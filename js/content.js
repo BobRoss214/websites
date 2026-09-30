@@ -13,6 +13,20 @@
  */
 window.WISE_ACRES = {
   photos: [
-    // { src: "assets/photos/example.jpg", alt: "Describe the photo", caption: "Optional caption" },
+    { src: "assets/photos/family-sunflower-field.webp",
+      alt: "The Wise Acres family hugging and smiling in a field of sunflowers",
+      caption: "The Wise Acres family in the sunflower field" },
+    { src: "assets/photos/family-strawberry-field-red-barn.webp",
+      alt: "A family kneeling in a strawberry field holding fresh berries, with the red farm barn and an orange tractor behind them",
+      caption: "Strawberry season at the farm" },
+    { src: "assets/photos/wildflower-field-cosmos.webp",
+      alt: "A wildflower field of pink cosmos, yellow sunflowers and orange marigolds",
+      caption: "The wildflower field" },
+    { src: "assets/photos/zinnia-and-sunflower-fields.webp",
+      alt: "Rows of colorful zinnias in front of a big field of sunflowers under a blue sky",
+      caption: "Zinnias and sunflowers" },
+    { src: "assets/photos/sunflowers-closeup.webp",
+      alt: "Bright yellow-orange sunflowers in bloom on a cloudy evening",
+      caption: "Sunflowers" },
   ],
 };

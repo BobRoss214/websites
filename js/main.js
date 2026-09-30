@@ -27,20 +27,27 @@
   /* ------------------------------------------------------------------ *
    * Season windows (typical dates — shown as "typical" in the UI)
    * ------------------------------------------------------------------ */
+  // Tree season starts the Friday after Thanksgiving (4th Thursday of November).
+  const thanksgivingFriday = (year) => {
+    const firstThu = 1 + ((4 - new Date(year, 10, 1).getDay() + 7) % 7);
+    return new Date(year, 10, firstThu + 22);
+  };
   const SEASONS = [
-    { id: 'spring', crop: 'Strawberries',            from: [4, 15], to: [6, 7],  next: 'mid-April' },
-    { id: 'summer', crop: 'Blueberries & sunflowers', from: [6, 1],  to: [7, 10], next: 'June' },
-    { id: 'fall',   crop: 'Pumpkins',                 from: [9, 13], to: [11, 8], next: 'mid-September' },
+    { id: 'spring', crop: 'Strawberries',            start: (y) => new Date(y, 3, 15), end: (y) => new Date(y, 5, 7),   next: 'mid-April' },
+    { id: 'summer', crop: 'Blueberries & sunflowers', start: (y) => new Date(y, 5, 15), end: (y) => new Date(y, 6, 10),  next: 'mid-June' },
+    { id: 'fall',   crop: 'Pumpkins',                 start: (y) => new Date(y, 8, 13), end: (y) => new Date(y, 10, 8),  next: 'mid-September' },
+    { id: 'winter', crop: 'Christmas trees',          start: thanksgivingFriday,        end: (y) => new Date(y, 11, 8),  next: 'the Friday after Thanksgiving' },
   ];
-  const md = (m, d) => m * 100 + d;
+  const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const inWindow = (s, now) => {
-    const v = md(now.getMonth() + 1, now.getDate());
-    return v >= md(...s.from) && v <= md(...s.to);
+    const t = dayStart(now), y = t.getFullYear();
+    return t >= s.start(y) && t <= s.end(y);
   };
   const daysUntilStart = (s, now) => {
-    let start = new Date(now.getFullYear(), s.from[0] - 1, s.from[1]);
-    if (start < now) start = new Date(now.getFullYear() + 1, s.from[0] - 1, s.from[1]);
-    return (start - now) / 864e5;
+    const t = dayStart(now);
+    let st = s.start(t.getFullYear());
+    if (st < t) st = s.start(t.getFullYear() + 1);
+    return (st - t) / 864e5;
   };
 
   /* ------------------------------------------------------------------ *
@@ -74,12 +81,6 @@
     box.addEventListener('click', (e) => { if (e.target === box) box.close(); });
 
     section.hidden = false;
-    const flowersLink = $('.nav a[href="#flowers"]');
-    if (flowersLink) {
-      const li = doc.createElement('li');
-      li.innerHTML = '<a href="#gallery">Photos</a>';
-      flowersLink.parentElement.after(li);
-    }
   }
 
   /* ------------------------------------------------------------------ *
@@ -102,7 +103,7 @@
     doc.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && nav.classList.contains('is-open')) { setOpen(false); toggle.focus(); }
     });
-    matchMedia('(min-width: 921px)').addEventListener('change', (e) => { if (e.matches) setOpen(false); });
+    matchMedia('(min-width: 1241px)').addEventListener('change', (e) => { if (e.matches) setOpen(false); });
 
     // Scroll-spy: highlight the nav link for the section in the middle of the screen.
     if (!('IntersectionObserver' in window)) return;
@@ -130,7 +131,7 @@
       entries.forEach((en) => {
         if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
     targets.forEach((el) => io.observe(el));
   }
 
@@ -409,12 +410,55 @@
     return s;
   }
 
+  function sceneWinter() {
+    let s = `<circle cx="400" cy="70" r="26" fill="#fff" opacity=".9"/>` +
+      `<path d="M0 200C90 176 200 186 290 198S430 186 480 176V340H0Z" fill="#dbe9f2"/>` +
+      `<path d="M0 240C120 218 260 228 480 214V340H0Z" fill="#f6fbfe"/>` +
+      `<path d="M0 300C160 286 320 296 480 286V340H0Z" fill="#fff"/>`;
+    [[70, 300, 64, 88, 0], [150, 286, 84, 116, 1], [250, 300, 74, 102, 2], [350, 292, 100, 138, 3], [440, 304, 70, 96, 4]].forEach(([cx, base, w, h, i]) => {
+      s += grow(i, use('fir', cx - w / 2, base - h, w, h));
+    });
+    [[40, 4.8, -1], [110, 6.2, -3], [190, 5.4, -2], [280, 7, -5], [360, 5.8, -4], [430, 6.6, -1]].forEach(([x, d, delay]) => {
+      s += `<g transform="translate(${x} 0)"><circle class="leaf-fall" r="4" fill="#fff" stroke="#bcd3e0" stroke-width="1.5" style="animation-duration:${d}s;animation-delay:${delay}s"/></g>`;
+    });
+    return s;
+  }
+
+  // Drawn "stickers" that sit on top of the real photos
+  const stickersSpring = () =>
+    grow(0, use('strawberry', 388, 236, 62, 70, 'transform="rotate(10 419 271)"')) +
+    grow(1, use('strawberry', 436, 280, 46, 52, 'transform="rotate(-14 459 306)"')) +
+    grow(2, use('strawberry', 346, 286, 40, 45, 'transform="rotate(18 366 308)"'));
+  const stickersSummer = () =>
+    grow(0, use('sunflower', 4, 232, 104, 104)) +
+    grow(1, use('blueberry', 380, 246, 76, 78)) +
+    `<g class="scene-bee">${use('bee-s', 160, 56, 44, 32)}</g>`;
+
+  // Keyboard-accessible tab behaviour shared by the season and group tabs.
+  function wireTabs(tabs, activate) {
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => activate(t, false));
+      t.addEventListener('keydown', (e) => {
+        const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+        let next = -1;
+        if (e.key in keys) next = (i + keys[e.key] + tabs.length) % tabs.length;
+        else if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = tabs.length - 1;
+        if (next >= 0) { e.preventDefault(); activate(tabs[next], true); }
+      });
+    });
+  }
+
   function initSeasons() {
-    const tabs = $$('.season-tab');
+    const tabs = $$('#season-tabs .season-tab');
     const panels = $$('.season-panel');
-    const builders = { spring: sceneSpring, summer: sceneSummer, fall: sceneFall };
+    const builders = { spring: sceneSpring, summer: sceneSummer, fall: sceneFall, winter: sceneWinter };
+    const stickers = { spring: stickersSpring, summer: stickersSummer };
     $$('.scene-card').forEach((card) => {
-      card.innerHTML = `<svg viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${builders[card.dataset.scene]()}</svg>`;
+      const key = card.dataset.scene;
+      const photo = card.classList.contains('has-photo');
+      card.insertAdjacentHTML('beforeend',
+        `<svg${photo ? ' class="stickers"' : ''} viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${(photo ? stickers[key] : builders[key])()}</svg>`);
     });
 
     const select = (id, focus) => {
@@ -430,17 +474,7 @@
         p.classList.toggle('is-active', on);
       });
     };
-    tabs.forEach((t, i) => {
-      t.addEventListener('click', () => select(t.dataset.season));
-      t.addEventListener('keydown', (e) => {
-        const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
-        let next = -1;
-        if (e.key in keys) next = (i + keys[e.key] + tabs.length) % tabs.length;
-        else if (e.key === 'Home') next = 0;
-        else if (e.key === 'End') next = tabs.length - 1;
-        if (next >= 0) { e.preventDefault(); select(tabs[next].dataset.season, true); }
-      });
-    });
+    wireTabs(tabs, (t, focus) => select(t.dataset.season, focus));
 
     // Mark what's happening now, and open that season by default.
     const now = new Date();
@@ -452,9 +486,71 @@
     const fact = $('#fact-season');
     if (fact) {
       fact.textContent = live.length
-        ? live.map((s) => s.crop).join(' & ') + ' — happening now'
+        ? live.map((s) => s.crop).join(' & ') + ' \u2014 happening now'
         : 'Next up: ' + target.crop + ' (' + target.next + ')';
     }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Groups: school tours / parties / corporate (deep-linkable tabs)
+   * ------------------------------------------------------------------ */
+  function initGroups() {
+    const tabs = $$('#group-tabs .group-tab');
+    const panels = $$('.group-panel');
+    if (!tabs.length) return;
+    const select = (panel, focus) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.panel === panel;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on && focus) t.focus();
+      });
+      panels.forEach((p) => {
+        const on = p.dataset.panel === panel;
+        p.hidden = !on;
+        p.classList.toggle('is-active', on);
+      });
+    };
+    wireTabs(tabs, (t, focus) => select(t.dataset.panel, focus));
+
+    const byHash = {};
+    tabs.forEach((t) => { byHash[t.dataset.hash] = t.dataset.panel; });
+    const go = (hash, scroll) => {
+      const panel = byHash[String(hash).replace('#', '')];
+      if (!panel) return false;
+      select(panel);
+      if (scroll) $('#groups').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      return true;
+    };
+    // Links like #parties or #corporate elsewhere on the page open the right tab.
+    doc.addEventListener('click', (e) => {
+      const a = e.target.closest('a[href^="#"]');
+      if (a && go(a.getAttribute('href'), true)) e.preventDefault();
+    });
+    addEventListener('hashchange', () => go(location.hash, true));
+    if (location.hash && go(location.hash, false)) setTimeout(() => $('#groups').scrollIntoView(), 60);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Small components: week strips + the farm-year "today" marker
+   * ------------------------------------------------------------------ */
+  function initWeekStrips() {
+    const letters = { 1: 'M', 2: 'T', 3: 'W', 4: 'T', 5: 'F', 6: 'S', 0: 'S' };
+    const today = new Date().getDay();
+    $$('.week-strip[data-days]').forEach((el) => {
+      const on = el.dataset.days.split(',').map(Number);
+      el.innerHTML = [1, 2, 3, 4, 5, 6, 0].map((d) =>
+        `<span class="day${on.includes(d) ? ' on' : ''}${d === today ? ' today' : ''}" aria-hidden="true">${letters[d]}</span>`).join('');
+    });
+  }
+
+  function initFarmCalendar() {
+    const cal = $('.cal');
+    if (!cal) return;
+    const now = new Date();
+    const dim = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    cal.style.setProperty('--today', ((now.getMonth() + (now.getDate() - 1) / dim) / 12).toFixed(4));
+    cal.classList.add('has-today');
   }
 
   /* ------------------------------------------------------------------ *
@@ -582,6 +678,9 @@
   initPicking();
   initBee();
   initSeasons();
+  initGroups();
+  initWeekStrips();
+  initFarmCalendar();
   initBouquet();
   initGoat();
   initCrops();
