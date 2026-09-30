@@ -215,6 +215,15 @@ def js_strings():
                 txt = m.group(1).replace("\\'", "'").replace('\\u2014', '\u2014').replace('\\u201C', '\u201C').replace('\\u201D', '\u201D')
                 if WORD.search(txt) and len(txt) > 1:
                     found[txt] = f
+    # page titles and search/share descriptions (swapped by i18n.js)
+    import html as _html
+    for f in sorted(os.listdir(ROOT)):
+        if not f.endswith('.html'):
+            continue
+        page = open(os.path.join(ROOT, f), encoding='utf-8').read()
+        for pat in (r'<title>(.*?)</title>', r'<meta name="description" content="([^"]*)"', r'<meta property="og:(?:title|description)" content="([^"]*)"'):
+            for m in re.finditer(pat, page, re.S):
+                found[_html.unescape(m.group(1)).strip()] = f
     # lines of the goat and similar arrays live in quotes inside a list
     main = open(os.path.join(jsdir, 'main.js'), encoding='utf-8').read()
     m = re.search(r'const lines = \[(.*?)\];', main, re.S)
