@@ -81,6 +81,7 @@ def compose(c, slug, meta, body):
     head = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{html.escape(title, quote=True)}">', head)
     head = re.sub(r'<meta property="og:description" content="[^"]*">', f'<meta property="og:description" content="{html.escape(desc, quote=True)}">', head)
     head = re.sub(r'\s*<script type="application/ld\+json">.*?</script>', '', head, flags=re.S)
+    head = re.sub(r'\s*<(?:link rel="canonical"|meta property="og:(?:url|image)"|meta name="twitter:card")[^>]*>', '', head)
     extra = (f'\n  <link rel="canonical" href="{url}">\n  <meta property="og:url" content="{url}">\n  <meta property="og:image" content="{image}">\n'
              f'  <meta name="twitter:card" content="summary_large_image">')
     graph = [
