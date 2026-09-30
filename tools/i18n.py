@@ -36,22 +36,29 @@ def pages():
     return [p for p in sorted(os.listdir(ROOT)) if p.endswith('.html')]
 
 
-def canon(el):
-    """Inner HTML as translators see it: svg icons collapsed to <svg/>, whitespace tidied."""
+def canon(el, counter=None):
+    """Inner HTML as translators see it: svg icons collapsed to <svg/>, links to <a1>, <a2>..., whitespace tidied."""
+    counter = counter if counter is not None else [0]
     parts = []
     for c in el.children:
         if isinstance(c, NavigableString):
             parts.append(str(c).replace('&', '&amp;').replace('<', '&lt;') if type(c).__name__ == 'NavigableString' else '')
         elif isinstance(c, Tag):
-            parts.append('<svg/>' if c.name == 'svg' else tag_html(c))
+            parts.append('<svg/>' if c.name == 'svg' else tag_html(c, counter))
     return re.sub(r'\s+', ' ', ''.join(parts)).strip()
 
 
-def tag_html(t):
-    attrs = ''.join(f' {k}="{v if isinstance(v, str) else " ".join(v)}"' for k, v in t.attrs.items() if not (k == 'data-t' or k.startswith('data-ta-')))
-    if t.name in ('br', 'wbr'):
+VOID = {'br', 'wbr', 'input', 'img', 'hr'}
+
+
+def tag_html(t, counter):
+    if t.name in VOID:
         return f'<{t.name}>'
-    return f'<{t.name}{attrs}>{canon(t)}</{t.name}>'
+    if t.name == 'a':
+        counter[0] += 1
+        return f'<a{counter[0]}>{canon(t, counter)}</a>'
+    attrs = ''.join(f' {k}="{v if isinstance(v, str) else " ".join(v)}"' for k, v in t.attrs.items() if not (k == 'data-t' or k.startswith('data-ta-')))
+    return f'<{t.name}{attrs}>{canon(t, counter)}</{t.name}>'
 
 
 def block_ok(el):
@@ -162,6 +169,67 @@ def load(code):
     return json.load(open(path, encoding='utf-8')) if os.path.exists(path) else {'ui': {}, 'js': {}}
 
 
+def cmd_dump(code, start, count):
+    en = json.load(open(os.path.join(LANG_DIR, 'en.json'), encoding='utf-8'))
+    have = load(code)['ui']
+    miss = [(k, v) for k, v in sorted(en.items()) if k not in have]
+    for k, v in miss[start:start + count]:
+        print(f'{k}\t{v}')
+    print(f'# {len(miss)} missing in total', file=sys.stderr)
+
+
+def cmd_merge(code):
+    """Fold lang/src/parts/<code>.*.json (each {id: translation}) into lang/src/<code>.json."""
+    data = load(code)
+    parts = os.path.join(SRC_DIR, 'parts')
+    n = 0
+    for f in sorted(os.listdir(parts)) if os.path.isdir(parts) else []:
+        if f.startswith(code + '.') and f.endswith('.json'):
+            d = json.load(open(os.path.join(parts, f), encoding='utf-8'))
+            bucket = 'js' if '.js.' in f else 'ui'
+            data.setdefault(bucket, {}).update(d)
+            n += len(d)
+    json.dump(data, open(os.path.join(SRC_DIR, code + '.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)
+    print(f'merged {n} strings into lang/src/{code}.json (ui={len(data.get("ui", {}))}, js={len(data.get("js", {}))})')
+
+
+JS_PATTERNS = [
+    r"\bt\(\s*'((?:[^'\\]|\\.)*)'",
+    r'\bt\(\s*"((?:[^"\\]|\\.)*)"',
+    r"(?:hint|btn):\s*'((?:[^'\\]|\\.)*)'",
+    r"\[\d+,\s*'((?:[^'\\]|\\.)*)'\]",
+    r"(?:label|crop|next|caption|alt):\s*['\"]((?:[^'\"\\]|\\.)*)['\"]",
+    r"const TEN = '((?:[^'\\]|\\.)*)'",
+]
+
+
+def js_strings():
+    found = {}
+    jsdir = os.path.join(ROOT, 'js')
+    for f in sorted(os.listdir(jsdir)):
+        if not f.endswith('.js') or f in ('i18n.js',):
+            continue
+        src = open(os.path.join(jsdir, f), encoding='utf-8').read()
+        for pat in JS_PATTERNS:
+            for m in re.finditer(pat, src):
+                txt = m.group(1).replace("\\'", "'").replace('\\u2014', '\u2014').replace('\\u201C', '\u201C').replace('\\u201D', '\u201D')
+                if WORD.search(txt) and len(txt) > 1:
+                    found[txt] = f
+    # lines of the goat and similar arrays live in quotes inside a list
+    main = open(os.path.join(jsdir, 'main.js'), encoding='utf-8').read()
+    m = re.search(r'const lines = \[(.*?)\];', main, re.S)
+    if m:
+        for x in re.findall(r"'((?:[^'\\]|\\.)*)'", m.group(1)):
+            found[x.replace("\\'", "'")] = 'main.js'
+    return found
+
+
+def cmd_jsstrings():
+    found = js_strings()
+    json.dump(found, open(os.path.join(LANG_DIR, 'js-strings.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)
+    print(len(found), 'JavaScript strings -> lang/js-strings.json')
+
+
 def cmd_missing(code):
     en = json.load(open(os.path.join(LANG_DIR, 'en.json'), encoding='utf-8'))
     have = load(code)['ui']
@@ -189,6 +257,12 @@ if __name__ == '__main__':
         cmd_extract()
     elif cmd == 'orphans':
         cmd_orphans()
+    elif cmd == 'dump':
+        cmd_dump(sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
+    elif cmd == 'merge':
+        cmd_merge(sys.argv[2])
+    elif cmd == 'jsstrings':
+        cmd_jsstrings()
     elif cmd == 'missing':
         cmd_missing(sys.argv[2])
     elif cmd == 'build':

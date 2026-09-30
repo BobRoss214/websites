@@ -82,9 +82,16 @@
   function swapBlocks(code) {
     const d = (W.dict[code] && W.dict[code].ui) || {};
     doc.querySelectorAll('[data-t]').forEach((el) => {
-      if (el._en === undefined) { el._en = el.innerHTML; el._svgs = Array.from(el.querySelectorAll('svg')).map((n) => n.outerHTML); }
+      if (el._en === undefined) {
+        el._en = el.innerHTML;
+        el._svgs = Array.from(el.querySelectorAll('svg')).map((n) => n.outerHTML);
+        el._links = (el._en.match(/<a\b[^>]*>/g)) || [];     // real opening tags of the links, in order
+      }
       const tr = code !== 'en' && d[el.getAttribute('data-t')];
-      if (tr) { let i = 0; el.innerHTML = tr.replace(/<svg\/>/g, () => el._svgs[i++] || ''); }
+      if (tr) {
+        let i = 0;
+        el.innerHTML = tr.replace(/<svg\/>/g, () => el._svgs[i++] || '').replace(/<a(\d+)>/g, (m, n) => el._links[n - 1] || '<a>');
+      }
       else if (el.innerHTML !== el._en) el.innerHTML = el._en;
     });
     doc.querySelectorAll('*').forEach((el) => {
