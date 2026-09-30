@@ -29,7 +29,7 @@
   const fieldEl = $('#field');
   const foreEl = $('#fore');
   const crittersEl = $('#critters');
-  if (!hero || !sceneEl || !fieldEl || !foreEl || !farEl || !midEl) return;
+  const hasHero = !!(hero && sceneEl && fieldEl && foreEl && farEl && midEl);   // inner pages only use the footer art
 
   const INK = '#3a2416';
   const VPY = 262, BOT = 600, SPAN = BOT - VPY;   // vanishing line + bottom of the field, in viewBox units
@@ -777,7 +777,13 @@
   }
 
   /* ------------------------------------------------------------------ */
-  setSeason(W.seasons.current(), false);
-  doc.documentElement.classList.add('scene-ready');
-  W.hero = { setSeason: (id) => setSeason(id, true) };
+  if (hasHero) {
+    setSeason(W.seasons.current(), false);
+    doc.documentElement.classList.add('scene-ready');
+    W.hero = { setSeason: (id) => setSeason(id, true) };
+  } else {
+    const id = W.seasons.active || W.seasons.current();
+    applyOnly(id);
+    if (footerEl) footerEl.innerHTML = footerArt(id);
+  }
 })();

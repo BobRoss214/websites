@@ -19,6 +19,16 @@
  * `notice` shows a yellow bar under the top bar on every page. Leave it empty
  * ('') to hide it. Add `noticeUntil: '2026-10-05'` to hide it automatically after that date.
  *
+ * REVIEWS
+ * -------
+ * Quotes appear in the "What families say" section once you add them here. Only add words a
+ * reviewer really wrote (copy them exactly, or ask first), with where they were posted:
+ *
+ *   { quote: "Best strawberries we have ever picked.", name: "Sarah M.", source: "Google",
+ *     url: "https://...", date: "May 2026" }
+ *
+ * `lang` is optional (use "es" for a review written in Spanish) so it is never machine-translated.
+ *
  * ANALYTICS
  * ---------
  * Off by default. See the top of js/analytics.js for the four supported providers.
@@ -33,6 +43,7 @@
  */
 window.WISE_ACRES = {
   seasonPicker: true,
+  reviews: [],
   analytics: { provider: 'none' },
   notice: '',
   noticeUntil: '',

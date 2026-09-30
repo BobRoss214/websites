@@ -20,6 +20,48 @@
   const t = (s, v) => (W.t ? W.t(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? v[k] : m)));
   const mulberry32 = W.rand;
 
+  function initPrint() {
+    $$('[data-print]').forEach((b) => b.addEventListener('click', () => window.print()));
+    // keep ticks on the "what to bring" list between visits
+    const boxes = $$('#checklist input[type="checkbox"]');
+    if (!boxes.length) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem('wa.checklist') || '[]');
+      boxes.forEach((b, i) => { b.checked = !!saved[i]; });
+    } catch (e) { /* storage unavailable */ }
+    boxes.forEach((b) => b.addEventListener('change', () => {
+      try { localStorage.setItem('wa.checklist', JSON.stringify(boxes.map((x) => x.checked))); } catch (e) { /* ignore */ }
+    }));
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Reviews: real quotes from js/content.js, shown with where they were posted
+   * ------------------------------------------------------------------ */
+  function initReviews() {
+    const list = $('#review-grid');
+    const items = (W.reviews || []).filter((r) => r && r.quote && r.name);
+    if (!list) return;
+    if (!items.length) { list.hidden = true; return; }
+    items.forEach((r) => {
+      const li = doc.createElement('li');
+      li.className = 'review';
+      const q = doc.createElement('blockquote'), p = doc.createElement('p');
+      p.textContent = '\u201C' + r.quote + '\u201D';
+      if (r.lang) p.lang = r.lang;
+      q.appendChild(p);
+      const by = doc.createElement('p');
+      by.className = 'review-by';
+      by.append('\u2014 ' + r.name + (r.date ? ', ' + r.date : ''));
+      if (r.source) {
+        by.append(' \u00B7 ');
+        if (r.url) { const a = doc.createElement('a'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = r.source; by.appendChild(a); }
+        else by.append(r.source);
+      }
+      li.append(q, by);
+      list.appendChild(li);
+    });
+  }
+
   /* ------------------------------------------------------------------ *
    * Gallery — appears only when photos are listed in js/content.js
    * ------------------------------------------------------------------ */
@@ -156,8 +198,8 @@
     const hero = $('#top');
     const layers = $$('.layer[data-depth]').map((el) => ({ el, depth: parseFloat(el.dataset.depth) }));
     const steps = $('#steps');
-    const stepEls = $$('.step', steps);
-    const track = $('.track', steps);
+    const stepEls = steps ? $$('.step', steps) : [];
+    const track = steps ? $('.track', steps) : null;
     let ticking = false, moveTimer = 0;
 
     function update() {
@@ -167,7 +209,7 @@
       const max = root.scrollHeight - vh;
       header.style.setProperty('--vp', max > 0 ? clamp(y / max, 0, 1).toFixed(4) : '0');
 
-      if (!reduceMotion && y < hero.offsetHeight + 40) {
+      if (hero && !reduceMotion && y < hero.offsetHeight + 40) {
         layers.forEach(({ el, depth }) => { el.style.transform = `translate3d(0, ${(y * depth).toFixed(1)}px, 0)`; });
       }
 
@@ -295,6 +337,7 @@
 
   function initSeasons() {
     const tabs = $$('#season-tabs .season-tab');
+    if (!tabs.length) return;
     const panels = $$('.season-panel');
     const builders = { spring: sceneSpring, summer: sceneSummer, fall: sceneFall, winter: sceneWinter };
     const stickers = { spring: stickersSpring, summer: stickersSummer };
@@ -537,7 +580,9 @@
   }
 
   /* ------------------------------------------------------------------ */
+  initPrint();
   initGallery();
+  initReviews();
   initNav();
   initReveal();
   initBee();
