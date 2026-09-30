@@ -444,7 +444,7 @@ svg.layer-fore{overflow:visible}
   .hero-sub{font-size:1rem;margin:.7em auto 1.1em}
   .sun{right:-18px;top:-16px;width:92px;opacity:.95}
   .chips{margin-top:1.1em}
-  .chips li:nth-child(3){display:none}
+  .chips li:nth-child(2){display:none}
   .btn-lg{font-size:1.1rem}
   .picker{right:auto;padding:8px 14px 8px 8px}
   .cards{gap:14px}

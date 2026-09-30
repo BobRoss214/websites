@@ -35,8 +35,8 @@
   const SEASONS = [
     { id: 'spring', crop: 'Strawberries',            start: (y) => new Date(y, 3, 15), end: (y) => new Date(y, 5, 7),   next: 'mid-April' },
     { id: 'summer', crop: 'Blueberries & sunflowers', start: (y) => new Date(y, 5, 15), end: (y) => new Date(y, 6, 10),  next: 'mid-June' },
-    { id: 'fall',   crop: 'Pumpkins',                 start: (y) => new Date(y, 8, 13), end: (y) => new Date(y, 10, 8),  next: 'mid-September' },
-    { id: 'winter', crop: 'Christmas trees',          start: thanksgivingFriday,        end: (y) => new Date(y, 11, 8),  next: 'the Friday after Thanksgiving' },
+    { id: 'fall',   crop: 'Pumpkins & tomatoes',       start: (y) => new Date(y, 8, 13), end: (y) => new Date(y, 10, 8),  next: 'mid-September' },
+    { id: 'winter', crop: 'Christmas trees at The GreenHouse', start: thanksgivingFriday,        end: (y) => new Date(y, 11, 8),  next: 'the Friday after Thanksgiving' },
   ];
   const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const inWindow = (s, now) => {
@@ -112,7 +112,7 @@
       links.forEach((a, key) => (key === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
     };
     const spy = new IntersectionObserver((entries) => {
-      entries.forEach((en) => { if (en.isIntersecting) setCurrent(en.target.id); });
+      entries.forEach((en) => { if (en.isIntersecting) setCurrent(en.target.dataset.nav || en.target.id); });
     }, { rootMargin: '-45% 0px -50% 0px' });
     $$('main > section[id]').forEach((s) => spy.observe(s));
   }
@@ -534,6 +534,17 @@
   /* ------------------------------------------------------------------ *
    * Small components: week strips + the farm-year "today" marker
    * ------------------------------------------------------------------ */
+  function initVarietyFilter() {
+    const buttons = $$('#variety-filters .filter-btn');
+    const items = $$('#variety-list .variety');
+    if (!buttons.length) return;
+    buttons.forEach((btn) => btn.addEventListener('click', () => {
+      const f = btn.dataset.filter;
+      buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      items.forEach((li) => { li.hidden = f !== 'all' && li.dataset.cat !== f; });
+    }));
+  }
+
   function initWeekStrips() {
     const letters = { 1: 'M', 2: 'T', 3: 'W', 4: 'T', 5: 'F', 6: 'S', 0: 'S' };
     const today = new Date().getDay();
@@ -680,6 +691,7 @@
   initSeasons();
   initGroups();
   initWeekStrips();
+  initVarietyFilter();
   initFarmCalendar();
   initBouquet();
   initGoat();

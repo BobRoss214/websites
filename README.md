@@ -19,7 +19,9 @@ Preview locally: open `index.html`, or run `python3 -m http.server` and visit ht
 
 Visit (farm vs. GreenHouse chooser, 3 steps, Fall 2026 packages and add-ons, reservation schedule,
 what's on the farm) · Seasons (spring / summer / fall / Christmas trees + farm-year calendar) ·
-Wise Pie pizza (how to get it, Fall 2026 menu, ingredients) · The GreenHouse · Flowers & photography
+**U-pick tomatoes & basil** (new this year: prices, growing method, 19-variety guide with filter) ·
+Wise Pie pizza (how to get it, Fall 2026 menu, ingredients) · The GreenHouse (bold "Next door / No
+reservations needed" banner, animated ice cream shop and wood-fired oven, Christmas trees) · Flowers & photography
 (schedule, bouquet toy, photographer passes and rules) · School tours / Parties / Corporate events
 (deep-linkable tabs: `#school-tours`, `#parties`, `#corporate`) · Our story · Photo gallery · FAQ ·
 Directions & contact.
@@ -36,7 +38,8 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Phone number** | Not shown. The official pages you pasted list email only (and a photographer emergency number, which is shown in the photography section). Tell us if a public phone number should be added. |
 | **Facebook** | Not linked. Instagram accounts are (farm, Wise Pie, GreenHouse, Bloomin' at Wise Acres). |
 | **Booking link** | Every Reserve/Book button uses `https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356`. Search & replace that string to change it. |
-| **Christmas tree season** | Dates from your farm schedule (Friday after Thanksgiving to early December). No other tree details were provided. |
+| **Christmas tree season** | Friday after Thanksgiving to early December, **located at The GreenHouse** (shown in the Seasons tab, the calendar, the GreenHouse section and the FAQ). No other tree details were provided. |
+| **Tomatoes & basil (new this year)** | Every weekend, late September through October. Tomatoes $4.50/lb, basil $1/stem. The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree (14 in one note, 16 in another, 15 tomato varieties actually listed). Give us the right number and we'll state it. All 19 varieties are listed (15 tomatoes + 4 basil) with a filter. |
 
 ## Photos
 
@@ -49,6 +52,11 @@ photos: [
   { src: "assets/photos/example.jpg", alt: "Describe the photo", caption: "Optional caption" },
 ],
 ```
+
+**Only these five photos reached the build environment as files.** Photos sent later in the chat
+arrived as previews with no file behind them, so they could not be copied in. Easiest fix: upload the
+image files to `assets/photos/` on the `claude/wise-acres-redesign-w9m4bi` branch on GitHub (Add file →
+Upload files), then ask for them to be placed. Descriptive file names help.
 
 Planned homes for the remaining photos (to add as soon as the files are available):
 

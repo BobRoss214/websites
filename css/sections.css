@@ -317,7 +317,7 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
   .group-tabs{grid-template-columns:1fr}
   .group-panel{grid-template-columns:1fr}
   .values{grid-template-columns:1fr}
-  .gh-art{max-width:420px;margin-inline:auto;width:100%}
+  .gh-art{max-width:420px;margin-inline:auto;width:100%;position:static}
   .about-photo{max-width:560px;margin-inline:auto}
   .pizza-head{grid-template-columns:1fr;text-align:center}
   .pizza-art{justify-self:center;order:-1}
@@ -355,4 +355,147 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
   .action-bar{gap:6px;padding:6px}
   .action-bar .btn{font-size:.82rem;padding:.7em .2em;gap:.25em}
   .action-bar .ico{width:1em;height:1em}
+}
+
+/* ==========================================================================
+   Fall additions: hero chip, chooser, tomatoes & basil, GreenHouse upgrade
+   ========================================================================== */
+
+/* hero: "New" chip */
+.chips .chip-new{background:var(--sun);animation:chipPop 2.8s ease-in-out infinite}
+.chips .chip-new a{display:inline-flex;align-items:center;gap:.4em;color:var(--ink);text-decoration:none;font-weight:700}
+@keyframes chipPop{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-3deg) scale(1.05)}95%{transform:rotate(2.5deg) scale(1.05)}}
+
+/* chooser */
+.choose-tag{font-size:.82rem}
+.choose-tag-green{font-size:.95rem;padding:.55em 1.1em;box-shadow:0 3px 0 var(--ink)}
+.choose-new{display:flex;align-items:center;gap:.6em;margin:0 0 1.1em;padding:.7em 1em;background:#fff;border:3px solid var(--ink);border-radius:16px;text-decoration:none;font-weight:800;line-height:1.3;color:var(--ink);box-shadow:0 4px 0 var(--ink);transition:transform .15s}
+.choose-new:hover{transform:translateY(-2px)}
+.choose-new-badge{flex:none;background:var(--red);color:#fff;border-radius:999px;padding:.15em .75em;font:700 .8rem/1.4 var(--display);letter-spacing:.08em;text-transform:uppercase}
+.choose-new .ico{flex:none;margin-left:auto}
+
+/* add-ons grid now has four items */
+.addon-list{grid-template-columns:repeat(2,1fr)}
+.addon-note a{font-weight:800}
+@media (max-width:1100px){.addon-list{grid-template-columns:1fr}}
+
+/* calendar */
+.bar-tomato{background:#ff6a5b}
+
+/* ---------- tomatoes & basil ---------- */
+.tomatoes{background:#fff1e4 radial-gradient(rgba(215,42,67,.1) 1.8px,transparent 1.8px) 0 0/26px 26px;border-block:3px solid var(--ink);overflow-x:clip}
+.tomato-hero{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,5vw,60px);align-items:center;background:#fff;border:3px solid var(--ink);border-radius:36px;padding:clamp(22px,4vw,48px);box-shadow:0 10px 0 var(--ink)}
+.new-ribbon{display:inline-block;margin:0 0 16px;padding:.4em 1.2em;background:var(--red);color:#fff;border:3px solid var(--ink);border-radius:999px;box-shadow:0 5px 0 var(--ink);rotate:-2deg;font:700 clamp(1.05rem,2vw,1.4rem)/1 var(--display);letter-spacing:.1em;text-transform:uppercase}
+.tomato-copy{min-width:0}
+.tomato-copy h2{font-size:clamp(2.1rem,4.8vw,3.4rem)}
+.tomato-copy .lead{margin-bottom:0}
+.tomato-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}
+.tomato-facts li{display:flex;flex-direction:column;gap:2px;background:#fff8dc;border:2.5px solid var(--ink);border-radius:16px;padding:12px 14px;font-weight:600;font-size:.92rem;line-height:1.3}
+.tf-big{font:700 clamp(1.3rem,2.6vw,1.95rem)/1.1 var(--display);color:var(--red-deep)}
+.tomato-copy .small{margin:14px 0 0}
+.tomato-art{min-width:0}
+.tomato-art svg{display:block;width:100%;max-width:470px;height:auto;margin-inline:auto;overflow:visible}
+.hang{transform-box:fill-box;transform-origin:50% 0;animation:sway 4.5s ease-in-out infinite alternate}
+.hang.h1{animation-duration:5.6s;animation-delay:-1.5s}
+.hang.h2{animation-duration:3.8s;animation-delay:-2.4s}
+.drop{transform-box:fill-box;animation:dropFall 2.4s ease-in infinite}
+.drop.d2{animation-delay:-.8s}.drop.d3{animation-delay:-1.6s}
+@keyframes dropFall{0%{transform:translateY(-8px);opacity:0}20%{opacity:1}100%{transform:translateY(12px);opacity:0}}
+
+.tomato-points{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:34px}
+.tomato-points li{background:#fff;border:3px solid var(--ink);border-radius:var(--radius);padding:20px 18px;box-shadow:var(--shadow)}
+.tp-art{height:56px;width:auto;margin-bottom:8px}
+.tomato-points h3{font-size:1.25rem;margin-bottom:.35em}
+.tomato-points p{margin:0;font-weight:600;font-size:.96rem;color:var(--ink-soft)}
+.tomato-note{text-align:center;margin:22px 0 0}
+
+.filter-row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:24px}
+.filter-btn{padding:.7em 1.25em;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:999px;font:700 1rem/1 var(--display);cursor:pointer;box-shadow:0 4px 0 var(--ink);transition:transform .15s,background-color .2s;-webkit-tap-highlight-color:transparent}
+.filter-btn:hover{transform:translateY(-2px)}
+.filter-btn[aria-pressed="true"]{background:var(--red);color:#fff;transform:translateY(-2px);box-shadow:0 6px 0 var(--ink)}
+.varieties{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.variety{display:flex;align-items:flex-start;gap:14px;background:#fff;border:3px solid var(--ink);border-radius:20px;padding:14px 16px;box-shadow:0 5px 0 var(--ink);animation:panelIn .4s cubic-bezier(.2,.8,.2,1)}
+.variety>div{min-width:0}
+.v-art{flex:none;width:52px;height:52px;margin-top:2px;transition:transform .35s cubic-bezier(.3,1.7,.5,1)}
+.variety:hover .v-art{transform:rotate(-10deg) scale(1.12)}
+.v-cat{display:block;font:700 .72rem/1.2 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--red-deep);margin-bottom:2px}
+.variety h4{font-size:1.2rem;margin-bottom:.2em}
+.variety p{margin:0;font-weight:600;font-size:.94rem;line-height:1.4;color:var(--ink-soft)}
+
+/* ---------- GreenHouse: bigger, bolder, more alive ---------- */
+.gh-banner{display:inline-flex;align-items:stretch;margin:0 0 16px;overflow:hidden;border:3px solid var(--ink);border-radius:999px;box-shadow:0 6px 0 var(--ink);rotate:-1.5deg;font:700 clamp(1.05rem,2.1vw,1.55rem)/1 var(--display);letter-spacing:.05em;text-transform:uppercase}
+.gh-banner span{padding:.6em 1em;white-space:nowrap}
+.gh-banner-a{background:var(--sun);color:var(--ink)}
+.gh-banner-b{background:var(--green);color:#fff}
+.gh-features{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 20px}
+.gh-features li{display:inline-flex;align-items:center;gap:.55em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:.3em 1em .3em .55em;font-weight:800;line-height:1.2}
+.gh-features svg{flex:none;height:32px;width:auto;max-width:34px}
+.gh-trees{display:flex;align-items:center;gap:14px;background:#e4f5d3;border:3px solid var(--ink);border-radius:18px;padding:.8em 1.1em;margin:0 0 18px;font-weight:600}
+.gh-trees svg{flex:none;height:56px;width:auto}
+.gh-trees strong{color:var(--green-deep)}
+
+.gh-grid{align-items:start}
+.gh-art{display:grid;gap:18px;justify-items:stretch;min-width:0;position:sticky;top:calc(var(--header-h) + 28px);align-self:start}
+.gh-stage{position:relative;display:grid;place-items:end center;min-height:210px;padding-top:26px}
+.gh-house{width:min(74%,320px);height:auto;filter:drop-shadow(0 8px 0 rgba(58,36,22,.18));animation:bob 6s ease-in-out infinite}
+.gh-fir{position:absolute;bottom:0;width:auto;height:118px;filter:drop-shadow(0 5px 0 rgba(58,36,22,.15))}
+.gh-fir-l{left:0}
+.gh-fir-r{right:0;height:98px}
+.gh-goat{position:absolute;left:20%;bottom:-14px;width:70px;height:auto;rotate:-6deg}
+.gh-tiles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.gh-tile{margin:0;padding:12px 12px 14px;text-align:center;border:3px solid var(--ink);border-radius:24px;box-shadow:var(--shadow)}
+.gh-tile:nth-child(1){background:#ffe6ef}
+.gh-tile:nth-child(2){background:#fff0d0}
+.gh-tile svg{display:block;width:100%;height:auto;max-height:200px;overflow:visible}
+.gh-tile figcaption{margin-top:6px;font:700 1.2rem/1.2 var(--display)}
+.awning{transform-box:fill-box;transform-origin:50% 0;animation:awning 3.6s ease-in-out infinite alternate}
+.cone-sign{transform-box:fill-box;transform-origin:50% 100%;animation:coneBob 2.4s ease-in-out infinite}
+.twinkle{transform-box:fill-box;transform-origin:center;animation:twinkle 2.2s ease-in-out infinite}
+.twinkle.t2{animation-delay:-1.1s}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flame .7s ease-in-out infinite alternate}
+.flame.f2{animation-duration:.55s}
+.flame.f3{animation-duration:.85s;animation-delay:-.3s}
+.puff{transform-box:fill-box;transform-origin:center;animation:smoke 3.2s ease-out infinite}
+.puff.p2{animation-delay:-1s}
+.puff.p3{animation-delay:-2.1s}
+.float-pizza{transform-box:fill-box;transform-origin:50% 100%;animation:bob 3.4s ease-in-out infinite}
+.gh-tile:hover .cone-sign{animation-duration:.9s}
+.gh-tile:hover .flame{animation-duration:.32s}
+.gh-tile:hover .awning{animation-duration:1.4s}
+@keyframes awning{from{transform:rotate(-1.4deg)}to{transform:rotate(1.4deg)}}
+@keyframes coneBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+@keyframes twinkle{0%,100%{transform:scale(.5);opacity:.35}50%{transform:scale(1.15);opacity:1}}
+@keyframes flame{0%{transform:scaleY(.85) scaleX(1.04)}100%{transform:scaleY(1.14) scaleX(.9)}}
+@keyframes smoke{0%{transform:translate(0,0) scale(.5);opacity:0}20%{opacity:.9}100%{transform:translate(12px,-52px) scale(1.7);opacity:0}}
+
+/* ---------- social handles: whole-handle chips that never split ---------- */
+.social,.follow .social{display:flex;flex-direction:row;flex-wrap:wrap;gap:10px}
+.social a{display:inline-flex;align-items:center;gap:.5em;padding:.5em 1em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;box-shadow:0 3px 0 var(--ink);color:var(--ink);text-decoration:none;font-weight:800;white-space:nowrap;word-break:normal;transition:transform .15s,box-shadow .15s}
+.social a:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--ink);text-decoration:none}
+.social .ico,.follow .social .ico{width:1.2em;height:1.2em;color:var(--red)}
+.follow .social{justify-content:flex-start}
+
+/* ---------- responsive for the additions ---------- */
+@media (max-width:920px){
+  .tomato-hero{grid-template-columns:1fr}
+  .tomato-art{order:-1}
+  .tomato-art svg{max-width:340px}
+  .tomato-points{grid-template-columns:1fr 1fr}
+}
+@media (max-width:640px){
+  .tomato-facts{grid-template-columns:1fr}
+  .tomato-facts li{flex-direction:row;align-items:baseline;gap:10px}
+  .tomato-points{grid-template-columns:1fr}
+  .varieties{grid-template-columns:1fr}
+  .gh-banner{flex-direction:column;border-radius:22px;text-align:center;font-size:1.15rem}
+  .gh-banner span{padding:.5em 1em}
+  .gh-features li{font-size:.95rem}
+  .gh-stage{min-height:170px}
+  .gh-fir{height:88px}
+  .gh-fir-r{height:74px}
+  .gh-goat{width:64px}
+  .gh-tile figcaption{font-size:1rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .chips .chip-new,.hang,.drop,.awning,.cone-sign,.twinkle,.flame,.puff,.float-pizza{animation:none}
 }
