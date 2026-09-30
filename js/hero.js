@@ -518,6 +518,41 @@
   const winterMid = () => `<path d="${MID_HILL}" fill="#ffffff" stroke="#c9dcef" stroke-width="3"/>`;
 
   /* ------------------------------------------------------------------ *
+   * Footer: a row of the season's crops standing on the dark soil of the footer
+   * ------------------------------------------------------------------ */
+  const footerEl = $('#footer-field');
+  function footerArt(id) {
+    const r = rand(77 + id.length), W_ = 1440, BASE = 130;
+    let out = '';
+    if (id === 'fall') {
+      const kinds = ['pumpkin', 'pumpkin', 'pumpkin-b', 'pumpkin-w'];
+      out += corn(44, 142, 150) + corn(84, 146, 118) + corn(1372, 142, 146) + corn(1400, 146, 112);
+      for (let x = 130; x < 1300; x += 48 + r() * 62) {
+        const w = 32 + r() * 36, h = w * 92 / 110;
+        out += leafUse(x + w * 0.1, BASE - 8, -50, w / 120, '#4aa04a') + use(kinds[Math.floor(r() * 4)], x, BASE - h - 2, w, h);
+      }
+      out += bale(650, BASE - 40, 76, 40) + blades(BASE, 5, 13, 20, '#dcb85c', 5);
+    } else if (id === 'winter') {
+      for (let x = 20; x < W_; x += 40 + r() * 54) {
+        const h = 62 + r() * 54, w = h * 0.727;
+        out += use('fir', x, BASE - h - 6, w, h) + use('fir-snow', x, BASE - h - 6, w, h);
+      }
+      out += `<g transform="translate(1040 ${BASE + 6}) scale(.3)">${snowman(0, 0)}</g>` +
+        `<path d="M-20 ${BASE + 20}V${BASE - 6}C120 ${BASE - 14} 260 ${BASE - 2} 420 ${BASE - 8}S720 ${BASE - 16} 900 ${BASE - 6} 1200 ${BASE - 14} 1460 ${BASE - 6}V${BASE + 20}Z" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    } else if (id === 'spring') {
+      for (let x = 40; x < W_; x += 78 + r() * 26) {
+        const w = 58 + r() * 18, h = w * 0.75;
+        out += use('sb-plant', x - w / 2, BASE - h * 0.94 - 4, w, h) + use('strawberry', x - w * 0.36, BASE - h * 0.62, w * 0.24, w * 0.27) + use('strawberry', x + w * 0.16, BASE - h * 0.5, w * 0.2, w * 0.225);
+      }
+      out += sunflower(18, BASE - 118, 42, '') + sunflower(1378, BASE - 126, 44, 's2') + blades(BASE, 5, 13, 20, '#5cb85c', 15);
+    } else {
+      for (let x = 60; x < W_; x += 96 + r() * 34) out += bush(x, BASE + 2, 76 + r() * 26, 0);
+      out += sunflower(14, BASE - 122, 44, '') + sunflower(74, BASE - 96, 34, 's2') + sunflower(1352, BASE - 124, 44, 's3') + sunflower(1402, BASE - 96, 34, '') + blades(BASE, 5, 13, 20, '#5cb85c', 19);
+    }
+    return `<svg viewBox="0 0 ${W_} ${BASE}" preserveAspectRatio="xMidYMax slice" focusable="false">${out}</svg>`;
+  }
+
+  /* ------------------------------------------------------------------ *
    * Scene table: what each season draws, says and does
    * ------------------------------------------------------------------ */
   const reserveHref = ($('.hero-cta a') || {}).href || '#reserve';
@@ -685,6 +720,7 @@
     fieldEl.innerHTML = sc.field();
     foreEl.innerHTML = sc.fore();
     particles(sc.particles);
+    if (footerEl) footerEl.innerHTML = footerArt(id);
     bindScene();
   }
 

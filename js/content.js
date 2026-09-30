@@ -19,6 +19,11 @@
  * `notice` shows a yellow bar under the top bar on every page. Leave it empty
  * ('') to hide it. Add `noticeUntil: '2026-10-05'` to hide it automatically after that date.
  *
+ * ANALYTICS
+ * ---------
+ * Off by default. See the top of js/analytics.js for the four supported providers.
+ * Nothing is sent until `provider` is set, and never for visitors who opt out.
+ *
  * SEASON SWITCHER
  * ---------------
  * The first screen automatically shows whatever season is happening at the farm
@@ -28,6 +33,7 @@
  */
 window.WISE_ACRES = {
   seasonPicker: true,
+  analytics: { provider: 'none' },
   notice: '',
   noticeUntil: '',
   closures: [],

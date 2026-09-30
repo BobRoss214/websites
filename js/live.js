@@ -130,7 +130,19 @@
     box.hidden = false;
   }
 
-  function refresh() { renderBadges(); renderNotice(); renderCountdown(); }
+  // The top bar says what is in season now, or what comes next.
+  function upcomingSeason(now) {
+    const S = W.seasons;
+    return S.list.filter((x) => !S.inWindow(x, now)).sort((a, b) => S.daysUntilStart(a, now) - S.daysUntilStart(b, now))[0];
+  }
+  function renderAnnounce() {
+    const el = $('[data-ann-season]');
+    if (!el) return;
+    const now = new Date(), live = W.seasons.live(now)[0], nxt = upcomingSeason(now);
+    el.textContent = live ? t('In season: {crop}', { crop: t(live.crop) }) : nxt ? t('Next up: {crop}, usually {when}', { crop: t(nxt.crop), when: t(nxt.next) }) : '';
+  }
+
+  function refresh() { renderBadges(); renderNotice(); renderCountdown(); renderAnnounce(); }
 
   refresh();
   setInterval(renderBadges, 60 * 1000);
