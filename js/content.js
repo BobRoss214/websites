@@ -11,6 +11,14 @@
  *
  * `alt` is required (it is read aloud by screen readers); `caption` is optional.
  *
+ * OPEN-NOW BADGES, CLOSURES AND THE NOTICE BAR
+ * ---------------------------------------------
+ * `hours` drives the green "Open now" badges (times are Eastern Time).
+ * days: 0 = Sunday ... 6 = Saturday. open/close are 24-hour "HH:MM".
+ * `closures` lists dates (YYYY-MM-DD) when a place is closed, for example for rain.
+ * `notice` shows a yellow bar under the top bar on every page. Leave it empty
+ * ('') to hide it. Add `noticeUntil: '2026-10-05'` to hide it automatically after that date.
+ *
  * SEASON SWITCHER
  * ---------------
  * The first screen automatically shows whatever season is happening at the farm
@@ -20,6 +28,14 @@
  */
 window.WISE_ACRES = {
   seasonPicker: true,
+  notice: '',
+  noticeUntil: '',
+  closures: [],
+  hours: {
+    greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00' },   // Fri-Sun, 10 am-8 pm
+    pizza:      { days: [5, 6, 0], open: '16:00', close: '20:00' },   // Wise Pie at The GreenHouse, 4-8 pm
+    farm:       { fall: [4, 5, 6, 0] },                               // reserved visits Thu-Sun in fall
+  },
   photos: [
     { src: "assets/photos/family-sunflower-field.webp",
       alt: "The Wise Acres family hugging and smiling in a field of sunflowers",

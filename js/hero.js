@@ -89,18 +89,31 @@
     `<g><g class="sway ${cls}"><use href="#sunflower-plant" x="${x}" y="${y}" width="${w}" height="${f1(w * 380 / 140)}"/></g></g>`;
 
   /* A pickable thing: a group that is clickable, animates when picked and regrows. */
-  const pickable = (x, y, inner, hit, origin = '50% 0', kind = 'fruit') =>
-    `<g class="berry-hit" transform="translate(${f1(x)} ${f1(y)})" data-pick="${kind}"><g class="berry" style="--o:${origin}">${inner}</g>` +
+  const pickable = (x, y, inner, hit, origin = '50% 0', kind = 'fruit', cls = '') =>
+    `<g class="berry-hit${cls ? ' ' + cls : ''}" transform="translate(${f1(x)} ${f1(y)})" data-pick="${kind}"><g class="berry" style="--o:${origin}">${inner}</g>` +
     `<rect x="${f1(hit.x)}" y="${f1(hit.y)}" width="${f1(hit.w)}" height="${f1(hit.h)}" fill="transparent"/></g>`;
 
   /* ------------------------------------------------------------------ *
    * SPRING — strawberry field
    * ------------------------------------------------------------------ */
+  // A child bent over the rows with a basket, feet hidden by the plants in front.
+  function kid(cx, cy, w, shirt, hat, flip) {
+    const sc = w / 30, f = flip ? -1 : 1;
+    return `<g transform="translate(${f1(cx)} ${f1(cy - 20 * sc)}) scale(${f1(sc * f * 100) / 100} ${f1(sc * 100) / 100})"><g class="kid-pick" style="animation-delay:${f1((cx % 7) * -0.4)}s">` +
+      person(0, 0, shirt, hat, false) +
+      `<g transform="translate(11 6) scale(.55)"><use href="#basket" width="64" height="52"/></g></g></g>`;
+  }
+
   function springField() {
     const rnd = rand(11);
     let out = `<path d="${groundPath()}" fill="#69b84c"/>`;
+    // a farm lane along the top of the field with a tractor hauling full crates of berries
+    out += `<path d="M-20 ${VPY - 4}C300 ${VPY - 12} 700 ${VPY} 1000 ${VPY - 6}S1340 ${VPY - 8} 1470 ${VPY - 4}V${VPY + 12}C1200 ${VPY + 16} 900 ${VPY + 8} 640 ${VPY + 14}S120 ${VPY + 14} -20 ${VPY + 12}Z" fill="#c9a06a" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>`;
+    out += buildRig({ y: VPY + 4, scale: 0.62, cargo: 'crates', body: '#f08a24', cab: '#c2581a', cls: 'rig-small' });
     out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a' });
-    [0.11, 0.15, 0.19, 0.25, 0.32, 0.4, 0.5, 0.62].forEach((t) => {
+    const KIDS = { 2: [[-1.5, '#e5334b', HAT.straw, 0], [1.5, '#4b5bb8', HAT.cap, 1]], 4: [[0.5, '#ffc928', HAT.beanie, 0]] };
+    [0.11, 0.15, 0.19, 0.25, 0.32, 0.4, 0.5, 0.62].forEach((t, ti) => {
+      (KIDS[ti] || []).forEach(([k, shirt, hat, flip]) => { out += kid(rowX(k, t), rowY(t) - 2, 22 + 130 * t, shirt, hat, flip); });
       for (let k = -4; k <= 4; k++) {
         const cx = rowX(k, t), cy = rowY(t);
         const w = 22 + 130 * t, h = w * 0.75;
@@ -126,6 +139,37 @@
     blades(520, 10, 30, 26, '#5cb85c', 4) +
     sunflower(24, 205, 128, '') + sunflower(170, 300, 88, 's2') + sunflower(1236, 250, 112, 's3') + sunflower(1330, 178, 138, 's2') + sunflower(1160, 340, 78, '') +
     blades(538, 12, 34, 22, '#2e8b3a', 9);
+
+  // Summer: the same sunflowers, but tap one and it is snipped. A kid cuts a flower for the bucket every few seconds.
+  const snippable = (x, y, w, cls) => {
+    const h = w * 380 / 140;
+    return pickable(x, y, sunflower(0, 0, w, cls), { x: -4, y: -4, w: w + 8, h: h * 0.42 }, '50% 100%', 'fruit', 'flower-cut');
+  };
+
+  function flowerCutter(x, y) {
+    const head = (sx, sy, sz) => `<use href="#sunflower" x="${sx}" y="${sy}" width="${sz}" height="${sz}"/>`;
+    return `<g transform="translate(${x} ${y})">` +
+      `<ellipse cx="14" cy="4" rx="74" ry="9" fill="rgba(58,36,22,.2)"/>` +
+      // bucket
+      `<g stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M40 -58L48 -2H92L100 -58Z" fill="#b9c2cc"/>` +
+      `<path d="M41 -46h58M43 -30h54" stroke="#8c97a3" stroke-width="2" fill="none"/><path d="M38 -58C38 -92 102 -92 102 -58" fill="none" stroke-width="3"/></g>` +
+      head(26, -96, 40) + head(54, -108, 46) + head(86, -96, 38) +
+      `<path d="M40 -58L48 -2H92L100 -58Z" fill="none" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` +
+      // the flower that drops in
+      `<g class="cut-flower"><path d="M-7 -24v-12" stroke="#3f9b45" stroke-width="5" stroke-linecap="round"/>${head(-24, -62, 34)}</g>` +
+      // the kid, reaching up with scissors
+      `<g transform="translate(-30 -12) scale(1.35)">` +
+      `<path d="M-7 18l-3 14M7 18l3 14" stroke="${INK}" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M-7 18l-3 14M7 18l3 14" stroke="#4b5bb8" stroke-width="2.6" stroke-linecap="round" fill="none"/>` +
+      person(0, 0, '#e5334b', HAT.straw, true) +
+      `<g transform="translate(18 -14)"><g class="snip"><path d="M0 0l9-5M0 0l9 4" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/><circle cx="-2" cy="-1" r="1.6" fill="none" stroke="${INK}" stroke-width="1.6"/></g></g></g></g>`;
+  }
+
+  const summerFore = () =>
+    blades(520, 10, 30, 26, '#5cb85c', 4) +
+    snippable(24, 205, 128, '') + snippable(170, 300, 88, 's2') + snippable(1236, 250, 112, 's3') + snippable(1330, 178, 138, 's2') + snippable(1160, 340, 78, '') +
+    flowerCutter(1010, 474) +
+    blades(538, 12, 34, 22, '#2e8b3a', 9);
+
 
   /* ------------------------------------------------------------------ *
    * SUMMER — blueberry bushes
@@ -172,7 +216,21 @@
         out += bush(rowX(k, t), rowY(t) + 2, w, n);
       }
     });
+    // bees working the bushes
+    [[420, 372, 30, 'a', 0], [566, 340, 24, 'b', -2.5], [760, 360, 28, 'c', -5], [930, 338, 24, 'a', -1.2], [1052, 380, 32, 'b', -6]]
+      .forEach(([x, y, w, v, dl]) => { out += miniBee(x, y, w, v, dl); });
     return out;
+  }
+
+  // A small bee: its own little flight path, wings blurring.
+  function miniBee(x, y, w, v, dl) {
+    return `<g transform="translate(${x} ${y})"><g class="bzz bzz-${v}" style="animation-delay:${dl}s">` +
+      `<g transform="scale(${f1(w / 64 * 100) / 100})">` +
+      `<g class="wing-a"><ellipse class="wing" cx="26" cy="12" rx="9" ry="13" transform="rotate(-22 26 12)" fill="#e6f6ff" stroke="${INK}" stroke-width="2.6"/></g>` +
+      `<g class="wing-b"><ellipse class="wing" cx="37" cy="12" rx="8" ry="12" transform="rotate(18 37 12)" fill="#f3fbff" stroke="${INK}" stroke-width="2.6"/></g>` +
+      `<path d="M11 28 3 28 11 32Z" fill="${INK}"/><ellipse cx="32" cy="28" rx="21" ry="13" fill="#ffc928"/>` +
+      `<path d="M24 16.5h6v23h-6ZM36 16.5h6v23h-6Z" fill="${INK}"/><ellipse cx="32" cy="28" rx="21" ry="13" fill="none" stroke="${INK}" stroke-width="3.4"/>` +
+      `<circle cx="53" cy="27" r="8.5" fill="#ffd54f" stroke="${INK}" stroke-width="3.4"/><circle cx="56" cy="25" r="2.4" fill="${INK}"/></g></g></g>`;
   }
 
   /* ------------------------------------------------------------------ *
@@ -213,26 +271,40 @@
       `<path d="${sp}" stroke="${INK}" stroke-width="2.4" stroke-linecap="round" fill="none"/><circle cx="${cx}" cy="${cy}" r="${f1(r * 0.2)}" fill="#7a4b2a" stroke="${INK}" stroke-width="2.4"/></g>`;
   };
 
-  // The wagon ride: a hay wagon full of passengers, towed by a green tractor. Origin = ground level.
-  function wagonRig() {
-    const wagon =
+  // A tractor towing a trailer. `cargo` picks what rides in the trailer; origin = ground level.
+  function crateStack() {
+    const crate = (x, y) => `<rect x="${x}" y="${y}" width="56" height="32" rx="4" fill="#c98a4b"/>` +
+      `<path d="M${x + 4} ${y + 11}h48M${x + 4} ${y + 21}h48" stroke="#7a4b2a" stroke-width="2.2" fill="none"/>` +
+      `<path d="M${x + 14} ${y}v32M${x + 42} ${y}v32" stroke="#7a4b2a" stroke-width="2.6" fill="none"/>`;
+    const berries = (x, y, n) => Array.from({ length: n }, (_, i) => use('strawberry', x + 6 + i * 13, y - 15 + (i % 2) * 3, 17, 19)).join('');
+    let out = '';
+    [-112, -54, 4, 62].forEach((x) => { out += crate(x, -80) + berries(x, -80, 4); });
+    [-82, -24, 34].forEach((x) => { out += crate(x, -112) + berries(x, -112, 4); });
+    return out;
+  }
+
+  function buildRig(cfg = {}) {
+    const c = Object.assign({ y: VPY + 52, scale: 1, cargo: 'hay', body: '#43a047', cab: '#2b7a3a', cls: '', dur: '' }, cfg);
+    const hay = c.cargo === 'hay';
+    const trailer =
       `<ellipse cx="0" cy="3" rx="152" ry="6" fill="rgba(58,36,22,.25)"/>` +
       `<g stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">` +
-        // hay bales the passengers sit on
-        [-118, -58, 2, 62].map((x) => `<rect x="${x}" y="-82" width="54" height="36" rx="6" fill="#f0c95a"/><path d="M${x + 8} -66h38M${x + 8} -56h38" stroke="#c19a2c" stroke-width="2" fill="none"/><path d="M${x + 16} -82v36M${x + 38} -82v36" stroke="#9c7a1c" stroke-width="2.6" fill="none"/>`).join('') +
-        // wagon bed + side rails
+        (hay
+          ? [-118, -58, 2, 62].map((x) => `<rect x="${x}" y="-82" width="54" height="36" rx="6" fill="#f0c95a"/><path d="M${x + 8} -66h38M${x + 8} -56h38" stroke="#c19a2c" stroke-width="2" fill="none"/><path d="M${x + 16} -82v36M${x + 38} -82v36" stroke="#9c7a1c" stroke-width="2.6" fill="none"/>`).join('')
+          : '') +
         `<rect x="-138" y="-48" width="276" height="26" rx="4" fill="#a5673f"/>` +
         `<path d="M-130 -38h260M-130 -30h260" stroke="#7a4b2a" stroke-width="2" fill="none"/>` +
-        `<path d="M-138 -48v-34M-92 -48v-30M-46 -48v-30M0 -48v-30M46 -48v-30M92 -48v-30M138 -48v-34" fill="none" stroke-width="4"/>` +
-        `<path d="M-138 -80h276" fill="none" stroke-width="5"/>` +
-        `<rect x="-50" y="-44" width="100" height="17" rx="4" fill="#fff3d6" stroke-width="2.6"/>` +
+        (hay
+          ? `<path d="M-138 -48v-34M-92 -48v-30M-46 -48v-30M0 -48v-30M46 -48v-30M92 -48v-30M138 -48v-34" fill="none" stroke-width="4"/><path d="M-138 -80h276" fill="none" stroke-width="5"/>` +
+            `<rect x="-50" y="-44" width="100" height="17" rx="4" fill="#fff3d6" stroke-width="2.6"/>`
+          : crateStack()) +
       `</g>` +
-      `<text x="0" y="-31.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="11.5" fill="${INK}" letter-spacing=".8">WAGON RIDES</text>` +
-      // passengers
-      person(-92, -110, '#e5334b', HAT.beanie, true) + person(-32, -106, '#4b5bb8', HAT.cap, false) +
-      person(28, -108, '#43a047', HAT.straw, true) + person(88, -104, '#ffc928', HAT.hair, false) +
-      // pumpkins riding along
-      use('pumpkin', -132, -102, 30, 25) + use('pumpkin-w', 108, -98, 26, 22) +
+      (hay
+        ? `<text x="0" y="-31.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="11.5" fill="${INK}" letter-spacing=".8">WAGON RIDES</text>` +
+          person(-92, -110, '#e5334b', HAT.beanie, true) + person(-32, -106, '#4b5bb8', HAT.cap, false) +
+          person(28, -108, '#43a047', HAT.straw, true) + person(88, -104, '#ffc928', HAT.hair, false) +
+          use('pumpkin', -132, -102, 30, 25) + use('pumpkin-w', 108, -98, 26, 22)
+        : '') +
       wheelWood(-88, -22, 24, 'wg1') + wheelWood(88, -22, 24, 'wg2') +
       `<path d="M138 -34L206 -30" stroke="${INK}" stroke-width="6" stroke-linecap="round" fill="none"/>`;
 
@@ -240,9 +312,9 @@
       `<g transform="translate(196 -111) scale(1.1)">` +
         `<g stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">` +
           `<rect x="100" y="14" width="7" height="30" rx="2" fill="#607d8b"/>` +
-          `<path d="M62 78V50c0-6 4-10 10-10h30c6 0 10 3 12 8l8 20v10Z" fill="#43a047"/>` +
+          `<path d="M62 78V50c0-6 4-10 10-10h30c6 0 10 3 12 8l8 20v10Z" fill="${c.body}"/>` +
           `<path d="M62 66h58" fill="none" stroke-width="2.5" opacity=".4"/>` +
-          `<path d="M28 54V26c0-6 4-10 10-10h22c6 0 8 4 8 10v28Z" fill="#2b7a3a"/>` +
+          `<path d="M28 54V26c0-6 4-10 10-10h22c6 0 8 4 8 10v28Z" fill="${c.cab}"/>` +
           `<rect x="36" y="24" width="24" height="22" rx="2" fill="#cfe9f7"/>` +
           `<circle cx="48" cy="36" r="6.4" fill="#f7c9a0" stroke-width="2.2"/><path d="M41 32h14" stroke-width="3.4"/><path d="M44 32a4 4 0 0 1 8 0Z" fill="#e9c46a" stroke-width="2"/>` +
           `<path d="M48 24v22" fill="none" stroke-width="2" opacity=".6"/>` +
@@ -257,9 +329,12 @@
       `<path d="M-6 10l6 11 6-11" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M-7 8.5h14" stroke="#fff" stroke-width="5"/>` +
       `<text x="0" y="3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="${INK}">Toot toot!</text></g>`;
 
-    return `<g transform="translate(0 ${VPY + 52})"><g class="rig"><g class="rig-bounce">${wagon}${tractor}</g>` +
-      `<rect class="scene-hit" data-rig x="-150" y="-190" width="520" height="200" fill="transparent"/></g></g>`;
+    // wheels turn at a speed that matches how far the tractor travels per second at this size
+    const sc = c.scale, vars = `--wt1:${f1(3.7 * sc)}s;--wt2:${f1(2.1 * sc)}s;--wg1:${f1(2.9 * sc)}s;--wg2:${f1(2.9 * sc)}s;` + (c.dur ? `--rig-dur:${c.dur};` : '');
+    return `<g transform="translate(0 ${c.y})"><g class="rig ${c.cls}" style="${vars}"><g transform="scale(${sc})"><g class="rig-bounce">${trailer}${tractor}</g>` +
+      `<rect class="scene-hit" data-rig x="-150" y="-190" width="520" height="200" fill="transparent"/></g></g></g>`;
   }
+  const wagonRig = () => buildRig();
 
   function fallField() {
     const rnd = rand(31);
@@ -459,8 +534,8 @@
     summer: {
       far: () => `<path d="${FAR_HILL}" fill="#a9e48a"/>` + round(228, 182, 1, '#4cae4e', '#43a047') + round(300, 198, 0.75, '#5cb85c', '#4cae4e') + round(1010, 196, 0.7, '#4cae4e', '#43a047') + barn(1130, 70, 170),
       mid: () => `<path d="${MID_HILL}" fill="#7bd05a"/>`,
-      field: summerField, fore: springFore,
-      hud: { art: 'basket', hint: 'Try it! Tap the blueberries to pick them.', btn: 'Pick a blueberry',
+      field: summerField, fore: summerFore,
+      hud: { art: 'basket', hint: 'Try it! Tap the blueberries to pick them, or snip a sunflower.', btn: 'Pick a blueberry',
         msgs: [[1, 'Sweet! Keep going.'], [3, 'Blue fingers mean a great picker!'], [5, 'Bucket&rsquo;s filling up! Ready for the real thing?' + reserveLink], [10, 'Wow, ten! <a href="' + reserveHref + '" target="_blank" rel="noopener">Reserve your spot</a> and pick real ones.']] },
     },
     fall: {
@@ -564,7 +639,7 @@
   }
 
   function bindScene() {
-    pickables = $$('[data-pick]', fieldEl);
+    pickables = $$('[data-pick]', sceneEl);
     pickables.forEach((el) => el.addEventListener('click', () => pick(el)));
 
     $$('[data-fire]', fieldEl).forEach((fire) => fire.addEventListener('click', () => {
@@ -575,7 +650,7 @@
 
     const rig = $('[data-rig]', fieldEl);
     if (rig) {
-      const rigEl = rig.parentNode;
+      const rigEl = rig.closest('.rig');
       rig.addEventListener('click', () => {
         rigEl.classList.add('tooting');
         clearTimeout(rigEl._t);

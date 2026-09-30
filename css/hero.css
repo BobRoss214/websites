@@ -69,13 +69,15 @@ html[data-season="winter"] .bee{display:none}
 
 /* ---------------------------------------------------------------- fall: tractor + wagon ride */
 .rig{--rig-from:-420px;--rig-to:1660px;--rig-rest:420px;
-  animation:rigDrive 40s linear infinite;animation-delay:-13s;will-change:transform}
+  animation:rigDrive var(--rig-dur,40s) linear infinite;animation-delay:-13s;will-change:transform}
+.rig-small{--rig-dur:34s;animation-delay:-19s}
 .rig-bounce{animation:rigBounce .46s ease-in-out infinite alternate}
 .rig.tooting .rig-bounce{animation-duration:.16s}
 .wheel{transform-box:fill-box;transform-origin:50% 50%;animation:wheelSpin linear infinite}
-.wheel.wt1{animation-duration:3.7s}
-.wheel.wt2{animation-duration:2.1s}
-.wheel.wg1,.wheel.wg2{animation-duration:2.9s}
+.wheel.wt1{animation-duration:var(--wt1,3.7s)}
+.wheel.wt2{animation-duration:var(--wt2,2.1s)}
+.wheel.wg1{animation-duration:var(--wg1,2.9s)}
+.wheel.wg2{animation-duration:var(--wg2,2.9s)}
 .wave{transform-box:fill-box;transform-origin:0 100%;animation:wave .7s ease-in-out infinite alternate}
 .rig-smoke .puff{transform-box:fill-box;transform-origin:50% 50%;opacity:0;animation:puff 1.9s ease-out infinite}
 .rig-smoke .p2{animation-delay:.65s}
@@ -91,6 +93,35 @@ html[data-season="winter"] .bee{display:none}
 @keyframes puff{0%{opacity:.95;transform:translate(0,0) scale(.5)}100%{opacity:0;transform:translate(-34px,-46px) scale(2.1)}}
 @keyframes toot{0%{opacity:0;transform:scale(.3)}12%{opacity:1;transform:scale(1.15)}22%{transform:scale(1)}82%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.9)}}
 @keyframes tootAuto{0%,86%{opacity:0;transform:scale(.3)}88.5%{opacity:1;transform:scale(1.15)}90.5%{opacity:1;transform:scale(1)}96%{opacity:1;transform:scale(1)}98.5%,100%{opacity:0;transform:scale(.9)}}
+
+/* ---------------------------------------------------------------- spring: berry pickers */
+.kid-pick{transform-box:fill-box;transform-origin:50% 100%;animation:kidPick 2.6s ease-in-out infinite alternate}
+@keyframes kidPick{from{transform:rotate(-3deg) translateY(0)}to{transform:rotate(9deg) translateY(2px)}}
+
+/* ---------------------------------------------------------------- summer: bees and the flower cutter */
+.bzz{animation:bzzA 11s ease-in-out infinite}
+.bzz-b{animation-name:bzzB;animation-duration:13s}
+.bzz-c{animation-name:bzzC;animation-duration:9.5s}
+.bzz .wing-a,.bzz .wing-b{transform-box:fill-box;transform-origin:50% 100%;animation:buzz .07s linear infinite alternate}
+.bzz .wing-b{animation-delay:-.03s}
+@keyframes bzzA{0%,100%{transform:translate(0,0)}20%{transform:translate(34px,-16px)}40%{transform:translate(70px,6px)}55%{transform:translate(52px,22px)}75%{transform:translate(12px,14px)}}
+@keyframes bzzB{0%,100%{transform:translate(0,0)}25%{transform:translate(-30px,-12px)}50%{transform:translate(-56px,10px)}70%{transform:translate(-20px,24px)}85%{transform:translate(8px,8px)}}
+@keyframes bzzC{0%,100%{transform:translate(0,0)}18%{transform:translate(22px,18px)}40%{transform:translate(-10px,30px)}62%{transform:translate(-44px,8px)}82%{transform:translate(-18px,-14px)}}
+
+.cut-flower{opacity:0;transform-box:fill-box;transform-origin:50% 100%;animation:cutDrop 8s ease-in-out infinite}
+.snip{transform-box:fill-box;transform-origin:0 50%;animation:snipSnip 8s ease-in-out infinite}
+@keyframes cutDrop{
+  0%,55%{opacity:0;transform:translate(0,0) rotate(0)}
+  57%{opacity:1;transform:translate(0,0) rotate(0)}
+  64%{opacity:1;transform:translate(34px,-46px) rotate(18deg)}
+  74%{opacity:1;transform:translate(86px,-30px) rotate(40deg)}
+  80%{opacity:1;transform:translate(90px,-12px) rotate(46deg)}
+  90%{opacity:1;transform:translate(90px,-12px) rotate(46deg)}
+  96%,100%{opacity:0;transform:translate(90px,-12px) rotate(46deg)}
+}
+@keyframes snipSnip{0%,54%,64%,100%{transform:scaleY(1)}56%{transform:scaleY(.25)}58%{transform:scaleY(1)}60%{transform:scaleY(.25)}62%{transform:scaleY(1)}}
+.flower-cut .berry.is-picked{animation:flowerCut .7s ease-in forwards}
+@keyframes flowerCut{0%{transform:rotate(0)}30%{transform:rotate(-8deg) translateY(-6px)}100%{transform:rotate(58deg) translateY(120px);opacity:0}}
 
 /* the scarecrow's crow hops and, now and then, flaps away and comes back */
 .crow{transform-box:fill-box;transform-origin:50% 100%;animation:crow 17s ease-in-out infinite}
@@ -164,7 +195,8 @@ html[data-season="winter"] .bee{display:none}
 /* ---------------------------------------------------------------- small screens */
 @media (max-width:760px){
   .hero{min-height:790px}
-  .rig{--rig-from:120px;--rig-to:1140px;--rig-rest:620px;animation-duration:22s;animation-delay:-7s}
+  .rig{--rig-from:120px;--rig-to:1140px;--rig-rest:620px;--rig-dur:22s;animation-delay:-7s}
+  .rig-small{--rig-dur:26s;animation-delay:-9s}
   .hero-note{font-size:.92rem;padding:.2em .8em}
   .season-switch{gap:5px;width:100%;flex-wrap:nowrap;margin-bottom:14px}
   .ss-label{display:none}
@@ -183,7 +215,8 @@ html[data-season="winter"] .bee{display:none}
   .rig-bounce,.wheel,.wave{animation:none}
   .rig-smoke,.toot,.spark,.particles{display:none}
   .rig.tooting .toot{display:block;animation:none;opacity:1}
-  .crow{animation:none}
+  .crow,.kid-pick,.bzz,.snip,.bzz .wing-a,.bzz .wing-b{animation:none}
+  .cut-flower{animation:none;opacity:0}
   .hero,.choose-farm{transition:none}
   .hero-scene svg.layer,.hero-scene .layer-critters{transition:none}
 }

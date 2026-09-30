@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/sections.css">
   <link rel="stylesheet" href="css/hero.css">
+  <link rel="stylesheet" href="css/extras.css">
   <script src="js/content.js"></script>
   <script src="js/season.js"></script>
   <script type="application/ld+json">
@@ -215,6 +216,19 @@
       </ul>
     </section>
 
+    <!-- ================= NEXT UP (countdown) ================= -->
+    <section class="next-up" data-countdown hidden aria-label="Next season">
+      <div class="wrap next-up-inner">
+        <div class="nu-count" aria-hidden="true"><span class="nu-num" data-cd-days>0</span><span class="nu-unit" data-cd-unit>days to go</span></div>
+        <div class="nu-text">
+          <p class="nu-now" data-cd-now></p>
+          <p class="nu-next" data-cd-next></p>
+          <p class="nu-fine">Dates are typical and depend on the weather.</p>
+        </div>
+        <a class="btn btn-red" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener">Tell me when <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </section>
+
     <!-- ================= VISIT ================= -->
     <section class="section visit" id="visit" aria-labelledby="visit-h">
       <div class="wrap">
@@ -233,6 +247,7 @@
             <svg class="choose-art" data-only="winter" hidden aria-hidden="true" viewBox="0 0 80 110"><use href="#fir"/></svg>
             <h3>The u-pick farm</h3>
             <p class="choose-addr"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> 4701 Hartis Rd, Indian Trail</p>
+            <p class="live" data-live="farm" hidden></p>
             <ul class="ticks" data-only="spring" hidden>
               <li>U-pick organic strawberries, plus u-cut flowers</li>
               <li>Playgrounds, animals, scavenger hunt and a shaded picnic patch</li>
@@ -266,6 +281,7 @@
             <svg class="choose-art choose-art-wide" aria-hidden="true" viewBox="0 0 150 116"><use href="#greenhouse-art"/></svg>
             <h3>The GreenHouse</h3>
             <p class="choose-addr"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> 5503 Poplin Rd, Indian Trail</p>
+            <p class="live" data-live="greenhouse" hidden></p>
             <ul class="ticks">
               <li>Fri&ndash;Sun, 10 am&ndash;8 pm</li>
               <li>Wise Pie pizza, ice cream, drinks, playground and goats</li>
@@ -800,6 +816,7 @@
         </div>
 
         <p class="pizza-hours reveal"><strong>Fall hours:</strong> Friday&ndash;Sunday</p>
+        <p class="live live-center" data-live="pizza" hidden></p>
 
         <div class="way-grid">
           <article class="way-card reveal">
@@ -897,7 +914,9 @@
 
           <div class="gh-hours">
             <h3><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg> Friday&ndash;Sunday, 10 am&ndash;8 pm</h3>
+            <p class="live live-lg" data-live="greenhouse" hidden></p>
             <div class="week-strip week-strip-lg" data-days="5,6,0" role="img" aria-label="Open Friday, Saturday and Sunday"></div>
+            <p class="live" data-live="pizza" hidden></p>
             <p>Wise Pie pizza is first come, first served from 4 to 8 pm. The pre-order link goes up 5 days before.</p>
           </div>
 
@@ -2033,5 +2052,6 @@
 
   <script src="js/main.js"></script>
   <script src="js/hero.js"></script>
+  <script src="js/live.js"></script>
 </body>
 </html>
