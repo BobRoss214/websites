@@ -39,7 +39,7 @@
   const dayName = (dow) => new Intl.DateTimeFormat(lang(), { weekday: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1 + dow, 12)));
   function timeLabel(mins) {
     const h = Math.floor(mins / 60), m = mins % 60;
-    const s = new Intl.DateTimeFormat(lang(), { hour: 'numeric', minute: m ? '2-digit' : undefined, timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1, h, m)));
+    const s = new Intl.DateTimeFormat(lang(), { hour: 'numeric', minute: m ? '2-digit' : undefined, hour12: true, timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1, h, m)));
     return lang() === 'en' ? s.replace(/\s?(AM|PM)/, (_, x) => ' ' + x.toLowerCase()) : s;
   }
 

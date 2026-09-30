@@ -45,3 +45,28 @@ html[data-season="summer"]{--strip:url("data:image/svg+xml,%3Csvg xmlns=%22http:
 .ann-season::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--sun)}
 .ann-season:empty{display:none}
 @media (max-width:760px){ .ann-season{display:none} }
+
+/* ---------------------------------------------------------------- language switcher */
+.lang{position:relative;flex:none}
+.lang-btn{display:inline-flex;align-items:center;gap:.4em;min-height:42px;padding:.25em .8em .25em .6em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:600 .92rem/1 var(--display);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.lang-btn:hover{transform:translateY(-1px)}
+.lang-btn .ico{width:1.25em;height:1.25em}
+.lang-list{position:absolute;right:0;top:calc(100% + 8px);z-index:80;min-width:190px;margin:0;padding:6px;list-style:none;background:#fff;border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink)}
+.lang-list button{width:100%;text-align:left;padding:.5em .8em;border:0;border-radius:12px;background:transparent;font:600 1.02rem/1.2 var(--display);color:var(--ink);cursor:pointer}
+.lang-list button:hover,.lang-list button:focus-visible{background:#fff3cf}
+.lang-list button[aria-checked="true"]{background:var(--sun)}
+.lang-links{display:flex;flex-wrap:wrap;gap:6px 14px;margin:1em 0 0;padding:0;list-style:none}
+.lang-link{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.lang-link[aria-pressed="true"]{color:var(--sun);text-decoration:none}
+.lang-offer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 14px;padding:.6em var(--gutter);background:#fff3cf;border-bottom:3px solid var(--ink)}
+.lang-offer p{margin:0;font-weight:800}
+@media (max-width:1239px){ .lang{margin-left:auto} .header-inner{gap:10px} }
+@media (max-width:420px){ .lang-btn{padding:.25em .55em} .lang-btn .lang-cur{display:none} }
+
+/* Fonts for scripts the self-hosted faces do not cover (the browser falls back per character). */
+html:lang(hi){--display:"Fredoka","Noto Sans Devanagari","Kohinoor Devanagari","Nirmala UI","Mangal",system-ui,sans-serif;--body:"Nunito","Noto Sans Devanagari","Kohinoor Devanagari","Nirmala UI","Mangal",system-ui,sans-serif;--hand:var(--display)}
+html:lang(zh){--display:"Fredoka","PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;--body:"Nunito","PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;--hand:var(--display)}
+html:lang(vi){--hand:var(--display)}
+html:lang(hi) body,html:lang(zh) body{line-height:1.75}
+html:lang(hi) .hero h1,html:lang(zh) .hero h1{line-height:1.25;letter-spacing:0}
+html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;letter-spacing:0}

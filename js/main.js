@@ -17,6 +17,7 @@
   // Season dates, the seeded PRNG and the hero scene live in js/season.js and js/hero.js.
   const W = window.WISE_ACRES || {};
   const S = W.seasons;
+  const t = (s, v) => (W.t ? W.t(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? v[k] : m)));
   const mulberry32 = W.rand;
 
   /* ------------------------------------------------------------------ *
@@ -36,12 +37,12 @@
       const li = doc.createElement('li');
       const btn = doc.createElement('button');
       btn.type = 'button';
-      btn.setAttribute('aria-label', 'Enlarge photo: ' + p.alt);
+      btn.setAttribute('aria-label', t('Enlarge photo:') + ' ' + t(p.alt));
       const thumb = doc.createElement('img');
-      thumb.src = p.src; thumb.alt = p.alt; thumb.loading = 'lazy'; thumb.decoding = 'async';
+      thumb.src = p.src; thumb.alt = t(p.alt); thumb.loading = 'lazy'; thumb.decoding = 'async';
       btn.appendChild(thumb);
       btn.addEventListener('click', () => {
-        img.src = p.src; img.alt = p.alt; cap.textContent = p.caption || '';
+        img.src = p.src; img.alt = t(p.alt); cap.textContent = p.caption ? t(p.caption) : '';
         box.showModal();
       });
       li.appendChild(btn);
@@ -63,7 +64,7 @@
       // Start the overlay right under the header, wherever the announcement bar has left it.
       nav.style.top = open ? Math.max(0, Math.round(header.getBoundingClientRect().bottom)) + 'px' : '';
       toggle.setAttribute('aria-expanded', String(open));
-      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      toggle.setAttribute('aria-label', open ? t('Close menu') : t('Open menu'));
       nav.classList.toggle('is-open', open);
       doc.body.classList.toggle('nav-lock', open);
     };
@@ -330,11 +331,14 @@
     doc.addEventListener('wa:season', (e) => select(e.detail));
 
     const fact = $('#fact-season');
-    if (fact) {
+    const renderFact = () => {
+      if (!fact) return;
       fact.textContent = live.length
-        ? live.map((s) => s.crop).join(' & ') + ' \u2014 happening now'
-        : 'Next up: ' + target.crop + ' (' + target.next + ')';
-    }
+        ? t('{crop} \u2014 happening now', { crop: live.map((s) => t(s.crop)).join(' & ') })
+        : t('Next up: {crop} ({when})', { crop: t(target.crop), when: t(target.next) });
+    };
+    renderFact();
+    doc.addEventListener('wa:lang', renderFact);
   }
 
   /* ------------------------------------------------------------------ *
@@ -392,13 +396,18 @@
   }
 
   function initWeekStrips() {
-    const letters = { 1: 'M', 2: 'T', 3: 'W', 4: 'T', 5: 'F', 6: 'S', 0: 'S' };
     const today = new Date().getDay();
-    $$('.week-strip[data-days]').forEach((el) => {
-      const on = el.dataset.days.split(',').map(Number);
-      el.innerHTML = [1, 2, 3, 4, 5, 6, 0].map((d) =>
-        `<span class="day${on.includes(d) ? ' on' : ''}${d === today ? ' today' : ''}" aria-hidden="true">${letters[d]}</span>`).join('');
-    });
+    const draw = () => {
+      // Jan 1, 2023 was a Sunday, so day n is Jan 1 + n.
+      const letter = (d) => new Intl.DateTimeFormat(W.lang || 'en', { weekday: 'narrow', timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1 + d, 12)));
+      $$('.week-strip[data-days]').forEach((el) => {
+        const on = el.dataset.days.split(',').map(Number);
+        el.innerHTML = [1, 2, 3, 4, 5, 6, 0].map((d) =>
+          `<span class="day${on.includes(d) ? ' on' : ''}${d === today ? ' today' : ''}" aria-hidden="true">${letter(d)}</span>`).join('');
+      });
+    };
+    draw();
+    doc.addEventListener('wa:lang', draw);
   }
 
   function initFarmCalendar() {
@@ -457,8 +466,8 @@
       n += 1;
       const full = n >= SLOTS.length;
       msg.textContent = full
-        ? 'Your cup is full! Cutting a real bouquet is part of the fun in our flower field.'
-        : `Added a ${k.label}. ${n} of ${SLOTS.length} flowers in your cup.`;
+        ? t('Your cup is full! Cutting a real bouquet is part of the fun in our flower field.')
+        : t('Added a {flower}. {n} of {total} flowers in your cup.', { flower: t(k.label), n: n, total: SLOTS.length });
       buttons.forEach((b) => { b.disabled = full; });
     }
 
@@ -466,7 +475,7 @@
     clear.addEventListener('click', () => {
       stems.textContent = ''; heads.textContent = ''; n = 0;
       buttons.forEach((b) => { b.disabled = false; });
-      msg.textContent = 'Fresh cup! Tap a flower to add it.';
+      msg.textContent = t('Fresh cup! Tap a flower to add it.');
     });
   }
 
@@ -479,7 +488,7 @@
     const lines = ['Baa! Welcome to the farm!', 'Have you picked a strawberry yet?', 'Psst… got any snacks?', 'Baa-rilliant day for a visit!', 'Don’t forget your reservation!', 'The kids can feed us. Just ask!'];
     let i = 0;
     btn.addEventListener('click', () => {
-      bubble.textContent = lines[i++ % lines.length];
+      bubble.textContent = t(lines[i++ % lines.length]);
       btn.classList.remove('baa'); void btn.offsetWidth; btn.classList.add('baa');
     });
   }

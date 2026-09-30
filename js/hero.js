@@ -20,6 +20,7 @@
   const $$ = (s, c = doc) => Array.from(c.querySelectorAll(s));
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const rand = W.rand;
+  const t = (s, v) => (W.t ? W.t(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? v[k] : m)));
 
   const hero = $('#top');
   const sceneEl = $('#hero-scene');
@@ -556,7 +557,8 @@
    * Scene table: what each season draws, says and does
    * ------------------------------------------------------------------ */
   const reserveHref = ($('.hero-cta a') || {}).href || '#reserve';
-  const reserveLink = ' <a href="' + reserveHref + '" target="_blank" rel="noopener">Reserve a visit</a>';
+  const reserveA = (text) => '<a href="' + reserveHref + '" target="_blank" rel="noopener">' + text + '</a>';
+  const TEN = 'Wow, ten! {spot} and pick real ones.';
 
   const SCENES = {
     spring: {
@@ -564,26 +566,26 @@
       mid: () => `<path d="${MID_HILL}" fill="#8ed46b"/>`,
       field: springField, fore: springFore,
       hud: { art: 'basket', hint: 'Try it! Tap the strawberries to pick them.', btn: 'Pick a strawberry',
-        msgs: [[1, 'Yum! Keep going.'], [3, 'You&rsquo;re a natural picker!'], [5, 'Basket&rsquo;s filling up! Ready for the real thing?' + reserveLink], [10, 'Wow, ten! <a href="' + reserveHref + '" target="_blank" rel="noopener">Reserve your spot</a> and pick real ones.']] },
+        msgs: [[1, 'Yum! Keep going.'], [3, 'You’re a natural picker!'], [5, 'Basket’s filling up! Ready for the real thing? {reserve}'], [10, TEN]] },
     },
     summer: {
       far: () => `<path d="${FAR_HILL}" fill="#a9e48a"/>` + round(228, 182, 1, '#4cae4e', '#43a047') + round(300, 198, 0.75, '#5cb85c', '#4cae4e') + round(1010, 196, 0.7, '#4cae4e', '#43a047') + barn(1130, 70, 170),
       mid: () => `<path d="${MID_HILL}" fill="#7bd05a"/>`,
       field: summerField, fore: summerFore,
       hud: { art: 'basket', hint: 'Try it! Tap the blueberries to pick them, or snip a sunflower.', btn: 'Pick a blueberry',
-        msgs: [[1, 'Sweet! Keep going.'], [3, 'Blue fingers mean a great picker!'], [5, 'Bucket&rsquo;s filling up! Ready for the real thing?' + reserveLink], [10, 'Wow, ten! <a href="' + reserveHref + '" target="_blank" rel="noopener">Reserve your spot</a> and pick real ones.']] },
+        msgs: [[1, 'Sweet! Keep going.'], [3, 'Blue fingers mean a great picker!'], [5, 'Bucket’s filling up! Ready for the real thing? {reserve}'], [10, TEN]] },
     },
     fall: {
       far: fallFar, mid: fallMid, field: fallField, fore: fallFore,
       particles: 'leaves',
       hud: { art: 'basket', hint: 'Try it! Tap the pumpkins to pick one, or tap the wagon.', btn: 'Pick a pumpkin',
-        msgs: [[1, 'What a pumpkin!'], [3, 'That one&rsquo;s a big one.'], [5, 'Basket&rsquo;s getting heavy! Ready for the real patch?' + reserveLink], [10, 'Wow, ten! <a href="' + reserveHref + '" target="_blank" rel="noopener">Reserve your spot</a> and pick real ones.']] },
+        msgs: [[1, 'What a pumpkin!'], [3, 'That one’s a big one.'], [5, 'Basket’s getting heavy! Ready for the real patch? {reserve}'], [10, TEN]] },
     },
     winter: {
       far: winterFar, mid: winterMid, field: winterField, fore: winterFore,
       particles: 'snow',
       hud: { art: 'fir', hint: 'Tap the trees to light them up. Tap a fire to stoke it.', btn: 'Light a tree',
-        msgs: [[1, 'Ooh, twinkly!'], [3, 'You&rsquo;re a natural decorator.'], [6, 'The whole farm is glowing! Real trees are at <a href="#greenhouse">The GreenHouse</a>.'], [12, 'Every tree is lit! Bring the family to <a href="#greenhouse">The GreenHouse</a>.']] },
+        msgs: [[1, 'Ooh, twinkly!'], [3, 'You’re a natural decorator.'], [6, 'The whole farm is glowing! Real trees are at {gh}.'], [12, 'Every tree is lit! Bring the family to {gh}.']] },
     },
   };
 
@@ -616,13 +618,21 @@
   let season = null, count = 0, token = 0;
   let pickables = [];
 
+  const msgVars = () => ({ reserve: reserveA(t('Reserve a visit')), spot: reserveA(t('Reserve your spot')), gh: '<a href="#greenhouse">' + t('The GreenHouse') + '</a>' });
+  const msgFor = (cfg, n) => { const m = cfg.msgs.filter(([k]) => n >= k).pop(); return m ? t(m[1], msgVars()) : t(cfg.hint); };
   function hud(cfg) {
     count = 0;
     if (countEl) countEl.textContent = '0';
-    if (msgEl) msgEl.innerHTML = cfg.hint;
-    if (btnEl) btnEl.textContent = cfg.btn;
+    if (msgEl) msgEl.innerHTML = t(cfg.hint);
+    if (btnEl) btnEl.textContent = t(cfg.btn);
     if (artEl) artEl.setAttribute('href', '#' + cfg.art);
   }
+  doc.addEventListener('wa:lang', () => {
+    if (!season) return;
+    const cfg = SCENES[season].hud;
+    if (msgEl && msgEl.dataset.custom !== '1') msgEl.innerHTML = msgFor(cfg, count);
+    if (btnEl) btnEl.textContent = t(cfg.btn);
+  });
 
   function floatPlus(el) {
     const r = el.getBoundingClientRect(), h = hero.getBoundingClientRect();
@@ -641,8 +651,7 @@
       countEl.textContent = String(count);
       countEl.classList.remove('bump'); void countEl.offsetWidth; countEl.classList.add('bump');
     }
-    const m = cfg.msgs.filter(([n]) => count >= n).pop();
-    if (m && msgEl) msgEl.innerHTML = m[1];
+    if (msgEl) { msgEl.dataset.custom = ''; msgEl.innerHTML = msgFor(cfg, count); }
   }
 
   function pick(el) {
@@ -697,7 +706,7 @@
   if (btnEl) btnEl.addEventListener('click', () => {
     const free = available();
     if (!free.length) {
-      if (msgEl) msgEl.textContent = season === 'winter' ? 'Every tree is glowing!' : 'You picked them all! Give them a moment to grow back.';
+      if (msgEl) { msgEl.dataset.custom = '1'; msgEl.textContent = season === 'winter' ? t('Every tree is glowing!') : t('You picked them all! Give them a moment to grow back.'); }
       return;
     }
     pick(free[Math.floor(Math.random() * free.length)]);
@@ -754,7 +763,7 @@
   if (switchEl && W.seasonPicker !== false) {
     const now = W.seasons.current();
     buttons.forEach((b, i) => {
-      if (b.dataset.season === now) b.insertAdjacentHTML('beforeend', '<span class="ss-now">now</span>');
+      if (b.dataset.season === now) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
       b.addEventListener('click', () => setSeason(b.dataset.season, true));
       b.addEventListener('keydown', (e) => {
         const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
