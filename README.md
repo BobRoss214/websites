@@ -5,10 +5,13 @@ Plain HTML, CSS and vanilla JavaScript. No build step, no dependencies, works of
 
 ```
 index.html          the page (content + inline SVG illustration library)
-css/styles.css      design system, hero, base components
+css/styles.css      design system, hero layout, base components
 css/sections.css    section styles (visit, packages, pizza, GreenHouse, groups, story…)
-js/main.js          interactions (scroll effects, picking game, seasons, groups, bouquet…)
-js/content.js       editable content: the photo gallery list
+css/hero.css        seasonal hero: sky/card colours per season, tractor, campfire and snow animations
+js/content.js       editable content: photo gallery list, season switcher on/off
+js/season.js        season dates + "which season is it today?" (runs first, sets html[data-season])
+js/hero.js          draws the four hero scenes and runs the picking / lighting / toot interactions
+js/main.js          everything else: scroll effects, seasons tabs, groups, bouquet, goat…
 assets/photos/      farm photos
 assets/fonts/       Fredoka, Nunito, Caveat (SIL Open Font License), self-hosted
 ```
@@ -33,6 +36,7 @@ Text, prices and links come from the wording you pasted from the current site. T
 | Item | Status |
 | --- | --- |
 | **Corporate events prices** | **Draft placeholders.** $750 (up to 50 guests), $1,400 (51–100), 3-hour block, modeled on comparable farm venues (e.g. an organic u-pick farm near Charlotte lists events of 20–80 guests at $790–$2,000). The section shows a "Draft pricing" tag. Confirm with Cathy, edit the numbers in `index.html` (`#corporate`), then delete the `.draft-tag` line. |
+| **Season dates & switcher** | Dates live in `js/season.js` (`SEASONS`): strawberries mid-April–early June, blueberries/sunflowers mid-June–early July, pumpkins/tomatoes mid-Sept–early Nov, Christmas trees the Friday after Thanksgiving–early December. Between seasons the site shows whichever is closest, so it never looks empty. The clickable season switcher is for previewing: set `seasonPicker: false` in `js/content.js` to make the page follow the calendar only. |
 | **Time-sensitive blocks** | Fall 2026 reservation schedule (`#schedule`), Exceptional Children Day / Home School Day dates (`#school-tours`), and the Fall Menu 2026 (`#menu`) must be updated as they change. `#schedule` is marked `UPDATE WEEKLY` in the HTML. |
 | **School tour form link** | Uses the Google Forms address you provided, which ends in `/edit` (the form *editor* link). Public visitors usually need the `/viewform` link. Please double-check it. |
 | **Phone number** | Not shown. The official pages you pasted list email only (and a photographer emergency number, which is shown in the photography section). Tell us if a public phone number should be added. |
@@ -74,8 +78,14 @@ Planned homes for the remaining photos (to add as soon as the files are availabl
 
 ## What's interactive
 
-- **Hero:** parallax hills, swaying sunflowers, drifting clouds, butterflies, a bee that follows the
-  cursor, and a strawberry field you can pick from (basket counter and a keyboard/touch button).
+- **Seasonal hero:** the first screen automatically shows the season the farm is in today.
+  **Fall:** a pumpkin patch (tap pumpkins to pick them) with a tractor pulling a wagon ride that drives
+  across the farm (tap it for a "Toot toot!"), a scarecrow and crow, hay bales, corn and falling leaves.
+  **Winter:** rows of Christmas trees (tap to light them up), two crackling campfires (tap to stoke them),
+  a snowman and falling snow. **Summer:** blueberry bushes to pick. **Spring:** the strawberry field.
+  A "See the farm in…" switcher at the top of the hero lets visitors click between seasons; it also
+  updates the Seasons tabs and the colour of the u-pick farm card in "Two places, one family"
+  (light orange in fall). Also: parallax hills, swaying plants, drifting clouds, and a bee that follows the cursor.
 - **Growing vine** under the header shows scroll progress.
 - **Visit steps:** a tractor drives along a road as you scroll and checks off the steps.
 - **Seasons:** four tabs; the current season is detected from today's date and badged "Happening now".

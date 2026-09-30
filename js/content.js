@@ -10,8 +10,16 @@
  *   { src: "assets/photos/strawberry-field.jpg", alt: "Rows of ripe strawberries", caption: "Spring picking" }
  *
  * `alt` is required (it is read aloud by screen readers); `caption` is optional.
+ *
+ * SEASON SWITCHER
+ * ---------------
+ * The first screen automatically shows whatever season is happening at the farm
+ * today (see js/season.js for the dates). While the site is being previewed, a
+ * "See the farm in…" switcher lets visitors click between seasons. Set
+ * `seasonPicker` to false when the site should simply follow the calendar.
  */
 window.WISE_ACRES = {
+  seasonPicker: true,
   photos: [
     { src: "assets/photos/family-sunflower-field.webp",
       alt: "The Wise Acres family hugging and smiling in a field of sunflowers",

@@ -42,7 +42,7 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
 /* ---------- visit: farm vs GreenHouse ---------- */
 .choose{display:grid;grid-template-columns:1fr 1fr;gap:26px}
 .choose-card{position:relative;display:flex;flex-direction:column;padding:clamp(22px,3vw,34px);border:3px solid var(--ink);border-radius:32px;box-shadow:0 8px 0 var(--ink)}
-.choose-farm{background:#ffdde4}
+.choose-farm{background:var(--farm-card,#ffdde4)}
 .choose-gh{background:#d9f3e6}
 .choose-tag{position:absolute;top:18px;right:18px;background:var(--red);color:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:.4em .9em;font:700 .78rem/1 var(--display);letter-spacing:.08em;text-transform:uppercase}
 .choose-tag-green{background:var(--green)}

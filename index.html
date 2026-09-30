@@ -14,6 +14,9 @@
   <link rel="preload" href="assets/fonts/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/sections.css">
+  <link rel="stylesheet" href="css/hero.css">
+  <script src="js/content.js"></script>
+  <script src="js/season.js"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -100,7 +103,7 @@
                 <path d="M-10-76 0-106 10-76Z" transform="rotate(240)"/><path d="M-10-76 0-106 10-76Z" transform="rotate(270)"/>
                 <path d="M-10-76 0-106 10-76Z" transform="rotate(300)"/><path d="M-10-76 0-106 10-76Z" transform="rotate(330)"/>
               </g>
-              <circle r="66" fill="#ffd42e" stroke="#3a2416" stroke-width="4"/>
+              <circle class="sun-core" r="66" fill="#ffd42e" stroke="#3a2416" stroke-width="4"/>
               <ellipse cx="-24" cy="-8" rx="6" ry="9.5" fill="#3a2416"/><ellipse cx="24" cy="-8" rx="6" ry="9.5" fill="#3a2416"/>
               <circle cx="-22" cy="-12" r="2.4" fill="#fff"/><circle cx="26" cy="-12" r="2.4" fill="#fff"/>
               <ellipse cx="-40" cy="16" rx="11" ry="7" fill="#ff8a7a" opacity=".65"/><ellipse cx="40" cy="16" rx="11" ry="7" fill="#ff8a7a" opacity=".65"/>
@@ -112,7 +115,7 @@
           <svg class="cloud c3" viewBox="0 0 220 90"><use href="#cloud"/></svg>
         </div>
 
-        <svg class="layer layer-far" data-depth="0.28" viewBox="0 0 1440 520" preserveAspectRatio="xMidYMax slice">
+        <svg class="layer layer-far" id="far" data-depth="0.28" viewBox="0 0 1440 520" preserveAspectRatio="xMidYMax slice">
           <path d="M0 210C120 158 260 148 400 182 520 212 640 156 780 146 930 136 1040 190 1180 176 1290 164 1370 146 1440 156V520H0Z" fill="#b5e59a"/>
           <g stroke="#3a2416" stroke-width="3" stroke-linejoin="round">
             <g transform="translate(228 126)"><rect x="-4" y="30" width="8" height="26" fill="#a5673f"/><circle cx="0" cy="18" r="26" fill="#6cbf5b"/><circle cx="-14" cy="30" r="15" fill="#5cb85c"/></g>
@@ -121,14 +124,14 @@
           <use href="#barn" x="1130" y="70" width="170" height="139"/>
         </svg>
 
-        <svg class="layer layer-mid" data-depth="0.16" viewBox="0 0 1440 520" preserveAspectRatio="xMidYMax slice">
+        <svg class="layer layer-mid" id="mid" data-depth="0.16" viewBox="0 0 1440 520" preserveAspectRatio="xMidYMax slice">
           <path d="M0 262C160 224 300 234 460 256 620 278 760 236 920 244 1080 252 1240 226 1440 252V520H0Z" fill="#8ed46b"/>
           <path d="M0 262C160 224 300 234 460 256" fill="none" stroke="#3a2416" stroke-width="3" stroke-linecap="round" opacity=".0"/>
         </svg>
 
         <svg class="layer layer-field" id="field" data-depth="0.06" viewBox="0 0 1440 520" preserveAspectRatio="xMidYMax slice"></svg>
 
-        <div class="layer layer-critters">
+        <div class="layer layer-critters" id="critters">
           <svg class="butterfly b1" viewBox="0 0 60 50"><g class="bw bw-l"><path d="M30 25C20 4 4 6 4 18c0 8 10 10 26 7Z" fill="#ff7eb6" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/><path d="M30 25C14 24 6 34 12 42c8 6 16-6 18-17Z" fill="#ffb3d3" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/></g><g class="bw bw-r"><path d="M30 25C40 4 56 6 56 18c0 8-10 10-26 7Z" fill="#ff7eb6" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/><path d="M30 25c16-1 24 9 18 17-8 6-16-6-18-17Z" fill="#ffb3d3" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/></g><rect x="28" y="16" width="4" height="22" rx="2" fill="#3a2416"/></svg>
           <svg class="butterfly b2" viewBox="0 0 60 50"><g class="bw bw-l"><path d="M30 25C20 4 4 6 4 18c0 8 10 10 26 7Z" fill="#5aa9ff" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/><path d="M30 25C14 24 6 34 12 42c8 6 16-6 18-17Z" fill="#a9d2ff" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/></g><g class="bw bw-r"><path d="M30 25C40 4 56 6 56 18c0 8-10 10-26 7Z" fill="#5aa9ff" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/><path d="M30 25c16-1 24 9 18 17-8 6-16-6-18-17Z" fill="#a9d2ff" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/></g><rect x="28" y="16" width="4" height="22" rx="2" fill="#3a2416"/></svg>
         </div>
@@ -152,6 +155,13 @@
       </svg>
 
       <div class="wrap hero-copy">
+        <div class="season-switch" id="season-switch" role="radiogroup" aria-label="See the farm in a different season" hidden>
+          <span class="ss-label">See the farm in</span>
+          <button type="button" role="radio" aria-checked="false" data-season="spring"><svg class="ss-ico" aria-hidden="true" viewBox="0 0 64 72"><use href="#strawberry"/></svg><span class="ss-name">Spring</span></button>
+          <button type="button" role="radio" aria-checked="false" data-season="summer"><svg class="ss-ico" aria-hidden="true" viewBox="0 0 90 92"><use href="#blueberry"/></svg><span class="ss-name">Summer</span></button>
+          <button type="button" role="radio" aria-checked="false" data-season="fall"><svg class="ss-ico" aria-hidden="true" viewBox="0 0 110 92"><use href="#pumpkin"/></svg><span class="ss-name">Fall</span></button>
+          <button type="button" role="radio" aria-checked="false" data-season="winter"><svg class="ss-ico" aria-hidden="true" viewBox="0 0 80 110"><use href="#fir"/></svg><span class="ss-name">Winter</span></button>
+        </div>
         <p class="hand hero-kicker">Welcome to Wise Acres!</p>
         <h1 id="hero-h">Organic <span class="hl">u-pick</span> fun for the whole family</h1>
         <p class="hero-sub">Pick strawberries in spring, blueberries and sunflowers in summer, and pumpkins, tomatoes and basil in fall &mdash; on our family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
@@ -163,7 +173,7 @@
         <ul class="chips" aria-label="Highlights">
           <li><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> USDA Certified Organic</li>
           <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Family farm since 2013</li>
-          <li class="chip-new"><a href="#tomatoes"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> New: u-pick tomatoes &amp; basil</a></li>
+          <li class="chip-new" data-only="fall"><a href="#tomatoes"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> New: u-pick tomatoes &amp; basil</a></li>
         </ul>
       </div>
 
@@ -217,15 +227,34 @@
         <div class="choose">
           <article class="choose-card choose-farm reveal">
             <span class="choose-tag">Reservation required</span>
-            <svg class="choose-art" aria-hidden="true" viewBox="0 0 110 92"><use href="#pumpkin"/></svg>
+            <svg class="choose-art" data-only="spring" hidden aria-hidden="true" viewBox="0 0 64 72"><use href="#strawberry"/></svg>
+            <svg class="choose-art" data-only="summer" hidden aria-hidden="true" viewBox="0 0 90 92"><use href="#blueberry"/></svg>
+            <svg class="choose-art" data-only="fall" aria-hidden="true" viewBox="0 0 110 92"><use href="#pumpkin"/></svg>
+            <svg class="choose-art" data-only="winter" hidden aria-hidden="true" viewBox="0 0 80 110"><use href="#fir"/></svg>
             <h3>The u-pick farm</h3>
             <p class="choose-addr"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> 4701 Hartis Rd, Indian Trail</p>
-            <ul class="ticks">
+            <ul class="ticks" data-only="spring" hidden>
+              <li>U-pick organic strawberries, plus u-cut flowers</li>
+              <li>Playgrounds, animals, scavenger hunt and a shaded picnic patch</li>
+              <li>Always by reservation, never walk-in</li>
+            </ul>
+            <ul class="ticks" data-only="summer" hidden>
+              <li>U-pick organic blueberries, plus u-cut sunflowers and flowers</li>
+              <li>Playgrounds, animals, scavenger hunt and a shaded picnic patch</li>
+              <li>Always by reservation, never walk-in</li>
+            </ul>
+            <ul class="ticks" data-only="fall">
               <li>A variety of pumpkin types to pick, plus wagon rides, the corn pit, a small sunn hemp maze and more</li>
               <li>Playgrounds, animals, scavenger hunt and a shaded picnic patch</li>
               <li>Always by reservation, never walk-in</li>
             </ul>
-            <a class="choose-new" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <ul class="ticks" data-only="winter" hidden>
+              <li>Picking is seasonal. Next up: u-pick strawberries, starting around mid-April</li>
+              <li>Christmas trees are next door at The GreenHouse, no reservation needed</li>
+              <li>Join our email list to hear when picking opens</li>
+            </ul>
+            <a class="choose-new" data-only="fall" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a class="choose-new" data-only="winter" hidden href="#greenhouse"><span class="choose-new-badge">Trees</span> Christmas trees are at The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
             <div class="card-actions">
               <a class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve the farm <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
               <a class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
@@ -1957,9 +1986,52 @@
     </g>
     <path d="M32 38 16 24M32 38l16-14M32 24V10" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".45"/>
   </symbol>
+
+  <!-- ============ SEASONAL HERO ============ -->
+  <!-- pumpkin leaf; drawn at the origin, pointing right -->
+  <path id="pumpkin-leaf" d="M0 0C4-12 12-18 22-16 22-26 34-32 40-24 50-30 60-20 54-10 64-8 66 4 56 8 50 16 36 14 30 10 20 14 8 10 0 0Z"/>
+  <radialGradient id="fireGlow" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#ffb347" stop-opacity=".8"/>
+    <stop offset=".45" stop-color="#ff9a3c" stop-opacity=".32"/>
+    <stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/>
+  </radialGradient>
+
+  <!-- snow dusting laid over #fir for the winter scene -->
+  <symbol id="fir-snow" viewBox="0 0 80 110">
+    <g fill="#fff" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round">
+      <path d="M40 10 33.4 22Q36 25.4 38.4 22.6Q40.4 26 42.6 22.6Q45 25.4 46.6 22Z"/>
+      <path d="M40 26 29.4 42Q32.4 45.6 35 42.6Q37.6 46 40 42.8Q42.6 46 45.2 42.6Q47.8 45.6 50.6 42Z"/>
+    </g>
+  </symbol>
+
+  <symbol id="pumpkin-b" viewBox="0 0 110 92">
+    <g stroke="#3a2416" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M52 26c0-9 2-15 7-19 4-3 9-1 9 3-4 1-7 4-7 9l-2 8Z" fill="#6f7a2c"/>
+      <ellipse cx="29" cy="56" rx="25" ry="31" fill="#cf5a0a"/>
+      <ellipse cx="81" cy="56" rx="25" ry="31" fill="#cf5a0a"/>
+      <ellipse cx="42" cy="56" rx="23" ry="33" fill="#e2690f"/>
+      <ellipse cx="68" cy="56" rx="23" ry="33" fill="#e2690f"/>
+      <ellipse cx="55" cy="56" rx="19" ry="34" fill="#f07a18"/>
+      <path d="M66 18c9-5 16 0 13 7" fill="none" stroke="#2b7a3a"/>
+    </g>
+    <path d="M38 38c-3 6-4 12-3 19" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".35"/>
+  </symbol>
+
+  <symbol id="pumpkin-w" viewBox="0 0 110 92">
+    <g stroke="#3a2416" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M52 26c0-9 2-15 7-19 4-3 9-1 9 3-4 1-7 4-7 9l-2 8Z" fill="#8a8a4a"/>
+      <ellipse cx="29" cy="56" rx="25" ry="31" fill="#e6dcc6"/>
+      <ellipse cx="81" cy="56" rx="25" ry="31" fill="#e6dcc6"/>
+      <ellipse cx="42" cy="56" rx="23" ry="33" fill="#f0e7d2"/>
+      <ellipse cx="68" cy="56" rx="23" ry="33" fill="#f0e7d2"/>
+      <ellipse cx="55" cy="56" rx="19" ry="34" fill="#f8f1e0"/>
+      <path d="M66 18c9-5 16 0 13 7" fill="none" stroke="#2b7a3a"/>
+    </g>
+    <path d="M38 38c-3 6-4 12-3 19" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+  </symbol>
 </svg>
 
-  <script src="js/content.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/hero.js"></script>
 </body>
 </html>

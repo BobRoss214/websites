@@ -109,7 +109,7 @@ a[href^="tel:"]{white-space:nowrap}
 /* ==========================================================================
    Hero
    ========================================================================== */
-.hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(#5fc1ee 0%,#93d8f6 34%,#cdefFb 58%,#fff1c9 100%);min-height:clamp(660px,calc(100svh - 112px),880px);padding-top:clamp(24px,4vw,48px);border-bottom:3px solid var(--ink)}
+.hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(var(--sky-1,#5fc1ee) 0%,var(--sky-2,#93d8f6) 34%,var(--sky-3,#cdeffb) 58%,var(--sky-4,#fff1c9) 100%);min-height:clamp(660px,calc(100svh - 112px),880px);padding-top:clamp(24px,4vw,48px);border-bottom:3px solid var(--ink)}
 .hero-scene{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
 .layer{position:absolute;left:0;width:100%;will-change:transform}
 svg.layer{bottom:0;height:64%}
@@ -137,7 +137,7 @@ svg.layer-fore{overflow:visible}
 .sway.s2{animation-duration:6.5s;animation-delay:-2s}
 .sway.s3{animation-duration:4.8s;animation-delay:-3.4s}
 .berry-hit{pointer-events:auto;cursor:pointer}
-.berry{transform-box:fill-box;transform-origin:50% 0;transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+.berry{transform-box:fill-box;transform-origin:var(--o,50% 0);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
 .berry-hit:hover .berry{transform:scale(1.28) rotate(-6deg)}
 .berry.is-picked{animation:pluck .45s ease-in forwards}
 .berry.is-regrowing{animation:regrow .8s cubic-bezier(.3,1.6,.5,1) both}

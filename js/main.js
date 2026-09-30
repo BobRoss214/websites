@@ -14,41 +14,10 @@
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Small seeded PRNG so the illustrated field looks the same on every load.
-  function mulberry32(seed) {
-    return () => {
-      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
-  /* ------------------------------------------------------------------ *
-   * Season windows (typical dates — shown as "typical" in the UI)
-   * ------------------------------------------------------------------ */
-  // Tree season starts the Friday after Thanksgiving (4th Thursday of November).
-  const thanksgivingFriday = (year) => {
-    const firstThu = 1 + ((4 - new Date(year, 10, 1).getDay() + 7) % 7);
-    return new Date(year, 10, firstThu + 22);
-  };
-  const SEASONS = [
-    { id: 'spring', crop: 'Strawberries',            start: (y) => new Date(y, 3, 15), end: (y) => new Date(y, 5, 7),   next: 'mid-April' },
-    { id: 'summer', crop: 'Blueberries & sunflowers', start: (y) => new Date(y, 5, 15), end: (y) => new Date(y, 6, 10),  next: 'mid-June' },
-    { id: 'fall',   crop: 'Pumpkins & tomatoes',       start: (y) => new Date(y, 8, 13), end: (y) => new Date(y, 10, 8),  next: 'mid-September' },
-    { id: 'winter', crop: 'Christmas trees at The GreenHouse', start: thanksgivingFriday,        end: (y) => new Date(y, 11, 8),  next: 'the Friday after Thanksgiving' },
-  ];
-  const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const inWindow = (s, now) => {
-    const t = dayStart(now), y = t.getFullYear();
-    return t >= s.start(y) && t <= s.end(y);
-  };
-  const daysUntilStart = (s, now) => {
-    const t = dayStart(now);
-    let st = s.start(t.getFullYear());
-    if (st < t) st = s.start(t.getFullYear() + 1);
-    return (st - t) / 864e5;
-  };
+  // Season dates, the seeded PRNG and the hero scene live in js/season.js and js/hero.js.
+  const W = window.WISE_ACRES || {};
+  const S = W.seasons;
+  const mulberry32 = W.rand;
 
   /* ------------------------------------------------------------------ *
    * Gallery — appears only when photos are listed in js/content.js
@@ -133,132 +102,6 @@
       });
     }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
     targets.forEach((el) => io.observe(el));
-  }
-
-  /* ------------------------------------------------------------------ *
-   * Hero: strawberry field + foreground
-   * ------------------------------------------------------------------ */
-  const berries = [];   // pickable berry groups
-
-  function buildField() {
-    const svg = $('#field');
-    const fore = $('#fore');
-    if (!svg || !fore) return;
-    const rnd = mulberry32(11);
-    const VPY = 262, BOT = 600, SPAN = BOT - VPY;
-    let out = '';
-
-    out += `<path d="M0 ${VPY + 10}C240 ${VPY - 8} 480 ${VPY + 8} 720 ${VPY}S1200 ${VPY - 8} 1440 ${VPY - 2}V${BOT}H0Z" fill="#69b84c"/>`;
-
-    // Perspective soil rows
-    const rowPt = (k, t, side, widen) => [720 + k * 230 * t + side * (6 + widen * t), VPY + SPAN * t];
-    for (let k = -5; k <= 5; k++) {
-      const [ax, ay] = rowPt(k, 0.05, -1, 58), [bx, by] = rowPt(k, 0.05, 1, 58);
-      const [cx, cy] = rowPt(k, 1, 1, 58), [dx, dy] = rowPt(k, 1, -1, 58);
-      out += `<path d="M${ax} ${ay}L${bx} ${by}L${cx} ${cy}L${dx} ${dy}Z" fill="#8a5a35" stroke="#3a2416" stroke-width="2.5" stroke-linejoin="round"/>`;
-      const [ex, ey] = rowPt(k, 0.05, -1, 26), [fx, fy] = rowPt(k, 0.05, 1, 26);
-      const [gx, gy] = rowPt(k, 1, 1, 26), [hx, hy] = rowPt(k, 1, -1, 26);
-      out += `<path d="M${ex} ${ey}L${fx} ${fy}L${gx} ${gy}L${hx} ${hy}Z" fill="#a4714a" opacity=".55"/>`;
-    }
-
-    // Plants, back to front
-    const levels = [0.11, 0.15, 0.19, 0.25, 0.32, 0.4, 0.5, 0.62];
-    levels.forEach((t) => {
-      for (let k = -4; k <= 4; k++) {
-        const cx = 720 + k * 230 * t;
-        const cy = VPY + SPAN * t;
-        const w = 22 + 130 * t, h = w * 0.75;
-        out += `<use href="#sb-plant" x="${(cx - w / 2).toFixed(1)}" y="${(cy - h * 0.94).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"/>`;
-        const r = rnd();
-        const count = t >= 0.25 ? (r < 0.3 ? 0 : r < 0.72 ? 1 : 2) : (r < 0.5 ? 1 : 0);
-        const bw = w * 0.27, bh = bw * 72 / 64;
-        const spots = [[cx - w * 0.3 - bw / 2, cy - h * 0.56], [cx + w * 0.13, cy - h * 0.5]];
-        for (let i = 0; i < count; i++) {
-          const [bx, by] = spots[i];
-          const berry = `<use href="#strawberry" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}"/>`;
-          if (t >= 0.25) {
-            const pad = bw * 0.3;
-            out += `<g class="berry-hit" transform="translate(${bx.toFixed(1)} ${by.toFixed(1)})" data-berry><g class="berry">${berry}</g>` +
-                   `<rect x="${-pad}" y="${-pad}" width="${(bw + pad * 2).toFixed(1)}" height="${(bh + pad * 2).toFixed(1)}" fill="transparent"/></g>`;
-          } else {
-            out += `<g transform="translate(${bx.toFixed(1)} ${by.toFixed(1)})">${berry}</g>`;
-          }
-        }
-      }
-    });
-    svg.innerHTML = out;
-    $$('[data-berry]', svg).forEach((g) => berries.push(g));
-
-    // Foreground: sunflowers + grass. Overflow is visible so the parallax never shows a seam.
-    const blades = (base, minH, maxH, step, fill, seed) => {
-      const r = mulberry32(seed);
-      let d = `M-40 700V${base}`;
-      for (let x = -40; x <= 1480; x += step) d += `L${x + step / 2} ${(base - minH - r() * (maxH - minH)).toFixed(0)}L${x + step} ${base}`;
-      return `<path d="${d}V700Z" fill="${fill}" stroke="#3a2416" stroke-width="3" stroke-linejoin="round"/>`;
-    };
-    const sf = (x, y, w, cls) => `<g class="sway ${cls}"><use href="#sunflower-plant" x="${x}" y="${y}" width="${w}" height="${(w * 380 / 140).toFixed(0)}"/></g>`;
-    fore.innerHTML =
-      blades(520, 10, 30, 26, '#5cb85c', 4) +
-      sf(24, 205, 128, '') + sf(170, 300, 88, 's2') + sf(1236, 250, 112, 's3') + sf(1330, 178, 138, 's2') + sf(1160, 340, 78, '') +
-      blades(538, 12, 34, 22, '#2e8b3a', 9);
-  }
-
-  /* ------------------------------------------------------------------ *
-   * Hero: picking strawberries
-   * ------------------------------------------------------------------ */
-  function initPicking() {
-    const hero = $('#top');
-    const countEl = $('#pick-count');
-    const msgEl = $('#pick-msg');
-    const btn = $('#pick-btn');
-    if (!hero || !countEl || !berries.length) return;
-    const reserveHref = $('.hero-cta a').getAttribute('href');
-    let count = 0;
-
-    const messages = [
-      [1, 'Yum! Keep going.'],
-      [3, 'You&rsquo;re a natural picker!'],
-      [5, 'Basket&rsquo;s filling up! Ready for the real thing? <a href="' + reserveHref + '" target="_blank" rel="noopener">Reserve a visit</a>'],
-      [10, 'Wow, ten! <a href="' + reserveHref + '" target="_blank" rel="noopener">Reserve your spot</a> and pick real ones.'],
-    ];
-
-    function pick(g) {
-      if (g.dataset.state === 'picked') return;
-      g.dataset.state = 'picked';
-      const berry = $('.berry', g);
-      berry.classList.remove('is-regrowing');
-      berry.classList.add('is-picked');
-      count += 1;
-      countEl.textContent = String(count);
-      countEl.classList.remove('bump'); void countEl.offsetWidth; countEl.classList.add('bump');
-      const m = messages.filter(([n]) => count >= n).pop();
-      if (m) msgEl.innerHTML = m[1];
-
-      const r = g.getBoundingClientRect(), h = hero.getBoundingClientRect();
-      const plus = doc.createElement('span');
-      plus.className = 'plus-one';
-      plus.textContent = '+1';
-      plus.style.left = (r.left - h.left + r.width / 2 - 12) + 'px';
-      plus.style.top = (r.top - h.top - 6) + 'px';
-      hero.appendChild(plus);
-      setTimeout(() => plus.remove(), 950);
-
-      setTimeout(() => {
-        berry.classList.remove('is-picked');
-        berry.classList.add('is-regrowing');
-        delete g.dataset.state;
-        setTimeout(() => berry.classList.remove('is-regrowing'), 900);
-      }, 7000 + Math.random() * 4000);
-    }
-
-    berries.forEach((g) => g.addEventListener('click', () => pick(g)));
-
-    // Keyboard / touch friendly alternative
-    btn.addEventListener('click', () => {
-      const free = berries.filter((g) => g.dataset.state !== 'picked');
-      if (!free.length) { msgEl.textContent = 'You picked them all! Give them a moment to grow back.'; return; }
-      pick(free[Math.floor(Math.random() * free.length)]);
-    });
   }
 
   /* ------------------------------------------------------------------ *
@@ -478,10 +321,13 @@
 
     // Mark what's happening now, and open that season by default.
     const now = new Date();
-    const live = SEASONS.filter((s) => inWindow(s, now));
+    const live = S.live(now);
     live.forEach((s) => { $('.now-badge', $('#tab-' + s.id)).hidden = false; });
-    const target = live[0] || SEASONS.slice().sort((a, b) => daysUntilStart(a, now) - daysUntilStart(b, now))[0];
+    const target = S.list.find((s) => s.id === S.current(now));
     select(target.id);
+
+    // The hero's season switcher and these tabs stay in step.
+    doc.addEventListener('wa:season', (e) => select(e.detail));
 
     const fact = $('#fact-season');
     if (fact) {
@@ -683,10 +529,8 @@
 
   /* ------------------------------------------------------------------ */
   initGallery();
-  buildField();
   initNav();
   initReveal();
-  initPicking();
   initBee();
   initSeasons();
   initGroups();
