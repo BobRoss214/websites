@@ -25,6 +25,11 @@ export const ICON = {
   plus: '<svg viewBox="0 0 64 64"><path d="M32 8v48M8 32h48" stroke="currentColor" stroke-width="8" stroke-linecap="round"/></svg>',
   play: '<svg viewBox="0 0 64 64"><path d="M16 8l40 24-40 24z" fill="currentColor"/></svg>',
   chat: '<svg viewBox="0 0 64 64"><path d="M6 10h52v34H26L12 56V44H6z" fill="currentColor"/></svg>',
+  up: '<svg viewBox="0 0 64 64"><path d="M6 28h12v30H6zM22 56V28l12-22c5 0 8 4 7 9l-3 11h16c4 0 7 4 6 8l-5 18c-1 3-3 4-6 4z" fill="currentColor"/></svg>',
+  down: '<svg viewBox="0 0 64 64"><path d="M6 36h12V6H6zM22 8v28l12 22c5 0 8-4 7-9l-3-11h16c4 0 7-4 6-8L55 12c-1-3-3-4-6-4z" fill="currentColor"/></svg>',
+  bell: '<svg viewBox="0 0 64 64"><path d="M32 6c-10 0-17 8-17 18v12l-7 10h48l-7-10V24c0-10-7-18-17-18zM25 50a7 7 0 0 0 14 0z" fill="currentColor"/></svg>',
+  pen: '<svg viewBox="0 0 64 64"><path d="M44 6l14 14-34 34H10V40zM38 12l14 14" stroke="currentColor" stroke-width="5" fill="none" stroke-linejoin="round"/></svg>',
+  yt: '<svg viewBox="0 0 64 64"><rect x="4" y="12" width="56" height="40" rx="12" fill="currentColor"/><path d="M26 22l16 10-16 10z" fill="#0b1640"/></svg>',
   back: '<svg viewBox="0 0 64 64"><path d="M28 12L8 32l20 20M10 32h46" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 

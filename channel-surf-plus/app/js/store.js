@@ -11,7 +11,7 @@ export const DEFAULTS = {
   region: 'US',
   safeSearch: 'moderate',
   // what the viewer can reach from the menu (Setup can turn these off for a simpler TV)
-  viewer: { search: true, ondemand: true, makeChannels: true },
+  viewer: { search: true, ondemand: true, makeChannels: true, account: true, comments: true },
   tv: { staticOn: true, sounds: true, cc: false, bigText: false, volume: 70, remote: 'auto', autoplayNext: true, lastNum: 2 },
   // lineup filters the viewer can change; every channel's schedule follows them
   filters: { length: 'any', age: 'any', captions: false },
@@ -25,6 +25,11 @@ export const DEFAULTS = {
   history: [],       // newest first, with pos (seconds watched)
   recentSearches: [],
   setupDone: false,
+  // optional YouTube sign-in: just the name to show. The sign-in itself is kept by tv.py.
+  account: null,
+  // the pretend account used in demo mode
+  demoSignedIn: false,
+  demoYT: { subs: [], ratings: {}, playlists: [], comments: {}, replies: {} },
 };
 
 function clone(o) { return JSON.parse(JSON.stringify(o)); }

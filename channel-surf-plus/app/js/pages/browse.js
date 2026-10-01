@@ -7,7 +7,9 @@ import { Sound } from '../sound.js';
 import * as L from '../lineup.js';
 import { yt, isDemo } from '../source.js';
 import { searchesLeft, plain } from '../api.js';
+import { account } from '../account.js';
 import { Page, ListPage, MessagePage, rows, thumb, avatar, sideVideo, videoMeta, tags } from './base.js';
+import { canUseAccount, lookUp, lookUpChannel, ratingOf, subOf, setRating, toggleSub, writeComment, SaveToPlaylistPage, RepliesPage } from './youtube.js';
 
 // ---------------- Search ----------------
 const KEYS = ['ABCDEFGHIJ', 'KLMNOPQRST', "UVWXYZ'-&.", '1234567890'];
@@ -70,7 +72,9 @@ export class SearchPage extends Page {
     // typing on a real keyboard
     if (raw && raw.length === 1 && /[\w '&.\-]/.test(raw)) { if (this.q.length < 80) this.q += raw.toLowerCase(); this.typed = true; this.rerender(); return true; }
     if (raw === 'Backspace') { if (this.q) { this.q = this.q.slice(0, -1); this.rerender(); return true; } return false; }
-    if (raw === 'Enter') { this.go(); return true; }
+    // a remote's OK button sends Enter too: Enter only searches straight after typing on a real keyboard
+    if (raw === 'Enter' && this.typed) { this.go(); return true; }
+    if (k !== 'ok') this.typed = false;
     if (this.area === 'keys') {
       if (k === 'left') { if (this.r === 4) { const c = this.keyCol(); this.c = c > 0 ? this.wideStart(c - 1) : 0; } else this.c = Math.max(0, this.c - 1); }
       else if (k === 'right') { if (this.r === 4) { const c = this.keyCol(); if (c < WIDE.length - 1) this.c = this.wideStart(c + 1); else if (S.recentSearches.length) { this.area = 'recent'; this.ri = 0; } } else if (this.c < 9) this.c++; else if (S.recentSearches.length) { this.area = 'recent'; this.ri = Math.min(this.r, S.recentSearches.length - 1); } }
@@ -149,6 +153,7 @@ export class VideoPage extends ListPage {
   onShow() {
     // fill in anything missing (likes, length) from YouTube; cached, 1 unit at most
     if (!this.v.fake && (this.v.dur == null || this.v.likes === undefined)) yt.videosInfo([this.v.id]).then(([full]) => { if (full) { this.v = full; this.build(); this.rerender(); } }).catch(() => {});
+    if (canUseAccount()) lookUp(this.v).then(() => { this.build(); this.rerender(); });
   }
   onReturn() { this.build(); }
   head() {
@@ -169,7 +174,15 @@ export class VideoPage extends ListPage {
     if (resume && !playingNow) it.push(['back', 'Watch from the start', '', () => tv.playVod(v, { queue, start: 0 })]);
     if (playingNow) it.push(['clock', 'Playback speed', 'Now ' + tv.speed + '×', () => app.screen.open(new SpeedPage())]);
     it.push(['plus', inList('watchLater', v.id) ? 'Remove from Watch Later' : 'Save to Watch Later', 'Saved on this TV only', () => { toggleList('watchLater', v); this.build(); this.rerender(); }]);
-    it.push(['heart', inList('liked', v.id) ? 'Unlike' : 'Like', 'Kept in My Stuff on this TV', () => { toggleList('liked', v); this.build(); this.rerender(); }]);
+    const redo = () => { this.build(); this.rerender(); };
+    if (canUseAccount() && !!v.fake === isDemo()) {
+      // signed in: these really happen on YouTube
+      const r = ratingOf(v.id), sub = subOf(v.channelId);
+      it.push(['up', r === 'like' ? 'Liked on YouTube ✓' : 'Like on YouTube', r === 'like' ? 'OK to take the like off' : 'A thumbs up, from your account', () => setRating(v, 'like', redo)]);
+      it.push(['down', r === 'dislike' ? 'Disliked on YouTube ✓' : 'Dislike', r === 'dislike' ? 'OK to take it off' : 'Only YouTube sees dislikes', () => setRating(v, 'dislike', redo)]);
+      if (v.channelId) it.push(['bell', sub ? 'Subscribed to ' + (v.channelTitle || 'the channel') + ' ✓' : 'Subscribe to ' + (v.channelTitle || 'the channel'), sub ? 'OK to unsubscribe' : 'Its new videos show up in Your YouTube', () => toggleSub({ id: v.channelId, title: v.channelTitle }, redo)]);
+      it.push(['grid', 'Save to a YouTube playlist', 'One of yours, or a new one', () => app.screen.open(new SaveToPlaylistPage(v))]);
+    } else it.push(['heart', inList('liked', v.id) ? 'Unlike' : 'Like', 'Kept in My Stuff on this TV', () => { toggleList('liked', v); redo(); }]);
     if (v.channelId) it.push(['people', 'Go to ' + (v.channelTitle || 'the channel'), 'Its videos and playlists', () => app.screen.open(new ChannelPage({ id: v.channelId, title: v.channelTitle }))]);
     if (v.comments !== 0) it.push(['chat', 'Comments' + (v.comments ? ' (' + shortNum(v.comments) + ')' : ''), 'What people are saying', () => app.screen.open(new CommentsPage(v))]);
     it.push(['grid', 'Full description', '', () => app.screen.open(new TextPage('Description', v))]);
@@ -198,16 +211,25 @@ export class TextPage extends Page {
 
 export class CommentsPage extends ListPage {
   constructor(v) { super('Comments'); this.v = v; this.rowH = 150; this.order = 'relevance'; this.crumb = v.title; this.sideText = sideVideo(v); }
-  onShow() { this.fetch(); }
+  onShow() { if (!this.loaded) { this.loaded = true; this.fetch(); } }
+  onReturn() { this.build(); }
   fetch() {
     this.load(async () => {
-      try {
-        const list = await yt.comments(this.v.id, this.order);
-        this.items = [{ cls: 'act', html: rows.action('filter', 'Sorted by: ' + (this.order === 'time' ? 'Newest first' : 'Top comments'), 'OK to switch'), act: () => { this.order = this.order === 'time' ? 'relevance' : 'time'; this.fetch(); } },
-          ...list.map(c => ({ cls: 'comment', html: `<div class="rt"><b>${esc(c.author)}</b><small>${ago(c.at)}${c.likes ? ' · ♥ ' + shortNum(c.likes) : ''}${c.replies ? ' · ' + c.replies + ' replies' : ''}</small><p>${esc(c.text)}</p></div>` }))];
-        if (list.length === 0) this.empty = 'No comments yet.';
-      } catch (e) { if (e.kind === 'commentsDisabled') { this.items = []; this.empty = 'Comments are turned off for this video.'; } else throw e; }
+      try { this.list = await yt.comments(this.v.id, this.order); this.off = false; }
+      catch (e) { if (e.kind === 'commentsDisabled') { this.list = []; this.off = true; } else throw e; }
+      this.build();
     });
+  }
+  build() {
+    if (this.off) { this.items = []; this.empty = 'Comments are turned off for this video.'; return; }
+    const list = this.list || [], write = canUseAccount() && S.viewer.comments !== false && !!this.v.fake === isDemo();
+    this.items = [
+      ...(write ? [{ cls: 'act', html: rows.action('pen', 'Write a comment', 'As ' + (account.name || 'you') + ', for everyone to read'), act: () => writeComment({ title: 'Write a Comment', prompt: 'Your comment on "' + this.v.title + '"', videoId: this.v.id, onPosted: c => { this.list.unshift({ ...c, author: c.author || account.name || 'You' }); this.sel = 1; this.build(); this.rerender(); } }) }] : []),
+      { cls: 'act', html: rows.action('filter', 'Sorted by: ' + (this.order === 'time' ? 'Newest first' : 'Top comments'), 'OK to switch'), act: () => { this.order = this.order === 'time' ? 'relevance' : 'time'; this.fetch(); } },
+      ...list.map(c => ({ cls: 'comment', html: `<div class="rt"><b>${esc(c.author)}</b><small>${ago(c.at)}${c.likes ? ' · ♥ ' + shortNum(c.likes) : ''}${c.replies ? ' · ' + c.replies + (c.replies === 1 ? ' reply' : ' replies') + ' (OK to read)' : write && c.canReply !== false ? ' · OK to reply' : ''}</small><p>${esc(c.text)}</p></div>`,
+        act: c.replies || (write && c.canReply !== false) ? () => app.screen.open(new RepliesPage(this.v, c)) : null })),
+    ];
+    if (!list.length) this.empty = 'No comments yet.';
   }
 }
 
@@ -219,6 +241,7 @@ export class ChannelPage extends ListPage {
     this.load(async () => {
       if (this.c.subs === undefined || !this.c.desc) { const [full] = await yt.channelsInfo([this.c.id]); if (full) this.c = { ...this.c, ...full }; }
       this.vids = await yt.channelVideos(this.c.id, 25);
+      await lookUpChannel(this.c.id);
       this.build();
     });
   }
@@ -227,12 +250,20 @@ export class ChannelPage extends ListPage {
   build() {
     const c = this.c, followed = S.follows.some(f => f.id === c.id);
     const inLineup = L.channels().find(ch => ch.sources && ch.sources.length === 1 && ch.sources[0].type === 'channel' && ch.sources[0].id === c.id);
-    const it = [
-      { cls: 'act', html: rows.action('people', followed ? 'Following ✓ (OK to unfollow)' : 'Follow this channel', 'Its new videos show up in On Demand'), act: () => { if (followed) S.follows = S.follows.filter(f => f.id !== c.id); else S.follows.unshift({ id: c.id, title: c.title, thumb: c.thumb || '', hue: c.hue }); save(); this.build(); this.rerender(); } },
-    ];
+    const redo = () => { this.build(); this.rerender(); };
+    const it = [];
+    if (canUseAccount() && !!c.fake === isDemo()) {
+      const sub = subOf(c.id);
+      it.push({ cls: 'act', html: rows.action('bell', sub ? 'Subscribed on YouTube ✓' : 'Subscribe on YouTube', sub ? 'OK to unsubscribe' : 'From your YouTube account'), act: () => toggleSub(c, redo) });
+    } else it.push({ cls: 'act', html: rows.action('people', followed ? 'Following ✓ (OK to unfollow)' : 'Follow this channel', 'Its new videos show up in On Demand'), act: () => { if (followed) S.follows = S.follows.filter(f => f.id !== c.id); else S.follows.unshift({ id: c.id, title: c.title, thumb: c.thumb || '', hue: c.hue }); save(); redo(); } });
     if (inLineup) it.push({ cls: 'act', html: rows.action('tv', 'Watch it on channel ' + inLineup.num, 'It\'s already in your lineup'), act: () => app.tv.tune(app.tv.list.indexOf(inLineup)) });
     else if (S.viewer.makeChannels) it.push({ cls: 'act', html: rows.action('tv', 'Make it a TV channel', 'Its videos, on a schedule, like real TV'), act: () => app.screen.open(new MakeChannelPage({ type: 'channel', id: c.id, title: c.title })) });
+    // the tabs on a YouTube channel page
+    const tab = (icon, label, hint, name, empty) => it.push({ cls: 'act', html: rows.action(icon, label, hint), act: () => app.screen.open(new VideoListPage(c.title + ': ' + label, () => yt.channelTab(c.id, name), { empty, live: name === 'live' })) });
+    tab('fire', 'Most popular', 'Its most-watched videos', 'popular', 'YouTube has no popular list for this channel.');
     it.push({ cls: 'act', html: rows.action('grid', 'Playlists', ''), act: () => app.screen.open(new VideoListPage(c.title + ': Playlists', () => yt.channelPlaylists(c.id), { empty: 'No playlists.' })) });
+    tab('live', 'Live streams', 'Live now and past streams', 'live', 'This channel hasn\'t done any live streams.');
+    tab('film', 'Shorts', 'Its short, upright videos', 'shorts', 'This channel has no Shorts.');
     if (this.vids.length > 1) it.push({ cls: 'act', html: rows.action('play', 'Play newest videos', this.vids.length + ' videos'), act: () => app.tv.playVod(this.vids[0], { queue: this.vids }) });
     this.vids.forEach(v => it.push({ html: rows.video(v), act: () => app.screen.open(new VideoPage(v, { queue: this.vids })), side: () => sideVideo(v) }));
     this.items = it;
@@ -242,12 +273,14 @@ export class ChannelPage extends ListPage {
 
 export class PlaylistPage extends ListPage {
   constructor(p) { super('Playlist'); this.p = p; this.rowH = 104; this.headH = 170; this.vids = []; }
-  onShow() { this.build(); this.load(async () => { this.vids = await yt.playlistVideos(this.p.id); this.build(); }); }
-  head() { const p = this.p; return `<div class="chead">${thumb({ ...p, dur: 0 })}<div class="vinfo"><b>${esc(p.title)}</b><small>${esc(p.channelTitle || '')}${p.count ? ' · ' + p.count + ' videos' : ''}</small></div></div>`; }
+  onShow() { this.build(); this.load(async () => { this.vids = await (this.p.mine ? yt.myPlaylistVideos(this.p.id) : yt.playlistVideos(this.p.id)); this.build(); }); }
+  onReturn() { this.build(); }
+  head() { const p = this.p; return `<div class="chead">${thumb({ ...p, dur: 0 })}<div class="vinfo"><b>${esc(p.title)}</b><small>${esc(p.channelTitle || '')}${p.count ? ' · ' + p.count + ' videos' : ''}${p.privacy === 'private' ? ' · Private: only you can see it' : ''}</small></div></div>`; }
   build() {
     const p = this.p, it = [];
     if (this.vids.length) it.push({ cls: 'act', html: rows.action('play', 'Play all', this.vids.length + ' videos in order'), act: () => app.tv.playVod(this.vids[0], { queue: this.vids }) });
-    if (S.viewer.makeChannels) it.push({ cls: 'act', html: rows.action('tv', 'Make it a TV channel', 'This playlist, on a schedule'), act: () => app.screen.open(new MakeChannelPage({ type: 'playlist', id: p.id, title: p.title })) });
+    // a private playlist can't feed a TV channel (the channel refresh doesn't use the sign-in)
+    if (S.viewer.makeChannels && p.privacy !== 'private') it.push({ cls: 'act', html: rows.action('tv', 'Make it a TV channel', 'This playlist, on a schedule'), act: () => app.screen.open(new MakeChannelPage({ type: 'playlist', id: p.id, title: p.title })) });
     this.vids.forEach(v => it.push({ html: rows.video(v), act: () => app.screen.open(new VideoPage(v, { queue: this.vids })), side: () => sideVideo(v) }));
     this.items = it;
   }
@@ -256,12 +289,13 @@ export class PlaylistPage extends ListPage {
 
 // ---------------- make a TV channel ----------------
 const KIND = { search: 'Shows matching a search', channel: 'A YouTube channel\'s videos', playlist: 'A YouTube playlist', topic: 'Popular videos in a topic', trending: 'What\'s popular on YouTube' };
+const kindText = src => src.sources ? src.sources.length + ' YouTube channels taking turns' : KIND[src.type] || '';
 export class MakeChannelPage extends ListPage {
   constructor(src) {
     super('Make a TV Channel'); this.src = src; this.rowH = 86; this.headH = 170;
     this.name = (src.title || 'My Channel').slice(0, 30); this.f = { length: 'any', age: 'any', captions: false }; this.build();
   }
-  head() { return `<div class="msgbox bevel"><b>New channel ${L.nextFreeNum()}: ${esc(this.name)}</b><br><span class="dim">${esc(KIND[this.src.type] || '')}. It refreshes once a day, all by itself. You can rename it or change its number in Setup.</span></div>`; }
+  head() { return `<div class="msgbox bevel"><b>New channel ${L.nextFreeNum()}: ${esc(this.name)}</b><br><span class="dim">${esc(kindText(this.src))}. It refreshes once a day, all by itself. You can rename it or change its number in Setup.</span></div>`; }
   build() {
     const LEN = L.FILTER_CHOICES.length, AGE = L.FILTER_CHOICES.age, lbl = (l, v) => (l.find(x => x[0] === v) || l[0])[1];
     const cyc = (k, l) => () => { const i = l.findIndex(x => x[0] === this.f[k]); this.f[k] = l[(i + 1) % l.length][0]; this.build(); this.rerender(); };
@@ -274,8 +308,8 @@ export class MakeChannelPage extends ListPage {
     ];
   }
   create() {
-    const src = { ...this.src }; delete src.title; src.title = this.src.title;
-    const ch = L.addChannel({ name: this.name, sources: [src], filters: { ...this.f } });
+    const sources = this.src.sources || [{ ...this.src }];
+    const ch = L.addChannel({ name: this.name, sources, filters: { ...this.f } });
     app.tv.refreshList();
     app.screen.replace(new MessagePage('Channel Added', `<b>Channel ${ch.num}, ${esc(ch.name)}, is in your lineup.</b><br><span class="dim">It's getting its shows from YouTube now. It'll also show up in the guide.</span>`, [
       ['tv', 'Watch channel ' + ch.num + ' now', () => app.tv.tune(app.tv.list.findIndex(c => c.id === ch.id))],

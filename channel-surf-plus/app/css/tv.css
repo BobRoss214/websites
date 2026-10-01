@@ -245,6 +245,15 @@ body.big #screen { font-size: 25px; }
 .rs { text-align: left; border: 0; border-radius: 8px; padding: 8px 14px; font: 700 1em/1.15 var(--f-ui); color: #fff; background: var(--navy); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rs small { display: block; font: 600 .75em var(--f-ui); color: var(--ink-3); }
 
+/* typing (comments, replies, playlist names) */
+.tprompt { font: 700 1.5em/1.2 var(--f-ui); color: var(--gold); margin: 0 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sbox.tbox { height: auto; min-height: 80px; max-height: 178px; white-space: normal; flex-wrap: wrap; align-content: center; padding: 10px 26px; font-size: 1.9em; line-height: 1.25; overflow-wrap: anywhere; }
+.sbox.tbox .caret { height: 40px; }
+.tcount { text-align: right; font: 600 1.1em var(--f-ui); margin-top: 4px; }
+.key.on { box-shadow: inset 0 0 0 4px var(--gold), inset 0 -3px 0 var(--navy-lo); }
+.msgbox .quote { margin: 14px 0; padding: 12px 18px; border-left: 6px solid var(--gold); background: var(--navy-lo); border-radius: 6px; font: 600 .9em/1.35 var(--f-ui); color: var(--ink); max-height: 190px; overflow: hidden; overflow-wrap: anywhere; }
+.comment-top p { margin: 8px 0 0; font-size: .85em; color: var(--ink-2); overflow-wrap: anywhere; }
+
 /* PIN */
 .pinpage h2 { font: 800 2.4em var(--f-ui); margin: 0 0 6px; }
 .pinpage p { font: 600 1.4em/1.35 var(--f-ui); color: var(--ink-2); margin: 0 0 10px; }

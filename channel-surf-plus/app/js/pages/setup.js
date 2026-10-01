@@ -8,6 +8,7 @@ import * as L from '../lineup.js';
 import { yt, isDemo } from '../source.js';
 import { real, plain, quotaUsed, DAILY, searchesLeft } from '../api.js';
 import { Page } from './base.js';
+import { account } from '../account.js';
 import { SEARCH_FILTERS, defaultSearchFilters } from './browse.js';
 
 class SetupPage extends Page {
@@ -22,6 +23,8 @@ const SRC_TEXT = s => ({ channel: 'YouTube channel: ', search: 'Search: ', playl
 
 export class SetupHome extends SetupPage {
   constructor(tab = 'channels') { super('Setup'); this.tab = isDemo() && tab === 'channels' && !S.setupDone ? 'youtube' : tab; this.msg = ''; this.msgOk = true; }
+  onShow() { account.refresh().then(() => { if (this.tab === 'youtube' && !this.typing()) this.rerender(); }); }
+  typing() { const a = document.activeElement; return !!(a && a.closest && a.closest('#pages input, #pages textarea')); }
   render() {
     const tabs = [['youtube', 'YouTube connection'], ['channels', 'Channels'], ['viewer', 'What the viewer sees'], ['backup', 'Backup and PIN']];
     return `<div class="setup"><div class="tabs">${tabs.map(([id, t]) => `<button type="button" data-tab="${id}" class="${this.tab === id ? 'on' : ''}">${t}</button>`).join('')}<button type="button" data-done="1">Done</button></div>
@@ -43,7 +46,27 @@ export class SetupHome extends SetupPage {
       <div class="btns"><button type="button" class="b gold" id="saveKey">Save and test the key</button><button type="button" class="b" id="showKey">Show / hide</button>${S.apiKey ? '<button type="button" class="b red" id="dropKey">Disconnect (back to practice channels)</button>' : ''}</div></div>
       ${isDemo() ? '' : `<div class="card bevel"><h3>Today's YouTube allowance</h3><div class="meter"><i style="width:${pct}%"></i></div><p>${used.toLocaleString()} of ${DAILY.toLocaleString()} units used today (resets at midnight Pacific time). About ${searchesLeft()} searches left. Refreshing a channel costs about 3; a search costs 100.</p></div>`}
       <div class="card bevel grid2"><div><label for="region">Country (for popular videos and what can play here)</label><select id="region">${['US', 'CA', 'GB', 'AU', 'IE', 'NZ', 'IN', 'DE', 'FR', 'ES', 'IT', 'MX', 'BR', 'JP'].map(r => `<option${S.region === r ? ' selected' : ''}>${r}</option>`).join('')}</select></div>
-      <div><label for="safe">Safe search</label><select id="safe">${[['moderate', 'Moderate (YouTube\'s default)'], ['strict', 'Strict'], ['none', 'Off']].map(([v, t]) => `<option value="${v}"${S.safeSearch === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div></div>`;
+      <div><label for="safe">Safe search</label><select id="safe">${[['moderate', 'Moderate (YouTube\'s default)'], ['strict', 'Strict'], ['none', 'Off']].map(([v, t]) => `<option value="${v}"${S.safeSearch === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div></div>
+      ${this.accountCard()}`;
+  }
+  // Optional: sign in to a YouTube account for real likes, subscriptions, playlists and comments.
+  accountCard() {
+    const a = account, intro = '<p>Optional. Signing in lets the TV do things on your real YouTube account: like videos, subscribe, use your playlists, and write comments. Watching works the same without it.</p>';
+    if (a.demo) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}
+      <p>${a.signedIn ? '<b>Signed in to a practice account ✓</b> Try the Your YouTube menu, likes and comments.' : 'In demo mode you can try it with a practice account. Nothing goes to YouTube.'}</p>
+      <div class="btns">${a.signedIn ? '<button type="button" class="b red" id="signOut">Sign out of the practice account</button>' : '<button type="button" class="b gold" id="signIn">Sign in to a practice account</button>'}</div></div>`;
+    if (!a.available) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}<p class="bad">Signing in needs the TV to be started with <code>python3 tv.py</code> on this computer.</p></div>`;
+    if (!a.configured || this.newClient) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}
+      <p>First, make a free "sign-in client" in the same Google Cloud project as your key. It takes about 5 minutes; the steps are in <b>HOW-TO.md</b> ("Sign in to YouTube"). Then paste its two codes here:</p>
+      <div class="grid2"><div><label for="cid">Client ID</label><input type="text" id="cid" placeholder="Ends with .apps.googleusercontent.com" autocomplete="off" spellcheck="false"></div>
+      <div><label for="csecret">Client secret</label><input type="password" id="csecret" placeholder="Starts with GOCSPX-" autocomplete="off" spellcheck="false"></div></div>
+      <div class="btns"><button type="button" class="b gold" id="saveClient">Save</button></div></div>`;
+    if (!a.signedIn) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}
+      <p>Ready. Press the button, pick your Google account, and allow Channel Surf to manage your YouTube account. You'll come back here when it's done.</p>
+      <div class="btns"><button type="button" class="b gold" id="signIn">Sign in with Google</button><button type="button" class="b" id="forgetClient">Change the sign-in client</button></div></div>`;
+    return `<div class="card bevel"><h2>YouTube account ✓</h2><p><b>Signed in${a.name ? ' as ' + esc(a.name) : ''}.</b> Likes, subscriptions, playlists and comments made on this TV really happen on YouTube. The sign-in is kept in a private file on this computer, never in the browser.</p>
+      <p class="dim">What the viewer can do with it is under "What the viewer sees".</p>
+      <div class="btns"><button type="button" class="b red" id="signOut">Sign out of YouTube</button></div></div>`;
   }
   wire_youtube() {
     this.on('#showKey', 'click', () => { const k = document.getElementById('key'); k.type = k.type === 'password' ? 'text' : 'password'; });
@@ -59,6 +82,16 @@ export class SetupHome extends SetupPage {
     });
     this.on('#dropKey', 'click', () => { S.apiKey = ''; save(true); location.reload(); });
     this.on('#region', 'change', (e, el) => { S.region = el.value; save(); });
+    this.on('#signIn', 'click', () => { account.signIn(); if (account.demo) this.say('Signed in to the practice account.'); });
+    this.on('#signOut', 'click', async (e, b) => { if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Click again to sign out'; return; } await account.signOut(); this.say('Signed out of YouTube.'); });
+    this.on('#saveClient', 'click', async () => {
+      const id = this.val('cid').trim(), secret = this.val('csecret').trim();
+      if (!/\.apps\.googleusercontent\.com$/.test(id)) return this.say('The client ID should end with .apps.googleusercontent.com', false);
+      if (!secret) return this.say('Paste the client secret too.', false);
+      try { await account.saveClient(id, secret); this.newClient = false; this.say('Saved. Now press "Sign in with Google".'); }
+      catch (e) { this.say(e.message, false); }
+    });
+    this.on('#forgetClient', 'click', () => { this.newClient = true; this.rerender(); });
     this.on('#safe', 'change', (e, el) => { S.safeSearch = el.value; save(); });
   }
 
@@ -101,7 +134,8 @@ export class SetupHome extends SetupPage {
     return `<div class="card bevel"><h2>Menus the viewer can use</h2><p>Turn these off for a simple TV with just channels, the guide and settings.</p>
       ${ck('vSearch', v.search, 'Search YouTube', 'The Search screen and the SEARCH button.')}
       ${ck('vOnDemand', v.ondemand, 'On Demand and My Stuff', 'Popular videos, topics, live now, watch later, history.')}
-      ${ck('vMake', v.makeChannels, 'Let the viewer make new TV channels', '"Make this a TV channel" on searches, channels and playlists.')}</div>
+      ${ck('vMake', v.makeChannels, 'Let the viewer make new TV channels', '"Make this a TV channel" on searches, channels and playlists.')}
+      ${account.signedIn ? ck('vAccount', v.account !== false, 'Use the YouTube account', 'Your YouTube menu, real likes, subscribing, and your playlists.') + ck('vComments', v.comments !== false, 'Let the viewer write comments and replies', 'Comments are public on YouTube. Each one is shown for checking before it\'s posted.') : ''}</div>
       <div class="card bevel"><h2>House rules for every channel</h2><p>Keeps Shorts and very long stream recordings off the schedule. Livestreams, premieres that haven't aired, age-restricted and non-embeddable videos are always left out.</p>
       <div class="grid2"><div><label for="minMin">Shortest show (minutes)</label><input type="number" id="minMin" min="1" max="60" value="${Math.round(r.minSec / 60)}"></div>
       <div><label for="maxMin">Longest show (minutes)</label><input type="number" id="maxMin" min="10" max="600" value="${Math.round(r.maxSec / 60)}"></div></div>
@@ -109,7 +143,7 @@ export class SetupHome extends SetupPage {
   }
   wire_viewer() {
     const set = (id, key) => this.on('#' + id, 'change', (e, el) => { S.viewer[key] = el.checked; save(); app.remote.render(); });
-    set('vSearch', 'search'); set('vOnDemand', 'ondemand'); set('vMake', 'makeChannels');
+    set('vSearch', 'search'); set('vOnDemand', 'ondemand'); set('vMake', 'makeChannels'); set('vAccount', 'account'); set('vComments', 'comments');
     this.on('#saveRules', 'click', () => {
       const a = Math.max(1, Math.min(60, +this.val('minMin') || 3)), b = Math.max(a + 1, Math.min(600, +this.val('maxMin') || 180));
       S.rules.minSec = a * 60; S.rules.maxSec = b * 60; save(); L.rescheduleAll(); this.say('House rules saved. The lineup has been updated.');
@@ -140,7 +174,7 @@ export class SetupHome extends SetupPage {
     this.on('#reset', 'click', async (e, b) => { if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Click again to erase everything'; return; } localStorage.clear(); await db.clear(); location.reload(); });
   }
 }
-function plainKind(k) { return { quota: 'YouTube daily limit reached; will retry tomorrow', key: 'the YouTube key isn\'t working', referrer: 'the key doesn\'t allow this address', disabled: 'the YouTube API isn\'t enabled for the key', network: 'no internet', notFound: 'not found on YouTube', nokey: 'no YouTube key yet' }[k] || 'had a problem'; }
+function plainKind(k) { return { quota: 'YouTube daily limit reached; will retry tomorrow', key: 'the YouTube key isn\'t working', referrer: 'the key doesn\'t allow this address', disabled: 'the YouTube API isn\'t enabled for the key', rate: 'YouTube asked to slow down; will try again soon', busy: 'YouTube was busy; will try again soon', network: 'no internet', notFound: 'not found on YouTube', nokey: 'no YouTube key yet' }[k] || 'had a problem'; }
 
 // ----- add or edit one channel -----
 export class ChannelEditor extends SetupPage {

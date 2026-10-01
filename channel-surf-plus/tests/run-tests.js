@@ -160,6 +160,12 @@ async function testBrowse(browser) {
   await page.keyboard.type('anything new', { delay: 20 }); await page.key('Enter', 1500);
   check('when YouTube\'s daily limit is used up, search says so plainly', await page.evaluate(() => /daily limit/.test(document.getElementById('pages').textContent)));
   mock.state.quotaOnSearch = false;
+  // after that, it stops spending searches for the rest of the day (cheap lists still work)
+  const before = mock.state.calls.filter(u => u === 'search').length;
+  await page.key('Backspace', 300); await page.evaluate(() => { channelSurf.screen.top().q = ''; }); await page.keyboard.type('one more', { delay: 20 }); await page.key('Enter', 900);
+  check('…and stops asking YouTube for searches until tomorrow', mock.state.calls.filter(u => u === 'search').length === before && await page.evaluate(() => /searches are used up/.test(document.getElementById('pages').textContent)));
+  await page.key('Backspace', 300);
+  await page.evaluate(() => localStorage.removeItem('channelSurfPlus.quota')); // a new day
   // slow internet
   mock.state.delayMs = 2500; await page.key('Backspace', 300);
   await page.evaluate(() => { channelSurf.screen.top().q = ''; }); await page.keyboard.type('mock birds', { delay: 20 }); await page.key('Enter', 600);

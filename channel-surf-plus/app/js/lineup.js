@@ -119,7 +119,7 @@ export async function refreshChannel(ch, { force = false } = {}) {
     const items = []; let err = null;
     for (let si = 0; si < ch.sources.length; si++) {
       try { (await sourceIds(ch.sources[si])).forEach(id => items.push({ id, src: si })); }
-      catch (e) { err = err || e; if (['quota', 'key', 'referrer', 'disabled', 'nokey'].includes(e.kind)) break; }
+      catch (e) { err = err || e; if (['quota', 'rate', 'key', 'referrer', 'disabled', 'nokey'].includes(e.kind)) break; }
     }
     const ids = [...new Set(items.map(i => i.id))];
     try { if (ids.length) await yt.videosInfo(ids); } catch (e) { err = err || e; }

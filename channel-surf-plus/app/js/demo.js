@@ -4,6 +4,7 @@
 import { hash, rng } from './util.js';
 import { putVideo, VIDS } from './vids.js';
 import { ApiError } from './api.js';
+import { S, save } from './store.js';
 
 const T = {
   wood: ['Workshop Two', 28, ['Hand-Cut Dovetails', 'Saving a Rusty Hand Plane', 'The Shaker Side Table, Part 1', 'The Shaker Side Table, Part 2', 'Sharpening Made Simple', 'A Workbench in a Weekend', 'Turning a Walnut Bowl', 'Fixing a Wobbly Chair', 'Picking the Right Glue', 'Finishing with Oil and Wax']],
@@ -26,6 +27,7 @@ const DESC = {
 };
 const CAT = { wood: '26', garden: '26', kitchen: '26', travel: '19', space: '28', music: '10', cars: '2', birds: '15', history: '27', fixit: '26' };
 const PEOPLE = ['Marge', 'Harold', 'Dottie', 'Walt', 'Bev', 'Earl', 'June', 'Frank', 'Lois', 'Gene', 'Ruth', 'Carl'];
+const REPLIES = ['Same here!', 'Agreed, very well done.', 'Thanks for sharing that.', 'Me too, every Sunday.', 'Good tip, I\'ll try it.'];
 const SAYS = ['I watched this twice. So well explained!', 'This takes me back. Thank you for making it.', 'Tried this last weekend and it worked.', 'My grandson and I watched this together.', 'Clear and calm. Wish all shows were like this.', 'Could you do one on the next step?', 'Beautiful. Brought a tear to my eye.', 'Saved for later, thank you!'];
 
 const NOW = Date.now();
@@ -62,6 +64,11 @@ const PLAYLISTS = new Map();
 })();
 
 const vid = id => VIDS.get(id);
+const person = r => PEOPLE[Math.floor(r() * PEOPLE.length)] + ' ' + String.fromCharCode(65 + Math.floor(r() * 26)) + '.';
+// the pretend signed-in account's likes, subscriptions, playlists and comments (kept on this computer)
+const DY = () => { const d = S.demoYT || (S.demoYT = {}); for (const k of ['subs', 'playlists']) d[k] = d[k] || []; for (const k of ['ratings', 'comments', 'replies']) d[k] = d[k] || {}; return d; };
+const mustSignIn = () => { if (!S.demoSignedIn) throw new ApiError('signedOut', 'You\'re not signed in to YouTube.'); };
+const done = () => save();
 const all = () => [...VIDS.values()].filter(v => v.fake && !v.gone);
 const words = q => String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
 const matches = (text, q) => { const t = text.toLowerCase(); return words(q).every(w => t.includes(w.replace(/s$/, ''))); };
@@ -113,8 +120,43 @@ export const demo = {
   async channelVideos(cid) { await tick(); return (BY_CH.get(cid) || []).map(vid).filter(Boolean); },
   async comments(id) {
     await tick(); const r = rng(hash(id)); const n = 4 + Math.floor(r() * 6);
-    return Array.from({ length: n }, (_, i) => ({ author: PEOPLE[Math.floor(r() * PEOPLE.length)] + ' ' + String.fromCharCode(65 + Math.floor(r() * 26)) + '.', text: SAYS[Math.floor(r() * SAYS.length)], likes: Math.floor(r() * 300), at: NOW - Math.floor(r() * 60 * 86400e3), replies: Math.floor(r() * 5) }));
+    const mine = (DY().comments[id] || []).slice();
+    const theirs = Array.from({ length: n }, (_, i) => ({ id: 'demo-c-' + id + '-' + i, author: person(r), text: SAYS[Math.floor(r() * SAYS.length)], likes: Math.floor(r() * 300), at: NOW - Math.floor(r() * 60 * 86400e3), replies: Math.floor(r() * 4), canReply: true }));
+    return [...mine, ...theirs].map(c => ({ ...c, replies: c.replies + (DY().replies[c.id] || []).length }));
+  },
+  async replies(parentId) {
+    await tick(); const r = rng(hash(parentId + 'r')); const n = 1 + Math.floor(rng(hash(parentId))() * 3);
+    const base = parentId.startsWith('demo-mine-') ? [] : Array.from({ length: n }, (_, i) => ({ id: parentId + '.r' + i, author: person(r), text: REPLIES[Math.floor(r() * REPLIES.length)], likes: Math.floor(r() * 40), at: NOW - Math.floor((n - i) * 86400e3 * r()) }));
+    return [...base, ...(DY().replies[parentId] || [])];
   },
   async fullDescription(id) { return (vid(id) || {}).desc || ''; },
   async testKey() { throw new ApiError('key', 'Demo mode has no key to test.'); },
+  async channelTab(cid, tab) {
+    await tick(); const l = (BY_CH.get(cid) || []).map(vid).filter(Boolean);
+    if (tab === 'popular') return l.slice().sort((a, b) => b.views - a.views);
+    if (tab === 'live') return all().filter(v => v.channelId === cid && v.live !== 'none');
+    return []; // no practice Shorts
+  },
+
+  // ---- the pretend signed-in account ----
+  async myChannel() { mustSignIn(); await tick(); return { id: 'demo-ch-me', title: 'Demo Viewer', desc: '', handle: '@demoviewer', thumb: '', subs: 0, videos: 0, fake: true, hue: 40 }; },
+  async mySubscriptions() { mustSignIn(); await tick(); return DY().subs.map(id => CH.get(id)).filter(Boolean).map(c => ({ subId: 'demo-sub-' + c.id, id: c.id, title: c.title, desc: c.desc, thumb: '', fake: true, hue: c.hue })).sort((a, b) => a.title.localeCompare(b.title)); },
+  async subscription(cid) { mustSignIn(); await tick(40); return DY().subs.includes(cid) ? 'demo-sub-' + cid : null; },
+  async subscribe(cid) { mustSignIn(); await tick(); const d = DY(); if (!d.subs.includes(cid)) d.subs.push(cid); done(); return 'demo-sub-' + cid; },
+  async unsubscribe(subId) { mustSignIn(); await tick(); const d = DY(); d.subs = d.subs.filter(id => 'demo-sub-' + id !== subId); done(); },
+  async getRating(id) { mustSignIn(); await tick(40); return DY().ratings[id] || 'none'; },
+  async rate(id, rating) { mustSignIn(); await tick(); const d = DY(); if (rating === 'none') delete d.ratings[id]; else d.ratings[id] = rating; done(); },
+  async myLiked() { mustSignIn(); await tick(); const d = DY(); return Object.keys(d.ratings).filter(id => d.ratings[id] === 'like').map(vid).filter(Boolean); },
+  async myPlaylists() { mustSignIn(); await tick(); return DY().playlists.map(p => ({ kind: 'playlist', id: p.id, title: p.title, desc: '', channelId: 'demo-ch-me', channelTitle: 'Demo Viewer', count: p.ids.length, thumb: '', fake: true, hue: 40, mine: true, privacy: 'private' })); },
+  async myPlaylistVideos(id) { mustSignIn(); await tick(); const p = DY().playlists.find(p => p.id === id); return p ? p.ids.map(vid).filter(Boolean) : []; },
+  async createPlaylist(title) { mustSignIn(); await tick(); const p = { id: 'demo-mypl-' + Date.now().toString(36), title, ids: [] }; DY().playlists.push(p); done(); return { kind: 'playlist', id: p.id, title, desc: '', channelId: 'demo-ch-me', channelTitle: 'Demo Viewer', count: 0, thumb: '', fake: true, hue: 40, mine: true, privacy: 'private' }; },
+  async addToPlaylist(pid, videoId) { mustSignIn(); await tick(); const p = DY().playlists.find(p => p.id === pid); if (!p) throw new ApiError('notFound', 'That playlist is gone.'); if (!p.ids.includes(videoId)) p.ids.push(videoId); done(); },
+  async postComment(videoId, text) {
+    mustSignIn(); await tick(); const c = { id: 'demo-mine-' + Date.now().toString(36), author: 'Demo Viewer', text, likes: 0, at: Date.now(), replies: 0, canReply: true, mine: true };
+    const d = DY(); (d.comments[videoId] = d.comments[videoId] || []).unshift(c); done(); return c;
+  },
+  async reply(parentId, text) {
+    mustSignIn(); await tick(); const c = { id: parentId + '.mine' + Date.now().toString(36), author: 'Demo Viewer', text, likes: 0, at: Date.now(), mine: true };
+    const d = DY(); (d.replies[parentId] = d.replies[parentId] || []).push(c); done(); return c;
+  },
 };

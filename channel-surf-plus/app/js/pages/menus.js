@@ -8,6 +8,8 @@ import * as L from '../lineup.js';
 import { yt, isDemo } from '../source.js';
 import { searchesLeft } from '../api.js';
 import { ListPage, Page, rows, sideVideo, MessagePage, ICON } from './base.js';
+import { canUseAccount } from './youtube.js';
+import { account } from '../account.js';
 
 const P = () => app.pages;
 
@@ -21,6 +23,7 @@ export class MainMenu extends ListPage {
       v.search && ['search', 'Search YouTube', 'Find shows, channels and playlists' + (isDemo() ? '' : ' · ' + searchesLeft() + ' searches left today'), () => app.screen.open(new (P().SearchPage)())],
       v.ondemand && ['film', 'On Demand', 'Popular now, topics, live right now', () => app.screen.open(new OnDemandPage())],
       v.ondemand && ['box', 'My Stuff', 'Watch later, history, favorites, followed', () => app.screen.open(new MyStuffPage())],
+      v.ondemand && canUseAccount() && ['yt', 'Your YouTube', 'Subscriptions, your playlists, likes · ' + (account.name || 'signed in'), () => app.screen.open(new (P().YourYouTubePage)())],
       !v.ondemand && ['star', 'Favorite Channels', 'Jump to a favorite', () => app.screen.open(new FavChannelsPage())],
       ['filter', 'Lineup Filters', filterSummary(), () => app.screen.open(new FiltersPage())],
       ['gear', 'Settings', 'Captions, bigger text, static, sounds', () => app.screen.open(new SettingsPage())],
