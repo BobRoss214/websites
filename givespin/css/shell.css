@@ -6,7 +6,7 @@
 
 /* ------------------------------------------------------------------ top bar */
 .topbar {
-  position: sticky; top: 0; z-index: 60; height: var(--top-h);
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60; height: var(--top-h);
   display: flex; align-items: center; gap: 14px; padding: 0 clamp(12px, 2vw, 22px);
   background: #0b141c; border-bottom: 1px solid var(--line);
 }
@@ -62,7 +62,7 @@
 .view { max-width: 1320px; margin-inline: auto; }
 
 .side {
-  position: sticky; top: var(--top-h); height: calc(100vh - var(--top-h)); overflow: auto;
+  position: sticky; top: calc(var(--top-h) + env(safe-area-inset-top, 0px)); height: calc(100vh - var(--top-h)); overflow: auto;
   display: flex; flex-direction: column; gap: 10px; padding: 14px 10px 14px 12px;
   background: var(--bg-2); border-right: 1px solid var(--line);
 }

@@ -25,7 +25,7 @@
   function renderFairBlock(box) {
     var f = store.fair();
     if (!GS.fair.available()) {
-      box.innerHTML = '<p class="note">' + ui.icon('triangle-alert') + '<span>This browser cannot run the cryptography that fair play needs (it requires https or localhost). Results fall back to the browser’s random generator and cannot be verified.</span></p>';
+      box.innerHTML = '<p class="note">' + ui.icon('triangle-alert') + '<span>This browser cannot run the secure hashing that fair play needs (it requires https or localhost). Results fall back to the browser’s random generator and cannot be verified.</span></p>';
       return;
     }
     box.innerHTML =
@@ -241,7 +241,7 @@
       '<section class="sect panel" aria-labelledby="fp-now"><h2 class="sect__t" id="fp-now">Your next round</h2><div data-role="block"></div></section>' +
       '<section class="sect" aria-labelledby="fp-verify"><div class="sect__head"><h2 class="sect__t" id="fp-verify">Verify a past round</h2></div><div data-role="hist"></div></section>' +
       '<section class="sect panel" aria-labelledby="fp-diy"><h2 class="sect__t" id="fp-diy">Check it without this site</h2>' +
-        '<p>Paste this into your browser’s developer console. It rebuilds the winners from a revealed seed using only the browser’s own crypto.</p>' +
+        '<p>Paste this into your browser’s developer console. It rebuilds the winners from a revealed seed using only the browser’s built-in hashing functions.</p>' +
         '<pre class="code" tabindex="0"><code>' + esc(GS.fair.SNIPPET) + '</code></pre>' +
         '<p class="tabnote">Call it like <code>draw(roundSeed, clientSeed, nonce, […charity ids in play…], count)</code> and compare with the winners on your receipt.</p></section>' +
       '<section class="sect panel panel--note" aria-labelledby="fp-lim"><h2 class="sect__t" id="fp-lim">The honest limits</h2>' +
