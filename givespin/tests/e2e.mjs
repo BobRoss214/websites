@@ -369,6 +369,7 @@ if (section('6. Charities page, profiles and the in-play switches')) {
   const page = await newPage();
   await openApp(page, '#charities');
   check(await page.locator('#view-charities .rcard').count() === N, 'lists all ' + N + ' charities');
+  check(N >= 1000, 'the roster has at least a thousand charities', N);
   await page.fill('#view-charities [data-role="q"]', 'wateraid');
   const n = await page.locator('#view-charities .rcard').count();
   check(n >= 1 && n < 10, 'search narrows the list', n);
@@ -972,7 +973,9 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
   await go(page, '#game-plinko');
   await page.fill('#size-custom', '1000');
   await page.waitForFunction(() => window.GS.store.prefs().sizes.plinko === 1000);
-  check(await page.evaluate(() => window.GS.games.plinko._bins()) === 1000 && (await page.locator('#size-hint').innerText()).includes('each appearing'), 'a 1,000-bin Plinko board repeats the ' + N + ' charities and says how often');
+  // with a roster of 1,000 or more a full board needs no repeats: it is picked at random from the roster
+  const hint1000 = await page.locator('#size-hint').innerText();
+  check(await page.evaluate(() => window.GS.games.plinko._bins()) === 1000 && hint1000.includes(N >= 1000 ? 'picked at random' : 'each appearing'), N >= 1000 ? 'a 1,000-bin Plinko board is picked at random from the ' + N + ' charities, with no repeats' : 'a 1,000-bin Plinko board repeats the ' + N + ' charities and says how often', hint1000);
   await go(page, '#game-coin');
   await page.fill('#size-custom', '100');
   await page.waitForFunction(() => window.GS.store.prefs().sizes.coin === 100);
@@ -1631,12 +1634,20 @@ if (section('13k. Slot machines: five themes, 3 to 12 reels, Triple Threat')) {
   await page.click('#btn-play');
   await page.waitForSelector('#panel-sweets .slots__banner.is-on', { timeout: 30000 });
   check((await page.locator('#panel-sweets .slots__banner').innerText()).includes('TRIPLE THREAT'), 'three of a kind lights a Triple Threat banner on the machine');
+  check(await page.locator('#panel-sweets .slots__machine').getAttribute('data-tier') === '3', 'the machine marks how big the match is (tier 3)');
+  await page.waitForSelector('#panel-sweets .slots__winline.is-on', { timeout: 8000 }).catch(() => {});
+  check(await page.locator('#panel-sweets .slots__winline').evaluate((e) => e.classList.contains('is-on') && e.offsetWidth > 10), 'a win line is drawn across the matching reels');
   await waitReceipt(page);
   const m = await page.evaluate(() => { const l = window.GS.app._last.round; return { jackpot: l.jackpot, n: l.match && l.match.n }; });
   check(m.jackpot && m.n === 3 && (await page.locator('#dlg-result .rs-title').innerText()).includes('TRIPLE THREAT'), 'and the receipt calls it a Triple Threat', m);
   await page.evaluate(() => { window.GS.fair.drawIndices = window.__oldDraw; });
   await closeReceipt(page);
   await a11y(page, 'slot machine: Sweet Charity');
+  await page.click('#panel-sweets [data-role="guide"]');
+  await page.waitForSelector('#dlg-slotguide[open]');
+  check(await page.locator('#dlg-slotguide .sg-row').count() === 5 && (await page.locator('#dlg-slotguide').innerText()).includes('Nothing on this machine pays you'), 'How it pays opens a five-row guide that says nothing pays you');
+  await a11y(page, 'slot machine guide');
+  await page.keyboard.press('Escape');
   await page.close();
   // a phone, with the busiest machine
   const ph = await newPage({ viewport: { width: 390, height: 780 }, mobile: true });

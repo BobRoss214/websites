@@ -6,8 +6,9 @@
  * reels (in a pool of five or more) for a Triple Threat bonus.
  *
  * Fairness: the app draws each reel's charity uniformly from the pool before anything moves (see js/fair.js);
- * the reel then rolls to a strip that ends on that charity. The themes, the blur, the slow last reel and the match
- * banners are show: they do not change who wins.
+ * the reel then rolls to a strip that ends on that charity. The themes, the blur, the slow last reel, the win line and
+ * the match banners are show: they do not change who wins. (Borrowed from real slot machines, as display only: a
+ * payline with a drawn win line, escalating win tiers, and a "how it pays" guide.)
  */
 (function () {
   'use strict';
@@ -60,7 +61,14 @@
     }
   ];
 
-  var ANNOUNCE = { 2: 'PAIR', 3: 'TRIPLE THREAT!', 4: 'FOUR OF A KIND!', 5: 'FIVE OF A KIND!' };
+  // The size of the show for a match of n reels (a pair, then Triple Threat, then bigger and bigger).
+  function tierName(n) {
+    if (n >= 6) { return 'EPIC MATCH!'; }
+    if (n === 5) { return 'MEGA MATCH!'; }
+    if (n === 4) { return 'BIG MATCH!'; }
+    if (n === 3) { return 'TRIPLE THREAT!'; }
+    return 'PAIR';
+  }
 
   function makeMachine(def) {
     var el = {};
@@ -119,6 +127,8 @@
     function clearMarks() {
       reels.forEach(function (r) { r.win.classList.remove('is-hit', 'is-match', 'is-lit', 'is-anticipate'); });
       el.machine.classList.remove('is-jackpot', 'is-anticipating');
+      el.machine.removeAttribute('data-tier');
+      if (el.winline) { el.winline.classList.remove('is-on'); }
       el.banner.classList.remove('is-on');
       el.banner.textContent = '';
     }
@@ -199,10 +209,14 @@
             '<div class="slots__window">' +
               '<div class="slots__reels" data-role="reels"></div>' +
               '<div class="slots__payline" aria-hidden="true"><i></i><i></i></div>' +
+              '<div class="slots__winline" data-role="winline" aria-hidden="true"></div>' +
               '<div class="slots__banner" data-role="banner" role="status" aria-live="polite"></div>' +
             '</div>' +
             '<div class="slots__bar">' +
-              '<button type="button" class="slots__turbo" data-role="turbo" aria-pressed="false">' + GS.icon('zap') + 'Turbo</button>' +
+              '<span class="slots__tools">' +
+                '<button type="button" class="slots__turbo" data-role="turbo" aria-pressed="false">' + GS.icon('zap') + 'Turbo</button>' +
+                '<button type="button" class="slots__turbo slots__guidebtn" data-role="guide">' + GS.icon('circle-help') + 'How it pays</button>' +
+              '</span>' +
               '<button type="button" class="slots__spin" data-role="spin">' + GS.icon('play') + '<span>Spin</span></button>' +
             '</div>' +
             '<button type="button" class="slots__lever" data-role="lever" aria-label="Pull the lever"><span class="slots__knob"></span><span class="slots__arm"></span></button>' +
@@ -215,6 +229,8 @@
       el.spin = container.querySelector('[data-role="spin"]');
       el.turbo = container.querySelector('[data-role="turbo"]');
       el.banner = container.querySelector('[data-role="banner"]');
+      el.winline = container.querySelector('[data-role="winline"]');
+      el.guide = container.querySelector('[data-role="guide"]');
       el.reelsBox = container.querySelector('[data-role="reels"]');
       el.stage = container.querySelector('[data-role="stage"]');
       el.lever.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
@@ -224,6 +240,7 @@
         el.turbo.setAttribute('aria-pressed', String(turbo));
         GS.audio.click();
       });
+      el.guide.addEventListener('click', function () { openGuide(); });
       buildReels();
       note();
       U.observeSize(el.stage, function () { fit(); });
@@ -250,6 +267,40 @@
       el.banner.classList.toggle('is-strong', !!strong);
       el.banner.classList.add('is-on');
       bannerTimer = setTimeout(function () { el.banner.classList.remove('is-on'); }, strong ? 2600 : 1700);
+    }
+
+    /** Draws the win line through the middle row, from the first matching reel to the last. */
+    function drawWinLine(idxs) {
+      if (!el.winline || idxs.length < 2 || !reels.length) { return; }
+      var a = reels[idxs[0]].win;
+      var b = reels[idxs[idxs.length - 1]].win;
+      var x1 = a.offsetLeft + a.offsetWidth / 2;
+      var x2 = b.offsetLeft + b.offsetWidth / 2;
+      el.winline.style.left = x1 + 'px';
+      el.winline.style.width = Math.max(4, x2 - x1) + 'px';
+      el.winline.classList.remove('is-on');
+      void el.winline.offsetWidth;
+      el.winline.classList.add('is-on');
+    }
+
+    /** "How it pays": a plain-language paytable (nothing here pays you; it shows what each match earns). */
+    function openGuide() {
+      var m = GS.ui.modal('slotguide');
+      var rows = [[2, 'PAIR', 'Two reels land on the same charity. A quick flash, no bonus.'],
+                  [3, 'TRIPLE THREAT', 'Three or more reels on the same charity (on a board of five or more). Bonus XP, confetti and the Triple Threat badge.'],
+                  [4, 'BIG MATCH', 'Four on the same charity. A bigger light show.'],
+                  [5, 'MEGA MATCH', 'Five on the same charity. An even bigger show.'],
+                  [6, 'EPIC MATCH', 'Six or more. The biggest show the machine has.']];
+      var list = rows.map(function (r) {
+        return '<li class="sg-row sg-t' + r[0] + '"><span class="sg-n" aria-hidden="true">' + (r[0] === 6 ? '6+' : r[0]) + '</span><span><b>' + r[1] + '</b><br>' + r[2] + '</span></li>';
+      }).join('');
+      m.set(
+        '<h2 class="modal__title" id="dlg-slotguide-title">How ' + U.esc(def.name) + ' pays</h2>' +
+        '<p class="modal__sub">Nothing on this machine pays you. Your gift is split evenly across the reels, one charity each, and every one of those shares really goes to the charity that lands.</p>' +
+        '<ul class="sg-list">' + list + '</ul>' +
+        '<p class="sg-foot">Every reel is a fair, equal-odds draw from the board of <b>' + pool.length + '</b> charities. The lights, the win line and the slow last reel are only for show: they never change who wins. Tap Fair Play? in the menu to check any spin yourself.</p>'
+      );
+      m.open();
     }
 
     /** One pull = every reel. Resolves with the winning charity of each reel. */
@@ -346,11 +397,23 @@
                 if (counts[winners[i].id] >= 2) { r.win.classList.add('is-match'); }
               }, i * (turbo ? 25 : 70));
             });
+            var hitIdx = [];
+            winners.forEach(function (w, i) { if (w.id === bestId) { hitIdx.push(i); } });
             if (best >= 3) {
+              var tier = Math.min(best, 6);
+              el.machine.setAttribute('data-tier', String(tier));
               el.machine.classList.add('is-jackpot');
-              showBanner((ANNOUNCE[Math.min(best, 5)] || 'MEGA MATCH!') + ' ' + best + ' × ' + GS.charity(bestId).short, true);
+              setTimeout(function () { drawWinLine(hitIdx); }, turbo ? 120 : 380);
+              showBanner(tierName(best) + ' ' + best + ' × ' + GS.charity(bestId).short, true);
+              if (tier >= 4) {
+                GS.audio.coin();
+                var rect = el.machine.getBoundingClientRect();
+                GS.confetti.burst({ x: rect.left + rect.width / 2, y: rect.top + rect.height * 0.4, count: 40 + tier * 24, power: 1000, gravity: 1250 });
+              }
             } else if (best === 2 && n >= 3) {
-              showBanner(ANNOUNCE[2] + ' · ' + GS.charity(bestId).short, false);
+              el.machine.setAttribute('data-tier', '2');
+              setTimeout(function () { drawWinLine(hitIdx); }, turbo ? 120 : 380);
+              showBanner(tierName(2) + ' · ' + GS.charity(bestId).short, false);
             }
             U.sleep(turbo ? 350 : 650).then(function () { resolve(winners); });
           }

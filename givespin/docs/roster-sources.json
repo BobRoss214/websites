@@ -183,7 +183,7 @@
    "https://4-h.org/about/",
    "https://en.wikipedia.org/wiki/4-H"
   ],
-  "note": "Official site confirms the organization, its role supporting 4-H National Headquarters and a Chevy Chase, MD base. Search summary gave conflicting founding years (1976 vs 1977 for the merger), so founded/hq left blank and the entry marked unverified."
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. 4-h.org says National 4-H Council was established in 1976 and is an independent 501(c)(3); its address has changed recently so no city is given."
  },
  {
   "id": "mentor-national-mentoring",
@@ -860,10 +860,11 @@
  {
   "id": "bos-foundation",
   "evidence": [
+   "https://www.orangutan.or.id/our-work",
    "https://en.wikipedia.org/wiki/Borneo_Orangutan_Survival",
    "https://www.learningtogive.org/resources/borneo-orangutan-survival-foundation-bos"
   ],
-  "note": "Founded 1991 by Willie Smits per sources; HQ city not stated in results so entry marked unverified."
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. orangutan.or.id says it was established in 1991; address in Bogor, West Java."
  },
  {
   "id": "snow-leopard-trust",
@@ -1029,7 +1030,7 @@
    "https://playingforchange.org/faq/",
    "https://en.wikipedia.org/wiki/Playing_for_Change"
   ],
-  "note": "Results describe a 501(c)(3) nonprofit music-education foundation (stated as founded 2007) with programmes in 19 countries; official domain playingforchange.org. Headquarters not stated in results, so entry kept unverified."
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. playingforchange.org says the foundation was founded in 2007 as a 501(c)(3); city not stated."
  },
  {
   "id": "sistema-scotland",
@@ -1038,7 +1039,7 @@
    "https://tfn.scot/news/music-changing-lives-through-pioneering-project",
    "https://wemakemusicscotland.org/spotlight-on/spotlight-on-sistema-scotland/"
   ],
-  "note": "National charity running Big Noise programmes (stated as founded 2008 by Richard Holloway); domain makeabignoise.org.uk. Headquarters not stated in results, so entry kept unverified."
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. makeabignoise.org.uk says Sistema Scotland was founded in 2008 and runs Big Noise programmes; it is a Scottish charity (SC039119)."
  },
  {
   "id": "catholic-charities-usa",
@@ -1156,11 +1157,11 @@
  {
   "id": "jrs-usa",
   "evidence": [
+   "https://www.jrsusa.org/about-us/",
    "https://www.jrsusa.org/about-us/our-history/",
-   "https://www.jrsusa.org/our-work/",
-   "https://en.wikipedia.org/wiki/Jesuit_Refugee_Service"
+   "https://www.jrsusa.org/our-work/"
   ],
-  "note": "Results confirmed the organisation, its work and domain jrsusa.org (result URLs). Global JRS was founded in 1980, but the US office's own founding year and HQ city were not stated in results, so marked unverified."
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. jrsusa.org says it is a 501(c)(3) and the U.S. office of Jesuit Refugee Service; founding year and city not stated in results."
  },
  {
   "id": "cmmb",
@@ -1208,11 +1209,11 @@
  {
   "id": "tzu-chi-usa",
   "evidence": [
+   "https://tzuchi.us/who-we-are/history",
    "https://tzuchi.us/our-philosophy/history",
-   "https://en.wikipedia.org/wiki/Tzu_Chi",
-   "https://global.tzuchi.org/history"
+   "https://en.wikipedia.org/wiki/Tzu_Chi"
   ],
-  "note": "Results confirmed the organisation, services and domain tzuchi.us (result URL). The Taiwan parent was founded in 1966 and the first US chapter set up in Alhambra CA in 1989, but the US entity's HQ was not stated, so marked unverified."
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. tzuchi.us says the U.S. chapter began in 1989 and its headquarters are in San Dimas, CA."
  },
  {
   "id": "buddhist-global-relief",
@@ -1311,5 +1312,4926 @@
    "https://www.charitynavigator.org/ein/300396918"
   ],
   "note": "Results confirmed 2007 founding with Hilton Foundation grant, Las Vegas address, four-county area; threesquare.org seen in result URLs."
+ },
+ {
+  "id": "interserve-development",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 12041298204; official register record (registered name: Interserve Development Limited)"
+ },
+ {
+  "id": "nextsense",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 53443272865; official register record"
+ },
+ {
+  "id": "mission-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 15000002522; official register record"
+ },
+ {
+  "id": "hammondcare",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 48000026219; official register record"
+ },
+ {
+  "id": "sim-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 46002679441; official register record"
+ },
+ {
+  "id": "heart-foundation-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 98008419761; official register record"
+ },
+ {
+  "id": "australian-ballet",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 57004849987; official register record"
+ },
+ {
+  "id": "febc-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 68000509517; official register record"
+ },
+ {
+  "id": "fnpw-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 90107744771; official register record"
+ },
+ {
+  "id": "shepherd-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 61000699927; official register record"
+ },
+ {
+  "id": "mind-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 22005063589; official register record (registered name: Mind Australia Limited)"
+ },
+ {
+  "id": "afes",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 91509626599; official register record"
+ },
+ {
+  "id": "bible-society-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 85214424729; official register record"
+ },
+ {
+  "id": "childrens-cancer-institute-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 41072279559; official register record"
+ },
+ {
+  "id": "diabetes-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 47008528461; official register record (registered name: Diabetes Australia Limited)"
+ },
+ {
+  "id": "red-nose-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 81462345159; official register record (registered name: Red Nose Limited)"
+ },
+ {
+  "id": "worldshare",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 16001441103; official register record"
+ },
+ {
+  "id": "redkite",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 65104710787; official register record"
+ },
+ {
+  "id": "save-the-children-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 99008610035; official register record"
+ },
+ {
+  "id": "make-a-wish-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 97006497632; official register record (registered name: Make-A-Wish Foundation Of Australia Ltd.)"
+ },
+ {
+  "id": "koorana-child-family-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 98173846132; official register record (registered name: Koorana Child & Family Services Ltd)"
+ },
+ {
+  "id": "melbourne-comedy-festival",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 43006697918; official register record (registered name: Melbourne International Comedy Festival Limited)"
+ },
+ {
+  "id": "local-leaders-international",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 68092388746; official register record"
+ },
+ {
+  "id": "your-best-life-disability-health",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 95450197846; official register record (registered name: Your Best Life Disability and Health Services Ltd)"
+ },
+ {
+  "id": "childrens-cancer-foundation-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 96114942415; official register record"
+ },
+ {
+  "id": "australian-rural-leadership-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 80056874787; official register record (registered name: Australian Rural Leadership Foundation Limited)"
+ },
+ {
+  "id": "repat-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 80069520869; official register record (registered name: The Repat Foundation Incorporated)"
+ },
+ {
+  "id": "baptist-world-aid-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 63430709718; official register record (registered name: Baptist World Aid Australia Ltd)"
+ },
+ {
+  "id": "big-issue-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 61071598439; official register record (registered name: Big Issue In Australia Limited)"
+ },
+ {
+  "id": "foodbank-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 58073579254; official register record (registered name: Foodbank Australia Limited)"
+ },
+ {
+  "id": "ovarian-cancer-research-foundation-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 37130949834; official register record (registered name: Ovarian Cancer Research Foundation Limited)"
+ },
+ {
+  "id": "greenfleet",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 86693237685; official register record (registered name: The Trustee For Greenfleet Trust)"
+ },
+ {
+  "id": "emerging-minds-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 87093479022; official register record (registered name: Australian Infant; Child; Adolescent And Family Mental Health Association Limited)"
+ },
+ {
+  "id": "wise-employment",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 68093718766; official register record (registered name: WISE Employment Ltd)"
+ },
+ {
+  "id": "life-without-barriers",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 15101252171; official register record"
+ },
+ {
+  "id": "invasive-species-council",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 27101522829; official register record (registered name: Invasive Species Council Inc.)"
+ },
+ {
+  "id": "ozharvest",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 33107782196; official register record (registered name: Oz Harvest Limited)"
+ },
+ {
+  "id": "deaf-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 62118664298; official register record (registered name: Deaf Services Limited)"
+ },
+ {
+  "id": "many-rivers-microfinance",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 58128486788; official register record (registered name: Many Rivers Microfinance Ltd)"
+ },
+ {
+  "id": "maf-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 26134583887; official register record"
+ },
+ {
+  "id": "careertrackers-indigenous-internship",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 67140287627; official register record (registered name: Careertrackers Indigenous Internship Program Limited)"
+ },
+ {
+  "id": "pancare-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 89797016686; official register record (registered name: Pancare Foundation Ltd)"
+ },
+ {
+  "id": "bus-stop-films",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 36154056630; official register record (registered name: Bus Stop Films Ltd)"
+ },
+ {
+  "id": "mulloon-institute",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 53153605531; official register record (registered name: The Mulloon Institute Limited)"
+ },
+ {
+  "id": "thread-together",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 91160701280; official register record (registered name: Thread Together Limited)"
+ },
+ {
+  "id": "soldier-on-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 24811760786; official register record (registered name: Soldier On Ltd.)"
+ },
+ {
+  "id": "australian-indigenous-governance-institute",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 87158627386; official register record (registered name: Australian Indigenous Governance Institute Limited)"
+ },
+ {
+  "id": "centre-of-perinatal-excellence",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 50203962931; official register record (registered name: Centre of Perinatal Excellence Ltd)"
+ },
+ {
+  "id": "wesley-community-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 42164655145; official register record (registered name: Wesley Community Services Limited)"
+ },
+ {
+  "id": "library-for-all",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 57602320865; official register record (registered name: Library For All Ltd)"
+ },
+ {
+  "id": "orange-sky-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 85890622990; official register record (registered name: Orange Sky Australia Limited)"
+ },
+ {
+  "id": "harding-miller-education-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 51607194641; official register record (registered name: Harding Miller Education Foundation Ltd)"
+ },
+ {
+  "id": "mothers-day-classic-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 16179157565; official register record"
+ },
+ {
+  "id": "farm-angels",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 47611990697; official register record (registered name: Farm Angels Ltd)"
+ },
+ {
+  "id": "disaster-relief-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 44614474010"
+ },
+ {
+  "id": "cera-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 24684029499"
+ },
+ {
+  "id": "heartkids",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 22613854336"
+ },
+ {
+  "id": "thirrili",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 14617635828"
+ },
+ {
+  "id": "good-things-foundation-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 92618363974"
+ },
+ {
+  "id": "centre-for-evidence-and-implementation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 56625430177"
+ },
+ {
+  "id": "end-food-waste-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 90627226537"
+ },
+ {
+  "id": "knowmore-legal-service",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 34639490912"
+ },
+ {
+  "id": "wise-global-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 33643107082"
+ },
+ {
+  "id": "ochre-education-resource-library",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 68653070234"
+ },
+ {
+  "id": "salesian-society-vic",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 43206946086"
+ },
+ {
+  "id": "world-vision-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 28004778081"
+ },
+ {
+  "id": "inclusion-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 60084254809"
+ },
+ {
+  "id": "fusion-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 26001273105"
+ },
+ {
+  "id": "australian-dance-theatre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 24007784858"
+ },
+ {
+  "id": "multicultural-centre-for-womens-health",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 48188616970"
+ },
+ {
+  "id": "communicare",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 27768389307"
+ },
+ {
+  "id": "intowork-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 85006162152"
+ },
+ {
+  "id": "australian-cancer-research-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 27076461360"
+ },
+ {
+  "id": "starlight-childrens-foundation-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 80931522157"
+ },
+ {
+  "id": "job-futures-coact",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 13080037538"
+ },
+ {
+  "id": "playgroup-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 31142795695"
+ },
+ {
+  "id": "country-education-foundation-of-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 60103889452"
+ },
+ {
+  "id": "macular-disease-foundation-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 52096255177"
+ },
+ {
+  "id": "brave-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 24138282210"
+ },
+ {
+  "id": "key-assets-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 47140180169"
+ },
+ {
+  "id": "rapid-relief-team-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 61166059392"
+ },
+ {
+  "id": "indigenous-marathon-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 39162317455"
+ },
+ {
+  "id": "homeward-bound-projects",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 76629076973"
+ },
+ {
+  "id": "push-for-better-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 49645093349"
+ },
+ {
+  "id": "musica-viva-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 94504497655"
+ },
+ {
+  "id": "yourtown",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 11102379386"
+ },
+ {
+  "id": "royal-guide-dogs-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 99008427423"
+ },
+ {
+  "id": "one-tree-community-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 74914567313"
+ },
+ {
+  "id": "australian-chamber-orchestra",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 45001335182"
+ },
+ {
+  "id": "conservation-volunteers-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 93006058135"
+ },
+ {
+  "id": "united-way-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 60002806215"
+ },
+ {
+  "id": "life-education-nsw",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 59053737045"
+ },
+ {
+  "id": "samaritans-purse-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 84070722404"
+ },
+ {
+  "id": "youth-opportunities-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 84615401812"
+ },
+ {
+  "id": "the-song-room",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 68790325760"
+ },
+ {
+  "id": "ilbijerri-theatre-company",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 27865864658"
+ },
+ {
+  "id": "anzgog",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 69138649028"
+ },
+ {
+  "id": "jawun",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 51097101169"
+ },
+ {
+  "id": "bravo-disability-support-network",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 62947760546"
+ },
+ {
+  "id": "together-for-humanity-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 51118344666"
+ },
+ {
+  "id": "teach-for-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 27133833762"
+ },
+ {
+  "id": "pankind",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 22145513060"
+ },
+ {
+  "id": "stars-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 68604680088"
+ },
+ {
+  "id": "fortem-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 58631587892"
+ },
+ {
+  "id": "my-room-childrens-cancer-charity",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 51636749570"
+ },
+ {
+  "id": "stride-mental-health",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 58000020146"
+ },
+ {
+  "id": "royal-flying-doctor-service-south-eastern",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 86000032422"
+ },
+ {
+  "id": "cerebral-palsy-alliance",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 45000062288"
+ },
+ {
+  "id": "crusader-union-of-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 90213359332"
+ },
+ {
+  "id": "aruma-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 31001813403"
+ },
+ {
+  "id": "australian-marine-conservation-society",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 53409718351"
+ },
+ {
+  "id": "wellways-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 93093357165"
+ },
+ {
+  "id": "community-resources-limited",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 90746695414"
+ },
+ {
+  "id": "neami-national",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 52105082460"
+ },
+ {
+  "id": "interact-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 47072232083"
+ },
+ {
+  "id": "australian-childhood-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 28057044514"
+ },
+ {
+  "id": "the-reach-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 87069837627"
+ },
+ {
+  "id": "australian-literacy-and-numeracy-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 27098802094"
+ },
+ {
+  "id": "each-limited",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 46197549317"
+ },
+ {
+  "id": "australasian-gastro-intestinal-trials-group",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 34093854267"
+ },
+ {
+  "id": "kids-with-cancer-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 99095779114"
+ },
+ {
+  "id": "clontarf-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 77131909405"
+ },
+ {
+  "id": "headspace-national-youth-mental-health-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 26137533843"
+ },
+ {
+  "id": "givit",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 21137408201"
+ },
+ {
+  "id": "institute-for-urban-indigenous-health",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 32140019290"
+ },
+ {
+  "id": "mercy-works",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 37147042466"
+ },
+ {
+  "id": "gidget-foundation-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 52160202960"
+ },
+ {
+  "id": "australian-alliance-to-end-homelessness",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 52163151808"
+ },
+ {
+  "id": "mates-in-construction",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 99166347539"
+ },
+ {
+  "id": "eat-up-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 52609589022"
+ },
+ {
+  "id": "no-to-violence",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 64524175321"
+ },
+ {
+  "id": "victorian-deaf-society",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 56004058084"
+ },
+ {
+  "id": "kids-first-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 52303567862"
+ },
+ {
+  "id": "royal-far-west",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 37821970819"
+ },
+ {
+  "id": "australian-foundation-for-disability",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 99000112729"
+ },
+ {
+  "id": "endeavour-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 80009670704"
+ },
+ {
+  "id": "outward-bound-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 57000250635. Short name is the common trading name (general knowledge; not in record)."
+ },
+ {
+  "id": "autism-spectrum-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 12000637267"
+ },
+ {
+  "id": "kidney-health-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 37008464426. Short name Kidney Health Australia is the trading name on kidney.org.au (general knowledge; not in record other_names)."
+ },
+ {
+  "id": "ms-plus",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 66004942287. Multiple sclerosis focus is from general knowledge of the MS Plus name, not stated in the record."
+ },
+ {
+  "id": "octec",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 91336868595"
+ },
+ {
+  "id": "ku-ring-gai-neighbourhood-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 22874067312. Register record has blank town/state; hq set to Ku-ring-gai, NSW from the name (the Ku-ring-gai area is in NSW)."
+ },
+ {
+  "id": "opera-queensland",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 83010258750"
+ },
+ {
+  "id": "campbell-page",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 49341812398"
+ },
+ {
+  "id": "rainbow-club-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 96753434862"
+ },
+ {
+  "id": "performing-lines",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 66003986061"
+ },
+ {
+  "id": "living-my-way",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 47110995518"
+ },
+ {
+  "id": "neura",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 94050110346. Short name NeuRA is the abbreviation used on neura.edu.au."
+ },
+ {
+  "id": "big-hart",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 56398434433"
+ },
+ {
+  "id": "bravehearts",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 41496913890"
+ },
+ {
+  "id": "act-for-kids",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 98142986767"
+ },
+ {
+  "id": "nature-glenelg-trust",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 23917949584"
+ },
+ {
+  "id": "syc",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 27167737144"
+ },
+ {
+  "id": "workskil-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 28167872424"
+ },
+ {
+  "id": "happy-paws-happy-hearts",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 53604090271"
+ },
+ {
+  "id": "original-power",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 98627048373"
+ },
+ {
+  "id": "polly-farmer-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 26062909402. Register shows established 2023, which looks like a re-incorporation date (the foundation predates it); founded set to null, and the year is not used in about."
+ },
+ {
+  "id": "deaf-children-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 57108025207"
+ },
+ {
+  "id": "little-sisters-of-the-poor-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 79110954055. faith=true is a judgement call: purposes are not listed in the record, but the entity is a Catholic religious congregation."
+ },
+ {
+  "id": "caspa-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 78263985795"
+ },
+ {
+  "id": "tresillian",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 28521424723. Short name Tresillian is the trading name shown by site tresillian.org.au (general knowledge)."
+ },
+ {
+  "id": "girl-guides-nsw",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 21366241150"
+ },
+ {
+  "id": "interrelate",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 43932956053"
+ },
+ {
+  "id": "sydney-film-festival",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 84000233741"
+ },
+ {
+  "id": "australian-volunteer-coast-guard",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 99392980313. Name expanded from \"Assoc\" to \"Association\"; marine rescue wording is general knowledge."
+ },
+ {
+  "id": "help-enterprises",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 46479304129"
+ },
+ {
+  "id": "ted-noffs-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 49018049971"
+ },
+ {
+  "id": "flourish-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 66001280628. Registered name is RichmondPRA Limited; short name Flourish Australia is the trading name (other_names list Flourish Australia entities and the site is flourishaustralia.org.au). Mental-health focus is general knowledge."
+ },
+ {
+  "id": "noahs-ark",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 56770578386"
+ },
+ {
+  "id": "jesuit-social-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 72005269554. faith=true is a judgement call: record purposes list only social or public welfare, but the organisation is a Jesuit ministry."
+ },
+ {
+  "id": "safe-and-equal",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 77965665912. Family-violence focus and Victorian peak-body role are general knowledge, not stated in the record."
+ },
+ {
+  "id": "mnd-nsw",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 12387503221"
+ },
+ {
+  "id": "acso",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 43037816628"
+ },
+ {
+  "id": "jobsupport",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 38429230773"
+ },
+ {
+  "id": "child-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 61986879146"
+ },
+ {
+  "id": "youth-insearch",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 31886363881"
+ },
+ {
+  "id": "carers-queensland",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 20061257725"
+ },
+ {
+  "id": "epic-employment-service",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 63946234656"
+ },
+ {
+  "id": "workways-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 50957582595"
+ },
+ {
+  "id": "omnia-inclusive-employment",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 88083168147"
+ },
+ {
+  "id": "nexus-human-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 49584451819"
+ },
+ {
+  "id": "marist180",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 70066591811"
+ },
+ {
+  "id": "refugee-immigration-legal-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 94806293897"
+ },
+ {
+  "id": "settlement-services-international",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 38031375761"
+ },
+ {
+  "id": "drug-arm",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 64102943304"
+ },
+ {
+  "id": "wildlife-warriors",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 13102721513"
+ },
+ {
+  "id": "the-pyjama-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 43111196742"
+ },
+ {
+  "id": "high-resolves",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 73127699978"
+ },
+ {
+  "id": "sea-shepherd-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 38123339499"
+ },
+ {
+  "id": "national-affordable-housing-consortium",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 30132604552"
+ },
+ {
+  "id": "aeiou-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 19135897255"
+ },
+ {
+  "id": "goodes-oloughlin-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 59139676010"
+ },
+ {
+  "id": "shake-it-up-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 65270391304"
+ },
+ {
+  "id": "literacy-for-life-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 83163634777"
+ },
+ {
+  "id": "good-cycles",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 56162578805"
+ },
+ {
+  "id": "mercy-community-services-seq",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 51166477318"
+ },
+ {
+  "id": "snaicc",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 42513562148"
+ },
+ {
+  "id": "lifeline-direct",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 14618509818"
+ },
+ {
+  "id": "indigenous-desert-alliance",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 20632257964"
+ },
+ {
+  "id": "roses-in-the-ocean",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 36652550966"
+ },
+ {
+  "id": "cottage-by-the-sea",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 21987748593"
+ },
+ {
+  "id": "surf-life-saving-nsw",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 93827748379"
+ },
+ {
+  "id": "sdn-childrens-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 23000014335"
+ },
+ {
+  "id": "anglican-youthworks",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 96398231605"
+ },
+ {
+  "id": "the-smith-family",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 28000030179"
+ },
+ {
+  "id": "northcott",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 87302064152"
+ },
+ {
+  "id": "gowrie-nsw",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 57001894659"
+ },
+ {
+  "id": "cpl-choice-passion-life",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 27009942269"
+ },
+ {
+  "id": "ymca-canberra",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 89952764183"
+ },
+ {
+  "id": "koomarri",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 38599467782"
+ },
+ {
+  "id": "challenge-community-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 17059209675"
+ },
+ {
+  "id": "alcohol-and-drug-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 66057731192"
+ },
+ {
+  "id": "guide-dogs-sa-nt",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 91183168093"
+ },
+ {
+  "id": "guide-dogs-nsw-act",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 52000399744"
+ },
+ {
+  "id": "multicap",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 40120240686"
+ },
+ {
+  "id": "newcastle-meals-on-wheels",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 59349207123"
+ },
+ {
+  "id": "oxfam",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/202918"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "msi-reproductive-choices",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/265543"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "shaw-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/287785"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "british-red-cross",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/220949"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "islamic-relief",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/328158"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "rnli",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/209603"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "rspb",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/207076"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "royal-british-legion",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/219279"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "halo-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1001813"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "dogs-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1167663"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "leonard-cheshire",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/218186"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "age-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1128267"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "save-the-children-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/213890"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "international-medical-corps-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1093861"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "unicef-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1072612"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "national-theatre",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/224223"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "irc-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1065972"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "walk-wheel-cycle-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/326550"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "ssafa",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/210760"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "mines-advisory-group",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1083008"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "ippf",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/229476"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "msf-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1026588"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "autism-initiatives",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1170634"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "zsl",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/208728"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "human-appeal",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1154288"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "woodland-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/294344"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "wwf-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1081247"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "camfed",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1029161"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "tearfund",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/265464"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "amanat-charity-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1000851"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "al-khair-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1126808"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "education-development-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/270901"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "depaul-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1107385"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "christian-aid",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1105851"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "matw-project",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1201110"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "world-vision-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/285908"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "care-international-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/292506"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "aga-khan-foundation-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/266518"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "plan-international-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/276035"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "cdp-worldwide",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1122330"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "breast-cancer-now",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1160558"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "medical-aid-for-palestinians",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1045315"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "cafod",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1160384"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "compassion-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1077216"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "blue-cross",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/224392"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "wildfowl-and-wetlands-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1030884"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "actionaid-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/274467"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "maf-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1058226"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "fauna-and-flora",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1011102"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "virunga-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1111806"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "relief-international-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1098106"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "pharo-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1143152"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "turn2us",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/207812"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "concern-worldwide-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1092236"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "action-for-humanity",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1154881"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "marine-stewardship-council",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1066806"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "ndcs",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1016532"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "muslim-hands",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1105056"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "birdlife-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1042125"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "clean-air-fund",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1183697"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "bbc-media-action",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1076235"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "iied",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/800066"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "helpage-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/288180"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "dementia-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1039404"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "world-animal-protection",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1081849"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "samaritans",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/219432"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "anna-freud-centre",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1077106"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "hand-in-hand-for-aid-and-development",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1176805"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "border-consortium",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1109476"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "gurkha-welfare-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1103669"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "clientearth",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1053988"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "one-nation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1156200"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "bible-society",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/232759"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "uk-for-unhcr",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1183415"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "brooke",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1085760"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "vso",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/313757"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "one-ummah",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1168565"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "amnesty-international-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1051681"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "muslim-aid",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1176462"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "sea-cadets",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/313013"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "orphans-in-need",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1144812"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "elton-john-aids-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1017336"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "uk-med",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1166956"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "thomson-reuters-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1082139"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "action-against-hunger-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1047501"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "street-child",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1128536"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "book-aid-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/313869"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "internews-europe",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1148404"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "little-sisters-of-the-poor",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/234434"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "raf-benevolent-fund",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1081009"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "royal-air-forces-association",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/226686"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "aatf",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1107507"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "al-ayn-social-care-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1163706"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "shelterbox",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1096479"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "ben-motor-trades",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/297877"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "saferworld",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1043843"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "compassion-in-world-farming",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1095050"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "nfer",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/313392"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "ivcc",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1128437"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "al-basar-international-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1160758"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "galvmed",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1115606"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "ifaw",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1024806"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "maf-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1064598"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "open-doors-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1125684"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "farm-africa",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/326901"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "the-climate-group",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1102909"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "hearing-dogs-for-deaf-people",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/293358"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "svp-england-and-wales",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1053992"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "girl-effect",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1141155"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "frontline-aids",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1038860"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "afghanaid",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1045348"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "international-alert",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/327553"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "world-jewish-relief",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/290767"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "birmingham-repertory-theatre",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/223660"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "duke-of-edinburghs-international-award",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1072453"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "article-19",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/327421"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "global-health-partnerships",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1113101"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "council-for-at-risk-academics",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/207471"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "st-john-of-jerusalem-eye-hospital-group",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1139527"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "greenpeace-environmental-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/284934"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "penny-appeal",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1128341"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "war-child",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1071659"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "wild-planet-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/306622"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "handicap-international-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1082565"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "blue-marine-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1137209"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "ripple-effect-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/299717"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "choose-love",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1177927"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "the-british-asian-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1127366"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "royal-naval-benevolent-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/206243"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "fara-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1139349"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "marwell-wildlife",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/275433"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "the-leprosy-mission-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1076356"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "addenbrookes-charitable-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1170103"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "dkms-foundation-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1150056"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "youth-sport-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1086915"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "read-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1160256"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "we-are-purposeful",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1169844"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "traffic-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1076722"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "royal-philharmonic-orchestra",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/244533"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "albertine-rift-conservation-society",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1102123"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "conciliation-resources",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1055436"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "al-mustafa-welfare-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1118492"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "tree-aid",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1135156"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "philharmonia",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/250277"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "hope-and-homes-for-children",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1089490"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "parkrun-global",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1175062"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "islamic-help",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1160490"
+  ],
+  "note": "official register record (charity no. 1160490)"
+ },
+ {
+  "id": "global-relief-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1191793"
+  ],
+  "note": "official register record (charity no. 1191793)"
+ },
+ {
+  "id": "jack-petchey-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1176221"
+  ],
+  "note": "official register record (charity no. 1176221)"
+ },
+ {
+  "id": "cochrane-collaboration",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1045921"
+  ],
+  "note": "official register record (charity no. 1045921)"
+ },
+ {
+  "id": "severn-wye-energy-agency",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1083812"
+  ],
+  "note": "official register record (charity no. 1083812)"
+ },
+ {
+  "id": "blue-ventures",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1098893"
+  ],
+  "note": "official register record (charity no. 1098893)"
+ },
+ {
+  "id": "liverpool-fc-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1096572"
+  ],
+  "note": "official register record (charity no. 1096572)"
+ },
+ {
+  "id": "donmar-warehouse",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/284262"
+  ],
+  "note": "official register record (charity no. 284262)"
+ },
+ {
+  "id": "dmi-network",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1207394"
+  ],
+  "note": "official register record (charity no. 1207394)"
+ },
+ {
+  "id": "working-animals-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/209015"
+  ],
+  "note": "official register record (charity no. 209015)"
+ },
+ {
+  "id": "world-horse-welfare",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/206658"
+  ],
+  "note": "official register record (charity no. 206658)"
+ },
+ {
+  "id": "fia-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1088670"
+  ],
+  "note": "official register record (charity no. 1088670)"
+ },
+ {
+  "id": "worldwide-veterinary-service",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1100485"
+  ],
+  "note": "official register record (charity no. 1100485)"
+ },
+ {
+  "id": "national-space-centre",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1078832"
+  ],
+  "note": "official register record (charity no. 1078832)"
+ },
+ {
+  "id": "human-relief-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1126281"
+  ],
+  "note": "official register record (charity no. 1126281)"
+ },
+ {
+  "id": "wagggs",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1159255"
+  ],
+  "note": "official register record (charity no. 1159255)"
+ },
+ {
+  "id": "cbso",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/506276"
+  ],
+  "note": "official register record (charity no. 506276)"
+ },
+ {
+  "id": "skt-welfare",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1153735"
+  ],
+  "note": "official register record (charity no. 1153735)"
+ },
+ {
+  "id": "abdullah-aid",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1165916"
+  ],
+  "note": "official register record (charity no. 1165916)"
+ },
+ {
+  "id": "bms-world-mission",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1174364"
+  ],
+  "note": "official register record (charity no. 1174364)"
+ },
+ {
+  "id": "little-princess-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1176160"
+  ],
+  "note": "official register record (charity no. 1176160)"
+ },
+ {
+  "id": "good-things-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1165209"
+  ],
+  "note": "official register record (charity no. 1165209)"
+ },
+ {
+  "id": "restless-development",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1127488"
+  ],
+  "note": "official register record (charity no. 1127488)"
+ },
+ {
+  "id": "mda-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1113409"
+  ],
+  "note": "official register record (charity no. 1113409)"
+ },
+ {
+  "id": "sands",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/299679"
+  ],
+  "note": "official register record (charity no. 299679)"
+ },
+ {
+  "id": "newcastle-united-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1124896"
+  ],
+  "note": "official register record (charity no. 1124896)"
+ },
+ {
+  "id": "synchronicity-earth",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1132786"
+  ],
+  "note": "official register record (charity no. 1132786)"
+ },
+ {
+  "id": "hope-for-justice",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1126097"
+  ],
+  "note": "official register record (charity no. 1126097)"
+ },
+ {
+  "id": "born-free-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1070906"
+  ],
+  "note": "official register record (charity no. 1070906)"
+ },
+ {
+  "id": "bristol-zoological-society",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1104986"
+  ],
+  "note": "official register record (charity no. 1104986)"
+ },
+ {
+  "id": "kings-trust-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1159815"
+  ],
+  "note": "official register record (charity no. 1159815)"
+ },
+ {
+  "id": "ashden",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1104153"
+  ],
+  "note": "official register record (charity no. 1104153)"
+ },
+ {
+  "id": "theirworld",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1092312"
+  ],
+  "note": "official register record (charity no. 1092312)"
+ },
+ {
+  "id": "forest-peoples-programme",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1082158"
+  ],
+  "note": "official register record (charity no. 1082158)"
+ },
+ {
+  "id": "muslim-charity",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1078488"
+  ],
+  "note": "official register record (charity no. 1078488)"
+ },
+ {
+  "id": "internet-watch-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1112398"
+  ],
+  "note": "official register record (charity no. 1112398)"
+ },
+ {
+  "id": "environmental-justice-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1088128"
+  ],
+  "note": "official register record (charity no. 1088128)"
+ },
+ {
+  "id": "unlimit-health",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1182166"
+  ],
+  "note": "official register record (charity no. 1182166)"
+ },
+ {
+  "id": "iwpr",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1027201"
+  ],
+  "note": "official register record (charity no. 1027201)"
+ },
+ {
+  "id": "sea-life-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1175859"
+  ],
+  "note": "official register record (charity no. 1175859)"
+ },
+ {
+  "id": "power-of-nutrition",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1160373"
+  ],
+  "note": "official register record (charity no. 1160373)"
+ },
+ {
+  "id": "eia-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1182208"
+  ],
+  "note": "official register record (charity no. 1182208)"
+ },
+ {
+  "id": "cbm-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1058162"
+  ],
+  "note": "official register record (charity number 1058162)"
+ },
+ {
+  "id": "ark-absolute-return-for-kids",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1095322"
+  ],
+  "note": "official register record (charity number 1095322)"
+ },
+ {
+  "id": "hand-in-hand-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1113868"
+  ],
+  "note": "official register record (charity number 1113868)"
+ },
+ {
+  "id": "womankind-worldwide",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/328206"
+  ],
+  "note": "official register record (charity number 328206)"
+ },
+ {
+  "id": "asymmetry-art-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1190437"
+  ],
+  "note": "official register record (charity number 1190437)"
+ },
+ {
+  "id": "royal-life-saving-society-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1046060"
+  ],
+  "note": "official register record (charity number 1046060)"
+ },
+ {
+  "id": "international-learning-movement",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1102513"
+  ],
+  "note": "official register record (charity number 1102513)"
+ },
+ {
+  "id": "mercy-to-humanity",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1195998"
+  ],
+  "note": "official register record (charity number 1195998)"
+ },
+ {
+  "id": "mercy-in-action",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1096068"
+  ],
+  "note": "official register record (charity number 1096068)"
+ },
+ {
+  "id": "the-boys-brigade",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/305969"
+  ],
+  "note": "official register record (charity number 305969)"
+ },
+ {
+  "id": "butterfly-conservation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/254937"
+  ],
+  "note": "official register record (charity number 254937)"
+ },
+ {
+  "id": "medaille-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1117830"
+  ],
+  "note": "official register record (charity number 1117830)"
+ },
+ {
+  "id": "minority-rights-group",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/282305"
+  ],
+  "note": "official register record (charity number 282305)"
+ },
+ {
+  "id": "lepra",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/213251"
+  ],
+  "note": "official register record (charity number 213251)"
+ },
+ {
+  "id": "the-zahra-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1129501"
+  ],
+  "note": "official register record (charity number 1129501)"
+ },
+ {
+  "id": "global-ncap",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1141798"
+  ],
+  "note": "official register record (charity number 1141798)"
+ },
+ {
+  "id": "ygam",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1162425"
+  ],
+  "note": "official register record (charity number 1162425)"
+ },
+ {
+  "id": "embrace-the-middle-east",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1076329"
+  ],
+  "note": "official register record (charity number 1076329)"
+ },
+ {
+  "id": "the-mission-to-seafarers",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1123613"
+  ],
+  "note": "official register record (charity number 1123613)"
+ },
+ {
+  "id": "lumos-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1112575"
+  ],
+  "note": "official register record (charity number 1112575)"
+ },
+ {
+  "id": "tikva-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1151993"
+  ],
+  "note": "official register record (charity number 1151993)"
+ },
+ {
+  "id": "microloan-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1104287"
+  ],
+  "note": "official register record (charity number 1104287)"
+ },
+ {
+  "id": "foundation-of-light",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1089333"
+  ],
+  "note": "official register record (charity number 1089333)"
+ },
+ {
+  "id": "laureus-sport-for-good-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1111364"
+  ],
+  "note": "official register record (charity number 1111364)"
+ },
+ {
+  "id": "the-peek-vision-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1165960"
+  ],
+  "note": "official register record (charity number 1165960)"
+ },
+ {
+  "id": "marine-conservation-society",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1004005"
+  ],
+  "note": "official register record (charity number 1004005)"
+ },
+ {
+  "id": "near-east-foundation-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1150993"
+  ],
+  "note": "official register record (charity number 1150993)"
+ },
+ {
+  "id": "peace-direct",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1123241"
+  ],
+  "note": "official register record (charity number 1123241)"
+ },
+ {
+  "id": "windle-trust-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1092834"
+  ],
+  "note": "official register record (charity number 1092834)"
+ },
+ {
+  "id": "whale-and-dolphin-conservation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1014705"
+  ],
+  "note": "official register record (charity number 1014705)"
+ },
+ {
+  "id": "justice-and-care",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1133829"
+  ],
+  "note": "official register record (charity number 1133829)"
+ },
+ {
+  "id": "mothers2mothers-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1119721"
+  ],
+  "note": "official register record (charity number 1119721)"
+ },
+ {
+  "id": "prs-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1080837"
+  ],
+  "note": "official register record (charity number 1080837)"
+ },
+ {
+  "id": "human-aid-and-advocacy",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1138111"
+  ],
+  "note": "official register record (charity number 1138111)"
+ },
+ {
+  "id": "business-and-human-rights-resource-centre",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1096664"
+  ],
+  "note": "official register record (charity number 1096664)"
+ },
+ {
+  "id": "childrens-cancer-and-leukaemia-group",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1182637"
+  ],
+  "note": "official register record (charity number 1182637)"
+ },
+ {
+  "id": "global-greengrants-fund-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1151527"
+  ],
+  "note": "official register record (charity number 1151527)"
+ },
+ {
+  "id": "united-purpose",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/272465"
+  ],
+  "note": "official register record (charity number 272465)"
+ },
+ {
+  "id": "chain-of-hope",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1081384"
+  ],
+  "note": "official register record (charity number 1081384)"
+ },
+ {
+  "id": "cure-eb",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1158672"
+  ],
+  "note": "official register record (charity number 1158672)"
+ },
+ {
+  "id": "cool-earth-action",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1117978"
+  ],
+  "note": "official register record (charity number 1117978)"
+ },
+ {
+  "id": "jacobs-well-appeal",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1192373"
+  ],
+  "note": "official register record (charity number 1192373)"
+ },
+ {
+  "id": "icnarc",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1039417"
+  ],
+  "note": "official register record (charity number 1039417)"
+ },
+ {
+  "id": "awf",
+  "evidence": [
+   "https://www.awf.org/about/strategic-vision"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. awf.org results state it was founded in 1961 and is headquartered in Nairobi, Kenya."
+ },
+ {
+  "id": "americans-for-the-arts",
+  "evidence": [
+   "https://www.americansforthearts.org/about-americans-for-the-arts/50th-anniversary/50th-anniversary-timeline"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. Its own site says it was founded in 1960, with offices in Washington, DC and New York City."
+ },
+ {
+  "id": "cpj",
+  "evidence": [
+   "https://cpj.org/about/history/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. cpj.org says it was incorporated in 1981 and its headquarters are in New York."
+ },
+ {
+  "id": "conservation-international",
+  "evidence": [
+   "https://www.conservation.org/about/global-offices"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. conservation.org shows an Arlington, VA headquarters; results give a 1987 founding."
+ },
+ {
+  "id": "coral-reef-alliance",
+  "evidence": [
+   "https://coral.org/en/who-we-are/mission-history/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. coral.org says it was founded in 1994 (headquarters city not shown in results)."
+ },
+ {
+  "id": "creative-commons",
+  "evidence": [
+   "https://creativecommons.org/history/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. creativecommons.org confirms the nonprofit exists and describes its history; founding year not stated in results."
+ },
+ {
+  "id": "gorilla-fund",
+  "evidence": [
+   "https://gorillafund.org/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. gorillafund.org says it was established in 1967; address in Atlanta, GA."
+ },
+ {
+  "id": "first-robotics",
+  "evidence": [
+   "https://www.firstinspires.org/about"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. firstinspires.org says Dean Kamen founded FIRST in 1989; address in Manchester, NH."
+ },
+ {
+  "id": "girls-on-the-run",
+  "evidence": [
+   "https://www.girlsontherun.org/about-us/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. girlsontherun.org says it began in 1996 in Charlotte, NC; headquarters address in Raleigh, NC."
+ },
+ {
+  "id": "hazelden-betty-ford",
+  "evidence": [
+   "https://www.hazeldenbettyford.org/about/history"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. hazeldenbettyford.org says Hazelden began in 1949 and the foundation is headquartered in Center City, MN."
+ },
+ {
+  "id": "internet-archive",
+  "evidence": [
+   "https://archive.org/details/InternetArchiveNewBuildingAt300Funston"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. archive.org describes it as a San Francisco-based nonprofit digital library (300 Funston Avenue); founding year not stated in results."
+ },
+ {
+  "id": "kaboom",
+  "evidence": [
+   "https://kaboom.org/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. kaboom.org lists Founded: 1996 and a Bethesda, MD address."
+ },
+ {
+  "id": "mission-blue",
+  "evidence": [
+   "https://mission-blue.org/about/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. mission-blue.org says Dr. Sylvia Earle founded Mission Blue in 2008 as a 501(c)(3); city not stated in results."
+ },
+ {
+  "id": "musicians-on-call",
+  "evidence": [
+   "https://www.musiciansoncall.org/about-us/founding-story/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. musiciansoncall.org says it was founded in 1999; city not stated in results."
+ },
+ {
+  "id": "audubon",
+  "evidence": [
+   "https://www.audubon.org/about/history"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. audubon.org says the National Audubon Society incorporated in 1905 (in New York State); headquarters city not stated in results."
+ },
+ {
+  "id": "little-kids-rock",
+  "evidence": [
+   "https://musicwill.org/news/little-kids-rock-rebrands-to-music-will-with-goal-of-reaching-one-million-more-kids-in-next-five-years/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. RENAMED: musicwill.org says Little Kids Rock changed its name to Music Will in 2022; it launched as a nonprofit in 2002."
+ },
+ {
+  "id": "national-park-foundation",
+  "evidence": [
+   "https://www.nationalparks.org/our-mission-history"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. nationalparks.org says Congress chartered it in 1967; headquarters in Washington, DC."
+ },
+ {
+  "id": "oceana",
+  "evidence": [
+   "https://usa.oceana.org/about-us/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. oceana.org says it was founded in 2001; international headquarters in Washington, DC."
+ },
+ {
+  "id": "panthera",
+  "evidence": [
+   "https://panthera.org/who-we-are"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. panthera.org says it was founded in 2006; headquarters in New York, NY."
+ },
+ {
+  "id": "partnership-end-addiction",
+  "evidence": [
+   "https://drugfree.org/newsroom/news-item/center-on-addiction-changes-name-to-partnership-to-end-addiction-and-launches-new-website/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. drugfree.org says it formed from the 2019 merger of the Center on Addiction and Partnership for Drug-Free Kids; city not stated."
+ },
+ {
+  "id": "propublica",
+  "evidence": [
+   "https://www.propublica.org/about"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. propublica.org describes itself as an independent nonprofit newsroom; results give a 2007-2008 founding and a New York address."
+ },
+ {
+  "id": "right-to-play",
+  "evidence": [
+   "https://righttoplayusa.org/en/about-us/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. righttoplayusa.org confirms the organisation (founded by Johann Olav Koss in 1994); the U.S. office founding year and city are not stated."
+ },
+ {
+  "id": "shatterproof",
+  "evidence": [
+   "https://www.shatterproof.org/about-us/our-story"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. shatterproof.org says Gary Mendell founded it and led it from its start in 2013; city not stated in results."
+ },
+ {
+  "id": "sing-for-hope",
+  "evidence": [
+   "https://www.singforhope.org/about"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. singforhope.org describes a non-profit founded in New York City; results give 2006."
+ },
+ {
+  "id": "society-for-science",
+  "evidence": [
+   "https://www.societyforscience.org/mission-and-history/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. societyforscience.org says it was founded in 1921 as Science Service and is based in Washington, DC."
+ },
+ {
+  "id": "surfrider",
+  "evidence": [
+   "https://www.surfrider.org/our-history"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. surfrider.org says it was incorporated in 1984 and its headquarters are in San Clemente, CA."
+ },
+ {
+  "id": "actors-fund",
+  "evidence": [
+   "https://actorsfund.org/about-us"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. RENAMED: actorsfund.org says the organisation was founded in 1882 and is now called the Entertainment Community Fund (formerly The Actors Fund)."
+ },
+ {
+  "id": "first-tee",
+  "evidence": [
+   "https://thefirsttee.org/about/contact-us/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. thefirsttee.org confirms a 501(c)(3) youth development organisation with headquarters in Ponte Vedra Beach, FL; founding year not stated in results."
+ },
+ {
+  "id": "marine-mammal-center",
+  "evidence": [
+   "https://www.marinemammalcenter.org/timeline-of-the-marine-mammal-center"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. marinemammalcenter.org says it was established in 1975 and its headquarters are in Sausalito, CA."
+ },
+ {
+  "id": "the-phoenix",
+  "evidence": [
+   "https://thephoenix.org/about-us"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. thephoenix.org says Scott Strode founded The Phoenix in 2006; city not stated in results."
+ },
+ {
+  "id": "planetary-society",
+  "evidence": [
+   "https://www.planetary.org/about/our-founders"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. planetary.org says Carl Sagan, Bruce Murray and Louis Friedman founded it in 1980; city not stated in results."
+ },
+ {
+  "id": "trust-for-public-land",
+  "evidence": [
+   "https://www.tpl.org/who-we-are"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. tpl.org says it was founded in 1972 in San Francisco; current headquarters city not stated in results."
+ },
+ {
+  "id": "save-the-music",
+  "evidence": [
+   "https://www.savethemusic.org/about/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. RENAMED: savethemusic.org says it was founded in 1997 and is now an independent nonprofit called the Save The Music Foundation."
+ },
+ {
+  "id": "wikimedia",
+  "evidence": [
+   "https://wikimediafoundation.org/who-we-are/"
+  ],
+  "note": "Verified 2026-10-01 by a search limited to the charity's own domain. wikimediafoundation.org says it was established as a nonprofit in 2003; address in San Francisco, CA."
+ },
+ {
+  "id": "kurbingui-youth-development",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 47298315697"
+ },
+ {
+  "id": "junction-neighbourhood-centre-maroubra",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 13231860321"
+ },
+ {
+  "id": "ausrelief",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 38600640408"
+ },
+ {
+  "id": "homicide-victims-support-group-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 77709011655"
+ },
+ {
+  "id": "islamic-relief-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 82147006639"
+ },
+ {
+  "id": "helpingminds",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 26183089857"
+ },
+ {
+  "id": "advocacy-tasmania",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 97953910196"
+ },
+ {
+  "id": "advocare-wa",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 64497727390"
+ },
+ {
+  "id": "carers-tasmania",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 54813187077"
+ },
+ {
+  "id": "macarthur-diversity-services-initiative",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 35139742322"
+ },
+ {
+  "id": "st-vincent-de-paul-society-nsw",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 91161127340"
+ },
+ {
+  "id": "pregnancy-to-parenthood-clinic",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 54659775907"
+ },
+ {
+  "id": "playgroup-wa",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 14415755273"
+ },
+ {
+  "id": "apnic-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 24646643156"
+ },
+ {
+  "id": "fitzroy-community-hospice",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 38647816920"
+ },
+ {
+  "id": "marrickville-legal-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 53699012017"
+ },
+ {
+  "id": "mansfield-autism-statewide-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 14006171580"
+ },
+ {
+  "id": "cultivating-community",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 26998940299"
+ },
+ {
+  "id": "berry-street-victoria",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 24719196762; official register record"
+ },
+ {
+  "id": "kari-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 11618913563; official register record"
+ },
+ {
+  "id": "little-dreamers-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 98343827904; official register record"
+ },
+ {
+  "id": "community-transitions-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 22132877135; official register record"
+ },
+ {
+  "id": "ywca-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 74111663873; official register record"
+ },
+ {
+  "id": "ada-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 19488136200; official register record"
+ },
+ {
+  "id": "darwin-aboriginal-art-fair-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 69156042072; official register record"
+ },
+ {
+  "id": "womens-community-shelters",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 54153006556; official register record"
+ },
+ {
+  "id": "back-to-back-theatre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 95834484241; official register record"
+ },
+ {
+  "id": "youth-off-the-streets",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 29100388412; official register record"
+ },
+ {
+  "id": "environmental-justice-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 74052124375; official register record"
+ },
+ {
+  "id": "unicef-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 35060581437; official register record"
+ },
+ {
+  "id": "windmill-production-company",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 17654493213; official register record"
+ },
+ {
+  "id": "boys-to-the-bush",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 87617085766; official register record"
+ },
+ {
+  "id": "little-wings",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 72154425331; official register record"
+ },
+ {
+  "id": "shine-for-kids",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 60662072775; official register record"
+ },
+ {
+  "id": "mary-mackillop-today",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 88808531480; official register record"
+ },
+ {
+  "id": "great-barrier-reef-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 82090616443; official register record"
+ },
+ {
+  "id": "sydney-theatre-company",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 87001667983; official register record"
+ },
+ {
+  "id": "australians-together",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "ABN 46151761572; official register record (registered name: Concilia Ltd)"
+ },
+ {
+  "id": "people-with-disability-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 98879981198"
+ },
+ {
+  "id": "mjd-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 65159208867"
+ },
+ {
+  "id": "sculpture-by-the-sea",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 84103984756"
+ },
+ {
+  "id": "wintringham",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 97007293478"
+ },
+ {
+  "id": "bobby-goldsmith-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 65141126703"
+ },
+ {
+  "id": "parkinsons-south-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 29954571742"
+ },
+ {
+  "id": "sunnyfield",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 72000415127"
+ },
+ {
+  "id": "warddeken-land-management",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 12128878142"
+ },
+ {
+  "id": "ruah-legal-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 58636664983"
+ },
+ {
+  "id": "australian-refugee-association",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 78904324535"
+ },
+ {
+  "id": "aged-rights-advocacy-service-sa",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 72214044225"
+ },
+ {
+  "id": "refugee-advice-and-casework-service",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 46008173978"
+ },
+ {
+  "id": "intouch-multicultural-centre-against-family-violence",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 65571761399"
+ },
+ {
+  "id": "womens-legal-service-victoria",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 49158531102"
+ },
+ {
+  "id": "aboriginal-legal-service-of-western-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 61532930441"
+ },
+ {
+  "id": "footscray-community-arts-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record. ABN 87005140303"
+ },
+ {
+  "id": "asetts",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 83460231835"
+ },
+ {
+  "id": "rights-information-and-advocacy-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 42401261070"
+ },
+ {
+  "id": "womens-health-in-the-north",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 72418921651"
+ },
+ {
+  "id": "northern-beaches-womens-shelter",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 20873461261"
+ },
+ {
+  "id": "bell-shakespeare-company",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 87050055251"
+ },
+ {
+  "id": "australian-animal-protection-society",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 51004948716"
+ },
+ {
+  "id": "multicultural-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 41372481576"
+ },
+ {
+  "id": "australian-opal-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 20377425512"
+ },
+ {
+  "id": "indigenous-wellbeing-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 96356361867"
+ },
+ {
+  "id": "relationships-australia-wa",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 32105234326"
+ },
+ {
+  "id": "oonah-health-and-community-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 79450431271"
+ },
+ {
+  "id": "health-for-all-wa",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 66376801057"
+ },
+ {
+  "id": "riverwood-community-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 20715425848"
+ },
+ {
+  "id": "st-vincents-curran-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 94674597413"
+ },
+ {
+  "id": "refugee-and-immigration-legal-service",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 69697546949"
+ },
+ {
+  "id": "st-francis-social-services",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 67064978347"
+ },
+ {
+  "id": "queenslanders-with-disability-network",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 26364844700"
+ },
+ {
+  "id": "womens-health-victoria",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 33365284944"
+ },
+ {
+  "id": "northern-nsw-helicopter-rescue-service",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 40002862026"
+ },
+ {
+  "id": "conflict-resolution-service-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record, ABN 65639472211"
+ },
+ {
+  "id": "addison-road-centre-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 50001350152"
+ },
+ {
+  "id": "first-languages-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 42162769977"
+ },
+ {
+  "id": "sydney-mardi-gras-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 87102451785"
+ },
+ {
+  "id": "financial-rights-legal-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 40506635273"
+ },
+ {
+  "id": "newman-womens-shelter",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 36250445852"
+ },
+ {
+  "id": "redfern-legal-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 31001442039"
+ },
+ {
+  "id": "queensland-advocacy-for-inclusion",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 97527905201"
+ },
+ {
+  "id": "ballarat-community-health",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 98227492950"
+ },
+ {
+  "id": "victorian-aboriginal-child-community-agency",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 44665455609"
+ },
+ {
+  "id": "brisbane-youth-service",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 83967756338"
+ },
+ {
+  "id": "daniel-morcombe-foundation",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 35086611943"
+ },
+ {
+  "id": "consumer-action-law-centre",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 37120056484"
+ },
+ {
+  "id": "st-john-ambulance-south-australia",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 42947425570"
+ },
+ {
+  "id": "indigenous-community-television",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 83122250533"
+ },
+ {
+  "id": "centre-for-multicultural-youth",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 82127444713"
+ },
+ {
+  "id": "griffin-theatre-company",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 98001991153"
+ },
+ {
+  "id": "muslim-care-au",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 43161377948"
+ },
+ {
+  "id": "wayside-chapel",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 88125771587"
+ },
+ {
+  "id": "cwaatsich-community-health",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 84826588748"
+ },
+ {
+  "id": "rural-health-tasmania",
+  "evidence": [
+   "https://data.gov.au/data/dataset/acnc-register"
+  ],
+  "note": "official register record; ABN 33028264129"
+ },
+ {
+  "id": "dfn-project-search",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1183834"
+  ],
+  "note": "official register record (charity no. 1183834)"
+ },
+ {
+  "id": "voces8-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1126785"
+  ],
+  "note": "official register record (charity no. 1126785)"
+ },
+ {
+  "id": "veganuary",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1168566"
+  ],
+  "note": "official register record (charity no. 1168566)"
+ },
+ {
+  "id": "cerebra",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1089812"
+  ],
+  "note": "official register record (charity no. 1089812)"
+ },
+ {
+  "id": "humanity-without-borders-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1172624"
+  ],
+  "note": "official register record (charity no. 1172624)"
+ },
+ {
+  "id": "amar-international-charitable-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1047432"
+  ],
+  "note": "official register record (charity no. 1047432)"
+ },
+ {
+  "id": "kaleidoscope-diversity-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1146274"
+  ],
+  "note": "official register record (charity no. 1146274)"
+ },
+ {
+  "id": "safe-passage-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1179608"
+  ],
+  "note": "official register record (charity no. 1179608)"
+ },
+ {
+  "id": "dialogue-earth",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1125378"
+  ],
+  "note": "official register record (charity no. 1125378)"
+ },
+ {
+  "id": "merlins-magic-wand",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1124081"
+  ],
+  "note": "official register record (charity no. 1124081)"
+ },
+ {
+  "id": "ethiopiaid",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/802353"
+  ],
+  "note": "official register record (charity no. 802353)"
+ },
+ {
+  "id": "privacy-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1147471"
+  ],
+  "note": "official register record (charity no. 1147471)"
+ },
+ {
+  "id": "rainforest-alliance-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1185764"
+  ],
+  "note": "official register record (charity no. 1185764)"
+ },
+ {
+  "id": "children-of-adam",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1153244"
+  ],
+  "note": "official register record (charity no. 1153244)"
+ },
+ {
+  "id": "follicular-lymphoma-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1185091"
+  ],
+  "note": "official register record (charity no. 1185091)"
+ },
+ {
+  "id": "greengate-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1171118"
+  ],
+  "note": "official register record (charity no. 1171118)"
+ },
+ {
+  "id": "baby-lifeline",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1006457"
+  ],
+  "note": "official register record (charity no. 1006457)"
+ },
+ {
+  "id": "redress-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1015787"
+  ],
+  "note": "official register record (charity no. 1015787)"
+ },
+ {
+  "id": "amna-refugee-healing-network",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1203454"
+  ],
+  "note": "official register record (charity no. 1203454)"
+ },
+ {
+  "id": "monteverdi-choir-and-orchestras",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/272279"
+  ],
+  "note": "official register record (charity no. 272279)"
+ },
+ {
+  "id": "aurora-orchestra",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1155738"
+  ],
+  "note": "official register record (charity no. 1155738)"
+ },
+ {
+  "id": "durrell-wildlife-conservation-trust-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1121989"
+  ],
+  "note": "official register record (charity no. 1121989)"
+ },
+ {
+  "id": "heal-humanity-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1200314"
+  ],
+  "note": "official register record (charity no. 1200314)"
+ },
+ {
+  "id": "shrimp-welfare-project",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1204414"
+  ],
+  "note": "official register record (charity no. 1204414)"
+ },
+ {
+  "id": "world-villages-for-children",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1058973"
+  ],
+  "note": "official register record (charity no. 1058973)"
+ },
+ {
+  "id": "impact-foundation-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/290992"
+  ],
+  "note": "official register record (charity no. 290992)"
+ },
+ {
+  "id": "practical-action",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/247257"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "world-land-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1001291"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "soho-theatre",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/267234"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "lively-minds",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1187460"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "girls-not-brides",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1154230"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "benefit-mankind-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1187849"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "scripture-union-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/213422"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "beit-halochem-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1146950"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "hcpt-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/281074"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "blackburn-uk-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1105234"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "lighthouse-construction-charity-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1149488"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "four-paws-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1118102"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "railway-children-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1058991"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "minhaj-welfare-foundation-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1084057"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "little-way-association-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/235703"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "varkey-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1145119"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "colchester-zoological-society",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1105621"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "pakaid-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1183821"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "irap",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1140357"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "seo-london",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1097832"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "citizens-foundation-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1087864"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "coram-childrens-legal-centre",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/281222"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "rahma-mercy-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1097682"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "defence-medical-welfare-service",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1087210"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "muslim-global-relief-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1081018"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "lia-relief-trust-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1156537"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "war-on-want",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/208724"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "reprieve-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1114900"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "al-imdaad-foundation-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1140187"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "solaraid",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1115960"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "national-youth-theatre",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/306075"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "aspire-spinal-injury",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1075317"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "david-nott-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1162537"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "youth-business-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1123946"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "hospices-of-hope",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1088475"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "raleigh-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1047653"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "mercy-relief-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1122376"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "orchestra-of-the-age-of-enlightenment",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/295329"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "international-animal-rescue",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1118277"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "transparency-international-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1112842"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "chamber-orchestra-of-europe",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/283484"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "medical-research-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1138223"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "release-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/280577"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "international-justice-mission-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1099126"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "kashmir-orphan-relief-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1113836"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "springboard-charity",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1045411"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "anti-slavery-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1049160"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "integrity-action",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1120927"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "empower-emerging-markets-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1118916"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "muslims-in-need",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1158317"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "wooden-spoon-society",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/326691"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "peaceful-change-initiative",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1162997"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "sense-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1076497"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "traidcraft-exchange",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1048752"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "zane-zimbabwe",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1112949"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "cris-cancer-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1140193"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1140193)"
+ },
+ {
+  "id": "the-mayhew-home",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1077588"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1077588)"
+ },
+ {
+  "id": "khalsa-aid-international",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1163294"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1163294)"
+ },
+ {
+  "id": "buglife",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1092293"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1092293)"
+ },
+ {
+  "id": "sentebale",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1113544"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1113544)"
+ },
+ {
+  "id": "conserve-global",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1195017"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1195017)"
+ },
+ {
+  "id": "fundacao-focus-europe",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1054174"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1054174)"
+ },
+ {
+  "id": "global-rahmah-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1154185"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1154185)"
+ },
+ {
+  "id": "world-child-cancer-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1084729"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1084729)"
+ },
+ {
+  "id": "nekton-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1162666"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1162666)"
+ },
+ {
+  "id": "wellbeing-of-women",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/239281"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 239281)"
+ },
+ {
+  "id": "aegis-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1082856"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1082856)"
+ },
+ {
+  "id": "bgci",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1098834"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1098834)"
+ },
+ {
+  "id": "family-for-every-child",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1149212"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1149212)"
+ },
+ {
+  "id": "muntada-aid",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1157117"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1157117)"
+ },
+ {
+  "id": "dentaid",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1075826"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1075826)"
+ },
+ {
+  "id": "stand-by-me-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1185124"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1185124)"
+ },
+ {
+  "id": "one-foundation-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1118810"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1118810)"
+ },
+ {
+  "id": "media-legal-defence-initiative",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1128789"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1128789)"
+ },
+ {
+  "id": "if-charity-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1095626"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1095626); registered name is \"If...\", entry uses the trading name iF Charity"
+ },
+ {
+  "id": "charity-right",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1163944"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1163944)"
+ },
+ {
+  "id": "royal-commonwealth-ex-services-league",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1174874"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1174874)"
+ },
+ {
+  "id": "feed-the-hungry-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1112955"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1112955)"
+ },
+ {
+  "id": "rainforest-foundation-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1138287"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1138287)"
+ },
+ {
+  "id": "sat-7-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1060612"
+  ],
+  "note": "official register record (England & Wales Charity Commission, reg no 1060612)"
+ },
+ {
+  "id": "13-rivers-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1161219"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "forgotten-women",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1169466"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "deafway",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1089918"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "ripple-africa",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1103256"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "concordia-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/305991"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "humanity-first-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1188494"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "akram-khan-dance-company",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1169593"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "hofesh-shechter-company",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1130255"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "lawyers-for-justice-in-libya",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1152068"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "coram-voice",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1046207"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "exceed-worldwide",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1032476"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "happy-doggo",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1203875"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "salam-charity",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1142191"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "parenting-for-lifelong-health",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1200313"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "meningitis-research-foundation",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1091105"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "hawk-conservancy-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1092349"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "amos-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1164234"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "stella-maris",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1069833"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "english-speaking-union-commonwealth",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/273136"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "purpose-of-life",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1165627"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "help-the-needy-charitable-trust",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1059951"
+  ],
+  "note": "official register record"
+ },
+ {
+  "id": "afrika-tikkun-uk",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1101556"
+  ],
+  "note": "official register record"
  }
 ]

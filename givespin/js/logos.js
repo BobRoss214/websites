@@ -1,9 +1,66 @@
 /*
- * Which charities have a logo file in assets/logos/ (id -> file extension). Written by tools/fetch-logos.mjs.
- * Charities not listed here keep their monogram circle.
+ * Which charities have a logo file in assets/logos/ (id -> file extension). Charities not listed here keep their
+ * monogram circle. See docs/logo-sources.md for where each one came from (and the trademark note), and
+ * tools/fetch-logos.mjs to add more from your own connection.
  */
 (function () {
   'use strict';
   var GS = (window.GS = window.GS || {});
-  GS.logos = {};
+  GS.logos = {
+    'african-parks': 'png',
+    'ajws': 'png',
+    'alsf': 'png',
+    'amfar': 'png',
+    'best-friends': 'png',
+    'charity-water': 'png',
+    'cleveland-orchestra': 'png',
+    'creative-commons': 'svg',
+    'dc-central-kitchen': 'png',
+    'direct-relief': 'png',
+    'evidence-action': 'png',
+    'feeding-america': 'png',
+    'first-robotics': 'svg',
+    'food-bank-for-nyc': 'png',
+    'food-rescue-us': 'png',
+    'foodcorps': 'png',
+    'fosterclub': 'png',
+    'hire-heroes': 'png',
+    'hispanic-scholarship-fund': 'png',
+    'imagination-library': 'png',
+    'internet-archive': 'svg',
+    'intrahealth': 'png',
+    'khan-academy': 'svg',
+    'lincoln-center': 'png',
+    'los-angeles-philharmonic': 'png',
+    'mha': 'png',
+    'ms-society': 'png',
+    'msf': 'png',
+    'nature-conservancy': 'png',
+    'new-york-philharmonic': 'png',
+    'nmcrs': 'png',
+    'north-texas-food-bank': 'png',
+    'oxfam-america': 'png',
+    'planetary-society': 'svg',
+    'playing-for-change-foundation': 'png',
+    'proliteracy': 'png',
+    'propublica': 'png',
+    'raspberry-pi-foundation': 'svg',
+    'salvation-army': 'png',
+    'save-the-children': 'png',
+    'seeing-eye': 'png',
+    'sightsavers': 'png',
+    'sing-for-hope': 'png',
+    'sos-childrens-villages': 'png',
+    'special-olympics': 'png',
+    'surfrider': 'png',
+    'team-rubicon': 'png',
+    'united-sikhs': 'png',
+    'usa-for-unhcr': 'png',
+    'village-enterprise': 'png',
+    'water-project': 'png',
+    'wateraid': 'png',
+    'wikimedia': 'svg',
+    'wwp': 'png',
+    'youth-villages': 'png'
+  };
 })();

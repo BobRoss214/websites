@@ -41,8 +41,8 @@ test('every charity has the fields the UI relies on, using only known vocabulary
 });
 
 test('charities flagged unverified never carry founding or headquarters facts', () => {
+  // (every entry has now been checked, so the list may be empty; the rule still holds for any added later)
   const unverified = GS.charities.filter((c) => c.unverified);
-  assert.ok(unverified.length > 0);
   unverified.forEach((c) => { assert.equal(c.founded, null, c.id); assert.equal(c.hq, '', c.id); });
 });
 

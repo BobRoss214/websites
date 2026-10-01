@@ -335,7 +335,7 @@
     }],
     ['help-slots', 'How do the slot machines work?', function () {
       return '<p>There are five themed machines (Classic, Gold Rush, Deep Sea, Sweet Charity and Cosmic Spin) in the <a href="#lobby-slots">Slots</a> category. Every reel is one charity, and your gift is split evenly across the reels, to the cent. You choose how many reels, from 3 up to 12 (each reel needs at least $1). More reels spread your gift across more causes; fewer give each charity a bigger share.</p>' +
-        '<p>Three or more of the same charity earns a Triple Threat bonus. The themes, the blur, the Turbo switch and the slow last reel are all show: every reel’s charity is picked fairly before anything moves, with the same chance for each.</p>';
+        '<p>Three or more of the same charity earns a Triple Threat bonus. The bigger the match (four, five, six or more), the bigger the light show and the win line drawn across the reels. Tap <strong>How it pays</strong> on any machine for the plain-language paytable. Nothing on a machine pays you: the themes, the blur, the win line, the Turbo switch and the slow last reel are all show, and every reel’s charity is picked fairly before anything moves, with the same chance for each.</p>';
     }],
     ['help-extras', 'Leagues, crews, cards, daily wheel and the rest', function (demo) {
       return '<p><strong>Everything here is play, and everything with other people is simulated.</strong> Rivals in leagues, crew-mates, chatters and sponsors are bots and say so on screen; chat never leaves your device.</p>' +
@@ -370,7 +370,7 @@
       return '<p>That is what it is built for. Hit the TV button at the top for <strong>Stream Mode</strong> (or add <code>?stream=1</code> to the URL). It enlarges the game and hides everything else. Add <code>&amp;transparent=1</code> for a see-through background in an OBS browser source. The space bar plays.</p>';
     }],
     ['help-data', 'About the charity information', function () {
-      return '<p>There are ' + GS.charities.length + ' charities. Names are used only to identify the organisations; GiveSpin is not affiliated with or endorsed by any of them and uses no logos. Descriptions are short summaries from public materials. A few entries have fewer verified details and say so on their profile. Always check a charity’s own website for the latest.</p>';
+      return '<p>There are ' + GS.charities.length + ' charities. Names are used only to identify the organisations; GiveSpin is not affiliated with or endorsed by any of them. Where a charity has a simple logo it is shown instead of the initials circle, only to identify the organisation; logos belong to their owners. Descriptions are short summaries from public materials and official charity registers. A few entries have fewer verified details and say so on their profile. Always check a charity’s own website for the latest.</p>';
     }],
     ['help-privacy', 'What do you store about me?', function () {
       return '<p>Nothing leaves your browser. Your level, streak, badges, history, preferences and (if you try the preview) account details are saved in this browser’s local storage so they are still there next visit. You can wipe them any time from My Giving or your account. There are no trackers or ads.</p>';

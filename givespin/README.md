@@ -2,10 +2,10 @@
 
 **The giving casino. Every round is a win for someone.**
 
-Pick an amount, filter by the causes you care about, then spin, roll, scratch or race your way to a charity. Fifteen
+Pick an amount, filter by the causes you care about, then spin, roll, scratch or race your way to a charity. Nineteen
 casino-style games (five of them themed slot machines) where **you choose how many charities are on the board** (from
 a couple to a thousand) and can back one to win, or tick exactly the charities you want, **live tables** where a whole table of players backs charities and the winner takes the whole pot,
-leagues, crews, collectible cards and a daily wheel, 228 charities, a lobby that feels like an online casino,
+leagues, crews, collectible cards and a daily wheel, 1,050 charities, a lobby that feels like an online casino,
 confetti, levels and a receipt for every gift. Built for streamers and anyone who thinks giving should be a little
 more fun.
 
@@ -35,7 +35,7 @@ tables (marked **Live** below), and Plinko has seven table sizes.
 | Game | Charities on the board | How it works |
 | --- | --- | --- |
 | Lucky Wheel (Live) | 2 to 1,000 slices | Canvas wheel with chasing LED bulbs and a ticking, flicking pointer. |
-| Classic Slots | 3 to 12 reels | The original red-and-gold machine. Every reel is one charity and your gift splits across the reels. Three or more of the same charity is a Triple Threat. |
+| Classic Slots | 3 to 12 reels | The original red-and-gold machine. Every reel is one charity and your gift splits across the reels. Three or more of the same charity is a Triple Threat. Bigger matches (four, five, six or more) get a bigger show and a win line drawn across the reels, and a **How it pays** button on every machine opens a plain-language paytable. All of that is display only: nothing pays you and every reel is an equal-odds draw. |
 | Gold Rush | 3 to 12 reels (5 by default) | A mining-themed machine with drifting gold dust. |
 | Deep Sea Treasure | 3 to 12 reels (5 by default) | An ocean machine with rising bubbles. |
 | Sweet Charity | 3 to 12 reels (6 by default) | A candy-coloured machine with sprinkles. |
@@ -95,7 +95,7 @@ Choices combine as OR within a
 group and AND between groups, with a live count. The same filters drive every game. Filter values that fewer
 than three charities have are hidden so a filter cannot just empty the pool.
 
-**381 charities, each with a profile** (the target is 1,000; see [Charities](#going-live)). Tap any charity anywhere (a card, a receipt, My Giving, search, or a
+**1,050 charities, each with a profile** (see [Charities](#going-live) for where they came from). Tap any charity anywhere (a card, a receipt, My Giving, search, or a
 `#charity-<id>` link) to see what it does, who it helps, where it works, how it helps, when it started, and a
 **Visit website** link. Switch individual charities on or off for the games.
 
@@ -166,20 +166,31 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   and money-transmission rules that vary by location. The redirect design is meant to leave payment handling with
   a regulated donation platform. Confirm the details with that platform (and a lawyer if you are unsure) before
   you promote the site. The "casino" look is a visual theme only: no one stakes anything and there is no prize.
-- **Charity list.** There are 381 charities. The first 228 were researched from public sources and the next 153 were each
-  checked with web searches (the organisation exists, its official website, and its founding year and headquarters where
-  the results stated them); the evidence links are in `docs/roster-sources.json`. 40 entries are marked `unverified`
-  because a fact could not be confirmed: they carry a short generic description and no founding year or headquarters, and
-  say so on their profile. The goal is 1,000, but the web-search allowance for the session ran out, so
-  `docs/roster-candidates.md` lists the names still to check (nothing in it is in the app). The charity hostnames in
-  `js/data.js` were **not link-checked**: verify that every entry is still active, accurate and one you are comfortable
-  with, and that your checkout provider supports it.
-- **Names and logos.** Charity names are used only to identify the organisations. By default no logos ship: every
-  charity shows a coloured monogram circle. The code can show a charity's logo instead (`js/logos.js` lists which
-  charities have one, and `logos: false` in `js/config.js` turns them off). `node tools/fetch-logos.mjs` collects each
-  charity's own touch icon or favicon from its website into `assets/logos/`; it needs an open internet connection. A
+- **Charity list.** There are 1,050 charities in three layers. The first 228 were researched from public sources and the next
+  153 were each checked with web searches (the organisation exists, its official website, and its founding year and headquarters
+  where the results stated them); the evidence links are in `docs/roster-sources.json`. The 40 entries that were first marked
+  `unverified` were later each checked again with a search limited to the charity's own website, which confirmed all 40 exist at
+  that address, filled in founding years and headquarters where the site stated them, and caught three renames (Little Kids Rock
+  is now Music Will, The Actors Fund is now the Entertainment Community Fund, VH1 Save The Music is now the Save The Music
+  Foundation). The remaining 669 come from two official government registers: the Charity Commission for England and Wales
+  (registered charities that work internationally; 364 list the UK first) and the Australian Charities and Not-for-profits
+  Commission (310 list Australia first). A register record confirms the charity exists, its official name, its website and its
+  location, so those entries were not web-searched; the register number or ABN is in `docs/roster-sources.json`. Their
+  descriptions are short, neutral paraphrases of the register text (for Australia, of the register's purpose flags), so they
+  are plainer than the first 381, and `founded` is empty for most because the register gives a registration date rather than a
+  founding date. About half of the register records that were considered were left out (universities and schools,
+  professional and membership bodies, grant-making trusts, religious orders, think tanks, commercial arms, and records whose
+  website belongs to a different brand). Facts can go out of date: registers and websites change, so re-check every entry (and
+  its link) before using real money, and confirm each one is a charity you are comfortable with and that your checkout provider
+  supports. `docs/roster-candidates.md` lists what was left out and what to check.
+- **Names and logos.** Charity names are used only to identify the organisations. Where a charity has a simple logo it is
+  shown instead of the coloured monogram circle (55 of them so far; `docs/logo-sources.md` lists each file and where it came
+  from: either the picture the organisation chose for its own GitHub account, checked by eye, or the open `simple-icons`
+  set). Everyone else keeps the monogram. `js/logos.js` lists which charities have a logo and `logos: false` in
+  `js/config.js` turns them off. `node tools/fetch-logos.mjs` collects more from each charity's own website (touch icon or
+  favicon) into `assets/logos/`; it needs an open internet connection, which the build environment did not have. A
   logo is the charity's trademark: showing it to identify the organisation is common, but it can look like an
-  endorsement and some charities have brand rules or ask for permission, so check before you add any. The footer says
+  endorsement and some charities have brand rules or ask for permission, so check before you keep any. The footer says
   GiveSpin is not affiliated with the charities. Games drawn on a canvas (wheel, roulette, Plinko, the races) keep the
   monogram either way.
 
@@ -332,7 +343,7 @@ css/chooser.css     the choose-your-own-charities dialog and its chip
 css/slots.css       the slot machines and their five themes
 css/tour.css        the first-visit tour
 js/config.js        mode, limits, demo credit, checkout hook
-js/data.js          causes, filter vocabulary and the 228 charities
+js/data.js          causes, filter vocabulary and the 1,050 charities
 js/core.js          pure logic (money, RNG, filters, XP, badges, validation); unit-tested in Node
 js/fair.js          commit/reveal draws (HMAC-SHA256); unit-tested in Node
 js/store.js         player state in localStorage, with defensive loading
@@ -350,9 +361,10 @@ js/ui/*.js          shared helpers, amount and gift options, filters, charities,
                     charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), live tables, game
                     screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
                     the first-visit tour (tour.js)
-js/logos.js         which charities have a logo file (empty until you add some)
-tools/              fetch-logos.mjs: collects charity logos from their own websites
-docs/               roster-sources.json (evidence for the added charities), roster-candidates.md (names still to check)
+js/logos.js         which charities have a logo file (55 so far)
+tools/              fetch-logos.mjs: collects more charity logos from their own websites
+assets/logos/       the logo files (see docs/logo-sources.md)
+docs/               roster-sources.json (evidence for the added charities), roster-candidates.md (what was left out), logo-sources.md
 js/app.js           boots everything, routing, top bar, search
 tests/              unit and end-to-end tests
 ```

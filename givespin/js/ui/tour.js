@@ -50,7 +50,7 @@
     }
     list.push({
       sel: '#view-lobby .tiles', icon: 'layout-grid', title: 'These are the games',
-      body: 'Fifteen games: a wheel, slots, roulette, Plinko, dice, scratch cards, duck and marble races and more. Open any one, pick an amount, and the game picks the charity (or charities) your gift goes to. You choose how many charities are on the board, and you can even back one to win.'
+      body: 'Nineteen games: a wheel, five slot machines, roulette, Plinko, dice, scratch cards, duck and marble races and more. Open any one, pick an amount, and the game picks the charity (or charities) your gift goes to. You choose how many charities are on the board, and you can even back one to win.'
     });
     list.push({
       sel: '#view-lobby .promos, #view-lobby .tiles', icon: 'list-checks', title: 'You choose who can win',

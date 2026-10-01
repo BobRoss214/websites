@@ -59,7 +59,8 @@
 .slots__banner.is-on { opacity: 1; scale: 1; }
 .slots__banner.is-strong { background: linear-gradient(180deg, #ffe39a, #ffb020); color: #3a2200; border-color: #fff; box-shadow: 0 0 40px 8px rgba(var(--glow), 0.8); }
 
-.slots__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.slots__bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.slots__tools { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .slots__turbo { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--trim) 55%, transparent); background: rgba(0, 0, 0, 0.28); color: var(--title); font: 700 0.78rem var(--f-body); cursor: pointer; }
 .slots__turbo[aria-pressed="true"] { background: var(--trim); color: #1b1200; }
 .slots__turbo .ico { width: 1em; height: 1em; }
@@ -94,6 +95,24 @@
 .slots--sea .slots__window::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(94, 234, 212, 0.14), transparent 30%); }
 .slots--sweets .slots__window { border-style: dashed; }
 
+/* the win line: drawn through the middle row between the first and last matching reel, like a real payline hit */
+.slots__winline { position: absolute; top: 50%; left: 0; width: 0; height: 5px; translate: 0 -50%; z-index: 2; border-radius: 5px; pointer-events: none; opacity: 0; transform-origin: left center; background: linear-gradient(90deg, #fff, var(--trim) 20%, var(--trim) 80%, #fff); box-shadow: 0 0 14px 3px rgba(var(--glow), 0.9); }
+.slots__winline.is-on { opacity: 1; animation: winline-draw 0.55s cubic-bezier(0.3, 0.9, 0.3, 1) both; }
+@keyframes winline-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* bigger matches, bigger show */
+.slots__machine[data-tier="4"] { --trim: #fff; }
+.slots__machine[data-tier="5"].is-jackpot, .slots__machine[data-tier="6"].is-jackpot { animation-duration: 0.35s; animation-iteration-count: 10; }
+.slots__machine[data-tier="6"] .slots__banner.is-strong { background: linear-gradient(90deg, #ff5ea8, #ffd45c, #5eead4, #8b5cf6); background-size: 300% 100%; animation: epic-sheen 1.4s linear infinite; color: #1b0b2e; }
+@keyframes epic-sheen { to { background-position: 300% 0; } }
+
+/* the "How it pays" guide */
+.sg-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+.sg-row { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.9rem; line-height: 1.35; }
+.sg-n { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font: 800 1rem var(--f-display); background: rgba(255, 255, 255, 0.12); }
+.sg-t3 .sg-n, .sg-t4 .sg-n { background: linear-gradient(180deg, #ffe39a, #ffb020); color: #3a2200; }
+.sg-t5 .sg-n, .sg-t6 .sg-n { background: linear-gradient(135deg, #ff5ea8, #ffd45c); color: #2a0b30; }
+.sg-foot { margin: 14px 0 0; font-size: 0.85rem; color: var(--muted); line-height: 1.45; }
+
 @media (max-width: 700px) {
   .slots__machine { padding: 10px 40px 12px 10px; border-radius: 22px; }
   .slots__title { font-size: 0.8rem; letter-spacing: 0.2em; }
@@ -105,4 +124,5 @@
   .slots__fx { display: none; }
   .reel.is-spinning .reel__strip { filter: none; }
   .slots__machine.is-jackpot, .slots__machine.is-jackpot .slots__title { animation: none; }
+  .slots__winline.is-on, .slots__machine[data-tier="6"] .slots__banner.is-strong { animation: none; }
 }
