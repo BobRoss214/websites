@@ -114,7 +114,7 @@
         if (m.open) { cfg.renderMenu(el.menu, m, !el.picWrap.hidden); return; }
         const tok = tv.tuneToken; // menu closed: go back to what's on (unless a channel change already happened)
         setTimeout(() => { if (tv.tuneToken === tok && !menu.open && tv.on) tv._present(tok); }, 0);
-      }); },
+      }); menu.cols = cfg.menuCols || 1; },
       powerOn(done) {
         setMode('blank');
         if (cfg.powerOn) return cfg.powerOn(el, done);

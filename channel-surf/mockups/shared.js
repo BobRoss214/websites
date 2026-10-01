@@ -473,8 +473,9 @@
       }
       if (this.screen === 'soon') { if (k === 'ok') { this.screen = 'main'; this.sel = 3; this.render(this); } return true; }
       const items = this.items();
-      if (k === 'up' || k === 'left' && this.screen === 'main') { this.sel = (this.sel - 1 + items.length) % items.length; Sound.beep(); }
-      else if (k === 'down' || k === 'right' && this.screen === 'main') { this.sel = (this.sel + 1) % items.length; Sound.beep(); }
+      const step = this.screen === 'main' ? (this.cols || 1) : 1; // tiles in a grid move by rows
+      if (k === 'up' || (k === 'left' && this.screen === 'main')) { this.sel = (this.sel - (k === 'up' ? step : 1) + items.length) % items.length; Sound.beep(); }
+      else if (k === 'down' || (k === 'right' && this.screen === 'main')) { this.sel = (this.sel + (k === 'down' ? step : 1)) % items.length; Sound.beep(); }
       else if (k === 'ok' || ((k === 'left' || k === 'right') && this.screen === 'settings')) this.activate(items[this.sel]);
       else return true;
       if (this.open) this.render(this);

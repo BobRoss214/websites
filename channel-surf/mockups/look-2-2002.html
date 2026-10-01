@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Look 2 · 2002 Digital Cable</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+/* Look 2: early-2000s digital cable. Glossy translucent blue panels, silver
+   chrome headers, an orange focus glow, Verdana-style screen type.
+   Banner: the picture squeezes into the top-left corner and an L-shaped
+   panel (side + bottom) fills the space it leaves. */
+:root {
+  --sky: #0a2a6b; --abyss: #03113a; --glass: rgba(60, 130, 230, .28); --glass-2: rgba(30, 80, 180, .55); --edge: rgba(170, 215, 255, .55);
+  --chrome-1: #f4f7fb; --chrome-2: #a3afc2; --ink: #ffffff; --ink-2: #bcd4ff; --ink-dark: #0b1d45;
+  --focus-1: #ffd24a; --focus-2: #ff8a1f; --good: #5ee07a;
+  --f-ui: Verdana, "DejaVu Sans", Tahoma, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+body { background: #020617; color: var(--ink); font-family: var(--f-ui); }
+#screen { font-size: 18px; background: #000; }
+body.big #screen { font-size: 22px; }
+.glass { background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.04) 48%, rgba(0,0,0,0) 52%), linear-gradient(180deg, var(--glass), var(--glass-2)); border: 2px solid var(--edge); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 6px 18px rgba(0,0,20,.5); border-radius: 18px; }
+.chrome { background: linear-gradient(180deg, var(--chrome-1), #d7deea 45%, var(--chrome-2) 55%, #c9d2e0); color: var(--ink-dark); box-shadow: inset 0 1px 0 #fff, 0 3px 8px rgba(0,0,0,.4); }
+.focus { background: linear-gradient(180deg, #fff2b0, var(--focus-1) 45%, var(--focus-2) 55%, #ffb347) !important; color: var(--ink-dark) !important; border-color: #fff !important; box-shadow: 0 0 0 3px rgba(255,200,80,.6), 0 0 24px rgba(255,170,50,.8) !important; }
+.bluebg { background: radial-gradient(ellipse at 80% 0%, #2a6fd6 0%, transparent 55%), radial-gradient(ellipse at 0% 100%, #0f3fa0 0%, transparent 50%), linear-gradient(160deg, var(--sky), var(--abyss)); }
+.bluebg::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 1200px 300px at 60% 110%, rgba(120,190,255,.18), transparent 70%), radial-gradient(ellipse 900px 220px at 20% -10%, rgba(120,190,255,.15), transparent 70%); }
+
+/* ---- L-shaped band: picture at 0,0 1216x684 ---- */
+#band { display: none; }
+#band.show { display: block; background: linear-gradient(160deg, #0d3488, var(--abyss)); }
+.side { position: absolute; left: 1216px; top: 0; width: 384px; height: 684px; box-sizing: border-box; padding: 26px 24px; display: grid; align-content: start; gap: 18px; }
+.badge { padding: 20px 10px 18px; text-align: center; }
+.badge b { display: block; font: bold 6.4em/1 var(--f-ui); color: #fff; text-shadow: 0 0 18px rgba(120,190,255,.9), 0 3px 0 #0b2a70; letter-spacing: -.03em; }
+.badge .call { display: block; font: bold 1.3em/1.2 var(--f-ui); color: var(--ink-2); letter-spacing: .14em; margin-top: 6px; }
+.badge .nm { display: block; font: 1.2em/1.3 var(--f-ui); color: #fff; margin-top: 4px; }
+.sclock { text-align: center; padding: 16px; font: bold 2.2em/1 var(--f-ui); }
+.sclock small { display: block; font: 0.5em/1.6 var(--f-ui); color: var(--ink-2); font-weight: normal; }
+.favtag { text-align: center; padding: 10px; font: bold 1.1em var(--f-ui); color: var(--focus-1); }
+.bottom { position: absolute; left: 0; top: 684px; width: 1600px; height: 216px; box-sizing: border-box; padding: 18px 26px 22px; }
+.bottom .glass { height: 100%; box-sizing: border-box; padding: 18px 30px; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 30px; align-items: center; }
+.bt-title { font: bold 2.3em/1.15 var(--f-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px #001; }
+.bt-desc { font: 1.15em/1.4 var(--f-ui); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 6px; }
+.bt-time { display: flex; align-items: center; gap: 16px; margin-top: 12px; font: bold 1.15em var(--f-ui); color: #fff; }
+.pbar { width: 300px; height: 14px; border-radius: 7px; background: rgba(0,10,40,.7); border: 1px solid var(--edge); overflow: hidden; }
+.pbar i { display: block; height: 100%; background: linear-gradient(180deg, #b9f0ff, #3aa0ff 50%, #1f6ee0 51%, #5ab8ff); }
+.bt-next { border-left: 2px solid var(--edge); padding-left: 26px; }
+.bt-next small { display: block; font: bold 1em var(--f-ui); color: var(--focus-1); letter-spacing: .12em; }
+.bt-next span { display: block; font: 1.25em/1.35 var(--f-ui); margin-top: 6px; }
+.typed { text-align: center; padding: 22px 10px; }
+.typed b { display: block; font: bold 6.4em/1 var(--f-ui); text-shadow: 0 0 18px rgba(120,190,255,.9); }
+.typed b.bad { color: #ff9a8a; text-shadow: 0 0 18px rgba(255,120,100,.7); }
+.typed small { display: block; font: 1.1em var(--f-ui); color: var(--ink-2); margin-top: 8px; }
+.wide { display: flex !important; align-items: center; gap: 34px; justify-content: center; grid-template-columns: none !important; }
+.wide .lbl { font: bold 2.2em var(--f-ui); }
+.vmeter { display: flex; gap: 6px; }
+.vmeter i { width: 30px; height: 50px; border-radius: 6px; background: linear-gradient(180deg, #e6fbff, #3aa0ff 50%, #1f6ee0 51%, #5ab8ff); border: 1px solid #cfe9ff; }
+.vmeter i.off { background: rgba(0,10,40,.6); border-color: rgba(170,215,255,.3); }
+.ico { width: 64px; height: 64px; }
+
+/* ---- interactive guide ---- */
+#guide { overflow: hidden; }
+.g-win { position: absolute; left: 34px; top: 34px; width: 524px; height: 300px; border-radius: 10px; background: #000; box-shadow: 0 0 0 3px var(--chrome-2), 0 0 0 5px #fff6, 0 8px 20px #000a; }
+.g-win .none { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-2); font: 1.2em var(--f-ui); }
+.g-det { position: absolute; left: 590px; top: 34px; width: 976px; height: 300px; box-sizing: border-box; padding: 22px 30px; }
+.g-det .ch { font: bold 1.2em var(--f-ui); color: var(--focus-1); letter-spacing: .06em; }
+.g-det .t { font: bold 2.4em/1.15 var(--f-ui); margin: 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-det .tm { font: bold 1.2em var(--f-ui); color: #fff; }
+.g-det .d { font: 1.2em/1.45 var(--f-ui); color: var(--ink-2); margin-top: 12px; }
+.g-det .clock { position: absolute; right: 26px; top: 18px; font: bold 1.5em var(--f-ui); }
+.g-head { position: absolute; left: 0; top: 356px; width: 1600px; height: 52px; display: grid; grid-template-columns: 230px repeat(3, 1fr); font: bold 1.3em/52px var(--f-ui); }
+.g-head span { padding-left: 16px; border-left: 1px solid #8090a8; }
+.g-head span:first-child { border: 0; }
+.g-body { position: absolute; left: 0; top: 414px; width: 1600px; height: 420px; overflow: hidden; }
+.g-row { display: grid; grid-template-columns: 230px 1fr; height: 70px; }
+.g-ch { margin: 3px 4px 3px 6px; border-radius: 10px; display: flex; align-items: center; gap: 12px; padding-left: 16px; font: bold 1.7em var(--f-ui); }
+.g-ch small { font: bold .6em var(--f-ui); color: var(--ink-2); letter-spacing: .1em; }
+.g-ch.focus small { color: var(--ink-dark); }
+.g-cells { position: relative; }
+.g-cell { position: absolute; top: 3px; height: 64px; box-sizing: border-box; border-radius: 10px; padding: 0 14px; display: flex; align-items: center; gap: 8px; overflow: hidden; white-space: nowrap; cursor: pointer; font: 1.2em var(--f-ui);
+  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,0) 50%), rgba(30,80,180,.5); border: 1px solid rgba(170,215,255,.4); }
+.g-cell.now { background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0) 50%), rgba(50,120,230,.65); }
+.g-cell .tt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.g-cell .arr { color: var(--focus-1); flex: none; font-size: .9em; }
+.g-cell.focus .arr { color: var(--ink-dark); }
+.g-cell.off { color: var(--ink-2); font-style: italic; }
+.g-foot { position: absolute; left: 0; top: 846px; width: 1600px; height: 54px; display: flex; justify-content: center; gap: 40px; align-items: center; font: 1.15em var(--f-ui); color: var(--ink-2); }
+.g-foot b { display: inline-block; min-width: 44px; padding: 4px 10px; border-radius: 14px; margin-right: 8px; text-align: center; font-size: .9em; }
+
+/* ---- main menu ---- */
+.m-head { position: absolute; left: 0; top: 0; width: 1600px; height: 92px; box-sizing: border-box; padding: 0 44px; display: flex; align-items: center; justify-content: space-between; font: bold 2em var(--f-ui); }
+.m-head span { font-size: .8em; }
+.m-tiles { position: absolute; left: 44px; top: 140px; width: 900px; display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.m-tile { height: 230px; box-sizing: border-box; padding: 26px; display: grid; align-content: space-between; cursor: pointer; }
+.m-tile svg { width: 84px; height: 84px; }
+.m-tile b { display: block; font: bold 1.7em/1.15 var(--f-ui); }
+.m-tile small { display: block; font: 1em/1.3 var(--f-ui); color: var(--ink-2); margin-top: 6px; }
+.m-tile.focus small { color: var(--ink-dark); }
+.m-list { position: absolute; left: 44px; top: 140px; width: 900px; display: grid; gap: 16px; }
+.m-row { height: 92px; box-sizing: border-box; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; cursor: pointer; font: bold 1.6em var(--f-ui); }
+.m-row small { font: 0.7em var(--f-ui); color: var(--ink-2); display: block; margin-top: 4px; }
+.m-row.focus small { color: var(--ink-dark); }
+.pill { min-width: 90px; text-align: center; padding: 8px 14px; border-radius: 22px; font: bold .8em var(--f-ui); background: rgba(0,10,40,.6); border: 1px solid var(--edge); }
+.pill.on { background: linear-gradient(180deg, #b9ffc9, var(--good)); color: #063a14; border-color: #dfffe6; }
+.m-win { position: absolute; left: 1000px; top: 140px; width: 560px; height: 316px; border-radius: 10px; background: #000; box-shadow: 0 0 0 3px var(--chrome-2), 0 0 0 5px #fff6; }
+.m-wincap { position: absolute; left: 1000px; top: 470px; width: 560px; font: bold 1em var(--f-ui); color: var(--focus-1); letter-spacing: .12em; }
+.m-desc { position: absolute; left: 1000px; width: 560px; box-sizing: border-box; padding: 22px 26px; font: 1.2em/1.5 var(--f-ui); color: #fff; }
+.m-foot { position: absolute; left: 0; top: 846px; width: 1600px; height: 54px; display: flex; justify-content: center; gap: 40px; align-items: center; font: 1.15em var(--f-ui); color: var(--ink-2); }
+.m-foot b { display: inline-block; padding: 4px 12px; border-radius: 14px; margin-right: 8px; font-size: .9em; }
+.pinrow { display: flex; gap: 22px; margin-top: 26px; }
+.pinrow i { width: 100px; height: 120px; display: grid; place-items: center; font: bold 3.4em var(--f-ui); font-style: normal; }
+.m-big { position: absolute; left: 44px; top: 140px; width: 900px; box-sizing: border-box; padding: 34px; font: 1.3em/1.5 var(--f-ui); color: var(--ink-2); }
+.m-big h2 { font: bold 1.6em var(--f-ui); color: #fff; margin: 0 0 12px; }
+
+/* ---- cards ---- */
+.dialog { position: absolute; left: 400px; top: 250px; width: 800px; box-sizing: border-box; padding: 40px 50px; text-align: center; }
+.dialog svg { width: 110px; height: 110px; }
+.dialog b { display: block; font: bold 2.4em/1.2 var(--f-ui); margin-top: 14px; }
+.dialog span { display: block; font: 1.3em/1.5 var(--f-ui); color: var(--ink-2); margin-top: 12px; }
+.dialog .seek { margin: 26px auto 0; width: 420px; height: 16px; border-radius: 8px; background: rgba(0,10,40,.7); border: 1px solid var(--edge); overflow: hidden; position: relative; }
+.dialog .seek i { position: absolute; top: 0; left: -30%; width: 30%; height: 100%; border-radius: 8px; background: linear-gradient(180deg, #e6fbff, #3aa0ff 50%, #1f6ee0 51%, #5ab8ff); animation: seek 1.4s ease-in-out infinite; }
+@keyframes seek { to { left: 100%; } }
+.boot .seek i { animation: boot 1.4s ease-out forwards; left: 0; width: 0; }
+@keyframes boot { to { width: 100%; } }
+.ident { position: absolute; inset: 0; overflow: hidden; }
+.ident .ring { position: absolute; left: 50%; top: 46%; border-radius: 50%; border: 3px solid rgba(160,215,255,.5); transform: translate(-50%, -50%); animation: ring 3s ease-out infinite; }
+.ident .r1 { width: 300px; height: 300px; } .ident .r2 { width: 300px; height: 300px; animation-delay: 1s; } .ident .r3 { width: 300px; height: 300px; animation-delay: 2s; }
+@keyframes ring { from { width: 280px; height: 280px; opacity: 1; } to { width: 1300px; height: 1300px; opacity: 0; } }
+.ident .swoosh { position: absolute; left: -20%; top: 54%; width: 140%; height: 160px; border-radius: 50%; border-top: 10px solid rgba(255,210,74,.85); transform: rotate(-8deg); filter: drop-shadow(0 0 14px rgba(255,180,60,.8)); animation: swoosh 1.2s ease-out both; }
+@keyframes swoosh { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.ident .orb { position: absolute; left: 50%; top: 42%; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 28%, #ffffff 0, #bfe3ff 12%, #3a8cff 45%, #0b3aa8 75%, #061e5e 100%); box-shadow: 0 0 60px rgba(90,170,255,.8), inset 0 -20px 40px rgba(0,0,40,.5); animation: orb .7s cubic-bezier(.3,1.5,.5,1) both; }
+.ident .orb b { font: bold 150px/1 var(--f-ui); color: #fff; text-shadow: 0 4px 10px #001a5a; }
+@keyframes orb { from { transform: scale(.1); opacity: 0; } }
+.ident .nm { position: absolute; left: 0; right: 0; top: 620px; text-align: center; font: bold 2.8em var(--f-ui); letter-spacing: .04em; text-shadow: 0 3px 10px #001; }
+.ident .up { position: absolute; left: 400px; right: 400px; top: 720px; padding: 18px; text-align: center; font: 1.4em var(--f-ui); animation: fadein .5s 1.4s both; }
+.ident .up small { display: block; font: bold .75em var(--f-ui); color: var(--focus-1); letter-spacing: .16em; margin-bottom: 6px; }
+@keyframes fadein { from { opacity: 0; transform: translateY(16px); } }
+@media (prefers-reduced-motion: reduce) { .ident *, .dialog .seek i { animation: none !important; } }
+
+#toast { left: 500px; top: 742px; width: 600px; box-sizing: border-box; padding: 20px; text-align: center; font: bold 1.6em var(--f-ui); }
+
+/* ---- TV off ---- */
+#power { display: grid; justify-items: center; align-content: center; gap: 28px; }
+#turnOn { display: grid; justify-items: center; gap: 24px; background: none; border: 0; color: #fff; font: bold 46px/1 var(--f-ui); cursor: pointer; }
+#turnOn .btn { width: 250px; height: 250px; border-radius: 50%; display: grid; place-items: center; color: #fff;
+  background: radial-gradient(circle at 35% 28%, #ffffff 0, #bfe3ff 10%, #3a8cff 42%, #0b3aa8 75%, #061e5e 100%); box-shadow: 0 0 0 10px rgba(255,255,255,.08), 0 0 0 14px var(--chrome-2), 0 0 90px rgba(90,170,255,.7); }
+#turnOn .btn svg { width: 110px; height: 110px; filter: drop-shadow(0 3px 4px #002); }
+#turnOn:hover .btn, #turnOn:focus-visible .btn { box-shadow: 0 0 0 10px rgba(255,255,255,.08), 0 0 0 14px var(--focus-1), 0 0 110px rgba(255,190,80,.8); }
+#turnOn small { font: 28px var(--f-ui); color: var(--ink-2); }
+.standbylight { display: flex; align-items: center; gap: 12px; font: 18px var(--f-ui); color: #7f93b8; letter-spacing: .1em; }
+.standbylight i { width: 12px; height: 12px; border-radius: 50%; background: #ff5a3a; box-shadow: 0 0 10px #ff5a3a; }
+
+/* ---- the remote: silver early-2000s cable remote ---- */
+.remote { border-radius: 60px 60px 80px 80px; padding: 30px 30px 26px; display: grid; gap: 15px; align-content: start;
+  background: linear-gradient(90deg, #8d96a6, #d9dfe8 22%, #f2f5f9 50%, #d9dfe8 78%, #8d96a6); box-shadow: 0 24px 50px #000a, inset 0 2px 0 #fff; }
+.remote .k { font: bold 17px/1 var(--f-ui); color: #1b2a44; border: 1px solid #7c8698; border-radius: 26px; height: 50px; padding: 0;
+  background: linear-gradient(180deg, #ffffff, #e3e8ef 48%, #c7cfdb 52%, #dfe4ec); box-shadow: 0 3px 0 #6f7889, 0 5px 8px #0004; }
+.remote .k:active { transform: translateY(2px); box-shadow: 0 1px 0 #6f7889; }
+.remote .r-top { display: grid; justify-items: center; }
+.remote .pw { width: 84px; height: 84px; border-radius: 50%; color: #fff; border-color: #7a1209; background: radial-gradient(circle at 38% 30%, #ffd0c8, #ff4a32 35%, #b71c0c 75%); box-shadow: 0 3px 0 #5c0f09, 0 6px 10px #0006; }
+.remote .pw svg { width: 40px; height: 40px; }
+.remote .r-fn { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.remote .guide { color: #fff; border-color: #0b3aa8; background: radial-gradient(circle at 40% 25%, #cfe8ff, #3a8cff 45%, #0b3aa8); box-shadow: 0 3px 0 #08296f; }
+.remote .info { color: #fff; border-color: #1f8a45; background: radial-gradient(circle at 40% 25%, #d8ffe3, #3fcf6c 45%, #1f8a45); box-shadow: 0 3px 0 #145c2e; }
+.remote .r-pad { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, 66px); gap: 6px; padding: 6px 0; }
+.remote .r-pad::before { content: ""; position: absolute; left: 50%; top: 50%; width: 214px; height: 214px; margin: -107px; border-radius: 50%; background: linear-gradient(180deg, #ffffff, #c7cfdb); box-shadow: inset 0 0 0 1px #7c8698, 0 4px 10px #0004; }
+.remote .r-pad .k { position: relative; height: 66px; }
+.remote .arrow { background: none; border: 0; box-shadow: none; font-size: 26px; color: #2c3e66; }
+.remote .ok { border-radius: 50%; width: 76px; height: 76px !important; justify-self: center; align-self: center; color: #fff; border-color: #c05a00; background: radial-gradient(circle at 40% 25%, #fff2b0, #ffb347 40%, #e07000); box-shadow: 0 3px 0 #8a4300; }
+.remote .corner { font-size: 13px; height: 44px !important; align-self: center; }
+.remote .r-pad .corner:nth-child(1), .remote .r-pad .corner:nth-child(7) { margin-right: 22px; }
+.remote .r-pad .corner:nth-child(3), .remote .r-pad .corner:nth-child(9) { margin-left: 22px; }
+.remote .r-rock { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center; }
+.remote .rock { display: grid; gap: 4px; text-align: center; }
+.remote .rock span { font: bold 12px var(--f-ui); letter-spacing: .2em; color: #4b566c; }
+.remote .rock .k { height: 46px; font-size: 20px; border-radius: 14px; }
+.remote .mute { height: 52px; font-size: 14px; }
+.remote .r-num { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.remote .num { height: 46px; font-size: 19px; }
+.remote .num.sm { font-size: 13px; }
+.remote .r-brand { font: bold 13px var(--f-ui); letter-spacing: .24em; color: #4b566c; text-align: center; }
+</style>
+</head>
+<body>
+<div class="stage-wrap"><div id="stage">
+  <div id="screen" data-mode="off">
+    <div id="band" hidden></div>
+    <div id="guide" class="bluebg" hidden></div>
+    <div id="menu" class="bluebg" hidden></div>
+    <div id="card" class="bluebg" hidden></div>
+    <div id="picWrap" hidden><canvas id="pic" width="960" height="540"></canvas></div>
+    <canvas id="snow" width="320" height="180" hidden></canvas>
+    <div id="toast" class="glass" hidden></div>
+    <div id="power" class="bluebg">
+      <button id="turnOn" type="button" aria-label="Turn on the TV"><span class="btn"></span>Turn on the TV<small>or press any button on the remote</small></button>
+      <div class="standbylight"><i></i>STANDBY</div>
+    </div>
+    <div id="crt"></div>
+  </div>
+</div></div>
+
+<script src="shared.js"></script>
+<script src="screen.js"></script>
+<script>
+(() => {
+  const { clock, minsLeft, next, CHANNELS, PW } = CS;
+  const $ = s => document.querySelector(s);
+  const fmtDate = t => new Date(t).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  $('#turnOn .btn').innerHTML = PW;
+  const ICON = {
+    grid: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4"><rect x="4" y="10" width="56" height="44" rx="8"/><path d="M4 26h56M4 40h56M24 10v44"/></svg>',
+    star: '<svg viewBox="0 0 64 64"><path d="M32 4l8.6 18.4L60 24.6 45.6 38.4 49.2 58 32 48.4 14.8 58l3.6-19.6L4 24.6l19.4-2.2z" fill="currentColor"/></svg>',
+    gear: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><circle cx="32" cy="32" r="10"/><path d="M32 4v10M32 50v10M4 32h10M50 32h10M12 12l7 7M45 45l7 7M12 52l7-7M45 19l7-7"/></svg>',
+    lock: '<svg viewBox="0 0 64 64"><rect x="12" y="28" width="40" height="30" rx="6" fill="currentColor"/><path d="M20 28v-8a12 12 0 0 1 24 0v8" fill="none" stroke="currentColor" stroke-width="6"/></svg>',
+    speaker: '<svg class="ico" viewBox="0 0 64 64" fill="currentColor"><path d="M8 24h12l16-14v44L20 40H8z"/><path d="M44 22a14 14 0 0 1 0 20M50 14a24 24 0 0 1 0 36" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>',
+    muted: '<svg class="ico" viewBox="0 0 64 64" fill="currentColor"><path d="M8 24h12l16-14v44L20 40H8z"/><path d="M44 24l16 16M60 24L44 40" stroke="#ff8a7a" stroke-width="6" stroke-linecap="round"/></svg>',
+    cc: '<svg class="ico" viewBox="0 0 64 64"><rect x="4" y="12" width="56" height="40" rx="8" fill="none" stroke="currentColor" stroke-width="5"/><text x="32" y="41" text-anchor="middle" font-family="Verdana, sans-serif" font-weight="bold" font-size="22" fill="currentColor">CC</text></svg>',
+    warn: '<svg viewBox="0 0 64 64"><path d="M32 6L60 56H4z" fill="#ffd24a" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><path d="M32 24v16" stroke="#0b1d45" stroke-width="6" stroke-linecap="round"/><circle cx="32" cy="48" r="3.5" fill="#0b1d45"/></svg>',
+    dish: '<svg viewBox="0 0 64 64" fill="none" stroke="#bcd4ff" stroke-width="4" stroke-linecap="round"><path d="M14 50a24 24 0 0 1 0-34l34 34a24 24 0 0 1-34 0z" fill="rgba(120,190,255,.25)"/><path d="M31 33l14-14M45 19l6-6M38 12a14 14 0 0 1 14 14M38 4a22 22 0 0 1 22 22"/></svg>',
+  };
+
+  const cfg = {
+    geom: {
+      full: { x: 0, y: 0, w: 1600, h: 900 },
+      squeeze: { x: 0, y: 0, w: 1216, h: 684 },
+      guide: { x: 34, y: 34, w: 524, h: 300 },
+      menu: { x: 1000, y: 140, w: 560, h: 316 },
+    },
+    guideSpan: 90,
+    menuCols: 2,
+    band(type, d) {
+      const now = Date.now(), ch = tv.ch;
+      const clockBox = `<div class="sclock glass">${clock(now)}<small>${fmtDate(now)}</small></div>`;
+      const side = inner => `<div class="side">${inner}${clockBox}${tv.favs.has(ch.num) ? '<div class="favtag glass">★ Favorite channel</div>' : ''}</div>`;
+      const badge = `<div class="badge glass"><b>${ch.num}</b><span class="call">${ch.call}</span><span class="nm">${ch.name}</span></div>`;
+      if (type === 'banner') {
+        const { a, opts } = d; const nx = next(ch, a.start + 1000);
+        const pct = Math.min(100, Math.max(0, (now - a.start) / (a.end - a.start) * 100));
+        return side(badge) + `<div class="bottom"><div class="glass">
+          <div style="min-width:0"><div class="bt-title">${a.show.t}</div><div class="bt-desc">${a.show.d}</div>
+          <div class="bt-time">${clock(a.start)} – ${clock(a.end)} <span class="pbar"><i style="width:${pct}%"></i></span> ${minsLeft(a, now)} min left${opts.replaced ? ' · now showing' : ''}</div></div>
+          <div class="bt-next"><small>NEXT</small><span>${nx ? clock(nx.start) + '<br>' + nx.show.t : ''}</span></div></div></div>`;
+      }
+      if (type === 'number') {
+        const n = parseInt(d.s, 10), c = CHANNELS.find(x => x.num === n);
+        return side(`<div class="typed glass"><b class="${d.bad ? 'bad' : ''}">${d.s}</b><small>${d.bad ? 'No such channel' : 'Channel'}</small></div>`) +
+          `<div class="bottom"><div class="glass wide"><span class="lbl">${d.bad ? 'That channel number isn\'t in your lineup.' : c ? 'Going to ' + c.num + ' · ' + c.name : 'Enter a channel number'}</span></div></div>`;
+      }
+      if (type === 'volume') return side(badge) + `<div class="bottom"><div class="glass wide">${d.muted ? ICON.muted : ICON.speaker}<span class="lbl">${d.muted ? 'Mute' : 'Volume'}</span><div class="vmeter">${Array.from({ length: 20 }, (_, i) => `<i class="${!d.muted && i < d.v / 5 ? '' : 'off'}"></i>`).join('')}</div></div></div>`;
+      return side(badge) + `<div class="bottom"><div class="glass wide">${ICON.cc}<span class="lbl">${d.text}</span></div></div>`;
+    },
+    toast(type, d) { if (type === 'number') return 'Channel ' + d.s; if (type === 'volume') return d.muted ? 'Mute' : 'Volume ' + d.v; return d.text; },
+    card(kind, ch, nx) {
+      if (kind === 'offair') return `<div class="dialog glass">${ICON.warn}<b>This channel is not available at this time.</b><span>${ch.num} ${ch.name} has no shows right now.<br>Try another channel, or press GUIDE.</span></div>`;
+      if (kind === 'standby') return `<div class="dialog glass">${ICON.dish}<b>Please stand by</b><span>We're having trouble with this program.<br>The next one will start in a moment.</span><div class="seek"><i></i></div></div>`;
+      if (kind === 'boot') return `<div class="dialog glass boot"><b>Channel Surf Digital Cable</b><span>Loading program guide… please wait.</span><div class="seek"><i></i></div></div>`;
+      return `<div class="ident"><i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i><i class="swoosh"></i><div class="orb"><b>${ch.num}</b></div><div class="nm">${ch.name}</div>${nx ? `<div class="up glass"><small>COMING UP NEXT</small>${nx.show.t}</div>` : ''}</div>`;
+    },
+    // the box "boots" and loads the guide before the picture comes up
+    powerOn(el, done) {
+      el.screen.dataset.mode = 'card'; el.card.hidden = false; el.card.innerHTML = cfg.card('boot');
+      setTimeout(() => { el.card.hidden = true; el.screen.dataset.anim = 'on'; setTimeout(done, 500); setTimeout(() => el.screen.dataset.anim = '', 1000); }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 1500);
+    },
+    renderGuide(el, d) {
+      const visible = 6, n = d.rows.length, start = Math.max(0, Math.min(n - visible, d.G.row - 2));
+      const s = d.selA, sc = d.selCh;
+      const rows = d.rows.slice(start, start + visible).map((r, k) => {
+        const ri = start + k;
+        const cells = r.cells.length ? r.cells.map((c, ci) => `<div class="g-cell${c.now ? ' now' : ''}${c.sel ? ' focus' : ''}" data-row="${ri}" data-col="${ci}" style="left:calc(${c.l * 100}% + 3px);width:calc(${(c.r - c.l) * 100}% - 6px)">${c.cutL ? '<span class="arr">◀</span>' : ''}<span class="tt">${c.a.show.t}</span>${c.cutR ? '<span class="arr">▶</span>' : ''}</div>`).join('')
+          : `<div class="g-cell off${r.sel ? ' focus' : ''}" data-row="${ri}" data-col="0" style="left:3px;width:calc(100% - 6px)">No program information available</div>`;
+        return `<div class="g-row"><div class="g-ch glass${r.sel ? ' focus' : ''}">${r.ch.num}<small>${r.ch.call}</small></div><div class="g-cells">${cells}</div></div>`;
+      }).join('');
+      const from = CHANNELS[tv.lastIdx];
+      el.innerHTML = `
+        <div class="g-win">${el.dataset.preview ? '' : '<div class="none">No preview</div>'}</div>
+        <div class="g-det glass"><div class="clock">${clock(d.now)}</div>
+          <div class="ch">${sc.num} · ${sc.name.toUpperCase()}</div>
+          <div class="t">${s ? s.show.t : 'No program information available'}</div>
+          <div class="tm">${s ? `${clock(s.start)} – ${clock(s.end)} · ${s.show.m} min${s.start <= d.now ? ' · on now' : ''}` : ''}</div>
+          <div class="d">${s ? s.show.d : ''}</div></div>
+        <div class="g-head chrome"><span>${new Date(d.from).toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })}</span>${d.times.map(t => `<span>${clock(t)}</span>`).join('')}</div>
+        <div class="g-body">${rows}</div>
+        <div class="g-foot"><span><b class="chrome">▲▼</b>Channels</span><span><b class="chrome">◀▶</b>Later / earlier</span><span><b class="focus">OK</b>Watch</span><span><b class="chrome">EXIT</b>Leave the guide</span>${from && el.dataset.preview ? `<span>Preview: ${from.num} ${from.name}</span>` : ''}</div>`;
+    },
+    renderMenu(el, m, hasPic) {
+      const foot = `<div class="m-foot"><span><b class="chrome">▲▼◀▶</b>Choose</span><span><b class="focus">OK</b>Select</span><span><b class="chrome">LAST</b>Back</span><span><b class="chrome">MENU</b>Close</span></div>`;
+      const head = `<div class="m-head chrome">${m.title()}<span>${clock(Date.now())}</span></div>`;
+      const win = hasPic ? `<div class="m-win"></div><div class="m-wincap">LIVE TV</div>` : '';
+      const descTop = hasPic ? 510 : 140;
+      if (m.screen === 'pin' || m.screen === 'soon') {
+        const boxes = [0, 1, 2, 3].map(i => `<i class="glass${i < m.pin.length ? ' focus' : ''}">${i < m.pin.length ? '•' : ''}</i>`).join('');
+        el.innerHTML = head + `<div class="m-big glass">${m.screen === 'pin' ? `<h2>Enter your PIN</h2>Setup is where channels are added and numbered. Use the number buttons.<div class="pinrow">${boxes}</div>` : `<h2>PIN accepted</h2>This is where Setup will open. It gets built in step 6.<br><br>Press OK to go back.`}</div>` + win + foot;
+        return;
+      }
+      const items = m.items(), s = items[m.sel] || {};
+      let body;
+      if (m.screen === 'main') body = `<div class="m-tiles">${items.map((it, i) => `<div class="m-tile glass${i === m.sel ? ' focus' : ''}" data-i="${i}">${ICON[it.icon]}<div><b>${it.label}</b><small>${it.hint}</small></div></div>`).join('')}</div>`;
+      else body = `<div class="m-list">${items.length ? items.map((it, i) => `<div class="m-row glass${i === m.sel ? ' focus' : ''}" data-i="${i}"><div>${it.label}${it.hint ? `<small>${it.hint}</small>` : ''}</div>${it.value ? `<span class="pill${it.value === 'On' ? ' on' : ''}">${it.value}</span>` : ''}</div>`).join('') : '<div class="m-row glass">No favorites yet</div>'}</div>`;
+      const desc = m.screen === 'settings' ? `<b>${s.label}</b><br>Press OK to turn it ${s.value === 'On' ? 'off' : 'on'}.` : m.screen === 'favs' ? 'Press OK to watch. Favorites are chosen in Setup.' : `<b>${s.label}</b><br>${s.hint}`;
+      el.innerHTML = head + body + win + `<div class="m-desc glass" style="top:${descTop}px">${desc}</div>` + foot;
+    },
+  };
+
+  const ui = CS.makeScreen(cfg);
+  const tv = new CS.TV(ui); ui.bind(tv);
+  document.getElementById('stage').insertAdjacentHTML('beforeend', CS.remoteHTML('CHANNEL SURF'));
+  CS.wireRemote(tv); CS.bindKeys(tv); CS.mockBar('look-2-2002.html', tv); CS.fitStage($('#stage'), 2000, 900);
+  $('#turnOn').addEventListener('click', () => tv.press('power'));
+  $('#guide').addEventListener('click', e => { const c = e.target.closest('.g-cell'); if (c) ui.tuneTo(CHANNELS.filter(x => x.kind !== 'guide')[+c.dataset.row]); });
+  $('#menu').addEventListener('click', e => { const it = e.target.closest('[data-i]'); if (it) ui.pickMenu(+it.dataset.i); });
+  window.tv = tv;
+})();
+</script>
+</body>
+</html>
