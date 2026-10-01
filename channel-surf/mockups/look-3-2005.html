@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Look 3 · 2005 Satellite HD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700;1,800&family=Libre+Baskerville:wght@400;700&display=swap">
+<link rel="stylesheet" href="mock.css">
+<style>
+/* Look 3: mid-2000s satellite receiver, early HD. Graphite panels, hairline
+   edges, amber focus, slim tech type. Banner: the picture slides right and a
+   channel list ("flip bar") appears on the left with the show strip below.
+   Changing channels shows a digital break-up instead of snow. */
+:root {
+  --coal: #0b0c0f; --panel: #17191e; --panel-2: #1f2228; --edge: #30343c; --edge-hi: #474c57;
+  --amber: #ffae1a; --amber-2: #ff7a00; --ink: #f2f3f5; --ink-2: #9aa1ad; --ink-dark: #1a1206; --teal: #3fd0dc;
+  --f-ui: "Exo 2", "Segoe UI", "DejaVu Sans", sans-serif;
+  color-scheme: dark;
+}
+body { background: #000; color: var(--ink); font-family: var(--f-ui); }
+#screen { font-size: 20px; }
+body.big #screen { font-size: 25px; }
+.pane { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); border-radius: 6px; }
+.hot { background: linear-gradient(180deg, #ffc65a, var(--amber) 50%, var(--amber-2)) !important; color: var(--ink-dark) !important; border-color: #ffd98a !important; box-shadow: 0 0 22px rgba(255,150,20,.45) !important; }
+.coal { background: radial-gradient(ellipse at 70% -20%, #262a33, transparent 60%), var(--coal); }
+
+/* ---- squeeze: picture at 400,0 1200x675; flip bar left, strip below ---- */
+#band { display: none; }
+#band.show { display: block; background: var(--coal); }
+.flip { position: absolute; left: 0; top: 0; width: 400px; height: 675px; box-sizing: border-box; padding: 18px 16px 18px 18px; display: grid; grid-template-rows: repeat(5, 1fr); gap: 10px; }
+.fl { display: grid; grid-template-columns: 110px minmax(0, 1fr); align-items: center; gap: 12px; padding: 0 14px; opacity: .55; }
+.fl b { font: italic 800 2.4em/1 var(--f-ui); }
+.fl .nm { font: 700 1.05em/1.2 var(--f-ui); letter-spacing: .08em; text-transform: uppercase; }
+.fl .sh { font: 500 .95em/1.3 var(--f-ui); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fl.cur { opacity: 1; }
+.fl.cur b { font-size: 3.4em; }
+.fl.cur .sh { color: var(--ink-dark); }
+.fl.near { opacity: .8; }
+.fl .logo { display: inline-block; padding: 2px 8px; border-radius: 4px; font: 800 .8em var(--f-ui); letter-spacing: .06em; color: #fff; margin-bottom: 4px; }
+.strip { position: absolute; left: 0; top: 675px; width: 1600px; height: 225px; box-sizing: border-box; padding: 16px 18px 18px; }
+.strip .pane { height: 100%; box-sizing: border-box; padding: 18px 30px; display: grid; grid-template-columns: minmax(0, 1fr) 380px 200px; gap: 30px; align-items: center; }
+.st-title { font: 700 2.6em/1.1 var(--f-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-meta { display: flex; gap: 18px; align-items: center; margin-top: 12px; white-space: nowrap; font: 600 1.2em var(--f-ui); color: var(--ink-2); }
+.st-meta .now { color: var(--amber); font-weight: 800; letter-spacing: .1em; }
+.bar { width: 300px; height: 8px; border-radius: 4px; background: #000; border: 1px solid var(--edge); overflow: hidden; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--amber-2), var(--amber)); }
+.st-desc { font: 400 1.1em/1.4 var(--f-ui); color: var(--ink-2); margin-top: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-next { border-left: 1px solid var(--edge-hi); padding-left: 26px; }
+.st-next small { display: block; font: 800 .9em var(--f-ui); letter-spacing: .2em; color: var(--teal); }
+.st-next span { display: block; font: 600 1.2em/1.35 var(--f-ui); margin-top: 6px; }
+.st-clock { text-align: right; font: 700 2.2em/1 var(--f-ui); }
+.st-clock small { display: block; font: 500 .5em/1.8 var(--f-ui); color: var(--ink-2); }
+.strip .pane.wide { grid-template-columns: auto 1fr auto; }
+.big-typed { font: italic 800 7em/1 var(--f-ui); color: var(--amber); }
+.big-typed.bad { color: #ff6a5a; }
+.meter { display: flex; gap: 5px; align-items: flex-end; height: 70px; }
+.meter i { width: 26px; background: var(--amber); border-radius: 2px; }
+.meter i.off { background: #2a2d34; }
+.lbl { font: 700 2em var(--f-ui); }
+.lbl small { display: block; font: 500 .55em var(--f-ui); color: var(--ink-2); }
+.ico { width: 70px; height: 70px; color: var(--amber); }
+
+/* ---- guide ---- */
+.g-top { position: absolute; left: 0; top: 0; width: 1600px; height: 64px; box-sizing: border-box; padding: 0 34px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--edge); background: linear-gradient(180deg, #1c1f25, #121418); }
+.g-top b { font: 800 1.3em var(--f-ui); letter-spacing: .3em; color: var(--amber); }
+.g-top span { font: 500 1.1em var(--f-ui); color: var(--ink-2); }
+.g-top .sp { flex: 1; }
+.g-top .clk { font: 700 1.5em var(--f-ui); color: var(--ink); }
+.g-det { position: absolute; left: 34px; top: 84px; width: 976px; height: 288px; box-sizing: border-box; padding: 24px 30px; }
+.g-det .ch { display: flex; align-items: center; gap: 14px; font: 700 1.1em var(--f-ui); color: var(--ink-2); letter-spacing: .1em; text-transform: uppercase; }
+.g-det .t { font: 700 2.5em/1.15 var(--f-ui); margin: 12px 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-det .tm { font: 600 1.2em var(--f-ui); color: var(--amber); }
+.g-det .d { font: 400 1.2em/1.5 var(--f-ui); color: var(--ink-2); margin-top: 12px; }
+.g-win { position: absolute; left: 1036px; top: 80px; width: 520px; height: 296px; background: #000; border: 2px solid var(--edge-hi); border-radius: 4px; }
+.g-win .none { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-2); font: 500 1.1em var(--f-ui); }
+.g-head { position: absolute; left: 0; top: 392px; width: 1600px; height: 44px; display: grid; grid-template-columns: 250px repeat(4, 1fr); font: 700 1.15em/44px var(--f-ui); color: var(--ink-2); border-top: 1px solid var(--edge); border-bottom: 1px solid var(--edge); background: #111317; }
+.g-head span { padding-left: 14px; border-left: 1px solid var(--edge); }
+.g-head span:first-child { border: 0; color: var(--amber); letter-spacing: .1em; }
+.g-body { position: absolute; left: 0; top: 440px; width: 1600px; height: 408px; overflow: hidden; }
+.g-row { display: grid; grid-template-columns: 250px 1fr; height: 58px; border-bottom: 1px solid #1c1f25; }
+.g-ch { display: flex; align-items: center; gap: 12px; padding-left: 18px; font: italic 800 1.5em var(--f-ui); }
+.g-ch .logo { font-style: normal; }
+.g-cells { position: relative; }
+.g-cell { position: absolute; top: 4px; height: 50px; box-sizing: border-box; padding: 0 12px; display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; cursor: pointer; font: 500 1.1em var(--f-ui);
+  background: #1a1d22; border: 1px solid var(--edge); border-radius: 4px; }
+.g-cell.now { background: #23272e; }
+.g-cell .tt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.g-cell .arr { color: var(--amber); flex: none; font-size: .8em; }
+.g-cell.hot .arr { color: var(--ink-dark); }
+.g-cell.off { color: var(--ink-2); font-style: italic; }
+.g-now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--teal); box-shadow: 0 0 8px var(--teal); z-index: 1; pointer-events: none; opacity: .55; }
+.g-foot { position: absolute; left: 0; top: 856px; width: 1600px; height: 44px; display: flex; justify-content: center; gap: 36px; align-items: center; font: 500 1.05em var(--f-ui); color: var(--ink-2); border-top: 1px solid var(--edge); }
+.g-foot b { display: inline-block; padding: 2px 10px; border-radius: 4px; border: 1px solid var(--edge-hi); color: var(--ink); margin-right: 8px; font-weight: 700; }
+.logo { display: inline-block; padding: 3px 9px; border-radius: 4px; font: 800 .62em/1.2 var(--f-ui); letter-spacing: .06em; color: #fff; }
+
+/* ---- menu: ribbon on the left, picture on the right ---- */
+.m-rib { position: absolute; left: 0; top: 0; width: 540px; height: 900px; box-sizing: border-box; padding: 40px 0 0; background: linear-gradient(90deg, #15171c, #0f1114); border-right: 1px solid var(--edge); }
+.m-rib h2 { margin: 0 40px 26px; font: 800 1.2em var(--f-ui); letter-spacing: .3em; color: var(--amber); text-transform: uppercase; }
+.m-it { display: grid; grid-template-columns: 64px 1fr auto; gap: 18px; align-items: center; height: 108px; padding: 0 30px 0 40px; cursor: pointer; border-top: 1px solid #1c1f25; }
+.m-it svg { width: 46px; height: 46px; color: var(--ink-2); }
+.m-it b { display: block; font: 700 1.5em/1.15 var(--f-ui); }
+.m-it small { display: block; font: 500 .95em/1.3 var(--f-ui); color: var(--ink-2); }
+.m-it .val { font: 800 1.1em var(--f-ui); color: var(--amber); letter-spacing: .1em; }
+.m-it.hot { border-radius: 0; }
+.m-it.hot svg, .m-it.hot small, .m-it.hot .val { color: var(--ink-dark); }
+.m-it.noicon { grid-template-columns: 1fr auto; }
+.m-win { position: absolute; left: 584px; top: 140px; width: 976px; height: 549px; background: #000; border: 2px solid var(--edge-hi); }
+.m-cap { position: absolute; left: 584px; top: 90px; font: 700 1.1em var(--f-ui); letter-spacing: .25em; color: var(--ink-2); }
+.m-cap span { color: var(--amber); }
+.m-desc { position: absolute; left: 584px; width: 976px; box-sizing: border-box; padding: 20px 26px; font: 500 1.25em/1.5 var(--f-ui); color: var(--ink); }
+.m-desc b { color: var(--amber); }
+.m-clock { position: absolute; right: 40px; top: 30px; font: 700 1.6em var(--f-ui); }
+.m-foot { position: absolute; left: 540px; top: 856px; width: 1060px; height: 44px; display: flex; justify-content: center; gap: 30px; align-items: center; font: 500 1.05em var(--f-ui); color: var(--ink-2); }
+.m-foot b { display: inline-block; padding: 2px 10px; border-radius: 4px; border: 1px solid var(--edge-hi); color: var(--ink); margin-right: 8px; }
+.pinrow { display: flex; gap: 16px; margin: 20px 40px; }
+.pinrow i { width: 90px; height: 110px; display: grid; place-items: center; font: 800 3em var(--f-ui); font-style: normal; }
+.m-note { margin: 0 40px; font: 500 1.2em/1.5 var(--f-ui); color: var(--ink-2); }
+
+/* ---- cards ---- */
+.panel { position: absolute; left: 430px; top: 260px; width: 740px; box-sizing: border-box; padding: 40px 50px; text-align: center; }
+.panel b { display: block; font: 700 2.3em/1.2 var(--f-ui); margin-top: 16px; }
+.panel span { display: block; font: 500 1.3em/1.5 var(--f-ui); color: var(--ink-2); margin-top: 10px; }
+.sig { display: flex; gap: 8px; align-items: flex-end; justify-content: center; height: 80px; }
+.sig i { width: 22px; background: var(--edge-hi); border-radius: 2px; animation: sig 1.6s ease-in-out infinite; }
+.sig i:nth-child(1) { height: 20%; } .sig i:nth-child(2) { height: 40%; animation-delay: .15s; } .sig i:nth-child(3) { height: 60%; animation-delay: .3s; } .sig i:nth-child(4) { height: 80%; animation-delay: .45s; } .sig i:nth-child(5) { height: 100%; animation-delay: .6s; }
+@keyframes sig { 0%, 100% { background: var(--edge-hi); } 50% { background: var(--amber); } }
+.noinfo { font: italic 800 5em/1 var(--f-ui); color: var(--edge-hi); }
+.ident { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 60%, #1d2027, #050506 70%); }
+.ident .streak { position: absolute; left: -40%; top: 47%; width: 60%; height: 4px; background: linear-gradient(90deg, transparent, #fff, var(--amber), transparent); filter: blur(1px); box-shadow: 0 0 30px var(--amber); animation: streak 1.6s ease-in-out both; }
+@keyframes streak { to { left: 110%; } }
+.ident .num { position: absolute; left: 0; right: 0; top: 200px; text-align: center; font: italic 800 300px/1 var(--f-ui);
+  background: linear-gradient(180deg, #ffffff 0%, #c9ced8 48%, #6b7280 52%, #e8ebf0 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 6px 18px rgba(0,0,0,.8)); animation: rise .8s ease-out both; }
+.ident .nm { position: absolute; left: 0; right: 0; top: 540px; text-align: center; font: 800 2em var(--f-ui); letter-spacing: .5em; color: var(--amber); animation: rise .8s .2s ease-out both; }
+.ident .up { position: absolute; left: 450px; right: 450px; top: 680px; padding: 18px 24px; text-align: center; font: 600 1.4em var(--f-ui); animation: rise .6s 1.2s ease-out both; }
+.ident .up small { display: block; font: 800 .7em var(--f-ui); letter-spacing: .25em; color: var(--teal); margin-bottom: 6px; }
+@keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+@media (prefers-reduced-motion: reduce) { .ident *, .sig i { animation: none !important; } }
+
+#toast { left: 560px; top: 770px; width: 480px; box-sizing: border-box; padding: 16px; text-align: center; font: 700 1.5em var(--f-ui); }
+#snow { image-rendering: pixelated; filter: none; }
+
+/* flat-panel era: power fades instead of the CRT line */
+#crt { background: #000; transform: none; box-shadow: none; }
+#screen[data-anim="on"] #crt { animation: fp-on .9s ease-out forwards; }
+#screen[data-anim="off"] #crt { animation: fp-off .5s ease-in forwards; }
+@keyframes fp-on { from { opacity: 1; } to { opacity: 0; } }
+@keyframes fp-off { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- TV off ---- */
+#power { display: grid; justify-items: center; align-content: center; gap: 30px; background: radial-gradient(ellipse at 50% 45%, #15171c, #000 60%); }
+#turnOn { display: grid; justify-items: center; gap: 26px; background: none; border: 0; color: var(--ink); font: 700 48px/1 var(--f-ui); letter-spacing: .04em; cursor: pointer; }
+#turnOn .btn { width: 240px; height: 240px; border-radius: 50%; display: grid; place-items: center; color: var(--amber); background: radial-gradient(circle at 50% 35%, #2a2e36, #121418 70%); box-shadow: 0 0 0 4px var(--amber), 0 0 50px rgba(255,150,20,.45), inset 0 2px 0 rgba(255,255,255,.1); }
+#turnOn .btn svg { width: 110px; height: 110px; filter: drop-shadow(0 0 10px rgba(255,160,30,.8)); }
+#turnOn:hover .btn, #turnOn:focus-visible .btn { box-shadow: 0 0 0 6px #ffd98a, 0 0 80px rgba(255,170,40,.75); }
+#turnOn small { font: 500 28px var(--f-ui); color: var(--ink-2); letter-spacing: 0; }
+
+/* ---- the remote: black universal remote with amber backlight ---- */
+.remote { border-radius: 46px 46px 70px 70px; padding: 30px 28px 26px; display: grid; gap: 15px; align-content: start;
+  background: linear-gradient(90deg, #050506, #1c1e23 25%, #26292f 50%, #1c1e23 75%, #050506); box-shadow: 0 24px 50px #000c, inset 0 1px 0 #3d414a; }
+.remote .k { font: 700 17px/1 var(--f-ui); color: var(--amber); background: linear-gradient(180deg, #2b2e35, #16181c); border: 1px solid #3a3e47; border-radius: 10px; height: 50px; padding: 0; text-shadow: 0 0 8px rgba(255,160,30,.55); box-shadow: 0 3px 0 #000, 0 5px 8px #0008; letter-spacing: .05em; text-transform: uppercase; }
+.remote .k:active { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
+.remote .r-top { display: grid; justify-items: center; }
+.remote .pw { width: 80px; height: 80px; border-radius: 50%; color: #ff5a3a; border-color: #5a1a10; text-shadow: none; }
+.remote .pw svg { width: 38px; height: 38px; filter: drop-shadow(0 0 6px rgba(255,80,40,.8)); }
+.remote .r-fn { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.remote .guide { color: var(--ink-dark); background: linear-gradient(180deg, #ffc65a, var(--amber-2)); text-shadow: none; border-color: #ffd98a; }
+.remote .r-pad { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, 66px); gap: 6px; padding: 6px 0; }
+.remote .r-pad::before { content: ""; position: absolute; left: 50%; top: 50%; width: 210px; height: 210px; margin: -105px; border-radius: 50%; background: radial-gradient(circle, #1a1c21 52%, #9aa1ad 53%, #4a4f59 60%, #23262c 70%); box-shadow: 0 4px 10px #000a; }
+.remote .r-pad .k { position: relative; height: 66px; }
+.remote .arrow { background: none; border: 0; box-shadow: none; font-size: 24px; color: #e8ebf0; text-shadow: none; }
+.remote .ok { border-radius: 50%; width: 80px; height: 80px !important; justify-self: center; align-self: center; color: var(--ink-dark); text-shadow: none; background: linear-gradient(180deg, #ffc65a, var(--amber-2)); border-color: #ffd98a; }
+.remote .corner { font-size: 13px; height: 42px !important; align-self: center; }
+.remote .r-pad .corner:nth-child(1), .remote .r-pad .corner:nth-child(7) { margin-right: 24px; }
+.remote .r-pad .corner:nth-child(3), .remote .r-pad .corner:nth-child(9) { margin-left: 24px; }
+.remote .r-rock { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center; }
+.remote .rock { display: grid; gap: 4px; text-align: center; }
+.remote .rock span { font: 700 12px var(--f-ui); letter-spacing: .2em; color: var(--ink-2); }
+.remote .rock .k { height: 46px; font-size: 20px; }
+.remote .mute { height: 52px; font-size: 14px; }
+.remote .r-num { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.remote .num { height: 46px; font-size: 20px; color: #f2f3f5; text-shadow: none; }
+.remote .num.sm { font-size: 13px; color: var(--amber); }
+.remote .r-brand { font: 800 13px var(--f-ui); letter-spacing: .3em; color: #5d636f; text-align: center; }
+</style>
+</head>
+<body>
+<div class="stage-wrap"><div id="stage">
+  <div id="screen" data-mode="off">
+    <div id="band" hidden></div>
+    <div id="guide" class="coal" hidden></div>
+    <div id="menu" class="coal" hidden></div>
+    <div id="card" class="coal" hidden></div>
+    <div id="picWrap" hidden><canvas id="pic" width="960" height="540"></canvas></div>
+    <canvas id="snow" width="160" height="90" hidden></canvas>
+    <div id="toast" class="pane" hidden></div>
+    <div id="power"><button id="turnOn" type="button" aria-label="Turn on the TV"><span class="btn"></span>Turn on the TV<small>or press any button on the remote</small></button></div>
+    <div id="crt"></div>
+  </div>
+</div></div>
+
+<script src="shared.js"></script>
+<script src="screen.js"></script>
+<script>
+(() => {
+  const { clock, minsLeft, airing, next, CHANNELS, PW, rng } = CS;
+  const $ = s => document.querySelector(s);
+  const fmtDate = t => new Date(t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  $('#turnOn .btn').innerHTML = PW;
+  const logo = ch => `<span class="logo" style="background:hsl(${ch.hue} 70% 38%)">${ch.call}</span>`;
+  const ICON = {
+    grid: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4"><rect x="4" y="10" width="56" height="44" rx="4"/><path d="M4 26h56M4 40h56M24 10v44"/></svg>',
+    star: '<svg viewBox="0 0 64 64"><path d="M32 4l8.6 18.4L60 24.6 45.6 38.4 49.2 58 32 48.4 14.8 58l3.6-19.6L4 24.6l19.4-2.2z" fill="currentColor"/></svg>',
+    gear: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><circle cx="32" cy="32" r="10"/><path d="M32 4v10M32 50v10M4 32h10M50 32h10M12 12l7 7M45 45l7 7M12 52l7-7M45 19l7-7"/></svg>',
+    lock: '<svg viewBox="0 0 64 64"><rect x="12" y="28" width="40" height="30" rx="4" fill="currentColor"/><path d="M20 28v-8a12 12 0 0 1 24 0v8" fill="none" stroke="currentColor" stroke-width="5"/></svg>',
+    speaker: '<svg class="ico" viewBox="0 0 64 64" fill="currentColor"><path d="M8 24h12l16-14v44L20 40H8z"/><path d="M44 22a14 14 0 0 1 0 20M50 14a24 24 0 0 1 0 36" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>',
+    muted: '<svg class="ico" viewBox="0 0 64 64" fill="currentColor"><path d="M8 24h12l16-14v44L20 40H8z"/><path d="M44 24l16 16M60 24L44 40" stroke="#ff6a5a" stroke-width="6" stroke-linecap="round"/></svg>',
+    cc: '<svg class="ico" viewBox="0 0 64 64"><rect x="4" y="12" width="56" height="40" rx="6" fill="none" stroke="currentColor" stroke-width="5"/><text x="32" y="41" text-anchor="middle" font-family="Exo 2, sans-serif" font-weight="800" font-size="22" fill="currentColor">CC</text></svg>',
+  };
+
+  // digital break-up: blocky squares and smeared strips, like a satellite signal hiccup
+  function Blocks(canvas) {
+    const x = canvas.getContext('2d'), W = canvas.width, H = canvas.height; let on = false, f = 0;
+    const loop = () => {
+      if (!on) return;
+      const hue = (CHANNELS[tv.idx] || {}).hue || 200; const r = rng((f++ * 7919) | 0);
+      if (f % 2 === 0) for (let i = 0; i < 60; i++) {
+        const s = [4, 8, 8, 16][Math.floor(r() * 4)], bx = Math.floor(r() * W / s) * s, by = Math.floor(r() * H / s) * s;
+        const kind = r(); x.fillStyle = kind < .5 ? `hsl(${hue + (r() - .5) * 60} ${30 + r() * 40}% ${15 + r() * 40}%)` : kind < .8 ? `hsl(${r() < .5 ? 130 : 300} 60% ${20 + r() * 30}%)` : `hsl(0 0% ${r() * 60}%)`;
+        x.fillRect(bx, by, s, s);
+      }
+      const y = Math.floor(r() * H), h = 2 + Math.floor(r() * 10); x.drawImage(canvas, 0, y, W, h, (r() - .5) * 20, y, W, h);
+      requestAnimationFrame(loop);
+    };
+    return { start() { if (on) return; on = true; f = 0; x.fillStyle = '#000'; x.fillRect(0, 0, W, H); requestAnimationFrame(loop); }, stop() { on = false; } };
+  }
+
+  const flipRow = (ch, cls) => {
+    const a = ch.kind === 'guide' ? null : airing(ch, Date.now());
+    const sh = ch.kind === 'guide' ? 'Program guide' : a ? (a.bumper ? 'Coming up next' : a.show.t) : 'No program information';
+    return `<div class="fl pane ${cls}"><b>${ch.num}</b><div style="min-width:0">${logo(ch)}<div class="nm">${ch.name}</div><div class="sh">${sh}</div></div></div>`;
+  };
+  function flipBar(center) {
+    const n = CHANNELS.length, i = CHANNELS.indexOf(center);
+    return `<div class="flip">${[-2, -1, 0, 1, 2].map(o => flipRow(CHANNELS[(i + o + n) % n], o === 0 ? 'cur hot' : Math.abs(o) === 1 ? 'near' : '')).join('')}</div>`;
+  }
+
+  const cfg = {
+    geom: {
+      full: { x: 0, y: 0, w: 1600, h: 900 },
+      squeeze: { x: 400, y: 0, w: 1200, h: 675 },
+      guide: { x: 1036, y: 80, w: 520, h: 296 },
+      menu: { x: 584, y: 140, w: 976, h: 549 },
+    },
+    guideSpan: 120,
+    staticFX: c => Blocks(c),
+    powerOn(el, done) { el.screen.dataset.anim = 'on'; setTimeout(done, 150); setTimeout(() => el.screen.dataset.anim = '', 1000); },
+    band(type, d) {
+      const now = Date.now(), ch = tv.ch;
+      const clk = `<div class="st-clock">${clock(now)}<small>${fmtDate(now)}</small></div>`;
+      if (type === 'banner') {
+        const { a, opts } = d, nx = opts.replaced ? null : next(ch, a.start + 1000);
+        const pct = Math.min(100, Math.max(0, (now - a.start) / (a.end - a.start) * 100));
+        return flipBar(ch) + `<div class="strip"><div class="pane">
+          <div style="min-width:0"><div class="st-title">${a.show.t}</div>
+            <div class="st-meta"><span class="now">NOW</span>${clock(a.start)} – ${clock(a.end)}<span class="bar"><i style="width:${pct}%"></i></span>${minsLeft(a, now)} min left</div>
+            <div class="st-desc">${a.show.d}</div></div>
+          <div class="st-next"><small>UP NEXT</small><span>${nx ? clock(nx.start) + ' · ' + nx.show.t : ''}</span></div>${clk}</div></div>`;
+      }
+      if (type === 'number') {
+        const c = CHANNELS.find(x => x.num === parseInt(d.s, 10));
+        return flipBar(c || ch) + `<div class="strip"><div class="pane wide"><div class="big-typed${d.bad ? ' bad' : ''}">${d.s}</div><div class="lbl">${d.bad ? 'No such channel' : c ? c.name : 'Enter a channel number'}<small>${d.bad ? 'That number isn\'t in your lineup' : 'Channel'}</small></div>${clk}</div></div>`;
+      }
+      if (type === 'volume') return flipBar(ch) + `<div class="strip"><div class="pane wide">${d.muted ? ICON.muted : ICON.speaker}<div class="lbl">${d.muted ? 'Mute' : 'Volume ' + d.v}<div class="meter">${Array.from({ length: 25 }, (_, i) => `<i class="${!d.muted && i < d.v / 4 ? '' : 'off'}" style="height:${20 + i * 3}%"></i>`).join('')}</div></div>${clk}</div></div>`;
+      return flipBar(ch) + `<div class="strip"><div class="pane wide">${ICON.cc}<div class="lbl">${d.text}</div>${clk}</div></div>`;
+    },
+    toast(type, d) { if (type === 'number') return 'Channel ' + d.s; if (type === 'volume') return d.muted ? 'Mute' : 'Volume ' + d.v; return d.text; },
+    card(kind, ch, nx) {
+      if (kind === 'offair') return `<div class="panel pane"><div class="noinfo">${ch.num}</div><b>No program information available</b><span>${ch.name} isn't showing anything right now.<br>Try another channel, or press GUIDE.</span></div>`;
+      if (kind === 'standby') return `<div class="panel pane"><div class="sig"><i></i><i></i><i></i><i></i><i></i></div><b>Please stand by</b><span>This program won't play. The next one starts in a moment.</span></div>`;
+      return `<div class="ident"><i class="streak"></i><div class="num">${ch.num}</div><div class="nm">${ch.name.toUpperCase()}</div>${nx ? `<div class="up pane"><small>COMING UP</small>${nx.show.t}</div>` : ''}</div>`;
+    },
+    renderGuide(el, d) {
+      const visible = 7, n = d.rows.length, start = Math.max(0, Math.min(n - visible, d.G.row - 3));
+      const s = d.selA, sc = d.selCh;
+      const nowPct = (d.now - d.from) / (d.to - d.from);
+      const rows = d.rows.slice(start, start + visible).map((r, k) => {
+        const ri = start + k;
+        const cells = r.cells.length ? r.cells.map((c, ci) => `<div class="g-cell${c.now ? ' now' : ''}${c.sel ? ' hot' : ''}" data-row="${ri}" data-col="${ci}" style="left:calc(${c.l * 100}% + 2px);width:calc(${(c.r - c.l) * 100}% - 4px)">${c.cutL ? '<span class="arr">◀</span>' : ''}<span class="tt">${c.a.show.t}</span>${c.cutR ? '<span class="arr">▶</span>' : ''}</div>`).join('')
+          : `<div class="g-cell off${r.sel ? ' hot' : ''}" data-row="${ri}" data-col="0" style="left:2px;width:calc(100% - 4px)">No program information available</div>`;
+        return `<div class="g-row"><div class="g-ch">${r.ch.num} ${logo(r.ch)}</div><div class="g-cells">${cells}${nowPct > 0 && nowPct < 1 ? `<i class="g-now" style="left:${nowPct * 100}%"></i>` : ''}</div></div>`;
+      }).join('');
+      el.innerHTML = `
+        <div class="g-top"><b>GUIDE</b><span>All channels</span><span class="sp"></span><span>${fmtDate(d.now)}</span><span class="clk">${clock(d.now)}</span></div>
+        <div class="g-det pane"><div class="ch">${sc.num} ${logo(sc)} ${sc.name}</div>
+          <div class="t">${s ? s.show.t : 'No program information available'}</div>
+          <div class="tm">${s ? `${clock(s.start)} – ${clock(s.end)} · ${s.show.m} min${s.start <= d.now ? ' · on now' : ''}` : ''}</div>
+          <div class="d">${s ? s.show.d : ''}</div></div>
+        <div class="g-win">${el.dataset.preview ? '' : '<div class="none">No preview</div>'}</div>
+        <div class="g-head"><span>${new Date(d.from).toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}</span>${d.times.map(t => `<span>${clock(t)}</span>`).join('')}</div>
+        <div class="g-body">${rows}</div>
+        <div class="g-foot"><span><b>▲▼</b>Channels</span><span><b>◀▶</b>Time</span><span><b>OK</b>Watch</span><span><b>EXIT</b>Back to TV</span></div>`;
+    },
+    renderMenu(el, m, hasPic) {
+      const foot = `<div class="m-foot"><span><b>▲▼</b>Choose</span><span><b>OK</b>Select</span><span><b>LAST</b>Back</span><span><b>MENU</b>Close</span></div>`;
+      const pc = (ui.showing && ui.showing.ch) || tv.ch;
+      const right = (hasPic ? `<div class="m-cap"><span>●</span> LIVE TV · ${pc.num} ${pc.name.toUpperCase()}</div><div class="m-win"></div>` : '') + `<div class="m-clock">${clock(Date.now())}</div>`;
+      const descTop = hasPic ? 710 : 140;
+      if (m.screen === 'pin' || m.screen === 'soon') {
+        const boxes = [0, 1, 2, 3].map(i => `<i class="pane${i < m.pin.length ? ' hot' : ''}">${i < m.pin.length ? '•' : ''}</i>`).join('');
+        el.innerHTML = `<div class="m-rib"><h2>Setup</h2>${m.screen === 'pin' ? `<div class="m-note">Enter your 4-digit PIN with the number buttons.</div><div class="pinrow">${boxes}</div>` : `<div class="m-note">PIN accepted. This is where Setup will open (built in step 6).<br><br>Press OK to go back.</div>`}</div>` + right + foot;
+        return;
+      }
+      const items = m.items(), s = items[m.sel] || {};
+      const list = items.length ? items.map((it, i) => `<div class="m-it${i === m.sel ? ' hot' : ''}${it.icon ? '' : ' noicon'}" data-i="${i}">${it.icon ? ICON[it.icon] : ''}<div><b>${it.label}</b>${it.hint ? `<small>${it.hint}</small>` : ''}</div>${it.value ? `<span class="val">${it.value.toUpperCase()}</span>` : ''}</div>`).join('') : '<div class="m-it noicon"><div><b>No favorites yet</b></div></div>';
+      const desc = m.screen === 'settings' ? `<b>${s.label}</b> · press OK to turn it ${s.value === 'On' ? 'off' : 'on'}.` : m.screen === 'favs' ? 'Press OK to watch. Favorites are chosen in Setup.' : `<b>${s.label}</b> · ${s.hint}`;
+      el.innerHTML = `<div class="m-rib"><h2>${m.title()}</h2>${list}</div>` + right + `<div class="m-desc pane" style="top:${descTop}px">${desc}</div>` + foot;
+    },
+  };
+
+  const ui = CS.makeScreen(cfg);
+  const tv = new CS.TV(ui); ui.bind(tv);
+  document.getElementById('stage').insertAdjacentHTML('beforeend', CS.remoteHTML('CHANNEL SURF HD'));
+  CS.wireRemote(tv); CS.bindKeys(tv); CS.mockBar('look-3-2005.html', tv); CS.fitStage($('#stage'), 2000, 900);
+  $('#turnOn').addEventListener('click', () => tv.press('power'));
+  $('#guide').addEventListener('click', e => { const c = e.target.closest('.g-cell'); if (c) ui.tuneTo(CHANNELS.filter(x => x.kind !== 'guide')[+c.dataset.row]); });
+  $('#menu').addEventListener('click', e => { const it = e.target.closest('[data-i]'); if (it) ui.pickMenu(+it.dataset.i); });
+  window.tv = tv;
+})();
+</script>
+</body>
+</html>

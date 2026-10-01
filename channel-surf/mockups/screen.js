@@ -14,7 +14,7 @@
     const picture = new Picture($('pic'));
     const fx = cfg.staticFX ? cfg.staticFX(el.snow) : new Snow(el.snow);
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let mode = 'off', bandTimer = 0, toastTimer = 0, tv = null, menu = null, showing = null, bandType = null;
+    let mode = 'off', bandTimer = 0, toastTimer = 0, powerTimer = 0, tv = null, menu = null, showing = null, bandType = null;
     const G = { win: 0, row: 0, col: 0, pausedUntil: 0, scroll: 0, raf: 0 };
     const guideChans = () => CHANNELS.filter(c => c.kind !== 'guide');
 
@@ -116,6 +116,7 @@
         setTimeout(() => { if (tv.tuneToken === tok && !menu.open && tv.on) tv._present(tok); }, 0);
       }); menu.cols = cfg.menuCols || 1; },
       powerOn(done) {
+        clearTimeout(powerTimer); el.screen.dataset.anim = '';
         setMode('blank');
         if (cfg.powerOn) return cfg.powerOn(el, done);
         el.screen.dataset.anim = 'on'; setTimeout(() => { done(); }, reduced ? 200 : 700); setTimeout(() => { el.screen.dataset.anim = ''; }, 1000);
@@ -123,7 +124,7 @@
       powerOff() {
         if (menu && menu.open) { menu.open = false; }
         setMode('blank'); el.screen.dataset.anim = 'off';
-        setTimeout(() => { el.screen.dataset.anim = ''; setMode('off'); }, reduced ? 300 : 850);
+        clearTimeout(powerTimer); powerTimer = setTimeout(() => { el.screen.dataset.anim = ''; setMode('off'); }, reduced ? 300 : 850);
       },
       blank() { setMode('blank'); },
       snow() { setMode('snow'); fx.start(); },
@@ -156,6 +157,7 @@
       menuBack() { menu.key('back'); },
       guideSelect(row, col) { G.row = row; G.col = col; G.pausedUntil = Date.now() + 8000; drawGuide(); },
       get mode() { return mode; },
+      get showing() { return showing; },
       el, G,
     };
     // keep the guide clock and "now" markers fresh

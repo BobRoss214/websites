@@ -1,0 +1,132 @@
+<title>Channel Surf Looks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Exo+2:wght@500;700;800&display=swap">
+<style>
+/* Cover page for the three look mockups. Deliberately one dark look (it's a TV).
+   Each card wears its own era's palette and type; a mini diagram shows where
+   the picture goes when the banner appears. */
+:root {
+  --bg: #08090c; --fg: #eef0f4; --muted: #9ba1ad; --line: #23262d;
+  --l1-a: #0b1f6b; --l1-b: #13308f; --l1-gold: #ffd23f;
+  --l2-a: #0a2a6b; --l2-b: #2a6fd6; --l2-hot: #ff9a1f;
+  --l3-a: #17191e; --l3-b: #0b0c0f; --l3-amber: #ffae1a;
+  --f-head: "Barlow Condensed", "Arial Narrow", sans-serif; --f-body: system-ui, -apple-system, "Segoe UI", Ubuntu, sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); color: var(--fg); }
+body { font: 16px/1.5 var(--f-body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 56px; }
+h1 { font: 800 clamp(34px, 6vw, 56px)/1 var(--f-head); letter-spacing: .01em; margin: 0; text-wrap: balance; }
+.lede { max-width: 66ch; color: var(--muted); font-size: 17px; margin: 14px 0 30px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 920px) { .cards { grid-template-columns: 1fr; } }
+.card { min-width: 0; display: grid; grid-template-rows: auto auto 1fr auto; gap: 14px; padding: 20px; border-radius: 14px; text-decoration: none; color: inherit; border: 1px solid var(--line); transition: transform .15s, box-shadow .15s; }
+.card:hover, .card:focus-visible { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,.5); outline: none; }
+.card:focus-visible { box-shadow: 0 0 0 3px #fff; }
+.era { font: 700 13px/1 var(--f-body); letter-spacing: .16em; text-transform: uppercase; opacity: .85; }
+.card h2 { margin: 4px 0 0; font-size: 30px; line-height: 1.05; }
+.card ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 15px; }
+.go { justify-self: start; font-weight: 700; padding: 10px 16px; border-radius: 8px; }
+/* mini screens: where the picture sits while the banner shows */
+.mini { position: relative; aspect-ratio: 16 / 9; max-width: 100%; border-radius: 6px; overflow: hidden; background: #000; }
+.mini .pic { position: absolute; background: linear-gradient(135deg, #6b4226, #2b160a); display: grid; place-items: center; font: 700 11px var(--f-body); color: #f6d9a8; letter-spacing: .08em; }
+.mini .b { position: absolute; }
+
+.c1 { background: linear-gradient(180deg, var(--l1-b), var(--l1-a)); border-color: #2e4fc0; }
+.c1 h2 { font: 800 34px/1 var(--f-head); }
+.c1 .era { color: var(--l1-gold); }
+.c1 .go { background: linear-gradient(180deg, #ffe066, #f0b400); color: var(--l1-a); font-family: var(--f-head); font-size: 20px; }
+.c1 .mini .pic { left: 12.5%; top: 0; width: 75%; height: 75%; }
+.c1 .mini .s { left: 0; top: 75%; width: 100%; height: 25%; background: var(--l1-b); box-shadow: inset 0 2px 0 var(--l1-gold); }
+.c1 .mini .s::before { content: ""; position: absolute; left: 3%; top: 15%; width: 10%; height: 70%; background: var(--l1-gold); border-radius: 3px; }
+.c1 .mini .fl, .c1 .mini .fr { top: 0; width: 12.5%; height: 75%; background: var(--l1-a); }
+.c1 .mini .fl { left: 0; } .c1 .mini .fr { right: 0; }
+
+.c2 { background: radial-gradient(ellipse at 90% 0%, var(--l2-b), transparent 60%), linear-gradient(160deg, var(--l2-a), #03113a); border-color: rgba(170,215,255,.45); font-family: Verdana, "DejaVu Sans", sans-serif; }
+.c2 h2 { font: bold 26px/1.1 Verdana, "DejaVu Sans", sans-serif; }
+.c2 ul { font-size: 14px; }
+.c2 .era { color: #bcd4ff; }
+.c2 .go { background: linear-gradient(180deg, #fff2b0, #ffd24a 45%, var(--l2-hot) 55%, #ffb347); color: #0b1d45; border-radius: 20px; }
+.c2 .mini .pic { left: 0; top: 0; width: 76%; height: 76%; }
+.c2 .mini .r { left: 77.5%; top: 3%; width: 20.5%; height: 71%; border-radius: 6px; background: rgba(60,130,230,.45); border: 1px solid rgba(170,215,255,.6); }
+.c2 .mini .s { left: 2%; top: 79%; width: 96%; height: 18%; border-radius: 6px; background: rgba(60,130,230,.45); border: 1px solid rgba(170,215,255,.6); }
+
+.c3 { background: linear-gradient(180deg, #1f2228, var(--l3-a)); border-color: #30343c; font-family: "Exo 2", system-ui, sans-serif; }
+.c3 h2 { font: 800 28px/1.05 "Exo 2", system-ui, sans-serif; }
+.c3 .era { color: var(--l3-amber); }
+.c3 .go { background: linear-gradient(180deg, #ffc65a, var(--l3-amber) 50%, #ff7a00); color: #1a1206; border-radius: 6px; }
+.c3 .mini .pic { left: 25%; top: 0; width: 75%; height: 75%; }
+.c3 .mini .l { left: 1.5%; width: 22%; height: 13%; border-radius: 3px; background: #2a2e36; border: 1px solid #3a3e47; }
+.c3 .mini .l.hot { background: var(--l3-amber); border-color: #ffd98a; }
+.c3 .mini .s { left: 1.5%; top: 78%; width: 97%; height: 19%; border-radius: 4px; background: #1f2228; border: 1px solid #30343c; }
+
+.try { margin-top: 34px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; }
+@media (max-width: 820px) { .try { grid-template-columns: 1fr; } }
+.try h3 { font: 700 26px/1.1 var(--f-head); letter-spacing: .02em; margin: 0 0 10px; }
+.try ol, .try ul { margin: 0; padding-left: 20px; display: grid; gap: 7px; color: #d6d9e0; }
+.try kbd { font: 600 13px ui-monospace, monospace; background: #1b1d22; border: 1px solid #33363e; border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; color: #fff; }
+.note { border-left: 3px solid var(--l1-gold); padding: 4px 0 4px 16px; color: #d6d9e0; }
+.note p { margin: 0 0 10px; }
+</style>
+
+<div class="wrap">
+  <h1>Channel Surf: pick a look</h1>
+  <p class="lede">Three takes on cable TV menus from 1995 to 2005. These use fake channels and sample pictures instead of YouTube. Open one, press the big power button, and flip around. Then tell me which one you want, or which parts to mix.</p>
+
+  <div class="cards">
+    <a class="card c1" href="look-1-1997.html">
+      <div><div class="era">Look 1 · about 1997</div><h2>Cable Box Guide</h2></div>
+      <div class="mini" aria-hidden="true"><div class="pic">PICTURE</div><div class="b fl"></div><div class="b fr"></div><div class="b s"></div></div>
+      <ul>
+        <li>Navy, bevelled boxes with gold highlights</li>
+        <li>Channel 1 is the guide that scrolls by itself, with promos on top</li>
+        <li>Snow between channels, color bars, a cartoon "Please Stand By"</li>
+        <li>Off screen shows the cable box's red clock</li>
+      </ul>
+      <span class="go">Open Look 1 →</span>
+    </a>
+    <a class="card c2" href="look-2-2002.html">
+      <div><div class="era">Look 2 · about 2002</div><h2>Digital Cable</h2></div>
+      <div class="mini" aria-hidden="true"><div class="pic">PICTURE</div><div class="b r"></div><div class="b s"></div></div>
+      <ul>
+        <li>Glossy see-through blue panels, silver headers, an orange highlight</li>
+        <li>The picture tucks into the corner while the banner shows</li>
+        <li>"Loading program guide… please wait" when you turn it on</li>
+        <li>Big menu tiles, a guide you can move around in</li>
+      </ul>
+      <span class="go">Open Look 2 →</span>
+    </a>
+    <a class="card c3" href="look-3-2005.html">
+      <div><div class="era">Look 3 · about 2005</div><h2>Satellite HD</h2></div>
+      <div class="mini" aria-hidden="true"><div class="pic">PICTURE</div><div class="b l" style="top:3%"></div><div class="b l" style="top:18%"></div><div class="b l hot" style="top:33%"></div><div class="b l" style="top:48%"></div><div class="b l" style="top:63%"></div><div class="b s"></div></div>
+      <ul>
+        <li>Dark graphite with amber, slim modern lettering</li>
+        <li>A channel list slides in beside the picture as you flip</li>
+        <li>Digital "break-up" blocks instead of snow</li>
+        <li>Wider guide (2 hours on screen) with a "now" line</li>
+      </ul>
+      <span class="go">Open Look 3 →</span>
+    </a>
+  </div>
+
+  <div class="try">
+    <div>
+      <h3>Things to try in each one</h3>
+      <ol>
+        <li>Press the big power button, or any button on the remote.</li>
+        <li>Flip with the remote's CH ▲▼, or the <kbd>↑</kbd> <kbd>↓</kbd> keys.</li>
+        <li>Type a channel number: <kbd>5</kbd>, or <kbd>4</kbd> then OK. Press LAST (<kbd>Backspace</kbd>) to jump back.</li>
+        <li>Press GUIDE (<kbd>G</kbd>). Move around with the arrows, press OK to watch.</li>
+        <li>Press MENU (<kbd>Home</kbd>), then Settings, then turn on <b>Bigger text</b>.</li>
+        <li>Tune to channel 9, which has no shows, to see the "off the air" screen.</li>
+        <li>Use the switches at the top: turn <b>Static</b> off, or hide the <b>Remote</b> to see the screen bigger. Try <b>Full screen</b> too.</li>
+      </ol>
+    </div>
+    <div class="note">
+      <p><b>Why does the picture shrink when the banner shows?</b> YouTube's rules don't allow anything drawn on top of its player. So instead of covering the show, the picture briefly makes room, then goes back to full screen.</p>
+      <p>Each look does that a different way, which is part of what you're choosing.</p>
+      <p>Sound effects (static, clicks, chimes) start after your first click.</p>
+    </div>
+  </div>
+</div>

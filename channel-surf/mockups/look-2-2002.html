@@ -235,7 +235,7 @@ body.big #screen { font-size: 22px; }
       const side = inner => `<div class="side">${inner}${clockBox}${tv.favs.has(ch.num) ? '<div class="favtag glass">★ Favorite channel</div>' : ''}</div>`;
       const badge = `<div class="badge glass"><b>${ch.num}</b><span class="call">${ch.call}</span><span class="nm">${ch.name}</span></div>`;
       if (type === 'banner') {
-        const { a, opts } = d; const nx = next(ch, a.start + 1000);
+        const { a, opts } = d; const nx = opts.replaced ? null : next(ch, a.start + 1000);
         const pct = Math.min(100, Math.max(0, (now - a.start) / (a.end - a.start) * 100));
         return side(badge) + `<div class="bottom"><div class="glass">
           <div style="min-width:0"><div class="bt-title">${a.show.t}</div><div class="bt-desc">${a.show.d}</div>

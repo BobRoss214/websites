@@ -105,6 +105,31 @@ these is in [RESEARCH.md](RESEARCH.md).
 - **No YouTube Premium:** keep the privacy-enhanced player. No standard-player switch.
 - **Show timing: back to back** with a short ident in between (as above).
 
+## Look direction (step 2)
+
+- **Era: 1995 to 2005 cable and satellite menus**, per your note. My first pass
+  (an 80s wood console and a 1994 cable box) was too old, so those were dropped
+  (still in git history).
+- **No fake TV cabinet.** On a laptop plugged into a TV, the real TV is the frame.
+  The picture gets the whole screen, and the nostalgia lives in the menus,
+  banners, guide, idents and cards.
+- **The banner "squeeze".** Because nothing may cover the YouTube player, every
+  banner, number entry or volume display briefly shrinks the picture to make room,
+  then lets it go back to full screen. Each mockup does this differently:
+  - Look 1: picture shrinks to the top center, navy frame around it.
+  - Look 2: picture tucks into the top-left corner, L-shaped panel.
+  - Look 3: picture slides right, channel list on the left.
+- **The on-screen remote sits beside the screen, never on top of it**, and can be
+  hidden. The same buttons work in every look.
+- **The guide channel is channel 1**, and the GUIDE button tunes there. In the
+  guide, the arrow keys move around the grid; CH ▲▼ and LAST leave it. The
+  little picture in the guide shows the channel you came from.
+- **The MENU button opens a set-top box style menu** (Guide, Favorites,
+  Settings, Setup with PIN). The live picture keeps playing in a window inside
+  the menu instead of being covered.
+- **The viewer's FAV button jumps to the next favorite channel.** Picking
+  favorites happens in Setup, so there's nothing for the viewer to mess up.
+
 ## Open, waiting on taste
 
-- Overall look: three mockups coming in step 2.
+- Which of the three looks (or which mix). Mockups are in `mockups/`.
