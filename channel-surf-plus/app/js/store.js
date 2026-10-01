@@ -52,7 +52,12 @@ export function save(now = false) {
   const doit = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { console.warn('could not save settings', e); } bus.emit('settings'); };
   if (now) doit(); else saveTimer = setTimeout(doit, 150);
 }
-export function replaceAll(obj) { for (const k of Object.keys(S)) delete S[k]; Object.assign(S, merge(clone(DEFAULTS), obj)); save(true); }
+export function replaceAll(obj) {
+  for (const k of Object.keys(S)) delete S[k]; Object.assign(S, merge(clone(DEFAULTS), obj));
+  // a backup file could have been edited by hand: channel numbers must be plain numbers
+  for (const list of [S.channels, S.demoChannels]) (Array.isArray(list) ? list : []).forEach(c => { c.num = Math.max(1, Math.min(999, parseInt(c.num, 10) || 1)); });
+  save(true);
+}
 export function exportSetup() { const o = clone(S); return JSON.stringify({ app: 'Channel Surf Plus', exported: new Date().toISOString(), settings: o }, null, 2); }
 
 // ---- lists of videos (history, watch later, liked) ----

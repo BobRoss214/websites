@@ -3,6 +3,8 @@
 // including the awkward cases: Shorts, livestreams, premieres, videos that
 // can't be embedded, age-restricted, deleted and private videos, a channel with
 // no "regular videos" playlist, an empty channel, disabled comments, quota and key errors.
+// Signed-in calls (likes, subscriptions, playlists, comments) need a "Bearer tok-…" pass,
+// and, like the real service, refuse a key and a pass sent together from different projects.
 'use strict';
 
 const NOW = Date.now();
@@ -39,6 +41,7 @@ for (let i = 0; i < 30; i++) {
   if (i === 10) Object.assign(v, { title: '<img src=x onerror="window.__xss=1"> Tom & Jerry\'s "Bench"' });
   wood.push(v);
 }
+wood[0].chapters = '0:00 Welcome\n1:15 The wood\n4:30 Cutting the joints\n8:00 Glue-up';
 const WOOD = addChannel('mockwoodshop', 'Mock Woodshop', '@mockwoodshop', wood);
 const NOLF = addChannel('nolongform', 'No Long Form', '@nolongform', [
   ...[0, 1, 2, 3, 4].map(i => ({ id: vid('nl', i), title: 'Regular upload ' + i, dur: 900 + i * 60, publishedAt: NOW - i * 86400e3 })),
@@ -68,7 +71,7 @@ function videoResource(id) {
   const v = VIDEOS[id];
   return {
     kind: 'youtube#video', etag: 'x', id,
-    snippet: { publishedAt: iso(v.publishedAt), channelId: v.channelId, title: v.title, description: 'About ' + v.title, thumbnails: thumbs(id), channelTitle: v.channelTitle, categoryId: '26', liveBroadcastContent: v.live || 'none' },
+    snippet: { publishedAt: iso(v.publishedAt), channelId: v.channelId, title: v.title, description: 'About ' + v.title + (v.chapters ? '\n\n' + v.chapters : ''), thumbnails: thumbs(id), channelTitle: v.channelTitle, categoryId: '26', liveBroadcastContent: v.live || 'none' },
     contentDetails: { duration: isoDur(v.dur), dimension: '2d', definition: v.hd ? 'hd' : 'sd', caption: v.caption ? 'true' : 'false', licensedContent: true, contentRating: v.age ? { ytRating: 'ytAgeRestricted' } : {}, projection: 'rectangular' },
     status: { uploadStatus: 'processed', privacyStatus: 'public', license: 'youtube', embeddable: !v.noembed, publicStatsViewable: true, madeForKids: false },
     statistics: { viewCount: String(1000 + v.dur * 7), likeCount: String(100 + v.dur), favoriteCount: '0', commentCount: id === NOCOMMENTS ? '0' : '12' },
@@ -84,11 +87,52 @@ function page(list, p, max = 50) {
   return { slice: list.slice(start, start + n), next: start + n < list.length ? String(start + n) : undefined, total: list.length };
 }
 
-exports.state = { quotaOnSearch: false, delayMs: 0, calls: [] };
+exports.state = { quotaOnSearch: false, delayMs: 0, calls: [], writes: [], tokenOk: true };
 
-exports.handle = function (url) {
-  const u = new URL(url), method = u.pathname.split('/').pop(), p = Object.fromEntries(u.searchParams);
+// ---- the signed-in viewer's account ----
+const ME = { id: ucid('mockviewer'), title: 'Mock Viewer' };
+const ACCT = exports.account = { subs: new Map(), ratings: {}, playlists: {}, comments: [], replies: [] };
+const E401 = [401, { error: { code: 401, message: 'Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential.', errors: [{ message: 'Invalid Credentials', domain: 'global', reason: 'authError', location: 'Authorization', locationType: 'header' }], status: 'UNAUTHENTICATED' } }];
+const MIXED = [400, { error: { code: 400, message: 'The API Key and the authentication credential are from different projects.', errors: [{ message: 'The API Key and the authentication credential are from different projects.', domain: 'global', reason: 'badRequest' }], status: 'INVALID_ARGUMENT' } }];
+const myPlaylist = x => ({ kind: 'youtube#playlist', id: x.id, snippet: { publishedAt: iso(NOW), channelId: ME.id, title: x.title, description: '', thumbnails: thumbs(x.id), channelTitle: ME.title }, contentDetails: { itemCount: x.ids.length }, status: { privacyStatus: x.privacy } });
+let seq = 0;
+function signedIn(path, p, verb, body) {
+  switch (verb + ' ' + path) {
+    case 'GET channels': return p.mine ? [200, { kind: 'youtube#channelListResponse', items: [{ kind: 'youtube#channel', id: ME.id, snippet: { title: ME.title, description: '', thumbnails: thumbs(ME.id) }, statistics: { subscriberCount: '3', videoCount: '0', hiddenSubscriberCount: false } }] }] : null;
+    case 'GET subscriptions': {
+      let list = [...ACCT.subs.entries()]; if (p.forChannelId) list = list.filter(([cid]) => p.forChannelId.split(',').includes(cid));
+      return [200, { kind: 'youtube#subscriptionListResponse', pageInfo: { totalResults: list.length }, items: list.map(([cid, sid]) => ({ kind: 'youtube#subscription', id: sid, snippet: { title: CH[cid] ? CH[cid].title : cid, description: '', resourceId: { kind: 'youtube#channel', channelId: cid }, thumbnails: thumbs(cid) } })) }];
+    }
+    case 'POST subscriptions': {
+      const cid = body.snippet.resourceId.channelId;
+      if (ACCT.subs.has(cid)) return [400, { error: { code: 400, message: 'The subscription that you are trying to create already exists.', errors: [{ reason: 'subscriptionDuplicate' }] } }];
+      const sid = 'sub' + (++seq); ACCT.subs.set(cid, sid); return [200, { kind: 'youtube#subscription', id: sid, snippet: body.snippet }];
+    }
+    case 'DELETE subscriptions': { const e = [...ACCT.subs.entries()].find(([, sid]) => sid === p.id); if (!e) return [404, { error: { code: 404, message: 'not found', errors: [{ reason: 'subscriptionNotFound' }] } }]; ACCT.subs.delete(e[0]); return [204, null]; }
+    case 'GET videos/getRating': return [200, { kind: 'youtube#videoGetRatingResponse', items: p.id.split(',').map(id => ({ videoId: id, rating: ACCT.ratings[id] || 'none' })) }];
+    case 'POST videos/rate': if (p.rating === 'none') delete ACCT.ratings[p.id]; else ACCT.ratings[p.id] = p.rating; return [204, null];
+    case 'GET videos': if (p.myRating) { const ids = Object.keys(ACCT.ratings).filter(id => ACCT.ratings[id] === p.myRating); return [200, { kind: 'youtube#videoListResponse', items: ids.map(videoResource) }]; } return null;
+    case 'GET playlists': return p.mine ? [200, { kind: 'youtube#playlistListResponse', items: Object.values(ACCT.playlists).map(myPlaylist) }] : null;
+    case 'POST playlists': { const x = { id: 'PLmine' + (++seq), title: body.snippet.title, privacy: body.status.privacyStatus, ids: [] }; ACCT.playlists[x.id] = x; return [200, myPlaylist(x)]; }
+    case 'POST playlistItems': { const x = ACCT.playlists[body.snippet.playlistId]; if (!x) return ERR.playlistNotFound; x.ids.push(body.snippet.resourceId.videoId); return [200, { kind: 'youtube#playlistItem', id: 'pi' + (++seq), snippet: body.snippet }]; }
+    case 'GET playlistItems': { const x = ACCT.playlists[p.playlistId]; if (!x) return null; return [200, { kind: 'youtube#playlistItemListResponse', items: x.ids.map(id => ({ kind: 'youtube#playlistItem', id: 'pi' + id, contentDetails: { videoId: id } })) }]; }
+    case 'POST commentThreads': { const c = { id: 'mine' + (++seq), videoId: body.snippet.videoId, text: body.snippet.topLevelComment.snippet.textOriginal }; ACCT.comments.push(c); return [200, { kind: 'youtube#commentThread', id: c.id, snippet: { videoId: c.videoId, canReply: true, totalReplyCount: 0, topLevelComment: { kind: 'youtube#comment', id: c.id, snippet: { authorDisplayName: '@' + ME.title.replace(' ', '').toLowerCase(), textDisplay: '', textOriginal: c.text, likeCount: 0, publishedAt: iso(Date.now()) } } } }]; }
+    case 'POST comments': { const c = { id: body.snippet.parentId + '.r' + (++seq), parentId: body.snippet.parentId, text: body.snippet.textOriginal }; ACCT.replies.push(c); return [200, { kind: 'youtube#comment', id: c.id, snippet: { parentId: c.parentId, authorDisplayName: '@mockviewer', textDisplay: c.text, textOriginal: c.text, likeCount: 0, publishedAt: iso(Date.now()) } }]; }
+  }
+  return null;
+}
+
+exports.handle = function (url, req = {}) {
+  const u = new URL(url), path = u.pathname.replace(/^.*\/youtube\/v3\//, ''), method = path.split('/').pop(), p = Object.fromEntries(u.searchParams);
+  const verb = (req.method || 'GET').toUpperCase(), auth = ((req.headers || {}).authorization || '');
   exports.state.calls.push(method + (p.chart ? ':chart' : ''));
+  if (auth) {
+    if (p.key) return MIXED;
+    if (!/^Bearer tok-/.test(auth) || !exports.state.tokenOk) return E401;
+    let body = null; try { body = req.body ? JSON.parse(req.body) : null; } catch {}
+    if (verb !== 'GET') exports.state.writes.push({ verb, path, p, body });
+    const r = signedIn(path, p, verb, body); if (r) return r;
+  } else if (verb !== 'GET' || p.mine || p.myRating || path === 'videos/getRating' || /^PLmine/.test(p.playlistId || '')) return E401;
   const key = p.key || '';
   if (/BAD/.test(key)) return ERR.keyInvalid;
   if (/NOREF/.test(key)) return ERR.referrer;
@@ -145,9 +189,15 @@ exports.handle = function (url) {
       else if (p.channelId) list = Object.values(PLAYLISTS).filter(x => x.channelId === p.channelId);
       return [200, { kind: 'youtube#playlistListResponse', pageInfo: { totalResults: list.length }, items: list.map(x => ({ kind: 'youtube#playlist', id: x.id, snippet: { publishedAt: iso(NOW), channelId: x.channelId, title: x.title, description: '', thumbnails: thumbs(x.id), channelTitle: x.channelTitle }, contentDetails: { itemCount: x.ids.length } })) }];
     }
+    case 'comments': {
+      const n = +((/^c(\d)$/.exec(p.parentId) || [])[1] || 0);
+      const mine = ACCT.replies.filter(r => r.parentId === p.parentId);
+      return [200, { kind: 'youtube#commentListResponse', items: [...Array.from({ length: n }, (_, i) => ({ kind: 'youtube#comment', id: p.parentId + '.' + i, snippet: { parentId: p.parentId, authorDisplayName: '@replier' + i, textDisplay: 'Reply number ' + i, textOriginal: 'Reply number ' + i, likeCount: i, publishedAt: iso(NOW - (n - i) * 3600e3) } })),
+        ...mine.map(r => ({ kind: 'youtube#comment', id: r.id, snippet: { parentId: r.parentId, authorDisplayName: '@mockviewer', textDisplay: r.text, textOriginal: r.text, likeCount: 0, publishedAt: iso(Date.now()) } }))] }];
+    }
     case 'commentThreads': {
       if (p.videoId === NOCOMMENTS) return ERR.commentsDisabled;
-      return [200, { kind: 'youtube#commentThreadListResponse', items: [1, 2, 3, 4, 5].map(i => ({ kind: 'youtube#commentThread', id: 'c' + i, snippet: { videoId: p.videoId, totalReplyCount: i, topLevelComment: { kind: 'youtube#comment', id: 'c' + i, snippet: { authorDisplayName: '@viewer' + i, textDisplay: i === 3 ? '<script>window.__xss=2</script> nice!' : 'Comment number ' + i, textOriginal: 'Comment number ' + i, likeCount: i * 3, publishedAt: iso(NOW - i * 86400e3) } } } })) }];
+      return [200, { kind: 'youtube#commentThreadListResponse', items: [1, 2, 3, 4, 5].map(i => ({ kind: 'youtube#commentThread', id: 'c' + i, snippet: { videoId: p.videoId, canReply: true, totalReplyCount: i, topLevelComment: { kind: 'youtube#comment', id: 'c' + i, snippet: { authorDisplayName: '@viewer' + i, textDisplay: i === 3 ? '<script>window.__xss=2</script> nice!' : 'Comment number ' + i, textOriginal: 'Comment number ' + i, likeCount: i * 3, publishedAt: iso(NOW - i * 86400e3) } } } })) }];
     }
   }
   return [404, { error: { code: 404, message: 'Not Found', errors: [{ reason: 'notFound' }] } }];

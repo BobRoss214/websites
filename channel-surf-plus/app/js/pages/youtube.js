@@ -159,7 +159,7 @@ export class MyPlaylistsPage extends ListPage {
     this.load(async () => {
       const lists = (await yt.myPlaylists()).map(p => ({ ...p, mine: true }));
       this.items = [{ cls: 'act', html: rows.action('plus', 'Make a new playlist', 'Private: only you can see it'), act: () => newPlaylist(() => this.fetch()) },
-        ...lists.map(p => ({ html: rows.playlist(p), act: () => app.screen.open(new (P().PlaylistPage)(p)), side: () => `<b>${esc(p.title)}</b><p>${p.count} videos${p.privacy ? ' · ' + p.privacy : ''}</p>` }))];
+        ...lists.map(p => ({ html: rows.playlist(p), act: () => app.screen.open(new (P().PlaylistPage)(p)), side: () => `<b>${esc(p.title)}</b><p>${p.count} videos${p.privacy ? ' · ' + esc(p.privacy) : ''}</p>` }))];
     });
   }
 }
@@ -199,9 +199,11 @@ export async function lookUp(v) {
   const jobs = [];
   if (v.id && !rated.has(v.id)) jobs.push(yt.getRating(v.id).then(r => rated.set(v.id, r)));
   if (v.channelId && !subbed.has(v.channelId)) jobs.push(yt.subscription(v.channelId).then(s => subbed.set(v.channelId, s)));
-  await Promise.all(jobs).catch(e => console.warn(e));
+  await Promise.all(jobs).catch(quiet);
 }
-export async function lookUpChannel(id) { if (canUseAccount() && !subbed.has(id)) await yt.subscription(id).then(s => subbed.set(id, s)).catch(e => console.warn(e)); }
+export async function lookUpChannel(id) { if (canUseAccount() && !subbed.has(id)) await yt.subscription(id).then(s => subbed.set(id, s)).catch(quiet); }
+// looking things up in the background: only speak up if the sign-in stopped working
+const quiet = e => { if (e.kind === 'signedOut') failed(e); else console.warn(e); };
 export const ratingOf = id => rated.get(id);
 export const subOf = id => subbed.get(id);
 

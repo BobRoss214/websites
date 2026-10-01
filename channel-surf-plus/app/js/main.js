@@ -1,6 +1,6 @@
 // Start-up: load the saved lineup, build the screen, the TV and the remote.
 import { app } from './app.js';
-import { S, save } from './store.js';
+import { S, save, db } from './store.js';
 import { $ } from './util.js';
 import * as L from './lineup.js';
 import { Screen } from './screen.js';
@@ -51,5 +51,7 @@ import * as youtube from './pages/youtube.js';
   addEventListener('beforeunload', () => { app.tv.leaveVod(); save(true); flush(); });
   // keep channels fresh while the TV stays on all day
   setInterval(() => { if (app.tv.on) L.refreshAll(app.tv.ch.id); }, 30 * 60e3);
+  // tidy the browser's database now and then: old YouTube answers (kept for at most a week anyway)
+  setTimeout(async () => { try { const keys = await db.keys('api:'); const vals = await db.getMany(keys); keys.forEach((k, i) => { if (!vals[i] || Date.now() - vals[i].at > 7 * 86400e3) db.del(k); }); } catch {} }, 60e3);
   window.channelSurf = Object.assign(app, { lineup: L, settings: S }); // handy for troubleshooting from the browser console
 })();

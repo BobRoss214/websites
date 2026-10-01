@@ -99,7 +99,7 @@ export class ListPage extends Page {
     if (k === 'ok' && n) { const it = this.items[this.sel]; if (it && it.act) { Sound.beep(); it.act(); } return true; }
     return false;
   }
-  click(i) { this.sel = i; const it = this.items[i]; if (it && it.act) it.act(); else this.rerender(); }
+  click(i) { this.sel = i; const it = this.items[i]; if (it && it.act) { Sound.beep(); it.act(); } else this.rerender(); }
   // load items from a promise, showing "Loading…" meanwhile
   async load(fn) {
     this.loading = true; this.error = null; this.rerender();

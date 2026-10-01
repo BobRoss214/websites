@@ -16,6 +16,7 @@ export class Screen {
     this.bandTimer = 0; this.bandType = null; this.bandData = null; this.toastTimer = 0;
     this.picRect = null;
     setInterval(() => this.tickClock(), 15000);
+    this.el.pages.addEventListener('click', e => { const r = e.target.closest('.row[data-i]'), p = this.top(); if (r && p && p.click) p.click(+r.dataset.i); });
   }
 
   // ---------- the picture ----------
@@ -39,7 +40,10 @@ export class Screen {
     else if (tv.view === 'picture' || tv.view === 'vod') { mode = 'picture'; where = this.bandType ? 'squeeze' : 'full'; }
     else if (tv.view === 'guide') { mode = 'guide'; if (tv.hasPicture()) where = 'guide'; }
     else mode = 'card';
+    const was = this.mode;
     this.mode = mode; e.screen.dataset.mode = mode;
+    if (!['pages', 'guide', 'card'].includes(mode)) { clearTimeout(this.toastTimer); e.toast.hidden = true; } // never over the picture
+    if (mode === 'guide' && was !== 'guide') app.guide.resume(); // its scrolling stops while a menu covers it
     e.power.hidden = mode !== 'off';
     e.snow.hidden = mode !== 'snow'; if (mode === 'snow') this.snow.start(); else this.snow.stop();
     e.card.hidden = mode !== 'card';
@@ -67,7 +71,8 @@ export class Screen {
     else if (v === 'vodstart') html = cards.vodStart(tv.vod.v);
     else if (v === 'nochannels') html = cards.nochannels();
     else if (v === 'problem') html = cards.problem(tv.problemTitle, tv.problemSub);
-    if (e.dataset.view !== v + ':' + (ch && ch.id) || v === 'standby' || v === 'problem') { e.innerHTML = html; e.dataset.view = v + ':' + (ch && ch.id); }
+    const key = v + ':' + (ch && ch.id) + ':' + (v === 'ident' ? (tv.identNext ? tv.identNext.v.id : '') : v === 'vodstart' && tv.vod ? tv.vod.v.id : '');
+    if (e.dataset.view !== key || v === 'standby' || v === 'problem') { e.innerHTML = html; e.dataset.view = key; }
   }
 
   // ---------- squeeze band (banner, number, volume, playback bar) ----------
@@ -119,7 +124,7 @@ export class Screen {
 
   // ---------- toasts: only over our own screens, never over the picture ----------
   toast(type, d) {
-    if (this.mode === 'off' || this.mode === 'blank' || this.mode === 'snow') return;
+    if (['off', 'blank', 'snow', 'picture'].includes(this.mode)) return;
     let text = typeof d === 'string' ? d : '';
     if (type === 'number') text = d.bad ? 'No channel ' + d.s : 'Channel ' + d.s + (d.name ? ' · ' + d.name : '');
     else if (type === 'volume') text = d.muted ? 'Mute' : 'Volume ' + d.v;
@@ -155,7 +160,7 @@ export class Screen {
     if (p.key && p.key(k, raw)) return true;
     if (k === 'back') { this.back(); return true; }
     if (k === 'exit' || k === 'menu') { this.closePages(); return true; }
-    return false;
+    return ['up', 'down', 'left', 'right', 'ok', 'info', 'fav'].includes(k);
   }
 
   tickClock() {

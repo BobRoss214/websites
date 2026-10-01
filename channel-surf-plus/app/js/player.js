@@ -113,7 +113,7 @@ class DemoPlayer {
     this._set('buffering');
     clearTimeout(this.bt); this.bt = setTimeout(() => { if (this.state !== 'buffering') return; this.t0 = performance.now(); this.base = this.pos; this.running = true; this._set('playing'); requestAnimationFrame(this._loop); }, 350);
   }
-  pause() { if (this.state === 'playing') { this.pos = this.time(); this.running = false; this._set('paused'); } }
+  pause() { if (this.state === 'playing') { this.pos = this.time(); this.running = false; this._set('paused'); } else if (this.state === 'buffering') { clearTimeout(this.bt); this._set('paused'); } }
   stop() { this.running = false; clearTimeout(this.bt); this.v = null; this.state = 'none'; const x = this.x; if (x) { x.fillStyle = '#000'; x.fillRect(0, 0, 960, 540); } }
   seek(sec) { this.pos = Math.max(0, Math.min(sec, this.duration() || sec)); this.t0 = performance.now(); this.base = this.pos; if (!this.running) this._draw(this.pos); }
   time() { return this.running ? this.base + (performance.now() - this.t0) / 1000 * this.speed : this.pos; }

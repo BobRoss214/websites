@@ -99,9 +99,7 @@ export class SetupHome extends SetupPage {
   channels() {
     const list = L.channels().filter(c => c.kind !== 'guide');
     const rowsHTML = list.map((c, i) => {
-      const st = L.poolStatus(c);
-      const status = st.loading ? 'getting shows…' : st.error && !st.usable ? '<span class="bad">' + esc(plainKind(st.error)) + '</span>' : st.at ? st.usable + ' shows ready · checked ' + ago(st.at) : 'not loaded yet';
-      return `<div class="chrow"><div class="n">${c.num}</div><div><b>${c.fav ? '★ ' : ''}${esc(c.name)}</b><small>${c.sources.map(s => esc(SRC_TEXT(s))).join(' + ') || 'No sources yet'} · ${status}</small></div>
+      return `<div class="chrow"><div class="n">${c.num}</div><div><b>${c.fav ? '★ ' : ''}${esc(c.name)}</b><small>${c.sources.map(s => esc(SRC_TEXT(s))).join(' + ') || 'No sources yet'} · <span data-st="${i}">${chStatus(c)}</span></small></div>
         <div class="btns" style="margin:0"><button type="button" class="b small" data-up="${i}" aria-label="Move up">▲</button><button type="button" class="b small" data-down="${i}" aria-label="Move down">▼</button><button type="button" class="b small" data-fav="${i}">${c.fav ? '★ Fav' : '☆ Fav'}</button><button type="button" class="b small gold" data-edit="${i}">Edit</button><button type="button" class="b small red" data-del="${i}">Delete</button></div></div>`;
     }).join('');
     return `<div class="card bevel"><h2>${isDemo() ? 'Practice lineup (demo)' : 'Your lineup'} · ${list.length} channels</h2><p>Channel 1 is always the guide. Each channel can mix several YouTube channels, searches, playlists or topics.</p>
@@ -123,8 +121,11 @@ export class SetupHome extends SetupPage {
     this.on('#import', 'click', () => app.screen.open(new ImportPage()));
     this.on('#renum', 'click', () => { L.renumber(); app.tv.refreshList(); this.say('Renumbered.'); });
     this.on('#refresh', 'click', async () => { this.say('Refreshing… this can take a minute.'); for (const c of list) await L.refreshChannel(c, { force: true }); this.say('All channels refreshed.'); });
-    // keep the status lines up to date while shows load
-    clearInterval(this.timer); this.timer = setInterval(() => { if (app.screen.top() === this && this.tab === 'channels' && !document.activeElement.closest('#pages input')) this.rerender(); else clearInterval(this.timer); }, 3000);
+    // keep the status lines up to date while shows load (in place: nothing else on the page moves)
+    clearInterval(this.timer); this.timer = setInterval(() => {
+      if (app.screen.top() !== this || this.tab !== 'channels') return clearInterval(this.timer);
+      $$('#pages [data-st]').forEach(el => { const c = list[+el.dataset.st]; const h = c ? chStatus(c) : ''; if (el.innerHTML !== h) el.innerHTML = h; });
+    }, 2000);
   }
   onHide() { clearInterval(this.timer); }
 
@@ -174,6 +175,10 @@ export class SetupHome extends SetupPage {
     this.on('#reset', 'click', async (e, b) => { if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = 'Click again to erase everything'; return; } localStorage.clear(); await db.clear(); location.reload(); });
   }
 }
+function chStatus(c) {
+  const st = L.poolStatus(c);
+  return st.loading ? 'getting shows…' : st.error && !st.usable ? '<span class="bad">' + esc(plainKind(st.error)) + '</span>' : st.at ? st.usable + ' shows ready · checked ' + ago(st.at) : 'not loaded yet';
+}
 function plainKind(k) { return { quota: 'YouTube daily limit reached; will retry tomorrow', key: 'the YouTube key isn\'t working', referrer: 'the key doesn\'t allow this address', disabled: 'the YouTube API isn\'t enabled for the key', rate: 'YouTube asked to slow down; will try again soon', busy: 'YouTube was busy; will try again soon', network: 'no internet', notFound: 'not found on YouTube', nokey: 'no YouTube key yet' }[k] || 'had a problem'; }
 
 // ----- add or edit one channel -----
@@ -200,7 +205,7 @@ export class ChannelEditor extends SetupPage {
         <div class="grid2">${sf.map(([k, label, opts]) => `<div><label for="sf_${k}">${label}</label><select id="sf_${k}">${opt(opts, defaultSearchFilters()[k])}</select></div>`).join('')}<div><label><input type="checkbox" id="sf_cc"> Only with captions</label></div></div>
         <div class="btns"><button type="button" class="b gold" id="addSearch">Add this search</button></div></div>
       <div class="card bevel grid2"><div><h3>Add a playlist</h3><input type="text" id="pl" value="${esc(p.pl || '')}" placeholder="Playlist link (has list= in it)"><div class="btns"><button type="button" class="b gold" id="addPl">Add playlist</button></div></div>
-        <div><h3>Add a topic</h3><select id="cat">${this.cats ? this.cats.map(c => `<option value="${c.id}">${esc(c.title)}</option>`).join('') : '<option>Loading topics…</option>'}</select><div class="btns"><button type="button" class="b gold" id="addCat">Add popular videos in this topic</button><button type="button" class="b" id="addTrend">Add "Popular on YouTube"</button></div></div></div>
+        <div><h3>Add a topic</h3><select id="cat">${this.cats ? this.cats.map(c => `<option value="${esc(c.id)}">${esc(c.title)}</option>`).join('') : '<option>Loading topics…</option>'}</select><div class="btns"><button type="button" class="b gold" id="addCat">Add popular videos in this topic</button><button type="button" class="b" id="addTrend">Add "Popular on YouTube"</button></div></div></div>
       <div class="card bevel"><h3>Filters for this channel</h3><div class="grid2"><div><label for="flen">Show length</label><select id="flen">${opt(L.FILTER_CHOICES.length, f.length)}</select></div><div><label for="fage">How new</label><select id="fage">${opt(L.FILTER_CHOICES.age, f.age)}</select></div>
         <div><label for="fwords">Leave out titles with these words (commas between)</label><input type="text" id="fwords" value="${esc(f.words || '')}" placeholder="for example: reaction, unboxing"></div><div><label><input type="checkbox" id="fcc"${f.captions ? ' checked' : ''}> Only shows with captions</label></div></div></div>
       <div class="btns"><button type="button" class="b gold" id="saveCh">${this.ch ? 'Save changes' : 'Create this channel'}</button><button type="button" class="b" id="cancel">Cancel</button></div></div>`;
@@ -246,7 +251,8 @@ export class ChannelEditor extends SetupPage {
       if (clash && !this.confirmClash) { this.confirmClash = true; return this.say(`Channel ${num} is already ${clash.name}. Press the button again to put this one there and move the others up.`, false); }
       if (clash) L.activeList().forEach(c => { if (c.num >= num && (!this.ch || c.id !== this.ch.id)) c.num++; });
       const filters = { ...d.filters };
-      if (this.ch) L.updateChannel(this.ch, { name: d.name.trim(), num, sources: d.sources, filters });
+      const changed = k => JSON.stringify(k === 'filters' ? filters : d[k]) !== JSON.stringify(this.ch[k]);
+      if (this.ch) L.updateChannel(this.ch, { name: d.name.trim(), num, ...(changed('filters') ? { filters } : {}), ...(changed('sources') ? { sources: d.sources } : {}) });
       else L.addChannel({ name: d.name.trim(), num, sources: d.sources, filters });
       app.tv.refreshList(); app.screen.back(); const h = app.screen.top(); if (h && h.say) h.say((this.ch ? 'Saved ' : 'Created ') + 'channel ' + num + ', ' + d.name.trim() + '.');
     });

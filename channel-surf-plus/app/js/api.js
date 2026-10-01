@@ -233,7 +233,7 @@ async function search(o) {
     if (o.hd) p.videoDefinition = 'high';
     if (o.live) p.eventType = 'live';
   }
-  if (o.date && o.date !== 'any' && AGE_DAYS[o.date]) p.publishedAfter = new Date(Date.now() - AGE_DAYS[o.date] * 86400e3).toISOString().replace(/\.\d+Z$/, 'Z');
+  if (o.date && o.date !== 'any' && AGE_DAYS[o.date]) p.publishedAfter = new Date(Math.floor((Date.now() - AGE_DAYS[o.date] * 86400e3) / 3600e3) * 3600e3).toISOString().replace(/\.\d+Z$/, 'Z');
   if (o.channelId) p.channelId = o.channelId;
   const r = await call('search', p, { ttl: o.live ? 15 * 60e3 : 6 * 3600e3 });
   const items = (r.items || []).map(it => {

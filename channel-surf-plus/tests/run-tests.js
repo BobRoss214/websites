@@ -2,6 +2,8 @@
 // for YouTube's player and data service (so they run without internet or a key).
 //   node tests/run-tests.js
 // Needs Node and Playwright (npm install playwright). Prints PASS/FAIL lines.
+// Covers live channels, search and on demand, Setup, importing, the signed-in YouTube
+// features (likes, subscriptions, playlists, comments), and past bugs.
 'use strict';
 const path = require('path'), http = require('http'), fs = require('fs');
 let chromium;
@@ -11,8 +13,18 @@ const { WOOD, NOLF, EMPTY, BIRDS, NOCOMMENTS } = mock.ids;
 
 const APP = path.join(__dirname, '..', 'app'), PORT = 8653;
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.txt': 'text/plain' };
+// stands in for tv.py's sign-in helper (the real one is tested in tests/test_oauth.py)
+const oauth = { configured: true, signedIn: false };
 const server = http.createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, 'http://x').pathname); if (p === '/') p = '/index.html';
+  if (p.startsWith('/api/')) {
+    const json = (code, o) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
+    if (req.headers['x-channel-surf'] !== '1' && req.method === 'POST') return json(403, { error: 'forbidden' });
+    if (p === '/api/oauth/status') return json(200, { configured: oauth.configured, signedIn: oauth.signedIn });
+    if (p === '/api/oauth/token') return oauth.signedIn ? json(200, { access_token: 'tok-' + Date.now(), expires_at: Date.now() / 1000 + 3600 }) : json(401, { error: 'signed_out' });
+    if (p === '/api/oauth/signout') { oauth.signedIn = false; return json(200, { ok: true }); }
+    return json(404, { error: 'not found' });
+  }
   const f = path.join(APP, p);
   if (!f.startsWith(APP) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res);
@@ -43,7 +55,13 @@ function seeded(extra = {}) {
 async function open(browser, settings) {
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 900 } });
   await ctx.route('https://www.youtube.com/iframe_api', r => r.fulfill({ contentType: 'text/javascript', body: `window.__mockDur=${JSON.stringify(mock.durations())};\n` + fs.readFileSync(path.join(__dirname, 'mock-iframe-api.js'), 'utf8') }));
-  await ctx.route('https://www.googleapis.com/youtube/v3/**', async r => { if (mock.state.delayMs) await sleep(mock.state.delayMs); const [status, body] = mock.handle(r.request().url()); await r.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(body) }).catch(() => {}); });
+  const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization, content-type', 'access-control-allow-methods': 'GET, POST, DELETE' };
+  await ctx.route('https://www.googleapis.com/youtube/v3/**', async r => {
+    const q = r.request(); if (q.method() === 'OPTIONS') return r.fulfill({ status: 204, headers: CORS }).catch(() => {});
+    if (mock.state.delayMs) await sleep(mock.state.delayMs);
+    const [status, body] = mock.handle(q.url(), { method: q.method(), headers: q.headers(), body: q.postData() });
+    await r.fulfill(status === 204 ? { status, headers: CORS } : { status, contentType: 'application/json', headers: CORS, body: JSON.stringify(body) }).catch(() => {});
+  });
   await ctx.route('https://i.ytimg.com/**', r => r.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="#456"/></svg>' }));
   if (settings) await ctx.addInitScript(s => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('channelSurfPlus.v1', s); sessionStorage.setItem('seeded', '1'); } }, JSON.stringify(settings));
   const page = await ctx.newPage();
@@ -213,10 +231,136 @@ async function testBlockedSound(browser) {
   await ctx.close();
 }
 
+// helpers for menus: pick the row whose text matches, or read the rows
+const rowsText = page => page.evaluate(() => { const t = channelSurf.screen.top(); return t && t.items ? t.items.map(i => i.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()) : []; });
+async function pick(page, re, wait = 700) {
+  const i = await page.evaluate(src => { const r = new RegExp(src); const t = channelSurf.screen.top(); return t && t.items ? t.items.findIndex(it => r.test(it.html.replace(/<[^>]+>/g, ' '))) : -1; }, re.source);
+  if (i < 0) throw new Error('no menu row matching ' + re + ' in: ' + (await rowsText(page)).join(' | '));
+  await page.evaluate(i => { channelSurf.screen.top().sel = i; channelSurf.screen.render(); }, i); await page.key('Enter', wait);
+}
+
+async function testSignedIn(browser) {
+  console.log('\n— Signed in to YouTube —');
+  oauth.signedIn = true; mock.state.writes = []; mock.state.tokenOk = true;
+  const { ctx, page } = await open(browser, seeded());
+  await page.key('Enter', 400); await page.until(() => channelSurf.tv.view === 'picture', 9000);
+  await page.until(() => !!channelSurf.settings.account, 4000);
+  check('the account name comes from YouTube', await page.evaluate(() => (channelSurf.settings.account || {}).name === 'Mock Viewer'));
+  await page.key('Home', 400);
+  check('the main menu has "Your YouTube"', (await rowsText(page)).some(t => /Your YouTube/.test(t)));
+  // a video page
+  await page.evaluate(id => channelSurf.screen.open(new channelSurf.pages.VideoPage({ id, title: 'Woodshop Show 0', channelId: 'UCmockwoodshop0000000000'.slice(0, 24), channelTitle: 'Mock Woodshop' })), mock.ids.WOOD && 'wd00_______');
+  await page.waitForTimeout(900);
+  let rows = await rowsText(page);
+  check('video page offers YouTube like, dislike, subscribe and save to playlist', ['Like on YouTube', 'Dislike', 'Subscribe to Mock Woodshop', 'Save to a YouTube playlist'].every(l => rows.some(t => t.includes(l))), rows.join(' | '));
+  check('chapters from the description are offered', rows.some(t => /Chapters \(4\)/.test(t)), rows.join(' | '));
+  await pick(page, /Like on YouTube/);
+  const rate = mock.state.writes.find(w => w.path === 'videos/rate');
+  check('Like really rates the video on YouTube', rate && rate.p.rating === 'like' && rate.p.id === 'wd00_______', JSON.stringify(mock.state.writes));
+  check('…and the key isn\'t sent along with the sign-in pass', !mock.state.writes.some(w => w.p.key));
+  check('…and the row says Liked ✓', (await rowsText(page)).some(t => /Liked on YouTube ✓/.test(t)));
+  await pick(page, /Subscribe to/);
+  check('Subscribe really subscribes', mock.account.subs.has(mock.ids.WOOD));
+  await pick(page, /Subscribed to/);
+  check('unsubscribing asks first', /Unsubscribe\?/.test(await page.evaluate(() => channelSurf.screen.top().title)));
+  await pick(page, /No, stay subscribed/);
+  check('…and "No" keeps the subscription', mock.account.subs.has(mock.ids.WOOD));
+  // save to a new playlist, typed on a keyboard
+  await pick(page, /Save to a YouTube playlist/, 900);
+  await pick(page, /New playlist/, 500);
+  await page.keyboard.type('Sunday Shows', { delay: 20 }); await page.key('Enter', 1200);
+  const pl = Object.values(mock.account.playlists)[0];
+  check('a new private playlist is made with the typed name, and the video goes in it', pl && pl.title === 'Sunday Shows' && pl.privacy === 'private' && pl.ids[0] === 'wd00_______', JSON.stringify(mock.account.playlists));
+  // comments: write one and reply to one
+  await pick(page, /Comments/, 900);
+  await pick(page, /Write a comment/, 500);
+  await page.keyboard.type('What a lovely bench!', { delay: 15 }); await page.key('Enter', 600);
+  check('a comment is shown for checking before it goes on YouTube', /Post this on YouTube as Mock Viewer\?/.test(await page.evaluate(() => document.getElementById('pages').textContent)));
+  check('…and nothing is posted yet', !mock.account.comments.length);
+  await pick(page, /Post it/, 1000);
+  check('"Post it" posts exactly what was typed', mock.account.comments.length === 1 && mock.account.comments[0].text === 'What a lovely bench!', JSON.stringify(mock.account.comments));
+  check('…and it shows at the top of the comments right away', (await rowsText(page)).some(t => /What a lovely bench!/.test(t)));
+  await pick(page, /2 replies/, 900);
+  rows = await rowsText(page);
+  check('replies to a comment can be read', rows.filter(t => /Reply number/.test(t)).length === 2, rows.join(' | '));
+  await pick(page, /Write a reply/, 500);
+  await page.keyboard.type('Thanks!', { delay: 15 }); await page.key('Enter', 600); await pick(page, /Post it/, 1000);
+  check('a reply goes to the right comment', mock.account.replies.length === 1 && mock.account.replies[0].parentId === 'c2' && mock.account.replies[0].text === 'Thanks!', JSON.stringify(mock.account.replies));
+  // the Your YouTube menu
+  await page.evaluate(() => { channelSurf.screen.closePages(true); channelSurf.screen.open(new channelSurf.pages.YourYouTubePage()); });
+  await pick(page, /Your Subscriptions/, 900);
+  check('Your Subscriptions lists the channel', (await rowsText(page)).some(t => /Mock Woodshop/.test(t)));
+  await page.key('Backspace', 300); await pick(page, /Your Playlists/, 900);
+  check('Your Playlists lists the new playlist', (await rowsText(page)).some(t => /Sunday Shows/.test(t)));
+  await pick(page, /Sunday Shows/, 900);
+  check('…and opening it shows its video (read with the sign-in)', (await rowsText(page)).some(t => /Woodshop Show 0/.test(t)));
+  await page.key('Backspace', 300); await page.key('Backspace', 300); await pick(page, /Videos You Liked/, 900);
+  check('Videos You Liked lists the liked video', (await rowsText(page)).some(t => /Woodshop Show 0/.test(t)));
+  // the sign-in stops working (revoked on Google's side)
+  mock.state.tokenOk = false;
+  const before = mock.state.writes.length;
+  await page.key('Backspace', 300); await page.evaluate(() => channelSurf.screen.open(new channelSurf.pages.VideoPage({ id: 'bd00_______', title: 'Birds', channelId: 'x', channelTitle: 'Mock Birds' })));
+  await page.waitForTimeout(900);
+  check('if the sign-in stopped working, it says so plainly', /Signed out of YouTube/.test(await page.evaluate(() => document.getElementById('toast').textContent)), await page.evaluate(() => document.getElementById('toast').textContent));
+  check('…and the video page goes back to the local Like', (await rowsText(page)).some(t => /^Like Kept/.test(t)) && mock.state.writes.length === before, (await rowsText(page)).join(' | '));
+  // Setup can hide comment writing from the viewer
+  oauth.signedIn = true; mock.state.tokenOk = true;
+  await page.evaluate(() => { channelSurf.settings.viewer.comments = false; });
+  await page.evaluate(() => import('./js/account.js').then(m => m.account.refresh()));
+  await page.evaluate(() => channelSurf.screen.open(new channelSurf.pages.CommentsPage({ id: 'wd00_______', title: 'Woodshop Show 0' })));
+  await page.waitForTimeout(800);
+  check('with comment writing switched off in Setup, there\'s no "Write a comment"', !(await rowsText(page)).some(t => /Write a comment/.test(t)));
+  check('no script errors', page.errors.length === 0, page.errors.join(' | '));
+  await ctx.close();
+  oauth.signedIn = false;
+}
+
+async function testRemoteAndFixes(browser) {
+  console.log('\n— Remote control details and past bugs —');
+  const { ctx, page } = await open(browser, seeded());
+  await page.key('Enter', 400); await page.until(() => channelSurf.tv.view === 'picture' && channelSurf.tv.pstate === 'playing', 9000);
+  // a remote's OK sends Enter: on the on-screen keyboard it presses the highlighted key
+  await page.evaluate(() => channelSurf.screen.open(new channelSurf.pages.SearchPage()));
+  await page.key('ArrowRight'); await page.key('Enter', 300); await page.key('Enter', 300);
+  check('remote OK on the search keyboard types the highlighted letter (not a search)', await page.evaluate(() => channelSurf.screen.top().q === 'bb' && channelSurf.screen.top().title === 'Search YouTube'));
+  // keys in a menu stay in the menu
+  await page.evaluate(() => { channelSurf.screen.closePages(true); channelSurf.screen.open(new channelSurf.pages.VideoListPage('Watch Later', async () => [], {})); });
+  const ch0 = (await page.st()).ch; await page.key('ArrowDown', 300); await page.key('ArrowUp', 300);
+  check('arrow keys on an empty list don\'t change the channel behind it', (await page.st()).ch === ch0 && await page.evaluate(() => channelSurf.screen.pages.length === 1));
+  // rows can be clicked
+  await page.evaluate(() => { channelSurf.screen.closePages(true); channelSurf.screen.open(new channelSurf.pages.MainMenu()); });
+  await page.click('#pages .row[data-i="5"]'); await page.waitForTimeout(400);
+  check('menu rows can be clicked or tapped', await page.evaluate(() => channelSurf.screen.top().title !== 'Main Menu'), await page.evaluate(() => channelSurf.screen.top().title));
+  // a message never stays over the full-size picture
+  await page.evaluate(() => channelSurf.screen.toast('message', { text: 'Hello' }));
+  await page.key('x', 900);
+  check('a message box never stays over the full-size picture', await page.evaluate(() => channelSurf.screen.mode === 'picture' && document.getElementById('toast').hidden));
+  // captions: settings go in once YouTube's captions part has loaded
+  await page.key('c', 900);
+  const cc = await page.evaluate(() => window.__ytlog.filter(e => e.ev === 'loadModule' || e.ev === 'setOption').map(e => e.ev + ':' + (e.k || e.m)));
+  check('captions on: the captions part is loaded, then size and language are set', cc.indexOf('loadModule:captions') >= 0 && cc.indexOf('setOption:fontSize') > cc.indexOf('loadModule:captions') && cc.includes('setOption:track'), cc.join(','));
+  await page.key('c', 600);
+  // on demand: a list of three; CH ▲ goes to the next one only (a late "ended" from the old video is ignored)
+  await page.evaluate(() => { const v = n => ({ id: 'bd0' + n + '_______', title: 'Birds at the feeder ' + n, dur: 700 + n * 90, channelId: 'x', channelTitle: 'Mock Birds' }); channelSurf.tv.playVod(v(0), { queue: [v(0), v(1), v(2)] }); });
+  await page.until(() => channelSurf.tv.pstate === 'playing', 6000);
+  await page.evaluate(() => channelSurf.tv.setSpeed(2));
+  await page.key('PageUp', 2500);
+  check('CH ▲ in an on-demand list goes to the next video, not two ahead', await page.evaluate(() => channelSurf.tv.vod && channelSurf.tv.vod.i === 1), JSON.stringify(await page.st()));
+  check('playback speed goes back to normal for the next video', await page.evaluate(() => channelSurf.tv.speed === 1 && window.__ytlog.filter(e => e.ev === 'rate').pop().r === 1));
+  // a broken on-demand video goes back to the list, then live TV works
+  await page.evaluate(() => { channelSurf.screen.closePages(true); channelSurf.screen.open(new channelSurf.pages.VideoPage({ id: 'noemb000000', title: 'Not embeddable', dur: 600, channelId: 'x', channelTitle: 'X' })); });
+  await page.waitForTimeout(300); await pick(page, /Watch now/, 4500);
+  check('a video that won\'t play returns to its page', await page.evaluate(() => channelSurf.screen.pages.length > 0 && channelSurf.screen.top().title === 'Video'));
+  await page.key('x', 2500);
+  check('…and EXIT goes to live TV (no stuck "Please Stand By")', (await page.st()).view === 'picture', JSON.stringify(await page.st()));
+  check('no script errors', page.errors.length === 0, page.errors.join(' | '));
+  await ctx.close();
+}
+
 (async () => {
   await new Promise(r => server.listen(PORT, '127.0.0.1', r));
   const browser = await chromium.launch();
-  try { await testKeys(browser); await testLineups(browser); await testBrowse(browser); await testImport(browser); await testBlockedSound(browser); }
+  try { await testKeys(browser); await testLineups(browser); await testBrowse(browser); await testImport(browser); await testBlockedSound(browser); await testSignedIn(browser); await testRemoteAndFixes(browser); }
   catch (e) { fail++; console.log('FAIL test run crashed: ' + e.stack); }
   await browser.close(); server.close();
   console.log(`\n${pass} passed, ${fail} failed`);

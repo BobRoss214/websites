@@ -112,13 +112,14 @@ export async function refreshChannel(ch, { force = false } = {}) {
   if (!ch || ch.kind === 'guide') return null;
   const cur = POOLS.get(ch.id);
   if (!force && cur && Date.now() - cur.at < REFRESH_MS && cur.sig === sourcesSig(ch)) return cur;
-  if (refreshing.has(ch.id)) return refreshing.get(ch.id);
+  if (refreshing.has(ch.id)) { const j = refreshing.get(ch.id); return force && j.sig !== sourcesSig(ch) ? j.then(() => refreshChannel(ch, { force: true })) : j; }
   if (!isDemo() && quotaLeft() < 200 && cur) return cur; // leave room for the day
+  const sig = sourcesSig(ch), sources = ch.sources.slice();
   const job = (async () => {
     bus.emit('pool', ch.id);
     const items = []; let err = null;
-    for (let si = 0; si < ch.sources.length; si++) {
-      try { (await sourceIds(ch.sources[si])).forEach(id => items.push({ id, src: si })); }
+    for (let si = 0; si < sources.length; si++) {
+      try { (await sourceIds(sources[si])).forEach(id => items.push({ id, src: si })); }
       catch (e) { err = err || e; if (['quota', 'rate', 'key', 'referrer', 'disabled', 'nokey'].includes(e.kind)) break; }
     }
     const ids = [...new Set(items.map(i => i.id))];
@@ -126,12 +127,12 @@ export async function refreshChannel(ch, { force = false } = {}) {
     if (err) bus.emit('apiError', err);
     if (!items.length && err && cur) { cur.error = err.kind || 'other'; return cur; } // keep yesterday's lineup
     const seen = new Set();
-    const pool = { at: Date.now(), sig: sourcesSig(ch), items: items.filter(i => !seen.has(i.id) && seen.add(i.id)), error: err ? err.kind || 'other' : null };
+    const pool = { at: Date.now(), sig, items: items.filter(i => !seen.has(i.id) && seen.add(i.id)), error: err ? err.kind || 'other' : null };
     POOLS.set(ch.id, pool); db.set('pool:' + ch.id, pool);
     reschedule(ch, cur ? Date.now() + LOCK_MS : Date.now());
     return pool;
   })().finally(() => { refreshing.delete(ch.id); bus.emit('pool', ch.id); });
-  refreshing.set(ch.id, job);
+  job.sig = sig; refreshing.set(ch.id, job);
   return job;
 }
 // Refresh everything that's more than a day old, one channel at a time, current channel first.
@@ -184,7 +185,7 @@ function extend(ch, until) {
     const r = rng(hash(ch.id + ':' + Math.floor(now / 3600e3)));
     const id = pick(ch, s, r); if (!id) return false;
     const d = getVideo(id).dur;
-    s.slots.push({ id, s: now - Math.floor(r() * d * 0.8) * 1000, d });
+    s.slots.push({ id, s: Math.max(last ? slotEnd(last) : 0, now - Math.floor(r() * d * 0.8) * 1000), d });
     last = s.slots[s.slots.length - 1];
   }
   let changed = false;
@@ -239,7 +240,7 @@ export async function loadAll() {
   const pools = await db.getMany(list.map(c => 'pool:' + c.id));
   const scheds = await db.getMany(list.map(c => 'sched:' + c.id));
   const ids = new Set();
-  list.forEach((c, i) => { if (pools[i]) { POOLS.set(c.id, pools[i]); pools[i].items.forEach(it => ids.add(it.id)); } if (scheds[i]) SCHED.set(c.id, scheds[i]); });
+  list.forEach((c, i) => { if (pools[i]) { POOLS.set(c.id, pools[i]); pools[i].items.forEach(it => ids.add(it.id)); } if (scheds[i]) { SCHED.set(c.id, scheds[i]); scheds[i].slots.forEach(x => ids.add(x.id)); } });
   const bad = await db.get('bad'); (bad || []).forEach(([k, u]) => BAD.set(k, u === 0 ? Infinity : u));
   await loadVideos([...ids]);
 }

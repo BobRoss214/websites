@@ -21,6 +21,8 @@ export class Guide {
     const i = this.chans().indexOf(app.tv.list[app.tv.lastIdx]); this.row = Math.max(0, i);
     this.draw(); cancelAnimationFrame(this.raf); this.frame();
   }
+  // start scrolling again after a menu was over the guide
+  resume() { cancelAnimationFrame(this.raf); this.draw(); this.frame(); }
   navigating() { return Date.now() < this.pausedUntil + 5000; }
   data() {
     const now = Date.now(), from = halfHourFloor(now) + this.win * 1800e3, to = from + SPAN;

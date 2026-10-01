@@ -110,14 +110,14 @@ export class TV {
     return { kind: 'picture', a: { ...a, offset } };
   }
   tune(i, opts = {}) {
-    if (!this.on || this.busy) return;
+    if (!this.on || this.busy || !this.playerReady) return;
     this.list = L.channels(); const n = this.list.length; if (!n) return;
     i = ((i % n) + n) % n;
     if (i !== this.idx) this.lastIdx = this.idx;
     this.leaveVod(); this.source = 'live'; this.vod = null;
     this.idx = i; if (this.ch.kind !== 'guide') { S.tv.lastNum = this.ch.num; save(); }
     app.screen.closePages(true); app.screen.unband(true);
-    const token = ++this.token; clearTimeout(this.wd); clearTimeout(this.dt); this.digits = ''; this.retried = null; this.speed = 1;
+    const token = ++this.token; clearTimeout(this.wd); clearTimeout(this.dt); this.digits = ''; this.retried = null; if (this.speed !== 1) this.setSpeed(1);
     this.stopPicture(); Sound.tone(false);
     const quick = opts.quick || !S.tv.staticOn || reducedMotion();
     this.setView(quick ? 'black' : 'static'); if (!quick) Sound.hiss(STATIC_MS);
@@ -196,7 +196,7 @@ export class TV {
     const rp = returnPages !== undefined ? returnPages : app.screen.pages.slice();
     this.source = 'vod'; this.vod = { v, queue, i, returnPages: rp };
     app.screen.closePages(true); app.screen.unband(true);
-    const token = ++this.token; clearTimeout(this.wd); this.retried = null; this.speed = 1;
+    const token = ++this.token; clearTimeout(this.wd); this.retried = null; if (this.speed !== 1) this.setSpeed(1);
     this.stopPicture(); Sound.tone(false);
     let pos = start;
     if (isLive(v)) pos = 0; // a live stream always joins "now"
@@ -210,7 +210,7 @@ export class TV {
       if (pos > 30) setTimeout(() => token === this.token && app.screen.band('message', { text: 'Picking up where you left off' }, 2500), 5200);
     }, 900);
   }
-  restartVod() { if (this.vod) this.playVod(this.vod.v, { queue: this.vod.queue, returnPages: this.vod.returnPages }); }
+  restartVod() { if (!this.vod) return; const r = this.retried; this.playVod(this.vod.v, { queue: this.vod.queue, returnPages: this.vod.returnPages }); this.retried = r; }
   leaveVod() { if (this.source === 'vod' && this.vod && this.loaded && !isLive(this.vod.v)) { const t = Math.floor(this.player.time()); if (t > 0) setHistoryPos(this.vod.v.id, t); } }
   vodKey(k) {
     const v = this.vod && this.vod.v; if (!v) return false;
@@ -257,10 +257,17 @@ export class TV {
   vodFailed(msg) {
     this.stopPicture(); this.standby('PLEASE STAND BY', msg);
     const tok = this.token;
-    setTimeout(() => { if (tok !== this.token) return; const q = this.vod; if (q && q.i + 1 < q.queue.length) this.vodStep(1); else this.backFromVod(); }, 2600);
+    setTimeout(() => {
+      if (tok !== this.token) return; const q = this.vod;
+      if (q && q.i + 1 < q.queue.length) return this.vodStep(1);
+      // nothing left to play: live TV behind the list it came from
+      const rp = q && q.returnPages; this.goLive(); if (rp && rp.length) app.screen.setPages(rp.slice());
+    }, 2600);
   }
   pagesClosed() {
     if (!this.on) return;
+    if (this.source === 'vod' && this.vod && !this.loaded) { this.goLive(); return; }
+    if (this.view === 'nochannels' && L.channels().length > 1) { this.tune(1, { quick: true }); return; }
     if (this.source === 'vod' && this.vod) { this.setView(this.loaded ? 'vod' : 'standby'); if (this.loaded) app.screen.band('vod', { v: this.vod.v }, 3000); }
     else if (this.view === 'picture') this.present(this.token);
     else app.screen.sync();
@@ -270,7 +277,9 @@ export class TV {
   armWatchdog() { clearTimeout(this.wd); const tok = this.token, id = this.loaded && this.loaded.id; this.wd = setTimeout(() => this.stalled(tok, id), WATCHDOG_MS); }
   stalled(tok, id) {
     if (tok !== this.token || !this.loaded || this.loaded.id !== id) return;
-    if (['playing', 'paused', 'ended'].includes(this.pstate) || !this.shown) return;
+    if (['playing', 'paused', 'ended'].includes(this.pstate)) return;
+    if (!this.shown || !this.want) { this.armWatchdog(); return; }
+    if (this.view === 'guide') { this.stopPicture(); app.screen.sync(); app.guide.draw(); return; }
     if (['cued', 'unstarted'].includes(this.pstate) && !this.mutedStart && navigator.onLine !== false) {
       // it never even started buffering: the browser probably blocked sound. Start muted instead.
       this.mutedStart = true; this.muted = true; this.player.mute(true); this.player.play(); this.armWatchdog();
@@ -298,13 +307,22 @@ export class TV {
   noSignal() {
     this.stopPicture(); this.standby('NO SIGNAL', 'Checking the cable… The internet seems to be down. This keeps trying by itself.');
     const tok = this.token;
-    const retry = () => { if (tok !== this.token) return; this.stalls = 0; this.retried = null; if (this.source === 'live') this.present(tok); else this.restartVod(); };
+    if (this.onlineRetry) removeEventListener('online', this.onlineRetry);
+    const retry = () => {
+      removeEventListener('online', retry); clearTimeout(this.wd);
+      if (tok !== this.token) return;
+      if (navigator.onLine === false) { this.wd = setTimeout(retry, 10000); addEventListener('online', retry); return; } // still down: stay on NO SIGNAL
+      this.stalls = 0; this.retried = null; if (this.source === 'live') this.present(tok); else this.restartVod();
+    };
+    this.onlineRetry = retry;
     this.wd = setTimeout(retry, navigator.onLine === false ? 10000 : 20000);
-    addEventListener('online', retry, { once: true });
+    addEventListener('online', retry);
   }
   onState(s) {
     this.pstate = s;
+    if (s === 'playing' && (!this.shown || !this.want)) { this.player.pause(); return; } // no sound without a picture
     if (s === 'playing') { clearTimeout(this.wd); this.stalls = 0; this.retried = null; if (this.view === 'standby' && this.loaded) this.setView(this.source === 'vod' ? 'vod' : 'picture'); }
+    else if (s === 'paused' && this.source === 'live' && this.want && this.shown) this.player.play(); // live TV can't be paused
     else if (s === 'buffering' && this.want && this.shown) this.armWatchdog();
     else if (s === 'ended') {
       this.want = false;
@@ -350,6 +368,7 @@ export class TV {
     if (app.screen.pages.length && app.screen.key(k, raw)) return;
     if (k === 'power') { this.power(); return; }
     if (!k) return;
+    if (this.view === 'problem' && !this.playerReady && k && k !== 'power') { this.on = false; this.power(); return; }
     if (this.view === 'problem' && k === 'ok') { if (this.playerReady) this.tune(this.idx); else { this.on = false; this.power(); } return; }
     if (/^\d$/.test(k)) { this.digit(k); return; }
     if (k === 'ok' && this.digits) { this.enterDigits(); return; }
