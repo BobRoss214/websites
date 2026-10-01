@@ -322,7 +322,7 @@ class SignIn(Base):
         loc, params = self.start_sign_in()
         self.assertTrue(loc.startswith(self.google.url + "/auth?"), loc)
         self.assertEqual(params["client_id"], CLIENT_ID)
-        self.assertEqual(params["redirect_uri"], f"http://localhost:{self.port}/api/oauth/callback")
+        self.assertEqual(params["redirect_uri"], f"http://127.0.0.1:{self.port}/api/oauth/callback")
         self.assertEqual(params["response_type"], "code")
         self.assertEqual(params["scope"], SCOPE)
         self.assertEqual(params["access_type"], "offline")
@@ -352,7 +352,8 @@ class SignIn(Base):
         self.assertEqual(resp.getheader("Referrer-Policy"), "no-referrer")
         page = data.decode()
         self.assertIn("Signed in to YouTube", page)
-        self.assertIn('<meta http-equiv="refresh" content="2;url=/?oauth=ok">', page)
+        # back to http://localhost, where the TV's settings live (Google came back to 127.0.0.1)
+        self.assertIn(f'<meta http-equiv="refresh" content="2;url=http://localhost:{self.port}/?oauth=ok">', page)
         for colour in ("#0b1f6b", "#ffd23f", "#fff"):
             self.assertIn(colour, page)
 
@@ -380,7 +381,7 @@ class SignIn(Base):
         self.assertEqual(resp.getheader("Content-Type"), "text/html; charset=utf-8")
         page = data.decode()
         self.assertIn("Sign-in didn&#x27;t work", page)
-        self.assertIn('href="/?oauth=failed"', page)
+        self.assertIn(f'href="http://localhost:{self.port}/?oauth=failed"', page)
         self.assertIn("#0b1f6b", page)
         self.assertNotIn("http-equiv=\"refresh\"", page)
         self.assertFalse(os.path.exists(self.token_file))

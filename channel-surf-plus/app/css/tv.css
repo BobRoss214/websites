@@ -245,6 +245,13 @@ body.big #screen { font-size: 25px; }
 .rs { text-align: left; border: 0; border-radius: 8px; padding: 8px 14px; font: 700 1em/1.15 var(--f-ui); color: #fff; background: var(--navy); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rs small { display: block; font: 600 .75em var(--f-ui); color: var(--ink-3); }
 
+/* Setup: check everything */
+.checks { display: grid; gap: 10px; }
+.ck { display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; padding: 10px 14px; border-radius: 8px; background: var(--navy-lo); }
+.ck i { font-style: normal; font: 800 1.5em/1.4 var(--f-ui); text-align: center; border-radius: 50%; width: 40px; height: 40px; }
+.ck.good i { background: #2a9d55; color: #fff; } .ck.bad i { background: #c0392b; color: #fff; } .ck.warn i { background: var(--gold); color: var(--navy); }
+.ck b { display: block; font-size: 1.15em; } .ck small { display: block; color: var(--ink-2); font-size: 1em; line-height: 1.35; }
+
 /* watch on your phone */
 .phonepage { display: grid; grid-template-columns: 430px 1fr; gap: 34px; align-items: center; padding: 30px; border-radius: 12px; }
 .phonepage .qr { background: #fff; border-radius: 10px; padding: 10px; line-height: 0; box-shadow: 0 0 0 6px var(--gold); }

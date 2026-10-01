@@ -146,9 +146,10 @@ these is in [RESEARCH.md](RESEARCH.md).
 - **Filters shape the TV:** Lineup Filters (length, how new, captions only) change
   every channel's schedule at once. Each channel can have its own filters, and any
   search, topic, channel or playlist can become a numbered TV channel.
-- **Not included, on purpose:** a recommendation feed, Google sign-in, posting
+- **Not included at first:** a recommendation feed, Google sign-in, posting
   comments, and real YouTube likes and subscriptions. See RESEARCH.md section 9 for
-  YouTube's "don't be a substitute" rule. Likes and follows are kept on this computer instead.
+  YouTube's "don't be a substitute" rule. Likes and follows were kept on this computer.
+  (Sign-in, likes, subscriptions and comments were added later, on request. See "Connected to YouTube" below.)
 - **Setup can switch the extras off** for the simple 75-year-old version.
 - **Demo mode** (practice channels) until a key is added, so everything can be tried first.
 - **Menus show live TV in a window**, the way 2000s cable boxes did, instead of
@@ -165,6 +166,55 @@ these is in [RESEARCH.md](RESEARCH.md).
   YouTube that answers with real response shapes and real error formats (47 checks).
   This sandbox can't reach youtube.com, so the real service hasn't been tried here yet.
 
+## Connected to YouTube (step 3)
+
+You asked for it to "actually connect to YouTube" with every YouTube ability that
+fits the TV vibe. That changed two earlier "not included" decisions:
+
+- **Optional Google sign-in, done once in Setup (behind the PIN).** The viewer never
+  sees a sign-in. Without it, everything works as before, with likes and follows
+  kept on the computer.
+- **How the sign-in is kept safe.** `tv.py` does the Google sign-in as a "Desktop
+  app" with PKCE, and keeps the lasting sign-in in a private file
+  (`~/.config/channel-surf/`, readable only by you). The browser page only gets
+  hour-long passes from `tv.py`, so nothing lasting is ever in the browser. `tv.py`
+  only answers requests from its own page: it checks the address, the origin and a
+  special header, and never allows other sites in.
+- **One permission:** `youtube.force-ssl`, the smallest one that covers likes,
+  subscriptions, playlists and comments.
+- **What it adds:**
+  - Like and dislike.
+  - Subscribe and unsubscribe (unsubscribing asks first).
+  - Save to your playlists, or a new private one.
+  - Comments and replies. They're typed on an on-screen keyboard, and always shown
+    back with "Post this on YouTube?" before posting, because comments are public.
+  - A **Your YouTube** menu: subscriptions, new from subscriptions, your playlists,
+    liked videos, and "make a TV channel from your subscriptions".
+  - Importing subscriptions straight from the account.
+- **Other YouTube abilities added:**
+  - Chapters (from the description, by YouTube's own rules).
+  - A channel's Most popular, Live streams and Shorts lists.
+  - Caption language.
+  - "Watch on your phone" (a QR code, made on the computer).
+  - Setup → **Check everything**.
+- **Still left out, on purpose:**
+  - YouTube's own recommendation feed and Watch Later list. The API doesn't offer
+    them anymore.
+  - Uploading, editing videos and deleting comments. They don't fit a TV, and
+    they're risky for the viewer.
+- **The remote's OK button sends the same key as Enter.** So on the on-screen
+  keyboards, Enter only finishes straight after real typing. Otherwise OK presses
+  the highlighted letter.
+- **Four helper reviews, all applied.** An audit of every API call against
+  YouTube's published definitions, a player audit, a bug hunt (18 confirmed bugs,
+  all fixed, most with a test), and a usability pass.
+  - One suggestion was not applied: making the player ignore clicks. That would
+    also block clicks on ads, which YouTube's rules don't allow. Instead, live TV
+    simply starts playing again if a click pauses it.
+
 ## Open
 
-- A pass with your real key and channels, on your Ubuntu machine.
+- A pass with your real key, your channels and your Google account, on your
+  Ubuntu machine. youtube.com is blocked in this sandbox, so the real player and
+  real sign-in haven't run here. Everything else ran against the pretend YouTube,
+  which answers in YouTube's real formats, including its error messages.

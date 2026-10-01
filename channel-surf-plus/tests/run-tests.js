@@ -20,6 +20,7 @@ const server = http.createServer((req, res) => {
   if (p.startsWith('/api/')) {
     const json = (code, o) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
     if (req.headers['x-channel-surf'] !== '1' && req.method === 'POST') return json(403, { error: 'forbidden' });
+    if (p === '/api/health') return json(200, { ok: true, oauth: true });
     if (p === '/api/oauth/status') return json(200, { configured: oauth.configured, signedIn: oauth.signedIn });
     if (p === '/api/oauth/token') return oauth.signedIn ? json(200, { access_token: 'tok-' + Date.now(), expires_at: Date.now() / 1000 + 3600 }) : json(401, { error: 'signed_out' });
     if (p === '/api/oauth/signout') { oauth.signedIn = false; return json(200, { ok: true }); }
@@ -353,6 +354,11 @@ async function testRemoteAndFixes(browser) {
   check('a video that won\'t play returns to its page', await page.evaluate(() => channelSurf.screen.pages.length > 0 && channelSurf.screen.top().title === 'Video'));
   await page.key('x', 2500);
   check('…and EXIT goes to live TV (no stuck "Please Stand By")', (await page.st()).view === 'picture', JSON.stringify(await page.st()));
+  // Setup: check everything
+  await page.evaluate(() => { channelSurf.screen.closePages(true); channelSurf.screen.open(new channelSurf.pages.SetupHome('check')); });
+  await page.click('#runCheck'); await page.waitForTimeout(300); await page.until(() => !channelSurf.screen.top().checking, 8000);
+  const res = await page.evaluate(() => channelSurf.screen.top().results.map(r => r.name + '=' + r.ok));
+  check('Setup "Check everything" tests each part and finds them working', res.length >= 9 && ['The Channel Surf program (tv.py)=true', 'YouTube key=true', 'The YouTube player=true', 'Channels=null'].every(x => res.includes(x)), res.join(', '));
   check('no script errors', page.errors.length === 0, page.errors.join(' | '));
   await ctx.close();
 }

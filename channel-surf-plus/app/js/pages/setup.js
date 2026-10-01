@@ -26,7 +26,7 @@ export class SetupHome extends SetupPage {
   onShow() { account.refresh().then(() => { if (this.tab === 'youtube' && !this.typing()) this.rerender(); }); }
   typing() { const a = document.activeElement; return !!(a && a.closest && a.closest('#pages input, #pages textarea')); }
   render() {
-    const tabs = [['youtube', 'YouTube connection'], ['channels', 'Channels'], ['viewer', 'What the viewer sees'], ['backup', 'Backup and PIN']];
+    const tabs = [['youtube', 'YouTube connection'], ['channels', 'Channels'], ['viewer', 'What the viewer sees'], ['backup', 'Backup and PIN'], ['check', 'Check everything']];
     return `<div class="setup"><div class="tabs">${tabs.map(([id, t]) => `<button type="button" data-tab="${id}" class="${this.tab === id ? 'on' : ''}">${t}</button>`).join('')}<button type="button" data-done="1">Done</button></div>
       ${this.msg ? `<p class="${this.msgOk ? 'ok' : 'bad'}">${esc(this.msg)}</p>` : ''}${this[this.tab]()}</div>`;
   }
@@ -52,6 +52,8 @@ export class SetupHome extends SetupPage {
   // Optional: sign in to a YouTube account for real likes, subscriptions, playlists and comments.
   accountCard() {
     const a = account, intro = '<p>Optional. Signing in lets the TV do things on your real YouTube account: like videos, subscribe, use your playlists, and write comments. Watching works the same without it.</p>';
+    // what YouTube's developer rules ask an app that uses someone's account to say
+    const terms = '<p class="dim">Channel Surf uses YouTube API Services. Signing in means you agree to YouTube\'s Terms of Service (youtube.com/t/terms); Google\'s Privacy Policy (policies.google.com/privacy) applies. Your account details stay on this computer. Signing out deletes the saved sign-in, and you can also remove Channel Surf\'s access any time at myaccount.google.com/permissions.</p>';
     if (a.demo) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}
       <p>${a.signedIn ? '<b>Signed in to a practice account ✓</b> Try the Your YouTube menu, likes and comments.' : 'In demo mode you can try it with a practice account. Nothing goes to YouTube.'}</p>
       <div class="btns">${a.signedIn ? '<button type="button" class="b red" id="signOut">Sign out of the practice account</button>' : '<button type="button" class="b gold" id="signIn">Sign in to a practice account</button>'}</div></div>`;
@@ -60,13 +62,13 @@ export class SetupHome extends SetupPage {
       <p>First, make a free "sign-in client" in the same Google Cloud project as your key. It takes about 5 minutes; the steps are in <b>HOW-TO.md</b> ("Sign in to YouTube"). Then paste its two codes here:</p>
       <div class="grid2"><div><label for="cid">Client ID</label><input type="text" id="cid" placeholder="Ends with .apps.googleusercontent.com" autocomplete="off" spellcheck="false"></div>
       <div><label for="csecret">Client secret</label><input type="password" id="csecret" placeholder="Starts with GOCSPX-" autocomplete="off" spellcheck="false"></div></div>
-      <div class="btns"><button type="button" class="b gold" id="saveClient">Save</button></div></div>`;
+      <div class="btns"><button type="button" class="b gold" id="saveClient">Save</button></div>${terms}</div>`;
     if (!a.signedIn) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}
       <p>Ready. Press the button, pick your Google account, and allow Channel Surf to manage your YouTube account. You'll come back here when it's done.</p>
-      <div class="btns"><button type="button" class="b gold" id="signIn">Sign in with Google</button><button type="button" class="b" id="forgetClient">Change the sign-in client</button></div></div>`;
+      <div class="btns"><button type="button" class="b gold" id="signIn">Sign in with Google</button><button type="button" class="b" id="forgetClient">Change the sign-in client</button></div>${terms}</div>`;
     return `<div class="card bevel"><h2>YouTube account ✓</h2><p><b>Signed in${a.name ? ' as ' + esc(a.name) : ''}.</b> Likes, subscriptions, playlists and comments made on this TV really happen on YouTube. The sign-in is kept in a private file on this computer, never in the browser.</p>
       <p class="dim">What the viewer can do with it is under "What the viewer sees".</p>
-      <div class="btns"><button type="button" class="b red" id="signOut">Sign out of YouTube</button></div></div>`;
+      <div class="btns"><button type="button" class="b red" id="signOut">Sign out of YouTube</button></div>${terms}</div>`;
   }
   wire_youtube() {
     this.on('#showKey', 'click', () => { const k = document.getElementById('key'); k.type = k.type === 'password' ? 'text' : 'password'; });
@@ -149,6 +151,43 @@ export class SetupHome extends SetupPage {
       const a = Math.max(1, Math.min(60, +this.val('minMin') || 3)), b = Math.max(a + 1, Math.min(600, +this.val('maxMin') || 180));
       S.rules.minSec = a * 60; S.rules.maxSec = b * 60; save(); L.rescheduleAll(); this.say('House rules saved. The lineup has been updated.');
     });
+  }
+
+  // ----- Check that everything works -----
+  check() {
+    const r = this.results, icon = ok => (ok === true ? '✓' : ok === false ? '✗' : '!'), cls = ok => (ok === true ? 'good' : ok === false ? 'bad' : 'warn');
+    return `<div class="card bevel"><h2>Check that everything works</h2><p>Tests each part in turn: this computer, the internet, YouTube, your key, the sign-in and every channel. It uses about 3 of today's YouTube units.</p>
+      <div class="btns"><button type="button" class="b gold" id="runCheck">${r ? 'Check again' : 'Run the check'}</button></div></div>
+      ${r ? `<div class="card bevel checks">${r.map(x => `<div class="ck ${cls(x.ok)}"><i>${icon(x.ok)}</i><div><b>${esc(x.name)}</b><small>${esc(x.text)}</small></div></div>`).join('')}${this.checking ? '<p class="dim">Checking…</p>' : ''}</div>` : ''}`;
+  }
+  wire_check() { this.on('#runCheck', 'click', () => { if (!this.checking) this.runCheck(); }); }
+  async runCheck() {
+    const out = []; this.checking = true; this.results = out; this.rerender();
+    const add = (name, ok, text) => { out.push({ name, ok, text }); if (app.screen.top() === this && this.tab === 'check') this.rerender(); };
+    const local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    let helper = null; try { const r = await fetch('/api/health', { cache: 'no-store' }); helper = r.ok ? await r.json() : null; } catch {}
+    add('The Channel Surf program (tv.py)', helper ? true : local ? false : null, helper ? 'Running on this computer.' : local ? 'Not answering. Close the TV window and start it again with: python3 tv.py' : 'This is the online demo, which runs without it.');
+    const home = location.origin === 'http://localhost:8642';
+    add('The address', home ? true : null, home ? 'http://localhost:8642, the one your key is set up for.' : 'This is ' + location.origin + '. Your YouTube key\'s "Websites" list needs ' + location.origin + '/* too.');
+    add('Internet', navigator.onLine !== false, navigator.onLine !== false ? 'Connected.' : 'This computer says it\'s offline. Check the Wi-Fi or the cable.');
+    if (isDemo()) add('YouTube key', null, 'No key yet, so the TV shows practice channels. See "YouTube connection".');
+    else { try { await real.testKey(S.apiKey); add('YouTube key', true, 'YouTube accepts the key.'); } catch (e) { add('YouTube key', false, plain(e)); } }
+    add('The YouTube player', !!app.tv.playerReady, app.tv.playerReady ? (isDemo() ? 'The practice player works.' : 'YouTube\'s player loaded.') : 'The player didn\'t load. Check the internet, then turn the TV off and on.');
+    if (app.tv.mutedStart) add('Sound', null, 'The browser blocked sound when the TV started, so it started muted. Press MUTE to hear it. Starting the TV with tv.py (in Chrome) stops this.');
+    if (!isDemo()) { const left = Math.max(0, DAILY - quotaUsed()); add('Today\'s YouTube allowance', left > 500 ? true : left > 0 ? null : false, left.toLocaleString() + ' of ' + DAILY.toLocaleString() + ' units left (about ' + searchesLeft() + ' searches). It starts over at midnight Pacific time.'); }
+    await account.refresh();
+    const SIGN = 'YouTube sign-in (optional)', fine = 'That\'s fine: it\'s only needed for likes, subscriptions, playlists and comments.';
+    if (account.demo) add(SIGN, account.signedIn ? true : null, account.signedIn ? 'Signed in to the practice account.' : 'Not signed in. ' + fine);
+    else if (!account.available) add(SIGN, null, 'Needs the TV to be started with tv.py. ' + fine);
+    else if (!account.configured) add(SIGN, null, 'Not set up. ' + fine);
+    else if (!account.signedIn) add(SIGN, null, 'Set up, but not signed in. Use "Sign in with Google" under YouTube connection.');
+    else { try { const c = await yt.myChannel(); add(SIGN, true, 'Signed in' + (c ? ' as ' + c.title : '') + '.'); } catch (e) { add(SIGN, false, plain(e)); } }
+    let stored = false; try { localStorage.setItem('cs.check', '1'); stored = localStorage.getItem('cs.check') === '1'; localStorage.removeItem('cs.check'); } catch {}
+    add('Saving settings on this computer', stored, stored ? 'Settings are saved in this browser.' : 'This browser won\'t keep settings (private mode?). Start the TV with tv.py.');
+    add('Keeping the screen on', 'wakeLock' in navigator ? true : null, 'wakeLock' in navigator ? 'The screen stays on while the TV is on.' : 'This browser can\'t keep the screen awake. In Ubuntu, Settings → Power → Screen Blank: Never.');
+    const list = L.channels().filter(c => c.kind !== 'guide'), empty = list.filter(c => { const st = L.poolStatus(c); return st.at && !st.usable; });
+    add('Channels', !list.length ? false : empty.length ? null : true, !list.length ? 'No channels yet. Add some under "Channels".' : empty.length ? empty.length + ' of ' + list.length + ' have nothing to show right now: ' + empty.map(c => c.num + ' ' + c.name).join(', ') + '. Their YouTube channels may have no regular videos, or every video is filtered out.' : 'All ' + list.length + ' channels have shows.');
+    this.checking = false; if (app.screen.top() === this && this.tab === 'check') this.rerender();
   }
 
   // ----- Backup and PIN -----
@@ -289,6 +328,7 @@ export class ImportPage extends SetupPage {
     const on = this.subs.filter(s => s.on).length;
     return `<div class="setup">${this.msg ? `<p class="${this.ok ? 'ok' : 'bad'}">${esc(this.msg)}</p>` : ''}
       <div class="card bevel"><h2>1. Get the list</h2>
+        ${account.signedIn ? `<p><b>Straight from your YouTube account</b> (you're signed in):</p><div class="btns"><button type="button" class="b gold" id="fromAccount">Get my subscriptions from YouTube</button></div><p style="margin-top:16px">Or…</p>` : ''}
         <p><b>From Google Takeout:</b> go to takeout.google.com, choose only "YouTube and YouTube Music", then "All YouTube data included" and pick only <b>subscriptions</b>. Download it, unzip it, and pick the file called <code>subscriptions.csv</code> here:</p>
         <div class="btns"><label class="b gold" style="display:inline-block;margin:0;cursor:pointer">Choose subscriptions.csv<input type="file" id="csv" accept=".csv,text/csv" hidden></label></div>
         <p style="margin-top:16px"><b>Or paste</b> channel links or @handles, one per line:</p><textarea id="pasted">${esc(this.pasted || '')}</textarea><div class="btns"><button type="button" class="b gold" id="usePaste">Use these</button></div></div>
@@ -305,6 +345,11 @@ export class ImportPage extends SetupPage {
       const r = new FileReader();
       r.onload = () => { const list = parseTakeout(String(r.result)); if (!list.length) return this.say('No channels found in that file. Is it subscriptions.csv?', false); this.subs = list.map(s => ({ ...s, on: true })); this.say('Found ' + list.length + ' subscriptions.'); };
       r.readAsText(f);
+    });
+    this.on('#fromAccount', 'click', async () => {
+      this.keep(); this.say('Asking YouTube for your subscriptions…');
+      try { const list = await yt.mySubscriptions(); if (!list.length) return this.say('Your YouTube account has no subscriptions yet.', false); list.forEach(c => { if (!this.subs.some(s => s.id === c.id)) this.subs.push({ id: c.id, title: c.title, on: true }); }); this.say('Found ' + list.length + ' subscriptions.'); }
+      catch (e) { this.say(plain(e), false); }
     });
     this.on('#usePaste', 'click', async () => {
       this.keep(); const lines = (this.pasted || '').split(/\n+/).map(s => s.trim()).filter(Boolean);

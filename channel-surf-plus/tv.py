@@ -104,8 +104,11 @@ class GoogleSignIn:
         self.auth_url = os.environ.get("CS_GOOGLE_AUTH_URL") or "https://accounts.google.com/o/oauth2/v2/auth"
         self.token_url = os.environ.get("CS_GOOGLE_TOKEN_URL") or "https://oauth2.googleapis.com/token"
         self.revoke_url = os.environ.get("CS_GOOGLE_REVOKE_URL") or "https://oauth2.googleapis.com/revoke"
-        # Google lets "Desktop app" clients come back to any port on this computer
-        self.redirect_uri = f"http://localhost:{port}/api/oauth/callback"
+        # Google lets "Desktop app" clients come back to any port on this computer, and
+        # recommends 127.0.0.1 over "localhost". The page there then sends the browser on
+        # to http://localhost, where the TV's settings live (the browser keeps them per address).
+        self.redirect_uri = f"http://127.0.0.1:{port}/api/oauth/callback"
+        self.home = f"http://localhost:{port}/"
         self.pending = {}                  # sign-ins in progress: state -> (secret check word, when started)
         self.pending_lock = threading.Lock()
         self.lock = threading.Lock()       # one change to the saved sign-in at a time
@@ -511,14 +514,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             signin.finish({k: v[0] for k, v in fields.items()})
         except SignInProblem as p:
-            return self._page(p.status, "Sign-in didn't work", p.message, "/?oauth=failed")
+            return self._page(p.status, "Sign-in didn't work", p.message, signin.home + "?oauth=failed")
         except Exception as e:
             return self._page(500, "Sign-in didn't work",
                               f"Something went wrong in the Channel Surf program ({type(e).__name__}). "
-                              "Please try again.", "/?oauth=failed")
+                              "Please try again.", signin.home + "?oauth=failed")
         return self._page(200, "Signed in to YouTube",
                           "You can now like videos, subscribe, comment and make playlists. "
-                          "Taking you back to the TV now...", "/?oauth=ok", refresh=2)
+                          "Taking you back to the TV now...", signin.home + "?oauth=ok", refresh=2)
 
     def _send(self, status, ctype, body, extra=()):
         self.send_response(status)

@@ -387,3 +387,48 @@ turn the sound on" instead of sitting frozen.
 Sources: Developer Policies, https://developers.google.com/youtube/terms/developer-policies;
 search.list, https://developers.google.com/youtube/v3/docs/search/list;
 Data API revision history (relatedToVideoId removed), https://developers.google.com/youtube/v3/revision_history
+
+## 10. Research for connecting to a real YouTube account
+
+**What the official API lets an app do for a signed-in person** (YouTube Data API v3).
+Checked against YouTube's published API definition, revision 20260924.
+- **Rate a video:** `videos.rate`, plus `videos.getRating` to read the current rating.
+- **Subscriptions:** `subscriptions.list` with `mine` or `forChannelId`; `subscriptions.insert` and `subscriptions.delete`.
+- **Playlists:** `playlists.list mine`, `playlists.insert`, `playlistItems.insert`.
+- **Comments:** `commentThreads.insert` posts a comment, `comments.insert` posts a reply, and `comments.list` reads replies.
+- **Your channel and likes:** `channels.list mine` and `videos.list myRating=like`.
+- **Cost:** each change costs 50 of the 10,000 free daily units, and each read costs 1.
+- **Not available through the API anymore:** the home feed (recommendations) and the Watch Later list.
+
+**Signing in from a program on your own computer** (Google's OAuth 2.0 for desktop apps).
+- **How the sign-in works:**
+  - The program opens Google's sign-in page in the browser.
+  - Google sends the browser back to a "loopback" address on the same computer. Google recommends `http://127.0.0.1:<port>`.
+  - The program exchanges a one-time code for a lasting sign-in. PKCE adds a secret check word, so a stolen code is useless.
+- **The client secret:** for Desktop clients, Google treats it as not really secret.
+- **Permission:** `https://www.googleapis.com/auth/youtube.force-ssl` is the one permission that covers rating, subscribing, playlists and posting comments. The plain `youtube` permission can't post comments.
+- **"Testing" mode:** an app in Testing mode only works for the test users you list (up to 100). Its lasting sign-in ends after 7 days. Publishing the app (still unverified) removes the 7-day limit, but you see the "Google hasn't verified this app" screen.
+
+**YouTube's rules for apps that use someone's account** (YouTube API Services Developer Policies):
+- The app must say it uses YouTube API Services.
+- It must link to YouTube's Terms of Service and Google's Privacy Policy.
+- It must tell people how to remove its access (https://myaccount.google.com/permissions).
+- It must only keep account data as long as it needs to, and delete it when access is removed.
+
+Channel Surf shows all of this in Setup next to the sign-in, and signing out deletes the saved sign-in. It never shows anything over the player and never blocks ads; the earlier rules still hold.
+
+**Things that fail in real life, and how the app handles them:**
+- A Google account with no YouTube channel (`youtubeSignupRequired`): says how to make one.
+- The key and the sign-in coming from different Google projects: the key isn't sent along with the sign-in.
+- Short-term rate limits (`rateLimitExceeded`, 429): says "slow down", not "daily limit used up".
+- Expired keys, and keys restricted to an IP address or phone app: each gets the right plain-English fix.
+- A remote's OK button sends Enter: the on-screen keyboards treat it as "press this letter".
+
+Sources:
+- YouTube Data API reference and discovery document: https://developers.google.com/youtube/v3/docs and https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest
+- Quota costs: https://developers.google.com/youtube/v3/determine_quota_cost
+- Errors: https://developers.google.com/youtube/v3/docs/errors
+- OAuth for desktop apps: https://developers.google.com/identity/protocols/oauth2/native-app
+- YouTube API Services Developer Policies: https://developers.google.com/youtube/terms/developer-policies
+
+developers.google.com was blocked from this sandbox, so these were checked through the live API's own answers, the discovery document, and search summaries of the pages.
