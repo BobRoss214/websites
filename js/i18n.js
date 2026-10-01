@@ -193,7 +193,7 @@
 
   function ready() {
     buildMenus();
-    if (W.lang !== 'en') apply(W.lang); else markMenus();
+    if (W.lang !== 'en') { apply(W.lang); doc.dispatchEvent(new CustomEvent('wa:lang', { detail: W.lang })); } else markMenus();
     offer();
   }
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', ready); else ready();
