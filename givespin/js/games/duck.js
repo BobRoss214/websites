@@ -13,7 +13,7 @@
   var TAU = Math.PI * 2;
   var MEDAL = ['#ffc542', '#cfd9e0', '#e0a070'];
 
-  function radiusFor(n) { return n <= 12 ? 13 : n <= 30 ? 8.5 : n <= 56 ? 6.5 : 4.6; }
+  function radiusFor(n) { return n <= 12 ? 13 : n <= 30 ? 8.5 : n <= 56 ? 6.5 : n <= 120 ? 4.6 : n <= 300 ? 3.2 : 2.4; }
 
   GS.crowdGame({
     id: 'duck',
@@ -21,18 +21,19 @@
     label: 'Duck Derby',
     icon: 'bird',
     category: 'races',
-    badge: 'Up to 100',
+    badge: 'Up to 1,000',
+    maxSize: 1000,
     tagline: 'Rubber ducks down a river. First one past the buoys wins your gift.',
     cta: 'Release the ducks',
-    sizes: [{ n: 8, name: 'Pond' }, { n: 24, name: 'Creek' }, { n: 48, name: 'River' }, { n: 100, name: 'Flood' }],
+    sizes: [{ n: 8, name: 'Pond' }, { n: 24, name: 'Creek' }, { n: 48, name: 'River' }, { n: 100, name: 'Flood' }, { n: 500, name: 'Tsunami' }],
     defaultSize: 8,
     seconds: 8,
     info: [
-      'Each charity is a rubber duck wearing its own colour. Choose a pond of 8 or a flood of 100, release the ducks and watch them bob down the river: whichever crosses the finish line first gets your gift.',
-      'The winner is drawn first, fairly, from every charity in play. The race is then played out to match, with plenty of lead changes on the way.'
+      'Each charity is a rubber duck wearing its own colour. Set the river to any number of ducks, from a small pond to a thousand, release them and watch them bob downstream: whichever crosses the finish line first gets your gift.',
+      'The winner is drawn first, fairly, from the charities in the race (each has equal odds). The race is then played out to match, with plenty of lead changes on the way. Back a duck and, if it wins, you earn a bonus.'
     ],
 
-    height: function (n) { return n <= 12 ? 320 : n <= 30 ? 340 : n <= 56 ? 370 : 410; },
+    height: function (n) { return n <= 12 ? 320 : n <= 30 ? 340 : n <= 56 ? 370 : n <= 120 ? 410 : n <= 300 ? 480 : 560; },
 
     layout: function (ents, W, H) {
       var n = ents.length;
@@ -118,8 +119,9 @@
       var g = S.geo;
       var r = g.r;
       var x = pos.x, y = pos.y;
-      var win = S.winnerId === e.ch.id && !S.racing;
-      var rank = S.lead[e.ch.id];
+      var win = e.run.place === 1 && !S.racing;
+      var rank = S.lead[e.idx];
+      var backed = !!S.pickId && e.ch.id === S.pickId;
 
       if (S.labels) {
         var fs = r >= 12 ? 11 : 9.5;
@@ -200,6 +202,20 @@
         ctx.beginPath();
         ctx.ellipse(x, y + r * 0.12, r * 1.2, r * 0.92, 0, 0, TAU);
         ctx.stroke();
+      }
+      if (backed) {
+        // the charity you backed: a gold ring and a star, readable even when the field is tiny
+        var br = Math.max(r * 1.9, 7);
+        ctx.beginPath();
+        ctx.arc(x, y, br, 0, TAU);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffc542';
+        ctx.stroke();
+        ctx.fillStyle = '#ffc542';
+        ctx.font = '800 ' + Math.max(10, r * 1.6) + 'px "Sora", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText('★', x, y - br - 2);
       }
       if (e.run.place && (e.run.place <= 3 || S.n <= 12)) {
         var mr = Math.max(5, Math.min(8.5, r * 0.62));

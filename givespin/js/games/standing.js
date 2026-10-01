@@ -25,7 +25,9 @@
   var locked = false;
   var result = null;
 
-  function count() { return Math.max(2, Math.min(size, pool.length)); }
+  var pick = '';         // id of the charity you backed (solo), or empty
+
+  function count() { return kit.sizeNow(size); }
 
   /** How many charities go out in each wave: big cuts at first, then one at a time once eight are left. */
   function schedule(n) {
@@ -44,7 +46,7 @@
   /** Milliseconds a wave takes when `left` charities are standing before it. */
   function waveMs(left) { return left > 8 ? 760 : left > 3 ? 620 : 1150; }
 
-  function density(n) { return n <= 12 ? 'sm' : n <= 30 ? 'md' : n <= 56 ? 'lg' : 'xl'; }
+  function density(n) { return n <= 12 ? 'sm' : n <= 30 ? 'md' : n <= 56 ? 'lg' : n <= 150 ? 'xl' : 'dot'; }
 
   function render() {
     if (!el.grid) { return; }
@@ -52,7 +54,7 @@
     el.grid.className = 'stand__grid stand__grid--' + density(tiles.length);
     el.grid.innerHTML = tiles.map(function (t, i) {
       var ch = t.ch;
-      return '<li class="stile" data-i="' + i + '" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + '">' +
+      return '<li class="stile' + (ch.id === pick ? ' is-pick' : '') + '" data-i="' + i + '" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + '">' +
         '<span class="cmono" style="--c:' + ch.accent + ';--s:24px" data-len="' + GS.mono(ch).length + '" aria-hidden="true">' + U.esc(GS.mono(ch)) + '</span>' +
         '<span class="stile__name">' + U.esc(ch.short) + '</span>' +
         (field ? '<b class="stile__share">' + core.fmtShare(t.tickets, tot) + '</b>' : '') + '</li>';
@@ -64,9 +66,7 @@
   function updateNote() {
     if (!el.note) { return; }
     if (field) { el.note.textContent = 'Charities with a bigger share of the pot tend to last longer, but only one is left in the end.'; return; }
-    if (!pool.length) { el.note.textContent = ''; return; }
-    el.note.textContent = (pool.length > tiles.length ? tiles.length + ' of your ' + pool.length + ' charities are on the board, reshuffled every round. ' : 'All ' + pool.length + ' charities in play are on the board. ') +
-      'Equal odds for every charity in play.';
+    el.note.textContent = kit.boardNote(pool, tiles.length, pick, 'on the board');
   }
 
   function setTiles(list, tickets) {
@@ -95,8 +95,8 @@
   }
 
   /** The order everyone but the winner goes out in: random, or (live) weighted towards the smaller stakes first. */
-  function knockoutOrder(winner) {
-    var others = tiles.filter(function (t) { return t.ch.id !== winner.id; });
+  function knockoutOrder(winTile) {
+    var others = tiles.filter(function (t) { return t !== winTile; });
     var order = [];
     while (others.length) {
       var w = others.map(function (t) { return field ? 1 / Math.pow(Math.max(1, t.tickets), 0.8) : 1; });
@@ -111,7 +111,10 @@
     result = null;
     if (el.result) { el.result.textContent = ''; }
     var n = tiles.length;
-    var order = knockoutOrder(winner);
+    // with spots repeating charities on a big board, exactly one tile is the survivor
+    var winTile = null;
+    tiles.forEach(function (t) { if (t.ch.id === winner.id) { winTile = t; } });
+    var order = knockoutOrder(winTile);
     var cuts = schedule(n);
     var left = n;
     var chain = Promise.resolve();
@@ -134,7 +137,7 @@
       });
     });
     return chain.then(function () {
-      var champ = tiles.filter(function (t) { return t.ch.id === winner.id; })[0];
+      var champ = winTile;
       champ.node.classList.add('is-champ');
       el.status.textContent = winner.name + ' is the last one standing';
       if (el.result) { el.result.textContent = winner.name; }
@@ -157,15 +160,16 @@
     label: 'Last Standing',
     icon: 'swords',
     category: 'instant',
-    badge: 'Up to 100',
+    badge: 'Up to 1,000',
     live: true,
-    sizes: [{ n: 8, name: 'Final eight' }, { n: 24, name: 'Big' }, { n: 48, name: 'Huge' }, { n: 100, name: 'Battle royale' }],
+    maxSize: 1000,
+    sizes: [{ n: 8, name: 'Final eight' }, { n: 24, name: 'Big' }, { n: 48, name: 'Huge' }, { n: 100, name: 'Battle royale' }, { n: 500, name: 'Last stand' }],
     defaultSize: 8,
     tagline: 'Charities are knocked out wave by wave. The last one standing gets your gift.',
     cta: 'Start the countdown',
     info: [
-      'Choose a board of 8 charities or a battle royale of 100. They are knocked out in waves, big cuts at first and one at a time near the end, until a single charity is still standing. That one gets your gift.',
-      'The winner is drawn first, fairly, from every charity in play. The knock-out order is then played out around it.'
+      'Put as many charities on the board as you like, from 8 to a thousand. They are knocked out in waves, big cuts at first and one at a time near the end, until a single charity is still standing. That one gets your gift.',
+      'The winner is drawn first, fairly, from the charities on the board (each has equal odds). The knock-out order is then played out around it. Back a charity and, if it is the last one standing, you earn a bonus.'
     ],
 
     mount: function (container, gameApi) {
@@ -187,6 +191,13 @@
     },
 
     setSize: function (n) { size = n; if (!playing && !field) { rebuild(); } },
+    /** The board for the next round: the charities on it (what the winner is drawn from), how many tiles, and the charity you backed. */
+    setBoard: function (list, n, pickId) {
+      pool = list.slice();
+      size = n;
+      pick = pickId || '';
+      if (!playing && !field) { rebuild(); }
+    },
     setPool: function (list) {
       pool = list.slice();
       if (!playing && !field) { rebuild(); }

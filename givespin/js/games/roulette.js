@@ -46,7 +46,9 @@
   var lastT = 0;
   var flash = 0;
 
-  function count() { return Math.max(2, Math.min(size, pool.length)); }
+  var pick = '';              // id of the charity you backed (solo), or empty
+
+  function count() { return kit.sizeNow(size); }
   function maxCanvas() { var n = pockets.length; return n <= 16 ? 520 : n <= 37 ? 600 : 680; }
 
   function geo() {
@@ -153,6 +155,16 @@
           ctx.rotate(qa + Math.PI / 2);
           ctx.fillText(String(q), 0, 0);
           ctx.restore();
+        }
+      }
+      if (pick) {
+        // the charity you backed: a gold edge on each of its pockets
+        ctx.lineWidth = n > 40 ? 1.6 : 3;
+        ctx.strokeStyle = '#ffc542';
+        for (var pk = 0; pk < n; pk++) {
+          if (pockets[pk].id !== pick) { continue; }
+          annulus(g, g.pockIn, g.pockOut, wheelA + pk * seg, wheelA + (pk + 1) * seg);
+          ctx.stroke();
         }
       }
       if (winIdx >= 0 && winIdx < n && ballMode === 'pocket' && !spinning) {
@@ -317,18 +329,27 @@
       }).join('');
       return;
     }
+    if (pockets.length > 40) {
+      // too many pockets to list one by one: one chip per charity, with how many pockets it has
+      var seen = {};
+      var order = [];
+      pockets.forEach(function (c) { if (!seen[c.id]) { seen[c.id] = { c: c, n: 0 }; order.push(seen[c.id]); } seen[c.id].n += 1; });
+      var shownCh = order.slice(0, 150);
+      el.legend.innerHTML = shownCh.map(function (o) {
+        var win = ballMode === 'pocket' && winIdx >= 0 && pockets[winIdx] && pockets[winIdx].id === o.c.id;
+        return '<li' + (win ? ' class="is-win"' : (o.c.id === pick ? ' class="is-pick"' : '')) + '><span class="cmono" style="--c:' + o.c.accent + ';--s:20px" data-len="' + GS.mono(o.c).length + '" aria-hidden="true">' + U.esc(GS.mono(o.c)) + '</span><span>' + U.esc(o.c.short) + (o.n > 1 ? ' × ' + o.n : '') + '</span></li>';
+      }).join('') + (order.length > shownCh.length ? '<li class="rlegend__more">+ ' + (order.length - shownCh.length) + ' more</li>' : '');
+      return;
+    }
     el.legend.innerHTML = pockets.map(function (c, i) {
-      return '<li data-i="' + i + '"' + (i === winIdx && ballMode === 'pocket' ? ' class="is-win"' : '') + '><span class="rlegend__n" style="background:' + pocketColor(i) + '">' + i + '</span><span>' + U.esc(c.short) + '</span></li>';
+      return '<li data-i="' + i + '"' + (i === winIdx && ballMode === 'pocket' ? ' class="is-win"' : (c.id === pick ? ' class="is-pick"' : '')) + '><span class="rlegend__n" style="background:' + pocketColor(i) + '">' + i + '</span><span>' + U.esc(c.short) + '</span></li>';
     }).join('');
   }
 
   function updateNote() {
     if (!el.note) { return; }
     if (field) { el.note.textContent = 'Pockets are shared out by stake: the more money behind a charity, the more pockets it owns.'; return; }
-    if (!pool.length) { el.note.textContent = ''; return; }
-    el.note.textContent = pool.length > pockets.length
-      ? pockets.length + ' of your ' + pool.length + ' charities are on the wheel, reshuffled every spin. Equal odds for all ' + pool.length + '.'
-      : 'All ' + pool.length + ' charities in play have a pocket. Equal odds for each.';
+    el.note.textContent = kit.boardNote(pool, pockets.length, pick, 'on the wheel');
   }
 
   function rebuild() {
@@ -410,15 +431,16 @@
     label: 'Roulette',
     icon: 'circle-dot',
     category: 'table',
-    badge: 'Up to 100',
+    badge: 'Up to 1,000',
     live: true,
-    sizes: [{ n: 16, name: 'Classic' }, { n: 37, name: 'Big' }, { n: 64, name: 'Huge' }, { n: 100, name: 'Giant' }],
+    maxSize: 1000,
+    sizes: [{ n: 16, name: 'Classic' }, { n: 37, name: 'Big' }, { n: 100, name: 'Giant' }, { n: 250, name: 'Mega' }],
     defaultSize: 16,
     tagline: 'The ball spins one way, the wheel the other. It skips across the pockets and settles in a charity’s.',
     cta: 'Spin roulette',
     info: [
-      'A roulette wheel where every pocket is a charity from your pool. Choose a board of 16, 37, 64 or a giant 100 pockets: the ball races around the rim in the opposite direction, bounces across the pockets and drops into one.',
-      'Casino roulette has 37 or 38 pockets and a house edge. Here there is no house: every charity in play has exactly the same chance and your whole gift goes to whoever the ball picks.'
+      'A roulette wheel where every pocket is a charity. Set the board to any number of pockets, from a few to a thousand: the ball races around the rim in the opposite direction, bounces across the pockets and drops into one.',
+      'Casino roulette has 37 or 38 pockets and a house edge. Here there is no house: every charity on the wheel has exactly the same chance and your whole gift goes to whoever the ball picks. Back a charity and, if the ball picks it, you earn a bonus.'
     ],
 
     mount: function (container, gameApi) {
@@ -442,6 +464,13 @@
     },
 
     setSize: function (n) { size = n; if (!spinning && !field) { rebuild(); } },
+    /** The board for the next spin: the charities on it (what the winner is drawn from), how many pockets, and the charity you backed. */
+    setBoard: function (list, n, pickId) {
+      pool = list.slice();
+      size = n;
+      pick = pickId || '';
+      if (!spinning && !field) { rebuild(); }
+    },
     setPool: function (list) {
       pool = list.slice();
       if (!spinning && !field) { rebuild(); }

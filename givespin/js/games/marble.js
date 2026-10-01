@@ -20,7 +20,9 @@
     if (n <= 12) { return { r: 11, lanes: 3, rows: 4 }; }
     if (n <= 30) { return { r: 7, lanes: 5, rows: 5 }; }
     if (n <= 56) { return { r: 5.5, lanes: 6, rows: 5 }; }
-    return { r: 4.2, lanes: 8, rows: 6 };
+    if (n <= 120) { return { r: 4.2, lanes: 8, rows: 6 }; }
+    if (n <= 300) { return { r: 3, lanes: 10, rows: 6 }; }
+    return { r: 2.2, lanes: 14, rows: 7 };
   }
 
   function halfWidth(t) { return t.lanes * (2 * t.r + 2) / 2; }
@@ -58,16 +60,17 @@
     label: 'Marble Run',
     icon: 'gem',
     category: 'races',
-    badge: 'Up to 100',
+    badge: 'Up to 1,000',
+    maxSize: 1000,
     tagline: 'Glass marbles tumble down a winding track. First one over the line wins your gift.',
     cta: 'Release the marbles',
-    sizes: [{ n: 8, name: 'Handful' }, { n: 24, name: 'Bag' }, { n: 48, name: 'Jar' }, { n: 100, name: 'Avalanche' }],
+    sizes: [{ n: 8, name: 'Handful' }, { n: 24, name: 'Bag' }, { n: 48, name: 'Jar' }, { n: 100, name: 'Avalanche' }, { n: 500, name: 'Landslide' }],
     defaultSize: 8,
     seconds: 8.5,
     labels: 'legend',
     info: [
-      'Every charity is a glass marble in its own colour. Pick a handful of 8 or an avalanche of 100, open the gate and watch them tumble down the track: whichever rolls over the finish line first gets your gift.',
-      'The winner is drawn first, fairly, from every charity in play. The marbles are then played out to match, with the order changing on the way down.'
+      'Every charity is a glass marble in its own colour. Set the bag to any number of marbles, from a handful to a thousand, open the gate and watch them tumble down the track: whichever rolls over the finish line first gets your gift.',
+      'The winner is drawn first, fairly, from the charities in the race (each has equal odds). The marbles are then played out to match, with the order changing on the way down. Back a marble and, if it wins, you earn a bonus.'
     ],
 
     height: function (n) {
@@ -196,8 +199,9 @@
     entity: function (ctx, e, pos, S) {
       var g = S.geo;
       var r = g.r;
-      var win = S.winnerId === e.ch.id && !S.racing;
-      var rank = S.lead[e.ch.id];
+      var win = e.run.place === 1 && !S.racing;
+      var rank = S.lead[e.idx];
+      var backed = !!S.pickId && e.ch.id === S.pickId;
       var x = pos.x, y = pos.y;
 
       if (win || rank) {
@@ -238,6 +242,20 @@
       ctx.beginPath();
       ctx.arc(x - r * 0.32, y - r * 0.34, Math.max(1, r * 0.2), 0, TAU);
       ctx.fill();
+      if (backed) {
+        // the charity you backed: a gold ring and a star, readable even when the field is tiny
+        var br = Math.max(r * 1.9, 7);
+        ctx.beginPath();
+        ctx.arc(x, y, br, 0, TAU);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffc542';
+        ctx.stroke();
+        ctx.fillStyle = '#ffc542';
+        ctx.font = '800 ' + Math.max(10, r * 1.6) + 'px "Sora", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText('★', x, y - br - 2);
+      }
       if (e.run.place && (e.run.place <= 3 || S.n <= 12)) {
         ctx.fillStyle = MEDAL[e.run.place - 1] || '#51697a';
         ctx.beginPath();

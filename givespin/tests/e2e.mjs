@@ -915,32 +915,113 @@ if (section('13. Stream mode, reduced motion, persistence')) {
 }
 
 /* ======================================================================== */
-if (section('13a. Board sizes: from a handful to a hundred charities')) {
+if (section('13a. Board sizes: any number of charities, and the winner is drawn from the board')) {
   const page = await newPage();
   await openApp(page);
-  const sized = [['roulette', 100], ['plinko', 100], ['wheel', 100], ['drop', 100], ['lotto', 100], ['derby', 48], ['duck', 100], ['marble', 100], ['balloon', 100], ['standing', 100], ['coin', 32], ['cards', 52], ['scratch', 24]];
+  const POOL = 228;
+  const sized = [['roulette', 1000], ['plinko', 500], ['wheel', 1000], ['drop', 1000], ['lotto', 300], ['derby', 200], ['duck', 1000], ['marble', 1000], ['balloon', 1000], ['standing', 1000], ['coin', 64], ['cards', 100], ['scratch', 48]];
   for (const [id, n] of sized) {
     await go(page, '#game-' + id);
     await page.waitForSelector('#panel-' + id + ':not([hidden])');
-    const g = await page.evaluate((gid) => window.GS.games[gid].sizes.map((x) => x.n), id);
-    check(g.includes(n) && g[0] < n, id + ': offers board sizes from ' + g[0] + ' up to ' + n, g);
-    await page.click(`#size-seg [data-n="${n}"]`);
-    check(await page.locator(`#size-seg [data-n="${n}"]`).getAttribute('aria-pressed') === 'true', id + ': ' + n + ' is selected');
-    check((await page.locator('#size-hint').innerText()).includes('Every one of the ' + (await page.evaluate(() => window.GS.app.state.pool.length)) + ' still has equal odds'), id + ': the hint says every charity in play keeps equal odds');
+    const g = await page.evaluate((gid) => ({ sizes: window.GS.games[gid].sizes.map((x) => x.n), max: window.GS.games[gid].maxSize }), id);
+    check(g.sizes.length >= 3 && g.max >= n, id + ': offers presets and can go up to ' + g.max, g);
+    await page.fill('#size-custom', String(n));
+    await page.waitForFunction((a) => window.GS.store.prefs().sizes[a[0]] === a[1], [id, n]);
+    const expectDistinct = id === 'scratch' ? n - 2 : Math.min(n, POOL);
+    const hint = await page.locator('#size-hint').innerText();
+    check(hint.includes('equal odds'), id + ': the hint says every charity on the board has equal odds', hint);
     await page.click('#btn-play');
     await waitReceipt(page);
-    const info = await page.evaluate((gid) => ({ w: window.GS.app._last.round.winners.map((x) => x.id), shown: window.GS.games[gid]._shown() }), id);
-    check(info.shown[0] === info.w[info.w.length - 1], id + ': the winner drawn from all 228 is the one on the ' + n + '-charity board', info);
+    const info = await page.evaluate((gid) => {
+      const l = window.GS.app._last;
+      return { w: l.round.winners.map((x) => x.id), shown: window.GS.games[gid]._shown(), board: l.round.fair.board, nboard: l.round.fair.board.length };
+    }, id);
+    check(info.shown[0] === info.w[info.w.length - 1], id + ': the winner on the ' + n + '-spot board is the one drawn', info.shown);
+    check(info.nboard === expectDistinct && info.board.includes(info.w[0]), id + ': the winner was drawn from the ' + expectDistinct + ' charities on the board', info.nboard);
+    await page.click('#dlg-result .rs-fair > summary');
+    await page.click('#dlg-result [data-role="verify"]');
+    await page.waitForSelector('#dlg-result .vfy li');
+    check(await page.locator('#dlg-result .vfy li.is-ok').count() === 3 && (await page.locator('#dlg-result .vfy').innerText()).includes('on the board'), id + ': the round verifies against the board');
     await closeReceipt(page);
   }
   const prefs = await page.evaluate(() => window.GS.store.prefs().sizes);
-  check(prefs.plinko === 100 && prefs.derby === 48, 'chosen sizes are remembered', prefs);
+  check(prefs.plinko === 500 && prefs.derby === 200 && prefs.duck === 1000, 'chosen sizes are remembered', prefs);
+
+  // typing any number: presets un-select, limits are enforced, beyond-the-pool boards repeat charities
+  await go(page, '#game-derby');
+  await page.fill('#size-custom', '37');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 37);
+  check(await page.locator('#size-seg [aria-pressed="true"]').count() === 0, 'a typed size un-selects the presets');
+  check(await page.evaluate(() => window.GS.games.derby._runners()) === 37, 'the derby now has 37 runners');
+  check((await page.locator('#size-hint').innerText()).includes('The winner is drawn from these 37'), 'and the hint says the winner is drawn from those 37');
+  await page.fill('#size-custom', '5000');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 200);
+  check((await page.locator('#size-hint').innerText()).includes('up to 200'), 'a number over the game limit is held at the limit and says so');
+  await page.fill('#size-custom', '1');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 2);
+  check(await page.evaluate(() => window.GS.games.derby._runners()) === 2, 'and a board needs at least two charities');
+  await page.click('#size-max');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 200);
+  check(await page.locator('#size-max').isDisabled(), 'the Max button sets the biggest board and then rests');
+  await go(page, '#game-plinko');
+  await page.fill('#size-custom', '1000');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.plinko === 1000);
+  check(await page.evaluate(() => window.GS.games.plinko._bins()) === 1000 && (await page.locator('#size-hint').innerText()).includes('each appearing'), 'a 1,000-bin Plinko board repeats the 228 charities and says how often');
+  await go(page, '#game-coin');
+  await page.fill('#size-custom', '100');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.coin === 100);
+  check(await page.evaluate(() => window.GS.games.coin._entrants()) === 64 && (await page.locator('#size-hint').innerText()).includes('power of two'), 'a bracket rounds down to a power of two and says so');
   // a narrow pool shrinks the board and says so
   await go(page, '#game-derby');
+  await page.fill('#size-custom', '150');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 150);
   await page.evaluate(() => { window.GS.store.setPref('filters', Object.assign(window.GS.core.emptyFilters(), { causes: ['animals'] })); window.GS.app.refreshPool(); });
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(250);
   const poolN = await page.evaluate(() => window.GS.app.state.pool.length);
-  check(poolN < 48 && (await page.locator('#size-hint').innerText()).includes('all ' + poolN), 'a filtered pool smaller than the board shows every charity in play', poolN);
+  check(poolN < 150 && await page.evaluate(() => window.GS.games.derby._runners()) === 150 && (await page.locator('#size-hint').innerText()).includes('fill them'), 'a pool smaller than the board fills the spots with repeats', poolN);
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('13a2. Back a charity (pick a duck) in a solo game')) {
+  const page = await newPage();
+  await openApp(page, '#game-duck');
+  check(await page.locator('#field-pick').isVisible(), 'Duck Derby offers Back a charity');
+  await go(page, '#game-cards');
+  check(!(await page.locator('#field-pick').isVisible()), 'Pick a Card does not (you pick a card there)');
+  await go(page, '#game-duck');
+  await page.fill('#size-custom', '2');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.duck === 2);
+  await page.click('#pick-btn');
+  await page.waitForSelector('#dlg-charitypick[open]');
+  await a11y(page, 'charity picker');
+  await page.fill('#cp-q', 'wateraid');
+  await page.locator('#dlg-charitypick .pickitem').first().click();
+  await page.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
+  check((await page.locator('#pick-chip').innerText()).includes('WaterAid') && (await page.locator('#pick-hint').innerText()).includes('is on the board'), 'the charity you back shows as a chip and is on the board');
+  let won = null;
+  let rounds = 0;
+  while (!won && rounds < 14) {
+    rounds++;
+    await page.click('#btn-play');
+    await waitReceipt(page);
+    const r = await page.evaluate(() => { const l = window.GS.app._last; return { pick: l.round.pick, board: l.round.fair.board, xp: l.summary.xpGain, text: document.querySelector('#dlg-result').innerText }; });
+    check(r.board.includes('wateraid') && r.pick && r.pick.id === 'wateraid', 'round ' + rounds + ': the backed charity was on the board it was drawn from');
+    if (r.pick.won) { won = r; }
+    else { check(r.text.includes('which didn’t win this time') && r.text.includes('Your gift still went to the winner'), 'losing the call says the gift still went to the winner'); }
+    await closeReceipt(page);
+  }
+  check(!!won, 'backing one of two charities wins within a few rounds', rounds);
+  if (won) {
+    check(won.text.includes('You backed WaterAid and it won') && won.xp > 20 + 38, 'a winning call is celebrated and earns bonus XP', won.xp);
+    const st = await state(page);
+    check(st.pickWins >= 1 && !!st.badges.called, 'Called It is unlocked by a solo call', st.pickWins);
+    check(st.history.some((h) => h.pick && h.pick.won && h.pick.charityId === 'wateraid'), 'the history records the pick');
+  }
+  await page.click('#pick-chip [data-role="clear-pick"]');
+  check(!(await page.locator('#pick-chip').isVisible()), 'you can stop backing a charity');
+  await go(page, '#giving');
+  check((await page.locator('#view-giving .hrow').first().innerText()).length > 0, 'My Giving still lists the rounds');
   await page.close();
 }
 
@@ -1021,11 +1102,11 @@ if (section('13c. Live tables: staking, cancelling, adding a charity (real time)
   // add a charity that is not at the table
   await page.click('#lt-stake [data-stake="20"]');
   await page.click('#livepanel [data-role="add"]');
-  await page.waitForSelector('#dlg-livepick[open]');
-  await page.fill('#lp-q', 'wateraid');
+  await page.waitForSelector('#dlg-charitypick[open]');
+  await page.fill('#cp-q', 'wateraid');
   await a11y(page, 'add a charity to the table');
-  await page.locator('#dlg-livepick .pickitem').first().click();
-  await page.waitForFunction(() => !document.querySelector('#dlg-livepick').open);
+  await page.locator('#dlg-charitypick .pickitem').first().click();
+  await page.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
   const pseudo = await page.locator('#livepanel .odd.is-new').count();
   check(pseudo === 1 && (await page.locator('#livepanel .odd.is-new').innerText()).includes('new gate'), 'a charity you add gets a gate of its own on the board');
   await page.click('#livepanel [data-role="join"]');

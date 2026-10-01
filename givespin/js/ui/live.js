@@ -415,38 +415,13 @@
 
   function openPicker() {
     if (!cur || cur.room.phase !== 'open' || cur.room.you) { return; }
-    var m = ui.modal('livepick');
-    m.set(
-      '<h2 class="modal__title" id="dlg-livepick-title">Add a charity to the table</h2>' +
-      '<p class="modal__sub">There ' + (cur.room.gatesOpen() === 1 ? 'is 1 gate' : 'are ' + cur.room.gatesOpen() + ' gates') + ' open. Pick any charity and it joins this table with your stake.</p>' +
-      '<label class="sr-only" for="lp-q">Search charities</label><input id="lp-q" class="input" type="search" placeholder="Search by name or cause" autocomplete="off" spellcheck="false">' +
-      '<ul class="picklist" data-role="list"></ul>'
-    );
-    var q = m.$('#lp-q');
-    var list = m.$('[data-role="list"]');
-    function paint() {
-      var term = q.value.trim().toLowerCase();
-      var all = GS.charities.filter(function (c) {
-        return !term || (c.name + ' ' + c.short + ' ' + c.causes.map(function (x) { return GS.cause(x).name; }).join(' ')).toLowerCase().indexOf(term) >= 0;
-      }).sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; }).slice(0, 40);
-      list.innerHTML = all.length ? all.map(function (c) {
-        var at = cur.room.seats[c.id];
-        return '<li><button type="button" class="pickitem" data-id="' + c.id + '" style="--c:' + c.accent + '">' + ui.mono(c, 32) +
-          '<span class="pickitem__t"><b>' + esc(c.name) + '</b><small>' + esc(c.causes.map(function (x) { return GS.cause(x).name; }).slice(0, 2).join(' · ')) + (at ? ' · already at the table' : '') + '</small></span></button></li>';
-      }).join('') : '<li class="empty">No charity matches “' + esc(q.value) + '”.</li>';
-    }
-    q.addEventListener('input', paint);
-    list.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-id]');
-      if (!b) { return; }
-      pick = b.getAttribute('data-id');
-      m.close();
-      renderOdds();
-      renderJoin();
+    var room = cur.room;
+    ui.pickCharity({
+      title: 'Add a charity to the table',
+      sub: 'There ' + (room.gatesOpen() === 1 ? 'is 1 gate' : 'are ' + room.gatesOpen() + ' gates') + ' open. Pick any charity and it joins this table with your stake.',
+      note: function (c) { return room.seats[c.id] ? 'already at the table' : ''; },
+      onPick: function (id) { pick = id; renderOdds(); renderJoin(); }
     });
-    paint();
-    m.open();
-    q.focus();
   }
 
   /* ----------------------------------------------------- game board syncing */

@@ -12,7 +12,7 @@
   var TAU = Math.PI * 2;
   var MEDAL = ['#ffc542', '#cfd9e0', '#e0a070'];
 
-  function radiusFor(n) { return n <= 12 ? 17 : n <= 30 ? 11 : n <= 56 ? 8 : 6; }
+  function radiusFor(n) { return n <= 12 ? 17 : n <= 30 ? 11 : n <= 56 ? 8 : n <= 120 ? 6 : n <= 300 ? 4 : 3; }
 
   GS.crowdGame({
     id: 'balloon',
@@ -20,16 +20,17 @@
     label: 'Balloon Race',
     icon: 'cloud',
     category: 'races',
-    badge: 'Up to 100',
+    badge: 'Up to 1,000',
+    maxSize: 1000,
     tagline: 'Balloons climb to the clouds. First one over the finish line wins your gift.',
     cta: 'Cut the ropes',
-    sizes: [{ n: 8, name: 'Bunch' }, { n: 24, name: 'Festival' }, { n: 48, name: 'Sky full' }, { n: 100, name: 'Skyline' }],
+    sizes: [{ n: 8, name: 'Bunch' }, { n: 24, name: 'Festival' }, { n: 48, name: 'Sky full' }, { n: 100, name: 'Skyline' }, { n: 500, name: 'Sky-high' }],
     defaultSize: 8,
     seconds: 9,
     labels: 'legend',
     info: [
-      'Every charity is a balloon in its own colour. Pick a bunch of 8 or a sky full of 100, cut the ropes and watch them climb: the first balloon to reach the finish line in the clouds gets your gift.',
-      'The winner is drawn first, fairly, from every charity in play. The race is then played out to match, with the leader changing as they drift upward.'
+      'Every charity is a balloon in its own colour. Set the sky to any number of balloons, from a bunch to a thousand, cut the ropes and watch them climb: the first balloon to reach the finish line in the clouds gets your gift.',
+      'The winner is drawn first, fairly, from the charities in the race (each has equal odds). The race is then played out to match, with the leader changing as they drift upward. Back a balloon and, if it wins, you earn a bonus.'
     ],
 
     height: function (n, W) {
@@ -130,8 +131,9 @@
       var g = S.geo;
       var r = g.r, rx = g.rx;
       var x = pos.x, y = pos.y;
-      var win = S.winnerId === e.ch.id && !S.racing;
-      var rank = S.lead[e.ch.id];
+      var win = e.run.place === 1 && !S.racing;
+      var rank = S.lead[e.idx];
+      var backed = !!S.pickId && e.ch.id === S.pickId;
 
       // string and knot
       var sway = Math.sin(S.t / 380 + e.run.phase * 7) * 2.5;
@@ -178,6 +180,20 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(mono, x + rx * 0.05, y + r * 0.1);
+      }
+      if (backed) {
+        // the charity you backed: a gold ring and a star, readable even when the field is tiny
+        var br = Math.max(r * 1.9, 7);
+        ctx.beginPath();
+        ctx.arc(x, y, br, 0, TAU);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffc542';
+        ctx.stroke();
+        ctx.fillStyle = '#ffc542';
+        ctx.font = '800 ' + Math.max(10, r * 1.6) + 'px "Sora", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText('★', x, y - br - 2);
       }
       if (e.run.place && (e.run.place <= 3 || S.n <= 12)) {
         var mr = Math.max(5, Math.min(8.5, r * 0.55));

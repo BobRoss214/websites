@@ -73,6 +73,10 @@
     else if (h.pay === 'checkout') { rows.push(['external-link', 'Finished on the checkout page']); }
     if (h.freq && h.freq !== 'once') { rows.push(['calendar-days', ui.opts.freqLabel(h.freq) + ' gift']); }
     if (h.dedication) { rows.push(['heart', (h.dedication.kind === 'memory' ? 'In memory of ' : 'In honor of ') + h.dedication.name + (h.dedication.note ? ': “' + h.dedication.note + '”' : '')]); }
+    if (h.pick) {
+      var backedCh = GS.charity(h.pick.charityId);
+      if (backedCh) { rows.unshift(['target', 'You backed ' + backedCh.short + (h.pick.won ? ' and it won' : ' (it didn’t win; your gift went to the winner)') + (h.pick.board ? ' · board of ' + h.pick.board : '')]); }
+    }
     if (h.live) {
       var pickCh = GS.charity(h.live.pick);
       var winCh = GS.charity(h.live.winner);
@@ -237,10 +241,10 @@
 
   function renderFair() {
     var root = $('#view-fair');
-    root.innerHTML = pageHead('Fair Play', 'Every result is decided before the animation starts, and you can check the maths yourself. In solo games every charity in play has exactly the same odds; at live tables each charity’s odds are its share of the pot.') +
+    root.innerHTML = pageHead('Fair Play', 'Every result is decided before the animation starts, and you can check the maths yourself. In solo games every charity on the board you set has exactly the same odds; at live tables each charity’s odds are its share of the pot.') +
       '<ol class="steps3">' +
         '<li class="step3"><span class="step3__n">1</span><h2>Commit</h2><p>Before you play, the game shows a hash: a fingerprint of a secret seed it has already chosen. It cannot change the seed afterwards without the fingerprint no longer matching.</p></li>' +
-        '<li class="step3"><span class="step3__n">2</span><h2>Draw</h2><p>Winners come from HMAC-SHA256 of the seed with your seed and the round number, with no modulo bias, applied to the charities in play sorted by id.</p></li>' +
+        '<li class="step3"><span class="step3__n">2</span><h2>Draw</h2><p>Winners come from HMAC-SHA256 of the seed with your seed and the round number, with no modulo bias, applied to the charities on the board sorted by id.</p></li>' +
         '<li class="step3"><span class="step3__n">3</span><h2>Reveal</h2><p>After the round the secret seed is shown. Hash it and match the fingerprint from step 1, then recompute the draws to see the same winners.</p></li>' +
       '</ol>' +
       '<section class="sect panel" aria-labelledby="fp-now"><h2 class="sect__t" id="fp-now">Your next round</h2><div data-role="block"></div></section>' +

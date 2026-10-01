@@ -20,6 +20,7 @@
   var size = 20;
   var pool = [];
   var field = null;      // live table entrants, or null
+  var pick = '';         // id of the charity you backed (solo), or empty
   var current = [];      // charities currently laid out in the (resting) strip
   var cardStep = 0;      // card width + gap in px
   var cardW = 0;
@@ -43,7 +44,7 @@
   function cardHTML(ch) {
     var cause = GS.cause(ch.causes[0]);
     var m = GS.mono(ch);
-    return '<div class="dcard" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
+    return '<div class="dcard' + (ch.id === pick ? ' is-pick' : '') + '" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
       '<span class="dcard__badge" data-len="' + m.length + '">' + U.esc(m) + '</span>' +
       '<span class="dcard__name">' + U.esc(ch.short) + '</span>' +
       (field ? '<span class="dcard__odds">' + oddsOf(ch) + '</span>' : '<span class="dcard__cause">' + GS.icon(cause.icon) + U.esc(cause.name) + '</span>') +
@@ -110,9 +111,7 @@
   function updateNote() {
     if (!el.note) { return; }
     if (field) { el.note.textContent = 'The reel is filled by stake: a charity with more money behind it fills more of the reel.'; return; }
-    if (!pool.length) { el.note.textContent = ''; return; }
-    var shown = Math.min(size, pool.length);
-    el.note.textContent = 'The reel rolls past ' + shown + (shown === 1 ? ' charity' : ' different charities') + (pool.length > shown ? ' picked from your ' + pool.length : '') + '. Every charity in play has equal odds.';
+    el.note.textContent = kit.boardNote(pool, size, pick, 'on the reel');
   }
 
   /** The long list of cards a roll passes through, ending on `winner` just before the marker stops. */
@@ -207,15 +206,16 @@
     label: 'Drop',
     icon: 'package-open',
     category: 'originals',
-    badge: 'Reel up to 100',
+    badge: 'Reel up to 1,000',
     live: true,
-    sizes: [{ n: 20, name: 'Short' }, { n: 50, name: 'Long' }, { n: 100, name: 'Epic' }],
+    maxSize: 1000,
+    sizes: [{ n: 20, name: 'Short' }, { n: 50, name: 'Long' }, { n: 100, name: 'Epic' }, { n: 300, name: 'Endless' }],
     defaultSize: 20,
     tagline: 'The reel rolls, slows, and locks on your charity.',
     cta: 'Open the crate',
     info: [
-      'A strip of charity cards rolls past a marker and slowly comes to a stop. Whatever card is under the marker gets your gift. Pick a short reel of 20 charities or an epic one that rolls past 100.',
-      'The cards you see rolling by are random picks from your pool, with the winner placed at the landing spot before the roll starts.'
+      'A strip of charity cards rolls past a marker and slowly comes to a stop. Whatever card is under the marker gets your gift. Make the reel as long as you like, from a handful of cards to a thousand.',
+      'The charities on the reel are exactly the ones the winner is drawn from, each with equal odds. Back one and, if it lands under the marker, you earn a bonus.'
     ],
 
     mount: function (container, gameApi) {
@@ -246,6 +246,13 @@
     },
 
     setSize: function (n) { size = n; updateNote(); },
+    /** The board for the next roll: the charities on the reel (what the winner is drawn from), how many cards it rolls past, and the charity you backed. */
+    setBoard: function (list, n, pickId) {
+      pool = list.slice();
+      size = n;
+      pick = pickId || '';
+      if (!spinning && !field) { seed(); }
+    },
     setPool: function (list) {
       pool = list.slice();
       if (!spinning && !field) { seed(); }

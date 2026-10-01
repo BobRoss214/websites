@@ -42,13 +42,17 @@
   var onDone = null;
   var lastThump = 0;
 
-  function count() { return Math.max(2, Math.min(size, pool.length)); }
+  var pick = '';         // id of the charity you backed (solo), or empty
+
+  function count() { return kit.sizeNow(size); }
 
   function laneHFor(n) {
     if (n <= 8) { return W < 420 ? 44 : 52; }
     if (n <= 16) { return 34; }
     if (n <= 28) { return 24; }
-    return 18;
+    if (n <= 60) { return 18; }
+    if (n <= 120) { return 12; }
+    return 9;
   }
 
   function layout() {
@@ -102,15 +106,19 @@
       ctx.fillStyle = '#0a1f14';
       ctx.fillRect(0, y, g.lw, g.laneH);
       var ru = runners[i];
-      if (ru) {
+      if (ru && pick && ru.ch.id === pick) {
+        ctx.fillStyle = 'rgba(255,197,66,0.2)';
+        ctx.fillRect(0, y, W, g.laneH);
+      }
+      if (ru && g.laneH >= 11) {
         ctx.fillStyle = 'rgba(255,255,255,0.55)';
         ctx.font = '800 ' + Math.max(8, fs - 1) + 'px "Sora", sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText(String(i + 1), 6, y + g.laneH / 2);
-        var label = ru.ch.short;
+        var label = (ru.ch.id === pick ? '★ ' : '') + ru.ch.short;
         ctx.font = '600 ' + fs + 'px "Inter", sans-serif';
-        ctx.fillStyle = ru.run.place === 1 ? '#ffe39a' : '#e6f1f6';
+        ctx.fillStyle = ru.run.place === 1 || ru.ch.id === pick ? '#ffe39a' : '#e6f1f6';
         var numW = g.lanes > 9 ? 22 : 16;
         var oddsW = field ? 40 : 0;
         var maxW = g.lw - numW - 8 - oddsW;
@@ -174,8 +182,9 @@
       ctx.arc(0, 0, g.r, 0, TAU);
       ctx.fillStyle = r.ch.accent;
       ctx.fill();
-      ctx.lineWidth = win ? 3 : (g.r < 8 ? 1 : 1.5);
-      ctx.strokeStyle = win ? '#ffc542' : 'rgba(255,255,255,0.8)';
+      var backed = !!pick && r.ch.id === pick;
+      ctx.lineWidth = win || backed ? 3 : (g.r < 8 ? 1 : 1.5);
+      ctx.strokeStyle = win || backed ? '#ffc542' : 'rgba(255,255,255,0.8)';
       ctx.stroke();
       if (g.r >= 9) {
         var mono = GS.mono(r.ch);
@@ -265,9 +274,7 @@
   function updateNote() {
     if (!el.note) { return; }
     if (field) { el.note.textContent = 'Each runner’s share of the pot is its chance of winning.'; return; }
-    if (!pool.length) { el.note.textContent = ''; return; }
-    el.note.textContent = (pool.length > runners.length ? runners.length + ' of your ' + pool.length + ' charities are on the track, reshuffled every race. ' : 'All ' + pool.length + ' charities in play are on the track. ') +
-      'Equal odds for every charity in play.';
+    el.note.textContent = kit.boardNote(pool, runners.length, pick, 'on the track');
   }
 
   function rebuild() {
@@ -322,15 +329,16 @@
     label: 'Derby',
     icon: 'flag-triangle-right',
     category: 'races',
-    badge: 'Up to 48',
+    badge: 'Up to 200',
     live: true,
-    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Huge' }, { n: 48, name: 'Giant' }],
+    maxSize: 200,
+    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Huge' }, { n: 48, name: 'Giant' }, { n: 120, name: 'Grand National' }],
     defaultSize: 6,
     tagline: 'A field of charities, one finish line. First across wins your gift.',
     cta: 'Start the race',
     info: [
-      'Charities from your pool line up at the start, from a classic field of six up to a giant race of 48. Hit go and watch them race: whoever crosses the line first gets your gift.',
-      'The result is decided before the gates open, then the race is played out to match, with plenty of lead changes on the way.'
+      'Charities line up at the start, from a classic field of six up to a Grand National of 200. Hit go and watch them race: whoever crosses the line first gets your gift.',
+      'The winner is drawn first, fairly, from the charities in the race (each has equal odds), then the race is played out to match with plenty of lead changes. Back a runner and, if it wins, you earn a bonus.'
     ],
 
     mount: function (container, gameApi) {
@@ -353,6 +361,13 @@
     },
 
     setSize: function (n) { size = n; if (!racing && !field) { rebuild(); } },
+    /** The board for the next race: the charities on the track (what the winner is drawn from), how many runners, and the charity you backed. */
+    setBoard: function (list, n, pickId) {
+      pool = list.slice();
+      size = n;
+      pick = pickId || '';
+      if (!racing && !field) { rebuild(); }
+    },
     setPool: function (list) {
       pool = list.slice();
       if (!racing && !field) { rebuild(); }

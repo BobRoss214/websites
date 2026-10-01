@@ -38,6 +38,7 @@
       verifies: 0,
       liveRounds: 0,
       liveWins: 0,
+      pickWins: 0,
       biggestPotCents: 0,
       badges: {},
       history: [],
@@ -86,12 +87,14 @@
           pick: str(x.live.pick, 60), won: !!x.live.won, winner: str(x.live.winner, 60)
         };
       }
+      if (x.pick && typeof x.pick === 'object') { out.pick = { charityId: str(x.pick.charityId, 60), won: !!x.pick.won, board: Math.floor(num(x.pick.board, 0)) }; }
       if (x.dedication && typeof x.dedication === 'object') { out.dedication = { kind: x.dedication.kind === 'memory' ? 'memory' : 'honor', name: str(x.dedication.name, 60), note: str(x.dedication.note, 140) }; }
       if (x.fair && typeof x.fair === 'object') {
         out.fair = {
           roundSeed: str(x.fair.roundSeed, 80), serverHash: str(x.fair.serverHash, 80), clientSeed: str(x.fair.clientSeed, 80),
           nonce: Math.floor(num(x.fair.nonce, 0)), poolHash: str(x.fair.poolHash, 80), count: Math.floor(num(x.fair.count, 0)),
           winners: arr(x.fair.winners).filter(function (w) { return typeof w === 'string'; }).slice(0, 12),
+          board: arr(x.fair.board).filter(function (w) { return typeof w === 'string'; }).slice(0, 300).map(function (w) { return str(w, 60); }),
           weights: arr(x.fair.weights).filter(function (w) { return Array.isArray(w) && typeof w[0] === 'string'; }).slice(0, 12).map(function (w) { return [str(w[0], 60), Math.floor(num(w[1], 0))]; }),
           filters: core.normalizeFilters(x.fair.filters), excluded: arr(x.fair.excluded).filter(function (w) { return typeof w === 'string'; }).slice(0, 300)
         };
@@ -135,6 +138,7 @@
     d.verifies = Math.floor(num(raw.verifies, 0));
     d.liveRounds = Math.floor(num(raw.liveRounds, 0));
     d.liveWins = Math.floor(num(raw.liveWins, 0));
+    d.pickWins = Math.floor(num(raw.pickWins, 0));
     d.biggestPotCents = Math.floor(num(raw.biggestPotCents, 0));
     d.badges = obj(raw.badges);
     d.history = sanitizeHistory(raw.history);
@@ -173,7 +177,7 @@
     var sz = obj(p.sizes);
     Object.keys(sz).forEach(function (k) {
       var v = sz[k];
-      if (GAME_IDS.indexOf(k) >= 0 && typeof v === 'number' && v >= 2 && v <= 200) { d.prefs.sizes[k] = Math.floor(v); }
+      if (GAME_IDS.indexOf(k) >= 0 && typeof v === 'number' && v >= 2 && v <= 1000) { d.prefs.sizes[k] = Math.floor(v); }
     });
     d.prefs.liveStake = typeof p.liveStake === 'number' && p.liveStake >= 1 && p.liveStake <= 1000 ? Math.floor(p.liveStake) : 20;
     return d;
@@ -220,7 +224,7 @@
       charitiesSeen: Object.keys(state.charityCounts), causesSeen: Object.keys(state.causeCounts),
       gamesPlayed: state.gamesPlayed.filter(function (g) { return g !== 'direct'; }), gameCount: GS.gameCount || 0, streak: state.streak, bestStreak: state.bestStreak,
       jackpots: state.jackpots, splits: state.splits, usedStream: state.usedStream, directGifts: state.directGifts, verifies: state.verifies,
-      plans: state.plans.length, liveRounds: state.liveRounds, liveWins: state.liveWins, biggestPotCents: state.biggestPotCents
+      plans: state.plans.length, liveRounds: state.liveRounds, liveWins: state.liveWins, pickWins: state.pickWins, biggestPotCents: state.biggestPotCents
     };
   }
 
@@ -339,6 +343,7 @@
       if (play.rounds >= 3) { state.splits += 1; }
       if (play.stream) { state.usedStream = true; }
       if (play.direct) { state.directGifts += 1; }
+      if (play.pick && play.pick.won) { state.pickWins += 1; }
       if (play.live) {
         var pi = -1;
         state.pending.forEach(function (x, i) { if (pi < 0 && x.game === play.game && x.cents === play.totalCents) { pi = i; } });
@@ -365,6 +370,7 @@
         allocations: play.allocations.map(function (a) { return { charityId: a.charityId, cents: a.cents }; })
       };
       if (play.direct) { entry.direct = true; }
+      if (play.pick) { entry.pick = { charityId: String(play.pick.charityId || '').slice(0, 60), won: !!play.pick.won, board: Math.floor(play.pick.board || 0) }; }
       if (play.live) { entry.live = { pot: play.live.pot, players: play.live.players, stake: play.totalCents, pick: play.live.pick, won: !!play.live.won, winner: play.live.winner }; }
       if (play.dedication && play.dedication.name) { entry.dedication = play.dedication; }
       if (play.fair) { entry.fair = play.fair; }

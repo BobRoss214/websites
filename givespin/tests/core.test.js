@@ -348,3 +348,62 @@ test('share and fmtShare format a charity\'s slice of the pot', () => {
 test('receipt ids look right', () => {
   for (let i = 0; i < 50; i++) { assert.match(core.receiptId(), /^GS-[A-HJKMNP-Z2-9]{6}$/); }
 });
+
+test('fillSlots fills any number of spots evenly from the charities available', () => {
+  const items = Array.from({ length: 10 }, (_, i) => ({ id: 'c' + i }));
+  assert.equal(core.fillSlots(items, 4).length, 4);
+  assert.equal(new Set(core.fillSlots(items, 4).map((c) => c.id)).size, 4, 'up to the pool size every spot is a different charity');
+  const big = core.fillSlots(items, 35);
+  assert.equal(big.length, 35);
+  const counts = {};
+  big.forEach((c) => { counts[c.id] = (counts[c.id] || 0) + 1; });
+  const vals = Object.values(counts);
+  assert.equal(vals.length, 10, 'every charity appears');
+  assert.ok(Math.max(...vals) - Math.min(...vals) <= 1, 'counts differ by at most one');
+  assert.equal(core.fillSlots(items, 1000).length, 1000);
+});
+
+test('slotsWith keeps the winner on a board of any size', () => {
+  const items = Array.from({ length: 6 }, (_, i) => ({ id: 'c' + i }));
+  for (const n of [2, 3, 6, 7, 40, 500]) {
+    for (let t = 0; t < 20; t++) {
+      const w = items[t % items.length];
+      const list = core.slotsWith(items, w, n);
+      assert.equal(list.length, n);
+      assert.ok(list.some((c) => c.id === w.id), 'winner on a board of ' + n);
+    }
+  }
+});
+
+test('boardField picks distinct charities and always keeps the one you backed', () => {
+  const pool = Array.from({ length: 50 }, (_, i) => ({ id: 'c' + String(i).padStart(2, '0') }));
+  for (let t = 0; t < 100; t++) {
+    const f = core.boardField(pool, 5, 'c07');
+    assert.equal(f.length, 5);
+    assert.equal(new Set(f.map((c) => c.id)).size, 5, 'distinct');
+    assert.ok(f.some((c) => c.id === 'c07'), 'the backed charity is on the board');
+  }
+  assert.equal(core.boardField(pool, 1000, '').length, 50, 'a board bigger than the pool holds the whole pool once');
+  assert.equal(core.boardField(pool, 1, '').length, 2, 'a board needs at least two charities');
+  assert.equal(core.boardField(pool, 5, 'not-in-pool').length, 5, 'a backed charity outside the pool is ignored');
+  // each charity is equally likely to land on a board when nothing is backed
+  const hits = {};
+  for (let t = 0; t < 6000; t++) { core.boardField(pool, 5, '').forEach((c) => { hits[c.id] = (hits[c.id] || 0) + 1; }); }
+  const h = Object.values(hits);
+  assert.ok(Math.min(...h) > 400 && Math.max(...h) < 800, 'roughly 600 each: ' + Math.min(...h) + '..' + Math.max(...h));
+});
+
+test('pickBonusXp rewards harder calls and caps repeat wins', () => {
+  assert.equal(core.pickBonusXp(10, 0), 0);
+  assert.ok(core.pickBonusXp(1000, 1) > core.pickBonusXp(5, 1));
+  assert.equal(core.pickBonusXp(8, 1), 34);
+  assert.equal(core.pickBonusXp(8, 3), 102);
+  assert.equal(core.pickBonusXp(8, 10), 102, 'at most three winning rounds count');
+});
+
+test('Called It is unlocked by a backed charity winning a race or a pot', () => {
+  const base = { totalCents: 0, rounds: 0, biggestCents: 0, charitiesSeen: [], causesSeen: [], gamesPlayed: [], gameCount: 15, streak: 0, bestStreak: 0, jackpots: 0, splits: 0, usedStream: false, directGifts: 0, verifies: 0, plans: 0, liveRounds: 0, liveWins: 0, pickWins: 0, biggestPotCents: 0 };
+  assert.ok(!core.newBadges(base, {}).includes('called'));
+  assert.ok(core.newBadges(Object.assign({}, base, { pickWins: 1 }), {}).includes('called'));
+  assert.ok(core.newBadges(Object.assign({}, base, { liveWins: 1 }), {}).includes('called'));
+});

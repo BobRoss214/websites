@@ -25,12 +25,16 @@
   var fresh = true;
   var result = null;
 
-  function bracketSize() {
-    var n = Math.min(size, pool.length);
+  var pick = '';         // id of the charity you backed, or empty
+
+  /** A bracket needs a power of two: the biggest one that fits in `n`. */
+  function snapSize(n) {
     var p = 2;
     while (p * 2 <= n) { p *= 2; }
     return p;
   }
+
+  function bracketSize() { return snapSize(Math.min(size, pool.length)); }
 
   function compact() { return entries.length >= 16; }
 
@@ -45,7 +49,7 @@
     var icon = side === 'top' ? 'heart' : 'star';
     var label = side === 'top' ? 'Heads' : 'Tails';
     if (!ch) { return '<div class="slot is-empty" data-side="' + side + '"><span class="slot__side" title="' + label + '">' + GS.icon(icon) + '</span><span class="slot__name">To be decided</span></div>'; }
-    return '<div class="slot" data-side="' + side + '" data-id="' + ch.id + '" title="' + U.esc(ch.name) + '" style="--c:' + ch.accent + '"><span class="slot__side" title="' + label + '">' + GS.icon(icon) + '</span>' +
+    return '<div class="slot' + (ch.id === pick ? ' is-pick' : '') + '" data-side="' + side + '" data-id="' + ch.id + '" title="' + U.esc(ch.name) + '" style="--c:' + ch.accent + '"><span class="slot__side" title="' + label + '">' + GS.icon(icon) + '</span>' +
       '<span class="cmono" style="--c:' + ch.accent + ';--s:' + (compact() ? 22 : 26) + 'px" data-len="' + GS.mono(ch).length + '" aria-hidden="true">' + U.esc(GS.mono(ch)) + '</span><span class="slot__name">' + U.esc(ch.short) + '</span></div>';
   }
 
@@ -83,9 +87,7 @@
 
   function updateNote() {
     if (!el.note) { return; }
-    if (!pool.length) { el.note.textContent = ''; return; }
-    el.note.textContent = (pool.length > entries.length ? entries.length + ' of your ' + pool.length + ' charities are in the bracket, reshuffled every round. ' : 'All ' + pool.length + ' charities in play are in the bracket. ') +
-      'Equal odds for every charity in play.';
+    el.note.textContent = kit.boardNote(pool, entries.length, pick, 'in the bracket');
   }
 
   function rebuild() {
@@ -188,14 +190,15 @@
     label: 'Coin Flip',
     icon: 'coins',
     category: 'table',
-    badge: 'Up to 32',
-    sizes: [{ n: 8, name: 'Classic' }, { n: 16, name: 'Big' }, { n: 32, name: 'Giant' }],
+    badge: 'Up to 128',
+    maxSize: 128,
+    sizes: [{ n: 8, name: 'Classic' }, { n: 16, name: 'Big' }, { n: 32, name: 'Giant' }, { n: 64, name: 'Huge' }, { n: 128, name: 'Mega' }],
     defaultSize: 8,
     tagline: 'A knockout bracket decided by coin flips. One charity walks away with your gift.',
     cta: 'Start the showdown',
     info: [
-      'Charities from your pool enter a knockout bracket of 8, 16 or 32. A coin is flipped for every match: heads sends the top charity through, tails the bottom one. Keep flipping until one is left.',
-      'The winner is drawn first, fairly, from every charity in play. The bracket and flips are then played out to match it.'
+      'Charities enter a knockout bracket of 2, 4, 8 and so on up to 128 (a bracket needs a power of two). A coin is flipped for every match: heads sends the top charity through, tails the bottom one. Keep flipping until one is left.',
+      'The winner is drawn first, fairly, from the charities in the bracket (each has equal odds). The bracket and flips are then played out to match it. Back a charity and, if it wins the showdown, you earn a bonus.'
     ],
 
     mount: function (container, gameApi) {
@@ -219,6 +222,15 @@
     },
 
     setSize: function (n) { size = n; if (!playing) { rebuild(); } },
+    /** A bracket needs a power of two, so the board size is rounded down to one. */
+    snap: snapSize,
+    /** The board for the next showdown: the charities in the bracket (what the winner is drawn from) and the charity you backed. */
+    setBoard: function (list, n, pickId) {
+      pool = list.slice();
+      size = n;
+      pick = pickId || '';
+      if (!playing) { rebuild(); }
+    },
     setPool: function (list) {
       pool = list.slice();
       if (!playing) { rebuild(); }

@@ -137,3 +137,11 @@
   .lcard { grid-template-columns: 78px minmax(0, 1fr); }
   .lcard__art { width: 78px; height: 70px; }
 }
+
+/* ---------- any board size, and backing a charity (solo games) ---------- */
+.size-custom { display: inline-flex; align-items: center; gap: 8px; }
+.pickrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.pickchip { display: inline-flex; align-items: center; gap: 8px; padding: 3px 6px 3px 4px; border-radius: 999px; border: 1px solid var(--gold); background: rgba(255, 197, 66, 0.12); font-size: 0.8rem; font-weight: 700; color: #fff; }
+.pickchip__x { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fff; }
+.pickchip__x .ico { width: 0.85rem; height: 0.85rem; }
+.cp-random { margin-top: 10px; }

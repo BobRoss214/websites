@@ -18,7 +18,7 @@
   var last = null;
 
   function dlg() {
-    if (!modal) { modal = ui.modal('result', { className: 'modal--result' }); }
+    if (!modal) { modal = ui.modal('result', { className: 'modal--result', onClose: function () { GS.bus.emit('receipt:closed'); } }); }
     return modal;
   }
 
@@ -30,7 +30,10 @@
   function verifyRound(fairData) {
     if (!GS.fair.available() || !fairData || !fairData.roundSeed) { return Promise.resolve({ error: true }); }
     // a live table's round is stake-weighted: it carries the pot (weights) instead of a pool of charities
-    var check = fairData.weights && fairData.weights.length ? GS.fair.verifyWeighted(fairData) : GS.fair.verify(fairData, core.buildPool(GS.charities, fairData.filters, fairData.excluded));
+    // a live table's round carries the pot (weights); a solo round on a chosen board carries the board's charities
+    var boardPool = fairData.board && fairData.board.length ? fairData.board.map(function (id) { return GS.charity(id); }).filter(Boolean) : null;
+    var check = fairData.weights && fairData.weights.length ? GS.fair.verifyWeighted(fairData)
+      : GS.fair.verify(fairData, boardPool || core.buildPool(GS.charities, fairData.filters, fairData.excluded));
     return check.then(function (r) {
       if (r.ok) { var badges = store.noteVerify(); if (badges.length) { GS.bus.emit('badges', badges); } }
       return r;
@@ -42,7 +45,7 @@
     function row(ok, label) { return '<li class="' + (ok ? 'is-ok' : 'is-bad') + '">' + ui.icon(ok ? 'circle-check' : 'circle-x') + '<span>' + esc(label) + '</span></li>'; }
     return '<ul class="vfy">' +
       row(r.hashOk, r.hashOk ? 'The seed matches the hash shown before the round' : 'The seed does NOT match the hash shown before the round') +
-      row(r.poolOk, r.poolOk ? (r.weighted ? 'The pot matches what was staked' : 'The same charities were in play') : (r.weighted ? 'The pot does not match what was staked' : 'The charities in play do not match')) +
+      row(r.poolOk, r.poolOk ? (r.weighted ? 'The pot matches what was staked' : 'The same charities were on the board') : (r.weighted ? 'The pot does not match what was staked' : 'The charities on the board do not match')) +
       row(r.winnersOk, r.winnersOk ? 'Recomputing the draws gives the same winners' : 'Recomputing the draws gives different winners') +
     '</ul>';
   }
@@ -54,6 +57,7 @@
         '<dt>Hash shown before the round</dt><dd class="mono">' + esc(f.serverHash) + '</dd>' +
         '<dt>Round seed (revealed now)</dt><dd class="mono">' + esc(f.roundSeed) + '</dd>' +
         '<dt>Your seed · round #</dt><dd class="mono">' + esc(f.clientSeed) + ' · ' + f.nonce + '</dd>' +
+        (f.board && f.board.length ? '<dt>Charities on the board</dt><dd>' + f.board.length + ' (the winner is drawn from these, each with equal odds)</dd>' : '') +
       '</dl>' +
       '<div class="rs-fair__act"><button type="button" class="btn btn--sm" data-role="verify">' + ui.icon('refresh-cw') + 'Verify this round</button></div>' +
       '<div data-role="verify-out" aria-live="polite"></div>' +
@@ -92,6 +96,14 @@
     }
     if (o.freq !== 'once' && plan) {
       rows.push(['calendar-days', ui.opts.freqLabel(o.freq) + ' gift added (preview). Next one: ' + ui.fmtDate(plan.next) + '. Manage it in My Giving.']);
+    }
+    if (round.pick) {
+      var pc = GS.charity(round.pick.id);
+      if (pc) {
+        rows.push(['target', round.pick.won
+          ? 'You backed ' + pc.short + ' and it won' + (round.pick.wins > 1 ? ' ' + round.pick.wins + ' times' : '') + '! Bonus XP for calling it (a 1 in ' + round.pick.board + ' pick).'
+          : 'You backed ' + pc.short + ', which didn’t win this time. Your gift still went to the winner.']);
+      }
     }
     if (o.dedication) {
       rows.push(['heart', (o.dedication.kind === 'memory' ? 'In memory of ' : 'In honor of ') + o.dedication.name + (o.dedication.note ? ': “' + o.dedication.note + '”' : '')]);
@@ -240,7 +252,9 @@
       var summary = store.recordPlay({
         game: round.game, totalCents: round.cents, rounds: round.rounds, jackpot: round.jackpot,
         status: pay.status, receipt: pay.receipt, pay: pay.pay, stream: GS.app.state.stream, direct: !!round.direct,
-        freq: o.freq, dedication: o.dedication, fair: round.fair, allocations: round.allocs
+        freq: o.freq, dedication: o.dedication, fair: round.fair, allocations: round.allocs,
+        pick: round.pick ? { charityId: round.pick.id, won: round.pick.won, board: round.pick.board } : null,
+        bonusXp: round.pick && round.pick.won ? core.pickBonusXp(round.pick.board, round.pick.wins) : 0
       });
       summary.newBadges = planBadges.concat(summary.newBadges);
       last = { round: round, pay: pay, summary: summary, plan: plan };

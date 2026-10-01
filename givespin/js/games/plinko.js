@@ -42,7 +42,9 @@
   var field = null;       // live table: [{ charity, tickets }] (the bins are exactly these charities)
   var binShare = [];      // live table: each bin's share of the pot, as text
 
-  function count() { return Math.max(2, Math.min(size, pool.length)); }
+  var pick = '';          // id of the charity you backed (solo), or empty
+
+  function count() { return kit.sizeNow(size); }
   function isBig() { return bins.length > 9; }
 
   /** Lays out the whole board in logical coordinates. Small boards fill the view; big ones are larger than it. */
@@ -158,12 +160,13 @@
         var isWin = b === winBin;
         var dim = winBin >= 0 && !isWin;
         var pulse = isWin ? 0.5 + 0.5 * Math.sin((t - winT) / 160) : 0;
+        var backed = !!pick && ch.id === pick;
         ctx.save();
         roundRect(bx, g.binTop, bw, g.binH, g.big ? 6 : 12);
         ctx.fillStyle = isWin ? U.rgba(ch.accent, 0.55 + 0.25 * pulse) : U.rgba(ch.accent, dim ? 0.08 : 0.22);
         ctx.fill();
-        ctx.lineWidth = isWin ? 3 : 1.2;
-        ctx.strokeStyle = isWin ? '#fff' : U.rgba(ch.accent, dim ? 0.25 : 0.75);
+        ctx.lineWidth = isWin ? 3 : (backed ? 3 : 1.2);
+        ctx.strokeStyle = isWin ? '#fff' : (backed ? '#ffc542' : U.rgba(ch.accent, dim ? 0.25 : 0.75));
         ctx.stroke();
         ctx.clip();
         ctx.globalAlpha = dim ? 0.45 : 1;
@@ -280,19 +283,17 @@
     if (!el.legend) { return; }
     if (!isBig()) { el.legend.innerHTML = ''; el.legend.hidden = true; return; }
     el.legend.hidden = false;
-    el.legend.innerHTML = bins.map(function (c, i) {
-      return '<li data-i="' + i + '"' + (i === winBin ? ' class="is-win"' : '') + '><span class="rlegend__n" style="background:' + c.accent + ';color:#0b1620">' + (i + 1) + '</span><span>' + U.esc(c.short) + '</span></li>';
-    }).join('');
+    var shown = bins.length > 250 ? bins.slice(0, 250) : bins;
+    el.legend.innerHTML = shown.map(function (c, i) {
+      return '<li data-i="' + i + '"' + (i === winBin ? ' class="is-win"' : (c.id === pick ? ' class="is-pick"' : '')) + '><span class="rlegend__n" style="background:' + c.accent + ';color:#0b1620">' + (i + 1) + '</span><span>' + U.esc(c.short) + '</span></li>';
+    }).join('') + (bins.length > shown.length ? '<li class="rlegend__more">+ ' + (bins.length - shown.length) + ' more bins down the board</li>' : '');
   }
 
   function updateNote() {
     if (!el.note) { return; }
     if (field) { el.note.textContent = 'Each bin’s share of the pot is its chance of winning. The ball is drawn to the winner, so the middle has no edge.'; return; }
     if (!pool.length) { el.note.textContent = ''; return; }
-    el.note.textContent = (pool.length > bins.length
-      ? bins.length + ' of your ' + pool.length + ' charities are on the board, reshuffled every drop. '
-      : 'All ' + pool.length + ' charities in play are on the board. ') +
-      'Every bin has equal odds, not just the middle ones.' + (isBig() ? ' Drag the board to look around, or use the buttons to jump to the top or the bins.' : '');
+    el.note.textContent = kit.boardNote(pool, bins.length, pick, 'on the board') + ' The middle has no edge.' + (isBig() ? ' Drag the board to look around, or use the buttons to jump to the top or the bins.' : '');
   }
 
   function rebuild() {
@@ -335,7 +336,7 @@
       bins.forEach(function (c, k) { if (c.id === winner.id) { target = k; } });
       var path = core.plinkoPath(rows, target);
       var hop;
-      if (rows > 8) { hop = U.dur(core.clamp((quick ? 3200 : 7000) / rows, quick ? 28 : 46, 430)); }
+      if (rows > 8) { hop = U.dur(core.clamp((quick ? 3200 : 7000) / rows, rows > 150 ? (quick ? 14 : 20) : (quick ? 28 : 46), 430)); }
       else { hop = U.dur(430 * (quick ? 0.6 : 1)); }
       var startX = geo.cx + core.randomRange(-0.25, 0.25) * geo.dx;
 
@@ -425,15 +426,16 @@
     label: 'Plinko',
     icon: 'pyramid',
     category: 'originals',
-    badge: 'Up to 100 bins',
+    badge: 'Up to 1,000 bins',
     live: true,
-    sizes: [{ n: 5, name: 'Easy' }, { n: 7, name: 'Classic' }, { n: 21, name: 'Tall' }, { n: 51, name: 'Huge' }, { n: 100, name: 'Giant' }],
+    maxSize: 1000,
+    sizes: [{ n: 5, name: 'Easy' }, { n: 7, name: 'Classic' }, { n: 21, name: 'Tall' }, { n: 51, name: 'Huge' }, { n: 100, name: 'Giant' }, { n: 500, name: 'Colossal' }],
     defaultSize: 7,
     tagline: 'Drop the ball and let the pegs decide. Make the board as giant as you like.',
     cta: 'Drop the ball',
     info: [
-      'Drop the ball at the top and watch it bounce down through the pegs into a charity’s bin. Pick a small board with five bins or a giant one with up to 100 bins and 99 rows of pegs, where the camera follows the ball all the way down.',
-      'On a real peg board the middle bins win far more often. Here every bin has the same odds: the result is drawn first and the ball follows a bouncy path to it.'
+      'Drop the ball at the top and watch it bounce down through the pegs into a charity’s bin. Set the board to any number of bins, from a few to a thousand: the more bins, the bigger and taller the board, and the camera follows the ball all the way down.',
+      'On a real peg board the middle bins win far more often. Here every charity on the board has the same odds: the result is drawn first and the ball follows a bouncy path to its bin. Back one and, if the ball lands there, you earn a bonus.'
     ],
 
     mount: function (container, gameApi) {
@@ -477,6 +479,13 @@
     },
 
     setSize: function (n) { size = n; if (!busy && !field) { rebuild(); } },
+    /** The board for the next drop: the charities in the bins (what the winner is drawn from), how many bins, and the charity you backed. */
+    setBoard: function (list, n, pickId) {
+      pool = list.slice();
+      size = n;
+      pick = pickId || '';
+      if (!busy && !field) { rebuild(); }
+    },
     setPool: function (list) {
       pool = list.slice();
       if (!busy && !field) { rebuild(); }

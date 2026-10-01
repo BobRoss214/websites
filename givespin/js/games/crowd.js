@@ -54,18 +54,21 @@
     var lastThump = 0;
     var lastHud = 0;
 
-    function count() { return Math.max(2, Math.min(size, pool.length)); }
+    var pick = '';
+
+    function count() { return kit.sizeNow(size); }
     function total() { return field ? ents.reduce(function (s, e) { return s + (e.tickets || 0); }, 0) : 0; }
 
     function S(t) {
       var lead = {};
       if (racing && ents.length > 3) {
-        ents.slice().sort(function (a, b) { return b.run.p - a.run.p; }).slice(0, 3).forEach(function (e, i) { lead[e.ch.id] = i + 1; });
+        ents.slice().sort(function (a, b) { return b.run.p - a.run.p; }).slice(0, 3).forEach(function (e, i) { lead[e.idx] = i + 1; });
       }
       var tot = total();
       return {
         W: W, H: H, t: t, geo: geo, racing: racing, field: !!field, total: tot, n: ents.length, winnerId: winnerId,
         lead: lead,
+        pickId: pick,
         labels: spec.labels !== 'legend' && (!!field || ents.length <= 12),
         share: function (e) { return field ? core.fmtShare(e.tickets, tot) : ''; }
       };
@@ -188,20 +191,24 @@
       if (!show) { el.legend.innerHTML = ''; return; }
       var tot = total();
       var list = field ? ents.slice().sort(function (a, b) { return b.tickets - a.tickets; }) : ents;
-      el.legend.className = 'rlegend' + (list.length > 12 ? ' rlegend--scroll' : '');
-      el.legend.innerHTML = list.map(function (e) {
+      // a big field has several runners of the same charity: one chip per charity, with how many
+      var seen = {};
+      var uniq = [];
+      list.forEach(function (e) { if (!seen[e.ch.id]) { seen[e.ch.id] = { e: e, n: 0 }; uniq.push(seen[e.ch.id]); } seen[e.ch.id].n += 1; });
+      var shown = uniq.slice(0, 150);
+      el.legend.className = 'rlegend' + (uniq.length > 12 ? ' rlegend--scroll' : '');
+      el.legend.innerHTML = shown.map(function (o) {
+        var e = o.e;
         var win = winnerId === e.ch.id;
-        return '<li' + (win ? ' class="is-win"' : '') + '><span class="cmono" style="--c:' + e.ch.accent + ';--s:20px" data-len="' + GS.mono(e.ch).length + '" aria-hidden="true">' + U.esc(GS.mono(e.ch)) + '</span>' +
-          '<span>' + U.esc(e.ch.short) + (field ? ' <b>' + core.fmtShare(e.tickets, tot) + '</b>' : '') + '</span></li>';
-      }).join('');
+        return '<li' + (win ? ' class="is-win"' : (e.ch.id === pick ? ' class="is-pick"' : '')) + '><span class="cmono" style="--c:' + e.ch.accent + ';--s:20px" data-len="' + GS.mono(e.ch).length + '" aria-hidden="true">' + U.esc(GS.mono(e.ch)) + '</span>' +
+          '<span>' + U.esc(e.ch.short) + (o.n > 1 ? ' × ' + o.n : '') + (field ? ' <b>' + core.fmtShare(e.tickets, tot) + '</b>' : '') + '</span></li>';
+      }).join('') + (uniq.length > shown.length ? '<li class="rlegend__more">+ ' + (uniq.length - shown.length) + ' more</li>' : '');
     }
 
     function updateNote() {
       if (!el.note) { return; }
       if (field) { el.note.textContent = 'Each runner’s share of the pot is its chance of winning.'; return; }
-      if (!pool.length) { el.note.textContent = ''; return; }
-      el.note.textContent = (pool.length > ents.length ? ents.length + ' of your ' + pool.length + ' charities are racing, reshuffled every race. ' : 'All ' + pool.length + ' charities in play are racing. ') +
-        'Equal odds for every charity in play.';
+      el.note.textContent = kit.boardNote(pool, ents.length, pick, 'racing');
     }
 
     function rebuild() {
@@ -262,6 +269,7 @@
       badge: spec.badge,
       live: true,
       sizes: spec.sizes,
+      maxSize: spec.maxSize || 1000,
       defaultSize: spec.defaultSize,
       tagline: spec.tagline,
       cta: spec.cta,
@@ -291,6 +299,13 @@
       },
 
       setSize: function (n) { size = n; if (!racing && !field) { rebuild(); } },
+      /** The board for the next race: the charities racing (what the winner is drawn from), how many runners, and the charity you backed. */
+      setBoard: function (list, n, pickId) {
+        pool = list.slice();
+        size = n;
+        pick = pickId || '';
+        if (!racing && !field) { rebuild(); }
+      },
       setPool: function (list) {
         pool = list.slice();
         if (!racing && !field) { rebuild(); }

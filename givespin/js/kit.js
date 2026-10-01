@@ -14,14 +14,14 @@
   var core = GS.core;
 
   var kit = {
-    /** How many charities a board of `size` can show given the pool (never fewer than 2). */
-    sizeNow: function (size, pool) { return Math.max(2, Math.min(size, pool.length)); },
+    /** How many spots a board of `size` has (never fewer than 2). It can be more than the charities in play: they repeat. */
+    sizeNow: function (size) { return Math.max(2, Math.floor(size)); },
 
-    /** `n` distinct charities from the pool, guaranteed to include `winner`, in random order. */
-    boardWith: function (pool, winner, n) { return core.subsetWith(pool, winner, Math.max(2, Math.min(n, pool.length))); },
+    /** `n` board spots from the charities on the board, guaranteed to include `winner`, in random order. */
+    boardWith: function (pool, winner, n) { return core.slotsWith(pool, winner, Math.max(2, n)); },
 
-    /** A random sample of `n` distinct charities. */
-    sample: function (pool, n) { return core.sampleSubset(pool, Math.max(2, Math.min(n, pool.length))); },
+    /** `n` board spots from the charities on the board (a random subset, or repeats when there are more spots than charities). */
+    sample: function (pool, n) { return core.fillSlots(pool, Math.max(2, n)); },
 
     /** Weighted pick: index of an item given an array of non-negative weights. */
     pickWeighted: function (weights) {
@@ -45,6 +45,27 @@
       var t = text;
       while (t.length > 2 && ctx.measureText(t).width > maxW) { t = t.slice(0, -2).replace(/\s+$/, '') + '…'; }
       return t;
+    },
+
+    /**
+     * The one-line note under a board: how many charities are on it, that each has equal odds, and what the spots are.
+     * `pool` is the charities on the board, `slots` the spots, `pickId` the charity you backed (or ''), `where` e.g. "on the wheel".
+     */
+    boardNote: function (pool, slots, pickId, where) {
+      var d = pool.length;
+      if (!d) { return ''; }
+      var s = d + (d === 1 ? ' charity is ' : ' charities are ') + where + '. Every one has equal odds.';
+      if (slots > d) { s += ' The ' + slots + ' spots repeat them (' + kit.repeatsText(slots, d) + '), so odds are per charity, not per spot.'; }
+      var pick = pickId ? GS.charity(pickId) : null;
+      if (pick) { s += ' You backed ' + pick.short + '.'; }
+      return s;
+    },
+
+    /** "each appearing 4 times" / "each appearing 1 or 2 times": how often `d` charities repeat across `slots` spots. */
+    repeatsText: function (slots, d) {
+      var lo = Math.floor(slots / d);
+      var hi = Math.ceil(slots / d);
+      return 'each appearing ' + (lo === hi ? lo + (lo === 1 ? ' time' : ' times') : lo + ' or ' + hi + ' times');
     },
 
     /** "1st", "2nd", "3rd", "4th"... */

@@ -121,6 +121,42 @@
   }
 
   /**
+   * `n` board spots filled from `items`. Up to items.length it is a random subset; beyond that every item repeats,
+   * evenly (counts differ by at most one), in a shuffled order. Spots are what a game draws: they never change who can win.
+   */
+  function fillSlots(items, n) {
+    n = Math.max(1, Math.floor(n));
+    if (n <= items.length) { return sampleSubset(items, n); }
+    var out = [];
+    while (out.length + items.length <= n) { out = out.concat(items); }
+    var rest = shuffle(items.slice()).slice(0, n - out.length);
+    return shuffle(out.concat(rest));
+  }
+
+  /** Like fillSlots, but guaranteed to include `winner`. */
+  function slotsWith(items, winner, n) {
+    n = Math.max(1, Math.floor(n));
+    if (n <= items.length) { return subsetWith(items, winner, n); }
+    var list = fillSlots(items, n);
+    if (!list.some(function (c) { return c.id === winner.id; })) { list[randomInt(list.length)] = winner; }
+    return list;
+  }
+
+  /**
+   * The charities on a board of `n` spots: `n` distinct charities from the pool (all of them when `n` is at least the
+   * pool size), always including `pickId` when that charity is in the pool. The winner is drawn from exactly these.
+   */
+  function boardField(pool, n, pickId) {
+    var k = Math.max(2, Math.min(Math.floor(n), pool.length));
+    var list = sampleSubset(pool, k);
+    if (pickId && !list.some(function (c) { return c.id === pickId; })) {
+      var pick = pool.filter(function (c) { return c.id === pickId; })[0];
+      if (pick) { list[randomInt(list.length)] = pick; }
+    }
+    return list;
+  }
+
+  /**
    * A left/right path through a Galton board with `rows` rows that ends in bin `target`
    * (0 .. rows). Exactly `target` of the moves are "right" (1), shuffled into a random order.
    */
@@ -315,6 +351,16 @@
     return xp;
   }
 
+  /**
+   * Bonus XP for backing a charity that wins: harder the bigger the board (1 in n), and up to three winning rounds count.
+   * `boardSize` is how many charities were on the board, `wins` how many rounds the backed charity won.
+   */
+  function pickBonusXp(boardSize, wins) {
+    if (!(wins > 0)) { return 0; }
+    var base = 10 + 8 * Math.log(Math.max(2, boardSize)) / Math.LN2;
+    return Math.round(base * Math.min(wins, 3));
+  }
+
   function levelFor(xp) {
     var idx = 0;
     for (var i = 0; i < LEVELS.length; i++) { if (xp >= LEVELS[i].xp) { idx = i; } }
@@ -382,7 +428,7 @@
    * Badges. `test(state)` receives the saved state *after* the latest play was recorded.
    * state: { totalCents, rounds, biggestCents, charitiesSeen[], causesSeen[], gamesPlayed[], gameCount,
    *          streak, bestStreak, jackpots, splits, usedStream, directGifts, verifies, plans,
-   *          liveRounds, liveWins, biggestPotCents }
+   *          liveRounds, liveWins, pickWins, biggestPotCents }
    */
   var BADGES = [
     { id: 'first',    name: 'First Give',       icon: 'heart',      desc: 'Complete your first round.',                 test: function (s) { return s.rounds >= 1; } },
@@ -400,7 +446,7 @@
     { id: 'verifier', name: 'Trust, Verified',  icon: 'shield-check', desc: 'Verify a result in Fair Play.',            test: function (s) { return s.verifies >= 1; } },
     { id: 'steady',   name: 'Steady Giver',     icon: 'calendar-days', desc: 'Set up a recurring gift.',                test: function (s) { return s.plans >= 1; } },
     { id: 'live',     name: 'Live Wire',        icon: 'radio',      desc: 'Take a seat at a live table.',               test: function (s) { return s.liveRounds >= 1; } },
-    { id: 'called',   name: 'Called It',        icon: 'target',     desc: 'Back the charity that wins a live pot.',     test: function (s) { return s.liveWins >= 1; } },
+    { id: 'called',   name: 'Called It',        icon: 'target',     desc: 'Back the charity that wins a race, spin or live pot.', test: function (s) { return (s.liveWins || 0) + (s.pickWins || 0) >= 1; } },
     { id: 'bigpot',   name: 'Pot of Gold',      icon: 'gem',        desc: 'Join a live pot of $500 or more.',           test: function (s) { return s.biggestPotCents >= 50000; } }
   ];
 
@@ -522,10 +568,10 @@
   return {
     toCents: toCents, fmtMoney: fmtMoney, splitCents: splitCents, validateAmount: validateAmount, allowedRounds: allowedRounds,
     randomInt: randomInt, randomFloat: randomFloat, randomRange: randomRange, pickOne: pickOne, shuffle: shuffle,
-    sampleSubset: sampleSubset, subsetWith: subsetWith, plinkoPath: plinkoPath, bracketOutcomes: bracketOutcomes,
+    sampleSubset: sampleSubset, subsetWith: subsetWith, fillSlots: fillSlots, slotsWith: slotsWith, boardField: boardField, plinkoPath: plinkoPath, bracketOutcomes: bracketOutcomes,
     ERA_IDS: ERA_IDS, eraOf: eraOf, emptyFilters: emptyFilters, normalizeFilters: normalizeFilters, matchesFilters: matchesFilters,
     buildPool: buildPool, activeFilterCount: activeFilterCount, facetCounts: facetCounts, mergeAllocations: mergeAllocations,
-    LEVELS: LEVELS, xpForPlay: xpForPlay, levelFor: levelFor,
+    LEVELS: LEVELS, xpForPlay: xpForPlay, pickBonusXp: pickBonusXp, levelFor: levelFor,
     dayKey: dayKey, monthKey: monthKey, daysBetween: daysBetween, nextStreak: nextStreak, nextGiftDate: nextGiftDate,
     apportion: apportion, share: share, fmtShare: fmtShare,
     BADGES: BADGES, newBadges: newBadges,

@@ -29,6 +29,9 @@
   var tabState = 'fair';
   var liveTabState = 'feed';
   var lastDrawn = null;
+  var boards = {};       // game id -> { field: [charities the winner is drawn from], slots, pv }
+  var picks = {};        // game id -> id of the charity you are backing
+  var sizeTimer = 0;
   var TABS_SOLO = [['fair', 'Fair play'], ['rounds', 'My rounds'], ['about', 'About this game'], ['pool', 'In play']];
   var TABS_LIVE = [['feed', 'Live feed'], ['last', 'Recent results'], ['fair', 'Fair play'], ['about', 'How it works']];
 
@@ -50,7 +53,13 @@
           '<div class="field" id="field-rounds"><span class="field__label" id="rounds-label">Split your gift</span>' +
             '<div class="seg" id="rounds-seg" role="group" aria-labelledby="rounds-label"></div><p class="field__hint" id="rounds-hint"></p></div>' +
           '<div class="field" id="field-size" hidden><span class="field__label" id="size-label">Charities on the board</span>' +
-            '<div class="seg" id="size-seg" role="group" aria-labelledby="size-label"></div><p class="field__hint" id="size-hint"></p></div>' +
+            '<div class="seg" id="size-seg" role="group" aria-labelledby="size-label"></div>' +
+            '<div class="lt-other"><label for="size-custom">Any number</label><span class="size-custom"><span class="lt-money"><input id="size-custom" type="number" inputmode="numeric" min="2" step="1" placeholder="e.g. 250"></span>' +
+            '<button type="button" class="btn btn--sm" id="size-max">Max</button></span></div>' +
+            '<p class="field__hint" id="size-hint"></p></div>' +
+          '<div class="field" id="field-pick" hidden><span class="field__label" id="pick-label">Back a charity <small>(optional)</small></span>' +
+            '<div class="pickrow"><button type="button" class="btn btn--sm" id="pick-btn">' + ui.icon('target') + 'Choose a charity</button><span class="pickchip" id="pick-chip" hidden></span></div>' +
+            '<p class="field__hint" id="pick-hint"></p></div>' +
           '<div class="field" id="field-pool">' +
             '<div class="field__row"><span class="field__label" id="pool-label">Charities in play</span>' +
               '<button type="button" class="btn btn--sm" id="btn-filters">' + ui.icon('list-filter') + 'Filters <span class="count" id="filters-count" hidden></span></button></div>' +
@@ -81,7 +90,8 @@
 
     el = {
       crumb: $('#g-crumb'), crumbRoot: $('#g-crumb-root'), livePanel: $('#livepanel'), moreTitle: $('#more-t'), title: $('#g-title'), tag: $('#g-tag'), games: $('#games'), rounds: $('#rounds'), stage: $('#stage'),
-      roundsSeg: $('#rounds-seg'), roundsHint: $('#rounds-hint'), sizeBox: $('#field-size'), sizeSeg: $('#size-seg'), sizeHint: $('#size-hint'), poolLine: $('#pool-line'), filtersBtn: $('#btn-filters'), filtersCount: $('#filters-count'),
+      roundsSeg: $('#rounds-seg'), roundsHint: $('#rounds-hint'), sizeBox: $('#field-size'), sizeSeg: $('#size-seg'), sizeHint: $('#size-hint'), sizeCustom: $('#size-custom'), sizeMax: $('#size-max'),
+      pickBox: $('#field-pick'), pickBtn: $('#pick-btn'), pickChip: $('#pick-chip'), pickHint: $('#pick-hint'), poolLine: $('#pool-line'), filtersBtn: $('#btn-filters'), filtersCount: $('#filters-count'),
       play: $('#btn-play'), playLabel: $('#btn-play-label'), playSub: $('#btn-play-sub'), optsSum: $('#opts-sum'), optsBox: $('#opts'),
       tabs: $('#below-tabs'), tabp: $('#tabp'), more: $('#moregames'), bet: root.querySelector('.bet')
     };
@@ -105,11 +115,35 @@
       var b = e.target.closest('[data-n]');
       if (!b || b.disabled || state().busy || !current) { return; }
       GS.audio.click();
-      var sizes = Object.assign({}, store.prefs().sizes);
-      sizes[current] = Number(b.getAttribute('data-n'));
-      store.setPref('sizes', sizes);
-      if (game().setSize) { game().setSize(sizes[current]); }
-      refreshSize();
+      setBoardSize(Number(b.getAttribute('data-n')));
+    });
+    el.sizeCustom.addEventListener('input', function () {
+      clearTimeout(sizeTimer);
+      sizeTimer = setTimeout(function () {
+        var n = Math.floor(Number(el.sizeCustom.value));
+        if (!current || state().busy || !(n >= 1)) { return; }
+        setBoardSize(n, true);
+      }, 350);
+    });
+    el.sizeCustom.addEventListener('change', function () { refreshSize(); });
+    el.sizeMax.addEventListener('click', function () {
+      if (!current || state().busy) { return; }
+      GS.audio.click();
+      setBoardSize(maxFor(game()));
+    });
+    el.pickBtn.addEventListener('click', function () {
+      if (!current || state().busy) { return; }
+      var inPlay = state().pool;
+      ui.pickCharity({
+        title: 'Back a charity',
+        sub: 'Pick the one you think will win. It is always on the board. If it wins you earn a bonus; either way your gift goes to whichever charity wins.',
+        charities: inPlay,
+        random: true,
+        onPick: function (id) { setPick(id); }
+      });
+    });
+    el.pickChip.addEventListener('click', function (e) {
+      if (e.target.closest('[data-role="clear-pick"]') && !state().busy) { GS.audio.click(); setPick(''); }
     });
 
     el.tabs.addEventListener('click', function (e) {
@@ -139,6 +173,12 @@
     GS.bus.on('balance', refreshBet);
     GS.bus.on('progress', renderTab);
     GS.bus.on('busy', lockUI);
+    // the round is over: set up the next board (the old one stays on screen behind the receipt until it is closed)
+    GS.bus.on('receipt:closed', function () {
+      if (!built || !current || isLive() || state().busy || !GS.games[current].setBoard) { return; }
+      newBoard(current);
+      refreshSize();
+    });
     built = true;
   }
 
@@ -213,20 +253,107 @@
     return store.prefs().sizes[id] || (g && g.defaultSize) || 0;
   }
 
-  /** The "charities on the board" control, for games that can show anything from a few charities to a hundred. */
+  function maxFor(g) { return g.maxSize || 100; }
+  function minFor(g) { return g.minSize || 2; }
+
+  /** How many spots the board has: what you chose, kept within what the game can show (and rounded to a bracket size where needed). */
+  function slotsFor(id) {
+    var g = GS.games[id];
+    var n = Math.max(minFor(g), Math.min(maxFor(g), Math.floor(sizeFor(id)) || g.defaultSize || 2));
+    return g.snap ? g.snap(n) : n;
+  }
+
+  function canPick(g) { return !!g && !!g.setBoard && g.id !== 'cards' && g.id !== 'scratch'; }
+
+  function pickFor(id) {
+    var pid = picks[id];
+    if (!pid) { return ''; }
+    return state().pool.some(function (c) { return c.id === pid; }) ? pid : '';
+  }
+
+  /**
+   * Chooses the charities on the board for the next round and hands them to the game. The winner is drawn from
+   * exactly these (each with equal odds), so the board you set is what the ball, wheel or ducks can land on.
+   */
+  function newBoard(id) {
+    var g = GS.games[id];
+    if (!g || !g.setBoard) { return; }
+    var slots = slotsFor(id);
+    var distinct = g.fieldFor ? g.fieldFor(slots) : slots;
+    var pid = pickFor(id);
+    var list = core.boardField(state().pool, distinct, pid);
+    boards[id] = { field: list, slots: slots, pv: state().poolVersion };
+    g.setBoard(list, slots, pid);
+  }
+
+  function setBoardSize(n, fromInput) {
+    var g = game();
+    var clamped = Math.max(minFor(g), Math.min(maxFor(g), Math.floor(n)));
+    var sizes = Object.assign({}, store.prefs().sizes);
+    sizes[current] = clamped;
+    store.setPref('sizes', sizes);
+    newBoard(current);
+    refreshSize();
+    if (fromInput && clamped !== n) { el.sizeHint.textContent = 'This game can show up to ' + maxFor(g) + '.'; }
+  }
+
+  function setPick(id) {
+    picks[current] = id;
+    newBoard(current);
+    refreshSize();
+    refreshPick();
+  }
+
+  /** The "charities on the board" control: presets and any number, up to what the game can show. */
   function refreshSize() {
     var g = game();
     if (!g || !g.sizes || state().live) { el.sizeBox.hidden = true; return; }
     el.sizeBox.hidden = false;
-    var cur = sizeFor(current);
+    var cur = slotsFor(current);
+    var chosen = Math.floor(sizeFor(current));
+    var inPresets = g.sizes.some(function (s) { return s.n === cur; });
     el.sizeSeg.innerHTML = g.sizes.map(function (s) {
       return '<button type="button" class="seg__btn" data-n="' + s.n + '" aria-pressed="' + (s.n === cur) + '"><span>' + s.n + '</span><small>' + esc(s.name) + '</small></button>';
     }).join('');
-    if (state().busy) { Array.prototype.forEach.call(el.sizeSeg.querySelectorAll('button'), function (b) { b.disabled = true; }); }
-    var n = state().pool.length;
-    el.sizeHint.textContent = n < cur
-      ? 'Your filters leave ' + n + ' charities in play, so the board shows all ' + n + '.'
-      : cur + ' of the ' + n + ' charities in play are shown on the board. Every one of the ' + n + ' still has equal odds.';
+    el.sizeCustom.min = String(minFor(g));
+    el.sizeCustom.max = String(maxFor(g));
+    el.sizeCustom.setAttribute('aria-label', 'Number of charities on the board, ' + minFor(g) + ' to ' + maxFor(g));
+    if (document.activeElement !== el.sizeCustom) { el.sizeCustom.value = inPresets ? '' : String(cur); }
+    el.sizeMax.textContent = 'Max ' + maxFor(g);
+    var busy = state().busy;
+    Array.prototype.forEach.call(el.sizeSeg.querySelectorAll('button'), function (b) { b.disabled = busy; });
+    el.sizeCustom.disabled = busy;
+    el.sizeMax.disabled = busy || cur === maxFor(g);
+    var P = state().pool.length;
+    var b = boards[current];
+    var d = b ? b.field.length : Math.min(cur, P);
+    var txt;
+    if (cur > d) {
+      txt = cur + ' spots on the board. Your ' + d + (d === 1 ? ' charity' : ' charities') + ' fill them, ' + GS.kit.repeatsText(cur, d) + '. Every one of the ' + d + ' has equal odds.';
+    } else {
+      txt = d + ' charities on the board, picked at random from the ' + P + ' in play. The winner is drawn from these ' + d + ', each with equal odds.';
+    }
+    if (g.snap && chosen !== cur) { txt += ' A bracket needs a power of two, so ' + chosen + ' became ' + cur + '.'; }
+    else if (chosen > maxFor(g)) { txt += ' This game can show up to ' + maxFor(g) + '.'; }
+    el.sizeHint.textContent = txt;
+    refreshPick();
+  }
+
+  /** "Back a charity": a charity you think will win. It is always on the board; if it wins you earn a bonus. */
+  function refreshPick() {
+    var g = game();
+    if (!g || !canPick(g) || state().live) { el.pickBox.hidden = true; return; }
+    el.pickBox.hidden = false;
+    var pid = pickFor(current);
+    var ch = pid ? GS.charity(pid) : null;
+    el.pickBtn.lastChild.textContent = ch ? 'Change' : 'Choose a charity';
+    el.pickBtn.disabled = !!state().busy;
+    el.pickChip.hidden = !ch;
+    el.pickChip.innerHTML = ch ? ui.mono(ch, 24) + '<span>' + esc(ch.short) + '</span><button type="button" class="pickchip__x" data-role="clear-pick" aria-label="Stop backing ' + esc(ch.short) + '"' + (state().busy ? ' disabled' : '') + '>' + ui.icon('x') + '</button>' : '';
+    el.pickChip.style.setProperty('--c', ch ? ch.accent : 'transparent');
+    el.pickHint.textContent = ch
+      ? ch.short + ' is on the board. If it wins you earn bonus XP and the Called It badge. Your gift always goes to the winner.'
+      : 'Optional: back one charity. If it wins you earn bonus XP; your gift always goes to the winner.';
   }
 
   function refreshBet() {
@@ -259,6 +386,10 @@
     el.filtersBtn.disabled = locked;
     Array.prototype.forEach.call(document.querySelectorAll('#quick-causes .chip'), function (b) { b.disabled = locked; });
     Array.prototype.forEach.call(el.sizeSeg.querySelectorAll('button'), function (b) { b.disabled = locked; });
+    el.sizeCustom.disabled = locked;
+    el.sizeMax.disabled = locked;
+    el.pickBtn.disabled = locked;
+    Array.prototype.forEach.call(el.pickChip.querySelectorAll('button'), function (b) { b.disabled = locked; });
     Array.prototype.forEach.call(el.roundsSeg.querySelectorAll('button'), function (b) {
       if (locked) { b.setAttribute('data-was-disabled', b.disabled ? '1' : '0'); b.disabled = true; }
       else if (b.getAttribute('data-was-disabled') !== null) { b.disabled = b.getAttribute('data-was-disabled') === '1'; b.removeAttribute('data-was-disabled'); }
@@ -334,7 +465,7 @@
       }).join('') + '</ol>' : '<p class="empty">No rounds of ' + esc(g.name) + ' yet. Your results will show up here.</p>';
     } else if (tabState === 'about') {
       h = '<div class="about">' + g.info.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') +
-        '<p><b>Odds:</b> every charity in play has exactly the same chance. The result is drawn first, from a seed committed before you play, and the game then shows it.</p></div>';
+        '<p><b>Odds:</b> ' + (g.setBoard ? 'every charity on the board has exactly the same chance (set how many are on it, from a few to ' + (g.maxSize || 100) + '). ' : 'every charity in play has exactly the same chance. ') + 'The result is drawn first, from a seed committed before you play, and the game then shows it.</p></div>';
     } else {
       var pool = state().pool.slice().sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
       h = '<p class="tabnote">' + pool.length + ' charities in play. Tap one to read about it.</p><div class="chips chips--pool">' + pool.map(function (c) {
@@ -374,8 +505,15 @@
     el.bet.hidden = live;
     el.livePanel.hidden = !live;
     $('#view-game').classList.toggle('is-live', live);
-    if (!live && g.setSize) { g.setSize(sizeFor(id)); }
-    if (m.pv !== state().poolVersion && !live) { g.setPool(state().pool); m.pv = state().poolVersion; }
+    if (!live) {
+      if (g.setBoard) {
+        var bd = boards[id];
+        if (!bd || bd.pv !== state().poolVersion || bd.slots !== slotsFor(id)) { newBoard(id); }
+      } else {
+        if (g.setSize) { g.setSize(sizeFor(id)); }
+        if (m.pv !== state().poolVersion) { g.setPool(state().pool); m.pv = state().poolVersion; }
+      }
+    }
     g.lock(live ? false : state().busy);
     g.activate();
     el.crumb.textContent = g.name;
@@ -401,14 +539,15 @@
   function poolChanged() {
     if (!built || !current || isLive()) { return; }
     if (!state().busy) {
-      GS.games[current].setPool(state().pool);
+      if (GS.games[current].setBoard) { newBoard(current); refreshSize(); }
+      else { GS.games[current].setPool(state().pool); }
       mounted[current].pv = state().poolVersion;
     }
   }
 
   /* ----------------------------------------------------------------- play */
 
-  function drawWinners(pool, count) {
+  function drawWinners(pool, count, board) {
     var sorted = pool.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; });
     if (!GS.fair.available()) {
       var ws = [];
@@ -429,7 +568,8 @@
         fair: {
           roundSeed: f.roundSeed, serverHash: f.serverHash, clientSeed: f.clientSeed, nonce: f.nonce, poolHash: r[1], count: count,
           winners: winners.map(function (w) { return w.id; }),
-          filters: core.normalizeFilters(store.prefs().filters), excluded: store.prefs().excluded.slice()
+          filters: core.normalizeFilters(store.prefs().filters), excluded: store.prefs().excluded.slice(),
+          board: board ? sorted.map(function (c) { return c.id; }) : []
         }
       };
     });
@@ -468,7 +608,11 @@
     ui.announce('Playing ' + g.name + '.');
     scrollStage();
 
-    return drawWinners(pool, rounds).then(function (draw) {
+    // the winner is drawn from the charities on the board (every game that has a board), each with equal odds
+    var bd = g.setBoard ? boards[current] : null;
+    var drawPool = bd ? bd.field : pool;
+    var pid = bd ? pickFor(current) : '';
+    return drawWinners(drawPool, rounds, !!bd).then(function (draw) {
       lastDrawn = draw;
       renderRounds(rounds, null);
       var gameOpts = ui.opts.read();
@@ -491,8 +635,12 @@
         var triple = g.id === 'slots' && winners.length === 3 && winners.every(function (w) { return w.id === winners[0].id; });
         round = {
           game: g.id, cents: cents, rounds: rounds, allocs: allocs, winners: winners, jackpot: triple && pool.length >= 5, triple: triple,
-          direct: false, fair: draw.fair, opts: gameOpts
+          direct: false, fair: draw.fair, opts: gameOpts, pick: null
         };
+        if (pid) {
+          var wins = winners.filter(function (w) { return w.id === pid; }).length;
+          round.pick = { id: pid, won: wins > 0, wins: wins, board: drawPool.length };
+        }
         return ui.receipt.finish(round);
       });
     }).catch(function (err) {

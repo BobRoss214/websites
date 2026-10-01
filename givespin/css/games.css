@@ -78,6 +78,7 @@
 .dcard__cause .ico { width: 0.9rem; height: 0.9rem; }
 .dcard.is-win { transform: scale(1.1); z-index: 1; box-shadow: 0 0 44px color-mix(in srgb, var(--c) 85%, transparent), inset 0 0 26px color-mix(in srgb, var(--c) 30%, transparent); border-color: #fff; }
 .dcard.is-dim { filter: brightness(0.5) saturate(0.7); }
+.dcard.is-pick { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
 .drop__fade { position: absolute; top: 0; bottom: 0; width: 20%; pointer-events: none; z-index: 1; }
 .drop__fade--l { left: 0; background: linear-gradient(90deg, #08121a, transparent); }
 .drop__fade--r { right: 0; background: linear-gradient(270deg, #08121a, transparent); }
@@ -104,6 +105,8 @@
 .rlegend li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px 3px 4px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.74rem; font-weight: 600; color: var(--muted); }
 .rlegend__n { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: #fff; font: 800 0.68rem var(--f-display); }
 .rlegend li.is-win { border-color: var(--gold); color: #fff; background: rgba(255, 197, 66, 0.14); }
+.rlegend li.is-pick { border-color: var(--gold); color: #fff; box-shadow: inset 0 0 0 1px var(--gold); }
+.rlegend__more { color: var(--dim) !important; }
 
 /* ---------- Pick a Card ---------- */
 .cards { width: 100%; display: grid; justify-items: center; gap: 16px; }
@@ -168,6 +171,7 @@
 .slot__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .slot.is-empty { color: #8aa3b1; font-weight: 500; }
 .slot.is-out { filter: grayscale(1) brightness(0.7); }
+.slot.is-pick { box-shadow: inset 0 0 0 2px var(--gold); }
 .slot.is-through { background: color-mix(in srgb, var(--c) 24%, var(--panel-2)); box-shadow: inset 0 0 0 1px var(--c); }
 .slot.is-arrive { animation: arrive 0.4s ease-out; }
 @keyframes arrive { from { transform: translateX(-10px); opacity: 0; } }
@@ -290,6 +294,11 @@
 .stand__grid--md { --min: 96px; }
 .stand__grid--lg { --min: 62px; gap: 5px; }
 .stand__grid--xl { --min: 40px; gap: 4px; padding: 6px; }
+.stand__grid--dot { --min: 11px; gap: 2px; padding: 6px; }
+.stand__grid--dot .stile { padding: 0; aspect-ratio: 1; min-height: 0; border-radius: 3px; border: 0; background: var(--c); }
+.stand__grid--dot .stile .cmono { display: none; }
+.stand__grid--dot .stile__name, .stand__grid--dot .stile__share { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.stand__grid--dot .stile.is-out { background: #1b2a35; }
 .stile { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 6px 8px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.74rem; font-weight: 600; color: var(--text); transition: transform 0.28s ease, filter 0.3s ease; }
 .stile .cmono { flex: none; }
 .stile__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -297,6 +306,7 @@
 .stand__grid--lg .stile, .stand__grid--xl .stile { justify-content: center; padding: 4px; }
 .stand__grid--lg .stile__name, .stand__grid--xl .stile__name { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .stand__grid--xl .cmono { --s: 24px; }
+.stile.is-pick { box-shadow: 0 0 0 2px var(--gold); position: relative; z-index: 1; }
 .stile.is-danger { border-color: var(--red); background: rgba(255, 90, 110, 0.18); animation: stile-shake 0.22s linear infinite; }
 .stile.is-out { background: transparent; border-color: var(--line); color: var(--dim); filter: grayscale(1); transform: scale(0.9); }
 .stile.is-out .cmono { opacity: 0.35; }

@@ -12,6 +12,7 @@
   var U = GS.util;
 
   var size = 6;           // panels on the card
+  var MIN_SIZE = 4;       // three matching panels plus at least one decoy
   var BRUSH = 15;
   var REVEAL_AT = 0.5;
 
@@ -206,7 +207,7 @@
 
   function updateNote() {
     if (!el.note) { return; }
-    el.note.textContent = pool.length ? 'The winner is drawn from all ' + pool.length + ' charities in play before the card is printed. Scratching only reveals what is already there.' : '';
+    el.note.textContent = pool.length ? 'The winner is drawn from the ' + pool.length + ' charities on this card before it is printed (each has equal odds). Scratching only reveals what is already there.' : '';
   }
 
   GS.games.scratch = {
@@ -215,13 +216,15 @@
     label: 'Scratch',
     icon: 'ticket',
     category: 'instant',
-    badge: 'Up to 24 panels',
-    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Mega' }],
+    badge: 'Up to 48 panels',
+    maxSize: 48,
+    minSize: 4,
+    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Mega' }, { n: 48, name: 'Jumbo' }],
     defaultSize: 6,
     tagline: 'Scratch the foil. Match three charities to win.',
     cta: 'Buy a card',
     info: [
-      'Buy a card and scratch the silver foil with your finger or mouse. Find three panels showing the same charity and that charity gets your gift. A mega card has up to 24 panels to scratch. Each panel opens once you have scratched about half of it.',
+      'Buy a card and scratch the silver foil with your finger or mouse. Find three panels showing the same charity and that charity gets your gift. Set the card to any number of panels, up to 48. Each panel opens once you have scratched about half of it.',
       'In a hurry, or using a keyboard? Press Tab to move between panels and Enter to reveal them, or tap Reveal all.'
     ],
 
@@ -249,6 +252,15 @@
     },
 
     setSize: function (n) { size = n; if (state !== 'playing') { state = 'idle'; buildPanels(size); layout(); el.card.classList.remove('is-live'); } },
+    /** A card of n panels has the winner on three of them and n - 3 other charities, so n - 2 charities in all. */
+    fieldFor: function (n) { return Math.max(2, n - 2); },
+    /** The board for the next card: the charities on it (what the winner is drawn from) and how many panels. */
+    setBoard: function (list, n) {
+      pool = list.slice();
+      size = n;
+      updateNote();
+      if (state !== 'playing') { state = 'idle'; buildPanels(size); layout(); el.card.classList.remove('is-live'); el.prompt.textContent = pool.length ? 'Buy a card to start scratching.' : ''; }
+    },
     setPool: function (list) {
       pool = list.slice();
       updateNote();

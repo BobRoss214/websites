@@ -42,7 +42,9 @@
   var result = null;
   var onTray = null;
 
-  function count() { return Math.max(2, Math.min(size, pool.length)); }
+  var pick = '';         // id of the charity you backed (solo), or empty
+
+  function count() { return kit.sizeNow(size); }
 
   function layout() {
     var n = balls.length || 6;
@@ -123,9 +125,14 @@
       }).join('');
       return;
     }
-    el.legend.innerHTML = balls.map(function (b) {
-      return '<li><span class="cmono" style="--c:' + b.ch.accent + ';--s:20px" data-len="' + GS.mono(b.ch).length + '" aria-hidden="true">' + U.esc(GS.mono(b.ch)) + '</span><span>' + U.esc(b.ch.short) + '</span></li>';
-    }).join('');
+    // one chip per charity (a big drum has several balls of the same one)
+    var seen = {};
+    var order = [];
+    balls.forEach(function (b) { if (!seen[b.ch.id]) { seen[b.ch.id] = { c: b.ch, n: 0 }; order.push(seen[b.ch.id]); } seen[b.ch.id].n += 1; });
+    var shown = order.slice(0, 150);
+    el.legend.innerHTML = shown.map(function (o) {
+      return '<li' + (o.c.id === pick ? ' class="is-pick"' : '') + '><span class="cmono" style="--c:' + o.c.accent + ';--s:20px" data-len="' + GS.mono(o.c).length + '" aria-hidden="true">' + U.esc(GS.mono(o.c)) + '</span><span>' + U.esc(o.c.short) + (o.n > 1 ? ' × ' + o.n : '') + '</span></li>';
+    }).join('') + (order.length > shown.length ? '<li class="rlegend__more">+ ' + (order.length - shown.length) + ' more</li>' : '');
   }
 
   function physics(dt) {
@@ -206,6 +213,12 @@
     ctx.arc(x, y, r, 0, TAU);
     ctx.fillStyle = b.ch.accent;
     ctx.fill();
+    if (pick && b.ch.id === pick) {
+      // the charity you backed: a gold ring
+      ctx.lineWidth = Math.max(1.6, r * 0.22);
+      ctx.strokeStyle = '#ffc542';
+      ctx.stroke();
+    }
     if (balls.length <= 40) {
       var g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
       g.addColorStop(0, '#ffffff');
@@ -377,9 +390,7 @@
   function updateNote() {
     if (!el.note) { return; }
     if (field) { el.note.textContent = 'Balls are shared out by stake: a charity with more money behind it has more balls in the drum.'; return; }
-    if (!pool.length) { el.note.textContent = ''; return; }
-    el.note.textContent = (pool.length > balls.length ? balls.length + ' of your ' + pool.length + ' charities are in the drum, reshuffled every draw. ' : 'All ' + pool.length + ' charities in play are in the drum. ') +
-      'Equal odds for every charity in play.';
+    el.note.textContent = kit.boardNote(pool, balls.length, pick, 'in the drum');
   }
 
   function rebuild() {
@@ -441,15 +452,16 @@
     label: 'Lotto',
     icon: 'circle-dot',
     category: 'instant',
-    badge: 'Up to 100',
+    badge: 'Up to 300',
     live: true,
-    sizes: [{ n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 50, name: 'Huge' }, { n: 100, name: 'Giant' }],
+    maxSize: 300,
+    sizes: [{ n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 50, name: 'Huge' }, { n: 100, name: 'Giant' }, { n: 300, name: 'Jumbo' }],
     defaultSize: 12,
     tagline: 'Balls tumble in the drum. One rolls out. That charity wins.',
     cta: 'Draw a ball',
     info: [
-      'Charity balls tumble in the drum with a puff of air, from a classic 12 up to a giant drum of 100. One is picked out through the chute and drops into the tray.',
-      'It is the classic lottery draw, except every ball is a winner for someone and your whole gift goes to the one that rolls out.'
+      'Charity balls tumble in the drum with a puff of air. Fill the drum with as many balls as you like, from a few to 300. One is picked out through the chute and drops into the tray.',
+      'It is the classic lottery draw, except every ball is a winner for someone and your whole gift goes to the one that rolls out. Every charity in the drum has equal odds. Back one and, if its ball rolls out, you earn a bonus.'
     ],
 
     mount: function (container, gameApi) {
@@ -472,6 +484,14 @@
     },
 
     setSize: function (n) { size = n; if (!mixing && !field && !(current && current.mode !== 'tray')) { rebuild(); } },
+    /** The board for the next draw: the charities in the drum (what the winner is drawn from), how many balls, and the charity you backed. */
+    setBoard: function (list, n, pickId) {
+      pool = list.slice();
+      size = n;
+      pick = pickId || '';
+      if (field) { return; }
+      if (!mixing && (!current || current.mode === 'tray')) { rebuild(); }
+    },
     setPool: function (list) {
       pool = list.slice();
       if (field) { return; }

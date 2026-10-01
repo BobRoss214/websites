@@ -11,6 +11,7 @@
   var GS = window.GS;
   var core = GS.core;
   var U = GS.util;
+  var kit = GS.kit;
 
   var size = 5;
 
@@ -23,7 +24,7 @@
   var awaiting = null;  // resolver while waiting for the player to pick
   var result = null;
 
-  function count() { return Math.max(2, Math.min(size, pool.length)); }
+  function count() { return kit.sizeNow(size); }
   function dense() { return cards.length > 10; }
 
   function faceHTML(ch) {
@@ -65,7 +66,7 @@
   function updateNote() {
     if (!el.note) { return; }
     if (!pool.length) { el.note.textContent = ''; return; }
-    el.note.textContent = 'Your pick is for fun: the winner is drawn from all ' + pool.length + ' charities in play before the cards are dealt, then placed under the card you choose.';
+    el.note.textContent = 'The winner is drawn from the ' + pool.length + (pool.length === 1 ? ' charity' : ' charities') + ' on the table before the cards are dealt, then placed under the card you choose. Picking is for the fun of the flip.';
   }
 
   function reset() {
@@ -114,7 +115,7 @@
       return waitPick(quick || GS.timeScale < 1);
     }).then(function (k) {
       // deal: the picked card hides the winner, the rest get decoys
-      var others = core.shuffle(pool.filter(function (c) { return c.id !== winner.id; })).slice(0, n - 1);
+      var others = kit.sample(pool.filter(function (c) { return c.id !== winner.id; }), n - 1);
       var oi = 0;
       cards.forEach(function (c, i) {
         c.charity = i === k ? winner : others[oi++] || winner;
@@ -147,14 +148,15 @@
     label: 'Cards',
     icon: 'spade',
     category: 'table',
-    badge: 'Up to 52',
+    badge: 'Up to 100',
+    maxSize: 100,
     sizes: [{ n: 5, name: 'Classic' }, { n: 10, name: 'Big' }, { n: 20, name: 'Huge' }, { n: 52, name: 'Full deck' }],
     defaultSize: 5,
     tagline: 'A spread of cards, one charity. Pick one and flip it.',
     cta: 'Deal the cards',
     info: [
-      'Face-down cards are shuffled in front of you: five, or a whole 52-card spread. Pick one and flip it to reveal the charity it hides, then watch the others turn over.',
-      'To keep things honest: the winner is drawn first, from every charity in play, and is dealt under whichever card you choose. Picking is about the fun of the flip, not about luck.'
+      'Face-down cards are shuffled in front of you: five, a whole 52-card spread, or up to 100. Pick one and flip it to reveal the charity it hides, then watch the others turn over.',
+      'To keep things honest: the winner is drawn first, from the charities on the table (each has equal odds), and is dealt under whichever card you choose. Picking is about the fun of the flip, not about luck.'
     ],
 
     mount: function (container, gameApi) {
@@ -176,6 +178,14 @@
     },
 
     setSize: function (n) { size = n; if (!awaiting && pool.length) { build(); el.prompt.textContent = 'Press Deal to shuffle the cards.'; } },
+    /** The board for the next deal: the charities on the table (what the winner is drawn from) and how many cards. */
+    setBoard: function (list, n) {
+      pool = list.slice();
+      size = n;
+      if (awaiting) { return; }
+      build();
+      el.prompt.textContent = pool.length ? 'Press Deal to shuffle the cards.' : '';
+    },
     setPool: function (list) {
       pool = list.slice();
       if (awaiting) { return; }

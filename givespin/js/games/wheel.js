@@ -30,6 +30,7 @@
   var segs = [];
   var bounds = [0];        // start angle of every slice, plus TAU at the end
   var field = null;        // live table entrants, or null when playing solo
+  var pick = '';          // id of the charity you backed (solo), or empty
   var labels = [];
   var fresh = false;       // true when the on-screen slices have not been spun yet
 
@@ -54,11 +55,7 @@
     return PALETTE[c];
   }
 
-  function sliceCount() {
-    var s = size;
-    if (s === 12 && window.innerWidth < 560) { s = 8; }
-    return Math.max(2, Math.min(s, pool.length));
-  }
+  function sliceCount() { return kit.sizeNow(size); }
 
   function maxCanvas() { return segs.length > 24 ? 680 : 600; }
 
@@ -205,6 +202,20 @@
         ctx.restore();
       }
 
+      if (pick) {
+        // the charity you backed: a gold edge on each of its slices
+        ctx.lineWidth = n > 40 ? 1.5 : 3;
+        ctx.strokeStyle = '#ffc542';
+        for (var pk = 0; pk < n; pk++) {
+          if (segs[pk].id !== pick) { continue; }
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, wr - 1, bounds[pk], bounds[pk + 1]);
+          ctx.closePath();
+          ctx.stroke();
+        }
+      }
+
       if (glowIdx >= 0 && glowIdx < n) {
         var pulse = 0.5 + 0.5 * Math.sin((t - glowT) / 170);
         for (var k = 0; k < n; k++) {
@@ -342,10 +353,7 @@
   function updateNote() {
     if (!el.note) { return; }
     if (field) { el.note.textContent = 'Slices are sized by the money behind each charity: a bigger slice is a better chance.'; return; }
-    if (!pool.length) { el.note.textContent = ''; return; }
-    el.note.textContent = pool.length > segs.length
-      ? 'Showing ' + segs.length + ' of ' + pool.length + ' charities in play. The slices are a sample that changes every spin; equal odds for all ' + pool.length + '.'
-      : 'All ' + pool.length + ' charities in play are on the wheel, equal odds for each.';
+    el.note.textContent = kit.boardNote(pool, segs.length, pick, 'on the wheel');
   }
 
   function spinOnce(winner, quick, durationMs) {
@@ -392,9 +400,10 @@
     defaultSize: 12,
     tagline: 'Spin it. Wherever the pointer stops, that charity gets your gift.',
     cta: 'Spin the wheel',
+    maxSize: 1000,
     info: [
-      'A big wheel with a ticking pointer. Hit spin and it slows to a stop on a charity. Choose a wheel with 8 slices or go all the way to a giant 100-slice wheel.',
-      'The wheel shows a sample of your pool (up to the size you pick) with the winner always among them. Split your gift into several rounds and it spins once per round with a fresh set of slices.'
+      'A big wheel with a ticking pointer. Hit spin and it slows to a stop on a charity. Put as many charities on the wheel as you like, from a handful to a giant wheel of a thousand slices.',
+      'The charities on the wheel are exactly the ones the winner is drawn from, each with equal odds. Back one of them and, if it wins, you earn a bonus. Split your gift into several rounds and it spins once per round.'
     ],
 
     mount: function (container, gameApi) {
@@ -427,6 +436,13 @@
     },
 
     setSize: function (n) { size = n; if (!spinning && !field && pool.length) { rebuild(false); } },
+    /** The board for the next spin: the charities on it (what the winner is drawn from), how many slices, and the charity you backed. */
+    setBoard: function (list, n, pickId) {
+      pool = list.slice();
+      size = n;
+      pick = pickId || '';
+      if (!spinning && !field && pool.length) { rebuild(false); }
+    },
     setPool: function (list) {
       pool = list.slice();
       if (!pool.length) { if (!field) { segs = []; labels = []; bounds = [0]; updateNote(); if (csize) { draw(performance.now()); } } return; }
