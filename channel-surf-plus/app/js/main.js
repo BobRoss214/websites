@@ -49,6 +49,8 @@ import * as youtube from './pages/youtube.js';
     addEventListener('popstate', () => { try { history.pushState({ cs: 1 }, ''); } catch {} app.tv.press('back'); });
   } catch {}
   addEventListener('beforeunload', () => { app.tv.leaveVod(); save(true); flush(); });
+  // the "Forgot the Setup PIN" page cleared the PIN in another window: don't save the old one back
+  addEventListener('storage', e => { if (e.key !== 'channelSurfPlus.v1' || !e.newValue) return; try { const n = JSON.parse(e.newValue); if (n.pin !== S.pin) S.pin = n.pin || ''; } catch {} });
   // keep channels fresh while the TV stays on all day
   setInterval(() => { if (app.tv.on) L.refreshAll(app.tv.ch.id); }, 30 * 60e3);
   // tidy the browser's database now and then: old YouTube answers (kept for at most a week anyway)

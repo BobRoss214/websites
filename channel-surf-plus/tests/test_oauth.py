@@ -242,7 +242,7 @@ class Base(unittest.TestCase):
 class HealthAndConfig(Base):
     def test_health(self):
         status, j = self.get_json("/api/health")
-        self.assertEqual((status, j), (200, {"ok": True, "oauth": True}))
+        self.assertEqual((status, j), (200, {"ok": True, "oauth": True, "app": "Channel Surf", "version": tv.VERSION}))
 
     def test_api_answers_are_never_cached(self):
         status, resp, _ = self.get("/api/oauth/status")

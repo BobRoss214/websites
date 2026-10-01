@@ -162,7 +162,7 @@ export class PinPage extends Page {
     const head = this.first ? (this.confirm ? 'Type the same PIN again' : 'Choose a 4-digit PIN for Setup') : 'Enter your 4-digit PIN';
     return `<div class="pinpage"><h2>${head}</h2><p>${this.first ? 'Setup is where channels are added and numbered. The PIN keeps it out of the way for whoever watches.' : 'Use the number buttons.'}</p><div class="pin">${boxes}</div><p class="err">${esc(this.msg)}</p><div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map(n => n === '' ? '<span></span>' : `<button type="button" class="kp bevel" data-kp="${n}">${n}</button>`).join('')}</div></div>`;
   }
-  side() { return this.first ? '<b>First time here</b><p>Pick any 4 digits you\'ll remember. You can change it in Setup.</p>' : '<b>Forgot the PIN?</b><p>See HOW-TO.md, "Forgot the Setup PIN".</p>'; }
+  side() { return this.first ? '<b>First time here</b><p>Pick any 4 digits you\'ll remember. You can change it in Setup.</p>' : '<b>Forgot the PIN?</b><p>Whoever set up the TV can clear it: right-click the Channel Surf icon in the dock and choose "Forgot the Setup PIN".</p>'; }
   foot() { return '0–9 type the PIN · BACK goes back'; }
   afterRender(el) { el.querySelectorAll('[data-kp]').forEach(b => b.addEventListener('click', () => this.key(b.dataset.kp === '⌫' ? 'left' : String(b.dataset.kp)))); }
   key(k) {

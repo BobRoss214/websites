@@ -17,70 +17,41 @@ This page is for **whoever sets it up**. The viewer only needs the last section,
 
 - An Ubuntu computer (a laptop is fine). It can be plugged into a TV with an HDMI cable.
 - Internet.
-- **Google Chrome** (best) or Firefox. Ubuntu comes with Firefox already.
+- A web browser. Ubuntu comes with Firefox, which works. **Google Chrome** works best (step 1, optional).
 - A free YouTube key (step 3 below, about 5 minutes).
+
+No Terminal and no typing commands. Everything is clicking.
 
 ---
 
-## 1. Put Channel Surf on the computer (once)
+## 1. Install Channel Surf (once)
 
-Open **Terminal** (press the Windows/Super key, type `terminal`, press Enter), then
-copy and paste these lines one at a time, pressing Enter after each:
+1. On the Ubuntu computer, download the installer file **`channel-surf_1.0.0_all.deb`**. Either:
+   - go to **https://github.com/BobRoss214/websites/blob/claude/friendly-thompson-rgqo95/channel-surf-plus/dist/channel-surf_1.0.0_all.deb** and click the **Download** button (the arrow pointing down, at the right of the file), or
+   - use the copy that was sent in the Claude app.
+2. Open the **Files** app, go to **Downloads**, and **double-click** `channel-surf_1.0.0_all.deb`.
+3. **App Center** opens and shows Channel Surf. Click **Install** and type your computer password when it asks.
+   - If double-clicking opens something else instead, **right-click** the file, choose **Open With…**, pick **App Center**, and click **Install**.
+4. Done. **Channel Surf** is now in your apps (press the Windows/Super key and type `channel`).
 
-```
-sudo apt update
-sudo apt install -y git python3
-cd ~
-git clone --branch claude/friendly-thompson-rgqo95 https://github.com/bobross214/websites.git
-```
-
-If it asks for a GitHub username and password, the project is private. Do this
-instead: on GitHub, open the `bobross214/websites` page, pick the branch
-`claude/friendly-thompson-rgqo95`, click the green **Code** button, then
-**Download ZIP**. Then run:
-
-```
-cd ~/Downloads
-unzip websites-claude-friendly-thompson-rgqo95.zip
-mv websites-claude-friendly-thompson-rgqo95 ~/websites
-```
-
-**Optional but recommended: install Google Chrome.** It handles YouTube and full
-screen best:
-
-```
-cd ~/Downloads
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-sudo apt install -y ./google-chrome-stable_current_amd64.deb
-```
+**Optional but recommended: Google Chrome.** It handles YouTube, sound and full
+screen best. Go to **https://www.google.com/chrome**, click **Download Chrome**,
+pick **64 bit .deb (For Debian/Ubuntu)**, then double-click the downloaded file
+and click **Install**, just like above. Channel Surf uses Chrome automatically
+when it's there, and Firefox otherwise.
 
 ## 2. Turn the TV on
 
-This is the one command:
-
-```
-python3 ~/websites/channel-surf-plus/tv.py
-```
+**Click the Channel Surf icon.** The first time, it also puts itself in the dock
+on the left of the screen, so next time it's one click there.
 
 The TV opens full screen. Press the big red button (or any key) to turn it on.
 At first you'll see **practice channels**, which are pretend shows so you can
 try everything before you connect YouTube.
 
-**To get out of full screen:** press `Alt` + `F4`. That closes the TV and stops
-the program too.
-
-**Make a desktop icon** so nobody needs the Terminal again:
-
-```
-python3 ~/websites/channel-surf-plus/tv.py --install-shortcut
-```
-
-A **Channel Surf** icon appears on the desktop and in the app list. If the
-desktop icon shows a little warning, right-click it and choose **Allow Launching**.
-
-Other ways to start it:
-- `python3 ~/websites/channel-surf-plus/tv.py --window` opens it in a normal window (handy while setting up).
-- `python3 ~/websites/channel-surf-plus/tv.py --no-browser` just starts it. Then open `http://localhost:8642` yourself.
+- **To turn the TV off and close it:** press `Alt` + `F4`.
+- **To set things up in a normal window** (easier with a mouse): right-click the Channel Surf icon in the dock and choose **Open in a window (for setting up)**.
+- **To take it out of the dock:** right-click the icon and choose **Unpin**. It stays in your apps.
 
 ## 3. Get your free YouTube key (once)
 
@@ -244,25 +215,26 @@ On a keyboard: arrows, `Enter` = OK, `Backspace` = BACK, `Home` = MENU, `G` guid
 | **No Signal: checking the cable** | The internet is down. It keeps trying by itself. Check the Wi-Fi. |
 | **Off the Air** | That channel has nothing to show right now (or its YouTube channel is empty). Try another channel, or check it in Setup. |
 | **Press MUTE to turn the sound on** | The browser started without sound. Press MUTE once. |
-| **Player setup problem** | It was opened as a file. Start it with the command in step 2 (or the desktop icon). |
+| **Player setup problem** | It was opened as a file. Start it with the Channel Surf icon instead. |
 | **Daily limit used up** (when searching) | YouTube allows about 90 searches a day on a free key. Searching works again after midnight Pacific time. Channels keep playing. |
 | Banner says channels are **"not loaded yet"** in Setup | Wait a minute after adding them, or click **Refresh all channels now**. |
 | **Signed out of YouTube** | Google ended the sign-in (it does every 7 days in Testing mode). Setup → YouTube connection → **Sign in with Google**. |
 | **"doesn't have a YouTube channel yet"** | Comments and playlists need a YouTube channel on that Google account. Make one on youtube.com (free), then try again. |
 | Sign-in page says **"Access blocked"** or **"not a test user"** | Step 8.4: add that Google account as a test user. |
 
-**Forgot the Setup PIN?** With the TV running, open `http://localhost:8642/reset-pin.html`
-in the browser and click **Clear the PIN**. Channels and settings stay.
+**Forgot the Setup PIN?** Right-click the Channel Surf icon in the dock and choose
+**Forgot the Setup PIN**, then click **Clear the PIN**. Channels and settings stay.
 
 **Moving to another computer, or keeping a backup:** **Setup → Backup and PIN → Save setup to a file.**
 On the other computer, use **Load setup from a file**. (The YouTube key comes along.
 Add `http://localhost:8642/*` to the key's Websites list if it's a new computer; it already is.)
 
-**Updating to a newer version** (if it was installed with git):
+**Updating to a newer version:** download the newer `.deb` file and double-click it,
+just like the first time. App Center replaces the old version, and your channels
+and settings stay.
 
-```
-cd ~/websites && git pull
-```
+**Removing it:** open **App Center**, click **Manage** (or search for Channel
+Surf), and click **Uninstall**.
 
 ---
 
@@ -275,12 +247,10 @@ cd ~/websites && git pull
 - Channel Surf uses YouTube API Services, so YouTube's Terms of Service (https://www.youtube.com/t/terms) and Google's Privacy Policy (https://policies.google.com/privacy) apply.
 - No tracking or analytics of any kind.
 
-## For the curious: checking it works
+## Checking it works
 
-There's a set of automatic tests that runs the app against a pretend YouTube
-(no internet needed). If you have Node.js and Playwright installed:
+**MENU → Setup → Check everything** tests each part on this computer and says
+what to fix, in plain words.
 
-```
-cd ~/websites/channel-surf-plus
-node tests/run-tests.js
-```
+For programmers: there are automatic tests that run the app against a pretend
+YouTube (see README.md).

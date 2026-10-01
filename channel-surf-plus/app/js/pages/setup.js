@@ -57,7 +57,7 @@ export class SetupHome extends SetupPage {
     if (a.demo) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}
       <p>${a.signedIn ? '<b>Signed in to a practice account ✓</b> Try the Your YouTube menu, likes and comments.' : 'In demo mode you can try it with a practice account. Nothing goes to YouTube.'}</p>
       <div class="btns">${a.signedIn ? '<button type="button" class="b red" id="signOut">Sign out of the practice account</button>' : '<button type="button" class="b gold" id="signIn">Sign in to a practice account</button>'}</div></div>`;
-    if (!a.available) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}<p class="bad">Signing in needs the TV to be started with <code>python3 tv.py</code> on this computer.</p></div>`;
+    if (!a.available) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}<p class="bad">Signing in needs the TV to be started from its Channel Surf icon on this computer.</p></div>`;
     if (!a.configured || this.newClient) return `<div class="card bevel"><h2>YouTube account (optional)</h2>${intro}
       <p>First, make a free "sign-in client" in the same Google Cloud project as your key. It takes about 5 minutes; the steps are in <b>HOW-TO.md</b> ("Sign in to YouTube"). Then paste its two codes here:</p>
       <div class="grid2"><div><label for="cid">Client ID</label><input type="text" id="cid" placeholder="Ends with .apps.googleusercontent.com" autocomplete="off" spellcheck="false"></div>
@@ -166,24 +166,24 @@ export class SetupHome extends SetupPage {
     const add = (name, ok, text) => { out.push({ name, ok, text }); if (app.screen.top() === this && this.tab === 'check') this.rerender(); };
     const local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
     let helper = null; try { const r = await fetch('/api/health', { cache: 'no-store' }); helper = r.ok ? await r.json() : null; } catch {}
-    add('The Channel Surf program (tv.py)', helper ? true : local ? false : null, helper ? 'Running on this computer.' : local ? 'Not answering. Close the TV window and start it again with: python3 tv.py' : 'This is the online demo, which runs without it.');
+    add('The Channel Surf program', helper ? true : local ? false : null, helper ? 'Running on this computer' + (helper.version ? ' (version ' + helper.version + ')' : '') + '.' : local ? 'Not answering. Close the TV (Alt+F4) and click the Channel Surf icon again.' : 'This is the online demo, which runs without it.');
     const home = location.origin === 'http://localhost:8642';
     add('The address', home ? true : null, home ? 'http://localhost:8642, the one your key is set up for.' : 'This is ' + location.origin + '. Your YouTube key\'s "Websites" list needs ' + location.origin + '/* too.');
     add('Internet', navigator.onLine !== false, navigator.onLine !== false ? 'Connected.' : 'This computer says it\'s offline. Check the Wi-Fi or the cable.');
     if (isDemo()) add('YouTube key', null, 'No key yet, so the TV shows practice channels. See "YouTube connection".');
     else { try { await real.testKey(S.apiKey); add('YouTube key', true, 'YouTube accepts the key.'); } catch (e) { add('YouTube key', false, plain(e)); } }
     add('The YouTube player', !!app.tv.playerReady, app.tv.playerReady ? (isDemo() ? 'The practice player works.' : 'YouTube\'s player loaded.') : 'The player didn\'t load. Check the internet, then turn the TV off and on.');
-    if (app.tv.mutedStart) add('Sound', null, 'The browser blocked sound when the TV started, so it started muted. Press MUTE to hear it. Starting the TV with tv.py (in Chrome) stops this.');
+    if (app.tv.mutedStart) add('Sound', null, 'The browser blocked sound when the TV started, so it started muted. Press MUTE to hear it. Installing Google Chrome stops this (Channel Surf uses it whenever it is installed).');
     if (!isDemo()) { const left = Math.max(0, DAILY - quotaUsed()); add('Today\'s YouTube allowance', left > 500 ? true : left > 0 ? null : false, left.toLocaleString() + ' of ' + DAILY.toLocaleString() + ' units left (about ' + searchesLeft() + ' searches). It starts over at midnight Pacific time.'); }
     await account.refresh();
     const SIGN = 'YouTube sign-in (optional)', fine = 'That\'s fine: it\'s only needed for likes, subscriptions, playlists and comments.';
     if (account.demo) add(SIGN, account.signedIn ? true : null, account.signedIn ? 'Signed in to the practice account.' : 'Not signed in. ' + fine);
-    else if (!account.available) add(SIGN, null, 'Needs the TV to be started with tv.py. ' + fine);
+    else if (!account.available) add(SIGN, null, 'Needs the TV to be started from its Channel Surf icon. ' + fine);
     else if (!account.configured) add(SIGN, null, 'Not set up. ' + fine);
     else if (!account.signedIn) add(SIGN, null, 'Set up, but not signed in. Use "Sign in with Google" under YouTube connection.');
     else { try { const c = await yt.myChannel(); add(SIGN, true, 'Signed in' + (c ? ' as ' + c.title : '') + '.'); } catch (e) { add(SIGN, false, plain(e)); } }
     let stored = false; try { localStorage.setItem('cs.check', '1'); stored = localStorage.getItem('cs.check') === '1'; localStorage.removeItem('cs.check'); } catch {}
-    add('Saving settings on this computer', stored, stored ? 'Settings are saved in this browser.' : 'This browser won\'t keep settings (private mode?). Start the TV with tv.py.');
+    add('Saving settings on this computer', stored, stored ? 'Settings are saved in this browser.' : 'This browser won\'t keep settings (private mode?). Start the TV from its Channel Surf icon.');
     add('Keeping the screen on', 'wakeLock' in navigator ? true : null, 'wakeLock' in navigator ? 'The screen stays on while the TV is on.' : 'This browser can\'t keep the screen awake. In Ubuntu, Settings → Power → Screen Blank: Never.');
     const list = L.channels().filter(c => c.kind !== 'guide'), empty = list.filter(c => { const st = L.poolStatus(c); return st.at && !st.usable; });
     add('Channels', !list.length ? false : empty.length ? null : true, !list.length ? 'No channels yet. Add some under "Channels".' : empty.length ? empty.length + ' of ' + list.length + ' have nothing to show right now: ' + empty.map(c => c.num + ' ' + c.name).join(', ') + '. Their YouTube channels may have no regular videos, or every video is filtered out.' : 'All ' + list.length + ' channels have shows.');

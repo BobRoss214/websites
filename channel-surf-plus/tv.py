@@ -12,6 +12,10 @@ Options:
   --no-browser         just run the server (open http://localhost:8642 yourself)
   --port N             use a different port (your API key must allow it too)
   --install-shortcut   put a "Channel Surf" icon on the desktop and in the app menu
+  --reset-pin          open the page that clears a forgotten Setup PIN
+
+Installed from the .deb file, it's in the app list as "Channel Surf" (and the
+dock), so none of this needs typing; right-click the icon for the extras.
 
 Signing in to YouTube is optional (it's only needed to like, subscribe, comment
 and make playlists). This program does the signing in itself, so the lasting
@@ -43,6 +47,7 @@ import urllib.parse
 import urllib.request
 import webbrowser
 
+VERSION = "1.0.0"
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(HERE, "app")
 
@@ -475,7 +480,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         signin = self.server.signin
         try:
             if path == "/api/health":
-                return self._json(200, {"ok": True, "oauth": True})
+                return self._json(200, {"ok": True, "oauth": True, "app": "Channel Surf", "version": VERSION})
             if path == "/api/oauth/status":
                 return self._json(200, signin.status())
             if path == "/api/oauth/config":
@@ -575,6 +580,33 @@ def profile_dir(path, snap_name):
     return d
 
 
+FIREFOX_PREFS = {
+    "media.autoplay.default": 0,                  # let the TV play with sound (the power button is a click anyway)
+    "media.autoplay.blocking_policy": 0,
+    "browser.shell.checkDefaultBrowser": False,   # no "make Firefox your default browser?"
+    "browser.aboutwelcome.enabled": False,        # no welcome pages
+    "browser.startup.homepage_override.mstone": "ignore",
+    "startup.homepage_welcome_url": "",
+    "browser.sessionstore.resume_from_crash": False,
+    "datareporting.policy.dataSubmissionEnabled": False,  # no reporting from the TV's own profile
+    "toolkit.telemetry.reportingpolicy.firstRun": False,
+    "browser.translations.automaticallyPopup": False,
+    "full-screen-api.warning.timeout": 0,         # no "press Esc to leave full screen" banner
+}
+
+
+def firefox_prefs(prof):
+    """Settings for the TV's own Firefox profile (it doesn't touch your normal Firefox)."""
+    lines = ["// Written by Channel Surf for the TV's own Firefox profile."]
+    for k, v in FIREFOX_PREFS.items():
+        lines.append(f"user_pref({json.dumps(k)}, {json.dumps(v)});")
+    try:
+        with open(os.path.join(prof, "user.js"), "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+    except OSError:
+        pass
+
+
 def find_browser(window):
     """Prefer Chrome/Chromium (best YouTube support), then Firefox."""
     for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser"):
@@ -584,16 +616,68 @@ def find_browser(window):
                      "--disable-translate", "--disable-features=Translate", "--password-store=basic",
                      "--disable-session-crashed-bubble", "--noerrdialogs", "--overscroll-history-navigation=0",
                      # the power button is a click anyway; this just makes sure sound is never blocked
-                     "--autoplay-policy=no-user-gesture-required"]
+                     "--autoplay-policy=no-user-gesture-required",
+                     # so the dock shows the TV under the Channel Surf icon
+                     "--class=channel-surf"]
             flags += ["--start-maximized"] if window else ["--kiosk"]
             return path, flags
     path = shutil.which("firefox")
     if path:
-        flags = ["--new-instance", "--profile", profile_dir(path, "firefox")]
+        prof = profile_dir(path, "firefox")
+        firefox_prefs(prof)
+        flags = ["--new-instance", "--profile", prof]
         if not window:
             flags.append("--kiosk")
         return path, flags
     return None, []
+
+
+def tell(message, error=False):
+    """Say something. Started from the icon there's no Terminal to print to, so pop up a box."""
+    print(message)
+    if sys.stdout and sys.stdout.isatty():
+        return
+    for cmd in (["zenity", "--error" if error else "--info", "--title=Channel Surf", "--width=420", "--text=" + message],
+                ["notify-send", "Channel Surf", message]):
+        if shutil.which(cmd[0]):
+            try:
+                subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return
+            except OSError:
+                pass
+
+
+def pin_to_dock():
+    """The first time it's started from the app list, keep its icon in the Ubuntu dock.
+    (Right-click the icon and choose "Unpin" to take it off.)"""
+    marker = os.path.join(os.path.expanduser("~"), ".config", "channel-surf", "pinned")
+    entry = "channel-surf.desktop"
+    places = ["/usr/share/applications", os.path.join(os.path.expanduser("~"), ".local", "share", "applications")]
+    if os.path.exists(marker) or not shutil.which("gsettings") or not any(os.path.exists(os.path.join(p, entry)) for p in places):
+        return
+    try:
+        out = subprocess.run(["gsettings", "get", "org.gnome.shell", "favorite-apps"], capture_output=True, text=True, timeout=5).stdout.strip()
+        if out.startswith("@as"):
+            out = out[3:].strip()
+        apps = re.findall(r"'([^']*)'", out)
+        if entry not in apps:
+            apps.append(entry)
+            subprocess.run(["gsettings", "set", "org.gnome.shell", "favorite-apps", "[" + ", ".join(f"'{a}'" for a in apps) + "]"], capture_output=True, timeout=5)
+        os.makedirs(os.path.dirname(marker), mode=0o700, exist_ok=True)
+        open(marker, "w").close()
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+
+def running_here(port):
+    """Is it Channel Surf that's already using this port (and not some other program)?"""
+    try:
+        c = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
+        c.request("GET", "/api/health", headers={"Host": f"localhost:{port}"})
+        r = c.getresponse()
+        return r.status == 200 and json.loads(r.read() or b"{}").get("ok") is True
+    except (OSError, ValueError):
+        return False
 
 
 def install_shortcut():
@@ -630,20 +714,29 @@ def main():
     ap.add_argument("--window", action="store_true", help="normal window instead of full screen")
     ap.add_argument("--no-browser", action="store_true", help="only start the server")
     ap.add_argument("--install-shortcut", action="store_true", help="add a desktop icon")
+    ap.add_argument("--reset-pin", action="store_true", help="open the page that clears a forgotten Setup PIN")
     args = ap.parse_args()
+    if args.reset_pin:
+        args.window = True
     if args.install_shortcut:
         install_shortcut()
         return
 
-    url = f"http://localhost:{args.port}/"
+    url = f"http://localhost:{args.port}/" + ("reset-pin.html" if args.reset_pin else "")
     try:
         httpd = make_server(args.port)
     except OSError:
-        # already running (someone double-clicked twice): just show the TV again
+        if not running_here(args.port):
+            tell(f"Channel Surf can't start: another program is using its spot on this computer (port {args.port}).\n\n"
+                 "Restarting the computer usually fixes it.", error=True)
+            sys.exit(1)
+        # already running (someone clicked the icon twice): just show the TV again
         print(f"Channel Surf is already running at {url}")
         if not args.no_browser:
             path, flags = find_browser(args.window)
-            subprocess.Popen([path, *flags, url]) if path else webbrowser.open(url)
+            # Firefox: hand the address to the TV window that's already open (a second copy would refuse)
+            flags = [f for f in flags if f != "--new-instance"]
+            subprocess.Popen([path, *flags, url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) if path else webbrowser.open(url)
         return
 
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
@@ -652,11 +745,14 @@ def main():
 
     proc = None
     if not args.no_browser:
+        pin_to_dock()
         path, flags = find_browser(args.window)
         if path:
             proc = subprocess.Popen([path, *flags, url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        else:
-            webbrowser.open(url)
+        elif not webbrowser.open(url):
+            tell("Channel Surf needs a web browser. Install Google Chrome (best) or Firefox, then click Channel Surf again.", error=True)
+            httpd.shutdown()
+            sys.exit(1)
 
     try:
         started = time.time()

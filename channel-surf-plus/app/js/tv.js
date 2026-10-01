@@ -334,7 +334,7 @@ export class TV {
   onError(code) {
     const id = this.loaded && this.loaded.id; if (!id) return;
     clearTimeout(this.wd);
-    if (code === 153 || location.protocol === 'file:') { this.stopPicture(); this.problem('PLAYER SETUP PROBLEM', 'YouTube needs Channel Surf to be started with its start program (python3 tv.py), not opened as a file.'); return; }
+    if (code === 153 || location.protocol === 'file:') { this.stopPicture(); this.problem('PLAYER SETUP PROBLEM', 'YouTube needs Channel Surf to be started from its Channel Surf icon, not opened as a file.'); return; }
     if (this.view === 'guide') { this.stopPicture(); app.screen.sync(); return; }
     if (code === 5 && this.retried !== id) {
       this.retried = id; const tok = this.token; this.stopPicture();

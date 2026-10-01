@@ -358,7 +358,7 @@ async function testRemoteAndFixes(browser) {
   await page.evaluate(() => { channelSurf.screen.closePages(true); channelSurf.screen.open(new channelSurf.pages.SetupHome('check')); });
   await page.click('#runCheck'); await page.waitForTimeout(300); await page.until(() => !channelSurf.screen.top().checking, 8000);
   const res = await page.evaluate(() => channelSurf.screen.top().results.map(r => r.name + '=' + r.ok));
-  check('Setup "Check everything" tests each part and finds them working', res.length >= 9 && ['The Channel Surf program (tv.py)=true', 'YouTube key=true', 'The YouTube player=true', 'Channels=null'].every(x => res.includes(x)), res.join(', '));
+  check('Setup "Check everything" tests each part and finds them working', res.length >= 9 && ['The Channel Surf program=true', 'YouTube key=true', 'The YouTube player=true', 'Channels=null'].every(x => res.includes(x)), res.join(', '));
   check('no script errors', page.errors.length === 0, page.errors.join(' | '));
   await ctx.close();
 }

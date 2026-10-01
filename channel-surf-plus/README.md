@@ -5,7 +5,14 @@ more inside 1997-style cable box menus. Optional sign-in puts likes,
 subscriptions, playlists and comments on your real YouTube account.
 Start here: **[HOW-TO.md](HOW-TO.md)** (plain English setup).
 
+**To install on Ubuntu without the Terminal:** double-click `dist/channel-surf_1.0.0_all.deb`
+and click Install in App Center. Then click the Channel Surf icon.
+
+For developers:
+
 ```
+sh packaging/build-deb.sh          build the Ubuntu installer (dist/channel-surf_<version>_all.deb)
+node tests/signin-e2e.js           the whole Google sign-in through the real tv.py (13 checks)
 python3 tv.py                      start the TV (http://localhost:8642, full screen)
 python3 tv.py --install-shortcut   add a desktop icon
 node tests/run-tests.js            automatic tests in a real browser against a pretend YouTube (84 checks)
@@ -42,6 +49,8 @@ app/js/
   sound.js, cards.js, led.js   sounds, full-screen cards (static, bars, idents), LED clock
   pages/              menu screens: base (lists), menus, browse (search, video, channel, chapters...),
                       youtube (your account, the typing keyboard), setup (incl. "Check everything")
+packaging/            builds the .deb installer (app list entry, dock icon, "Forgot the Setup PIN")
+dist/                 the built installer
 tests/                pretend YouTube (player + data API, incl. signed-in calls), the browser test runner,
                       the sign-in tests, and the QR code test (checks every code with a decoder)
 ```
