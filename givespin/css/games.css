@@ -1,0 +1,133 @@
+/* ==========================================================================
+   GiveSpin: stage, tabs and the four games
+   ========================================================================== */
+
+.stage { padding: 14px; }
+
+.stage__tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 5px; background: rgba(5, 8, 26, 0.7); border: 1px solid var(--line); border-radius: 18px; }
+.tab { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 8px; border: 0; border-radius: 13px; background: transparent; color: var(--muted); font-weight: 700; font-size: 0.93rem; transition: all 0.15s; }
+.tab .ico { width: 1.2rem; height: 1.2rem; }
+.tab:hover:not(:disabled):not([aria-selected="true"]) { color: #fff; background: rgba(255, 255, 255, 0.07); }
+.tab[aria-selected="true"] { color: #fff; background: linear-gradient(135deg, rgba(124, 92, 255, 0.6), rgba(255, 79, 162, 0.42)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), 0 10px 26px -12px rgba(124, 92, 255, 0.9); }
+.tab:disabled:not([aria-selected="true"]) { opacity: 0.45; }
+
+.stage__body { position: relative; margin-top: 10px; min-height: 560px; display: grid; align-items: center; padding: 6px 4px; }
+.game { width: 100%; display: grid; justify-items: center; gap: 10px; }
+.game[hidden] { display: none; }
+.game-note { text-align: center; font-size: 0.82rem; color: var(--dim); max-width: 46ch; min-height: 2.6em; padding-inline: 8px; }
+.stage__tagline { text-align: center; font-weight: 600; font-size: 0.95rem; color: var(--muted); margin-top: 2px; min-height: 1.5em; }
+
+/* result chips under the stage when a gift is split */
+.rounds { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
+.rounds[hidden] { display: none; }
+.round { --c: #a78bff; display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 6px 12px 6px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.04); border: 1px dashed var(--line-2); font-size: 0.82rem; font-weight: 600; color: var(--dim); transition: all 0.25s; }
+.round__n { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); font-size: 0.72rem; font-weight: 800; color: #fff; }
+.round__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.round.is-active { border: 1px solid #a78bff; color: #fff; animation: pulse-ring 1.2s ease-in-out infinite; }
+.round.is-done { border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); color: #fff; }
+.round.is-done .round__n { background: var(--c); color: #0b1026; }
+@keyframes pulse-ring { 50% { box-shadow: 0 0 0 5px rgba(124, 92, 255, 0.22); } }
+
+/* ---------- Lucky Wheel ---------- */
+.wheel-stage { width: 100%; display: grid; place-items: center; padding-top: 46px; }
+.wheel { position: relative; container-type: inline-size; max-width: 100%; }
+.wheel::before { content: ""; position: absolute; left: 6%; right: 6%; bottom: -3%; height: 12%; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), transparent); pointer-events: none; }
+.wheel__canvas { display: block; }
+.wheel__pointer { position: absolute; left: 50%; top: -8.4%; width: 11.5%; aspect-ratio: 44 / 60; translate: -50% 0; transform-origin: 50% 33%; z-index: 3; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5)); }
+.wheel__pointer svg { width: 100%; height: 100%; }
+.wheel__hub { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 22.5%; aspect-ratio: 1; z-index: 2; border: 0; border-radius: 50%; background: var(--grad); color: #fff; font-family: var(--f-display); font-weight: 800; font-size: 5cqw; letter-spacing: 0.06em; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25), 0 14px 34px -6px rgba(255, 79, 162, 0.85), inset 0 2px 0 rgba(255, 255, 255, 0.5); transition: transform 0.12s, filter 0.2s; }
+.wheel__hub span { display: block; text-shadow: 0 2px 8px rgba(80, 10, 60, 0.45); }
+.wheel__hub:hover:not(:disabled) { transform: scale(1.07); }
+.wheel__hub:active:not(:disabled) { transform: scale(0.96); }
+.wheel__hub:disabled { filter: saturate(0.45) brightness(0.8); }
+.wheel:not(.is-busy) .wheel__hub { animation: hub-pulse 2.4s ease-in-out infinite; }
+@keyframes hub-pulse { 50% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.06), 0 14px 34px -6px rgba(255, 79, 162, 0.85), inset 0 2px 0 rgba(255, 255, 255, 0.5); } }
+.wheel__hub:focus-visible { box-shadow: var(--ring); }
+
+/* ---------- Slot Machine ---------- */
+.slots { --rh: clamp(222px, 64vw, 282px); width: 100%; max-width: 540px; padding: 10px 2px 0; }
+.slots__machine { position: relative; border-radius: 30px; padding: 14px 46px 18px 14px; background: linear-gradient(180deg, #343a8f 0%, #1a2058 45%, #0f1340 100%); border: 1px solid rgba(255, 255, 255, 0.24); box-shadow: 0 34px 60px -26px rgba(0, 0, 0, 0.85), inset 0 2px 0 rgba(255, 255, 255, 0.28), inset 0 -14px 34px rgba(0, 0, 0, 0.4); }
+.slots__top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.slots__title { font-family: var(--f-display); font-weight: 800; letter-spacing: 0.32em; font-size: 1rem; color: #ffe39a; text-shadow: 0 0 16px rgba(255, 200, 61, 0.85); white-space: nowrap; }
+.slots__lights { flex: 1; height: 9px; background: radial-gradient(circle at 50% 50%, #ffe39a 36%, transparent 42%) 0 50% / 18px 9px repeat-x; animation: bulbs 0.9s steps(1) infinite; }
+.slots__lights:last-child { animation-direction: reverse; }
+@keyframes bulbs { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.slots__window { position: relative; border-radius: 18px; overflow: hidden; background: #05081c; border: 3px solid #090c2b; box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.12); }
+.slots__reels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; background: #090c2b; }
+.reel { position: relative; height: var(--rh); overflow: hidden; background: linear-gradient(180deg, #0a0e2e 0%, #1a2058 50%, #0a0e2e 100%); }
+.reel::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(3, 5, 20, 0.78) 0%, transparent 28%, transparent 72%, rgba(3, 5, 20, 0.78) 100%); }
+.reel__strip { will-change: transform; }
+.reel.is-spinning .reel__strip { filter: blur(2.4px); }
+.sym { --c: #a78bff; height: calc(var(--rh) / 3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 6px 4px; text-align: center; transition: filter 0.25s, transform 0.25s; }
+.sym__badge { display: grid; place-items: center; width: clamp(40px, 11vw, 54px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 55%, color-mix(in srgb, var(--c) 65%, #000)); color: #0b1026; font-family: var(--f-display); font-weight: 800; font-size: clamp(0.95rem, 3.2vw, 1.25rem); letter-spacing: -0.02em; box-shadow: 0 4px 14px -2px color-mix(in srgb, var(--c) 70%, transparent), inset 0 -3px 6px rgba(0, 0, 0, 0.25); }
+.sym__badge[data-len="3"] { font-size: clamp(0.8rem, 2.6vw, 1.05rem); }
+.sym__badge[data-len="4"], .sym__badge[data-len="5"] { font-size: clamp(0.66rem, 2.1vw, 0.85rem); }
+.sym__name { font-size: clamp(0.62rem, 1.9vw, 0.76rem); font-weight: 700; line-height: 1.15; color: #e9ecff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; }
+.reel.is-hit .sym:nth-child(2) { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--c) 90%, transparent)); transform: scale(1.06); }
+.slots__payline { position: absolute; left: 0; right: 0; top: 33.333%; height: 33.333%; pointer-events: none; border-block: 2px solid rgba(255, 200, 61, 0.92); background: linear-gradient(90deg, rgba(255, 200, 61, 0.14), transparent 18%, transparent 82%, rgba(255, 200, 61, 0.14)); box-shadow: 0 0 22px rgba(255, 200, 61, 0.3); }
+.slots__payline i { position: absolute; top: 50%; width: 0; height: 0; border: 9px solid transparent; translate: 0 -50%; }
+.slots__payline i:first-child { left: 0; border-left-color: #ffc83d; border-right-width: 0; }
+.slots__payline i:last-child { right: 0; border-right-color: #ffc83d; border-left-width: 0; }
+.slots__lever { position: absolute; right: 8px; top: 30%; width: 34px; height: 130px; padding: 0; border: 0; background: none; display: grid; justify-items: center; align-content: start; }
+.slots__knob { width: 30px; height: 30px; border-radius: 50%; z-index: 1; background: radial-gradient(circle at 32% 28%, #ff9ab3, #f43f5e 55%, #8a1432); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), 0 0 16px rgba(244, 63, 94, 0.6); transition: transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.slots__arm { width: 9px; height: 84px; margin-top: -6px; border-radius: 5px; background: linear-gradient(90deg, #8f97d6, #e4e8ff 45%, #6e76b5); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); transform-origin: top; transition: transform 0.18s; }
+.slots__lever:hover:not(:disabled) .slots__knob { filter: brightness(1.15); }
+.slots__machine.is-pulled .slots__knob { transform: translateY(66px); }
+.slots__machine.is-pulled .slots__arm { transform: scaleY(0.2); }
+.slots__lever:disabled { cursor: not-allowed; filter: saturate(0.5); }
+.slots__machine.is-jackpot { animation: jackpot-flash 0.5s ease-in-out 6; }
+.slots__machine.is-jackpot .slots__title { animation: jackpot-shake 0.25s linear 12; }
+@keyframes jackpot-flash { 50% { box-shadow: 0 0 0 4px #ffc83d, 0 0 60px 6px rgba(255, 200, 61, 0.7), 0 34px 60px -26px rgba(0, 0, 0, 0.85); } }
+@keyframes jackpot-shake { 25% { transform: translateX(-2px) rotate(-1deg); } 75% { transform: translateX(2px) rotate(1deg); } }
+
+/* ---------- Drop Crate ---------- */
+.drop { width: 100%; display: grid; gap: 16px; justify-items: center; }
+.drop__view { position: relative; width: 100%; height: 232px; overflow: hidden; border-radius: 22px; background: linear-gradient(180deg, rgba(5, 8, 26, 0.9), rgba(16, 22, 62, 0.9)); border: 1px solid var(--line-2); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.6); }
+.drop__strip { position: absolute; left: 0; top: 50%; translate: 0 -50%; display: flex; gap: 10px; will-change: transform; }
+.dcard { --c: #a78bff; flex: none; width: clamp(124px, 33vw, 150px); height: 184px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 10px 8px; text-align: center; border-radius: 16px; background: linear-gradient(180deg, color-mix(in srgb, var(--c) 24%, #151b4d), #0d1238 90%); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); border-bottom: 5px solid var(--c); transition: transform 0.35s, opacity 0.35s, box-shadow 0.35s; }
+.dcard__badge { display: grid; place-items: center; width: 58px; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 55%, color-mix(in srgb, var(--c) 65%, #000)); color: #0b1026; font-family: var(--f-display); font-weight: 800; font-size: 1.3rem; box-shadow: 0 6px 18px -4px color-mix(in srgb, var(--c) 70%, transparent); }
+.dcard__badge[data-len="3"] { font-size: 1.05rem; }
+.dcard__badge[data-len="4"], .dcard__badge[data-len="5"] { font-size: 0.85rem; }
+.dcard__name { font-weight: 800; font-size: clamp(0.8rem, 2.6vw, 0.92rem); line-height: 1.15; overflow-wrap: anywhere; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dcard__cause { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 700; color: var(--c); }
+.dcard__cause .ico { width: 0.9rem; height: 0.9rem; }
+.dcard.is-win { transform: scale(1.1); z-index: 1; box-shadow: 0 0 44px color-mix(in srgb, var(--c) 85%, transparent), inset 0 0 26px color-mix(in srgb, var(--c) 30%, transparent); border-color: #fff; }
+.dcard.is-dim { opacity: 0.38; }
+.drop__fade { position: absolute; top: 0; bottom: 0; width: 20%; pointer-events: none; z-index: 1; }
+.drop__fade--l { left: 0; background: linear-gradient(90deg, #070a26, transparent); }
+.drop__fade--r { right: 0; background: linear-gradient(270deg, #070a26, transparent); }
+.drop__marker { position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; translate: -1.5px 0; z-index: 2; pointer-events: none; background: #fff; box-shadow: 0 0 18px 2px rgba(255, 255, 255, 0.85), 0 0 40px 6px rgba(124, 92, 255, 0.6); }
+.drop__marker i { position: absolute; left: 50%; translate: -50% 0; width: 0; height: 0; border: 11px solid transparent; }
+.drop__marker i:first-child { top: 0; border-top-color: #fff; border-bottom-width: 0; }
+.drop__marker i:last-child { bottom: 0; border-bottom-color: #fff; border-top-width: 0; }
+.drop__view.is-landed .drop__marker { animation: marker-hit 0.9s ease-out; }
+@keyframes marker-hit { 20% { width: 7px; box-shadow: 0 0 40px 10px #fff, 0 0 80px 18px rgba(255, 79, 162, 0.8); } }
+
+.drop__open, .plinko__drop { display: inline-flex; align-items: center; gap: 10px; padding: 12px 26px; border-radius: 999px; border: 0; background: var(--grad); color: #fff; font-family: var(--f-display); font-weight: 800; font-size: 1.1rem; box-shadow: 0 14px 30px -12px rgba(255, 79, 162, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.4); transition: transform 0.12s, filter 0.2s; }
+.drop__open > span { display: inline-flex; align-items: center; gap: 10px; }
+.drop__open:hover:not(:disabled), .plinko__drop:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.08); }
+.drop__open:active:not(:disabled), .plinko__drop:active:not(:disabled) { transform: scale(0.97); }
+.drop__open:disabled, .plinko__drop:disabled { filter: grayscale(0.7) brightness(0.7); }
+
+/* ---------- Plinko ---------- */
+.plinko { position: relative; width: 100%; display: grid; justify-items: center; gap: 14px; }
+.plinko__canvas { display: block; border-radius: 22px; background: radial-gradient(120% 90% at 50% 0%, rgba(124, 92, 255, 0.22), rgba(5, 8, 26, 0.85) 70%); border: 1px solid var(--line-2); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5); }
+
+/* ---------- small screens ---------- */
+@media (max-width: 560px) {
+  .stage { padding: 10px; }
+  .tab { flex-direction: column; gap: 4px; padding: 9px 4px; font-size: 0.75rem; }
+  .stage__body { min-height: 0; }
+  .wheel-stage { padding-top: 38px; }
+  .slots__machine { padding: 10px 40px 14px 10px; border-radius: 24px; }
+  .slots__title { font-size: 0.8rem; letter-spacing: 0.22em; }
+  .slots__lever { right: 4px; }
+  .drop__view { height: 208px; }
+  .dcard { height: 164px; }
+  .dcard__badge { width: 48px; font-size: 1.1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wheel:not(.is-busy) .wheel__hub, .slots__lights, .round.is-active { animation: none; }
+  .slots__machine.is-jackpot, .slots__machine.is-jackpot .slots__title { animation: none; }
+}
