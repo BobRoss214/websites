@@ -64,7 +64,7 @@ export class TopicsPage extends ListPage {
     this.load(async () => {
       const cats = await yt.categories();
       const VL = P().VideoListPage;
-      this.items = cats.map(c => ({ html: rows.menu('topics', c.title, 'Popular in ' + c.title), act: () => app.screen.open(new VL(c.title, () => yt.trending(c.id), { makeChannel: { type: 'topic', cat: c.id, title: c.title }, empty: 'Nothing popular in this topic right now.' })) }));
+      this.items = cats.map(c => ({ html: rows.menu('topics', c.title, 'Popular in ' + c.title), act: () => app.screen.open(new VL(c.title, () => yt.trending(c.id).catch(e => { if (e.kind === 'notFound') return []; throw e; }), { makeChannel: { type: 'topic', cat: c.id, title: c.title }, empty: 'Nothing popular in this topic right now.' })) }));
     });
   }
 }

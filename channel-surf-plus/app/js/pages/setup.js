@@ -150,8 +150,8 @@ export class ChannelEditor extends SetupPage {
     this.draft.filters = { length: 'any', age: 'any', captions: false, words: '', ...this.draft.filters };
     this.msg = ''; this.ok = true; this.cats = null;
   }
-  onShow() { yt.categories().then(c => { this.cats = c; this.rerender(); }).catch(() => { this.cats = []; }); }
-  say(m, ok = true) { this.keepInputs(); this.msg = m; this.ok = ok; this.rerender(); }
+  onShow() { yt.categories().then(c => { this.keepInputs(); this.cats = c; this.rerender(); }).catch(() => { this.cats = []; }); }
+  say(m, ok = true) { this.msg = m; this.ok = ok; this.rerender(); } // handlers call keepInputs() first
   keepInputs() { const d = this.draft; if (document.getElementById('cname')) { d.name = this.val('cname'); d.num = +this.val('cnum') || d.num; d.filters.length = this.val('flen'); d.filters.age = this.val('fage'); d.filters.captions = document.getElementById('fcc').checked; d.filters.words = this.val('fwords'); this.pending = { links: this.val('links'), q: this.val('sq'), pl: this.val('pl') }; } }
   render() {
     const d = this.draft, f = d.filters, p = this.pending || {};
@@ -243,7 +243,7 @@ export function parseTakeout(text) {
 
 export class ImportPage extends SetupPage {
   constructor() { super('Import channels'); this.subs = []; this.msg = ''; this.ok = true; }
-  say(m, ok = true) { this.msg = m; this.ok = ok; this.keep(); this.rerender(); }
+  say(m, ok = true) { this.msg = m; this.ok = ok; this.rerender(); } // handlers call keep() first
   keep() { $$('#pages [data-sub]').forEach(cb => { const s = this.subs[+cb.dataset.sub]; if (s) s.on = cb.checked; }); const n = document.getElementById('comboName'); if (n) this.comboName = n.value; const l = document.getElementById('pasted'); if (l) this.pasted = l.value; }
   render() {
     const on = this.subs.filter(s => s.on).length;
@@ -261,7 +261,7 @@ export class ImportPage extends SetupPage {
   }
   afterRender() {
     this.on('#csv', 'change', (e, el) => {
-      const f = el.files[0]; if (!f) return;
+      this.keep(); const f = el.files[0]; if (!f) return;
       const r = new FileReader();
       r.onload = () => { const list = parseTakeout(String(r.result)); if (!list.length) return this.say('No channels found in that file. Is it subscriptions.csv?', false); this.subs = list.map(s => ({ ...s, on: true })); this.say('Found ' + list.length + ' subscriptions.'); };
       r.readAsText(f);
@@ -273,8 +273,8 @@ export class ImportPage extends SetupPage {
       for (const line of lines) { try { const c = await yt.resolveChannel(line); if (!this.subs.some(s => s.id === c.id)) this.subs.push({ id: c.id, title: c.title, on: true }); } catch (e) { bad.push(line); if (e.kind === 'quota' || e.kind === 'key') break; } }
       this.pasted = bad.join('\n'); this.say(bad.length ? 'Couldn\'t find: ' + bad.join(', ') : 'Found them all.', !bad.length);
     });
-    this.on('#all', 'click', () => { this.subs.forEach(s => s.on = true); this.rerender(); });
-    this.on('#none', 'click', () => { this.subs.forEach(s => s.on = false); this.rerender(); });
+    this.on('#all', 'click', () => { this.keep(); this.subs.forEach(s => s.on = true); this.rerender(); });
+    this.on('#none', 'click', () => { this.keep(); this.subs.forEach(s => s.on = false); this.rerender(); });
     this.on('#each', 'click', () => {
       this.keep(); const picked = this.subs.filter(s => s.on); if (!picked.length) return this.say('Pick at least one.', false);
       const existing = new Set(L.channels().flatMap(c => (c.sources || []).filter(s => s.type === 'channel').map(s => s.id)));

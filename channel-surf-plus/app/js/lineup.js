@@ -99,7 +99,7 @@ async function sourceIds(src) {
       if (!isDemo() && searchesLeft() < 3) throw Object.assign(new Error('saving searches for later'), { kind: 'quota' });
       const r = await yt.search({ q: src.q, type: 'video', max: 50, ...(src.f || {}) }); return r.items.map(v => v.id);
     }
-    case 'topic': return (await yt.trending(src.cat)).map(v => v.id);
+    case 'topic': try { return (await yt.trending(src.cat)).map(v => v.id); } catch (e) { if (e.kind === 'notFound') return []; throw e; }
     case 'trending': return (await yt.trending()).map(v => v.id);
   }
   return [];

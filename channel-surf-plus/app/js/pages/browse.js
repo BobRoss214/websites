@@ -204,7 +204,7 @@ export class CommentsPage extends ListPage {
       try {
         const list = await yt.comments(this.v.id, this.order);
         this.items = [{ cls: 'act', html: rows.action('filter', 'Sorted by: ' + (this.order === 'time' ? 'Newest first' : 'Top comments'), 'OK to switch'), act: () => { this.order = this.order === 'time' ? 'relevance' : 'time'; this.fetch(); } },
-          ...list.map(c => ({ cls: 'comment', html: `<div class="rt"><small><b>${esc(c.author)}</b> · ${ago(c.at)}${c.likes ? ' · ♥ ' + shortNum(c.likes) : ''}${c.replies ? ' · ' + c.replies + ' replies' : ''}</small><p>${esc(c.text)}</p></div>` }))];
+          ...list.map(c => ({ cls: 'comment', html: `<div class="rt"><b>${esc(c.author)}</b><small>${ago(c.at)}${c.likes ? ' · ♥ ' + shortNum(c.likes) : ''}${c.replies ? ' · ' + c.replies + ' replies' : ''}</small><p>${esc(c.text)}</p></div>` }))];
         if (list.length === 0) this.empty = 'No comments yet.';
       } catch (e) { if (e.kind === 'commentsDisabled') { this.items = []; this.empty = 'Comments are turned off for this video.'; } else throw e; }
     });

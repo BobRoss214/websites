@@ -38,5 +38,5 @@ import * as setup from './pages/setup.js';
   addEventListener('beforeunload', () => { app.tv.leaveVod(); save(true); flush(); });
   // keep channels fresh while the TV stays on all day
   setInterval(() => { if (app.tv.on) L.refreshAll(app.tv.ch.id); }, 30 * 60e3);
-  window.channelSurf = app; // handy for troubleshooting from the browser console
+  window.channelSurf = Object.assign(app, { lineup: L, settings: S }); // handy for troubleshooting from the browser console
 })();
