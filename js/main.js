@@ -581,10 +581,12 @@
         return { h, ratio: 0.55, sway: true, html: `<svg viewBox="0 0 60 110"><path d="M30 110V40" stroke="#3a2416" stroke-width="9" stroke-linecap="round"/><path d="M30 110V40" stroke="#43a047" stroke-width="5" stroke-linecap="round"/><path d="M30 92c-14 0-20-8-22-16 12-2 20 4 22 16Z" fill="#5cb85c" stroke="#3a2416" stroke-width="2.5" stroke-linejoin="round"/><g style="color:${c}"><use href="#bloom" x="2" y="0" width="56" height="56"/></g></svg>` };
       }
       const r = rndv();
-      if (r < 0.2) { const h = 96 + rndv() * 26; return { h, ratio: 140 / 380, sway: true, html: '<svg viewBox="0 0 140 380"><use href="#sunflower-plant"/></svg>' }; }
-      if (r < 0.45) { const h = 44 + rndv() * 16; return { h, ratio: 120 / 90, html: '<svg viewBox="0 0 120 90"><use href="#sb-plant"/></svg>' }; }
-      if (r < 0.65) { const h = 44 + rndv() * 14; return { h, ratio: 110 / 92, html: '<svg viewBox="0 0 110 92"><use href="#pumpkin"/></svg>' }; }
-      if (r < 0.82) { const h = 44 + rndv() * 12; return { h, ratio: 90 / 92, html: '<svg viewBox="0 0 90 92"><use href="#blueberry"/></svg>' }; }
+      if (r < 0.15) { const h = 96 + rndv() * 26; return { h, ratio: 140 / 380, sway: true, html: '<svg viewBox="0 0 140 380"><use href="#sunflower-plant"/></svg>' }; }
+      if (r < 0.32) { const h = 44 + rndv() * 16; return { h, ratio: 120 / 90, html: '<svg viewBox="0 0 120 90"><use href="#sb-plant"/></svg>' }; }
+      if (r < 0.46) { const h = 44 + rndv() * 14; return { h, ratio: 110 / 92, html: '<svg viewBox="0 0 110 92"><use href="#pumpkin"/></svg>' }; }
+      if (r < 0.58) { const h = 44 + rndv() * 12; return { h, ratio: 90 / 92, html: '<svg viewBox="0 0 90 92"><use href="#blueberry"/></svg>' }; }
+      if (r < 0.74) { const h = 78 + rndv() * 22; return { h, ratio: 80 / 110, sway: true, html: '<svg viewBox="0 0 80 110"><use href="#tomato-plant"/></svg>' }; }
+      if (r < 0.88) { const h = 40 + rndv() * 14; return { h, ratio: 1, html: '<svg viewBox="0 0 64 64" style="color:' + pick(['#4caf50', '#3f9b45', '#66bb6a', '#7b2d5f']) + '"><use href="#basil"/></svg>' }; }
       return { h: 36 + rndv() * 12, ratio: 40 / 52, html: '<svg viewBox="0 0 40 52"><use href="#sprout"/></svg>' };
     };
 

@@ -107,7 +107,8 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Time-sensitive blocks** | The Fall 2026 reservation schedule (`#schedule`), Exceptional Children Day / Home School Day dates, and the Fall Menu 2026 must be updated as they change (and re-translated: run `missing`). |
 | **Open-now badges** | Based on the hours in `js/content.js` (farm: reserved visits Thu–Sun in fall; GreenHouse Fri–Sun 10–8; Wise Pie at The GreenHouse Fri–Sun 4–8). Please check these match real life. |
 | **School tour form link** | Uses the Google Forms address you provided, which ends in `/edit` (the form *editor* link). Public visitors usually need `/viewform`. Please double-check it. |
-| **Phone number / Facebook** | Not shown (the pages you pasted list email only). Instagram accounts are linked. |
+| **Facebook & hashtag** | Facebook links to https://www.facebook.com/wiseacresnc/ (found by web search, **please confirm it is the right page**). The photo notes ask people to tag @wiseacresorganic and use **#wiseacresorganic** (our suggestion; change it in the two `tag-us` notes in `index.html`, the Flowers section and the Photo gallery). Social links are in the footer, the Contact section and the winter "watch for details" line. |
+| **Phone number** | Not shown (the pages you pasted list email only). |
 | **Christmas trees** | Friday after Thanksgiving to early December, at The GreenHouse. |
 | **Tomatoes & basil** | The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree. Give us the right number and we'll state it. |
 | **Reviews** | The reviews section is built but empty. It needs real quotes (with permission) from you. |

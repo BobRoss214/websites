@@ -57,7 +57,7 @@
   const where = (el) => { const s = el.closest('section[id], header, footer, .mobile-bar, .action-bar'); return s ? (s.id || s.className.split(' ')[0]) : 'page'; };
   const RULES = [
     [/bookeo\.com/, 'Reserve click'], [/^mailto:/, 'Email click'], [/google\.com\/maps/, 'Directions click'],
-    [/square\.site/, 'Pizza pre-order click'], [/eepurl\.com/, 'Email signup click'], [/instagram\.com/, 'Instagram click'], [/^tel:/, 'Phone click'],
+    [/square\.site/, 'Pizza pre-order click'], [/eepurl\.com/, 'Email signup click'], [/instagram\.com/, 'Instagram click'], [/facebook\.com/, 'Facebook click'], [/^tel:/, 'Phone click'],
     [/docs\.google\.com\/forms/, 'School tour form click'],
   ];
   doc.addEventListener('click', (e) => {

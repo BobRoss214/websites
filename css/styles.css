@@ -330,6 +330,8 @@ svg.layer-fore{overflow:visible}
 .ra-basket{width:190px;height:152px;left:26%;bottom:0;animation:bob 5s ease-in-out infinite -1s}
 .ra-pumpkin{width:130px;height:109px;right:2%;bottom:6%;animation:bob 4.6s ease-in-out infinite -2s}
 .ra-blue{width:96px;height:98px;right:16%;top:0;animation:bob 5.4s ease-in-out infinite -3s}
+.ra-tomato{width:104px;height:104px;left:0;bottom:3%;color:#e5334b;animation:bob 4.4s ease-in-out infinite -1.5s}
+.ra-basil{width:92px;height:92px;left:45%;top:2%;color:#4caf50;animation:bob 5.2s ease-in-out infinite -2.5s}
 
 /* crop rows that "grow" along section edges */
 .crop-row{position:absolute;left:0;right:0;top:0;height:0;pointer-events:none;z-index:2}
@@ -431,6 +433,12 @@ svg.layer-fore{overflow:visible}
   .contact-grid{grid-template-columns:1fr}
   .reserve-inner{grid-template-columns:1fr}
   .reserve-art{height:220px;max-width:420px}
+  .ra-strawberry{width:88px;height:99px}
+  .ra-basket{width:150px;height:120px}
+  .ra-pumpkin{width:104px;height:87px}
+  .ra-blue{width:76px;height:78px}
+  .ra-tomato{width:80px;height:80px}
+  .ra-basil{width:72px;height:72px;left:42%}
   .footer-inner{grid-template-columns:1fr 1fr}
   .footer-brand{grid-column:1/-1}
 }

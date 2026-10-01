@@ -313,6 +313,18 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 @keyframes achFall{0%{opacity:1;transform:translate(0,0) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translate(var(--sw),820px) rotate(var(--r))}}
 @media (max-width:760px){.ach-stack{bottom:calc(100% + 10px)}.ach-medal{width:54px;height:54px}.ach-medal svg{width:32px;height:32px}.ach-time .ach-medal{width:62px;height:62px}}
 
+/* Social links (footer) and the "tag us" note by the photos */
+.social-links{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 0;padding:0;list-style:none}
+.social-links a{display:inline-flex;align-items:center;gap:.45em;padding:.5em 1em;border:2.5px solid rgba(255,255,255,.6);border-radius:999px;color:#fff;font:700 .95rem/1 var(--display);text-decoration:none;transition:background-color .2s,color .2s,transform .25s cubic-bezier(.3,1.6,.5,1)}
+.social-links a:hover{background:#fff;color:var(--ink);transform:translateY(-2px)}
+.social-links .ico{width:1.15em;height:1.15em}
+.tag-us{display:flex;gap:12px;align-items:flex-start;max-width:40em;margin:20px auto 0;padding:.85em 1.1em;background:#fff;border:2.5px dashed var(--ink);border-radius:18px;font-weight:600;line-height:1.45}
+.flowers-copy .tag-us{margin:22px 0 0}
+.tag-us .ico{flex:none;width:1.5em;height:1.5em;margin-top:.1em;color:var(--red)}
+.tag-us a{color:var(--ink);font-weight:800}
+.tag-chip{padding:.05em .55em;background:var(--sun);border-radius:999px;text-decoration:none}
+.tag-chip:hover{background:#ffe066}
+
 @media (prefers-reduced-motion:reduce){
   .hero-cta .btn:hover,.hero-cta .btn:nth-child(even):hover{transform:none;animation:none}
   .hero-cta .btn:hover::after,.hero-cta .btn:hover .ico,.chips .chip-new:hover,.chips .chip-new:hover .ico,.choose-new:hover,.choose-new:hover .ico,.choose-new:hover .choose-new-badge{animation:none;transform:none}
