@@ -135,7 +135,7 @@ test('filters: OR inside a group, AND between groups', () => {
   assert.deepEqual(ids({ causes: ['kids'], where: ['africa'] }), []);
 });
 
-test('filters: founded eras, faith-based, and complete-profile switches', () => {
+test('filters: founded eras', () => {
   const ids = (f) => core.buildPool(rich, f, []).map((c) => c.id);
   assert.equal(core.eraOf(1949), 'e1');
   assert.equal(core.eraOf(1950), 'e2');
@@ -146,17 +146,14 @@ test('filters: founded eras, faith-based, and complete-profile switches', () => 
   assert.equal(core.eraOf(null), null);
   assert.deepEqual(ids({ era: ['e1', 'e2'] }), ['r1', 'r2']);
   assert.deepEqual(ids({ era: ['e4'] }), ['r5']); // unknown founding year never matches an era filter
-  assert.deepEqual(ids({ faith: 'hide' }), ['r1', 'r2', 'r4', 'r5']);
-  assert.deepEqual(ids({ faith: 'only' }), ['r3']);
-  assert.deepEqual(ids({ completeOnly: true }), ['r1', 'r2', 'r3', 'r5']);
 });
 
 test('normalizeFilters rejects junk and counts active filters', () => {
-  const f = core.normalizeFilters({ causes: ['x', 5, null], era: ['e9', 'e1'], faith: 'weird', completeOnly: 1, extra: 1 });
-  assert.deepEqual(f, { causes: ['x'], serves: [], where: [], how: [], era: ['e1'], faith: 'any', completeOnly: true });
+  const f = core.normalizeFilters({ causes: ['x', 5, null], era: ['e9', 'e1'], faith: 'hide', completeOnly: 1, extra: 1 });
+  assert.deepEqual(f, { causes: ['x'], serves: [], where: [], how: [], era: ['e1'] }); // the removed values filter is ignored in old saved data
   assert.deepEqual(core.normalizeFilters(null), core.emptyFilters());
   assert.equal(core.activeFilterCount(core.emptyFilters()), 0);
-  assert.equal(core.activeFilterCount({ causes: ['a', 'b'], where: ['us'], faith: 'hide', completeOnly: true }), 5);
+  assert.equal(core.activeFilterCount({ causes: ['a', 'b'], where: ['us'] }), 3);
 });
 
 test('facetCounts tallies each facet value', () => {
@@ -164,8 +161,6 @@ test('facetCounts tallies each facet value', () => {
   assert.deepEqual(c.causes, { kids: 2, health: 2, animals: 2 });
   assert.equal(c.where.us, 2);
   assert.equal(c.era.e1, 1);
-  assert.equal(c.faith, 1);
-  assert.equal(c.unverified, 1);
 });
 
 test('allowedRounds drops splits that would make a round too small', () => {

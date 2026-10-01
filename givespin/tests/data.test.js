@@ -59,7 +59,6 @@ test('filter facets: the headline values each match plenty of charities', () => 
   assert.ok(f.where.us >= 100 && f.where.global >= 50);
   ['direct', 'research', 'advocacy', 'training', 'funding', 'protection'].forEach((id) => assert.ok(f.how[id] >= 5, id));
   core.ERA_IDS.forEach((id) => assert.ok(f.era[id] >= 10, id));
-  assert.ok(f.faith >= 8 && f.faith <= 30);
 });
 
 test('charity names are not duplicated and no entry quietly overstates itself', () => {
@@ -76,7 +75,7 @@ test('monograms are short and present for every charity', () => {
 test('combined filters always leave something to play for common combinations', () => {
   const combos = [
     { causes: ['kids'], where: ['us'] }, { causes: ['animals', 'planet'] }, { serves: ['veterans'] },
-    { how: ['research'], causes: ['health'] }, { faith: 'only' }, { era: ['e4'] }, { causes: ['hunger'], faith: 'hide' },
+    { how: ['research'], causes: ['health'] }, { era: ['e4'] }, { causes: ['hunger'], era: ['e3', 'e4'] },
   ];
   combos.forEach((f) => assert.ok(core.buildPool(GS.charities, f, []).length >= 2, JSON.stringify(f)));
 });

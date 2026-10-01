@@ -47,7 +47,7 @@ payment method (demo credit or a preview saved card). You can also **give direct
 involved.
 
 **Filters.** Causes (30, in six groups), who they help, where they work, how they help, when they were founded
-and values (hide or show only faith-based, only charities with full profiles). Choices combine as OR within a
+Choices combine as OR within a
 group and AND between groups, with a live count. The same filters drive every game. Filter values that fewer
 than three charities have are hidden so a filter cannot just empty the pool.
 
@@ -111,7 +111,7 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
 - **Charity list.** The roster was researched from public sources, and short descriptions are paraphrases.
   194 entries have verified founding years, headquarters and descriptions. **34 entries are marked `unverified`**
   because they could not be fully checked: they carry a short generic description and no founding year or
-  headquarters, say so on their profile, and can be excluded with the "full profiles only" filter. The charity
+  headquarters, and say so on their profile. The charity
   hostnames in `js/data.js` were **not link-checked**. Verify that every entry is still active, accurate and one
   you are comfortable with, and that your checkout provider supports it.
 - **Names and logos.** Charity names are used only to identify the organisations and no logos are used. The footer

@@ -263,7 +263,7 @@
       return '<p>A secret seed is committed before you play (you see its hash). The winner is computed from that seed, your own seed and the round number with HMAC-SHA256, using rejection sampling so no charity is favoured. The animation then reveals a result that is already decided. <a href="#fair">Verify any round yourself.</a></p>';
     }],
     ['help-pick', 'Can I choose which charities can win?', function () {
-      return '<p>Yes, several ways. Use <strong>Filters</strong> to narrow the pool by cause, who they help, where they work, how they help, when they started and values. Or open <a href="#charities">Charities</a> and switch individual ones off. Or skip the luck and <strong>give directly</strong> to any charity from its profile.</p>';
+      return '<p>Yes, several ways. Use <strong>Filters</strong> to narrow the pool by cause, who they help, where they work, how they help and when they started. Or open <a href="#charities">Charities</a> and switch individual ones off. Or skip the luck and <strong>give directly</strong> to any charity from its profile.</p>';
     }],
     ['help-split', 'What does “split your gift” do?', function () {
       return '<p>It divides your amount into equal parts, to the cent, and plays one round per part. Give $10 across 3 rounds and you get $3.34, $3.33 and $3.33, each going to whichever charity that round lands on. Each round needs at least $1, so small gifts have fewer split options. Slots always uses three reels.</p>';

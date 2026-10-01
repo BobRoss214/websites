@@ -1,5 +1,5 @@
 /*
- * Filters: the full filter dialog (causes, who they help, where, how, when founded, values), the quick cause
+ * Filters: the full filter dialog (causes, who they help, where, how, when founded), the quick cause
  * chips shown next to the bet panel, and the "N charities in play" line. Changes apply instantly and the
  * live count updates as you tap.
  */
@@ -112,16 +112,6 @@
     html += facetSection('how', 'How they help');
     html += facetSection('era', 'When they started', 'Founded year. Charities with no founding year on file never match this filter.');
 
-    html += '<section class="fgroup"><h3 class="fgroup__t">Values</h3>' +
-      '<div class="seg" role="group" aria-label="Faith-based charities" data-role="faith">' +
-        '<button type="button" class="seg__btn" data-group="faith" data-id="any" aria-pressed="false">All charities</button>' +
-        '<button type="button" class="seg__btn" data-group="faith" data-id="hide" aria-pressed="false">Hide faith-based</button>' +
-        '<button type="button" class="seg__btn" data-group="faith" data-id="only" aria-pressed="false">Only faith-based</button>' +
-      '</div>' +
-      '<p class="fgroup__h">' + c.faith + ' charities in the roster are faith-based or have a religious mission.</p>' +
-      '<label class="switchrow"><input type="checkbox" role="switch" data-group="completeOnly"><span class="switch__ui" aria-hidden="true"></span><span>Only charities with full profiles<small>' + c.unverified + ' entries have fewer details on file (no founding year or headquarters yet).</small></span></label>' +
-    '</section>';
-
     html += '<div class="modal__foot"><button type="button" class="btn btn--ghost" data-role="clear">Clear all filters</button><button type="button" class="btn btn--green" data-role="done">Show charities</button></div>' +
       '<p class="modal__fine">Prefer to hand-pick? <a href="#charities" data-role="to-dir">Open the Charities page</a> to switch individual charities on or off.</p>';
     return html;
@@ -142,9 +132,7 @@
     modal.$$('[data-group]').forEach(function (b) {
       var g = b.getAttribute('data-group');
       var id = b.getAttribute('data-id');
-      if (g === 'completeOnly') { b.checked = f.completeOnly; }
-      else if (g === 'faith') { b.setAttribute('aria-pressed', String(f.faith === id)); }
-      else { b.setAttribute('aria-pressed', String(f[g].indexOf(id) >= 0)); }
+      b.setAttribute('aria-pressed', String(f[g].indexOf(id) >= 0));
     });
     var clear = modal.$('[data-role="clear"]');
     clear.disabled = core.activeFilterCount(f) === 0;
@@ -164,22 +152,13 @@
           var f = current();
           var g = b.getAttribute('data-group');
           var id = b.getAttribute('data-id');
-          if (g === 'faith') { f.faith = id; }
-          else { f[g] = toggled(f[g], id); }
+          f[g] = toggled(f[g], id);
           save(f);
           return;
         }
         if (e.target.closest('[data-role="clear"]')) { GS.audio.click(); save(core.emptyFilters()); return; }
         if (e.target.closest('[data-role="done"]')) { modal.close(); return; }
         if (e.target.closest('[data-role="to-dir"]')) { modal.close(); }
-      });
-      modal.body.addEventListener('change', function (e) {
-        var b = e.target.closest('[data-group="completeOnly"]');
-        if (!b) { return; }
-        GS.audio.click();
-        var f = current();
-        f.completeOnly = b.checked;
-        save(f);
       });
       GS.bus.on('pool', sync);
     }

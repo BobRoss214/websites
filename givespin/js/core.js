@@ -172,7 +172,7 @@
   }
 
   function emptyFilters() {
-    return { causes: [], serves: [], where: [], how: [], era: [], faith: 'any', completeOnly: false };
+    return { causes: [], serves: [], where: [], how: [], era: [] };
   }
 
   function strList(v) { return Array.isArray(v) ? v.filter(function (x) { return typeof x === 'string'; }) : []; }
@@ -187,8 +187,6 @@
     out.where = strList(f.where);
     out.how = strList(f.how);
     out.era = strList(f.era).filter(function (e) { return ERA_IDS.indexOf(e) >= 0; });
-    out.faith = f.faith === 'hide' || f.faith === 'only' ? f.faith : 'any';
-    out.completeOnly = !!f.completeOnly;
     return out;
   }
 
@@ -209,9 +207,6 @@
       var e = eraOf(ch.founded);
       if (!e || f.era.indexOf(e) < 0) { return false; }
     }
-    if (f.faith === 'hide' && ch.faith) { return false; }
-    if (f.faith === 'only' && !ch.faith) { return false; }
-    if (f.completeOnly && ch.unverified) { return false; }
     return true;
   }
 
@@ -226,13 +221,12 @@
   /** How many filter groups / values are active (drives the "Filters (3)" badge). */
   function activeFilterCount(filters) {
     var f = normalizeFilters(filters);
-    return f.causes.length + f.serves.length + f.where.length + f.how.length + f.era.length +
-      (f.faith !== 'any' ? 1 : 0) + (f.completeOnly ? 1 : 0);
+    return f.causes.length + f.serves.length + f.where.length + f.how.length + f.era.length;
   }
 
   /** Static counts per facet value across the whole roster, used for the numbers on filter chips. */
   function facetCounts(charities) {
-    var out = { causes: {}, serves: {}, where: {}, how: {}, era: {}, faith: 0, unverified: 0 };
+    var out = { causes: {}, serves: {}, where: {}, how: {}, era: {} };
     function bump(group, id) { out[group][id] = (out[group][id] || 0) + 1; }
     charities.forEach(function (ch) {
       (ch.causes || []).forEach(function (x) { bump('causes', x); });
@@ -241,8 +235,6 @@
       (ch.how || []).forEach(function (x) { bump('how', x); });
       var e = eraOf(ch.founded);
       if (e) { bump('era', e); }
-      if (ch.faith) { out.faith += 1; }
-      if (ch.unverified) { out.unverified += 1; }
     });
     return out;
   }
