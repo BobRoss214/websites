@@ -7,7 +7,7 @@ import { Sound } from '../sound.js';
 import * as L from '../lineup.js';
 import { yt, isDemo } from '../source.js';
 import { searchesLeft } from '../api.js';
-import { ListPage, Page, rows, sideVideo, MessagePage, ICON } from './base.js';
+import { ListPage, Page, rows, sideVideo } from './base.js';
 import { canUseAccount } from './youtube.js';
 import { account } from '../account.js';
 
@@ -179,4 +179,3 @@ export class PinPage extends Page {
   }
 }
 
-export { MessagePage, ICON };

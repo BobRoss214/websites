@@ -289,10 +289,9 @@ export class TV {
     this.stalls++;
     if (navigator.onLine === false || this.stalls >= 3) return this.noSignal();
     if (this.retried !== id) {
-      this.retried = id; const keep = this.loaded.v; this.stopPicture();
+      this.retried = id; this.stopPicture();
       this.standby('PLEASE STAND BY', 'The picture is slow to come in. Trying again…');
       setTimeout(() => { if (tok !== this.token) return; if (this.source === 'live') this.present(tok); else this.restartVod(); }, 2500);
-      void keep;
     } else {
       this.retried = null; this.stopPicture();
       if (this.source === 'live') { L.markBad(id, true); this.standby('PLEASE STAND BY', 'That show won\'t come in. Here\'s the next one.'); setTimeout(() => tok === this.token && this.present(tok), 1500); }

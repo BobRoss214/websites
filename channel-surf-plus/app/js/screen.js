@@ -3,7 +3,7 @@
 // Banners and number/volume displays make the picture shrink ("squeeze") and
 // draw in the space it leaves; menus show the picture in a window instead.
 import { app, RECT } from './app.js';
-import { $, esc, clock, minsLeft, hms, lengthText } from './util.js';
+import { $, esc, clock, minsLeft, hms } from './util.js';
 import { S } from './store.js';
 import { cards, Snow, frameClock } from './cards.js';
 import { nextAfter } from './lineup.js';
@@ -168,4 +168,3 @@ export class Screen {
     if (this.bandType) this.refreshBand();
   }
 }
-export { lengthText };

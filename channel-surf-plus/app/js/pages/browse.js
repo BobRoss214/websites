@@ -7,9 +7,9 @@ import { qrSVG } from '../qr.js';
 import { Sound } from '../sound.js';
 import * as L from '../lineup.js';
 import { yt, isDemo } from '../source.js';
-import { searchesLeft, plain } from '../api.js';
+import { searchesLeft } from '../api.js';
 import { account } from '../account.js';
-import { Page, ListPage, MessagePage, rows, thumb, avatar, sideVideo, videoMeta, tags } from './base.js';
+import { Page, ListPage, MessagePage, rows, thumb, avatar, sideVideo, tags } from './base.js';
 import { canUseAccount, lookUp, lookUpChannel, ratingOf, subOf, setRating, toggleSub, writeComment, SaveToPlaylistPage, RepliesPage } from './youtube.js';
 
 // ---------------- Search ----------------
@@ -355,4 +355,3 @@ export class MakeChannelPage extends ListPage {
     ]));
   }
 }
-export { plain };
