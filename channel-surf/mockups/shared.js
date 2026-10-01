@@ -333,11 +333,13 @@
   }
 
   // ---------- the TV brain (shared by all three looks) ----------
-  // The look supplies `ui` callbacks; this handles channel logic.
+  // ---------- the TV brain (shared by all three looks) ----------
+  // The look supplies `ui` callbacks; this handles channels, numbers, volume.
+  // Every button (on-screen remote or keyboard) goes through tv.press(key).
   class TV {
     constructor(ui, opts = {}) {
       this.ui = ui; this.channels = CHANNELS; this.on = false; this.idx = 1; this.lastIdx = 1;
-      this.volume = 60; this.muted = false; this.cc = false; this.favs = new Set([2, 5]);
+      this.volume = 60; this.muted = false; this.cc = false; this.bigText = false; this.favs = new Set([2, 5, 7]);
       this.digits = ''; this.digitTimer = null; this.staticOn = opts.staticOn !== false;
       this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
       this.tuneToken = 0; this.cur = null;
@@ -345,8 +347,27 @@
     }
     get ch() { return this.channels[this.idx]; }
     find(num) { return this.channels.findIndex(c => c.num === num); }
-    power() {
+    press(k) {
       Sound.init(); if (Sound.ctx && Sound.ctx.state === 'suspended') Sound.ctx.resume();
+      if (!this.on || k === 'power') { this.power(); return; } // any button turns the TV on
+      if (this.ui.keyHook && this.ui.keyHook(k, this)) return;   // menus and the guide get first look
+      if (/^\d$/.test(k)) return this.digit(k);
+      switch (k) {
+        case 'up': case 'chup': return this.up();
+        case 'down': case 'chdown': return this.down();
+        case 'ok': return this.enter();
+        case 'back': return this.last();
+        case 'menu': return this.ui.menu && this.ui.menu();
+        case 'guide': return this.guide();
+        case 'info': return this.info();
+        case 'mute': return this.mute();
+        case 'vup': return this.vol(10);
+        case 'vdown': return this.vol(-10);
+        case 'cc': return this.toggleCC();
+        case 'fav': return this.favNext();
+      }
+    }
+    power() {
       this.on = !this.on;
       if (this.on) { Sound.powerOn(); this.ui.powerOn(() => this.tune(this.idx, { fromPower: true })); }
       else { this.cur = null; this.tuneToken++; Sound.powerOff(); Sound.tone(false); clearTimeout(this.digitTimer); this.digits = ''; this.ui.powerOff(); }
@@ -356,10 +377,9 @@
       const n = this.channels.length; i = ((i % n) + n) % n;
       if (i !== this.idx) this.lastIdx = this.idx;
       this.idx = i; const token = ++this.tuneToken;
-      const ch = this.ch;
       const go = () => this._present(token);
-      this.ui.channelNumber(ch);
-      if (how.fromPower || !this.staticOn || this.reduced) { this.ui.blank && this.ui.blank(); setTimeout(go, how.fromPower ? 0 : 180); }
+      this.ui.channelNumber && this.ui.channelNumber(this.ch);
+      if (how.fromPower || !this.staticOn || this.reduced) { this.ui.blank(); setTimeout(go, how.fromPower ? 0 : 180); }
       else { Sound.hiss(380); this.ui.snow(); setTimeout(go, 380); }
     }
     // Put whatever the clock says is on right now onto the screen.
@@ -367,9 +387,9 @@
       if (token !== this.tuneToken || !this.on) return;
       const ch = this.ch; const now = Date.now();
       Sound.tone(false);
-      if (ch.kind === 'guide') { this.cur = { type: 'guide' }; this.ui.showGuide(ch); this.ui.banner(ch, null); return; }
+      if (ch.kind === 'guide') { this.cur = { type: 'guide' }; this.ui.showGuide(ch); return; }
       const a = airing(ch, now);
-      if (!a) { this.cur = { type: 'offair' }; Sound.tone(true); this.ui.offAir(ch); this.ui.banner(ch, null); return; }
+      if (!a) { this.cur = { type: 'offair' }; Sound.tone(true); this.ui.offAir(ch); return; }
       if (a.show.broken && !a.bumper) {
         // broken video: brief stand-by card, then the next show takes its slot
         this.cur = { type: 'standby' }; this.ui.standBy(ch);
@@ -378,10 +398,10 @@
           const nx = next(ch, now); const t = Date.now();
           const fake = Object.assign({}, nx, { offset: 0, start: t, end: t + nx.show.m * 60000, slotEnd: t + nx.show.m * 60000 + 6000 });
           this.cur = { type: 'picture', a: fake }; this.ui.picture(ch, fake); this.ui.banner(ch, fake, { replaced: true });
-        }, 1800);
+        }, 2200);
         return;
       }
-      if (a.bumper) { const nx = next(ch, now); this.cur = { type: 'ident', a }; Sound.chime(); this.ui.ident(ch, nx); this.ui.banner(ch, nx, { upNext: true }); return; }
+      if (a.bumper) { const nx = next(ch, now); this.cur = { type: 'ident', a }; Sound.chime(); this.ui.ident(ch, nx); return; }
       this.cur = { type: 'picture', a }; this.ui.picture(ch, a); this.ui.banner(ch, a);
     }
     // Every half second: when a show ends, roll into the ident, then the next show.
@@ -392,13 +412,12 @@
     up() { this.tune(this.idx + 1); }
     down() { this.tune(this.idx - 1); }
     last() { this.tune(this.lastIdx); }
-    guide() { const g = this.find(1); this.tune(g); }
+    guide() { this.tune(this.find(1)); }
     digit(d) {
-      if (!this.on) return; Sound.beep();
+      Sound.beep();
       this.digits = (this.digits + d).slice(-2); this.ui.typing(this.digits);
       clearTimeout(this.digitTimer);
-      if (this.digits.length === 2) this.digitTimer = setTimeout(() => this.enter(), 500);
-      else this.digitTimer = setTimeout(() => this.enter(), 1800);
+      this.digitTimer = setTimeout(() => this.enter(), this.digits.length === 2 ? 500 : 1800);
     }
     enter() {
       clearTimeout(this.digitTimer);
@@ -407,63 +426,154 @@
       const i = this.find(num);
       if (i >= 0) this.tune(i); else this.ui.typing('--', true);
     }
-    info() { if (!this.on) return; const ch = this.ch; const a = ch.kind === 'guide' ? null : airing(ch, Date.now()); this.ui.banner(ch, a && !a.bumper ? a : null, { info: true }); }
-    vol(d) { if (!this.on) return; this.muted = false; this.volume = Math.max(0, Math.min(100, this.volume + d)); Sound.master && (Sound.master.gain.value = this.volume / 120); this.ui.volume(this.volume, false); }
-    mute() { if (!this.on) return; this.muted = !this.muted; Sound.master && (Sound.master.gain.value = this.muted ? 0 : this.volume / 120); this.ui.volume(this.volume, this.muted); }
-    toggleCC() { if (!this.on) return; this.cc = !this.cc; this.ui.cc && this.ui.cc(this.cc); }
-    fav() { if (!this.on) return; const n = this.ch.num; this.favs.has(n) ? this.favs.delete(n) : this.favs.add(n); this.ui.fav && this.ui.fav(this.ch, this.favs.has(n)); }
+    airingNow() { const ch = this.ch; if (!ch.shows || !ch.shows.length) return null; const c = this.cur; if (c && c.type === 'picture') return c.a; return null; }
+    info() { const a = this.airingNow(); if (a) this.ui.banner(this.ch, a, { info: true }); }
+    vol(d) { this.muted = false; this.volume = Math.max(0, Math.min(100, this.volume + d)); Sound.master && (Sound.master.gain.value = this.volume / 120); this.ui.volume(this.volume, false); }
+    mute() { this.muted = !this.muted; Sound.master && (Sound.master.gain.value = this.muted ? 0 : this.volume / 120); this.ui.volume(this.volume, this.muted); }
+    toggleCC() { this.cc = !this.cc; this.ui.message && this.ui.message(this.cc ? 'Captions on' : 'Captions off'); }
     favNext() { // jump to the next favorite channel
-      if (!this.on || !this.favs.size) return; const n = this.channels.length;
+      if (!this.favs.size) return; const n = this.channels.length;
       for (let k = 1; k <= n; k++) { const j = (this.idx + k) % n; if (this.favs.has(this.channels[j].num)) { this.tune(j); return; } }
     }
   }
 
+  // ---------- the set-top box menu (shared model; each look draws it) ----------
+  class Menu {
+    constructor(tv, render) { this.tv = tv; this.render = render; this.open = false; this.screen = 'main'; this.sel = 0; this.pin = ''; }
+    items() {
+      const tv = this.tv;
+      if (this.screen === 'main') return [
+        { id: 'guide', label: 'Program Guide', hint: 'What\'s on now and later', icon: 'grid' },
+        { id: 'favs', label: 'Favorite Channels', hint: tv.favs.size + ' favorites', icon: 'star' },
+        { id: 'settings', label: 'Settings', hint: 'Captions, text size, static', icon: 'gear' },
+        { id: 'setup', label: 'Setup', hint: 'Channels and numbers (PIN)', icon: 'lock' },
+      ];
+      if (this.screen === 'settings') return [
+        { id: 'cc', label: 'Closed captions', value: tv.cc ? 'On' : 'Off' },
+        { id: 'big', label: 'Bigger text', value: tv.bigText ? 'On' : 'Off' },
+        { id: 'static', label: 'Static between channels', value: tv.staticOn ? 'On' : 'Off' },
+        { id: 'sound', label: 'Button sounds', value: Sound.enabled ? 'On' : 'Off' },
+      ];
+      if (this.screen === 'favs') return CHANNELS.filter(c => tv.favs.has(c.num)).map(c => ({ id: 'tune', ch: c, label: c.num + '  ' + c.name, hint: (airing(c, Date.now()) || { show: { t: 'Off the air' } }).show.t }));
+      return [];
+    }
+    title() { return { main: 'Main Menu', settings: 'Settings', favs: 'Favorite Channels', pin: 'Setup', soon: 'Setup' }[this.screen]; }
+    show() { this.open = true; this.screen = 'main'; this.sel = 0; this.pin = ''; this.render(this); }
+    close() { this.open = false; this.render(this); }
+    key(k) {
+      if (!this.open) return false;
+      const tv = this.tv;
+      if (k === 'vup' || k === 'vdown' || k === 'mute') return false; // volume always works
+      if (k === 'chup' || k === 'chdown' || k === 'guide') { this.close(); return false; }
+      if (k === 'menu' || k === 'exit') { this.close(); return true; }
+      if (k === 'back') { if (this.screen === 'main') this.close(); else { this.screen = 'main'; this.sel = 0; this.render(this); } return true; }
+      if (this.screen === 'pin') {
+        if (/^\d$/.test(k)) { Sound.beep(); this.pin += k; if (this.pin.length === 4) { this.screen = 'soon'; } this.render(this); }
+        return true;
+      }
+      if (this.screen === 'soon') { if (k === 'ok') { this.screen = 'main'; this.sel = 3; this.render(this); } return true; }
+      const items = this.items();
+      if (k === 'up' || k === 'left' && this.screen === 'main') { this.sel = (this.sel - 1 + items.length) % items.length; Sound.beep(); }
+      else if (k === 'down' || k === 'right' && this.screen === 'main') { this.sel = (this.sel + 1) % items.length; Sound.beep(); }
+      else if (k === 'ok' || ((k === 'left' || k === 'right') && this.screen === 'settings')) this.activate(items[this.sel]);
+      else return true;
+      if (this.open) this.render(this);
+      return true;
+    }
+    activate(it) {
+      if (!it) return; const tv = this.tv;
+      switch (it.id) {
+        case 'guide': this.close(); tv.guide(); return;
+        case 'favs': this.screen = 'favs'; this.sel = 0; return;
+        case 'settings': this.screen = 'settings'; this.sel = 0; return;
+        case 'setup': this.screen = 'pin'; this.pin = ''; return;
+        case 'tune': this.close(); tv.tune(CHANNELS.indexOf(it.ch)); return;
+        case 'cc': tv.cc = !tv.cc; return;
+        case 'big': tv.bigText = !tv.bigText; document.body.classList.toggle('big', tv.bigText); return;
+        case 'static': tv.staticOn = !tv.staticOn; const cb = document.getElementById('mb-static'); if (cb) cb.checked = tv.staticOn; return;
+        case 'sound': Sound.enabled = !Sound.enabled; return;
+      }
+    }
+    pick(i) { this.sel = i; this.activate(this.items()[i]); if (this.open) this.render(this); }
+  }
+
   // ---------- keyboard: TV-remote style ----------
-  function bindKeys(tv, extra = {}) {
+  const KEYMAP = {
+    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', Enter: 'ok', ' ': 'info',
+    PageUp: 'chup', PageDown: 'chdown', ChannelUp: 'chup', ChannelDown: 'chdown',
+    Backspace: 'back', Escape: 'back', BrowserBack: 'back', GoBack: 'back',
+    Home: 'menu', ContextMenu: 'menu', Menu: 'menu',
+    m: 'mute', M: 'mute', AudioVolumeMute: 'mute', '+': 'vup', '=': 'vup', '-': 'vdown', AudioVolumeUp: 'vup', AudioVolumeDown: 'vdown',
+    g: 'guide', G: 'guide', i: 'info', I: 'info', c: 'cc', C: 'cc', f: 'fav', F: 'fav', p: 'power', P: 'power', Power: 'power',
+  };
+  function bindKeys(tv) {
     addEventListener('keydown', e => {
       if (e.target.closest && e.target.closest('input,textarea,select')) return;
-      const k = e.key;
-      if (extra[k]) { e.preventDefault(); extra[k](e); return; }
-      if (!tv.on && !(k === 'p' || k === 'P' || k === 'Enter' || k === ' ' || k === 'Power')) return;
-      const map = {
-        ArrowUp: () => tv.up(), ArrowDown: () => tv.down(), PageUp: () => tv.up(), PageDown: () => tv.down(), ChannelUp: () => tv.up(), ChannelDown: () => tv.down(),
-        Backspace: () => tv.last(), Escape: () => tv.last(), BrowserBack: () => tv.last(), l: () => tv.last(),
-        m: () => tv.mute(), M: () => tv.mute(), AudioVolumeMute: () => tv.mute(),
-        '+': () => tv.vol(10), '=': () => tv.vol(10), '-': () => tv.vol(-10), AudioVolumeUp: () => tv.vol(10), AudioVolumeDown: () => tv.vol(-10),
-        g: () => tv.guide(), G: () => tv.guide(), i: () => tv.info(), I: () => tv.info(), c: () => tv.toggleCC(), C: () => tv.toggleCC(),
-        f: () => tv.favNext(), F: () => tv.favNext(), p: () => tv.power(), P: () => tv.power(), Power: () => tv.power(),
-        Enter: () => tv.on ? tv.enter() : tv.power(), ' ': () => tv.on ? tv.info() : tv.power(),
-      };
-      // on the guide channel, arrows and Enter move around the guide instead
-      if (tv.on && tv.cur && tv.cur.type === 'guide' && !tv.digits && tv.ui.guideKey && tv.ui.guideKey(k)) { e.preventDefault(); return; }
-      if (/^[0-9]$/.test(k)) { e.preventDefault(); tv.digit(k); return; }
-      if (map[k]) { e.preventDefault(); map[k](); }
+      const k = /^[0-9]$/.test(e.key) ? e.key : KEYMAP[e.key];
+      if (!k) return;
+      e.preventDefault(); tv.press(k);
+    });
+  }
+
+  // ---------- the on-screen remote: same buttons for every look, each look styles it ----------
+  const PW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>';
+  function remoteHTML(brand) {
+    const b = (k, label, cls = '', aria = '') => `<button type="button" class="k ${cls}" data-k="${k}"${aria ? ` aria-label="${aria}"` : ''}>${label}</button>`;
+    return `<div class="remote" id="remote">
+      <div class="r-top">${b('power', PW, 'pw', 'Power')}</div>
+      <div class="r-fn">${b('guide', 'Guide', 'fn guide')}${b('menu', 'Menu', 'fn menu')}${b('info', 'Info', 'fn info')}</div>
+      <div class="r-pad">${b('back', 'Last', 'corner')}${b('up', '▲', 'arrow', 'Up')}${b('exit', 'Exit', 'corner')}
+        ${b('left', '◀', 'arrow', 'Left')}${b('ok', 'OK', 'ok')}${b('right', '▶', 'arrow', 'Right')}
+        ${b('fav', 'Fav', 'corner')}${b('down', '▼', 'arrow', 'Down')}${b('cc', 'CC', 'corner')}</div>
+      <div class="r-rock">
+        <div class="rock"><span>CH</span>${b('chup', '▲', 'rk', 'Channel up')}${b('chdown', '▼', 'rk', 'Channel down')}</div>
+        ${b('mute', 'Mute', 'mute')}
+        <div class="rock"><span>VOL</span>${b('vup', '+', 'rk', 'Volume up')}${b('vdown', '−', 'rk', 'Volume down')}</div>
+      </div>
+      <div class="r-num">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => b(String(n), n, 'num')).join('')}${b('back', 'Last', 'num sm')}${b('0', '0', 'num')}${b('ok', 'Enter', 'num sm')}</div>
+      <div class="r-brand">${brand || 'Channel Surf'}</div>
+    </div>`;
+  }
+  function wireRemote(tv, root = document) {
+    root.querySelectorAll('[data-k]').forEach(btn => {
+      btn.tabIndex = -1; // keep the keyboard on the TV, not on a button
+      btn.addEventListener('mousedown', e => e.preventDefault());
+      btn.addEventListener('click', () => tv.press(btn.dataset.k));
     });
   }
 
   // ---------- fit a fixed-size stage to the window ----------
+  let fitState = null;
   function fitStage(stage, W, H) {
+    fitState = { stage, W, H };
     const fit = () => {
+      const { stage, W, H } = fitState;
       const bar = document.querySelector('.mock-bar'); const bh = bar ? bar.offsetHeight : 0;
       const s = Math.min(innerWidth / W, (innerHeight - bh) / H);
+      stage.style.width = W + 'px'; stage.style.height = H + 'px';
       stage.style.transform = `translate(-50%, 0) scale(${s})`;
       stage.parentElement.style.height = (H * s) + 'px';
     };
-    addEventListener('resize', fit); fit();
+    if (!fitStage.bound) { addEventListener('resize', () => fitState && fitStage.fit()); fitStage.bound = true; }
+    fitStage.fit = fit; fit();
   }
 
   // ---------- the mockup switcher bar shown above every look ----------
   function mockBar(current, tv) {
     const bar = document.createElement('div'); bar.className = 'mock-bar';
-    const looks = [['look-a-1987.html', 'A · 1987 Console'], ['look-b-1994.html', 'B · 1994 Cable Box'], ['look-c-2003.html', 'C · 2003 Digital']];
+    const looks = [['look-1-1997.html', '1 · 1997 Cable Box Guide'], ['look-2-2002.html', '2 · 2002 Digital Cable'], ['look-3-2005.html', '3 · 2005 Satellite HD']];
     bar.innerHTML = `<span class="mb-name">Channel Surf mockups</span>` +
       looks.map(([href, label]) => `<a href="${href}"${href === current ? ' aria-current="page"' : ''}>${label}</a>`).join('') +
-      `<span class="mb-sp"></span><label class="mb-tog"><input type="checkbox" id="mb-static" checked> Static</label><button type="button" id="mb-fs">Full screen</button>` +
-      `<span class="mb-keys">Keys: ↑↓ channel · 0-9 · Enter · Backspace = last · G guide · I info · M mute · +/− volume · C captions · F favorites · P power</span>`;
+      `<span class="mb-sp"></span><label class="mb-tog"><input type="checkbox" id="mb-remote" checked> Remote</label><label class="mb-tog"><input type="checkbox" id="mb-static" checked> Static</label><button type="button" id="mb-fs">Full screen</button>` +
+      `<span class="mb-keys">Keyboard: ↑↓ channel (moves around in the guide and menus) · PgUp/PgDn channel · 0–9 · Enter OK · Backspace last channel · Home menu · G guide · I info · M mute · +/− volume · C captions · F favorites · P power</span>`;
     document.body.prepend(bar);
     bar.querySelector('#mb-static').addEventListener('change', e => { tv.staticOn = e.target.checked; e.target.blur(); });
-    bar.querySelector('#mb-fs').addEventListener('click', e => { e.target.blur(); const el = document.documentElement; (document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen && el.requestFullscreen()).catch?.(() => {}); });
+    bar.querySelector('#mb-remote').addEventListener('change', e => {
+      e.target.blur(); const r = document.getElementById('remote'); r.hidden = !e.target.checked;
+      fitState.W = e.target.checked ? 1600 + 400 : 1600; fitStage.fit();
+    });
+    bar.querySelector('#mb-fs').addEventListener('click', e => { e.target.blur(); const el = document.documentElement; const p = document.fullscreenElement ? document.exitFullscreen() : (el.requestFullscreen ? el.requestFullscreen() : null); p && p.catch && p.catch(() => {}); });
   }
 
-  window.CS = { CHANNELS, airing, listings, next, clock, minsLeft, mmss, halfHourFloor, Picture, Snow, Sound, pixelText, pixelWidth, ledSVG, TV, bindKeys, fitStage, mockBar, hash, rng };
+  window.CS = { CHANNELS, airing, listings, next, clock, minsLeft, mmss, halfHourFloor, Picture, Snow, Sound, pixelText, pixelWidth, ledSVG, TV, Menu, bindKeys, remoteHTML, wireRemote, fitStage, mockBar, hash, rng, PW };
 })();
