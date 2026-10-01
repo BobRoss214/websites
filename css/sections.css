@@ -499,3 +499,7 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
 @media (prefers-reduced-motion:reduce){
   .chips .chip-new,.hang,.drop,.awning,.cone-sign,.twinkle,.flame,.puff,.float-pizza{animation:none}
 }
+
+.addon-art-group{display:flex;gap:4px;align-items:flex-end}
+.addon-art-group .addon-art{height:60px}
+.addon-list li>.addon-art-group{flex-direction:row;align-items:flex-end;gap:4px;line-height:0}

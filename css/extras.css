@@ -160,3 +160,36 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 .pol-c{--r:-2.5deg;margin-top:14px}
 @media (max-width:760px){.collage .polaroid{width:46%}.photo-strip li{flex-basis:130px}.goat-strip li{flex-basis:140px}}
 .polaroid img{height:auto}
+
+/* Big hover moments: the main buttons jump, tilt, shine and ring; the "New" tomato notices pop and wiggle. */
+.hero-cta .btn{position:relative;overflow:hidden;isolation:isolate;transition:transform .38s cubic-bezier(.3,1.9,.5,1),box-shadow .3s,background-color .2s}
+.hero-cta .btn::after{content:"";position:absolute;top:-30%;bottom:-30%;left:-70%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.8),transparent);transform:skewX(-20deg);opacity:0;pointer-events:none}
+.hero-cta .btn .ico{transition:transform .25s}
+@keyframes btnShine{0%{left:-70%;opacity:1}100%{left:140%;opacity:1}}
+@keyframes btnRing{0%{box-shadow:0 14px 0 var(--ink),0 24px 34px rgba(58,36,22,.34),0 0 0 0 rgba(255,201,40,.9)}100%{box-shadow:0 14px 0 var(--ink),0 24px 34px rgba(58,36,22,.34),0 0 0 26px rgba(255,201,40,0)}}
+@keyframes arrowDash{0%,100%{transform:translateX(0) scale(1.25)}50%{transform:translateX(14px) scale(1.55)}}
+@media (hover:hover){
+  .hero-cta .btn:hover{transform:translateY(-7px) scale(1.16) rotate(-2.4deg);box-shadow:0 14px 0 var(--ink),0 24px 34px rgba(58,36,22,.34);animation:btnRing .9s ease-out infinite}
+  .hero-cta .btn:nth-child(even):hover{transform:translateY(-7px) scale(1.16) rotate(2.4deg)}
+  .hero-cta .btn:hover::after{animation:btnShine .75s ease-out .05s}
+  .hero-cta .btn:hover .ico{animation:arrowDash .8s ease-in-out infinite}
+}
+.hero-cta .btn:focus-visible{transform:translateY(-5px) scale(1.1)}
+.hero-cta .btn:active{transform:translateY(3px) scale(.96);box-shadow:0 1px 0 var(--ink);animation:none}
+
+@keyframes chipWiggle{0%,100%{transform:scale(1.24) rotate(-3.5deg)}25%{transform:scale(1.3) rotate(3.5deg)}50%{transform:scale(1.24) rotate(-3.5deg)}75%{transform:scale(1.3) rotate(3.5deg)}}
+@keyframes leafSwing{0%,100%{transform:rotate(-24deg) scale(1.35)}50%{transform:rotate(24deg) scale(1.6)}}
+@keyframes chipGlow{0%{box-shadow:0 0 0 0 rgba(229,51,75,.7),0 8px 0 rgba(58,36,22,.25)}100%{box-shadow:0 0 0 18px rgba(229,51,75,0),0 8px 0 rgba(58,36,22,.25)}}
+.chips .chip-new,.choose-new{transition:transform .3s cubic-bezier(.3,1.9,.5,1),background-color .2s}
+.choose-new{display:flex;transform-origin:left center}
+@media (hover:hover){
+  .chips .chip-new:hover{animation:chipWiggle .9s ease-in-out infinite,chipGlow 1s ease-out infinite;background:#ffe066;z-index:2;position:relative}
+  .chips .chip-new:hover .ico{animation:leafSwing .9s ease-in-out infinite;color:var(--red)}
+  .choose-new:hover{transform:scale(1.07) rotate(-1deg);animation:chipGlow 1s ease-out infinite}
+  .choose-new:hover .choose-new-badge{animation:chipWiggle .8s ease-in-out infinite;display:inline-block}
+  .choose-new:hover .ico{animation:arrowDash .8s ease-in-out infinite}
+}
+@media (prefers-reduced-motion:reduce){
+  .hero-cta .btn:hover,.hero-cta .btn:nth-child(even):hover{transform:none;animation:none}
+  .hero-cta .btn:hover::after,.hero-cta .btn:hover .ico,.chips .chip-new:hover,.chips .chip-new:hover .ico,.choose-new:hover,.choose-new:hover .ico,.choose-new:hover .choose-new-badge{animation:none;transform:none}
+}

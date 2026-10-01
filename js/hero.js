@@ -125,31 +125,38 @@
       `<g transform="translate(11 6) scale(.55)"><use href="#basket" width="64" height="52"/></g></g></g>`;
   }
 
-  // The farm road the wagon drives along (ruts, pebbles and grass tufts along the edges)
-  function roadArt(fill = '#c69a63', rut = '#a9794a', hi = '#dcb57c', seed = 5) {
-    const r = rand(seed);
-    let o = `<path d="M-20 ${VPY + 16}C260 ${VPY + 6} 560 ${VPY + 22} 860 ${VPY + 12}S1300 ${VPY + 8} 1470 ${VPY + 16}V${VPY + 62}C1240 ${VPY + 70} 980 ${VPY + 58} 700 ${VPY + 66}S180 ${VPY + 62} -20 ${VPY + 68}Z" fill="${fill}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` +
-      `<path d="M-10 ${VPY + 34}C260 ${VPY + 28} 560 ${VPY + 42} 860 ${VPY + 34}S1300 ${VPY + 30} 1460 ${VPY + 36}" fill="none" stroke="${rut}" stroke-width="3" stroke-dasharray="14 12" stroke-linecap="round"/>` +
-      `<path d="M-10 ${VPY + 50}C260 ${VPY + 46} 560 ${VPY + 58} 860 ${VPY + 50}S1300 ${VPY + 46} 1460 ${VPY + 52}" fill="none" stroke="${hi}" stroke-width="3" stroke-dasharray="10 14" stroke-linecap="round"/>`;
-    for (let i = 0; i < 46; i++) {
-      const x = r() * 1440, y = VPY + 22 + r() * 40, w = 2 + r() * 4;
-      o += `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${f1(w)}" ry="${f1(w * 0.62)}" fill="${r() < 0.5 ? rut : hi}" stroke="${INK}" stroke-width="1.2" opacity=".85"/>`;
+  // A farm lane (ruts, pebbles, grass tufts). `k` squashes it for the distance; `y0` is where its top edge sits.
+  function roadArt(fill = '#c69a63', rut = '#a9794a', hi = '#dcb57c', seed = 5, k = 1, y0 = VPY + 16) {
+    const r = rand(seed), Y = (o) => f1(y0 + (o - 16) * k), sz = Math.max(k, 0.4);
+    let o = `<path d="M-20 ${Y(16)}C260 ${Y(6)} 560 ${Y(22)} 860 ${Y(12)}S1300 ${Y(8)} 1470 ${Y(16)}V${Y(62)}C1240 ${Y(70)} 980 ${Y(58)} 700 ${Y(66)}S180 ${Y(62)} -20 ${Y(68)}Z" fill="${fill}" stroke="${INK}" stroke-width="${f1(1.4 + 1.6 * k)}" stroke-linejoin="round"/>` +
+      `<path d="M-10 ${Y(34)}C260 ${Y(28)} 560 ${Y(42)} 860 ${Y(34)}S1300 ${Y(30)} 1460 ${Y(36)}" fill="none" stroke="${rut}" stroke-width="${f1(1.2 + 1.8 * k)}" stroke-dasharray="14 12" stroke-linecap="round"/>` +
+      `<path d="M-10 ${Y(50)}C260 ${Y(46)} 560 ${Y(58)} 860 ${Y(50)}S1300 ${Y(46)} 1460 ${Y(52)}" fill="none" stroke="${hi}" stroke-width="${f1(1.2 + 1.8 * k)}" stroke-dasharray="10 14" stroke-linecap="round"/>`;
+    for (let i = 0, n = Math.round(46 * k) + 10; i < n; i++) {
+      const x = r() * 1440, y = Y(22 + r() * 40), w = (2 + r() * 4) * sz;
+      o += `<ellipse cx="${f1(x)}" cy="${y}" rx="${f1(w)}" ry="${f1(w * 0.62)}" fill="${r() < 0.5 ? rut : hi}" stroke="${INK}" stroke-width="1" opacity=".85"/>`;
     }
-    for (let i = 0; i < 40; i++) {
-      const x = r() * 1440, top = r() < 0.5, y = top ? VPY + 14 + Math.sin(x / 190) * 4 : VPY + 64 + Math.sin(x / 150) * 3;
-      o += `<path d="M${f1(x)} ${f1(y)}l-3 -9M${f1(x)} ${f1(y)}l1 -11M${f1(x)} ${f1(y)}l4 -8" stroke="#3f8f3a" stroke-width="2.2" stroke-linecap="round" fill="none"/>`;
+    for (let i = 0, n = Math.round(40 * k) + 12; i < n; i++) {
+      const x = r() * 1440, top = r() < 0.5, y = Y(top ? 14 + Math.sin(x / 190) * 4 : 64 + Math.sin(x / 150) * 3);
+      o += `<path d="M${f1(x)} ${y}l${f1(-3 * sz)} ${f1(-9 * sz)}M${f1(x)} ${y}l${f1(sz)} ${f1(-11 * sz)}M${f1(x)} ${y}l${f1(4 * sz)} ${f1(-8 * sz)}" stroke="#3f8f3a" stroke-width="${f1(1.2 + sz)}" stroke-linecap="round" fill="none"/>`;
     }
     return o;
   }
 
+  // The field runs from the horizon all the way to the front of the scene; the farm lanes sit behind it.
+  const FIELD_T = [0.1, 0.125, 0.152, 0.182, 0.215, 0.25, 0.29, 0.335, 0.385, 0.44, 0.5, 0.565, 0.635, 0.71];
+  const LANES = { w: { y0: VPY - 4, k: 0.28, ground: VPY + 4, scale: 0.46 }, b: { y0: VPY + 16, k: 0.26, ground: VPY + 21, scale: 0.36 } };
+  // back lane: the wagon ride; front lane: the little barrel train
+  const lanes = (season, fill, rut, hi, seed) =>
+    roadArt(fill, rut, hi, seed, LANES.w.k, LANES.w.y0) + buildRig({ season, y: LANES.w.ground, scale: LANES.w.scale }) +
+    roadArt(fill, rut, hi, seed + 1, LANES.b.k, LANES.b.y0) + barrelRig(LANES.b.ground, LANES.b.scale);
+
   function springField() {
     const rnd = rand(11);
     let out = `<path d="${groundPath()}" fill="#69b84c"/>`;
-    out += roadArt('#cfa571', '#b0804f', '#e3c18a', 6);
-    out += wagonRig('spring');
-    out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a', t0: 0.24 });
-    const KIDS = { 1: [[-1.5, '#e5334b', HAT.straw, 0], [1.5, '#4b5bb8', HAT.cap, 1]], 3: [[0.5, '#ffc928', HAT.beanie, 0]] };
-    [0.3, 0.36, 0.43, 0.51, 0.6, 0.7].forEach((t, ti) => {
+    out += lanes('spring', '#cfa571', '#b0804f', '#e3c18a', 6);
+    out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a', t0: 0.08 });
+    const KIDS = { 6: [[-1.5, '#e5334b', HAT.straw, 0], [1.5, '#4b5bb8', HAT.cap, 1]], 9: [[0.5, '#ffc928', HAT.beanie, 0]], 11: [[-3.2, '#43a047', HAT.pony, 1]] };
+    FIELD_T.forEach((t, ti) => {
       (KIDS[ti] || []).forEach(([k, shirt, hat, flip]) => { out += kid(rowX(k, t), rowY(t) - 2, 22 + 130 * t, shirt, hat, flip); });
       for (let k = -4; k <= 4; k++) {
         const cx = rowX(k, t), cy = rowY(t);
@@ -162,8 +169,10 @@
         for (let i = 0; i < count; i++) {
           const [bx, by] = spots[i];
           const berry = use('strawberry', 0, 0, bw, bh);
-          const pad = bw * 0.3;
-          out += pickable(bx, by, berry, { x: -pad, y: -pad, w: bw + pad * 2, h: bh + pad * 2 });
+          if (t >= 0.2) {
+            const pad = bw * 0.3;
+            out += pickable(bx, by, berry, { x: -pad, y: -pad, w: bw + pad * 2, h: bh + pad * 2 });
+          } else out += `<g transform="translate(${f1(bx)} ${f1(by)})">${berry}</g>`;
         }
       }
     });
@@ -247,13 +256,12 @@
   function summerField() {
     const rnd = rand(23);
     let out = `<path d="${groundPath()}" fill="#63b34a"/>`;
-    out += roadArt('#d9b27a', '#b88e56', '#ecd0a0', 8);
-    out += wagonRig('summer');
-    out += rowPolys(range(-5, 5), { fill: '#c9a06a', stroke: '#6b4a28', inner: '#dcb884', hw: 60, innerHw: 30, t0: 0.24 });
-    [0.3, 0.36, 0.43, 0.51, 0.6, 0.7].forEach((t) => {
+    out += lanes('summer', '#d9b27a', '#b88e56', '#ecd0a0', 8);
+    out += rowPolys(range(-5, 5), { fill: '#c9a06a', stroke: '#6b4a28', inner: '#dcb884', hw: 60, innerHw: 30, t0: 0.08 });
+    FIELD_T.forEach((t) => {
       for (let k = -4; k <= 4; k++) {
         const w = 36 + 150 * t;
-        const n = 4 + Math.floor(rnd() * 3);
+        const n = t >= 0.22 ? 4 + Math.floor(rnd() * 3) : 0;
         out += bush(rowX(k, t), rowY(t) + 2, w, n);
       }
     });
@@ -418,9 +426,102 @@
     const tractor = `<g transform="translate(${TX} ${TY}) scale(${S})">${tractorOpen(true)}</g>` +
       `<g class="rig-smoke" transform="translate(${f1(TX + 105 * S)} ${f1(TY + 13 * S)})" fill="#fff" stroke="#cfcfcf" stroke-width="1.5">` +
         `<circle class="puff p1" r="7"/><circle class="puff p2" r="5.5"/><circle class="puff p3" r="6.5"/></g>` +
-      `<g class="toot" transform="translate(292 -168)"><rect x="-42" y="-17" width="84" height="28" rx="14" fill="#fff" stroke="${INK}" stroke-width="3"/>` +
+      `<g transform="translate(292 -168) scale(${f1(0.78 / c.scale * 100) / 100})"><g class="toot"><rect x="-42" y="-17" width="84" height="28" rx="14" fill="#fff" stroke="${INK}" stroke-width="3"/>` +
       `<path d="M-6 10l6 11 6-11" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M-7 8.5h14" stroke="#fff" stroke-width="5"/>` +
-      `<text x="0" y="3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="${INK}">Toot toot!</text></g>`;
+      `<text x="0" y="3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="${INK}">Toot toot!</text></g></g>`;
+
+    // wheels turn at a speed that matches how far the tractor travels per second at this size
+    const sc = c.scale, vars = `--wt1:${f1(3.7 * sc)}s;--wt2:${f1(2.1 * sc)}s;--wg1:${f1(2.9 * sc)}s;--wg2:${f1(2.9 * sc)}s;` + (c.dur ? `--rig-dur:${c.dur};` : '');
+    return `<g transform="translate(0 ${c.y})"><g class="rig ${c.cls}" style="${vars}"><g transform="scale(${sc})"><g class="rig-bounce">${trailer}${tractor}</g>` +
+      `<rect class="scene-hit" data-rig x="-150" y="-190" width="520" height="200" fill="transparent"/></g></g></g>`;
+  }
+
+  // A small tractor pulling plastic barrels laid on their sides. Each barrel has a hole cut in the top,
+  // a chair inside and a steering wheel for the kid (who waves with the other hand), wheels underneath,
+  // and they are hitched together. Local box 0..334 x -20..100 (ground y = 96).
+  // `animated` adds the wheel classes and the puffs of smoke; `ref` points at the #tractor icon instead of drawing it.
+  function barrelTrain(animated = false, ref = false) {
+    const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+    const kids = [['#e5334b', 'beanie'], ['#ffc928', 'cap'], ['#43a047', 'straw']];
+    const skin = '#f7c9a0';
+    const hatSvg = (h) => h === 'beanie' ? `<path d="M-8.6 -9.2a8.6 8.6 0 0 1 17.2 0Z" fill="#e5334b"/><path d="M-8.8 -10h17.6" stroke="#fff" stroke-width="2.6"/><circle cx="0" cy="-18.4" r="2.4" fill="#fff"/>`
+      : h === 'cap' ? `<path d="M-8.2 -9.4a8.2 8.2 0 0 1 16.4 0Z" fill="#4b5bb8"/><path d="M-1 -9.6h12" stroke-width="2.8"/>`
+      : `<path d="M-12 -10h24" stroke-width="2.8"/><path d="M-7.4 -10a7.4 7.4 0 0 1 14.8 0Z" fill="#e9c46a"/><path d="M-7.4 -11.4h14.8" stroke="#e5334b" stroke-width="2"/>`;
+    let out = `<ellipse cx="167" cy="97" rx="162" ry="3.8" fill="rgba(58,36,22,.22)"/>`;
+    for (let i = 0; i < 3; i++) {
+      const ox = 8 + i * 64, [shirt, hat] = kids[i], cx = ox + 29;
+      // wheels and frame under the barrel
+      out += `<g ${sk}><rect x="${ox + 4}" y="76" width="50" height="5" rx="2" fill="#5d6770"/>` +
+        [ox + 13, ox + 45].map((x, k) => `<g class="${animated ? 'wheel bt' + (i * 2 + k) : ''}"><circle cx="${x}" cy="86" r="9.4" fill="#2b2b30"/><circle cx="${x}" cy="86" r="4.8" fill="#c9d1d8" stroke-width="2.2"/><circle cx="${x}" cy="86" r="1.5" fill="${INK}" stroke="none"/></g>`).join('') + `</g>`;
+      // the barrel: blue plastic, ribbed
+      out += `<g ${sk}><rect x="${ox}" y="42" width="58" height="38" rx="15" fill="#2f6fd6"/>` +
+        `<path d="M${ox + 12} 42v38M${ox + 29} 42v38M${ox + 46} 42v38" fill="none" stroke="#1f4fa0" stroke-width="2.6"/>` +
+        `<path d="M${ox + 9} 50h40" fill="none" stroke="#fff" stroke-width="3" opacity=".4"/><path d="M${ox + 9} 73h40" fill="none" stroke="#1a3f86" stroke-width="2.4" opacity=".5"/></g>` +
+        `<ellipse cx="${ox + 8}" cy="61" rx="3.2" ry="5" fill="#1f4fa0" stroke="${INK}" stroke-width="1.8"/>`;
+      // the hole cut in the top, the chair, the kid (one hand waving), and the front lip of the hole
+      out += `<ellipse cx="${cx}" cy="44" rx="17" ry="6" fill="#0f1b3d" stroke="${INK}" stroke-width="3"/>` +
+        `<g ${sk}><rect x="${cx - 15}" y="26" width="6.4" height="19" rx="2.6" fill="#ff8a3d"/></g>` +
+        `<g transform="translate(${cx + 2} 38)" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">` +
+          `<g class="${animated ? 'wave' : ''}"><path d="M-4 3l-8 -12" fill="none" stroke-width="5.2"/><path d="M-4 3l-8 -12" fill="none" stroke="${shirt}" stroke-width="2.6"/><circle cx="-12.6" cy="-10" r="3.1" fill="${skin}"/></g>` +
+          `<rect x="-7.6" y="-1" width="15.2" height="12" rx="5" fill="${shirt}"/>` +
+          `<circle cx="0" cy="-9" r="8.4" fill="${skin}"/>${hatSvg(hat)}` +
+          `<circle cx="-3" cy="-9.2" r="1.1" fill="${INK}" stroke="none"/><circle cx="3" cy="-9.2" r="1.1" fill="${INK}" stroke="none"/><path d="M-2.6 -5.2q2.6 2.4 5.2 0" fill="none" stroke-width="1.5"/>` +
+          `<ellipse cx="-5.4" cy="-5.8" rx="2" ry="1.3" fill="#ff8fa3" opacity=".6" stroke="none"/><ellipse cx="5.4" cy="-5.8" rx="2" ry="1.3" fill="#ff8fa3" opacity=".6" stroke="none"/>` +
+          `<path d="M5 3l11 3" fill="none" stroke-width="5.2"/><path d="M5 3l11 3" fill="none" stroke="${shirt}" stroke-width="2.6"/></g>` +
+        // steering wheel on a short post
+        `<g ${sk}><path d="M${cx + 19} 45L${cx + 17} 36" fill="none" stroke-width="4.6"/><path d="M${cx + 19} 45L${cx + 17} 36" fill="none" stroke="#6c7a86" stroke-width="2"/>` +
+        `<ellipse cx="${cx + 17}" cy="35" rx="8" ry="3" transform="rotate(-22 ${cx + 17} 35)" fill="none" stroke-width="4.4"/><ellipse cx="${cx + 17}" cy="35" rx="8" ry="3" transform="rotate(-22 ${cx + 17} 35)" fill="none" stroke="#ffc928" stroke-width="2"/></g>` +
+        `<path d="M${cx - 17} 44a17 6 0 0 0 34 0" fill="none" stroke="#dbe7ff" stroke-width="2.4" stroke-linecap="round"/>` +
+        // the hitch to the next car
+        (i < 2 ? `<g ${sk}><rect x="${ox + 56}" y="68" width="10" height="4.6" rx="2" fill="#5d6770"/><circle cx="${ox + 62}" cy="70.3" r="1.5" fill="#c9d1d8" stroke-width="1.4"/></g>` : '');
+    }
+    // the tractor up front: clearly bigger than the kids, with a puff of smoke from its exhaust
+    const S = 0.8, TX = 218.8, TY = 16;
+    out += `<g ${sk}><path d="M196 71L214 86" fill="none" stroke-width="8"/><path d="M196 71L214 86" fill="none" stroke="#5d6770" stroke-width="3.6"/></g>` +
+      `<g transform="translate(${TX} ${TY}) scale(${S})">${ref ? '<use href="#tractor" x="-10" y="0" width="150" height="100"/>' : tractorOpen(animated)}</g>` +
+      (animated ? `<g class="rig-smoke" transform="translate(${f1(TX + 105 * S)} ${f1(TY + 13 * S)})" fill="#fff" stroke="#cfcfcf" stroke-width="1.5"><circle class="puff p1" r="7"/><circle class="puff p2" r="5.5"/><circle class="puff p3" r="6.5"/></g>` : '');
+    return out;
+  }
+
+  // The wagon (ground at y = 0, centre x = 0): kids behind the side boards, wooden wheels. No hay.
+  function wagonArt(season, tongue = true) {
+    const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+    let planks = '', studs = '';
+    [[-70, '#b8794a'], [-59, '#c98a4b'], [-48, '#b8794a']].forEach(([y, f]) => { planks += `<rect x="-138" y="${y}" width="276" height="11" fill="${f}"/>`; });
+    for (let x = -126; x <= 126; x += 28) studs += `<circle cx="${x}" cy="-64" r="1.3" fill="${INK}" stroke="none"/><circle cx="${x}" cy="-53" r="1.3" fill="${INK}" stroke="none"/>`;
+    const posts = [-138, -92, -46, 0, 46, 92, 138].map((x) => `<rect x="${x - 4}" y="-82" width="8" height="38" rx="2" fill="#8a5a35"/>`).join('');
+    return `<ellipse cx="0" cy="3" rx="160" ry="6" fill="rgba(58,36,22,.25)"/>` +
+      // the riders sit behind the side boards
+      person(-96, -100, '#e5334b', HAT.beanie, true) + person(-44, -96, '#4b5bb8', HAT.cap, false) +
+      person(8, -98, '#43a047', HAT.straw, true) + person(56, -94, '#ffc928', HAT.pony, false) + person(100, -98, '#ff7a3d', HAT.hair, true) +
+      `<g ${sk}>` +
+        // chassis: axles, beam and the deck
+        `<rect x="-100" y="-26" width="200" height="7" rx="2" fill="#7a4b2a"/><rect x="-92" y="-22" width="8" height="12" fill="#5c3720"/><rect x="84" y="-22" width="8" height="12" fill="#5c3720"/>` +
+        `<rect x="-146" y="-33" width="14" height="6" rx="2" fill="#8a5a35"/>` +
+        `<rect x="-140" y="-48" width="280" height="24" rx="4" fill="#a5673f"/><path d="M-132 -37h264M-132 -30h264" stroke="#7a4b2a" stroke-width="2" fill="none"/>` +
+        // the side boards, with posts and a painted sign
+        `<g>${planks}</g><path d="M-138 -59H138M-138 -48H138" stroke="${INK}" stroke-width="2.4" fill="none"/>` +
+        `<rect x="-138" y="-48" width="276" height="4.6" fill="#d8322b" stroke-width="2.4"/>` + studs +
+        posts + `<rect x="-142" y="-86" width="284" height="7" rx="3.4" fill="#d9a066"/><path d="M-136 -83h272" stroke="#fff" stroke-width="1.8" opacity=".45" fill="none"/>` +
+        `<rect x="-52" y="-68" width="104" height="19" rx="4" fill="#fff3d6" stroke-width="2.6"/>` +
+        `<path d="M138 -86V-50" stroke-width="3.4"/>` +
+      `</g>` + wagonProps(season) +
+      `<text x="0" y="-54.4" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="11.5" fill="${INK}" letter-spacing=".8">WAGON RIDES</text>` +
+      wheelWood(-88, -22, 24, 'wg1') + wheelWood(88, -22, 24, 'wg2') +
+      (tongue ? `<path d="M138 -36L194 -17" stroke="${INK}" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M138 -36L194 -17" stroke="#8a5a35" stroke-width="3.8" stroke-linecap="round" fill="none"/>` : '');
+  }
+
+  function buildRig(cfg = {}) {
+    const c = Object.assign({ y: VPY + 52, scale: 1, season: 'fall', cls: '', dur: '' }, cfg);
+    const trailer = wagonArt(c.season);
+
+    const S = 1.08, TX = 202, TY = -108;
+    const tractor = `<g transform="translate(${TX} ${TY}) scale(${S})">${tractorOpen(true)}</g>` +
+      `<g class="rig-smoke" transform="translate(${f1(TX + 105 * S)} ${f1(TY + 13 * S)})" fill="#fff" stroke="#cfcfcf" stroke-width="1.5">` +
+        `<circle class="puff p1" r="7"/><circle class="puff p2" r="5.5"/><circle class="puff p3" r="6.5"/></g>` +
+      `<g transform="translate(292 -168) scale(${f1(0.78 / c.scale * 100) / 100})"><g class="toot"><rect x="-42" y="-17" width="84" height="28" rx="14" fill="#fff" stroke="${INK}" stroke-width="3"/>` +
+      `<path d="M-6 10l6 11 6-11" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M-7 8.5h14" stroke="#fff" stroke-width="5"/>` +
+      `<text x="0" y="3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="${INK}">Toot toot!</text></g></g>`;
 
     // wheels turn at a speed that matches how far the tractor travels per second at this size
     const sc = c.scale, vars = `--wt1:${f1(3.7 * sc)}s;--wt2:${f1(2.1 * sc)}s;--wg1:${f1(2.9 * sc)}s;--wg2:${f1(2.9 * sc)}s;` + (c.dur ? `--rig-dur:${c.dur};` : '');
@@ -471,23 +572,20 @@
     return out;
   }
 
-  // The little barrel train drives along the far lane, small and slow
-  function barrelRig() {
-    return `<path d="M-20 ${VPY - 5}C300 ${VPY - 12} 700 ${VPY} 1000 ${VPY - 6}S1340 ${VPY - 8} 1470 ${VPY - 4}V${VPY + 9}C1200 ${VPY + 13} 900 ${VPY + 6} 640 ${VPY + 11}S120 ${VPY + 11} -20 ${VPY + 9}Z" fill="#c69a63" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>` +
-      `<g transform="translate(0 ${VPY + 3})"><g class="rig rig-barrel" style="--wt1:1.9s;--wt2:1.1s;"><g transform="scale(.46)"><g class="rig-bounce"><g transform="translate(-144 -96)">${barrelTrain(true)}</g></g></g></g></g>`;
+  // The little barrel train, drawn small for the distance (the lane itself comes from `lanes`)
+  function barrelRig(y, sc) {
+    const sp = sc / 0.46;
+    return `<g transform="translate(0 ${y})"><g class="rig rig-barrel" style="--wt1:${f1(1.9 * sp)}s;--wt2:${f1(1.1 * sp)}s;"><g transform="scale(${sc})"><g class="rig-bounce"><g transform="translate(-144 -96)">${barrelTrain(true)}</g></g></g></g></g>`;
   }
-  const wagonRig = (season) => buildRig({ season });
 
   function fallField() {
     const rnd = rand(31);
     let out = `<path d="${groundPath()}" fill="#a9bd45"/>`;
-    out += barrelRig();
-    out += roadArt();
-    out += wagonRig('fall');
-    out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a', t0: 0.24 });
+    out += lanes('fall', '#c69a63', '#a9794a', '#dcb57c', 5);
+    out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a', t0: 0.08 });
 
     const variants = ['pumpkin', 'pumpkin', 'pumpkin-b', 'pumpkin-b', 'pumpkin-w'];
-    [0.3, 0.36, 0.43, 0.51, 0.6, 0.7].forEach((t) => {
+    FIELD_T.forEach((t) => {
       for (let k = -4; k <= 4; k++) {
         const hw = 6 + 58 * t;
         const cx = rowX(k, t) + (rnd() - 0.5) * hw * 0.9, cy = rowY(t) + (rnd() - 0.5) * 6;
@@ -663,9 +761,63 @@
     `<path d="M-40 700V548C80 522 220 530 340 542S580 524 720 538 1000 524 1140 538 1380 526 1480 536V700Z" fill="#ffffff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` +
     `<path d="M0 588c80-12 160-12 240 0M700 592c90-12 180-10 270 2M1180 590c60-10 130-10 200 0" fill="none" stroke="#cfe0f0" stroke-width="4" stroke-linecap="round"/>`;
 
+  // The GreenHouse in winter: a cream building with a green roof (not a glass greenhouse), snow on top,
+  // and the ice cream bar built onto the side. Local box: ground at y = 0, x from -34 to 290.
+  function greenhouse(x, base, sc) {
+    const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+    let siding = '', shingles = '', lights = '', shingles2 = '';
+    for (let i = 10; i < 150; i += 10) siding += `M${i} -62v52`;
+    for (const y of [-70, -78, -86, -94]) { const d = ((-62 - y) / 36) * 32; shingles += `M${f1(-10 + d)} ${y}H${f1(160 - d)}`; }
+    for (const y of [-52, -60, -68]) { const d = ((-46 - y) / 26) * 20; shingles2 += `M${f1(146 + d)} ${y}H${f1(252 - d)}`; }
+    const cols = ['#e5334b', '#ffd54f', '#43a047', '#4b5bb8'];
+    for (let i = 0; i < 14; i++) lights += `<circle cx="${-4 + i * 12}" cy="-57" r="2.4" fill="${cols[i % 4]}" stroke="${INK}" stroke-width="1.2"/>`;
+    for (let i = 0; i < 8; i++) lights += `<circle cx="${158 + i * 12}" cy="-43" r="2.2" fill="${cols[(i + 1) % 4]}" stroke="${INK}" stroke-width="1.2"/>`;
+    const win = (wx) => `<rect x="${wx}" y="-42" width="34" height="26" rx="2" fill="#ffe08a" ${sk} stroke-width="2.6"/><path d="M${wx + 17} -42v26M${wx} -29h34" fill="none" stroke="${INK}" stroke-width="2"/>` +
+      `<path d="M${wx + 3} -39h12" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>` +
+      `<rect x="${wx - 3}" y="-16" width="40" height="7" rx="2" fill="#8a5a35" ${sk} stroke-width="2.4"/><circle cx="${wx + 6}" cy="-19" r="3" fill="#e5334b"/><circle cx="${wx + 17}" cy="-20" r="3.4" fill="#e5334b"/><circle cx="${wx + 28}" cy="-19" r="3" fill="#e5334b"/><path d="M${wx + 2} -17h30" stroke="#2b7a3a" stroke-width="3" stroke-linecap="round"/>`;
+    const rug = `<ellipse cx="46" cy="2" rx="40" ry="4" fill="#ffd166" opacity=".3"/><ellipse cx="124" cy="2" rx="40" ry="4" fill="#ffd166" opacity=".3"/>`;
+    return `<g transform="translate(${x} ${base}) scale(${sc})">` +
+      `<path d="M-40 6C-10 -6 60 -8 130 -6S250 -8 300 6V16H-40Z" fill="#fff" stroke="#c9dcef" stroke-width="3"/>` + rug +
+      // chimney with smoke
+      `<g ${sk}><rect x="108" y="-112" width="17" height="38" fill="#b5533a"/><path d="M108 -100h17M108 -88h17M116 -112v12M116 -88v14" fill="none" stroke-width="1.8" opacity=".6"/><rect x="105" y="-117" width="23" height="7" rx="2" fill="#8a5a35"/></g>` +
+      `<g class="rig-smoke" transform="translate(116 -124)" fill="#fff" stroke="#cfcfcf" stroke-width="1.6"><circle class="puff p1" r="7"/><circle class="puff p2" r="5.5"/><circle class="puff p3" r="6.5"/></g>` +
+      // main building
+      `<g ${sk}><rect x="0" y="-64" width="150" height="64" fill="#f7f0df"/><path d="${siding}" fill="none" stroke="#e1d4b6" stroke-width="1.6"/><rect x="-2" y="-9" width="154" height="9" fill="#9aa0a6" stroke-width="2.6"/></g>` +
+      // roof: green, with shingles, a dormer and snow on top
+      `<g ${sk}><path d="M-10 -62L22 -98H128L160 -62Z" fill="#2e8b4a"/><path d="${shingles}" fill="none" stroke="#1f6b3a" stroke-width="1.8" opacity=".65"/>` +
+      `<path d="M52 -98L75 -122L98 -98Z" fill="#2e8b4a"/><rect x="66" y="-110" width="18" height="12" fill="#ffe08a" stroke-width="2.2"/><path d="M75 -110v12M66 -104h18" fill="none" stroke-width="1.6"/>` +
+      `<path d="M62 -112l13 -13 13 13Q82 -108 75 -112Q68 -108 62 -112Z" fill="#fff" stroke-width="2.4"/>` +
+      `<path d="M18 -100H132L140 -92Q131 -84 123 -92Q113 -84 103 -92Q93 -84 83 -92Q73 -84 63 -92Q53 -84 43 -92Q33 -84 27 -92Z" fill="#fff"/></g>` +
+      `<path d="M-6 -62H156" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".9"/>` +
+      lights +
+      // windows, sign, door
+      win(10) + win(106) +
+      `<g ${sk}><rect x="34" y="-59" width="82" height="15" rx="3" fill="#2b7a3a"/></g>` +
+      `<text x="75" y="-48.4" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="8.8" fill="#fff" letter-spacing=".4">THE GREENHOUSE</text>` +
+      `<g ${sk}><rect x="63" y="-38" width="24" height="38" rx="2" fill="#c8412f"/><path d="M69 -32h12v12H69Z" fill="#ffe08a" stroke-width="2"/><path d="M75 -32v12M69 -26h12" fill="none" stroke-width="1.4"/><circle cx="83" cy="-14" r="1.8" fill="#ffc928" stroke-width="1.6"/><rect x="60" y="-3" width="30" height="3" fill="#cfd8dc" stroke-width="2"/></g>` +
+      `<g><circle cx="75" cy="-8" r="5.4" fill="none" stroke="#2b7a3a" stroke-width="3.4"/><circle cx="75" cy="-2.6" r="2.2" fill="#e5334b"/></g>` +
+      // little Christmas trees by the door
+      use('fir', -28, -50, 30, 41) + use('fir-snow', -28, -50, 30, 41) +
+      // the ice cream bar, built onto the side
+      `<g ${sk}><rect x="150" y="-48" width="96" height="48" fill="#ffe3ec"/><rect x="150" y="-12" width="96" height="12" fill="#f4b6c7" stroke-width="2.6"/>` +
+      `<path d="M144 -46L166 -72H232L254 -46Z" fill="#2e8b4a"/><path d="${shingles2}" fill="none" stroke="#1f6b3a" stroke-width="1.8" opacity=".65"/>` +
+      `<path d="M164 -74H234L240 -66Q232 -60 224 -66Q214 -58 204 -66Q194 -58 184 -66Q174 -58 168 -66Z" fill="#fff" stroke-width="2.6"/>` +
+      `<rect x="166" y="-38" width="52" height="26" rx="2" fill="#cfe9f7" stroke-width="2.6"/><path d="M192 -38v26M166 -25h52" fill="none" stroke-width="1.8"/>` +
+      `<rect x="162" y="-12" width="60" height="6" rx="2" fill="#a5673f" stroke-width="2.4"/></g>` +
+      `<g stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"><path d="M164 -46h13l-2 10h-9Z" fill="#e5334b"/><path d="M177 -46h13l-1 10h-13Z" fill="#fff"/><path d="M190 -46h13l-1 10h-13Z" fill="#e5334b"/><path d="M203 -46h13l1 10h-13Z" fill="#fff"/><path d="M216 -46h8l2 10h-8Z" fill="#e5334b"/></g>` +
+      `<path d="M170 -34h12M170 -28h20" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity=".8"/>` +
+      `<g ${sk}><rect x="226" y="-40" width="16" height="22" rx="2" fill="#2a3b36" stroke-width="2.4"/></g><path d="M230 -34h8M230 -28h6M230 -22h8" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>` +
+      `<g ${sk}><rect x="172" y="-94" width="54" height="17" rx="4" fill="#ffb3c7"/></g>` +
+      `<text x="199" y="-81.6" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="8.2" fill="${INK}" letter-spacing=".4">ICE CREAM</text>` +
+      use('icecream', 188, -128, 22, 33) +
+      use('fir', 254, -62, 34, 47) + use('fir-snow', 254, -62, 34, 47) +
+      '</g>';
+  }
+
   const winterFar = () =>
     `<path d="${FAR_HILL}" fill="#f7fbff" stroke="#c5d8ea" stroke-width="3"/>` +
-    [[150, 186, 0.9], [226, 190, 1.15], [302, 204, 0.85], [362, 212, 0.7], [1010, 202, 0.85], [1222, 194, 0.7], [1292, 184, 1.05], [1388, 176, 0.95]].map(([x, b, s]) => snowFir(x, b, s)).join('') +
+    [[34, 186, 0.78], [72, 190, 0.62], [470, 206, 0.85], [530, 210, 0.7], [1010, 202, 0.85], [1222, 194, 0.7], [1292, 184, 1.05], [1388, 176, 0.95]].map(([x, b, s]) => snowFir(x, b, s)).join('') +
+    greenhouse(136, 202, 0.92) +
     barn(1130, 70, 170, true);
 
   const winterMid = () => `<path d="${MID_HILL}" fill="#ffffff" stroke="#c9dcef" stroke-width="3"/>`;
