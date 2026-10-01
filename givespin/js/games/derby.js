@@ -1,18 +1,20 @@
 /*
- * Charity Derby. Up to six charities race down the track; the first across the line gets your gift.
+ * Charity Derby. Up to 48 charities race down the track; the first across the line gets your gift.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the gates open. The race is
  * choreographed so that charity crosses first, with lead changes along the way. The runners on the track are a
  * sample of the pool that always includes the winner.
+ *
+ * Live tables: every charity with money behind it is a runner and its share of the pot is shown beside its name.
  */
 (function () {
   'use strict';
   var GS = window.GS;
   var core = GS.core;
   var U = GS.util;
+  var kit = GS.kit;
   var TAU = Math.PI * 2;
 
-  var MAX_RUNNERS = 6;
   var MEDAL = ['#ffc542', '#cfd9e0', '#e0a070'];
 
   var el = {};
@@ -22,10 +24,13 @@
   var H = 0;
   var dpr = 1;
 
+  var size = 6;
   var pool = [];
-  var runners = [];      // { ch, e, tf, phase, p, place }
+  var field = null;
+  var runners = [];      // { ch, tickets, run }  (run: the race state for this runner)
   var fresh = true;
   var racing = false;
+  var race = null;
   var raceStart = 0;
   var banner = '';
   var bannerUntil = 0;
@@ -37,12 +42,19 @@
   var onDone = null;
   var lastThump = 0;
 
-  function count() { return Math.max(2, Math.min(MAX_RUNNERS, pool.length)); }
+  function count() { return Math.max(2, Math.min(size, pool.length)); }
+
+  function laneHFor(n) {
+    if (n <= 8) { return W < 420 ? 44 : 52; }
+    if (n <= 16) { return 34; }
+    if (n <= 28) { return 24; }
+    return 18;
+  }
 
   function layout() {
     var lanes = runners.length || count();
-    var laneH = W < 420 ? 44 : 52;
-    var lw = Math.max(78, Math.min(130, W * 0.2));
+    var laneH = laneHFor(lanes);
+    var lw = Math.max(86, Math.min(140, W * 0.21));
     return { lanes: lanes, laneH: laneH, top: 30, lw: lw, x0: lw + 8, x1: W - 30, r: laneH * 0.32 };
   }
 
@@ -51,8 +63,8 @@
     var w = Math.floor(el.stage.clientWidth);
     if (!w) { return; }
     W = Math.min(w, 700);
-    var l = { lanes: runners.length || count() };
-    H = (W < 420 ? 44 : 52) * l.lanes + 30 + 14;
+    var lanes = runners.length || count();
+    H = laneHFor(lanes) * lanes + 30 + 14;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     el.canvas.width = Math.round(W * dpr);
     el.canvas.height = Math.round(H * dpr);
@@ -63,13 +75,15 @@
 
   function runnerX(g, p) { return g.x0 + g.r + p * (g.x1 - g.x0 - 2 * g.r); }
 
+  function totalTickets() { return runners.reduce(function (s, r) { return s + (r.tickets || 0); }, 0); }
+
   function draw(t) {
     if (!ctx || !W) { return; }
     var g = layout();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
+    var total = field ? totalTickets() : 0;
 
-    // header strip
     ctx.fillStyle = 'rgba(255,255,255,0.06)';
     ctx.fillRect(0, 0, W, g.top - 4);
     ctx.fillStyle = 'rgba(255,255,255,0.6)';
@@ -80,6 +94,7 @@
     ctx.textAlign = 'right';
     ctx.fillText('FINISH', g.x1 + 26, (g.top - 4) / 2);
 
+    var fs = Math.min(12, Math.max(8, g.laneH * 0.5));
     for (var i = 0; i < g.lanes; i++) {
       var y = g.top + i * g.laneH;
       ctx.fillStyle = i % 2 ? '#145f31' : '#0f4a26';
@@ -89,19 +104,27 @@
       var ru = runners[i];
       if (ru) {
         ctx.fillStyle = 'rgba(255,255,255,0.55)';
-        ctx.font = '800 11px "Sora", sans-serif';
+        ctx.font = '800 ' + Math.max(8, fs - 1) + 'px "Sora", sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText(String(i + 1), 10, y + g.laneH / 2);
+        ctx.fillText(String(i + 1), 6, y + g.laneH / 2);
         var label = ru.ch.short;
-        ctx.font = '600 ' + (W < 420 ? 11 : 12) + 'px "Inter", sans-serif';
-        ctx.fillStyle = ru.place === 1 ? '#ffe39a' : '#e6f1f6';
-        var maxW = g.lw - 34;
+        ctx.font = '600 ' + fs + 'px "Inter", sans-serif';
+        ctx.fillStyle = ru.run.place === 1 ? '#ffe39a' : '#e6f1f6';
+        var numW = g.lanes > 9 ? 22 : 16;
+        var oddsW = field ? 40 : 0;
+        var maxW = g.lw - numW - 8 - oddsW;
         while (ctx.measureText(label).width > maxW && label.length > 3) { label = label.slice(0, -2).replace(/\s+$/, '') + '…'; }
-        ctx.fillText(label, 26, y + g.laneH / 2);
+        ctx.fillText(label, numW + 2, y + g.laneH / 2);
+        if (field) {
+          ctx.textAlign = 'right';
+          ctx.fillStyle = '#ffc542';
+          ctx.font = '800 ' + fs + 'px "Sora", sans-serif';
+          ctx.fillText(core.fmtShare(ru.tickets, total), g.lw - 5, y + g.laneH / 2);
+          ctx.textAlign = 'left';
+        }
       }
     }
-    // distance ticks
     ctx.strokeStyle = 'rgba(255,255,255,0.1)';
     ctx.lineWidth = 1;
     for (var q = 1; q < 4; q++) {
@@ -111,10 +134,9 @@
       ctx.lineTo(qx, g.top + g.lanes * g.laneH);
       ctx.stroke();
     }
-    // start line + finish checkers
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.fillRect(g.x0 - 1, g.top, 2, g.lanes * g.laneH);
-    var sq = 8;
+    var sq = g.lanes > 16 ? 6 : 8;
     for (var cy = 0; cy < g.lanes * g.laneH; cy += sq) {
       ctx.fillStyle = (cy / sq) % 2 ? '#fff' : '#111';
       ctx.fillRect(g.x1, g.top + cy, sq / 2, Math.min(sq, g.lanes * g.laneH - cy));
@@ -122,14 +144,13 @@
       ctx.fillRect(g.x1 + sq / 2, g.top + cy, sq / 2, Math.min(sq, g.lanes * g.laneH - cy));
     }
 
-    // runners
     for (var k = 0; k < runners.length; k++) {
       var r = runners[k];
       var cyy = g.top + k * g.laneH + g.laneH / 2;
-      var cx = runnerX(g, r.p);
-      var moving = racing && r.p < 1 && r.p > 0;
-      var bob = moving ? Math.sin(t / 55 + r.phase * 6) * 1.8 : 0;
-      if (moving) {
+      var cx = runnerX(g, r.run.p);
+      var moving = racing && r.run.p < 1 && r.run.p > 0;
+      var bob = moving ? Math.sin(t / 55 + r.run.phase * 6) * Math.min(1.8, g.laneH * 0.05) : 0;
+      if (moving && g.r >= 8) {
         ctx.strokeStyle = 'rgba(255,255,255,0.4)';
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
@@ -149,43 +170,37 @@
         ctx.fillStyle = 'rgba(255,197,66,' + (0.28 + 0.2 * Math.sin(t / 150)) + ')';
         ctx.fill();
       }
-      var grad = ctx.createRadialGradient(-g.r * 0.35, -g.r * 0.35, g.r * 0.1, 0, 0, g.r);
-      grad.addColorStop(0, '#fff');
-      grad.addColorStop(0.35, r.ch.accent);
-      grad.addColorStop(1, '#00000066');
       ctx.beginPath();
       ctx.arc(0, 0, g.r, 0, TAU);
       ctx.fillStyle = r.ch.accent;
       ctx.fill();
-      ctx.fillStyle = grad;
-      ctx.globalAlpha = 0.5;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.lineWidth = win ? 3 : 1.5;
+      ctx.lineWidth = win ? 3 : (g.r < 8 ? 1 : 1.5);
       ctx.strokeStyle = win ? '#ffc542' : 'rgba(255,255,255,0.8)';
       ctx.stroke();
-      var mono = GS.mono(r.ch);
-      ctx.fillStyle = '#0b1620';
-      ctx.font = '800 ' + (g.r * (mono.length > 2 ? 0.72 : 0.95)) + 'px "Sora", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(mono, 0, 1);
+      if (g.r >= 9) {
+        var mono = GS.mono(r.ch);
+        ctx.fillStyle = '#0b1620';
+        ctx.font = '800 ' + (g.r * (mono.length > 2 ? 0.72 : 0.95)) + 'px "Sora", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(mono, 0, 1);
+      }
       ctx.restore();
-      // place badge once across the line
-      if (r.place) {
+      if (r.run.place && (r.run.place <= 3 || g.lanes <= 12)) {
         var bx = g.x1 + 18;
         ctx.beginPath();
-        ctx.arc(bx, cyy, 9, 0, TAU);
-        ctx.fillStyle = MEDAL[r.place - 1] || '#51697a';
+        ctx.arc(bx, cyy, Math.min(9, g.laneH * 0.4), 0, TAU);
+        ctx.fillStyle = MEDAL[r.run.place - 1] || '#51697a';
         ctx.fill();
-        ctx.fillStyle = '#0b1620';
-        ctx.font = '800 11px "Sora", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(String(r.place), bx, cyy + 1);
+        if (g.laneH >= 22) {
+          ctx.fillStyle = '#0b1620';
+          ctx.font = '800 11px "Sora", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(String(r.run.place), bx, cyy + 1);
+        }
       }
     }
 
-    // ready / go banner
     if (banner && t < bannerUntil) {
       ctx.fillStyle = 'rgba(4,10,14,0.55)';
       ctx.fillRect(0, H / 2 - 30, W, 60);
@@ -211,27 +226,16 @@
 
   function step(t) {
     var el2 = (t - raceStart) / 1000;
-    if (el2 < 0) { return; }
-    var allDone = true;
-    var finished = runners.filter(function (r) { return r.place; }).length;
-    runners.forEach(function (r) {
-      var u = el2 / r.tf;
-      if (u >= 1) {
-        r.p = 1;
-        if (!r.place) { finished += 1; r.place = finished; GS.audio.tick(0.9); }
-      } else {
-        var wob = 0.014 * Math.sin(el2 * 7 + r.phase * 6) * (1 - u);
-        r.p = core.clamp(Math.pow(Math.max(0, u), r.e) + wob, 0, 0.995);
-        allDone = false;
-      }
-    });
+    if (el2 < 0 || !race) { return; }
+    var allDone = race.step(el2, function () { GS.audio.tick(0.9); });
     if (t - lastThump > 230 && !allDone) { lastThump = t; GS.audio.thump(); }
     if (allDone) {
       racing = false;
       banner = '';
-      var w = runners.filter(function (r) { return r.place === 1; })[0];
+      var w = runners.filter(function (r) { return r.run.place === 1; })[0];
       winnerId = w.ch.id;
       result = w.ch;
+      if (el.result) { el.result.textContent = w.ch.name; }
       GS.audio.ring();
       renderRanking();
       var done = onDone;
@@ -242,15 +246,17 @@
 
   function renderRanking() {
     if (!el.rank) { return; }
-    var ordered = runners.slice().sort(function (a, b) { return (a.place || 99) - (b.place || 99); });
-    el.rank.innerHTML = ordered.map(function (r) {
-      return '<li' + (r.place === 1 ? ' class="is-win"' : '') + '><span class="rank__n">' + (r.place || '-') + '</span>' +
+    var ordered = runners.slice().sort(function (a, b) { return (a.run.place || 99) - (b.run.place || 99); });
+    var shown = ordered.slice(0, 10);
+    el.rank.innerHTML = shown.map(function (r) {
+      return '<li' + (r.run.place === 1 ? ' class="is-win"' : '') + '><span class="rank__n">' + (r.run.place || '-') + '</span>' +
         '<span class="cmono" style="--c:' + r.ch.accent + ';--s:24px" data-len="' + GS.mono(r.ch).length + '" aria-hidden="true">' + U.esc(GS.mono(r.ch)) + '</span><span class="rank__name">' + U.esc(r.ch.short) + '</span></li>';
-    }).join('');
+    }).join('') + (ordered.length > 10 ? '<li class="rank__more">+ ' + (ordered.length - 10) + ' more</li>' : '');
   }
 
-  function makeRunners(list) {
-    runners = list.map(function (ch) { return { ch: ch, e: 1, tf: 1, phase: Math.random(), p: 0, place: 0 }; });
+  function makeRunners(list, tickets) {
+    runners = list.map(function (ch, i) { return { ch: ch, tickets: tickets ? tickets[i] : 0, run: { p: 0, place: 0, phase: Math.random() } }; });
+    race = null;
     winnerId = null;
     result = null;
     if (el.rank) { el.rank.innerHTML = ''; }
@@ -258,14 +264,16 @@
 
   function updateNote() {
     if (!el.note) { return; }
+    if (field) { el.note.textContent = 'Each runner’s share of the pot is its chance of winning.'; return; }
     if (!pool.length) { el.note.textContent = ''; return; }
     el.note.textContent = (pool.length > runners.length ? runners.length + ' of your ' + pool.length + ' charities are on the track, reshuffled every race. ' : 'All ' + pool.length + ' charities in play are on the track. ') +
       'Equal odds for every charity in play.';
   }
 
   function rebuild() {
+    if (field) { return; }
     if (!pool.length) { runners = []; resize(); updateNote(); return; }
-    makeRunners(core.sampleSubset(pool, count()));
+    makeRunners(kit.sample(pool, count()));
     fresh = true;
     resize();
     updateNote();
@@ -275,33 +283,32 @@
     var has = runners.some(function (r) { return r.ch.id === winner.id; });
     if (fresh && has) { return; }
     if (fresh) { runners[core.randomInt(runners.length)].ch = winner; return; }
-    makeRunners(core.subsetWith(pool, winner, count()));
+    makeRunners(kit.boardWith(pool, winner, count()));
     fresh = true;
     resize();
     updateNote();
   }
 
-  function race(winner, quick) {
+  function runRace(winner, quick, durationMs) {
     return new Promise(function (resolve) {
       fresh = false;
       winnerId = null;
       result = null;
+      if (el.result) { el.result.textContent = ''; }
       if (el.rank) { el.rank.innerHTML = ''; }
-      var base = U.dur(quick ? 3400 : 8000) / 1000;   // seconds the winner takes to cross the line
-      runners.forEach(function (r) {
-        r.p = 0;
-        r.place = 0;
-        r.phase = Math.random();
-        if (r.ch.id === winner.id) { r.tf = base; r.e = core.randomRange(0.9, 1.12); }
-        else { r.tf = base * core.randomRange(1.04, 1.26); r.e = core.randomRange(0.72, 1.32); }
-      });
+      var n = runners.length;
+      var winIdx = 0;
+      runners.forEach(function (r, k) { if (r.ch.id === winner.id) { winIdx = k; } });
+      var baseMs = durationMs ? durationMs * 0.8 : (quick ? 3400 : 8000) + (n > 24 ? 2500 : n > 12 ? 1200 : 0);
+      var base = U.dur(baseMs) / 1000;
+      race = new kit.Race(n, winIdx, base);
+      runners.forEach(function (r, k) { r.run = race.runs[k]; });
       var ready = quick ? 250 : 900;
       banner = 'READY';
       bannerUntil = performance.now() + U.dur(ready) + U.dur(500);
       GS.audio.whoosh();
       setTimeout(function () { banner = 'GO!'; }, U.dur(ready));
-      var startAt = performance.now() + U.dur(ready) + U.dur(300);
-      raceStart = startAt;
+      raceStart = performance.now() + U.dur(ready) + U.dur(300);
       onDone = resolve;
       racing = true;
       lastThump = 0;
@@ -314,12 +321,15 @@
     name: 'Charity Derby',
     label: 'Derby',
     icon: 'flag-triangle-right',
-    category: 'instant',
-    badge: 'Race',
-    tagline: 'Six charities, one finish line. First across wins your gift.',
+    category: 'races',
+    badge: 'Up to 48',
+    live: true,
+    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Huge' }, { n: 48, name: 'Giant' }],
+    defaultSize: 6,
+    tagline: 'A field of charities, one finish line. First across wins your gift.',
     cta: 'Start the race',
     info: [
-      'Up to six charities from your pool line up at the start. Hit go and watch them race: whoever crosses the line first gets your gift.',
+      'Charities from your pool line up at the start, from a classic field of six up to a giant race of 48. Hit go and watch them race: whoever crosses the line first gets your gift.',
       'The result is decided before the gates open, then the race is played out to match, with plenty of lead changes on the way.'
     ],
 
@@ -327,6 +337,7 @@
       api = gameApi;
       container.innerHTML =
         '<div class="derby" data-role="stage"><canvas class="derby__canvas" data-role="canvas" aria-hidden="true"></canvas></div>' +
+        '<p class="game-result" data-role="result" aria-live="polite"></p>' +
         '<button type="button" class="gbtn" data-role="go">' + GS.icon('flag-triangle-right') + '<span>Start race</span></button>' +
         '<ol class="rank" data-role="rank" aria-label="Finishing order"></ol>' +
         '<p class="game-note" data-role="note"></p>';
@@ -334,23 +345,35 @@
       el.canvas = container.querySelector('[data-role="canvas"]');
       el.rank = container.querySelector('[data-role="rank"]');
       el.note = container.querySelector('[data-role="note"]');
+      el.result = container.querySelector('[data-role="result"]');
       el.go = container.querySelector('[data-role="go"]');
       ctx = el.canvas.getContext('2d');
       el.go.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
       U.observeSize(el.stage, resize);
     },
 
+    setSize: function (n) { size = n; if (!racing && !field) { rebuild(); } },
     setPool: function (list) {
       pool = list.slice();
-      if (!racing) { rebuild(); }
+      if (!racing && !field) { rebuild(); }
     },
+    setField: function (entrants) {
+      if (racing) { return; }
+      field = entrants;
+      var sp = kit.split(entrants);
+      makeRunners(sp.items, sp.tickets);
+      fresh = true;
+      resize();
+      updateNote();
+    },
+    clearField: function () { field = null; if (!racing) { rebuild(); } },
 
     activate: function () { active = true; resize(); startLoop(); },
     deactivate: function () { active = false; },
 
     lock: function (isLocked) {
       locked = !!isLocked;
-      if (el.go) { el.go.disabled = locked; }
+      if (el.go) { el.go.hidden = !!field; el.go.disabled = locked; }
     },
 
     play: function (opts) {
@@ -363,7 +386,7 @@
           if (i >= count2) { resolve(winners); return; }
           if (opts.onRound) { opts.onRound(i, count2); }
           showWinner(winners[i]);
-          race(winners[i], quick).then(function (winner) {
+          runRace(winners[i], quick).then(function (winner) {
             if (opts.onReveal) { opts.onReveal(i, winner); }
             i += 1;
             return U.sleep(count2 > 1 ? 900 : 500);
@@ -372,6 +395,9 @@
       });
     },
 
-    _shown: function () { return result ? [result.id] : []; }
+    playLive: function (opts) { return runRace(opts.winner, false, opts.durationMs); },
+
+    _shown: function () { return result ? [result.id] : []; },
+    _runners: function () { return runners.length; }
   };
 })();

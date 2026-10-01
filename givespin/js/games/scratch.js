@@ -11,6 +11,7 @@
   var core = GS.core;
   var U = GS.util;
 
+  var size = 6;           // panels on the card
   var BRUSH = 15;
   var REVEAL_AT = 0.5;
 
@@ -33,6 +34,8 @@
   }
 
   function buildPanels(n) {
+    el.grid.style.setProperty('--cols', String(n <= 6 ? 3 : n <= 12 ? 4 : 6));
+    el.card.classList.toggle('scard--big', n > 6);
     el.grid.innerHTML = '';
     panels = [];
     for (var i = 0; i < n; i++) {
@@ -165,7 +168,7 @@
     winner = w;
     result = null;
     var others = core.shuffle(pool.filter(function (c) { return c.id !== w.id; }));
-    var want = Math.min(3, others.length * 2);
+    var want = Math.max(0, Math.min(size - 3, others.length * 2));
     var decoys = [];
     for (var k = 0; k < want; k++) { decoys.push(others[k % others.length]); }
     var all = core.shuffle([w, w, w].concat(decoys));
@@ -212,11 +215,13 @@
     label: 'Scratch',
     icon: 'ticket',
     category: 'instant',
-    badge: 'Instant win',
+    badge: 'Up to 24 panels',
+    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Mega' }],
+    defaultSize: 6,
     tagline: 'Scratch the foil. Match three charities to win.',
     cta: 'Buy a card',
     info: [
-      'Buy a card and scratch the silver foil with your finger or mouse. Find three panels showing the same charity and that charity gets your gift. Each panel opens once you have scratched about half of it.',
+      'Buy a card and scratch the silver foil with your finger or mouse. Find three panels showing the same charity and that charity gets your gift. A mega card has up to 24 panels to scratch. Each panel opens once you have scratched about half of it.',
       'In a hurry, or using a keyboard? Press Tab to move between panels and Enter to reveal them, or tap Reveal all.'
     ],
 
@@ -238,15 +243,16 @@
       el.reveal = container.querySelector('[data-role="reveal"]');
       el.note = container.querySelector('[data-role="note"]');
       el.buy.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
-      buildPanels(6);
+      buildPanels(size);
       el.prompt.textContent = 'Buy a card to start scratching.';
       U.observeSize(el.card, function () { if (state !== 'playing') { layout(); } });
     },
 
+    setSize: function (n) { size = n; if (state !== 'playing') { state = 'idle'; buildPanels(size); layout(); el.card.classList.remove('is-live'); } },
     setPool: function (list) {
       pool = list.slice();
       updateNote();
-      if (state !== 'playing') { state = 'idle'; buildPanels(6); layout(); el.card.classList.remove('is-live'); el.prompt.textContent = pool.length ? 'Buy a card to start scratching.' : ''; }
+      if (state !== 'playing') { state = 'idle'; buildPanels(size); layout(); el.card.classList.remove('is-live'); el.prompt.textContent = pool.length ? 'Buy a card to start scratching.' : ''; }
     },
 
     activate: function () { active = true; if (state !== 'playing') { layout(); } },

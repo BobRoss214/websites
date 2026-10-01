@@ -29,8 +29,9 @@
   /** Recomputes a stored round. Resolves { hashOk, poolOk, winnersOk, ok } or { error }. */
   function verifyRound(fairData) {
     if (!GS.fair.available() || !fairData || !fairData.roundSeed) { return Promise.resolve({ error: true }); }
-    var pool = core.buildPool(GS.charities, fairData.filters, fairData.excluded);
-    return GS.fair.verify(fairData, pool).then(function (r) {
+    // a live table's round is stake-weighted: it carries the pot (weights) instead of a pool of charities
+    var check = fairData.weights && fairData.weights.length ? GS.fair.verifyWeighted(fairData) : GS.fair.verify(fairData, core.buildPool(GS.charities, fairData.filters, fairData.excluded));
+    return check.then(function (r) {
       if (r.ok) { var badges = store.noteVerify(); if (badges.length) { GS.bus.emit('badges', badges); } }
       return r;
     });
@@ -41,7 +42,7 @@
     function row(ok, label) { return '<li class="' + (ok ? 'is-ok' : 'is-bad') + '">' + ui.icon(ok ? 'circle-check' : 'circle-x') + '<span>' + esc(label) + '</span></li>'; }
     return '<ul class="vfy">' +
       row(r.hashOk, r.hashOk ? 'The seed matches the hash shown before the round' : 'The seed does NOT match the hash shown before the round') +
-      row(r.poolOk, r.poolOk ? 'The same charities were in play' : 'The charities in play do not match') +
+      row(r.poolOk, r.poolOk ? (r.weighted ? 'The pot matches what was staked' : 'The same charities were in play') : (r.weighted ? 'The pot does not match what was staked' : 'The charities in play do not match')) +
       row(r.winnersOk, r.winnersOk ? 'Recomputing the draws gives the same winners' : 'Recomputing the draws gives different winners') +
     '</ul>';
   }

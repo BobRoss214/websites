@@ -1,5 +1,6 @@
 /*
- * Pick a Card. Five face-down cards are shuffled; you pick one and flip it to see which charity it hides.
+ * Pick a Card. Face-down cards (5, or a spread of up to 52) are shuffled; you pick one and flip it to see which
+ * charity it hides.
  *
  * Fairness: the app draws the winner (see js/fair.js) before the cards are even dealt. Your pick is for fun:
  * whichever card you choose is the one that hides the winner, and the other cards then flip to show decoys.
@@ -11,7 +12,7 @@
   var core = GS.core;
   var U = GS.util;
 
-  var MAX_CARDS = 5;
+  var size = 5;
 
   var el = {};
   var api = null;
@@ -22,12 +23,13 @@
   var awaiting = null;  // resolver while waiting for the player to pick
   var result = null;
 
-  function count() { return Math.max(2, Math.min(MAX_CARDS, pool.length)); }
+  function count() { return Math.max(2, Math.min(size, pool.length)); }
+  function dense() { return cards.length > 10; }
 
   function faceHTML(ch) {
     var m = GS.mono(ch);
     var cause = GS.cause(ch.causes[0]);
-    return '<span class="cmono pcard__mono" style="--c:' + ch.accent + ';--s:50px" data-len="' + m.length + '" aria-hidden="true">' + U.esc(m) + '</span>' +
+    return '<span class="cmono pcard__mono" style="--c:' + ch.accent + ';--s:' + (dense() ? 30 : 50) + 'px" data-len="' + m.length + '" aria-hidden="true">' + U.esc(m) + '</span>' +
       '<span class="pcard__name">' + U.esc(ch.short) + '</span>' +
       '<span class="pcard__cause">' + GS.icon(cause.icon) + U.esc(cause.name) + '</span>';
   }
@@ -43,6 +45,7 @@
     el.row.innerHTML = '';
     cards = [];
     el.row.style.setProperty('--mid', String((n - 1) / 2));
+    el.row.classList.toggle('is-dense', n > 10);
     for (var i = 0; i < n; i++) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -131,9 +134,9 @@
         // flip the rest, staggered
         var rest = cards.filter(function (c, i) { return i !== k; });
         rest.forEach(function (c, j) {
-          setTimeout(function () { c.btn.classList.add('is-flipped', 'is-dim'); }, U.dur(150 * j + 200));
+          setTimeout(function () { c.btn.classList.add('is-flipped', 'is-dim'); }, U.dur(Math.max(10, 600 / Math.max(1, rest.length / 4)) * (j / 4 + 0.3) + 150));
         });
-        return U.sleep(quick ? 350 : 900).then(function () { return winner; });
+        return U.sleep(quick ? 350 : 900 + (rest.length > 12 ? 1200 : 0)).then(function () { return winner; });
       });
     });
   }
@@ -144,11 +147,13 @@
     label: 'Cards',
     icon: 'spade',
     category: 'table',
-    badge: 'Pick a card',
-    tagline: 'Five cards, one charity. Pick one and flip it.',
+    badge: 'Up to 52',
+    sizes: [{ n: 5, name: 'Classic' }, { n: 10, name: 'Big' }, { n: 20, name: 'Huge' }, { n: 52, name: 'Full deck' }],
+    defaultSize: 5,
+    tagline: 'A spread of cards, one charity. Pick one and flip it.',
     cta: 'Deal the cards',
     info: [
-      'Five face-down cards are shuffled in front of you. Pick one and flip it to reveal the charity it hides, then watch the others turn over.',
+      'Face-down cards are shuffled in front of you: five, or a whole 52-card spread. Pick one and flip it to reveal the charity it hides, then watch the others turn over.',
       'To keep things honest: the winner is drawn first, from every charity in play, and is dealt under whichever card you choose. Picking is about the fun of the flip, not about luck.'
     ],
 
@@ -170,6 +175,7 @@
       el.deal.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
     },
 
+    setSize: function (n) { size = n; if (!awaiting && pool.length) { build(); el.prompt.textContent = 'Press Deal to shuffle the cards.'; } },
     setPool: function (list) {
       pool = list.slice();
       if (awaiting) { return; }
@@ -206,6 +212,7 @@
     _shown: function () { return result ? [result.id] : []; },
     /** Test hook: picks a card while the game is waiting for one. */
     _pick: function (i) { if (awaiting) { awaiting(i); return true; } return false; },
-    _awaiting: function () { return !!awaiting; }
+    _awaiting: function () { return !!awaiting; },
+    _cards: function () { return cards.length; }
   };
 })();

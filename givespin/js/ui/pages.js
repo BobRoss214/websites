@@ -73,6 +73,11 @@
     else if (h.pay === 'checkout') { rows.push(['external-link', 'Finished on the checkout page']); }
     if (h.freq && h.freq !== 'once') { rows.push(['calendar-days', ui.opts.freqLabel(h.freq) + ' gift']); }
     if (h.dedication) { rows.push(['heart', (h.dedication.kind === 'memory' ? 'In memory of ' : 'In honor of ') + h.dedication.name + (h.dedication.note ? ': “' + h.dedication.note + '”' : '')]); }
+    if (h.live) {
+      var pickCh = GS.charity(h.live.pick);
+      var winCh = GS.charity(h.live.winner);
+      rows.unshift(['radio', 'Live table: ' + money(h.live.pot, true) + ' pot, ' + h.live.players + ' players (the others were bots). ' + (pickCh ? 'You backed ' + pickCh.short + (h.live.won ? ', and it won.' : winCh ? '; ' + winCh.short + ' won the pot.' : '.') : '')]);
+    }
     rows.push(['receipt', 'Receipt ' + h.id]);
     return '<ul class="rs-rows">' + rows.map(function (r) { return '<li>' + ui.icon(r[0]) + '<span>' + esc(r[1]) + '</span></li>'; }).join('') + '</ul>';
   }
@@ -97,7 +102,7 @@
           '<dl class="kv kv--small"><dt>Hash shown before</dt><dd class="mono">' + esc(h.fair.serverHash) + '</dd><dt>Seed revealed</dt><dd class="mono">' + esc(h.fair.roundSeed) + '</dd><dt>Your seed · round</dt><dd class="mono">' + esc(h.fair.clientSeed) + ' · ' + h.fair.nonce + '</dd></dl></div>'
         : '';
       return '<li class="hrow"><details><summary><span class="hist__game">' + ui.icon(ui.gameIcon(h.game)) + '</span>' +
-        '<span class="hrow__main"><b>' + esc(title) + '</b><small>' + esc(ui.gameName(h.game)) + ' · ' + esc(ui.fmtWhen(h.ts)) + (h.rounds > 1 ? ' · ' + h.rounds + ' rounds' : '') + '</small></span>' +
+        '<span class="hrow__main"><b>' + esc(title) + '</b><small>' + esc(ui.gameName(h.game)) + (h.live ? ' · Live' : '') + ' · ' + esc(ui.fmtWhen(h.ts)) + (h.rounds > 1 ? ' · ' + h.rounds + ' rounds' : '') + '</small></span>' +
         '<span class="hist__amt">' + money(h.totalCents, true) + '</span>' + ui.icon('chevron-down', 'hrow__chev') + '</summary>' +
         '<div class="hrow__body"><ul class="alloc alloc--sm">' + allocs + '</ul>' + histRows(h) + fairBits + '</div></details></li>';
     }).join('') + '</ol>';
@@ -232,7 +237,7 @@
 
   function renderFair() {
     var root = $('#view-fair');
-    root.innerHTML = pageHead('Fair Play', 'Every result is decided before the animation starts, and you can check the maths yourself. No charity is favoured: all of them in play have exactly the same odds.') +
+    root.innerHTML = pageHead('Fair Play', 'Every result is decided before the animation starts, and you can check the maths yourself. In solo games every charity in play has exactly the same odds; at live tables each charity’s odds are its share of the pot.') +
       '<ol class="steps3">' +
         '<li class="step3"><span class="step3__n">1</span><h2>Commit</h2><p>Before you play, the game shows a hash: a fingerprint of a secret seed it has already chosen. It cannot change the seed afterwards without the fingerprint no longer matching.</p></li>' +
         '<li class="step3"><span class="step3__n">2</span><h2>Draw</h2><p>Winners come from HMAC-SHA256 of the seed with your seed and the round number, with no modulo bias, applied to the charities in play sorted by id.</p></li>' +
@@ -243,9 +248,9 @@
       '<section class="sect panel" aria-labelledby="fp-diy"><h2 class="sect__t" id="fp-diy">Check it without this site</h2>' +
         '<p>Paste this into your browser’s developer console. It rebuilds the winners from a revealed seed using only the browser’s built-in hashing functions.</p>' +
         '<pre class="code" tabindex="0"><code>' + esc(GS.fair.SNIPPET) + '</code></pre>' +
-        '<p class="tabnote">Call it like <code>draw(roundSeed, clientSeed, nonce, […charity ids in play…], count)</code> and compare with the winners on your receipt.</p></section>' +
+        '<p class="tabnote">Call it like <code>draw(roundSeed, clientSeed, nonce, […charity ids in play…], count)</code> and compare with the winners on your receipt. For a live table, list each charity id once per dollar staked (its tickets) instead, with <code>count</code> 1.</p></section>' +
       '<section class="sect panel panel--note" aria-labelledby="fp-lim"><h2 class="sect__t" id="fp-lim">The honest limits</h2>' +
-        '<p>In this browser-only build the secret seed is generated on your own device, so this shows how results are derived and that they were fixed before the animation. It is not an audit by a separate party. A live deployment should generate and commit seeds on a server the player does not control, and publish the hashes. What is on screen (the slices, reels, bins and decoys) is decoration around a result that is already drawn.</p></section>';
+        '<p>In this browser-only build the secret seed is generated on your own device, so this shows how results are derived and that they were fixed before the animation. It is not an audit by a separate party. A live deployment should generate and commit seeds on a server the player does not control, and publish the hashes. What is on screen (the slices, reels, bins and decoys) is decoration around a result that is already drawn. At live tables the other players are simulated bots, so the pot you see is simulated too.</p></section>';
     ui.hydrate(root);
     ui.fairBlock.render($('[data-role="block"]', root));
     historyList($('[data-role="hist"]', root), { limit: 10, fairOnly: true });
@@ -261,6 +266,11 @@
     }],
     ['help-fair', 'How is the winner picked?', function () {
       return '<p>A secret seed is committed before you play (you see its hash). The winner is computed from that seed, your own seed and the round number with HMAC-SHA256, using rejection sampling so no charity is favoured. The animation then reveals a result that is already decided. <a href="#fair">Verify any round yourself.</a></p>';
+    }],
+    ['help-live', 'How do live tables work? Are the other players real?', function (demo) {
+      return '<p>A live table is a shared pot. Everyone at the table backs a charity with a stake (default $20). Every dollar is a ticket, so a charity with 30% of the pot wins 30% of the time. When bets close, one charity is drawn, the game plays out, and <strong>the whole pot goes to the winner, whether you backed it or not</strong>. Your own stake is allocated to the winner too, so it is as if your charity won.</p>' +
+        '<p><strong>The other players are bots for now.</strong> They stand in for a real multiplayer table and their stakes are simulated, so every screen labels them. A real launch would run tables on a server. Live tables are demo-only: a pooled pot needs that server, and this site never touches real money.</p>' +
+        '<p>Your stake is refunded if you cancel before the table locks. The draw uses a seed committed before bets open and the frozen pot, so you can <a href="#fair">verify any live round</a> afterwards.</p>';
     }],
     ['help-pick', 'Can I choose which charities can win?', function () {
       return '<p>Yes, several ways. Use <strong>Filters</strong> to narrow the pool by cause, who they help, where they work, how they help and when they started. Or open <a href="#charities">Charities</a> and switch individual ones off. Or skip the luck and <strong>give directly</strong> to any charity from its profile.</p>';

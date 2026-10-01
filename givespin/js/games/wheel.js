@@ -1,44 +1,77 @@
 /*
- * Lucky Wheel. A canvas wheel with a ticking pointer and chasing LED bulbs.
+ * Lucky Wheel. A canvas wheel with a ticking pointer and chasing LED bulbs, from 8 slices up to 100.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) and hands it to the wheel. The wheel
  * shows a sample of the pool (all of it when it fits) that always includes the winner, then spins to stop with
  * the pointer inside the winner's slice. The slices are decoration; the odds belong to the whole pool.
+ *
+ * Live tables: slice sizes follow the stakes, so a charity with 40% of the pot owns 40% of the wheel.
  */
 (function () {
   'use strict';
   var GS = window.GS;
   var core = GS.core;
   var U = GS.util;
+  var kit = GS.kit;
   var TAU = Math.PI * 2;
 
-  // 12 colours, ordered so neighbouring slices always contrast (the wheel never shows more than 12).
+  // 12 colours, ordered so neighbouring slices always contrast.
   var PALETTE = ['#7C5CFF', '#FBBF24', '#FF4FA2', '#2DD4BF', '#3B82F6', '#FB923C',
                  '#A855F7', '#4ADE80', '#F43F5E', '#22D3EE', '#6366F1', '#EAB308'];
 
   var el = {};
   var api = null;
   var ctx = null;
-  var size = 0;
+  var csize = 0;
   var dpr = 1;
 
+  var size = 12;
   var pool = [];
   var segs = [];
+  var bounds = [0];        // start angle of every slice, plus TAU at the end
+  var field = null;        // live table entrants, or null when playing solo
   var labels = [];
   var fresh = false;       // true when the on-screen slices have not been spun yet
 
   var angle = Math.random() * TAU;
-  var anim = null;         // { start, dur, from, total, lastIdx }
+  var anim = null;
   var spinning = false;
   var active = false;
   var raf = 0;
   var lastT = 0;
-  var pointerKick = 0;     // 0..1, decays; drives the flicking pointer
-  var glowIdx = -1;        // winning slice highlighted after a spin
+  var pointerKick = 0;
+  var glowIdx = -1;
   var glowT = 0;
-  var flash = 0;           // white flash when the slices reshuffle
+  var flash = 0;
   var disposeResize = null;
   var locked = false;
+
+  function sliceColor(i) {
+    var n = segs.length;
+    var c = i % PALETTE.length;
+    // keep the last slice from matching the first one around the seam
+    if (i === n - 1 && n > 1 && c === 0) { c = 5; }
+    return PALETTE[c];
+  }
+
+  function sliceCount() {
+    var s = size;
+    if (s === 12 && window.innerWidth < 560) { s = 8; }
+    return Math.max(2, Math.min(s, pool.length));
+  }
+
+  function maxCanvas() { return segs.length > 24 ? 680 : 600; }
+
+  function computeBounds(weights) {
+    var n = segs.length;
+    bounds = [0];
+    var total = weights ? weights.reduce(function (s, w) { return s + w; }, 0) : n;
+    var acc = 0;
+    for (var i = 0; i < n; i++) {
+      acc += weights ? weights[i] : 1;
+      bounds.push((acc / total) * TAU);
+    }
+  }
 
   /* ---------------------------------------------------------------- layout */
 
@@ -46,36 +79,38 @@
     if (!el.canvas) { return; }
     var w = Math.floor(el.stage.clientWidth);
     if (!w) { return; }
-    size = Math.min(w, 600);
+    csize = Math.min(w, maxCanvas());
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    el.wheel.style.width = size + 'px';
-    el.wheel.style.height = size + 'px';
-    el.canvas.width = Math.round(size * dpr);
-    el.canvas.height = Math.round(size * dpr);
-    el.canvas.style.width = size + 'px';
-    el.canvas.style.height = size + 'px';
+    el.wheel.style.width = csize + 'px';
+    el.wheel.style.height = csize + 'px';
+    el.canvas.width = Math.round(csize * dpr);
+    el.canvas.height = Math.round(csize * dpr);
+    el.canvas.style.width = csize + 'px';
+    el.canvas.style.height = csize + 'px';
     layoutLabels();
     draw(performance.now());
   }
 
-  function wheelRadius() { return size / 2 - 2 - size * 0.05; }
+  function wheelRadius() { return csize / 2 - 2 - csize * 0.05; }
 
   /** Pre-computes a label (and font size) for every slice so drawing stays cheap. */
   function layoutLabels() {
     labels = [];
-    if (!size || !segs.length) { return; }
+    if (!csize || !segs.length) { return; }
     var wr = wheelRadius();
-    var hubR = size * 0.115;
-    var maxW = wr - hubR - size * 0.085;
+    var hubR = csize * 0.115;
+    var maxW = wr - hubR - csize * 0.085;
     var font = '"Sora", "Inter", system-ui, sans-serif';
-    var segAngle = TAU / segs.length;
-    // Slices are fat at the rim and thin near the centre, so cap the text height by the chord too.
-    var maxFs = Math.max(11, Math.min(size * 0.05, wr * 0.75 * segAngle * 0.5));
     for (var i = 0; i < segs.length; i++) {
-      var fs = maxFs;
+      var a = bounds[i + 1] - bounds[i];
+      // slices are fat at the rim and thin near the centre, so cap the text height by the chord too
+      var chord = wr * 0.7 * a;
+      var maxFs = Math.min(csize * 0.05, chord * 0.62);
       var text = segs[i].short;
+      if (maxFs < 6.5) { labels.push(null); continue; }
+      var fs = Math.max(7, maxFs);
       ctx.font = '700 ' + fs + 'px ' + font;
-      while (ctx.measureText(text).width > maxW && fs > 10) {
+      while (ctx.measureText(text).width > maxW && fs > 7) {
         fs -= 1;
         ctx.font = '700 ' + fs + 'px ' + font;
       }
@@ -89,8 +124,8 @@
   /* --------------------------------------------------------------- drawing */
 
   function draw(t) {
-    if (!ctx || !size) { return; }
-    var s = size;
+    if (!ctx || !csize) { return; }
+    var s = csize;
     var cx = s / 2;
     var cy = s / 2;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -100,7 +135,6 @@
     var rimW = s * 0.05;
     var wr = outerR - rimW;
 
-    // Rim
     var rim = ctx.createLinearGradient(0, 0, s, s);
     rim.addColorStop(0, '#2b4658');
     rim.addColorStop(0.5, '#0c1822');
@@ -113,7 +147,6 @@
     ctx.strokeStyle = 'rgba(255,197,66,0.55)';
     ctx.stroke();
 
-    // LED bulbs chasing around the rim
     var bulbs = 30;
     var bulbR = outerR - rimW / 2;
     var chase = Math.floor(t / (spinning ? 55 : 240));
@@ -121,45 +154,33 @@
     for (var b = 0; b < bulbs; b++) {
       var ba = (b / bulbs) * TAU;
       var on = still ? b % 2 === 0 : (spinning ? (b + chase) % 2 === 0 : (b + chase) % 4 === 0 || (b + chase) % 4 === 1);
-      var bx = cx + Math.cos(ba) * bulbR;
-      var by = cy + Math.sin(ba) * bulbR;
       ctx.beginPath();
-      ctx.arc(bx, by, s * 0.0095, 0, TAU);
-      if (on) {
-        ctx.shadowColor = '#FFD166';
-        ctx.shadowBlur = s * 0.03;
-        ctx.fillStyle = '#FFE39A';
-      } else {
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = 'rgba(255,209,102,0.22)';
-      }
+      ctx.arc(cx + Math.cos(ba) * bulbR, cy + Math.sin(ba) * bulbR, s * 0.0095, 0, TAU);
+      if (on) { ctx.shadowColor = '#FFD166'; ctx.shadowBlur = s * 0.03; ctx.fillStyle = '#FFE39A'; }
+      else { ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,209,102,0.22)'; }
       ctx.fill();
     }
     ctx.shadowBlur = 0;
 
-    // Wheel face
     var n = segs.length;
     if (n) {
-      var a = TAU / n;
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(angle);
       for (var i = 0; i < n; i++) {
-        var color = PALETTE[i % PALETTE.length];
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.arc(0, 0, wr, i * a, (i + 1) * a);
+        ctx.arc(0, 0, wr, bounds[i], bounds[i + 1]);
         ctx.closePath();
-        ctx.fillStyle = color;
+        ctx.fillStyle = sliceColor(i);
         ctx.fill();
         if (n > 1) {
-          ctx.lineWidth = 2;
+          ctx.lineWidth = n > 40 ? 0.8 : 2;
           ctx.strokeStyle = 'rgba(8,14,20,0.45)';
           ctx.stroke();
         }
       }
 
-      // Depth: darker towards the hub, slight sheen at the rim.
       var depth = ctx.createRadialGradient(0, 0, wr * 0.1, 0, 0, wr);
       depth.addColorStop(0, 'rgba(4,10,16,0.45)');
       depth.addColorStop(0.55, 'rgba(4,10,16,0.05)');
@@ -169,32 +190,27 @@
       ctx.fillStyle = depth;
       ctx.fill();
 
-      // Labels
       for (var j = 0; j < n; j++) {
         var lb = labels[j];
         if (!lb) { continue; }
         ctx.save();
-        ctx.rotate((j + 0.5) * a);
+        ctx.rotate((bounds[j] + bounds[j + 1]) / 2);
         ctx.font = '700 ' + lb.fs + 'px ' + lb.font;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
-        var ink = U.inkOn(PALETTE[j % PALETTE.length]);
-        if (ink === '#FFFFFF') {
-          ctx.shadowColor = 'rgba(0,0,0,0.35)';
-          ctx.shadowBlur = 3;
-        }
+        var ink = U.inkOn(sliceColor(j));
+        if (ink === '#FFFFFF') { ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 3; }
         ctx.fillStyle = ink;
-        ctx.fillText(lb.text, wr - size * 0.03, 0);
+        ctx.fillText(lb.text, wr - csize * 0.03, 0);
         ctx.restore();
       }
 
-      // Winner spotlight: dim the rest, light the winner
       if (glowIdx >= 0 && glowIdx < n) {
         var pulse = 0.5 + 0.5 * Math.sin((t - glowT) / 170);
         for (var k = 0; k < n; k++) {
           ctx.beginPath();
           ctx.moveTo(0, 0);
-          ctx.arc(0, 0, wr, k * a, (k + 1) * a);
+          ctx.arc(0, 0, wr, bounds[k], bounds[k + 1]);
           ctx.closePath();
           if (k === glowIdx) {
             ctx.fillStyle = 'rgba(255,255,255,' + (0.1 + 0.16 * pulse) + ')';
@@ -218,7 +234,6 @@
       ctx.fill();
     }
 
-    // Inner bezel + hub plate (the clickable hub button is HTML, layered above)
     ctx.beginPath();
     ctx.arc(cx, cy, wr, 0, TAU);
     ctx.lineWidth = 4;
@@ -239,10 +254,14 @@
 
   /* ------------------------------------------------------------- animation */
 
+  function indexAt(a) {
+    for (var i = 0; i < segs.length; i++) { if (a >= bounds[i] && a < bounds[i + 1]) { return i; } }
+    return Math.max(0, segs.length - 1);
+  }
+
   function segmentUnderPointer() {
     if (!segs.length) { return -1; }
-    var a = TAU / segs.length;
-    return Math.floor(U.mod(-Math.PI / 2 - angle, TAU) / a) % segs.length;
+    return indexAt(U.mod(-Math.PI / 2 - angle, TAU));
   }
 
   function loop(t) {
@@ -266,7 +285,7 @@
         done();
       }
     } else if (!spinning && glowIdx < 0 && !U.reducedMotion()) {
-      angle += dt * 0.07; // lazy idle drift so the wheel feels alive
+      angle += dt * 0.07;
     }
 
     pointerKick *= Math.exp(-dt * 13);
@@ -282,17 +301,25 @@
     raf = requestAnimationFrame(loop);
   }
 
-  function sliceCount() { return Math.min(PALETTE.length, window.innerWidth < 560 ? 8 : 12, pool.length); }
+  /* ------------------------------------------------------------------ logic */
+
+  function setSegs(list, weights) {
+    segs = list;
+    computeBounds(weights || null);
+    glowIdx = -1;
+    layoutLabels();
+    updateNote();
+    if (el.result) { el.result.textContent = ''; }
+    if (!active && csize) { draw(performance.now()); }
+  }
 
   /** Puts a fresh random sample of the pool on the wheel. */
   function rebuild(withFlash) {
-    segs = core.sampleSubset(pool, sliceCount());
-    glowIdx = -1;
+    if (field) { return; }
+    setSegs(kit.sample(pool, sliceCount()));
     fresh = true;
     if (withFlash) { flash = 1; }
-    layoutLabels();
-    updateNote();
-    if (!active) { draw(performance.now()); }
+    resize();
   }
 
   /** Makes sure `winner` is one of the slices. Returns true when the slices had to be reshuffled in view. */
@@ -305,37 +332,37 @@
       layoutLabels();
       return false;
     }
-    segs = core.subsetWith(pool, winner, sliceCount());
-    glowIdx = -1;
+    setSegs(kit.boardWith(pool, winner, sliceCount()));
     fresh = true;
     flash = 1;
-    layoutLabels();
-    updateNote();
+    resize();
     return true;
   }
 
   function updateNote() {
     if (!el.note) { return; }
+    if (field) { el.note.textContent = 'Slices are sized by the money behind each charity: a bigger slice is a better chance.'; return; }
     if (!pool.length) { el.note.textContent = ''; return; }
     el.note.textContent = pool.length > segs.length
       ? 'Showing ' + segs.length + ' of ' + pool.length + ' charities in play. The slices are a sample that changes every spin; equal odds for all ' + pool.length + '.'
       : 'All ' + pool.length + ' charities in play are on the wheel, equal odds for each.';
   }
 
-  function spinOnce(winner, quick) {
+  function spinOnce(winner, quick, durationMs) {
     return new Promise(function (resolve) {
       var n = segs.length;
-      var a = TAU / n;
-      var winnerIdx = 0;                          // the winner was drawn before the spin; find its slice
+      var winnerIdx = 0;
       segs.forEach(function (c, k) { if (c.id === winner.id) { winnerIdx = k; } });
-      var inside = core.randomRange(0.14, 0.86);  // where in the slice the pointer comes to rest
-      var targetMod = U.mod(-Math.PI / 2 - (winnerIdx + inside) * a, TAU);
+      var inside = core.randomRange(0.14, 0.86);
+      var a0 = bounds[winnerIdx], a1 = bounds[winnerIdx + 1];
+      var targetMod = U.mod(-Math.PI / 2 - (a0 + (a1 - a0) * inside), TAU);
       var delta = U.mod(targetMod - U.mod(angle, TAU), TAU);
       var turns = quick ? 3 : 5 + core.randomInt(3);
       var total = turns * TAU + delta;
-      var dur = U.dur(quick ? 2600 : 6200);
+      var dur = U.dur(durationMs || (quick ? 2600 : 6200 + (n > 40 ? 1500 : 0)));
 
       glowIdx = -1;
+      if (el.result) { el.result.textContent = ''; }
       spinning = true;
       fresh = false;
       GS.audio.whoosh();
@@ -344,6 +371,7 @@
         done: function () {
           glowIdx = winnerIdx;
           glowT = performance.now();
+          if (el.result) { el.result.textContent = winner.name; }
           resolve(segs[winnerIdx]);
         }
       };
@@ -358,12 +386,15 @@
     label: 'Wheel',
     icon: 'aperture',
     category: 'originals',
-    badge: 'Classic',
+    badge: 'Up to 100',
+    live: true,
+    sizes: [{ n: 8, name: 'Small' }, { n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 48, name: 'Huge' }, { n: 100, name: 'Giant' }],
+    defaultSize: 12,
     tagline: 'Spin it. Wherever the pointer stops, that charity gets your gift.',
     cta: 'Spin the wheel',
     info: [
-      'A big wheel with a ticking pointer. Hit spin and it slows to a stop on a charity.',
-      'The wheel shows up to 12 charities from your pool at a time. Split your gift into several rounds and it spins once per round with a fresh set of slices.'
+      'A big wheel with a ticking pointer. Hit spin and it slows to a stop on a charity. Choose a wheel with 8 slices or go all the way to a giant 100-slice wheel.',
+      'The wheel shows a sample of your pool (up to the size you pick) with the winner always among them. Split your gift into several rounds and it spins once per round with a fresh set of slices.'
     ],
 
     mount: function (container, gameApi) {
@@ -380,6 +411,7 @@
             '<button type="button" class="wheel__hub" data-role="hub" aria-label="Spin the wheel"><span>SPIN</span></button>' +
           '</div>' +
         '</div>' +
+        '<p class="game-result" data-role="result" aria-live="polite"></p>' +
         '<p class="game-note" data-role="note"></p>';
       el.stage = container.querySelector('.wheel-stage');
       el.wheel = container.querySelector('[data-role="wheel"]');
@@ -387,25 +419,36 @@
       el.pointer = container.querySelector('[data-role="pointer"]');
       el.hub = container.querySelector('[data-role="hub"]');
       el.note = container.querySelector('[data-role="note"]');
+      el.result = container.querySelector('[data-role="result"]');
       ctx = el.canvas.getContext('2d');
-      el.hub.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
+      el.hub.addEventListener('click', function () { if (!locked && !field) { api.requestPlay(); } });
       disposeResize = U.observeSize(el.stage, resize);
       resize();
     },
 
+    setSize: function (n) { size = n; if (!spinning && !field && pool.length) { rebuild(false); } },
     setPool: function (list) {
       pool = list.slice();
-      if (!pool.length) { segs = []; labels = []; updateNote(); if (size) { draw(performance.now()); } return; }
-      rebuild(false);
+      if (!pool.length) { if (!field) { segs = []; labels = []; bounds = [0]; updateNote(); if (csize) { draw(performance.now()); } } return; }
+      if (!field) { rebuild(false); }
     },
+    setField: function (entrants) {
+      if (spinning) { return; }
+      field = entrants;
+      var split = kit.split(entrants);
+      setSegs(split.items, split.tickets);
+      fresh = true;
+      resize();
+    },
+    clearField: function () { field = null; if (!spinning && pool.length) { rebuild(false); } },
 
     activate: function () { active = true; resize(); startLoop(); },
     deactivate: function () { active = false; },
 
     lock: function (isLocked) {
       locked = !!isLocked;
-      if (el.hub) { el.hub.disabled = locked; }
-      if (el.wheel) { el.wheel.classList.toggle('is-busy', locked); }
+      if (el.hub) { el.hub.disabled = locked || !!field; }
+      if (el.wheel) { el.wheel.classList.toggle('is-busy', locked || !!field); }
     },
 
     /**
@@ -432,10 +475,11 @@
       });
     },
 
-    /** Test hook: which charity is under the pointer right now. */
+    /** Live table: spin the stake-sized slices to the winner. */
+    playLive: function (opts) { return spinOnce(opts.winner, false, opts.durationMs); },
+
     _underPointer: function () { var i = segmentUnderPointer(); return i >= 0 ? segs[i] : null; },
     _slices: function () { return segs.length; },
-    /** Test hook: the charity the wheel is showing as its result. */
     _shown: function () { var i = glowIdx >= 0 ? glowIdx : segmentUnderPointer(); return i >= 0 && segs[i] ? [segs[i].id] : []; }
   };
 })();

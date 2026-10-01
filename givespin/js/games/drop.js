@@ -1,19 +1,25 @@
 /*
  * Drop Crate. A horizontal strip of charity cards rolls past a marker and slows to a stop on one of them,
- * the same suspense mechanic streamers know from case openings.
+ * the same suspense mechanic streamers know from case openings. Choose a short reel of 20 charities or an epic
+ * one that rolls past 100.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) and the strip is built with that
  * charity in the landing slot before it moves. The other cards are decoration.
+ *
+ * Live tables: the reel is filled in proportion to the stakes, so a charity with half the pot is half the cards.
  */
 (function () {
   'use strict';
   var GS = window.GS;
   var core = GS.core;
   var U = GS.util;
+  var kit = GS.kit;
 
   var el = {};
   var api = null;
+  var size = 20;
   var pool = [];
+  var field = null;      // live table entrants, or null
   var current = [];      // charities currently laid out in the (resting) strip
   var cardStep = 0;      // card width + gap in px
   var cardW = 0;
@@ -22,9 +28,17 @@
   var active = false;
   var locked = false;
   var spinning = false;
+  var result = null;
 
   var REST_CARDS = 11;   // resting strip holds this many cards, marker on the middle one
   var MID = (REST_CARDS - 1) / 2;
+
+  function totalTickets() { return field ? field.reduce(function (s, e) { return s + e.tickets; }, 0) : 0; }
+  function oddsOf(ch) {
+    if (!field) { return ''; }
+    var e = field.filter(function (x) { return x.charity.id === ch.id; })[0];
+    return e ? core.fmtShare(e.tickets, totalTickets()) : '';
+  }
 
   function cardHTML(ch) {
     var cause = GS.cause(ch.causes[0]);
@@ -32,7 +46,7 @@
     return '<div class="dcard" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
       '<span class="dcard__badge" data-len="' + m.length + '">' + U.esc(m) + '</span>' +
       '<span class="dcard__name">' + U.esc(ch.short) + '</span>' +
-      '<span class="dcard__cause">' + GS.icon(cause.icon) + U.esc(cause.name) + '</span>' +
+      (field ? '<span class="dcard__odds">' + oddsOf(ch) + '</span>' : '<span class="dcard__cause">' + GS.icon(cause.icon) + U.esc(cause.name) + '</span>') +
       '</div>';
   }
 
@@ -52,19 +66,22 @@
 
   function cardCenter(i) { return i * cardStep + cardW / 2; }
 
+  /** n cards for filler: weighted by stake on a live table, otherwise uniform from the pool; never the same twice in a row. */
   function randomCards(n, prev) {
     var out = [];
+    var list = field ? field.map(function (e) { return e.charity; }) : pool;
+    var weights = field ? field.map(function (e) { return e.tickets; }) : null;
     for (var i = 0; i < n; i++) {
-      var c = core.pickOne(pool);
+      var pick = function () { return weights ? list[kit.pickWeighted(weights)] : core.pickOne(list); };
+      var c = pick();
       var guard = 0;
-      while (pool.length > 1 && prev && c.id === prev.id && guard++ < 6) { c = core.pickOne(pool); }
+      while (list.length > 1 && prev && c.id === prev.id && guard++ < 8) { c = pick(); }
       out.push(c);
       prev = c;
     }
     return out;
   }
 
-  /** Lays out the compact resting strip. `offset` keeps the marker exactly where the last roll stopped. */
   function renderStatic(list, offset, winIdx) {
     current = list;
     restOffset = offset || 0;
@@ -83,8 +100,105 @@
   }
 
   function seed() {
-    if (!pool.length) { return; }
+    if (!pool.length && !field) { return; }
+    result = null;
+    if (el.result) { el.result.textContent = ''; }
     renderStatic(randomCards(REST_CARDS, null), 0, -1);
+    updateNote();
+  }
+
+  function updateNote() {
+    if (!el.note) { return; }
+    if (field) { el.note.textContent = 'The reel is filled by stake: a charity with more money behind it fills more of the reel.'; return; }
+    if (!pool.length) { el.note.textContent = ''; return; }
+    var shown = Math.min(size, pool.length);
+    el.note.textContent = 'The reel rolls past ' + shown + (shown === 1 ? ' charity' : ' different charities') + (pool.length > shown ? ' picked from your ' + pool.length : '') + '. Every charity in play has equal odds.';
+  }
+
+  /** The long list of cards a roll passes through, ending on `winner` just before the marker stops. */
+  function buildRoll(winner) {
+    var head = current.slice();
+    var items = head.slice();
+    var winnerIdx;
+    if (field) {
+      var body = randomCards(52 - head.length, head[head.length - 1]);
+      items = items.concat(body);
+      winnerIdx = items.length + core.randomInt(4);
+      while (items.length < winnerIdx) { items.push(randomCards(1, items[items.length - 1])[0]); }
+    } else {
+      var distinct = kit.boardWith(pool, winner, size);
+      var mid = core.shuffle(distinct.filter(function (c) { return c.id !== winner.id; }));
+      items = items.concat(mid);
+      // short reels get padded with repeats so the roll always has some length to it
+      while (items.length < 48) { items.push(core.pickOne(distinct)); }
+      winnerIdx = items.length + core.randomInt(4);
+      while (items.length < winnerIdx) { items.push(core.pickOne(distinct)); }
+    }
+    items.push(winner);
+    var tail = field ? randomCards(8, winner) : (function () { var t = []; for (var i = 0; i < 8; i++) { t.push(core.pickOne(kit.boardWith(pool, winner, Math.min(size, 12)))); } return t; })();
+    items = items.concat(tail);
+    // avoid a neighbour identical to the winner on either side purely for readability
+    [winnerIdx - 1, winnerIdx + 1].forEach(function (k) {
+      var list = field ? field.map(function (e) { return e.charity; }) : pool;
+      if (list.length > 1 && items[k] && items[k].id === winner.id) { items[k] = randomCards(1, winner)[0]; }
+    });
+    items[winnerIdx] = winner;
+    return { items: items, winnerIdx: winnerIdx };
+  }
+
+  function rollOnce(winner, quick, durationMs) {
+    return new Promise(function (resolve) {
+      if (!pool.length && !field) { resolve(null); return; }
+      spinning = true;
+      result = null;
+      if (el.result) { el.result.textContent = ''; }
+      GS.audio.whoosh();
+
+      var roll = buildRoll(winner);
+      var items = roll.items;
+      var winnerIdx = roll.winnerIdx;
+
+      el.strip.innerHTML = items.map(cardHTML).join('');
+      measure();
+      var startX = cardCenter(MID) + restOffset;
+      var landing = cardCenter(winnerIdx) + core.randomRange(-0.36, 0.36) * cardW;
+      var dist = landing - startX;
+      place(startX);
+
+      var lenFactor = core.clamp(items.length / 60, 1, 2.1);
+      var dur = U.dur(durationMs || (quick ? 3000 * Math.min(1.5, lenFactor) : 7200 * lenFactor));
+      var t0 = performance.now();
+      var lastIdx = -1;
+      el.view.classList.add('is-rolling');
+
+      (function frame(now) {
+        var t = Math.min(1, (now - t0) / dur);
+        var e = 1 - Math.pow(1 - t, 4.2);
+        var x = startX + dist * e;
+        place(x);
+        var idx = Math.floor(x / cardStep);
+        if (idx !== lastIdx) {
+          lastIdx = idx;
+          if (t < 0.985) { GS.audio.tick(Math.min(1, (1 - t) * 1.3)); }
+        }
+        if (t < 1) { requestAnimationFrame(frame); return; }
+
+        el.view.classList.remove('is-rolling');
+        markWinner(winnerIdx);
+        el.view.classList.add('is-landed');
+        setTimeout(function () { el.view.classList.remove('is-landed'); }, 900);
+        GS.audio.thud();
+        spinning = false;
+        result = winner;
+        if (el.result) { el.result.textContent = winner.name; }
+
+        // Collapse back to a compact strip centred on the winner (visually identical, keeps the DOM small
+        // and keeps the next roll starting exactly where this one stopped).
+        var offset = x - cardCenter(winnerIdx);
+        renderStatic(items.slice(winnerIdx - MID, winnerIdx + MID + 1), offset, MID);
+        resolve(winner);
+      })(performance.now());
+    });
   }
 
   GS.games.drop = {
@@ -93,11 +207,14 @@
     label: 'Drop',
     icon: 'package-open',
     category: 'originals',
-    badge: 'Case opening',
+    badge: 'Reel up to 100',
+    live: true,
+    sizes: [{ n: 20, name: 'Short' }, { n: 50, name: 'Long' }, { n: 100, name: 'Epic' }],
+    defaultSize: 20,
     tagline: 'The reel rolls, slows, and locks on your charity.',
     cta: 'Open the crate',
     info: [
-      'A strip of charity cards rolls past a marker and slowly comes to a stop. Whatever card is under the marker gets your gift.',
+      'A strip of charity cards rolls past a marker and slowly comes to a stop. Whatever card is under the marker gets your gift. Pick a short reel of 20 charities or an epic one that rolls past 100.',
       'The cards you see rolling by are random picks from your pool, with the winner placed at the landing spot before the roll starts.'
     ],
 
@@ -111,12 +228,14 @@
             '<span class="drop__fade drop__fade--r" aria-hidden="true"></span>' +
             '<div class="drop__marker" aria-hidden="true"><i></i><i></i></div>' +
           '</div>' +
+          '<p class="game-result" data-role="result" aria-live="polite"></p>' +
           '<button type="button" class="drop__open" data-role="open"><span>' + GS.icon('package-open') + 'Open crate</span></button>' +
         '</div>' +
-        '<p class="game-note" data-role="note">Every card in the strip is an equal-odds draw from your pool.</p>';
+        '<p class="game-note" data-role="note"></p>';
       el.view = container.querySelector('[data-role="view"]');
       el.strip = container.querySelector('[data-role="strip"]');
       el.note = container.querySelector('[data-role="note"]');
+      el.result = container.querySelector('[data-role="result"]');
       el.open = container.querySelector('[data-role="open"]');
       el.open.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
       U.observeSize(el.view, function () {
@@ -126,10 +245,13 @@
       });
     },
 
+    setSize: function (n) { size = n; updateNote(); },
     setPool: function (list) {
       pool = list.slice();
-      if (!spinning) { seed(); }
+      if (!spinning && !field) { seed(); }
     },
+    setField: function (entrants) { if (!spinning) { field = entrants; seed(); } else { field = entrants; } },
+    clearField: function () { field = null; if (!spinning) { seed(); } },
 
     activate: function () {
       active = true;
@@ -139,7 +261,7 @@
 
     lock: function (isLocked) {
       locked = !!isLocked;
-      if (el.open) { el.open.disabled = locked; }
+      if (el.open) { el.open.hidden = !!field; el.open.disabled = locked; }
       if (el.view) { el.view.classList.toggle('is-busy', locked); }
     },
 
@@ -162,7 +284,10 @@
       });
     },
 
-    _shown: function () { var id = this._underMarker(); return id ? [id] : []; },
+    playLive: function (opts) { return rollOnce(opts.winner, false, opts.durationMs); },
+
+    /** What the marker is really over (measured from the page, not remembered), once a roll has finished. */
+    _shown: function () { if (!result) { return []; } var id = GS.games.drop._underMarker(); return id ? [id] : []; },
     _underMarker: function () {
       var r = el.view.getBoundingClientRect();
       var cx = r.left + r.width / 2;
@@ -174,65 +299,4 @@
       return null;
     }
   };
-
-  function rollOnce(winner, quick) {
-    return new Promise(function (resolve) {
-      if (!pool.length) { resolve(null); return; }
-      spinning = true;
-      GS.audio.whoosh();
-
-      var TOTAL = 58;
-      var winnerIdx = 46 + core.randomInt(6);
-      var head = current.slice();                 // keep what is on screen so nothing jumps
-      var items = head.slice();
-      var prev = head[head.length - 1];
-      var fill = randomCards(TOTAL - head.length, prev);
-      items = items.concat(fill);
-      items[winnerIdx] = winner;
-      // Avoid a neighbour identical to the winner on either side purely for readability.
-      [winnerIdx - 1, winnerIdx + 1].forEach(function (k) {
-        if (pool.length > 1 && items[k].id === winner.id) { items[k] = randomCards(1, winner)[0]; }
-      });
-
-      el.strip.innerHTML = items.map(cardHTML).join('');
-      measure();
-      var startX = cardCenter(MID) + restOffset;
-      // Land somewhere inside the winning card, sometimes tantalisingly close to an edge.
-      var landing = cardCenter(winnerIdx) + core.randomRange(-0.36, 0.36) * cardW;
-      var dist = landing - startX;
-      place(startX);
-
-      var dur = U.dur(quick ? 3000 : 7200);
-      var t0 = performance.now();
-      var lastIdx = -1;
-      el.view.classList.add('is-rolling');
-
-      (function frame(now) {
-        var t = Math.min(1, (now - t0) / dur);
-        // Quick launch, long graceful crawl to the stop.
-        var e = 1 - Math.pow(1 - t, 4.2);
-        var x = startX + dist * e;
-        place(x);
-        var idx = Math.floor(x / cardStep);
-        if (idx !== lastIdx) {
-          lastIdx = idx;
-          if (t < 0.985) { GS.audio.tick(Math.min(1, (1 - t) * 1.3)); }
-        }
-        if (t < 1) { requestAnimationFrame(frame); return; }
-
-        el.view.classList.remove('is-rolling');
-        markWinner(winnerIdx);
-        el.view.classList.add('is-landed');
-        setTimeout(function () { el.view.classList.remove('is-landed'); }, 900);
-        GS.audio.thud();
-        spinning = false;
-
-        // Collapse back to a compact strip centred on the winner (visually identical, keeps the DOM small
-        // and keeps the next roll starting exactly where this one stopped).
-        var offset = x - cardCenter(winnerIdx);
-        renderStatic(items.slice(winnerIdx - MID, winnerIdx + MID + 1), offset, MID);
-        resolve(winner);
-      })(performance.now());
-    });
-  }
 })();

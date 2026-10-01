@@ -81,3 +81,55 @@ test('the standalone snippet shown on the Fair Play page matches drawIndices', a
     assert.deepEqual(mine, idx.map((i) => sorted[i]));
   }
 });
+
+/* ---------------------------------------------------------------- stake-weighted (live tables) */
+
+test('weighted draws follow the stakes (30,000 rounds)', async () => {
+  const weights = [['c', 10], ['a', 60], ['b', 30]]; // deliberately not in id order
+  const counts = { a: 0, b: 0, c: 0 };
+  for (let n = 0; n < 30000; n++) {
+    const r = await fair.drawWeighted('seed-' + (n % 97), 'client', n, weights);
+    counts[r.winner] += 1;
+  }
+  const expect = { a: 18000, b: 9000, c: 3000 };
+  for (const k of Object.keys(expect)) {
+    const sd = Math.sqrt(30000 * (expect[k] / 30000) * (1 - expect[k] / 30000));
+    assert.ok(Math.abs(counts[k] - expect[k]) < 5 * sd, k + ' got ' + counts[k] + ' want about ' + expect[k]);
+  }
+});
+
+test('weighted draws are deterministic and match a plain draw over the expanded ticket list', async () => {
+  const weights = [['b', 3], ['a', 2], ['d', 5]];
+  const a = await fair.drawWeighted('s1', 'c1', 4, weights);
+  const b = await fair.drawWeighted('s1', 'c1', 4, [['d', 5], ['a', 2], ['b', 3]]);
+  assert.deepEqual(a, b, 'input order does not matter');
+  const expanded = ['a', 'a', 'b', 'b', 'b', 'd', 'd', 'd', 'd', 'd'];
+  const idx = (await fair.drawIndices('s1', 'c1', 4, expanded.length, 1))[0];
+  assert.equal(a.winner, expanded[idx]);
+  assert.equal(a.ticket, idx);
+  assert.equal(fair.ticketOwner(fair.sortWeights(weights), 0), 'a');
+  assert.equal(fair.ticketOwner(fair.sortWeights(weights), 2), 'b');
+  assert.equal(fair.ticketOwner(fair.sortWeights(weights), 9), 'd');
+});
+
+test('a charity with no tickets can never win, and one with all of them always does', async () => {
+  for (let n = 0; n < 50; n++) {
+    assert.equal((await fair.drawWeighted('s', 'c', n, [['x', 0], ['y', 7]])).winner, 'y');
+  }
+});
+
+test('weighted verification passes for a real round and catches tampering', async () => {
+  const commit = await fair.newCommit();
+  const weights = [['wateraid', 40], ['unicef-usa', 25], ['red-cross', 35]];
+  const d = await fair.drawWeighted(commit.roundSeed, 'me', 3, weights);
+  const round = { roundSeed: commit.roundSeed, serverHash: commit.serverHash, clientSeed: 'me', nonce: 3, poolHash: await fair.weightsHash(weights), weights, winners: [d.winner] };
+  assert.equal((await fair.verifyWeighted(round)).ok, true);
+  const wrongWinner = Object.assign({}, round, { winners: [d.winner === 'wateraid' ? 'red-cross' : 'wateraid'] });
+  const v1 = await fair.verifyWeighted(wrongWinner);
+  assert.equal(v1.winnersOk, false);
+  assert.equal(v1.hashOk, true);
+  const wrongStakes = Object.assign({}, round, { weights: [['wateraid', 41], ['unicef-usa', 25], ['red-cross', 35]] });
+  assert.equal((await fair.verifyWeighted(wrongStakes)).poolOk, false);
+  const wrongSeed = Object.assign({}, round, { roundSeed: 'f'.repeat(64) });
+  assert.equal((await fair.verifyWeighted(wrongSeed)).hashOk, false);
+});

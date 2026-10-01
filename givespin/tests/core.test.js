@@ -293,19 +293,56 @@ test('streaks: same day holds, next day extends, gaps reset', () => {
 });
 
 test('badges unlock from state and are not re-awarded', () => {
-  const base = { totalCents: 0, rounds: 0, biggestCents: 0, charitiesSeen: [], causesSeen: [], gamesPlayed: [], gameCount: 11, streak: 0, bestStreak: 0, jackpots: 0, splits: 0, usedStream: false, directGifts: 0, verifies: 0, plans: 0 };
+  const base = { totalCents: 0, rounds: 0, biggestCents: 0, charitiesSeen: [], causesSeen: [], gamesPlayed: [], gameCount: 15, streak: 0, bestStreak: 0, jackpots: 0, splits: 0, usedStream: false, directGifts: 0, verifies: 0, plans: 0,
+    liveRounds: 0, liveWins: 0, biggestPotCents: 0 };
   assert.deepEqual(core.newBadges(base, {}), []);
   const s1 = Object.assign({}, base, { rounds: 1, biggestCents: 10000 });
   assert.deepEqual(core.newBadges(s1, {}).sort(), ['big', 'first']);
   assert.deepEqual(core.newBadges(s1, { first: 1 }), ['big']);
-  const games = Array.from({ length: 11 }, (_, i) => 'g' + i);
+  const games = Array.from({ length: 15 }, (_, i) => 'g' + i);
   const s2 = Object.assign({}, base, { rounds: 9, jackpots: 1, splits: 1, usedStream: true, bestStreak: 3, directGifts: 1, verifies: 2, plans: 1,
-    charitiesSeen: ['1', '2', '3', '4', '5'], causesSeen: ['a', 'b', 'c', 'd', 'e'], gamesPlayed: games, totalCents: 25000, biggestCents: 10000 });
+    charitiesSeen: ['1', '2', '3', '4', '5'], causesSeen: ['a', 'b', 'c', 'd', 'e'], gamesPlayed: games, totalCents: 25000, biggestCents: 10000,
+    liveRounds: 1, liveWins: 1, biggestPotCents: 50000 });
   assert.equal(core.newBadges(s2, {}).length, core.BADGES.length);
   // "Game Master" needs every game, "Arcade Regular" only five
   const five = Object.assign({}, base, { rounds: 5, gamesPlayed: games.slice(0, 5) });
   assert.deepEqual(core.newBadges(five, {}).sort(), ['first', 'regular']);
   assert.equal(new Set(core.BADGES.map((b) => b.id)).size, core.BADGES.length);
+});
+
+test('live badges unlock from live state', () => {
+  const base = { totalCents: 0, rounds: 0, biggestCents: 0, charitiesSeen: [], causesSeen: [], gamesPlayed: [], gameCount: 15, streak: 0, bestStreak: 0, jackpots: 0, splits: 0, usedStream: false, directGifts: 0, verifies: 0, plans: 0, liveRounds: 0, liveWins: 0, biggestPotCents: 0 };
+  assert.deepEqual(core.newBadges(Object.assign({}, base, { liveRounds: 1 }), {}), ['live']);
+  assert.deepEqual(core.newBadges(Object.assign({}, base, { liveRounds: 3, liveWins: 1 }), {}).sort(), ['called', 'live']);
+  assert.deepEqual(core.newBadges(Object.assign({}, base, { liveRounds: 1, biggestPotCents: 49999 }), {}), ['live']);
+  assert.deepEqual(core.newBadges(Object.assign({}, base, { liveRounds: 1, biggestPotCents: 50000 }), {}).sort(), ['bigpot', 'live']);
+});
+
+test('apportion splits a total in proportion, with a minimum, and always sums exactly', () => {
+  assert.deepEqual(core.apportion([1, 1, 1], 9, 0), [3, 3, 3]);
+  assert.deepEqual(core.apportion([50, 30, 20], 10, 0), [5, 3, 2]);
+  const a = core.apportion([97, 2, 1], 24, 1);
+  assert.equal(a.reduce((x, y) => x + y, 0), 24);
+  assert.ok(a.every((v) => v >= 1), 'every entrant keeps at least one');
+  assert.ok(a[0] > a[1] && a[1] >= a[2]);
+  assert.deepEqual(core.apportion([5, 0, 5], 4, 1), [2, 0, 2], 'zero-weight entrants get nothing');
+  for (let t = 0; t < 200; t++) {
+    const w = Array.from({ length: 1 + (t % 8) }, (_, i) => 1 + ((t * 7 + i * 13) % 50));
+    const total = Math.max(w.length, 5 + (t % 40));
+    assert.equal(core.apportion(w, total, 1).reduce((x, y) => x + y, 0), total, JSON.stringify([w, total]));
+  }
+  assert.deepEqual(core.apportion([], 5, 0), []);
+  assert.deepEqual(core.apportion([0, 0], 5, 0), [0, 0]);
+});
+
+test('share and fmtShare format a charity\'s slice of the pot', () => {
+  assert.equal(core.share(25, 100), 25);
+  assert.equal(core.share(1, 3), 33.3);
+  assert.equal(core.share(5, 0), 0);
+  assert.equal(core.fmtShare(1, 3), '33.3%');
+  assert.equal(core.fmtShare(50, 100), '50%');
+  assert.equal(core.fmtShare(1, 1000), '<1%');
+  assert.equal(core.fmtShare(0, 100), '0%');
 });
 
 test('receipt ids look right', () => {

@@ -15,9 +15,10 @@
     ['all', 'All games', 'lobby'],
     ['originals', 'Originals', 'lobby-originals'],
     ['table', 'Table games', 'lobby-table'],
+    ['races', 'Races', 'lobby-races'],
     ['instant', 'Instant wins', 'lobby-instant']
   ];
-  var BY = { originals: 'GiveSpin Originals', table: 'GiveSpin Table', instant: 'GiveSpin Instant' };
+  var BY = { originals: 'GiveSpin Originals', table: 'GiveSpin Table', races: 'GiveSpin Races', instant: 'GiveSpin Instant' };
 
   var root = null;
   var cat = 'all';
@@ -28,6 +29,7 @@
       return '<a class="tile" href="#game-' + id + '" data-game="' + id + '" data-cat="' + g.category + '" aria-label="' + esc(g.name) + ', ' + esc(g.badge) + '">' +
         '<span class="tile__art">' + GS.art[id]('l') + '</span>' +
         '<span class="tile__badge">' + esc(g.badge) + '</span>' +
+        (g.live && GS.live.enabled() ? '<span class="tile__live" title="This game also has a live table">Live table</span>' : '') +
         '<span class="tile__play" aria-hidden="true">' + ui.icon('play') + 'Play</span>' +
         '<span class="tile__meta"><span class="tile__name">' + esc(g.name) + '</span><span class="tile__by">' + BY[g.category] + '</span></span>' +
       '</a>';
@@ -73,6 +75,7 @@
 
   function build() {
     root.innerHTML = '<h1 class="sr-only">GiveSpin lobby: casino-style games that give to charity</h1>' + promos() +
+      '<section class="sect livestrip" data-role="livestrip" aria-labelledby="lb-live" hidden></section>' +
       '<div class="lobbybar"><nav class="cats" aria-label="Game categories">' + CATS.map(function (c) {
         return '<a class="cat" href="#' + c[2] + '" data-cat="' + c[0] + '">' + esc(c[1]) + '</a>';
       }).join('') + '</nav>' +
@@ -84,6 +87,7 @@
       '<section class="sect" aria-labelledby="lb-recent"><div class="sect__head"><h2 class="sect__t" id="lb-recent">Your latest gifts</h2><a class="linkbtn" href="#giving">See all in My Giving</a></div>' +
         '<div class="rgifts" data-role="recent"></div></section>';
     ui.hydrate(root);
+    ui.live.mountStrip($('[data-role="livestrip"]', root));
     ui.filters.quickChips($('[data-role="causes"]', root));
     $('[data-role="repeat"]', root).addEventListener('click', function () { ui.game.repeatLast(); });
     GS.bus.on('pool', refreshBits);

@@ -124,6 +124,61 @@
       });
   }
 
+  /* ------------------------------------------------ stake-weighted draws (live tables) */
+
+  /**
+   * A live table's draw is stake-weighted: every dollar in the pot is one ticket, and the winner is the charity that
+   * owns the drawn ticket. `weights` is a list of [charityId, tickets]; it is always put in id order first, so the
+   * same stakes give the same ticket list everywhere. This is exactly a uniform draw over the id-sorted list in
+   * which each charity id appears once per ticket.
+   */
+  function sortWeights(weights) {
+    return weights.map(function (w) { return [w[0], Math.floor(w[1])]; })
+      .filter(function (w) { return w[1] > 0; })
+      .sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; });
+  }
+
+  function weightsTotal(weights) { return weights.reduce(function (s, w) { return s + w[1]; }, 0); }
+
+  /** Which charity owns ticket number `index` (0-based) when tickets are laid out in id order. */
+  function ticketOwner(weights, index) {
+    var left = index;
+    for (var i = 0; i < weights.length; i++) {
+      if (left < weights[i][1]) { return weights[i][0]; }
+      left -= weights[i][1];
+    }
+    return weights.length ? weights[weights.length - 1][0] : null;
+  }
+
+  /** A fingerprint of the stakes, so a past round can prove what was in the pot. */
+  function weightsHash(weights) {
+    return sha256Hex(sortWeights(weights).map(function (w) { return w[0] + ':' + w[1]; }).join(','));
+  }
+
+  /** Resolves { winner: charityId, ticket: number, weights } for one stake-weighted draw. */
+  function drawWeighted(roundSeed, clientSeed, nonce, weights) {
+    var sorted = sortWeights(weights);
+    var total = weightsTotal(sorted);
+    return drawIndices(roundSeed, clientSeed, nonce, total, 1).then(function (idx) {
+      return { winner: ticketOwner(sorted, idx[0]), ticket: idx[0], weights: sorted };
+    });
+  }
+
+  /**
+   * Recomputes a live round. `round` = { roundSeed, serverHash, clientSeed, nonce, poolHash (the weights hash),
+   * weights, winners[] }. Resolves { hashOk, poolOk, winnersOk, ok, derived }.
+   */
+  function verifyWeighted(round) {
+    var sorted = sortWeights(round.weights || []);
+    return Promise.all([sha256Hex(round.roundSeed), weightsHash(sorted), drawWeighted(round.roundSeed, round.clientSeed, round.nonce, sorted)])
+      .then(function (r) {
+        var hashOk = r[0] === round.serverHash;
+        var poolOk = r[1] === round.poolHash;
+        var winnersOk = round.winners.length === 1 && round.winners[0] === r[2].winner;
+        return { hashOk: hashOk, poolOk: poolOk, winnersOk: winnersOk, ok: hashOk && poolOk && winnersOk, derived: [r[2].winner], weighted: true };
+      });
+  }
+
   /** Fresh round seed with its public hash. */
   function newCommit() {
     var seed = randomHex(32);
@@ -155,6 +210,7 @@
 
   return {
     SNIPPET: SNIPPET, available: available, randomHex: randomHex, sha256Hex: sha256Hex, hmacBytes: hmacBytes, stream: stream,
-    drawIndices: drawIndices, sortedIds: sortedIds, poolHash: poolHash, verify: verify, newCommit: newCommit
+    drawIndices: drawIndices, sortedIds: sortedIds, poolHash: poolHash, verify: verify, newCommit: newCommit,
+    sortWeights: sortWeights, weightsTotal: weightsTotal, ticketOwner: ticketOwner, weightsHash: weightsHash, drawWeighted: drawWeighted, verifyWeighted: verifyWeighted
   };
 });

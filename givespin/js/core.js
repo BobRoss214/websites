@@ -158,6 +158,43 @@
     return rounds;
   }
 
+  /**
+   * Splits `total` whole units across items in proportion to `weights` (largest remainder method), giving every
+   * item with a positive weight at least `min` units. Used to size pockets, balls and slices for stake-weighted
+   * live tables. The result always sums to exactly `total` (when total >= min * count of positive weights).
+   */
+  function apportion(weights, total, min) {
+    min = min || 0;
+    var sum = weights.reduce(function (s, w) { return s + Math.max(0, w); }, 0);
+    var out = weights.map(function (w) { return w > 0 ? min : 0; });
+    var left = total - out.reduce(function (s, v) { return s + v; }, 0);
+    if (sum <= 0 || left <= 0) { return out; }
+    var rems = [];
+    weights.forEach(function (w, i) {
+      if (w <= 0) { return; }
+      var exact = (w / sum) * left;
+      var whole = Math.floor(exact);
+      out[i] += whole;
+      rems.push({ i: i, r: exact - whole });
+    });
+    var rest = total - out.reduce(function (s, v) { return s + v; }, 0);
+    rems.sort(function (a, b) { return b.r - a.r || a.i - b.i; });
+    for (var k = 0; k < rest; k++) { out[rems[k % rems.length].i] += 1; }
+    return out;
+  }
+
+  /** A charity's share of a pot as a percentage with one decimal (0 when the pot is empty). */
+  function share(tickets, total) {
+    return total > 0 ? Math.round((tickets / total) * 1000) / 10 : 0;
+  }
+
+  /** "37%" or "<1%" for display. */
+  function fmtShare(tickets, total) {
+    var p = share(tickets, total);
+    if (p > 0 && p < 1) { return '<1%'; }
+    return (Math.round(p * 10) % 10 === 0 ? Math.round(p) : p.toFixed(1)) + '%';
+  }
+
   /* ------------------------------------------------------------ pool logic */
 
   var ERA_IDS = ['e1', 'e2', 'e3', 'e4'];
@@ -344,7 +381,8 @@
   /**
    * Badges. `test(state)` receives the saved state *after* the latest play was recorded.
    * state: { totalCents, rounds, biggestCents, charitiesSeen[], causesSeen[], gamesPlayed[], gameCount,
-   *          streak, bestStreak, jackpots, splits, usedStream, directGifts, verifies, plans }
+   *          streak, bestStreak, jackpots, splits, usedStream, directGifts, verifies, plans,
+   *          liveRounds, liveWins, biggestPotCents }
    */
   var BADGES = [
     { id: 'first',    name: 'First Give',       icon: 'heart',      desc: 'Complete your first round.',                 test: function (s) { return s.rounds >= 1; } },
@@ -360,7 +398,10 @@
     { id: 'streamer', name: 'Main Character',   icon: 'tv',         desc: 'Play in Stream Mode.',                       test: function (s) { return !!s.usedStream; } },
     { id: 'direct',   name: 'Hand-Picked',      icon: 'target',     desc: 'Give directly to a charity you chose.',      test: function (s) { return s.directGifts >= 1; } },
     { id: 'verifier', name: 'Trust, Verified',  icon: 'shield-check', desc: 'Verify a result in Fair Play.',            test: function (s) { return s.verifies >= 1; } },
-    { id: 'steady',   name: 'Steady Giver',     icon: 'calendar-days', desc: 'Set up a recurring gift.',                test: function (s) { return s.plans >= 1; } }
+    { id: 'steady',   name: 'Steady Giver',     icon: 'calendar-days', desc: 'Set up a recurring gift.',                test: function (s) { return s.plans >= 1; } },
+    { id: 'live',     name: 'Live Wire',        icon: 'radio',      desc: 'Take a seat at a live table.',               test: function (s) { return s.liveRounds >= 1; } },
+    { id: 'called',   name: 'Called It',        icon: 'target',     desc: 'Back the charity that wins a live pot.',     test: function (s) { return s.liveWins >= 1; } },
+    { id: 'bigpot',   name: 'Pot of Gold',      icon: 'gem',        desc: 'Join a live pot of $500 or more.',           test: function (s) { return s.biggestPotCents >= 50000; } }
   ];
 
   /** Returns the ids of badges newly earned given `state` and the set already unlocked. */
@@ -486,6 +527,7 @@
     buildPool: buildPool, activeFilterCount: activeFilterCount, facetCounts: facetCounts, mergeAllocations: mergeAllocations,
     LEVELS: LEVELS, xpForPlay: xpForPlay, levelFor: levelFor,
     dayKey: dayKey, monthKey: monthKey, daysBetween: daysBetween, nextStreak: nextStreak, nextGiftDate: nextGiftDate,
+    apportion: apportion, share: share, fmtShare: fmtShare,
     BADGES: BADGES, newBadges: newBadges,
     validateEmail: validateEmail, validatePhone: validatePhone, passwordStrength: passwordStrength,
     luhn: luhn, cardBrand: cardBrand, BRAND_NAMES: BRAND_NAMES, formatCardNumber: formatCardNumber, validateExpiry: validateExpiry, validateCvc: validateCvc,

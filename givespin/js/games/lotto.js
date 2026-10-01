@@ -1,17 +1,21 @@
 /*
- * Lucky Draw. Charity balls tumble in a drum; one is drawn out through the chute into the tray.
+ * Lucky Draw. Charity balls tumble in a drum; one is drawn out through the chute into the tray. The drum holds
+ * 12 balls or up to 100.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the drum starts. The drum holds
  * a sample of the pool that always includes the winner; the winner's ball is steered to the chute after the mix.
+ *
+ * Live tables: the drum holds a ball per share of the pot, so a charity with half the money is half the balls.
  */
 (function () {
   'use strict';
   var GS = window.GS;
   var core = GS.core;
   var U = GS.util;
+  var kit = GS.kit;
   var TAU = Math.PI * 2;
 
-  var MAX_BALLS = 12;
+  var LIVE_BALLS = 36;
 
   var el = {};
   var api = null;
@@ -21,7 +25,9 @@
   var dpr = 1;
   var geo = null;
 
+  var size = 12;
   var pool = [];
+  var field = null;
   var balls = [];        // { ch, x, y, vx, vy, mode: 'drum' | 'guide' | 'tube' | 'tray', ... }
   var fresh = true;
   var mixing = false;
@@ -36,33 +42,37 @@
   var result = null;
   var onTray = null;
 
-  function count() { return Math.max(2, Math.min(MAX_BALLS, pool.length)); }
+  function count() { return Math.max(2, Math.min(size, pool.length)); }
 
   function layout() {
+    var n = balls.length || 6;
     var Rd = W * 0.36;
-    var r = Rd * (balls.length > 8 ? 0.17 : balls.length > 4 ? 0.2 : 0.24);
+    var r = Rd * core.clamp(Math.sqrt(0.4 / n), 0.05, 0.24);
     var cx = W / 2;
     var cy = Rd + 12;
     var tubeTop = cy + Rd - 6;
-    var tubeLen = r * 3.3;
+    var tr = Math.max(r, 11); // tube and tray are sized for a ball the winner can be read on
+    var tubeLen = tr * 3.3;
     geo = {
-      Rd: Rd, r: r, cx: cx, cy: cy, tubeTop: tubeTop, tubeBot: tubeTop + tubeLen,
-      trayTop: tubeTop + tubeLen + r * 0.2, trayH: r * 2.7, G: 1500 * (Rd / 150),
-      mouth: { x: cx, y: cy + Rd - r * 1.15 }
+      Rd: Rd, r: r, tr: tr, cx: cx, cy: cy, tubeTop: tubeTop, tubeBot: tubeTop + tubeLen,
+      trayTop: tubeTop + tubeLen + tr * 0.2, trayH: tr * 2.7, G: 1500 * (Rd / 150),
+      mouth: { x: cx, y: cy + Rd - tr * 1.15 }
     };
     H = Math.ceil(geo.trayTop + geo.trayH + 14);
   }
 
   function measure() {
     var w = el.stage ? Math.floor(el.stage.clientWidth) : 0;
-    if (w) { W = Math.min(w, 440); }
+    if (w) { W = Math.min(w, balls.length > 24 ? 560 : 440); }
     return !!W;
   }
 
   function resize() {
     if (!el.canvas) { return; }
     if (!measure()) { return; }
+    var oldR = geo ? geo.Rd : 0;
     layout();
+    if (oldR && Math.abs(oldR - geo.Rd) > 1) { rescale(oldR); }
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     el.canvas.width = Math.round(W * dpr);
     el.canvas.height = Math.round(H * dpr);
@@ -71,15 +81,30 @@
     draw();
   }
 
+  /** The drum changed size: bring balls with it. */
+  function rescale(oldR) {
+    var k = geo.Rd / oldR;
+    var ocx = oldR ? (W / 2) : 0;
+    balls.forEach(function (b) {
+      b.x = geo.cx + (b.x - ocx) * k;
+      b.y = geo.cy + (b.y - (oldR + 12)) * k;
+      b.vx *= k; b.vy *= k;
+    });
+  }
+
   /* ---------------------------------------------------------------- balls */
 
   function spawn(list) {
     measure();
+    balls = list.map(function (ch) { return { ch: ch, x: 0, y: 0, vx: 0, vy: 0, mode: 'drum' }; });
     layout();
-    balls = list.map(function (ch, i) {
+    balls.forEach(function (b) {
       var a = Math.random() * TAU;
       var d = Math.random() * (geo.Rd - geo.r * 1.5);
-      return { ch: ch, x: geo.cx + Math.cos(a) * d, y: geo.cy + Math.sin(a) * d * 0.8, vx: core.randomRange(-120, 120), vy: core.randomRange(-120, 60), mode: 'drum' };
+      b.x = geo.cx + Math.cos(a) * d;
+      b.y = geo.cy + Math.sin(a) * d * 0.8;
+      b.vx = core.randomRange(-120, 120);
+      b.vy = core.randomRange(-120, 60);
     });
     current = null;
     result = null;
@@ -89,6 +114,15 @@
 
   function renderLegend() {
     if (!el.legend) { return; }
+    el.legend.className = 'rlegend' + (balls.length > 30 ? ' rlegend--scroll' : '');
+    if (field) {
+      var total = field.reduce(function (s, e) { return s + e.tickets; }, 0);
+      el.legend.innerHTML = field.map(function (e) {
+        var mine = balls.filter(function (b) { return b.ch.id === e.charity.id; }).length;
+        return '<li><span class="cmono" style="--c:' + e.charity.accent + ';--s:20px" data-len="' + GS.mono(e.charity).length + '" aria-hidden="true">' + U.esc(GS.mono(e.charity)) + '</span><span>' + U.esc(e.charity.short) + ' · ' + core.fmtShare(e.tickets, total) + ' · ' + mine + (mine === 1 ? ' ball' : ' balls') + '</span></li>';
+      }).join('');
+      return;
+    }
     el.legend.innerHTML = balls.map(function (b) {
       return '<li><span class="cmono" style="--c:' + b.ch.accent + ';--s:20px" data-len="' + GS.mono(b.ch).length + '" aria-hidden="true">' + U.esc(GS.mono(b.ch)) + '</span><span>' + U.esc(b.ch.short) + '</span></li>';
     }).join('');
@@ -96,7 +130,7 @@
 
   function physics(dt) {
     if (!geo) { return; }
-    var sub = 3;
+    var sub = balls.length > 40 ? 2 : 3;
     var h = dt / sub;
     var Rd = geo.Rd, r = geo.r;
     for (var s = 0; s < sub; s++) {
@@ -149,7 +183,7 @@
 
   function jets(strength) {
     var inDrum = balls.filter(function (b) { return b.mode === 'drum'; });
-    var k = Math.min(inDrum.length, 3);
+    var k = Math.min(inDrum.length, Math.max(3, Math.round(inDrum.length / 5)));
     var picks = core.sampleSubset(inDrum, k || 1);
     picks.forEach(function (b) {
       if (!b) { return; }
@@ -161,34 +195,44 @@
   /* -------------------------------------------------------------- drawing */
 
   function drawBall(b, x, y, r, glow) {
-    var m = GS.mono(b.ch);
+    var text = r >= 11;
     if (glow) {
       ctx.beginPath();
       ctx.arc(x, y, r + 7, 0, TAU);
       ctx.fillStyle = 'rgba(255,197,66,0.35)';
       ctx.fill();
     }
-    var g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
-    g.addColorStop(0, '#ffffff');
-    g.addColorStop(0.25, b.ch.accent);
-    g.addColorStop(1, 'rgba(0,0,0,0.55)');
     ctx.beginPath();
     ctx.arc(x, y, r, 0, TAU);
     ctx.fillStyle = b.ch.accent;
     ctx.fill();
-    ctx.fillStyle = g;
-    ctx.globalAlpha = 0.65;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.beginPath();
-    ctx.arc(x, y, r * 0.62, 0, TAU);
-    ctx.fillStyle = 'rgba(255,255,255,0.95)';
-    ctx.fill();
-    ctx.fillStyle = '#0b1620';
-    ctx.font = '800 ' + (r * 0.62 * (m.length > 2 ? 0.95 : 1.15)) + 'px "Sora", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(m, x, y + 1);
+    if (balls.length <= 40) {
+      var g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(0.25, b.ch.accent);
+      g.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = g;
+      ctx.globalAlpha = 0.65;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.beginPath();
+      ctx.arc(x - r * 0.3, y - r * 0.3, r * 0.35, 0, TAU);
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fill();
+    }
+    if (text) {
+      var m = GS.mono(b.ch);
+      ctx.beginPath();
+      ctx.arc(x, y, r * 0.62, 0, TAU);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.fill();
+      ctx.fillStyle = '#0b1620';
+      ctx.font = '800 ' + (r * 0.62 * (m.length > 2 ? 0.95 : 1.15)) + 'px "Sora", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(m, x, y + 1);
+    }
   }
 
   function draw() {
@@ -197,8 +241,7 @@
     ctx.clearRect(0, 0, W, H);
     var g = geo;
 
-    // tube
-    var tw = g.r * 1.5 + 8;
+    var tw = g.tr * 1.5 + 8;
     ctx.fillStyle = 'rgba(255,255,255,0.07)';
     ctx.fillRect(g.cx - tw / 2, g.tubeTop, tw, g.tubeBot - g.tubeTop + 8);
     ctx.strokeStyle = 'rgba(255,255,255,0.35)';
@@ -210,9 +253,8 @@
     ctx.lineTo(g.cx + tw / 2, g.tubeBot + 8);
     ctx.stroke();
 
-    // tray
-    var tx = g.cx - g.r * 2.6;
-    var tww = g.r * 5.2;
+    var tx = g.cx - g.tr * 2.6;
+    var tww = g.tr * 5.2;
     ctx.beginPath();
     var rr = 14;
     ctx.moveTo(tx + rr, g.trayTop);
@@ -227,7 +269,6 @@
     ctx.strokeStyle = '#ffc542';
     ctx.stroke();
 
-    // drum
     ctx.beginPath();
     ctx.arc(g.cx, g.cy, g.Rd, 0, TAU);
     var fillG = ctx.createRadialGradient(g.cx, g.cy - g.Rd * 0.3, g.Rd * 0.1, g.cx, g.cy, g.Rd);
@@ -235,7 +276,6 @@
     fillG.addColorStop(1, 'rgba(255,255,255,0.03)');
     ctx.fillStyle = fillG;
     ctx.fill();
-    // balls inside the drum (behind the glass rim)
     var i, b;
     for (i = 0; i < balls.length; i++) {
       b = balls[i];
@@ -251,7 +291,6 @@
     ctx.beginPath();
     ctx.arc(g.cx, g.cy, g.Rd + 5, 0, TAU);
     ctx.stroke();
-    // spokes that turn with the mix
     ctx.save();
     ctx.translate(g.cx, g.cy);
     ctx.rotate(drumT);
@@ -265,13 +304,11 @@
       ctx.stroke();
     }
     ctx.restore();
-    // mouth
     ctx.fillStyle = '#ffc542';
     ctx.fillRect(g.cx - tw / 2 - 3, g.cy + g.Rd - 2, tw + 6, 7);
-    // balls that have left the drum
     for (i = 0; i < balls.length; i++) {
       b = balls[i];
-      if (b.mode !== 'drum') { drawBall(b, b.x, b.y, g.r, b.mode === 'tray'); }
+      if (b.mode !== 'drum') { drawBall(b, b.x, b.y, g.tr, b.mode === 'tray'); }
     }
   }
 
@@ -315,7 +352,7 @@
   }
 
   function tubeStep(b, dt) {
-    var rest = geo.trayTop + geo.trayH * 0.5 + geo.r * 0.1;
+    var rest = geo.trayTop + geo.trayH * 0.5 + geo.tr * 0.1;
     b.vy += geo.G * dt;
     b.y += b.vy * dt;
     b.x = geo.cx;
@@ -339,14 +376,27 @@
 
   function updateNote() {
     if (!el.note) { return; }
+    if (field) { el.note.textContent = 'Balls are shared out by stake: a charity with more money behind it has more balls in the drum.'; return; }
     if (!pool.length) { el.note.textContent = ''; return; }
     el.note.textContent = (pool.length > balls.length ? balls.length + ' of your ' + pool.length + ' charities are in the drum, reshuffled every draw. ' : 'All ' + pool.length + ' charities in play are in the drum. ') +
       'Equal odds for every charity in play.';
   }
 
   function rebuild() {
+    if (field) { return; }
     if (!pool.length) { balls = []; layout(); renderLegend(); updateNote(); return; }
-    spawn(core.sampleSubset(pool, count()));
+    spawn(kit.sample(pool, count()));
+    fresh = true;
+    resize();
+    updateNote();
+  }
+
+  function setLiveField(entrants) {
+    field = entrants;
+    var counts = core.apportion(entrants.map(function (e) { return e.tickets; }), Math.max(LIVE_BALLS, entrants.length), 1);
+    var list = [];
+    entrants.forEach(function (e, i) { for (var k = 0; k < counts[i]; k++) { list.push(e.charity); } });
+    spawn(core.shuffle(list));
     fresh = true;
     resize();
     updateNote();
@@ -356,13 +406,13 @@
     var has = balls.some(function (b) { return b.ch.id === winner.id; });
     if (fresh && has) { return; }
     if (fresh) { balls[core.randomInt(balls.length)].ch = winner; renderLegend(); return; }
-    spawn(core.subsetWith(pool, winner, count()));
+    spawn(kit.boardWith(pool, winner, count()));
     fresh = true;
     resize();
     updateNote();
   }
 
-  function draw1(winner, quick) {
+  function draw1(winner, quick, durationMs) {
     return new Promise(function (resolve) {
       fresh = false;
       result = null;
@@ -370,11 +420,12 @@
       mixing = true;
       jetT = 0;
       GS.audio.whoosh();
-      U.sleep(quick ? 900 : 3000).then(function () {
+      var mixMs = durationMs ? durationMs * 0.62 : (quick ? 900 : 3000 + balls.length * 12);
+      U.sleep(mixMs).then(function () {
         mixing = false;
-        var b = balls.filter(function (x) { return x.ch.id === winner.id; })[0];
+        var mine = balls.filter(function (x) { return x.ch.id === winner.id; });
+        var b = mine[core.randomInt(mine.length)];
         current = b;
-        // let the balls settle a moment, then steer the winner to the chute
         return U.sleep(quick ? 120 : 600).then(function () {
           b.mode = 'guide';
           b.g = { x0: b.x, y0: b.y, start: performance.now(), dur: U.dur(quick ? 500 : 1300) };
@@ -390,11 +441,14 @@
     label: 'Lotto',
     icon: 'circle-dot',
     category: 'instant',
-    badge: 'Ball draw',
+    badge: 'Up to 100',
+    live: true,
+    sizes: [{ n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 50, name: 'Huge' }, { n: 100, name: 'Giant' }],
+    defaultSize: 12,
     tagline: 'Balls tumble in the drum. One rolls out. That charity wins.',
     cta: 'Draw a ball',
     info: [
-      'Up to twelve charity balls tumble in the drum with a puff of air. One is picked out through the chute and drops into the tray.',
+      'Charity balls tumble in the drum with a puff of air, from a classic 12 up to a giant drum of 100. One is picked out through the chute and drops into the tray.',
       'It is the classic lottery draw, except every ball is a winner for someone and your whole gift goes to the one that rolls out.'
     ],
 
@@ -417,18 +471,22 @@
       U.observeSize(el.stage, resize);
     },
 
+    setSize: function (n) { size = n; if (!mixing && !field && !(current && current.mode !== 'tray')) { rebuild(); } },
     setPool: function (list) {
       pool = list.slice();
+      if (field) { return; }
       if (!mixing && !current) { rebuild(); }
       else if (!mixing && current && current.mode === 'tray') { rebuild(); }
     },
+    setField: function (entrants) { if (!mixing && !(current && current.mode !== 'tray')) { setLiveField(entrants); } },
+    clearField: function () { field = null; if (!mixing) { rebuild(); } },
 
     activate: function () { active = true; resize(); startLoop(); },
     deactivate: function () { active = false; },
 
     lock: function (isLocked) {
       locked = !!isLocked;
-      if (el.go) { el.go.disabled = locked; }
+      if (el.go) { el.go.hidden = !!field; el.go.disabled = locked; }
     },
 
     play: function (opts) {
@@ -451,6 +509,9 @@
       });
     },
 
-    _shown: function () { return result ? [result.id] : []; }
+    playLive: function (opts) { return draw1(opts.winner, false, opts.durationMs); },
+
+    _shown: function () { return result ? [result.id] : []; },
+    _balls: function () { return balls.length; }
   };
 })();

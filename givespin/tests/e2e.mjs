@@ -5,6 +5,7 @@
 // Needs Playwright (npm i -g playwright) with a Chromium build available. Optional env:
 //   SHOTS=/some/dir        save screenshots of the key moments
 //   AXE=/path/axe.min.js   also run an axe-core accessibility scan on every page and dialog
+//   ONLY=12,13a            run only these numbered sections
 import { createRequire } from 'node:module';
 import http from 'node:http';
 import fs from 'node:fs';
@@ -49,7 +50,13 @@ function check(cond, label, extra) {
   if (cond) { passes++; console.log('  ok   ' + label); }
   else { failures++; console.log('  FAIL ' + label + (extra !== undefined ? '  -> ' + JSON.stringify(extra) : '')); }
 }
-function section(name) { console.log('\n' + name); }
+// ONLY=12,13a runs just those sections (handy while working on one area)
+const ONLY = process.env.ONLY ? process.env.ONLY.split(',') : null;
+function section(name) {
+  if (ONLY && !ONLY.includes(name.split('.')[0])) { return false; }
+  console.log('\n' + name);
+  return true;
+}
 
 const browser = await chromium.launch();
 const problems = [];
@@ -85,6 +92,15 @@ const closeReceipt = async (page) => {
   await page.waitForFunction(() => !document.querySelector('#dlg-result').open);
   await page.waitForFunction(() => !window.GS.app.state.busy);
 };
+const settleScroll = async (page) => {
+  let last = -1;
+  for (let i = 0; i < 40; i++) {
+    const y = await page.evaluate(() => Math.round(window.scrollY));
+    if (y === last) { return; }
+    last = y;
+    await page.waitForTimeout(120);
+  }
+};
 const receiptOpen = (page) => page.evaluate(() => !!document.querySelector('#dlg-result[open]'));
 const balance = (page) => page.evaluate(() => window.GS.store.balance());
 const state = (page) => page.evaluate(() => window.GS.store.get());
@@ -102,24 +118,26 @@ const a11y = async (page, label) => {
   check(res.length === 0, 'axe: ' + label, res);
 };
 
-const GAMES = ['wheel', 'slots', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'lotto'];
+const GAMES = ['wheel', 'slots', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
+const LIVE_GAMES = ['wheel', 'drop', 'plinko', 'roulette', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
 
 /* ======================================================================== */
-section('1. Page load and lobby');
-{
+if (section('1. Page load and lobby')) {
   const page = await newPage();
   await openApp(page);
   check(await page.title() === 'GiveSpin | Play to give', 'title is set');
   check(await page.locator('html').getAttribute('data-mode') === 'demo', 'defaults to demo mode');
   check(await page.locator('.demo-strip').isVisible(), 'demo banner is visible');
   check(await page.locator('#balance-amt').innerText() === '$1,000', 'starts with $1,000 demo credit');
-  check(await page.locator('.tile').count() === 12, '12 tiles (11 games and Give Direct)');
-  check(await page.locator('.tile:not([hidden])').count() === 12, 'all tiles shown on All games');
+  check(await page.locator('.tile').count() === 16, '16 tiles (15 games and Give Direct)');
+  check(await page.locator('.tile:not([hidden])').count() === 16, 'all tiles shown on All games');
   const cat = async (c) => { await page.click(`.cat[data-cat="${c}"]`); await page.waitForFunction((h) => window.location.hash === h, c === 'all' ? '#lobby' : '#lobby-' + c); await page.waitForTimeout(100); };
   await cat('originals');
   check(await page.locator('.tile:not([hidden])').count() === 4 && page.url().endsWith('#lobby-originals'), 'Originals shows 4 games and updates the URL');
   await cat('table');
   check(await page.locator('.tile:not([hidden])').count() === 4, 'Table games shows 4');
+  await cat('races');
+  check(await page.locator('.tile:not([hidden])').count() === 4 && page.url().endsWith('#lobby-races'), 'Races shows 4 and updates the URL');
   await cat('instant');
   check(await page.locator('.tile:not([hidden])').count() === 3, 'Instant wins shows 3');
   await cat('all');
@@ -136,8 +154,7 @@ section('1. Page load and lobby');
 }
 
 /* ======================================================================== */
-section('2. Search');
-{
+if (section('2. Search')) {
   const page = await newPage();
   await openApp(page);
   await page.fill('#search-input', 'roul');
@@ -158,8 +175,7 @@ section('2. Search');
 }
 
 /* ======================================================================== */
-section('3. Every game plays, shows the drawn winner, and can be verified');
-{
+if (section('3. Every game plays, shows the drawn winner, and can be verified')) {
   const page = await newPage();
   await openApp(page);
   let expected = 100000;
@@ -191,15 +207,14 @@ section('3. Every game plays, shows the drawn winner, and can be verified');
     await closeReceipt(page);
   }
   const s = await state(page);
-  check(s.plays === 11 && s.gamesPlayed.length === 11, 'all 11 games recorded as played', s.gamesPlayed);
+  check(s.plays === 15 && s.gamesPlayed.length === 15, 'all 15 games recorded as played', s.gamesPlayed);
   check(!!s.badges.master && !!s.badges.verifier, 'Game Master and Trust, Verified badges unlocked');
-  check(s.fair.nonce === 11, 'round number advanced once per round', s.fair.nonce);
+  check(s.fair.nonce === 15, 'round number advanced once per round', s.fair.nonce);
   await page.close();
 }
 
 /* ======================================================================== */
-section('4. Split gifts, minimum per round, amount rules');
-{
+if (section('4. Split gifts, minimum per round, amount rules')) {
   const page = await newPage();
   await openApp(page, '#game-wheel');
   const seg = (r) => page.locator(`#rounds-seg [data-r="${r}"]`);
@@ -267,8 +282,7 @@ section('4. Split gifts, minimum per round, amount rules');
 }
 
 /* ======================================================================== */
-section('5. Filters');
-{
+if (section('5. Filters')) {
   const page = await newPage();
   await openApp(page, '#game-wheel');
   const count = () => page.evaluate(() => window.GS.app.state.pool.length);
@@ -345,8 +359,7 @@ section('5. Filters');
 }
 
 /* ======================================================================== */
-section('6. Charities page, profiles and the in-play switches');
-{
+if (section('6. Charities page, profiles and the in-play switches')) {
   const page = await newPage();
   await openApp(page, '#charities');
   check(await page.locator('#view-charities .rcard').count() === 228, 'lists all 228 charities');
@@ -413,8 +426,7 @@ section('6. Charities page, profiles and the in-play switches');
 }
 
 /* ======================================================================== */
-section('7. Give directly, repeat gifts, dedications and My Giving');
-{
+if (section('7. Give directly, repeat gifts, dedications and My Giving')) {
   const page = await newPage();
   await openApp(page, '#charity-wateraid');
   await page.waitForSelector('#dlg-profile[open]');
@@ -502,8 +514,7 @@ section('7. Give directly, repeat gifts, dedications and My Giving');
 }
 
 /* ======================================================================== */
-section('8. Demo credit');
-{
+if (section('8. Demo credit')) {
   const page = await newPage();
   await openApp(page, '#game-wheel');
   await page.click('#btn-credit');
@@ -529,8 +540,7 @@ section('8. Demo credit');
 }
 
 /* ======================================================================== */
-section('9. Optional account (preview): sign up, card, limit, sign in');
-{
+if (section('9. Optional account (preview): sign up, card, limit, sign in')) {
   const page = await newPage();
   await openApp(page, '#game-wheel');
   await page.click('#acct [data-role="signup"]');
@@ -699,8 +709,7 @@ section('9. Optional account (preview): sign up, card, limit, sign in');
 }
 
 /* ======================================================================== */
-section('10. Fair play page');
-{
+if (section('10. Fair play page')) {
   const page = await newPage();
   await openApp(page, '#fair');
   const hash1 = await page.locator('#view-fair [data-role="hash"]').innerText();
@@ -767,11 +776,10 @@ section('10. Fair play page');
 }
 
 /* ======================================================================== */
-section('11. Giving Club, Help and keyboard');
-{
+if (section('11. Giving Club, Help and keyboard')) {
   const page = await newPage();
   await openApp(page, '#club');
-  check(await page.locator('#view-club .rung').count() === 10 && await page.locator('#view-club .badge').count() === 14, 'club shows 10 levels and 14 badges');
+  check(await page.locator('#view-club .rung').count() === 10 && await page.locator('#view-club .badge').count() === core.BADGES.length, 'club shows 10 levels and every badge');
   check(await page.locator('#view-club .rung.is-now').count() === 1, 'one level is marked current');
   await a11y(page, 'Giving Club');
   await go(page, '#help-real');
@@ -813,8 +821,7 @@ section('11. Giving Club, Help and keyboard');
 }
 
 /* ======================================================================== */
-section('12. Hands-on games (real speed): cards and scratch cards');
-{
+if (section('12. Hands-on games (real speed): cards and scratch cards')) {
   const page = await newPage();
   await openApp(page, '#game-cards', '');
   await page.click('#btn-play');
@@ -832,6 +839,7 @@ section('12. Hands-on games (real speed): cards and scratch cards');
   await go(page, '#game-scratch');
   await page.click('#btn-play');
   await page.waitForFunction(() => document.querySelectorAll('.spanel__btn:not([disabled])').length >= 5, null, { timeout: 15000 });
+  await settleScroll(page); // pressing play scrolls the stage into view; measure the panels only once that has finished
   const boxes = await page.locator('#panel-scratch .spanel').evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; }));
   check(boxes.length >= 5, 'a card has at least five panels', boxes.length);
   for (const b of boxes) {
@@ -859,8 +867,7 @@ section('12. Hands-on games (real speed): cards and scratch cards');
 }
 
 /* ======================================================================== */
-section('13. Stream mode, reduced motion, persistence');
-{
+if (section('13. Stream mode, reduced motion, persistence')) {
   const page = await newPage();
   await openApp(page);
   await page.click('#btn-stream');
@@ -908,8 +915,275 @@ section('13. Stream mode, reduced motion, persistence');
 }
 
 /* ======================================================================== */
-section('14. Live mode (redirect to checkout) never handles money');
-{
+if (section('13a. Board sizes: from a handful to a hundred charities')) {
+  const page = await newPage();
+  await openApp(page);
+  const sized = [['roulette', 100], ['plinko', 100], ['wheel', 100], ['drop', 100], ['lotto', 100], ['derby', 48], ['duck', 100], ['marble', 100], ['balloon', 100], ['standing', 100], ['coin', 32], ['cards', 52], ['scratch', 24]];
+  for (const [id, n] of sized) {
+    await go(page, '#game-' + id);
+    await page.waitForSelector('#panel-' + id + ':not([hidden])');
+    const g = await page.evaluate((gid) => window.GS.games[gid].sizes.map((x) => x.n), id);
+    check(g.includes(n) && g[0] < n, id + ': offers board sizes from ' + g[0] + ' up to ' + n, g);
+    await page.click(`#size-seg [data-n="${n}"]`);
+    check(await page.locator(`#size-seg [data-n="${n}"]`).getAttribute('aria-pressed') === 'true', id + ': ' + n + ' is selected');
+    check((await page.locator('#size-hint').innerText()).includes('Every one of the ' + (await page.evaluate(() => window.GS.app.state.pool.length)) + ' still has equal odds'), id + ': the hint says every charity in play keeps equal odds');
+    await page.click('#btn-play');
+    await waitReceipt(page);
+    const info = await page.evaluate((gid) => ({ w: window.GS.app._last.round.winners.map((x) => x.id), shown: window.GS.games[gid]._shown() }), id);
+    check(info.shown[0] === info.w[info.w.length - 1], id + ': the winner drawn from all 228 is the one on the ' + n + '-charity board', info);
+    await closeReceipt(page);
+  }
+  const prefs = await page.evaluate(() => window.GS.store.prefs().sizes);
+  check(prefs.plinko === 100 && prefs.derby === 48, 'chosen sizes are remembered', prefs);
+  // a narrow pool shrinks the board and says so
+  await go(page, '#game-derby');
+  await page.evaluate(() => { window.GS.store.setPref('filters', Object.assign(window.GS.core.emptyFilters(), { causes: ['animals'] })); window.GS.app.refreshPool(); });
+  await page.waitForTimeout(200);
+  const poolN = await page.evaluate(() => window.GS.app.state.pool.length);
+  check(poolN < 48 && (await page.locator('#size-hint').innerText()).includes('all ' + poolN), 'a filtered pool smaller than the board shows every charity in play', poolN);
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('13b. Live tables: the page, the lobby strip and a live room')) {
+  const page = await newPage();
+  await openApp(page);
+  check(await page.locator('.livestrip .lcard').count() === 4, 'the lobby has a "live now" strip with four tables');
+  check((await page.locator('.livestrip').innerText()).includes('bots'), 'the strip says the other players are bots');
+  check(await page.locator('.side__link[data-route="live"]').isVisible(), 'the side nav has Live tables');
+  await go(page, '#live');
+  check(await page.locator('#view-live').isVisible() && await page.locator('#view-live .lcard').count() === LIVE_GAMES.length, 'the Live tables page lists a table for each live game', await page.locator('#view-live .lcard').count());
+  check((await page.locator('#view-live .simbanner').innerText()).includes('bot'), 'a banner says the tables are simulated and the players are bots');
+  check(await page.locator('.side__link[aria-current="page"]').getAttribute('data-route') === 'live', 'the nav marks Live tables as current');
+  check((await page.locator('#view-live').innerText()).includes('whole pot goes to it, whether you backed it or not'), 'the page explains that the whole pot goes to the winner');
+  await shot(page, '13-live-page');
+  await a11y(page, 'live tables page');
+  await page.click('#view-live .lcard[data-room="derby"]');
+  await page.waitForSelector('#livepanel:not([hidden])');
+  check(await page.evaluate(() => window.location.hash) === '#live-derby', 'a table opens at #live-<game>');
+  check(!(await page.locator('.bet:not(#livepanel)').isVisible()) && await page.locator('#livepanel').isVisible(), 'the solo gift panel is swapped for the live panel');
+  check((await page.locator('#g-title').innerText()).includes('Live'), 'the title says Live');
+  check(await page.locator('#view-game .crumbs a').first().innerText() === 'Live tables', 'the breadcrumb leads back to Live tables');
+  check(await page.locator('#livepanel .odd').count() >= 2, 'the odds board lists the charities at the table');
+  check(await page.locator('#livepanel .simnote').isVisible() && (await page.locator('#livepanel .simnote').innerText()).includes('bots'), 'the panel says the other players are bots');
+  const rows = await page.evaluate(() => GS.live.room('derby').field().map((f) => ({ id: f.charity.id, t: f.tickets, bots: f.bots })));
+  check(rows.length >= 2 && rows.every((r) => r.t >= 5 && r.bots >= 1), 'every charity at the table is backed by bots with stakes of $5 or more', rows);
+  const pctSum = (await page.locator('#livepanel .odd__num b').allTextContents()).reduce((a, t) => a + parseFloat(t.replace('<', '')), 0);
+  check(pctSum > 97 && pctSum < 103, 'the chances shown add up to about 100%', pctSum);
+  check((await page.locator('#livepanel .lt-phase').innerText()).length > 0 && /\d:\d\d/.test(await page.locator('#livepanel .lt-clock').innerText() || '0:00'), 'there is a phase and a countdown');
+  check(await page.locator('#below-tabs .tab').count() === 4 && (await page.locator('#tab-feed').innerText()) === 'Live feed', 'the tabs under the table are Live feed, Recent results, Fair play and How it works');
+  check((await page.locator('#tabp').innerText()).includes('BOT'), 'the live feed marks bots with a BOT tag');
+  await shot(page, '13-live-room');
+  await a11y(page, 'live room');
+  await page.click('#tab-fair');
+  check((await page.locator('#tabp').innerText()).includes('committed before bets'), 'the Fair play tab shows the hash committed before bets open');
+  // the games in solo mode are untouched
+  await go(page, '#game-derby');
+  check(await page.locator('.bet:not(#livepanel)').isVisible() && !(await page.locator('#livepanel').isVisible()), 'back in solo mode the gift panel returns');
+  check(await page.locator('#size-seg').isVisible(), 'and so does the board size control');
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('13c. Live tables: staking, cancelling, adding a charity (real time)')) {
+  const page = await newPage();
+  await openApp(page, '#live-derby', '');
+  await page.evaluate(() => { GS.live.room('derby').openRound(0); });
+  await page.waitForSelector('#livepanel .lt-phase.is-open');
+  await page.waitForTimeout(300);
+  check(await page.locator('#lt-stake [aria-pressed="true"]').innerText() === '$20', 'the default stake is $20');
+  check((await page.locator('#livepanel [data-role="join"]').innerText()).includes('Pick a charity') && await page.locator('#livepanel [data-role="join"]').isDisabled(), 'you pick a charity before you can join');
+  await page.click('#lt-stake [data-stake="50"]');
+  check(await page.evaluate(() => GS.store.prefs().liveStake) === 50, 'the stake you choose is remembered');
+  await page.locator('#livepanel .odd').nth(1).click();
+  const label = await page.locator('#livepanel [data-role="join-label"]').innerText();
+  check(/^Put \$50 on /.test(label), 'the button says what you are about to do', label);
+  check((await page.locator('#livepanel [data-role="join-sub"]').innerText()).includes('whole pot to the winner'), 'and that the whole pot goes to the winner');
+  const before = await balance(page);
+  const potBefore = await page.evaluate(() => GS.live.room('derby').pot());
+  await page.click('#livepanel [data-role="join"]');
+  check(await balance(page) === before - 5000, 'putting up $50 takes it from your credit');
+  const rm = await page.evaluate(() => { const r = GS.live.room('derby'); return { you: r.you, pot: r.pot(), pending: GS.store.get().pending.length }; });
+  check(rm.you && rm.you.dollars === 50 && rm.pot >= potBefore + 50 && rm.pending === 1, 'your stake is in the pot and recorded as pending', rm);
+  check((await page.locator('#livepanel [data-role="join"]').innerText()).includes('Take my bet back'), 'the join button becomes Take my bet back');
+  check(await page.locator('#livepanel .odd.is-on small').first().innerText().then((t) => t.includes('you $50')), 'your stake shows on the odds board');
+  check((await page.locator('#tabp').innerText()).includes('You'), 'and in the live feed');
+  await page.click('#livepanel [data-role="join"]');
+  check(await balance(page) === before, 'cancelling gives the stake back');
+  check(await page.evaluate(() => GS.live.room('derby').you === null && GS.store.get().pending.length === 0), 'and clears the pending marker');
+  // a custom stake
+  await page.fill('#lt-custom', '35');
+  check(await page.locator('#lt-stake [aria-pressed="true"]').count() === 0, 'typing another amount un-selects the presets');
+  await page.locator('#livepanel .odd').first().click();
+  await page.click('#livepanel [data-role="join"]');
+  check(await page.evaluate(() => GS.live.room('derby').you.dollars) === 35 && await balance(page) === before - 3500, 'a custom stake of $35 works');
+  await page.click('#livepanel [data-role="join"]');
+  // add a charity that is not at the table
+  await page.click('#lt-stake [data-stake="20"]');
+  await page.click('#livepanel [data-role="add"]');
+  await page.waitForSelector('#dlg-livepick[open]');
+  await page.fill('#lp-q', 'wateraid');
+  await a11y(page, 'add a charity to the table');
+  await page.locator('#dlg-livepick .pickitem').first().click();
+  await page.waitForFunction(() => !document.querySelector('#dlg-livepick').open);
+  const pseudo = await page.locator('#livepanel .odd.is-new').count();
+  check(pseudo === 1 && (await page.locator('#livepanel .odd.is-new').innerText()).includes('new gate'), 'a charity you add gets a gate of its own on the board');
+  await page.click('#livepanel [data-role="join"]');
+  const seat = await page.evaluate(() => { const r = GS.live.room('derby'); const k = Object.keys(r.seats).filter((id) => r.seats[id].you); return { k, tickets: r.seats[k[0]] && r.seats[k[0]].tickets }; });
+  check(seat.k.length === 1 && seat.tickets === 20, 'joining puts your charity on the table with your stake', seat);
+  await page.click('#livepanel [data-role="join"]');
+  // a full table
+  const full = await page.evaluate(() => {
+    const r = GS.live.room('derby');
+    for (const c of GS.charities) { if (r.distinct() >= GS.live.MAX_GATES) { break; } if (!r.seats[c.id]) { r._botJoin(c, 5); } }
+    const other = GS.charities.find((c) => !r.seats[c.id]);
+    return { distinct: r.distinct(), res: r.join(other.id, 20), still: r.you };
+  });
+  check(full.distinct === 8 && full.res.ok === false && full.res.code === 'full' && full.still === null, 'a full table (8 charities) turns away a ninth', full);
+  // not enough credit
+  await page.evaluate(() => { GS.live.room('derby').openRound(0); GS.store.spend(GS.store.balance() - 500); GS.bus.emit('balance'); });
+  await page.waitForSelector('#livepanel .lt-phase.is-open');
+  await page.waitForTimeout(200);
+  await page.locator('#livepanel .odd').first().click();
+  await page.click('#livepanel [data-role="join"]');
+  await page.waitForSelector('#dlg-credit[open]');
+  check(await balance(page) === 500 && await page.evaluate(() => GS.live.room('derby').you === null), 'without enough credit it opens Add credit and takes nothing');
+  await page.keyboard.press('Escape');
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('13d. Live tables: a round, the whole pot to the winner, and a fair draw')) {
+  const page = await newPage();
+  await openApp(page, '#live-derby');
+  await page.waitForSelector('#livepanel .lt-phase.is-open');
+  await page.waitForTimeout(150);
+  await page.locator('#livepanel .odd').first().click();
+  await page.click('#livepanel [data-role="join"]');
+  await page.waitForSelector('#lt-result .lt-res', { timeout: 60000 });
+  const r = await page.evaluate(() => {
+    const room = GS.live.room('derby');
+    const res = room.result;
+    const h = GS.store.get().history[0];
+    return {
+      winner: res.winnerId, pot: res.pot, players: res.players, bots: res.bots, shown: GS.games.derby._shown(), you: res.you && { won: res.you.won, dollars: res.you.dollars },
+      histAlloc: h.allocations.map((a) => [a.charityId, a.cents]), histLive: h.live, histGame: h.game, histTotal: h.totalCents,
+      weights: res.weights, tickets: res.weights.reduce((s, w) => s + w[1], 0), balance: GS.store.balance(), plays: GS.store.get().plays, liveRounds: GS.store.get().liveRounds, liveWins: GS.store.get().liveWins,
+      badges: Object.keys(GS.store.get().badges), pending: GS.store.get().pending.length, monthly: GS.store.get().monthly.cents, xp: GS.store.get().xp
+    };
+  });
+  check(r.shown[0] === r.winner, 'the race on screen ends on the charity the draw picked', r);
+  check(r.tickets === r.pot, 'the tickets in the draw are the dollars in the pot', [r.tickets, r.pot]);
+  check(JSON.stringify(r.histAlloc) === JSON.stringify([[r.winner, 2000]]), 'your stake is allocated to the winning charity, even if you backed another', r.histAlloc);
+  check(r.histLive && r.histLive.pot === r.pot * 100 && r.histLive.players === r.players && r.histLive.won === r.you.won && r.histGame === 'derby', 'history records the live pot, players and whether your pick won', r.histLive);
+  check(r.balance === 100000 - 2000 && r.pending === 0, 'you paid exactly your stake, once', [r.balance, r.pending]);
+  check(r.monthly === 2000, 'it counts once toward this month\'s giving', r.monthly);
+  check(r.plays === 1 && r.liveRounds === 1 && r.liveWins === (r.you.won ? 1 : 0), 'plays and live stats are recorded', r);
+  check(r.badges.includes('live') && (r.badges.includes('called') === r.you.won) && (r.badges.includes('bigpot') === (r.pot >= 500)), 'Live Wire (and, when earned, Called It and Pot of Gold) are unlocked', r.badges);
+  const text = await page.locator('#lt-result').innerText();
+  check(text.includes('takes the pot') && text.includes('$' + r.pot) && text.includes('simulated bots'), 'the result shows the pot and says the rest came from simulated bots');
+  check(r.you.won ? text.includes('You backed the winner') : text.includes('as if your charity won'), 'and speaks to whether your pick won');
+  check(await page.locator('#livepanel .odd.is-winner').count() === 1, 'the winner is marked on the odds board');
+  await shot(page, '13-live-result');
+  await page.click('#lt-result .rs-fair > summary');
+  await page.click('#lt-result [data-role="verify"]');
+  await page.waitForSelector('#lt-result .vfy li');
+  check(await page.locator('#lt-result .vfy li.is-ok').count() === 3 && (await page.locator('#lt-result .vfy').innerText()).includes('pot matches'), 'the live round verifies (hash, pot and winner)');
+  // tampering with the pot makes verification fail
+  const tamper = await page.evaluate(async () => {
+    const f = JSON.parse(JSON.stringify(GS.store.get().history[0].fair));
+    f.weights[0][1] += 1;
+    const bad = await GS.ui.receipt.verifyRound(f);
+    const f2 = JSON.parse(JSON.stringify(GS.store.get().history[0].fair));
+    f2.roundSeed = f2.roundSeed.replace(/.$/, (c) => (c === '0' ? '1' : '0'));
+    const bad2 = await GS.ui.receipt.verifyRound(f2);
+    return { weights: bad.ok, seed: bad2.ok };
+  });
+  check(tamper.weights === false && tamper.seed === false, 'a changed pot or seed fails verification', tamper);
+  // My Giving and Fair Play list it
+  await go(page, '#giving');
+  check((await page.locator('#view-giving .hrow').first().innerText()).includes('Live'), 'My Giving lists the live round');
+  await page.locator('#view-giving .hrow summary').first().click();
+  check((await page.locator('#view-giving .hrow').first().innerText()).includes('the others were bots'), 'and says the other players were bots');
+  await page.click('#view-giving [data-verify="0"]');
+  await page.waitForSelector('#view-giving .hrow [data-role="vout"] .vfy li');
+  check(await page.locator('#view-giving .hrow [data-role="vout"] .vfy li.is-ok').count() === 3, 'a live round can be verified from My Giving');
+  // solo play still works on the same game afterwards
+  await go(page, '#game-derby');
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  check(await page.evaluate(() => GS.games.derby._shown()[0] === GS.app._last.round.winners[0].id) , 'the same game plays solo afterwards');
+  await closeReceipt(page);
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('13e. Live tables: leaving mid-round, reloading, and arriving late')) {
+  // leave the room: the round still settles and you are told
+  const page = await newPage();
+  await openApp(page, '#live-roulette');
+  await page.waitForSelector('#livepanel .lt-phase.is-open');
+  await page.waitForTimeout(150);
+  await page.locator('#livepanel .odd').first().click();
+  await page.click('#livepanel [data-role="join"]');
+  await go(page, '#lobby');
+  await page.waitForFunction(() => GS.store.get().liveRounds === 1, null, { timeout: 60000 });
+  check((await toastText(page)).some((t) => t.includes('Roulette') && t.includes('pot')), 'if you leave the table you still get told how it ended');
+  check(await balance(page) === 98000 && await page.evaluate(() => GS.store.get().pending.length === 0), 'and it settled once');
+  check(await page.evaluate(() => !GS.ui.live.current()), 'the room is not left attached');
+  await page.close();
+
+  // reload mid-round: the unsettled stake comes back
+  const p2 = await newPage();
+  await openApp(p2, '#live-wheel', '');
+  await p2.evaluate(() => { GS.live.room('wheel').openRound(0); });
+  await p2.waitForSelector('#livepanel .lt-phase.is-open');
+  await p2.waitForTimeout(200);
+  await p2.locator('#livepanel .odd').first().click();
+  await p2.click('#livepanel [data-role="join"]');
+  check(await balance(p2) === 98000, 'a stake is spent when you put it up');
+  await p2.reload({ waitUntil: 'load' });
+  await p2.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
+  check(await balance(p2) === 100000 && await p2.evaluate(() => GS.store.get().pending.length === 0), 'reloading the page returns an unsettled stake to your credit');
+  await p2.waitForSelector('#toasts .toast');
+  check((await toastText(p2)).some((t) => t.includes('returned') && t.includes('$20')), 'and tells you', await toastText(p2));
+  await p2.close();
+
+  // arrive while the game is already playing: it plays out for you and the result shows
+  const p3 = await newPage();
+  await openApp(p3, '#lobby', '');
+  await p3.evaluate(() => { const r = GS.live.room('marble'); r.openRound(0); r.lock(); });
+  await p3.waitForFunction(() => GS.live.room('marble').phase === 'playing', null, { timeout: 15000 });
+  await go(p3, '#live-marble');
+  await p3.waitForSelector('#lt-result .lt-res', { timeout: 40000 });
+  check(await p3.evaluate(() => GS.games.marble._shown()[0] === GS.live.room('marble').result.winnerId), 'arriving mid-round still plays the race to the drawn winner');
+  check((await p3.locator('#lt-result').innerText()).includes('You watched'), 'a table you only watched says so');
+  check(await balance(p3) === 100000, 'and costs nothing');
+  await p3.close();
+}
+
+/* ======================================================================== */
+if (section('13f. Live tables: every live game')) {
+  const page = await newPage();
+  await openApp(page);
+  for (const id of LIVE_GAMES) {
+    await go(page, '#live-' + id);
+    await page.waitForSelector('#livepanel .lt-phase.is-open', { timeout: 30000 });
+    await page.waitForTimeout(120);
+    await page.locator('#livepanel .odd').first().click();
+    await page.click('#livepanel [data-role="join"]');
+    await page.waitForSelector('#lt-result .lt-res', { timeout: 60000 });
+    const info = await page.evaluate((gid) => ({ w: GS.live.room(gid).result.winnerId, shown: GS.games[gid]._shown(), hist: GS.store.get().history[0].game }), id);
+    check(info.shown[0] === info.w && info.hist === id, id + ': the live game shows the drawn winner and records the round', info);
+    check(await page.evaluate(async () => (await GS.ui.receipt.verifyRound(GS.store.get().history[0].fair)).ok), id + ': the live round verifies');
+  }
+  const s = await state(page);
+  check(s.liveRounds === LIVE_GAMES.length && s.pending.length === 0, 'all ' + LIVE_GAMES.length + ' live rounds settled', [s.liveRounds, s.pending.length]);
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('14. Real-donation mode (redirect to checkout) never handles money')) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => problems.push('pageerror: ' + e.message));
@@ -924,6 +1198,12 @@ section('14. Live mode (redirect to checkout) never handles money');
   check(await page.locator('html').getAttribute('data-mode') === 'redirect', 'mode is redirect');
   check(!(await page.locator('#balance').isVisible()) && !(await page.locator('.demo-strip').isVisible()) && !(await page.locator('#btn-credit').isVisible()), 'credit pill, Add credit and the demo banner are hidden');
   check(!(await page.locator('#view-game [data-role="pay-field"]').isVisible()), 'the pay-with field is hidden (you pay on the checkout page)');
+  check(!(await page.locator('.side__link[data-route="live"]').isVisible()) && await page.evaluate(() => !GS.live.enabled() && GS.live.ids().length === 0), 'live tables are switched off (a shared pot needs a server and real money is never handled here)');
+  await page.evaluate(() => { window.location.hash = '#live-derby'; });
+  await page.waitForTimeout(250);
+  check(await page.locator('#view-lobby').isVisible(), 'a live table link falls back to the lobby');
+  await page.evaluate(() => { window.location.hash = '#game-wheel'; });
+  await page.waitForTimeout(250);
   await page.click('#btn-play');
   await waitReceipt(page);
   check(await page.locator('#dlg-result .stamp').count() === 0, 'no DEMO stamp');
@@ -953,11 +1233,10 @@ section('14. Live mode (redirect to checkout) never handles money');
 }
 
 /* ======================================================================== */
-section('15. Phones');
-{
+if (section('15. Phones')) {
   const page = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
   await openApp(page);
-  const routes = ['#lobby', '#lobby-table', ...GAMES.map((g) => '#game-' + g), '#giving', '#charities', '#club', '#fair', '#help'];
+  const routes = ['#lobby', '#lobby-table', ...GAMES.map((g) => '#game-' + g), '#live', ...LIVE_GAMES.map((g) => '#live-' + g), '#giving', '#charities', '#club', '#fair', '#help'];
   const wide = [];
   for (const r of routes) {
     await go(page, r);
@@ -969,12 +1248,12 @@ section('15. Phones');
   await go(page, '#lobby');
   const nav = await page.locator('#side').boundingBox();
   check(nav.y + nav.height >= 840 && nav.width >= 380, 'the side nav becomes a bottom bar');
-  check(await page.locator('.side__link:visible').count() === 5, 'with five destinations');
+  check(await page.locator('.side__link:visible').count() === 5, 'with five destinations (Lobby, Live tables, My Giving, Charities, Giving Club)');
   const tile = await page.locator('.tile').first().boundingBox();
   check(tile.width < 200 && tile.width > 120, 'tiles show two per row', tile.width);
   await go(page, '#game-wheel');
   const stage = await page.locator('#stage').boundingBox();
-  const bet = await page.locator('.bet').boundingBox();
+  const bet = await page.locator('.bet:not(#livepanel)').boundingBox();
   check(stage.y < bet.y, 'the game stage comes before the gift panel');
   await page.click('#btn-play');
   await waitReceipt(page);
@@ -991,25 +1270,24 @@ section('15. Phones');
 }
 
 /* ======================================================================== */
-section('16. Accessibility scan (needs AXE) and page health');
-{
+if (section('16. Accessibility scan (needs AXE) and page health')) {
   if (AXE) {
     const page = await newPage();
     await openApp(page);
     for (const g of GAMES) { await go(page, '#game-' + g); await page.waitForTimeout(500); await a11y(page, 'game: ' + g); }
-    for (const r of ['#lobby', '#lobby-originals', '#charities']) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
+    for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live']) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
+    for (const g of LIVE_GAMES) { await go(page, '#live-' + g); await page.waitForTimeout(500); await a11y(page, 'live room: ' + g); }
     await page.close();
   } else { console.log('  skip axe scans (set AXE=/path/to/axe.min.js)'); }
   check(external.length === 0, 'the site makes no requests to any other host', external.slice(0, 5));
 }
 
 /* ======================================================================== */
-section('17. Opens straight from the file system');
-{
+if (section('17. Opens straight from the file system')) {
   const page = await newPage();
   await page.goto('file://' + path.join(root, 'index.html') + '?fast=1');
   await page.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
-  check(await page.locator('.tile').count() === 12, 'lobby renders from file://');
+  check(await page.locator('.tile').count() === 16, 'lobby renders from file://');
   await page.click('.tile[data-game="wheel"]');
   await page.waitForSelector('#panel-wheel:not([hidden])');
   await page.click('#btn-play');

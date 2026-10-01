@@ -17,7 +17,7 @@
   var money = core.fmtMoney;
   var $ = ui.$;
 
-  var ALL = ['wheel', 'slots', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'lotto'];
+  var ALL = ['wheel', 'slots', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
   var ORDER = ALL.filter(function (id) { return !!GS.games[id]; });
 
   var built = false;
@@ -27,22 +27,30 @@
   var amount = null;
   var opts = null;
   var tabState = 'fair';
+  var liveTabState = 'feed';
   var lastDrawn = null;
+  var TABS_SOLO = [['fair', 'Fair play'], ['rounds', 'My rounds'], ['about', 'About this game'], ['pool', 'In play']];
+  var TABS_LIVE = [['feed', 'Live feed'], ['last', 'Recent results'], ['fair', 'Fair play'], ['about', 'How it works']];
 
   function state() { return GS.app.state; }
+  function isLive() { return !!state().live; }
+  function tabList() { return isLive() ? TABS_LIVE : TABS_SOLO; }
+  function tabIds() { return tabList().map(function (t) { return t[0]; }); }
 
   /* ----------------------------------------------------------------- build */
 
   function build() {
     var root = $('#view-game');
     root.innerHTML =
-      '<nav class="crumbs" aria-label="Breadcrumb"><a href="#lobby">Lobby</a><span aria-hidden="true">' + ui.icon('chevron-right') + '</span><span id="g-crumb" aria-current="page"></span></nav>' +
+      '<nav class="crumbs" aria-label="Breadcrumb"><a href="#lobby" id="g-crumb-root">Lobby</a><span aria-hidden="true">' + ui.icon('chevron-right') + '</span><span id="g-crumb" aria-current="page"></span></nav>' +
       '<div class="gamegrid">' +
         '<section class="bet panel" aria-labelledby="bet-t">' +
           '<h2 class="bet__title" id="bet-t">Your gift</h2>' +
           '<div class="field" data-role="amount" id="field-amount"></div>' +
           '<div class="field" id="field-rounds"><span class="field__label" id="rounds-label">Split your gift</span>' +
             '<div class="seg" id="rounds-seg" role="group" aria-labelledby="rounds-label"></div><p class="field__hint" id="rounds-hint"></p></div>' +
+          '<div class="field" id="field-size" hidden><span class="field__label" id="size-label">Charities on the board</span>' +
+            '<div class="seg" id="size-seg" role="group" aria-labelledby="size-label"></div><p class="field__hint" id="size-hint"></p></div>' +
           '<div class="field" id="field-pool">' +
             '<div class="field__row"><span class="field__label" id="pool-label">Charities in play</span>' +
               '<button type="button" class="btn btn--sm" id="btn-filters">' + ui.icon('list-filter') + 'Filters <span class="count" id="filters-count" hidden></span></button></div>' +
@@ -53,28 +61,27 @@
           '<button type="button" class="playbtn" id="btn-play"><span class="playbtn__main"><span data-icon="play"></span><span id="btn-play-label">Play</span></span><span class="playbtn__sub" id="btn-play-sub"></span></button>' +
           '<p class="kbd-hint">Tip: press <kbd>Space</kbd> to play.</p>' +
         '</section>' +
+        '<section class="bet bet--live panel" id="livepanel" aria-labelledby="lt-title" hidden></section>' +
         '<section class="stage panel" id="stage" aria-label="Game stage">' +
           '<header class="stage__head"><div class="stage__titles"><h1 class="stage__title" id="g-title"></h1><p class="stage__tag" id="g-tag"></p></div>' +
             '<div class="stage__badges"><span class="pill pill--fair" id="stage-fair" title="Every result is drawn before the animation starts"><span data-icon="shield-check"></span>Provably fair</span>' +
             '<span class="pill pill--demo only-demo"><span data-icon="coins"></span>Demo credit</span></div></header>' +
+          '<div class="lt-stagebar" id="lt-stagebar" hidden></div>' +
           '<div class="stage__body" id="games"></div>' +
+          '<div class="lt-result" id="lt-result" aria-live="polite"></div>' +
           '<ol class="rounds" id="rounds" aria-label="Round results" hidden></ol>' +
         '</section>' +
       '</div>' +
       '<section class="below panel" aria-label="More about this game">' +
-        '<div class="tabs" role="tablist" aria-label="Game details" id="below-tabs">' +
-          [['fair', 'Fair play'], ['rounds', 'My rounds'], ['about', 'About this game'], ['pool', 'In play']].map(function (t) {
-            return '<button type="button" class="tab" role="tab" id="tab-' + t[0] + '" data-tab="' + t[0] + '" aria-controls="tabp" aria-selected="false" tabindex="-1">' + t[1] + '</button>';
-          }).join('') +
-        '</div>' +
+        '<div class="tabs" role="tablist" aria-label="Game details" id="below-tabs"></div>' +
         '<div class="tabpanel" id="tabp" role="tabpanel" tabindex="0"></div>' +
       '</section>' +
       '<section class="moregames" aria-labelledby="more-t"><h2 class="sect__t" id="more-t">More games</h2><div class="moregames__row" id="moregames"></div></section>';
     ui.hydrate(root);
 
     el = {
-      crumb: $('#g-crumb'), title: $('#g-title'), tag: $('#g-tag'), games: $('#games'), rounds: $('#rounds'), stage: $('#stage'),
-      roundsSeg: $('#rounds-seg'), roundsHint: $('#rounds-hint'), poolLine: $('#pool-line'), filtersBtn: $('#btn-filters'), filtersCount: $('#filters-count'),
+      crumb: $('#g-crumb'), crumbRoot: $('#g-crumb-root'), livePanel: $('#livepanel'), moreTitle: $('#more-t'), title: $('#g-title'), tag: $('#g-tag'), games: $('#games'), rounds: $('#rounds'), stage: $('#stage'),
+      roundsSeg: $('#rounds-seg'), roundsHint: $('#rounds-hint'), sizeBox: $('#field-size'), sizeSeg: $('#size-seg'), sizeHint: $('#size-hint'), poolLine: $('#pool-line'), filtersBtn: $('#btn-filters'), filtersCount: $('#filters-count'),
       play: $('#btn-play'), playLabel: $('#btn-play-label'), playSub: $('#btn-play-sub'), optsSum: $('#opts-sum'), optsBox: $('#opts'),
       tabs: $('#below-tabs'), tabp: $('#tabp'), more: $('#moregames'), bet: root.querySelector('.bet')
     };
@@ -94,12 +101,23 @@
       refreshBet();
     });
 
+    el.sizeSeg.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-n]');
+      if (!b || b.disabled || state().busy || !current) { return; }
+      GS.audio.click();
+      var sizes = Object.assign({}, store.prefs().sizes);
+      sizes[current] = Number(b.getAttribute('data-n'));
+      store.setPref('sizes', sizes);
+      if (game().setSize) { game().setSize(sizes[current]); }
+      refreshSize();
+    });
+
     el.tabs.addEventListener('click', function (e) {
       var b = e.target.closest('[data-tab]');
       if (b) { selectTab(b.getAttribute('data-tab')); }
     });
     el.tabs.addEventListener('keydown', function (e) {
-      var ids = ['fair', 'rounds', 'about', 'pool'];
+      var ids = tabIds();
       var i = ids.indexOf(tabState);
       var n = null;
       if (e.key === 'ArrowRight') { n = (i + 1) % ids.length; }
@@ -112,10 +130,7 @@
       $('#tab-' + ids[n]).focus();
     });
 
-    el.more.innerHTML = ORDER.map(function (id) {
-      var g = GS.games[id];
-      return '<a class="mini" href="#game-' + id + '" data-game="' + id + '"><span class="mini__art">' + GS.art[id]('m') + '</span><span class="mini__name">' + esc(g.name) + '</span></a>';
-    }).join('');
+    buildMore(false);
 
     el.optsBox.addEventListener('toggle', function () { /* remembered per session only */ });
 
@@ -125,6 +140,22 @@
     GS.bus.on('progress', renderTab);
     GS.bus.on('busy', lockUI);
     built = true;
+  }
+
+  /** The "more games" row: every game, or (in a live room) every live table. */
+  function buildMore(live) {
+    var ids = live ? GS.live.ids() : ORDER;
+    el.more.innerHTML = ids.map(function (id) {
+      var g = GS.games[id];
+      return '<a class="mini" href="#' + (live ? 'live-' : 'game-') + id + '" data-game="' + id + '"><span class="mini__art">' + GS.art[id]('m') + '</span><span class="mini__name">' + esc(g.name) + '</span></a>';
+    }).join('');
+    el.moreTitle.textContent = live ? 'More live tables' : 'More games';
+  }
+
+  function buildTabs() {
+    el.tabs.innerHTML = tabList().map(function (t) {
+      return '<button type="button" class="tab" role="tab" id="tab-' + t[0] + '" data-tab="' + t[0] + '" aria-controls="tabp" aria-selected="false" tabindex="-1">' + t[1] + '</button>';
+    }).join('');
   }
 
   /* ------------------------------------------------------------ bet panel */
@@ -177,11 +208,33 @@
     }
   }
 
+  function sizeFor(id) {
+    var g = GS.games[id];
+    return store.prefs().sizes[id] || (g && g.defaultSize) || 0;
+  }
+
+  /** The "charities on the board" control, for games that can show anything from a few charities to a hundred. */
+  function refreshSize() {
+    var g = game();
+    if (!g || !g.sizes || state().live) { el.sizeBox.hidden = true; return; }
+    el.sizeBox.hidden = false;
+    var cur = sizeFor(current);
+    el.sizeSeg.innerHTML = g.sizes.map(function (s) {
+      return '<button type="button" class="seg__btn" data-n="' + s.n + '" aria-pressed="' + (s.n === cur) + '"><span>' + s.n + '</span><small>' + esc(s.name) + '</small></button>';
+    }).join('');
+    if (state().busy) { Array.prototype.forEach.call(el.sizeSeg.querySelectorAll('button'), function (b) { b.disabled = true; }); }
+    var n = state().pool.length;
+    el.sizeHint.textContent = n < cur
+      ? 'Your filters leave ' + n + ' charities in play, so the board shows all ' + n + '.'
+      : cur + ' of the ' + n + ' charities in play are shown on the board. Every one of the ' + n + ' still has equal odds.';
+  }
+
   function refreshBet() {
     if (!built || !current) { return; }
     var g = game();
     el.playLabel.textContent = g.cta;
     refreshRounds();
+    refreshSize();
     var ok = amount.valid().ok;
     var rounds = roundsNow();
     var sub;
@@ -205,6 +258,7 @@
     el.play.setAttribute('aria-busy', String(locked));
     el.filtersBtn.disabled = locked;
     Array.prototype.forEach.call(document.querySelectorAll('#quick-causes .chip'), function (b) { b.disabled = locked; });
+    Array.prototype.forEach.call(el.sizeSeg.querySelectorAll('button'), function (b) { b.disabled = locked; });
     Array.prototype.forEach.call(el.roundsSeg.querySelectorAll('button'), function (b) {
       if (locked) { b.setAttribute('data-was-disabled', b.disabled ? '1' : '0'); b.disabled = true; }
       else if (b.getAttribute('data-was-disabled') !== null) { b.disabled = b.getAttribute('data-was-disabled') === '1'; b.removeAttribute('data-was-disabled'); }
@@ -244,13 +298,20 @@
   /* ----------------------------------------------------------------- tabs */
 
   function selectTab(id) {
-    tabState = id;
+    if (isLive()) { liveTabState = id; } else { tabState = id; }
+    var shown = id;
     Array.prototype.forEach.call(el.tabs.querySelectorAll('.tab'), function (b) {
       var on = b.getAttribute('data-tab') === id;
       b.setAttribute('aria-selected', String(on));
       b.tabIndex = on ? 0 : -1;
     });
-    el.tabp.setAttribute('aria-labelledby', 'tab-' + id);
+    el.tabp.setAttribute('aria-labelledby', 'tab-' + shown);
+    renderTab();
+  }
+
+  /** In a live room: refresh the tab under the stage (the feed and the commitment change as the table fills). */
+  function refreshLiveTab() {
+    if (!built || !isLive() || !current) { return; }
     renderTab();
   }
 
@@ -258,6 +319,7 @@
     if (!built || !current) { return; }
     var g = game();
     var h = '';
+    if (isLive()) { ui.live.renderTab(liveTabState, el.tabp); return; }
     if (tabState === 'fair') {
       h = '<div data-role="fairblock"></div><p class="tabnote">Want to check a result yourself? <a href="#fair">Open Fair Play</a> to recompute any past round.</p>';
       el.tabp.innerHTML = h;
@@ -296,37 +358,48 @@
     mounted[id] = { panel: panel, pv: -1 };
   }
 
-  function enter(id) {
+  function enter(id, opts) {
     if (ORDER.indexOf(id) < 0) { id = 'wheel'; }
     if (!built) { build(); }
+    var live = !!(opts && opts.live) && !!GS.live && GS.live.supports(id);
     var prev = current;
+    if (live || isLive()) { ui.live.detach(); }
     if (prev && prev !== id && mounted[prev]) { GS.games[prev].deactivate(); mounted[prev].panel.hidden = true; }
     current = id;
-    store.setPref('game', id);
+    if (!live) { store.setPref('game', id); }
     ensureMounted(id);
     var m = mounted[id];
     m.panel.hidden = false;
     var g = GS.games[id];
-    if (m.pv !== state().poolVersion) { g.setPool(state().pool); m.pv = state().poolVersion; }
-    g.lock(state().busy);
+    el.bet.hidden = live;
+    el.livePanel.hidden = !live;
+    $('#view-game').classList.toggle('is-live', live);
+    if (!live && g.setSize) { g.setSize(sizeFor(id)); }
+    if (m.pv !== state().poolVersion && !live) { g.setPool(state().pool); m.pv = state().poolVersion; }
+    g.lock(live ? false : state().busy);
     g.activate();
     el.crumb.textContent = g.name;
-    el.title.textContent = g.name;
-    el.tag.textContent = g.tagline;
-    document.title = g.name + ' | GiveSpin';
+    el.crumbRoot.textContent = live ? 'Live tables' : 'Lobby';
+    el.crumbRoot.setAttribute('href', live ? '#live' : '#lobby');
+    el.title.textContent = live ? g.name + ' · Live' : g.name;
+    el.tag.textContent = live ? 'A live table: every player backs a charity, and the winner takes the whole pot.' : g.tagline;
+    document.title = (live ? 'Live ' : '') + g.name + ' | GiveSpin';
+    buildMore(live);
     Array.prototype.forEach.call(el.more.querySelectorAll('.mini'), function (a) { a.classList.toggle('is-current', a.getAttribute('data-game') === id); a.hidden = a.getAttribute('data-game') === id; });
     renderRounds(0);
-    selectTab(tabState);
-    refreshBet();
+    buildTabs();
+    selectTab(live ? liveTabState : tabState);
+    if (live) { ui.live.attach(id); } else { refreshBet(); }
   }
 
   function leave() {
     if (current && mounted[current]) { GS.games[current].deactivate(); }
+    if (isLive() && ui.live) { ui.live.detach(); }
   }
 
   /** The pool changed: tell the mounted game the next time it is shown, and the active one right now. */
   function poolChanged() {
-    if (!built || !current) { return; }
+    if (!built || !current || isLive()) { return; }
     if (!state().busy) {
       GS.games[current].setPool(state().pool);
       mounted[current].pv = state().poolVersion;
@@ -363,7 +436,8 @@
   }
 
   function play() {
-    if (state().busy || !current) { return Promise.resolve(); }
+    if (state().busy || !current || isLive()) { return Promise.resolve(); }
+    if (ui.live && ui.live.gameBusy(current)) { ui.toast('That table is mid-round. Try again in a few seconds.', 'info'); return Promise.resolve(); }
     var g = game();
     var v = amount.valid();
     if (!v.ok) { amount.flash(v.message); return Promise.resolve(); }
@@ -456,7 +530,7 @@
 
   ui.game = {
     ORDER: ORDER, enter: enter, leave: leave, play: play, repeatLast: repeatLast, poolChanged: poolChanged,
-    current: function () { return current; },
+    current: function () { return current; }, refreshLiveTab: refreshLiveTab,
     amountCents: function () { return amount ? amount.cents() : NaN; },
     lastDraw: function () { return lastDrawn; },
     mountedGame: function (id) { return mounted[id] ? GS.games[id] : null; }

@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="css/views.css">
   <link rel="stylesheet" href="css/dialogs.css">
   <link rel="stylesheet" href="css/games.css">
+  <link rel="stylesheet" href="css/live.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -63,13 +64,15 @@
           <li><a class="side__link" href="#lobby" data-route="lobby"><span data-icon="layout-grid"></span><span class="side__txt">Lobby</span></a></li>
           <li class="side__sub"><a class="side__link" href="#lobby-originals" data-route="lobby-originals"><span data-icon="sparkles"></span><span class="side__txt">Originals</span></a></li>
           <li class="side__sub"><a class="side__link" href="#lobby-table" data-route="lobby-table"><span data-icon="club"></span><span class="side__txt">Table games</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#lobby-races" data-route="lobby-races"><span data-icon="flag-triangle-right"></span><span class="side__txt">Races</span></a></li>
           <li class="side__sub"><a class="side__link" href="#lobby-instant" data-route="lobby-instant"><span data-icon="zap"></span><span class="side__txt">Instant wins</span></a></li>
+          <li class="only-demo"><a class="side__link side__link--live" href="#live" data-route="live"><span data-icon="radio"></span><span class="side__txt">Live tables</span><span class="livedot" aria-hidden="true"></span><span class="livecount" id="live-count" hidden>0</span></a></li>
           <li class="side__rule" aria-hidden="true"></li>
           <li><a class="side__link" href="#giving" data-route="giving"><span data-icon="hand-heart"></span><span class="side__txt">My Giving</span></a></li>
           <li><a class="side__link" href="#charities" data-route="charities"><span data-icon="globe"></span><span class="side__txt">Charities</span></a></li>
           <li><a class="side__link" href="#club" data-route="club"><span data-icon="crown"></span><span class="side__txt">Giving Club</span></a></li>
           <li class="side__rule" aria-hidden="true"></li>
-          <li><a class="side__link" href="#fair" data-route="fair"><span data-icon="shield-check"></span><span class="side__txt">Fair Play</span></a></li>
+          <li class="side__help"><a class="side__link" href="#fair" data-route="fair"><span data-icon="shield-check"></span><span class="side__txt">Fair Play</span></a></li>
           <li class="side__help"><a class="side__link" href="#help" data-route="help"><span data-icon="circle-help"></span><span class="side__txt">Help</span></a></li>
         </ul>
         <div class="side__level" id="side-level"></div>
@@ -79,6 +82,7 @@
       <main id="main" class="main" tabindex="-1">
         <section class="view" id="view-lobby" data-view="lobby" aria-label="Lobby" hidden></section>
         <section class="view" id="view-game" data-view="game" aria-label="Game" hidden></section>
+        <section class="view" id="view-live" data-view="live" aria-label="Live tables" hidden></section>
         <section class="view" id="view-giving" data-view="giving" aria-label="My Giving" hidden></section>
         <section class="view" id="view-charities" data-view="charities" aria-label="Charities" hidden></section>
         <section class="view" id="view-club" data-view="club" aria-label="Giving Club" hidden></section>
@@ -86,7 +90,7 @@
         <section class="view" id="view-help" data-view="help" aria-label="Help" hidden></section>
 
         <footer class="foot">
-          <p><strong>Give responsibly.</strong> Giving should feel good. You can set a monthly giving limit in your account, and every game is equal odds for every charity in play.</p>
+          <p><strong>Give responsibly.</strong> Giving should feel good. You can set a monthly giving limit in your account, and every solo game gives every charity in play equal odds, and live tables weigh each charity by what is in the pot.</p>
           <p>Charity names are used only to identify the organisations. GiveSpin is not affiliated with or endorsed by any of them, and no logos are used. Descriptions are short summaries, not official statements.</p>
           <p class="foot__links"><a href="#help">Help</a><a href="#fair">Fair Play</a><a href="#help-privacy">Privacy</a></p>
         </footer>
@@ -105,11 +109,13 @@
   <script src="js/config.js"></script>
   <script src="js/data.js"></script>
   <script src="js/util.js"></script>
+  <script src="js/kit.js"></script>
   <script src="js/store.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/confetti.js"></script>
   <script src="js/payments.js"></script>
   <script src="js/accounts.js"></script>
+  <script src="js/live.js"></script>
   <script src="js/art.js"></script>
   <script src="js/ui/common.js"></script>
   <script src="js/ui/amount.js"></script>
@@ -124,11 +130,17 @@
   <script src="js/games/dice.js"></script>
   <script src="js/games/coin.js"></script>
   <script src="js/games/derby.js"></script>
+  <script src="js/games/crowd.js"></script>
+  <script src="js/games/duck.js"></script>
+  <script src="js/games/marble.js"></script>
+  <script src="js/games/balloon.js"></script>
+  <script src="js/games/standing.js"></script>
   <script src="js/games/lotto.js"></script>
   <script src="js/ui/filters.js"></script>
   <script src="js/ui/charity.js"></script>
   <script src="js/ui/account.js"></script>
   <script src="js/ui/receipt.js"></script>
+  <script src="js/ui/live.js"></script>
   <script src="js/ui/game.js"></script>
   <script src="js/ui/lobby.js"></script>
   <script src="js/ui/pages.js"></script>

@@ -191,6 +191,64 @@
     return svg(out);
   };
 
+  art.duck = function () {
+    function duck(x, y, sc, scarf) {
+      return '<g transform="translate(' + x + ' ' + y + ') scale(' + sc + ')"><ellipse cx="0" cy="3" rx="15" ry="11" fill="#ffd23c" stroke="#b07a10" stroke-width="1.6"/>' +
+        '<circle cx="9" cy="-8" r="8" fill="#ffd23c" stroke="#b07a10" stroke-width="1.6"/><path d="M15 -9l9 3-9 3z" fill="#ff8a3d"/><circle cx="11" cy="-10" r="1.6" fill="' + INK + '"/>' +
+        '<path d="M2 -2l12 1" stroke="' + scarf + '" stroke-width="4.5" stroke-linecap="round"/><ellipse cx="-5" cy="4" rx="7" ry="4.6" fill="#ffb347" opacity=".8" transform="rotate(-20 -5 4)"/></g>';
+    }
+    var out = '<rect x="6" y="14" width="148" height="112" rx="12" fill="#0f6aa0"/>';
+    for (var i = 0; i < 4; i++) { out += '<path d="M' + (14 + i * 10) + ' ' + (36 + i * 24) + 'q6-5 12 0t12 0t12 0" fill="none" stroke="#fff" stroke-width="2" opacity=".25"/>'; }
+    for (var f = 0; f < 6; f++) { out += '<circle cx="140" cy="' + (22 + f * 18) + '" r="5" fill="' + (f % 2 ? '#fff' : RED) + '"/>'; }
+    out += duck(100, 36, 0.8, PINK) + duck(72, 66, 0.8, CYAN) + duck(46, 98, 0.8, GREEN);
+    out += sparkle(22, 24, 6, '#fff');
+    return svg(out);
+  };
+
+  art.marble = function () {
+    var out = '<path d="M16 34H132a14 14 0 0 1 0 28H28a14 14 0 0 0 0 28H128" fill="none" stroke="#0a1830" stroke-width="22" stroke-linecap="round"/>';
+    out += '<path d="M16 34H132a14 14 0 0 1 0 28H28a14 14 0 0 0 0 28H128" fill="none" stroke="#27456d" stroke-width="16" stroke-linecap="round"/>';
+    out += '<path d="M16 34H132a14 14 0 0 1 0 28H28a14 14 0 0 0 0 28H128" fill="none" stroke="#1b3558" stroke-width="10" stroke-linecap="round"/>';
+    var m = [[40, 34, PINK], [58, 33, GOLD], [96, 35, CYAN], [124, 49, GREEN], [66, 62, VIOLET], [36, 62, ORANGE], [100, 90, RED], [118, 90, '#7cf0c9']];
+    m.forEach(function (b) { out += '<circle cx="' + b[0] + '" cy="' + b[1] + '" r="7.4" fill="' + b[2] + '" stroke="#fff" stroke-width="1.4"/><circle cx="' + (b[0] - 2.4) + '" cy="' + (b[1] - 2.6) + '" r="1.9" fill="#fff" opacity=".85"/>'; });
+    out += '<path d="M130 80v22" stroke="#fff" stroke-width="3"/><rect x="130" y="80" width="12" height="22" fill="#fff"/><path d="M130 80h6v6h-6zM136 86h6v6h-6zM130 92h6v6h-6z" fill="#111"/>';
+    out += sparkle(20, 112, 7, GOLD) + sparkle(140, 20, 6, '#fff');
+    return svg(out);
+  };
+
+  art.balloon = function () {
+    function balloon(x, y, sc, fill) {
+      return '<g transform="translate(' + x + ' ' + y + ') scale(' + sc + ')"><path d="M0 22C-24 14-22-22 0-24 22-22 24 14 0 22Z" fill="' + fill + '" stroke="#fff" stroke-width="2"/>' +
+        '<path d="M0 21l-4 6h8z" fill="' + fill + '"/><path d="M0 27q6 10 -2 22" fill="none" stroke="#fff" stroke-width="1.6" opacity=".8"/><ellipse cx="-8" cy="-8" rx="3.4" ry="6.5" fill="#fff" opacity=".5" transform="rotate(-20 -8 -8)"/></g>';
+    }
+    var out = '<rect x="6" y="10" width="148" height="116" rx="12" fill="#2b7fd8"/><path d="M6 100q40-14 74-4t74-8v38H6z" fill="#2f9a4a"/>';
+    out += '<path d="M12 34H148" stroke="' + GOLD + '" stroke-width="2.6" stroke-dasharray="7 5"/>';
+    out += '<g fill="#fff" opacity=".6"><ellipse cx="34" cy="86" rx="20" ry="6"/><ellipse cx="124" cy="78" rx="18" ry="6"/></g>';
+    out += balloon(46, 70, 0.8, PINK) + balloon(112, 62, 0.72, CYAN) + balloon(80, 40, 0.95, GOLD);
+    out += sparkle(24, 28, 6, '#fff') + sparkle(142, 22, 5, GOLD);
+    return svg(out);
+  };
+
+  art.standing = function () {
+    var out = '';
+    var cols = [PINK, GOLD, CYAN, GREEN, VIOLET, ORANGE, RED, '#7cf0c9', PINK];
+    for (var i = 0; i < 9; i++) {
+      var x = 14 + (i % 3) * 46, y = 14 + Math.floor(i / 3) * 38;
+      var out_ = i !== 4 && i % 2 === 1;
+      if (i === 4) {
+        out += '<rect x="' + (x - 3) + '" y="' + (y - 3) + '" width="44" height="34" rx="9" fill="' + GOLD + '" opacity=".28"/>';
+        out += '<rect x="' + x + '" y="' + y + '" width="38" height="28" rx="7" fill="#2a1a52" stroke="' + GOLD + '" stroke-width="3"/><circle cx="' + (x + 19) + '" cy="' + (y + 14) + '" r="9" fill="' + GOLD + '"/>' + heart(x + 19, y + 14.5, 5, '#7a2a0a');
+      } else {
+        out += '<rect x="' + x + '" y="' + y + '" width="38" height="28" rx="7" fill="#2a1a52" stroke="' + cols[i] + '" stroke-width="2" opacity="' + (out_ ? '.3' : '.9') + '"/>' +
+          '<circle cx="' + (x + 19) + '" cy="' + (y + 14) + '" r="8" fill="' + cols[i] + '" opacity="' + (out_ ? '.3' : '.95') + '"/>';
+        if (out_) { out += '<path d="M' + (x + 8) + ' ' + (y + 6) + 'L' + (x + 30) + ' ' + (y + 22) + 'M' + (x + 30) + ' ' + (y + 6) + 'L' + (x + 8) + ' ' + (y + 22) + '" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>'; }
+      }
+    }
+    out += '<path d="M62 6l6 8 8-4-2 10H50l-2-10 8 4z" fill="' + GOLD + '" stroke="#fff4c4" stroke-width="1.4" stroke-linejoin="round" transform="translate(12 -2)"/>';
+    out += sparkle(22, 128, 6, '#fff') + sparkle(138, 126, 6, GOLD);
+    return svg(out);
+  };
+
   art.lotto = function () {
     var out = '<ellipse cx="80" cy="132" rx="40" ry="5" fill="#000" opacity=".3"/><path d="M52 128h56l-8-18H60z" fill="#5a1a08"/>';
     out += '<circle cx="80" cy="62" r="48" fill="#ffffff" fill-opacity=".1" stroke="#ffd9c0" stroke-width="3.4"/>';

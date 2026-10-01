@@ -14,6 +14,10 @@
 [data-game="scratch"] { --t1: #b8701c; --t2: #4a2808; }
 [data-game="derby"] { --t1: #1f8a42; --t2: #0a3a1c; }
 [data-game="lotto"] { --t1: #cc5220; --t2: #4a1608; }
+[data-game="duck"] { --t1: #c79a0a; --t2: #4a3600; }
+[data-game="marble"] { --t1: #2d6fd0; --t2: #0a2050; }
+[data-game="balloon"] { --t1: #cc3a66; --t2: #46102a; }
+[data-game="standing"] { --t1: #7a30bd; --t2: #2a0f4b; }
 [data-game="direct"] { --t1: #12857f; --t2: #073a38; }
 
 .sect { margin-top: 30px; }
