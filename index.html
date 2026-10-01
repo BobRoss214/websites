@@ -71,9 +71,12 @@
       <nav data-ta-aria-label="td1883058" class="nav" id="nav" aria-label="Main">
         <ul>
           <li><a data-t="t7c9a8664" href="#visit">Visit</a></li>
+          <li><a data-t="te9db7dd6" href="#farm">On the Farm</a></li>
           <li><a data-t="t27d882d4" href="#seasons">Seasons</a></li>
+          <li class="nav-tomato"><a data-t="t3a209b3e" href="#tomatoes">Tomatoes</a></li>
           <li><a data-t="t01eb73e0" href="#pizza">Pizza</a></li>
           <li><a data-t="t1dc91a78" href="#greenhouse">GreenHouse</a></li>
+          <li><a data-t="t55de8870" href="shop.html">Shop</a></li>
           <li><a data-t="td4e7d7d3" href="#flowers">Flowers</a></li>
           <li><a data-t="tae9629f4" href="#groups">Groups</a></li>
           <li><a data-t="tc8927cf4" href="#about">Our Story</a></li>
@@ -451,13 +454,13 @@
           <p class="notice notice-soft"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><span data-t="t6b7a7539">When reservations first open, heavy traffic can cause a temporary &ldquo;error&rdquo; message. That doesn&rsquo;t mean we&rsquo;re full. It slows down after the first rush.</span></p>
         </div>
 
-        <header class="section-head reveal sub-head farm-head" id="farm">
+        <header class="section-head reveal sub-head farm-head" id="farm" data-nav="farm">
           <p data-t="tbd74e341" class="hand eyebrow">Included with your visit</p>
           <h3 data-t="t0566300c" class="h-lg">What&rsquo;s on the farm</h3>
           <p data-t="tbe974059" class="lead">Your reservation gets you into the fields and all the play spaces. Here&rsquo;s what to look forward to.</p>
         </header>
 
-        <ul class="cards" id="farm-cards">
+        <ul class="cards" id="farm-cards" data-nav="farm">
           <li class="card c-pink reveal">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 64 72"><use href="#strawberry"/></svg>
             <h3 data-t="t927dbc14">U-Pick Fields</h3>
@@ -659,7 +662,7 @@
     </section>
 
     <!-- ================= TOMATOES & BASIL (new this year) ================= -->
-    <section class="section tomatoes" id="tomatoes" data-nav="seasons" aria-labelledby="tomato-h">
+    <section class="section tomatoes" id="tomatoes" data-nav="tomatoes" aria-labelledby="tomato-h">
       <div class="wrap">
         <div class="tomato-hero reveal">
           <div class="tomato-copy">
@@ -1712,6 +1715,7 @@
         <ul class="footer-links footer-guides">
           <li><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
           <li><a data-t="tbc7509fd" href="pumpkin-patch.html">Pumpkin patch</a></li>
+          <li><a data-t="tb476d59f" href="shop.html">What to buy</a></li>
           <li><a data-t="t7c910e1a" href="strawberry-picking.html">Strawberry picking</a></li>
           <li><a data-t="t9d722faf" href="school-field-trips.html">School field trips</a></li>
           <li><a data-t="t9cc96e01" href="wise-pie.html">Wise Pie pizza</a></li>
@@ -2268,6 +2272,17 @@
     <g fill="#fff" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"><path d="M40 10L47.1 22.6Q46 27.6 44.8 22.6Q43.6 29.6 42.4 22.6Q41.2 27.6 40 22.6Q38.8 29.6 37.6 22.6Q36.4 27.6 35.2 22.6Q34 29.6 32.9 22.6Z"/><path d="M40 26L50.1 41.1Q48.4 46.1 46.7 41.1Q45 48.1 43.4 41.1Q41.7 46.1 40 41.1Q38.3 48.1 36.6 41.1Q35 46.1 33.3 41.1Q31.6 48.1 29.9 41.1Z"/><path d="M40 44L53 60Q50.8 65 48.7 60Q46.5 67 44.3 60Q42.2 65 40 60Q37.8 67 35.7 60Q33.5 65 31.3 60Q29.1 67 27 60Z"/><path d="M40 62L55.5 78Q53 83 50.4 78Q47.8 85 45.2 78Q42.6 83 40 78Q37.4 85 34.8 78Q32.2 83 29.6 78Q27.1 85 24.5 78Z"/></g>
     <g fill="#dbe9f6" opacity=".9"><ellipse cx="36" cy="22" rx="2.4" ry="1.2"/><ellipse cx="43" cy="42" rx="3" ry="1.4"/><ellipse cx="36" cy="64" rx="3.4" ry="1.4"/></g>
   </symbol>
+  <symbol id="trophy" viewBox="0 0 64 64">
+    <g stroke="#3a2416" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M17 13H8c0 11 4 19 11 21" fill="none"/><path d="M47 13h9c0 11-4 19-11 21" fill="none"/>
+      <path d="M17 7h30v17c0 11-7 19-15 19S17 35 17 24Z" fill="#ffc933"/>
+      <path d="M28 43h8l2 8H26Z" fill="#e0a21a"/>
+      <path d="M20 51h24a2 2 0 0 1 2 2v4H18v-4a2 2 0 0 1 2-2Z" fill="#8a5a2b"/>
+    </g>
+    <path d="M32 14l2.8 6 6.4.7-4.8 4.3 1.4 6.3L32 28.2l-5.8 3.1 1.4-6.3-4.8-4.3 6.4-.7Z" fill="#fff3a8" stroke="#3a2416" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M21 12v14" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+  </symbol>
+  <symbol id="sparkle" viewBox="0 0 24 24"><path d="M12 1l3 8 8 3-8 3-3 8-3-8-8-3 8-3Z" fill="#ffd54f" stroke="#3a2416" stroke-width="1.6" stroke-linejoin="round"/></symbol>
 
   <symbol id="pumpkin-b" viewBox="0 0 110 92">
     <ellipse cx="55" cy="87" rx="40" ry="4.4" fill="rgba(58,36,22,.22)"/>

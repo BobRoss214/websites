@@ -958,12 +958,90 @@
     if (msgEl) { msgEl.dataset.custom = ''; msgEl.innerHTML = msgFor(cfg, count); }
   }
 
+  /* ------------------------------------------------------------------ *
+   * Achievements: 100 of one kind of pick earns that kind's badge, and
+   * 1,000 picks in all earns the "lots of time" one. Counted per visit.
+   * ------------------------------------------------------------------ */
+  const ACH = {
+    strawberry: { icon: 'strawberry', at: 100, title: () => t('Berry Boss'), msg: () => t('100 strawberries! Your basket is overflowing. Time to make jam!') },
+    blueberry: { icon: 'blueberry', at: 100, title: () => t('Blueberry Bandit'), msg: () => t('100 blueberries! Your fingers must be blue by now.') },
+    sunflower: { icon: 'sunflower', at: 100, title: () => t('Sunflower Whisperer'), msg: () => t('100 sunflowers snipped! You could open a flower stand.') },
+    pumpkin: { icon: 'pumpkin', at: 100, title: () => t('Pumpkin Champion'), msg: () => t('100 pumpkins! That is a lot of pie.') },
+    winter: { icon: 'fir', at: 100, title: () => t('Winter Sparkler'), msg: () => t('100 lights and sparks! You are lighting up the whole farm.') },
+    time: { icon: 'trophy', at: 1000, title: () => t('Wow, you’ve got a lot of time on your hands!'), msg: () => t('That’s 1,000 picks! Ready for the real thing? {reserve}', msgVars()) },
+  };
+  const RAIN = {
+    strawberry: ['strawberry'], blueberry: ['blueberry'], sunflower: ['sunflower'], pumpkin: ['pumpkin', 'pumpkin-b'],
+    winter: ['fir-snow', 'sparkle'], time: ['strawberry', 'blueberry', 'sunflower', 'pumpkin', 'fir-snow', 'sparkle'],
+  };
+  const tally = { total: 0 };
+  const queue = [];
+  let toasting = false, stackEl = null;
+
+  const kindOf = (el) => (el.dataset.pick === 'tree' ? 'winter'
+    : season === 'spring' ? 'strawberry'
+      : season === 'summer' ? (el.classList.contains('flower-cut') ? 'sunflower' : 'blueberry')
+        : 'pumpkin');
+
+  function credit(kind) {
+    tally[kind] = (tally[kind] || 0) + 1;
+    tally.total += 1;
+    if (tally[kind] === ACH[kind].at) queue.push(kind);
+    if (tally.total === ACH.time.at) queue.push('time');
+    if (!toasting) nextToast();
+  }
+
+  function rain(kind) {
+    if (reduceMotion) return;
+    const ids = RAIN[kind], n = kind === 'time' ? 34 : 18;
+    const box = doc.createElement('div');
+    box.className = 'ach-rain ach-rain-' + kind;
+    box.setAttribute('aria-hidden', 'true');
+    let html = '';
+    for (let i = 0; i < n; i++) {
+      html += '<svg class="ach-drop" style="left:' + rnd(2, 96).toFixed(1) + '%;--s:' + Math.round(rnd(26, 52)) + 'px;--d:' + rnd(2.2, 3.6).toFixed(2) + 's;--dl:' + rnd(0, 1.1).toFixed(2) + 's;--sw:' + Math.round(rnd(-70, 70)) + 'px;--r:' + Math.round(rnd(-320, 320)) + 'deg"><use href="#' + ids[i % ids.length] + '" width="100%" height="100%"/></svg>';
+    }
+    box.innerHTML = html;
+    hero.appendChild(box);
+    setTimeout(() => box.remove(), 5200);
+  }
+
+  function nextToast() {
+    const kind = queue.shift();
+    if (!kind) { toasting = false; return; }
+    toasting = true;
+    const a = ACH[kind];
+    if (!stackEl) {
+      stackEl = doc.createElement('div');
+      stackEl.className = 'ach-stack';
+      stackEl.setAttribute('aria-live', 'polite');
+      ($('#picker') || hero).appendChild(stackEl);
+    }
+    const el = doc.createElement('div');
+    el.className = 'ach ach-' + kind;
+    el.innerHTML = '<span class="ach-medal" aria-hidden="true"><svg><use href="#' + a.icon + '" width="100%" height="100%"/></svg></span>' +
+      '<span class="ach-text"><span class="ach-kicker">' + t('Achievement unlocked!') + '</span><strong class="ach-title">' + a.title() + '</strong><span class="ach-msg">' + a.msg() + '</span></span>' +
+      '<button class="ach-close" type="button" aria-label="' + t('Close') + '">&times;</button>';
+    stackEl.appendChild(el);
+    rain(kind);
+    let done = false;
+    const close = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      el.classList.add('is-leaving');
+      setTimeout(() => { el.remove(); nextToast(); }, reduceMotion ? 0 : 380);
+    };
+    const timer = setTimeout(close, kind === 'time' ? 11500 : 6000);
+    $('.ach-close', el).addEventListener('click', close);
+  }
+
   function pick(el) {
     const cfg = SCENES[season].hud;
     if (el.dataset.pick === 'tree') {
       if (el.classList.contains('lit')) return;
       el.classList.add('lit');
-      bump(cfg); floatPlus(el);
+      bump(cfg); floatPlus(el); credit(kindOf(el));
       return;
     }
     if (el.dataset.state === 'picked') return;
@@ -971,7 +1049,7 @@
     const body = $('.berry', el);
     body.classList.remove('is-regrowing');
     body.classList.add('is-picked');
-    bump(cfg); floatPlus(el);
+    bump(cfg); floatPlus(el); credit(kindOf(el));
     const mine = token;
     setTimeout(() => {
       if (mine !== token) return;
@@ -992,6 +1070,7 @@
 
     $$('[data-fire]', fieldEl).forEach((fire) => fire.addEventListener('click', () => {
       fire.classList.add('flare');
+      credit('winter');
       clearTimeout(fire._t);
       fire._t = setTimeout(() => fire.classList.remove('flare'), 1100);
     }));

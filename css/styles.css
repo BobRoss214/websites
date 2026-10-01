@@ -94,7 +94,7 @@ a[href^="tel:"]{white-space:nowrap}
 .nav ul{display:flex;gap:4px}
 .nav ul a{position:relative;display:block;padding:.5em .8em;font:600 1.02rem/1 var(--display);text-decoration:none;border-radius:999px;transition:background-color .2s}
 .nav ul a:hover{background:#fff}
-.nav ul a[aria-current="true"]{background:var(--sun);box-shadow:inset 0 0 0 2.5px var(--ink)}
+.nav ul a[aria-current]{background:var(--sun);box-shadow:inset 0 0 0 2.5px var(--ink)}
 .menu-toggle{display:none;width:48px;height:48px;padding:0;border:3px solid var(--ink);border-radius:16px;background:#fff;color:var(--ink);box-shadow:0 3px 0 var(--ink);cursor:pointer;place-items:center}
 .menu-toggle .ico{width:26px;height:26px}
 .menu-toggle .ico-close{display:none}

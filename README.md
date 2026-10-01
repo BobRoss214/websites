@@ -11,6 +11,7 @@ pumpkin-patch.html
 strawberry-picking.html
 school-field-trips.html
 wise-pie.html
+shop.html               "What to buy": pumpkins, u-pick, farm and GreenHouse prices (draft, see Content status)
 sitemap.xml, robots.txt generated with the pages
 pages/                  the short sources the extra pages are built from
 css/styles.css          design system, hero layout, base components
@@ -51,8 +52,8 @@ Preview locally: run `python3 -m http.server` and visit http://localhost:8000 (a
 
 ## Extra pages (for Google)
 
-`first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html` and
-`wise-pie.html` are separate pages with their own titles, descriptions, FAQ markup and breadcrumbs.
+`first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html`,
+`wise-pie.html` and `shop.html` are separate pages with their own titles, descriptions, FAQ markup and breadcrumbs.
 They are **generated**: edit the short source in `pages/<name>.html`, then run
 
 ```
@@ -111,6 +112,7 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Christmas trees** | Friday after Thanksgiving to early December, at The GreenHouse. |
 | **Tomatoes & basil** | The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree. Give us the right number and we'll state it. |
 | **Reviews** | The reviews section is built but empty. It needs real quotes (with permission) from you. |
+| **Shop page (`shop.html`)** | **Draft.** The layout is done and every price we know is on it (tomatoes, basil, farm fees, rides, pizza). Everything marked "Prices coming soon" (pumpkins, strawberries, blueberries, flowers, concessions, drinks, local goods, ice cream, Christmas trees) needs the real list. Edit `pages/shop.html`: change a `<dd class="soon">Prices coming soon</dd>` to the price, e.g. `<dd>$5 each</dd>`, then run the rebuild commands. |
 | **Farm map** | Waiting on the annotated Google Earth screenshot. The first-visit page still has draft notes for parking and check-in until then. |
 
 ## Photos
@@ -135,6 +137,7 @@ alt text and captions that still need translating.
 
 - **Seasonal hero:** the first screen shows the season the farm is in today. The grey line under the headline describes only that season (strawberries, blueberries, pumpkins + tomatoes & basil, Christmas trees), and in winter the headline itself becomes "Wise Acres Christmas trees". A red, open tractor (no cab) pulls the wagon ride past the fields in **spring, summer and fall**: riders sit behind the side boards and wave (no hay: it is a wagon ride). **Fall:** pumpkin patch (tap to pick), a little barrel train on the far lane, scarecrow, crow, falling leaves. **Winter:** Christmas trees to light, campfires to stoke, a snowman, snow. **Summer:** blueberry bushes to pick, bees, sunflowers to snip. **Spring:** strawberries to pick, kids picking in the rows. A "See the farm in…" switcher changes the season, the Seasons tabs and the u-pick card colour.
 - **Hero reactions:** the sun beams, wobbles and blinks on hover and hops, squints and bursts into sparks when clicked (`initSun` in `js/hero.js`, styles at the bottom of `css/extras.css`). The "No reservation? Visit The GreenHouse" pill lifts, glows green and shines on hover, and pops with a spray of leaves before it glides down to The GreenHouse (`initNote`). The big buttons and the "New" tomato chip have their own hover moments. All of it is switched off by `prefers-reduced-motion`, and the hover parts only run on devices that can hover.
+- **Achievements:** pick 100 of one kind (strawberries, blueberries, sunflowers, pumpkins, or trees lit + fires stoked in winter) and a badge pops up above the basket while that item rains down the screen; pick 1,000 in all and a gold "you've got a lot of time on your hands" badge appears. Counted per visit (`credit()` in `js/hero.js`).
 - **Seasonal touches elsewhere:** the top bar says what is in season; dividers and the footer scene change with the season.
 - **Open now** badges, a **notice bar**, and a **next-season countdown** with an email sign-up.
 - **Growing vine** under the header shows scroll progress.

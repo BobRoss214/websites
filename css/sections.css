@@ -18,10 +18,15 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
 .answer .ticks{margin-top:.6em}
 .answer a{font-weight:800}
 
-/* ---------- header: nine links, so the menu collapses earlier ---------- */
-.header-inner.wrap{width:min(1320px,100% - 2 * var(--gutter))}
-.nav ul a{padding:.5em .62em;font-size:.98rem}
-@media (max-width:1240px){
+/* ---------- header: twelve links, so the menu collapses earlier ----------
+   Spanish and Vietnamese labels are longer, so they collapse at a wider screen. */
+.header-inner.wrap{width:min(1560px,100% - 2 * var(--gutter))}
+.nav{gap:14px}
+.nav ul{gap:2px}
+.nav ul a{padding:.5em .5em;font-size:.92rem;white-space:nowrap}
+/* fall: a little red dot on the new Tomatoes link */
+html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
+@media (max-width:1340px){
   :root{--header-h:64px}
   .menu-toggle{display:grid}
   .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
@@ -29,9 +34,21 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
   .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
   .nav ul{flex-direction:column;gap:8px}
   .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px}
-  .nav ul a[aria-current="true"]{box-shadow:0 4px 0 var(--ink)}
+  .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
   .nav-cta{font-size:1.3rem;padding:.9em}
   body.nav-lock{overflow:hidden}
+}
+@media (max-width:1500px){
+  html:is([lang="es"],[lang="vi"]){--header-h:64px}
+  html:is([lang="es"],[lang="vi"]) .menu-toggle{display:grid}
+  html:is([lang="es"],[lang="vi"]) .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
+  html:is([lang="es"],[lang="vi"]) .nav{position:fixed;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+  html:is([lang="es"],[lang="vi"]) .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
+  html:is([lang="es"],[lang="vi"]) .nav ul{flex-direction:column;gap:8px}
+  html:is([lang="es"],[lang="vi"]) .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px}
+  html:is([lang="es"],[lang="vi"]) .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
+  html:is([lang="es"],[lang="vi"]) .nav-cta{font-size:1.3rem;padding:.9em}
+  html:is([lang="es"],[lang="vi"]) body.nav-lock{overflow:hidden}
 }
 
 /* ---------- hero extras ---------- */

@@ -45,7 +45,7 @@ def chrome():
 
     def to_home(s):
         s = s.replace('href="#top"', 'href="index.html"')
-        return re.sub(r'href="#(?!main")', 'href="index.html#', s)
+        return re.sub(r'(?<!<use )href="#(?!main")', 'href="index.html#', s)   # not icons: <use href="#i-arrow"> must stay local to the page's own sprite
     return dict(head=head, skip=skip, announce=to_home(announce), header=to_home(header), footer=to_home(footer), action=to_home(action), sprite=sprite, scripts=scripts)
 
 
@@ -94,6 +94,7 @@ def compose(c, slug, meta, body):
     if faq:
         graph.append({'@type': 'FAQPage', 'mainEntity': faq})
     ld = '\n  <script type="application/ld+json">\n' + json.dumps({'@context': 'https://schema.org', '@graph': graph}, indent=2, ensure_ascii=False) + '\n  </script>'
+    header = c['header'].replace(f'<a href="{slug}.html">', f'<a href="{slug}.html" aria-current="page">')
     doc = f'''<!doctype html>
 <html lang="en" class="no-js">
 <head>{head.rstrip()}{extra}{ld}
@@ -105,7 +106,7 @@ def compose(c, slug, meta, body):
   {c['announce']}
 
   <!-- ================= HEADER ================= -->
-  {c['header']}
+  {header}
 
   <main id="main">
 {body}

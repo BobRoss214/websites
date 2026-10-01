@@ -143,18 +143,18 @@
     doc.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && nav.classList.contains('is-open')) { setOpen(false); toggle.focus(); }
     });
-    matchMedia('(min-width: 1241px)').addEventListener('change', (e) => { if (e.matches) setOpen(false); });
+    addEventListener('resize', () => { if (getComputedStyle(toggle).display === 'none') setOpen(false); });
 
     // Scroll-spy: highlight the nav link for the section in the middle of the screen.
     if (!('IntersectionObserver' in window)) return;
-    const links = new Map($$('.nav ul a').map((a) => [a.getAttribute('href').slice(1), a]));
+    const links = new Map($$('.nav ul a[href^="#"]').map((a) => [a.getAttribute('href').slice(1), a]));
     const setCurrent = (id) => {
       links.forEach((a, key) => (key === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
     };
     const spy = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) setCurrent(en.target.dataset.nav || en.target.id); });
     }, { rootMargin: '-45% 0px -50% 0px' });
-    $$('main > section[id]').forEach((s) => spy.observe(s));
+    $$('main > section[id], #farm, #farm-cards').forEach((s) => spy.observe(s));
   }
 
   /* ------------------------------------------------------------------ *
