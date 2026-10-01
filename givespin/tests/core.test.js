@@ -109,12 +109,152 @@ test('plinkoPath has exactly `target` right-moves', () => {
   }
 });
 
-test('buildPool filters by any-cause and exclusions', () => {
-  assert.equal(core.buildPool(charities, [], []).length, 4);
-  assert.deepEqual(core.buildPool(charities, ['kids'], []).map((c) => c.id), ['a', 'c']);
-  assert.deepEqual(core.buildPool(charities, ['kids', 'planet'], []).map((c) => c.id), ['a', 'c', 'd']);
-  assert.deepEqual(core.buildPool(charities, ['animals'], ['d']).map((c) => c.id), ['b']);
-  assert.equal(core.buildPool(charities, [], ['a', 'b', 'c', 'd']).length, 0);
+test('buildPool: causes are OR-ed, exclusions apply, and the old list form still works', () => {
+  assert.equal(core.buildPool(charities, core.emptyFilters(), []).length, 4);
+  assert.deepEqual(core.buildPool(charities, { causes: ['kids'] }, []).map((c) => c.id), ['a', 'c']);
+  assert.deepEqual(core.buildPool(charities, ['kids'], []).map((c) => c.id), ['a', 'c']); // legacy saved data
+  assert.deepEqual(core.buildPool(charities, { causes: ['kids', 'planet'] }, []).map((c) => c.id), ['a', 'c', 'd']);
+  assert.deepEqual(core.buildPool(charities, { causes: ['animals'] }, ['d']).map((c) => c.id), ['b']);
+  assert.equal(core.buildPool(charities, {}, ['a', 'b', 'c', 'd']).length, 0);
+});
+
+const rich = [
+  { id: 'r1', causes: ['kids'], serves: ['children'], where: ['us'], how: ['direct'], founded: 1940, faith: false },
+  { id: 'r2', causes: ['kids', 'health'], serves: ['children', 'patients'], where: ['global'], how: ['research'], founded: 1975 },
+  { id: 'r3', causes: ['animals'], serves: [], where: ['us'], how: ['advocacy'], founded: 2005, faith: true },
+  { id: 'r4', causes: ['animals'], serves: [], where: ['africa'], how: ['protection'], founded: null, unverified: true },
+  { id: 'r5', causes: ['health'], serves: ['patients'], where: ['global'], how: ['direct', 'research'], founded: 2015 },
+];
+
+test('filters: OR inside a group, AND between groups', () => {
+  const ids = (f) => core.buildPool(rich, f, []).map((c) => c.id);
+  assert.deepEqual(ids({ causes: ['kids', 'animals'] }), ['r1', 'r2', 'r3', 'r4']);
+  assert.deepEqual(ids({ causes: ['kids', 'animals'], where: ['us'] }), ['r1', 'r3']);
+  assert.deepEqual(ids({ causes: ['health'], how: ['research'] }), ['r2', 'r5']);
+  assert.deepEqual(ids({ serves: ['patients'], where: ['global'], how: ['direct'] }), ['r5']);
+  assert.deepEqual(ids({ causes: ['kids'], where: ['africa'] }), []);
+});
+
+test('filters: founded eras, faith-based, and complete-profile switches', () => {
+  const ids = (f) => core.buildPool(rich, f, []).map((c) => c.id);
+  assert.equal(core.eraOf(1949), 'e1');
+  assert.equal(core.eraOf(1950), 'e2');
+  assert.equal(core.eraOf(1989), 'e2');
+  assert.equal(core.eraOf(1990), 'e3');
+  assert.equal(core.eraOf(2009), 'e3');
+  assert.equal(core.eraOf(2010), 'e4');
+  assert.equal(core.eraOf(null), null);
+  assert.deepEqual(ids({ era: ['e1', 'e2'] }), ['r1', 'r2']);
+  assert.deepEqual(ids({ era: ['e4'] }), ['r5']); // unknown founding year never matches an era filter
+  assert.deepEqual(ids({ faith: 'hide' }), ['r1', 'r2', 'r4', 'r5']);
+  assert.deepEqual(ids({ faith: 'only' }), ['r3']);
+  assert.deepEqual(ids({ completeOnly: true }), ['r1', 'r2', 'r3', 'r5']);
+});
+
+test('normalizeFilters rejects junk and counts active filters', () => {
+  const f = core.normalizeFilters({ causes: ['x', 5, null], era: ['e9', 'e1'], faith: 'weird', completeOnly: 1, extra: 1 });
+  assert.deepEqual(f, { causes: ['x'], serves: [], where: [], how: [], era: ['e1'], faith: 'any', completeOnly: true });
+  assert.deepEqual(core.normalizeFilters(null), core.emptyFilters());
+  assert.equal(core.activeFilterCount(core.emptyFilters()), 0);
+  assert.equal(core.activeFilterCount({ causes: ['a', 'b'], where: ['us'], faith: 'hide', completeOnly: true }), 5);
+});
+
+test('facetCounts tallies each facet value', () => {
+  const c = core.facetCounts(rich);
+  assert.deepEqual(c.causes, { kids: 2, health: 2, animals: 2 });
+  assert.equal(c.where.us, 2);
+  assert.equal(c.era.e1, 1);
+  assert.equal(c.faith, 1);
+  assert.equal(c.unverified, 1);
+});
+
+test('allowedRounds drops splits that would make a round too small', () => {
+  assert.deepEqual(core.allowedRounds(500, [1, 3, 5, 10], 100), [1, 3, 5]);
+  assert.deepEqual(core.allowedRounds(1000, [1, 3, 5, 10], 100), [1, 3, 5, 10]);
+  assert.deepEqual(core.allowedRounds(250, [1, 3, 5, 10], 100), [1]);
+  assert.deepEqual(core.allowedRounds(NaN, [1, 3], 100), []);
+});
+
+test('subsetWith always includes the winner, keeps members distinct, and respects n', () => {
+  const pool = Array.from({ length: 30 }, (_, i) => ({ id: 'c' + i }));
+  for (let i = 0; i < 400; i++) {
+    const winner = pool[core.randomInt(pool.length)];
+    const n = 1 + core.randomInt(14);
+    const list = core.subsetWith(pool, winner, n);
+    assert.equal(list.length, n);
+    assert.ok(list.some((c) => c.id === winner.id));
+    assert.equal(new Set(list.map((c) => c.id)).size, n);
+  }
+  const small = [{ id: 'x' }, { id: 'y' }];
+  assert.equal(core.subsetWith(small, small[0], 12).length, 2);
+});
+
+test('bracketOutcomes: the chosen contestant always wins, and there are size-1 matches', () => {
+  for (const size of [2, 4, 8]) {
+    for (let pos = 0; pos < size; pos++) {
+      const rounds = core.bracketOutcomes(size, pos);
+      assert.equal(rounds.length, Math.log2(size));
+      assert.equal(rounds.reduce((n, r) => n + r.length, 0), size - 1);
+      // replay the bracket and check who survives
+      let alive = Array.from({ length: size }, (_, i) => i);
+      rounds.forEach((r) => { alive = r.map((left, k) => (left ? alive[2 * k] : alive[2 * k + 1])); });
+      assert.deepEqual(alive, [pos]);
+    }
+  }
+});
+
+test('nextGiftDate: weekly adds 7 days, monthly clamps to short months', () => {
+  assert.equal(core.dayKey(core.nextGiftDate('weekly', new Date(2026, 0, 30))), '2026-02-06');
+  assert.equal(core.dayKey(core.nextGiftDate('monthly', new Date(2026, 0, 15))), '2026-02-15');
+  assert.equal(core.dayKey(core.nextGiftDate('monthly', new Date(2026, 0, 31))), '2026-02-28');
+  assert.equal(core.dayKey(core.nextGiftDate('monthly', new Date(2028, 0, 31))), '2028-02-29'); // leap year
+  assert.equal(core.dayKey(core.nextGiftDate('monthly', new Date(2026, 11, 20))), '2027-01-20');
+  assert.equal(core.monthKey(new Date(2026, 8, 30)), '2026-09');
+});
+
+test('email and phone validation', () => {
+  assert.equal(core.validateEmail('  Sam@Example.COM ').value, 'sam@example.com');
+  assert.ok(core.validateEmail('a@b.co').ok);
+  for (const bad of ['', 'nope', 'a@b', 'a b@c.com', '@x.com', 'a@@b.com']) { assert.equal(core.validateEmail(bad).ok, false, bad); }
+  assert.equal(core.validatePhone('+1 (555) 123-4567').value, '+15551234567');
+  assert.equal(core.validatePhone('555-123-4567').value, '5551234567');
+  for (const bad of ['', '123', 'call me', '12345678901234567', '555-123-45a7']) { assert.equal(core.validatePhone(bad).ok, false, bad); }
+});
+
+test('password strength is sensible and never says a bad password is fine', () => {
+  assert.equal(core.passwordStrength('').ok, false);
+  assert.equal(core.passwordStrength('short1A').ok, false);
+  assert.equal(core.passwordStrength('password').ok, false);
+  assert.equal(core.passwordStrength('password123').ok, false); // starts with a known weak word
+  assert.equal(core.passwordStrength('abcdefgh').score, 1);
+  assert.ok(core.passwordStrength('Tr0ub4dor&3x').ok);
+  assert.equal(core.passwordStrength('Tr0ub4dor&3xyz!').score, 4);
+  assert.ok(core.passwordStrength('Tr0ub4dor&3xyz!').score > core.passwordStrength('abcd1234').score);
+});
+
+test('card checks: Luhn, brand, formatting, expiry, security code', () => {
+  assert.ok(core.luhn('4242 4242 4242 4242'));
+  assert.ok(core.luhn('378282246310005'));
+  assert.equal(core.luhn('4242424242424241'), false);
+  assert.equal(core.luhn('1234'), false);
+  assert.equal(core.cardBrand('4111111111111111'), 'visa');
+  assert.equal(core.cardBrand('5555555555554444'), 'mastercard');
+  assert.equal(core.cardBrand('2223003122003222'), 'mastercard');
+  assert.equal(core.cardBrand('378282246310005'), 'amex');
+  assert.equal(core.cardBrand('6011111111111117'), 'discover');
+  assert.equal(core.cardBrand('9999'), 'card');
+  assert.equal(core.formatCardNumber('4242424242424242'), '4242 4242 4242 4242');
+  assert.equal(core.formatCardNumber('378282246310005'), '3782 822463 10005');
+  const now = new Date(2026, 8, 30);
+  assert.ok(core.validateExpiry('12/29', now).ok);
+  assert.ok(core.validateExpiry('09/26', now).ok);        // valid through the end of September
+  assert.equal(core.validateExpiry('08/26', now).ok, false);
+  assert.equal(core.validateExpiry('13/29', now).ok, false);
+  assert.equal(core.validateExpiry('1/9', now).ok, false);
+  assert.equal(core.validateExpiry('12/60', now).ok, false);
+  assert.ok(core.validateCvc('123', 'visa').ok);
+  assert.equal(core.validateCvc('1234', 'visa').ok, false);
+  assert.ok(core.validateCvc('1234', 'amex').ok);
 });
 
 test('mergeAllocations sums repeats, keeps order and the total', () => {
@@ -158,14 +298,19 @@ test('streaks: same day holds, next day extends, gaps reset', () => {
 });
 
 test('badges unlock from state and are not re-awarded', () => {
-  const base = { totalCents: 0, rounds: 0, biggestCents: 0, charitiesSeen: [], causesSeen: [], gamesPlayed: [], streak: 0, bestStreak: 0, jackpots: 0, splits: 0, usedStream: false };
+  const base = { totalCents: 0, rounds: 0, biggestCents: 0, charitiesSeen: [], causesSeen: [], gamesPlayed: [], gameCount: 11, streak: 0, bestStreak: 0, jackpots: 0, splits: 0, usedStream: false, directGifts: 0, verifies: 0, plans: 0 };
   assert.deepEqual(core.newBadges(base, {}), []);
   const s1 = Object.assign({}, base, { rounds: 1, biggestCents: 10000 });
   assert.deepEqual(core.newBadges(s1, {}).sort(), ['big', 'first']);
   assert.deepEqual(core.newBadges(s1, { first: 1 }), ['big']);
-  const s2 = Object.assign({}, base, { rounds: 9, jackpots: 1, splits: 1, usedStream: true, bestStreak: 3,
-    charitiesSeen: ['1', '2', '3', '4', '5'], causesSeen: ['a', 'b', 'c', 'd', 'e'], gamesPlayed: ['w', 's', 'd', 'p'], totalCents: 25000, biggestCents: 10000 });
+  const games = Array.from({ length: 11 }, (_, i) => 'g' + i);
+  const s2 = Object.assign({}, base, { rounds: 9, jackpots: 1, splits: 1, usedStream: true, bestStreak: 3, directGifts: 1, verifies: 2, plans: 1,
+    charitiesSeen: ['1', '2', '3', '4', '5'], causesSeen: ['a', 'b', 'c', 'd', 'e'], gamesPlayed: games, totalCents: 25000, biggestCents: 10000 });
   assert.equal(core.newBadges(s2, {}).length, core.BADGES.length);
+  // "Game Master" needs every game, "Arcade Regular" only five
+  const five = Object.assign({}, base, { rounds: 5, gamesPlayed: games.slice(0, 5) });
+  assert.deepEqual(core.newBadges(five, {}).sort(), ['first', 'regular']);
+  assert.equal(new Set(core.BADGES.map((b) => b.id)).size, core.BADGES.length);
 });
 
 test('receipt ids look right', () => {

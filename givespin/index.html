@@ -3,227 +3,96 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>GiveSpin | Give big. Let luck pick where it lands.</title>
-  <meta name="description" content="The game-show way to give. Pick an amount, choose your causes, then spin the wheel, pull the slots, open the crate or play Plinko. Every round is a win for someone.">
-  <meta name="theme-color" content="#070A1A">
+  <title>GiveSpin | Play to give</title>
+  <meta name="description" content="The giving casino. Choose an amount, filter by the causes you care about, then spin, roll, scratch or race your way to a charity. Every round is a win for someone.">
+  <meta name="theme-color" content="#0a1219">
+  <meta name="color-scheme" content="dark">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="GiveSpin | Give big. Let luck pick where it lands.">
-  <meta property="og:description" content="Spin the wheel, pull the slots, open the crate or play Plinko. Every round is a win for a charity.">
+  <meta property="og:title" content="GiveSpin | Play to give">
+  <meta property="og:description" content="Eleven casino-style games, 228 charities, and every round is a win for someone.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/views.css">
+  <link rel="stylesheet" href="css/dialogs.css">
   <link rel="stylesheet" href="css/games.css">
-  <link rel="stylesheet" href="css/sections.css">
 </head>
 <body>
-  <a class="skip" href="#play">Skip to the game</a>
-  <div class="bg" aria-hidden="true"><span class="bg__glow bg__glow--a"></span><span class="bg__glow bg__glow--b"></span><span class="bg__glow bg__glow--c"></span><span class="bg__grid"></span></div>
+  <a class="skip" href="#main">Skip to content</a>
 
-  <!-- ============================================================ top bar -->
-  <header class="topbar" id="top">
-    <div class="wrap topbar__in">
-      <a class="brand" href="#top" aria-label="GiveSpin home">
+  <div class="app" id="app">
+    <!-- ============================================================ top bar -->
+    <header class="topbar" id="topbar">
+      <a class="brand" href="#lobby" aria-label="GiveSpin lobby">
         <svg class="brand__mark" viewBox="0 0 40 40" aria-hidden="true">
-          <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7C5CFF"/><stop offset=".6" stop-color="#FF4FA2"/><stop offset="1" stop-color="#FFC83D"/></linearGradient></defs>
-          <circle cx="20" cy="20" r="18.5" fill="url(#lg)"/>
-          <path d="M20 20V1.5A18.5 18.5 0 0 1 37.6 14.3Z M20 20 7.6 33.8A18.5 18.5 0 0 1 1.5 20Z M20 20 37.6 25.7A18.5 18.5 0 0 1 32.4 33.8Z" fill="rgba(255,255,255,.2)"/>
-          <path d="M20 29c-.4 0-.7-.1-1-.4C14.6 24.800 11.500 22 11.500 18.400c0-2.500 1.900-4.400 4.300-4.400 1.700 0 3.300.9 4.200 2.400.9-1.500 2.500-2.400 4.200-2.400 2.400 0 4.300 1.900 4.300 4.400 0 3.600-3.100 6.400-7.500 10.200-.3.300-.6.400-1 .4Z" fill="#fff"/>
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22f07a"/><stop offset="1" stop-color="#14b8a6"/></linearGradient></defs>
+          <rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="url(#lg)"/>
+          <circle cx="20" cy="20" r="12.5" fill="none" stroke="#03210f" stroke-opacity=".28" stroke-width="2" stroke-dasharray="3.2 3.2"/>
+          <path d="M20 28.2c-.4 0-.7-.1-1-.4-4.100-3.600-7-6.200-7-9.600 0-2.300 1.800-4.100 4-4.100 1.600 0 3.100.8 4 2.200.9-1.400 2.400-2.200 4-2.200 2.200 0 4 1.800 4 4.100 0 3.400-2.900 6-7 9.600-.3.300-.6.400-1 .4Z" fill="#03210f"/>
         </svg>
         <span class="brand__name">Give<b>Spin</b></span>
       </a>
-      <nav class="nav" aria-label="Sections">
-        <a href="#play">Play</a>
-        <a href="#impact">Impact</a>
-        <a href="#charities">Charities</a>
-        <a href="#how">How it works</a>
-        <a href="#faq">FAQ</a>
-      </nav>
-      <div class="topbar__tools">
-        <span class="lvlpill" id="lvlpill" title="Your level"><span class="lvlpill__n" id="lvlpill-n">1</span><span class="lvlpill__t" id="lvlpill-t">Rookie Giver</span></span>
-        <button type="button" class="iconbtn" id="btn-sound" aria-pressed="false" aria-label="Sound on" title="Sound"></button>
-        <button type="button" class="iconbtn" id="btn-stream" aria-pressed="false" aria-label="Stream Mode" title="Stream Mode (bigger game, nothing else)"></button>
-      </div>
-    </div>
-    <div class="demo-banner only-demo" role="note">
-      <div class="wrap demo-banner__in"><span class="demo-banner__dot" aria-hidden="true"></span><span><strong>Demo mode.</strong> Nothing is charged and no money moves.<span class="demo-banner__more"> Play it, demo it, stream it.</span> <a href="#faq-real">Real donations?</a></span></div>
-    </div>
-  </header>
 
-  <main id="main">
-    <!-- ============================================================ arcade -->
-    <section class="hero wrap" id="play" aria-labelledby="h-title">
-      <div class="hero__copy">
-        <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Play to give</p>
-        <h1 id="h-title">Give big.<br>Let <span class="grad">luck</span> pick<br>where it lands.</h1>
-        <p class="lede">Choose an amount and the causes you love, then spin, pull, drop or plink your way to a charity. <strong>Every round is a win for someone.</strong></p>
-        <ul class="trust" aria-label="Highlights">
-          <li><span data-icon="shield-check"></span>Equal odds for every charity</li>
-          <li><span data-icon="hand-heart"></span><span id="trust-count">44</span> hand-picked charities</li>
-          <li><span data-icon="lock"></span><span class="only-demo">No card needed in demo</span><span class="only-live">You pay on the charity's checkout</span></li>
+      <div class="search" id="search">
+        <span class="search__ico" data-icon="search"></span>
+        <input id="search-input" class="search__input" type="search" role="combobox" aria-expanded="false" aria-controls="search-list" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search games and charities" aria-label="Search games and charities">
+        <ul class="search__list" id="search-list" role="listbox" aria-label="Search results" hidden></ul>
+      </div>
+
+      <div class="topbar__right">
+        <div class="balance only-demo" id="balance" title="Free play-money you can give. Nothing here is real.">
+          <span class="balance__ico" data-icon="coins"></span>
+          <span class="balance__txt"><span class="balance__lbl">Demo credit</span><span class="balance__amt" id="balance-amt">$0</span></span>
+        </div>
+        <button type="button" class="btn btn--green btn--sm only-demo" id="btn-credit"><span data-icon="plus"></span><span class="hide-sm">Add credit</span></button>
+        <button type="button" class="iconbtn" id="btn-sound" aria-pressed="false" aria-label="Sound on"></button>
+        <button type="button" class="iconbtn hide-sm" id="btn-stream" aria-pressed="false" aria-label="Stream Mode" title="Stream Mode (bigger game, nothing else)"></button>
+        <div class="acct" id="acct"></div>
+      </div>
+    </header>
+
+    <aside class="demo-strip only-demo" aria-label="Demo mode">
+      <span class="demo-strip__dot" aria-hidden="true"></span>
+      <span><strong>Demo mode.</strong> Play-money only: nothing is charged and no real donation is made. <a href="#help-real">Real donations?</a></span>
+    </aside>
+
+    <div class="layout">
+      <!-- ============================================================ side nav -->
+      <nav class="side" id="side" aria-label="Main">
+        <ul class="side__list">
+          <li><a class="side__link" href="#lobby" data-route="lobby"><span data-icon="layout-grid"></span><span class="side__txt">Lobby</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#lobby-originals" data-route="lobby-originals"><span data-icon="sparkles"></span><span class="side__txt">Originals</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#lobby-table" data-route="lobby-table"><span data-icon="club"></span><span class="side__txt">Table games</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#lobby-instant" data-route="lobby-instant"><span data-icon="zap"></span><span class="side__txt">Instant wins</span></a></li>
+          <li class="side__rule" aria-hidden="true"></li>
+          <li><a class="side__link" href="#giving" data-route="giving"><span data-icon="hand-heart"></span><span class="side__txt">My Giving</span></a></li>
+          <li><a class="side__link" href="#charities" data-route="charities"><span data-icon="globe"></span><span class="side__txt">Charities</span></a></li>
+          <li><a class="side__link" href="#club" data-route="club"><span data-icon="crown"></span><span class="side__txt">Giving Club</span></a></li>
+          <li class="side__rule" aria-hidden="true"></li>
+          <li><a class="side__link" href="#fair" data-route="fair"><span data-icon="shield-check"></span><span class="side__txt">Fair Play</span></a></li>
+          <li class="side__help"><a class="side__link" href="#help" data-route="help"><span data-icon="circle-help"></span><span class="side__txt">Help</span></a></li>
         </ul>
-      </div>
+        <div class="side__level" id="side-level"></div>
+      </nav>
 
-      <!-- Controls -->
-      <section class="panel controls" aria-labelledby="c-title">
-        <header class="panel__head"><h2 id="c-title">Your round</h2><span class="panel__step" aria-hidden="true">Set it up</span></header>
+      <!-- ============================================================ views -->
+      <main id="main" class="main" tabindex="-1">
+        <section class="view" id="view-lobby" data-view="lobby" aria-label="Lobby" hidden></section>
+        <section class="view" id="view-game" data-view="game" aria-label="Game" hidden></section>
+        <section class="view" id="view-giving" data-view="giving" aria-label="My Giving" hidden></section>
+        <section class="view" id="view-charities" data-view="charities" aria-label="Charities" hidden></section>
+        <section class="view" id="view-club" data-view="club" aria-label="Giving Club" hidden></section>
+        <section class="view" id="view-fair" data-view="fair" aria-label="Fair Play" hidden></section>
+        <section class="view" id="view-help" data-view="help" aria-label="Help" hidden></section>
 
-        <div class="field" id="field-amount">
-          <label class="field__label" for="amount">How much are you giving?</label>
-          <div class="amount">
-            <span class="amount__cur" aria-hidden="true">$</span>
-            <input id="amount" class="amount__input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="8" aria-describedby="amount-msg" value="25">
-          </div>
-          <div class="presets" role="group" aria-label="Quick amounts" id="presets"></div>
-          <p class="field__msg" id="amount-msg" role="alert"></p>
-        </div>
-
-        <div class="field">
-          <div class="field__row">
-            <span class="field__label" id="causes-label">Pick your causes</span>
-            <button type="button" class="linkbtn" id="causes-clear" hidden>Clear</button>
-          </div>
-          <div class="chips" id="causes" role="group" aria-labelledby="causes-label"></div>
-          <p class="pool-line" id="pool-line" aria-live="polite"></p>
-        </div>
-
-        <div class="field" id="field-rounds">
-          <span class="field__label" id="rounds-label">Split your gift</span>
-          <div class="seg" id="rounds-seg" role="group" aria-labelledby="rounds-label"></div>
-          <p class="field__hint" id="rounds-hint"></p>
-        </div>
-
-        <button type="button" class="cta" id="btn-play"><span class="cta__in"><span data-icon="dice-5"></span><span id="btn-play-label">Spin the wheel</span></span><span class="cta__sub" id="btn-play-sub"></span></button>
-        <p class="kbd-hint">Tip: press <kbd>Space</kbd> to play.</p>
-      </section>
-
-      <!-- Stage -->
-      <section class="panel stage" id="stage" aria-label="Game stage">
-        <div class="stage__tabs" role="tablist" aria-label="Choose a game" id="tabs"></div>
-        <div class="stage__body" id="games"></div>
-        <p class="stage__tagline" id="tagline"></p>
-        <ol class="rounds" id="rounds" aria-label="Round results" hidden></ol>
-      </section>
-    </section>
-
-    <!-- ============================================================ marquee -->
-    <div class="marquee" aria-hidden="true"><div class="marquee__track" id="marquee"></div></div>
-
-    <!-- ============================================================ impact -->
-    <section class="section wrap" id="impact" aria-labelledby="impact-title">
-      <div class="section__head">
-        <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>Your impact</p>
-        <h2 id="impact-title">Level up by giving.</h2>
-        <p class="section__sub">Earn XP every round, keep a streak going, and unlock badges. It all lives on this device only.</p>
-      </div>
-      <div class="impact">
-        <div class="panel levelcard" id="levelcard"></div>
-        <div class="statgrid" id="statgrid"></div>
-        <div class="panel badges" aria-labelledby="badges-title">
-          <header class="panel__head"><h3 id="badges-title">Badges</h3><span class="panel__step" id="badges-count"></span></header>
-          <ul class="badgegrid" id="badgegrid"></ul>
-        </div>
-        <div class="panel history" aria-labelledby="history-title">
-          <header class="panel__head"><h3 id="history-title">Recent rounds</h3><button type="button" class="linkbtn" id="btn-reset">Reset my data</button></header>
-          <ol class="historylist" id="historylist"></ol>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================ roster -->
-    <section class="section wrap" id="charities" aria-labelledby="roster-title">
-      <div class="section__head">
-        <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>The roster</p>
-        <h2 id="roster-title">Meet the charities in play.</h2>
-        <p class="section__sub">Hand-picked, well-known organisations across every cause. Switch any of them off and they will never show up in your games.</p>
-      </div>
-      <div class="rostertools">
-        <label class="search"><span class="sr-only">Search charities</span><span data-icon="search"></span><input type="search" id="roster-search" placeholder="Search charities or causes" autocomplete="off"></label>
-        <div class="seg seg--sm" id="roster-filter" role="group" aria-label="Show"></div>
-        <button type="button" class="linkbtn" id="roster-allon">Turn all on</button>
-      </div>
-      <p class="roster-count" id="roster-count" aria-live="polite"></p>
-      <ul class="roster" id="roster"></ul>
-    </section>
-
-    <!-- ============================================================ how -->
-    <section class="section wrap" id="how" aria-labelledby="how-title">
-      <div class="section__head">
-        <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>How it works</p>
-        <h2 id="how-title">Four steps. Zero guilt. Plenty of confetti.</h2>
-      </div>
-      <ol class="steps">
-        <li class="step"><span class="step__n">1</span><span class="step__ico" data-icon="hand-coins"></span><h3>Pick your amount</h3><p>Tap a preset or type your own. You can split one gift across several rounds.</p></li>
-        <li class="step"><span class="step__n">2</span><span class="step__ico" data-icon="sliders-horizontal"></span><h3>Choose your causes</h3><p>Kids, animals, planet, hunger and more. Mix and match, or leave it open for a total surprise.</p></li>
-        <li class="step"><span class="step__n">3</span><span class="step__ico" data-icon="gamepad-2"></span><h3>Play a game</h3><p>Spin the wheel, pull the slots, open the crate or drop the Plinko ball.</p></li>
-        <li class="step"><span class="step__n">4</span><span class="step__ico" data-icon="party-popper"></span><h3>Give &amp; celebrate</h3><p class="only-demo">Your result pops with confetti and a receipt. In demo mode it is all simulated.</p><p class="only-live">Your result pops with confetti, then you finish your gift on the charity's checkout page.</p></li>
-      </ol>
-
-      <div class="fair">
-        <h3>Fair by design</h3>
-        <div class="fair__grid">
-          <div><span data-icon="dices"></span><h4>Equal odds</h4><p>Every charity in play has exactly the same chance, in every game. Even Plinko, where a real peg board would favour the middle.</p></div>
-          <div><span data-icon="shield-check"></span><h4>Secure randomness</h4><p>Winners come from your browser's cryptographic random generator, with no modulo bias. The animation reveals a result that is already decided.</p></div>
-          <div><span data-icon="eye"></span><h4>Nothing hidden</h4><p>The wheel tells you how many charities are in play, and every round ends with a clear breakdown of who got what, to the cent.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================ faq -->
-    <section class="section wrap" id="faq" aria-labelledby="faq-title">
-      <div class="section__head">
-        <p class="eyebrow"><span class="eyebrow__dot" aria-hidden="true"></span>FAQ</p>
-        <h2 id="faq-title">Good questions.</h2>
-      </div>
-      <div class="faq">
-        <details id="faq-real">
-          <summary>Is this real money?</summary>
-          <p class="only-demo">Not yet. This site is running in <strong>demo mode</strong>: rounds are simulated from start to finish, nothing is charged, and no donation is made. Every receipt is stamped DEMO so nobody is misled. The site owner can connect real checkout in <code>js/config.js</code> (see the README).</p>
-          <p class="only-live">Yes. When a game picks a charity you finish your gift on a checkout page run by the donation platform. GiveSpin never sees or stores your card details.</p>
-        </details>
-        <details>
-          <summary>How is the winner picked?</summary>
-          <p>By your browser's cryptographic random number generator (<code>crypto.getRandomValues</code>), using rejection sampling so no charity is favoured. The result is chosen first and the game animates to it. When the pool is bigger than the wheel, a random subset is shown and the winner is drawn from it, which is still equal odds for the whole pool.</p>
-        </details>
-        <details>
-          <summary>Can I choose which charities can win?</summary>
-          <p>Yes, two ways. Tap cause chips (Kids, Animals, Planet&hellip;) to narrow the pool, or open <a href="#charities">the roster</a> and switch individual charities off.</p>
-        </details>
-        <details>
-          <summary>What does "split your gift" do?</summary>
-          <p>It divides your amount into equal parts, to the cent, and plays one round per part. Give $10 across 3 rounds and you get $3.34, $3.33 and $3.33, each going to whichever charity that round lands on. Slots always use three reels, so a pull is automatically a three-way split.</p>
-        </details>
-        <details>
-          <summary>Are there fees or tax receipts?</summary>
-          <p>GiveSpin adds no fee of its own. Any processing fees are set by the checkout provider and shown before you pay. Tax receipts come from the charity or provider that processes the gift, not from GiveSpin, and demo receipts are not tax documents.</p>
-        </details>
-        <details>
-          <summary>Can I use this on stream?</summary>
-          <p>That is what it is built for. Hit the TV button at the top for <strong>Stream Mode</strong> (or add <code>?stream=1</code> to the URL). It enlarges the game and hides everything else. Add <code>&amp;transparent=1</code> for a see-through background in an OBS browser source. Space bar plays.</p>
-        </details>
-        <details>
-          <summary>What do you store about me?</summary>
-          <p>Nothing leaves your browser. Your level, streak, badges and history are saved in this browser's local storage so they are still there next visit, and you can wipe them any time from the Impact section. There are no accounts, trackers or ads.</p>
-        </details>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="wrap footer__in">
-      <div>
-        <a class="brand brand--sm" href="#top" aria-label="Back to top"><span class="brand__name">Give<b>Spin</b></span></a>
-        <p class="footer__tag">The game-show way to give.</p>
-      </div>
-      <p class="footer__legal">Charity names are used only to identify the organisations. GiveSpin is not affiliated with or endorsed by any of them, and no logos are used. Descriptions are short summaries, not official statements.</p>
+        <footer class="foot">
+          <p><strong>Give responsibly.</strong> Giving should feel good. You can set a monthly giving limit in your account, and every game is equal odds for every charity in play.</p>
+          <p>Charity names are used only to identify the organisations. GiveSpin is not affiliated with or endorsed by any of them, and no logos are used. Descriptions are short summaries, not official statements.</p>
+          <p class="foot__links"><a href="#help">Help</a><a href="#fair">Fair Play</a><a href="#help-privacy">Privacy</a></p>
+        </footer>
+      </main>
     </div>
-  </footer>
-
-  <!-- ============================================================ result dialog -->
-  <dialog class="result" id="result" aria-labelledby="result-title">
-    <div class="result__card">
-      <button type="button" class="result__close iconbtn" id="result-close" aria-label="Close"></button>
-      <div class="result__body" id="result-body"></div>
-    </div>
-  </dialog>
+  </div>
 
   <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
   <div class="sr-only" id="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -232,6 +101,7 @@
 
   <script src="js/icons.js"></script>
   <script src="js/core.js"></script>
+  <script src="js/fair.js"></script>
   <script src="js/config.js"></script>
   <script src="js/data.js"></script>
   <script src="js/util.js"></script>
@@ -239,10 +109,29 @@
   <script src="js/audio.js"></script>
   <script src="js/confetti.js"></script>
   <script src="js/payments.js"></script>
+  <script src="js/accounts.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/ui/common.js"></script>
+  <script src="js/ui/amount.js"></script>
+  <script src="js/ui/opts.js"></script>
   <script src="js/games/wheel.js"></script>
   <script src="js/games/slots.js"></script>
   <script src="js/games/drop.js"></script>
   <script src="js/games/plinko.js"></script>
+  <script src="js/games/roulette.js"></script>
+  <script src="js/games/scratch.js"></script>
+  <script src="js/games/cards.js"></script>
+  <script src="js/games/dice.js"></script>
+  <script src="js/games/coin.js"></script>
+  <script src="js/games/derby.js"></script>
+  <script src="js/games/lotto.js"></script>
+  <script src="js/ui/filters.js"></script>
+  <script src="js/ui/charity.js"></script>
+  <script src="js/ui/account.js"></script>
+  <script src="js/ui/receipt.js"></script>
+  <script src="js/ui/game.js"></script>
+  <script src="js/ui/lobby.js"></script>
+  <script src="js/ui/pages.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

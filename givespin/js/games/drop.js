@@ -2,7 +2,8 @@
  * Drop Crate. A horizontal strip of charity cards rolls past a marker and slows to a stop on one of them,
  * the same suspense mechanic streamers know from case openings.
  *
- * Fairness: the winning card is a uniform draw from the pool, placed in the strip before it moves.
+ * Fairness: the app draws the winner from the whole pool (see js/fair.js) and the strip is built with that
+ * charity in the landing slot before it moves. The other cards are decoration.
  */
 (function () {
   'use strict';
@@ -89,9 +90,16 @@
   GS.games.drop = {
     id: 'drop',
     name: 'Drop Crate',
+    label: 'Drop',
     icon: 'package-open',
+    category: 'originals',
+    badge: 'Case opening',
     tagline: 'The reel rolls, slows, and locks on your charity.',
     cta: 'Open the crate',
+    info: [
+      'A strip of charity cards rolls past a marker and slowly comes to a stop. Whatever card is under the marker gets your gift.',
+      'The cards you see rolling by are random picks from your pool, with the winner placed at the landing spot before the roll starts.'
+    ],
 
     mount: function (container, gameApi) {
       api = gameApi;
@@ -136,16 +144,15 @@
     },
 
     play: function (opts) {
-      var count = opts.count || 1;
+      var winners = opts.winners;
+      var count = winners.length;
       var quick = !!opts.quick || count > 1;
-      var out = [];
       var i = 0;
       return new Promise(function (resolve) {
         function round() {
-          if (i >= count) { resolve(out); return; }
+          if (i >= count) { resolve(winners); return; }
           if (opts.onRound) { opts.onRound(i, count); }
-          rollOnce(quick).then(function (winner) {
-            out.push(winner);
+          rollOnce(winners[i], quick).then(function (winner) {
             if (opts.onReveal) { opts.onReveal(i, winner); }
             i += 1;
             return U.sleep(count > 1 ? 1100 : 500);
@@ -155,21 +162,25 @@
       });
     },
 
+    _shown: function () { var id = this._underMarker(); return id ? [id] : []; },
     _underMarker: function () {
       var r = el.view.getBoundingClientRect();
-      var node = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-      var card = node && node.closest ? node.closest('.dcard') : null;
-      return card ? card.getAttribute('data-id') : null;
+      var cx = r.left + r.width / 2;
+      var cards = el.strip.children;
+      for (var i = 0; i < cards.length; i++) {
+        var b = cards[i].getBoundingClientRect();
+        if (b.left <= cx && cx <= b.right) { return cards[i].getAttribute('data-id'); }
+      }
+      return null;
     }
   };
 
-  function rollOnce(quick) {
+  function rollOnce(winner, quick) {
     return new Promise(function (resolve) {
       if (!pool.length) { resolve(null); return; }
       spinning = true;
       GS.audio.whoosh();
 
-      var winner = core.pickOne(pool);            // drawn fairly up front
       var TOTAL = 58;
       var winnerIdx = 46 + core.randomInt(6);
       var head = current.slice();                 // keep what is on screen so nothing jumps

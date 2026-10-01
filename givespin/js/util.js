@@ -64,4 +64,15 @@
   };
 
   GS.games = GS.games || {};
+
+  /** A tiny event bus so the UI modules can react to each other without importing each other. */
+  var handlers = {};
+  GS.bus = {
+    on: function (name, fn) { (handlers[name] = handlers[name] || []).push(fn); },
+    emit: function (name, data) {
+      (handlers[name] || []).slice().forEach(function (fn) {
+        try { fn(data); } catch (e) { if (window.console) { console.error(e); } }
+      });
+    }
+  };
 })();

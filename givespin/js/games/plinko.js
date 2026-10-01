@@ -1,9 +1,10 @@
 /*
  * Plinko. Drop the ball, watch it ricochet through the pegs, and it lands in a charity's bin.
  *
- * Fairness: a real peg board is centre-heavy, so this one is deliberately not. The winning bin is drawn
- * uniformly first; the ball then follows a shuffled left/right path that ends exactly there (see
- * core.plinkoPath). Every bin has equal odds, and the note under the board says so.
+ * Fairness: a real peg board is centre-heavy, so this one is deliberately not. The app draws the winner
+ * uniformly from the whole pool first (see js/fair.js); the board is set up with that charity in a bin, and
+ * the ball follows a shuffled left/right path that ends exactly there (see core.plinkoPath). Every bin has
+ * equal odds, and the note under the board says so.
  */
 (function () {
   'use strict';
@@ -124,7 +125,7 @@
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.font = '800 ' + Math.max(11, Math.min(geo.dx * 0.3, 20) * (mono.length > 2 ? 0.8 : 1)) + 'px "Bricolage Grotesque", system-ui, sans-serif';
+      ctx.font = '800 ' + Math.max(11, Math.min(geo.dx * 0.3, 20) * (mono.length > 2 ? 0.8 : 1)) + 'px "Sora", system-ui, sans-serif';
       ctx.fillText(mono, bx + bw / 2, geo.binTop + geo.dx * 0.26);
 
       ctx.save();
@@ -223,11 +224,25 @@
       'Every bin has equal odds, not just the middle ones.';
   }
 
-  function dropOnce(quick) {
+  /** Makes sure `winner` has a bin, reshuffling the board only when it has already been used. */
+  function showWinner(winner) {
+    var idx = -1;
+    bins.forEach(function (c, k) { if (c.id === winner.id) { idx = k; } });
+    var used = winBin >= 0 || ball !== null;
+    if (!used && idx >= 0) { return; }
+    if (!used) { bins[core.randomInt(bins.length)] = winner; layout(); return; }
+    bins = core.subsetWith(pool, winner, Math.min(MAX_BINS, pool.length));
+    winBin = -1; ball = null; trail = []; pegFlash = {};
+    layout();
+    updateNote();
+  }
+
+  function dropOnce(winner, quick) {
     return new Promise(function (resolve) {
       var n = bins.length;
-      var target = core.randomInt(n);                  // fair draw first
-      var path = core.plinkoPath(rows, target);        // then a natural-looking route there
+      var target = 0;                                  // the winner was drawn before the drop
+      bins.forEach(function (c, k) { if (c.id === winner.id) { target = k; } });
+      var path = core.plinkoPath(rows, target);        // a natural-looking route to that bin
       var scale = quick ? 0.6 : 1;
       var hop = U.dur(430 * scale);
       var startX = geo.cx + core.randomRange(-0.25, 0.25) * geo.dx;
@@ -313,9 +328,16 @@
   GS.games.plinko = {
     id: 'plinko',
     name: 'Plinko',
+    label: 'Plinko',
     icon: 'pyramid',
+    category: 'originals',
+    badge: 'Peg board',
     tagline: 'Drop the ball and let the pegs decide.',
     cta: 'Drop the ball',
+    info: [
+      'Drop the ball at the top and watch it bounce down through the pegs into a charity\u2019s bin.',
+      'On a real peg board the middle bins win far more often. Here every bin has the same odds: the result is drawn first and the ball follows a bouncy path to it.'
+    ],
 
     mount: function (container, gameApi) {
       api = gameApi;
@@ -349,17 +371,16 @@
     },
 
     play: function (opts) {
-      var count = opts.count || 1;
+      var winners = opts.winners;
+      var count = winners.length;
       var quick = !!opts.quick || count > 1;
-      var out = [];
       var i = 0;
       return new Promise(function (resolve) {
         (function round() {
-          if (i >= count) { resolve(out); return; }
+          if (i >= count) { resolve(winners); return; }
           if (opts.onRound) { opts.onRound(i, count); }
-          if (i > 0 || winBin >= 0) { rebuild(); }
-          U.sleep(i > 0 ? 350 : 0).then(function () { return dropOnce(quick); }).then(function (winner) {
-            out.push(winner);
+          showWinner(winners[i]);
+          U.sleep(i > 0 ? 350 : 0).then(function () { return dropOnce(winners[i], quick); }).then(function (winner) {
             if (opts.onReveal) { opts.onReveal(i, winner); }
             i += 1;
             return U.sleep(count > 1 ? 1100 : 500);
@@ -369,6 +390,7 @@
     },
 
     _winningBin: function () { return winBin >= 0 ? bins[winBin] : null; },
+    _shown: function () { return winBin >= 0 ? [bins[winBin].id] : []; },
     _ballBinX: function () { return ball ? ball.x : null; },
     _binCenters: function () { return geo ? bins.map(function (c, i) { return { id: c.id, x: binCenter(i) }; }) : []; }
   };

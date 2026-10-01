@@ -2,8 +2,8 @@
  * Slot Machine. Three reels, three charities. The gift is split evenly across the reels, so every pull
  * can light up to three causes. Match all three (with a big enough pool) for a Triple Threat bonus.
  *
- * Fairness: each reel's result is drawn uniformly from the charities in play before it starts
- * spinning; the reel then rolls to a strip that ends on that result.
+ * Fairness: the app draws each reel's charity uniformly from the pool before anything moves (see js/fair.js);
+ * the reel then rolls to a strip that ends on that charity.
  */
 (function () {
   'use strict';
@@ -66,10 +66,17 @@
   GS.games.slots = {
     id: 'slots',
     name: 'Slot Machine',
+    label: 'Slots',
     icon: 'cherry',
+    category: 'originals',
+    badge: '3 reels',
     tagline: 'Three reels, three charities. Your gift is split evenly across the stops.',
     cta: 'Pull the lever',
     fixedRounds: REELS,
+    info: [
+      'Pull the lever and three reels spin to three charities. Your gift is split evenly across the reels, so one pull can help up to three causes.',
+      'Land the same charity on all three reels (in a pool of five or more) and you earn the Triple Threat bonus: extra XP and a shower of confetti.'
+    ],
 
     mount: function (container, gameApi) {
       api = gameApi;
@@ -117,7 +124,7 @@
     /** One pull = three reels. Resolves with the three winning charities. */
     play: function (opts) {
       return new Promise(function (resolve) {
-        if (!pool.length) { resolve([]); return; }
+        if (!pool.length || !opts.winners || opts.winners.length < REELS) { resolve([]); return; }
         spinning = true;
         el.machine.classList.remove('is-jackpot');
         el.machine.classList.add('is-pulled');
@@ -131,7 +138,7 @@
 
         var plans = reels.map(function (r, idx) {
           r.win.classList.remove('is-hit');
-          var winner = core.pickOne(pool);          // uniform draw, made before the reel moves
+          var winner = opts.winners[idx];           // drawn fairly by the app before any reel moves
           winners.push(winner);
           var fillCount = 22 + idx * 9;
           var head = r.visible.slice();
@@ -184,6 +191,7 @@
             plans.forEach(function (pl) { setStatic(pl.reel, pl.reel.visible); });
             var triple = winners.every(function (w) { return w.id === winners[0].id; });
             if (triple) { el.machine.classList.add('is-jackpot'); }
+            if (opts && opts.onRound) { /* one pull is one round */ }
             U.sleep(500).then(function () { resolve(winners); });
           }
         })(performance.now());
@@ -191,6 +199,7 @@
     },
 
     /** Test hook: charities currently on the payline (middle row), left to right. */
-    _paylineIds: function () { return reels.map(function (r) { return r.visible[1] && r.visible[1].id; }); }
+    _paylineIds: function () { return reels.map(function (r) { return r.visible[1] && r.visible[1].id; }); },
+    _shown: function () { return reels.map(function (r) { return r.visible[1] && r.visible[1].id; }); }
   };
 })();

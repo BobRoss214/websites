@@ -116,6 +116,13 @@
     levelUp: function () {
       [392, 523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { tone(f, 0.18, 'square', 0.06, i * 0.07); });
     },
-    badge: function () { tone(784, 0.1, 'triangle', 0.1); tone(1175, 0.25, 'triangle', 0.1, 0.09); }
+    badge: function () { tone(784, 0.1, 'triangle', 0.1); tone(1175, 0.25, 'triangle', 0.1, 0.09); },
+    shuffle: function () { for (var i = 0; i < 6; i++) { burstNoise(0.08, 0.06, 2600, 900, i * 0.075); } },
+    flip: function () { burstNoise(0.14, 0.09, 1700, 700); tone(420, 0.1, 'triangle', 0.05, 0.05); },
+    scratch: function () { burstNoise(0.1, 0.05, 4200, 2600); },
+    rattle: function () { for (var i = 0; i < 8; i++) { tone(260 + Math.random() * 520, 0.04, 'square', 0.035, i * 0.055); } },
+    ring: function () { tone(1568, 0.55, 'sine', 0.08); tone(2349, 0.4, 'sine', 0.05, 0.02); },
+    thump: function () { tone(120, 0.09, 'sine', 0.12, 0, 60); },
+    drum: function () { burstNoise(0.12, 0.05, 700, 300); }
   };
 })();

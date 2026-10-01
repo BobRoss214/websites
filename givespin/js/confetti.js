@@ -6,7 +6,7 @@
   'use strict';
   var GS = (window.GS = window.GS || {});
 
-  var COLORS = ['#7C5CFF', '#FF4FA2', '#22D3EE', '#A3E635', '#FFC83D', '#FFFFFF', '#FB923C'];
+  var COLORS = ['#22F07A', '#FFC542', '#FF5D9E', '#35D4FF', '#9A7BFF', '#FFFFFF', '#FF8A3D'];
   var MAX_PARTICLES = 650;
 
   var canvas = null;

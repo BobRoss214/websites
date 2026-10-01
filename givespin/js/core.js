@@ -52,6 +52,14 @@
     return { ok: true, message: '' };
   }
 
+  /**
+   * Which round counts a gift of `cents` can be split into without any single round falling below
+   * `minPerRoundCents` (payment providers have minimums, and tiny gifts are not worth the processing).
+   */
+  function allowedRounds(cents, options, minPerRoundCents) {
+    return options.filter(function (n) { return isFinite(cents) && Math.floor(cents / n) >= minPerRoundCents; });
+  }
+
   /* -------------------------------------------------------------------- RNG */
 
   var cryptoObj = (root && root.crypto && root.crypto.getRandomValues) ? root.crypto
@@ -93,26 +101,150 @@
     return arr;
   }
 
-  /**
-   * A uniformly random subset of `n` distinct items (order shuffled too). Games that can only show a
-   * few charities at once display one of these, then pick the winner uniformly from what is on screen.
-   * A random subset followed by a uniform pick is itself uniform over the whole pool, so every charity
-   * in play has exactly the same chance no matter how big the pool is.
-   */
+  /** A random subset of `n` distinct items (order shuffled too). Purely cosmetic: it decides what is *shown*. */
   function sampleSubset(pool, n) {
     n = Math.max(1, Math.min(n, pool.length));
     return shuffle(pool.slice()).slice(0, n);
   }
 
   /**
+   * The `n` distinct charities a game will display, guaranteed to include `winner` at a random position.
+   * The winner is decided first (see fair.js); the rest of what is on screen is decoration.
+   */
+  function subsetWith(pool, winner, n) {
+    n = Math.max(1, Math.min(n, pool.length));
+    var others = pool.filter(function (c) { return c.id !== winner.id; });
+    shuffle(others);
+    var list = others.slice(0, n - 1);
+    list.splice(randomInt(list.length + 1), 0, winner);
+    return list;
+  }
+
+  /**
    * A left/right path through a Galton board with `rows` rows that ends in bin `target`
-   * (0 .. rows). Exactly `target` of the moves are "right" (1), shuffled into a random order,
-   * which gives a natural-looking bounce while the end bin stays uniform.
+   * (0 .. rows). Exactly `target` of the moves are "right" (1), shuffled into a random order.
    */
   function plinkoPath(rows, target) {
     var moves = [];
     for (var i = 0; i < rows; i++) { moves.push(i < target ? 1 : 0); }
     return shuffle(moves);
+  }
+
+  /**
+   * Single-elimination bracket outcomes for `size` (a power of two) contestants where contestant `winnerPos`
+   * must win. Returns rounds: array of arrays of booleans (true = left side of that match wins).
+   */
+  function bracketOutcomes(size, winnerPos) {
+    var rounds = [];
+    var alive = [];
+    var i;
+    for (i = 0; i < size; i++) { alive.push(i); }
+    while (alive.length > 1) {
+      var results = [];
+      var next = [];
+      for (i = 0; i < alive.length; i += 2) {
+        var a = alive[i];
+        var b = alive[i + 1];
+        var leftWins;
+        if (a === winnerPos) { leftWins = true; }
+        else if (b === winnerPos) { leftWins = false; }
+        else { leftWins = randomInt(2) === 0; }
+        results.push(leftWins);
+        next.push(leftWins ? a : b);
+      }
+      rounds.push(results);
+      alive = next;
+    }
+    return rounds;
+  }
+
+  /* ------------------------------------------------------------ pool logic */
+
+  var ERA_IDS = ['e1', 'e2', 'e3', 'e4'];
+
+  /** Which "founded" bucket a year falls into (null when the year is unknown). */
+  function eraOf(year) {
+    if (typeof year !== 'number' || !isFinite(year)) { return null; }
+    if (year < 1950) { return 'e1'; }
+    if (year < 1990) { return 'e2'; }
+    if (year < 2010) { return 'e3'; }
+    return 'e4';
+  }
+
+  function emptyFilters() {
+    return { causes: [], serves: [], where: [], how: [], era: [], faith: 'any', completeOnly: false };
+  }
+
+  function strList(v) { return Array.isArray(v) ? v.filter(function (x) { return typeof x === 'string'; }) : []; }
+
+  /** Coerces anything (including old saved data: a bare list of cause ids) into a valid filters object. */
+  function normalizeFilters(f) {
+    var out = emptyFilters();
+    if (Array.isArray(f)) { out.causes = strList(f); return out; }
+    if (!f || typeof f !== 'object') { return out; }
+    out.causes = strList(f.causes);
+    out.serves = strList(f.serves);
+    out.where = strList(f.where);
+    out.how = strList(f.how);
+    out.era = strList(f.era).filter(function (e) { return ERA_IDS.indexOf(e) >= 0; });
+    out.faith = f.faith === 'hide' || f.faith === 'only' ? f.faith : 'any';
+    out.completeOnly = !!f.completeOnly;
+    return out;
+  }
+
+  function anyOf(selected, values) {
+    if (!selected.length) { return true; }
+    for (var i = 0; i < values.length; i++) { if (selected.indexOf(values[i]) >= 0) { return true; } }
+    return false;
+  }
+
+  /** Does one charity pass every active filter group? (OR inside a group, AND between groups.) */
+  function matchesFilters(ch, filters) {
+    var f = normalizeFilters(filters);
+    if (!anyOf(f.causes, ch.causes || [])) { return false; }
+    if (!anyOf(f.serves, ch.serves || [])) { return false; }
+    if (!anyOf(f.where, ch.where || [])) { return false; }
+    if (!anyOf(f.how, ch.how || [])) { return false; }
+    if (f.era.length) {
+      var e = eraOf(ch.founded);
+      if (!e || f.era.indexOf(e) < 0) { return false; }
+    }
+    if (f.faith === 'hide' && ch.faith) { return false; }
+    if (f.faith === 'only' && !ch.faith) { return false; }
+    if (f.completeOnly && ch.unverified) { return false; }
+    return true;
+  }
+
+  /** Charities currently "in play": they pass the filters and the player has not switched them off. */
+  function buildPool(charities, filters, excludedIds) {
+    var f = normalizeFilters(filters);
+    var excluded = {};
+    (excludedIds || []).forEach(function (id) { excluded[id] = true; });
+    return charities.filter(function (ch) { return !excluded[ch.id] && matchesFilters(ch, f); });
+  }
+
+  /** How many filter groups / values are active (drives the "Filters (3)" badge). */
+  function activeFilterCount(filters) {
+    var f = normalizeFilters(filters);
+    return f.causes.length + f.serves.length + f.where.length + f.how.length + f.era.length +
+      (f.faith !== 'any' ? 1 : 0) + (f.completeOnly ? 1 : 0);
+  }
+
+  /** Static counts per facet value across the whole roster, used for the numbers on filter chips. */
+  function facetCounts(charities) {
+    var out = { causes: {}, serves: {}, where: {}, how: {}, era: {}, faith: 0, unverified: 0 };
+    function bump(group, id) { out[group][id] = (out[group][id] || 0) + 1; }
+    charities.forEach(function (ch) {
+      (ch.causes || []).forEach(function (x) { bump('causes', x); });
+      (ch.serves || []).forEach(function (x) { bump('serves', x); });
+      (ch.where || []).forEach(function (x) { bump('where', x); });
+      (ch.how || []).forEach(function (x) { bump('how', x); });
+      var e = eraOf(ch.founded);
+      if (e) { bump('era', e); }
+      if (ch.faith) { out.faith += 1; }
+      if (ch.unverified) { out.unverified += 1; }
+    });
+    return out;
   }
 
   /**
@@ -128,25 +260,6 @@
       byId[it.charityId].hits += 1;
     });
     return order.map(function (id) { return byId[id]; });
-  }
-
-  /* ------------------------------------------------------------- pool logic */
-
-  /**
-   * Charities currently "in play": matches ANY selected cause (or every charity when none are
-   * selected), minus charities the player switched off.
-   */
-  function buildPool(charities, selectedCauses, excludedIds) {
-    var causeSet = {};
-    (selectedCauses || []).forEach(function (c) { causeSet[c] = true; });
-    var hasFilter = (selectedCauses || []).length > 0;
-    var excluded = {};
-    (excludedIds || []).forEach(function (id) { excluded[id] = true; });
-    return charities.filter(function (ch) {
-      if (excluded[ch.id]) { return false; }
-      if (!hasFilter) { return true; }
-      return ch.causes.some(function (c) { return causeSet[c]; });
-    });
   }
 
   /* ------------------------------------------------------------- XP / level */
@@ -192,7 +305,7 @@
     };
   }
 
-  /* ----------------------------------------------------------------- streak */
+  /* ------------------------------------------------------------ dates / streak */
 
   /** Local calendar day as "YYYY-MM-DD" (local time on purpose: a "day" is the player's day). */
   function dayKey(date) {
@@ -201,6 +314,9 @@
     var day = d.getDate();
     return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
   }
+
+  /** Local calendar month as "YYYY-MM". */
+  function monthKey(date) { return dayKey(date).slice(0, 7); }
 
   function daysBetween(a, b) {
     var pa = a.split('-').map(Number);
@@ -219,29 +335,143 @@
     return 1;
   }
 
+  /** The next date a weekly or monthly gift would go out (a monthly gift clamps to the end of short months). */
+  function nextGiftDate(frequency, from) {
+    var d = new Date(from.getTime());
+    if (frequency === 'weekly') { d.setDate(d.getDate() + 7); return d; }
+    var day = d.getDate();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + 1);
+    var last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day, last));
+    return d;
+  }
+
   /* ----------------------------------------------------------------- badges */
 
   /**
    * Badges. `test(state)` receives the saved state *after* the latest play was recorded.
-   * state: { totalCents, rounds, biggestCents, charitiesSeen[], causesSeen[], gamesPlayed[],
-   *          streak, bestStreak, jackpots, splits, usedStream }
+   * state: { totalCents, rounds, biggestCents, charitiesSeen[], causesSeen[], gamesPlayed[], gameCount,
+   *          streak, bestStreak, jackpots, splits, usedStream, directGifts, verifies, plans }
    */
   var BADGES = [
     { id: 'first',    name: 'First Give',       icon: 'heart',      desc: 'Complete your first round.',                 test: function (s) { return s.rounds >= 1; } },
     { id: 'explorer', name: 'Charity Explorer', icon: 'globe',      desc: 'Support 5 different charities.',             test: function (s) { return s.charitiesSeen.length >= 5; } },
     { id: 'collector',name: 'Cause Collector',  icon: 'layers',     desc: 'Give to 5 different causes.',                test: function (s) { return s.causesSeen.length >= 5; } },
-    { id: 'allgames', name: 'Arcade Regular',   icon: 'gamepad-2',  desc: 'Play all four games.',                       test: function (s) { return s.gamesPlayed.length >= 4; } },
+    { id: 'regular',  name: 'Arcade Regular',   icon: 'gamepad-2',  desc: 'Play 5 different games.',                    test: function (s) { return s.gamesPlayed.length >= 5; } },
+    { id: 'master',   name: 'Game Master',      icon: 'crown',      desc: 'Play every game in the lobby.',              test: function (s) { return s.gameCount > 0 && s.gamesPlayed.length >= s.gameCount; } },
     { id: 'split',    name: 'Split Decision',   icon: 'repeat',     desc: 'Split one gift across 3 or more rounds.',    test: function (s) { return s.splits >= 1; } },
     { id: 'jackpot',  name: 'Triple Threat',    icon: 'cherry',     desc: 'Land three matching reels on the slots.',    test: function (s) { return s.jackpots >= 1; } },
     { id: 'big',      name: 'Big Heart',        icon: 'hand-heart', desc: 'Give $100 or more in a single round.',       test: function (s) { return s.biggestCents >= 10000; } },
-    { id: 'hundred',  name: 'Century Club',     icon: 'crown',      desc: 'Reach $250 given in total.',                 test: function (s) { return s.totalCents >= 25000; } },
+    { id: 'hundred',  name: 'Century Club',     icon: 'gem',        desc: 'Reach $250 given in total.',                 test: function (s) { return s.totalCents >= 25000; } },
     { id: 'streak3',  name: 'On a Roll',        icon: 'flame',      desc: 'Give three days in a row.',                  test: function (s) { return s.bestStreak >= 3; } },
-    { id: 'streamer', name: 'Main Character',   icon: 'tv',         desc: 'Play in Stream Mode.',                       test: function (s) { return !!s.usedStream; } }
+    { id: 'streamer', name: 'Main Character',   icon: 'tv',         desc: 'Play in Stream Mode.',                       test: function (s) { return !!s.usedStream; } },
+    { id: 'direct',   name: 'Hand-Picked',      icon: 'target',     desc: 'Give directly to a charity you chose.',      test: function (s) { return s.directGifts >= 1; } },
+    { id: 'verifier', name: 'Trust, Verified',  icon: 'shield-check', desc: 'Verify a result in Fair Play.',            test: function (s) { return s.verifies >= 1; } },
+    { id: 'steady',   name: 'Steady Giver',     icon: 'calendar-days', desc: 'Set up a recurring gift.',                test: function (s) { return s.plans >= 1; } }
   ];
 
   /** Returns the ids of badges newly earned given `state` and the set already unlocked. */
   function newBadges(state, unlocked) {
     return BADGES.filter(function (b) { return !unlocked[b.id] && b.test(state); }).map(function (b) { return b.id; });
+  }
+
+  /* ------------------------------------------------- account & card checks */
+
+  /** Trims and checks an email address. This is a sanity check, not a deliverability check. */
+  function validateEmail(input) {
+    var v = String(input == null ? '' : input).trim();
+    if (!v) { return { ok: false, value: v, message: 'Enter your email address.' }; }
+    if (v.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) { return { ok: false, value: v, message: 'That email does not look right. Try name@example.com.' }; }
+    return { ok: true, value: v.toLowerCase(), message: '' };
+  }
+
+  /** Accepts "+1 (555) 123-4567" style input; needs 7 to 15 digits. Returns the cleaned "+digits" form. */
+  function validatePhone(input) {
+    var raw = String(input == null ? '' : input).trim();
+    if (!raw) { return { ok: false, value: raw, message: 'Enter your phone number.' }; }
+    if (/[^0-9+\-().\s]/.test(raw)) { return { ok: false, value: raw, message: 'Phone numbers can only contain digits, spaces and + - ( ).' }; }
+    var digits = raw.replace(/\D/g, '');
+    if (digits.length < 7 || digits.length > 15) { return { ok: false, value: raw, message: 'Enter a phone number with 7 to 15 digits.' }; }
+    return { ok: true, value: (raw.charAt(0) === '+' ? '+' : '') + digits, message: '' };
+  }
+
+  /** Strength meter for the sign-up form. `score` runs 0 to 4; `ok` means long enough and not trivially weak. */
+  function passwordStrength(pw) {
+    pw = String(pw == null ? '' : pw);
+    var checks = {
+      length: pw.length >= 8,
+      long: pw.length >= 12,
+      mixed: /[a-z]/.test(pw) && /[A-Z]/.test(pw),
+      digit: /\d/.test(pw),
+      symbol: /[^A-Za-z0-9]/.test(pw)
+    };
+    var common = /^(password|12345678|123456789|qwertyui|letmein|iloveyou|admin123)/i.test(pw);
+    var score = 0;
+    if (checks.length) { score += 1; }
+    if (checks.mixed) { score += 1; }
+    if (checks.digit || checks.symbol) { score += 1; }
+    if (checks.long) { score += 1; }
+    if (common || !checks.length) { score = Math.min(score, checks.length ? 1 : 0); }
+    var labels = ['Too short', 'Weak', 'Okay', 'Good', 'Strong'];
+    return { score: score, label: labels[score], checks: checks, ok: checks.length && !common && score >= 2 };
+  }
+
+  /** Luhn checksum, the check digit scheme card numbers use. */
+  function luhn(num) {
+    var digits = String(num).replace(/\D/g, '');
+    if (digits.length < 12) { return false; }
+    var sum = 0;
+    var alt = false;
+    for (var i = digits.length - 1; i >= 0; i--) {
+      var n = digits.charCodeAt(i) - 48;
+      if (alt) { n *= 2; if (n > 9) { n -= 9; } }
+      sum += n;
+      alt = !alt;
+    }
+    return sum % 10 === 0;
+  }
+
+  /** Card network from the leading digits. */
+  function cardBrand(num) {
+    var d = String(num).replace(/\D/g, '');
+    if (/^4/.test(d)) { return 'visa'; }
+    if (/^(5[1-5]|222[1-9]|22[3-9]\d|2[3-6]\d\d|27[01]\d|2720)/.test(d)) { return 'mastercard'; }
+    if (/^3[47]/.test(d)) { return 'amex'; }
+    if (/^(6011|65|64[4-9])/.test(d)) { return 'discover'; }
+    return 'card';
+  }
+
+  var BRAND_NAMES = { visa: 'Visa', mastercard: 'Mastercard', amex: 'American Express', discover: 'Discover', card: 'Card' };
+
+  /** Groups card digits for display: 4-4-4-4, or 4-6-5 for American Express. */
+  function formatCardNumber(num) {
+    var d = String(num).replace(/\D/g, '');
+    var brand = cardBrand(d);
+    if (brand === 'amex') { d = d.slice(0, 15); return [d.slice(0, 4), d.slice(4, 10), d.slice(10)].filter(Boolean).join(' '); }
+    d = d.slice(0, 19);
+    return d.replace(/(.{4})/g, '$1 ').trim();
+  }
+
+  /** "12/29" or "1229" -> {ok, month, year, message}. A card is valid through the end of its expiry month. */
+  function validateExpiry(input, now) {
+    var d = String(input == null ? '' : input).replace(/\D/g, '');
+    if (d.length !== 4) { return { ok: false, message: 'Use the MM/YY on the front of the card.' }; }
+    var month = parseInt(d.slice(0, 2), 10);
+    var year = 2000 + parseInt(d.slice(2), 10);
+    if (month < 1 || month > 12) { return { ok: false, message: 'Month must be between 01 and 12.' }; }
+    var ref = now || new Date();
+    var endOfMonth = new Date(year, month, 0, 23, 59, 59);
+    if (endOfMonth < ref) { return { ok: false, message: 'That card has expired.' }; }
+    if (year > ref.getFullYear() + 20) { return { ok: false, message: 'That expiry date looks too far away.' }; }
+    return { ok: true, month: month, year: year, message: '' };
+  }
+
+  function validateCvc(input, brand) {
+    var d = String(input == null ? '' : input).replace(/\D/g, '');
+    var need = brand === 'amex' ? 4 : 3;
+    if (d.length !== need) { return { ok: false, message: 'The security code has ' + need + ' digits.' }; }
+    return { ok: true, message: '' };
   }
 
   /* ----------------------------------------------------------------- misc */
@@ -257,11 +487,16 @@
   function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
   return {
-    toCents: toCents, fmtMoney: fmtMoney, splitCents: splitCents, validateAmount: validateAmount,
+    toCents: toCents, fmtMoney: fmtMoney, splitCents: splitCents, validateAmount: validateAmount, allowedRounds: allowedRounds,
     randomInt: randomInt, randomFloat: randomFloat, randomRange: randomRange, pickOne: pickOne, shuffle: shuffle,
-    sampleSubset: sampleSubset, plinkoPath: plinkoPath, buildPool: buildPool, mergeAllocations: mergeAllocations,
+    sampleSubset: sampleSubset, subsetWith: subsetWith, plinkoPath: plinkoPath, bracketOutcomes: bracketOutcomes,
+    ERA_IDS: ERA_IDS, eraOf: eraOf, emptyFilters: emptyFilters, normalizeFilters: normalizeFilters, matchesFilters: matchesFilters,
+    buildPool: buildPool, activeFilterCount: activeFilterCount, facetCounts: facetCounts, mergeAllocations: mergeAllocations,
     LEVELS: LEVELS, xpForPlay: xpForPlay, levelFor: levelFor,
-    dayKey: dayKey, daysBetween: daysBetween, nextStreak: nextStreak,
-    BADGES: BADGES, newBadges: newBadges, receiptId: receiptId, clamp: clamp
+    dayKey: dayKey, monthKey: monthKey, daysBetween: daysBetween, nextStreak: nextStreak, nextGiftDate: nextGiftDate,
+    BADGES: BADGES, newBadges: newBadges,
+    validateEmail: validateEmail, validatePhone: validatePhone, passwordStrength: passwordStrength,
+    luhn: luhn, cardBrand: cardBrand, BRAND_NAMES: BRAND_NAMES, formatCardNumber: formatCardNumber, validateExpiry: validateExpiry, validateCvc: validateCvc,
+    receiptId: receiptId, clamp: clamp
   };
 });
