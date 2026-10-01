@@ -178,8 +178,13 @@
           <button type="button" role="radio" aria-checked="false" data-season="winter"><svg class="ss-ico" aria-hidden="true" viewBox="0 0 80 110"><use href="#fir"/></svg><span data-t="t24615d93" class="ss-name">Winter</span></button>
         </div>
         <p data-t="tfec31dfd" class="hand hero-kicker">Welcome to Wise Acres!</p>
-        <h1 data-t="t13189526" id="hero-h">Organic <span class="hl">u-pick</span> fun for the whole family</h1>
-        <p data-t="t7affc7af" class="hero-sub">Pick strawberries in spring, blueberries and sunflowers in summer, and pumpkins, tomatoes and basil in fall &mdash; on our family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
+        <h1 id="hero-h"><span data-t="t13189526" data-only="spring summer fall">Organic <span class="hl">u-pick</span> fun for the whole family</span><span data-t="tc1fd8535" data-only="winter" hidden>Wise Acres <span class="hl">Christmas trees</span></span></h1>
+        <!-- One line per season (hero.js shows the current one). The first is what visitors without JavaScript see. -->
+        <p data-t="t7affc7af" class="hero-sub" data-only="no-js">Pick strawberries in spring, blueberries and sunflowers in summer, and pumpkins, tomatoes and basil in fall &mdash; on our family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
+        <p data-t="ta83368b3" class="hero-sub" data-only="spring" hidden>It&rsquo;s strawberry season! Pick juicy organic strawberries, cut flowers to take home and meet the animals, on our family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
+        <p data-t="t37504198" class="hero-sub" data-only="summer" hidden>It&rsquo;s blueberry season! Fill a bucket with organic blueberries, then cut your own sunflowers and flowers, on our family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
+        <p data-t="td1807783" class="hero-sub" data-only="fall" hidden>It&rsquo;s pumpkin season! Pick pumpkins, plus new u-pick organic tomatoes and basil, with wagon rides and a haunted trail, on our family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
+        <p data-t="tb7f044e8" class="hero-sub" data-only="winter" hidden>Pick out a North Carolina Christmas tree at The GreenHouse next door, starting the Friday after Thanksgiving. Wise Acres is a family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
         <div class="hero-cta">
           <a data-t="tdcd8d557" class="btn btn-red btn-lg" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your visit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
           <a data-t="t38a1d40a" class="btn btn-white btn-lg" href="#seasons">See what&rsquo;s in season</a>

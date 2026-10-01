@@ -166,26 +166,26 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 .hero-cta .btn::after{content:"";position:absolute;top:-30%;bottom:-30%;left:-70%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.8),transparent);transform:skewX(-20deg);opacity:0;pointer-events:none}
 .hero-cta .btn .ico{transition:transform .25s}
 @keyframes btnShine{0%{left:-70%;opacity:1}100%{left:140%;opacity:1}}
-@keyframes btnRing{0%{box-shadow:0 14px 0 var(--ink),0 24px 34px rgba(58,36,22,.34),0 0 0 0 rgba(255,201,40,.9)}100%{box-shadow:0 14px 0 var(--ink),0 24px 34px rgba(58,36,22,.34),0 0 0 26px rgba(255,201,40,0)}}
-@keyframes arrowDash{0%,100%{transform:translateX(0) scale(1.25)}50%{transform:translateX(14px) scale(1.55)}}
+@keyframes btnRing{0%{box-shadow:0 9px 0 var(--ink),0 16px 24px rgba(58,36,22,.28),0 0 0 0 rgba(255,201,40,.85)}100%{box-shadow:0 9px 0 var(--ink),0 16px 24px rgba(58,36,22,.28),0 0 0 16px rgba(255,201,40,0)}}
+@keyframes arrowDash{0%,100%{transform:translateX(0) scale(1.1)}50%{transform:translateX(7px) scale(1.3)}}
 @media (hover:hover){
-  .hero-cta .btn:hover{transform:translateY(-7px) scale(1.16) rotate(-2.4deg);box-shadow:0 14px 0 var(--ink),0 24px 34px rgba(58,36,22,.34);animation:btnRing .9s ease-out infinite}
-  .hero-cta .btn:nth-child(even):hover{transform:translateY(-7px) scale(1.16) rotate(2.4deg)}
+  .hero-cta .btn:hover{transform:translateY(-4px) scale(1.07) rotate(-1.2deg);box-shadow:0 9px 0 var(--ink),0 16px 24px rgba(58,36,22,.28);animation:btnRing .9s ease-out infinite}
+  .hero-cta .btn:nth-child(even):hover{transform:translateY(-4px) scale(1.07) rotate(1.2deg)}
   .hero-cta .btn:hover::after{animation:btnShine .75s ease-out .05s}
   .hero-cta .btn:hover .ico{animation:arrowDash .8s ease-in-out infinite}
 }
-.hero-cta .btn:focus-visible{transform:translateY(-5px) scale(1.1)}
+.hero-cta .btn:focus-visible{transform:translateY(-3px) scale(1.05)}
 .hero-cta .btn:active{transform:translateY(3px) scale(.96);box-shadow:0 1px 0 var(--ink);animation:none}
 
-@keyframes chipWiggle{0%,100%{transform:scale(1.24) rotate(-3.5deg)}25%{transform:scale(1.3) rotate(3.5deg)}50%{transform:scale(1.24) rotate(-3.5deg)}75%{transform:scale(1.3) rotate(3.5deg)}}
-@keyframes leafSwing{0%,100%{transform:rotate(-24deg) scale(1.35)}50%{transform:rotate(24deg) scale(1.6)}}
-@keyframes chipGlow{0%{box-shadow:0 0 0 0 rgba(229,51,75,.7),0 8px 0 rgba(58,36,22,.25)}100%{box-shadow:0 0 0 18px rgba(229,51,75,0),0 8px 0 rgba(58,36,22,.25)}}
+@keyframes chipWiggle{0%,100%{transform:scale(1.08) rotate(-2.2deg)}25%{transform:scale(1.12) rotate(2.2deg)}50%{transform:scale(1.08) rotate(-2.2deg)}75%{transform:scale(1.12) rotate(2.2deg)}}
+@keyframes leafSwing{0%,100%{transform:rotate(-16deg) scale(1.15)}50%{transform:rotate(16deg) scale(1.3)}}
+@keyframes chipGlow{0%{box-shadow:0 0 0 0 rgba(229,51,75,.6),0 5px 0 rgba(58,36,22,.22)}100%{box-shadow:0 0 0 12px rgba(229,51,75,0),0 5px 0 rgba(58,36,22,.22)}}
 .chips .chip-new,.choose-new{transition:transform .3s cubic-bezier(.3,1.9,.5,1),background-color .2s}
 .choose-new{display:flex;transform-origin:left center}
 @media (hover:hover){
   .chips .chip-new:hover{animation:chipWiggle .9s ease-in-out infinite,chipGlow 1s ease-out infinite;background:#ffe066;z-index:2;position:relative}
   .chips .chip-new:hover .ico{animation:leafSwing .9s ease-in-out infinite;color:var(--red)}
-  .choose-new:hover{transform:scale(1.07) rotate(-1deg);animation:chipGlow 1s ease-out infinite}
+  .choose-new:hover{transform:scale(1.035);animation:chipGlow 1s ease-out infinite}
   .choose-new:hover .choose-new-badge{animation:chipWiggle .8s ease-in-out infinite;display:inline-block}
   .choose-new:hover .ico{animation:arrowDash .8s ease-in-out infinite}
 }
@@ -235,17 +235,17 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 /* "No reservation? Visit The GreenHouse": the pill lifts, wobbles, glows green and shines; click squashes it and sprays leaves. */
 .hero-note{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .38s cubic-bezier(.3,1.9,.5,1),background-color .25s,box-shadow .3s}
 .hero-note .ico{transition:transform .25s}
-@keyframes noteWiggle{0%,100%{rotate:-1.8deg}50%{rotate:1.8deg}}
-@keyframes noteRing{0%{box-shadow:0 7px 0 var(--ink),0 0 0 0 rgba(67,160,71,.8)}100%{box-shadow:0 7px 0 var(--ink),0 0 0 22px rgba(67,160,71,0)}}
+@keyframes noteWiggle{0%,100%{rotate:-1deg}50%{rotate:1deg}}
+@keyframes noteRing{0%{box-shadow:0 5px 0 var(--ink),0 0 0 0 rgba(67,160,71,.75)}100%{box-shadow:0 5px 0 var(--ink),0 0 0 14px rgba(67,160,71,0)}}
 @keyframes noteShine{0%{background-position:150% 0}100%{background-position:-60% 0}}
-@keyframes noteArrow{0%,100%{transform:translateX(0) scale(1.2)}50%{transform:translateX(8px) scale(1.5)}}
+@keyframes noteArrow{0%,100%{transform:translateX(0) scale(1.1)}50%{transform:translateX(5px) scale(1.3)}}
 @keyframes notePop{
   0%{transform:none}
-  14%{transform:translateY(4px) scale(1.2,.8)}
-  42%{transform:translateY(-20px) scale(.94,1.16)}
-  66%{transform:translateY(0) scale(1.12,.9)}
-  84%{transform:scale(.98,1.03)}
-  100%{transform:translateY(-3px) scale(1.1)}
+  14%{transform:translateY(3px) scale(1.12,.88)}
+  42%{transform:translateY(-14px) scale(.96,1.1)}
+  66%{transform:translateY(0) scale(1.07,.94)}
+  84%{transform:scale(.99,1.02)}
+  100%{transform:translateY(-2px) scale(1.05)}
 }
 @keyframes noteBit{
   0%{opacity:1;transform:translate(0,0) scale(.3) rotate(0)}
@@ -253,7 +253,7 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
   100%{opacity:0;transform:translate(var(--x),calc(var(--y) + 26px)) scale(.9) rotate(var(--r))}
 }
 @media (hover:hover){
-  .hero-note:hover{transform:translateY(-6px) scale(1.14);background-color:#e2f6d3;background-image:linear-gradient(100deg,transparent 38%,rgba(255,255,255,.95) 50%,transparent 62%);background-size:260% 100%;box-shadow:0 7px 0 var(--ink);animation:noteWiggle .9s ease-in-out infinite,noteRing 1s ease-out infinite,noteShine .9s ease-out infinite;z-index:2}
+  .hero-note:hover{transform:translateY(-3px) scale(1.06);background-color:#e2f6d3;background-image:linear-gradient(100deg,transparent 38%,rgba(255,255,255,.95) 50%,transparent 62%);background-size:260% 100%;box-shadow:0 5px 0 var(--ink);animation:noteWiggle .9s ease-in-out infinite,noteRing 1s ease-out infinite,noteShine .9s ease-out infinite;z-index:2}
   .hero-note:hover a{text-decoration-thickness:3px;text-decoration-color:var(--green,#2e8b57)}
   .hero-note:hover .ico{animation:noteArrow .8s ease-in-out infinite}
 }

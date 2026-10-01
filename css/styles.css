@@ -148,7 +148,7 @@ svg.layer-fore{overflow:visible}
 .hero h1{font-size:clamp(2.35rem,6.2vw,4.7rem);letter-spacing:-.01em;text-shadow:0 3px 0 rgba(255,255,255,.55)}
 .hl{position:relative;white-space:nowrap;z-index:0}
 .hl::before{content:"";position:absolute;left:-.1em;right:-.1em;bottom:.02em;height:.42em;background:var(--sun);border-radius:.3em;transform:rotate(-1.4deg);z-index:-1}
-.hero-sub{font-size:clamp(1.05rem,1.6vw,1.28rem);font-weight:600;max-width:660px;margin:.9em auto 1.3em;color:#3a2416}
+.hero-sub{font-size:clamp(1.02rem,1.5vw,1.2rem);font-weight:600;max-width:700px;margin:.9em auto 1.3em;color:#3a2416;text-wrap:balance;text-shadow:0 0 8px rgba(255,255,255,.8),0 0 2px rgba(255,255,255,.9)}
 .hero-cta{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;pointer-events:auto}
 .chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 10px;margin-top:1.4em}
 .chips li{display:inline-flex;align-items:center;gap:.4em;background:rgba(255,255,255,.85);border:2.5px solid var(--ink);border-radius:999px;padding:.3em .85em .3em .6em;font:600 .93rem/1.2 var(--display)}
