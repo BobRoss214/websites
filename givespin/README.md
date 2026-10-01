@@ -311,7 +311,7 @@ cause and filter).
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 ```
 
-About 720 end-to-end checks in headless Chromium (needs Playwright installed globally). They start their own static
+About 725 end-to-end checks in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
 the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board, the big Roulette wheel and the Plinko camera, backing a charity, live tables (including the seven Plinko table sizes) (stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, filters checked
 against an independent computation, the charity directory and profiles, direct gifts, repeat plans and dedications,

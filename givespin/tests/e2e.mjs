@@ -1351,7 +1351,7 @@ if (section('13g. Live extras: events, sponsor match, jackpot, last call, all-in
   });
   check(res.bonus.match === Math.min(200, res.pot) && res.bonus.total === res.bonus.match, 'the sponsor match is the pot up to its cap', res.bonus);
   const text = await p2.locator('#lt-result').innerText();
-  check(text.includes('takes the pot: $' + (res.pot + res.bonus.total)) && text.includes('matched') && text.includes('simulated'), 'the result shows the matched total and says the sponsor is simulated');
+  check(text.includes('takes the pot: $' + (res.pot + res.bonus.total).toLocaleString('en-US')) && text.includes('matched') && text.includes('simulated'), 'the result shows the matched total and says the sponsor is simulated', { text, pot: res.pot, bonus: res.bonus });
   const truth = { big: res.pot >= 500, upset: res.winShare < 0.25, leader: res.winner === res.leader };
   const guess = { big: true, upset: false, leader: true };
   check(res.pred.rows.length === 3 && res.pred.rows.every((x) => x.right === (guess[x.key] === truth[x.key])), 'each side prediction is scored against what happened', res.pred);
