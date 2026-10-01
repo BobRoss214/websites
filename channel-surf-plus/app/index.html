@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Channel Surf Plus</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='12' width='56' height='40' rx='6' fill='%230b1f6b' stroke='%23ffd23f' stroke-width='4'/%3E%3Cpath d='M22 4l10 8 10-8' stroke='%23ffd23f' stroke-width='4' fill='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/tv.css">
+</head>
+<body>
+<div id="stageWrap">
+  <div id="stage">
+    <div id="screen" data-mode="off">
+      <div id="band"></div>
+      <div id="guide" hidden></div>
+      <div id="pages" hidden></div>
+      <div id="card" hidden></div>
+      <div id="picWrap" class="off"><div id="player"></div></div>
+      <div id="wincard" hidden></div>
+      <canvas id="snow" width="320" height="180" hidden></canvas>
+      <div id="toast" class="bevel" hidden></div>
+      <div id="power">
+        <button id="turnOn" type="button" aria-label="Turn on the TV">
+          <span class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg></span>
+          Turn on the TV
+          <small>or press any button on the remote</small>
+        </button>
+        <div class="boxfront"><div class="name">CHANNEL SURF<small>DIGITAL CABLE</small></div><div class="sp"></div><div class="ledwin"><div id="led"></div></div><span class="lamp"></span></div>
+        <p class="demo-note" id="demoNote" hidden>Practice channels. To watch real YouTube, press MENU, then Setup.</p>
+      </div>
+      <div id="crt"></div>
+    </div>
+    <div id="remote" class="remote" hidden></div>
+  </div>
+</div>
+<noscript>Channel Surf needs JavaScript turned on.</noscript>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
