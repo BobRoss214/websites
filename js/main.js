@@ -96,6 +96,34 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * Zoom: any photo or link marked data-zoom opens in the photo viewer
+   * ------------------------------------------------------------------ */
+  function initZoom() {
+    const targets = $$('[data-zoom]');
+    if (!targets.length) return;
+    let box = $('#lightbox');
+    if (!box) {
+      box = doc.createElement('dialog');
+      box.className = 'lightbox'; box.id = 'lightbox'; box.setAttribute('aria-label', t('Photo viewer'));
+      box.innerHTML = '<form method="dialog"><button class="lightbox-close" type="submit" aria-label="' + t('Close photo') + '"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button></form><img id="lightbox-img" alt=""><p id="lightbox-cap"></p>';
+      doc.body.appendChild(box);
+      box.addEventListener('click', (e) => { if (e.target === box) box.close(); });
+    }
+    const img = $('#lightbox-img', box), cap = $('#lightbox-cap', box);
+    const show = (src, alt, caption) => { img.src = src; img.alt = alt || ''; cap.textContent = caption || ''; box.showModal(); };
+    targets.forEach((el) => {
+      if (el.tagName === 'IMG') {
+        el.tabIndex = 0; el.setAttribute('role', 'button');
+        const open = () => { const fc = el.closest('figure') && el.closest('figure').querySelector('figcaption'); show(el.currentSrc || el.src, el.alt, fc ? fc.textContent : ''); };
+        el.addEventListener('click', open);
+        el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+      } else {
+        el.addEventListener('click', (e) => { e.preventDefault(); show(el.href, el.textContent.trim(), ''); });
+      }
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
    * Navigation (mobile menu + scroll-spy)
    * ------------------------------------------------------------------ */
   function initNav() {
@@ -315,6 +343,10 @@
     grow(0, use('strawberry', 388, 236, 62, 70, 'transform="rotate(10 419 271)"')) +
     grow(1, use('strawberry', 436, 280, 46, 52, 'transform="rotate(-14 459 306)"')) +
     grow(2, use('strawberry', 346, 286, 40, 45, 'transform="rotate(18 366 308)"'));
+  const stickersFall = () =>
+    grow(0, use('pumpkin', 6, 262, 92, 78)) +
+    grow(1, use('pumpkin-w', 392, 268, 70, 59)) +
+    grow(2, use('pumpkin-b', 330, 286, 56, 47));
   const stickersSummer = () =>
     grow(0, use('sunflower', 4, 232, 104, 104)) +
     grow(1, use('blueberry', 380, 246, 76, 78)) +
@@ -340,7 +372,7 @@
     if (!tabs.length) return;
     const panels = $$('.season-panel');
     const builders = { spring: sceneSpring, summer: sceneSummer, fall: sceneFall, winter: sceneWinter };
-    const stickers = { spring: stickersSpring, summer: stickersSummer };
+    const stickers = { spring: stickersSpring, summer: stickersSummer, fall: stickersFall };
     $$('.scene-card').forEach((card) => {
       const key = card.dataset.scene;
       const photo = card.classList.contains('has-photo');
@@ -582,6 +614,7 @@
   /* ------------------------------------------------------------------ */
   initPrint();
   initGallery();
+  initZoom();
   initReviews();
   initNav();
   initReveal();

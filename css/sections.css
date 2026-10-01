@@ -78,9 +78,9 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
 .included,.addons{margin-top:26px;background:#fff;border:3px solid var(--ink);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow)}
 .included h4,.addons h4{margin-bottom:.6em}
 .ticks-cols{display:grid;grid-template-columns:repeat(2,1fr);gap:0 28px}
-.addon-list{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:1em}
-.addon-list li{display:flex;align-items:center;gap:14px;background:var(--cream);border:2.5px solid var(--ink);border-radius:18px;padding:14px}
-.addon-art{flex:none;width:auto;height:52px;aspect-ratio:1}
+.addon-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:1em}
+.addon-list li{display:flex;flex-direction:column;align-items:flex-start;gap:10px;background:var(--cream);border:2.5px solid var(--ink);border-radius:18px;padding:14px}
+.addon-art{flex:none;width:auto;height:64px;max-width:100%;aspect-ratio:var(--ar,1)}
 .addon-list li>span{display:flex;flex-direction:column;line-height:1.3;min-width:0}
 .addon-price{font:700 1.15rem/1.2 var(--display);color:var(--red-deep)}
 .addon-note{font-size:.88rem;font-weight:600;color:var(--ink-soft)}

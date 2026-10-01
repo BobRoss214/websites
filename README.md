@@ -109,18 +109,36 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Phone number / Facebook** | Not shown (the pages you pasted list email only). Instagram accounts are linked. |
 | **Christmas trees** | Friday after Thanksgiving to early December, at The GreenHouse. |
 | **Tomatoes & basil** | The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree. Give us the right number and we'll state it. |
-| **Reviews & extra photos** | The reviews section is built but empty. It needs real quotes (with permission) from you; extra farm photos need to be uploaded as files to `assets/photos/` on the branch. |
+| **Reviews** | The reviews section is built but empty. It needs real quotes (with permission) from you. |
 | **Farm map** | Waiting on the annotated Google Earth screenshot. The first-visit page still has draft notes for parking and check-in until then. |
+
+## Photos
+
+All 19 farm photos are in `assets/photos/`, plus the printed Fall Menu 2026 (`wise-pie-fall-menu-2026.webp`).
+They appear in the photo gallery (every one), and in context: season panels (spring, summer, fall photo strips),
+the flowers collage, "Meet the goats" at The GreenHouse, the Wise Pie section ("View the printed menu" opens the
+menu image) and the pumpkin, strawberry and Wise Pie pages. Tap any photo to enlarge it.
+
+To add more, drop files into `assets/photos/` and list them in `js/content.js`:
+
+```js
+photos: [
+  { src: "assets/photos/example.jpg", alt: "Describe the photo", caption: "Optional caption" },
+],
+```
+
+Then run `python3 tools/i18n.py extract && python3 tools/i18n.py missing es --list` (and hi, zh, vi) to see the new
+alt text and captions that still need translating.
 
 ## What's interactive
 
-- **Seasonal hero:** the first screen shows the season the farm is in today. **Fall:** pumpkin patch (tap to pick), a tractor pulling a wagon of kids, scarecrow, crow, hay bales, falling leaves. **Winter:** Christmas trees to light, campfires to stoke, a snowman, snow. **Summer:** blueberry bushes to pick, bees, sunflowers to snip. **Spring:** strawberries to pick, a small tractor with crates, kids picking. A "See the farm in…" switcher changes the season, the Seasons tabs and the u-pick card colour.
+- **Seasonal hero:** the first screen shows the season the farm is in today. A red, open tractor (no cab) pulls the wagon ride past the fields in **spring, summer and fall**: riders sit behind the side boards and wave (no hay: it is a wagon ride). **Fall:** pumpkin patch (tap to pick), a little barrel train on the far lane, scarecrow, crow, falling leaves. **Winter:** Christmas trees to light, campfires to stoke, a snowman, snow. **Summer:** blueberry bushes to pick, bees, sunflowers to snip. **Spring:** strawberries to pick, kids picking in the rows. A "See the farm in…" switcher changes the season, the Seasons tabs and the u-pick card colour.
 - **Seasonal touches elsewhere:** the top bar says what is in season; dividers and the footer scene change with the season.
 - **Open now** badges, a **notice bar**, and a **next-season countdown** with an email sign-up.
 - **Growing vine** under the header shows scroll progress.
 - **Visit steps:** a tractor drives along a road as you scroll.
 - **Seasons** tabs, **week strips**, **farm-year calendar** with a "Today" marker, **group tabs** with deep links.
-- **Bouquet builder**, tappable goat, FAQ accordion, tomato variety filter, photo viewer.
+- **Bouquet builder**, tappable goat, FAQ accordion, tomato variety filter, photo viewer (tap any photo).
 - **First-visit guide** with a printable "what to bring" checklist (remembers what you ticked).
 - Mobile: hamburger menu and a sticky **Reserve / Directions / Email** bar.
 
@@ -130,5 +148,5 @@ keyboard navigable.
 ## Notes
 
 - Colors, fonts and spacing live in the `:root` tokens at the top of `css/styles.css`.
-- Illustrations are an inline SVG sprite at the bottom of `index.html` (`<symbol id="strawberry">` etc.).
+- Illustrations are an inline SVG sprite at the bottom of `index.html` (`<symbol id="strawberry">` etc.). The tractor, wagon and barrel train are drawn in `js/hero.js` (`tractorOpen`, `wagonArt`, `barrelTrain`) and copied into the sprite as static icons.
 - The "USDA Certified Organic" chip is plain text, not the official USDA seal.

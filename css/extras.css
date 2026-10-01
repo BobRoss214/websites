@@ -137,3 +137,26 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 .first-time{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.4em .6em;max-width:760px;margin:0 auto 28px;padding:.7em 1.2em;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--ink);font-weight:700;text-align:center}
 .first-time .ico{width:1.3em;height:1.3em;color:var(--red)}
 .footer-guides{margin-top:1.2em}
+
+/* Photo strips: small framed photos that open in the viewer when tapped */
+.photo-strip{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:14px}
+.photo-strip li{margin:0;flex:1 1 150px;max-width:230px}
+.photo-strip figure{margin:0;background:#fff;padding:7px 7px 9px;border:3px solid var(--ink);border-radius:14px;box-shadow:0 5px 0 rgba(58,36,22,.22);rotate:var(--r,0deg);transition:rotate .25s,transform .25s}
+.photo-strip li:nth-child(odd) figure{--r:-1.6deg}
+.photo-strip li:nth-child(even) figure{--r:1.4deg}
+.photo-strip figure:hover{rotate:0deg;transform:scale(1.03)}
+.photo-strip img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:#eee;cursor:zoom-in}
+.photo-strip figcaption{margin-top:6px;text-align:center;font:700 1.15rem/1.1 var(--hand);color:var(--ink-soft)}
+.season-pics li{flex:1 1 110px;max-width:170px}
+.goat-strip,.pizza-photo{justify-content:center}
+.goat-strip li{flex:1 1 190px;max-width:250px}
+.goat-strip img{aspect-ratio:1/1}
+.pizza-photo li{flex:1 1 300px;max-width:420px}
+.gh-goats{text-align:center;padding-top:34px}
+.gh-goats h3{font-size:clamp(1.5rem,3vw,2.1rem);margin-bottom:4px}
+.menu-head .btn{margin-left:auto}
+.collage{flex-wrap:wrap}
+.collage .polaroid{width:min(31%,220px)}
+.pol-c{--r:-2.5deg;margin-top:14px}
+@media (max-width:760px){.collage .polaroid{width:46%}.photo-strip li{flex-basis:130px}.goat-strip li{flex-basis:140px}}
+.polaroid img{height:auto}
