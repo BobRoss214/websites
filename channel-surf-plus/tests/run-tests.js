@@ -195,10 +195,22 @@ async function testImport(browser) {
   await ctx.close();
 }
 
+async function testBlockedSound(browser) {
+  console.log('\n— A browser that blocks sound —');
+  const { ctx, page } = await open(browser, seeded());
+  await page.evaluate(() => { window.__blockSound = true; });
+  await page.key('Enter', 400);
+  const ok = await page.until(() => channelSurf.tv.pstate === 'playing' && channelSurf.tv.muted, 20000);
+  check('if sound is blocked, the TV starts muted instead of freezing', ok, JSON.stringify(await page.st()));
+  check('…and tells the viewer to press MUTE for sound', await page.until(() => /MUTE to turn the sound on/i.test(document.getElementById('band').textContent), 5000));
+  check('no script errors', page.errors.length === 0, page.errors.join(' | '));
+  await ctx.close();
+}
+
 (async () => {
   await new Promise(r => server.listen(PORT, '127.0.0.1', r));
   const browser = await chromium.launch();
-  try { await testKeys(browser); await testLineups(browser); await testBrowse(browser); await testImport(browser); }
+  try { await testKeys(browser); await testLineups(browser); await testBrowse(browser); await testImport(browser); await testBlockedSound(browser); }
   catch (e) { fail++; console.log('FAIL test run crashed: ' + e.stack); }
   await browser.close(); server.close();
   console.log(`\n${pass} passed, ${fail} failed`);

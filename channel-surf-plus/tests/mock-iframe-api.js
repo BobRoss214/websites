@@ -22,6 +22,7 @@
     const scale = stage.getBoundingClientRect().width / stage.offsetWidth;
     log.push({ ev: 'play', id: this.vid, visible: !wrap.classList.contains('off') && getComputedStyle(wrap).visibility !== 'hidden', w: r.width / scale, h: r.height / scale });
     if (!this.vid) return;
+    if (window.__blockSound && !this.muted) return; // like a browser that blocks autoplay with sound
     const id = this.vid;
     if (/gone/.test(id)) { setTimeout(() => this._err(100), 200); return; }
     if (/noemb/.test(id)) { setTimeout(() => this._err(150), 200); return; }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect x="8" y="26" width="112" height="82" rx="14" fill="#0b1f6b" stroke="#ffd23f" stroke-width="6"/>
+  <rect x="20" y="38" width="88" height="58" rx="8" fill="#13308f"/>
+  <path d="M44 6l20 18 20-18" fill="none" stroke="#ffd23f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="64" y="80" text-anchor="middle" font-family="Arial Narrow, sans-serif" font-weight="800" font-size="40" fill="#ffd23f">CH</text>
+  <rect x="34" y="110" width="12" height="10" rx="2" fill="#ffd23f"/><rect x="82" y="110" width="12" height="10" rx="2" fill="#ffd23f"/>
+</svg>

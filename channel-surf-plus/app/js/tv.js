@@ -43,6 +43,7 @@ export class TV {
     if (this.busy) return;
     if (this.on) return this.off();
     this.on = true; this.busy = true; clearTimeout(this.offTimer); this.offAnim = false;
+    this.keepAwake();
     Sound.init(); Sound.powerOn();
     const scr = app.screen.el.screen; scr.dataset.anim = 'on';
     this.setView('boot');
@@ -60,10 +61,15 @@ export class TV {
   off() {
     this.leaveVod(); this.on = false; this.token++; this.want = false; clearTimeout(this.wd); clearTimeout(this.dt); this.digits = '';
     this.player.stop(); this.loaded = null; this.preview = false; this.source = 'live'; this.vod = null;
-    Sound.powerOff(); Sound.tone(false);
+    Sound.powerOff(); Sound.tone(false); try { this.lock && this.lock.release(); } catch {} this.lock = null;
     app.screen.closePages(true); app.screen.unband(true);
     const scr = app.screen.el.screen; scr.dataset.anim = 'off'; this.view = 'black'; this.offAnim = true; app.screen.sync();
     this.offTimer = setTimeout(() => { scr.dataset.anim = ''; this.offAnim = false; this.view = 'none'; app.screen.sync(); }, reducedMotion() ? 300 : 850);
+  }
+  // ask the computer not to dim or sleep the screen while the TV is on
+  async keepAwake() {
+    try { if ('wakeLock' in navigator && !this.lock) { this.lock = await navigator.wakeLock.request('screen'); this.lock.addEventListener('release', () => { this.lock = null; }); } } catch {}
+    if (!this.wakeBound) { this.wakeBound = true; document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && this.on) this.keepAwake(); }); }
   }
   applyAudio() { this.player.volume(S.tv.volume); this.player.mute(this.muted); this.player.captions(S.tv.cc, S.tv.bigText); }
   problem(title, sub) { this.problemTitle = title; this.problemSub = sub; this.setView('problem'); }
@@ -262,6 +268,12 @@ export class TV {
   stalled(tok, id) {
     if (tok !== this.token || !this.loaded || this.loaded.id !== id) return;
     if (['playing', 'paused', 'ended'].includes(this.pstate) || !this.shown) return;
+    if (['cued', 'unstarted'].includes(this.pstate) && !this.mutedStart && navigator.onLine !== false) {
+      // it never even started buffering: the browser probably blocked sound. Start muted instead.
+      this.mutedStart = true; this.muted = true; this.player.mute(true); this.player.play(); this.armWatchdog();
+      setTimeout(() => app.screen.band('message', { text: 'Press MUTE to turn the sound on' }, 6000), 1500);
+      return;
+    }
     this.stalls++;
     if (navigator.onLine === false || this.stalls >= 3) return this.noSignal();
     if (this.retried !== id) {

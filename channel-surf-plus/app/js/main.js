@@ -33,8 +33,10 @@ import * as setup from './pages/setup.js';
   app.screen.sync();
 
   // the browser's Back button (and a Fire TV remote's Back) works like BACK
-  history.replaceState({ cs: 0 }, ''); history.pushState({ cs: 1 }, '');
-  addEventListener('popstate', () => { history.pushState({ cs: 1 }, ''); app.tv.press('back'); });
+  try {
+    history.replaceState({ cs: 0 }, ''); history.pushState({ cs: 1 }, '');
+    addEventListener('popstate', () => { try { history.pushState({ cs: 1 }, ''); } catch {} app.tv.press('back'); });
+  } catch {}
   addEventListener('beforeunload', () => { app.tv.leaveVod(); save(true); flush(); });
   // keep channels fresh while the TV stays on all day
   setInterval(() => { if (app.tv.on) L.refreshAll(app.tv.ch.id); }, 30 * 60e3);
