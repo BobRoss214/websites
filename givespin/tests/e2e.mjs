@@ -1172,9 +1172,12 @@ if (section('13d. Live tables: a round, the whole pot to the winner, and a fair 
       weights: res.weights, tickets: res.weights.reduce((s, w) => s + w[1], 0), balance: GS.store.balance(), plays: GS.store.get().plays, liveRounds: GS.store.get().liveRounds, liveWins: GS.store.get().liveWins,
       badges: Object.keys(GS.store.get().badges), pending: GS.store.get().pending.length, monthly: GS.store.get().monthly.cents, xp: GS.store.get().xp,
       // read in the same instant as the rest: the table moves on to its next round ten seconds after the result
-      marks: document.querySelectorAll('#livepanel .odd.is-winner').length, text: document.querySelector('#lt-result').innerText
+      marks: document.querySelectorAll('#livepanel .odd.is-winner').length, text: document.querySelector('#lt-result').innerText,
+      // the table's own round timer is the only clock that is stopped here: the steps below take longer than ten seconds on a busy machine
+      held: (room._clearTimers(), room.phase)
     };
   });
+  check(r.held === 'result', 'the result is on screen while it is checked', r.held);
   check(r.shown[0] === r.winner, 'the race on screen ends on the charity the draw picked', r);
   check(r.tickets === r.pot, 'the tickets in the draw are the dollars in the pot', [r.tickets, r.pot]);
   check(JSON.stringify(r.histAlloc) === JSON.stringify([[r.winner, 2000]]), 'your stake is allocated to the winning charity, even if you backed another', r.histAlloc);
@@ -1191,7 +1194,8 @@ if (section('13d. Live tables: a round, the whole pot to the winner, and a fair 
   await page.click('#lt-result .rs-fair > summary');
   await page.click('#lt-result [data-role="verify"]');
   await page.waitForSelector('#lt-result .vfy li');
-  check(await page.locator('#lt-result .vfy li.is-ok').count() === 3 && (await page.locator('#lt-result .vfy').innerText()).includes('pot matches'), 'the live round verifies (hash, pot and winner)');
+  const vfy = await page.evaluate(() => ({ ok: document.querySelectorAll('#lt-result .vfy li.is-ok').length, bad: document.querySelectorAll('#lt-result .vfy li.is-bad').length, text: (document.querySelector('#lt-result .vfy') || {}).innerText || '', phase: GS.live.room('derby').phase }));
+  check(vfy.ok === 3 && vfy.text.includes('pot matches'), 'the live round verifies (hash, pot and winner)', vfy);
   // tampering with the pot makes verification fail
   const tamper = await page.evaluate(async () => {
     const f = JSON.parse(JSON.stringify(GS.store.get().history[0].fair));
