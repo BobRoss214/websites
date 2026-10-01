@@ -2,7 +2,8 @@
 // playlists, comments, and "make this a TV channel".
 import { app } from '../app.js';
 import { S, save, toggleList, inList } from '../store.js';
-import { esc, ago, shortNum, lengthText, fmtDate, titleCase, hms } from '../util.js';
+import { esc, ago, shortNum, lengthText, fmtDate, titleCase, hms, chapters } from '../util.js';
+import { qrSVG } from '../qr.js';
 import { Sound } from '../sound.js';
 import * as L from '../lineup.js';
 import { yt, isDemo } from '../source.js';
@@ -154,6 +155,8 @@ export class VideoPage extends ListPage {
     // fill in anything missing (likes, length) from YouTube; cached, 1 unit at most
     if (!this.v.fake && (this.v.dur == null || this.v.likes === undefined)) yt.videosInfo([this.v.id]).then(([full]) => { if (full) { this.v = full; this.build(); this.rerender(); } }).catch(() => {});
     if (canUseAccount()) lookUp(this.v).then(() => { this.build(); this.rerender(); });
+    // chapters come from the full description (cached, 1 unit at most)
+    if (this.v.live !== 'live') (this.v.fake ? Promise.resolve(this.v.desc) : yt.fullDescription(this.v.id)).then(d => { const c = chapters(d, this.v.dur); if (c.length) { this.chapters = c; this.build(); this.rerender(); } }).catch(() => {});
   }
   onReturn() { this.build(); }
   head() {
@@ -172,6 +175,7 @@ export class VideoPage extends ListPage {
     if (playingNow) it.push(['film', 'Back to the video', 'It\'s playing in the window', () => app.screen.closePages()]);
     else it.push(['play', resume ? 'Resume at ' + hms(h.pos) : 'Watch now', resume ? 'Pick up where you left off' : v.dur ? lengthText(v.dur) : 'Live', () => tv.playVod(v, { queue })]);
     if (resume && !playingNow) it.push(['back', 'Watch from the start', '', () => tv.playVod(v, { queue, start: 0 })]);
+    if (this.chapters) it.push(['grid', 'Chapters (' + this.chapters.length + ')', playingNow ? 'Jump to a part of the video' : 'Start from a part of the video', () => app.screen.open(new ChaptersPage(v, this.chapters, queue))]);
     if (playingNow) it.push(['clock', 'Playback speed', 'Now ' + tv.speed + '×', () => app.screen.open(new SpeedPage())]);
     it.push(['plus', inList('watchLater', v.id) ? 'Remove from Watch Later' : 'Save to Watch Later', 'Saved on this TV only', () => { toggleList('watchLater', v); this.build(); this.rerender(); }]);
     const redo = () => { this.build(); this.rerender(); };
@@ -186,10 +190,42 @@ export class VideoPage extends ListPage {
     if (v.channelId) it.push(['people', 'Go to ' + (v.channelTitle || 'the channel'), 'Its videos and playlists', () => app.screen.open(new ChannelPage({ id: v.channelId, title: v.channelTitle }))]);
     if (v.comments !== 0) it.push(['chat', 'Comments' + (v.comments ? ' (' + shortNum(v.comments) + ')' : ''), 'What people are saying', () => app.screen.open(new CommentsPage(v))]);
     it.push(['grid', 'Full description', '', () => app.screen.open(new TextPage('Description', v))]);
+    it.push(['film', 'Watch on your phone', 'A code to scan with your phone\'s camera', () => app.screen.open(new PhonePage(v.title, videoLink(v), 'this video'))]);
     if (v.channelId && S.viewer.makeChannels) it.push(['tv', 'Make a TV channel from ' + (v.channelTitle || 'this channel'), 'Its newest videos, on a schedule', () => app.screen.open(new MakeChannelPage({ type: 'channel', id: v.channelId, title: v.channelTitle || 'New Channel' }))]);
     this.items = it.map(([icon, label, hint, act]) => ({ html: rows.action(icon, label, hint), act }));
     this.sideText = sideVideo(v);
   }
+}
+
+// ---------------- chapters ----------------
+export class ChaptersPage extends ListPage {
+  constructor(v, list, queue) {
+    super('Chapters'); this.v = v; this.list = list; this.queue = queue; this.rowH = 70; this.crumb = v.title; this.sideText = sideVideo(v);
+    const tv = app.tv, now = () => tv.source === 'vod' && tv.vod && tv.vod.v.id === v.id;
+    const here = now() ? tv.player.time() : -1;
+    this.items = list.map((c, i) => {
+      const on = here >= c.t && (i === list.length - 1 || here < list[i + 1].t);
+      return { html: rows.menu('play', c.title, hms(c.t), on ? 'Now' : null), act: () => {
+        if (now()) { tv.player.seek(c.t); app.screen.closePages(); app.screen.toast('message', { text: c.title }); }
+        else tv.playVod(v, { queue: this.queue, start: c.t, returnPages: app.screen.pages.slice(0, -1) }); // BACK goes to the video's page
+      } };
+    });
+    this.sel = Math.max(0, this.items.findIndex((_, i) => here >= list[i].t && (i === list.length - 1 || here < list[i + 1].t)));
+  }
+}
+
+// ---------------- watch on your phone ----------------
+export const videoLink = v => 'https://youtu.be/' + v.id + (app.tv.source === 'vod' && app.tv.vod && app.tv.vod.v.id === v.id && app.tv.player.time() > 30 ? '?t=' + Math.floor(app.tv.player.time()) : '');
+export class PhonePage extends Page {
+  constructor(title, url, what) { super('Watch on Your Phone'); this.url = url; this.what = what; this.crumb = title; }
+  render() {
+    let code = ''; try { code = qrSVG(this.url, { ecc: 'M', margin: 3 }); } catch { code = ''; }
+    return `<div class="phonepage bevel"><div class="qr">${code}</div><div class="pt"><b>Point your phone's camera at the square</b>
+      <p>Tap the link that pops up and ${esc(this.what)} opens on your phone${/[?&]t=/.test(this.url) ? ', right where you are now' : ''}.</p>
+      <p class="dim">${esc(this.url)}</p>${isDemo() ? '<p class="dim">(Practice video: this code is just an example.)</p>' : ''}</div></div>`;
+  }
+  side() { return '<b>No phone camera app?</b><p>Most phones from the last few years read these codes in the regular camera. Hold it steady about a foot away.</p>'; }
+  foot() { return 'BACK goes back'; }
 }
 
 export class SpeedPage extends ListPage {
@@ -265,6 +301,7 @@ export class ChannelPage extends ListPage {
     tab('live', 'Live streams', 'Live now and past streams', 'live', 'This channel hasn\'t done any live streams.');
     tab('film', 'Shorts', 'Its short, upright videos', 'shorts', 'This channel has no Shorts.');
     if (this.vids.length > 1) it.push({ cls: 'act', html: rows.action('play', 'Play newest videos', this.vids.length + ' videos'), act: () => app.tv.playVod(this.vids[0], { queue: this.vids }) });
+    it.push({ cls: 'act', html: rows.action('film', 'Open on your phone', 'A code to scan with your phone\'s camera'), act: () => app.screen.open(new PhonePage(c.title, 'https://www.youtube.com/channel/' + c.id, 'this channel')) });
     this.vids.forEach(v => it.push({ html: rows.video(v), act: () => app.screen.open(new VideoPage(v, { queue: this.vids })), side: () => sideVideo(v) }));
     this.items = it;
   }
@@ -281,6 +318,7 @@ export class PlaylistPage extends ListPage {
     if (this.vids.length) it.push({ cls: 'act', html: rows.action('play', 'Play all', this.vids.length + ' videos in order'), act: () => app.tv.playVod(this.vids[0], { queue: this.vids }) });
     // a private playlist can't feed a TV channel (the channel refresh doesn't use the sign-in)
     if (S.viewer.makeChannels && p.privacy !== 'private') it.push({ cls: 'act', html: rows.action('tv', 'Make it a TV channel', 'This playlist, on a schedule'), act: () => app.screen.open(new MakeChannelPage({ type: 'playlist', id: p.id, title: p.title })) });
+    if (p.privacy !== 'private') it.push({ cls: 'act', html: rows.action('film', 'Open on your phone', 'A code to scan with your phone\'s camera'), act: () => app.screen.open(new PhonePage(p.title, 'https://www.youtube.com/playlist?list=' + p.id, 'this playlist')) });
     this.vids.forEach(v => it.push({ html: rows.video(v), act: () => app.screen.open(new VideoPage(v, { queue: this.vids })), side: () => sideVideo(v) }));
     this.items = it;
   }

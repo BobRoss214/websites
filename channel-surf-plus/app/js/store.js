@@ -12,7 +12,7 @@ export const DEFAULTS = {
   safeSearch: 'moderate',
   // what the viewer can reach from the menu (Setup can turn these off for a simpler TV)
   viewer: { search: true, ondemand: true, makeChannels: true, account: true, comments: true },
-  tv: { staticOn: true, sounds: true, cc: false, bigText: false, volume: 70, remote: 'auto', autoplayNext: true, lastNum: 2 },
+  tv: { staticOn: true, sounds: true, cc: false, ccLang: 'en', bigText: false, volume: 70, remote: 'auto', autoplayNext: true, lastNum: 2 },
   // lineup filters the viewer can change; every channel's schedule follows them
   filters: { length: 'any', age: 'any', captions: false },
   // house rules that keep Shorts and old stream recordings off the schedule

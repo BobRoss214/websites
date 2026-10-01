@@ -127,17 +127,30 @@ export class FiltersPage extends ListPage {
 
 export class SettingsPage extends ListPage {
   constructor() { super('Settings'); this.rowH = 92; this.build(); }
+  onReturn() { this.build(); }
   build() {
     const t = S.tv, onoff = b => (b ? 'On' : 'Off');
     const REM = { auto: 'When the mouse moves', always: 'Always', never: 'Never' };
     this.items = [
       ['chat', 'Closed captions', 'Words on screen for what\'s said', onoff(t.cc), () => { app.tv.toggleCC(); }],
-      ['search', 'Bigger text', 'Larger letters on menus, banners and captions', onoff(t.bigText), () => { t.bigText = !t.bigText; document.body.classList.toggle('big', t.bigText); app.tv.player.captions(t.cc, t.bigText); }],
+      ['search', 'Bigger text', 'Larger letters on menus, banners and captions', onoff(t.bigText), () => { t.bigText = !t.bigText; document.body.classList.toggle('big', t.bigText); app.tv.applyCC(); }],
+      ['chat', 'Caption language', 'Which language captions show in, when a video has it', (CC_LANGS.find(l => l[0] === (t.ccLang || 'en')) || CC_LANGS[0])[1], () => app.screen.open(new CaptionLangPage())],
       ['tv', 'Static between channels', 'The short burst of snow when you flip', onoff(t.staticOn), () => { t.staticOn = !t.staticOn; }],
       ['fire', 'Button sounds', 'Clicks, static hiss and chimes', onoff(t.sounds), () => { t.sounds = !t.sounds; }],
       ['film', 'Play the next video', 'On demand: keep going to the next one in the list', onoff(t.autoplayNext), () => { t.autoplayNext = !t.autoplayNext; }],
       ['grid', 'On-screen remote', 'Show the big remote buttons', REM[t.remote], () => { t.remote = { auto: 'always', always: 'never', never: 'auto' }[t.remote]; app.remote.apply(); }],
     ].map(([icon, label, hint, value, fn]) => ({ html: rows.menu(icon, label, hint, value), act: () => { fn(); save(); this.build(); this.rerender(); }, side: () => `<b>${esc(label)}</b><p>${esc(hint)}. Press OK to change.</p>` }));
+  }
+}
+
+export const CC_LANGS = [['en', 'English'], ['es', 'Spanish (Español)'], ['fr', 'French (Français)'], ['de', 'German (Deutsch)'], ['it', 'Italian (Italiano)'], ['pt', 'Portuguese (Português)'], ['pl', 'Polish (Polski)'], ['nl', 'Dutch (Nederlands)'], ['ru', 'Russian (Русский)'], ['uk', 'Ukrainian (Українська)'], ['el', 'Greek (Ελληνικά)'], ['zh', 'Chinese (中文)'], ['ja', 'Japanese (日本語)'], ['ko', 'Korean (한국어)'], ['vi', 'Vietnamese (Tiếng Việt)'], ['tl', 'Tagalog (Filipino)'], ['hi', 'Hindi (हिन्दी)'], ['ar', 'Arabic (العربية)'], ['he', 'Hebrew (עברית)']];
+export class CaptionLangPage extends ListPage {
+  constructor() {
+    super('Caption Language'); this.rowH = 70;
+    const now = S.tv.ccLang || 'en', have = new Set((app.tv.player.tracks ? app.tv.player.tracks() : []).map(t => (t.code || '').split('-')[0]));
+    this.items = CC_LANGS.map(([code, name]) => ({ html: rows.menu('chat', name, have.has(code) ? 'This video has it' : '', code === now ? 'Now' : null), act: () => { S.tv.ccLang = code; save(); app.tv.applyCC(); app.screen.back(); app.screen.toast('message', { text: 'Captions in ' + name.replace(/ \(.*/, '') + (S.tv.cc ? '' : ' (press CC to turn them on)') }); } }));
+    this.sel = Math.max(0, CC_LANGS.findIndex(l => l[0] === now));
+    this.sideText = 'If a video doesn\'t have captions in this language, YouTube shows its usual ones.';
   }
 }
 

@@ -10,6 +10,7 @@ import { makePlayer } from './player.js';
 import { isDemo } from './source.js';
 
 const STATIC_MS = 400, WATCHDOG_MS = 12000, GRACE_S = 90;
+const isLive = v => v.live === 'live' || !v.dur;
 
 export class TV {
   constructor(playerEl) {
@@ -19,7 +20,7 @@ export class TV {
     this.lastIdx = this.idx; this.digits = ''; this.source = 'live'; this.view = 'none'; this.a = null; this.token = 0;
     this.vod = null; this.loaded = null; this.pstate = 'none'; this.want = false; this.speed = 1; this.stalls = 0; this.retried = null;
     this.muted = false; this.preview = false; this.shown = false;
-    this.player = makePlayer(playerEl, isDemo(), { state: s => this.onState(s), error: c => this.onError(c) });
+    this.player = makePlayer(playerEl, isDemo(), { state: s => this.onState(s), error: c => this.onError(c), blocked: () => this.onBlocked(), rate: r => { this.speed = r; } });
     bus.on('lineup', () => this.refreshList());
     bus.on('pool', id => {
       if (!this.on) return;
@@ -71,7 +72,8 @@ export class TV {
     try { if ('wakeLock' in navigator && !this.lock) { this.lock = await navigator.wakeLock.request('screen'); this.lock.addEventListener('release', () => { this.lock = null; }); } } catch {}
     if (!this.wakeBound) { this.wakeBound = true; document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && this.on) this.keepAwake(); }); }
   }
-  applyAudio() { this.player.volume(S.tv.volume); this.player.mute(this.muted); this.player.captions(S.tv.cc, S.tv.bigText); }
+  applyAudio() { this.player.volume(S.tv.volume); this.player.mute(this.muted); this.applyCC(); }
+  applyCC() { this.player.captions(S.tv.cc, S.tv.bigText, S.tv.ccLang); }
   problem(title, sub) { this.problemTitle = title; this.problemSub = sub; this.setView('problem'); }
   standby(title, sub) { this.standbyTitle = title; this.standbySub = sub; this.setView('standby'); }
 
@@ -182,7 +184,7 @@ export class TV {
   // ---------- volume and captions ----------
   vol(d) { this.muted = false; S.tv.volume = clamp(S.tv.volume + d, 0, 100); save(); this.player.mute(false); this.player.volume(S.tv.volume); app.screen.band('volume', { v: S.tv.volume, muted: false }, 2500); }
   mute() { this.muted = !this.muted; this.player.mute(this.muted); app.screen.band('volume', { v: S.tv.volume, muted: this.muted }, 2500); }
-  toggleCC() { S.tv.cc = !S.tv.cc; save(); this.player.captions(S.tv.cc, S.tv.bigText); app.screen.band('message', { text: S.tv.cc ? 'Captions on' : 'Captions off' }, 2500); }
+  toggleCC() { S.tv.cc = !S.tv.cc; save(); this.applyCC(); app.screen.band('message', { text: S.tv.cc ? 'Captions on' : 'Captions off' }, 2500); }
 
   // ---------- on demand ----------
   playVod(v, { queue, start, returnPages } = {}) {
@@ -197,7 +199,8 @@ export class TV {
     const token = ++this.token; clearTimeout(this.wd); this.retried = null; this.speed = 1;
     this.stopPicture(); Sound.tone(false);
     let pos = start;
-    if (pos == null) { const h = S.history.find(x => x.id === v.id); pos = h && h.pos > 30 && (!v.dur || h.pos < v.dur - 30) ? h.pos : 0; }
+    if (isLive(v)) pos = 0; // a live stream always joins "now"
+    else if (pos == null) { const h = S.history.find(x => x.id === v.id); pos = h && h.pos > 30 && (!v.dur || h.pos < v.dur - 30) ? h.pos : 0; }
     this.cue(v, pos); addHistory(v, pos);
     this.setView('vodstart');
     setTimeout(() => {
@@ -208,14 +211,14 @@ export class TV {
     }, 900);
   }
   restartVod() { if (this.vod) this.playVod(this.vod.v, { queue: this.vod.queue, returnPages: this.vod.returnPages }); }
-  leaveVod() { if (this.source === 'vod' && this.vod && this.loaded) { const t = Math.floor(this.player.time()); if (t > 0) setHistoryPos(this.vod.v.id, t); } }
+  leaveVod() { if (this.source === 'vod' && this.vod && this.loaded && !isLive(this.vod.v)) { const t = Math.floor(this.player.time()); if (t > 0) setHistoryPos(this.vod.v.id, t); } }
   vodKey(k) {
     const v = this.vod && this.vod.v; if (!v) return false;
-    const isLive = v.live === 'live' || !v.dur;
+    const live = isLive(v);
     switch (k) {
       case 'ok': this.togglePause(); return true;
-      case 'left': if (!isLive) { this.player.seek(this.player.time() - 10); app.screen.band('vod', { v }, 4000); } return true;
-      case 'right': if (!isLive) { this.player.seek(this.player.time() + 30); app.screen.band('vod', { v }, 4000); } return true;
+      case 'left': if (!live) { this.player.seek(this.player.time() - 10); app.screen.band('vod', { v }, 4000); } return true;
+      case 'right': if (!live) { this.player.seek(this.player.time() + 30); app.screen.band('vod', { v }, 4000); } return true;
       case 'up': case 'down': app.screen.band('vod', { v }, 5000); return true;
       case 'chup': this.vodStep(1); return true;
       case 'chdown': this.vodStep(-1); return true;
@@ -287,6 +290,11 @@ export class TV {
       else this.vodFailed('That video won\'t load right now.');
     }
   }
+  onBlocked() {
+    if (!this.loaded || this.muted) return;
+    this.mutedStart = true; this.muted = true; this.player.mute(true); this.player.play(); this.armWatchdog();
+    setTimeout(() => app.screen.band('message', { text: 'Press MUTE to turn the sound on' }, 6000), 1500);
+  }
   noSignal() {
     this.stopPicture(); this.standby('NO SIGNAL', 'Checking the cable… The internet seems to be down. This keeps trying by itself.');
     const tok = this.token;
@@ -299,6 +307,7 @@ export class TV {
     if (s === 'playing') { clearTimeout(this.wd); this.stalls = 0; this.retried = null; if (this.view === 'standby' && this.loaded) this.setView(this.source === 'vod' ? 'vod' : 'picture'); }
     else if (s === 'buffering' && this.want && this.shown) this.armWatchdog();
     else if (s === 'ended') {
+      this.want = false;
       if (this.source === 'vod') this.vodEnded();
       else if (this.view === 'guide') { this.guidePreview(); app.screen.sync(); }
       else if (this.view === 'picture') this.present(this.token, { grace: true, endedId: this.loaded && this.loaded.id });
@@ -308,18 +317,18 @@ export class TV {
   onError(code) {
     const id = this.loaded && this.loaded.id; if (!id) return;
     clearTimeout(this.wd);
-    if (code === 153 || code === 152) { this.stopPicture(); this.problem('PLAYER SETUP PROBLEM', 'YouTube needs Channel Surf to be started with its start program (python3 tv.py), not opened as a file.'); return; }
+    if (code === 153 || location.protocol === 'file:') { this.stopPicture(); this.problem('PLAYER SETUP PROBLEM', 'YouTube needs Channel Surf to be started with its start program (python3 tv.py), not opened as a file.'); return; }
     if (this.view === 'guide') { this.stopPicture(); app.screen.sync(); return; }
     if (code === 5 && this.retried !== id) {
       this.retried = id; const tok = this.token; this.stopPicture();
       setTimeout(() => { if (tok !== this.token) return; if (this.source === 'live') this.present(tok); else this.restartVod(); }, 1500); return;
     }
-    // 2 = bad video ID, 100 = deleted or private, 101/150 = the owner doesn't allow playing it here
+    // 2 = bad video ID, 100 = deleted or private, 101/150/152 = can't be played here
     if (this.source === 'live') {
       L.markBad(id, code === 5);
       const tok = this.token; this.stopPicture(); this.standby('PLEASE STAND BY', 'That show isn\'t available. The next one is coming right up.');
       setTimeout(() => tok === this.token && this.present(tok), 1800);
-    } else this.vodFailed(code === 100 ? 'That video was removed or made private.' : code === 101 || code === 150 ? 'The owner doesn\'t allow that video to play outside YouTube.' : 'That video won\'t play.');
+    } else this.vodFailed(code === 100 ? 'That video was removed or made private.' : code === 101 || code === 150 || code === 152 ? 'The owner doesn\'t allow that video to play outside YouTube.' : 'That video won\'t play.');
   }
   tick() {
     if (!this.on || this.busy) return;
@@ -328,7 +337,7 @@ export class TV {
       if (this.view === 'ident' && now >= this.identUntil) this.present(this.token);
       else if (this.view === 'loading' && !L.poolStatus(this.ch).loading) this.present(this.token);
       else if (this.view === 'picture' && !this.logged && this.pstate === 'playing' && this.a && now - this.playingSince > 60000) { this.logged = true; addHistory(this.a.v, Math.floor(this.player.time())); }
-    } else if (this.vod && this.pstate === 'playing' && now - (this.posSaved || 0) > 10000) { this.posSaved = now; setHistoryPos(this.vod.v.id, Math.floor(this.player.time())); }
+    } else if (this.vod && !isLive(this.vod.v) && this.pstate === 'playing' && now - (this.posSaved || 0) > 10000) { this.posSaved = now; setHistoryPos(this.vod.v.id, Math.floor(this.player.time())); }
     if (app.screen.bandType === 'vod') app.screen.refreshBand();
   }
 

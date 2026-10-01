@@ -22,7 +22,7 @@
     const scale = stage.getBoundingClientRect().width / stage.offsetWidth;
     log.push({ ev: 'play', id: this.vid, visible: !wrap.classList.contains('off') && getComputedStyle(wrap).visibility !== 'hidden', w: r.width / scale, h: r.height / scale });
     if (!this.vid) return;
-    if (window.__blockSound && !this.muted) return; // like a browser that blocks autoplay with sound
+    if (window.__blockSound && !this.muted) { if (window.__blockEvent) { const f = this.opts.events.onAutoplayBlocked; f && setTimeout(() => f({ target: this }), 30); } return; } // like a browser that blocks autoplay with sound
     const id = this.vid;
     if (/gone/.test(id)) { setTimeout(() => this._err(100), 200); return; }
     if (/noemb/.test(id)) { setTimeout(() => this._err(150), 200); return; }
@@ -35,16 +35,21 @@
     }, 250);
   };
   Player.prototype.pauseVideo = function () { if (this.state === 1) { this.base = this.getCurrentTime(); this.t0 = 0; this._set(2); } };
-  Player.prototype.stopVideo = function () { clearTimeout(this.tm); clearInterval(this.iv); this.vid = null; this.t0 = 0; this.state = -1; log.push({ ev: 'stop' }); };
+  // the real player can send a late "ended" after stopVideo (the app must ignore it)
+  Player.prototype.stopVideo = function () { const was = this.state; clearTimeout(this.tm); clearInterval(this.iv); this.vid = null; this.t0 = 0; this.state = -1; log.push({ ev: 'stop' }); if (was === 1 || was === 2) setTimeout(() => { const f = this.opts.events.onStateChange; f && f({ data: 0, target: this }); }, 5); };
   Player.prototype.seekTo = function (s) { this.base = s; if (this.t0) this.t0 = performance.now(); log.push({ ev: 'seek', to: s }); };
   Player.prototype.getCurrentTime = function () { return this.t0 ? this.base + (performance.now() - this.t0) / 1000 * this.rate : this.base; };
   Player.prototype.getDuration = function () { return DUR[this.vid] || 600; };
   Player.prototype.setVolume = function (v) { this.vol = v; };
   Player.prototype.mute = function () { this.muted = true; };
   Player.prototype.unMute = function () { this.muted = false; };
-  Player.prototype.loadModule = function (m) { log.push({ ev: 'loadModule', m }); };
-  Player.prototype.unloadModule = function (m) { log.push({ ev: 'unloadModule', m }); };
+  // captions: settings only work after the module has loaded and onApiChange has fired
+  Player.prototype.loadModule = function (m) { log.push({ ev: 'loadModule', m }); if (m === 'captions' && !this.cc) setTimeout(() => { this.cc = true; const f = this.opts.events.onApiChange; f && f({ target: this }); }, 40); };
+  Player.prototype.unloadModule = function (m) { log.push({ ev: 'unloadModule', m }); if (m === 'captions') this.cc = false; };
+  Player.prototype.getOptions = function (m) { return m === 'captions' ? (this.cc ? ['fontSize', 'track', 'tracklist'] : []) : ['captions']; };
+  Player.prototype.getOption = function (m, k) { if (m === 'captions' && k === 'tracklist' && this.cc) return [{ languageCode: 'en', displayName: 'English', kind: '' }, { languageCode: 'es-419', displayName: 'Spanish (Latin America)', kind: '' }]; return undefined; };
   Player.prototype.setOption = function (m, k, v) { log.push({ ev: 'setOption', m, k, v }); };
+  Player.prototype.destroy = function () { this.box.remove(); };
   Player.prototype.setPlaybackRate = function (r) { this.base = this.getCurrentTime(); if (this.t0) this.t0 = performance.now(); this.rate = r; log.push({ ev: 'rate', r }); };
   Player.prototype.getAvailablePlaybackRates = function () { return [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]; };
   window.YT = { Player, PlayerState: { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 } };

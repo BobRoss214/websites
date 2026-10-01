@@ -245,6 +245,13 @@ body.big #screen { font-size: 25px; }
 .rs { text-align: left; border: 0; border-radius: 8px; padding: 8px 14px; font: 700 1em/1.15 var(--f-ui); color: #fff; background: var(--navy); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rs small { display: block; font: 600 .75em var(--f-ui); color: var(--ink-3); }
 
+/* watch on your phone */
+.phonepage { display: grid; grid-template-columns: 430px 1fr; gap: 34px; align-items: center; padding: 30px; border-radius: 12px; }
+.phonepage .qr { background: #fff; border-radius: 10px; padding: 10px; line-height: 0; box-shadow: 0 0 0 6px var(--gold); }
+.phonepage .qr svg { width: 100%; height: auto; display: block; }
+.phonepage .pt b { display: block; font: 800 1.9em/1.15 var(--f-ui); color: var(--gold); margin-bottom: 14px; }
+.phonepage .pt p { font: 600 1.35em/1.35 var(--f-ui); margin: 0 0 12px; overflow-wrap: anywhere; }
+
 /* typing (comments, replies, playlist names) */
 .tprompt { font: 700 1.5em/1.2 var(--f-ui); color: var(--gold); margin: 0 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sbox.tbox { height: auto; min-height: 80px; max-height: 178px; white-space: normal; flex-wrap: wrap; align-content: center; padding: 10px 26px; font-size: 1.9em; line-height: 1.25; overflow-wrap: anywhere; }

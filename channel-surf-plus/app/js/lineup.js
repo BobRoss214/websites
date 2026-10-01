@@ -85,7 +85,7 @@ export function usable(v, ch) {
   if (v.live && v.live !== 'none') return false;
   if (v.blocked && v.blocked.includes(S.region)) return false;
   if (v.allowed && !v.allowed.includes(S.region)) return false;
-  if (v.dur < S.rules.minSec || v.dur > S.rules.maxSec) return false;
+  if (v.dur <= S.rules.minSec || v.dur > S.rules.maxSec) return false; // Shorts can be up to 3 minutes
   return passFilters(v, S.filters) && passFilters(v, ch.filters);
 }
 

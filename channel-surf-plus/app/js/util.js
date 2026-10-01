@@ -39,6 +39,23 @@ export function clock(t, ampm = true) {
 }
 export const fmtDay = t => new Date(t).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 export const fmtDate = t => new Date(t).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+// Chapters, the way YouTube finds them: timestamps in the description, the
+// first one at 0:00, at least three, in order. "0:00 Intro" or "Intro - 0:00".
+export function chapters(desc, dur = 0) {
+  const T = '[\\[(]?((?:\\d{1,2}:)?\\d{1,2}:\\d{2})[\\])]?', SEP = '\\s*[-–—:|.•]?\\s*';
+  const lead = new RegExp('^\\s*' + T + SEP + '(.*)$'), tail = new RegExp('^(.*?)' + SEP + T + '\\s*$');
+  const secs = s => s.split(':').reduce((a, n) => a * 60 + +n, 0);
+  const out = [];
+  for (const line of String(desc || '').split(/\r?\n/)) {
+    let m = lead.exec(line), t, title;
+    if (m) { t = secs(m[1]); title = m[2]; } else if ((m = tail.exec(line)) && m[1].trim()) { t = secs(m[2]); title = m[1]; } else continue;
+    title = title.replace(/^[-–—:|.•\s]+|[-–—:|.•\s]+$/g, '').trim();
+    if (out.length && t <= out[out.length - 1].t) continue;
+    if (dur && t >= dur) continue;
+    out.push({ t, title: title || 'Part ' + (out.length + 1) });
+  }
+  return out.length >= 3 && out[0].t === 0 ? out : [];
+}
 export function hms(sec) {
   sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
   return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0');

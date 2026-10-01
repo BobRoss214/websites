@@ -27,21 +27,38 @@ class YouTubePlayer {
   constructor(el, h) { this.el = el; this.h = h; this.p = null; this.state = 'none'; this.id = null; }
   async init() {
     const YT = await loadYT();
+    this.el.querySelectorAll('#ytHost').forEach(n => n.remove()); // a try that never got ready
     const host = document.createElement('div'); host.id = 'ytHost'; this.el.appendChild(host);
-    await new Promise(res => {
+    await new Promise((res, rej) => {
+      // if the player never says it's ready, give up (the TV shows "can't reach YouTube" and OK tries again)
+      const t = setTimeout(() => { try { this.p.destroy(); } catch {} this.p = null; rej(new Error('noready')); }, 20000);
       this.p = new YT.Player(host, {
         host: 'https://www.youtube-nocookie.com', width: '100%', height: '100%',
-        playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, playsinline: 1, cc_load_policy: S.tv.cc ? 1 : 0, cc_lang_pref: 'en', origin: location.origin },
+        playerVars: { autoplay: 0, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, rel: 0, playsinline: 1, cc_load_policy: S.tv.cc ? 1 : 0, cc_lang_pref: S.tv.ccLang || 'en', origin: location.origin },
         events: {
-          onReady: () => res(),
-          onStateChange: e => { this.state = STATES[e.data] || 'unknown'; this.h.state(this.state); },
+          onReady: () => { clearTimeout(t); res(); },
+          onStateChange: e => this._state(e.data),
           onError: e => this.h.error(e.data),
+          onApiChange: () => this._applyCC(), // the captions module finished loading
+          onAutoplayBlocked: () => this.h.blocked && this.h.blocked(),
+          onPlaybackRateChange: e => this.h.rate && this.h.rate(e.data),
         },
       });
     });
-    const f = this.el.querySelector('iframe'); if (f) { f.setAttribute('tabindex', '-1'); f.setAttribute('title', 'TV picture'); }
+    const f = this.el.querySelector('iframe'); if (f) f.setAttribute('tabindex', '-1');
   }
-  cue(v, start) { this.id = v.id; this.state = 'cueing'; this.p.cueVideoById({ videoId: v.id, startSeconds: Math.max(0, Math.floor(start || 0)) }); }
+  _state(d) {
+    const s = STATES[d] || 'unknown';
+    if (!this.id) return; // stopped: ignore leftovers from the last video
+    // right after cueing, a late "ended" or "paused" belongs to the previous video
+    if (this.fresh) { if (s === 'ended' || s === 'paused') return; if (s !== 'unstarted') this.fresh = false; }
+    if (s === 'playing' && this.ccFor !== this.id) this._applyCC(true);
+    this.state = s; this.h.state(s);
+  }
+  cue(v, start) {
+    this.id = v.id; this.fresh = true; this.ccFor = null; this.state = 'cueing';
+    try { this.p.cueVideoById({ videoId: v.id, startSeconds: Math.max(0, Math.floor(start || 0)) }); } catch {}
+  }
   play() { try { this.p.playVideo(); } catch {} }
   pause() { try { this.p.pauseVideo(); } catch {} }
   stop() { try { this.p.stopVideo(); } catch {} this.id = null; }
@@ -50,12 +67,23 @@ class YouTubePlayer {
   duration() { try { return this.p.getDuration() || 0; } catch { return 0; } }
   volume(v) { try { this.p.setVolume(v); } catch {} }
   mute(m) { try { m ? this.p.mute() : this.p.unMute(); } catch {} }
-  captions(on, big) {
+  // Captions: the module only takes settings once it has loaded (onApiChange), and it
+  // resets with every new video, so this is applied again each time a video starts.
+  captions(on, big, lang) { this.cc = { on, big, lang: lang || 'en' }; this._applyCC(true); }
+  _applyCC(kick) {
+    const p = this.p, c = this.cc; if (!p || !c || !this.id) return;
     try {
-      if (on) { this.p.loadModule('captions'); this.p.setOption('captions', 'fontSize', big ? 2 : 1); }
-      else this.p.unloadModule('captions');
+      const loaded = (p.getOptions('captions') || []).length > 0;
+      if (!c.on) { if (loaded) { p.setOption('captions', 'track', {}); p.unloadModule('captions'); } this.ccFor = this.id; return; }
+      if (!loaded) { if (kick) p.loadModule('captions'); return; }
+      p.setOption('captions', 'fontSize', c.big ? 2 : 0);
+      const list = p.getOption('captions', 'tracklist') || [], base = t => (t.languageCode || '').split('-')[0];
+      const t = list.find(t => base(t) === c.lang && t.kind !== 'asr') || list.find(t => base(t) === c.lang);
+      if (t) p.setOption('captions', 'track', { languageCode: t.languageCode });
+      this.ccFor = this.id;
     } catch {}
   }
+  tracks() { try { return (this.p.getOption('captions', 'tracklist') || []).map(t => ({ code: t.languageCode, name: t.displayName || t.languageName || t.languageCode, auto: t.kind === 'asr' })); } catch { return []; } }
   rate(r) { try { this.p.setPlaybackRate(r); } catch {} }
   rates() { try { return this.p.getAvailablePlaybackRates() || [1]; } catch { return [1]; } }
 }
@@ -93,6 +121,7 @@ class DemoPlayer {
   volume(v) { this.vol = v; } mute() {} rate(r) { this.pos = this.time(); this.base = this.pos; this.t0 = performance.now(); this.speed = r; }
   rates() { return [0.5, 0.75, 1, 1.25, 1.5, 2]; }
   captions(on) { this.cc = on; }
+  tracks() { return this.v && this.v.caption ? [{ code: 'en', name: 'English' }, { code: 'es', name: 'Spanish' }] : []; }
   _loop() {
     if (!this.running || !this.v) return;
     const t = this.time();

@@ -1,7 +1,7 @@
 // Demo mode: a pretend YouTube with practice channels and shows, used until a
 // YouTube key is added in Setup (and by the automatic tests). It answers the
 // same questions as api.js, so every screen works the same way.
-import { hash, rng } from './util.js';
+import { hash, rng, hms } from './util.js';
 import { putVideo, VIDS } from './vids.js';
 import { ApiError } from './api.js';
 import { S, save } from './store.js';
@@ -43,8 +43,11 @@ const PLAYLISTS = new Map();
     titles.forEach((t, i) => {
       const id = 'demo-' + kind + '-' + i;
       const dur = Math.floor((8 + r() * 34) * 60 + r() * 59);
+      // chapters in the description, the way YouTubers write them
+      const parts = [[0, 'Welcome'], [0.12, 'What you\'ll need'], [0.3, 'Getting started'], [0.55, 'The main part'], [0.85, 'Finishing up']];
+      const desc = DESC[kind] + ' In this episode: ' + t.toLowerCase() + '. Practice video for demo mode.\n\nChapters:\n' + parts.map(([f, p]) => hms(Math.floor(dur * f)) + ' ' + p).join('\n');
       putVideo({
-        id, title: t, desc: DESC[kind] + ' In this episode: ' + t.toLowerCase() + '. Practice video for demo mode.', channelId: cid, channelTitle: name,
+        id, title: t, desc, channelId: cid, channelTitle: name,
         publishedAt: NOW - Math.floor((i * 4 + r() * 3) * 86400e3), dur, live: 'none', caption: r() > 0.3, hd: r() > 0.2, embeddable: true, public: true, processed: true,
         age: false, views: Math.floor(1e3 + r() * 2e6), likes: Math.floor(10 + r() * 5e4), comments: Math.floor(r() * 900), thumb: '', categoryId: CAT[kind],
         fake: true, look: kind, hue, broken: kind === 'kitchen' && i === 1, at: NOW,
