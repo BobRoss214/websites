@@ -11,7 +11,6 @@ pumpkin-patch.html
 strawberry-picking.html
 school-field-trips.html
 wise-pie.html
-shop.html               "What to buy": pumpkins, u-pick, farm and GreenHouse prices (draft, see Content status)
 sitemap.xml, robots.txt generated with the pages
 pages/                  the short sources the extra pages are built from
 css/styles.css          design system, hero layout, base components
@@ -52,8 +51,8 @@ Preview locally: run `python3 -m http.server` and visit http://localhost:8000 (a
 
 ## Extra pages (for Google)
 
-`first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html`,
-`wise-pie.html` and `shop.html` are separate pages with their own titles, descriptions, FAQ markup and breadcrumbs.
+`first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html` and
+`wise-pie.html` are separate pages with their own titles, descriptions, FAQ markup and breadcrumbs.
 They are **generated**: edit the short source in `pages/<name>.html`, then run
 
 ```
@@ -112,7 +111,7 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Christmas trees** | Friday after Thanksgiving to early December, at The GreenHouse. |
 | **Tomatoes & basil** | The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree. Give us the right number and we'll state it. |
 | **Reviews** | The reviews section is built but empty. It needs real quotes (with permission) from you. |
-| **Shop page (`shop.html`)** | **Draft.** The layout is done and every price we know is on it (tomatoes, basil, farm fees, rides, pizza). Everything marked "Prices coming soon" (pumpkins, strawberries, blueberries, flowers, concessions, drinks, local goods, ice cream, Christmas trees) needs the real list. Edit `pages/shop.html`: change a `<dd class="soon">Prices coming soon</dd>` to the price, e.g. `<dd>$5 each</dd>`, then run the rebuild commands. |
+| **Shop section (`#shop` in `index.html`)** | **Draft.** It sits between The GreenHouse and Flowers on the main page. The layout is done and every price we know is on it (tomatoes, basil, farm fees, rides, pizza). Everything marked "Prices coming soon" (pumpkins, strawberries, blueberries, flowers, concessions, drinks, local goods, ice cream, Christmas trees) needs the real list. Edit the `#shop` section in `index.html`: change a `<dd class="soon">Prices coming soon</dd>` to the price, e.g. `<dd>$5 each</dd>`, then run the rebuild commands. |
 | **Farm map** | Waiting on the annotated Google Earth screenshot. The first-visit page still has draft notes for parking and check-in until then. |
 
 ## Photos

@@ -94,7 +94,6 @@ def compose(c, slug, meta, body):
     if faq:
         graph.append({'@type': 'FAQPage', 'mainEntity': faq})
     ld = '\n  <script type="application/ld+json">\n' + json.dumps({'@context': 'https://schema.org', '@graph': graph}, indent=2, ensure_ascii=False) + '\n  </script>'
-    header = c['header'].replace(f'<a href="{slug}.html">', f'<a href="{slug}.html" aria-current="page">')
     doc = f'''<!doctype html>
 <html lang="en" class="no-js">
 <head>{head.rstrip()}{extra}{ld}
@@ -106,7 +105,7 @@ def compose(c, slug, meta, body):
   {c['announce']}
 
   <!-- ================= HEADER ================= -->
-  {header}
+  {c['header']}
 
   <main id="main">
 {body}
