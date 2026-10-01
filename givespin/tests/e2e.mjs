@@ -122,7 +122,7 @@ const a11y = async (page, label) => {
 
 const GAMES = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
 const SLOTS = ['slots', 'goldrush', 'deepsea', 'sweets', 'cosmic'];
-const LIVE_TABLES = 9 + 7;   // nine single-table games, plus Plinko's seven table sizes
+const LIVE_TABLES = 10 * 7; // ten live games, each with seven table sizes
 const LIVE_GAMES = ['wheel', 'drop', 'plinko', 'roulette', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
 
 /* ======================================================================== */
@@ -1042,15 +1042,18 @@ if (section('13b. Live tables: the page, the lobby strip and a live room')) {
   check((await page.locator('.livestrip').innerText()).includes('bots'), 'the strip says the other players are bots');
   check(await page.locator('.side__link[data-route="live"]').isVisible(), 'the side nav has Live tables');
   await go(page, '#live');
-  check(await page.locator('#view-live').isVisible() && await page.locator('#view-live .lcard').count() === LIVE_TABLES, 'the Live tables page lists every table (Plinko has seven sizes)', await page.locator('#view-live .lcard').count());
+  check(await page.locator('#view-live').isVisible() && await page.locator('#view-live .lgame').count() === LIVE_GAMES.length, 'the Live tables page has a chip for each of the ' + LIVE_GAMES.length + ' live games', await page.locator('#view-live .lgame').count());
+  check(await page.locator('#view-live .lcards--tables .lcard').count() === 7 && await page.evaluate(() => GS.live.rooms().length) === LIVE_TABLES, 'and lists that game\'s seven tables (' + LIVE_TABLES + ' tables run in all)', await page.locator('#view-live .lcards--tables .lcard').count());
   check((await page.locator('#view-live .simbanner').innerText()).includes('bot'), 'a banner says the tables are simulated and the players are bots');
   check(await page.locator('.side__link[aria-current="page"]').getAttribute('data-route') === 'live', 'the nav marks Live tables as current');
   check((await page.locator('#view-live').innerText()).includes('whole pot goes to it, whether you backed it or not'), 'the page explains that the whole pot goes to the winner');
   await shot(page, '13-live-page');
   await a11y(page, 'live tables page');
-  await page.click('#view-live .lcard[data-room="derby"]');
+  await page.click('#view-live .lgame[data-lgame="derby"]');
+  check(await page.locator('#view-live .lcards--tables .lcard[data-game="derby"]').count() === 7, 'picking a game lists its seven tables');
+  await page.click('#view-live .lcard[data-room="derby10"]');
   await page.waitForSelector('#livepanel:not([hidden])');
-  check(await page.evaluate(() => window.location.hash) === '#live-derby', 'a table opens at #live-<game>');
+  check(await page.evaluate(() => window.location.hash) === '#live-derby10', 'a table opens at #live-<game><size>');
   check(!(await page.locator('.bet:not(#livepanel)').isVisible()) && await page.locator('#livepanel').isVisible(), 'the solo gift panel is swapped for the live panel');
   check((await page.locator('#g-title').innerText()).includes('Live'), 'the title says Live');
   check(await page.locator('#view-game .crumbs a').first().innerText() === 'Live tables', 'the breadcrumb leads back to Live tables');
@@ -1663,7 +1666,7 @@ if (section('13l. Live Plinko tables: seven sizes, backed charities plus catalog
   await openApp(page, '#live');
   const sizes = await page.$$eval('[data-role="tables"] .lcard__size b', (n) => n.map((x) => x.textContent.replace(/,/g, '')));
   check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '1000']), 'the table lobby lists seven sizes, smallest first', sizes);
-  check((await page.locator('#view-live #lv-t-plinko').innerText()).includes('choose your table'), 'under a "choose your table" heading');
+  check((await page.locator('#view-live #lv-t').innerText()).includes('Plinko') && (await page.locator('#view-live #lv-t').innerText()).includes('choose your table'), 'under a "choose your table" heading');
   await a11y(page, 'live tables lobby');
   for (const size of [5, 100, 1000]) {
     await go(page, '#live-plinko' + size);
@@ -1694,6 +1697,47 @@ if (section('13l. Live Plinko tables: seven sizes, backed charities plus catalog
   check((await page.locator('#g-title').innerText()).includes('10 bins'), '#live-plinko still opens the default table');
   await a11y(page, 'live Plinko table');
   await page.close();
+}
+
+/* ======================================================================== */
+if (section('13o. Every live game is a lobby of seven tables')) {
+  const page = await newPage();
+  await openApp(page, '#live');
+  const UNIT = { plinko: 'bins', wheel: 'slices', drop: 'cards', roulette: 'pockets', derby: 'runners', duck: 'ducks', marble: 'marbles', balloon: 'balloons', standing: 'tiles', lotto: 'balls' };
+  for (const gid of LIVE_GAMES) {
+    await page.click('#view-live .lgame[data-lgame="' + gid + '"]');
+    const sizes = await page.$$eval('#view-live [data-role="tables"] .lcard__size b', (n) => n.map((x) => x.textContent.replace(/,/g, '')));
+    const unit = await page.locator('#view-live [data-role="tables"] .lcard__size small').nth(1).innerText();
+    check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '1000']) && unit === UNIT[gid], gid + ': seven table sizes, counted in ' + UNIT[gid], [sizes, unit]);
+  }
+  await a11y(page, 'live lobby: last game');
+  // for every game: a Classic (25) table has a full board, and the pot goes to a backed charity that the game shows winning
+  for (const gid of LIVE_GAMES) {
+    await go(page, '#live-' + gid + '25');
+    await page.waitForSelector('#livepanel:not([hidden]) [data-role="gates"]');
+    await page.waitForFunction((id) => { const r = window.GS.live.room(id); return r && r.phase === 'open' && r.msLeft() > 900 && r.distinct() >= 2; }, gid + '25', { timeout: 40000 });
+    const board = await page.evaluate((id) => { const r = window.GS.live.room(id); const b = r.boardInfo(); return { spots: b.spots.length, backedAll: r.field().every((f) => b.spots.some((c) => c.id === f.charity.id)), title: r.title() }; }, gid + '25');
+    check(board.spots === 25 && board.backedAll && board.title.includes('25 ' + UNIT[gid]), gid + ': the 25-table board is full and holds every backed charity', board);
+    await page.evaluate(() => { const o = document.querySelector('#livepanel .odd'); if (o) { o.click(); } });
+    await page.evaluate(() => { const j = document.querySelector('#livepanel [data-role="join"]:not([disabled])'); if (j) { j.click(); } });
+    await page.waitForSelector('#lt-result .lt-res', { timeout: 90000 });
+    const res = await page.evaluate((args) => { const r = window.GS.live.room(args[0]).result; const g = window.GS.games[args[1]]; const sh = g._shown ? g._shown() : null; return { winner: r.winnerId, weights: r.weights.map((w) => w[0]), size: r.size, game: r.game, shown: sh }; }, [gid + '25', gid]);
+    check(res.weights.includes(res.winner) && res.size === 25 && res.game === gid, gid + ': the pot goes to a backed charity (fillers cannot win)', res);
+    check(Array.isArray(res.shown) ? res.shown.includes(res.winner) : res.shown === res.winner, gid + ': and the game shows that charity winning', res);
+  }
+  // the aliases still open each game's default (10-spot) table, and the 1,000 table of a race has a full board
+  for (const gid of ['balloon', 'wheel']) {
+    await go(page, '#live-' + gid);
+    check((await page.locator('#g-title').innerText()).includes('10 ' + UNIT[gid]), '#live-' + gid + ' opens the 10-spot table');
+  }
+  await go(page, '#live-balloon1000');
+  await page.waitForFunction(() => { const r = window.GS.live.room('balloon1000'); return r && r.boardInfo() && r.boardInfo().spots.length === 1000; }, null, { timeout: 30000 });
+  check(true, 'the 1,000-balloon table has a board of 1,000');
+  await page.close();
+  const ph = await newPage({ viewport: { width: 390, height: 800 }, mobile: true });
+  await openApp(ph, '#live');
+  check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'the live lobby fits a phone without sideways scrolling');
+  await ph.close();
 }
 
 /* ======================================================================== */

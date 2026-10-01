@@ -131,7 +131,7 @@
           ctx.textAlign = 'right';
           ctx.fillStyle = '#ffc542';
           ctx.font = '800 ' + fs + 'px "Sora", sans-serif';
-          ctx.fillText(core.fmtShare(ru.tickets, total), g.lw - 5, y + g.laneH / 2);
+          ctx.fillText(kit.share(ru.tickets, total), g.lw - 5, y + g.laneH / 2);
           ctx.textAlign = 'left';
         }
       }

@@ -38,7 +38,7 @@
   function oddsOf(ch) {
     if (!field) { return ''; }
     var e = field.filter(function (x) { return x.charity.id === ch.id; })[0];
-    return e ? core.fmtShare(e.tickets, totalTickets()) : '';
+    return e ? kit.share(e.tickets, totalTickets()) : '';
   }
 
   function cardHTML(ch) {
@@ -71,7 +71,7 @@
   function randomCards(n, prev) {
     var out = [];
     var list = field ? field.map(function (e) { return e.charity; }) : pool;
-    var weights = field ? field.map(function (e) { return e.tickets; }) : null;
+    var weights = field ? kit.liveWeights(field) : null;
     for (var i = 0; i < n; i++) {
       var pick = function () { return weights ? list[kit.pickWeighted(weights)] : core.pickOne(list); };
       var c = pick();

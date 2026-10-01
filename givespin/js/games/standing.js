@@ -57,7 +57,7 @@
       return '<li class="stile' + (ch.id === pick ? ' is-pick' : '') + '" data-i="' + i + '" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + '">' +
         '' + GS.ui.mono(ch, 24) + '' +
         '<span class="stile__name">' + U.esc(ch.short) + '</span>' +
-        (field ? '<b class="stile__share">' + core.fmtShare(t.tickets, tot) + '</b>' : '') + '</li>';
+        (field && t.tickets > 0 ? '<b class="stile__share">' + core.fmtShare(t.tickets, tot) + '</b>' : '') + '</li>';
     }).join('');
     var nodes = el.grid.children;
     tiles.forEach(function (t, i) { t.node = nodes[i]; });

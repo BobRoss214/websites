@@ -58,7 +58,7 @@
     var g = room.game();
     var sized = !!room.tab && !compact;
     var art = sized
-      ? '<span class="lcard__art lcard__size"><b>' + room.size.toLocaleString('en-US') + '</b><small>bins</small></span>'
+      ? '<span class="lcard__art lcard__size"><b>' + room.size.toLocaleString('en-US') + '</b><small>' + esc(room.unit(room.size)) + '</small></span>'
       : '<span class="lcard__art">' + GS.art[room.gid]('lc') + '</span>';
     var name = sized ? room.tab.name + ' table' : room.title();
     return '<a class="lcard' + (compact ? ' lcard--compact' : '') + (sized ? ' lcard--table' : '') + '" href="#live-' + room.id + '" data-room="' + room.id + '" data-game="' + room.gid + '">' +
@@ -100,17 +100,52 @@
       'Only your own stake (demo credit) is yours. Real multiplayer tables would need a server, so they are not switched on yet.</div></aside>';
   }
 
-  /** Games with several tables (live Plinko) get their own lobby: pick how big the board is. */
-  function tableSections() {
+  /**
+   * Every live game has its own lobby of tables: pick a game, then how big the board is (5, 10, 25 ... 1,000). A chip row
+   * switches between the games; the lobby below it lists that game's tables.
+   */
+  var lobbyGame = '';
+  function lobbyGames() {
     var gids = [];
     GS.live.rooms().forEach(function (r) { if (r.tab && gids.indexOf(r.gid) < 0) { gids.push(r.gid); } });
-    return gids.map(function (gid) {
+    return gids;
+  }
+
+  function lobbyChips() {
+    return lobbyGames().map(function (gid) {
       var g = GS.games[gid];
-      var tabs = GS.live.tables(gid);
-      return '<section class="sect" aria-labelledby="lv-t-' + gid + '"><div class="sect__head"><h2 class="sect__t" id="lv-t-' + gid + '">Live ' + esc(g.name) + ': choose your table</h2></div>' +
-        '<p class="tabnote tabnote--tables">' + tabs.length + ' tables, from ' + tabs[0].size + ' bins to ' + tabs[tabs.length - 1].size.toLocaleString('en-US') + '. Each one has its own pot and its own players. The charities players back go on the board, and the rest of the bins are filled in at random from our catalog so the board is always full; only the backed charities can win. Bigger tables have more gates and more players, and the biggest drop takes about half a minute.</p>' +
-        '<div class="lcards lcards--tables" data-role="tables">' + tabs.map(function (r) { return cardHTML(r, false); }).join('') + '</div></section>';
+      var on = gid === lobbyGame;
+      return '<button type="button" class="lgame' + (on ? ' is-on' : '') + '" data-lgame="' + gid + '" aria-pressed="' + on + '">' + ui.icon(g.icon) + '<span>' + esc(g.name) + '</span></button>';
     }).join('');
+  }
+
+  function lobbyTables() {
+    var gid = lobbyGame;
+    var g = GS.games[gid];
+    var tabs = GS.live.tables(gid);
+    if (!g || !tabs.length) { return ''; }
+    var u = tabs[0].unit(2);
+    return '<h2 class="sect__t" id="lv-t">Live ' + esc(g.name) + ': choose your table</h2>' +
+      '<p class="tabnote tabnote--tables">' + tabs.length + ' tables, from ' + tabs[0].size + ' ' + esc(u) + ' to ' + tabs[tabs.length - 1].size.toLocaleString('en-US') + '. Each one has its own pot and its own players. ' +
+      'The charities players back go on the board, and the rest of the ' + esc(u) + ' are filled in at random from our catalog so the board is always full; only the backed charities can win. ' +
+      'Bigger tables have more gates and more players' + (tabs[tabs.length - 1].tab.play > 20000 ? ', and the biggest one takes about half a minute to play out' : '') + '.</p>' +
+      '<div class="lcards lcards--tables" data-role="tables">' + tabs.map(function (r) { return cardHTML(r, false); }).join('') + '</div>';
+  }
+
+  function tableSections() {
+    if (!lobbyGame || lobbyGames().indexOf(lobbyGame) < 0) { lobbyGame = lobbyGames().indexOf('plinko') >= 0 ? 'plinko' : (lobbyGames()[0] || ''); }
+    return '<section class="sect" aria-labelledby="lv-games-t"><div class="sect__head"><h2 class="sect__t" id="lv-games-t">Choose a live game</h2></div>' +
+      '<div class="lgames" data-role="lgames" role="group" aria-label="Live games">' + lobbyChips() + '</div>' +
+      '<div class="lobbybox" data-role="lobby" aria-live="polite">' + lobbyTables() + '</div></section>';
+  }
+
+  function chooseLobby(gid) {
+    if (!gid || gid === lobbyGame) { return; }
+    lobbyGame = gid;
+    var root = $('#view-live');
+    $('[data-role="lgames"]', root).innerHTML = lobbyChips();
+    $('[data-role="lobby"]', root).innerHTML = lobbyTables();
+    updateCards(root);
   }
 
   function buildPage() {
@@ -122,15 +157,18 @@
       banner() +
       '<div class="evbar" data-role="evbar"></div>' +
       '<nav class="quicklinks" aria-label="More ways to play"><a class="btn btn--sm" href="#leagues">' + ui.icon('trophy') + 'Leagues and the Charity Cup</a><a class="btn btn--sm" href="#crews">' + ui.icon('users') + 'Crews</a><a class="btn btn--sm" href="#cards">' + ui.icon('layers') + 'Your cards</a></nav>' +
-      '<div class="lcards" data-role="cards">' + GS.live.rooms().filter(function (r) { return !r.tab; }).map(function (r) { return cardHTML(r, false); }).join('') + '</div>' +
       tableSections() +
       '<section class="sect" aria-labelledby="lv-recent"><div class="sect__head"><h2 class="sect__t" id="lv-recent">Pots that just went out</h2></div><div data-role="recent"></div></section>' +
       '<section class="sect panel" aria-labelledby="lv-how"><h2 class="sect__t" id="lv-how">How a live table works</h2>' +
         '<ol class="steps3 steps3--live">' +
-          '<li><b>1. Back a charity</b><span>Stake $5, $10, $20, $50, $100 or any amount. Back a charity that is already at the table or open a gate for a new one (up to ' + GS.live.MAX_GATES + ' charities per table, more at the big Plinko tables).</span></li>' +
+          '<li><b>1. Back a charity</b><span>Pick a game and a table size, then stake $5, $10, $20, $50, $100 or any amount. Back a charity that is already at the table or open a gate for a new one (up to ' + GS.live.MAX_GATES + ' charities at a small table, more at the big ones).</span></li>' +
           '<li><b>2. Watch the odds move</b><span>The board shows who has backed what and each charity’s chance. Change your mind or take your bet back until the table locks.</span></li>' +
           '<li><b>3. One charity takes the pot</b><span>The draw is fair and checkable. The race, wheel or drop plays out, and the winner gets every dollar in the pot. It is as if your charity won, even if you backed another one.</span></li>' +
         '</ol></section>';
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-lgame]') : null;
+      if (b) { chooseLobby(b.getAttribute('data-lgame')); }
+    });
     pageBuilt = true;
   }
 
@@ -594,12 +632,30 @@
     return room.field().map(function (f) { return { charity: f.charity, tickets: f.tickets }; });
   }
 
+  /**
+   * What a game is told about the table. Plinko reads the whole board itself (`info.spots`). Every other game gets one
+   * entrant per spot on the board: the charities people backed (with their tickets) and the catalog charities that fill
+   * the rest (0 tickets and `filler: true`: they are on the board, but cannot win).
+   */
+  function boardEntrants(room, backed, info) {
+    if (!info || !info.spots) { return backed; }
+    var by = {};
+    backed.forEach(function (e) { by[e.charity.id] = e; });
+    var seen = {};
+    info.spots.forEach(function (c) { seen[c.id] = (seen[c.id] || 0) + 1; });
+    return info.spots.map(function (c) {
+      var e = by[c.id];
+      return e ? { charity: c, tickets: e.tickets / seen[c.id], backed: true } : { charity: c, tickets: 0, filler: true };
+    });
+  }
+
   function setFieldNow() {
     if (!cur || animating[cur.id]) { return; }
-    var list = entrants(cur.room);
-    if (list.length < 2) { return; }
+    var backed = entrants(cur.room);
+    if (backed.length < 2) { return; }
     var g = GS.games[cur.id];
-    g.setField(list, cur.room.boardInfo());
+    var info = cur.room.boardInfo();
+    g.setField(cur.id === 'plinko' ? backed : boardEntrants(cur.room, backed, info), info);
     g.lock(false);
   }
 
@@ -705,8 +761,8 @@
   function renderTableBar(room) {
     if (!room.tab) { el.tablebar.hidden = true; el.tablebar.innerHTML = ''; return; }
     el.tablebar.hidden = false;
-    el.tablebar.innerHTML = '<span class="tablebar__l">Table size <small>(bins)</small></span>' + GS.live.tables(room.gid).map(function (t) {
-      return '<a class="tbtn' + (t.id === room.id ? ' is-on' : '') + '" href="#live-' + t.id + '"' + (t.id === room.id ? ' aria-current="page"' : '') + ' aria-label="' + esc(t.tab.name + ' table, ' + t.size + ' bins') + '">' + t.size.toLocaleString('en-US') + '</a>';
+    el.tablebar.innerHTML = '<span class="tablebar__l">Table size <small>(' + esc(room.unit(2)) + ')</small></span>' + GS.live.tables(room.gid).map(function (t) {
+      return '<a class="tbtn' + (t.id === room.id ? ' is-on' : '') + '" href="#live-' + t.id + '"' + (t.id === room.id ? ' aria-current="page"' : '') + ' aria-label="' + esc(t.tab.name + ' table, ' + t.size + ' ' + t.unit(t.size)) + '">' + t.size.toLocaleString('en-US') + '</a>';
     }).join('');
   }
 
@@ -765,7 +821,7 @@
   function renderAbout() {
     var g = GS.games[cur.id];
     var tableNote = cur.room.tab
-      ? '<p><b>This table: ' + esc(cur.room.tab.name) + ', ' + cur.room.size.toLocaleString('en-US') + ' bins.</b> Up to ' + cur.room.maxGates + ' different charities can be backed here. Every charity somebody backs gets a bin; the remaining bins are filled in at random from our catalog so the board is always ' + cur.room.size.toLocaleString('en-US') + ' bins. Only backed charities hold tickets, so only they can win; the others are scenery. If the catalog has fewer charities than bins, charities repeat evenly.</p>'
+      ? '<p><b>This table: ' + esc(cur.room.tab.name) + ', ' + cur.room.size.toLocaleString('en-US') + ' ' + esc(cur.room.unit(cur.room.size)) + '.</b> Up to ' + cur.room.maxGates + ' different charities can be backed here. Every charity somebody backs gets a spot; the remaining ' + esc(cur.room.unit(2)) + ' are filled in at random from our catalog so the board is always ' + cur.room.size.toLocaleString('en-US') + ' ' + esc(cur.room.unit(cur.room.size)) + '. Only backed charities hold tickets, so only they can win; the others are scenery. If the catalog has fewer charities than ' + esc(cur.room.unit(2)) + ', charities repeat evenly.</p>'
       : '';
     return '<div class="about">' + tableNote + '<p><b>Live ' + esc(g.name) + '.</b> A table opens every few seconds. Everyone at it backs a charity with a stake, and every dollar is a ticket in a draw, so a charity with 30% of the pot wins 30% of the time. ' +
       'Whichever charity is drawn gets the <b>whole pot</b>, whether you backed it or not.</p>' +

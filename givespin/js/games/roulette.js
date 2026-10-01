@@ -502,12 +502,17 @@
     el.legend.className = 'rlegend' + (big ? ' rlegend--scroll' : '');
     if (big) { el.legend.setAttribute('tabindex', '0'); } else { el.legend.removeAttribute('tabindex'); }
     if (field) {
-      // live: one chip per charity with its stake share and how many pockets it owns
+      // live: one chip per charity with its stake share and how many pockets it owns (backed charities first; a long board is cut off)
       var total = field.reduce(function (s, e) { return s + e.tickets; }, 0);
-      el.legend.innerHTML = field.map(function (e) {
-        var mine = pockets.filter(function (c) { return c.id === e.charity.id; }).length;
-        return '<li data-id="' + e.charity.id + '">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' · ' + core.fmtShare(e.tickets, total) + ' · ' + mine + (mine === 1 ? ' pocket' : ' pockets') + '</span></li>';
-      }).join('');
+      var mineBy = {};
+      pockets.forEach(function (c) { mineBy[c.id] = (mineBy[c.id] || 0) + 1; });
+      var ordered = field.filter(function (e) { return e.tickets > 0; }).concat(field.filter(function (e) { return !(e.tickets > 0); }));
+      var cut = ordered.slice(0, 150);
+      el.legend.innerHTML = cut.map(function (e) {
+        var mine = mineBy[e.charity.id] || 0;
+        var sh = kit.share(e.tickets, total);
+        return '<li data-id="' + e.charity.id + '">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' · ' + (sh ? sh + ' · ' : '') + mine + (mine === 1 ? ' pocket' : ' pockets') + '</span></li>';
+      }).join('') + (ordered.length > cut.length ? '<li class="rlegend__more">+ ' + (ordered.length - cut.length) + ' more</li>' : '');
       return;
     }
     if (pockets.length > 40) {
@@ -564,7 +569,9 @@
 
   function setLiveField(entrants) {
     field = entrants;
-    var counts = core.apportion(entrants.map(function (e) { return e.tickets; }), Math.max(LIVE_POCKETS, entrants.length), 1);
+    // one pocket for every spot on the board (catalog fillers included), plus a few more shared out by stake
+    var nSpots = entrants.length;
+    var counts = core.apportion(entrants.map(function (e) { return e.tickets; }), Math.max(LIVE_POCKETS, nSpots + Math.min(nSpots, 36)), 1);
     var list = [];
     entrants.forEach(function (e, i) { for (var k = 0; k < counts[i]; k++) { list.push(e.charity); } });
     // spread each charity's pockets around the wheel

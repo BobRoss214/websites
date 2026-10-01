@@ -28,21 +28,34 @@
   var OPEN_MS = 28000;
   var LOCK_MS = 2600;
   var RESULT_MS = 10000;
-  // Live Plinko comes in tables of different sizes. Players back charities (the gates); the bins that are left over are
-  // filled in from the catalog so the board is always exactly `size` bins. Only backed charities are in the draw.
-  var TABLES = {
-    plinko: [
-      { size: 5,    name: 'Mini',    gates: 5,  bots: 1,   play: 6500 },
-      { size: 10,   name: 'Small',   gates: 8,  bots: 1.2, play: 8500 },
-      { size: 25,   name: 'Classic', gates: 12, bots: 1.6, play: 12500 },
-      { size: 50,   name: 'High',    gates: 16, bots: 2.1, play: 13000 },
-      { size: 100,  name: 'Big',     gates: 20, bots: 2.7, play: 13500 },
-      { size: 200,  name: 'Giant',   gates: 24, bots: 3.3, play: 14500 },
-      { size: 1000, name: 'Mega',    gates: 30, bots: 4.2, play: 30000 }
-    ]
-  };
-  var DEFAULT_TABLE = { plinko: 10 };      // the table the lobby strip and #live-plinko open
+  // Every live game comes in tables of different sizes, like a lobby: pick how many charities are on the board. Players back
+  // charities (the gates); the spots that are left over are filled in from the catalog so the board is always exactly
+  // `size` spots. Only backed charities are in the draw, so only they can win. The spots are bins in Plinko, slices on the
+  // wheel, pockets in roulette, ducks in the duck derby, and so on (see UNITS).
   var PLAY_MS = { derby: 13000, duck: 13000, marble: 14000, balloon: 13000, standing: 11000, roulette: 11000, wheel: 9500, plinko: 9500, drop: 8500, lotto: 10500 };
+  var SIZES = [
+    { size: 5,    name: 'Mini',    gates: 5,  bots: 1,   play: 6500 },
+    { size: 10,   name: 'Small',   gates: 8,  bots: 1.2, play: 8500 },
+    { size: 25,   name: 'Classic', gates: 12, bots: 1.6, play: 12500 },
+    { size: 50,   name: 'High',    gates: 16, bots: 2.1, play: 13000 },
+    { size: 100,  name: 'Big',     gates: 20, bots: 2.7, play: 13500 },
+    { size: 200,  name: 'Giant',   gates: 24, bots: 3.3, play: 14500 },
+    { size: 1000, name: 'Mega',    gates: 30, bots: 4.2, play: 30000 }
+  ];
+  var UNITS = {
+    plinko: ['bin', 'bins'], wheel: ['slice', 'slices'], drop: ['card', 'cards'], roulette: ['pocket', 'pockets'], derby: ['runner', 'runners'],
+    duck: ['duck', 'ducks'], marble: ['marble', 'marbles'], balloon: ['balloon', 'balloons'], standing: ['tile', 'tiles'], lotto: ['ball', 'balls']
+  };
+  var LIVE_GAMES = Object.keys(UNITS);
+  var TABLES = {};
+  LIVE_GAMES.forEach(function (gid) {
+    // the longer the board, the longer the show; Plinko's own timings are the yardstick for every game
+    TABLES[gid] = SIZES.map(function (t) {
+      return { size: t.size, name: t.name, gates: t.gates, bots: t.bots, play: Math.round(PLAY_MS[gid] * t.play / PLAY_MS.plinko) };
+    });
+  });
+  var DEFAULT_TABLE = {};                  // the table the lobby strip and #live-<game> open
+  LIVE_GAMES.forEach(function (gid) { DEFAULT_TABLE[gid] = 10; });
   var STAKES = [[5, 30], [10, 28], [20, 22], [50, 12], [100, 6], [250, 2]];   // [dollars, weight] for bots
   var HANDLES = [
     'LuckyLark', 'PocketAces', 'NovaGiver', 'DiceDaisy', 'RollingRae', 'PennyPine', 'BigHeartBen', 'MarbleMike', 'SpinDoc', 'CharityCat',
@@ -177,10 +190,16 @@
 
   R.game = function () { return GS.games[this.gid]; };
 
-  /** "Plinko · Big · 100 bins" for a sized table, the game's name otherwise. */
+  /** What a spot on this game's board is called: "bin", "slice", "pocket", "duck"... (plural by default). */
+  R.unit = function (n) {
+    var u = UNITS[this.gid] || ['spot', 'spots'];
+    return n === 1 ? u[0] : u[1];
+  };
+
+  /** "Balloon Race · Big · 100 balloons" for a sized table, the game's name otherwise. */
   R.title = function () {
     var g = this.game();
-    return this.tab ? g.name + ' · ' + this.tab.name + ' · ' + this.size.toLocaleString('en-US') + ' bins' : g.name;
+    return this.tab ? g.name + ' · ' + this.tab.name + ' · ' + this.size.toLocaleString('en-US') + ' ' + this.unit(this.size) : g.name;
   };
 
   /**
@@ -574,6 +593,7 @@
     PRESETS: PRESETS,
     MAX_GATES: MAX_GATES,
     TABLES: TABLES,
+    UNITS: UNITS,
     resolve: resolve,
     DEFAULT_STAKE: 20,
 

@@ -29,8 +29,8 @@ Instant wins), a tile for every game, quick cause chips, your latest gifts and a
 side nav (a bottom bar on phones) leads to Slots, Live tables, Leagues, Crews, Your cards, My Giving, Charities, the Giving
 Club, Fair Play? and Help. A daily wheel sits in the top bar. Search finds games and charities.
 
-**Nineteen games.** Played solo, every one is equal odds for every charity in play. Nine of them also have live
-tables (marked **Live** below), and Plinko has seven table sizes.
+**Nineteen games.** Played solo, every one is equal odds for every charity in play. Ten of them also have live
+tables (marked **Live** below), and every live game has seven table sizes.
 
 | Game | Charities on the board | How it works |
 | --- | --- | --- |
@@ -200,7 +200,7 @@ Open **Live tables** (or the "live now" strip in the lobby) to take a seat at a 
 every live game and a new round every minute or so.
 
 1. **Back a charity.** Put up a stake ($5, $10, **$20 by default**, $50, $100 or any whole-dollar amount) on any
-   charity. A table holds up to 8 charities; back one already there or open a gate for another.
+   charity. A small table holds up to 8 charities (more at the big tables); back one already there or open a gate for another.
 2. **Watch the odds move.** The odds board shows who has backed what, how many players are behind each charity, and
    each charity's chance of winning. Every dollar is one ticket, so a charity with 30% of the pot wins 30% of the time.
    You can take your bet back until the table locks.
@@ -234,13 +234,16 @@ table locks, and refunded if you close the page before the round settles.
 - **Crews.** If you are in a crew, two or three of its simulated members back the same charity as you with small
   simulated stakes ($5 to $20 each), and the feed says so.
 
-**Live Plinko has seven table sizes.** Plinko is the one live game with several tables: 5, 10, 25, 50, 100, 200 and
-1,000 bins (Mini, Small, Classic, High, Big, Giant, Mega), each with its own pot, players and rounds, picked from a
-table lobby on the Live tables page (and switched from a bar inside the table). The charities players back (the gates:
-5 at the smallest table, 30 at the biggest) go on the board, and the remaining bins are **filled in at random from the
-catalog** so the board is always the full size; if the catalog has fewer charities than bins they repeat evenly. Only
-backed charities hold tickets, so only they can win, and the faded bins are scenery. Bigger tables have more bots and
-a longer drop (the 1,000-bin table takes about half a minute).
+**Every live game is a lobby of seven tables.** On the Live tables page you pick a game, then a table: 5, 10, 25, 50,
+100, 200 or 1,000 spots (Mini, Small, Classic, High, Big, Giant, Mega). A spot is a bin in Plinko, a slice on the
+wheel, a pocket in roulette, a card in the drop crate, a ball in the lucky draw, a runner, duck, marble or balloon in the
+races, and a tile in Last One Standing. Each table has its own pot, players and rounds, and you can hop between a game's
+tables from a bar inside the table. The charities players back (the gates: 5 at the smallest table, 30 at the biggest) go
+on the board, and the remaining spots are **filled in at random from the catalog** so the board is always the full size;
+if the catalog has fewer charities than spots they repeat evenly. Only backed charities hold tickets, so only they can
+win: the others are scenery (thin slivers on the wheel, runners with no percentage, faded bins). Bigger tables have more
+bots and a longer show (the 1,000-spot tables take about half a minute). All 70 tables run at once, and a game's
+`#live-<game>` link opens its Small (10-spot) table.
 
 **Live tables are demo-only.** A pooled pot needs a server to hold the money and run the table, and this site never
 handles real money, so in `redirect` mode the live tables are switched off and hidden. To make them real you would

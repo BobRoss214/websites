@@ -72,8 +72,8 @@
         W: W, H: H, t: t, geo: geo, racing: racing, field: !!field, total: tot, n: ents.length, winnerId: winnerId,
         lead: lead,
         pickId: pick,
-        labels: spec.labels !== 'legend' && (!!field || ents.length <= 12),
-        share: function (e) { return field ? core.fmtShare(e.tickets, tot) : ''; }
+        labels: spec.labels !== 'legend' && (field ? ents.length <= 24 : ents.length <= 12),
+        share: function (e) { return field ? kit.share(e.tickets, tot) : ''; }
       };
     }
 
@@ -196,7 +196,7 @@
 
     function renderLegend() {
       if (!el.legend) { return; }
-      var show = spec.labels === 'legend' && ents.length > 0;
+      var show = (spec.labels === 'legend' || (!!field && ents.length > 24)) && ents.length > 0;
       el.legend.hidden = !show;
       if (!show) { el.legend.innerHTML = ''; return; }
       var tot = total();
@@ -212,7 +212,7 @@
         var e = o.e;
         var win = winnerId === e.ch.id;
         return '<li' + (win ? ' class="is-win"' : (e.ch.id === pick ? ' class="is-pick"' : '')) + '>' + GS.ui.mono(e.ch, 20) + '' +
-          '<span>' + U.esc(e.ch.short) + (o.n > 1 ? ' × ' + o.n : '') + (field ? ' <b>' + core.fmtShare(e.tickets, tot) + '</b>' : '') + '</span></li>';
+          '<span>' + U.esc(e.ch.short) + (o.n > 1 ? ' × ' + o.n : '') + (field && e.tickets > 0 ? ' <b>' + core.fmtShare(e.tickets, tot) + '</b>' : '') + '</span></li>';
       }).join('') + (uniq.length > shown.length ? '<li class="rlegend__more">+ ' + (uniq.length - shown.length) + ' more</li>' : '');
     }
 

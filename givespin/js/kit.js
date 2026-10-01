@@ -40,6 +40,25 @@
       return { items: entrants.map(function (e) { return e.charity; }), tickets: entrants.map(function (e) { return e.tickets; }) };
     },
 
+    /** A live charity's share of the pot as text, or nothing for a catalog charity that only fills a spot on the board (0 tickets). */
+    share: function (tickets, total) { return tickets > 0 ? core.fmtShare(tickets, total) : ''; },
+
+    /**
+     * How wide each live entrant looks on a board that is sized by stake (wheel slices, strip cards). Charities somebody
+     * backed keep their stake; the catalog charities that fill the rest of the board get a thin equal sliver (about a third
+     * of the board between them, never wider than the smallest stake) so they are visible but clearly not the favourites.
+     */
+    liveWeights: function (entrants) {
+      var sum = 0, min = Infinity, fillers = 0;
+      entrants.forEach(function (e) { if (e.tickets > 0) { sum += e.tickets; if (e.tickets < min) { min = e.tickets; } } else { fillers += 1; } });
+      if (!fillers) { return entrants.map(function (e) { return e.tickets; }); }
+      var floor = Math.min(min === Infinity ? 1 : min, (sum || 1) * 0.35 / fillers);
+      return entrants.map(function (e) { return e.tickets > 0 ? e.tickets : floor; });
+    },
+
+    /** True when a live board has catalog charities filling spots (not just the charities that were backed). */
+    hasFillers: function (entrants) { return !!entrants && entrants.some(function (e) { return !(e.tickets > 0); }); },
+
     /** Shortens `text` with an ellipsis until it fits `maxW` in the context's current font. */
     fit: function (ctx, text, maxW) {
       var t = text;

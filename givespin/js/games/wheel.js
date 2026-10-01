@@ -352,7 +352,12 @@
 
   function updateNote() {
     if (!el.note) { return; }
-    if (field) { el.note.textContent = 'Slices are sized by the money behind each charity: a bigger slice is a better chance.'; return; }
+    if (field) {
+      el.note.textContent = kit.hasFillers(field)
+        ? 'Slices are sized by the money behind each charity: a bigger slice is a better chance. The thin slices are catalog charities that fill the wheel; they cannot win.'
+        : 'Slices are sized by the money behind each charity: a bigger slice is a better chance.';
+      return;
+    }
     el.note.textContent = kit.boardNote(pool, segs.length, pick, 'on the wheel');
   }
 
@@ -452,7 +457,7 @@
       if (spinning) { return; }
       field = entrants;
       var split = kit.split(entrants);
-      setSegs(split.items, split.tickets);
+      setSegs(split.items, kit.liveWeights(entrants));
       fresh = true;
       resize();
     },
