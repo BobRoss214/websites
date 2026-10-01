@@ -133,6 +133,7 @@ alt text and captions that still need translating.
 ## What's interactive
 
 - **Seasonal hero:** the first screen shows the season the farm is in today. A red, open tractor (no cab) pulls the wagon ride past the fields in **spring, summer and fall**: riders sit behind the side boards and wave (no hay: it is a wagon ride). **Fall:** pumpkin patch (tap to pick), a little barrel train on the far lane, scarecrow, crow, falling leaves. **Winter:** Christmas trees to light, campfires to stoke, a snowman, snow. **Summer:** blueberry bushes to pick, bees, sunflowers to snip. **Spring:** strawberries to pick, kids picking in the rows. A "See the farm in…" switcher changes the season, the Seasons tabs and the u-pick card colour.
+- **Hero reactions:** the sun beams, wobbles and blinks on hover and hops, squints and bursts into sparks when clicked (`initSun` in `js/hero.js`, styles at the bottom of `css/extras.css`). The "No reservation? Visit The GreenHouse" pill lifts, glows green and shines on hover, and pops with a spray of leaves before it glides down to The GreenHouse (`initNote`). The big buttons and the "New" tomato chip have their own hover moments. All of it is switched off by `prefers-reduced-motion`, and the hover parts only run on devices that can hover.
 - **Seasonal touches elsewhere:** the top bar says what is in season; dividers and the footer scene change with the season.
 - **Open now** badges, a **notice bar**, and a **next-season countdown** with an email sign-up.
 - **Growing vine** under the header shows scroll progress.

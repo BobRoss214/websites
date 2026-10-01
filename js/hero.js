@@ -1080,10 +1080,85 @@
     switchEl.hidden = false;
   }
 
+  /* ------------------------------------------------------------------ *
+   * Friendly extras: the sun and the "No reservation?" pill answer a
+   * hover with CSS (css/extras.css) and a click with a burst from here.
+   * ------------------------------------------------------------------ */
+  const rnd = (a, b) => a + Math.random() * (b - a);   // visual-only randomness (the scenes use the seeded W.rand)
+
+  function restart(el, cls, ms) {
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    clearTimeout(el._fx);
+    el._fx = setTimeout(() => el.classList.remove(cls), ms);
+  }
+
+  function initSun() {
+    const sun = $('.sun', hero);
+    if (!sun) return;
+    const COLORS = ['#ffd54f', '#ffb300', '#fff4a8', '#ff8a3d', '#ffffff'];
+    sun.addEventListener('click', () => {
+      restart(sun, 'sun-boom', 1200);
+      if (reduceMotion) return;
+      const size = sun.offsetWidth || 120;
+      const box = doc.createElement('span');
+      box.className = 'sun-burst';
+      box.style.setProperty('--r0', Math.round(size * 0.34) + 'px');
+      let html = '<b class="sun-ring"></b><b class="sun-ring" style="--dl:.18s"></b>';
+      const n = 18;
+      for (let i = 0; i < n; i++) {
+        const a = Math.round((360 / n) * i + (i % 2 ? 8 : -8));
+        const d = Math.round(size * rnd(0.72, 1.22));
+        const s = Math.round(rnd(9, 19));
+        html += '<i style="--a:' + a + 'deg;--d:' + d + 'px;--s:' + s + 'px;--c:' + COLORS[i % COLORS.length] + ';--dl:' + ((i % 3) * 0.04).toFixed(2) + 's"></i>';
+      }
+      box.innerHTML = html;
+      sun.appendChild(box);
+      setTimeout(() => box.remove(), 1500);
+    });
+  }
+
+  function initNote() {
+    const note = $('.hero-note', hero);
+    const link = note && $('a[href^="#"]', note);
+    if (!note || !link) return;
+    const go = () => {
+      const href = link.getAttribute('href');
+      const target = $(href);
+      if (!target) return;
+      if (location.hash === href) target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      else location.hash = href;
+    };
+    note.addEventListener('click', (e) => {
+      if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (reduceMotion) { if (!link.contains(e.target)) go(); return; }
+      e.preventDefault();                      // let the pop play first, then glide down to The GreenHouse
+      restart(note, 'is-pop', 800);
+      const box = doc.createElement('span');
+      box.className = 'note-burst';
+      const GREENS = ['#43a047', '#7bc67e', '#2e8b57'];
+      let html = '';
+      for (let i = 0; i < 16; i++) {
+        const kind = ['p-leaf', 'p-star', 'p-dot'][i % 3];
+        const dir = (i / 16) * Math.PI * 2;
+        const dist = rnd(70, 140);
+        const x = Math.round(Math.cos(dir) * dist * 1.5), y = Math.round(Math.sin(dir) * dist * 0.7 - 20);
+        html += '<i class="' + kind + '" style="--x:' + x + 'px;--y:' + y + 'px;--r:' + Math.round(rnd(-260, 260)) + 'deg;--s:' + Math.round(rnd(11, 19)) + 'px;--c:' + GREENS[i % 3] + ';--dl:' + ((i % 4) * 0.03).toFixed(2) + 's"></i>';
+      }
+      box.innerHTML = html;
+      note.appendChild(box);
+      setTimeout(() => box.remove(), 1400);
+      setTimeout(go, 520);
+    });
+  }
+
   /* ------------------------------------------------------------------ */
   if (hasHero) {
     setSeason(W.seasons.current(), false);
     doc.documentElement.classList.add('scene-ready');
+    initSun();
+    initNote();
     W.hero = { setSeason: (id) => setSeason(id, true) };
   } else {
     const id = W.seasons.active || W.seasons.current();

@@ -189,7 +189,86 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
   .choose-new:hover .choose-new-badge{animation:chipWiggle .8s ease-in-out infinite;display:inline-block}
   .choose-new:hover .ico{animation:arrowDash .8s ease-in-out infinite}
 }
+/* The sun is a friend. Hover: it beams, wobbles, blinks and grins. Click: it hops, squints, and bursts into sparks. */
+.sun{pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+.sun svg{transition:scale .45s cubic-bezier(.3,1.8,.5,1),filter .3s}
+.sun-rays{transition:scale .45s cubic-bezier(.3,1.8,.5,1)}
+.sun-eyes,.sun-mouth,.sun-cheek{transform-box:fill-box;transform-origin:center}
+.sun-mouth{transform-origin:50% 0;transition:transform .3s cubic-bezier(.3,1.8,.5,1)}
+.sun-cheek{transition:transform .3s cubic-bezier(.3,1.8,.5,1),opacity .3s}
+@keyframes sunWobble{0%,100%{transform:rotate(-5deg) translateY(0)}50%{transform:rotate(5deg) translateY(-7px)}}
+@keyframes sunPulse{0%,100%{scale:1.08}50%{scale:1.3}}
+@keyframes sunBlink{0%,84%,100%{transform:scaleY(1)}90%{transform:scaleY(.1)}}
+@keyframes sunBoom{
+  0%{transform:none}
+  14%{transform:translateY(8px) scale(1.2,.78)}
+  36%{transform:translateY(-34px) scale(.88,1.2) rotate(-9deg)}
+  58%{transform:translateY(0) scale(1.2,.82) rotate(6deg)}
+  76%{transform:translateY(-9px) scale(.96,1.06)}
+  100%{transform:none}
+}
+@keyframes sunSquint{0%,100%{transform:none}18%,80%{transform:translateY(2px) scale(1.15,.2)}}
+@keyframes sunRaysSpin{to{rotate:360deg}}
+@keyframes sunSpark{
+  0%{opacity:1;transform:rotate(var(--a)) translateY(calc(var(--r0) * -1)) scale(.3)}
+  65%{opacity:1}
+  100%{opacity:0;transform:rotate(var(--a)) translateY(calc(var(--d) * -1)) rotate(220deg) scale(1.3)}
+}
+@keyframes sunRing{0%{opacity:.95;transform:scale(.7)}100%{opacity:0;transform:scale(2.4)}}
+.sun-glow,.sun:hover svg{filter:drop-shadow(0 0 16px rgba(255,200,40,.95)) drop-shadow(0 0 42px rgba(255,150,20,.65))}
+@media (hover:hover){
+  .sun:hover svg{scale:1.16;animation:sunWobble 1.2s ease-in-out infinite}
+  .sun:hover .sun-rays{animation:spin 70s linear infinite,sunPulse .8s ease-in-out infinite}
+  .sun:hover .sun-eyes{animation:sunBlink 1.6s ease-in-out infinite}
+  .sun:hover .sun-mouth{transform:scale(1.3,1.55)}
+  .sun:hover .sun-cheek{transform:scale(1.35);opacity:.95}
+}
+.sun-boom svg{scale:1.16;filter:drop-shadow(0 0 20px rgba(255,210,60,1)) drop-shadow(0 0 50px rgba(255,150,20,.8));animation:sunBoom 1.15s cubic-bezier(.3,.9,.4,1) both}
+.sun-boom .sun-rays{scale:1.3;animation:spin 70s linear infinite,sunRaysSpin 1.15s cubic-bezier(.2,.8,.2,1) 1}
+.sun-boom .sun-eyes{animation:sunSquint 1.15s ease-in-out 1}
+.sun-boom .sun-mouth{transform:scale(1.5,2)}
+.sun-boom .sun-cheek{transform:scale(1.5);opacity:1}
+.sun-burst{position:absolute;inset:0;pointer-events:none;z-index:3}
+.sun-burst i{position:absolute;left:50%;top:50%;width:var(--s,14px);height:var(--s,14px);margin:calc(var(--s,14px) / -2) 0 0 calc(var(--s,14px) / -2);background:var(--c,#ffd54f);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);opacity:0;animation:sunSpark .95s cubic-bezier(.1,.7,.3,1) var(--dl,0s) forwards}
+.sun-ring{position:absolute;inset:8%;border-radius:50%;border:5px solid #fff4a8;box-shadow:0 0 14px rgba(255,190,40,.9),inset 0 0 14px rgba(255,190,40,.6);opacity:0;animation:sunRing .9s ease-out var(--dl,0s) forwards}
+
+/* "No reservation? Visit The GreenHouse": the pill lifts, wobbles, glows green and shines; click squashes it and sprays leaves. */
+.hero-note{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .38s cubic-bezier(.3,1.9,.5,1),background-color .25s,box-shadow .3s}
+.hero-note .ico{transition:transform .25s}
+@keyframes noteWiggle{0%,100%{rotate:-1.8deg}50%{rotate:1.8deg}}
+@keyframes noteRing{0%{box-shadow:0 7px 0 var(--ink),0 0 0 0 rgba(67,160,71,.8)}100%{box-shadow:0 7px 0 var(--ink),0 0 0 22px rgba(67,160,71,0)}}
+@keyframes noteShine{0%{background-position:150% 0}100%{background-position:-60% 0}}
+@keyframes noteArrow{0%,100%{transform:translateX(0) scale(1.2)}50%{transform:translateX(8px) scale(1.5)}}
+@keyframes notePop{
+  0%{transform:none}
+  14%{transform:translateY(4px) scale(1.2,.8)}
+  42%{transform:translateY(-20px) scale(.94,1.16)}
+  66%{transform:translateY(0) scale(1.12,.9)}
+  84%{transform:scale(.98,1.03)}
+  100%{transform:translateY(-3px) scale(1.1)}
+}
+@keyframes noteBit{
+  0%{opacity:1;transform:translate(0,0) scale(.3) rotate(0)}
+  55%{opacity:1;transform:translate(calc(var(--x) * .85),calc(var(--y) * .85 - 14px)) scale(1.1) rotate(calc(var(--r) * .6))}
+  100%{opacity:0;transform:translate(var(--x),calc(var(--y) + 26px)) scale(.9) rotate(var(--r))}
+}
+@media (hover:hover){
+  .hero-note:hover{transform:translateY(-6px) scale(1.14);background-color:#e2f6d3;background-image:linear-gradient(100deg,transparent 38%,rgba(255,255,255,.95) 50%,transparent 62%);background-size:260% 100%;box-shadow:0 7px 0 var(--ink);animation:noteWiggle .9s ease-in-out infinite,noteRing 1s ease-out infinite,noteShine .9s ease-out infinite;z-index:2}
+  .hero-note:hover a{text-decoration-thickness:3px;text-decoration-color:var(--green,#2e8b57)}
+  .hero-note:hover .ico{animation:noteArrow .8s ease-in-out infinite}
+}
+.hero-note:active{transform:translateY(2px) scale(.95);box-shadow:0 1px 0 var(--ink);animation:none}
+.hero-note.is-pop{background-color:#e2f6d3;animation:notePop .75s cubic-bezier(.3,1.4,.5,1) both;z-index:2}
+.hero-note.is-pop .ico{animation:noteArrow .5s ease-in-out 1}
+.note-burst{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:3}
+.note-burst i{position:absolute;left:0;top:0;width:var(--s,14px);height:var(--s,14px);margin:calc(var(--s,14px) / -2) 0 0 calc(var(--s,14px) / -2);opacity:0;animation:noteBit .95s cubic-bezier(.15,.7,.3,1) var(--dl,0s) forwards}
+.note-burst .p-leaf{background:var(--c,#43a047);border:2px solid var(--ink);border-radius:0 100% 0 100%}
+.note-burst .p-star{background:#ffd54f;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+.note-burst .p-dot{background:#e5334b;border:2px solid var(--ink);border-radius:50%}
+
 @media (prefers-reduced-motion:reduce){
   .hero-cta .btn:hover,.hero-cta .btn:nth-child(even):hover{transform:none;animation:none}
   .hero-cta .btn:hover::after,.hero-cta .btn:hover .ico,.chips .chip-new:hover,.chips .chip-new:hover .ico,.choose-new:hover,.choose-new:hover .ico,.choose-new:hover .choose-new-badge{animation:none;transform:none}
+  .sun:hover svg,.sun-boom svg,.sun:hover .sun-rays,.sun-boom .sun-rays,.sun:hover .sun-eyes,.sun-boom .sun-eyes,.hero-note:hover,.hero-note.is-pop,.hero-note:hover .ico,.hero-note.is-pop .ico{animation:none;scale:1;transform:none;filter:none}
+  .sun-burst,.note-burst{display:none}
 }
