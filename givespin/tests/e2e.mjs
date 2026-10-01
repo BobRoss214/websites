@@ -120,6 +120,13 @@ const a11y = async (page, label) => {
   check(res.length === 0, 'axe: ' + label, res);
 };
 
+// A live table cycles through its phases by itself (the stake buttons switch off while it is locked), so an accessibility scan
+// that lands on a phase change measures a half-way state. Wait for an open betting window with plenty of time left first.
+const liveSettled = (page, id) => page.waitForFunction((rid) => {
+  const r = window.GS.live.room(rid);
+  return !!r && r.phase === 'open' && r.msLeft() > 7000;
+}, id, { timeout: 70000, polling: 200 }).catch(() => {});
+
 const GAMES = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
 const SLOTS = ['slots', 'goldrush', 'deepsea', 'sweets', 'cosmic'];
 const LIVE_TABLES = 10 * 7; // ten live games, each with seven table sizes
@@ -1067,6 +1074,7 @@ if (section('13b. Live tables: the page, the lobby strip and a live room')) {
   check(await page.locator('#below-tabs .tab').count() === 4 && (await page.locator('#tab-feed').innerText()) === 'Live feed', 'the tabs under the table are Live feed, Recent results, Fair play and How it works');
   check((await page.locator('#tabp').innerText()).includes('BOT'), 'the live feed marks bots with a BOT tag');
   await shot(page, '13-live-room');
+  await liveSettled(page, 'derby10');
   await a11y(page, 'live room');
   await page.click('#tab-fair');
   check((await page.locator('#tabp').innerText()).includes('committed before bets'), 'the Fair play tab shows the hash committed before bets open');
@@ -1162,7 +1170,9 @@ if (section('13d. Live tables: a round, the whole pot to the winner, and a fair 
       winner: res.winnerId, pot: res.pot, players: res.players, bots: res.bots, shown: GS.games.derby._shown(), you: res.you && { won: res.you.won, dollars: res.you.dollars },
       histAlloc: h.allocations.map((a) => [a.charityId, a.cents]), histLive: h.live, histGame: h.game, histTotal: h.totalCents,
       weights: res.weights, tickets: res.weights.reduce((s, w) => s + w[1], 0), balance: GS.store.balance(), plays: GS.store.get().plays, liveRounds: GS.store.get().liveRounds, liveWins: GS.store.get().liveWins,
-      badges: Object.keys(GS.store.get().badges), pending: GS.store.get().pending.length, monthly: GS.store.get().monthly.cents, xp: GS.store.get().xp
+      badges: Object.keys(GS.store.get().badges), pending: GS.store.get().pending.length, monthly: GS.store.get().monthly.cents, xp: GS.store.get().xp,
+      // read in the same instant as the rest: the table moves on to its next round ten seconds after the result
+      marks: document.querySelectorAll('#livepanel .odd.is-winner').length, text: document.querySelector('#lt-result').innerText
     };
   });
   check(r.shown[0] === r.winner, 'the race on screen ends on the charity the draw picked', r);
@@ -1173,10 +1183,10 @@ if (section('13d. Live tables: a round, the whole pot to the winner, and a fair 
   check(r.monthly === 2000, 'it counts once toward this month\'s giving', r.monthly);
   check(r.plays === 1 && r.liveRounds === 1 && r.liveWins === (r.you.won ? 1 : 0), 'plays and live stats are recorded', r);
   check(r.badges.includes('live') && (r.badges.includes('called') === r.you.won) && (r.badges.includes('bigpot') === (r.pot >= 500)), 'Live Wire (and, when earned, Called It and Pot of Gold) are unlocked', r.badges);
-  const text = await page.locator('#lt-result').innerText();
+  const text = r.text;
   check(text.includes('takes the pot') && text.includes('$' + r.pot.toLocaleString('en-US')) && text.includes('simulated bots'), 'the result shows the pot and says the rest came from simulated bots', { pot: r.pot, text });
   check(r.you.won ? text.includes('You backed the winner') : text.includes('as if your charity won'), 'and speaks to whether your pick won');
-  check(await page.locator('#livepanel .odd.is-winner').count() === 1, 'the winner is marked on the odds board');
+  check(r.marks === 1, 'the winner is marked on the odds board', r.marks);
   await shot(page, '13-live-result');
   await page.click('#lt-result .rs-fair > summary');
   await page.click('#lt-result [data-role="verify"]');
@@ -1248,9 +1258,14 @@ if (section('13e. Live tables: leaving mid-round, reloading, and arriving late')
   await p3.evaluate(() => { const r = GS.live.room('marble'); r.openRound(0); r.lock(); });
   await p3.waitForFunction(() => GS.live.room('marble').phase === 'playing', null, { timeout: 15000 });
   await go(p3, '#live-marble');
-  await p3.waitForSelector('#lt-result .lt-res', { timeout: 40000 });
-  check(await p3.evaluate(() => GS.games.marble._shown()[0] === GS.live.room('marble').result.winnerId), 'arriving mid-round still plays the race to the drawn winner');
-  check((await p3.locator('#lt-result').innerText()).includes('You watched'), 'a table you only watched says so');
+  // the snapshot is taken inside the wait, while the result is on screen (the table moves on ten seconds later)
+  const arrived = await (await p3.waitForFunction(() => {
+    const r = GS.live.room('marble');
+    const card = document.querySelector('#lt-result .lt-res');
+    return r && r.phase === 'result' && r.result && card ? { ok: GS.games.marble._shown()[0] === r.result.winnerId, text: card.innerText } : null;
+  }, null, { timeout: 40000, polling: 100 })).jsonValue();
+  check(arrived.ok, 'arriving mid-round still plays the race to the drawn winner');
+  check(arrived.text.includes('You watched'), 'a table you only watched says so');
   check(await balance(p3) === 100000, 'and costs nothing');
   await p3.close();
 }
@@ -1265,8 +1280,12 @@ if (section('13f. Live tables: every live game')) {
     await page.waitForTimeout(120);
     await page.locator('#livepanel .odd').first().click();
     await page.click('#livepanel [data-role="join"]');
-    await page.waitForSelector('#lt-result .lt-res', { timeout: 60000 });
-    const info = await page.evaluate((gid) => ({ w: GS.live.room(gid).result.winnerId, shown: GS.games[gid]._shown(), hist: GS.store.get().history[0].game }), id);
+    // the snapshot is taken inside the wait, while the result is on screen (the table moves on ten seconds later)
+    const info = await (await page.waitForFunction((gid) => {
+      const r = GS.live.room(gid);
+      return r && r.phase === 'result' && r.result && document.querySelector('#lt-result .lt-res')
+        ? { w: r.result.winnerId, shown: GS.games[gid]._shown(), hist: GS.store.get().history[0].game } : null;
+    }, id, { timeout: 60000, polling: 100 })).jsonValue();
     check(info.shown[0] === info.w && info.hist === id, id + ': the live game shows the drawn winner and records the round', info);
     check(await page.evaluate(async () => (await GS.ui.receipt.verifyRound(GS.store.get().history[0].fair)).ok), id + ': the live round verifies');
   }
@@ -1882,7 +1901,7 @@ if (section('16. Accessibility scan (needs AXE) and page health')) {
     await openApp(page);
     for (const g of GAMES) { await go(page, '#game-' + g); await page.waitForTimeout(500); await a11y(page, 'game: ' + g); }
     for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#leagues', '#crews', '#cards']) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
-    for (const g of LIVE_GAMES) { await go(page, '#live-' + g); await page.waitForTimeout(500); await a11y(page, 'live room: ' + g); }
+    for (const g of LIVE_GAMES) { await go(page, '#live-' + g); await page.waitForTimeout(500); await liveSettled(page, g); await a11y(page, 'live room: ' + g); }
     await page.close();
   } else { console.log('  skip axe scans (set AXE=/path/to/axe.min.js)'); }
   check(external.length === 0, 'the site makes no requests to any other host', external.slice(0, 5));
