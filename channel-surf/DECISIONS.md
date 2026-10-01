@@ -92,6 +92,19 @@ these is in [RESEARCH.md](RESEARCH.md).
 - **Export / import a setup file**, so you can build the lineup on your own
   computer and load it on the TV computer.
 
+## Your answers (step 1 questions)
+
+- **Testing:** you're opening this environment's internet so I can test real
+  YouTube here. Until it takes effect, I build and test with the practice player.
+- **Controls: all of them.** A TV-style USB remote, a keyboard and mouse, and a
+  touchscreen all have to work. So the on-screen remote has big touch-sized buttons,
+  and every key a cheap media remote sends gets mapped (arrows, OK/Enter, Back,
+  number keys, Page Up/Down for channel, media and volume keys).
+- **Setup happens on the TV computer itself.** Export/import is kept as a small
+  backup feature, not the main path.
+- **No YouTube Premium:** keep the privacy-enhanced player. No standard-player switch.
+- **Show timing: back to back** with a short ident in between (as above).
+
 ## Open, waiting on taste
 
 - Overall look: three mockups coming in step 2.
