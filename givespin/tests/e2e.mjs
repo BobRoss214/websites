@@ -1174,7 +1174,7 @@ if (section('13d. Live tables: a round, the whole pot to the winner, and a fair 
   check(r.plays === 1 && r.liveRounds === 1 && r.liveWins === (r.you.won ? 1 : 0), 'plays and live stats are recorded', r);
   check(r.badges.includes('live') && (r.badges.includes('called') === r.you.won) && (r.badges.includes('bigpot') === (r.pot >= 500)), 'Live Wire (and, when earned, Called It and Pot of Gold) are unlocked', r.badges);
   const text = await page.locator('#lt-result').innerText();
-  check(text.includes('takes the pot') && text.includes('$' + r.pot) && text.includes('simulated bots'), 'the result shows the pot and says the rest came from simulated bots');
+  check(text.includes('takes the pot') && text.includes('$' + r.pot.toLocaleString('en-US')) && text.includes('simulated bots'), 'the result shows the pot and says the rest came from simulated bots', { pot: r.pot, text });
   check(r.you.won ? text.includes('You backed the winner') : text.includes('as if your charity won'), 'and speaks to whether your pick won');
   check(await page.locator('#livepanel .odd.is-winner').count() === 1, 'the winner is marked on the odds board');
   await shot(page, '13-live-result');
