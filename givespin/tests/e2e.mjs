@@ -1707,7 +1707,7 @@ if (section('13o. Every live game is a lobby of seven tables')) {
   for (const gid of LIVE_GAMES) {
     await page.click('#view-live .lgame[data-lgame="' + gid + '"]');
     const sizes = await page.$$eval('#view-live [data-role="tables"] .lcard__size b', (n) => n.map((x) => x.textContent.replace(/,/g, '')));
-    const unit = await page.locator('#view-live [data-role="tables"] .lcard__size small').nth(1).innerText();
+    const unit = (await page.locator('#view-live [data-role="tables"] .lcard__size small').nth(1).innerText()).toLowerCase();   // shown in capitals by CSS
     check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '1000']) && unit === UNIT[gid], gid + ': seven table sizes, counted in ' + UNIT[gid], [sizes, unit]);
   }
   await a11y(page, 'live lobby: last game');
