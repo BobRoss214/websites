@@ -133,6 +133,7 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 .price-list dd{margin:0;font:700 1.1rem/1.2 var(--display);text-align:right}
 .price-list small{display:block;grid-column:1/-1;font:600 .88rem/1.4 var(--body);color:var(--ink-soft);text-align:left;margin-top:2px}
 .price-card .fine{margin:0}
+.price-list dd.pl-note{grid-column:1/-1;margin:2px 0 0;font:600 .88rem/1.4 var(--body);color:var(--ink-soft);text-align:left}
 .price-list dd.soon{justify-self:end;padding:.25em .8em;border:2px dashed var(--red-deep);border-radius:999px;background:#fff1f3;color:var(--red-deep);font:700 .85rem/1.2 var(--display);text-align:center}
 .shop-note{margin:0 0 clamp(28px,4vw,48px)}
 .shop-jump{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:calc(-1 * clamp(8px,2vw,24px)) 0 clamp(20px,3vw,32px);padding:0;list-style:none}
@@ -176,7 +177,7 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 @keyframes arrowDash{0%,100%{transform:translateX(0) scale(1.1)}50%{transform:translateX(7px) scale(1.3)}}
 @media (hover:hover){
   .hero-cta .btn:hover{transform:translateY(-4px) scale(1.07) rotate(-1.2deg);box-shadow:0 9px 0 var(--ink),0 16px 24px rgba(58,36,22,.28);animation:btnRing .9s ease-out infinite}
-  .hero-cta .btn:nth-child(even):hover{transform:translateY(-4px) scale(1.07) rotate(1.2deg)}
+  .hero-cta .btn.btn-white:hover{transform:translateY(-4px) scale(1.07) rotate(1.2deg)}
   .hero-cta .btn:hover::after{animation:btnShine .75s ease-out .05s}
   .hero-cta .btn:hover .ico{animation:arrowDash .8s ease-in-out infinite}
 }
@@ -313,6 +314,20 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 @keyframes achFall{0%{opacity:1;transform:translate(0,0) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translate(var(--sw),820px) rotate(var(--r))}}
 @media (max-width:760px){.ach-stack{bottom:calc(100% + 10px)}.ach-medal{width:54px;height:54px}.ach-medal svg{width:32px;height:32px}.ach-time .ach-medal{width:62px;height:62px}}
 
+/* Off-screen sections stop animating (set by main.js) so the page stays light on phones */
+.is-offscreen,.is-offscreen *,.is-offscreen *::before,.is-offscreen *::after{animation-play-state:paused!important}
+/* Sections below the first screen are only laid out and painted once they are near the viewport. */
+html.cv .cv-sec{content-visibility:auto;contain-intrinsic-size:auto 900px}
+
+/* Back to top */
+.to-top{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:55;width:52px;height:52px;display:grid;place-items:center;padding:0;border:3px solid var(--ink);border-radius:50%;background:var(--sun);color:var(--ink);box-shadow:0 4px 0 var(--ink);cursor:pointer;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.to-top[hidden]{display:none}
+.to-top .ico{width:26px;height:26px;transform:rotate(180deg)}
+.to-top:hover{transform:translateY(-3px)}
+.to-top:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+@media (max-width:760px){.to-top{bottom:calc(84px + env(safe-area-inset-bottom,0px));width:46px;height:46px}}
+@media print{.to-top{display:none!important}}
+
 /* Social links (footer) and the "tag us" note by the photos */
 .social-links{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 0;padding:0;list-style:none}
 .social-links a{display:inline-flex;align-items:center;gap:.45em;padding:.5em 1em;border:2.5px solid rgba(255,255,255,.6);border-radius:999px;color:#fff;font:700 .95rem/1 var(--display);text-decoration:none;transition:background-color .2s,color .2s,transform .25s cubic-bezier(.3,1.6,.5,1)}
@@ -326,7 +341,7 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 .tag-chip:hover{background:#ffe066}
 
 @media (prefers-reduced-motion:reduce){
-  .hero-cta .btn:hover,.hero-cta .btn:nth-child(even):hover{transform:none;animation:none}
+  .hero-cta .btn:hover,.hero-cta .btn.btn-white:hover{transform:none;animation:none}
   .hero-cta .btn:hover::after,.hero-cta .btn:hover .ico,.chips .chip-new:hover,.chips .chip-new:hover .ico,.choose-new:hover,.choose-new:hover .ico,.choose-new:hover .choose-new-badge{animation:none;transform:none}
   .sun:hover svg,.sun-boom svg,.sun:hover .sun-rays,.sun-boom .sun-rays,.sun:hover .sun-eyes,.sun-boom .sun-eyes,.hero-note:hover,.hero-note.is-pop,.hero-note:hover .ico,.hero-note.is-pop .ico{animation:none;scale:1;transform:none;filter:none}
   .sun-burst,.note-burst,.ach-rain{display:none}

@@ -12,6 +12,9 @@ strawberry-picking.html
 school-field-trips.html
 wise-pie.html
 sitemap.xml, robots.txt generated with the pages
+404.html                a friendly "page not found" page (plain English, expects the site at the domain root)
+manifest.webmanifest    icon + colors for phones that bookmark the site
+_headers                security and cache headers for Netlify / Cloudflare Pages (copy the same into other hosts)
 pages/                  the short sources the extra pages are built from
 css/styles.css          design system, hero layout, base components
 css/sections.css        section styles (visit, packages, pizza, GreenHouse, groups, story…)
@@ -138,6 +141,7 @@ alt text and captions that still need translating.
 - **Seasonal hero:** the first screen shows the season the farm is in today. The grey line under the headline describes only that season (strawberries, blueberries, pumpkins + tomatoes & basil, Christmas trees), and in winter the headline itself becomes "Wise Acres Christmas trees". A red, open tractor (no cab) pulls the wagon ride past the fields in **spring, summer and fall**: riders sit behind the side boards and wave (no hay: it is a wagon ride). **Fall:** pumpkin patch (tap to pick), a little barrel train on the far lane, scarecrow, crow, falling leaves. **Winter:** Christmas trees to light, campfires to stoke, a snowman, snow. **Summer:** blueberry bushes to pick, bees, sunflowers to snip. **Spring:** strawberries to pick, kids picking in the rows. A "See the farm in…" switcher changes the season, the Seasons tabs and the u-pick card colour.
 - **Hero reactions:** the sun beams, wobbles and blinks on hover and hops, squints and bursts into sparks when clicked (`initSun` in `js/hero.js`, styles at the bottom of `css/extras.css`). The "No reservation? Visit The GreenHouse" pill lifts, glows green and shines on hover, and pops with a spray of leaves before it glides down to The GreenHouse (`initNote`). The big buttons and the "New" tomato chip have their own hover moments. All of it is switched off by `prefers-reduced-motion`, and the hover parts only run on devices that can hover.
 - **Achievements:** pick 100 of one kind (strawberries, blueberries, sunflowers, pumpkins, or trees lit + fires stoked in winter) and a badge pops up above the basket while that item rains down the screen; pick 1,000 in all and a gold "you've got a lot of time on your hands" badge appears. Counted per visit (`credit()` in `js/hero.js`).
+- **Menu:** Visit, On the Farm, Seasons, Tomatoes, Pizza, GreenHouse, Shop, and a **More** menu (Flowers, Groups, Our Story, FAQ, Contact). On phones it is one long list. In winter the main buttons (hero and phone bar) point to The GreenHouse, since the farm is closed. A round **back to top** button shows after scrolling.
 - **Seasonal touches elsewhere:** the top bar says what is in season; dividers and the footer scene change with the season.
 - **Open now** badges, a **notice bar**, and a **next-season countdown** with an email sign-up.
 - **Growing vine** under the header shows scroll progress.
@@ -149,6 +153,16 @@ alt text and captions that still need translating.
 
 Everything respects `prefers-reduced-motion`, works without JavaScript (content and links), and is
 keyboard navigable.
+
+## Putting it online
+
+1. Upload the whole folder to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step.
+2. Use your real domain at the **root** (`https://www.wiseacresorganic.com/`). If it lives elsewhere, change `SITE` in `tools/pages.py`, run the rebuild commands, and search & replace the domain in `index.html` (canonical, share image, structured data).
+3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
+4. Send people to the Google Business profile, and add your site's address there.
+5. Before launch: fill every "Prices coming soon", confirm hours, Facebook and the hashtag, and have a native speaker read each language (see Content status).
+
+How the page stays fast: sections far down the page are skipped until you scroll near them (`initLazyRender` in `js/main.js`), animations pause when off screen, and photos load lazily. If you ever add a tall new section, nothing needs to change.
 
 ## Notes
 

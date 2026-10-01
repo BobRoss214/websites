@@ -145,11 +145,28 @@
     });
     addEventListener('resize', () => { if (getComputedStyle(toggle).display === 'none') setOpen(false); });
 
+    // "More" dropdown: click to open, Escape or an outside click to close, and it closes when focus leaves.
+    const more = $('.nav-more', nav);
+    const moreBtn = more && $('.nav-more-btn', more);
+    const setMore = (open) => {
+      if (!more) return;
+      more.classList.toggle('is-open', open);
+      moreBtn.setAttribute('aria-expanded', String(open));
+    };
+    if (more) {
+      moreBtn.addEventListener('click', () => setMore(!more.classList.contains('is-open')));
+      more.addEventListener('keydown', (e) => { if (e.key === 'Escape') { setMore(false); moreBtn.focus(); } });
+      more.addEventListener('focusout', (e) => { if (!more.contains(e.relatedTarget)) setMore(false); });
+      doc.addEventListener('click', (e) => { if (!more.contains(e.target)) setMore(false); });
+      more.addEventListener('click', (e) => { if (e.target.closest('a')) setMore(false); });
+    }
+
     // Scroll-spy: highlight the nav link for the section in the middle of the screen.
     if (!('IntersectionObserver' in window)) return;
     const links = new Map($$('.nav ul a[href^="#"]').map((a) => [a.getAttribute('href').slice(1), a]));
     const setCurrent = (id) => {
       links.forEach((a, key) => (key === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+      if (moreBtn) { const inMore = !!(links.get(id) && more.contains(links.get(id))); if (inMore) moreBtn.setAttribute('aria-current', 'true'); else moreBtn.removeAttribute('aria-current'); }
     };
     const spy = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) setCurrent(en.target.dataset.nav || en.target.id); });
@@ -613,7 +630,79 @@
     addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(all, 200); }, { passive: true });
   }
 
+  /* ------------------------------------------------------------------ *
+   * Keep the page light: animations in sections that are off screen are paused
+   * ------------------------------------------------------------------ */
+  function initOffscreenPause() {
+    if (!('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => e.target.classList.toggle('is-offscreen', !e.isIntersecting));
+    }, { rootMargin: '160px 0px' });
+    $$('main > section, .site-footer, .footer-field').forEach((el) => io.observe(el));
+    // The waving riders live inside the sprite, so it only runs while the add-ons list is on screen.
+    const sprite = $('#sprite');
+    const users = $$('.addon-list');
+    if (sprite && users.length) {
+      const seen = new Set();
+      new IntersectionObserver((entries) => {
+        entries.forEach((e) => (e.isIntersecting ? seen.add(e.target) : seen.delete(e.target)));
+        sprite.classList.toggle('is-offscreen', seen.size === 0);
+      }, { rootMargin: '160px 0px' }).observe(users[0]);
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Back-to-top button: shows after a couple of screens of scrolling
+   * ------------------------------------------------------------------ */
+  function initToTop() {
+    const btn = doc.createElement('button');
+    btn.type = 'button';
+    btn.className = 'to-top';
+    btn.hidden = true;
+    btn.setAttribute('aria-label', t('Back to top'));
+    btn.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg>';
+    doc.body.appendChild(btn);
+    let ticking = false;
+    const update = () => { ticking = false; btn.hidden = scrollY < innerHeight * 1.6; };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    btn.addEventListener('click', () => { scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' }); });
+    doc.addEventListener('wa:lang', () => btn.setAttribute('aria-label', t('Back to top')));
+    update();
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Lazy rendering: once the page has laid out for real, sections far from the screen are skipped
+   * (content-visibility). Their real heights are written down first, so nothing jumps.
+   * ------------------------------------------------------------------ */
+  function initLazyRender() {
+    if (!(window.CSS && CSS.supports && CSS.supports('content-visibility', 'auto'))) return;
+    const sections = () => $$('main > section:not(#top):not(.facts):not(.next-up), .site-footer');
+    let timer = 0;
+    const apply = () => {
+      root.classList.remove('cv');                    // lay everything out for real first
+      const vh = innerHeight, y = scrollY;
+      sections().forEach((s) => {
+        const r = s.getBoundingClientRect();
+        const near = r.bottom > -vh && r.top < vh * 2;     // on or near the screen right now
+        const early = r.top + y < vh * 1.5;                // within the first screens of the page
+        s.classList.toggle('cv-sec', !near && !early);
+        const cs = getComputedStyle(s);
+        const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+        s.style.containIntrinsicSize = 'auto ' + Math.max(0, Math.round(r.height - pad)) + 'px';   // the size is for the content box, padding comes on top
+      });
+      root.classList.add('cv');
+    };
+    const later = (ms) => { clearTimeout(timer); timer = setTimeout(apply, ms); };
+    const start = () => later(900);
+    if (doc.readyState === 'complete') start(); else addEventListener('load', start);
+    addEventListener('resize', () => { root.classList.remove('cv'); later(300); }, { passive: true });
+    doc.addEventListener('wa:lang', () => { root.classList.remove('cv'); later(300); });
+  }
+
   /* ------------------------------------------------------------------ */
+  initLazyRender();
+  initToTop();
+  initOffscreenPause();
   initPrint();
   initGallery();
   initZoom();

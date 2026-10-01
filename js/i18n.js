@@ -168,8 +168,8 @@
     doc.querySelectorAll('.lang-cur').forEach((n) => { n.textContent = cur.short; });
     doc.querySelectorAll('[data-lang]').forEach((b) => {
       const on = b.dataset.lang === cur.code;
-      b.setAttribute('aria-checked', String(on));
       if (b.classList.contains('lang-link')) b.setAttribute('aria-pressed', String(on));
+      else b.setAttribute('aria-checked', String(on));
     });
   }
 

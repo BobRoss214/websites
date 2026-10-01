@@ -36,10 +36,10 @@ def chrome():
     src = strip_i18n(open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read())
     head = re.search(r'<head>(.*?)</head>', src, re.S).group(1)
     skip = re.search(r'\s*<a class="skip-link"[^>]*>.*?</a>', src, re.S).group(0).strip()
-    announce = re.search(r'<div class="announce">.*?</div>\s*', src, re.S).group(0).strip()
+    announce = re.search(r'<div class="announce"[^>]*>.*?</div>\s*', src, re.S).group(0).strip()
     header = re.search(r'<header class="site-header".*?</header>', src, re.S).group(0)
     footer = src[src.index('<div class="footer-field"'):src.index('</footer>') + len('</footer>')]
-    action = re.search(r'<div class="action-bar".*?</div>', src, re.S).group(0)
+    action = re.search(r'<nav class="action-bar".*?</nav>', src, re.S).group(0)
     sprite = src[src.index('<svg xmlns="http://www.w3.org/2000/svg" id="sprite"'):src.index('  <script src="js/main.js">')].rstrip()
     scripts = re.findall(r'<script src="js/[^"]+"></script>', src[src.index('</svg>\n\n  <script src="js/main.js">'):])
 

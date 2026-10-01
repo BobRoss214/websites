@@ -10,6 +10,9 @@
   <meta property="og:title" content="Wood-Fired Pizza in Indian Trail, NC | Wise Pie at Wise Acres">
   <meta property="og:description" content="Wise Pie wood-fired pizza from a 700-degree oven, made with homemade dough and locally sourced mozzarella. Order at The GreenHouse in Indian Trail, NC, Friday to Sunday 4 to 8 pm, or add pizza to a farm reservation.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="assets/fonts/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
@@ -108,7 +111,7 @@
   <a data-t="t0a4470d6" class="skip-link" href="#main">Skip to content</a>
 
   <!-- ================= ANNOUNCEMENT ================= -->
-  <div class="announce">
+  <div data-ta-aria-label="t9598093b" class="announce" role="region" aria-label="Announcement">
     <p data-t="tf45d455e"><span class="ann-season" data-ann-season data-no-i18n></span><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>
       <strong>The farm is reservation-only.</strong> The GreenHouse next door needs no reservation.
       <a href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your time <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
@@ -132,11 +135,16 @@
           <li><a data-t="t01eb73e0" href="index.html#pizza">Pizza</a></li>
           <li><a data-t="t1dc91a78" href="index.html#greenhouse">GreenHouse</a></li>
           <li><a data-t="t55de8870" href="index.html#shop">Shop</a></li>
-          <li><a data-t="td4e7d7d3" href="index.html#flowers">Flowers</a></li>
-          <li><a data-t="tae9629f4" href="index.html#groups">Groups</a></li>
-          <li><a data-t="tc8927cf4" href="index.html#about">Our Story</a></li>
-          <li><a data-t="t03688ba6" href="index.html#faq">FAQ</a></li>
-          <li><a data-t="tb37456c4" href="index.html#contact">Contact</a></li>
+          <li class="nav-more">
+            <button data-t="t1e6fa7b2" class="nav-more-btn" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="nav-more-list">More <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <ul class="nav-more-list" id="nav-more-list">
+              <li><a data-t="td4e7d7d3" href="index.html#flowers">Flowers</a></li>
+              <li><a data-t="tae9629f4" href="index.html#groups">Groups</a></li>
+              <li><a data-t="tc8927cf4" href="index.html#about">Our Story</a></li>
+              <li><a data-t="t03688ba6" href="index.html#faq">FAQ</a></li>
+              <li><a data-t="tb37456c4" href="index.html#contact">Contact</a></li>
+            </ul>
+          </li>
         </ul>
         <a data-t="t122adc77" class="btn btn-red nav-cta" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
       </nav>
@@ -314,11 +322,13 @@
     <p data-t="tc0fb43cb" class="wrap copyright">2026 &copy; Wise Acres Organic Farm &middot; USDA Certified Organic &middot; Indian Trail, NC</p>
   </footer>
 
-  <div class="action-bar" id="action-bar">
-    <a data-t="t8e6ed827" class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg> Reserve</a>
-    <a data-t="t4b3f3cb5" class="btn btn-white" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+  <nav data-ta-aria-label="t82b6bfe1" class="action-bar" id="action-bar" aria-label="Quick actions">
+    <a data-t="t8e6ed827" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg> Reserve</a>
+    <a data-t="te149bcbe" class="btn btn-red" data-only="winter" hidden href="index.html#greenhouse"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> GreenHouse</a>
+    <a data-t="t4b3f3cb5" class="btn btn-white" data-only="spring summer fall" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+    <a data-t="t4b3f3cb5" class="btn btn-white" data-only="winter" hidden href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
     <a data-t="t64c30157" class="btn btn-white" href="mailto:cathy@wiseacresorganic.com"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Email</a>
-  </div>
+  </nav>
 
 <svg xmlns="http://www.w3.org/2000/svg" id="sprite" width="0" height="0" style="position:absolute;top:0;left:0" aria-hidden="true" focusable="false">
   <defs>
@@ -719,7 +729,7 @@
   <symbol id="i-external" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14 21 3"/></g></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
-  <symbol id="i-chevron" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5 9-10"/></symbol>
   <symbol id="i-leaf" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></g></symbol>
 

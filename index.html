@@ -14,6 +14,9 @@
   <meta property="og:image" content="https://www.wiseacresorganic.com/assets/og-share.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="assets/fonts/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
@@ -32,6 +35,8 @@
     "description": "Family-owned, USDA Certified Organic u-pick farm offering strawberries, blueberries, u-cut flowers and pumpkins, plus Wise Pie wood-fired pizza and The GreenHouse. Farm reservations required.",
     "url": "https://www.wiseacresorganic.com/",
     "email": "cathy@wiseacresorganic.com",
+    "image": "https://www.wiseacresorganic.com/assets/og-share.png",
+    "hasMap": "https://www.google.com/maps/search/?api=1&query=4701+Hartis+Rd+Indian+Trail+NC+28079",
     "foundingDate": "2013-03",
     "address": {
       "@type": "PostalAddress",
@@ -54,7 +59,7 @@
   <a data-t="t0a4470d6" class="skip-link" href="#main">Skip to content</a>
 
   <!-- ================= ANNOUNCEMENT ================= -->
-  <div class="announce">
+  <div data-ta-aria-label="t9598093b" class="announce" role="region" aria-label="Announcement">
     <p data-t="tf45d455e"><span class="ann-season" data-ann-season data-no-i18n></span><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>
       <strong>The farm is reservation-only.</strong> The GreenHouse next door needs no reservation.
       <a href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your time <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
@@ -78,11 +83,16 @@
           <li><a data-t="t01eb73e0" href="#pizza">Pizza</a></li>
           <li><a data-t="t1dc91a78" href="#greenhouse">GreenHouse</a></li>
           <li><a data-t="t55de8870" href="#shop">Shop</a></li>
-          <li><a data-t="td4e7d7d3" href="#flowers">Flowers</a></li>
-          <li><a data-t="tae9629f4" href="#groups">Groups</a></li>
-          <li><a data-t="tc8927cf4" href="#about">Our Story</a></li>
-          <li><a data-t="t03688ba6" href="#faq">FAQ</a></li>
-          <li><a data-t="tb37456c4" href="#contact">Contact</a></li>
+          <li class="nav-more">
+            <button data-t="t1e6fa7b2" class="nav-more-btn" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="nav-more-list">More <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <ul class="nav-more-list" id="nav-more-list">
+              <li><a data-t="td4e7d7d3" href="#flowers">Flowers</a></li>
+              <li><a data-t="tae9629f4" href="#groups">Groups</a></li>
+              <li><a data-t="tc8927cf4" href="#about">Our Story</a></li>
+              <li><a data-t="t03688ba6" href="#faq">FAQ</a></li>
+              <li><a data-t="tb37456c4" href="#contact">Contact</a></li>
+            </ul>
+          </li>
         </ul>
         <a data-t="t122adc77" class="btn btn-red nav-cta" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
       </nav>
@@ -190,10 +200,11 @@
         <p data-t="td1807783" class="hero-sub" data-only="fall" hidden>It&rsquo;s pumpkin season! Pick pumpkins, plus new u-pick organic tomatoes and basil, with wagon rides and a haunted trail, on our family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
         <p data-t="tb7f044e8" class="hero-sub" data-only="winter" hidden>Pick out a North Carolina Christmas tree at The GreenHouse next door, starting the Friday after Thanksgiving. Wise Acres is a family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
         <div class="hero-cta">
-          <a data-t="tdcd8d557" class="btn btn-red btn-lg" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your visit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <a data-t="tdcd8d557" class="btn btn-red btn-lg" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your visit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <a data-t="t927e6cbe" class="btn btn-red btn-lg" data-only="winter" hidden href="#greenhouse">Visit The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
           <a data-t="t38a1d40a" class="btn btn-white btn-lg" href="#seasons">See what&rsquo;s in season</a>
         </div>
-        <p data-t="t854933db" class="hero-note">No reservation? <a href="#greenhouse">Visit The GreenHouse next door <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
+        <p data-t="t854933db" class="hero-note" data-only="spring summer fall">No reservation? <a href="#greenhouse">Visit The GreenHouse next door <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
         <ul data-ta-aria-label="tfaf247c7" class="chips" aria-label="Highlights">
           <li data-t="t9e0e2003"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> USDA Certified Organic</li>
           <li data-t="t65d9d8ba"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Family farm since 2013</li>
@@ -273,17 +284,17 @@
             <p class="live" data-no-i18n data-live="farm" hidden></p>
             <ul class="ticks" data-only="spring" hidden>
               <li data-t="t0e96fa27">U-pick organic strawberries, plus u-cut flowers</li>
-              <li data-t="t0f160737">Playgrounds, animals, scavenger hunt and a shaded picnic patch</li>
+              <li data-t="tb6c0c855">Playgrounds, animals and a shaded picnic patch</li>
               <li data-t="t1d8c953b">Always by reservation, never walk-in</li>
             </ul>
             <ul class="ticks" data-only="summer" hidden>
               <li data-t="tca9fcac2">U-pick organic blueberries, plus u-cut sunflowers and flowers</li>
-              <li data-t="t0f160737">Playgrounds, animals, scavenger hunt and a shaded picnic patch</li>
+              <li data-t="tb6c0c855">Playgrounds, animals and a shaded picnic patch</li>
               <li data-t="t1d8c953b">Always by reservation, never walk-in</li>
             </ul>
             <ul class="ticks" data-only="fall">
               <li data-t="t447b4ee9">A variety of pumpkin types to pick, plus wagon rides, the corn pit, a small sunn hemp maze and more</li>
-              <li data-t="t0f160737">Playgrounds, animals, scavenger hunt and a shaded picnic patch</li>
+              <li data-t="tb2ff1037">Playgrounds, animals, a haunted trail and a shaded picnic patch</li>
               <li data-t="t1d8c953b">Always by reservation, never walk-in</li>
             </ul>
             <ul class="ticks" data-only="winter" hidden>
@@ -391,7 +402,6 @@
             <li data-t="t9812b413">Shaded picnic patch</li>
             <li data-t="t2472110c">Playgrounds</li>
             <li data-t="t1780ecaa">Animals</li>
-            <li data-t="t9c9edbee">Scavenger hunt</li>
             <li data-t="t39573dd5">Small sunn hemp maze</li>
             <li data-t="tc9cb608d">Pumpkin &amp; flower field access</li>
           </ul>
@@ -1151,8 +1161,8 @@
           <div class="price-card">
             <h3 data-t="t7a752a57">Pumpkin prices</h3>
             <dl class="price-list">
-              <div><dt data-t="t443ca977">U-pick pumpkins</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><small data-t="t60b17c24">Pick your own in the patch.</small></div>
-              <div><dt data-t="td7d16637">NC pumpkins</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><small data-t="t77a31b94">Pumpkins grown in North Carolina.</small></div>
+              <div><dt data-t="t443ca977">U-pick pumpkins</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><dd data-t="t60b17c24" class="pl-note">Pick your own in the patch.</dd></div>
+              <div><dt data-t="td7d16637">NC pumpkins</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><dd data-t="t77a31b94" class="pl-note">Pumpkins grown in North Carolina.</dd></div>
             </dl>
             <p data-t="t9444ce60" class="fine">A clear guide to pumpkin sizes, types and prices is coming soon.</p>
           </div>
@@ -1170,11 +1180,11 @@
           <div class="price-card">
             <h3 data-t="t3c260d31">U-pick prices</h3>
             <dl class="price-list">
-              <div><dt data-t="t3a209b3e">Tomatoes</dt><dd data-t="t1fccf389">$4.50 per pound</dd><small data-t="t52245af8">Every weekend, late September through October.</small></div>
-              <div><dt data-t="t21365a52">Basil</dt><dd data-t="tbbaa09ab">$1 per stem</dd><small data-t="t52245af8">Every weekend, late September through October.</small></div>
-              <div><dt data-t="t93f3a241">Strawberries</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><small data-t="t958fe96a">In spring.</small></div>
-              <div><dt data-t="tc9b6a025">Blueberries</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><small data-t="t610f9702">In summer.</small></div>
-              <div><dt data-t="t9858e9a3">Sunflowers &amp; flowers</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><small data-t="tad408a60">U-cut flowers, September through first frost.</small></div>
+              <div><dt data-t="t3a209b3e">Tomatoes</dt><dd data-t="t1fccf389">$4.50 per pound</dd><dd data-t="t52245af8" class="pl-note">Every weekend, late September through October.</dd></div>
+              <div><dt data-t="t21365a52">Basil</dt><dd data-t="tbbaa09ab">$1 per stem</dd><dd data-t="t52245af8" class="pl-note">Every weekend, late September through October.</dd></div>
+              <div><dt data-t="t93f3a241">Strawberries</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><dd data-t="t958fe96a" class="pl-note">In spring.</dd></div>
+              <div><dt data-t="tc9b6a025">Blueberries</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><dd data-t="t610f9702" class="pl-note">In summer.</dd></div>
+              <div><dt data-t="t9858e9a3">Sunflowers &amp; flowers</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><dd data-t="tad408a60" class="pl-note">U-cut flowers, September through first frost.</dd></div>
             </dl>
           </div>
         </div>
@@ -1195,12 +1205,12 @@
           <div class="price-card">
             <h3 data-t="t7b7034d4">At the farm</h3>
             <dl class="price-list">
-              <div><dt data-t="tc2d0d544">Farm fun, no pizza</dt><dd data-t="t18e5bf8e">$3 per person</dd><small data-t="t18eee5bf">Ages 3 and up. Thursday&ndash;Sunday. Infants 2 and under are free.</small></div>
-              <div><dt data-t="t9bc35dea">Farm fun with pizza</dt><dd data-t="te0ae7737">$31 base</dd><small data-t="te9a8e62d">Includes 2 Wise Pie pizzas, plus $3 per person (ages 3+). Friday&ndash;Sunday.</small></div>
-              <div><dt data-t="tca08d18d">Corn pit</dt><dd data-t="t65444880">$4 per person</dd><small data-t="t4937889a">Buy one, get one free on Thursdays with reservations.</small></div>
-              <div><dt data-t="tfd41a510">Wagon ride</dt><dd data-t="t01a02185">$4.50 per person</dd><small data-t="tb65a930a">Ages 2 and younger ride free.</small></div>
-              <div><dt data-t="td7695794">Barrel train</dt><dd data-t="ta25438de">$3 per child</dd><small data-t="t3a8eb034">Ages 12 and under only.</small></div>
-              <div><dt data-t="ta82102c3">Concessions</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><small data-t="tf8aa7cb2">Snacks and drinks.</small></div>
+              <div><dt data-t="tc2d0d544">Farm fun, no pizza</dt><dd data-t="t18e5bf8e">$3 per person</dd><dd data-t="t18eee5bf" class="pl-note">Ages 3 and up. Thursday&ndash;Sunday. Infants 2 and under are free.</dd></div>
+              <div><dt data-t="t9bc35dea">Farm fun with pizza</dt><dd data-t="te0ae7737">$31 base</dd><dd data-t="te9a8e62d" class="pl-note">Includes 2 Wise Pie pizzas, plus $3 per person (ages 3+). Friday&ndash;Sunday.</dd></div>
+              <div><dt data-t="tca08d18d">Corn pit</dt><dd data-t="t65444880">$4 per person</dd><dd data-t="t4937889a" class="pl-note">Buy one, get one free on Thursdays with reservations.</dd></div>
+              <div><dt data-t="tfd41a510">Wagon ride</dt><dd data-t="t01a02185">$4.50 per person</dd><dd data-t="tb65a930a" class="pl-note">Ages 2 and younger ride free.</dd></div>
+              <div><dt data-t="td7695794">Barrel train</dt><dd data-t="ta25438de">$3 per child</dd><dd data-t="t3a8eb034" class="pl-note">Ages 12 and under only.</dd></div>
+              <div><dt data-t="ta82102c3">Concessions</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><dd data-t="tf8aa7cb2" class="pl-note">Snacks and drinks.</dd></div>
               <div><dt data-t="t5cc2b160">Beer, hard cider &amp; wine</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd></div>
               <div><dt data-t="tc5a4988d">Local goods</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd></div>
             </dl>
@@ -1228,11 +1238,11 @@
           <div class="price-card">
             <h3 data-t="t11999abc">At The GreenHouse</h3>
             <dl class="price-list">
-              <div><dt data-t="t9cc96e01">Wise Pie pizza</dt><dd>$15&ndash;$17</dd><small data-t="tc955ad55">Gluten-free crust is +$9 and vegan cheese is +$3.</small></div>
+              <div><dt data-t="t9cc96e01">Wise Pie pizza</dt><dd>$15&ndash;$17</dd><dd data-t="tc955ad55" class="pl-note">Gluten-free crust is +$9 and vegan cheese is +$3.</dd></div>
               <div><dt data-t="t3699e70a">Waxhaw Creamery ice cream</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd></div>
               <div><dt data-t="t02fc833c">Beer, wine &amp; cider</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd></div>
               <div><dt data-t="tc5a4988d">Local goods</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd></div>
-              <div><dt data-t="t05db350a">Christmas trees</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><small data-t="t53cf41e8">From the Friday after Thanksgiving to early December.</small></div>
+              <div><dt data-t="t05db350a">Christmas trees</dt><dd data-t="tf1fa2a1d" class="soon">Prices coming soon</dd><dd data-t="t53cf41e8" class="pl-note">From the Friday after Thanksgiving to early December.</dd></div>
             </dl>
             <p data-t="tfc98242f" class="fine">Prices can change.</p>
           </div>
@@ -1422,7 +1432,6 @@
                 <li data-t="t910a3c0c">Wagon ride through the woods</li>
                 <li data-t="t834a7389">Meet and feed the farm animals</li>
                 <li data-t="tb604c4f8">Unlimited access to playground areas</li>
-                <li data-t="ta2f65b2e">Educational scavenger hunt</li>
                 <li data-t="t756d2aeb">Picnic tables in the shaded Party Patch for lunch or snacks</li>
               </ul>
             </div>
@@ -1452,7 +1461,7 @@
             <div class="group-main">
               <p data-t="tce1b92c5" class="badge-now badge-sun">Fall party overview &middot; September &ndash; November</p>
               <h3 data-t="t47aeb2c0">Parties at the farm</h3>
-              <p data-t="tf8a6e3a0">Thank you for thinking of the farm for your special celebration! Your party takes place in our private party patch, with picnic tables and plenty of shade. You and your guests can also enjoy the playgrounds, the animals, the scavenger hunt, the fields and the barn.</p>
+              <p data-t="tf7ddcce0">Thank you for thinking of the farm for your special celebration! Your party takes place in our private party patch, with picnic tables and plenty of shade. You and your guests can also enjoy the playgrounds, the animals, the fields and the barn.</p>
               <div class="card-actions">
                 <a data-t="t910306a6" class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Book a party <svg class="ico" aria-hidden="true"><use href="#i-external"/></svg></a>
                 <a data-t="te909c612" class="btn btn-ghost" href="mailto:cathy@wiseacresorganic.com?subject=Party%20question"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Ask a question</a>
@@ -1493,7 +1502,7 @@
               <!-- DRAFT CONTENT: the prices, guest counts and time block below are placeholders modeled on
                    comparable farm venues. Confirm with Cathy, then delete the .draft-tag element. -->
               <p data-t="t10886e34" class="draft-tag"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> Draft pricing &mdash; confirm before publishing</p>
-              <p data-t="t2768c654">Give your team a day away from the office on a working organic farm. Your group gets a private party patch with picnic tables and shade, plus access to the playgrounds, the animals, the scavenger hunt, the fields and the barn. It works well for team lunches, client thank-yous and company picnics.</p>
+              <p data-t="t3d3164e7">Give your team a day away from the office on a working organic farm. Your group gets a private party patch with picnic tables and shade, plus access to the playgrounds, the animals, the fields and the barn. It works well for team lunches, client thank-yous and company picnics.</p>
               <div class="card-actions">
                 <a data-t="t8e3a2097" class="btn btn-red" href="mailto:cathy@wiseacresorganic.com?subject=Corporate%20event%20inquiry&amp;body=Company%3A%0AApproximate%20group%20size%3A%0APreferred%20date%3A%0A" >Request a quote <svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg></a>
                 <a data-t="t6df5e2e8" class="btn btn-ghost" href="#parties" data-goto-group="parties">Compare with parties</a>
@@ -1503,7 +1512,7 @@
               <ul class="ticks">
                 <li data-t="t1cf78196">Private party patch with picnic tables and shade</li>
                 <li data-t="t02a58337">Farm entry for every guest, included in the package price</li>
-                <li data-t="t9c5cd6ee">Playgrounds, animals, scavenger hunt, fields and barn</li>
+                <li data-t="t7f553727">Playgrounds, animals, fields and barn</li>
                 <li data-t="tedbb0910">Bring your own food, or ask us about adding Wise Pie pizza</li>
                 <li data-t="t793cc86d">Beer, hard cider and wine for sale at the farm. Outside alcohol is not permitted</li>
               </ul>
@@ -1863,11 +1872,13 @@
   </footer>
 
   <!-- ================= MOBILE ACTION BAR ================= -->
-  <div class="action-bar" id="action-bar">
-    <a data-t="t8e6ed827" class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg> Reserve</a>
-    <a data-t="t4b3f3cb5" class="btn btn-white" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+  <nav data-ta-aria-label="t82b6bfe1" class="action-bar" id="action-bar" aria-label="Quick actions">
+    <a data-t="t8e6ed827" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg> Reserve</a>
+    <a data-t="te149bcbe" class="btn btn-red" data-only="winter" hidden href="#greenhouse"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> GreenHouse</a>
+    <a data-t="t4b3f3cb5" class="btn btn-white" data-only="spring summer fall" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+    <a data-t="t4b3f3cb5" class="btn btn-white" data-only="winter" hidden href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
     <a data-t="t64c30157" class="btn btn-white" href="mailto:cathy@wiseacresorganic.com"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Email</a>
-  </div>
+  </nav>
 
 <svg xmlns="http://www.w3.org/2000/svg" id="sprite" width="0" height="0" style="position:absolute;top:0;left:0" aria-hidden="true" focusable="false">
   <defs>
@@ -2268,7 +2279,7 @@
   <symbol id="i-external" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14 21 3"/></g></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
-  <symbol id="i-chevron" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5 9-10"/></symbol>
   <symbol id="i-leaf" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></g></symbol>
 

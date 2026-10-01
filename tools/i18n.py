@@ -33,7 +33,7 @@ STRIP = re.compile(r'\sdata-(?:t|ta-[a-z-]+)="t[0-9a-f]{8}"')
 
 
 def pages():
-    return [p for p in sorted(os.listdir(ROOT)) if p.endswith('.html')]
+    return [p for p in sorted(os.listdir(ROOT)) if p.endswith('.html') and p != '404.html']   # 404.html is plain English, no scripts
 
 
 def canon(el, counter=None):
@@ -218,7 +218,7 @@ def js_strings():
     # page titles and search/share descriptions (swapped by i18n.js)
     import html as _html
     for f in sorted(os.listdir(ROOT)):
-        if not f.endswith('.html'):
+        if not f.endswith('.html') or f == '404.html':
             continue
         page = open(os.path.join(ROOT, f), encoding='utf-8').read()
         for pat in (r'<title>(.*?)</title>', r'<meta name="description" content="([^"]*)"', r'<meta property="og:(?:title|description)" content="([^"]*)"'):
