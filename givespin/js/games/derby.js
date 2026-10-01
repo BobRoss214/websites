@@ -41,6 +41,9 @@
   var raf = 0;
   var onDone = null;
   var lastThump = 0;
+  var vt = 0;            // race clock in seconds: it runs slow-motion through a photo finish
+  var lastReal = 0;
+  var photo = false;
 
   var pick = '';         // id of the charity you backed (solo), or empty
 
@@ -234,9 +237,15 @@
   }
 
   function step(t) {
-    var el2 = (t - raceStart) / 1000;
-    if (el2 < 0 || !race) { return; }
-    var allDone = race.step(el2, function () { GS.audio.tick(0.9); });
+    if (t < raceStart || !race) { return; }
+    if (!lastReal) { lastReal = raceStart; }
+    var dt = Math.min(0.1, (t - lastReal) / 1000);
+    lastReal = t;
+    var ps = runners.map(function (r) { return r.run.p; }).sort(function (a, b) { return b - a; });
+    var slow = ps[0] >= 0.9 && ps[0] < 1 && ps.length > 1 && ps[0] - ps[1] < 0.04 ? 0.4 : ps[0] >= 0.95 && ps[0] < 1 ? 0.65 : 1;
+    if (slow < 1 && !photo && ps[0] - (ps[1] || 0) < 0.04) { photo = true; banner = 'PHOTO FINISH'; bannerUntil = t + U.dur(1400); GS.audio.drum(); }
+    vt += dt * slow;
+    var allDone = race.step(vt, function () { GS.audio.tick(0.9); });
     if (t - lastThump > 230 && !allDone) { lastThump = t; GS.audio.thump(); }
     if (allDone) {
       racing = false;
@@ -316,6 +325,9 @@
       GS.audio.whoosh();
       setTimeout(function () { banner = 'GO!'; }, U.dur(ready));
       raceStart = performance.now() + U.dur(ready) + U.dur(300);
+      vt = 0;
+      lastReal = 0;
+      photo = false;
       onDone = resolve;
       racing = true;
       lastThump = 0;

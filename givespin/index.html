@@ -45,6 +45,7 @@
           <span class="balance__ico" data-icon="coins"></span>
           <span class="balance__txt"><span class="balance__lbl">Demo credit</span><span class="balance__amt" id="balance-amt">$0</span></span>
         </div>
+        <button type="button" class="iconbtn only-demo daily" id="btn-daily" aria-label="Daily bonus wheel" title="Daily bonus wheel (free play credit)"></button>
         <button type="button" class="btn btn--green btn--sm only-demo" id="btn-credit"><span data-icon="plus"></span><span class="hide-sm">Add credit</span></button>
         <button type="button" class="iconbtn" id="btn-sound" aria-pressed="false" aria-label="Sound on"></button>
         <button type="button" class="iconbtn hide-sm" id="btn-stream" aria-pressed="false" aria-label="Stream Mode" title="Stream Mode (bigger game, nothing else)"></button>
@@ -67,6 +68,9 @@
           <li class="side__sub"><a class="side__link" href="#lobby-races" data-route="lobby-races"><span data-icon="flag-triangle-right"></span><span class="side__txt">Races</span></a></li>
           <li class="side__sub"><a class="side__link" href="#lobby-instant" data-route="lobby-instant"><span data-icon="zap"></span><span class="side__txt">Instant wins</span></a></li>
           <li class="only-demo"><a class="side__link side__link--live" href="#live" data-route="live"><span data-icon="radio"></span><span class="side__txt">Live tables</span><span class="livedot" aria-hidden="true"></span><span class="livecount" id="live-count" hidden>0</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#leagues" data-route="leagues"><span data-icon="trophy"></span><span class="side__txt">Leagues</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#crews" data-route="crews"><span data-icon="users"></span><span class="side__txt">Crews</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#cards" data-route="cards"><span data-icon="layers"></span><span class="side__txt">Your cards</span></a></li>
           <li class="side__rule" aria-hidden="true"></li>
           <li><a class="side__link" href="#giving" data-route="giving"><span data-icon="hand-heart"></span><span class="side__txt">My Giving</span></a></li>
           <li><a class="side__link" href="#charities" data-route="charities"><span data-icon="globe"></span><span class="side__txt">Charities</span></a></li>
@@ -83,6 +87,9 @@
         <section class="view" id="view-lobby" data-view="lobby" aria-label="Lobby" hidden></section>
         <section class="view" id="view-game" data-view="game" aria-label="Game" hidden></section>
         <section class="view" id="view-live" data-view="live" aria-label="Live tables" hidden></section>
+        <section class="view" id="view-leagues" data-view="leagues" aria-label="Leagues" hidden></section>
+        <section class="view" id="view-crews" data-view="crews" aria-label="Crews" hidden></section>
+        <section class="view" id="view-cards" data-view="cards" aria-label="Your cards" hidden></section>
         <section class="view" id="view-giving" data-view="giving" aria-label="My Giving" hidden></section>
         <section class="view" id="view-charities" data-view="charities" aria-label="Charities" hidden></section>
         <section class="view" id="view-club" data-view="club" aria-label="Giving Club" hidden></section>
@@ -115,6 +122,7 @@
   <script src="js/confetti.js"></script>
   <script src="js/payments.js"></script>
   <script src="js/accounts.js"></script>
+  <script src="js/crews.js"></script>
   <script src="js/live.js"></script>
   <script src="js/art.js"></script>
   <script src="js/ui/common.js"></script>
@@ -145,6 +153,8 @@
   <script src="js/ui/game.js"></script>
   <script src="js/ui/lobby.js"></script>
   <script src="js/ui/pages.js"></script>
+  <script src="js/ui/collection.js"></script>
+  <script src="js/ui/leagues.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

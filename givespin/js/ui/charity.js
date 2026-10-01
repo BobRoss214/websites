@@ -167,7 +167,7 @@
         GS.audio.unlock();
         var round = {
           game: 'direct', cents: cents, rounds: 1, direct: true, jackpot: false, triple: false, fair: null,
-          allocs: [{ charityId: ch2.id, cents: cents, hits: 1 }], opts: ui.opts.read()
+          allocs: [{ charityId: ch2.id, cents: cents, hits: 1 }], opts: ui.opts.read(), collect: [{ charityId: ch2.id, rarity: 'common' }]
         };
         GS.app.setBusy(true);
         ui.receipt.finish(round).catch(function (err) {

@@ -39,6 +39,15 @@
       liveRounds: 0,
       liveWins: 0,
       pickWins: 0,
+      weekly: { key: core.weekKey(), xp: 0 },          // XP earned this (Monday to Sunday) week, for the league
+      hot: { streak: 0, best: 0 },                      // backed winners in a row
+      daily: { day: '', claims: 0 },                    // the daily bonus wheel
+      cards: {},                                        // charity id -> { n, rarity, ts }
+      setClaims: {},                                    // month -> true once that month's card set is complete
+      crew: '',
+      crewEver: false,
+      cup: null,                                        // this week's Charity Cup: { key, field, pick, rounds, done, called }
+      pred: { right: 0, total: 0 },                     // side predictions at live tables
       biggestPotCents: 0,
       badges: {},
       history: [],
@@ -50,7 +59,7 @@
       account: { signedIn: false, name: '', type: 'email', contact: '', hue: 150, createdAt: 0, card: null, limitCents: null },
       prefs: {
         amount: GS.config.defaultAmount, filters: core.emptyFilters(), excluded: [], game: 'wheel', rounds: 1,
-        freq: 'once', pay: 'credit', muted: false, dedication: { kind: 'honor', name: '', note: '' }, sidebar: true, sizes: {}, liveStake: 20
+        freq: 'once', pay: 'credit', muted: false, dedication: { kind: 'honor', name: '', note: '' }, sidebar: true, sizes: {}, liveStake: 20, voice: false
       }
     };
   }
@@ -139,6 +148,31 @@
     d.liveRounds = Math.floor(num(raw.liveRounds, 0));
     d.liveWins = Math.floor(num(raw.liveWins, 0));
     d.pickWins = Math.floor(num(raw.pickWins, 0));
+    var wk = obj(raw.weekly);
+    d.weekly = { key: str(wk.key, 12) || d.weekly.key, xp: Math.floor(num(wk.xp, 0)) };
+    var ht = obj(raw.hot);
+    d.hot = { streak: Math.floor(num(ht.streak, 0)), best: Math.floor(num(ht.best, 0)) };
+    var dl = obj(raw.daily);
+    d.daily = { day: typeof dl.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dl.day) ? dl.day : '', claims: Math.floor(num(dl.claims, 0)) };
+    var cd = obj(raw.cards);
+    Object.keys(cd).forEach(function (id) {
+      var c = obj(cd[id]);
+      if (GS.charity(id)) { d.cards[id] = { n: Math.max(1, Math.floor(num(c.n, 1))), rarity: core.RARITIES.indexOf(c.rarity) >= 0 ? c.rarity : 'common', ts: num(c.ts, 0) }; }
+    });
+    var sc = obj(raw.setClaims);
+    Object.keys(sc).forEach(function (k) { if (/^\d{4}-\d{2}$/.test(k) && sc[k]) { d.setClaims[k] = true; } });
+    d.crew = ['tide', 'owls', 'paws', 'longshots'].indexOf(raw.crew) >= 0 ? raw.crew : '';
+    d.crewEver = !!raw.crewEver || !!d.crew;
+    var cp = obj(raw.cup);
+    d.cup = cp.key && Array.isArray(cp.field) ? {
+      key: str(cp.key, 12), field: cp.field.filter(function (id) { return typeof id === 'string' && !!GS.charity(id); }).slice(0, 8),
+      pick: typeof cp.pick === 'string' && GS.charity(cp.pick) ? cp.pick : '',
+      rounds: arr(cp.rounds).slice(0, 3).map(function (r) { return arr(r).filter(function (id) { return typeof id === 'string'; }).slice(0, 4); }),
+      done: !!cp.done, called: !!cp.called
+    } : null;
+    if (d.cup && d.cup.field.length !== 8) { d.cup = null; }
+    var pr = obj(raw.pred);
+    d.pred = { right: Math.floor(num(pr.right, 0)), total: Math.floor(num(pr.total, 0)) };
     d.biggestPotCents = Math.floor(num(raw.biggestPotCents, 0));
     d.badges = obj(raw.badges);
     d.history = sanitizeHistory(raw.history);
@@ -179,6 +213,7 @@
       var v = sz[k];
       if (GAME_IDS.indexOf(k) >= 0 && typeof v === 'number' && v >= 2 && v <= 1000) { d.prefs.sizes[k] = Math.floor(v); }
     });
+    d.prefs.voice = !!p.voice;
     d.prefs.liveStake = typeof p.liveStake === 'number' && p.liveStake >= 1 && p.liveStake <= 1000 ? Math.floor(p.liveStake) : 20;
     return d;
   }
@@ -192,6 +227,38 @@
         t.cents += a.cents; t.hits += 1; t.last = Math.max(t.last, h.ts);
       });
     });
+  }
+
+  function rollWeek() {
+    var k = core.weekKey();
+    if (state.weekly.key !== k) { state.weekly = { key: k, xp: 0 }; }
+  }
+
+  /** Adds cards to the collection. list = [{ charityId, rarity }]. Returns what changed: [{ charityId, rarity, isNew, upgraded }]. */
+  function collectCards(list) {
+    var now = Date.now();
+    return list.map(function (c) {
+      var have = state.cards[c.charityId];
+      var rarity = core.RARITIES.indexOf(c.rarity) >= 0 ? c.rarity : 'common';
+      if (!have) { state.cards[c.charityId] = { n: 1, rarity: rarity, ts: now }; return { charityId: c.charityId, rarity: rarity, isNew: true, upgraded: false }; }
+      have.n += 1;
+      var up = core.rarityRank(rarity) > core.rarityRank(have.rarity);
+      if (up) { have.rarity = rarity; }
+      return { charityId: c.charityId, rarity: have.rarity, isNew: false, upgraded: up };
+    });
+  }
+
+  /** Finishing this month's card set pays 150 XP, once. Returns the XP paid (0 when nothing new). */
+  function checkSet() {
+    var month = core.monthKey();
+    if (state.setClaims[month]) { return 0; }
+    var ids = core.monthlySet(GS.charities, month);
+    if (!ids.every(function (id) { return !!state.cards[id]; })) { return 0; }
+    state.setClaims[month] = true;
+    state.xp += 150;
+    rollWeek();
+    state.weekly.xp += 150;
+    return 150;
   }
 
   function rollMonth() {
@@ -224,7 +291,9 @@
       charitiesSeen: Object.keys(state.charityCounts), causesSeen: Object.keys(state.causeCounts),
       gamesPlayed: state.gamesPlayed.filter(function (g) { return g !== 'direct'; }), gameCount: GS.gameCount || 0, streak: state.streak, bestStreak: state.bestStreak,
       jackpots: state.jackpots, splits: state.splits, usedStream: state.usedStream, directGifts: state.directGifts, verifies: state.verifies,
-      plans: state.plans.length, liveRounds: state.liveRounds, liveWins: state.liveWins, pickWins: state.pickWins, biggestPotCents: state.biggestPotCents
+      plans: state.plans.length, liveRounds: state.liveRounds, liveWins: state.liveWins, pickWins: state.pickWins,
+      predRight: state.pred.right, bestHot: state.hot.best, cardsOwned: Object.keys(state.cards).length, setsDone: Object.keys(state.setClaims).length,
+      dailyClaims: state.daily.claims, cupCalled: state.cup && state.cup.called ? 1 : 0, crewJoined: state.crewEver, biggestPotCents: state.biggestPotCents
     };
   }
 
@@ -334,7 +403,16 @@
       state.lastDay = today;
 
       var xpGain = core.xpForPlay(play.totalCents, play.rounds, !!play.jackpot) + Math.max(0, Math.floor(play.bonusXp || 0));
+      // hot hand: backing winners back to back lifts your XP (x1.1 per win in a row, up to x1.5) until a call misses
+      var hotBefore = state.hot.streak;
+      var hotMult = 1 + 0.1 * Math.min(hotBefore, 5);
+      if (hotBefore > 0) { xpGain = Math.round(xpGain * hotMult); }
+      var called = play.live ? !!play.live.won : (play.pick ? !!play.pick.won : null);
+      if (called === true) { state.hot.streak += 1; state.hot.best = Math.max(state.hot.best, state.hot.streak); }
+      else if (called === false) { state.hot.streak = 0; }
       state.xp += xpGain;
+      rollWeek();
+      state.weekly.xp += xpGain;
       state.totalCents += play.totalCents;
       state.plays += 1;
       state.biggestCents = Math.max(state.biggestCents, play.totalCents);
@@ -377,10 +455,80 @@
       state.history.unshift(entry);
       state.history = state.history.slice(0, HISTORY_MAX);
 
+      var newCards = play.collect ? collectCards(play.collect) : [];
+      var setXp = play.collect ? checkSet() : 0;
       var newBadgeList = awardBadges();
       var after = core.levelFor(state.xp);
       save();
-      return { xpGain: xpGain, before: before, after: after, leveledUp: after.level > before.level, newBadges: newBadgeList };
+      return {
+        xpGain: xpGain + setXp, setXp: setXp, before: before, after: after, leveledUp: after.level > before.level, newBadges: newBadgeList,
+        hot: { before: hotBefore, after: state.hot.streak, mult: hotBefore > 0 ? hotMult : 1 }, newCards: newCards
+      };
+    },
+
+    /* ---------------- bonuses, collection, league, crew, cup ---------------- */
+
+    /** Adds XP that is not tied to a play (side predictions, the Charity Cup, a finished card set, the daily wheel). */
+    grantXp: function (xp) {
+      var before = core.levelFor(state.xp);
+      xp = Math.max(0, Math.floor(xp));
+      state.xp += xp;
+      rollWeek();
+      state.weekly.xp += xp;
+      var badges = awardBadges();
+      var after = core.levelFor(state.xp);
+      save();
+      return { xpGain: xp, before: before, after: after, leveledUp: after.level > before.level, newBadges: badges };
+    },
+    weekly: function () { rollWeek(); return state.weekly; },
+    hot: function () { return state.hot; },
+    hotMultiplier: function () { return 1 + 0.1 * Math.min(state.hot.streak, 5); },
+
+    notePredictions: function (right, total) {
+      state.pred.right += right;
+      state.pred.total += total;
+      var badges = awardBadges();
+      save();
+      return badges;
+    },
+    predictions: function () { return state.pred; },
+
+    dailyAvailable: function () { return state.daily.day !== core.dayKey(); },
+    /** Claims today's bonus wheel: `cents` of free demo credit. Returns the badges earned, or null when already claimed. */
+    claimDaily: function (cents) {
+      if (state.daily.day === core.dayKey()) { return null; }
+      state.daily.day = core.dayKey();
+      state.daily.claims += 1;
+      state.balanceCents += Math.max(0, Math.floor(cents));
+      var badges = awardBadges();
+      save();
+      return badges;
+    },
+
+    cards: function () { return state.cards; },
+    collect: function (list) {
+      var out = collectCards(list);
+      var setXp = checkSet();
+      var badges = awardBadges();
+      save();
+      return { cards: out, badges: badges, setXp: setXp };
+    },
+
+    crew: function () { return state.crew; },
+    setCrew: function (id) {
+      state.crew = id;
+      if (id) { state.crewEver = true; }
+      var badges = awardBadges();
+      save();
+      return badges;
+    },
+
+    cup: function () { return state.cup; },
+    setCup: function (cup) {
+      state.cup = cup;
+      var badges = awardBadges();
+      save();
+      return badges;
     },
 
     /** Wipes progress (level, history, badges, plans) but keeps preferences, the account and the fair-play seeds. */

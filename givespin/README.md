@@ -3,10 +3,11 @@
 **The giving casino. Every round is a win for someone.**
 
 Pick an amount, filter by the causes you care about, then spin, roll, scratch or race your way to a charity. Fifteen
-casino-style games (every one can run with anywhere from a handful of charities up to a hundred), **live tables**
-where a whole table of players backs charities and the winner takes the whole pot, 228 charities, a lobby that
-feels like an online casino, confetti, levels and a receipt for every gift. Built for streamers and anyone who
-thinks giving should be a little more fun.
+casino-style games where **you choose how many charities are on the board** (from a couple to a thousand) and can
+back one to win, **live tables** where a whole table of players backs charities and the winner takes the whole pot,
+leagues, crews, collectible cards and a daily wheel, 228 charities, a lobby that feels like an online casino,
+confetti, levels and a receipt for every gift. Built for streamers and anyone who thinks giving should be a little
+more fun.
 
 Plain HTML, CSS and vanilla JavaScript. No build step, no dependencies, no network requests, no tracking.
 It works from a web server or by double-clicking `index.html`.
@@ -24,35 +25,43 @@ python3 -m http.server 8000     # then open http://localhost:8000
 
 **The lobby** has promo banners, a "live now" strip of tables, category tabs (Originals, Table games, Races,
 Instant wins), a tile for every game, quick cause chips, your latest gifts and a "Repeat last round" shortcut. A
-side nav (a bottom bar on phones) leads to Live tables, My Giving, Charities, the Giving Club, Fair Play and Help.
-Search finds games and charities.
+side nav (a bottom bar on phones) leads to Live tables, Leagues, Crews, Your cards, My Giving, Charities, the Giving
+Club, Fair Play and Help. A daily wheel sits in the top bar. Search finds games and charities.
 
 **Fifteen games.** Played solo, every one is equal odds for every charity in play. Ten of them also have live
 tables (marked **Live** below).
 
-| Game | Board sizes | How it works |
+| Game | Charities on the board | How it works |
 | --- | --- | --- |
-| Lucky Wheel (Live) | 8 to 100 slices | Canvas wheel with chasing LED bulbs and a ticking, flicking pointer. |
+| Lucky Wheel (Live) | 2 to 1,000 slices | Canvas wheel with chasing LED bulbs and a ticking, flicking pointer. |
 | Slot Machine | 3 reels | Three reels, three charities; the gift splits across them. Three of a kind is a Triple Threat. |
-| Drop Crate (Live) | 20 to 100 cards | A case-opening strip rolls past a marker and crawls to a stop. |
-| Plinko (Live) | 5 to 100 bins | A ball ricochets through pegs into a charity's bin. Deliberately uniform (a real board favours the middle). Big boards are giant: the camera follows the ball down 99 rows. |
-| Roulette (Live) | 16 to 100 pockets | The ball runs against the wheel, rolls round every pocket and settles in a charity's. |
-| Pick a Card | 5 to 52 cards (a full deck) | Cards are shuffled face down; pick one and flip it. |
+| Drop Crate (Live) | 2 to 1,000 cards | A case-opening strip rolls past a marker and crawls to a stop. |
+| Plinko (Live) | 2 to 1,000 bins | A ball ricochets through pegs into a charity's bin. Deliberately uniform (a real board favours the middle). Big boards are giant: the camera follows the ball down every row. |
+| Roulette (Live) | 2 to 1,000 pockets | The ball runs against the wheel, rolls round every pocket and settles in a charity's. |
+| Pick a Card | 2 to 100 cards | Cards are shuffled face down; pick one and flip it. |
 | Dice | 6 faces | A 3D die tumbles and lands on a face; every face on the board belongs to a charity. |
-| Coin Flip Showdown | 8, 16 or 32 | A knockout bracket decided by coin flips. |
-| Scratch Cards | 6 to 24 panels | Scratch the foil with a finger or mouse (or reveal by keyboard) to find matching charities. |
-| Charity Derby (Live) | 6 to 48 runners | Charities race down lanes; the first across the line wins. |
-| Duck Derby (Live) | 8 to 100 ducks | Rubber ducks bob down a river; each wears its charity's colour. |
-| Marble Run (Live) | 8 to 100 marbles | Glass marbles tumble down a winding track. |
-| Balloon Race (Live) | 8 to 100 balloons | Balloons climb to a finish line in the clouds. |
-| Lucky Draw (Live) | 12 to 100 balls | Balls tumble in a drum; one rolls out through the chute. |
-| Last One Standing (Live) | 8 to 100 tiles | Charities are knocked out wave by wave until one is left. |
+| Coin Flip Showdown | 2 to 128 (a power of two) | A knockout bracket decided by coin flips. |
+| Scratch Cards | 4 to 48 panels | Scratch the foil with a finger or mouse (or reveal by keyboard) to find matching charities. |
+| Charity Derby (Live) | 2 to 200 runners | Charities race down lanes; the first across the line wins. |
+| Duck Derby (Live) | 2 to 1,000 ducks | Rubber ducks bob down a river; each wears its charity's colour. |
+| Marble Run (Live) | 2 to 1,000 marbles | Glass marbles tumble down a winding track. |
+| Balloon Race (Live) | 2 to 1,000 balloons | Balloons climb to a finish line in the clouds. |
+| Lucky Draw (Live) | 2 to 300 balls | Balls tumble in a drum; one rolls out through the chute. |
+| Last One Standing (Live) | 2 to 1,000 tiles | Charities are knocked out wave by wave until one is left. |
 
-**Board sizes.** Games that can show more than a few charities have a **Charities on the board** control. Pick a
-small classic board or go big: a roulette wheel with 100 pockets where the ball rolls past every one, a Plinko board
-with 100 bins and a camera that follows the ball down, a race of 100 ducks. The winner is always drawn from every
-charity in play (not just the ones shown), the board is a sample of the pool that includes the winner, and each
-game's note says so. Sizes are remembered per game.
+**Charities on the board.** Games that can show more than a few charities have a **Charities on the board**
+control: pick a preset or type any number, from a couple up to the game's maximum (above). Make it five or a thousand:
+a Plinko board with a thousand bins that the camera follows the ball down, a roulette wheel with any number of
+pockets, a river of 500 ducks. **The board is exactly what the winner is drawn from**, each charity on it with the
+same chance, so a bigger board is a longer shot. If you ask for more spots than there are charities in play, charities
+fill more than one spot (spread as evenly as possible, so odds stay equal). The receipt and the verifier record the
+board. Sizes are remembered per game.
+
+**Back a charity.** Games that show a field (everything except Slots, Pick a Card and Scratch Cards, where you already
+choose) have a **Back a charity** step: pick any charity, or let the site choose one at random, and it is always put
+on the board, marked on the table (your duck wears a ring, your bin glows). Backing a charity does not change the
+odds. If it wins you earn bonus XP that grows with how long the shot was (a 1-in-1,000 pick is worth far more than a
+1-in-8 one), and it counts towards the Called It badge.
 
 **Live tables.** See below.
 
@@ -75,8 +84,21 @@ than three charities have are hidden so a filter cannot just empty the pool.
 website, a "Give again" button, a breakdown by cause, repeat gift plans and your recent rounds (each expandable,
 with a verify button).
 
-**Giving Club:** XP and 10 levels, a daily streak, 17 badges and a level ladder. Stored in the player's own
+**Giving Club:** XP and 10 levels, a daily streak, 24 badges and a level ladder. Stored in the player's own
 browser (`localStorage`) and resettable.
+
+**Leagues, crews and cards.** All play, no cash value, and everything with other people is simulated and labelled.
+- **Leagues.** A weekly XP table against 14 simulated rivals (the same table for everyone that week), with promotion
+  and relegation zones, and **tiers** from Bronze to Diamond by level. Gold, Platinum and Diamond unlock VIP stakes
+  ($250, $500, $1,000) at live tables. The **Charity Cup** is a three-round knockout of eight charities where you
+  call each winner: XP only, plus the Cup Seer badge for calling the champion.
+- **Crews.** Join one of four simulated crews, chat with emotes (chat stays on your device), and work towards a
+  weekly crew XP goal. Members' lines are scripted bots and say so.
+- **Cards.** Every time a charity you backed (or a live pot you were in) wins, you collect that charity's card, rarer
+  the longer the shot (common, rare, epic, legendary). Each month there is a six-card set; completing it pays 150 XP
+  once.
+- **Streaks.** Back winners on the trot to build a **hot hand**: a carried streak multiplies your XP gains (up to
+  x1.5). A **daily wheel** gives one free spin a day for $5 to $100 of demo credit (demo mode only).
 
 **Fair Play:** every winner is drawn from a committed seed before the animation starts. See
 [How the games stay fair](#how-the-games-stay-fair).
@@ -154,6 +176,25 @@ the table bar, and "came from simulated bots" on the result. Their stakes are si
 yours, and in demo mode that is demo credit. A stake is taken when you place it, refunded if you cancel before the
 table locks, and refunded if you close the page before the round settles.
 
+**Extras at the table.** All simulated, all labelled:
+- **Sponsor match.** About one table in seven has a simulated sponsor who adds 50% of the pot (up to $100) to what the
+  winner receives. The result shows the stakes, the match and who the sponsor was as separate lines.
+- **Progressive jackpot.** Every settled pot adds 5% to a simulated jackpot. Once it passes $1,500 it drops at the next
+  table, goes to that table's winner on top of the pot, and starts again. A siren sounds when it lands.
+- **Events.** Featured events run off the clock: Giving Tuesday Jackpot (a simulated sponsor matches the pot dollar for
+  dollar up to $250), Disaster Relief Night (disaster-relief and health charities only, 50% matched up to $150) and a
+  Double Pot Hour at the top of every hour (dollar for dollar up to $200).
+- **Drama.** A **last call** warns that bets are closing, an **all-in** stake asks you to confirm, the table says how
+  close the finish was, and close races end in a slow-motion **photo finish**. A **croupier voice** (the browser's own
+  speech, off by default) calls the action.
+- **Side predictions.** Before the lock you can make XP-only predictions: the pot reaches $500, the winner has under
+  25% of the pot, the leading charity wins. Right calls earn the Oracle badge.
+- **Stream chat vote.** Turn on "chat vote" and simulated chatters vote for charities while bets are open; the most
+  voted charity gets a simulated $25 stake when bets close. It is a way to try how a streamer's audience could take a
+  seat, with no real chat connected.
+- **Crews.** If you are in a crew, two or three of its simulated members back the same charity as you with small
+  simulated stakes ($5 to $20 each), and the feed says so.
+
 **Live tables are demo-only.** A pooled pot needs a server to hold the money and run the table, and this site never
 handles real money, so in `redirect` mode the live tables are switched off and hidden. To make them real you would
 run the tables, seeds and pots on a server and replace the bots in `js/live.js` with players.
@@ -165,10 +206,12 @@ Timings (betting window, lock, result), bot names and stake sizes, and the table
 
 1. **Commit.** Before a round the page shows the SHA-256 hash of a secret round seed it has already chosen.
 2. **Draw.** The app (not the game) draws every winner: HMAC-SHA256 of the round seed with your own seed and a round
-   number, read as 32-bit numbers with rejection sampling (no modulo bias), applied to the charities in play sorted
-   by id. That is exactly equal odds for the whole pool.
+   number, read as 32-bit numbers with rejection sampling (no modulo bias), applied to **the charities on the board**
+   sorted by id. That is exactly equal odds for every charity on the board. The board is recorded with the round
+   (`fair.board`), so the verifier and the standalone snippet can redo the draw from just the board.
 3. **Show.** The game then animates to the already-chosen winner. The slices, reels, bins, pockets, cards and runners
-   on screen are decoration around that result: a sample of the pool that always includes the winner.
+   on screen are the board itself (the charities the winner was drawn from, repeated to fill extra spots), so what you
+   see is what was drawn from.
 4. **Reveal.** After the round the seed is revealed. Hash it and compare with step 1, then recompute the draws. The
    Fair Play page and every receipt have a one-click verifier, and the Fair Play page also shows a standalone
    snippet you can paste into a browser console.
@@ -193,7 +236,10 @@ browser's random generator and the site makes no verifiability claim.
 | Amount limits, presets, split options, minimum per round, demo credit, mode, checkout links | `js/config.js` |
 | Causes, filter values and charities (names, descriptions, accent colours) | `js/data.js` |
 | Colours, fonts, spacing | the `:root` tokens at the top of `css/base.css` |
-| Level names, XP, badges | `LEVELS`, `xpForPlay` and `BADGES` in `js/core.js` |
+| Level names, XP, badges, tiers, card rarity | `LEVELS`, `xpForPlay`, `BADGES`, `TIERS` and `RARITIES` in `js/core.js` |
+| Live-table timings, events, bots, sponsor and jackpot | the constants and `EVENTS` at the top of `js/live.js` |
+| Crews and their chat | `js/crews.js` |
+| Daily wheel segments | `js/ui/collection.js` |
 | Sign-up, log-in and saved-card behaviour | `js/accounts.js` |
 | Brand name and copy | `index.html` and `js/ui/` |
 
@@ -205,20 +251,22 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js
 ```
 
-48 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
-within a group, AND between), XP, levels, streaks, badges, apportioning pockets and slices by stake, the
-stake-weighted draw (ticket ownership, hashes, uniformity, tampering), email/phone/password/card/expiry validation, the fair-play
-draw (cross-checked against Node's own HMAC, uniformity over 30,000 rounds, tampering is caught, the standalone
-snippet matches), and the charity data (unique ids, valid vocabulary, short names and blurbs, bare hostnames, no
-superlatives, minimum counts per cause and filter).
+60 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
+backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
+(ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly
+league and the Charity Cup field, email/phone/password/card/expiry validation, the fair-play draw (cross-checked
+against Node's own HMAC, uniformity over 30,000 rounds, tampering is caught, the standalone snippet matches), and the
+charity data (unique ids, valid vocabulary, short names and blurbs, bare hostnames, no superlatives, minimum counts per
+cause and filter).
 
 ```
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 ```
 
-About 510 end-to-end checks in headless Chromium (needs Playwright installed globally). They start their own static
+About 600 end-to-end checks in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
-real-speed card picking and scratching, split gifts and the minimum per round, amount validation, filters checked
+every game at its biggest board, backing a charity, live tables (stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, filters checked
 against an independent computation, the charity directory and profiles, direct gifts, repeat plans and dedications,
 My Giving, the whole account preview (including that no password or full card number ever reaches storage), demo
 credit, the monthly limit, fair-play verification and tamper detection, stream mode, reduced motion, persistence,
@@ -243,7 +291,7 @@ css/shell.css       top bar, side nav, layout, stream mode
 css/views.css       lobby, game screen, My Giving, Club, Fair Play, Help, Charities
 css/dialogs.css     modal frame, filters, profile, direct gift, account, credit, receipt
 css/games.css       the games
-css/live.css        live tables: the page, the lobby strip and the live room
+css/live.css        live tables, leagues, crews, cards, the daily wheel and the back-a-charity picker
 js/config.js        mode, limits, demo credit, checkout hook
 js/data.js          causes, filter vocabulary and the 228 charities
 js/core.js          pure logic (money, RNG, filters, XP, badges, validation); unit-tested in Node
@@ -252,14 +300,16 @@ js/store.js         player state in localStorage, with defensive loading
 js/payments.js      the money step (demo credit or redirect)
 js/accounts.js      the account and saved-card PREVIEW
 js/kit.js           shared game toolkit: board samples that include the winner, the race choreography
-js/live.js          live tables: rooms, rounds, bots, stakes and the weighted draw (no DOM)
+js/live.js          live tables: rooms, rounds, bots, stakes, events, sponsor match, jackpot and the weighted draw (no DOM)
+js/crews.js         simulated crews: members, chat lines, emotes, weekly goal
 js/art.js           lobby tile artwork (inline SVG)
 js/icons.js         inline Lucide icons
 js/audio.js         synthesised sound effects
 js/confetti.js      confetti particle system
 js/games/*.js       the fifteen games; crowd.js is the engine behind Duck Derby, Marble Run and Balloon Race
 js/ui/*.js          shared helpers, amount and gift options, filters, charities, account, receipt,
-                    live tables, game screen, lobby, pages
+                    charity picker, live tables, game screen, lobby, pages, cards and daily wheel
+                    (collection.js), leagues and crews (leagues.js)
 js/app.js           boots everything, routing, top bar, search
 tests/              unit and end-to-end tests
 ```

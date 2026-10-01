@@ -39,9 +39,59 @@
     'SageSurf', 'TeaTimeTy', 'UmberUma', 'VelvetVic', 'WaffleWes', 'XenaX', 'YarrowYul', 'ZenZoe', 'AmberArc', 'BoldBasil'
   ];
 
+  var JACKPOT_AT = 1500;                   // the progressive jackpot drops at a table once it passes this (simulated money)
+  var JACKPOT_SEED = 250;
+  var LAST_CALL_MS = 5000;
+
   var rooms = {};
   var order = [];
   var started = false;
+  var forcedEvent;                         // undefined = follow the clock; null = no event; an object = that event (tests, demos)
+  var totals = { sent: 0, jackpot: 650 };
+
+  /** Side predictions (XP only, never money): answered before the table locks, scored when it settles. */
+  var PREDICTIONS = [
+    { key: 'big',    label: 'The pot reaches $500',                  test: function (r) { return r.pot >= 500; } },
+    { key: 'upset',  label: 'The winner has under 25% of the pot',   test: function (r) { return r.winShare < 0.25; } },
+    { key: 'leader', label: 'The leading charity wins',              test: function (r) { return r.winnerId === r.leaderId; } }
+  ];
+
+  /**
+   * Featured events. They run off the clock so the lobby always has something on: Giving Tuesday, a relief night in
+   * the evening, and a Double Pot Hour at the top of every hour. The sponsor behind a match is simulated.
+   */
+  function eventAt(d) {
+    if (d.getDay() === 2) {
+      return { id: 'tuesday', name: 'Giving Tuesday Jackpot', desc: 'A simulated sponsor matches every pot dollar for dollar, up to $250.', match: { ratio: 1, cap: 250 }, causes: null };
+    }
+    if (d.getHours() >= 18) {
+      return { id: 'relief', name: 'Disaster Relief Night', desc: 'Every table runs on disaster-relief and health charities, and a simulated sponsor adds 50% up to $150.', match: { ratio: 0.5, cap: 150 }, causes: ['disaster', 'global-health', 'health'] };
+    }
+    if (d.getMinutes() < 15) {
+      return { id: 'double', name: 'Double Pot Hour', desc: 'A simulated sponsor matches every pot dollar for dollar, up to $200, until quarter past.', match: { ratio: 1, cap: 200 }, causes: null };
+    }
+    return null;
+  }
+
+  /** Where the winning ticket sat: how close it came to going to the neighbouring charity. Returns null unless it was a close call. */
+  function closeCall(weights, ticket) {
+    if (ticket == null) { return null; }
+    var total = weights.reduce(function (s, w) { return s + w[1]; }, 0);
+    var acc = 0;
+    for (var i = 0; i < weights.length; i++) {
+      var start = acc;
+      var end = acc + weights[i][1];
+      acc = end;
+      if (ticket >= start && ticket < end) {
+        var lowGap = i > 0 ? ticket - start + 1 : Infinity;
+        var highGap = i < weights.length - 1 ? end - ticket : Infinity;
+        var gap = Math.min(lowGap, highGap);
+        if (gap === Infinity || gap > Math.max(2, total * 0.015)) { return null; }
+        return { charityId: weights[lowGap <= highGap ? i - 1 : i + 1][0], tickets: gap, pct: Math.round(gap / total * 1000) / 10 };
+      }
+    }
+    return null;
+  }
 
   function scale() { return GS.timeScale || 1; }
   function emit(type, room, extra) { GS.bus.emit('live', { type: type, room: room, extra: extra || null }); }
@@ -57,7 +107,11 @@
     return items[items.length - 1];
   }
 
-  function pool() {
+  function pool(ev) {
+    if (ev && ev.causes) {
+      var themed = GS.charities.filter(function (c) { return c.causes.some(function (x) { return ev.causes.indexOf(x) >= 0; }); });
+      if (themed.length >= 12) { return themed; }
+    }
     var p = GS.app && GS.app.state && GS.app.state.pool;
     return p && p.length >= MAX_GATES ? p : GS.charities;
   }
@@ -83,6 +137,12 @@
     this._phaseTimer = 0;
     this._hold = null;
     this._names = {};
+    this.event = null;       // the featured event this round opened under
+    this.match = null;       // { ratio, cap, why }: a (simulated) sponsor adds to the pot when it settles
+    this.jackpot = 0;        // dollars of the progressive jackpot that drop at this table (simulated)
+    this.pred = {};          // your side predictions: key -> true | false
+    this.lastCall = false;
+    this.chat = null;        // stream chat vote: { on, votes: { charityId: n }, lead }
   }
 
   var R = Room.prototype;
@@ -167,8 +227,19 @@
     self._hold = null;
     self._names = {};
     self.commit = null;
+    self.pred = {};
+    self.lastCall = false;
+    self.chat = { on: !!(self.chat && self.chat.on), votes: {}, lead: '' };
     self.phaseMs = OPEN_MS * scale();
     self.phaseStart = Date.now() - frac * self.phaseMs;
+
+    // featured event, sponsor match and progressive jackpot (all simulated)
+    var ev = GS.live.event();
+    self.event = ev;
+    self.match = ev && ev.match ? { ratio: ev.match.ratio, cap: ev.match.cap, why: ev.name }
+      : core.randomFloat() < 0.14 ? { ratio: 0.5, cap: 100, why: 'A simulated sponsor' } : null;
+    self.jackpot = 0;
+    if (totals.jackpot >= JACKPOT_AT) { self.jackpot = Math.floor(totals.jackpot); totals.jackpot = JACKPOT_SEED; }
 
     if (GS.fair.available()) {
       var rn = self.round;
@@ -177,9 +248,9 @@
 
     // who is at the table this round: a slate of 4 to 7 charities, some much more popular than others
     var slateN = 4 + core.randomInt(4);
-    self.slate = core.sampleSubset(pool(), slateN);
+    self.slate = core.sampleSubset(pool(ev), slateN);
     var weights = [1, 0.75, 0.55, 0.4, 0.3, 0.22, 0.16].slice(0, slateN);
-    var hot = core.randomFloat() < 0.18 ? 1.8 : 1;
+    var hot = core.randomFloat() < 0.18 || (ev && ev.match) || self.jackpot ? 1.8 : 1;
     var nBots = Math.max(6, Math.min(26, Math.round(core.randomRange(7, 16) * hot)));
     var plan = [];
     for (var i = 0; i < nBots; i++) {
@@ -196,7 +267,51 @@
     });
 
     self._phaseTimer = setTimeout(function () { self.lock(); }, self.phaseMs * (1 - frac));
+
+    // last call: the final seconds before the table locks
+    var untilLock = self.phaseMs * (1 - frac);
+    var lastAt = untilLock - LAST_CALL_MS * scale();
+    if (lastAt > 0) { self._later(function () { if (self.phase === 'open') { self.lastCall = true; emit('lastcall', self); } }, lastAt); }
+    else if (untilLock > 0) { self.lastCall = true; }
+
+    // stream chat vote: simulated chat votes for the slate's charities while bets are open
+    if (self.chat.on) { self._startChat(frac); }
     emit('phase', self);
+  };
+
+  /** Simulated chat voting on which charity the stream backs. */
+  R._startChat = function (frac) {
+    var self = this;
+    var left = self.phaseMs * (1 - (frac || 0));
+    var ticks = Math.max(4, Math.round(left / (1400 * scale())));
+    var w = [1, 0.8, 0.6, 0.45, 0.3, 0.2, 0.15].slice(0, self.slate.length);
+    for (var i = 0; i < ticks; i++) {
+      self._later(function () {
+        if (self.phase !== 'open' || !self.chat.on) { return; }
+        var votes = 1 + core.randomInt(4);
+        var c = self.slate[pickWeighted(w.map(function (x, k) { return k; }), function (k) { return w[k]; })];
+        self.chat.votes[c.id] = (self.chat.votes[c.id] || 0) + votes;
+        var lead = Object.keys(self.chat.votes).sort(function (a, b) { return self.chat.votes[b] - self.chat.votes[a]; })[0];
+        self.chat.lead = lead || '';
+        emit('chat', self);
+      }, (i + 1) * (left / (ticks + 1)));
+    }
+  };
+
+  /** Turns the stream chat vote on or off for this table. */
+  R.setChat = function (on) {
+    this.chat.on = !!on;
+    if (on && this.phase === 'open') { this._startChat(1 - this.msLeft() / this.phaseMs); }
+    emit('chat', this);
+  };
+
+  /** Answer a side prediction (true, false, or null to clear). XP only. */
+  R.predict = function (key, val) {
+    if (this.phase !== 'open') { return false; }
+    if (!PREDICTIONS.some(function (p) { return p.key === key; })) { return false; }
+    if (val === null) { delete this.pred[key]; } else { this.pred[key] = !!val; }
+    emit('pred', this);
+    return true;
   };
 
   /** Bets close; the winner is drawn from the pot. */
@@ -208,11 +323,20 @@
       var spare = self.slate.filter(function (c) { return !self.seats[c.id]; });
       self._botJoin(spare.length ? core.pickOne(spare) : core.pickOne(GS.charities), 5 + 5 * core.randomInt(3));
     }
+    // the stream's chat vote becomes a (simulated) stake on its favourite
+    if (self.chat && self.chat.on && self.chat.lead && self.slate.some(function (c) { return c.id === self.chat.lead; })) {
+      var cc = GS.charity(self.chat.lead);
+      var seat = self.seats[cc.id] || (self.seats[cc.id] = { charity: cc, tickets: 0, bots: 0, you: 0 });
+      seat.tickets += 25;
+      seat.bots += 1;
+      self._note({ kind: 'chat', name: 'Chat', dollars: 25, charityId: cc.id, votes: self.chat.votes[cc.id] });
+    }
     self.phase = 'locked';
     self.phaseMs = LOCK_MS * scale();
     self.phaseStart = Date.now();
     var weights = Object.keys(self.seats).map(function (k) { return [k, self.seats[k].tickets]; });
     self.weights = GS.fair.sortWeights(weights);
+    self.leaderId = self.field()[0].charity.id;
     self._note({ kind: 'lock', pot: self.pot() });
 
     var rn = self.round;
@@ -261,15 +385,37 @@
     self._clearTimers();
     var winner = GS.charity(self.draw.winnerId);
     var pot = self.pot();
+    var winTickets = (self.weights.filter(function (w) { return w[0] === winner.id; })[0] || [0, 0])[1];
+    // what the (simulated) sponsor and the progressive jackpot add on top of the stakes
+    var matchBonus = self.match ? Math.min(self.match.cap, Math.floor(pot * self.match.ratio)) : 0;
     var result = {
       round: self.round, game: self.id, winnerId: winner.id, winner: winner, pot: pot, players: self.players(), bots: self.botCount(),
+      winShare: pot ? winTickets / pot : 0, leaderId: self.leaderId, closeCall: closeCall(self.weights, self.draw.ticket),
+      bonus: { match: matchBonus, matchWhy: self.match ? self.match.why : '', jackpot: self.jackpot, total: matchBonus + self.jackpot },
+      event: self.event ? self.event.name : '',
       distinct: self.distinct(), weights: self.weights, ts: Date.now(),
       fair: self.commit && self.draw.fair ? {
         roundSeed: self.commit.roundSeed, serverHash: self.commit.serverHash, clientSeed: self.draw.clientSeed, nonce: self.round,
         poolHash: self.draw.poolHash, count: 1, winners: [winner.id], weights: self.weights, ticket: self.draw.ticket
       } : null,
-      you: null
+      you: null, pred: null
     };
+    // side predictions: XP only
+    var keys = Object.keys(self.pred);
+    if (keys.length) {
+      var rows = keys.map(function (k) {
+        var def = PREDICTIONS.filter(function (p) { return p.key === k; })[0];
+        var truth = def.test(result);
+        return { key: k, label: def.label, guess: self.pred[k], truth: truth, right: self.pred[k] === truth };
+      });
+      var right = rows.filter(function (r) { return r.right; }).length;
+      var xp = right * 15 + (right === rows.length && rows.length > 1 ? 10 : 0);
+      var grant = xp ? store.grantXp(xp) : null;
+      var pbadges = store.notePredictions(right, rows.length);
+      var allBadges = (grant ? grant.newBadges : []).concat(pbadges.filter(function (b) { return !grant || !grant.newBadges.some(function (g) { return g.id === b.id; }); }));
+      if (allBadges.length) { GS.bus.emit('badges', allBadges); }
+      result.pred = { rows: rows, right: right, xp: xp, leveledUp: !!(grant && grant.leveledUp) };
+    }
     if (self.you) {
       var cents = self.you.dollars * 100;
       var won = self.you.charityId === winner.id;
@@ -283,7 +429,8 @@
           count: 1, winners: [winner.id], weights: self.weights, filters: core.emptyFilters(), excluded: []
         } : null,
         allocations: [{ charityId: winner.id, cents: cents, hits: 1 }],
-        live: { pot: pot * 100, players: self.players(), pick: self.you.charityId, won: won, winner: winner.id, prepaid: true }
+        live: { pot: pot * 100, players: self.players(), pick: self.you.charityId, won: won, winner: winner.id, prepaid: true },
+        collect: [{ charityId: winner.id, rarity: core.rarityFor(result.winShare) }]
       });
       result.you = { charityId: self.you.charityId, dollars: self.you.dollars, won: won, receipt: receipt, bonusXp: bonusXp, summary: summary };
       if (summary.newBadges.length) { GS.bus.emit('badges', summary.newBadges); }
@@ -296,7 +443,8 @@
     self._hold = null;
     self.phaseMs = RESULT_MS * scale();
     self.phaseStart = Date.now();
-    totals.sent += pot;
+    totals.sent += pot + result.bonus.total;
+    totals.jackpot += Math.round(pot * 0.05);
     emit('result', self);
     if (result.you) { GS.bus.emit('progress', result.you.summary); GS.bus.emit('balance'); }
     self._phaseTimer = setTimeout(function () { self.openRound(0); }, self.phaseMs);
@@ -322,6 +470,7 @@
     seat.you += dollars;
     self.you = { charityId: charityId, dollars: dollars };
     self._note({ kind: 'join', who: 'you', name: 'You', dollars: dollars, charityId: charityId });
+    if (GS.crews && store.crew()) { GS.crews.backYou(self, ch); }
     GS.bus.emit('balance');
     emit('field', self);
     return { ok: true };
@@ -346,8 +495,6 @@
   };
 
   /* ---------------------------------------------------------------- the floor */
-
-  var totals = { sent: 0 };
 
   function liveIds() {
     var ui = GS.ui && GS.ui.game;
@@ -382,6 +529,17 @@
     rooms: function () { return order.map(function (id) { return rooms[id]; }); },
     /** Tables where you have a bet on the current round. */
     yourBets: function () { return GS.live.rooms().filter(function (r) { return !!r.you && r.phase !== 'result'; }); },
-    sentThisSession: function () { return totals.sent; }
+    sentThisSession: function () { return totals.sent; },
+
+    PREDICTIONS: PREDICTIONS.map(function (p) { return { key: p.key, label: p.label }; }),
+    JACKPOT_AT: JACKPOT_AT,
+    /** The progressive jackpot (simulated): grows with every settled pot and drops at the next table once it passes JACKPOT_AT. */
+    jackpot: function () { return Math.floor(totals.jackpot); },
+    setJackpot: function (n) { totals.jackpot = n; },
+    /** The featured event now (or the one forced for a demo or test; pass null for none, undefined to follow the clock). */
+    event: function () { return forcedEvent !== undefined ? forcedEvent : eventAt(new Date()); },
+    setEvent: function (ev) { forcedEvent = ev; },
+    eventAt: eventAt,
+    closeCall: closeCall
   };
 })();

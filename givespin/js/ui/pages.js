@@ -219,7 +219,7 @@
         (on ? '<span class="badge__when">Unlocked ' + esc(ui.fmtDate(s.badges[b.id])) + '</span>' : '') + '</li>';
     }).join('');
 
-    root.innerHTML = pageHead('Giving Club', 'Earn XP for every round you play, keep your streak going and collect badges. Your level and badges live on this device.') +
+    root.innerHTML = pageHead('Giving Club', 'Earn XP for every round you play, keep your streak going, back winners for a hot hand and collect badges. Your level and badges live on this device.') +
       '<div class="clubtop">' +
         '<div class="panel levelcard"><div class="ring" style="--p:' + lv.pct + '"><div class="ring__in"><span class="ring__n">' + lv.level + '</span><span class="ring__l">Level</span></div></div>' +
           '<div class="levelcard__main"><div class="lvl__name">' + esc(lv.name) + '</div>' +
@@ -232,6 +232,12 @@
           stat('globe', String(Object.keys(s.charityCounts).length), 'Charities supported') +
           stat('gem', money(s.biggestCents, true), 'Biggest single gift') +
         '</div>' +
+      '</div>' +
+      '<div class="stats clubperks">' +
+        stat('crown', core.tierFor(lv.level).tier.name, 'Tier · <a href="#leagues">Leagues</a>') +
+        stat('flame', s.hot.streak ? '×' + store.hotMultiplier().toFixed(1) + ' (' + s.hot.streak + ' in a row)' : 'None yet', 'Hot hand · best ' + s.hot.best) +
+        stat('layers', Object.keys(s.cards).length + ' of ' + GS.charities.length, 'Cards · <a href="#cards">Collection</a>') +
+        stat('users', GS.crews && GS.crews.mine() ? GS.crews.mine().name : 'No crew', 'Crew · <a href="#crews">Crews</a>') +
       '</div>' +
       '<div class="twocol twocol--club"><section class="sect panel" aria-labelledby="cl-lad"><h2 class="sect__t" id="cl-lad">Level ladder</h2><ol class="ladder">' + ladder + '</ol></section>' +
       '<section class="sect panel" aria-labelledby="cl-bad"><div class="sect__head"><h2 class="sect__t" id="cl-bad">Badges</h2><span class="tag tag--plain">' + unlocked + ' / ' + core.BADGES.length + '</span></div><ul class="badgegrid">' + badges + '</ul></section></div>';
@@ -252,7 +258,7 @@
       '<section class="sect panel" aria-labelledby="fp-diy"><h2 class="sect__t" id="fp-diy">Check it without this site</h2>' +
         '<p>Paste this into your browser’s developer console. It rebuilds the winners from a revealed seed using only the browser’s built-in hashing functions.</p>' +
         '<pre class="code" tabindex="0"><code>' + esc(GS.fair.SNIPPET) + '</code></pre>' +
-        '<p class="tabnote">Call it like <code>draw(roundSeed, clientSeed, nonce, […charity ids in play…], count)</code> and compare with the winners on your receipt. For a live table, list each charity id once per dollar staked (its tickets) instead, with <code>count</code> 1.</p></section>' +
+        '<p class="tabnote">Call it like <code>draw(roundSeed, clientSeed, nonce, […the charity ids on the board…], count)</code> and compare with the winners on your receipt. Each charity id counts once, however many spots it fills on the board. For a live table, list each charity id once per dollar staked (its tickets) instead, with <code>count</code> 1.</p></section>' +
       '<section class="sect panel panel--note" aria-labelledby="fp-lim"><h2 class="sect__t" id="fp-lim">The honest limits</h2>' +
         '<p>In this browser-only build the secret seed is generated on your own device, so this shows how results are derived and that they were fixed before the animation. It is not an audit by a separate party. A live deployment should generate and commit seeds on a server the player does not control, and publish the hashes. What is on screen (the slices, reels, bins and decoys) is decoration around a result that is already drawn. At live tables the other players are simulated bots, so the pot you see is simulated too.</p></section>';
     ui.hydrate(root);
@@ -269,15 +275,31 @@
         : '<p>Yes. When a game picks a charity you finish your gift on a checkout page run by the donation platform. GiveSpin never sees or stores your card details.</p>';
     }],
     ['help-fair', 'How is the winner picked?', function () {
-      return '<p>A secret seed is committed before you play (you see its hash). The winner is computed from that seed, your own seed and the round number with HMAC-SHA256, using rejection sampling so no charity is favoured. The animation then reveals a result that is already decided. <a href="#fair">Verify any round yourself.</a></p>';
+      return '<p>A secret seed is committed before you play (you see its hash). The winner is computed from that seed, your own seed and the round number with HMAC-SHA256, using rejection sampling, over the charities on the board, so none is favoured. The animation then reveals a result that is already decided. <a href="#fair">Verify any round yourself.</a></p>';
     }],
     ['help-live', 'How do live tables work? Are the other players real?', function (demo) {
       return '<p>A live table is a shared pot. Everyone at the table backs a charity with a stake (default $20). Every dollar is a ticket, so a charity with 30% of the pot wins 30% of the time. When bets close, one charity is drawn, the game plays out, and <strong>the whole pot goes to the winner, whether you backed it or not</strong>. Your own stake is allocated to the winner too, so it is as if your charity won.</p>' +
         '<p><strong>The other players are bots for now.</strong> They stand in for a real multiplayer table and their stakes are simulated, so every screen labels them. A real launch would run tables on a server. Live tables are demo-only: a pooled pot needs that server, and this site never touches real money.</p>' +
+        '<p>Some tables carry a <strong>sponsor match</strong> (a simulated sponsor adds to the winner’s pot), a rolling <strong>progressive jackpot</strong>, or a time-limited <strong>event</strong>. These are simulated too and are labelled on the table. A <em>last call</em> warns you before betting closes, a big stake asks you to confirm, and close finishes get a slow-motion photo finish. Turn the <strong>croupier voice</strong> on or off from the table.</p>' +
         '<p>Your stake is refunded if you cancel before the table locks. The draw uses a seed committed before bets open and the frozen pot, so you can <a href="#fair">verify any live round</a> afterwards.</p>';
     }],
     ['help-pick', 'Can I choose which charities can win?', function () {
       return '<p>Yes, several ways. Use <strong>Filters</strong> to narrow the pool by cause, who they help, where they work, how they help and when they started. Or open <a href="#charities">Charities</a> and switch individual ones off. Or skip the luck and <strong>give directly</strong> to any charity from its profile.</p>';
+    }],
+    ['help-board', 'How many charities can be on a game? Can I back one?', function () {
+      return '<p>Most games have a <strong>Charities on the board</strong> control: pick a preset or type any number, from a couple up to 1,000 on Plinko, Roulette, the wheel and the races. <strong>The board is exactly what the winner is drawn from</strong>, every charity on it with the same chance, so a bigger board means a longer shot and a smaller one a better chance. If you ask for more spots than there are charities in play, charities fill more than one spot (spread evenly, so their odds stay equal).</p>' +
+        '<p>In games that show a field (Plinko bins, roulette pockets, ducks, marbles, runners, balloons and so on) you can <strong>Back a charity</strong> first: choose one, or let the site choose, and it is always on the board. If it wins you earn bonus XP, and the longer the shot the bigger the bonus. Backing a charity never changes the odds. Cards and scratch cards are the exceptions, because you already choose there.</p>';
+    }],
+    ['help-extras', 'Leagues, crews, cards, daily wheel and the rest', function (demo) {
+      return '<p><strong>Everything here is play, and everything with other people is simulated.</strong> Rivals in leagues, crew-mates, chatters and sponsors are bots and say so on screen; chat never leaves your device.</p>' +
+        '<ul>' +
+        '<li><strong><a href="#leagues">Leagues</a>.</strong> A weekly XP table against simulated rivals, tiers from Bronze to Diamond (higher tiers unlock bigger live-table stakes), and the <strong>Charity Cup</strong>, a three-round knockout of eight charities where you call each winner for XP.</li>' +
+        '<li><strong><a href="#crews">Crews</a>.</strong> Join a simulated crew, chat with emotes, and work towards a weekly crew goal.</li>' +
+        '<li><strong><a href="#cards">Cards</a>.</strong> A collectible card for each charity you help win, rarer for longer shots. Complete the monthly set for bonus XP.</li>' +
+        '<li><strong>Streaks.</strong> Back winners on the trot to build a <em>hot hand</em>, a growing XP multiplier. At live tables you can also make XP-only predictions (a pot of $500 or more, an upset win, the leading charity winning).</li>' +
+        (demo ? '<li><strong>Daily wheel.</strong> One free spin a day for demo credit.</li>' : '') +
+        '</ul>' +
+        '<p>None of it costs money. XP, cards and tiers have no cash value.</p>';
     }],
     ['help-split', 'What does “split your gift” do?', function () {
       return '<p>It divides your amount into equal parts, to the cent, and plays one round per part. Give $10 across 3 rounds and you get $3.34, $3.33 and $3.33, each going to whichever charity that round lands on. Each round needs at least $1, so small gifts have fewer split options. Slots always uses three reels.</p>';
@@ -318,7 +340,7 @@
       '<ol class="steps3 steps3--4">' +
         '<li class="step3"><span class="step3__n">1</span><h2>Pick an amount</h2><p>Tap a preset or type your own. You can split one gift across several rounds.</p></li>' +
         '<li class="step3"><span class="step3__n">2</span><h2>Choose who can win</h2><p>Filter by cause, who they help, where they work and more. Or leave it open for a surprise.</p></li>' +
-        '<li class="step3"><span class="step3__n">3</span><h2>Play a game</h2><p>Eleven games, from the wheel and slots to roulette, dice, scratch cards and a derby.</p></li>' +
+        '<li class="step3"><span class="step3__n">3</span><h2>Play a game</h2><p>Fifteen games, from the wheel and slots to roulette, Plinko, duck races and live tables.</p></li>' +
         '<li class="step3"><span class="step3__n">4</span><h2>Give &amp; celebrate</h2><p>' + (demo ? 'Your result pops with confetti and a receipt. In demo mode it is all simulated.' : 'Your result pops with confetti, then you finish on the charity’s checkout page.') + '</p></li>' +
       '</ol>' +
       '<div class="faq" data-role="faq">' + FAQ.map(function (f) {

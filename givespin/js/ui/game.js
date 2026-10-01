@@ -637,6 +637,8 @@
           game: g.id, cents: cents, rounds: rounds, allocs: allocs, winners: winners, jackpot: triple && pool.length >= 5, triple: triple,
           direct: false, fair: draw.fair, opts: gameOpts, pick: null
         };
+        // each winning charity's card goes in your collection; the rarer the win, the rarer the card
+        round.collect = winners.map(function (w) { return { charityId: w.id, rarity: core.rarityFor(1 / Math.max(2, drawPool.length)) }; });
         if (pid) {
           var wins = winners.filter(function (w) { return w.id === pid; }).length;
           round.pick = { id: pid, won: wins > 0, wins: wins, board: drawPool.length };

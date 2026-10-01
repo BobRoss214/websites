@@ -422,13 +422,124 @@
     return d;
   }
 
+  /* ------------------------------------------------- tiers, leagues, cards */
+
+  /** A small seeded random generator (mulberry32 over a string hash) so weekly things are the same for everyone this week. */
+  function seeded(seed) {
+    var str = String(seed);
+    var h = 1779033703 ^ str.length;
+    for (var i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    var a = h >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function seededShuffle(arr, seed) {
+    var rng = seeded(seed);
+    var out = arr.slice();
+    for (var i = out.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = out[i]; out[i] = out[j]; out[j] = t;
+    }
+    return out;
+  }
+
+  /** "2026-W40": the ISO week a date falls in (weeks run Monday to Sunday). */
+  function weekKey(date) {
+    var dt = date || new Date();
+    var d = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()));
+    var day = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - day);
+    var yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+    var week = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+    return d.getUTCFullYear() + '-W' + (week < 10 ? '0' : '') + week;
+  }
+
+  /** How far through the (Monday to Sunday) week a moment is, 0 to 1. */
+  function weekFraction(date) {
+    var d = date || new Date();
+    var day = (d.getDay() + 6) % 7;
+    return (day + (d.getHours() + d.getMinutes() / 60) / 24) / 7;
+  }
+
+  /** Tiers by level. Higher tiers open VIP stakes at live tables. */
+  var TIERS = [
+    { id: 'bronze',   name: 'Bronze',   minLevel: 1, vip: [],               perk: 'Every table, with stakes up to $100.' },
+    { id: 'silver',   name: 'Silver',   minLevel: 3, vip: [],               perk: 'A silver frame on your name and a place in a crew.' },
+    { id: 'gold',     name: 'Gold',     minLevel: 5, vip: [250],            perk: 'VIP stakes: $250.' },
+    { id: 'platinum', name: 'Platinum', minLevel: 7, vip: [250, 500],       perk: 'VIP stakes: $250 and $500.' },
+    { id: 'diamond',  name: 'Diamond',  minLevel: 9, vip: [250, 500, 1000], perk: 'VIP stakes: $250, $500 and $1,000.' }
+  ];
+
+  function tierFor(level) {
+    var idx = 0;
+    TIERS.forEach(function (t, i) { if (level >= t.minLevel) { idx = i; } });
+    return { tier: TIERS[idx], next: TIERS[idx + 1] || null, index: idx };
+  }
+
+  /** Live-table stake presets, with VIP amounts added for higher tiers. */
+  function stakePresets(base, level) {
+    return base.concat(tierFor(level).tier.vip);
+  }
+
+  /** How rare a card is, from the chance the charity had of winning (0 to 1). */
+  var RARITIES = ['common', 'rare', 'epic', 'legendary'];
+  function rarityFor(p) {
+    if (p < 0.01) { return 'legendary'; }
+    if (p < 0.05) { return 'epic'; }
+    if (p < 0.15) { return 'rare'; }
+    return 'common';
+  }
+  function rarityRank(r) { return Math.max(0, RARITIES.indexOf(r)); }
+
+  /** The six charities in this month's set: the same for everyone this month, different next month. */
+  function monthlySet(charities, month) {
+    return seededShuffle(charities.map(function (c) { return c.id; }).sort(), 'set:' + month).slice(0, 6);
+  }
+
+  var LEAGUE_NAMES = ['PocketAces', 'NovaGiver', 'MapleMoon', 'TurboTess', 'RiverRuby', 'OtterOllie', 'PixelPaw', 'SunnySid', 'KiwiKai', 'ZigZagZed',
+    'HoneyHawk', 'FoxTrotFin', 'WillowWren', 'TangoTom', 'AtlasAnt', 'BeaconBea', 'EmberEli', 'GlimmerGia', 'JollyJet', 'KoalaKay'];
+
+  /**
+   * The weekly league: you and 14 simulated rivals, ranked by XP this week. Rivals' totals are the same for everyone
+   * this week and grow as the week goes on (`fraction`, 0 to 1). Returns rows [{ name, xp, you, rank, zone }], best first.
+   */
+  function leagueTable(week, fraction, myXp, myName) {
+    var rng = seeded('league:' + week);
+    var names = seededShuffle(LEAGUE_NAMES, 'names:' + week).slice(0, 14);
+    var f = Math.max(0, Math.min(1, fraction));
+    var rows = names.map(function (n) {
+      var pace = 120 + Math.floor(rng() * 1100);                 // what they would reach by the end of the week
+      var wobble = 0.85 + 0.3 * seeded('w:' + week + n)();
+      return { name: n, xp: Math.round(pace * Math.pow(f, 0.9) * wobble), you: false };
+    });
+    rows.push({ name: myName || 'You', xp: Math.max(0, Math.floor(myXp)), you: true });
+    rows.sort(function (a, b) { return b.xp - a.xp || (a.you ? -1 : b.you ? 1 : 0); });
+    rows.forEach(function (r, i) { r.rank = i + 1; r.zone = i < 3 ? 'up' : i >= rows.length - 3 ? 'down' : 'stay'; });
+    return rows;
+  }
+
+  /** The Charity Cup field for a week: eight charities, the same for everyone this week. */
+  function cupField(charities, week) {
+    return seededShuffle(charities.map(function (c) { return c.id; }).sort(), 'cup:' + week).slice(0, 8);
+  }
+
   /* ----------------------------------------------------------------- badges */
 
   /**
    * Badges. `test(state)` receives the saved state *after* the latest play was recorded.
    * state: { totalCents, rounds, biggestCents, charitiesSeen[], causesSeen[], gamesPlayed[], gameCount,
    *          streak, bestStreak, jackpots, splits, usedStream, directGifts, verifies, plans,
-   *          liveRounds, liveWins, pickWins, biggestPotCents }
+   *          liveRounds, liveWins, pickWins, biggestPotCents, predRight, bestHot, cardsOwned, setsDone, dailyClaims,
+   *          cupCalled, crewJoined }
    */
   var BADGES = [
     { id: 'first',    name: 'First Give',       icon: 'heart',      desc: 'Complete your first round.',                 test: function (s) { return s.rounds >= 1; } },
@@ -447,7 +558,14 @@
     { id: 'steady',   name: 'Steady Giver',     icon: 'calendar-days', desc: 'Set up a recurring gift.',                test: function (s) { return s.plans >= 1; } },
     { id: 'live',     name: 'Live Wire',        icon: 'radio',      desc: 'Take a seat at a live table.',               test: function (s) { return s.liveRounds >= 1; } },
     { id: 'called',   name: 'Called It',        icon: 'target',     desc: 'Back the charity that wins a race, spin or live pot.', test: function (s) { return (s.liveWins || 0) + (s.pickWins || 0) >= 1; } },
-    { id: 'bigpot',   name: 'Pot of Gold',      icon: 'gem',        desc: 'Join a live pot of $500 or more.',           test: function (s) { return s.biggestPotCents >= 50000; } }
+    { id: 'bigpot',   name: 'Pot of Gold',      icon: 'gem',        desc: 'Join a live pot of $500 or more.',           test: function (s) { return s.biggestPotCents >= 50000; } },
+    { id: 'oracle',   name: 'Oracle',           icon: 'sparkles',   desc: 'Get three side predictions right.',          test: function (s) { return (s.predRight || 0) >= 3; } },
+    { id: 'hothand',  name: 'Hot Hand',         icon: 'flame',      desc: 'Back the winner three times in a row.',      test: function (s) { return (s.bestHot || 0) >= 3; } },
+    { id: 'cards10',  name: 'Card Collector',   icon: 'layers',     desc: 'Collect 10 charity cards.',                  test: function (s) { return (s.cardsOwned || 0) >= 10; } },
+    { id: 'setdone',  name: 'Set Complete',     icon: 'award',      desc: 'Finish a monthly card set.',                 test: function (s) { return (s.setsDone || 0) >= 1; } },
+    { id: 'daily',    name: 'Lucky Day',        icon: 'gift',       desc: 'Spin the daily bonus wheel.',                test: function (s) { return (s.dailyClaims || 0) >= 1; } },
+    { id: 'cupseer',  name: 'Cup Seer',         icon: 'trophy',     desc: 'Call the Charity Cup champion.',             test: function (s) { return (s.cupCalled || 0) >= 1; } },
+    { id: 'crew',     name: 'Crew Member',      icon: 'users',      desc: 'Join a crew.',                               test: function (s) { return !!s.crewJoined; } }
   ];
 
   /** Returns the ids of badges newly earned given `state` and the set already unlocked. */
@@ -572,6 +690,8 @@
     ERA_IDS: ERA_IDS, eraOf: eraOf, emptyFilters: emptyFilters, normalizeFilters: normalizeFilters, matchesFilters: matchesFilters,
     buildPool: buildPool, activeFilterCount: activeFilterCount, facetCounts: facetCounts, mergeAllocations: mergeAllocations,
     LEVELS: LEVELS, xpForPlay: xpForPlay, pickBonusXp: pickBonusXp, levelFor: levelFor,
+    seeded: seeded, seededShuffle: seededShuffle, weekKey: weekKey, weekFraction: weekFraction, TIERS: TIERS, tierFor: tierFor, stakePresets: stakePresets,
+    RARITIES: RARITIES, rarityFor: rarityFor, rarityRank: rarityRank, monthlySet: monthlySet, leagueTable: leagueTable, cupField: cupField,
     dayKey: dayKey, monthKey: monthKey, daysBetween: daysBetween, nextStreak: nextStreak, nextGiftDate: nextGiftDate,
     apportion: apportion, share: share, fmtShare: fmtShare,
     BADGES: BADGES, newBadges: newBadges,

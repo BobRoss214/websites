@@ -302,7 +302,7 @@ test('badges unlock from state and are not re-awarded', () => {
   const games = Array.from({ length: 15 }, (_, i) => 'g' + i);
   const s2 = Object.assign({}, base, { rounds: 9, jackpots: 1, splits: 1, usedStream: true, bestStreak: 3, directGifts: 1, verifies: 2, plans: 1,
     charitiesSeen: ['1', '2', '3', '4', '5'], causesSeen: ['a', 'b', 'c', 'd', 'e'], gamesPlayed: games, totalCents: 25000, biggestCents: 10000,
-    liveRounds: 1, liveWins: 1, biggestPotCents: 50000 });
+    liveRounds: 1, liveWins: 1, biggestPotCents: 50000, predRight: 3, bestHot: 3, cardsOwned: 10, setsDone: 1, dailyClaims: 1, cupCalled: 1, crewJoined: true });
   assert.equal(core.newBadges(s2, {}).length, core.BADGES.length);
   // "Game Master" needs every game, "Arcade Regular" only five
   const five = Object.assign({}, base, { rounds: 5, gamesPlayed: games.slice(0, 5) });
@@ -406,4 +406,87 @@ test('Called It is unlocked by a backed charity winning a race or a pot', () => 
   assert.ok(!core.newBadges(base, {}).includes('called'));
   assert.ok(core.newBadges(Object.assign({}, base, { pickWins: 1 }), {}).includes('called'));
   assert.ok(core.newBadges(Object.assign({}, base, { liveWins: 1 }), {}).includes('called'));
+});
+
+test('seeded generators are repeatable and different seeds differ', () => {
+  const a = core.seeded('x'); const b = core.seeded('x'); const c = core.seeded('y');
+  const sa = [a(), a(), a()]; const sb = [b(), b(), b()]; const sc = [c(), c(), c()];
+  assert.deepEqual(sa, sb);
+  assert.notDeepEqual(sa, sc);
+  assert.ok(sa.every((v) => v >= 0 && v < 1));
+  const arr = [1, 2, 3, 4, 5, 6, 7, 8];
+  assert.deepEqual(core.seededShuffle(arr, 's'), core.seededShuffle(arr, 's'));
+  assert.deepEqual(core.seededShuffle(arr, 's').slice().sort(), arr, 'a shuffle keeps every item');
+});
+
+test('weekKey follows ISO weeks (Monday to Sunday)', () => {
+  assert.equal(core.weekKey(new Date(2026, 0, 1)), '2026-W01');
+  assert.equal(core.weekKey(new Date(2026, 9, 5)), '2026-W41');           // a Monday
+  assert.equal(core.weekKey(new Date(2026, 9, 4)), '2026-W40');           // the Sunday before
+  assert.equal(core.weekKey(new Date(2020, 11, 31)), '2020-W53');
+  assert.equal(core.weekFraction(new Date(2026, 9, 5, 0, 0)), 0);
+  assert.ok(Math.abs(core.weekFraction(new Date(2026, 9, 8, 12, 0)) - 3.5 / 7) < 1e-9);
+});
+
+test('tiers follow level and open VIP stakes at the top', () => {
+  assert.equal(core.tierFor(1).tier.id, 'bronze');
+  assert.equal(core.tierFor(3).tier.id, 'silver');
+  assert.equal(core.tierFor(5).tier.id, 'gold');
+  assert.equal(core.tierFor(10).tier.id, 'diamond');
+  assert.equal(core.tierFor(10).next, null);
+  assert.deepEqual(core.stakePresets([5, 10, 20, 50, 100], 1), [5, 10, 20, 50, 100]);
+  assert.deepEqual(core.stakePresets([5, 10, 20, 50, 100], 5), [5, 10, 20, 50, 100, 250]);
+  assert.deepEqual(core.stakePresets([5, 10], 9), [5, 10, 250, 500, 1000]);
+});
+
+test('rarity gets rarer as the odds get longer', () => {
+  assert.equal(core.rarityFor(0.5), 'common');
+  assert.equal(core.rarityFor(0.1), 'rare');
+  assert.equal(core.rarityFor(0.03), 'epic');
+  assert.equal(core.rarityFor(0.004), 'legendary');
+  assert.ok(core.rarityRank('legendary') > core.rarityRank('epic') && core.rarityRank('epic') > core.rarityRank('rare') && core.rarityRank('rare') > core.rarityRank('common'));
+});
+
+test('the monthly set and the Charity Cup field are repeatable and well formed', () => {
+  const cs = Array.from({ length: 40 }, (_, i) => ({ id: 'c' + i }));
+  const set = core.monthlySet(cs, '2026-10');
+  assert.equal(set.length, 6);
+  assert.equal(new Set(set).size, 6);
+  assert.deepEqual(set, core.monthlySet(cs.slice().reverse(), '2026-10'), 'the same set whatever order the roster is in');
+  assert.notDeepEqual(set, core.monthlySet(cs, '2026-11'));
+  const cup = core.cupField(cs, '2026-W40');
+  assert.equal(cup.length, 8);
+  assert.equal(new Set(cup).size, 8);
+  assert.deepEqual(cup, core.cupField(cs, '2026-W40'));
+});
+
+test('the weekly league ranks you among 14 simulated rivals', () => {
+  const rows = core.leagueTable('2026-W40', 0.5, 300, 'Me');
+  assert.equal(rows.length, 15);
+  assert.equal(rows.filter((r) => r.you).length, 1);
+  assert.equal(new Set(rows.map((r) => r.name)).size, 15, 'every name is different');
+  for (let i = 1; i < rows.length; i++) { assert.ok(rows[i - 1].xp >= rows[i].xp, 'sorted best first'); }
+  assert.deepEqual(rows.map((r) => r.rank), rows.map((_, i) => i + 1));
+  assert.equal(rows[0].zone, 'up');
+  assert.equal(rows[14].zone, 'down');
+  assert.deepEqual(core.leagueTable('2026-W40', 0.5, 300, 'Me'), rows, 'the same for everyone this week');
+  const early = core.leagueTable('2026-W40', 0.1, 0, 'Me');
+  const late = core.leagueTable('2026-W40', 0.9, 0, 'Me');
+  assert.ok(early[0].xp < late[0].xp, 'rivals earn as the week goes on');
+  assert.equal(core.leagueTable('2026-W40', 0, 0, 'Me').filter((r) => !r.you).every((r) => r.xp === 0), true);
+});
+
+test('the new badges unlock on their own conditions', () => {
+  const base = { totalCents: 0, rounds: 0, biggestCents: 0, charitiesSeen: [], causesSeen: [], gamesPlayed: [], gameCount: 15, streak: 0, bestStreak: 0, jackpots: 0, splits: 0, usedStream: false, directGifts: 0, verifies: 0, plans: 0, liveRounds: 0, liveWins: 0, pickWins: 0, biggestPotCents: 0, predRight: 0, bestHot: 0, cardsOwned: 0, setsDone: 0, dailyClaims: 0, cupCalled: 0, crewJoined: false };
+  const ids = (o) => core.newBadges(Object.assign({}, base, o), {});
+  assert.deepEqual(ids({}), []);
+  assert.deepEqual(ids({ predRight: 3 }), ['oracle']);
+  assert.deepEqual(ids({ bestHot: 3 }), ['hothand']);
+  assert.deepEqual(ids({ cardsOwned: 10 }), ['cards10']);
+  assert.deepEqual(ids({ setsDone: 1 }), ['setdone']);
+  assert.deepEqual(ids({ dailyClaims: 1 }), ['daily']);
+  assert.deepEqual(ids({ cupCalled: 1 }), ['cupseer']);
+  assert.deepEqual(ids({ crewJoined: true }), ['crew']);
+  assert.equal(core.BADGES.length, 24);
+  assert.equal(new Set(core.BADGES.map((b) => b.id)).size, 24, 'badge ids are unique');
 });

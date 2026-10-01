@@ -742,7 +742,7 @@ if (section('10. Fair play page')) {
   const redo = await page.evaluate(async ({ code }) => {
     const draw = new Function('crypto', code + '\nreturn draw;')(window.crypto);
     const f = window.GS.app._last.round.fair;
-    const pool = window.GS.core.buildPool(window.GS.charities, f.filters, f.excluded).map((c) => c.id);
+    const pool = f.board || window.GS.core.buildPool(window.GS.charities, f.filters, f.excluded).map((c) => c.id);
     return { got: await draw(f.roundSeed, f.clientSeed, f.nonce, pool, f.count), want: window.GS.app._last.round.winners.map((w) => w.id) };
   }, { code });
   check(JSON.stringify(redo.got) === JSON.stringify(redo.want), 'the do-it-yourself snippet reproduces the winners', redo);
@@ -1264,6 +1264,192 @@ if (section('13f. Live tables: every live game')) {
 }
 
 /* ======================================================================== */
+if (section('13g. Live extras: events, sponsor match, jackpot, last call, all-in, predictions, chat vote, crews')) {
+  // real time: forced rounds with the full betting window
+  const page = await newPage();
+  await openApp(page, '#live-derby', '');
+  await page.evaluate(() => {
+    GS.live.setEvent({ id: 'double', name: 'Double Pot Hour', desc: 'A simulated sponsor matches every pot.', match: { ratio: 1, cap: 200 }, causes: null });
+    GS.live.room('derby').openRound(0);
+  });
+  await page.waitForSelector('#livepanel .chip-ev--event');
+  check((await page.locator('#livepanel .chip-ev--event').innerText()).includes('Double Pot Hour'), 'the featured event shows on the table');
+  check((await page.locator('#livepanel .chip-ev--match').innerText()).includes('Match +100% up to $200') && (await page.locator('#livepanel .chip-ev--match').innerText()).includes('simulated'), 'a sponsor match shows its terms and says the sponsor is simulated');
+  await page.evaluate(() => { GS.live.setEvent(null); GS.live.setJackpot(1600); GS.live.room('derby').openRound(0); });
+  await page.waitForSelector('#livepanel .chip-ev--jackpot');
+  const jp = await page.evaluate(() => ({ at: GS.live.room('derby').jackpot, meter: GS.live.jackpot() }));
+  check(jp.at === 1600 && jp.meter === 250 && (await page.locator('#livepanel .chip-ev--jackpot').innerText()).includes('simulated'), 'a full jackpot drops at the next table (simulated) and the meter resets', jp);
+  // last call
+  await page.evaluate(() => { GS.live.setJackpot(700); GS.live.room('derby').openRound(0.9); });
+  await page.waitForSelector('#livepanel .lt-phase.is-last');
+  check((await page.locator('#livepanel .lt-phase').innerText()) === 'Last call!' && await page.locator('#livepanel .lt-clock.is-last').count() === 1, 'the last seconds before the lock are called out');
+  // all-in: a big stake needs a second press
+  await page.evaluate(() => { GS.live.room('derby').openRound(0); GS.store.spend(GS.store.balance() - 3000); GS.bus.emit('balance'); });
+  await page.waitForSelector('#livepanel .lt-phase.is-open');
+  await page.waitForTimeout(200);
+  await page.click('#lt-stake [data-stake="20"]');
+  await page.locator('#livepanel .odd').first().click();
+  await page.click('#livepanel [data-role="join"]');
+  check((await page.locator('#livepanel [data-role="join-label"]').innerText()).startsWith('Confirm all-in') && await page.evaluate(() => GS.live.room('derby').you === null) && await balance(page) === 3000, 'a stake of half your credit or more asks you to confirm first and takes nothing yet');
+  await page.click('#livepanel [data-role="join"]');
+  check(await page.evaluate(() => GS.live.room('derby').you && GS.live.room('derby').you.dollars) === 20 && await balance(page) === 1000, 'pressing again places it');
+  await page.click('#livepanel [data-role="join"]');
+  // VIP stakes appear with tier
+  check(await page.locator('#lt-stake [data-stake="250"]').count() === 0, 'a Bronze player sees no VIP stakes');
+  await page.evaluate(() => { GS.store.grantXp(20000); GS.bus.emit('progress'); });
+  await page.waitForSelector('#lt-stake [data-stake="250"]');
+  check((await page.locator('#lt-stake [data-stake="1000"]').count()) === 1 && (await page.locator('#livepanel .chip-ev--vip').innerText()).includes('Diamond'), 'a Diamond player gets $250, $500 and $1,000 VIP stakes');
+  // chat vote: simulated chat picks a charity, which gets a stake at the lock
+  await page.evaluate(() => { GS.live.setEvent(undefined); GS.live.room('derby').openRound(0); });
+  await page.waitForSelector('#livepanel .lt-phase.is-open');
+  await page.check('#livepanel [data-role="chat-on"]');
+  await page.waitForFunction(() => Object.keys(GS.live.room('derby').chat.votes).length > 0, null, { timeout: 15000 });
+  check(await page.locator('#livepanel .lt-chat').isVisible() && await page.locator('#livepanel .cvote').count() >= 4, 'the stream chat vote shows simulated viewers voting');
+  const lead = await page.evaluate(() => { const r = GS.live.room('derby'); const before = r.pot(); const l = r.chat.lead; r.lock(); return { l, grew: r.pot() >= before + 25, note: r.feed.some((n) => n.kind === 'chat' && n.charityId === l) }; });
+  check(lead.grew && lead.note, 'at the lock the chat’s favourite gets a $25 simulated stake', lead);
+  // crews: crewmates back your charity
+  await page.evaluate(() => { GS.live.room('derby').openRound(0); });
+  await go(page, '#crews');
+  await page.click('[data-crew-join="tide"]');
+  await go(page, '#live-derby');
+  await page.waitForSelector('#livepanel .lt-phase.is-open');
+  await page.evaluate(() => { GS.store.topUp(100000); GS.bus.emit('balance'); });
+  check((await page.locator('#livepanel .chip-ev--crew').innerText()).includes('Tide Turners'), 'being in a crew shows on the table');
+  await page.locator('#livepanel .odd').first().click();
+  await page.click('#livepanel [data-role="join"]');
+  const crewNote = await page.evaluate(() => GS.live.room('derby').feed.filter((n) => n.kind === 'crew')[0]);
+  check(crewNote && crewNote.members.length >= 2 && crewNote.dollars >= 10, 'two or three crewmates (bots) back the same charity with you', crewNote);
+  await page.click('#tab-feed');
+  check((await page.locator('#tabp').innerText()).includes('crewmates'), 'and the feed says so');
+  await page.close();
+
+  // a settled round with extras (fast): match, predictions, near miss helper
+  const p2 = await newPage();
+  await openApp(p2, '#live-duck');
+  await p2.evaluate(() => { GS.live.setEvent({ id: 'double', name: 'Double Pot Hour', desc: 'x', match: { ratio: 1, cap: 200 }, causes: null }); GS.live.room('duck').openRound(0); });
+  await p2.waitForSelector('#livepanel .lt-phase.is-open');
+  await p2.waitForTimeout(100);
+  await p2.click('#livepanel [data-pred="big"][data-val="1"]');
+  await p2.click('#livepanel [data-pred="upset"][data-val="0"]');
+  await p2.click('#livepanel [data-pred="leader"][data-val="1"]');
+  check(await p2.locator('#livepanel [data-pred][aria-pressed="true"]').count() === 3, 'you can answer the side predictions');
+  await p2.locator('#livepanel .odd').first().click();
+  await p2.click('#livepanel [data-role="join"]');
+  await p2.waitForSelector('#lt-result .lt-res', { timeout: 60000 });
+  const res = await p2.evaluate(() => {
+    const r = GS.live.room('duck').result;
+    return { pot: r.pot, bonus: r.bonus, pred: r.pred, winShare: r.winShare, leader: r.leaderId, winner: r.winnerId, preds: GS.store.get().pred };
+  });
+  check(res.bonus.match === Math.min(200, res.pot) && res.bonus.total === res.bonus.match, 'the sponsor match is the pot up to its cap', res.bonus);
+  const text = await p2.locator('#lt-result').innerText();
+  check(text.includes('takes the pot: $' + (res.pot + res.bonus.total)) && text.includes('matched') && text.includes('simulated'), 'the result shows the matched total and says the sponsor is simulated');
+  const truth = { big: res.pot >= 500, upset: res.winShare < 0.25, leader: res.winner === res.leader };
+  const guess = { big: true, upset: false, leader: true };
+  check(res.pred.rows.length === 3 && res.pred.rows.every((x) => x.right === (guess[x.key] === truth[x.key])), 'each side prediction is scored against what happened', res.pred);
+  check(res.pred.xp === res.pred.right * 15 + (res.pred.right === 3 ? 10 : 0) && res.preds.total === 3 && res.preds.right === res.pred.right, 'predictions pay XP only and are tallied', res.preds);
+  check(await p2.evaluate(async () => (await GS.ui.receipt.verifyRound(GS.live.room('duck').result.fair)).ok), 'a matched round still verifies');
+  const cc = await p2.evaluate(() => ({
+    mid: GS.live.closeCall([['a', 10], ['b', 90]], 50), edge: GS.live.closeCall([['a', 10], ['b', 90]], 9), first: GS.live.closeCall([['a', 10], ['b', 90]], 0),
+    top: GS.live.closeCall([['a', 10], ['b', 90]], 99), none: GS.live.closeCall([['a', 10], ['b', 90]], null)
+  }));
+  check(cc.mid === null && cc.edge && cc.edge.charityId === 'b' && cc.edge.tickets === 1 && cc.first === null && cc.top === null && cc.none === null, 'a close call is spotted only when the winning ticket sat right next to another charity', cc);
+  await p2.close();
+}
+
+/* ======================================================================== */
+if (section('13h. Leagues, Charity Cup, cards, daily wheel, hot hand and crews')) {
+  const page = await newPage();
+  await openApp(page);
+  // tiers and the weekly league
+  await go(page, '#leagues');
+  check(await page.locator('#view-leagues .tier').count() === 5 && (await page.locator('#view-leagues .tier.is-current b').innerText()) === 'Bronze', 'Leagues shows the five tiers and your current one');
+  check(await page.locator('#view-leagues .lrow').count() === 15 && await page.locator('#view-leagues .lrow.is-you').count() === 1, 'the weekly league lists you and 14 rivals');
+  check(await page.locator('#view-leagues .lrow .botpill').count() === 14 && (await page.locator('#view-leagues .simbanner').innerText()).includes('bots'), 'every rival is tagged BOT and the page says they are simulated');
+  // Charity Cup
+  check(await page.locator('[data-cup-pick]').count() === 8, 'the Charity Cup has eight charities to back');
+  const field = await page.evaluate(() => GS.store.cup().field);
+  await page.click('[data-cup-pick]');
+  check(await page.evaluate(() => GS.store.cup().pick) === field[0], 'you can back a champion');
+  await page.click('[data-role="cup-next"]');
+  check(await page.evaluate(() => GS.store.cup().rounds.length) === 1 && await page.evaluate(() => GS.store.cup().rounds[0].length) === 4, 'the first round plays down to four');
+  await page.click('[data-role="cup-all"]');
+  await page.waitForFunction(() => GS.store.cup().done);
+  const cup = await page.evaluate(() => GS.store.cup());
+  check(cup.rounds.length === 3 && cup.rounds[0].length === 4 && cup.rounds[1].length === 2 && cup.rounds[2].length === 1, 'the cup plays 8 to 4 to 2 to 1');
+  check(cup.rounds[0].every((id) => field.includes(id)) && cup.rounds[1].every((id) => cup.rounds[0].includes(id)) && cup.rounds[2].every((id) => cup.rounds[1].includes(id)), 'each round’s winners come from the round before');
+  check((await page.locator('#view-leagues .cupresult').innerText()).includes('won this week’s cup') && cup.called === (cup.pick === cup.rounds[2][0]), 'the champion is shown, and calling it right is recorded');
+  if (cup.called) { check(!!(await state(page)).badges.cupseer, 'calling the champion unlocks Cup Seer'); }
+  await a11y(page, 'leagues page');
+  // cards: a long-odds win is a rare card
+  await go(page, '#game-derby');
+  await page.fill('#size-custom', '200');
+  await page.waitForFunction(() => GS.store.prefs().sizes.derby === 200);
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  const won = await page.evaluate(() => ({ id: GS.app._last.round.winners[0].id, text: document.querySelector('#dlg-result').innerText, cards: GS.store.cards() }));
+  check(won.cards[won.id] && won.cards[won.id].rarity === 'legendary' && won.text.includes('New card') && won.text.toLowerCase().includes('legendary'), 'winning a 1-in-200 charity earns a legendary card, and the receipt says so', won.cards[won.id]);
+  await closeReceipt(page);
+  await go(page, '#cards');
+  check((await page.locator('#view-cards .stat').first().innerText()).includes('1 of 228') && await page.locator('#view-cards .tcard--legendary').count() >= 1, 'the Cards page shows the collection');
+  check(await page.locator('#view-cards .cardgrid').first().locator('.tcard').count() === 6, 'this month’s set has six charities');
+  // finishing the set pays XP once
+  const setRes = await page.evaluate(() => {
+    const ids = GS.core.monthlySet(GS.charities, GS.core.monthKey());
+    const before = GS.store.get().xp;
+    const out = GS.store.collect(ids.map((id) => ({ charityId: id, rarity: 'common' })));
+    const again = GS.store.collect(ids.map((id) => ({ charityId: id, rarity: 'common' })));
+    return { xp: GS.store.get().xp - before, setXp: out.setXp, again: again.setXp, badges: Object.keys(GS.store.get().badges) };
+  });
+  check(setRes.setXp === 150 && setRes.again === 0 && setRes.xp === 150 && setRes.badges.includes('setdone'), 'a finished monthly set pays 150 XP once and unlocks Set Complete', setRes);
+  await a11y(page, 'cards page');
+  // daily bonus wheel
+  check(await page.locator('#daily-dot').isVisible(), 'the daily wheel button shows a dot while a spin is ready');
+  const bal0 = await balance(page);
+  await page.click('#btn-daily');
+  await page.waitForSelector('#dlg-daily[open]');
+  await a11y(page, 'daily wheel');
+  await page.click('#dlg-daily [data-role="spin"]');
+  await page.waitForFunction(() => !GS.store.dailyAvailable());
+  const gained = (await balance(page)) - bal0;
+  check([500, 1000, 1500, 2500, 5000, 10000].includes(gained), 'the wheel pays $5 to $100 of free credit', gained);
+  check(!!(await state(page)).badges.daily && !(await page.locator('#daily-dot').isVisible()), 'it unlocks Lucky Day and the dot goes away');
+  await page.keyboard.press('Escape');
+  await page.click('#btn-daily');
+  await page.waitForSelector('#dlg-daily[open]');
+  check(await page.locator('#dlg-daily [data-role="spin"]').isDisabled() && (await page.locator('#dlg-daily').innerText()).includes('tomorrow'), 'a second spin the same day is refused');
+  await page.keyboard.press('Escape');
+  // hot hand: backing winners in a row lifts XP until a call misses
+  const hot = await page.evaluate(() => {
+    const play = (won) => GS.store.recordPlay({ game: 'duck', totalCents: 2500, rounds: 1, status: 'demo', receipt: GS.core.receiptId(), pay: 'credit', freq: 'once', allocations: [{ charityId: 'wateraid', cents: 2500, hits: 1 }], pick: { charityId: 'wateraid', won, board: 10 } });
+    const base = GS.core.xpForPlay(2500, 1, false);
+    const r = [];
+    for (const won of [true, true, true, false, true]) { r.push(play(won)); }
+    return { base, xp: r.map((x) => x.xpGain - 0), mults: r.map((x) => x.hot.mult), streak: GS.store.hot(), badge: !!GS.store.get().badges.hothand };
+  });
+  // the pick-win bonus is added to the first two plays' base only through bonusXp (none here), so xp = base * carried multiplier
+  check(hot.xp[0] === hot.base && hot.xp[1] === Math.round(hot.base * 1.1) && hot.xp[2] === Math.round(hot.base * 1.2) && hot.xp[3] === Math.round(hot.base * 1.3), 'each winner called in a row adds 10% to the next round’s XP', hot);
+  check(hot.xp[4] === hot.base && hot.streak.streak === 1 && hot.streak.best === 3 && hot.badge, 'a missed call resets it, and three in a row unlocks Hot Hand', hot);
+  // crews page
+  await go(page, '#crews');
+  check(await page.locator('.crewcard').count() === 4 && (await page.locator('#view-crews .simbanner').innerText()).includes('bot'), 'Crews offers four simulated crews');
+  await page.click('[data-crew-join="owls"]');
+  check((await page.locator('#cr-me').innerText()) === 'Night Owls Giving' && !!(await state(page)).badges.crew, 'joining a crew shows it and unlocks Crew Member');
+  await page.fill('#chat-in', 'hello crew');
+  await page.click('[data-role="chat-send"]');
+  await page.click('[data-emote="fire"]');
+  await page.waitForTimeout(150);
+  const chat = await page.locator('[data-role="chatlog"]').innerText();
+  check(chat.includes('You') && chat.includes('hello crew') && chat.includes('On fire'), 'you can chat and send emotes');
+  check((await page.locator('[data-role="chatlog"] .botpill').count()) >= 1 && (await page.locator('#view-crews').innerText()).includes('Nothing you type is sent anywhere'), 'bots are tagged and the page says the chat stays on this device');
+  await a11y(page, 'crews page');
+  await page.click('[data-role="crew-leave"]');
+  check(await page.locator('.crewcard').count() === 4 && await page.evaluate(() => GS.store.crew()) === '', 'you can leave a crew');
+  await go(page, '#club');
+  check(await page.locator('#view-club .clubperks .stat').count() === 4, 'the Giving Club shows tier, hot hand, cards and crew');
+  await page.close();
+}
+
+/* ======================================================================== */
 if (section('14. Real-donation mode (redirect to checkout) never handles money')) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
@@ -1279,6 +1465,7 @@ if (section('14. Real-donation mode (redirect to checkout) never handles money')
   check(await page.locator('html').getAttribute('data-mode') === 'redirect', 'mode is redirect');
   check(!(await page.locator('#balance').isVisible()) && !(await page.locator('.demo-strip').isVisible()) && !(await page.locator('#btn-credit').isVisible()), 'credit pill, Add credit and the demo banner are hidden');
   check(!(await page.locator('#view-game [data-role="pay-field"]').isVisible()), 'the pay-with field is hidden (you pay on the checkout page)');
+  check(!(await page.locator('#btn-daily').isVisible()), 'the daily bonus wheel (play credit) is hidden too');
   check(!(await page.locator('.side__link[data-route="live"]').isVisible()) && await page.evaluate(() => !GS.live.enabled() && GS.live.ids().length === 0), 'live tables are switched off (a shared pot needs a server and real money is never handled here)');
   await page.evaluate(() => { window.location.hash = '#live-derby'; });
   await page.waitForTimeout(250);
@@ -1317,7 +1504,7 @@ if (section('14. Real-donation mode (redirect to checkout) never handles money')
 if (section('15. Phones')) {
   const page = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
   await openApp(page);
-  const routes = ['#lobby', '#lobby-table', ...GAMES.map((g) => '#game-' + g), '#live', ...LIVE_GAMES.map((g) => '#live-' + g), '#giving', '#charities', '#club', '#fair', '#help'];
+  const routes = ['#lobby', '#lobby-table', ...GAMES.map((g) => '#game-' + g), '#live', ...LIVE_GAMES.map((g) => '#live-' + g), '#leagues', '#crews', '#cards', '#giving', '#charities', '#club', '#fair', '#help'];
   const wide = [];
   for (const r of routes) {
     await go(page, r);
@@ -1356,7 +1543,7 @@ if (section('16. Accessibility scan (needs AXE) and page health')) {
     const page = await newPage();
     await openApp(page);
     for (const g of GAMES) { await go(page, '#game-' + g); await page.waitForTimeout(500); await a11y(page, 'game: ' + g); }
-    for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live']) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
+    for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#leagues', '#crews', '#cards']) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
     for (const g of LIVE_GAMES) { await go(page, '#live-' + g); await page.waitForTimeout(500); await a11y(page, 'live room: ' + g); }
     await page.close();
   } else { console.log('  skip axe scans (set AXE=/path/to/axe.min.js)'); }

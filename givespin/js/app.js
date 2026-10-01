@@ -14,8 +14,8 @@
 
   var params = new URLSearchParams(window.location.search);
   var state = { pool: [], poolVersion: 0, busy: false, stream: false, route: 'lobby', view: null, live: false };
-  var PAGES = ['giving', 'charities', 'club', 'fair', 'help'];
-  var TITLES = { giving: 'My Giving', charities: 'Charities', club: 'Giving Club', fair: 'Fair Play', help: 'Help' };
+  var PAGES = ['giving', 'charities', 'club', 'fair', 'help', 'leagues', 'crews', 'cards'];
+  var TITLES = { giving: 'My Giving', charities: 'Charities', club: 'Giving Club', fair: 'Fair Play', help: 'Help', leagues: 'Leagues', crews: 'Crews', cards: 'Your cards' };
 
   /* ------------------------------------------------------------------ pool */
 
@@ -251,6 +251,8 @@
     document.body.appendChild(exit);
 
     ui.account.init();
+    ui.daily.init();
+    GS.crews.start();
     initSearch();
     renderSideLevel();
     GS.bus.on('progress', renderSideLevel);

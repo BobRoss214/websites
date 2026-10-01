@@ -27,6 +27,9 @@
   var pageBuilt = false;
   var stripBoxes = [];
   var verifyOut = '';
+  var armed = false;         // all-in: the first press arms the button, the second places the bet
+  var armTimer = 0;
+  var sirenRound = {};       // room id -> round the jackpot siren already sounded for
 
   function dollars(n) { return money(n * 100, true); }
   function scale() { return GS.timeScale || 1; }
@@ -99,6 +102,8 @@
         '<p>Pick a charity, put up a stake (default $20) and watch the whole table fill up. Every dollar is a ticket, so a charity’s share of the pot is its chance of winning. ' +
         'When the table locks, one charity is drawn and <strong>the whole pot goes to it, whether you backed it or not</strong>.</p></div></header>' +
       banner() +
+      '<div class="evbar" data-role="evbar"></div>' +
+      '<nav class="quicklinks" aria-label="More ways to play"><a class="btn btn--sm" href="#leagues">' + ui.icon('trophy') + 'Leagues and the Charity Cup</a><a class="btn btn--sm" href="#crews">' + ui.icon('users') + 'Crews</a><a class="btn btn--sm" href="#cards">' + ui.icon('layers') + 'Your cards</a></nav>' +
       '<div class="lcards" data-role="cards">' + GS.live.rooms().map(function (r) { return cardHTML(r, false); }).join('') + '</div>' +
       '<section class="sect" aria-labelledby="lv-recent"><div class="sect__head"><h2 class="sect__t" id="lv-recent">Pots that just went out</h2></div><div data-role="recent"></div></section>' +
       '<section class="sect panel" aria-labelledby="lv-how"><h2 class="sect__t" id="lv-how">How a live table works</h2>' +
@@ -129,11 +134,26 @@
     }).join('') + '</ol>' : '<p class="empty">Finished pots will show up here as tables settle. Each one went to a single charity.</p>';
   }
 
+  /** The featured event and the progressive jackpot meter (both simulated). */
+  function renderEventBar() {
+    var box = $('[data-role="evbar"]', $('#view-live'));
+    if (!box) { return; }
+    var ev = GS.live.event();
+    var jp = GS.live.jackpot();
+    var pct = Math.min(100, Math.round(jp / GS.live.JACKPOT_AT * 100));
+    var html = (ev ? '<div class="evcard">' + ui.icon('sparkles') + '<div><b>' + esc(ev.name) + '</b><span>' + esc(ev.desc) + '</span></div></div>' : '') +
+      '<div class="jpmeter"><div class="jpmeter__t">' + ui.icon('gem') + '<b>Progressive jackpot</b> <span class="jpmeter__v">' + dollars(jp) + '</span> <small>simulated</small></div>' +
+      '<div class="jpmeter__bar" role="img" aria-label="Jackpot is ' + pct + '% of the way to dropping"><i style="width:' + pct + '%"></i></div>' +
+      '<small>It grows with every pot and drops at the next table to open once it passes ' + dollars(GS.live.JACKPOT_AT) + '.</small></div>';
+    if (box.getAttribute('data-sig') !== html) { box.setAttribute('data-sig', html); box.innerHTML = html; }
+  }
+
   function renderPage() {
     if (!GS.live.enabled()) { return; }
     if (!pageBuilt) { buildPage(); }
     updateCards($('#view-live'));
     renderRecent();
+    renderEventBar();
   }
 
   /* ------------------------------------------------------------ lobby strip */
@@ -161,6 +181,8 @@
 
   /* ------------------------------------------------------------- the room */
 
+  function presetsNow() { return core.stakePresets(GS.live.PRESETS, core.levelFor(store.get().xp).level); }
+
   function ensurePanel() {
     if (panel) { return; }
     panel = $('#livepanel');
@@ -169,6 +191,7 @@
       '<p class="simnote">' + ui.icon('bot') + '<span><b>Simulated table.</b> The other players are bots standing in for real people. <a href="#help-live">How it works</a></span></p>' +
       '<div class="lt-status"><div class="lt-status__row"><span class="lt-phase" data-role="phase"></span><span class="lt-clock" data-role="clock"></span></div>' +
         '<div class="lt-bar" aria-hidden="true"><i data-role="bar"></i></div></div>' +
+      '<div class="lt-chips" data-role="chips"></div>' +
       '<div class="lt-pot"><div><span>Pot</span><b data-role="pot">$0</b></div><div><span>Players</span><b data-role="players">0</b></div><div><span>Gates</span><b data-role="gates">0/8</b></div></div>' +
       '<div class="field"><span class="field__label" id="lt-stake-label">Your stake</span><div class="seg" id="lt-stake" role="group" aria-labelledby="lt-stake-label"></div>' +
         '<div class="lt-other"><label for="lt-custom">Other amount</label><span class="lt-money"><span aria-hidden="true">$</span><input id="lt-custom" type="number" inputmode="numeric" min="1" max="' + GS.config.maxAmount + '" step="1" placeholder="e.g. 35"></span></div></div>' +
@@ -177,19 +200,23 @@
         '<div class="odds" data-role="odds" role="radiogroup" aria-labelledby="lt-odds-label"></div><p class="field__hint" data-role="oddshint"></p></div>' +
       '<button type="button" class="playbtn" data-role="join"><span class="playbtn__main"><span data-icon="radio"></span><span data-role="join-label">Put up your stake</span></span><span class="playbtn__sub" data-role="join-sub"></span></button>' +
       '<p class="field__msg field__msg--block" data-role="msg" role="alert"></p>' +
+      '<details class="lt-pred" data-role="pred" open><summary>' + ui.icon('sparkles') + 'Side predictions <small>XP only, never money</small></summary><div class="lt-pred__rows" data-role="pred-rows"></div></details>' +
+      '<div class="lt-chat" data-role="chat" hidden></div>' +
+      '<div class="lt-toggles"><label class="check"><input type="checkbox" data-role="chat-on"><span>Stream chat vote</span></label>' +
+        '<label class="check" data-role="voice-wrap"><input type="checkbox" data-role="voice-on"><span>Croupier voice</span></label></div>' +
       '<p class="kbd-hint lt-fine">Live stakes use demo credit and are refunded if you cancel before the table locks.</p>';
     ui.hydrate(panel);
     el = {
-      phase: $('[data-role="phase"]', panel), clock: $('[data-role="clock"]', panel), bar: $('[data-role="bar"]', panel),
+      phase: $('[data-role="phase"]', panel), clock: $('[data-role="clock"]', panel), bar: $('[data-role="bar"]', panel), chips: $('[data-role="chips"]', panel),
       pot: $('[data-role="pot"]', panel), players: $('[data-role="players"]', panel), gates: $('[data-role="gates"]', panel),
       stake: $('#lt-stake', panel), custom: $('#lt-custom', panel), odds: $('[data-role="odds"]', panel), oddsHint: $('[data-role="oddshint"]', panel),
       add: $('[data-role="add"]', panel), join: $('[data-role="join"]', panel), joinLabel: $('[data-role="join-label"]', panel), joinSub: $('[data-role="join-sub"]', panel),
-      msg: $('[data-role="msg"]', panel), result: $('#lt-result'), stagebar: $('#lt-stagebar')
+      msg: $('[data-role="msg"]', panel), result: $('#lt-result'), stagebar: $('#lt-stagebar'),
+      pred: $('[data-role="pred-rows"]', panel), chat: $('[data-role="chat"]', panel), chatOn: $('[data-role="chat-on"]', panel),
+      voiceOn: $('[data-role="voice-on"]', panel), voiceWrap: $('[data-role="voice-wrap"]', panel)
     };
     stake = store.prefs().liveStake || 20;
-    el.stake.innerHTML = GS.live.PRESETS.map(function (p) {
-      return '<button type="button" class="seg__btn" data-stake="' + p + '" aria-pressed="false">$' + p + '</button>';
-    }).join('');
+    buildPresets();
 
     el.stake.addEventListener('click', function (e) {
       var b = e.target.closest('[data-stake]');
@@ -207,23 +234,54 @@
       if (!b || b.disabled || (cur && cur.room.you)) { return; }
       GS.audio.click();
       pick = b.getAttribute('data-id');
+      disarm();
       renderOdds();
       renderJoin();
     });
     el.add.addEventListener('click', openPicker);
     el.join.addEventListener('click', onJoin);
+    el.pred.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-pred]');
+      if (!b || b.disabled || !cur) { return; }
+      var key = b.getAttribute('data-pred');
+      var val = b.getAttribute('data-val') === '1';
+      var now = cur.room.pred[key];
+      GS.audio.click();
+      cur.room.predict(key, now === val ? null : val);
+      renderPred();
+    });
+    el.chatOn.addEventListener('change', function () { if (cur) { cur.room.setChat(el.chatOn.checked); renderChat(); } });
+    el.voiceWrap.hidden = !GS.audio.voiceSupported();
+    el.voiceOn.checked = GS.audio.voiceOn();
+    el.voiceOn.addEventListener('change', function () {
+      GS.audio.setVoice(el.voiceOn.checked);
+      store.setPref('voice', el.voiceOn.checked);
+      if (el.voiceOn.checked) { GS.audio.unlock(); GS.audio.say('Place your bets'); }
+    });
+  }
+
+  function buildPresets() {
+    var list = presetsNow();
+    var sig = list.join(',');
+    if (el.stake.getAttribute('data-sig') === sig) { return; }
+    el.stake.setAttribute('data-sig', sig);
+    el.stake.innerHTML = list.map(function (p) {
+      return '<button type="button" class="seg__btn' + (p >= 250 ? ' seg__btn--vip' : '') + '" data-stake="' + p + '" aria-pressed="false"' + (p >= 250 ? ' title="VIP stake"' : '') + '>$' + p + '</button>';
+    }).join('');
   }
 
   function setStake(n, fromInput) {
     stake = n;
     store.setPref('liveStake', n);
+    disarm();
     renderStake();
     renderJoin();
     if (!fromInput) { renderOdds(); }
   }
 
   function renderStake() {
-    var inPresets = GS.live.PRESETS.indexOf(stake) >= 0;
+    buildPresets();
+    var inPresets = presetsNow().indexOf(stake) >= 0;
     var locked = !!(cur && cur.room.you) || !cur || cur.room.phase !== 'open';
     Array.prototype.forEach.call(el.stake.querySelectorAll('button'), function (b) {
       b.setAttribute('aria-pressed', String(Number(b.getAttribute('data-stake')) === stake));
@@ -232,6 +290,58 @@
     if (document.activeElement !== el.custom) { el.custom.value = inPresets ? '' : String(stake); }
     el.custom.disabled = locked;
   }
+
+  /** The chips under the clock: what is special about this round. */
+  function renderChips() {
+    if (!cur) { return; }
+    var room = cur.room;
+    var chips = [];
+    if (room.event) { chips.push('<span class="chip-ev chip-ev--event">' + ui.icon('sparkles') + esc(room.event.name) + '</span>'); }
+    if (room.match) { chips.push('<span class="chip-ev chip-ev--match" title="The sponsor is simulated">' + ui.icon('hand-coins') + 'Match +' + Math.round(room.match.ratio * 100) + '% up to ' + dollars(room.match.cap) + ' <small>simulated sponsor</small></span>'); }
+    if (room.jackpot) { chips.push('<span class="chip-ev chip-ev--jackpot">' + ui.icon('gem') + 'Jackpot drops here: +' + dollars(room.jackpot) + ' <small>simulated</small></span>'); }
+    var tier = core.tierFor(core.levelFor(store.get().xp).level).tier;
+    if (tier.vip.length) { chips.push('<span class="chip-ev chip-ev--vip">' + ui.icon('crown') + tier.name + ' VIP stakes</span>'); }
+    var hot = store.hot();
+    if (hot.streak > 0) { chips.push('<span class="chip-ev chip-ev--hot">' + ui.icon('flame') + 'Hot hand ×' + store.hotMultiplier().toFixed(1) + ' <small>' + hot.streak + ' in a row</small></span>'); }
+    var crew = GS.crews.mine();
+    if (crew) { chips.push('<span class="chip-ev chip-ev--crew">' + ui.icon('users') + esc(crew.name) + ' <small>crewmates join your pick</small></span>'); }
+    var html = chips.join('');
+    if (el.chips.getAttribute('data-sig') !== html) { el.chips.setAttribute('data-sig', html); el.chips.innerHTML = html; }
+  }
+
+  /** Side predictions: yes or no on a few questions, scored when the table settles. XP only. */
+  function renderPred() {
+    if (!cur) { return; }
+    var room = cur.room;
+    var open = room.phase === 'open';
+    var r = room.result && room.phase === 'result' ? room.result.pred : null;
+    el.pred.innerHTML = GS.live.PREDICTIONS.map(function (p) {
+      var g = room.pred[p.key];
+      var row = r ? r.rows.filter(function (x) { return x.key === p.key; })[0] : null;
+      var mark = row ? '<span class="pred__mark ' + (row.right ? 'is-right' : 'is-wrong') + '">' + ui.icon(row.right ? 'circle-check' : 'circle-x') + (row.right ? 'Right, +15 XP' : 'Missed') + '</span>' : '';
+      return '<div class="pred"><span class="pred__q" id="pq-' + p.key + '">' + esc(p.label) + '?</span>' + mark +
+        '<span class="seg seg--sm" role="group" aria-labelledby="pq-' + p.key + '">' +
+        '<button type="button" class="seg__btn" data-pred="' + p.key + '" data-val="1" aria-pressed="' + (g === true) + '"' + (open ? '' : ' disabled') + '>Yes</button>' +
+        '<button type="button" class="seg__btn" data-pred="' + p.key + '" data-val="0" aria-pressed="' + (g === false) + '"' + (open ? '' : ' disabled') + '>No</button></span></div>';
+    }).join('');
+  }
+
+  /** The stream chat vote: simulated chat picks a charity, and the stream's favourite gets a (simulated) stake at the lock. */
+  function renderChat() {
+    if (!cur) { return; }
+    var room = cur.room;
+    el.chatOn.checked = !!room.chat.on;
+    el.chat.hidden = !room.chat.on;
+    if (!room.chat.on) { return; }
+    var votes = room.chat.votes;
+    var total = Object.keys(votes).reduce(function (a, k) { return a + votes[k]; }, 0);
+    var rows = room.slate.map(function (c) { return { c: c, n: votes[c.id] || 0 }; }).sort(function (a, b) { return b.n - a.n; });
+    el.chat.innerHTML = '<p class="lt-chat__t">' + ui.icon('radio') + 'Chat is voting <small>simulated viewers · the winner gets a $25 stake at the lock</small></p>' + rows.map(function (r, i) {
+      return '<div class="cvote' + (i === 0 && r.n ? ' is-lead' : '') + '"><span>' + esc(r.c.short) + '</span><i style="width:' + (total ? Math.round(r.n / total * 100) : 0) + '%;background:' + r.c.accent + '"></i><b>' + r.n + '</b></div>';
+    }).join('');
+  }
+
+  function disarm() { armed = false; clearTimeout(armTimer); armTimer = 0; }
 
   /** The odds board: one row per charity at the table; tap one to back it. */
   function renderOdds() {
@@ -287,13 +397,14 @@
     } else {
       var ch = GS.charity(pick);
       var seat = room.seats[pick];
-      label = 'Put ' + dollars(stake) + ' on ' + ch.short;
-      sub = 'Chance ' + core.fmtShare((seat ? seat.tickets : 0) + stake, room.pot() + stake) + ' · whole pot to the winner';
+      label = armed ? 'Confirm all-in: ' + dollars(stake) + ' on ' + ch.short : 'Put ' + dollars(stake) + ' on ' + ch.short;
+      sub = armed ? 'That is a big share of your credit. Press again to place it.' : 'Chance ' + core.fmtShare((seat ? seat.tickets : 0) + stake, room.pot() + stake) + ' · whole pot to the winner';
     }
     el.joinLabel.textContent = label;
     el.joinSub.textContent = sub;
     el.join.disabled = disabled;
     el.join.classList.toggle('is-cancel', !!room.you && room.phase === 'open');
+    el.join.classList.toggle('is-armed', armed);
     renderStake();
   }
 
@@ -302,12 +413,14 @@
     var room = cur.room;
     var left = room.msLeft();
     var txt = room.phase === 'open' ? 'Betting open' : room.phase === 'locked' ? 'Bets closed · drawing the winner' : room.phase === 'playing' ? 'Playing' : 'Result';
-    el.phase.textContent = txt;
-    el.phase.className = 'lt-phase is-' + room.phase;
+    var last = room.phase === 'open' && room.lastCall;
+    el.phase.textContent = last ? 'Last call!' : txt;
+    el.phase.className = 'lt-phase is-' + room.phase + (last ? ' is-last' : '');
     el.clock.textContent = room.phase === 'open' || room.phase === 'result' ? clock(left) : '';
+    el.clock.classList.toggle('is-last', last);
     var frac = room.phaseMs ? Math.max(0, Math.min(1, left / room.phaseMs)) : 0;
     el.bar.style.width = (room.phase === 'open' ? frac * 100 : room.phase === 'result' ? frac * 100 : 100) + '%';
-    el.bar.parentNode.className = 'lt-bar is-' + room.phase;
+    el.bar.parentNode.className = 'lt-bar is-' + room.phase + (last ? ' is-last' : '');
     el.pot.textContent = dollars(room.pot());
     el.players.textContent = String(room.players());
     el.gates.textContent = room.distinct() + '/' + GS.live.MAX_GATES;
@@ -323,6 +436,9 @@
     renderOdds();
     renderJoin();
     renderClock();
+    renderChips();
+    renderPred();
+    renderChat();
     renderResult();
     if (ui.game.refreshLiveTab) { ui.game.refreshLiveTab(); }
   }
@@ -338,6 +454,7 @@
     el.result.setAttribute('data-round', String(r.round) + room.id);
     var winner = r.winner;
     var you = r.you;
+    var total = r.pot + r.bonus.total;
     var lines = [];
     var cls = 'lt-res';
     if (you) {
@@ -348,11 +465,27 @@
         cls += ' is-lose';
         lines.push('<p>You backed ' + esc(GS.charity(you.charityId).short) + ', so it wasn’t your pick this time. The pot still goes to <b>' + esc(winner.short) + '</b>, and so does your ' + dollars(you.dollars) + '. It’s as if your charity won.</p>');
       }
-      lines.push('<p class="lt-res__xp">+' + you.summary.xpGain + ' XP' + (you.bonusXp ? ' (including ' + you.bonusXp + ' for backing the winner)' : '') + (you.summary.leveledUp ? ' · Level up!' : '') + '</p>');
+      var sm = you.summary;
+      lines.push('<p class="lt-res__xp">+' + sm.xpGain + ' XP' + (you.bonusXp ? ' (including ' + you.bonusXp + ' for backing the winner)' : '') + (sm.hot && sm.hot.mult > 1 ? ' · hot hand ×' + sm.hot.mult.toFixed(1) : '') + (sm.leveledUp ? ' · Level up!' : '') + '</p>');
+      if (sm.hot && sm.hot.after >= 2 && you.won) { lines.push('<p class="lt-res__xp">' + ui.icon('flame') + sm.hot.after + ' winners called in a row. Your next round earns ×' + store.hotMultiplier().toFixed(1) + ' XP.</p>'); }
+      (sm.newCards || []).forEach(function (c) {
+        var ch = GS.charity(c.charityId);
+        lines.push('<p class="lt-res__card">' + ui.icon('layers') + (c.isNew ? 'New card: ' : c.upgraded ? 'Card upgraded: ' : 'Card again: ') + '<b>' + esc(ch.short) + '</b> <span class="rar rar--' + c.rarity + '">' + c.rarity + '</span> <a href="#cards">See your cards</a></p>');
+      });
     } else {
       cls += ' is-watch';
       lines.push('<p>You watched this one. Join the next table to put a stake on the board.</p>');
     }
+    if (r.closeCall) {
+      var nb = GS.charity(r.closeCall.charityId);
+      lines.push('<p class="lt-res__close">' + ui.icon('timer') + '<span><b>Photo finish.</b> The winning ticket was only ' + r.closeCall.tickets + (r.closeCall.tickets === 1 ? ' ticket' : ' tickets') + ' (' + r.closeCall.pct + '%) from going to ' + esc(nb.short) + '.</span></p>');
+    }
+    if (r.pred) {
+      lines.push('<p class="lt-res__xp">' + ui.icon('sparkles') + 'Predictions: ' + r.pred.right + ' of ' + r.pred.rows.length + ' right' + (r.pred.xp ? ' · +' + r.pred.xp + ' XP' : '') + '</p>');
+    }
+    var bonusBits = [];
+    if (r.bonus.match) { bonusBits.push(esc(r.bonus.matchWhy) + ' matched ' + dollars(r.bonus.match) + ' (simulated)'); }
+    if (r.bonus.jackpot) { bonusBits.push('the progressive jackpot added ' + dollars(r.bonus.jackpot) + ' (simulated)'); }
     var f = r.fair;
     var fairBits = f
       ? '<details class="rs-fair"><summary>' + ui.icon('shield-check') + 'Fair play details</summary><dl class="kv">' +
@@ -364,12 +497,13 @@
           '<div class="rs-fair__act"><button type="button" class="btn btn--sm" data-role="verify">' + ui.icon('refresh-cw') + 'Verify this round</button></div><div data-role="verify-out" aria-live="polite">' + verifyOut + '</div></details>'
       : '';
     el.result.innerHTML =
-      '<div class="' + cls + '"><p class="lt-res__eyebrow">Round ' + r.round + ' result</p>' +
-        '<h2 class="lt-res__t">' + esc(winner.name) + ' takes the pot: <em>' + dollars(r.pot) + '</em></h2>' +
+      '<div class="' + cls + '"><p class="lt-res__eyebrow">Round ' + r.round + ' result' + (r.event ? ' · ' + esc(r.event) : '') + '</p>' +
+        '<h2 class="lt-res__t">' + esc(winner.name) + ' takes the pot: <em>' + dollars(total) + '</em></h2>' +
         '<ul class="lt-res__who">' + '<li><span>Winner</span><b>' + esc(winner.short) + ' · ' + core.fmtShare(r.weights.filter(function (w) { return w[0] === winner.id; })[0][1], r.pot) + ' chance</b></li>' +
-        '<li><span>Players</span><b>' + r.players + ' (' + r.bots + ' bots)</b></li></ul>' +
+        '<li><span>Players</span><b>' + r.players + ' (' + r.bots + ' bots)</b></li>' +
+        '<li><span>Stakes</span><b>' + dollars(r.pot) + (bonusBits.length ? ' + ' + dollars(r.bonus.total) + ' bonus' : '') + '</b></li></ul>' +
         lines.join('') +
-        '<p class="lt-res__sim">' + (you ? 'Your ' + dollars(you.dollars) + ' is demo credit. The other ' + dollars(Math.max(0, r.pot - you.dollars)) + ' came from simulated bots.' : 'The whole ' + dollars(r.pot) + ' came from simulated bots.') + '</p>' +
+        '<p class="lt-res__sim">' + (you ? 'Your ' + dollars(you.dollars) + ' is demo credit. The other ' + dollars(Math.max(0, r.pot - you.dollars)) + ' came from simulated bots' : 'The whole ' + dollars(r.pot) + ' came from simulated bots') + (bonusBits.length ? ', and ' + bonusBits.join(' and ') : '') + '.</p>' +
         '<p><button type="button" class="linkbtn" data-open-charity="' + winner.id + '">About ' + esc(winner.short) + '</button></p>' + fairBits + '</div>';
     ui.hydrate(el.result);
     var vb = $('[data-role="verify"]', el.result);
@@ -401,6 +535,16 @@
     var gate = ui.opts.check(stake * 100);
     if (!gate.ok && gate.limit) { say(gate.message); return; }
     GS.audio.unlock();
+    // a big stake (half your credit or more, or $250+) needs a second press
+    var big = stake >= 250 || stake * 100 >= store.balance() * 0.5;
+    if (big && !armed && stake * 100 <= store.balance()) {
+      armed = true;
+      clearTimeout(armTimer);
+      armTimer = setTimeout(function () { disarm(); renderJoin(); }, 5000);
+      renderJoin();
+      return;
+    }
+    disarm();
     var res = room.join(pick, stake);
     if (!res.ok) {
       say(res.message);
@@ -483,8 +627,14 @@
   function onPhase() {
     var room = cur.room;
     say('');
-    if (room.phase === 'open') { verifyOut = ''; if (!animating[cur.id]) { setFieldNow(); } }
-    else if (room.phase === 'locked') { setFieldNow(); ui.announce('Bets are closed. Drawing the winner from a pot of ' + dollars(room.pot()) + '.'); }
+    disarm();
+    if (room.phase === 'open') {
+      verifyOut = '';
+      if (!animating[cur.id]) { setFieldNow(); }
+      if (room.jackpot && sirenRound[room.id] !== room.round) { sirenRound[room.id] = room.round; GS.audio.siren(); GS.audio.say('Jackpot table'); ui.toast('Jackpot drops at this table: +' + dollars(room.jackpot) + ' (simulated)', 'gem'); }
+      else { GS.audio.say('Place your bets'); }
+    }
+    else if (room.phase === 'locked') { setFieldNow(); GS.audio.say('No more bets'); ui.announce('Bets are closed. Drawing the winner from a pot of ' + dollars(room.pot()) + '.'); }
     else if (room.phase === 'playing') { startAnimation(0); return; }
     renderAll();
   }
@@ -493,7 +643,9 @@
     if (!cur) { return; }
     var r = cur.room.result;
     if (r) {
-      ui.announce(r.winner.name + ' wins the ' + dollars(r.pot) + ' pot.' + (r.you ? (r.you.won ? ' Your charity won.' : ' Your stake went to the winner.') : ''));
+      ui.announce(r.winner.name + ' wins the ' + dollars(r.pot + r.bonus.total) + ' pot.' + (r.you ? (r.you.won ? ' Your charity won.' : ' Your stake went to the winner.') : ''));
+      GS.audio.say(r.winner.short + ' wins the pot');
+      if (r.bonus.jackpot) { GS.audio.siren(); GS.confetti.celebrate(1.4); }
     }
     if (!animating[cur.id]) { renderAll(); celebrate(); }
   }
@@ -510,8 +662,12 @@
     $('#lt-stagebar').hidden = false;
     el.stagebar = $('#lt-stagebar');
     el.msg.textContent = '';
+    disarm();
+    el.voiceOn.checked = GS.audio.voiceOn();
+    if (GS.app.state.stream && !room.chat.on) { room.setChat(true); }
     renderStake();
     setFieldNow();
+    if (room.jackpot && room.phase === 'open' && sirenRound[room.id] !== room.round) { sirenRound[room.id] = room.round; GS.audio.siren(); }
     if (room.phase === 'playing' && !animating[id]) { startAnimation(3500); }
     renderAll();
     clearInterval(clockTimer);
@@ -541,6 +697,8 @@
         var who = n.who === 'you' ? '<b>You</b>' : '<b>' + esc(n.name) + '</b> ' + botTag();
         return '<li class="feed__row' + (n.who === 'you' ? ' is-you' : '') + '">' + who + (n.kind === 'cancel' ? ' took back ' : ' put ') + '<b>' + dollars(n.dollars) + '</b>' + (n.kind === 'cancel' ? ' from ' : ' on ') + '<span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span></li>';
       }
+      if (n.kind === 'crew') { return '<li class="feed__row feed__row--crew">' + ui.icon('users') + '<b>' + esc(n.name) + '</b> ' + botTag() + ' crewmates ' + esc(n.members.join(', ')) + ' put <b>' + dollars(n.dollars) + '</b> on <span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span> with you</li>'; }
+      if (n.kind === 'chat') { return '<li class="feed__row feed__row--crew">' + ui.icon('radio') + '<b>Chat</b> ' + botTag() + ' voted for <span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span> (' + n.votes + ' votes) and put <b>' + dollars(n.dollars) + '</b> on it</li>'; }
       if (n.kind === 'lock') { return '<li class="feed__row feed__row--sys">Bets closed. The pot is <b>' + dollars(n.pot) + '</b>. Drawing the winner…</li>'; }
       return '<li class="feed__row feed__row--sys">' + esc(ch.name) + ' wins the <b>' + dollars(n.pot) + '</b> pot.</li>';
     }).join('') + '</ol>';
@@ -597,7 +755,7 @@
   function slowTick() {
     if (document.hidden || !GS.live.enabled()) { return; }
     var pageEl = $('#view-live');
-    if (pageEl && !pageEl.hidden && pageBuilt) { updateCards(pageEl); renderRecent(); }
+    if (pageEl && !pageEl.hidden && pageBuilt) { updateCards(pageEl); renderRecent(); renderEventBar(); }
     stripBoxes = stripBoxes.filter(function (b) { return document.body.contains(b); });
     stripBoxes.forEach(function (b) { if (!b.closest('[hidden]')) { updateCards(b); } });
     refreshNav();
@@ -618,9 +776,15 @@
         else if (e.type === 'phase') { onPhase(); }
         else if (e.type === 'result') { onResult(); }
         else if (e.type === 'commit') { if (ui.game.refreshLiveTab) { ui.game.refreshLiveTab(); } }
+        else if (e.type === 'lastcall') { GS.audio.bell(); GS.audio.say('Last call'); renderClock(); }
+        else if (e.type === 'chat') { renderChat(); }
+        else if (e.type === 'pred') { renderPred(); }
       }
       if (e.type !== 'field') { refreshNav(); }
     });
+    GS.audio.setVoice(!!store.prefs().voice);
+    GS.bus.on('progress', function () { if (cur) { renderChips(); renderStake(); } });
+    GS.bus.on('crew', function () { if (cur) { renderChips(); } });
     slowTimer = setInterval(slowTick, 1000);
     refreshNav();
   }

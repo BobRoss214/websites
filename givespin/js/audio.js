@@ -77,6 +77,7 @@
   }
 
   var lastTick = 0;
+  var voice = false;
 
   GS.audio = {
     /** Call from any click/tap handler so the browser allows sound. */
@@ -123,6 +124,24 @@
     rattle: function () { for (var i = 0; i < 8; i++) { tone(260 + Math.random() * 520, 0.04, 'square', 0.035, i * 0.055); } },
     ring: function () { tone(1568, 0.55, 'sine', 0.08); tone(2349, 0.4, 'sine', 0.05, 0.02); },
     thump: function () { tone(120, 0.09, 'sine', 0.12, 0, 60); },
-    drum: function () { burstNoise(0.12, 0.05, 700, 300); }
+    drum: function () { burstNoise(0.12, 0.05, 700, 300); },
+    /** The last-call bell. */
+    bell: function () { tone(1318, 0.5, 'sine', 0.09); tone(1976, 0.35, 'sine', 0.05, 0.02); tone(1318, 0.5, 'sine', 0.07, 0.3); },
+    /** The jackpot siren: two alternating tones. */
+    siren: function () { for (var i = 0; i < 8; i++) { tone(i % 2 ? 740 : 988, 0.2, 'sawtooth', 0.045, i * 0.2); } },
+
+    /** Croupier voice: speaks a short line with the browser's own voice. Off by default; needs sound on. */
+    voiceOn: function () { return voice; },
+    setVoice: function (v) { voice = !!v; if (!voice && window.speechSynthesis) { try { window.speechSynthesis.cancel(); } catch (e) { /* ignore */ } } },
+    voiceSupported: function () { return !!(window.speechSynthesis && window.SpeechSynthesisUtterance); },
+    say: function (text) {
+      if (!voice || muted || !GS.audio.voiceSupported()) { return; }
+      try {
+        window.speechSynthesis.cancel();
+        var u = new window.SpeechSynthesisUtterance(text);
+        u.rate = 1.02; u.pitch = 0.85; u.volume = 0.85;
+        window.speechSynthesis.speak(u);
+      } catch (e) { /* speech is a nicety */ }
+    }
   };
 })();

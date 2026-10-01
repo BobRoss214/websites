@@ -148,6 +148,15 @@
       '<div class="bar"><i style="width:' + startPct + '%"></i></div>' +
       (summary.leveledUp ? '<div class="levelup">Level up! You are now ' + esc(after.name) + '.</div>' : '') + '</div>';
 
+    var extras = '';
+    if (summary.hot && summary.hot.mult > 1) {
+      extras += '<p class="rs-note">' + ui.icon('flame') + 'Hot hand ×' + summary.hot.mult.toFixed(1) + ' on this round’s XP (' + summary.hot.before + ' winning calls in a row).</p>';
+    }
+    (summary.newCards || []).forEach(function (c) {
+      var cc = GS.charity(c.charityId);
+      extras += '<p class="rs-note rs-note--card">' + ui.icon('layers') + (c.isNew ? 'New card: ' : c.upgraded ? 'Card upgraded: ' : 'Card again: ') + '<b>' + esc(cc.short) + '</b> <span class="rar rar--' + c.rarity + '">' + c.rarity + '</span> <a href="#cards" data-role="mycards">Your cards</a></p>';
+    });
+    if (summary.setXp) { extras += '<p class="rs-note">' + ui.icon('award') + 'Monthly card set complete! +' + summary.setXp + ' XP.</p>'; }
     var badges = summary.newBadges.length
       ? '<div class="newbadges">' + summary.newBadges.map(function (b, i) {
           return '<div class="newbadge" style="animation-delay:' + (0.35 + i * 0.15) + 's"><span class="badge__ico">' + ui.icon(b.icon) + '</span><div><strong>Badge unlocked: ' + esc(b.name) + '</strong><span>' + esc(b.desc) + '</span></div></div>';
@@ -165,7 +174,7 @@
         '<p class="rs-sub">' + sub + '</p>' +
       '</div>' +
       '<ul class="alloc">' + items + '</ul>' +
-      detailRows(round, pay, plan) + checkout + xp + badges + fairDetailsHTML(round.fair) +
+      detailRows(round, pay, plan) + checkout + xp + extras + badges + fairDetailsHTML(round.fair) +
       '<div class="rs-actions">' +
         '<button type="button" class="btn btn--green btn--wide" data-role="again">' + ui.icon(round.direct ? 'hand-heart' : 'rotate-cw') + againLabel + '</button>' +
         '<button type="button" class="btn" data-role="share">' + ui.icon('share-2') + 'Share</button>' +
@@ -188,6 +197,7 @@
     });
     m.$('[data-role="done"]').addEventListener('click', function () { m.close(); });
     m.$('[data-role="mygiving"]').addEventListener('click', function () { m.close(); });
+    Array.prototype.forEach.call(m.$$('[data-role="mycards"]'), function (a) { a.addEventListener('click', function () { m.close(); }); });
     m.$('[data-role="share"]').addEventListener('click', function () { share(round, demo); });
     var vbtn = m.$('[data-role="verify"]');
     if (vbtn) {
@@ -254,6 +264,7 @@
         status: pay.status, receipt: pay.receipt, pay: pay.pay, stream: GS.app.state.stream, direct: !!round.direct,
         freq: o.freq, dedication: o.dedication, fair: round.fair, allocations: round.allocs,
         pick: round.pick ? { charityId: round.pick.id, won: round.pick.won, board: round.pick.board } : null,
+        collect: round.collect || null,
         bonusXp: round.pick && round.pick.won ? core.pickBonusXp(round.pick.board, round.pick.wins) : 0
       });
       summary.newBadges = planBadges.concat(summary.newBadges);
