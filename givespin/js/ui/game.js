@@ -17,7 +17,7 @@
   var money = core.fmtMoney;
   var $ = ui.$;
 
-  var ALL = ['wheel', 'slots', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
+  var ALL = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
   var ORDER = ALL.filter(function (id) { return !!GS.games[id]; });
 
   var built = false;
@@ -65,6 +65,15 @@
               '<button type="button" class="btn btn--sm" id="btn-filters">' + ui.icon('list-filter') + 'Filters <span class="count" id="filters-count" hidden></span></button></div>' +
             '<div class="chips chips--quick" id="quick-causes" role="group" aria-label="Quick causes"></div>' +
             '<p class="pool-line" id="pool-line" aria-live="polite"></p>' +
+            '<div class="customrow" id="custom-row">' +
+              '<button type="button" class="btn btn--sm" id="custom-btn">' + ui.icon('list-checks') + '<span>Choose your own charities</span></button>' +
+              '<span class="customchip" id="custom-chip" hidden>' +
+                '<button type="button" id="custom-toggle" role="switch" aria-checked="true"><span class="customchip__tick" aria-hidden="true">' + ui.icon('check') + '</span><span id="custom-label">Custom charities</span></button>' +
+                '<button type="button" class="customchip__edit" id="custom-edit">Edit</button>' +
+                '<button type="button" class="customchip__x" id="custom-clear" aria-label="Remove my custom list">' + ui.icon('x') + '</button>' +
+              '</span>' +
+            '</div>' +
+            '<p class="field__hint" id="custom-hint"></p>' +
           '</div>' +
           '<details class="opts" id="opts"><summary>Gift options <span class="opts__sum" id="opts-sum"></span></summary><div class="opts__body" data-role="opts"></div></details>' +
           '<button type="button" class="playbtn" id="btn-play"><span class="playbtn__main"><span data-icon="play"></span><span id="btn-play-label">Play</span></span><span class="playbtn__sub" id="btn-play-sub"></span></button>' +
@@ -91,6 +100,7 @@
     el = {
       crumb: $('#g-crumb'), crumbRoot: $('#g-crumb-root'), livePanel: $('#livepanel'), moreTitle: $('#more-t'), title: $('#g-title'), tag: $('#g-tag'), games: $('#games'), rounds: $('#rounds'), stage: $('#stage'),
       roundsSeg: $('#rounds-seg'), roundsHint: $('#rounds-hint'), sizeBox: $('#field-size'), sizeSeg: $('#size-seg'), sizeHint: $('#size-hint'), sizeCustom: $('#size-custom'), sizeMax: $('#size-max'),
+      customBtn: $('#custom-btn'), customChip: $('#custom-chip'), customToggle: $('#custom-toggle'), customLabel: $('#custom-label'), customEdit: $('#custom-edit'), customClear: $('#custom-clear'), customHint: $('#custom-hint'), poolBox: $('#field-pool'),
       pickBox: $('#field-pick'), pickBtn: $('#pick-btn'), pickChip: $('#pick-chip'), pickHint: $('#pick-hint'), poolLine: $('#pool-line'), filtersBtn: $('#btn-filters'), filtersCount: $('#filters-count'),
       play: $('#btn-play'), playLabel: $('#btn-play-label'), playSub: $('#btn-play-sub'), optsSum: $('#opts-sum'), optsBox: $('#opts'),
       tabs: $('#below-tabs'), tabp: $('#tabp'), more: $('#moregames'), bet: root.querySelector('.bet')
@@ -101,13 +111,35 @@
     ui.filters.quickChips($('#quick-causes'), { max: 8 });
 
     el.filtersBtn.addEventListener('click', function () { ui.filters.open(); });
+    el.customBtn.addEventListener('click', openChooser);
+    el.customEdit.addEventListener('click', openChooser);
+    el.customToggle.addEventListener('click', function () {
+      if (!current || state().busy) { return; }
+      var c = customFor(current);
+      if (!c) { return; }
+      GS.audio.click();
+      saveCustom(current, { on: !c.on, ids: c.ids });
+      customChanged();
+    });
+    el.customClear.addEventListener('click', function () {
+      if (!current || state().busy) { return; }
+      GS.audio.click();
+      saveCustom(current, null);
+      customChanged();
+    });
     el.play.addEventListener('click', function () { play(); });
 
     el.roundsSeg.addEventListener('click', function (e) {
       var b = e.target.closest('.seg__btn');
       if (!b || b.disabled || state().busy) { return; }
       GS.audio.click();
-      store.setPref('rounds', Number(b.getAttribute('data-r')));
+      var rn = b.getAttribute('data-reels');
+      if (rn) {
+        var all = Object.assign({}, store.prefs().reels || {});
+        all[current] = Number(rn);
+        store.setPref('reels', all);
+        if (game().setReels) { game().setReels(Number(rn)); }
+      } else { store.setPref('rounds', Number(b.getAttribute('data-r'))); }
       refreshBet();
     });
 
@@ -133,7 +165,7 @@
     });
     el.pickBtn.addEventListener('click', function () {
       if (!current || state().busy) { return; }
-      var inPlay = state().pool;
+      var inPlay = activePool(current);
       ui.pickCharity({
         title: 'Back a charity',
         sub: 'Pick the one you think will win. It is always on the board. If it wins you earn a bonus; either way your gift goes to whichever charity wins.',
@@ -184,7 +216,8 @@
 
   /** The "more games" row: every game, or (in a live room) every live table. */
   function buildMore(live) {
-    var ids = live ? GS.live.ids() : ORDER;
+    // in a live room: one link per game (a game with several tables goes to its default table)
+    var ids = live ? GS.live.primaryRooms().map(function (r) { return r.gid; }) : ORDER;
     el.more.innerHTML = ids.map(function (id) {
       var g = GS.games[id];
       return '<a class="mini" href="#' + (live ? 'live-' : 'game-') + id + '" data-game="' + id + '"><span class="mini__art">' + GS.art[id]('m') + '</span><span class="mini__name">' + esc(g.name) + '</span></a>';
@@ -202,8 +235,17 @@
 
   function game() { return GS.games[current]; }
 
+  /** How many reels a slot machine uses: your choice for that machine, or its default. */
+  function reelsFor(id) {
+    var g = GS.games[id];
+    var r = (store.prefs().reels || {})[id];
+    var opts2 = g && g.reelOptions ? g.reelOptions : [];
+    return opts2.indexOf(r) >= 0 ? r : (g && g.defaultReels) || 3;
+  }
+
   function roundsNow() {
     var g = game();
+    if (g && g.reelOptions) { return reelsFor(current); }
     if (g && g.fixedRounds) { return g.fixedRounds; }
     var cents = amount ? amount.cents() : NaN;
     var allowed = core.allowedRounds(cents, cfg.roundOptions, cfg.minPerRound * 100);
@@ -219,15 +261,25 @@
     var cur = roundsNow();
     var cents = amount.cents();
     var minC = cfg.minPerRound * 100;
-    if (g.fixedRounds) {
-      el.roundsSeg.innerHTML = '<button type="button" class="seg__btn" aria-pressed="true" disabled>' + g.fixedRounds + ' reels</button>';
+    var html = '';
+    var rl = document.getElementById('rounds-label');
+    if (rl) { rl.textContent = g.reelOptions ? 'Reels (your gift splits across them)' : 'Split your gift'; }
+    if (g.reelOptions) {
+      html = g.reelOptions.map(function (r) {
+        var ok = !(cents > 0) || Math.floor(cents / r) >= minC;
+        return '<button type="button" class="seg__btn" data-reels="' + r + '" aria-pressed="' + (cur === r) + '"' + (ok ? '' : ' disabled title="Needs at least ' + money(r * minC, true) + '"') + '>' + r + '</button>';
+      }).join('');
+    } else if (g.fixedRounds) {
+      html = '<button type="button" class="seg__btn" aria-pressed="true" disabled>' + g.fixedRounds + ' reels</button>';
     } else {
       var allowed = core.allowedRounds(cents, cfg.roundOptions, minC);
-      el.roundsSeg.innerHTML = cfg.roundOptions.map(function (r) {
+      html = cfg.roundOptions.map(function (r) {
         var ok = allowed.indexOf(r) >= 0;
         return '<button type="button" class="seg__btn" data-r="' + r + '" aria-pressed="' + (cur === r) + '"' + (ok ? '' : ' disabled title="Needs at least ' + money(r * minC, true) + '"') + '>' + (r === 1 ? '1 charity' : r + ' rounds') + '</button>';
       }).join('');
     }
+    // only redraw when something changed: replacing a button between a click's press and release would swallow the click
+    if (el.roundsSeg.getAttribute('data-sig') !== html) { el.roundsSeg.setAttribute('data-sig', html); el.roundsSeg.innerHTML = html; }
     if (state().busy) { Array.prototype.forEach.call(el.roundsSeg.querySelectorAll('button'), function (b) { b.disabled = true; }); }
     var ok2 = amount.valid().ok;
     if (ok2 && cur > 1) {
@@ -238,6 +290,8 @@
         : (g.fixedRounds ? 'Reels' : 'Rounds') + ' give ' + parts.map(function (p) { return money(p, false); }).join(' + ') + '.';
     } else if (ok2 && g.fixedRounds && cents < g.fixedRounds * minC) {
       el.roundsHint.textContent = g.name + ' splits your gift across ' + g.fixedRounds + ' reels, so it needs at least ' + money(g.fixedRounds * minC, true) + '.';
+    } else if (g.reelOptions) {
+      el.roundsHint.textContent = 'Every reel is one charity. More reels spread your gift across more causes; fewer reels give each charity a bigger share.';
     } else if (g.fixedRounds) {
       el.roundsHint.textContent = g.name + ' always splits your gift across ' + g.fixedRounds + ' reels.';
     } else {
@@ -263,12 +317,89 @@
     return g.snap ? g.snap(n) : n;
   }
 
+  /* ---------------------------------------------------- your own charities */
+
+  function customFor(id) { var c = store.prefs().custom || {}; return c[id] || null; }
+  function customList(id) {
+    var c = customFor(id);
+    return c ? c.ids.map(function (x) { return GS.charity(x); }).filter(Boolean) : [];
+  }
+  function customOn(id) { var c = customFor(id); return !!(c && c.on && customList(id).length >= cfg.minPool); }
+  /** The charities this game draws from: the ones you chose for it, or whatever your filters leave in play. */
+  function activePool(id) { return customOn(id) ? customList(id) : state().pool; }
+  function customStamp(id) { return customOn(id) ? customFor(id).ids.join(',') : ''; }
+
+  function saveCustom(id, c) {
+    var all = Object.assign({}, store.prefs().custom || {});
+    if (c) { all[id] = c; } else { delete all[id]; }
+    store.setPref('custom', all);
+  }
+
+  /** Re-deals the board (or hands the pool over) after the custom list changed. */
+  function customChanged() {
+    var g = game();
+    if (!g || !current) { return; }
+    if (g.setBoard) { newBoard(current); }
+    else { g.setPool(activePool(current)); mounted[current].pv = state().poolVersion; mounted[current].cs = customStamp(current); }
+    refreshBet();
+    if (tabState === 'pool') { renderTab(); }
+  }
+
+  function refreshCustom() {
+    if (!el.customBtn) { return; }
+    var g = game();
+    var c = current ? customFor(current) : null;
+    var n = c ? customList(current).length : 0;
+    var on = customOn(current);
+    var busy = state().busy;
+    el.customBtn.hidden = !!c;
+    el.customBtn.disabled = busy;
+    el.customChip.hidden = !c;
+    el.customChip.classList.toggle('is-on', on);
+    el.customToggle.setAttribute('aria-checked', String(on));
+    el.customLabel.textContent = 'Custom charities · ' + n;
+    el.customToggle.disabled = busy || (n < cfg.minPool);
+    el.customEdit.disabled = busy;
+    el.customClear.disabled = busy;
+    el.poolBox.classList.toggle('is-paused', on);
+    el.customHint.textContent = on
+      ? 'This game uses only the ' + n + ' charities you chose. Your filters are paused for it; they still apply to other games.'
+      : (c ? 'Switched off: this game uses the charities your filters leave in play.' : 'Optional: pick exactly which charities this game uses, by name, cause or place.');
+    if (!g) { el.customBtn.hidden = true; }
+  }
+
+  function openChooser() {
+    if (!current || state().busy) { return; }
+    var g = game();
+    var max = maxFor(g);
+    var c = customFor(current);
+    ui.chooseCharities({
+      title: 'Choose your own charities',
+      sub: 'For ' + g.name + '. Pick up to ' + max + '. The winner is drawn from exactly these, each with equal odds. Your filters are ignored for this game while the list is on.',
+      selected: c ? c.ids : [],
+      min: cfg.minPool,
+      max: max,
+      onDone: function (ids) {
+        saveCustom(current, { on: true, ids: ids });
+        // a bigger list than the board has spots for: make room for all of it
+        if (g.sizes && ids.length > slotsFor(current)) {
+          var sizes = Object.assign({}, store.prefs().sizes);
+          sizes[current] = Math.min(maxFor(g), ids.length);
+          store.setPref('sizes', sizes);
+        }
+        GS.audio.click();
+        customChanged();
+        ui.toast('Playing ' + g.name + ' with your ' + ids.length + ' charities.', 'list-checks');
+      }
+    });
+  }
+
   function canPick(g) { return !!g && !!g.setBoard && g.id !== 'cards' && g.id !== 'scratch'; }
 
   function pickFor(id) {
     var pid = picks[id];
     if (!pid) { return ''; }
-    return state().pool.some(function (c) { return c.id === pid; }) ? pid : '';
+    return activePool(id).some(function (c) { return c.id === pid; }) ? pid : '';
   }
 
   /**
@@ -281,8 +412,8 @@
     var slots = slotsFor(id);
     var distinct = g.fieldFor ? g.fieldFor(slots) : slots;
     var pid = pickFor(id);
-    var list = core.boardField(state().pool, distinct, pid);
-    boards[id] = { field: list, slots: slots, pv: state().poolVersion };
+    var list = core.boardField(activePool(id), distinct, pid);
+    boards[id] = { field: list, slots: slots, pv: state().poolVersion, cs: customStamp(id) };
     g.setBoard(list, slots, pid);
   }
 
@@ -312,9 +443,10 @@
     var cur = slotsFor(current);
     var chosen = Math.floor(sizeFor(current));
     var inPresets = g.sizes.some(function (s) { return s.n === cur; });
-    el.sizeSeg.innerHTML = g.sizes.map(function (s) {
+    var sizeHtml = g.sizes.map(function (s) {
       return '<button type="button" class="seg__btn" data-n="' + s.n + '" aria-pressed="' + (s.n === cur) + '"><span>' + s.n + '</span><small>' + esc(s.name) + '</small></button>';
     }).join('');
+    if (el.sizeSeg.getAttribute('data-sig') !== sizeHtml) { el.sizeSeg.setAttribute('data-sig', sizeHtml); el.sizeSeg.innerHTML = sizeHtml; }
     el.sizeCustom.min = String(minFor(g));
     el.sizeCustom.max = String(maxFor(g));
     el.sizeCustom.setAttribute('aria-label', 'Number of charities on the board, ' + minFor(g) + ' to ' + maxFor(g));
@@ -324,11 +456,17 @@
     Array.prototype.forEach.call(el.sizeSeg.querySelectorAll('button'), function (b) { b.disabled = busy; });
     el.sizeCustom.disabled = busy;
     el.sizeMax.disabled = busy || cur === maxFor(g);
-    var P = state().pool.length;
+    var P = activePool(current).length;
     var b = boards[current];
     var d = b ? b.field.length : Math.min(cur, P);
     var txt;
-    if (cur > d) {
+    if (customOn(current)) {
+      txt = cur > d
+        ? cur + ' spots on the board. Your ' + d + ' custom charities fill them, ' + GS.kit.repeatsText(cur, d) + '. Every one has equal odds.'
+        : d < P
+          ? d + ' of your ' + P + ' custom charities are on the board, picked at random. The winner is drawn from these ' + d + ', each with equal odds.'
+          : 'All ' + P + ' of your custom charities are on the board, each with equal odds.';
+    } else if (cur > d) {
       txt = cur + ' spots on the board. Your ' + d + (d === 1 ? ' charity' : ' charities') + ' fill them, ' + GS.kit.repeatsText(cur, d) + '. Every one of the ' + d + ' has equal odds.';
     } else {
       txt = d + ' charities on the board, picked at random from the ' + P + ' in play. The winner is drawn from these ' + d + ', each with equal odds.';
@@ -370,6 +508,7 @@
     else { sub = money(amount.cents(), true) + ' split ' + (g.fixedRounds ? 'across ' + rounds + ' reels' : 'into ' + rounds + ' rounds'); }
     el.playSub.textContent = sub;
     ui.filters.renderPoolLine(el.poolLine);
+    refreshCustom();
     var n = ui.filters.count();
     el.filtersCount.textContent = String(n);
     el.filtersCount.hidden = !n;
@@ -389,6 +528,7 @@
     el.sizeCustom.disabled = locked;
     el.sizeMax.disabled = locked;
     el.pickBtn.disabled = locked;
+    if (el.customBtn) { el.customBtn.disabled = locked; el.customToggle.disabled = locked; el.customEdit.disabled = locked; el.customClear.disabled = locked; }
     Array.prototype.forEach.call(el.pickChip.querySelectorAll('button'), function (b) { b.disabled = locked; });
     Array.prototype.forEach.call(el.roundsSeg.querySelectorAll('button'), function (b) {
       if (locked) { b.setAttribute('data-was-disabled', b.disabled ? '1' : '0'); b.disabled = true; }
@@ -452,7 +592,7 @@
     var h = '';
     if (isLive()) { ui.live.renderTab(liveTabState, el.tabp); return; }
     if (tabState === 'fair') {
-      h = '<div data-role="fairblock"></div><p class="tabnote">Want to check a result yourself? <a href="#fair">Open Fair Play</a> to recompute any past round.</p>';
+      h = '<div data-role="fairblock"></div><p class="tabnote">Want to check a result yourself? <a href="#fair">Open Fair Play?</a> for a plain-English explanation and a button that re-checks any past round.</p>';
       el.tabp.innerHTML = h;
       if (ui.fairBlock) { ui.fairBlock.render(el.tabp.querySelector('[data-role="fairblock"]'), { compact: true }); }
       return;
@@ -467,8 +607,8 @@
       h = '<div class="about">' + g.info.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') +
         '<p><b>Odds:</b> ' + (g.setBoard ? 'every charity on the board has exactly the same chance (set how many are on it, from a few to ' + (g.maxSize || 100) + '). ' : 'every charity in play has exactly the same chance. ') + 'The result is drawn first, from a seed committed before you play, and the game then shows it.</p></div>';
     } else {
-      var pool = state().pool.slice().sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
-      h = '<p class="tabnote">' + pool.length + ' charities in play. Tap one to read about it.</p><div class="chips chips--pool">' + pool.map(function (c) {
+      var pool = activePool(current).slice().sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+      h = '<p class="tabnote">' + pool.length + (customOn(current) ? ' charities in your custom list.' : ' charities in play.') + ' Tap one to read about it.</p><div class="chips chips--pool">' + pool.map(function (c) {
         return '<button type="button" class="chip chip--link" style="--c:' + c.accent + '" data-open-charity="' + c.id + '">' + ui.mono(c, 22) + esc(c.short) + '</button>';
       }).join('') + '</div>';
     }
@@ -506,12 +646,13 @@
     el.livePanel.hidden = !live;
     $('#view-game').classList.toggle('is-live', live);
     if (!live) {
+      if (g.setReels) { g.setReels(reelsFor(id)); }
       if (g.setBoard) {
         var bd = boards[id];
-        if (!bd || bd.pv !== state().poolVersion || bd.slots !== slotsFor(id)) { newBoard(id); }
+        if (!bd || bd.pv !== state().poolVersion || bd.slots !== slotsFor(id) || bd.cs !== customStamp(id)) { newBoard(id); }
       } else {
         if (g.setSize) { g.setSize(sizeFor(id)); }
-        if (m.pv !== state().poolVersion) { g.setPool(state().pool); m.pv = state().poolVersion; }
+        if (m.pv !== state().poolVersion || m.cs !== customStamp(id)) { g.setPool(activePool(id)); m.pv = state().poolVersion; m.cs = customStamp(id); }
       }
     }
     g.lock(live ? false : state().busy);
@@ -519,15 +660,16 @@
     el.crumb.textContent = g.name;
     el.crumbRoot.textContent = live ? 'Live tables' : 'Lobby';
     el.crumbRoot.setAttribute('href', live ? '#live' : '#lobby');
-    el.title.textContent = live ? g.name + ' · Live' : g.name;
+    var liveRoom = live ? GS.live.room((opts && opts.table) || id) : null;
+    el.title.textContent = live ? (liveRoom ? liveRoom.title() : g.name) + ' · Live' : g.name;
     el.tag.textContent = live ? 'A live table: every player backs a charity, and the winner takes the whole pot.' : g.tagline;
-    document.title = (live ? 'Live ' : '') + g.name + ' | GiveSpin';
+    document.title = (live ? 'Live ' : '') + ((live && opts && opts.table && GS.live.room(opts.table)) ? GS.live.room(opts.table).title().replace(/^Plinko/, 'Plinko') : g.name) + ' | GiveSpin';
     buildMore(live);
     Array.prototype.forEach.call(el.more.querySelectorAll('.mini'), function (a) { a.classList.toggle('is-current', a.getAttribute('data-game') === id); a.hidden = a.getAttribute('data-game') === id; });
     renderRounds(0);
     buildTabs();
     selectTab(live ? liveTabState : tabState);
-    if (live) { ui.live.attach(id); } else { refreshBet(); }
+    if (live) { ui.live.attach((opts && opts.table) || id); } else { refreshBet(); }
   }
 
   function leave() {
@@ -540,7 +682,7 @@
     if (!built || !current || isLive()) { return; }
     if (!state().busy) {
       if (GS.games[current].setBoard) { newBoard(current); refreshSize(); }
-      else { GS.games[current].setPool(state().pool); }
+      else { GS.games[current].setPool(activePool(current)); }
       mounted[current].pv = state().poolVersion;
     }
   }
@@ -588,7 +730,7 @@
       amount.flash(g.name + ' needs at least ' + money(rounds * minC, true) + ' for ' + rounds + (g.fixedRounds ? ' reels.' : ' rounds.'));
       return Promise.resolve();
     }
-    var pool = state().pool;
+    var pool = activePool(current);
     if (pool.length < cfg.minPool) {
       ui.toast('Put at least ' + cfg.minPool + ' charities in play.', 'info');
       ui.filters.open();
@@ -612,7 +754,7 @@
     var bd = g.setBoard ? boards[current] : null;
     var drawPool = bd ? bd.field : pool;
     var pid = bd ? pickFor(current) : '';
-    return drawWinners(drawPool, rounds, !!bd).then(function (draw) {
+    return drawWinners(drawPool, rounds, !!bd || customOn(current)).then(function (draw) {
       lastDrawn = draw;
       renderRounds(rounds, null);
       var gameOpts = ui.opts.read();
@@ -632,9 +774,15 @@
       }).then(function () {
         var winners = draw.winners;
         var allocs = core.mergeAllocations(winners.map(function (w, i) { return { charityId: w.id, cents: parts[i] }; }));
-        var triple = g.id === 'slots' && winners.length === 3 && winners.every(function (w) { return w.id === winners[0].id; });
+        // a slot machine: the same charity on three or more reels is a Triple Threat
+        var tally = {};
+        winners.forEach(function (w) { tally[w.id] = (tally[w.id] || 0) + 1; });
+        var matchId = '', matchN = 0;
+        Object.keys(tally).forEach(function (k) { if (tally[k] > matchN) { matchN = tally[k]; matchId = k; } });
+        var triple = !!g.reelOptions && winners.length >= 3 && matchN >= 3;
         round = {
           game: g.id, cents: cents, rounds: rounds, allocs: allocs, winners: winners, jackpot: triple && pool.length >= 5, triple: triple,
+          match: triple ? { id: matchId, n: matchN } : null,
           direct: false, fair: draw.fair, opts: gameOpts, pick: null
         };
         // each winning charity's card goes in your collection; the rarer the win, the rarer the card

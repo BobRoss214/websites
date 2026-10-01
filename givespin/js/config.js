@@ -33,6 +33,10 @@
     // The fewest charities a game needs in play.
     minPool: 2,
 
+    // Show a charity's logo instead of its monogram circle when one has been added (see tools/fetch-logos.mjs).
+    // Logos are the charities' trademarks: read the note in that file before adding any. Set false to turn them off.
+    logos: true,
+
     // Demo credit (demo mode only): what a new player starts with, and the amounts offered in "Add credit".
     demoCredit: 1000,
     creditTopUps: [100, 500, 1000],

@@ -3,14 +3,15 @@
 **The giving casino. Every round is a win for someone.**
 
 Pick an amount, filter by the causes you care about, then spin, roll, scratch or race your way to a charity. Fifteen
-casino-style games where **you choose how many charities are on the board** (from a couple to a thousand) and can
-back one to win, **live tables** where a whole table of players backs charities and the winner takes the whole pot,
+casino-style games (five of them themed slot machines) where **you choose how many charities are on the board** (from
+a couple to a thousand) and can back one to win, or tick exactly the charities you want, **live tables** where a whole table of players backs charities and the winner takes the whole pot,
 leagues, crews, collectible cards and a daily wheel, 228 charities, a lobby that feels like an online casino,
 confetti, levels and a receipt for every gift. Built for streamers and anyone who thinks giving should be a little
 more fun.
 
 Plain HTML, CSS and vanilla JavaScript. No build step, no dependencies, no network requests, no tracking.
-It works from a web server or by double-clicking `index.html`.
+It works from a web server or by double-clicking `index.html`. First-time visitors get a short, skippable tour that
+explains what it is (a charity site, not a crypto one) and that, in demo mode, everything in it is pretend.
 
 ```
 cd givespin
@@ -23,21 +24,25 @@ python3 -m http.server 8000     # then open http://localhost:8000
 
 ## What's in it
 
-**The lobby** has promo banners, a "live now" strip of tables, category tabs (Originals, Table games, Races,
+**The lobby** has promo banners, a "live now" strip of tables, category tabs (Originals, Slots, Table games, Races,
 Instant wins), a tile for every game, quick cause chips, your latest gifts and a "Repeat last round" shortcut. A
-side nav (a bottom bar on phones) leads to Live tables, Leagues, Crews, Your cards, My Giving, Charities, the Giving
-Club, Fair Play and Help. A daily wheel sits in the top bar. Search finds games and charities.
+side nav (a bottom bar on phones) leads to Slots, Live tables, Leagues, Crews, Your cards, My Giving, Charities, the Giving
+Club, Fair Play? and Help. A daily wheel sits in the top bar. Search finds games and charities.
 
-**Fifteen games.** Played solo, every one is equal odds for every charity in play. Ten of them also have live
-tables (marked **Live** below).
+**Nineteen games.** Played solo, every one is equal odds for every charity in play. Nine of them also have live
+tables (marked **Live** below), and Plinko has seven table sizes.
 
 | Game | Charities on the board | How it works |
 | --- | --- | --- |
 | Lucky Wheel (Live) | 2 to 1,000 slices | Canvas wheel with chasing LED bulbs and a ticking, flicking pointer. |
-| Slot Machine | 3 reels | Three reels, three charities; the gift splits across them. Three of a kind is a Triple Threat. |
+| Classic Slots | 3 to 12 reels | The original red-and-gold machine. Every reel is one charity and your gift splits across the reels. Three or more of the same charity is a Triple Threat. |
+| Gold Rush | 3 to 12 reels (5 by default) | A mining-themed machine with drifting gold dust. |
+| Deep Sea Treasure | 3 to 12 reels (5 by default) | An ocean machine with rising bubbles. |
+| Sweet Charity | 3 to 12 reels (6 by default) | A candy-coloured machine with sprinkles. |
+| Cosmic Spin | 3 to 12 reels (8 by default) | A space machine under a twinkling sky. |
 | Drop Crate (Live) | 2 to 1,000 cards | A case-opening strip rolls past a marker and crawls to a stop. |
-| Plinko (Live) | 2 to 1,000 bins | A ball ricochets through pegs into a charity's bin. Deliberately uniform (a real board favours the middle). Big boards are giant: the camera follows the ball down every row. |
-| Roulette (Live) | 2 to 1,000 pockets | The ball runs against the wheel, rolls round every pocket and settles in a charity's. |
+| Plinko (Live) | 2 to 1,000 bins | A ball ricochets through pegs into a charity's bin. Deliberately uniform (a real board favours the middle). Big boards are giant: the camera zooms out (more the bigger the board) and follows the glowing ball, with a long trail and a row counter, then zooms back in on the winning bin. |
+| Roulette (Live) | 2 to 1,000 pockets | The ball runs against the wheel, rolls round every pocket and settles in a charity's. Past about a hundred pockets the wheel gets bigger than the screen so pockets stay about as wide as the ball: the camera pulls back while the ball flies and closes in as it settles. |
 | Pick a Card | 2 to 100 cards | Cards are shuffled face down; pick one and flip it. |
 | Dice | 6 faces | A 3D die tumbles and lands on a face; every face on the board belongs to a charity. |
 | Coin Flip Showdown | 2 to 128 (a power of two) | A knockout bracket decided by coin flips. |
@@ -56,6 +61,20 @@ pockets, a river of 500 ducks. **The board is exactly what the winner is drawn f
 same chance, so a bigger board is a longer shot. If you ask for more spots than there are charities in play, charities
 fill more than one spot (spread as evenly as possible, so odds stay equal). The receipt and the verifier record the
 board. Sizes are remembered per game.
+
+**Choose your own charities.** Every solo game has a **Choose your own charities** button. It opens a searchable
+list: type a name, a cause ("animals"), a place or what a charity does, narrow it with the same filters as the rest of
+the site (cause, where they work, who they help, how, when founded), read each charity's description and details, open
+its own website, and tick the ones you want or choose everything that is showing. The limit is what the game can show
+(up to 100 for Pick a Card, 1,000 for Roulette and Plinko). A **Custom charities** chip with a tick then appears on the game
+screen: turn it off and on, edit it or remove it. While it is on the winner is drawn from exactly those charities
+(each with equal odds) and your filters are paused for that game. The list is remembered per game.
+
+**Slot machines.** The Slots category has five themed machines on one engine. Each reel is a round: you choose how
+many reels (3, 4, 5, 6, 8, 10 or 12) and your gift is split evenly across them to the cent, one charity per reel.
+There is a Turbo switch, a pair banner and a payline sweep when charities match, and the last reel slows down when it
+would complete a match of three or more. The themes, blur and banners are show; every reel's charity is drawn fairly
+before anything moves.
 
 **Back a charity.** Games that show a field (everything except Slots, Pick a Card and Scratch Cards, where you already
 choose) have a **Back a charity** step: pick any charity, or let the site choose one at random, and it is always put
@@ -76,7 +95,7 @@ Choices combine as OR within a
 group and AND between groups, with a live count. The same filters drive every game. Filter values that fewer
 than three charities have are hidden so a filter cannot just empty the pool.
 
-**228 charities, each with a profile.** Tap any charity anywhere (a card, a receipt, My Giving, search, or a
+**381 charities, each with a profile** (the target is 1,000; see [Charities](#going-live)). Tap any charity anywhere (a card, a receipt, My Giving, search, or a
 `#charity-<id>` link) to see what it does, who it helps, where it works, how it helps, when it started, and a
 **Visit website** link. Switch individual charities on or off for the games.
 
@@ -100,8 +119,9 @@ browser (`localStorage`) and resettable.
 - **Streaks.** Back winners on the trot to build a **hot hand**: a carried streak multiplies your XP gains (up to
   x1.5). A **daily wheel** gives one free spin a day for $5 to $100 of demo credit (demo mode only).
 
-**Fair Play:** every winner is drawn from a committed seed before the animation starts. See
-[How the games stay fair](#how-the-games-stay-fair).
+**Fair Play?** is the page that answers "is it rigged?" in plain language: a short version, a sealed-envelope explanation
+of commit, draw and reveal, a glossary, a button that re-checks any past round, and (for the technically curious) a snippet
+you can run yourself. See [How the games stay fair](#how-the-games-stay-fair) for the details.
 
 **Optional account (preview).** Sign up with an email or a phone number and a password (strength meter, a
 verify-code step, a display name), log in, save a card for easy giving, set a monthly giving limit. All of it is a
@@ -146,14 +166,22 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   and money-transmission rules that vary by location. The redirect design is meant to leave payment handling with
   a regulated donation platform. Confirm the details with that platform (and a lawyer if you are unsure) before
   you promote the site. The "casino" look is a visual theme only: no one stakes anything and there is no prize.
-- **Charity list.** The roster was researched from public sources, and short descriptions are paraphrases.
-  194 entries have verified founding years, headquarters and descriptions. **34 entries are marked `unverified`**
-  because they could not be fully checked: they carry a short generic description and no founding year or
-  headquarters, and say so on their profile. The charity
-  hostnames in `js/data.js` were **not link-checked**. Verify that every entry is still active, accurate and one
-  you are comfortable with, and that your checkout provider supports it.
-- **Names and logos.** Charity names are used only to identify the organisations and no logos are used. The footer
-  says GiveSpin is not affiliated with them. Keep it that way unless you have their permission.
+- **Charity list.** There are 381 charities. The first 228 were researched from public sources and the next 153 were each
+  checked with web searches (the organisation exists, its official website, and its founding year and headquarters where
+  the results stated them); the evidence links are in `docs/roster-sources.json`. 40 entries are marked `unverified`
+  because a fact could not be confirmed: they carry a short generic description and no founding year or headquarters, and
+  say so on their profile. The goal is 1,000, but the web-search allowance for the session ran out, so
+  `docs/roster-candidates.md` lists the names still to check (nothing in it is in the app). The charity hostnames in
+  `js/data.js` were **not link-checked**: verify that every entry is still active, accurate and one you are comfortable
+  with, and that your checkout provider supports it.
+- **Names and logos.** Charity names are used only to identify the organisations. By default no logos ship: every
+  charity shows a coloured monogram circle. The code can show a charity's logo instead (`js/logos.js` lists which
+  charities have one, and `logos: false` in `js/config.js` turns them off). `node tools/fetch-logos.mjs` collects each
+  charity's own touch icon or favicon from its website into `assets/logos/`; it needs an open internet connection. A
+  logo is the charity's trademark: showing it to identify the organisation is common, but it can look like an
+  endorsement and some charities have brand rules or ask for permission, so check before you add any. The footer says
+  GiveSpin is not affiliated with the charities. Games drawn on a canvas (wheel, roulette, Plinko, the races) keep the
+  monogram either way.
 
 ## Live tables
 
@@ -194,6 +222,14 @@ table locks, and refunded if you close the page before the round settles.
   seat, with no real chat connected.
 - **Crews.** If you are in a crew, two or three of its simulated members back the same charity as you with small
   simulated stakes ($5 to $20 each), and the feed says so.
+
+**Live Plinko has seven table sizes.** Plinko is the one live game with several tables: 5, 10, 25, 50, 100, 200 and
+1,000 bins (Mini, Small, Classic, High, Big, Giant, Mega), each with its own pot, players and rounds, picked from a
+table lobby on the Live tables page (and switched from a bar inside the table). The charities players back (the gates:
+5 at the smallest table, 30 at the biggest) go on the board, and the remaining bins are **filled in at random from the
+catalog** so the board is always the full size; if the catalog has fewer charities than bins they repeat evenly. Only
+backed charities hold tickets, so only they can win, and the faded bins are scenery. Bigger tables have more bots and
+a longer drop (the 1,000-bin table takes about half a minute).
 
 **Live tables are demo-only.** A pooled pot needs a server to hold the money and run the table, and this site never
 handles real money, so in `redirect` mode the live tables are switched off and hidden. To make them real you would
@@ -264,9 +300,9 @@ cause and filter).
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 ```
 
-About 600 end-to-end checks in headless Chromium (needs Playwright installed globally). They start their own static
+About 720 end-to-end checks in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
-every game at its biggest board, backing a charity, live tables (stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, filters checked
+the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board, the big Roulette wheel and the Plinko camera, backing a charity, live tables (including the seven Plinko table sizes) (stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, filters checked
 against an independent computation, the charity directory and profiles, direct gifts, repeat plans and dedications,
 My Giving, the whole account preview (including that no password or full card number ever reaches storage), demo
 credit, the monthly limit, fair-play verification and tamper detection, stream mode, reduced motion, persistence,
@@ -292,6 +328,9 @@ css/views.css       lobby, game screen, My Giving, Club, Fair Play, Help, Charit
 css/dialogs.css     modal frame, filters, profile, direct gift, account, credit, receipt
 css/games.css       the games
 css/live.css        live tables, leagues, crews, cards, the daily wheel and the back-a-charity picker
+css/chooser.css     the choose-your-own-charities dialog and its chip
+css/slots.css       the slot machines and their five themes
+css/tour.css        the first-visit tour
 js/config.js        mode, limits, demo credit, checkout hook
 js/data.js          causes, filter vocabulary and the 228 charities
 js/core.js          pure logic (money, RNG, filters, XP, badges, validation); unit-tested in Node
@@ -306,10 +345,14 @@ js/art.js           lobby tile artwork (inline SVG)
 js/icons.js         inline Lucide icons
 js/audio.js         synthesised sound effects
 js/confetti.js      confetti particle system
-js/games/*.js       the fifteen games; crowd.js is the engine behind Duck Derby, Marble Run and Balloon Race
+js/games/*.js       the games; crowd.js is the engine behind Duck Derby, Marble Run and Balloon Race, and slots.js is one engine behind the five slot machines
 js/ui/*.js          shared helpers, amount and gift options, filters, charities, account, receipt,
-                    charity picker, live tables, game screen, lobby, pages, cards and daily wheel
-                    (collection.js), leagues and crews (leagues.js)
+                    charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), live tables, game
+                    screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
+                    the first-visit tour (tour.js)
+js/logos.js         which charities have a logo file (empty until you add some)
+tools/              fetch-logos.mjs: collects charity logos from their own websites
+docs/               roster-sources.json (evidence for the added charities), roster-candidates.md (names still to check)
 js/app.js           boots everything, routing, top bar, search
 tests/              unit and end-to-end tests
 ```

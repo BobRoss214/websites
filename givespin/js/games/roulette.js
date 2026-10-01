@@ -51,9 +51,52 @@
   function count() { return kit.sizeNow(size); }
   function maxCanvas() { var n = pockets.length; return n <= 16 ? 520 : n <= 37 ? 600 : 680; }
 
-  function geo() {
-    var R = cw / 2 - 4;
-    return { cx: cw / 2, cy: cw / 2, R: R, rimIn: R * 0.93, trackIn: R * 0.8, pockOut: R * 0.8, pockIn: R * 0.5, hub: R * 0.12 };
+  /* ------------------------------------------------------------- geometry
+   * Up to around a hundred pockets the whole wheel fits the canvas. Beyond that the pockets stay in proportion to the
+   * ball and the wheel simply gets bigger than the screen: the camera zooms out to show the whole wheel while the ball
+   * is flying, then closes in on the ball as it slows and drops into a pocket.
+   */
+  var G = null;
+  var cam = { z: 1, lz: 0, fx: 0, fy: 0, fb: 0 };   // zoom (and its log), the focus point and how much it follows the ball
+  var prevA = null;                                   // last ball / wheel angles, to measure how fast the pockets stream past
+  var vS = 0;
+  var SPEED_CAP = 900;                                // px per second the pockets may stream past on screen
+
+  function ballRad(n) { return Math.max(4.5, cw * (n > 40 ? 0.014 : 0.021)); }
+
+  function layout() {
+    if (!cw) { G = null; return; }
+    var n = pockets.length;
+    var fitR = cw / 2 - 4;
+    G = { R: fitR, rimIn: fitR * 0.93, trackIn: fitR * 0.8, pockOut: fitR * 0.8, pockIn: fitR * 0.5, hub: fitR * 0.12, big: false, zo: 1, zi: 1, skip: fitR * (0.035 + n / 3000) };
+    if (n > 40) {
+      var ballD = 2 * ballRad(n);
+      var arc = ballD * 1.35;                         // each pocket is about as wide as the ball, with some room
+      var midR = arc * n / TAU;
+      var depth = arc * 1.9, trackW = ballD * 2.3, rimW = ballD * 0.9;
+      var pockOut = midR + depth / 2;
+      var R = pockOut + trackW + rimW;
+      if (R > fitR * 1.6) {
+        var zo = fitR / R;
+        G = { R: R, rimIn: pockOut + trackW, trackIn: pockOut, pockOut: pockOut, pockIn: midR - depth / 2, hub: (midR - depth / 2) * 0.12, big: true,
+          zo: zo, zi: zo >= 0.4 ? zo : 0.85, skip: trackW * 0.45, arc: arc, midR: midR };
+      }
+    }
+    if (!spinning) { resetCamera(); } else { cam.lz = core.clamp(cam.lz, Math.log(G.zo), Math.log(1.2)); cam.z = Math.exp(cam.lz); }
+  }
+
+  function idleFocus() { return G.zi === G.zo ? { x: 0, y: 0 } : { x: 0, y: -G.pockOut }; }
+
+  function resetCamera() {
+    if (!G) { return; }
+    cam.lz = Math.log(G.zi);
+    cam.z = G.zi;
+    cam.fb = 0;
+    var f = G.big ? idleFocus() : { x: 0, y: 0 };
+    cam.fx = f.x;
+    cam.fy = f.y;
+    prevA = null;
+    vS = 0;
   }
 
   function resize() {
@@ -66,6 +109,7 @@
     el.canvas.height = Math.round(cw * dpr);
     el.canvas.style.width = cw + 'px';
     el.canvas.style.height = cw + 'px';
+    layout();
     draw(performance.now());
   }
 
@@ -73,38 +117,88 @@
 
   function annulus(g, r0, r1, a0, a1) {
     ctx.beginPath();
-    ctx.arc(g.cx, g.cy, r1, a0, a1);
-    ctx.arc(g.cx, g.cy, r0, a1, a0, true);
+    ctx.arc(0, 0, r1, a0, a1);
+    ctx.arc(0, 0, r0, a1, a0, true);
     ctx.closePath();
   }
 
+  /** A pocket's slice as part of the current path (so many can be filled at once). */
+  function sliceSub(g, a0, a1) {
+    ctx.moveTo(Math.cos(a0) * g.pockOut, Math.sin(a0) * g.pockOut);
+    ctx.arc(0, 0, g.pockOut, a0, a1);
+    ctx.arc(0, 0, g.pockIn, a1, a0, true);
+    ctx.closePath();
+  }
+
+  /** Where the ball is, in board coordinates (the wheel's centre is the origin). */
+  function ballPos(g) {
+    if (ballMode === 'park') { return { x: 0, y: -(g.trackIn + g.rimIn) / 2, a: -Math.PI / 2 }; }
+    var ang = ballMode === 'pocket' ? wheelA + (winIdx + 0.5) * (TAU / Math.max(1, pockets.length)) : ballA;
+    var rad = ballMode === 'pocket' ? (g.pockOut + g.pockIn) / 2 + (g.pockOut - g.pockIn) * 0.18 : ballR;
+    return { x: Math.cos(ang) * rad, y: Math.sin(ang) * rad, a: ang };
+  }
+
+  /** Eases the camera: zoomed out while the ball is quick, close in as it slows, and right in on the pocket it lands in. */
+  function updateCamera(dt) {
+    var g = G;
+    if (!g || !g.big) { cam.z = 1; cam.lz = 0; cam.fx = 0; cam.fy = 0; return; }
+    var bp = ballPos(g);
+    var targetZ, fbT, rate;
+    if (ballMode === 'park') {
+      targetZ = g.zi; fbT = 0; rate = 3; prevA = null; vS = 0;
+    } else if (ballMode === 'pocket') {
+      targetZ = 1.15; fbT = 1; rate = 3; prevA = null;
+    } else {
+      fbT = 1; rate = 5;
+      if (prevA && dt > 0) {
+        var rel = Math.abs((ballA - prevA.b) - (wheelA - prevA.w));
+        var v = (ballR * rel) / dt;
+        vS += (v - vS) * 0.35;
+      }
+      prevA = { b: ballA, w: wheelA };
+      targetZ = U.reducedMotion() ? g.zi : core.clamp(SPEED_CAP / Math.max(vS, 1), g.zo, 1);
+    }
+    cam.lz += (Math.log(targetZ) - cam.lz) * (1 - Math.exp(-dt * rate));
+    cam.z = Math.exp(cam.lz);
+    cam.fb += (fbT - cam.fb) * (1 - Math.exp(-dt * 6));
+    var f = idleFocus();
+    cam.fx = f.x + (bp.x - f.x) * cam.fb;
+    cam.fy = f.y + (bp.y - f.y) * cam.fb;
+  }
+
   function draw(t) {
-    if (!ctx || !cw) { return; }
-    var g = geo();
+    if (!ctx || !cw || !G) { return; }
+    var g = G;
+    var z = cam.z;
+    var px = 1 / z;                       // one screen pixel, in board units
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cw, cw);
+    ctx.save();
+    ctx.translate(cw / 2, cw / 2);
+    ctx.scale(z, z);
+    ctx.translate(-cam.fx, -cam.fy);
 
     ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.R, 0, TAU);
-    var rim = ctx.createLinearGradient(0, 0, cw, cw);
+    ctx.arc(0, 0, g.R, 0, TAU);
+    var rim = ctx.createLinearGradient(-g.R, -g.R, g.R, g.R);
     rim.addColorStop(0, '#5a3a1a');
     rim.addColorStop(0.5, '#24140a');
     rim.addColorStop(1, '#4a2f16');
     ctx.fillStyle = rim;
     ctx.fill();
-    ctx.lineWidth = 3;
+    ctx.lineWidth = Math.max(3, 2 * px);
     ctx.strokeStyle = '#ffc542';
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.rimIn, 0, TAU);
+    ctx.arc(0, 0, g.rimIn, 0, TAU);
     ctx.fillStyle = '#0f1a16';
     ctx.fill();
 
-    var tr = ctx.createRadialGradient(g.cx, g.cy, g.trackIn, g.cx, g.cy, g.rimIn);
+    var tr = ctx.createRadialGradient(0, 0, g.trackIn, 0, 0, g.rimIn);
     tr.addColorStop(0, '#1d3028');
     tr.addColorStop(1, '#0a120f');
     ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.rimIn - 2, 0, TAU);
+    ctx.arc(0, 0, g.rimIn - 2 * Math.max(1, px), 0, TAU);
     ctx.fillStyle = tr;
     ctx.fill();
 
@@ -113,28 +207,68 @@
       var seg = TAU / n;
       var midR = (g.pockIn + g.pockOut) / 2;
       var arc = midR * seg;
-      for (var i = 0; i < n; i++) {
-        var a0 = wheelA + i * seg;
-        annulus(g, g.pockIn, g.pockOut, a0, a0 + seg);
-        ctx.fillStyle = pocketColor(i);
-        ctx.fill();
-        ctx.lineWidth = n > 40 ? 0.6 : 1.5;
-        ctx.strokeStyle = 'rgba(255,197,66,0.85)';
-        ctx.stroke();
+      // which pockets are on screen: all of them when the whole wheel is in view, otherwise an arc of them
+      var viewR = cw * 0.76 / z;
+      var fd = Math.hypot(cam.fx, cam.fy);
+      var iFrom = 0, iTo = n - 1;
+      if (g.big && viewR < fd) {
+        var half = Math.asin(Math.min(1, viewR / fd)) + seg * 2;
+        var mid = Math.atan2(cam.fy, cam.fx);
+        iFrom = Math.floor((mid - half - wheelA) / seg);
+        iTo = Math.ceil((mid + half - wheelA) / seg);
+        if (iTo - iFrom + 1 >= n) { iFrom = 0; iTo = n - 1; }
       }
+      var lw = g.big ? core.clamp(1.1 * px, 0.8, 3) : (n > 40 ? 0.6 : 1.5);
+      var showEdge = !g.big || arc * z >= 5;
+      var winning = winIdx >= 0 && winIdx < n && ballMode === 'pocket' && !spinning;
+
+      if (g.big) {
+        // many pockets: fill them by colour in three passes
+        var groups = [[], [], []];
+        for (var m = iFrom; m <= iTo; m++) {
+          var gi = U.mod(m, n);
+          groups[gi === 0 ? 2 : (gi % 2 ? 0 : 1)].push(m);
+        }
+        [RED, BLACK, GREEN].forEach(function (col, gk) {
+          if (!groups[gk].length) { return; }
+          ctx.beginPath();
+          groups[gk].forEach(function (mm) { sliceSub(g, wheelA + mm * seg, wheelA + (mm + 1) * seg); });
+          ctx.fillStyle = col;
+          ctx.fill();
+        });
+        if (showEdge) {
+          ctx.beginPath();
+          for (var me = iFrom; me <= iTo; me++) { sliceSub(g, wheelA + me * seg, wheelA + (me + 1) * seg); }
+          ctx.lineWidth = lw;
+          ctx.strokeStyle = 'rgba(255,197,66,0.85)';
+          ctx.stroke();
+        }
+      } else {
+        for (var i = 0; i < n; i++) {
+          var a0 = wheelA + i * seg;
+          annulus(g, g.pockIn, g.pockOut, a0, a0 + seg);
+          ctx.fillStyle = pocketColor(i);
+          ctx.fill();
+          ctx.lineWidth = lw;
+          ctx.strokeStyle = 'rgba(255,197,66,0.85)';
+          ctx.stroke();
+        }
+      }
+
       var mfs = Math.max(0, Math.min(arc * 0.34, 19));
-      if (mfs >= 6.5) {
-        for (var j = 0; j < n; j++) {
-          var ca = wheelA + (j + 0.5) * seg;
-          var m = GS.mono(pockets[j]);
+      if (mfs * z >= 6.5) {
+        for (var jj = iFrom; jj <= iTo; jj++) {
+          var j = U.mod(jj, n);
+          var ca = wheelA + (jj + 0.5) * seg;
+          var m2 = GS.mono(pockets[j]);
           ctx.save();
-          ctx.translate(g.cx + Math.cos(ca) * midR, g.cy + Math.sin(ca) * midR);
+          ctx.translate(Math.cos(ca) * midR, Math.sin(ca) * midR);
           ctx.rotate(ca + Math.PI / 2);
           ctx.fillStyle = '#fff';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.font = '800 ' + (mfs * (m.length > 2 ? 0.82 : 1)) + 'px "Sora", "Inter", sans-serif';
-          ctx.fillText(m, 0, 2);
+          ctx.font = '800 ' + (mfs * (m2.length > 2 ? 0.82 : 1)) + 'px "Sora", "Inter", sans-serif';
+          ctx.fillText(m2, 0, 2);
           if (cw >= 340 && arc >= 30) {
             ctx.font = '700 ' + Math.max(8, mfs * 0.5) + 'px "Inter", sans-serif';
             ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -151,7 +285,7 @@
         for (var q = 0; q < n; q += 5) {
           var qa = wheelA + (q + 0.5) * seg;
           ctx.save();
-          ctx.translate(g.cx + Math.cos(qa) * midR, g.cy + Math.sin(qa) * midR);
+          ctx.translate(Math.cos(qa) * midR, Math.sin(qa) * midR);
           ctx.rotate(qa + Math.PI / 2);
           ctx.fillText(String(q), 0, 0);
           ctx.restore();
@@ -159,49 +293,49 @@
       }
       if (pick) {
         // the charity you backed: a gold edge on each of its pockets
-        ctx.lineWidth = n > 40 ? 1.6 : 3;
+        ctx.lineWidth = g.big ? Math.max(2, 2 * px) : (n > 40 ? 1.6 : 3);
         ctx.strokeStyle = '#ffc542';
-        for (var pk = 0; pk < n; pk++) {
-          if (pockets[pk].id !== pick) { continue; }
-          annulus(g, g.pockIn, g.pockOut, wheelA + pk * seg, wheelA + (pk + 1) * seg);
-          ctx.stroke();
+        ctx.beginPath();
+        for (var pk = iFrom; pk <= iTo; pk++) {
+          if (pockets[U.mod(pk, n)].id !== pick) { continue; }
+          sliceSub(g, wheelA + pk * seg, wheelA + (pk + 1) * seg);
         }
+        ctx.stroke();
       }
-      if (winIdx >= 0 && winIdx < n && ballMode === 'pocket' && !spinning) {
+      if (winning) {
         var pulse = 0.5 + 0.5 * Math.sin((t - glowT) / 170);
-        for (var k = 0; k < n; k++) {
-          var b0 = wheelA + k * seg;
-          if (k === winIdx) { continue; }
-          annulus(g, g.pockIn, g.pockOut, b0, b0 + seg);
-          ctx.fillStyle = 'rgba(4,10,14,0.6)';
-          ctx.fill();
+        ctx.beginPath();
+        for (var k = iFrom; k <= iTo; k++) {
+          if (U.mod(k, n) === winIdx) { continue; }
+          sliceSub(g, wheelA + k * seg, wheelA + (k + 1) * seg);
         }
+        ctx.fillStyle = 'rgba(4,10,14,0.6)';
+        ctx.fill();
         var w0 = wheelA + winIdx * seg;
         annulus(g, g.pockIn, g.pockOut, w0, w0 + seg);
         ctx.fillStyle = 'rgba(255,255,255,' + (0.18 + 0.2 * pulse) + ')';
         ctx.fill();
-        ctx.lineWidth = n > 40 ? 3 : 4;
+        ctx.lineWidth = Math.max(n > 40 ? 3 : 4, 2.5 * px);
         ctx.strokeStyle = '#fff';
         ctx.stroke();
       }
     }
 
-    var felt = ctx.createRadialGradient(g.cx, g.cy, 0, g.cx, g.cy, g.pockIn);
+    var felt = ctx.createRadialGradient(0, 0, 0, 0, 0, g.pockIn);
     felt.addColorStop(0, '#1c5a3e');
     felt.addColorStop(1, '#0c2e20');
     ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.pockIn - 1, 0, TAU);
+    ctx.arc(0, 0, g.pockIn - 1, 0, TAU);
     ctx.fillStyle = felt;
     ctx.fill();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = Math.max(2, 1.5 * px);
     ctx.strokeStyle = '#ffc542';
     ctx.stroke();
     ctx.save();
-    ctx.translate(g.cx, g.cy);
     ctx.rotate(wheelA);
     ctx.strokeStyle = '#ffc542';
     ctx.lineCap = 'round';
-    ctx.lineWidth = Math.max(3, cw * 0.011);
+    ctx.lineWidth = Math.max(3, g.R * 0.022);
     for (var s = 0; s < 4; s++) {
       var sa = s * Math.PI / 2 + Math.PI / 4;
       ctx.beginPath();
@@ -209,14 +343,14 @@
       ctx.lineTo(Math.cos(sa) * (g.pockIn * 0.88), Math.sin(sa) * (g.pockIn * 0.88));
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(Math.cos(sa) * g.pockIn * 0.88, Math.sin(sa) * g.pockIn * 0.88, cw * 0.012, 0, TAU);
+      ctx.arc(Math.cos(sa) * g.pockIn * 0.88, Math.sin(sa) * g.pockIn * 0.88, g.R * 0.024, 0, TAU);
       ctx.fillStyle = '#ffe39a';
       ctx.fill();
     }
     ctx.restore();
     ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.hub, 0, TAU);
-    var hubG = ctx.createRadialGradient(g.cx - g.hub * 0.3, g.cy - g.hub * 0.3, 1, g.cx, g.cy, g.hub);
+    ctx.arc(0, 0, g.hub, 0, TAU);
+    var hubG = ctx.createRadialGradient(-g.hub * 0.3, -g.hub * 0.3, 1, 0, 0, g.hub);
     hubG.addColorStop(0, '#fff4c4');
     hubG.addColorStop(1, '#d99a14');
     ctx.fillStyle = hubG;
@@ -224,19 +358,31 @@
 
     if (flash > 0.01) {
       ctx.beginPath();
-      ctx.arc(g.cx, g.cy, g.pockOut, 0, TAU);
+      ctx.arc(0, 0, g.pockOut, 0, TAU);
       ctx.fillStyle = 'rgba(255,255,255,' + flash * 0.4 + ')';
       ctx.fill();
     }
 
-    var br = Math.max(4.5, cw * (n > 40 ? 0.014 : 0.021));
-    var bx, by;
-    if (ballMode === 'park') { bx = g.cx; by = g.cy - (g.trackIn + g.rimIn) / 2; }
-    else {
-      var ang = ballMode === 'pocket' ? wheelA + (winIdx + 0.5) * (TAU / Math.max(1, pockets.length)) : ballA;
-      var rad = ballMode === 'pocket' ? (g.pockOut + g.pockIn) / 2 + (g.pockOut - g.pockIn) * 0.18 : ballR;
-      bx = g.cx + Math.cos(ang) * rad;
-      by = g.cy + Math.sin(ang) * rad;
+    // the ball (drawn at least a few pixels across on screen, so it can be followed when the camera is zoomed out)
+    var bp = ballPos(g);
+    var br = Math.max(ballRad(n), 5 * px);
+    var bx = bp.x, by = bp.y;
+    if (g.big && z < 0.6 && ballMode !== 'park') {
+      // a glow (and a ring that breathes) so the ball can be found on a huge wheel
+      var halo = Math.min(br * 6, 90 * px);
+      var hg = ctx.createRadialGradient(bx, by, br * 0.4, bx, by, halo);
+      hg.addColorStop(0, 'rgba(255,226,140,0.95)');
+      hg.addColorStop(0.35, 'rgba(255,176,64,0.45)');
+      hg.addColorStop(1, 'rgba(255,140,30,0)');
+      ctx.fillStyle = hg;
+      ctx.beginPath();
+      ctx.arc(bx, by, halo, 0, TAU);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(bx, by, br * (2.4 + 0.4 * Math.sin(t / 130)), 0, TAU);
+      ctx.lineWidth = Math.max(1.5, 1.8 * px);
+      ctx.strokeStyle = 'rgba(255,225,140,0.75)';
+      ctx.stroke();
     }
     ctx.beginPath();
     ctx.arc(bx + 1.5, by + 2.5, br, 0, TAU);
@@ -249,6 +395,36 @@
     ctx.arc(bx, by, br, 0, TAU);
     ctx.fillStyle = bg;
     ctx.fill();
+    ctx.restore();
+
+    // a small map of the whole wheel while the camera is in close: where the ball is, and where the winner is
+    if (g.big && z > g.zo * 1.3) {
+      var mr = 34, mx = cw - mr - 12, my = mr + 12;
+      ctx.beginPath();
+      ctx.arc(mx, my, mr + 6, 0, TAU);
+      ctx.fillStyle = 'rgba(8,16,26,0.72)';
+      ctx.fill();
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = RED;
+      ctx.setLineDash([TAU * (mr * 0.72) / 60, TAU * (mr * 0.72) / 60]);
+      ctx.beginPath();
+      ctx.arc(mx, my, mr * 0.72, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ffc542';
+      ctx.beginPath();
+      ctx.arc(mx, my, mr, 0, TAU);
+      ctx.stroke();
+      var ma = Math.atan2(by, bx);
+      ctx.beginPath();
+      ctx.arc(mx + Math.cos(ma) * mr * 0.86, my + Math.sin(ma) * mr * 0.86, 4, 0, TAU);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.strokeStyle = '#0b1620';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
   }
 
   /* ------------------------------------------------------------ animation */
@@ -264,7 +440,7 @@
     lastT = t;
     flash *= Math.exp(-dt * 7);
     if (anim) {
-      var g = geo();
+      var g = G;
       var p = Math.min(1, (t - anim.start) / anim.dur);
       var n = pockets.length;
       var seg = TAU / n;
@@ -280,17 +456,20 @@
         if (!anim.off0) {
           var pw1 = wheelA + (anim.target + 0.5) * seg;
           var raw = anim.bFreeEnd - pw1;
-          anim.off0 = U.mod(raw, TAU) + TAU * (anim.quick ? 0.4 : 1) + (n > 37 ? TAU * 1.5 : 0);
+          anim.off0 = U.mod(raw, TAU) + TAU * (anim.quick ? 0.4 : 1) + (g.big ? TAU * 0.25 : n > 37 ? TAU * 1.5 : 0);
         }
         ballMode = 'orbit';
         var pw = wheelA + (anim.target + 0.5) * seg;
         ballA = pw + anim.off0 * (1 - U.easeOutCubic(q2));
         var rP = (g.pockOut + g.pockIn) / 2 + (g.pockOut - g.pockIn) * 0.18;
         var drop = U.easeInOut(Math.min(1, q2 * 1.15));
-        var skip = Math.abs(Math.sin(q2 * Math.PI * (4.5 + n / 9))) * (1 - q2) * g.R * (0.035 + n / 3000) * (q2 > 0.35 ? 1 : 0);
+        var skip = Math.abs(Math.sin(q2 * Math.PI * (4.5 + Math.min(n, 100) / 9))) * (1 - q2) * g.skip * (q2 > 0.35 ? 1 : 0);
         ballR = rT + (rP - rT) * drop + skip;
         var under = pocketUnder(ballA);
-        if (under !== anim.lastUnder) { anim.lastUnder = under; GS.audio.tick(Math.min(1, (1 - q2) * 1.3)); }
+        if (under !== anim.lastUnder) {
+          anim.lastUnder = under;
+          if (t - anim.lastTick > 34) { anim.lastTick = t; GS.audio.tick(Math.min(1, (1 - q2) * 1.3)); }   // never more than ~30 ticks a second
+        }
       }
       if (p >= 1) {
         var done = anim.done;
@@ -304,6 +483,7 @@
     } else if (!spinning && !U.reducedMotion()) {
       wheelA += dt * (winIdx >= 0 ? 0.05 : 0.12);
     }
+    updateCamera(dt);
     draw(t);
     raf = requestAnimationFrame(loop);
   }
@@ -320,12 +500,13 @@
     if (!el.legend) { return; }
     var big = pockets.length > 40;
     el.legend.className = 'rlegend' + (big ? ' rlegend--scroll' : '');
+    if (big) { el.legend.setAttribute('tabindex', '0'); } else { el.legend.removeAttribute('tabindex'); }
     if (field) {
       // live: one chip per charity with its stake share and how many pockets it owns
       var total = field.reduce(function (s, e) { return s + e.tickets; }, 0);
       el.legend.innerHTML = field.map(function (e) {
         var mine = pockets.filter(function (c) { return c.id === e.charity.id; }).length;
-        return '<li data-id="' + e.charity.id + '"><span class="cmono" style="--c:' + e.charity.accent + ';--s:20px" data-len="' + GS.mono(e.charity).length + '" aria-hidden="true">' + U.esc(GS.mono(e.charity)) + '</span><span>' + U.esc(e.charity.short) + ' · ' + core.fmtShare(e.tickets, total) + ' · ' + mine + (mine === 1 ? ' pocket' : ' pockets') + '</span></li>';
+        return '<li data-id="' + e.charity.id + '">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' · ' + core.fmtShare(e.tickets, total) + ' · ' + mine + (mine === 1 ? ' pocket' : ' pockets') + '</span></li>';
       }).join('');
       return;
     }
@@ -337,7 +518,7 @@
       var shownCh = order.slice(0, 150);
       el.legend.innerHTML = shownCh.map(function (o) {
         var win = ballMode === 'pocket' && winIdx >= 0 && pockets[winIdx] && pockets[winIdx].id === o.c.id;
-        return '<li' + (win ? ' class="is-win"' : (o.c.id === pick ? ' class="is-pick"' : '')) + '><span class="cmono" style="--c:' + o.c.accent + ';--s:20px" data-len="' + GS.mono(o.c).length + '" aria-hidden="true">' + U.esc(GS.mono(o.c)) + '</span><span>' + U.esc(o.c.short) + (o.n > 1 ? ' × ' + o.n : '') + '</span></li>';
+        return '<li' + (win ? ' class="is-win"' : (o.c.id === pick ? ' class="is-pick"' : '')) + '>' + GS.ui.mono(o.c, 20) + '<span>' + U.esc(o.c.short) + (o.n > 1 ? ' × ' + o.n : '') + '</span></li>';
       }).join('') + (order.length > shownCh.length ? '<li class="rlegend__more">+ ' + (order.length - shownCh.length) + ' more</li>' : '');
       return;
     }
@@ -348,8 +529,9 @@
 
   function updateNote() {
     if (!el.note) { return; }
+    if (cw) { layout(); }
     if (field) { el.note.textContent = 'Pockets are shared out by stake: the more money behind a charity, the more pockets it owns.'; return; }
-    el.note.textContent = kit.boardNote(pool, pockets.length, pick, 'on the wheel');
+    el.note.textContent = kit.boardNote(pool, pockets.length, pick, 'on the wheel') + (G && G.big ? ' With this many pockets the wheel is far bigger than your screen: the camera pulls back while the ball flies and closes in as it settles.' : '');
   }
 
   function rebuild() {
@@ -409,10 +591,12 @@
       el.legend.querySelectorAll('.is-win').forEach(function (li) { li.classList.remove('is-win'); });
       GS.audio.whoosh();
       var turns = quick ? 3.2 : 6;
-      var dur = U.dur(durationMs || (quick ? 3600 : 7600 + (n > 37 ? 1600 : 0)));
+      var dur = U.dur(durationMs || ((quick ? 3600 : 7600 + (n > 37 ? 1600 : 0)) + (G && G.big ? (quick ? 800 : 2400) : 0)));
+      prevA = null;
+      vS = 0;
       anim = {
         start: performance.now(), dur: dur, quick: quick, p1: 0.62,
-        wA0: wheelA, wTurns: quick ? 0.9 : 1.7, bA0: -Math.PI / 2, bTurns: turns, target: target, off0: 0, lastUnder: -1,
+        wA0: wheelA, wTurns: quick ? 0.9 : 1.7, bA0: -Math.PI / 2, bTurns: turns, target: target, off0: 0, lastUnder: -1, lastTick: 0,
         bFreeEnd: -Math.PI / 2 - turns * TAU,
         done: function () {
           if (el.result) { el.result.textContent = field ? winner.name : 'Pocket ' + target + ': ' + winner.name; }
@@ -509,6 +693,8 @@
     playLive: function (opts) { return spinOnce(opts.winner, false, opts.durationMs); },
 
     _shown: function () { return winIdx >= 0 && ballMode === 'pocket' && pockets[winIdx] ? [pockets[winIdx].id] : []; },
-    _pockets: function () { return pockets.length; }
+    _pockets: function () { return pockets.length; },
+    _zoom: function () { return cam.z; },
+    _big: function () { return !!(G && G.big); }
   };
 })();

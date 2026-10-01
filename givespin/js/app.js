@@ -15,7 +15,7 @@
   var params = new URLSearchParams(window.location.search);
   var state = { pool: [], poolVersion: 0, busy: false, stream: false, route: 'lobby', view: null, live: false };
   var PAGES = ['giving', 'charities', 'club', 'fair', 'help', 'leagues', 'crews', 'cards'];
-  var TITLES = { giving: 'My Giving', charities: 'Charities', club: 'Giving Club', fair: 'Fair Play', help: 'Help', leagues: 'Leagues', crews: 'Crews', cards: 'Your cards' };
+  var TITLES = { giving: 'My Giving', charities: 'Charities', club: 'Giving Club', fair: 'Fair Play?', help: 'Help', leagues: 'Leagues', crews: 'Crews', cards: 'Your cards' };
 
   /* ------------------------------------------------------------------ pool */
 
@@ -39,11 +39,11 @@
     var h = String(hash || '').replace(/^#/, '');
     if (!h || h === 'lobby') { return { view: 'lobby', cat: 'all', route: 'lobby' }; }
     var m;
-    if ((m = /^lobby-(originals|table|races|instant)$/.exec(h))) { return { view: 'lobby', cat: m[1], route: h }; }
+    if ((m = /^lobby-(originals|slots|table|races|instant)$/.exec(h))) { return { view: 'lobby', cat: m[1], route: h }; }
     if ((m = /^game-([a-z]+)$/.exec(h)) && ui.game.ORDER.indexOf(m[1]) >= 0) { return { view: 'game', id: m[1], route: h }; }
     if (GS.live.enabled()) {
       if (h === 'live') { return { view: 'live', route: 'live' }; }
-      if ((m = /^live-([a-z]+)$/.exec(h)) && GS.live.supports(m[1])) { return { view: 'game', id: m[1], live: true, route: h }; }
+      if ((m = /^live-([a-z]+\d*)$/.exec(h)) && GS.live.supports(m[1])) { var tb = GS.live.room(m[1]); return { view: 'game', id: tb.gid, live: true, table: tb.id, route: h }; }
     }
     if ((m = /^charity-([a-z0-9-]+)$/.exec(h))) { return { view: 'charity', id: m[1], route: h }; }
     if ((m = /^help-([a-z-]+)$/.exec(h))) { return { view: 'help', faq: h, route: 'help' }; }
@@ -65,7 +65,7 @@
 
     var title = 'GiveSpin | Play to give';
     if (view === 'lobby') { ui.lobby.render(r.cat); }
-    else if (view === 'game') { ui.game.enter(r.id, { live: !!r.live }); title = null; }
+    else if (view === 'game') { ui.game.enter(r.id, { live: !!r.live, table: r.table }); title = null; }
     else if (view === 'live') { ui.live.renderPage(); title = 'Live tables | GiveSpin'; }
     else if (view === 'charities') { ui.charity.renderDirectory($('#view-charities')); title = TITLES.charities + ' | GiveSpin'; }
     else if (ui.pages[view]) { ui.pages[view](); title = TITLES[view] + ' | GiveSpin'; }
@@ -271,6 +271,7 @@
     if (params.get('stream') === '1') { setStream(true); }
     if (params.get('transparent') === '1') { document.body.classList.add('is-transparent'); }
     document.body.classList.add('is-ready');
+    ui.tour.maybeStart();
   }
 
   GS.app = {

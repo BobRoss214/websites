@@ -45,7 +45,7 @@
     if (!el.board) { return; }
     el.board.innerHTML = faces.map(function (c, k) {
       return '<li class="dtile' + (k === winFace && !rolling ? ' is-win' : '') + '" style="--c:' + c.accent + '"><span class="dtile__n">' + (k + 1) + '</span>' +
-        '<span class="cmono" style="--c:' + c.accent + ';--s:34px" data-len="' + GS.mono(c).length + '" aria-hidden="true">' + U.esc(GS.mono(c)) + '</span>' +
+        '' + GS.ui.mono(c, 34) + '' +
         '<span class="dtile__name">' + U.esc(c.short) + '</span></li>';
     }).join('');
   }

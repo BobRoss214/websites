@@ -13,7 +13,7 @@
   var KEY = 'givespin:v2';
   var LEGACY_KEY = 'givespin:v1';
   var HISTORY_MAX = 60;
-  var GAME_IDS = ['wheel', 'slots', 'drop', 'plinko', 'roulette', 'scratch', 'cards', 'dice', 'coin', 'derby', 'lotto', 'duck', 'marble', 'balloon', 'standing', 'direct'];
+  var GAME_IDS = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'scratch', 'cards', 'dice', 'coin', 'derby', 'lotto', 'duck', 'marble', 'balloon', 'standing', 'direct'];
 
   function demoCreditCents() { return Math.round((GS.config.demoCredit || 0) * 100); }
 
@@ -59,7 +59,9 @@
       account: { signedIn: false, name: '', type: 'email', contact: '', hue: 150, createdAt: 0, card: null, limitCents: null },
       prefs: {
         amount: GS.config.defaultAmount, filters: core.emptyFilters(), excluded: [], game: 'wheel', rounds: 1,
-        freq: 'once', pay: 'credit', muted: false, dedication: { kind: 'honor', name: '', note: '' }, sidebar: true, sizes: {}, liveStake: 20, voice: false
+        freq: 'once', pay: 'credit', muted: false, dedication: { kind: 'honor', name: '', note: '' }, sidebar: true, sizes: {}, liveStake: 20, voice: false,
+        custom: {},        // game id -> { on, ids }: the charities you chose yourself for that game
+        reels: {}          // slot machine id -> how many reels you chose
       }
     };
   }
@@ -212,6 +214,20 @@
     Object.keys(sz).forEach(function (k) {
       var v = sz[k];
       if (GAME_IDS.indexOf(k) >= 0 && typeof v === 'number' && v >= 2 && v <= 1000) { d.prefs.sizes[k] = Math.floor(v); }
+    });
+    d.prefs.reels = {};
+    var rl = obj(p.reels);
+    Object.keys(rl).forEach(function (k) {
+      if (GAME_IDS.indexOf(k) >= 0 && typeof rl[k] === 'number' && rl[k] >= 2 && rl[k] <= 12) { d.prefs.reels[k] = Math.floor(rl[k]); }
+    });
+    d.prefs.custom = {};
+    var cu = obj(p.custom);
+    Object.keys(cu).forEach(function (k) {
+      if (GAME_IDS.indexOf(k) < 0 || k === 'direct') { return; }
+      var c0 = obj(cu[k]);
+      var seen = {};
+      var ids = arr(c0.ids).filter(function (id) { if (typeof id !== 'string' || seen[id] || !GS.charity(id)) { return false; } seen[id] = true; return true; }).slice(0, 1000);
+      if (ids.length) { d.prefs.custom[k] = { on: c0.on !== false, ids: ids }; }
     });
     d.prefs.voice = !!p.voice;
     d.prefs.liveStake = typeof p.liveStake === 'number' && p.liveStake >= 1 && p.liveStake <= 1000 ? Math.floor(p.liveStake) : 20;

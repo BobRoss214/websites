@@ -117,11 +117,12 @@
   function renderLegend() {
     if (!el.legend) { return; }
     el.legend.className = 'rlegend' + (balls.length > 30 ? ' rlegend--scroll' : '');
+    if (balls.length > 30) { el.legend.setAttribute('tabindex', '0'); } else { el.legend.removeAttribute('tabindex'); }
     if (field) {
       var total = field.reduce(function (s, e) { return s + e.tickets; }, 0);
       el.legend.innerHTML = field.map(function (e) {
         var mine = balls.filter(function (b) { return b.ch.id === e.charity.id; }).length;
-        return '<li><span class="cmono" style="--c:' + e.charity.accent + ';--s:20px" data-len="' + GS.mono(e.charity).length + '" aria-hidden="true">' + U.esc(GS.mono(e.charity)) + '</span><span>' + U.esc(e.charity.short) + ' · ' + core.fmtShare(e.tickets, total) + ' · ' + mine + (mine === 1 ? ' ball' : ' balls') + '</span></li>';
+        return '<li>' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' · ' + core.fmtShare(e.tickets, total) + ' · ' + mine + (mine === 1 ? ' ball' : ' balls') + '</span></li>';
       }).join('');
       return;
     }
@@ -131,7 +132,7 @@
     balls.forEach(function (b) { if (!seen[b.ch.id]) { seen[b.ch.id] = { c: b.ch, n: 0 }; order.push(seen[b.ch.id]); } seen[b.ch.id].n += 1; });
     var shown = order.slice(0, 150);
     el.legend.innerHTML = shown.map(function (o) {
-      return '<li' + (o.c.id === pick ? ' class="is-pick"' : '') + '><span class="cmono" style="--c:' + o.c.accent + ';--s:20px" data-len="' + GS.mono(o.c).length + '" aria-hidden="true">' + U.esc(GS.mono(o.c)) + '</span><span>' + U.esc(o.c.short) + (o.n > 1 ? ' × ' + o.n : '') + '</span></li>';
+      return '<li' + (o.c.id === pick ? ' class="is-pick"' : '') + '>' + GS.ui.mono(o.c, 20) + '<span>' + U.esc(o.c.short) + (o.n > 1 ? ' × ' + o.n : '') + '</span></li>';
     }).join('') + (order.length > shown.length ? '<li class="rlegend__more">+ ' + (order.length - shown.length) + ' more</li>' : '');
   }
 

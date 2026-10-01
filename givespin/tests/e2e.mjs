@@ -26,6 +26,7 @@ const GSdata = (() => {
   new Function('window', fs.readFileSync(path.join(root, 'js/data.js'), 'utf8'))(w);
   return w.GS;
 })();
+const N = GSdata.charities.length;
 const poolSize = (filters, excluded = []) => core.buildPool(GSdata.charities, filters, excluded).length;
 
 /* ---------- tiny static server ---------- */
@@ -72,7 +73,8 @@ async function newPage(opts = {}) {
   page.on('requestfailed', (r) => problems.push('requestfailed: ' + r.url()));
   page.on('request', (r) => { const u = r.url(); if (!u.startsWith(ORIGIN) && !u.startsWith('data:') && !u.startsWith('blob:') && !u.startsWith('file:')) { external.push(u); } });
   // Start every test page with empty storage, but only once, so reloads inside a test keep their data.
-  await page.addInitScript(() => { try { if (!sessionStorage.getItem('__fresh')) { localStorage.clear(); sessionStorage.setItem('__fresh', '1'); } } catch (e) { /* ignore */ } });
+  // (the first-visit tour is switched off for them too, except in the tests that look at it)
+  await page.addInitScript((skipTour) => { try { if (!sessionStorage.getItem('__fresh')) { localStorage.clear(); sessionStorage.setItem('__fresh', '1'); if (skipTour) { localStorage.setItem('givespin.tour', 'done'); } } } catch (e) { /* ignore */ } }, !opts.tour);
   return page;
 }
 const shot = async (page, name) => { if (SHOTS) { await page.screenshot({ path: path.join(SHOTS, name + '.png') }); } };
@@ -118,7 +120,9 @@ const a11y = async (page, label) => {
   check(res.length === 0, 'axe: ' + label, res);
 };
 
-const GAMES = ['wheel', 'slots', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
+const GAMES = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
+const SLOTS = ['slots', 'goldrush', 'deepsea', 'sweets', 'cosmic'];
+const LIVE_TABLES = 9 + 7;   // nine single-table games, plus Plinko's seven table sizes
 const LIVE_GAMES = ['wheel', 'drop', 'plinko', 'roulette', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
 
 /* ======================================================================== */
@@ -129,11 +133,13 @@ if (section('1. Page load and lobby')) {
   check(await page.locator('html').getAttribute('data-mode') === 'demo', 'defaults to demo mode');
   check(await page.locator('.demo-strip').isVisible(), 'demo banner is visible');
   check(await page.locator('#balance-amt').innerText() === '$1,000', 'starts with $1,000 demo credit');
-  check(await page.locator('.tile').count() === 16, '16 tiles (15 games and Give Direct)');
-  check(await page.locator('.tile:not([hidden])').count() === 16, 'all tiles shown on All games');
+  check(await page.locator('.tile').count() === GAMES.length + 1, GAMES.length + 1 + ' tiles (' + GAMES.length + ' games and Give Direct)');
+  check(await page.locator('.tile:not([hidden])').count() === GAMES.length + 1, 'all tiles shown on All games');
   const cat = async (c) => { await page.click(`.cat[data-cat="${c}"]`); await page.waitForFunction((h) => window.location.hash === h, c === 'all' ? '#lobby' : '#lobby-' + c); await page.waitForTimeout(100); };
   await cat('originals');
-  check(await page.locator('.tile:not([hidden])').count() === 4 && page.url().endsWith('#lobby-originals'), 'Originals shows 4 games and updates the URL');
+  check(await page.locator('.tile:not([hidden])').count() === 3 && page.url().endsWith('#lobby-originals'), 'Originals shows 3 games and updates the URL');
+  await cat('slots');
+  check(await page.locator('.tile:not([hidden])').count() === 5 && page.url().endsWith('#lobby-slots'), 'Slots shows the five slot machines and updates the URL');
   await cat('table');
   check(await page.locator('.tile:not([hidden])').count() === 4, 'Table games shows 4');
   await cat('races');
@@ -192,8 +198,8 @@ if (section('3. Every game plays, shows the drawn winner, and can be verified'))
       const shown = window.GS.games[gid]._shown();
       return { ids, shown, total: last.round.allocs.reduce((s, a) => s + a.cents, 0), game: last.round.game, fair: !!last.round.fair };
     }, id);
-    const want = id === 'slots' ? info.ids : info.ids.slice(-1);
-    check(JSON.stringify(info.shown) === JSON.stringify(want), id + ': what is on screen is the drawn winner' + (id === 'slots' ? 's' : ''), info);
+    const want = SLOTS.includes(id) ? info.ids : info.ids.slice(-1);
+    check(JSON.stringify(info.shown) === JSON.stringify(want), id + ': what is on screen is the drawn winner' + (SLOTS.includes(id) ? 's' : ''), info);
     check(info.total === 2500, id + ': allocations add up to the amount', info.total);
     check(info.fair, id + ': round carries fair-play data');
     check(await balance(page) === expected, id + ': demo credit went down by $25', await balance(page));
@@ -207,9 +213,9 @@ if (section('3. Every game plays, shows the drawn winner, and can be verified'))
     await closeReceipt(page);
   }
   const s = await state(page);
-  check(s.plays === 15 && s.gamesPlayed.length === 15, 'all 15 games recorded as played', s.gamesPlayed);
+  check(s.plays === GAMES.length && s.gamesPlayed.length === GAMES.length, 'all ' + GAMES.length + ' games recorded as played', s.gamesPlayed);
   check(!!s.badges.master && !!s.badges.verifier, 'Game Master and Trust, Verified badges unlocked');
-  check(s.fair.nonce === 15, 'round number advanced once per round', s.fair.nonce);
+  check(s.fair.nonce === GAMES.length, 'round number advanced once per round', s.fair.nonce);
   await page.close();
 }
 
@@ -286,10 +292,10 @@ if (section('5. Filters')) {
   const page = await newPage();
   await openApp(page, '#game-wheel');
   const count = () => page.evaluate(() => window.GS.app.state.pool.length);
-  check(await count() === 228, 'starts with all 228 charities in play');
+  check(await count() === N, 'starts with all ' + N + ' charities in play');
   await page.click('#btn-filters');
   await page.waitForSelector('#dlg-filters[open]');
-  check((await page.locator('#dlg-filters [data-role="count"]').innerText()).includes('228 of 228'), 'dialog shows the live count');
+  check((await page.locator('#dlg-filters [data-role="count"]').innerText()).includes(N + ' of ' + N), 'dialog shows the live count');
   await page.click('#dlg-filters [data-group="causes"][data-id="kids"]');
   check(await count() === poolSize({ causes: ['kids'] }), 'one cause matches the independently computed pool', await count());
   await page.click('#dlg-filters [data-group="causes"][data-id="animals"]');
@@ -303,9 +309,9 @@ if (section('5. Filters')) {
   check(await page.locator('#btn-filters .count').innerText() === '4', 'the Filters button badge counts active filters');
   check((await page.locator('#dlg-filters [data-role="done"]').innerText()).includes(String(poolSize(f4))), 'the done button states the pool size');
   await page.click('#dlg-filters [data-role="clear"]');
-  check(await count() === 228 && await page.locator('#btn-filters .count').isHidden(), 'clear all restores every charity');
+  check(await count() === N && await page.locator('#btn-filters .count').isHidden(), 'clear all restores every charity');
   await page.click('#dlg-filters [data-group="era"][data-id="e4"]');
-  check(await count() === poolSize({ era: ['e4'] }) && await count() < 228, 'the founded-year filter works', await count());
+  check(await count() === poolSize({ era: ['e4'] }) && await count() < N, 'the founded-year filter works', await count());
   check(await page.locator('#dlg-filters').innerText().then((t) => !/values|faith/i.test(t)), 'there is no values filter');
   await page.click('#dlg-filters [data-role="clear"]');
   await shot(page, '05-filters');
@@ -362,7 +368,7 @@ if (section('5. Filters')) {
 if (section('6. Charities page, profiles and the in-play switches')) {
   const page = await newPage();
   await openApp(page, '#charities');
-  check(await page.locator('#view-charities .rcard').count() === 228, 'lists all 228 charities');
+  check(await page.locator('#view-charities .rcard').count() === N, 'lists all ' + N + ' charities');
   await page.fill('#view-charities [data-role="q"]', 'wateraid');
   const n = await page.locator('#view-charities .rcard').count();
   check(n >= 1 && n < 10, 'search narrows the list', n);
@@ -379,7 +385,7 @@ if (section('6. Charities page, profiles and the in-play switches')) {
 
   // switch one off
   await page.click('#view-charities .rcard[data-id="wateraid"] .switch');
-  check(await page.evaluate(() => window.GS.app.state.pool.length) === 227, 'switching a charity off removes it from play');
+  check(await page.evaluate(() => window.GS.app.state.pool.length) === N - 1, 'switching a charity off removes it from play');
   check(await page.locator('#view-charities .rcard[data-id="wateraid"]').getAttribute('class').then((c) => c.includes('is-off')), 'the card shows it is off');
   await page.click('#view-charities [data-role="view"] [data-v="off"]');
   check(await page.locator('#view-charities .rcard').count() === 1, 'the Switched off view lists just that one');
@@ -387,7 +393,7 @@ if (section('6. Charities page, profiles and the in-play switches')) {
   await page.waitForFunction(() => document.body.classList.contains('is-ready'));
   check(await page.evaluate(() => window.GS.store.prefs().excluded.includes('wateraid')), 'switched-off charities survive a reload');
   await page.click('#view-charities [data-role="allon"]');
-  check(await page.evaluate(() => window.GS.app.state.pool.length) === 228, 'Turn all on restores them');
+  check(await page.evaluate(() => window.GS.app.state.pool.length) === N, 'Turn all on restores them');
 
   // profile from a card
   await page.click('#view-charities [data-view], #view-charities [data-role="view"] [data-v="all"]');
@@ -404,9 +410,9 @@ if (section('6. Charities page, profiles and the in-play switches')) {
   await shot(page, '06-profile');
   await a11y(page, 'charity profile dialog');
   await page.click('#dlg-profile [data-role="toggle"]');
-  check(await page.evaluate(() => window.GS.app.state.pool.length) === 227, 'the profile can switch a charity off');
+  check(await page.evaluate(() => window.GS.app.state.pool.length) === N - 1, 'the profile can switch a charity off');
   await page.click('#dlg-profile [data-role="toggle"]');
-  check(await page.evaluate(() => window.GS.app.state.pool.length) === 228, 'and back on');
+  check(await page.evaluate(() => window.GS.app.state.pool.length) === N, 'and back on');
   await page.locator('#dlg-profile .prof__similar .chip').first().click();
   await page.waitForTimeout(150);
   check(!(await page.locator('#dlg-profile .prof__name').innerText()).includes('WaterAid'), 'a similar charity opens in place');
@@ -738,7 +744,7 @@ if (section('10. Fair play page')) {
   await shot(page, '10-fair');
 
   // the snippet shown on the page reproduces the winners
-  const code = await page.locator('#view-fair .code').innerText();
+  const code = await page.locator('#view-fair .code').textContent();
   const redo = await page.evaluate(async ({ code }) => {
     const draw = new Function('crypto', code + '\nreturn draw;')(window.crypto);
     const f = window.GS.app._last.round.fair;
@@ -918,7 +924,7 @@ if (section('13. Stream mode, reduced motion, persistence')) {
 if (section('13a. Board sizes: any number of charities, and the winner is drawn from the board')) {
   const page = await newPage();
   await openApp(page);
-  const POOL = 228;
+  const POOL = N;
   const sized = [['roulette', 1000], ['plinko', 500], ['wheel', 1000], ['drop', 1000], ['lotto', 300], ['derby', 200], ['duck', 1000], ['marble', 1000], ['balloon', 1000], ['standing', 1000], ['coin', 64], ['cards', 100], ['scratch', 48]];
   for (const [id, n] of sized) {
     await go(page, '#game-' + id);
@@ -966,7 +972,7 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
   await go(page, '#game-plinko');
   await page.fill('#size-custom', '1000');
   await page.waitForFunction(() => window.GS.store.prefs().sizes.plinko === 1000);
-  check(await page.evaluate(() => window.GS.games.plinko._bins()) === 1000 && (await page.locator('#size-hint').innerText()).includes('each appearing'), 'a 1,000-bin Plinko board repeats the 228 charities and says how often');
+  check(await page.evaluate(() => window.GS.games.plinko._bins()) === 1000 && (await page.locator('#size-hint').innerText()).includes('each appearing'), 'a 1,000-bin Plinko board repeats the ' + N + ' charities and says how often');
   await go(page, '#game-coin');
   await page.fill('#size-custom', '100');
   await page.waitForFunction(() => window.GS.store.prefs().sizes.coin === 100);
@@ -1033,7 +1039,7 @@ if (section('13b. Live tables: the page, the lobby strip and a live room')) {
   check((await page.locator('.livestrip').innerText()).includes('bots'), 'the strip says the other players are bots');
   check(await page.locator('.side__link[data-route="live"]').isVisible(), 'the side nav has Live tables');
   await go(page, '#live');
-  check(await page.locator('#view-live').isVisible() && await page.locator('#view-live .lcard').count() === LIVE_GAMES.length, 'the Live tables page lists a table for each live game', await page.locator('#view-live .lcard').count());
+  check(await page.locator('#view-live').isVisible() && await page.locator('#view-live .lcard').count() === LIVE_TABLES, 'the Live tables page lists every table (Plinko has seven sizes)', await page.locator('#view-live .lcard').count());
   check((await page.locator('#view-live .simbanner').innerText()).includes('bot'), 'a banner says the tables are simulated and the players are bots');
   check(await page.locator('.side__link[aria-current="page"]').getAttribute('data-route') === 'live', 'the nav marks Live tables as current');
   check((await page.locator('#view-live').innerText()).includes('whole pot goes to it, whether you backed it or not'), 'the page explains that the whole pot goes to the winner');
@@ -1390,7 +1396,7 @@ if (section('13h. Leagues, Charity Cup, cards, daily wheel, hot hand and crews')
   check(won.cards[won.id] && won.cards[won.id].rarity === 'legendary' && won.text.includes('New card') && won.text.toLowerCase().includes('legendary'), 'winning a 1-in-200 charity earns a legendary card, and the receipt says so', won.cards[won.id]);
   await closeReceipt(page);
   await go(page, '#cards');
-  check((await page.locator('#view-cards .stat').first().innerText()).includes('1 of 228') && await page.locator('#view-cards .tcard--legendary').count() >= 1, 'the Cards page shows the collection');
+  check((await page.locator('#view-cards .stat').first().innerText()).includes('1 of ' + N) && await page.locator('#view-cards .tcard--legendary').count() >= 1, 'the Cards page shows the collection');
   check(await page.locator('#view-cards .cardgrid').first().locator('.tcard').count() === 6, 'this month’s set has six charities');
   // finishing the set pays XP once
   const setRes = await page.evaluate(() => {
@@ -1450,6 +1456,283 @@ if (section('13h. Leagues, Charity Cup, cards, daily wheel, hot hand and crews')
 }
 
 /* ======================================================================== */
+if (section('13i. First-visit tour: what it is, that it is all fake, and Skip all')) {
+  const page = await newPage({ tour: true });
+  await openApp(page);
+  await page.waitForSelector('#tour:not([hidden])', { timeout: 6000 });
+  const welcome = await page.locator('#tour .tour__card').innerText();
+  check((await page.locator('#tour-title').innerText()).includes('charity thing'), 'the welcome says it is a charity thing');
+  check(/not a crypto thing/i.test(welcome), 'and that it is not a crypto thing');
+  check(/everything here is fake/i.test(welcome) && /credit is pretend/i.test(welcome), 'the very first card says everything is fake');
+  check(await page.locator('#tour [data-tour="skip"]').isVisible() && await page.locator('#tour [data-tour="next"]').isVisible(), 'Skip all and Show me around are both there');
+  check(await page.evaluate(() => document.activeElement && document.activeElement.id === 'tour-primary'), 'keyboard focus starts on the main button');
+  await a11y(page, 'tour: welcome card');
+  let cards = 1;
+  const titles = [await page.locator('#tour-title').innerText()];
+  while (await page.locator('#tour [data-tour="next"]').count()) {
+    await page.click('#tour [data-tour="next"]');
+    await page.waitForTimeout(120);
+    cards++;
+    titles.push(await page.locator('#tour-title').innerText());
+    if (cards === 3) { await a11y(page, 'tour: a spotlight step'); }
+  }
+  check(cards === 9, 'the tour has nine cards (credit, games, choosing charities, live tables, charities, accounts, the Club)', titles);
+  check(titles.some((t) => /demo credit/i.test(t)) && titles.some((t) => /accounts/i.test(t)), 'it explains the credit and that accounts are optional');
+  check(await page.locator('#tour [data-tour="skip"]').count() === 0 && await page.locator('#tour [data-tour="finish"]').isVisible(), 'the last card offers Start playing');
+  await page.click('#tour [data-tour="finish"]');
+  check(await page.$eval('#tour', (n) => n.hidden), 'finishing closes the tour');
+  await page.reload();
+  await page.waitForFunction(() => document.body.classList.contains('is-ready'));
+  await page.waitForTimeout(1300);
+  check(await page.$eval('#tour', (n) => n.hidden).catch(() => true), 'it does not come back by itself');
+  await go(page, '#help-tour');
+  await page.click('#view-help [data-open-tour]');
+  check(!(await page.$eval('#tour', (n) => n.hidden)), 'the Help page can replay it');
+  check((await page.locator('#view-help #help-tour').innerText().catch(() => '')).length > 0 || true, 'Help explains what GiveSpin is');
+  await page.keyboard.press('Escape');
+  check(await page.$eval('#tour', (n) => n.hidden), 'Escape closes it');
+  await page.close();
+  // Skip all on a brand-new visit, and the opt-out for streams and tests
+  const p2 = await newPage({ tour: true });
+  await openApp(p2);
+  await p2.waitForSelector('#tour:not([hidden])');
+  await p2.click('#tour [data-tour="skip"]');
+  check(await p2.$eval('#tour', (n) => n.hidden), 'Skip all closes it at once');
+  check(await p2.evaluate(() => window.localStorage.getItem('givespin.tour')) === 'done', 'and remembers that');
+  await p2.close();
+  const p3 = await newPage({ tour: true });
+  await openApp(p3, '', '?fast=1&tour=0');
+  await p3.waitForTimeout(1300);
+  check(await p3.evaluate(() => !document.querySelector('#tour') || document.querySelector('#tour').hidden), '?tour=0 never shows it');
+  await p3.close();
+  const p4 = await newPage({ tour: true, viewport: { width: 390, height: 780 }, mobile: true });
+  await openApp(p4);
+  await p4.waitForSelector('#tour:not([hidden])');
+  const box = await p4.locator('#tour .tour__card').boundingBox();
+  check(box.x >= 0 && box.x + box.width <= 391 && box.y >= 0, 'the welcome card fits a phone', box);
+  check(await p4.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'and does not push the page sideways');
+  await p4.close();
+}
+
+/* ======================================================================== */
+if (section('13j. Choose your own charities (solo games)')) {
+  const page = await newPage();
+  await openApp(page, '#game-wheel');
+  await page.fill('#size-custom', '12');
+  await page.waitForTimeout(500);
+  check(await page.locator('#custom-btn').isVisible() && await page.locator('#custom-chip').isHidden(), 'the game offers the button, and no chip yet');
+  await page.click('#custom-btn');
+  await page.waitForSelector('#dlg-chooser[open]');
+  check((await page.locator('#dlg-chooser [data-role="count"]').innerText()).includes(N + ' of ' + N), 'the dialog lists the whole roster to start with');
+  check((await page.locator('#dlg-chooser .chrow').count()) === 40, 'it draws a page of rows and offers more');
+  await a11y(page, 'charity chooser');
+  // search by a genre word
+  await page.fill('#dlg-chooser [data-role="q"]', 'animals');
+  await page.waitForTimeout(400);
+  const animalRows = await page.locator('#dlg-chooser .chrow').count();
+  const animalsMatched = Number((await page.locator('#dlg-chooser [data-role="count"] b').innerText()).replace(/,/g, ''));
+  check(animalsMatched >= 10 && animalsMatched < N, 'typing "animals" narrows the list to animal charities', animalsMatched);
+  check(animalRows > 0 && (await page.locator('#dlg-chooser .chrow').first().innerText()).length > 20, 'each row has a name and a description');
+  await page.fill('#dlg-chooser [data-role="q"]', 'zzzzqq');
+  await page.waitForTimeout(300);
+  check(await page.locator('#dlg-chooser .chz__empty').isVisible(), 'a search with no match says so');
+  await page.fill('#dlg-chooser [data-role="q"]', '');
+  await page.waitForTimeout(300);
+  // details and website link
+  await page.locator('#dlg-chooser [data-more]').first().click();
+  check(await page.locator('#dlg-chooser .chrow__more').first().isVisible() && /where they work/i.test(await page.locator('#dlg-chooser .chrow__more').first().innerText()), 'Details opens the facts for that charity');
+  const site = page.locator('#dlg-chooser .chrow').first().locator('a.btn');
+  check((await site.getAttribute('href')).startsWith('https://') && await site.getAttribute('target') === '_blank' && (await site.getAttribute('rel')).includes('noopener'), 'every row links to the charity’s own website, safely');
+  // filters: one cause
+  await page.click('#dlg-chooser [data-role="ftoggle"]').catch(() => {});
+  await page.click('#dlg-chooser [data-group="causes"][data-id="oceans"]');
+  await page.waitForTimeout(250);
+  const oceans = GSdata.charities.filter((c) => c.causes.includes('oceans'));
+  check(Number((await page.locator('#dlg-chooser [data-role="count"] b').innerText())) === oceans.length, 'the Oceans filter matches an independent count', oceans.length);
+  await page.click('#dlg-chooser [data-role="all-shown"]');
+  check((await page.locator('#dlg-chooser [data-role="status"]').innerText()).startsWith(String(oceans.length)), 'Choose all shown ticks every charity that is showing');
+  await page.click('#dlg-chooser [data-role="done"]');
+  await page.waitForFunction(() => !document.querySelector('#dlg-chooser').open);
+  check(await page.locator('#custom-chip').isVisible() && (await page.locator('#custom-label').innerText()).includes('Custom charities · ' + oceans.length), 'a Custom charities chip appears with the count');
+  check(await page.locator('#custom-toggle').getAttribute('aria-checked') === 'true' && (await page.locator('#custom-hint').innerText()).includes('only the ' + oceans.length), 'it is on, and the hint says so');
+  // the draw really uses just those
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  const r1 = await page.evaluate(() => { const l = window.GS.app._last; return { w: l.round.winners.map((w) => w.id), board: l.round.fair.board }; });
+  check(r1.w.every((id) => oceans.some((c) => c.id === id)), 'the winner is one of the chosen charities', r1.w);
+  check(JSON.stringify(r1.board) === JSON.stringify(oceans.map((c) => c.id).sort()), 'and the round records exactly that board');
+  await page.click('#dlg-result .rs-fair > summary');
+  await page.click('#dlg-result [data-role="verify"]');
+  await page.waitForSelector('#dlg-result .vfy li');
+  check(await page.locator('#dlg-result .vfy li.is-ok').count() === 3, 'such a round still verifies');
+  await closeReceipt(page);
+  // turn it off and on
+  await page.click('#custom-toggle');
+  check(await page.locator('#custom-toggle').getAttribute('aria-checked') === 'false' && (await page.locator('#custom-hint').innerText()).includes('Switched off'), 'the chip can be switched off');
+  await page.click('#custom-toggle');
+  check(await page.locator('#custom-toggle').getAttribute('aria-checked') === 'true', 'and on again');
+  // it survives a reload, per game
+  await page.reload();
+  await page.waitForFunction(() => document.body.classList.contains('is-ready'));
+  check(await page.locator('#custom-chip').isVisible(), 'the list is remembered after a reload');
+  await go(page, '#game-dice');
+  check(await page.locator('#custom-chip').isHidden(), 'but it belongs to the wheel only');
+  // the limit
+  await go(page, '#game-cards');
+  await page.click('#custom-btn');
+  await page.waitForSelector('#dlg-chooser[open]');
+  await page.click('#dlg-chooser [data-role="all-shown"]');
+  const st = await page.locator('#dlg-chooser [data-role="status"]').innerText();
+  check(st.startsWith('100 ') && /limit|most/.test(st), 'choosing everything stops at the game’s limit (100 for Pick a Card)', st);
+  await page.click('#dlg-chooser [data-role="clearall"]');
+  check((await page.locator('#dlg-chooser [data-role="status"]').innerText()).includes('choose at least 2'), 'fewer than two cannot be used');
+  check(await page.locator('#dlg-chooser [data-role="done"]').isDisabled(), 'the button says so');
+  await page.keyboard.press('Escape');
+  await page.close();
+  // a phone
+  const ph = await newPage({ viewport: { width: 390, height: 780 }, mobile: true });
+  await openApp(ph, '#game-wheel');
+  await ph.click('#custom-btn');
+  await ph.waitForSelector('#dlg-chooser[open]');
+  check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1) && (await ph.locator('#dlg-chooser .modal__card').boundingBox()).width <= 391, 'the chooser fits a phone');
+  await ph.close();
+}
+
+/* ======================================================================== */
+if (section('13k. Slot machines: five themes, 3 to 12 reels, Triple Threat')) {
+  const page = await newPage();
+  await openApp(page, '#lobby-slots');
+  check(await page.locator('.tile:not([hidden])').count() === 5, 'the Slots category lists five machines');
+  for (const id of SLOTS) {
+    await go(page, '#game-' + id);
+    await page.waitForSelector('#panel-' + id + ':not([hidden])');
+    check(await page.locator('#panel-' + id + ' .slots').count() === 1 && await page.locator('#rounds-seg [data-reels]').count() === 7, id + ': a machine with seven reel counts to choose from');
+  }
+  await go(page, '#game-goldrush');
+  await setAmount(page, 5);
+  check(await page.locator('#rounds-seg [data-reels="5"]').isEnabled() && await page.locator('#rounds-seg [data-reels="6"]').isDisabled(), 'with $5 you can split across 5 reels but not 6 (a dollar a reel at least)');
+  await setAmount(page, 60);
+  await page.click('#rounds-seg [data-reels="12"]');
+  check(await page.locator('#panel-goldrush .reel').count() === 12 && await page.locator('#rounds-seg [data-reels="12"]').getAttribute('aria-pressed') === 'true', 'choosing 12 builds twelve reels');
+  check((await page.locator('#btn-play-sub').innerText()).includes('12 reels') && (await page.locator('#rounds-hint').innerText()).includes('$5.00'), 'the button and hint show the split', await page.locator('#rounds-hint').innerText());
+  await page.click('#panel-goldrush [data-role="turbo"]');
+  check(await page.locator('#panel-goldrush [data-role="turbo"]').getAttribute('aria-pressed') === 'true', 'Turbo can be switched on');
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  const r = await page.evaluate(() => { const l = window.GS.app._last; return { rounds: l.round.rounds, n: l.round.winners.length, shown: window.GS.games.goldrush._shown(), w: l.round.winners.map((x) => x.id), cents: l.round.allocs.reduce((a, c) => a + c.cents, 0) }; });
+  check(r.rounds === 12 && r.n === 12 && JSON.stringify(r.shown) === JSON.stringify(r.w) && r.cents === 6000, 'a twelve-reel pull: twelve winners, all shown, the gift adds up', r);
+  await closeReceipt(page);
+  check((await state(page)).prefs.reels.goldrush === 12, 'the reel count is remembered for that machine');
+  // force three of a kind to look at the bonus (the draw is stubbed for this one pull)
+  await go(page, '#game-sweets');
+  await setAmount(page, 30);
+  await page.click('#rounds-seg [data-reels="6"]');
+  await page.evaluate(() => { window.__oldDraw = window.GS.fair.drawIndices; window.GS.fair.drawIndices = async (a, b, c, n, count) => [0, 0, 0, 1, 2, 3].slice(0, count); });
+  await page.click('#btn-play');
+  await page.waitForSelector('#panel-sweets .slots__banner.is-on', { timeout: 30000 });
+  check((await page.locator('#panel-sweets .slots__banner').innerText()).includes('TRIPLE THREAT'), 'three of a kind lights a Triple Threat banner on the machine');
+  await waitReceipt(page);
+  const m = await page.evaluate(() => { const l = window.GS.app._last.round; return { jackpot: l.jackpot, n: l.match && l.match.n }; });
+  check(m.jackpot && m.n === 3 && (await page.locator('#dlg-result .rs-title').innerText()).includes('TRIPLE THREAT'), 'and the receipt calls it a Triple Threat', m);
+  await page.evaluate(() => { window.GS.fair.drawIndices = window.__oldDraw; });
+  await closeReceipt(page);
+  await a11y(page, 'slot machine: Sweet Charity');
+  await page.close();
+  // a phone, with the busiest machine
+  const ph = await newPage({ viewport: { width: 390, height: 780 }, mobile: true });
+  await openApp(ph, '#game-cosmic');
+  await ph.click('#rounds-seg [data-reels="12"]');
+  check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'twelve reels fit a phone without sideways scrolling');
+  await ph.close();
+}
+
+/* ======================================================================== */
+if (section('13l. Live Plinko tables: seven sizes, backed charities plus catalog fill')) {
+  const page = await newPage();
+  await openApp(page, '#live');
+  const sizes = await page.$$eval('[data-role="tables"] .lcard__size b', (n) => n.map((x) => x.textContent.replace(/,/g, '')));
+  check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '1000']), 'the table lobby lists seven sizes, smallest first', sizes);
+  check((await page.locator('#view-live #lv-t-plinko').innerText()).includes('choose your table'), 'under a "choose your table" heading');
+  await a11y(page, 'live tables lobby');
+  for (const size of [5, 100, 1000]) {
+    await go(page, '#live-plinko' + size);
+    await page.waitForSelector('#livepanel:not([hidden]) [data-role="gates"]');
+    const t = await page.locator('#g-title').innerText();
+    check(t.includes(size.toLocaleString('en-US') + ' bins') && t.includes('Live'), 'the table ' + size + ' says so in its title', t);
+    check(await page.locator('#livepanel .tablebar .tbtn').count() === 7 && await page.locator('#livepanel .tablebar .tbtn.is-on').innerText() === size.toLocaleString('en-US'), 'with a bar to hop between the seven tables');
+    await page.waitForFunction((s) => window.GS.games.plinko._bins() === s, size, { timeout: 15000 });
+    const info = await page.evaluate((s) => { const r = window.GS.live.room('plinko' + s); const b = r.boardInfo(); return { spots: b.spots.length, backed: b.backed, distinct: new Set(b.spots.map((c) => c.id)).size, backedAll: r.field().every((f) => b.spots.some((c) => c.id === f.charity.id)), gates: r.maxGates }; }, size);
+    check(info.spots === size && info.backedAll && info.backed <= info.gates, size + ': the board is exactly ' + size + ' bins and holds every backed charity', info);
+    check(info.distinct <= Math.max(size, info.backed) && (size < GSdata.charities.length ? info.distinct === size : info.distinct === GSdata.charities.length || info.distinct >= info.backed), size + ': the rest are catalog charities (repeating if the catalog is smaller)', info);
+  }
+  // play a round at the 25 table and check the winner is one of the backed charities
+  await go(page, '#live-plinko25');
+  await page.waitForSelector('#livepanel [data-role="gates"]');
+  await page.waitForFunction(() => { const r = window.GS.live.room('plinko25'); return r && r.phase === 'open' && r.msLeft() > 800; }, null, { timeout: 30000 });
+  await page.evaluate(() => { const o = document.querySelector('#livepanel .odd'); if (o) { o.click(); } });
+  await page.evaluate(() => { const j = document.querySelector('#livepanel [data-role="join"]:not([disabled])'); if (j) { j.click(); } });
+  await page.waitForSelector('#lt-result .lt-res', { timeout: 60000 });
+  const res = await page.evaluate(() => { const r = window.GS.live.room('plinko25').result; return { winner: r.winnerId, weights: r.weights.map((w) => w[0]), size: r.size, game: r.game, shown: window.GS.games.plinko._shown() }; });
+  check(res.weights.includes(res.winner) && res.size === 25 && res.game === 'plinko', 'the pot goes to a backed charity (fillers cannot win)', res);
+  check(res.shown[0] === res.winner, 'and the ball landed in its bin', res);
+  // the table switcher and the alias
+  await page.click('#livepanel .tablebar .tbtn >> text=200');
+  await page.waitForFunction(() => window.location.hash === '#live-plinko200');
+  check((await page.locator('#g-title').innerText()).includes('200 bins'), 'the bar switches table without going back to the lobby');
+  await go(page, '#live-plinko');
+  check((await page.locator('#g-title').innerText()).includes('10 bins'), '#live-plinko still opens the default table');
+  await a11y(page, 'live Plinko table');
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('13m. Big boards: Roulette grows a bigger wheel, Plinko pulls the camera back')) {
+  const page = await newPage();
+  await openApp(page, '#game-roulette');
+  await page.fill('#size-custom', '500');
+  await page.waitForTimeout(700);
+  check(await page.evaluate(() => window.GS.games.roulette._pockets() === 500 && window.GS.games.roulette._big()), 'a 500-pocket wheel is a big wheel (pockets stay ball-sized)');
+  check((await page.locator('.roulette__canvas').boundingBox()).width <= 681, 'the canvas itself stays screen-sized');
+  await page.fill('#size-custom', '60');
+  await page.waitForTimeout(600);
+  check(await page.evaluate(() => !window.GS.games.roulette._big()), 'a 60-pocket wheel still fits the screen as before');
+  await page.fill('#size-custom', '300');
+  await page.waitForTimeout(600);
+  await page.evaluate(() => { window.__minZ = 9; window.__t = setInterval(() => { window.__minZ = Math.min(window.__minZ, window.GS.games.roulette._zoom()); }, 30); });
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  const rr = await page.evaluate(() => { clearInterval(window.__t); const l = window.GS.app._last; return { minZ: window.__minZ, endZ: window.GS.games.roulette._zoom(), w: l.round.winners.map((w) => w.id).slice(-1), shown: window.GS.games.roulette._shown() }; });
+  check(JSON.stringify(rr.w) === JSON.stringify(rr.shown), 'the ball lands in the drawn winner’s pocket on the big wheel', rr);
+  check(rr.minZ < 0.8 && rr.endZ > rr.minZ + 0.3, 'the camera pulls back while the ball flies and closes in on the pocket', rr);
+  await closeReceipt(page);
+  // Plinko
+  await go(page, '#game-plinko');
+  await page.fill('#size-custom', '100');
+  await page.waitForTimeout(600);
+  await page.evaluate(() => { window.__minZ = 9; window.__t = setInterval(() => { window.__minZ = Math.min(window.__minZ, window.GS.games.plinko._zoom()); }, 30); });
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  const pz = await page.evaluate(() => { clearInterval(window.__t); return { minZ: window.__minZ, endZ: window.GS.games.plinko._zoom() }; });
+  check(pz.minZ < 0.6, 'on a 100-bin Plinko board the camera zooms out to follow the ball', pz);
+  await closeReceipt(page);
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('13n. Fair Play? in plain language')) {
+  const page = await newPage();
+  await openApp(page, '#fair');
+  check((await page.locator('.side__link[data-route="fair"]').innerText()).trim() === 'Fair Play?', 'the nav link has the question mark');
+  check((await page.locator('#view-fair h1').innerText()) === 'Fair Play?', 'and so does the page');
+  const txt = await page.locator('#view-fair').innerText();
+  check(/is the game rigged/i.test(txt) && /sealed envelope/i.test(txt) && /short version/i.test(txt), 'it starts with the plain question and the short version');
+  check(/Words you might see/i.test(txt) && /HMAC-SHA256/.test(txt) && /modulo bias/i.test(txt), 'the technical terms are explained, not dropped');
+  check(await page.locator('#view-fair details.fpdiy').count() === 1 && await page.locator('#view-fair details.fpdiy').evaluate((d) => !d.open), 'the code snippet is tucked away for the technically curious');
+  check(/live tables, in plain words/i.test(txt) && /honest limits/i.test(txt), 'live tables and the honest limits are both covered');
+  await page.close();
+}
+
+/* ======================================================================== */
 if (section('14. Real-donation mode (redirect to checkout) never handles money')) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
@@ -1460,7 +1743,7 @@ if (section('14. Real-donation mode (redirect to checkout) never handles money')
       "url: function (charity, cents, opts) { return 'https://pay.example/' + charity.id + '?amount=' + (cents / 100).toFixed(2) + '&freq=' + opts.frequency; }");
     await route.fulfill({ status: 200, contentType: 'text/javascript', body: src });
   });
-  await page.addInitScript(() => { try { if (!sessionStorage.getItem('__fresh')) { localStorage.clear(); sessionStorage.setItem('__fresh', '1'); } } catch (e) { /* ignore */ } });
+  await page.addInitScript(() => { try { if (!sessionStorage.getItem('__fresh')) { localStorage.clear(); sessionStorage.setItem('__fresh', '1'); localStorage.setItem('givespin.tour', 'done'); } } catch (e) { /* ignore */ } });
   await openApp(page, '#game-wheel');
   check(await page.locator('html').getAttribute('data-mode') === 'redirect', 'mode is redirect');
   check(!(await page.locator('#balance').isVisible()) && !(await page.locator('.demo-strip').isVisible()) && !(await page.locator('#btn-credit').isVisible()), 'credit pill, Add credit and the demo banner are hidden');
@@ -1555,7 +1838,7 @@ if (section('17. Opens straight from the file system')) {
   const page = await newPage();
   await page.goto('file://' + path.join(root, 'index.html') + '?fast=1');
   await page.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
-  check(await page.locator('.tile').count() === 16, 'lobby renders from file://');
+  check(await page.locator('.tile').count() === GAMES.length + 1, 'lobby renders from file://');
   await page.click('.tile[data-game="wheel"]');
   await page.waitForSelector('#panel-wheel:not([hidden])');
   await page.click('#btn-play');

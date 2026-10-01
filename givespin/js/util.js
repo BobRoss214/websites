@@ -43,7 +43,7 @@
     },
 
     /** Readable label colour for text drawn on `hex`. */
-    inkOn: function (hex) { return GS.util.luminance(hex) > 0.3 ? '#0B1020' : '#FFFFFF'; },
+    inkOn: function (hex) { var L = GS.util.luminance(hex); return (L + 0.05) / (0.007 + 0.05) >= 1.05 / (L + 0.05) ? '#0B1020' : '#FFFFFF'; },
 
     /** #rrggbb + alpha -> rgba() string. */
     rgba: function (hex, a) {

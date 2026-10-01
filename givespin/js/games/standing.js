@@ -55,7 +55,7 @@
     el.grid.innerHTML = tiles.map(function (t, i) {
       var ch = t.ch;
       return '<li class="stile' + (ch.id === pick ? ' is-pick' : '') + '" data-i="' + i + '" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + '">' +
-        '<span class="cmono" style="--c:' + ch.accent + ';--s:24px" data-len="' + GS.mono(ch).length + '" aria-hidden="true">' + U.esc(GS.mono(ch)) + '</span>' +
+        '' + GS.ui.mono(ch, 24) + '' +
         '<span class="stile__name">' + U.esc(ch.short) + '</span>' +
         (field ? '<b class="stile__share">' + core.fmtShare(t.tickets, tot) + '</b>' : '') + '</li>';
     }).join('');

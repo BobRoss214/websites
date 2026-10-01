@@ -1,9 +1,13 @@
 /*
- * Slot Machine. Three reels, three charities. The gift is split evenly across the reels, so every pull
- * can light up to three causes. Match all three (with a big enough pool) for a Triple Threat bonus.
+ * Slot machines. One engine, five themed machines (Classic, Gold Rush, Deep Sea, Sweet Charity, Cosmic Spin).
+ *
+ * Every reel is one round: your gift is split evenly across the reels (you choose how many, from 3 up to 12), and
+ * each reel stops on one charity, so a single pull can help many causes. Match the same charity on three or more
+ * reels (in a pool of five or more) for a Triple Threat bonus.
  *
  * Fairness: the app draws each reel's charity uniformly from the pool before anything moves (see js/fair.js);
- * the reel then rolls to a strip that ends on that charity.
+ * the reel then rolls to a strip that ends on that charity. The themes, the blur, the slow last reel and the match
+ * banners are show: they do not change who wins.
  */
 (function () {
   'use strict';
@@ -11,86 +15,195 @@
   var core = GS.core;
   var U = GS.util;
 
-  var REELS = 3;
+  var STD = [3, 4, 5, 6, 8, 10, 12];
 
-  var el = {};
-  var api = null;
-  var pool = [];
-  var reels = [];       // { win, strip, visible: [charity x3] }
-  var active = false;
-  var locked = false;
-  var spinning = false;
-
-  function tileHTML(ch) {
-    var m = GS.mono(ch);
-    return '<div class="sym" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
-      '<span class="sym__badge" data-len="' + m.length + '">' + U.esc(m) + '</span>' +
-      '<span class="sym__name">' + U.esc(ch.short) + '</span></div>';
-  }
-
-  function randomFill(n, avoid) {
-    var out = [];
-    var prev = avoid;
-    for (var i = 0; i < n; i++) {
-      var c = core.pickOne(pool);
-      var guard = 0;
-      while (pool.length > 1 && prev && c.id === prev.id && guard++ < 6) { c = core.pickOne(pool); }
-      out.push(c);
-      prev = c;
+  var THEMES = [
+    {
+      id: 'slots', cls: 'classic', name: 'Classic Slots', label: 'Classic', icon: 'cherry', title: 'GIVE ROLL', badge: '3 to 12 reels', defaultReels: 3,
+      tagline: 'The original: a red-and-gold machine with a lever. Choose how many reels your gift splits across.',
+      info: [
+        'Pull the lever and the reels spin to charities. Your gift is split evenly across the reels, so one pull can help several causes. Start with three reels or go up to twelve.',
+        'Land the same charity on three or more reels (in a pool of five or more) and you earn the Triple Threat bonus: extra XP and a shower of confetti.'
+      ], fx: 0
+    },
+    {
+      id: 'goldrush', cls: 'gold', name: 'Gold Rush', label: 'Gold Rush', icon: 'gem', title: 'GOLD RUSH', badge: '5 reels · mining', defaultReels: 5,
+      tagline: 'Strike it rich for charity. A five-reel mining machine with drifting gold dust.',
+      info: [
+        'A prospector’s machine: five reels by default, each one a charity your gift is split across. Pick fewer reels for a bigger share on each, or up to twelve to spread the gold around.',
+        'Three or more matching charities on the payline is a Triple Threat: bonus XP and confetti. The dust, the glow and the slow last reel are just for show; every reel is an equal-odds draw.'
+      ], fx: 16
+    },
+    {
+      id: 'deepsea', cls: 'sea', name: 'Deep Sea Treasure', label: 'Deep Sea', icon: 'waves', title: 'DEEP SEA', badge: '5 reels · ocean', defaultReels: 5,
+      tagline: 'Dive for treasure. A five-reel ocean machine with rising bubbles.',
+      info: [
+        'Dive down and let the reels surface your charities. Five reels by default; choose from three to twelve and your gift splits evenly across them.',
+        'Land the same charity on three or more reels for the Triple Threat bonus. The bubbles and waves are decoration; the draw is fair and equal for every charity.'
+      ], fx: 14
+    },
+    {
+      id: 'sweets', cls: 'sweets', name: 'Sweet Charity', label: 'Sweet Charity', icon: 'gift', title: 'SWEET CHARITY', badge: '6 reels · candy', defaultReels: 6,
+      tagline: 'A six-reel candy machine with sprinkles. Sweet for you, sweeter for the charities.',
+      info: [
+        'A candy-coloured machine with six reels by default. Your gift is split across the reels, one charity each. Choose three to twelve.',
+        'Three or more of the same charity on the payline earns the Triple Threat bonus. The sprinkles are just for fun; every charity has the same chance.'
+      ], fx: 18
+    },
+    {
+      id: 'cosmic', cls: 'cosmic', name: 'Cosmic Spin', label: 'Cosmic Spin', icon: 'rocket', title: 'COSMIC SPIN', badge: '8 reels · space', defaultReels: 8,
+      tagline: 'Blast off with eight reels of charities under a twinkling sky.',
+      info: [
+        'The big machine: eight reels by default (up to twelve), so one pull can light up a whole constellation of causes. Fewer reels means a bigger share on each.',
+        'Three or more matching charities earns the Triple Threat bonus. The stars and glow are decoration; every reel is an equal-odds draw.'
+      ], fx: 26
     }
-    return out;
-  }
+  ];
 
-  function setStatic(r, list) {
-    r.visible = list;
-    r.strip.style.transition = 'none';
-    r.strip.style.transform = 'translateY(0)';
-    r.strip.innerHTML = list.map(tileHTML).join('');
-  }
+  var ANNOUNCE = { 2: 'PAIR', 3: 'TRIPLE THREAT!', 4: 'FOUR OF A KIND!', 5: 'FIVE OF A KIND!' };
 
-  function seedReels() {
-    if (!pool.length) { return; }
-    reels.forEach(function (r) { setStatic(r, randomFill(3, null)); r.win.classList.remove('is-hit'); });
-    el.machine.classList.remove('is-jackpot');
-  }
+  function makeMachine(def) {
+    var el = {};
+    var api = null;
+    var pool = [];
+    var reels = [];       // { win, strip, visible: [charity x3] }
+    var active = false;
+    var locked = false;
+    var spinning = false;
+    var n = def.defaultReels;
+    var turbo = false;
+    var bannerTimer = 0;
 
-  function tileH() { return reels[0].win.clientHeight / 3; }
+    var game = {
+      id: def.id,
+      name: def.name,
+      label: def.label,
+      icon: def.icon,
+      category: 'slots',
+      badge: def.badge,
+      tagline: def.tagline,
+      cta: 'Pull the lever',
+      fixedRounds: n,
+      reelOptions: STD,
+      defaultReels: def.defaultReels,
+      info: def.info
+    };
 
-  // Rolls a little past the stop (0.22 of a tile, whatever the distance), then settles back with a clunk.
-  var OVERSHOOT = 0.22;
-  function reelPosition(t, finalK) {
-    if (t < 0.88) { return (finalK + OVERSHOOT) * U.easeOutCubic(t / 0.88); }
-    return finalK + OVERSHOOT * (1 - U.easeInOut((t - 0.88) / 0.12));
-  }
+    function tileHTML(ch) {
+      var m = GS.mono(ch);
+      return '<div class="sym" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
+        '<span class="sym__badge' + (GS.ui.hasLogo(ch) ? ' is-logo' : '') + '" data-len="' + m.length + '" data-mono="' + U.esc(m) + '">' + GS.ui.monoInner(ch) + '</span>' +
+        '<span class="sym__name">' + U.esc(ch.short) + '</span></div>';
+    }
 
-  GS.games.slots = {
-    id: 'slots',
-    name: 'Slot Machine',
-    label: 'Slots',
-    icon: 'cherry',
-    category: 'originals',
-    badge: '3 reels',
-    tagline: 'Three reels, three charities. Your gift is split evenly across the stops.',
-    cta: 'Pull the lever',
-    fixedRounds: REELS,
-    info: [
-      'Pull the lever and three reels spin to three charities. Your gift is split evenly across the reels, so one pull can help up to three causes.',
-      'Land the same charity on all three reels (in a pool of five or more) and you earn the Triple Threat bonus: extra XP and a shower of confetti.'
-    ],
-
-    mount: function (container, gameApi) {
-      api = gameApi;
-      var reelsHTML = '';
-      for (var i = 0; i < REELS; i++) {
-        reelsHTML += '<div class="reel" data-role="reel"><div class="reel__strip"></div></div>';
+    function randomFill(count, avoid) {
+      var out = [];
+      var prev = avoid;
+      for (var i = 0; i < count; i++) {
+        var c = core.pickOne(pool);
+        var guard = 0;
+        while (pool.length > 1 && prev && c.id === prev.id && guard++ < 6) { c = core.pickOne(pool); }
+        out.push(c);
+        prev = c;
       }
+      return out;
+    }
+
+    function setStatic(r, list) {
+      r.visible = list;
+      r.strip.style.transition = 'none';
+      r.strip.style.transform = 'translateY(0)';
+      r.strip.innerHTML = list.map(tileHTML).join('');
+    }
+
+    function clearMarks() {
+      reels.forEach(function (r) { r.win.classList.remove('is-hit', 'is-match', 'is-lit', 'is-anticipate'); });
+      el.machine.classList.remove('is-jackpot', 'is-anticipating');
+      el.banner.classList.remove('is-on');
+      el.banner.textContent = '';
+    }
+
+    function seedReels() {
+      if (!pool.length || !reels.length) { return; }
+      reels.forEach(function (r) { setStatic(r, randomFill(3, null)); });
+      clearMarks();
+    }
+
+    /** Sizes the tiles to the width the reels actually have, so twelve reels still fit a phone. */
+    function fit() {
+      if (!el.stage || !el.reelsBox) { return; }
+      var w = el.reelsBox.clientWidth || el.stage.clientWidth || 400;
+      var per = w / n;
+      var bs = Math.max(20, Math.min(56, Math.floor(per * 0.66)));
+      var dense = per < 74;
+      var th = bs + (dense ? 16 : 40);
+      el.stage.style.setProperty('--bs', bs + 'px');
+      el.stage.style.setProperty('--rh', (th * 3) + 'px');
+      el.stage.classList.toggle('is-dense', dense);
+    }
+
+    function tileH() { return reels[0].win.clientHeight / 3; }
+
+    function buildReels() {
+      var html = '';
+      for (var i = 0; i < n; i++) { html += '<div class="reel" data-role="reel"><div class="reel__strip"></div></div>'; }
+      el.reelsBox.innerHTML = html;
+      el.reelsBox.style.gridTemplateColumns = 'repeat(' + n + ', minmax(0, 1fr))';
+      el.stage.style.setProperty('--n', String(n));
+      el.stage.setAttribute('data-n', String(n));
+      reels = Array.prototype.map.call(el.reelsBox.querySelectorAll('[data-role="reel"]'), function (w) {
+        return { win: w, strip: w.querySelector('.reel__strip'), visible: [] };
+      });
+      fit();
+      seedReels();
+    }
+
+    function fxHTML() {
+      var out = '';
+      for (var i = 0; i < def.fx; i++) {
+        out += '<i style="--x:' + Math.round(Math.random() * 100) + '%;--s:' + (3 + Math.random() * 6).toFixed(1) + 'px;--d:' + (6 + Math.random() * 9).toFixed(1) + 's;--dl:-' + (Math.random() * 12).toFixed(1) + 's;--h:' + Math.round(Math.random() * 360) + '"></i>';
+      }
+      return out;
+    }
+
+    // Rolls a little past the stop (0.22 of a tile, whatever the distance), then settles back with a clunk.
+    var OVERSHOOT = 0.22;
+    function reelPosition(t, finalK) {
+      if (t < 0.88) { return (finalK + OVERSHOOT) * U.easeOutCubic(t / 0.88); }
+      return finalK + OVERSHOOT * (1 - U.easeInOut((t - 0.88) / 0.12));
+    }
+
+    function note() {
+      if (!el.note) { return; }
+      el.note.textContent = n + ' reels: your gift is split evenly across them, one charity each. Every reel is an equal-odds draw from your pool. Three or more of the same charity earns a Triple Threat bonus.';
+    }
+
+    /** The app tells the machine how many reels the player chose. */
+    game.setReels = function (count) {
+      count = Math.max(2, Math.min(12, Math.floor(count) || def.defaultReels));
+      game.fixedRounds = count;
+      if (count === n && reels.length) { return; }
+      n = count;
+      if (!el.machine || spinning) { return; }
+      buildReels();
+      note();
+    };
+
+    game.mount = function (container, gameApi) {
+      api = gameApi;
       container.innerHTML =
-        '<div class="slots">' +
+        '<div class="slots slots--' + def.cls + '" data-role="stage">' +
           '<div class="slots__machine" data-role="machine">' +
-            '<div class="slots__top"><span class="slots__lights" aria-hidden="true"></span><span class="slots__title">GIVE ROLL</span><span class="slots__lights" aria-hidden="true"></span></div>' +
+            '<div class="slots__fx" aria-hidden="true">' + fxHTML() + '</div>' +
+            '<div class="slots__top"><span class="slots__lights" aria-hidden="true"></span><span class="slots__title">' + GS.icon(def.icon) + '<span>' + def.title + '</span></span><span class="slots__lights" aria-hidden="true"></span></div>' +
             '<div class="slots__window">' +
-              '<div class="slots__reels">' + reelsHTML + '</div>' +
+              '<div class="slots__reels" data-role="reels"></div>' +
               '<div class="slots__payline" aria-hidden="true"><i></i><i></i></div>' +
+              '<div class="slots__banner" data-role="banner" role="status" aria-live="polite"></div>' +
+            '</div>' +
+            '<div class="slots__bar">' +
+              '<button type="button" class="slots__turbo" data-role="turbo" aria-pressed="false">' + GS.icon('zap') + 'Turbo</button>' +
+              '<button type="button" class="slots__spin" data-role="spin">' + GS.icon('play') + '<span>Spin</span></button>' +
             '</div>' +
             '<button type="button" class="slots__lever" data-role="lever" aria-label="Pull the lever"><span class="slots__knob"></span><span class="slots__arm"></span></button>' +
           '</div>' +
@@ -99,48 +212,71 @@
       el.machine = container.querySelector('[data-role="machine"]');
       el.note = container.querySelector('[data-role="note"]');
       el.lever = container.querySelector('[data-role="lever"]');
-      el.stage = container.querySelector('.slots');
-      reels = Array.prototype.map.call(container.querySelectorAll('[data-role="reel"]'), function (w) {
-        return { win: w, strip: w.querySelector('.reel__strip'), visible: [] };
-      });
+      el.spin = container.querySelector('[data-role="spin"]');
+      el.turbo = container.querySelector('[data-role="turbo"]');
+      el.banner = container.querySelector('[data-role="banner"]');
+      el.reelsBox = container.querySelector('[data-role="reels"]');
+      el.stage = container.querySelector('[data-role="stage"]');
       el.lever.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
-      el.note.textContent = 'Every reel is an equal-odds draw from your pool. Three of a kind earns a Triple Threat bonus.';
-    },
+      el.spin.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
+      el.turbo.addEventListener('click', function () {
+        turbo = !turbo;
+        el.turbo.setAttribute('aria-pressed', String(turbo));
+        GS.audio.click();
+      });
+      buildReels();
+      note();
+      U.observeSize(el.stage, function () { fit(); });
+    };
 
-    setPool: function (list) {
+    game.setPool = function (list) {
       pool = list.slice();
       if (!spinning) { seedReels(); }
-    },
+    };
 
-    activate: function () { active = true; },
-    deactivate: function () { active = false; },
+    game.activate = function () { active = true; fit(); };
+    game.deactivate = function () { active = false; };
 
-    lock: function (isLocked) {
+    game.lock = function (isLocked) {
       locked = !!isLocked;
       if (el.lever) { el.lever.disabled = locked; }
+      if (el.spin) { el.spin.disabled = locked; }
       if (el.machine) { el.machine.classList.toggle('is-busy', locked); }
-    },
+    };
 
-    /** One pull = three reels. Resolves with the three winning charities. */
-    play: function (opts) {
+    function showBanner(text, strong) {
+      clearTimeout(bannerTimer);
+      el.banner.textContent = text;
+      el.banner.classList.toggle('is-strong', !!strong);
+      el.banner.classList.add('is-on');
+      bannerTimer = setTimeout(function () { el.banner.classList.remove('is-on'); }, strong ? 2600 : 1700);
+    }
+
+    /** One pull = every reel. Resolves with the winning charity of each reel. */
+    game.play = function (opts) {
       return new Promise(function (resolve) {
-        if (!pool.length || !opts.winners || opts.winners.length < REELS) { resolve([]); return; }
+        if (!pool.length || !opts.winners || opts.winners.length < n) { resolve([]); return; }
         spinning = true;
-        el.machine.classList.remove('is-jackpot');
+        clearMarks();
         el.machine.classList.add('is-pulled');
         setTimeout(function () { el.machine.classList.remove('is-pulled'); }, 420);
         GS.audio.whoosh();
 
         var H = tileH();
-        var winners = [];
+        var winners = opts.winners.slice(0, n);
         var finished = 0;
         var t0 = performance.now();
+        var speed = turbo ? 0.45 : 1;
+        var stagger = (n <= 5 ? 800 : n <= 8 ? 460 : 320) * speed;
+
+        // does the last reel complete a match of three or more? Then it takes its time, as real machines do.
+        var lastId = winners[n - 1].id;
+        var priorSame = winners.slice(0, n - 1).filter(function (w) { return w.id === lastId; }).length;
+        var anticipate = priorSame >= 2 && !turbo;
 
         var plans = reels.map(function (r, idx) {
-          r.win.classList.remove('is-hit');
-          var winner = opts.winners[idx];           // drawn fairly by the app before any reel moves
-          winners.push(winner);
-          var fillCount = 22 + idx * 9;
+          var winner = winners[idx];                // drawn fairly by the app before any reel moves
+          var fillCount = Math.min(50, 14 + idx * 3);
           var head = r.visible.slice();
           var fill = randomFill(fillCount, head[2]);
           var pre = core.pickOne(pool);
@@ -152,12 +288,20 @@
           r.strip.style.transform = 'translateY(0)';
           r.strip.innerHTML = items.map(tileHTML).join('');
           r.win.classList.add('is-spinning');
+          var dur = (1900 * speed) + idx * stagger + (anticipate && idx === n - 1 ? 1300 : 0);
           return {
             reel: r, items: items, winner: winner, idx: idx, winnerIdx: winnerIdx,
             finalK: winnerIdx - 1,              // the middle row shows items[k + 1]
-            dur: U.dur(2300 + idx * 800), lastTick: 0, done: false
+            dur: U.dur(dur), lastTick: 0, done: false
           };
         });
+
+        if (anticipate) {
+          var lastPlan = plans[n - 1];
+          setTimeout(function () {
+            if (spinning && !lastPlan.done) { el.machine.classList.add('is-anticipating'); lastPlan.reel.win.classList.add('is-anticipate'); GS.audio.tick(0.5); }
+          }, Math.max(0, plans[n - 2].dur - 120));
+        }
 
         (function frame(now) {
           var p;
@@ -170,12 +314,12 @@
             var whole = Math.floor(k);
             if (whole !== p.lastTick) {
               p.lastTick = whole;
-              if (t < 0.97) { GS.audio.tick(0.25 + 0.2 * p.idx); }
+              if (t < 0.97 && (n <= 5 || p.idx % 2 === 0)) { GS.audio.tick(0.2 + 0.2 * Math.min(1, p.idx / 4)); }
             }
             if (t >= 1) {
               p.done = true;
               p.reel.strip.style.transform = 'translateY(' + (-p.finalK * H) + 'px)';
-              p.reel.win.classList.remove('is-spinning');
+              p.reel.win.classList.remove('is-spinning', 'is-anticipate');
               p.reel.win.classList.add('is-hit');
               p.reel.visible = p.items.slice(p.winnerIdx - 1, p.winnerIdx + 2);
               GS.audio.reelStop();
@@ -187,19 +331,42 @@
             requestAnimationFrame(frame);
           } else {
             spinning = false;
+            el.machine.classList.remove('is-anticipating');
             // Re-seat each strip to just the three visible tiles (visually identical, keeps the DOM small).
             plans.forEach(function (pl) { setStatic(pl.reel, pl.reel.visible); });
-            var triple = winners.every(function (w) { return w.id === winners[0].id; });
-            if (triple) { el.machine.classList.add('is-jackpot'); }
-            if (opts && opts.onRound) { /* one pull is one round */ }
-            U.sleep(500).then(function () { resolve(winners); });
+            // matches: any charity on two or more reels
+            var counts = {};
+            winners.forEach(function (w) { counts[w.id] = (counts[w.id] || 0) + 1; });
+            var best = 0, bestId = '';
+            Object.keys(counts).forEach(function (id) { if (counts[id] > best) { best = counts[id]; bestId = id; } });
+            // sweep the payline left to right, lighting the matches
+            reels.forEach(function (r, i) {
+              setTimeout(function () {
+                r.win.classList.add('is-lit');
+                if (counts[winners[i].id] >= 2) { r.win.classList.add('is-match'); }
+              }, i * (turbo ? 25 : 70));
+            });
+            if (best >= 3) {
+              el.machine.classList.add('is-jackpot');
+              showBanner((ANNOUNCE[Math.min(best, 5)] || 'MEGA MATCH!') + ' ' + best + ' × ' + GS.charity(bestId).short, true);
+            } else if (best === 2 && n >= 3) {
+              showBanner(ANNOUNCE[2] + ' · ' + GS.charity(bestId).short, false);
+            }
+            U.sleep(turbo ? 350 : 650).then(function () { resolve(winners); });
           }
         })(performance.now());
       });
-    },
+    };
 
-    /** Test hook: charities currently on the payline (middle row), left to right. */
-    _paylineIds: function () { return reels.map(function (r) { return r.visible[1] && r.visible[1].id; }); },
-    _shown: function () { return reels.map(function (r) { return r.visible[1] && r.visible[1].id; }); }
-  };
+    /** Test hooks: charities currently on the payline (middle row), left to right. */
+    game._paylineIds = function () { return reels.map(function (r) { return r.visible[1] && r.visible[1].id; }); };
+    game._shown = game._paylineIds;
+    game._reels = function () { return reels.length; };
+
+    GS.games[def.id] = game;
+    return game;
+  }
+
+  THEMES.forEach(makeMachine);
+  GS.slotThemes = THEMES;
 })();

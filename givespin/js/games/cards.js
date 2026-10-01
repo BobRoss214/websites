@@ -30,7 +30,7 @@
   function faceHTML(ch) {
     var m = GS.mono(ch);
     var cause = GS.cause(ch.causes[0]);
-    return '<span class="cmono pcard__mono" style="--c:' + ch.accent + ';--s:' + (dense() ? 30 : 50) + 'px" data-len="' + m.length + '" aria-hidden="true">' + U.esc(m) + '</span>' +
+    return GS.ui.mono(ch, dense() ? 30 : 50, 'pcard__mono') +
       '<span class="pcard__name">' + U.esc(ch.short) + '</span>' +
       '<span class="pcard__cause">' + GS.icon(cause.icon) + U.esc(cause.name) + '</span>';
   }

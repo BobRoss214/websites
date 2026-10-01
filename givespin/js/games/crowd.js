@@ -180,7 +180,7 @@
       var shown = ordered.slice(0, 10);
       el.rank.innerHTML = shown.map(function (e) {
         return '<li' + (e.run.place === 1 ? ' class="is-win"' : '') + '><span class="rank__n">' + (e.run.place || '-') + '</span>' +
-          '<span class="cmono" style="--c:' + e.ch.accent + ';--s:24px" data-len="' + GS.mono(e.ch).length + '" aria-hidden="true">' + U.esc(GS.mono(e.ch)) + '</span><span class="rank__name">' + U.esc(e.ch.short) + '</span></li>';
+          '' + GS.ui.mono(e.ch, 24) + '<span class="rank__name">' + U.esc(e.ch.short) + '</span></li>';
       }).join('') + (ordered.length > 10 ? '<li class="rank__more">+ ' + (ordered.length - 10) + ' more</li>' : '');
     }
 
@@ -207,10 +207,11 @@
       list.forEach(function (e) { if (!seen[e.ch.id]) { seen[e.ch.id] = { e: e, n: 0 }; uniq.push(seen[e.ch.id]); } seen[e.ch.id].n += 1; });
       var shown = uniq.slice(0, 150);
       el.legend.className = 'rlegend' + (uniq.length > 12 ? ' rlegend--scroll' : '');
+      if (uniq.length > 12) { el.legend.setAttribute('tabindex', '0'); } else { el.legend.removeAttribute('tabindex'); }
       el.legend.innerHTML = shown.map(function (o) {
         var e = o.e;
         var win = winnerId === e.ch.id;
-        return '<li' + (win ? ' class="is-win"' : (e.ch.id === pick ? ' class="is-pick"' : '')) + '><span class="cmono" style="--c:' + e.ch.accent + ';--s:20px" data-len="' + GS.mono(e.ch).length + '" aria-hidden="true">' + U.esc(GS.mono(e.ch)) + '</span>' +
+        return '<li' + (win ? ' class="is-win"' : (e.ch.id === pick ? ' class="is-pick"' : '')) + '>' + GS.ui.mono(e.ch, 20) + '' +
           '<span>' + U.esc(e.ch.short) + (o.n > 1 ? ' × ' + o.n : '') + (field ? ' <b>' + core.fmtShare(e.tickets, tot) + '</b>' : '') + '</span></li>';
       }).join('') + (uniq.length > shown.length ? '<li class="rlegend__more">+ ' + (uniq.length - shown.length) + ' more</li>' : '');
     }

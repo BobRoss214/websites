@@ -268,7 +268,7 @@
     var shown = ordered.slice(0, 10);
     el.rank.innerHTML = shown.map(function (r) {
       return '<li' + (r.run.place === 1 ? ' class="is-win"' : '') + '><span class="rank__n">' + (r.run.place || '-') + '</span>' +
-        '<span class="cmono" style="--c:' + r.ch.accent + ';--s:24px" data-len="' + GS.mono(r.ch).length + '" aria-hidden="true">' + U.esc(GS.mono(r.ch)) + '</span><span class="rank__name">' + U.esc(r.ch.short) + '</span></li>';
+        '' + GS.ui.mono(r.ch, 24) + '<span class="rank__name">' + U.esc(r.ch.short) + '</span></li>';
     }).join('') + (ordered.length > 10 ? '<li class="rank__more">+ ' + (ordered.length - 10) + ' more</li>' : '');
   }
 

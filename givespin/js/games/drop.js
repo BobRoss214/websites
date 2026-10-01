@@ -45,7 +45,7 @@
     var cause = GS.cause(ch.causes[0]);
     var m = GS.mono(ch);
     return '<div class="dcard' + (ch.id === pick ? ' is-pick' : '') + '" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
-      '<span class="dcard__badge" data-len="' + m.length + '">' + U.esc(m) + '</span>' +
+      '<span class="dcard__badge' + (GS.ui.hasLogo(ch) ? ' is-logo' : '') + '" data-len="' + m.length + '" data-mono="' + U.esc(m) + '">' + GS.ui.monoInner(ch) + '</span>' +
       '<span class="dcard__name">' + U.esc(ch.short) + '</span>' +
       (field ? '<span class="dcard__odds">' + oddsOf(ch) + '</span>' : '<span class="dcard__cause">' + GS.icon(cause.icon) + U.esc(cause.name) + '</span>') +
       '</div>';

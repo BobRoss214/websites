@@ -14,11 +14,12 @@
   var CATS = [
     ['all', 'All games', 'lobby'],
     ['originals', 'Originals', 'lobby-originals'],
+    ['slots', 'Slots', 'lobby-slots'],
     ['table', 'Table games', 'lobby-table'],
     ['races', 'Races', 'lobby-races'],
     ['instant', 'Instant wins', 'lobby-instant']
   ];
-  var BY = { originals: 'GiveSpin Originals', table: 'GiveSpin Table', races: 'GiveSpin Races', instant: 'GiveSpin Instant' };
+  var BY = { originals: 'GiveSpin Originals', slots: 'GiveSpin Slots', table: 'GiveSpin Table', races: 'GiveSpin Races', instant: 'GiveSpin Instant' };
 
   var root = null;
   var cat = 'all';

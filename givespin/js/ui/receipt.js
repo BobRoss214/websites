@@ -44,9 +44,9 @@
     if (r.error) { return '<p class="vfy vfy--bad">' + ui.icon('triangle-alert') + '<span>This browser cannot run the check (it needs a secure page).</span></p>'; }
     function row(ok, label) { return '<li class="' + (ok ? 'is-ok' : 'is-bad') + '">' + ui.icon(ok ? 'circle-check' : 'circle-x') + '<span>' + esc(label) + '</span></li>'; }
     return '<ul class="vfy">' +
-      row(r.hashOk, r.hashOk ? 'The seed matches the hash shown before the round' : 'The seed does NOT match the hash shown before the round') +
+      row(r.hashOk, r.hashOk ? 'The secret number matches the fingerprint shown before the round (nobody swapped it)' : 'The secret number does NOT match the fingerprint shown before the round') +
       row(r.poolOk, r.poolOk ? (r.weighted ? 'The pot matches what was staked' : 'The same charities were on the board') : (r.weighted ? 'The pot does not match what was staked' : 'The charities on the board do not match')) +
-      row(r.winnersOk, r.winnersOk ? 'Recomputing the draws gives the same winners' : 'Recomputing the draws gives different winners') +
+      row(r.winnersOk, r.winnersOk ? 'Redoing the pick gives the same winners' : 'Redoing the pick gives different winners') +
     '</ul>';
   }
 
@@ -54,10 +54,10 @@
     if (!f || !f.roundSeed) { return ''; }
     return '<details class="rs-fair"><summary>' + ui.icon('shield-check') + 'Fair play details</summary>' +
       '<dl class="kv">' +
-        '<dt>Hash shown before the round</dt><dd class="mono">' + esc(f.serverHash) + '</dd>' +
-        '<dt>Round seed (revealed now)</dt><dd class="mono">' + esc(f.roundSeed) + '</dd>' +
-        '<dt>Your seed · round #</dt><dd class="mono">' + esc(f.clientSeed) + ' · ' + f.nonce + '</dd>' +
-        (f.board && f.board.length ? '<dt>Charities on the board</dt><dd>' + f.board.length + ' (the winner is drawn from these, each with equal odds)</dd>' : '') +
+        '<dt>Fingerprint shown before the round (hash)</dt><dd class="mono">' + esc(f.serverHash) + '</dd>' +
+        '<dt>Secret number, revealed now (seed)</dt><dd class="mono">' + esc(f.roundSeed) + '</dd>' +
+        '<dt>Your lucky number · round #</dt><dd class="mono">' + esc(f.clientSeed) + ' · ' + f.nonce + '</dd>' +
+        (f.board && f.board.length ? '<dt>Charities on the board</dt><dd>' + f.board.length + ' (the winner is picked from these, each with the same chance)</dd>' : '') +
       '</dl>' +
       '<div class="rs-fair__act"><button type="button" class="btn btn--sm" data-role="verify">' + ui.icon('refresh-cw') + 'Verify this round</button></div>' +
       '<div data-role="verify-out" aria-live="polite"></div>' +
@@ -81,7 +81,8 @@
     var allocs = round.allocs;
     var first = GS.charity(allocs[0].charityId);
     if (round.direct) { return 'You gave <em>' + money(round.cents, false) + '</em> to ' + esc(first.name); }
-    if (round.jackpot) { return 'JACKPOT! <em>' + money(round.cents, false) + '</em> all on ' + esc(first.short); }
+    if (round.jackpot && allocs.length === 1) { return 'JACKPOT! <em>' + money(round.cents, false) + '</em> all on ' + esc(first.short); }
+    if (round.jackpot && round.match && GS.charity(round.match.id)) { return 'TRIPLE THREAT! ' + esc(GS.charity(round.match.id).short) + ' landed <em>' + round.match.n + ' times</em>'; }
     if (allocs.length === 1) {
       return (round.rounds > 1 ? 'Every round landed on ' : '') + '<em>' + money(round.cents, false) + '</em> ' + (round.rounds > 1 ? 'for ' : 'goes to ') + esc(first.name);
     }

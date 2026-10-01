@@ -74,6 +74,52 @@
     return svg(out);
   };
 
+  /** A slot machine silhouette in a theme's colours: body, trim, window and three symbols (functions that draw at cx, cy). */
+  function machine(body, trim, win, lights, symbols, extra) {
+    var out = '<rect x="20" y="14" width="112" height="108" rx="14" fill="' + body + '" stroke="' + trim + '" stroke-width="3"/>';
+    for (var i = 0; i < 5; i++) { out += '<circle cx="' + (36 + i * 22) + '" cy="26" r="3.4" fill="' + lights[i % lights.length] + '"/>'; }
+    out += '<rect x="30" y="40" width="92" height="56" rx="8" fill="' + win + '"/><path d="M61 40v56M91 40v56" stroke="#0004" stroke-width="2"/>';
+    out += symbols(45.5, 68) + symbols(76, 68, 1) + symbols(106.5, 68, 2);
+    out += '<rect x="30" y="61" width="92" height="14" fill="none" stroke="' + GREEN + '" stroke-width="2.4" rx="2"/>';
+    out += '<rect x="42" y="104" width="68" height="9" rx="4.5" fill="#0006"/>';
+    out += '<path d="M138 46v36" stroke="#cfd8ff" stroke-width="6" stroke-linecap="round"/><circle cx="138" cy="40" r="9" fill="' + RED + '" stroke="#0007" stroke-width="2"/><circle cx="135" cy="37" r="2.6" fill="#ffd0d8"/>';
+    return out + (extra || '');
+  }
+
+  art.goldrush = function () {
+    var nugget = function (x, y, s, f) { return '<path transform="translate(' + x + ' ' + y + ') scale(' + s + ')" d="M-9 3-6-5 1-8 8-4 10 3 4 8-5 7Z" fill="' + f + '" stroke="#8a5a00" stroke-width="1.4" stroke-linejoin="round"/><path transform="translate(' + x + ' ' + y + ') scale(' + s + ')" d="M-4-2 0-4 3-1" fill="none" stroke="#fff6c0" stroke-width="1.6" stroke-linecap="round"/>'; };
+    var out = machine('#6b3f12', GOLD, '#fff1cc', [GOLD, '#ff9d2e'], function (x, y, k) { return k === 1 ? nugget(x, y, 1.45, '#ffd34d') : nugget(x, y, 1.15, '#ffbf2e'); },
+      '<g stroke="#e8d3a1" stroke-width="3.2" stroke-linecap="round"><path d="M10 124 36 98M36 124 10 98" transform="translate(110 -4)"/></g>');
+    return svg(out + sparkle(24, 24, 7, GOLD) + sparkle(142, 108, 5, '#fff'));
+  };
+
+  art.deepsea = function () {
+    var fish = function (x, y, k) {
+      var c = k === 1 ? '#ff8a3d' : '#35d4ff';
+      return '<ellipse cx="' + x + '" cy="' + y + '" rx="11" ry="7" fill="' + c + '"/><path d="M' + (x + 9) + ' ' + y + 'l9-7v14Z" fill="' + c + '"/><circle cx="' + (x - 5) + '" cy="' + (y - 1.5) + '" r="1.8" fill="#04243a"/><path d="M' + (x - 1) + ' ' + (y - 6) + 'q4-4 7-1" fill="none" stroke="#fff" stroke-width="1.4" opacity=".7"/>';
+    };
+    var out = machine('#0e6b8a', '#5eead4', '#d8f7ff', ['#5eead4', '#35d4ff'], function (x, y, k) { return k === 2 ? '<circle cx="' + x + '" cy="' + y + '" r="9" fill="#fff" stroke="#9adff0" stroke-width="2"/><circle cx="' + (x - 3) + '" cy="' + (y - 3) + '" r="3" fill="#fff" opacity=".9"/>' : fish(x - 2, y, k); });
+    return svg(out + '<circle cx="14" cy="102" r="5" fill="none" stroke="#9be7ff" stroke-width="2"/><circle cx="24" cy="86" r="3" fill="none" stroke="#9be7ff" stroke-width="2"/><circle cx="148" cy="64" r="4" fill="none" stroke="#9be7ff" stroke-width="2"/>');
+  };
+
+  art.sweets = function () {
+    var lolly = function (x, y, col) {
+      return '<path d="M' + x + ' ' + (y + 6) + 'v14" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="' + x + '" cy="' + (y - 2) + '" r="10" fill="' + col + '"/><path d="M' + x + ' ' + (y - 2) + 'm-6 0a6 6 0 1 1 6 6a3 3 0 1 1-3-3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>';
+    };
+    var wrap = function (x, y, col) {
+      return '<path d="M' + (x - 8) + ' ' + y + 'l-8-6v12ZM' + (x + 8) + ' ' + y + 'l8-6v12Z" fill="' + col + '"/><ellipse cx="' + x + '" cy="' + y + '" rx="10" ry="7" fill="' + col + '" stroke="#fff" stroke-width="1.6"/><path d="M' + (x - 5) + ' ' + (y - 3) + 'l4 6M' + x + ' ' + (y - 4) + 'l4 8" stroke="#fff" stroke-width="1.6" opacity=".8"/>';
+    };
+    var out = machine('#c13a9b', '#fff0f8', '#fff4fa', ['#ffe66d', '#fff'], function (x, y, k) { return k === 1 ? wrap(x, y, '#ff5d9e') : k === 2 ? lolly(x, y, '#9a7bff') : lolly(x, y, '#35d4ff'); });
+    return svg(out + sparkle(18, 30, 6, '#ffe66d') + sparkle(146, 118, 6, '#fff'));
+  };
+
+  art.cosmic = function () {
+    var planet = function (x, y) { return '<circle cx="' + x + '" cy="' + y + '" r="9" fill="#9a7bff"/><path d="M' + (x - 14) + ' ' + (y + 3) + 'q14-9 28-3" fill="none" stroke="#ffe66d" stroke-width="3" stroke-linecap="round"/><circle cx="' + (x - 3) + '" cy="' + (y - 3) + '" r="2.4" fill="#fff" opacity=".6"/>'; };
+    var out = machine('#1d1456', '#9be7ff', '#0b0a2a', ['#9be7ff', '#c4b5fd'], function (x, y, k) { return k === 1 ? star(x, y, 12, '#ffe66d') : k === 2 ? '<path d="M' + (x + 7) + ' ' + (y - 11) + 'a11 11 0 1 0 0 22a9 9 0 1 1 0-22Z" fill="#fff0b3"/>' : planet(x, y); });
+    out += '<circle cx="36" cy="46" r="1" fill="#fff"/><circle cx="64" cy="90" r="1" fill="#fff"/><circle cx="110" cy="48" r="1" fill="#fff"/><circle cx="96" cy="92" r="1" fill="#fff"/>';
+    return svg(out + sparkle(18, 118, 6, '#9be7ff') + sparkle(144, 20, 5, '#fff'));
+  };
+
   art.drop = function () {
     var out = '';
     for (var i = 0; i < 9; i++) {

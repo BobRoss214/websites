@@ -29,42 +29,6 @@
 @keyframes hub-pulse { 50% { box-shadow: 0 0 0 4px rgba(255, 197, 66, 0.9), 0 0 0 14px rgba(34, 240, 122, 0.12), 0 12px 28px -6px rgba(34, 240, 122, 0.6), inset 0 2px 0 rgba(255, 255, 255, 0.5); } }
 .wheel__hub:focus-visible { box-shadow: var(--ring), 0 0 0 4px rgba(255, 197, 66, 0.9); }
 
-/* ---------- Slot Machine ---------- */
-.slots { --rh: clamp(222px, 62vw, 282px); width: 100%; max-width: 540px; padding: 10px 2px 0; }
-.slots__machine { position: relative; border-radius: 26px; padding: 14px 46px 18px 14px; background: linear-gradient(180deg, #7a1d42 0%, #4a1029 45%, #2b0817 100%); border: 2px solid var(--gold); box-shadow: 0 34px 60px -26px rgba(0, 0, 0, 0.9), inset 0 2px 0 rgba(255, 255, 255, 0.25), inset 0 -14px 34px rgba(0, 0, 0, 0.4); }
-.slots__top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.slots__title { font: 800 1rem var(--f-display); letter-spacing: 0.32em; color: #ffe39a; white-space: nowrap; }
-.slots__lights { flex: 1; height: 9px; background: radial-gradient(circle at 50% 50%, #ffe39a 36%, transparent 42%) 0 50% / 18px 9px repeat-x; animation: bulbs 0.9s steps(1) infinite; }
-.slots__lights:last-child { animation-direction: reverse; }
-@keyframes bulbs { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-.slots__window { position: relative; border-radius: 16px; overflow: hidden; background: #060d13; border: 3px solid #1b0a12; box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 197, 66, 0.4); }
-.slots__reels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; background: #1b0a12; }
-.reel { position: relative; height: var(--rh); overflow: hidden; background: linear-gradient(180deg, #0b141c 0%, #19303f 50%, #0b141c 100%); }
-.reel::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(3, 8, 12, 0.8) 0%, transparent 28%, transparent 72%, rgba(3, 8, 12, 0.8) 100%); }
-.reel__strip { will-change: transform; }
-.sym { --c: #9bb3c0; height: calc(var(--rh) / 3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 6px 4px; text-align: center; transition: filter 0.25s, transform 0.25s; }
-.sym__badge { display: grid; place-items: center; width: clamp(40px, 11vw, 54px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 55%, color-mix(in srgb, var(--c) 65%, #000)); color: #0b1620; font: 800 clamp(0.95rem, 3.2vw, 1.25rem) var(--f-display); letter-spacing: -0.02em; box-shadow: 0 4px 14px -2px color-mix(in srgb, var(--c) 70%, transparent), inset 0 -3px 6px rgba(0, 0, 0, 0.25); }
-.sym__badge[data-len="3"] { font-size: clamp(0.8rem, 2.6vw, 1.05rem); }
-.sym__badge[data-len="4"], .sym__badge[data-len="5"] { font-size: clamp(0.66rem, 2.1vw, 0.85rem); }
-.sym__name { font-size: clamp(0.62rem, 1.9vw, 0.76rem); font-weight: 700; line-height: 1.15; color: #e6f1f6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; }
-.reel.is-hit .sym:nth-child(2) { transform: scale(1.08); }
-.reel.is-hit .sym:nth-child(2) .sym__badge { box-shadow: 0 0 0 3px #fff, 0 0 26px color-mix(in srgb, var(--c) 90%, transparent); }
-.slots__payline { position: absolute; left: 0; right: 0; top: 33.333%; height: 33.333%; pointer-events: none; border-block: 2px solid rgba(34, 240, 122, 0.9); background: linear-gradient(90deg, rgba(34, 240, 122, 0.12), transparent 18%, transparent 82%, rgba(34, 240, 122, 0.12)); }
-.slots__payline i { position: absolute; top: 50%; width: 0; height: 0; border: 9px solid transparent; translate: 0 -50%; }
-.slots__payline i:first-child { left: 0; border-left-color: var(--green); border-right-width: 0; }
-.slots__payline i:last-child { right: 0; border-right-color: var(--green); border-left-width: 0; }
-.slots__lever { position: absolute; right: 8px; top: 30%; width: 34px; height: 130px; padding: 0; border: 0; background: none; display: grid; justify-items: center; align-content: start; }
-.slots__knob { width: 30px; height: 30px; border-radius: 50%; z-index: 1; background: radial-gradient(circle at 32% 28%, #ff9ab3, #f43f5e 55%, #8a1432); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), 0 0 16px rgba(244, 63, 94, 0.6); transition: transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1); }
-.slots__arm { width: 9px; height: 84px; margin-top: -6px; border-radius: 5px; background: linear-gradient(90deg, #8aa3b1, #e6f1f6 45%, #6a8393); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); transform-origin: top; transition: transform 0.18s; }
-.slots__lever:hover:not(:disabled) .slots__knob { filter: brightness(1.15); }
-.slots__machine.is-pulled .slots__knob { transform: translateY(66px); }
-.slots__machine.is-pulled .slots__arm { transform: scaleY(0.2); }
-.slots__lever:disabled { cursor: not-allowed; filter: saturate(0.5); }
-.slots__machine.is-jackpot { animation: jackpot-flash 0.5s ease-in-out 6; }
-.slots__machine.is-jackpot .slots__title { animation: jackpot-shake 0.25s linear 12; }
-@keyframes jackpot-flash { 50% { box-shadow: 0 0 0 4px var(--gold), 0 0 60px 6px rgba(255, 197, 66, 0.7), 0 34px 60px -26px rgba(0, 0, 0, 0.85); } }
-@keyframes jackpot-shake { 25% { transform: translateX(-2px) rotate(-1deg); } 75% { transform: translateX(2px) rotate(1deg); } }
-
 /* ---------- Drop Crate ---------- */
 .drop { width: 100%; display: grid; gap: 16px; justify-items: center; }
 .drop__view { position: relative; width: 100%; height: 232px; overflow: hidden; border-radius: 18px; background: linear-gradient(180deg, #08121a, #10202c); border: 1px solid var(--line-2); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.6); }
@@ -267,16 +231,12 @@
 /* ---------- small screens ---------- */
 @media (max-width: 560px) {
   .wheel-stage { padding-top: 38px; }
-  .slots__machine { padding: 10px 40px 14px 10px; border-radius: 22px; }
-  .slots__title { font-size: 0.8rem; letter-spacing: 0.22em; }
-  .slots__lever { right: 4px; }
   .drop__view { height: 208px; }
   .dcard { height: 164px; }
   .dcard__badge { width: 48px; font-size: 1.1rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wheel:not(.is-busy) .wheel__hub, .slots__lights { animation: none; }
-  .slots__machine.is-jackpot, .slots__machine.is-jackpot .slots__title { animation: none; }
+  .wheel:not(.is-busy) .wheel__hub { animation: none; }
 }
 
 /* ---------- crowd races (duck, marble, balloon) ---------- */

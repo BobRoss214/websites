@@ -50,7 +50,7 @@
     var label = side === 'top' ? 'Heads' : 'Tails';
     if (!ch) { return '<div class="slot is-empty" data-side="' + side + '"><span class="slot__side" title="' + label + '">' + GS.icon(icon) + '</span><span class="slot__name">To be decided</span></div>'; }
     return '<div class="slot' + (ch.id === pick ? ' is-pick' : '') + '" data-side="' + side + '" data-id="' + ch.id + '" title="' + U.esc(ch.name) + '" style="--c:' + ch.accent + '"><span class="slot__side" title="' + label + '">' + GS.icon(icon) + '</span>' +
-      '<span class="cmono" style="--c:' + ch.accent + ';--s:' + (compact() ? 22 : 26) + 'px" data-len="' + GS.mono(ch).length + '" aria-hidden="true">' + U.esc(GS.mono(ch)) + '</span><span class="slot__name">' + U.esc(ch.short) + '</span></div>';
+      GS.ui.mono(ch, compact() ? 22 : 26) + '<span class="slot__name">' + U.esc(ch.short) + '</span></div>';
   }
 
   function renderBracket() {

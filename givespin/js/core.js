@@ -346,7 +346,7 @@
   function xpForPlay(cents, rounds, isJackpot) {
     var dollars = Math.min(cents / 100, 200);
     var xp = 20 + Math.round(dollars * 1.5);
-    if (rounds > 1) { xp += 10 * (rounds - 1); }
+    if (rounds > 1) { xp += 10 * (Math.min(rounds, 10) - 1); }
     if (isJackpot) { xp += 75; }
     return xp;
   }

@@ -28,6 +28,20 @@
   var OPEN_MS = 28000;
   var LOCK_MS = 2600;
   var RESULT_MS = 10000;
+  // Live Plinko comes in tables of different sizes. Players back charities (the gates); the bins that are left over are
+  // filled in from the catalog so the board is always exactly `size` bins. Only backed charities are in the draw.
+  var TABLES = {
+    plinko: [
+      { size: 5,    name: 'Mini',    gates: 5,  bots: 1,   play: 6500 },
+      { size: 10,   name: 'Small',   gates: 8,  bots: 1.2, play: 8500 },
+      { size: 25,   name: 'Classic', gates: 12, bots: 1.6, play: 12500 },
+      { size: 50,   name: 'High',    gates: 16, bots: 2.1, play: 13000 },
+      { size: 100,  name: 'Big',     gates: 20, bots: 2.7, play: 13500 },
+      { size: 200,  name: 'Giant',   gates: 24, bots: 3.3, play: 14500 },
+      { size: 1000, name: 'Mega',    gates: 30, bots: 4.2, play: 30000 }
+    ]
+  };
+  var DEFAULT_TABLE = { plinko: 10 };      // the table the lobby strip and #live-plinko open
   var PLAY_MS = { derby: 13000, duck: 13000, marble: 14000, balloon: 13000, standing: 11000, roulette: 11000, wheel: 9500, plinko: 9500, drop: 8500, lotto: 10500 };
   var STAKES = [[5, 30], [10, 28], [20, 22], [50, 12], [100, 6], [250, 2]];   // [dollars, weight] for bots
   var HANDLES = [
@@ -107,19 +121,33 @@
     return items[items.length - 1];
   }
 
-  function pool(ev) {
+  function pool(ev, need) {
+    need = Math.max(need || 0, MAX_GATES);
     if (ev && ev.causes) {
       var themed = GS.charities.filter(function (c) { return c.causes.some(function (x) { return ev.causes.indexOf(x) >= 0; }); });
-      if (themed.length >= 12) { return themed; }
+      if (themed.length >= Math.max(12, need)) { return themed; }
     }
     var p = GS.app && GS.app.state && GS.app.state.pool;
-    return p && p.length >= MAX_GATES ? p : GS.charities;
+    return p && p.length >= need ? p : GS.charities;
+  }
+
+  /** The charities that fall off the bottom of a heavy tail: 1, 0.8, 0.64 ... (a few charities are much more popular than the rest). */
+  function popularity(n) {
+    var w = [];
+    for (var i = 0; i < n; i++) { w.push(Math.max(0.05, Math.pow(0.8, i))); }
+    return w;
   }
 
   /* ------------------------------------------------------------------ room */
 
-  function Room(id) {
-    this.id = id;
+  function Room(id, gid, tab) {
+    this.id = id;                              // the table: "plinko25", or the game's own id
+    this.gid = gid || id;                      // the game it plays
+    this.tab = tab || null;                    // a table size, for games that have several
+    this.size = tab ? tab.size : 0;            // bins on the board (sized tables only)
+    this.maxGates = tab ? tab.gates : MAX_GATES;
+    this.filler = [];                          // the catalog in a random order: what fills the bins nobody backed
+    this._board = null;
     this.round = 0;
     this.phase = 'idle';
     this.phaseStart = 0;
@@ -147,7 +175,37 @@
 
   var R = Room.prototype;
 
-  R.game = function () { return GS.games[this.id]; };
+  R.game = function () { return GS.games[this.gid]; };
+
+  /** "Plinko · Big · 100 bins" for a sized table, the game's name otherwise. */
+  R.title = function () {
+    var g = this.game();
+    return this.tab ? g.name + ' · ' + this.tab.name + ' · ' + this.size.toLocaleString('en-US') + ' bins' : g.name;
+  };
+
+  /**
+   * The board for a sized table: every charity somebody has backed, then charities from the catalog to fill the rest.
+   * Only backed charities have tickets, so only they can win; the others are there to fill the board. When the catalog
+   * is smaller than the board, charities repeat (evenly). The layout is stable for the round, so bins do not jump around.
+   */
+  R.boardInfo = function () {
+    var self = this;
+    if (!self.size) { return null; }
+    var backed = self.field().map(function (f) { return f.charity; });
+    var key = self.round + ':' + backed.map(function (c) { return c.id; }).sort().join(',');
+    if (self._board && self._board.key === key) { return self._board; }
+    var have = {};
+    backed.forEach(function (c) { have[c.id] = true; });
+    var distinct = backed.slice();
+    for (var i = 0; i < self.filler.length && distinct.length < self.size; i++) {
+      var c = self.filler[i];
+      if (!have[c.id]) { have[c.id] = true; distinct.push(c); }
+    }
+    var spots = distinct.length >= self.size ? distinct.slice(0, self.size) : core.fillSlots(distinct, self.size);
+    spots = core.seededShuffle(spots, 'board:' + self.id + ':' + self.round);
+    self._board = { key: key, spots: spots, size: self.size, backed: backed.length, fillers: Math.max(0, Math.min(self.size, distinct.length) - backed.length), distinct: distinct.length };
+    return self._board;
+  };
 
   /** Dollars in the pot. */
   R.pot = function () {
@@ -161,8 +219,8 @@
     return Object.keys(self.seats).reduce(function (s, k) { return s + self.seats[k].bots; }, 0);
   };
   R.players = function () { return this.botCount() + (this.you ? 1 : 0); };
-  R.gatesOpen = function () { return MAX_GATES - this.distinct(); };
-  R.canAdd = function (charityId) { return !!this.seats[charityId] || this.distinct() < MAX_GATES; };
+  R.gatesOpen = function () { return this.maxGates - this.distinct(); };
+  R.canAdd = function (charityId) { return !!this.seats[charityId] || this.distinct() < this.maxGates; };
 
   /** Time left in this phase, in ms. */
   R.msLeft = function () { return Math.max(0, this.phaseStart + this.phaseMs - Date.now()); };
@@ -229,6 +287,8 @@
     self.commit = null;
     self.pred = {};
     self.lastCall = false;
+    self._board = null;
+    self.filler = self.size ? core.shuffle(GS.charities.slice()) : [];
     self.chat = { on: !!(self.chat && self.chat.on), votes: {}, lead: '' };
     self.phaseMs = OPEN_MS * scale();
     self.phaseStart = Date.now() - frac * self.phaseMs;
@@ -247,11 +307,12 @@
     }
 
     // who is at the table this round: a slate of 4 to 7 charities, some much more popular than others
-    var slateN = 4 + core.randomInt(4);
-    self.slate = core.sampleSubset(pool(ev), slateN);
-    var weights = [1, 0.75, 0.55, 0.4, 0.3, 0.22, 0.16].slice(0, slateN);
+    var slateN = self.tab ? Math.max(3, Math.min(self.maxGates - 1, Math.round(self.maxGates * core.randomRange(0.5, 0.85)))) : 4 + core.randomInt(4);
+    self.slate = core.sampleSubset(pool(ev, slateN), slateN);
+    var weights = popularity(slateN);
     var hot = core.randomFloat() < 0.18 || (ev && ev.match) || self.jackpot ? 1.8 : 1;
-    var nBots = Math.max(6, Math.min(26, Math.round(core.randomRange(7, 16) * hot)));
+    var botMul = self.tab ? self.tab.bots : 1;
+    var nBots = Math.max(6, Math.min(self.tab ? 120 : 26, Math.round(core.randomRange(7, 16) * hot * botMul)));
     var plan = [];
     for (var i = 0; i < nBots; i++) {
       var late = i >= nBots - 2 && core.randomFloat() < 0.6;
@@ -284,7 +345,7 @@
     var self = this;
     var left = self.phaseMs * (1 - (frac || 0));
     var ticks = Math.max(4, Math.round(left / (1400 * scale())));
-    var w = [1, 0.8, 0.6, 0.45, 0.3, 0.2, 0.15].slice(0, self.slate.length);
+    var w = popularity(self.slate.length);
     for (var i = 0; i < ticks; i++) {
       self._later(function () {
         if (self.phase !== 'open' || !self.chat.on) { return; }
@@ -363,7 +424,7 @@
   R.play = function () {
     var self = this;
     self.phase = 'playing';
-    self.playMs = (PLAY_MS[self.id] || 10000) * scale();
+    self.playMs = ((self.tab ? self.tab.play : PLAY_MS[self.gid]) || 10000) * scale();
     self.phaseMs = self.playMs;
     self.phaseStart = Date.now();
     emit('phase', self);
@@ -389,7 +450,7 @@
     // what the (simulated) sponsor and the progressive jackpot add on top of the stakes
     var matchBonus = self.match ? Math.min(self.match.cap, Math.floor(pot * self.match.ratio)) : 0;
     var result = {
-      round: self.round, game: self.id, winnerId: winner.id, winner: winner, pot: pot, players: self.players(), bots: self.botCount(),
+      round: self.round, game: self.gid, table: self.id, size: self.size, board: self.size ? { size: self.size, backed: self.distinct(), fillers: Math.max(0, self.size - self.distinct()) } : null, winnerId: winner.id, winner: winner, pot: pot, players: self.players(), bots: self.botCount(),
       winShare: pot ? winTickets / pot : 0, leaderId: self.leaderId, closeCall: closeCall(self.weights, self.draw.ticket),
       bonus: { match: matchBonus, matchWhy: self.match ? self.match.why : '', jackpot: self.jackpot, total: matchBonus + self.jackpot },
       event: self.event ? self.event.name : '',
@@ -422,7 +483,7 @@
       var receipt = core.receiptId();
       var bonusXp = won ? 30 + Math.min(50, Math.floor(pot / 20)) : 0;
       var summary = store.recordPlay({
-        game: self.id, totalCents: cents, rounds: 1, jackpot: false, status: 'demo', receipt: receipt, pay: 'credit', stream: false, direct: false,
+        game: self.gid, totalCents: cents, rounds: 1, jackpot: false, status: 'demo', receipt: receipt, pay: 'credit', stream: false, direct: false,
         freq: 'once', dedication: null, bonusXp: bonusXp,
         fair: result.fair ? {
           roundSeed: result.fair.roundSeed, serverHash: result.fair.serverHash, clientSeed: result.fair.clientSeed, nonce: result.fair.nonce, poolHash: result.fair.poolHash,
@@ -464,7 +525,7 @@
     var ch = GS.charity(charityId);
     if (!ch) { return fail('charity', 'Pick a charity first.'); }
     if (!self.canAdd(charityId)) { return fail('full', 'Every gate at this table is taken. Back one of the charities already here, or wait for the next round.'); }
-    if (!store.placeStake(dollars * 100, self.id)) { return fail('credit', 'Not enough demo credit for that.'); }
+    if (!store.placeStake(dollars * 100, self.gid)) { return fail('credit', 'Not enough demo credit for that.'); }
     var seat = self.seats[charityId] || (self.seats[charityId] = { charity: ch, tickets: 0, bots: 0, you: 0 });
     seat.tickets += dollars;
     seat.you += dollars;
@@ -486,7 +547,7 @@
       seat.you -= self.you.dollars;
       if (seat.tickets <= 0) { delete self.seats[self.you.charityId]; }
     }
-    store.refundStake(self.you.dollars * 100, self.id);
+    store.refundStake(self.you.dollars * 100, self.gid);
     self._note({ kind: 'cancel', who: 'you', name: 'You', dollars: self.you.dollars, charityId: self.you.charityId });
     self.you = null;
     GS.bus.emit('balance');
@@ -502,9 +563,18 @@
     return ids.filter(function (id) { var g = GS.games[id]; return g && g.live && typeof g.setField === 'function' && typeof g.playLive === 'function'; });
   }
 
+  /** "plinko" means the default Plinko table. */
+  function resolve(id) {
+    if (rooms[id]) { return id; }
+    if (DEFAULT_TABLE[id] && rooms[id + DEFAULT_TABLE[id]]) { return id + DEFAULT_TABLE[id]; }
+    return id;
+  }
+
   GS.live = {
     PRESETS: PRESETS,
     MAX_GATES: MAX_GATES,
+    TABLES: TABLES,
+    resolve: resolve,
     DEFAULT_STAKE: 20,
 
     /** Live tables only run in demo mode: a shared pot needs a server and real money never touches this site. */
@@ -515,18 +585,31 @@
       if (started || !GS.live.enabled()) { return 0; }
       started = true;
       var refunded = store.refundPending();
-      order = liveIds();
-      order.forEach(function (id) {
-        rooms[id] = new Room(id);
-        rooms[id].openRound(core.randomRange(0.05, 0.85));
+      order = [];
+      liveIds().forEach(function (gid) {
+        var tabs = TABLES[gid];
+        if (tabs) {
+          tabs.forEach(function (tab) {
+            var rid = gid + tab.size;
+            rooms[rid] = new Room(rid, gid, tab);
+            order.push(rid);
+          });
+        } else { rooms[gid] = new Room(gid, gid, null); order.push(gid); }
       });
+      order.forEach(function (id) { rooms[id].openRound(core.randomRange(0.05, 0.85)); });
       return refunded;
     },
 
     ids: function () { return order.slice(); },
-    supports: function (id) { return !!rooms[id]; },
-    room: function (id) { return rooms[id] || null; },
+    supports: function (id) { return !!rooms[resolve(id)]; },
+    room: function (id) { return rooms[resolve(id)] || null; },
     rooms: function () { return order.map(function (id) { return rooms[id]; }); },
+    /** The tables of one game, smallest first (just the one table for most games). */
+    tables: function (gid) { return order.filter(function (id) { return rooms[id].gid === gid; }).map(function (id) { return rooms[id]; }); },
+    /** One table per game: the default one for games that have several. */
+    primaryRooms: function () {
+      return order.filter(function (id) { var r = rooms[id]; return !r.tab || r.size === DEFAULT_TABLE[r.gid]; }).map(function (id) { return rooms[id]; });
+    },
     /** Tables where you have a bet on the current round. */
     yourBets: function () { return GS.live.rooms().filter(function (r) { return !!r.you && r.phase !== 'result'; }); },
     sentThisSession: function () { return totals.sent; },

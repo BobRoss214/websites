@@ -55,11 +55,16 @@
   /* ------------------------------------------------------- cards (page + strip) */
 
   function cardHTML(room, compact) {
-    var g = GS.games[room.id];
-    return '<a class="lcard' + (compact ? ' lcard--compact' : '') + '" href="#live-' + room.id + '" data-room="' + room.id + '" data-game="' + room.id + '">' +
-      '<span class="lcard__art">' + GS.art[room.id]('lc') + '</span>' +
+    var g = room.game();
+    var sized = !!room.tab && !compact;
+    var art = sized
+      ? '<span class="lcard__art lcard__size"><b>' + room.size.toLocaleString('en-US') + '</b><small>bins</small></span>'
+      : '<span class="lcard__art">' + GS.art[room.gid]('lc') + '</span>';
+    var name = sized ? room.tab.name + ' table' : room.title();
+    return '<a class="lcard' + (compact ? ' lcard--compact' : '') + (sized ? ' lcard--table' : '') + '" href="#live-' + room.id + '" data-room="' + room.id + '" data-game="' + room.gid + '">' +
+      art +
       '<span class="lcard__body">' +
-        '<span class="lcard__top"><b class="lcard__name">' + esc(g.name) + '</b><span class="phasepill" data-f="phase"></span></span>' +
+        '<span class="lcard__top"><b class="lcard__name">' + esc(name) + '</b><span class="phasepill" data-f="phase"></span></span>' +
         '<span class="lcard__stats"><span data-f="pot"></span><span data-f="players"></span></span>' +
         '<span class="stack" data-f="stack" aria-hidden="true"></span>' +
         '<span class="lcard__lead" data-f="lead"></span>' +
@@ -95,6 +100,19 @@
       'Only your own stake (demo credit) is yours. Real multiplayer tables would need a server, so they are not switched on yet.</div></aside>';
   }
 
+  /** Games with several tables (live Plinko) get their own lobby: pick how big the board is. */
+  function tableSections() {
+    var gids = [];
+    GS.live.rooms().forEach(function (r) { if (r.tab && gids.indexOf(r.gid) < 0) { gids.push(r.gid); } });
+    return gids.map(function (gid) {
+      var g = GS.games[gid];
+      var tabs = GS.live.tables(gid);
+      return '<section class="sect" aria-labelledby="lv-t-' + gid + '"><div class="sect__head"><h2 class="sect__t" id="lv-t-' + gid + '">Live ' + esc(g.name) + ': choose your table</h2></div>' +
+        '<p class="tabnote tabnote--tables">' + tabs.length + ' tables, from ' + tabs[0].size + ' bins to ' + tabs[tabs.length - 1].size.toLocaleString('en-US') + '. Each one has its own pot and its own players. The charities players back go on the board, and the rest of the bins are filled in at random from our catalog so the board is always full; only the backed charities can win. Bigger tables have more gates and more players, and the biggest drop takes about half a minute.</p>' +
+        '<div class="lcards lcards--tables" data-role="tables">' + tabs.map(function (r) { return cardHTML(r, false); }).join('') + '</div></section>';
+    }).join('');
+  }
+
   function buildPage() {
     var root = $('#view-live');
     root.innerHTML =
@@ -104,11 +122,12 @@
       banner() +
       '<div class="evbar" data-role="evbar"></div>' +
       '<nav class="quicklinks" aria-label="More ways to play"><a class="btn btn--sm" href="#leagues">' + ui.icon('trophy') + 'Leagues and the Charity Cup</a><a class="btn btn--sm" href="#crews">' + ui.icon('users') + 'Crews</a><a class="btn btn--sm" href="#cards">' + ui.icon('layers') + 'Your cards</a></nav>' +
-      '<div class="lcards" data-role="cards">' + GS.live.rooms().map(function (r) { return cardHTML(r, false); }).join('') + '</div>' +
+      '<div class="lcards" data-role="cards">' + GS.live.rooms().filter(function (r) { return !r.tab; }).map(function (r) { return cardHTML(r, false); }).join('') + '</div>' +
+      tableSections() +
       '<section class="sect" aria-labelledby="lv-recent"><div class="sect__head"><h2 class="sect__t" id="lv-recent">Pots that just went out</h2></div><div data-role="recent"></div></section>' +
       '<section class="sect panel" aria-labelledby="lv-how"><h2 class="sect__t" id="lv-how">How a live table works</h2>' +
         '<ol class="steps3 steps3--live">' +
-          '<li><b>1. Back a charity</b><span>Stake $5, $10, $20, $50, $100 or any amount. Back a charity that is already at the table or open a gate for a new one (up to ' + GS.live.MAX_GATES + ' charities per table).</span></li>' +
+          '<li><b>1. Back a charity</b><span>Stake $5, $10, $20, $50, $100 or any amount. Back a charity that is already at the table or open a gate for a new one (up to ' + GS.live.MAX_GATES + ' charities per table, more at the big Plinko tables).</span></li>' +
           '<li><b>2. Watch the odds move</b><span>The board shows who has backed what and each charity’s chance. Change your mind or take your bet back until the table locks.</span></li>' +
           '<li><b>3. One charity takes the pot</b><span>The draw is fair and checkable. The race, wheel or drop plays out, and the winner gets every dollar in the pot. It is as if your charity won, even if you backed another one.</span></li>' +
         '</ol></section>';
@@ -120,16 +139,16 @@
     var box = $('[data-role="recent"]', $('#view-live'));
     if (!box) { return; }
     var all = [];
-    GS.live.rooms().forEach(function (r) { r.history.forEach(function (h) { all.push({ room: r.id, h: h }); }); });
+    GS.live.rooms().forEach(function (r) { r.history.forEach(function (h) { all.push({ room: r.gid, id: r.id, h: h }); }); });
     all.sort(function (a, b) { return b.h.ts - a.h.ts; });
     all = all.slice(0, 8);
-    var sig = all.map(function (x) { return x.room + x.h.round; }).join();
+    var sig = all.map(function (x) { return x.id + x.h.round; }).join();
     if (box._sig === sig) { return; }
     box._sig = sig;
     box.innerHTML = all.length ? '<ol class="histlist">' + all.map(function (x) {
       var ch = GS.charity(x.h.winnerId);
       return '<li class="hist"><span class="hist__game">' + ui.icon(ui.gameIcon(x.room)) + '</span><div><div class="hist__main">' + esc(ch.name) + ' took the pot</div>' +
-        '<div class="hist__sub">' + esc(ui.gameName(x.room)) + ' · round ' + x.h.round + ' · ' + x.h.players + ' players' + (x.h.youPlayed ? (x.h.youWon ? ' · you backed it' : ' · you were in') : ' · simulated bots') + '</div></div>' +
+        '<div class="hist__sub">' + esc(GS.live.room(x.id).title()) + ' · round ' + x.h.round + ' · ' + x.h.players + ' players' + (x.h.youPlayed ? (x.h.youWon ? ' · you backed it' : ' · you were in') : ' · simulated bots') + '</div></div>' +
         '<span class="hist__amt">' + dollars(x.h.pot) + '</span></li>';
     }).join('') + '</ol>' : '<p class="empty">Finished pots will show up here as tables settle. Each one went to a single charity.</p>';
   }
@@ -159,7 +178,7 @@
   /* ------------------------------------------------------------ lobby strip */
 
   function stripFill(box) {
-    var rooms = GS.live.rooms().slice().sort(function (a, b) {
+    var rooms = GS.live.primaryRooms().slice().sort(function (a, b) {
       var ao = a.phase === 'open' ? 1 : 0, bo = b.phase === 'open' ? 1 : 0;
       return bo - ao || b.pot() - a.pot();
     }).slice(0, 4);
@@ -188,6 +207,7 @@
     panel = $('#livepanel');
     panel.innerHTML =
       '<h2 class="bet__title" id="lt-title">Live table <span class="livepill"><i aria-hidden="true"></i>Live</span></h2>' +
+      '<nav class="tablebar" data-role="tablebar" aria-label="Table size" hidden></nav>' +
       '<p class="simnote">' + ui.icon('bot') + '<span><b>Simulated table.</b> The other players are bots standing in for real people. <a href="#help-live">How it works</a></span></p>' +
       '<div class="lt-status"><div class="lt-status__row"><span class="lt-phase" data-role="phase"></span><span class="lt-clock" data-role="clock"></span></div>' +
         '<div class="lt-bar" aria-hidden="true"><i data-role="bar"></i></div></div>' +
@@ -208,7 +228,7 @@
     ui.hydrate(panel);
     el = {
       phase: $('[data-role="phase"]', panel), clock: $('[data-role="clock"]', panel), bar: $('[data-role="bar"]', panel), chips: $('[data-role="chips"]', panel),
-      pot: $('[data-role="pot"]', panel), players: $('[data-role="players"]', panel), gates: $('[data-role="gates"]', panel),
+      tablebar: $('[data-role="tablebar"]', panel), pot: $('[data-role="pot"]', panel), players: $('[data-role="players"]', panel), gates: $('[data-role="gates"]', panel),
       stake: $('#lt-stake', panel), custom: $('#lt-custom', panel), odds: $('[data-role="odds"]', panel), oddsHint: $('[data-role="oddshint"]', panel),
       add: $('[data-role="add"]', panel), join: $('[data-role="join"]', panel), joinLabel: $('[data-role="join-label"]', panel), joinSub: $('[data-role="join-sub"]', panel),
       msg: $('[data-role="msg"]', panel), result: $('#lt-result'), stagebar: $('#lt-stagebar'),
@@ -376,7 +396,7 @@
     var gates = room.gatesOpen();
     el.add.hidden = !open || gates <= 0;
     el.oddsHint.textContent = (pot ? 'Every dollar is a ticket: a charity’s share of the pot is its chance of winning. ' : '') +
-      room.distinct() + ' of ' + GS.live.MAX_GATES + ' gates used' + (open ? (gates > 0 ? ', ' + gates + ' open for a new charity.' : '. The table is full: back one of these.') : '.');
+      room.distinct() + ' of ' + room.maxGates + ' gates used' + (open ? (gates > 0 ? ', ' + gates + ' open for a new charity.' : '. The table is full: back one of these.') : '.');
   }
 
   function renderJoin() {
@@ -423,7 +443,7 @@
     el.bar.parentNode.className = 'lt-bar is-' + room.phase + (last ? ' is-last' : '');
     el.pot.textContent = dollars(room.pot());
     el.players.textContent = String(room.players());
-    el.gates.textContent = room.distinct() + '/' + GS.live.MAX_GATES;
+    el.gates.textContent = room.distinct() + '/' + room.maxGates;
     if (room.phase === 'open' && room.you) { el.joinSub.textContent = dollars(room.you.dollars) + ' on ' + GS.charity(room.you.charityId).short + ' · bets close in ' + clock(left); }
     if (el.stagebar) {
       el.stagebar.innerHTML = '<span class="lt-stagebar__a"><b>Round ' + room.round + '</b> · ' + esc(txt) + (room.phase === 'open' || room.phase === 'result' ? ' <b>' + clock(left) + '</b>' : '') + '</span>' +
@@ -489,9 +509,9 @@
     var f = r.fair;
     var fairBits = f
       ? '<details class="rs-fair"><summary>' + ui.icon('shield-check') + 'Fair play details</summary><dl class="kv">' +
-          '<dt>Hash shown when the round opened</dt><dd class="mono">' + esc(f.serverHash) + '</dd>' +
-          '<dt>Round seed (revealed now)</dt><dd class="mono">' + esc(f.roundSeed) + '</dd>' +
-          '<dt>Your seed · round #</dt><dd class="mono">' + esc(f.clientSeed) + ' · ' + f.nonce + '</dd>' +
+          '<dt>Fingerprint shown when the round opened (hash)</dt><dd class="mono">' + esc(f.serverHash) + '</dd>' +
+          '<dt>Secret number, revealed now (seed)</dt><dd class="mono">' + esc(f.roundSeed) + '</dd>' +
+          '<dt>Your lucky number · round #</dt><dd class="mono">' + esc(f.clientSeed) + ' · ' + f.nonce + '</dd>' +
           '<dt>Pot at the lock (charity: tickets)</dt><dd class="mono">' + esc(f.weights.map(function (w) { return w[0] + ': ' + w[1]; }).join(', ')) + '</dd>' +
           '<dt>Winning ticket</dt><dd class="mono">#' + (f.ticket + 1) + ' of ' + r.pot + '</dd></dl>' +
           '<div class="rs-fair__act"><button type="button" class="btn btn--sm" data-role="verify">' + ui.icon('refresh-cw') + 'Verify this round</button></div><div data-role="verify-out" aria-live="polite">' + verifyOut + '</div></details>'
@@ -579,7 +599,7 @@
     var list = entrants(cur.room);
     if (list.length < 2) { return; }
     var g = GS.games[cur.id];
-    g.setField(list);
+    g.setField(list, cur.room.boardInfo());
     g.lock(false);
   }
 
@@ -610,7 +630,12 @@
     room.hold(p);
     function done() {
       animating[id] = false;
-      if (cur && cur.id === id) { renderAll(); if (cur.room.phase === 'result') { celebrate(); } }
+      if (cur && cur.id === id) {
+        // you hopped to another table of this game while the drop played: show that table now
+        if (cur.room !== room) { if (cur.room.phase === 'playing') { startAnimation(0); return; } setFieldNow(); }
+        renderAll();
+        if (cur.room.phase === 'result' && cur.room === room) { celebrate(); }
+      }
       else { g.clearField(); }
     }
     p.then(done, done);
@@ -656,7 +681,9 @@
     var room = GS.live.room(id);
     if (!room) { return; }
     ensurePanel();
+    id = room.gid;                 // `cur.id` is the game; the table is `cur.room`
     cur = { id: id, room: room };
+    renderTableBar(room);
     stake = store.prefs().liveStake || 20;
     verifyOut = '';
     $('#lt-stagebar').hidden = false;
@@ -674,11 +701,22 @@
     clockTimer = setInterval(function () { if (cur && !document.hidden) { renderClock(); } }, 250);
   }
 
+  /** For games with several tables: hop between them without going back to the lobby. */
+  function renderTableBar(room) {
+    if (!room.tab) { el.tablebar.hidden = true; el.tablebar.innerHTML = ''; return; }
+    el.tablebar.hidden = false;
+    el.tablebar.innerHTML = '<span class="tablebar__l">Table size <small>(bins)</small></span>' + GS.live.tables(room.gid).map(function (t) {
+      return '<a class="tbtn' + (t.id === room.id ? ' is-on' : '') + '" href="#live-' + t.id + '"' + (t.id === room.id ? ' aria-current="page"' : '') + ' aria-label="' + esc(t.tab.name + ' table, ' + t.size + ' bins') + '">' + t.size.toLocaleString('en-US') + '</a>';
+    }).join('');
+  }
+
   function detach() {
     clearInterval(clockTimer);
     clearTimeout(fieldTimer);
     fieldTimer = 0;
     if (cur) {
+      // leaving a table whose drop is still playing (one canvas serves every Plinko table): stop that drop
+      if (animating[cur.id] && GS.games[cur.id].abort) { GS.games[cur.id].abort(); }
       if (!animating[cur.id]) { GS.games[cur.id].clearField(); }
       var sb = $('#lt-stagebar');
       if (sb) { sb.hidden = true; }
@@ -726,7 +764,10 @@
 
   function renderAbout() {
     var g = GS.games[cur.id];
-    return '<div class="about"><p><b>Live ' + esc(g.name) + '.</b> A table opens every few seconds. Everyone at it backs a charity with a stake, and every dollar is a ticket in a draw, so a charity with 30% of the pot wins 30% of the time. ' +
+    var tableNote = cur.room.tab
+      ? '<p><b>This table: ' + esc(cur.room.tab.name) + ', ' + cur.room.size.toLocaleString('en-US') + ' bins.</b> Up to ' + cur.room.maxGates + ' different charities can be backed here. Every charity somebody backs gets a bin; the remaining bins are filled in at random from our catalog so the board is always ' + cur.room.size.toLocaleString('en-US') + ' bins. Only backed charities hold tickets, so only they can win; the others are scenery. If the catalog has fewer charities than bins, charities repeat evenly.</p>'
+      : '';
+    return '<div class="about">' + tableNote + '<p><b>Live ' + esc(g.name) + '.</b> A table opens every few seconds. Everyone at it backs a charity with a stake, and every dollar is a ticket in a draw, so a charity with 30% of the pot wins 30% of the time. ' +
       'Whichever charity is drawn gets the <b>whole pot</b>, whether you backed it or not.</p>' +
       '<p><b>Where does your stake go?</b> Always to the charity that wins the table, never to a prize for players. If your charity loses, your stake still lands on the winner, so every round is a win for someone.</p>' +
       '<p><b>Are the other players real?</b> Not yet. They are bots standing in for a real multiplayer table, and their stakes are simulated. A real launch would run tables on a server.</p>' +
@@ -769,7 +810,7 @@
       var room = e.room;
       if (e.type === 'result' && room.result && room.result.you && !(cur && cur.room === room)) {
         var r = room.result;
-        ui.toast(GS.games[room.id].name + ': ' + r.winner.short + ' took the ' + dollars(r.pot) + ' pot. ' + (r.you.won ? 'Your pick won!' : 'Your ' + dollars(r.you.dollars) + ' went to it.'), r.you.won ? 'award' : 'trophy');
+        ui.toast(room.title() + ': ' + r.winner.short + ' took the ' + dollars(r.pot) + ' pot. ' + (r.you.won ? 'Your pick won!' : 'Your ' + dollars(r.you.dollars) + ' went to it.'), r.you.won ? 'award' : 'trophy');
       }
       if (cur && cur.room === room) {
         if (e.type === 'field') { queueField(); }

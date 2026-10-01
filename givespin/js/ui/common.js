@@ -47,11 +47,22 @@
 
     money: function (cents, compact) { return core.fmtMoney(cents, compact); },
 
-    /** A round monogram badge for a charity. `size` is in px. */
-    mono: function (ch, size) {
+    /** A round badge for a charity: its logo when there is one, otherwise its monogram. `size` is in px; `cls` is an optional extra class. */
+    mono: function (ch, size, cls) {
       var m = GS.mono(ch);
-      return '<span class="cmono" style="--c:' + ch.accent + ';--s:' + (size || 40) + 'px" data-len="' + m.length + '" aria-hidden="true">' + esc(m) + '</span>';
+      var logo = GS.logoFor ? GS.logoFor(ch) : '';
+      var base = ' style="--c:' + ch.accent + ';--s:' + (size || 40) + 'px" data-len="' + m.length + '" data-mono="' + esc(m) + '" aria-hidden="true"';
+      var c = 'cmono' + (cls ? ' ' + cls : '');
+      if (logo) { return '<span class="' + c + ' is-logo"' + base + '><img src="' + esc(logo) + '" alt="" loading="lazy" decoding="async" draggable="false"></span>'; }
+      return '<span class="' + c + '"' + base + '>' + esc(m) + '</span>';
     },
+
+    /** The inside of a badge you draw yourself: the logo image, or the monogram text. Add class `is-logo` and `data-mono` on the badge to match. */
+    monoInner: function (ch) {
+      var logo = GS.logoFor ? GS.logoFor(ch) : '';
+      return logo ? '<img src="' + esc(logo) + '" alt="" loading="lazy" decoding="async" draggable="false">' : esc(GS.mono(ch));
+    },
+    hasLogo: function (ch) { return !!(GS.logoFor && GS.logoFor(ch)); },
 
     causeTag: function (id) {
       var c = GS.cause(id);
@@ -198,4 +209,14 @@
       $$('dialog.modal[open]').forEach(function (d) { if (d._modal && !d._modal.locked) { d._modal.close(); } });
     }
   };
+
+  // a logo that fails to load goes back to the monogram (image errors do not bubble, so listen while capturing)
+  document.addEventListener('error', function (e) {
+    var img = e.target;
+    if (!img || img.tagName !== 'IMG') { return; }
+    var badge = img.closest ? img.closest('.is-logo[data-mono]') : null;
+    if (!badge) { return; }
+    badge.classList.remove('is-logo');
+    badge.textContent = badge.getAttribute('data-mono') || '';
+  }, true);
 })();

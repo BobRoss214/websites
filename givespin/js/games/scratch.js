@@ -31,7 +31,7 @@
   function underHTML(ch) {
     if (!ch) { return ''; }
     var m = GS.mono(ch);
-    return '<span class="cmono" style="--c:' + ch.accent + ';--s:44px" data-len="' + m.length + '" aria-hidden="true">' + U.esc(m) + '</span><span class="spanel__name">' + U.esc(ch.short) + '</span>';
+    return GS.ui.mono(ch, 44) + '<span class="spanel__name">' + U.esc(ch.short) + '</span>';
   }
 
   function buildPanels(n) {
