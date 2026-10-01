@@ -1,0 +1,87 @@
+{
+  "site": "https://www.wiseacresorganic.com/",
+  "signs": [
+    {
+      "id": "review",
+      "url": "{reviewUrl}",
+      "title_en": "Loved your visit?",
+      "title_es": "¿Te encantó tu visita?",
+      "text_en": "Leave us a Google review. It helps other families find the farm.",
+      "text_es": "Déjanos una reseña en Google. Ayuda a otras familias a encontrar la granja."
+    },
+    {
+      "id": "instagram",
+      "url": "https://www.instagram.com/wiseacresorganic/",
+      "title_en": "Follow the farm",
+      "title_es": "Síguenos",
+      "text_en": "@wiseacresorganic on Instagram",
+      "text_es": "@wiseacresorganic en Instagram"
+    },
+    {
+      "id": "hashtag",
+      "url": "https://www.instagram.com/explore/tags/wiseacresorganic/",
+      "title_en": "Take a photo, tag us",
+      "title_es": "Toma una foto y etiquétanos",
+      "text_en": "Tag @wiseacresorganic and use #wiseacresorganic. Scan to see the photos.",
+      "text_es": "Etiqueta @wiseacresorganic y usa #wiseacresorganic. Escanea para ver las fotos."
+    },
+    {
+      "id": "facebook",
+      "url": "https://www.facebook.com/wiseacresnc/",
+      "title_en": "Find us on Facebook",
+      "title_es": "Encuéntranos en Facebook",
+      "text_en": "Farm news, photos and events.",
+      "text_es": "Noticias, fotos y eventos de la granja."
+    },
+    {
+      "id": "reserve",
+      "url": "https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356",
+      "title_en": "Reserve your visit",
+      "title_es": "Reserva tu visita",
+      "text_en": "The farm is reservation-only. Book your next visit here.",
+      "text_es": "La granja es solo con reserva. Reserva tu próxima visita aquí."
+    },
+    {
+      "id": "pizza",
+      "url": "https://wise-pie-wood-fired-at-wise-acres.square.site/?location=CVJNFDQTZCA3B",
+      "title_en": "Pre-order Wise Pie pizza",
+      "title_es": "Pide tu pizza Wise Pie",
+      "text_en": "Wood-fired pizza, ready when you are.",
+      "text_es": "Pizza al horno de leña, lista cuando tú lo estés."
+    },
+    {
+      "id": "menu",
+      "url": "{site}index.html#menu",
+      "utm": true,
+      "title_en": "Wise Pie pizza menu",
+      "title_es": "Menú de pizza Wise Pie",
+      "text_en": "Scan to see the menu.",
+      "text_es": "Escanea para ver el menú."
+    },
+    {
+      "id": "signup",
+      "url": "https://eepurl.com/hZehgr",
+      "title_en": "Get farm news by email",
+      "title_es": "Recibe noticias de la granja",
+      "text_en": "When picking opens, new pizza weekends and events.",
+      "text_es": "Cuándo abre la cosecha, nuevos fines de semana de pizza y eventos."
+    },
+    {
+      "id": "map",
+      "url": "{site}first-visit.html#farm-map",
+      "utm": true,
+      "title_en": "Farm map and first-visit guide",
+      "title_es": "Mapa de la granja y guía",
+      "text_en": "Where to park, check in and find everything.",
+      "text_es": "Dónde estacionar, registrarte y encontrar todo."
+    },
+    {
+      "id": "directions",
+      "url": "https://www.google.com/maps/dir/?api=1&destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079",
+      "title_en": "Directions to the farm",
+      "title_es": "Cómo llegar a la granja",
+      "text_en": "4701 Hartis Road, Indian Trail, NC",
+      "text_es": "4701 Hartis Road, Indian Trail, NC"
+    }
+  ]
+}

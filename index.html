@@ -23,6 +23,9 @@
   <link rel="stylesheet" href="css/sections.css">
   <link rel="stylesheet" href="css/hero.css">
   <link rel="stylesheet" href="css/extras.css">
+  <link rel="stylesheet" href="css/features.css">
+  <!-- GOOGLE SEARCH CONSOLE: after you add the site there, paste the verification tag it gives you right here, for example
+       <meta name="google-site-verification" content="XXXXXXXX"> -->
   <script src="js/content.js"></script>
   <script src="js/season.js"></script>
   <script src="js/i18n.js"></script>
@@ -209,6 +212,7 @@
           <li data-t="t9e0e2003"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> USDA Certified Organic</li>
           <li data-t="t65d9d8ba"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Family farm since 2013</li>
           <li class="chip-new" data-only="fall"><a data-t="t30661b0e" href="#tomatoes"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> New: u-pick tomatoes &amp; basil</a></li>
+          <li class="chip-rel rel-off" data-rel-chip data-only="fall"><a href="#schedule"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg> <span data-rel-chip-text data-no-i18n>Pizza reservations</span></a></li>
         </ul>
       </div>
 
@@ -259,7 +263,38 @@
           <p class="nu-next" data-cd-next data-no-i18n></p>
           <p data-t="t18273326" class="nu-fine">Dates are typical and depend on the weather.</p>
         </div>
-        <a data-t="tf09e1fa4" class="btn btn-red" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener">Tell me when <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a data-t="tf09e1fa4" class="btn btn-red" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Tell me when <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </section>
+
+    <!-- ================= THIS WEEK AT THE FARM =================
+         Fills itself from today's date. To add the weekly note and the "spots left" table, edit WISE_ACRES.week in js/content.js. -->
+    <section class="week" id="this-week" data-week data-nav="visit" aria-labelledby="week-h" hidden>
+      <div class="wrap">
+        <header class="week-head">
+          <div>
+            <p data-t="tafc65daa" class="hand eyebrow">Right now</p>
+            <h2 data-t="t69d94566" id="week-h">This week at the farm</h2>
+          </div>
+          <p class="week-updated" data-week-updated data-no-i18n></p>
+        </header>
+        <ul class="week-crops" data-week-crops></ul>
+        <div class="week-note" data-week-note hidden>
+          <svg class="ico" aria-hidden="true"><use href="#i-info"/></svg>
+          <p data-no-i18n></p>
+        </div>
+        <div class="week-days" data-week-days hidden>
+          <h3 data-t="tc8317201">Spots left</h3>
+          <div data-ta-aria-label="t5f6e51f7" class="table-scroll" tabindex="0" role="group" aria-label="Spots left. Scrolls sideways on small screens.">
+            <table role="table">
+              <caption data-t="t87550955" class="sr-only">Spots left for the next two weeks</caption>
+              <thead role="rowgroup"><tr role="row"><th data-t="t987b9ced" scope="col" role="columnheader">Day</th><th data-t="tc3215b79" scope="col" role="columnheader">Farm</th><th data-t="t01eb73e0" scope="col" role="columnheader">Pizza</th><th scope="col" role="columnheader"><span data-t="t187579e3" class="sr-only">Reserve</span></th></tr></thead>
+              <tbody role="rowgroup"></tbody>
+            </table>
+          </div>
+          <p data-t="tb3864aa8" class="fine">Spots go fast and change all day. The booking page always has the final word.</p>
+        </div>
+        <p class="week-demo" data-week-demo data-no-i18n hidden>Preview example only. These spots are not real.</p>
       </div>
     </section>
 
@@ -440,7 +475,23 @@
             <h4 data-t="t65d35823">Fall 2026 reservation schedule</h4>
             <span data-t="t3e824025" class="pill">Updated weekly</span>
           </div>
-          <!-- UPDATE WEEKLY: this block changes as new weekends open. -->
+          <div class="rel-box" data-rel-box data-mode="wait" hidden>
+            <div class="rel-main">
+              <p class="rel-eyebrow" data-rel-eyebrow data-no-i18n></p>
+              <div class="rel-count" data-rel-count role="timer" data-no-i18n></div>
+              <p class="rel-when" data-rel-when data-no-i18n></p>
+            </div>
+            <div class="rel-actions">
+              <a data-t="t90bac313" class="btn btn-red" data-rel-reserve hidden href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve now <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+              <button data-t="t08fbdb4d" class="btn btn-sun" type="button" data-rel-remind aria-haspopup="true" aria-expanded="false" aria-controls="rel-menu"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg> Remind me</button>
+              <div class="remind-menu" id="rel-menu" hidden>
+                <a data-t="tb5072f7e" class="btn btn-sm btn-white" data-rel-google href="https://calendar.google.com/calendar/render?action=TEMPLATE" target="_blank" rel="noopener">Add to Google Calendar</a>
+                <button data-t="t14513f89" class="btn btn-sm btn-white" type="button" data-rel-ics>Apple or Outlook calendar (.ics file)</button>
+              </div>
+            </div>
+          </div>
+          <!-- UPDATE WEEKLY: this block changes as new weekends open.
+               Each row needs data-release="YYYY-MM-DD" (the Tuesday it opens). The countdown above follows these rows. -->
           <div class="schedule-grid">
             <div>
               <h5 data-t="t78b5a064">No pizza</h5>
@@ -449,14 +500,14 @@
             <div>
               <h5 data-t="tb0dfd7c1">With pizza</h5>
               <p data-t="t509bceb8">New weekends open every <strong>Tuesday at 5:00 PM</strong>, after we check the forecast.</p>
-              <table class="sched-table">
+              <table class="sched-table" data-release-time="17:00">
                 <caption data-t="ta2ed1e26" class="sr-only">When pizza reservations open</caption>
                 <thead><tr><th data-t="taa4df16c" scope="col">Opens Tuesday, 5 PM</th><th data-t="tbaf6d454" scope="col">For visits on</th></tr></thead>
                 <tbody>
-                  <tr><td data-t="ta04c75ca">Oct 6</td><td data-t="ta7ed8b75">Oct 9&ndash;11</td></tr>
-                  <tr><td data-t="td5fa3165">Oct 13</td><td data-t="t592eba14">Oct 16&ndash;18</td></tr>
-                  <tr><td data-t="t738909c5">Oct 20</td><td data-t="t25d26d10">Oct 23&ndash;25</td></tr>
-                  <tr><td data-t="t76605a99">Oct 27</td><td data-t="t54f0fccf">Oct 30&ndash;Nov 8</td></tr>
+                  <tr data-release="2026-10-06"><td data-t="ta04c75ca">Oct 6</td><td data-t="ta7ed8b75">Oct 9&ndash;11</td></tr>
+                  <tr data-release="2026-10-13"><td data-t="td5fa3165">Oct 13</td><td data-t="t592eba14">Oct 16&ndash;18</td></tr>
+                  <tr data-release="2026-10-20"><td data-t="t738909c5">Oct 20</td><td data-t="t25d26d10">Oct 23&ndash;25</td></tr>
+                  <tr data-release="2026-10-27"><td data-t="t76605a99">Oct 27</td><td data-t="t54f0fccf">Oct 30&ndash;Nov 8</td></tr>
                 </tbody>
               </table>
             </div>
@@ -523,6 +574,32 @@
             <span class="goat-hill" aria-hidden="true"></span>
           </button>
           <p data-t="t1ab35006" class="goat-bubble" id="goat-bubble" role="status" aria-live="polite">Psst&hellip; tap me!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FARM MAP =================
+         An illustrated map drawn from the points you mark in the Farm Map Marker. It stays hidden until js/farm-map-data.js has points
+         (python3 tools/farm_map.py makes that file from the saved map). -->
+    <section class="section farm-map" id="farm-map" data-nav="visit" data-farm-map aria-labelledby="map-h" hidden>
+      <div class="wrap">
+        <header class="section-head reveal">
+          <p data-t="tbe3cb72b" class="hand eyebrow">Find your way</p>
+          <h2 data-t="t0a13643a" id="map-h">Farm map</h2>
+          <p data-t="tc1fb0e71" class="lead">Tap a number to see what it is. Parking, check-in and restrooms come first.</p>
+        </header>
+        <div class="map-layout reveal">
+          <div class="map-wrap"></div>
+          <div class="map-side">
+            <div class="map-detail" role="status" aria-live="polite" hidden></div>
+            <div class="map-legend"></div>
+          </div>
+        </div>
+        <p data-t="t49adf8be" class="fine map-fine">Not to scale. Paths and fields change with the seasons.</p>
+        <div class="card-actions map-links">
+          <a data-t="t8ef529c3" class="btn btn-red" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions in Google Maps</a>
+          <a data-t="t204a9876" class="btn btn-ghost" href="https://maps.apple.com/?daddr=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a>
+          <a data-t="te8fdcb08" class="btn btn-ghost" href="https://waze.com/ul?q=4701%20Hartis%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a>
         </div>
       </div>
     </section>
@@ -1612,6 +1689,25 @@
           <a data-t="te072033b" class="btn btn-white" href="https://www.yelp.com/biz/wise-acres-organic-farm-indian-trail-2" target="_blank" rel="noopener">Yelp <svg class="ico" aria-hidden="true"><use href="#i-external"/></svg></a>
         </div>
         <p data-t="t2e9b74f7" class="fineprint">Reviews belong to the people who wrote them. We link to where each one was posted.</p>
+        <div class="review-cta reveal">
+          <svg class="rv-star" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5l-5.9 3.1 1.2-6.5L2.5 9.5l6.6-.9z" fill="#ffc928" stroke="#3a2416" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <div class="rv-copy">
+            <h3 data-t="t5880537d">Visited us? Tell other families</h3>
+            <p data-t="te8e37009">A short Google review helps new families find the farm. It only takes a minute.</p>
+          </div>
+          <a data-t="t16e2c151" class="btn btn-sun" data-review data-track="Review click" href="https://www.google.com/maps/search/?api=1&amp;query=Wise+Acres+Organic+Farm+Indian+Trail+NC" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg> Leave a Google review</a>
+        </div>
+        <div class="press reveal">
+          <h3 data-t="t94fe8b18">In the news</h3>
+          <ul class="press-list">
+            <li><a href="https://www.axios.com/local/charlotte/2018/09/24/wise-acres-organic-farm-is-open-for-the-fall-season-with-pumpkins-and-pizza-141853" target="_blank" rel="noopener" data-track="Press click"><span class="press-name" data-no-i18n>Axios Charlotte</span><span class="press-title" lang="en" data-no-i18n>Wise Acres organic farm is open for the fall season with pumpkins and pizza</span><span class="press-year" data-no-i18n>2018</span></a></li>
+            <li><a href="https://www.axios.com/local/charlotte/2017/05/03/wise-acres-organic-farm-springtime-perfection-strawberry-picking-outdoor-pizza-kitchen-89414" target="_blank" rel="noopener" data-track="Press click"><span class="press-name" data-no-i18n>Axios Charlotte</span><span class="press-title" lang="en" data-no-i18n>Wise Acres Organic Farm is springtime perfection with strawberry picking and an outdoor pizza kitchen</span><span class="press-year" data-no-i18n>2017</span></a></li>
+          </ul>
+          <!-- AWARD BADGES: when a group says you may show their badge, save the image in assets/badges/ and add it here, then remove the word hidden:
+          <ul class="press-badges">
+            <li><img src="assets/badges/example-badge.png" alt="Describe the award, for example: Best of Charlotte 2026" width="120" height="120" loading="lazy"></li>
+          </ul> -->
+        </div>
       </div>
     </section>
 
@@ -1623,6 +1719,14 @@
         </header>
         <p class="tag-us reveal"><svg class="ico" aria-hidden="true"><use href="#i-instagram"/></svg><span data-t="t559ec077">Posting a photo from your visit? Tag <a href="https://www.instagram.com/wiseacresorganic/" target="_blank" rel="noopener">@wiseacresorganic</a> and use <a class="tag-chip" href="https://www.instagram.com/explore/tags/wiseacresorganic/" target="_blank" rel="noopener">#wiseacresorganic</a> on Instagram so we can find it.</span></p>
         <ul class="gallery-grid" id="gallery-grid"></ul>
+        <div class="community reveal" id="community" hidden>
+          <header class="community-head">
+            <p data-t="t1e1ef1fe" class="hand eyebrow">Your photos</p>
+            <h3 data-t="t00cca43f" class="h-lg">From families who visit</h3>
+          </header>
+          <ul class="community-strip"></ul>
+          <p data-t="t4f5a0522" class="fine">Shared with permission. Want yours here? Post with #wiseacresorganic and say yes when we ask.</p>
+        </div>
       </div>
       <dialog data-ta-aria-label="tb6e670fa" class="lightbox" id="lightbox" aria-label="Photo viewer">
         <form method="dialog"><button data-ta-aria-label="t331f7af2" class="lightbox-close" type="submit" aria-label="Close photo"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button></form>
@@ -1782,6 +1886,7 @@
               <a data-t="t60adc929" class="btn btn-red" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
               <a data-t="t122adc77" class="btn btn-ghost" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
             </div>
+            <p data-t="td7b709b8" class="more-maps">Open in <a href="https://maps.apple.com/?daddr=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a href="https://waze.com/ul?q=4701%20Hartis%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
           </article>
 
           <article class="loc-card reveal">
@@ -1793,6 +1898,7 @@
               <a data-t="t60adc929" class="btn btn-green" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
               <a data-t="t0cab61e8" class="btn btn-ghost" href="https://www.instagram.com/thegreenhouse5503/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-instagram"/></svg> Instagram</a>
             </div>
+            <p data-t="td7b709b8" class="more-maps">Open in <a href="https://maps.apple.com/?daddr=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a href="https://waze.com/ul?q=5503%20Poplin%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
           </article>
 
           <article class="loc-card loc-touch reveal">
@@ -1807,11 +1913,46 @@
           </article>
         </div>
 
+        <div class="drive reveal">
+          <h3 data-t="t5f720f23">How long is the drive?</h3>
+          <ul class="drive-list">
+            <li><span data-t="t2208e27a">Stallings</span> <span class="dr-time" data-drive="10"></span></li>
+            <li><span data-t="t42a1c634">Matthews</span> <span class="dr-time" data-drive="15"></span></li>
+            <li><span data-t="t5b04f65b">Mint Hill</span> <span class="dr-time" data-drive="20"></span></li>
+            <li><span data-t="t59f6be2d">Monroe</span> <span class="dr-time" data-drive="20"></span></li>
+            <li><span data-t="t448b0cc7">Waxhaw</span> <span class="dr-time" data-drive="25"></span></li>
+            <li><span data-t="t7ba8e959">Uptown Charlotte</span> <span class="dr-time" data-drive="30"></span></li>
+          </ul>
+          <p data-t="t35517f47" class="fine">Typical drive with light traffic. Rush hour can add time.</p>
+        </div>
+
         <div class="follow reveal">
           <div class="follow-signup">
             <h3 data-t="ta516c690">Farm happenings &amp; picking opportunities</h3>
             <p data-t="t1ca0501a">Sign up for emails about seasons, reservations and events.</p>
-            <a data-t="t3db31efd" class="btn btn-red" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener">Join the email list <svg class="ico" aria-hidden="true"><use href="#i-external"/></svg></a>
+            <form class="signup" id="signup" data-signup hidden novalidate>
+              <div class="su-row">
+                <label data-t="te1b1790d" class="sr-only" for="su-email">Your email address</label>
+                <input data-ta-placeholder="t6b6992db" id="su-email" type="email" name="EMAIL" autocomplete="email" inputmode="email" required placeholder="Your email address">
+                <button data-t="t04707f33" class="btn btn-red" type="submit">Join the list</button>
+              </div>
+              <fieldset class="su-interests">
+                <legend data-t="tc5d0db4d">I want to hear about</legend>
+                <div class="su-chips">
+                  <label class="su-chip"><input type="checkbox" name="interest" value="strawberries"><span data-t="t93f3a241">Strawberries</span></label>
+                  <label class="su-chip"><input type="checkbox" name="interest" value="blueberries"><span data-t="tc9b6a025">Blueberries</span></label>
+                  <label class="su-chip"><input type="checkbox" name="interest" value="flowers"><span data-t="t9858e9a3">Sunflowers &amp; flowers</span></label>
+                  <label class="su-chip"><input type="checkbox" name="interest" value="pumpkins"><span data-t="td8913263">Pumpkins</span></label>
+                  <label class="su-chip"><input type="checkbox" name="interest" value="tomatoes"><span data-t="tffd483ee">Tomatoes &amp; basil</span></label>
+                  <label class="su-chip"><input type="checkbox" name="interest" value="trees"><span data-t="t05db350a">Christmas trees</span></label>
+                  <label class="su-chip"><input type="checkbox" name="interest" value="pizza"><span data-t="t9cc96e01">Wise Pie pizza</span></label>
+                  <label class="su-chip"><input type="checkbox" name="interest" value="events"><span data-t="t9aa2b3bc">Events &amp; parties</span></label>
+                </div>
+              </fieldset>
+              <p class="su-msg" data-signup-msg role="status" aria-live="polite" data-no-i18n></p>
+              <p data-t="t01d5c9ba" class="su-fine">We only send farm news. Unsubscribe any time.</p>
+            </form>
+            <a data-t="t3db31efd" class="btn btn-red" data-signup-fallback href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-track="Email signup click">Join the email list <svg class="ico" aria-hidden="true"><use href="#i-external"/></svg></a>
           </div>
           <ul class="social">
             <li><a data-t="t88689c93" href="https://www.instagram.com/wiseacresorganic/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-instagram"/></svg> @wiseacresorganic</a></li>
@@ -1836,10 +1977,11 @@
           <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name">Wise Acres</span><span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
         </a>
         <p data-t="ta1bc4780">A family-owned, USDA Certified Organic u-pick farm in Indian Trail, North Carolina.</p>
-        <p><a data-t="tf40e80c8" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener">Sign up for emails about farm happenings and picking opportunities</a></p>
+        <p><a data-t="tf40e80c8" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Sign up for emails about farm happenings and picking opportunities</a></p>
         <ul class="social-links">
           <li><a data-t="t0cab61e8" href="https://www.instagram.com/wiseacresorganic/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-instagram"/></svg> Instagram</a></li>
           <li><a data-t="t659297b0" href="https://www.facebook.com/wiseacresnc/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-facebook"/></svg> Facebook</a></li>
+          <li><a data-t="t306f0406" data-review data-track="Review click" href="https://www.google.com/maps/search/?api=1&amp;query=Wise+Acres+Organic+Farm+Indian+Trail+NC" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg> Review us</a></li>
         </ul>
         <ul class="lang-links" data-lang-list data-no-i18n aria-label="Language"></ul>
       </div>
@@ -2378,6 +2520,8 @@
   <symbol id="i-drink" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3Z"/><path d="M16 10h2a2 2 0 0 1 0 6h-2M8 3v2M12 3v2"/></g></symbol>
   <symbol id="i-nodog" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M5 5l14 14"/><path d="M9.5 14.5c0-1.4 1-2.5 2.5-2.5s2.5 1.1 2.5 2.5-1 2-2.5 2-2.5-.6-2.5-2Z"/></g></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></g></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></g></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M12 2.8l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.7l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></symbol>
 
   <!-- ============ TOMATOES & BASIL ============ -->
   <symbol id="tomato" viewBox="0 0 64 64">
@@ -2485,6 +2629,8 @@
   <script src="js/main.js"></script>
   <script src="js/hero.js"></script>
   <script src="js/live.js"></script>
+  <script src="js/farm-map-data.js"></script>
+  <script src="js/features.js"></script>
   <script src="js/analytics.js"></script>
 </body>
 </html>

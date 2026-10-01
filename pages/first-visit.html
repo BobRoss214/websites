@@ -64,9 +64,26 @@ crumb: First visit
             <li>Vehicles are not allowed in the fields, barn or garden areas.</li>
             <li>No reservation? <a href="index.html#greenhouse">The GreenHouse</a> next door at 5503 Poplin Rd welcomes drop-ins.</li>
           </ul>
+          <figure class="entrance-photo" data-entrance hidden>
+            <img alt="" loading="lazy" decoding="async">
+            <figcaption></figcaption>
+          </figure>
           <p class="draft-tag" data-no-i18n><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> Draft: exact parking and check-in spots will come from the farm map</p>
           <div class="card-actions">
             <a class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
+          </div>
+          <p class="more-maps">Open in <a href="https://maps.apple.com/?daddr=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a href="https://waze.com/ul?q=4701%20Hartis%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
+          <div class="drive">
+            <h3>How long is the drive?</h3>
+            <ul class="drive-list">
+              <li><span>Stallings</span> <span class="dr-time" data-drive="10"></span></li>
+              <li><span>Matthews</span> <span class="dr-time" data-drive="15"></span></li>
+              <li><span>Mint Hill</span> <span class="dr-time" data-drive="20"></span></li>
+              <li><span>Monroe</span> <span class="dr-time" data-drive="20"></span></li>
+              <li><span>Waxhaw</span> <span class="dr-time" data-drive="25"></span></li>
+              <li><span>Uptown Charlotte</span> <span class="dr-time" data-drive="30"></span></li>
+            </ul>
+            <p class="fine">Typical drive with light traffic. Rush hour can add time.</p>
           </div>
         </div>
         <div class="checklist-card" id="checklist">
@@ -105,13 +122,45 @@ crumb: First visit
             <h3>A working farm</h3>
             <p>Wise Acres is a working farm. We take extra precautions to keep it safe, but the farm is not childproof. Irrigation lines, support stakes and farm equipment may be present throughout the fields.</p>
           </li>
-          <li class="fact-card fact-card-wide">
-            <h3>Strollers, wheelchairs and paths</h3>
-            <p>Have questions about getting around with a stroller or wheelchair? Email us and we&rsquo;ll help you plan.</p>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section section-tint" id="comfort" aria-labelledby="comfort-h">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="hand eyebrow">For every family</p>
+          <h2 id="comfort-h">Accessibility &amp; comfort</h2>
+          <p class="lead">What to expect if you are bringing a stroller, a wheelchair or little ones. Not sure about something? <a href="mailto:cathy@wiseacresorganic.com?subject=Accessibility%20question">Email Cathy</a> and we will help you plan.</p>
+        </header>
+        <ul class="fact-grid comfort-grid">
+          <li class="fact-card c-sky">
+            <h3>Strollers &amp; wheelchairs</h3>
+            <p>Wise Acres is a working farm. Irrigation lines, support stakes and farm equipment may be in the fields, so the easiest route depends on the day. Tell us what you need before you come and we will help you plan.</p>
             <a class="btn btn-ghost btn-sm" href="mailto:cathy@wiseacresorganic.com?subject=Accessibility%20question"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Email us</a>
-            <p class="draft-tag" data-no-i18n><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> Draft: add path and accessibility details</p>
+          </li>
+          <li class="fact-card c-mint">
+            <h3>Accessible restroom</h3>
+            <p>We have porta-johns, including a handicapped-accessible unit, and portable foot-pump hand-washing stations throughout the farm.</p>
+          </li>
+          <li class="fact-card c-sun">
+            <h3>Parking &amp; drop-off</h3>
+            <p>We are in a neighborhood on Hartis Road with limited parking. Vehicles are not allowed in the fields, barn or garden areas.</p>
+          </li>
+          <li class="fact-card c-pink">
+            <h3>Shade &amp; a place to sit</h3>
+            <p>Every reservation includes the shaded picnic patch, so you can cool off, have a snack and take a break.</p>
+          </li>
+          <li class="fact-card">
+            <h3>Little ones</h3>
+            <p>There are playgrounds and animals to visit. Infants 2 and under are free, and kids 2 and younger ride the wagon free.</p>
+          </li>
+          <li class="fact-card">
+            <h3>Service animals</h3>
+            <p>Pets stay home because of liability and food-safety rules, but service animals are always welcome.</p>
           </li>
         </ul>
+        <p class="draft-tag" data-no-i18n><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> Draft: add path surfaces, quieter times and baby-changing details</p>
       </div>
     </section>
 
@@ -138,8 +187,22 @@ crumb: First visit
       </div>
     </section>
 
-    <section class="section" id="farm-map" aria-labelledby="map-h" hidden>
-      <div class="wrap"><header class="section-head"><p class="hand eyebrow">Find your way</p><h2 id="map-h">Farm map</h2></header></div>
+    <section class="section farm-map" id="farm-map" data-farm-map aria-labelledby="map-h" hidden>
+      <div class="wrap">
+        <header class="section-head">
+          <p class="hand eyebrow">Find your way</p>
+          <h2 id="map-h">Farm map</h2>
+          <p class="lead">Tap a number to see what it is. Parking, check-in and restrooms come first.</p>
+        </header>
+        <div class="map-layout">
+          <div class="map-wrap"></div>
+          <div class="map-side">
+            <div class="map-detail" role="status" aria-live="polite" hidden></div>
+            <div class="map-legend"></div>
+          </div>
+        </div>
+        <p class="fine map-fine">Not to scale. Paths and fields change with the seasons.</p>
+      </div>
     </section>
 
     <section class="section faq" id="faq" aria-labelledby="faq-h">

@@ -9,8 +9,9 @@
  *   analytics: { provider: 'cloudflare',  token: 'YOUR-BEACON-TOKEN' }        (page views only)
  *   analytics: { provider: 'none' }                                            (default: nothing is sent)
  *
- * What it records: which buttons people tap (Reserve, Directions, Email, Pizza pre-order,
- * Email signup, Instagram), which sections they reach, season and language changes.
+ * What it records: which buttons people tap (Reserve, Directions, Email, Pizza pre-order, Email signup,
+ * Review, Waitlist, Instagram), reminders added, map points opened, which sections they reach,
+ * season and language changes.
  */
 (() => {
   'use strict';
@@ -58,7 +59,7 @@
   const RULES = [
     [/bookeo\.com/, 'Reserve click'], [/^mailto:/, 'Email click'], [/google\.com\/maps/, 'Directions click'],
     [/square\.site/, 'Pizza pre-order click'], [/eepurl\.com/, 'Email signup click'], [/instagram\.com/, 'Instagram click'], [/facebook\.com/, 'Facebook click'], [/^tel:/, 'Phone click'],
-    [/docs\.google\.com\/forms/, 'School tour form click'],
+    [/docs\.google\.com\/forms/, 'School tour form click'], [/maps\.apple\.com|waze\.com\/ul/, 'Directions click'],
   ];
   doc.addEventListener('click', (e) => {
     const a = e.target.closest('a[href], [data-track]');
@@ -80,7 +81,7 @@
     const io = new IntersectionObserver((entries) => entries.forEach((en) => {
       if (en.isIntersecting && !seen.has(en.target.id)) { seen.add(en.target.id); track('Section view', { section: en.target.id }); }
     }), { threshold: 0.35 });
-    ['visit', 'seasons', 'tomatoes', 'pizza', 'greenhouse', 'flowers', 'groups', 'about', 'faq', 'reserve', 'contact'].forEach((id) => { const el = doc.getElementById(id); if (el) io.observe(el); });
+    ['this-week', 'visit', 'seasons', 'tomatoes', 'pizza', 'greenhouse', 'flowers', 'groups', 'about', 'faq', 'reserve', 'contact'].forEach((id) => { const el = doc.getElementById(id); if (el) io.observe(el); });
   }
 
   W.track = track;

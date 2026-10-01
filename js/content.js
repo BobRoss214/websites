@@ -34,6 +34,46 @@
  * Off by default. See the top of js/analytics.js for the four supported providers.
  * Nothing is sent until `provider` is set, and never for visitors who opt out.
  *
+ * THIS WEEK AT THE FARM  (the green "This week at the farm" box under the top of the page)
+ * ---------------------------------------------------------------------------------------
+ * It fills itself from today's date (what is normally in season, and what starts soon). To add a
+ * note, mark how things are going, or show spots left, fill in `week` below. Everything in `week`
+ * stops showing 14 days after `updated`, so old news never lingers. Delete the lines you do not use.
+ *
+ *   week: {
+ *     updated: '2026-10-01',                       // the day you last checked (required)
+ *     note: 'Tomatoes are at their best. Bring a bucket!',   // or { en: '...', es: '...' } to write it in each language
+ *     crops: { tomatoes: 'peak', pumpkins: 'starting', flowers: 'ending' },
+ *               // crop names: strawberries, blueberries, sunflowers, flowers, pumpkins, tomatoes, trees
+ *               // how it is going: soon | starting | peak | ending | off   (off hides it)
+ *     days: [                                      // "Spots left" table. Only today and the next 14 days show.
+ *       { date: '2026-10-02', farm: 'few',  pizza: 'open', note: 'Rain possible' },
+ *       { date: '2026-10-03', farm: 'full', pizza: 'full' },
+ *     ],                                            // farm and pizza: open | few | full | closed
+ *     waitlistEmail: 'cathy@wiseacresorganic.com',  // "Join the waitlist" emails this address
+ *     feed: '',                                     // optional: a web address that returns this same shape as JSON
+ *   }
+ *
+ * EMAIL SIGNUP WITH INTERESTS
+ * ---------------------------
+ * The signup form on the page stays hidden (the old "Join the email list" button shows instead) until you
+ * paste your Mailchimp form address into `signup.action`. In Mailchimp: Audience > Signup forms > Embedded forms.
+ * Copy the address inside  <form action="...">  . For the interest choices, add the group names from the same
+ * embed code, e.g.  interests: { strawberries: 'group[12345][1]', pumpkins: 'group[12345][2]' }.
+ *
+ * GOOGLE REVIEW LINK
+ * ------------------
+ * `reviewUrl` is where every "Leave a Google review" button goes. In your Google Business Profile choose
+ * "Ask for reviews" (or "Get more reviews") and copy the review link (it looks like https://g.page/r/.../review).
+ * Until it is set, the buttons open the farm on Google Maps.
+ *
+ * VISITOR PHOTOS, ENTRANCE PHOTO
+ * ------------------------------
+ * `community` fills the "From families who visit" strip in the photo gallery. Only add a photo after the
+ * person who took it said yes in writing. `by` is how you credit them; `url` (optional) links to their post.
+ *   { src: 'assets/photos/visitors/pumpkin-day.jpg', alt: 'A girl holding a big pumpkin', by: '@name on Instagram', url: 'https://...' }
+ * `entrancePhoto` is the picture on the First-visit page that shows where to park and check in.
+ *
  * SEASON SWITCHER
  * ---------------
  * The first screen automatically shows whatever season is happening at the farm
@@ -53,6 +93,11 @@ window.WISE_ACRES = {
     pizza:      { days: [5, 6, 0], open: '16:00', close: '20:00' },   // Wise Pie at The GreenHouse, 4-8 pm
     farm:       { fall: [4, 5, 6, 0] },                               // reserved visits Thu-Sun in fall
   },
+  week: {},
+  signup: { action: '', interests: {}, tags: '' },
+  reviewUrl: '',
+  community: [],
+  entrancePhoto: null,   // { src: 'assets/photos/entrance.jpg', alt: 'The farm gate and parking on Hartis Road', caption: 'Look for this gate.' }
   photos: [
     { src: "assets/photos/family-sunflower-field.webp",
       alt: "The Wise Acres family hugging and smiling in a field of sunflowers",

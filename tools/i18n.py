@@ -194,6 +194,7 @@ def cmd_merge(code):
 
 
 JS_PATTERNS = [
+    r"\bT\(\s*'((?:[^'\\]|\\.)*)'",       # T('text'): marks a text that is translated later, when it is shown
     r"\bt\(\s*'((?:[^'\\]|\\.)*)'",
     r'\bt\(\s*"((?:[^"\\]|\\.)*)"',
     r"(?:hint|btn):\s*'((?:[^'\\]|\\.)*)'",
@@ -210,6 +211,8 @@ def js_strings():
         if not f.endswith('.js') or f in ('i18n.js',):
             continue
         src = open(os.path.join(jsdir, f), encoding='utf-8').read()
+        src = re.sub(r'/\*.*?\*/', '', src, flags=re.S)           # comments are not text on the page
+        src = re.sub(r'(?<![:\'"\\])//[^\n]*', '', src)
         for pat in JS_PATTERNS:
             for m in re.finditer(pat, src):
                 txt = m.group(1).replace("\\'", "'").replace('\\u2014', '\u2014').replace('\\u201C', '\u201C').replace('\\u201D', '\u201D')

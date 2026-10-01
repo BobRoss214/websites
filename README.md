@@ -20,6 +20,7 @@ css/styles.css          design system, hero layout, base components
 css/sections.css        section styles (visit, packages, pizza, GreenHouse, groups, story…)
 css/hero.css            seasonal hero: sky/card colours per season, tractor, campfire and snow animations
 css/extras.css          open-now badges, notice bar, countdown, seasonal dividers/footer, languages, reviews, inner pages
+css/features.css        pizza countdown, "this week" box, email signup, review + press, photo wall, farm map, drive times
 js/content.js           editable content: hours, closures, notice bar, reviews, analytics, photo list
 js/season.js            season dates + "which season is it today?" (sets html[data-season])
 js/i18n.js              language switcher + text swapping (loaded first so the page paints in the chosen language)
@@ -27,9 +28,14 @@ js/hero.js              draws the four hero scenes, footer art, and runs the pic
 js/main.js              everything else: scroll effects, seasons tabs, groups, bouquet, goat, reviews, print checklist…
 js/live.js              "Open now" badges, notice bar, next-season countdown, top-bar text
 js/analytics.js         privacy-friendly analytics (off until you pick a provider)
+js/features.js          pizza-reservation countdown + calendar reminders, "this week" box, email signup, review links, photo wall, farm map, drive times
+js/farm-map-data.js     the points of the farm map (written by tools/farm_map.py; empty until the map is marked)
 lang/src/<code>.json    the translations (you edit these)
 lang/<code>.js          built from lang/src (what the pages load; do not edit)
-tools/                  pages.py (builds the extra pages), i18n.py (tags text, builds translations)
+tools/                  pages.py (builds the extra pages), i18n.py (tags text, builds translations),
+                        make_qr.py + qr_links.json (QR signs), farm_map.py (saved map -> js/farm-map-data.js)
+assets/qr/              QR codes (SVG), made by tools/make_qr.py
+print/qr-signs.html     printable signs, one per page, English + Spanish (not listed in Google)
 assets/photos/          farm photos
 assets/fonts/           Fredoka, Nunito (+ Vietnamese letters), Caveat (SIL Open Font License), self-hosted
 ```
@@ -51,6 +57,87 @@ Preview locally: run `python3 -m http.server` and visit http://localhost:8000 (a
 | Turn on analytics | `js/content.js` → `analytics: { provider: 'plausible', site: 'wiseacresorganic.com' }` (also `goatcounter`, `umami`, `cloudflare`). Nothing is sent until you do, and never for visitors with Do Not Track. |
 | Change the hero text for a season | `index.html` → the `.hero-sub[data-only="spring"]` (summer, fall, winter) lines under the big headline, and the winter headline (`#hero-h`). hero.js shows the one for the current season. Then run the `extract` / `missing` / `build` commands under Languages. |
 | Change the booking link | Search & replace `https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356`. |
+| Open a new pizza weekend | `index.html` → `#schedule` table: add a row `<tr data-release="2026-11-03"><td>Nov 3</td><td>Nov 6–8</td></tr>`. The countdown, the "Remind me" calendar buttons and the hero chip all follow those rows. |
+| Say what is ripe / spots left this week | `js/content.js` → `week` (see "Planning features" below). Takes two minutes, and stops showing by itself after 14 days. |
+| Make the email signup work | `js/content.js` → `signup.action` (see "Planning features"). |
+| Set the Google review link | `js/content.js` → `reviewUrl: 'https://g.page/r/…/review'`. Every "Leave a Google review" button follows it. |
+| Show a visitor's photo | `js/content.js` → `community` (only after they said yes in writing). |
+| Print QR signs | `python3 tools/make_qr.py`, then open `print/qr-signs.html` and print. |
+| Update the farm map | Mark it in the Farm Map Marker, save, then `python3 tools/farm_map.py saved-map.json`. |
+
+## Planning features (countdown, weekly box, signup, map…)
+
+All of these live in `js/features.js` (styles in `css/features.css`). Each one hides itself until it has something to show.
+
+**Pizza countdown + "Remind me".** Inside the Fall reservation schedule (`#schedule`) a box counts down to the next Tuesday 5:00 PM
+Eastern release, taken from the `data-release` rows of the table, and shows "just opened" with a Reserve button for six hours after.
+"Remind me" adds all the upcoming release times to the visitor's calendar: a Google Calendar link (repeats weekly), or a `.ics`
+file for Apple / Outlook with a 15-minute alarm. A small chip in the hero says "Pizza reservations open in 5d 1h". Visitors outside
+Eastern Time also see their own time. After the last row passes, the box and chip hide themselves. The times are Eastern on purpose.
+
+**Weekly box ("This week at the farm").** Fills itself from today's date: what is normally in season (strawberries, blueberries,
+sunflowers, pumpkins, tomatoes & basil, flowers) and what starts in the next three weeks (Christmas trees at The GreenHouse). The dates
+are the typical ones in `js/features.js` (`CROPS`) and `js/season.js`. To add a real update, fill in `week` in `js/content.js`:
+
+```js
+week: {
+  updated: '2026-10-01',                         // the day you checked. Everything below stops showing 14 days later.
+  note: 'Tomatoes are at their best. Bring a bucket!',   // or { en: '…', es: '…' } to write it in each language
+  crops: { tomatoes: 'peak', pumpkins: 'starting', flowers: 'off' },   // soon | starting | peak | ending | off
+  days: [ { date: '2026-10-02', farm: 'few', pizza: 'open', note: 'Rain possible' },
+          { date: '2026-10-03', farm: 'full', pizza: 'full' } ],         // open | few | full | closed
+  waitlistEmail: 'cathy@wiseacresorganic.com',   // "Join the waitlist" opens an email to this address
+},
+```
+
+"Spots left" and the waitlist are filled in by hand. **Live availability from Bookeo is not built in:** it needs your Bookeo API
+keys and a small server function (a website cannot read Bookeo directly, and the keys must never be on the page). If you want it,
+make that function return the same JSON as `week` (`{updated, note, crops, days}`) and put its address in `week.feed`; the page reads it
+(and falls back to the hand-written box if it is down).
+
+**Email signup with interests.** In the Contact section, a form with interest choices (strawberries, blueberries, flowers, pumpkins,
+tomatoes & basil, Christmas trees, pizza, events). It stays hidden, and the old "Join the email list" button shows, until you connect
+Mailchimp: in Mailchimp go to Audience → Signup forms → Embedded forms, copy the address inside `<form action="…">`, and set:
+
+```js
+signup: { action: 'https://YOURNAME.us21.list-manage.com/subscribe/post?u=…&id=…',
+          interests: { pumpkins: 'group[12345][1]', trees: 'group[12345][2]' },   // names from the same embed code
+          tags: '' },
+```
+
+When it is set, the other "Tell me when" / "Sign up" links scroll to the form instead. Choices with no `interests` entry are simply not sent.
+
+**Reviews, news, photos.** The Reviews section has a "Leave a Google review" button (set `reviewUrl`) and an **In the news** list
+(two Axios Charlotte articles, found by web search: **please open both links and confirm** before launch). Award badges: save the image
+in `assets/badges/` and uncomment the `press-badges` block under the news list (only with permission from whoever gave the award).
+"From families who visit" (photo gallery) shows the photos in `community` (`src`, `alt`, `by`, optional `url`); nothing from Instagram is
+embedded. The First-visit page can show an entrance / parking photo: set `entrancePhoto` in `js/content.js`.
+
+**Farm map.** The Farm Map Marker (a private page you were sent) lets you mark parking, check-in, restrooms, fields, the corn maze and
+its sign, and so on on the Google Earth photo. The website does not publish that photo (it is Google's picture); it draws its own
+illustrated, numbered map from your points, with a list you can tap and Apple Maps / Waze / Google Maps links. After you press "Save for
+Claude" in the tool, Claude fetches the saved JSON and runs `python3 tools/farm_map.py saved-map.json`, which writes `js/farm-map-data.js`.
+The map section (home page and First-visit page) appears as soon as that file has points. Names and notes you typed need translating:
+the script lists them. Freehand scribbles are notes for Claude and are not drawn.
+
+**Drive times and map apps.** The Contact section and the First-visit page list drive times (`data-drive="minutes"` in the HTML; edit them
+there) and "Open in Apple Maps or Waze" links.
+
+**Accessibility & comfort** (First-visit page, `#comfort`) only repeats facts the farm has already published (accessible porta-john,
+hand washing, parking, shade, little ones, service animals). It still carries a draft tag: add path surfaces, quieter times and
+baby-changing details when you know them, then delete the tag line.
+
+**QR signs.** `python3 tools/make_qr.py` (needs `pip install segno`; `--check` also needs `zxing-cpp pillow` and scans every code back)
+makes `assets/qr/<name>.svg` and `print/qr-signs.html`: one letter-size sign per page in English and Spanish for Google review (needs
+`reviewUrl`), Instagram, the #wiseacresorganic hashtag, Facebook, reserving, pre-ordering pizza, the pizza menu, the email signup, the
+farm map and directions. Edit `tools/qr_links.json` to change wording or addresses. Open the page in a browser and print or save as PDF.
+The Spanish text was written by an AI: have a Spanish speaker read it before you print.
+
+**Analytics + Google Search Console.** Analytics stays off until you pick a provider in `js/content.js` (see `js/analytics.js`). New events
+it records once on: Review click, Waitlist click, Reminder added, Map select, Email signup click, Press click, Directions (Google,
+Apple, Waze). QR signs that point at this website carry `utm_source=qr` so you can see scans. For Search Console: add the site at
+search.google.com/search-console, choose "HTML tag" verification, paste the tag in the marked comment in the `<head>` of `index.html`
+(and nowhere else), then submit `https://www.wiseacresorganic.com/sitemap.xml`.
 
 ## Extra pages (for Google)
 
@@ -111,12 +198,17 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Open-now badges** | Based on the hours in `js/content.js` (farm: reserved visits Thu–Sun in fall; GreenHouse Fri–Sun 10–8; Wise Pie at The GreenHouse Fri–Sun 4–8). Please check these match real life. |
 | **School tour form link** | Uses the Google Forms address you provided, which ends in `/edit` (the form *editor* link). Public visitors usually need `/viewform`. Please double-check it. |
 | **Facebook & hashtag** | Facebook links to https://www.facebook.com/wiseacresnc/ (found by web search, **please confirm it is the right page**). The photo notes ask people to tag @wiseacresorganic and use **#wiseacresorganic** (our suggestion; change it in the two `tag-us` notes in `index.html`, the Flowers section and the Photo gallery). Social links are in the footer, the Contact section and the winter "watch for details" line. |
-| **Phone number** | Not shown (the pages you pasted list email only). |
 | **Christmas trees** | Friday after Thanksgiving to early December, at The GreenHouse. |
 | **Tomatoes & basil** | The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree. Give us the right number and we'll state it. |
 | **Reviews** | The reviews section is built but empty. It needs real quotes (with permission) from you. |
 | **Shop section (`#shop` in `index.html`)** | **Draft.** It sits between The GreenHouse and Flowers on the main page. The layout is done and every price we know is on it (tomatoes, basil, farm fees, rides, pizza). Everything marked "Prices coming soon" (pumpkins, strawberries, blueberries, flowers, concessions, drinks, local goods, ice cream, Christmas trees) needs the real list. Edit the `#shop` section in `index.html`: change a `<dd class="soon">Prices coming soon</dd>` to the price, e.g. `<dd>$5 each</dd>`, then run the rebuild commands. |
-| **Farm map** | Waiting on the annotated Google Earth screenshot. The first-visit page still has draft notes for parking and check-in until then. |
+| **Farm map** | The marking tool is ready; waiting for you to mark the farm and press Save. The home page and First-visit page show the map as soon as `js/farm-map-data.js` has points. The First-visit page keeps a draft note about parking and check-in until then. |
+| **Drive times** | My estimates (Stallings 10, Matthews 15, Mint Hill 20, Monroe 20, Waxhaw 25, Uptown Charlotte 30 minutes, light traffic). Please check them and edit the `data-drive` numbers. |
+| **In the news** | Two Axios Charlotte articles (2017, 2018) found by web search. The headlines are copied from the search results; I could not open the articles from here. Please open both links. |
+| **Email signup** | Built and tested against a pretend Mailchimp. Hidden until you set `signup.action` (see above). |
+| **Google review link** | Buttons open the farm on Google Maps until you set `reviewUrl`. The QR review sign is skipped until then. |
+| **Accessibility & comfort** | Only published facts. Needs your details on paths (surface, slope), quieter times and baby changing. |
+| **Phone number** | Listings online show (704) 628-6232, but it is **not** on the site until you confirm it. |
 
 ## Photos
 
@@ -144,6 +236,7 @@ alt text and captions that still need translating.
 - **Menu:** Visit, On the Farm, Seasons, Tomatoes, Pizza, GreenHouse, Shop, and a **More** menu (Flowers, Groups, Our Story, FAQ, Contact). On phones it is one long list. In winter the main buttons (hero and phone bar) point to The GreenHouse, since the farm is closed. A round **back to top** button shows after scrolling.
 - **Seasonal touches elsewhere:** the top bar says what is in season; dividers and the footer scene change with the season.
 - **Open now** badges, a **notice bar**, and a **next-season countdown** with an email sign-up.
+- **Pizza countdown** with calendar reminders, a **this-week** box, **email signup with interests**, a **review button** and QR signs, a **farm map**, drive times, and Apple Maps / Waze links (see "Planning features").
 - **Growing vine** under the header shows scroll progress.
 - **Visit steps:** a tractor drives along a road as you scroll.
 - **Seasons** tabs, **week strips**, **farm-year calendar** with a "Today" marker, **group tabs** with deep links.

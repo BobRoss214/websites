@@ -19,6 +19,9 @@
   <link rel="stylesheet" href="css/sections.css">
   <link rel="stylesheet" href="css/hero.css">
   <link rel="stylesheet" href="css/extras.css">
+  <link rel="stylesheet" href="css/features.css">
+  <!-- GOOGLE SEARCH CONSOLE: after you add the site there, paste the verification tag it gives you right here, for example
+       <meta name="google-site-verification" content="XXXXXXXX"> -->
   <script src="js/content.js"></script>
   <script src="js/season.js"></script>
   <script src="js/i18n.js"></script>
@@ -216,9 +219,26 @@
             <li data-t="ta41cbda2">Vehicles are not allowed in the fields, barn or garden areas.</li>
             <li data-t="t4a5431cf">No reservation? <a href="index.html#greenhouse">The GreenHouse</a> next door at 5503 Poplin Rd welcomes drop-ins.</li>
           </ul>
+          <figure class="entrance-photo" data-entrance hidden>
+            <img alt="" loading="lazy" decoding="async">
+            <figcaption></figcaption>
+          </figure>
           <p class="draft-tag" data-no-i18n><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> Draft: exact parking and check-in spots will come from the farm map</p>
           <div class="card-actions">
             <a data-t="t60adc929" class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
+          </div>
+          <p data-t="td7b709b8" class="more-maps">Open in <a href="https://maps.apple.com/?daddr=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a href="https://waze.com/ul?q=4701%20Hartis%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
+          <div class="drive">
+            <h3 data-t="t5f720f23">How long is the drive?</h3>
+            <ul class="drive-list">
+              <li><span data-t="t2208e27a">Stallings</span> <span class="dr-time" data-drive="10"></span></li>
+              <li><span data-t="t42a1c634">Matthews</span> <span class="dr-time" data-drive="15"></span></li>
+              <li><span data-t="t5b04f65b">Mint Hill</span> <span class="dr-time" data-drive="20"></span></li>
+              <li><span data-t="t59f6be2d">Monroe</span> <span class="dr-time" data-drive="20"></span></li>
+              <li><span data-t="t448b0cc7">Waxhaw</span> <span class="dr-time" data-drive="25"></span></li>
+              <li><span data-t="t7ba8e959">Uptown Charlotte</span> <span class="dr-time" data-drive="30"></span></li>
+            </ul>
+            <p data-t="t35517f47" class="fine">Typical drive with light traffic. Rush hour can add time.</p>
           </div>
         </div>
         <div class="checklist-card" id="checklist">
@@ -257,13 +277,45 @@
             <h3 data-t="t067e9041">A working farm</h3>
             <p data-t="tdb06d078">Wise Acres is a working farm. We take extra precautions to keep it safe, but the farm is not childproof. Irrigation lines, support stakes and farm equipment may be present throughout the fields.</p>
           </li>
-          <li class="fact-card fact-card-wide">
-            <h3 data-t="t266622cb">Strollers, wheelchairs and paths</h3>
-            <p data-t="t204de187">Have questions about getting around with a stroller or wheelchair? Email us and we&rsquo;ll help you plan.</p>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section section-tint" id="comfort" aria-labelledby="comfort-h">
+      <div class="wrap">
+        <header class="section-head">
+          <p data-t="t92b54149" class="hand eyebrow">For every family</p>
+          <h2 data-t="tfca69604" id="comfort-h">Accessibility &amp; comfort</h2>
+          <p data-t="ta18ddf30" class="lead">What to expect if you are bringing a stroller, a wheelchair or little ones. Not sure about something? <a href="mailto:cathy@wiseacresorganic.com?subject=Accessibility%20question">Email Cathy</a> and we will help you plan.</p>
+        </header>
+        <ul class="fact-grid comfort-grid">
+          <li class="fact-card c-sky">
+            <h3 data-t="tc08fa4e5">Strollers &amp; wheelchairs</h3>
+            <p data-t="tca02c54f">Wise Acres is a working farm. Irrigation lines, support stakes and farm equipment may be in the fields, so the easiest route depends on the day. Tell us what you need before you come and we will help you plan.</p>
             <a data-t="t719b0078" class="btn btn-ghost btn-sm" href="mailto:cathy@wiseacresorganic.com?subject=Accessibility%20question"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Email us</a>
-            <p class="draft-tag" data-no-i18n><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> Draft: add path and accessibility details</p>
+          </li>
+          <li class="fact-card c-mint">
+            <h3 data-t="t3bbaa31c">Accessible restroom</h3>
+            <p data-t="t9c5d2633">We have porta-johns, including a handicapped-accessible unit, and portable foot-pump hand-washing stations throughout the farm.</p>
+          </li>
+          <li class="fact-card c-sun">
+            <h3 data-t="t91886507">Parking &amp; drop-off</h3>
+            <p data-t="t65ba07a6">We are in a neighborhood on Hartis Road with limited parking. Vehicles are not allowed in the fields, barn or garden areas.</p>
+          </li>
+          <li class="fact-card c-pink">
+            <h3 data-t="tf439f97e">Shade &amp; a place to sit</h3>
+            <p data-t="t40b95b09">Every reservation includes the shaded picnic patch, so you can cool off, have a snack and take a break.</p>
+          </li>
+          <li class="fact-card">
+            <h3 data-t="t13b58026">Little ones</h3>
+            <p data-t="tb4f389ee">There are playgrounds and animals to visit. Infants 2 and under are free, and kids 2 and younger ride the wagon free.</p>
+          </li>
+          <li class="fact-card">
+            <h3 data-t="t29a8b135">Service animals</h3>
+            <p data-t="tf92dc6ca">Pets stay home because of liability and food-safety rules, but service animals are always welcome.</p>
           </li>
         </ul>
+        <p class="draft-tag" data-no-i18n><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> Draft: add path surfaces, quieter times and baby-changing details</p>
       </div>
     </section>
 
@@ -290,8 +342,22 @@
       </div>
     </section>
 
-    <section class="section" id="farm-map" aria-labelledby="map-h" hidden>
-      <div class="wrap"><header class="section-head"><p data-t="tbe3cb72b" class="hand eyebrow">Find your way</p><h2 data-t="t0a13643a" id="map-h">Farm map</h2></header></div>
+    <section class="section farm-map" id="farm-map" data-farm-map aria-labelledby="map-h" hidden>
+      <div class="wrap">
+        <header class="section-head">
+          <p data-t="tbe3cb72b" class="hand eyebrow">Find your way</p>
+          <h2 data-t="t0a13643a" id="map-h">Farm map</h2>
+          <p data-t="tc1fb0e71" class="lead">Tap a number to see what it is. Parking, check-in and restrooms come first.</p>
+        </header>
+        <div class="map-layout">
+          <div class="map-wrap"></div>
+          <div class="map-side">
+            <div class="map-detail" role="status" aria-live="polite" hidden></div>
+            <div class="map-legend"></div>
+          </div>
+        </div>
+        <p data-t="t49adf8be" class="fine map-fine">Not to scale. Paths and fields change with the seasons.</p>
+      </div>
     </section>
 
     <section class="section faq" id="faq" aria-labelledby="faq-h">
@@ -355,10 +421,11 @@
           <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name">Wise Acres</span><span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
         </a>
         <p data-t="ta1bc4780">A family-owned, USDA Certified Organic u-pick farm in Indian Trail, North Carolina.</p>
-        <p><a data-t="tf40e80c8" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener">Sign up for emails about farm happenings and picking opportunities</a></p>
+        <p><a data-t="tf40e80c8" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Sign up for emails about farm happenings and picking opportunities</a></p>
         <ul class="social-links">
           <li><a data-t="t0cab61e8" href="https://www.instagram.com/wiseacresorganic/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-instagram"/></svg> Instagram</a></li>
           <li><a data-t="t659297b0" href="https://www.facebook.com/wiseacresnc/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-facebook"/></svg> Facebook</a></li>
+          <li><a data-t="t306f0406" data-review data-track="Review click" href="https://www.google.com/maps/search/?api=1&amp;query=Wise+Acres+Organic+Farm+Indian+Trail+NC" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg> Review us</a></li>
         </ul>
         <ul class="lang-links" data-lang-list data-no-i18n aria-label="Language"></ul>
       </div>
@@ -896,6 +963,8 @@
   <symbol id="i-drink" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3Z"/><path d="M16 10h2a2 2 0 0 1 0 6h-2M8 3v2M12 3v2"/></g></symbol>
   <symbol id="i-nodog" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M5 5l14 14"/><path d="M9.5 14.5c0-1.4 1-2.5 2.5-2.5s2.5 1.1 2.5 2.5-1 2-2.5 2-2.5-.6-2.5-2Z"/></g></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></g></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></g></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M12 2.8l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.7l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/></symbol>
 
   <!-- ============ TOMATOES & BASIL ============ -->
   <symbol id="tomato" viewBox="0 0 64 64">
@@ -1003,6 +1072,8 @@
   <script src="js/main.js"></script>
   <script src="js/hero.js"></script>
   <script src="js/live.js"></script>
+  <script src="js/farm-map-data.js"></script>
+  <script src="js/features.js"></script>
   <script src="js/analytics.js"></script>
 </body>
 </html>

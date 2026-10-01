@@ -99,19 +99,23 @@
    * Zoom: any photo or link marked data-zoom opens in the photo viewer
    * ------------------------------------------------------------------ */
   function initZoom() {
-    const targets = $$('[data-zoom]');
-    if (!targets.length) return;
-    let box = $('#lightbox');
-    if (!box) {
-      box = doc.createElement('dialog');
-      box.className = 'lightbox'; box.id = 'lightbox'; box.setAttribute('aria-label', t('Photo viewer'));
-      box.innerHTML = '<form method="dialog"><button class="lightbox-close" type="submit" aria-label="' + t('Close photo') + '"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button></form><img id="lightbox-img" alt=""><p id="lightbox-cap"></p>';
-      doc.body.appendChild(box);
-      box.addEventListener('click', (e) => { if (e.target === box) box.close(); });
-    }
-    const img = $('#lightbox-img', box), cap = $('#lightbox-cap', box);
-    const show = (src, alt, caption) => { img.src = src; img.alt = alt || ''; cap.textContent = caption || ''; box.showModal(); };
-    targets.forEach((el) => {
+    let box = null, img = null, cap = null;
+    const ensure = () => {
+      if (box) return;
+      box = $('#lightbox');
+      if (!box) {
+        box = doc.createElement('dialog');
+        box.className = 'lightbox'; box.id = 'lightbox'; box.setAttribute('aria-label', t('Photo viewer'));
+        box.innerHTML = '<form method="dialog"><button class="lightbox-close" type="submit" aria-label="' + t('Close photo') + '"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button></form><img id="lightbox-img" alt=""><p id="lightbox-cap"></p>';
+        doc.body.appendChild(box);
+        box.addEventListener('click', (e) => { if (e.target === box) box.close(); });
+      }
+      img = $('#lightbox-img', box); cap = $('#lightbox-cap', box);
+    };
+    const show = (src, alt, caption) => { ensure(); img.src = src; img.alt = alt || ''; cap.textContent = caption || ''; box.showModal(); };
+    const bind = (el) => {
+      if (el._zoom) return;
+      el._zoom = true;
       if (el.tagName === 'IMG') {
         el.tabIndex = 0; el.setAttribute('role', 'button');
         const open = () => { const fc = el.closest('figure') && el.closest('figure').querySelector('figcaption'); show(el.currentSrc || el.src, el.alt, fc ? fc.textContent : ''); };
@@ -120,7 +124,9 @@
       } else {
         el.addEventListener('click', (e) => { e.preventDefault(); show(el.href, el.textContent.trim(), ''); });
       }
-    });
+    };
+    $$('[data-zoom]').forEach(bind);
+    W.bindZoom = bind;   // js/features.js uses this for photos it adds later
   }
 
   /* ------------------------------------------------------------------ *
