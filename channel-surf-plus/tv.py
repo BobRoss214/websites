@@ -53,13 +53,24 @@ class Server(socketserver.ThreadingMixIn, http.server.HTTPServer):
     allow_reuse_address = True
 
 
+def profile_dir(path, snap_name):
+    """A separate browser profile just for the TV (no sign-ins, no history mixed in).
+    Ubuntu's snap browsers can't use hidden folders, so they get one inside ~/snap."""
+    home = os.path.expanduser("~")
+    if "/snap/" in os.path.realpath(path) or path.startswith("/snap/"):
+        d = os.path.join(home, "snap", snap_name, "common", "channel-surf")
+    else:
+        d = os.path.join(home, ".config", "channel-surf-browser-" + snap_name)
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
 def find_browser(window):
     """Prefer Chrome/Chromium (best YouTube support), then Firefox."""
-    profile = os.path.join(os.path.expanduser("~"), ".config", "channel-surf-browser")
     for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser"):
         path = shutil.which(name)
         if path:
-            flags = [f"--user-data-dir={profile}-chrome", "--no-first-run", "--no-default-browser-check",
+            flags = [f"--user-data-dir={profile_dir(path, 'chromium')}", "--no-first-run", "--no-default-browser-check",
                      "--disable-translate", "--disable-features=Translate", "--password-store=basic",
                      "--disable-session-crashed-bubble", "--noerrdialogs", "--overscroll-history-navigation=0",
                      # the power button is a click anyway; this just makes sure sound is never blocked
@@ -68,8 +79,7 @@ def find_browser(window):
             return path, flags
     path = shutil.which("firefox")
     if path:
-        os.makedirs(profile + "-firefox", exist_ok=True)
-        flags = ["--new-instance", "--profile", profile + "-firefox"]
+        flags = ["--new-instance", "--profile", profile_dir(path, "firefox")]
         if not window:
             flags.append("--kiosk")
         return path, flags

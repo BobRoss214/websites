@@ -130,6 +130,41 @@ these is in [RESEARCH.md](RESEARCH.md).
 - **The viewer's FAV button jumps to the next favorite channel.** Picking
   favorites happens in Setup, so there's nothing for the viewer to mess up.
 
-## Open, waiting on taste
+## Channel Surf Plus (step 2 onward)
 
-- Which of the three looks (or which mix). Mockups are in `mockups/`.
+- **A separate folder, `channel-surf-plus/`**, per your note. The mockups stay in
+  `channel-surf/mockups/`.
+- **The look: Look 1 (1997 cable box)**, my recommended pick, with Look 2's
+  "Loading program guide… please wait" start-up screen. You said "that's good, but expand it"
+  without naming one. It also has the biggest, easiest-to-read text. The code
+  keeps every color and size in one stylesheet, so switching looks later is a contained job.
+- **"Everything YouTube can do", the TV way:** Search (on-screen keyboard plus
+  filters), results, video pages, channel pages, playlists, comments (read only),
+  On Demand (popular now, topics, live now, new from followed channels), and My
+  Stuff (watch later, history with resume, liked, followed, favorite channels).
+  Playback speed, captions, pause, skip ±, next/previous in a list.
+- **Filters shape the TV:** Lineup Filters (length, how new, captions only) change
+  every channel's schedule at once. Each channel can have its own filters, and any
+  search, topic, channel or playlist can become a numbered TV channel.
+- **Not included, on purpose:** a recommendation feed, Google sign-in, posting
+  comments, and real YouTube likes and subscriptions. See RESEARCH.md section 9 for
+  YouTube's "don't be a substitute" rule. Likes and follows are kept on this computer instead.
+- **Setup can switch the extras off** for the simple 75-year-old version.
+- **Demo mode** (practice channels) until a key is added, so everything can be tried first.
+- **Menus show live TV in a window**, the way 2000s cable boxes did, instead of
+  covering or hiding the picture. Setup screens pause it (no sound without a picture).
+- **The on-screen remote** appears when the mouse moves or the screen is touched,
+  and sits beside the picture (it shrinks to make room), never on top.
+- **Errors:** player errors 2/100/101/150 mean skip and never schedule again; 5 means retry once;
+  153 means "start it with tv.py". No picture after 12 seconds means one retry, then skip
+  (for 6 hours). Three stalls in a row means "No Signal", which retries by itself.
+- **Start-up:** `python3 tv.py` serves on `http://localhost:8642` and opens Chrome
+  (or Firefox) in kiosk mode with its own profile. `--install-shortcut` makes a desktop
+  icon. Closing the window stops it.
+- **Tests:** `tests/run-tests.js` drives the real app in a browser against a pretend
+  YouTube that answers with real response shapes and real error formats (47 checks).
+  This sandbox can't reach youtube.com, so the real service hasn't been tried here yet.
+
+## Open
+
+- A pass with your real key and channels, on your Ubuntu machine.

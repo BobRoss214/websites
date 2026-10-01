@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reset the Setup PIN</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #08154d; color: #fff; font: 20px/1.5 "DejaVu Sans Condensed", "Arial Narrow", sans-serif; }
+  main { max-width: 560px; padding: 32px; background: #13308f; border-radius: 14px; box-shadow: inset 0 3px 0 #4a6be0; }
+  h1 { margin: 0 0 10px; color: #ffd23f; font-size: 30px; }
+  button { font: 700 22px inherit; padding: 12px 20px; border: 0; border-radius: 10px; background: #ffd23f; color: #0b1f6b; cursor: pointer; }
+  a { color: #ffd23f; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Forgot the Setup PIN?</h1>
+  <p>This clears only the PIN. Your channels and settings stay as they are. Next time you open Setup, you'll choose a new PIN.</p>
+  <p><button type="button" id="go">Clear the PIN</button></p>
+  <p id="msg"></p>
+  <p><a href="./">Back to the TV</a></p>
+</main>
+<script>
+  document.getElementById('go').addEventListener('click', () => {
+    const KEY = 'channelSurfPlus.v1';
+    try { const s = JSON.parse(localStorage.getItem(KEY) || '{}'); s.pin = ''; localStorage.setItem(KEY, JSON.stringify(s)); document.getElementById('msg').textContent = 'Done. The PIN is cleared.'; }
+    catch (e) { document.getElementById('msg').textContent = 'Could not clear it: ' + e.message; }
+  });
+</script>
+</body>
+</html>

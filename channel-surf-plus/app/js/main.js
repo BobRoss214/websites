@@ -26,6 +26,8 @@ import * as setup from './pages/setup.js';
   bindKeys(app.tv);
   $('#turnOn').addEventListener('click', () => app.tv.press('power'));
   $('#demoNote').hidden = !isDemo();
+  // the online demo (not on this computer) can't connect to YouTube: say so
+  if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) $('#demoNote').textContent = 'Online demo with practice channels. The real YouTube version runs on your own computer.';
 
   // the cable box shows the time while the TV is off
   const led = () => { const d = new Date(), h = d.getHours() % 12 || 12; $('#led').innerHTML = ledSVG((h < 10 ? ' ' : '') + h + ':' + String(d.getMinutes()).padStart(2, '0')); };

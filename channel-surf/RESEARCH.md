@@ -337,3 +337,53 @@ It's normal for a new key to take up to 5 minutes before it starts working.
 - Takeout subscriptions.csv format: https://github.com/TeamNewPipe/NewPipeExtractor/pull/709, https://gist.github.com/hazycora/bc41e673aff4c9c7846d80e145574285
 - Guide channel history: https://tedium.co/2016/03/29/cable-prevue-channel-secret-amiga/, https://en.wikipedia.org/wiki/Electronic_program_guide
 - CRT behavior (power-off dot, degauss): https://www.repairfaq.org/sam/tvfaq.htm
+
+---
+
+## 9. Research for the "Plus" version (search and on demand)
+
+Added when the brief grew to "everything YouTube can do, inside TV menus".
+
+**The big rule.** YouTube's Developer Policies say an API app must not be "a
+substitute for, or substantially similar service to" YouTube's own apps. It also
+must not "recreate the browse experience" unless it adds significant
+independent value. A literal "all of YouTube, different layout" would break that.
+What keeps Channel Surf on the right side is that the core is something YouTube
+doesn't do: **live, scheduled channels** that are always on, a guide grid, flipping, and
+channels you build from searches and filters. Search and on demand are there to
+feed that TV experience: find something, watch it, or **make it a channel**.
+Choices that follow from this:
+- No recommendation feed, no endless home page of thumbnails.
+- No "related videos" (YouTube removed that from the API in August 2023 anyway). It's "more from this channel" instead.
+- Watch Later, History, Likes and Follows are kept on this computer only. They don't
+  sign in or change anything on YouTube. Real likes, comments and subscriptions would need Google
+  sign-in (OAuth) and push it toward being a YouTube replacement, so they're left
+  out unless you decide otherwise.
+
+**Search costs.** Each search is 100 quota units (about 90 a day with
+the free 10,000, after leaving room for channel refreshes). So searches are
+cached for 6 hours, never used for regular channel refreshes, and the Search
+screen shows how many are left today. Everything else we call costs 1 unit:
+popular videos (`videos.list` with `chart=mostPopular`), topics (`videoCategories.list`),
+playlists, comments (`commentThreads.list`).
+
+**Search filters** map straight onto YouTube's own: type (video, channel, playlist),
+length (`videoDuration`: short under 4 min, medium 4 to 20, long over 20), upload date
+(`publishedAfter`), sort (`order`), captions (`videoCaption`), HD (`videoDefinition`),
+live (`eventType=live`). We always add `videoEmbeddable=true` and
+`videoSyndicated=true` so results can actually play here.
+
+**Search results have HTML codes in their text** (`&amp;`, `&#39;`). They're
+decoded for display, and every title, name and comment is escaped before it's
+shown, because they're written by strangers.
+
+**Some topics have no "popular" list.** YouTube answers "chart not found" for
+those, so they just show as empty instead of an error.
+
+**Autoplay with sound.** After the power-button click, Chrome and Firefox allow
+sound. If a browser ever refuses, the TV starts muted and says "Press MUTE to
+turn the sound on" instead of sitting frozen.
+
+Sources: Developer Policies, https://developers.google.com/youtube/terms/developer-policies;
+search.list, https://developers.google.com/youtube/v3/docs/search/list;
+Data API revision history (relatedToVideoId removed), https://developers.google.com/youtube/v3/revision_history
