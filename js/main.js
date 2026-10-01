@@ -442,6 +442,50 @@
   /* ------------------------------------------------------------------ *
    * Groups: school tours / parties / corporate (deep-linkable tabs)
    * ------------------------------------------------------------------ */
+  // "What's on the farm": a season picker that opens on the current season. Each card says which seasons it
+  // belongs to (data-seasons), so the u-pick card swaps crop, colour and drawing and one-season things stay out.
+  function initFarmSeasons() {
+    const root = $('[data-farm-seasons]');
+    const list = $('#farm-cards');
+    if (!root || !list) return;
+    const cards = $$('li[data-seasons]', list);
+    const btns = $$('[data-fs]', $('#farm')?.parentElement || doc);
+    const notes = $$('[data-fs-note]', root);
+    const cols = $$('#farm-glance [data-col]');
+    const nowId = S.current(new Date());
+    S.live(new Date()).forEach((s) => { const b = $('[data-fs="' + s.id + '"]', root); if (b) $('.fs-now', b.parentElement).hidden = false; });
+    let shown = null;
+
+    const select = (id, animate) => {
+      if (id === shown) return;
+      shown = id;
+      btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.fs === id)));
+      notes.forEach((n) => {
+        const on = n.dataset.fsNote === id;
+        n.hidden = !on;
+        if (on) $('.fs-this', n).hidden = id !== nowId;
+      });
+      cols.forEach((c) => c.classList.toggle('is-sel', c.dataset.col === id));
+      let k = 0;
+      cards.forEach((card) => {
+        const on = card.dataset.seasons.split(' ').includes(id);
+        card.hidden = !on;
+        card.classList.remove('fs-in');
+        if (on) {
+          card.classList.add('in');   // the reveal observer may never have seen a card that started hidden
+          if (animate) { card.style.setProperty('--k', String(k)); void card.offsetWidth; card.classList.add('fs-in'); }
+          k += 1;
+        }
+      });
+      list.style.setProperty('--fcols', String(k % 3 === 0 || k === 6 ? 3 : 4));
+      list.dataset.season = id;
+    };
+
+    btns.forEach((b) => b.addEventListener('click', () => select(b.dataset.fs, true)));
+    doc.addEventListener('wa:season', (e) => select(e.detail, true));
+    select(S.active || nowId, false);
+  }
+
   function initGroups() {
     const tabs = $$('#group-tabs .group-tab');
     const panels = $$('.group-panel');
@@ -717,6 +761,7 @@
   initReveal();
   initBee();
   initSeasons();
+  initFarmSeasons();
   initGroups();
   initWeekStrips();
   initVarietyFilter();

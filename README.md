@@ -117,15 +117,15 @@ embedded. The First-visit page can show an entrance / parking photo: set `entran
 its sign, and so on on the Google Earth photo. The website does not publish that photo (it is Google's picture); it draws its own
 illustrated, numbered map from your points, with a list you can tap and Apple Maps / Waze / Google Maps links. After you press "Save for
 Claude" in the tool, Claude fetches the saved JSON and runs `python3 tools/farm_map.py saved-map.json`, which writes `js/farm-map-data.js`.
-The map section (home page and First-visit page) appears as soon as that file has points. Names and notes you typed need translating:
+The map section (home page and First-visit page) appears as soon as that file has points. **Your real map (25 points) is in** (`tools/saved-map.json` is the saved copy; re-run the script after you change it). Names and notes you typed need translating:
 the script lists them. Freehand scribbles are notes for Claude and are not drawn.
 
 **Drive times and map apps.** The Contact section and the First-visit page list drive times (`data-drive="minutes"` in the HTML; edit them
 there) and "Open in Apple Maps or Waze" links.
 
 **Accessibility & comfort** (First-visit page, `#comfort`) only repeats facts the farm has already published (accessible porta-john,
-hand washing, parking, shade, little ones, service animals). It still carries a draft tag: add path surfaces, quieter times and
-baby-changing details when you know them, then delete the tag line.
+hand washing, parking, shade, little ones, service animals). Path surfaces, quieter times and
+baby-changing details can be added whenever you know them.
 
 **QR signs.** `python3 tools/make_qr.py` (needs `pip install segno`; `--check` also needs `zxing-cpp pillow` and scans every code back)
 makes `assets/qr/<name>.svg` and `print/qr-signs.html`: one letter-size sign per page in English and Spanish for Google review (needs
@@ -202,7 +202,7 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Tomatoes & basil** | The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree. Give us the right number and we'll state it. |
 | **Reviews** | The reviews section is built but empty. It needs real quotes (with permission) from you. |
 | **Shop section (`#shop` in `index.html`)** | **Draft.** It sits between The GreenHouse and Flowers on the main page. The layout is done and every price we know is on it (tomatoes, basil, farm fees, rides, pizza). Everything marked "Prices coming soon" (pumpkins, strawberries, blueberries, flowers, concessions, drinks, local goods, ice cream, Christmas trees) needs the real list. Edit the `#shop` section in `index.html`: change a `<dd class="soon">Prices coming soon</dd>` to the price, e.g. `<dd>$5 each</dd>`, then run the rebuild commands. |
-| **Farm map** | The marking tool is ready; waiting for you to mark the farm and press Save. The home page and First-visit page show the map as soon as `js/farm-map-data.js` has points. The First-visit page keeps a draft note about parking and check-in until then. |
+| **Farm map** | Done: your marked map is on the home page and the First-visit page. Re-mark in the tool and run `python3 tools/farm_map.py saved-map.json` to change it. The map calls the maze "Corn maze" (your label) while the cards say "Small Sunn Hemp Maze" (the farm's own wording); pick one when you have time. |
 | **Drive times** | My estimates (Stallings 10, Matthews 15, Mint Hill 20, Monroe 20, Waxhaw 25, Uptown Charlotte 30 minutes, light traffic). Please check them and edit the `data-drive` numbers. |
 | **In the news** | Two Axios Charlotte articles (2017, 2018) found by web search. The headlines are copied from the search results; I could not open the articles from here. Please open both links. |
 | **Email signup** | Built and tested against a pretend Mailchimp. Hidden until you set `signup.action` (see above). |
@@ -231,6 +231,8 @@ alt text and captions that still need translating.
 ## What's interactive
 
 - **Seasonal hero:** the first screen shows the season the farm is in today. The grey line under the headline describes only that season (strawberries, blueberries, pumpkins + tomatoes & basil, Christmas trees), and in winter the headline itself becomes "Wise Acres Christmas trees". A red, open tractor (no cab) pulls the wagon ride past the fields in **spring, summer and fall**: riders sit behind the side boards and wave (no hay: it is a wagon ride). **Fall:** pumpkin patch (tap to pick), a little barrel train on the far lane, scarecrow, crow, falling leaves. **Winter:** Christmas trees to light, campfires to stoke, a snowman, snow. **Summer:** blueberry bushes to pick, bees, sunflowers to snip. **Spring:** strawberries to pick, kids picking in the rows. A "See the farm in…" switcher changes the season, the Seasons tabs and the u-pick card colour.
+- **What's on the farm** (home page, `#farm`): it opens on the current season. Spring / Summer / Fall / Winter buttons swap the cards (`data-seasons="spring summer fall winter"` on each `<li>` in `#farm-cards`; `initFarmSeasons` in `js/main.js`). The u-pick card changes crop, colour and drawing per season (strawberries, blueberries, pumpkins + tomatoes & basil, Christmas trees at The GreenHouse). One-season things (haunted trail, sunn hemp maze, corn pit) only show in fall, the barrel train and wagon ride not in winter. A season-by-season table sits underneath; edit its ticks in `#farm-glance`. Seasons are the typical dates in `js/season.js`.
+- **Farm friends:** tap a kid in the strawberry rows, the sunflower cutter, a wagon rider, a barrel-train kid, the scarecrow (its crow flies off) or the snowman and they react and say something (`SAY` and `npcTalk` in `js/hero.js`; the lines are translated like other JS text).
 - **Hero reactions:** the sun beams, wobbles and blinks on hover and hops, squints and bursts into sparks when clicked (`initSun` in `js/hero.js`, styles at the bottom of `css/extras.css`). The "No reservation? Visit The GreenHouse" pill lifts, glows green and shines on hover, and pops with a spray of leaves before it glides down to The GreenHouse (`initNote`). The big buttons and the "New" tomato chip have their own hover moments. All of it is switched off by `prefers-reduced-motion`, and the hover parts only run on devices that can hover.
 - **Achievements:** pick 100 of one kind (strawberries, blueberries, sunflowers, pumpkins, or trees lit + fires stoked in winter) and a badge pops up above the basket while that item rains down the screen; pick 1,000 in all and a gold "you've got a lot of time on your hands" badge appears. Counted per visit (`credit()` in `js/hero.js`).
 - **Menu:** Visit, On the Farm, Seasons, Tomatoes, Pizza, GreenHouse, Shop, and a **More** menu (Flowers, Groups, Our Story, FAQ, Contact). On phones it is one long list. In winter the main buttons (hero and phone bar) point to The GreenHouse, since the farm is closed. A round **back to top** button shows after scrolling.

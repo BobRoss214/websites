@@ -223,7 +223,6 @@
             <img alt="" loading="lazy" decoding="async">
             <figcaption></figcaption>
           </figure>
-          <p class="draft-tag" data-no-i18n><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> Draft: exact parking and check-in spots will come from the farm map</p>
           <div class="card-actions">
             <a data-t="t60adc929" class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
           </div>
@@ -315,7 +314,6 @@
             <p data-t="tf92dc6ca">Pets stay home because of liability and food-safety rules, but service animals are always welcome.</p>
           </li>
         </ul>
-        <p class="draft-tag" data-no-i18n><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> Draft: add path surfaces, quieter times and baby-changing details</p>
       </div>
     </section>
 
@@ -885,6 +883,16 @@
     <g fill="#fff" opacity=".7"><circle cx="26" cy="82.8" r="1.1"/><circle cx="52" cy="86.8" r="1.1"/><circle cx="30" cy="62.8" r="1"/><circle cx="48" cy="64.8" r="1.1"/></g>
   </symbol>
 
+  <!-- clean Christmas-tree body (no baked ornaments): same tier geometry as #fir so #fir-snow still lines up -->
+  <symbol id="xmas-tree" viewBox="0 0 80 110">
+    <g stroke="#3a2416" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="34" y="97" width="12" height="11" fill="#8a5a35"/>
+      <path d="M40 62L77 100Q70.8 105 64.7 100Q58.5 105 52.3 100Q46.2 105 40 100Q33.8 105 27.7 100Q21.5 105 15.3 100Q9.2 105 3 100Z" fill="#23703a"/><path d="M40 44L71 82Q65.8 87 60.7 82Q55.5 87 50.3 82Q45.2 87 40 82Q34.8 87 29.7 82Q24.5 87 19.3 82Q14.2 87 9 82Z" fill="#2f8a43"/><path d="M40 26L64 62Q60 67 56 62Q52 67 48 62Q44 67 40 62Q36 67 32 62Q28 67 24 62Q20 67 16 62Z" fill="#3c9f4f"/><path d="M40 10L57 40Q54.2 45 51.3 40Q48.5 45 45.7 40Q42.8 45 40 40Q37.2 45 34.3 40Q31.5 45 28.7 40Q25.8 45 23 40Z" fill="#4fb35c"/>
+    </g>
+    <g fill="#000" opacity=".13"><path d="M40 62L77 100Q70.8 105 64.7 100Q58.5 105 52.3 100Q46.2 105 40 100Z"/><path d="M40 44L71 82Q65.8 87 60.7 82Q55.5 87 50.3 82Q45.2 87 40 82Z"/><path d="M40 26L64 62Q60 67 56 62Q52 67 48 62Q44 67 40 62Z"/><path d="M40 10L57 40Q54.2 45 51.3 40Q48.5 45 45.7 40Q42.8 45 40 40Z"/></g>
+    <path d="M30.65 34q9.35 6 18.7 0M26.8 56q13.2 6 26.4 0M22.95 76q17.05 6 34.1 0M19.65 94q20.35 6 40.7 0" fill="none" stroke="#1a5c2c" stroke-width="1.6" stroke-linecap="round" opacity=".55"/>
+  </symbol>
+
   <symbol id="greenhouse-art" viewBox="0 0 150 116">
     <g stroke="#3a2416" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
       <path d="M14 106V52L75 12l61 40v54Z" fill="#dff6f0"/>
@@ -996,6 +1004,12 @@
     <stop offset="0" stop-color="#ffb347" stop-opacity=".8"/>
     <stop offset=".45" stop-color="#ff9a3c" stop-opacity=".32"/>
     <stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/>
+  </radialGradient>
+
+  <radialGradient id="treeGlow" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#fff4b8" stop-opacity=".85"/>
+    <stop offset=".5" stop-color="#ffd54f" stop-opacity=".3"/>
+    <stop offset="1" stop-color="#ffd54f" stop-opacity="0"/>
   </radialGradient>
 
   <!-- snow dusting laid over #fir for the winter scene -->

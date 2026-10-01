@@ -561,21 +561,52 @@
   function drawMap(container, data) {
     const wrap = $('.map-wrap', container);
     wrap.innerHTML = '';
-    const Wd = data.size.width, Ht = data.size.height, u = Wd / 380;
-    const svg = el('svg', { viewBox: '0 0 ' + Wd + ' ' + Ht, class: 'map-svg', role: 'group', 'aria-label': t('Illustrated map of the farm') });
+    const Wd = data.size.width, Ht = data.size.height;
+    const items = data.items.filter((it) => it && it.pts && it.pts.length);
+    // Show only the part of the picture that has something on it (with a margin), so the map fills the space.
+    let lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
+    items.forEach((it) => it.pts.forEach((q) => { lo = [Math.min(lo[0], q[0]), Math.min(lo[1], q[1] - (it.type === 'pin' ? 36 : 0))]; hi = [Math.max(hi[0], q[0]), Math.max(hi[1], q[1])]; }));
+    const PAD = 34;
+    let vx = Math.max(0, lo[0] - PAD), vy = Math.max(0, lo[1] - PAD), vw = Math.min(Wd, hi[0] + PAD) - vx, vh = Math.min(Ht, hi[1] + PAD) - vy;
+    if (!(vw > 0 && vh > 0)) { vx = 0; vy = 0; vw = Wd; vh = Ht; }
+    if (vw < 220) { vx = Math.max(0, Math.min(Wd - 220, vx - (220 - vw) / 2)); vw = Math.min(220, Wd); }
+    if (vh < 260) { vy = Math.max(0, Math.min(Ht - 260, vy - (260 - vh) / 2)); vh = Math.min(260, Ht); }
+    const u = vw / 380;
+    const svg = el('svg', { viewBox: [vx, vy, vw, vh].map((v) => +v.toFixed(1)).join(' '), class: 'map-svg', role: 'group', 'aria-label': t('Illustrated map of the farm') });
     svg.style.setProperty('--u', u);
     const defs = el('defs', {}, svg);
-    el('rect', { x: 0, y: 0, width: Wd, height: Ht, rx: 14 * u, fill: '#e9f4d4' }, svg);
+    el('rect', { x: vx, y: vy, width: vw, height: vh, rx: 14 * u, fill: '#e9f4d4' }, svg);
     const dots = el('pattern', { id: 'mp-dots', width: 14 * u, height: 14 * u, patternUnits: 'userSpaceOnUse' }, defs);
     el('circle', { cx: 3 * u, cy: 3 * u, r: 1.2 * u, fill: '#cfe5b0' }, dots);
-    el('rect', { x: 0, y: 0, width: Wd, height: Ht, rx: 14 * u, fill: 'url(#mp-dots)' }, svg);
-    el('rect', { x: 0, y: 0, width: Wd, height: Ht, rx: 14 * u, fill: 'none', stroke: '#3a2416', 'stroke-width': 3 * u }, svg);
+    el('rect', { x: vx, y: vy, width: vw, height: vh, rx: 14 * u, fill: 'url(#mp-dots)' }, svg);
+    el('rect', { x: vx, y: vy, width: vw, height: vh, rx: 14 * u, fill: 'none', stroke: '#3a2416', 'stroke-width': 3 * u }, svg);
 
-    const items = data.items.filter((it) => it && it.pts && it.pts.length);
+    // Pins that sit almost on top of each other are nudged apart (the map is not to scale anyway).
+    const pinPts = new Map();
+    const pinList = items.filter((it) => it.type === 'pin');
+    pinList.forEach((it) => pinPts.set(it.id, [it.pts[0][0], it.pts[0][1]]));
+    const minGap = 25 * u;
+    for (let iter = 0; iter < 60; iter++) {
+      let moved = false;
+      for (let i = 0; i < pinList.length; i++) {
+        for (let j = i + 1; j < pinList.length; j++) {
+          const a = pinPts.get(pinList[i].id), b = pinPts.get(pinList[j].id);
+          let dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy);
+          if (d >= minGap) continue;
+          if (d < 0.01) { const ang = i * 2.399963 + j; dx = Math.cos(ang); dy = Math.sin(ang); d = 1; }
+          const push = (minGap - d) / 2;
+          a[0] -= dx / d * push; a[1] -= dy / d * push; b[0] += dx / d * push; b[1] += dy / d * push; moved = true;
+        }
+      }
+      if (!moved) break;
+    }
     // numbers: everything that has a name, in legend order
     const numbered = items.filter((it) => (it.type === 'pin' || it.type === 'area' || it.type === 'path') && it.label);
     numbered.sort((a, b) => (kindOf(a.kind).g - kindOf(b.kind).g) || String(a.label).localeCompare(String(b.label)));
-    const num = new Map(numbered.map((it, i) => [it.id, i + 1]));
+    const keyOf = (it) => it.kind + '|' + it.label;
+    const numByKey = new Map();
+    numbered.forEach((it) => { if (!numByKey.has(keyOf(it))) numByKey.set(keyOf(it), numByKey.size + 1); });
+    const num = { get: (id) => { const it = items.find((x) => x.id === id); return it ? numByKey.get(keyOf(it)) : undefined; } };
     const gAreas = el('g', {}, svg), gPaths = el('g', {}, svg), gPins = el('g', {}, svg), gText = el('g', {}, svg);
     const nodes = new Map();
 
@@ -587,7 +618,7 @@
     };
     const interactive = (g, it) => {
       const n = num.get(it.id);
-      g.setAttribute('class', 'map-item'); g.setAttribute('data-id', it.id);
+      g.setAttribute('class', 'map-item'); g.setAttribute('data-id', it.id); g.setAttribute('data-key', keyOf(it));
       if (n) { g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', n + '. ' + t(it.label)); }
       nodes.set(it.id, g);
     };
@@ -624,7 +655,7 @@
     // Freehand scribbles from the Farm Map Marker are notes for Claude, so they are not drawn on the public map.
     items.filter((it) => it.type === 'pin').forEach((it) => {
       const k = kindOf(it.kind), g = el('g', {}, gPins); interactive(g, it);
-      const [x, y] = it.pts[0], r = 11 * u;
+      const [x, y] = pinPts.get(it.id), r = 11 * u;
       el('path', { d: 'M' + x + ' ' + y + ' L' + (x - 6 * u) + ' ' + (y - 14 * u) + ' L' + (x + 6 * u) + ' ' + (y - 14 * u) + ' Z', fill: '#3a2416' }, g);
       const n = num.get(it.id);
       badge(g, x, y - 22 * u, n || '', k.c, r);
@@ -634,7 +665,7 @@
       tx.textContent = it.label || '';
     });
     // north arrow
-    const na = el('g', { transform: 'translate(' + (Wd - 26 * u) + ' ' + (26 * u) + ')', 'aria-hidden': 'true' }, svg);
+    const na = el('g', { transform: 'translate(' + (vx + vw - 26 * u) + ' ' + (vy + 26 * u) + ')', 'aria-hidden': 'true' }, svg);
     const rot = { up: 0, right: -90, down: 180, left: 90 }[data.north || 'up'] || 0;
     const ng = el('g', { transform: 'rotate(' + rot + ')' }, na);
     el('circle', { r: 15 * u, fill: '#fff', stroke: '#3a2416', 'stroke-width': 2 * u }, ng);
@@ -650,13 +681,14 @@
     // legend
     const legend = $('.map-legend', container); legend.innerHTML = '';
     MG.forEach((gname, gi) => {
-      const list = numbered.filter((it) => kindOf(it.kind).g === gi);
+      const seenKeys = new Set();
+      const list = numbered.filter((it) => kindOf(it.kind).g === gi && !seenKeys.has(keyOf(it)) && seenKeys.add(keyOf(it)));
       if (!list.length) return;
       const h = doc.createElement('h3'); h.textContent = t(gname); legend.appendChild(h);
       const ol = doc.createElement('ol');
       list.forEach((it) => {
         const li = doc.createElement('li'), b = doc.createElement('button'), k = kindOf(it.kind);
-        b.type = 'button'; b.dataset.id = it.id; b.setAttribute('aria-pressed', 'false');
+        b.type = 'button'; b.dataset.key = keyOf(it); b.setAttribute('aria-pressed', 'false');
         const bd = badgeOf(k.c); b.innerHTML = '<span class="mn" style="--c:' + bd.bg + ';--fg:' + bd.fg + '"></span><span class="ml"></span>';
         $('.mn', b).textContent = String(num.get(it.id));
         $('.ml', b).textContent = t(it.label);
@@ -668,11 +700,12 @@
     // selecting
     const detail = $('.map-detail', container);
     let active = null;
-    const select = (id, fromMap) => {
-      active = active === id ? null : id;
-      nodes.forEach((g, key) => g.classList.toggle('is-active', key === active));
-      $$('.map-legend button', container).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.id === active)));
-      const it = items.find((x) => x.id === active);
+    const select = (key, fromMap) => {
+      active = active === key ? null : key;
+      nodes.forEach((g) => g.classList.toggle('is-active', g.getAttribute('data-key') === active));
+      $$('.map-legend button', container).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.key === active)));
+      const same = items.filter((x) => active && keyOf(x) === active);
+      const it = same[0] && Object.assign({}, same[0], { note: (same.find((x) => x.note) || same[0]).note });
       detail.hidden = !it;
       if (it) {
         const k = kindOf(it.kind);
@@ -685,11 +718,12 @@
         if (!fromMap && window.matchMedia('(max-width: 820px)').matches) wrap.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     };
-    nodes.forEach((g, id) => {
-      g.addEventListener('click', () => select(id, true));
-      g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(id, true); } });
+    nodes.forEach((g) => {
+      const key = g.getAttribute('data-key');
+      g.addEventListener('click', () => select(key, true));
+      g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(key, true); } });
     });
-    $$('.map-legend button', container).forEach((b) => b.addEventListener('click', () => select(b.dataset.id, false)));
+    $$('.map-legend button', container).forEach((b) => b.addEventListener('click', () => select(b.dataset.key, false)));
     container.dataset.rendered = '1';
   }
 

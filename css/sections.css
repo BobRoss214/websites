@@ -103,9 +103,9 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .package .small{margin:0 0 1.2em}
 
 .week-strip{display:grid;grid-template-columns:repeat(7,minmax(0,38px));gap:6px;margin:.3em 0 .9em}
-.week-strip .day{aspect-ratio:1;display:grid;place-items:center;border:2.5px solid var(--ink);border-radius:50%;font:700 .85rem/1 var(--display);background:#fff;color:var(--ink-soft);opacity:.5}
-.week-strip .day.on{background:var(--sun);color:var(--ink);opacity:1}
-.week-strip .day.today{outline:3px solid var(--red);outline-offset:2px;opacity:1}
+.week-strip .day{aspect-ratio:1;display:grid;place-items:center;border:2.5px solid var(--ink);border-radius:50%;font:700 .85rem/1 var(--display);background:#fff;color:#74655a;border-color:#cdbfb1}
+.week-strip .day.on{background:var(--sun);color:var(--ink);border-color:var(--ink);opacity:1}
+.week-strip .day.today{outline:3px solid var(--red);outline-offset:2px;border-color:var(--ink);color:var(--ink);opacity:1}
 .week-strip-lg{grid-template-columns:repeat(7,minmax(0,46px))}
 .week-strip-lg .day{font-size:1.05rem}
 

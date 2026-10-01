@@ -522,51 +522,161 @@
           <p data-t="tbe974059" class="lead">Your reservation gets you into the fields and all the play spaces. Here&rsquo;s what to look forward to.</p>
         </header>
 
+        <div class="fs reveal" id="farm-seasons" data-farm-seasons>
+          <div data-ta-aria-label="t49a8609c" class="fs-tabs" role="group" aria-label="Pick a season to see what&rsquo;s on the farm">
+            <div class="fs-tab">
+              <button class="fs-btn" type="button" data-fs="spring" aria-pressed="false"><svg class="fs-art" aria-hidden="true" viewBox="0 0 64 72"><use href="#strawberry"/></svg><span data-t="t89677615" class="fs-name">Spring</span></button>
+              <span data-t="te3b82040" class="fs-now" hidden>Now</span>
+            </div>
+            <div class="fs-tab">
+              <button class="fs-btn" type="button" data-fs="summer" aria-pressed="false"><svg class="fs-art" aria-hidden="true" viewBox="0 0 90 92"><use href="#blueberry"/></svg><span data-t="t7c92fc5c" class="fs-name">Summer</span></button>
+              <span data-t="te3b82040" class="fs-now" hidden>Now</span>
+            </div>
+            <div class="fs-tab">
+              <button class="fs-btn" type="button" data-fs="fall" aria-pressed="false"><svg class="fs-art" aria-hidden="true" viewBox="0 0 110 92"><use href="#pumpkin"/></svg><span data-t="t5c1ae82c" class="fs-name">Fall</span></button>
+              <span data-t="te3b82040" class="fs-now" hidden>Now</span>
+            </div>
+            <div class="fs-tab">
+              <button class="fs-btn" type="button" data-fs="winter" aria-pressed="false"><svg class="fs-art" aria-hidden="true" viewBox="0 0 80 110"><use href="#fir"/></svg><span data-t="t24615d93" class="fs-name">Winter</span></button>
+              <span data-t="te3b82040" class="fs-now" hidden>Now</span>
+            </div>
+          </div>
+          <div class="fs-notes" role="status" aria-live="polite">
+            <div class="fs-note" data-fs-note="spring" hidden>
+              <p data-t="tde886b76" class="fs-this" hidden>This season</p>
+              <h4 data-t="t83fd58c8" class="fs-title">Spring at the farm</h4>
+              <p data-t="t459c886e" class="fs-when">Typically mid-April to early June.</p>
+            </div>
+            <div class="fs-note" data-fs-note="summer" hidden>
+              <p data-t="tde886b76" class="fs-this" hidden>This season</p>
+              <h4 data-t="tc4ea0ca0" class="fs-title">Summer at the farm</h4>
+              <p data-t="t6fdc35e4" class="fs-when">Typically mid-June to early July.</p>
+            </div>
+            <div class="fs-note" data-fs-note="fall" hidden>
+              <p data-t="tde886b76" class="fs-this" hidden>This season</p>
+              <h4 data-t="t23417aee" class="fs-title">Fall at the farm</h4>
+              <p data-t="t67fdc776" class="fs-when">Typically mid-September to early November.</p>
+            </div>
+            <div class="fs-note" data-fs-note="winter" hidden>
+              <p data-t="tde886b76" class="fs-this" hidden>This season</p>
+              <h4 data-t="t8b7f690c" class="fs-title">Winter: Christmas trees</h4>
+              <p data-t="t2527da3d" class="fs-when">From the Friday after Thanksgiving to early December. The u-pick farm takes a break, so everything below is at The GreenHouse next door. No reservation needed.</p>
+            </div>
+          </div>
+        </div>
+
         <ul class="cards" id="farm-cards" data-nav="farm">
-          <li class="card c-pink reveal">
+          <li class="card c-pink reveal" data-seasons="spring">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 64 72"><use href="#strawberry"/></svg>
-            <h3 data-t="t927dbc14">U-Pick Fields</h3>
-            <p data-t="tef497b3e">Pumpkins, flowers and new organic tomatoes and basil in fall. Strawberries in spring, blueberries in summer.</p>
+            <h3 data-t="t0f8baf93">U-Pick Strawberries</h3>
+            <p data-t="t933726da">Pick your own organic strawberries, plus u-cut flowers.</p>
           </li>
-          <li class="card c-sky reveal">
+          <li class="card c-blue reveal" data-seasons="summer">
+            <svg class="card-art" aria-hidden="true" viewBox="0 0 90 92"><use href="#blueberry"/></svg>
+            <h3 data-t="t1dc842e8">U-Pick Blueberries</h3>
+            <p data-t="t012772bb">Pick your own organic blueberries, plus u-cut sunflowers and flowers.</p>
+          </li>
+          <li class="card c-pumpkin reveal" data-seasons="fall">
+            <svg class="card-art" aria-hidden="true" viewBox="0 0 110 92"><use href="#pumpkin"/></svg>
+            <h3 data-t="t7b607707">U-Pick Pumpkins</h3>
+            <p data-t="t93b3741c">A variety of pumpkin types to pick, plus u-cut flowers and new organic tomatoes and basil.</p>
+          </li>
+          <li class="card c-green reveal" data-seasons="winter">
+            <svg class="card-art" aria-hidden="true" viewBox="0 0 80 110"><use href="#fir"/></svg>
+            <h3 data-t="t0c1c1374">Christmas Trees</h3>
+            <p data-t="t8aea10f7">Pick out a North Carolina Christmas tree at The GreenHouse next door, starting the Friday after Thanksgiving.</p>
+            <span data-t="t11999abc" class="tag">At The GreenHouse</span>
+          </li>
+          <li class="card c-sky reveal" data-seasons="spring summer fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 120 112"><use href="#goat"/></svg>
             <h3 data-t="t1eece26f">Meet the Animals</h3>
             <p data-t="t38dfa5d4">Say hello to the farm animals &mdash; and help feed them.</p>
           </li>
-          <li class="card c-sun reveal">
+          <li class="card c-sky reveal" data-seasons="winter">
+            <svg class="card-art" aria-hidden="true" viewBox="0 0 120 112"><use href="#goat"/></svg>
+            <h3 data-t="td75cc584">Playground &amp; Goats</h3>
+            <p data-t="t2a765f16">The kids can run on the playground and pet the goats at The GreenHouse.</p>
+            <span data-t="t11999abc" class="tag">At The GreenHouse</span>
+          </li>
+          <li class="card c-sun reveal" data-seasons="spring summer fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 152 100"><use href="#playground"/></svg>
             <h3 data-t="t2472110c">Playgrounds</h3>
             <p data-t="td348b539">Free play areas, including a 100% recycled-tire playground.</p>
           </li>
-          <li class="card c-lilac reveal">
+          <li class="card c-lilac reveal" data-seasons="fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 120 100"><use href="#haunted"/></svg>
             <h3 data-t="t4b6d3990">Haunted Trail</h3>
             <p data-t="tb89adc3c">Take a spooky walk on our haunted trail.</p>
             <span data-t="t5c1ae82c" class="tag">Fall</span>
           </li>
-          <li class="card c-green reveal">
+          <li class="card c-green reveal" data-seasons="fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 90 90"><use href="#maze"/></svg>
             <h3 data-t="t8c64d6c3">Small Sunn Hemp Maze</h3>
             <p data-t="tcc37b939">Wander through our little maze on fall visits.</p>
             <span data-t="t5c1ae82c" class="tag">Fall</span>
           </li>
-          <li class="card c-lime reveal">
+          <li class="card c-lime reveal" data-seasons="spring summer fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 90 110"><use href="#tree"/></svg>
             <h3 data-t="t8b4d3088">Shaded Picnic Patch</h3>
             <p data-t="tad272b52">Bring a snack, cool off in the shade and take a breather.</p>
           </li>
-          <li class="card c-orange reveal">
+          <li class="card c-orange reveal" data-seasons="spring summer">
+            <svg class="card-art" aria-hidden="true" viewBox="0 0 220 180"><use href="#barn"/></svg>
+            <h3 data-t="taebf0a9a">Concessions &amp; Local Goods</h3>
+            <p data-t="tbf415391">Snacks, beer, hard cider and wine, and local goods.</p>
+          </li>
+          <li class="card c-orange reveal" data-seasons="fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 220 180"><use href="#barn"/></svg>
             <h3 data-t="taebf0a9a">Concessions &amp; Local Goods</h3>
             <p data-t="t7528af5c">Snacks, beer, hard cider and wine, local goods and NC pumpkins.</p>
           </li>
-          <li class="card c-cream reveal">
+          <li class="card c-orange reveal" data-seasons="winter">
+            <svg class="card-art" aria-hidden="true" viewBox="0 0 84 92"><use href="#pizza-slice"/></svg>
+            <h3 data-t="t2e120666">Pizza, Ice Cream &amp; Drinks</h3>
+            <p data-t="t3517c259">Wise Pie pizza, Waxhaw Creamery ice cream, and beer, wine and cider at The GreenHouse.</p>
+            <span data-t="t11999abc" class="tag">At The GreenHouse</span>
+          </li>
+          <li class="card c-cream reveal" data-seasons="spring summer">
+            <svg class="card-art" aria-hidden="true" viewBox="0 0 508 158"><use href="#wagon"/><g class="rig-smoke" transform="translate(465 56)" fill="#fff" stroke="#cfcfcf" stroke-width="2"><circle class="puff p1" r="9"/><circle class="puff p2" r="7"/><circle class="puff p3" r="8"/></g></svg>
+            <h3 data-t="tea6897bf">Wagon Ride &amp; Barrel Train</h3>
+            <p data-t="t77a4e8d8">Extra fun you can add to your visit.</p>
+            <span data-t="t2877bc7c" class="tag">Add-on</span>
+          </li>
+          <li class="card c-cream reveal" data-seasons="fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 508 158"><use href="#wagon"/><g class="rig-smoke" transform="translate(465 56)" fill="#fff" stroke="#cfcfcf" stroke-width="2"><circle class="puff p1" r="9"/><circle class="puff p2" r="7"/><circle class="puff p3" r="8"/></g></svg>
             <h3 data-t="t6498fda1">Wagon, Corn Pit &amp; Barrel Train</h3>
             <p data-t="t7fdff574">Extra fun you can add to your fall visit.</p>
             <span data-t="t2877bc7c" class="tag">Add-on</span>
           </li>
         </ul>
+
+        <div class="fs-glance reveal">
+          <h4 data-t="t71f65d02" class="fs-glance-h">Season by season</h4>
+          <div data-ta-aria-label="t536c3119" class="fs-scroll" tabindex="0" role="region" aria-label="Table: what&rsquo;s on the farm in each season">
+            <table class="fs-table" id="farm-glance">
+              <caption data-t="t87a31fa0" class="sr-only">What&rsquo;s on the farm, season by season</caption>
+              <thead><tr><td></td>
+                <th scope="col" data-col="spring"><button data-t="t89677615" type="button" data-fs="spring">Spring</button></th>
+                <th scope="col" data-col="summer"><button data-t="t7c92fc5c" type="button" data-fs="summer">Summer</button></th>
+                <th scope="col" data-col="fall"><button data-t="t5c1ae82c" type="button" data-fs="fall">Fall</button></th>
+                <th scope="col" data-col="winter"><button data-t="t24615d93" type="button" data-fs="winter">Winter</button></th>
+              </tr></thead>
+              <tbody>
+                <tr><th data-t="tce23d9e3" scope="row">What you pick</th><td data-t="t93f3a241" data-col="spring" class="fs-text">Strawberries</td><td data-t="tc9b6a025" data-col="summer" class="fs-text">Blueberries</td><td data-t="t36c85461" data-col="fall" class="fs-text">Pumpkins, flowers, tomatoes &amp; basil</td><td data-t="t05db350a" data-col="winter" class="fs-gh">Christmas trees</td></tr>
+                <tr><th data-t="t1780ecaa" scope="row">Animals</th><td data-col="spring" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="summer" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-t="t1c23b792" data-col="winter" class="fs-gh">Goats</td></tr>
+                <tr><th data-t="t2472110c" scope="row">Playgrounds</th><td data-col="spring" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="summer" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-t="ta68eb230" data-col="winter" class="fs-gh">Playground</td></tr>
+                <tr><th data-t="t9812b413" scope="row">Shaded picnic patch</th><td data-col="spring" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="summer" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
+                <tr><th data-t="te71c4e07" scope="row">Concessions &amp; local goods</th><td data-col="spring" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="summer" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-t="tfd50ab92" data-col="winter" class="fs-gh">Pizza, ice cream &amp; drinks</td></tr>
+                <tr><th data-t="tfd41a510" scope="row">Wagon ride</th><td data-col="spring" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="summer" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
+                <tr><th data-t="td7695794" scope="row">Barrel train</th><td data-col="spring" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="summer" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
+                <tr><th data-t="tca08d18d" scope="row">Corn pit</th><td data-col="spring" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="summer" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
+                <tr><th data-t="t49c35609" scope="row">Haunted trail</th><td data-col="spring" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="summer" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
+                <tr><th data-t="t39573dd5" scope="row">Small sunn hemp maze</th><td data-col="spring" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="summer" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="fs-legend small"><span class="fs-gh-key"></span> <span data-t="tad89c7a2">Next door at The GreenHouse. No reservation needed.</span></p>
+        </div>
 
         <div class="goat-nook reveal" aria-hidden="false">
           <button data-ta-aria-label="t062abb55" class="goat-btn" id="goat-btn" type="button" aria-label="Say hi to the goat">
@@ -2442,6 +2552,16 @@
     <g fill="#fff" opacity=".7"><circle cx="26" cy="82.8" r="1.1"/><circle cx="52" cy="86.8" r="1.1"/><circle cx="30" cy="62.8" r="1"/><circle cx="48" cy="64.8" r="1.1"/></g>
   </symbol>
 
+  <!-- clean Christmas-tree body (no baked ornaments): same tier geometry as #fir so #fir-snow still lines up -->
+  <symbol id="xmas-tree" viewBox="0 0 80 110">
+    <g stroke="#3a2416" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="34" y="97" width="12" height="11" fill="#8a5a35"/>
+      <path d="M40 62L77 100Q70.8 105 64.7 100Q58.5 105 52.3 100Q46.2 105 40 100Q33.8 105 27.7 100Q21.5 105 15.3 100Q9.2 105 3 100Z" fill="#23703a"/><path d="M40 44L71 82Q65.8 87 60.7 82Q55.5 87 50.3 82Q45.2 87 40 82Q34.8 87 29.7 82Q24.5 87 19.3 82Q14.2 87 9 82Z" fill="#2f8a43"/><path d="M40 26L64 62Q60 67 56 62Q52 67 48 62Q44 67 40 62Q36 67 32 62Q28 67 24 62Q20 67 16 62Z" fill="#3c9f4f"/><path d="M40 10L57 40Q54.2 45 51.3 40Q48.5 45 45.7 40Q42.8 45 40 40Q37.2 45 34.3 40Q31.5 45 28.7 40Q25.8 45 23 40Z" fill="#4fb35c"/>
+    </g>
+    <g fill="#000" opacity=".13"><path d="M40 62L77 100Q70.8 105 64.7 100Q58.5 105 52.3 100Q46.2 105 40 100Z"/><path d="M40 44L71 82Q65.8 87 60.7 82Q55.5 87 50.3 82Q45.2 87 40 82Z"/><path d="M40 26L64 62Q60 67 56 62Q52 67 48 62Q44 67 40 62Z"/><path d="M40 10L57 40Q54.2 45 51.3 40Q48.5 45 45.7 40Q42.8 45 40 40Z"/></g>
+    <path d="M30.65 34q9.35 6 18.7 0M26.8 56q13.2 6 26.4 0M22.95 76q17.05 6 34.1 0M19.65 94q20.35 6 40.7 0" fill="none" stroke="#1a5c2c" stroke-width="1.6" stroke-linecap="round" opacity=".55"/>
+  </symbol>
+
   <symbol id="greenhouse-art" viewBox="0 0 150 116">
     <g stroke="#3a2416" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
       <path d="M14 106V52L75 12l61 40v54Z" fill="#dff6f0"/>
@@ -2553,6 +2673,12 @@
     <stop offset="0" stop-color="#ffb347" stop-opacity=".8"/>
     <stop offset=".45" stop-color="#ff9a3c" stop-opacity=".32"/>
     <stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/>
+  </radialGradient>
+
+  <radialGradient id="treeGlow" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#fff4b8" stop-opacity=".85"/>
+    <stop offset=".5" stop-color="#ffd54f" stop-opacity=".3"/>
+    <stop offset="1" stop-color="#ffd54f" stop-opacity="0"/>
   </radialGradient>
 
   <!-- snow dusting laid over #fir for the winter scene -->

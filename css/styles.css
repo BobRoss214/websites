@@ -209,7 +209,7 @@ svg.layer-fore{overflow:visible}
 .step.is-reached{background:#f3fbe8}
 
 .farm-head{margin-top:clamp(64px,9vw,104px)}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.cards{display:grid;grid-template-columns:repeat(var(--fcols,4),1fr);gap:22px}
 .card{position:relative;padding:22px 20px 24px;border:3px solid var(--ink);border-radius:var(--radius);box-shadow:var(--shadow);background:var(--bg,#fff);transition:transform .25s cubic-bezier(.3,1.6,.5,1),box-shadow .25s}
 .card:hover{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 12px 0 var(--ink)}
 .card-art{width:auto;height:88px;margin-bottom:14px;transition:transform .35s cubic-bezier(.3,1.7,.5,1);transform-origin:50% 90%}
@@ -218,7 +218,50 @@ svg.layer-fore{overflow:visible}
 .card p{margin:0;font-weight:600;font-size:.98rem;line-height:1.5}
 .tag{position:absolute;top:14px;right:14px;background:var(--ink);color:#fff;font:600 .72rem/1 var(--display);letter-spacing:.1em;text-transform:uppercase;padding:.45em .8em;border-radius:999px}
 .c-pink{--bg:#ffd9df}.c-sky{--bg:#cfeeff}.c-sun{--bg:#fff0b0}.c-green{--bg:#d3f0bf}
+.c-blue{--bg:#d9e2ff}.c-pumpkin{--bg:#ffd3a3}
 .c-lilac{--bg:#e5e0ff}.c-lime{--bg:#e6f5b4}.c-orange{--bg:#ffdcb8}.c-cream{--bg:#fff3d6}
+
+/* What's on the farm: season picker, season-aware cards, season-by-season table */
+.fs{display:grid;gap:18px;justify-items:center;margin:0 0 clamp(24px,3.4vw,38px)}
+.fs-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.fs-tab{position:relative}
+.fs-btn{display:flex;align-items:center;gap:10px;min-height:54px;padding:6px 22px 6px 14px;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:999px;font:700 1.08rem/1 var(--display);cursor:pointer;box-shadow:0 4px 0 var(--ink);transition:transform .2s cubic-bezier(.3,1.6,.5,1),background-color .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.fs-btn:hover{transform:translateY(-2px)}
+.fs-btn[aria-pressed="true"]{background:var(--sun);transform:translateY(-3px);box-shadow:0 7px 0 var(--ink)}
+.fs-art{width:auto;height:36px;transition:transform .3s cubic-bezier(.3,1.7,.5,1);transform-origin:50% 90%}
+.fs-btn[aria-pressed="true"] .fs-art{transform:rotate(-10deg) scale(1.15)}
+.fs-now{position:absolute;top:-13px;right:-4px;background:var(--red);color:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .68rem/1 var(--display);letter-spacing:.08em;text-transform:uppercase;padding:.42em .7em;pointer-events:none}
+.fs-notes{text-align:center;max-width:64ch}
+.fs-note:not([hidden]){animation:fadeDown .35s ease both}
+.fs-this{display:inline-block;margin:0 0 .5em;background:var(--ink);color:#fff;font:600 .72rem/1 var(--display);letter-spacing:.1em;text-transform:uppercase;padding:.5em .9em;border-radius:999px}
+.fs-title{font-size:clamp(1.35rem,2.4vw,1.7rem);margin:0}
+.fs-when{margin:.3em 0 0;font-weight:600;color:var(--ink-soft)}
+.card.fs-in{animation:fsIn .5s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(var(--k,0) * 55ms)}
+@keyframes fsIn{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:none}}
+.fs-glance{margin-top:clamp(30px,4.4vw,52px)}
+.fs-glance-h{text-align:center;font-size:1.45rem;margin:0 0 14px}
+.fs-scroll{overflow-x:auto;background:#fff;border:3px solid var(--ink);border-radius:var(--radius);box-shadow:var(--shadow)}
+.fs-table{width:100%;min-width:660px;border-collapse:separate;border-spacing:0}
+.fs-table th,.fs-table td{padding:.65em .8em;text-align:center;font-weight:600;font-size:.96rem;line-height:1.3;border-bottom:2px solid #f0e6d2;transition:background-color .25s}
+.fs-table tbody tr:last-child th,.fs-table tbody tr:last-child td{border-bottom:0}
+.fs-table tbody th{position:sticky;left:0;z-index:1;text-align:left;background:#fff;font:600 1rem/1.25 var(--display);min-width:9.5em;box-shadow:2px 0 0 #f0e6d2}
+.fs-table thead th,.fs-table thead td{border-bottom:3px solid var(--ink);background:var(--cream)}
+.fs-table thead button{font:700 1rem/1 var(--display);color:var(--ink);background:none;border:0;padding:.35em .6em;border-radius:999px;cursor:pointer}
+.fs-table thead button:hover{background:#fff}
+.fs-table [data-col].is-sel{background:#fff4c9}
+.fs-table thead [data-col].is-sel{background:var(--sun)}
+.fs-yes span[aria-hidden]{color:var(--green-deep);font-size:1.25rem;font-weight:800}
+.fs-no{color:#a99f92}
+.fs-text{font-family:var(--display)}
+.fs-gh{background:#e3f3d9}
+.fs-table [data-col].is-sel.fs-gh{background:#d3ebc4}
+.fs-legend{display:flex;align-items:center;justify-content:center;gap:.6em;margin:.9em 0 0;text-align:center}
+.fs-gh-key{flex:none;width:1.1em;height:1.1em;border:2px solid var(--ink);border-radius:5px;background:#cfe8c0}
+@media (max-width:520px){
+  .fs-tabs{gap:10px}
+  .fs-btn{min-height:48px;padding:4px 16px 4px 10px;font-size:1rem}
+  .fs-art{height:30px}
+}
 
 .goat-nook{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin-top:clamp(28px,4vw,48px)}
 .goat-btn{position:relative;width:150px;height:134px;padding:0;border:0;background:none;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -468,6 +511,7 @@ svg.layer-fore{overflow:visible}
   .cards{grid-template-columns:1fr}
   .card{display:grid;grid-template-columns:76px 1fr;gap:0 14px;align-items:center}
   .card-art{grid-row:span 2;height:66px;width:76px;margin:0;object-fit:contain}
+  .tag{position:static;grid-column:2;justify-self:start;margin-top:.55em}
   .facts-grid{grid-template-columns:1fr}
   .footer-inner{grid-template-columns:1fr}
   .hero h1{font-size:2.3rem}
@@ -479,6 +523,7 @@ svg.layer-fore{overflow:visible}
 }
 
 @media (prefers-reduced-motion:reduce){
+  .card.fs-in,.fs-note:not([hidden]){animation:none}
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.001ms!important;transition-delay:0s!important}
   .grow,.crop{transform:none}

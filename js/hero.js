@@ -20,6 +20,7 @@
   const $$ = (s, c = doc) => Array.from(c.querySelectorAll(s));
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const rand = W.rand;
+  const T = (s) => s;   // marks a text for translation; t() translates it at the moment it is shown
   const t = (s, v) => (W.t ? W.t(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? v[k] : m)));
 
   const hero = $('#top');
@@ -120,9 +121,10 @@
   // A child bent over the rows with a basket, feet hidden by the plants in front.
   function kid(cx, cy, w, shirt, hat, flip) {
     const sc = w / 30, f = flip ? -1 : 1;
-    return `<g transform="translate(${f1(cx)} ${f1(cy - 20 * sc)}) scale(${f1(sc * f * 100) / 100} ${f1(sc * 100) / 100})"><g class="kid-pick" style="animation-delay:${f1((cx % 7) * -0.4)}s">` +
+    return `<g transform="translate(${f1(cx)} ${f1(cy - 20 * sc)}) scale(${f1(sc * f * 100) / 100} ${f1(sc * 100) / 100})"><g class="npc" data-npc="kid"><g class="kid-pick" style="animation-delay:${f1((cx % 7) * -0.4)}s">` +
       person(0, 0, shirt, hat, false) +
-      `<g transform="translate(11 6) scale(.55)"><use href="#basket" width="64" height="52"/></g></g></g>`;
+      `<g transform="translate(11 6) scale(.55)"><use href="#basket" width="64" height="52"/></g></g>` +
+      `<rect class="npc-hit" x="-13" y="-27" width="46" height="58" fill="transparent"/></g></g>`;
   }
 
   // A farm lane (ruts, pebbles, grass tufts). `k` squashes it for the distance; `y0` is where its top edge sits.
@@ -203,10 +205,11 @@
       // the flower that drops in
       `<g class="cut-flower"><path d="M-7 -24v-12" stroke="#3f9b45" stroke-width="5" stroke-linecap="round"/>${head(-24, -62, 34)}</g>` +
       // the kid, reaching up with scissors
-      `<g transform="translate(-30 -12) scale(1.35)">` +
+      `<g class="npc" data-npc="cutter" transform="translate(-30 -12) scale(1.35)"><g class="npc-body">` +
       `<path d="M-7 18l-3 14M7 18l3 14" stroke="${INK}" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M-7 18l-3 14M7 18l3 14" stroke="#4b5bb8" stroke-width="2.6" stroke-linecap="round" fill="none"/>` +
       person(0, 0, '#e5334b', HAT.straw, true) +
-      `<g transform="translate(18 -14)"><g class="snip"><path d="M0 0l9-5M0 0l9 4" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/><circle cx="-2" cy="-1" r="1.6" fill="none" stroke="${INK}" stroke-width="1.6"/></g></g></g></g>`;
+      `<g transform="translate(18 -14)"><g class="snip"><path d="M0 0l9-5M0 0l9 4" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/><circle cx="-2" cy="-1" r="1.6" fill="none" stroke="${INK}" stroke-width="1.6"/></g></g></g>` +
+      `<rect class="npc-hit" x="-15" y="-30" width="54" height="68" fill="transparent"/></g></g>`;
   }
 
   const summerFore = () =>
@@ -390,6 +393,10 @@
     return `<use href="#pumpkin" x="-134" y="-112" width="32" height="27"/><use href="#pumpkin-w" x="106" y="-108" width="28" height="24"/>`;
   }
 
+  // The five kids on the wagon; the invisible tap targets are added after the rig's own (see buildRig) so they sit on top of it.
+  const RIDERS = [[-96, -100, '#e5334b', HAT.beanie, true], [-44, -96, '#4b5bb8', HAT.cap, false], [8, -98, '#43a047', HAT.straw, true], [56, -94, '#ffc928', HAT.pony, false], [100, -98, '#ff7a3d', HAT.hair, true]];
+  const riderHits = () => RIDERS.map(([x, y], i) => `<rect class="npc-hit" data-npc="rider" data-r="${i}" x="${x - 16}" y="${y - 30}" width="32" height="50" fill="transparent"/>`).join('');
+
   // The wagon (ground at y = 0, centre x = 0): kids behind the side boards, wooden wheels. No hay.
   function wagonArt(season, tongue = true) {
     const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
@@ -399,8 +406,7 @@
     const posts = [-138, -92, -46, 0, 46, 92, 138].map((x) => `<rect x="${x - 4}" y="-82" width="8" height="38" rx="2" fill="#8a5a35"/>`).join('');
     return `<ellipse cx="0" cy="3" rx="160" ry="6" fill="rgba(58,36,22,.25)"/>` +
       // the riders sit behind the side boards
-      person(-96, -100, '#e5334b', HAT.beanie, true) + person(-44, -96, '#4b5bb8', HAT.cap, false) +
-      person(8, -98, '#43a047', HAT.straw, true) + person(56, -94, '#ffc928', HAT.pony, false) + person(100, -98, '#ff7a3d', HAT.hair, true) +
+      RIDERS.map(([x, y, shirt, hat, wave], i) => `<g class="npc-body" data-r="${i}">${person(x, y, shirt, hat, wave)}</g>`).join('') +
       `<g ${sk}>` +
         // chassis: axles, beam and the deck
         `<rect x="-100" y="-26" width="200" height="7" rx="2" fill="#7a4b2a"/><rect x="-92" y="-22" width="8" height="12" fill="#5c3720"/><rect x="84" y="-22" width="8" height="12" fill="#5c3720"/>` +
@@ -433,7 +439,7 @@
     // wheels turn at a speed that matches how far the tractor travels per second at this size
     const sc = c.scale, vars = `--wt1:${f1(3.7 * sc)}s;--wt2:${f1(2.1 * sc)}s;--wg1:${f1(2.9 * sc)}s;--wg2:${f1(2.9 * sc)}s;` + (c.dur ? `--rig-dur:${c.dur};` : '');
     return `<g transform="translate(0 ${c.y})"><g class="rig ${c.cls}" style="${vars}"><g transform="scale(${sc})"><g class="rig-bounce">${trailer}${tractor}</g>` +
-      `<rect class="scene-hit" data-rig x="-150" y="-190" width="520" height="200" fill="transparent"/></g></g></g>`;
+      `<rect class="scene-hit" data-rig x="-150" y="-190" width="520" height="200" fill="transparent"/>${riderHits()}</g></g></g>`;
   }
 
   // A small tractor pulling plastic barrels laid on their sides. Each barrel has a hole cut in the top,
@@ -461,13 +467,14 @@
       // the hole cut in the top, the chair, the kid (one hand waving), and the front lip of the hole
       out += `<ellipse cx="${cx}" cy="44" rx="17" ry="6" fill="#0f1b3d" stroke="${INK}" stroke-width="3"/>` +
         `<g ${sk}><rect x="${cx - 15}" y="26" width="6.4" height="19" rx="2.6" fill="#ff8a3d"/></g>` +
-        `<g transform="translate(${cx + 2} 38)" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">` +
+        `<g class="npc-body" data-r="${i}"><g transform="translate(${cx + 2} 38)" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">` +
           `<g class="${animated ? 'wave' : ''}"><path d="M-4 3l-8 -12" fill="none" stroke-width="5.2"/><path d="M-4 3l-8 -12" fill="none" stroke="${shirt}" stroke-width="2.6"/><circle cx="-12.6" cy="-10" r="3.1" fill="${skin}"/></g>` +
           `<rect x="-7.6" y="-1" width="15.2" height="12" rx="5" fill="${shirt}"/>` +
           `<circle cx="0" cy="-9" r="8.4" fill="${skin}"/>${hatSvg(hat)}` +
           `<circle cx="-3" cy="-9.2" r="1.1" fill="${INK}" stroke="none"/><circle cx="3" cy="-9.2" r="1.1" fill="${INK}" stroke="none"/><path d="M-2.6 -5.2q2.6 2.4 5.2 0" fill="none" stroke-width="1.5"/>` +
           `<ellipse cx="-5.4" cy="-5.8" rx="2" ry="1.3" fill="#ff8fa3" opacity=".6" stroke="none"/><ellipse cx="5.4" cy="-5.8" rx="2" ry="1.3" fill="#ff8fa3" opacity=".6" stroke="none"/>` +
-          `<path d="M5 3l11 3" fill="none" stroke-width="5.2"/><path d="M5 3l11 3" fill="none" stroke="${shirt}" stroke-width="2.6"/></g>` +
+          `<path d="M5 3l11 3" fill="none" stroke-width="5.2"/><path d="M5 3l11 3" fill="none" stroke="${shirt}" stroke-width="2.6"/></g></g>` +
+        (animated ? `<rect class="npc-hit" data-npc="barrel" data-r="${i}" x="${ox}" y="20" width="58" height="62" fill="transparent"/>` : '') +
         // steering wheel on a short post
         `<g ${sk}><path d="M${cx + 19} 45L${cx + 17} 36" fill="none" stroke-width="4.6"/><path d="M${cx + 19} 45L${cx + 17} 36" fill="none" stroke="#6c7a86" stroke-width="2"/>` +
         `<ellipse cx="${cx + 17}" cy="35" rx="8" ry="3" transform="rotate(-22 ${cx + 17} 35)" fill="none" stroke-width="4.4"/><ellipse cx="${cx + 17}" cy="35" rx="8" ry="3" transform="rotate(-22 ${cx + 17} 35)" fill="none" stroke="#ffc928" stroke-width="2"/></g>` +
@@ -483,99 +490,10 @@
     return out;
   }
 
-  // The wagon (ground at y = 0, centre x = 0): kids behind the side boards, wooden wheels. No hay.
-  function wagonArt(season, tongue = true) {
-    const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
-    let planks = '', studs = '';
-    [[-70, '#b8794a'], [-59, '#c98a4b'], [-48, '#b8794a']].forEach(([y, f]) => { planks += `<rect x="-138" y="${y}" width="276" height="11" fill="${f}"/>`; });
-    for (let x = -126; x <= 126; x += 28) studs += `<circle cx="${x}" cy="-64" r="1.3" fill="${INK}" stroke="none"/><circle cx="${x}" cy="-53" r="1.3" fill="${INK}" stroke="none"/>`;
-    const posts = [-138, -92, -46, 0, 46, 92, 138].map((x) => `<rect x="${x - 4}" y="-82" width="8" height="38" rx="2" fill="#8a5a35"/>`).join('');
-    return `<ellipse cx="0" cy="3" rx="160" ry="6" fill="rgba(58,36,22,.25)"/>` +
-      // the riders sit behind the side boards
-      person(-96, -100, '#e5334b', HAT.beanie, true) + person(-44, -96, '#4b5bb8', HAT.cap, false) +
-      person(8, -98, '#43a047', HAT.straw, true) + person(56, -94, '#ffc928', HAT.pony, false) + person(100, -98, '#ff7a3d', HAT.hair, true) +
-      `<g ${sk}>` +
-        // chassis: axles, beam and the deck
-        `<rect x="-100" y="-26" width="200" height="7" rx="2" fill="#7a4b2a"/><rect x="-92" y="-22" width="8" height="12" fill="#5c3720"/><rect x="84" y="-22" width="8" height="12" fill="#5c3720"/>` +
-        `<rect x="-146" y="-33" width="14" height="6" rx="2" fill="#8a5a35"/>` +
-        `<rect x="-140" y="-48" width="280" height="24" rx="4" fill="#a5673f"/><path d="M-132 -37h264M-132 -30h264" stroke="#7a4b2a" stroke-width="2" fill="none"/>` +
-        // the side boards, with posts and a painted sign
-        `<g>${planks}</g><path d="M-138 -59H138M-138 -48H138" stroke="${INK}" stroke-width="2.4" fill="none"/>` +
-        `<rect x="-138" y="-48" width="276" height="4.6" fill="#d8322b" stroke-width="2.4"/>` + studs +
-        posts + `<rect x="-142" y="-86" width="284" height="7" rx="3.4" fill="#d9a066"/><path d="M-136 -83h272" stroke="#fff" stroke-width="1.8" opacity=".45" fill="none"/>` +
-        `<rect x="-52" y="-68" width="104" height="19" rx="4" fill="#fff3d6" stroke-width="2.6"/>` +
-        `<path d="M138 -86V-50" stroke-width="3.4"/>` +
-      `</g>` + wagonProps(season) +
-      `<text x="0" y="-54.4" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="11.5" fill="${INK}" letter-spacing=".8">WAGON RIDES</text>` +
-      wheelWood(-88, -22, 24, 'wg1') + wheelWood(88, -22, 24, 'wg2') +
-      (tongue ? `<path d="M138 -36L194 -17" stroke="${INK}" stroke-width="8" stroke-linecap="round" fill="none"/><path d="M138 -36L194 -17" stroke="#8a5a35" stroke-width="3.8" stroke-linecap="round" fill="none"/>` : '');
-  }
-
-  function buildRig(cfg = {}) {
-    const c = Object.assign({ y: VPY + 52, scale: 1, season: 'fall', cls: '', dur: '' }, cfg);
-    const trailer = wagonArt(c.season);
-
-    const S = 1.08, TX = 202, TY = -108;
-    const tractor = `<g transform="translate(${TX} ${TY}) scale(${S})">${tractorOpen(true)}</g>` +
-      `<g class="rig-smoke" transform="translate(${f1(TX + 105 * S)} ${f1(TY + 13 * S)})" fill="#fff" stroke="#cfcfcf" stroke-width="1.5">` +
-        `<circle class="puff p1" r="7"/><circle class="puff p2" r="5.5"/><circle class="puff p3" r="6.5"/></g>` +
-      `<g transform="translate(292 -168) scale(${f1(0.78 / c.scale * 100) / 100})"><g class="toot"><rect x="-42" y="-17" width="84" height="28" rx="14" fill="#fff" stroke="${INK}" stroke-width="3"/>` +
-      `<path d="M-6 10l6 11 6-11" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M-7 8.5h14" stroke="#fff" stroke-width="5"/>` +
-      `<text x="0" y="3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="${INK}">Toot toot!</text></g></g>`;
-
-    // wheels turn at a speed that matches how far the tractor travels per second at this size
-    const sc = c.scale, vars = `--wt1:${f1(3.7 * sc)}s;--wt2:${f1(2.1 * sc)}s;--wg1:${f1(2.9 * sc)}s;--wg2:${f1(2.9 * sc)}s;` + (c.dur ? `--rig-dur:${c.dur};` : '');
-    return `<g transform="translate(0 ${c.y})"><g class="rig ${c.cls}" style="${vars}"><g transform="scale(${sc})"><g class="rig-bounce">${trailer}${tractor}</g>` +
-      `<rect class="scene-hit" data-rig x="-150" y="-190" width="520" height="200" fill="transparent"/></g></g></g>`;
-  }
-
-  // A small tractor pulling plastic barrels laid on their sides. Each barrel has a hole cut in the top,
-  // a chair inside and a steering wheel for the kid, wheels underneath, and they are hitched together.
-  // Local box 0..280 x 0..100 (ground y = 96). `animated` adds the wheel classes.
-  function barrelTrain(animated = false, ref = false) {
-    const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
-    const kids = [['#e5334b', 'beanie'], ['#ffc928', 'cap'], ['#43a047', 'straw']];
-    const skin = '#f7c9a0';
-    const hatSvg = (h) => h === 'beanie' ? `<path d="M-8.6 -9.2a8.6 8.6 0 0 1 17.2 0Z" fill="#e5334b"/><path d="M-8.8 -10h17.6" stroke="#fff" stroke-width="2.6"/><circle cx="0" cy="-18.4" r="2.4" fill="#fff"/>`
-      : h === 'cap' ? `<path d="M-8.2 -9.4a8.2 8.2 0 0 1 16.4 0Z" fill="#4b5bb8"/><path d="M-1 -9.6h12" stroke-width="2.8"/>`
-      : `<path d="M-12 -10h24" stroke-width="2.8"/><path d="M-7.4 -10a7.4 7.4 0 0 1 14.8 0Z" fill="#e9c46a"/><path d="M-7.4 -11.4h14.8" stroke="#e5334b" stroke-width="2"/>`;
-    let out = `<ellipse cx="140" cy="97" rx="136" ry="3.6" fill="rgba(58,36,22,.22)"/>`;
-    for (let i = 0; i < 3; i++) {
-      const ox = 8 + i * 64, [shirt, hat] = kids[i], cx = ox + 29;
-      // wheels and frame under the barrel
-      out += `<g ${sk}><rect x="${ox + 4}" y="76" width="50" height="5" rx="2" fill="#5d6770"/>` +
-        [ox + 13, ox + 45].map((x, k) => `<g class="${animated ? 'wheel bt' + (i * 2 + k) : ''}"><circle cx="${x}" cy="86" r="9.4" fill="#2b2b30"/><circle cx="${x}" cy="86" r="4.8" fill="#c9d1d8" stroke-width="2.2"/><circle cx="${x}" cy="86" r="1.5" fill="${INK}" stroke="none"/></g>`).join('') + `</g>`;
-      // the barrel: blue plastic, ribbed
-      out += `<g ${sk}><rect x="${ox}" y="42" width="58" height="38" rx="15" fill="#2f6fd6"/>` +
-        `<path d="M${ox + 12} 42v38M${ox + 29} 42v38M${ox + 46} 42v38" fill="none" stroke="#1f4fa0" stroke-width="2.6"/>` +
-        `<path d="M${ox + 9} 50h40" fill="none" stroke="#fff" stroke-width="3" opacity=".4"/><path d="M${ox + 9} 73h40" fill="none" stroke="#1a3f86" stroke-width="2.4" opacity=".5"/></g>` +
-        `<ellipse cx="${ox + 8}" cy="61" rx="3.2" ry="5" fill="#1f4fa0" stroke="${INK}" stroke-width="1.8"/>`;
-      // the hole cut in the top, the chair, the kid, and the front lip of the hole
-      out += `<ellipse cx="${cx}" cy="44" rx="17" ry="6" fill="#0f1b3d" stroke="${INK}" stroke-width="3"/>` +
-        `<g ${sk}><rect x="${cx - 15}" y="26" width="6.4" height="19" rx="2.6" fill="#ff8a3d"/></g>` +
-        `<g transform="translate(${cx + 2} 38)" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">` +
-          `<rect x="-7.6" y="-1" width="15.2" height="12" rx="5" fill="${shirt}"/>` +
-          `<circle cx="0" cy="-9" r="8.4" fill="${skin}"/>${hatSvg(hat)}` +
-          `<circle cx="-3" cy="-9.2" r="1.1" fill="${INK}" stroke="none"/><circle cx="3" cy="-9.2" r="1.1" fill="${INK}" stroke="none"/><path d="M-2.6 -5.2q2.6 2.4 5.2 0" fill="none" stroke-width="1.5"/>` +
-          `<ellipse cx="-5.4" cy="-5.8" rx="2" ry="1.3" fill="#ff8fa3" opacity=".6" stroke="none"/><ellipse cx="5.4" cy="-5.8" rx="2" ry="1.3" fill="#ff8fa3" opacity=".6" stroke="none"/>` +
-          `<path d="M5 3l11 3" fill="none" stroke-width="5.2"/><path d="M5 3l11 3" fill="none" stroke="${shirt}" stroke-width="2.6"/></g>` +
-        // steering wheel on a short post
-        `<g ${sk}><path d="M${cx + 19} 45L${cx + 17} 36" fill="none" stroke-width="4.6"/><path d="M${cx + 19} 45L${cx + 17} 36" fill="none" stroke="#6c7a86" stroke-width="2"/>` +
-        `<ellipse cx="${cx + 17}" cy="35" rx="8" ry="3" transform="rotate(-22 ${cx + 17} 35)" fill="none" stroke-width="4.4"/><ellipse cx="${cx + 17}" cy="35" rx="8" ry="3" transform="rotate(-22 ${cx + 17} 35)" fill="none" stroke="#ffc928" stroke-width="2"/></g>` +
-        `<path d="M${cx - 17} 44a17 6 0 0 0 34 0" fill="none" stroke="#dbe7ff" stroke-width="2.4" stroke-linecap="round"/>` +
-        // the hitch to the next car
-        (i < 2 ? `<g ${sk}><rect x="${ox + 56}" y="68" width="10" height="4.6" rx="2" fill="#5d6770"/><circle cx="${ox + 62}" cy="70.3" r="1.5" fill="#c9d1d8" stroke-width="1.4"/></g>` : '');
-    }
-    // the little tractor up front
-    out += `<g ${sk}><rect x="198" y="68" width="14" height="4.6" rx="2" fill="#5d6770"/></g>` +
-      `<g transform="translate(206 41) scale(.54)">${ref ? '<use href="#tractor" x="-10" y="0" width="150" height="100"/>' : tractorOpen(animated)}</g>`;
-    return out;
-  }
-
   // The little barrel train, drawn small for the distance (the lane itself comes from `lanes`)
   function barrelRig(y, sc) {
     const sp = sc / 0.46;
-    return `<g transform="translate(0 ${y})"><g class="rig rig-barrel" style="--wt1:${f1(1.9 * sp)}s;--wt2:${f1(1.1 * sp)}s;"><g transform="scale(${sc})"><g class="rig-bounce"><g transform="translate(-144 -96)">${barrelTrain(true)}</g></g></g></g></g>`;
+    return `<g transform="translate(0 ${y})"><g class="rig rig-barrel" style="--wt1:${f1(1.9 * sp)}s;--wt2:${f1(1.1 * sp)}s;"><g transform="scale(${sc})"><g class="rig-bounce"><g transform="translate(-167 -96)">${barrelTrain(true)}</g></g></g></g></g>`;
   }
 
   function fallField() {
@@ -627,7 +545,7 @@
 
   function scarecrow(x, y) {
     const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
-    return `<g transform="translate(${x} ${y})"><g class="sway s2">` +
+    return `<g class="npc" data-npc="scarecrow" transform="translate(${x} ${y})"><g class="sway s2"><g class="sc-all">` +
       `<rect x="-6" y="-176" width="12" height="176" rx="3" fill="#8a5a35" ${sk}/>` +
       `<path d="M-62 -122H62" stroke="${INK}" stroke-width="15" stroke-linecap="round"/><path d="M-62 -122H62" stroke="#a5673f" stroke-width="9" stroke-linecap="round"/>` +
       `<path d="M-30 -132H30L38 -66H-38Z" fill="#d9482f" ${sk}/>` +
@@ -640,14 +558,15 @@
       `<circle cx="-8" cy="-154" r="3.6" fill="${INK}"/><circle cx="8" cy="-154" r="3.6" fill="${INK}"/><circle cx="-7" cy="-155" r="1.2" fill="#fff"/><circle cx="9" cy="-155" r="1.2" fill="#fff"/>` +
       `<path d="M0 -150l7 9h-14Z" fill="#f57c1f" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/>` +
       `<path d="M-11 -139q11 9 22 0" fill="none" stroke="${INK}" stroke-width="2.6" stroke-dasharray="3 3" stroke-linecap="round"/>` +
-      `<path d="M-34 -166H34" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="M-32 -166H32" stroke="#7a4b2a" stroke-width="2.6" stroke-linecap="round"/>` +
+      `<g class="sc-head"><path d="M-34 -166H34" stroke="${INK}" stroke-width="5" stroke-linecap="round"/><path d="M-32 -166H32" stroke="#7a4b2a" stroke-width="2.6" stroke-linecap="round"/>` +
       `<path d="M-20 -166C-22 -198 22 -198 20 -166Z" fill="#7a4b2a" ${sk}/><rect x="-20" y="-176" width="40" height="8" fill="#e5334b" stroke="${INK}" stroke-width="2.4"/>` +
-      `<path d="M-30 -164l-12 6M-26 -166l-14 -2M30 -164l12 6M26 -166l14 -2" stroke="#e9c35b" stroke-width="3.4" stroke-linecap="round" fill="none"/>` +
+      `<path d="M-30 -164l-12 6M-26 -166l-14 -2M30 -164l12 6M26 -166l14 -2" stroke="#e9c35b" stroke-width="3.4" stroke-linecap="round" fill="none"/></g>` +
       `<circle cx="-4" cy="-118" r="2.4" fill="#fff3d6" stroke="${INK}" stroke-width="1.6"/><circle cx="-4" cy="-100" r="2.4" fill="#fff3d6" stroke="${INK}" stroke-width="1.6"/><circle cx="-4" cy="-82" r="2.4" fill="#fff3d6" stroke="${INK}" stroke-width="1.6"/>` +
       `<path d="M-36 -68H36" stroke="#8a5a35" stroke-width="5" stroke-linecap="round"/><path d="M-36 -68H36" stroke="#c98a4b" stroke-width="2" stroke-linecap="round"/><rect x="-4" y="-72" width="8" height="8" rx="1.6" fill="#ffc928" stroke="${INK}" stroke-width="2"/>` +
-      `<g class="crow" transform="translate(-66 -130)"><ellipse cx="0" cy="0" rx="12" ry="8" fill="#2b2b33" ${sk}/><circle cx="-10" cy="-7" r="6.4" fill="#2b2b33" ${sk}/>` +
-      `<path d="M-15 -8l-9 3 9 3Z" fill="#f5a300" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><circle cx="-11" cy="-8" r="1.4" fill="#fff"/><path d="M11 -2l15 4-13 3Z" fill="#2b2b33" ${sk}/></g>` +
-      `</g></g>`;
+      `<g transform="translate(-66 -130)"><g class="crow"><ellipse cx="0" cy="0" rx="12" ry="8" fill="#2b2b33" ${sk}/><circle cx="-10" cy="-7" r="6.4" fill="#2b2b33" ${sk}/>` +
+      `<path d="M-15 -8l-9 3 9 3Z" fill="#f5a300" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><circle cx="-11" cy="-8" r="1.4" fill="#fff"/><path d="M11 -2l15 4-13 3Z" fill="#2b2b33" ${sk}/></g></g>` +
+      `</g></g>` +
+      `<rect class="npc-hit" x="-74" y="-208" width="148" height="212" fill="transparent"/></g>`;
   }
 
   const fallFore = () =>
@@ -676,16 +595,39 @@
   /* ------------------------------------------------------------------ *
    * WINTER — Christmas-tree farm, campfires, snowman
    * ------------------------------------------------------------------ */
-  const BULBS = [[26, 80, '#ff4d6d'], [54, 84, '#ffd54f'], [40, 66, '#7cf0ff'], [22, 60, '#ffd54f'], [58, 60, '#ff4d6d'], [40, 42, '#7cf0ff'], [30, 48, '#ff4d6d'], [52, 46, '#ffd54f'], [40, 24, '#ffd54f']];
+  // A string of lights swagged across each tier of the tree, in the 80×110 tree space.
+  // Bulbs are numbered bottom tier first so they switch on in a ripple from the trunk up to the star.
+  const LIGHT_COLORS = ['#ff4d6d', '#ffd54f', '#5ee0ff', '#8dff7a', '#ff9ad5'];
+  const TIERS = [{ top: 62, base: 100, hw: 37, n: 6 }, { top: 44, base: 82, hw: 31, n: 5 }, { top: 26, base: 62, hw: 24, n: 4 }, { top: 10, base: 40, hw: 17, n: 3 }];
+  const STAR = `<path d="M40 -1.6l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L40 14.4l-6 3.1 1.3-6.6-4.9-4.6 6.7-.8Z" fill="#ffc928" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>`;
+  const LIGHTS = (() => {
+    let swags = '', bulbs = '', i = 0;
+    TIERS.forEach((ti, row) => {
+      const yl = ti.top + (ti.base - ti.top) * 0.6, half = ti.hw * 0.54, dip = 7;
+      swags += `<path d="M${f1(40 - half)} ${f1(yl)}Q40 ${f1(yl + dip * 2)} ${f1(40 + half)} ${f1(yl)}" fill="none" stroke="#17482a" stroke-width="1.5" stroke-linecap="round"/>`;
+      for (let j = 0; j < ti.n; j++) {
+        const u = (j + 0.5) / ti.n, x = 40 - half + 2 * half * u, y = yl + 4 * dip * u * (1 - u) + 1;   // point on the swag
+        const c = LIGHT_COLORS[(i + row) % LIGHT_COLORS.length];
+        bulbs += `<g class="bulb" style="--d:${(i * 0.06).toFixed(2)}s;--c:${c}"><circle class="halo" cx="${f1(x)}" cy="${f1(y)}" r="7.5"/><circle class="core" cx="${f1(x)}" cy="${f1(y)}" r="3"/></g>`;
+        i += 1;
+      }
+    });
+    const sparks = [[-26, -4], [26, -8], [-30, 24], [30, 28], [0, -22], [-16, 46], [18, 50]]
+      .map(([dx, dy], k) => `<path class="pop" d="M0 -4.5l1.3 3.2L4.5 0l-3.2 1.3L0 4.5l-1.3-3.2L-4.5 0l3.2-1.3Z" transform="translate(40 40)" style="--dx:${dx}px;--dy:${dy}px;--dl:${(k * 0.07).toFixed(2)}s"/>`).join('');
+    return { swags, bulbs, sparks, star: `<g class="star"><circle class="star-halo" cx="40" cy="9" r="17" fill="url(#treeGlow)"/><g class="star-art">${STAR}</g></g>` };
+  })();
 
-  function tree(x, y, w, h, pickableTree) {
-    let inner = `<ellipse cx="0" cy="0" rx="${f1(w * 0.44)}" ry="${f1(w * 0.09)}" fill="#e3edf7"/>` + use('fir', -w / 2, -h, w, h) + use('fir-snow', -w / 2, -h, w, h);
-    if (!pickableTree) return `<g transform="translate(${f1(x)} ${f1(y)})">${inner}</g>`;
-    const s = w / 80;
-    inner += `<g transform="translate(${f1(-w / 2)} ${f1(-h)}) scale(${f1(s * 1000) / 1000})"><circle class="tree-glow" cx="40" cy="62" r="54" fill="url(#fireGlow)"/>` +
-      BULBS.map(([bx, by, c], i) => `<circle class="bulb" cx="${bx}" cy="${by}" r="3.4" fill="${c}" style="--d:${(i * 0.17).toFixed(2)}s"/>`).join('') + '</g>';
+  // x,y = bottom centre of the trunk. mode: 'pick' (click to light), 'lit' (always lit, decoration), 'plain' (far trees)
+  function tree(x, y, w, h, mode = 'plain') {
+    const s = w / 80, at = `translate(${f1(-w / 2)} ${f1(-h)}) scale(${f1(s * 1000) / 1000})`;
+    const body = `<ellipse cx="0" cy="0" rx="${f1(w * 0.46)}" ry="${f1(w * 0.09)}" fill="#e3edf7" stroke="#c9dcef" stroke-width="1.5"/>` +
+      use('xmas-tree', -w / 2, -h, w, h) + use('fir-snow', -w / 2, -h, w, h);
+    if (mode === 'plain') return `<g transform="translate(${f1(x)} ${f1(y)})">${body}<g transform="${at}">${STAR}</g></g>`;
+    const lights = `<g class="lights" transform="${at}"><circle class="tree-glow" cx="40" cy="58" r="78" fill="url(#treeGlow)"/>${LIGHTS.swags}${LIGHTS.bulbs}${LIGHTS.sparks}${LIGHTS.star}</g>`;
     const pad = w * 0.1;
-    return `<g class="berry-hit tree-pick" transform="translate(${f1(x)} ${f1(y)})" data-pick="tree">${inner}<rect x="${f1(-w / 2 - pad)}" y="${f1(-h - pad)}" width="${f1(w + pad * 2)}" height="${f1(h + pad * 2)}" fill="transparent"/></g>`;
+    if (mode === 'lit') return `<g class="xt lit still" transform="translate(${f1(x)} ${f1(y)})"><g class="tree-body">${body}${lights}</g></g>`;
+    return `<g class="xt berry-hit tree-pick" transform="translate(${f1(x)} ${f1(y)})" data-pick="tree"><g class="tree-body">${body}${lights}</g>` +
+      `<rect x="${f1(-w / 2 - pad)}" y="${f1(-h - pad)}" width="${f1(w + pad * 2)}" height="${f1(h + pad * 2)}" fill="transparent"/></g>`;
   }
 
   function campfire(x, y, s) {
@@ -715,16 +657,18 @@
 
   const FIRES = [{ x: 560, y: 458, s: 1 }, { x: 890, y: 452, s: 0.94 }];   // kept clear of the picking card (bottom left) and the snowman (right)
 
+  // Rows of trees planted on the snow lanes, evenly stepped toward the viewer; every other row is shifted
+  // a lane so it reads like a real planted lot. Clearings are left around the campfires.
+  const TREE_ROWS = [0.13, 0.2, 0.29, 0.4, 0.52, 0.65];
   function winterField() {
-    const rnd = rand(41);
     let out = `<path d="${groundPath()}" fill="#f5f9fd" stroke="#c9dcef" stroke-width="3"/>`;
     out += rowPolys(range(-5, 5), { fill: '#e6f0f9', inner: '#ffffff', hw: 60, innerHw: 28, innerOpacity: 0.7 });
-    [0.11, 0.15, 0.19, 0.25, 0.32, 0.4, 0.5, 0.62].forEach((t) => {
-      for (let k = -4; k <= 4; k++) {
-        const x = rowX(k, t) + (rnd() - 0.5) * 8, y = rowY(t);
-        if (FIRES.some((f) => Math.abs(x - f.x) < 100 && Math.abs(y - f.y) < 72)) continue;
-        const h = (34 + 190 * t) * (0.9 + rnd() * 0.2), w = h * 0.727;
-        out += tree(x, y, w, h, t >= 0.25);
+    TREE_ROWS.forEach((t, r) => {
+      const h = 18 + 188 * t, w = h * 0.727, y = rowY(t), step = t < 0.25 ? 2 : 1;
+      for (let k = (r % 2 ? -3.5 : -4); k <= 4; k += step) {   // odd rows sit half a lane over, so each tree peeks between two in front
+        const x = rowX(k, t);
+        if (FIRES.some((f) => Math.abs(x - f.x) < 108 && Math.abs(y - f.y) < 62)) continue;
+        out += tree(x, y, w, h, t >= 0.25 ? 'pick' : 'plain');
       }
     });
     FIRES.forEach((f) => { out += campfire(f.x, f.y, f.s); });
@@ -733,7 +677,7 @@
 
   function snowman(x, y) {
     const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
-    return `<g transform="translate(${x} ${y}) scale(.95)"><g class="sway s3">` +
+    return `<g class="npc" data-npc="snowman" transform="translate(${x} ${y}) scale(.95)"><g class="sway s3">` +
       `<ellipse cx="0" cy="2" rx="58" ry="9" fill="rgba(58,36,22,.18)"/>` +
       `<path d="M-31 -102L-80 -130M-58 -116L-62 -138M-68 -122L-92 -122" stroke="${INK}" stroke-width="9" stroke-linecap="round" fill="none"/><path d="M-31 -102L-80 -130M-58 -116L-62 -138M-68 -122L-92 -122" stroke="#8a5a35" stroke-width="4.6" stroke-linecap="round" fill="none"/>` +
       `<path d="M31 -102L80 -122M58 -112L64 -132M70 -117L92 -112" stroke="${INK}" stroke-width="9" stroke-linecap="round" fill="none"/><path d="M31 -102L80 -122M58 -112L64 -132M70 -117L92 -112" stroke="#8a5a35" stroke-width="4.6" stroke-linecap="round" fill="none"/>` +
@@ -749,14 +693,14 @@
       `<g fill="#cfe0f0" opacity=".9"><circle cx="-26" cy="-70" r="2.4"/><circle cx="-34" cy="-40" r="2"/><circle cx="26" cy="-30" r="2.4"/><circle cx="20" cy="-72" r="2"/></g>` +
       `<g fill="#fff" stroke="none" opacity=".95"><path d="M-72 -150l2 4 4 1-4 1-2 4-2-4-4-1 4-1Z"/><path d="M70 -166l2 4 4 1-4 1-2 4-2-4-4-1 4-1Z"/></g>` +
       `<circle cx="-1.4" cy="-93.4" r="1.2" fill="#fff" opacity=".6"/><circle cx="-1.4" cy="-59.4" r="1.2" fill="#fff" opacity=".6"/>` +
-      `<rect x="-27" y="-186" width="54" height="10" rx="3" fill="#2b2b33" ${sk}/><rect x="-17" y="-214" width="34" height="30" rx="3" fill="#2b2b33" ${sk}/><rect x="-17" y="-192" width="34" height="8" fill="#43a047" stroke="${INK}" stroke-width="2.4"/>` +
-      `<rect x="-4" y="-191" width="8" height="6" rx="1.4" fill="#ffc928" stroke="${INK}" stroke-width="1.6"/><path d="M-12 -208h6" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity=".35"/>` +
-      `</g></g>`;
+      `<g class="sn-hat"><rect x="-27" y="-186" width="54" height="10" rx="3" fill="#2b2b33" ${sk}/><rect x="-17" y="-214" width="34" height="30" rx="3" fill="#2b2b33" ${sk}/><rect x="-17" y="-192" width="34" height="8" fill="#43a047" stroke="${INK}" stroke-width="2.4"/>` +
+      `<rect x="-4" y="-191" width="8" height="6" rx="1.4" fill="#ffc928" stroke="${INK}" stroke-width="1.6"/><path d="M-12 -208h6" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity=".35"/></g>` +
+      `</g><rect class="npc-hit" x="-62" y="-232" width="124" height="238" fill="transparent"/></g>`;
   }
 
   const winterFore = () =>
     `<path d="M-40 700V532C60 508 180 512 300 524S540 506 700 520 980 506 1120 520 1360 506 1480 516V700Z" fill="#dce9f5" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` +
-    use('fir', -34, 232, 170, 234) + use('fir', 1318, 262, 150, 206) +
+    tree(51, 460, 170, 234, 'lit') + tree(1393, 464, 150, 206, 'lit') +
     snowman(1236, 512) +
     `<path d="M-40 700V548C80 522 220 530 340 542S580 524 720 538 1000 524 1140 538 1380 526 1480 536V700Z" fill="#ffffff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` +
     `<path d="M0 588c80-12 160-12 240 0M700 592c90-12 180-10 270 2M1180 590c60-10 130-10 200 0" fill="none" stroke="#cfe0f0" stroke-width="4" stroke-linecap="round"/>`;
@@ -1064,9 +1008,64 @@
     return pickables.filter((el) => (el.dataset.pick === 'tree' ? !el.classList.contains('lit') : el.dataset.state !== 'picked'));
   }
 
+  /* ------------------------------------------------------------------ *
+   * Farm friends: tap a kid, a wagon rider, the scarecrow or the snowman and they react and say something.
+   * ------------------------------------------------------------------ */
+  const SAY = {
+    kid: [T('Yum! So sweet!'), T('Look at this big one!'), T('One for the basket, one for me.'), T('Hi there!'), T('The red ones are the ripest!')],
+    cutter: [T('Snip, snip! Fresh sunflowers!'), T('This one is taller than me!'), T('Flowers for Mom!'), T('Hi there!')],
+    rider: [T('Wheee!'), T('Hold on tight!'), T('Are we there yet?'), T('I can see the whole farm from here!'), T('Wave back!')],
+    barrel: [T('Choo choo!'), T('Beep beep! I am driving!'), T('Faster, tractor!')],
+    scarecrow: [T('Boo! ...Just kidding.'), T('Hi! I keep the crows away.'), T('Happy fall, friend!'), T('Psst... the crow is my buddy.'), T('I am not scary, I promise.')],
+    snowman: [T('Brr! Stay warm out there!'), T('Do you like my hat?'), T('I love the snow!'), T('Have you lit a tree yet?')]
+  };
+
+  // A speech bubble that follows the character (the wagon keeps rolling and the layers drift with the page).
+  function say(el, text) {
+    if (el._say) el._say.remove();
+    const b = doc.createElement('span');
+    b.className = 'npc-say';
+    b.setAttribute('aria-hidden', 'true');
+    b.textContent = text;
+    hero.appendChild(b);
+    el._say = b;
+    let gone = false;
+    const place = () => {
+      if (gone) return;
+      const r = el.getBoundingClientRect(), h = hero.getBoundingClientRect();
+      b.style.left = Math.min(Math.max(r.left - h.left + r.width / 2, 96), h.width - 96) + 'px';
+      b.style.top = (r.top - h.top - 6) + 'px';
+      requestAnimationFrame(place);
+    };
+    place();
+    setTimeout(() => {
+      b.classList.add('out');
+      setTimeout(() => { gone = true; b.remove(); if (el._say === b) el._say = null; }, 260);
+    }, 2500);
+  }
+
+  function npcTalk(el) {
+    const kind = el.dataset.npc, lines = SAY[kind];
+    if (!lines) return;
+    el._i = ((el._i == null ? Math.floor(Math.random() * lines.length) : el._i) + 1) % lines.length;
+    say(el, t(lines[el._i]));
+    // riders and barrel kids are drawn inside the rig, the others react as a whole
+    const body = el.dataset.r != null ? $(`.npc-body[data-r="${el.dataset.r}"]`, el.closest('.rig')) : el;
+    if (body) restart(body, 'is-hi', kind === 'scarecrow' ? 2800 : 1700);
+  }
+
   function bindScene() {
     pickables = $$('[data-pick]', sceneEl);
     pickables.forEach((el) => el.addEventListener('click', () => pick(el)));
+
+    $$('[data-npc]', sceneEl).forEach((el) => {
+      el.addEventListener('click', () => npcTalk(el));
+      if (el.dataset.r != null) {   // the tap target is separate from the drawing, so mirror the hover
+        const body = () => $(`.npc-body[data-r="${el.dataset.r}"]`, el.closest('.rig'));
+        el.addEventListener('pointerenter', () => { const b = body(); if (b) b.classList.add('is-over'); });
+        el.addEventListener('pointerleave', () => { const b = body(); if (b) b.classList.remove('is-over'); });
+      }
+    });
 
     $$('[data-fire]', fieldEl).forEach((fire) => fire.addEventListener('click', () => {
       fire.classList.add('flare');

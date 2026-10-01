@@ -1,17 +1,17 @@
-/* Farm map points for the "Farm map" section. Written by tools/farm_map.py from the map saved in the Farm Map Marker.
- * Do not edit by hand: change the map in the Farm Map Marker and run the script again. */
-window.WISE_ACRES_MAP = {
- "size": {
-  "width": 380,
-  "height": 587
+{
+ "assetId": null,
+ "flatId": "013670202b0959d6b206a4ba45c8b323",
+ "imageSize": {
+  "height": 587,
+  "width": 380
  },
- "north": "up",
  "items": [
   {
+   "arrow": false,
    "id": "imupv5nuq3",
-   "type": "area",
    "kind": "parking",
    "label": "Parking",
+   "note": "",
    "pts": [
     [
      203,
@@ -49,25 +49,29 @@ window.WISE_ACRES_MAP = {
      203,
      428
     ]
-   ]
+   ],
+   "type": "area"
   },
   {
+   "arrow": false,
    "id": "imupv6ses8",
-   "type": "pin",
    "kind": "entrance",
    "label": "Entrance or gate",
+   "note": "",
    "pts": [
     [
      243,
      333
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupv72efa",
-   "type": "path",
    "kind": "road",
    "label": "Road or driveway",
+   "note": "",
    "pts": [
     [
      247,
@@ -77,37 +81,43 @@ window.WISE_ACRES_MAP = {
      246,
      308
     ]
-   ]
+   ],
+   "type": "path"
   },
   {
+   "arrow": false,
    "id": "imupv7jmab",
-   "type": "pin",
    "kind": "checkin",
    "label": "Check-in",
+   "note": "",
    "pts": [
     [
      146,
      319
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupw8sc31",
-   "type": "pin",
    "kind": "restrooms",
    "label": "Restrooms",
+   "note": "",
    "pts": [
     [
      91,
      297
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupw94p82",
-   "type": "area",
    "kind": "pumpkins",
    "label": "Pumpkins",
+   "note": "",
    "pts": [
     [
      203,
@@ -129,37 +139,43 @@ window.WISE_ACRES_MAP = {
      201,
      304
     ]
-   ]
+   ],
+   "type": "area"
   },
   {
+   "arrow": false,
    "id": "imupwapyv6",
-   "type": "pin",
    "kind": "animals",
    "label": "Goats and animals",
+   "note": "",
    "pts": [
     [
      108,
      319
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupwb0wn8",
-   "type": "pin",
    "kind": "animals",
    "label": "Goats and animals",
+   "note": "",
    "pts": [
     [
      189,
      87
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupwrviu1",
-   "type": "area",
    "kind": "blueberries",
    "label": "Blueberries",
+   "note": "",
    "pts": [
     [
      120,
@@ -185,13 +201,15 @@ window.WISE_ACRES_MAP = {
      117,
      509
     ]
-   ]
+   ],
+   "type": "area"
   },
   {
+   "arrow": false,
    "id": "imupwsmhx3",
-   "type": "area",
    "kind": "tomatoes",
    "label": "Tomatoes and basil",
+   "note": "",
    "pts": [
     [
      171,
@@ -213,13 +231,15 @@ window.WISE_ACRES_MAP = {
      171,
      465
     ]
-   ]
+   ],
+   "type": "area"
   },
   {
+   "arrow": false,
    "id": "imupwsybr4",
-   "type": "area",
    "kind": "sunflowers",
    "label": "Sunflowers",
+   "note": "",
    "pts": [
     [
      161,
@@ -241,13 +261,15 @@ window.WISE_ACRES_MAP = {
      161,
      393
     ]
-   ]
+   ],
+   "type": "area"
   },
   {
+   "arrow": false,
    "id": "imupwt85m5",
-   "type": "area",
    "kind": "flowers",
    "label": "Cut flowers",
+   "note": "",
    "pts": [
     [
      162,
@@ -269,13 +291,15 @@ window.WISE_ACRES_MAP = {
      162,
      391
     ]
-   ]
+   ],
+   "type": "area"
   },
   {
+   "arrow": false,
    "id": "imupwtgra6",
-   "type": "area",
    "kind": "sunflowers",
    "label": "Sunflowers",
+   "note": "",
    "pts": [
     [
      188,
@@ -297,37 +321,43 @@ window.WISE_ACRES_MAP = {
      185,
      385
     ]
-   ]
+   ],
+   "type": "area"
   },
   {
+   "arrow": false,
    "id": "imupwu1ga9",
-   "type": "pin",
    "kind": "playground",
    "label": "Playground",
+   "note": "",
    "pts": [
     [
      179,
      152
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupwu2zda",
-   "type": "pin",
    "kind": "playground",
    "label": "Playground",
+   "note": "",
    "pts": [
     [
      52,
      308
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupwu7yib",
-   "type": "area",
    "kind": "maze",
    "label": "Corn maze",
+   "note": "",
    "pts": [
     [
      205,
@@ -349,37 +379,43 @@ window.WISE_ACRES_MAP = {
      204,
      209
     ]
-   ]
+   ],
+   "type": "area"
   },
   {
+   "arrow": false,
    "id": "imupwunecc",
-   "type": "pin",
    "kind": "cornpit",
    "label": "Corn pit",
+   "note": "",
    "pts": [
     [
      117,
      366
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupwuud8d",
-   "type": "pin",
    "kind": "wagon",
    "label": "Wagon ride stop",
+   "note": "",
    "pts": [
     [
      104,
      381
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupwuyk4e",
-   "type": "path",
    "kind": "wagonroute",
    "label": "Wagon ride route",
+   "note": "",
    "pts": [
     [
      103,
@@ -399,22 +435,22 @@ window.WISE_ACRES_MAP = {
     ],
     [
      106,
-     587
+     612
     ],
     [
      264,
-     587
+     612
     ],
     [
      302,
      573
     ],
     [
-     380,
+     383,
      547
     ],
     [
-     380,
+     403,
      467
     ],
     [
@@ -453,13 +489,15 @@ window.WISE_ACRES_MAP = {
      103,
      504
     ]
-   ]
+   ],
+   "type": "path"
   },
   {
+   "arrow": false,
    "id": "imupwvs9gf",
-   "type": "path",
    "kind": "barrel",
    "label": "Barrel train route",
+   "note": "",
    "pts": [
     [
      83,
@@ -501,13 +539,15 @@ window.WISE_ACRES_MAP = {
      84,
      298
     ]
-   ]
+   ],
+   "type": "path"
   },
   {
+   "arrow": false,
    "id": "imupwwdcog",
-   "type": "path",
    "kind": "haunted",
    "label": "Haunted trail",
+   "note": "",
    "pts": [
     [
      166,
@@ -533,55 +573,70 @@ window.WISE_ACRES_MAP = {
      22,
      314
     ]
-   ]
+   ],
+   "type": "path"
   },
   {
+   "arrow": false,
    "id": "imupwww5wh",
-   "type": "pin",
    "kind": "firepit",
    "label": "Fire pit",
+   "note": "",
    "pts": [
     [
      142,
      310
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupwx1kvi",
-   "type": "pin",
    "kind": "firepit",
    "label": "Fire pit",
+   "note": "",
    "pts": [
     [
      167,
      76
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupwx7qpj",
-   "type": "pin",
    "kind": "concessions",
    "label": "Concessions or farm store",
+   "note": "",
    "pts": [
     [
      124,
      301
     ]
-   ]
+   ],
+   "type": "pin"
   },
   {
+   "arrow": false,
    "id": "imupwxdjpk",
-   "type": "pin",
    "kind": "barn",
    "label": "Barn or shed",
+   "note": "",
    "pts": [
     [
      128,
      297
     ]
-   ]
+   ],
+   "type": "pin"
   }
- ]
-};
+ ],
+ "notes": "",
+ "savedAt": "2026-10-01T22:52:00.169Z",
+ "scale": null,
+ "source": "farm-aerial.png",
+ "topFaces": "up",
+ "version": 1
+}
