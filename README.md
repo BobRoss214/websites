@@ -89,7 +89,7 @@ and look at the site. Anything marked **ask Claude** needs a command that has to
 
 ## Planning features (countdown, weekly box, signup, map…)
 
-All of these live in `js/features.js` (styles in `css/features.css`). Each one hides itself until it has something to show.
+All of these live in `js/features.js` (the farm map is drawn by `js/map-art.js`; styles are in `css/features.css`). Each one hides itself until it has something to show.
 Each paragraph says what visitors see, then what you do.
 
 **Pizza countdown + "Remind me".** *Visitors see:* inside the Fall reservation schedule (`#schedule`) a box that counts down to the next
@@ -109,7 +109,7 @@ dates depend on the weather."). The typical dates live in `js/features.js` (`CRO
 
 ```js
 week: {
-  updated: '2026-10-01',                         // TODAY's date. Everything below stops showing 14 days later.
+  updated: '2026-10-01',                         // TODAY's date. Everything below is hidden once this date is more than 14 days old.
   note: 'Tomatoes are ripe this weekend. Bring a bucket!',   // or { en: '…', es: '…', hi: '…', zh: '…', vi: '…' } to write it in each language
   crops: { tomatoes: 'peak', pumpkins: 'starting', flowers: 'off' },   // soon | starting | peak | ending | off
   days: [ { date: '2026-10-02', farm: 'few', pizza: 'open', note: 'Rain possible' },
@@ -129,6 +129,7 @@ Rules for `week` (if you break one, that part is skipped; the "Site check" box t
   out to show a dash. A day with spots in either column gets a Reserve button. A day that is Full with nothing open gets "Email us to join
   the waitlist". If the farm column says Closed and the pizza column is Closed or left out, there is no button.
 - Use `full` only if someone will read and answer the waitlist emails. The button opens an email to `waitlistEmail`; the family still has to press Send.
+  If you leave `waitlistEmail` out, `cathy@wiseacresorganic.com` is used. If you type something that is not an email address, that same address is used and the "Site check" box says so.
 - `note` (and a day's note) is shown exactly as typed in every language. For other languages write `{ en: '…', es: '…', hi: '…', zh: '…', vi: '…' }`; a language you leave out shows the English.
 - Apostrophes: `note: "We're open Saturday!"` (double quotes) or `'We\'re open Saturday!'`. A single apostrophe inside single quotes stops all of `js/content.js`: hours, closures, the notice bar, photos and reviews disappear.
 
@@ -188,7 +189,7 @@ First-visit page) appears as soon as `js/farm-map-data.js` has points. **Your re
 and press "Save for Claude". Then ask Claude to update the map. *Claude:* fetches the saved JSON, saves it as `tools/saved-map.json` and runs
 `python3 tools/farm_map.py tools/saved-map.json`, which writes `js/farm-map-data.js` (and refuses to write an empty map). Names and notes you typed
 need translating: the script lists them for every language; add each one under `"js"` in `lang/src/<code>.json`, then run `python3 tools/i18n.py build`.
-Freehand scribbles are notes for Claude and are not drawn. Text labels are drawn exactly as typed (not translated). Only mark things that are
+Freehand scribbles are notes for Claude and are not drawn. Text labels are translated like other names (add them under `"js"` as above). Only mark things that are
 really there: for example a smooth path, drinking water or first aid are claims visitors will rely on.
 
 **Drive times and map apps.** The Contact section and the First-visit page list drive times and "Open in Apple Maps or Waze" links. The times are
@@ -218,7 +219,7 @@ so an analytics tool that understands it can show scans; signs that open Instagr
 Google moves them): (1) go to search.google.com/search-console and sign in with the farm's Google account; (2) choose "Add property", pick the
 **URL prefix** box (not "Domain") and type `https://www.wiseacresorganic.com/`; (3) under "Other verification methods" choose **HTML tag** and copy the
 whole line that starts `<meta name="google-site-verification"`; (4) paste it in `index.html` where the comment in the `<head>` says
-"GOOGLE SEARCH CONSOLE" (only there; when Claude rebuilds the pages it is copied into the other pages too, which is fine), publish, and click
+"GOOGLE SEARCH CONSOLE" (only there; the page rebuild does not copy it into the other pages), publish, and click
 **Verify**; (5) in the left menu choose **Sitemaps**, type `sitemap.xml` in the box (the start of the address is already filled in) and click Submit.
 
 ## Check your changes
@@ -283,8 +284,8 @@ writes goes through `WISE_ACRES.t("English text")`.
   `missing` also counts text that JavaScript writes (`t('…')` in `js/*.js`).
 - Words you type in `js/content.js` (the week note and a day's note, the entrance photo's alt and caption, a community photo's description and credit)
   are shown exactly as typed in every language. For the week note, a day's note and `notice` you can write `{ en: '…', es: '…', hi: '…', zh: '…', vi: '…' }`;
-  a language you leave out shows the English. For the entrance photo's alt/caption, add the exact English text under `"js"` in `lang/src/<code>.json`
-  and run `python3 tools/i18n.py build`. (A community photo's alt and credit are never translated.)
+  a language you leave out shows the English. The entrance photo's alt and caption can be written the same way (`alt: { en: '…', es: '…' }`), or add the exact English text under `"js"` in
+  `lang/src/<code>.json` and run `python3 tools/i18n.py build`. (A community photo's alt and credit are never translated.)
 - Translations live in `lang/src/<code>.json` as `{ "ui": { id: text }, "js": { "English text": text } }`.
   Keep tags such as `<strong>`, `<br>`, `<svg/>` and `<a1>…</a>` (a link) exactly as in English.
   `python3 tools/i18n.py dump es 0 50` prints missing strings with their ids; `merge` folds
@@ -309,7 +310,7 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Tomatoes & basil** | The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree. Give us the right number and we'll state it. |
 | **Reviews** | The reviews section is built but empty. It needs real quotes (with permission) from you. |
 | **Shop section (`#shop` in `index.html`)** | **Draft.** It sits between The GreenHouse and Flowers on the main page. The layout is done and every price we know is on it (tomatoes, basil, farm fees, rides, pizza). Everything marked "Prices coming soon" (pumpkins, strawberries, blueberries, flowers, concessions, drinks, local goods, ice cream, Christmas trees) needs the real list. Edit the `#shop` section in `index.html`: change a `<dd data-t="…" class="soon">Prices coming soon</dd>` to the price, e.g. `<dd>$5 each</dd>` (this also drops the red dashed "soon" pill), then run the rebuild commands. |
-| **Farm map** | Done: your marked map is on the home page and the First-visit page. Re-mark in the tool and ask Claude to update it (`python3 tools/farm_map.py tools/saved-map.json`). The map's list says "Corn maze" (the name that came from the Farm Map Marker) while the page says "Small Sunn Hemp Maze" (the farm's own wording): please tell us which name you want. Its list also says "Restrooms" and "Concessions or farm store" where the page says "Bathrooms" and "Concessions & local goods". |
+| **Farm map** | Done: your marked map is on the home page and the First-visit page. Re-mark in the tool and ask Claude to update it (`python3 tools/farm_map.py tools/saved-map.json`). The map's list says "Corn maze" (the name that came from the Farm Map Marker) while the page says "Small Sunn Hemp Maze" (the farm's own wording): please tell us which name you want. Its list also says "Restrooms" and "Concessions or farm store" where the page says "Bathrooms" and "Concessions & local goods". The "Wagon ride route" in the saved map has 4 points outside the photo (it runs off the bottom and right edge); the script pins them to the edge, so that route bends along the border: please re-mark it inside the picture. |
 | **Drive times** | Our estimates, not yours (Stallings 10, Matthews 15, Mint Hill 20, Monroe 20, Waxhaw 25, Uptown Charlotte 30 minutes, light traffic). Please check them and tell Claude the right numbers (in the HTML they are `data-drive`). |
 | **In the news** | Two Axios Charlotte articles (2017, 2018) found by web search. The headlines and years are copied from the search results; I could not open the articles from here. Please open both links and check that the headline, year and name match, or ask Claude to hide the list. |
 | **Email signup** | Built and tested against a pretend Mailchimp, not yet against yours. Hidden until you set `signup.action` (see "Planning features"). After you set it, sign up once with your own email. |
