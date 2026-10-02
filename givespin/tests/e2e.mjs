@@ -1749,8 +1749,14 @@ if (section('13o. Every live game is a lobby of seven tables')) {
     check(board.spots === 25 && board.backedAll && board.title.includes('25 ' + UNIT[gid]), gid + ': the 25-table board is full and holds every backed charity', board);
     await page.evaluate(() => { const o = document.querySelector('#livepanel .odd'); if (o) { o.click(); } });
     await page.evaluate(() => { const j = document.querySelector('#livepanel [data-role="join"]:not([disabled])'); if (j) { j.click(); } });
-    await page.waitForSelector('#lt-result .lt-res', { timeout: 90000 });
-    const res = await page.evaluate((args) => { const r = window.GS.live.room(args[0]).result; const g = window.GS.games[args[1]]; const sh = g._shown ? g._shown() : null; return { winner: r.winnerId, weights: r.weights.map((w) => w[0]), size: r.size, game: r.game, shown: sh }; }, [gid + '25', gid]);
+    // the snapshot is taken inside the wait, while this table's result is on screen (the table moves on ten seconds later, and a busy machine can be slower than that)
+    const res = await (await page.waitForFunction((args) => {
+      const r = window.GS.live.room(args[0]);
+      if (!(r && r.phase === 'result' && r.result && document.querySelector('#lt-result .lt-res'))) { return null; }
+      const g = window.GS.games[args[1]];
+      const sh = g._shown ? g._shown() : null;
+      return { winner: r.result.winnerId, weights: r.result.weights.map((w) => w[0]), size: r.result.size, game: r.result.game, shown: sh };
+    }, [gid + '25', gid], { timeout: 90000, polling: 100 })).jsonValue();
     check(res.weights.includes(res.winner) && res.size === 25 && res.game === gid, gid + ': the pot goes to a backed charity (fillers cannot win)', res);
     check(Array.isArray(res.shown) ? res.shown.includes(res.winner) : res.shown === res.winner, gid + ': and the game shows that charity winning', res);
   }
