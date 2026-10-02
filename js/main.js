@@ -80,6 +80,7 @@
       const btn = doc.createElement('button');
       btn.type = 'button';
       btn.setAttribute('aria-label', t('Enlarge photo:') + ' ' + t(p.alt));
+      btn.setAttribute('aria-haspopup', 'dialog');   // tells a screen reader that this opens the photo viewer
       const thumb = doc.createElement('img');
       thumb.src = p.src; thumb.alt = t(p.alt); thumb.loading = 'lazy'; thumb.decoding = 'async';
       btn.appendChild(thumb);
@@ -118,11 +119,12 @@
       if (el._zoom) return;
       el._zoom = true;
       if (el.tagName === 'IMG') {
-        el.tabIndex = 0; el.setAttribute('role', 'button');
+        el.tabIndex = 0; el.setAttribute('role', 'button'); el.setAttribute('aria-haspopup', 'dialog');   // a photo that opens the viewer
         const open = () => { const fc = el.closest('figure') && el.closest('figure').querySelector('figcaption'); show(el.currentSrc || el.src, el.alt, fc ? fc.textContent : ''); };
         el.addEventListener('click', open);
         el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
       } else {
+        el.setAttribute('aria-haspopup', 'dialog');
         el.addEventListener('click', (e) => { e.preventDefault(); show(el.href, el.textContent.trim(), ''); });
       }
     };

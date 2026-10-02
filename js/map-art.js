@@ -74,6 +74,21 @@
   };
   const sceneryFor = (data) => (data && data.scenery !== undefined ? data.scenery : (data && data.size && data.size.width === 380 && data.size.height === 587 ? SCENERY : null));
 
+  // Icons, trees and name ribbons have a fixed size that suits the 380 x 587 aerial the owner marked. A map marked on a
+  // bigger or smaller picture is scaled to that size first, and every point is kept on the picture (as tools/farm_map.py does),
+  // so a new screenshot does not make the map unreadable and a stray point cannot blow the map up.
+  const REF = 587;
+  function normalize(data) {
+    const w = +(data.size && data.size.width) || 0, h = +(data.size && data.size.height) || 0;
+    if (!(w > 0 && h > 0)) return data;
+    const k = Math.abs(Math.max(w, h) - REF) < 1 ? 1 : REF / Math.max(w, h), w2 = w * k, h2 = h * k;
+    const fit = (p) => [Math.max(0, Math.min(w2, (+p[0] || 0) * k)), Math.max(0, Math.min(h2, (+p[1] || 0) * k))];
+    return Object.assign({}, data, { scenery: sceneryFor(data), size: { width: w2, height: h2 }, items: (data.items || []).map((it) => (it && Array.isArray(it.pts) ? Object.assign({}, it, { pts: it.pts.map(fit) }) : it)) });
+  }
+  // Name ribbons should read at about 9.5 px on screen. 6.6 map units does that on a laptop; on a phone the map is shown
+  // smaller, so the ribbons are drawn bigger (features.js draws the map again when its width changes a lot).
+  const labelFont = (px, vb) => (px > 0 ? Math.max(6.6, Math.min(12, 9.5 * vb.w / px)) : 6.6);
+
   /* ------------------------------------------------------------------ *
    * Little drawings (symbols). Colours that change per use come from `color` on the <use>.
    * ------------------------------------------------------------------ */
@@ -243,9 +258,9 @@
       `<path d="${walls}" fill="none" stroke="#b9d86a" stroke-width=".9" stroke-dasharray="1 2.6" stroke-linecap="round"/><g fill="#e3c24a" stroke="none">${tassels}</g></g>`;
   }
 
+  const AREA_FILL = { staff: '#d3d3d3', picnic: '#bfe08a', accessible: '#cdeed5' };
   function plainArea(it, kind) {
-    const fills = { staff: '#d3d3d3', picnic: '#bfe08a', accessible: '#cdeed5' };
-    return `<path class="shape" d="${pathD(it.pts, true)}" fill="${fills[kind] || '#e4e9c8'}" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round" stroke-dasharray="${kind === 'staff' ? '4 3' : ''}"/>`;
+    return `<path class="shape" d="${pathD(it.pts, true)}" fill="${AREA_FILL[kind] || '#e4e9c8'}" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round" stroke-dasharray="${kind === 'staff' ? '4 3' : ''}"/>`;
   }
 
   function area(it, idx) {
@@ -384,18 +399,31 @@
     return out;
   }
 
+  function backgroundImage(data, items, vb) {
+    const src = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb.x} ${vb.y} ${vb.w} ${vb.h}"><defs>${defs()}</defs>${background(data, items, vb)}</svg>`;
+    return `<image href="data:image/svg+xml;charset=utf-8,${encodeURIComponent(src)}" x="${vb.x}" y="${vb.y}" width="${vb.w}" height="${vb.h}" preserveAspectRatio="none"/>`;
+  }
+
   /* ------------------------------------------------------------------ *
    * Name ribbons
    * ------------------------------------------------------------------ */
   const charW = (ch) => (ch.charCodeAt(0) > 0x2e7f ? 1.02 : /[A-Z0-9]/.test(ch) ? 0.64 : /[ilIj.,'’ ]/.test(ch) ? 0.3 : 0.52);
-  function ribbonSize(text, fs) { let w = 0; for (const ch of String(text)) w += charW(ch) * fs; return { w: Math.max(26, w + 12), h: fs + 7 }; }
+  const clip = (s) => { const a = Array.from(String(s)); return a.length > 30 ? a.slice(0, 29).join('').trimEnd() + '…' : a.join(''); };
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  function ribbonSize(text, fs) { let w = 0; for (const ch of clip(text)) w += charW(ch) * fs; return { w: Math.max(26, w + 12), h: fs + 7 }; }
   function ribbon(text, fs, color) {
     const { w, h } = ribbonSize(text, fs), x = -w / 2, y = -h / 2;
     return `<g class="mp-rib"><path d="M${f1(x - 4)} ${f1(y + 2)}l4 -.4v${h}l-4 -.4l2.4 -${h / 2 - 1}z" fill="${color}" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round" opacity=".92"/>` +
       `<path d="M${f1(-x + 4)} ${f1(y + 2)}l-4 -.4v${h}l4 -.4l-2.4 -${h / 2 - 1}z" fill="${color}" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round" opacity=".92"/>` +
       `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${h}" rx="2.4" fill="#fffaf0" stroke="${INK}" stroke-width="1.3"/>` +
       `<rect x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="2.6" rx="1.2" fill="${color}"/>` +
-      `<text x="0" y="${f1(fs * 0.36 + 1.2)}" text-anchor="middle" font-size="${fs}" font-weight="700" font-family="Fredoka, Nunito, sans-serif" fill="${INK}">${String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;')}</text></g>`;
+      `<text x="0" y="${f1(fs * 0.36 + 1.2)}" text-anchor="middle" font-size="${fs}" font-weight="700" font-family="Fredoka, Nunito, sans-serif" fill="${INK}">${esc(clip(text))}</text></g>`;
+  }
+  // a note the owner wrote on the photo ("Hay bales here"): a small paper tag, readable on the woods too
+  function noteTag(text, fs) {
+    const { w, h } = ribbonSize(text, fs);
+    return `<rect x="${f1(-w / 2)}" y="${f1(-h / 2)}" width="${f1(w)}" height="${h}" rx="2" fill="#fff3b0" stroke="${INK}" stroke-width="1.1"/>` +
+      `<text x="0" y="${f1(fs * 0.36)}" text-anchor="middle" font-size="${fs}" font-weight="700" font-family="Nunito, sans-serif" fill="${INK}">${esc(clip(text))}</text>`;
   }
 
   // Greedy label placement: try the spot nearest each anchor that does not overlap an icon or an earlier label.
@@ -412,7 +440,7 @@
         if (!ring) cands.unshift([dx, dy]);
       }
       for (const [ox, oy] of cands) {
-        const cx = l.x + ox, cy = l.y + oy, r = { x: cx - w / 2 - 4, y: cy - h / 2, w: w + 8, h };
+        const cx = l.x + ox, cy = l.y + oy, r = { x: cx - w / 2 - 4, y: cy - h / 2 - 1, w: w + 8, h: h + 3 };   // the ribbon's tails hang below it
         if (inside(r) && !hit(r)) { placed.push(r); return { key: l.key, x: cx, y: cy, shown: true }; }
       }
       return { key: l.key, x: l.x, y: l.y + (l.dy || 0), shown: false };
@@ -421,14 +449,15 @@
 
   // a small picture for the list next to the map
   function legendIcon(kind, type) {
-    if (type === 'pin' && ICON[kind]) return `<svg viewBox="-24 -42 48 46" aria-hidden="true" focusable="false">${pinIcon(kind)}</svg>`;
+    if (type === 'pin') return `<svg viewBox="-24 -42 48 46" aria-hidden="true" focusable="false">${pinIcon(kind)}</svg>`;
     const cfg = CROP[kind];
     if (cfg) return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#${cfg.plant}" x="2" y="2" width="20" height="20"${cfg.colors ? ' color="#e5649a"' : ''}/></svg>`;
     if (kind === 'parking') return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="1" y="3" width="22" height="18" rx="3" fill="#cdd0d8" stroke="${INK}" stroke-width="1.6"/><use href="#mp-car" x="8" y="5" width="8" height="14" color="#d72a43"/></svg>`;
     if (kind === 'maze') return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2" y="2" width="20" height="20" rx="3" fill="#ead9a4" stroke="${INK}" stroke-width="1.6"/><path d="M7 20V7h10v10h-5V11" fill="none" stroke="#6fa02e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    if (type === 'area') return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7l9-4 9 3-1.6 13.6L4.4 21z" fill="${AREA_FILL[kind] || '#e4e9c8'}" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"${kind === 'staff' ? ' stroke-dasharray="3 2"' : ''}/></svg>`;
     const line = { road: ['#d9b980', ''], wagonroute: ['#c99d63', ''], barrel: ['#2f7fd0', '1 4'], haunted: ['#6b4a9a', ''], accessible: ['#6fc08a', ''] }[kind] || ['#bbb', '4 3'];
     return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 18Q9 4 14 12T21 6" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M3 18Q9 4 14 12T21 6" fill="none" stroke="${line[0]}" stroke-width="4.2" stroke-linecap="round"${line[1] ? ` stroke-dasharray="${line[1]}"` : ''}/></svg>`;
   }
 
-  W.mapArt = { defs, viewBox, background, area, pathArt, pinIcon, iconR, legendIcon, layoutLabels, ribbon, ribbonSize, sceneryFor, centroid, polyArea, along, dpath, pip, bbox };
+  W.mapArt = { normalize, labelFont, noteTag, backgroundImage, defs, viewBox, background, area, pathArt, pinIcon, iconR, legendIcon, layoutLabels, ribbon, ribbonSize, sceneryFor, centroid, polyArea, along, dpath, pip, bbox };
 })();

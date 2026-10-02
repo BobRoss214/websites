@@ -670,12 +670,15 @@
     const wrap = $('.map-wrap', container);
     wrap.innerHTML = '';
     if (!A) { container.hidden = true; return; }
+    if (A.normalize) data = A.normalize(data);   // any picture size comes out the same size, all points on the picture
     // Unknown kinds become "Something else" here, once, so js/map-art.js only ever sees kinds it knows.
     const items = data.items.filter((it) => it && it.pts && it.pts.length).map((it) => (has(MK, it.kind) ? it : Object.assign({}, it, { kind: 'other' })));
     const vb = A.viewBox(data, items);
-    const svg = el('svg', { viewBox: [vb.x, vb.y, vb.w, vb.h].join(' '), class: 'map-svg', role: 'group', 'aria-label': t('Illustrated map of the farm') });
+    // The drawing is for the eyes. Screen readers and the keyboard use the list beside it (the legend), which has every name and note,
+    // so the picture is hidden from assistive technology and nothing in it can take focus.
+    const svg = el('svg', { viewBox: [vb.x, vb.y, vb.w, vb.h].join(' '), class: 'map-svg', 'aria-hidden': 'true', focusable: 'false' });
     const defs = el('defs', {}, svg); defs.innerHTML = A.defs();
-    const gBase = el('g', { class: 'mp-base', 'aria-hidden': 'true' }, svg); gBase.innerHTML = A.background(data, items, vb);
+    const gBase = el('g', { class: 'mp-base', 'aria-hidden': 'true' }, svg); gBase.innerHTML = (A.backgroundImage || A.background)(data, items, vb);
     const gAreas = el('g', {}, svg), gPaths = el('g', {}, svg), gPins = el('g', {}, svg), gLabels = el('g', { class: 'mp-labels', 'aria-hidden': 'true' }, svg);
 
     // Pins that sit almost on top of each other are nudged apart (the map is not to scale anyway).
@@ -700,12 +703,11 @@
     pinList.forEach((it) => { const q = pinPts.get(it.id); q[0] = Math.max(vb.x + 14, Math.min(vb.x + vb.w - 14, q[0])); q[1] = Math.max(vb.y + 34, Math.min(vb.y + vb.h - 4, q[1])); });
 
     const named = items.filter((it) => (it.type === 'pin' || it.type === 'area' || it.type === 'path') && it.label);
-    named.sort((a, b) => (kindOf(a.kind).g - kindOf(b.kind).g) || String(a.label).localeCompare(String(b.label)));
+    named.sort((a, b) => (kindOf(a.kind).g - kindOf(b.kind).g) || String(t(a.label)).localeCompare(String(t(b.label)), lang()));
     const keyOf = (it) => it.kind + '|' + it.label;
     const nodes = new Map();
-    const interactive = (g, it) => {
+    const interactive = (g, it) => {   // mouse and touch only: no tabindex, no role (the legend is the keyboard way in)
       g.setAttribute('class', 'map-item'); g.setAttribute('data-id', it.id); g.setAttribute('data-key', keyOf(it));
-      g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', t(it.label));
       nodes.set(it.id, g);
     };
 
@@ -726,22 +728,22 @@
         `<circle cx="${x.toFixed(1)}" cy="${(y - 13).toFixed(1)}" r="${(A.iconR(it.kind) + 3).toFixed(1)}" fill="transparent"/>`;
       boxes.push({ x: x - 16, y: y - 34, w: 32, h: 36 });
     });
-    items.filter((it) => it.type === 'text').forEach((it) => {
-      const tx = el('text', { x: it.pts[0][0], y: it.pts[0][1], 'text-anchor': 'middle', 'font-size': 8, 'font-weight': 800, fill: '#3a2416', 'font-family': 'Nunito, sans-serif', class: 'map-note' }, gLabels);
-      tx.textContent = t(it.label || '');
+    items.filter((it) => it.type === 'text' && it.label).forEach((it) => {
+      const g = el('g', { class: 'map-note', transform: `translate(${it.pts[0][0]} ${it.pts[0][1]})` }, gLabels);
+      g.innerHTML = A.noteTag ? A.noteTag(t(it.label), A.labelFont ? A.labelFont(wrap.clientWidth, vb) : 7) : '';
     });
 
     // name ribbons: one per kind of thing, placed where they do not cover an icon or each other
     const first = new Map();   // areas and paths are named once per kind; every pin gets its own name
     named.forEach((it) => { if (it.type === 'pin') return; const k = keyOf(it); const cur = first.get(k); if (!cur || (it.type === 'area' && A.polyArea(it.pts) > A.polyArea(cur.pts))) first.set(k, it); });
-    const FS = 6.6, labelInfo = [];
+    const FS = A.labelFont ? A.labelFont(wrap.clientWidth, vb) : 6.6, labelInfo = [];
     const prio = { pin: 0, area: 1, path: 2 };
-    pinList.filter((it) => it.label).concat([...first.values()]).sort((a, b) => prio[a.type] - prio[b.type]).forEach((it) => {
+    pinList.filter((it) => it.label).concat([...first.values()]).sort((a, b) => (prio[a.type] - prio[b.type]) || (kindOf(a.kind).g - kindOf(b.kind).g)).forEach((it) => {   // check-in, restrooms... get their names first
       let x, y;
       if (it.type === 'pin') { const q = pinPts.get(it.id); x = q[0]; y = q[1] + 7; }
       else if (it.type === 'area') { const c = A.centroid(it.pts); x = c[0]; y = c[1]; }
       else { const m = A.along(it.pts, 0.5); x = m.x; y = m.y; }
-      labelInfo.push({ key: keyOf(it), text: t(it.label), x, y, fs: FS, it, rings: it.type === 'pin' ? 1 : 5 });
+      labelInfo.push({ key: keyOf(it), text: t(it.label), x, y, fs: FS, it, rings: it.type === 'pin' ? (kindOf(it.kind).g === 0 ? 2 : 1) : 5 });   // parking, check-in, restrooms may sit a little further off
     });
     const placedLabels = A.layoutLabels(labelInfo, boxes, vb);
     placedLabels.forEach((pl, i) => {
@@ -777,8 +779,8 @@
       const seenKeys = new Set();
       const list = named.filter((it) => kindOf(it.kind).g === gi && !seenKeys.has(keyOf(it)) && seenKeys.add(keyOf(it)));
       if (!list.length) return;
-      const h = doc.createElement('h3'); h.textContent = t(gname); legend.appendChild(h);
-      const ol = doc.createElement('ol');
+      const h = doc.createElement('h3'); h.textContent = t(gname); h.id = (container.id || 'farm-map') + '-key-' + gi; legend.appendChild(h);
+      const ol = doc.createElement('ol'); ol.setAttribute('role', 'list'); ol.setAttribute('aria-labelledby', h.id);   // role: list-style:none makes VoiceOver drop the list
       list.forEach((it) => {
         const li = doc.createElement('li'), b = doc.createElement('button');
         b.type = 'button'; b.dataset.key = keyOf(it); b.setAttribute('aria-pressed', 'false');
@@ -790,8 +792,10 @@
       legend.appendChild(ol);
     });
 
-    // selecting
+    // selecting. The detail card is the page's status area: it is always in the page (invisible while empty) and its text is replaced when
+    // something is picked, so screen readers say the name and note. A status box that appears and fills in one step is often not announced.
     const detail = $('.map-detail', container);
+    detail.hidden = false; detail.textContent = '';
     let active = null;
     const select = (key, fromMap) => {
       active = active === key ? null : key;
@@ -800,8 +804,8 @@
       $$('.map-legend button', container).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.key === active)));
       const same = items.filter((x) => active && keyOf(x) === active);
       const it = same[0] && Object.assign({}, same[0], { note: (same.find((x) => x.note) || same[0]).note });
-      detail.hidden = !it;
-      if (it) {
+      if (!it) detail.textContent = '';
+      else {
         const k = kindOf(it.kind);
         detail.innerHTML = '<span class="mi"></span><div><strong></strong><span class="md-kind"></span><p></p></div>';
         $('.mi', detail).innerHTML = A.legendIcon(it.kind, it.type);
@@ -815,7 +819,6 @@
     nodes.forEach((g) => {
       const key = g.getAttribute('data-key');
       g.addEventListener('click', () => select(key, true));
-      g.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(key, true); } });
     });
     $$('.map-legend button', container).forEach((b) => b.addEventListener('click', () => select(b.dataset.key, false)));
     container.dataset.rendered = '1';
@@ -826,7 +829,24 @@
     const boxes = $$('[data-farm-map]');
     if (!boxes.length) return;
     if (!data || !data.items || !data.items.length || !data.size) { boxes.forEach((b) => { b.hidden = true; }); return; }
-    boxes.forEach((b) => { b.hidden = false; drawMap(b, data); });
+    boxes.forEach((b) => { b.hidden = false; drawWhenNear(b); });
+  }
+  // The map is a lot of drawing (a third of a second on a laptop, a second or more on a phone), so it is not drawn while the
+  // page loads: it is drawn when it is about to scroll into view, or once the browser is idle after loading (so the legend
+  // is there for screen readers too). Its space is kept meanwhile so the page does not jump.
+  // It is drawn again when its width changes a lot (turning a phone, resizing a window), so the names stay readable.
+  function drawWhenNear(b) {
+    const wrap = $('.map-wrap', b), size = window.WISE_ACRES_MAP.size;
+    let drawn = false, width = 0, timer = 0;
+    const draw = () => { drawn = true; drawMap(b, window.WISE_ACRES_MAP); width = wrap.clientWidth; wrap.style.aspectRatio = ''; };
+    if (!('IntersectionObserver' in window)) { draw(); return; }
+    if (+size.width > 0 && +size.height > 0) wrap.style.aspectRatio = size.width + ' / ' + size.height;
+    const io = new IntersectionObserver((es) => { if (!drawn && es.some((e) => e.isIntersecting)) { io.disconnect(); draw(); } }, { rootMargin: '900px 0px' });
+    io.observe(b);
+    const later = () => { if (!drawn) { io.disconnect(); draw(); } };
+    const idle = () => (window.requestIdleCallback ? requestIdleCallback(later, { timeout: 3000 }) : setTimeout(later, 1500));
+    if (doc.readyState === 'complete') idle(); else window.addEventListener('load', idle, { once: true });
+    if ('ResizeObserver' in window) new ResizeObserver(() => { const w = wrap.clientWidth; if (!width || !w || Math.abs(w - width) < width * 0.2) return; clearTimeout(timer); timer = setTimeout(draw, 250); }).observe(wrap);
   }
 
   /* ------------------------------------------------------------------ */

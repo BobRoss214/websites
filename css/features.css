@@ -152,8 +152,6 @@
 .map-svg{display:block;width:100%;height:auto}
 .map-item{cursor:pointer;outline:none}
 .map-item:hover .shape{filter:brightness(1.07)}
-.map-item:focus-visible .shape{stroke:var(--focus);stroke-width:3.4}
-.map-item:focus-visible .mp-ring{stroke:var(--focus);opacity:1}
 .map-item.is-active .shape{stroke:#ffc928;stroke-width:3.4;filter:drop-shadow(0 0 3px #ffc928)}
 .mp-icon{transform-box:fill-box;transform-origin:50% 100%}
 .map-item:hover .mp-icon{animation:mpHop .5s ease-out}
@@ -165,7 +163,7 @@
 .map-item:hover .mp-flame,.map-item.is-active .mp-flame{animation:mpFlame .7s ease-in-out 8 alternate}
 .map-item:hover .mp-ghost,.map-item.is-active .mp-ghost{animation:mpFloat 3.2s ease-in-out 2}
 .map-item:hover .mp-bat,.map-item.is-active .mp-bat{animation:mpFloat 2.2s ease-in-out 3 reverse}
-.mp-label{pointer-events:none;transition:opacity .2s}
+.mp-label,.map-note{pointer-events:none;transition:opacity .2s}
 .mp-label.is-quiet{opacity:0}
 .mp-label.is-quiet.is-active,.mp-label.is-active{opacity:1}
 .map-wrap.names-off .mp-label:not(.is-active){opacity:0}
@@ -179,6 +177,8 @@
 .map-detail strong{display:block;font:700 1.2rem/1.2 var(--display)}
 .map-detail .md-kind{display:block;font-weight:700;font-size:.85rem;color:var(--ink-soft)}
 .map-detail p{margin:.4em 0 0;font-weight:600}
+/* The status box stays in the page while empty (a live region that appears and fills in one step is often not announced); it is just invisible then. */
+.map-detail:empty{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;box-shadow:none;overflow:hidden;clip:rect(0 0 0 0)}
 .mi{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#f1f6e2;border:2px solid var(--ink)}
 .mi svg{width:30px;height:30px;overflow:visible}
 .map-toggle{justify-self:start;display:inline-flex;align-items:center;gap:.5em;min-height:40px;padding:0 1em;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:999px;font:700 .92rem/1 var(--display);cursor:pointer}
