@@ -99,7 +99,8 @@
   function renderNotice() {
     let el = $('#site-notice');
     const until = W.noticeUntil && /^\d{4}-\d{2}-\d{2}$/.test(W.noticeUntil) ? W.noticeUntil : '';
-    const live = W.notice && (!until || easternParts(new Date()).ymd <= until);
+    const n = W.notice, text = n && typeof n === 'object' ? (n[W.lang] || n.en || '') : (n || '');   // 'Closed Saturday.'  or  { en: '...', es: '...' }
+    const live = text && (!until || easternParts(new Date()).ymd <= until);
     if (!live) { if (el) el.remove(); return; }
     if (!el) {
       el = doc.createElement('div');
@@ -109,7 +110,7 @@
       if (bar) bar.after(el); else doc.body.prepend(el);
     }
     $('.sn-label', el).textContent = t('Heads up:');
-    $('.sn-text', el).textContent = t(W.notice);
+    $('.sn-text', el).textContent = t(text);
   }
 
   /* ------------------------------------------------------------------ *

@@ -27,9 +27,38 @@ OUT_PRINT = os.path.join(ROOT, 'print')
 
 def review_url():
     src = open(os.path.join(ROOT, 'js', 'content.js'), encoding='utf-8').read()
-    src = re.sub(r'/\*.*?\*/', '', src, flags=re.S)
-    m = re.search(r"reviewUrl:\s*'([^']*)'", src)
-    return m.group(1).strip() if m else ''
+    src = re.sub(r'/\*.*?\*/', '', src, flags=re.S)          # /* comments */
+    src = re.sub(r'(?m)^\s*//.*$', '', src)                   # lines the owner switched off with //
+    m = re.search(r"""^\s*reviewUrl:\s*(['"])(.*?)\1""", src, re.M)
+    return m.group(2).strip() if m else ''
+
+
+def load_config():
+    """Reads tools/qr_links.json and stops with a plain message (not a Python error) when something is wrong."""
+    path = os.path.join(ROOT, 'tools', 'qr_links.json')
+    try:
+        cfg = json.load(open(path, encoding='utf-8-sig'))
+    except ValueError as e:
+        sys.exit(f'tools/qr_links.json is not valid JSON ({e}). Check commas and quotes near that spot.')
+    if not isinstance(cfg, dict) or not str(cfg.get('site', '')).startswith('https://'):
+        sys.exit('tools/qr_links.json: "site" must be the website address starting with https://, for example "https://www.wiseacresorganic.com/".')
+    cfg['site'] = cfg['site'].rstrip('/') + '/'          # "{site}index.html" needs exactly one slash
+    signs = cfg.get('signs')
+    if not isinstance(signs, list) or not signs:
+        sys.exit('tools/qr_links.json: "signs" must be a list with at least one sign, so nothing was changed.')
+    seen = set()
+    for n, sign in enumerate(signs, 1):
+        if not isinstance(sign, dict):
+            sys.exit(f'tools/qr_links.json: sign number {n} is not a {{ ... }} block.')
+        missing = [k for k in ('id', 'url', 'title_en', 'title_es', 'text_en', 'text_es') if not isinstance(sign.get(k), str)]
+        if missing:
+            sys.exit(f'tools/qr_links.json: sign number {n} ({sign.get("id", "no id")}) is missing: {", ".join(missing)}.')
+        if not re.fullmatch(r'[a-z0-9-]+', sign['id']):
+            sys.exit(f'tools/qr_links.json: the id "{sign["id"]}" may only use small letters, numbers and dashes.')
+        if sign['id'] in seen:
+            sys.exit(f'tools/qr_links.json: the id "{sign["id"]}" is used twice. Every sign needs its own id.')
+        seen.add(sign['id'])
+    return cfg
 
 
 def resolve(sign, site, review):
@@ -63,7 +92,7 @@ body{margin:0;background:#f4efe3;color:#3a2416;font:600 1.05rem/1.4 "Nunito",sys
 h1{margin:.25em 0 0;font:700 3.2rem/1.05 "Fredoka",system-ui,sans-serif;text-wrap:balance}
 h1 span{display:block;margin-top:.15em;font-size:2rem;color:#6a5140;font-weight:600}
 .qr{margin:.3in 0 .2in;padding:.18in;background:#fff;border:6px solid #3a2416;border-radius:24px;line-height:0}
-.qr svg{width:4.3in;height:4.3in}
+.qr{width:min(100%,calc(4.66in + 12px))}.qr svg{width:100%;height:auto}@media (max-width:560px){.sign{padding:.3in .2in}}
 .how{margin:0 0 .15in;font:700 1.25rem "Fredoka",system-ui,sans-serif}
 .how span,.text span{display:block;color:#6a5140;font-weight:600}
 .text{margin:0;font-size:1.3rem}
@@ -74,7 +103,7 @@ h1 span{display:block;margin-top:.15em;font-size:2rem;color:#6a5140;font-weight:
 
 def main():
     check = '--check' in sys.argv
-    cfg = json.load(open(os.path.join(ROOT, 'tools', 'qr_links.json'), encoding='utf-8'))
+    cfg = load_config()
     site, review = cfg['site'], review_url()
     os.makedirs(OUT_QR, exist_ok=True)
     os.makedirs(OUT_PRINT, exist_ok=True)
@@ -82,9 +111,14 @@ def main():
     for sign in cfg['signs']:
         url = resolve(sign, site, review)
         if not url:
-            print(f"skipped  {sign['id']}: no address yet" + (' (set reviewUrl in js/content.js)' if sign['id'] == 'review' else ''))
+            raw = sign['url'].replace('{site}', site).replace('{reviewUrl}', review).strip()
+            why = ('no address yet' if not raw else 'the address must start with https://  (it is: ' + raw[:60] + ')')
+            print(f"skipped  {sign['id']}: {why}" + (' (set reviewUrl in js/content.js, between the quotes)' if sign['id'] == 'review' else ''))
             continue
-        qr = segno.make(url, error='m')
+        try:
+            qr = segno.make(url, error='m')
+        except Exception:
+            sys.exit(f"The address for the sign '{sign['id']}' is too long for a QR code ({len(url)} letters). Use a shorter link.")
         qr.save(os.path.join(OUT_QR, sign['id'] + '.svg'), scale=10, border=4, dark='#000000', light='#ffffff', xmldecl=False, svgns=True)
         inline = qr.svg_inline(scale=10, border=4, dark='#000000', light='#ffffff', svgclass=None, lineclass=None, omitsize=True)
         inline = inline.replace('<svg ', '<svg role="img" aria-label="QR code: ' + html.escape(sign['title_en'], quote=True) + '" ', 1)
@@ -114,6 +148,8 @@ def main():
             else:
                 line += '   scans OK'
         print(line)
+    if not made:
+        sys.exit('No sign could be made (every address was empty or did not start with https://), so print/qr-signs.html was not changed.')
     doc = f'''<!doctype html>
 <html lang="en">
 <head>

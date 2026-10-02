@@ -15,6 +15,7 @@
   const W = window.WISE_ACRES;
   if (!W || !W.seasons) return;
   const doc = document;
+  const contentFailed = !W.hours;   // js/content.js defines hours: if it is missing, the file has a typo and did not run
   const $ = (s, c = doc) => c.querySelector(s);
   const $$ = (s, c = doc) => Array.from(c.querySelectorAll(s));
   const t = (s, v) => (W.t ? W.t(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? v[k] : m)));
@@ -26,6 +27,37 @@
   const TZ = 'America/New_York';
   const BOOK = 'https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356';
   const SVGNS = 'http://www.w3.org/2000/svg';
+
+  // Mistakes in js/content.js or in the schedule table are collected here instead of breaking the page. They go to the
+  // console and, while you preview the site on your own computer (or when the address ends in ?check), into a yellow box.
+  const problems = [];
+  const warn = (msg) => { if (problems.indexOf(msg) < 0) { problems.push(msg); try { console.warn('Wise Acres: ' + msg); } catch (e) { /* no console */ } } };
+  function showProblems() {
+    const here = /^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname) || /[?&]check\b/.test(location.search);
+    if (!problems.length || !here || !doc.body) return;
+    let box = doc.getElementById('wa-problems');
+    if (!box) {
+      box = doc.createElement('div'); box.id = 'wa-problems'; box.setAttribute('role', 'alert');
+      box.style.cssText = 'position:fixed;z-index:99999;left:12px;right:12px;bottom:12px;max-height:40vh;overflow:auto;padding:12px 16px;background:#fff3b0;color:#3a2416;border:3px solid #3a2416;border-radius:14px;font:600 14px/1.4 system-ui,sans-serif';
+      doc.body.appendChild(box);
+    }
+    box.textContent = '';
+    const h = doc.createElement('strong'); h.textContent = 'Site check (only you see this): ' + problems.length + (problems.length === 1 ? ' thing to fix' : ' things to fix'); box.appendChild(h);
+    const ul = doc.createElement('ul'); ul.style.margin = '6px 0 0 18px'; ul.style.padding = '0';
+    problems.forEach((m) => { const li = doc.createElement('li'); li.textContent = m; ul.appendChild(li); });
+    box.appendChild(ul);
+  }
+  const lc = (v) => String(v == null ? '' : v).trim().toLowerCase();
+  // 2026-10-3 and 10/3/2026 are understood too (and reported), the page itself always uses 2026-10-03.
+  function fixYmd(v, what) {
+    const s = String(v == null ? '' : v).trim();
+    let m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s);
+    if (!m && (m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s))) m = [0, m[3], m[1], m[2]];
+    if (!m) { if (s && what) warn(what + ' "' + s + '" is not a date. Write it like 2026-10-03 (year-month-day).'); return ''; }
+    const out = m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
+    if (what && out !== s) warn(what + ' "' + s + '" was read as ' + out + '. Please write it as ' + out + '.');
+    return out;
+  }
 
   /* ------------------------------------------------------------------ *
    * Time helpers (the farm runs on Eastern Time, whoever is reading)
@@ -91,8 +123,13 @@
 
   function readReleases() {
     const table = $('[data-release-time]');
-    const time = (table && table.dataset.releaseTime) || '17:00';
-    return $$('tr[data-release]').map((tr) => {
+    const time = table && /^\d{1,2}:\d{2}$/.test(table.dataset.releaseTime || '') ? table.dataset.releaseTime : '17:00';
+    $$('[data-release-time] tbody tr:not([data-release])').forEach(() => warn('A row of the pizza schedule has no data-release="YYYY-MM-DD", so it does not count for the countdown.'));
+    return $$('tr[data-release]').filter((tr) => {
+      const good = /^\d{4}-\d{2}-\d{2}$/.test(tr.dataset.release);
+      if (!good) warn('A row of the pizza schedule says data-release="' + tr.dataset.release + '". Write it like data-release="2026-11-03" (year-month-day, two digits each). That row is ignored.');
+      return good;
+    }).map((tr) => {
       const at = zonedToUtc(tr.dataset.release, time);
       return { ymd: tr.dataset.release, at, time, forText: tr.cells[1] ? tr.cells[1].textContent.trim() : '' };
     }).filter((r) => !isNaN(r.at)).sort((a, b) => a.at - b.at);
@@ -302,8 +339,35 @@
 
   let weekFeed = null;
   function weekConfig() {
-    const base = Object.assign({ updated: '', expireDays: 14, note: '', crops: {}, days: [], waitlistEmail: 'cathy@wiseacresorganic.com', feed: '' }, W.week || {});
-    return weekFeed ? Object.assign(base, weekFeed) : base;
+    const raw = Object.assign({ updated: '', expireDays: 14, note: '', crops: {}, days: [], waitlistEmail: 'cathy@wiseacresorganic.com', feed: '' }, W.week || {}, weekFeed || {});
+    const cfg = Object.assign({}, raw);
+    const hasContent = raw.note || (raw.days && raw.days.length) || (raw.crops && Object.keys(raw.crops).length);
+    cfg.updated = fixYmd(raw.updated, 'week.updated');
+    if (cfg.updated && hasContent) {
+      const age = daysBetween(cfg.updated, todayET()), keep = raw.expireDays || 14;
+      if (age < -1) warn('week.updated ' + cfg.updated + ' is in the future, so everything in "week" is hidden.');
+      else if (age > keep) warn('week.updated ' + cfg.updated + ' is more than ' + keep + ' days ago, so the note, crops and spots are hidden until you update it.');
+    }
+    if (hasContent && !String(raw.updated || '').trim()) warn("week needs updated: 'YYYY-MM-DD' (the day you checked). Without it the note, crops and spots are not shown.");
+    cfg.crops = {};
+    Object.keys(raw.crops && typeof raw.crops === 'object' ? raw.crops : {}).forEach((k) => {
+      const id = lc(k), v = lc(raw.crops[k]);
+      if (!CROPS.some((c) => c.id === id)) warn('week.crops: "' + k + '" is not a crop name. Use: ' + CROPS.map((c) => c.id).join(', ') + '.');
+      else if (v !== 'off' && v !== 'done' && !OVERRIDE_LABEL[v]) warn('week.crops.' + k + ': "' + raw.crops[k] + '" is not one of soon, starting, peak, ending, off.');
+      else cfg.crops[id] = v;
+    });
+    if (!Array.isArray(raw.days)) { if (raw.days && Object.keys(raw.days).length) warn('week.days must be a list: days: [ { date: ..., farm: ... }, { ... } ].'); cfg.days = []; }
+    else cfg.days = raw.days.filter((d) => d && typeof d === 'object').map((d) => {
+      const out = Object.assign({}, d);
+      out.date = fixYmd(d.date, 'week.days date');
+      ['farm', 'pizza'].forEach((f) => {
+        out[f] = lc(d[f]);
+        if (out[f] && !AVAIL_LABEL[out[f]] && out[f] !== 'none') { warn('week.days ' + (out.date || d.date) + ' ' + f + ': "' + d[f] + '" is not one of open, few, full, closed.'); out[f] = ''; }
+      });
+      return out;
+    });
+    if (cfg.days.length && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(cfg.waitlistEmail || ''))) warn('week.waitlistEmail "' + cfg.waitlistEmail + '" is not an email address.');
+    return cfg;
   }
 
   function renderWeek() {
@@ -389,6 +453,7 @@
       } catch (e) { /* the page works without the live feed */ }
       clearTimeout(to);
     }
+    showProblems();
     setInterval(() => { if (!doc.hidden) renderWeek(); }, 15 * 60 * 1000);
   }
 
@@ -413,13 +478,19 @@
   function initSignup() {
     const form = $('[data-signup]');
     if (!form) return;
-    const cfg = W.signup || {};
+    const cfg = Object.assign({}, W.signup || {});
+    if (cfg.action) {
+      cfg.action = String(cfg.action).replace(/&amp;/g, '&').trim();   // the Mailchimp embed code shows & as &amp;
+      if (!/^https:\/\/[^/]+\/subscribe\/post\?/.test(cfg.action)) warn('signup.action should look like https://NAME.us21.list-manage.com/subscribe/post?u=...&id=... (copy it from the Mailchimp embed code).');
+      const keys = $$('input[name=interest]', form).map((i) => i.value);
+      Object.keys(cfg.interests || {}).forEach((k) => { if (keys.indexOf(k) < 0) warn('signup.interests: "' + k + '" is not a choice on the form. Use: ' + keys.join(', ') + '.'); });
+    }
     const live = !!(cfg.action || cfg.demo);
     const fallback = $('[data-signup-fallback]');
     form.hidden = !live;
     if (fallback) fallback.hidden = live;
     if (!live) return;
-    $$('a[data-signup-link]').forEach((a) => { a.setAttribute('href', '#signup'); a.removeAttribute('target'); a.removeAttribute('rel'); });
+    $$('a[data-signup-link]').forEach((a) => { a.setAttribute('href', '#follow-signup'); a.removeAttribute('target'); a.removeAttribute('rel'); });
     const email = $('input[type=email]', form), msg = $('[data-signup-msg]', form), btn = $('button[type=submit]', form);
     const say = (text, kind) => { msg.textContent = text; msg.dataset.kind = kind || ''; };
     form.addEventListener('submit', async (e) => {
@@ -462,10 +533,12 @@
   }
   function initReviewLinks() {
     if (!W.reviewUrl) return;
+    if (!/^https:\/\//.test(W.reviewUrl)) { warn('reviewUrl "' + W.reviewUrl + '" must start with https:// (copy the whole link from Google Business Profile). The buttons keep opening Google Maps.'); return; }
     $$('a[data-review]').forEach((a) => { a.href = W.reviewUrl; });
   }
   function initCommunity() {
     const box = $('#community');
+    (W.community || []).forEach((p, i) => { if (!p || !p.src || !p.alt) warn('community photo number ' + (i + 1) + ' needs both src and alt (what the picture shows). It is not shown.'); });
     const list = (W.community || []).filter((p) => p && p.src && p.alt);
     if (!box || !list.length) return;
     const ul = $('.community-strip', box); ul.innerHTML = '';
@@ -488,6 +561,7 @@
   // The "where to park / check in" photo on the first-visit page (WISE_ACRES.entrancePhoto).
   function initEntrance() {
     const fig = $('[data-entrance]'), p = W.entrancePhoto;
+    if (fig && p && (!p.src || !p.alt)) warn('entrancePhoto needs both src and alt. It is not shown.');
     if (!fig || !p || !p.src || !p.alt) return;
     const img = $('img', fig), cap = $('figcaption', fig);
     img.src = p.src; img.alt = t(p.alt); img.setAttribute('data-zoom', ''); if (W.bindZoom) W.bindZoom(img);
@@ -710,14 +784,13 @@
   let mapReady = false;
   function initFarmMapRerender() { if (mapReady) { $$('[data-farm-map][data-rendered]').forEach((b) => drawMap(b, window.WISE_ACRES_MAP)); } }
 
-  initReviewLinks();
-  initRelease();
-  initWeek();
-  initSignup();
-  initCommunity();
-  initEntrance();
-  initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length);
-  renderDrive();
+  // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
+  const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + e.message); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + e.message); } };
+  if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). Open the browser console (F12) to see the line number.');
+  [initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance].forEach(safe);
+  safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
+  safe(renderDrive);
+  showProblems();
   doc.addEventListener('wa:lang', () => { relBuilt = false; relCache = null; relKey = chipKey = ''; renderAll(); });
   doc.addEventListener('wa:season', () => renderWeek());
 

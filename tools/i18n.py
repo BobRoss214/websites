@@ -244,12 +244,16 @@ def cmd_jsstrings():
 
 def cmd_missing(code):
     en = json.load(open(os.path.join(LANG_DIR, 'en.json'), encoding='utf-8'))
-    have = load(code)['ui']
+    data = load(code)
+    have = data['ui']
     miss = {k: v for k, v in en.items() if k not in have}
-    print(f'{code}: {len(have)} translated, {len(miss)} missing, {sum(words(v) for v in miss.values())} words to go')
+    jsmiss = {k: f for k, f in js_strings().items() if k not in data['js']}   # text the JavaScript writes: t('...'), titles, descriptions
+    print(f'{code}: {len(have)} translated, {len(miss)} missing, {sum(words(v) for v in miss.values())} words to go; text written by JavaScript: {len(jsmiss)} missing')
     if '--list' in sys.argv:
         for k, v in miss.items():
             print(k, '|', v)
+        for k, f in jsmiss.items():
+            print('js |', k, f'   (from {f}: add it under "js" in lang/src/{code}.json)')
 
 
 def cmd_build():

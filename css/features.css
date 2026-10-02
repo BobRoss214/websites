@@ -217,3 +217,94 @@
   .chips .chip-rel .ico{animation:none}
   .su-chip span,.press-list a{transition:none}
 }
+
+/* ---- Phone and small-screen fixes (from the visual review) ---- */
+
+/* 1. countdown tiles: more room, smaller non-breaking labels; 2x2 on very small phones */
+@media (max-width:760px){
+  .rel-box{padding:16px 14px}
+  .rel-count{gap:6px}
+  .rc{padding:8px 2px 6px}
+  .rc i{font-size:.62rem;letter-spacing:.02em;overflow-wrap:normal;word-break:normal}
+}
+@media (max-width:359px){
+  .rel-count{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rc{flex-direction:row;justify-content:center;gap:.4em;padding:8px 4px}
+  .rc b{font-size:1.5rem}
+  .rc i{font-size:.6rem;letter-spacing:.01em}
+}
+
+/* 2. "Spots left" cards: button drops under the labels on narrow phones so the day name keeps its width */
+@media (max-width:420px){
+  .week-days tbody tr{grid-template-columns:minmax(0,1fr)}
+  .week-days .av-act{grid-column:1;grid-row:auto;justify-self:start;text-align:left;white-space:normal}
+}
+
+/* 2b. FARM / PIZZA pills line up in every language (label column is a fixed width) */
+@media (max-width:640px){
+  .week-days td[data-label]:not(.av-empty){display:grid;grid-template-columns:6.4em minmax(0,1fr);align-items:center;gap:0 10px}
+  .week-days td[data-label]::before{min-width:0}
+  .week-days td[data-label] .av{justify-self:start}
+}
+
+/* 3. signup interest chips: 44px tap height */
+.su-chip span{min-height:44px;padding:.35em 1em}
+
+/* 4. hero pizza chip: whole pill is the link */
+.chips .chip-rel{padding:0}
+.chips .chip-rel a{padding:.3em .85em .3em .6em;min-height:40px}
+
+/* 5. "Open in Apple Maps or Waze": bigger tap area */
+.more-maps a{display:inline-block;padding:.65em .25em;margin:-.65em 0}
+
+/* 6. "this season" pill label on the season buttons: keep it off the row above */
+@media (max-width:520px){
+  .fs-tabs{row-gap:20px}
+  .fs-now{font-size:.62rem;padding:.38em .6em;letter-spacing:.04em;white-space:nowrap}
+}
+
+/* 7. review card: centred copy when it stacks */
+@media (max-width:560px){
+  .review-cta{text-align:center}
+  .rv-copy{flex-basis:100%}
+}
+
+/* 8. dash in the season table: readable */
+.fs-no{color:#7d7265}
+
+/* 9. drive chips: the drive time wraps as a unit and drops under a long place name */
+.drive-list li{flex-wrap:wrap;column-gap:.5em;border-radius:22px}
+.dr-time{white-space:nowrap}
+
+/* 10. season-by-season legend: key sits next to its text */
+.fs-legend{justify-content:flex-start;text-align:left}
+@media (min-width:700px){.fs-legend{justify-content:center}}
+
+/* 11. visitor photo strip: centred when it does not fill the row */
+@media (min-width:701px){.community-strip{justify-content:safe center}}
+
+/* 12. yellow signup/social card: the single column may shrink (it was sized by the widest nowrap social pill) */
+@media (max-width:920px){ .follow{grid-template-columns:minmax(0,1fr)} }
+.follow .social a{max-width:100%;white-space:normal}
+@media (max-width:360px){
+  .follow{padding:20px 18px}
+  .follow .social a{font-size:.88rem;padding:.45em .75em}
+}
+
+/* 13. hero: on phones the "Try it" picker sits in the flow under the chips instead of covering them */
+@media (max-width:760px){
+  .picker{position:relative;left:auto;bottom:auto;margin:18px auto 16px;width:fit-content}
+}
+
+/* 14. season-by-season table on phones: show the feature column + the season that is selected above (no hidden sideways scroll) */
+@media (max-width:760px){
+  .fs-table{min-width:0}
+  .fs-table [data-col]:not(.is-sel){display:none}
+  .fs-table tbody th{min-width:0;box-shadow:none}
+}
+
+/* 15. no orphan last word in buttons */
+.btn{text-wrap:balance}
+
+/* the "Tell me when" links land on the heading, clear of the sticky header */
+.follow-signup{scroll-margin-top:90px}

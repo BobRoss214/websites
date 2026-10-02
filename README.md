@@ -29,12 +29,12 @@ js/main.js              everything else: scroll effects, seasons tabs, groups, b
 js/live.js              "Open now" badges, notice bar, next-season countdown, top-bar text
 js/analytics.js         privacy-friendly analytics (off until you pick a provider)
 js/features.js          pizza-reservation countdown + calendar reminders, "this week" box, email signup, review links, photo wall, farm map, drive times
-js/farm-map-data.js     the points of the farm map (written by tools/farm_map.py; empty until the map is marked)
+js/farm-map-data.js     the points of the farm map (written by tools/farm_map.py from tools/saved-map.json; do not edit by hand)
 js/map-art.js           draws the illustrated farm map from those points (forest, fields with plants, parking with cars, maze, trails, icons)
 lang/src/<code>.json    the translations (you edit these)
 lang/<code>.js          built from lang/src (what the pages load; do not edit)
 tools/                  pages.py (builds the extra pages), i18n.py (tags text, builds translations),
-                        make_qr.py + qr_links.json (QR signs), farm_map.py (saved map -> js/farm-map-data.js)
+                        make_qr.py + qr_links.json (QR signs), farm_map.py + saved-map.json (saved map -> js/farm-map-data.js)
 assets/qr/              QR codes (SVG), made by tools/make_qr.py
 print/qr-signs.html     printable signs, one per page, English + Spanish (not listed in Google)
 assets/photos/          farm photos
@@ -58,13 +58,13 @@ Preview locally: run `python3 -m http.server` and visit http://localhost:8000 (a
 | Turn on analytics | `js/content.js` → `analytics: { provider: 'plausible', site: 'wiseacresorganic.com' }` (also `goatcounter`, `umami`, `cloudflare`). Nothing is sent until you do, and never for visitors with Do Not Track. |
 | Change the hero text for a season | `index.html` → the `.hero-sub[data-only="spring"]` (summer, fall, winter) lines under the big headline, and the winter headline (`#hero-h`). hero.js shows the one for the current season. Then run the `extract` / `missing` / `build` commands under Languages. |
 | Change the booking link | Search & replace `https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356`. |
-| Open a new pizza weekend | `index.html` → `#schedule` table: add a row `<tr data-release="2026-11-03"><td>Nov 3</td><td>Nov 6–8</td></tr>`. The countdown, the "Remind me" calendar buttons and the hero chip all follow those rows. |
-| Say what is ripe / spots left this week | `js/content.js` → `week` (see "Planning features" below). Takes two minutes, and stops showing by itself after 14 days. |
-| Make the email signup work | `js/content.js` → `signup.action` (see "Planning features"). |
+| Open a new pizza weekend | `index.html` → the `#schedule` table (the one with `data-release-time="17:00"`): add a row under the last one: `<tr data-release="2026-11-03"><td>Nov 3</td><td>Nov 6–8</td></tr>`. `data-release` is the day reservations open, written year-month-day with two digits each (`2026-11-03`; not `11/3/2026`, not `2026-11-3`). Then (1) run the three commands under Languages and translate the two new cells, otherwise Spanish, Hindi, Chinese and Vietnamese visitors see "Nov 6–8" in English letters; (2) update by hand the sentence under the table that starts "Open now: pizza reservations for…". The countdown, the "Remind me" buttons and the hero chip (fall hero only) follow the rows by themselves. The 5:00 PM comes from `data-release-time`; the words "Tuesday, 5 PM" in the table are plain text. |
+| Say what is ripe / spots left this week | `js/content.js` → `week` (copy the example under "Planning features", change the dates, save). It shows for 14 days after `updated`, then the page goes back to its automatic "typical dates" version. A mistake in it is reported by the "Site check" box: see "Check your changes". |
+| Make the email signup work | `js/content.js` → `signup.action` (see "Planning features"). Test it once with your own email address. |
 | Set the Google review link | `js/content.js` → `reviewUrl: 'https://g.page/r/…/review'`. Every "Leave a Google review" button follows it. |
 | Show a visitor's photo | `js/content.js` → `community` (only after they said yes in writing). |
 | Print QR signs | `python3 tools/make_qr.py`, then open `print/qr-signs.html` and print. |
-| Update the farm map | Mark it in the Farm Map Marker, save, then `python3 tools/farm_map.py saved-map.json`. |
+| Update the farm map | Mark it in the Farm Map Marker and press "Save for Claude", then ask Claude to update the map. (Claude puts the saved file at `tools/saved-map.json` and runs `python3 tools/farm_map.py tools/saved-map.json`.) |
 
 ## Planning features (countdown, weekly box, signup, map…)
 
@@ -72,8 +72,8 @@ All of these live in `js/features.js` (styles in `css/features.css`). Each one h
 
 **Pizza countdown + "Remind me".** Inside the Fall reservation schedule (`#schedule`) a box counts down to the next Tuesday 5:00 PM
 Eastern release, taken from the `data-release` rows of the table, and shows "just opened" with a Reserve button for six hours after.
-"Remind me" adds all the upcoming release times to the visitor's calendar: a Google Calendar link (repeats weekly), or a `.ics`
-file for Apple / Outlook with a 15-minute alarm. A small chip in the hero says "Pizza reservations open in 5d 1h". Visitors outside
+"Remind me" adds all the upcoming release times to the visitor's calendar: a Google Calendar link (adds the next row, and repeats it every week only when the rows are exactly 7 days apart), or a `.ics`
+file for Apple / Outlook with every row (up to 12) and a 15-minute alarm. A small chip in the hero (autumn hero only) says "Pizza reservations open in 5d 1h". Visitors outside
 Eastern Time also see their own time. After the last row passes, the box and chip hide themselves. The times are Eastern on purpose.
 
 **Weekly box ("This week at the farm").** Fills itself from today's date: what is normally in season (strawberries, blueberries,
@@ -91,10 +91,18 @@ week: {
 },
 ```
 
+Rules for `week` (if you break one, that part is skipped; the "Site check" box tells you which):
+
+- `updated` is required, written `'YYYY-MM-DD'` with two digits for month and day. Without it nothing else in `week` shows.
+- `crops` names: `strawberries`, `blueberries`, `sunflowers`, `flowers`, `pumpkins`, `tomatoes`, `trees` (all small letters). Values: `soon`, `starting`, `peak`, `ending`, `off` (small letters).
+- `days`: `date` written `'YYYY-MM-DD'`; only today and the next 14 days show. `farm` and `pizza`: `open`, `few`, `full`, `closed` (leave one out to show a dash).
+- `note` (and a day's note) is shown exactly as typed in every language. For other languages write `{ en: '…', es: '…', hi: '…', zh: '…', vi: '…' }`; a language you leave out shows the English.
+- Apostrophes: `note: "We're open Saturday!"` (double quotes) or `'We\'re open Saturday!'`. A single apostrophe inside single quotes stops all of `js/content.js`: hours, closures, the notice bar, photos and reviews disappear.
+
 "Spots left" and the waitlist are filled in by hand. **Live availability from Bookeo is not built in:** it needs your Bookeo API
 keys and a small server function (a website cannot read Bookeo directly, and the keys must never be on the page). If you want it,
 make that function return the same JSON as `week` (`{updated, note, crops, days}`) and put its address in `week.feed`; the page reads it
-(and falls back to the hand-written box if it is down).
+(and falls back to the hand-written box if it is down). The function must answer with the header `Access-Control-Allow-Origin: *`, or browsers refuse to read it from your website. The feed is read once when the page opens.
 
 **Email signup with interests.** In the Contact section, a form with interest choices (strawberries, blueberries, flowers, pumpkins,
 tomatoes & basil, Christmas trees, pizza, events). It stays hidden, and the old "Join the email list" button shows, until you connect
@@ -106,9 +114,12 @@ signup: { action: 'https://YOURNAME.us21.list-manage.com/subscribe/post?u=…&id
           tags: '' },
 ```
 
+`interests` keys are the choices on the form: `strawberries`, `blueberries`, `flowers`, `pumpkins`, `tomatoes`, `trees`, `pizza`, `events`.
+Copy the `<form action="…">` address from Mailchimp's embed code; the page turns an `&amp;` in it into `&` by itself.
 When it is set, the other "Tell me when" / "Sign up" links scroll to the form instead. Choices with no `interests` entry are simply not sent.
+After saving, sign up once with your own email and check in Mailchimp that you are on the list with the right interests ticked.
 
-**Reviews, news, photos.** The Reviews section has a "Leave a Google review" button (set `reviewUrl`) and an **In the news** list
+**Reviews, news, photos.** The Reviews section has a "Leave a Google review" button (set `reviewUrl`, between quotes, starting with `https://`) and an **In the news** list
 (two Axios Charlotte articles, found by web search: **please open both links and confirm** before launch). Award badges: save the image
 in `assets/badges/` and uncomment the `press-badges` block under the news list (only with permission from whoever gave the award).
 "From families who visit" (photo gallery) shows the photos in `community` (`src`, `alt`, `by`, optional `url`); nothing from Instagram is
@@ -117,9 +128,9 @@ embedded. The First-visit page can show an entrance / parking photo: set `entran
 **Farm map.** The Farm Map Marker (a private page you were sent) lets you mark parking, check-in, restrooms, fields, the corn maze and
 its sign, and so on on the Google Earth photo. The website does not publish that photo (it is Google's picture); it draws its own
 illustrated map from your points (forest, mown lawn, dirt lanes, fields full of plants, a parking lot with cars, a maze, trails with little characters and an icon for every pin), with a picture list you can tap and Apple Maps / Waze / Google Maps links. After you press "Save for
-Claude" in the tool, Claude fetches the saved JSON and runs `python3 tools/farm_map.py saved-map.json`, which writes `js/farm-map-data.js`.
+Claude" in the tool, Claude fetches the saved JSON, saves it as `tools/saved-map.json` and runs `python3 tools/farm_map.py tools/saved-map.json`, which writes `js/farm-map-data.js` (and refuses to write an empty map).
 The map section (home page and First-visit page) appears as soon as that file has points. **Your real map (25 points) is in** (`tools/saved-map.json` is the saved copy; re-run the script after you change it). Names and notes you typed need translating:
-the script lists them. Freehand scribbles are notes for Claude and are not drawn.
+the script lists them for every language: add each one under `"js"` in `lang/src/<code>.json`, then run `python3 tools/i18n.py build`. Freehand scribbles are notes for Claude and are not drawn. Text labels are drawn exactly as typed (not translated).
 
 **Drive times and map apps.** The Contact section and the First-visit page list drive times (`data-drive="minutes"` in the HTML; edit them
 there) and "Open in Apple Maps or Waze" links.
@@ -131,14 +142,23 @@ baby-changing details can be added whenever you know them.
 **QR signs.** `python3 tools/make_qr.py` (needs `pip install segno`; `--check` also needs `zxing-cpp pillow` and scans every code back)
 makes `assets/qr/<name>.svg` and `print/qr-signs.html`: one letter-size sign per page in English and Spanish for Google review (needs
 `reviewUrl`), Instagram, the #wiseacresorganic hashtag, Facebook, reserving, pre-ordering pizza, the pizza menu, the email signup, the
-farm map and directions. Edit `tools/qr_links.json` to change wording or addresses. Open the page in a browser and print or save as PDF.
+farm map and directions. If `reviewUrl` is empty the review sign is skipped (the script says so). Edit `tools/qr_links.json` to change wording or addresses. Open the page in a browser and print or save as PDF.
 The Spanish text was written by an AI: have a Spanish speaker read it before you print.
 
 **Analytics + Google Search Console.** Analytics stays off until you pick a provider in `js/content.js` (see `js/analytics.js`). New events
-it records once on: Review click, Waitlist click, Reminder added, Map select, Email signup click, Press click, Directions (Google,
-Apple, Waze). QR signs that point at this website carry `utm_source=qr` so you can see scans. For Search Console: add the site at
+it records once on: `Review click`, `Waitlist click`, `Reminder added` (type: google or ics), `Map select` (kind), `Signup submit`,
+`Email signup click`, `Press click`, `Directions click` (the Google, Apple Maps and Waze links all use this one name). QR signs that point at this website carry `utm_source=qr` so you can see scans. For Search Console: add the site at
 search.google.com/search-console, choose "HTML tag" verification, paste the tag in the marked comment in the `<head>` of `index.html`
-(and nowhere else), then submit `https://www.wiseacresorganic.com/sitemap.xml`.
+(only there; the rebuild copies it into the other pages, which is fine), then submit `https://www.wiseacresorganic.com/sitemap.xml`.
+
+## Check your changes
+
+After you edit `js/content.js` or the pizza schedule, preview the site (`python3 -m http.server`, then http://localhost:8000/?check).
+If something you typed cannot be used, a yellow "Site check" box at the bottom of the page says what and where. On the live
+site add `?check` to the address (https://www.wiseacresorganic.com/?check): only you see the box.
+If the box says "js/content.js did not run", there is a typo in that file (most often an apostrophe inside single quotes, a missing comma, or curly
+quotes pasted from Word). Press F12, open Console, and the first red line names the line number. Until it is fixed, hours, closures, the notice bar,
+photos, reviews and the signup are off.
 
 ## Extra pages (for Google)
 
@@ -171,7 +191,8 @@ English wording. The English stays in the HTML (so Google and visitors without J
 complete pages); other languages are swapped in by id from `lang/<code>.js`. Text that JavaScript
 writes goes through `WISE_ACRES.t("English text")`.
 
-- **Changing English wording changes its id**, so the block shows up as "missing" until retranslated.
+- **Changing English wording changes its id**, so the block shows up as "missing" until retranslated. Visitors who read another language see the
+  English words for that block meanwhile. If you edit the English but do not run `extract`, they keep seeing the OLD translation (for example an old price).
   After editing any English text run:
 
   ```
@@ -179,6 +200,13 @@ writes goes through `WISE_ACRES.t("English text")`.
   python3 tools/i18n.py missing es --list  # what still needs a translation (es, hi, zh, vi)
   python3 tools/i18n.py build              # rebuild lang/*.js
   ```
+
+  Then add the missing ids and texts to `lang/src/<code>.json` (or ask Claude to translate everything `missing` lists) and run `build` again.
+  `missing` also counts text that JavaScript writes (`t('…')` in `js/*.js`).
+- Words you type in `js/content.js` (the week note and a day's note, the entrance photo's alt and caption, a community photo's description and credit)
+  are shown exactly as typed in every language. For the week note, a day's note and `notice` you can write `{ en: '…', es: '…', hi: '…', zh: '…', vi: '…' }`;
+  a language you leave out shows the English. For the entrance photo's alt/caption, add the exact English text under `"js"` in `lang/src/<code>.json`
+  and run `python3 tools/i18n.py build`. (A community photo's alt and credit are never translated.)
 - Translations live in `lang/src/<code>.json` as `{ "ui": { id: text }, "js": { "English text": text } }`.
   Keep tags such as `<strong>`, `<br>`, `<svg/>` and `<a1>…</a>` (a link) exactly as in English.
   `python3 tools/i18n.py dump es 0 50` prints missing strings with their ids; `merge` folds
@@ -202,8 +230,8 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Christmas trees** | Friday after Thanksgiving to early December, at The GreenHouse. |
 | **Tomatoes & basil** | The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree. Give us the right number and we'll state it. |
 | **Reviews** | The reviews section is built but empty. It needs real quotes (with permission) from you. |
-| **Shop section (`#shop` in `index.html`)** | **Draft.** It sits between The GreenHouse and Flowers on the main page. The layout is done and every price we know is on it (tomatoes, basil, farm fees, rides, pizza). Everything marked "Prices coming soon" (pumpkins, strawberries, blueberries, flowers, concessions, drinks, local goods, ice cream, Christmas trees) needs the real list. Edit the `#shop` section in `index.html`: change a `<dd class="soon">Prices coming soon</dd>` to the price, e.g. `<dd>$5 each</dd>`, then run the rebuild commands. |
-| **Farm map** | Done: your marked map is on the home page and the First-visit page. Re-mark in the tool and run `python3 tools/farm_map.py saved-map.json` to change it. The map calls the maze "Corn maze" (your label) while the cards say "Small Sunn Hemp Maze" (the farm's own wording); pick one when you have time. |
+| **Shop section (`#shop` in `index.html`)** | **Draft.** It sits between The GreenHouse and Flowers on the main page. The layout is done and every price we know is on it (tomatoes, basil, farm fees, rides, pizza). Everything marked "Prices coming soon" (pumpkins, strawberries, blueberries, flowers, concessions, drinks, local goods, ice cream, Christmas trees) needs the real list. Edit the `#shop` section in `index.html`: change a `<dd data-t="…" class="soon">Prices coming soon</dd>` to the price, e.g. `<dd>$5 each</dd>` (this also drops the red dashed "soon" pill), then run the rebuild commands. |
+| **Farm map** | Done: your marked map is on the home page and the First-visit page. Re-mark in the tool and ask Claude to update it (`python3 tools/farm_map.py tools/saved-map.json`). The map calls the maze "Corn maze" (your label) while the cards say "Small Sunn Hemp Maze" (the farm's own wording); pick one when you have time. |
 | **Drive times** | My estimates (Stallings 10, Matthews 15, Mint Hill 20, Monroe 20, Waxhaw 25, Uptown Charlotte 30 minutes, light traffic). Please check them and edit the `data-drive` numbers. |
 | **In the news** | Two Axios Charlotte articles (2017, 2018) found by web search. The headlines are copied from the search results; I could not open the articles from here. Please open both links. |
 | **Email signup** | Built and tested against a pretend Mailchimp. Hidden until you set `signup.action` (see above). |
