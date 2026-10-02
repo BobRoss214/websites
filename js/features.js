@@ -164,7 +164,7 @@
         $('[data-rel-count]', box).hidden = st.mode === 'open';
         const forTxt = st.rel.forText ? t('For visits {dates}', { dates: st.rel.forText }) : '';
         const when = st.mode === 'open' ? t('Opened {when}', { when: openingLabel(st.rel) }) : t('Opens {when}', { when: openingLabel(st.rel) }) + yourTimeNote(st.rel);
-        $('[data-rel-when]', box).textContent = (forTxt ? forTxt + '. ' : '') + when;
+        $('[data-rel-when]', box).textContent = forTxt ? t('{first}. {second}', { first: forTxt, second: when }) : when;
         $('[data-rel-remind]', box).hidden = st.mode === 'open' && !st.list.some((r) => r.at > Date.now());
         const reserve = $('[data-rel-reserve]', box); if (reserve) reserve.hidden = st.mode !== 'open';
         $$('.rc', box).forEach((el) => { el._v = undefined; });
@@ -210,7 +210,7 @@
     const stamp = utcStamp(new Date());
     list.forEach((r) => {
       const summary = t('Wise Acres: pizza reservations open');
-      const desc = t('Pizza reservations for {dates} open at {time} Eastern Time. Spots go fast. Reserve here: {url}', { dates: r.forText || '', time: fmtClock(r.at, TZ), url: BOOK });
+      const desc = t('Pizza reservations for {dates} open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}', { dates: r.forText || '', time: fmtClock(r.at, TZ), url: BOOK });
       L.push('BEGIN:VEVENT', 'UID:wa-release-' + r.ymd + '@wiseacresorganic.com', 'DTSTAMP:' + stamp,
         'DTSTART;TZID=' + TZ + ':' + compact(r.ymd, r.time), 'DTEND;TZID=' + TZ + ':' + compact(r.ymd, addMinutes(r.time, 30)),
         'SUMMARY:' + icsEsc(summary), 'DESCRIPTION:' + icsEsc(desc), 'URL:' + BOOK,
@@ -225,7 +225,7 @@
     const q = new URLSearchParams({
       action: 'TEMPLATE', text: t('Wise Acres: pizza reservations open'),
       dates: utcStamp(r.at) + '/' + utcStamp(end),
-      details: t('Pizza reservations for {dates} open at {time} Eastern Time. Spots go fast. Reserve here: {url}', { dates: r.forText || '', time: fmtClock(r.at, TZ), url: BOOK }),
+      details: weekly ? t('Pizza reservations for the coming weekend open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}', { time: fmtClock(r.at, TZ), url: BOOK }) : t('Pizza reservations for {dates} open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}', { dates: r.forText || '', time: fmtClock(r.at, TZ), url: BOOK }),
       ctz: TZ,
     });
     if (weekly) q.set('recur', 'RRULE:FREQ=WEEKLY;COUNT=' + list.length);
@@ -434,10 +434,15 @@
         await new Promise((r) => setTimeout(r, 500));
         say(t('Preview only: nothing was sent.'), 'ok'); btn.disabled = false; return;
       }
+      // The address copied from Mailchimp's embed code may hold "&amp;" or start with "//"; fix both so the request is valid.
+      let act = String(cfg.action).trim().replace(/&amp;/g, '&');
+      if (act.indexOf('//') === 0) act = 'https:' + act;
       const params = { EMAIL: val };
-      picked.forEach((p) => { const field = cfg.interests && cfg.interests[p]; if (field) params[field] = '1'; });
+      // Mailchimp group checkboxes send their bit value (1, 2, 4, 8...), which is the number in the last [ ] of the field name.
+      picked.forEach((p) => { const field = cfg.interests && cfg.interests[p]; if (field) params[field] = (String(field).match(/\[(\d+)\]$/) || [])[1] || '1'; });
       if (cfg.tags) params.tags = cfg.tags;
-      const res = await jsonp(String(cfg.action).replace('/subscribe/post?', '/subscribe/post-json?'), params);
+      try { const q = new URL(act).searchParams; if (q.get('u') && q.get('id')) params['b_' + q.get('u') + '_' + q.get('id')] = ''; } catch (err) { /* the empty bot-trap field is optional */ }
+      const res = await jsonp(act.replace('/subscribe/post?', '/subscribe/post-json?'), params);
       btn.disabled = false;
       if (res.result === 'success') { say(t('Thanks! Check your email to confirm your signup.'), 'ok'); form.reset(); }
       else if (res.result === 'error' && /already subscribed/i.test(res.msg || '')) say(t('You are already on the list. Thank you!'), 'ok');
@@ -535,142 +540,99 @@
     if (parent) parent.appendChild(n);
     return n;
   };
-  const centroid = (pts) => { let x = 0, y = 0; pts.forEach((p) => { x += p[0]; y += p[1]; }); return [x / pts.length, y / pts.length]; };
-  function polyArea(pts) { let a = 0; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) a += (pts[j][0] + pts[i][0]) * (pts[j][1] - pts[i][1]); return Math.abs(a / 2); }
-  function longestEdgeAngle(pts) {
-    let best = 0, ang = 0;
-    for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length], d = Math.hypot(b[0] - a[0], b[1] - a[1]); if (d > best) { best = d; ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI; } }
-    return ang;
-  }
-  const pathD = (pts, close) => pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ') + (close ? ' Z' : '');
-  const lumOf = (hex) => { const n = parseInt(hex.slice(1), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
-  const contrastOf = (a, b) => { const x = lumOf(a), y = lumOf(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-  const darken = (hex, f) => { const n = parseInt(hex.slice(1), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(v * f)); return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join(''); };
-  // Colour + text colour for the numbered badges: always readable (4.5 : 1), darkening a colour a little when it must.
-  function badgeOf(hex) {
-    let c = hex;
-    for (let i = 0; i < 10; i++) {
-      if (contrastOf('#ffffff', c) >= 4.5) return { bg: c, fg: '#fff' };
-      if (contrastOf('#3a2416', c) >= 4.5) return { bg: c, fg: '#3a2416' };
-      c = darken(c, 0.92);
-    }
-    return { bg: c, fg: '#fff' };
-  }
-  const mix = (hex, amt) => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; const f = (v) => Math.round(v + (255 - v) * amt); return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')'; };
+  const kindColor = (k) => k.c || '#555555';
 
   function drawMap(container, data) {
+    const A = W.mapArt;   // js/map-art.js does the drawing; this function wires it up
     const wrap = $('.map-wrap', container);
     wrap.innerHTML = '';
-    const Wd = data.size.width, Ht = data.size.height;
+    if (!A) { container.hidden = true; return; }
     const items = data.items.filter((it) => it && it.pts && it.pts.length);
-    // Show only the part of the picture that has something on it (with a margin), so the map fills the space.
-    let lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
-    items.forEach((it) => it.pts.forEach((q) => { lo = [Math.min(lo[0], q[0]), Math.min(lo[1], q[1] - (it.type === 'pin' ? 36 : 0))]; hi = [Math.max(hi[0], q[0]), Math.max(hi[1], q[1])]; }));
-    const PAD = 34;
-    let vx = Math.max(0, lo[0] - PAD), vy = Math.max(0, lo[1] - PAD), vw = Math.min(Wd, hi[0] + PAD) - vx, vh = Math.min(Ht, hi[1] + PAD) - vy;
-    if (!(vw > 0 && vh > 0)) { vx = 0; vy = 0; vw = Wd; vh = Ht; }
-    if (vw < 220) { vx = Math.max(0, Math.min(Wd - 220, vx - (220 - vw) / 2)); vw = Math.min(220, Wd); }
-    if (vh < 260) { vy = Math.max(0, Math.min(Ht - 260, vy - (260 - vh) / 2)); vh = Math.min(260, Ht); }
-    const u = vw / 380;
-    const svg = el('svg', { viewBox: [vx, vy, vw, vh].map((v) => +v.toFixed(1)).join(' '), class: 'map-svg', role: 'group', 'aria-label': t('Illustrated map of the farm') });
-    svg.style.setProperty('--u', u);
-    const defs = el('defs', {}, svg);
-    el('rect', { x: vx, y: vy, width: vw, height: vh, rx: 14 * u, fill: '#e9f4d4' }, svg);
-    const dots = el('pattern', { id: 'mp-dots', width: 14 * u, height: 14 * u, patternUnits: 'userSpaceOnUse' }, defs);
-    el('circle', { cx: 3 * u, cy: 3 * u, r: 1.2 * u, fill: '#cfe5b0' }, dots);
-    el('rect', { x: vx, y: vy, width: vw, height: vh, rx: 14 * u, fill: 'url(#mp-dots)' }, svg);
-    el('rect', { x: vx, y: vy, width: vw, height: vh, rx: 14 * u, fill: 'none', stroke: '#3a2416', 'stroke-width': 3 * u }, svg);
+    const vb = A.viewBox(data, items);
+    const svg = el('svg', { viewBox: [vb.x, vb.y, vb.w, vb.h].join(' '), class: 'map-svg', role: 'group', 'aria-label': t('Illustrated map of the farm') });
+    const defs = el('defs', {}, svg); defs.innerHTML = A.defs();
+    const gBase = el('g', { class: 'mp-base', 'aria-hidden': 'true' }, svg); gBase.innerHTML = A.background(data, items, vb);
+    const gAreas = el('g', {}, svg), gPaths = el('g', {}, svg), gPins = el('g', {}, svg), gLabels = el('g', { class: 'mp-labels', 'aria-hidden': 'true' }, svg);
 
     // Pins that sit almost on top of each other are nudged apart (the map is not to scale anyway).
-    const pinPts = new Map();
-    const pinList = items.filter((it) => it.type === 'pin');
+    const pinList = items.filter((it) => it.type === 'pin'), pinPts = new Map();
     pinList.forEach((it) => pinPts.set(it.id, [it.pts[0][0], it.pts[0][1]]));
-    const minGap = 25 * u;
-    for (let iter = 0; iter < 60; iter++) {
+    const boxW = (it) => (A.iconR(it.kind) * 2 + 6) * 0.8, boxH = () => 31;   // the icon's footprint on the map, centred above its foot
+    for (let iter = 0; iter < 140; iter++) {
       let moved = false;
       for (let i = 0; i < pinList.length; i++) {
         for (let j = i + 1; j < pinList.length; j++) {
-          const a = pinPts.get(pinList[i].id), b = pinPts.get(pinList[j].id);
-          let dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy);
-          if (d >= minGap) continue;
-          if (d < 0.01) { const ang = i * 2.399963 + j; dx = Math.cos(ang); dy = Math.sin(ang); d = 1; }
-          const push = (minGap - d) / 2;
-          a[0] -= dx / d * push; a[1] -= dy / d * push; b[0] += dx / d * push; b[1] += dy / d * push; moved = true;
+          const A1 = pinList[i], B1 = pinList[j], a = pinPts.get(A1.id), b = pinPts.get(B1.id);
+          const dx = b[0] - a[0], dy = b[1] - a[1];
+          const ox = (boxW(A1) + boxW(B1)) / 2 - Math.abs(dx), oy = boxH() - Math.abs(dy);
+          if (ox <= 0 || oy <= 0) continue;
+          moved = true;
+          if (ox < oy * 1.15) { const sx = dx >= 0 ? 1 : -1, d = (dx === 0 ? (i % 2 ? 1 : -1) * ox : sx * ox) / 2; a[0] -= d; b[0] += d; }
+          else { const sy = dy >= 0 ? 1 : -1, d = (dy === 0 ? oy : sy * oy) / 2; a[1] -= d; b[1] += d; }
         }
       }
       if (!moved) break;
     }
-    // numbers: everything that has a name, in legend order
-    const numbered = items.filter((it) => (it.type === 'pin' || it.type === 'area' || it.type === 'path') && it.label);
-    numbered.sort((a, b) => (kindOf(a.kind).g - kindOf(b.kind).g) || String(a.label).localeCompare(String(b.label)));
-    const keyOf = (it) => it.kind + '|' + it.label;
-    const numByKey = new Map();
-    numbered.forEach((it) => { if (!numByKey.has(keyOf(it))) numByKey.set(keyOf(it), numByKey.size + 1); });
-    const num = { get: (id) => { const it = items.find((x) => x.id === id); return it ? numByKey.get(keyOf(it)) : undefined; } };
-    const gAreas = el('g', {}, svg), gPaths = el('g', {}, svg), gPins = el('g', {}, svg), gText = el('g', {}, svg);
-    const nodes = new Map();
+    pinList.forEach((it) => { const q = pinPts.get(it.id); q[0] = Math.max(vb.x + 14, Math.min(vb.x + vb.w - 14, q[0])); q[1] = Math.max(vb.y + 34, Math.min(vb.y + vb.h - 4, q[1])); });
 
-    const badge = (parent, x, y, n, color, r) => {
-      const bd = badgeOf(color);
-      el('circle', { cx: x, cy: y, r: r, fill: bd.bg, stroke: '#3a2416', 'stroke-width': 2.2 * u }, parent);
-      const tx = el('text', { x: x, y: y + r * 0.36, 'text-anchor': 'middle', 'font-size': r * (n > 9 ? 1.0 : 1.2), 'font-weight': 800, fill: bd.fg, 'font-family': 'Fredoka, Nunito, sans-serif', class: 'map-num' }, parent);
-      tx.textContent = String(n);
-    };
+    const named = items.filter((it) => (it.type === 'pin' || it.type === 'area' || it.type === 'path') && it.label);
+    named.sort((a, b) => (kindOf(a.kind).g - kindOf(b.kind).g) || String(a.label).localeCompare(String(b.label)));
+    const keyOf = (it) => it.kind + '|' + it.label;
+    const nodes = new Map();
     const interactive = (g, it) => {
-      const n = num.get(it.id);
       g.setAttribute('class', 'map-item'); g.setAttribute('data-id', it.id); g.setAttribute('data-key', keyOf(it));
-      if (n) { g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', n + '. ' + t(it.label)); }
+      g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', t(it.label));
       nodes.set(it.id, g);
     };
 
-    items.filter((it) => it.type === 'area').sort((a, b) => polyArea(b.pts) - polyArea(a.pts)).forEach((it, idx) => {
-      const k = kindOf(it.kind), g = el('g', {}, gAreas); interactive(g, it);
-      const id = 'mp-rows-' + idx, ang = longestEdgeAngle(it.pts);
-      const crop = k.g === 1;
-      if (crop) {
-        const pat = el('pattern', { id, width: 9 * u, height: 9 * u, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(' + ang.toFixed(1) + ')' }, defs);
-        el('rect', { width: 9 * u, height: 9 * u, fill: mix(k.c, 0.62) }, pat);
-        el('rect', { y: 0, width: 9 * u, height: 3 * u, fill: mix(k.c, 0.25) }, pat);
-      }
-      const fill = it.kind === 'parking' ? '#d5d9e0' : it.kind === 'staff' ? '#cfcfcf' : crop ? 'url(#' + id + ')' : mix(k.c, 0.6);
-      el('path', { d: pathD(it.pts, true), fill, stroke: '#3a2416', 'stroke-width': 2.4 * u, 'stroke-linejoin': 'round', class: 'shape' }, g);
-      const c = centroid(it.pts);
-      if (k.icon) {
-        const s = Math.min(34 * u, Math.sqrt(polyArea(it.pts)) * 0.5), h = s * (k.vb[1] / k.vb[0]);
-        el('use', { href: '#' + k.icon, x: c[0] - s / 2, y: c[1] - h / 2 - 6 * u, width: s, height: h, opacity: 0.95, color: k.c }, g);
-      }
-      const n = num.get(it.id); if (n) badge(g, c[0], c[1] + (k.icon ? 14 * u : 0), n, k.c, 9 * u);
+    items.filter((it) => it.type === 'area').sort((a, b) => A.polyArea(b.pts) - A.polyArea(a.pts)).forEach((it, idx) => {
+      const g = el('g', {}, gAreas); interactive(g, it); g.innerHTML = A.area(it, idx);
     });
     items.filter((it) => it.type === 'path').forEach((it) => {
-      const k = kindOf(it.kind), g = el('g', {}, gPaths); interactive(g, it);
-      const isRoad = it.kind === 'road';
-      el('path', { d: pathD(it.pts), fill: 'none', stroke: '#3a2416', 'stroke-width': (isRoad ? 11 : 8) * u, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', class: 'shape-under' }, g);
-      el('path', { d: pathD(it.pts), fill: 'none', stroke: isRoad ? '#e3c590' : k.c, 'stroke-width': (isRoad ? 8 : 4.5) * u, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-dasharray': isRoad ? '' : (7 * u) + ' ' + (5 * u), class: 'shape' }, g);
-      if (it.arrow && it.pts.length > 1) {
-        const a = it.pts[it.pts.length - 2], b = it.pts[it.pts.length - 1], ang = Math.atan2(b[1] - a[1], b[0] - a[0]), L = 13 * u;
-        el('path', { d: 'M' + b[0] + ' ' + b[1] + ' L' + (b[0] - L * Math.cos(ang - 0.45)) + ' ' + (b[1] - L * Math.sin(ang - 0.45)) + ' L' + (b[0] - L * Math.cos(ang + 0.45)) + ' ' + (b[1] - L * Math.sin(ang + 0.45)) + ' Z', fill: k.c, stroke: '#3a2416', 'stroke-width': 1.6 * u }, g);
-      }
-      const n = num.get(it.id); if (n) { const m = it.pts[Math.floor(it.pts.length / 2)]; badge(g, m[0], m[1], n, k.c, 8.5 * u); }
+      const g = el('g', {}, gPaths); interactive(g, it);
+      g.innerHTML = A.pathArt(it) + `<path d="${it.pts.map((q, i) => (i ? 'L' : 'M') + q[0] + ' ' + q[1]).join('')}" fill="none" stroke="transparent" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" pointer-events="stroke"/>`;
     });
     // Freehand scribbles from the Farm Map Marker are notes for Claude, so they are not drawn on the public map.
-    items.filter((it) => it.type === 'pin').forEach((it) => {
-      const k = kindOf(it.kind), g = el('g', {}, gPins); interactive(g, it);
-      const [x, y] = pinPts.get(it.id), r = 11 * u;
-      el('path', { d: 'M' + x + ' ' + y + ' L' + (x - 6 * u) + ' ' + (y - 14 * u) + ' L' + (x + 6 * u) + ' ' + (y - 14 * u) + ' Z', fill: '#3a2416' }, g);
-      const n = num.get(it.id);
-      badge(g, x, y - 22 * u, n || '', k.c, r);
+    const SCALE = 0.8, boxes = [];
+    pinList.forEach((it) => {
+      const g = el('g', {}, gPins); interactive(g, it);
+      const [x, y] = pinPts.get(it.id), ox = it.pts[0][0], oy = it.pts[0][1], moved = Math.hypot(x - ox, y - oy) > 7;
+      g.innerHTML = (moved ? `<path d="M${ox} ${oy}L${x} ${y}" stroke="${'#3a2416'}" stroke-width="1" stroke-dasharray="1.6 2.2" fill="none"/><circle cx="${ox}" cy="${oy}" r="1.8" fill="#fff" stroke="#3a2416" stroke-width="1"/>` : '') +
+        `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${SCALE})"><ellipse class="mp-ring" cx="0" cy="1" rx="21" ry="7.5" fill="none" stroke="#ffc928" stroke-width="3.4"/><g class="mp-icon">${A.pinIcon(it.kind)}</g></g>` +
+        `<circle cx="${x.toFixed(1)}" cy="${(y - 13).toFixed(1)}" r="${(A.iconR(it.kind) + 3).toFixed(1)}" fill="transparent"/>`;
+      boxes.push({ x: x - 16, y: y - 34, w: 32, h: 36 });
     });
     items.filter((it) => it.type === 'text').forEach((it) => {
-      const tx = el('text', { x: it.pts[0][0], y: it.pts[0][1], 'text-anchor': 'middle', 'font-size': 12 * u, 'font-weight': 800, fill: '#3a2416', 'font-family': 'Nunito, sans-serif', class: 'map-note' }, gText);
+      const tx = el('text', { x: it.pts[0][0], y: it.pts[0][1], 'text-anchor': 'middle', 'font-size': 8, 'font-weight': 800, fill: '#3a2416', 'font-family': 'Nunito, sans-serif', class: 'map-note' }, gLabels);
       tx.textContent = it.label || '';
     });
+
+    // name ribbons: one per kind of thing, placed where they do not cover an icon or each other
+    const first = new Map();   // areas and paths are named once per kind; every pin gets its own name
+    named.forEach((it) => { if (it.type === 'pin') return; const k = keyOf(it); const cur = first.get(k); if (!cur || (it.type === 'area' && A.polyArea(it.pts) > A.polyArea(cur.pts))) first.set(k, it); });
+    const FS = 6.6, labelInfo = [];
+    const prio = { pin: 0, area: 1, path: 2 };
+    pinList.filter((it) => it.label).concat([...first.values()]).sort((a, b) => prio[a.type] - prio[b.type]).forEach((it) => {
+      let x, y;
+      if (it.type === 'pin') { const q = pinPts.get(it.id); x = q[0]; y = q[1] + 7; }
+      else if (it.type === 'area') { const c = A.centroid(it.pts); x = c[0]; y = c[1]; }
+      else { const m = A.along(it.pts, 0.5); x = m.x; y = m.y; }
+      labelInfo.push({ key: keyOf(it), text: t(it.label), x, y, fs: FS, it, rings: it.type === 'pin' ? 1 : 5 });
+    });
+    const placedLabels = A.layoutLabels(labelInfo, boxes, vb);
+    placedLabels.forEach((pl, i) => {
+      const li = labelInfo[i], k = kindOf(li.it.kind);
+      const g = el('g', { class: 'mp-label' + (pl.shown ? '' : ' is-quiet'), 'data-key': li.key, transform: `translate(${pl.x.toFixed(1)} ${pl.y.toFixed(1)})` }, gLabels);
+      g.innerHTML = A.ribbon(li.text, FS, kindColor(k));
+    });
+
     // north arrow
-    const na = el('g', { transform: 'translate(' + (vx + vw - 26 * u) + ' ' + (vy + 26 * u) + ')', 'aria-hidden': 'true' }, svg);
+    const na = el('g', { transform: 'translate(' + (vb.x + vb.w - 22) + ' ' + (vb.y + 22) + ')', 'aria-hidden': 'true' }, svg);
     const rot = { up: 0, right: -90, down: 180, left: 90 }[data.north || 'up'] || 0;
     const ng = el('g', { transform: 'rotate(' + rot + ')' }, na);
-    el('circle', { r: 15 * u, fill: '#fff', stroke: '#3a2416', 'stroke-width': 2 * u }, ng);
-    el('path', { d: 'M0 ' + (-11 * u) + ' L' + (5 * u) + ' ' + (1 * u) + ' L' + (-5 * u) + ' ' + (1 * u) + ' Z', fill: '#d72a43' }, ng);
-    const nt = el('text', { y: 11 * u, 'text-anchor': 'middle', 'font-size': 9 * u, 'font-weight': 800, fill: '#3a2416', 'font-family': 'Fredoka, sans-serif' }, ng); nt.textContent = 'N';
+    el('circle', { r: 12.5, fill: '#fff', stroke: '#3a2416', 'stroke-width': 1.8 }, ng);
+    el('path', { d: 'M0 -9 L4.4 1 L-4.4 1 Z', fill: '#d72a43' }, ng);
+    const nt = el('text', { y: 9.4, 'text-anchor': 'middle', 'font-size': 7.4, 'font-weight': 800, fill: '#3a2416', 'font-family': 'Fredoka, sans-serif' }, ng); nt.textContent = 'N';
     wrap.appendChild(svg);
     const prevDemo = $('.map-demo', container); if (prevDemo) prevDemo.remove();
     if (data.demo) {   // only the preview page sets this: example points must never look real
@@ -678,19 +640,26 @@
       const side = $('.map-side', container); if (side) side.prepend(note);
     }
 
-    // legend
+    // names on/off
+    const side = $('.map-side', container), old = $('.map-toggle', container); if (old) old.remove();
+    const tg = doc.createElement('button'); tg.type = 'button'; tg.className = 'map-toggle'; tg.setAttribute('aria-pressed', String(!wrap.classList.contains('names-off')));
+    tg.textContent = t('Show names');
+    tg.addEventListener('click', () => { const off = wrap.classList.toggle('names-off'); tg.setAttribute('aria-pressed', String(!off)); });
+    if (side) side.insertBefore(tg, $('.map-detail', container).nextSibling);
+
+    // legend: a little picture for each thing on the map
     const legend = $('.map-legend', container); legend.innerHTML = '';
     MG.forEach((gname, gi) => {
       const seenKeys = new Set();
-      const list = numbered.filter((it) => kindOf(it.kind).g === gi && !seenKeys.has(keyOf(it)) && seenKeys.add(keyOf(it)));
+      const list = named.filter((it) => kindOf(it.kind).g === gi && !seenKeys.has(keyOf(it)) && seenKeys.add(keyOf(it)));
       if (!list.length) return;
       const h = doc.createElement('h3'); h.textContent = t(gname); legend.appendChild(h);
       const ol = doc.createElement('ol');
       list.forEach((it) => {
-        const li = doc.createElement('li'), b = doc.createElement('button'), k = kindOf(it.kind);
+        const li = doc.createElement('li'), b = doc.createElement('button');
         b.type = 'button'; b.dataset.key = keyOf(it); b.setAttribute('aria-pressed', 'false');
-        const bd = badgeOf(k.c); b.innerHTML = '<span class="mn" style="--c:' + bd.bg + ';--fg:' + bd.fg + '"></span><span class="ml"></span>';
-        $('.mn', b).textContent = String(num.get(it.id));
+        b.innerHTML = '<span class="mi"></span><span class="ml"></span>';
+        $('.mi', b).innerHTML = A.legendIcon(it.kind, it.type);
         $('.ml', b).textContent = t(it.label);
         li.appendChild(b); ol.appendChild(li);
       });
@@ -703,14 +672,15 @@
     const select = (key, fromMap) => {
       active = active === key ? null : key;
       nodes.forEach((g) => g.classList.toggle('is-active', g.getAttribute('data-key') === active));
+      $$('.mp-label', svg).forEach((g) => g.classList.toggle('is-active', g.getAttribute('data-key') === active));
       $$('.map-legend button', container).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.key === active)));
       const same = items.filter((x) => active && keyOf(x) === active);
       const it = same[0] && Object.assign({}, same[0], { note: (same.find((x) => x.note) || same[0]).note });
       detail.hidden = !it;
       if (it) {
         const k = kindOf(it.kind);
-        const bd = badgeOf(k.c); detail.innerHTML = '<span class="mn" style="--c:' + bd.bg + ';--fg:' + bd.fg + '"></span><div><strong></strong><span class="md-kind"></span><p></p></div>';
-        $('.mn', detail).textContent = String(num.get(it.id));
+        detail.innerHTML = '<span class="mi"></span><div><strong></strong><span class="md-kind"></span><p></p></div>';
+        $('.mi', detail).innerHTML = A.legendIcon(it.kind, it.type);
         $('strong', detail).textContent = t(it.label);
         $('.md-kind', detail).textContent = t(k.label) === t(it.label) ? '' : t(k.label);
         const p = $('p', detail); p.textContent = it.note ? t(it.note) : ''; p.hidden = !it.note;

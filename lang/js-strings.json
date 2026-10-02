@@ -130,7 +130,8 @@
  "Picnic or shade": "features.js",
  "Pizza": "features.js",
  "Pizza reservations are open now": "features.js",
- "Pizza reservations for {dates} open at {time} Eastern Time. Spots go fast. Reserve here: {url}": "features.js",
+ "Pizza reservations for the coming weekend open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}": "features.js",
+ "Pizza reservations for {dates} open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}": "features.js",
  "Pizza reservations just opened": "features.js",
  "Pizza reservations open in {time}": "features.js",
  "Pizza, drinks and the playground": "content.js",
@@ -157,6 +158,7 @@
  "Rows of pink, orange and yellow mums in pots beside a little red shed": "content.js",
  "Rubs make us happy": "content.js",
  "School Field Trips to an Organic Farm | Wise Acres, Indian Trail, NC": "school-field-trips.html",
+ "Show names": "features.js",
  "Smooth path (strollers, wheelchairs)": "features.js",
  "Snack time": "content.js",
  "Snip, snip! Fresh sunflowers!": "hero.js",
@@ -236,5 +238,6 @@
  "tomorrow": "live.js",
  "white daisy": "main.js",
  "{crop} — happening now": "main.js",
- "{date} at {time} Eastern Time": "features.js"
+ "{date} at {time} Eastern Time": "features.js",
+ "{first}. {second}": "features.js"
 }

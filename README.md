@@ -30,6 +30,7 @@ js/live.js              "Open now" badges, notice bar, next-season countdown, to
 js/analytics.js         privacy-friendly analytics (off until you pick a provider)
 js/features.js          pizza-reservation countdown + calendar reminders, "this week" box, email signup, review links, photo wall, farm map, drive times
 js/farm-map-data.js     the points of the farm map (written by tools/farm_map.py; empty until the map is marked)
+js/map-art.js           draws the illustrated farm map from those points (forest, fields with plants, parking with cars, maze, trails, icons)
 lang/src/<code>.json    the translations (you edit these)
 lang/<code>.js          built from lang/src (what the pages load; do not edit)
 tools/                  pages.py (builds the extra pages), i18n.py (tags text, builds translations),
@@ -115,7 +116,7 @@ embedded. The First-visit page can show an entrance / parking photo: set `entran
 
 **Farm map.** The Farm Map Marker (a private page you were sent) lets you mark parking, check-in, restrooms, fields, the corn maze and
 its sign, and so on on the Google Earth photo. The website does not publish that photo (it is Google's picture); it draws its own
-illustrated, numbered map from your points, with a list you can tap and Apple Maps / Waze / Google Maps links. After you press "Save for
+illustrated map from your points (forest, mown lawn, dirt lanes, fields full of plants, a parking lot with cars, a maze, trails with little characters and an icon for every pin), with a picture list you can tap and Apple Maps / Waze / Google Maps links. After you press "Save for
 Claude" in the tool, Claude fetches the saved JSON and runs `python3 tools/farm_map.py saved-map.json`, which writes `js/farm-map-data.js`.
 The map section (home page and First-visit page) appears as soon as that file has points. **Your real map (25 points) is in** (`tools/saved-map.json` is the saved copy; re-run the script after you change it). Names and notes you typed need translating:
 the script lists them. Freehand scribbles are notes for Claude and are not drawn.
