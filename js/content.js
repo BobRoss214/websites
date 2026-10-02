@@ -147,6 +147,14 @@
  *       entrancePhoto: { src: 'assets/photos/entrance.jpg', alt: 'What the photo shows', caption: 'A short line that helps people find the entrance' },
  * `alt` is required. Describe only what is really in the picture. `alt` and `caption` can also be written { en: '...', es: '...' } like the notice.
  *
+ * DRIVE TIME FROM A VISITOR'S ADDRESS
+ * -----------------------------------
+ * The "Drive time" box in the Contact section lets a visitor type an address and see the miles and minutes to the farm.
+ * It finds the farm by its address with the free OpenStreetMap search. Optional: give the exact spot instead, so the farm is never searched for.
+ * On Google Maps, right-click the farm and click the two numbers at the top of the menu to copy them. Then change  farmPoint: null,  to
+ *       farmPoint: { lat: 00.0000, lon: -00.0000 },     (your own two numbers, not these)
+ * The visitor's address is sent to OpenStreetMap only when they press the button, and this website does not keep it.
+ *
  * SEASON SWITCHER
  * ---------------
  * The first screen shows whatever season is happening at the farm today (the dates are in js/season.js; ask Claude to change them).
@@ -169,6 +177,7 @@ window.WISE_ACRES = {
   signup: { action: '', interests: {}, tags: '' },
   reviewUrl: '',
   community: [],
+  farmPoint: null,   // optional exact spot of the farm for the Drive time box; see DRIVE TIME above
   entrancePhoto: null,   // example: { src: 'assets/photos/entrance.jpg', alt: 'What the photo shows', caption: 'A short line that helps people find the entrance' }
   photos: [
     { src: "assets/photos/family-sunflower-field.webp",

@@ -259,7 +259,16 @@
   "white daisy": "một bông cúc trắng",
   "{crop} — happening now": "{crop}: đang diễn ra",
   "{date} at {time} Eastern Time": "{date} lúc {time} giờ miền Đông",
-  "{first}. {second}": "{first}. {second}"
+  "{first}. {second}": "{first}. {second}",
+  "Working it out…": "Đang tính…",
+  "Type your street address, town and state.": "Hãy nhập địa chỉ đường, thị trấn và tiểu bang.",
+  "We could not find that address. Add the town and state, like 123 Main St, Monroe NC.": "Chúng tôi không tìm thấy địa chỉ đó. Hãy thêm thị trấn và tiểu bang, ví dụ: 123 Main St, Monroe NC.",
+  "We could not find a drive from that address to the farm. Try the Google Maps button.": "Chúng tôi không tìm được đường lái xe từ địa chỉ đó đến nông trại. Hãy thử nút Google Maps.",
+  "The lookup is not working right now. Try the Google Maps button instead.": "Chức năng tìm kiếm hiện không hoạt động. Hãy thử nút Google Maps.",
+  "{distance}, about {time} by car": "{distance}, khoảng {time} đi ô tô",
+  "We looked up: {place}": "Chúng tôi đã tra: {place}",
+  "To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.": "Đến nông trại tại 4701 Hartis Rd. Theo tốc độ đường thông thường, không có kẹt xe. Giờ cao điểm có thể lâu hơn.",
+  "Open these directions in Google Maps": "Mở đường đi này trong Google Maps"
  },
  "ui": {
   "t000eb0a5": "Tự cắt bó hoa của bạn trong ruộng hoa",
@@ -1280,6 +1289,11 @@
   "tff31acaa": "Chuyến tham quan trường học giá $11 mỗi học sinh. Phụ huynh và anh chị em từ 3 tuổi trở lên đi cùng sẽ trả phí vào cửa $11 nếu tham gia.",
   "tff70a484": "Những lời tốt đẹp",
   "tff7999ae": "4701 Hartis Rd, Indian Trail, NC",
-  "tffd483ee": "Cà chua và húng quế"
+  "tffd483ee": "Cà chua và húng quế",
+  "t0a75fed1": "Thời gian lái xe",
+  "te49f839c": "Nhập địa chỉ của bạn để xem số dặm và số phút đến nông trại",
+  "t5caafaf3": "Đường, thị trấn và tiểu bang",
+  "t89dd3672": "Xem thời gian lái xe",
+  "tc37c5664": "Khi bạn bấm nút, địa chỉ của bạn được gửi đến các dịch vụ OpenStreetMap miễn phí để tính quãng đường. Trang web này không lưu lại địa chỉ."
  }
 }

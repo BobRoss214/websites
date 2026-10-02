@@ -4,7 +4,7 @@
  *   - "This week at the farm": what is in season, spots left, waitlist   (WISE_ACRES.week)
  *   - Email signup with interests                          (WISE_ACRES.signup)
  *   - Farm map, drawn from the points marked in the Farm Map Marker   (js/farm-map-data.js)
- *   - Drive times, review links, visitor photo wall        (WISE_ACRES.reviewUrl, WISE_ACRES.community)
+ *   - Drive times (towns, and the visitor's own address), review links, visitor photo wall   (WISE_ACRES.reviewUrl, WISE_ACRES.community)
  *
  * Everything you are meant to edit lives in js/content.js (see the comments there).
  * Every piece quietly hides itself when it has nothing to show.
@@ -607,6 +607,109 @@
       el.textContent = t('about {time}', { time: tm });
     });
   }
+  /* Drive time from the visitor's own address.
+   * Nothing is contacted until the visitor presses the button. Then OpenStreetMap's free search (Nominatim) finds the place
+   * and the public OSRM server works out the drive. The address is not stored anywhere on this website.
+   * If either service is down, the Google Maps button still gives the answer. */
+  const FARM_ADDRESS = '4701 Hartis Rd, Indian Trail, NC 28079';
+  const GEO_URL = 'https://nominatim.openstreetmap.org/search';
+  const ROUTE_URL = 'https://router.project-osrm.org/route/v1/driving/';
+  let driveShow = null;   // draws the answer again when the language changes
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function getJson(url, ms) {
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
+    try {
+      const res = await fetch(url, { signal: ctl.signal, credentials: 'omit', referrerPolicy: 'strict-origin-when-cross-origin' });
+      if (!res.ok) throw new Error('http ' + res.status);
+      return await res.json();
+    } finally { clearTimeout(timer); }
+  }
+  const goodPoint = (p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lon) && Math.abs(p.lat) <= 90 && Math.abs(p.lon) <= 180;
+  async function geocode(text) {
+    const list = await getJson(GEO_URL + '?format=jsonv2&limit=1&countrycodes=us&accept-language=en&q=' + encodeURIComponent(text), 12000);
+    const hit = Array.isArray(list) && list[0];
+    const p = hit && { lat: Number(hit.lat), lon: Number(hit.lon), name: String(hit.display_name || '') };
+    return goodPoint(p) ? p : null;
+  }
+  async function driveBetween(a, b) {
+    const data = await getJson(ROUTE_URL + a.lon.toFixed(6) + ',' + a.lat.toFixed(6) + ';' + b.lon.toFixed(6) + ',' + b.lat.toFixed(6) + '?overview=false&alternatives=false&steps=false', 12000);
+    const r = data && data.code === 'Ok' && Array.isArray(data.routes) && data.routes[0];
+    return r && Number.isFinite(r.distance) && Number.isFinite(r.duration) && r.distance >= 0 ? { miles: r.distance / 1609.344, minutes: r.duration / 60 } : null;
+  }
+  const fmtMiles = (mi) => {
+    const v = mi < 100 ? Math.round(mi * 10) / 10 : Math.round(mi);
+    try { return formatter(Intl.NumberFormat, { style: 'unit', unit: 'mile', unitDisplay: 'long', maximumFractionDigits: 1 }).format(v); } catch (e) { return v + ' miles'; }
+  };
+  const fmtDriveTime = (min) => {
+    const m = Math.max(1, Math.round(min));
+    try {
+      const nf = (unit) => formatter(Intl.NumberFormat, { style: 'unit', unit, unitDisplay: 'long' });
+      if (m < 60) return nf('minute').format(m);
+      return nf('hour').format(Math.floor(m / 60)) + (m % 60 ? ' ' + nf('minute').format(m % 60) : '');
+    } catch (e) { return m + ' min'; }
+  };
+  function initDriveForm() {
+    const form = $('#drive-form');
+    if (!form || !window.fetch || !window.AbortController) return;   // without these the form stays hidden
+    const input = $('#drive-addr', form), btn = $('button[type="submit"]', form), out = $('#drive-result', form);
+    if (!input || !btn || !out) return;
+    let busy = false, farm = null, state = null;
+    const mapsLink = (from) => 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(from) + '&destination=' + encodeURIComponent(FARM_ADDRESS);
+    const MSG = {
+      wait: T('Working it out…'),
+      short: T('Type your street address, town and state.'),
+      nf: T('We could not find that address. Add the town and state, like 123 Main St, Monroe NC.'),
+      noroute: T('We could not find a drive from that address to the farm. Try the Google Maps button.'),
+      down: T('The lookup is not working right now. Try the Google Maps button instead.'),
+    };
+    const show = (next) => {
+      state = next || state;
+      out.textContent = '';
+      if (!state) { out.hidden = true; return; }
+      const add = (tag, text, cls) => { const el = doc.createElement(tag); if (cls) el.className = cls; el.textContent = text; out.appendChild(el); return el; };
+      out.setAttribute('data-kind', state.kind);
+      if (state.kind === 'ok') {
+        add('p', t('{distance}, about {time} by car', { distance: fmtMiles(state.miles), time: fmtDriveTime(state.minutes) }), 'drive-big');
+        if (state.place) { const p = add('p', t('We looked up: {place}', { place: Array.from(state.place).slice(0, 140).join('') }), 'fine'); if (lang() !== 'en') p.setAttribute('lang', 'en'); }
+        const note = add('p', t('To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.') + ' ', 'fine');
+        const cr = doc.createElement('a'); cr.href = 'https://www.openstreetmap.org/copyright'; cr.target = '_blank'; cr.rel = 'noopener'; cr.textContent = '\u00a9 OpenStreetMap contributors'; cr.setAttribute('lang', 'en');
+        note.appendChild(cr);
+      } else add('p', t(MSG[state.kind] || MSG.down), state.kind === 'wait' ? 'drive-wait' : 'drive-err');
+      if (state.from && state.kind !== 'wait') {
+        const a = doc.createElement('a');
+        a.className = 'btn btn-sun btn-sm'; a.href = mapsLink(state.from); a.target = '_blank'; a.rel = 'noopener';
+        a.textContent = t('Open these directions in Google Maps');
+        out.appendChild(a);
+      }
+      out.hidden = false;
+    };
+    driveShow = () => show();
+    form.hidden = false;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (busy) return;
+      const text = input.value.replace(/\s+/g, ' ').trim();
+      if (text.length < 5) { input.setAttribute('aria-invalid', 'true'); show({ kind: 'short' }); input.focus(); return; }
+      input.removeAttribute('aria-invalid');
+      busy = true; btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+      show({ kind: 'wait' });
+      try {
+        const from = await geocode(text);
+        if (!from) { show({ kind: 'nf', from: text }); return; }
+        if (!farm) {
+          const f = W.farmPoint && goodPoint({ lat: Number(W.farmPoint.lat), lon: Number(W.farmPoint.lon) }) ? { lat: Number(W.farmPoint.lat), lon: Number(W.farmPoint.lon) } : null;
+          if (f) farm = f; else { await sleep(1100); farm = await geocode(FARM_ADDRESS); }   // the free search asks for one request a second
+        }
+        if (!farm) { show({ kind: 'down', from: text }); return; }
+        const r = await driveBetween(from, farm);
+        if (!r) { show({ kind: 'noroute', from: text }); return; }
+        show({ kind: 'ok', miles: r.miles, minutes: r.minutes, place: from.name, from: text });
+        track('drive_time');
+      } catch (err) {
+        show({ kind: 'down', from: text });
+      } finally { busy = false; btn.disabled = false; btn.removeAttribute('aria-busy'); }
+    });
+  }
   function initReviewLinks() {
     if (!W.reviewUrl) return;
     if (!/^https:\/\/\S+$/i.test(String(W.reviewUrl).trim())) { warn('reviewUrl "' + q(W.reviewUrl) + '" must start with https:// (copy the whole link from Google Business Profile). The buttons keep opening Google Maps.'); return; }
@@ -879,14 +982,14 @@
   }
 
   /* ------------------------------------------------------------------ */
-  function renderAll() { renderRelease(); renderWeek(); renderDrive(); initEntrance(); initFarmMapRerender(); }
+  function renderAll() { renderRelease(); renderWeek(); renderDrive(); if (driveShow) driveShow(); initEntrance(); initFarmMapRerender(); }
   let mapReady = false;
   function initFarmMapRerender() { if (mapReady) { $$('[data-farm-map][data-rendered]').forEach((b) => drawMap(b, window.WISE_ACRES_MAP)); } }
 
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
   const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
   if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). Open the browser console (F12) to see the line number.');
-  [expireDated, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance].forEach(safe);
+  [expireDated, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
   safe(renderDrive);

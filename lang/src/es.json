@@ -259,7 +259,16 @@
   "white daisy": "una margarita blanca",
   "{crop} — happening now": "{crop}: ahora mismo",
   "{date} at {time} Eastern Time": "{date} a las {time}, hora del Este",
-  "{first}. {second}": "{first}. {second}"
+  "{first}. {second}": "{first}. {second}",
+  "Working it out…": "Calculando…",
+  "Type your street address, town and state.": "Escribe tu dirección, la localidad y el estado.",
+  "We could not find that address. Add the town and state, like 123 Main St, Monroe NC.": "No encontramos esa dirección. Agrega la localidad y el estado, por ejemplo: 123 Main St, Monroe NC.",
+  "We could not find a drive from that address to the farm. Try the Google Maps button.": "No encontramos un trayecto en auto desde esa dirección hasta la granja. Prueba con el botón de Google Maps.",
+  "The lookup is not working right now. Try the Google Maps button instead.": "La búsqueda no funciona en este momento. Prueba con el botón de Google Maps.",
+  "{distance}, about {time} by car": "{distance}, aprox. {time} en auto",
+  "We looked up: {place}": "Buscamos: {place}",
+  "To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.": "Hasta la granja en 4701 Hartis Rd. Velocidad normal de la vía, sin tráfico. En hora pico puede tardar más.",
+  "Open these directions in Google Maps": "Abrir esta ruta en Google Maps"
  },
  "ui": {
   "t000eb0a5": "Corta tu propio ramo en el campo de flores",
@@ -1280,6 +1289,11 @@
   "tff31acaa": "Las visitas escolares cuestan $11 por estudiante. Los padres y hermanos de 3 años o más que acompañen la visita pagan la entrada de $11 si participan.",
   "tff70a484": "Palabras amables",
   "tff7999ae": "4701 Hartis Rd, Indian Trail, NC",
-  "tffd483ee": "Tomates y albahaca"
+  "tffd483ee": "Tomates y albahaca",
+  "t0a75fed1": "Tiempo en auto",
+  "te49f839c": "Escribe tu dirección para ver las millas y los minutos hasta la granja",
+  "t5caafaf3": "Calle, localidad y estado",
+  "t89dd3672": "Ver tiempo en auto",
+  "tc37c5664": "Al pulsar el botón, tu dirección se envía a los servicios gratuitos de OpenStreetMap para calcular el trayecto. Este sitio web no la guarda."
  }
 }

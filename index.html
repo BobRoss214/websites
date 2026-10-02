@@ -2028,7 +2028,7 @@
         </div>
 
         <div class="drive reveal">
-          <h3 data-t="tf9a5cd1b">Drive time from nearby towns</h3>
+          <h3 data-t="t0a75fed1">Drive time</h3>
           <ul class="drive-list">
             <li><span data-t="t2208e27a">Stallings</span> <span class="dr-time" data-drive="10"></span></li>
             <li><span data-t="t42a1c634">Matthews</span> <span class="dr-time" data-drive="15"></span></li>
@@ -2038,6 +2038,15 @@
             <li><span data-t="t7ba8e959">Uptown Charlotte</span> <span class="dr-time" data-drive="30"></span></li>
           </ul>
           <p data-t="t9fb8ced7" class="fine">Rough times with light traffic. Rush hour can add more. Your map app can give you the time for today.</p>
+          <form class="drive-form" id="drive-form" hidden novalidate>
+            <label data-t="te49f839c" class="drive-label" for="drive-addr">Type your address to see the miles and minutes to the farm</label>
+            <div class="su-row drive-row">
+              <input data-ta-placeholder="t5caafaf3" id="drive-addr" name="address" type="text" autocomplete="street-address" maxlength="200" placeholder="Street, town and state">
+              <button data-t="t89dd3672" class="btn btn-red" type="submit">Get drive time</button>
+            </div>
+            <p data-t="tc37c5664" class="fine drive-priv">When you press the button, your address goes to the free OpenStreetMap services to work out the drive. This website does not keep it.</p>
+            <div class="drive-result" id="drive-result" role="status" aria-live="polite" hidden></div>
+          </form>
         </div>
 
         <div class="follow reveal">

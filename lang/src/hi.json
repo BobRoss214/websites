@@ -259,7 +259,16 @@
   "white daisy": "एक सफ़ेद डेज़ी",
   "{crop} — happening now": "{crop} — अभी चल रहा है",
   "{date} at {time} Eastern Time": "{date}, {time} ईस्टर्न टाइम",
-  "{first}. {second}": "{first}। {second}"
+  "{first}. {second}": "{first}। {second}",
+  "Working it out…": "हिसाब लगा रहे हैं…",
+  "Type your street address, town and state.": "अपना पूरा पता लिखें: गली, कस्बा और राज्य।",
+  "We could not find that address. Add the town and state, like 123 Main St, Monroe NC.": "हमें वह पता नहीं मिला। कस्बा और राज्य जोड़ें, जैसे 123 Main St, Monroe NC।",
+  "We could not find a drive from that address to the farm. Try the Google Maps button.": "हमें उस पते से फ़ार्म तक गाड़ी का रास्ता नहीं मिला। Google Maps बटन आज़माएँ।",
+  "The lookup is not working right now. Try the Google Maps button instead.": "अभी खोज काम नहीं कर रही है। इसके बजाय Google Maps बटन आज़माएँ।",
+  "{distance}, about {time} by car": "{distance}, गाड़ी से लगभग {time}",
+  "We looked up: {place}": "हमने यह जगह खोजी: {place}",
+  "To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.": "4701 Hartis Rd पर फ़ार्म तक। सड़क की सामान्य रफ़्तार, बिना ट्रैफ़िक के। भीड़ के समय और ज़्यादा लग सकता है।",
+  "Open these directions in Google Maps": "यह रास्ता Google Maps में खोलें"
  },
  "ui": {
   "t000eb0a5": "फूलों के खेत में अपना गुलदस्ता खुद काटें",
@@ -1280,6 +1289,11 @@
   "tff31acaa": "स्कूल टूर प्रति छात्र $11 है। साथ आने वाले 3 साल और उससे बड़े माता-पिता और भाई-बहन, अगर टूर में आते हैं, तो $11 प्रवेश शुल्क देते हैं।",
   "tff70a484": "प्यारे शब्द",
   "tff7999ae": "4701 Hartis Rd, Indian Trail, NC",
-  "tffd483ee": "टमाटर और बेसिल"
+  "tffd483ee": "टमाटर और बेसिल",
+  "t0a75fed1": "गाड़ी से लगने वाला समय",
+  "te49f839c": "फ़ार्म तक कितने मील और कितने मिनट लगेंगे, यह देखने के लिए अपना पता लिखें",
+  "t5caafaf3": "गली, कस्बा और राज्य",
+  "t89dd3672": "गाड़ी का समय देखें",
+  "tc37c5664": "बटन दबाने पर आपका पता सफ़र का हिसाब लगाने के लिए मुफ़्त OpenStreetMap सेवाओं को भेजा जाता है। यह वेबसाइट इसे सहेजकर नहीं रखती।"
  }
 }
