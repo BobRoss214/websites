@@ -462,7 +462,7 @@
         `<circle class="puff p1" r="7"/><circle class="puff p2" r="5.5"/><circle class="puff p3" r="6.5"/></g>` +
       `<g transform="translate(292 -168) scale(${f1(0.78 / c.scale * 100) / 100})"><g class="toot"><rect x="-42" y="-17" width="84" height="28" rx="14" fill="#fff" stroke="${INK}" stroke-width="3"/>` +
       `<path d="M-6 10l6 11 6-11" fill="#fff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M-7 8.5h14" stroke="#fff" stroke-width="5"/>` +
-      `<text x="0" y="3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="${INK}">Toot toot!</text></g></g>`;
+      `<text class="toot-say" x="0" y="3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="${INK}">${t('Toot toot!')}</text></g></g>`;
 
     // wheels turn at a speed that matches how far the tractor travels per second at this size
     const sc = c.scale, vars = `--wt1:${f1(3.7 * sc)}s;--wt2:${f1(2.1 * sc)}s;--wg1:${f1(2.9 * sc)}s;--wg2:${f1(2.9 * sc)}s;` + (c.dur ? `--rig-dur:${c.dur};` : '');
@@ -904,6 +904,7 @@
     if (artEl) artEl.setAttribute('href', '#' + cfg.art);
   }
   doc.addEventListener('wa:lang', () => {
+    $$('.toot-say').forEach((n) => { n.textContent = t('Toot toot!'); });   // the tractor's bubble is drawn once, so it is re-worded here
     if (!season) return;
     const cfg = SCENES[season].hud;
     if (msgEl && msgEl.dataset.custom !== '1') msgEl.innerHTML = msgFor(cfg, count);

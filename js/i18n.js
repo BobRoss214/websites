@@ -24,6 +24,9 @@
   W.languages = LANGS;
   W.dict = W.dict || {};
 
+  // The word "Language" for the language button and the footer list (read aloud by screen readers).
+  const LANG_WORD = { en: 'Language', es: 'Idioma', hi: 'भाषा', zh: '语言', vi: 'Ngôn ngữ' };
+
   // Asked in the visitor's own language when their browser prefers it.
   const OFFER = {
     es: ['¿Prefieres ver este sitio en español?', 'Sí, en español', 'No, gracias'],
@@ -145,7 +148,7 @@
   function buildMenus() {
     doc.querySelectorAll('[data-lang-menu]').forEach((box) => {
       box.classList.add('lang');
-      box.innerHTML = '<button type="button" class="lang-btn" aria-haspopup="true" aria-expanded="false" aria-label="Language">' + GLOBE + '<span class="lang-cur"></span></button>' +
+      box.innerHTML = '<button type="button" class="lang-btn" aria-haspopup="true" aria-expanded="false" aria-label="' + (LANG_WORD[W.lang] || LANG_WORD.en) + '">' + GLOBE + '<span class="lang-cur"></span></button>' +
         '<ul class="lang-list" role="menu" hidden>' + LANGS.map((l) => '<li role="none"><button type="button" role="menuitemradio" aria-checked="false" data-lang="' + l.code + '" lang="' + l.html + '">' + l.name + '</button></li>').join('') + '</ul>';
       const btn = box.querySelector('.lang-btn'), list = box.querySelector('.lang-list');
       const close = () => { list.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
@@ -168,6 +171,7 @@
   function markMenus() {
     const cur = LANGS.find((l) => l.code === W.lang) || LANGS[0];
     doc.querySelectorAll('.lang-cur').forEach((n) => { n.textContent = cur.short; });
+    doc.querySelectorAll('.lang-btn, [data-lang-list]').forEach((n) => n.setAttribute('aria-label', LANG_WORD[cur.code] || LANG_WORD.en));
     doc.querySelectorAll('[data-lang]').forEach((b) => {
       const on = b.dataset.lang === cur.code;
       if (b.classList.contains('lang-link')) b.setAttribute('aria-pressed', String(on));
@@ -185,7 +189,7 @@
     if (!code) return;
     const [q, yes, no] = OFFER[code];
     const bar = doc.createElement('div');
-    bar.className = 'lang-offer'; bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', 'Language');
+    bar.className = 'lang-offer'; bar.setAttribute('role', 'region'); bar.setAttribute('lang', code); bar.setAttribute('aria-label', LANG_WORD[code] || LANG_WORD.en);
     bar.innerHTML = '<p lang="' + code + '"></p><button type="button" class="btn btn-sm btn-sun" data-y></button><button type="button" class="btn btn-sm btn-ghost" data-n></button>';
     bar.querySelector('p').textContent = q; bar.querySelector('[data-y]').textContent = yes; bar.querySelector('[data-n]').textContent = no;
     bar.querySelector('[data-y]').addEventListener('click', () => { setLang(code); bar.remove(); });

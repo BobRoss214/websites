@@ -73,6 +73,11 @@ html:lang(vi) body{line-height:1.65}
 html:lang(hi) body,html:lang(zh) body{line-height:1.75}
 html:lang(hi) .hero h1,html:lang(zh) .hero h1{line-height:1.25;letter-spacing:0}
 html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;letter-spacing:0}
+/* Devanagari: letter-spacing pulls the joined top line of each word apart, and labels under 12px are hard to read. Chinese: no slanted (synthetic italic) text, and no lone character on the last line. */
+html:lang(hi) :is(.rc i,.badge-now,.fs-this,.new-ribbon,.nu-now,.rel-eyebrow,.cal-months span,.cal-today span,.way-time,.menu-addons span,.bloom-when,.choose-new-badge,.choose-tag,.fact-label,.fs-now,.gh-banner-a,.gh-banner-b,.loc-tag,.menu-name,.now-badge,.package-flag,.pill,.ss-now,.tag,.v-cat,.who-what,.sched-table th,.map-legend h3,.press h3){letter-spacing:0}
+html:lang(hi) :is(.rc i,.fs-now,.fs-this,.now-badge,.package-flag,.pill,.ss-now,.tag,.v-cat,.cal-months span,.cal-today span){font-size:12px}
+html:lang(hi) .menu-desc,html:lang(zh) .menu-desc{font-style:normal}
+html:lang(zh) body{text-wrap:pretty}
 
 /* ---------------------------------------------------------------- reviews */
 .reviews{background:#fff3cf}
@@ -134,6 +139,8 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 .price-list small{display:block;grid-column:1/-1;font:600 .88rem/1.4 var(--body);color:var(--ink-soft);text-align:left;margin-top:2px}
 .price-card .fine{margin:0}
 .price-list dd.pl-note{grid-column:1/-1;margin:2px 0 0;font:600 .88rem/1.4 var(--body);color:var(--ink-soft);text-align:left}
+/* The note (<small>) inside a price must not make the price column as wide as the note, so the dd steps aside and its text and note become grid items of the row. */
+.price-list dd:not(.pl-note):not(.soon){display:contents}
 .price-list dd.soon{justify-self:end;padding:.25em .8em;border:2px dashed var(--red-deep);border-radius:999px;background:#fff1f3;color:var(--red-deep);font:700 .85rem/1.2 var(--display);text-align:center}
 .shop-note{margin:0 0 clamp(28px,4vw,48px)}
 .shop-jump{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:calc(-1 * clamp(8px,2vw,24px)) 0 clamp(20px,3vw,32px);padding:0;list-style:none}

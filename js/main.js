@@ -571,6 +571,9 @@
     const stems = $('#bq-stems'), heads = $('#bq-heads'), msg = $('#bq-msg'), clear = $('#bq-clear');
     const buttons = $$('.bq-flower');
     if (!stems || !heads) return;
+    // tools/i18n.py does not tag attributes of <svg>, so the picture's label is set (and re-set when the language changes) here
+    const cup = $('#bouquet-svg'), labelCup = () => { if (cup) cup.setAttribute('aria-label', t('A paper cup that fills with the flowers you tap')); };
+    labelCup(); doc.addEventListener('wa:lang', labelCup);
     const MOUTH = { x: 150, y: 205 };
     // [angle from vertical (deg), distance from the cup mouth] — filled from the middle out
     const SLOTS = [[0, 96], [-11, 150], [11, 150], [-24, 96], [24, 96], [-32, 150], [32, 150], [-48, 96], [48, 96], [0, 182]];

@@ -38,10 +38,13 @@
   // Mistakes in js/content.js or in the schedule table are collected here instead of breaking the page. They go to the
   // console and, while you preview the site on your own computer (or when the address ends in ?check), into a yellow box.
   const problems = [];
+  // A value typed in js/content.js (or sent by the live feed) is shown in the box at most 60 letters long, on one line,
+  // so the box can never carry a long message of someone else's.
+  const q = (v) => { const a = Array.from(String(v == null ? '' : v).replace(/\s+/g, ' ')); return a.length > 60 ? a.slice(0, 59).join('') + '\u2026' : a.join(''); };
   const warn = (msg) => { if (problems.indexOf(msg) < 0) { problems.push(msg); try { console.warn('Wise Acres: ' + msg); } catch (e) { /* no console */ } } };
   function showProblems() {
-    const here = /^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname) || /[?&]check\b/.test(location.search);
-    if (!problems.length || !here || !doc.body) return;
+    const local = /^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname);
+    if (!problems.length || !(local || /[?&]check\b/.test(location.search)) || !doc.body) return;
     let box = doc.getElementById('wa-problems');
     if (!box) {
       box = doc.createElement('div'); box.id = 'wa-problems'; box.setAttribute('role', 'alert');
@@ -49,7 +52,11 @@
       doc.body.appendChild(box);
     }
     box.textContent = '';
-    const h = doc.createElement('strong'); h.textContent = 'Site check (only you see this): ' + problems.length + (problems.length === 1 ? ' thing to fix' : ' things to fix'); box.appendChild(h);
+    const h = doc.createElement('strong'); h.textContent = problems.length === 1 ? t('Site check: {n} thing to fix', { n: 1 }) : t('Site check: {n} things to fix', { n: problems.length }); box.appendChild(h);
+    // Say honestly who can see it: on the live site anyone who adds ?check to the address does.
+    const why = doc.createElement('p'); why.style.margin = '4px 0 0'; why.style.fontWeight = '500';
+    why.textContent = local ? t('You see this box because the site is open on this computer, not on the live website. Visitors do not see it.') : t('You see this box because the web address has ?check in it. Anyone who adds ?check to the address sees it too.');
+    box.appendChild(why);
     const ul = doc.createElement('ul'); ul.style.margin = '6px 0 0 18px'; ul.style.padding = '0';
     problems.forEach((m) => { const li = doc.createElement('li'); li.textContent = m; ul.appendChild(li); });
     box.appendChild(ul);
@@ -67,10 +74,10 @@
     const s = String(v == null ? '' : v).trim();
     let m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s);
     if (!m && (m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s))) m = [0, m[3], m[1], m[2]];
-    if (!m) { if (s && what) warn(what + ' "' + s + '" is not a date. Write it like 2026-10-03 (year-month-day).'); return ''; }
+    if (!m) { if (s && what) warn(what + ' "' + q(s) + '" is not a date. Write it like 2026-10-03 (year-month-day).'); return ''; }
     const out = m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
-    if (!realYmd(out)) { if (what) warn(what + ' "' + s + '" is not a real day on the calendar.'); return ''; }
-    if (what && out !== s) warn(what + ' "' + s + '" was read as ' + out + '. Please write it as ' + out + '.');
+    if (!realYmd(out)) { if (what) warn(what + ' "' + q(s) + '" is not a real day on the calendar.'); return ''; }
+    if (what && out !== s) warn(what + ' "' + q(s) + '" was read as ' + out + '. Please write it as ' + out + '.');
     return out;
   }
 
@@ -142,7 +149,7 @@
     $$('[data-release-time] tbody tr:not([data-release])').forEach(() => warn('A row of the pizza schedule has no data-release="YYYY-MM-DD", so it does not count for the countdown.'));
     return $$('tr[data-release]').filter((tr) => {
       const good = realYmd(tr.dataset.release);
-      if (!good) warn('A row of the pizza schedule says data-release="' + tr.dataset.release + '". Write it like data-release="2026-11-03" (a real day, year-month-day, two digits each). That row is ignored.');
+      if (!good) warn('A row of the pizza schedule says data-release="' + q(tr.dataset.release) + '". Write it like data-release="2026-11-03" (a real day, year-month-day, two digits each). That row is ignored.');
       return good;
     }).map((tr) => {
       const at = zonedToUtc(tr.dataset.release, time);
@@ -370,14 +377,14 @@
     if (cfg.updated && hasContent) {
       const age = daysBetween(cfg.updated, todayET()), keep = raw.expireDays || 14;
       if (age < -1) warn('week.updated ' + cfg.updated + ' is in the future, so everything in "week" is hidden.');
-      else if (age > keep) warn('week.updated ' + cfg.updated + ' is more than ' + keep + ' days ago, so the note, crops and spots are hidden until you update it.');
+      else if (age > keep) warn('week.updated ' + cfg.updated + ' is more than ' + q(keep) + ' days ago, so the note, crops and spots are hidden until you update it.');
     }
     if (hasContent && !String(raw.updated || '').trim()) warn("week needs updated: 'YYYY-MM-DD' (the day you checked). Without it the note, crops and spots are not shown.");
     cfg.crops = {};
     Object.keys(raw.crops && typeof raw.crops === 'object' ? raw.crops : {}).forEach((k) => {
       const id = lc(k), v = lc(raw.crops[k]);
-      if (!CROPS.some((c) => c.id === id)) warn('week.crops: "' + k + '" is not a crop name. Use: ' + CROPS.map((c) => c.id).join(', ') + '.');
-      else if (v !== 'off' && v !== 'done' && !has(OVERRIDE_LABEL, v)) warn('week.crops.' + k + ': "' + raw.crops[k] + '" is not one of soon, starting, peak, ending, off.');
+      if (!CROPS.some((c) => c.id === id)) warn('week.crops: "' + q(k) + '" is not a crop name. Use: ' + CROPS.map((c) => c.id).join(', ') + '.');
+      else if (v !== 'off' && v !== 'done' && !has(OVERRIDE_LABEL, v)) warn('week.crops.' + q(k) + ': "' + q(raw.crops[k]) + '" is not one of soon, starting, peak, ending, off.');
       else cfg.crops[id] = v;
     });
     if (!Array.isArray(raw.days)) { if (raw.days && Object.keys(raw.days).length) warn('week.days must be a list: days: [ { date: ..., farm: ... }, { ... } ].'); cfg.days = []; }
@@ -386,12 +393,12 @@
       out.date = fixYmd(d.date, 'week.days date');
       ['farm', 'pizza'].forEach((f) => {
         out[f] = lc(d[f]);
-        if (out[f] && !has(AVAIL_LABEL, out[f]) && out[f] !== 'none') { warn('week.days ' + (out.date || d.date) + ' ' + f + ': "' + d[f] + '" is not one of open, few, full, closed.'); out[f] = ''; }
+        if (out[f] && !has(AVAIL_LABEL, out[f]) && out[f] !== 'none') { warn('week.days ' + q(out.date || d.date) + ' ' + f + ': "' + q(d[f]) + '" is not one of open, few, full, closed.'); out[f] = ''; }
       });
       return out;
     });
     cfg.waitlistEmail = String(raw.waitlistEmail || '').trim();
-    if (!EMAIL_OK.test(cfg.waitlistEmail)) { if (cfg.days.length) warn('week.waitlistEmail "' + cfg.waitlistEmail + '" is not an email address, so ' + WAITLIST + ' is used.'); cfg.waitlistEmail = WAITLIST; }
+    if (!EMAIL_OK.test(cfg.waitlistEmail)) { if (cfg.days.length) warn('week.waitlistEmail "' + q(cfg.waitlistEmail) + '" is not an email address, so ' + WAITLIST + ' is used.'); cfg.waitlistEmail = WAITLIST; }
     return cfg;
   }
 
@@ -531,7 +538,7 @@
     else if (cfg.action && !mc) warn('signup.action should look like https://NAME.us21.list-manage.com/subscribe/post?u=...&id=... (copy it from the Mailchimp embed code). The old signup button stays until it does.');
     if (mc) {
       const keys = $$('input[name=interest]', form).map((i) => i.value);
-      Object.keys(cfg.interests || {}).forEach((k) => { if (keys.indexOf(k) < 0) warn('signup.interests: "' + k + '" is not a choice on the form. Use: ' + keys.join(', ') + '.'); });
+      Object.keys(cfg.interests || {}).forEach((k) => { if (keys.indexOf(k) < 0) warn('signup.interests: "' + q(k) + '" is not a choice on the form. Use: ' + keys.join(', ') + '.'); });
     }
     const live = !!(mc || cfg.demo);
     const fallback = $('[data-signup-fallback]');
@@ -580,7 +587,7 @@
   }
   function initReviewLinks() {
     if (!W.reviewUrl) return;
-    if (!/^https:\/\/\S+$/i.test(String(W.reviewUrl).trim())) { warn('reviewUrl "' + W.reviewUrl + '" must start with https:// (copy the whole link from Google Business Profile). The buttons keep opening Google Maps.'); return; }
+    if (!/^https:\/\/\S+$/i.test(String(W.reviewUrl).trim())) { warn('reviewUrl "' + q(W.reviewUrl) + '" must start with https:// (copy the whole link from Google Business Profile). The buttons keep opening Google Maps.'); return; }
     $$('a[data-review]').forEach((a) => { a.href = String(W.reviewUrl).trim(); });
   }
   function initCommunity() {
@@ -758,7 +765,7 @@
     const ng = el('g', { transform: 'rotate(' + rot + ')' }, na);
     el('circle', { r: 12.5, fill: '#fff', stroke: '#3a2416', 'stroke-width': 1.8 }, ng);
     el('path', { d: 'M0 -9 L4.4 1 L-4.4 1 Z', fill: '#d72a43' }, ng);
-    const nt = el('text', { y: 9.4, 'text-anchor': 'middle', 'font-size': 7.4, 'font-weight': 800, fill: '#3a2416', 'font-family': 'Fredoka, sans-serif' }, ng); nt.textContent = 'N';
+    const nt = el('text', { y: 9.4, 'text-anchor': 'middle', 'font-size': 7.4, 'font-weight': 800, fill: '#3a2416', 'font-family': 'Fredoka, sans-serif' }, ng); nt.textContent = t('N');   // north; "N" is one letter, so tools/i18n.py does not list it: its translations are added by hand in lang/src
     wrap.appendChild(svg);
     const prevDemo = $('.map-demo', container); if (prevDemo) prevDemo.remove();
     if (data.demo) {   // only the preview page sets this: example points must never look real
@@ -855,13 +862,13 @@
   function initFarmMapRerender() { if (mapReady) { $$('[data-farm-map][data-rendered]').forEach((b) => drawMap(b, window.WISE_ACRES_MAP)); } }
 
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
-  const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + e.message); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + e.message); } };
+  const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
   if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). Open the browser console (F12) to see the line number.');
   [initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance].forEach(safe);
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
   safe(renderDrive);
   showProblems();
-  doc.addEventListener('wa:lang', () => { $$('.community-strip img').forEach((i) => (lang() === 'en' ? i.removeAttribute('lang') : i.setAttribute('lang', 'en'))); relBuilt = false; relCache = null; relKey = chipKey = ''; renderAll(); });
+  doc.addEventListener('wa:lang', () => { $$('.community-strip img').forEach((i) => (lang() === 'en' ? i.removeAttribute('lang') : i.setAttribute('lang', 'en'))); relBuilt = false; relCache = null; relKey = chipKey = ''; renderAll(); showProblems(); });
   doc.addEventListener('wa:season', () => renderWeek());
 
   W.features = { zonedToUtc, readReleases, releaseState, buildICS, googleUrl, renderWeek, renderRelease, fmtYmd };

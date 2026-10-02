@@ -228,7 +228,7 @@ Do this after you edit `js/content.js` or the pizza schedule.
 
 1. Save the file.
 2. Look at the site: double-click `index.html` (or run `python3 -m http.server` and visit http://localhost:8000/?check). On the live
-   site add `?check` to the address: https://www.wiseacresorganic.com/?check . Only you see the result.
+   site add `?check` to the address: https://www.wiseacresorganic.com/?check . Anyone who adds ?check sees the box too, so it only ever shows what is already in the public files.
 3. Look at the bottom of the page. If something you typed cannot be used, a yellow "Site check" box says what and where. No box means the check
    found nothing wrong.
 4. The check covers `week`, `signup`, `reviewUrl`, `community`, `entrancePhoto` and the rows of the pizza schedule. It does **not** check hours,

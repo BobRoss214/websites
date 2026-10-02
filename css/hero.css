@@ -253,7 +253,7 @@ html[data-season="winter"] .bee{display:none}
   .hero-note{font-size:.92rem;padding:.2em .8em}
   .season-switch{gap:5px;width:100%;flex-wrap:nowrap;margin-bottom:14px}
   .ss-label{display:none}
-  .season-switch button{flex:1 1 0;justify-content:center;min-width:0;padding:.22em .3em .22em .3em;font-size:.82rem;box-shadow:0 2px 0 var(--ink)}
+  .season-switch button{flex:1 1 auto;justify-content:center;min-width:0;padding:.22em .3em .22em .3em;font-size:.82rem;box-shadow:0 2px 0 var(--ink)}
   .ss-ico{width:20px;height:20px}
   .ss-now{top:-11px;right:-3px;font-size:.58rem}
 }
