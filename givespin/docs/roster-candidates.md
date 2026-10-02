@@ -15,7 +15,7 @@ half were left out. The reasons, in short:
 - universities, schools and colleges, and training or employment companies
 - professional, learned, trade and membership bodies, and peak bodies
 - grant-making trusts, private or corporate foundations and donor-advised-fund intermediaries
-- religious orders, parishes, dioceses and evangelism-only bodies
+- religious bodies whose purpose is mainly to advance a religion (orders, parishes, dioceses, evangelism-only bodies). A charity that is run by a religious body but whose work is care, such as the Little Sisters of the Poor homes for older people, was kept and flagged `faith`
 - think tanks and research institutes with no public-giving route
 - commercial arms of charities, aged-care and housing operators, local-only service providers whose mission could not be described from the record
 - a website that belongs to a different brand than the registered name

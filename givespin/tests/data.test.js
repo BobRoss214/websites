@@ -40,6 +40,15 @@ test('every charity has the fields the UI relies on, using only known vocabulary
   });
 });
 
+test('no two charities share the same short name (they would look identical on a board or a wheel)', () => {
+  const seen = {};
+  GS.charities.forEach((c) => {
+    const k = c.short.toLowerCase();
+    assert.ok(!seen[k], c.id + ' and ' + seen[k] + ' are both called "' + c.short + '"');
+    seen[k] = c.id;
+  });
+});
+
 test('charities flagged unverified never carry founding or headquarters facts', () => {
   // (every entry has now been checked, so the list may be empty; the rule still holds for any added later)
   const unverified = GS.charities.filter((c) => c.unverified);
