@@ -5,8 +5,9 @@
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) and hands it over. The wheel shows a
  * sample of the pool that always includes the winner; the ball is animated to land in the winner's pocket.
  *
- * Live tables: the wheel has 24 pockets shared out by stake (every charity with money on it keeps at least one),
- * and the ball lands in one of the winner's pockets.
+ * Live tables: every spot on the board owns a pocket (the catalog charities that fill the board included, drawn dimmed), and
+ * the pockets on top of those are shared out by stake, so the charities people backed light up and own more of the wheel.
+ * The ball lands in one of the winner's pockets, and only a backed charity can be the winner.
  */
 (function () {
   'use strict';
@@ -20,6 +21,11 @@
   var RED = '#d8344a';
   var BLACK = '#17222c';
   var GREEN = '#169c58';
+  // the same three colours, muted: the pockets of catalog charities that only fill a live board (they cannot win)
+  var RED_DIM = '#6b2a37';
+  var BLACK_DIM = '#0f171e';
+  var GREEN_DIM = '#14583a';
+  var PALETTE = [RED, BLACK, GREEN, RED_DIM, BLACK_DIM, GREEN_DIM];
 
   var el = {};
   var api = null;
@@ -31,6 +37,9 @@
   var pool = [];
   var pockets = [];
   var field = null;          // live table entrants, or null when playing solo
+  var ring = null;           // live: the wheel's pockets, kept for the whole round so a new bet only changes a pocket or two
+  var backedAt = [];         // live: true for a pocket whose charity somebody backed (the rest only fill the board)
+  var backedIdx = [];        // live: the indexes of those pockets (a few dozen at most, even on a 1,000-pocket wheel)
   var fresh = true;
   var wheelA = Math.random() * TAU;
   var ballA = -Math.PI / 2;
@@ -47,8 +56,16 @@
   var flash = 0;
 
   var pick = '';              // id of the charity you backed (solo), or empty
+  var livePick = '';          // the charity you have backed at the live table you are watching, or empty
 
   function count() { return kit.sizeNow(size); }
+  /** The charity you have put your stake on at the live table you are watching (or empty): its pockets get a gold edge. */
+  function yourPick() {
+    var cur = GS.ui && GS.ui.live && GS.ui.live.current ? GS.ui.live.current() : null;
+    return cur && cur.room && cur.room.you ? cur.room.you.charityId : '';
+  }
+  /** A phone-sized screen: a long list of chips scrolls inside its box sooner there, so it does not push the page down. */
+  function narrow() { return !!(window.matchMedia && window.matchMedia('(max-width: 560px)').matches); }
   function maxCanvas() { var n = pockets.length; return n <= 16 ? 520 : n <= 37 ? 600 : 680; }
 
   /* ------------------------------------------------------------- geometry
@@ -105,15 +122,20 @@
     if (!w) { return; }
     cw = Math.min(w, maxCanvas());
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    el.canvas.width = Math.round(cw * dpr);
-    el.canvas.height = Math.round(cw * dpr);
-    el.canvas.style.width = cw + 'px';
-    el.canvas.style.height = cw + 'px';
+    // only touch the canvas when its size really changed (a live wheel calls this every time somebody bets)
+    if (el.canvas.width !== Math.round(cw * dpr) || el.canvas.style.width !== cw + 'px') {
+      el.canvas.width = Math.round(cw * dpr);
+      el.canvas.height = Math.round(cw * dpr);
+      el.canvas.style.width = cw + 'px';
+      el.canvas.style.height = cw + 'px';
+    }
     layout();
     draw(performance.now());
   }
 
-  function pocketColor(i) { return i === 0 ? GREEN : (i % 2 ? RED : BLACK); }
+  /** Which colour pocket `i` is: 0 red, 1 black, 2 green (the first pocket); a live filler pocket is the muted twin (3 to 5). */
+  function pocketGroup(i) { return (field && !backedAt[i] ? 3 : 0) + (i === 0 ? 2 : (i % 2 ? 0 : 1)); }
+  function pocketColor(i) { return PALETTE[pocketGroup(i)]; }
 
   function annulus(g, r0, r1, a0, a1) {
     ctx.beginPath();
@@ -221,15 +243,14 @@
       var lw = g.big ? core.clamp(1.1 * px, 0.8, 3) : (n > 40 ? 0.6 : 1.5);
       var showEdge = !g.big || arc * z >= 5;
       var winning = winIdx >= 0 && winIdx < n && ballMode === 'pocket' && !spinning;
+      // a live wheel tells the charities somebody backed (bright, with a cap in their colour) from the catalog charities that only fill it (muted)
+      var live = !!field && backedAt.length === n && backedIdx.length > 0;
 
       if (g.big) {
-        // many pockets: fill them by colour in three passes
-        var groups = [[], [], []];
-        for (var m = iFrom; m <= iTo; m++) {
-          var gi = U.mod(m, n);
-          groups[gi === 0 ? 2 : (gi % 2 ? 0 : 1)].push(m);
-        }
-        [RED, BLACK, GREEN].forEach(function (col, gk) {
+        // many pockets: fill them by colour in a few passes (live filler pockets have a muted twin of each colour)
+        var groups = [[], [], [], [], [], []];
+        for (var m = iFrom; m <= iTo; m++) { groups[pocketGroup(U.mod(m, n))].push(m); }
+        PALETTE.forEach(function (col, gk) {
           if (!groups[gk].length) { return; }
           ctx.beginPath();
           groups[gk].forEach(function (mm) { sliceSub(g, wheelA + mm * seg, wheelA + (mm + 1) * seg); });
@@ -237,11 +258,22 @@
           ctx.fill();
         });
         if (showEdge) {
-          ctx.beginPath();
-          for (var me = iFrom; me <= iTo; me++) { sliceSub(g, wheelA + me * seg, wheelA + (me + 1) * seg); }
           ctx.lineWidth = lw;
-          ctx.strokeStyle = 'rgba(255,197,66,0.85)';
-          ctx.stroke();
+          if (live) {
+            ctx.beginPath();
+            for (var mf = iFrom; mf <= iTo; mf++) { if (!backedAt[U.mod(mf, n)]) { sliceSub(g, wheelA + mf * seg, wheelA + (mf + 1) * seg); } }
+            ctx.strokeStyle = 'rgba(255,197,66,0.3)';
+            ctx.stroke();
+            ctx.beginPath();
+            for (var mb = iFrom; mb <= iTo; mb++) { if (backedAt[U.mod(mb, n)]) { sliceSub(g, wheelA + mb * seg, wheelA + (mb + 1) * seg); } }
+            ctx.strokeStyle = 'rgba(255,214,102,1)';
+            ctx.stroke();
+          } else {
+            ctx.beginPath();
+            for (var me = iFrom; me <= iTo; me++) { sliceSub(g, wheelA + me * seg, wheelA + (me + 1) * seg); }
+            ctx.strokeStyle = 'rgba(255,197,66,0.85)';
+            ctx.stroke();
+          }
         }
       } else {
         for (var i = 0; i < n; i++) {
@@ -250,8 +282,19 @@
           ctx.fillStyle = pocketColor(i);
           ctx.fill();
           ctx.lineWidth = lw;
-          ctx.strokeStyle = 'rgba(255,197,66,0.85)';
+          ctx.strokeStyle = live && !backedAt[i] ? 'rgba(255,197,66,0.3)' : (live ? 'rgba(255,214,102,1)' : 'rgba(255,197,66,0.85)');
           ctx.stroke();
+        }
+      }
+      if (live) {
+        // a cap in the charity's own colour at the rim end of every pocket somebody backed, so they stand out even when the wheel is too small to read
+        var capIn = g.pockOut - (g.pockOut - g.pockIn) * 0.2;
+        for (var cj = iFrom; cj <= iTo; cj++) {
+          var ci = U.mod(cj, n);
+          if (!backedAt[ci]) { continue; }
+          annulus(g, capIn, g.pockOut, wheelA + cj * seg, wheelA + (cj + 1) * seg);
+          ctx.fillStyle = pockets[ci].accent;
+          ctx.fill();
         }
       }
 
@@ -264,19 +307,19 @@
           ctx.save();
           ctx.translate(Math.cos(ca) * midR, Math.sin(ca) * midR);
           ctx.rotate(ca + Math.PI / 2);
-          ctx.fillStyle = '#fff';
+          ctx.fillStyle = live && !backedAt[j] ? 'rgba(255,255,255,0.4)' : '#fff';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.font = '800 ' + (mfs * (m2.length > 2 ? 0.82 : 1)) + 'px "Sora", "Inter", sans-serif';
           ctx.fillText(m2, 0, 2);
-          if (cw >= 340 && arc >= 30) {
+          if (cw >= 340 && arc >= 30 && !live) {
             ctx.font = '700 ' + Math.max(8, mfs * 0.5) + 'px "Inter", sans-serif';
             ctx.fillStyle = 'rgba(255,255,255,0.7)';
             ctx.fillText(String(j), 0, -(g.pockOut - g.pockIn) * 0.36);
           }
           ctx.restore();
         }
-      } else if (n <= 64) {
+      } else if (n <= 64 && !live) {
         // pockets too small for lettering: number every fifth one so the wheel still reads as a wheel
         ctx.fillStyle = 'rgba(255,255,255,0.75)';
         ctx.textAlign = 'center';
@@ -291,13 +334,14 @@
           ctx.restore();
         }
       }
-      if (pick) {
+      var mine = field ? livePick : pick;
+      if (mine) {
         // the charity you backed: a gold edge on each of its pockets
         ctx.lineWidth = g.big ? Math.max(2, 2 * px) : (n > 40 ? 1.6 : 3);
         ctx.strokeStyle = '#ffc542';
         ctx.beginPath();
         for (var pk = iFrom; pk <= iTo; pk++) {
-          if (pockets[U.mod(pk, n)].id !== pick) { continue; }
+          if (pockets[U.mod(pk, n)].id !== mine) { continue; }
           sliceSub(g, wheelA + pk * seg, wheelA + (pk + 1) * seg);
         }
         ctx.stroke();
@@ -411,6 +455,18 @@
       ctx.arc(mx, my, mr * 0.72, 0, TAU);
       ctx.stroke();
       ctx.setLineDash([]);
+      if (live) {
+        // the pockets somebody backed, as gold ticks: the ball can only land in one of them
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffd666';
+        ctx.beginPath();
+        for (var bt = 0; bt < backedIdx.length; bt++) {
+          var ta = wheelA + (backedIdx[bt] + 0.5) * (TAU / n);
+          ctx.moveTo(mx + Math.cos(ta) * mr * 0.52, my + Math.sin(ta) * mr * 0.52);
+          ctx.lineTo(mx + Math.cos(ta) * mr * 0.92, my + Math.sin(ta) * mr * 0.92);
+        }
+        ctx.stroke();
+      }
       ctx.lineWidth = 2;
       ctx.strokeStyle = '#ffc542';
       ctx.beginPath();
@@ -481,7 +537,9 @@
         done();
       }
     } else if (!spinning && !U.reducedMotion()) {
-      wheelA += dt * (winIdx >= 0 ? 0.05 : 0.12);
+      // a huge wheel turns slowly, so its rim does not stream past faster than the rim of a wheel that fits the screen
+      var idle = G && G.big ? Math.min(1, 36 / (G.pockOut * 0.12)) : 1;
+      wheelA += dt * (winIdx >= 0 ? 0.05 : 0.12) * idle;
     }
     updateCamera(dt);
     draw(t);
@@ -498,23 +556,29 @@
 
   function renderLegend() {
     if (!el.legend) { return; }
-    var big = pockets.length > 40;
-    el.legend.className = 'rlegend' + (big ? ' rlegend--scroll' : '');
-    if (big) { el.legend.setAttribute('tabindex', '0'); } else { el.legend.removeAttribute('tabindex'); }
+    var live = null;
     if (field) {
-      // live: one chip per charity with its stake share and how many pockets it owns (backed charities first; a long board is cut off)
+      // live: a chip for every charity somebody backed (biggest stake first) with its share and its pockets, then the catalog charities
+      // that only fill the board, muted (a long list of those is boiled down to one line)
       var total = field.reduce(function (s, e) { return s + e.tickets; }, 0);
       var mineBy = {};
       pockets.forEach(function (c) { mineBy[c.id] = (mineBy[c.id] || 0) + 1; });
-      var ordered = field.filter(function (e) { return e.tickets > 0; }).concat(field.filter(function (e) { return !(e.tickets > 0); }));
-      var cut = ordered.slice(0, 150);
-      el.legend.innerHTML = cut.map(function (e) {
+      var backed = field.filter(function (e) { return e.tickets > 0; }).sort(function (a, b) { return b.tickets - a.tickets; });
+      var fillers = field.filter(function (e) { return !(e.tickets > 0); });
+      var winId = ballMode === 'pocket' && winIdx >= 0 && pockets[winIdx] ? pockets[winIdx].id : '';
+      var shownF = fillers.length <= 30 ? fillers : [];
+      live = { chips: backed.length + shownF.length + (fillers.length > shownF.length ? 1 : 0) };
+      live.html = backed.map(function (e) {
         var mine = mineBy[e.charity.id] || 0;
-        var sh = kit.share(e.tickets, total);
-        return '<li data-id="' + e.charity.id + '">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' · ' + (sh ? sh + ' · ' : '') + mine + (mine === 1 ? ' pocket' : ' pockets') + '</span></li>';
-      }).join('') + (ordered.length > cut.length ? '<li class="rlegend__more">+ ' + (ordered.length - cut.length) + ' more</li>' : '');
-      return;
+        return '<li class="' + (e.charity.id === winId ? 'is-win' : 'is-pick') + '" data-id="' + e.charity.id + '">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' · ' + kit.share(e.tickets, total) + ' · ' + mine + (mine === 1 ? ' pocket' : ' pockets') + (e.charity.id === livePick ? ' · you' : '') + '</span></li>';
+      }).join('') + shownF.map(function (e) {
+        return '<li data-id="' + e.charity.id + '" style="opacity:0.55" title="Fills the board: this charity cannot win">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + '</span></li>';
+      }).join('') + (fillers.length > shownF.length ? '<li class="rlegend__more">+ ' + fillers.length + ' more charities fill the wheel, one pocket each. They cannot win.</li>' : '');
     }
+    var big = live ? live.chips > (narrow() ? 6 : 14) : pockets.length > 40;
+    el.legend.className = 'rlegend' + (big ? ' rlegend--scroll' : '');
+    if (big) { el.legend.setAttribute('tabindex', '0'); } else { el.legend.removeAttribute('tabindex'); }
+    if (live) { el.legend.innerHTML = live.html; return; }
     if (pockets.length > 40) {
       // too many pockets to list one by one: one chip per charity, with how many pockets it has
       var seen = {};
@@ -535,7 +599,13 @@
   function updateNote() {
     if (!el.note) { return; }
     if (cw) { layout(); }
-    if (field) { el.note.textContent = 'Pockets are shared out by stake: the more money behind a charity, the more pockets it owns.'; return; }
+    if (field) {
+      var nb = backedIdx.length ? Object.keys(backedAt.reduce(function (o, v, i) { if (v) { o[pockets[i].id] = 1; } return o; }, {})).length : 0;
+      var nf = Math.max(0, field.length - nb);
+      el.note.textContent = nb + (nb === 1 ? ' charity is' : ' charities are') + ' backed and light up on the wheel: the more money behind one, the more pockets it owns.' +
+        (nf === 1 ? ' The other one fills the board with a pocket, dimmed, and cannot win.' : nf ? ' The other ' + nf.toLocaleString('en-US') + ' fill the board with a pocket each, dimmed, and cannot win.' : '');
+      return;
+    }
     el.note.textContent = kit.boardNote(pool, pockets.length, pick, 'on the wheel') + (G && G.big ? ' With this many pockets the wheel is far bigger than your screen: the camera pulls back while the ball flies and closes in as it settles.' : '');
   }
 
@@ -567,15 +637,84 @@
     resize();
   }
 
-  function setLiveField(entrants) {
+  /**
+   * The ring of a live wheel. Every spot on the board owns a pocket (the catalog charities that fill it included), and the pockets on
+   * top of those are shared out by stake, so the more money behind a charity, the more of the wheel it owns. The ring is kept for the
+   * whole round: when somebody bets, only the pocket or two that change hands change, and the rest of the wheel stays where it was.
+   */
+  function layoutLive(entrants, key) {
+    var n = entrants.length;
+    var total = Math.max(LIVE_POCKETS, n + Math.min(n, 36));
+    var extras = total - n;
+    var t;
+    if (!ring || ring.key !== key || ring.ch.length !== total) {
+      ring = { key: key, extra: [], ch: [] };
+      for (t = 0; t < total; t++) {
+        ring.extra.push(Math.floor((t + 1) * extras / total) > Math.floor(t * extras / total));   // the extra pockets sit evenly among the others
+        ring.ch.push(null);
+      }
+    }
+    // the spots: a charity keeps the pocket it had, and one that is new on the board takes a pocket that a charity which left has given up
+    var need = {};
+    var byId = {};
+    entrants.forEach(function (e) { need[e.charity.id] = (need[e.charity.id] || 0) + 1; byId[e.charity.id] = e.charity; });
+    var vacant = [];
+    for (t = 0; t < total; t++) {
+      if (ring.extra[t]) { continue; }
+      var c = ring.ch[t];
+      if (c && need[c.id] > 0) { need[c.id] -= 1; } else { ring.ch[t] = null; vacant.push(t); }
+    }
+    entrants.forEach(function (e) {
+      if (need[e.charity.id] > 0 && vacant.length) { need[e.charity.id] -= 1; ring.ch[vacant.shift()] = e.charity; }
+    });
+    // the extra pockets: shared out by stake. A charity keeps the extra pockets it had while it still deserves them.
+    var counts = core.apportion(entrants.map(function (e) { return e.tickets > 0 ? e.tickets : 0; }), extras, 0);
+    var want = {};
+    entrants.forEach(function (e, i) { want[e.charity.id] = (want[e.charity.id] || 0) + counts[i]; });
+    var have = {};
+    var free = [];
+    for (t = 0; t < total; t++) {
+      if (!ring.extra[t]) { continue; }
+      var o = ring.ch[t];
+      if (o && (have[o.id] || 0) < (want[o.id] || 0)) { have[o.id] = (have[o.id] || 0) + 1; } else { ring.ch[t] = null; free.push(t); }
+    }
+    // a charity that gained pockets takes free ones, each as far as it can from the pockets it already has (so they spread around the wheel)
+    var mineAt = {};
+    ring.ch.forEach(function (ch, s) { if (ch) { (mineAt[ch.id] = mineAt[ch.id] || []).push(s); } });
+    Object.keys(want).filter(function (id) { return want[id] > (have[id] || 0); }).sort(function (a, b) { return want[b] - want[a] || (a < b ? -1 : 1); }).forEach(function (id) {
+      var at = mineAt[id] = mineAt[id] || [];
+      while ((have[id] || 0) < want[id] && free.length) {
+        var best = 0;
+        var bestD = -1;
+        for (var f = 0; f < free.length; f++) {
+          var d = total;
+          for (var u = 0; u < at.length; u++) { var gap = Math.abs(at[u] - free[f]); d = Math.min(d, gap, total - gap); }
+          if (d > bestD) { bestD = d; best = f; }
+        }
+        var slot = free.splice(best, 1)[0];
+        ring.ch[slot] = byId[id];
+        at.push(slot);
+        have[id] = (have[id] || 0) + 1;
+      }
+    });
+    var backedIds = {};
+    entrants.forEach(function (e) { if (e.tickets > 0) { backedIds[e.charity.id] = true; } });
+    pockets = [];
+    backedAt = [];
+    backedIdx = [];
+    ring.ch.forEach(function (ch) {
+      if (!ch) { return; }
+      if (backedIds[ch.id]) { backedIdx.push(pockets.length); }
+      backedAt.push(!!backedIds[ch.id]);
+      pockets.push(ch);
+    });
+  }
+
+  function setLiveField(entrants, info) {
     field = entrants;
-    // one pocket for every spot on the board (catalog fillers included), plus a few more shared out by stake
-    var nSpots = entrants.length;
-    var counts = core.apportion(entrants.map(function (e) { return e.tickets; }), Math.max(LIVE_POCKETS, nSpots + Math.min(nSpots, 36)), 1);
-    var list = [];
-    entrants.forEach(function (e, i) { for (var k = 0; k < counts[i]; k++) { list.push(e.charity); } });
-    // spread each charity's pockets around the wheel
-    pockets = core.shuffle(list);
+    livePick = yourPick();
+    // the same wheel for the whole round (info.key starts with the round number), however the board changes as people back charities
+    layoutLive(entrants, (info && info.key ? String(info.key).split(':')[0] : '') + '/' + entrants.length);
     winIdx = -1;
     ballMode = 'park';
     fresh = true;
@@ -609,7 +748,8 @@
           if (el.result) { el.result.textContent = field ? winner.name : 'Pocket ' + target + ': ' + winner.name; }
           renderLegend();
           resolve(winner);
-        }
+        },
+        stop: function () { resolve(winner); }
       };
     });
   }
@@ -666,8 +806,19 @@
       pool = list.slice();
       if (!spinning && !field) { rebuild(); }
     },
-    setField: function (entrants) { if (!spinning) { setLiveField(entrants); } },
-    clearField: function () { field = null; if (!spinning) { rebuild(); } },
+    setField: function (entrants, info) { if (!spinning) { setLiveField(entrants, info); } },
+    clearField: function () { field = null; ring = null; backedAt = []; backedIdx = []; livePick = ''; if (!spinning) { rebuild(); } },
+    /** Stops a spin in progress (the live table it belonged to has been left): the wheel goes back to rest. */
+    abort: function () {
+      if (!anim) { return; }
+      var a = anim;
+      anim = null;
+      spinning = false;
+      ballMode = 'park';
+      winIdx = -1;
+      resetCamera();
+      a.stop();
+    },
 
     activate: function () { active = true; resize(); startLoop(); },
     deactivate: function () { active = false; },
@@ -701,6 +852,8 @@
 
     _shown: function () { return winIdx >= 0 && ballMode === 'pocket' && pockets[winIdx] ? [pockets[winIdx].id] : []; },
     _pockets: function () { return pockets.length; },
+    _ring: function () { return pockets.map(function (c) { return c.id; }); },
+    _marked: function () { return field ? livePick : pick; },
     _zoom: function () { return cam.z; },
     _big: function () { return !!(G && G.big); }
   };

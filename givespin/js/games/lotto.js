@@ -5,7 +5,9 @@
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the drum starts. The drum holds
  * a sample of the pool that always includes the winner; the winner's ball is steered to the chute after the mix.
  *
- * Live tables: the drum holds a ball per share of the pot, so a charity with half the money is half the balls.
+ * Live tables: every spot on the board has a ball in the drum (the catalog charities that fill the board included, dimmed),
+ * and the balls on top of those are shared out by stake, so a charity with half the money is about half the coloured balls. Only a
+ * charity somebody backed can be drawn.
  */
 (function () {
   'use strict';
@@ -16,6 +18,7 @@
   var TAU = Math.PI * 2;
 
   var LIVE_BALLS = 36;
+  var FILLER = 'rgba(178,198,214,0.42)';   // a charity that only fills a live drum (it cannot win): a pale, glassy ball
 
   var el = {};
   var api = null;
@@ -28,7 +31,13 @@
   var size = 12;
   var pool = [];
   var field = null;
-  var balls = [];        // { ch, x, y, vx, vy, mode: 'drum' | 'guide' | 'tube' | 'tray', ... }
+  var liveKey = '';      // live: which round of which table the drum belongs to (a drum is kept for the whole round)
+  var groups = null;     // a big drum's balls grouped by colour, so each colour is painted in one go
+  var gridHead = null;   // the broad phase of the physics: balls sorted into square cells the size of a ball
+  var gridNext = null;
+  var drawToken = 0;
+  var drawing = null;    // the draw in progress: { resolve, winner }
+  var balls = [];        // { ch, backed, x, y, vx, vy, mode: 'drum' | 'guide' | 'tube' | 'tray', ... }
   var fresh = true;
   var mixing = false;
   var jetT = 0;
@@ -43,13 +52,22 @@
   var onTray = null;
 
   var pick = '';         // id of the charity you backed (solo), or empty
+  var livePick = '';     // the charity you have backed at the live table you are watching, or empty
 
   function count() { return kit.sizeNow(size); }
+  /** The charity you have put your stake on at the live table you are watching (or empty): its balls get a gold ring. */
+  function yourPick() {
+    var cur = GS.ui && GS.ui.live && GS.ui.live.current ? GS.ui.live.current() : null;
+    return cur && cur.room && cur.room.you ? cur.room.you.charityId : '';
+  }
+  /** A phone-sized screen: a long list of chips scrolls inside its box sooner there, so it does not push the page down. */
+  function narrow() { return !!(window.matchMedia && window.matchMedia('(max-width: 560px)').matches); }
 
   function layout() {
     var n = balls.length || 6;
     var Rd = W * 0.36;
-    var r = Rd * core.clamp(Math.sqrt(0.4 / n), 0.05, 0.24);
+    // balls get smaller as the drum fills up, so about 40% of the drum is always ball (a thousand balls are small, but they fit)
+    var r = Math.max(2, Rd * core.clamp(Math.sqrt(0.4 / n), 0.012, 0.24));
     var cx = W / 2;
     var cy = Rd + 12;
     var tubeTop = cy + Rd - 6;
@@ -76,10 +94,13 @@
     layout();
     if (oldR && Math.abs(oldR - geo.Rd) > 1) { rescale(oldR); }
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    el.canvas.width = Math.round(W * dpr);
-    el.canvas.height = Math.round(H * dpr);
-    el.canvas.style.width = W + 'px';
-    el.canvas.style.height = H + 'px';
+    // only touch the canvas when its size really changed (a live drum calls this every time somebody bets)
+    if (el.canvas.width !== Math.round(W * dpr) || el.canvas.height !== Math.round(H * dpr) || el.canvas.style.width !== W + 'px') {
+      el.canvas.width = Math.round(W * dpr);
+      el.canvas.height = Math.round(H * dpr);
+      el.canvas.style.width = W + 'px';
+      el.canvas.style.height = H + 'px';
+    }
     draw();
   }
 
@@ -96,9 +117,10 @@
 
   /* ---------------------------------------------------------------- balls */
 
-  function spawn(list) {
+  function spawn(list, backedIds) {
     measure();
-    balls = list.map(function (ch) { return { ch: ch, x: 0, y: 0, vx: 0, vy: 0, mode: 'drum' }; });
+    groups = null;
+    balls = list.map(function (ch) { return { ch: ch, backed: !backedIds || !!backedIds[ch.id], x: 0, y: 0, vx: 0, vy: 0, cx: 0, cy: 0, mode: 'drum' }; });
     layout();
     balls.forEach(function (b) {
       var a = Math.random() * TAU;
@@ -116,43 +138,110 @@
 
   function renderLegend() {
     if (!el.legend) { return; }
-    el.legend.className = 'rlegend' + (balls.length > 30 ? ' rlegend--scroll' : '');
-    if (balls.length > 30) { el.legend.setAttribute('tabindex', '0'); } else { el.legend.removeAttribute('tabindex'); }
     if (field) {
+      // live: a chip for every charity somebody backed (biggest stake first) with its share and its balls, then the catalog charities that
+      // only fill the drum, muted (a long list of those is boiled down to one line)
       var total = field.reduce(function (s, e) { return s + e.tickets; }, 0);
       var mineBy = {};
       balls.forEach(function (b) { mineBy[b.ch.id] = (mineBy[b.ch.id] || 0) + 1; });
-      var ordered = field.filter(function (e) { return e.tickets > 0; }).concat(field.filter(function (e) { return !(e.tickets > 0); }));
-      var cut = ordered.slice(0, 150);
-      el.legend.innerHTML = cut.map(function (e) {
+      var backed = field.filter(function (e) { return e.tickets > 0; }).sort(function (a, b) { return b.tickets - a.tickets; });
+      var fillers = field.filter(function (e) { return !(e.tickets > 0); });
+      var shownF = fillers.length <= 30 ? fillers : [];
+      var chips = backed.length + shownF.length + (fillers.length > shownF.length ? 1 : 0);
+      var winId = result ? result.id : '';
+      var scroll = chips > (narrow() ? 6 : 14);
+      el.legend.className = 'rlegend' + (scroll ? ' rlegend--scroll' : '');
+      if (scroll) { el.legend.setAttribute('tabindex', '0'); } else { el.legend.removeAttribute('tabindex'); }
+      el.legend.innerHTML = backed.map(function (e) {
         var mine = mineBy[e.charity.id] || 0;
-        var sh = kit.share(e.tickets, total);
-        return '<li>' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' \u00b7 ' + (sh ? sh + ' \u00b7 ' : '') + mine + (mine === 1 ? ' ball' : ' balls') + '</span></li>';
-      }).join('') + (ordered.length > cut.length ? '<li class="rlegend__more">+ ' + (ordered.length - cut.length) + ' more</li>' : '');
+        return '<li class="' + (e.charity.id === winId ? 'is-win' : 'is-pick') + '">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' \u00b7 ' + kit.share(e.tickets, total) + ' \u00b7 ' + mine + (mine === 1 ? ' ball' : ' balls') + (e.charity.id === livePick ? ' \u00b7 you' : '') + '</span></li>';
+      }).join('') + shownF.map(function (e) {
+        return '<li style="opacity:0.55" title="Fills the drum: this charity cannot win">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + '</span></li>';
+      }).join('') + (fillers.length > shownF.length ? '<li class="rlegend__more">+ ' + fillers.length + ' more charities fill the drum, one ball each. They cannot win.</li>' : '');
       return;
     }
+    el.legend.className = 'rlegend' + (balls.length > 30 ? ' rlegend--scroll' : '');
+    if (balls.length > 30) { el.legend.setAttribute('tabindex', '0'); } else { el.legend.removeAttribute('tabindex'); }
     // one chip per charity (a big drum has several balls of the same one)
     var seen = {};
     var order = [];
     balls.forEach(function (b) { if (!seen[b.ch.id]) { seen[b.ch.id] = { c: b.ch, n: 0 }; order.push(seen[b.ch.id]); } seen[b.ch.id].n += 1; });
     var shown = order.slice(0, 150);
     el.legend.innerHTML = shown.map(function (o) {
-      return '<li' + (o.c.id === pick ? ' class="is-pick"' : '') + '>' + GS.ui.mono(o.c, 20) + '<span>' + U.esc(o.c.short) + (o.n > 1 ? ' × ' + o.n : '') + '</span></li>';
+      return '<li' + (o.c.id === pick ? ' class="is-pick"' : '') + '>' + GS.ui.mono(o.c, 20) + '<span>' + U.esc(o.c.short) + (o.n > 1 ? ' \u00d7 ' + o.n : '') + '</span></li>';
     }).join('') + (order.length > shown.length ? '<li class="rlegend__more">+ ' + (order.length - shown.length) + ' more</li>' : '');
+  }
+
+  /**
+   * Pushes overlapping balls apart (and bounces them off each other). A ball only meets the balls in its own square of the grid and
+   * the eight around it, so a drum of a thousand balls costs about as much as a drum of a hundred.
+   */
+  function collide(r) {
+    var n = balls.length;
+    var cell = r * 2;
+    var cols = Math.ceil(geo.Rd * 2 / cell) + 3;
+    var ox = geo.cx - geo.Rd - cell;
+    var oy = geo.cy - geo.Rd - cell;
+    var i, j, k, b, c;
+    if (!gridHead || gridHead.length !== cols * cols) { gridHead = new Int32Array(cols * cols); }
+    if (!gridNext || gridNext.length !== n) { gridNext = new Int32Array(n); }
+    for (k = 0; k < gridHead.length; k++) { gridHead[k] = -1; }
+    for (i = 0; i < n; i++) {
+      b = balls[i];
+      if (b.mode !== 'drum') { continue; }
+      b.cx = core.clamp(Math.floor((b.x - ox) / cell), 1, cols - 2);
+      b.cy = core.clamp(Math.floor((b.y - oy) / cell), 1, cols - 2);
+      k = b.cy * cols + b.cx;
+      gridNext[i] = gridHead[k];
+      gridHead[k] = i;
+    }
+    var min = r * 2;
+    var min2 = min * min;
+    for (i = 0; i < n; i++) {
+      b = balls[i];
+      if (b.mode !== 'drum') { continue; }
+      for (var gy = -1; gy <= 1; gy++) {
+        for (var gx = -1; gx <= 1; gx++) {
+          for (j = gridHead[(b.cy + gy) * cols + b.cx + gx]; j >= 0; j = gridNext[j]) {
+            if (j <= i) { continue; }
+            c = balls[j];
+            var ddx = c.x - b.x, ddy = c.y - b.y;
+            var d2 = ddx * ddx + ddy * ddy;
+            if (d2 < min2 && d2 > 0.0001) {
+              var d = Math.sqrt(d2);
+              var ux = ddx / d, uy = ddy / d;
+              var push = (min - d) / 2;
+              b.x -= ux * push; b.y -= uy * push;
+              c.x += ux * push; c.y += uy * push;
+              var rv = (c.vx - b.vx) * ux + (c.vy - b.vy) * uy;
+              if (rv < 0) {
+                var imp = -(1 + 0.82) * rv / 2;
+                b.vx -= imp * ux; b.vy -= imp * uy;
+                c.vx += imp * ux; c.vy += imp * uy;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   function physics(dt) {
     if (!geo) { return; }
-    var sub = balls.length > 40 ? 2 : 3;
-    var h = dt / sub;
     var Rd = geo.Rd, r = geo.r;
+    // small balls need small steps, so that a fast one cannot jump through another
+    var base = balls.length > 40 ? 2 : 3;
+    var sub = Math.max(base, Math.min(8, Math.ceil(dt * Math.sqrt(4 * geo.G * Rd) / (r * 1.2))));
+    var h = dt / sub;
+    var damp = Math.pow(0.9996, base / sub);      // the drag and the drum's push on the balls are per second, however many small steps there are
+    var kick = 14 * base / sub;
     for (var s = 0; s < sub; s++) {
-      var i, j, b, c;
+      var i, b;
       for (i = 0; i < balls.length; i++) {
         b = balls[i];
         if (b.mode !== 'drum') { continue; }
         b.vy += geo.G * h;
-        b.vx *= 0.9996;
+        b.vx *= damp;
         b.x += b.vx * h;
         b.y += b.vy * h;
         var dx = b.x - geo.cx, dy = b.y - geo.cy;
@@ -165,32 +254,11 @@
           if (vn > 0) {
             b.vx -= 1.72 * vn * nx;
             b.vy -= 1.72 * vn * ny;
-            b.vx += -ny * 14 * (drumT % 2 ? 1 : -1);
+            b.vx += -ny * kick * (drumT % 2 ? 1 : -1);
           }
         }
       }
-      for (i = 0; i < balls.length; i++) {
-        for (j = i + 1; j < balls.length; j++) {
-          b = balls[i]; c = balls[j];
-          if (b.mode !== 'drum' || c.mode !== 'drum') { continue; }
-          var ddx = c.x - b.x, ddy = c.y - b.y;
-          var d2 = ddx * ddx + ddy * ddy;
-          var min = r * 2;
-          if (d2 < min * min && d2 > 0.0001) {
-            var d = Math.sqrt(d2);
-            var ux = ddx / d, uy = ddy / d;
-            var push = (min - d) / 2;
-            b.x -= ux * push; b.y -= uy * push;
-            c.x += ux * push; c.y += uy * push;
-            var rv = (c.vx - b.vx) * ux + (c.vy - b.vy) * uy;
-            if (rv < 0) {
-              var imp = -(1 + 0.82) * rv / 2;
-              b.vx -= imp * ux; b.vy -= imp * uy;
-              c.vx += imp * ux; c.vy += imp * uy;
-            }
-          }
-        }
-      }
+      collide(r);
     }
   }
 
@@ -209,6 +277,8 @@
 
   function drawBall(b, x, y, r, glow) {
     var text = r >= 11;
+    var dim = field && !b.backed && b.mode === 'drum';
+    if (dim) { ctx.globalAlpha = 0.45; }
     if (glow) {
       ctx.beginPath();
       ctx.arc(x, y, r + 7, 0, TAU);
@@ -219,7 +289,7 @@
     ctx.arc(x, y, r, 0, TAU);
     ctx.fillStyle = b.ch.accent;
     ctx.fill();
-    if (pick && b.ch.id === pick) {
+    if (b.ch.id === (field ? livePick : pick)) {
       // the charity you backed: a gold ring
       ctx.lineWidth = Math.max(1.6, r * 0.22);
       ctx.strokeStyle = '#ffc542';
@@ -231,9 +301,9 @@
       g.addColorStop(0.25, b.ch.accent);
       g.addColorStop(1, 'rgba(0,0,0,0.55)');
       ctx.fillStyle = g;
-      ctx.globalAlpha = 0.65;
+      ctx.globalAlpha = dim ? 0.3 : 0.65;
       ctx.fill();
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = dim ? 0.45 : 1;
     } else {
       ctx.beginPath();
       ctx.arc(x - r * 0.3, y - r * 0.3, r * 0.35, 0, TAU);
@@ -251,6 +321,54 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(m, x, y + 1);
+    }
+    if (dim) { ctx.globalAlpha = 1; }
+  }
+
+  /** A big drum's balls grouped by colour (the glassy filler balls first, so the coloured ones are painted over them). */
+  function drumGroups() {
+    if (groups) { return groups; }
+    var by = {};
+    groups = [];
+    balls.forEach(function (b, i) {
+      var key = field && !b.backed ? '' : b.ch.accent;
+      var gp = by[key];
+      if (!gp) { gp = by[key] = { color: key || FILLER, idx: [] }; groups.push(gp); }
+      gp.idx.push(i);
+    });
+    groups.sort(function (a, b) { return (a.color === FILLER ? 0 : 1) - (b.color === FILLER ? 0 : 1); });
+    return groups;
+  }
+
+  /** The balls in a big drum are too small to read, so they are painted a colour at a time instead of one by one. */
+  function drawDrumBig(r) {
+    var i, k, b;
+    drumGroups().forEach(function (gp) {
+      ctx.beginPath();
+      for (k = 0; k < gp.idx.length; k++) {
+        b = balls[gp.idx[k]];
+        if (b.mode === 'drum') { ctx.moveTo(b.x + r, b.y); ctx.arc(b.x, b.y, r, 0, TAU); }
+      }
+      ctx.fillStyle = gp.color;
+      ctx.fill();
+    });
+    ctx.beginPath();
+    for (i = 0; i < balls.length; i++) {
+      b = balls[i];
+      if (b.mode === 'drum') { ctx.moveTo(b.x - r * 0.3 + r * 0.35, b.y - r * 0.3); ctx.arc(b.x - r * 0.3, b.y - r * 0.3, r * 0.35, 0, TAU); }
+    }
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fill();
+    var mine = field ? livePick : pick;
+    if (mine) {
+      ctx.lineWidth = Math.max(1.2, r * 0.3);
+      ctx.strokeStyle = '#ffc542';
+      ctx.beginPath();
+      for (i = 0; i < balls.length; i++) {
+        b = balls[i];
+        if (b.mode === 'drum' && b.ch.id === mine) { ctx.moveTo(b.x + r, b.y); ctx.arc(b.x, b.y, r, 0, TAU); }
+      }
+      ctx.stroke();
     }
   }
 
@@ -296,9 +414,12 @@
     ctx.fillStyle = fillG;
     ctx.fill();
     var i, b;
-    for (i = 0; i < balls.length; i++) {
-      b = balls[i];
-      if (b.mode === 'drum') { drawBall(b, b.x, b.y, g.r, false); }
+    if (balls.length > 120) { drawDrumBig(g.r); }
+    else {
+      for (i = 0; i < balls.length; i++) {
+        b = balls[i];
+        if (b.mode === 'drum') { drawBall(b, b.x, b.y, g.r, false); }
+      }
     }
     ctx.lineWidth = 6;
     ctx.strokeStyle = 'rgba(255,255,255,0.4)';
@@ -327,7 +448,7 @@
     ctx.fillRect(g.cx - tw / 2 - 3, g.cy + g.Rd - 2, tw + 6, 7);
     for (i = 0; i < balls.length; i++) {
       b = balls[i];
-      if (b.mode !== 'drum') { drawBall(b, b.x, b.y, g.tr, b.mode === 'tray'); }
+      if (b.mode !== 'drum') { drawBall(b, b.x, b.y, b.mode === 'guide' ? b.rad : g.tr, b.mode === 'tray'); }
     }
   }
 
@@ -367,6 +488,7 @@
     var e = U.easeInOut(p);
     b.x = b.g.x0 + (geo.mouth.x - b.g.x0) * e;
     b.y = b.g.y0 + (geo.mouth.y - b.g.y0) * e;
+    b.rad = geo.r + (geo.tr - geo.r) * e;          // the drawn ball grows to the size of the chute, so it can be read
     if (p >= 1) { b.mode = 'tube'; b.x = geo.cx; b.vx = 0; b.vy = 120; b.bounces = 0; GS.audio.click(); }
   }
 
@@ -384,6 +506,7 @@
         result = b.ch;
         GS.audio.thud();
         if (el.name) { el.name.textContent = b.ch.name; }
+        if (field) { renderLegend(); }
         var done = onTray;
         onTray = null;
         if (done) { done(b.ch); }
@@ -395,7 +518,13 @@
 
   function updateNote() {
     if (!el.note) { return; }
-    if (field) { el.note.textContent = 'Balls are shared out by stake: a charity with more money behind it has more balls in the drum.'; return; }
+    if (field) {
+      var nb = field.filter(function (e) { return e.tickets > 0; }).length;
+      var nf = field.length - nb;
+      el.note.textContent = nb + (nb === 1 ? ' charity is' : ' charities are') + ' backed and shown as coloured balls: the more money behind one, the more balls it has in the drum.' +
+        (nf === 1 ? ' The other one fills the drum with a dimmed ball, and cannot be drawn.' : nf ? ' The other ' + nf.toLocaleString('en-US') + ' fill the drum with a dimmed ball each, and cannot be drawn.' : '');
+      return;
+    }
     el.note.textContent = kit.boardNote(pool, balls.length, pick, 'in the drum');
   }
 
@@ -408,22 +537,50 @@
     updateNote();
   }
 
-  function setLiveField(entrants) {
+  function setLiveField(entrants, info) {
     field = entrants;
-    var nSpots = entrants.length;
-    var counts = core.apportion(entrants.map(function (e) { return e.tickets; }), Math.max(LIVE_BALLS, nSpots + Math.min(nSpots, 36)), 1);
-    var list = [];
-    entrants.forEach(function (e, i) { for (var k = 0; k < counts[i]; k++) { list.push(e.charity); } });
-    spawn(core.shuffle(list));
+    livePick = yourPick();
+    var n = entrants.length;
+    var total = Math.max(LIVE_BALLS, n + Math.min(n, 36));
+    // every spot has a ball (the catalog charities that fill the board included); the balls on top of those are shared out by stake
+    var extra = core.apportion(entrants.map(function (e) { return e.tickets > 0 ? e.tickets : 0; }), total - n, 0);
+    var want = {};
+    var byId = {};
+    var backedIds = {};
+    entrants.forEach(function (e, i) {
+      want[e.charity.id] = (want[e.charity.id] || 0) + 1 + extra[i];
+      byId[e.charity.id] = e.charity;
+      if (e.tickets > 0) { backedIds[e.charity.id] = true; }
+    });
+    var key = (info && info.key ? String(info.key).split(':')[0] : '') + '/' + n;
+    if (key === liveKey && balls.length === total && !current) {
+      // the same round: the drum keeps tumbling, and only the balls that changed hands change colour
+      var have = {};
+      var spare = [];
+      balls.forEach(function (b) {
+        if ((have[b.ch.id] || 0) < (want[b.ch.id] || 0)) { have[b.ch.id] = (have[b.ch.id] || 0) + 1; } else { spare.push(b); }
+      });
+      Object.keys(want).forEach(function (id) {
+        while ((have[id] || 0) < want[id] && spare.length) { spare.pop().ch = byId[id]; have[id] = (have[id] || 0) + 1; }
+      });
+      balls.forEach(function (b) { b.backed = !!backedIds[b.ch.id]; });
+      groups = null;
+    } else {
+      liveKey = key;
+      var list = [];
+      Object.keys(want).forEach(function (id) { for (var k = 0; k < want[id]; k++) { list.push(byId[id]); } });
+      spawn(core.shuffle(list), backedIds);
+    }
     fresh = true;
     resize();
+    renderLegend();
     updateNote();
   }
 
   function showWinner(winner) {
     var has = balls.some(function (b) { return b.ch.id === winner.id; });
     if (fresh && has) { return; }
-    if (fresh) { balls[core.randomInt(balls.length)].ch = winner; renderLegend(); return; }
+    if (fresh) { balls[core.randomInt(balls.length)].ch = winner; groups = null; renderLegend(); return; }
     spawn(kit.boardWith(pool, winner, count()));
     fresh = true;
     resize();
@@ -432,22 +589,28 @@
 
   function draw1(winner, quick, durationMs) {
     return new Promise(function (resolve) {
+      var token = ++drawToken;
+      drawing = { resolve: resolve, winner: winner };
       fresh = false;
       result = null;
       if (el.name) { el.name.textContent = ''; }
       mixing = true;
       jetT = 0;
       GS.audio.whoosh();
-      var mixMs = durationMs ? durationMs * 0.62 : (quick ? 900 : 3000 + balls.length * 12);
+      // live: the mix fills the play time, leaving just enough for the ball to be taken out and to drop into the tray
+      var mixMs = durationMs ? Math.max(durationMs * 0.5, durationMs - 3300) : (quick ? 900 : 3000 + balls.length * 12);
       U.sleep(mixMs).then(function () {
+        if (token !== drawToken) { return; }
         mixing = false;
         var mine = balls.filter(function (x) { return x.ch.id === winner.id; });
         var b = mine[core.randomInt(mine.length)];
         current = b;
         return U.sleep(quick ? 120 : 600).then(function () {
+          if (token !== drawToken) { return; }
           b.mode = 'guide';
+          b.rad = geo.r;
           b.g = { x0: b.x, y0: b.y, start: performance.now(), dur: U.dur(quick ? 500 : 1300) };
-          onTray = resolve;
+          onTray = function (ch) { drawing = null; resolve(ch); };
         });
       });
     });
@@ -505,8 +668,20 @@
       if (!mixing && !current) { rebuild(); }
       else if (!mixing && current && current.mode === 'tray') { rebuild(); }
     },
-    setField: function (entrants) { if (!mixing && !(current && current.mode !== 'tray')) { setLiveField(entrants); } },
-    clearField: function () { field = null; if (!mixing) { rebuild(); } },
+    setField: function (entrants, info) { if (!mixing && !(current && current.mode !== 'tray')) { setLiveField(entrants, info); } },
+    clearField: function () { field = null; liveKey = ''; livePick = ''; if (!mixing) { rebuild(); } },
+    /** Stops a draw in progress (the live table it belonged to has been left). */
+    abort: function () {
+      if (!drawing) { return; }
+      var d = drawing;
+      drawing = null;
+      drawToken += 1;
+      mixing = false;
+      if (current) { current.mode = 'drum'; }
+      current = null;
+      onTray = null;
+      d.resolve(d.winner);
+    },
 
     activate: function () { active = true; resize(); startLoop(); },
     deactivate: function () { active = false; },
@@ -539,6 +714,8 @@
     playLive: function (opts) { return draw1(opts.winner, false, opts.durationMs); },
 
     _shown: function () { return result ? [result.id] : []; },
-    _balls: function () { return balls.length; }
+    _balls: function () { return balls.length; },
+    _labels: function () { return balls.map(function (b) { return b.ch.id; }); },
+    _marked: function () { return field ? livePick : pick; }
   };
 })();

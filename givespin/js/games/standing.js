@@ -5,7 +5,8 @@
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the first wave. The board is a
  * sample of the pool that always includes the winner, and the knock-out order is shuffled among everyone else.
  * On a live table every charity with money behind it is on the board; those with a bigger share tend to last
- * longer, but the winner is whoever the draw picked.
+ * longer, but the winner is whoever the draw picked. The rest of a live board is filled with catalog charities:
+ * they are shown dimmed underneath, go out first, and cannot win.
  */
 (function () {
   'use strict';
@@ -24,10 +25,42 @@
   var playing = false;
   var locked = false;
   var result = null;
+  var runToken = 0;      // a newer run (or an abort) cancels the one in progress
+  var stopRun = null;    // lets abort() settle the run in progress straight away
+  var fillSig = '';      // live: which catalog charities the dimmed grid shows now (it is only redrawn when that changes)
 
   var pick = '';         // id of the charity you backed (solo), or empty
+  var livePick = '';     // the charity you have backed at the live table you are watching, or empty
+
+  // The look of a live board: the charities somebody backed sit in a grid of their own with names and shares, and the catalog
+  // charities that only fill the board are dimmed underneath. Added once, when the game is first shown.
+  var CSS = [
+    '.stand__cap{width:100%;max-width:680px;margin:2px 0 -4px;font:700 0.68rem var(--f-body);letter-spacing:0.08em;text-transform:uppercase;color:var(--dim)}',
+    '.stand__grid--live{--min:128px}',
+    '.stand__grid--live .stile{min-height:46px;border-color:color-mix(in srgb,var(--c) 55%,var(--line));background:color-mix(in srgb,var(--c) 12%,var(--panel-2))}',
+    '.stand__grid--live .stile.is-danger{border-color:var(--red);background:rgba(255,90,110,0.18)}',
+    '.stand__grid--live .stile.is-out{border-color:var(--line);background:transparent}',
+    '.stand__grid--live .stile.is-champ{border-color:var(--gold);background:rgba(255,197,66,0.16)}',
+    '.stile__txt{display:grid;min-width:0;gap:1px}',
+    '.stile__txt .stile__name{font-size:0.78rem;line-height:1.15;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}',
+    '.stile__txt .stile__share{margin-left:0;font-size:0.74rem}',
+    '.stand__grid--fill .stile.is-filler{color:var(--dim)}',
+    '.stand__grid--fill .stile.is-filler .cmono{opacity:0.6}',
+    '.stand__grid--dot .stile.is-out{filter:none;transform:none;transition:background-color 0.25s}',
+    '.stand__grid--dot .stile.is-danger{animation:none;background:var(--red)}',
+    '.stand__grid--fill.stand__grid--dot .stile.is-filler{opacity:1;background:color-mix(in srgb,var(--c) 38%,#26343f)}',
+    '.stand__grid--fill.stand__grid--dot .stile.is-filler.is-danger{background:var(--red)}',
+    '.stand__grid--fill.stand__grid--dot .stile.is-filler.is-out{background:#1b2a35}',
+    '@media (max-width:560px){.stand__grid--dot{--min:8px}.stand__grid--lg{--min:48px}.stand__grid--xl{--min:34px}.stand__grid--live{gap:5px}.stand__grid--live .stile{min-height:40px;padding:5px 7px;gap:6px}}'
+  ].join('');
 
   function count() { return kit.sizeNow(size); }
+
+  /** The charity you have put your stake on at the live table you are watching (or empty): its tile gets a gold ring. */
+  function yourPick() {
+    var cur = GS.ui && GS.ui.live && GS.ui.live.current ? GS.ui.live.current() : null;
+    return cur && cur.room && cur.room.you ? cur.room.you.charityId : '';
+  }
 
   /** How many charities go out in each wave: big cuts at first, then one at a time once eight are left. */
   function schedule(n) {
@@ -48,24 +81,83 @@
 
   function density(n) { return n <= 12 ? 'sm' : n <= 30 ? 'md' : n <= 56 ? 'lg' : n <= 150 ? 'xl' : 'dot'; }
 
+  function narrow() { return !!(window.matchMedia && window.matchMedia('(max-width: 560px)').matches); }
+
+  /** A tile of a solo board, or of the dimmed filler on a live one. */
+  function tileHTML(t, tot, filler, dens) {
+    var ch = t.ch;
+    if (filler && dens === 'dot') { return '<li class="stile is-filler" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + '"></li>'; }
+    return '<li class="stile' + (filler ? ' is-filler' : '') + (ch.id === (field ? livePick : pick) ? ' is-pick' : '') + '" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + '">' +
+      GS.ui.mono(ch, filler && narrow() && dens === 'xl' ? 18 : 24) +
+      '<span class="stile__name">' + U.esc(ch.short) + '</span>' +
+      (!filler && field && t.tickets > 0 ? '<b class="stile__share">' + core.fmtShare(t.tickets, tot) + '</b>' : '') + '</li>';
+  }
+
+  /** A live tile for a charity somebody backed: its name, and what share of the pot is behind it. */
+  function backedHTML(t, tot) {
+    var ch = t.ch;
+    var you = ch.id === livePick;
+    return '<li class="stile' + (you ? ' is-pick' : '') + '" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + (you ? ' (your pick)' : '') + '">' + GS.ui.mono(ch, 26) +
+      '<span class="stile__txt"><span class="stile__name">' + U.esc(ch.short) + '</span><b class="stile__share">' + core.fmtShare(t.tickets, tot) + (you ? ' · you' : '') + '</b></span></li>';
+  }
+
   function render() {
     if (!el.grid) { return; }
     var tot = tiles.reduce(function (s, t) { return s + (t.tickets || 0); }, 0);
-    el.grid.className = 'stand__grid stand__grid--' + density(tiles.length);
-    el.grid.innerHTML = tiles.map(function (t, i) {
-      var ch = t.ch;
-      return '<li class="stile' + (ch.id === pick ? ' is-pick' : '') + '" data-i="' + i + '" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + '">' +
-        '' + GS.ui.mono(ch, 24) + '' +
-        '<span class="stile__name">' + U.esc(ch.short) + '</span>' +
-        (field && t.tickets > 0 ? '<b class="stile__share">' + core.fmtShare(t.tickets, tot) + '</b>' : '') + '</li>';
-    }).join('');
-    var nodes = el.grid.children;
-    tiles.forEach(function (t, i) { t.node = nodes[i]; });
+    var i;
+    if (!field) {
+      el.backcap.hidden = true;
+      el.fillcap.hidden = true;
+      el.fill.hidden = true;
+      fillSig = '';
+      el.grid.className = 'stand__grid stand__grid--' + density(tiles.length);
+      el.grid.setAttribute('aria-label', 'Charities on the board');
+      el.grid.innerHTML = tiles.map(function (t) { return tileHTML(t, tot, false, ''); }).join('');
+      var nodes = el.grid.children;
+      tiles.forEach(function (t, k) { t.node = nodes[k]; });
+      return;
+    }
+    // live: the charities somebody backed (biggest stake first) in a grid of their own, the catalog charities that fill the board below, dimmed
+    var backed = tiles.filter(function (t) { return t.tickets > 0; }).sort(function (a, b) { return b.tickets - a.tickets || (a.ch.id < b.ch.id ? -1 : 1); });
+    var fillers = tiles.filter(function (t) { return !(t.tickets > 0); }).sort(function (a, b) { return a.ch.id < b.ch.id ? -1 : a.ch.id > b.ch.id ? 1 : 0; });
+    el.grid.className = 'stand__grid stand__grid--live';
+    el.grid.setAttribute('aria-label', 'Charities backed at this table, with their share of the pot');
+    el.grid.innerHTML = backed.map(function (t) { return backedHTML(t, tot); }).join('');
+    for (i = 0; i < backed.length; i++) { backed[i].node = el.grid.children[i]; }
+    el.backcap.hidden = !fillers.length;
+    el.backcap.textContent = 'Backed at this table: one of these wins';
+    el.fillcap.hidden = !fillers.length;
+    el.fillcap.textContent = fillers.length === 1 ? '1 more charity fills the board. It cannot win.' : fillers.length.toLocaleString('en-US') + ' more charities fill the board. They cannot win.';
+    el.fill.hidden = !fillers.length;
+    if (fillers.length) {
+      var dens = density(fillers.length);
+      var sig = dens + (narrow() ? 'n' : 'w') + ':' + fillers.map(function (t) { return t.ch.id; }).join(',');
+      if (sig !== fillSig) {
+        fillSig = sig;
+        el.fill.className = 'stand__grid stand__grid--fill stand__grid--' + dens;
+        el.fill.innerHTML = fillers.map(function (t) { return tileHTML(t, 0, true, dens); }).join('');
+      }
+      for (i = 0; i < fillers.length; i++) {
+        fillers[i].node = el.fill.children[i];
+        fillers[i].node.className = 'stile is-filler';
+      }
+    }
+  }
+
+  function statusText() {
+    if (!field) { return tiles.length + ' charities on the board. Last one standing takes your gift.'; }
+    var nb = tiles.filter(function (t) { return t.tickets > 0; }).length;
+    var nf = tiles.length - nb;
+    return tiles.length.toLocaleString('en-US') + ' charities on the board: ' + nb + ' backed' + (nf ? ', ' + nf.toLocaleString('en-US') + ' filling it' : '') + '. The last one standing takes the pot.';
   }
 
   function updateNote() {
     if (!el.note) { return; }
-    if (field) { el.note.textContent = 'Charities with a bigger share of the pot tend to last longer, but only one is left in the end.'; return; }
+    if (field) {
+      el.note.textContent = 'Charities with a bigger share of the pot tend to last longer, but only one is left in the end.' +
+        (tiles.some(function (t) { return !(t.tickets > 0); }) ? ' The charities that only fill the board go out first, and cannot win.' : '');
+      return;
+    }
     el.note.textContent = kit.boardNote(pool, tiles.length, pick, 'on the board');
   }
 
@@ -74,7 +166,7 @@
     result = null;
     if (el.result) { el.result.textContent = ''; }
     render();
-    if (el.status) { el.status.textContent = tiles.length + ' charities on the board. Last one standing takes your gift.'; }
+    if (el.status) { el.status.textContent = statusText(); }
   }
 
   function rebuild() {
@@ -94,7 +186,7 @@
     updateNote();
   }
 
-  /** The order everyone but the winner goes out in: random, or (live) weighted towards the smaller stakes first. */
+  /** The order everyone but the winner goes out in: random, or (live) weighted towards the smaller stakes first (the filler goes before all of them). */
   function knockoutOrder(winTile) {
     var others = tiles.filter(function (t) { return t !== winTile; });
     var order = [];
@@ -109,6 +201,7 @@
     playing = true;
     fresh = false;
     result = null;
+    var token = ++runToken;
     if (el.result) { el.result.textContent = ''; }
     var n = tiles.length;
     // with spots repeating charities on a big board, exactly one tile is the survivor
@@ -125,18 +218,21 @@
       taken += cut;
       left -= cut;
       chain = chain.then(function () {
+        if (token !== runToken) { return; }
         var ms = U.dur(waveMs(before) * speed);
-        el.status.textContent = 'Wave ' + (wi + 1) + ' of ' + cuts.length + ' · ' + before + ' standing';
+        el.status.textContent = 'Wave ' + (wi + 1) + ' of ' + cuts.length + ' · ' + before.toLocaleString('en-US') + ' standing';
         victims.forEach(function (t) { t.node.classList.add('is-danger'); });
         GS.audio.tick(0.9);
         return U.sleep(ms * 0.55).then(function () {
+          if (token !== runToken) { return; }
           victims.forEach(function (t) { t.node.classList.remove('is-danger'); t.node.classList.add('is-out'); });
           GS.audio.thud();
           return U.sleep(ms * 0.45);
         });
       });
     });
-    return chain.then(function () {
+    var finished = chain.then(function () {
+      if (token !== runToken) { return winner; }
       var champ = winTile;
       champ.node.classList.add('is-champ');
       el.status.textContent = winner.name + ' is the last one standing';
@@ -146,6 +242,8 @@
       GS.audio.ring();
       return winner;
     });
+    // abort() settles the run at once, so leaving a table does not leave you waiting for the waves to finish
+    return Promise.race([finished, new Promise(function (resolve) { stopRun = function () { resolve(winner); }; })]);
   }
 
   /** Total time (ms, unscaled) the waves of an n-charity board take. */
@@ -174,15 +272,27 @@
 
     mount: function (container, gameApi) {
       api = gameApi;
+      if (!document.getElementById('gs-standing-css')) {
+        var st = document.createElement('style');
+        st.id = 'gs-standing-css';
+        st.textContent = CSS;
+        document.head.appendChild(st);
+      }
       container.innerHTML =
         '<div class="stand">' +
           '<p class="stand__status" data-role="status" aria-live="polite"></p>' +
+          '<p class="stand__cap" data-role="backcap" hidden></p>' +
           '<ul class="stand__grid" data-role="grid" aria-label="Charities on the board"></ul>' +
+          '<p class="stand__cap" data-role="fillcap" hidden></p>' +
+          '<ul class="stand__grid stand__grid--fill" data-role="fill" aria-hidden="true" hidden></ul>' +
         '</div>' +
         '<p class="game-result" data-role="result" aria-live="polite"></p>' +
         '<button type="button" class="gbtn" data-role="go">' + GS.icon('swords') + '<span>Start the countdown</span></button>' +
         '<p class="game-note" data-role="note"></p>';
       el.grid = container.querySelector('[data-role="grid"]');
+      el.fill = container.querySelector('[data-role="fill"]');
+      el.backcap = container.querySelector('[data-role="backcap"]');
+      el.fillcap = container.querySelector('[data-role="fillcap"]');
       el.status = container.querySelector('[data-role="status"]');
       el.result = container.querySelector('[data-role="result"]');
       el.note = container.querySelector('[data-role="note"]');
@@ -205,12 +315,22 @@
     setField: function (entrants) {
       if (playing) { return; }
       field = entrants;
+      livePick = yourPick();
       var sp = kit.split(entrants);
       setTiles(sp.items, sp.tickets);
       fresh = true;
       updateNote();
     },
-    clearField: function () { field = null; if (!playing) { rebuild(); } },
+    clearField: function () { field = null; fillSig = ''; livePick = ''; if (!playing) { rebuild(); } },
+    /** Stops a round in progress (the live table it belonged to has been left). */
+    abort: function () {
+      if (!playing) { return; }
+      runToken += 1;
+      playing = false;
+      var s = stopRun;
+      stopRun = null;
+      if (s) { s(); }
+    },
 
     activate: function () {},
     deactivate: function () {},
@@ -241,12 +361,13 @@
     },
 
     playLive: function (opts) {
-      var speed = opts.durationMs ? Math.max(0.1, opts.durationMs * 0.85 / totalMs(tiles.length)) : 1;
+      var speed = opts.durationMs ? Math.max(0.1, opts.durationMs * 0.92 / totalMs(tiles.length)) : 1;   // the last wave ends just before the table settles
       return run(opts.winner, speed);
     },
 
     _shown: function () { return result ? [result.id] : []; },
     _entrants: function () { return tiles.length; },
+    _marked: function () { return field ? livePick : pick; },
     _schedule: schedule
   };
 })();
