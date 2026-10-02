@@ -221,10 +221,27 @@
       if (!have[c.id]) { have[c.id] = true; distinct.push(c); }
     }
     var spots = distinct.length >= self.size ? distinct.slice(0, self.size) : core.fillSlots(distinct, self.size);
-    spots = core.seededShuffle(spots, 'board:' + self.id + ':' + self.round);
-    self._board = { key: key, spots: spots, size: self.size, backed: backed.length, fillers: Math.max(0, Math.min(self.size, distinct.length) - backed.length), distinct: distinct.length };
+    // the order is fixed for the round: when a newly backed charity changes who is on the board, everyone else keeps their place
+    // (the newcomer takes the place of a catalog charity that dropped off), so slices, bins and pockets do not all jump around
+    var prev = self._board && self._board.round === self.round ? self._board.spots : null;
+    spots = prev && prev.length === spots.length ? keepOrder(prev, spots) : core.seededShuffle(spots, 'board:' + self.id + ':' + self.round);
+    self._board = { key: key, round: self.round, spots: spots, size: self.size, backed: backed.length, fillers: Math.max(0, Math.min(self.size, distinct.length) - backed.length), distinct: distinct.length };
     return self._board;
   };
+
+  /** `next` laid out like `prev`: charities that are still on the board stay in their places, and new ones take the places of the ones that left. */
+  function keepOrder(prev, next) {
+    var want = {};
+    next.forEach(function (c) { want[c.id] = (want[c.id] || 0) + 1; });
+    var used = {};
+    var out = prev.map(function (c) {
+      if ((used[c.id] || 0) < (want[c.id] || 0)) { used[c.id] = (used[c.id] || 0) + 1; return c; }
+      return null;
+    });
+    var seen = {};
+    var fresh = next.filter(function (c) { seen[c.id] = (seen[c.id] || 0) + 1; return seen[c.id] > (used[c.id] || 0); });
+    return out.map(function (c) { return c || fresh.shift(); });
+  }
 
   /** Dollars in the pot. */
   R.pot = function () {

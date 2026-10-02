@@ -87,7 +87,8 @@ const go = async (page, hash) => {
   await page.evaluate((h) => { window.location.hash = h; }, hash);
   await page.waitForTimeout(150);
 };
-const waitReceipt = (page) => page.waitForSelector('#dlg-result[open] .rs-title', { timeout: 40000 });
+// a 1,000-bin Plinko drop takes about half a minute at real speed, and a busy machine (several browsers at once) can double that
+const waitReceipt = (page) => page.waitForSelector('#dlg-result[open] .rs-title', { timeout: 100000 });
 const closeReceipt = async (page) => {
   await page.evaluate(() => window.GS.confetti.clear());
   await page.click('#dlg-result [data-role="done"]');
@@ -122,10 +123,15 @@ const a11y = async (page, label) => {
 
 // A live table cycles through its phases by itself (the stake buttons switch off while it is locked), so an accessibility scan
 // that lands on a phase change measures a half-way state. Wait for an open betting window with plenty of time left first.
-const liveSettled = (page, id) => page.waitForFunction((rid) => {
-  const r = window.GS.live.room(rid);
-  return !!r && r.phase === 'open' && r.msLeft() > 7000;
-}, id, { timeout: 70000, polling: 200 }).catch(() => {});
+const liveSettled = async (page, id) => {
+  await page.waitForFunction((rid) => {
+    const r = window.GS.live.room(rid);
+    return !!r && r.phase === 'open' && r.msLeft() > 7000;
+  }, id, { timeout: 70000, polling: 200 }).catch(() => {});
+  // stop that table's round timer: the scan itself can take longer than the seconds that are left, and a table that locks half way
+  // through it switches its buttons off while they are being measured
+  await page.evaluate((rid) => { const r = window.GS.live.room(rid); if (r) { r._clearTimers(); } }, id).catch(() => {});
+};
 
 const GAMES = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
 const SLOTS = ['slots', 'goldrush', 'deepsea', 'sweets', 'cosmic'];

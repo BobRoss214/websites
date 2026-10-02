@@ -180,7 +180,8 @@
     d.history = sanitizeHistory(raw.history);
     d.plans = sanitizePlans(raw.plans);
     d.balanceCents = typeof raw.balanceCents === 'number' && isFinite(raw.balanceCents) && raw.balanceCents >= 0 ? Math.floor(raw.balanceCents) : d.balanceCents;
-    d.pending = arr(raw.pending).filter(function (x) { return x && typeof x.cents === 'number' && x.cents > 0; }).slice(0, 20)
+    // one stake per live table at most, and there are 70 tables, so a player can have well over twenty in flight
+    d.pending = arr(raw.pending).filter(function (x) { return x && typeof x.cents === 'number' && x.cents > 0; }).slice(0, 100)
       .map(function (x) { return { game: str(x.game, 20), cents: Math.floor(x.cents), ts: num(x.ts, 0) }; });
     var m = obj(raw.monthly);
     d.monthly = { key: typeof m.key === 'string' ? m.key : core.monthKey(), cents: Math.floor(num(m.cents, 0)) };

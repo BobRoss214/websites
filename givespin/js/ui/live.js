@@ -28,6 +28,8 @@
   var stripBoxes = [];
   var verifyOut = '';
   var armed = false;         // all-in: the first press arms the button, the second places the bet
+  var oddsDown = 0;          // when a finger or the mouse went down on the odds board (0 = not pressed): its rows must not be replaced under it
+  var oddsLate = false;      // a redraw was held back while it was pressed
   var armTimer = 0;
   var sirenRound = {};       // room id -> round the jackpot siren already sounded for
 
@@ -82,7 +84,8 @@
     f('players').textContent = room.players() + ' players' + (room.you ? ' (you in)' : '');
     f('stack').innerHTML = stackHTML(field);
     var lead = field[0];
-    f('lead').textContent = lead ? 'Leading: ' + lead.charity.short + ' ' + core.fmtShare(lead.tickets, pot) : '';
+    // the share comes first so that a long name that gets cut with an ellipsis cannot hide it
+    f('lead').textContent = lead ? 'Leading: ' + core.fmtShare(lead.tickets, pot) + ' ' + lead.charity.short : '';
     node.classList.toggle('has-bet', !!room.you && room.phase !== 'result');
   }
 
@@ -128,7 +131,7 @@
     return '<h2 class="sect__t" id="lv-t">Live ' + esc(g.name) + ': choose your table</h2>' +
       '<p class="tabnote tabnote--tables">' + tabs.length + ' tables, from ' + tabs[0].size + ' ' + esc(u) + ' to ' + tabs[tabs.length - 1].size.toLocaleString('en-US') + '. Each one has its own pot and its own players. ' +
       'The charities players back go on the board, and the rest of the ' + esc(u) + ' are filled in at random from our catalog so the board is always full; only the backed charities can win. ' +
-      'Bigger tables have more gates and more players' + (tabs[tabs.length - 1].tab.play > 20000 ? ', and the biggest one takes about half a minute to play out' : '') + '.</p>' +
+      'Bigger tables have more gates and more players' + (tabs[tabs.length - 1].tab.play > 20000 ? ', and the biggest ones take close to a minute to play out' : '') + '.</p>' +
       '<div class="lcards lcards--tables" data-role="tables">' + tabs.map(function (r) { return cardHTML(r, false); }).join('') + '</div>';
   }
 
@@ -136,16 +139,23 @@
     if (!lobbyGame || lobbyGames().indexOf(lobbyGame) < 0) { lobbyGame = lobbyGames().indexOf('plinko') >= 0 ? 'plinko' : (lobbyGames()[0] || ''); }
     return '<section class="sect" aria-labelledby="lv-games-t"><div class="sect__head"><h2 class="sect__t" id="lv-games-t">Choose a live game</h2></div>' +
       '<div class="lgames" data-role="lgames" role="group" aria-label="Live games">' + lobbyChips() + '</div>' +
-      '<div class="lobbybox" data-role="lobby" aria-live="polite">' + lobbyTables() + '</div></section>';
+      '<div class="lobbybox" data-role="lobby">' + lobbyTables() + '</div></section>';
   }
 
+  /** Switches the lobby to another game. The chips stay in place (so keyboard focus stays on the one you pressed); the cards are updated every second, so they are not a live region: one short announcement says what changed. */
   function chooseLobby(gid) {
     if (!gid || gid === lobbyGame) { return; }
     lobbyGame = gid;
     var root = $('#view-live');
-    $('[data-role="lgames"]', root).innerHTML = lobbyChips();
+    Array.prototype.forEach.call(root.querySelectorAll('.lgame'), function (b) {
+      var on = b.getAttribute('data-lgame') === gid;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
     $('[data-role="lobby"]', root).innerHTML = lobbyTables();
     updateCards(root);
+    var g = GS.games[gid];
+    ui.announce('Showing the ' + GS.live.tables(gid).length + ' ' + (g ? g.name : '') + ' tables.');
   }
 
   function buildPage() {
@@ -287,6 +297,16 @@
       var n = Math.floor(Number(el.custom.value));
       if (n >= 1 && n <= GS.config.maxAmount) { setStake(n, true); }
     });
+    // The crowd's bets redraw the board many times a second. A press that spans a redraw would lose its click (the row it went down on is gone),
+    // so the board holds still while it is pressed and catches up when the press ends.
+    el.odds.addEventListener('pointerdown', function () { oddsDown = Date.now(); });
+    function oddsUp() {
+      if (!oddsDown) { return; }
+      oddsDown = 0;
+      if (oddsLate) { oddsLate = false; setTimeout(renderOdds, 0); }
+    }
+    document.addEventListener('pointerup', oddsUp, true);
+    document.addEventListener('pointercancel', oddsUp, true);
     el.odds.addEventListener('click', function (e) {
       var b = e.target.closest('[data-id]');
       if (!b || b.disabled || (cur && cur.room.you)) { return; }
@@ -404,6 +424,7 @@
   /** The odds board: one row per charity at the table; tap one to back it. */
   function renderOdds() {
     if (!cur) { return; }
+    if (oddsDown && Date.now() - oddsDown < 1500) { oddsLate = true; return; }
     var room = cur.room;
     var field = room.field();
     var pot = room.pot();
@@ -431,6 +452,8 @@
       }
     }
     el.odds.innerHTML = rows.join('');
+    // the board scrolls when it is long; once every row is disabled (you have bet, or bets are closed) nothing in it can take focus, so the board itself must
+    el.odds.tabIndex = open ? -1 : 0;
     var gates = room.gatesOpen();
     el.add.hidden = !open || gates <= 0;
     el.oddsHint.textContent = (pot ? 'Every dollar is a ticket: a charity’s share of the pot is its chance of winning. ' : '') +
@@ -681,14 +704,15 @@
     var winner = GS.charity(room.draw.winnerId);
     setFieldNow();
     animating[id] = true;
-    var nominal = Math.max(minMs || 0, room.playMs / scale());
+    // a round that is already under way (you arrived late, or hopped here) plays out what is left of it, not the whole show again
+    var nominal = Math.max(minMs || 0, (minMs ? room.msLeft() : room.playMs) / scale());
     var p = Promise.resolve(g.playLive({ winner: winner, durationMs: nominal }));
     room.hold(p);
     function done() {
       animating[id] = false;
       if (cur && cur.id === id) {
         // you hopped to another table of this game while the drop played: show that table now
-        if (cur.room !== room) { if (cur.room.phase === 'playing') { startAnimation(0); return; } setFieldNow(); }
+        if (cur.room !== room) { if (cur.room.phase === 'playing') { startAnimation(3500); return; } setFieldNow(); }
         renderAll();
         if (cur.room.phase === 'result' && cur.room === room) { celebrate(); }
       }
@@ -823,7 +847,7 @@
     var tableNote = cur.room.tab
       ? '<p><b>This table: ' + esc(cur.room.tab.name) + ', ' + cur.room.size.toLocaleString('en-US') + ' ' + esc(cur.room.unit(cur.room.size)) + '.</b> Up to ' + cur.room.maxGates + ' different charities can be backed here. Every charity somebody backs gets a spot; the remaining ' + esc(cur.room.unit(2)) + ' are filled in at random from our catalog so the board is always ' + cur.room.size.toLocaleString('en-US') + ' ' + esc(cur.room.unit(cur.room.size)) + '. Only backed charities hold tickets, so only they can win; the others are scenery. If the catalog has fewer charities than ' + esc(cur.room.unit(2)) + ', charities repeat evenly.</p>'
       : '';
-    return '<div class="about">' + tableNote + '<p><b>Live ' + esc(g.name) + '.</b> A table opens every few seconds. Everyone at it backs a charity with a stake, and every dollar is a ticket in a draw, so a charity with 30% of the pot wins 30% of the time. ' +
+    return '<div class="about">' + tableNote + '<p><b>Live ' + esc(g.name) + '.</b> A new round opens about once a minute. Everyone at it backs a charity with a stake, and every dollar is a ticket in a draw, so a charity with 30% of the pot wins 30% of the time. ' +
       'Whichever charity is drawn gets the <b>whole pot</b>, whether you backed it or not.</p>' +
       '<p><b>Where does your stake go?</b> Always to the charity that wins the table, never to a prize for players. If your charity loses, your stake still lands on the winner, so every round is a win for someone.</p>' +
       '<p><b>Are the other players real?</b> Not yet. They are bots standing in for a real multiplayer table, and their stakes are simulated. A real launch would run tables on a server.</p>' +
