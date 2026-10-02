@@ -275,33 +275,57 @@ def unsafe(data, en):
 
 def cmd_build():
     en = json.load(open(os.path.join(LANG_DIR, 'en.json'), encoding='utf-8'))
+    built = []
     for f in sorted(os.listdir(SRC_DIR)):
         if not f.endswith('.json'):
             continue
-        code = f[:-5]
-        data = json.load(open(os.path.join(SRC_DIR, f), encoding='utf-8'))
+        try:
+            data = json.load(open(os.path.join(SRC_DIR, f), encoding='utf-8'))
+        except ValueError as e:
+            sys.exit(f'lang/src/{f} is not valid JSON ({e}). Check the commas and quotes near that spot. Nothing was built.')
+        if not isinstance(data, dict) or not isinstance(data.get('ui', {}), dict) or not isinstance(data.get('js', {}), dict):
+            sys.exit(f'lang/src/{f} must look like {{ "ui": {{ ... }}, "js": {{ ... }} }}. Nothing was built.')
         bad = unsafe(data, en)
         if bad:
-            sys.exit(f'lang/src/{f}: not built, fix these first:\n  ' + '\n  '.join(bad))
+            sys.exit(f'lang/src/{f}: not built (nothing was built), fix these first:\n  ' + '\n  '.join(bad))
+        built.append((f[:-5], data))
+    for code, data in built:   # only now: every language passed
         js = 'window.WISE_ACRES=window.WISE_ACRES||{};(WISE_ACRES.dict=WISE_ACRES.dict||{}).%s=%s;\n' % (code, json.dumps(data, ensure_ascii=False, separators=(',', ':')))
         open(os.path.join(LANG_DIR, code + '.js'), 'w', encoding='utf-8').write(js)
         print(f'lang/{code}.js  ui={len(data.get("ui", {}))} js={len(data.get("js", {}))}')
 
 
+def languages():
+    return sorted(f[:-5] for f in os.listdir(SRC_DIR) if f.endswith('.json'))
+
+
+def need_language(args, extra=0):
+    """The language code (and `extra` more words) typed after the command; a plain message when it is missing or unknown."""
+    if len(args) < 3 + extra:
+        sys.exit('This command needs a language code, for example:  python3 tools/i18n.py ' + args[1] + ' es' + (' 0 50' if extra else '') + '\n(languages: ' + ', '.join(languages()) + ')')
+    if args[2] not in languages():
+        sys.exit(f"There is no language '{args[2]}'. Languages: {', '.join(languages())}. (To add one, see 'To add a language' in the README.)")
+    return args[2]
+
+
 if __name__ == '__main__':
-    cmd = sys.argv[1] if len(sys.argv) > 1 else 'stats'
+    cmd = sys.argv[1] if len(sys.argv) > 1 else ''
     if cmd == 'extract':
         cmd_extract()
     elif cmd == 'orphans':
         cmd_orphans()
     elif cmd == 'dump':
-        cmd_dump(sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
+        code = need_language(sys.argv, 2)
+        try:
+            cmd_dump(code, int(sys.argv[3]), int(sys.argv[4]))
+        except ValueError:
+            sys.exit('dump needs two numbers after the language, for example:  python3 tools/i18n.py dump es 0 50')
     elif cmd == 'merge':
-        cmd_merge(sys.argv[2])
+        cmd_merge(need_language(sys.argv))
     elif cmd == 'jsstrings':
         cmd_jsstrings()
     elif cmd == 'missing':
-        cmd_missing(sys.argv[2])
+        cmd_missing(need_language(sys.argv))
     elif cmd == 'build':
         cmd_build()
     elif cmd == 'stats':

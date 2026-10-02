@@ -27,7 +27,8 @@
   const has = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);   // own keys only: "constructor" etc. are not settings
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => '&#' + c.charCodeAt(0) + ';');   // for translated text that goes into markup
   // Photos must come from this website (no "https://other-site", "//host", "data:"), so no other site sees who visits.
-  const localSrc = (s) => typeof s === 'string' && s.trim() !== '' && !/^\s*([a-z][a-z0-9+.-]*:|\/\/|\\)/i.test(s);
+  // Ask the browser where the address really points: "/\host" or "/<tab>/host" also mean "//host" (another site).
+  const localSrc = (s) => { if (typeof s !== 'string' || !s.trim()) return false; try { return new URL(s, location.href).origin === location.origin; } catch (e) { return false; } };
   const own = (v) => (v && typeof v === 'object' ? String((has(v, lang()) && v[lang()]) || (has(v, 'en') && v.en) || '') : (v == null ? '' : String(v)));
   const track = (name, props) => { if (W.track) W.track(name, props); };
   const TZ = 'America/New_York';
@@ -54,6 +55,13 @@
     box.appendChild(ul);
   }
   const lc = (v) => String(v == null ? '' : v).trim().toLowerCase();
+  // A real day on the calendar: 2026-11-31 is not one (browsers quietly roll it over to December 1).
+  const realYmd = (s) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return false;
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
+  };
   // 2026-10-3 and 10/3/2026 are understood too (and reported), the page itself always uses 2026-10-03.
   function fixYmd(v, what) {
     const s = String(v == null ? '' : v).trim();
@@ -61,6 +69,7 @@
     if (!m && (m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s))) m = [0, m[3], m[1], m[2]];
     if (!m) { if (s && what) warn(what + ' "' + s + '" is not a date. Write it like 2026-10-03 (year-month-day).'); return ''; }
     const out = m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
+    if (!realYmd(out)) { if (what) warn(what + ' "' + s + '" is not a real day on the calendar.'); return ''; }
     if (what && out !== s) warn(what + ' "' + s + '" was read as ' + out + '. Please write it as ' + out + '.');
     return out;
   }
@@ -132,8 +141,8 @@
     const time = table && /^\d{1,2}:\d{2}$/.test(table.dataset.releaseTime || '') ? table.dataset.releaseTime : '17:00';
     $$('[data-release-time] tbody tr:not([data-release])').forEach(() => warn('A row of the pizza schedule has no data-release="YYYY-MM-DD", so it does not count for the countdown.'));
     return $$('tr[data-release]').filter((tr) => {
-      const good = /^\d{4}-\d{2}-\d{2}$/.test(tr.dataset.release);
-      if (!good) warn('A row of the pizza schedule says data-release="' + tr.dataset.release + '". Write it like data-release="2026-11-03" (year-month-day, two digits each). That row is ignored.');
+      const good = realYmd(tr.dataset.release);
+      if (!good) warn('A row of the pizza schedule says data-release="' + tr.dataset.release + '". Write it like data-release="2026-11-03" (a real day, year-month-day, two digits each). That row is ignored.');
       return good;
     }).map((tr) => {
       const at = zonedToUtc(tr.dataset.release, time);
@@ -183,14 +192,15 @@
     const minute = Math.floor(s / 60);
     if (host._minute !== minute) {   // the spoken time is only updated once a minute
       host._minute = minute;
-      host.setAttribute('aria-label', [['d', 'day'], ['h', 'hour'], ['m', 'minute']].filter(([k]) => vals[k] || k === 'm').map(([k, u]) => vals[k] + ' ' + unitLong(u, vals[k])).join(', '));
+      host.setAttribute('aria-label', t('Opens in {time}', { time: [['d', 'day'], ['h', 'hour'], ['m', 'minute']].filter(([k]) => vals[k] || k === 'm').map(([k, u]) => vals[k] + ' ' + unitLong(u, vals[k])).join(', ') }));
     }
   }
   function chipTime(ms) {
     const s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
-    if (d) return unitShort('day', d) + ' ' + unitShort('hour', h);
-    if (h) return unitShort('hour', h) + ' ' + unitShort('minute', m);
-    return unitShort('minute', Math.max(1, m));
+    const part = (n, u) => { try { return formatter(Intl.NumberFormat, { style: 'unit', unit: u, unitDisplay: 'long' }).format(n); } catch (e) { return n + ' ' + u + (n === 1 ? '' : 's'); } };   // "5 days", not "5d": plain words, and screen readers say them properly
+    if (d) return part(d, 'day') + (h ? ' ' + part(h, 'hour') : '');
+    if (h) return part(h, 'hour') + (m ? ' ' + part(m, 'minute') : '');
+    return part(Math.max(1, m), 'minute');
   }
 
   function renderRelease() {
@@ -204,7 +214,7 @@
       if (changed) {
         box.hidden = false;
         box.dataset.mode = st.mode;
-        $('[data-rel-eyebrow]', box).textContent = st.mode === 'open' ? t('Pizza reservations just opened') : t('Next pizza reservations open');
+        $('[data-rel-eyebrow]', box).textContent = st.mode === 'open' ? t('Pizza reservations just opened') : t('Next pizza reservations open in');
         $('[data-rel-count]', box).hidden = st.mode === 'open';
         const forTxt = st.rel.forText ? t('For visits {dates}', { dates: st.rel.forText }) : '';
         const when = st.mode === 'open' ? t('Opened {when}', { when: openingLabel(st.rel) }) : t('Opens {when}', { when: openingLabel(st.rel) }) + yourTimeNote(st.rel);
@@ -220,7 +230,7 @@
       const s = Math.max(0, Math.floor((st.left || 0) / 1000)), ck = st.mode === 'open' ? 'open|' + lang() : Math.floor(s / 60) + '|' + lang();
       if (changed || ck !== chipKey) {
         chipKey = ck;
-        $('[data-rel-chip-text]', chip).textContent = st.mode === 'open' ? t('Pizza reservations are open now') : t('Pizza reservations open in {time}', { time: chipTime(st.left) });
+        $('[data-rel-chip-text]', chip).textContent = st.mode === 'open' ? t('Pizza reservations are open now') : t('Next pizza reservations open in {time}', { time: chipTime(st.left) });
       }
     }
     relKey = key;
@@ -333,7 +343,7 @@
     { id: 'trees', name: T('Christmas trees'), icon: 'fir', vb: '0 0 80 110', wins: seasonRange('winter'), where: T('At The GreenHouse') },
   ];
   const OVERRIDE_LABEL = { soon: T('Coming soon'), starting: T('Just starting'), peak: T('Peak picking'), ending: T('Winding down') };
-  const AVAIL_LABEL = { open: T('Open'), few: T('A few spots left'), full: T('Sold out'), closed: T('Closed') };
+  const AVAIL_LABEL = { open: T('Spots open'), few: T('A few spots left'), full: T('Full'), closed: T('Closed') };
 
   function autoStatus(c, now) {
     const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -367,7 +377,7 @@
     Object.keys(raw.crops && typeof raw.crops === 'object' ? raw.crops : {}).forEach((k) => {
       const id = lc(k), v = lc(raw.crops[k]);
       if (!CROPS.some((c) => c.id === id)) warn('week.crops: "' + k + '" is not a crop name. Use: ' + CROPS.map((c) => c.id).join(', ') + '.');
-      else if (v !== 'off' && v !== 'done' && !OVERRIDE_LABEL[v]) warn('week.crops.' + k + ': "' + raw.crops[k] + '" is not one of soon, starting, peak, ending, off.');
+      else if (v !== 'off' && v !== 'done' && !has(OVERRIDE_LABEL, v)) warn('week.crops.' + k + ': "' + raw.crops[k] + '" is not one of soon, starting, peak, ending, off.');
       else cfg.crops[id] = v;
     });
     if (!Array.isArray(raw.days)) { if (raw.days && Object.keys(raw.days).length) warn('week.days must be a list: days: [ { date: ..., farm: ... }, { ... } ].'); cfg.days = []; }
@@ -376,7 +386,7 @@
       out.date = fixYmd(d.date, 'week.days date');
       ['farm', 'pizza'].forEach((f) => {
         out[f] = lc(d[f]);
-        if (out[f] && !AVAIL_LABEL[out[f]] && out[f] !== 'none') { warn('week.days ' + (out.date || d.date) + ' ' + f + ': "' + d[f] + '" is not one of open, few, full, closed.'); out[f] = ''; }
+        if (out[f] && !has(AVAIL_LABEL, out[f]) && out[f] !== 'none') { warn('week.days ' + (out.date || d.date) + ' ' + f + ': "' + d[f] + '" is not one of open, few, full, closed.'); out[f] = ''; }
       });
       return out;
     });
@@ -393,6 +403,7 @@
 
     // crops
     const items = [];
+    let usedTypical = false;   // some crop is shown from the typical dates, not from the owner's note
     CROPS.forEach((c) => {
       const ov = fresh && cfg.crops ? cfg.crops[c.id] : null;
       const auto = autoStatus(c, now);
@@ -400,8 +411,9 @@
       if (ov === 'off' || ov === 'done') return;
       if (ov && has(OVERRIDE_LABEL, ov)) { state = ov === 'soon' ? 'soon' : ov; label = t(OVERRIDE_LABEL[ov]); }
       else if (auto) {
+        usedTypical = true;
         state = auto.state === 'now' ? 'now' : 'soon';
-        label = auto.state === 'now' ? t('In season') : t('Starts {date}', { date: fmtYmd(ymdOf({ y: auto.start.getFullYear(), m: auto.start.getMonth() + 1, d: auto.start.getDate() }), { month: 'short', day: 'numeric' }) });
+        label = auto.state === 'now' ? t('In season') : t('Usually starts {date}', { date: fmtYmd(ymdOf({ y: auto.start.getFullYear(), m: auto.start.getMonth() + 1, d: auto.start.getDate() }), { month: 'short', day: 'numeric' }) });
       }
       if (state) items.push({ c, state, label });
     });
@@ -436,13 +448,13 @@
         const full = (d.farm === 'full' || d.pizza === 'full') && !open(d.farm) && !open(d.pizza);   // waitlist only when nothing that day can still be reserved
         const label = fmtYmd(d.date, { weekday: 'long', month: 'short', day: 'numeric' });
         tr.setAttribute('role', 'row');
-        tr.innerHTML = '<th scope="row" role="rowheader"></th><td role="cell" data-label="' + esc(t('Farm')) + '"' + (ok(d.farm) ? '' : ' class="av-empty"') + '>' + pill(d.farm) + '</td><td role="cell" data-label="' + esc(t('Pizza')) + '"' + (ok(d.pizza) ? '' : ' class="av-empty"') + '>' + pill(d.pizza) + '</td><td role="cell" class="av-act"></td>';
+        tr.innerHTML = '<th scope="row" role="rowheader"></th><td role="cell" data-label="' + esc(t('No pizza')) + '"' + (ok(d.farm) ? '' : ' class="av-empty"') + '>' + pill(d.farm) + '</td><td role="cell" data-label="' + esc(t('With pizza')) + '"' + (ok(d.pizza) ? '' : ' class="av-empty"') + '>' + pill(d.pizza) + '</td><td role="cell" class="av-act"></td>';
         $('th', tr).textContent = label;
         const act = $('.av-act', tr);
         const a = doc.createElement('a'); a.className = 'btn btn-sm ' + (full ? 'btn-ghost' : 'btn-red'); a.target = '_blank'; a.rel = 'noopener';
         if (full) {
-          a.href = 'mailto:' + cfg.waitlistEmail + '?subject=' + encodeURIComponent(t('Waitlist: {day}', { day: label })) + '&body=' + encodeURIComponent(t('Hi! Please add me to the waitlist for {day}. How many people: ', { day: label }));
-          a.removeAttribute('target'); a.textContent = t('Join the waitlist'); a.setAttribute('data-track', 'Waitlist click');
+          a.href = 'mailto:' + cfg.waitlistEmail + '?subject=' + encodeURIComponent(t('Waitlist: {day}', { day: label })) + '&body=' + encodeURIComponent(t('Hi! Please add me to the waitlist for {day}.', { day: label }) + '\n\n' + t('My name:') + '\n' + t('How many people:') + '\n' + t('Visit with or without pizza:') + '\n');
+          a.removeAttribute('target'); a.textContent = t('Email us to join the waitlist'); a.setAttribute('data-track', 'Waitlist click');
         } else if (d.farm === 'closed' && (!d.pizza || d.pizza === 'closed' || d.pizza === 'none')) { a.remove(); }
         else { a.href = BOOK; a.textContent = t('Reserve'); }
         if (a.textContent) act.appendChild(a);
@@ -453,7 +465,7 @@
 
     // header line + visibility
     const up = $('[data-week-updated]', sec);
-    up.textContent = fresh ? t('Updated {date}', { date: fmtYmd(cfg.updated, { weekday: 'long', month: 'short', day: 'numeric' }) }) : t('Based on typical dates. Real dates depend on the weather.');
+    up.textContent = fresh ? t('Updated {date}', { date: fmtYmd(cfg.updated, { weekday: 'long', month: 'short', day: 'numeric' }) }) + (usedTypical ? ' ' + t('Crops without a note use typical dates.') : '') : t('Based on typical dates. Real dates depend on the weather.');
     const demo = $('[data-week-demo]', sec); if (demo) demo.hidden = !(cfg.demo && days.length);
     sec.hidden = !(items.length || note || days.length);
   }
@@ -463,9 +475,13 @@
     renderWeek();
     const feed = (W.week && W.week.feed) || '';
     if (feed) {
-      const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000);
+      const ctl = new AbortController();
+      let to = setTimeout(() => ctl.abort(), 6000);
       try {
         const r = await fetch(feed, { signal: ctl.signal, cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer' });
+        // The answer has arrived. Translating the page can keep the browser busy for seconds, and the 6-second timer
+        // must not cut off reading the (small) answer just because it fires first: give the reading its own time.
+        clearTimeout(to); to = setTimeout(() => ctl.abort(), 20000);
         if (r.ok) { const j = await r.json(); if (j && typeof j === 'object' && !Array.isArray(j)) { weekFeed = j; renderWeek(); } }
       } catch (e) { /* the page works without the live feed */ }
       clearTimeout(to);
@@ -485,6 +501,7 @@
     let s = String(action || '').trim().replace(/&amp;/g, '&'), u;   // the embed code may hold "&amp;" or start with "//"
     if (s.indexOf('//') === 0) s = 'https:' + s;
     try { u = new URL(s); } catch (e) { return null; }
+    if (!u.searchParams.get('u') || !u.searchParams.get('id') || /YOURNAME|\u2026/.test(s)) return null;   // the README example, or an address without the list codes
     if (u.protocol !== 'https:' || !/(^|\.)list-manage\.com$/i.test(u.hostname) || !/^\/subscribe\/post(-json)?\/?$/.test(u.pathname)) return null;
     u.pathname = '/subscribe/post-json';
     u.searchParams.delete('c');   // tutorials paste "&c=?"; the callback name is ours
@@ -510,7 +527,8 @@
     if (!form) return;
     const cfg = Object.assign({}, W.signup || {});
     const mc = cfg.action ? mailchimpUrl(cfg.action) : null;
-    if (cfg.action && !mc) warn('signup.action should look like https://NAME.us21.list-manage.com/subscribe/post?u=...&id=... (copy it from the Mailchimp embed code). The old signup button stays until it does.');
+    if (cfg.action && !mc && /YOURNAME|\u2026/.test(String(cfg.action))) warn('signup.action still holds the example from the README (YOURNAME, ...). Paste your own address from the Mailchimp embed code. The old signup button stays until you do.');
+    else if (cfg.action && !mc) warn('signup.action should look like https://NAME.us21.list-manage.com/subscribe/post?u=...&id=... (copy it from the Mailchimp embed code). The old signup button stays until it does.');
     if (mc) {
       const keys = $$('input[name=interest]', form).map((i) => i.value);
       Object.keys(cfg.interests || {}).forEach((k) => { if (keys.indexOf(k) < 0) warn('signup.interests: "' + k + '" is not a choice on the form. Use: ' + keys.join(', ') + '.'); });
@@ -528,7 +546,7 @@
       e.preventDefault();
       if (busy) return;
       const val = email.value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) { email.setAttribute('aria-invalid', 'true'); say(t('Please enter a valid email address.'), 'err'); email.focus(); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) { email.setAttribute('aria-invalid', 'true'); say(t('That email address does not look right. Please check it and try again.'), 'err'); email.focus(); return; }
       email.removeAttribute('aria-invalid');
       const picked = $$('input[name=interest]:checked', form).map((i) => i.value);
       busy = true; btn.setAttribute('aria-disabled', 'true'); say(t('Joining…'), '');
@@ -544,9 +562,9 @@
       const q = mc.searchParams; if (q.get('u') && q.get('id')) params['b_' + q.get('u') + '_' + q.get('id')] = '';   // Mailchimp's empty bot-trap field
       const res = await jsonp(mc, params);
       busy = false; btn.removeAttribute('aria-disabled');
-      if (res.result === 'success') { say(t('Thanks! Check your email to confirm your signup.'), 'ok'); form.reset(); }
+      if (res.result === 'success') { say(t('Thanks! Check your email to confirm your signup. If you do not see it, look in your spam folder.'), 'ok'); form.reset(); }
       else if (res.result === 'error' && /already subscribed/i.test(res.msg || '')) say(t('You are already on the list. Thank you!'), 'ok');
-      else { say(t('That did not go through. Please try the signup page instead.'), 'err'); if (fallback) fallback.hidden = false; }
+      else { say(t('Sorry, that did not go through. Please try the “Join the email list” button below.'), 'err'); if (fallback) fallback.hidden = false; }
     });
   }
 
@@ -556,7 +574,7 @@
   function renderDrive() {
     $$('[data-drive]').forEach((el) => {
       const m = +el.dataset.drive;
-      let tm; try { tm = formatter(Intl.NumberFormat, { style: 'unit', unit: 'minute', unitDisplay: 'short' }).format(m); } catch (e) { tm = m + ' min'; }
+      let tm; try { tm = formatter(Intl.NumberFormat, { style: 'unit', unit: 'minute', unitDisplay: 'long' }).format(m); } catch (e) { tm = m + ' minutes'; }
       el.textContent = t('about {time}', { time: tm });
     });
   }
@@ -710,7 +728,7 @@
     });
     items.filter((it) => it.type === 'text').forEach((it) => {
       const tx = el('text', { x: it.pts[0][0], y: it.pts[0][1], 'text-anchor': 'middle', 'font-size': 8, 'font-weight': 800, fill: '#3a2416', 'font-family': 'Nunito, sans-serif', class: 'map-note' }, gLabels);
-      tx.textContent = it.label || '';
+      tx.textContent = t(it.label || '');
     });
 
     // name ribbons: one per kind of thing, placed where they do not cover an icon or each other

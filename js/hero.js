@@ -1040,12 +1040,12 @@
    * Farm friends: tap a kid, a wagon rider, the scarecrow or the snowman and they react and say something.
    * ------------------------------------------------------------------ */
   const SAY = {
-    kid: [T('Yum! So sweet!'), T('Look at this big one!'), T('One for the basket, one for me.'), T('Hi there!'), T('The red ones are the ripest!')],
+    kid: [T('Yum! So sweet!'), T('Look at this big one!'), T('My bucket is almost full!'), T('Hi there!'), T('The red ones are the ripest!')],
     berrykid: [T('Plink! One more for the bucket.'), T('Blue fingers, happy me!'), T('Pick the dark blue ones!'), T('Yum! So sweet!'), T('Look at this big one!'), T('Hi there!')],
-    cutter: [T('Snip, snip! Fresh sunflowers!'), T('This one is taller than me!'), T('Flowers for Mom!'), T('Hi there!')],
+    cutter: [T('Snip, snip! Fresh sunflowers!'), T('This one is taller than me!'), T('Flowers for someone special!'), T('Hi there!')],
     rider: [T('Wheee!'), T('Hold on tight!'), T('Are we there yet?'), T('I can see the whole farm from here!'), T('Wave back!')],
-    barrel: [T('Choo choo!'), T('Beep beep! I am driving!'), T('Faster, tractor!')],
-    scarecrow: [T('Boo! ...Just kidding.'), T('Hi! I keep the crows away.'), T('Happy fall, friend!'), T('Psst... the crow is my buddy.'), T('I am not scary, I promise.')],
+    barrel: [T('Choo choo!'), T('Toot toot! All aboard!'), T('Faster, tractor!')],
+    scarecrow: [T('Boo! … Just kidding.'), T('Hi! I keep the crows away.'), T('Happy fall, friend!'), T('Psst… the crow is my buddy.'), T('I am not scary, I promise.')],
     snowman: [T('Brr! Stay warm out there!'), T('Do you like my hat?'), T('I love the snow!'), T('Have you lit a tree yet?')]
   };
 

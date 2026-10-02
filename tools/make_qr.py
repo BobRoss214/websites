@@ -163,7 +163,7 @@ def main():
   <style>{CSS}</style>
 </head>
 <body>
-  <div class="bar"><span>One sign per page. Print on letter paper, or choose Save as PDF.</span><button type="button" onclick="window.print()">Print all signs</button></div>
+  <div class="bar"><span>One sign per page. Print on letter paper, or choose Save as PDF. Have a Spanish speaker read the Spanish first.</span><button type="button" onclick="window.print()">Print all signs</button></div>
 {chr(10).join(pages)}
 </body>
 </html>

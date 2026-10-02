@@ -1,85 +1,157 @@
 /*
- * Editable site content.
+ * THE FARM'S CONTROL PANEL
+ * ========================
+ * You change words, dates and numbers in this file, and the website follows. You do not need to know how to program.
+ *
+ * HOW TO EDIT THIS FILE (please read this once)
+ * ---------------------------------------------
+ *   1. Open it in a plain text program: Notepad on Windows, TextEdit on a Mac (Format > Make Plain Text), or a code editor.
+ *      Do NOT use Word, Pages or Google Docs. They turn the straight quote marks into curly ones, and then the page stops working.
+ *   2. Before you start, make a copy of this file and keep it somewhere safe. If anything goes wrong, put the copy back.
+ *   3. Change only what is between the quote marks, and the numbers and dates. Leave the quote marks, the brackets { } [ ] and the comma
+ *      at the end of each line exactly where they are.
+ *   4. Write dates as year-month-day, two digits each:  '2026-10-04'  means October 4, 2026. Not 10/4/2026 and not 2026-10-4.
+ *   5. An apostrophe inside 'single quotes' breaks the whole file. Put double quotes around the text instead:
+ *          notice: "We're closed Saturday for rain.",
+ *      (Another way is a backslash in front of the apostrophe:  'We\'re closed Saturday.' )
+ *   6. Anything after // on a line is a note for you, and the computer skips it. To switch a line off, put // in front of it.
+ *   7. Save the file and look at the website: double-click index.html (or refresh the live page). If a yellow box called "Site check"
+ *      shows at the bottom of the page, it says what to fix. If the page looks broken, press Undo (Ctrl+Z, or Cmd+Z on a Mac)
+ *      until it works again, or put your copy back. See "Check your changes" in README.md.
+ *   8. Saving the file on your computer does not change the live website. Publish the changed file the way you publish the site.
+ *      Browsers can keep the old file for up to an hour, so give it a little while (a hard refresh, Ctrl+F5 or Cmd+Shift+R, shows
+ *      the new version at once on your own screen).
  *
  * PHOTOS
  * ------
- * Drop image files into assets/photos/ and list them here. As soon as this list
- * has at least one entry, a "Photo gallery" section appears on the page (with a
- * click-to-enlarge viewer) and a "Photos" link is added to the navigation.
- *
- *   { src: "assets/photos/strawberry-field.jpg", alt: "Rows of ripe strawberries", caption: "Spring picking" }
- *
- * `alt` is required (it is read aloud by screen readers); `caption` is optional.
+ * The "Photo gallery" section shows every photo listed in `photos` at the bottom of this file. Tap a photo to enlarge it.
+ *   1. Put the picture in the folder assets/photos/. Shrink big phone photos first, or the page gets slow.
+ *   2. Add one line inside photos: [ ... ], like this:
+ *        { src: "assets/photos/strawberry-field.jpg", alt: "Rows of ripe strawberries", caption: "Spring picking" },
+ *   `src` must match the file name exactly (capital letters, no spaces). `alt` is a short description for people who cannot see the
+ *   picture (a screen reader reads it aloud): write one for every photo. `caption` is optional.
+ *   Other languages show your alt and caption in English until Claude adds translations.
  *
  * OPEN-NOW BADGES, CLOSURES AND THE NOTICE BAR
- * ---------------------------------------------
- * `hours` drives the green "Open now" badges (times are Eastern Time).
- * days: 0 = Sunday ... 6 = Saturday. open/close are 24-hour "HH:MM".
- * `closures` lists dates (YYYY-MM-DD) when a place is closed, for example for rain.
- * `notice` shows a yellow bar under the top bar on every page. Leave it empty
- * ('') to hide it. Add `noticeUntil: '2026-10-05'` to hide it automatically after that date.
+ * --------------------------------------------
+ * `hours` drives the green "Open now" badges. Times are Eastern Time on a 24-hour clock: '10:00' is 10 am, '16:00' is 4 pm, '20:00' is 8 pm.
+ * `days` are numbers: 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday.
+ * For `farm` you list the days with reserved visits for each season (spring, summer, fall, winter). A season you leave out shows no farm badge.
+ *
+ * `closures` is one list of dates when the farm, The GreenHouse and Wise Pie are all shown as closed, or as having no visits (rain, a holiday):
+ *       closures: ['2026-10-04', '2026-10-11'],
+ *   It does not change Bookeo, so also close those times there. Dates that have passed can stay in the list.
+ *
+ * `notice` is the yellow bar at the top of every page. '' (two quote marks, nothing between) hides it.
+ *       notice: 'Closed Saturday for rain.',
+ *       noticeUntil: '2026-10-05',      // optional: the bar disappears after this day by itself
+ *   The bar shows in English in every language. To give each language its own words, write:
+ *       notice: { en: 'Closed Saturday for rain.', es: 'Cerrado el sábado por la lluvia.', hi: '...', zh: '...', vi: '...' },
+ *   A language you leave out shows the English. The Site check box does not check hours, closures or the notice: look at the page yourself.
  *
  * REVIEWS
  * -------
- * Quotes appear in the "What families say" section once you add them here. Only add words a
- * reviewer really wrote (copy them exactly, or ask first), with where they were posted:
- *
- *   { quote: "Best strawberries we have ever picked.", name: "Sarah M.", source: "Google",
- *     url: "https://...", date: "May 2026" }
- *
- * `lang` is optional (use "es" for a review written in Spanish) so it is never machine-translated.
+ * The quote cards in the "What families say" section stay hidden until you add one here. The buttons to Google, Tripadvisor and Yelp
+ * are always there. Only add words a reviewer really wrote (copy them exactly, or ask first), and say where they were posted:
+ *       reviews: [
+ *         { quote: "Best strawberries we have ever picked.", name: "Sarah M.", source: "Google", url: "https://...", date: "May 2026" },
+ *       ],
+ * `quote` and `name` are required (a review without both is skipped). `source`, `url` (a link to the post) and `date` are optional.
+ * Add  lang: "es"  to a review that was written in Spanish, so it is never machine-translated.
  *
  * ANALYTICS
  * ---------
- * Off by default. See the top of js/analytics.js for the four supported providers.
- * Nothing is sent until `provider` is set, and never for visitors who opt out.
+ * Off. When it is on, it counts visits and button taps without cookies, and never for visitors who have "Do Not Track" switched on.
+ * To turn it on you first sign up with one service (Plausible, GoatCounter, Umami or Cloudflare Web Analytics), then paste what they give you
+ * into `analytics` below. The exact lines are at the top of js/analytics.js. Ask Claude to do the pasting.
  *
- * THIS WEEK AT THE FARM  (the green "This week at the farm" box under the top of the page)
- * ---------------------------------------------------------------------------------------
- * It fills itself from today's date (what is normally in season, and what starts soon). To add a
- * note, mark how things are going, or show spots left, fill in `week` below. Everything in `week`
- * stops showing 14 days after `updated`, so old news never lingers. Delete the lines you do not use.
+ * THIS WEEK AT THE FARM  (the light green "This week at the farm" box, just under the first screen of the home page)
+ * ---------------------------------------------------------------------------------------------------------------
+ * You do not have to do anything: the box fills itself from today's date and lists what is usually in season, and what usually starts
+ * in the next three weeks. Those are typical dates. The real dates depend on the weather.
+ * When you know better, tell visitors. Find the line  week: {},  near the bottom of this file and replace it with the example below.
+ * IT IS ONLY AN EXAMPLE: change every word and date, and delete the lines you do not need.
  *
  *   week: {
- *     updated: '2026-10-01',                       // the day you last checked (required)
- *     note: 'Tomatoes are at their best. Bring a bucket!',   // or { en: '...', es: '...' } to write it in each language
+ *     updated: '2026-10-01',     // TODAY's date. Required. Change it every time you edit. Everything below disappears 14 days after it.
+ *     note: 'Tomatoes are ripe this weekend. Bring a bucket!',     // one short message for families
  *     crops: { tomatoes: 'peak', pumpkins: 'starting', flowers: 'ending' },
- *               // crop names: strawberries, blueberries, sunflowers, flowers, pumpkins, tomatoes, trees
- *               // how it is going: soon | starting | peak | ending | off   (off hides it)
- *     days: [                                      // "Spots left" table. Only today and the next 14 days show.
+ *         // Crop names:  strawberries, blueberries, sunflowers, flowers, pumpkins, tomatoes, trees
+ *         // What each word shows:  soon = "Coming soon",  starting = "Just starting",  peak = "Peak picking",
+ *         //                        ending = "Winding down",  off = hide that crop
+ *         // A crop you do not mention keeps its typical dates.
+ *     days: [                    // the "Spots left" table. One line per day. Only today and the next 14 days show.
  *       { date: '2026-10-02', farm: 'few',  pizza: 'open', note: 'Rain possible' },
  *       { date: '2026-10-03', farm: 'full', pizza: 'full' },
- *     ],                                            // farm and pizza: open | few | full | closed
- *     waitlistEmail: 'cathy@wiseacresorganic.com',  // "Join the waitlist" emails this address
- *     feed: '',                                     // optional: a web address that returns this same shape as JSON
- *   }
+ *     ],
+ *         // farm = visits without pizza (the "No pizza" column).   pizza = visits with pizza (the "With pizza" column).
+ *         // For each:  open = "Spots open",  few = "A few spots left",  full = "Full",  closed = "Closed".  Leave it out to show a dash.
+ *         // Buttons: if either column has spots (open or few) the day gets a "Reserve" button. If a day is Full and nothing is open,
+ *         // it gets an "Email us to join the waitlist" button. If the farm is closed and pizza is closed or left out, there is no button.
+ *     waitlistEmail: 'cathy@wiseacresorganic.com',   // that button opens an email to this address. The family still has to press Send.
+ *   },
  *
- * EMAIL SIGNUP WITH INTERESTS
- * ---------------------------
- * The signup form on the page stays hidden (the old "Join the email list" button shows instead) until you
- * paste your Mailchimp form address into `signup.action`. In Mailchimp: Audience > Signup forms > Embedded forms.
- * Copy the address inside  <form action="...">  . For the interest choices, add the group names from the same
- * embed code, e.g.  interests: { strawberries: 'group[12345][1]', pumpkins: 'group[12345][2]' }.
+ *   Only use "full" if someone will read and answer the waitlist emails. Spots are typed in by hand: the page cannot see Bookeo.
+ *   To show a note in each language, write it like the notice:  note: { en: '...', es: '...', hi: '...', zh: '...', vi: '...' }
+ *   If part of week does not show, the Site check box says why. There is also an advanced option called `feed` that a web developer can
+ *   use to connect live Bookeo numbers later. Leave it out.
+ *
+ * EMAIL SIGNUP (Mailchimp)
+ * ------------------------
+ * Until this is connected, visitors see a plain "Join the email list" button. After it is connected they see a form: an email box and
+ * checkboxes for what they want to hear about (strawberries, blueberries, flowers, pumpkins, tomatoes & basil, Christmas trees, pizza, events).
+ * Easiest: in Mailchimp copy ALL the code of your embedded form, paste it to Claude and say "set up the signup form".
+ * To do it yourself:
+ *   1. In Mailchimp go to Audience, then Signup forms, then Embedded forms. (Mailchimp changes its menus now and then. If you cannot find
+ *      them, search Mailchimp Help for "embedded form".)
+ *   2. A box of code appears. Find  <form action="  and copy only the long web address between the quote marks after it.
+ *      It starts with https:// and has list-manage.com in it. It is fine if it contains &amp;.
+ *   3. Paste it between the quote marks:    signup: { action: 'PASTE IT HERE', interests: {}, tags: '' },
+ *   4. Save, refresh, and sign up once with your own email address. Mailchimp should send you a confirmation email. After you confirm it,
+ *      your address appears in Mailchimp under Audience, then All contacts. If the signup form does not appear, or the Site check box
+ *      complains, the address you pasted is wrong.
+ *   5. The page tells people "Check your email to confirm your signup". That is only true while Mailchimp asks people to confirm
+ *      (Mailchimp calls this "double opt-in"; search Mailchimp Help for it). If you switch it off, tell Claude so the message can be changed.
+ * The checkboxes only do something if Mailchimp has a matching group for each. Without that the form still collects email addresses,
+ * but the boxes people tick are thrown away. To use them: in Mailchimp create one group (type: checkboxes) for each choice you want to keep,
+ * copy the embedded form code again, and find the group lines, which look like  name="group[12345][1]".  Match each choice on the form to its line:
+ *       interests: { pumpkins: 'group[12345][1]', trees: 'group[12345][2]' },
+ * The choice names you can use: strawberries, blueberries, flowers, pumpkins, tomatoes, trees, pizza, events. A choice you leave out is not sent.
+ * If you would rather not use the checkboxes at all, ask Claude to hide them. Leave  tags: ''  empty.
  *
  * GOOGLE REVIEW LINK
  * ------------------
- * `reviewUrl` is where every "Leave a Google review" button goes. In your Google Business Profile choose
- * "Ask for reviews" (or "Get more reviews") and copy the review link (it looks like https://g.page/r/.../review).
- * Until it is set, the buttons open the farm on Google Maps.
+ * `reviewUrl` is where every "Leave a Google review" button goes. Until you set it, those buttons only open the farm on Google Maps
+ * (and the printed QR review sign is not made).
+ *   1. Sign in to Google with the account that manages the farm's Google Business Profile (business.google.com).
+ *   2. Open the farm's profile and choose "Ask for reviews" (it may be called "Get more reviews" or "Share review form").
+ *   3. Choose "Copy link". It looks like  https://g.page/r/.../review
+ *   4. Paste it between the quote marks:    reviewUrl: 'PASTE IT HERE',
+ *   5. Save, refresh, tap "Leave a Google review" on your phone. It should open a box where you can pick stars.
+ * If you cannot find the button, ask Claude to build the link for you. The link must start with https:// (the Site check box tells you if it does not).
  *
- * VISITOR PHOTOS, ENTRANCE PHOTO
- * ------------------------------
- * `community` fills the "From families who visit" strip in the photo gallery. Only add a photo after the
- * person who took it said yes in writing. `by` is how you credit them; `url` (optional) links to their post.
- *   { src: 'assets/photos/visitors/pumpkin-day.jpg', alt: 'A girl holding a big pumpkin', by: '@name on Instagram', url: 'https://...' }
- * `entrancePhoto` is the picture on the First-visit page that shows where to park and check in.
+ * VISITOR PHOTOS
+ * --------------
+ * `community` is the "From families who visit" row in the photo gallery. Add a photo only after the person who took it said yes in writing
+ * (a message or a comment is fine: keep a screenshot).
+ *   1. Save the photo in the folder assets/photos/visitors/. It must be a file on this website, not a link to another site.
+ *   2. Add one line:
+ *        { src: 'assets/photos/visitors/pumpkin-day.jpg', alt: 'A girl holding a big pumpkin', by: '@name on Instagram', url: 'https://...' },
+ *      `alt` (required) describes the picture. `by` is the credit people read. `url` (optional, starts with https://) links to their post.
+ *   A photo missing its src or alt is skipped, and the Site check box says so. These words are not translated.
+ *
+ * ENTRANCE PHOTO
+ * --------------
+ * `entrancePhoto` is the picture on the First-visit page that shows where to park and check in. It stays hidden until you fill it in.
+ * Change  entrancePhoto: null,  to the line below, with your own file and words:
+ *       entrancePhoto: { src: 'assets/photos/entrance.jpg', alt: 'What the photo shows', caption: 'A short line that helps people find the entrance' },
+ * `alt` is required. Describe only what is really in the picture. `alt` and `caption` can also be written { en: '...', es: '...' } like the notice.
  *
  * SEASON SWITCHER
  * ---------------
- * The first screen automatically shows whatever season is happening at the farm
- * today (see js/season.js for the dates). While the site is being previewed, a
- * "See the farm in…" switcher lets visitors click between seasons. Set
- * `seasonPicker` to false when the site should simply follow the calendar.
+ * The first screen shows whatever season is happening at the farm today (the dates are in js/season.js; ask Claude to change them).
+ * While the site is being previewed, a "See the farm in..." switcher lets people click between seasons. Set `seasonPicker` to false
+ * when the site should simply follow the calendar.
  */
 window.WISE_ACRES = {
   seasonPicker: true,
@@ -97,7 +169,7 @@ window.WISE_ACRES = {
   signup: { action: '', interests: {}, tags: '' },
   reviewUrl: '',
   community: [],
-  entrancePhoto: null,   // { src: 'assets/photos/entrance.jpg', alt: 'The farm gate and parking on Hartis Road', caption: 'Look for this gate.' }
+  entrancePhoto: null,   // example: { src: 'assets/photos/entrance.jpg', alt: 'What the photo shows', caption: 'A short line that helps people find the entrance' }
   photos: [
     { src: "assets/photos/family-sunflower-field.webp",
       alt: "The Wise Acres family hugging and smiling in a field of sunflowers",

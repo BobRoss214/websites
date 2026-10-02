@@ -25,6 +25,7 @@ KNOWN = {'parking', 'entrance', 'road', 'dropoff', 'checkin', 'restrooms', 'acce
          'picnic', 'firepit', 'concessions', 'barn', 'water', 'firstaid', 'staff', 'other'}
 MIN_POINTS = {'pin': 1, 'text': 1, 'area': 3, 'path': 2}
 LANGS = ('es', 'hi', 'zh', 'vi')
+MAX_ITEMS = 300   # the Farm Map Marker saves a few dozen points; thousands would freeze visitors' phones
 
 
 def fail(msg):
@@ -114,6 +115,8 @@ def main():
             print('skipped:', s)
         fail('there are no usable points in this map, so js/farm-map-data.js was NOT changed and the map on the website stays as it is.\n'
              '(To hide the map on purpose, put  window.WISE_ACRES_MAP = null;  in that file.)')
+    if len(items) > MAX_ITEMS:
+        fail(f'this map has {len(items)} points; the website draws at most {MAX_ITEMS} (a real farm map has a few dozen). Nothing was changed.')
     north = doc.get('topFaces') if doc.get('topFaces') in ('up', 'down', 'left', 'right') else 'up'
     data = {'size': {'width': w, 'height': h}, 'north': north, 'items': items}
     # JSON inside a .js file: escape the two line separators older phones reject, and "</" in case it is ever inlined in a page

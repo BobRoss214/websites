@@ -10,7 +10,7 @@ Each source in pages/<slug>.html starts with a small block of settings between -
   ---
   title: Page title for Google and the browser tab
   description: One or two sentences for search results
-  crumb: Short name for the breadcrumb
+  crumb: Short name for the breadcrumb (only used if you add a visible breadcrumb trail; see compose())
   schema: LocalBusiness            (optional extra schema.org type: Event is NOT used, dates change)
   image: assets/og-share.png       (optional)
   ---
@@ -24,6 +24,7 @@ from bs4 import BeautifulSoup
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = 'https://www.wiseacresorganic.com/'
 OG_IMAGE = 'assets/og-share.png'
+OG_IMAGE_ALT = 'Illustration of a fall farm: a tractor pulling a wagon of children past a pumpkin patch, a red barn and a scarecrow, with the words Welcome to Wise Acres! Organic u-pick fun for the whole family'   # keep identical to og:image:alt in index.html
 
 PAGES_DIR = os.path.join(ROOT, 'pages')
 
@@ -33,6 +34,15 @@ def strip_i18n(s):
 
 
 def chrome():
+    try:
+        return _chrome()
+    except (AttributeError, ValueError):
+        sys.exit('index.html is missing a part that tools/pages.py copies into every extra page: the <head>, the skip link, the announcement bar, '
+                 '<header class="site-header">, <div class="footer-field"> ... </footer>, <nav class="action-bar">, the icon sprite or the <script src="js/..."> tags. '
+                 'Put it back the way it was, then run this again. Nothing was changed.')
+
+
+def _chrome():
     src = strip_i18n(open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read())
     head = re.search(r'<head>(.*?)</head>', src, re.S).group(1)
     skip = re.search(r'\s*<a class="skip-link"[^>]*>.*?</a>', src, re.S).group(0).strip()
@@ -50,13 +60,19 @@ def chrome():
 
 
 def parse_source(path):
-    raw = open(path, encoding='utf-8').read()
-    m = re.match(r'---\n(.*?)\n---\n', raw, re.S)
+    name = os.path.basename(path)
+    raw = open(path, encoding='utf-8-sig').read()   # utf-8-sig: Windows editors add an invisible marker at the start
+    m = re.match(r'\s*---[ \t]*\n(.*?)\n---[ \t]*\n', raw, re.S)
+    if not m:
+        sys.exit(f'pages/{name}: it must start with a block of settings between two lines of ---  (title: ..., description: ...). See the top of tools/pages.py.')
     meta = {}
     for line in m.group(1).splitlines():
         if ':' in line:
             k, v = line.split(':', 1)
             meta[k.strip()] = v.strip()
+    missing = [k for k in ('title', 'description') if not meta.get(k)]
+    if missing:
+        sys.exit(f'pages/{name}: the settings block is missing: {", ".join(missing)}.')
     return meta, raw[m.end():].strip() + '\n'
 
 
@@ -81,14 +97,21 @@ def compose(c, slug, meta, body):
     head = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{html.escape(title, quote=True)}">', head)
     head = re.sub(r'<meta property="og:description" content="[^"]*">', f'<meta property="og:description" content="{html.escape(desc, quote=True)}">', head)
     head = re.sub(r'\s*<script type="application/ld\+json">.*?</script>', '', head, flags=re.S)
-    head = re.sub(r'\s*<(?:link rel="canonical"|meta property="og:(?:url|image)"|meta name="twitter:card")[^>]*>', '', head)
-    extra = (f'\n  <link rel="canonical" href="{url}">\n  <meta property="og:url" content="{url}">\n  <meta property="og:image" content="{image}">\n'
-             f'  <meta name="twitter:card" content="summary_large_image">')
+    head = re.sub(r'\s*<(?:link rel="canonical"|meta property="og:(?:url|image(?::[a-z]+)?)"|meta name="twitter:(?:card|image:alt)")[^>]*>', '', head)
+    # The Search Console tag belongs on the home page only (see README), so do not copy its placeholder comment or a pasted tag.
+    head = re.sub(r'\s*<!-- GOOGLE SEARCH CONSOLE.*?-->', '', head, flags=re.S)
+    head = re.sub(r'\s*<meta name="google-site-verification"[^>]*>', '', head)
+    extra = (f'\n  <link rel="canonical" href="{url}">\n  <meta property="og:url" content="{url}">\n  <meta property="og:image" content="{image}">')
+    if image == SITE + OG_IMAGE:   # width, height and description are for the default share picture only
+        extra += (f'\n  <meta property="og:image:width" content="1200">\n  <meta property="og:image:height" content="630">'
+                  f'\n  <meta property="og:image:alt" content="{OG_IMAGE_ALT}">')
+    extra += '\n  <meta name="twitter:card" content="summary_large_image">'
+    if image == SITE + OG_IMAGE:
+        extra += f'\n  <meta name="twitter:image:alt" content="{OG_IMAGE_ALT}">'
+    # No BreadcrumbList here on purpose: these pages have no visible breadcrumb trail, and structured data must match the page.
+    # If you add a visible trail (Home > page), add the BreadcrumbList back using meta['crumb'].
     graph = [
         {'@type': 'WebPage', '@id': url, 'url': url, 'name': title, 'description': desc, 'isPartOf': {'@id': SITE + '#site'}, 'inLanguage': 'en-US'},
-        {'@type': 'BreadcrumbList', 'itemListElement': [
-            {'@type': 'ListItem', 'position': 1, 'name': 'Wise Acres Organic Farm', 'item': SITE},
-            {'@type': 'ListItem', 'position': 2, 'name': meta.get('crumb', title), 'item': url}]},
     ]
     faq = faq_items(body)
     if faq:
@@ -131,6 +154,8 @@ def main():
         if not f.endswith('.html'):
             continue
         slug = f[:-5]
+        if not re.fullmatch(r'[a-z0-9-]+', slug):
+            sys.exit(f'pages/{f}: a page file name may only use small letters, numbers and dashes (it becomes the web address and goes into sitemap.xml).')
         meta, body = parse_source(os.path.join(PAGES_DIR, f))
         out = compose(c, slug, meta, body)
         open(os.path.join(ROOT, slug + '.html'), 'w', encoding='utf-8').write(out)
