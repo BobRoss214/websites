@@ -123,13 +123,18 @@ const a11y = async (page, label) => {
 
 // A live table cycles through its phases by itself (the stake buttons switch off while it is locked), so an accessibility scan
 // that lands on a phase change measures a half-way state. Wait for an open betting window with plenty of time left first.
+// "Plenty" is judged against the length of the window: seven seconds in real time, but with ?fast=1 the whole window is only 2.2 seconds,
+// so asking for seven there could never be met and every call waited out its full 70 seconds (and then froze the table in whatever phase it was in).
 const liveSettled = async (page, id) => {
   await page.waitForFunction((rid) => {
     const r = window.GS.live.room(rid);
-    return !!r && r.phase === 'open' && r.msLeft() > 7000;
-  }, id, { timeout: 70000, polling: 200 }).catch(() => {});
-  // stop that table's round timer: the scan itself can take longer than the seconds that are left, and a table that locks half way
-  // through it switches its buttons off while they are being measured
+    if (!(r && r.phase === 'open' && r.msLeft() > Math.min(7000, r.phaseMs * 0.4))) { return false; }
+    // stop that table's round timer here, in the same turn that sees the open window: the scan itself can take longer than the seconds that
+    // are left, and a table that locks half way through it switches its buttons off while they are being measured
+    r._clearTimers();
+    return true;
+  }, id, { timeout: 70000, polling: 100 }).catch(() => {});
+  // (and again, in case the wait ran out)
   await page.evaluate((rid) => { const r = window.GS.live.room(rid); if (r) { r._clearTimers(); } }, id).catch(() => {});
 };
 
@@ -1776,6 +1781,80 @@ if (section('13o. Every live game is a lobby of seven tables')) {
 }
 
 /* ======================================================================== */
+if (section('13p. Live boards tell the truth: no stale pick, no zero-share chips, and a race stops when you leave')) {
+  // at real speed: the last part only means something when a race really takes about half a minute (with ?fast=1 it is over in three seconds anyway)
+  const page = await newPage();
+  await openApp(page, '#game-standing', '');
+  // back a charity in the solo game, then open that game's live tables: the pick must not be shown there as if it were a stake
+  await page.click('#pick-btn');
+  await page.waitForSelector('#dlg-charitypick[open]');
+  await page.fill('#cp-q', 'wateraid');
+  await page.locator('#dlg-charitypick .pickitem').first().click();
+  await page.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
+  check((await page.locator('#pick-chip').innerText()).includes('WaterAid'), 'a charity is backed in the solo game');
+  for (const id of ['standing25', 'standing1000']) {
+    // the table is set up before it is looked at: a fresh open round where a bot backs that same charity (so a stale gold ring has a tile to land on),
+    // and its round timer stopped so nothing changes under the checks
+    await page.evaluate((rid) => { const r = window.GS.live.room(rid); r.openRound(0); r._botJoin(window.GS.charity('wateraid'), 5); r._clearTimers(); }, id);
+    await go(page, '#live-' + id);
+    const onBoard = await page.waitForFunction(() => { const n = window.GS.charity('wateraid').name; return Array.from(document.querySelectorAll('#panel-standing .stile')).some((li) => li.getAttribute('title') === n); }, null, { timeout: 15000 }).then(() => true, () => false);
+    const r = await page.evaluate((rid) => ({ marked: document.querySelectorAll('#panel-standing .stile.is-pick').length, game: typeof window.GS.games.standing._marked === 'function' ? window.GS.games.standing._marked() : '(no _marked hook)', staked: !!window.GS.live.room(rid).you }), id);
+    check(onBoard && r.marked === 0 && r.game === '' && !r.staked, id + ': the charity you back in the solo game is not shown as your pick on a live board', Object.assign({ onBoard }, r));
+  }
+  // on a big live Roulette wheel or Lucky Draw drum every spot owns a pocket or a ball, and the legend never lists a charity with none;
+  // the worst case is set up on purpose: one charity with a $5 stake against a pot of more than $1,000 (about half a pocket on a 100-spot board)
+  for (const id of ['roulette100', 'lotto100', 'roulette1000', 'lotto1000']) {
+    const gid = id.replace(/\d+$/, '');
+    const tiny = await page.evaluate((rid) => {
+      const r = window.GS.live.room(rid);
+      r.openRound(0);
+      const free = window.GS.charities.filter((c) => !r.seats[c.id]);
+      for (let i = 0; i < 4; i++) { r._botJoin(free[0], 250); }
+      r._botJoin(free[1], 5);
+      r._clearTimers();
+      return free[1].short;
+    }, id);
+    await go(page, '#live-' + id);
+    const shown = await page.waitForFunction((args) => Array.from(document.querySelectorAll('#panel-' + args[0] + ' .rlegend li')).some((li) => li.textContent.includes(args[1])), [gid, tiny], { timeout: 15000 }).then(() => true, () => false);
+    const r = await page.evaluate((args) => {
+      const g = window.GS.games[args[0]];
+      const legend = Array.from(document.querySelectorAll('#panel-' + args[0] + ' .rlegend li')).map((li) => li.textContent.trim());
+      return {
+        spots: window.GS.live.room(args[1]).boardInfo().spots.length, units: args[0] === 'roulette' ? g._pockets() : g._balls(),
+        zero: legend.filter((t) => /\b0 (pockets|balls)\b/.test(t)).length, items: legend.length, tinyChip: legend.filter((t) => t.includes(args[2]))[0] || ''
+      };
+    }, [gid, id, tiny]);
+    check(shown && r.zero === 0 && r.units >= r.spots && r.items > 0 && /\b[1-9]\d* (pocket|ball)s?\b/.test(r.tinyChip), id + ': every spot owns a ' + (gid === 'roulette' ? 'pocket' : 'ball') + ' and no legend chip says 0, not even the $5 stake in a big pot', Object.assign({ shown }, r));
+  }
+  // leaving a table in the middle of its round stops that round at once, so the next table shows straight away.
+  // Every game keeps its own count of what is on its board (a 1,000 table shows 1,000 or a little more, a 10 table far fewer);
+  // Drop has no such count, so there it is whether its roll is still running.
+  const BOARD = { derby: '_runners', standing: '_entrants', wheel: '_slices', plinko: '_bins', roulette: '_pockets', lotto: '_balls', duck: '_entrants', marble: '_entrants', balloon: '_entrants', drop: null };
+  for (const gid of ['derby', 'standing', 'wheel', 'plinko', 'roulette', 'lotto', 'duck', 'marble', 'balloon', 'drop']) {
+    // the table we hop to is made ready first (open, and still); the one we leave is put into the middle of its round
+    await page.evaluate((a) => {
+      const t = window.GS.live.room(a[1]);
+      t.openRound(0);
+      t._clearTimers();
+      const r = window.GS.live.room(a[0]);
+      r.openRound(0);
+      r.lock();
+    }, [gid + '1000', gid + '10']);
+    const playing = await page.waitForFunction((rid) => window.GS.live.room(rid).phase === 'playing', gid + '1000', { timeout: 20000 }).then(() => true, () => false);
+    await go(page, '#live-' + gid + '1000');
+    const arrived = await page.waitForFunction((a) => (a[1] ? window.GS.games[a[0]][a[1]]() >= 1000 : window.GS.ui.live.gameBusy(a[0])), [gid, BOARD[gid]], { timeout: 15000 }).then(() => true, () => false);
+    await page.waitForTimeout(800);
+    const busy = await page.evaluate((g) => window.GS.ui.live.gameBusy(g), gid);
+    const t0 = Date.now();
+    await go(page, '#live-' + gid + '10');
+    const next = await page.waitForFunction((a) => (a[1] ? window.GS.games[a[0]][a[1]]() < 100 : !window.GS.ui.live.gameBusy(a[0])), [gid, BOARD[gid]], { timeout: 15000 }).then(() => true, () => false);
+    const took = Date.now() - t0;
+    check(playing && arrived && busy && next && took < 5000, gid + ': leaving a table in the middle of its round shows the next table at once (the old round would play on for about half a minute)', { playing, arrived, busy, next, took });
+  }
+  await page.close();
+}
+
+/* ======================================================================== */
 if (section('13m. Big boards: Roulette grows a bigger wheel, Plinko pulls the camera back')) {
   const page = await newPage();
   await openApp(page, '#game-roulette');
@@ -1918,6 +1997,19 @@ if (section('16. Accessibility scan (needs AXE) and page health')) {
     for (const g of GAMES) { await go(page, '#game-' + g); await page.waitForTimeout(500); await a11y(page, 'game: ' + g); }
     for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#leagues', '#crews', '#cards']) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
     for (const g of LIVE_GAMES) { await go(page, '#live-' + g); await page.waitForTimeout(500); await liveSettled(page, g); await a11y(page, 'live room: ' + g); }
+    // the rooms above are scanned while their betting is open; one table is also stopped on its settled result card (the other screen of a live table)
+    await go(page, '#live-derby10');
+    await page.evaluate(() => { window.GS.live.room('derby10').openRound(0); });
+    await page.waitForFunction(() => !!window.GS.live.room('derby10').commit, null, { timeout: 10000 }).catch(() => {});
+    await page.evaluate(() => { window.GS.live.room('derby10').lock(); });
+    const onResult = await page.waitForFunction(() => {
+      const r = window.GS.live.room('derby10');
+      if (!(r.phase === 'result' && document.querySelector('#lt-result .lt-res'))) { return false; }
+      r._clearTimers();   // stop here, in the same turn that sees the card, so the next round cannot wipe it before the scan
+      return true;
+    }, null, { timeout: 40000, polling: 20 }).then(() => true, () => false);
+    check(onResult, 'a live table can be stopped on its result card for the scan');
+    await a11y(page, 'live room: result card');
     await page.close();
   } else { console.log('  skip axe scans (set AXE=/path/to/axe.min.js)'); }
   check(external.length === 0, 'the site makes no requests to any other host', external.slice(0, 5));
