@@ -1,20 +1,155 @@
 /*
- * Balloon Race. One balloon per charity (up to 100) lifts off from the meadow; the first to reach the finish
+ * Balloon Race. One balloon per charity (up to 1,000) lifts off from the meadow; the first to reach the finish
  * line in the clouds gets your gift.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the balloons are released. The
  * race is choreographed so that charity's balloon rises first. On a live table every charity with money behind it
  * is a balloon and its share of the pot is its chance of winning.
+ *
+ * Live tables: the balloons with money behind them are big, carry the charity's monogram (the same badge as its chip in
+ * the list under the sky) and are drawn on top of the crowd. The charities that only fill the sky from the catalog (they
+ * cannot win) are smaller, faded balloons.
  */
 (function () {
   'use strict';
   var GS = window.GS;
   var TAU = Math.PI * 2;
   var MEDAL = ['#ffc542', '#cfd9e0', '#e0a070'];
+  var FADE = 0.55;       // how faint a catalog balloon that only fills a live sky is drawn
+
+  var sprites = {};
+  var frameDpr = 1;      // the pixel density this frame is drawn at
+  var later = [];        // the balloons with money behind them: drawn last, on top of the crowd
 
   function radiusFor(n) { return n <= 12 ? 17 : n <= 30 ? 11 : n <= 56 ? 8 : n <= 120 ? 6 : n <= 300 ? 4 : 3; }
+  function dprNow() { return Math.min(window.devicePixelRatio || 1, 2); }
 
-  GS.crowdGame({
+  /** The balloon (body, shine, knot and string) with its centre at (x, y). `sway` bends the string. */
+  function paintBalloon(c, x, y, r, rx, accent, sway) {
+    c.strokeStyle = 'rgba(255,255,255,0.7)';
+    c.lineWidth = r >= 10 ? 1.3 : 1;
+    c.beginPath();
+    c.moveTo(x, y + r);
+    c.quadraticCurveTo(x + sway, y + r + r * 0.9, x - sway * 0.5, y + r + r * 1.7);
+    c.stroke();
+    c.fillStyle = accent;
+    c.beginPath();
+    c.moveTo(x, y + r);
+    c.bezierCurveTo(x - rx * 1.25, y + r * 0.35, x - rx * 1.15, y - r * 1.05, x, y - r);
+    c.bezierCurveTo(x + rx * 1.15, y - r * 1.05, x + rx * 1.25, y + r * 0.35, x, y + r);
+    c.closePath();
+    c.fill();
+    c.lineWidth = 1.2;
+    c.strokeStyle = 'rgba(255,255,255,0.8)';
+    c.stroke();
+    // knot
+    c.fillStyle = accent;
+    c.beginPath();
+    c.moveTo(x, y + r - 1);
+    c.lineTo(x - rx * 0.22, y + r + r * 0.18);
+    c.lineTo(x + rx * 0.22, y + r + r * 0.18);
+    c.closePath();
+    c.fill();
+    // shine
+    c.fillStyle = 'rgba(255,255,255,0.5)';
+    c.beginPath();
+    c.ellipse(x - rx * 0.38, y - r * 0.36, Math.max(1, rx * 0.16), Math.max(1.5, r * 0.3), -0.35, 0, TAU);
+    c.fill();
+  }
+
+  /** Small balloons are stamped from a picture of the balloon (one per colour and size), so a sky of a thousand stays smooth. */
+  function sprite(accent, r, rx) {
+    var d = dprNow();
+    var key = accent + '|' + r + '|' + d;
+    if (sprites[key]) { return sprites[key]; }
+    var ox = rx * 1.4 + 2;
+    var oy = r + 2;
+    var cv = document.createElement('canvas');
+    cv.width = Math.ceil((ox * 2) * d);
+    cv.height = Math.ceil((r * 3.8 + 4) * d);
+    var c = cv.getContext('2d');
+    c.scale(d, d);
+    paintBalloon(c, ox, oy, r, rx, accent, 0);
+    sprites[key] = { cv: cv, ox: ox, oy: oy, w: cv.width / d, h: cv.height / d };
+    return sprites[key];
+  }
+
+  function drawBalloon(ctx, e, pos, S, big) {
+    var g = S.geo;
+    var filler = S.field && !(e.tickets > 0);   // a catalog charity that only fills the sky
+    // the balloons with money behind them are bigger than the crowd, and show their monogram
+    var r = big ? Math.max(g.r * 1.45, 11) : filler ? Math.max(2.5, g.r * 0.85) : g.r;
+    var rx = r * 0.82;
+    var x = pos.x, y = pos.y;
+    var win = e.run.place === 1 && !S.racing;
+    var rank = S.lead[e.idx];
+    var backed = !S.field && !!S.pickId && e.ch.id === S.pickId;   // the solo pick never shows on a live board
+
+    if (win || rank) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, Math.max(rx * 1.5, win ? 11 : 0), Math.max(r * 1.4, win ? 13 : 0), 0, 0, TAU);
+      ctx.fillStyle = win ? 'rgba(255,197,66,' + (0.34 + 0.2 * Math.sin(S.t / 150)) + ')' : 'rgba(255,255,255,0.22)';
+      ctx.fill();
+    }
+    if (filler) { ctx.globalAlpha = FADE; }
+    if (r <= 6) {
+      // the picture of this balloon is kept on it, and stamped on whole device pixels (the fast way to copy a picture)
+      var sp = e._spr;
+      if (!sp || e._sprR !== r || e._sprC !== e.ch.accent) { sp = e._spr = sprite(e.ch.accent, r, rx); e._sprR = r; e._sprC = e.ch.accent; }
+      ctx.drawImage(sp.cv, Math.round((x - sp.ox) * frameDpr) / frameDpr, Math.round((y - sp.oy) * frameDpr) / frameDpr, sp.w, sp.h);
+    } else {
+      paintBalloon(ctx, x, y, r, rx, e.ch.accent, Math.sin(S.t / 380 + e.run.phase * 7) * 2.5);
+    }
+    if (filler) { ctx.globalAlpha = 1; }
+    if (win) {
+      ctx.lineWidth = 2.6;
+      ctx.strokeStyle = '#ffc542';
+      ctx.beginPath();
+      ctx.moveTo(x, y + r);
+      ctx.bezierCurveTo(x - rx * 1.25, y + r * 0.35, x - rx * 1.15, y - r * 1.05, x, y - r);
+      ctx.bezierCurveTo(x + rx * 1.15, y - r * 1.05, x + rx * 1.25, y + r * 0.35, x, y + r);
+      ctx.closePath();
+      ctx.stroke();
+    }
+    if (r >= 10) {
+      var mono = GS.mono(e.ch);
+      ctx.fillStyle = 'rgba(11,22,32,0.85)';
+      ctx.font = '800 ' + (r * (mono.length > 2 ? 0.5 : 0.62)) + 'px "Sora", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(mono, x + rx * 0.05, y + r * 0.1);
+    }
+    if (backed) {
+      // the charity you backed: a gold ring and a star, readable even when the field is tiny
+      var br = Math.max(r * 1.9, 7);
+      ctx.beginPath();
+      ctx.arc(x, y, br, 0, TAU);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ffc542';
+      ctx.stroke();
+      ctx.fillStyle = '#ffc542';
+      ctx.font = '800 ' + Math.max(10, r * 1.6) + 'px "Sora", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('★', x, y - br - 2);
+    }
+    if (e.run.place && (e.run.place <= 3 || S.n <= 12)) {
+      var mr = Math.max(5, Math.min(8.5, r * 0.55));
+      ctx.beginPath();
+      ctx.arc(x + rx * 0.95, y - r * 0.95, mr, 0, TAU);
+      ctx.fillStyle = MEDAL[e.run.place - 1] || '#51697a';
+      ctx.fill();
+      if (mr >= 7) {
+        ctx.fillStyle = '#0b1620';
+        ctx.font = '800 10px "Sora", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(e.run.place), x + rx * 0.95, y - r * 0.93);
+      }
+    }
+  }
+
+  var game = GS.crowdGame({
     id: 'balloon',
     name: 'Balloon Race',
     label: 'Balloon Race',
@@ -68,6 +203,8 @@
 
     background: function (ctx, S) {
       var g = S.geo, W = S.W, H = S.H, t = S.t;
+      later.length = 0;
+      frameDpr = dprNow();
       var sky = ctx.createLinearGradient(0, 0, 0, H);
       sky.addColorStop(0, '#1b4fa8');
       sky.addColorStop(1, '#7cc4f2');
@@ -128,87 +265,38 @@
     },
 
     entity: function (ctx, e, pos, S) {
-      var g = S.geo;
-      var r = g.r, rx = g.rx;
-      var x = pos.x, y = pos.y;
-      var win = e.run.place === 1 && !S.racing;
-      var rank = S.lead[e.idx];
-      var backed = !!S.pickId && e.ch.id === S.pickId;
+      // the balloons with money behind them wait, to be drawn on top of the crowd (see foreground)
+      if (S.field && e.tickets > 0 && S.n > 12 && S.geo.r <= 11) { later.push([e, pos]); return; }
+      drawBalloon(ctx, e, pos, S, false);
+    },
 
-      // string and knot
-      var sway = Math.sin(S.t / 380 + e.run.phase * 7) * 2.5;
-      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-      ctx.lineWidth = r >= 10 ? 1.3 : 1;
-      ctx.beginPath();
-      ctx.moveTo(x, y + r);
-      ctx.quadraticCurveTo(x + sway, y + r + r * 0.9, x - sway * 0.5, y + r + r * 1.7);
-      ctx.stroke();
-
-      if (win || rank) {
-        ctx.beginPath();
-        ctx.ellipse(x, y, rx * 1.5, r * 1.4, 0, 0, TAU);
-        ctx.fillStyle = win ? 'rgba(255,197,66,' + (0.34 + 0.2 * Math.sin(S.t / 150)) + ')' : 'rgba(255,255,255,0.22)';
-        ctx.fill();
-      }
-      ctx.fillStyle = e.ch.accent;
-      ctx.beginPath();
-      ctx.moveTo(x, y + r);
-      ctx.bezierCurveTo(x - rx * 1.25, y + r * 0.35, x - rx * 1.15, y - r * 1.05, x, y - r);
-      ctx.bezierCurveTo(x + rx * 1.15, y - r * 1.05, x + rx * 1.25, y + r * 0.35, x, y + r);
-      ctx.closePath();
-      ctx.fill();
-      ctx.lineWidth = win ? 2.6 : 1.2;
-      ctx.strokeStyle = win ? '#ffc542' : 'rgba(255,255,255,0.8)';
-      ctx.stroke();
-      // knot
-      ctx.fillStyle = e.ch.accent;
-      ctx.beginPath();
-      ctx.moveTo(x, y + r - 1);
-      ctx.lineTo(x - rx * 0.22, y + r + r * 0.18);
-      ctx.lineTo(x + rx * 0.22, y + r + r * 0.18);
-      ctx.closePath();
-      ctx.fill();
-      // shine
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.beginPath();
-      ctx.ellipse(x - rx * 0.38, y - r * 0.36, Math.max(1, rx * 0.16), Math.max(1.5, r * 0.3), -0.35, 0, TAU);
-      ctx.fill();
-      if (r >= 10) {
-        var mono = GS.mono(e.ch);
-        ctx.fillStyle = 'rgba(11,22,32,0.85)';
-        ctx.font = '800 ' + (r * (mono.length > 2 ? 0.5 : 0.62)) + 'px "Sora", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(mono, x + rx * 0.05, y + r * 0.1);
-      }
-      if (backed) {
-        // the charity you backed: a gold ring and a star, readable even when the field is tiny
-        var br = Math.max(r * 1.9, 7);
-        ctx.beginPath();
-        ctx.arc(x, y, br, 0, TAU);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#ffc542';
-        ctx.stroke();
-        ctx.fillStyle = '#ffc542';
-        ctx.font = '800 ' + Math.max(10, r * 1.6) + 'px "Sora", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillText('★', x, y - br - 2);
-      }
-      if (e.run.place && (e.run.place <= 3 || S.n <= 12)) {
-        var mr = Math.max(5, Math.min(8.5, r * 0.55));
-        ctx.beginPath();
-        ctx.arc(x + rx * 0.95, y - r * 0.95, mr, 0, TAU);
-        ctx.fillStyle = MEDAL[e.run.place - 1] || '#51697a';
-        ctx.fill();
-        if (mr >= 7) {
-          ctx.fillStyle = '#0b1620';
-          ctx.font = '800 10px "Sora", sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(String(e.run.place), x + rx * 0.95, y - r * 0.93);
-        }
-      }
+    foreground: function (ctx, S) {
+      for (var i = 0; i < later.length; i++) { drawBalloon(ctx, later[i][0], later[i][1], S, true); }
     }
   });
+
+  // the note under the sky says which balloons can win
+  var stage = null;      // the panel this game is mounted in
+  var mount = game.mount;
+  game.mount = function (container) {
+    stage = container;
+    return mount.apply(game, arguments);
+  };
+  var setField = game.setField;
+  game.setField = function (entrants) {
+    var res = setField.apply(game, arguments);
+    var note = stage && stage.querySelector('[data-role="note"]');
+    var fill = entrants.filter(function (e) { return !(e.tickets > 0); }).length;
+    if (note && fill > 0) {
+      note.textContent = 'Each balloon with money behind it has a chance equal to its share of the pot. The other ' + fill + (fill === 1 ? ' balloon fills' : ' balloons fill') + ' the sky from our catalog and cannot win.';
+    }
+    return res;
+  };
+
+  // crowd.js races for 80% of the time it is given, and the field then needs about another third to come in behind the
+  // winner, so a live race ran about a third longer than the table's play time (56 s against 41 s at 1,000 balloons). Ask for less.
+  var playLive = game.playLive;
+  game.playLive = function (opts) {
+    return playLive.call(game, { winner: opts.winner, durationMs: opts.durationMs * (game._entrants() > 24 ? 0.78 : 0.88) });
+  };
 })();

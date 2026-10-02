@@ -21,6 +21,7 @@
   var live = { on: false, k: 0 };   // a live board is showing, and how many of its ducks have money behind them
   var busy = false;                 // a race is running: the board cannot change
   var sprites = {};
+  var frameDpr = 1;                 // the pixel density this frame is drawn at
   var fontGen = 0;                  // bumps when web fonts finish loading, so cached labels are fitted again
   if (document.fonts && document.fonts.addEventListener) {
     document.fonts.addEventListener('loadingdone', function () { fontGen += 1; });
@@ -228,6 +229,7 @@
 
     background: function (ctx, S) {
       var g = S.geo, W = S.W, H = S.H, t = S.t;
+      frameDpr = dprNow();
       var water = ctx.createLinearGradient(0, g.top - 10, 0, H - g.bottom + 10);
       water.addColorStop(0, '#1d7fb0');
       water.addColorStop(1, '#0f5a86');
@@ -255,21 +257,9 @@
         ctx.stroke();
       }
       if (g.pack) {
-        // a faint band behind every other lane, and a strip that says what the flock is
+        // a faint band behind every other lane
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
         for (var b = 1; b < g.k; b += 2) { ctx.fillRect(0, g.top + b * g.rowH, W, g.rowH); }
-        if (g.m) {
-          ctx.fillStyle = 'rgba(4,16,28,0.5)';
-          ctx.fillRect(0, g.stripTop, W, 16);
-          ctx.fillStyle = 'rgba(255,255,255,0.78)';
-          ctx.font = '700 10.5px "Inter", sans-serif';
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          var cap = S.field
-            ? (W < 420 ? '+ ' + g.m + ' fill the river · can’t win' : '+ ' + g.m + ' catalog ' + (g.m === 1 ? 'charity fills' : 'charities fill') + ' the river · they can’t win')
-            : (g.k ? '+ ' : '') + g.m + ' ' + (g.k ? 'more ' : '') + (g.m === 1 ? 'duck' : 'ducks');
-          ctx.fillText(kit.fit(ctx, cap, W - 16), 8, g.stripTop + 8.5);
-        }
       }
       // start gate
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -291,6 +281,18 @@
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.textAlign = 'right';
       ctx.fillText('FINISH', W - 6, g.top / 2 - 8);
+      if (g.pack && g.m) {
+        // what the flock is, written over the gate and the buoys so they never cut the words
+        ctx.fillStyle = 'rgba(4,16,28,0.6)';
+        ctx.fillRect(0, g.stripTop, W, 16);
+        ctx.fillStyle = 'rgba(255,255,255,0.82)';
+        ctx.font = '700 10.5px "Inter", sans-serif';
+        ctx.textAlign = 'left';
+        var cap = S.field
+          ? (W < 420 ? '+ ' + g.m + ' fill the river · can’t win' : '+ ' + g.m + ' catalog ' + (g.m === 1 ? 'charity fills' : 'charities fill') + ' the river · they can’t win')
+          : (g.k ? '+ ' : '') + g.m + ' ' + (g.k ? 'more ' : '') + (g.m === 1 ? 'duck' : 'ducks');
+        ctx.fillText(kit.fit(ctx, cap, W - 16), 8, g.stripTop + 8.5);
+      }
     },
 
     place: function (e, p, S) {
@@ -313,7 +315,7 @@
       var x = pos.x, y = pos.y;
       var win = e.run.place === 1 && !S.racing;
       var rank = S.lead[e.idx];
-      var backed = !!S.pickId && e.ch.id === S.pickId;
+      var backed = !S.field && !!S.pickId && e.ch.id === S.pickId;   // the solo pick never shows on a live board
       var filler = S.field && !(e.tickets > 0);   // a catalog charity that only fills the board
 
       if (g.pack ? lane : S.labels) { drawLabel(ctx, e, x, y, S, filler, win); }
@@ -339,8 +341,10 @@
 
       if (filler) { ctx.globalAlpha = FADE; }
       if (r <= 6.5) {
-        var sp = sprite(e.ch.accent, r);
-        ctx.drawImage(sp.cv, x - sp.ox, y - sp.oy, sp.w, sp.h);
+        // the picture of this duck is kept on it, and stamped on whole device pixels (the fast way to copy a picture)
+        var sp = e._spr;
+        if (!sp || e._sprR !== r || e._sprC !== e.ch.accent) { sp = e._spr = sprite(e.ch.accent, r); e._sprR = r; e._sprC = e.ch.accent; }
+        ctx.drawImage(sp.cv, Math.round((x - sp.ox) * frameDpr) / frameDpr, Math.round((y - sp.oy) * frameDpr) / frameDpr, sp.w, sp.h);
       } else {
         paintDuck(ctx, x, y, r, e.ch.accent);
       }
@@ -400,17 +404,34 @@
     var done = function (v) { busy = false; return v; };
     return p.then(done, function (err) { busy = false; throw err; });
   }
+  var stage = null;      // the panel this game is mounted in
+  var mount = game.mount;
+  game.mount = function (container) {
+    stage = container;
+    return mount.apply(game, arguments);
+  };
   game.setField = function (entrants) {
-    if (!busy) {
-      live.on = true;
-      live.k = entrants.filter(function (e) { return e.tickets > 0; }).length;
+    if (busy) { return setField.apply(game, arguments); }
+    live.on = true;
+    live.k = entrants.filter(function (e) { return e.tickets > 0; }).length;
+    var res = setField.apply(game, arguments);
+    // the note under the river says what the faded ducks are
+    var note = stage && stage.querySelector('[data-role="note"]');
+    var fill = entrants.length - live.k;
+    if (note && fill > 0) {
+      note.textContent = 'Each duck with money behind it has a chance equal to its share of the pot. The other ' + fill + (fill === 1 ? ' duck fills' : ' ducks fill') + ' the river from our catalog and cannot win.';
     }
-    return setField.apply(game, arguments);
+    return res;
   };
   game.clearField = function () {
     if (!busy) { live.on = false; live.k = 0; }
     return clearField.apply(game, arguments);
   };
-  game.playLive = function (opts) { return racingUntil(Promise.resolve(playLive.call(game, opts))); };
+  // crowd.js races for 80% of the time it is given, and the field then needs about another third to come in behind the
+  // winner, so a live race ran about a third longer than the table's play time (55 s against 41 s at 1,000 ducks). Ask for less.
+  game.playLive = function (opts) {
+    var shorter = { winner: opts.winner, durationMs: opts.durationMs * (game._entrants() > 24 ? 0.78 : 0.88) };
+    return racingUntil(Promise.resolve(playLive.call(game, shorter)));
+  };
   game.play = function (opts) { return racingUntil(Promise.resolve(play.call(game, opts))); };
 })();

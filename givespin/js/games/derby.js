@@ -66,6 +66,9 @@
 
   function count() { return kit.sizeNow(size); }
 
+  /** The charity you backed in a solo game. A live board never shows it: there it would only make a catalog charity look like your bet. */
+  function mine() { return field ? '' : pick; }
+
   function laneHFor(n) {
     if (n <= 8) { return W < 420 ? 44 : 52; }
     if (n <= 16) { return 34; }
@@ -94,8 +97,9 @@
       g.r = g.laneH * 0.36;
       g.stripTop = g.top + k * g.laneH + (k && m ? 4 : 0);
       g.fieldTop = g.stripTop + (m ? 18 : 0);
-      g.fieldH = m ? Math.round(Math.min(150, 36 + 7 * Math.sqrt(m))) : 0;
-      g.fr = m <= 40 ? 3.4 : m <= 200 ? 2.6 : 1.9;
+      // a solo board is nothing but runners, so its field gets a taller track and bigger dots than the crowd that fills a live table
+      g.fieldH = m ? Math.round(field ? Math.min(150, 36 + 7 * Math.sqrt(m)) : Math.min(260, 120 + 10 * Math.sqrt(m))) : 0;
+      g.fr = field ? (m <= 40 ? 3.4 : m <= 200 ? 2.6 : 1.9) : (m <= 60 ? 5 : m <= 150 ? 4.2 : 3.4);
       g.bottom = m ? g.fieldTop + g.fieldH : g.top + k * g.laneH;
       g.nums = false;
       g.fs = Math.min(12, Math.max(9, g.laneH * 0.46));
@@ -105,7 +109,7 @@
       g.r = g.laneH * 0.32;
       g.bottom = g.top + n * g.laneH;
       g.nums = true;
-      g.fs = Math.min(12, Math.max(8, g.laneH * 0.5));
+      g.fs = Math.min(g.laneH >= 44 ? 13.5 : 12, Math.max(8, g.laneH * 0.5));
     }
     g.two = g.laneH >= 30;               // name over odds, instead of side by side
     g.numW = g.nums ? (g.lanes > 9 ? 22 : 16) : 0;
@@ -164,7 +168,7 @@
   function labelFor(ru) {
     var g = geo;
     var share = field ? kit.share(ru.tickets, total) : '';
-    var starred = ru.ch.id === pick;
+    var starred = !!mine() && ru.ch.id === mine();
     var key = ru.ch.id + '|' + share + '|' + (starred ? 1 : 0) + '|' + g.lw + '|' + g.fs + '|' + (g.two ? 1 : 0) + '|' + fontGen;
     if (ru._lab && ru._lab.key === key) { return ru._lab; }
     var room = g.lw - g.nameX - 6;
@@ -181,7 +185,7 @@
     var g = geo;
     var cy = y + g.laneH / 2;
     var lab = labelFor(ru);
-    var gold = ru.run.place === 1 || ru.ch.id === pick;
+    var gold = ru.run.place === 1 || (!!mine() && ru.ch.id === mine());
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     if (g.nums) {
@@ -210,7 +214,16 @@
     ctx.globalAlpha = 1;
   }
 
-  /** "+ 985 catalog charities fill the board · they can't win" above the field of dots. */
+  /** The background of the field below the lanes. */
+  function drawFieldBand() {
+    var g = geo;
+    ctx.fillStyle = '#0d3f21';
+    ctx.fillRect(g.lw, g.fieldTop, W - g.lw, g.fieldH);
+    ctx.fillStyle = '#0a1f14';
+    ctx.fillRect(0, g.fieldTop, g.lw, g.fieldH);
+  }
+
+  /** "+ 985 catalog charities fill the board · they can't win" above the field of dots (drawn over the track lines so they never cut the words). */
   function drawFieldStrip() {
     var g = geo;
     var m = g.n - g.lanes;
@@ -224,10 +237,6 @@
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText(kit.fit(ctx, text, W - 16), 8, g.stripTop + 9.5);
-    ctx.fillStyle = '#0d3f21';
-    ctx.fillRect(g.lw, g.fieldTop, W - g.lw, g.fieldH);
-    ctx.fillStyle = '#0a1f14';
-    ctx.fillRect(0, g.fieldTop, g.lw, g.fieldH);
   }
 
   /** The field: one small dot per runner nobody backed. All the dots of one colour are one path, so a thousand of them are a few dozen fills. */
@@ -300,13 +309,13 @@
       ctx.fillStyle = '#0a1f14';
       ctx.fillRect(0, y, g.lw, g.laneH);
       if (!ru) { continue; }
-      if (pick && ru.ch.id === pick) {
+      if (mine() && ru.ch.id === mine()) {
         ctx.fillStyle = 'rgba(255,197,66,0.2)';
         ctx.fillRect(0, y, W, g.laneH);
       }
       if (g.laneH >= 11) { drawLabel(ru, i, y); }
     }
-    if (g.pack && g.n > g.lanes) { drawFieldStrip(); }
+    if (g.pack && g.n > g.lanes) { drawFieldBand(); }
 
     var span = g.bottom - g.top;
     ctx.strokeStyle = 'rgba(255,255,255,0.1)';
@@ -328,7 +337,7 @@
       ctx.fillRect(g.x1 + sq / 2, g.top + cy0, sq / 2, Math.min(sq, span - cy0));
     }
 
-    if (g.pack && g.n > g.lanes) { drawField(); }
+    if (g.pack && g.n > g.lanes) { drawFieldStrip(); drawField(); }
 
     for (var k = 0; k < g.lanes; k++) {
       var r = runners[k];
@@ -363,14 +372,14 @@
       ctx.arc(0, 0, g.r, 0, TAU);
       ctx.fillStyle = r.ch.accent;
       ctx.fill();
-      var backed = !!pick && r.ch.id === pick;
+      var backed = !!mine() && r.ch.id === mine();
       ctx.lineWidth = win || backed ? 3 : (g.r < 8 ? 1 : 1.5);
       ctx.strokeStyle = win || backed ? '#ffc542' : 'rgba(255,255,255,0.8)';
       ctx.stroke();
       if (g.r >= 9) {
         var mono = GS.mono(r.ch);
         ctx.fillStyle = '#0b1620';
-        ctx.font = '800 ' + (g.r * (mono.length > 2 ? 0.72 : 0.95)) + 'px "Sora", sans-serif';
+        ctx.font = '800 ' + (g.r * (mono.length <= 2 ? 0.95 : mono.length === 3 ? 0.72 : mono.length === 4 ? 0.6 : 0.5)) + 'px "Sora", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(mono, 0, 1);
@@ -560,6 +569,11 @@
       var baseMs = durationMs ? durationMs * 0.8 : (quick ? 3400 : 8000) + (n > 24 ? 2500 : n > 12 ? 1200 : 0);
       var base = U.dur(baseMs) / 1000;
       race = new kit.Race(n, winI, base);
+      if (durationMs) {
+        // a live table has a set show time: the rest of the field comes in soon after the winner, so the result is not held up by the stragglers
+        var squeeze = n > 24 ? 0.3 : 0.5;
+        race.runs.forEach(function (r, k) { if (k !== winI) { r.tf = base + (r.tf - base) * squeeze; } });
+      }
       runners.forEach(function (r, k) { r.run = race.runs[k]; });
       var ready = quick ? 250 : 900;
       banner = 'READY';
@@ -665,6 +679,16 @@
     },
 
     playLive: function (opts) { return runRace(opts.winner, false, opts.durationMs); },
+
+    /** Leaving a live table in the middle of its race (one track serves every Derby table): stop the race, so the next table shows at once. */
+    abort: function () {
+      if (!racing) { return; }
+      racing = false;
+      banner = '';
+      var done = onDone;
+      onDone = null;
+      if (done) { done(null); }
+    },
 
     _shown: function () { return result ? [result.id] : []; },
     _runners: function () { return runners.length; },
