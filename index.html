@@ -217,7 +217,7 @@
         <ul data-ta-aria-label="tfaf247c7" class="chips" aria-label="Highlights">
           <li data-t="t9e0e2003"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> USDA Certified Organic</li>
           <li data-t="t65d9d8ba"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Family farm since 2013</li>
-          <li class="chip-new" data-only="fall"><a data-t="t30661b0e" href="#tomatoes"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> New: u-pick tomatoes &amp; basil</a></li>
+          <li class="chip-new" data-only="fall" data-until="2026-12-31"><a data-t="t30661b0e" href="#tomatoes"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> New: u-pick tomatoes &amp; basil</a></li>
           <li class="chip-rel rel-off" data-rel-chip data-only="fall"><a href="#schedule"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg> <span data-rel-chip-text data-no-i18n>Pizza reservations</span></a></li>
         </ul>
       </div>
@@ -498,28 +498,29 @@
             </div>
           </div>
           <!-- UPDATE WEEKLY: this block changes as new weekends open.
-               Each row needs data-release="YYYY-MM-DD" (the Tuesday it opens). The countdown above follows these rows. -->
+               Each row needs data-release="YYYY-MM-DD" (the Tuesday it opens). The countdown above follows these rows.
+               data-until="YYYY-MM-DD" is the last day a row (or the "Open now" line) is true; it hides itself after that day. -->
           <div class="schedule-grid">
-            <div>
+            <div data-until="2026-11-30">
               <h5 data-t="t78b5a064">No pizza</h5>
               <p data-t="tb848cce7">Open for <strong>all of October and November</strong>.</p>
             </div>
             <div>
               <h5 data-t="tb0dfd7c1">With pizza</h5>
               <p data-t="t509bceb8">New weekends open every <strong>Tuesday at 5:00 PM</strong>, after we check the forecast.</p>
-              <table class="sched-table" data-release-time="17:00">
+              <table class="sched-table" data-release-time="17:00" data-until-empty>
                 <caption data-t="ta2ed1e26" class="sr-only">When pizza reservations open</caption>
                 <thead><tr><th data-t="taa4df16c" scope="col">Opens Tuesday, 5 PM</th><th data-t="tbaf6d454" scope="col">For visits on</th></tr></thead>
                 <tbody>
-                  <tr data-release="2026-10-06"><td data-t="ta04c75ca">Oct 6</td><td data-t="ta7ed8b75">Oct 9&ndash;11</td></tr>
-                  <tr data-release="2026-10-13"><td data-t="td5fa3165">Oct 13</td><td data-t="t592eba14">Oct 16&ndash;18</td></tr>
-                  <tr data-release="2026-10-20"><td data-t="t738909c5">Oct 20</td><td data-t="t25d26d10">Oct 23&ndash;25</td></tr>
-                  <tr data-release="2026-10-27"><td data-t="t76605a99">Oct 27</td><td data-t="t54f0fccf">Oct 30&ndash;Nov 8</td></tr>
+                  <tr data-release="2026-10-06" data-until="2026-10-11"><td data-t="ta04c75ca">Oct 6</td><td data-t="ta7ed8b75">Oct 9&ndash;11</td></tr>
+                  <tr data-release="2026-10-13" data-until="2026-10-18"><td data-t="td5fa3165">Oct 13</td><td data-t="t592eba14">Oct 16&ndash;18</td></tr>
+                  <tr data-release="2026-10-20" data-until="2026-10-25"><td data-t="t738909c5">Oct 20</td><td data-t="t25d26d10">Oct 23&ndash;25</td></tr>
+                  <tr data-release="2026-10-27" data-until="2026-11-08"><td data-t="t76605a99">Oct 27</td><td data-t="t54f0fccf">Oct 30&ndash;Nov 8</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <p data-t="t58da3033" class="notice"><strong>Open now:</strong> pizza reservations for Oct 2 &amp; 3. We haven&rsquo;t opened Sunday, Oct 4. Unless the forecast changes a lot, we&rsquo;ll be closed that day for rain.</p>
+          <p data-t="t58da3033" class="notice" data-until="2026-10-04"><strong>Open now:</strong> pizza reservations for Oct 2 &amp; 3. We haven&rsquo;t opened Sunday, Oct 4. Unless the forecast changes a lot, we&rsquo;ll be closed that day for rain.</p>
           <p class="notice notice-soft"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><span data-t="t6b7a7539">When reservations first open, heavy traffic can cause a temporary &ldquo;error&rdquo; message. That doesn&rsquo;t mean we&rsquo;re full. It slows down after the first rush.</span></p>
         </div>
 
@@ -867,7 +868,7 @@
       <div class="wrap">
         <div class="tomato-hero reveal">
           <div class="tomato-copy">
-            <p data-t="tbaeea389" class="new-ribbon">New this year</p>
+            <p data-t="tbaeea389" class="new-ribbon" data-until="2026-12-31">New this year</p>
             <h2 data-t="td028c96c" id="tomato-h">U-pick organic tomatoes &amp; basil</h2>
             <p data-t="tcc72b104" class="lead">Certified organic cherry tomatoes, slicers and basil, picked fresh by you. Grab basil and tomatoes together in one trip. It&rsquo;s a family-friendly u-pick outing.</p>
             <ul class="tomato-facts">
@@ -1636,11 +1637,11 @@
                 <h5 data-t="t42c02da8">Parents &amp; siblings</h5>
                 <p data-t="t21d64a02">Accompanying parents and siblings ages 3 and older pay the $11 admission fee if they attend the tour. Please explain this to family members before they arrive.</p>
               </div>
-              <div class="side-note">
+              <div class="side-note" data-until-empty>
                 <h5 data-t="t7f10df40">Fall 2026 special days</h5>
                 <ul class="date-list">
-                  <li data-t="tcda0fa57"><strong>Exceptional Children Day</strong> Tuesday, Oct 6, 10 am&ndash;1 pm. Email <a href="mailto:vanessa@wiseacresorganic.com?subject=Exceptional%20Children%20Day">vanessa@wiseacresorganic.com</a> to join us.</li>
-                  <li data-t="tec7183b8"><strong>Home School Day</strong> Tuesday, Nov 3, 9 am&ndash;1 pm. Information and reservation sign-ups opened 9/29.</li>
+                  <li data-t="tcda0fa57" data-until="2026-10-06"><strong>Exceptional Children Day</strong> Tuesday, Oct 6, 10 am&ndash;1 pm. Email <a href="mailto:vanessa@wiseacresorganic.com?subject=Exceptional%20Children%20Day">vanessa@wiseacresorganic.com</a> to join us.</li>
+                  <li data-t="tec7183b8" data-until="2026-11-03"><strong>Home School Day</strong> Tuesday, Nov 3, 9 am&ndash;1 pm. Information and reservation sign-ups opened 9/29.</li>
                 </ul>
               </div>
             </div>

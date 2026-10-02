@@ -337,6 +337,28 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * Dated lines that hide themselves: data-until="2026-10-04" on an element in the HTML hides it from the next day
+   * on (Eastern Time). Visitors without JavaScript still see it. A box or table marked data-until-empty hides
+   * once every list item or table row in it has been hidden that way.
+   * ------------------------------------------------------------------ */
+  const goneEl = (el) => el.style.getPropertyValue('display') === 'none';
+  function expireDated() {
+    const today = todayET();
+    $$('[data-until]').forEach((el) => {
+      const until = el.getAttribute('data-until'), opens = el.getAttribute('data-release');
+      if (!realYmd(until)) { warn('data-until="' + q(until) + '" is not a date. Write it like data-until="2026-10-04" (year-month-day). That part stays visible.'); return; }
+      if (opens && realYmd(opens) && until < opens) { warn('A row of the pizza schedule opens ' + opens + ' but its data-until="' + until + '" is earlier (copied from another row?). Put the last day of that weekend in data-until. The row stays visible.'); return; }
+      if (today <= until) return;
+      el.style.setProperty('display', 'none', 'important');   // "important": the season switch toggles only the hidden attribute
+      warn('Hidden since ' + addDays(until, 1) + ' because its data-until date has passed: "' + q(el.textContent) + '". Delete it from the page, or if you reused it for new dates, change its data-until.');
+    });
+    $$('[data-until-empty]').forEach((box) => {
+      const items = $$('li, tbody tr', box);
+      if (items.length && items.every(goneEl)) box.style.setProperty('display', 'none', 'important');
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
    * 2. This week at the farm
    * ------------------------------------------------------------------ */
   const seasonRange = (id) => (y) => { const s = W.seasons.list.find((x) => x.id === id); return [[s.start(y), s.end(y)]]; };
@@ -864,7 +886,8 @@
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
   const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
   if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). Open the browser console (F12) to see the line number.');
-  [initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance].forEach(safe);
+  [expireDated, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance].forEach(safe);
+  setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
   safe(renderDrive);
   showProblems();

@@ -1165,6 +1165,9 @@
       W.seasons.apply(id);
       build(id);
       applyOnly(id);
+      // Between seasons the scene shows the nearest one, but its line ("It's strawberry season!") would not be true yet
+      // (or any more), so the all-year line is shown instead. A season picked with the switcher still shows its own line.
+      if (!userAction && !W.seasons.live().some((s) => s.id === id)) $$('.hero-sub').forEach((p) => { p.hidden = p.dataset.only !== 'no-js'; });
       markSwitch(id);
       sceneEl.classList.remove('is-swapping');
       if (userAction) doc.dispatchEvent(new CustomEvent('wa:season', { detail: id }));
