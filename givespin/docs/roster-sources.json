@@ -1342,13 +1342,6 @@
   "note": "ABN 48000026219; official register record"
  },
  {
-  "id": "sim-australia",
-  "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
-  ],
-  "note": "ABN 46002679441; official register record"
- },
- {
   "id": "heart-foundation-au",
   "evidence": [
    "https://data.gov.au/data/dataset/acnc-register"
@@ -1361,13 +1354,6 @@
    "https://data.gov.au/data/dataset/acnc-register"
   ],
   "note": "ABN 57004849987; official register record"
- },
- {
-  "id": "febc-australia",
-  "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
-  ],
-  "note": "ABN 68000509517; official register record"
  },
  {
   "id": "fnpw-au",
@@ -1389,20 +1375,6 @@
    "https://data.gov.au/data/dataset/acnc-register"
   ],
   "note": "ABN 22005063589; official register record (registered name: Mind Australia Limited)"
- },
- {
-  "id": "afes",
-  "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
-  ],
-  "note": "ABN 91509626599; official register record"
- },
- {
-  "id": "bible-society-australia",
-  "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
-  ],
-  "note": "ABN 85214424729; official register record"
  },
  {
   "id": "childrens-cancer-institute-au",
@@ -1466,13 +1438,6 @@
    "https://data.gov.au/data/dataset/acnc-register"
   ],
   "note": "ABN 43006697918; official register record (registered name: Melbourne International Comedy Festival Limited)"
- },
- {
-  "id": "local-leaders-international",
-  "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
-  ],
-  "note": "ABN 68092388746; official register record"
  },
  {
   "id": "your-best-life-disability-health",
@@ -1585,13 +1550,6 @@
    "https://data.gov.au/data/dataset/acnc-register"
   ],
   "note": "ABN 58128486788; official register record (registered name: Many Rivers Microfinance Ltd)"
- },
- {
-  "id": "maf-australia",
-  "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
-  ],
-  "note": "ABN 26134583887; official register record"
  },
  {
   "id": "careertrackers-indigenous-internship",
@@ -2068,13 +2026,6 @@
    "https://data.gov.au/data/dataset/acnc-register"
   ],
   "note": "official register record; ABN 45000062288"
- },
- {
-  "id": "crusader-union-of-australia",
-  "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
-  ],
-  "note": "official register record; ABN 90213359332"
  },
  {
   "id": "aruma-services",
@@ -2733,13 +2684,6 @@
    "https://data.gov.au/data/dataset/acnc-register"
   ],
   "note": "official register record, ABN 23000014335"
- },
- {
-  "id": "anglican-youthworks",
-  "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
-  ],
-  "note": "official register record, ABN 96398231605"
  },
  {
   "id": "the-smith-family",

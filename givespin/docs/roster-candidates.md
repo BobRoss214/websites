@@ -1,8 +1,8 @@
 # What was left out of the roster, and what to check
 
-The roster is at 1,050 charities (see the README, "Charity list"). This note is about what was **not** added.
+The roster is at 1,042 charities (see the README, "Charity list"). This note is about what was **not** added.
 
-## How the last 669 were chosen
+## How the last 661 were chosen
 They come from two official registers, not from web searches:
 
 - **England and Wales Charity Commission**: registered charities that report working overseas, income at least about GBP 120,000.
@@ -15,7 +15,7 @@ half were left out. The reasons, in short:
 - universities, schools and colleges, and training or employment companies
 - professional, learned, trade and membership bodies, and peak bodies
 - grant-making trusts, private or corporate foundations and donor-advised-fund intermediaries
-- religious bodies whose purpose is mainly to advance a religion (orders, parishes, dioceses, evangelism-only bodies). A charity that is run by a religious body but whose work is care, such as the Little Sisters of the Poor homes for older people, was kept and flagged `faith`
+- religious bodies whose purpose is mainly to advance a religion (orders, parishes, dioceses, evangelism-only bodies). A charity that is run by a religious body but whose work is care, such as the Little Sisters of the Poor homes for older people, was kept and flagged `faith`. An audit later found eight Australian records whose register purpose is only (or mainly) advancing a religion and whose entry describes no care work, and they were removed: Anglican Youthworks, the Australian Fellowship of Evangelical Students, Bible Society Australia, Far East Broadcasting Co (Australia), Local Leaders International, MAF Australia, SIM Australia and The Crusader Union of Australia. Six more list "advancing religion" among their register purposes but their described work is care, health, refugees, homelessness or reconciliation (HammondCare, Muslim Care, Interserve Development, Together For Humanity, the Wayside Chapel and World Villages for Children), so they were kept and are flagged as faith-based.
 - think tanks and research institutes with no public-giving route
 - commercial arms of charities, aged-care and housing operators, local-only service providers whose mission could not be described from the record
 - a website that belongs to a different brand than the registered name
