@@ -5,7 +5,8 @@
  * shows a sample of the pool (all of it when it fits) that always includes the winner, then spins to stop with
  * the pointer inside the winner's slice. The slices are decoration; the odds belong to the whole pool.
  *
- * Live tables: slice sizes follow the stakes, so a charity with 40% of the pot owns 40% of the wheel.
+ * Live tables: slice sizes follow the stakes, so a charity with 40% of the pot owns 40% of the wheel. The charities
+ * that fill the rest of the board are drawn dark, so the backed ones (bright, with their share of the pot) stand out.
  */
 (function () {
   'use strict';
@@ -18,6 +19,11 @@
   // 12 colours, ordered so neighbouring slices always contrast.
   var PALETTE = ['#7C5CFF', '#FBBF24', '#FF4FA2', '#2DD4BF', '#3B82F6', '#FB923C',
                  '#A855F7', '#4ADE80', '#F43F5E', '#22D3EE', '#6366F1', '#EAB308'];
+  var FONT = '"Sora", "Inter", system-ui, sans-serif';
+  var DARK = '#0b1620';       // a filler slice is its colour mixed with this
+  var RUN_FILL = '#101d29';   // a run of filler slices too thin to tell apart is drawn as one dark wedge
+  var THIN_PX = 1.4;          // a filler slice narrower than this (at the rim) is part of such a run
+  var BULBS = 30;             // lights round the rim
 
   var el = {};
   var api = null;
@@ -30,6 +36,11 @@
   var segs = [];
   var bounds = [0];        // start angle of every slice, plus TAU at the end
   var field = null;        // live table entrants, or null when playing solo
+  var fillerAt = [];       // live table: true for a slice that only fills the wheel (no money behind it: it cannot win)
+  var shareAt = [];        // live table: each slice's share of the pot as text ("36%"), empty for fillers
+  var fills = [];          // the colour of every slice
+  var items = [];          // what is drawn: single slices, and runs of filler slices that are too thin to draw one by one
+  var ribs = [];           // hairlines inside those runs, as [cos, sin] pairs
   var pick = '';          // id of the charity you backed (solo), or empty
   var labels = [];
   var fresh = false;       // true when the on-screen slices have not been spun yet
@@ -53,6 +64,14 @@
     // keep the last slice from matching the first one around the seam
     if (i === n - 1 && n > 1 && c === 0) { c = 5; }
     return PALETTE[c];
+  }
+
+  /** Mixes two #rrggbb colours: t = 0 gives `a`, t = 1 gives `b`. */
+  function mix(a, b, t) {
+    var x = parseInt(a.slice(1), 16);
+    var y = parseInt(b.slice(1), 16);
+    function ch(sh) { return Math.round(((x >> sh) & 255) * (1 - t) + ((y >> sh) & 255) * t); }
+    return 'rgb(' + ch(16) + ',' + ch(8) + ',' + ch(0) + ')';
   }
 
   function sliceCount() { return kit.sizeNow(size); }
@@ -84,183 +103,389 @@
     el.canvas.height = Math.round(csize * dpr);
     el.canvas.style.width = csize + 'px';
     el.canvas.style.height = csize + 'px';
-    layoutLabels();
+    under = over = shade = bulbOn = disc = null;
+    layoutBoard();
     draw(performance.now());
+  }
+
+  /** Resizes the canvas only when the wheel needs another size (resizing clears it, so it is not done for every table update). */
+  function ensureSize() {
+    var w = el.stage ? Math.floor(el.stage.clientWidth) : 0;
+    if (!csize || (w && Math.min(w, maxCanvas()) !== csize)) { resize(); }
   }
 
   function wheelRadius() { return csize / 2 - 2 - csize * 0.05; }
 
-  /** Pre-computes a label (and font size) for every slice so drawing stays cheap. */
-  function layoutLabels() {
+  /** The widest of `lines` in the font that is set on the context. */
+  function widest(lines) {
+    var w = 0;
+    for (var k = 0; k < lines.length; k++) { w = Math.max(w, ctx.measureText(lines[k]).width); }
+    return w;
+  }
+
+  /** A long name split in two near its middle (at a space), or just the name when it has no space to split at. */
+  function twoLines(text) {
+    var mid = text.length / 2;
+    var best = -1;
+    for (var k = 1; k < text.length - 1; k++) {
+      if (text.charAt(k) === ' ' && (best < 0 || Math.abs(k - mid) < Math.abs(best - mid))) { best = k; }
+    }
+    return best < 0 ? [text] : [text.slice(0, best), text.slice(best + 1)];
+  }
+
+  /** The label for a slice on a solo wheel, or for a filler: one line of text as big as the slice's width allows (null when it is too thin). */
+  function plainLabel(i, a, wr, hubR, dim) {
+    var maxW = wr - hubR - csize * 0.085;
+    // slices are fat at the rim and thin near the centre, so cap the text height by the chord too
+    var chord = wr * 0.7 * a;
+    var maxFs = Math.min(csize * 0.05, chord * 0.62);
+    var text = segs[i].short;
+    if (maxFs < (dim ? 8 : 6.5)) { return null; }
+    var fs = Math.max(7, maxFs);
+    ctx.font = '700 ' + fs + 'px ' + FONT;
+    while (ctx.measureText(text).width > maxW && fs > 7) {
+      fs -= 1;
+      ctx.font = '700 ' + fs + 'px ' + FONT;
+    }
+    while (ctx.measureText(text).width > maxW && text.length > 4) {
+      text = text.slice(0, -2).replace(/\s+$/, '') + '…';
+    }
+    var ink = dim ? 'rgba(206,220,231,0.6)' : U.inkOn(fills[i]);
+    return { lines: [text], fs: fs, font: '700 ' + fs + 'px ' + FONT, h: fs * 1.1, ink: ink, shadow: !dim && ink === '#FFFFFF' };
+  }
+
+  /**
+   * The label for a charity somebody backed: the biggest one that fits its slice. A long name is split over two lines when that
+   * lets it be bigger, and its share of the pot goes underneath. Null when the slice is too thin to carry any text.
+   */
+  function liveLabel(i, a, wr, hubR) {
+    var rOut = wr - csize * 0.03;                 // the text ends here, at the rim
+    var xMin = hubR + csize * 0.055;              // and stops short of the hub
+    var widen = Math.tan(Math.min(a, 3) / 2);     // half the slice's width at distance x from the centre is x * widen
+    var name = segs[i].short;
+    var variants = [[name]];
+    var two = twoLines(name);
+    if (two.length === 2) { variants.push(two); }
+    var best = null;
+    for (var fs = Math.floor(csize * 0.05); fs >= 7 && !best; fs--) {
+      ctx.font = '700 ' + fs + 'px ' + FONT;
+      for (var k = 0; k < variants.length && !best; k++) {
+        var w = widest(variants[k]);
+        var h = variants[k].length * fs * 1.1;
+        if (rOut - w >= xMin && (rOut - w) * widen >= h / 2) { best = { lines: variants[k], fs: fs, w: w, h: h }; }
+      }
+    }
+    if (!best) { return plainLabel(i, a, wr, hubR, false); }
+    var ink = U.inkOn(fills[i]);
+    var lb = { lines: best.lines, fs: best.fs, font: '700 ' + best.fs + 'px ' + FONT, h: best.h, ink: ink, shadow: ink === '#FFFFFF' };
+    var pct = shareAt[i];
+    if (pct) {
+      var pfs = Math.max(9, Math.round(best.fs * 0.75));
+      ctx.font = '800 ' + pfs + 'px ' + FONT;
+      var w2 = Math.max(best.w, ctx.measureText(pct).width);
+      var h2 = best.h + pfs * 1.15;
+      if (rOut - w2 >= xMin && (rOut - w2) * widen >= h2 / 2) { lb.pct = pct; lb.pfs = pfs; lb.pfont = '800 ' + pfs + 'px ' + FONT; lb.h = h2; }
+    }
+    return lb;
+  }
+
+  /**
+   * Works out how the current slices are drawn: their colours, which filler slices are too thin to draw one by one (they become a
+   * dark wedge with hairlines in it: clearer to look at and far cheaper to draw than a thousand slivers), and a label for each
+   * slice that has room for one.
+   */
+  function layoutBoard() {
     labels = [];
+    items = [];
+    ribs = [];
+    fills = [];
     if (!csize || !segs.length) { return; }
+    var n = segs.length;
     var wr = wheelRadius();
     var hubR = csize * 0.115;
-    var maxW = wr - hubR - csize * 0.085;
-    var font = '"Sora", "Inter", system-ui, sans-serif';
-    for (var i = 0; i < segs.length; i++) {
+    var muted = {};
+    var i, j;
+    for (i = 0; i < n; i++) {
+      var c = sliceColor(i);
+      if (fillerAt[i]) { muted[c] = muted[c] || mix(c, DARK, 0.7); fills.push(muted[c]); }
+      else { fills.push(c); }
+    }
+    function thin(k) { return !!fillerAt[k] && (bounds[k + 1] - bounds[k]) * wr < THIN_PX; }
+    i = 0;
+    while (i < n) {
+      if (!thin(i)) { items.push({ i0: i, i1: i, run: false }); i += 1; continue; }
+      j = i;
+      while (j + 1 < n && thin(j + 1)) { j += 1; }
+      items.push({ i0: i, i1: j, run: true });
+      var acc = 0;
+      for (var k = i; k < j; k++) {
+        acc += (bounds[k + 1] - bounds[k]) * wr;
+        if (acc >= 4) { acc = 0; ribs.push([Math.cos(bounds[k + 1]), Math.sin(bounds[k + 1])]); }
+      }
+      i = j + 1;
+    }
+    for (i = 0; i < n; i++) {
       var a = bounds[i + 1] - bounds[i];
-      // slices are fat at the rim and thin near the centre, so cap the text height by the chord too
-      var chord = wr * 0.7 * a;
-      var maxFs = Math.min(csize * 0.05, chord * 0.62);
-      var text = segs[i].short;
-      if (maxFs < 6.5) { labels.push(null); continue; }
-      var fs = Math.max(7, maxFs);
-      ctx.font = '700 ' + fs + 'px ' + font;
-      while (ctx.measureText(text).width > maxW && fs > 7) {
-        fs -= 1;
-        ctx.font = '700 ' + fs + 'px ' + font;
-      }
-      while (ctx.measureText(text).width > maxW && text.length > 4) {
-        text = text.slice(0, -2).replace(/\s+$/, '') + '…';
-      }
-      labels.push({ text: text, fs: fs, font: font });
+      if (thin(i)) { labels.push(null); }
+      else if (fillerAt[i]) { labels.push(plainLabel(i, a, wr, hubR, true)); }
+      else if (field) { labels.push(liveLabel(i, a, wr, hubR)); }
+      else { labels.push(plainLabel(i, a, wr, hubR, false)); }
     }
   }
 
   /* --------------------------------------------------------------- drawing */
 
-  function draw(t) {
-    if (!ctx || !csize) { return; }
+  // Painting a gradient, a shadow or a thousand slices from scratch is the slow part of every frame (it is all done by the CPU on
+  // many phones), so what never changes is painted once into pictures and just drawn from then on.
+  var under = null;        // the rim with its dark bulb sockets (drawn first)
+  var over = null;         // the ring round the slices, and the hub (drawn last)
+  var shade = null;        // the round shading that gives the wheel depth
+  var bulbOn = null;       // one lit bulb with its glow
+  var bulbSide = 0;
+  var disc = null;         // the slices and labels as a picture, used while the wheel spins (turning a picture is cheaper than painting 1,000 slices)
+  var discAngle = 0;       // the angle the picture was painted at
+
+  function layer() {
+    var px = Math.round(csize * dpr);
+    var c = document.createElement('canvas');
+    c.width = px;
+    c.height = px;
+    var g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { c: c, g: g };
+  }
+
+  function buildStatic() {
     var s = csize;
     var cx = s / 2;
-    var cy = s / 2;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, s, s);
-
     var outerR = s / 2 - 2;
     var rimW = s * 0.05;
     var wr = outerR - rimW;
-
-    var rim = ctx.createLinearGradient(0, 0, s, s);
+    var bulbR = outerR - rimW / 2;
+    var hubR = s * 0.115;
+    var u = layer();
+    var rim = u.g.createLinearGradient(0, 0, s, s);
     rim.addColorStop(0, '#2b4658');
     rim.addColorStop(0.5, '#0c1822');
     rim.addColorStop(1, '#1f3a4b');
-    ctx.beginPath();
-    ctx.arc(cx, cy, outerR, 0, TAU);
-    ctx.fillStyle = rim;
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255,197,66,0.55)';
-    ctx.stroke();
+    u.g.beginPath();
+    u.g.arc(cx, cx, outerR, 0, TAU);
+    u.g.fillStyle = rim;
+    u.g.fill();
+    u.g.lineWidth = 2;
+    u.g.strokeStyle = 'rgba(255,197,66,0.55)';
+    u.g.stroke();
+    u.g.fillStyle = 'rgba(255,209,102,0.22)';
+    for (var b = 0; b < BULBS; b++) {
+      var ba = (b / BULBS) * TAU;
+      u.g.beginPath();
+      u.g.arc(cx + Math.cos(ba) * bulbR, cx + Math.sin(ba) * bulbR, s * 0.0095, 0, TAU);
+      u.g.fill();
+    }
+    under = u.c;
 
-    var bulbs = 30;
-    var bulbR = outerR - rimW / 2;
+    var o = layer();
+    o.g.beginPath();
+    o.g.arc(cx, cx, wr, 0, TAU);
+    o.g.lineWidth = 4;
+    o.g.strokeStyle = 'rgba(255,255,255,0.35)';
+    o.g.stroke();
+    o.g.beginPath();
+    o.g.arc(cx, cx, hubR * 1.22, 0, TAU);
+    o.g.fillStyle = '#0a1219';
+    o.g.shadowColor = 'rgba(0,0,0,0.5)';
+    o.g.shadowBlur = 18;
+    o.g.fill();
+    o.g.shadowBlur = 0;
+    o.g.lineWidth = 3;
+    o.g.strokeStyle = 'rgba(255,197,66,0.7)';
+    o.g.stroke();
+    over = o.c;
+
+    var d = layer();
+    var depth = d.g.createRadialGradient(cx, cx, wr * 0.1, cx, cx, wr);
+    depth.addColorStop(0, 'rgba(4,10,16,0.45)');
+    depth.addColorStop(0.55, 'rgba(4,10,16,0.05)');
+    depth.addColorStop(1, 'rgba(255,255,255,0.10)');
+    d.g.beginPath();
+    d.g.arc(cx, cx, wr, 0, TAU);
+    d.g.fillStyle = depth;
+    d.g.fill();
+    shade = d.c;
+
+    // a lit bulb: the bulb and its glow, painted once on a small square of its own
+    var blur = s * 0.03;
+    bulbSide = Math.ceil((s * 0.0095 + blur * 1.6) * 2) + 2;
+    var px = Math.ceil(bulbSide * dpr);
+    var bc = document.createElement('canvas');
+    bc.width = px;
+    bc.height = px;
+    var bg = bc.getContext('2d');
+    bg.setTransform(dpr, 0, 0, dpr, 0, 0);
+    bg.beginPath();
+    bg.arc(bulbSide / 2, bulbSide / 2, s * 0.0095, 0, TAU);
+    bg.shadowColor = '#FFD166';
+    bg.shadowBlur = blur;
+    bg.fillStyle = '#FFE39A';
+    bg.fill();
+    bulbOn = bc;
+  }
+
+  /** Paints the slices and their labels, turned to `rot`, on a context whose origin is the middle of the wheel. */
+  function paintDisc(c, rot) {
+    var n = segs.length;
+    var wr = wheelRadius();
+    var q, r, j, m;
+    c.save();
+    c.rotate(rot);
+    c.lineWidth = n > 40 ? 0.8 : 2;
+    c.strokeStyle = 'rgba(8,14,20,0.45)';
+    for (q = 0; q < items.length; q++) {
+      var it = items[q];
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.arc(0, 0, wr, bounds[it.i0], bounds[it.i1 + 1]);
+      c.closePath();
+      c.fillStyle = it.run ? RUN_FILL : fills[it.i0];
+      c.fill();
+      if (n > 1 && !it.run) { c.stroke(); }
+    }
+    if (ribs.length) {
+      c.beginPath();
+      for (r = 0; r < ribs.length; r++) {
+        c.moveTo(ribs[r][0] * wr * 0.5, ribs[r][1] * wr * 0.5);
+        c.lineTo(ribs[r][0] * wr, ribs[r][1] * wr);
+      }
+      c.lineWidth = 0.8;
+      c.strokeStyle = 'rgba(255,255,255,0.08)';
+      c.stroke();
+    }
+    c.restore();
+
+    c.drawImage(shade, -csize / 2, -csize / 2, csize, csize);
+
+    c.save();
+    c.rotate(rot);
+    var lx = wr - csize * 0.03;
+    for (j = 0; j < n; j++) {
+      var lb = labels[j];
+      if (!lb) { continue; }
+      c.save();
+      c.rotate((bounds[j] + bounds[j + 1]) / 2);
+      c.font = lb.font;
+      c.textAlign = 'right';
+      c.textBaseline = 'middle';
+      if (lb.shadow) { c.shadowColor = 'rgba(0,0,0,0.35)'; c.shadowBlur = 3; }
+      c.fillStyle = lb.ink;
+      var ly = -lb.h / 2;
+      for (m = 0; m < lb.lines.length; m++) {
+        c.fillText(lb.lines[m], lx, ly + lb.fs * 0.55);
+        ly += lb.fs * 1.1;
+      }
+      if (lb.pct) {
+        c.font = lb.pfont;
+        c.fillText(lb.pct, lx, ly + lb.pfs * 0.58);
+      }
+      c.restore();
+    }
+    var mine = field ? '' : pick;       // the charity you backed in a solo game (it means nothing on a live table)
+    if (mine) {
+      // the charity you backed: a gold edge on each of its slices
+      c.lineWidth = n > 40 ? 1.5 : 3;
+      c.strokeStyle = '#ffc542';
+      for (var pk = 0; pk < n; pk++) {
+        if (segs[pk].id !== mine) { continue; }
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.arc(0, 0, wr - 1, bounds[pk], bounds[pk + 1]);
+        c.closePath();
+        c.stroke();
+      }
+    }
+    c.restore();
+  }
+
+  /** Paints the slices into the picture a spin turns. */
+  function bakeDisc() {
+    if (!csize || !segs.length) { disc = null; return; }
+    if (!under) { buildStatic(); }
+    var px = Math.round(csize * dpr);
+    if (!disc || disc.width !== px) {
+      disc = document.createElement('canvas');
+      disc.width = px;
+      disc.height = px;
+    }
+    var g = disc.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, csize, csize);
+    g.translate(csize / 2, csize / 2);
+    paintDisc(g, angle);
+    discAngle = angle;
+  }
+
+  function draw(t) {
+    if (!ctx || !csize) { return; }
+    if (!under) { buildStatic(); }
+    var s = csize;
+    var cx = s / 2;
+    var wr = wheelRadius();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, s, s);
+    ctx.drawImage(under, 0, 0, s, s);
+
+    var bulbR = s / 2 - 2 - s * 0.025;
     var chase = Math.floor(t / (spinning ? 55 : 240));
     var still = U.reducedMotion();
-    for (var b = 0; b < bulbs; b++) {
-      var ba = (b / bulbs) * TAU;
+    for (var b = 0; b < BULBS; b++) {
       var on = still ? b % 2 === 0 : (spinning ? (b + chase) % 2 === 0 : (b + chase) % 4 === 0 || (b + chase) % 4 === 1);
-      ctx.beginPath();
-      ctx.arc(cx + Math.cos(ba) * bulbR, cy + Math.sin(ba) * bulbR, s * 0.0095, 0, TAU);
-      if (on) { ctx.shadowColor = '#FFD166'; ctx.shadowBlur = s * 0.03; ctx.fillStyle = '#FFE39A'; }
-      else { ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,209,102,0.22)'; }
-      ctx.fill();
+      if (!on) { continue; }
+      var ba = (b / BULBS) * TAU;
+      ctx.drawImage(bulbOn, cx + Math.cos(ba) * bulbR - bulbSide / 2, cx + Math.sin(ba) * bulbR - bulbSide / 2, bulbSide, bulbSide);
     }
-    ctx.shadowBlur = 0;
 
     var n = segs.length;
     if (n) {
       ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(angle);
-      for (var i = 0; i < n; i++) {
+      ctx.translate(cx, cx);
+      if (anim && disc) {
+        ctx.save();
+        ctx.rotate(angle - discAngle);
+        ctx.drawImage(disc, -cx, -cx, s, s);
+        ctx.restore();
+      } else {
+        paintDisc(ctx, angle);
+      }
+      if (glowIdx >= 0 && glowIdx < n) {
+        ctx.rotate(angle);
+        var pulse = 0.5 + 0.5 * Math.sin((t - glowT) / 170);
+        // everything but the winner goes dark: one fill over the whole wheel with a hole in the shape of the winning slice
+        ctx.beginPath();
+        ctx.arc(0, 0, wr, 0, TAU);
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, wr, bounds[glowIdx], bounds[glowIdx + 1]);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(5,10,16,0.62)';
+        ctx.fill('evenodd');
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.arc(0, 0, wr, bounds[i], bounds[i + 1]);
+        ctx.arc(0, 0, wr, bounds[glowIdx], bounds[glowIdx + 1]);
         ctx.closePath();
-        ctx.fillStyle = sliceColor(i);
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.1 + 0.16 * pulse) + ')';
         ctx.fill();
-        if (n > 1) {
-          ctx.lineWidth = n > 40 ? 0.8 : 2;
-          ctx.strokeStyle = 'rgba(8,14,20,0.45)';
-          ctx.stroke();
-        }
-      }
-
-      var depth = ctx.createRadialGradient(0, 0, wr * 0.1, 0, 0, wr);
-      depth.addColorStop(0, 'rgba(4,10,16,0.45)');
-      depth.addColorStop(0.55, 'rgba(4,10,16,0.05)');
-      depth.addColorStop(1, 'rgba(255,255,255,0.10)');
-      ctx.beginPath();
-      ctx.arc(0, 0, wr, 0, TAU);
-      ctx.fillStyle = depth;
-      ctx.fill();
-
-      for (var j = 0; j < n; j++) {
-        var lb = labels[j];
-        if (!lb) { continue; }
-        ctx.save();
-        ctx.rotate((bounds[j] + bounds[j + 1]) / 2);
-        ctx.font = '700 ' + lb.fs + 'px ' + lb.font;
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        var ink = U.inkOn(sliceColor(j));
-        if (ink === '#FFFFFF') { ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 3; }
-        ctx.fillStyle = ink;
-        ctx.fillText(lb.text, wr - csize * 0.03, 0);
-        ctx.restore();
-      }
-
-      if (pick) {
-        // the charity you backed: a gold edge on each of its slices
-        ctx.lineWidth = n > 40 ? 1.5 : 3;
-        ctx.strokeStyle = '#ffc542';
-        for (var pk = 0; pk < n; pk++) {
-          if (segs[pk].id !== pick) { continue; }
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.arc(0, 0, wr - 1, bounds[pk], bounds[pk + 1]);
-          ctx.closePath();
-          ctx.stroke();
-        }
-      }
-
-      if (glowIdx >= 0 && glowIdx < n) {
-        var pulse = 0.5 + 0.5 * Math.sin((t - glowT) / 170);
-        for (var k = 0; k < n; k++) {
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.arc(0, 0, wr, bounds[k], bounds[k + 1]);
-          ctx.closePath();
-          if (k === glowIdx) {
-            ctx.fillStyle = 'rgba(255,255,255,' + (0.1 + 0.16 * pulse) + ')';
-            ctx.fill();
-            ctx.lineWidth = 5;
-            ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-            ctx.stroke();
-          } else {
-            ctx.fillStyle = 'rgba(5,10,16,0.62)';
-            ctx.fill();
-          }
-        }
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+        ctx.stroke();
       }
       ctx.restore();
     }
 
     if (flash > 0.01) {
       ctx.beginPath();
-      ctx.arc(cx, cy, wr, 0, TAU);
+      ctx.arc(cx, cx, wr, 0, TAU);
       ctx.fillStyle = 'rgba(255,255,255,' + flash * 0.5 + ')';
       ctx.fill();
     }
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, wr, 0, TAU);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-    ctx.stroke();
-    var hubR = s * 0.115;
-    ctx.beginPath();
-    ctx.arc(cx, cy, hubR * 1.22, 0, TAU);
-    ctx.fillStyle = '#0a1219';
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur = 18;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(255,197,66,0.7)';
-    ctx.stroke();
+    ctx.drawImage(over, 0, 0, s, s);
   }
 
   /* ------------------------------------------------------------- animation */
@@ -282,7 +507,7 @@
 
     if (anim) {
       var p = Math.min(1, (t - anim.start) / anim.dur);
-      angle = anim.from + anim.total * (1 - Math.pow(1 - p, 3.6));
+      angle = anim.from + anim.total * (1 - Math.pow(1 - p, anim.ease));
       var idx = segmentUnderPointer();
       if (idx !== anim.lastIdx) {
         anim.lastIdx = idx;
@@ -314,11 +539,14 @@
 
   /* ------------------------------------------------------------------ logic */
 
-  function setSegs(list, weights) {
+  /** `marks` (live tables): { filler: [bool per slice], share: [text per slice] }. */
+  function setSegs(list, weights, marks) {
     segs = list;
+    fillerAt = marks ? marks.filler : [];
+    shareAt = marks ? marks.share : [];
     computeBounds(weights || null);
     glowIdx = -1;
-    layoutLabels();
+    layoutBoard();
     updateNote();
     if (el.result) { el.result.textContent = ''; }
     if (!active && csize) { draw(performance.now()); }
@@ -340,7 +568,7 @@
     if (fresh && !has) {
       // The wheel has not been spun yet: swap one slice quietly rather than flash.
       segs[core.randomInt(segs.length)] = winner;
-      layoutLabels();
+      layoutBoard();
       return false;
     }
     setSegs(kit.boardWith(pool, winner, sliceCount()));
@@ -354,11 +582,18 @@
     if (!el.note) { return; }
     if (field) {
       el.note.textContent = kit.hasFillers(field)
-        ? 'Slices are sized by the money behind each charity: a bigger slice is a better chance. The thin slices are catalog charities that fill the wheel; they cannot win.'
+        ? 'Slices are sized by the money behind each charity: a bigger slice is a better chance. The dark slices are catalog charities that only fill the wheel; they cannot win.'
         : 'Slices are sized by the money behind each charity: a bigger slice is a better chance.';
       return;
     }
     el.note.textContent = kit.boardNote(pool, segs.length, pick, 'on the wheel');
+  }
+
+  /** The centre button says SPIN when you can press it, and LIVE at a live table (the wheel spins by itself there). */
+  function setHub() {
+    if (!el.hub || !el.hub.firstChild) { return; }
+    el.hub.firstChild.textContent = field ? 'LIVE' : 'SPIN';
+    el.hub.setAttribute('aria-label', field ? 'Live table: the wheel spins by itself when betting closes' : 'Spin the wheel');
   }
 
   function spinOnce(winner, quick, durationMs) {
@@ -370,17 +605,22 @@
       var a0 = bounds[winnerIdx], a1 = bounds[winnerIdx + 1];
       var targetMod = U.mod(-Math.PI / 2 - (a0 + (a1 - a0) * inside), TAU);
       var delta = U.mod(targetMod - U.mod(angle, TAU), TAU);
-      var turns = quick ? 3 : 5 + core.randomInt(3);
+      var nominal = durationMs || (quick ? 2600 : 6200 + (n > 40 ? 1500 : 0));
+      var secs = nominal / 1000;
+      // a long show (a big live table) gets more turns, so the wheel stays lively, and a gentler slow-down, so it never looks stuck at the end
+      var turns = quick ? 3 : Math.max(5, Math.min(14, Math.round(secs * 0.5))) + core.randomInt(3);
       var total = turns * TAU + delta;
-      var dur = U.dur(durationMs || (quick ? 2600 : 6200 + (n > 40 ? 1500 : 0)));
+      var dur = U.dur(nominal);
 
       glowIdx = -1;
       if (el.result) { el.result.textContent = ''; }
       spinning = true;
       fresh = false;
+      bakeDisc();
       GS.audio.whoosh();
       anim = {
-        start: performance.now(), dur: dur, from: angle, total: total, lastIdx: segmentUnderPointer(),
+        start: performance.now(), dur: dur, from: angle, total: total, lastIdx: segmentUnderPointer(), ease: U.clamp(3.6 - (secs - 6.5) * 0.026, 3, 3.6),
+        settle: resolve,
         done: function () {
           glowIdx = winnerIdx;
           glowT = performance.now();
@@ -450,18 +690,42 @@
     },
     setPool: function (list) {
       pool = list.slice();
-      if (!pool.length) { if (!field) { segs = []; labels = []; bounds = [0]; updateNote(); if (csize) { draw(performance.now()); } } return; }
+      if (!pool.length) { if (!field) { segs = []; labels = []; items = []; ribs = []; fills = []; bounds = [0]; updateNote(); if (csize) { draw(performance.now()); } } return; }
       if (!field) { rebuild(false); }
     },
+    /** Live table: one entrant per slice. Charities somebody backed carry their tickets; catalog charities that fill the board have none and cannot win. */
     setField: function (entrants) {
       if (spinning) { return; }
       field = entrants;
       var split = kit.split(entrants);
-      setSegs(split.items, kit.liveWeights(entrants));
+      var total = split.tickets.reduce(function (s, x) { return s + x; }, 0);
+      setSegs(split.items, kit.liveWeights(entrants), {
+        filler: entrants.map(function (e) { return !(e.tickets > 0); }),
+        share: entrants.map(function (e) { return kit.share(e.tickets, total); })
+      });
       fresh = true;
-      resize();
+      setHub();
+      ensureSize();
+      if (!active && csize) { draw(performance.now()); }
     },
-    clearField: function () { field = null; if (!spinning && pool.length) { rebuild(false); } },
+    clearField: function () {
+      field = null;
+      fillerAt = [];
+      shareAt = [];
+      setHub();
+      if (!spinning && pool.length) { rebuild(false); }
+    },
+    /** Leaving a live table in the middle of its spin (one wheel serves every Wheel table): stop the spin and settle it at once, with no winner shown, so the next table appears right away. */
+    abort: function () {
+      if (!anim) { return; }
+      var settle = anim.settle;
+      anim = null;
+      spinning = false;
+      glowIdx = -1;
+      pointerKick = 0;
+      if (el.result) { el.result.textContent = ''; }
+      settle(null);
+    },
 
     activate: function () { active = true; resize(); startLoop(); },
     deactivate: function () { active = false; },

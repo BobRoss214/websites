@@ -45,6 +45,7 @@
   var field = null;       // live table: [{ charity, tickets }] (the bins are exactly these charities)
   var binShare = [];      // live table: each bin's share of the pot, as text
   var backedIds = {};     // live table: the charities players have backed (the rest of the bins are filled from the catalog and cannot win)
+  var legendHTML = '';    // what the legend list under the board currently holds
 
   var pick = '';          // id of the charity you backed (solo), or empty
 
@@ -112,21 +113,25 @@
   function lookTop(snap) { if (geo) { cam.tz = restZoom(); lookAt(geo.bw / 2, 0, snap); } }
   function lookBins(snap) { if (geo) { cam.tz = restZoom(); lookAt(winBin >= 0 ? binCenter(winBin) : geo.bw / 2, geo.bh, snap); } }
 
-  function resize() {
+  /** Fits the board to the stage. `keepView` leaves the camera where it is (a live table calls this for every bet). */
+  function resize(keepView) {
     if (!el.canvas) { return; }
     var w = Math.floor(el.stage.clientWidth);
     if (!w) { return; }
     W = Math.min(w, 760);
     layout();
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    el.canvas.width = Math.round(W * dpr);
-    el.canvas.height = Math.round(H * dpr);
+    // setting a canvas's size wipes and reallocates it, so only do it when the size really changed (a live table calls this for every bet)
+    if (el.canvas.width !== Math.round(W * dpr)) { el.canvas.width = Math.round(W * dpr); }
+    if (el.canvas.height !== Math.round(H * dpr)) { el.canvas.height = Math.round(H * dpr); }
     el.canvas.style.width = W + 'px';
     el.canvas.style.height = H + 'px';
     if (el.nav) { el.nav.hidden = !isBig(); }
-    el.canvas.style.touchAction = isBig() ? 'none' : '';
+    // on a touch screen a finger sliding up or down scrolls the page (a board that grabbed every touch would trap it: on a phone the
+    // board fills most of the screen), and a sideways drag looks around; a mouse can drag any way, and the Top and Bins buttons go up and down
+    el.canvas.style.touchAction = isBig() ? 'pan-y' : '';
     el.canvas.style.cursor = isBig() ? 'grab' : '';
-    if (geo && !busy && winBin < 0) { lookTop(true); }
+    if (geo && !busy && winBin < 0 && keepView !== true) { lookTop(true); }
     draw(performance.now());
   }
 
@@ -183,6 +188,7 @@
     }
 
     // bins (only the visible ones)
+    var mine = field ? '' : pick;          // the charity you backed in a solo game (it means nothing on a live table)
     var left = g.cx - g.n * g.dx / 2;
     var b0 = Math.max(0, Math.floor((vx0 - left) / g.dx));
     var b1 = Math.min(g.n - 1, Math.ceil((vx1 - left) / g.dx));
@@ -196,7 +202,7 @@
         var filler = !!field && !backedIds[ch.id];
         var backedLive = !!field && !!backedIds[ch.id];
         var pulse = isWin ? 0.5 + 0.5 * Math.sin((t - winT) / 160) : 0;
-        var backed = !!pick && ch.id === pick;
+        var backed = !!mine && ch.id === mine;
         ctx.save();
         roundRect(bx, g.binTop, bw, g.binH, g.big ? 6 : 12);
         ctx.fillStyle = isWin ? U.rgba(ch.accent, 0.55 + 0.25 * pulse) : U.rgba(ch.accent, dim ? 0.08 : (filler ? 0.1 : (backedLive ? 0.34 : 0.22)));
@@ -244,6 +250,7 @@
     var rA = Math.max(0, Math.floor((vy0 - g.y0) / g.dy));
     var rB = Math.min(rows - 1, Math.ceil((vy1 - g.y0) / g.dy));
     var pr = Math.max(g.pegR, 1.1 * px);
+    var dots = pr * z < 1.7;               // pegs this small on screen are drawn as little squares: far cheaper than thousands of circles
     ctx.fillStyle = z < 0.6 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.78)';
     ctx.beginPath();
     for (var r = rA; r <= rB; r++) {
@@ -252,8 +259,11 @@
       for (var j = jA; j <= jB; j++) {
         if (pegFlash[r + ',' + j] > 0.05) { continue; }
         var p = pegPos(r, j);
-        ctx.moveTo(p.x + pr, p.y);
-        ctx.arc(p.x, p.y, pr, 0, TAU);
+        if (dots) { ctx.rect(p.x - pr, p.y - pr, pr * 2, pr * 2); }
+        else {
+          ctx.moveTo(p.x + pr, p.y);
+          ctx.arc(p.x, p.y, pr, 0, TAU);
+        }
       }
     }
     ctx.fill();
@@ -405,12 +415,14 @@
 
   function renderLegend() {
     if (!el.legend) { return; }
-    if (!isBig()) { el.legend.innerHTML = ''; el.legend.hidden = true; return; }
+    if (!isBig()) { legendHTML = ''; el.legend.innerHTML = ''; el.legend.hidden = true; return; }
     el.legend.hidden = false;
     var shown = bins.length > 250 ? bins.slice(0, 250) : bins;
-    el.legend.innerHTML = shown.map(function (c, i) {
-      return '<li data-i="' + i + '"' + (i === winBin ? ' class="is-win"' : (c.id === pick || (field && backedIds[c.id]) ? ' class="is-pick"' : '')) + '><span class="rlegend__n" style="background:' + c.accent + ';color:' + U.inkOn(c.accent) + '">' + (i + 1) + '</span><span>' + U.esc(c.short) + '</span></li>';
+    var html = shown.map(function (c, i) {
+      return '<li data-i="' + i + '"' + (i === winBin ? ' class="is-win"' : ((!field && c.id === pick) || (field && backedIds[c.id]) ? ' class="is-pick"' : '')) + '><span class="rlegend__n" style="background:' + c.accent + ';color:' + U.inkOn(c.accent) + '">' + (i + 1) + '</span><span>' + U.esc(c.short) + '</span></li>';
     }).join('') + (bins.length > shown.length ? '<li class="rlegend__more">+ ' + (bins.length - shown.length) + ' more bins down the board</li>' : '');
+    // a live table asks for this on every bet: rebuild the list only when it is really different (that also keeps its scroll position)
+    if (legendHTML !== html) { legendHTML = html; el.legend.innerHTML = html; }
   }
 
   function updateNote() {
@@ -459,7 +471,8 @@
     updateNote();
   }
 
-  function dropOnce(winner, quick) {
+  /** `durationMs` (live tables): how long the table's show lasts, so a big board's ball takes about that long however fast the screen draws. */
+  function dropOnce(winner, quick, durationMs) {
     return new Promise(function (resolve) {
       aborted = false;
       function bail() { busy = false; landing = false; ball = null; trail = []; winBin = -1; pegFlash = {}; resolve(winner); }
@@ -470,7 +483,12 @@
       if (mineBins.length) { target = mineBins[core.randomInt(mineBins.length)]; }
       var path = core.plinkoPath(rows, target);
       var hop;
-      if (rows > 8) { hop = U.dur(core.clamp((quick ? 3200 : 7000) / rows, rows > 150 ? (quick ? 14 : 20) : (quick ? 28 : 46), 430)); }
+      if (rows > 8) {
+        var hopMs = (quick ? 3200 : 7000) / rows;
+        // a big live board fills the show: 50 bins and up fall for about as long as the table plays, not 7 seconds and then wait
+        if (durationMs && !quick && rows > 40) { hopMs = Math.min(330, Math.max(hopMs, (durationMs - 700) / (rows * 1.03))); }
+        hop = U.dur(core.clamp(hopMs, rows > 150 ? (quick ? 14 : 20) : (quick ? 28 : 46), 430));
+      }
       else { hop = U.dur(430 * (quick ? 0.6 : 1)); }
       var startX = geo.cx + core.randomRange(-0.25, 0.25) * geo.dx;
 
@@ -507,6 +525,24 @@
 
       (function frame(now) {
         if (aborted) { bail(); return; }
+        // Finish every hop whose time is up. A slow frame can cover several, and the time left over goes into the next hop, so the drop
+        // takes as long as it was meant to however fast the screen draws (a hop shorter than a frame used to cost a whole frame each).
+        var from = seg;
+        while (seg < pts.length - 1 && now - segStart >= segDur) {
+          seg += 1;
+          if (seg >= pts.length - 1) { break; }
+          segStart += segDur;
+          segDur = hop * (0.92 + Math.random() * 0.2);
+        }
+        for (var k = Math.max(from, seg - 6); k < seg; k++) {
+          if (pts[k + 1].peg) { pegFlash[pts[k + 1].peg[0] + ',' + pts[k + 1].peg[1]] = 1; }
+        }
+        if (seg > from && pts[seg].peg) { GS.audio.bounce(seg); }
+        if (seg >= pts.length - 1) {
+          ball.x = pts[seg].x;
+          ball.y = pts[seg].y;
+          return land();
+        }
         var a = pts[seg];
         var b = pts[seg + 1];
         var u = Math.min(1, (now - segStart) / segDur);
@@ -522,17 +558,6 @@
         rowNow = seg;
         // the camera keeps the ball in the upper part of the view, with plenty of board below it
         if (geo.big) { lookAt(ball.x, ball.y + H * 0.17 / cam.tz, false); }
-
-        if (u >= 1) {
-          if (b.peg) {
-            pegFlash[b.peg[0] + ',' + b.peg[1]] = 1;
-            GS.audio.bounce(seg);
-          }
-          seg += 1;
-          if (seg >= pts.length - 1) { return land(); }
-          segStart = now;
-          segDur = hop * (0.92 + Math.random() * 0.2);
-        }
         requestAnimationFrame(frame);
       })(performance.now());
 
@@ -638,25 +663,30 @@
     /** Live table: `entrants` are the backed charities; `info.spots` (a sized table) is the whole board, backed charities plus catalog fill. */
     setField: function (entrants, info) {
       if (busy) { return; }
+      // a new round (the last one's ball or winner is still up) or a different board starts at the top; while bets come in at the same
+      // table the camera stays where the player dragged it (this is called for every bet, and a big board would keep snapping back to the top)
+      var again = !!field && !!geo && winBin < 0 && ball === null;
       field = entrants;
       if (el.drop) { el.drop.hidden = true; }
       var tot = entrants.reduce(function (sum, e) { return sum + e.tickets; }, 0);
       var share = {};
       backedIds = {};
       entrants.forEach(function (e) { share[e.charity.id] = core.fmtShare(e.tickets, tot); backedIds[e.charity.id] = true; });
-      bins = info && info.spots && info.spots.length ? info.spots.slice() : entrants.map(function (e) { return e.charity; });
+      var next = info && info.spots && info.spots.length ? info.spots.slice() : entrants.map(function (e) { return e.charity; });
+      again = again && next.length === bins.length;
+      bins = next;
       binShare = bins.map(function (c) { return share[c.id] || ''; });
       winBin = -1; ball = null; trail = []; pegFlash = {};
       if (el.result) { el.result.textContent = ''; }
-      cam.tx = 0; cam.ty = 0; cam.x = 0; cam.y = 0;
+      if (!again) { cam.tx = 0; cam.ty = 0; cam.x = 0; cam.y = 0; }
       layout();
-      lookTop(true);
+      if (!again) { lookTop(true); }
       renderLegend();
       updateNote();
-      resize();
+      resize(again);
     },
     clearField: function () { field = null; binShare = []; backedIds = {}; if (el.drop) { el.drop.hidden = false; } if (!busy) { rebuild(); } },
-    playLive: function (opts) { return dropOnce(opts.winner, false); },
+    playLive: function (opts) { return dropOnce(opts.winner, false, opts.durationMs); },
     /** Stops a drop in progress (the live room it belonged to has been left). */
     abort: function () { if (busy) { aborted = true; } },
 

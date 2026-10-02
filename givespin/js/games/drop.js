@@ -7,6 +7,7 @@
  * charity in the landing slot before it moves. The other cards are decoration.
  *
  * Live tables: the reel is filled in proportion to the stakes, so a charity with half the pot is half the cards.
+ * Catalog charities that only fill the board roll past too, dimmed and marked "can't win".
  */
 (function () {
   'use strict';
@@ -20,6 +21,7 @@
   var size = 20;
   var pool = [];
   var field = null;      // live table entrants, or null
+  var byId = {};         // live table: charity id -> its entrant
   var pick = '';         // id of the charity you backed (solo), or empty
   var current = [];      // charities currently laid out in the (resting) strip
   var cardStep = 0;      // card width + gap in px
@@ -30,6 +32,10 @@
   var locked = false;
   var spinning = false;
   var result = null;
+  var dealtAt = 0;       // live table: when the resting strip was last dealt, and which charities were backed then
+  var dealtFor = '';
+  var rolling = null;    // the roll in progress (an object that stands for it), or null
+  var settleRoll = null; // ends that roll at once (see abort)
 
   var REST_CARDS = 11;   // resting strip holds this many cards, marker on the middle one
   var MID = (REST_CARDS - 1) / 2;
@@ -37,17 +43,35 @@
   function totalTickets() { return field ? field.reduce(function (s, e) { return s + e.tickets; }, 0) : 0; }
   function oddsOf(ch) {
     if (!field) { return ''; }
-    var e = field.filter(function (x) { return x.charity.id === ch.id; })[0];
+    var e = byId[ch.id];
     return e ? kit.share(e.tickets, totalTickets()) : '';
   }
+  /** A live card for a charity nobody backed: it only fills the board, so it is dimmed and says it cannot win. */
+  function isFiller(ch) {
+    var e = field ? byId[ch.id] : null;
+    return !!field && !(e && e.tickets > 0);
+  }
+
+  function indexField() {
+    byId = {};
+    (field || []).forEach(function (e) { if (!byId[e.charity.id] || e.tickets > byId[e.charity.id].tickets) { byId[e.charity.id] = e; } });
+  }
+
+  function backedKey() {
+    return (field || []).filter(function (e) { return e.tickets > 0; }).map(function (e) { return e.charity.id; }).sort().join(',');
+  }
+
+  var FILLER_CSS = 'font-size:.72rem;font-weight:700;color:var(--dim)';   // the small grey "can't win" line on a catalog card
 
   function cardHTML(ch) {
     var cause = GS.cause(ch.causes[0]);
     var m = GS.mono(ch);
-    return '<div class="dcard' + (ch.id === pick ? ' is-pick' : '') + '" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
+    var filler = isFiller(ch);
+    var mine = field ? '' : pick;       // the charity you backed in a solo game (it means nothing on a live table)
+    return '<div class="dcard' + (ch.id === mine ? ' is-pick' : '') + (filler ? ' is-filler' : '') + '" data-id="' + ch.id + '" style="--c:' + ch.accent + (filler ? ';opacity:.55' : '') + '">' +
       '<span class="dcard__badge' + (GS.ui.hasLogo(ch) ? ' is-logo' : '') + '" data-len="' + m.length + '" data-mono="' + U.esc(m) + '">' + GS.ui.monoInner(ch) + '</span>' +
       '<span class="dcard__name">' + U.esc(ch.short) + '</span>' +
-      (field ? '<span class="dcard__odds">' + oddsOf(ch) + '</span>' : '<span class="dcard__cause">' + GS.icon(cause.icon) + U.esc(cause.name) + '</span>') +
+      (field ? '<span class="dcard__odds"' + (filler ? ' style="' + FILLER_CSS + '"' : '') + '>' + (filler ? 'can’t win' : oddsOf(ch)) + '</span>' : '<span class="dcard__cause">' + GS.icon(cause.icon) + U.esc(cause.name) + '</span>') +
       '</div>';
   }
 
@@ -105,22 +129,53 @@
     result = null;
     if (el.result) { el.result.textContent = ''; }
     renderStatic(randomCards(REST_CARDS, null), 0, -1);
+    dealtAt = Date.now();
+    dealtFor = backedKey();
     updateNote();
+  }
+
+  /** Brings the cards on show up to date with the table (new percentages, a card that has just been backed) without dealing them again. */
+  function refreshCards() {
+    var cards = el.strip.children;
+    for (var c = 0; c < cards.length; c++) {
+      var card = cards[c];
+      var ch = current[c];
+      var odds = card.querySelector('.dcard__odds');
+      if (!ch || !odds) { continue; }
+      var filler = isFiller(ch);
+      card.classList.toggle('is-filler', filler);
+      card.classList.remove('is-pick');
+      card.style.opacity = filler ? '0.55' : '';
+      odds.textContent = filler ? 'can’t win' : oddsOf(ch);
+      odds.setAttribute('style', filler ? FILLER_CSS : '');
+    }
+  }
+
+  /** On a live table the resting reel keeps its cards while bets come in (it would flicker otherwise); it is dealt again when a new charity is backed, at most every couple of seconds. */
+  function refreshOrSeed() {
+    var stale = result !== null || !current.length || current.some(function (ch) { return !byId[ch.id]; });
+    if (stale || (backedKey() !== dealtFor && Date.now() - dealtAt > 2000)) { seed(); }
+    else { refreshCards(); updateNote(); }
   }
 
   function updateNote() {
     if (!el.note) { return; }
-    if (field) { el.note.textContent = 'The reel is filled by stake: a charity with more money behind it fills more of the reel.'; return; }
+    if (field) {
+      el.note.textContent = 'The reel is filled by stake: a charity with more money behind it fills more of the reel.' +
+        (kit.hasFillers(field) ? ' The dim “can’t win” cards are catalog charities that only fill the board: they roll past, but the reel never stops on one.' : '');
+      return;
+    }
     el.note.textContent = kit.boardNote(pool, size, pick, 'on the reel');
   }
 
-  /** The long list of cards a roll passes through, ending on `winner` just before the marker stops. */
-  function buildRoll(winner) {
+  /** The long list of cards a roll passes through, ending on `winner` just before the marker stops. `secs` is how long the roll lasts: a longer show rolls past more cards. */
+  function buildRoll(winner, secs) {
     var head = current.slice();
     var items = head.slice();
     var winnerIdx;
     if (field) {
-      var body = randomCards(52 - head.length, head[head.length - 1]);
+      var total = core.clamp(Math.round(secs * 3), 52, 80);
+      var body = randomCards(total - head.length, head[head.length - 1]);
       items = items.concat(body);
       winnerIdx = items.length + core.randomInt(4);
       while (items.length < winnerIdx) { items.push(randomCards(1, items[items.length - 1])[0]); }
@@ -153,7 +208,8 @@
       if (el.result) { el.result.textContent = ''; }
       GS.audio.whoosh();
 
-      var roll = buildRoll(winner);
+      var secs = (durationMs || 7200) / 1000;
+      var roll = buildRoll(winner, secs);
       var items = roll.items;
       var winnerIdx = roll.winnerIdx;
 
@@ -166,13 +222,19 @@
 
       var lenFactor = core.clamp(items.length / 60, 1, 2.1);
       var dur = U.dur(durationMs || (quick ? 3000 * Math.min(1.5, lenFactor) : 7200 * lenFactor));
+      // a long live show slows down more gently, so the reel is still creeping along near the end instead of looking stopped for seconds
+      var ease = durationMs ? core.clamp(4.2 - (secs - 7) * 0.09, 2.6, 4.2) : 4.2;
       var t0 = performance.now();
       var lastIdx = -1;
+      var me = {};
+      rolling = me;
+      settleRoll = resolve;
       el.view.classList.add('is-rolling');
 
       (function frame(now) {
+        if (rolling !== me) { return; }     // stopped by abort
         var t = Math.min(1, (now - t0) / dur);
-        var e = 1 - Math.pow(1 - t, 4.2);
+        var e = 1 - Math.pow(1 - t, ease);
         var x = startX + dist * e;
         place(x);
         var idx = Math.floor(x / cardStep);
@@ -182,6 +244,8 @@
         }
         if (t < 1) { requestAnimationFrame(frame); return; }
 
+        rolling = null;
+        settleRoll = null;
         el.view.classList.remove('is-rolling');
         markWinner(winnerIdx);
         el.view.classList.add('is-landed');
@@ -257,8 +321,31 @@
       pool = list.slice();
       if (!spinning && !field) { seed(); }
     },
-    setField: function (entrants) { if (!spinning) { field = entrants; seed(); } else { field = entrants; } },
-    clearField: function () { field = null; if (!spinning) { seed(); } },
+    /** Live table: one entrant per card on the board. Charities somebody backed carry their tickets; catalog charities that fill the board have none and cannot win. */
+    setField: function (entrants) {
+      var wasLive = !!field;
+      field = entrants;
+      indexField();
+      if (!spinning) {
+        if (!wasLive) { current = []; }       // the cards on show came from the solo game: deal this table's own
+        refreshOrSeed();
+      }
+    },
+    clearField: function () { field = null; byId = {}; if (!spinning) { seed(); } },
+    /** Leaving a live table in the middle of its roll (one reel serves every Drop table): stop the roll and settle it at once, so the next table appears right away. */
+    abort: function () {
+      if (!rolling) { return; }
+      var settle = settleRoll;
+      rolling = null;
+      settleRoll = null;
+      spinning = false;
+      result = null;
+      current = [];
+      el.view.classList.remove('is-rolling');
+      el.strip.innerHTML = '';
+      if (el.result) { el.result.textContent = ''; }
+      if (settle) { settle(null); }
+    },
 
     activate: function () {
       active = true;
