@@ -22,7 +22,11 @@
   const lang = () => W.lang || 'en';
   const T = (s) => s;   // marks a text for translation; it is translated by t() at the moment it is shown
   // Text you wrote in js/content.js can be one string, or { en: '...', es: '...' } to give each language its own.
-  const own = (v) => (v && typeof v === 'object' ? (v[lang()] || v.en || '') : (v == null ? '' : String(v)));
+  const has = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);   // own keys only: "constructor" etc. are not settings
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => '&#' + c.charCodeAt(0) + ';');   // for translated text that goes into markup
+  // Photos must come from this website (no "https://other-site", "//host", "data:"), so no other site sees who visits.
+  const localSrc = (s) => typeof s === 'string' && s.trim() !== '' && !/^\s*([a-z][a-z0-9+.-]*:|\/\/|\\)/i.test(s);
+  const own = (v) => (v && typeof v === 'object' ? String((has(v, lang()) && v[lang()]) || (has(v, 'en') && v.en) || '') : (v == null ? '' : String(v)));
   const track = (name, props) => { if (W.track) W.track(name, props); };
   const TZ = 'America/New_York';
   const BOOK = 'https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356';
@@ -220,7 +224,7 @@
   }
 
   // ---- calendar files ----
-  const icsEsc = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  const icsEsc = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n').replace(/[\x00-\x08\x0b-\x1f\x7f]/g, '');
   function icsFold(line) {
     const enc = new TextEncoder(), out = []; let cur = '', bytes = 0;
     for (const ch of line) {
@@ -338,8 +342,12 @@
   }
 
   let weekFeed = null;
+  const FEED_KEYS = ['updated', 'expireDays', 'note', 'crops', 'days'];   // what the live feed may change
+  const WAITLIST = 'cathy@wiseacresorganic.com';
+  const EMAIL_OK = /^[^\s@?&#%:/\\<>"]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
   function weekConfig() {
-    const raw = Object.assign({ updated: '', expireDays: 14, note: '', crops: {}, days: [], waitlistEmail: 'cathy@wiseacresorganic.com', feed: '' }, W.week || {}, weekFeed || {});
+    const raw = Object.assign({ updated: '', expireDays: 14, note: '', crops: {}, days: [], waitlistEmail: WAITLIST, feed: '' }, W.week || {});
+    if (weekFeed) FEED_KEYS.forEach((k) => { if (has(weekFeed, k)) raw[k] = weekFeed[k]; });   // the live feed may change what is ripe, never the waitlist address
     const cfg = Object.assign({}, raw);
     const hasContent = raw.note || (raw.days && raw.days.length) || (raw.crops && Object.keys(raw.crops).length);
     cfg.updated = fixYmd(raw.updated, 'week.updated');
@@ -366,7 +374,8 @@
       });
       return out;
     });
-    if (cfg.days.length && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(cfg.waitlistEmail || ''))) warn('week.waitlistEmail "' + cfg.waitlistEmail + '" is not an email address.');
+    cfg.waitlistEmail = String(raw.waitlistEmail || '').trim();
+    if (!EMAIL_OK.test(cfg.waitlistEmail)) { if (cfg.days.length) warn('week.waitlistEmail "' + cfg.waitlistEmail + '" is not an email address, so ' + WAITLIST + ' is used.'); cfg.waitlistEmail = WAITLIST; }
     return cfg;
   }
 
@@ -383,7 +392,7 @@
       const auto = autoStatus(c, now);
       let state = null, label = '';
       if (ov === 'off' || ov === 'done') return;
-      if (ov && OVERRIDE_LABEL[ov]) { state = ov === 'soon' ? 'soon' : ov; label = t(OVERRIDE_LABEL[ov]); }
+      if (ov && has(OVERRIDE_LABEL, ov)) { state = ov === 'soon' ? 'soon' : ov; label = t(OVERRIDE_LABEL[ov]); }
       else if (auto) {
         state = auto.state === 'now' ? 'now' : 'soon';
         label = auto.state === 'now' ? t('In season') : t('Starts {date}', { date: fmtYmd(ymdOf({ y: auto.start.getFullYear(), m: auto.start.getMonth() + 1, d: auto.start.getDate() }), { month: 'short', day: 'numeric' }) });
@@ -413,13 +422,14 @@
     daysBox.hidden = !days.length;
     if (days.length) {
       const tb = $('tbody', daysBox); tb.innerHTML = '';
-      const pill = (v) => v && AVAIL_LABEL[v] ? '<span class="av" data-v="' + v + '">' + t(AVAIL_LABEL[v]) + '</span>' : '<span class="av-none" aria-hidden="true">&ndash;</span>';
+      const ok = (v) => has(AVAIL_LABEL, v);
+      const pill = (v) => ok(v) ? '<span class="av" data-v="' + v + '">' + esc(t(AVAIL_LABEL[v])) + '</span>' : '<span class="av-none" aria-hidden="true">&ndash;</span>';
       days.forEach((d) => {
         const tr = doc.createElement('tr');
         const full = d.farm === 'full' || d.pizza === 'full';
         const label = fmtYmd(d.date, { weekday: 'long', month: 'short', day: 'numeric' });
         tr.setAttribute('role', 'row');
-        tr.innerHTML = '<th scope="row" role="rowheader"></th><td role="cell" data-label="' + t('Farm') + '"' + (d.farm && AVAIL_LABEL[d.farm] ? '' : ' class="av-empty"') + '>' + pill(d.farm) + '</td><td role="cell" data-label="' + t('Pizza') + '"' + (d.pizza && AVAIL_LABEL[d.pizza] ? '' : ' class="av-empty"') + '>' + pill(d.pizza) + '</td><td role="cell" class="av-act"></td>';
+        tr.innerHTML = '<th scope="row" role="rowheader"></th><td role="cell" data-label="' + esc(t('Farm')) + '"' + (ok(d.farm) ? '' : ' class="av-empty"') + '>' + pill(d.farm) + '</td><td role="cell" data-label="' + esc(t('Pizza')) + '"' + (ok(d.pizza) ? '' : ' class="av-empty"') + '>' + pill(d.pizza) + '</td><td role="cell" class="av-act"></td>';
         $('th', tr).textContent = label;
         const act = $('.av-act', tr);
         const a = doc.createElement('a'); a.className = 'btn btn-sm ' + (full ? 'btn-ghost' : 'btn-red'); a.target = '_blank'; a.rel = 'noopener';
@@ -448,8 +458,8 @@
     if (feed) {
       const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000);
       try {
-        const r = await fetch(feed, { signal: ctl.signal, cache: 'no-store', credentials: 'omit' });
-        if (r.ok) { const j = await r.json(); if (j && typeof j === 'object') { weekFeed = j; renderWeek(); } }
+        const r = await fetch(feed, { signal: ctl.signal, cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer' });
+        if (r.ok) { const j = await r.json(); if (j && typeof j === 'object' && !Array.isArray(j)) { weekFeed = j; renderWeek(); } }
       } catch (e) { /* the page works without the live feed */ }
       clearTimeout(to);
     }
@@ -462,15 +472,28 @@
    *    Connect it to Mailchimp by pasting the "form action" into WISE_ACRES.signup.action
    *    (see js/content.js). Until then the old "Join the email list" button stays.
    * ------------------------------------------------------------------ */
-  function jsonp(url, params) {
+  // Only a Mailchimp form address is used: https://<name>.<dc>.list-manage.com/subscribe/post?u=…&id=…
+  // (the JSONP answer runs as a script on this page, so it must never come from anywhere else).
+  function mailchimpUrl(action) {
+    let s = String(action || '').trim().replace(/&amp;/g, '&'), u;   // the embed code may hold "&amp;" or start with "//"
+    if (s.indexOf('//') === 0) s = 'https:' + s;
+    try { u = new URL(s); } catch (e) { return null; }
+    if (u.protocol !== 'https:' || !/(^|\.)list-manage\.com$/i.test(u.hostname) || !/^\/subscribe\/post(-json)?\/?$/.test(u.pathname)) return null;
+    u.pathname = '/subscribe/post-json';
+    u.searchParams.delete('c');   // tutorials paste "&c=?"; the callback name is ours
+    return u;
+  }
+  function jsonp(base, params) {
     return new Promise((resolve) => {
-      const cb = 'waSignup' + Date.now(), s = doc.createElement('script');
+      const cb = 'waSignup' + Date.now(), s = doc.createElement('script'), u = new URL(base.href);
       let to = 0;
-      const done = (r) => { clearTimeout(to); try { delete window[cb]; } catch (e) { window[cb] = undefined; } s.remove(); resolve(r); };
+      const done = (r) => { clearTimeout(to); window[cb] = () => {}; s.remove(); resolve(r); };   // a late answer must not throw
       to = setTimeout(() => done({ result: 'timeout' }), 9000);
       window[cb] = (r) => done(r || { result: 'error' });
       s.onerror = () => done({ result: 'error' });
-      s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(Object.assign({}, params, { c: cb })).toString();
+      Object.keys(params).forEach((k) => u.searchParams.set(k, params[k]));
+      u.searchParams.set('c', cb);
+      s.src = u.href;
       doc.head.appendChild(s);
     });
   }
@@ -479,13 +502,13 @@
     const form = $('[data-signup]');
     if (!form) return;
     const cfg = Object.assign({}, W.signup || {});
-    if (cfg.action) {
-      cfg.action = String(cfg.action).replace(/&amp;/g, '&').trim();   // the Mailchimp embed code shows & as &amp;
-      if (!/^https:\/\/[^/]+\/subscribe\/post\?/.test(cfg.action)) warn('signup.action should look like https://NAME.us21.list-manage.com/subscribe/post?u=...&id=... (copy it from the Mailchimp embed code).');
+    const mc = cfg.action ? mailchimpUrl(cfg.action) : null;
+    if (cfg.action && !mc) warn('signup.action should look like https://NAME.us21.list-manage.com/subscribe/post?u=...&id=... (copy it from the Mailchimp embed code). The old signup button stays until it does.');
+    if (mc) {
       const keys = $$('input[name=interest]', form).map((i) => i.value);
       Object.keys(cfg.interests || {}).forEach((k) => { if (keys.indexOf(k) < 0) warn('signup.interests: "' + k + '" is not a choice on the form. Use: ' + keys.join(', ') + '.'); });
     }
-    const live = !!(cfg.action || cfg.demo);
+    const live = !!(mc || cfg.demo);
     const fallback = $('[data-signup-fallback]');
     form.hidden = !live;
     if (fallback) fallback.hidden = live;
@@ -501,19 +524,16 @@
       const picked = $$('input[name=interest]:checked', form).map((i) => i.value);
       btn.disabled = true; say(t('Joining…'), '');
       track('Signup submit', { interests: picked.length });
-      if (cfg.demo && !cfg.action) {
+      if (!mc) {
         await new Promise((r) => setTimeout(r, 500));
         say(t('Preview only: nothing was sent.'), 'ok'); btn.disabled = false; return;
       }
-      // The address copied from Mailchimp's embed code may hold "&amp;" or start with "//"; fix both so the request is valid.
-      let act = String(cfg.action).trim().replace(/&amp;/g, '&');
-      if (act.indexOf('//') === 0) act = 'https:' + act;
       const params = { EMAIL: val };
       // Mailchimp group checkboxes send their bit value (1, 2, 4, 8...), which is the number in the last [ ] of the field name.
-      picked.forEach((p) => { const field = cfg.interests && cfg.interests[p]; if (field) params[field] = (String(field).match(/\[(\d+)\]$/) || [])[1] || '1'; });
+      picked.forEach((p) => { const field = has(cfg.interests, p) && cfg.interests[p]; if (field) params[field] = (String(field).match(/\[(\d+)\]$/) || [])[1] || '1'; });
       if (cfg.tags) params.tags = cfg.tags;
-      try { const q = new URL(act).searchParams; if (q.get('u') && q.get('id')) params['b_' + q.get('u') + '_' + q.get('id')] = ''; } catch (err) { /* the empty bot-trap field is optional */ }
-      const res = await jsonp(act.replace('/subscribe/post?', '/subscribe/post-json?'), params);
+      const q = mc.searchParams; if (q.get('u') && q.get('id')) params['b_' + q.get('u') + '_' + q.get('id')] = '';   // Mailchimp's empty bot-trap field
+      const res = await jsonp(mc, params);
       btn.disabled = false;
       if (res.result === 'success') { say(t('Thanks! Check your email to confirm your signup.'), 'ok'); form.reset(); }
       else if (res.result === 'error' && /already subscribed/i.test(res.msg || '')) say(t('You are already on the list. Thank you!'), 'ok');
@@ -533,13 +553,13 @@
   }
   function initReviewLinks() {
     if (!W.reviewUrl) return;
-    if (!/^https:\/\//.test(W.reviewUrl)) { warn('reviewUrl "' + W.reviewUrl + '" must start with https:// (copy the whole link from Google Business Profile). The buttons keep opening Google Maps.'); return; }
-    $$('a[data-review]').forEach((a) => { a.href = W.reviewUrl; });
+    if (!/^https:\/\/\S+$/i.test(String(W.reviewUrl).trim())) { warn('reviewUrl "' + W.reviewUrl + '" must start with https:// (copy the whole link from Google Business Profile). The buttons keep opening Google Maps.'); return; }
+    $$('a[data-review]').forEach((a) => { a.href = String(W.reviewUrl).trim(); });
   }
   function initCommunity() {
     const box = $('#community');
-    (W.community || []).forEach((p, i) => { if (!p || !p.src || !p.alt) warn('community photo number ' + (i + 1) + ' needs both src and alt (what the picture shows). It is not shown.'); });
-    const list = (W.community || []).filter((p) => p && p.src && p.alt);
+    (W.community || []).forEach((p, i) => { if (!p || !localSrc(p.src) || !p.alt) warn('community photo number ' + (i + 1) + ' needs both src (a file in assets/photos/ on this website, not another site) and alt (what the picture shows). It is not shown.'); });
+    const list = (W.community || []).filter((p) => p && localSrc(p.src) && p.alt);
     if (!box || !list.length) return;
     const ul = $('.community-strip', box); ul.innerHTML = '';
     list.forEach((p) => {
@@ -561,8 +581,8 @@
   // The "where to park / check in" photo on the first-visit page (WISE_ACRES.entrancePhoto).
   function initEntrance() {
     const fig = $('[data-entrance]'), p = W.entrancePhoto;
-    if (fig && p && (!p.src || !p.alt)) warn('entrancePhoto needs both src and alt. It is not shown.');
-    if (!fig || !p || !p.src || !p.alt) return;
+    if (fig && p && (!localSrc(p.src) || !p.alt)) warn('entrancePhoto needs both src (a file on this website) and alt. It is not shown.');
+    if (!fig || !p || !localSrc(p.src) || !p.alt) return;
     const img = $('img', fig), cap = $('figcaption', fig);
     img.src = p.src; img.alt = t(p.alt); img.setAttribute('data-zoom', ''); if (W.bindZoom) W.bindZoom(img);
     cap.textContent = p.caption ? t(p.caption) : ''; cap.hidden = !p.caption;
@@ -607,7 +627,7 @@
     staff: { g: 4, label: T('Staff only (not for visitors)'), c: '#7d7d7d' },
     other: { g: 4, label: T('Something else'), c: '#555555' },
   };
-  const kindOf = (id) => MK[id] || MK.other;
+  const kindOf = (id) => (has(MK, id) ? MK[id] : MK.other);
   const el = (name, attrs, parent) => {
     const n = doc.createElementNS(SVGNS, name);
     Object.keys(attrs || {}).forEach((k) => n.setAttribute(k, attrs[k]));
@@ -621,7 +641,8 @@
     const wrap = $('.map-wrap', container);
     wrap.innerHTML = '';
     if (!A) { container.hidden = true; return; }
-    const items = data.items.filter((it) => it && it.pts && it.pts.length);
+    // Unknown kinds become "Something else" here, once, so js/map-art.js only ever sees kinds it knows.
+    const items = data.items.filter((it) => it && it.pts && it.pts.length).map((it) => (has(MK, it.kind) ? it : Object.assign({}, it, { kind: 'other' })));
     const vb = A.viewBox(data, items);
     const svg = el('svg', { viewBox: [vb.x, vb.y, vb.w, vb.h].join(' '), class: 'map-svg', role: 'group', 'aria-label': t('Illustrated map of the farm') });
     const defs = el('defs', {}, svg); defs.innerHTML = A.defs();

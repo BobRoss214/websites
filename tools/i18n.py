@@ -256,12 +256,33 @@ def cmd_missing(code):
             print('js |', k, f'   (from {f}: add it under "js" in lang/src/{code}.json)')
 
 
+TAG = re.compile(r'</?([a-z][a-z0-9]*)')
+
+
+def unsafe(data, en):
+    """Translations are inserted as HTML (ui) or as plain text (js): they may not add tags, handlers or quotes."""
+    bad = []
+    for k, v in data.get('ui', {}).items():
+        if k in en and sorted(TAG.findall(v)) != sorted(TAG.findall(en[k])):
+            bad.append(f'ui {k}: its tags differ from the English text')
+        if re.search(r'<[^>]*\son[a-z]+\s*=|javascript:', v, re.I):
+            bad.append(f'ui {k}: event handler or javascript: link')
+    for k, v in data.get('js', {}).items():
+        if re.search(r'[<>"]', v) and not re.search(r'[<>"]', k):
+            bad.append(f'js {k!r}: contains < > or "')
+    return bad
+
+
 def cmd_build():
+    en = json.load(open(os.path.join(LANG_DIR, 'en.json'), encoding='utf-8'))
     for f in sorted(os.listdir(SRC_DIR)):
         if not f.endswith('.json'):
             continue
         code = f[:-5]
         data = json.load(open(os.path.join(SRC_DIR, f), encoding='utf-8'))
+        bad = unsafe(data, en)
+        if bad:
+            sys.exit(f'lang/src/{f}: not built, fix these first:\n  ' + '\n  '.join(bad))
         js = 'window.WISE_ACRES=window.WISE_ACRES||{};(WISE_ACRES.dict=WISE_ACRES.dict||{}).%s=%s;\n' % (code, json.dumps(data, ensure_ascii=False, separators=(',', ':')))
         open(os.path.join(LANG_DIR, code + '.js'), 'w', encoding='utf-8').write(js)
         print(f'lang/{code}.js  ui={len(data.get("ui", {}))} js={len(data.get("js", {}))}')

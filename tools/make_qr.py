@@ -109,6 +109,9 @@ def main():
     os.makedirs(OUT_PRINT, exist_ok=True)
     pages, made, bad = [], 0, 0
     for sign in cfg['signs']:
+        if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,40}', str(sign.get('id', ''))):
+            print(f"skipped  {sign.get('id')!r}: a sign id may only use a-z, 0-9 and - (it becomes a file name)")
+            continue
         url = resolve(sign, site, review)
         if not url:
             raw = sign['url'].replace('{site}', site).replace('{reviewUrl}', review).strip()

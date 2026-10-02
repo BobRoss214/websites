@@ -49,10 +49,12 @@
   /* ------------------------------------------------------------------ *
    * t(): text that JavaScript writes
    * ------------------------------------------------------------------ */
+  const hasOwn = (o, k) => !!o && Object.prototype.hasOwnProperty.call(o, k);
   function t(s, vars) {
     const d = W.dict[W.lang];
-    let out = (W.lang !== 'en' && d && d.js && d.js[s]) || s;
-    if (vars) out = out.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
+    // Own keys only: a map name or note such as "constructor" must not pick up Object.prototype.constructor.
+    let out = (W.lang !== 'en' && d && hasOwn(d.js, s) && typeof d.js[s] === 'string' && d.js[s]) || s;
+    if (vars) out = String(out).replace(/\{(\w+)\}/g, (m, k) => (hasOwn(vars, k) ? vars[k] : m));
     return out;
   }
   W.t = t;

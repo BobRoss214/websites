@@ -106,7 +106,8 @@
       if (!box) {
         box = doc.createElement('dialog');
         box.className = 'lightbox'; box.id = 'lightbox'; box.setAttribute('aria-label', t('Photo viewer'));
-        box.innerHTML = '<form method="dialog"><button class="lightbox-close" type="submit" aria-label="' + t('Close photo') + '"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button></form><img id="lightbox-img" alt=""><p id="lightbox-cap"></p>';
+        box.innerHTML = '<form method="dialog"><button class="lightbox-close" type="submit"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button></form><img id="lightbox-img" alt=""><p id="lightbox-cap"></p>';
+        $('.lightbox-close', box).setAttribute('aria-label', t('Close photo'));   // translated text never goes into markup
         doc.body.appendChild(box);
         box.addEventListener('click', (e) => { if (e.target === box) box.close(); });
       }

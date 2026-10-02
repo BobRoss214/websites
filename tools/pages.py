@@ -93,7 +93,7 @@ def compose(c, slug, meta, body):
     faq = faq_items(body)
     if faq:
         graph.append({'@type': 'FAQPage', 'mainEntity': faq})
-    ld = '\n  <script type="application/ld+json">\n' + json.dumps({'@context': 'https://schema.org', '@graph': graph}, indent=2, ensure_ascii=False) + '\n  </script>'
+    ld = '\n  <script type="application/ld+json">\n' + json.dumps({'@context': 'https://schema.org', '@graph': graph}, indent=2, ensure_ascii=False).replace('<', '\\u003c') + '\n  </script>'
     doc = f'''<!doctype html>
 <html lang="en" class="no-js">
 <head>{head.rstrip()}{extra}{ld}

@@ -98,7 +98,7 @@ def main():
         kind = it.get('kind') if it.get('kind') in KNOWN else 'other'
         if kind != it.get('kind'):
             print(f"note: kind {it.get('kind')!r} is not one the website draws; shown as 'Something else': {label}")
-        rid = str(rid) if rid not in (None, '') else f'item{n}'
+        rid = re.sub(r'[^A-Za-z0-9_-]', '', str(rid) if rid not in (None, '') else '')[:40] or f'item{n}'   # ids end up in page markup: letters, digits, - and _ only
         while rid in seen:   # two points must never share an id (the numbers on the map would mix up)
             rid += '-' + str(n)
         seen.add(rid)
@@ -116,7 +116,8 @@ def main():
              '(To hide the map on purpose, put  window.WISE_ACRES_MAP = null;  in that file.)')
     north = doc.get('topFaces') if doc.get('topFaces') in ('up', 'down', 'left', 'right') else 'up'
     data = {'size': {'width': w, 'height': h}, 'north': north, 'items': items}
-    body = json.dumps(data, ensure_ascii=False, indent=1)
+    # JSON inside a .js file: escape the two line separators older phones reject, and "</" in case it is ever inlined in a page
+    body = json.dumps(data, ensure_ascii=False, indent=1).replace('\u2028', '\\u2028').replace('\u2029', '\\u2029').replace('</', '<\\/')
     js = ('/* Farm map points for the "Farm map" section. Written by tools/farm_map.py from the map saved in the Farm Map Marker.\n'
           ' * Do not edit by hand: change the map in the Farm Map Marker and run the script again. */\n'
           'window.WISE_ACRES_MAP = ' + body + ';\n')
