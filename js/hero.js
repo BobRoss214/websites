@@ -336,7 +336,7 @@
       `<path d="M-3 -5.2q3 2.8 6 0" fill="none" stroke-width="1.6"/></g>`;
   }
   const HAT = {
-    beanie: '<path d="M-9.4 -12a9.4 9.4 0 0 1 18.8 0Z" fill="#e5334b"/><path d="M-9.6 -13h19.2" stroke-width="3" stroke="#fff"/>',
+    beanie: '<path d="M-9.4 -12a9.4 9.4 0 0 1 18.8 0Z" fill="#e5334b"/><path d="M-9.6 -13h19.2" stroke-width="3" stroke="#ffc928"/>',
     straw:  '<path d="M-13.5 -13h27" stroke-width="3"/><path d="M-8 -13a8 8 0 0 1 16 0Z" fill="#e9c46a"/><path d="M-8 -14.5h16" stroke="#e5334b" stroke-width="2.2"/>',
     cap:    '<path d="M-9 -13a9 9 0 0 1 18 0Z" fill="#4b5bb8"/><path d="M-1 -13h13" stroke-width="3"/>',
     hair:   '<path d="M-9.4 -11a9.4 9.4 0 0 1 18.8 0c-4-4.5-14-4.5-18.8 0Z" fill="#8a5a35"/><path d="M-6 -17.4q3-1.8 6 0" fill="none" stroke="#b97a4a" stroke-width="1.4"/>',
@@ -478,7 +478,7 @@
     const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
     const kids = [['#e5334b', 'beanie'], ['#ffc928', 'cap'], ['#43a047', 'straw']];
     const skin = '#f7c9a0';
-    const hatSvg = (h) => h === 'beanie' ? `<path d="M-8.6 -9.2a8.6 8.6 0 0 1 17.2 0Z" fill="#e5334b"/><path d="M-8.8 -10h17.6" stroke="#fff" stroke-width="2.6"/>`
+    const hatSvg = (h) => h === 'beanie' ? `<path d="M-8.6 -9.2a8.6 8.6 0 0 1 17.2 0Z" fill="#e5334b"/><path d="M-8.8 -10h17.6" stroke="#ffc928" stroke-width="2.6"/>`
       : h === 'cap' ? `<path d="M-8.2 -9.4a8.2 8.2 0 0 1 16.4 0Z" fill="#4b5bb8"/><path d="M-1 -9.6h12" stroke-width="2.8"/>`
       : `<path d="M-12 -10h24" stroke-width="2.8"/><path d="M-7.4 -10a7.4 7.4 0 0 1 14.8 0Z" fill="#e9c46a"/><path d="M-7.4 -11.4h14.8" stroke="#e5334b" stroke-width="2"/>`;
     let out = `<ellipse cx="167" cy="97" rx="162" ry="3.8" fill="rgba(58,36,22,.22)"/>`;
