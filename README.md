@@ -298,6 +298,8 @@ writes goes through `WISE_ACRES.t("English text")`.
 
 Plain-English questions to send to the farm, with notes at the bottom on what to change for each answer: [docs/QUESTIONS_FOR_THE_FARM.md](docs/QUESTIONS_FOR_THE_FARM.md) (Spanish copy for the farm: [docs/QUESTIONS_FOR_THE_FARM.es.md](docs/QUESTIONS_FOR_THE_FARM.es.md)).
 
+What the website keeps in visitors' browsers and which other sites it contacts (a dated fact sheet, not a privacy policy): [docs/WHAT_THE_SITE_STORES.md](docs/WHAT_THE_SITE_STORES.md)
+
 Text, prices and links come from the wording you pasted from the current site. Things to know:
 
 | Item | Status |
