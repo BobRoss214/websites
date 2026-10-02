@@ -244,7 +244,10 @@
   "white daisy": "una margarita blanca",
   "{crop} — happening now": "{crop}: ahora mismo",
   "{date} at {time} Eastern Time": "{date} a las {time}, hora del Este",
-  "{first}. {second}": "{first}. {second}"
+  "{first}. {second}": "{first}. {second}",
+  "Plink! One more for the bucket.": "¡Plin! Una más para el balde.",
+  "Blue fingers, happy me!": "¡Dedos azules, qué feliz estoy!",
+  "Pick the dark blue ones!": "¡Elige los de azul oscuro!"
  },
  "ui": {
   "t000eb0a5": "Corta tu propio ramo en el campo de flores",

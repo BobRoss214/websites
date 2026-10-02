@@ -127,6 +127,18 @@
       `<rect class="npc-hit" x="-13" y="-27" width="46" height="58" fill="transparent"/></g></g>`;
   }
 
+  // A blueberry picker: a child (or a grown-up, a bit bigger) reaching into the bushes with a pail that has a few berries on top.
+  function berryPicker(cx, cy, w, shirt, hat, flip) {
+    const sc = w / 30, f = flip ? -1 : 1;
+    const pail = `<g transform="translate(10 5)" stroke="${INK}" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round">` +
+      `<path d="M-7 0L-5.4 13H5.4L7 0Z" fill="#b9c2cc"/><path d="M-6.2 6h12.4" stroke="#8c97a3" fill="none"/>` +
+      `<circle cx="-3" cy="-1" r="2.3" fill="#4d5fc9"/><circle cx="2.2" cy="-1.4" r="2.3" fill="#4d5fc9"/><circle cx="-0.4" cy="-3.2" r="2.3" fill="#3f4fb8"/>` +
+      `<path d="M-7 0C-7 -10 7 -10 7 0" fill="none"/></g>`;
+    return `<g transform="translate(${f1(cx)} ${f1(cy - 20 * sc)}) scale(${f1(sc * f * 100) / 100} ${f1(sc * 100) / 100})"><g class="npc" data-npc="berrykid"><g class="kid-pick" style="animation-delay:${f1((cx % 7) * -0.4)}s">` +
+      person(0, 0, shirt, hat, false) + pail + `</g>` +
+      `<rect class="npc-hit" x="-13" y="-27" width="46" height="58" fill="transparent"/></g></g>`;
+  }
+
   // A farm lane (ruts, pebbles, grass tufts). `k` squashes it for the distance; `y0` is where its top edge sits.
   function roadArt(fill = '#c69a63', rut = '#a9794a', hi = '#dcb57c', seed = 5, k = 1, y0 = VPY + 16) {
     const r = rand(seed), Y = (o) => f1(y0 + (o - 16) * k), sz = Math.max(k, 0.4);
@@ -256,18 +268,34 @@
     return out;
   }
 
+  // Two open walking lanes through the bushes (a column of bushes left out) where people stand and pick, and two people in front of the field.
+  const BERRY_LANES = [{ k: 1, from: 7 }, { k: -2, from: 9 }];
+  // row index -> [column, shirt, hat, faces left?, size] (size 1 = a child, 1.3 = a grown-up)
+  const BERRY_PICKERS = {
+    8: [[1, '#e5334b', 'straw', 1, 1]],
+    9: [[-2, '#43a047', 'pony', 0, 1]],
+    10: [[1, '#4b5bb8', 'cap', 0, 1.3], [1.5, '#ffc928', 'beanie', 1, 0.9]],
+    11: [[-2, '#e5334b', 'beanie', 1, 1.25]]
+  };
+  const BERRY_FRONT = [[640, '#ffc928', 'cap', 0, 1], [1190, '#4b5bb8', 'pony', 1, 1.05]];
+
   function summerField() {
     const rnd = rand(23);
     let out = `<path d="${groundPath()}" fill="#63b34a"/>`;
     out += lanes('summer', '#d9b27a', '#b88e56', '#ecd0a0', 8);
     out += rowPolys(range(-5, 5), { fill: '#c9a06a', stroke: '#6b4a28', inner: '#dcb884', hw: 60, innerHw: 30, t0: 0.08 });
-    FIELD_T.forEach((t) => {
+    FIELD_T.forEach((t, ti) => {
       for (let k = -4; k <= 4; k++) {
         const w = 36 + 150 * t;
-        const n = t >= 0.22 ? 4 + Math.floor(rnd() * 3) : 0;
+        const n = t >= 0.22 ? 4 + Math.floor(rnd() * 3) : 0;   // always draw the random number, so the other bushes look the same with or without the lanes
+        if (BERRY_LANES.some((l) => l.k === k && ti >= l.from)) continue;
         out += bush(rowX(k, t), rowY(t) + 2, w, n);
       }
+      (BERRY_PICKERS[ti] || []).forEach(([k, shirt, hat, flip, size]) => {
+        out += berryPicker(rowX(k, t), rowY(t) + 6, (22 + 130 * t) * 0.64 * size, shirt, HAT[hat], flip);
+      });
     });
+    BERRY_FRONT.forEach(([x, shirt, hat, flip, size]) => { out += berryPicker(x, rowY(0.71) + 24, (22 + 130 * 0.8) * 0.64 * size, shirt, HAT[hat], flip); });
     // bees working the bushes
     [[420, 372, 30, 'a', 0], [566, 340, 24, 'b', -2.5], [760, 360, 28, 'c', -5], [930, 338, 24, 'a', -1.2], [1052, 380, 32, 'b', -6]]
       .forEach(([x, y, w, v, dl]) => { out += miniBee(x, y, w, v, dl); });
@@ -1013,6 +1041,7 @@
    * ------------------------------------------------------------------ */
   const SAY = {
     kid: [T('Yum! So sweet!'), T('Look at this big one!'), T('One for the basket, one for me.'), T('Hi there!'), T('The red ones are the ripest!')],
+    berrykid: [T('Plink! One more for the bucket.'), T('Blue fingers, happy me!'), T('Pick the dark blue ones!'), T('Yum! So sweet!'), T('Look at this big one!'), T('Hi there!')],
     cutter: [T('Snip, snip! Fresh sunflowers!'), T('This one is taller than me!'), T('Flowers for Mom!'), T('Hi there!')],
     rider: [T('Wheee!'), T('Hold on tight!'), T('Are we there yet?'), T('I can see the whole farm from here!'), T('Wave back!')],
     barrel: [T('Choo choo!'), T('Beep beep! I am driving!'), T('Faster, tractor!')],
