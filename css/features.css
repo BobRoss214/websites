@@ -158,10 +158,12 @@
 .map-item:hover .mp-icon{animation:mpHop .5s ease-out}
 .mp-ring{opacity:0;transition:opacity .2s}
 .map-item.is-active .mp-ring{opacity:1}
-.map-item.is-active .mp-icon{animation:mpBounce 1.1s ease-in-out infinite}
-.mp-flame{transform-box:fill-box;transform-origin:50% 100%;animation:mpFlame .7s ease-in-out infinite alternate}
-.mp-ghost{animation:mpFloat 3.2s ease-in-out infinite}
-.mp-bat{animation:mpFloat 2.2s ease-in-out infinite reverse}
+.map-item.is-active .mp-icon{animation:mpBounce 1.1s ease-in-out 3}   /* a few bounces, not forever: a looping animation repaints the whole map every frame */
+.mp-flame{transform-box:fill-box;transform-origin:50% 100%}
+/* The flames, ghosts and bats only move while you point at / pick them (an endless loop repaints the whole map every frame and makes the page slow) */
+.map-item:hover .mp-flame,.map-item.is-active .mp-flame{animation:mpFlame .7s ease-in-out 8 alternate}
+.map-item:hover .mp-ghost,.map-item.is-active .mp-ghost{animation:mpFloat 3.2s ease-in-out 2}
+.map-item:hover .mp-bat,.map-item.is-active .mp-bat{animation:mpFloat 2.2s ease-in-out 3 reverse}
 .mp-label{pointer-events:none;transition:opacity .2s}
 .mp-label.is-quiet{opacity:0}
 .mp-label.is-quiet.is-active,.mp-label.is-active{opacity:1}
@@ -308,3 +310,28 @@
 
 /* the "Tell me when" links land on the heading, clear of the sticky header */
 .follow-signup{scroll-margin-top:90px}
+
+/* ---- Accessibility fixes (from the keyboard and screen-reader review) ---- */
+
+/* Visitor photos: the <figure> has overflow:hidden, so it clips the photo's own focus ring. Draw the ring on the figure instead. */
+.community-strip img:focus-visible{outline:none}
+.community-strip figure:has(img:focus-visible){outline:4px solid var(--focus);outline-offset:1px}
+@supports not selector(:has(*)){.community-strip img:focus-visible{outline:4px solid var(--focus);outline-offset:-4px}}
+
+/* Signup message: keep the empty status box in the page (visually hidden) instead of display:none, so the first message is announced. */
+.su-msg:empty{display:block;position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Windows High Contrast: background colours are dropped, so the selected season / legend item / table column needs a system-colour cue */
+@media (forced-colors:active){
+  .fs-btn[aria-pressed="true"],.map-legend button[aria-pressed="true"],.fs-table thead [data-col].is-sel{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}
+  .fs-table thead [data-col].is-sel button{forced-color-adjust:none;color:HighlightText}
+}
+
+/* The "Now" badge sits inside the season button, so a screen reader hears the current season */
+.fs-btn{position:relative}
+
+/* Phones: the fixed bottom bar must never cover the focused element */
+@media (max-width:760px){html{scroll-padding-bottom:96px}}
+
+/* "Print this list" on the First visit page prints the checklist only */
+@media print{#farm-map,#comfort{display:none!important}}

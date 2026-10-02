@@ -22,6 +22,8 @@
   const lang = () => W.lang || 'en';
   const T = (s) => s;   // marks a text for translation; it is translated by t() at the moment it is shown
   // Text you wrote in js/content.js can be one string, or { en: '...', es: '...' } to give each language its own.
+  // Text the owner typed is English unless it was given per language. Mark it, so a screen reader on a translated page does not read it with the wrong voice.
+  const markEnglish = (el, raw, shown) => { const native = raw && typeof raw === 'object' && raw[lang()]; if (lang() !== 'en' && !native && el.textContent === String(shown)) el.setAttribute('lang', 'en'); else el.removeAttribute('lang'); };
   const has = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);   // own keys only: "constructor" etc. are not settings
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => '&#' + c.charCodeAt(0) + ';');   // for translated text that goes into markup
   // Photos must come from this website (no "https://other-site", "//host", "data:"), so no other site sees who visits.
@@ -162,6 +164,7 @@
   function buildCount(box) {
     const host = $('[data-rel-count]', box);
     host.innerHTML = ['d', 'h', 'm', 's'].map((k) => '<span class="rc" data-k="' + k + '"><b>0</b><i></i></span>').join('');
+    host._minute = undefined;   // a language switch must re-word the spoken time at once
     relBuilt = true; relKey = ''; chipKey = '';
   }
   function setCount(box, ms) {
@@ -239,7 +242,7 @@
   const utcStamp = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const addMinutes = (hhmm, n) => { const [h, m] = hhmm.split(':').map(Number), x = h * 60 + m + n; return pad(Math.floor(x / 60) % 24) + ':' + pad(x % 60); };
 
-  function futureReleases() { const now = Date.now(); return readReleases().filter((r) => r.at > now - 3600e3).slice(0, 12); }
+  function futureReleases() { const now = Date.now(); return readReleases().filter((r) => r.at > now).slice(0, 12); }
   function buildICS(list) {
     const L = [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Wise Acres Organic Farm//Reservations//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
@@ -285,18 +288,21 @@
     if (!$('tr[data-release]')) return;
     if (box) {
       const btn = $('[data-rel-remind]', box), menu = $('.remind-menu', box);
-      const setOpen = (open) => {
+      const actions = btn.parentElement;
+      const setOpen = (open, refocus) => {
         if (open) { const list = futureReleases(); if (!list.length) return; $('[data-rel-google]', menu).href = googleUrl(list); }
         menu.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+        if (!open && refocus) btn.focus();   // never leave focus on a hidden item
       };
       btn.addEventListener('click', (e) => { e.stopPropagation(); setOpen(menu.hidden); });
       doc.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target)) setOpen(false); });
-      box.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); } });
+      box.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) setOpen(false, true); });
+      actions.addEventListener('focusout', (e) => { if (!menu.hidden && e.relatedTarget && !actions.contains(e.relatedTarget)) setOpen(false); });   // Tab past the last item closes it
       $('[data-rel-ics]', menu).addEventListener('click', () => {
         const list = futureReleases(); if (!list.length) return;
-        download('wise-acres-pizza-reservations.ics', buildICS(list)); setOpen(false); track('Reminder added', { type: 'ics' });
+        download('wise-acres-pizza-reservations.ics', buildICS(list)); setOpen(false, true); track('Reminder added', { type: 'ics' });
       });
-      $('[data-rel-google]', menu).addEventListener('click', () => { setOpen(false); track('Reminder added', { type: 'google' }); });
+      $('[data-rel-google]', menu).addEventListener('click', () => { setOpen(false, true); track('Reminder added', { type: 'google' }); });
     }
     renderRelease();
     // Tick every second only while the box or the chip is on screen (and once every 20 seconds otherwise).
@@ -414,7 +420,7 @@
 
     // owner's note
     const noteBox = $('[data-week-note]', sec), note = fresh ? own(cfg.note) : '';
-    noteBox.hidden = !note; if (note) $('p', noteBox).textContent = t(note);
+    noteBox.hidden = !note; if (note) { const np = $('p', noteBox); np.textContent = t(note); markEnglish(np, cfg.note, note); }
 
     // spots left / waitlist
     const days = (fresh ? (cfg.days || []) : []).filter((d) => d && /^\d{4}-\d{2}-\d{2}$/.test(d.date) && d.date >= today && daysBetween(today, d.date) <= 14).sort((a, b) => a.date.localeCompare(b.date));
@@ -426,7 +432,8 @@
       const pill = (v) => ok(v) ? '<span class="av" data-v="' + v + '">' + esc(t(AVAIL_LABEL[v])) + '</span>' : '<span class="av-none" aria-hidden="true">&ndash;</span>';
       days.forEach((d) => {
         const tr = doc.createElement('tr');
-        const full = d.farm === 'full' || d.pizza === 'full';
+        const open = (v) => v === 'open' || v === 'few';
+        const full = (d.farm === 'full' || d.pizza === 'full') && !open(d.farm) && !open(d.pizza);   // waitlist only when nothing that day can still be reserved
         const label = fmtYmd(d.date, { weekday: 'long', month: 'short', day: 'numeric' });
         tr.setAttribute('role', 'row');
         tr.innerHTML = '<th scope="row" role="rowheader"></th><td role="cell" data-label="' + esc(t('Farm')) + '"' + (ok(d.farm) ? '' : ' class="av-empty"') + '>' + pill(d.farm) + '</td><td role="cell" data-label="' + esc(t('Pizza')) + '"' + (ok(d.pizza) ? '' : ' class="av-empty"') + '>' + pill(d.pizza) + '</td><td role="cell" class="av-act"></td>';
@@ -439,7 +446,7 @@
         } else if (d.farm === 'closed' && (!d.pizza || d.pizza === 'closed' || d.pizza === 'none')) { a.remove(); }
         else { a.href = BOOK; a.textContent = t('Reserve'); }
         if (a.textContent) act.appendChild(a);
-        if (d.note) { const n = doc.createElement('div'); n.className = 'av-note'; n.textContent = t(own(d.note)); $('th', tr).appendChild(n); }
+        if (d.note) { const n = doc.createElement('div'); n.className = 'av-note'; n.textContent = t(own(d.note)); markEnglish(n, d.note, own(d.note)); $('th', tr).appendChild(n); }
         tb.appendChild(tr);
       });
     }
@@ -516,17 +523,19 @@
     $$('a[data-signup-link]').forEach((a) => { a.setAttribute('href', '#follow-signup'); a.removeAttribute('target'); a.removeAttribute('rel'); });
     const email = $('input[type=email]', form), msg = $('[data-signup-msg]', form), btn = $('button[type=submit]', form);
     const say = (text, kind) => { msg.textContent = text; msg.dataset.kind = kind || ''; };
+    let busy = false;   // aria-disabled instead of disabled: a disabled button throws keyboard focus back to the top of the page
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (busy) return;
       const val = email.value.trim();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) { email.setAttribute('aria-invalid', 'true'); say(t('Please enter a valid email address.'), 'err'); email.focus(); return; }
       email.removeAttribute('aria-invalid');
       const picked = $$('input[name=interest]:checked', form).map((i) => i.value);
-      btn.disabled = true; say(t('Joining…'), '');
+      busy = true; btn.setAttribute('aria-disabled', 'true'); say(t('Joining…'), '');
       track('Signup submit', { interests: picked.length });
       if (!mc) {
         await new Promise((r) => setTimeout(r, 500));
-        say(t('Preview only: nothing was sent.'), 'ok'); btn.disabled = false; return;
+        say(t('Preview only: nothing was sent.'), 'ok'); busy = false; btn.removeAttribute('aria-disabled'); return;
       }
       const params = { EMAIL: val };
       // Mailchimp group checkboxes send their bit value (1, 2, 4, 8...), which is the number in the last [ ] of the field name.
@@ -534,7 +543,7 @@
       if (cfg.tags) params.tags = cfg.tags;
       const q = mc.searchParams; if (q.get('u') && q.get('id')) params['b_' + q.get('u') + '_' + q.get('id')] = '';   // Mailchimp's empty bot-trap field
       const res = await jsonp(mc, params);
-      btn.disabled = false;
+      busy = false; btn.removeAttribute('aria-disabled');
       if (res.result === 'success') { say(t('Thanks! Check your email to confirm your signup.'), 'ok'); form.reset(); }
       else if (res.result === 'error' && /already subscribed/i.test(res.msg || '')) say(t('You are already on the list. Thank you!'), 'ok');
       else { say(t('That did not go through. Please try the signup page instead.'), 'err'); if (fallback) fallback.hidden = false; }
@@ -564,6 +573,7 @@
     const ul = $('.community-strip', box); ul.innerHTML = '';
     list.forEach((p) => {
       const li = doc.createElement('li'), fig = doc.createElement('figure'), img = doc.createElement('img');
+      if (lang() !== 'en') img.lang = 'en';   // the owner's alt text is English
       img.src = p.src; img.alt = p.alt; img.loading = 'lazy'; img.decoding = 'async'; img.setAttribute('data-zoom', '');
       fig.appendChild(img);
       if (p.by) {
@@ -581,11 +591,12 @@
   // The "where to park / check in" photo on the first-visit page (WISE_ACRES.entrancePhoto).
   function initEntrance() {
     const fig = $('[data-entrance]'), p = W.entrancePhoto;
-    if (fig && p && (!localSrc(p.src) || !p.alt)) warn('entrancePhoto needs both src (a file on this website) and alt. It is not shown.');
-    if (!fig || !p || !localSrc(p.src) || !p.alt) return;
+    if (fig && p && (!localSrc(p.src) || !own(p.alt))) warn('entrancePhoto needs both src (a file on this website) and alt. It is not shown.');
+    if (!fig || !p || !localSrc(p.src) || !own(p.alt)) return;
     const img = $('img', fig), cap = $('figcaption', fig);
-    img.src = p.src; img.alt = t(p.alt); img.setAttribute('data-zoom', ''); if (W.bindZoom) W.bindZoom(img);
-    cap.textContent = p.caption ? t(p.caption) : ''; cap.hidden = !p.caption;
+    const alt = own(p.alt), caption = own(p.caption);   // each can be one text or { en, es, ... }
+    img.src = p.src; img.alt = t(alt); img.setAttribute('data-zoom', ''); if (W.bindZoom && !img._zoomBound) { W.bindZoom(img); img._zoomBound = true; }
+    cap.textContent = caption ? t(caption) : ''; cap.hidden = !caption;
     fig.hidden = false;
   }
 
@@ -780,7 +791,7 @@
         $('.md-kind', detail).textContent = t(k.label) === t(it.label) ? '' : t(k.label);
         const p = $('p', detail); p.textContent = it.note ? t(it.note) : ''; p.hidden = !it.note;
         track('Map select', { kind: it.kind });
-        if (!fromMap && window.matchMedia('(max-width: 820px)').matches) wrap.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (!fromMap && window.matchMedia('(max-width: 820px)').matches) wrap.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
       }
     };
     nodes.forEach((g) => {
@@ -801,7 +812,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  function renderAll() { renderRelease(); renderWeek(); renderDrive(); initFarmMapRerender(); }
+  function renderAll() { renderRelease(); renderWeek(); renderDrive(); initEntrance(); initFarmMapRerender(); }
   let mapReady = false;
   function initFarmMapRerender() { if (mapReady) { $$('[data-farm-map][data-rendered]').forEach((b) => drawMap(b, window.WISE_ACRES_MAP)); } }
 
@@ -812,7 +823,7 @@
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
   safe(renderDrive);
   showProblems();
-  doc.addEventListener('wa:lang', () => { relBuilt = false; relCache = null; relKey = chipKey = ''; renderAll(); });
+  doc.addEventListener('wa:lang', () => { $$('.community-strip img').forEach((i) => (lang() === 'en' ? i.removeAttribute('lang') : i.setAttribute('lang', 'en'))); relBuilt = false; relCache = null; relKey = chipKey = ''; renderAll(); });
   doc.addEventListener('wa:season', () => renderWeek());
 
   W.features = { zonedToUtc, readReleases, releaseState, buildICS, googleUrl, renderWeek, renderRelease, fmtYmd };
