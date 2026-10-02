@@ -20,10 +20,10 @@
     {
       "id": "hashtag",
       "url": "https://www.instagram.com/explore/tags/wiseacresorganic/",
-      "title_en": "Share your day on Instagram",
-      "title_es": "Comparte tu día en Instagram",
+      "title_en": "Share on Instagram",
+      "title_es": "Comparte en Instagram",
       "text_en": "Post a photo and tag @wiseacresorganic. Add #wiseacresorganic. Scan to see photos other families shared.",
-      "text_es": "Publica una foto y etiqueta a @wiseacresorganic. Usa #wiseacresorganic. Escanea para ver las fotos que comparten otras familias."
+      "text_es": "Publica una foto, etiqueta a @wiseacresorganic y usa #wiseacresorganic. Escanea para ver fotos de otras familias."
     },
     {
       "id": "facebook",
@@ -45,9 +45,9 @@
       "id": "pizza",
       "url": "https://wise-pie-wood-fired-at-wise-acres.square.site/?location=CVJNFDQTZCA3B",
       "title_en": "Pre-order Wise Pie pizza",
-      "title_es": "Pide tu pizza Wise Pie con anticipación",
+      "title_es": "Pide tu pizza Wise Pie por adelantado",
       "text_en": "Wood-fired pizza at The GreenHouse. The pre-order link is posted 5 days ahead.",
-      "text_es": "Pizza al horno de leña en The GreenHouse. El enlace para pedir se publica 5 días antes."
+      "text_es": "Pizza a la leña en The GreenHouse. El enlace para pedir se publica 5 días antes."
     },
     {
       "id": "menu",
@@ -64,16 +64,16 @@
       "title_en": "Get farm news by email",
       "title_es": "Recibe noticias de la granja por correo",
       "text_en": "Hear when picking opens and what is new at the farm.",
-      "text_es": "Entérate cuándo empieza la cosecha y qué hay de nuevo en la granja."
+      "text_es": "Entérate de cuándo empieza la cosecha y qué hay de nuevo en la granja."
     },
     {
       "id": "map",
       "url": "{site}first-visit.html#farm-map",
       "utm": true,
-      "title_en": "Farm map and first-visit guide",
+      "title_en": "Farm map and visit guide",
       "title_es": "Mapa de la granja y guía de primera visita",
       "text_en": "Where to park, where to check in and how to find your way around.",
-      "text_es": "Dónde estacionar, dónde registrarte y cómo encontrar lo que buscas."
+      "text_es": "Dónde estacionar, dónde registrarte y cómo moverte por la granja."
     },
     {
       "id": "directions",

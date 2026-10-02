@@ -4,24 +4,24 @@
 
 # Preguntas para la granja
 
-El sitio web debe decir solo lo que la granja ha confirmado, así que preguntamos antes de publicar algo que no pudimos comprobar nosotros mismos. Por favor, escriban Sí, No o unas palabras después de cada línea de "Respuesta:"; si no están seguros, díganlo y no adivinaremos.
+El sitio web debe decir solo lo que la granja ha confirmado, así que preguntamos antes de publicar algo que no pudimos comprobar nosotros mismos. Por favor, escriban Sí, No o unas palabras después de cada "Respuesta:"; si no están seguros, díganlo y no adivinaremos.
 
-## 1. Cosas que podrían confundir al público (por favor, respondan estas primero)
+## 1. Cosas que podrían inducir a error al público (por favor, respondan estas primero)
 
 ### Pregunta 1
 
-**¿Organizan picnics de empresas o días de trabajo en equipo en la granja?**
+**¿Organizan días de equipo y picnics de empresa en la granja?**
 
-Por qué importa: Los precios que ahora aparecen en el sitio ($750 y $1,400) son marcadores de posición que pusimos nosotros, no son sus precios reales.
+Por qué importa: Los precios que ahora aparecen en el sitio para ellos ($750 y $1,400) son provisionales: los pusimos nosotros, no son sus precios reales.
 
 Respuesta:
 
 
 ### Pregunta 2
 
-**¿Pueden enviarnos el enlace público del formulario de inscripción para visitas escolares (en Google Forms, presionen Enviar y luego el ícono del enlace)?**
+**¿Pueden enviarnos el enlace público del formulario de inscripción para visitas escolares (en Google Forms, hagan clic en Enviar y luego en el ícono del enlace)?**
 
-Por qué importa: El enlace que tenemos abre el formulario para editarlo, así que a los maestros les podrían pedir iniciar sesión o solicitar acceso.
+Por qué importa: El enlace que tenemos abre el formulario para editarlo, así que es posible que a los maestros les pidan iniciar sesión o solicitar acceso.
 
 Respuesta:
 
@@ -37,9 +37,9 @@ Respuesta:
 
 ### Pregunta 4
 
-**¿Hay una cena tailandesa los jueves por la tarde en The GreenHouse este otoño?**
+**¿Hay una cena tailandesa los jueves por la noche en The GreenHouse este otoño?**
 
-Por qué importa: Una de sus páginas que leímos parecía decirlo y otras no, y el sitio no dice nada al respecto. No queremos publicarlo, ni omitirlo, por error.
+Por qué importa: Una de sus páginas que leímos parecía decirlo y otras no, y el sitio no dice nada al respecto. No queremos publicarlo ni omitirlo por error.
 
 Respuesta:
 
@@ -66,7 +66,7 @@ Respuesta:
 
 **¿Son correctos los precios de los tomates y la albahaca: $4.50 por libra de tomates y $1 por tallo de albahaca?**
 
-Por qué importa: Están impresos en varios lugares del sitio.
+Por qué importa: Aparecen en varios lugares del sitio.
 
 Respuesta:
 
@@ -138,9 +138,9 @@ Respuesta:
 
 ### Pregunta 15
 
-**¿Se venden bocadillos, bebidas y productos locales en la granja en primavera y verano, como en otoño?**
+**¿Se venden refrigerios, bebidas y productos locales en la granja en primavera y verano, como en otoño?**
 
-Por qué importa: Lo marcamos para primavera y verano como un plan nuestro, no con palabras de ustedes.
+Por qué importa: Lo marcamos para primavera y verano por decisión nuestra, no porque ustedes lo hayan dicho.
 
 Respuesta:
 
@@ -160,7 +160,7 @@ Respuesta:
 
 **¿Son correctos estos horarios: visitas a la granja de jueves a domingo en otoño; The GreenHouse de viernes a domingo, de 10 a. m. a 8 p. m.; Wise Pie en The GreenHouse de viernes a domingo, de 4 a 8 p. m.; pizza en la granja de 10 a. m. a 4 p. m.?**
 
-Por qué importa: Las insignias de "abierto ahora" y muchas líneas de texto los usan.
+Por qué importa: Las etiquetas de "Abierto ahora" y muchas líneas de texto los usan.
 
 Respuesta:
 
@@ -176,7 +176,7 @@ Respuesta:
 
 ### Pregunta 19
 
-**¿Pueden enviarnos sus precios actuales de calabazas, fresas, arándanos, flores, bocadillos y bebidas, helado y árboles de Navidad?**
+**¿Pueden enviarnos sus precios actuales de calabazas, fresas, arándanos, flores, refrigerios y bebidas, helado y árboles de Navidad?**
 
 Por qué importa: Mientras no los tengamos, esas líneas del sitio dicen "Precios próximamente".
 
@@ -196,7 +196,7 @@ Respuesta:
 
 **Cuando un día está lleno, ¿llevan una lista de espera a la que la gente puede unirse escribiendo a cathy@wiseacresorganic.com?**
 
-Por qué importa: El cuadro semanal puede mostrar un botón de "Escríbenos para unirte a la lista de espera" para los días llenos, y no vimos una lista de espera mencionada en sus páginas actuales.
+Por qué importa: El recuadro "Esta semana en la granja" puede mostrar un botón "Escríbenos para unirte a la lista de espera" para los días llenos, y no vimos una lista de espera mencionada en sus páginas actuales.
 
 Respuesta:
 
@@ -250,7 +250,7 @@ Respuesta:
 
 ### Pregunta 27
 
-**¿Pueden enviarnos el enlace para reseñas de Google (en su Perfil de Empresa de Google, elijan "Pedir reseñas")?**
+**¿Pueden enviarnos el enlace para reseñas de Google (en su Perfil de Empresa de Google, elijan "Pedir reseñas"; el nombre exacto puede variar)?**
 
 Por qué importa: Mientras no lo tengamos, los botones de "Deja una reseña en Google" solo abren la granja en Google Maps.
 
@@ -279,7 +279,7 @@ Respuesta:
 
 ### Pregunta 30
 
-**¿Se leerá y responderá cathy@wiseacresorganic.com, ya que el sitio pide a los visitantes que le escriban?**
+**¿Alguien leerá y responderá los mensajes que lleguen a cathy@wiseacresorganic.com, ya que el sitio pide a los visitantes que escriban a esa dirección?**
 
 Por qué importa: A los visitantes se les dice que escriban a Cathy con sus preguntas, por ejemplo sobre cómo moverse por la granja con un cochecito o una silla de ruedas.
 
@@ -290,14 +290,14 @@ Respuesta:
 
 **¿Pueden decirnos cómo son los senderos (superficie y pendiente), cuándo la granja está más tranquila y si hay un lugar para cambiar pañales?**
 
-Por qué importa: La sección de Accesibilidad todavía no lo dice; solo enumera lo que la granja ya ha publicado.
+Por qué importa: La sección "Accesibilidad y comodidad" todavía no lo dice; solo enumera lo que la granja ya ha publicado.
 
 Respuesta:
 
 
 ### Pregunta 32
 
-**¿Les parecen correctos estos tiempos de viaje: Stallings 10, Matthews 15, Mint Hill 20, Monroe 20, Waxhaw 25 y el centro de Charlotte 30 minutos, con poco tráfico?**
+**¿Les parecen correctos estos tiempos en auto: Stallings 10, Matthews 15, Mint Hill 20, Monroe 20, Waxhaw 25 y el Centro de Charlotte (Uptown) 30 minutos, con poco tráfico?**
 
 Por qué importa: Son estimaciones nuestras, no de ustedes.
 
@@ -308,7 +308,7 @@ Respuesta:
 
 **¿Pueden enviarnos algunas reseñas reales de clientes, con permiso de quienes las escribieron, para mostrarlas en el sitio?**
 
-Por qué importa: La sección de Reseñas permanece oculta hasta que tenga citas reales.
+Por qué importa: La sección "Lo que dicen las familias" permanece oculta hasta que tenga citas reales.
 
 Respuesta:
 
@@ -317,6 +317,6 @@ Respuesta:
 
 **¿Pueden enviarnos una foto de la entrada de la granja y de dónde estacionar?**
 
-Por qué importa: La mostraríamos en la página de Primera visita para que la gente sepa dónde entrar; mientras tanto, esa imagen no se muestra.
+Por qué importa: La mostraríamos en la Guía de primera visita para que la gente sepa por dónde entrar; mientras tanto, esa imagen no se muestra.
 
 Respuesta:
