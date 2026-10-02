@@ -56,6 +56,7 @@
     var vt = 0;            // race clock, in seconds: it runs slow-motion through a photo finish
     var lastReal = 0;
     var photo = false;
+    var held = 0;          // since when the gate has been held shut, waiting for a game that drives its own runners to be ready
 
     var pick = '';
 
@@ -71,7 +72,7 @@
       return {
         W: W, H: H, t: t, geo: geo, racing: racing, field: !!field, total: tot, n: ents.length, winnerId: winnerId,
         lead: lead,
-        pickId: pick,
+        pickId: field ? '' : pick,
         labels: spec.labels !== 'legend' && (field ? ents.length <= 24 : ents.length <= 12),
         share: function (e) { return field ? kit.share(e.tickets, tot) : ''; }
       };
@@ -140,19 +141,32 @@
     }
 
     function leadersText() {
-      var ordered = ents.slice().sort(function (a, b) { return b.run.p - a.run.p; }).slice(0, 3);
+      // on a live table the catalog charities that fill the board cannot win, so the line never names them
+      var ordered = ents.filter(function (e) { return !field || e.tickets > 0; }).sort(function (a, b) { return b.run.p - a.run.p; }).slice(0, 3);
       return ordered.map(function (e, i) { return kit.ordinal(i + 1) + ' ' + e.ch.short; }).join('  ·  ');
     }
 
     function step(t) {
-      if (t < raceStart || !race) { return; }
+      if (!race) { return; }
+      if (race.work) { race.work(t); }       // a motion may be working things out ahead of the race (and shaking the pack) before the gate opens
+      if (t < raceStart) { return; }
+      if (race.ready && !race.ready(t)) {
+        // not ready yet: the gate stays shut a little longer (and READY stays up if it takes a while)
+        raceStart = t; lastReal = 0;
+        if (!held) { held = t; } else if (t - held > U.dur(400)) { banner = 'READY'; bannerUntil = t + U.dur(500); }
+        return;
+      }
+      if (held && banner === 'READY') { banner = 'GO!'; bannerUntil = t + U.dur(600); }
+      held = 0;
       if (!lastReal) { lastReal = raceStart; }
       var dt = Math.min(0.1, (t - lastReal) / 1000);
       lastReal = t;
       // photo finish: when the leaders are close together near the line, the race slows down
       var ps = ents.map(function (e) { return e.run.p; }).sort(function (a, b) { return b - a; });
       var slow = ps[0] >= 0.9 && ps[0] < 1 && ps.length > 1 && ps[0] - ps[1] < 0.04 ? 0.4 : ps[0] >= 0.95 && ps[0] < 1 ? 0.65 : 1;
-      if (slow < 1 && !photo && ps[0] - (ps[1] || 0) < 0.04) { photo = true; banner = 'PHOTO FINISH'; bannerUntil = t + U.dur(1400); GS.audio.drum(); }
+      var nearLine = slow < 1;                             // the banner goes by how close the leaders are to the line, however the slow-motion is shaped
+      if (race.pace) { slow = race.pace(vt, slow); }       // a motion can shape the slow-motion itself
+      if (nearLine && !photo && ps[0] - (ps[1] || 0) < 0.04) { photo = true; banner = 'PHOTO FINISH'; bannerUntil = t + U.dur(1400); GS.audio.drum(); }
       vt += dt * slow;
       var allDone = race.step(vt, function () { GS.audio.tick(0.9); });
       if (t - lastThump > 260 && !allDone) { lastThump = t; GS.audio.thump(); }
@@ -200,7 +214,9 @@
       el.legend.hidden = !show;
       if (!show) { el.legend.innerHTML = ''; return; }
       var tot = total();
-      var list = field ? ents.slice().sort(function (a, b) { return b.tickets - a.tickets; }) : ents;
+      // on a live table the catalog charities that only fill the board are not listed one by one: they get a single line
+      var fillers = field ? ents.filter(function (e) { return !(e.tickets > 0); }).length : 0;
+      var list = field ? ents.filter(function (e) { return !fillers || e.tickets > 0; }).sort(function (a, b) { return b.tickets - a.tickets; }) : ents;
       // a big field has several runners of the same charity: one chip per charity, with how many
       var seen = {};
       var uniq = [];
@@ -211,9 +227,10 @@
       el.legend.innerHTML = shown.map(function (o) {
         var e = o.e;
         var win = winnerId === e.ch.id;
-        return '<li' + (win ? ' class="is-win"' : (e.ch.id === pick ? ' class="is-pick"' : '')) + '>' + GS.ui.mono(e.ch, 20) + '' +
+        return '<li' + (win ? ' class="is-win"' : (!field && e.ch.id === pick ? ' class="is-pick"' : '')) + '>' + GS.ui.mono(e.ch, 20) + '' +
           '<span>' + U.esc(e.ch.short) + (o.n > 1 ? ' × ' + o.n : '') + (field && e.tickets > 0 ? ' <b>' + core.fmtShare(e.tickets, tot) + '</b>' : '') + '</span></li>';
-      }).join('') + (uniq.length > shown.length ? '<li class="rlegend__more">+ ' + (uniq.length - shown.length) + ' more</li>' : '');
+      }).join('') + (uniq.length > shown.length ? '<li class="rlegend__more">+ ' + (uniq.length - shown.length) + ' more</li>' : '') +
+        (fillers ? '<li class="rlegend__more">+ ' + fillers + ' catalog charities fill the board · they can’t win</li>' : '');
     }
 
     function updateNote() {
@@ -256,17 +273,24 @@
         var winIdx = 0;
         ents.forEach(function (e, k) { if (e.ch.id === winner.id) { winIdx = k; } });
         var baseMs = durationMs ? durationMs * 0.8 : (quick ? 3400 : spec.seconds * 1000) + (n > 48 ? 2500 : n > 24 ? 1500 : 0);
-        race = new kit.Race(n, winIdx, U.dur(baseMs) / 1000);
-        ents.forEach(function (e, k) { e.run = race.runs[k]; });
         var ready = quick ? 250 : 900;
+        var began = performance.now();
+        raceStart = began + U.dur(ready) + U.dur(300);
+        // a game can drive its runners itself (spec.motion, see marble.js); if it has none, or declines, the plain progress race runs
+        race = spec.motion ? spec.motion({
+          ents: ents, geo: geo, winIdx: winIdx, winner: winner, seconds: U.dur(baseMs) / 1000, liveSeconds: durationMs ? U.dur(durationMs) / 1000 : 0,
+          quick: !!quick, startAt: began, releaseAt: raceStart
+        }) : null;
+        if (!race) { race = new kit.Race(n, winIdx, U.dur(baseMs) / 1000); }
+        ents.forEach(function (e, k) { e.run = race.runs[k]; });
         banner = 'READY';
-        bannerUntil = performance.now() + U.dur(ready) + U.dur(500);
+        bannerUntil = began + U.dur(ready) + U.dur(500);
         GS.audio.whoosh();
         setTimeout(function () { banner = 'GO!'; }, U.dur(ready));
-        raceStart = performance.now() + U.dur(ready) + U.dur(300);
         vt = 0;
         lastReal = 0;
         photo = false;
+        held = 0;
         onDone = resolve;
         racing = true;
         lastThump = 0;
@@ -355,6 +379,7 @@
             if (opts.onRound) { opts.onRound(i, count2); }
             showWinner(winners[i]);
             runRace(winners[i], quick).then(function (winner) {
+              if (!winner) { i = count2; return; }          // the race was aborted
               if (opts.onReveal) { opts.onReveal(i, winner); }
               i += 1;
               return U.sleep(count2 > 1 ? 900 : 500);
@@ -364,6 +389,17 @@
       },
 
       playLive: function (opts) { return runRace(opts.winner, false, opts.durationMs); },
+
+      /** Leaving a live table (or hopping to another one) in the middle of its race: settle the race at once, so the next board shows straight away. */
+      abort: function () {
+        if (!racing) { return; }
+        racing = false;
+        banner = '';
+        if (race && race.abort) { race.abort(); }
+        var done = onDone;
+        onDone = null;
+        if (done) { done(null); }
+      },
 
       _shown: function () { return result ? [result.id] : []; },
       _entrants: function () { return ents.length; }
