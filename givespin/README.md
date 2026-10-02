@@ -173,18 +173,18 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   that address, filled in founding years and headquarters where the site stated them, and caught three renames (Little Kids Rock
   is now Music Will, The Actors Fund is now the Entertainment Community Fund, VH1 Save The Music is now the Save The Music
   Foundation). The remaining 669 come from two official government registers: the Charity Commission for England and Wales
-  (registered charities that work internationally; 364 list the UK first) and the Australian Charities and Not-for-profits
+  (registered charities that work internationally; 359 list the UK first) and the Australian Charities and Not-for-profits
   Commission (310 list Australia first). A register record confirms the charity exists, its official name, its website and its
   location, so those entries were not web-searched; the register number or ABN is in `docs/roster-sources.json`. Their
   descriptions are short, neutral paraphrases of the register text (for Australia, of the register's purpose flags), so they
   are plainer than the first 381, and `founded` is empty for most because the register gives a registration date rather than a
   founding date. About half of the register records that were considered were left out (universities and schools,
-  professional and membership bodies, grant-making trusts, religious orders, think tanks, commercial arms, and records whose
+  professional and membership bodies, grant-making trusts, religious bodies, think tanks, commercial arms, and records whose
   website belongs to a different brand). Facts can go out of date: registers and websites change, so re-check every entry (and
   its link) before using real money, and confirm each one is a charity you are comfortable with and that your checkout provider
   supports. `docs/roster-candidates.md` lists what was left out and what to check.
 - **Names and logos.** Charity names are used only to identify the organisations. Where a charity has a simple logo it is
-  shown instead of the coloured monogram circle (55 of them so far; `docs/logo-sources.md` lists each file and where it came
+  shown instead of the coloured monogram circle (53 of them so far; `docs/logo-sources.md` lists each file and where it came
   from: either the picture the organisation chose for its own GitHub account, checked by eye, or the open `simple-icons`
   set). Everyone else keeps the monogram. `js/logos.js` lists which charities have a logo and `logos: false` in
   `js/config.js` turns them off. `node tools/fetch-logos.mjs` collects more from each charity's own website (touch icon or
@@ -242,7 +242,7 @@ tables from a bar inside the table. The charities players back (the gates: 5 at 
 on the board, and the remaining spots are **filled in at random from the catalog** so the board is always the full size;
 if the catalog has fewer charities than spots they repeat evenly. Only backed charities hold tickets, so only they can
 win: the others are scenery (thin slivers on the wheel, runners with no percentage, faded bins). Bigger tables have more
-bots and a longer show (the 1,000-spot tables take about half a minute). All 70 tables run at once, and a game's
+bots and a longer show (the 1,000-spot tables take close to a minute to play out). All 70 tables run at once, and a game's
 `#live-<game>` link opens its Small (10-spot) table.
 
 **Live tables are demo-only.** A pooled pot needs a server to hold the money and run the table, and this site never
@@ -314,9 +314,9 @@ cause and filter).
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 ```
 
-About 725 end-to-end checks in headless Chromium (needs Playwright installed globally). They start their own static
+About 780 end-to-end checks in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
-the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board, the big Roulette wheel and the Plinko camera, backing a charity, live tables (including the seven Plinko table sizes) (stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, filters checked
+the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the lobby of seven table sizes for every live game, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, filters checked
 against an independent computation, the charity directory and profiles, direct gifts, repeat plans and dedications,
 My Giving, the whole account preview (including that no password or full card number ever reaches storage), demo
 credit, the monthly limit, fair-play verification and tamper detection, stream mode, reduced motion, persistence,
@@ -364,7 +364,7 @@ js/ui/*.js          shared helpers, amount and gift options, filters, charities,
                     charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), live tables, game
                     screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
                     the first-visit tour (tour.js)
-js/logos.js         which charities have a logo file (55 so far)
+js/logos.js         which charities have a logo file (53 so far)
 tools/              fetch-logos.mjs: collects more charity logos from their own websites
 assets/logos/       the logo files (see docs/logo-sources.md)
 docs/               roster-sources.json (evidence for the added charities), roster-candidates.md (what was left out), logo-sources.md
