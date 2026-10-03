@@ -1344,9 +1344,10 @@
  {
   "id": "heart-foundation-au",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/National_Heart_Foundation_of_Australia"
   ],
-  "note": "ABN 98008419761; official register record"
+  "note": "ABN 98008419761; official register record; founding year 1959 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "australian-ballet",
@@ -1414,9 +1415,10 @@
  {
   "id": "save-the-children-au",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Save_the_Children_Australia"
   ],
-  "note": "ABN 99008610035; official register record"
+  "note": "ABN 99008610035; official register record; founding year 1919 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "make-a-wish-australia",
@@ -1428,9 +1430,10 @@
  {
   "id": "koorana-child-family-services",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://koorana.org.au/about-us/history/"
   ],
-  "note": "ABN 98173846132; official register record (registered name: Koorana Child & Family Services Ltd)"
+  "note": "ABN 98173846132; official register record (registered name: Koorana Child & Family Services Ltd); founding year 1976 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "melbourne-comedy-festival",
@@ -1470,9 +1473,10 @@
  {
   "id": "baptist-world-aid-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://baptistworldaid.org.au/about-us/"
   ],
-  "note": "ABN 63430709718; official register record (registered name: Baptist World Aid Australia Ltd)"
+  "note": "ABN 63430709718; official register record (registered name: Baptist World Aid Australia Ltd); founding year 1959 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "big-issue-australia",
@@ -1498,9 +1502,10 @@
  {
   "id": "greenfleet",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.greenfleet.com.au/pages/our-history"
   ],
-  "note": "ABN 86693237685; official register record (registered name: The Trustee For Greenfleet Trust)"
+  "note": "ABN 86693237685; official register record (registered name: The Trustee For Greenfleet Trust); founding year 1997 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "emerging-minds-au",
@@ -1512,9 +1517,10 @@
  {
   "id": "wise-employment",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://wiseemployment.com.au/about-us/"
   ],
-  "note": "ABN 68093718766; official register record (registered name: WISE Employment Ltd)"
+  "note": "ABN 68093718766; official register record (registered name: WISE Employment Ltd); founding year 1992 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "life-without-barriers",
@@ -1645,9 +1651,10 @@
  {
   "id": "farm-angels",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://farmangels.org.au/about-us/our-history/"
   ],
-  "note": "ABN 47611990697; official register record (registered name: Farm Angels Ltd)"
+  "note": "ABN 47611990697; official register record (registered name: Farm Angels Ltd); founding year 2014 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "disaster-relief-australia",
