@@ -422,3 +422,106 @@ Respuesta:
 Por qué importa: No somos abogados y esto no es asesoría legal. No encontramos ninguna regla que lo prohíba, pero no pudimos revisarlo todo. Solo leímos resúmenes de buscadores sobre la ley (decían que Carolina del Norte no tenía una ley general de privacidad del consumidor en mayo de 2026), no la ley misma ni nada más reciente. No revisamos las reglas sobre la privacidad de menores ni las leyes de otros estados, y los dos servicios guardan sus propios registros por un tiempo que no pudimos encontrar.
 
 Respuesta:
+
+
+## 7. Revisión del menú de Wise Pie (agregada el 3 de octubre de 2026)
+
+Leímos línea por línea su menú impreso de otoño 2026 y lo comparamos con el sitio web. Las nueve pizzas, sus precios, los dos extras (masa sin gluten +$9, queso vegano +$3) y las notas sobre el queso, la masa y la salsa coinciden, en inglés y en los otros cuatro idiomas. Las preguntas de abajo son sobre lo que el menú impreso no dice. Están en orden: primero las más importantes.
+
+### Pregunta 44
+
+**En el paquete "Con pizza" del sitio ($31 de base, "Incluye 2 pizzas Wise Pie, más $3 por persona"), ¿qué pizzas puede elegir una familia, y la masa sin gluten (+$9) y el queso vegano (+$3) se cobran aparte, además de los $31?**
+
+Por qué importa: El menú impreso no menciona el paquete. Con los precios del menú, dos pizzas cuestan entre $30 y $34, así que $31 solo tiene sentido si la elección es limitada o si el paquete tiene su propia regla; y una familia que lee "2 pizzas Wise Pie" va a suponer que son cualesquiera dos. Por favor, revisen también que la página de reservas diga lo mismo.
+
+Respuesta:
+
+
+### Pregunta 45
+
+**¿Podemos agregar una línea breve sobre alérgenos cerca del menú, y qué debería decir? Por ejemplo: qué alérgenos comunes tienen su masa, su salsa y sus quesos (trigo y leche, por lo menos), y si la masa sin gluten se prepara y se hornea aparte de las demás pizzas o en el mismo lugar.**
+
+Por qué importa: Ni el menú impreso ni el sitio tienen una nota sobre alérgenos o contaminación cruzada, y sin embargo ambos ofrecen "masa sin gluten" y "queso vegano", y las preguntas frecuentes del sitio responden "Sí" a "¿Hay opción vegana o sin gluten?". Una persona celíaca o con una alergia alimentaria podría entender que es seguro para ella. Escribiremos solo lo que ustedes nos digan.
+
+Respuesta:
+
+
+### Pregunta 46
+
+**¿La pizza The Dill Pickle lleva queso, y qué pizzas se pueden hacer totalmente veganas con el queso vegano?**
+
+Por qué importa: El menú impreso no indica queso en The Dill Pickle ("masa casera, aceite de oliva orgánico, ajo orgánico, pepinillos al eneldo"), y el sitio lo copia. Si sí lleva queso, falta una palabra en el menú y en el sitio; si no lleva, quienes evitan los lácteos van a preguntar. Además, el sitio no dice qué pizzas pueden ser veganas (The Bee Keeper lleva miel, por ejemplo).
+
+Respuesta:
+
+
+### Pregunta 47
+
+**¿El horno de "700 grados" es en grados Fahrenheit, y quieren mantener la cifra?**
+
+Por qué importa: "Pizza de verdad de un horno a 700 grados" es el título de la sección y de la página de Wise Pie, y aparece en la descripción de la página, en las traducciones y en la imagen que se muestra cuando se comparte la página. El menú impreso no da ninguna temperatura. En español, hindi, chino y vietnamita, "700 grados" sin unidad normalmente se entiende como grados Celsius (unos 1,290 °F), así que quisiéramos escribir "700 °F" si eso es lo que quieren decir.
+
+Respuesta:
+
+
+### Pregunta 48
+
+**¿Los precios, los nombres y los tamaños de su página de pedidos de Square coinciden con el menú impreso de otoño 2026 (nueve pizzas de $15 a $17; masa sin gluten +$9; queso vegano +$3)?**
+
+Por qué importa: El menú del sitio está copiado de la imagen impresa. Desde donde trabajamos no pudimos abrir las páginas reales de Square ni de reservas, así que no pudimos compararlas. Si la página de Square es distinta, alguien podría pedir a un precio que el sitio no muestra. (La pregunta 18 pide confirmar que los precios del sitio son correctos y la 23 que el enlace es correcto; esta pregunta es si los dos lugares coinciden entre sí.)
+
+Respuesta:
+
+
+### Pregunta 49
+
+**El sitio dice que el enlace para pedir por adelantado se "publica 5 días antes". ¿5 días antes de qué: de cada día de pizza o del fin de semana? ¿Qué día y a qué hora lo publican, y dónde lo encuentra la gente (Instagram, el sitio web, un mensaje)?**
+
+Por qué importa: "5 días antes" se puede entender de más de una manera. Aparece en la página principal (dos veces), en la página de Wise Pie y en el letrero con código QR para pedir por adelantado, y quien busque demasiado pronto o demasiado tarde no encuentra el enlace.
+
+Respuesta:
+
+
+### Pregunta 50
+
+**El sitio dice que las pizzas de una reserva en la granja están "listas para recoger 1 hora después de tu hora de reserva". ¿Siempre es 1 hora, incluso en una reserva tardía (una reserva a las 3:30 p. m. daría las 4:30 p. m., después del horario de 10 a. m. a 4 p. m. que el sitio muestra para el lado de la granja), y dónde se recogen exactamente?**
+
+Por qué importa: Es la única promesa del sitio sobre cuándo estará lista una pizza reservada. Está en la página principal y en la página de Wise Pie. El sitio dice "en el horno de leña de The GreenHouse", que está al lado de la granja.
+
+Respuesta:
+
+
+### Pregunta 51
+
+**¿Todas las pizzas miden 12 pulgadas y se venden solo enteras, y de verdad una pizza alcanza para unos 2 a 3 adultos o 3 a 4 niños?**
+
+Por qué importa: Nada de esto está en el menú impreso. Está en la página principal (en la sección de Wise Pie y en la tarjeta del paquete) y dos veces en la página de Wise Pie, una de ellas en sus preguntas frecuentes, que los buscadores también leen.
+
+Respuesta:
+
+
+### Pregunta 52
+
+**¿Es correcto decir "mozzarella de origen local" y "apoya a granjas y artesanos locales"?**
+
+Por qué importa: El menú impreso solo dice que la mozzarella viene de Uno Alla Volta, en Charlotte, y que la hacen con leche de una granja amish al noreste de Charlotte. "De origen local" y "granjas y artesanos locales" están en las primeras líneas de la sección y de la página de Wise Pie, y no están en el menú impreso. Si compran otros ingredientes a granjas o artesanos locales, díganos cuáles y lo diremos.
+
+Respuesta:
+
+
+### Pregunta 53
+
+**¿Qué venden en The GreenHouse además de pizza: qué helado (¿es de Waxhaw Creamery?), qué bebidas (¿"cider" es sidra con alcohol?) y algo más? ¿Pueden enviarnos los precios? (La pregunta 19 también los pide.)**
+
+Por qué importa: El menú impreso es solo de pizza, así que nada que venga de ustedes respalda el helado y las bebidas que el sitio menciona en la página principal, en la sección de The GreenHouse, en la tienda y en la tarjeta de contacto. En inglés, el lado de la granja dice "beer, hard cider and wine" y el lado de The GreenHouse dice "beer, wine and cider"; muchas familias pueden entender "cider" a secas como jugo de manzana sin alcohol. (En español el sitio dice "sidra" en los dos lados.)
+
+Respuesta:
+
+
+### Pregunta 54
+
+**¿Se puede sentar a comer en The GreenHouse (la página de Wise Pie dice "para comer allí"), o la pizza es solo para llevar? Si hay mesas, ¿dónde están?**
+
+Por qué importa: El sitio dice "Por orden de llegada para comer allí o para llevar", pero no dice si hay mesas, sombra o calefacción. Una familia con niños pequeños querrá saberlo antes de venir.
+
+Respuesta:

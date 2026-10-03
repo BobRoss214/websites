@@ -420,6 +420,109 @@ Why it matters: We are not lawyers and this is not legal advice. We found no rul
 Answer:
 
 
+## 7. The Wise Pie menu check (added 3 October 2026)
+
+We read your printed Fall Menu 2026 line by line and compared it with the website. The nine pizzas, their prices, the two extras (gluten-free crust +$9, vegan cheese +$3) and the notes about the cheese, dough and sauce all match, in English and in the four other languages. The questions below are about what the printed menu does not say. They are in order, the most important first.
+
+### Question 44
+
+**For the "Yes pizza" package on the site ($31 base, "Includes 2 Wise Pie pizzas, plus $3 per person"), which pizzas can a family choose, and do the gluten-free crust (+$9) and the vegan cheese (+$3) cost extra on top of the $31?**
+
+Why it matters: The printed menu does not mention the package. At menu prices two pizzas cost $30 to $34, so $31 only makes sense if the choice is limited or the package has its own rule, and a family that reads "2 Wise Pie pizzas" will assume any two. Please also check that the booking page says the same.
+
+Answer:
+
+
+### Question 45
+
+**May we add a short allergen line near the menu, and what should it say? For example: which common allergens are in your dough, sauce and cheeses (wheat and milk, at least), and is the gluten-free crust made and baked apart from the other pizzas, or in the same place?**
+
+Why it matters: Neither the printed menu nor the site has an allergen or cross-contact note, yet both offer "gluten-free crust" and "vegan cheese", and the site's questions answer "Is there a vegan or gluten-free option?" with "Yes". A guest with celiac disease or a food allergy may take that to mean it is safe for them. We will write only what you tell us.
+
+Answer:
+
+
+### Question 46
+
+**Does The Dill Pickle pizza have cheese, and which pizzas can be made fully vegan with the vegan cheese?**
+
+Why it matters: The printed menu lists no cheese for The Dill Pickle ("homemade dough, organic olive oil, organic garlic, dill pickles"), and the site copies it. If it does have cheese, a word is missing on the menu and on the site; if it does not, guests who avoid dairy will ask. The site also does not say which pizzas can be vegan (The Bee Keeper has honey, for example).
+
+Answer:
+
+
+### Question 47
+
+**Is the oven "700 degrees" in Fahrenheit, and do you want to keep the number?**
+
+Why it matters: "Real pizza from a 700-degree oven" is the heading of the Wise Pie section and page, and it appears in the page description, in the translations and in the picture shown when the page is shared. The printed menu gives no temperature. In Spanish, Hindi, Chinese and Vietnamese, "700 degrees" with no unit is normally read as Celsius, which would be about 1,290°F, so we would like to write "700°F" if that is what you mean.
+
+Answer:
+
+
+### Question 48
+
+**Do the prices, names and sizes on your Square pre-order page match the printed Fall Menu 2026 (nine pizzas at $15 to $17; gluten-free crust +$9; vegan cheese +$3)?**
+
+Why it matters: The site's menu is copied from the printed picture. We could not open the live Square or booking pages from where we work, so we could not compare them. If the Square page differs, someone could order at a price the site does not show. (Question 18 asks whether the site's prices are right and question 23 whether the link is right; this one asks whether the two places agree with each other.)
+
+Answer:
+
+
+### Question 49
+
+**The site says the pre-order link is "posted 5 days ahead". Five days before what: each pizza day, or the weekend? On which day and at what time do you post it, and where do people find it (Instagram, the website, a message)?**
+
+Why it matters: "5 days ahead" can be read in more than one way. It is on the home page (twice), on the Wise Pie page and on the pre-order QR sign, so a visitor who looks too early or too late finds no link.
+
+Answer:
+
+
+### Question 50
+
+**The site says pizzas from a farm reservation are "ready for pick-up 1 hour after your reservation time". Is it always 1 hour, even for a late reservation (a 3:30 pm reservation would give 4:30 pm, after the farm side's 10 am to 4 pm hours on the site), and where exactly do people pick them up?**
+
+Why it matters: It is the only promise on the site about when a reserved pizza will be ready. It is on the home page and on the Wise Pie page. The site says "at the wood-fired oven at The GreenHouse", which is next door to the farm.
+
+Answer:
+
+
+### Question 51
+
+**Is every pizza 12 inches and sold only as a whole pie, and does one pizza really serve about 2 to 3 adults or 3 to 4 children?**
+
+Why it matters: None of this is on the printed menu. It is on the home page (in the Wise Pie section and in the package card) and twice on the Wise Pie page, once in its questions, which search engines also read.
+
+Answer:
+
+
+### Question 52
+
+**Is it right to say "locally sourced mozzarella" and "supporting local farms and artisans"?**
+
+Why it matters: The printed menu says only that the mozzarella comes from Uno Alla Volta in Charlotte, made from milk from an Amish farm northeast of Charlotte. "Locally sourced" and "local farms and artisans" are in the opening lines of the Wise Pie section and page, and they are not on the printed menu. If you buy other ingredients from local farms or makers, tell us which, and we will say so.
+
+Answer:
+
+
+### Question 53
+
+**What do you sell at The GreenHouse besides pizza: which ice cream (is it Waxhaw Creamery?), which drinks (is "cider" hard cider?) and anything else? Can you send the prices (question 19 also asks for them)?**
+
+Why it matters: The printed menu is only pizza, so nothing from you backs up the ice cream and drinks that the site lists on the home page, in The GreenHouse section, in the Shop and on the contact card. The farm side of the site says "beer, hard cider and wine", while The GreenHouse side says "beer, wine and cider", and families may read "cider" alone as apple cider without alcohol.
+
+Answer:
+
+
+### Question 54
+
+**Can people sit and eat at The GreenHouse (the Wise Pie page says "drop-in dining"), or is pizza take-away only? If there are tables, where are they?**
+
+Why it matters: The site says "First come, first served for drop-in dining or pick-up" but not whether there are tables, shade or heat. A family with small children will want to know before they come.
+
+Answer:
+
+
 ---
 
 ## For whoever edits the site
@@ -524,39 +627,39 @@ All line numbers in this part were recomputed on 3 October 2026 for commit 12eec
 **Question 17: Are these hours right: farm visits Thursday to Sunday in fall; The GreenHouse Friday to Sunday, 10 am to 8 pm; Wise Pie at The GreenHouse Friday to Sunday, 4 to 8 pm; pizza at the farm 10 am to 4 pm?**
 
 - **If Yes:** no change; delete the README row (`README.md:323`).
-- **If No:** change `js/content.js:181-183`, the text lines `index.html:368, 1120, 1125, 1135, 1221, 1225, 1228, 1430, 1916, 2025`, and the pizza sentences in `pages/wise-pie.html:27, 31, 38, 86, 90`, `pages/pumpkin-patch.html:43, 72, 116` (search "Friday").
+- **If No:** change `js/content.js:184-186`, the text lines `index.html:369, 1123, 1128, 1138, 1224, 1228, 1231, 1433, 1919, 2038`, and the pizza sentences in `pages/wise-pie.html:29, 33, 40, 88, 92`, `pages/pumpkin-patch.html:45, 74, 118` (search "Friday").
 
 **Question 18: Are the nine pizzas and their prices on the site right ($15 to $17; gluten-free crust +$9; vegan cheese +$3)?**
 
-- **If No:** change the nine pizzas `index.html:1161-1169`, the crust and cheese extras `index.html:1172-1173, 1185, 1442`, and replace the printed menu picture `assets/photos/wise-pie-fall-menu-2026.webp` (opened from `index.html:1158`).
+- **If No:** change the nine pizzas `index.html:1164-1172`, the crust and cheese extras `index.html:1175-1176, 1188, 1445`, and replace the printed menu picture `assets/photos/wise-pie-fall-menu-2026.webp` (opened from `index.html:1161`).
 - **If Yes:** no change.
 
 **Question 19: Can you send us your current prices for pumpkins, strawberries, blueberries, flowers, snacks and drinks, ice cream and Christmas trees?**
 
-- **If Yes:** type each price over "Prices coming soon" (`index.html:1345, 1365-1366, 1386-1388, 1414-1416, 1443-1446`, including the note above the shop at line 1334). In the HTML change `<dd data-t="..." class="soon">Prices coming soon</dd>` to `<dd>$5 each</dd>` (this also removes the red dashed "soon" pill). Delete the README row (`README.md:329`).
+- **If Yes:** type each price over "Prices coming soon" (`index.html:1348, 1368-1369, 1389-1391, 1417-1419, 1446-1449`, including the note above the shop at line 1337). In the HTML change `<dd data-t="..." class="soon">Prices coming soon</dd>` to `<dd>$5 each</dd>` (this also removes the red dashed "soon" pill). Delete the README row (`README.md:329`).
 - **If No:** no change.
 
 **Question 20: Are you happy for the site to say "We're the only USDA-certified organic strawberry farm in the area"?**
 
-- **If No:** delete the first clause of `index.html:1899` and keep the rest of the sentence.
+- **If No:** delete the first clause of `index.html:1912` and keep the rest of the sentence.
 - **If Yes:** no change.
 
 **Question 21: When a day is full, do you keep a waitlist that people can join by emailing cathy@wiseacresorganic.com?**
 
-- **If Yes:** no change. If the waitlist email is a different address, set `waitlistEmail` inside `week` (documented in `js/content.js:98`; the default is `js/features.js:398`).
-- **If No:** never mark a day `full` in `week` (use `closed`); today `week` is empty (`js/content.js:185`). Delete the README row (`README.md:335`) after telling Claude.
+- **If Yes:** no change. If the waitlist email is a different address, set `waitlistEmail` inside `week` (documented in `js/content.js:101`; the default is `js/features.js:397`).
+- **If No:** never mark a day `full` in `week` (use `closed`); today `week` is empty (`js/content.js:188`). Delete the README row (`README.md:335`) after telling Claude.
 
 ### 4. Links and accounts
 
 **Question 22: Is bookeo.com/wiseacres?category=41576YNUUTJ173F2927356 the right booking page for every farm visit (with or without pizza, and parties)?**
 
 - **If Yes:** no change.
-- **If No:** search and replace the address (README "Change the booking link"): `index.html:74, 108, 214, 253, 354, 397, 432, 444, 499, 777, 795, 815, 888, 1130, 1379, 1672, 1985, 2016, 2156`, `pages/first-visit.html:14, 45, 258`, `pages/pumpkin-patch.html:14, 134`, `pages/strawberry-picking.html:13, 123`, `pages/wise-pie.html:35`, `tools/qr_links.json:38` (re-run `python3 tools/make_qr.py`) and `js/features.js:35` (calendar reminders).
+- **If No:** search and replace the address (README "Change the booking link"): `index.html:75, 109, 215, 254, 355, 399, 435, 447, 502, 780, 798, 818, 891, 1133, 1382, 1675, 1998, 2029, 2176`, `pages/first-visit.html:16, 47, 277`, `pages/pumpkin-patch.html:16, 136`, `pages/strawberry-picking.html:15, 125`, `pages/wise-pie.html:37`, `tools/qr_links.json:38` (re-run `python3 tools/make_qr.py`) and `js/features.js:35` (calendar reminders).
 
 **Question 23: Is wise-pie-wood-fired-at-wise-acres.square.site/?location=CVJNFDQTZCA3B the page where people pre-order Wise Pie pizza?**
 
 - **If Yes:** no change.
-- **If No:** change `index.html:1140, 1242`, `pages/wise-pie.html:14, 43, 112` and `tools/qr_links.json:46` (re-run `python3 tools/make_qr.py`).
+- **If No:** change `index.html:1143, 1245`, `pages/wise-pie.html:16, 45, 114` and `tools/qr_links.json:46` (re-run `python3 tools/make_qr.py`).
 
 **Question 24: Is facebook.com/wiseacresnc your main Facebook page?**
 
@@ -621,7 +724,7 @@ Line numbers in this section are for commit 12eec95 (with the documentation fixe
 
 **Question 35: Can you send us the exact spot of the farm, as two numbers from Google Maps?**
 
-- **If Yes:** at `js/content.js:189` change `farmPoint: null,` to `farmPoint: { lat: <first number>, lon: <second number> },`. The steps are in the comment at `js/content.js:157-162`, and the code that reads it is `js/features.js:715`. No rebuild is needed. Open the home page, press "Get drive time" with a nearby address and check that the miles look right. Then delete "set `farmPoint` (Drive time box);" from launch item 6 (`README.md:418`) and the farm-spot part of the Drive time row (`README.md:339`).
+- **If Yes:** at `js/content.js:189` change `farmPoint: null,` to `farmPoint: { lat: <first number>, lon: <second number> },`. The steps are in the comment at `js/content.js:157-162`, and the code that reads it is `js/features.js:715`. No rebuild is needed. Open the home page, press "Get drive time" with a nearby address and check that the miles look right. Then delete "set `farmPoint` (Drive time box);" from launch item 6 (`README.md:429`) and the farm-spot part of the Drive time row (`README.md:339`).
 - **If the spot is not the gate:** ask again for the place where cars turn in (see questions 34 and 42), because the box says "To the farm at 4701 Hartis Rd".
 - **If No:** no change. The box then searches for `FARM_ADDRESS` (`js/features.js:621`) on the first press after each page load.
 
@@ -672,3 +775,76 @@ Line numbers in this section are for commit 12eec95 (with the documentation fixe
 - **If the lawyer says it is fine:** no change. Keep the notice (`index.html:2062`) and the fact sheet (`docs/WHAT_THE_SITE_STORES.md:49, 62, 76-84, 172`).
 - **If the lawyer wants more:** change the notice at `index.html:2062` (it is translated into four languages, so ask Claude), or add a privacy page.
 - **If the lawyer says no:** switch the box off as in question 36 (d).
+
+### 7. The Wise Pie menu check (added 3 October 2026)
+
+Line numbers in this section are for commit 6f2aa1b. Everything was checked against the code on 3 October 2026. Changed English text needs its four translations: ask Claude.
+
+**Question 44: The "Yes pizza" package: which pizzas, and do the extras cost more?**
+
+- **If she gives a rule (for example "any two pizzas; the extras cost more" or "only these pizzas"):** add it to the package card (`index.html:433-434`; the price is `index.html:432`), the Shop line (`index.html:1413`) and the pumpkin page's price list (`pages/pumpkin-patch.html:45`). Then check that the booking page says the same.
+- **If the $31 is wrong:** change the number at `index.html:432, 1413` and `pages/pumpkin-patch.html:45` (the same number is in the translations).
+- **If she says it is right as written:** no change. Delete the README row (`README.md:344`) once questions 44 to 46 are answered.
+
+**Question 45: A short allergen line near the menu**
+
+- **If she gives the words:** put them under the cheese note (`index.html:1178`), in the "Ingredients & sources" box (`index.html:1183-1188`) and in the answer to "Is there a vegan or gluten-free option?" (`pages/wise-pie.html:96`; the rebuild copies that answer into the page's search-engine data). Point to them from "Vegan cheese and gluten-free crust available" (`index.html:1152`, `pages/wise-pie.html:66`). Do not write anything she has not said. Whether to print it on the menu picture is her choice; a new picture would replace `assets/photos/wise-pie-fall-menu-2026.webp` (opened from `index.html:1161`).
+- **If she does not want to list allergens:** with her OK, ask Claude for one neutral sentence such as "Please tell us about any allergy before you order" in the same places. Otherwise no change.
+
+**Question 46: Does The Dill Pickle have cheese, and which pizzas can be vegan?**
+
+- **If The Dill Pickle has cheese:** add "cheese" to its line (`index.html:1171`) and replace the printed menu picture (`assets/photos/wise-pie-fall-menu-2026.webp`, opened from `index.html:1161`) so the two agree.
+- **If it has none:** no change.
+- **Which pizzas can be vegan:** add one sentence next to "Vegan cheese and gluten-free crust available" (`index.html:1152`, `pages/wise-pie.html:66`) and in the answer at `pages/wise-pie.html:96`.
+
+**Question 47: Is the oven "700 degrees" Fahrenheit?**
+
+- **If it is Fahrenheit:** change "700-degree" to "700°F" in the heading `index.html:1117` and in `pages/wise-pie.html:3` (description), `:6` (the share picture's description, which repeats the heading) and `:12`. The heading and the description are translated in four languages. The share picture `assets/og-wise-pie.png` has the heading drawn in it, so ask for a new one (`docs/LAUNCH_CHECKLIST.md:290`; after launch the new picture needs a new file name, as that section explains).
+- **If it is another number, or she would rather not give one:** the same places, with the right number or with a heading that has no number (for example "Real pizza from a wood-fired oven"), and the same new share picture.
+- **If it is right as it is:** no change.
+
+**Question 48: Does the Square pre-order page match the printed menu?**
+
+- **If they match:** no change.
+- **If they differ:** first decide which is right. If the printed menu is out of date, change the nine pizzas (`index.html:1164-1172`), the extras and the price range (`index.html:1175-1176, 1188, 1445`) and replace the printed menu picture (`assets/photos/wise-pie-fall-menu-2026.webp`, opened from `index.html:1161`). This is the same list as the "If No" of question 18. The numbers are also in the translations.
+- Delete the README row (`README.md:346`) once question 53 is answered too.
+
+**Question 49: "Posted 5 days ahead": five days before what?**
+
+- **If she tells us the rule:** change "posted 5 days ahead" and "goes up 5 days before" at `index.html:1140, 1228` and `pages/wise-pie.html:42`, and the sign text in `tools/qr_links.json:49-50` (English and Spanish; re-run `python3 tools/make_qr.py` to rebuild `print/qr-signs.html:69`). Add where the link is posted if she says.
+- **If it is right as it is:** no change.
+
+**Question 50: Pick-up "1 hour after your reservation time"**
+
+- **If the time is different, or not always true:** change `index.html:434` and `pages/wise-pie.html:36`.
+- **If it is right as it is:** no change.
+
+**Question 51: 12 inches, whole pie only, serves 2 to 3 adults or 3 to 4 children**
+
+- **If any of it is wrong:** change `index.html:434, 1150-1151` and `pages/wise-pie.html:64-65, 100` (the rebuild copies the answer at line 100 into the page's search-engine data).
+- **If it is right as it is:** no change.
+
+**Question 52: "Locally sourced mozzarella" and "supporting local farms and artisans"**
+
+- **If she prefers other words:** change `index.html:1118`, `pages/wise-pie.html:13` and `pages/pumpkin-patch.html:74`.
+- **If it is fine:** no change.
+
+**Question 53: Ice cream and drinks at The GreenHouse**
+
+- **If she sends the list:** change the names at `index.html:370, 651, 1213, 1217-1218, 2038` and `pages/pumpkin-patch.html:89`, and type the prices over "Prices coming soon" (`index.html:1446-1447`; question 19 has the same lines). Make the wording agree: The GreenHouse side says "cider" (`index.html:651, 1213, 1218, 1447`) and the farm side says "hard cider" (`index.html:486, 641, 646, 1404, 1418, 1685, 1726`).
+- **If it is not Waxhaw Creamery:** change `index.html:651, 1213, 1217, 1446`.
+- **If it is right as it is:** no change.
+
+**Question 54: Can people sit and eat at The GreenHouse?**
+
+- **If there are no tables:** change "drop-in dining or pick-up" to "drop-in or pick-up" (`index.html:1140`, `pages/wise-pie.html:42`).
+- **If there are tables:** say where, in the same two lines or in The GreenHouse section (`index.html:1213`).
+- **If she does not know:** no change.
+- Delete the README row (`README.md:345`) once questions 47, 49, 50, 51, 52 and 54 are answered.
+
+## Translation notes (for a reader of Hindi or Spanish, not for the farm)
+
+These are not questions for the farm. Nothing here has been changed.
+
+- **Hindi, "zucchini" on The Farmer Cathy:** the Hindi line says "ऑर्गेनिक तोरी" (`lang/src/hi.json`, entry `t9b66d867`; the English is at `index.html:1168`). "तोरी" can mean ridge gourd (turai), a different vegetable; "ज़ुकीनी" is the clearer word for zucchini. A Hindi reader should confirm, and then Claude changes that one word.
+- **Spanish, "hard cider":** the Spanish text says "sidra fuerte" in two places (`index.html:1404, 1418`, both in the Shop) and plain "sidra" everywhere else. In Spanish "sidra" alone usually means the alcoholic kind, so a Spanish reader may prefer one word everywhere (see question 53).
