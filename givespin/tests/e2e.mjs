@@ -71,7 +71,7 @@ async function newPage(opts = {}) {
   const page = await ctx.newPage();
   page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) { problems.push(m.type() + ': ' + m.text()); } });
   page.on('pageerror', (e) => problems.push('pageerror: ' + e.message));
-  page.on('requestfailed', (r) => problems.push('requestfailed: ' + r.url()));
+  page.on('requestfailed', (r) => problems.push('requestfailed: ' + r.url() + ' (' + ((r.failure() || {}).errorText || 'no reason given') + ')'));   // the reason tells a cancelled load (a page closed or left while an image was coming) from a real failure
   page.on('request', (r) => { const u = r.url(); if (!u.startsWith(ORIGIN) && !u.startsWith('data:') && !u.startsWith('blob:') && !u.startsWith('file:')) { external.push(u); } });
   // Start every test page with empty storage, but only once, so reloads inside a test keep their data.
   // (the first-visit tour is switched off for them too, except in the tests that look at it)
@@ -84,10 +84,48 @@ const openApp = async (page, hash = '', query = '?fast=1') => {
   await page.addStyleTag({ content: 'html{scroll-behavior:auto!important}' });
   await page.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
 };
+// Setting the hash only queues the "hashchange" event: the app draws the new page when that event is handled, a moment later (longer on a busy
+// machine). A read made before then sees the page we just left, so this waits for the event to be handled (our listener is added after the app's,
+// so it runs after the app's has finished) instead of only pausing for a fixed time. The 5 s limit only keeps a hash the app ignores from hanging.
 const go = async (page, hash) => {
-  await page.evaluate((h) => { window.location.hash = h; }, hash);
+  await page.evaluate((h) => new Promise((resolve) => {
+    const want = h.charAt(0) === '#' ? h : '#' + h;
+    if (window.location.hash === want) { resolve(); return; }   // no change, so no event to wait for
+    const done = () => { window.removeEventListener('hashchange', done); clearTimeout(limit); resolve(); };
+    const limit = setTimeout(done, 5000);
+    window.addEventListener('hashchange', done);
+    window.location.hash = want;
+  }), hash);
   await page.waitForTimeout(150);
 };
+// Waits until the app says it is showing this route (its own record of it, set in the same turn that draws the page), for a click that
+// navigates: waiting for the address bar alone is not enough, it changes before the page is drawn. Returns false (it does not throw) if the route never comes,
+// so that the check which follows reports what is on screen.
+const onRoute = (page, route) => page.waitForFunction((r) => window.GS.app.state.route === r, route, { timeout: 15000 }).then(() => true, () => false);
+// The title of the game screen once it names what we asked for (a switch of table draws the new title a moment after the address changes, so a read
+// made straight after the click can still hold the old one). If it never does, whatever is there is returned, for the check to show.
+const titleWith = async (page, part) => {
+  await page.waitForFunction((t) => ((document.querySelector('#g-title') || {}).textContent || '').includes(t), part, { timeout: 15000 }).catch(() => {});
+  return page.locator('#g-title').innerText();
+};
+// Puts a stake on the table in the same page turn that sees a betting window with time left: picks a charity and presses Join.
+// Clicking with the mouse from here could not be made reliable. With ?fast=1 the whole window is 2.2 seconds, the crowd redraws the odds
+// board many times in it (a button that is replaced while the mouse is being aimed at it is detached and has to be found again), and the
+// table locks half way through; Playwright then waits for the next window, and gives up after 30 seconds. Nothing in the page can change between the
+// check and the clicks because they run in one turn, so the stake is in whenever this returns true. If no window comes, it returns false.
+// (A stake that asks for a second, confirming press is not for this: it presses Join once.)
+const stakeNow = (page, rid, opts = {}) => page.waitForFunction((a) => {
+  const r = window.GS.live.room(a.rid);
+  const cur = window.GS.ui.live.current();
+  if (!(r && cur && cur.room === r && r.phase === 'open' && !r.you && r.msLeft() > Math.min(a.left, r.phaseMs * 0.4))) { return false; }
+  const odd = document.querySelectorAll('#livepanel .odd:not([disabled])')[a.nth];
+  if (!odd) { return false; }
+  odd.click();
+  const join = document.querySelector('#livepanel [data-role="join"]:not([disabled])');
+  if (!join) { return false; }
+  join.click();
+  return !!r.you;
+}, { rid, nth: opts.nth || 0, left: opts.left || 1000 }, { timeout: opts.timeout || 40000, polling: 50 }).then(() => true, () => false);
 // a 1,000-bin Plinko drop takes about half a minute at real speed, and a busy machine (several browsers at once) can double that
 const waitReceipt = (page) => page.waitForSelector('#dlg-result[open] .rs-title', { timeout: 100000 });
 const closeReceipt = async (page) => {
@@ -154,7 +192,7 @@ if (section('1. Page load and lobby')) {
   check(await page.locator('#balance-amt').innerText() === '$1,000', 'starts with $1,000 demo credit');
   check(await page.locator('.tile').count() === GAMES.length + 1, GAMES.length + 1 + ' tiles (' + GAMES.length + ' games and Give Direct)');
   check(await page.locator('.tile:not([hidden])').count() === GAMES.length + 1, 'all tiles shown on All games');
-  const cat = async (c) => { await page.click(`.cat[data-cat="${c}"]`); await page.waitForFunction((h) => window.location.hash === h, c === 'all' ? '#lobby' : '#lobby-' + c); await page.waitForTimeout(100); };
+  const cat = async (c) => { await page.click(`.cat[data-cat="${c}"]`); await onRoute(page, c === 'all' ? 'lobby' : 'lobby-' + c); await page.waitForTimeout(100); };
   await cat('originals');
   check(await page.locator('.tile:not([hidden])').count() === 3 && page.url().endsWith('#lobby-originals'), 'Originals shows 3 games and updates the URL');
   await cat('slots');
@@ -185,7 +223,7 @@ if (section('2. Search')) {
   await page.fill('#search-input', 'roul');
   check(await page.locator('#search-list [role="option"]').count() >= 1, 'search finds a game by name');
   await page.keyboard.press('Enter');
-  await page.waitForFunction(() => window.location.hash === '#game-roulette');
+  await onRoute(page, 'game-roulette');
   await page.waitForSelector('#view-game:not([hidden])');
   check(await page.locator('#view-game').isVisible() && (await page.locator('#g-title').innerText()) === 'Roulette', 'Enter opens the first result');
   await page.fill('#search-input', 'wateraid');
@@ -837,8 +875,7 @@ if (section('11. Giving Club, Help and keyboard')) {
   // navigation is blocked while a round is running
   await page.click('#btn-play');
   await page.waitForFunction(() => window.GS.app.state.busy);
-  await page.evaluate(() => { window.location.hash = '#giving'; });
-  await page.waitForTimeout(250);
+  await go(page, '#giving');
   check(await page.locator('#view-game').isVisible() && !(await page.locator('#view-giving').isVisible()), 'navigating away mid-round is refused');
   check(page.url().endsWith('#game-dice'), 'and the URL is put back', page.url());
   await waitReceipt(page);
@@ -935,7 +972,7 @@ if (section('13. Stream mode, reduced motion, persistence')) {
   await setAmount(p, 50).catch(() => {});
   await go(p, '#lobby');
   await p.click('[data-role="repeat"]');
-  await p.waitForFunction(() => window.location.hash === '#game-coin');
+  await onRoute(p, 'game-coin');
   check(await p.locator('#view-game .amount__input').inputValue() === '25', 'Repeat last round restores the game and amount');
   await p.close();
 }
@@ -1186,14 +1223,13 @@ if (section('13c. Live tables: staking, cancelling, adding a charity (real time)
 if (section('13d. Live tables: a round, the whole pot to the winner, and a fair draw')) {
   const page = await newPage();
   await openApp(page, '#live-derby');
-  await page.waitForSelector('#livepanel .lt-phase.is-open');
-  await page.waitForTimeout(150);
-  await page.locator('#livepanel .odd').first().click();
-  await page.click('#livepanel [data-role="join"]');
-  await page.waitForSelector('#lt-result .lt-res', { timeout: 60000 });
-  const r = await page.evaluate(() => {
+  check(await stakeNow(page, 'derby'), 'a $20 stake goes onto the table in an open betting window');
+  // everything is read inside the wait, in the turn that sees the result on screen: with ?fast=1 the table moves on 0.8 seconds later and clears its result,
+  // and a busy machine can take longer than that to answer a second call
+  const r = await (await page.waitForFunction(() => {
     const room = GS.live.room('derby');
     const res = room.result;
+    if (!(room.phase === 'result' && res && res.you && document.querySelector('#lt-result .lt-res'))) { return null; }
     const h = GS.store.get().history[0];
     return {
       winner: res.winnerId, pot: res.pot, players: res.players, bots: res.bots, shown: GS.games.derby._shown(), you: res.you && { won: res.you.won, dollars: res.you.dollars },
@@ -1205,7 +1241,7 @@ if (section('13d. Live tables: a round, the whole pot to the winner, and a fair 
       // the table's own round timer is the only clock that is stopped here: the steps below take longer than ten seconds on a busy machine
       held: (room._clearTimers(), room.phase)
     };
-  });
+  }, null, { timeout: 90000, polling: 100 })).jsonValue();
   check(r.held === 'result', 'the result is on screen while it is checked', r.held);
   check(r.shown[0] === r.winner, 'the race on screen ends on the charity the draw picked', r);
   check(r.tickets === r.pot, 'the tickets in the draw are the dollars in the pot', [r.tickets, r.pot]);
@@ -1258,10 +1294,7 @@ if (section('13e. Live tables: leaving mid-round, reloading, and arriving late')
   // leave the room: the round still settles and you are told
   const page = await newPage();
   await openApp(page, '#live-roulette');
-  await page.waitForSelector('#livepanel .lt-phase.is-open');
-  await page.waitForTimeout(150);
-  await page.locator('#livepanel .odd').first().click();
-  await page.click('#livepanel [data-role="join"]');
+  check(await stakeNow(page, 'roulette'), 'a $20 stake goes onto the Roulette table in an open betting window');
   await go(page, '#lobby');
   await page.waitForFunction(() => GS.store.get().liveRounds === 1, null, { timeout: 60000 });
   check((await toastText(page)).some((t) => t.includes('Roulette') && t.includes('pot')), 'if you leave the table you still get told how it ended');
@@ -1292,13 +1325,13 @@ if (section('13e. Live tables: leaving mid-round, reloading, and arriving late')
   await p3.waitForFunction(() => GS.live.room('marble').phase === 'playing', null, { timeout: 15000 });
   await go(p3, '#live-marble');
   // the snapshot is taken inside the wait, while the result is on screen (the table moves on ten seconds later)
-  const arrived = await (await p3.waitForFunction(() => {
+  const arrived = await p3.waitForFunction(() => {
     const r = GS.live.room('marble');
     const card = document.querySelector('#lt-result .lt-res');
     return r && r.phase === 'result' && r.result && card ? { ok: GS.games.marble._shown()[0] === r.result.winnerId, text: card.innerText } : null;
-  }, null, { timeout: 40000, polling: 100 })).jsonValue();
-  check(arrived.ok, 'arriving mid-round still plays the race to the drawn winner');
-  check(arrived.text.includes('You watched'), 'a table you only watched says so');
+  }, null, { timeout: 40000, polling: 100 }).then((h) => h.jsonValue(), () => null);
+  check(!!arrived && arrived.ok, 'arriving mid-round still plays the race to the drawn winner', arrived || 'no result card was on screen while the table was showing its result');
+  check(!!arrived && arrived.text.includes('You watched'), 'a table you only watched says so');
   check(await balance(p3) === 100000, 'and costs nothing');
   await p3.close();
 }
@@ -1309,17 +1342,16 @@ if (section('13f. Live tables: every live game')) {
   await openApp(page);
   for (const id of LIVE_GAMES) {
     await go(page, '#live-' + id);
-    await page.waitForSelector('#livepanel .lt-phase.is-open', { timeout: 30000 });
-    await page.waitForTimeout(120);
-    await page.locator('#livepanel .odd').first().click();
-    await page.click('#livepanel [data-role="join"]');
-    // the snapshot is taken inside the wait, while the result is on screen (the table moves on ten seconds later)
-    const info = await (await page.waitForFunction((gid) => {
+    if (!(await stakeNow(page, id))) { check(false, id + ': a $20 stake could not be put on the table in any open betting window'); continue; }
+    // the snapshot is taken inside the wait, while the result is on screen (with ?fast=1 the table moves on 0.8 seconds later),
+    // and the table is stopped there so nothing changes under the checks. A game whose card never shows before the table moves on is a failed check, not a crash
+    const info = await page.waitForFunction((gid) => {
       const r = GS.live.room(gid);
-      return r && r.phase === 'result' && r.result && document.querySelector('#lt-result .lt-res')
-        ? { w: r.result.winnerId, shown: GS.games[gid]._shown(), hist: GS.store.get().history[0].game } : null;
-    }, id, { timeout: 60000, polling: 100 })).jsonValue();
-    check(info.shown[0] === info.w && info.hist === id, id + ': the live game shows the drawn winner and records the round', info);
+      if (!(r && r.phase === 'result' && r.result && document.querySelector('#lt-result .lt-res'))) { return null; }
+      r._clearTimers();
+      return { w: r.result.winnerId, shown: GS.games[gid]._shown(), hist: GS.store.get().history[0].game };
+    }, id, { timeout: 90000, polling: 100 }).then((h) => h.jsonValue(), () => null);
+    check(!!info && info.shown[0] === info.w && info.hist === id, id + ': the live game shows the drawn winner and records the round', info || 'no result card was on screen while the table was showing its result');
     check(await page.evaluate(async () => (await GS.ui.receipt.verifyRound(GS.store.get().history[0].fair)).ok), id + ': the live round verifies');
   }
   const s = await state(page);
@@ -1391,26 +1423,41 @@ if (section('13g. Live extras: events, sponsor match, jackpot, last call, all-in
   const p2 = await newPage();
   await openApp(p2, '#live-duck');
   await p2.evaluate(() => { GS.live.setEvent({ id: 'double', name: 'Double Pot Hour', desc: 'x', match: { ratio: 1, cap: 200 }, causes: null }); GS.live.room('duck').openRound(0); });
-  await p2.waitForSelector('#livepanel .lt-phase.is-open');
-  await p2.waitForTimeout(100);
-  await p2.click('#livepanel [data-pred="big"][data-val="1"]');
-  await p2.click('#livepanel [data-pred="upset"][data-val="0"]');
-  await p2.click('#livepanel [data-pred="leader"][data-val="1"]');
-  check(await p2.locator('#livepanel [data-pred][aria-pressed="true"]').count() === 3, 'you can answer the side predictions');
-  await p2.locator('#livepanel .odd').first().click();
-  await p2.click('#livepanel [data-role="join"]');
-  await p2.waitForSelector('#lt-result .lt-res', { timeout: 60000 });
-  const res = await p2.evaluate(() => {
-    const r = GS.live.room('duck').result;
-    return { pot: r.pot, bonus: r.bonus, pred: r.pred, winShare: r.winShare, leader: r.leaderId, winner: r.winnerId, preds: GS.store.get().pred };
-  });
+  // the three answers, a charity and Join are all pressed in one page turn, in the forced round's window: with ?fast=1 it is 2.2 seconds long,
+  // which five mouse clicks can outlast on a busy machine (and a prediction pressed twice is un-pressed, so nothing is pressed until all of it can be)
+  const placed = await p2.waitForFunction(() => {
+    const r = GS.live.room('duck');
+    const cur = GS.ui.live.current();
+    if (!(r && cur && cur.room === r && r.phase === 'open' && !r.you && r.msLeft() > 900)) { return null; }
+    const answers = [['big', '1'], ['upset', '0'], ['leader', '1']];
+    // (each press redraws the prediction rows, so every button is looked up again just before it is pressed)
+    const pred = (k) => document.querySelector('#livepanel [data-pred="' + k[0] + '"][data-val="' + k[1] + '"]');
+    const odd = document.querySelector('#livepanel .odd:not([disabled])');
+    if (answers.some((k) => !pred(k) || pred(k).disabled) || !odd) { return null; }
+    answers.forEach((k) => pred(k).click());
+    const pressed = document.querySelectorAll('#livepanel [data-pred][aria-pressed="true"]').length;
+    odd.click();
+    const join = document.querySelector('#livepanel [data-role="join"]:not([disabled])');
+    if (join) { join.click(); }
+    return { pressed, joined: !!join, staked: !!r.you };
+  }, null, { timeout: 60000, polling: 50 }).then((h) => h.jsonValue(), () => null);
+  check(!!placed && placed.pressed === 3 && placed.joined && placed.staked, 'you can answer the side predictions and put your stake on', placed || 'no open betting window came');
+  // everything is read inside the wait, in the turn that sees the result card (the table moves on 0.8 seconds later with ?fast=1 and clears its result),
+  // for the round that holds our stake; the table is stopped there, so the checks below (and the verification) read this round and no other
+  const res = await (await p2.waitForFunction(() => {
+    const room = GS.live.room('duck');
+    const r = room.result;
+    if (!(room.phase === 'result' && r && r.you && document.querySelector('#lt-result .lt-res'))) { return null; }
+    room._clearTimers();
+    return { pot: r.pot, bonus: r.bonus, pred: r.pred, winShare: r.winShare, leader: r.leaderId, winner: r.winnerId, preds: GS.store.get().pred, text: document.querySelector('#lt-result').innerText };
+  }, null, { timeout: 90000, polling: 100 })).jsonValue();
   check(res.bonus.match === Math.min(200, res.pot) && res.bonus.total === res.bonus.match, 'the sponsor match is the pot up to its cap', res.bonus);
-  const text = await p2.locator('#lt-result').innerText();
+  const text = res.text;
   check(text.includes('takes the simulated pot: $' + (res.pot + res.bonus.total).toLocaleString('en-US')) && text.includes('matched') && text.includes('simulated'), 'the result shows the matched total and says the sponsor is simulated', { text, pot: res.pot, bonus: res.bonus });
   const truth = { big: res.pot >= 500, upset: res.winShare < 0.25, leader: res.winner === res.leader };
   const guess = { big: true, upset: false, leader: true };
-  check(res.pred.rows.length === 3 && res.pred.rows.every((x) => x.right === (guess[x.key] === truth[x.key])), 'each side prediction is scored against what happened', res.pred);
-  check(res.pred.xp === res.pred.right * 15 + (res.pred.right === 3 ? 10 : 0) && res.preds.total === 3 && res.preds.right === res.pred.right, 'predictions pay XP only and are tallied', res.preds);
+  check(!!res.pred && res.pred.rows.length === 3 && res.pred.rows.every((x) => x.right === (guess[x.key] === truth[x.key])), 'each side prediction is scored against what happened', res.pred);
+  check(!!res.pred && res.pred.xp === res.pred.right * 15 + (res.pred.right === 3 ? 10 : 0) && res.preds.total === 3 && res.preds.right === res.pred.right, 'predictions pay XP only and are tallied', res.preds);
   check(await p2.evaluate(async () => (await GS.ui.receipt.verifyRound(GS.live.room('duck').result.fair)).ok), 'a matched round still verifies');
   const cc = await p2.evaluate(() => ({
     mid: GS.live.closeCall([['a', 10], ['b', 90]], 50), edge: GS.live.closeCall([['a', 10], ['b', 90]], 9), first: GS.live.closeCall([['a', 10], ['b', 90]], 0),
@@ -1723,7 +1770,7 @@ if (section('13l. Live Plinko tables: seven sizes, backed charities plus catalog
   for (const size of [5, 100, 1000]) {
     await go(page, '#live-plinko' + size);
     await page.waitForSelector('#livepanel:not([hidden]) [data-role="gates"]');
-    const t = await page.locator('#g-title').innerText();
+    const t = await titleWith(page, size.toLocaleString('en-US') + ' bins');
     check(t.includes(size.toLocaleString('en-US') + ' bins') && t.includes('Live'), 'the table ' + size + ' says so in its title', t);
     check(await page.locator('#livepanel .tablebar .tbtn').count() === 7 && await page.locator('#livepanel .tablebar .tbtn.is-on').innerText() === size.toLocaleString('en-US'), 'with a bar to hop between the seven tables');
     await page.waitForFunction((s) => window.GS.games.plinko._bins() === s, size, { timeout: 15000 });
@@ -1734,19 +1781,25 @@ if (section('13l. Live Plinko tables: seven sizes, backed charities plus catalog
   // play a round at the 25 table and check the winner is one of the backed charities
   await go(page, '#live-plinko25');
   await page.waitForSelector('#livepanel [data-role="gates"]');
-  await page.waitForFunction(() => { const r = window.GS.live.room('plinko25'); return r && r.phase === 'open' && r.msLeft() > 800; }, null, { timeout: 30000 });
-  await page.evaluate(() => { const o = document.querySelector('#livepanel .odd'); if (o) { o.click(); } });
-  await page.evaluate(() => { const j = document.querySelector('#livepanel [data-role="join"]:not([disabled])'); if (j) { j.click(); } });
-  await page.waitForSelector('#lt-result .lt-res', { timeout: 60000 });
-  const res = await page.evaluate(() => { const r = window.GS.live.room('plinko25').result; return { winner: r.winnerId, weights: r.weights.map((w) => w[0]), size: r.size, game: r.game, shown: window.GS.games.plinko._shown() }; });
-  check(res.weights.includes(res.winner) && res.size === 25 && res.game === 'plinko', 'the pot goes to a backed charity (fillers cannot win)', res);
-  check(res.shown[0] === res.winner, 'and the ball landed in its bin', res);
+  const staked = await stakeNow(page, 'plinko25');
+  // read inside the wait, in the turn that sees the result card: with ?fast=1 the table moves on 0.8 seconds later and clears its result (a read in a second call
+  // found it empty on a busy machine); the table is stopped there so the checks read this round and no other
+  const res = await page.waitForFunction(() => {
+    const r = window.GS.live.room('plinko25');
+    if (!(r && r.phase === 'result' && r.result && document.querySelector('#lt-result .lt-res'))) { return null; }
+    r._clearTimers();
+    return { winner: r.result.winnerId, weights: r.result.weights.map((w) => w[0]), size: r.result.size, game: r.result.game, shown: window.GS.games.plinko._shown() };
+  }, null, { timeout: 90000, polling: 100 }).then((h) => h.jsonValue(), () => null);
+  check(staked && !!res && res.weights.includes(res.winner) && res.size === 25 && res.game === 'plinko', 'the pot goes to a backed charity (fillers cannot win)', { staked, res });
+  check(!!res && res.shown[0] === res.winner, 'and the ball landed in its bin', res);
   // the table switcher and the alias
   await page.click('#livepanel .tablebar .tbtn >> text=200');
-  await page.waitForFunction(() => window.location.hash === '#live-plinko200');
-  check((await page.locator('#g-title').innerText()).includes('200 bins'), 'the bar switches table without going back to the lobby');
+  await onRoute(page, 'live-plinko200');
+  const switched = await titleWith(page, '200 bins');
+  check(switched.includes('200 bins'), 'the bar switches table without going back to the lobby', switched);
   await go(page, '#live-plinko');
-  check((await page.locator('#g-title').innerText()).includes('10 bins'), '#live-plinko still opens the default table');
+  const alias = await titleWith(page, '10 bins');
+  check(alias.includes('10 bins'), '#live-plinko still opens the default table', alias);
   await a11y(page, 'live Plinko table');
   await page.close();
 }
@@ -1770,23 +1823,24 @@ if (section('13o. Every live game is a lobby of seven tables')) {
     await page.waitForFunction((id) => { const r = window.GS.live.room(id); return r && r.phase === 'open' && r.msLeft() > 900 && r.distinct() >= 2; }, gid + '25', { timeout: 40000 });
     const board = await page.evaluate((id) => { const r = window.GS.live.room(id); const b = r.boardInfo(); return { spots: b.spots.length, backedAll: r.field().every((f) => b.spots.some((c) => c.id === f.charity.id)), title: r.title() }; }, gid + '25');
     check(board.spots === 25 && board.backedAll && board.title.includes('25 ' + UNIT[gid]), gid + ': the 25-table board is full and holds every backed charity', board);
-    await page.evaluate(() => { const o = document.querySelector('#livepanel .odd'); if (o) { o.click(); } });
-    await page.evaluate(() => { const j = document.querySelector('#livepanel [data-role="join"]:not([disabled])'); if (j) { j.click(); } });
-    // the snapshot is taken inside the wait, while this table's result is on screen (the table moves on ten seconds later, and a busy machine can be slower than that)
-    const res = await (await page.waitForFunction((args) => {
+    const staked = await stakeNow(page, gid + '25');
+    // the snapshot is taken inside the wait, while this table's result is on screen (the table moves on ten seconds later, and a busy machine can be slower than that);
+    // a game whose card never shows before the table moves on is a failed check, not a crash that hides the games after it
+    const res = await page.waitForFunction((args) => {
       const r = window.GS.live.room(args[0]);
       if (!(r && r.phase === 'result' && r.result && document.querySelector('#lt-result .lt-res'))) { return null; }
       const g = window.GS.games[args[1]];
       const sh = g._shown ? g._shown() : null;
       return { winner: r.result.winnerId, weights: r.result.weights.map((w) => w[0]), size: r.result.size, game: r.result.game, shown: sh };
-    }, [gid + '25', gid], { timeout: 90000, polling: 100 })).jsonValue();
-    check(res.weights.includes(res.winner) && res.size === 25 && res.game === gid, gid + ': the pot goes to a backed charity (fillers cannot win)', res);
-    check(Array.isArray(res.shown) ? res.shown.includes(res.winner) : res.shown === res.winner, gid + ': and the game shows that charity winning', res);
+    }, [gid + '25', gid], { timeout: 90000, polling: 100 }).then((h) => h.jsonValue(), () => null);
+    check(staked && !!res && res.weights.includes(res.winner) && res.size === 25 && res.game === gid, gid + ': the pot goes to a backed charity (fillers cannot win)', { staked, res });
+    check(!!res && (Array.isArray(res.shown) ? res.shown.includes(res.winner) : res.shown === res.winner), gid + ': and the game shows that charity winning', res);
   }
   // the aliases still open each game's default (10-spot) table, and the 1,000 table of a race has a full board
   for (const gid of ['balloon', 'wheel']) {
     await go(page, '#live-' + gid);
-    check((await page.locator('#g-title').innerText()).includes('10 ' + UNIT[gid]), '#live-' + gid + ' opens the 10-spot table');
+    const alias = await titleWith(page, '10 ' + UNIT[gid]);
+    check(alias.includes('10 ' + UNIT[gid]), '#live-' + gid + ' opens the 10-spot table', alias);
   }
   await go(page, '#live-balloon1000');
   await page.waitForFunction(() => { const r = window.GS.live.room('balloon1000'); return r && r.boardInfo() && r.boardInfo().spots.length === 1000; }, null, { timeout: 30000 });
@@ -2308,68 +2362,78 @@ if (section('13u. Small regressions found in review: sound waits for a first tou
 
   /* ---- (b) a wrong number typed in the board-size box is cleared when the box is left, even if it is left at once ---- */
   // The box applies a typed number 350 ms after the last key, or when it is left. Here it is left well inside that wait, which is the case that
-  // used to leave "0", "-5" or "0.5" sitting in the box. The page's own input and change events are timed so a slow machine cannot make the test pass by accident.
-  const stamps = () => {
-    const i = document.querySelector('#size-custom');
-    window.__q = { input: 0, change: 0 };
-    i.addEventListener('input', () => { window.__q.input = performance.now(); });
-    i.addEventListener('change', () => { window.__q.change = performance.now(); });
-  };
+  // used to leave "0", "-5" or "0.5" sitting in the box.
+  // The quick sequences (here and in (c)) run entirely inside the page, on the page's own timers: the number is typed with a real edit
+  // (execCommand 'insertText', so the browser treats it as the visitor's edit and fires `change` when the box is left), and 60 ms later the box is left (or
+  // Play is pressed). The gap between the last `input` and the moment the box is left (or Play pressed) is measured in the page with performance.now(), so how slow this machine's round
+  // trips to the test are cannot stretch it. If the page's own timer is ever late by more than 250 ms the try is thrown away and repeated (up to 8 times).
+  const quickEdit = (page, texts, finish) => page.evaluate(({ texts, finish }) => new Promise((resolve) => {
+    const box = document.querySelector('#size-custom');
+    const play = document.querySelector('#btn-play');
+    let tries = 0;
+    const attempt = () => {
+      const text = texts[tries % texts.length];
+      tries++;
+      let tInput = 0;
+      let tChange = 0;
+      const onInput = () => { tInput = performance.now(); };
+      const onChange = () => { tChange = performance.now(); };
+      box.addEventListener('input', onInput);
+      box.addEventListener('change', onChange);
+      box.focus();
+      box.select();
+      document.execCommand('insertText', false, text);
+      setTimeout(() => {
+        const waited = performance.now() - tInput;
+        if (waited > 250) { // the page's own timer ran late: not the quick case, so do nothing and try again
+          box.removeEventListener('input', onInput);
+          box.removeEventListener('change', onChange);
+          if (tries < 8) { attempt(); } else { resolve({ tooSlow: true, tries }); }
+          return;
+        }
+        const gap = Math.round(waited); // last `input` to the moment the box is left or Play is pressed, read in the page just before it happens
+        if (finish === 'play') { play.focus(); play.click(); } else { box.blur(); }
+        box.removeEventListener('input', onInput);
+        box.removeEventListener('change', onChange);
+        resolve({ text, tries, typed: tInput > 0, changed: tChange > 0, gap });
+      }, 60);
+    };
+    attempt();
+  }), { texts, finish });
   const sizeHint = (p) => p.locator('#size-hint').textContent();
   for (const id of ['wheel', 'cards', 'scratch']) {
     const left = {};
-    let tooSlow = 0;
     for (const bad of ['0', '-5', '0.5']) {
-      let done = false;
-      for (let attempt = 0; attempt < 4 && !done; attempt++) {
-        const page = await newPage();
-        await openApp(page, '#game-' + id);
-        await page.waitForSelector('#btn-play:not([disabled])');
-        const box0 = await page.inputValue('#size-custom');
-        const hint0 = await sizeHint(page);
-        await page.evaluate(stamps);
-        await page.click('#size-custom');
-        await page.keyboard.type(bad);
-        await page.keyboard.press('Tab');
-        const gap = await page.evaluate(() => window.__q.change - window.__q.input);
-        if (gap > 250) { tooSlow++; await page.close(); continue; }
-        await page.waitForTimeout(600); // past the 350 ms wait, so a late timer would have shown itself too
-        left[bad] = { box: await page.inputValue('#size-custom'), box0, sameBoard: (await sizeHint(page)) === hint0, gap: Math.round(gap) };
-        done = true;
-        await page.close();
-      }
-      if (!done) { left[bad] = { notTested: 'could not leave the box in time (' + tooSlow + ' slow tries)' }; }
-    }
-    check(['0', '-5', '0.5'].every((b) => left[b] && left[b].box !== undefined && left[b].box === left[b].box0 && left[b].sameBoard), id + ': typing 0, -5 or 0.5 and leaving the size box at once puts the box back to the real size and leaves the board alone', left);
-  }
-
-  /* ---- (c) a quick click on Play after typing a size plays the size that was typed ---- */
-  // Number, mouse onto Play and press: all inside the 350 ms wait. The number is not a preset or a default, so an ignored number shows.
-  for (const id of ['wheel', 'cards', 'derby']) {
-    let res = null;
-    for (let attempt = 0; attempt < 4 && !res; attempt++) {
       const page = await newPage();
       await openApp(page, '#game-' + id);
       await page.waitForSelector('#btn-play:not([disabled])');
-      await page.evaluate(stamps);
-      await page.click('#size-custom');
-      await page.keyboard.press('Control+A');
-      await page.keyboard.type('17');
-      await page.evaluate(() => document.querySelector('#btn-play').scrollIntoView({ block: 'center', behavior: 'instant' }));
-      const at = await page.locator('#btn-play').boundingBox();
-      await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
-      await page.mouse.down();
-      await page.waitForTimeout(100);
-      await page.mouse.up();
-      const gap = await page.evaluate(() => window.__q.change - window.__q.input);
-      if (gap > 250) { await page.close(); continue; } // too slow on this machine to be the quick case: try again
-      await waitReceipt(page);
-      res = await page.evaluate((g) => { const h = window.GS.store.get().history[0]; return { gap: 0, board: h && h.fair ? h.fair.board.length : -1, saved: window.GS.store.prefs().sizes ? window.GS.store.prefs().sizes[g] : null, rounds: window.GS.store.get().history.length }; }, id);
-      res.gap = Math.round(gap);
-      await closeReceipt(page);
+      const box0 = await page.inputValue('#size-custom');
+      const hint0 = await sizeHint(page);
+      const q = await quickEdit(page, [bad], 'blur');
+      await page.waitForTimeout(600); // past the 350 ms wait, so a late timer would have shown itself too
+      left[bad] = { box: await page.inputValue('#size-custom'), box0, sameBoard: (await sizeHint(page)) === hint0, quick: q };
       await page.close();
     }
-    check(res && res.board === 17 && res.saved === 17 && res.rounds === 1, id + ': typing 17 in the size box and pressing Play within about 100 ms plays a board of 17 (the saved round has 17 charities on its board)', res || 'could not press Play in time on this machine');
+    check(['0', '-5', '0.5'].every((b) => left[b].quick.typed && left[b].quick.changed && left[b].quick.gap < 250 && left[b].box === left[b].box0 && left[b].sameBoard), id + ': typing 0, -5 or 0.5 and leaving the size box at once (60 ms later, timed in the page) puts the box back to the real size and leaves the board alone', left);
+  }
+
+  /* ---- (c) a quick click on Play after typing a size plays the size that was typed ---- */
+  // The number is typed and Play is pressed 60 ms later, inside the 350 ms wait. The number is not a preset or a default, so an ignored number shows.
+  // (Pressing Play moves focus off the box, which is what fires `change`, exactly as a mouse press on the button does.)
+  for (const id of ['wheel', 'cards', 'derby']) {
+    const page = await newPage();
+    await openApp(page, '#game-' + id);
+    await page.waitForSelector('#btn-play:not([disabled])');
+    const q = await quickEdit(page, ['17', '19', '23', '29', '31', '37', '41', '43'], 'play');
+    let res = null;
+    if (q.typed && q.changed) {
+      await waitReceipt(page);
+      res = await page.evaluate((g) => { const h = window.GS.store.get().history[0]; return { board: h && h.fair ? h.fair.board.length : -1, saved: window.GS.store.prefs().sizes ? window.GS.store.prefs().sizes[g] : null, rounds: window.GS.store.get().history.length }; }, id);
+      await closeReceipt(page);
+    }
+    const n = q.text ? Number(q.text) : null;
+    check(res && q.gap < 250 && res.board === n && res.saved === n && res.rounds === 1, id + ': typing ' + (q.text || 'a number') + ' in the size box and pressing Play 60 ms later (timed in the page) plays a board of that size (the saved round has that many charities on its board)', { quick: q, round: res });
+    await page.close();
   }
 
   /* ---- (d) a founding year that is the register's date says so, in the profile too; a corrected year does not ---- */
@@ -2602,11 +2666,9 @@ if (section('14. Real-donation mode (redirect to checkout) never handles money')
   check(!(await page.locator('#view-game [data-role="pay-field"]').isVisible()), 'the pay-with field is hidden (you pay on the checkout page)');
   check(!(await page.locator('#btn-daily').isVisible()), 'the daily bonus wheel (play credit) is hidden too');
   check(!(await page.locator('.side__link[data-route="live"]').isVisible()) && await page.evaluate(() => !GS.live.enabled() && GS.live.ids().length === 0), 'live tables are switched off (a shared pot needs a server and real money is never handled here)');
-  await page.evaluate(() => { window.location.hash = '#live-derby'; });
-  await page.waitForTimeout(250);
+  await go(page, '#live-derby');
   check(await page.locator('#view-lobby').isVisible(), 'a live table link falls back to the lobby');
-  await page.evaluate(() => { window.location.hash = '#game-wheel'; });
-  await page.waitForTimeout(250);
+  await go(page, '#game-wheel');
   await page.click('#btn-play');
   await waitReceipt(page);
   check(await page.locator('#dlg-result .stamp').count() === 0, 'no DEMO stamp');

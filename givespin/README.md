@@ -337,7 +337,7 @@ storage is reported, and the saved text stays small), and this README (the roste
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 ```
 
-About 780 end-to-end checks in headless Chromium (needs Playwright installed globally). They start their own static
+About 840 end-to-end checks (770 without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
 the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the lobby of seven table sizes for every live game, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, filters checked
 against an independent computation, the charity directory and profiles, direct gifts, repeat plans and dedications,
