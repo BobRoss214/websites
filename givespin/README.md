@@ -51,7 +51,7 @@ tables (marked **Live** below), and every live game has seven table sizes.
 | Scratch Cards | 4 to 48 panels | Scratch the foil with a finger or mouse (or reveal by keyboard) to find matching charities. |
 | Charity Derby (Live) | 2 to 1,000 runners | Charities race down lanes; the first across the line wins. |
 | Duck Derby (Live) | 2 to 1,000 ducks | Rubber ducks bob down a river; each wears its charity's colour. |
-| Marble Run (Live) | 2 to 1,000 marbles | Glass marbles tumble down a winding track. |
+| Marble Run (Live) | 2 to 1,000 marbles | Glass marbles roll, bump and overtake down a winding track (a small physics race that is worked out first, with the drawn charity's marble in the place that crosses first). |
 | Balloon Race (Live) | 2 to 1,000 balloons | Balloons climb to a finish line in the clouds. |
 | Lucky Draw (Live) | 2 to 1,000 balls | Balls tumble in a drum; one rolls out through the chute. |
 | Last One Standing (Live) | 2 to 1,000 tiles | Charities are knocked out wave by wave until one is left. |
