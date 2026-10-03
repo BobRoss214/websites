@@ -94,12 +94,12 @@
     const s = doc.createElement('script');
     s.src = 'lang/' + code + '.js';
     s.onload = () => done();
-    s.onerror = () => done();
+    s.onerror = () => { s.remove(); done(); };   // removed, so picking the language again later tries again
     (doc.head || doc.documentElement).appendChild(s);
   }
   if (W.lang !== 'en' && !W.dict[W.lang] && doc.readyState === 'loading') {
     // Parser-blocking on purpose: the page is translated before it is first drawn.
-    doc.write('<script src="lang/' + W.lang + '.js"><\/script>');
+    doc.write('<script src="lang/' + W.lang + '.js" data-wa-lang><\/script>');
   }
 
   /* ------------------------------------------------------------------ *
@@ -178,7 +178,10 @@
   // The language is applied when the page has been read to the end (DOMContentLoaded), but the big scripts at the end of the page run before that,
   // and the first screen can be painted in English in the meantime. main.js is the first of them: it calls this, so the texts are swapped
   // while the page is still being built. ready() below then only finishes the job (menus, titles, the "wa:lang" event).
+  // The saved or asked-for language's file did not load: the page is English, and says so (<html lang>, dates, menus).
+  const fallBack = () => { if (W.lang !== 'en' && !W.dict[W.lang]) { W.lang = 'en'; doc.documentElement.lang = 'en'; } };
   W.translateNow = () => {
+    fallBack();
     if (W.lang === 'en' || !(W.dict[W.lang] && W.dict[W.lang].ui) || !doc.body) return;
     const info = LANGS.find((l) => l.code === W.lang) || LANGS[0];
     doc.documentElement.lang = info.html;
@@ -190,6 +193,7 @@
     if (!CODES.includes(code)) return;
     const mark = placeMark();
     load(code, () => {
+      if (code !== 'en' && !W.dict[code]) return;   // its words did not arrive (offline, blocked): stay in the current language
       W.lang = code;
       if (!(opts && opts.quiet)) store.set('wa.lang', code);
       apply(code);
@@ -271,7 +275,8 @@
   }
 
   function ready() {
-    buildMenus();
+    fallBack();
+    try { buildMenus(); } catch (e) { setTimeout(() => { throw e; }); }
     if (W.lang !== 'en') { apply(W.lang); doc.dispatchEvent(new CustomEvent('wa:lang', { detail: W.lang })); } else markMenus();
     offer();
   }
@@ -283,6 +288,9 @@
   if (doc.readyState === 'loading' && W.onParse) {
     const reading = new Set();   // read, but maybe not all of their contents yet
     W.onParse((els) => {
+      // Once the browser has read past the language file (it waits for it), the file has run or failed: if it failed, English.
+      const ls = W.lang !== 'en' && !W.dict[W.lang] && doc.querySelector('script[data-wa-lang]');
+      if (ls && els.some((el) => ls.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) fallBack();
       const d = W.lang !== 'en' && W.dict[W.lang] && W.dict[W.lang].ui;
       els.forEach((el) => {
         if (el === doc.body) offer();

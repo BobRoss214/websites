@@ -925,23 +925,14 @@
   }
 
   /* ------------------------------------------------------------------ */
-  initToTop();
-  initOffscreenPause();
-  initPrint();
-  initGallery();
-  initZoom();
-  initReviews();
-  initNav();
-  initReveal();
-  initBee();
-  initSeasons();
-  initFarmSeasons();
-  initGroups();
-  initWeekStrips();
-  initVarietyFilter();
-  initFarmCalendar();
-  initBouquet();
-  initGoat();
-  initCrops();
-  initScroll();
+  // Each part starts on its own: one that fails (an old browser, a browser extension, a bad edit) must not stop the others,
+  // or the sections below the first screen stay invisible (.reveal) and the phone menu does not open. The error is still reported.
+  [initToTop, initOffscreenPause, initPrint, initGallery, initZoom, initReviews, initNav, initReveal, initBee, initSeasons, initFarmSeasons,
+    initGroups, initWeekStrips, initVarietyFilter, initFarmCalendar, initBouquet, initGoat, initCrops, initScroll]
+    .forEach((init) => {
+      try { init(); } catch (e) {
+        if (init === initReveal) $$('.reveal, .crop-row, .goat-nook').forEach((el) => el.classList.add('in'));   // never leave the sections invisible
+        setTimeout(() => { throw e; });
+      }
+    });
 })();

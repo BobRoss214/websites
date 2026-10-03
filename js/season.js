@@ -108,6 +108,7 @@
    * Below: this season's lines and buttons (data-only="fall", data-in-season, data-out-of-season), the all-year hero
    * line between seasons and the "See the farm in" switcher, exactly as js/hero.js sets them again when it runs. */
   var batches = [];
+  function later(e) { setTimeout(function () { throw e; }); }   // reported, without stopping what comes after
   W.onParse = function (fn) { batches.push(fn); };
   W.parsed = function (el) {
     for (var n = el; n && n !== document.documentElement; n = n.parentNode) if (n.nextSibling) return true;
@@ -136,7 +137,7 @@
     var reader = new MutationObserver(function (records) {
       var els = [];
       for (var i = 0; i < records.length; i++) for (var j = 0; j < records[i].addedNodes.length; j++) if (records[i].addedNodes[j].nodeType === 1) els.push(records[i].addedNodes[j]);
-      for (var k = 0; k < batches.length; k++) batches[k](els);
+      for (var k = 0; k < batches.length; k++) { try { batches[k](els); } catch (e) { later(e); } }   // one failing must not stop the others
     });
     reader.observe(document.documentElement, { childList: true, subtree: true });
     document.addEventListener('DOMContentLoaded', function () { reader.disconnect(); });

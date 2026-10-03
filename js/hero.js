@@ -1184,7 +1184,7 @@
     if (!SCENES[id]) return;
     const run = () => {
       W.seasons.apply(id);
-      build(id);
+      try { build(id); } catch (e) { setTimeout(() => { throw e; }); }   // a drawing problem must not leave the wrong season's words and buttons
       applyOnly(id);
       // Between seasons the scene shows the nearest one, but its line ("It's strawberry season!") would not be true yet
       // (or any more), so the all-year line is shown instead. A season picked with the switcher still shows its own line.

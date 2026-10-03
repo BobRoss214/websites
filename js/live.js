@@ -246,28 +246,29 @@
     if (st.mode !== 'none') $('[data-rel-chip-text]', chip).textContent = chipText(st);
   }
 
-  function refresh() { renderBadges(); renderNotice(); renderCountdown(); renderAnnounce(); renderYear(); }
+  const each = (fns) => fns.forEach((f) => { try { f(); } catch (e) { setTimeout(() => { throw e; }); } });   // one failing must not stop the others
+  function refresh() { each([renderBadges, renderNotice, renderCountdown, renderAnnounce, renderYear]); }
 
   if (doc.readyState === 'loading' && W.onParse) {
     const reading = new Set();   // read, but maybe not all of their contents yet
     W.onParse((els) => {
-      els.forEach((el) => {
+      els.forEach((el) => each([() => {
         // The badges and the top bar line are empty in the HTML, so they are filled the moment they are read; the rest once read to the end.
         if (el.matches('[data-live]')) renderBadge(el);
         else if (el.matches('[data-ann-season]')) renderAnnounce();
         else if (el.matches('[data-countdown], .announce, [data-release-time]')) reading.add(el);
         if (el.matches('[data-rel-chip]') && !el.hidden) { el.classList.remove('rel-off'); el.classList.add('rel-wait'); }   // this season has the chip: keep its line
         if (el.matches('tr[data-release]')) renderChip(false);   // the rows are in date order, so the first one still to come already decides it
-      });
+      }]));
       reading.forEach((el) => {
         if (!W.parsed(el)) return;
         reading.delete(el);
-        if (el.matches('[data-countdown]')) renderCountdown();
-        if (el.matches('.announce')) renderNotice();
-        if (el.matches('[data-release-time]')) renderChip(true);
+        if (el.matches('[data-countdown]')) each([renderCountdown]);
+        if (el.matches('.announce')) each([renderNotice]);
+        if (el.matches('[data-release-time]')) each([() => renderChip(true)]);
       });
     });
-    doc.addEventListener('DOMContentLoaded', () => { renderChip(true); refresh(); });   // once more with the whole page, in case anything was missed
+    doc.addEventListener('DOMContentLoaded', () => { each([() => renderChip(true)]); refresh(); });   // once more with the whole page, in case anything was missed
   } else refresh();
   let seenDay = easternParts(new Date()).ymd;   // a page left open overnight: new day, new countdown number, an expired notice goes away
   setInterval(() => { renderBadges(); const d = easternParts(new Date()).ymd; if (d !== seenDay) { seenDay = d; refresh(); } }, 60 * 1000);
