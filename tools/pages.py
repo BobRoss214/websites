@@ -23,7 +23,12 @@ The farm map's scripts (js/map-art.js, js/farm-map-data.js) are added only to a 
 Change SITE below if the website is published somewhere other than wiseacresorganic.com.
 """
 import html, json, os, re, struct, sys
-from bs4 import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    sys.exit('This needs the beautifulsoup4 package. Type this once, then run the command again:\n'
+             '    python3 -m pip install beautifulsoup4\n'
+             '(On Windows type python instead of python3. See "Commands: one-time setup" in README.md.)')
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = 'https://www.wiseacresorganic.com/'

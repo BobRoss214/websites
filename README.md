@@ -51,7 +51,7 @@ run `python3 -m http.server` in this folder and visit http://localhost:8000).
 ## Start here (for the farm owner)
 
 You can change many things on the site yourself, with no programming: you type words, dates and numbers into a plain text file, save it,
-and look at the site. Anything marked **ask Claude** needs a command that has to be run on a computer that is set up for it.
+and look at the site. Anything marked **ask Claude** needs a command typed into a terminal window. You can ask Claude, or set your own computer up once and type the commands yourself (see "Commands: one-time setup" below).
 
 **Editing a file safely**
 
@@ -68,17 +68,28 @@ and look at the site. Anything marked **ask Claude** needs a command that has to
 
 `js/content.js` has the same instructions at the top, with an example for each setting.
 
+**Commands: one-time setup** (only for the changes below that say "run")
+
+Changes to the words on a page, the translations, photos and the QR signs use short commands typed into a terminal window. Set this up once; after that each command is one line.
+
+1. Install Python 3 from python.org/downloads. On Windows, tick "Add python.exe to PATH" on the first screen of the installer.
+2. Open a terminal in the site folder. Windows: open the folder in File Explorer, click the address bar, type `cmd` and press Enter. Mac: open the Terminal app, type `cd ` (with a space after it), drag the site folder into the window and press Return.
+3. Type `python3 --version` and press Enter. It should answer `Python 3.` and some numbers. On Windows type `python --version` instead; if Windows says Python was not found, or opens the Microsoft Store, run the installer again and tick the PATH box. This file writes every command as `python3 ...`: on Windows type `python ...` (or `py ...`).
+4. Once, install the three helper packages: `python3 -m pip install beautifulsoup4 pillow segno` (`beautifulsoup4` is for `pages.py` and `i18n.py`, `pillow` for `add_photo.py`, `segno` for `make_qr.py`).
+
+A message that ends in `No module named ...` means step 4 was skipped. `command not found`, or `'python3' is not recognized`, means step 1, or that Windows needs `python` instead of `python3`.
+
 ## Day-to-day changes
 
 | I want to… | Do this |
 | --- | --- |
-| Close for rain or a holiday | `js/content.js` → in `closures` add the date between quote marks: `closures: ['2026-10-04'],` (two dates: `['2026-10-04', '2026-10-11']`). The "Open now" badges for the farm, The GreenHouse and Wise Pie then show closed (or "No visits today") that day. It does not stop people booking in Bookeo, so close those times in Bookeo too, and add a banner (next row). |
-| Show a banner on every page | `js/content.js` → `notice: 'Closed Saturday for rain.',` and, to make it disappear by itself, `noticeUntil: '2026-10-05',` (the last day it shows). The banner is in English for everyone; to write it in each language use `notice: { en: '…', es: '…', hi: '…', zh: '…', vi: '…' },` (a language you leave out shows the English). To remove it: `notice: '',`. |
-| Change opening hours | `js/content.js` → `hours`. Times are Eastern Time on a 24-hour clock (`'16:00'` is 4 pm). `days`: 0 = Sunday, 1 = Monday … 6 = Saturday. This changes only the green "Open now" badges. The hours written in the page text (Visit, Pizza, GreenHouse, Contact, FAQ) are separate: ask Claude to change those, and their translations. |
-| Change season dates | Ask Claude (the dates are in `js/season.js`). They move the hero scene, the season tabs, the top bar and the countdown. |
+| Close for rain or a holiday | `js/content.js` → in `closures` add the date between quote marks: `closures: ['2026-10-04'],` (more days: `['2026-10-04', '2026-10-11']`; a whole week: write all seven days; there is no range). Days that have passed can stay. The "Open now" badges for the farm, The GreenHouse and Wise Pie then show closed (or "No visits today") that day. **All three are closed together: you cannot close only the farm** (for that, use the banner in the next row and close the times in Bookeo). It does not stop people booking in Bookeo, so close those times in Bookeo too. To see a closed badge today, write today's date for a minute, look, then put the real date back. After a long closure the badge names only the weekday ("Opens Friday"): if the next opening is more than a week away, say the date in the banner. |
+| Show a banner on every page | `js/content.js` → `notice: "Closed Saturday, Oct 10, for rain.",` and, to make it disappear by itself, `noticeUntil: '2026-10-11',` (the last day it shows). **The banner shows from the moment you publish, not from the day it is about** (there is no start date), so write the date in the words and, for a closure weeks away, add the banner later (put a reminder in your calendar). There is one banner at a time, and the words "Heads up:" are put in front of it for you. The banner is in English for everyone; to write it in each language use `notice: { en: '…', es: '…', hi: '…', zh: '…', vi: '…' },` (a language you leave out shows the English). To remove it: `notice: '',`. Write `"We're closed"` in double quotes if the words have an apostrophe. |
+| Change opening hours | `js/content.js` → `hours`. Times are Eastern Time on a 24-hour clock (`'16:00'` is 4 pm). `days`: 0 = Sunday, 1 = Monday … 6 = Saturday. **The GreenHouse and Wise Pie each have one set of days and hours for the whole year**; only `farm` can be set per season. For different winter hours, change them when winter starts and again when it ends. This changes only the green "Open now" badges. The hours written in the page text are separate, and so are their translations: see "Change a fact everywhere" below. A misspelled name (`houers:`) is silently ignored: the Site check box does not look at `hours`. |
+| Change season dates | The site follows the calendar by itself, every year (the dates in `js/season.js` have no year), so you do **not** add 2027 dates: see "A new year, a new season" below. To change the usual dates, ask Claude. They move the hero scene, the season tabs, the top bar and the countdown. |
 | Turn off the season switcher | `js/content.js` → `seasonPicker: false,`. The "See the farm in…" buttons in the first screen disappear and the site follows the calendar. Do this before you launch. (The "What's on the farm" and "What's in season" tabs stay.) |
 | Add a review | `js/content.js` → inside `reviews: [ ]` add `{ quote: "…", name: "Sarah M.", source: "Google", url: "https://…", date: "May 2026" },`. `quote` and `name` are required. Only add words a reviewer really wrote, and ask first. The quote cards stay hidden until there is one. The Google, Tripadvisor and Yelp buttons always show. |
-| Add a photo | Ask Claude, and send the picture with a few words on what is in it. Claude runs `python3 tools/add_photo.py` (steps under "Adding a photo" in the Photos section below). It shrinks the picture, takes out the hidden camera and location data, saves it and lists it in the gallery. Other languages show the description in English until Claude translates it. |
+| Add a photo | Run `python3 tools/add_photo.py` (steps under "Adding a photo" in the Photos section below), or ask Claude and send the picture with a few words on what is in it. It shrinks the picture, takes out the hidden camera and location data, saves it and lists it in the gallery. Other languages show the description in English until you add the translations. |
 | Turn on analytics | Ask Claude. You first sign up with one of Plausible, GoatCounter, Umami or Cloudflare Web Analytics; Claude then puts the details in `analytics` in `js/content.js`. Nothing is counted until then, and never for visitors who send Do Not Track or Global Privacy Control. |
 | Change the hero text for a season | Ask Claude. (The words are in `index.html`: the `.hero-sub` lines under the big headline and the winter headline `#hero-h`. They need new translations too.) |
 | Change the booking link | Ask Claude. The Bookeo address `https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356` appears in many places and must be replaced in all of them. |
@@ -91,6 +102,54 @@ and look at the site. Anything marked **ask Claude** needs a command that has to
 | Print QR signs | Ask Claude to make the signs. Then open `print/qr-signs.html` in your browser and press Print (Letter paper; or "Save as PDF" for a print shop). Scan every printed sign with your own phone before you put it up. |
 | Update the farm map | Change the marks in the Farm Map Marker and press "Save for Claude", then ask Claude to update the map. (Claude puts the saved file at `tools/saved-map.json` and runs `python3 tools/farm_map.py tools/saved-map.json`.) |
 | Change wording on a page | Ask Claude. Every change of English wording needs the other four languages updated (see "Languages"). |
+
+## Change a fact everywhere (hours, a price, the phone number, an email address)
+
+The same fact is usually written in several places, and each place has four translations. The site cannot find them for you, so search the whole folder:
+
+1. Use an editor that can search inside all the files of a folder ("Find in Files": Notepad++ and VS Code both have it, Ctrl+Shift+F). Plain Notepad searches one file at a time: open `index.html` and each file in `pages/` and press Ctrl+F in each.
+2. Search for the **words in the table below**, not for a whole sentence. A dash is written `&ndash;` in the files, so search `10 am`, not `10 am–8 pm`. A number can be split by a tag (`<span class="big">$3</span> per person`). Look at every hit before you change it: `$3` is also the barrel train and the vegan cheese, and `$35` is a photo pass.
+3. Change `index.html` and the files in `pages/`. **Never** change `first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html` or `wise-pie.html` in the top folder: they are rebuilt from `pages/`, and your change would be lost.
+4. Run `python3 tools/pages.py`, then `python3 tools/i18n.py extract`, then `python3 tools/i18n.py missing es --list`. Every text you changed is listed there. Translate each one (next section), then `python3 tools/i18n.py build`. A number, a phone number or an email address on its own is not listed: it has nothing to translate.
+5. Look at the site with `?check` (see "Check your changes"). A developer can run `node tests/consistency.test.mjs`: it lists every place a price, time, day, phone number or email is written and says which places disagree. The file names it prints for the five pages in the top folder mean the file of the same name in `pages/`.
+
+| Fact | Search for | Places |
+| --- | --- | --- |
+| The GreenHouse hours (now Friday–Sunday, 10 am–8 pm) | `10 am` | `index.html`: four places say 10 am–8 pm (the facts card, the heading of the GreenHouse section, "Open Friday–Sunday", the note in Contact). The others say `10 am – 4 pm`: that is pizza at the farm. Also in `index.html`: `data-days=` and `aria-label="Open Friday, Saturday and Sunday"` under that heading (the little week picture), and `hours` in `js/content.js` (the green badges). |
+| Wise Pie hours at The GreenHouse (now Friday–Sunday, 4–8 pm) | `4 to 8`, `4 pm`, `4:00` | `index.html` (pizza section, GreenHouse section, FAQ), `pages/wise-pie.html` (the `description:` line at the top, "Two ways to get it", the FAQ), `pages/pumpkin-patch.html`, and `hours` → `pizza` in `js/content.js`. |
+| The per-person farm fee (now $3) | `$3 per person`, then `>$3<` | `index.html`: the two package texts, the price list in the Shop, and the two photographer passes ("+ $3 per person farm fee"). `pages/pumpkin-patch.html`: the price list and the FAQ answer. **Leave** "$3 per child" (barrel train) and "+$3" (vegan cheese): other prices. |
+| The $31 package | `$31` | `index.html` (the package and the Shop) and `pages/pumpkin-patch.html`. |
+| The main phone number | `tel:`, `footer-contact`, `Questions?` | Add `<a href="tel:+17046286232">(704) 628-6232</a>` in the footer block (`footer-contact`), under the address on the farm card (the `<address>` after "The u-pick farm") and next to the "Questions?" email; add `"telephone": "+1-704-628-6232",` under the `"email"` line in the structured data at the top of `index.html`. Keep the photographers' "Day-of emergencies" number as it is. The footer block has translations: after `extract`, copy its old translation for each language and add `<br> <a2>(704) 628-6232</a>` at the end (the next section explains the `<a1>` / `<a2>` link tags). The developer's facts test then reports two phone numbers (the main one and the day-of one): that is expected, and a developer should allow it. |
+| An email address | `@wiseacresorganic.com` | The general address is in many places (search the address). For a new person for one subject: Contact section, "Who to email": copy one whole `<li>…</li>` line, and change the words and the address in both spots. `extract` then lists two texts: the words (translate them) and `<svg/> name@wiseacresorganic.com` (use the same text in every language). |
+
+## Change one sentence and its translations, step by step
+
+**The English sentence is the key.** Each block of English text gets a short code made from its exact words (`data-t="t3b8b1f71"`), and each language file has one line per code: `"t3b8b1f71": "Preferimos efectivo…"`. Change one letter of the English and the code changes, so the old translation no longer fits anything. Example: add "Samsung Pay" to "Cash is preferred. We also accept all major credit cards, Apple Pay and Google Pay."
+
+1. Change the English in `index.html` (and in the file in `pages/` if the sentence is there too: search a few of its words). Save.
+2. Run `python3 tools/pages.py`, then `python3 tools/i18n.py extract`.
+3. Run `python3 tools/i18n.py missing es --list`. It prints one line per text that needs a translation: `tf63372c4 | Cash is preferred. We also accept …`. The first word is the new code. (`hi`, `zh` and `vi` list the same codes.)
+4. Open `lang/src/es.json`. Press Ctrl+F and search a few words of the old translation (`Apple Pay`): you find the old line, for example `"t3b8b1f71": "Preferimos efectivo… Apple Pay y Google Pay.",`. Leave it (an unused line does no harm). Directly under it, add a new line with the NEW code and your translation:
+   `"tf63372c4": "Preferimos efectivo… Apple Pay, Google Pay y Samsung Pay.",`
+   Rules: straight double quote marks `"` only (not curly ones); a comma at the end of every line except the last one before a `}`; keep tags such as `<strong>`, `<br>` and `<a1>…</a>` exactly as in the English (a link `<a1>` stays `<a1>`, and a second link is `<a2>`); where the English has `&amp;`, use the word for "and" in your language (or write `&amp;`); a `"` inside the text is written `\"`. Texts that JavaScript writes (the list at the end of `missing`, marked `js |`) go in the `"js"` part of the file, which comes first, with the English text as the key.
+5. Do the same in `hi.json`, `zh.json` and `vi.json`. Names, email addresses and numbers stay as they are.
+6. Run `python3 tools/i18n.py build`. If it says "not valid JSON … line N", look at line N and at the line **above** it: a comma is usually missing at the end of the line above, or a quote mark is curly. If it says "its tags differ", compare the tags in the English text it prints with the tags in your translation.
+7. Run `python3 tools/i18n.py missing es` (then `hi`, `zh`, `vi`): each must say `0 missing`.
+8. Look at the page in each language: `index.html?lang=es`, `?lang=hi`, `?lang=zh`, `?lang=vi`.
+
+If a step is skipped, nobody sees an error:
+
+- No `extract` after you edit the English: English visitors see the new words, but visitors in the other languages still see the OLD translation (for example the old price). `python3 tools/i18n.py missing es` now warns about this.
+- `extract` but no translation: that block shows in English inside the translated page. `missing` lists it; the Site check box does not.
+- One language left out: only that language shows English for that block.
+
+## A new year, a new season
+
+- **The seasons switch by themselves, every year.** The site follows the calendar: spring from April 15, summer from June 15, fall from September 13, winter from the Friday after Thanksgiving. The dates in `js/season.js` have no year, so they repeat. You do not add 2027 dates. If you ever edit that file: months count from 0 there (`new Date(y, 8, 13)` is September 13, `0` is January).
+- **What does not switch by itself** (search for `2026`): the "Fall 2026" headings (the Visit section, the schedule, the Shop and its note "Prices are for fall 2026", "Fall 2026 special days", the Pumpkin patch page), "Fall Menu 2026" and its picture, the dates of the special days (Exceptional Children Day, Home School Day), and the rows of the pizza table. Search `2026` and look at each hit; a `data-until` or `data-release` date is a row or line that hides itself.
+- **The pizza table:** delete the old rows and add the new ones (see "Open a new pizza weekend" above). New rows can go in weeks early, but the "Open now" sentence under the table shows the moment you publish it, so write it on the day the reservations open.
+- **The menu picture** (`assets/photos/wise-pie-fall-menu-2026.webp`): add the new menu with `add_photo.py` under a NEW file name and change the link next to "View the printed menu". Visitors' browsers keep the old picture for up to a year if you reuse the name. Changing the heading to "Fall Menu 2027" does not change the pizzas on the page: check each pizza and price.
+- Every text you change needs four translations ("Change one sentence", above). The footer year (2026 ©) changes by itself.
 
 ## Planning features (countdown, weekly box, signup, map…)
 
@@ -215,7 +274,7 @@ our estimates (see Content status). To change one, tell Claude the right number 
 
 - It uses two free public services: OpenStreetMap's address search (Nominatim) and the OSRM routing demo server, which a German non-profit (FOSSGIS) runs. Nothing is contacted until a visitor presses the button, and this website does not keep the address. `docs/WHAT_THE_SITE_STORES.md` lists exactly what is sent.
 - Both are free and come with no promise. They ask for about one request a second and may refuse without notice. The routing server's own page calls its demo "reasonable, non-commercial" use, and this is a business site, so there is a real chance they stop answering one day. Nothing breaks when that happens: the box says "The lookup is not working right now" and offers a Google Maps button.
-- **Once, before launch:** set `farmPoint` in `js/content.js` (the steps are in the comment "DRIVE TIME FROM A VISITOR'S ADDRESS"). It halves the requests and makes the answer faster.
+- **Once, before launch:** set `farmPoint` in `js/content.js`. It halves the requests and makes the answer faster. On Google Maps, right-click the farm: the first line of the menu shows two numbers like `35.0712, -80.6534` (click it to copy it). The first number is `lat`, the second is `lon` (in North Carolina it starts with a minus sign). Type them like this, with a comma between and no quote marks: `farmPoint: { lat: 35.0712, lon: -80.6534 },`. The Site check box does not check these numbers: swapped numbers or a missing minus sign are accepted, and every answer is then wrong. Press "Get drive time" once with an address in Indian Trail: the miles should be small.
 - If you add the Content-Security-Policy line to `_headers`, its `connect-src` must allow exactly `https://nominatim.openstreetmap.org` and `https://router.project-osrm.org`. The line in `docs/LAUNCH_CHECKLIST.md` already does; without them the box only ever says "not working right now".
 - Keep the three small links that the box shows under every answer: "© OpenStreetMap contributors", "Routing: OSRM" and "Fix the map". The two services ask for that credit.
 - To switch the box off, or to move it to a service with a contract (Mapbox, Google), see step 3.13 of `docs/LAUNCH_CHECKLIST.md`. Test the box yourself once a week in season.
@@ -251,15 +310,16 @@ whole line that starts `<meta name="google-site-verification"`; (4) paste it in 
 Do this after you edit `js/content.js` or the pizza schedule.
 
 1. Save the file.
-2. Look at the site: double-click `index.html` (or run `python3 -m http.server` and visit http://localhost:8000/?check). On the live
-   site add `?check` to the address: https://www.wiseacresorganic.com/?check . Anyone who adds ?check sees the box too, so it only ever shows what is already in the public files.
+2. Look at the site: double-click `index.html` (the box shows by itself on your own computer; or run `python3 -m http.server` and visit http://localhost:8000/). On the live
+   site add `?check` to the address: https://www.wiseacresorganic.com/?check . Anyone who adds ?check sees the box too, so it only ever shows what is already in the public files. **Visitors never see a message**: if `js/content.js` breaks, the live site silently loses its banner, badges, closures and photo gallery. So open the live site with `?check` after every change you publish.
 3. Look at the bottom of the page. If something you typed cannot be used, a yellow "Site check" box says what and where. No box means the check
    found nothing wrong.
 4. The check covers `week`, `signup`, `reviewUrl`, `community`, `entrancePhoto`, the rows of the pizza schedule and every `data-until` date (it says what has already hidden itself) and every date in `closures` and `noticeUntil` (it lists any it cannot read; write each closed day on its own, like `'2026-10-04'`). It does **not** check hours,
    the notice words, reviews, photos or `farmPoint`: look at those yourself. For `farmPoint`, press "Get drive time" once with an address in Indian Trail and see that the miles look right.
 5. If the box says "js/content.js did not run", there is a typo in that file (most often an apostrophe inside single quotes, a missing comma, or curly
-   quotes pasted from Word). Press F12 (on a Mac in Chrome: Cmd+Option+J), open Console, and the first red line names the line number. Until it is
+   quotes pasted from Word). Press F12 (on a Mac in Chrome: Cmd+Option+J), open Console, and find the red line that names `content.js`: it ends with the line number. (If you opened the page by double-click, Chrome also prints red lines about fonts: ignore those.) Until it is
    fixed, hours, closures, the notice bar, photos, reviews and the signup are off. Undoing your last change (Ctrl+Z) or putting your copy back also fixes it.
+6. The box finds wrong values, not wrong names: a misspelled setting (`noticeUntill:`) is silently ignored, and so is a setting put in the wrong place. Copy the names from the examples instead of retyping them.
 
 ## Extra pages (for Google)
 
@@ -283,7 +343,7 @@ English, Español, हिन्दी, 中文 (Simplified) and Tiếng Việt. A
 header or the footer. The choice is remembered. If their browser is set to one of these languages
 they are asked once, in that language, whether they'd like it.
 
-**For the owner:** you do not run the commands below. After you change any wording on a page, ask Claude to update the translations.
+**For the owner:** you can type the commands below yourself (set the computer up once: "Commands: one-time setup", and follow "Change one sentence and its translations, step by step"), or ask Claude to update the translations after you change any wording on a page.
 
 **The translations were written by an AI. Please have a native speaker of each language read them
 before relying on them**, especially prices, policies and anything about alcohol, allergies or safety.
@@ -438,7 +498,7 @@ Automatic browser checks (countdown, languages, farm map, accessibility, the too
 
 New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md): which host, what to upload, the steps in order, and what to test afterwards.
 
-1. Upload the folder to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. **Leave out the `docs/` and `tests/` folders** (`docs/`: notes and questions for the farm owner; `tests/`: automatic checks for developers; neither is for visitors). You can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site.
+1. Upload the folder to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. Every later change is uploaded the same way: make a clean copy and drag it in again (`docs/LAUNCH_CHECKLIST.md`, section 2). **Leave out the `docs/` and `tests/` folders** (`docs/`: notes and questions for the farm owner; `tests/`: automatic checks for developers; neither is for visitors). You can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site.
 2. Use your real domain at the **root** (`https://www.wiseacresorganic.com/`). If it lives elsewhere, change `SITE` in `tools/pages.py`, run the rebuild commands, and search & replace the domain in `index.html` (canonical, share image, structured data), and set `site` in `tools/qr_links.json` and run `python3 tools/make_qr.py` again (the QR signs carry the address).
 3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
 4. Send people to the Google Business Profile, and add your site's address there.

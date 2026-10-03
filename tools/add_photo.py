@@ -361,6 +361,10 @@ def write_content(text, crlf, bom):
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(CONTENT), suffix='.tmp')
     with os.fdopen(fd, 'wb') as f:
         f.write((b'\xef\xbb\xbf' if bom else b'') + data.encode('utf-8'))
+    try:                                      # a temporary file is private (mode 600): keep the file's own permissions, so the web server can still read it
+        os.chmod(tmp, os.stat(CONTENT).st_mode & 0o777)
+    except OSError:
+        pass
     os.replace(tmp, CONTENT)
 
 
@@ -440,6 +444,10 @@ def main():
                 check.load()
                 if check.info.get('exif') or check.info.get('icc_profile') or check.info.get('xmp') or len(check.getexif()):
                     raise ValueError('hidden data was found in the saved picture')
+            try:                              # same reason: a temporary file is private; a picture should be readable like the others
+                os.chmod(tmp, 0o644)
+            except OSError:
+                pass
             os.replace(tmp, out)
         except Exception as e:
             if os.path.exists(tmp):

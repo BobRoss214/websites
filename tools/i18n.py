@@ -26,7 +26,12 @@ How it works
   language file.
 """
 import hashlib, json, os, re, sys
-from bs4 import BeautifulSoup, NavigableString, Tag
+try:
+    from bs4 import BeautifulSoup, NavigableString, Tag
+except ImportError:
+    sys.exit('This needs the beautifulsoup4 package. Type this once, then run the command again:\n'
+             '    python3 -m pip install beautifulsoup4\n'
+             '(On Windows type python instead of python3. See "Commands: one-time setup" in README.md.)')
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LANG_DIR = os.path.join(ROOT, 'lang')
@@ -248,6 +253,19 @@ def cmd_jsstrings():
     print(len(found), 'JavaScript strings -> lang/js-strings.json')
 
 
+def stale_pages():
+    """Texts on a page whose English was edited after the last `extract`: the tag on the block (data-t) is not the one its words now give."""
+    out = []
+    for p in pages():
+        raw = open(os.path.join(ROOT, p), encoding='utf-8').read()
+        present = set(re.findall(r'data-t(?:a-[a-z-]+)?="(t[0-9a-f]{8})"', raw))
+        strings, _ = analyse(STRIP.sub('', raw))
+        for i, text in strings.items():
+            if i not in present:
+                out.append((p, re.sub(r'<[^>]+>|\s+', ' ', text).strip()[:90]))
+    return out
+
+
 def cmd_missing(code):
     en = json.load(open(os.path.join(LANG_DIR, 'en.json'), encoding='utf-8'))
     data = load(code)
@@ -260,9 +278,40 @@ def cmd_missing(code):
             print(k, '|', v)
         for k, f in jsmiss.items():
             print('js |', k, f'   (from {f}: add it under "js" in lang/src/{code}.json)')
+        if miss or jsmiss:
+            print(f'Add each one to lang/src/{code}.json: a line  "id": "your translation",  under "ui" (the first word of the line above is the id), or  "English text": "your translation",  under "js" for the lines that start with js |.')
+            print('Every line ends with a comma except the last one before a }. Keep tags such as <strong>, <br>, <a1>...</a> as in the English. Then run: python3 tools/i18n.py build')
+    stale = stale_pages()
+    if stale:
+        print()
+        print('WARNING: the English wording below was changed after the last "extract", so the counts above cannot see it. Visitors in the other languages')
+        print('still see the OLD translation of it. Run  python3 tools/pages.py  and  python3 tools/i18n.py extract  and then this command again:')
+        for page, text in stale[:5]:
+            print(f'  {page}: "{text}"')
+        if len(stale) > 5:
+            print(f'  ... and {len(stale) - 5} more')
 
 
 TAG = re.compile(r'</?([a-z][a-z0-9]*)')
+
+
+def tag_difference(english, translation):
+    """Say in plain words which tags a translation lost or added: "it has no <a2> and no </a2>"."""
+    pat = re.compile(r'<(/?)([a-z][a-z0-9]*)')
+    def count(t):
+        c = {}
+        for slash, name in pat.findall(t):
+            c['<' + slash + name + '>'] = c.get('<' + slash + name + '>', 0) + 1
+        return c
+    a, b = count(english), count(translation)
+    lost = [t for t in sorted(a) if a[t] > b.get(t, 0)]
+    extra = [t for t in sorted(b) if b[t] > a.get(t, 0)]
+    out = []
+    if lost:
+        out.append('The translation is missing ' + ', '.join(lost) + '.')
+    if extra:
+        out.append('The translation has too many ' + ', '.join(extra) + '.')
+    return ' '.join(out) + ' Copy every tag from the English exactly (a link is <a1>...</a>, a second link is <a2>...</a>).'
 
 
 def unsafe(data, en):
@@ -270,13 +319,33 @@ def unsafe(data, en):
     bad = []
     for k, v in data.get('ui', {}).items():
         if k in en and sorted(TAG.findall(v)) != sorted(TAG.findall(en[k])):
-            bad.append(f'ui {k}: its tags differ from the English text')
+            bad.append(f'ui {k}: its tags differ from the English text. {tag_difference(en[k], v)}  English: {re.sub(chr(10), " ", en[k])[:100]}')
         if re.search(r'<[^>]*\son[a-z]+\s*=|javascript:', v, re.I):
             bad.append(f'ui {k}: event handler or javascript: link')
     for k, v in data.get('js', {}).items():
         if re.search(r'[<>"]', v) and not re.search(r'[<>"]', k):
             bad.append(f'js {k!r}: contains < > or "')
     return bad
+
+
+def json_problem(name, path, e):
+    """Explain a JSON mistake the way a person fixes it: which lines to look at, and the usual cause."""
+    ln = getattr(e, 'lineno', 0) or 0
+    msg = getattr(e, 'msg', str(e))
+    lines = open(path, encoding='utf-8').read().split('\n')
+    show = lambda n: f'    line {n}: ' + (lines[n - 1].strip()[:110] if 0 < n <= len(lines) else '')
+    out = [f'{name} is not valid JSON ({msg}; the computer points at line {ln}). Nothing was built.']
+    if ln > 1:
+        out += [show(ln - 1), show(ln)]
+    if 'delimiter' in msg and "','" in msg.replace('"', "'"):
+        out.append(f'Most likely a comma is missing at the END of line {ln - 1} (the line above the one the computer points at).')
+    elif 'property name' in msg:
+        out.append(f'Most likely there is a comma after the last entry (remove the comma at the end of line {ln - 1}), or a quote mark is missing.')
+    elif 'control character' in msg or 'Unterminated' in msg or 'Expecting value' in msg or 'delimiter' in msg:
+        out.append(f'Most likely a closing quote mark is missing, or it is a curly quote (\u201d) instead of a straight one ("), on line {ln} or the line above.')
+    else:
+        out.append('Check the commas and quote marks near those lines.')
+    return '\n'.join(out)
 
 
 def cmd_build():
@@ -288,7 +357,7 @@ def cmd_build():
         try:
             data = json.load(open(os.path.join(SRC_DIR, f), encoding='utf-8'))
         except ValueError as e:
-            sys.exit(f'lang/src/{f} is not valid JSON ({e}). Check the commas and quotes near that spot. Nothing was built.')
+            sys.exit(json_problem(f'lang/src/{f}', os.path.join(SRC_DIR, f), e))
         if not isinstance(data, dict) or not isinstance(data.get('ui', {}), dict) or not isinstance(data.get('js', {}), dict):
             sys.exit(f'lang/src/{f} must look like {{ "ui": {{ ... }}, "js": {{ ... }} }}. Nothing was built.')
         bad = unsafe(data, en)

@@ -15,7 +15,8 @@
  *          notice: "We're closed Saturday for rain.",
  *      (Another way is a backslash in front of the apostrophe:  'We\'re closed Saturday.' )
  *   6. Anything after // on a line is a note for you, and the computer skips it. To switch a line off, put // in front of it.
- *   7. Save the file and look at the website: double-click index.html (or refresh the live page). If a yellow box called "Site check"
+ *   7. Save the file and look at the website: double-click index.html (or refresh the live page; on the live site add ?check to the address,
+ *      and do that after every change: visitors never see a message when this file is broken). If a yellow box called "Site check"
  *      shows at the bottom of the page, it says what to fix. If the page looks broken, press Undo (Ctrl+Z, or Cmd+Z on a Mac)
  *      until it works again, or put your copy back. See "Check your changes" in README.md.
  *   8. Saving the file on your computer does not change the live website. Publish the changed file the way you publish the site.
@@ -51,10 +52,14 @@
  * `closures` is one list of dates when the farm, The GreenHouse and Wise Pie are all shown as closed, or as having no visits (rain, a holiday):
  *       closures: ['2026-10-04', '2026-10-11'],
  *   It does not change Bookeo, so also close those times there. Dates that have passed can stay in the list.
+ *   A whole week: write all seven days (there is no range). All three places close together: you cannot close only the farm (use the notice for that).
+ *   To see a closed badge today, write today's date for a minute, look at the page, then put the real date back.
  *
  * `notice` is the yellow bar at the top of every page. '' (two quote marks, nothing between) hides it.
  *       notice: 'Closed Saturday for rain.',
  *       noticeUntil: '2026-10-05',      // optional: the bar disappears after this day by itself
+ *   The bar shows from the moment you publish until noticeUntil: there is no start date. So write the date in the words ("Closed Saturday,
+ *   Oct 10, for rain.") and, for a closure weeks away, add the notice later. There is one bar at a time. The words "Heads up:" are put in front for you.
  *   The bar shows in English in every language. To give each language its own words, write:
  *       notice: { en: 'Closed Saturday for rain.', es: 'Cerrado el sábado por la lluvia.', hi: '...', zh: '...', vi: '...' },
  *   A language you leave out shows the English. The Site check box checks the dates in closures and noticeUntil, but not the hours or the words of the notice: look at the page yourself.
@@ -166,11 +171,13 @@
  * -----------------------------------
  * The "Drive time" box in the Contact section lets a visitor type an address and see the miles and minutes to the farm or to The GreenHouse (they pick which).
  * It finds the farm by its address with the free OpenStreetMap search. Optional: give the exact spot instead, so the farm is never searched for.
- * On Google Maps, right-click the farm and click the two numbers at the top of the menu to copy them. Then change  farmPoint: null,  to
- *       farmPoint: { lat: 00.0000, lon: -00.0000 },     (your own two numbers, not these)
+ * On Google Maps, right-click the farm. The first line of the menu shows two numbers separated by a comma (click it to copy them). The first
+ * number is lat, the second is lon (in North Carolina the second one starts with a minus sign). Change  farmPoint: null,  to
+ *       farmPoint: { lat: FIRST_NUMBER, lon: SECOND_NUMBER },     and replace the two words with your two numbers (keep the minus sign).
  * When a visitor presses the button, the address they typed goes to OpenStreetMap's search, and two map spots (theirs and the farm's) go to the free OSRM routing
- * server. Nothing is sent before that, and this website does not keep the address. The Site check box does not check `farmPoint`: after you set it,
- * press "Get drive time" once with an address in Indian Trail and see that the miles look right.
+ * server. Nothing is sent before that, and this website does not keep the address. The Site check box does not check `farmPoint`: swapped numbers
+ * or a missing minus sign are accepted and every answer is then wrong. After you set it, press "Get drive time" once with an address in Indian
+ * Trail and see that the miles look right.
  *
  * SEASON SWITCHER
  * ---------------

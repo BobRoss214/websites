@@ -92,7 +92,7 @@
     const s = String(v == null ? '' : v).trim();
     let m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s);
     if (!m && (m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s))) m = [0, m[3], m[1], m[2]];
-    if (!m) { if (s && what) warn(what + ' "' + q(s) + '" is not a date. Write it like 2026-10-03 (year-month-day).'); return ''; }
+    if (!m) { if (s && what) warn(what + ' "' + q(s) + '" is not a date. Write it like 2026-10-03 (year-month-day) and put quote marks around it, so it reads \'2026-10-03\'.'); return ''; }
     const out = m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
     if (!realYmd(out)) { if (what) warn(what + ' "' + q(s) + '" is not a real day on the calendar.'); return ''; }
     if (what && out !== s) warn(what + ' "' + q(s) + '" was read as ' + out + '. Please write it as ' + out + '.');
@@ -379,7 +379,7 @@
       if (opens && realYmd(opens) && until < opens) { warn('A row of the pizza schedule opens ' + opens + ' but its data-until="' + until + '" is earlier (copied from another row?). Put the last day of that weekend in data-until. The row stays visible.'); return; }
       if (today <= until) return;
       el.style.setProperty('display', 'none', 'important');   // "important": the season switch toggles only the hidden attribute
-      warn('Hidden since ' + addDays(until, 1) + ' because its data-until date has passed: "' + q(el.textContent) + '". Delete it from the page, or if you reused it for new dates, change its data-until.');
+      warn('Hidden since ' + addDays(until, 1) + ' because its data-until date has passed: "' + q(el.textContent) + '". Nothing is broken: the line did its job and hid itself. To remove it for good, delete it from the page (search for data-until="' + until + '" in index.html and in the files in pages/), or if you reused it for new dates, change its data-until.');
     });
     $$('[data-until-empty]').forEach((box) => {
       const items = $$('li, tbody tr, [data-until]', box);
@@ -1154,7 +1154,7 @@
 
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
   const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
-  if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). Open the browser console (F12) to see the line number.');
+  if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). A missing comma at the end of a line or a curly quote mark does the same. Visitors see none of these features and no message. Open the browser console (F12): the red line that names content.js ends with the line number (red lines about fonts are not the problem).');
   [expireDated, checkOwnerDates, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });

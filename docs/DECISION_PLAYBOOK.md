@@ -53,6 +53,7 @@ python3 tools/farm_map.py tools/saved-map.json   # only after a new saved map
 
 Changing an English sentence changes its id (data-t). The old translations no longer match and show as missing.
 Add the 4 new translations, rebuild, and the check above must say 0 missing.
+How to find the texts to translate (`python3 tools/i18n.py missing es --list`) and where to put them is in the README, "Change one sentence and its translations, step by step".
 
 Tests (needs Playwright; see tests/README.md). One word picks every test whose name contains it:
 
@@ -67,7 +68,7 @@ Always run consistency after a change to a price, time, day, age, size, phone nu
 Apply a patch from the repo root, then rebuild:
 
 ```
-patch -p1 --dry-run < scratchpad/agents/<folder>/<file>.patch    # nothing printed = it applies
+patch -p1 --dry-run < scratchpad/agents/<folder>/<file>.patch    # a line "checking file ..." per file and no word FAILED = it applies
 patch -p1 < scratchpad/agents/<folder>/<file>.patch
 ```
 

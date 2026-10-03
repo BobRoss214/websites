@@ -529,7 +529,7 @@ Answer:
 
 *The farm does not need to read this part. Do not publish this file with the website: the questions above include internal remarks, so leave it out of the upload.*
 
-All line numbers in this part were recomputed on 3 October 2026 for commit 12eec95 plus the documentation fixes made in that check. If they have moved, search for the quoted words. How to edit and rebuild is in the README (see "Start here" and "Languages").
+Line numbers in this part were right on 3 October 2026 for commit 12eec95 and drift every time a file is edited: on 3 October 2026, 11 of 11 numbers checked for the hours and the phone number were already 1 to 20 lines off. **Search for the quoted words; if a number and the words disagree, trust the words.** How to edit and rebuild is in the README (see "Start here", "Change a fact everywhere", "Change one sentence and its translations, step by step" and "Languages").
 
 - After changing English text in `index.html` or `pages/*.html`, run `python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build`, then `python3 tools/i18n.py missing es` (also `hi`, `zh`, `vi`) to see what needs translating.
 - Edit `pages/<name>.html`, not the generated pages (`first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html`, `wise-pie.html`); the rebuild overwrites them.
@@ -552,12 +552,12 @@ All line numbers in this part were recomputed on 3 October 2026 for commit 12eec
 
 **Question 3: May we show your phone number, (704) 628-6232, on the website?**
 
-- **If Yes:** add the number as a `tel:+17046286232` link in the footer (`index.html:2147-2148`), under the address on the farm card (`index.html:2012`) and next to the "Questions?" email (`index.html:262-263`). Add `"telephone": "+1-704-628-6232",` after the `"email"` line in the structured data (`index.html:46`). Rebuild so the footer is copied to the other five pages. Keep the photographers' emergency number (`index.html:1558`) as it is. Delete the README row (`README.md:338`).
+- **If Yes:** follow the README, "Change a fact everywhere", row "The main phone number": a `tel:+17046286232` link in the footer, under the address on the farm card and next to the "Questions?" email, and `"telephone": "+1-704-628-6232",` after the `"email"` line in the structured data at the top of `index.html`. Rebuild so the footer is copied to the other five pages. Keep the photographers' emergency number (search `Day-of emergencies`) as it is. The facts test (`tests/consistency.test.mjs`) wants exactly one phone number, so it will report two (7042076347 and 7046286232): a developer must allow the second. Delete the README row "Phone number".
 - **If No:** no change.
 
 **Question 4: Is there a Thursday-evening Thai dinner at The GreenHouse this fall?**
 
-- **If Yes:** ask for the days, hours and what is served. The GreenHouse hours are written in `index.html:368, 1221, 1430, 2025` and `js/content.js:181`. That setting is one Friday-Sunday window, so a Thursday evening needs a small code change (ask Claude).
+- **If Yes:** ask for the days, hours and what is served. The GreenHouse hours are written in five places (README, "Change a fact everywhere", row "The GreenHouse hours"). That setting is one Friday-Sunday window, so a Thursday evening needs a small code change (ask Claude).
 - **If No:** no change.
 
 **Question 5: Is there a haunted trail at the farm this fall?**
@@ -627,7 +627,7 @@ All line numbers in this part were recomputed on 3 October 2026 for commit 12eec
 **Question 17: Are these hours right: farm visits Thursday to Sunday in fall; The GreenHouse Friday to Sunday, 10 am to 8 pm; Wise Pie at The GreenHouse Friday to Sunday, 4 to 8 pm; pizza at the farm 10 am to 4 pm?**
 
 - **If Yes:** no change; delete the README row (`README.md:323`).
-- **If No:** change `js/content.js:184-186`, the text lines `index.html:369, 1123, 1128, 1138, 1224, 1228, 1231, 1433, 1919, 2038`, and the pizza sentences in `pages/wise-pie.html:29, 33, 40, 88, 92`, `pages/pumpkin-patch.html:45, 74, 118` (search "Friday").
+- **If No:** follow the README, "Change a fact everywhere", rows "The GreenHouse hours" and "Wise Pie hours" (`hours` in `js/content.js`; the text in `index.html`, `pages/wise-pie.html` and `pages/pumpkin-patch.html`). Pizza at the farm, 10 am to 4 pm, is written as `10 am – 4 pm` in `index.html` and `pages/wise-pie.html`, and as "At the farm" in the FAQ answers: search for both.
 
 **Question 18: Are the nine pizzas and their prices on the site right ($15 to $17; gluten-free crust +$9; vegan cheese +$3)?**
 
@@ -738,7 +738,7 @@ Line numbers in this section are for commit 12eec95 (with the documentation fixe
 **Question 37: What should visitors see from January to April?**
 
 - **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html:416`), the packages (`index.html:422`) and the schedule (`index.html:486`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js:1147` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html:397`), "Fall hours:" (`index.html:1120`), the Shop sentence and note (`index.html:1399, 1418`) and "Fall 2026 special days" (`index.html:1656`).
-- **The GreenHouse has different winter hours, or is closed:** change `js/content.js:181-182` (the `greenhouse` and `pizza` hours; they are one Friday-Sunday window all year, so separate winter hours need a small code change: ask Claude) and the text `index.html:368, 1221, 1430, 2025`. The "Closed today. Opens Friday at 10 am" line comes from `js/content.js:181`. For single closed days use `closures` (README, "Day-to-day changes"). Question 17 lists the other hours lines.
+- **The GreenHouse has different winter hours, or is closed:** change `hours` in `js/content.js` (the `greenhouse` and `pizza` hours; they are one Friday-Sunday window all year, so separate winter hours need a small code change: ask Claude, or change them by hand when winter starts and again when it ends) and the text (README, "Change a fact everywhere", rows "The GreenHouse hours" and "Wise Pie hours"). The "Closed today. Opens Friday at 10 am" line comes from the `greenhouse` hours in `js/content.js`. For single closed days use `closures` (README, "Day-to-day changes"). Question 17 lists the other hours lines.
 - **Trees end earlier or later than early December:** the wording "to early December" is at `index.html:575, 824, 826, 860, 1230, 1446, 1888, 1930` and the end date is `js/season.js:23` (8 December). After it the site keeps the winter look until about 10 February (the closest-season rule, `js/season.js:50-62`) and shows "Christmas trees are here." (`index.html:1230`, marked `data-only="winter"`). If trees are over by then, ask Claude to change the rule or the wording.
 - **If the answer is "leave it":** no change; the README row (`README.md:340`) stays.
 
