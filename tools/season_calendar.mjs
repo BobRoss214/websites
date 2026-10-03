@@ -490,7 +490,7 @@ const REASONS = {
   other: ['Something on the page depends on the date', 'see “What switches”'],
 };
 
-function diffLook(prev, cur, pg) {
+function diffLook(prev, cur, pg, day) {
   const a = fieldsOf(prev), b = fieldsOf(cur), out = [];
   const sd = (x, y) => ({ added: y.filter((v) => !x.includes(v)), removed: x.filter((v) => !y.includes(v)) });
   const lab = (f) => f.replace(/\s+\[.*\]$/, '');
@@ -521,9 +521,9 @@ function diffLook(prev, cur, pg) {
   const some = (xs) => list(xs.slice(0, 4).map((x) => quote(ellipsis(lab(x), 45)))) + (xs.length > 4 ? ' and ' + (xs.length - 4) + ' more' : '');
   if (dt.added.length || dt.removed.length) {
     const lastDay = (x) => (/until (\d{4}-\d\d-\d\d)/.exec(x) || [])[1];
-    const untilGone = dt.removed.filter((x) => lastDay(x));
+    const untilGone = dt.removed.filter((x) => lastDay(x) && lastDay(x) === addDays(day, -1));   // gone because its last day was yesterday (a line that also belongs to a season may be going for that reason)
     if (untilGone.length) out.push({ kind: 'until', text: 'a line with a last day is gone: ' + list(untilGone.slice(0, 4).map((x) => quote(ellipsis(lab(x), 45)) + ' (last day ' + short(lastDay(x)) + ')')) });
-    const shown = dt.added.filter((x) => !lastDay(x)), hidden = dt.removed.filter((x) => !lastDay(x));
+    const shown = dt.added.filter((x) => !lastDay(x)), hidden = dt.removed.filter((x) => !untilGone.includes(x));
     if (shown.length || hidden.length) out.push({ kind: /out-of-season/.test(shown.concat(hidden).join('')) ? 'out' : 'only', text: 'lines for a season: ' + [shown.length ? 'now shown (' + shown.length + '): ' + some(shown) : '', hidden.length ? 'hidden (' + hidden.length + '): ' + some(hidden) : ''].filter(Boolean).join('; ') });
   }
   const lk = sd(a.links, b.links).added.concat(sd(a.links, b.links).removed).filter((x) => / (HIDDEN|MISSING)$/.test(x));
@@ -536,7 +536,7 @@ function diffLook(prev, cur, pg) {
 
 function changesAt(prevRun, run) {
   const all = [];
-  for (const pg of PAGES) all.push(...diffLook(prevRun.pages[pg], run.pages[pg], pg));
+  for (const pg of PAGES) all.push(...diffLook(prevRun.pages[pg], run.pages[pg], pg, run.from));
   // the same change on several pages is one line ("on all pages", or "on the Home page and 3 others")
   const by = new Map();
   for (const c of all) { const e = by.get(c.text) || { ...c, pages: [] }; e.pages.push(c.page); by.set(c.text, e); }

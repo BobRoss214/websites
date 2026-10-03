@@ -169,7 +169,8 @@
           <p class="live" data-no-i18n data-live="farm" hidden></p>
           <div class="hero-cta">
             <a data-t="t108d546d" class="btn btn-red btn-lg" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your time <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-            <a data-t="t395025f7" class="btn btn-white btn-lg" data-only="fall" data-in-season href="index.html#schedule">Fall schedule</a>
+            <!-- Goes to the schedule box on the home page, which hides itself after its last dated line (data-until="2026-11-30" on the "No pizza" block). The button hides the same day. When you put next fall's weekends into that box, move this date to match. -->
+            <a data-t="t395025f7" class="btn btn-white btn-lg" data-only="fall" data-in-season data-until="2026-11-30" href="index.html#schedule">Fall schedule</a>
           </div>
         </div>
         <div class="page-hero-art" aria-hidden="true"><svg viewBox="0 0 110 92"><use href="#pumpkin"/></svg></div>

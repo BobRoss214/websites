@@ -179,5 +179,31 @@ for (const d of DOCS) {
 }
 ok('no doc names a file outside the repository (a helper\'s scratch folder, /tmp or a home folder)', outside.length === 0, outside.slice(0, 10).join('; ') + (outside.length > 10 ? ' and ' + (outside.length - 10) + ' more' : ''));
 
+/* ---- 7. The decision playbook has a table row, a topic and an entry for every dashboard question ---- */
+// Without this a question added to the dashboard (d43 to d45 were) can be missing from the playbook for days without anyone noticing, and a title
+// changed in the table but not in the entry (or the other way round) goes unseen. (The dashboard itself is not in the repository, so its texts
+// cannot be compared here: whoever changes a dashboard text changes the playbook with it.)
+{
+  const pb = TEXT['docs/DECISION_PLAYBOOK.md'];
+  const part = (from, to) => { const a = pb.indexOf(from); if (a < 0) return ''; const b = pb.indexOf(to, a + from.length); return pb.slice(a, b < 0 ? undefined : b); };
+  const rows = new Map([...part('### Every dashboard question, and its doc number', '\n### ').matchAll(/^\| (d\d\d) \| ([^|]+?) \| ([^|]+?) \|$/gm)].map((m) => [m[1], { title: m[2], doc: m[3] }]));
+  const entries = new Map([...pb.matchAll(/^### (d\d\d)\. (.+)$/gm)].map((m) => [m[1], m[2].trim()]));
+  const topics = new Set([...part('## The 10 topics', '\n## ').matchAll(/\bd\d\d\b/g)].map((m) => m[0]));
+  const noNumber = new Set([...part('### Dashboard questions with no number in the doc', '\n## ').matchAll(/^\| (d\d\d) \|/gm)].map((m) => m[1]));
+  const problems = [];
+  const top = Math.max(0, ...[...rows.keys()].map((k) => +k.slice(1)));
+  for (let n = 1; n <= top; n++) { const id = 'd' + String(n).padStart(2, '0'); if (!rows.has(id)) problems.push(id + ' has no row in "Every dashboard question, and its doc number"'); }
+  for (const [id, r] of rows) {
+    if (!entries.has(id)) problems.push(id + ' has no "### ' + id + '." entry');
+    else if (entries.get(id) !== r.title) problems.push(id + ' is called "' + r.title + '" in the table and "' + entries.get(id) + '" in its entry');
+    if (!topics.has(id)) problems.push(id + ' is in no topic of "The 10 topics"');
+    const noDoc = r.doc === 'none' || r.doc.startsWith('related');   // "related: Q25" (d29) is a note, not a number
+    if (noDoc !== noNumber.has(id)) problems.push(id + (noDoc ? ' has no doc number but is not in' : ' has a doc number but is in') + ' "Dashboard questions with no number in the doc"');
+  }
+  for (const id of entries.keys()) if (!rows.has(id)) problems.push(id + ' has an entry but no table row');
+  for (const id of topics) if (!rows.has(id)) problems.push(id + ' is in a topic but has no table row');
+  ok('the decision playbook has a table row, a topic and an entry for every dashboard question (' + rows.size + ' questions, d01 to d' + String(top).padStart(2, '0') + ')', rows.size > 40 && problems.length === 0, problems.slice(0, 8).join('; ') + (problems.length > 8 ? ' and ' + (problems.length - 8) + ' more' : ''));
+}
+
 info(DOCS.length + ' docs: ' + DOCS.join(', '));
 await finish();

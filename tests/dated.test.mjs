@@ -1,4 +1,5 @@
-/* Lines that hide themselves after their date (data-until="2026-10-04" in index.html) and the hero line between seasons.
+/* Lines that hide themselves after their date (data-until="2026-10-04" in index.html), the "New: tomatoes" tags that follow the tomato dates, the
+ * "Fall schedule" button that must not point at a schedule box that is gone, and the hero line between seasons.
  * The page clock is set to chosen moments (Eastern Time is what counts: a line hides from the day after its date). */
 import { run, open, ok, okSoon, until, fetchRetry } from './lib.mjs';
 
@@ -117,4 +118,33 @@ await run('dated', async ({ browser, base, errs }) => {
   await p.click('#season-switch button[data-season="fall"]');
   await okSoon('...and picking a season with the switcher shows that season\'s own line', () => hero(p), (v) => v === 'fall');
   await p.context().close();
+
+  // ---- the "New: u-pick tomatoes & basil" tags end with the tomatoes: the same last day as "This week at the farm" and the page's own words ("late September through October")
+  const tomatoes = async (pg) => ({
+    chip: await pg.locator('.chip-new').first().isVisible(), card: await pg.locator('a.choose-new[href="#tomatoes"]').first().isVisible(),
+    week: (await pg.locator('#this-week .wk-name').allTextContents()).some((t) => /Tomatoes/.test(t)),
+  });
+  p = await at('2026-10-31T12:00:00-04:00');
+  let tm = await tomatoes(p);
+  ok('Oct 31 (the last day of the tomatoes): the "New: u-pick tomatoes & basil" chip and the card link are shown, and "This week" lists the tomatoes', tm.chip && tm.card && tm.week, JSON.stringify(tm));
+  await p.context().close();
+  p = await at('2026-11-01T12:00:00-05:00');
+  tm = await tomatoes(p);
+  ok('Nov 1: the chip, the card link and the tomatoes in "This week" are all gone together (fall goes on until Nov 8)', !tm.chip && !tm.card && !tm.week && await p.locator('.hero-sub[data-only="fall"]').first().isVisible(), JSON.stringify(tm));
+  await p.context().close();
+
+  // ---- "Fall schedule" (pumpkin page) opens the schedule box on the home page: it is shown only while that box is
+  const target = async (time) => {
+    const home = await open(browser, base, 'index.html', errs, { time });
+    const there = await home.locator('#schedule').first().isVisible();
+    await home.context().close();
+    const pg = await open(browser, base, 'pumpkin-patch.html', errs, { time });
+    const btn = await pg.locator('a[href="index.html#schedule"]').first().isVisible();
+    await pg.context().close();
+    return { btn, there };
+  };
+  let ft = await target('2026-11-08T12:00:00-05:00');
+  ok('Nov 8 2026 (last day of fall): the "Fall schedule" button is shown and the schedule box it opens is there', ft.btn && ft.there, JSON.stringify(ft));
+  ft = await target('2027-09-20T12:00:00-04:00');
+  ok('Sep 20 2027 (fall again, no 2027 weekends in the box): no "Fall schedule" button that would open nothing', !ft.btn && !ft.there, JSON.stringify(ft));
 });

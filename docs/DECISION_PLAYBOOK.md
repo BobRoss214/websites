@@ -1,8 +1,8 @@
 # Decision playbook
 
-What to change when the farm owner answers one of the open questions on the dashboard: d01 to d42 and the 14 new ones d46 to d59 (see "Dashboard ids and doc question numbers").
+What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 (see "Dashboard ids and doc question numbers").
 Written on 3 October 2026 for commit b54427b, extended for e02b95e. Nothing here decides anything for the owner, and no optional patch has been applied.
-d43 to d45 (added later on the dashboard) have no entry here yet.
+Entries d43 to d45 (added later on the dashboard, with no number in the doc) were written on 3 October 2026 for commit af1e572. On the same day the dashboard texts of d01, d10, d15, d22, d41 and d44 were reworded; this page says the same as the dashboard now.
 
 ## How to use it
 
@@ -12,7 +12,7 @@ d43 to d45 (added later on the dashboard) have no entry here yet.
 4. If the entry names a patch, apply it only after her answer. Patches are listed in "Patches on disk".
 5. Delete the matching row in the README table "Content status" when a question is closed.
 
-Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
+Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
 
 Commit e02b95e also holds the messages feature (f45d6d9) and the plain-English rewrite (7d917e6), which changed the wording and the ids of 77 sentences.
 
@@ -75,7 +75,7 @@ patch -p1 < path/to/the.patch
 | 3 | People and photos (permission) | blocks launch | d13, d31, d32, d33, d12, d34 |
 | 4 | Pizza and food facts | wrong or risky information | d17, d16, d18, d19, d20, d21, d22, d49, d53, d08, d57 |
 | 5 | Dates, seasons and winter | wrong or risky information | d01, d09, d23, d50, d51, d24, d25, d26, d27 |
-| 6 | Rules and promises to visitors | wrong or risky information | d41, d42, d52, d55, d35, d36 |
+| 6 | Rules and promises to visitors | wrong or risky information | d41, d42, d52, d55, d44, d45, d35, d36, d43 |
 | 7 | Names, address and listings | wrong or risky information | d07, d28, d29, d39, d40 |
 | 10 | What the site says the farm offers | wrong or risky information | d48, d56, d58, d59 |
 | 8 | Drive time box and map tools | nice to have | d10, d11, d14 |
@@ -107,6 +107,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | d52 Cathy's email | d55, d03, messages tests | The accessibility card and the waitlist/messages feature name this address. |
 | d53 pre-order timing, d57 eat there | each other | They share the sentence index.html at `data-t="t60509a07"`. |
 | d02, d36, d03 | each other | Groups prices, school tour rules and the sign-up form are all on the School tours and Groups tabs. |
+| d43 farm words, d44 corn pit offer, d45 free ages | each other, d07, d16, d02, d36, tests | The corn pit line in d43 must agree with the Thursday offer in d44. The maze line in d43 uses the name chosen in d07. The age at which children are free (d45) is written next to the $3 field fee (d16, "ages 3 and up"), the party guest count (d02), the school tour admission for family members (d36) and the wagon ride line; consistency pins every one of these age sentences (see the test table below). |
 
 ## Tests that can need an update
 
@@ -137,28 +138,31 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | farm-seasons at `haunted trail and the maze only in fall` and `Christmas trees only in winter` | "Haunted" and /Maze/ only in fall; "Christmas" only in winter | d07, d48, d50 |
 | features at `press: two Axios Charlotte links` | exactly two Axios links in the press list | d56 |
 | messages at `the waitlist link is a mailto: to the farm` and `an address the owner typed with a + in it` | the waitlist mailto goes to cathy@wiseacresorganic.com | d52 |
+| consistency at `age: free (infants, wagon ride, party children)` and `age: from this age people pay the field fee / school admission` | the age up to which children are free (every place must give the same number) and the age from which people pay the field fee, the pizza package extra and the school admission for family members | d45 |
+| consistency at `days: farm visits without pizza (fall)` and tools/check_facts.py at `Ages 3 and up` | both read the words "Ages 3 and up" (and "Field fee, ages 3 and up") next to the farm days and the $3 price; reword those and these two checks need the new words | d45 |
 | i18n, languages | every id has 4 translations; plain checks of each language | any change of English text |
 
 ## Patches on disk
 
-Nothing has been applied. All were dry-run on e02b95e (the winter patches were rebased for it).
+Nothing has been applied. Every patch below was dry-run again on 3 October 2026 (17:02 UTC) against commit af1e572 (the newest commit at that time) with patch -p1 --dry-run. "Applies" below means exactly that: no hunk failed on af1e572 on that date. Where a hunk fails, the table says which one and the one-line hand fix.
 The patch files are not in the repository: the helpers made them in scratch folders on their own computers. Ask Claude for a patch by its file name; a scratch folder may have been cleared since, and then the change has to be made again.
 
-| Patch | For | Status |
+| Patch | For | Status on af1e572, 3 October 2026 |
 |---|---|---|
-| winter-A-on-e02b95e.patch | d01 A, d24 B | Applies to e02b95e. Rebuilt (0 missing) and tested: consistency, dated, farm-seasons, hero, live, messages. |
-| winter-B-on-e02b95e.patch | d01 B | Applies to e02b95e. Rebuilt (0 missing) and tested like A. |
-| winter-A-on-b54427b.patch, winter-B-on-b54427b.patch | d01 (old) | Do not apply on e02b95e: the translation files and three sentences changed in the plain-English rewrite. |
-| winter-A.patch | d01 A (old) | Does not apply to b54427b (2 hunks fail). Use the "on-b54427b" copy. |
-| winter-C.patch | d01 C (old) | Stale: the tree wording is already in-season-only in the code (commit e081393). Do not apply. |
-| reserve-window-OPTIONAL-ff5965d.patch | d25 A | Applies. Hides spring Reserve buttons outside the booking window. Not re-run in this job. |
-| OPT-A-redirects-file.patch | d30 A, d05 A/B | Applies. Adds _redirects (22 lines) for Cloudflare Pages and Netlify. |
-| OPT-B-redirect-pages.patch | d30 A, d05 C | Applies. 13 small redirect pages, for hosts with no _redirects. |
-| OPT-C-clean-urls.patch | d05 A | Applies to e02b95e. On 66c8272 one hunk in each generated page fails (those lines changed): apply with patch -f, delete the .rej files, run python3 tools/pages.py (tested: canonical tags lose .html, public-site passes). Page addresses without .html: tools/pages.py, 5 pages, sitemap, public-site test, README, checklist. |
-| 2-OPTIONAL-cloudflare-no-html-addresses.patch | d05 A | Applies. The small version of OPT-C: tools/pages.py only, then rebuild. The public-site test then needs the OPT-C edit. Prefer OPT-C. |
-| OPT-D-shorter-code-cache.patch | d05 (any host) | Applies. css, js and lang cached 5 minutes instead of 1 hour. |
-| MAPPING-for-owner.txt | d30 | Old address to new page table. /summer/ and /posts/ left out on purpose (launch decision D3). |
-| es-OPTIONAL-clock-12h.patch, vi-OPTIONAL-clock-words.patch | d37 | Stale: do not apply on b54427b or HEAD. Ask for a redo. |
+| winter-A-on-e02b95e.patch | d01 A, d24 B | Applies (every hunk moved a few lines, none fails). Applied in a scratch copy and rebuilt: 0 missing in es, hi, zh and vi; consistency (67) and public-site (13) pass. One follow-up: the docs test then says two counts in the notes are out of date. In docs/QUESTIONS_FOR_THE_FARM.md at `eepurl.com/hZehgr` the text says 7 places and the home page then has 8; in the same file at `The u-pick farm is closed until spring` the sentence names the Reserve-button class btn btn-sm btn-red, which is then in index.html twice, not once. Change those two numbers. The browser tests (dated, farm-seasons, hero, live, messages) passed on e02b95e and were not run again on af1e572. |
+| winter-B-on-e02b95e.patch | d01 B | Applies. Applied in a scratch copy and rebuilt: 0 missing; consistency, public-site and docs pass. Browser tests not run again on af1e572. |
+| winter-A-on-b54427b.patch, winter-B-on-b54427b.patch | d01 (old) | Fail on af1e572 (2 of 9 hunks in index.html for A; the four translation files for both). Do not apply. Use the "on-e02b95e" copies. |
+| winter-A.patch | d01 A (old) | Fails on af1e572 (3 of 10 hunks in index.html, the pumpkin page and the four translation files). Use winter-A-on-e02b95e.patch. |
+| winter-B.patch | d01 B (old) | Fails on af1e572 (the four translation files). Use winter-B-on-e02b95e.patch. |
+| winter-C.patch | d01 C (old) | Fails on af1e572 (2 of 3 hunks in index.html and the one in css/hero.css). It is stale anyway: C now means "leave it as it is now" and needs no patch. |
+| reserve-window-OPTIONAL-ff5965d.patch | d25 A | Applies (index.html hunks moved a few lines, one with a small fuzz; css/styles.css and js/hero.js clean). Applied in a scratch copy and rebuilt: 0 missing; consistency, public-site and docs pass. Hides spring Reserve buttons outside the booking window. Browser tests not run. |
+| OPT-A-redirects-file.patch | d30 A, d05 A/B | One hunk fails: docs/LAUNCH_CHECKLIST.md, the bullet that starts "To use it: save the block as a file named" (it was reworded after the patch was made). Hand fix: replace that one bullet with the patch's new bullet ("To use it: leave _redirects in the top folder of the upload ..."). The _redirects file (22 lines) and the README hunks apply; applied with patch -f (the failing hunk is only wording), public-site passes (13 checks, 3 October 2026). |
+| OPT-B-redirect-pages.patch | d30 A, d05 C | Same one failing hunk as OPT-A (the "To use it" bullet in docs/LAUNCH_CHECKLIST.md): same hand fix. The 13 small redirect pages and the README hunks apply. |
+| OPT-C-clean-urls.patch | d05 A | Two things fail. (1) README.md, step 2 of the upload list "Use your real domain at the **root**": add by hand the sentence about PAGE_EXT in tools/pages.py (the patch has it). (2) The first hunk in each of the five built pages (first-visit, pumpkin-patch, school-field-trips, strawberry-picking, wise-pie): the head of the pages gained a line since. Hand fix: apply with patch -f, delete the .rej and .orig files, then run python3 tools/pages.py, which writes the new canonical tags itself. Tested on 3 October 2026 this way: canonical tags lose .html, public-site 14 and consistency 67 pass. The other hunks (tools/pages.py with fuzz, sitemap.xml, the public-site test, the launch checklist) apply. |
+| 2-OPTIONAL-cloudflare-no-html-addresses.patch | d05 A | Applies (tools/pages.py only, with fuzz and 52 lines of offset). The small version of OPT-C; then rebuild. The public-site test then needs the OPT-C edit. Prefer OPT-C. |
+| OPT-D-shorter-code-cache.patch | d05 (any host) | One hunk fails: docs/LAUNCH_CHECKLIST.md, the bullet "Update "This week at the farm"" under "Every week in season" (it was reworded). Hand fix: in that bullet change "up to an hour" to "up to five minutes (_headers keeps css/, js/ and lang/ for 5 minutes; pictures in assets/ for a year, so a changed picture needs a new file name)". The _headers hunk (css, js and lang cached 5 minutes instead of 1 hour), README and js/content.js apply. |
+| MAPPING-for-owner.txt | d30 | Old address to new page table (not a patch). /summer/ and /posts/ left out on purpose (launch decision D3). |
+| es-OPTIONAL-clock-12h.patch, vi-OPTIONAL-clock-words.patch | d37 | Fail on af1e572 (the hunk in js/features.js for both, the one in js/live.js for vi): the code around them changed. Do not apply. Ask for a redo. |
 
 The patches zh-C, es-C, vi-C and hi-C (translation decisions) and the photo, share-image and checklist patches are already merged.
 
@@ -241,12 +245,12 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d07 | Name of the maze | Q11 |
 | d08 | Thai night | Q4 |
 | d09 | The GreenHouse winter hours | Q37 (also Q17) |
-| d10 | Free routing server behind Drive time | Q36 (also Q43) |
+| d10 | Free driving-directions service behind the Drive time box | Q36 (also Q43) |
 | d11 | The farm's exact spot on the map | Q35 |
 | d12 | Photo originals | Q38 |
 | d13 | Photos with words or people | Q40 (also Q39) |
 | d14 | Try the Farm Map Marker swipe on a real phone | none |
-| d15 | Security header for the new host | none |
+| d15 | Browser safety rule for the new host | none |
 | d16 | The $31 pizza package | Q44 |
 | d17 | Allergen note on the pizza page | Q45 (also Q46) |
 | d18 | Oven temperature on the site | Q47 |
@@ -274,6 +278,9 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d40 | Does The GreenHouse have its own Google listing | none |
 | d41 | Cancel fee on the strawberry page | none |
 | d42 | Service animals | none |
+| d43 | What do your farm words mean | none |
+| d44 | Corn pit: buy one get one free on Thursdays | none |
+| d45 | Who is free: ages 2 and under | none |
 | d46 | Is this the right booking page? | Q22 |
 | d47 | Is the pizza pre-order page right? | Q23, Q48 |
 | d48 | Haunted trail and u-pick tomatoes this fall | Q5, Q6, Q7 |
@@ -295,7 +302,7 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 |---|---|
 | d05 | Where to put the website online |
 | d14 | Try the Farm Map Marker swipe on a real phone |
-| d15 | Security header for the new host |
+| d15 | Browser safety rule for the new host |
 | d23 | Is the farm open after November 8? |
 | d24 | Fall 2027 prices, schedule and menu |
 | d25 | Reserve buttons when nothing can be booked |
@@ -311,8 +318,11 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d40 | Does The GreenHouse have its own Google listing |
 | d41 | Cancel fee on the strawberry page |
 | d42 | Service animals |
+| d43 | What do your farm words mean |
+| d44 | Corn pit: buy one get one free on Thursdays |
+| d45 | Who is free: ages 2 and under |
 
-Only a note exists for d37 (the doc has a "Translation notes" section, but no question). d29 is the printed sign for the hashtag asked in Q25. d43 to d45 (farm words, the corn pit offer, free entry for ages 2 and under) were added to the dashboard later and have no doc number and no entry here.
+Only a note exists for d37 (the doc has a "Translation notes" section, but no question). d29 is the printed sign for the hashtag asked in Q25. d43 to d45 (farm words, the corn pit offer, free entry for ages 2 and under) were added to the dashboard after the doc was written: they have no doc number and no "Dashboard id" line there, and their entries are in Topic 6.
 
 ## Topic 1. Put the site online
 
@@ -331,7 +341,7 @@ Nothing can go live until the host and the web address are chosen. The files alr
 **A. Cloudflare Pages**
 
 - No site file changes to host it: upload the folder without docs/, tests/, tools/, pages/, README.md (checklist section 2).
-- Clean page addresses (no .html): apply OPT-C-clean-urls.patch (tools/pages.py PAGE_EXT = '', 5 generated pages, sitemap.xml, tests/public-site.test.mjs, README and checklist wording). Do this before submitting the sitemap (checklist 3.7).
+- Clean page addresses (no .html): apply OPT-C-clean-urls.patch (tools/pages.py PAGE_EXT = '', 5 generated pages, sitemap.xml, tests/public-site.test.mjs, README and checklist wording). Do this before submitting the sitemap (checklist 3.7). On af1e572 (checked 3 October 2026) two hunks need a hand fix: see "Patches on disk".
 - Old addresses: d30 option A with OPT-A-redirects-file.patch (a _redirects file).
 - _headers already works there (4 security notes and the cache rules). Content-Security-Policy: see d15.
 - Optional, any host: OPT-D-shorter-code-cache.patch (css/js/lang cached 5 minutes instead of 1 hour: _headers, js/content.js text, README, checklist).
@@ -370,8 +380,8 @@ Nothing can go live until the host and the web address are chosen. The files alr
 
 **A. Yes, send old addresses to the new pages**
 
-- Cloudflare Pages or Netlify: apply OPT-A-redirects-file.patch. It adds _redirects (22 lines, all 301) and notes in README and the checklist.
-- Host with no _redirects (GitHub Pages): apply OPT-B-redirect-pages.patch instead (13 folders with a small redirect page).
+- Cloudflare Pages or Netlify: apply OPT-A-redirects-file.patch. It adds _redirects (22 lines, all 301) and notes in README and the checklist. On af1e572 (checked 3 October 2026) one checklist bullet needs a hand edit: see "Patches on disk".
+- Host with no _redirects (GitHub Pages): apply OPT-B-redirect-pages.patch instead (13 folders with a small redirect page). Same one checklist bullet needs a hand edit on af1e572 (checked 3 October 2026).
 - Where each old address goes: MAPPING-for-owner.txt. /summer/ and /posts/ are left out on purpose (checklist D3: the owner decides what happens to them; today they show 404.html).
 - Test after upload: open all 13 old addresses (checklist section 5).
 - Strings: 0
@@ -411,7 +421,7 @@ Nothing can go live until the host and the web address are chosen. The files alr
 - Strings: 0
 - Tests: public-site (reads SITE, canonical tags, sitemap, robots.txt, QR file); python3 tools/test_pages.py has 3 fixture lines with the old address
 
-### d15. Security header for the new host
+### d15. Browser safety rule for the new host
 
 - In plain words: A safety rule that tells browsers where scripts may load from. Written, tested only on a test computer, not switched on.
 - Doc question: none (launch checklist 3.5 and section 6)
@@ -979,7 +989,7 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 
 ### d22. Mozzarella wording
 
-- In plain words: The site says "local mozzarella" (and "locally sourced" on the pumpkin page). The menu only says Uno Alla Volta in Charlotte, milk from an Amish farm northeast of Charlotte.
+- In plain words: The home page says local mozzarella and the pumpkin page says locally sourced mozzarella. The menu only says Uno Alla Volta in Charlotte, with milk from an Amish farm northeast of Charlotte.
 - Doc question: Q52
 - Urgency: 2 (wrong or risky information). Checklist says: can follow launch.
 - Owner fact (no sensible default): yes
@@ -1115,11 +1125,11 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 ## Topic 5. Dates, seasons and winter
 
 Urgency: wrong or risky information.
-The site shows fall wording all year. The three winter patches, the fall end date, new-year content and the Reserve buttons belong together.
+The site shows fall wording all year. The two winter patches (A and B), the fall end date, new-year content and the Reserve buttons belong together.
 
 ### d01. What visitors see in winter
 
-- In plain words: From January to March the site still shows fall booking buttons and fall 2026 prices. Three ready-made fixes exist.
+- In plain words: From January to March the site still shows fall booking buttons and fall 2026 prices. Two ready-made fixes exist (A and B). C means leave it: the Christmas tree wording is already fixed.
 - Doc question: Q37 (and Q12 for the Christmas tree dates; Q12 is not on the dashboard)
 - Urgency: 2 (wrong or risky information). Checklist says: can follow launch.
 - Owner fact (no sensible default): yes
@@ -1133,7 +1143,7 @@ The site shows fall wording all year. The three winter patches, the fall end dat
 - What it does: the "Reserve now" button in the Visit area, the "Choose your package" header, packages, included, add-ons, the "See prices" and "See packages" buttons, the "At the farm" shop block with its jump link and the "Fall:" paragraph get data-only="fall" (or "spring summer fall"). A new off-season line ("Fall at the farm usually starts again in mid-September...") with the existing "Tell me when it opens" button shows in winter, spring and summer. First-visit page: "See packages & add-ons" button hidden out of fall. css/sections.css +2 lines.
 - Then rebuild (python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build) and python3 tools/i18n.py missing es hi zh vi (0 each).
 - The pumpkin page (pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`) keeps "fall 2026" prices all year: not covered.
-- Applies cleanly to e02b95e and to 66c8272 (dry run).
+- Dry run on 3 October 2026 against af1e572: applies, no hunk fails (see "Patches on disk" for the two doc counts to change afterwards).
 - The fall blocks come back about August 12 (the site then treats fall as the nearest season): answer d24 before that.
 - Strings: 1 new UI sentence (id t48ba72e7) x 4 translations, already written in the patch
 - Tests: Run on the patched e02b95e tree: consistency 66, live 20, dated 24, farm-seasons 24, hero 74, messages 173: all pass. Page-clock check: packages, shop block and Reserve now show on 2026-10-10 only; the off-season line shows from 2026-11-20 to 2027-03-01; the tree headline shows on 2026-12-01 only (same as unpatched). No test needs a change
@@ -1149,10 +1159,10 @@ The site shows fall wording all year. The three winter patches, the fall end dat
 - Tests: Run on the patched e02b95e tree: consistency 66, live 20, dated 24, farm-seasons 24, hero 74, messages 173: all pass. Page-clock check: the note shows from 2026-11-20 to 2027-03-01, not on 2026-10-10. No test needs a change
 - Patch: winter-B-on-e02b95e.patch
 
-**C. Only fix the Christmas tree wording**
+**C. Leave it as it is now**
 
-- Nothing left to apply. The tree wording is already in-season-only at b54427b (commit e081393): the headline "Wise Acres Christmas trees", the "Trees" chip and "Christmas trees are here." show only from the Friday after Thanksgiving to December 8 (data-in-season; js/hero.js at `function applyOnly(` and `$$('#hero-h > [data-only]')`). Checked with a page clock on the unpatched tree: tree headline on 2026-12-01 only; 2026-11-20, 2026-12-20, 2027-01-20 and 2027-03-01 show "Organic u-pick fun for the whole family".
-- Do NOT apply the patch winter-C.patch (it is stale). A naive rebase (tree headline first in the h1) is wrong: js/hero.js at `$$('#hero-h > [data-only]')` shows the FIRST title between seasons, so the tree headline would show all winter. Tested and rejected.
+- Nothing to apply: this answer means "change nothing more". The Christmas tree wording is already fixed: it is in-season-only since b54427b (commit e081393): the headline "Wise Acres Christmas trees", the "Trees" chip and "Christmas trees are here." show only from the Friday after Thanksgiving to December 8 (data-in-season; js/hero.js at `function applyOnly(` and `$$('#hero-h > [data-only]')`). Checked with a page clock on the unpatched tree: tree headline on 2026-12-01 only; 2026-11-20, 2026-12-20, 2027-01-20 and 2027-03-01 show "Organic u-pick fun for the whole family".
+- Do NOT apply the patch winter-C.patch (it is stale and does not apply any more). A naive rebase (tree headline first in the h1) is wrong: js/hero.js at `$$('#hero-h > [data-only]')` shows the FIRST title between seasons, so the tree headline would show all winter. Tested and rejected.
 - What stays wrong with C alone: from the Nov 9 gap to March the Visit and Shop areas still show "Fall 2026" prices and "Reserve now" (see A and B).
 - Strings: 0
 - Tests: none to run: no file changes
@@ -1303,7 +1313,7 @@ The site shows fall wording all year. The three winter patches, the fall end dat
 
 **A. Hide them out of season**
 
-- Apply reserve-window-OPTIONAL-ff5965d.patch (optional patch; applies to b54427b and to HEAD). Files: css/styles.css, index.html, js/hero.js, pages/strawberry-picking.html (then python3 tools/pages.py).
+- Apply reserve-window-OPTIONAL-ff5965d.patch (optional patch; dry run on 3 October 2026 against af1e572: applies). Files: css/styles.css, index.html, js/hero.js, pages/strawberry-picking.html (then python3 tools/pages.py).
 - What it does: the buttons marked data-book show only inside the booking window the site's own words give: strawberry (spring) buttons from 3 weeks before the season starts (about March 25) to its end. Summer and fall state no window, so their buttons are never hidden by it (the November 9 to 17 gap stays).
 - Phone bar keeps its buttons evenly spaced (data-count).
 - Strings: 0
@@ -1373,7 +1383,7 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 
 ### d41. Cancel fee on the strawberry page
 
-- In plain words: The home and first-visit pages say there is a 3 percent fee when you cancel. The strawberry page rain policy does not mention it.
+- In plain words: The home and first-visit pages say a 3 percent card fee is kept when you cancel. The strawberry page rain policy does not mention it.
 - Doc question: none
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): no
@@ -1467,6 +1477,64 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 - Strings: 3 to 5 new ids x 4 translations (title and sentences)
 - Tests: none pinned; i18n and languages
 
+### d44. Corn pit: buy one get one free on Thursdays
+
+- In plain words: The site says buy one, get one free on Thursdays with a reservation. It does not say who gets the free one.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 2 (wrong or risky information). Checklist says: not listed.
+- Owner fact (no sensible default): yes
+- Default: none. Only she knows who gets the free one. Until she answers, the words stay as they are.
+- Depends on: d45 (who counts as a child), d43 (the corn pit is one of the farm words that need a plain line).
+- Note: "With a reservation" is already on the site, so that part is settled (the first version of this question had an option for it; it was removed). The $4 per person price is not part of this question. The offer is written in three places: index.html at `data-t="t810fb0e4"` (the note under the add-ons), index.html at `data-t="t4937889a"` (the corn pit line in the price list) and pages/pumpkin-patch.html at `Buy one, get one free on Thursdays with reservations.` (the corn pit line in the pumpkin page price list; its id is tbbe8a55a).
+
+**A. Free for every child with a paying adult**
+
+- Say it in all three places. The wording is hers to approve; for example: "On Thursdays, every child with a paying adult gets into the corn pit free, if you have a reservation." (index.html at `data-t="t810fb0e4"`) and "Every child with a paying adult is free on Thursdays with reservations." (index.html at `data-t="t4937889a"` and the small line in pages/pumpkin-patch.html at `Buy one, get one free on Thursdays with reservations.`). Then rebuild (python3 tools/pages.py and the translation steps in "The standard steps").
+- Strings: 3 English sentences (t810fb0e4, t4937889a, tbbe8a55a) x 4 translations. The word for "child" must be right in each language.
+- Tests: none pinned on these sentences. consistency at `price: corn pit, per person` still reads the $4 sentences, which do not change. i18n and languages after the rebuild.
+
+**B. Free for any second person, child or adult**
+
+- Same three places, saying that the second person is free whether child or adult; for example: "On Thursdays, the corn pit is buy one, get one free for any two people, child or adult, if you have a reservation." (index.html at `data-t="t810fb0e4"`) and "Buy one, get one free on Thursdays with reservations. The second person is free, child or adult." (index.html at `data-t="t4937889a"` and pages/pumpkin-patch.html at `Buy one, get one free on Thursdays with reservations.`). The words now on the site can already be read this way; this option makes it explicit.
+- Strings: 3 English sentences x 4 translations
+- Tests: as in A
+
+**C. I will explain**
+
+- She sends the rule in her own words (for example one free child per paying adult, or only on certain Thursdays). Put it in the same three places and keep them identical in meaning.
+- Strings: 3 English sentences x 4 translations
+- Tests: as in A
+
+### d45. Who is free: ages 2 and under
+
+- In plain words: The site says children 2 and under are free. Does that mean until the 3rd birthday? The wagon ride line already says ages 2 and younger ride free.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 2 (wrong or risky information). Checklist says: not listed.
+- Owner fact (no sensible default): yes
+- Default: none. Only she knows the rule. If she does not answer, nothing changes, which is the same as A.
+- Depends on: d16 (the $3 field fee and the pizza package extra start at "ages 3 and up"), d02 (party guests: "Children age 2 and younger are free and do not count toward the total"), d36 (school tours: parents and siblings "ages 3 and older" pay the admission), d44 (what counts as a child on Thursdays).
+- Note: Where the site says it now: "Children age 2 and younger are free" in index.html at `data-t="td4abc72c"` (the pizza package), `data-t="tf355075d"` (the field fee card), `data-t="t6d7bc03d"` (the price list) and `data-t="tc38820e6"` (party guests); pages/first-visit.html at `Children age 2 and younger are free` (1 place); pages/pumpkin-patch.html at `Children age 2 and younger are free` (2 places: the price list and the FAQ answer). "Ages 2 and younger ride free" (the wagon ride) is a separate line: index.html at `data-t="tb65a930a"` (2 places), pages/pumpkin-patch.html at `Ages 2 and younger ride free.` and the sentence in pages/first-visit.html at `ages 2 and younger ride free`.
+
+**A. Free until their 3rd birthday**
+
+- No change is needed: "age 2 and younger" next to "ages 3 and up" already means exactly this (a child is free until the day they turn 3).
+- Optional, only if she wants it plainer for parents: write "Children under 3 are free" in the places listed in the Note. Then consistency MUST follow (see Tests): its age check reads the words "Children age 2 and younger are free".
+- Strings: 0 if nothing changes; if the plainer words are used, 7 English sentences x 4 translations (ids t2531639c, t3a5391d6, t6d7bc03d, tc38820e6, td4abc72c, tf355075d, tfdad55ee)
+- Tests: none if nothing changes. For the plainer words: consistency at `age: free (infants, wagon ride, party children)` (its minimum is 10; it reads "Children age N and younger are free", "Children N and under are free", "Infants N and under are free" and "Ages N and younger ride free", so it needs a new pattern for the new words).
+
+**B. Free for infants under 12 months only**
+
+- Children aged 1 and 2 then pay. Replace "Children age 2 and younger are free" with her words (for example "Infants under 12 months are free") in all the places in the Note, and change the age from which people pay to match (for example "ages 1 and up"): index.html at `data-t="t10ffb744"` (Field fee, ages 3 and up), `data-t="tf7203efa"` and `data-t="te9a8e62d"` (pizza package, "ages 3+"), `data-t="t6d7bc03d"` (the price list), `data-t="t6c80dbc4"` (school tours: parents and siblings ages 3 and older); pages/pumpkin-patch.html at `Ages 3 and up.`, `(ages 3+)` and `ages 3 and up`; pages/school-field-trips.html at `ages 3 and older` (2 places). Then rebuild.
+- The wagon ride line ("Ages 2 and younger ride free") is a different rule: she must say whether it changes too (2 more English sentences: ids tb65a930a and tb77e4ad7).
+- Strings: about 14 English sentences x 4 translations (ids t2531639c, t3a5391d6, t6d7bc03d, tc38820e6, td4abc72c, tf355075d, tfdad55ee, t041b0712, t10ffb744, t4d23e4b7, t6c80dbc4, t8763a833, te9a8e62d, tf7203efa); 2 more if the wagon ride changes
+- Tests: consistency MUST follow: consistency at `age: free (infants, wagon ride, party children)` (give it a pattern for the new words; lower its minimum of 10 if fewer places say it), `age: from this age people pay the field fee / school admission` (minimum 11: every place must say the same new number) and `days: farm visits without pizza (fall)` (it reads "Ages 3 and up" and "Field fee, ages 3 and up" before the days). tools/check_facts.py at `Ages 3 and up` reads the same words for the $3 field fee.
+
+**C. I will explain**
+
+- She sends the rule in her words (for example free under 12 months, half price at 1 and 2). Change the same places as in B; the test notes of B apply.
+- Strings: about 14 English sentences x 4 translations
+- Tests: as in B
+
 ### d35. Parking and entrance
 
 - In plain words: The site only says limited parking and shows the map. Visitors ask where to park and which entrance to use.
@@ -1509,6 +1577,30 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 **B. Minimum stays 100 students**
 
 - No change.
+- Strings: 0
+- Tests: none
+
+### d43. What do your farm words mean
+
+- In plain words: A first-time visitor cannot guess these: corn pit, barrel train, sunn hemp maze, Halfzies, Party Patch, u-cut, farm fun. One plain line from you for each, and the site can explain them.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): yes (only she knows what each word means on her farm)
+- Default: none. If she does not answer, B: nothing breaks.
+- Depends on: d07 (the maze line must use the name she picks), d44 (the corn pit line must agree with the Thursday offer), d02 (the Party Patch is the private party area in the group prices), d16 (farm fun is what both package prices include), d45 (ages).
+- Note: All seven words are on the site today. A few sit next to a short line (the maze card says "Wander through our little maze on fall visits."; Halfzies says "pepperoni on half"), but none has a plain line of its own that says what it is. This question asks for one in her words. Where each word first appears: corn pit, index.html at `data-t="t447b4ee9"` (price $4 per person); barrel train, index.html at `data-t="tea6897bf"` (ages 12 and under, $3 per child); small sunn hemp maze, index.html at `data-t="t447b4ee9"`; Halfzies, index.html at `data-t="te2b6ab0c"` (next to it: "homemade dough, tomato sauce, cheese, pepperoni on half"); Party Patch, index.html at `data-t="t756d2aeb"` (the tab calls it "Private party patch", index.html at `data-t="t91aeca4c"`); u-cut, index.html at `data-t="t0e96fa27"`; farm fun, index.html at `data-t="t9c63bc47"`.
+
+**A. I will send one line for each**
+
+- She sends seven short lines, one for each word. Nothing else is asked.
+- Where they go is not decided by her answer. The usual place (a suggestion for whoever makes the change): one new question in the First-timer questions list of pages/first-visit.html, after the question pages/first-visit.html at `<summary>What are your bathroom facilities?</summary>`, with the question "What do the farm words mean?" and the seven lines as the answer. The rebuild (python3 tools/pages.py) copies the question and answer into that page's structured data. To show it on the home page too, add the same question to the FAQ of index.html at `id="faq"` and rebuild.
+- Halfzies is one of the farm names that stay in English inside translated text (js/i18n.js at `const NAMES =`); the other six words are translated.
+- Strings: 1 question and 1 answer (2 ids; 8 ids if the answer is a list of seven short items) x 4 translations
+- Tests: i18n, languages and i18n-a11y after the rebuild. If a line repeats a price, a day or an age, consistency reads it too (for example consistency at `price: corn pit, per person` and `age: free (infants, wagon ride, party children)`).
+
+**B. Leave them as they are**
+
+- No change. The seven words stay as they are, and a first-time visitor has to guess them.
 - Strings: 0
 - Tests: none
 
@@ -1773,7 +1865,7 @@ Features, prices and claims the site states as fact. They came from the farm's o
 Urgency: nice to have.
 Works today with free outside services. The decisions are about risk, not about launch.
 
-### d10. Free routing server behind Drive time
+### d10. Free driving-directions service behind the Drive time box
 
 - In plain words: It asks for non-business use and may refuse one day. The box would then say "not working right now" and still offer the Google Maps button.
 - Doc question: Q36 (and Q43, the lawyer question; Q43 is not on the dashboard)
@@ -1870,7 +1962,7 @@ Four AI-written translations that no native speaker has read.
 **A. A native speaker checks them**
 
 - No change now. When a speaker answers, edit the value of each id in lang/src/<code>.json (key = id of the English text; JS strings are keyed by the English text), then python3 tools/i18n.py build and python3 tools/i18n.py missing <code> (0). English never changes.
-- Two optional patches on disk no longer apply (stale: es/out/es-OPTIONAL-clock-12h.patch and vi/out/vi-OPTIONAL-clock-words.patch fail on b54427b and on HEAD); ask Claude to redo them from the speaker's answer. The other translation patches (zh-C, es-C, vi-C, hi-C) are already merged in HEAD.
+- Two optional patches on disk no longer apply (stale: es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch fail on b54427b and, checked 3 October 2026, on af1e572); ask Claude to redo them from the speaker's answer. The other translation patches (zh-C, es-C, vi-C, hi-C) are already merged.
 - Send the speaker first: the allergen line (d17), refund and cancel lines (d41, 3% fee), prices, hours and days, "700 degrees" (d18).
 - Strings: 0 English; only the translation values that the speaker changes
 - Tests: i18n, languages; consistency if a number, price or day changes (it compares each translation to the English)
