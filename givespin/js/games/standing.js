@@ -144,6 +144,17 @@
     }
   }
 
+  /**
+   * The status line is a polite live region, so it is only written when its words change (writing the same words again makes a screen reader
+   * say them again), and on a live table it is silent while bets come in: only the waves and the result are announced.
+   */
+  function setStatus(text) {
+    if (el.status && el.status.textContent !== text) { el.status.textContent = text; }
+  }
+  function quietStatus(quiet) {
+    if (el.status) { el.status.setAttribute('aria-live', quiet ? 'off' : 'polite'); }
+  }
+
   function statusText() {
     if (!field) { return tiles.length + ' charities on the board. Last one standing takes your gift.'; }
     var nb = tiles.filter(function (t) { return t.tickets > 0; }).length;
@@ -166,7 +177,7 @@
     result = null;
     if (el.result) { el.result.textContent = ''; }
     render();
-    if (el.status) { el.status.textContent = statusText(); }
+    setStatus(statusText());
   }
 
   function rebuild() {
@@ -186,13 +197,19 @@
     updateNote();
   }
 
-  /** The order everyone but the winner goes out in: random, or (live) weighted towards the smaller stakes first (the filler goes before all of them). */
+  /**
+   * The order everyone but the winner goes out in. Solo: random (every charity has the same odds). Live: the catalog charities that only fill
+   * the board go first, in any order, and then the charities somebody backed, the smaller stakes tending to go before the bigger ones. The words
+   * on the page say the fillers go out first, so the order now really does that (the winner is never part of it, so who wins is not affected).
+   */
   function knockoutOrder(winTile) {
     var others = tiles.filter(function (t) { return t !== winTile; });
-    var order = [];
-    while (others.length) {
-      var w = others.map(function (t) { return field ? 1 / Math.pow(Math.max(1, t.tickets), 0.8) : 1; });
-      order.push(others.splice(kit.pickWeighted(w), 1)[0]);
+    if (!field) { return core.shuffle(others); }
+    var backed = others.filter(function (t) { return t.tickets > 0; });
+    var order = core.shuffle(others.filter(function (t) { return !(t.tickets > 0); }));
+    while (backed.length) {
+      var w = backed.map(function (t) { return 1 / Math.pow(Math.max(1, t.tickets), 0.8); });
+      order.push(backed.splice(kit.pickWeighted(w), 1)[0]);
     }
     return order;
   }
@@ -202,6 +219,7 @@
     fresh = false;
     result = null;
     var token = ++runToken;
+    quietStatus(false);
     if (el.result) { el.result.textContent = ''; }
     var n = tiles.length;
     // with spots repeating charities on a big board, exactly one tile is the survivor
@@ -220,7 +238,7 @@
       chain = chain.then(function () {
         if (token !== runToken) { return; }
         var ms = U.dur(waveMs(before) * speed);
-        el.status.textContent = 'Wave ' + (wi + 1) + ' of ' + cuts.length + ' · ' + before.toLocaleString('en-US') + ' standing';
+        setStatus('Wave ' + (wi + 1) + ' of ' + cuts.length + ' · ' + before.toLocaleString('en-US') + ' standing');
         victims.forEach(function (t) { t.node.classList.add('is-danger'); });
         GS.audio.tick(0.9);
         return U.sleep(ms * 0.55).then(function () {
@@ -235,7 +253,7 @@
       if (token !== runToken) { return winner; }
       var champ = winTile;
       champ.node.classList.add('is-champ');
-      el.status.textContent = winner.name + ' is the last one standing';
+      setStatus(winner.name + ' is the last one standing');
       if (el.result) { el.result.textContent = winner.name; }
       result = winner;
       playing = false;
@@ -316,12 +334,13 @@
       if (playing) { return; }
       field = entrants;
       livePick = yourPick();
+      quietStatus(true);
       var sp = kit.split(entrants);
       setTiles(sp.items, sp.tickets);
       fresh = true;
       updateNote();
     },
-    clearField: function () { field = null; fillSig = ''; livePick = ''; if (!playing) { rebuild(); } },
+    clearField: function () { field = null; fillSig = ''; livePick = ''; quietStatus(false); if (!playing) { rebuild(); } },
     /** Stops a round in progress (the live table it belonged to has been left). */
     abort: function () {
       if (!playing) { return; }

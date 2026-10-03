@@ -429,7 +429,7 @@
     if (!el.note) { return; }
     if (field) {
       var nBacked = Object.keys(backedIds).length;
-      el.note.textContent = nBacked < bins.length || bins.length > nBacked
+      el.note.textContent = nBacked < bins.length
         ? 'Gold-edged bins are charities players have backed: only they can win, and each one’s share of the pot is its chance. The faded bins are filled in at random from our catalog so the board has ' + bins.length.toLocaleString('en-US') + ' bins. The middle has no edge.'
         : 'Each bin’s share of the pot is its chance of winning. The ball is drawn to the winner, so the middle has no edge.';
       return;

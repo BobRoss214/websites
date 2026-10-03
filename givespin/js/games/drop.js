@@ -28,7 +28,6 @@
   var cardW = 0;
   var viewW = 0;
   var restOffset = 0;    // how far (px) the marker sits from the middle card's centre at rest
-  var active = false;
   var locked = false;
   var spinning = false;
   var result = null;
@@ -61,15 +60,15 @@
     return (field || []).filter(function (e) { return e.tickets > 0; }).map(function (e) { return e.charity.id; }).sort().join(',');
   }
 
-  var FILLER_CSS = 'font-size:.72rem;font-weight:700;color:var(--dim)';   // the small grey "can't win" line on a catalog card
+  var FILLER_CSS = 'font-size:.72rem;font-weight:700;color:var(--muted)';   // the small grey "can't win" line on a catalog card (readable: only the badge is faded)
 
   function cardHTML(ch) {
     var cause = GS.cause(ch.causes[0]);
     var m = GS.mono(ch);
     var filler = isFiller(ch);
     var mine = field ? '' : pick;       // the charity you backed in a solo game (it means nothing on a live table)
-    return '<div class="dcard' + (ch.id === mine ? ' is-pick' : '') + (filler ? ' is-filler' : '') + '" data-id="' + ch.id + '" style="--c:' + ch.accent + (filler ? ';opacity:.55' : '') + '">' +
-      '<span class="dcard__badge' + (GS.ui.hasLogo(ch) ? ' is-logo' : '') + '" data-len="' + m.length + '" data-mono="' + U.esc(m) + '">' + GS.ui.monoInner(ch) + '</span>' +
+    return '<div class="dcard' + (ch.id === mine ? ' is-pick' : '') + (filler ? ' is-filler' : '') + '" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
+      '<span class="dcard__badge' + (GS.ui.hasLogo(ch) ? ' is-logo' : '') + '" data-len="' + m.length + '" data-mono="' + U.esc(m) + '"' + (filler ? ' style="opacity:.5"' : '') + '>' + GS.ui.monoInner(ch) + '</span>' +
       '<span class="dcard__name">' + U.esc(ch.short) + '</span>' +
       (field ? '<span class="dcard__odds"' + (filler ? ' style="' + FILLER_CSS + '"' : '') + '>' + (filler ? 'can’t win' : oddsOf(ch)) + '</span>' : '<span class="dcard__cause">' + GS.icon(cause.icon) + U.esc(cause.name) + '</span>') +
       '</div>';
@@ -145,7 +144,8 @@
       var filler = isFiller(ch);
       card.classList.toggle('is-filler', filler);
       card.classList.remove('is-pick');
-      card.style.opacity = filler ? '0.55' : '';
+      var badge = card.querySelector('.dcard__badge');
+      if (badge) { badge.style.opacity = filler ? '0.5' : ''; }
       odds.textContent = filler ? 'can’t win' : oddsOf(ch);
       odds.setAttribute('style', filler ? FILLER_CSS : '');
     }
@@ -348,10 +348,9 @@
     },
 
     activate: function () {
-      active = true;
       if (!spinning && current.length) { measure(); place(cardCenter(MID) + restOffset); }
     },
-    deactivate: function () { active = false; },
+    deactivate: function () {},
 
     lock: function (isLocked) {
       locked = !!isLocked;

@@ -421,7 +421,8 @@
       self._botJoin(spare.length ? core.pickOne(spare) : core.pickOne(GS.charities), 5 + 5 * core.randomInt(3));
     }
     // the stream's chat vote becomes a (simulated) stake on its favourite
-    if (self.chat && self.chat.on && self.chat.lead && self.slate.some(function (c) { return c.id === self.chat.lead; })) {
+    // (only when its charity already has a gate, or one is free: the stake must never push a backed charity off a full board)
+    if (self.chat && self.chat.on && self.chat.lead && self.slate.some(function (c) { return c.id === self.chat.lead; }) && (self.seats[self.chat.lead] || self.distinct() < self.maxGates)) {
       var cc = GS.charity(self.chat.lead);
       var seat = self.seats[cc.id] || (self.seats[cc.id] = { charity: cc, tickets: 0, bots: 0, you: 0 });
       seat.tickets += 25;

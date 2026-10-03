@@ -554,17 +554,30 @@
 
   /* ----------------------------------------------------------------- logic */
 
+  /** The live entrants one to a charity: a charity that holds several spots (a short roster repeats charities on a big board) counts once, with all of its tickets. */
+  function perCharity(entrants) {
+    var seen = {};
+    var out = [];
+    entrants.forEach(function (e) {
+      var id = e.charity.id;
+      if (!seen[id]) { seen[id] = { charity: e.charity, tickets: 0 }; out.push(seen[id]); }
+      seen[id].tickets += e.tickets;
+    });
+    return out;
+  }
+
   function renderLegend() {
     if (!el.legend) { return; }
     var live = null;
     if (field) {
       // live: a chip for every charity somebody backed (biggest stake first) with its share and its pockets, then the catalog charities
       // that only fill the board, muted (a long list of those is boiled down to one line)
-      var total = field.reduce(function (s, e) { return s + e.tickets; }, 0);
+      var rows = perCharity(field);
+      var total = rows.reduce(function (s, e) { return s + e.tickets; }, 0);
       var mineBy = {};
       pockets.forEach(function (c) { mineBy[c.id] = (mineBy[c.id] || 0) + 1; });
-      var backed = field.filter(function (e) { return e.tickets > 0; }).sort(function (a, b) { return b.tickets - a.tickets; });
-      var fillers = field.filter(function (e) { return !(e.tickets > 0); });
+      var backed = rows.filter(function (e) { return e.tickets > 0; }).sort(function (a, b) { return b.tickets - a.tickets; });
+      var fillers = rows.filter(function (e) { return !(e.tickets > 0); });
       var winId = ballMode === 'pocket' && winIdx >= 0 && pockets[winIdx] ? pockets[winIdx].id : '';
       var shownF = fillers.length <= 30 ? fillers : [];
       live = { chips: backed.length + shownF.length + (fillers.length > shownF.length ? 1 : 0) };
@@ -572,7 +585,8 @@
         var mine = mineBy[e.charity.id] || 0;
         return '<li class="' + (e.charity.id === winId ? 'is-win' : 'is-pick') + '" data-id="' + e.charity.id + '">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' · ' + kit.share(e.tickets, total) + ' · ' + mine + (mine === 1 ? ' pocket' : ' pockets') + (e.charity.id === livePick ? ' · you' : '') + '</span></li>';
       }).join('') + shownF.map(function (e) {
-        return '<li data-id="' + e.charity.id + '" style="opacity:0.55" title="Fills the board: this charity cannot win">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + '</span></li>';
+        // (only the badge is faded: faded text would not be readable)
+        return '<li data-id="' + e.charity.id + '" style="color:var(--dim)" title="Fills the board: this charity cannot win"><span style="opacity:0.55;display:inline-flex">' + GS.ui.mono(e.charity, 20) + '</span><span>' + U.esc(e.charity.short) + '</span></li>';
       }).join('') + (fillers.length > shownF.length ? '<li class="rlegend__more">+ ' + fillers.length + ' more charities fill the wheel, one pocket each. They cannot win.</li>' : '');
     }
     var big = live ? live.chips > (narrow() ? 6 : 14) : pockets.length > 40;

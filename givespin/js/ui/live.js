@@ -21,15 +21,19 @@
   var pick = '';             // charity id you have chosen for your bet
   var stake = 20;
   var animating = {};        // game id -> true while a live animation is running
+  var showRoom = {};         // game id -> the table whose show is running, and (showRound) the round it belongs to
+  var showRound = {};
+  var missed = {};           // "table:round" -> the result that arrived while that round's show was still running
+  var missedLater = [];      // outcomes to tell the visitor when the tab is visible again
   var fieldTimer = 0;
   var clockTimer = 0;
-  var slowTimer = 0;
   var pageBuilt = false;
   var stripBoxes = [];
   var verifyOut = '';
   var armed = false;         // all-in: the first press arms the button, the second places the bet
   var oddsDown = 0;          // when a finger or the mouse went down on the odds board (0 = not pressed): its rows must not be replaced under it
   var oddsLate = false;      // a redraw was held back while it was pressed
+  var ODDS_HOLD_MS = 5000;   // the longest the odds board waits for a press to end
   var armTimer = 0;
   var sirenRound = {};       // room id -> round the jackpot siren already sounded for
 
@@ -57,7 +61,6 @@
   /* ------------------------------------------------------- cards (page + strip) */
 
   function cardHTML(room, compact) {
-    var g = room.game();
     var sized = !!room.tab && !compact;
     var art = sized
       ? '<span class="lcard__art lcard__size"><b>' + room.size.toLocaleString('en-US') + '</b><small>' + esc(room.unit(room.size)) + '</small></span>'
@@ -304,7 +307,7 @@
       if (n >= 1 && n <= GS.config.maxAmount) { setStake(n, true); }
     });
     // The crowd's bets redraw the board many times a second. A press that spans a redraw would lose its click (the row it went down on is gone),
-    // so the board holds still while it is pressed and catches up when the press ends.
+    // so the board holds still while it is pressed and catches up when the press ends (or after ODDS_HOLD_MS, in case the release is never seen).
     el.odds.addEventListener('pointerdown', function () { oddsDown = Date.now(); });
     function oddsUp() {
       if (!oddsDown) { return; }
@@ -430,7 +433,7 @@
   /** The odds board: one row per charity at the table; tap one to back it. */
   function renderOdds() {
     if (!cur) { return; }
-    if (oddsDown && Date.now() - oddsDown < 1500) { oddsLate = true; return; }
+    if (oddsDown && Date.now() - oddsDown < ODDS_HOLD_MS) { oddsLate = true; return; }
     var room = cur.room;
     var field = room.field();
     var pot = room.pot();
@@ -457,9 +460,23 @@
           '<span class="odd__num"><b>' + core.fmtShare(stake, pot + stake) + '</b><small>' + dollars(0) + ' so far</small></span></button>');
       }
     }
-    el.odds.innerHTML = rows.join('');
+    var html = rows.join('');
+    if (el.odds._html !== html) {
+      el.odds._html = html;
+      // the rows are replaced for every bet: the row that has keyboard focus (and where the board is scrolled to) must survive that
+      var held = document.activeElement && document.activeElement !== el.odds && el.odds.contains(document.activeElement) ? document.activeElement.getAttribute('data-id') : '';
+      var top = el.odds.scrollTop;
+      el.odds.innerHTML = html;
+      el.odds.scrollTop = top;
+      el.odds._held = held;
+    }
     // the board scrolls when it is long; once every row is disabled (you have bet, or bets are closed) nothing in it can take focus, so the board itself must
     el.odds.tabIndex = open ? -1 : 0;
+    if (el.odds._held) {
+      var again = el.odds.querySelector('[data-id="' + el.odds._held + '"]');
+      el.odds._held = '';
+      if (again && !again.disabled) { again.focus({ preventScroll: true }); } else { el.odds.focus({ preventScroll: true }); }
+    }
     var gates = room.gatesOpen();
     el.add.hidden = !open || gates <= 0;
     el.oddsHint.textContent = (pot ? 'Every dollar is a ticket: a charity’s share of the pot is its chance of winning. ' : '') +
@@ -693,12 +710,46 @@
     fieldTimer = setTimeout(function () {
       fieldTimer = 0;
       if (!cur) { return; }
+      dropStaleShow();
       if (cur.room.phase === 'open') { setFieldNow(); }
       renderOdds();
       renderJoin();
       renderClock();
       if (ui.game.refreshLiveTab) { ui.game.refreshLiveTab(); }
     }, Math.max(60, U.dur(220)));
+  }
+
+  /**
+   * A show that is still running although its table has moved on to another round (the tab was in the background, so the browser paused
+   * the animation, or the device is very slow): stop it. Its outcome is told by done(), and the board of the new round shows at once.
+   */
+  function dropStaleShow() {
+    if (!cur || !animating[cur.id] || showRoom[cur.id] !== cur.room || showRound[cur.id] === cur.room.round) { return; }
+    var g = GS.games[cur.id];
+    if (g.abort) { g.abort(); }
+  }
+
+  /** The line a visitor gets when a table they are not looking at (or whose result card they missed) settles. */
+  function resultToast(room, r) {
+    ui.toast(room.title() + ': ' + r.winner.short + ' took the ' + dollars(r.pot) + ' pot. ' + (r.you.won ? 'Your pick won!' : 'Your ' + dollars(r.you.dollars) + ' went to it.'), r.you.won ? 'award' : 'trophy');
+  }
+
+  /**
+   * The show of round `rn` ended without the visitor having seen that round's result card (its table moved on, or you hopped away, or the tab
+   * was in the background): they still hear how their stake did, as soon as the tab is visible. Like any result, a toast; the win sound and
+   * confetti only if they are still at that table. Returns true when there was an outcome to tell.
+   */
+  function tellMissed(room, rn, attached) {
+    var key = room.id + ':' + rn;
+    var r = missed[key];
+    delete missed[key];
+    if (!r || !r.you) { return false; }
+    var tell = function () {
+      resultToast(room, r);
+      if (attached && cur && cur.room === room) { celebrate(r); }
+    };
+    if (document.hidden) { missedLater.push(tell); } else { tell(); }
+    return true;
   }
 
   function startAnimation(minMs) {
@@ -708,19 +759,43 @@
     var id = cur.id;
     var g = GS.games[id];
     var winner = GS.charity(room.draw.winnerId);
+    var rn = room.round;
     setFieldNow();
     animating[id] = true;
+    showRoom[id] = room;
+    showRound[id] = rn;
     // a round that is already under way (you arrived late, or hopped here) plays out what is left of it, not the whole show again
     var nominal = Math.max(minMs || 0, (minMs ? room.msLeft() : room.playMs) / scale());
     var p = Promise.resolve(g.playLive({ winner: winner, durationMs: nominal }));
     room.hold(p);
+    var finished = false;
+    // a show that never settles would freeze this game's tables (no result card, no later shows): after twice the table's play time plus five seconds, stop it
+    var guard = setTimeout(function () {
+      if (finished) { return; }
+      if (g.abort) { g.abort(); }
+      setTimeout(done, 1000);
+    }, Math.max(nominal * scale(), room.playMs) * 2 + 5000);
     function done() {
+      if (finished) { return; }
+      finished = true;
+      clearTimeout(guard);
       animating[id] = false;
+      var attached = !!(cur && cur.id === id && cur.room === room);
+      var told = false;
+      if (attached && room.round === rn && room.phase === 'result' && !document.hidden) { delete missed[room.id + ':' + rn]; }   // the result card shows below
+      else { told = tellMissed(room, rn, attached); }
       if (cur && cur.id === id) {
-        // you hopped to another table of this game while the drop played: show that table now
-        if (cur.room !== room) { if (cur.room.phase === 'playing') { startAnimation(3500); return; } setFieldNow(); }
+        if (cur.room !== room) {
+          // you hopped to another table of this game while the drop played: show that table now
+          if (cur.room.phase === 'playing') { startAnimation(3500); return; }
+          setFieldNow();
+        } else if (room.round !== rn) {
+          // this table moved on to another round while its show was still running: show the board of the new one
+          if (room.phase === 'playing') { startAnimation(3500); return; }
+          setFieldNow();
+        }
         renderAll();
-        if (cur.room.phase === 'result' && cur.room === room) { celebrate(); }
+        if (cur.room.phase === 'result' && cur.room === room && !told) { celebrate(); }
       }
       else { g.clearField(); }
     }
@@ -728,8 +803,8 @@
     renderAll();
   }
 
-  function celebrate() {
-    var r = cur && cur.room.result;
+  function celebrate(result) {
+    var r = result || (cur && cur.room.result);
     if (!r || !r.you) { return; }
     if (r.you.won) { GS.audio.win(); GS.confetti.celebrate(1); }
     else { GS.audio.coin(); }
@@ -739,6 +814,7 @@
     var room = cur.room;
     say('');
     disarm();
+    dropStaleShow();
     if (room.phase === 'open') {
       verifyOut = '';
       if (!animating[cur.id]) { setFieldNow(); }
@@ -752,7 +828,10 @@
 
   function onResult() {
     if (!cur) { return; }
+    dropStaleShow();
     var r = cur.room.result;
+    // a show that is still running keeps the result card back; if the table moves on before it ends, done() tells how the round ended
+    if (r && animating[cur.id] && showRoom[cur.id] === cur.room) { missed[cur.room.id + ':' + r.round] = r; }
     if (r) {
       ui.announce(r.winner.name + ' wins the ' + dollars(r.pot + r.bonus.total) + ' pot.' + (r.you ? (r.you.won ? ' Your charity won.' : ' Your stake went to the winner.') : ''));
       GS.audio.say(r.winner.short + ' wins the pot');
@@ -860,12 +939,30 @@
       g.info.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + '</div>';
   }
 
+  /** True when somebody is reading or using what is in `box` right now: keyboard focus inside it, or text in it selected. */
+  function readerInside(box) {
+    var a = document.activeElement;
+    if (a && a !== box && box.contains(a)) { return true; }
+    var sel = window.getSelection ? window.getSelection() : null;
+    return !!(sel && !sel.isCollapsed && sel.rangeCount && box.contains(sel.anchorNode));
+  }
+
+  /**
+   * The tab under the stage (live feed, recent results, fair play, how it works). It is asked to refresh for every bet, so it is only
+   * rewritten when its text really changed, and never while somebody is using it (focus or selected text inside) within the same round:
+   * a rewrite would drop their focus and their selection.
+   */
   function renderTab(tab, box) {
-    if (!cur) { box.innerHTML = ''; return; }
-    if (tab === 'feed') { box.innerHTML = renderFeed(); }
-    else if (tab === 'last') { box.innerHTML = renderLast(); }
-    else if (tab === 'fair') { box.innerHTML = renderFairTab(); }
-    else { box.innerHTML = renderAbout(); }
+    if (!cur) { box.innerHTML = ''; box._liveKey = ''; return; }
+    var html = tab === 'feed' ? renderFeed() : tab === 'last' ? renderLast() : tab === 'fair' ? renderFairTab() : renderAbout();
+    var key = tab + ':' + cur.room.id + ':' + cur.room.round;
+    // (the solo game writes into the same box: the cache only counts while this box still holds what was written here)
+    var same = box._liveKey === key && box._liveFirst === box.firstElementChild;
+    if (same && (box._liveHtml === html || readerInside(box))) { return; }
+    box._liveKey = key;
+    box._liveHtml = html;
+    box.innerHTML = html;
+    box._liveFirst = box.firstElementChild;
   }
 
   /* ------------------------------------------------------------- global bits */
@@ -895,8 +992,7 @@
     GS.bus.on('live', function (e) {
       var room = e.room;
       if (e.type === 'result' && room.result && room.result.you && !(cur && cur.room === room)) {
-        var r = room.result;
-        ui.toast(room.title() + ': ' + r.winner.short + ' took the ' + dollars(r.pot) + ' pot. ' + (r.you.won ? 'Your pick won!' : 'Your ' + dollars(r.you.dollars) + ' went to it.'), r.you.won ? 'award' : 'trophy');
+        resultToast(room, room.result);
       }
       if (cur && cur.room === room) {
         if (e.type === 'field') { queueField(); }
@@ -909,10 +1005,17 @@
       }
       if (e.type !== 'field') { refreshNav(); }
     });
+    // outcomes that were settled while the tab was in the background are told when it comes back
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { return; }
+      var todo = missedLater;
+      missedLater = [];
+      todo.forEach(function (tell) { tell(); });
+    });
     GS.audio.setVoice(!!store.prefs().voice);
     GS.bus.on('progress', function () { if (cur) { renderChips(); renderStake(); } });
     GS.bus.on('crew', function () { if (cur) { renderChips(); } });
-    slowTimer = setInterval(slowTick, 1000);
+    setInterval(slowTick, 1000);
     refreshNav();
   }
 

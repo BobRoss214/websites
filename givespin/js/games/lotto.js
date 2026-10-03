@@ -136,16 +136,29 @@
     renderLegend();
   }
 
+  /** The live entrants one to a charity: a charity that holds several spots (a short roster repeats charities on a big board) counts once, with all of its tickets. */
+  function perCharity(entrants) {
+    var seen = {};
+    var out = [];
+    entrants.forEach(function (e) {
+      var id = e.charity.id;
+      if (!seen[id]) { seen[id] = { charity: e.charity, tickets: 0 }; out.push(seen[id]); }
+      seen[id].tickets += e.tickets;
+    });
+    return out;
+  }
+
   function renderLegend() {
     if (!el.legend) { return; }
     if (field) {
       // live: a chip for every charity somebody backed (biggest stake first) with its share and its balls, then the catalog charities that
       // only fill the drum, muted (a long list of those is boiled down to one line)
-      var total = field.reduce(function (s, e) { return s + e.tickets; }, 0);
+      var rows = perCharity(field);
+      var total = rows.reduce(function (s, e) { return s + e.tickets; }, 0);
       var mineBy = {};
       balls.forEach(function (b) { mineBy[b.ch.id] = (mineBy[b.ch.id] || 0) + 1; });
-      var backed = field.filter(function (e) { return e.tickets > 0; }).sort(function (a, b) { return b.tickets - a.tickets; });
-      var fillers = field.filter(function (e) { return !(e.tickets > 0); });
+      var backed = rows.filter(function (e) { return e.tickets > 0; }).sort(function (a, b) { return b.tickets - a.tickets; });
+      var fillers = rows.filter(function (e) { return !(e.tickets > 0); });
       var shownF = fillers.length <= 30 ? fillers : [];
       var chips = backed.length + shownF.length + (fillers.length > shownF.length ? 1 : 0);
       var winId = result ? result.id : '';
@@ -156,7 +169,8 @@
         var mine = mineBy[e.charity.id] || 0;
         return '<li class="' + (e.charity.id === winId ? 'is-win' : 'is-pick') + '">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + ' \u00b7 ' + kit.share(e.tickets, total) + ' \u00b7 ' + mine + (mine === 1 ? ' ball' : ' balls') + (e.charity.id === livePick ? ' \u00b7 you' : '') + '</span></li>';
       }).join('') + shownF.map(function (e) {
-        return '<li style="opacity:0.55" title="Fills the drum: this charity cannot win">' + GS.ui.mono(e.charity, 20) + '<span>' + U.esc(e.charity.short) + '</span></li>';
+        // (only the badge is faded: faded text would not be readable)
+        return '<li style="color:var(--dim)" title="Fills the drum: this charity cannot win"><span style="opacity:0.55;display:inline-flex">' + GS.ui.mono(e.charity, 20) + '</span><span>' + U.esc(e.charity.short) + '</span></li>';
       }).join('') + (fillers.length > shownF.length ? '<li class="rlegend__more">+ ' + fillers.length + ' more charities fill the drum, one ball each. They cannot win.</li>' : '');
       return;
     }
