@@ -28,6 +28,7 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
 html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
 /* the More dropdown */
 .nav-more{position:relative}
+.nav .nav-first{display:none}   /* only in the phone menu (see the breakpoints below); the wide bar has it under More */
 .nav-more-btn{display:flex;align-items:center;gap:.3em;padding:.5em .55em .5em .75em;border:0;border-radius:999px;background:none;color:inherit;font:600 .95rem/1 var(--display);cursor:pointer;transition:background-color .2s}
 .nav-more-btn:hover,.nav-more.is-open .nav-more-btn{background:#fff}
 .nav-more-btn .ico{width:1em;height:1em;transition:transform .2s}
@@ -51,6 +52,8 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   .nav .nav-more-list a{padding:.55em .8em!important;font-size:1.4rem!important}
   .nav-cta{font-size:1.3rem;padding:.9em}
   body.nav-lock{overflow:hidden}
+  .nav .nav-first{display:block}
+  .nav .nav-first-more{display:none}
 }
 @media (max-width:83.125em){
   html:is([lang="es"],[lang="vi"]){--header-h:4rem}
@@ -66,6 +69,8 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   html:is([lang="es"],[lang="vi"]) .nav .nav-more-list a{padding:.55em .8em!important;font-size:1.4rem!important}
   html:is([lang="es"],[lang="vi"]) .nav-cta{font-size:1.3rem;padding:.9em}
   html:is([lang="es"],[lang="vi"]) body.nav-lock{overflow:hidden}
+  html:is([lang="es"],[lang="vi"]) .nav .nav-first{display:block}
+  html:is([lang="es"],[lang="vi"]) .nav .nav-first-more{display:none}
 }
 
 /* ---------- hero extras ---------- */

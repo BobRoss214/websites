@@ -129,13 +129,37 @@
     markMenus();
   }
 
+  // Changing language changes the height of every text block, and the browser loses its place because the
+  // text it was anchored to is replaced. So remember which block is at the top of the screen and put it back.
+  function placeMark() {
+    if (window.scrollY < 120) return null;
+    const edge = (doc.querySelector('.site-header') || { getBoundingClientRect: () => ({ bottom: 70 }) }).getBoundingClientRect().bottom + 4;
+    const els = doc.querySelectorAll('[data-t]');
+    for (let i = 0; i < els.length; i++) {
+      if (els[i].closest('header, nav, #action-bar, [aria-hidden="true"]')) continue; // fixed or hidden things do not move with the page
+      const r = els[i].getBoundingClientRect();
+      if (r.height > 0 && r.bottom > edge + 6 && r.top < window.innerHeight) return { el: els[i], top: r.top };
+    }
+    return null;
+  }
+  function restoreMark(m) {
+    if (!m || !m.el.isConnected) return;
+    const d = m.el.getBoundingClientRect().top - m.top;
+    if (Math.abs(d) > 1) window.scrollTo({ top: window.scrollY + d, left: 0, behavior: 'instant' });
+  }
+
   function setLang(code, opts) {
     if (!CODES.includes(code)) return;
+    const mark = placeMark();
     load(code, () => {
       W.lang = code;
       if (!(opts && opts.quiet)) store.set('wa.lang', code);
       apply(code);
       doc.dispatchEvent(new CustomEvent('wa:lang', { detail: code }));
+      restoreMark(mark);
+      // late changes (a font that arrives, a block that redraws): once more, unless the reader has already moved
+      const y = window.scrollY;
+      setTimeout(() => { if (Math.abs(window.scrollY - y) < 2) restoreMark(mark); }, 500);
     });
   }
   W.setLang = setLang;
@@ -152,13 +176,14 @@
         '<ul class="lang-list" role="menu" hidden>' + LANGS.map((l) => '<li role="none"><button type="button" role="menuitemradio" aria-checked="false" data-lang="' + l.code + '" lang="' + l.html + '">' + l.name + '</button></li>').join('') + '</ul>';
       const btn = box.querySelector('.lang-btn'), list = box.querySelector('.lang-list');
       const close = () => { list.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
-      btn.addEventListener('click', (e) => { e.stopPropagation(); const open = list.hidden; list.hidden = !open; btn.setAttribute('aria-expanded', String(open)); if (open) { const cur = list.querySelector('[aria-checked="true"]') || list.querySelector('button'); cur.focus(); } });
-      list.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (b) { setLang(b.dataset.lang); close(); btn.focus(); } });
+      // The header is sticky: moving focus inside it must not scroll the page (it used to throw the reader hundreds of pixels up).
+      btn.addEventListener('click', (e) => { e.stopPropagation(); const open = list.hidden; list.hidden = !open; btn.setAttribute('aria-expanded', String(open)); if (open) { const cur = list.querySelector('[aria-checked="true"]') || list.querySelector('button'); cur.focus({ preventScroll: true }); } });
+      list.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (b) { setLang(b.dataset.lang); close(); btn.focus({ preventScroll: true }); } });
       list.addEventListener('keydown', (e) => {
         const items = Array.from(list.querySelectorAll('button')), i = items.indexOf(doc.activeElement);
-        if (e.key === 'Escape') { close(); btn.focus(); }
-        else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
-        else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+        if (e.key === 'Escape') { close(); btn.focus({ preventScroll: true }); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus({ preventScroll: true }); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus({ preventScroll: true }); }
       });
       doc.addEventListener('click', (e) => { if (!box.contains(e.target)) close(); });
     });

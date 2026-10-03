@@ -724,7 +724,7 @@
     list.forEach((p) => {
       const li = doc.createElement('li'), fig = doc.createElement('figure'), img = doc.createElement('img');
       if (lang() !== 'en') img.lang = 'en';   // the owner's alt text is English
-      img.src = p.src; img.alt = p.alt; img.loading = 'lazy'; img.decoding = 'async'; img.setAttribute('data-zoom', '');
+      img.loading = 'lazy'; img.decoding = 'async'; img.src = p.src; img.alt = p.alt; img.setAttribute('data-zoom', '');   // lazy first: setting src first starts the download at once
       fig.appendChild(img);
       if (p.by) {
         const cap = doc.createElement('figcaption');

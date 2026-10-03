@@ -82,7 +82,7 @@
       btn.setAttribute('aria-label', t('Enlarge photo:') + ' ' + t(p.alt));
       btn.setAttribute('aria-haspopup', 'dialog');   // tells a screen reader that this opens the photo viewer
       const thumb = doc.createElement('img');
-      thumb.src = p.src; thumb.alt = t(p.alt); thumb.loading = 'lazy'; thumb.decoding = 'async';
+      thumb.loading = 'lazy'; thumb.decoding = 'async'; thumb.src = p.src; thumb.alt = t(p.alt);   // lazy first: setting src first starts the download at once
       btn.appendChild(thumb);
       btn.addEventListener('click', () => {
         img.src = p.src; img.alt = t(p.alt); cap.textContent = p.caption ? t(p.caption) : '';

@@ -86,6 +86,7 @@
       <nav data-ta-aria-label="td1883058" class="nav" id="nav" aria-label="Main">
         <ul>
           <li><a data-t="t7c9a8664" href="#visit">Visit</a></li>
+          <li class="nav-first"><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
           <li><a data-t="te9db7dd6" href="#farm">On the Farm</a></li>
           <li><a data-t="t27d882d4" href="#seasons">Seasons</a></li>
           <li class="nav-tomato"><a data-t="t3a209b3e" href="#tomatoes">Tomatoes</a></li>
@@ -95,6 +96,7 @@
           <li class="nav-more">
             <button data-t="t1e6fa7b2" class="nav-more-btn" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="nav-more-list">More <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
             <ul class="nav-more-list" id="nav-more-list">
+              <li class="nav-first-more"><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
               <li><a data-t="td4e7d7d3" href="#flowers">Flowers</a></li>
               <li><a data-t="tae9629f4" href="#groups">Groups</a></li>
               <li><a data-t="tc8927cf4" href="#about">Our Story</a></li>
@@ -214,6 +216,7 @@
           <a data-t="t38a1d40a" class="btn btn-white btn-lg" href="#seasons">See what&rsquo;s in season</a>
         </div>
         <p data-t="t854933db" class="hero-note" data-only="spring summer fall">No reservation? <a href="#greenhouse">Visit The GreenHouse next door <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
+        <p class="hero-live"><span class="live" data-no-i18n data-live="farm" hidden></span><span class="live" data-no-i18n data-live="greenhouse" hidden></span></p>
         <ul data-ta-aria-label="tfaf247c7" class="chips" aria-label="Highlights">
           <li data-t="t9e0e2003"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> USDA Certified Organic</li>
           <li data-t="t65d9d8ba"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Family farm since 2013</li>
@@ -346,8 +349,10 @@
             <a data-t="tddae9ce2" class="choose-new" data-only="fall" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
             <a data-t="t01cba258" class="choose-new" data-only="winter" hidden href="#greenhouse"><span class="choose-new-badge">Trees</span> Christmas trees are at The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
             <div class="card-actions">
-              <a data-t="tfa23ca11" class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve the farm <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+              <a data-t="tfa23ca11" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve the farm <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+              <a data-t="tf09e1fa4" class="btn btn-red" data-only="winter" hidden href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Tell me when <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
               <a data-t="t4b3f3cb5" class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+              <a data-t="tb349c1e7" class="btn btn-ghost btn-sm" data-only="fall" href="#options">See prices</a>
             </div>
           </article>
 
@@ -394,6 +399,7 @@
               <h3 data-t="t7085b601">Head to the farm</h3>
               <p data-t="t275a5613">We&rsquo;re at 4701 Hartis Road, in a neighborhood with limited parking. Check in under the name on your reservation. Reservations are transferable, so whoever comes can use it.</p>
               <a data-t="tce5b5050" class="btn btn-sm btn-sun" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener">Get directions <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+              <a data-t="t0a13643a" class="btn btn-sm btn-ghost" href="#farm-map">Farm map</a>
             </li>
             <li class="step reveal">
               <span class="step-num" aria-hidden="true"><span class="n">3</span><svg class="ico"><use href="#i-check"/></svg></span>
@@ -1217,7 +1223,7 @@
 
           <p class="gh-callout"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><span data-t="tf898ba95"><strong>No reservations required</strong>, but The GreenHouse does not include farm access. Pizza is available from 10 to 4 by farm reservation only.</span></p>
 
-          <p class="gh-trees"><svg aria-hidden="true" viewBox="0 0 80 110"><use href="#fir"/></svg><span data-t="t4503c39b"><strong>Christmas trees are here.</strong> Tree season runs from the Friday after Thanksgiving to early December, right at The GreenHouse.</span></p>
+          <p class="gh-trees" data-only="winter" hidden><svg aria-hidden="true" viewBox="0 0 80 110"><use href="#fir"/></svg><span data-t="t4503c39b"><strong>Christmas trees are here.</strong> Tree season runs from the Friday after Thanksgiving to early December, right at The GreenHouse.</span></p>
 
           <ul class="rules">
             <li><svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg><span data-t="tee483f28"><strong>Cash preferred</strong> All cards accepted</span></li>
