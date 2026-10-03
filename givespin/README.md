@@ -183,7 +183,7 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   `unverified` were later each checked again with a search limited to the charity's own website, which confirmed all 40 exist at
   that address, filled in founding years and headquarters where the site stated them, and caught three renames (Little Kids Rock
   is now Music Will, The Actors Fund is now the Entertainment Community Fund, VH1 Save The Music is now the Save The Music
-  Foundation). A later round of 141 (veterans and first responders, justice, mental health, abuse and safety, recovery) was checked the same way, with the evidence links in the same file; two of them are flagged `unverified` because a founding year or headquarters could not be confirmed. The remaining 660 come from two official government registers: the Charity Commission for England and Wales
+  Foundation). A later round of 141 (veterans and first responders, justice, mental health, abuse and safety, recovery) was checked the same way, with the evidence links in the same file; two of them were first flagged `unverified` because a founding year or headquarters could not be confirmed, and a later web check confirmed them (no entry is flagged now). The remaining 660 come from two official government registers: the Charity Commission for England and Wales
   (registered charities that work internationally; 358 list the UK first) and the Australian Charities and Not-for-profits
   Commission (302 list Australia first). A register record confirms the charity exists, its official name, its website and its
   location, so those entries were not web-searched; the register number or ABN is in `docs/roster-sources.json`. Their

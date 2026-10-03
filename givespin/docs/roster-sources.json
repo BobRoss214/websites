@@ -1466,9 +1466,10 @@
  {
   "id": "repat-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://mesha.org.au/about-us/"
   ],
-  "note": "ABN 80069520869; official register record (registered name: The Repat Foundation Incorporated)"
+  "note": "ABN 80069520869; official register record (registered name: The Repat Foundation Incorporated); renamed: now Military and Emergency Services Health Australia (MESHA), formerly The Road Home / The Repat Foundation"
  },
  {
   "id": "baptist-world-aid-australia",
@@ -1476,7 +1477,7 @@
    "https://data.gov.au/data/dataset/acnc-register",
    "https://baptistworldaid.org.au/about-us/"
   ],
-  "note": "ABN 63430709718; official register record (registered name: Baptist World Aid Australia Ltd); founding year 1959 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
+  "note": "ABN 63430709718; official register record (registered name: Baptist World Aid Australia Ltd); founding year 1959 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass; website changed from transformaid.org (its parent group) to its own site"
  },
  {
   "id": "big-issue-australia",
@@ -1623,9 +1624,10 @@
  {
   "id": "library-for-all",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://libraryforall.org/"
   ],
-  "note": "ABN 57602320865; official register record (registered name: Library For All Ltd)"
+  "note": "ABN 57602320865; official register record (registered name: Library For All Ltd); website changed to libraryforall.org, its own site shown by a web search"
  },
  {
   "id": "orange-sky-australia",
@@ -6788,7 +6790,7 @@
    "https://rapecrisis.org.uk/about-us/",
    "https://en.wikipedia.org/wiki/Rape_Crisis_England_&_Wales"
   ],
-  "note": "Results confirm the national feminist charity and umbrella for member rape crisis centres, site rapecrisis.org.uk; founding year not stated and HQ ambiguous (Leeds vs London) so left unverified."
+  "note": "Results confirm the national feminist charity and umbrella for member rape crisis centres, site rapecrisis.org.uk; founding year not stated and HQ ambiguous (Leeds vs London) so left unverified.; founding year 2003 (formed as a co-ordinating group; registered as a charity in 2007), headquarters Leeds, and website checked by web searches; the unverified flag was removed"
  },
  {
   "id": "futures-without-violence",
@@ -7170,7 +7172,7 @@
    "https://www.thelivelovelaughfoundation.org/about-us",
    "https://en.wikipedia.org/wiki/The_Live_Love_Laugh_Foundation"
   ],
-  "note": "Results confirm an Indian mental health awareness foundation created by actor Deepika Padukone (reported as 2015), official site thelivelovelaughfoundation.org; headquarters not stated in results, so left unverified."
+  "note": "Results confirm an Indian mental health awareness foundation created by actor Deepika Padukone (reported as 2015), official site thelivelovelaughfoundation.org; headquarters not stated in results, so left unverified.; founding year 2015, headquarters Bangalore, and website checked by web searches; the unverified flag was removed"
  },
  {
   "id": "air-force-aid-society",
