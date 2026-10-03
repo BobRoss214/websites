@@ -420,7 +420,7 @@ keyboard navigable.
 
 ## Testing
 
-Automatic browser checks (countdown, languages, farm map, accessibility, the tools…) live in `tests/`; how to install and run them is in `tests/README.md`. You do not need them to edit the site, and the folder is not part of the website.
+Automatic browser checks (countdown, languages, farm map, accessibility, the tools…) live in `tests/`; how to install and run them is in `tests/README.md`. You do not need them to edit the site, and the folder is not part of the website. `tests/visual-check.mjs` (not one of the tests: it needs a baseline made on your own computer) tells you which parts of the pages look different after a change, with a picture of each; see "The visual check" in `tests/README.md`.
 
 ## Putting it online
 

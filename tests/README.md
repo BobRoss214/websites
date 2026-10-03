@@ -69,6 +69,38 @@ Nothing is written into the site folder (the `pipeline` test works in a temporar
 | `pipeline` | the Python tools: the rebuild commands change nothing on a finished site, no translation is missing, edited English is reported, unsafe translations and empty maps are refused, the farm map and QR signs rebuild as committed, the tools' own checks `tools/test_add_photo.py` and `tools/test_pages.py` pass |
 | `consistency` | one fact, one answer (no browser): every price, clock time, weekday list, age, group size, phone number, e-mail address, street address, drive time and date is the same in every place it is written (home page, the five other pages, FAQ answers, page descriptions, structured data, `js/content.js`, `js/season.js`, the QR sign list), the farm-year picture's bars end where the words beside them say, and each of Spanish, Hindi, Chinese and Vietnamese carries the English numbers, prices, times, weekdays, months, names and e-mail addresses. `WA_FACTS=1 node tests/consistency.test.mjs` prints every place of every fact (file, line, exact words). When it fails after you reworded a sentence on purpose, the failing line says which fact lost a place: change the wording the test looks for |
 | `public-site` | nothing links to `tests/`, the sitemap lists only real pages, `robots.txt` and `_headers` keep `tests/` and `print/` out of search results, and the site's own address (`SITE` in `tools/pages.py`) is the same in every canonical tag, share tag, structured-data address, the sitemap, `robots.txt` and the QR signs |
+| `visual-check` | the visual check tool itself (`visual-check.mjs`, see "The visual check" below), on a temporary copy of the site and one small page: no baseline is refused, `--update` saves a small text baseline, an unchanged site gives "Nothing looks different", a changed heading color is reported with a picture. Never touches your own baseline in `tests/.visual/`. Takes one to three minutes |
+
+## The visual check: "does it still look the same?"
+
+`visual-check.mjs` is **not** one of the tests above (`run-all.mjs` does not run it): it compares how the pages *look* before and after a change, so it
+needs a baseline made on your own computer first, and a full run takes a while (11 to 12 minutes on a 4-core computer that was running at ten times its capacity; a quiet computer is much faster). Use it after you
+change CSS, a page or a translation, to see at once which sections look different. It uses the same Playwright and the same settings as the tests
+(`WA_CHROME`, `WA_DATE`, `WA_SLOW`; it starts its own web server on a free port).
+
+```
+node tests/visual-check.mjs --update   # on a version you trust, BEFORE you change things: save how every page looks now
+   ... make your change ...
+node tests/visual-check.mjs            # list the sections that look different, with a picture of each one
+node tests/visual-check.mjs --quick    # English only: a quarter of the time
+node tests/visual-check.mjs --help     # all options (--only "wise-pie", --parallel 3, --strict, tolerances ...)
+```
+
+What it looks at: the 6 pages (home, first visit, pumpkin patch, school trips, strawberry picking, Wise Pie) in en, es, hi, zh and vi, on a phone
+(390 px) and a computer (1440 px), and the home hero in the other three seasons. Everything that moves is frozen first (the date is `TODAY`, "random"
+numbers are fixed, animations stop on their first frame, the bee is hidden, pictures and fonts are loaded). Each page is cut into its sections
+(top bar, menu, hero, "Visit", "Pizza" ... footer) and every section gets a short fingerprint: its exact pixels, a 16 x 16 brightness map, an 8 x 8 color map
+and the list of colors it uses (so a changed color is found even in a few words of text).
+
+The answer is in plain words: the page, the section ("Groups section [part 1/2]", "footer"), roughly where, and a picture
+(baseline | now | what changed, in red) in `tests/.visual/last-run/` (open `report.html`). A section that flickers (for example a photo that flips) is looked at again,
+up to twice, before it is reported. Differences of a few pixels (a font edge) are listed but not counted (`--strict` counts them). The exit code is 0 when nothing changed,
+1 when something looks different and 2 when the tool itself could not run.
+
+**Where the baseline lives.** `tests/.visual/baseline.json` (fingerprints, about 1 MB of text) and `tests/.visual/pictures/` (about 100 MB) are made by `--update` on
+your computer and are **not** in git (`.gitignore` lists `tests/.visual/`): fonts and the browser version change how text is drawn, so a baseline only fits the computer and
+browser that made it. Nothing needs to be committed or uploaded. `--no-pictures` keeps only the fingerprints (the check still works; the report then shows only the new
+picture with red boxes). After you change the look on purpose, read the report, then run `--update` to accept it. After a new Chromium or another computer, run `--update` once.
 
 ## When a test fails
 

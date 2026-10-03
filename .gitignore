@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 *.orig
 *.rej
+
+# Baseline made by tests/visual-check.mjs on each developer's own computer (not part of the repository)
+tests/.visual/
