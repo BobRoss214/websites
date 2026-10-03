@@ -125,13 +125,37 @@
   const fmtCache = {};
   const formatter = (Ctor, opts) => {
     const key = Ctor.name + '|' + lang() + '|' + JSON.stringify(opts);
-    return fmtCache[key] || (fmtCache[key] = new Ctor(lang() === 'es' && (Ctor === Intl.NumberFormat || opts.hour) ? 'es-US' : lang(), opts));   // Spanish numbers and clock times like the rest of the page: 14.2, 1,500 and 5:00 p.m., not 14,2, 1500 and 17:00
+    return fmtCache[key] || (fmtCache[key] = new Ctor(lang() === 'es' && Ctor === Intl.NumberFormat ? 'es-US' : lang(), opts));   // Spanish numbers like the rest of the page: 14.2 and 1,500, not 14,2 and 1500. (Clock times: see fmtClock, they stay "5:00 p. m." as in the fixed texts.)
   };
   const fmtYmd = (ymd, opts) => {
-    const [y, m, d] = ymd.split('-').map(Number);
-    return formatter(Intl.DateTimeFormat, Object.assign({ timeZone: 'UTC' }, opts)).format(new Date(Date.UTC(y, m - 1, d, 12)));
+    const [y, m, d] = ymd.split('-').map(Number), L = lang(), o = Object.assign({ timeZone: 'UTC' }, opts);
+    if (L === 'hi' && o.month === 'short') o.month = 'long';        // the fixed Hindi texts spell the month out: 6 अक्टूबर (the browser's short form is 6 अक्तू॰)
+    if (L === 'zh' && o.weekday === 'long') o.weekday = 'short';    // and the fixed Chinese texts say 周二, not 星期二
+    const s = formatter(Intl.DateTimeFormat, o).format(new Date(Date.UTC(y, m - 1, d, 12)));
+    return L === 'hi' ? s.replace('अक्तूबर', 'अक्टूबर') : s;
   };
-  const fmtClock = (date, tz) => formatter(Intl.DateTimeFormat, { hour: 'numeric', minute: '2-digit', timeZone: tz }).format(date);
+  // A time of day in the wording of the fixed texts: English "5:00 PM" and Spanish "5:00 p. m." come from the browser (12-hour, which Spanish
+  // would not do on its own); Hindi, Chinese and Vietnamese come from W.clock (i18n.js): शाम 5 बजे, 下午 5 点, 5 giờ chiều.
+  // No time zone means the visitor's own.
+  const fmtClock = (date, tz) => {
+    const L = lang();
+    if (W.clock && (L === 'hi' || L === 'zh' || L === 'vi') && (tz || hereTz)) {
+      const p = tzParts(date, tz || hereTz), c = W.clock(p.h, p.min, L);
+      if (c) return c;
+    }
+    return formatter(Intl.DateTimeFormat, L === 'es' ? { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz } : { hour: 'numeric', minute: '2-digit', timeZone: tz }).format(date);
+  };
+  // The weekday and the time of day in the visitor's own zone: English "Wed 2:30 AM"; the other languages word the weekday like the fixed texts (miércoles, बुधवार, 周三, Thứ Tư).
+  const fmtDayClock = (date) => lang() === 'en'
+    ? formatter(Intl.DateTimeFormat, { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(date)
+    : formatter(Intl.DateTimeFormat, { weekday: lang() === 'zh' ? 'short' : 'long' }).format(date) + (lang() === 'zh' ? '' : ' ') + fmtClock(date);
+  // A number with its unit word ("14.2 miles", "24 minutes"), written like the fixed texts in every language: Western digits and US separators
+  // (14.2 and 1,234, never 14,2 or 1.234), and in Chinese a space between the number and the word, as in the rest of the Chinese text ("2 岁", "1 小时").
+  const fmtUnit = (unit, n, extra) => {
+    const s = formatter(Intl.NumberFormat, Object.assign({ style: 'unit', unit, unitDisplay: 'long' }, extra)).formatToParts(n)
+      .map((p) => (p.type === 'decimal' ? '.' : p.type === 'group' ? ',' : p.value)).join('');
+    return lang() === 'zh' ? s.replace(/(\d)(?=[\u4e00-\u9fff])/g, '$1 ') : s;
+  };
   const unitLong = (unit, n) => {
     try { return formatter(Intl.NumberFormat, { style: 'unit', unit, unitDisplay: 'long' }).formatToParts(n).find((p) => p.type === 'unit').value; }
     catch (e) { return unit + (n === 1 ? '' : 's'); }
@@ -177,8 +201,8 @@
   function yourTimeNote(rel) {
     if (!hereTz || hereTz === TZ) return '';
     const sameDay = ymdOf(tzParts(rel.at, hereTz)) === ymdOf(tzParts(rel.at, TZ));
-    const mine = sameDay ? fmtClock(rel.at) : formatter(Intl.DateTimeFormat, { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(rel.at);
-    return sameDay && mine === fmtClock(rel.at, TZ) ? '' : ' ' + t('(Your time: {time})', { time: mine });
+    const mine = sameDay ? fmtClock(rel.at) : fmtDayClock(rel.at);
+    return sameDay && mine === fmtClock(rel.at, TZ) ? '' : (lang() === 'zh' ? '' : ' ') + t('(Your time: {time})', { time: mine });
   }
 
   let relBuilt = false, relKey = '', chipKey = '';   // what the texts were last written for, so they are only rewritten when it changes
@@ -204,14 +228,15 @@
     const minute = Math.floor(s / 60);
     if (host._minute !== minute) {   // the spoken time is only updated once a minute
       host._minute = minute;
-      host.setAttribute('aria-label', t('Opens in {time}', { time: [['d', 'day'], ['h', 'hour'], ['m', 'minute']].filter(([k]) => vals[k] || k === 'm').map(([k, u]) => vals[k] + ' ' + unitLong(u, vals[k])).join(', ') }));
+      host.setAttribute('aria-label', t('Opens in {time}', { time: [['d', 'day'], ['h', 'hour'], ['m', 'minute']].filter(([k]) => vals[k] || k === 'm').map(([k, u]) => vals[k] + ' ' + unitLong(u, vals[k])).join(lang() === 'zh' ? '，' : ', ') }));
     }
   }
   function chipTime(ms) {
     const s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
-    const part = (n, u) => { try { return formatter(Intl.NumberFormat, { style: 'unit', unit: u, unitDisplay: 'long' }).format(n); } catch (e) { return n + ' ' + u + (n === 1 ? '' : 's'); } };   // "5 days", not "5d": plain words, and screen readers say them properly
-    if (d) return part(d, 'day') + (h ? ' ' + part(h, 'hour') : '');
-    if (h) return part(h, 'hour') + (m ? ' ' + part(m, 'minute') : '');
+    const part = (n, u) => { try { return fmtUnit(u, n); } catch (e) { return n + ' ' + u + (n === 1 ? '' : 's'); } };   // "5 days", not "5d": plain words, and screen readers say them properly
+    const and = lang() === 'es' ? ' y ' : ' ';   // "5 días y 1 hora", like the drive times
+    if (d) return part(d, 'day') + (h ? and + part(h, 'hour') : '');
+    if (h) return part(h, 'hour') + (m ? and + part(m, 'minute') : '');
     return part(Math.max(1, m), 'minute');
   }
 
@@ -617,7 +642,7 @@
   function renderDrive() {
     $$('[data-drive]').forEach((el) => {
       const m = +el.dataset.drive;
-      let tm; try { tm = formatter(Intl.NumberFormat, { style: 'unit', unit: 'minute', unitDisplay: 'long' }).format(m); } catch (e) { tm = m + ' minutes'; }
+      let tm; try { tm = fmtUnit('minute', m); } catch (e) { tm = m + ' minutes'; }
       el.textContent = t('about {time}', { time: tm });
     });
   }
@@ -662,14 +687,13 @@
   }
   const fmtMiles = (mi) => {
     const v = mi < 100 ? Math.round(mi * 10) / 10 : Math.round(mi);
-    try { return formatter(Intl.NumberFormat, { style: 'unit', unit: 'mile', unitDisplay: 'long', maximumFractionDigits: 1 }).format(v); } catch (e) { return v + ' miles'; }
+    try { return fmtUnit('mile', v, { maximumFractionDigits: 1 }); } catch (e) { return v + ' miles'; }
   };
   const fmtDriveTime = (min) => {
     const m = Math.max(1, Math.round(min));
     try {
-      const nf = (unit) => formatter(Intl.NumberFormat, { style: 'unit', unit, unitDisplay: 'long' });
-      if (m < 60) return nf('minute').format(m);
-      return nf('hour').format(Math.floor(m / 60)) + (m % 60 ? (lang() === 'zh' ? '' : lang() === 'es' ? ' y ' : ' ') + nf('minute').format(m % 60) : '');   // 1小时15分钟, 1 hora y 15 minutos
+      if (m < 60) return fmtUnit('minute', m);
+      return fmtUnit('hour', Math.floor(m / 60)) + (m % 60 ? (lang() === 'es' ? ' y ' : ' ') + fmtUnit('minute', m % 60) : '');   // 1 小时 15 分钟, 1 hora y 15 minutos
     } catch (e) { return m + ' min'; }
   };
   // Every .drive-form on the page is one box with its own answer. (A page can hold more than one.)

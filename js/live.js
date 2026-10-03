@@ -48,9 +48,11 @@
     return dt.getUTCFullYear() + '-' + String(dt.getUTCMonth() + 1).padStart(2, '0') + '-' + String(dt.getUTCDate()).padStart(2, '0');
   };
   // Jan 1, 2023 was a Sunday, so day n is Jan 1 + n.
-  const dayName = (dow) => new Intl.DateTimeFormat(lang(), { weekday: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1 + dow, 12)));
+  const dayName = (dow) => new Intl.DateTimeFormat(lang(), { weekday: lang() === 'zh' ? 'short' : 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1 + dow, 12)));   // Chinese: 周五, as in the fixed texts (not 星期五)
   function timeLabel(mins) {
     const h = Math.floor(mins / 60), m = mins % 60;
+    const own = W.clock && lang() !== 'en' ? W.clock(h, m, lang()) : '';   // Hindi, Chinese, Vietnamese: शाम 5 बजे, 下午 5 点, 5 giờ chiều (i18n.js)
+    if (own) return own;
     const s = new Intl.DateTimeFormat(lang(), { hour: 'numeric', minute: m ? '2-digit' : undefined, hour12: true, timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1, h, m)));
     return lang() === 'en' ? s.replace(/\s?(AM|PM)/, (_, x) => ' ' + x.toLowerCase()) : s;
   }
@@ -69,7 +71,7 @@
       if (!sch.days.includes(dow) || closedOn(addDays(now.ymd, i))) continue;
       const when = i === 1 ? t('tomorrow') : dayName(dow);
       const lead = sch.days.includes(now.dow) && closedOn(now.ymd) ? t('Closed today.') : (todayOpen ? t('Closed now.') : t('Closed today.'));
-      return { state: 'closed', text: lead + ' ' + t('Opens {day} at {time}', { day: when, time: timeLabel(open) }) };
+      return { state: 'closed', text: lead + (lang() === 'zh' ? '' : ' ') + t('Opens {day} at {time}', { day: when, time: timeLabel(open) }) };
     }
     return { state: 'closed', text: t('Closed for now') };
   }

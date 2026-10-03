@@ -63,6 +63,27 @@
   W.t = t;
 
   /* ------------------------------------------------------------------ *
+   * clock(): a time of day worded like the fixed texts of the page.
+   *   Hindi  शाम 5 बजे, रात 11:59 बजे      Chinese  下午 5 点, 晚上 11:59      Vietnamese  5 giờ chiều, 11:59 tối
+   * English ("5:00 PM") and Spanish ("5:00 p. m.") already come out right from the browser's own 12-hour wording, so this
+   * returns '' for them (and for any other language): the caller then uses Intl as before. h is 0 to 23, m is 0 to 59.
+   * ------------------------------------------------------------------ */
+  const DAY_PART = {
+    hi: (h) => (h < 4 ? 'रात' : h < 12 ? 'सुबह' : h < 16 ? 'दोपहर' : h < 20 ? 'शाम' : 'रात'),
+    zh: (h) => (h < 5 ? '凌晨' : h < 8 ? '早上' : h < 12 ? '上午' : h < 13 ? '中午' : h < 18 ? '下午' : '晚上'),
+    vi: (h) => (h < 4 ? 'đêm' : h < 11 ? 'sáng' : h < 13 ? 'trưa' : h < 18 ? 'chiều' : 'tối'),
+  };
+  W.clock = (h, m, code) => {
+    code = code || W.lang;
+    const part = hasOwn(DAY_PART, code) && DAY_PART[code];
+    if (!part || !(h >= 0 && h < 24 && m >= 0 && m < 60)) return '';
+    const h12 = h % 12 || 12, mm = m ? ':' + String(m).padStart(2, '0') : '';   // a whole hour has no minutes, as in "10 am"
+    if (code === 'hi') return part(h) + ' ' + h12 + mm + ' बजे';
+    if (code === 'zh') return part(h) + ' ' + h12 + (m ? mm : ' 点');
+    return m ? h12 + mm + ' ' + part(h) : h12 + ' giờ ' + part(h);
+  };
+
+  /* ------------------------------------------------------------------ *
    * Loading dictionaries (before first paint when we can)
    * ------------------------------------------------------------------ */
   const loading = {};

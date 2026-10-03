@@ -255,7 +255,7 @@
   "tomorrow": "ngày mai",
   "white daisy": "một bông cúc trắng",
   "{crop} — happening now": "{crop}: đang diễn ra",
-  "{date} at {time} Eastern Time": "{date} lúc {time} giờ miền Đông",
+  "{date} at {time} Eastern Time": "{date} lúc {time} (giờ miền Đông)",
   "{first}. {second}": "{first}. {second}",
   "Working it out…": "Đang tính…",
   "Type your street address, town and state.": "Hãy nhập địa chỉ (số nhà và tên đường), thị trấn và tiểu bang.",
