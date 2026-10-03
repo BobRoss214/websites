@@ -1,5 +1,6 @@
 {
  "(Your time: {time})": "features.js",
+ "1 photo": "main.js",
  "100 blueberries! Your fingers must be blue by now.": "hero.js",
  "100 lights and sparks! You are lighting up the whole farm.": "hero.js",
  "100 pumpkins! That is a lot of pie.": "hero.js",
@@ -285,6 +286,7 @@
  "the Friday after Thanksgiving": "season.js",
  "tomorrow": "live.js",
  "white daisy": "main.js",
+ "{count} photos": "main.js",
  "{crop} — happening now": "main.js",
  "{date} at {time} Eastern Time": "features.js",
  "{distance}, about {time} by car": "features.js",

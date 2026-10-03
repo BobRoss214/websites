@@ -295,7 +295,9 @@
   "Four people behind a Foster Village information table at an event": "四个人站在活动现场的 Foster Village 信息桌后面",
   "Foster Village table": "Foster Village 的桌子",
   "To The GreenHouse at 5503 Poplin Rd. Usual road speed with no traffic. Rush hour can add more.": "到 5503 Poplin Rd 的 The GreenHouse。按正常路速、没有车流计算，高峰时段可能更久。",
-  "We could not find a drive from that address to The GreenHouse. Try the Google Maps button.": "没有找到从该地址到 The GreenHouse 的行车路线。请试试 Google Maps 按钮。"
+  "We could not find a drive from that address to The GreenHouse. Try the Google Maps button.": "没有找到从该地址到 The GreenHouse 的行车路线。请试试 Google Maps 按钮。",
+  "1 photo": "1 张照片",
+  "{count} photos": "{count} 张照片"
  },
  "ui": {
   "t000eb0a5": "在花田里剪一束属于你的花束",
@@ -1340,6 +1342,10 @@
   "t32619828": "目的地：",
   "t3c38402a": "输入你的地址，查看有多少英里、要开多久",
   "t60ba1e75": "农场（4701 Hartis Rd）",
-  "tee27c655": "The GreenHouse（5503 Poplin Rd）"
+  "tee27c655": "The GreenHouse（5503 Poplin Rd）",
+  "t0ce86084": "浆果",
+  "t2e2fd69b": "按主题筛选照片",
+  "t70af7aa7": "人物和活动",
+  "tafd37123": "农场动物"
  }
 }

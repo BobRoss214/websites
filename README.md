@@ -347,6 +347,13 @@ The farm photos are in `assets/photos/`, plus the printed Fall Menu 2026 (`wise-
 "Meet the goats" at The GreenHouse, the tomatoes section, the school tour and the strawberry, pumpkin, school and Wise Pie pages. Tap any photo to enlarge it.
 On phones the gallery shows two photos to a row.
 
+**Topic buttons.** Above the gallery a row of buttons (All, Berries, Flowers, Farm animals, Fall, Pizza, People & events) shows only the photos of that topic;
+"All" is the default, and a line under them says how many photos are showing ("12 photos"). Each photo can carry `tags: ["berries", "flowers"]` in `js/content.js`
+(a photo with no tags shows under "All" only; a button with no photos hides itself). Tag only what you can see in the picture. The allowed topics are listed in the comment
+at the top of `js/content.js` (after "Allowed tags:"). A new topic needs a new button in `index.html` (section "Photo gallery", `data-gtag="..."`), its name added to that list,
+and the button label translated (Claude: `python3 tools/i18n.py extract`, then add the new text under `"ui"` in `lang/src/<code>.json`). `python3 tools/test_add_photo.py` fails
+if the buttons and the allowed list ever disagree; the "Site check" box (`?check` on the address) names a photo whose tag has no button.
+
 ### Adding a photo
 
 When the farm sends new photos, Claude adds each one with one command (the farm owner does not need to run anything):
@@ -361,6 +368,7 @@ python3 tools/add_photo.py path/to/picture.jpg --name goat-in-frog-hat --alt "A 
 | `--name` | A few plain words for the file name: "goat in frog hat" becomes `assets/photos/goat-in-frog-hat.webp`. An existing picture is never overwritten, unless you add `--replace`. |
 | `--alt` | **What is visible**, read aloud to people who cannot see the picture. Never put prices, names of people or dates in it: they go out of date and can be wrong. The tool warns when it sees one. If you are not sure what an animal or a place is, say only what you can see ("a small animal wearing a green knitted frog hat"). |
 | `--caption` | Optional. A short line under the picture when it is enlarged. |
+| `--tags` | Optional. The topic buttons above the gallery it belongs under, for example `--tags berries,flowers`. Only tag what you can **see**. The tool refuses a topic that has no button and says which ones exist. Without `--tags` the picture shows under "All" only (the tool says so). |
 | `--seasonal-text` | The picture has words printed on it (a season, a date, a price, "Happy Easter!"). Those go out of date, so such a picture is listed last in the gallery (marked `// words on the picture` in `js/content.js`) and should not be put in a prominent spot on a page. Say the words in `--alt`. |
 | `--place none` | Only save the file; do not list it in the gallery. |
 | `--dry-run` | Show what would happen, change nothing. Do this first when in doubt. |
@@ -379,7 +387,7 @@ To show a photo on a page as well, ask Claude: it becomes a small tile in a phot
 To check the tool itself: `python3 tools/test_add_photo.py` (it works on a throw-away copy and never touches the real site).
 
 By hand, if you ever have to: put the shrunk picture in `assets/photos/` and add `{ src: "assets/photos/name.webp", alt: "What is visible", caption: "Optional" },`
-to `photos` in `js/content.js`. The description (`alt`) is read aloud for people who cannot see the picture, so write one for every photo. Other languages show the
+(and, if you like, `tags: ["berries"]` after the caption) to `photos` in `js/content.js`. The description (`alt`) is read aloud for people who cannot see the picture, so write one for every photo. Other languages show the
 description and caption in English until you ask Claude to translate them. (Claude: run `python3 tools/i18n.py extract && python3 tools/i18n.py missing es --list`,
 and hi, zh, vi, to see what still needs translating.)
 

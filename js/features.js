@@ -774,6 +774,14 @@
       a.addEventListener('click', () => { const to = a.getAttribute('data-drive-to'); if (to) driveBoxes.forEach((b) => b.pick(to)); });   // the page scrolls to the box by itself
     });
   }
+  function checkPhotoTags() {   // the topic buttons above the gallery: a tag that has no button would never be found
+    const known = $$('#gallery-filters [data-gtag]').map((b) => b.dataset.gtag).filter((g) => g !== 'all');
+    (W.photos || []).forEach((p, i) => {
+      if (!p || p.tags === undefined) return;
+      if (!Array.isArray(p.tags)) { warn('photo number ' + (i + 1) + ' (' + q(p.alt) + '): tags must be a list like  tags: ["berries", "flowers"]. The photo shows under All only.'); return; }
+      p.tags.forEach((x) => { if (known.indexOf(String(x).trim().toLowerCase()) < 0) warn('photo number ' + (i + 1) + ' (' + q(p.alt) + ') has the tag "' + q(x) + '", but the gallery has no button for it. The tags that work: ' + known.join(', ') + '.'); });
+    });
+  }
   function initReviewLinks() {
     if (!W.reviewUrl) return;
     if (!/^https:\/\/\S+$/i.test(String(W.reviewUrl).trim())) { warn('reviewUrl "' + q(W.reviewUrl) + '" must start with https:// (copy the whole link from Google Business Profile). The buttons keep opening Google Maps.'); return; }
@@ -1053,7 +1061,7 @@
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
   const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
   if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). Open the browser console (F12) to see the line number.');
-  [expireDated, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm].forEach(safe);
+  [expireDated, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
   safe(renderDrive);

@@ -74,15 +74,17 @@
     const box = $('#lightbox');
     const img = $('#lightbox-img');
     const cap = $('#lightbox-cap');
+    const filters = $('#gallery-filters');
+    const countEl = $('#gallery-count');
+    const tagsOf = (p) => (Array.isArray(p.tags) ? p.tags : []).map((x) => String(x).trim().toLowerCase()).filter(Boolean);   // tags: ["berries", "flowers"] in js/content.js
 
-    photos.forEach((p) => {
+    const items = photos.map((p) => {
       const li = doc.createElement('li');
       const btn = doc.createElement('button');
       btn.type = 'button';
-      btn.setAttribute('aria-label', t('Enlarge photo:') + ' ' + t(p.alt));
       btn.setAttribute('aria-haspopup', 'dialog');   // tells a screen reader that this opens the photo viewer
       const thumb = doc.createElement('img');
-      thumb.loading = 'lazy'; thumb.decoding = 'async'; thumb.src = p.src; thumb.alt = t(p.alt);   // lazy first: setting src first starts the download at once
+      thumb.loading = 'lazy'; thumb.decoding = 'async'; thumb.src = p.src;   // lazy first: setting src first starts the download at once
       btn.appendChild(thumb);
       btn.addEventListener('click', () => {
         img.src = p.src; img.alt = t(p.alt); cap.textContent = p.caption ? t(p.caption) : '';
@@ -90,8 +92,48 @@
       });
       li.appendChild(btn);
       grid.appendChild(li);
+      return { p, li, btn, thumb, tags: tagsOf(p) };
     });
+    const words = () => items.forEach((it) => {   // alt text and button labels in the language of the page (drawn again when the language changes)
+      it.thumb.alt = t(it.p.alt);
+      it.btn.setAttribute('aria-label', t('Enlarge photo:') + ' ' + t(it.p.alt));
+    });
+    words();
     box.addEventListener('click', (e) => { if (e.target === box) box.close(); });
+
+    // Topic buttons: one is pressed at a time ("All" to start). A photo with no tags shows under "All" only.
+    // The photos are drawn once and only hidden or shown, so the buttons never move and the focus stays on the one that was pressed.
+    const buttons = filters ? $$('[data-gtag]', filters) : [];
+    let current = 'all';
+    const showCount = (n, label) => {
+      if (!countEl) return;
+      countEl.textContent = '';
+      const who = doc.createElement('span');
+      who.className = 'sr-only';
+      who.textContent = label + ': ';      // read aloud with the number, so two groups with the same count still sound different
+      countEl.append(who, n === 1 ? t('1 photo') : t('{count} photos', { count: n }));
+    };
+    const apply = () => {
+      let n = 0;
+      items.forEach((it) => { const on = current === 'all' || it.tags.includes(current); it.li.hidden = !on; if (on) n++; });
+      const pressed = buttons.find((b) => b.dataset.gtag === current);
+      showCount(n, pressed ? pressed.textContent.trim() : '');
+    };
+    if (filters && items.some((it) => it.tags.length)) {
+      buttons.forEach((b) => {
+        const tag = b.dataset.gtag;
+        if (tag !== 'all' && !items.some((it) => it.tags.includes(tag))) b.hidden = true;   // no photo in that group (yet): no button
+        b.addEventListener('click', () => {
+          current = tag;
+          buttons.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          apply();
+        });
+      });
+      filters.hidden = false;
+      if (countEl) countEl.hidden = false;
+    }
+    apply();
+    doc.addEventListener('wa:lang', () => { words(); apply(); });
 
     section.hidden = false;
   }

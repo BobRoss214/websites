@@ -8,6 +8,8 @@ and lists it in the photo gallery (js/content.js).
   --name WORDS     the file name to use, in a few plain words: "goat in frog hat" becomes assets/photos/goat-in-frog-hat.webp
   --alt "TEXT"     what is VISIBLE in the picture, read aloud to people who cannot see it. No prices, no names of people, no dates.
   --caption "TEXT" (optional) a short line shown under the picture when it is enlarged
+  --tags a,b       (optional) the topic buttons above the gallery it belongs under, for example  --tags berries,flowers . Only tag what you can
+                   SEE in the picture. Allowed: the list after "Allowed tags:" in js/content.js. No tags = it shows under "All" only.
   --place gallery  (the default) also list the picture in the photo gallery
   --place none     only save the file (for a picture you will put on a page yourself)
   --seasonal-text  the picture has words printed on it (a season, a date, a price, "Happy Easter"). Such pictures go out of date, so
@@ -21,11 +23,11 @@ What it does
   - saves a WebP copy at quality 85 with NO camera, GPS or other hidden data in it (the original file is not changed)
   - adds one entry to  photos: [ ... ]  in js/content.js, before any entry marked  // words on the picture,  so those stay last
   - checks that js/content.js still works before it writes it, and warns when the picture looks like one that is already there
-  - prints the next steps (translations for the alt text and caption)
+  - prints the next steps (translations for the alt text and caption; the topic buttons are already translated)
 
 Needs:  pip install pillow
 """
-import argparse, html, io, os, re, shutil, subprocess, sys, tempfile, unicodedata
+import argparse, difflib, html, io, os, re, shutil, subprocess, sys, tempfile, unicodedata
 
 try:
     from PIL import Image, ImageOps
@@ -273,7 +275,34 @@ def photo_entries(lines):
     return open_i, close_i, entries
 
 
-def plan_listing(text, src, alt, caption, seasonal):
+def allowed_tags(text):
+    """The topics the gallery buttons have, from the line  Allowed tags: berries, flowers, ...  in the comment at the top of js/content.js."""
+    m = re.search(r'Allowed tags:\s*([^\n]*)', text)
+    if not m:
+        return None
+    return [t for t in re.split(r'[\s,]+', m.group(1).strip().rstrip('.')) if t]
+
+
+def clean_tags(raw, allowed):
+    """['Berries, flowers'] -> ['berries', 'flowers'], and a plain message for a topic that has no button."""
+    wanted = []
+    for t in re.split(r'[\s,;]+', (raw or '').lower()):
+        if t and t not in wanted:
+            wanted.append(t)
+    if not wanted:
+        return []
+    if allowed is None:
+        fail('I cannot find the list  Allowed tags: ...  in the comment at the top of js/content.js, so I cannot check --tags. '
+             'Add the picture without --tags, or ask Claude.')
+    for t in wanted:
+        if t not in allowed:
+            close = difflib.get_close_matches(t, allowed, n=1)
+            fail(f'"{t}" is not a topic the gallery has' + (f' (did you mean "{close[0]}"?)' if close else '') +
+                 f'. The topics are: {", ".join(allowed)}. A new topic needs a new button and its translations: ask Claude.')
+    return wanted
+
+
+def plan_listing(text, src, alt, caption, seasonal, tags=()):
     """Returns (new text, where it went, 'added' or 'already listed')."""
     lines = text.split('\n')
     open_i, close_i, entries = photo_entries(lines)
@@ -290,9 +319,11 @@ def plan_listing(text, src, alt, caption, seasonal):
     else:
         indent = re.match(r'^(\s*)', lines[open_i]).group(1) + '  '
     mark = '   // ' + WORDS_MARK if seasonal else ''
-    block = [f'{indent}{{ src: "{src}",{mark}', f'{indent}  alt: "{alt}"' + (',' if caption else ' },')]
+    block = [f'{indent}{{ src: "{src}",{mark}', f'{indent}  alt: "{alt}"' + (',' if caption or tags else ' },')]
     if caption:
-        block.append(f'{indent}  caption: "{caption}" }},')
+        block.append(f'{indent}  caption: "{caption}"' + (',' if tags else ' },'))
+    if tags:
+        block.append(f'{indent}  tags: [' + ', '.join(f'"{t}"' for t in tags) + '] },')
     first_words = next((e for e in entries if e[3]), None)
     if first_words is not None and not seasonal:
         at, where = first_words[0], f'just before "{os.path.basename(first_words[2])}", the first picture with words on it'
@@ -344,6 +375,7 @@ def parse_args():
     p.add_argument('--name', required=True)
     p.add_argument('--alt', default=None)
     p.add_argument('--caption', default='')
+    p.add_argument('--tags', default='')
     p.add_argument('--place', choices=('gallery', 'none'), default='gallery')
     p.add_argument('--seasonal-text', action='store_true')
     p.add_argument('--replace', action='store_true')
@@ -368,6 +400,8 @@ def main():
     if args.alt is None and not (args.replace and listed):
         fail('you still need to give --alt "what is visible in the picture". It is read aloud for people who cannot see it.')
     notes, alt, caption = [], '', ''
+    allowed = allowed_tags(text)
+    tags = clean_tags(args.tags, allowed)
     if args.alt is not None:
         alt, n = clean_text(args.alt, 'alt text', MAX_ALT, MIN_ALT)
         notes += n
@@ -388,7 +422,7 @@ def main():
 
     new_text, where, state, checked = text, None, 'skipped', True
     if args.place == 'gallery' and (args.alt is not None):
-        new_text, where, state = plan_listing(text, src, alt, caption, seasonal)
+        new_text, where, state = plan_listing(text, src, alt, caption, seasonal, tags)
         if state == 'added':
             checked = check_javascript(new_text, text.count('src: "assets/photos/'))
     elif args.place == 'gallery':
@@ -433,12 +467,17 @@ def main():
     print('  removed:    camera, location (GPS) and all other hidden data: the saved file starts clean' if not dry else '  will remove: camera, location (GPS) and all other hidden data')
     if state == 'added':
         print(f'  gallery:    {"will be listed" if dry else "listed"} in js/content.js {where}')
+        print('  topics:     ' + (', '.join(tags) if tags else 'none: it shows under "All" only') + '   (the buttons above the gallery)')
     elif state == 'already listed':
-        print('  gallery:    this picture is already listed in js/content.js: its alt text and caption were left as they are')
+        print('  gallery:    this picture is already listed in js/content.js: its alt text, caption and topics were left as they are')
     else:
         print('  gallery:    not listed (--place none): the file is only saved')
     for n in notes:
         print(n)
+    if state == 'added' and not tags and allowed:
+        print(f'note: no topic given, so it shows under "All" only. To put it under the topic buttons add  --tags  and one or more of: {", ".join(allowed)}  (only what you can see in the picture).')
+    if tags and state != 'added':
+        print('note: --tags was not used, because the picture is not listed in the gallery here.')
     if max(fw, fh) < SOFT_BELOW:
         print(f'warning: this picture is only {max(fw, fh)} pixels on its long side, so it will look soft if it is shown big. '
               'The website keeps pictures like this to small tiles. If you can, send the ORIGINAL from the phone (not a screenshot, and not a copy that went through a chat app).')

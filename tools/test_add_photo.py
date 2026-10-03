@@ -387,6 +387,99 @@ class Site(unittest.TestCase):
         self.assertEqual(self.photo_srcs()[-1], 'after-last.webp')
         self.assert_node_ok()
 
+    # ------------------------------------------------------------- topic tags (the buttons above the gallery)
+    def js_photo(self, name):
+        """The entry as the browser sees it (needs node), else None."""
+        if not NODE:
+            return None
+        code = ("const fs=require('fs');const W={};new Function('window',fs.readFileSync(process.argv[1],'utf8'))(W);"
+                "console.log(JSON.stringify(W.WISE_ACRES.photos.find(p=>p.src.endsWith('/'+process.argv[2]+'.webp'))))")
+        r = subprocess.run([NODE, '-e', code, os.path.join(self.root, 'js', 'content.js'), name], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        import json
+        return json.loads(r.stdout)
+
+    def test_tags_are_written_in_the_same_format(self):
+        src = self.save('a.jpg', picture(900, 600), format='JPEG')
+        code, text = self.run_tool(src, '--name', 'tagged-one', '--alt', 'A bowl of blueberries in a sunflower field', '--caption', 'Blueberries', '--tags', 'berries,flowers')
+        self.assertEqual(code, 0, text)
+        self.assertIn('      caption: "Blueberries",\n      tags: ["berries", "flowers"] },', self.content())
+        self.assertIn('topics:     berries, flowers', text)
+        self.assertNotIn('note: no topic given', text)
+        entry = self.js_photo('tagged-one')
+        if entry:
+            self.assertEqual(entry['tags'], ['berries', 'flowers'])
+            self.assertEqual(entry['caption'], 'Blueberries')
+        self.assert_node_ok()
+
+    def test_tags_without_a_caption(self):
+        src = self.save('a.jpg', picture(900, 600), format='JPEG')
+        self.assertEqual(self.run_tool(src, '--name', 'tagged-two', '--alt', 'Rows of green plants in a field', '--tags', 'fall')[0], 0)
+        self.assertIn('      alt: "Rows of green plants in a field",\n      tags: ["fall"] },', self.content())
+        self.assert_node_ok()
+
+    def test_tags_with_the_seasonal_marker_and_in_order(self):
+        src = self.save('a.jpg', picture(900, 600), format='JPEG')
+        self.assertEqual(self.run_tool(src, '--name', 'tagged-three', '--alt', 'A banner reading Happy Easter over a meadow', '--seasonal-text', '--tags', 'animals')[0], 0)
+        self.assertRegex(self.content(), r'src: "assets/photos/tagged-three.webp",\s*// words on the picture\n\s*alt: "[^"]*",\n\s*tags: \["animals"\] \},')
+        self.assertEqual(self.photo_srcs()[-1], 'tagged-three.webp')
+        self.assert_node_ok()
+
+    def test_tags_are_tidied(self):
+        src = self.save('a.jpg', picture(900, 600), format='JPEG')
+        self.assertEqual(self.run_tool(src, '--name', 'tagged-four', '--alt', 'Rows of green plants in a field', '--tags', 'Berries, flowers berries')[0], 0)
+        self.assertIn('tags: ["berries", "flowers"] },', self.content())
+
+    def test_a_topic_the_gallery_does_not_have_is_refused_with_a_hint(self):
+        src = self.save('a.jpg', picture(900, 600), format='JPEG')
+        before = snapshot(self.root)
+        code, text = self.run_tool(src, '--name', 'bad-tag', '--alt', 'Rows of green plants in a field', '--tags', 'berrys')
+        self.assertEqual(code, 1)
+        self.assertIn('"berrys" is not a topic the gallery has', text)
+        self.assertIn('did you mean "berries"?', text)
+        self.assertIn('berries, flowers, animals, fall, pizza, people', text)
+        self.assertEqual(snapshot(self.root), before)
+
+    def test_without_tags_a_note_explains_that_it_shows_under_all_only(self):
+        src = self.save('a.jpg', picture(900, 600), format='JPEG')
+        code, text = self.run_tool(src, '--name', 'untagged-one', '--alt', 'Rows of green plants in a field')
+        self.assertEqual(code, 0, text)
+        self.assertIn('shows under "All" only', text)
+        self.assertNotIn('tags:', self.content().split('untagged-one.webp')[1].split('},')[0])
+
+    def test_tags_need_the_list_of_allowed_topics(self):
+        path = os.path.join(self.root, 'js', 'content.js')
+        changed = self.content().replace('Allowed tags:', 'Allowed things:')
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(changed)
+        src = self.save('a.jpg', picture(900, 600), format='JPEG')
+        before = snapshot(self.root)
+        code, text = self.run_tool(src, '--name', 'no-list', '--alt', 'Rows of green plants in a field', '--tags', 'fall')
+        self.assertEqual(code, 1)
+        self.assertIn('Allowed tags', text)
+        self.assertEqual(snapshot(self.root), before)
+
+    def test_tags_are_ignored_with_a_note_when_the_picture_is_not_listed(self):
+        src = self.save('a.jpg', picture(900, 600), format='JPEG')
+        code, text = self.run_tool(src, '--name', 'file-tags', '--alt', 'Rows of green plants in a field', '--place', 'none', '--tags', 'fall')
+        self.assertEqual(code, 0, text)
+        self.assertIn('--tags was not used', text)
+
+    def test_the_real_site_topics_agree_everywhere(self):
+        """js/content.js (allowed list + every photo's tags) and the buttons in index.html must name the same topics."""
+        with open(os.path.join(REAL, 'js', 'content.js'), encoding='utf-8') as f:
+            content = f.read()
+        with open(os.path.join(REAL, 'index.html'), encoding='utf-8') as f:
+            index = f.read()
+        allowed = re.split(r'[\s,]+', re.search(r'Allowed tags:\s*([^\n]*)', content).group(1).strip().rstrip('.'))
+        allowed = [t for t in allowed if t]
+        buttons = [t for t in re.findall(r'data-gtag="([a-z0-9-]+)"', index) if t != 'all']
+        self.assertEqual(sorted(allowed), sorted(buttons), 'the allowed list in js/content.js and the buttons in index.html differ')
+        photos = content[content.index('\n  photos: ['):]
+        used = set(t for group in re.findall(r'tags:\s*\[([^\]]*)\]', photos) for t in re.findall(r'"([^"]+)"', group))
+        self.assertTrue(used <= set(allowed), 'photos use topics that have no button: ' + ', '.join(sorted(used - set(allowed))))
+        self.assertTrue(set(allowed) <= used, 'topics without any photo (their button hides itself): ' + ', '.join(sorted(set(allowed) - used)))
+
     def test_no_arguments_prints_the_help(self):
         code, text = self.run_tool()
         self.assertEqual(code, 1)
