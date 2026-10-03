@@ -1729,9 +1729,10 @@
  {
   "id": "world-vision-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/World_Vision_Australia"
   ],
-  "note": "official register record; ABN 28004778081"
+  "note": "official register record; ABN 28004778081; founding year 1966 from the organisation's own history (the register lists 1969), checked by two web searches in a spot-check"
  },
  {
   "id": "inclusion-australia",
@@ -2303,9 +2304,11 @@
  {
   "id": "big-hart",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Big_hART",
+   "https://www.bighart.org/who-we-are/"
   ],
-  "note": "official register record; ABN 56398434433"
+  "note": "official register record; ABN 56398434433; founding year 1992 from the organisation's own history (the register lists 1995), checked by two web searches in a spot-check"
  },
  {
   "id": "bravehearts",

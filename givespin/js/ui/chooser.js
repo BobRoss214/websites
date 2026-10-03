@@ -125,7 +125,7 @@
     var meta = [];
     if (ch.hq) { meta.push(ui.icon('landmark') + esc(ch.hq)); }
     if (where.length) { meta.push(ui.icon('globe') + esc(where.slice(0, 3).join(', '))); }
-    if (ch.founded) { meta.push(ui.icon('calendar-days') + 'Since ' + ch.founded); }
+    if (ch.founded) { meta.push(ui.icon('calendar-days') + (ch.foundedFrom === 'register' ? 'Register date ' : 'Since ') + ch.founded); }
     return '<li class="chrow' + (on ? ' is-on' : '') + '" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
       '<label class="chrow__pick"><input type="checkbox" data-pick="' + ch.id + '"' + (on ? ' checked' : '') + ' aria-label="Choose ' + esc(ch.name) + '"><span class="chrow__box" aria-hidden="true">' + ui.icon('check') + '</span></label>' +
       ui.mono(ch, 42) +
@@ -150,7 +150,7 @@
         '<div><dt>Who they help</dt><dd>' + esc(serves.length ? serves.join(', ') : 'People and communities in general') + '</dd></div>' +
         '<div><dt>Where they work</dt><dd>' + esc(where.length ? where.join(', ') : 'Not on file yet') + '</dd></div>' +
         '<div><dt>How they help</dt><dd>' + esc(how.length ? how.join(', ') : 'Not on file yet') + '</dd></div>' +
-        '<div><dt>Founded</dt><dd>' + esc(ch.founded ? String(ch.founded) : 'Not on file yet') + '</dd></div>' +
+        '<div><dt>Founded</dt><dd>' + esc(ui.founded(ch)) + '</dd></div>' +
         '<div><dt>Website</dt><dd><a href="https://' + esc(ch.url) + '" target="_blank" rel="noopener noreferrer">' + esc(ch.url) + ' ↗</a></dd></div>' +
       '</dl>' +
       (ch.unverified ? '<p class="chrow__note">' + ui.icon('info') + 'We have fewer verified details on file for this charity. Visit its website for the full story.</p>' : '');

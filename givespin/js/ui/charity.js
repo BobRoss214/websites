@@ -50,7 +50,7 @@
       ['users', 'Who they help', serves.length ? serves.join(', ') : 'People and communities in general'],
       ['globe', 'Where they work', where.length ? where.join(', ') : 'Not on file yet'],
       ['hand-heart', 'How they help', how.length ? how.join(', ') : 'Not on file yet'],
-      ['calendar-days', 'Founded', ch.founded ? String(ch.founded) : 'Not on file yet'],
+      ['calendar-days', 'Founded', ui.founded(ch)],
       ['landmark', 'Headquarters', ch.hq || 'Not on file yet']
     ];
     var similar = similarTo(ch);

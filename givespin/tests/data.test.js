@@ -35,6 +35,7 @@ test('every charity has the fields the UI relies on, using only known vocabulary
     assert.ok(c.how.length >= 1 && c.how.every((x) => how.has(x)), c.id + ': how');
     assert.match(c.url, /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/[a-z]+)?$/, c.id + ': url should be a bare hostname');
     assert.ok(c.founded === null || (Number.isInteger(c.founded) && c.founded > 1800 && c.founded <= 2026), c.id + ': founded');
+    assert.ok(c.foundedFrom === undefined || (c.foundedFrom === 'register' && c.founded !== null), c.id + ': foundedFrom is only "register", and only next to a year');
     assert.equal(typeof c.hq, 'string');
     assert.ok(/^#[0-9A-F]{6}$/i.test(c.accent), c.id + ': accent colour');
   });

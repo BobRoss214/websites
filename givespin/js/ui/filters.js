@@ -137,7 +137,7 @@
     var clear = modal.$('[data-role="clear"]');
     clear.disabled = core.activeFilterCount(f) === 0;
     var done = modal.$('[data-role="done"]');
-    done.textContent = bad ? 'Close' : 'Show ' + n + ' ' + (n === 1 ? 'charity' : 'charities');
+    done.textContent = bad ? 'Close' : 'Show ' + ui.num(n) + ' ' + (n === 1 ? 'charity' : 'charities');
   }
 
   function open() {

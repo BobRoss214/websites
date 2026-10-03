@@ -451,7 +451,7 @@
     el.sizeCustom.max = String(maxFor(g));
     el.sizeCustom.setAttribute('aria-label', 'Number of charities on the board, ' + minFor(g) + ' to ' + maxFor(g));
     if (document.activeElement !== el.sizeCustom) { el.sizeCustom.value = inPresets ? '' : String(cur); }
-    el.sizeMax.textContent = 'Max ' + maxFor(g);
+    el.sizeMax.textContent = 'Max ' + ui.num(maxFor(g));
     var busy = state().busy;
     Array.prototype.forEach.call(el.sizeSeg.querySelectorAll('button'), function (b) { b.disabled = busy; });
     el.sizeCustom.disabled = busy;
@@ -609,7 +609,7 @@
         '<p><b>Odds:</b> ' + (g.setBoard ? 'every charity on the board has exactly the same chance (set how many are on it, from a few to ' + ui.num(g.maxSize || 100) + '). ' : 'every charity in play has exactly the same chance. ') + 'The result is drawn first, from a seed committed before you play, and the game then shows it.</p></div>';
     } else {
       var pool = activePool(current).slice().sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
-      h = '<p class="tabnote">' + pool.length + (customOn(current) ? ' charities in your custom list.' : ' charities in play.') + ' Tap one to read about it.</p><div class="chips chips--pool">' + pool.map(function (c) {
+      h = '<p class="tabnote">' + ui.num(pool.length) + (customOn(current) ? ' charities in your custom list.' : ' charities in play.') + ' Tap one to read about it.</p><div class="chips chips--pool">' + pool.map(function (c) {
         return '<button type="button" class="chip chip--link" style="--c:' + c.accent + '" data-open-charity="' + c.id + '">' + ui.mono(c, 22) + esc(c.short) + '</button>';
       }).join('') + '</div>';
     }

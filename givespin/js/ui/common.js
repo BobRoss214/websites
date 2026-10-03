@@ -50,6 +50,13 @@
     /** A count with a thousands separator: 1042 -> "1,042". */
     num: function (n) { return Number(n).toLocaleString('en-US'); },
 
+    /** A charity's founding year for display. A year taken from an official register says so, because a register can
+     *  list a later date than the one the organisation gives for itself. */
+    founded: function (ch) {
+      if (!ch.founded) { return 'Not on file yet'; }
+      return String(ch.founded) + (ch.foundedFrom === 'register' ? ' (register date)' : '');
+    },
+
     /** A round badge for a charity: its logo when there is one, otherwise its monogram. `size` is in px; `cls` is an optional extra class. */
     mono: function (ch, size, cls) {
       var m = GS.mono(ch);
