@@ -21,6 +21,17 @@
   const t = (s, v) => (W.t ? W.t(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? v[k] : m)));
   const mulberry32 = W.rand;
 
+  // <dialog> and its methods arrived in Safari 15.4 and Firefox 98. Where they are missing, the photo viewer is drawn as a plain fixed box
+  // (class lb-fallback in css/styles.css) and opened, closed and Escape-d here, so a tap on a photo still works.
+  const hasDialog = typeof HTMLDialogElement === 'function' && typeof HTMLDialogElement.prototype.showModal === 'function';
+  const openDialog = (d) => { if (hasDialog) { d.showModal(); return; } d.classList.add('lb-fallback'); d.setAttribute('open', ''); const c = $('.lightbox-close', d); if (c) c.focus(); };
+  const closeDialog = (d) => { if (hasDialog) d.close(); else d.removeAttribute('open'); };
+  const wireDialog = (d) => {
+    if (hasDialog || d._fb) return; d._fb = true;
+    const f = $('form', d); if (f) f.addEventListener('submit', (e) => { e.preventDefault(); closeDialog(d); });   // method="dialog" does nothing here and would reload the page
+    d.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); closeDialog(d); } });
+  };
+
   function initPrint() {
     $$('[data-print]').forEach((b) => b.addEventListener('click', () => window.print()));
     // keep ticks on the "what to bring" list between visits
@@ -89,7 +100,7 @@
       btn.appendChild(thumb);
       btn.addEventListener('click', () => {
         img.src = p.src; img.alt = t(p.alt); cap.textContent = p.caption ? t(p.caption) : '';
-        box.showModal();
+        openDialog(box);
       });
       li.appendChild(btn);
       grid.appendChild(li);
@@ -100,7 +111,8 @@
       it.btn.setAttribute('aria-label', t('Enlarge photo:') + ' ' + t(it.p.alt));
     });
     words();
-    box.addEventListener('click', (e) => { if (e.target === box) box.close(); });
+    box.addEventListener('click', (e) => { if (e.target === box) closeDialog(box); });
+    wireDialog(box);
 
     // Topic buttons: one is pressed at a time ("All" to start). A photo with no tags shows under "All" only.
     // The photos are drawn once and only hidden or shown, so the buttons never move and the focus stays on the one that was pressed.
@@ -153,11 +165,12 @@
         box.innerHTML = '<form method="dialog"><button class="lightbox-close" type="submit"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button></form><img id="lightbox-img" alt=""><p id="lightbox-cap"></p>';
         $('.lightbox-close', box).setAttribute('aria-label', t('Close photo'));   // translated text never goes into markup
         doc.body.appendChild(box);
-        box.addEventListener('click', (e) => { if (e.target === box) box.close(); });
+        box.addEventListener('click', (e) => { if (e.target === box) closeDialog(box); });
       }
       img = $('#lightbox-img', box); cap = $('#lightbox-cap', box);
+      wireDialog(box);
     };
-    const show = (src, alt, caption) => { ensure(); img.src = src; img.alt = alt || ''; cap.textContent = caption || ''; box.showModal(); };
+    const show = (src, alt, caption) => { ensure(); img.src = src; img.alt = alt || ''; cap.textContent = caption || ''; openDialog(box); };
     const bind = (el) => {
       if (el._zoom) return;
       el._zoom = true;
@@ -296,7 +309,8 @@
       if (on && !running) { running = true; raf = requestAnimationFrame(frame); }
       if (!on) { running = false; cancelAnimationFrame(raf); }
     };
-    new IntersectionObserver((entries) => { onScreen = entries[entries.length - 1].isIntersecting; sync(); }).observe(hero);
+    if ('IntersectionObserver' in window) new IntersectionObserver((entries) => { onScreen = entries[entries.length - 1].isIntersecting; sync(); }).observe(hero);
+    else { onScreen = true; sync(); }   // no observer: the bee just keeps going
     doc.addEventListener('visibilitychange', sync);
     doc.addEventListener('wa:season', sync);
   }
@@ -772,7 +786,7 @@
       });
     }, { rootMargin: '200px' });   // wakes up before it scrolls into view
     const hasBox = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 || r.height > 0; };
-    const loops = (el) => el.getAnimations().some((a) => a.effect && a.effect.target === el && a.animationName && a.effect.getTiming().iterations === Infinity);
+    const loops = (el) => typeof el.getAnimations === 'function' && el.getAnimations().some((a) => a.effect && a.effect.target === el && a.animationName && a.effect.getTiming().iterations === Infinity);
     // The box to watch for one looping element: the whole drawing (outermost <svg>), and never something that moves itself
     // (bobbing, drifting, spinning): a box that moves could be paused just off the screen and then never come back.
     // A drawing that is not drawn yet (size 0, in a section the lazy rendering skips) is watched through the nearest box

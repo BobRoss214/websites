@@ -117,7 +117,7 @@ a[href^="tel:"]{white-space:nowrap}
 /* ==========================================================================
    Hero
    ========================================================================== */
-.hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(var(--sky-1,#5fc1ee) 0%,var(--sky-2,#93d8f6) 34%,var(--sky-3,#cdeffb) 58%,var(--sky-4,#fff1c9) 100%);min-height:clamp(660px,calc(100svh - 112px),880px);padding-top:clamp(24px,4vw,48px);border-bottom:3px solid var(--ink)}
+.hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(var(--sky-1,#5fc1ee) 0%,var(--sky-2,#93d8f6) 34%,var(--sky-3,#cdeffb) 58%,var(--sky-4,#fff1c9) 100%);min-height:clamp(660px,calc(100vh - 112px),880px);min-height:clamp(660px,calc(100svh - 112px),880px);padding-top:clamp(24px,4vw,48px);border-bottom:3px solid var(--ink)}
 .hero-scene{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
 .layer{position:absolute;left:0;width:100%;will-change:transform}
 svg.layer{bottom:0;height:64%}
@@ -534,3 +534,11 @@ svg.layer-fore{overflow:visible}
   .grow,.crop{transform:none}
   .cloud{animation:none}
 }
+
+/* ---- Older browsers ---- */
+/* overflow:clip is Safari 16 / Chrome 90 / Firefox 81 and newer. Without it the line is dropped and a decorative sticker or ribbon that sticks out
+   on the right (the About photo sticker, for one) lets the page slide sideways. "hidden" does the same job there. */
+@supports not (overflow-x:clip){body,.pizza,.about,.flowers,.greenhouse,.tomatoes{overflow-x:hidden}}
+/* the photo viewer in a browser with no <dialog> (Safari before 15.4): js/main.js adds .lb-fallback and the open attribute */
+.lightbox:not([open]){display:none}
+.lightbox.lb-fallback[open]{position:fixed;top:50%;left:50%;margin:0;transform:translate(-50%,-50%);z-index:1000;overflow:auto;box-shadow:0 0 0 100vmax rgba(58,36,22,.72)}

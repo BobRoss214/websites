@@ -147,7 +147,7 @@
   function restoreMark(m) {
     if (!m || !m.el.isConnected) return;
     const d = m.el.getBoundingClientRect().top - m.top;
-    if (Math.abs(d) > 1) window.scrollTo({ top: window.scrollY + d, left: 0, behavior: 'instant' });
+    if (Math.abs(d) > 1) { try { window.scrollTo({ top: window.scrollY + d, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, window.scrollY + d); } }   // a browser that rejects 'instant' still scrolls
   }
 
   // The language is applied when the page has been read to the end (DOMContentLoaded), but the big scripts at the end of the page run before that,
