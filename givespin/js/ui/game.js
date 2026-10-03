@@ -156,7 +156,7 @@
       if (!sizePending) { return; }
       sizePending = false;
       var n = Math.floor(Number(el.sizeCustom.value));
-      if (!current || state().busy || !(n >= 1)) { return; }
+      if (!current || state().busy || !(n >= 1)) { refreshSize(); return; }
       setBoardSize(n, true);
     }
     el.sizeCustom.addEventListener('input', function () {

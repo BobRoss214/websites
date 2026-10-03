@@ -22,6 +22,7 @@
 
   function ensure() {
     if (ctx) { if (ctx.state === 'suspended') { ctx.resume(); } return ctx; }
+    if (!gesture && navigator.userActivation && navigator.userActivation.hasBeenActive) { gesture = true; }
     if (!gesture) { return null; }
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) { return null; }
