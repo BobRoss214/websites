@@ -1687,9 +1687,10 @@
  {
   "id": "centre-for-evidence-and-implementation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.ceiglobal.org/about/introduction-cei"
   ],
-  "note": "official register record; ABN 56625430177"
+  "note": "official register record; ABN 56625430177; founding year 2015 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "end-food-waste-australia",
@@ -1737,9 +1738,10 @@
  {
   "id": "inclusion-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.inclusionaustralia.org.au/about-us/our-history/"
   ],
-  "note": "official register record; ABN 60084254809"
+  "note": "official register record; ABN 60084254809; founding year 1954 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "fusion-australia",
@@ -1912,9 +1914,10 @@
  {
   "id": "life-education-nsw",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.lifeeducation.org.au/about-us/history"
   ],
-  "note": "official register record; ABN 59053737045"
+  "note": "official register record; ABN 59053737045; founding year 1979 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "samaritans-purse-australia",
@@ -1982,9 +1985,10 @@
  {
   "id": "pankind",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://pankind.org.au/about-us/our-financials/"
   ],
-  "note": "official register record; ABN 22145513060"
+  "note": "official register record; ABN 22145513060; founding year 2008 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "stars-foundation",
@@ -2073,9 +2077,10 @@
  {
   "id": "australian-childhood-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.childhood.org.au/about-us/who-we-are/"
   ],
-  "note": "official register record; ABN 28057044514"
+  "note": "official register record; ABN 28057044514; founding year 1986 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "the-reach-foundation",
@@ -2136,9 +2141,10 @@
  {
   "id": "institute-for-urban-indigenous-health",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.foodbank.org.au/institute-for-urban-indigenous-health-charity/"
   ],
-  "note": "official register record; ABN 32140019290"
+  "note": "official register record; ABN 32140019290; founding year 2009 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "mercy-works",
@@ -2213,9 +2219,10 @@
  {
   "id": "endeavour-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://endeavour.com.au/our-endeavour-foundation/history"
   ],
-  "note": "official register record; ABN 80009670704"
+  "note": "official register record; ABN 80009670704; founding year 1951 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "outward-bound-australia",
@@ -2320,9 +2327,10 @@
  {
   "id": "act-for-kids",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.actforkids.com.au/about/"
   ],
-  "note": "official register record; ABN 98142986767"
+  "note": "official register record; ABN 98142986767; founding year 1988 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "nature-glenelg-trust",
@@ -2341,9 +2349,10 @@
  {
   "id": "workskil-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.workskil.com.au/about-us/our-organisation/our-history/"
   ],
-  "note": "official register record; ABN 28167872424"
+  "note": "official register record; ABN 28167872424; founding year 1982 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "happy-paws-happy-hearts",
@@ -2418,9 +2427,10 @@
  {
   "id": "australian-volunteer-coast-guard",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://coastguard.com.au/about-us/history/"
   ],
-  "note": "official register record; ABN 99392980313. Name expanded from \"Assoc\" to \"Association\"; marine rescue wording is general knowledge."
+  "note": "official register record; ABN 99392980313. Name expanded from \"Assoc\" to \"Association\"; marine rescue wording is general knowledge.; founding year 1961 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "help-enterprises",
@@ -2558,9 +2568,10 @@
  {
   "id": "drug-arm",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.drugarm.com.au/about-us/who-we-are/our-history/"
   ],
-  "note": "official register record, ABN 64102943304"
+  "note": "official register record, ABN 64102943304; founding year 1988 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "wildlife-warriors",
@@ -2579,9 +2590,10 @@
  {
   "id": "high-resolves",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://highresolves.org.au/our-story/"
   ],
-  "note": "official register record, ABN 73127699978"
+  "note": "official register record, ABN 73127699978; founding year 2005 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "sea-shepherd-australia",
@@ -2635,9 +2647,10 @@
  {
   "id": "mercy-community-services-seq",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.mercycommunity.org.au/about/our-history/"
   ],
-  "note": "official register record, ABN 51166477318"
+  "note": "official register record, ABN 51166477318; founding year 1996 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "snaicc",
@@ -2719,9 +2732,10 @@
  {
   "id": "ymca-canberra",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://ymcacanberra.org.au/about-ymca/history/"
   ],
-  "note": "official register record, ABN 89952764183"
+  "note": "official register record, ABN 89952764183; founding year 1941 from the organisation's own history (the register lists a later year), checked by a web search in a second spot-check"
  },
  {
   "id": "koomarri",

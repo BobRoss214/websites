@@ -221,8 +221,8 @@
       if (dir.view === 'gave' && !totals[ch.id]) { return false; }
       return !q || hay(ch).indexOf(q) >= 0;
     });
-    if (dir.sort === 'old') { list.sort(function (a, b) { return (a.founded || 9999) - (b.founded || 9999) || (a.name < b.name ? -1 : 1); }); }
-    else if (dir.sort === 'new') { list.sort(function (a, b) { return (b.founded || 0) - (a.founded || 0) || (a.name < b.name ? -1 : 1); }); }
+    if (dir.sort === 'old') { list.sort(function (a, b) { return (core.ageYear(a) || 9999) - (core.ageYear(b) || 9999) || (a.name < b.name ? -1 : 1); }); }
+    else if (dir.sort === 'new') { list.sort(function (a, b) { return (core.ageYear(b) || 0) - (core.ageYear(a) || 0) || (a.name < b.name ? -1 : 1); }); }
     else if (dir.sort === 'given') { list.sort(function (a, b) { return ((totals[b.id] || {}).cents || 0) - ((totals[a.id] || {}).cents || 0) || (a.name < b.name ? -1 : 1); }); }
     else { list.sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; }); }
     return list;

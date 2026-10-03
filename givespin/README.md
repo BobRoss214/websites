@@ -189,7 +189,10 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   location, so those entries were not web-searched; the register number or ABN is in `docs/roster-sources.json`. Their
   descriptions are short, neutral paraphrases of the register text (for Australia, of the register's purpose flags), so they
   are plainer than the first 381, and `founded` is empty for most because the register gives a registration date rather than a
-  founding date. About half of the register records that were considered were left out (universities and schools,
+  founding date. Where a register year is kept (154 entries) it is marked `foundedFrom: "register"`, shown as "(register date)", and
+  left out of the Founded filter and the oldest/newest sort, because a spot-check of 40 of them found the organisation's own
+  account gave an earlier year in 17 (the register year is often when the current company was incorporated or merged); fourteen
+  entries where the organisation's own year was clear carry that year instead. About half of the register records that were considered were left out (universities and schools,
   professional and membership bodies, grant-making trusts, religious bodies whose purpose is mainly to advance a religion,
   think tanks, commercial arms, and records whose website belongs to a different brand). A charity that is run by a religious
   body but whose work is care (aged care, homelessness, children) stays and carries a faith-based flag. Facts can go out of date: registers and websites change, so re-check every entry (and
@@ -318,7 +321,7 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/readme.test.js
 ```
 
-89 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+90 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
 backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly

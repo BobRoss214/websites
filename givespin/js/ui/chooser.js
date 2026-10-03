@@ -74,8 +74,8 @@
       if (s > 0) { rows.push({ c: ch, s: s }); }
     });
     var az = function (a, b) { return a.c.name.toLowerCase() < b.c.name.toLowerCase() ? -1 : 1; };
-    if (S.sort === 'old') { rows.sort(function (a, b) { return (a.c.founded || 9999) - (b.c.founded || 9999) || az(a, b); }); }
-    else if (S.sort === 'new') { rows.sort(function (a, b) { return (b.c.founded || 0) - (a.c.founded || 0) || az(a, b); }); }
+    if (S.sort === 'old') { rows.sort(function (a, b) { return (core.ageYear(a.c) || 9999) - (core.ageYear(b.c) || 9999) || az(a, b); }); }
+    else if (S.sort === 'new') { rows.sort(function (a, b) { return (core.ageYear(b.c) || 0) - (core.ageYear(a.c) || 0) || az(a, b); }); }
     else if (S.sort === 'best' && toks.length) { rows.sort(function (a, b) { return b.s - a.s || az(a, b); }); }
     else { rows.sort(az); }
     return rows.map(function (r) { return r.c; });

@@ -244,6 +244,12 @@
     return 'e4';
   }
 
+  /** The founding year to use for filtering and sorting by age: null when the only year on file is the date an official
+   *  register lists, because that can be many years later than when the organisation actually began. */
+  function ageYear(ch) {
+    return ch && ch.foundedFrom !== 'register' && typeof ch.founded === 'number' ? ch.founded : null;
+  }
+
   function emptyFilters() {
     return { causes: [], serves: [], where: [], how: [], era: [] };
   }
@@ -277,7 +283,7 @@
     if (!anyOf(f.where, ch.where || [])) { return false; }
     if (!anyOf(f.how, ch.how || [])) { return false; }
     if (f.era.length) {
-      var e = eraOf(ch.founded);
+      var e = eraOf(ageYear(ch));
       if (!e || f.era.indexOf(e) < 0) { return false; }
     }
     return true;
@@ -306,7 +312,7 @@
       (ch.serves || []).forEach(function (x) { bump('serves', x); });
       (ch.where || []).forEach(function (x) { bump('where', x); });
       (ch.how || []).forEach(function (x) { bump('how', x); });
-      var e = eraOf(ch.founded);
+      var e = eraOf(ageYear(ch));
       if (e) { bump('era', e); }
     });
     return out;
@@ -687,7 +693,7 @@
     toCents: toCents, fmtMoney: fmtMoney, splitCents: splitCents, validateAmount: validateAmount, allowedRounds: allowedRounds,
     randomInt: randomInt, randomFloat: randomFloat, randomRange: randomRange, pickOne: pickOne, shuffle: shuffle,
     sampleSubset: sampleSubset, subsetWith: subsetWith, fillSlots: fillSlots, slotsWith: slotsWith, boardField: boardField, plinkoPath: plinkoPath, bracketOutcomes: bracketOutcomes,
-    ERA_IDS: ERA_IDS, eraOf: eraOf, emptyFilters: emptyFilters, normalizeFilters: normalizeFilters, matchesFilters: matchesFilters,
+    ERA_IDS: ERA_IDS, eraOf: eraOf, ageYear: ageYear, emptyFilters: emptyFilters, normalizeFilters: normalizeFilters, matchesFilters: matchesFilters,
     buildPool: buildPool, activeFilterCount: activeFilterCount, facetCounts: facetCounts, mergeAllocations: mergeAllocations,
     LEVELS: LEVELS, xpForPlay: xpForPlay, pickBonusXp: pickBonusXp, levelFor: levelFor,
     seeded: seeded, seededShuffle: seededShuffle, weekKey: weekKey, weekFraction: weekFraction, TIERS: TIERS, tierFor: tierFor, stakePresets: stakePresets,

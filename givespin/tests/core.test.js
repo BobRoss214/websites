@@ -148,6 +148,19 @@ test('filters: founded eras', () => {
   assert.deepEqual(ids({ era: ['e4'] }), ['r5']); // unknown founding year never matches an era filter
 });
 
+test('a founding year that is only a register date is not used to filter or sort by age', () => {
+  const pool = [
+    { id: 'a', causes: ['kids'], serves: [], where: ['us'], how: ['direct'], founded: 1940 },
+    { id: 'b', causes: ['kids'], serves: [], where: ['us'], how: ['direct'], founded: 1941, foundedFrom: 'register' },
+    { id: 'c', causes: ['kids'], serves: [], where: ['us'], how: ['direct'], founded: null }
+  ];
+  assert.equal(core.ageYear(pool[0]), 1940);
+  assert.equal(core.ageYear(pool[1]), null);
+  assert.equal(core.ageYear(pool[2]), null);
+  assert.deepEqual(core.buildPool(pool, { era: ['e1'] }, []).map((c) => c.id), ['a']);
+  assert.equal(core.facetCounts(pool).era.e1, 1);
+});
+
 test('normalizeFilters rejects junk and counts active filters', () => {
   const f = core.normalizeFilters({ causes: ['x', 5, null], era: ['e9', 'e1'], faith: 'hide', completeOnly: 1, extra: 1 });
   assert.deepEqual(f, { causes: ['x'], serves: [], where: [], how: [], era: ['e1'] }); // the removed values filter is ignored in old saved data
