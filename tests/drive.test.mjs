@@ -188,7 +188,7 @@ if (want(6)) { console.log('6. Spanish, and language switch re-draws the answer'
   await page.waitForFunction(() => /milla/.test(document.querySelector('#drive-result')?.textContent || ''), null, { timeout: T });
   const r = await result(page);
   ok(/14,2 millas, aprox\. 24 minutos en auto/.test(r) || /14\.2 millas, aprox\. 24 minutos en auto/.test(r), 'Spanish answer: ' + JSON.stringify(r.slice(0, 60)));
-  ok(/Abrir esta ruta en Google Maps/.test(r), 'Spanish button');
+  ok(/Abre esta ruta en Google Maps/.test(r), 'Spanish button');
   // switch back to English with the language picker if present
   await page.evaluate(() => document.querySelector('button[data-lang="en"]').click());
   await page.waitForFunction(() => /14\.2 miles, about 24 minutes by car/.test(document.querySelector('#drive-result').textContent), null, { timeout: T }).catch(() => {});
