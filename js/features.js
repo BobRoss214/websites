@@ -707,8 +707,8 @@
     const forget = () => { if (state) { state = null; show(); } };   // an answer about the other place would mislead
     const mapsLink = (from, to) => 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(from) + '&destination=' + encodeURIComponent(PLACES[to].addr);
     const NOTE = {
-      farm: T('To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.'),
-      greenhouse: T('To The GreenHouse at 5503 Poplin Rd. Usual road speed with no traffic. Rush hour can add more.'),
+      farm: T('To the farm at 4701 Hartis Rd. This time is for normal road speed with no traffic. Rush hour can add more time.'),
+      greenhouse: T('To The GreenHouse at 5503 Poplin Rd. This time is for normal road speed with no traffic. Rush hour can add more time.'),
     };
     const NOROUTE = {
       farm: T('We could not find a drive from that address to the farm. Try the Google Maps button.'),

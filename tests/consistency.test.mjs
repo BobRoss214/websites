@@ -119,25 +119,25 @@ const FACTS = [
     extra: () => [{ file: 'js/content.js', line: contentLine(/greenhouse:/), value: CONTENT.hours.greenhouse.open + '-' + CONTENT.hours.greenhouse.close, words: 'hours.greenhouse' }] },
   { id: 'time: Wise Pie at The GreenHouse (no reservation)', norm: String, min: 9, val: (m) => range(m, 1), find: [
     new RegExp('\\| ' + T + ' ?– ?' + T + ' \\| At The GreenHouse', 'i'), new RegExp('first come, first served from ' + T + ' to ' + T, 'i'),
-    new RegExp('GreenHouse from ' + T + ' to ' + T + ', Friday through Sunday', 'i'), new RegExp('Poplin Rd\\) Friday through Sunday from ' + T + ' to ' + T, 'i'),
-    new RegExp('GreenHouse ?\\|? ?, Friday–Sunday, ' + T + '–' + T, 'i'), new RegExp('Friday to Sunday ' + T + ' to ' + T, 'i')],
+    new RegExp('GreenHouse from ' + T + ' to ' + T + ', Friday through Sunday', 'i'), new RegExp('Poplin Rd\\)(?:, you can get pizza)? Friday through Sunday from ' + T + ' to ' + T, 'i'),
+    new RegExp('GreenHouse ?\\|? ?, Friday–Sunday, ' + T + '–' + T, 'i'), new RegExp('Friday to Sunday,? ' + T + ' to ' + T, 'i')],
     extra: () => [{ file: 'js/content.js', line: contentLine(/pizza:\s*\{/), value: CONTENT.hours.pizza.open + '-' + CONTENT.hours.pizza.close, words: 'hours.pizza' }] },
   { id: 'time: pizza at the farm, with a farm reservation', norm: String, min: 3, val: (m) => range(m, 1), find: [new RegExp('\\| ' + T + ' ?– ?' + T + ' \\| At the farm', 'i'), new RegExp('available from ' + T + ' to ' + T + ' by farm reservation', 'i')] },
-  { id: 'time: pizza at the farm ends', norm: String, min: 3, find: [new RegExp('(?:At the farm \\| until|At the farm until|farm until) ' + T, 'i')].map((r) => [r, 0]), val: (m) => timeOf(m, 1) },
+  { id: 'time: pizza at the farm ends', norm: String, min: 3, find: [new RegExp('(?:At the farm ?,? ?\\|? ?until|farm until|you can get pizza until) ' + T, 'i')].map((r) => [r, 0]), val: (m) => timeOf(m, 1) },
   { id: 'time: last moment to change a reservation for free', norm: String, min: 5, find: [new RegExp('until ' + T + ' (?:the night before|PM the night before)', 'i')].map((r) => [r, 0]), val: (m) => timeOf(m, 1) },
   /* ---- days of the week ---- */
   { id: 'days: farm visits without pizza (fall)', norm: String, min: 7, val: (m) => daysFrom(m[1]), find: [
     new RegExp('No pizza \\| ' + DAYTXT + ' \\|', 'i'), new RegExp('Farm fun, no pizza \\| ' + MONEY + ' per person \\| [^|]*?Ages 3 and up\\. ' + DAYTXT + '\\.'), new RegExp('Field fee, ages 3 and up\\. (?:Infants[^.]*\\. )?' + DAYTXT),
-    new RegExp(DAYTXT + ' reservations, with or without pizza'), new RegExp('farm is open ' + DAYTXT + ' by reservation'), new RegExp('Farm-fun-only reservations are available ' + DAYTXT)],
+    new RegExp(DAYTXT + ' reservations, with or without pizza'), new RegExp('farm is open ' + DAYTXT + ' by reservation'), new RegExp('Farm-fun-only reservations are available ' + DAYTXT), new RegExp('Reservations without pizza are available ' + DAYTXT)],
     extra: () => [{ file: 'js/content.js', line: contentLine(/farm:\s*\{/), value: dayList(CONTENT.hours.farm.fall), words: 'hours.farm.fall' }, ...stripDays('No')] },
   { id: 'days: farm visits with pizza, and pizza at the farm', norm: String, min: 6, val: (m) => daysFrom(m[1]), find: [
-    new RegExp('Yes pizza \\| ' + DAYTXT + ' \\|', 'i'), new RegExp('Includes 2 Wise Pie pizzas, plus \\$\\d+ per person \\(ages 3\\+\\)\\. ' + DAYTXT + '\\.'), new RegExp('Reservations with Wise Pie pizza are ' + DAYTXT)], extra: () => stripDays('Yes') },
+    new RegExp('Yes pizza \\| ' + DAYTXT + ' \\|', 'i'), new RegExp('Includes 2 Wise Pie pizzas, plus \\$\\d+ per person \\(ages 3\\+\\)\\. ' + DAYTXT + '\\.'), new RegExp('Reservations with Wise Pie pizza are (?:available )?' + DAYTXT)], extra: () => stripDays('Yes') },
   { id: 'days: The GreenHouse and Wise Pie there (Fri-Sun)', norm: String, min: 12, val: (m) => daysFrom(m[1]), find: [
-    new RegExp(DAYTXT + ',? \\d{1,2} ?[ap]m ?– ?\\d{1,2} ?[ap]m', 'i'), new RegExp('Fall hours:? ' + DAYTXT), new RegExp('GreenHouse from \\d+ to \\d+ pm, ' + DAYTXT, 'i'), new RegExp('Poplin Rd\\) ' + DAYTXT + ' from', 'i'),
-    new RegExp(DAYTXT + ' \\d to \\d pm', 'i')],
+    new RegExp(DAYTXT + ',? \\d{1,2} ?[ap]m ?– ?\\d{1,2} ?[ap]m', 'i'), new RegExp('Fall hours:? ' + DAYTXT), new RegExp('GreenHouse from \\d+ to \\d+ pm, ' + DAYTXT, 'i'), new RegExp('Poplin Rd\\)(?:, you can get pizza)? ' + DAYTXT + ' from', 'i'),
+    new RegExp(DAYTXT + ',? \\d to \\d pm', 'i')],
     extra: () => [{ file: 'js/content.js', line: contentLine(/greenhouse:/), value: dayList(CONTENT.hours.greenhouse.days), words: 'hours.greenhouse.days' }, { file: 'js/content.js', line: contentLine(/pizza:\s*\{/), value: dayList(CONTENT.hours.pizza.days), words: 'hours.pizza.days' }, ...stripDays('GreenHouse')] },
   /* ---- ages ---- */
-  { id: 'age: free (infants, wagon ride, party children)', norm: num, min: 10, find: [/[Ii]nfants (\d+) and under are free/, /[Aa]ges (\d+) and younger ride free/, /[Cc]hildren (\d+) and under are free/] },
+  { id: 'age: free (infants, wagon ride, party children)', norm: num, min: 10, find: [/[Ii]nfants (\d+) and under are free/, /[Aa]ges (\d+) and younger ride free/, /[Cc]hildren (\d+) and under are free/, /[Cc]hildren age (\d+) and younger are free/] },
   { id: 'age: from this age people pay the field fee / school admission', norm: num, min: 11, find: [/[Aa]ges (\d+) and up/, /\(ages (\d+)\+\)/, /ages (\d+) and older/, /ages (\d+) and up/] },
   { id: 'age: barrel train (and under only)', norm: num, min: 3, find: [/Ages (\d+) and under only/] },
   /* ---- group sizes ---- */
@@ -149,7 +149,7 @@ const FACTS = [
   { id: 'pizza: feeds adults', norm: String, min: 4, find: [/about (\d)(?:–| to )(\d) adults/], val: (m) => m[1] + '-' + m[2] },
   { id: 'pizza: feeds children', norm: String, min: 4, find: [/or (\d)(?:–| to )(\d) children/], val: (m) => m[1] + '-' + m[2] },
   { id: 'pizza: ready for pick-up after (hours)', norm: num, min: 2, find: [/(\d+) hour after your reservation time/] },
-  { id: 'pizza: pre-order link posted (days ahead), also on the QR sign', norm: num, min: 3, find: [/(?:link posted|link goes up|link is posted) (\d+) days (?:ahead|before)/], extra: () => qrFacts(/posted (\d+) days ahead/) },
+  { id: 'pizza: pre-order link posted (days ahead), also on the QR sign', norm: num, min: 3, find: [/(?:link posted|link goes up|link is posted|link we post|[Ww]e post the pre-order link) (\d+) days (?:ahead|before)/], extra: () => qrFacts(/posted (\d+) days ahead/) },
   { id: 'pizza: oven temperature (°F) in the page text and descriptions', norm: num, min: 4, find: [/(\d+)-degree oven/] },
   /* ---- the farm and the family ---- */
   { id: 'year the farm began', norm: String, min: 3, find: [/since (20\d\d)/, /March of (20\d\d)/, /[Ff]amily owned since (20\d\d)/],
@@ -210,7 +210,7 @@ ok('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its
 {
   const rules = [
     ['pets stay home, service animals are welcome', /pets must stay home|[Pp]ets stay home|Leave pets at home|No dogs/g, /(?<!Are )\b(?:dogs|pets) (?:are |is )?(?:welcome|allowed|permitted)\b|\bbring (?:your )?(?:dog|pet)s?\b/gi, 8],
-    ['outside alcohol is not allowed', /Outside alcohol is (?:not permitted|prohibited)/g, /outside alcohol (?:is )?(?:allowed|welcome|permitted)\b/gi, 4],
+    ['outside alcohol is not allowed', /Outside alcohol is (?:not permitted|prohibited)|Please do not bring your own alcohol|State rules do not allow you to bring your own alcohol/g, /outside alcohol (?:is )?(?:allowed|welcome|permitted)\b/gi, 4],
     ['severe weather: we close, we e-mail, we refund in full', /we(?:’|')ll email you and give a full refund/g, /\bno refunds?\b|non-refundable|partial refund/gi, 4],
     ['the farm itself is by reservation only, the GreenHouse needs none', /needs no reservation|No reservation (?:is )?required|No reservations required|No reservation needed|No reservation and no farm access/g, /walk-ins? (?:are )?welcome|reservations? (?:are )?(?:optional|not needed) at the farm/gi, 6],
     ['payment: cash preferred, cards accepted', /Cash (?:is )?preferred/g, /cash only|no cards/gi, 3],
