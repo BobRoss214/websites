@@ -397,6 +397,7 @@ assets/licenses/    the licence texts for the fonts and the icons
 docs/               roster-sources.json (evidence for the added charities), roster-candidates.md (what was left out), logo-sources.md
 js/app.js           boots everything, routing, top bar, search
 tests/              unit and end-to-end tests
+tools/              check-links.mjs: asks every charity website whether it still answers or has moved (run it from a normal connection)
 ```
 
 ## Credits
