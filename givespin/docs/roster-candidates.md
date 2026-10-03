@@ -1,8 +1,8 @@
 # What was left out of the roster, and what to check
 
-The roster is at 1,182 charities (see the README, "Charity list"). This note is about what was **not** added.
+The roster is at 1,181 charities (see the README, "Charity list"). This note is about what was **not** added.
 
-## How the last 660 were chosen
+## How the last 659 were chosen
 They come from two official registers, not from web searches:
 
 - **England and Wales Charity Commission**: registered charities that report working overseas, income at least about GBP 120,000.
@@ -37,3 +37,9 @@ half were left out. The reasons, in short:
 ## Removed after being added
 
 - Peaceful Change Initiative (UK): its own website says it closed at the end of 2025 and the site is now an archive, so it was removed.
+- Disaster Relief Australia: the results of a web check say it ceased operations and went into liquidation in May 2026 (its home page shows an unavailable notice and the National Emergency Management Agency lists it), so it was removed.
+
+## Website checks
+
+The websites of 321 of the 659 register-derived entries were checked by web search (does the organisation's own site have the host in the roster?): 4 were wrong and were fixed (Medical Aid for Palestinians, Baptist World Aid Australia, Library For All, Playgroup Australia), one more (International Rescue Committee UK) lives on a path of a wider site and was left. The other 338 have not been checked: the build sandbox blocks outbound traffic and its web search budget was used up. `tools/check-links.mjs` checks every website from a normal connection and reports the ones that are dead or have moved.
+

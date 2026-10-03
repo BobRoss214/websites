@@ -1659,13 +1659,6 @@
   "note": "ABN 47611990697; official register record (registered name: Farm Angels Ltd); founding year 2014 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
-  "id": "disaster-relief-australia",
-  "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
-  ],
-  "note": "official register record; ABN 44614474010"
- },
- {
   "id": "cera-foundation",
   "evidence": [
    "https://data.gov.au/data/dataset/acnc-register"
