@@ -364,7 +364,7 @@ const plain = (s) => decode(String(s).replace(/<[^>]+>/g, ' ')).replace(/[   ]/g
 const MONTH_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const MONTH = {   // regular expressions for the months in each language (full names and the short forms the site uses)
   es: ['enero|ene', 'febrero|feb', 'marzo|mar', 'abril|abr', 'mayo|may', 'junio|jun', 'julio|jul', 'agosto|ago', 'septiembre|setiembre|sep|sept', 'octubre|oct', 'noviembre|nov', 'diciembre|dic'],
-  hi: ['जन', 'फ़र|फर', 'मार्च', 'अप्रै', 'मई', 'जून', 'जुल', 'अग', 'सित', 'अक्टू|अक्तू', 'नव', 'दिस'],
+  hi: ['जन|Jan', 'फ़र|फर|Feb', 'मार्च|Mar', 'अप्रै|Apr', 'मई|May', 'जून|Jun', 'जुल|Jul', 'अग|Aug', 'सित|Sep', 'अक्टू|अक्तू|Oct', 'नव|Nov', 'दिस|Dec'],   // the year bar writes the Latin short names (Jan..Dec)
 };
 const WEEKDAY = {   // the names in each language, Sunday first (a short form after the bar; "bên thứ ba" is "third party", not Tuesday)
   es: ['domingo|dom', 'lunes|lun', 'martes', 'mi[eé]rcoles|mi[eé]', 'jueves|jue', 'viernes|vie', 's[aá]bado|s[aá]b'],
@@ -409,6 +409,7 @@ function differences(en, tr, lang) {
   const eMonths = months(e, 'en'), tMonths = months(t, lang);
   const want = numbers(e); const have = numbers(t);
   if (lang === 'zh' || lang === 'vi') for (const mo of eMonths) want.push(String(mo));
+  if (lang === 'es' || lang === 'hi') for (const m of e.matchAll(/(?<![\d/])(\d{1,2})\/(\d{1,2})(?![\d/])/g)) { const i = want.indexOf(String(+m[1])); if (i >= 0 && tMonths.includes(+m[1])) want.splice(i, 1); }   // 9/29 may be written 29 septiembre / 29 सितंबर: the month is then a word, not a digit
   const missing = [];
   for (const x of want) { const i = have.indexOf(x); if (i >= 0) { have.splice(i, 1); continue; } const k = SAME_HOURS.test(e) && +x >= 1 && +x <= 12 ? have.indexOf(String(+x + 12)) : -1; if (k >= 0) { have.splice(k, 1); continue; } missing.push(x); }
   const extra = have.filter((x) => !want.includes(x) && !ALLOWED_EXTRA.some(([rx, v]) => rx.test(e) && v === x));
