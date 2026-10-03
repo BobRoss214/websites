@@ -1805,9 +1805,10 @@
  {
   "id": "playgroup-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.playgroupaustralia.org.au/about-playgroups/"
   ],
-  "note": "official register record; ABN 31142795695"
+  "note": "official register record; ABN 31142795695; founding year 1984 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "country-education-foundation-of-australia",
@@ -1870,9 +1871,10 @@
  {
   "id": "musica-viva-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.musicaviva.com.au/news-stories/2025/dec/celebrating-80-years-of-musica-viva-australia/"
   ],
-  "note": "official register record; ABN 94504497655"
+  "note": "official register record; ABN 94504497655; founding year 1945 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "yourtown",
@@ -2234,9 +2236,10 @@
  {
   "id": "outward-bound-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.outwardbound.org.au/resources/news/outward-bound-australia-turns-70/"
   ],
-  "note": "official register record; ABN 57000250635. Short name is the common trading name (general knowledge; not in record)."
+  "note": "official register record; ABN 57000250635. Short name is the common trading name (general knowledge; not in record).; founding year 1956 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "autism-spectrum-australia",
@@ -2255,9 +2258,10 @@
  {
   "id": "ms-plus",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.msplus.org.au/about-us/our-history-and-commitment"
   ],
-  "note": "official register record; ABN 66004942287. Multiple sclerosis focus is from general knowledge of the MS Plus name, not stated in the record."
+  "note": "official register record; ABN 66004942287. Multiple sclerosis focus is from general knowledge of the MS Plus name, not stated in the record.; founding year 1956 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "octec",
@@ -2290,9 +2294,10 @@
  {
   "id": "rainbow-club-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.myrainbowclub.org.au/our-history/"
   ],
-  "note": "official register record; ABN 96753434862"
+  "note": "official register record; ABN 96753434862; founding year 1969 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "performing-lines",
@@ -2311,9 +2316,10 @@
  {
   "id": "neura",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Neuroscience_Research_Australia"
   ],
-  "note": "official register record; ABN 94050110346. Short name NeuRA is the abbreviation used on neura.edu.au."
+  "note": "official register record; ABN 94050110346. Short name NeuRA is the abbreviation used on neura.edu.au.; founding year 1991 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "big-hart",
@@ -2350,9 +2356,10 @@
  {
   "id": "syc",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.syc.net.au/about"
   ],
-  "note": "official register record; ABN 27167737144"
+  "note": "official register record; ABN 27167737144; founding year 1958 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "workskil-australia",
@@ -2513,9 +2520,10 @@
  {
   "id": "youth-insearch",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://youthinsearch.org.au/about"
   ],
-  "note": "official register record; ABN 31886363881"
+  "note": "official register record; ABN 31886363881; founding year 1985 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "carers-queensland",
@@ -2686,9 +2694,10 @@
  {
   "id": "roses-in-the-ocean",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://rosesintheocean.com.au/about/our-story/"
   ],
-  "note": "official register record, ABN 36652550966"
+  "note": "official register record, ABN 36652550966; founding year 2011 from the organisation's own account (the register lists a later year), checked by a web search in the last spot-check pass"
  },
  {
   "id": "cottage-by-the-sea",
