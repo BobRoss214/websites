@@ -3,10 +3,12 @@
 
   python3 tools/test_pages.py
 
-Also checks the real site: every extra page names its own share picture, the file is there, 1200 x 630 and under 250 KB, and it has a description.
+Also checks the real site: every extra page names its own share picture, the file is there, 1200 x 630 and under 250 KB, and it has a description;
+every page has its own title and description of a length search results can show; and every question and answer in a page's structured data
+(FAQPage) is word for word what the page shows, with no markup left in it.
 Prints "OK" when everything passes. Needs: pip install beautifulsoup4  (and pillow for the picture-size tests).
 """
-import os, re, shutil, struct, subprocess, sys, tempfile, unittest
+import json, os, re, shutil, struct, subprocess, sys, tempfile, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REAL = os.path.dirname(HERE)
@@ -14,6 +16,7 @@ try:
     from PIL import Image
 except ImportError:
     Image = None
+from bs4 import BeautifulSoup
 
 
 def png_size(path):
@@ -133,10 +136,64 @@ class Pages(unittest.TestCase):
             self.assertEqual(png_size(path), (1200, 630), meta['image'])
             self.assertLess(os.path.getsize(path), 250 * 1000, meta['image'] + ' is over 250 KB')
 
+    # -------------------------------------------------------------
+    def test_a_list_in_an_answer_reads_as_sentences(self):
+        body = ('<section data-faq><details><summary>What is the rule?</summary><div class="answer"><p>It is simple.</p>'
+                '<ul><li>Change it before noon</li><li>We refund the rest.</li><li>Call us (anytime)</li></ul></div></details></section>')
+        with open(os.path.join(self.root, 'pages', 'rule.html'), 'w', encoding='utf-8') as f:
+            f.write('---\ntitle: Rule\ndescription: A rule.\n---\n' + body + '\n')
+        code, text = self.build()
+        self.assertEqual(code, 0, text)
+        ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', self.out('rule'), re.S).group(1))
+        faq = [g for g in ld['@graph'] if g['@type'] == 'FAQPage'][0]['mainEntity']
+        self.assertEqual(faq[0]['acceptedAnswer']['text'], 'It is simple. Change it before noon. We refund the rest. Call us (anytime)')
+
+    # -------------------------------------------------------------
+    def real_pages(self):
+        pages = ['index'] + sorted(f[:-5] for f in os.listdir(os.path.join(REAL, 'pages')) if f.endswith('.html'))
+        out = {}
+        for slug in pages:
+            with open(os.path.join(REAL, slug + '.html'), encoding='utf-8') as f:
+                out[slug] = BeautifulSoup(f.read(), 'html.parser')
+        return out
+
+    def test_the_real_pages_have_their_own_title_and_description(self):
+        titles, descriptions = {}, {}
+        for slug, soup in self.real_pages().items():
+            title = soup.title.get_text().strip()
+            desc = soup.find('meta', attrs={'name': 'description'})['content'].strip()
+            self.assertTrue(30 <= len(title) <= 62, f'{slug}: the title is {len(title)} letters (search results show about 50 to 60): {title}')
+            self.assertTrue(110 <= len(desc) <= 165, f'{slug}: the description is {len(desc)} letters (search results show about 120 to 160)')
+            self.assertNotIn(title, titles, f'{slug} has the same title as {titles.get(title)}')
+            self.assertNotIn(desc, descriptions, f'{slug} has the same description as {descriptions.get(desc)}')
+            titles[title], descriptions[desc] = slug, slug
+
+    def test_the_structured_data_of_the_real_pages_is_what_the_page_shows(self):
+        checked = 0
+        for slug, soup in self.real_pages().items():
+            for tag in soup.find_all('script', type='application/ld+json'):
+                data = json.loads(tag.string)
+                nodes = data['@graph'] if '@graph' in data else [data]
+                for node in nodes:
+                    if node.get('@type') != 'FAQPage':
+                        continue
+                    shown = soup.select('[data-faq] details')
+                    self.assertEqual(len(node['mainEntity']), len(shown), f'{slug}: the page shows {len(shown)} questions, its structured data has {len(node["mainEntity"])}')
+                    for q, d in zip(node['mainEntity'], shown):
+                        want_q = re.sub(r'\s+', ' ', d.find('summary').get_text(' ', strip=True))
+                        want_a = re.sub(r'\s+', ' ', d.select_one('.answer').get_text(' ', strip=True))
+                        got_a = q['acceptedAnswer']['text']
+                        self.assertEqual(q['name'], want_q, f'{slug}: question differs')
+                        self.assertFalse(re.search(r'<[^>]+>|&[a-z#0-9]+;', got_a + q['name']), f'{slug}: markup left in {q["name"]}')
+                        # the page shows list items without full stops; the structured data adds them, nothing else may differ
+                        self.assertEqual(re.sub(r'[.!?]', '', got_a), re.sub(r'[.!?]', '', want_a), f'{slug}: answer to "{want_q}" is not what the page shows')
+                        checked += 1
+        self.assertGreater(checked, 20)
+
 
 if __name__ == '__main__':
     result = unittest.main(exit=False, verbosity=1)
     if result.result.wasSuccessful():
-        print('OK: tools/pages.py share pictures passed', result.result.testsRun, 'checks')
+        print('OK: tools/pages.py share pictures, titles and structured data passed', result.result.testsRun, 'checks')
     else:
         sys.exit(1)

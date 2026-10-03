@@ -67,7 +67,7 @@ Nothing is written into the site folder (the `pipeline` test works in a temporar
 | `print-qr` | the printable QR signs on phones, and exactly one letter page per sign when printed |
 | `axe` | accessibility (axe-core, WCAG 2.1 AA and best practices) on the home and First-visit pages, phone and desktop, English / Chinese / Hindi, every season tab. Needs `axe-core` |
 | `pipeline` | the Python tools: the rebuild commands change nothing on a finished site, no translation is missing, edited English is reported, unsafe translations and empty maps are refused, the farm map and QR signs rebuild as committed, the tools' own checks `tools/test_add_photo.py` and `tools/test_pages.py` pass |
-| `public-site` | nothing links to `tests/`, the sitemap lists only real pages, `robots.txt` and `_headers` keep `tests/` and `print/` out of search results |
+| `public-site` | nothing links to `tests/`, the sitemap lists only real pages, `robots.txt` and `_headers` keep `tests/` and `print/` out of search results, and the site's own address (`SITE` in `tools/pages.py`) is the same in every canonical tag, share tag, structured-data address, the sitemap, `robots.txt` and the QR signs |
 
 ## When a test fails
 

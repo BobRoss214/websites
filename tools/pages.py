@@ -119,12 +119,17 @@ def parse_source(path):
     return meta, raw[m.end():].strip() + '\n'
 
 
+def sentence(text):
+    """A list item has no full stop on the page, but run together in one answer it needs one: "...your visit If you cancel..." becomes "...your visit. If you cancel..."."""
+    return text if re.search(r'[.!?\u2026:;)"\u201d\u2019]$', text) else text + '.'
+
+
 def faq_items(body):
     soup = BeautifulSoup(body, 'html.parser')
     out = []
     for d in soup.select('[data-faq] details'):
         q = d.find('summary').get_text(' ', strip=True)
-        a = ' '.join(x.get_text(' ', strip=True) for x in d.select('.answer p, .answer li'))
+        a = ' '.join(sentence(x.get_text(' ', strip=True)) for x in d.select('.answer p, .answer li') if x.get_text(strip=True))
         if q and a:
             out.append({'@type': 'Question', 'name': q, 'acceptedAnswer': {'@type': 'Answer', 'text': a}})
     return out

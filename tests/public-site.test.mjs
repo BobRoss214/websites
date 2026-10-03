@@ -1,5 +1,6 @@
 /* Keeps the tests and the owner's notes off the public site: nothing links to tests/ or docs/, the sitemap lists only real pages, robots.txt and
- * _headers keep tests/, docs/ and print/ out of search results, and tests/ holds no web page. No browser needed. */
+ * _headers keep tests/, docs/ and print/ out of search results, and tests/ holds no web page. Also: the site's own address is written the same way
+ * everywhere (a forgotten place would make Google and share cards point at another site). No browser needed. */
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, ok, finish } from './lib.mjs';
@@ -21,6 +22,26 @@ ok('every address in sitemap.xml is a real page', missing.length === 0, missing.
 const robots = read('robots.txt');
 ok('robots.txt keeps /tests/, /docs/ and /print/ out of search engines', ['tests', 'docs', 'print'].every((d) => new RegExp('^Disallow:\\s*/' + d + '/\\s*$', 'm').test(robots)), robots.replace(/\n/g, ' | '));
 ok('robots.txt still lets the site itself be crawled and names the sitemap', /^Allow:\s*\/\s*$/m.test(robots) && /^Sitemap:\s*https:\/\/\S+\/sitemap\.xml\s*$/m.test(robots));
+
+// One address everywhere: SITE in tools/pages.py, the home page's own tags and structured data, the sitemap, robots.txt and the QR signs.
+// Changing the domain and forgetting one of these leaves canonical tags and share pictures pointing at another site.
+const site = (read('tools/pages.py').match(/^SITE = '([^']+)'/m) || [])[1] || '';
+const originOf = (u) => { try { return new URL(u).origin; } catch (e) { return ''; } };
+const home = read('index.html');
+const tagValues = (html, re) => [...html.matchAll(re)].map((m) => m[1]);
+const selfUrls = (f) => {
+  const html = read(f);
+  return [...tagValues(html, /<link rel="canonical" href="([^"]+)"/g), ...tagValues(html, /<meta (?:property|name)="(?:og:url|og:image|twitter:image)" content="([^"]+)"/g),
+    ...tagValues(html, /"(?:@id|url|image)":\s*"(https?:[^"]+)"/g).filter((u) => originOf(u) !== 'https://www.google.com')];
+};
+ok('SITE in tools/pages.py is one plain address ending in a slash', /^https:\/\/[^/]+\/$/.test(site), site);
+const origin = originOf(site);
+const wrongPlace = [];
+for (const f of fs.readdirSync(ROOT).filter((n) => n.endsWith('.html') && n !== '404.html')) for (const u of selfUrls(f)) if (originOf(u) !== origin && !/^https:\/\/(www\.)?(facebook|instagram)\.com\//.test(u)) wrongPlace.push(f + ': ' + u);
+ok('every canonical, share and structured-data address of every page is on the SITE address', wrongPlace.length === 0, wrongPlace.slice(0, 4).join(' | '));
+ok('the home page names itself exactly as SITE does', tagValues(home, /<link rel="canonical" href="([^"]+)"/g)[0] === site, tagValues(home, /<link rel="canonical" href="([^"]+)"/g)[0]);
+ok('sitemap.xml, robots.txt and the QR signs use the SITE address', locs.every((u) => u.startsWith(site)) && read('robots.txt').includes('Sitemap: ' + site + 'sitemap.xml') && JSON.parse(read('tools/qr_links.json')).site === site,
+  [locs.find((u) => !u.startsWith(site)), JSON.parse(read('tools/qr_links.json')).site].filter(Boolean).join(' | '));
 
 const headers = read('_headers');
 ok('_headers marks /tests/*, /docs/* and /print/* as noindex', ['tests', 'docs', 'print'].every((d) => new RegExp('^/' + d + '/\\*\\s*\\n\\s+X-Robots-Tag:\\s*noindex', 'm').test(headers)));
