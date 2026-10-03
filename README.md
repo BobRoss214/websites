@@ -333,6 +333,11 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Season by season** | The "Season by season" table and the cards under "What's on the farm" follow your pages for what you pick and for fall and the GreenHouse. The wagon ride and barrel train in spring and summer were added as requested. The ticks for "Concessions & local goods" in spring and summer are our plan, not words from your pages: please check them. |
 | **Accessibility & comfort** | Only published facts, in softer words than before. It does not say yet what the paths are like, when it is quieter, or about baby changing: tell us when you know. It invites people to email Cathy: please make sure cathy@wiseacresorganic.com is read and answered. |
 | **Phone number** | The main number in online listings, (704) 628-6232, is **not** on the site until you confirm it. The day-of emergencies number for photographers, 704-207-6347, **is** on the site ("Day-of emergencies: call or text", in the photography section). |
+| **Drive time box (farm spot, free services)** | Built and tested with pretend services. Our test computer cannot reach the real ones, so press the button yourself once the site is live. Still open: the farm's exact spot for `farmPoint` in `js/content.js` (question 35), whether to write to the free routing server's operators about business use or move to Mapbox later (question 36), and a lawyer's view on sending a typed address to outside map services (question 43). Steps and risks: `docs/LAUNCH_CHECKLIST.md`, step 3.13. |
+| **Winter and early-spring wording** | The Visit area, the Shop and the schedule say "Fall 2026" all year, with "Reserve now" and package prices, also from January to April when the farm is closed. The GreenHouse shows Friday to Sunday, 10 am to 8 pm, all year, and "Christmas trees are here." stays up until the site switches to spring (about 10 February). The farm card itself is right in winter. Waiting for question 37. |
+| **13 new photos** | Added to `assets/photos/` on 3 October and **not used on the site yet**. They are only 206 px wide (question 38), one shows four people at a Foster Village table (question 39), four have words printed in the picture and one shows price signs (question 40). Do not list them in `js/content.js` until those are answered. |
+| **Bottom-bar "Email" button** | On phones the bar at the bottom has Reserve, Directions and Email. Email opens a blank message to cathy@wiseacresorganic.com, not the email list. Question 41. |
+| **Entrance and parking** | The site says "limited parking", and the farm map marks a parking area, an entrance and check-in, but nothing says in words which entrance cars use or where to park. Question 42 (the photo is question 34). |
 
 ## Photos
 
@@ -385,7 +390,7 @@ New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](do
 5. Before launch: fill every "Prices coming soon", confirm hours, Facebook and the hashtag, and have a native speaker read each language (see Content status).
 6. Also before launch: set `reviewUrl`; set `farmPoint` (Drive time box); open both "In the news" links; confirm the drive times, the waitlist and the "Season by season" ticks; decide on the maze name; set `seasonPicker: false`; then check the live site once with `?check` added to the address.
 
-How the page stays fast: sections far down the page are skipped until you scroll near them (`initLazyRender` in `js/main.js`), looping animations pause when they are off screen (a whole section far away, or one drawing inside a long section: `initOffscreenPause` in `js/main.js`) and while the tab is hidden, and photos load lazily. If you ever add a tall new section, nothing needs to change.
+How the page stays fast: looping animations pause when they are off screen (a whole section far away, or one drawing inside a long section: `initOffscreenPause` in `js/main.js`) and while the tab is hidden, and photos load only when you scroll near them (`loading="lazy"`; in JavaScript set `loading` before `src`, or the photo downloads at once). If you ever add a tall new section, nothing needs to change.
 
 ## Notes
 

@@ -268,7 +268,8 @@
   "{distance}, about {time} by car": "{distance}, khoảng {time} đi ô tô",
   "We looked up: {place}": "Chúng tôi đã tra: {place}",
   "To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.": "Đến nông trại tại 4701 Hartis Rd. Theo tốc độ đường thông thường, không có kẹt xe. Giờ cao điểm có thể lâu hơn.",
-  "Open these directions in Google Maps": "Mở đường đi này trong Google Maps"
+  "Open these directions in Google Maps": "Mở đường đi này trong Google Maps",
+  "Hide this box": "Ẩn hộp này"
  },
  "ui": {
   "t000eb0a5": "Tự cắt bó hoa của bạn trong ruộng hoa",
@@ -1295,6 +1296,7 @@
   "te49f839c": "Nhập địa chỉ của bạn để xem số dặm và số phút đến nông trại",
   "t5caafaf3": "Đường, thị trấn và tiểu bang",
   "t89dd3672": "Xem thời gian lái xe",
-  "tc37c5664": "Khi bạn bấm nút, địa chỉ của bạn được gửi đến các dịch vụ OpenStreetMap miễn phí để tính quãng đường. Trang web này không lưu lại địa chỉ."
+  "tc37c5664": "Khi bạn bấm nút, địa chỉ của bạn được gửi đến các dịch vụ OpenStreetMap miễn phí để tính quãng đường. Trang web này không lưu lại địa chỉ.",
+  "tad115b68": "Chào một người bạn ở nông trại nhé"
  }
 }

@@ -94,7 +94,7 @@
           <li><a data-t="t1dc91a78" href="#greenhouse">GreenHouse</a></li>
           <li><a data-t="t55de8870" href="#shop">Shop</a></li>
           <li class="nav-more">
-            <button data-t="t1e6fa7b2" class="nav-more-btn" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="nav-more-list">More <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <button data-t="t1e6fa7b2" class="nav-more-btn" type="button" aria-expanded="false" aria-controls="nav-more-list">More <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
             <ul class="nav-more-list" id="nav-more-list">
               <li class="nav-first-more"><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
               <li><a data-t="td4e7d7d3" href="#flowers">Flowers</a></li>
@@ -121,7 +121,7 @@
     </div>
   </header>
 
-  <main id="main">
+  <main id="main" tabindex="-1">
 
     <!-- ================= HERO ================= -->
     <section class="hero" id="top" aria-labelledby="hero-h">
@@ -226,13 +226,15 @@
       </div>
 
       <div class="picker" id="picker">
-        <div class="picker-basket" aria-live="polite">
+        <div class="picker-basket">
           <svg class="picker-art" aria-hidden="true"><use href="#basket"/></svg>
           <span class="picker-count" id="pick-count">0</span>
         </div>
         <div class="picker-text">
-          <p id="pick-msg" data-no-i18n>Try it! Tap the strawberries to pick them.</p>
+          <p id="pick-msg" role="status" data-no-i18n>Try it! Tap the strawberries to pick them.</p>
           <button class="btn btn-sm btn-sun" id="pick-btn" type="button" data-no-i18n>Pick a strawberry</button>
+          <button data-ta-aria-label="tad115b68" data-ta-title="tad115b68" class="btn btn-sm btn-white npc-btn" id="npc-btn" type="button" aria-label="Say hi to a farm friend" title="Say hi to a farm friend" hidden><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 14.2c1 1.5 2.4 2.3 4 2.3s3-.8 4-2.3"/><circle cx="9" cy="10" r=".7" fill="currentColor"/><circle cx="15" cy="10" r=".7" fill="currentColor"/></svg></button>
+          <p class="sr-only" id="npc-live" role="status"></p>
         </div>
       </div>
     </section>
@@ -2047,7 +2049,7 @@
           <form class="drive-form" id="drive-form" hidden novalidate>
             <label data-t="te49f839c" class="drive-label" for="drive-addr">Type your address to see the miles and minutes to the farm</label>
             <div class="su-row drive-row">
-              <input data-ta-placeholder="t5caafaf3" id="drive-addr" name="address" type="text" autocomplete="street-address" maxlength="200" placeholder="Street, town and state">
+              <input data-ta-placeholder="t5caafaf3" id="drive-addr" aria-describedby="drive-result" name="address" type="text" autocomplete="street-address" maxlength="200" placeholder="Street, town and state">
               <button data-t="t89dd3672" class="btn btn-red" type="submit">Get drive time</button>
             </div>
             <p data-t="tc37c5664" class="fine drive-priv">When you press the button, your address goes to the free OpenStreetMap services to work out the drive. This website does not keep it.</p>

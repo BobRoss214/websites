@@ -318,13 +318,115 @@ Why it matters: We would show it on the First-visit page so people know where to
 Answer:
 
 
+## 6. New questions (added 3 October 2026)
+
+### Question 35
+
+**Can you send us the exact spot of the farm, as two numbers from Google Maps? (On a computer: open Google Maps, right-click the place where visitors turn in, and click the two numbers at the top of the menu to copy them. On a phone: touch and hold that place; the numbers show in the search box or in the sheet that opens. Paste both numbers here.)**
+
+Why it matters: The Drive time box finds the farm by searching for "4701 Hartis Rd, Indian Trail, NC 28079" in OpenStreetMap, which can put the pin in the wrong place. With the exact spot the box is more accurate, answers about a second faster and sends half as many requests to the free search service.
+
+Answer:
+
+
+### Question 36
+
+**The Drive time box uses a free routing server whose own page says its demo is for "reasonable, non-commercial use-cases". Should we (a) write to the people who run it and ask whether a small farm website is allowed, (b) leave it as it is and watch it, (c) move to Mapbox later (it needs a free account in the farm's name), or (d) switch the box off?**
+
+Why it matters: The site sells farm visits, so it is a business, and the free server can refuse it at any time without warning. If it does, the box says "The lookup is not working right now" and shows a Google Maps button, so nothing breaks, but visitors lose the miles and minutes. The details are in step 3.13 of the launch checklist.
+
+Answer:
+
+
+### Question 37
+
+**From January to April, what should visitors see: is the u-pick farm closed, what are The GreenHouse's hours, and when do you stop selling Christmas trees?**
+
+Why it matters: The site shows fall wording all year. We tried it on a computer set to 20 January: the Visit area still shows "Fall 2026 reservations", the package prices, the "Fall 2026 reservation schedule" and a "Reserve now" button, and the Shop starts its prices with "Fall 2026 prices for a farm visit". The GreenHouse is shown open Friday to Sunday, 10 am to 8 pm, all year, and "Christmas trees are here." stays up until the site switches to spring, about 10 February. The farm card itself is already right in winter: it says picking is seasonal and that strawberries come next, around mid-April. (Question 12 asks when trees start; this asks what happens after they end.)
+
+Answer:
+
+
+### Question 38
+
+**Can you send us the original, full-size files of the 13 new photos, with the same file names?**
+
+- `baby-goat-bunny-hoodie-happy-easter.webp`
+- `blueberries-in-bowl-in-sunflower-field-dusk.webp`
+- `blueberries-sunflowers-happy-fathers-day.webp`
+- `foster-village-table.webp`
+- `goat-in-green-frog-hat.webp`
+- `goats-on-platform-waiting-all-summer.webp`
+- `mums-field-with-red-shed-and-palm.webp`
+- `organic-tomatoes-and-basil-u-pick-signs.webp`
+- `pink-clouds-sky-over-field.webp`
+- `school-bus-on-farm-path.webp`
+- `strawberries-and-blueberries-in-white-bowl.webp`
+- `sunflower-field-golden-light.webp`
+- `sunflowers-with-strawberry-and-blueberry-baskets.webp`
+
+Why it matters: The copies we received are only 206 pixels wide (the chat program shrank them). Our other photos are 375 to 1,999 pixels on the long side, most about 750. A 206-pixel photo looks blurry when a visitor taps it to enlarge it. The 13 photos are not on the site yet, and we will not show them until we have bigger files.
+
+Answer:
+
+
+### Question 39
+
+**May we show the photos with people in them, and how should we credit them? In particular, the photo of four people at a Foster Village table (`foster-village-table.webp`): who took it, and do those four people, and Foster Village, agree to it being on your website? Also, is the animal in `goat-in-green-frog-hat.webp` a goat?**
+
+Why it matters: Faces and an organization's name should not go on the website without a yes. Two other new photos show a person's arm or hair but no face (the Easter baby goat and the frog-hat animal). We also called the last one a goat from its file name; if it is a lamb or another animal, the picture's description would be wrong.
+
+Answer:
+
+
+### Question 40
+
+**Four of the new photos have words printed in the picture. May we show them in the gallery, or should we leave them out? (You can also send versions without the words.)**
+
+- `baby-goat-bunny-hoodie-happy-easter.webp`: "Happy Easter!"
+- `blueberries-sunflowers-happy-fathers-day.webp`: "Happy Father's Day!"
+- `goats-on-platform-waiting-all-summer.webp`: "...ve been waiting all summer long to see you!" (cut off at the left edge)
+- `sunflowers-with-strawberry-and-blueberry-baskets.webp`: "Plenty of organic strawberries & blueberries now available! Morning & evening reservations."
+
+Why it matters: Words inside a picture can not be translated into Spanish, Hindi, Chinese or Vietnamese, can not be read by a screen reader and can not be updated. They also go out of date: "Happy Easter" and "Happy Father's Day" are seasonal, "now available! Morning & evening reservations" is an offer that may not be true, and "waiting all summer" is cut off. A fifth photo, `organic-tomatoes-and-basil-u-pick-signs.webp`, shows real signs with prices ("4.50$" a pound for tomatoes and "$1" per stem for basil); question 7 asks whether those prices are right.
+
+Answer:
+
+
+### Question 41
+
+**On phones, a bar at the bottom of the screen has Reserve, Directions and Email. "Email" opens a blank message to cathy@wiseacresorganic.com. Should it open the email sign-up (the email list) instead?**
+
+Why it matters: Visitors may expect "Email" to mean the email list. Today they get an empty message to Cathy, and there is no way to join the list from that bar.
+
+Answer:
+
+
+### Question 42
+
+**Which entrance do cars use on Hartis Road, and where should visitors park? (Question 34 asks for the photo; here we need it in words.)**
+
+Why it matters: The site only says "in a neighborhood with limited parking", and the farm map marks a parking area, an entrance and check-in without words. First-time visitors have to guess which gate to take and where to leave the car.
+
+Answer:
+
+
+### Question 43
+
+**If you have a lawyer or adviser, could you ask them: "Our website has a box where a visitor can type a home address to see the drive time to the farm. When they press the button, the address goes to free outside map services run by non-profits (OpenStreetMap, and a routing server run by FOSSGIS in Germany). The page says so next to the button, and our site does not keep the address. Is that enough, or should we change something?"**
+
+Why it matters: We are not lawyers and this is not legal advice. We found no rule that forbids it, but we could not check everything. We read only search-engine summaries of the law (they said North Carolina had no general consumer privacy law as of May 2026), not the law itself or anything newer. We did not check children's privacy rules or other states' laws, and the two services keep their own records for a time we could not find.
+
+Answer:
+
+
 ---
 
 ## For whoever edits the site
 
 *The farm does not need to read this part. Do not publish this file with the website: the questions above include internal remarks, so leave it out of the upload.*
 
-Line numbers are for commit 9582aab plus the one README line this file adds. If they have moved, search for the quoted words. How to edit and rebuild is in the README (see "Start here" and "Languages").
+Line numbers for questions 1 to 34 are for commit 9582aab plus the one README line this file adds, and many have moved since (for example the README rows are now 12 lines further down). Line numbers for questions 35 to 43 are for commit 2d08498. If they have moved, search for the quoted words. How to edit and rebuild is in the README (see "Start here" and "Languages").
 
 - After changing English text in `index.html` or `pages/*.html`, run `python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build`, then `python3 tools/i18n.py missing es` (also `hi`, `zh`, `vi`) to see what needs translating.
 - Edit `pages/<name>.html`, not the generated pages (`first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html`, `wise-pie.html`); the rebuild overwrites them.
@@ -512,3 +614,61 @@ Line numbers are for commit 9582aab plus the one README line this file adds. If 
 
 - **If Yes:** save the picture in `assets/photos/` and set `entrancePhoto` (`js/content.js:172`); the First-visit page shows it automatically.
 - **If No:** no change.
+
+### 6. New questions (added 3 October 2026)
+
+Line numbers in this section are for commit 2d08498, plus the README rows added with these questions. Everything was checked against the code on 3 October 2026.
+
+**Question 35: Can you send us the exact spot of the farm, as two numbers from Google Maps?**
+
+- **If Yes:** at `js/content.js:180` change `farmPoint: null,` to `farmPoint: { lat: <first number>, lon: <second number> },`. The steps are in the comment at `js/content.js:150-155`, and the code that reads it is `js/features.js:704`. No rebuild is needed. Open the home page, press "Get drive time" with a nearby address and check that the miles look right. Then delete "set `farmPoint` (Drive time box);" from launch item 6 (`README.md:391`) and the farm-spot part of the Drive time row (`README.md:336`).
+- **If the spot is not the gate:** ask again for the place where cars turn in (see questions 34 and 42), because the box says "To the farm at 4701 Hartis Rd".
+- **If No:** no change. The box then searches for `FARM_ADDRESS` (`js/features.js:614`) on the first press after each page load.
+
+**Question 36: Free routing server: write to its operators, leave it, move to Mapbox, or switch the box off?**
+
+- **(a) Write to the operators:** the farm sends the message (Claude can draft it) to `fossgis-routing-server@openstreetmap.de`, the address on the routing server's own about page. Say it is a small farm website, a visitor presses a button, and one routing request is sent per press. Keep the reply and note it under decision D11 (`docs/LAUNCH_CHECKLIST.md:356`). No file changes unless they say no.
+- **(b) Leave it:** no change. Keep the weekly test (`docs/LAUNCH_CHECKLIST.md`, section 5).
+- **(c) Mapbox:** the farm makes a Mapbox account and a public token limited to `https://www.wiseacresorganic.com/`. Then ask Claude to change `GEO_URL` and `ROUTE_URL` and the two request functions (`js/features.js:615-616` and `geocode` / `driveBetween` just below), the credit line under the answer, the `connect-src` part of the Content-Security-Policy line (`docs/LAUNCH_CHECKLIST.md:158`, and `_headers` once that line is added: replace the two current hosts with `https://api.mapbox.com`) and the fact sheet (`docs/WHAT_THE_SITE_STORES.md:49, 62, 76-84, 171`).
+- **(d) Switch the box off:** remove `initDriveForm` from the list at `js/features.js:996`. The form (`index.html:2047-2055`) stays hidden because it carries the `hidden` attribute; the list of towns stays. Update `README.md:199-206`, `docs/WHAT_THE_SITE_STORES.md:49, 62, 76-84` and the Drive time row (`README.md:336`).
+
+**Question 37: What should visitors see from January to April?**
+
+- **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html:414`), the packages (`index.html:420`) and the schedule (`index.html:484`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js:1131` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html:395`), "Fall hours:" (`index.html:1116`), the Shop sentence and note (`index.html:1395, 1414`) and "Fall 2026 special days" (`index.html:1647`).
+- **The GreenHouse has different winter hours, or is closed:** change `js/content.js:172-173` (the `greenhouse` and `pizza` hours; they are one Friday-Sunday window all year, so separate winter hours need a small code change: ask Claude) and the text `index.html:366, 1217, 1426, 2016`. The "Closed today. Opens Friday at 10 am" line comes from `js/content.js:172`. For single closed days use `closures` (README, "Day-to-day changes"). Question 17 lists the other hours lines.
+- **Trees end earlier or later than early December:** the wording "to early December" is at `index.html:573, 822, 824, 858, 1226, 1442, 1879, 1921` and the end date is `js/season.js:23` (8 December). After it the site keeps the winter look until about 10 February (the closest-season rule, `js/season.js:50-62`) and shows "Christmas trees are here." (`index.html:1226`, marked `data-only="winter"`). If trees are over by then, ask Claude to change the rule or the wording.
+- **If the answer is "leave it":** no change; the README row (`README.md:337`) stays.
+
+**Question 38: Can you send us the original files of the 13 new photos?**
+
+- **If Yes:** save each original in `assets/photos/` under the same name (replacing the 206 px copy). Claude resizes them and converts them to WebP (the older photos are about 750 px wide). List them in `photos` (`js/content.js:182-237`, entries `{ src, alt, caption }`) only after questions 39 and 40 are answered. Then update the count in the Photos section (`README.md:344`, "All 19 farm photos") and delete the photos row (`README.md:338`) once questions 38 to 40 are done.
+- **If No:** leave them out of `photos`. Nothing on the site uses them (no file mentions their names), so they only add weight to the upload: delete the 13 files from `assets/photos/` (about 0.2 MB together).
+
+**Question 39: People in photos, credit, and the animal in the frog hat**
+
+- **If the people agreed (and Foster Village, for its name):** list the picture in `photos` (`js/content.js:182-237`) with `caption: "Photo: <name>"` (the gallery shows the caption) and an `alt` that describes it.
+- **If No, or no answer:** do not list it, and delete `assets/photos/foster-village-table.webp`.
+- **If the animal is a goat:** use an `alt` such as "A goat kid wearing a green crocheted frog hat". **If it is another animal:** rename `goat-in-green-frog-hat.webp` and write the right `alt`.
+
+**Question 40: Photos with words in the picture**
+
+- **If she says show them:** list them in `photos` (`js/content.js:182-237`) with an `alt` that repeats the words (for example "A baby goat in a pink bunny hoodie with the words Happy Easter!"). These words are not translated. Skip the seasonal ones (Easter, Father's Day) until their season.
+- **If she says leave them out, or sends versions without words:** do not list them; delete the four files, or replace them with the new versions under the same names.
+- **`organic-tomatoes-and-basil-u-pick-signs.webp` (price signs):** use it only if question 6 is Yes and question 7's prices are right.
+
+**Question 41: Should the bottom-bar "Email" button open the email sign-up?**
+
+- **If Yes:** change the `href` at `index.html:2151` to `#follow-signup` (the sign-up box is `index.html:2059`; on the other five pages the rebuild turns it into `index.html#follow-signup`). The label "Email" is translated in four languages, so ask Claude to change the label and its translations. The sign-up form stays hidden until Mailchimp is connected (question 26); until then the box shows the plain "Join the email list" button (`index.html:2084`).
+- **If No:** no change. A subject line could be added, as at `index.html:1866`.
+- Delete the bar row (`README.md:339`) when answered.
+
+**Question 42: Entrance and parking, in words**
+
+- **If she describes it:** add it to the Parking card (`pages/first-visit.html:156`, generated `first-visit.html:300`), to the lead sentence (`pages/first-visit.html:70`, generated `first-visit.html:214`) and to step 2 on the home page (`index.html:400`). Set the entrance photo's caption in `entrancePhoto` (`js/content.js:181`) once question 34 is answered. The parking area and entrance on the farm map (`js/farm-map-data.js:13, 53, 81`) are drawn from the marked map; to move them, re-mark the map and run `python3 tools/farm_map.py tools/saved-map.json`; do not edit that file by hand. Delete the row (`README.md:340`).
+- **If not sure:** leave the wording as it is.
+
+**Question 43: One question for a lawyer (not legal advice)**
+
+- **If the lawyer says it is fine:** no change. Keep the notice (`index.html:2053`) and the fact sheet (`docs/WHAT_THE_SITE_STORES.md:49, 62, 76-84, 171`).
+- **If the lawyer wants more:** change the notice at `index.html:2053` (it is translated into four languages, so ask Claude), or add a privacy page.
+- **If the lawyer says no:** switch the box off as in question 36 (d).

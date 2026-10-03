@@ -60,6 +60,13 @@
     const ul = doc.createElement('ul'); ul.style.margin = '6px 0 0 18px'; ul.style.padding = '0';
     problems.forEach((m) => { const li = doc.createElement('li'); li.textContent = m; ul.appendChild(li); });
     box.appendChild(ul);
+    // The box sits on top of the page, so it must be closable (it hid the buttons under it from keyboard users). Escape closes it too.
+    const hide = doc.createElement('button'); hide.type = 'button'; hide.textContent = t('Hide this box');
+    hide.style.cssText = 'margin:10px 0 0;padding:.45em 1em;font:inherit;font-weight:700;font-size:14px;color:inherit;background:#fff;border:2px solid #3a2416;border-radius:10px;cursor:pointer';
+    const close = () => { const had = box.contains(doc.activeElement); box.remove(); const m = doc.getElementById('main'); if (had && m) m.focus({ preventScroll: true }); };
+    hide.addEventListener('click', close);
+    box.onkeydown = (e) => { if (e.key === 'Escape') close(); };
+    box.appendChild(hide);
   }
   const lc = (v) => String(v == null ? '' : v).trim().toLowerCase();
   // A real day on the calendar: 2026-11-31 is not one (browsers quietly roll it over to December 1).

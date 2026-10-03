@@ -950,6 +950,8 @@
   const tally = { total: 0 };
   const queue = [];
   let toasting = false, stackEl = null;
+  // Made now, empty, so the live region already exists when the first badge is put into it (screen readers can miss text that arrives with its region).
+  { const host = $('#picker') || hero; if (host) { stackEl = doc.createElement('div'); stackEl.className = 'ach-stack'; stackEl.setAttribute('aria-live', 'polite'); host.appendChild(stackEl); } }
 
   const kindOf = (el) => (el.dataset.pick === 'tree' ? 'winter'
     : season === 'spring' ? 'strawberry'
@@ -984,7 +986,7 @@
     if (!kind) { toasting = false; return; }
     toasting = true;
     const a = ACH[kind];
-    if (!stackEl) {
+    if (!stackEl) {   // normally made at start-up (above)
       stackEl = doc.createElement('div');
       stackEl.className = 'ach-stack';
       stackEl.setAttribute('aria-live', 'polite');
@@ -1051,7 +1053,11 @@
   };
 
   // A speech bubble that follows the character (the wagon keeps rolling and the layers drift with the page).
+  // Screen readers cannot see the speech bubble, so what a friend says is also put in a hidden live region (#npc-live).
+  const npcLive = $('#npc-live');
+  const announce = (text) => { if (!npcLive) return; npcLive.textContent = ''; requestAnimationFrame(() => { npcLive.textContent = text; }); };
   function say(el, text) {
+    announce(text);
     if (el._say) el._say.remove();
     const b = doc.createElement('span');
     b.className = 'npc-say';
@@ -1084,8 +1090,18 @@
     if (body) restart(body, 'is-hi', kind === 'scarecrow' ? 2800 : 1700);
   }
 
+  // The friends are drawn in the picture and cannot be reached with Tab, so this one button says hi to the next friend in turn.
+  const npcBtn = $('#npc-btn');
+  let npcNext = -1;
+  if (npcBtn) npcBtn.addEventListener('click', () => {
+    const all = $$('[data-npc]', sceneEl);
+    if (all.length) { npcNext = (npcNext + 1) % all.length; npcTalk(all[npcNext]); }
+  });
+
   function bindScene() {
     pickables = $$('[data-pick]', sceneEl);
+    npcNext = -1;
+    if (npcBtn) npcBtn.hidden = !$$('[data-npc]', sceneEl).length;
     pickables.forEach((el) => el.addEventListener('click', () => pick(el)));
 
     $$('[data-npc]', sceneEl).forEach((el) => {
@@ -1182,9 +1198,10 @@
       b.addEventListener('click', () => setSeason(b.dataset.season, true));
       b.addEventListener('keydown', (e) => {
         const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-        if (!step) return;
+        const jump = e.key === 'Home' ? 0 : e.key === 'End' ? buttons.length - 1 : -1;
+        if (!step && jump < 0) return;
         e.preventDefault();
-        const next = buttons[(i + step + buttons.length) % buttons.length];
+        const next = step ? buttons[(i + step + buttons.length) % buttons.length] : buttons[jump];
         next.focus(); setSeason(next.dataset.season, true);
       });
     });

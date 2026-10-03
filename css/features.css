@@ -303,6 +303,11 @@
   .hero{padding-bottom:164px}   /* picker 124px + its 26px bottom offset + 14px air */
 }
 
+/* The "say hi to a farm friend" button sits next to the pick button; it is round, so the picker keeps its size. */
+.npc-btn{width:38px;height:38px;min-height:0;padding:0;margin-left:6px;border-radius:50%;vertical-align:middle;display:inline-grid;place-items:center}
+.npc-btn[hidden]{display:none}
+.npc-btn .ico{width:22px;height:22px}
+
 /* 14. season-by-season table on phones: show the feature column + the season that is selected above (no hidden sideways scroll) */
 @media (max-width:47.5em){
   .fs-table{min-width:0}

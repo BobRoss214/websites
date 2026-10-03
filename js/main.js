@@ -147,8 +147,16 @@
       nav.classList.toggle('is-open', open);
       doc.body.classList.toggle('nav-lock', open);
     };
-    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+    // The menu sits before its button in the page, so Tab from the button would skip it and land on the page behind it.
+    // Opening it moves focus to its first link instead.
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      setOpen(open);
+      if (open) { const first = $('a', nav); if (first) first.focus(); }
+    });
     nav.addEventListener('click', (e) => { if (e.target.closest('a')) setOpen(false); });
+    // Tabbing out of the header (past the menu button, or back out of the menu) closes the open menu.
+    header.addEventListener('focusout', (e) => { if (nav.classList.contains('is-open') && e.relatedTarget && !header.contains(e.relatedTarget)) setOpen(false); });
     doc.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && nav.classList.contains('is-open')) { setOpen(false); toggle.focus(); }
     });
@@ -802,37 +810,7 @@
     update();
   }
 
-  /* ------------------------------------------------------------------ *
-   * Lazy rendering: once the page has laid out for real, sections far from the screen are skipped
-   * (content-visibility). Their real heights are written down first, so nothing jumps.
-   * ------------------------------------------------------------------ */
-  function initLazyRender() {
-    if (!(window.CSS && CSS.supports && CSS.supports('content-visibility', 'auto'))) return;
-    const sections = () => $$('main > section:not(#top):not(.facts):not(.next-up), .site-footer');
-    let timer = 0;
-    const apply = () => {
-      root.classList.remove('cv');                    // lay everything out for real first
-      const vh = innerHeight, y = scrollY;
-      sections().forEach((s) => {
-        const r = s.getBoundingClientRect();
-        const near = r.bottom > -vh && r.top < vh * 2;     // on or near the screen right now
-        const early = r.top + y < vh * 1.5;                // within the first screens of the page
-        s.classList.toggle('cv-sec', !near && !early);
-        const cs = getComputedStyle(s);
-        const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
-        s.style.containIntrinsicSize = 'auto ' + Math.max(0, Math.round(r.height - pad)) + 'px';   // the size is for the content box, padding comes on top
-      });
-      root.classList.add('cv');
-    };
-    const later = (ms) => { clearTimeout(timer); timer = setTimeout(apply, ms); };
-    const start = () => later(900);
-    if (doc.readyState === 'complete') start(); else addEventListener('load', start);
-    addEventListener('resize', () => { root.classList.remove('cv'); later(300); }, { passive: true });
-    doc.addEventListener('wa:lang', () => { root.classList.remove('cv'); later(300); });
-  }
-
   /* ------------------------------------------------------------------ */
-  initLazyRender();
   initToTop();
   initOffscreenPause();
   initPrint();

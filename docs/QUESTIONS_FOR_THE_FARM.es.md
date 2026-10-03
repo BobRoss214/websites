@@ -320,3 +320,105 @@ Respuesta:
 Por qué importa: La mostraríamos en la Guía de primera visita para que la gente sepa por dónde entrar; mientras tanto, esa imagen no se muestra.
 
 Respuesta:
+
+
+## 6. Preguntas nuevas (agregadas el 3 de octubre de 2026)
+
+### Pregunta 35
+
+**¿Pueden enviarnos el punto exacto de la granja, como dos números de Google Maps? (En una computadora: abran Google Maps, hagan clic derecho en el lugar por donde entran los visitantes y hagan clic en los dos números que aparecen arriba del menú para copiarlos. En un teléfono: mantengan presionado ese lugar; los números aparecen en la barra de búsqueda o en la hoja que se abre. Peguen aquí los dos números.)**
+
+Por qué importa: La casilla "Tiempo en auto" encuentra la granja buscando "4701 Hartis Rd, Indian Trail, NC 28079" en OpenStreetMap, y puede poner el punto en un lugar equivocado. Con el punto exacto, la casilla es más precisa, responde alrededor de un segundo más rápido y envía la mitad de las solicitudes al servicio de búsqueda gratuito.
+
+Respuesta:
+
+
+### Pregunta 36
+
+**La casilla "Tiempo en auto" usa un servidor de rutas gratuito cuya propia página dice que su demostración es para "usos razonables y no comerciales". ¿Qué hacemos? (a) Escribir a quienes lo manejan y preguntar si se permite el sitio web de una granja pequeña; (b) dejarlo como está y vigilarlo; (c) pasar más adelante a Mapbox (requiere una cuenta gratuita a nombre de la granja); (d) quitar la casilla.**
+
+Por qué importa: El sitio vende visitas a la granja, así que es un negocio, y el servidor gratuito puede rechazarlo en cualquier momento y sin aviso. Si lo hace, la casilla dice "La búsqueda no funciona en este momento" y muestra un botón de Google Maps, así que nada se rompe, pero los visitantes pierden las millas y los minutos. Los detalles están en el paso 3.13 de la lista de lanzamiento.
+
+Respuesta:
+
+
+### Pregunta 37
+
+**De enero a abril, ¿qué deben ver los visitantes? ¿La granja de recolección está cerrada, qué horario tiene The GreenHouse y cuándo dejan de vender árboles de Navidad?**
+
+Por qué importa: El sitio muestra textos de otoño todo el año. Lo probamos en una computadora con la fecha del 20 de enero: el área "Visita" todavía muestra "Reservas otoño 2026", los precios de los paquetes, el "Calendario de reservas otoño 2026" y un botón "Reservar ahora", y la sección de la tienda empieza sus precios con "Precios de otoño 2026 para una visita a la granja". The GreenHouse aparece abierto de viernes a domingo, de 10 am a 8 pm, todo el año, y "Los árboles de Navidad ya están aquí." sigue puesto hasta que el sitio cambia a primavera, hacia el 10 de febrero. La tarjeta de la granja ya está bien en invierno: dice que la recolección es de temporada y que sigue la fresa, hacia mediados de abril. (La pregunta 12 pregunta cuándo empiezan los árboles; esta pregunta qué pasa cuando terminan.)
+
+Respuesta:
+
+
+### Pregunta 38
+
+**¿Pueden enviarnos los archivos originales, de tamaño completo, de las 13 fotos nuevas, con los mismos nombres de archivo?**
+
+- `baby-goat-bunny-hoodie-happy-easter.webp`
+- `blueberries-in-bowl-in-sunflower-field-dusk.webp`
+- `blueberries-sunflowers-happy-fathers-day.webp`
+- `foster-village-table.webp`
+- `goat-in-green-frog-hat.webp`
+- `goats-on-platform-waiting-all-summer.webp`
+- `mums-field-with-red-shed-and-palm.webp`
+- `organic-tomatoes-and-basil-u-pick-signs.webp`
+- `pink-clouds-sky-over-field.webp`
+- `school-bus-on-farm-path.webp`
+- `strawberries-and-blueberries-in-white-bowl.webp`
+- `sunflower-field-golden-light.webp`
+- `sunflowers-with-strawberry-and-blueberry-baskets.webp`
+
+Por qué importa: Las copias que recibimos miden solo 206 píxeles de ancho (el programa de chat las redujo). Nuestras otras fotos miden entre 375 y 1,999 píxeles en el lado más largo, la mayoría unos 750. Una foto de 206 píxeles se ve borrosa cuando un visitante la toca para agrandarla. Las 13 fotos todavía no están en el sitio y no las mostraremos hasta tener archivos más grandes.
+
+Respuesta:
+
+
+### Pregunta 39
+
+**¿Podemos mostrar las fotos en las que salen personas y cómo deben darse los créditos? En particular, la foto de cuatro personas en una mesa de Foster Village (`foster-village-table.webp`): ¿quién la tomó y esas cuatro personas, y Foster Village, están de acuerdo en que salga en su sitio web? Además, ¿el animal de `goat-in-green-frog-hat.webp` es una cabra?**
+
+Por qué importa: No deben ponerse rostros ni el nombre de una organización en el sitio sin un sí. Otras dos fotos nuevas muestran el brazo o el cabello de una persona, pero no el rostro (la cabrita de Pascua y el animal con gorro de rana). También llamamos "cabra" al último por el nombre del archivo; si es un cordero u otro animal, la descripción de la imagen sería incorrecta.
+
+Respuesta:
+
+
+### Pregunta 40
+
+**Cuatro de las fotos nuevas tienen palabras impresas en la imagen. ¿Podemos mostrarlas en la galería o debemos dejarlas fuera? (También pueden enviar versiones sin las palabras.)**
+
+- `baby-goat-bunny-hoodie-happy-easter.webp`: "Happy Easter!" (Feliz Pascua)
+- `blueberries-sunflowers-happy-fathers-day.webp`: "Happy Father's Day!" (Feliz Día del Padre)
+- `goats-on-platform-waiting-all-summer.webp`: "...ve been waiting all summer long to see you!" (cortada en el borde izquierdo)
+- `sunflowers-with-strawberry-and-blueberry-baskets.webp`: "Plenty of organic strawberries & blueberries now available! Morning & evening reservations." (hay fresas y arándanos orgánicos de sobra, reservas por la mañana y por la tarde)
+
+Por qué importa: Las palabras dentro de una imagen no se pueden traducir al español, hindi, chino ni vietnamita, no las lee un lector de pantalla y no se pueden actualizar. Además se vuelven obsoletas: "Happy Easter" y "Happy Father's Day" son de temporada, "now available! Morning & evening reservations" es una oferta que quizá ya no sea cierta, y "waiting all summer" está cortada. Una quinta foto, `organic-tomatoes-and-basil-u-pick-signs.webp`, muestra carteles reales con precios ("4.50$" la libra de tomates y "$1" por tallo de albahaca); la pregunta 7 pregunta si esos precios son correctos.
+
+Respuesta:
+
+
+### Pregunta 41
+
+**En los teléfonos, una barra en la parte de abajo de la pantalla tiene Reservar, Cómo llegar y Correo. "Correo" abre un mensaje en blanco para cathy@wiseacresorganic.com. ¿Debería abrir mejor la inscripción a la lista de correo?**
+
+Por qué importa: Los visitantes pueden esperar que "Correo" signifique la lista de correo. Hoy reciben un mensaje vacío para Cathy y no hay forma de unirse a la lista desde esa barra.
+
+Respuesta:
+
+
+### Pregunta 42
+
+**¿Por qué entrada deben pasar los autos en Hartis Road y dónde deben estacionarse los visitantes? (La pregunta 34 pide la foto; aquí lo necesitamos en palabras.)**
+
+Por qué importa: El sitio solo dice "en un vecindario con estacionamiento limitado", y el mapa de la granja marca un estacionamiento, una entrada y el registro sin palabras. Quienes vienen por primera vez tienen que adivinar qué portón tomar y dónde dejar el auto.
+
+Respuesta:
+
+
+### Pregunta 43
+
+**Si tienen un abogado o asesor, ¿podrían preguntarle: "Nuestro sitio web tiene una casilla donde un visitante puede escribir la dirección de su casa para ver el tiempo en auto hasta la granja. Al presionar el botón, la dirección va a servicios de mapas gratuitos de organizaciones sin fines de lucro (OpenStreetMap y un servidor de rutas que maneja FOSSGIS en Alemania). La página lo dice junto al botón y nuestro sitio no guarda la dirección. ¿Es suficiente o debemos cambiar algo?"**
+
+Por qué importa: No somos abogados y esto no es asesoría legal. No encontramos ninguna regla que lo prohíba, pero no pudimos revisarlo todo. Solo leímos resúmenes de buscadores sobre la ley (decían que Carolina del Norte no tenía una ley general de privacidad del consumidor en mayo de 2026), no la ley misma ni nada más reciente. No revisamos las reglas sobre la privacidad de menores ni las leyes de otros estados, y los dos servicios guardan sus propios registros por un tiempo que no pudimos encontrar.
+
+Respuesta:

@@ -156,7 +156,6 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
   .header-inner{height:auto;padding-block:0 8px}
   .page-hero,.hero{min-height:0!important;padding-block:8px!important;background:none!important;border:0}
   .reveal{opacity:1!important;transform:none!important}
-  html.cv .cv-sec{content-visibility:visible!important}
   .section{padding-block:12px}
   .two-col{grid-template-columns:1fr}
   .checklist-card{box-shadow:none;border:2px solid #000}
@@ -360,8 +359,6 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 /* The same for one looping drawing that is off screen inside a section that is on screen, and for everything while the tab is hidden */
 .anim-off,.anim-off *,.anim-off *::before,.anim-off *::after,
 html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animation-play-state:paused!important}
-/* Sections below the first screen are only laid out and painted once they are near the viewport. */
-html.cv .cv-sec{content-visibility:auto;contain-intrinsic-size:auto 900px}
 
 /* Back to top */
 .to-top{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:55;width:52px;height:52px;display:grid;place-items:center;padding:0;border:3px solid var(--ink);border-radius:50%;background:var(--sun);color:var(--ink);box-shadow:0 4px 0 var(--ink);cursor:pointer;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}

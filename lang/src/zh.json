@@ -268,7 +268,8 @@
   "{distance}, about {time} by car": "{distance}，开车约{time}",
   "We looked up: {place}": "我们查到的地点：{place}",
   "To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.": "前往 4701 Hartis Rd 的农场。按道路正常车速估算，未计入车流，高峰时段可能更久。",
-  "Open these directions in Google Maps": "在 Google 地图中打开这条路线"
+  "Open these directions in Google Maps": "在 Google 地图中打开这条路线",
+  "Hide this box": "隐藏此框"
  },
  "ui": {
   "t000eb0a5": "在花田里剪一束属于你的花束",
@@ -1295,6 +1296,7 @@
   "te49f839c": "输入你的地址，查看到农场有多少英里、要开多久",
   "t5caafaf3": "街道、城镇和州",
   "t89dd3672": "查看车程",
-  "tc37c5664": "点击按钮后，你的地址会发送到免费的 OpenStreetMap 服务来计算车程。本网站不会保存。"
+  "tc37c5664": "点击按钮后，你的地址会发送到免费的 OpenStreetMap 服务来计算车程。本网站不会保存。",
+  "tad115b68": "跟农场的小伙伴打个招呼"
  }
 }

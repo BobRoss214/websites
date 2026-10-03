@@ -186,6 +186,7 @@
         else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus({ preventScroll: true }); }
       });
       doc.addEventListener('click', (e) => { if (!box.contains(e.target)) close(); });
+      box.addEventListener('focusout', (e) => { if (!list.hidden && e.relatedTarget && !box.contains(e.relatedTarget)) close(); });   // Tab away closes it, like the More menu
     });
     doc.querySelectorAll('[data-lang-list]').forEach((ul) => {
       ul.innerHTML = LANGS.map((l) => '<li><button type="button" class="lang-link" data-lang="' + l.code + '" lang="' + l.html + '">' + l.name + '</button></li>').join('');

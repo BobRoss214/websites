@@ -117,6 +117,8 @@ def compose(c, slug, meta, body):
     if faq:
         graph.append({'@type': 'FAQPage', 'mainEntity': faq})
     ld = '\n  <script type="application/ld+json">\n' + json.dumps({'@context': 'https://schema.org', '@graph': graph}, indent=2, ensure_ascii=False).replace('<', '\\u003c') + '\n  </script>'
+    # The farm map's drawing code and points are only loaded by a page that has a map (data-farm-map).
+    scripts = [s for s in c['scripts'] if 'data-farm-map' in body or not re.search(r'js/(map-art|farm-map-data)\.js', s)]
     doc = f'''<!doctype html>
 <html lang="en" class="no-js">
 <head>{head.rstrip()}{extra}{ld}
@@ -130,7 +132,7 @@ def compose(c, slug, meta, body):
   <!-- ================= HEADER ================= -->
   {c['header']}
 
-  <main id="main">
+  <main id="main" tabindex="-1">
 {body}
   </main>
 
@@ -140,7 +142,7 @@ def compose(c, slug, meta, body):
 
 {c['sprite']}
 
-  {chr(10).join('  ' + s for s in c['scripts']).strip()}
+  {chr(10).join('  ' + s for s in scripts).strip()}
 </body>
 </html>
 '''
