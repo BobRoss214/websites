@@ -914,9 +914,11 @@
     items.filter((it) => it.type === 'area').sort((a, b) => A.polyArea(b.pts) - A.polyArea(a.pts)).forEach((it, idx) => {
       const g = el('g', {}, gAreas); interactive(g, it); g.innerHTML = A.area(it, idx);
     });
+    const pxu = Math.max(wrap.clientWidth, 1) / vb.w;   // screen px per drawing unit
+    const hitW = Math.max(16, Math.ceil(26 / pxu));   // invisible stroke around trails and roads: about 26px wide on any screen, so a finger can hit it
     items.filter((it) => it.type === 'path').forEach((it) => {
       const g = el('g', {}, gPaths); interactive(g, it);
-      g.innerHTML = A.pathArt(it) + `<path d="${it.pts.map((q, i) => (i ? 'L' : 'M') + q[0] + ' ' + q[1]).join('')}" fill="none" stroke="transparent" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" pointer-events="stroke"/>`;
+      g.innerHTML = A.pathArt(it) + `<path d="${it.pts.map((q, i) => (i ? 'L' : 'M') + q[0] + ' ' + q[1]).join('')}" fill="none" stroke="transparent" stroke-width="${hitW}" stroke-linecap="round" stroke-linejoin="round" pointer-events="stroke"/>`;
     });
     // Freehand scribbles from the Farm Map Marker are notes for Claude, so they are not drawn on the public map.
     const SCALE = 0.8, boxes = [];
@@ -925,7 +927,7 @@
       const [x, y] = pinPts.get(it.id), ox = it.pts[0][0], oy = it.pts[0][1], moved = Math.hypot(x - ox, y - oy) > 7;
       g.innerHTML = (moved ? `<path d="M${ox} ${oy}L${x} ${y}" stroke="${'#3a2416'}" stroke-width="1" stroke-dasharray="1.6 2.2" fill="none"/><circle cx="${ox}" cy="${oy}" r="1.8" fill="#fff" stroke="#3a2416" stroke-width="1"/>` : '') +
         `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${SCALE})"><ellipse class="mp-ring" cx="0" cy="1" rx="21" ry="7.5" fill="none" stroke="#ffc928" stroke-width="3.4"/><g class="mp-icon">${A.pinIcon(it.kind)}</g></g>` +
-        `<circle cx="${x.toFixed(1)}" cy="${(y - 13).toFixed(1)}" r="${(A.iconR(it.kind) + 3).toFixed(1)}" fill="transparent"/>`;
+        `<circle cx="${x.toFixed(1)}" cy="${(y - 13).toFixed(1)}" r="${Math.max(A.iconR(it.kind) + 3, Math.ceil(13 / pxu)).toFixed(1)}" fill="transparent"/>`;   // invisible hit circle: at least 26px across
       boxes.push({ x: x - 16, y: y - 34, w: 32, h: 36 });
     });
     items.filter((it) => it.type === 'text' && it.label).forEach((it) => {
@@ -945,11 +947,25 @@
       else { const m = A.along(it.pts, 0.5); x = m.x; y = m.y; }
       labelInfo.push({ key: keyOf(it), text: t(it.label), x, y, fs: FS, it, rings: it.type === 'pin' ? (kindOf(it.kind).g === 0 ? 2 : 1) : 5 });   // parking, check-in, restrooms may sit a little further off
     });
-    const placedLabels = A.layoutLabels(labelInfo, boxes, vb);
+    // Names should be as close to 12px on screen as they can be. Try 12, 11.75, ... down to the old size and keep the biggest one that
+    // still shows every name the old size showed (bigger ribbons need more room; nothing overlaps, and no name is dropped).
+    // The picture is scaled to the screen, so a size in px has to be converted to drawing units.
+    const kpx = pxu;
+    const layoutAt = (fs) => { const info = labelInfo.map((l) => Object.assign({}, l, { fs })); return { fs, placed: A.layoutLabels(info, boxes, vb) }; };
+    const shownNames = (r) => new Set(r.placed.map((p, i) => (p.shown ? labelInfo[i].text : null)).filter(Boolean));
+    const base = layoutAt(FS), baseNames = shownNames(base);
+    let best = base;
+    for (let px = 12; px >= 9; px -= 0.25) {
+      const fs = Math.max(6.6, Math.min(16, px / kpx));
+      if (fs <= FS + 0.05) break;
+      const cand = layoutAt(fs), names = shownNames(cand);
+      if ([...baseNames].every((n) => names.has(n))) { best = cand; break; }
+    }
+    const placedLabels = best.placed;
     placedLabels.forEach((pl, i) => {
       const li = labelInfo[i], k = kindOf(li.it.kind);
       const g = el('g', { class: 'mp-label' + (pl.shown ? '' : ' is-quiet'), 'data-key': li.key, transform: `translate(${pl.x.toFixed(1)} ${pl.y.toFixed(1)})` }, gLabels);
-      g.innerHTML = A.ribbon(li.text, FS, kindColor(k));
+      g.innerHTML = A.ribbon(li.text, best.fs, kindColor(k));
     });
 
     // north arrow

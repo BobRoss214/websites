@@ -94,7 +94,7 @@ html:lang(hi) :is(.rc i,.fs-now,.fs-this,.now-badge,.package-flag,.pill,.ss-now,
 html:lang(hi) .menu-desc,html:lang(zh) .menu-desc{font-style:normal}
 html:lang(zh) body{text-wrap:pretty}
 .cal-months{grid-template-columns:repeat(12,minmax(0,1fr))}
-@media (max-width:360px){.cal-months{letter-spacing:0;text-transform:none}}
+@media (max-width:360px){.cal-months{letter-spacing:0;text-transform:none}.cal-months span{margin-inline:-3px;text-align:center}}
 /* A long word that cannot break (an e-mail address) wraps instead of pushing a 320px screen sideways, whatever font the phone falls back to while Nunito loads or if it fails. */
 a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 @media (max-width:640px){.gh-banner{max-width:100%}.gh-banner span{white-space:normal}}
@@ -134,8 +134,8 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .checklist-card{padding:22px 24px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:0 6px 0 var(--ink)}
 .checklist-card h3{font-size:1.4rem}
 .checklist{margin:.6em 0 1em;padding:0;list-style:none;display:grid;gap:8px}
-.checklist label{display:flex;gap:.7em;align-items:flex-start;font-weight:700;cursor:pointer}
-.checklist input{flex:none;width:1.35em;height:1.35em;margin-top:.15em;accent-color:var(--green)}
+.checklist label{display:flex;gap:.7em;align-items:flex-start;font-weight:700;cursor:pointer;padding-block:4px;margin-block:-4px}
+.checklist input{flex:none;width:1.5rem;height:1.5rem;margin:0;accent-color:var(--green)}
 .checklist input:checked+*,.checklist label:has(input:checked){text-decoration:line-through;opacity:.6}
 .ticks-lg li{font-size:1.1rem;padding-block:.25em}
 .cta-band{background:var(--sun);border-block:3px solid var(--ink);padding-block:clamp(36px,6vw,64px);text-align:center}
@@ -410,3 +410,11 @@ html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animatio
   .price-list dd{text-align:left}
   .price-list dd.soon{justify-self:start}
 }
+/* Touch targets: these links were 18-23px tall. Padding (and an equal negative margin where the box is a block or flex item) makes the clickable box taller without moving anything. */
+.hero-note a{padding-block:.55em;margin-block:-.55em}
+.chips .chip-new a{padding:.75em .85em .75em .6em;margin:-.75em -.85em -.75em -.6em}
+.footer-contact a{padding-block:.6em}
+.announce a{padding-block:.5em;margin-block:-.5em}
+/* Vietnamese season buttons: the long names wrap to two lines on phones; without the little picture they fit on one. Opaque, so the sun no longer shows through the last one. */
+.season-switch button{background:#fff}
+@media (max-width:25.6875em){html:lang(vi) .season-switch .ss-ico{display:none}html:lang(vi) .season-switch button{white-space:nowrap;min-height:26px}}

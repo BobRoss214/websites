@@ -238,7 +238,7 @@ svg.layer-fore{overflow:visible}
 .fs-btn[aria-pressed="true"]{background:var(--sun);transform:translateY(-3px);box-shadow:0 7px 0 var(--ink)}
 .fs-art{width:auto;height:36px;transition:transform .3s cubic-bezier(.3,1.7,.5,1);transform-origin:50% 90%}
 .fs-btn[aria-pressed="true"] .fs-art{transform:rotate(-10deg) scale(1.15)}
-.fs-now{position:absolute;top:-13px;right:-4px;background:var(--red);color:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .68rem/1 var(--display);letter-spacing:.08em;text-transform:uppercase;padding:.42em .7em;pointer-events:none}
+.fs-now{position:absolute;top:-13px;right:-4px;background:var(--red);color:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .6875rem/1 var(--display);letter-spacing:.08em;text-transform:uppercase;padding:.42em .7em;pointer-events:none}
 .fs-notes{text-align:center;max-width:64ch}
 .fs-note:not([hidden]){animation:fadeDown .35s ease both}
 .fs-this{display:inline-block;margin:0 0 .5em;background:var(--ink);color:#fff;font:600 .72rem/1 var(--display);letter-spacing:.1em;text-transform:uppercase;padding:.5em .9em;border-radius:999px}
