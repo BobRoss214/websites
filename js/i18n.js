@@ -137,6 +137,61 @@
     doc.querySelectorAll('*').forEach((el) => swapAttrs(el, d, code));
   }
 
+  /* ------------------------------------------------------------------ *
+   * English names inside a translated page
+   *
+   * A screen reader chooses its voice from the lang attribute. A translated page says lang="es" (hi, zh-Hans, vi), so "Wise Pie" in the middle of
+   * a Spanish sentence would be read the Spanish way. The rule: the farm's own names (business, pizzas, street and town) and the services
+   * it points to (Google Maps, Instagram...) get lang="en", and nothing else. Ordinary English words are translated, not marked.
+   * Translations may not carry markup (tools/i18n.py refuses it), so this is done here, after the text is swapped, and again for text that
+   * JavaScript writes later (a watcher, only while the page is not English). The English page needs none of it.
+   * The wrappers are <wa-en> (the name) and <wa-run> (the text around it), not <span>: some styles target ".card span" and an unknown tag has none of its own.
+   * ------------------------------------------------------------------ */
+  const NAMES = /\b(?:\d{4} (?:Hartis|Poplin) R(?:oa)?d(?:,? Indian Trail, NC(?: 28079)?)?|Indian Trail(?:, NC(?: 28079)?)?|(?:Hartis|Poplin) R(?:oa)?d|Wise Acres Organic Farm|Wise Acres|Wise Pie|The GreenHouse|GreenHouse|The Bee Keeper|The Farmer Cathy|The Dill Pickle|Ricotta Pie|Halfzies|Google Maps|Google Pay|Google Calendar|Google|Apple Maps|Apple Pay|Apple|Outlook|Waze|Instagram|Facebook|USDA|OpenStreetMap)\b/g;
+  const HAS_NAME = new RegExp(NAMES.source);   // a copy without the "g" flag: .test() on a global one remembers where it stopped
+  const NOT_HERE = 'script,style,noscript,textarea,option,svg,[lang="en"],wa-en';   // already English (or not text a reader hears)
+
+  function markNames(root) {
+    if (W.lang === 'en' || !root || !HAS_NAME.test(root.textContent || '')) return;
+    if (root.closest(NOT_HERE)) return;
+    const found = [], walk = doc.createTreeWalker(root, 4, null);   // 4 = text nodes
+    while (walk.nextNode()) {
+      const n = walk.currentNode;
+      if (HAS_NAME.test(n.nodeValue) && n.parentElement && !n.parentElement.closest(NOT_HERE)) found.push(n);
+    }
+    found.forEach((n) => {
+      const text = n.nodeValue, parts = [];
+      let last = 0, m;
+      NAMES.lastIndex = 0;
+      while ((m = NAMES.exec(text))) {
+        if (m.index > last) parts.push(doc.createTextNode(text.slice(last, m.index)));
+        const en = doc.createElement('wa-en');
+        en.setAttribute('lang', 'en'); en.textContent = m[0];
+        parts.push(en);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) parts.push(doc.createTextNode(text.slice(last)));
+      // One element takes the place of the one text node. In a flex or grid box (buttons, the top bar, the FAQ questions) every piece would
+      // otherwise become a box of its own, with the gap between them and the spaces around the name lost.
+      let one = parts[0];
+      if (parts.length > 1) { one = doc.createElement('wa-run'); parts.forEach((x) => one.appendChild(x)); }
+      n.parentNode.replaceChild(one, n);
+    });
+  }
+
+  let watcher = null;
+  function watchNames() {
+    if (watcher || !window.MutationObserver || !doc.body) return;
+    watcher = new MutationObserver((records) => {
+      if (W.lang === 'en') return;
+      const tops = new Set();
+      records.forEach((r) => r.addedNodes.forEach((n) => { const el = n.nodeType === 1 ? n : n.nodeType === 3 ? n.parentElement : null; if (el) tops.add(el); }));
+      tops.forEach((el) => { if (el.isConnected) markNames(el); });
+      watcher.takeRecords();   // what was just changed is this function's own work: do not look at it again
+    });
+    watcher.observe(doc.body, { childList: true, subtree: true });
+  }
+
   let meta = null;
   function swapMeta() {
     if (!meta) {
@@ -152,6 +207,7 @@
     const info = LANGS.find((l) => l.code === code) || LANGS[0];
     doc.documentElement.lang = info.html;
     swapBlocks(code);
+    markNames(doc.body); if (code !== 'en') watchNames();
     swapMeta();
     markMenus();
   }
@@ -186,6 +242,7 @@
     const info = LANGS.find((l) => l.code === W.lang) || LANGS[0];
     doc.documentElement.lang = info.html;
     swapBlocks(W.lang);
+    markNames(doc.body); watchNames();
     swapMeta();
   };
 
@@ -245,7 +302,9 @@
   function markMenus() {
     const cur = LANGS.find((l) => l.code === W.lang) || LANGS[0];
     doc.querySelectorAll('.lang-cur').forEach((n) => { n.textContent = cur.short; });
-    doc.querySelectorAll('.lang-btn, [data-lang-list]').forEach((n) => n.setAttribute('aria-label', LANG_WORD[cur.code] || LANG_WORD.en));
+    const word = LANG_WORD[cur.code] || LANG_WORD.en;
+    doc.querySelectorAll('[data-lang-list]').forEach((n) => n.setAttribute('aria-label', word));
+    doc.querySelectorAll('.lang-btn').forEach((n) => n.setAttribute('aria-label', word + (cur.code === 'zh' ? '\uff1a' : ': ') + cur.name));   // "Language: English": a screen reader hears the current language, not just "Language"
     doc.querySelectorAll('[data-lang]').forEach((b) => {
       const on = b.dataset.lang === cur.code;
       if (b.classList.contains('lang-link')) b.setAttribute('aria-pressed', String(on));

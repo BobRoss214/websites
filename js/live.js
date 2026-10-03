@@ -132,7 +132,10 @@
       if (bar) bar.after(el); else doc.body.prepend(el);
     }
     $('.sn-label', el).textContent = t('Heads up:');
-    $('.sn-text', el).textContent = t(text);
+    const words = $('.sn-text', el);
+    words.textContent = t(text);
+    // the owner's English (no wording for this language, no translation of it either): said with an English voice, as the week note and photo texts are
+    if (lang() !== 'en' && !(n && typeof n === 'object' && n[W.lang]) && words.textContent === text) words.setAttribute('lang', 'en'); else words.removeAttribute('lang');
   }
 
   /* ------------------------------------------------------------------ *

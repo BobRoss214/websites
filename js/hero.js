@@ -1213,6 +1213,7 @@
         next.focus(); setSeason(next.dataset.season, true);
       });
     });
+    doc.addEventListener('wa:lang', () => $$('.ss-now').forEach((n) => { n.textContent = t('now'); }));   // written once above, so it is re-worded when the language changes
     switchEl.hidden = false;
   }
 

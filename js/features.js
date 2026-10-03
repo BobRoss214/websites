@@ -622,20 +622,22 @@
     if (!live) return;
     $$('a[data-signup-link]').forEach((a) => { a.setAttribute('href', '#follow-signup'); a.removeAttribute('target'); a.removeAttribute('rel'); });
     const email = $('input[type=email]', form), msg = $('[data-signup-msg]', form), btn = $('button[type=submit]', form);
-    const say = (text, kind) => { msg.textContent = text; msg.dataset.kind = kind || ''; };
+    let said = null;   // the message on show, kept as a function so a change of language words it again
+    const say = (words, kind) => { said = words; msg.textContent = words(); msg.dataset.kind = kind || ''; };
+    doc.addEventListener('wa:lang', () => { if (said) msg.textContent = said(); });
     let busy = false;   // aria-disabled instead of disabled: a disabled button throws keyboard focus back to the top of the page
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (busy) return;
       const val = email.value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) { email.setAttribute('aria-invalid', 'true'); say(t('That email address does not look right. Please check it and try again.'), 'err'); email.focus(); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val)) { email.setAttribute('aria-invalid', 'true'); say(() => t('That email address does not look right. Please check it and try again.'), 'err'); email.focus(); return; }
       email.removeAttribute('aria-invalid');
       const picked = $$('input[name=interest]:checked', form).map((i) => i.value);
-      busy = true; btn.setAttribute('aria-disabled', 'true'); say(t('Joining…'), '');
+      busy = true; btn.setAttribute('aria-disabled', 'true'); say(() => t('Joining…'), '');
       track('Signup submit', { interests: picked.length });
       if (!mc) {
         await new Promise((r) => setTimeout(r, 500));
-        say(t('Preview only: nothing was sent.'), 'ok'); busy = false; btn.removeAttribute('aria-disabled'); return;
+        say(() => t('Preview only: nothing was sent.'), 'ok'); busy = false; btn.removeAttribute('aria-disabled'); return;
       }
       const params = { EMAIL: val };
       // Mailchimp group checkboxes send their bit value (1, 2, 4, 8...), which is the number in the last [ ] of the field name.
@@ -645,9 +647,9 @@
       const q = mc.searchParams; if (q.get('u') && q.get('id')) params['b_' + q.get('u') + '_' + q.get('id')] = '';   // Mailchimp's empty bot-trap field
       const res = await jsonp(mc, params);
       busy = false; btn.removeAttribute('aria-disabled');
-      if (res.result === 'success') { say(t('Thanks! Check your email to confirm your signup. If you do not see it, look in your spam folder.'), 'ok'); form.reset(); }
-      else if (res.result === 'error' && /already subscribed/i.test(res.msg || '')) say(t('You are already on the list. Thank you!'), 'ok');
-      else { say(t('Sorry, that did not go through. Please try the “Join the email list” button below.'), 'err'); if (fallback) fallback.hidden = false; }
+      if (res.result === 'success') { say(() => t('Thanks! Check your email to confirm your signup. If you do not see it, look in your spam folder.'), 'ok'); form.reset(); }
+      else if (res.result === 'error' && /already subscribed/i.test(res.msg || '')) say(() => t('You are already on the list. Thank you!'), 'ok');
+      else { say(() => t('Sorry, that did not go through. Please try the “Join the email list” button below.'), 'err'); if (fallback) fallback.hidden = false; }
     });
   }
 
@@ -891,6 +893,10 @@
     const alt = own(p.alt), caption = own(p.caption);   // each can be one text or { en, es, ... }
     img.src = p.src; img.alt = t(alt); img.setAttribute('data-zoom', ''); if (W.bindZoom && !img._zoomBound) { W.bindZoom(img); img._zoomBound = true; }
     cap.textContent = caption ? t(caption) : ''; cap.hidden = !caption;
+    // the owner's English, with no wording for this language: said with an English voice (see markEnglish)
+    const english = (raw, shown) => lang() !== 'en' && !(raw && typeof raw === 'object' && raw[lang()]) && t(shown) === String(shown);
+    if (english(p.alt, alt)) img.setAttribute('lang', 'en'); else img.removeAttribute('lang');
+    if (caption && english(p.caption, caption)) cap.setAttribute('lang', 'en'); else cap.removeAttribute('lang');
     fig.hidden = false;
   }
 

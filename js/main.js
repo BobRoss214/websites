@@ -177,7 +177,7 @@
       img = $('#lightbox-img', box); cap = $('#lightbox-cap', box);
       wireDialog(box);
     };
-    const show = (src, alt, caption) => { ensure(); img.src = src; img.alt = alt || ''; cap.textContent = caption || ''; openDialog(box); };
+    const show = (src, alt, caption) => { ensure(); box.setAttribute('aria-label', t('Photo viewer')); $('.lightbox-close', box).setAttribute('aria-label', t('Close photo')); img.src = src; img.alt = alt || ''; cap.textContent = caption || ''; openDialog(box); };
     const bind = (el) => {
       if (el._zoom) return;
       el._zoom = true;
@@ -210,6 +210,8 @@
       nav.classList.toggle('is-open', open);
       doc.body.classList.toggle('nav-lock', open);
     };
+    // a change of language puts back the closed-menu label: say "Close menu" again if the menu is open
+    doc.addEventListener('wa:lang', () => toggle.setAttribute('aria-label', toggle.getAttribute('aria-expanded') === 'true' ? t('Close menu') : t('Open menu')));
     // The menu sits before its button in the page, so Tab from the button would skip it and land on the page behind it.
     // Opening it moves focus to its first link instead.
     toggle.addEventListener('click', () => {

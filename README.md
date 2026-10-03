@@ -377,6 +377,8 @@ writes goes through `WISE_ACRES.t("English text")`.
   `python3 tools/i18n.py dump es 0 50` prints missing strings with their ids; `merge` folded
   `lang/src/parts/<code>.*.json` (old drafts) into the main file; that folder was removed, so `merge` now only says there is nothing to merge.
 - Text that must stay as is (names, text JavaScript fills in) carries `data-no-i18n`.
+- English names inside a translated page (Wise Pie, The GreenHouse, the street and town, Google Maps...) are marked `lang="en"` by `js/i18n.js`, so a screen reader says them with an English voice.
+  The list is `NAMES` there: add a new business, pizza or service name to it. Owner text from `js/content.js` that falls back to English (a `notice` with no wording for the language) is marked the same way.
 - To add a language: add it to `LANGS` in `js/i18n.js`, create `lang/src/<code>.json`, run `build`.
   If it needs its own font, add a rule next to the `html:lang(hi)` rules in `css/extras.css`.
 
