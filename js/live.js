@@ -63,21 +63,24 @@
   }
 
   // The farm has no walk-up hours: it is open for reserved visits on certain days each season.
+  // `season` is the season that is really happening today (none between seasons, so no badge then).
   function farmStatus(now, season) {
-    const days = (W.hours && W.hours.farm && W.hours.farm[season]) || null;
+    const days = (season && W.hours && W.hours.farm && W.hours.farm[season.id]) || null;
     if (!days) return null;
-    const closed = (W.closures || []).includes(now.ymd);
-    if (days.includes(now.dow) && !closed) return { state: 'open', text: t('Reserved visits today') };
+    const closed = (ymd) => (W.closures || []).includes(ymd);
+    const inSeason = (ymd) => { const [y, m, d] = ymd.split('-').map(Number); return W.seasons.inWindow(season, new Date(y, m - 1, d, 12)); };
+    if (days.includes(now.dow) && !closed(now.ymd)) return { state: 'open', text: t('Reserved visits today') };
     for (let i = 1; i <= 7; i++) {
-      const dow = (now.dow + i) % 7;
-      if (days.includes(dow)) return { state: 'closed', text: t('No visits today. Next reserved day: {day}', { day: i === 1 ? t('tomorrow') : dayName(dow) }) };
+      const dow = (now.dow + i) % 7, ymd = addDays(now.ymd, i);
+      if (!inSeason(ymd)) break;   // the season ends before another reserved day
+      if (days.includes(dow) && !closed(ymd)) return { state: 'closed', text: t('No visits today. Next reserved day: {day}', { day: i === 1 ? t('tomorrow') : dayName(dow) }) };
     }
     return null;
   }
 
   function statusFor(name, date) {
     const now = easternParts(date || new Date());
-    if (name === 'farm') return farmStatus(now, W.seasons.current(date || new Date()));
+    if (name === 'farm') return farmStatus(now, W.seasons.live(date || new Date())[0]);
     const sch = W.hours && W.hours[name];
     return sch ? scheduleStatus(sch, now) : null;
   }

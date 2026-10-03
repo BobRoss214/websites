@@ -477,6 +477,7 @@
     live.forEach((s) => { $('.now-badge', $('#tab-' + s.id)).hidden = false; });
     const target = S.list.find((s) => s.id === S.current(now));
     select(target.id);
+    const next = S.list.filter((s) => !S.inWindow(s, now)).sort((a, b) => S.daysUntilStart(a, now) - S.daysUntilStart(b, now))[0] || target;
 
     // The hero's season switcher and these tabs stay in step.
     doc.addEventListener('wa:season', (e) => select(e.detail));
@@ -486,7 +487,7 @@
       if (!fact) return;
       fact.textContent = live.length
         ? t('{crop} \u2014 happening now', { crop: live.map((s) => t(s.crop)).join(' & ') })
-        : t('Next up: {crop} ({when})', { crop: t(target.crop), when: t(target.next) });
+        : t('Next up: {crop} ({when})', { crop: t(next.crop), when: t(next.next) });
     };
     renderFact();
     doc.addEventListener('wa:lang', renderFact);

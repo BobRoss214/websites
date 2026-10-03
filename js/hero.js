@@ -1143,8 +1143,11 @@
   /* ------------------------------------------------------------------ *
    * Build a season
    * ------------------------------------------------------------------ */
+  // data-only="fall winter": shown only while one of those seasons is on screen. Add data-in-season to show it only
+  // while that season is really happening (not in the weeks before or after, when the nearest season is shown).
   function applyOnly(id) {
-    $$('[data-only]').forEach((el) => el.toggleAttribute('hidden', !el.dataset.only.split(/\s+/).includes(id)));   // SVG elements have no .hidden property
+    const live = W.seasons.live().some((s) => s.id === id);
+    $$('[data-only]').forEach((el) => el.toggleAttribute('hidden', !el.dataset.only.split(/\s+/).includes(id) || (el.hasAttribute('data-in-season') && !live)));   // SVG elements have no .hidden property
   }
 
   function build(id) {
@@ -1183,7 +1186,10 @@
       applyOnly(id);
       // Between seasons the scene shows the nearest one, but its line ("It's strawberry season!") would not be true yet
       // (or any more), so the all-year line is shown instead. A season picked with the switcher still shows its own line.
-      if (!userAction && !W.seasons.live().some((s) => s.id === id)) $$('.hero-sub').forEach((p) => { p.hidden = p.dataset.only !== 'no-js'; });
+      if (!userAction && !W.seasons.live().some((s) => s.id === id)) {
+        $$('.hero-sub').forEach((p) => { p.hidden = p.dataset.only !== 'no-js'; });
+        $$('#hero-h > [data-only]').forEach((s, i) => { s.hidden = i > 0; });   // the first title is the all-year one
+      }
       markSwitch(id);
       sceneEl.classList.remove('is-swapping');
       if (userAction) doc.dispatchEvent(new CustomEvent('wa:season', { detail: id }));
@@ -1194,7 +1200,7 @@
   if (switchEl && W.seasonPicker !== false) {
     const now = W.seasons.current();
     buttons.forEach((b, i) => {
-      if (b.dataset.season === now) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
+      if (b.dataset.season === now && W.seasons.live().some((s) => s.id === now)) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
       b.addEventListener('click', () => setSeason(b.dataset.season, true));
       b.addEventListener('keydown', (e) => {
         const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
