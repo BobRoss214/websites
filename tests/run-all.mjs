@@ -15,8 +15,8 @@ import { startSite, loadPlaywright, axeSource, ms } from './lib.mjs';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 // the cheap checks first, then the browser tests from fast to slow
-const ORDER = ['public-site', 'pipeline', 'live', 'dated', 'drive', 'pause', 'gallery', 'analytics', 'print-qr', 'farm-seasons', 'npc', 'i18n', 'i18n-early', 'languages', 'axe', 'map', 'features', 'hero'];
-const NEEDS_BROWSER = (name) => !['public-site', 'pipeline'].includes(name);
+const ORDER = ['public-site', 'pipeline', 'consistency', 'live', 'dated', 'drive', 'pause', 'gallery', 'analytics', 'print-qr', 'farm-seasons', 'npc', 'i18n', 'i18n-early', 'languages', 'axe', 'map', 'features', 'hero'];
+const NEEDS_BROWSER = (name) => !['public-site', 'pipeline', 'consistency'].includes(name);
 const args = process.argv.slice(2), flags = args.filter((a) => a.startsWith('--')), words = args.filter((a) => !a.startsWith('--'));
 const names = fs.readdirSync(DIR).filter((f) => f.endsWith('.test.mjs')).map((f) => f.replace(/\.test\.mjs$/, ''))
   .sort((a, b) => (ORDER.indexOf(a) < 0 ? 99 : ORDER.indexOf(a)) - (ORDER.indexOf(b) < 0 ? 99 : ORDER.indexOf(b)) || a.localeCompare(b))
