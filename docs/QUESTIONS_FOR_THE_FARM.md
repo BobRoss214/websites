@@ -8,6 +8,8 @@ The website should say only what the farm has confirmed, so we ask before we pri
 
 **Do you host company picnics or team days at the farm?**
 
+Dashboard id: d02
+
 Why it matters: The prices now on the site for them ($750 and $1,400) are placeholders we put in, not your real prices.
 
 Answer:
@@ -16,6 +18,8 @@ Answer:
 ### Question 2
 
 **Can you send us the public link to the school-tour sign-up form (in Google Forms, press Send, then the link icon)?**
+
+Dashboard id: d03
 
 Why it matters: The link we have opens the form for editing, so teachers may be asked to sign in or ask for access.
 
@@ -26,6 +30,8 @@ Answer:
 
 **May we show your phone number, (704) 628-6232, on the website?**
 
+Dashboard id: d04
+
 Why it matters: It is not on the site yet. It is listed in public directories (BBB, YellowPages and Yelp).
 
 Answer:
@@ -34,6 +40,8 @@ Answer:
 ### Question 4
 
 **Is there a Thursday-evening Thai dinner at The GreenHouse this fall?**
+
+Dashboard id: d08
 
 Why it matters: One of your pages that we read seemed to say so and others did not, and the site says nothing about it. We do not want to print it, or leave it out, wrongly.
 
@@ -44,6 +52,8 @@ Answer:
 
 **Is there a haunted trail at the farm this fall?**
 
+Dashboard id: d48
+
 Why it matters: The site mentions it in several places, but we could not find it on your public pages.
 
 Answer:
@@ -52,6 +62,8 @@ Answer:
 ### Question 6
 
 **Are you offering u-pick tomatoes and basil this fall (every weekend, late September through October)?**
+
+Dashboard id: d48
 
 Why it matters: The site has a whole section, a menu link and prices for it, but we could not find it on your public pages.
 
@@ -62,6 +74,8 @@ Answer:
 
 **Are the tomato and basil prices right: $4.50 per pound for tomatoes and $1 per stem for basil?**
 
+Dashboard id: d48
+
 Why it matters: They are printed in several places on the site.
 
 Answer:
@@ -71,6 +85,8 @@ Answer:
 
 **Are all 15 tomato varieties and all 4 basil varieties listed on the site growing this year?**
 
+Dashboard id: none (no question needed)
+
 Why it matters: The site says "more than a dozen tomato varieties" because the counts we were given did not agree.
 
 Answer:
@@ -79,6 +95,8 @@ Answer:
 ### Question 9
 
 **Is it OK to say on the site that the tomatoes and basil are "grown by our farm manager, who has about six years in agriculture"?**
+
+Dashboard id: none yet (later)
 
 Why it matters: It is a personal detail about someone who works for you, so we want your OK.
 
@@ -91,6 +109,8 @@ Answer:
 
 **Does the scavenger hunt still happen at the farm?**
 
+Dashboard id: none (no question needed)
+
 Why it matters: Some of your pages that we read still mention one; our site no longer does.
 
 Answer:
@@ -99,6 +119,8 @@ Answer:
 ### Question 11
 
 **Is the maze this year a small sunn hemp maze?**
+
+Dashboard id: d07
 
 Why it matters: The site calls it a "small sunn hemp maze" but the farm map calls it a "corn maze", so they disagree.
 
@@ -109,6 +131,8 @@ Answer:
 
 **Will Christmas trees be sold at The GreenHouse (5503 Poplin Rd), starting the Friday after Thanksgiving?**
 
+Dashboard id: d50, d01
+
 Why it matters: The site says so in many places, so we want to be sure.
 
 Answer:
@@ -117,6 +141,8 @@ Answer:
 ### Question 13
 
 **Is blueberry and sunflower season usually "mid- to late June through early July"?**
+
+Dashboard id: none (no question needed)
 
 Why it matters: A page of yours that we read says "June - early July", and the site says "mid- to late June through early July".
 
@@ -127,6 +153,8 @@ Answer:
 
 **Do you still run summer programs?**
 
+Dashboard id: d59
+
 Why it matters: Your current website has a Summer Programs page, and the new site has nothing about it.
 
 Answer:
@@ -136,6 +164,8 @@ Answer:
 
 **Are snacks, drinks and local goods for sale at the farm in spring and summer, as they are in fall?**
 
+Dashboard id: d58
+
 Why it matters: We ticked this for spring and summer as our own plan, not from your words.
 
 Answer:
@@ -144,6 +174,8 @@ Answer:
 ### Question 16
 
 **Can you re-mark the wagon-ride route on the farm map so that it stays inside the picture?**
+
+Dashboard id: none yet (later)
 
 Why it matters: Four points of the route fall outside the photo, so the route bends along the edge of the map.
 
@@ -156,6 +188,8 @@ Answer:
 
 **Are these hours right: farm visits Thursday to Sunday in fall; The GreenHouse Friday to Sunday, 10 am to 8 pm; Wise Pie at The GreenHouse Friday to Sunday, 4 to 8 pm; pizza at the farm 10 am to 4 pm?**
 
+Dashboard id: d51, d09
+
 Why it matters: The "open now" badges and many lines of text use them.
 
 Answer:
@@ -164,6 +198,8 @@ Answer:
 ### Question 18
 
 **Are the nine pizzas and their prices on the site right ($15 to $17; gluten-free crust +$9; vegan cheese +$3)?**
+
+Dashboard id: none (no question needed)
 
 Why it matters: We found no public copy of the prices; they come only from the menu you gave us.
 
@@ -174,6 +210,8 @@ Answer:
 
 **Can you send us your current prices for pumpkins, strawberries, blueberries, flowers, snacks and drinks, ice cream and Christmas trees?**
 
+Dashboard id: d54, d19
+
 Why it matters: Until we have them, those lines on the site say "Prices coming soon".
 
 Answer:
@@ -183,6 +221,8 @@ Answer:
 
 **Are you happy for the site to say "We're the only USDA-certified organic strawberry farm in the area"?**
 
+Dashboard id: none (no question needed)
+
 Why it matters: It is a strong claim and we could not check it ourselves.
 
 Answer:
@@ -191,6 +231,8 @@ Answer:
 ### Question 21
 
 **When a day is full, do you keep a waitlist that people can join by emailing cathy@wiseacresorganic.com?**
+
+Dashboard id: none (no question needed)
 
 Why it matters: The weekly box can show an "Email us to join the waitlist" button for full days, and we did not see a waitlist mentioned on your current pages.
 
@@ -203,6 +245,8 @@ Answer:
 
 **Is bookeo.com/wiseacres?category=41576YNUUTJ173F2927356 the right booking page for every farm visit (with or without pizza, and parties)?**
 
+Dashboard id: d46
+
 Why it matters: The "Reserve" buttons on the site go there, and we could not open that page ourselves.
 
 Answer:
@@ -211,6 +255,8 @@ Answer:
 ### Question 23
 
 **Is wise-pie-wood-fired-at-wise-acres.square.site/?location=CVJNFDQTZCA3B the page where people pre-order Wise Pie pizza?**
+
+Dashboard id: d47
 
 Why it matters: It is behind the "Pre-order pizza" buttons, and we could not find that address on your pages.
 
@@ -221,6 +267,8 @@ Answer:
 
 **Is facebook.com/wiseacresnc your main Facebook page?**
 
+Dashboard id: d28
+
 Why it matters: We found it by searching, and other pages with similar names exist.
 
 Answer:
@@ -229,6 +277,8 @@ Answer:
 ### Question 25
 
 **Are you happy for the site to ask people to use #wiseacresorganic when they post photos?**
+
+Dashboard id: d29
 
 Why it matters: That hashtag was our suggestion, not yours.
 
@@ -239,6 +289,8 @@ Answer:
 
 **Do you want an email sign-up form with interest choices (strawberries, pumpkins, pizza and so on) on the site, and can you send us the Mailchimp form code?**
 
+Dashboard id: none yet (later)
+
 Why it matters: Until it is set up, the site shows a plain "Join the email list" button instead.
 
 Answer:
@@ -248,6 +300,8 @@ Answer:
 
 **Can you send us your Google review link (in your Google Business Profile, choose "Ask for reviews")?**
 
+Dashboard id: d06
+
 Why it matters: Until we have it, the "Leave a Google review" buttons just open the farm on Google Maps.
 
 Answer:
@@ -256,6 +310,8 @@ Answer:
 ### Question 28
 
 **Do both Axios Charlotte links under "In the news" open an article about Wise Acres with the headline and year the site shows?**
+
+Dashboard id: d56
 
 Why it matters: We found them by searching and could not open the articles ourselves.
 
@@ -268,6 +324,8 @@ Answer:
 
 **Are strollers and wheelchairs allowed in the fields?**
 
+Dashboard id: d55
+
 Why it matters: The site only says the fields may have irrigation lines, stakes and equipment, and asks people to email before they come.
 
 Answer:
@@ -276,6 +334,8 @@ Answer:
 ### Question 30
 
 **Will cathy@wiseacresorganic.com be read and answered, since the site asks visitors to email it?**
+
+Dashboard id: d52
 
 Why it matters: Visitors are told to email Cathy with questions, for example about getting around the farm with a stroller or wheelchair.
 
@@ -286,6 +346,8 @@ Answer:
 
 **Can you tell us what the paths are like (surface and slope), when the farm is quieter, and whether there is a baby-changing place?**
 
+Dashboard id: d55
+
 Why it matters: The Accessibility section does not say yet; it only lists what the farm has already published.
 
 Answer:
@@ -294,6 +356,8 @@ Answer:
 ### Question 32
 
 **Do these drive times look right: Stallings 10, Matthews 15, Mint Hill 20, Monroe 20, Waxhaw 25 and Uptown Charlotte 30 minutes, with light traffic?**
+
+Dashboard id: none yet (later)
 
 Why it matters: They are our estimates, not yours.
 
@@ -304,6 +368,8 @@ Answer:
 
 **Can you send us a few real customer reviews, with the reviewers' permission, to show on the site?**
 
+Dashboard id: none yet (later)
+
 Why it matters: The quote cards in the "What families say" section stay hidden until there are real quotes. The buttons to Google, Tripadvisor and Yelp are always there.
 
 Answer:
@@ -312,6 +378,8 @@ Answer:
 ### Question 34
 
 **Can you send us a photo of the farm gate and where to park?**
+
+Dashboard id: d35
 
 Why it matters: We would show it on the First-visit page so people know where to turn in; until then that picture is left out.
 
@@ -324,6 +392,8 @@ Answer:
 
 **Can you send us the exact spot of the farm, as two numbers from Google Maps? (On a computer: open Google Maps, right-click the place where visitors turn in, and click the two numbers at the top of the menu to copy them. On a phone: touch and hold that place; the numbers show in the search box or in the sheet that opens. Paste both numbers here.)**
 
+Dashboard id: d11
+
 Why it matters: The Drive time box finds the farm by searching for "4701 Hartis Rd, Indian Trail, NC 28079" in OpenStreetMap, which can put the pin in the wrong place. With the exact spot the box is more accurate, answers about a second faster and sends half as many requests to the free search service.
 
 Answer:
@@ -332,6 +402,8 @@ Answer:
 ### Question 36
 
 **The Drive time box uses a free routing server whose own page says its demo is for "reasonable, non-commercial use-cases". Should we (a) write to the people who run it and ask whether a small farm website is allowed, (b) leave it as it is and watch it, (c) move to Mapbox later (it needs a free account in the farm's name), or (d) switch the box off?**
+
+Dashboard id: d10
 
 Why it matters: The site sells farm visits, so it is a business, and the free server can refuse it at any time without warning. If it does, the box says "The lookup is not working right now" and shows a Google Maps button, so nothing breaks, but visitors lose the miles and minutes. The details are in step 3.13 of the launch checklist.
 
@@ -342,6 +414,8 @@ Answer:
 
 **From January to April, what should visitors see: is the u-pick farm closed, what are The GreenHouse's hours, and when do you stop selling Christmas trees?**
 
+Dashboard id: d01, d09
+
 Why it matters: The site shows fall wording all year. We tried it on a computer set to 20 January: the Visit area still shows "Fall 2026 reservations", the package prices, the "Fall 2026 reservation schedule" and a "Reserve now" button, and the Shop starts its prices with "Fall 2026 prices for a farm visit". The GreenHouse is shown open Friday to Sunday, 10 am to 8 pm, all year, and "Christmas trees are here." stays up until the site switches to spring, about 10 February. The farm card itself is already right in winter: it says picking is seasonal and that strawberries come next, around mid-April. (Question 12 asks when trees start; this asks what happens after they end.)
 
 Answer:
@@ -350,6 +424,8 @@ Answer:
 ### Question 38
 
 **Can you send us the original, full-size files of the 13 new photos, with the same file names?**
+
+Dashboard id: d12
 
 - `baby-goat-bunny-hoodie-happy-easter.webp`
 - `blueberries-in-bowl-in-sunflower-field-dusk.webp`
@@ -374,6 +450,8 @@ Answer:
 
 **May we show the photos with people in them, and how should we credit them? In particular, the photo of four people at a Foster Village table (`foster-village-table.webp`): who took it, and do those four people, and Foster Village, agree to it being on your website? Also, is the animal in `goat-in-green-frog-hat.webp` a goat?**
 
+Dashboard id: d31, d33
+
 Why it matters: Faces and an organization's name should not be on the website without a yes. This photo is already in the photo gallery (the last picture, captioned "Foster Village table"), so we need your answer before the site goes live; if it is No, we take the picture out. Two other new photos show a person's arm or hair but no face (the Easter baby goat and the frog-hat animal). The frog-hat animal is in the "Meet the goats" pictures at The GreenHouse, and we called it a goat only from its file name; its description on the site says "a small animal". If it is a lamb or another animal, "Meet the goats" would be wrong.
 
 Answer:
@@ -382,6 +460,8 @@ Answer:
 ### Question 40
 
 **Four of the new photos have words printed in the picture. They are in the photo gallery now (the last pictures there, and nowhere else on the site). May we keep them there, or should we take them out? (You can also send versions without the words.)**
+
+Dashboard id: d13, d32
 
 - `baby-goat-bunny-hoodie-happy-easter.webp`: "Happy Easter!"
 - `blueberries-sunflowers-happy-fathers-day.webp`: "Happy Father's Day!"
@@ -397,6 +477,8 @@ Answer:
 
 **On phones, a bar at the bottom of the screen has Reserve, Directions and Email. "Email" opens a blank message to cathy@wiseacresorganic.com. Should it open the email sign-up (the email list) instead?**
 
+Dashboard id: none yet (later)
+
 Why it matters: Visitors may expect "Email" to mean the email list. Today they get an empty message to Cathy, and there is no way to join the list from that bar.
 
 Answer:
@@ -406,6 +488,8 @@ Answer:
 
 **Which entrance do cars use on Hartis Road, and where should visitors park? (Question 34 asks for the photo; here we need it in words.)**
 
+Dashboard id: d35
+
 Why it matters: The site only says "in a neighborhood with limited parking", and the farm map marks a parking area, an entrance and check-in without words. First-time visitors have to guess which gate to take and where to leave the car.
 
 Answer:
@@ -414,6 +498,8 @@ Answer:
 ### Question 43
 
 **If you have a lawyer or adviser, could you ask them: "Our website has a box where a visitor can type a home address to see the drive time to the farm. When they press the button, the address goes to free outside map services run by non-profits (OpenStreetMap, and a routing server run by FOSSGIS in Germany). The page says so next to the button, and our site does not keep the address. Is that enough, or should we change something?"**
+
+Dashboard id: d10
 
 Why it matters: We are not lawyers and this is not legal advice. We found no rule that forbids it, but we could not check everything. We read only search-engine summaries of the law (they said North Carolina had no general consumer privacy law as of May 2026), not the law itself or anything newer. We did not check children's privacy rules or other states' laws, and the two services keep their own records for a time we could not find.
 
@@ -428,6 +514,8 @@ We read your printed Fall Menu 2026 line by line and compared it with the websit
 
 **For the "Yes pizza" package on the site ($31 base, "Includes 2 Wise Pie pizzas, plus $3 per person"), which pizzas can a family choose, and do the gluten-free crust (+$9) and the vegan cheese (+$3) cost extra on top of the $31?**
 
+Dashboard id: d16
+
 Why it matters: The printed menu does not mention the package. At menu prices two pizzas cost $30 to $34, so $31 only makes sense if the choice is limited or the package has its own rule, and a family that reads "2 Wise Pie pizzas" will assume any two. Please also check that the booking page says the same.
 
 Answer:
@@ -436,6 +524,8 @@ Answer:
 ### Question 45
 
 **May we add a short allergen line near the menu, and what should it say? For example: which common allergens are in your dough, sauce and cheeses (wheat and milk, at least), and is the gluten-free crust made and baked apart from the other pizzas, or in the same place?**
+
+Dashboard id: d17
 
 Why it matters: Neither the printed menu nor the site has an allergen or cross-contact note, yet both offer "gluten-free crust" and "vegan cheese", and the site's questions answer "Is there a vegan or gluten-free option?" with "Yes". A guest with celiac disease or a food allergy may take that to mean it is safe for them. We will write only what you tell us.
 
@@ -446,6 +536,8 @@ Answer:
 
 **Does The Dill Pickle pizza have cheese, and which pizzas can be made fully vegan with the vegan cheese?**
 
+Dashboard id: d49, d17
+
 Why it matters: The printed menu lists no cheese for The Dill Pickle ("homemade dough, organic olive oil, organic garlic, dill pickles"), and the site copies it. If it does have cheese, a word is missing on the menu and on the site; if it does not, guests who avoid dairy will ask. The site also does not say which pizzas can be vegan (The Bee Keeper has honey, for example).
 
 Answer:
@@ -454,6 +546,8 @@ Answer:
 ### Question 47
 
 **Is the oven "700 degrees" in Fahrenheit, and do you want to keep the number?**
+
+Dashboard id: d18
 
 Why it matters: "Real pizza from a 700-degree oven" is the heading of the Wise Pie section and page, and it appears in the page description, in the translations and in the picture shown when the page is shared. The printed menu gives no temperature. In Spanish, Hindi, Chinese and Vietnamese, "700 degrees" with no unit is normally read as Celsius, which would be about 1,290°F, so we would like to write "700°F" if that is what you mean.
 
@@ -464,6 +558,8 @@ Answer:
 
 **Do the prices, names and sizes on your Square pre-order page match the printed Fall Menu 2026 (nine pizzas at $15 to $17; gluten-free crust +$9; vegan cheese +$3)?**
 
+Dashboard id: d47
+
 Why it matters: The site's menu is copied from the printed picture. We could not open the live Square or booking pages from where we work, so we could not compare them. If the Square page differs, someone could order at a price the site does not show. (Question 18 asks whether the site's prices are right and question 23 whether the link is right; this one asks whether the two places agree with each other.)
 
 Answer:
@@ -472,6 +568,8 @@ Answer:
 ### Question 49
 
 **The site says the pre-order link is "posted 5 days ahead". Five days before what: each pizza day, or the weekend? On which day and at what time do you post it, and where do people find it (Instagram, the website, a message)?**
+
+Dashboard id: d53
 
 Why it matters: "5 days ahead" can be read in more than one way. It is on the home page (twice), on the Wise Pie page and on the pre-order QR sign, so a visitor who looks too early or too late finds no link.
 
@@ -482,6 +580,8 @@ Answer:
 
 **The site says pizzas from a farm reservation are "ready for pick-up 1 hour after your reservation time". Is it always 1 hour, even for a late reservation (a 3:30 pm reservation would give 4:30 pm, after the farm side's 10 am to 4 pm hours on the site), and where exactly do people pick them up?**
 
+Dashboard id: d20
+
 Why it matters: It is the only promise on the site about when a reserved pizza will be ready. It is on the home page and on the Wise Pie page. The site says "at the wood-fired oven at The GreenHouse", which is next door to the farm.
 
 Answer:
@@ -490,6 +590,8 @@ Answer:
 ### Question 51
 
 **Is every pizza 12 inches and sold only as a whole pie, and does one pizza really serve about 2 to 3 adults or 3 to 4 children?**
+
+Dashboard id: d21
 
 Why it matters: None of this is on the printed menu. It is on the home page (in the Wise Pie section and in the package card) and twice on the Wise Pie page, once in its questions, which search engines also read.
 
@@ -500,6 +602,8 @@ Answer:
 
 **Is it right to say "locally sourced mozzarella" and "supporting local farms and artisans"?**
 
+Dashboard id: d22
+
 Why it matters: The printed menu says only that the mozzarella comes from Uno Alla Volta in Charlotte, made from milk from an Amish farm northeast of Charlotte. "Locally sourced" and "local farms and artisans" are in the opening lines of the Wise Pie section and page, and they are not on the printed menu. If you buy other ingredients from local farms or makers, tell us which, and we will say so.
 
 Answer:
@@ -509,6 +613,8 @@ Answer:
 
 **What do you sell at The GreenHouse besides pizza: which ice cream (is it Waxhaw Creamery?), which drinks (is "cider" hard cider?) and anything else? Can you send the prices (question 19 also asks for them)?**
 
+Dashboard id: d19
+
 Why it matters: The printed menu is only pizza, so nothing from you backs up the ice cream and drinks that the site lists on the home page, in The GreenHouse section, in the Shop and on the contact card. The farm side of the site says "beer, hard cider and wine", while The GreenHouse side says "beer, wine and cider", and families may read "cider" alone as apple cider without alcohol.
 
 Answer:
@@ -517,6 +623,8 @@ Answer:
 ### Question 54
 
 **Can people sit and eat at The GreenHouse (the Wise Pie page says "drop-in dining"), or is pizza take-away only? If there are tables, where are they?**
+
+Dashboard id: d57
 
 Why it matters: The site says "First come, first served for drop-in dining or pick-up" but not whether there are tables, shade or heat. A family with small children will want to know before they come.
 
