@@ -2848,6 +2848,20 @@ if (section('13v. Saved data from an older version: a round that names a charity
   check(verdict.hashOk && verdict.noPool && /saved before the site kept its pool/.test(verdict.html), 'a genuine old round without a saved pool is explained, not left to read like cheating', verdict.html.slice(0, 160));
   check(verdict.swappedHash === false && !verdict.swappedNoPool, 'a tampered old round does not get that excuse');
   await p.close();
+
+  // typing in the small-screen search, then widening the window across the 920 px line: the box moves into the top bar and must keep focus and its results
+  const q = await newPage({ viewport: { width: 390, height: 800 }, mobile: true });
+  await openApp(q, '');
+  await q.fill('#search-input', 'oxfam');
+  await q.waitForFunction(() => document.querySelectorAll('#search-list li').length > 0, null, { timeout: 8000 }).catch(() => {});
+  const fits = await q.evaluate(() => !!document.querySelector('[data-role="lobbysearch"] #search'));
+  check(fits, 'on a phone the search box sits at the top of the lobby');
+  await q.setViewportSize({ width: 1280, height: 900 });
+  await q.waitForFunction(() => !document.querySelector('[data-role="lobbysearch"] #search'), null, { timeout: 8000 }).catch(() => {});
+  await q.waitForTimeout(250);
+  const kept = await q.evaluate(() => ({ focused: document.activeElement && document.activeElement.id === 'search-input', text: document.getElementById('search-input').value, listOpen: !document.getElementById('search-list').hidden && document.querySelectorAll('#search-list li').length > 0 }));
+  check(kept.text === 'oxfam' && kept.focused && kept.listOpen, 'widening the window keeps the typed text, the focus and the open results list', JSON.stringify(kept));
+  await q.close();
 }
 
 if (section('13n. Fair Play? in plain language')) {

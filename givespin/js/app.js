@@ -181,8 +181,16 @@
     if (!box || !bar) { return; }
     var slot = document.querySelector('[data-role="lobbysearch"]');
     var small = !!(window.matchMedia && window.matchMedia('(max-width: 920px)').matches);
-    if (small && slot) { if (box.parentNode !== slot) { slot.appendChild(box); } }
-    else if (box.parentNode !== bar) { bar.insertBefore(box, $('.topbar__right', bar)); }
+    var input = $('#search-input');
+    var typing = !!input && document.activeElement === input;
+    var moved = false;
+    if (small && slot) { if (box.parentNode !== slot) { slot.appendChild(box); moved = true; } }
+    else if (box.parentNode !== bar) { bar.insertBefore(box, $('.topbar__right', bar)); moved = true; }
+    // moving the box in the page drops its focus and closes its list: put both back, so a tablet turned mid-typing keeps going
+    if (moved && typing) {
+      try { input.focus({ preventScroll: true }); } catch (e) { /* not focusable right now */ }
+      if (input.value) { runSearch(input.value); }
+    }
   }
 
   function chooseSearch(i) {
