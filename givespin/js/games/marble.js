@@ -17,6 +17,8 @@
  * Big solo races do not wait for the whole race to be worked out: the gate opens as soon as the physics has seen the first
  * marbles cross the line (the winner is known then), and the rest of the race is worked out in small slices while the replay
  * plays, always a little ahead of it. The next race of the same board is started the same way while this one is still playing.
+ * A live table works its race out during the betting: the physics only needs to know how many marbles there are (the board
+ * keeps its size while bets come in), not who backs what, and the drawn charity is swapped in once the table has locked.
  *
  * The track is a snake: `pathAt` maps a distance along the centre line to a point and heading.
  */
@@ -752,9 +754,50 @@
 
   /* ======================================================================== replay */
 
+  /**
+   * The geometry of a board of n marbles on a canvas W x H: the track and the starting pack (a long pack is relaxed first, which for a
+   * thousand marbles takes tens of milliseconds). It depends on nothing else, and a live table sends its board again on every bet, so
+   * the last few are kept.
+   */
+  var layoutMemo = {}, layoutKeys = [];
+  function geoFor(n, W, H) {
+    var key = n + '|' + W + '|' + H;
+    if (layoutMemo[key]) { return layoutMemo[key]; }
+    var sh = shape(n, W);
+    var t = sh.t;
+    var gap = sh.gap;
+    var hw = sh.hw;
+    var rowGap = sh.rowGap;
+    var rt = sh.rt;
+    var xA = PAD + rt + hw + 6;
+    var xB = Math.max(xA + 90, sh.Wv - PAD - rt - hw - 6);
+    var straight = xB - xA;
+    var R = Math.ceil(n / t.lanes);                  // rows of marbles in the starting pack
+    var gate = R * gap + 6;                          // distance along the track to the start gate (may run round the first turn)
+    var pileLen = Math.min(Math.max(sh.packLen * 1.3, 150), straight - 4);
+    var total = (t.rows - 1) * (straight + Math.PI * rt) + straight;
+    var geo = {
+      rows: t.rows, rowGap: rowGap, rt: rt, hw: hw, xA: xA, xB: xB, straight: straight, y0: hw + 36,
+      r: t.r, gap: gap, lanes: t.lanes, gate: gate, total: total, finish: total - pileLen, W: sh.Wv, H: sh.Hv, n: n, k: sh.k, cw: W, ch: H
+    };
+    geo.track = buildTrack(geo);
+    var pack = packSlots(geo, n);
+    if (t.r + 4 + (pack.rows - 1) * gap + t.r > straight) {
+      var sim = createSim(geo.track, pack.x, pack.y, pack.sg, 1);
+      sim.relax(n > 400 ? 90 : 140, gate);
+      pack.x = sim.X; pack.y = sim.Y; pack.sg = sim.SG; pack.overlap = sim.overlap;
+    }
+    pack.s0 = t.r + 4 + (pack.rows - 1) * gap;       // where the front row of the pack stands along the track
+    geo.pack = pack;
+    if (layoutKeys.length >= 4) { delete layoutMemo[layoutKeys.shift()]; }
+    layoutMemo[key] = geo;
+    layoutKeys.push(key);
+    return geo;
+  }
+
   // The pre-simulation is kept between races (a field of the same size on the same canvas needs the same run of the track),
   // and big fields are worked out a little at a time while the board sits there, so pressing the button starts at once.
-  var simCache = { key: '', entry: null, timer: 0 };
+  var simCache = { key: '', entry: null, timer: 0, kind: '', slices: 0, warmMs: 0, warmMax: 0 };       // (the last three are counters for the tests)
 
   function simKey(g) { return [g.n, g.W, g.H, Math.round(g.xA), Math.round(g.xB), g.finish | 0].join('|'); }
 
@@ -830,40 +873,75 @@
     return simCache.entry;
   }
 
+  // The background work takes about 30 % of the time of a frame: one slice per frame, a bit under half as long as the rest of the frame takes
+  // (5 ms of a 12 ms frame on a computer, 15 ms of a 35 ms frame on a slow phone), never under 3 ms (so it still gets done in the betting time on a
+  // busy machine) and never over 15 ms.
+  var WARM_SHARE = 0.43, WARM_MIN_MS = 3, WARM_MAX_MS = 15;
+  var warmSched = { cost: 12, lastT: 0, used: 0 };     // what a frame takes without the slice (smoothed), the time of the last frame, and what the last slice took
+
+  /** Stops the background work that is waiting for its turn (a frame, or a timer). */
+  function cancelWarm() {
+    if (simCache.timer) {
+      if (simCache.kind === 'raf') { window.cancelAnimationFrame(simCache.timer); } else { clearTimeout(simCache.timer); }
+      simCache.timer = 0;
+    }
+  }
+
   /**
-   * Big fields: start working out the race in the background as soon as the board is shown. It works in the time the
-   * browser has to spare between frames (a small fixed slice where it cannot say), so the page stays smooth meanwhile.
+   * Big fields: start working out the race in the background as soon as the board is shown (for a live table that is the whole
+   * betting time, the pre-simulation does not depend on who backs what or who wins). It works one small slice per screen frame,
+   * right after the frame has been drawn, about 30 % of the time of a frame (so a slow phone gets longer slices, which it needs, and a fast
+   * computer shorter ones), and waits while the tab is hidden (no frames then). There is one slice waiting at most, and one race being worked out at a time.
+   * (Idle-time callbacks were not used: a board that is drawn on every frame, and a live board that is also redrawn on every bet, leaves
+   * them almost no idle time, and in a live table hardly any of the work was done in the 28 s of betting.)
    */
   function warmUp(g) {
     if (g.n < 70 || typeof setTimeout !== 'function') { return; }
     var entry = entryFor(g);
     if (entry.done || simCache.timer) { return; }
-    var idle = typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function' && typeof window.cancelIdleCallback === 'function';
-    var tick = function (dl) {
+    var raf = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function' && typeof window.cancelAnimationFrame === 'function';
+    var slice = function () {
       simCache.timer = 0;
       var en = simCache.entry;
       if (!en || en.done || en.claimed) { return; }
       var ms = 6;
-      if (idle && dl && dl.timeRemaining) { ms = dl.didTimeout ? 4 : Math.min(11, dl.timeRemaining() - 2); }
-      try { if (ms >= 2) { advance(en, ms); } }
+      if (raf) { ms = Math.max(WARM_MIN_MS, Math.min(WARM_MAX_MS, warmSched.cost * WARM_SHARE)); }
+      var t0 = performance.now();
+      try { advance(en, ms); }
       catch (err) { simCache.entry = null; if (window.console && console.error) { console.error(err); } return; }       // (the next race is just not prepared ahead: it will be worked out when it is asked for)
+      var used = performance.now() - t0;
+      warmSched.used = used;
+      simCache.slices += 1;
+      simCache.warmMs += used;
+      if (used > simCache.warmMax) { simCache.warmMax = used; }
       if (!en.done) { next(); }
     };
     var next = function () {
-      simCache.idle = idle;
-      simCache.timer = idle ? window.requestIdleCallback(tick, { timeout: 300 }) : setTimeout(tick, 40);
+      if (raf) {
+        simCache.kind = 'raf';
+        simCache.timer = window.requestAnimationFrame(function (t) {
+          var gap = t - warmSched.lastT;
+          warmSched.lastT = t;
+          if (gap > 0 && gap < 400) { warmSched.cost = 0.7 * warmSched.cost + 0.3 * Math.max(4, gap - warmSched.used); }       // (a hidden tab or a long pause is not a frame time)
+          warmSched.used = 0;
+          simCache.kind = 'tm';
+          simCache.timer = setTimeout(slice, 0);       // right after this frame has been drawn
+        });
+      } else {
+        simCache.kind = 'tm';
+        simCache.timer = setTimeout(slice, 40);
+      }
     };
-    simCache.idle = false;
+    simCache.kind = 'tm';
     simCache.timer = setTimeout(function () { simCache.timer = 0; next(); }, 150);
   }
 
-  /** Leaving the game: stop working out the next race and let go of what has been worked out. */
+  /** Leaving the game: stop working out the next race and let go of what has been worked out (and of the board geometry kept for the live updates). */
   function stopWarm() {
-    if (simCache.timer) {
-      if (simCache.idle) { window.cancelIdleCallback(simCache.timer); } else { clearTimeout(simCache.timer); }
-      simCache.timer = 0;
-    }
+    cancelWarm();
     simCache.entry = null;
+    layoutMemo = {};
+    layoutKeys = [];
   }
 
   /** The race that the next start of this board will use (taken from the cache, so the next race gets a new one). */
@@ -871,10 +949,7 @@
     var entry = entryFor(g);
     entry.claimed = true;
     simCache.entry = null;
-    if (simCache.timer) {
-      if (simCache.idle) { window.cancelIdleCallback(simCache.timer); } else { clearTimeout(simCache.timer); }
-      simCache.timer = 0;
-    }
+    cancelWarm();
     return entry;
   }
 
@@ -1011,7 +1086,7 @@
     var RATE_MAX = 2.5;                      // a live race that is joined late is never played faster than this (it would only strobe): the first part is skipped instead
     var ts0 = 0;                             // where in the physics the replay starts (0, unless the race was joined late)
     var stream = n > 300 && !(a.liveSeconds > 0);   // a big solo race starts as soon as the winner is known, and the rest is worked out while it plays
-    var vtHold = 0, leadF = 1, lastWorkAt = 0, nextFed = false;
+    var vtHold = 0, leadF = 1, lastWorkAt = 0, nextFed = false, waitAt = 0, waitUsed = 10, waitCost = 10;
 
     /** The real time the replay needs per unit of speed up to the physics time `upTo` (with or without the finish speed-up). */
     function effective(upTo, withBoost) {
@@ -1090,7 +1165,18 @@
     function work0(t) {
       if (stage === 'sim') {
         // (the pack keeps rattling while the physics is worked out; a person who is waiting gets most of every frame for it)
-        var known = stream ? advanceStream(entry, 10) : advance(entry, n > 120 ? 10 : 12);
+        var wms = n > 120 ? 10 : 12;
+        if (n >= 300) {
+          // a big board is being waited for, and the "ready, steady" is over: as long a slice as the rest of a frame takes (so a slow phone, whose frames are
+          // long, does not get a few percent of them), 10 to 24 ms. (Until then the gate is shut anyway, and a fast computer is not slowed down for nothing.)
+          var wnow = performance.now();
+          if (waitAt && wnow - waitAt < 400) { waitCost = 0.7 * waitCost + 0.3 * Math.max(4, wnow - waitAt - waitUsed); }
+          waitAt = wnow;
+          if (wnow > relAt) { wms = Math.max(10, Math.min(24, waitCost)); }
+        }
+        var w0 = performance.now();
+        var known = stream ? advanceStream(entry, wms) : advance(entry, wms);
+        waitUsed = performance.now() - w0;
         if (!known) { shakePose(t); return; }
         sim = entry.sim;
         if (!sim.order.length) { throw new Error('the physics found no winner'); }
@@ -1606,32 +1692,9 @@
 
     layout: function (ents, W, H) {
       var n = ents.length;
-      var sh = shape(n, W);
-      var t = sh.t;
-      var gap = sh.gap;
-      var hw = sh.hw;
-      var rowGap = sh.rowGap;
-      var rt = sh.rt;
-      var xA = PAD + rt + hw + 6;
-      var xB = Math.max(xA + 90, sh.Wv - PAD - rt - hw - 6);
-      var straight = xB - xA;
+      var geo = geoFor(n, W, H);
+      var pack = geo.pack, t = { lanes: geo.lanes, r: geo.r }, gap = geo.gap, total = geo.total;
       var R = Math.ceil(n / t.lanes);                  // rows of marbles in the starting pack
-      var gate = R * gap + 6;                          // distance along the track to the start gate (may run round the first turn)
-      var pileLen = Math.min(Math.max(sh.packLen * 1.3, 150), straight - 4);
-      var total = (t.rows - 1) * (straight + Math.PI * rt) + straight;
-      var geo = {
-        rows: t.rows, rowGap: rowGap, rt: rt, hw: hw, xA: xA, xB: xB, straight: straight, y0: hw + 36,
-        r: t.r, gap: gap, lanes: t.lanes, gate: gate, total: total, finish: total - pileLen, W: sh.Wv, H: sh.Hv, n: n, k: sh.k, cw: W, ch: H
-      };
-      geo.track = buildTrack(geo);
-      var pack = packSlots(geo, n);
-      if (t.r + 4 + (pack.rows - 1) * gap + t.r > straight) {
-        var sim = createSim(geo.track, pack.x, pack.y, pack.sg, 1);
-        sim.relax(n > 400 ? 90 : 140, gate);
-        pack.x = sim.X; pack.y = sim.Y; pack.sg = sim.SG; pack.overlap = sim.overlap;
-      }
-      pack.s0 = t.r + 4 + (pack.rows - 1) * gap;       // where the front row of the pack stands along the track
-      geo.pack = pack;
       shownEnts = ents;
       lastGeo = geo;
       warmUp(geo);
