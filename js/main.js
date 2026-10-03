@@ -34,6 +34,13 @@
 
   function initPrint() {
     $$('[data-print]').forEach((b) => b.addEventListener('click', () => window.print()));
+    // On paper every answer should show, not only the one that happens to be open: open them all while printing, then put them back.
+    // (The question groups share a name so only one stays open; the name is taken off for the moment too.)
+    let opened = null;
+    const openAll = () => { if (opened) return; opened = $$('main details').map((d) => ({ d, open: d.open, name: d.getAttribute('name') })); opened.forEach(({ d }) => { d.removeAttribute('name'); d.open = true; }); };
+    const putBack = () => { if (!opened) return; opened.forEach(({ d, open, name }) => { if (name !== null) d.setAttribute('name', name); d.open = open; }); opened = null; };
+    addEventListener('beforeprint', openAll); addEventListener('afterprint', putBack);
+    if (window.matchMedia) { const mq = window.matchMedia('print'); const on = (e) => (e.matches ? openAll() : putBack()); if (mq.addEventListener) mq.addEventListener('change', on); else if (mq.addListener) mq.addListener(on); }
     // keep ticks on the "what to bring" list between visits
     const boxes = $$('#checklist input[type="checkbox"]');
     if (!boxes.length) return;

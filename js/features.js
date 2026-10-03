@@ -749,6 +749,16 @@
         a.textContent = t('Open these directions in Google Maps');
         out.appendChild(a);
       }
+      if (next && next.kind !== 'wait') bringIntoView();
+    }
+    // The answer appears under the button. On a laptop with big text, or behind the bar at the bottom of a phone, that can be off the screen:
+    // scroll just enough to show it (never so far that the address box goes under the header).
+    function bringIntoView() {
+      const r = out.getBoundingClientRect(), bar = doc.getElementById('action-bar'), hdr = $('.site-header');
+      const floor = (bar && getComputedStyle(bar).display !== 'none' ? bar.getBoundingClientRect().top : window.innerHeight) - 12;
+      const ceiling = (hdr ? hdr.getBoundingClientRect().bottom : 0) + 12;
+      const by = Math.min(r.bottom - floor, r.top - ceiling);
+      if (by > 4) window.scrollBy({ top: by, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     }
     const box = {
       show: () => show(),
@@ -1095,6 +1105,12 @@
     if (+size.width > 0 && +size.height > 0) wrap.style.aspectRatio = size.width + ' / ' + size.height;
     const io = new IntersectionObserver((es) => { if (!drawn && es.some((e) => e.isIntersecting)) { io.disconnect(); draw(); } }, { rootMargin: '900px 0px' });
     io.observe(b);
+    // The legend beside the map makes the page much taller once it is drawn. A link to a place further down (a menu item, or a link from
+    // another page like index.html#pizza) works out where that place is at the moment it is used, so the map is drawn first for those.
+    const now = () => { if (!drawn) { io.disconnect(); draw(); } };
+    doc.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('a[href^="#"]')) now(); }, true);
+    addEventListener('hashchange', now);
+    if (location.hash.length > 1) now();
     const later = () => { if (!drawn) { io.disconnect(); draw(); } };
     const idle = () => (window.requestIdleCallback ? requestIdleCallback(later, { timeout: 3000 }) : setTimeout(later, 1500));
     if (doc.readyState === 'complete') idle(); else window.addEventListener('load', idle, { once: true });
@@ -1112,6 +1128,27 @@
   [expireDated, checkOwnerDates, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
+
+  // A page opened with #something (a link from another page, a QR code): the browser scrolled there while the scripts were still adding
+  // content above it (the countdown, "this week", the farm map), so the place can end up lower down than the screen. Put it in place
+  // again once the page has loaded, unless the reader has already started to move.
+  safe(function keepHashTarget() {
+    if (location.hash.length < 2) return;
+    const nav = window.performance && performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+    if (nav && (nav.type === 'reload' || nav.type === 'back_forward')) return;   // the browser puts a returning reader back where they were
+    let moved = false;
+    const stop = () => { moved = true; };
+    ['wheel', 'touchstart', 'mousedown', 'keydown'].forEach((ev) => addEventListener(ev, stop, { passive: true, once: true }));
+    addEventListener('hashchange', stop, { once: true });
+    const settle = () => {
+      if (moved) return;
+      let el = null;
+      try { el = doc.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { /* not a place on this page */ }
+      if (el && el.getClientRects().length) el.scrollIntoView({ block: 'start', behavior: 'instant' });
+    };
+    const after = () => { setTimeout(settle, 300); setTimeout(settle, 1500); };
+    if (doc.readyState === 'complete') after(); else addEventListener('load', after, { once: true });
+  });
   safe(renderDrive);
   showProblems();
   doc.addEventListener('wa:lang', () => { $$('.community-strip img').forEach((i) => (lang() === 'en' ? i.removeAttribute('lang') : i.setAttribute('lang', 'en'))); relBuilt = false; relCache = null; relKey = chipKey = ''; renderAll(); showProblems(); });
