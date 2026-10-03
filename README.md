@@ -376,7 +376,7 @@ New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](do
 5. Before launch: fill every "Prices coming soon", confirm hours, Facebook and the hashtag, and have a native speaker read each language (see Content status).
 6. Also before launch: set `reviewUrl`; open both "In the news" links; confirm the drive times, the waitlist and the "Season by season" ticks; decide on the maze name; set `seasonPicker: false`; then check the live site once with `?check` added to the address.
 
-How the page stays fast: sections far down the page are skipped until you scroll near them (`initLazyRender` in `js/main.js`), animations pause when off screen, and photos load lazily. If you ever add a tall new section, nothing needs to change.
+How the page stays fast: sections far down the page are skipped until you scroll near them (`initLazyRender` in `js/main.js`), looping animations pause when they are off screen (a whole section far away, or one drawing inside a long section: `initOffscreenPause` in `js/main.js`) and while the tab is hidden, and photos load lazily. If you ever add a tall new section, nothing needs to change.
 
 ## Notes
 

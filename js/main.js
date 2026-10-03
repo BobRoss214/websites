@@ -687,14 +687,88 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Keep the page light: animations in sections that are off screen are paused
+   * Keep the page light: looping animations only run where someone can see them.
+   *  - A section that is far from the screen is paused as a whole (.is-offscreen).
+   *  - Inside a section, every drawing that loops is paused on its own while it is off the screen (.anim-off):
+   *    the long sections (Visit, Greenhouse, Shop) are "on screen" while one corner of them is, but their
+   *    drawings can be several screens away.
+   *  - Everything is paused while the tab is hidden (html.anim-hidden).
+   * Only endless CSS loops are watched, so hover and click effects (which run once) are never touched, and with
+   * prefers-reduced-motion the CSS has switched the loops off already, so there is nothing to pause.
+   * A drawing that is not found (drawn later, or inside a symbol) simply keeps running: it can never be frozen by mistake.
    * ------------------------------------------------------------------ */
   function initOffscreenPause() {
+    const onVis = () => root.classList.toggle('anim-hidden', doc.hidden);
+    doc.addEventListener('visibilitychange', onVis);
+    onVis();
     if (!('IntersectionObserver' in window)) return;
+
+    // Drawings that loop. The hero is one screen tall and is paused as a section; the sprite has its own rule below;
+    // a symbol or <defs> is only drawn through <use> somewhere else, so its own box says nothing about what can be seen.
+    const SKIP = '#top, #sprite, symbol, defs';
+    const watched = new WeakSet();
+    const artIO = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.target.isConnected) { artIO.unobserve(e.target); return; }   // redrawn since
+        e.target.classList.toggle('anim-off', !e.isIntersecting);
+      });
+    }, { rootMargin: '200px' });   // wakes up before it scrolls into view
+    const hasBox = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 || r.height > 0; };
+    const loops = (el) => el.getAnimations().some((a) => a.effect && a.effect.target === el && a.animationName && a.effect.getTiming().iterations === Infinity);
+    // The box to watch for one looping element: the whole drawing (outermost <svg>), and never something that moves itself
+    // (bobbing, drifting, spinning): a box that moves could be paused just off the screen and then never come back.
+    // A drawing that is not drawn yet (size 0, in a section the lazy rendering skips) is watched through the nearest box
+    // around it. If there is no real box at the drawing, it is left alone (null) and keeps running.
+    const boxFor = (t) => {
+      let el = t;
+      while (el.ownerSVGElement) el = el.ownerSVGElement;
+      const mine = el.getBoundingClientRect();
+      for (let hops = 0; el && el !== doc.body && hops < 6; hops++, el = el.parentElement) {
+        if (el.matches('main, main > section, .site-footer, .footer-field')) return null;   // a whole section is handled above
+        if (loops(el) || !hasBox(el)) continue;   // it moves itself, or has no box yet: watch what holds it instead
+        // close to the drawing (inside it, or at most 100px away, less than the 200px head start below), so that when the
+        // drawing can be seen this box is always inside the head start too
+        const r = el.getBoundingClientRect();
+        if (Math.max(0, mine.left - r.right, r.left - mine.right, mine.top - r.bottom, r.top - mine.bottom) <= 100) return el;
+      }
+      return null;
+    };
+    const scan = (scope) => {
+      let list;
+      try { list = scope ? scope.getAnimations({ subtree: true }) : doc.getAnimations(); } catch (err) { return; }
+      list.forEach((a) => {
+        const t = a.effect && a.effect.target;
+        if (!a.animationName || !t || !t.isConnected || a.effect.getTiming().iterations !== Infinity || t.closest(SKIP)) return;   // endless CSS loops only
+        const box = boxFor(t);
+        if (box && !watched.has(box)) { watched.add(box); artIO.observe(box); }
+      });
+    };
+    // Look again whenever new drawings can appear: after load, when a section comes near, after a season, language,
+    // tab or size change (cards, panels and crop rows are drawn again).
+    const pending = new Set();
+    let timer = 0;
+    const scanSoon = (scope) => {
+      pending.add(scope || doc);
+      clearTimeout(timer);
+      timer = setTimeout(() => { const all = pending.has(doc), list = [...pending]; pending.clear(); if (all) scan(); else list.forEach(scan); }, 250);
+    };
+    if (doc.readyState === 'complete') scanSoon(); else addEventListener('load', () => scanSoon());
+    ['wa:season', 'wa:lang'].forEach((ev) => doc.addEventListener(ev, () => scanSoon()));
+    addEventListener('resize', () => scanSoon(), { passive: true });
+    doc.addEventListener('click', (e) => { const sec = e.target.closest && e.target.closest('main > section'); if (sec) scanSoon(sec); });
+
+    const scanned = new WeakMap();   // a section is looked at again when it comes near, but not more than every few seconds
     const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => e.target.classList.toggle('is-offscreen', !e.isIntersecting));
+      entries.forEach((e) => {
+        e.target.classList.toggle('is-offscreen', !e.isIntersecting);
+        if (e.isIntersecting && e.target.matches('main > section') && !(performance.now() - (scanned.get(e.target) || -1e9) < 5000)) { scanned.set(e.target, performance.now()); scanSoon(e.target); }
+      });
     }, { rootMargin: '160px 0px' });
-    $$('main > section, .site-footer, .footer-field').forEach((el) => io.observe(el));
+    $$('main > section, .site-footer, .footer-field').forEach((el) => {
+      io.observe(el);
+      // A section that is skipped by the lazy rendering has no boxes yet, so its drawings can only be found once it is drawn.
+      el.addEventListener('contentvisibilityautostatechange', (e) => { if (!e.skipped) scanSoon(el); });
+    });
     // The waving riders live inside the sprite, so it only runs while the add-ons list is on screen.
     const sprite = $('#sprite');
     const users = $$('.addon-list');
@@ -704,6 +778,8 @@
         entries.forEach((e) => (e.isIntersecting ? seen.add(e.target) : seen.delete(e.target)));
         sprite.classList.toggle('is-offscreen', seen.size === 0);
       }, { rootMargin: '160px 0px' }).observe(users[0]);
+    } else if (sprite && !$('#farm-map')) {
+      sprite.classList.add('is-offscreen');   // a page with no wagon anywhere (the guide pages): nobody can see the riders wave
     }
   }
 
