@@ -50,6 +50,15 @@
     var form = root.querySelector('[data-role="cardform"]');
     var name = form.querySelector('#cd-name'), num = form.querySelector('#cd-number'), exp = form.querySelector('#cd-exp'), cvc = form.querySelector('#cd-cvc');
     var brand = form.querySelector('[data-role="brand"]');
+    // a card typed but never saved must not linger in the hidden dialog: wipe the form whenever the dialog closes
+    var dlg = form.closest('dialog');
+    if (dlg && !dlg._cardWipe) {
+      dlg._cardWipe = true;
+      dlg.addEventListener('close', function () {
+        var f = dlg.querySelector('[data-role="cardform"]');
+        if (f) { f.reset(); var b = f.querySelector('[data-role="brand"]'); if (b) { b.textContent = ''; } }
+      });
+    }
     function showBrand() {
       var b = core.cardBrand(num.value);
       brand.textContent = b === 'card' ? '' : core.BRAND_NAMES[b];
@@ -302,7 +311,7 @@
       GS.bus.emit('account'); GS.bus.emit('prefs'); GS.bus.emit('balance'); GS.bus.emit('progress');
       GS.app.refreshPool();
       m.close();
-      ui.toast('Everything on this device has been erased.', 'trash-2');
+      ui.toast('Your giving history, progress and account on this device have been erased. Your sound and display settings were kept.', 'trash-2');
     });
   }
 

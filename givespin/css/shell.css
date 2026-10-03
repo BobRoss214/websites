@@ -90,7 +90,7 @@
 
 /* -------------------------------------------------------------- stream mode */
 .stream-exit { position: fixed; right: 16px; bottom: 16px; z-index: 90; background: #1b3040; }
-body.is-stream .topbar, body.is-stream .demo-strip, body.is-stream .side, body.is-stream .foot,
+body.is-stream .topbar, body.is-stream .side, body.is-stream .foot,
 body.is-stream .crumbs, body.is-stream .below, body.is-stream .moregames, body.is-stream .stage__badges { display: none; }
 body.is-stream .layout { grid-template-columns: minmax(0, 1fr); }
 body.is-stream .main { padding-top: 16px; }

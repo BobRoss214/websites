@@ -84,7 +84,7 @@
         '<section class="bet bet--live panel" id="livepanel" aria-labelledby="lt-title" hidden></section>' +
         '<section class="stage panel" id="stage" aria-label="Game stage">' +
           '<header class="stage__head"><div class="stage__titles"><h1 class="stage__title" id="g-title"></h1><p class="stage__tag" id="g-tag"></p></div>' +
-            '<div class="stage__badges"><span class="pill pill--fair" id="stage-fair" title="Every result is drawn before the animation starts"><span data-icon="shield-check"></span>Provably fair</span>' +
+            '<div class="stage__badges"><span class="pill pill--fair" id="stage-fair" title="The winner is drawn before the animation starts, and you can check it afterwards. In this preview the secret is made on your own device."><span data-icon="shield-check"></span>Checkable result</span>' +
             '<span class="pill pill--demo only-demo"><span data-icon="coins"></span>Demo credit</span></div></header>' +
           '<div class="lt-stagebar" id="lt-stagebar" hidden></div>' +
           '<div class="stage__body" id="games"></div>' +

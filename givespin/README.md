@@ -25,7 +25,7 @@ python3 -m http.server 8000     # then open http://localhost:8000
 ## What's in it
 
 **The lobby** has promo banners, a "live now" strip of tables, category tabs (Originals, Slots, Table games, Races,
-Instant wins), a tile for every game, quick cause chips, your latest gifts and a "Repeat last round" shortcut. A
+Instant wins), a tile for every game, quick cause chips, your latest rounds and a "Repeat last round" shortcut. A
 side nav leads to Slots, Live tables, Leagues, Crews, Your cards, My Giving, Charities, the Giving Club, Fair Play? and
 Help. On a phone the side nav becomes a bottom bar with the five main places (Lobby, Live tables, My Giving, Charities
 and Giving Club); the rest are reached from the footer links, the "More ways to play" quick links on the Live tables page,
@@ -143,7 +143,7 @@ Never type a real card number into a preview. The sample card `4242 4242 4242 42
 **Demo credit.** In demo mode every player starts with $1,000 of play money that goes down as they give, with
 "Add credit" top-ups. In live mode the credit pill, the banner and the pay-with field disappear.
 
-**Stream Mode:** the TV button (or `?stream=1`) enlarges the game and hides everything else. Add
+**Stream Mode:** the TV button (or `?stream=1`) enlarges the game and hides everything else except the one-line demo notice (in demo mode). Add
 `&transparent=1` for a see-through background in an OBS browser source. The space bar plays.
 
 **Polish:** synthesised sound effects (no audio files, mutable), confetti that draws above dialogs, reduced-motion
@@ -240,7 +240,7 @@ table locks, and refunded if you close the page before the round settles.
   (all day Tuesday; a simulated sponsor matches the pot dollar for dollar up to $250), Disaster Relief Night (from 6 pm;
   disaster-relief and health charities only, 50% matched up to $150) and a Double Pot Hour in the first quarter of every
   hour (dollar for dollar up to $200).
-- **Drama.** A **last call** warns that bets are closing, an **all-in** stake asks you to confirm, the table says how
+- **Drama.** A **last call** warns that bets are closing, a big stake (half your credit or more, or $250+) asks you to confirm, the table says how
   close the finish was, and close races end in a slow-motion **photo finish**. A **croupier voice** (the browser's own
   speech, off by default) calls the action.
 - **Side predictions.** Before the lock you can make XP-only predictions: the pot reaches $500, the winner has under

@@ -1216,7 +1216,7 @@ if (section('13d. Live tables: a round, the whole pot to the winner, and a fair 
   check(r.plays === 1 && r.liveRounds === 1 && r.liveWins === (r.you.won ? 1 : 0), 'plays and live stats are recorded', r);
   check(r.badges.includes('live') && (r.badges.includes('called') === r.you.won) && (r.badges.includes('bigpot') === (r.pot >= 500)), 'Live Wire (and, when earned, Called It and Pot of Gold) are unlocked', r.badges);
   const text = r.text;
-  check(text.includes('takes the pot') && text.includes('$' + r.pot.toLocaleString('en-US')) && text.includes('simulated bots'), 'the result shows the pot and says the rest came from simulated bots', { pot: r.pot, text });
+  check(text.includes('takes the simulated pot') && text.includes('$' + r.pot.toLocaleString('en-US')) && text.includes('simulated bots'), 'the result shows the pot and says the rest came from simulated bots', { pot: r.pot, text });
   check(r.you.won ? text.includes('You backed the winner') : text.includes('as if your charity won'), 'and speaks to whether your pick won');
   check(r.marks === 1, 'the winner is marked on the odds board', r.marks);
   await shot(page, '13-live-result');
@@ -1354,7 +1354,7 @@ if (section('13g. Live extras: events, sponsor match, jackpot, last call, all-in
   await page.click('#lt-stake [data-stake="20"]');
   await page.locator('#livepanel .odd').first().click();
   await page.click('#livepanel [data-role="join"]');
-  check((await page.locator('#livepanel [data-role="join-label"]').innerText()).startsWith('Confirm all-in') && await page.evaluate(() => GS.live.room('derby').you === null) && await balance(page) === 3000, 'a stake of half your credit or more asks you to confirm first and takes nothing yet');
+  check((await page.locator('#livepanel [data-role="join-label"]').innerText()).startsWith('Confirm: ') && await page.evaluate(() => GS.live.room('derby').you === null) && await balance(page) === 3000, 'a stake of half your credit or more asks you to confirm first and takes nothing yet');
   await page.click('#livepanel [data-role="join"]');
   check(await page.evaluate(() => GS.live.room('derby').you && GS.live.room('derby').you.dollars) === 20 && await balance(page) === 1000, 'pressing again places it');
   await page.click('#livepanel [data-role="join"]');
@@ -1406,7 +1406,7 @@ if (section('13g. Live extras: events, sponsor match, jackpot, last call, all-in
   });
   check(res.bonus.match === Math.min(200, res.pot) && res.bonus.total === res.bonus.match, 'the sponsor match is the pot up to its cap', res.bonus);
   const text = await p2.locator('#lt-result').innerText();
-  check(text.includes('takes the pot: $' + (res.pot + res.bonus.total).toLocaleString('en-US')) && text.includes('matched') && text.includes('simulated'), 'the result shows the matched total and says the sponsor is simulated', { text, pot: res.pot, bonus: res.bonus });
+  check(text.includes('takes the simulated pot: $' + (res.pot + res.bonus.total).toLocaleString('en-US')) && text.includes('matched') && text.includes('simulated'), 'the result shows the matched total and says the sponsor is simulated', { text, pot: res.pot, bonus: res.bonus });
   const truth = { big: res.pot >= 500, upset: res.winShare < 0.25, leader: res.winner === res.leader };
   const guess = { big: true, upset: false, leader: true };
   check(res.pred.rows.length === 3 && res.pred.rows.every((x) => x.right === (guess[x.key] === truth[x.key])), 'each side prediction is scored against what happened', res.pred);
@@ -2400,6 +2400,174 @@ if (section('13u. Small regressions found in review: sound waits for a first tou
   const wasCorrected = GSdata.charities.filter((c) => { const m = REG_YEAR.exec(c.about || ''); return m && Number(m[1]) !== c.founded; });
   check(corrected && corrected.founded === 1982 && corrected.foundedFrom === undefined && /Founded\s?1982$/.test(wRow) && !/register date/.test(wRow) && wasCorrected.length >= 10 && wasCorrected.every((c) => c.foundedFrom !== 'register'), 'founding years: Workskil Australia, whose year was corrected to the organisation\'s own (1982), and the ' + wasCorrected.length + ' charities like it, show no "register date" label', { workskil: wRow, flaggedAmongCorrected: wasCorrected.filter((c) => c.foundedFrom === 'register').map((c) => c.id) });
   await dpage.close();
+}
+
+if (section('13t. Honesty wording: fair play you can check, demo or checkout wording, simulated pots, nothing left in a closed card dialog')) {
+  const noLink = (t) => !/Provably fair/i.test(t);
+
+  // ---- demo mode (the default)
+  const page = await newPage();
+  await openApp(page, '#lobby');
+  const promos = await page.locator('#view-lobby .promos').innerText();
+  check(/Fair play you can check/i.test(promos) && noLink(promos), 'the lobby card says "Fair play you can check", not "Provably fair"', promos);
+  check(/made on your own device/i.test(promos), 'and says where the secret is made');
+  check(!/No losing streaks/i.test(promos) && /play-money/i.test(promos) && /nothing is charged/i.test(promos), 'the lobby tagline has no "No losing streaks" and says it is play-money', promos);
+  check((await page.locator('#lb-recent').innerText()).trim() === 'Your latest rounds', 'the lobby lists "Your latest rounds" (not gifts that were never given)');
+  await go(page, '#game-wheel');
+  const pill = await page.locator('#stage-fair').innerText();
+  check(noLink(pill) && /Checkable result/.test(pill), 'the pill on a game page does not say "Provably fair"', pill);
+
+  await go(page, '#fair');
+  const head = await page.locator('#view-fair .page-head').innerText();
+  check(/made on your own device/i.test(head) && /not an outside audit/i.test(head), 'the Fair Play headline names the limit: the secret is made on your own device', head);
+  check(!/take our word/i.test(head) && !/would catch it/i.test(await page.locator('#view-fair .panel--short').innerText()), 'and no longer says "you do not have to take our word" or "you would catch it"');
+
+  await go(page, '#club');
+  const stats = await page.locator('#view-club .stats--2').innerText();
+  check(/Total given\s*demo/i.test(stats.replace(/\n/g, ' ')) && /Biggest single gift\s*demo/i.test(stats.replace(/\n/g, ' ')), 'the Giving Club labels "Total given" and "Biggest single gift" as demo', stats);
+  check(/Triple Threat XP bonus/i.test(await page.locator('#view-club').innerText()) && !/jackpot bonus/i.test(await page.locator('#view-club').innerText()), 'the Club says the slot bonus is XP (a Triple Threat XP bonus, not a "jackpot bonus")');
+
+  await go(page, '#leagues');
+  const lg = await page.locator('#view-leagues').innerText();
+  check(!/move up a league/i.test(lg) && /nobody actually moves up or down/i.test(lg), 'the leagues page no longer promises moves up or down', lg.slice(0, 200));
+
+  await go(page, '#help');
+  const help = await page.locator('#view-help').textContent();
+  check(/every draw is random, so a streak does not make the next win more likely/.test(help), 'Help says a hot hand is only XP and does not make a win likelier');
+  check(/Add credit/.test(await page.locator('#help-credit').textContent()) && /one-line demo notice/.test(await page.locator('#help-stream').textContent()), 'in demo mode Help still explains Add credit, and says Stream Mode keeps a demo notice');
+
+  // the "sending" step of a demo gift says demo
+  const demoPage = await newPage();
+  await openApp(demoPage, '#charity-wateraid', '');
+  await demoPage.waitForSelector('#dlg-profile[open]');
+  await demoPage.click('#dlg-profile [data-role="give"]');
+  await demoPage.waitForSelector('#dlg-direct[open]');
+  await demoPage.click('#dlg-direct .preset[data-amt="10"]');
+  await demoPage.click('#dlg-direct [data-role="go"]');
+  const sendingHandle = await demoPage.waitForFunction(() => { const e = document.querySelector('#dlg-result .rs-sending'); return e ? e.innerText : false; }, null, { polling: 'raf', timeout: 8000 }).catch(() => null);
+  const sending = sendingHandle ? await sendingHandle.jsonValue() : '';
+  check(/Sending your demo gift/.test(sending) && /nothing is charged/i.test(sending) && !/Sending your gift/.test(sending), 'the sending step says "Sending your demo gift" and that nothing is charged', sending);
+  await waitReceipt(demoPage);
+  check((await demoPage.locator('#dlg-result .rs-title').innerText()).includes('You gave') && await demoPage.locator('#dlg-result .stamp').count() > 0, 'the demo receipt still carries its DEMO stamp');
+  await closeReceipt(demoPage);
+  await demoPage.close();
+
+  // a card number typed and then abandoned does not stay in the closed dialog
+  await page.evaluate(() => { GS.accounts.createAccount('email', 'kim@example.com', 'Kim'); GS.bus.emit('account'); });
+  await page.click('#acct [data-role="toggle"]');
+  await page.click('#acct [data-role="settings"]');
+  await page.waitForSelector('#dlg-settings[open] #cd-number');
+  await page.fill('#cd-name', 'Kim Giver');
+  await page.fill('#cd-number', '4242424242424242');
+  await page.fill('#cd-exp', '1234');
+  await page.fill('#cd-cvc', '123');
+  check(await page.locator('#cd-number').inputValue() === '4242 4242 4242 4242', 'a card number is typed into the preview form');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#dlg-settings').open);
+  // (the dialog's "close" event comes a moment after it stops being open, so wait for the clearing instead of reading at once)
+  const cardFields = () => Array.from(document.querySelectorAll('#cd-name, #cd-number, #cd-exp, #cd-cvc')).map((i) => i.value).join('|');
+  await page.waitForFunction((read) => new Function('return (' + read + ')()')() === '|||', cardFields.toString(), { timeout: 3000 }).catch(() => {});
+  const left = await page.evaluate(cardFields);
+  check(left === '|||', 'closing the dialog without saving clears the number, the code and the name', left);
+  check(!(await page.evaluate(() => JSON.stringify(Object.assign({}, window.localStorage)))).includes('4242424242424242'), 'and the number is nowhere in storage');
+  await page.close();
+
+  // Stream Mode keeps the one-line demo notice
+  const stream = await newPage();
+  await openApp(stream, '', '?fast=1&stream=1');
+  check(await stream.evaluate(() => document.body.classList.contains('is-stream')), 'Stream Mode is on');
+  check(await stream.locator('.demo-strip').isVisible() && /Demo mode/.test(await stream.locator('.demo-strip').innerText()), 'and still shows the one-line "Demo mode" notice');
+  check(!(await stream.locator('.side').isVisible()) && !(await stream.locator('#topbar').isVisible()), 'while the navigation and the top bar stay hidden');
+  await stream.close();
+
+  // ---- live tables: everything about other people says simulated
+  const live = await newPage();
+  await openApp(live, '#live');
+  check(/its own simulated players/.test(await live.locator('#view-live').innerText()), 'the live page says each table has its own simulated players');
+  await go(live, '#live-derby');
+  await live.waitForSelector('#livepanel .lt-phase.is-open');
+  const chatLabel = await live.locator('#livepanel [data-role="chat-on"]').evaluate((i) => i.closest('label').innerText);
+  check(/simulated viewers/i.test(chatLabel), 'the stream chat checkbox says its viewers are simulated', chatLabel);
+  await live.evaluate(() => {
+    window.__sr = [];
+    new MutationObserver(() => { window.__sr.push(document.querySelector('#sr-live').textContent); }).observe(document.querySelector('#sr-live'), { childList: true, characterData: true, subtree: true });
+  });
+  // a stake is placed through the table itself, in a window with time left (a window is only a couple of seconds in fast mode, and a busy machine can miss it)
+  const stake = () => live.evaluate(async () => {
+    const room = window.GS.live.room('derby');
+    const until = (fn, ms) => new Promise((res) => { const t0 = Date.now(); (function w() { if (fn()) { res(true); } else if (Date.now() - t0 > ms) { res(false); } else { setTimeout(w, 15); } })(); });
+    for (let i = 0; i < 8; i++) {
+      await until(() => room.phase === 'open' && room.msLeft() > Math.min(900, room.phaseMs * 0.4), 45000);
+      if (room.join(room.field()[0].charity.id, 20).ok) { return true; }
+    }
+    return false;
+  });
+  check(await stake(), 'a stake is placed at the live table');
+  await live.waitForSelector('#lt-result .lt-res', { timeout: 90000 });
+  const headline = await live.locator('#lt-result .lt-res__t').innerText();
+  check(/takes the simulated pot/.test(headline), 'the live result headline says "takes the simulated pot"', headline);
+  await live.waitForTimeout(150);
+  const said = await live.evaluate(() => window.__sr.filter((t) => /wins the .* pot\./.test(t)));
+  check(said.length > 0 && said.every((t) => /wins the simulated \$/.test(t)), 'and the screen-reader announcement says "wins the simulated $… pot"', said);
+  // leave the table for the next round and take a stake there: the toast that tells how it went also says simulated
+  check(await stake(), 'a second stake is placed, then the visitor leaves the table');
+  await go(live, '#lobby');
+  await live.waitForFunction(() => Array.from(document.querySelectorAll('#toasts .toast')).some((t) => /took the/.test(t.textContent)), null, { timeout: 90000 }).catch(() => {});
+  const toasts = await live.evaluate(() => Array.from(document.querySelectorAll('#toasts .toast')).map((t) => t.textContent.trim()).filter((t) => /took the/.test(t)));
+  check(toasts.length > 0 && toasts.every((t) => /took the simulated \$/.test(t)), 'the live result toast says "took the simulated $… pot"', toasts);
+  await live.close();
+
+  // ---- real-donation (redirect) mode: the pages say it leaves the site, and nothing says a gift is done before checkout
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const rp = await ctx.newPage();
+  rp.on('pageerror', (e) => problems.push('pageerror: ' + e.message));
+  await rp.route('**/js/config.js', async (route) => {
+    let src = fs.readFileSync(path.join(root, 'js/config.js'), 'utf8');
+    src = src.replace("mode: 'demo'", "mode: 'redirect'").replace('url: function (charity, cents, opts) { return null; }',
+      "url: function (charity, cents, opts) { return 'https://pay.example/' + charity.id + '?amount=' + (cents / 100).toFixed(2) + '&freq=' + opts.frequency; }");
+    await route.fulfill({ status: 200, contentType: 'text/javascript', body: src });
+  });
+  await rp.addInitScript(() => { try { if (!sessionStorage.getItem('__fresh')) { localStorage.clear(); sessionStorage.setItem('__fresh', '1'); localStorage.setItem('givespin.tour', 'done'); } } catch (e) { /* ignore */ } });
+  await openApp(rp, '#lobby');
+  check(await rp.locator('html').getAttribute('data-mode') === 'redirect', 'redirect mode is on');
+  const rpromo = await rp.locator('#view-lobby .promos').innerText();
+  check(/checkout page/i.test(rpromo) && !/play-money/i.test(rpromo) && !/No losing streaks/i.test(rpromo), 'the lobby tagline says each gift is finished on the checkout page, not that it is play-money', rpromo);
+  await go(rp, '#help');
+  const rcredit = await rp.locator('#help-credit').textContent();
+  check(!/Add credit/.test(rcredit) && /no play-money balance/i.test(rcredit), 'Help does not mention the hidden "Add credit" button in redirect mode', rcredit);
+  await go(rp, '#club');
+  const rstats = (await rp.locator('#view-club .stats--2').innerText()).replace(/\n/g, ' ');
+  check(/Total sent to checkout/.test(rstats) && !/Total given/.test(rstats), 'the Giving Club says "Total sent to checkout", not "Total given"', rstats);
+  await go(rp, '#game-wheel');
+  await rp.click('#btn-play');
+  await waitReceipt(rp);
+  const rsub = await rp.locator('#dlg-result .rs-sub').innerText();
+  check(/another website/i.test(rsub) && /new tab/i.test(rsub) && /nothing is given until you complete it/i.test(rsub), 'the receipt says the checkout is on another website, opens in a new tab and is not done until completed', rsub);
+  const rco = await rp.locator('#dlg-result .rs-checkout').textContent();
+  check(/opens the checkout page on another website, in a new tab/.test(rco) && /on another website, in a new tab/.test(rco) && /never sees your card details/.test(rco), 'the checkout buttons say they open another website in a new tab', rco);
+  const rlink = await rp.locator('#dlg-result .rs-checkout a').first();
+  check(await rlink.getAttribute('target') === '_blank' && /noopener/.test(await rlink.getAttribute('rel')) && /^https:\/\//.test(await rlink.getAttribute('href')), 'the checkout link is https, opens a new tab and is noopener');
+  const rtitle = await rp.locator('#dlg-result .rs-title').innerText();
+  check(!/goes to/.test(rtitle) && /is for/.test(rtitle), 'the redirect receipt title does not say the money "goes to" the charity yet', rtitle);
+  await rp.evaluate(() => { window.__shared = null; navigator.share = (d) => { window.__shared = d; return Promise.resolve(); }; });
+  await rp.click('#dlg-result [data-role="share"]');
+  const shared = await rp.evaluate(() => window.__shared);
+  check(shared && !/just gave/i.test(shared.text) && /picked/.test(shared.text), 'the share text does not claim "I just gave" before checkout is done', shared);
+  await closeReceipt(rp);
+  // a direct gift
+  await go(rp, '#charity-wateraid');
+  await rp.waitForSelector('#dlg-profile[open]');
+  await rp.click('#dlg-profile [data-role="give"]');
+  await rp.waitForSelector('#dlg-direct[open]');
+  const fine = await rp.locator('#dlg-direct .modal__fine').innerText();
+  check(/another website/i.test(fine) && /new tab/i.test(fine) && /never sees your card details/i.test(fine), 'the give-directly dialog says the checkout is on another website, in a new tab', fine);
+  await rp.click('#dlg-direct .preset[data-amt="10"]');
+  await rp.click('#dlg-direct [data-role="go"]');
+  await waitReceipt(rp);
+  const dtitle = await rp.locator('#dlg-result .rs-title').innerText();
+  check(/You are giving/.test(dtitle) && !/You gave/.test(dtitle), 'a direct gift before checkout says "You are giving", not "You gave"', dtitle);
+  await closeReceipt(rp);
+  await ctx.close();
 }
 
 /* ======================================================================== */

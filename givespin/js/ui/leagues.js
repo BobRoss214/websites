@@ -61,7 +61,7 @@
     var rows = core.leagueTable(week, core.weekFraction(), store.weekly().xp, s.account.signedIn && s.account.name ? s.account.name : 'You');
     var me = rows.filter(function (r) { return r.you; })[0];
     return '<section class="sect panel" aria-labelledby="lg-league"><div class="sect__head"><h2 class="sect__t" id="lg-league">This week’s league <small>' + week + '</small></h2><span class="tag tag--plain">ends in ' + timeLeftInWeek() + '</span></div>' +
-      '<p>You are <b>#' + me.rank + '</b> with <b>' + me.xp + ' XP</b> this week. The top three move up a league next week; the bottom three drop down. Earn XP by giving, backing winners, predicting and finishing card sets.</p>' +
+      '<p>You are <b>#' + me.rank + '</b> with <b>' + me.xp + ' XP</b> this week. The top three are in the green zone and the bottom three in the red zone. This preview has one league, so nobody actually moves up or down. Earn XP by giving, backing winners, predicting and finishing card sets.</p>' +
       '<ol class="league" aria-label="Weekly league standings">' + rows.map(function (r) {
         return '<li class="lrow lrow--' + r.zone + (r.you ? ' is-you' : '') + '"><span class="lrow__rank">' + r.rank + '</span><span class="lrow__name">' + esc(r.name) + (r.you ? ' <small>(you)</small>' : ' ' + botTag()) + '</span><span class="lrow__xp">' + r.xp + ' XP</span></li>';
       }).join('') + '</ol>' +

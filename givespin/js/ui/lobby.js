@@ -53,13 +53,15 @@
   function promos() {
     return '<div class="promos">' +
       '<article class="promo promo--a"><div class="promo__copy"><p class="promo__eyebrow">Welcome to the giving casino</p><h2 class="promo__t">Every round is a win for someone.</h2>' +
-        '<p class="promo__p">Pick an amount, play any game, and your gift lands on a charity. No losing streaks here.</p>' +
+        '<p class="promo__p">' + (GS.payments.mode() === 'demo'
+          ? 'Pick an amount, play any game, and see which charity your gift lands on. Right now it is all play-money: nothing is charged.'
+          : 'Pick an amount, play any game, and the game picks the charity for your gift. You finish each gift on the charity’s checkout page.') + '</p>' +
         '<a class="btn btn--light" href="#game-wheel">' + ui.icon('play') + 'Spin the wheel</a></div><div class="promo__art" aria-hidden="true">' + GS.art.wheel() + '</div></article>' +
       '<article class="promo promo--b"><div class="promo__copy"><p class="promo__eyebrow">Giving Club</p><h2 class="promo__t">Level up as you give.</h2>' +
         '<p class="promo__p">Earn XP every round, keep a streak alive and unlock ' + core.BADGES.length + ' badges.</p>' +
         '<a class="btn btn--light" href="#club">' + ui.icon('crown') + 'Open the Club</a></div><div class="promo__art" aria-hidden="true">' + GS.art.coin('p') + '</div></article>' +
-      '<article class="promo promo--c"><div class="promo__copy"><p class="promo__eyebrow">Provably fair</p><h2 class="promo__t">Check every result yourself.</h2>' +
-        '<p class="promo__p">Each winner is drawn from a committed seed before the animation starts. Recompute it any time.</p>' +
+      '<article class="promo promo--c"><div class="promo__copy"><p class="promo__eyebrow">Fair play you can check</p><h2 class="promo__t">Check every result yourself.</h2>' +
+        '<p class="promo__p">Each winner is drawn from a sealed secret before the animation starts, and you can recompute it. In this preview the secret is made on your own device.</p>' +
         '<a class="btn btn--light" href="#fair">' + ui.icon('shield-check') + 'See how</a></div><div class="promo__art" aria-hidden="true">' + GS.art.dice() + '</div></article>' +
     '</div>';
   }
@@ -69,7 +71,7 @@
     var box = $('[data-role="recent"]', root);
     if (!box) { return; }
     if (!h.length) {
-      box.innerHTML = '<p class="empty">Nothing here yet. Play any game and your gifts will show up here, with a link to each charity.</p>';
+      box.innerHTML = '<p class="empty">Nothing here yet. Play any game and your rounds will show up here, with a link to each charity.</p>';
       return;
     }
     box.innerHTML = h.map(function (x) {
@@ -93,7 +95,7 @@
       '<div class="tiles" data-role="tiles">' + tiles() + '</div>' +
       '<section class="sect" aria-labelledby="lb-causes"><h2 class="sect__t" id="lb-causes">Pick a cause first</h2>' +
         '<div class="chips chips--quick" data-role="causes" role="group" aria-label="Quick causes"></div><p class="pool-line" data-role="poolline" aria-live="polite"></p></section>' +
-      '<section class="sect" aria-labelledby="lb-recent"><div class="sect__head"><h2 class="sect__t" id="lb-recent">Your latest gifts</h2><a class="linkbtn" href="#giving">See all in My Giving</a></div>' +
+      '<section class="sect" aria-labelledby="lb-recent"><div class="sect__head"><h2 class="sect__t" id="lb-recent">Your latest rounds</h2><a class="linkbtn" href="#giving">See all in My Giving</a></div>' +
         '<div class="rgifts" data-role="recent"></div></section>';
     ui.hydrate(root);
     ui.live.mountStrip($('[data-role="livestrip"]', root));

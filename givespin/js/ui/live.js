@@ -132,7 +132,7 @@
     if (!g || !tabs.length) { return ''; }
     var u = tabs[0].unit(2);
     return '<h2 class="sect__t" id="lv-t">Live ' + esc(g.name) + ': choose your table</h2>' +
-      '<p class="tabnote tabnote--tables">' + tabs.length + ' tables, from ' + tabs[0].size + ' ' + esc(u) + ' to ' + tabs[tabs.length - 1].size.toLocaleString('en-US') + '. Each one has its own pot and its own players. ' +
+      '<p class="tabnote tabnote--tables">' + tabs.length + ' tables, from ' + tabs[0].size + ' ' + esc(u) + ' to ' + tabs[tabs.length - 1].size.toLocaleString('en-US') + '. Each one has its own pot and its own simulated players. ' +
       'The charities players back go on the board, and the rest of the ' + esc(u) + ' are filled in at random from our catalog so the board is always full; only the backed charities can win. ' +
       'Bigger tables have more gates and more players' + (tabs[tabs.length - 1].tab.play > 20000 ? ', and the biggest ones take about ' + Math.round(tabs[tabs.length - 1].tab.play / 1000) + ' seconds to play out' : '') + '.</p>' +
       '<div class="lcards lcards--tables" data-role="tables">' + tabs.map(function (r) { return cardHTML(r, false); }).join('') + '</div>';
@@ -279,7 +279,7 @@
       '<p class="field__msg field__msg--block" data-role="msg" role="alert"></p>' +
       '<details class="lt-pred" data-role="pred" open><summary>' + ui.icon('sparkles') + 'Side predictions <small>XP only, never money</small></summary><div class="lt-pred__rows" data-role="pred-rows"></div></details>' +
       '<div class="lt-chat" data-role="chat" hidden></div>' +
-      '<div class="lt-toggles"><label class="check"><input type="checkbox" data-role="chat-on"><span>Stream chat vote</span></label>' +
+      '<div class="lt-toggles"><label class="check"><input type="checkbox" data-role="chat-on"><span>Stream chat vote (simulated viewers)</span></label>' +
         '<label class="check" data-role="voice-wrap"><input type="checkbox" data-role="voice-on"><span>Croupier voice</span></label></div>' +
       '<p class="kbd-hint lt-fine">Live stakes use demo credit and are refunded if you cancel before the table locks.</p>';
     ui.hydrate(panel);
@@ -501,8 +501,8 @@
     } else {
       var ch = GS.charity(pick);
       var seat = room.seats[pick];
-      label = armed ? 'Confirm all-in: ' + dollars(stake) + ' on ' + ch.short : 'Put ' + dollars(stake) + ' on ' + ch.short;
-      sub = armed ? 'That is a big share of your credit. Press again to place it.' : 'Chance ' + core.fmtShare((seat ? seat.tickets : 0) + stake, room.pot() + stake) + ' · whole pot to the winner';
+      label = armed ? 'Confirm: ' + dollars(stake) + ' on ' + ch.short : 'Put ' + dollars(stake) + ' on ' + ch.short;
+      sub = armed ? 'That is a big stake (half your credit or more, or $250+). Press again to place it.' : 'Chance ' + core.fmtShare((seat ? seat.tickets : 0) + stake, room.pot() + stake) + ' · whole pot to the winner';
     }
     el.joinLabel.textContent = label;
     el.joinSub.textContent = sub;
@@ -602,7 +602,7 @@
       : '';
     el.result.innerHTML =
       '<div class="' + cls + '"><p class="lt-res__eyebrow">Round ' + r.round + ' result' + (r.event ? ' · ' + esc(r.event) : '') + '</p>' +
-        '<h2 class="lt-res__t">' + esc(winner.name) + ' takes the pot: <em>' + dollars(total) + '</em></h2>' +
+        '<h2 class="lt-res__t">' + esc(winner.name) + ' takes the simulated pot: <em>' + dollars(total) + '</em></h2>' +
         '<ul class="lt-res__who">' + '<li><span>Winner</span><b>' + esc(winner.short) + ' · ' + core.fmtShare(r.weights.filter(function (w) { return w[0] === winner.id; })[0][1], r.pot) + ' chance</b></li>' +
         '<li><span>Players</span><b>' + r.players + ' (' + r.bots + ' bots)</b></li>' +
         '<li><span>Stakes</span><b>' + dollars(r.pot) + (bonusBits.length ? ' + ' + dollars(r.bonus.total) + ' bonus' : '') + '</b></li></ul>' +
@@ -731,7 +731,7 @@
 
   /** The line a visitor gets when a table they are not looking at (or whose result card they missed) settles. */
   function resultToast(room, r) {
-    ui.toast(room.title() + ': ' + r.winner.short + ' took the ' + dollars(r.pot) + ' pot. ' + (r.you.won ? 'Your pick won!' : 'Your ' + dollars(r.you.dollars) + ' went to it.'), r.you.won ? 'award' : 'trophy');
+    ui.toast(room.title() + ': ' + r.winner.short + ' took the simulated ' + dollars(r.pot) + ' pot. ' + (r.you.won ? 'Your pick won!' : 'Your ' + dollars(r.you.dollars) + ' went to it.'), r.you.won ? 'award' : 'trophy');
   }
 
   /**
@@ -833,7 +833,7 @@
     // a show that is still running keeps the result card back; if the table moves on before it ends, done() tells how the round ended
     if (r && animating[cur.id] && showRoom[cur.id] === cur.room) { missed[cur.room.id + ':' + r.round] = r; }
     if (r) {
-      ui.announce(r.winner.name + ' wins the ' + dollars(r.pot + r.bonus.total) + ' pot.' + (r.you ? (r.you.won ? ' Your charity won.' : ' Your stake went to the winner.') : ''));
+      ui.announce(r.winner.name + ' wins the simulated ' + dollars(r.pot + r.bonus.total) + ' pot.' + (r.you ? (r.you.won ? ' Your charity won.' : ' Your stake went to the winner.') : ''));
       GS.audio.say(r.winner.short + ' wins the pot');
       if (r.bonus.jackpot) { GS.audio.siren(); GS.confetti.celebrate(1.4); }
     }

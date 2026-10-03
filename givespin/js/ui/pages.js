@@ -204,6 +204,7 @@
   function renderClub() {
     var root = $('#view-club');
     var s = store.get();
+    var demo = GS.payments.mode() === 'demo';
     var lv = core.levelFor(s.xp);
     var unlocked = core.BADGES.filter(function (b) { return s.badges[b.id]; }).length;
 
@@ -225,12 +226,12 @@
           '<div class="levelcard__main"><div class="lvl__name">' + esc(lv.name) + '</div>' +
           '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + lv.pct + '" aria-label="Progress to next level"><i style="width:' + lv.pct + '%"></i></div>' +
           '<div class="lvl__meta">' + (lv.maxed ? 'Max level reached. ' + s.xp.toLocaleString() + ' XP in total.' : lv.into.toLocaleString() + ' / ' + lv.need.toLocaleString() + ' XP to ' + esc(lv.nextName)) + '</div>' +
-          '<p class="lvl__tip">XP comes from every round: a base, a bonus that grows with your gift, extra for splits and a jackpot bonus on the slots.</p></div></div>' +
+          '<p class="lvl__tip">XP comes from every round: a base, a bonus that grows with your gift, extra for splits and a Triple Threat XP bonus on the slots.</p></div></div>' +
         '<div class="stats stats--2">' +
           stat('flame', s.streak + (s.streak === 1 ? ' day' : ' days'), 'Current streak' + (s.bestStreak > s.streak ? ' · best ' + s.bestStreak : '')) +
-          stat('hand-coins', money(s.totalCents, true), 'Total given') +
+          stat('hand-coins', money(s.totalCents, true), demo ? 'Total given <span class="tag tag--plain">demo</span>' : 'Total sent to checkout') +
           stat('globe', String(Object.keys(s.charityCounts).length), 'Charities supported') +
-          stat('gem', money(s.biggestCents, true), 'Biggest single gift') +
+          stat('gem', money(s.biggestCents, true), demo ? 'Biggest single gift <span class="tag tag--plain">demo</span>' : 'Biggest single checkout') +
         '</div>' +
       '</div>' +
       '<div class="stats clubperks">' +
@@ -247,12 +248,12 @@
 
   function renderFair() {
     var root = $('#view-fair');
-    root.innerHTML = pageHead('Fair Play?', 'The honest question: <b>is the game rigged?</b> No, and you do not have to take our word for it. Here is how it works in plain words, and how to check any result yourself.') +
+    root.innerHTML = pageHead('Fair Play?', 'The honest question: <b>is the game rigged?</b> The result is fixed before the animation, and you can check it yourself. One honest limit: in this preview the secret is made on your own device, so this shows how a result is worked out, not an outside audit. Here is how it works in plain words.') +
 
       '<section class="sect panel panel--short" aria-labelledby="fp-short"><h2 class="sect__t" id="fp-short">The short version</h2>' +
         '<ul class="fplist">' +
           '<li>' + ui.icon('lock') + '<span><b>The winner is picked first.</b> Before the wheel spins, the ball drops or the ducks race, the result is already decided. The animation is just the show.</span></li>' +
-          '<li>' + ui.icon('shield-check') + '<span><b>It is locked in where you can see.</b> Before you play, the game shows you a “fingerprint” of its secret. If it changed anything afterwards, the fingerprint would no longer match, and you would catch it.</span></li>' +
+          '<li>' + ui.icon('shield-check') + '<span><b>It is locked in where you can see.</b> Before you play, the game shows you a “fingerprint” of its secret. If the secret were swapped afterwards, the fingerprint would no longer match and Verify would show it. In this preview the game and the secret both live on your device, so this is a demonstration, not an outside audit.</span></li>' +
           '<li>' + ui.icon('scale') + '<span><b>Everyone gets the same chance.</b> In solo games every charity on the board has exactly the same odds. At live tables each charity’s chance is its share of the pot.</span></li>' +
           '<li>' + ui.icon('circle-check') + '<span><b>You can check.</b> Press “Verify” on any past round and your browser redoes the maths and tells you whether it all adds up.</span></li>' +
         '</ul></section>' +
@@ -344,7 +345,7 @@
         '<li><strong><a href="#leagues">Leagues</a>.</strong> A weekly XP table against simulated rivals, tiers from Bronze to Diamond (higher tiers unlock bigger live-table stakes), and the <strong>Charity Cup</strong>, a three-round knockout of eight charities: you back one champion before it starts, and only a champion win pays XP.</li>' +
         '<li><strong><a href="#crews">Crews</a>.</strong> Join a simulated crew, chat with emotes, and work towards a weekly crew goal.</li>' +
         '<li><strong><a href="#cards">Cards</a>.</strong> A collectible card for each charity you help win, rarer for longer shots. Complete the monthly set for bonus XP.</li>' +
-        '<li><strong>Streaks.</strong> Back winners on the trot to build a <em>hot hand</em>, a growing XP multiplier. At live tables you can also make XP-only predictions (a pot of $500 or more, an upset win, the leading charity winning).</li>' +
+        '<li><strong>Streaks.</strong> Back winners on the trot to build a <em>hot hand</em>, a growing XP multiplier. It is only XP: every draw is random, so a streak does not make the next win more likely. At live tables you can also make XP-only predictions (a pot of $500 or more, an upset win, the leading charity winning).</li>' +
         (demo ? '<li><strong>Daily wheel.</strong> One free spin a day for demo credit.</li>' : '') +
         '</ul>' +
         '<p>None of it costs money. XP, cards and tiers have no cash value.</p>';
@@ -358,7 +359,8 @@
     ['help-account', 'Do I need an account? What about saving a card?', function () {
       return '<p>No. Accounts are optional, and right now they are a <strong>preview</strong>: you can try the sign-up, log-in and saved-card screens, but nothing is sent anywhere and no password is stored. If you save a sample card, only its type, last four digits and expiry are kept in this browser. Never enter a real card number in a preview.</p>';
     }],
-    ['help-credit', 'What is demo credit?', function () {
+    ['help-credit', 'What is demo credit?', function (demo) {
+      if (!demo) { return '<p>Demo credit is free play-money that only exists in demo mode. In this version there is no play-money balance: you finish each gift on the charity’s checkout page.</p>'; }
       return '<p>Free play-money so you can try every game. It goes down when you give and you can top it up any time with <strong>Add credit</strong>. It is not real money and cannot be cashed out.</p>';
     }],
     ['help-fees', 'Are there fees or tax receipts?', function () {
@@ -367,8 +369,8 @@
     ['help-limit', 'Can I limit how much I give?', function () {
       return '<p>Yes. When you are signed in, open <strong>Card &amp; giving limit</strong> from your account menu and set a monthly limit. Games and direct gifts stop when you reach it.</p>';
     }],
-    ['help-stream', 'Can I use this on stream?', function () {
-      return '<p>That is what it is built for. Hit the TV button at the top for <strong>Stream Mode</strong> (or add <code>?stream=1</code> to the URL). It enlarges the game and hides everything else. Add <code>&amp;transparent=1</code> for a see-through background in an OBS browser source. The space bar plays.</p>';
+    ['help-stream', 'Can I use this on stream?', function (demo) {
+      return '<p>That is what it is built for. Hit the TV button at the top for <strong>Stream Mode</strong> (or add <code>?stream=1</code> to the URL). It enlarges the game and hides everything else' + (demo ? ', except a one-line demo notice so viewers know it is play-money' : '') + '. Add <code>&amp;transparent=1</code> for a see-through background in an OBS browser source. The space bar plays.</p>';
     }],
     ['help-data', 'About the charity information', function () {
       var unv = GS.charities.filter(function (c) { return c.unverified; }).length;

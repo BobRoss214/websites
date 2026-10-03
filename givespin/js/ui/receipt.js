@@ -72,21 +72,21 @@
     var m = dlg();
     var names = round.allocs.length === 1 ? GS.charity(round.allocs[0].charityId).name : round.allocs.length + ' charities';
     m.set('<div class="rs-sending" role="status"><div class="rs-spinner">' + ui.icon('coins') + '</div>' +
-      '<h2 id="dlg-result-title">Sending your gift…</h2><p>' + money(round.cents, false) + ' to ' + esc(names) + '</p></div>');
+      '<h2 id="dlg-result-title">Sending your demo gift…</h2><p>' + money(round.cents, false) + ' to ' + esc(names) + ' · demo, nothing is charged</p></div>');
     m.setLocked(true);
     m.open();
   }
 
   /* --------------------------------------------------------------- receipt */
 
-  function titleFor(round) {
+  function titleFor(round, demo) {
     var allocs = round.allocs;
     var first = GS.charity(allocs[0].charityId);
-    if (round.direct) { return 'You gave <em>' + money(round.cents, false) + '</em> to ' + esc(first.name); }
-    if (round.jackpot && allocs.length === 1) { return 'JACKPOT! <em>' + money(round.cents, false) + '</em> all on ' + esc(first.short); }
+    if (round.direct) { return (demo ? 'You gave' : 'You are giving') + ' <em>' + money(round.cents, false) + '</em> to ' + esc(first.name); }
+    if (round.jackpot && allocs.length === 1) { return 'TRIPLE THREAT! <em>' + money(round.cents, false) + '</em> all on ' + esc(first.short); }
     if (round.jackpot && round.match && GS.charity(round.match.id)) { return 'TRIPLE THREAT! ' + esc(GS.charity(round.match.id).short) + ' landed <em>' + round.match.n + ' times</em>'; }
     if (allocs.length === 1) {
-      return (round.rounds > 1 ? 'Every round landed on ' : '') + '<em>' + money(round.cents, false) + '</em> ' + (round.rounds > 1 ? 'for ' : 'goes to ') + esc(first.name);
+      return (round.rounds > 1 ? 'Every round landed on ' : '') + '<em>' + money(round.cents, false) + '</em> ' + (round.rounds > 1 ? 'for ' : demo ? 'goes to ' : 'is for ') + esc(first.name);
     }
     return 'Your <em>' + money(round.cents, false) + '</em> is lighting up <em>' + allocs.length + ' charities</em>';
   }
@@ -123,7 +123,7 @@
 
     var sub = demo
       ? 'Simulated round: no money moved and nothing was charged.'
-      : 'Nice pick by fate. Finish each gift on the checkout page below.';
+      : 'Nice pick by fate. Each gift is finished on the charity’s checkout page, on another website. The buttons below open it in a new tab, and nothing is given until you complete it there.';
 
     var items = allocs.map(function (a) {
       var ch = GS.charity(a.charityId);
@@ -140,9 +140,9 @@
       checkout = '<div class="rs-checkout">' + pay.links.map(function (l) {
         var ch = GS.charity(l.charityId);
         return l.url
-          ? '<a class="btn btn--green" href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer">' + ui.icon('external-link') + 'Donate ' + money(l.cents, false) + ' to ' + esc(ch.short) + '</a>'
+          ? '<a class="btn btn--green" href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer">' + ui.icon('external-link') + 'Donate ' + money(l.cents, false) + ' to ' + esc(ch.short) + '<span class="sr-only"> (opens the checkout page on another website, in a new tab)</span></a>'
           : '<p class="rs-fine">No checkout link is set up for ' + esc(ch.name) + ' yet.</p>';
-      }).join('') + '</div>';
+      }).join('') + (pay.links.some(function (l) { return l.url; }) ? '<p class="rs-fine">Each button opens the charity’s checkout page on another website, in a new tab. GiveSpin never sees your card details.</p>' : '') + '</div>';
     }
 
     var after = summary.after;
@@ -174,7 +174,7 @@
         '<div class="rs-seal">' + ui.icon(round.jackpot ? 'trophy' : 'heart') + '</div>' +
         (round.jackpot ? '<span class="jackpot-tag">' + ui.icon('crown') + 'Triple Threat</span>' : '') +
         '<p class="rs-eyebrow">' + (demo ? 'Demo receipt' : 'Ready to donate') + ' · ' + esc(pay.receipt) + '</p>' +
-        '<h2 class="rs-title" id="dlg-result-title">' + titleFor(round) + '</h2>' +
+        '<h2 class="rs-title" id="dlg-result-title">' + titleFor(round, demo) + '</h2>' +
         '<p class="rs-sub">' + sub + '</p>' +
       '</div>' +
       '<ul class="alloc">' + items + '</ul>' +
@@ -225,7 +225,7 @@
     var url = window.location.href.split('#')[0].split('?')[0];
     var text = demo
       ? 'My GiveSpin round landed on ' + list + '. Give it a spin:'
-      : 'I just gave ' + money(round.cents, false) + ' to ' + list + ' on GiveSpin, the giving casino.';
+      : 'GiveSpin picked ' + list + ' for my ' + money(round.cents, false) + ' gift. Give it a spin:';
     if (navigator.share) {
       navigator.share({ title: 'GiveSpin', text: text, url: url }).catch(function (err) {
         if (!err || err.name !== 'AbortError') { ui.copyWithToast(text + ' ' + url, 'Message'); }

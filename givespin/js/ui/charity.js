@@ -144,7 +144,7 @@
         '<details class="opts"><summary>Gift options <span class="opts__sum" data-role="opts-sum"></span></summary><div class="opts__body" data-role="opts"></div></details>' +
         '<p class="field__msg field__msg--block" data-role="msg" role="alert"></p>' +
         '<button type="button" class="playbtn" data-role="go">' + '<span class="playbtn__main">' + ui.icon('hand-heart') + '<span>Give</span></span><span class="playbtn__sub" data-role="sum"></span></button>' +
-        '<p class="modal__fine">' + (GS.payments.mode() === 'demo' ? 'Demo mode: nothing is charged and no real donation is made.' : 'You will finish your gift on the charity’s checkout page.') + '</p>'
+        '<p class="modal__fine">' + (GS.payments.mode() === 'demo' ? 'Demo mode: nothing is charged and no real donation is made.' : 'You will finish your gift on the charity’s checkout page, on another website. It opens in a new tab, and GiveSpin never sees your card details.') + '</p>'
       );
       directAmount = ui.amount.mount(direct.$('[data-role="amount"]'), updateDirectSummary);
       ui.opts.mount(direct.$('[data-role="opts"]'));
