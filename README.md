@@ -34,7 +34,8 @@ js/map-art.js           draws the illustrated farm map from those points (forest
 lang/src/<code>.json    the translations (you edit these)
 lang/<code>.js          built from lang/src (what the pages load; do not edit)
 tools/                  pages.py (builds the extra pages), i18n.py (tags text, builds translations),
-                        make_qr.py + qr_links.json (QR signs), farm_map.py + saved-map.json (saved map -> js/farm-map-data.js)
+                        make_qr.py + qr_links.json (QR signs), farm_map.py + saved-map.json (saved map -> js/farm-map-data.js),
+                        add_photo.py (adds a photo: web size, no hidden data, listed in the gallery) + test_add_photo.py (its check)
 assets/qr/              QR codes (SVG), made by tools/make_qr.py
 print/qr-signs.html     printable signs, one per page, English + Spanish (not listed in Google)
 assets/photos/          farm photos
@@ -74,7 +75,7 @@ and look at the site. Anything marked **ask Claude** needs a command that has to
 | Change season dates | Ask Claude (the dates are in `js/season.js`). They move the hero scene, the season tabs, the top bar and the countdown. |
 | Turn off the season switcher | `js/content.js` → `seasonPicker: false,`. The "See the farm in…" buttons in the first screen disappear and the site follows the calendar. Do this before you launch. (The "What's on the farm" and "What's in season" tabs stay.) |
 | Add a review | `js/content.js` → inside `reviews: [ ]` add `{ quote: "…", name: "Sarah M.", source: "Google", url: "https://…", date: "May 2026" },`. `quote` and `name` are required. Only add words a reviewer really wrote, and ask first. The quote cards stay hidden until there is one. The Google, Tripadvisor and Yelp buttons always show. |
-| Add a photo | Put the file in `assets/photos/`, then add a line to `photos` in `js/content.js`: `{ src: "assets/photos/name.jpg", alt: "Describe the photo", caption: "Optional" },`. Other languages show the description in English until Claude translates it (see "Photos"). |
+| Add a photo | Ask Claude, and send the picture with a few words on what is in it. Claude runs `python3 tools/add_photo.py` (steps under "Adding a photo" in the Photos section below). It shrinks the picture, takes out the hidden camera and location data, saves it and lists it in the gallery. Other languages show the description in English until Claude translates it. |
 | Turn on analytics | Ask Claude. You first sign up with one of Plausible, GoatCounter, Umami or Cloudflare Web Analytics; Claude then puts the details in `analytics` in `js/content.js`. Nothing is counted until then, and never for visitors who send Do Not Track. |
 | Change the hero text for a season | Ask Claude. (The words are in `index.html`: the `.hero-sub` lines under the big headline and the winter headline `#hero-h`. They need new translations too.) |
 | Change the booking link | Ask Claude. The Bookeo address `https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356` appears in many places and must be replaced in all of them. |
@@ -341,20 +342,44 @@ Text, prices and links come from the wording you pasted from the current site. T
 
 ## Photos
 
-All 19 farm photos are in `assets/photos/`, plus the printed Fall Menu 2026 (`wise-pie-fall-menu-2026.webp`).
-They appear in the photo gallery (every one), and in context: season panels (spring, summer, fall photo strips),
-the flowers collage, "Meet the goats" at The GreenHouse, the Wise Pie section ("View the printed menu" opens the
-menu image) and the pumpkin, strawberry and Wise Pie pages. Tap any photo to enlarge it.
+The farm photos are in `assets/photos/`, plus the printed Fall Menu 2026 (`wise-pie-fall-menu-2026.webp`). Every photo listed in `photos`
+(in `js/content.js`) is in the photo gallery. Some also sit in context: season panels (spring, summer, fall photo strips), the flowers collage,
+"Meet the goats" at The GreenHouse, the tomatoes section, the school tour and the strawberry, pumpkin, school and Wise Pie pages. Tap any photo to enlarge it.
+On phones the gallery shows two photos to a row.
 
-To add more, drop files into `assets/photos/` and list them in `js/content.js`:
+### Adding a photo
 
-```js
-photos: [
-  { src: "assets/photos/example.jpg", alt: "Describe the photo", caption: "Optional caption" },
-],
+When the farm sends new photos, Claude adds each one with one command (the farm owner does not need to run anything):
+
+```
+python3 tools/add_photo.py path/to/picture.jpg --name goat-in-frog-hat --alt "A small animal wearing a green knitted frog hat" --caption "Frog hat"
 ```
 
-The description (`alt`) is read aloud for people who cannot see the picture, so write one for every photo. Other languages show the
+| Part | What it means |
+| --- | --- |
+| `picture.jpg` | A JPEG, PNG, WebP or iPhone HEIC file (HEIC needs `pip install pillow-heif`). Files that are tiny (under 120 pixels), huge (over 60 MB or 100 megapixels), animated or not pictures are refused with a plain message. The original file is never changed. |
+| `--name` | A few plain words for the file name: "goat in frog hat" becomes `assets/photos/goat-in-frog-hat.webp`. An existing picture is never overwritten, unless you add `--replace`. |
+| `--alt` | **What is visible**, read aloud to people who cannot see the picture. Never put prices, names of people or dates in it: they go out of date and can be wrong. The tool warns when it sees one. If you are not sure what an animal or a place is, say only what you can see ("a small animal wearing a green knitted frog hat"). |
+| `--caption` | Optional. A short line under the picture when it is enlarged. |
+| `--seasonal-text` | The picture has words printed on it (a season, a date, a price, "Happy Easter!"). Those go out of date, so such a picture is listed last in the gallery (marked `// words on the picture` in `js/content.js`) and should not be put in a prominent spot on a page. Say the words in `--alt`. |
+| `--place none` | Only save the file; do not list it in the gallery. |
+| `--dry-run` | Show what would happen, change nothing. Do this first when in doubt. |
+
+What the tool does: turns the picture upright when the phone stored it sideways, shrinks it to at most 1400 pixels on the long side (a small picture is **never blown up**),
+saves a WebP copy (quality 85) **with no camera or GPS data in it** (the tool says when the original had a location), adds one entry to `photos` in `js/content.js`
+(before the pictures with words on them), checks that `js/content.js` still works before it writes it, and warns when the picture looks like one that is already on the site.
+
+**Small pictures.** A picture sent through a chat app is often only about 200 pixels wide. The tool saves it as it is and warns that it will look soft if shown big.
+Such a picture belongs in a small tile (a photo strip or the gallery), never wide. If you can, ask the farm for the original from the phone.
+
+Then (the tool prints these steps too): `python3 tools/i18n.py jsstrings`, add the alt text and caption under `"js"` in `lang/src/es.json`, `hi.json`, `zh.json` and `vi.json`
+(the English text on the left, the translation on the right), `python3 tools/i18n.py build`, and `python3 tools/i18n.py missing es` (and hi, zh, vi) until each says 0 missing.
+To show a photo on a page as well, ask Claude: it becomes a small tile in a photo strip (the tool prints the tile), then `python3 tools/pages.py` and `python3 tools/i18n.py extract`.
+
+To check the tool itself: `python3 tools/test_add_photo.py` (it works on a throw-away copy and never touches the real site).
+
+By hand, if you ever have to: put the shrunk picture in `assets/photos/` and add `{ src: "assets/photos/name.webp", alt: "What is visible", caption: "Optional" },`
+to `photos` in `js/content.js`. The description (`alt`) is read aloud for people who cannot see the picture, so write one for every photo. Other languages show the
 description and caption in English until you ask Claude to translate them. (Claude: run `python3 tools/i18n.py extract && python3 tools/i18n.py missing es --list`,
 and hi, zh, vi, to see what still needs translating.)
 

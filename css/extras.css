@@ -218,6 +218,8 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .gallery-grid img[src$="foster-village-table.webp"]{object-position:50% 100%}
 /* The photo viewer shows a small file at its own size, which can be smaller than its tile: let it grow a little (not wide, the file is only ~200px). */
 .lightbox img{min-width:min(100%,320px)}
+/* Phones: two photos to a row in the gallery. A tile is then about 140-210px wide, so the small files (about 206px) stay sharp, and 30+ photos are half as long to scroll. */
+@media (max-width:30em){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
 
 /* Big hover moments: the main buttons jump, tilt, shine and ring; the "New" tomato notices pop and wiggle. */
 .hero-cta .btn{position:relative;overflow:hidden;isolation:isolate;transition:transform .38s cubic-bezier(.3,1.9,.5,1),box-shadow .3s,background-color .2s}

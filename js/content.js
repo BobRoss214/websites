@@ -25,6 +25,8 @@
  * PHOTOS
  * ------
  * The "Photo gallery" section shows every photo listed in `photos` at the bottom of this file. Tap a photo to enlarge it.
+ * Claude adds a photo with one command, `python3 tools/add_photo.py` (README.md, "Adding a photo"): it shrinks the picture, takes the hidden
+ * camera and location data out of it, saves it in assets/photos/ and adds the line below for you. The steps here are for doing it by hand.
  *   1. Put the picture in the folder assets/photos/. Shrink big phone photos first, or the page gets slow.
  *   2. Add one line inside photos: [ ... ], like this:
  *        { src: "assets/photos/strawberry-field.jpg", alt: "Rows of ripe strawberries", caption: "Spring picking" },
@@ -34,7 +36,8 @@
  *   Every photo in `photos` is in the gallery. To show one on a page as well (a small tile in a "photo strip"), ask Claude where.
  *   Pictures that arrive small (about 200 pixels wide, for example sent by chat) look soft when shown big, so Claude keeps them to small
  *   tiles. If you can, send the original file (1000 pixels wide or more) and it can be shown larger.
- *   Pictures with words written on them (a season, a date, a price) go out of date: keep those in the gallery only, and say the words in `alt`.
+ *   Pictures with words written on them (a season, a date, a price) go out of date: keep those in the gallery only, say the words in `alt`,
+ *   and mark the line with  // words on the picture  (add_photo.py does this with --seasonal-text). Those lines must stay last in the list.
  *
  * OPEN-NOW BADGES, CLOSURES AND THE NOTICE BAR
  * --------------------------------------------
@@ -259,16 +262,16 @@ window.WISE_ACRES = {
     { src: "assets/photos/goat-in-green-frog-hat.webp",
       alt: "A small animal wearing a green knitted frog hat",
       caption: "Frog hat" },
-    { src: "assets/photos/goats-on-platform-waiting-all-summer.webp",
+    { src: "assets/photos/goats-on-platform-waiting-all-summer.webp",   // words on the picture
       alt: "A goat standing on a high wooden platform against a blue sky, with the words We’ve been waiting all summer long to see you! partly cut off at the left",
       caption: "Up on the platform" },
-    { src: "assets/photos/baby-goat-bunny-hoodie-happy-easter.webp",
+    { src: "assets/photos/baby-goat-bunny-hoodie-happy-easter.webp",   // words on the picture
       alt: "A baby goat wearing a pink hoodie with bunny ears in a flower meadow, with the words Happy Easter! on the picture",
       caption: "Bunny-ear hoodie" },
-    { src: "assets/photos/sunflowers-with-strawberry-and-blueberry-baskets.webp",
+    { src: "assets/photos/sunflowers-with-strawberry-and-blueberry-baskets.webp",   // words on the picture
       alt: "Sunflowers behind a basket of strawberries and a basket of blueberries, with text on the picture reading Plenty of organic strawberries & blueberries now available! Morning & evening reservations.",
       caption: "Berries and sunflowers" },
-    { src: "assets/photos/blueberries-sunflowers-happy-fathers-day.webp",
+    { src: "assets/photos/blueberries-sunflowers-happy-fathers-day.webp",   // words on the picture
       alt: "A metal bowl full of blueberries in a sunflower field at dusk, with a banner reading Happy Father’s Day! (the first letters are cut off)",
       caption: "Father’s Day" },
     { src: "assets/photos/foster-village-table.webp",
