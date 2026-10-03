@@ -34,7 +34,7 @@ A test prints `PASS` or `FAIL` for each check (a failing line says what it saw) 
 code is 0 only when everything passed. A full run takes about ten minutes on a quiet computer and twenty to thirty when the computer is busy (`drive` and `hero` are the slow ones: `node tests/run-all.mjs --list`).
 
 No setup is needed: every test starts a small web server of its own **on a free port** and serves this folder's parent (the site).
-Nothing is written into the site folder (the `pipeline` test works in a temporary copy) and no pictures are saved.
+Nothing is written into the site folder (the `pipeline` and `deploy` tests work in a temporary copy) and no pictures are saved.
 
 | Setting | What it does |
 | --- | --- |
@@ -43,7 +43,7 @@ Nothing is written into the site folder (the `pipeline` test works in a temporar
 | `WA_CHROME=/path/to/chrome` | use this Chrome / Chromium instead of the one Playwright installed |
 | `WA_SLOW=3` | multiply every time limit by 3: for a very busy or slow computer (default 1) |
 | `WA_DATE=2026-12-15T12:00:00-05:00` | the moment every page believes it is "now" (default: Friday Oct 2 2026, noon in New York). Only for looking at the site on another day: some checks assume fall and then fail on purpose |
-| `WA_PYTHON=python3` | the Python program the `pipeline` test calls |
+| `WA_PYTHON=python3` | the Python program the `pipeline` and `deploy` tests call |
 | `AXE_PATH`, `PLAYWRIGHT_PATH` | where to find `axe.min.js`, or the `playwright` folder, if they are installed somewhere unusual |
 
 ## What each test covers
@@ -68,6 +68,7 @@ Nothing is written into the site folder (the `pipeline` test works in a temporar
 | `print-qr` | the printable QR signs on phones, and exactly one letter page per sign when printed |
 | `axe` | accessibility (axe-core, WCAG 2.1 AA and best practices) on the home and First-visit pages, phone and desktop, English / Chinese / Hindi, every season tab. Needs `axe-core` |
 | `pipeline` | the Python tools: the rebuild commands change nothing on a finished site, no translation is missing, edited English is reported, unsafe translations and empty maps are refused, the farm map and QR signs rebuild as committed, the tools' own checks `tools/test_add_photo.py` and `tools/test_pages.py` pass |
+| `deploy` | the upload folder made by `tools/make_deploy_folder.py`, in a temporary copy: no `docs/`, `tests/`, `tools/`, `pages/`, `README.md` or `lang/src/` in it; `_headers` and `404.html` are; `FILES.txt` lists every file with the right size and sha256; every file a page, style, code file, manifest or the sitemap points to is there; file count and size are sane; built twice it is byte for byte the same; served by a plain web server every page loads with no error or missing file; a page that was not rebuilt is rebuilt (`--check` only names it); unset launch settings are warned about without stopping; a missing translation stops it; a folder that is not its own is never emptied. Needs Python with beautifulsoup4 |
 | `consistency` | one fact, one answer (no browser): every price, clock time, weekday list, age, group size, phone number, e-mail address, street address, drive time and date is the same in every place it is written (home page, the five other pages, FAQ answers, page descriptions, structured data, `js/content.js`, `js/season.js`, the QR sign list), the farm-year picture's bars end where the words beside them say, and each of Spanish, Hindi, Chinese and Vietnamese carries the English numbers, prices, times, weekdays, months, names and e-mail addresses. `WA_FACTS=1 node tests/consistency.test.mjs` prints every place of every fact (file, line, exact words). When it fails after you reworded a sentence on purpose, the failing line says which fact lost a place: change the wording the test looks for |
 | `public-site` | nothing links to `tests/`, the sitemap lists only real pages, `robots.txt` and `_headers` keep `tests/` and `print/` out of search results, and the site's own address (`SITE` in `tools/pages.py`) is the same in every canonical tag, share tag, structured-data address, the sitemap, `robots.txt` and the QR signs |
 | `visual-check` | the visual check tool itself (`visual-check.mjs`, see "The visual check" below), on a temporary copy of the site and one small page: no baseline is refused, `--update` saves a small text baseline, an unchanged site gives "Nothing looks different", a changed heading color is reported with a picture. Never touches your own baseline in `tests/.visual/`. Takes one to three minutes |

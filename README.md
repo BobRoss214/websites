@@ -36,7 +36,9 @@ lang/<code>.js          built from lang/src (what the pages load; do not edit)
 lang/en.json, lang/js-strings.json   written by tools/i18n.py (the English text of the pages by id; the text JavaScript writes): do not edit
 tools/                  pages.py (builds the extra pages), i18n.py (tags text, builds translations),
                         make_qr.py + qr_links.json (QR signs), farm_map.py + saved-map.json (saved map -> js/farm-map-data.js),
-                        add_photo.py (adds a photo: web size, no hidden data, listed in the gallery) + test_add_photo.py (its check)
+                        add_photo.py (adds a photo: web size, no hidden data, listed in the gallery) + test_add_photo.py (its check),
+                        test_pages.py (pages.py's check), make_deploy_folder.py (makes deploy/: exactly the files to upload)
+deploy/                 the folder to upload, made fresh by tools/make_deploy_folder.py (not kept in the repository)
 assets/qr/              QR codes (SVG), made by tools/make_qr.py
 print/qr-signs.html     printable signs, one per page, English + Spanish (not listed in Google)
 tests/                  automatic browser checks for developers, not part of the website (do not upload; see tests/README.md)
@@ -372,8 +374,8 @@ writes goes through `WISE_ACRES.t("English text")`.
   `lang/src/<code>.json` and run `python3 tools/i18n.py build`. (A community photo's alt and credit are never translated.)
 - Translations live in `lang/src/<code>.json` as `{ "ui": { id: text }, "js": { "English text": text } }`.
   Keep tags such as `<strong>`, `<br>`, `<svg/>` and `<a1>…</a>` (a link) exactly as in English.
-  `python3 tools/i18n.py dump es 0 50` prints missing strings with their ids; `merge` folds
-  `lang/src/parts/<code>.*.json` into the main file. Do not run `merge`: those files are old drafts (on 3 October 2026 it only added about 20 strings per language that the site no longer uses, and it would also put old wording back over any translation edited since).
+  `python3 tools/i18n.py dump es 0 50` prints missing strings with their ids; `merge` folded
+  `lang/src/parts/<code>.*.json` (old drafts) into the main file; that folder was removed, so `merge` now only says there is nothing to merge.
 - Text that must stay as is (names, text JavaScript fills in) carries `data-no-i18n`.
 - To add a language: add it to `LANGS` in `js/i18n.js`, create `lang/src/<code>.json`, run `build`.
   If it needs its own font, add a rule next to the `html:lang(hi)` rules in `css/extras.css`.
@@ -498,7 +500,7 @@ Automatic browser checks (countdown, languages, farm map, accessibility, the too
 
 New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md): which host, what to upload, the steps in order, and what to test afterwards.
 
-1. Upload the folder to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. Every later change is uploaded the same way: make a clean copy and drag it in again (`docs/LAUNCH_CHECKLIST.md`, section 2). **Leave out the `docs/` and `tests/` folders** (`docs/`: notes and questions for the farm owner; `tests/`: automatic checks for developers; neither is for visitors). You can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site.
+1. Upload the folder to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. Every later change is uploaded the same way: make a clean copy and drag it in again (`docs/LAUNCH_CHECKLIST.md`, section 2). `python3 tools/make_deploy_folder.py` makes that copy for you: `deploy/` with exactly the files to upload (it rebuilds, checks the translations and links, warns about settings still to set, and lists what it left out); upload what is inside it. **Leave out the `docs/` and `tests/` folders** (`docs/`: notes and questions for the farm owner; `tests/`: automatic checks for developers; neither is for visitors). You can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site.
 2. Use your real domain at the **root** (`https://www.wiseacresorganic.com/`). If it lives elsewhere, change `SITE` in `tools/pages.py`, run the rebuild commands, and search & replace the domain in `index.html` (canonical, share image, structured data), and set `site` in `tools/qr_links.json` and run `python3 tools/make_qr.py` again (the QR signs carry the address).
 3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
 4. Send people to the Google Business Profile, and add your site's address there.

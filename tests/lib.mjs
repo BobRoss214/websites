@@ -75,7 +75,7 @@ export async function loadPlaywright() {
   for (const dir of [process.env.PLAYWRIGHT_PATH, g && path.join(g, 'playwright')].filter(Boolean)) {
     try { return await import(pathToFileURL(path.join(dir, 'index.mjs')).href); } catch (e) { /* next */ }
   }
-  throw new Error('Playwright is not installed. In the main folder run:  npm i -D playwright   and then   npx playwright install chromium   (see tests/README)');
+  throw new Error('Playwright is not installed. In the tests folder run:  npm install   and then   npx playwright install chromium   (see tests/README)');
 }
 
 /** The text of axe.min.js (for the accessibility test), or null when axe-core is not installed. */

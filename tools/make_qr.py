@@ -160,6 +160,7 @@ def main():
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <title>Wise Acres QR signs (print)</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <style>{CSS}</style>
 </head>
 <body>
@@ -168,7 +169,7 @@ def main():
 </body>
 </html>
 '''
-    open(os.path.join(OUT_PRINT, 'qr-signs.html'), 'w', encoding='utf-8').write(doc)
+    open(os.path.join(OUT_PRINT, 'qr-signs.html'), 'w', encoding='utf-8', newline='\n').write(doc)
     print(f'\n{made} signs -> print/qr-signs.html, codes in assets/qr/')
     if bad:
         sys.exit(f'{bad} code(s) did not scan back correctly')

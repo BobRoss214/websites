@@ -124,7 +124,7 @@ def main():
     js = ('/* Farm map points for the "Farm map" section. Written by tools/farm_map.py from the map saved in the Farm Map Marker.\n'
           ' * Do not edit by hand: change the map in the Farm Map Marker and run the script again. */\n'
           'window.WISE_ACRES_MAP = ' + body + ';\n')
-    with open(OUT, 'w', encoding='utf-8') as f:
+    with open(OUT, 'w', encoding='utf-8', newline='\n') as f:
         f.write(js)
     kinds = {}
     for r in items:

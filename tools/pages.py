@@ -212,13 +212,13 @@ def main():
             sys.exit(f'pages/{f}: a page file name may only use small letters, numbers and dashes (it becomes the web address and goes into sitemap.xml).')
         meta, body = parse_source(os.path.join(PAGES_DIR, f))
         out = compose(c, slug, meta, body)
-        open(os.path.join(ROOT, slug + '.html'), 'w', encoding='utf-8').write(out)
+        open(os.path.join(ROOT, slug + '.html'), 'w', encoding='utf-8', newline='\n').write(out)
         slugs.append(slug)
         print('wrote', slug + '.html')
     urls = [SITE] + [SITE + s + '.html' for s in slugs]
     sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'  <url><loc>{u}</loc></url>\n' for u in urls) + '</urlset>\n'
-    open(os.path.join(ROOT, 'sitemap.xml'), 'w', encoding='utf-8').write(sm)
-    open(os.path.join(ROOT, 'robots.txt'), 'w', encoding='utf-8').write(f'User-agent: *\nAllow: /\nDisallow: /print/\nDisallow: /tests/\nDisallow: /docs/\n\nSitemap: {SITE}sitemap.xml\n')
+    open(os.path.join(ROOT, 'sitemap.xml'), 'w', encoding='utf-8', newline='\n').write(sm)
+    open(os.path.join(ROOT, 'robots.txt'), 'w', encoding='utf-8', newline='\n').write(f'User-agent: *\nAllow: /\nDisallow: /print/\nDisallow: /tests/\nDisallow: /docs/\n\nSitemap: {SITE}sitemap.xml\n')
     print('wrote sitemap.xml, robots.txt')
 
 

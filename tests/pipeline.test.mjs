@@ -18,7 +18,7 @@ if (py(ROOT, '-c', 'import bs4').status !== 0) skip(`${PY} with beautifulsoup4 i
 const hasSegno = py(ROOT, '-c', 'import segno').status === 0;
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-pipeline-'));
-fs.cpSync(ROOT, tmp, { recursive: true, filter: (src) => !/[\\/](\.git|node_modules|tests|__pycache__)([\\/]|$)/.test(src) });
+fs.cpSync(ROOT, tmp, { recursive: true, filter: (src) => !/(^|[\\/])(\.git|node_modules|tests|__pycache__)([\\/]|$)/.test(path.relative(ROOT, src)) });
 const hashAll = (dir) => {
   const out = {};
   (function walk(d) { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, f.name); if (f.isDirectory()) { if (f.name !== '__pycache__') walk(p); } else out[path.relative(dir, p)] = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex'); } })(dir);

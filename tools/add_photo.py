@@ -346,7 +346,7 @@ def check_javascript(new_text, old_count_src):
         return False
     fd, tmp = tempfile.mkstemp(suffix='.js')
     try:
-        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as f:
             f.write(new_text)
         ok = subprocess.run([node, '--check', tmp], capture_output=True, text=True)
     finally:

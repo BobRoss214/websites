@@ -10,8 +10,8 @@
   python3 tools/i18n.py build        turn lang/src/*.json into lang/*.js (what the pages load)
   python3 tools/i18n.py orphans      list text that would never be translated (it sits loose next to block-level tags)
   python3 tools/i18n.py stats        strings and words per page
-  python3 tools/i18n.py merge es     fold lang/src/parts/es.*.json into lang/src/es.json (those files are old drafts: do not run it
-                                     unless you mean to bring them back)
+  python3 tools/i18n.py merge es     fold lang/src/parts/es.*.json into lang/src/es.json (left from the first translation round: that
+                                     folder was removed, so today it only says there is nothing to merge and changes nothing)
 
 Needs:  pip install beautifulsoup4
 
@@ -168,10 +168,10 @@ def cmd_extract():
         path = os.path.join(ROOT, p)
         src = STRIP.sub('', open(path, encoding='utf-8').read())
         strings, marks = analyse(src)
-        open(path, 'w', encoding='utf-8').write(inject(src, marks))
+        open(path, 'w', encoding='utf-8', newline='\n').write(inject(src, marks))
         allstr.update(strings)
         print(f'{p}: {len(strings)} strings tagged')
-    json.dump(allstr, open(os.path.join(LANG_DIR, 'en.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)
+    json.dump(allstr, open(os.path.join(LANG_DIR, 'en.json'), 'w', encoding='utf-8', newline='\n'), ensure_ascii=False, indent=1, sort_keys=True)
     print('unique strings:', len(allstr), ' words:', sum(words(v) for v in allstr.values()))
 
 
@@ -193,14 +193,18 @@ def cmd_merge(code):
     """Fold lang/src/parts/<code>.*.json (each {id: translation}) into lang/src/<code>.json."""
     data = load(code)
     parts = os.path.join(SRC_DIR, 'parts')
+    found = [f for f in (sorted(os.listdir(parts)) if os.path.isdir(parts) else []) if f.startswith(code + '.') and f.endswith('.json')]
+    if not found:   # without this, the file was rewritten (re-sorted) although nothing was added
+        print(f'Nothing to merge: there is no lang/src/parts/{code}.*.json. lang/src/{code}.json was not changed.')
+        return
     n = 0
-    for f in sorted(os.listdir(parts)) if os.path.isdir(parts) else []:
+    for f in found:
         if f.startswith(code + '.') and f.endswith('.json'):
             d = json.load(open(os.path.join(parts, f), encoding='utf-8'))
             bucket = 'js' if '.js.' in f else 'ui'
             data.setdefault(bucket, {}).update(d)
             n += len(d)
-    json.dump(data, open(os.path.join(SRC_DIR, code + '.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)
+    json.dump(data, open(os.path.join(SRC_DIR, code + '.json'), 'w', encoding='utf-8', newline='\n'), ensure_ascii=False, indent=1, sort_keys=True)
     print(f'merged {n} strings into lang/src/{code}.json (ui={len(data.get("ui", {}))}, js={len(data.get("js", {}))})')
 
 
@@ -249,7 +253,7 @@ def js_strings():
 
 def cmd_jsstrings():
     found = js_strings()
-    json.dump(found, open(os.path.join(LANG_DIR, 'js-strings.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)
+    json.dump(found, open(os.path.join(LANG_DIR, 'js-strings.json'), 'w', encoding='utf-8', newline='\n'), ensure_ascii=False, indent=1, sort_keys=True)
     print(len(found), 'JavaScript strings -> lang/js-strings.json')
 
 
@@ -366,7 +370,7 @@ def cmd_build():
         built.append((f[:-5], data))
     for code, data in built:   # only now: every language passed
         js = 'window.WISE_ACRES=window.WISE_ACRES||{};(WISE_ACRES.dict=WISE_ACRES.dict||{}).%s=%s;\n' % (code, json.dumps(data, ensure_ascii=False, separators=(',', ':')))
-        open(os.path.join(LANG_DIR, code + '.js'), 'w', encoding='utf-8').write(js)
+        open(os.path.join(LANG_DIR, code + '.js'), 'w', encoding='utf-8', newline='\n').write(js)
         print(f'lang/{code}.js  ui={len(data.get("ui", {}))} js={len(data.get("js", {}))}')
 
 

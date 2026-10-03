@@ -14,7 +14,7 @@ try { await loadPlaywright(); } catch (e) { skip('Playwright is not installed, s
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-visual-'));
 const site = path.join(tmp, 'site');
-fs.cpSync(ROOT, site, { recursive: true, filter: (src) => !/[\\/](\.git|node_modules|tests|__pycache__)([\\/]|$)/.test(src) });
+fs.cpSync(ROOT, site, { recursive: true, filter: (src) => !/(^|[\\/])(\.git|node_modules|tests|__pycache__)([\\/]|$)/.test(path.relative(ROOT, src)) });
 const base = ['--site', site, '--manifest', path.join(tmp, 'baseline.json'), '--pictures', path.join(tmp, 'pictures'), '--out', path.join(tmp, 'out'), '--only', '^wise-pie.en.390$', '--parallel', '1'];
 
 // runs the tool (not through lib's server: the tool serves --site itself) and returns { code, text }

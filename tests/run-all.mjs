@@ -15,7 +15,7 @@ import { startSite, loadPlaywright, axeSource, ms } from './lib.mjs';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 // the cheap checks first, then the browser tests from fast to slow
-const ORDER = ['public-site', 'pipeline', 'consistency', 'live', 'dated', 'messages', 'drive', 'pause', 'gallery', 'analytics', 'print-qr', 'farm-seasons', 'npc', 'i18n', 'i18n-early', 'languages', 'axe', 'map', 'features', 'hero'];
+const ORDER = ['public-site', 'pipeline', 'consistency', 'live', 'dated', 'messages', 'drive', 'pause', 'gallery', 'analytics', 'print-qr', 'deploy', 'farm-seasons', 'npc', 'i18n', 'i18n-early', 'languages', 'axe', 'map', 'features', 'hero'];
 const NEEDS_BROWSER = (name) => !['public-site', 'pipeline', 'consistency'].includes(name);
 const args = process.argv.slice(2), flags = args.filter((a) => a.startsWith('--')), words = args.filter((a) => !a.startsWith('--'));
 const names = fs.readdirSync(DIR).filter((f) => f.endsWith('.test.mjs')).map((f) => f.replace(/\.test\.mjs$/, ''))
@@ -32,8 +32,8 @@ if (flags.includes('--list')) {
 if (!names.length) { console.log('No test matches: ' + words.join(' ')); process.exit(1); }
 
 let playwright = true;
-try { await loadPlaywright(); } catch (e) { playwright = false; console.log('Playwright is not installed, so the browser tests cannot run.\n  Fix: npm i -D playwright axe-core && npx playwright install chromium   (see tests/README)\n'); }
-if (!axeSource() && names.includes('axe')) console.log('(axe-core is not installed: the accessibility test will be skipped. npm i -D axe-core)\n');
+try { await loadPlaywright(); } catch (e) { playwright = false; console.log('Playwright is not installed, so the browser tests cannot run.\n  Fix: in the tests folder run  npm install && npx playwright install chromium   (see tests/README)\n'); }
+if (!axeSource() && names.includes('axe')) console.log('(axe-core is not installed: the accessibility test will be skipped. In the tests folder: npm install)\n');
 
 const site = await startSite();
 const LIMIT = ms(900000);   // no single test may run longer than 15 minutes (scaled by WA_SLOW); the slowest, drive, needs about 8 on a busy computer

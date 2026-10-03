@@ -23,7 +23,7 @@ Every statement about a host company carries a tag that says how sure we are:
 ## The short version
 
 1. Use **Cloudflare Pages** on the free plan, with its drag-and-drop upload. Section 1 says why, and what to do if you would rather use Netlify.
-2. Upload a copy of the folder **without** `docs/`, `tests/`, `tools/`, `pages/` and `README.md` (section 2).
+2. Make the upload folder with one command, `python3 tools/make_deploy_folder.py` (or ask Claude to), and upload what is inside `deploy/`. By hand: a copy of the folder **without** `docs/`, `tests/`, `tools/`, `pages/` and `README.md` (section 2).
 3. Make the owner decisions in section 4. Ask for `seasonPicker: false` before the real upload.
 4. Point `www.wiseacresorganic.com` at the host with one DNS record. Leave every other record alone, because your email depends on them (step 3.3).
 5. Check the padlock and the headers (3.4, 3.5). Decide about the old-address redirects (3.6).
@@ -56,6 +56,27 @@ The site is plain files. There is no database and no build step, so any host tha
 
 ## 2. What to upload, and what to leave out
 
+### The easy way: one command
+
+In the site folder run
+
+```
+python3 tools/make_deploy_folder.py
+```
+
+(on Windows type `python` instead of `python3`), or ask Claude to run it. It needs Python 3.8 or newer and the `beautifulsoup4` package that the other tools use (README, "Commands: one-time setup"). It does four things and says each one in plain words:
+
+1. It rebuilds the pages and the translations. If a page was not rebuilt after an edit, it is updated in your folder and named.
+2. It **stops** if a translation is missing (ask Claude to add it), so no visitor sees a sentence left in English.
+3. It **warns, without stopping**, about settings in `js/content.js` that this checklist asks you to set: `seasonPicker` (3.8), `farmPoint` (3.13), and, which can follow launch, `reviewUrl` (3.12) and the Mailchimp `signup`.
+4. It makes the folder `deploy/` with exactly the files a visitor needs, checks that every file the pages point to is in it, and lists what it left out and why. At commit `66c8272` that is 77 files and `FILES.txt`, 5.8 MB.
+
+Upload what is **inside** `deploy/`: in step 3.2 drag the `deploy` folder where it says `wise-acres-upload`. `deploy/FILES.txt` lists every file with its size and a fingerprint (sha256). It is uploaded too and does no harm. Its last line is a fingerprint of the whole folder: two uploads with the same fingerprint have exactly the same files. Keep a copy of each folder you upload, with the date in its name (`wise-acres-upload-2026-10-09`), so you can go back. `deploy/` is remade from scratch each time and is never saved in the repository.
+
+`python3 tools/make_deploy_folder.py --check` only says whether the pages and translations are up to date, and writes nothing. If `beautifulsoup4` cannot be installed, `--no-rebuild` copies the files as they are, without steps 1 and 2 (not recommended).
+
+### By hand (if you cannot run the command)
+
 **Upload** these (everything the visitor needs):
 
 | Item | What it is |
@@ -85,7 +106,7 @@ How to do it, with no tools:
 3. What is left should be 16 items (17 with `_redirects`), 92 files (93 with `_redirects`), about 6.4 MB. Double-click `index.html` in the copy and check the site looks right. (In Chrome the lettering looks plainer when a page is opened this way, because Chrome does not load font files from a plain folder; online the real fonts load. **[tested here]**)
 4. Keep each uploaded folder, with the date in its name (`wise-acres-upload-2026-10-09`). If an upload goes wrong you can go back.
 
-The helper checked on 2 October 2026, and again on 3 October 2026 with the files at commit `13e88af`, that the site loads with all 8 pages and 5 languages from this reduced folder, with no missing file.
+The helper checked on 2 October 2026, and again on 3 October 2026 with the files at commit `13e88af`, that the site loads with all 8 pages and 5 languages from this reduced folder, with no missing file. The same check was run on 3 October 2026 on the folder made by `tools/make_deploy_folder.py` at commit `66c8272`, served by a plain web server with no special rules: 40 page loads (every page, including `404.html` and `print/qr-signs.html`, in all 5 languages), every one with status 200, no error and no missing file. **[tested here]** The command also leaves out `lang/src/`, `lang/en.json`, `lang/js-strings.json` (material for translators) and `assets/qr/` (the QR codes as separate files: `print/qr-signs.html` has its own copy of each). When you copy by hand you can leave them in; they do no harm.
 
 ## 3. The steps, in order
 
@@ -98,7 +119,7 @@ Some steps change the files (marked **FILES**): `seasonPicker`, `_redirects`, th
 
 ### 3.2 Upload a trial copy
 
-- [ ] In the Cloudflare dashboard open Workers & Pages, then Create application, Get started, **Drag and drop your files**. Name the project (for example `wise-acres`), drag in the `wise-acres-upload` folder, and press Deploy site. The site appears at `<project>.pages.dev`. **[read]** If you cannot find the drag-and-drop choice, stop and ask the helper. Do not use the command-line route alone.
+- [ ] In the Cloudflare dashboard open Workers & Pages, then Create application, Get started, **Drag and drop your files**. Name the project (for example `wise-acres`), drag in the `deploy` folder (section 2; or the `wise-acres-upload` folder if you made it by hand), and press Deploy site. The site appears at `<project>.pages.dev`. **[read]** If you cannot find the drag-and-drop choice, stop and ask the helper. Do not use the command-line route alone.
 - [ ] On that address check: the home page and each language; `/wise-pie.html` jumps to `/wise-pie` and shows the page; a made-up address such as `/nonsense` shows the friendly "page not found" page; adding `?check` to the home address shows no yellow "Site check" box at the bottom. **[tested here]**
 - [ ] Do not give the `.pages.dev` address to anyone. See 3.5 for keeping it out of Google.
 - Updating later: open the project, Create a new deployment, drag the folder again. **[read]**

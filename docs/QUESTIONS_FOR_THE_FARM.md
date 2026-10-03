@@ -641,7 +641,7 @@ Line numbers in this part were right on 3 October 2026 for commit 12eec95 and dr
 
 - After changing English text in `index.html` or `pages/*.html`, run `python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build`, then `python3 tools/i18n.py missing es` (also `hi`, `zh`, `vi`) to see what needs translating.
 - Edit `pages/<name>.html`, not the generated pages (`first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html`, `wise-pie.html`); the rebuild overwrites them.
-- Add translations directly to `lang/src/<code>.json`. Do not run `python3 tools/i18n.py merge`: it reloads the old drafts in `lang/src/parts/` (on 3 October 2026 it only added about 20 strings per language that the site no longer uses, and it would also put old wording back over any translation edited since).
+- Add translations directly to `lang/src/<code>.json`. There is no need for `python3 tools/i18n.py merge`: the old drafts it reloaded (`lang/src/parts/`) were removed, and it now changes nothing (on 3 October 2026 it only added about 20 strings per language that the site no longer uses, and it would also put old wording back over any translation edited since).
 - Never guess an answer. If the farm does not answer, leave that part of the site as it is and keep the README row.
 
 ### 1. Things that could mislead the public (please answer these first)
