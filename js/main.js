@@ -286,13 +286,19 @@
       if (Math.abs(dx) > 6) facing = dx > 0 ? 1 : -1;
       const bob = Math.sin(t * 9) * 5;
       bee.style.transform = `translate3d(${x.toFixed(1)}px, ${(y + bob).toFixed(1)}px, 0) scaleX(${facing}) rotate(${(Math.sin(t * 5) * 5).toFixed(1)}deg)`;
-      requestAnimationFrame(frame);
+      raf = requestAnimationFrame(frame);
     }
-    new IntersectionObserver((entries) => {
-      const on = entries[0].isIntersecting;
-      if (on && !running) { running = true; requestAnimationFrame(frame); }
-      if (!on) running = false;
-    }).observe(hero);
+    // It only flies while the hero is on screen, the tab is visible and the season shows a bee (the CSS hides it in winter:
+    // a hidden bee used to keep the loop, and with it a drawing frame of the whole hero, going all the time).
+    let onScreen = false, raf = 0;
+    const sync = () => {
+      const on = onScreen && !doc.hidden && root.getAttribute('data-season') !== 'winter';
+      if (on && !running) { running = true; raf = requestAnimationFrame(frame); }
+      if (!on) { running = false; cancelAnimationFrame(raf); }
+    };
+    new IntersectionObserver((entries) => { onScreen = entries[entries.length - 1].isIntersecting; sync(); }).observe(hero);
+    doc.addEventListener('visibilitychange', sync);
+    doc.addEventListener('wa:season', sync);
   }
 
   /* ------------------------------------------------------------------ *
