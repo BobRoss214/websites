@@ -11,7 +11,7 @@
  *
  * What it records: which buttons people tap (Reserve, Directions, Email, Pizza pre-order, Email signup,
  * Review, Waitlist, Instagram), reminders added, map points opened, which sections they reach,
- * season and language changes.
+ * season and language changes, and that a Drive time answer was shown (and for which place). Never anything typed.
  */
 (() => {
   'use strict';
@@ -19,7 +19,9 @@
   if (!W) return;
   const cfg = W.analytics || { provider: 'none' };
   const doc = document;
-  const dnt = navigator.doNotTrack === '1' || window.doNotTrack === '1' || navigator.globalPrivacyControl === true;
+  // "1" is what every current browser sends; "yes" and msDoNotTrack are the older spellings (old Firefox, Internet Explorer, old Edge); window.doNotTrack is Safari's older place for it
+  const yes = (v) => v === '1' || v === 'yes' || v === 1 || v === true;
+  const dnt = yes(navigator.doNotTrack) || yes(window.doNotTrack) || yes(navigator.msDoNotTrack) || navigator.globalPrivacyControl === true;
   const debug = /[?&]track=debug\b/.test(location.search);
   const log = [];
 

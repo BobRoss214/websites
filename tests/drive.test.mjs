@@ -234,7 +234,7 @@ if (want(9)) { console.log('9. the "Drive to:" choice and its default by season'
   ok(r[0].label === 'The farm (4701 Hartis Rd)' && r[1].label === 'The GreenHouse (5503 Poplin Rd)', 'both places are named with their address: ' + JSON.stringify(r.map((x) => x.label)));
   ok(await page.locator('.drive-to legend').innerText() === 'Drive to:', 'the choice has a legend');
   ok(/miles and minutes/.test(await page.locator('.drive-label').innerText()) && !/farm/i.test(await page.locator('.drive-label').innerText()), 'the label no longer says "to the farm"');
-  ok(await page.locator('.drive-list li').count() === 6 && /does not keep it/.test(await page.locator('.drive-priv').innerText()), 'town chips and the privacy line are still there');
+  ok(await page.locator('.drive-list li').count() === 6 && /does not keep your address, but those services may keep a record of the request/.test(await page.locator('.drive-priv').innerText()), 'town chips and the privacy line are still there');
   await pickPlace(page, 'greenhouse');
   await settle(page, 150);
   r = await radios(page);

@@ -149,30 +149,72 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .cta-band{background:var(--sun);border-block:3px solid var(--ink);padding-block:clamp(36px,6vw,64px);text-align:center}
 .cta-band h2{font-size:clamp(1.8rem,4vw,2.8rem);margin-bottom:.6em}
 .cta-band .hero-cta{justify-content:center}
-/* Printing. Every page: no animation, nothing hidden until you scroll to it, no decoration, cards stay in one piece.
+/* Printing. Every page: no animation, nothing hidden until you scroll to it, nothing that only works on a screen (buttons, tabs, filters,
+   games, live countdowns), no decoration, no dependence on background colours (a browser leaves them off unless the person turns them on),
+   cards and tables stay in one piece, headings stay with their text, and the links that matter show their address.
    The First visit page (its hero and FAQ carry .print-skip) prints just "When you arrive" and the checklist on ONE sheet. */
 @media print{
   @page{margin:.6in}
+  html{font-size:14px;scroll-behavior:auto}
+  body{line-height:1.45}
   *,*::before,*::after{animation:none!important;transition:none!important;box-shadow:none!important;text-shadow:none!important}
-  html{scroll-behavior:auto}
-  .announce,.skip-link,.vine,.nav,.menu-toggle,[data-lang-menu],.lang,.action-bar,.to-top,.footer-field,.site-footer,.season-strip,
-  #hero-scene,#critters,#season-switch,.picker,.bee-fly,.cta-band,.page-hero-art,.page-hero .hero-cta,.hero-cta,.card-actions,
-  main img,.photo-strip,#gallery,.print-skip,#on-farm,#know,#before,[data-print],#arrive .drive,#arrive .more-maps,#arrive .entrance-photo{display:none!important}
+  /* gone: navigation, banners, the bottom bar, scenes and pictures */
+  .announce,.skip-link,.vine,.nav,.menu-toggle,[data-lang-menu],.lang,.lang-offer,.action-bar,.to-top,.footer-field,.season-strip,
+  #hero-scene,#critters,#season-switch,.picker,.bee-fly,.page-hero-art,.page-hero .hero-cta,.hero .hero-cta,.card-actions,.lightbox,
+  main img,.photo-strip,#gallery,.print-skip,#on-farm,#know,#before,[data-print],#arrive .drive,.more-maps,#arrive .entrance-photo,#arrive .eyebrow,.shop-jump,.gh-goats,.review-cta,
+  .track,.scene-card,.tomato-art,.reserve-art,.gh-art,.collage,.pizza-art,.addon-art,.addon-art-group,.package-art,.choose-art,.price-art,.pass-art,.value-art,.care-art,.tp-art,.card-art,.about-sticker,.about-photo,.float-pizza,.cone-sign{display:none!important}
+  /* gone: things that need a finger or a clock (they would be stale or dead on paper) */
+  button,.fs-tabs,.season-tabs,.group-tabs,.filter-row,.goat-nook,.bouquet,.rel-count,.rel-actions,.remind-menu,.next-up,.chip-rel,.live,.hero-live,.cal-today{display:none!important}
   body{background:#fff!important;padding:0!important}
   .site-header{position:static;background:none;border:0;-webkit-backdrop-filter:none;backdrop-filter:none}
   .header-inner{height:auto;padding-block:0 8px}
   .page-hero,.hero{min-height:0!important;padding-block:8px!important;background:none!important;border:0}
   .reveal{opacity:1!important;transform:none!important}
   .section{padding-block:12px}
-  .two-col{grid-template-columns:1fr}
-  .checklist-card{box-shadow:none;border:2px solid #000}
-  .card,.fact-card,.package,.price-card,.loc-card,.choose-card,details,figure,li,tr{break-inside:avoid}
-  h1,h2,h3,h4{break-after:avoid}
-  /* the sign-up form's address is printed under its button (a button does nothing on paper), and an e-mail address never breaks in two */
-  .btn[href^="https://docs.google.com/forms"]{flex-wrap:wrap;height:auto}
-  .btn[href^="https://docs.google.com/forms"]::after{content:attr(href);flex:1 0 100%;margin-top:.3em;font:600 8pt/1.3 var(--body);color:#000;text-align:left;word-break:break-all}
-  .fact-grid{grid-template-columns:1fr!important}
-  .eyebrow{break-after:avoid}
+  /* Chrome does not split a CSS grid between its rows when a heading is kept with what follows (a whole sheet can stay empty, or a heading end up alone at the foot of a page), so the grids that hold headings and long lists print as plain blocks */
+  .two-col,.faq-grid{display:block!important}
+  .two-col>*+*{margin-top:20px}
+  .faq-list,.fact-grid,.price-card,.price-list{display:flex!important;flex-direction:column}
+  .table-scroll,.fs-scroll{overflow:visible!important}
+  th,.faq-head{position:static!important}
+  .faq-head{margin-bottom:12px}
+  .checklist-card{border:2px solid #000}
+  /* Colour: nothing relies on a background. Light text that sat on red, green, brown or sun-yellow turns black with an outline. */
+  .btn,.tag,.choose-tag,.choose-new-badge,.package-flag,.fs-this,.fs-now,.now-badge,.new-ribbon,.way-time,.gh-banner-a,.gh-banner-b,.loc-tag,.badge-now,.badge-sun,.badge-green,.pill,.draft-tag,.menu-tag{background:none!important;color:#000!important;border:1.5px solid #000!important}
+  .btn{padding:.35em .9em;font-size:.95rem;height:auto;min-height:0}
+  .pizza,.pizza *,.reserve,.reserve *,.cta-band,.cta-band *,.site-footer,.site-footer *{background:none!important;color:#000!important}
+  .pizza .btn,.reserve .btn,.cta-band .btn{border:1.5px solid #000!important}
+  .ticks li::before{content:"\2713";background:none;border:0;width:auto;height:auto;color:#000;font:800 1em/1.6 var(--body)}
+  .faq-list summary::after{display:none}
+  details::details-content{content-visibility:visible;display:block;height:auto}
+  /* Buttons do nothing on paper. What stays: the sign-up and booking buttons, with their address printed under them, and e-mail buttons. */
+  a.btn{display:none!important}
+  a.btn[href^="mailto:"],a.btn[href^="tel:"],
+  a.btn[href^="https://docs.google.com/forms"],a.btn[href^="https://eepurl.com"],a.btn[href^="https://wise-pie-wood-fired-at-wise-acres.square.site"],
+  :is(.cta-band,.reserve) a.btn[href^="https://bookeo.com"]{display:inline-flex!important}
+  a.btn[href^="https://docs.google.com/forms"],a.btn[href^="https://eepurl.com"],a.btn[href^="https://wise-pie-wood-fired-at-wise-acres.square.site"],a.btn[href^="https://bookeo.com"]{flex-wrap:wrap;height:auto}
+  a.btn[href^="https://docs.google.com/forms"]::after,a.btn[href^="https://eepurl.com"]::after,a.btn[href^="https://wise-pie-wood-fired-at-wise-acres.square.site"]::after,a.btn[href^="https://bookeo.com"]::after,
+  .site-footer a[data-signup-link]::after{content:attr(href);position:static;display:block;flex:1 0 100%;width:auto;margin-top:.3em;background:none;opacity:1;transform:none;font:600 8pt/1.3 var(--body);color:#000;text-align:left;word-break:break-all}
+  /* the closing "book now" band and the footer print as one plain block; the home page already has contact details, the First visit sheet is only one page */
+  .cta-band{padding:10px 0;border-block:2px solid #000;text-align:left}
+  .cta-band .hero-cta{justify-content:flex-start}
+  .site-footer{margin-top:12px;padding:8px 0 0;border-top:2px solid #000}
+  .site-footer :is(.grass,nav,.social-links,.lang-links,.brand){display:none!important}
+  .footer-inner{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;padding:0}
+  .site-footer a[data-signup-link]{display:block}   /* a block inside a link that sits in a paragraph is cut off at the page end by Chrome: the link itself is the block */
+  .copyright{padding:6px 0 0;font-size:.85rem}
+  body:has(#contact) .site-footer,body:has(#arrive) .site-footer,body:has(#arrive) .cta-band{display:none!important}
+  /* Keep together: cards, tables, the year chart; keep headings with what follows. The two long boxes (menu, reservation schedule) and the
+     groups panel may run over a page, and then each part keeps its own border. */
+  .card,.fact-card,.package,.loc-card,.choose-card,.way-card,.variety,.pass,.notice,.gh-callout,.step,.rel-box,.cal,.farm-cal,.included,.tomato-hero,.season-panel,
+  .sched-table,.fs-table,.table-scroll,.flower-schedule,.bloom-timeline>*,.tag-us,.first-time,.drive-opt,.contact-grid>*,
+  .addon-list>*,.gh-hours,.pizza-hours,.pizza-facts,.week-strip,.checklist-card,.tier-list,.cta-band,.site-footer,
+  .section-head,.col-head,.faq-head,.week-head,.schedule-head,.menu-head,.community-head,.sub-head,.lead,
+  details,figure,li,tr,.price-list>div{break-inside:avoid}
+  .menu,.schedule,.group-panel,.price-card{-webkit-box-decoration-break:clone;box-decoration-break:clone}
+  h1,h2,h3,h4,summary,.eyebrow,.hero-kicker,.gh-banner,.section-head,.col-head,.faq-head,.week-head,.schedule-head,.menu-head,.community-head,.sub-head,.schedule-head+*,thead{break-after:avoid}
+  thead{display:table-header-group}
+  /* an e-mail address never breaks in two */
   a[href^="mailto:"]{overflow-wrap:normal;word-break:normal}
 }
 .price-card{padding:22px 24px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:0 6px 0 var(--ink);display:grid;gap:12px;align-content:start}

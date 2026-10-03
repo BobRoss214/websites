@@ -110,7 +110,7 @@ The helper checked on 2 October 2026, and again on 3 October 2026 with the files
 
 ## 3. The steps, in order
 
-Some steps change the files (marked **FILES**): `seasonPicker`, `_redirects`, the Content-Security-Policy line, the page addresses, analytics, the Search Console tag. Each time, upload the folder again. Only the newest upload is live, and each takes a few minutes. So the first upload (3.2) is a trial run on a temporary address; the real one comes after the FILES steps.
+Some steps change the files (marked **FILES**): `seasonPicker`, `_redirects`, the Content-Security-Policy line, the page addresses, analytics, the Search Console tag. Each time, make the upload folder again (section 2) and upload it: a change in the site folder does not reach a `deploy/` folder made before it. Only the newest upload is live, and each takes a few minutes. So the first upload (3.2) is a trial run on a temporary address; the real one comes after the FILES steps.
 
 ### 3.1 Account
 
@@ -122,7 +122,7 @@ Some steps change the files (marked **FILES**): `seasonPicker`, `_redirects`, th
 - [ ] In the Cloudflare dashboard open Workers & Pages, then Create application, Get started, **Drag and drop your files**. Name the project (for example `wise-acres`), drag in the `deploy` folder (section 2; or the `wise-acres-upload` folder if you made it by hand), and press Deploy site. The site appears at `<project>.pages.dev`. **[read]** If you cannot find the drag-and-drop choice, stop and ask the helper. Do not use the command-line route alone.
 - [ ] On that address check: the home page and each language; `/wise-pie.html` jumps to `/wise-pie` and shows the page; a made-up address such as `/nonsense` shows the friendly "page not found" page; adding `?check` to the home address shows no yellow "Site check" box at the bottom. **[tested here]**
 - [ ] Do not give the `.pages.dev` address to anyone. See 3.5 for keeping it out of Google.
-- Updating later: open the project, Create a new deployment, drag the folder again. **[read]**
+- Updating later: make the upload folder again (section 2), open the project, Create a new deployment, and drag in the new folder. **[read]**
 
 ### 3.3 Domain and DNS
 
@@ -243,7 +243,7 @@ It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Bot
 /parties-school-tours/   /#groups                 301
 ```
 
-- [ ] To use it: save the block as a file named `_redirects` (no `.txt`) in the top folder of the upload, and upload again.
+- [ ] To use it: save the block as a file named `_redirects` (no `.txt`) in the top folder of the site, next to `index.html` (`tools/make_deploy_folder.py` copies it into `deploy/`; if you copy by hand, it goes in the top of the copy), then make the upload folder again and upload it.
 - [ ] Test: open each old address in a browser. It should land on the right place. All 22 lines were tested in Cloudflare's own test server (each answers 301 and lands on a page that opens), and Netlify's open-source parser accepted the file. **[tested here]**
 - On Netlify, the targets `/wise-pie` and `/school-field-trips` rely on Netlify serving the address without `.html`, which a Netlify support-forum answer says it does. **[not opened]**
 
@@ -411,7 +411,7 @@ If something is wrong: open the project's list of deployments in Cloudflare and 
 
 ### Every week in season (about 10 minutes)
 
-- [ ] Update "This week at the farm" (`week` in `js/content.js`), the notice bar and any closures; and open the next pizza weekend if it is due (README, "Day-to-day changes"). Upload again; a hard refresh (Ctrl+F5, or Cmd+Shift+R on a Mac) shows the new version at once on your own screen, and other visitors may keep the old files for up to an hour.
+- [ ] Update "This week at the farm" (`week` in `js/content.js`), the notice bar and any closures; and open the next pizza weekend if it is due (README, "Day-to-day changes"). Make the upload folder again and upload it (section 2); a hard refresh (Ctrl+F5, or Cmd+Shift+R on a Mac) shows the new version at once on your own screen, and other visitors may keep the old files for up to an hour.
 - [ ] Open the live site on your phone. The "Open now" badges and the countdown should match real life.
 - [ ] Press Reserve: the Bookeo page should show the days you expect.
 - [ ] Add `?check` to the home address. No yellow box. Press "Get drive time" once with your own address; if it fails two weeks running, tell the helper (3.13).

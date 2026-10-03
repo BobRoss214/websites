@@ -4,6 +4,8 @@
 
 **Checked:** 2 October 2026, website version `4d80383`. The Drive time box was added later and checked on 3 October 2026, website version `2996b9f`: sections 2, 3, 5, 6, 7 and 8 and the events table were updated for it. The browser-storage and outside-sites checks were run again on 3 October 2026 for website version `979437f`, after the keyboard, language-menu, first-visit and photo changes: the same three entries in section 1, no cookies, and no contact with another site until "Get drive time" is pressed. Section 5 now also lists the two other credit links under a Drive time answer. If the code changes, these facts can change too. Ask Claude to run the checks again (see the end of this page).
 
+**Checked again on 3 October 2026, website version `f478b83`** (after about 100 further changes), with a crawl: all 6 pages x 5 languages x the 4 seasons (the browser clock set to a date in each season) = 120 visits, each with scrolling to the bottom, every FAQ opened, the season switcher and the language menu; 27 longer visits to the home page and the First-visit page that also played the hero game, the goat, the gallery, the map, both reminder buttons, the Drive time box (with a made-up address) and the signup (stand-ins for the outside services); and the 404 page and the QR-sign page in 5 languages. Result: the same three entries in section 1, nothing kept before the visitor does something (and `?lang=` alone keeps nothing), no cookie, no sessionStorage, IndexedDB, Cache Storage or service worker in any visit, no other site contacted while a page is only read (0 requests in 140 reading visits), the other sites contacted only after their own button (section 2), every outside request carrying the site name only as Referer and no cookie, and the made-up address found only in the first request to the address search. These checks now run by themselves: `node tests/run-all.mjs privacy analytics` (see "How to check again"). Findings of that check that changed this sheet: the event `drive_time` is now `Drive time` and does carry the chosen place (`farm` or `greenhouse`); older Do Not Track spellings are now honoured (section 4); the signup reply is a script the page runs (section 3); `g.page` is listed (section 5).
+
 **How it was checked**
 
 1. **The site as it is today.** Every page was opened in a brand-new browser profile, with the browser set to Spanish so the "Would you like this in Spanish?" question appears. Every feature was then used:
@@ -72,7 +74,7 @@ These are kept only in memory and disappear when the page is closed or reloaded:
 - an empty field that Mailchimp uses to catch robots;
 - a one-time reply name.
 
-Everything travels inside the request's web address; that is how this kind of Mailchimp connection works. The page shows nothing from Mailchimp's reply except whether the signup went through, or whether the person is already on the list.
+Everything travels inside the request's web address; that is how this kind of Mailchimp connection works. The page shows nothing from Mailchimp's reply except whether the signup went through, or whether the person is already on the list. **But the reply is a small script that the page runs** (the "JSONP" way of talking to Mailchimp), so Mailchimp's address is trusted like an analytics script: it is the only outside address that can run code in the page, and only after the button is pressed.
 
 **What goes to the two map services when the visitor presses "Get drive time":**
 - **To `nominatim.openstreetmap.org`** (the address search run by the OpenStreetMap Foundation): the address exactly as typed (at most 200 characters), and fixed words: `format=jsonv2`, `limit=1`, `countrycodes=us`, `accept-language=en`. A second search, for the chosen place's address (the farm: `4701 Hartis Rd, Indian Trail, NC 28079`, or The GreenHouse: `5503 Poplin Rd, Indian Trail, NC 28079`; both are public business addresses), follows about 1.1 seconds later, unless `farmPoint` is set in `js/content.js`; its answer is kept in memory until the page is closed or reloaded, so later presses send only the first search.
@@ -80,7 +82,7 @@ Everything travels inside the request's web address; that is how this kind of Ma
 - **What comes back and is shown:** the name of the place found (up to 140 characters; the place name is always in English, after the words "We looked up:" in the visitor's language), the distance and the time. Nothing is stored by the website: the browser's local storage, session storage and cookies were identical before and after a lookup (tested).
 - **A link, only if tapped:** under every answer there is a button "Open these directions in Google Maps". Google receives the typed address in that link's web address only if the visitor taps it.
 - **The browser's own autofill:** the box is marked as a street-address field, so a browser may offer the visitor's saved addresses and may offer to remember what is typed. That is the browser's feature, not this website's.
-- **With analytics on:** the event `drive_time` is sent after an answer is shown, with no details (table below).
+- **With analytics on:** the event `Drive time` is sent after an answer is shown, with one detail: which place was chosen (`farm` or `greenhouse`). Never the address, the place found or the distance (table below).
 
 **What every outside site sees on any of these requests:**
 - the visitor's internet (IP) address and browser type, as with any web request;
@@ -101,7 +103,7 @@ Everything travels inside the request's web address; that is how this kind of Ma
 | Season preview | The season switcher is used | The season |
 | Language change | The language is changed, or a page opens in a language other than English | The language code |
 | Hero played | First tap in the game at the top of the home page (picking, the tractor, the fire) | Nothing |
-| `drive_time` | A drive-time answer is shown in the Drive time box | Nothing. Not the address, not the place, not the distance. |
+| `Drive time` | A drive-time answer is shown in the Drive time box | Which place was chosen: `farm` or `greenhouse`. Not the address, not the place found, not the distance. (Until 3 October 2026 this event was called `drive_time`.) |
 
 **Never sent to the analytics service:** email addresses, names, anything typed (including the Drive time address), map names or notes, which photo was opened.
 
@@ -112,11 +114,12 @@ The test recorded these events and their details exactly as they were handed to 
 | Visitor's browser | Analytics script loaded? | Events handed to it |
 |---|---|---|
 | No signal | Yes (when analytics is on) | Yes |
-| Do Not Track on | **No** | None |
+| Do Not Track on (the browser says `1`, or `yes` in older Firefox, or `window.doNotTrack` in older Safari, or `msDoNotTrack` in Internet Explorer and old Edge) | **No** | None |
 | Global Privacy Control on | **No** | None |
+| Do Not Track set to `0` (the visitor has not asked) | Yes (when analytics is on) | Yes |
 | Either signal, plus `?track=debug` in the address | **No** | None. The events are only listed in that visitor's own browser console, for testing. |
 
-All four were tested with Plausible switched on.
+All of these are tested with Plausible switched on (a stand-in for its script) by `tests/analytics.test.mjs`. Until 3 October 2026 the older Firefox, Safari and Internet Explorer spellings were not recognised: a visitor with an old browser who had asked not to be tracked was counted.
 
 ## 5. Links out: nothing is contacted until the visitor taps
 
@@ -125,6 +128,7 @@ All four were tested with Plausible switched on.
 | Bookeo | `bookeo.com` | Reservations: farm visits, pizza visits, parties |
 | Square | `wise-pie-wood-fired-at-wise-acres.square.site` | Wise Pie pizza pre-orders |
 | Google Maps | `www.google.com/maps` | Directions and "Google reviews". "Leave a Google review" goes here too until `reviewUrl` is set. The Drive time answer also has "Open these directions in Google Maps", which carries the address the visitor typed (see section 3). |
+| Google review short link | `g.page` | "Leave a Google review" once `reviewUrl` is set (the comment in `js/content.js` shows an address like `https://g.page/r/.../review`; any address can be set) |
 | Apple Maps, Waze | `maps.apple.com`, `waze.com` | Directions |
 | Instagram | `www.instagram.com` | Four farm accounts, the hashtag page, and credit links on visitor photos |
 | Facebook | `www.facebook.com` | The farm's page |
@@ -175,6 +179,7 @@ All four were tested with Plausible switched on.
 
 ## How to check again
 
+- **Automatically:** `node tests/run-all.mjs privacy analytics` (see `tests/README.md`). `privacy` fails when a new storage key, cookie or outside site appears that is not on the lists at the top of `tests/privacy.test.mjs`; if that happens on purpose, add it to that list **and** to the tables above.
 - **Ask Claude:** "re-run the storage and outside-sites check" after any change to `js/`, `index.html` or `js/content.js`.
 - **By hand:**
   1. Open the site in a private window.

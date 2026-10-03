@@ -391,6 +391,15 @@
   }
 
   // closures and noticeUntil (js/content.js) are read by js/live.js, which skips a date it cannot read. Say so here, so it is not silent.
+  // Analytics chosen in js/content.js but not finished: the page would count nothing and say nothing, so the Site check box says it.
+  function checkAnalytics() {
+    const a = W.analytics || {}, p = String(a.provider || 'none');
+    if (p === 'none') return;
+    const need = { plausible: ['site'], goatcounter: ['endpoint'], umami: ['site', 'src'], cloudflare: ['token'] };
+    if (!has(need, p)) { warn('analytics.provider "' + q(p) + '" is not one of plausible, goatcounter, umami, cloudflare or none. Nothing is counted.'); return; }
+    const missing = need[p].filter((k) => !String(a[k] == null ? '' : a[k]).trim());
+    if (missing.length) warn('analytics.provider is "' + p + '" but ' + missing.map((k) => 'analytics.' + k).join(' and ') + (missing.length > 1 ? ' are' : ' is') + ' empty. Nothing is counted.');
+  }
   function checkOwnerDates() {
     const c = W.closures;
     if (c != null && !Array.isArray(c)) warn("closures must be a list of dates: closures: ['2026-10-04', '2026-10-11']. To close several days, write each day.");
@@ -819,7 +828,7 @@
         const r = await driveBetween(from, dest);
         if (!r) { answer({ kind: 'noroute', from: text, to }); return; }
         answer({ kind: 'ok', miles: r.miles, minutes: r.minutes, place: from.name, from: text, to });
-        track('drive_time', { to });
+        track('Drive time', { to });   // only which place (farm or greenhouse): never the address, the place found or the distance
       } catch (err) {
         answer({ kind: 'down', from: text, to });
       } finally { driveBusy = false; driveBoxes.forEach((b) => b.busy(false)); }
@@ -1164,7 +1173,7 @@
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
   const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
   if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). A missing comma at the end of a line or a curly quote mark does the same. Visitors see none of these features and no message. Open the browser console (F12): the red line that names content.js ends with the line number (red lines about fonts are not the problem).');
-  [expireDated, checkOwnerDates, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
+  [expireDated, checkOwnerDates, checkAnalytics, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
 
