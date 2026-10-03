@@ -352,7 +352,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 }
 
 @media (max-width:57.5em){
-  .choose,.packages,.way-grid,.gh-grid,.flowers-top,.flowers-mid,.about-grid,.follow,.schedule-grid{grid-template-columns:1fr}
+  .choose,.packages,.way-grid,.gh-grid,.flowers-top,.flowers-mid,.about-grid,.follow,.schedule-grid{grid-template-columns:minmax(0,1fr)}
   .group-tabs{grid-template-columns:1fr}
   .group-panel{grid-template-columns:1fr}
   .values{grid-template-columns:1fr}

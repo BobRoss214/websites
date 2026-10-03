@@ -65,7 +65,7 @@ html[data-season="winter"] .bee{display:none}
 .season-switch button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 .season-switch button[aria-checked="true"]{background:var(--sun);box-shadow:0 3px 0 var(--ink),inset 0 0 0 2px rgba(255,255,255,.55)}
 .ss-ico{width:26px;height:26px;flex:none}
-.ss-now{position:absolute;top:-12px;right:-8px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .5em;font:700 .64rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;transform:rotate(6deg);pointer-events:none}
+.ss-now{position:absolute;top:-12px;right:-8px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .5em;font:700 .7rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;transform:rotate(6deg);pointer-events:none}
 
 /* ---------------------------------------------------------------- fall: tractor + wagon ride */
 .rig{--rig-from:-420px;--rig-to:1660px;--rig-rest:420px;
@@ -251,15 +251,16 @@ html[data-season="winter"] .bee{display:none}
   .rig-small{--rig-dur:26s;animation-delay:-9s}
   .rig-barrel{--rig-dur:38s;animation-delay:-20s;--rig-from:-200px;--rig-to:1100px;--rig-rest:900px}
   .hero-note{font-size:.92rem;padding:.2em .8em}
-  .season-switch{gap:5px;width:100%;flex-wrap:nowrap;margin-bottom:14px}
+  .season-switch{gap:5px;width:100%;flex-wrap:nowrap;margin-top:12px;margin-bottom:14px}
   .ss-label{display:none}
   .season-switch button{flex:1 1 auto;justify-content:center;min-width:0;padding:.22em .3em .22em .3em;font-size:.82rem;box-shadow:0 2px 0 var(--ink)}
   .ss-ico{width:20px;height:20px}
-  .ss-now{top:-11px;right:-3px;font-size:.58rem}
+  .ss-now{top:-20px;right:-4px;font-size:.66rem}
 }
 @media (max-width:22.5em){
   .season-switch button{font-size:.76rem;gap:.25em}
   .ss-ico{width:17px;height:17px}
+  .hero h1{font-size:clamp(1.7rem,9vw,2.3rem)}   /* "Árboles de Navidad" (es, winter) was cut off at 320px */
 }
 
 /* Nothing should freeze off-screen or half-drawn when motion is turned off. */

@@ -94,7 +94,7 @@ html:lang(hi) :is(.rc i,.fs-now,.fs-this,.now-badge,.package-flag,.pill,.ss-now,
 html:lang(hi) .menu-desc,html:lang(zh) .menu-desc{font-style:normal}
 html:lang(zh) body{text-wrap:pretty}
 .cal-months{grid-template-columns:repeat(12,minmax(0,1fr))}
-@media (max-width:360px){html:lang(vi) .cal-months{letter-spacing:0;text-transform:none}}
+@media (max-width:360px){.cal-months{letter-spacing:0;text-transform:none}}
 /* A long word that cannot break (an e-mail address) wraps instead of pushing a 320px screen sideways, whatever font the phone falls back to while Nunito loads or if it fails. */
 a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 @media (max-width:640px){.gh-banner{max-width:100%}.gh-banner span{white-space:normal}}
@@ -207,6 +207,17 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .pol-c{--r:-2.5deg;margin-top:14px}
 @media (max-width:47.5em){.collage .polaroid{width:46%}.photo-strip li{flex-basis:130px}.goat-strip li{flex-basis:140px}}
 .polaroid img{height:auto}
+/* Photos that are only about 200px wide: keep them in small tiles (strips, polaroids, gallery squares), never wide, or they go soft. */
+.photo-strip-center{justify-content:center}
+.pol-d{--r:2.5deg;margin-top:6px}
+/* Five or more tiles in a season strip: three to a row, so one tile does not sit alone and stretched on the last row. */
+.season-pics:has(> li:nth-child(5)){display:grid;grid-template-columns:repeat(3,minmax(0,170px))}
+.season-pics:has(> li:nth-child(5)) li{max-width:none}
+/* The gallery crops every tile to 4:3. These three have words or a banner at the very top or bottom of a square picture, so show that edge. */
+.gallery-grid img[src$="goats-on-platform-waiting-all-summer.webp"],.gallery-grid img[src$="blueberries-sunflowers-happy-fathers-day.webp"]{object-position:50% 0}
+.gallery-grid img[src$="foster-village-table.webp"]{object-position:50% 100%}
+/* The photo viewer shows a small file at its own size, which can be smaller than its tile: let it grow a little (not wide, the file is only ~200px). */
+.lightbox img{min-width:min(100%,320px)}
 
 /* Big hover moments: the main buttons jump, tilt, shine and ring; the "New" tomato notices pop and wiggle. */
 .hero-cta .btn{position:relative;overflow:hidden;isolation:isolate;transition:transform .38s cubic-bezier(.3,1.9,.5,1),box-shadow .3s,background-color .2s}
@@ -387,4 +398,10 @@ html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animatio
   .sun:hover svg,.sun-boom svg,.sun:hover .sun-rays,.sun-boom .sun-rays,.sun:hover .sun-eyes,.sun-boom .sun-eyes,.hero-note:hover,.hero-note.is-pop,.hero-note:hover .ico,.hero-note.is-pop .ico{animation:none;scale:1;transform:none;filter:none}
   .sun-burst,.note-burst,.ach-rain{display:none}
   .ach,.ach *{animation:none!important}
+}
+/* Price lists on the narrowest phones: label on one line, price (or the "Prices coming soon" pill) under it, instead of a one-word-per-line label. */
+@media (max-width:22.5em){
+  .price-list>div{grid-template-columns:minmax(0,1fr)}
+  .price-list dd{text-align:left}
+  .price-list dd.soon{justify-self:start}
 }

@@ -31,6 +31,10 @@
  *   `src` must match the file name exactly (capital letters, no spaces). `alt` is a short description for people who cannot see the
  *   picture (a screen reader reads it aloud): write one for every photo. `caption` is optional.
  *   Other languages show your alt and caption in English until Claude adds translations.
+ *   Every photo in `photos` is in the gallery. To show one on a page as well (a small tile in a "photo strip"), ask Claude where.
+ *   Pictures that arrive small (about 200 pixels wide, for example sent by chat) look soft when shown big, so Claude keeps them to small
+ *   tiles. If you can, send the original file (1000 pixels wide or more) and it can be shown larger.
+ *   Pictures with words written on them (a season, a date, a price) go out of date: keep those in the gallery only, and say the words in `alt`.
  *
  * OPEN-NOW BADGES, CLOSURES AND THE NOTICE BAR
  * --------------------------------------------
@@ -192,9 +196,15 @@ window.WISE_ACRES = {
     { src: "assets/photos/zinnia-and-sunflower-fields.webp",
       alt: "Rows of colorful zinnias in front of a big field of sunflowers under a blue sky",
       caption: "Zinnias and sunflowers" },
+    { src: "assets/photos/pink-clouds-sky-over-field.webp",
+      alt: "Pink and purple clouds across the sky over a field, with a line of trees against the glowing horizon",
+      caption: "Pink sky over the field" },
     { src: "assets/photos/sunflowers-closeup.webp",
       alt: "Bright yellow-orange sunflowers in bloom on a cloudy evening",
       caption: "Sunflowers" },
+    { src: "assets/photos/sunflower-field-golden-light.webp",
+      alt: "A field of sunflowers in warm golden light",
+      caption: "Sunflowers in golden light" },
     { src: "assets/photos/poppies-and-larkspur-field.webp",
       alt: "Red poppies and purple larkspur blooming in a wildflower field",
       caption: "Poppies & larkspur" },
@@ -204,6 +214,9 @@ window.WISE_ACRES = {
     { src: "assets/photos/strawberries-in-pink-bucket.webp",
       alt: "A pink bucket piled high with fresh-picked strawberries",
       caption: "Fresh-picked strawberries" },
+    { src: "assets/photos/strawberries-and-blueberries-in-white-bowl.webp",
+      alt: "A white bowl heaped with fresh strawberries and blueberries",
+      caption: "A bowl of berries" },
     { src: "assets/photos/strawberries-and-blueberries-in-pints.webp",
       alt: "Two green pint boxes, one of strawberries and one of blueberries",
       caption: "Strawberries & blueberries" },
@@ -213,12 +226,21 @@ window.WISE_ACRES = {
     { src: "assets/photos/sunflower-field-chairs-and-blueberries.webp",
       alt: "Two white chairs facing a sunflower field at dusk, with a bowl of blueberries and a sunflower on a table",
       caption: "Sunflower field at dusk" },
+    { src: "assets/photos/blueberries-in-bowl-in-sunflower-field-dusk.webp",
+      alt: "A metal bowl full of blueberries in a sunflower field at dusk",
+      caption: "Blueberries at dusk" },
     { src: "assets/photos/sunflowers-and-pumpkins-by-the-fire.webp",
       alt: "A bucket of sunflowers and two pumpkins beside a crackling fire pit",
       caption: "Pumpkins by the fire" },
     { src: "assets/photos/mums-and-red-shed.webp",
       alt: "Rows of pink, orange and yellow mums in pots beside a little red shed",
       caption: "Fall mums" },
+    { src: "assets/photos/mums-field-with-red-shed-and-palm.webp",
+      alt: "A field of potted mums in red, pink and white, with a small red shed and a palm tree behind",
+      caption: "Field of mums" },
+    { src: "assets/photos/organic-tomatoes-and-basil-u-pick-signs.webp",
+      alt: "A pint of colorful cherry tomatoes and pumpkins in front of two signs, Organic U-pick Tomatoes and Organic U-pick Basil, each with a price",
+      caption: "U-pick tomatoes & basil" },
     { src: "assets/photos/wise-pie-pizza-and-drinks.webp",
       alt: "A pepperoni pizza in a box with local drinks on a picnic table, with the farm and playground behind",
       caption: "Pizza, drinks and the playground" },
@@ -234,5 +256,23 @@ window.WISE_ACRES = {
     { src: "assets/photos/goat-with-pumpkins.webp",
       alt: "A baby goat sniffing small pumpkins in the grass",
       caption: "Goat meets pumpkins" },
+    { src: "assets/photos/goat-in-green-frog-hat.webp",
+      alt: "A small animal wearing a green knitted frog hat",
+      caption: "Frog hat" },
+    { src: "assets/photos/goats-on-platform-waiting-all-summer.webp",
+      alt: "A goat standing on a high wooden platform against a blue sky, with the words We’ve been waiting all summer long to see you! partly cut off at the left",
+      caption: "Up on the platform" },
+    { src: "assets/photos/baby-goat-bunny-hoodie-happy-easter.webp",
+      alt: "A baby goat wearing a pink hoodie with bunny ears in a flower meadow, with the words Happy Easter! on the picture",
+      caption: "Bunny-ear hoodie" },
+    { src: "assets/photos/sunflowers-with-strawberry-and-blueberry-baskets.webp",
+      alt: "Sunflowers behind a basket of strawberries and a basket of blueberries, with text on the picture reading Plenty of organic strawberries & blueberries now available! Morning & evening reservations.",
+      caption: "Berries and sunflowers" },
+    { src: "assets/photos/blueberries-sunflowers-happy-fathers-day.webp",
+      alt: "A metal bowl full of blueberries in a sunflower field at dusk, with a banner reading Happy Father’s Day! (the first letters are cut off)",
+      caption: "Father’s Day" },
+    { src: "assets/photos/foster-village-table.webp",
+      alt: "Four people behind a Foster Village information table at an event",
+      caption: "Foster Village table" },
   ],
 };
