@@ -191,7 +191,7 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   are plainer than the first 381, and `founded` is empty for most because the register gives a registration date rather than a
   founding date. Where a register year is kept (154 entries) it is marked `foundedFrom: "register"`, shown as "(register date)", and
   left out of the Founded filter and the oldest/newest sort, because a spot-check of 40 of them found the organisation's own
-  account gave an earlier year in 17 (the register year is often when the current company was incorporated or merged); fourteen
+  account gave an earlier year in 17 (the register year is often when the current company was incorporated or merged); twenty-seven
   entries where the organisation's own year was clear carry that year instead. About half of the register records that were considered were left out (universities and schools,
   professional and membership bodies, grant-making trusts, religious bodies whose purpose is mainly to advance a religion,
   think tanks, commercial arms, and records whose website belongs to a different brand). A charity that is run by a religious

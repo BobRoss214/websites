@@ -1702,9 +1702,10 @@
  {
   "id": "knowmore-legal-service",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://knowmore.org.au/about-us/about-knowmore/"
   ],
-  "note": "official register record; ABN 34639490912"
+  "note": "official register record; ABN 34639490912; founding year 2013 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "wise-global-foundation",
@@ -1746,16 +1747,18 @@
  {
   "id": "fusion-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://fusion.org.au/history/"
   ],
-  "note": "official register record; ABN 26001273105"
+  "note": "official register record; ABN 26001273105; founding year 1960 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "australian-dance-theatre",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Australian_Dance_Theatre"
   ],
-  "note": "official register record; ABN 24007784858"
+  "note": "official register record; ABN 24007784858; founding year 1965 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "multicultural-centre-for-womens-health",
@@ -1809,9 +1812,10 @@
  {
   "id": "country-education-foundation-of-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://cef.org.au/our-story/"
   ],
-  "note": "official register record; ABN 60103889452"
+  "note": "official register record; ABN 60103889452; founding year 1993 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "macular-disease-foundation-australia",
@@ -1851,9 +1855,10 @@
  {
   "id": "homeward-bound-projects",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Homeward_Bound_(organization)"
   ],
-  "note": "official register record; ABN 76629076973"
+  "note": "official register record; ABN 76629076973; founding year 2015 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "push-for-better-foundation",
@@ -2120,16 +2125,18 @@
  {
   "id": "clontarf-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://clontarf.org.au/history/"
   ],
-  "note": "official register record; ABN 77131909405"
+  "note": "official register record; ABN 77131909405; founding year 2000 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "headspace-national-youth-mental-health-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Headspace_(organisation)"
   ],
-  "note": "official register record; ABN 26137533843"
+  "note": "official register record; ABN 26137533843; founding year 2006 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "givit",
@@ -2320,9 +2327,10 @@
  {
   "id": "bravehearts",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://bravehearts.org.au/who-we-are/about-bravehearts/"
   ],
-  "note": "official register record; ABN 41496913890"
+  "note": "official register record; ABN 41496913890; founding year 1997 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "act-for-kids",
@@ -2612,9 +2620,10 @@
  {
   "id": "aeiou-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "http://aeiou.org.au/blog-view/the-story-behind-the-name-aeiou-297"
   ],
-  "note": "official register record, ABN 19135897255"
+  "note": "official register record, ABN 19135897255; founding year 2005 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "goodes-oloughlin-foundation",
@@ -2669,9 +2678,10 @@
  {
   "id": "indigenous-desert-alliance",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.indigenousdesertalliance.com/our-history"
   ],
-  "note": "official register record, ABN 20632257964"
+  "note": "official register record, ABN 20632257964; founding year 2014 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "roses-in-the-ocean",
@@ -2740,9 +2750,10 @@
  {
   "id": "koomarri",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://koomarri.com.au/aboutus"
   ],
-  "note": "official register record, ABN 38599467782"
+  "note": "official register record, ABN 38599467782; founding year 1952 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "challenge-community-services",
@@ -2761,16 +2772,18 @@
  {
   "id": "guide-dogs-sa-nt",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://sant.guidedogs.com.au/about-us/who-we-are/"
   ],
-  "note": "official register record, ABN 91183168093"
+  "note": "official register record, ABN 91183168093; founding year 1957 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "guide-dogs-nsw-act",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://nsw.guidedogs.com.au/about-us/history/"
   ],
-  "note": "official register record, ABN 52000399744"
+  "note": "official register record, ABN 52000399744; founding year 1957 from the organisation's own account (the register lists a later year), checked by a web search in a third spot-check"
  },
  {
   "id": "multicap",
