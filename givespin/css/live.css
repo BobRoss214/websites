@@ -16,7 +16,7 @@
 .botpill { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px; background: rgba(154, 123, 255, 0.18); border: 1px solid rgba(154, 123, 255, 0.5); color: #c9b8ff; font: 800 0.58rem var(--f-body); letter-spacing: 0.08em; vertical-align: 1px; }
 
 /* tiles of games that also have a live table */
-.tile__live { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: rgba(8, 14, 20, 0.62); border: 1px solid rgba(255, 77, 106, 0.6); color: #ffd3da; font: 800 0.58rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; }
+.tile__live { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: rgba(8, 14, 20, 0.62); border: 1px solid rgba(255, 77, 106, 0.6); color: #ffd3da; font: 800 0.58rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; }
 .tile__live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
 
 /* ---------- simulated-table banners ---------- */
@@ -220,7 +220,7 @@
 
 .rs-note { display: flex; align-items: flex-start; gap: 8px; font-size: 0.84rem; color: var(--muted); padding: 8px 12px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
 .rs-note .ico { flex: none; width: 1rem; height: 1rem; margin-top: 2px; color: var(--gold); }
-.rs-note a { margin-left: auto; }
+.rs-note a { margin-left: auto; white-space: nowrap; }
 
 /* ---------- leagues, cup, crews ---------- */
 .tiers { display: grid; gap: 6px; margin: 12px 0; }
@@ -305,6 +305,8 @@
 .lcard--table .lcard__size { display: grid; place-content: center; text-align: center; width: 92px; height: 82px; border-radius: 14px; background: linear-gradient(160deg, color-mix(in srgb, var(--gold) 20%, var(--panel-2)), var(--panel-2)); border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--line-2)); }
 .lcard--table .lcard__size b { font: 800 1.35rem/1 var(--f-display); color: var(--gold); font-variant-numeric: tabular-nums; }
 .lcard--table .lcard__size small { font: 700 0.64rem var(--f-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+/* on a phone the card's picture column is 78 px wide: the size block must follow it (it stayed 92 px and sat on top of the table's name) */
+@media (max-width: 760px) { .lcard--table .lcard__size { width: 78px; height: 70px; } }
 .tablebar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line); }
 .tablebar[hidden] { display: none; }
 .tablebar__l { font: 700 0.74rem var(--f-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }

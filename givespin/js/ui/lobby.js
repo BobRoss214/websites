@@ -24,19 +24,27 @@
   var root = null;
   var cat = 'all';
 
+  /** The corner label of a tile. For "Up to N" labels N is the game's own limit, so the label can never disagree with what the game lets you pick. */
+  function badgeFor(g) {
+    var t = String(g.badge || '');
+    if (!g.maxSize) { return t; }
+    return t.replace(/^((?:Reel )?up to )([\d,]+)/i, function (all, lead) { return lead + g.maxSize.toLocaleString('en-US'); });
+  }
+
   function tiles() {
     var html = ui.game.ORDER.map(function (id) {
       var g = GS.games[id];
-      return '<a class="tile" href="#game-' + id + '" data-game="' + id + '" data-cat="' + g.category + '" aria-label="' + esc(g.name) + ', ' + esc(g.badge) + '">' +
+      var badge = badgeFor(g);
+      return '<a class="tile" href="#game-' + id + '" data-game="' + id + '" data-cat="' + g.category + '" aria-label="' + esc(g.name) + ', ' + esc(badge) + '">' +
         '<span class="tile__art">' + GS.art[id]('l') + '</span>' +
-        '<span class="tile__badge">' + esc(g.badge) + '</span>' +
-        (g.live && GS.live.enabled() ? '<span class="tile__live" title="This game also has a live table">Live table</span>' : '') +
+        '<span class="tile__tags"><span class="tile__badge">' + esc(badge) + '</span>' +
+        (g.live && GS.live.enabled() ? '<span class="tile__live" title="This game also has a live table">Live table</span>' : '') + '</span>' +
         '<span class="tile__play" aria-hidden="true">' + ui.icon('play') + 'Play</span>' +
         '<span class="tile__meta"><span class="tile__name">' + esc(g.name) + '</span><span class="tile__by">' + BY[g.category] + '</span></span>' +
       '</a>';
     }).join('');
     html += '<a class="tile" href="#charities" data-game="direct" data-cat="direct" aria-label="Give Direct, you pick the charity">' +
-      '<span class="tile__art">' + GS.art.direct() + '</span><span class="tile__badge">Your pick</span>' +
+      '<span class="tile__art">' + GS.art.direct() + '</span><span class="tile__tags"><span class="tile__badge">Your pick</span></span>' +
       '<span class="tile__play" aria-hidden="true">' + ui.icon('hand-heart') + 'Browse</span>' +
       '<span class="tile__meta"><span class="tile__name">Give Direct</span><span class="tile__by">Hand-picked</span></span></a>';
     return html;

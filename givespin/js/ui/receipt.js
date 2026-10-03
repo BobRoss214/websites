@@ -157,7 +157,8 @@
     }
     (summary.newCards || []).forEach(function (c) {
       var cc = GS.charity(c.charityId);
-      extras += '<p class="rs-note rs-note--card">' + ui.icon('layers') + (c.isNew ? 'New card: ' : c.upgraded ? 'Card upgraded: ' : 'Card again: ') + '<b>' + esc(cc.short) + '</b> <span class="rar rar--' + c.rarity + '">' + c.rarity + '</span> <a href="#cards" data-role="mycards">Your cards</a></p>';
+      // the words, the name and the rarity are one piece of text (a row of separate flex items broke into four narrow columns on a phone)
+      extras += '<p class="rs-note rs-note--card">' + ui.icon('layers') + '<span>' + (c.isNew ? 'New card: ' : c.upgraded ? 'Card upgraded: ' : 'Card again: ') + '<b>' + esc(cc.short) + '</b> <span class="rar rar--' + c.rarity + '">' + c.rarity + '</span></span> <a href="#cards" data-role="mycards">Your cards</a></p>';
     });
     if (summary.setXp) { extras += '<p class="rs-note">' + ui.icon('award') + 'Monthly card set complete! +' + summary.setXp + ' XP.</p>'; }
     var badges = summary.newBadges.length
@@ -208,7 +209,9 @@
         verifyRound(round.fair).then(function (r) { m.$('[data-role="verify-out"]').innerHTML = verifyHTML(r); });
       });
     }
-    m.$('[data-role="again"]').focus();
+    // keyboard focus goes to Play again, but without scrolling to it: on a phone (or after a many-reel slot round) the card is taller than the screen,
+    // and scrolling the button into view used to open the receipt half way down, with the amount and the winner out of sight
+    m.$('[data-role="again"]').focus({ preventScroll: true });
 
     if (round.jackpot) { GS.audio.jackpot(); GS.confetti.celebrate(1.7); GS.confetti.shower(2600); }
     else { GS.audio.win(); GS.confetti.celebrate(round.direct ? 0.8 : 1); }

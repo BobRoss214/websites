@@ -32,6 +32,8 @@
   var boards = {};       // game id -> { field: [charities the winner is drawn from], slots, pv }
   var picks = {};        // game id -> id of the charity you are backing
   var sizeTimer = 0;
+  var sizePending = false;   // a number typed in "Any number" that has not been applied yet
+  var sizeNote = '';         // "This game can show up to 200.": kept in the size hint after a typed number was held at the limit, so the hint (and the Play button under it) does not change height when the box loses focus
   var TABS_SOLO = [['fair', 'Fair play'], ['rounds', 'My rounds'], ['about', 'About this game'], ['pool', 'In play']];
   var TABS_LIVE = [['feed', 'Live feed'], ['last', 'Recent results'], ['fair', 'Fair play'], ['about', 'How it works']];
 
@@ -149,15 +151,21 @@
       GS.audio.click();
       setBoardSize(Number(b.getAttribute('data-n')));
     });
-    el.sizeCustom.addEventListener('input', function () {
+    function applyTypedSize() {
       clearTimeout(sizeTimer);
-      sizeTimer = setTimeout(function () {
-        var n = Math.floor(Number(el.sizeCustom.value));
-        if (!current || state().busy || !(n >= 1)) { return; }
-        setBoardSize(n, true);
-      }, 350);
+      if (!sizePending) { return; }
+      sizePending = false;
+      var n = Math.floor(Number(el.sizeCustom.value));
+      if (!current || state().busy || !(n >= 1)) { return; }
+      setBoardSize(n, true);
+    }
+    el.sizeCustom.addEventListener('input', function () {
+      sizePending = true;
+      clearTimeout(sizeTimer);
+      sizeTimer = setTimeout(applyTypedSize, 350);
     });
-    el.sizeCustom.addEventListener('change', function () { refreshSize(); });
+    // leaving the box (or Enter) applies a number that is still waiting, so a quick click on Play plays the board that was typed
+    el.sizeCustom.addEventListener('change', function () { if (sizePending) { applyTypedSize(); } else { refreshSize(); } });
     el.sizeMax.addEventListener('click', function () {
       if (!current || state().busy) { return; }
       GS.audio.click();
@@ -168,7 +176,7 @@
       var inPlay = activePool(current);
       ui.pickCharity({
         title: 'Back a charity',
-        sub: 'Pick the one you think will win. It goes on the board if it was not there already, and every charity on the board has equal odds, so backing never tilts the draw. If it wins you earn a bonus; either way your gift goes to whichever charity wins.',
+        sub: 'Pick the one you think will win. It goes on the board if it was not there already, which is what gives it a chance (with 8 spots, 1 in 8 instead of 1 in over a thousand); once it is there, every charity on the board has equal odds. If it wins you earn a bonus; either way your gift goes to whichever charity wins.',
         charities: inPlay,
         random: true,
         onPick: function (id) { setPick(id); }
@@ -208,8 +216,20 @@
     // the round is over: set up the next board (the old one stays on screen behind the receipt until it is closed)
     GS.bus.on('receipt:closed', function () {
       if (!built || !current || isLive() || state().busy || !GS.games[current].setBoard) { return; }
+      sizeNote = '';
       newBoard(current);
       refreshSize();
+    });
+    // The receipt tries to hand focus back to the Play button that started the round, but that button is switched off while the round starts, so
+    // after a keyboard-played round focus fell to the top of the page. When the receipt is closed, put it back on Play (only if nothing else has it).
+    GS.bus.on('receipt:closed', function () {
+      setTimeout(function () {
+        var a = document.activeElement;
+        if (!built || !current || isLive() || state().busy || state().view !== 'game') { return; }
+        if (a && a !== document.body && a !== document.documentElement) { return; }
+        if (document.querySelector('dialog.modal[open]')) { return; }
+        if (el.play && !el.play.disabled && el.play.offsetParent !== null) { try { el.play.focus({ preventScroll: true }); } catch (e) { /* not focusable right now */ } }
+      }, 0);
     });
     built = true;
   }
@@ -419,13 +439,16 @@
 
   function setBoardSize(n, fromInput) {
     var g = game();
-    var clamped = Math.max(minFor(g), Math.min(maxFor(g), Math.floor(n)));
+    var lo = minFor(g);
+    var hi = maxFor(g);
+    var clamped = Math.max(lo, Math.min(hi, Math.floor(n)));
     var sizes = Object.assign({}, store.prefs().sizes);
     sizes[current] = clamped;
     store.setPref('sizes', sizes);
+    // a typed number outside what the game can show is held at the limit, and the hint says so (as part of the usual hint: see sizeNote)
+    sizeNote = fromInput && clamped !== Math.floor(n) ? (n > hi ? 'This game can show up to ' + ui.num(hi) + '.' : 'A board needs at least ' + lo + ' charities.') : '';
     newBoard(current);
     refreshSize();
-    if (fromInput && clamped !== n) { el.sizeHint.textContent = 'This game can show up to ' + ui.num(maxFor(g)) + '.'; }
   }
 
   function setPick(id) {
@@ -438,7 +461,7 @@
   /** The "charities on the board" control: presets and any number, up to what the game can show. */
   function refreshSize() {
     var g = game();
-    if (!g || !g.sizes || state().live) { el.sizeBox.hidden = true; return; }
+    if (!g || !g.sizes || state().live) { el.sizeBox.hidden = true; refreshPick(); return; }   // (a game without sizes must still hide or show "Back a charity" for itself)
     el.sizeBox.hidden = false;
     var cur = slotsFor(current);
     var chosen = Math.floor(sizeFor(current));
@@ -474,6 +497,7 @@
     }
     if (g.snap && chosen !== cur) { txt += ' A bracket needs a power of two, so ' + ui.num(chosen) + ' became ' + curT + '.'; }
     else if (chosen > maxFor(g)) { txt += ' This game can show up to ' + ui.num(maxFor(g)) + '.'; }
+    if (sizeNote) { txt += ' ' + sizeNote; }
     el.sizeHint.textContent = txt;
     refreshPick();
   }
@@ -637,6 +661,7 @@
     var prev = current;
     if (live || isLive()) { ui.live.detach(); }
     if (prev && prev !== id && mounted[prev]) { GS.games[prev].deactivate(); mounted[prev].panel.hidden = true; }
+    if (prev !== id) { sizeNote = ''; sizePending = false; clearTimeout(sizeTimer); }
     current = id;
     if (!live) { store.setPref('game', id); }
     ensureMounted(id);

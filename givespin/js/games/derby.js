@@ -541,6 +541,7 @@
     if (!pool.length) { runners = []; backedN = 0; laneN = 0; resize(); updateNote(); return; }
     makeRunners(kit.sample(pool, count()));
     fresh = true;
+    if (el.result) { el.result.textContent = ''; }   // a new field: the last race's winner name does not belong under it
     resize();
     updateNote();
   }

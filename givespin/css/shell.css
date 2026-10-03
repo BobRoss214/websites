@@ -19,7 +19,7 @@
 .search { position: relative; flex: 1 1 auto; max-width: 440px; }
 .search__ico { position: absolute; left: 13px; top: 50%; translate: 0 -50%; color: var(--dim); display: grid; pointer-events: none; }
 .search__input { width: 100%; min-height: 40px; padding: 8px 12px 8px 40px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: 500 0.88rem var(--f-body); }
-.search__input::placeholder { color: #6e8796; }
+.search__input::placeholder { color: #7c93a1; }   /* was #6e8796: 4.4 to 1 on the panel colour, a little under the 4.5 to 1 a reader needs */
 .search__input:focus { outline: none; border-color: var(--green); box-shadow: var(--ring); }
 .search__input::-webkit-search-cancel-button { filter: invert(0.7); }
 .search__list { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 70; padding: 6px; border-radius: 14px; background: #162838; border: 1px solid var(--line-2); box-shadow: 0 22px 50px -16px rgba(0, 0, 0, 0.85); max-height: 70vh; overflow: auto; }
@@ -116,7 +116,7 @@ body.is-transparent .panel { background: rgba(19, 32, 44, 0.78); }
   :root { --top-h: 56px; }
   .topbar { gap: 8px; }
   .brand__name { display: none; }
-  .search { display: none; }
+  .topbar .search { display: none; }   /* only the top bar's own search: the Charities page and the charity chooser have a search field of their own that must stay */
   .balance { padding: 4px 10px 4px 8px; }
   .balance__ico { display: none; }
   .layout { grid-template-columns: minmax(0, 1fr); }
@@ -137,4 +137,19 @@ body.is-transparent .panel { background: rgba(19, 32, 44, 0.78); }
 }
 @media (max-width: 400px) {
   .iconbtn { width: 36px; height: 36px; }
+}
+/* The top bar used to run off the right edge (Sign up cut off) on small phones (320 to 360 px) and on a tablet held upright (730 to 790 px). */
+@media (max-width: 960px) {
+  .topbar .search { display: none; }   /* the search box was squeezed to about 50 px here: too small to use. (Games and charities are searchable from the lobby and the Charities page.) */
+}
+@media (max-width: 800px) {
+  .acct [data-role="login"] { display: none; }   /* "Log in" is in the Sign up window too ("Already have an account?") */
+}
+@media (max-width: 380px) {
+  .topbar { gap: 4px; padding: 0 8px; }
+  .topbar__right { gap: 4px; }
+  .brand__mark { width: 28px; height: 28px; }
+  .balance { padding: 3px 6px; }
+  .iconbtn { width: 32px; height: 32px; }
+  #btn-credit, .acct .btn { padding-left: 8px; padding-right: 8px; }
 }

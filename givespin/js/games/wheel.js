@@ -55,7 +55,6 @@
   var glowIdx = -1;
   var glowT = 0;
   var flash = 0;
-  var disposeResize = null;
   var locked = false;
 
   function sliceColor(i) {
@@ -639,7 +638,7 @@
     label: 'Wheel',
     icon: 'aperture',
     category: 'originals',
-    badge: 'Up to 100',
+    badge: 'Up to 1,000',
     live: true,
     sizes: [{ n: 8, name: 'Small' }, { n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 48, name: 'Huge' }, { n: 100, name: 'Giant' }],
     defaultSize: 12,
@@ -676,7 +675,7 @@
       el.result = container.querySelector('[data-role="result"]');
       ctx = el.canvas.getContext('2d');
       el.hub.addEventListener('click', function () { if (!locked && !field) { api.requestPlay(); } });
-      disposeResize = U.observeSize(el.stage, resize);
+      U.observeSize(el.stage, resize);
       resize();
     },
 

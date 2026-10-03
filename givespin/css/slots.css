@@ -32,7 +32,7 @@
 .reel::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(3, 8, 12, 0.8) 0%, transparent 28%, transparent 72%, rgba(3, 8, 12, 0.8) 100%); }
 .reel__strip { will-change: transform; }
 .reel.is-spinning .reel__strip { filter: blur(1.6px) saturate(1.2); }
-.sym { --c: #9bb3c0; height: calc(var(--rh) / 3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 6px 3px; text-align: center; transition: filter 0.25s, transform 0.25s; }
+.sym { --c: #9bb3c0; height: calc(var(--rh) / 3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px 3px; text-align: center; transition: filter 0.25s, transform 0.25s; }   /* gap and padding trimmed by 6 px in all: a two-line charity name needs that much room under the badge, and its second line was being cut off at the bottom */
 .sym__badge { display: grid; place-items: center; width: var(--bs); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 55%, color-mix(in srgb, var(--c) 65%, #000)); color: #0b1620; font: 800 calc(var(--bs) * 0.34) var(--f-display); letter-spacing: -0.02em; box-shadow: 0 4px 14px -2px color-mix(in srgb, var(--c) 70%, transparent), inset 0 -3px 6px rgba(0, 0, 0, 0.25); }
 .sym__badge[data-len="3"] { font-size: calc(var(--bs) * 0.28); }
 .sym__badge[data-len="4"], .sym__badge[data-len="5"] { font-size: calc(var(--bs) * 0.21); }

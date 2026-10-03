@@ -36,6 +36,8 @@
 
   function bracketSize() { return snapSize(Math.min(size, pool.length)); }
 
+  var HINT = 'Heads (heart) sends the top charity through. Tails (star) sends the bottom one.';
+
   function compact() { return entries.length >= 16; }
 
   function title(r, R) {
@@ -95,6 +97,7 @@
     entries = kit.sample(pool, bracketSize());
     result = null;
     fresh = true;
+    if (el.status && !playing) { el.status.textContent = HINT; }   // a new bracket: "X wins the showdown" from the last round must not stay above it
     renderBracket();
     updateNote();
   }
@@ -207,7 +210,7 @@
         '<div class="coingame">' +
           '<div class="coinstage"><div class="coin3d" data-role="coin"><div class="coin3d__in" data-role="coin-in">' +
             '<span class="coin3d__face coin3d__heads" title="Heads">' + GS.icon('heart') + '</span><span class="coin3d__face coin3d__tails" title="Tails">' + GS.icon('star') + '</span></div></div>' +
-            '<p class="coin__status" data-role="status" aria-live="polite">Heads (heart) sends the top charity through. Tails (star) sends the bottom one.</p>' +
+            '<p class="coin__status" data-role="status" aria-live="polite">' + HINT + '</p>' +
             '<button type="button" class="gbtn" data-role="go">' + GS.icon('coins') + '<span>Flip</span></button></div>' +
           '<div class="bracket" data-role="bracket" aria-label="Knockout bracket"></div>' +
         '</div>' +
