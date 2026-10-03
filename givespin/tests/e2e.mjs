@@ -2230,6 +2230,179 @@ if (section('13r. A show that outlives its round: the new board shows and the vi
 }
 
 /* ======================================================================== */
+if (section('13u. Small regressions found in review: sound waits for a first touch, a wrong typed size is cleared, a quick click on Play plays the typed board, register-dated years carry their label')) {
+  /* ---- (a) the sound gate: a counting stand-in for AudioContext goes in before the page's own scripts run ---- */
+  const countAudio = () => {
+    window.__au = { made: 0, osc: 0 };
+    const AC = window.AudioContext;
+    if (!AC) { return; }
+    const Counting = function () { window.__au.made++; return new AC(...arguments); };
+    Counting.prototype = AC.prototype;
+    window.AudioContext = Counting;
+    const makeOsc = AC.prototype.createOscillator;
+    AC.prototype.createOscillator = function () { window.__au.osc++; return makeOsc.apply(this, arguments); };
+  };
+  // A page that Playwright navigates to already counts as "used" for the browser (navigator.userActivation.hasBeenActive is true at load), which
+  // would hide the page's own first-touch gate. So the browser's record is replaced here: it says "not used yet" (or, in the last test of this
+  // part, "used"), and the gate has to be opened by the page's own pointerdown, keydown or touchstart listeners.
+  const audioPage = async (opts, used) => {
+    const p = await newPage(opts);
+    await p.addInitScript(countAudio);
+    await p.addInitScript((u) => { try { Object.defineProperty(navigator, 'userActivation', { configurable: true, get() { return { hasBeenActive: u, isActive: false }; } }); } catch (e) { /* not replaceable */ } }, !!used);
+    return p;
+  };
+  const au = (p) => p.evaluate(() => ({ made: window.__au.made, osc: window.__au.osc }));
+  const askForSounds = (p) => p.evaluate(() => { const a = window.GS.audio; a.click(); a.win(); a.whoosh(); a.tick(0.5); a.coin(); });
+
+  // a click on Play (a real mouse press), then mute and unmute with real clicks
+  const pa = await audioPage();
+  await openApp(pa, '#game-wheel');
+  await askForSounds(pa);
+  await pa.waitForTimeout(150);
+  const beforeTouch = await au(pa);
+  check(beforeTouch.made === 0 && beforeTouch.osc === 0, 'sound: no AudioContext exists before the first pointerdown, keydown or touchstart (sounds asked for earlier are skipped)', beforeTouch);
+  await pa.click('#btn-play');
+  await waitReceipt(pa);
+  const afterClick = await au(pa);
+  check(afterClick.made === 1 && afterClick.osc > 0, 'sound: after a real click on Play there is exactly one AudioContext and the round made its sounds', afterClick);
+  await closeReceipt(pa);
+  await pa.click('#btn-sound'); // mute
+  const muted1 = await pa.evaluate(() => ({ muted: window.GS.audio.isMuted(), osc: window.__au.osc }));
+  await askForSounds(pa);
+  const muted2 = await au(pa);
+  await pa.click('#btn-sound'); // unmute (it plays a coin sound as it does)
+  const unmuted1 = await pa.evaluate(() => ({ muted: window.GS.audio.isMuted(), osc: window.__au.osc }));
+  await askForSounds(pa);
+  const unmuted2 = await au(pa);
+  check(muted1.muted === true && muted2.osc === muted1.osc, 'sound: Mute makes the page silent (no tone is started while muted)', [muted1, muted2]);
+  check(unmuted1.muted === false && unmuted2.osc > unmuted1.osc && unmuted2.made === 1, 'sound: Unmute brings the sound back, still on the one AudioContext', [unmuted1, unmuted2]);
+  await pa.close();
+
+  // the other two first touches: a key press, and a finger on a touch screen
+  const pk = await audioPage();
+  await openApp(pk, '#lobby');
+  await askForSounds(pk);
+  const keyBefore = await au(pk);
+  await pk.keyboard.press('Tab');
+  await askForSounds(pk);
+  const keyAfter = await au(pk);
+  check(keyBefore.made === 0 && keyAfter.made === 1 && keyAfter.osc > 0, 'sound: a key press (keydown) opens the gate: no AudioContext before it, one after, and it makes sound', [keyBefore, keyAfter]);
+  await pk.close();
+  const pt = await audioPage({ mobile: true, viewport: { width: 390, height: 800 } });
+  await openApp(pt, '#lobby');
+  await askForSounds(pt);
+  const touchBefore = await au(pt);
+  await pt.touchscreen.tap(195, 400);
+  await askForSounds(pt);
+  const touchAfter = await au(pt);
+  check(touchBefore.made === 0 && touchAfter.made === 1 && touchAfter.osc > 0, 'sound: a touch (touchstart) opens the gate: no AudioContext before it, one after, and it makes sound', [touchBefore, touchAfter]);
+  await pt.close();
+  // an assistive tool that sends only a click leaves no pointer or key event, but the browser still records the page as used. A test cannot
+  // click without sending those events, so the browser's record is emulated: navigator.userActivation says the page has been used
+  const pu = await audioPage({}, true);
+  await openApp(pu, '#lobby');
+  await askForSounds(pu);
+  const activeStub = await au(pu);
+  check(activeStub.made === 1 && activeStub.osc > 0, 'sound: the browser\'s own record of user activation also opens the gate (emulated: navigator.userActivation is replaced by one that says the page has been used)', activeStub);
+  await pu.close();
+
+  /* ---- (b) a wrong number typed in the board-size box is cleared when the box is left, even if it is left at once ---- */
+  // The box applies a typed number 350 ms after the last key, or when it is left. Here it is left well inside that wait, which is the case that
+  // used to leave "0", "-5" or "0.5" sitting in the box. The page's own input and change events are timed so a slow machine cannot make the test pass by accident.
+  const stamps = () => {
+    const i = document.querySelector('#size-custom');
+    window.__q = { input: 0, change: 0 };
+    i.addEventListener('input', () => { window.__q.input = performance.now(); });
+    i.addEventListener('change', () => { window.__q.change = performance.now(); });
+  };
+  const sizeHint = (p) => p.locator('#size-hint').textContent();
+  for (const id of ['wheel', 'cards', 'scratch']) {
+    const left = {};
+    let tooSlow = 0;
+    for (const bad of ['0', '-5', '0.5']) {
+      let done = false;
+      for (let attempt = 0; attempt < 4 && !done; attempt++) {
+        const page = await newPage();
+        await openApp(page, '#game-' + id);
+        await page.waitForSelector('#btn-play:not([disabled])');
+        const box0 = await page.inputValue('#size-custom');
+        const hint0 = await sizeHint(page);
+        await page.evaluate(stamps);
+        await page.click('#size-custom');
+        await page.keyboard.type(bad);
+        await page.keyboard.press('Tab');
+        const gap = await page.evaluate(() => window.__q.change - window.__q.input);
+        if (gap > 250) { tooSlow++; await page.close(); continue; }
+        await page.waitForTimeout(600); // past the 350 ms wait, so a late timer would have shown itself too
+        left[bad] = { box: await page.inputValue('#size-custom'), box0, sameBoard: (await sizeHint(page)) === hint0, gap: Math.round(gap) };
+        done = true;
+        await page.close();
+      }
+      if (!done) { left[bad] = { notTested: 'could not leave the box in time (' + tooSlow + ' slow tries)' }; }
+    }
+    check(['0', '-5', '0.5'].every((b) => left[b] && left[b].box !== undefined && left[b].box === left[b].box0 && left[b].sameBoard), id + ': typing 0, -5 or 0.5 and leaving the size box at once puts the box back to the real size and leaves the board alone', left);
+  }
+
+  /* ---- (c) a quick click on Play after typing a size plays the size that was typed ---- */
+  // Number, mouse onto Play and press: all inside the 350 ms wait. The number is not a preset or a default, so an ignored number shows.
+  for (const id of ['wheel', 'cards', 'derby']) {
+    let res = null;
+    for (let attempt = 0; attempt < 4 && !res; attempt++) {
+      const page = await newPage();
+      await openApp(page, '#game-' + id);
+      await page.waitForSelector('#btn-play:not([disabled])');
+      await page.evaluate(stamps);
+      await page.click('#size-custom');
+      await page.keyboard.press('Control+A');
+      await page.keyboard.type('17');
+      await page.evaluate(() => document.querySelector('#btn-play').scrollIntoView({ block: 'center', behavior: 'instant' }));
+      const at = await page.locator('#btn-play').boundingBox();
+      await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
+      await page.mouse.down();
+      await page.waitForTimeout(100);
+      await page.mouse.up();
+      const gap = await page.evaluate(() => window.__q.change - window.__q.input);
+      if (gap > 250) { await page.close(); continue; } // too slow on this machine to be the quick case: try again
+      await waitReceipt(page);
+      res = await page.evaluate((g) => { const h = window.GS.store.get().history[0]; return { gap: 0, board: h && h.fair ? h.fair.board.length : -1, saved: window.GS.store.prefs().sizes ? window.GS.store.prefs().sizes[g] : null, rounds: window.GS.store.get().history.length }; }, id);
+      res.gap = Math.round(gap);
+      await closeReceipt(page);
+      await page.close();
+    }
+    check(res && res.board === 17 && res.saved === 17 && res.rounds === 1, id + ': typing 17 in the size box and pressing Play within about 100 ms plays a board of 17 (the saved round has 17 charities on its board)', res || 'could not press Play in time on this machine');
+  }
+
+  /* ---- (d) a founding year that is the register's date says so, in the profile too; a corrected year does not ---- */
+  const REG_YEAR = /register lists an established year of (\d{4})/;
+  const regDated = GSdata.charities.filter((c) => { const m = REG_YEAR.exec(c.about || ''); return m && Number(m[1]) === c.founded; });
+  const notFlagged = regDated.filter((c) => c.foundedFrom !== 'register').map((c) => c.id);
+  check(regDated.length >= 40 && notFlagged.length === 0, 'founding years: every charity whose text says the year is the register\'s (' + regDated.length + ' of them) carries foundedFrom "register"', { count: regDated.length, notFlagged: notFlagged.slice(0, 6), more: Math.max(0, notFlagged.length - 6) });
+  const dpage = await newPage();
+  await openApp(dpage, '#lobby');
+  const labels = await dpage.evaluate((ids) => ids.map((id) => [id, window.GS.ui.founded(window.GS.charity(id))]), regDated.map((c) => c.id));
+  const unlabelled = labels.filter((x) => !/^\d{4} \(register date\)$/.test(x[1])).map((x) => x[0] + ': ' + x[1]);
+  check(labels.length === regDated.length && unlabelled.length === 0, 'founding years: the label text for all ' + labels.length + ' of them reads "year (register date)"', unlabelled.slice(0, 6));
+  const founded = async (id) => {
+    await dpage.evaluate((i) => window.GS.ui.charity.openProfile(i), id);
+    await dpage.waitForSelector('#dlg-profile[open]');
+    const row = (await dpage.locator('#dlg-profile dl > div').filter({ hasText: 'Founded' }).first().textContent()).replace(/\s+/g, ' ').trim();
+    await dpage.keyboard.press('Escape');
+    await dpage.waitForFunction(() => !document.querySelector('#dlg-profile').open);
+    return row;
+  };
+  // the first and last of them, and two that had no label before the fix
+  const sample = [regDated[0].id, regDated[regDated.length - 1].id, 'australian-indigenous-governance-institute', 'worldshare'];
+  const rows = {};
+  for (const id of sample) { rows[id] = await founded(id); }
+  check(sample.every((id) => regDated.some((c) => c.id === id) && /\(register date\)/.test(rows[id])), 'founding years: the profile dialog shows "(register date)" for ' + sample.length + ' of them, including two that had no label before', rows);
+  const corrected = GSdata.charities.find((c) => c.id === 'workskil-australia');
+  const wRow = await founded('workskil-australia');
+  const wasCorrected = GSdata.charities.filter((c) => { const m = REG_YEAR.exec(c.about || ''); return m && Number(m[1]) !== c.founded; });
+  check(corrected && corrected.founded === 1982 && corrected.foundedFrom === undefined && /Founded\s?1982$/.test(wRow) && !/register date/.test(wRow) && wasCorrected.length >= 10 && wasCorrected.every((c) => c.foundedFrom !== 'register'), 'founding years: Workskil Australia, whose year was corrected to the organisation\'s own (1982), and the ' + wasCorrected.length + ' charities like it, show no "register date" label', { workskil: wRow, flaggedAmongCorrected: wasCorrected.filter((c) => c.foundedFrom === 'register').map((c) => c.id) });
+  await dpage.close();
+}
+
+/* ======================================================================== */
 if (section('13n. Fair Play? in plain language')) {
   const page = await newPage();
   await openApp(page, '#fair');
