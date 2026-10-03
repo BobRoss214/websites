@@ -179,6 +179,78 @@ async function viewer(p) {
   ok('one tap on the close button closes it and the page scrolls again', closed && (await p.evaluate(() => getComputedStyle(document.documentElement).overflowY)) !== 'hidden', `tapped ${Math.round(c.x)},${Math.round(c.y)} on ${top}, closed ${closed}`);
 }
 
+/** 4b. the photo viewer: Previous / Next and sideways swipes, with real touch events */
+async function swipes(p, label) {
+  const total = await p.evaluate(() => document.querySelectorAll('#gallery-grid > li:not([hidden])').length);
+  const count = (pg) => pg.evaluate(() => { const c = document.querySelector('#lightbox .lightbox-count'); return c && c.firstChild ? c.firstChild.textContent : ''; });
+  const src = (pg) => pg.evaluate(() => document.querySelector('#lightbox img').getAttribute('src'));
+  const isOpen = (pg) => pg.evaluate(() => document.getElementById('lightbox').open);
+  const openAt = async (n) => {   // the n-th photo that is shown (1 = first)
+    await p.evaluate((n) => { document.querySelectorAll('[data-pick-me]').forEach((e) => e.removeAttribute('data-pick-me')); document.querySelectorAll('#gallery-grid > li:not([hidden]) button')[n - 1].setAttribute('data-pick-me', '1'); }, n);
+    const pt = await reach(p, '[data-pick-me]', { anchor: '.gallery-grid', steps: [0, 150, 300, 450, 600, 900, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000] });
+    if (!pt) return false;
+    await p.touchscreen.tap(pt.x, pt.y);
+    return !!(await until(p, () => document.getElementById('lightbox').open, null, 8000));
+  };
+  const swipe = async (dx, dy, from = null) => {   // a finger moves (dx, dy); it starts where the photo is (or at `from`)
+    const c = from || await p.evaluate(() => { const r = document.querySelector('#lightbox img').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+    await drag(p.cdp, c.x - dx / 2, c.y - dy / 2, c.x + dx / 2, c.y + dy / 2, 12);
+  };
+  const mid = (sel) => p.evaluate((sel) => { const r = document.querySelector(sel).getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, sel);   // the buttons move a little when the next photo has another shape
+
+  ok(`${label}: a gallery photo opens the viewer with one tap ("3 of ${total}")`, (await openAt(3)) && (await count(p)) === `3 of ${total}`, await count(p));
+  const y0 = await scrollNow(p);
+  await swipe(-150, 12);
+  ok(`${label}: a swipe to the left shows the next photo, and only one (4 of ${total})`, (await count(p)) === `4 of ${total}`, await count(p));
+  await swipe(150, -10);
+  ok(`${label}: a swipe to the right goes back (3 of ${total})`, (await count(p)) === `3 of ${total}`, await count(p));
+  await swipe(8, -160);
+  ok(`${label}: an up-and-down swipe does not change the photo and does not scroll the page behind`, (await count(p)) === `3 of ${total}` && Math.abs((await scrollNow(p)) - y0) <= 2, `${await count(p)}, page moved ${(await scrollNow(p)) - y0}px`);
+  await swipe(-110, -110);
+  ok(`${label}: a diagonal swipe does not change the photo`, (await count(p)) === `3 of ${total}`, await count(p));
+  await swipe(-28, 4);
+  ok(`${label}: a short sideways drag (28px) does not change the photo`, (await count(p)) === `3 of ${total}`, await count(p));
+  await swipe(-150, 0, await mid('#lightbox .lightbox-next'));
+  ok(`${label}: a swipe that starts on the Next button is not a tap and not a swipe`, (await count(p)) === `3 of ${total}`, await count(p));
+  // a pinch (two fingers apart) zooms the page and never turns the photo
+  const c0 = await p.evaluate(() => { const r = document.querySelector('#lightbox img').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  await p.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: c0.x - 20, y: c0.y, id: 1 }, { x: c0.x + 20, y: c0.y, id: 2 }] });
+  for (let i = 1; i <= 8; i++) { await p.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: c0.x - 20 - i * 12, y: c0.y, id: 1 }, { x: c0.x + 20 + i * 12, y: c0.y, id: 2 }] }); await sleep(16); }
+  await p.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(500);
+  const z = await p.evaluate(() => ({ s: window.visualViewport.scale, zoomed: document.getElementById('lightbox').classList.contains('is-zoomed'), ta: getComputedStyle(document.getElementById('lightbox')).touchAction }));
+  ok(`${label}: a two-finger pinch zooms in (not trapped) and does not change the photo, and while zoomed one finger may move around the picture`, z.s > 1.2 && (await count(p)) === `3 of ${total}` && z.zoomed && (/pan-x/.test(z.ta) || z.ta === 'manipulation'), JSON.stringify(z));
+  await swipe(-150, 0);
+  ok(`${label}: zoomed in, a sideways drag moves the picture and does not change the photo`, (await count(p)) === `3 of ${total}`, await count(p));
+  await p.cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 }); await sleep(400);
+  ok(`${label}: zoomed back out, the swipe works again`, await (async () => { await swipe(-150, 0); return (await count(p)) === `4 of ${total}`; })(), await count(p));
+  const nxt = await mid('#lightbox .lightbox-next');
+  await p.touchscreen.tap(nxt.x, nxt.y); await sleep(200);
+  ok(`${label}: one tap on Next shows one photo (5 of ${total})`, (await count(p)) === `5 of ${total}`, await count(p));
+  const prv = await mid('#lightbox .lightbox-prev');
+  await p.touchscreen.tap(prv.x, prv.y); await sleep(200);
+  ok(`${label}: one tap on Previous goes back one (4 of ${total})`, (await count(p)) === `4 of ${total}`, await count(p));
+  for (let i = 0; i < 4; i++) await swipe(150, 0);
+  ok(`${label}: swiping right past the first photo wraps round to the last (${total} of ${total})`, (await count(p)) === `${total} of ${total}`, await count(p));
+  await p.keyboard.press('Escape');
+  await until(p, () => !document.getElementById('lightbox').open, null, 4000);
+  ok(`${label}: closed again, the page is where it was and scrolls`, !(await isOpen(p)) && (await p.evaluate(() => getComputedStyle(document.documentElement).overflowY)) !== 'hidden');
+
+  // only the photos a topic button shows
+  await p.evaluate(() => document.getElementById('gallery-filters').scrollIntoView({ block: 'center', behavior: 'instant' })); await p.clock.runFor(200);
+  const chip = await reach(p, '#gallery-filters [data-gtag]:not([data-gtag=all]):not([hidden])', { anchor: '#gallery-filters', steps: [0, 100, 200] });
+  if (chip) {
+    await p.touchscreen.tap(chip.x, chip.y); await p.clock.runFor(200);
+    const shown = await p.evaluate(() => [...document.querySelectorAll('#gallery-grid > li:not([hidden]) img')].map((i) => i.getAttribute('src')));
+    ok(`${label}: a topic button is pressed with a finger (${shown.length} photos shown)`, shown.length > 1 && shown.length < total, String(shown.length));
+    if (shown.length > 1 && (await openAt(1))) {
+      const tour = [];
+      for (let i = 0; i < shown.length; i++) { tour.push(await src(p)); await swipe(-150, 6); }
+      ok(`${label}: swiping through a topic shows only its ${shown.length} photos, in page order, and comes back to the first`, JSON.stringify(tour) === JSON.stringify(shown) && (await count(p)) === `1 of ${shown.length}`, `${tour.length} seen, ${await count(p)}`);
+      await p.keyboard.press('Escape'); await until(p, () => !document.getElementById('lightbox').open, null, 4000);
+    }
+  }
+}
+
 /** 6. the keyboard: the screen gets shorter, the field being typed in must stay in view */
 async function keyboard(p, label, vp, kb, sel) {
   const fs = await p.evaluate(() => [...document.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea')].map((e) => parseFloat(getComputedStyle(e).fontSize)));
@@ -227,6 +299,7 @@ await run('touch', async ({ browser, base, errs }) => {
     await bee(p);
     await behaviour(p);
     await viewer(p);
+    await swipes(p, 'iPhone');
     await fingers(p, 'iPhone');
     await keyboard(p, 'iPhone home page', PHONE, 336, '#drive-addr');
     await menus(p, 'iPhone');

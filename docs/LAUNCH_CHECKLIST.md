@@ -64,16 +64,16 @@ In the site folder run
 python3 tools/make_deploy_folder.py
 ```
 
-(on Windows type `python` instead of `python3`), or ask Claude to run it. It needs Python 3.8 or newer and the `beautifulsoup4` package that the other tools use (README, "Commands: one-time setup"). It does four things and says each one in plain words:
+(on Windows type `python` instead of `python3`), or ask Claude to run it. It needs Python 3.8 or newer and the `beautifulsoup4` package that the other tools use (README, "Commands: one-time setup"). It does five things and says each one in plain words:
 
 1. It rebuilds the pages and the translations. If a page was not rebuilt after an edit, it is updated in your folder and named.
-2. It **stops** if a translation is missing (ask Claude to add it), so no visitor sees a sentence left in English.
+2. It **stops** if a fact is written two ways (a price, an hour, a phone number, an email address, the address, an age or the year: the same check as `python3 tools/check_facts.py`) or if a translation is missing, so no visitor sees a wrong fact or a sentence left in English. Each red thing is one plain line that names the file and says how to fix it.
 3. It **warns, without stopping**, about settings in `js/content.js` that this checklist asks you to set: `seasonPicker` (3.8), `farmPoint` (3.13), and, which can follow launch, `reviewUrl` (3.12) and the Mailchimp `signup`.
 4. It makes the folder `deploy/` with exactly the files a visitor needs, checks that every file the pages point to is in it, and lists what it left out and why. At commit `66c8272` that is 77 files and `FILES.txt`, 5.8 MB.
 
 Upload what is **inside** `deploy/`: in step 3.2 drag the `deploy` folder where it says `wise-acres-upload`. `deploy/FILES.txt` lists every file with its size and a fingerprint (sha256). It is uploaded too and does no harm. Its last line is a fingerprint of the whole folder: two uploads with the same fingerprint have exactly the same files. Keep a copy of each folder you upload, with the date in its name (`wise-acres-upload-2026-10-09`), so you can go back. `deploy/` is remade from scratch each time and is never saved in the repository.
 
-`python3 tools/make_deploy_folder.py --check` only says whether the pages and translations are up to date, and writes nothing. If `beautifulsoup4` cannot be installed, `--no-rebuild` copies the files as they are, without steps 1 and 2 (not recommended).
+`python3 tools/make_deploy_folder.py --check` only says whether the pages, facts and translations are up to date, and writes nothing. `--force` builds the folder even when step 2 is red; it says so on screen and writes it into `deploy/FILES.txt`, so do not upload a folder made that way unless you know why. A broken link inside the folder is never overridden. To look at the folder before you upload it, run `python3 tools/serve.py deploy`. If `beautifulsoup4` cannot be installed, `--no-rebuild` copies the files as they are, without step 1 and the translation part of step 2 (not recommended).
 
 ### By hand (if you cannot run the command)
 

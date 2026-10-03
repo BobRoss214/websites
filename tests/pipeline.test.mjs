@@ -3,6 +3,7 @@
  *   - no translation is missing, no text is left loose (orphans)
  *   - an edited English sentence is reported as missing, and unsafe translations / empty maps are refused
  *   - the farm map and the QR signs are rebuilt exactly as committed
+ *   - every page's icon sprite has every drawing the page points at; the extra pages load js/footer-art.js, not js/hero.js
  *   - the tools' own checks (tools/test_add_photo.py, tools/test_pages.py) pass
  * Everything happens in a temporary copy of the site; your files are not touched. */
 import fs from 'node:fs';
@@ -41,6 +42,21 @@ try {
   }
   const orphans = py(tmp, 'tools/i18n.py', 'orphans');
   ok('no loose text left out of the translations (orphans)', orphans.status === 0 && orphans.stdout.trim() === '', orphans.stdout.trim().split('\n')[0]);
+
+  // the light pages: every drawing a page points at (<use href="#...">, url(#...), also in the style sheets) is on that page, the extra pages load the
+  // footer art and not the hero engine, and the home page keeps both
+  {
+    const cssUrls = fs.readdirSync(path.join(tmp, 'css')).filter((f) => f.endsWith('.css')).flatMap((f) => [...fs.readFileSync(path.join(tmp, 'css', f), 'utf8').matchAll(/url\(\s*["']?#([^)"']+)/g)].map((m) => m[1]));
+    for (const f of fs.readdirSync(tmp).filter((x) => x.endsWith('.html') && x !== '404.html').sort()) {
+      const t = fs.readFileSync(path.join(tmp, f), 'utf8');
+      const have = new Set([...t.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
+      const want = new Set([...[...t.matchAll(/<use\b[^>]*?\bhref="#([^"]+)"/g)].map((m) => m[1]), ...[...t.matchAll(/url\(#([^)]+)\)/g)].map((m) => m[1]), ...cssUrls]);
+      const lost = [...want].filter((i) => !have.has(i));
+      ok(`${f}: every drawing the page points at is in its icon sprite (${want.size} used)`, lost.length === 0, lost.join(', '));
+      const hero = t.includes('id="hero-scene"');
+      ok(`${f}: loads ${hero ? 'js/hero.js' : 'js/footer-art.js and not js/hero.js'}`, hero ? t.includes('<script src="js/hero.js">') : (t.includes('<script src="js/footer-art.js">') && !t.includes('js/hero.js')));
+    }
+  }
 
   // the tools' own checks (tools/test_*.py): each builds its own throw-away folders and needs Pillow
   for (const name of fs.readdirSync(path.join(ROOT, 'tools')).filter((f) => /^test_.*\.py$/.test(f)).sort()) {

@@ -136,6 +136,15 @@ def open_picture(path):
     return im, fmt, size
 
 
+def to_8bit(im):
+    """A 16-bit or 32-bit grey picture (a scanner, some editors) is scaled down to 8 bits. A plain convert() would cut everything above 255 off
+    and turn the whole picture white."""
+    if not (im.mode.startswith('I;16') or im.mode == 'I'):
+        return im
+    top = max(65535, im.getextrema()[1])
+    return im.point(lambda v: v * (255 / top)).convert('L')
+
+
 def upright_and_clean(im):
     """Returns (a new picture with no hidden data, list of facts about what was removed or changed)."""
     facts = []
@@ -155,6 +164,7 @@ def upright_and_clean(im):
     icc = im.info.get('icc_profile')
     im = ImageOps.exif_transpose(im)
     im.load()
+    im = to_8bit(im)
     if icc and ImageCms is not None and im.mode in ('RGB', 'RGBA', 'CMYK', 'L', 'LA'):
         try:   # keep the colours right: convert from the picture's own colour profile to the standard web one
             src = ImageCms.ImageCmsProfile(io.BytesIO(icc))
@@ -417,7 +427,12 @@ def main():
 
     im, fmt, size = open_picture(args.picture)
     w0, h0 = im.size
-    clean, facts = upright_and_clean(im)
+    try:
+        clean, facts = upright_and_clean(im)
+    except MemoryError:
+        fail('this picture is too big for this computer to open ({} x {} pixels). Shrink it first (or send a smaller copy) and try again.'.format(*im.size))
+    except Exception:
+        fail('this picture is damaged, or it was cut off while it was copied or sent, so I could not read all of it. Nothing was changed. Send the photo again (from the phone itself, not from a message that stopped part-way).')
     ow, oh = clean.size
     final, was_shrunk = shrink(clean)
     fw, fh = final.size

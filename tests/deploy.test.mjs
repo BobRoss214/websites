@@ -4,7 +4,8 @@
  *   - every file that a page, style, code file, manifest or the sitemap points to is in the folder; file count and size are sane
  *   - served by a plain web server (no special rules), every page in all five languages loads with no error and no missing file
  *   - an out-of-date page is rebuilt (--check only reports it), settings still to set are warned about without stopping,
- *     a missing translation stops it, and a folder that is not its own is never wiped
+ *     facts that disagree (tools/check_facts.py) and a missing translation each stop it with one plain line that says how to fix it,
+ *     --force builds anyway and says so (on screen and in FILES.txt), and a folder that is not its own is never wiped
  * Your own files are not touched. */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -146,13 +147,36 @@ try {
   const f = make('--out', foreign);
   ok('--out on a folder with other files: refused, nothing deleted', f.code === 1 && fs.existsSync(path.join(foreign, 'keep.txt')), last(f.out));
 
-  // ---- a missing translation stops it
+  // ---- facts that disagree stop it; --force builds anyway and says so
+  const pump = path.join(site, 'pages', 'pumpkin-patch.html'), pumpOrig = fs.readFileSync(pump, 'utf8');
+  fs.writeFileSync(pump, pumpOrig.replace('farm fun without pizza is $3 per person', 'farm fun without pizza is $4 per person'));
+  const out3 = path.join(tmp, 'out3'), out4 = path.join(tmp, 'out4');
+  const g = make('--out', out3);
+  ok('a price written two ways (the changed sentence also has no translation yet): NOT READY, one plain line for the facts with the file and the fix, one for each language, nothing written', g.code === 1 && /NOT READY: \d+ checks? (is|are) red/.test(g.out)
+    && /Facts disagree: price: farm fee per person: \$3 in \d+ places, \$4 in 1 place \(pages\/pumpkin-patch\.html:\d+\)\. Fix: make every place say the same/.test(g.out) && /add --force/.test(g.out) && !fs.existsSync(out3), last(g.out));
+  const gf = make('--out', out4, '--force');
+  const note = fs.existsSync(path.join(out4, 'FILES.txt')) ? fs.readFileSync(path.join(out4, 'FILES.txt'), 'utf8') : '';
+  ok('--force: it builds anyway, says so on screen, lists what was red, and writes that into FILES.txt', gf.code === 0 && /--force: building anyway/.test(gf.out) && /Facts disagree: price: farm fee/.test(gf.out) && /BUILT WITH --force: \d+ red checks were ignored/.test(gf.out)
+    && !/Upload what is INSIDE/.test(gf.out) && fs.existsSync(path.join(out4, 'index.html')) && /built with --force although these checks were red/.test(note) && /Facts disagree: price: farm fee/.test(note), last(gf.out));
+  const rows4 = [...note.matchAll(/^\s*(\d+)\s+([0-9a-f]{64})\s+(\S+)$/gm)].length;
+  ok('...and FILES.txt still lists every file (the note does not break the list)', rows4 === files(out4).length - 1, `${rows4} rows, ${files(out4).length - 1} files`);
+  fs.writeFileSync(pump, pumpOrig);
+  py(site, 'tools/pages.py'); py(site, 'tools/i18n.py', 'extract'); py(site, 'tools/i18n.py', 'build');   // the sentence is back as it was, so the translations match again
+  fs.rmSync(out4, { recursive: true, force: true });
+  const clean = make('--check');
+  ok('the price put right again: ready again, and it says the facts agree', clean.code === 0 && /Facts agree everywhere/.test(clean.out), last(clean.out));
+
+  // ---- a missing translation stops it; --force builds anyway
   const src = path.join(site, 'pages', 'wise-pie.html'), html = fs.readFileSync(src, 'utf8');
   const m = html.match(/<p>([A-Z][^<]{20,}?\.)<\/p>/);
   if (m) {
     fs.writeFileSync(src, html.replace(m[0], `<p>${m[1].replace(/\.$/, '')} (a new sentence).</p>`));
-    const t = make('--out', out2);
-    ok('an English sentence with no translation yet: not ready, and it says which languages', t.code === 1 && /translations are missing/.test(t.out) && /\bes: 1 page text/.test(t.out), last(t.out));
+    const t = make('--out', out3);
+    ok('an English sentence with no translation yet: NOT READY, one line for each language, with how to fix it, nothing written', t.code === 1 && /NOT READY: \d+ checks? (is|are) red/.test(t.out) && /Translations missing: es has 1 page text\(s\)/.test(t.out)
+      && /Fix: python3 tools\/i18n\.py missing es --list shows them; add them to lang\/src\/es\.json/.test(t.out) && /Translations missing: vi has 1 page text/.test(t.out) && /add --force/.test(t.out) && !fs.existsSync(out3), last(t.out));
+    const tf = make('--out', out4, '--force');
+    const note2 = fs.existsSync(path.join(out4, 'FILES.txt')) ? fs.readFileSync(path.join(out4, 'FILES.txt'), 'utf8') : '';
+    ok('--force with a missing translation: it builds, says so, and the note in FILES.txt names the languages', tf.code === 0 && /--force: building anyway/.test(tf.out) && /BUILT WITH --force: 4 red checks were ignored/.test(tf.out) && /Translations missing: es has/.test(note2), last(tf.out));
   } else info('(the missing-translation check was skipped: no plain sentence found in pages/wise-pie.html)');
 } catch (e) {
   ok('deploy: the test ran to the end', false, String(e && e.stack ? e.stack.split('\n').slice(0, 3).join(' / ') : e));

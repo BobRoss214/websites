@@ -32,6 +32,104 @@
     d.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); closeDialog(d); } });
   };
 
+  /* ------------------------------------------------------------------ *
+   * Photo viewer: ONE <dialog> shared by the gallery and by every photo marked data-zoom (the page's own #lightbox, or one made on first use).
+   * Photos from the gallery open with Previous / Next buttons, the Left / Right arrow keys and a sideways swipe, and say "3 of 30"; they go round
+   * (the last one is followed by the first) through the photos the topic button shows right now, in page order. A single photo opens without them.
+   * ------------------------------------------------------------------ */
+  const viewer = (() => {
+    let box = null, img = null, cap = null, count = null, prev = null, next = null;
+    let set = [], at = 0, dir = 1, opener = null, pre = null, onLoad = null, finger = null;
+    const SWIPE = 48;   // px sideways; and at least twice as far as it went up or down, so a scroll-like or diagonal drag changes nothing
+    const later = window.requestIdleCallback ? (f) => window.requestIdleCallback(f, { timeout: 1500 }) : (f) => setTimeout(f, 250);
+
+    const afterClose = () => { box.classList.remove('is-zoomed'); if (opener && opener.isConnected) { try { opener.focus({ preventScroll: true }); } catch (e) { /* gone */ } } opener = null; };
+    const shut = () => { closeDialog(box); afterClose(); };
+    const render = (fade) => {
+      const p = set[at], many = set.length > 1;
+      img.src = p.src; img.alt = p.alt; cap.textContent = p.caption || '';
+      box.classList.toggle('is-single', !many);
+      prev.hidden = next.hidden = count.hidden = !many;
+      if (many) {
+        prev.setAttribute('aria-label', t('Previous photo')); next.setAttribute('aria-label', t('Next photo'));
+        const n = doc.createElement('span'), alt = doc.createElement('span');   // the number is what is seen; the photo's description is only for a screen reader
+        n.textContent = t('{n} of {total}', { n: at + 1, total: set.length });
+        alt.className = 'sr-only'; alt.textContent = p.alt ? '. ' + p.alt : '';
+        count.replaceChildren(n, alt);
+      }
+      if (fade && !reduceMotion) { img.classList.remove('lb-fade'); void img.offsetWidth; img.classList.add('lb-fade'); }   // a short fade, never a slide
+      // only the photo the visitor is heading for is fetched ahead of time, and only when the browser is idle
+      if (onLoad) img.removeEventListener('load', onLoad);
+      if (many) {
+        const ahead = () => later(() => { pre = new Image(); pre.decoding = 'async'; pre.src = set[(at + dir + set.length) % set.length].src; });
+        if (img.complete) ahead(); else { onLoad = () => { onLoad = null; ahead(); }; img.addEventListener('load', onLoad, { once: true }); }
+      }
+    };
+    const go = (d) => { if (set.length < 2) return; dir = d; at = (at + d + set.length) % set.length; render(true); };
+
+    const ensure = () => {
+      if (box) return;
+      box = $('#lightbox');
+      if (!box) {
+        box = doc.createElement('dialog');
+        box.className = 'lightbox'; box.id = 'lightbox'; box.setAttribute('aria-label', t('Photo viewer'));
+        box.innerHTML = '<form method="dialog"><button class="lightbox-close" type="submit"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button></form><img id="lightbox-img" alt=""><p id="lightbox-cap"></p>';
+        doc.body.appendChild(box);
+      }
+      img = $('#lightbox-img', box); cap = $('#lightbox-cap', box);
+      const arrow = (cls, d) => { const b = doc.createElement('button'); b.type = 'button'; b.className = 'lightbox-nav ' + cls; b.hidden = true; b.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg>'; b.addEventListener('click', () => go(d)); return b; };
+      prev = arrow('lightbox-prev', -1); next = arrow('lightbox-next', 1);
+      count = doc.createElement('p'); count.id = 'lightbox-count'; count.className = 'lightbox-count'; count.hidden = true;
+      count.setAttribute('role', 'status'); count.setAttribute('aria-live', 'polite');   // read out when the photo changes
+      box.append(prev, next, count);
+      wireDialog(box);
+      // a tap on the dark area closes it; a tap in the gaps between the photo and the buttons (inside the box) does not
+      box.addEventListener('click', (e) => { if (e.target !== box) return; const r = box.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) shut(); });
+      box.addEventListener('close', afterClose);
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {   // Tab goes round the buttons of the viewer instead of out to the browser's own bar
+          const tabs = $$('button', box).filter((b) => !b.hidden && !b.disabled);
+          if (!tabs.length) return;
+          const first = tabs[0], last = tabs[tabs.length - 1];
+          if (e.shiftKey && (doc.activeElement === first || !box.contains(doc.activeElement))) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && (doc.activeElement === last || !box.contains(doc.activeElement))) { e.preventDefault(); first.focus(); }
+          return;
+        }
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (e.key === 'ArrowRight') { e.preventDefault(); go(1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+      });
+      // swipe: one finger, mostly sideways. Two fingers (a pinch) and a zoomed-in page are left alone.
+      const fingers = new Set();
+      box.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse') return;
+        fingers.add(e.pointerId);
+        finger = fingers.size === 1 && !e.target.closest('button') ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null;
+      });
+      const end = (e, done) => {
+        fingers.delete(e.pointerId);
+        const f = finger; if (!f || f.id !== e.pointerId) return;
+        finger = null;
+        const zoomed = window.visualViewport && window.visualViewport.scale > 1.02;
+        const dx = e.clientX - f.x, dy = e.clientY - f.y;
+        if (done && !zoomed && fingers.size === 0 && Math.abs(dx) >= SWIPE && Math.abs(dx) >= 2 * Math.abs(dy)) go(dx < 0 ? 1 : -1);
+      };
+      box.addEventListener('pointerup', (e) => end(e, true));
+      box.addEventListener('pointercancel', (e) => end(e, false));
+      // zoomed in with a pinch: one finger moves the picture instead of being held back (the viewer allows only pinching while it is not zoomed)
+      if (window.visualViewport) window.visualViewport.addEventListener('resize', () => box.classList.toggle('is-zoomed', window.visualViewport.scale > 1.02));
+    };
+
+    const open = (list, index, from) => {
+      ensure();
+      box.setAttribute('aria-label', t('Photo viewer'));
+      const x = $('.lightbox-close', box); if (x) x.setAttribute('aria-label', t('Close photo'));   // translated text never goes into markup
+      set = list; at = index; dir = 1; opener = from || null; finger = null;
+      render(false);
+      openDialog(box);
+    };
+    return { open, one: (src, alt, caption, from) => open([{ src, alt: alt || '', caption: caption || '' }], 0, from) };
+  })();
+
   function initPrint() {
     $$('[data-print]').forEach((b) => b.addEventListener('click', () => window.print()));
     // On paper every answer should show, not only the one that happens to be open: open them all while printing, then put them back.
@@ -90,9 +188,6 @@
     if (!section || !photos.length) return;
 
     const grid = $('#gallery-grid');
-    const box = $('#lightbox');
-    const img = $('#lightbox-img');
-    const cap = $('#lightbox-cap');
     const filters = $('#gallery-filters');
     const countEl = $('#gallery-count');
     const tagsOf = (p) => (Array.isArray(p.tags) ? p.tags : []).map((x) => String(x).trim().toLowerCase()).filter(Boolean);   // tags: ["berries", "flowers"] in js/content.js
@@ -105,21 +200,20 @@
       const thumb = doc.createElement('img');
       thumb.loading = 'lazy'; thumb.decoding = 'async'; thumb.src = p.src;   // lazy first: setting src first starts the download at once
       btn.appendChild(thumb);
-      btn.addEventListener('click', () => {
-        img.src = p.src; img.alt = t(p.alt); cap.textContent = p.caption ? t(p.caption) : '';
-        openDialog(box);
-      });
       li.appendChild(btn);
       grid.appendChild(li);
-      return { p, li, btn, thumb, tags: tagsOf(p) };
+      const it = { p, li, btn, thumb, tags: tagsOf(p) };
+      btn.addEventListener('click', () => {   // the viewer goes round the photos that are shown right now (the topic button pressed), in page order
+        const shown = items.filter((x) => !x.li.hidden);
+        viewer.open(shown.map((x) => ({ src: x.p.src, alt: t(x.p.alt), caption: x.p.caption ? t(x.p.caption) : '' })), Math.max(0, shown.indexOf(it)), btn);
+      });
+      return it;
     });
     const words = () => items.forEach((it) => {   // alt text and button labels in the language of the page (drawn again when the language changes)
       it.thumb.alt = t(it.p.alt);
       it.btn.setAttribute('aria-label', t('Enlarge photo:') + ' ' + t(it.p.alt));
     });
     words();
-    box.addEventListener('click', (e) => { if (e.target === box) closeDialog(box); });
-    wireDialog(box);
 
     // Topic buttons: one is pressed at a time ("All" to start). A photo with no tags shows under "All" only.
     // The photos are drawn once and only hidden or shown, so the buttons never move and the focus stays on the one that was pressed.
@@ -162,33 +256,17 @@
    * Zoom: any photo or link marked data-zoom opens in the photo viewer
    * ------------------------------------------------------------------ */
   function initZoom() {
-    let box = null, img = null, cap = null;
-    const ensure = () => {
-      if (box) return;
-      box = $('#lightbox');
-      if (!box) {
-        box = doc.createElement('dialog');
-        box.className = 'lightbox'; box.id = 'lightbox'; box.setAttribute('aria-label', t('Photo viewer'));
-        box.innerHTML = '<form method="dialog"><button class="lightbox-close" type="submit"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button></form><img id="lightbox-img" alt=""><p id="lightbox-cap"></p>';
-        $('.lightbox-close', box).setAttribute('aria-label', t('Close photo'));   // translated text never goes into markup
-        doc.body.appendChild(box);
-        box.addEventListener('click', (e) => { if (e.target === box) closeDialog(box); });
-      }
-      img = $('#lightbox-img', box); cap = $('#lightbox-cap', box);
-      wireDialog(box);
-    };
-    const show = (src, alt, caption) => { ensure(); box.setAttribute('aria-label', t('Photo viewer')); $('.lightbox-close', box).setAttribute('aria-label', t('Close photo')); img.src = src; img.alt = alt || ''; cap.textContent = caption || ''; openDialog(box); };
     const bind = (el) => {
       if (el._zoom) return;
       el._zoom = true;
       if (el.tagName === 'IMG') {
         el.tabIndex = 0; el.setAttribute('role', 'button'); el.setAttribute('aria-haspopup', 'dialog');   // a photo that opens the viewer
-        const open = () => { const fc = el.closest('figure') && el.closest('figure').querySelector('figcaption'); show(el.currentSrc || el.src, el.alt, fc ? fc.textContent : ''); };
+        const open = () => { const fc = el.closest('figure') && el.closest('figure').querySelector('figcaption'); viewer.one(el.currentSrc || el.src, el.alt, fc ? fc.textContent : '', el); };
         el.addEventListener('click', open);
         el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
       } else {
         el.setAttribute('aria-haspopup', 'dialog');
-        el.addEventListener('click', (e) => { e.preventDefault(); show(el.href, el.textContent.trim(), ''); });
+        el.addEventListener('click', (e) => { e.preventDefault(); viewer.one(el.href, el.textContent.trim(), '', el); });
       }
     };
     $$('[data-zoom]').forEach(bind);
@@ -702,15 +780,19 @@
     // [angle from vertical (deg), distance from the cup mouth] — filled from the middle out
     const SLOTS = [[0, 96], [-11, 150], [11, 150], [-24, 96], [24, 96], [-32, 150], [32, 150], [-48, 96], [48, 96], [0, 182]];
     const KINDS = {
-      sun:    { label: 'sunflower',     sym: 'sunflower', size: 62 },
-      pink:   { label: 'pink flower',   sym: 'bloom', size: 54, color: '#ff6fa5' },
-      white:  { label: 'white daisy',   sym: 'bloom', size: 54, color: '#ffffff' },
-      purple: { label: 'purple flower', sym: 'bloom', size: 54, color: '#a682ff' },
-      orange: { label: 'orange flower', sym: 'bloom', size: 54, color: '#ff8a3d' },
-      blue:   { label: 'blue flower',   sym: 'bloom', size: 54, color: '#5aa9ff' },
+      sun:    { label: 'a sunflower',     sym: 'sunflower', size: 62 },
+      pink:   { label: 'a pink flower',   sym: 'bloom', size: 54, color: '#ff6fa5' },
+      white:  { label: 'a white daisy',   sym: 'bloom', size: 54, color: '#ffffff' },
+      purple: { label: 'a purple flower', sym: 'bloom', size: 54, color: '#a682ff' },
+      orange: { label: 'an orange flower', sym: 'bloom', size: 54, color: '#ff8a3d' },
+      blue:   { label: 'a blue flower',   sym: 'bloom', size: 54, color: '#5aa9ff' },
     };
     const NS = 'http://www.w3.org/2000/svg';
     let n = 0;
+    // The line under the cup is written again in the new language if the visitor changes language while it is showing.
+    let line = null;
+    const say = (fn) => { line = fn; msg.textContent = fn(); };
+    doc.addEventListener('wa:lang', () => { if (line) msg.textContent = line(); });
 
     function add(kind) {
       if (n >= SLOTS.length) return;
@@ -737,9 +819,10 @@
       inner.appendChild(u); outer.appendChild(inner); heads.appendChild(outer);
       n += 1;
       const full = n >= SLOTS.length;
-      msg.textContent = full
-        ? t('Your cup is full! Cutting a real bouquet is part of the fun in our flower field.')
-        : t('Added a {flower}. {n} of {total} flowers in your cup.', { flower: t(k.label), n: n, total: SLOTS.length });
+      say(full
+        ? () => t('Your cup is full! Cutting a real bouquet is part of the fun in our flower field.')
+        : () => t('Added {flower}. {n} of {total} flowers in your cup.', { flower: t(k.label), n: n, total: SLOTS.length }));
+      if (full && buttons.includes(doc.activeElement)) clear.focus({ preventScroll: true });   // the flower button that was just pressed is switched off: keep the keyboard on the one button left to use
       buttons.forEach((b) => { b.disabled = full; });
     }
 
@@ -747,7 +830,7 @@
     clear.addEventListener('click', () => {
       stems.textContent = ''; heads.textContent = ''; n = 0;
       buttons.forEach((b) => { b.disabled = false; });
-      msg.textContent = t('Fresh cup! Tap a flower to add it.');
+      say(() => t('Fresh cup! Tap a flower to add it.'));
     });
   }
 
@@ -758,11 +841,13 @@
     const btn = $('#goat-btn'), bubble = $('#goat-bubble');
     if (!btn) return;
     const lines = ['Baa! Welcome to the farm!', 'Have you picked a strawberry yet?', 'Psst… got any snacks?', 'Baa-rilliant day for a visit!', 'Don’t forget your reservation!', 'The kids can feed us. Just ask!'];
-    let i = 0;
+    let i = 0, said = -1;
     btn.addEventListener('click', () => {
-      bubble.textContent = t(lines[i++ % lines.length]);
+      said = i++ % lines.length;
+      bubble.textContent = t(lines[said]);
       btn.classList.remove('baa'); void btn.offsetWidth; btn.classList.add('baa');
     });
+    doc.addEventListener('wa:lang', () => { if (said >= 0) bubble.textContent = t(lines[said]); });   // what the goat said stays, in the new language
   }
 
   /* ------------------------------------------------------------------ *

@@ -144,6 +144,11 @@
     reader.observe(document.documentElement, { childList: true, subtree: true });
     document.addEventListener('DOMContentLoaded', function () { reader.disconnect(); });
     // The switcher only works with js/hero.js. If that did not load, do not leave buttons that do nothing.
-    window.addEventListener('load', function () { var sw = document.getElementById('season-switch'); if (sw && !W.hero) sw.hidden = true; });
+    window.addEventListener('load', function () {
+      var sw = document.getElementById('season-switch'); if (sw && !W.hero) sw.hidden = true;
+      var pk = document.getElementById('picker'); if (pk && !W.hero) pk.hidden = true;   // the picking game too
+      // js/main.js takes .no-js off as its first step. Still there after the page has loaded: the file is missing, so the menu button and the toys do nothing (css/features.css, "js-failed").
+      if (document.documentElement.classList.contains('no-js')) document.documentElement.classList.add('js-failed');
+    });
   }
 })();

@@ -24,7 +24,8 @@ css/features.css        pizza countdown, "this week" box, email signup, review +
 js/content.js           editable content: hours, closures, notice bar, reviews, "this week" box, email signup, review link, analytics, photo list, farm spot, season switcher
 js/season.js            season dates + "which season is it today?" (sets html[data-season])
 js/i18n.js              language switcher + text swapping (loaded first so the page paints in the chosen language)
-js/hero.js              draws the four hero scenes, footer art, and runs the picking / lighting / toot interactions
+js/hero.js              draws the four hero scenes, footer art, and runs the picking / lighting / toot interactions (the home page only)
+js/footer-art.js        the footer's row of crops for the extra pages: written by tools/pages.py from js/hero.js, do not edit
 js/main.js              everything else: scroll effects, seasons tabs, groups, bouquet, goat, reviews, print checklist…
 js/live.js              "Open now" badges, notice bar, next-season countdown, top-bar text
 js/analytics.js         privacy-friendly analytics (off until you pick a provider)
@@ -39,7 +40,9 @@ tools/                  pages.py (builds the extra pages), i18n.py (tags text, b
                         add_photo.py (adds a photo: web size, no hidden data, listed in the gallery) + test_add_photo.py (its check),
                         test_pages.py (pages.py's check), make_deploy_folder.py (makes deploy/: exactly the files to upload),
                         check_facts.py (lists every place a price, hour, phone, email, address, age or year is written and which disagree) + test_check_facts.py,
-                        launch_check.py (checks the live site after the upload: python3 tools/launch_check.py https://...)
+                        launch_check.py (checks the live site after the upload: python3 tools/launch_check.py https://...),
+                        serve.py (shows the site on your own computer at http://localhost:PORT/ for editing; close its window to stop it)
+                        season_calendar.mjs (loads the pages on every day of the year and writes docs/WHAT_VISITORS_SEE_WHEN.md)
 deploy/                 the folder to upload, made fresh by tools/make_deploy_folder.py (not kept in the repository)
 assets/qr/              QR codes (SVG), made by tools/make_qr.py
 print/qr-signs.html     printable signs, one per page, English + Spanish; qr-signs.hi / .zh / .vi.html the same in Hindi, Chinese, Vietnamese (not listed in Google)
@@ -49,8 +52,7 @@ assets/photos/          farm photos
 assets/fonts/           Fredoka, Nunito (+ Vietnamese letters), Caveat (SIL Open Font License), self-hosted
 ```
 
-Preview locally: double-click `index.html` (English works at once; the other languages load more reliably over a small web server:
-run `python3 -m http.server` in this folder and visit http://localhost:8000).
+Preview locally: run `python3 tools/serve.py` in this folder. It opens the site in your browser at an address like http://localhost:8000/ (and says that address in its window: close the window to stop it). Use it whenever you edit: the pages come the way they come from the live site, all five languages load, and the "Site check" box names the line of a typo. (Double-clicking `index.html` also shows English at once, but the other languages load less reliably and the box cannot name a line.)
 
 ## Start here (for the farm owner)
 
@@ -318,12 +320,12 @@ whole line that starts `<meta name="google-site-verification"`; (4) paste it in 
 Do this after you edit `js/content.js` or the pizza schedule.
 
 1. Save the file.
-2. Look at the site: double-click `index.html` (the box shows by itself on your own computer; or run `python3 -m http.server` and visit http://localhost:8000/). On the live
+2. Look at the site: in this folder run `python3 tools/serve.py`. It opens the site in your browser (the "Site check" box shows by itself on your own computer) and keeps showing it: after each save, refresh the page (F5). Close its window to stop it. On the live
    site add `?check` to the address: https://www.wiseacresorganic.com/?check . Anyone who adds ?check sees the box too, so it only ever shows what is already in the public files. **Visitors never see a message**: if `js/content.js` breaks, the live site silently loses its banner, badges, closures and photo gallery. So open the live site with `?check` after every change you publish.
 3. Look at the bottom of the page. There are two kinds of box. A **yellow** "Site check: 2 things to fix" box lists settings that cannot be used, each with what and where: fix those. A **green** "Site check: nothing is broken" box lists only old dated lines that have hidden themselves (the lines did their job: remove them when you like). If both kinds exist, the yellow box has the green part under a dashed line. No box means the check found nothing.
-4. The check covers `week`, `signup`, `reviewUrl`, `community`, `entrancePhoto`, `farmPoint` (a spot outside the United States, swapped or sign-less numbers, numbers in quote marks), the rows of the pizza schedule, every `data-until` date (it says what has already hidden itself), every day and range in `closures` and the date in `noticeUntil` (it lists any it cannot read). It also checks the **names**: a misspelled setting (`noticeUntill:`) or a misspelled name inside `hours`, `week`, `signup`, `farmPoint`, `entrancePhoto` or a photo is named, with the right spelling suggested ("Did you mean noticeUntil?"). It does **not** check the values of the hours or the words of the notice, reviews or photos: look at those yourself.
+4. The check covers `week`, `signup`, `reviewUrl`, `community`, `entrancePhoto`, `farmPoint` (a spot outside the United States, swapped or sign-less numbers, numbers in quote marks), the rows of the pizza schedule, every `data-until` date (it says what has already hidden itself), every day and range in `closures` and the date in `noticeUntil` (it lists any it cannot read). It also checks the **names**: a misspelled setting (`noticeUntill:`) or a misspelled name inside `hours`, `week`, `signup`, `farmPoint`, `entrancePhoto` or a photo is named, with the right spelling suggested ("Did you mean noticeUntil?"). It checks the **values** too: hours must be on the 24-hour clock (`'16:00'`, not `'4 pm'`), open before close, and days numbers 0 to 6; the notice must have words (and an English version) when `noticeUntil` is set; a review needs a quote and a name, and its link, the review link and the signup address must start with `https://`; a photo needs a `src` and an `alt`. Each message names the exact setting and what to type. It does **not** judge the words themselves (spelling, whether the hours are right): look at those yourself. With `?check` and a language (`?check&lang=es`) the box also lists the texts of that page that still have no translation in that language, or says every text is translated.
 5. If the box says "js/content.js stopped at line" and gives a number, there is a typo in that file, and the box names the line the browser gave up at and says what it usually is. Look at that line **and the line above it** (a missing comma at the end of a line is reported on the next line); the other usual causes are an apostrophe inside single quotes and curly quotes pasted from Word. Until it is fixed, hours, closures, the notice bar, photos, reviews and the signup are off, and visitors see no message. Undoing your last change (Ctrl+Z) or putting your copy back also fixes it. If the box says "js/content.js could not be loaded", the file is missing, was renamed or is not in the `js` folder.
-   When you open `index.html` by double-click (`file://`), the browser does not give the page the line number: the box then says "js/content.js did not run" and sends you to the console. Press F12 (on a Mac in Chrome: Cmd+Option+J), open Console, and find the red line that names `content.js`: it ends with the line number (red lines about fonts are not the problem). Or run `python3 -m http.server` in this folder and open http://localhost:8000/: then the box shows the line itself.
+   When you open `index.html` by double-click (`file://`), the browser does not give the page the line number: the box then says "js/content.js did not run" and sends you to the console. Press F12 (on a Mac in Chrome: Cmd+Option+J), open Console, and find the red line that names `content.js`: it ends with the line number (red lines about fonts are not the problem). Or, much easier, run `python3 tools/serve.py` in this folder: then the box shows the line itself.
 6. A setting put in the wrong place (for example `noticeUntil` inside `week`) shows as an unknown name inside that part. Copy the names from the examples instead of retyping them.
 
 ## Extra pages (for Google)
@@ -390,7 +392,13 @@ Plain-English questions to send to the farm, with notes at the bottom on what to
 
 What to change for each answer to the open questions on the owner dashboard (one entry per question, with the files, patches and tests): [docs/DECISION_PLAYBOOK.md](docs/DECISION_PLAYBOOK.md)
 
+A plan, not built, for a form that writes the settings for you and a facts table so a price is typed once (with cost, risk and what the owner decides): [docs/PROPOSAL_owner_page.md](docs/PROPOSAL_owner_page.md)
+
 What the website keeps in visitors' browsers and which other sites it contacts (a dated fact sheet, not a privacy policy): [docs/WHAT_THE_SITE_STORES.md](docs/WHAT_THE_SITE_STORES.md)
+
+What a visitor sees on every day from Oct 3 2026 to Dec 31 2027 (season, headline, buttons, badges, pizza chip, schedule box, tags, footer year), the day each thing switches, and the days that look wrong: [docs/WHAT_VISITORS_SEE_WHEN.md](docs/WHAT_VISITORS_SEE_WHEN.md). It is written by `node tools/season_calendar.mjs` (10 to 40 minutes); run it again after you change the season dates, a `data-until`, a release row or the words in the first screen. `node tools/season_calendar.mjs --check` says whether the committed page is out of date.
+
+What a visitor sees on every day from Oct 3 2026 to Dec 31 2027 (season, headline, buttons, badges, pizza chip, schedule box, tags, footer year), the day each thing switches, and the days that look wrong: [docs/WHAT_VISITORS_SEE_WHEN.md](docs/WHAT_VISITORS_SEE_WHEN.md). It is written by `node tools/season_calendar.mjs` (10 to 40 minutes); run it again after you change the season dates, a `data-until`, a release row or the words in the first screen. `node tools/season_calendar.mjs --check` says whether the committed page is out of date.
 
 Text, prices and links come from the wording you pasted from the current site. Things to know:
 
@@ -428,7 +436,7 @@ Text, prices and links come from the wording you pasted from the current site. T
 
 The farm photos are in `assets/photos/`, plus the printed Fall Menu 2026 (`wise-pie-fall-menu-2026.webp`). Every photo listed in `photos`
 (in `js/content.js`) is in the photo gallery. Some also sit in context: season panels (spring, summer, fall photo strips), the flowers collage,
-"Meet the goats" at The GreenHouse, the tomatoes section, the school tour and the strawberry, pumpkin, school and Wise Pie pages. Tap any photo to enlarge it.
+"Meet the goats" at The GreenHouse, the tomatoes section, the school tour and the strawberry, pumpkin, school and Wise Pie pages. Tap any photo to enlarge it. A photo from the gallery opens with Previous and Next buttons (also the Left and Right arrow keys, or a swipe sideways on a phone) and says "3 of 30"; it goes round through the photos the topic button shows. A photo that is not in the gallery opens alone.
 On phones the gallery shows two photos to a row.
 
 **Topic buttons.** Above the gallery a row of buttons (All, Berries, Flowers, Farm animals, Fall, Pizza, People & events) shows only the photos of that topic;
@@ -460,6 +468,7 @@ python3 tools/add_photo.py path/to/picture.jpg --name goat-in-frog-hat --alt "A 
 What the tool does: turns the picture upright when the phone stored it sideways, shrinks it to at most 1400 pixels on the long side (a small picture is **never blown up**),
 saves a WebP copy (quality 85) **with no camera or GPS data in it** (the tool says when the original had a location), adds one entry to `photos` in `js/content.js`
 (before the pictures with words on them), checks that `js/content.js` still works before it writes it, and warns when the picture looks like one that is already on the site.
+A damaged or cut-off picture, and a 16-bit grey scan, get a plain message or the right brightness. The `files-audit` test (tests/README) checks every picture the site uploads for hidden data (GPS, camera, names), so a photo put in by hand with its camera data is caught.
 
 **Small pictures.** A picture sent through a chat app is often only about 200 pixels wide. The tool saves it as it is and warns that it will look soft if shown big.
 Such a picture belongs in a small tile (a photo strip or the gallery), never wide. If you can, ask the farm for the original from the phone.
@@ -516,7 +525,7 @@ Automatic browser checks (countdown, languages, farm map, accessibility, the too
 
 New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md): which host, what to upload, the steps in order, and what to test afterwards.
 
-1. Upload the site to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. The easy way: `python3 tools/make_deploy_folder.py` makes `deploy/` with exactly the files to upload (it rebuilds, checks the translations and links, warns about settings still to set, and lists what it left out); upload what is inside it. By hand: make a clean copy of the folder and **leave out the `docs/` and `tests/` folders** (`docs/`: notes and questions for the farm owner; `tests/`: automatic checks for developers; neither is for visitors); you can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site. Every later change is uploaded the same way: make the folder again and drag it in (`docs/LAUNCH_CHECKLIST.md`, section 2).
+1. Upload the site to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. The easy way: `python3 tools/make_deploy_folder.py` makes `deploy/` with exactly the files to upload (it rebuilds, stops if a fact is written two ways or a translation is missing, checks the links, warns about settings still to set, and lists what it left out); upload what is inside it. If it stops, each red thing is one plain line with how to fix it; `--force` builds the folder anyway, says so on screen and in `deploy/FILES.txt`, and is only for when you know why. By hand: make a clean copy of the folder and **leave out the `docs/` and `tests/` folders** (`docs/`: notes and questions for the farm owner; `tests/`: automatic checks for developers; neither is for visitors); you can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site. Every later change is uploaded the same way: make the folder again and drag it in (`docs/LAUNCH_CHECKLIST.md`, section 2).
 2. Use your real domain at the **root** (`https://www.wiseacresorganic.com/`). If it lives elsewhere, change `SITE` in `tools/pages.py`, run the rebuild commands, and search & replace the domain in `index.html` (canonical, share image, structured data), and set `site` in `tools/qr_links.json` and run `python3 tools/make_qr.py` again (the QR signs carry the address).
 3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
 4. Send people to the Google Business Profile, and add your site's address there.
@@ -530,4 +539,5 @@ How the page stays fast: looping animations pause when they are off screen (a wh
 
 - Colors, fonts and spacing live in the `:root` tokens at the top of `css/styles.css`.
 - Illustrations are an inline SVG sprite at the bottom of `index.html` (`<symbol id="strawberry">` etc.). The tractor, wagon and barrel train are drawn in `js/hero.js` (`tractorOpen`, `wagonArt`, `barrelTrain`) and copied into the sprite as static icons.
+  The extra pages get only the drawings they use, so they stay light on a slow phone (`tools/pages.py` picks them: the ones the page points at, the icons the scripts add, the footer art, and on the page with the farm map everything the map draws). The home page keeps the whole sprite: it is the one source copy. After adding a drawing there (or a script that draws one onto an extra page) run `python3 tools/pages.py`; `node tests/run-all.mjs sprite` opens every extra page in every season and language and fails if a drawing is missing.
 - The "USDA Certified Organic" chip is plain text, not the official USDA seal.

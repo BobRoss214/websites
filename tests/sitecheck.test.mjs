@@ -28,7 +28,7 @@ await run('sitecheck', async ({ browser, base, errs }) => {
   let p = await at('');
   ok('the unchanged site: no Site check box (no real setting is called unknown)', (await box(p)) === '', await box(p));
   await done(p);
-  p = await at(`WISE_ACRES.noticeUntil = '2026-10-05'; WISE_ACRES.hours.farm.winter = [5, 6]; WISE_ACRES.community = [];
+  p = await at(`WISE_ACRES.notice = 'Closed Saturday for rain.'; WISE_ACRES.noticeUntil = '2026-10-05'; WISE_ACRES.hours.farm.winter = [5, 6]; WISE_ACRES.community = [];
     WISE_ACRES.week = { updated: '2026-10-01', expireDays: 14, note: 'Tomatoes!', crops: { tomatoes: 'peak' }, days: [{ date: '2026-10-02', farm: 'open', pizza: 'open', note: 'x' }], waitlistEmail: 'cathy@wiseacresorganic.com', feed: '' };
     WISE_ACRES.signup = { action: '', interests: {}, tags: '', languageField: '' };
     WISE_ACRES.reviews = [{ quote: 'Lovely', name: 'A. B.', source: 'Google', url: 'https://example.com/r', date: 'May 2026', lang: 'es' }];

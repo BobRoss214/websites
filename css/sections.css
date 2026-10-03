@@ -164,6 +164,8 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 /* ---------- Wise Pie ---------- */
 .pizza{background:var(--green-deep) radial-gradient(rgba(255,255,255,.08) 1.6px,transparent 1.6px) 0 0/26px 26px;color:#fff;padding-top:clamp(88px,11vw,140px);overflow-x:clip}
 .pizza :focus-visible{--focus:#fff3b0}
+/* The light cards, menu, photos and questions inside the dark pizza section keep the blue ring: the pale one is invisible on cream and white. */
+.pizza :is(.way-card,.menu,figure,details) :focus-visible{--focus:inherit}
 .pizza-head{display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center;max-width:960px;margin:0 auto 22px}
 .pizza .eyebrow{color:var(--sun)}
 .pizza-head h2{font-size:clamp(2rem,4.6vw,3.3rem)}
@@ -198,7 +200,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .pizza-links{justify-content:center}
 
 /* ---------- The GreenHouse ---------- */
-.greenhouse{background:#d9f3e6 linear-gradient(rgba(35,128,63,.13) 3px,transparent 3px) 0 0/96px 96px,linear-gradient(90deg,rgba(35,128,63,.13) 3px,transparent 3px) 0 0/96px 96px;border-block:3px solid var(--ink)}
+.greenhouse{background:linear-gradient(rgba(35,128,63,.13) 3px,transparent 3px) 0 0/96px 96px,linear-gradient(90deg,rgba(35,128,63,.13) 3px,transparent 3px) 0 0/96px 96px #d9f3e6;border-block:3px solid var(--ink)}
 .gh-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(28px,5vw,64px);align-items:center}
 .gh-copy{min-width:0}
 .gh-copy h2{font-size:clamp(2.2rem,5vw,3.6rem)}
@@ -250,6 +252,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .pass-cta{background:var(--sun)}
 .pass-cta p{color:var(--ink)}
 .pass-cta .btn{margin:10px 0 4px;font-size:.98rem;word-break:break-word}
+@media (max-width:23em){.pizza-links .btn-on-dark,.pass-cta .btn{font-size:.86rem;overflow-wrap:break-word;word-break:normal}}   /* an e-mail address inside a button label stays in one piece on a 320px phone (it broke after "...organic.co" and left ".com" alone on a line) */
 .pass-cta .small a{font-weight:800}
 .photo-rules{max-width:860px;margin-inline:auto}
 

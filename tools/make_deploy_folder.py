@@ -6,6 +6,8 @@
   python3 tools/make_deploy_folder.py --out DIR    put the folder somewhere else (it must be new, empty, or an old deploy folder)
   python3 tools/make_deploy_folder.py --no-rebuild copy the files as they are, without the rebuild and the translation check
                                                    (for a computer without beautifulsoup4; not recommended)
+  python3 tools/make_deploy_folder.py --force      build the folder even though the facts disagree or a translation is missing
+                                                   (it says so, and FILES.txt says so too; do not upload such a folder without knowing why)
 
 Then upload the CONTENTS of deploy/ (step 3.2 of docs/LAUNCH_CHECKLIST.md: drag the deploy folder onto the upload box).
 
@@ -13,14 +15,17 @@ What it does, in order:
   1. Rebuilds the pages and translations in a temporary copy of the site (tools/pages.py, tools/i18n.py extract,
      tools/i18n.py build). If that changes any file, your folder was not rebuilt after the last edit: those files are
      updated in your folder too, and listed. (--check only lists them.)
-  2. Stops if any translation is missing (tools/i18n.py missing, for every language).
+  2. Stops if the facts disagree (tools/check_facts.py: a price, an hour, a phone number, an e-mail address, the address, an age or the
+     year written two ways) or if any translation is missing (tools/i18n.py missing, for every language). Each red thing is one plain line
+     with how to fix it. --force builds the folder anyway, says so, and writes that into FILES.txt.
   3. Warns (does not stop) about settings in js/content.js that the launch checklist says to set before launch.
   4. Copies the upload set into deploy/ (an old deploy/ is replaced), checks that every file the pages point to is there,
      and writes deploy/FILES.txt: every file with its size and sha256 fingerprint, and one fingerprint for the whole folder
      (the same files always give the same fingerprint, so two uploads can be compared).
 
 Needs Python 3.8 or newer, and beautifulsoup4 for the rebuild (pip install beautifulsoup4), like the other tools.
-Exit code: 0 ready (warnings allowed), 1 not ready (a problem is printed), 2 a Python package is missing.
+Exit code: 0 ready (warnings allowed; with --force also when checks were red), 1 not ready (a problem is printed), 2 a Python package is missing.
+A broken link inside the folder is never overridden by --force.
 """
 import argparse, hashlib, json, os, re, shutil, subprocess, sys, tempfile
 from html.parser import HTMLParser
@@ -116,6 +121,7 @@ def stale_files(site):
 
 
 def missing_translations(site):
+    """(language codes, one plain line for each language that is not complete, with how to fix it)."""
     py = sys.executable or 'python3'
     codes = sorted(f[:-5] for f in os.listdir(os.path.join(site, 'lang', 'src')) if f.endswith('.json'))
     bad = []
@@ -123,10 +129,23 @@ def missing_translations(site):
         r = subprocess.run([py, 'tools/i18n.py', 'missing', code], cwd=site, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8', errors='replace')
         m = re.search(r'(\d+) missing.*JavaScript: (\d+) missing', r.stdout or '')
         if r.returncode != 0 or not m:
-            bad.append(code + ': the check could not run (' + ((r.stderr or r.stdout or '').strip().split('\n') or [''])[-1] + ')')
+            bad.append('Translations: the check for %s could not run (%s). Fix: run  python3 tools/i18n.py missing %s  and read what it says.' % (code, ((r.stderr or r.stdout or '').strip().split('\n') or [''])[-1], code))
         elif int(m.group(1)) or int(m.group(2)):
-            bad.append('%s: %s page texts and %s texts written by the code have no translation yet' % (code, m.group(1), m.group(2)))
+            bad.append('Translations missing: %s has %s page text(s) and %s text(s) written by the code with no translation yet. Fix: python3 tools/i18n.py missing %s --list shows them; add them to lang/src/%s.json (README, "Change one sentence and its translations") or ask Claude.' % (code, m.group(1), m.group(2), code, code))
     return codes, bad
+
+
+def fact_problems(site):
+    """One plain line for each fact that is written two ways (tools/check_facts.py --brief), or []."""
+    script = os.path.join(site, 'tools', 'check_facts.py')
+    if not os.path.isfile(script):
+        return []
+    py = sys.executable or 'python3'
+    r = subprocess.run([py, 'tools/check_facts.py', '--brief'], cwd=site, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8', errors='replace')
+    lines = [l[len('DIFFERENT '):].strip() for l in (r.stdout or '').splitlines() if l.startswith('DIFFERENT ')]
+    if r.returncode not in (0, 1) or (r.returncode == 1 and not lines):
+        return ['Facts: the check could not run (%s). Fix: run  python3 tools/check_facts.py  and read what it says.' % ((r.stderr or r.stdout or '').strip().split('\n') or [''])[-1]]
+    return ['Facts disagree: %s. Fix: make every place say the same (the files and lines are named; README, "Change a fact everywhere"); python3 tools/check_facts.py lists every place.' % l for l in lines]
 
 
 # ---------------------------------------------------------------- 3. settings the checklist says to set
@@ -334,7 +353,7 @@ def check_links(out, site_url):
 
 
 # ---------------------------------------------------------------- FILES.txt
-def write_manifest(out, files):
+def write_manifest(out, files, forced=None):
     rows, whole = [], hashlib.sha256()
     total = 0
     for f in sorted(files):
@@ -343,8 +362,12 @@ def write_manifest(out, files):
         rows.append('%10d  %s  %s' % (len(data), h, f))
         whole.update(('%s\0%s\n' % (f, h)).encode('utf-8'))
         total += len(data)
+    note = ''
+    if forced:
+        note = 'NOTE: built with --force although these checks were red (do not upload it unless you know why):\n' + ''.join('  - ' + f + '\n' for f in forced) + '\n'
     text = ('The files to upload, made by tools/make_deploy_folder.py. Size in bytes, sha256 fingerprint, file.\n'
             'The fingerprint of the whole folder (last line) is the same whenever the files are the same.\n\n'
+            + note
             + '\n'.join(rows) + '\n\n'
             + '%d files, %d bytes\n' % (len(rows), total)
             + 'sha256 of the whole folder: %s\n' % whole.hexdigest())
@@ -365,11 +388,13 @@ def main():
     ap.add_argument('--out', default=os.path.join(ROOT, 'deploy'), help='where to put the folder (default: deploy/ in the site folder)')
     ap.add_argument('--check', action='store_true', help='only check that the pages and translations are up to date; write nothing')
     ap.add_argument('--no-rebuild', action='store_true', help='skip the rebuild and the translation check (not recommended)')
+    ap.add_argument('--force', action='store_true', help='build the folder even though the facts disagree or a translation is missing (it says so, and FILES.txt says so)')
     args = ap.parse_args()
 
     if not args.check:
         check_out(args.out)   # before the slow part: say at once if --out is a folder this tool must not empty
     tmp = tempfile.mkdtemp(prefix='wa-deploy-')
+    red = []   # one plain line for each check that is red: facts that disagree, translations that are missing
     try:
         if args.no_rebuild:
             say('Skipping the rebuild and the translation check (--no-rebuild): the files are copied as they are.')
@@ -393,14 +418,21 @@ def main():
             else:
                 say('Pages and translations are up to date.')
             codes, bad = missing_translations(site)
-            if bad:
-                say('Not ready: some translations are missing. Ask Claude to translate them, then run this again:')
-                for b in bad:
-                    say('  ' + b)
+        red = fact_problems(site) + bad
+        if red:
+            if args.force:
+                say('--force: building anyway, although %d check%s red. The folder will have these mistakes:' % (len(red), ' is' if len(red) == 1 else 's are'))
+            else:
+                say('NOT READY: %d check%s red.' % (len(red), ' is' if len(red) == 1 else 's are'))
+            for line in red:
+                say('  ' + line)
+            if not args.force:
+                say('Nothing was written to deploy/. Fix the lines above and run this again. To build the folder anyway, with these mistakes in it: add --force.')
                 sys.exit(1)
-            say('Translations complete: ' + ', '.join(codes) + '.')
+        else:
+            say('Facts agree everywhere.' + ('' if args.no_rebuild else ' Translations complete: ' + ', '.join(codes) + '.'))
         if args.check:
-            say('Ready to make deploy/ (nothing was written: --check).')
+            say('Ready to make deploy/ (nothing was written: --check)' + (' with --force, although %d check(s) were red.' % len(red) if red else '.'))
             return
 
         warnings = settings_warnings(site)
@@ -412,7 +444,7 @@ def main():
             shutil.copyfile(os.path.join(site, *f.split('/')), dst)
         canon = re.search(r'<link rel="canonical" href="([^"]+)"', read(os.path.join(out, 'index.html')).decode('utf-8', 'replace')) if 'index.html' in files else None
         problems, unused = check_links(out, canon.group(1) if canon else 'https://www.wiseacresorganic.com/')
-        total, whole = write_manifest(out, files)
+        total, whole = write_manifest(out, files, red if args.force else None)
 
         say('')
         say('Left out (not needed by visitors):')
@@ -432,7 +464,10 @@ def main():
                 say('  ' + p)
             sys.exit(1)
         say('Ready: %s holds %d files and FILES.txt, %s in all (folder fingerprint %s...).' % (out, len(files), mb(total), whole[:16]))
-        say('Upload what is INSIDE that folder (docs/LAUNCH_CHECKLIST.md, step 3.2).')
+        if red:
+            say('BUILT WITH --force: %d red check%s ignored (listed above and in FILES.txt). Do not upload this folder unless you know why.' % (len(red), ' was' if len(red) == 1 else 's were'))
+        else:
+            say('Upload what is INSIDE that folder (docs/LAUNCH_CHECKLIST.md, step 3.2).')
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

@@ -15,7 +15,8 @@
  *          notice: "We're closed Saturday for rain.",
  *      (Another way is a backslash in front of the apostrophe:  'We\'re closed Saturday.' )
  *   6. Anything after // on a line is a note for you, and the computer skips it. To switch a line off, put // in front of it.
- *   7. Save the file and look at the website: double-click index.html (or refresh the live page; on the live site add ?check to the address,
+ *   7. Save the file and look at the website: run  python3 tools/serve.py  in this folder (it opens the site; refresh after each save), or
+ *      refresh the live page; on the live site add ?check to the address,
  *      and do that after every change: visitors never see a message when this file is broken). If a yellow box called "Site check"
  *      shows at the bottom of the page, it says what to fix and where, and names a misspelled setting (a green one only lists old lines that
  *      hid themselves: nothing is broken). If the page looks broken, press Undo (Ctrl+Z, or Cmd+Z on a Mac)
@@ -26,7 +27,7 @@
  *
  * PHOTOS
  * ------
- * The "Photo gallery" section shows every photo listed in `photos` at the bottom of this file. Tap a photo to enlarge it.
+ * The "Photo gallery" section shows every photo listed in `photos` at the bottom of this file. Tap a photo to enlarge it; then Previous / Next (or the arrow keys, or a swipe) go through the photos shown.
  * Claude adds a photo with one command, `python3 tools/add_photo.py` (README.md, "Adding a photo"): it shrinks the picture, takes the hidden
  * camera and location data out of it, saves it in assets/photos/ and adds the line below for you. The steps here are for doing it by hand.
  *   1. Put the picture in the folder assets/photos/. Shrink big phone photos first, or the page gets slow.
@@ -49,6 +50,8 @@
  * `hours` drives the green "Open now" badges. Times are Eastern Time on a 24-hour clock: '10:00' is 10 am, '16:00' is 4 pm, '20:00' is 8 pm.
  * `days` are numbers: 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday.
  * For `farm` you list the days with reserved visits for each season (spring, summer, fall, winter). A season you leave out shows no farm badge.
+ * The Site check box reads these values: a time that is not on the 24-hour clock ('4 pm' instead of '16:00'), a close that is not later than the open,
+ * and a day that is not a number from 0 to 6 are each named, with what to type.
  *
  * `closures` is one list of dates when the farm, The GreenHouse and Wise Pie are all shown as closed, or as having no visits (rain, a holiday):
  *       closures: ['2026-10-04', '2026-10-11'],
@@ -74,7 +77,8 @@
  *       reviews: [
  *         { quote: "Best strawberries we have ever picked.", name: "Sarah M.", source: "Google", url: "https://...", date: "May 2026" },
  *       ],
- * `quote` and `name` are required (a review without both is skipped). `source`, `url` (a link to the post) and `date` are optional.
+ * `quote` and `name` are required (a review without both is skipped, and the Site check box says which is missing). `source`, `url` (a link to the post,
+ * which must start with https://, and is shown only together with `source`) and `date` are optional.
  * Add  lang: "es"  to a review that was written in Spanish, so it is never machine-translated.
  *
  * ANALYTICS

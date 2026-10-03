@@ -387,26 +387,26 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 
 /* Achievements: a badge pops up above the picker, and the thing you picked rains down. Each kind enters a little differently. */
 .ach-stack{position:absolute;left:0;bottom:calc(100% + 14px);width:min(390px,calc(100vw - 2 * var(--gutter)));display:grid;gap:10px;pointer-events:none;z-index:9}
-.ach{--a-bg:#fff;--a-ring:#e5334b;--a-medal:#ffd2da;position:relative;display:flex;align-items:center;gap:12px;pointer-events:auto;background:var(--a-bg);border:3px solid var(--ink);border-radius:22px;padding:10px 40px 10px 10px;box-shadow:0 6px 0 var(--ink),0 14px 28px rgba(58,36,22,.25);color:var(--ink)}
+.ach{--a-bg:#fff;--a-ring:#e5334b;--a-kick:#cf2f45;--a-medal:#ffd2da;position:relative;display:flex;align-items:center;gap:12px;pointer-events:auto;background:var(--a-bg);border:3px solid var(--ink);border-radius:22px;padding:10px 40px 10px 10px;box-shadow:0 6px 0 var(--ink),0 14px 28px rgba(58,36,22,.25);color:var(--ink)}
 .ach-medal{position:relative;flex:none;width:62px;height:62px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0,var(--a-medal) 55%,var(--a-ring) 130%);border:3px solid var(--ink);box-shadow:inset 0 0 0 3px var(--a-ring);overflow:hidden}
 .ach-medal svg{width:36px;height:36px;overflow:visible}
 .ach-medal::after{content:"";position:absolute;top:-30%;bottom:-30%;left:-80%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.85),transparent);transform:skewX(-20deg);animation:btnShine 1.1s ease-out .5s 2 both}
 .ach-text{display:grid;gap:3px;min-width:0}
-.ach-kicker{font:700 .7rem/1 var(--display);letter-spacing:.09em;text-transform:uppercase;color:var(--a-ring)}
+.ach-kicker{font:700 .7rem/1 var(--display);letter-spacing:.09em;text-transform:uppercase;color:var(--a-kick)}   /* darker than the ring colour: the ring colour on the pale background was 1.9 to 4.6:1, this is 4.7 or more */
 .ach-title{font:700 1.08rem/1.15 var(--display)}
 .ach-msg{font-size:.86rem;line-height:1.3;font-weight:600}
 .ach-msg a{color:inherit;font-weight:800}
 .ach-close{position:absolute;top:0;right:0;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:var(--ink);font:700 1.3rem/1 var(--display);cursor:pointer}
 @media (hover:hover){.ach-close:hover{background:rgba(58,36,22,.1)}}
 .ach.is-leaving{animation:achOut .38s ease-in forwards!important}
-.ach-strawberry{--a-bg:#fff0f2;--a-ring:#e5334b;--a-medal:#ffc9d2;animation:achBounce .8s cubic-bezier(.3,1.6,.5,1) both}
-.ach-blueberry{--a-bg:#eef0ff;--a-ring:#5b5fd6;--a-medal:#cfd3ff;animation:achRoll .85s cubic-bezier(.2,.9,.3,1.08) both}
-.ach-sunflower{--a-bg:#fff8cf;--a-ring:#f0a500;--a-medal:#ffe27a;animation:achPop .7s cubic-bezier(.3,1.7,.5,1) both}
+.ach-strawberry{--a-bg:#fff0f2;--a-ring:#e5334b;--a-kick:#c42f41;--a-medal:#ffc9d2;animation:achBounce .8s cubic-bezier(.3,1.6,.5,1) both}
+.ach-blueberry{--a-bg:#eef0ff;--a-ring:#5b5fd6;--a-kick:#5459c9;--a-medal:#cfd3ff;animation:achRoll .85s cubic-bezier(.2,.9,.3,1.08) both}
+.ach-sunflower{--a-bg:#fff8cf;--a-ring:#f0a500;--a-kick:#8f5f0a;--a-medal:#ffe27a;animation:achPop .7s cubic-bezier(.3,1.7,.5,1) both}
 .ach-sunflower .ach-medal svg{animation:achSpin 1.2s cubic-bezier(.2,.8,.2,1) both}
-.ach-pumpkin{--a-bg:#fff0de;--a-ring:#ee7b1f;--a-medal:#ffd3a3;animation:achDrop .9s cubic-bezier(.4,0,.6,1) both}
-.ach-winter{--a-bg:#eaf6ff;--a-ring:#2e7d4f;--a-medal:#cdeed8;animation:achFade .9s ease-out both}
+.ach-pumpkin{--a-bg:#fff0de;--a-ring:#ee7b1f;--a-kick:#9e5219;--a-medal:#ffd3a3;animation:achDrop .9s cubic-bezier(.4,0,.6,1) both}
+.ach-winter{--a-bg:#eaf6ff;--a-ring:#2e7d4f;--a-kick:#2a7449;--a-medal:#cdeed8;animation:achFade .9s ease-out both}
 .ach-winter .ach-medal svg{animation:achTwinkle 1.1s ease-in-out 3}
-.ach-time{--a-bg:#fff5cf;--a-ring:#c98a00;--a-medal:#ffe9a0;border-width:4px;padding-right:44px;animation:achZoom 1s cubic-bezier(.3,1.5,.5,1) both,achGlow 1.2s ease-in-out 3 both}
+.ach-time{--a-bg:#fff5cf;--a-ring:#c98a00;--a-kick:#8d5f08;--a-medal:#ffe9a0;border-width:4px;padding-right:44px;animation:achZoom 1s cubic-bezier(.3,1.5,.5,1) both,achGlow 1.2s ease-in-out 3 both}
 .ach-time .ach-medal{width:72px;height:72px}
 .ach-time .ach-medal svg{width:44px;height:44px;animation:achShake .6s ease-in-out .9s 3}
 .ach-time .ach-title{font-size:1.2rem}
@@ -438,7 +438,7 @@ html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animatio
 .to-top .ico{width:26px;height:26px;transform:rotate(180deg)}
 @media (hover:hover){.to-top:hover{transform:translateY(-3px)}}
 .to-top:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
-@media (max-width:47.5em){.to-top{bottom:calc(84px + env(safe-area-inset-bottom,0px));width:46px;height:46px}}
+@media (max-width:47.5em){.to-top{bottom:calc(98px + env(safe-area-inset-bottom,0px));width:46px;height:46px}}   /* clear of the bottom bar even when its labels run over two lines (Spanish, Vietnamese: the bar is up to 86px high at 390px) */
 @media print{.to-top{display:none!important}}
 
 /* Social links (footer) and the "tag us" note by the photos */
@@ -581,12 +581,28 @@ button.map-toggle{min-height:44px}
 .nav .nav-more-list a{display:flex;align-items:center;min-height:44px}
 .lang-list button{min-height:44px}
 }
-/* The fixed bottom bar must not hide the link you tabbed to or jumped to: keep its height free at the bottom of the scroll area (the fixed 96px in features.css is too small once the text is bigger). */
-@media (max-width:47.5em){:root{scroll-padding-bottom:max(96px,calc(2.4rem + 40px))}}
+/* The round "back to top" button (68px from the bottom edge) must not hide the link you tabbed to: keep that much free at the bottom of the scroll area. */
+:root{scroll-padding-bottom:80px}
+/* The fixed bottom bar must not hide the link you tabbed to or jumped to: keep its height free at the bottom of the scroll area (the fixed 96px in features.css is too small once the text is bigger).
+   The "back to top" button sits on top of the bar, 130px up, so at least 140px. */
+@media (max-width:47.5em){:root{scroll-padding-bottom:max(140px,calc(2.4rem + 40px))}}
 @media (max-height:34em) and (max-width:47.5em){:root{scroll-padding-bottom:84px}}
 /* A phone held sideways (about 360px tall): a fixed header and a fixed bar would be a third of the screen. The bar then sits in the page, after the footer, instead of floating. */
 @media (max-height:26em) and (max-height:420px) and (max-width:47.5em){
   body{padding-bottom:0}
   .action-bar{position:static;margin:12px 8px 8px}
   :root{scroll-padding-bottom:0}
+}
+
+/* ---------------------------------------------------------------- keyboard focus rings
+   The top bar is dark: its link gets the pale ring (as the footer does), and while it has focus it drops the tall tap padding, or the ring would be cut off by the window edge and the header.
+   On the dark bar, the hero drawing and the dark footer a blue ring alone is hard to see: a white band sits under it.
+   The "new" hero chip has a tall invisible tap box, so its ring goes round the visible pill instead. */
+.announce :focus-visible{--focus:#fff3b0}
+.announce a:focus-visible{padding-block:0;margin-block:0}
+.skip-link:focus-visible,.chips .chip-rel a:focus-visible{box-shadow:0 0 0 7px #fff}
+.to-top:focus-visible{box-shadow:0 0 0 7px #fff,0 4px 0 var(--ink)}
+@supports selector(:has(*)){
+  .chips .chip-new:has(> a:focus-visible){outline:4px solid var(--focus);outline-offset:3px;box-shadow:0 0 0 7px #fff}
+  .chips .chip-new > a:focus-visible{outline:none}
 }

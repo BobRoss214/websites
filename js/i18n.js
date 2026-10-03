@@ -281,7 +281,7 @@
     list.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (b) { setLang(b.dataset.lang); close(); btn.focus({ preventScroll: true }); } });
     list.addEventListener('keydown', (e) => {
       const items = Array.from(list.querySelectorAll('button')), i = items.indexOf(doc.activeElement);
-      if (e.key === 'Escape') { close(); btn.focus({ preventScroll: true }); }
+      if (e.key === 'Escape') { e.stopPropagation(); close(); btn.focus({ preventScroll: true }); }   // only this list: the open phone menu around it stays open
       else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus({ preventScroll: true }); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus({ preventScroll: true }); }
     });

@@ -891,15 +891,27 @@
    * Picking / lighting
    * ------------------------------------------------------------------ */
   const countEl = $('#pick-count'), msgEl = $('#pick-msg'), btnEl = $('#pick-btn'), artEl = $('#picker use');
-  let season = null, count = 0, token = 0;
+  let season = null, count = 0, lights = 0, token = 0;   // count: everything picked or stoked in this scene; lights: only what the hint line is about (winter: trees, not fires)
   let pickables = [];
 
   const msgVars = () => ({ reserve: reserveA(t('Reserve a visit')), spot: reserveA(t('Reserve your spot')), gh: '<a href="#greenhouse">' + t('The GreenHouse') + '</a>' });
   const msgFor = (cfg, n) => { const m = cfg.msgs.filter(([k]) => n >= k).pop(); return m ? t(m[1], msgVars()) : t(cfg.hint); };
+  const doneText = () => (season === 'winter' ? t('Every tree is glowing!') : t('You picked them all! Give them a moment to grow back.'));
+  // 1,000 like the badge says (Spanish like the rest of the page: 1,000, Vietnamese 1.000)
+  const fmtN = (n) => { try { const l = W.lang || 'en'; return new Intl.NumberFormat(l === 'es' ? 'es-US' : l).format(n); } catch (e) { return String(n); } };
+  // #pick-msg is a live region: write it only when the sentence changes, or a screen reader reads the same line again after every single pick
+  let shown = '';
+  function setMsg(value, asText) {
+    if (!msgEl) return;
+    const key = (asText ? 'text:' : 'html:') + value;
+    if (key === shown) return;
+    shown = key;
+    if (asText) msgEl.textContent = value; else msgEl.innerHTML = value;
+  }
   function hud(cfg) {
-    count = 0;
-    if (countEl) countEl.textContent = '0';
-    if (msgEl) msgEl.innerHTML = t(cfg.hint);
+    count = 0; lights = 0;
+    if (countEl) countEl.textContent = fmtN(0);
+    if (msgEl) { msgEl.dataset.custom = ''; setMsg(t(cfg.hint)); }
     if (btnEl) btnEl.textContent = t(cfg.btn);
     if (artEl) artEl.setAttribute('href', '#' + cfg.art);
   }
@@ -907,7 +919,8 @@
     $$('.toot-say').forEach((n) => { n.textContent = t('Toot toot!'); });   // the tractor's bubble is drawn once, so it is re-worded here
     if (!season) return;
     const cfg = SCENES[season].hud;
-    if (msgEl && msgEl.dataset.custom !== '1') msgEl.innerHTML = msgFor(cfg, count);
+    if (msgEl) { if (msgEl.dataset.custom === '1') setMsg(doneText(), true); else setMsg(msgFor(cfg, lights)); }
+    if (countEl) countEl.textContent = fmtN(count);
     if (btnEl) btnEl.textContent = t(cfg.btn);
   });
 
@@ -922,13 +935,16 @@
     setTimeout(() => plus.remove(), 950);
   }
 
-  function bump(cfg) {
+  // spark: a fire that was stoked. It counts (and shows) like a lit tree, because the winter badge counts both, but it does not move the hint line on.
+  function bump(cfg, spark) {
     count += 1;
     if (countEl) {
-      countEl.textContent = String(count);
+      countEl.textContent = fmtN(count);
       countEl.classList.remove('bump'); void countEl.offsetWidth; countEl.classList.add('bump');
     }
-    if (msgEl) { msgEl.dataset.custom = ''; msgEl.innerHTML = msgFor(cfg, count); }
+    if (spark) return;
+    lights += 1;
+    if (msgEl) { msgEl.dataset.custom = ''; setMsg(msgFor(cfg, lights)); }
   }
 
   /* ------------------------------------------------------------------ *
@@ -981,6 +997,16 @@
     setTimeout(() => box.remove(), 5200);
   }
 
+  // The words of the badge on screen. They are set here (and again if the language is changed while it is showing), not when the page is built.
+  let toast = null;
+  function paintToast(el, a) {
+    $('.ach-kicker', el).textContent = t('Achievement unlocked!');
+    $('.ach-title', el).textContent = a.title();
+    $('.ach-msg', el).innerHTML = a.msg();
+    $('.ach-close', el).setAttribute('aria-label', t('Close'));
+  }
+  doc.addEventListener('wa:lang', () => { if (toast) paintToast(toast.el, toast.a); });
+
   function nextToast() {
     const kind = queue.shift();
     if (!kind) { toasting = false; return; }
@@ -995,8 +1021,10 @@
     const el = doc.createElement('div');
     el.className = 'ach ach-' + kind;
     el.innerHTML = '<span class="ach-medal" aria-hidden="true"><svg><use href="#' + a.icon + '" width="100%" height="100%"/></svg></span>' +
-      '<span class="ach-text"><span class="ach-kicker">' + t('Achievement unlocked!') + '</span><strong class="ach-title">' + a.title() + '</strong><span class="ach-msg">' + a.msg() + '</span></span>' +
-      '<button class="ach-close" type="button" aria-label="' + t('Close') + '">&times;</button>';
+      '<span class="ach-text"><span class="ach-kicker"></span><strong class="ach-title"></strong><span class="ach-msg"></span></span>' +
+      '<button class="ach-close" type="button">&times;</button>';
+    paintToast(el, a);
+    toast = { el, a };
     stackEl.appendChild(el);
     rain(kind);
     let done = false;
@@ -1004,6 +1032,7 @@
       if (done) return;
       done = true;
       clearTimeout(timer);
+      if (toast && toast.el === el) toast = null;
       el.classList.add('is-leaving');
       setTimeout(() => { el.remove(); nextToast(); }, reduceMotion ? 0 : 380);
     };
@@ -1035,6 +1064,14 @@
     }, 7000 + Math.random() * 4000);
   }
 
+  // A stoked fire is one "spark": it counts in the basket and towards the winter badge, like a lit tree does.
+  function stoke(fire) {
+    fire.classList.add('flare');
+    bump(SCENES.winter.hud, true); floatPlus(fire); credit('winter');
+    clearTimeout(fire._t);
+    fire._t = setTimeout(() => fire.classList.remove('flare'), 1100);
+  }
+
   function available() {
     return pickables.filter((el) => (el.dataset.pick === 'tree' ? !el.classList.contains('lit') : el.dataset.state !== 'picked'));
   }
@@ -1058,14 +1095,15 @@
   const announce = (text) => { if (!npcLive) return; npcLive.textContent = ''; requestAnimationFrame(() => { npcLive.textContent = text; }); };
   function say(el, text) {
     announce(text);
-    if (el._say) el._say.remove();
+    if (el._say) { el._say.remove(); el._sayStop(); }   // the old bubble's loop and timers stop with it (tapping a friend again and again must not pile them up)
     const b = doc.createElement('span');
     b.className = 'npc-say';
     b.setAttribute('aria-hidden', 'true');
     b.textContent = text;
     hero.appendChild(b);
     el._say = b;
-    let gone = false;
+    let gone = false, t1 = 0, t2 = 0;
+    el._sayStop = () => { gone = true; clearTimeout(t1); clearTimeout(t2); };
     const place = () => {
       if (gone) return;
       const r = el.getBoundingClientRect(), h = hero.getBoundingClientRect();
@@ -1074,9 +1112,9 @@
       requestAnimationFrame(place);
     };
     place();
-    setTimeout(() => {
+    t1 = setTimeout(() => {
       b.classList.add('out');
-      setTimeout(() => { gone = true; b.remove(); if (el._say === b) el._say = null; }, 260);
+      t2 = setTimeout(() => { gone = true; b.remove(); if (el._say === b) el._say = null; }, 260);
     }, 2500);
   }
 
@@ -1113,12 +1151,7 @@
       }
     });
 
-    $$('[data-fire]', fieldEl).forEach((fire) => fire.addEventListener('click', () => {
-      fire.classList.add('flare');
-      credit('winter');
-      clearTimeout(fire._t);
-      fire._t = setTimeout(() => fire.classList.remove('flare'), 1100);
-    }));
+    $$('[data-fire]', fieldEl).forEach((fire) => fire.addEventListener('click', () => stoke(fire)));
 
     const rig = $('[data-rig]', fieldEl);
     if (rig) {
@@ -1134,7 +1167,10 @@
   if (btnEl) btnEl.addEventListener('click', () => {
     const free = available();
     if (!free.length) {
-      if (msgEl) { msgEl.dataset.custom = '1'; msgEl.textContent = season === 'winter' ? t('Every tree is glowing!') : t('You picked them all! Give them a moment to grow back.'); }
+      if (msgEl) { msgEl.dataset.custom = '1'; setMsg(doneText(), true); }
+      // every tree is lit: the button stokes a fire instead, so the winter badge (100 lights and sparks) can be earned without a mouse or a finger
+      const fires = $$('[data-fire]', fieldEl);
+      if (season === 'winter' && fires.length) stoke(fires[Math.floor(Math.random() * fires.length)]);
       return;
     }
     pick(free[Math.floor(Math.random() * free.length)]);
@@ -1180,8 +1216,19 @@
     });
   }
 
+  let swapTimer = 0;
   function setSeason(id, userAction) {
     if (!SCENES[id]) return;
+    if (userAction) {
+      clearTimeout(swapTimer);   // a quick second choice (or a key held down on the switcher) replaces the one still waiting: the scene is drawn once, for the last one
+      if (id === season) {       // already showing it: nothing to redraw, and the basket count and the picked things stay as they are
+        sceneEl.classList.remove('is-swapping');
+        markSwitch(id);
+        doc.dispatchEvent(new CustomEvent('wa:season', { detail: id }));
+        return;
+      }
+      markSwitch(id);
+    }
     const run = () => {
       W.seasons.apply(id);
       try { build(id); } catch (e) { setTimeout(() => { throw e; }); }   // a drawing problem must not leave the wrong season's words and buttons
@@ -1196,7 +1243,7 @@
       sceneEl.classList.remove('is-swapping');
       if (userAction) doc.dispatchEvent(new CustomEvent('wa:season', { detail: id }));
     };
-    if (userAction && !reduceMotion) { sceneEl.classList.add('is-swapping'); setTimeout(run, 240); } else run();
+    if (userAction && !reduceMotion) { sceneEl.classList.add('is-swapping'); swapTimer = setTimeout(run, 240); } else run();
   }
 
   if (switchEl && W.seasonPicker !== false) {
@@ -1251,8 +1298,10 @@
         html += '<i style="--a:' + a + 'deg;--d:' + d + 'px;--s:' + s + 'px;--c:' + COLORS[i % COLORS.length] + ';--dl:' + ((i % 3) * 0.04).toFixed(2) + 's"></i>';
       }
       box.innerHTML = html;
+      if (sun._burst) sun._burst.remove();   // a new burst replaces the one still flying
       sun.appendChild(box);
-      setTimeout(() => box.remove(), 1500);
+      sun._burst = box;
+      setTimeout(() => { box.remove(); if (sun._burst === box) sun._burst = null; }, 1500);
     });
   }
 
@@ -1284,8 +1333,10 @@
         html += '<i class="' + kind + '" style="--x:' + x + 'px;--y:' + y + 'px;--r:' + Math.round(rnd(-260, 260)) + 'deg;--s:' + Math.round(rnd(11, 19)) + 'px;--c:' + GREENS[i % 3] + ';--dl:' + ((i % 4) * 0.03).toFixed(2) + 's"></i>';
       }
       box.innerHTML = html;
+      if (note._burst) note._burst.remove();
       note.appendChild(box);
-      setTimeout(() => box.remove(), 1400);
+      note._burst = box;
+      setTimeout(() => { box.remove(); if (note._burst === box) note._burst = null; }, 1400);
       setTimeout(go, 520);
     });
   }

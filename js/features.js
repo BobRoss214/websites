@@ -51,14 +51,16 @@
   // Two kinds, kept apart: `problems` are settings to fix (yellow box), `oldLines` are dated lines that hid themselves after their date
   // (nothing is broken: the box is green and says so).
   const problems = [], oldLines = [];
+  let transReport = null;   // ?check&lang=xx: { name, missing: [{ id, text }], codeMissing: [text] | null, codeNote } (see checkTranslations)
   // A value typed in js/content.js (or sent by the live feed) is shown in the box at most 60 letters long, on one line,
   // so the box can never carry a long message of someone else's.
   const q = (v) => { const a = Array.from(String(v == null ? '' : v).replace(/\s+/g, ' ')); return a.length > 60 ? a.slice(0, 59).join('') + '\u2026' : a.join(''); };
   const warn = (msg, kind) => { const list = kind === 'old' ? oldLines : problems; if (list.indexOf(msg) < 0) { list.push(msg); try { console.warn('Wise Acres: ' + msg); } catch (e) { /* no console */ } } };
   function showProblems() {
     const local = /^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname);
-    if (!(problems.length || oldLines.length) || !(local || /[?&]check\b/.test(location.search)) || !doc.body) return;
+    if (!(local || /[?&]check\b/.test(location.search)) || !doc.body) return;
     let box = doc.getElementById('wa-problems');
+    if (!(problems.length || oldLines.length || transReport)) { if (box) box.remove(); return; }   // nothing (any more) to say
     const calm = !problems.length;   // only old lines: nothing to fix
     if (!box) {
       box = doc.createElement('div'); box.id = 'wa-problems';
@@ -80,6 +82,16 @@
       const part = doc.createElement('div'); part.style.cssText = 'margin-top:10px;font-weight:500' + (problems.length ? ';padding-top:8px;border-top:2px dashed #3a2416' : '');
       const hh = doc.createElement('strong'); hh.textContent = t('Old lines that hid themselves. Nothing is broken: remove them when you like.'); part.appendChild(hh);
       list(oldLines, part); box.appendChild(part);
+    }
+    if (transReport) {   // ?check&lang=xx: what is still in English on this page (nothing is broken: visitors see the English text)
+      const part = doc.createElement('div'); part.style.cssText = 'margin-top:10px;font-weight:500' + (problems.length || oldLines.length ? ';padding-top:8px;border-top:2px dashed #3a2416' : '');
+      const all = transReport.missing.length + (transReport.codeMissing ? transReport.codeMissing.length : 0);
+      const hh = doc.createElement('strong'); hh.textContent = (all ? t('Not translated yet: these texts on this page show in English.') : t('Every text on this page is translated.')) + ' (' + transReport.name + ')'; part.appendChild(hh);
+      const shown = transReport.missing.slice(0, 25).map((m) => '"' + q(m.text) + '" (' + m.id + ')').concat((transReport.codeMissing || []).slice(0, 15).map((x) => 'code text: "' + q(x) + '"'));
+      if (all > shown.length) shown.push('... and ' + (all - shown.length) + ' more. All of them: python3 tools/i18n.py missing ' + transReport.code + ' --list');
+      if (shown.length) list(shown, part);
+      if (transReport.codeNote) { const n = doc.createElement('p'); n.style.margin = '6px 0 0'; n.textContent = transReport.codeNote; part.appendChild(n); }
+      box.appendChild(part);
     }
     // The box sits on top of the page, so it must be closable (it hid the buttons under it from keyboard users). Escape closes it too.
     const hide = doc.createElement('button'); hide.type = 'button'; hide.textContent = t('Hide this box');
@@ -484,6 +496,129 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * The values in js/content.js: opening hours (24-hour clock, open before close, days 0-6), the notice bar, reviews, and web addresses
+   * (https://). Each message names the exact setting and says what to type.
+   * ------------------------------------------------------------------ */
+  const LANG_CODES = ['en', 'es', 'hi', 'zh', 'vi'];
+  const DAY_NUMBERS = '0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday';
+  const DAY_BY_NAME = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+  const HHMM = /^(?:(?:[01]?\d|2[0-3]):[0-5]\d|24:00)$/;
+  const minutesOf = (v) => { const m = /^(\d{1,2}):(\d\d)$/.exec(v); return m ? (+m[1]) * 60 + (+m[2]) : NaN; };
+  const hhmmOf = (mins) => pad(Math.floor(mins / 60) % 24) + ':' + pad(mins % 60);
+  function twentyFour(v) {   // '4 pm', '4:30 PM', '4:30pm' -> '16:30' ('' when it is not a 12-hour time)
+    const m = /^(\d{1,2})(?::(\d\d))?\s*([ap])\.?m\.?$/i.exec(String(v).trim());
+    if (!m || +m[1] < 1 || +m[1] > 12 || (m[2] && +m[2] > 59)) return '';
+    return pad((+m[1] % 12) + (m[3].toLowerCase() === 'p' ? 12 : 0)) + ':' + (m[2] || '00');
+  }
+  function checkDays(days, where) {
+    if (!Array.isArray(days)) { warn(where + ' must be a list of day numbers in square brackets, like ' + where.split('.').pop() + ': [5, 6, 0] (' + DAY_NUMBERS + ').'); return; }
+    days.forEach((d) => {
+      if (Number.isInteger(d) && d >= 0 && d <= 6) return;
+      const name = typeof d === 'string' ? DAY_BY_NAME[d.trim().slice(0, 3).toLowerCase()] : undefined;
+      if (name !== undefined) warn(where + ' has "' + q(d) + '", but days are numbers. Write ' + name + ' (' + DAY_NUMBERS + ').');
+      else if (typeof d === 'string' && /^\d$/.test(d.trim()) && +d <= 6) warn(where + ' has "' + q(d) + '" in quote marks, so it never matches a day. Write ' + d.trim() + ' without the quote marks.');
+      else if (d === 7) warn(where + ' has 7, but the days run from 0 to 6. Sunday is 0, not 7 (' + DAY_NUMBERS + ').');
+      else warn(where + ' has "' + q(d) + '", which is not a day number. Use 0 to 6 (' + DAY_NUMBERS + ').');
+    });
+  }
+  function checkHours() {
+    const h = W.hours;
+    if (!h || typeof h !== 'object') return;   // missing hours: reported with the other failures of js/content.js
+    ['greenhouse', 'pizza'].forEach((place) => {
+      const sch = h[place];
+      if (sch == null) return;   // not given: no badge for it
+      if (typeof sch !== 'object' || Array.isArray(sch)) { warn('hours.' + place + ' must look like { days: [5, 6, 0], open: \'10:00\', close: \'20:00\' }.'); return; }
+      const ok = {};
+      ['open', 'close'].forEach((k) => {
+        const v = sch[k], where = 'hours.' + place + '.' + k;
+        if (v == null || v === '') { warn(where + ' is missing, so the "Open now" badge for it cannot work. Write it in quote marks on the 24-hour clock, like ' + k + ": '" + (k === 'open' ? '10:00' : '20:00') + "' (" + (k === 'open' ? '10 am' : '8 pm') + ').'); return; }
+        if (typeof v === 'string' && HHMM.test(v.trim())) { ok[k] = minutesOf(v.trim()); return; }
+        const fix = twentyFour(v);
+        warn(where + ' "' + q(v) + '" is not a time the site can read. ' + (fix ? 'Use the 24-hour clock with a colon, in quote marks: ' + k + ": '" + fix + "'." : "Write the 24-hour clock with a colon, in quote marks, like '10:00' (10 am) or '16:00' (4 pm)."));
+      });
+      if (ok.open !== undefined && ok.close !== undefined && ok.close <= ok.open) {
+        const maybe = ok.close < 720 && ok.close + 720 > ok.open ? ' Did you mean close: \'' + hhmmOf(ok.close + 720) + '\'?' : '';
+        warn('hours.' + place + ' closes at ' + hhmmOf(ok.close) + ' but opens at ' + hhmmOf(ok.open) + '. close must be later than open on the 24-hour clock (8 pm is \'20:00\').' + maybe + ' Hours past midnight are not supported: the badge would never show open.');
+      }
+      if (sch.days !== undefined) checkDays(sch.days, 'hours.' + place + '.days');
+    });
+    if (h.farm && typeof h.farm === 'object' && !Array.isArray(h.farm)) Object.keys(h.farm).forEach((season) => { if (['spring', 'summer', 'fall', 'winter'].indexOf(season) >= 0) checkDays(h.farm[season], 'hours.farm.' + season); });
+    else if (h.farm != null) warn('hours.farm must look like { fall: [4, 5, 6, 0] }: a list of day numbers for each season (' + DAY_NUMBERS + ').');
+  }
+  function checkNotice() {
+    const n = W.notice, until = String(W.noticeUntil == null ? '' : W.noticeUntil).trim();
+    const empty = n == null || (typeof n === 'string' && n === '');
+    if (n != null && typeof n !== 'string' && (typeof n !== 'object' || Array.isArray(n))) { warn('notice must be words in quote marks, like notice: \'Closed Saturday for rain.\' (or { en: \'…\', es: \'…\' } for each language).'); return; }
+    if (typeof n === 'string' && n !== '' && !n.trim()) { warn('notice is only spaces, so the bar would show with no words. Use notice: \'\' (two quote marks, nothing between) to hide it.'); return; }
+    if (n && typeof n === 'object') {
+      Object.keys(n).forEach((k) => { if (LANG_CODES.indexOf(k) < 0) warn('notice has "' + q(k) + '", which is not a language the site has. Use en, es, hi, zh or vi.'); });
+      if (!String(n.en || '').trim()) warn('notice has no English words (en: \'…\'), so visitors on the English page see no bar. Add  en: \'Closed Saturday for rain.\'  (a language you leave out shows the English).');
+    }
+    if (empty && until) { warn('noticeUntil is set (' + q(until) + ') but notice is empty, so no bar shows. Write the words in notice: \'Closed Saturday for rain.\', or delete the noticeUntil line.'); return; }
+    const text = own(n);
+    if (text && until && realYmd(until) && todayET() > until) warn('The notice bar ("' + q(text) + '") is hidden because noticeUntil ' + until + ' has passed. To remove it for good, write notice: \'\' and delete the noticeUntil line, or give it a new date.', 'old');
+  }
+  const httpsUrl = (v) => /^https:\/\/\S+$/i.test(String(v == null ? '' : v).trim());
+  function checkReviewsAndPhotos() {
+    const r = W.reviews;
+    if (r != null && !Array.isArray(r)) warn('reviews must be a list in square brackets: reviews: [ { quote: "…", name: "Sarah M." } ].');
+    (Array.isArray(r) ? r : []).forEach((x, i) => {
+      const who = 'reviews number ' + (i + 1);
+      if (!x || typeof x !== 'object') { warn(who + ' must look like { quote: "…", name: "Sarah M." }. It is skipped.'); return; }
+      const noQuote = !String(x.quote || '').trim(), noName = !String(x.name || '').trim();
+      if (noQuote || noName) { warn(who + (x.name ? ' (' + q(x.name) + ')' : '') + ' is skipped: it has no ' + (noQuote && noName ? 'quote and no name' : noQuote ? 'quote' : 'name') + '. Add ' + (noQuote && noName ? 'both, like quote: "Best strawberries we have ever picked.", name: "Sarah M."' : noQuote ? 'quote: "the words the reviewer wrote"' : 'name: "Sarah M."') + '. A review needs a quote and a name.'); return; }
+      if (x.url != null && x.url !== '' && !httpsUrl(x.url)) warn(who + ' (' + q(x.name) + '): url "' + q(x.url) + '" must start with https:// (copy the whole address of the post from the address bar).');
+      if (httpsUrl(x.url) && !String(x.source || '').trim()) warn(who + ' (' + q(x.name) + '): url is set but source is empty, so the link is not shown. Add source: "Google" (where it was posted).');
+      if (x.lang != null && x.lang !== '' && LANG_CODES.indexOf(x.lang) < 0) warn(who + ' (' + q(x.name) + '): lang "' + q(x.lang) + '" is not a language the site has. Use en, es, hi, zh or vi.');
+    });
+    (Array.isArray(W.photos) ? W.photos : []).forEach((p, i) => {
+      if (!p || typeof p !== 'object') return;
+      const miss = [!String(p.src || '').trim() ? 'src (the picture file, in the folder assets/photos)' : '', !String(p.alt || '').trim() ? 'alt (a short description for people who cannot see the picture)' : ''].filter(Boolean);
+      if (miss.length) warn('photos number ' + (i + 1) + (p.caption ? ' (' + q(p.caption) + ')' : '') + ' has no ' + miss.join(' and no ') + '.');
+    });
+    (Array.isArray(W.community) ? W.community : []).forEach((p, i) => { if (p && p.url != null && p.url !== '' && !httpsUrl(p.url)) warn('community photo number ' + (i + 1) + ': url "' + q(p.url) + '" must start with https://, or the credit shows without a link.'); });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * ?check&lang=es: which texts of this page have no translation in that language (visitors see them in English). The page texts are read from
+   * the page itself; the texts the code writes are read from lang/js-strings.json when that file can be had (on your own computer, over
+   * tools/serve.py; the live site does not carry it), otherwise the box says how to get the list.
+   * ------------------------------------------------------------------ */
+  async function checkTranslations() {
+    if (!/[?&]check\b/.test(location.search)) return;
+    const asked = lang() !== 'en' ? lang() : (/[?&]lang=([a-z]{2})\b/.exec(location.search) || [])[1];   // the language on the page; if it fell back to English, the one that was asked for
+    transReport = null;
+    if (!asked || asked === 'en' || LANG_CODES.indexOf(asked) < 0) return;
+    const name = LANG_NAME[asked];
+    if (lang() !== asked || !(W.dict && W.dict[asked] && W.dict[asked].ui)) {
+      warn('?lang=' + asked + ' asked for ' + name + ' but the page is in English: lang/' + asked + '.js did not load (it must be in the lang folder next to the other languages; rebuild it with python3 tools/i18n.py build).');
+      return;
+    }
+    const ui = W.dict[asked].ui, seen = {}, missing = [], plainText = (html) => { const d = doc.createElement('div'); d.innerHTML = String(html).replace(/<br\s*\/?>|<\/(?:p|li|div|h\d|td|th)>/gi, ' '); return d.textContent.replace(/\s+/g, ' ').trim(); };
+    $$('[data-t]').forEach((el) => {
+      const id = el.getAttribute('data-t');
+      if (!id || seen[id] || (typeof ui[id] === 'string' && ui[id])) return;
+      seen[id] = 1; missing.push({ id, text: plainText(el._en !== undefined ? el._en : el.innerHTML) });
+    });
+    $$('*').forEach((el) => Array.from(el.attributes).forEach((a) => {
+      if (a.name.indexOf('data-ta-') !== 0 || seen[a.value] || (typeof ui[a.value] === 'string' && ui[a.value])) return;
+      const attr = a.name.slice(8); seen[a.value] = 1; missing.push({ id: a.value, text: String(el['_en_' + attr] !== undefined ? el['_en_' + attr] : el.getAttribute(attr) || '') });
+    }));
+    transReport = { name, code: asked, missing, codeMissing: null, codeNote: '' };
+    try {
+      if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) throw new Error('not on this computer');   // the live site has no list of code texts, so do not ask it
+      const res = await fetch(new URL('lang/' + 'js-strings.json', location.href).href, { cache: 'no-store' });   // two pieces: the upload folder leaves this file out on purpose, and its link check must not take it for a missing file
+      if (!res.ok) throw new Error('not found');
+      const all = Object.keys(await res.json()), js = W.dict[asked].js || {};
+      transReport.codeMissing = all.filter((k) => !(typeof js[k] === 'string' && js[k]));
+      transReport.codeNote = transReport.codeMissing.length ? '' : 'The texts the code writes (buttons, messages, countdown) are all translated too.';
+    } catch (e) {
+      transReport.codeNote = 'The texts the code writes (buttons, messages, countdown) are not checked here: the list is not on this site. On your own computer run  python3 tools/i18n.py missing ' + asked + ' --list  or open the site with  python3 tools/serve.py.';
+    }
+    showProblems();
+  }
+
+  /* ------------------------------------------------------------------ *
    * farmPoint (js/content.js): the exact spot of the farm for the Drive time box, two numbers copied from Google Maps. Only a spot in the
    * United States is used. A swapped pair, a missing minus sign or text instead of a number would send every visitor's route to the wrong
    * place without a word, so such a spot is not used (the address is searched instead) and the Site check box says what is wrong.
@@ -745,6 +880,7 @@
     const cfg = Object.assign({}, W.signup || {});
     const mc = cfg.action ? mailchimpUrl(cfg.action) : null;
     if (cfg.action && !mc && /YOURNAME|\u2026/.test(String(cfg.action))) warn('signup.action still holds the example from the README (YOURNAME, ...). Paste your own address from the Mailchimp embed code. The old signup button stays until you do.');
+    else if (cfg.action && !mc && /^http:\/\//i.test(String(cfg.action).trim())) warn('signup.action starts with http://, but it must start with https:// (change only the first letters). The old signup button stays until it does.');
     else if (cfg.action && !mc) warn('signup.action should look like https://NAME.us21.list-manage.com/subscribe/post?u=...&id=... (copy it from the Mailchimp embed code). The old signup button stays until it does.');
     if (mc) {
       const keys = $$('input[name=interest]', form).map((i) => i.value);
@@ -1302,7 +1438,7 @@
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
   const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
   safe(reportContentErrors);
-  [expireDated, checkOwnerDates, checkSettingNames, checkFarmPoint, checkAnalytics, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
+  [expireDated, checkOwnerDates, checkSettingNames, checkHours, checkNotice, checkReviewsAndPhotos, checkFarmPoint, checkTranslations, checkAnalytics, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
 
@@ -1328,7 +1464,7 @@
   });
   safe(renderDrive);
   showProblems();
-  doc.addEventListener('wa:lang', () => { $$('.community-strip img').forEach((i) => (lang() === 'en' ? i.removeAttribute('lang') : i.setAttribute('lang', 'en'))); relBuilt = false; relCache = null; relKey = chipKey = ''; renderAll(); showProblems(); });
+  doc.addEventListener('wa:lang', () => { $$('.community-strip img').forEach((i) => (lang() === 'en' ? i.removeAttribute('lang') : i.setAttribute('lang', 'en'))); relBuilt = false; relCache = null; relKey = chipKey = ''; renderAll(); safe(checkTranslations); showProblems(); });
   doc.addEventListener('wa:season', () => renderWeek());
 
   W.features = { zonedToUtc, readReleases, releaseState, buildICS, googleUrl, renderWeek, renderRelease, fmtYmd, readFarmPoint };

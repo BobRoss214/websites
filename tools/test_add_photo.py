@@ -231,6 +231,108 @@ class Site(unittest.TestCase):
         self.assertEqual(self.run_tool(s2, '--name', 'palette-one', '--alt', 'Rows of green plants in a field')[0], 0)
         self.assertEqual(self.info('cmyk-one')[1], 'RGB')
 
+    # ------------------------------------------------------------- a phone's hidden data, a sideways photo, a huge PNG, damaged files
+    def corner_letters(self, name):
+        """The four corners of a saved picture (top-left, top-right, bottom-left, bottom-right) as R G B Y: the marked picture's colours."""
+        with Image.open(self.out(name)) as im:
+            im = im.convert('RGB')
+            w, h = im.size
+            def letter(x, y):
+                r, g, b = im.getpixel((x, y))
+                return 'R' if r > 200 and g < 60 else 'G' if g > 200 and r < 60 else 'B' if b > 200 and r < 60 else 'Y' if r > 200 and g > 200 else '.'
+            return im.size, letter(15, 15) + letter(w - 15, 15) + letter(15, h - 15) + letter(w - 15, h - 15)
+
+    @staticmethod
+    def marked_picture(w=400, h=300):
+        """Upright 'photo' with a red / green / blue / yellow square in its top-left / top-right / bottom-left / bottom-right corner."""
+        im = picture(w, h, seed=7)
+        d = ImageDraw.Draw(im)
+        for box, colour in (((0, 0, 60, 60), (255, 0, 0)), ((w - 61, 0, w - 1, 60), (0, 255, 0)), ((0, h - 61, 60, h - 1), (0, 0, 255)), ((w - 61, h - 61, w - 1, h - 1), (255, 255, 0))):
+            d.rectangle(box, fill=colour)
+        return im
+
+    def test_gps_camera_names_and_xmp_of_a_jpeg_are_all_gone(self):
+        ex = Image.Exif()
+        ex[0x010F], ex[0x0110], ex[0x013B], ex[0x8298] = 'SecretMaker', 'SecretPhone', 'Jane Farmer', '(c) Jane Farmer'
+        gps = ex.get_ifd(0x8825)
+        gps[1], gps[2], gps[3], gps[4] = 'N', (35.0, 4.0, 12.0), 'W', (80.0, 40.0, 1.0)
+        xmp = (b'<?xpacket begin="\xef\xbb\xbf"?><x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+               b'<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:exif="http://ns.adobe.com/exif/1.0/" exif:GPSLatitude="35,4.2N">'
+               b'<dc:creator><rdf:Seq><rdf:li>Jane Farmer</rdf:li></rdf:Seq></dc:creator></rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end="w"?>')
+        src = self.save('located.jpg', self.marked_picture(1600, 1200), format='JPEG', quality=90, exif=ex, xmp=xmp, comment=b'taken by Jane Farmer at home')
+        with open(src, 'rb') as f:
+            raw = f.read()
+        for there in (b'GPS', b'xmpmeta', b'Jane Farmer', b'SecretMaker'):
+            self.assertIn(there, raw, 'the test picture should carry ' + there.decode())
+        code, text = self.run_tool(src, '--name', 'located', '--alt', self.ALT)
+        self.assertEqual(code, 0, text)
+        with open(self.out('located'), 'rb') as f:
+            saved = f.read()
+        for hidden in (b'GPS', b'Exif', b'EXIF', b'xmp', b'XMP', b'Jane', b'Secret', b'ICCP', b'taken by'):
+            self.assertNotIn(hidden, saved)
+        self.assertEqual(self.corner_letters('located'), ((1400, 1050), 'RGBY'))
+
+    def test_every_exif_turn_comes_out_upright_whatever_the_file_type(self):
+        upright = self.marked_picture(400, 300)
+        undo = {1: lambda i: i, 2: lambda i: i.transpose(Image.FLIP_LEFT_RIGHT), 3: lambda i: i.transpose(Image.ROTATE_180), 4: lambda i: i.transpose(Image.FLIP_TOP_BOTTOM),
+                5: lambda i: i.transpose(Image.TRANSPOSE), 6: lambda i: i.transpose(Image.ROTATE_90), 7: lambda i: i.transpose(Image.TRANSVERSE), 8: lambda i: i.transpose(Image.ROTATE_270)}
+        for turn in range(1, 9):                         # how the phone stored it, and the tag that says how to turn it back
+            ex = Image.Exif()
+            ex[0x0112] = turn
+            for kind, kw in (('jpg', {'format': 'JPEG', 'quality': 95}), ('webp', {'format': 'WEBP', 'quality': 95}), ('png', {'format': 'PNG'})):
+                if kind != 'jpg' and turn not in (3, 6, 8):
+                    continue
+                src = self.save(f'turn{turn}.{kind}', undo[turn](upright), exif=ex, **kw)
+                self.assertEqual(self.run_tool(src, '--name', f'turn-{turn}-{kind}', '--alt', self.ALT, '--place', 'none')[0], 0, f'{kind} turn {turn}')
+                self.assertEqual(self.corner_letters(f'turn-{turn}-{kind}'), ((400, 300), 'RGBY'), f'a {kind} stored with turn {turn} did not come out upright')
+
+    def test_a_huge_png_is_shrunk_and_comes_out_small(self):
+        big = Image.new('RGB', (8000, 6000), (20, 120, 60))               # 48 megapixels, a few KB as a file
+        d = ImageDraw.Draw(big)
+        d.rectangle([0, 0, 2000, 1500], fill=(255, 0, 0))
+        d.ellipse([4000, 3000, 7999, 5999], fill=(30, 30, 200))
+        src = self.save('huge.png', big, format='PNG', compress_level=1)
+        code, text = self.run_tool(src, '--name', 'huge-one', '--alt', 'Rows of green plants in a field')
+        self.assertEqual(code, 0, text)
+        self.assertEqual(self.info('huge-one')[0], (1400, 1050))
+        self.assertLess(os.path.getsize(self.out('huge-one')), 200 * 1024)
+        self.assertIn('shrunk', text)
+
+    def test_a_16_bit_grey_png_keeps_its_brightness(self):
+        import random
+        r = random.Random(3)
+        im = Image.new('I;16', (600, 400))
+        for x in range(600):
+            for y in range(400):
+                im.putpixel((x, y), min(65535, x * 100 + r.randint(0, 3000)))     # a dark-to-light ramp
+        src = self.save('scan16.png', im)
+        self.assertEqual(self.run_tool(src, '--name', 'scan-sixteen', '--alt', 'A smooth ramp of grey from dark to light')[0], 0)
+        with Image.open(self.out('scan-sixteen')) as out:
+            ramp = [out.convert('L').getpixel((x, 200)) for x in (100, 300, 500)]
+        for got, want in zip(ramp, (45, 123, 201)):        # a plain convert() would cut everything above 255 off: all white
+            self.assertLess(abs(got - want), 12, f'brightness {ramp} instead of about 45, 123, 201')
+
+    def test_a_damaged_picture_gets_a_plain_message_and_changes_nothing(self):
+        good = self.save('whole.jpg', self.marked_picture(1600, 1200), format='JPEG', quality=90)
+        with open(good, 'rb') as f:
+            raw = f.read()
+        cut = os.path.join(self.pics, 'cut.jpg')
+        with open(cut, 'wb') as f:
+            f.write(raw[:len(raw) // 2])
+        png = self.save('whole.png', self.marked_picture(800, 600), format='PNG')
+        with open(png, 'rb') as f:
+            raw = f.read()
+        cut_png = os.path.join(self.pics, 'cut.png')
+        with open(cut_png, 'wb') as f:
+            f.write(raw[:len(raw) * 2 // 3])
+        before = snapshot(self.root)
+        for name, path in (('cut-jpeg', cut), ('cut-png', cut_png)):
+            code, text = self.run_tool(path, '--name', name, '--alt', self.ALT)
+            self.assertEqual(code, 1, text)
+            self.assertNotIn('Traceback', text)
+            self.assertIn('damaged', text)
+        self.assertEqual(snapshot(self.root), before, 'a damaged picture must change nothing')
+
     def test_heic_without_the_extra_package_gets_a_plain_message(self):
         if pillow_heif is not None:
             self.skipTest('pillow-heif is installed here')

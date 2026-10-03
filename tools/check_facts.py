@@ -4,6 +4,8 @@
   python3 tools/check_facts.py            every key fact, every place, then what to do next
   python3 tools/check_facts.py phone      only the facts with "phone" in their name (several words are fine)
   python3 tools/check_facts.py --short    only the one-line answer for each fact (and the places that disagree)
+  python3 tools/check_facts.py --brief    print nothing when everything agrees, and one line starting with DIFFERENT for each fact that does not
+                                          (tools/make_deploy_folder.py uses this before it makes the upload folder)
 
 Run it after you change a price, an hour, a phone number, an e-mail address, the address, an age or the year, and before you publish. It reads the files you
 edit (index.html, pages/*.html, js/content.js, lang/src/*.json), not the pages built from them, and needs only Python 3.8 or newer: nothing to install.
@@ -11,7 +13,7 @@ It prints each place as  file:line  and the words around the fact. A fact whose 
 "node tests/consistency.test.mjs" does the same job on the built pages in all five languages and knows more facts, but needs Node and a browser kit.
 Exit code: 0 = everything agrees, 1 = something disagrees.
 """
-import glob, html, json, os, re, sys
+import contextlib, glob, html, io, json, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -297,12 +299,14 @@ def report(fact, places, short):
         print('    %s  (%d place(s))%s' % (v, len(ps), '' if tie or i else '   <- most places'))
         for p in ps[:6] if short else ps:
             print('        %s:%s  %s' % (p['file'], p['line'], p['words']))
-    problems.append('%s: %s' % (fact['name'], ' vs '.join('%s (%d)' % (v, len(ps)) for v, ps in ordered)))
+    where = lambda ps: ' (' + ', '.join('%s:%s' % (p['file'], p['line']) for p in ps[:3]) + (', ...' if len(ps) > 3 else '') + ')'
+    problems.append('%s: %s' % (fact['name'], ', '.join('%s in %d place%s%s' % (v, len(ps), '' if len(ps) == 1 else 's', where(ps) if (tie or i) else '') for i, (v, ps) in enumerate(ordered))))
     return problems
 
 
 def main(argv):
     short = '--short' in argv
+    brief = '--brief' in argv
     pick = [a.lower() for a in argv if not a.startswith('--')]
     if '-h' in argv or '--help' in argv:
         print(__doc__)
@@ -316,6 +320,16 @@ def main(argv):
     if not chosen:
         print('No fact matches ' + ', '.join(pick) + '. The facts: ' + '; '.join(f['name'] for f in FACTS))
         return 2
+    if brief:   # one line for each fact that disagrees, nothing else
+        lines = []
+        for fact in chosen:
+            places = find_places(fact, files, trans)
+            if places:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    lines += report(fact, places, True)
+        for line in lines:
+            print('DIFFERENT ' + line)
+        return 1 if lines else 0
     print('Checking %d facts in %d files (index.html, pages/*.html, js/content.js) and %d translated texts (lang/src/*.json).' % (len(chosen), len(files), len(trans)))
     if not trans:
         print('(lang/src/*.json or lang/en.json was not found: the translations are not checked.)')

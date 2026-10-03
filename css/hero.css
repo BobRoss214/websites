@@ -51,6 +51,8 @@ html[data-season="winter"] .bee-fly{display:none}
 
 /* ---------------------------------------------------------------- pickables */
 .tree-pick,.scene-hit{pointer-events:auto;cursor:pointer}
+/* A tree that is lit and a fruit that is picked no longer catch taps. The tap boxes of neighbours overlap, and without this the last unlit trees (and the fruit behind a picked one) sat under dead boxes that did nothing. */
+.tree-pick.lit,.berry-hit[data-state="picked"]{pointer-events:none}
 .scene-hit{-webkit-tap-highlight-color:transparent}
 
 /* The note sits right where the tractor drives by, so give it the same pill look as the chips. */

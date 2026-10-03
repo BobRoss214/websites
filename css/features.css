@@ -355,6 +355,26 @@
   .fs-table thead button{pointer-events:none}
 }
 
+/* ---------- js/main.js did not load ----------
+   One file can get lost on a bad connection. js/season.js puts .js-failed on <html> once the page has loaded and main.js never took .no-js off.
+   The phone menu button, the "More" dropdown, the farm-year buttons and the toys would then do nothing, so the page is shown the way it is with
+   scripts off (the .no-js rules in css/styles.css and css/sections.css already stack the seasons and the school tabs). Keep in step with the block above. */
+html.js-failed :is(.menu-toggle,.nav-more-btn,.goat-nook,.filter-row,.bouquet,.fs-tabs,[data-print]){display:none!important}
+html.js-failed .site-header{position:static}
+html.js-failed .header-inner{height:auto;flex-wrap:wrap;justify-content:flex-start;gap:6px 20px;padding-block:10px}
+html.js-failed .nav{position:static;inset:auto;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0;overflow:visible;background:none;opacity:1;visibility:visible;transform:none;transition:none}
+html.js-failed .nav ul{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
+html.js-failed :is(.nav-more,.nav .nav-more-list){display:contents}
+html.js-failed :is(.nav ul a,.nav .nav-more-list a){padding:.45em .75em!important;font-size:1rem!important;border:0;box-shadow:none;background:none;border-radius:999px}
+html.js-failed .nav-cta{padding:.55em 1.1em;font-size:1rem}
+html.js-failed .fs-note[hidden]{display:block!important;margin-top:14px}
+html.js-failed .fs-this{display:none}
+html.js-failed .fs-table [data-col]:not(.is-sel){display:table-cell}
+html.js-failed .fs-scroll{position:relative}
+html.js-failed .fs-table{min-width:660px}
+html.js-failed .fs-table tbody th{box-shadow:2px 0 0 #f0e6d2}
+html.js-failed .fs-table thead button{pointer-events:none}
+
 /* the "Tell me when" links land on the heading, clear of the sticky header */
 .follow-signup{scroll-margin-top:90px}
 
@@ -445,4 +465,41 @@
 /* "More contrast": the softer text colour and the red and green used for small text and buttons get darker (7:1 or better on cream and white). */
 @media (prefers-contrast:more){
   :root{--ink-soft:#4a3322;--red:#ab1128;--red-deep:#a30f27;--green:#17602f;--green-deep:#145429}
+}
+
+/* ---- Photo viewer: Previous / Next, "3 of 30" (js/main.js, the viewer). Gallery photos go round; a single photo has neither. ---- */
+.lightbox-nav{width:44px;height:44px;display:grid;place-items:center;padding:0;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:50%;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.lightbox-nav[hidden],.lightbox-count[hidden]{display:none}
+.lightbox-prev .ico{transform:rotate(180deg)}
+.lightbox-nav:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+@media (hover:hover){.lightbox-nav:hover{background:var(--sun)}}
+.lightbox-nav:focus-visible,.lightbox-close:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
+.lightbox-count{margin:0;text-align:center;font:700 .95rem/1.2 var(--display);color:var(--ink-soft)}
+/* the buttons sit under the photo on a narrow screen (next to the caption and the counter, so the photo keeps the whole width) ... */
+.lightbox[open]{display:grid;align-content:start;grid-template-columns:44px minmax(0,1fr) 44px;grid-template-areas:"img img img" "prev cap next" "prev count next";gap:8px 10px;align-items:center}
+.lightbox[open]>img{grid-area:img;justify-self:center;max-height:min(70vh,calc(100vh - 200px))}
+@supports (height:1dvh){.lightbox[open]>img{max-height:min(70dvh,calc(100dvh - 200px))}}
+.lightbox[open]>#lightbox-cap{grid-area:cap;margin:0;min-width:0}
+.lightbox[open]>.lightbox-prev{grid-area:prev}
+.lightbox[open]>.lightbox-next{grid-area:next}
+.lightbox[open]>.lightbox-count{grid-area:count}
+/* ... and at the sides on a wide screen or a phone turned sideways */
+@media (min-width:36em),(orientation:landscape) and (max-height:30em){
+  .lightbox[open]{grid-template-areas:"prev img next" ". cap ." ". count ."}
+  .lightbox[open]>img{max-height:min(74vh,calc(100vh - 140px))}
+  @supports (height:1dvh){.lightbox[open]>img{max-height:min(74dvh,calc(100dvh - 140px))}}
+}
+.lightbox.is-single[open]{grid-template-columns:minmax(0,1fr);grid-template-areas:"img" "cap"}
+.lightbox.is-zoomed{touch-action:pan-x pan-y pinch-zoom}   /* pinched in: one finger moves around the picture */
+@keyframes lbFade{from{opacity:0}to{opacity:1}}
+.lightbox img.lb-fade{animation:lbFade .18s ease-out}
+@media (prefers-reduced-motion:reduce){.lightbox img.lb-fade{animation:none}}
+
+/* Fingers: buttons that wrap onto lines of their own (the three under "Head to the farm") were 3-6px apart; a finger needs 8px between targets. */
+.steps .step>.btn{margin:4px 3px}
+/* The two link chips under the hero text (New tomatoes, Pizza reservations) are 44px pills on a phone, with the link filling the pill, so they are 8px apart and do not overlap. */
+@media (max-width:47.5em){
+  .chips{row-gap:13px}   /* 8px between the links, which reach 2.5px past each pill */
+  .chips .chip-new,.chips .chip-rel{min-height:44px;padding-block:0}
+  .chips .chip-new a,.chips .chip-rel a{align-self:stretch;min-height:0;margin:-2.5px -.85em -2.5px -.6em;padding:0 .85em 0 .6em}   /* the pill has a 2.5px border: the link covers it too */
 }

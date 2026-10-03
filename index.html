@@ -1530,12 +1530,12 @@
             </div>
             <p data-t="t2219e610" class="bouquet-msg" id="bq-msg" role="status" aria-live="polite">Tap a flower to add it to your cup.</p>
             <div data-ta-aria-label="t7836d034" class="bouquet-picker" role="group" aria-label="Choose flowers">
-              <button data-ta-aria-label="t93ce554f" type="button" class="bq-flower" data-kind="sun" aria-label="Add a sunflower"><svg viewBox="0 0 120 120"><use href="#sunflower"/></svg></button>
-              <button data-ta-aria-label="t48331914" type="button" class="bq-flower" data-kind="pink" aria-label="Add a pink flower" style="color:#ff6fa5"><svg viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
-              <button data-ta-aria-label="t77e2ff9d" type="button" class="bq-flower" data-kind="white" aria-label="Add a white daisy" style="color:#ffffff"><svg viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
-              <button data-ta-aria-label="t2b5c7b02" type="button" class="bq-flower" data-kind="purple" aria-label="Add a purple flower" style="color:#a682ff"><svg viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
-              <button data-ta-aria-label="t01566543" type="button" class="bq-flower" data-kind="orange" aria-label="Add an orange flower" style="color:#ff8a3d"><svg viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
-              <button data-ta-aria-label="t584c973f" type="button" class="bq-flower" data-kind="blue" aria-label="Add a blue flower" style="color:#5aa9ff"><svg viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
+              <button data-ta-aria-label="t93ce554f" type="button" class="bq-flower" data-kind="sun" aria-label="Add a sunflower"><svg aria-hidden="true" viewBox="0 0 120 120"><use href="#sunflower"/></svg></button>
+              <button data-ta-aria-label="t48331914" type="button" class="bq-flower" data-kind="pink" aria-label="Add a pink flower" style="color:#ff6fa5"><svg aria-hidden="true" viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
+              <button data-ta-aria-label="t77e2ff9d" type="button" class="bq-flower" data-kind="white" aria-label="Add a white daisy" style="color:#ffffff"><svg aria-hidden="true" viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
+              <button data-ta-aria-label="t2b5c7b02" type="button" class="bq-flower" data-kind="purple" aria-label="Add a purple flower" style="color:#a682ff"><svg aria-hidden="true" viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
+              <button data-ta-aria-label="t01566543" type="button" class="bq-flower" data-kind="orange" aria-label="Add an orange flower" style="color:#ff8a3d"><svg aria-hidden="true" viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
+              <button data-ta-aria-label="t584c973f" type="button" class="bq-flower" data-kind="blue" aria-label="Add a blue flower" style="color:#5aa9ff"><svg aria-hidden="true" viewBox="0 0 60 60"><use href="#bloom"/></svg></button>
             </div>
             <button data-t="t51dd91dc" type="button" class="btn btn-sm btn-ghost" id="bq-clear">Start over</button>
           </div>
@@ -2097,7 +2097,7 @@
             <form class="signup" id="signup" data-signup hidden novalidate>
               <div class="su-row">
                 <label data-t="te1b1790d" class="sr-only" for="su-email">Your email address</label>
-                <input data-ta-placeholder="t6b6992db" id="su-email" type="email" name="EMAIL" autocomplete="email" inputmode="email" required placeholder="Your email address">
+                <input data-ta-placeholder="t6b6992db" id="su-email" type="email" name="EMAIL" autocomplete="email" inputmode="email" required aria-describedby="su-msg" placeholder="Your email address">
                 <button data-t="t4a12a408" class="btn btn-red" type="submit">Join the email list</button>
               </div>
               <fieldset class="su-interests">
@@ -2113,7 +2113,7 @@
                   <label class="su-chip"><input type="checkbox" name="interest" value="events"><span data-t="t9aa2b3bc">Events &amp; parties</span></label>
                 </div>
               </fieldset>
-              <p class="su-msg" data-signup-msg role="status" aria-live="polite" data-no-i18n></p>
+              <p class="su-msg" id="su-msg" data-signup-msg role="status" aria-live="polite" data-no-i18n></p>
               <p data-t="t01d5c9ba" class="su-fine">We only send farm news. Unsubscribe any time.</p>
               <p data-t="tf5dbb6b5" class="su-fine" data-signup-lang-note hidden>We note the language of this page (for example Spanish) so we can write back in it.</p>
             </form>

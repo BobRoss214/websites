@@ -56,7 +56,7 @@ node tests/run-all.mjs consistency dated farm-seasons hero live
 node tests/run-all.mjs --list        # all test names
 ```
 
-Test names: public-site, docs, pipeline, consistency, live, dated, messages, drive, pause, gallery, analytics, print-qr, deploy, farm-seasons, npc, i18n, i18n-early, i18n-a11y, languages, axe, map, features, hero.
+Test names: public-site, docs, pipeline, consistency, live, dated, messages, drive, pause, gallery, analytics, print-qr, deploy, farm-seasons, npc, i18n, i18n-early, i18n-a11y, languages, axe, keyboard, map, features, hero.
 Always run consistency after a change to a price, time, day, age, size, phone number or address. It reads every page in all five languages.
 
 Apply a patch from the repo root, then rebuild:
