@@ -85,7 +85,7 @@ await run('sitecheck', async ({ browser, base, errs }) => {
     const junk = [];
     const q = await open(browser, base, 'index.html', junk, { routes: async (pg) => {
       await pg.route('**/js/content.js', (route) => (transform === null ? route.fulfill({ status: 404, contentType: 'text/plain', body: 'Not found' }) : route.fulfill({ contentType: 'text/javascript', body: transform(CONTENT) })));
-      if (o.noEarlyScript) await pg.route('**/index.html*', async (route) => { const res = await route.fetch(); route.fulfill({ response: res, body: (await res.text()).replace(/<script>addEventListener\('error'.*?<\/script>\n/, '') }); });
+      if (o.noEarlyScript) await pg.route('**/index.html*', async (route) => { const res = await route.fetch(); route.fulfill({ response: res, body: (await res.text()).replace(/<script src="js\/guard\.js"><\/script>\n/, '') }); });
     } });
     await until(q, () => !!document.getElementById('wa-problems'), null, 8000);
     const res = { text: await box(q), parts: await parts(q), hours: await q.evaluate(() => !!(window.WISE_ACRES && window.WISE_ACRES.hours)), features: await q.evaluate(() => !!(window.WISE_ACRES && window.WISE_ACRES.features)) };

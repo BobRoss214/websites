@@ -1,0 +1,3 @@
+/* Notes where js/content.js fails, for the "Site check" box (js/features.js, reportContentErrors). It is a file of its own, loaded before js/content.js, because the
+   Content-Security-Policy in docs/LAUNCH_CHECKLIST.md does not allow inline scripts. Keep it above the js/content.js line in every page. */
+addEventListener('error',function(e){var f=String(e.filename||(e.target&&e.target.src)||'');if(/content\.js/.test(f))(window.WA_CONTENT_ERRORS=window.WA_CONTENT_ERRORS||[]).push({message:String(e.message||''),line:e.lineno||0,col:e.colno||0,load:!!(e.target&&e.target.tagName==='SCRIPT')})},true);
