@@ -567,7 +567,8 @@
       var n = runners.length;
       var winI = 0;
       runners.forEach(function (r, k) { if (r.ch.id === winner.id) { winI = k; } });
-      var baseMs = durationMs ? durationMs * 0.8 : (quick ? 3400 : 8000) + (n > 24 ? 2500 : n > 12 ? 1200 : 0);
+      // a live table's race is asked for a little less than the table's show time (x 0.92): the READY / GO lead-in and the slow motion at the line come on top
+      var baseMs = durationMs ? durationMs * 0.8 * 0.92 : (quick ? 3400 : 8000) + (n > 24 ? 2500 : n > 12 ? 1200 : 0);
       var base = U.dur(baseMs) / 1000;
       race = new kit.Race(n, winI, base);
       if (durationMs) {
