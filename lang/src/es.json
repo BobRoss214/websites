@@ -302,7 +302,9 @@
   "Preferred language:": "Idioma preferido:",
   "Previous photo": "Foto anterior",
   "Next photo": "Foto siguiente",
-  "{n} of {total}": "{n} de {total}"
+  "{n} of {total}": "{n} de {total}",
+  "Pause animations": "Pausar animaciones",
+  "Play animations": "Reproducir animaciones"
  },
  "ui": {
   "t000eb0a5": "Corta tu propio ramo en el campo de flores",
@@ -1350,6 +1352,8 @@
   "t70af7aa7": "Personas y eventos",
   "tafd37123": "Animales de la granja",
   "tf51b9c7e": "“Escríbenos para unirte a la lista de espera” abre un correo para la granja. Está escrito en inglés, con tu idioma junto a cada línea, para que la granja pueda leerlo. Agrega tus propias palabras si quieres. No se envía nada hasta que presiones Enviar.",
-  "tf5dbb6b5": "Anotamos el idioma de esta página (por ejemplo, español) para poder responderte en ese idioma."
+  "tf5dbb6b5": "Anotamos el idioma de esta página (por ejemplo, español) para poder responderte en ese idioma.",
+  "t37a0c221": "Pausar animaciones",
+  "t58a21ae5": "<svg/> Pausar animaciones"
  }
 }

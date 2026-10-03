@@ -17,7 +17,7 @@ await run('i18n-early', async ({ browser, base, errs }) => {
   }
 
   // swapping the texts early must not break what the other scripts attach to the page: it all still works in another language
-  const p = await open(browser, base, 'index.html', errs, { lang: 'es' });
+  const p = await open(browser, base, 'index.html', errs, { lang: 'es', extra: 'WISE_ACRES.seasonPicker = true;' });   // the test uses the season switcher
   await p.locator('#faq details summary').nth(1).scrollIntoViewIfNeeded();   // (the first question is open from the start: take the second)
   await p.locator('#faq details summary').nth(1).click();
   await okSoon('es: a question in the FAQ opens', () => p.evaluate(() => document.querySelectorAll('#faq details')[1].open), (v) => v === true);

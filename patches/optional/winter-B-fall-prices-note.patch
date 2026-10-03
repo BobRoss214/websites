@@ -1,0 +1,77 @@
+Option: winter-B
+Name: Keep the fall prices all year, with a note
+Does: Adds one line before the Reservation packages (shown in winter, spring and summer): "These are the fall 2026 prices and times. New ones come later." Nothing is hidden. The sentence names 2026: change it when the 2027 details come (d24 A).
+Answers: d01 B (winter)
+Group: winter
+Conflicts: winter-A
+Requires: none
+Host: any
+Order: 10
+After: python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each)
+Strings: 1 new sentence (id t8e365ded), already translated into es, hi, zh, vi inside this patch
+
+diff --git a/index.html b/index.html
+index dcb86e1..2039324 100644
+--- a/index.html
++++ b/index.html
+@@ -420,6 +420,8 @@
+           </ol>
+         </div>
+ 
++        <p class="notice notice-soft reveal" data-only="winter spring summer" hidden><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><span data-t="t8e365ded">These are the fall 2026 prices and times. New ones come later.</span></p>
++
+         <!-- ---------- Reservation packages (Fall 2026) ---------- -->
+         <header class="section-head reveal sub-head" id="options">
+           <p data-t="t14925fb1" class="hand eyebrow">Fall 2026 reservations</p>
+diff --git a/lang/src/es.json b/lang/src/es.json
+index ab966bf..1d043bd 100644
+--- a/lang/src/es.json
++++ b/lang/src/es.json
+@@ -329,2 +329,3 @@
+   "t07948fd5": "Estas fechas de temporada son las típicas. El clima decide las fechas exactas de apertura.",
++  "t8e365ded": "Estos son los precios y horarios del otoño 2026. Los nuevos llegarán más adelante.",
+   "t040ce859": "Brown Berry",
+@@ -1354,2 +1355,2 @@
+  }
+-}
++}
+\ No newline at end of file
+diff --git a/lang/src/hi.json b/lang/src/hi.json
+index 5649004..ef5b251 100644
+--- a/lang/src/hi.json
++++ b/lang/src/hi.json
+@@ -329,2 +329,3 @@
+   "t07948fd5": "सीज़न की तारीख़ें आमतौर पर यही रहती हैं। शुरुआत की पक्की तारीख़ें मौसम तय करता है।",
++  "t8e365ded": "ये पतझड़ 2026 की कीमतें और समय हैं। नई कीमतें और समय बाद में आएँगे।",
+   "t040ce859": "Brown Berry",
+@@ -1354,2 +1355,2 @@
+  }
+-}
++}
+\ No newline at end of file
+diff --git a/lang/src/vi.json b/lang/src/vi.json
+index 33ee20e..0e76480 100644
+--- a/lang/src/vi.json
++++ b/lang/src/vi.json
+@@ -329,2 +329,3 @@
+   "t07948fd5": "Ngày của các mùa chỉ là ước chừng theo thường lệ. Thời tiết quyết định ngày mở cửa chính xác.",
++  "t8e365ded": "Đây là giá và giờ của mùa thu 2026. Giá và giờ mới sẽ có sau.",
+   "t040ce859": "Brown Berry",
+@@ -1354,2 +1355,2 @@
+  }
+-}
++}
+\ No newline at end of file
+diff --git a/lang/src/zh.json b/lang/src/zh.json
+index 824a116..e15a9a2 100644
+--- a/lang/src/zh.json
++++ b/lang/src/zh.json
+@@ -329,2 +329,3 @@
+   "t07948fd5": "这些季节日期是往年惯例。具体开放日期由天气决定。",
++  "t8e365ded": "这些是 2026 年秋季的价格和时间，新的价格和时间稍后公布。",
+   "t040ce859": "Brown Berry",
+@@ -1354,2 +1355,2 @@
+  }
+-}
++}
+\ No newline at end of file

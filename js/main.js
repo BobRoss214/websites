@@ -432,7 +432,7 @@
     addEventListener('resize', () => { w = hero.clientWidth; h = hero.clientHeight; }, { passive: true });
 
     const sync = () => {
-      const on = onScreen && !doc.hidden && root.getAttribute('data-season') !== 'winter';
+      const on = onScreen && !doc.hidden && root.getAttribute('data-season') !== 'winter' && !root.hasAttribute('data-calm');
       if (on === running) return;
       running = on;
       if (running) { lastMove = Math.min(lastMove, performance.now() - 2000); wanderTimer = setTimeout(wander, 600); return; }
@@ -443,6 +443,107 @@
     else { onScreen = true; sync(); }   // no observer: the bee just keeps going
     doc.addEventListener('visibilitychange', sync);
     doc.addEventListener('wa:season', sync);
+    doc.addEventListener('wa:calm', sync);   // "Pause animations" or the calm mode: it lands where it is
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Motion: the "Pause animations" buttons and the automatic calm mode
+   *   One switch on <html>, data-calm, set here and read by the scripts (the bee) and the CSS (the hero's layers):
+   *     (not set)         everything moves as drawn
+   *     data-calm="light" the page found the hero struggling (a slow phone): the bee and the smallest decorations of the hero
+   *                       rest (sparks, smoke puffs, swaying flowers, falling leaves and snow, butterflies, the little bees, tree lights)
+   *     data-calm="most"  still struggling after that: every endless animation rests except the few that show something
+   *                       (the pulsing "open now" dot, the bell of the reservation chip, the "now" season badge)
+   *     data-calm="all"   the visitor pressed "Pause animations": every endless animation rests, the bee stops and the hero's
+   *                       layers no longer slide at different speeds while scrolling
+   *   The buttons show pressed while any of these is set, so one press turns all motion back on (and the page never switches
+   *   by itself again). A rested animation stops where it is, so the picture stays whole. What a tap starts (picking, the wagon's
+   *   toot, a tree, a farm friend) still plays; anything endless it starts rests a moment later. With "all" a new badge still
+   *   shows, but no fruit rains down the hero (js/hero.js, rain). Nothing is stored: it lasts
+   *   until the page is left.
+   *   The automatic check costs next to nothing: it watches only while the hero is on the screen and the tab is visible, 2 seconds
+   *   at a time (6 times after the page has loaded, then every 15 s), counting frames and the browser's long tasks.
+   *   With "reduce motion" on in the visitor's system the CSS stops the animations itself: the buttons stay hidden, nothing here runs.
+   * ------------------------------------------------------------------ */
+  function initMotion() {
+    const btns = $$('[data-motion]');
+    if (reduceMotion || typeof doc.getAnimations !== 'function') { btns.forEach((b) => { b.hidden = true; }); return; }
+    const hero = $('#top');
+    const SMALL = '.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *';
+    const SHOWS = '.live-dot, .chip-rel .ico, .now-badge';
+    let level = '', visitor = false;
+    const held = new Set();   // the animations rested here, so that turning motion on again can start them
+    const wanted = (a) => {
+      const el = a.effect && a.effect.target;
+      if (typeof a.animationName !== 'string' || !el || a.effect.getTiming().iterations !== Infinity) return false;   // endless CSS animations only
+      if (level === 'all') return true;
+      if (level === 'most') return !el.matches(SHOWS);
+      return !!hero && hero.contains(el) && el.matches(SMALL);
+    };
+    const rest = () => { if (level) doc.getAnimations().forEach((a) => { if (!held.has(a) && wanted(a)) { a.pause(); held.add(a); } }); };
+    const wake = () => {
+      const els = new Set();
+      held.forEach((a) => { const el = a.effect && a.effect.target; if (el && el.isConnected) { if (a.effect.pseudoElement) a.play(); else els.add(el); } });
+      held.clear();
+      // Started again as new CSS animations, so the CSS keeps pausing them off screen and in a hidden tab.
+      els.forEach((el) => { const was = el.style.animationName; el.style.animationName = 'none'; void getComputedStyle(el).animationName; el.style.animationName = was; });
+    };
+    let soon = 0;
+    const restSoon = () => { if (level && !soon) soon = setTimeout(() => { soon = 0; rest(); }); };
+    doc.addEventListener('animationstart', restSoon, true);   // new endless animations: a season drawn again, a lit tree, a section drawn later
+    ['wa:season', 'wa:lang'].forEach((ev) => doc.addEventListener(ev, restSoon));
+    const label = () => {
+      const on = !!level;
+      btns.forEach((b) => { b.setAttribute('aria-pressed', String(on)); b.title = on ? t('Play animations') : t('Pause animations'); });
+    };
+    function set(next, by) {   // the steps only add to what rests (light, most), or go back to nothing
+      if (next === level) return;
+      level = next;
+      if (next) root.setAttribute('data-calm', next); else root.removeAttribute('data-calm');
+      if (next) rest(); else wake();
+      label();
+      doc.dispatchEvent(new CustomEvent('wa:calm', { detail: { level: next, by } }));
+    }
+    btns.forEach((b) => b.addEventListener('click', () => { visitor = true; set(level ? '' : 'all', 'visitor'); }));
+    doc.addEventListener('wa:lang', label);
+    label();
+    W.motion = { get level() { return level; } };
+
+    // The automatic check: is the hero struggling? Two bad 2-s spells in a row move one step (light, then most).
+    // A browser run by a program (the tests, tests/visual-check.mjs) never switches by itself: its speed is that of a busy test computer.
+    if (!hero || !('IntersectionObserver' in window) || navigator.webdriver) return;
+    let onScreen = false, ready = false, sampling = false, timer = 0, bad = 0, quick = 6, longs = [], seen = null;
+    try {
+      seen = new PerformanceObserver((list) => { if (sampling) longs = longs.concat(list.getEntries()); });
+      seen.observe({ type: 'longtask' });
+    } catch (e) { seen = null; /* no long-task timing (Safari, Firefox): frames only */ }
+    const over = () => visitor || level === 'most' || level === 'all';
+    const later = (wait) => { clearTimeout(timer); if (ready && onScreen && !doc.hidden && !over()) timer = setTimeout(sample, wait); };
+    function sample() {
+      if (sampling || over() || !onScreen || doc.hidden) return;
+      sampling = true; longs = [];
+      let frames = 0, t0 = 0;
+      const step = (now) => {
+        if (!t0) t0 = now; else frames++;
+        if (now - t0 < 2000 && onScreen && !doc.hidden && !over()) { requestAnimationFrame(step); return; }
+        sampling = false;
+        const span = now - t0;
+        if (span > 1800 && !over()) {   // a whole spell (not cut short by scrolling away or a hidden tab)
+          // takeRecords: on a busy phone the observer's own callback can come late; the long tasks of this spell are counted all the same
+          if (seen) longs = longs.concat(seen.takeRecords());
+          const fps = frames * 1000 / span, busy = longs.filter((e) => e.startTime + e.duration > t0).reduce((sum, e) => sum + e.duration, 0);
+          const struggling = fps < 35 && (seen ? busy >= 150 : fps < 25);
+          bad = struggling ? bad + 1 : 0;
+          if (bad >= 2) { bad = 0; quick = 4; set(level ? 'most' : 'light', 'auto'); }
+        }
+        later(quick > 0 ? (quick--, 0) : 15000);
+      };
+      requestAnimationFrame(step);
+    }
+    new IntersectionObserver((entries) => { onScreen = entries[entries.length - 1].isIntersecting; if (onScreen) later(500); else clearTimeout(timer); }).observe(hero);
+    doc.addEventListener('visibilitychange', () => later(500));
+    const start = () => setTimeout(() => { ready = true; later(0); }, 1500);   // after the page has loaded: loading itself is busy on every phone
+    if (doc.readyState === 'complete') start(); else addEventListener('load', start);
   }
 
   /* ------------------------------------------------------------------ *
@@ -1014,7 +1115,7 @@
   /* ------------------------------------------------------------------ */
   // Each part starts on its own: one that fails (an old browser, a browser extension, a bad edit) must not stop the others,
   // or the sections below the first screen stay invisible (.reveal) and the phone menu does not open. The error is still reported.
-  [initToTop, initOffscreenPause, initPrint, initGallery, initZoom, initReviews, initNav, initReveal, initBee, initSeasons, initFarmSeasons,
+  [initToTop, initOffscreenPause, initPrint, initGallery, initZoom, initReviews, initNav, initReveal, initBee, initMotion, initSeasons, initFarmSeasons,
     initGroups, initWeekStrips, initVarietyFilter, initFarmCalendar, initBouquet, initGoat, initCrops, initScroll]
     .forEach((init) => {
       try { init(); } catch (e) {

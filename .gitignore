@@ -9,6 +9,9 @@ tests/.visual/
 # The upload folder made by tools/make_deploy_folder.py (made fresh each time)
 deploy/
 
+# The sheets for a native speaker, made on demand by tools/review_sheet.py (never kept: a stale sheet would undo newer translations)
+review/
+
 # Made by `npm install` in tests/ (see tests/README): never part of the repository
 node_modules/
 tests/package-lock.json

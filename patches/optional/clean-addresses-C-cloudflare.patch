@@ -1,0 +1,100 @@
+Option: clean-addresses-C
+Name: Page addresses without .html (Cloudflare Pages)
+Does: Sets PAGE_EXT = "" in tools/pages.py, so the extra pages name themselves to Google as /wise-pie, not /wise-pie.html (canonical tag, share address, structured data, sitemap). Cloudflare Pages redirects /wise-pie.html to /wise-pie, so without this the canonical tags point at an address that redirects. Updates the public-site test (a sitemap address may omit .html) and the README and checklist wording. Links inside the site keep .html.
+Answers: d05 A (host: Cloudflare Pages), d38
+Conflicts: none
+Requires: none
+Host: cloudflare
+Order: 40
+After: python3 tools/pages.py (the usual rebuild line is fine too); the 5 extra pages and sitemap.xml are rewritten
+Strings: none
+
+diff --git a/tests/public-site.test.mjs b/tests/public-site.test.mjs
+index ada2264..11f47ed 100644
+--- a/tests/public-site.test.mjs
++++ b/tests/public-site.test.mjs
+@@ -16,8 +16,12 @@ ok('no page links to anything under tests/ or docs/', linking.length === 0, link
+ const sitemap = read('sitemap.xml');
+ const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+ ok('sitemap.xml lists nothing under tests/, docs/, print/, tools/, pages/ or lang/', locs.length > 0 && !locs.some((u) => /\/(tests|docs|print|tools|pages|lang)\//.test(u)), locs.filter((u) => /\/(tests|docs|print|tools|pages|lang)\//.test(u)).join(', '));
+-const missing = locs.map((u) => new URL(u).pathname.replace(/^\//, '') || 'index.html').filter((f) => !fs.existsSync(path.join(ROOT, f)));
++// a sitemap address is a real page either as written (/x.html) or without the extension (/x, which Cloudflare Pages serves for x.html)
++const fileOf = (u) => { const f = new URL(u).pathname.replace(/^\//, '') || 'index.html'; return fs.existsSync(path.join(ROOT, f)) ? f : f + '.html'; };
++const missing = locs.filter((u) => !fs.existsSync(path.join(ROOT, fileOf(u))));
+ ok('every address in sitemap.xml is a real page', missing.length === 0, missing.join(', '));
++const askew = locs.filter((u) => !missing.includes(u) && !new RegExp('<link rel="canonical" href="' + u.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '">').test(read(fileOf(u))));
++ok('each page names itself in its canonical tag exactly as the sitemap does', askew.length === 0, askew.join(', '));
+ 
+ const robots = read('robots.txt');
+ ok('robots.txt keeps /tests/, /docs/ and /print/ out of search engines', ['tests', 'docs', 'print'].every((d) => new RegExp('^Disallow:\\s*/' + d + '/\\s*$', 'm').test(robots)), robots.replace(/\n/g, ' | '));
+diff --git a/tools/pages.py b/tools/pages.py
+index 5f1b897..4047ddd 100644
+--- a/tools/pages.py
++++ b/tools/pages.py
+@@ -39,6 +39,10 @@ except ImportError:
+ 
+ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ SITE = 'https://www.wiseacresorganic.com/'
++# How the site names its extra pages to Google (canonical, share address, structured data, sitemap): '' gives
++# https://www.wiseacresorganic.com/wise-pie (use on Cloudflare Pages, which sends /wise-pie.html to /wise-pie);
++# '.html' gives .../wise-pie.html (Netlify, GitHub Pages and plain servers show both). Links inside the site keep .html either way.
++PAGE_EXT = ''
+ OG_IMAGE = 'assets/og-share.png'
+ 
+ PAGES_DIR = os.path.join(ROOT, 'pages')
+@@ -308,7 +312,7 @@ def css_ids():
+ 
+ 
+ def compose(c, slug, meta, body):
+-    url = SITE + slug + '.html'
++    url = SITE + slug + PAGE_EXT
+     title, desc = meta['title'], meta['description']
+     image_rel, image_alt, image_dims = share_picture(c, slug, meta)
+     image = SITE + image_rel
+@@ -396,7 +400,7 @@ def main():
+         open(os.path.join(ROOT, slug + '.html'), 'w', encoding='utf-8', newline='\n').write(out)
+         slugs.append(slug)
+         print('wrote', slug + '.html')
+-    urls = [SITE] + [SITE + s + '.html' for s in slugs]
++    urls = [SITE] + [SITE + s + PAGE_EXT for s in slugs]
+     sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'  <url><loc>{u}</loc></url>\n' for u in urls) + '</urlset>\n'
+     open(os.path.join(ROOT, 'sitemap.xml'), 'w', encoding='utf-8', newline='\n').write(sm)
+     open(os.path.join(ROOT, 'robots.txt'), 'w', encoding='utf-8', newline='\n').write(f'User-agent: *\nAllow: /\nDisallow: /print/\nDisallow: /tests/\nDisallow: /docs/\n\nSitemap: {SITE}sitemap.xml\n')
+diff --git a/README.md b/README.md
+index f11e419..a99c1ef 100644
+--- a/README.md
++++ b/README.md
+@@ -528,3 +528,3 @@ New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](do
+ 1. Upload the site to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. The easy way: `python3 tools/make_deploy_folder.py` makes `deploy/` with exactly the files to upload (it rebuilds, stops if a fact is written two ways or a translation is missing, checks the links, warns about settings still to set, and lists what it left out); upload what is inside it. If it stops, each red thing is one plain line with how to fix it; `--force` builds the folder anyway, says so on screen and in `deploy/FILES.txt`, and is only for when you know why. By hand: make a clean copy of the folder and **leave out the `docs/` and `tests/` folders** (`docs/`: notes and questions for the farm owner; `tests/`: automatic checks for developers; neither is for visitors); you can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site. Every later change is uploaded the same way: make the folder again and drag it in (`docs/LAUNCH_CHECKLIST.md`, section 2).
+-2. Use your real domain at the **root** (`https://www.wiseacresorganic.com/`). If it lives elsewhere, change `SITE` in `tools/pages.py`, run the rebuild commands, and search & replace the domain in `index.html` (canonical, share image, structured data), and set `site` in `tools/qr_links.json` and run `python3 tools/make_qr.py` again (the QR signs carry the address).
++2. Use your real domain at the **root** (`https://www.wiseacresorganic.com/`). `PAGE_EXT` in `tools/pages.py` decides how the extra pages name themselves to Google: `''` gives `/wise-pie` (Cloudflare Pages redirects `/wise-pie.html` to it), `'.html'` gives `/wise-pie.html` (Netlify, GitHub Pages and plain servers); change it, then run the rebuild commands. If the domain lives elsewhere, change `SITE` in `tools/pages.py`, run the rebuild commands, and search & replace the domain in `index.html` (canonical, share image, structured data), and set `site` in `tools/qr_links.json` and run `python3 tools/make_qr.py` again (the QR signs carry the address).
+ 3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
+diff --git a/docs/LAUNCH_CHECKLIST.md b/docs/LAUNCH_CHECKLIST.md
+index cdaf9c6..cae6c2f 100644
+--- a/docs/LAUNCH_CHECKLIST.md
++++ b/docs/LAUNCH_CHECKLIST.md
+@@ -29,3 +29,3 @@ Every statement about a host company carries a tag that says how sure we are:
+ 5. Check the padlock and the headers (3.4, 3.5). Decide about the old-address redirects (3.6).
+-6. Before you give Google the sitemap, ask Claude to change the page addresses from `/wise-pie.html` to `/wise-pie` (3.7). This is the one real catch of the recommended host.
++6. The pages already name themselves to Google as `/wise-pie`, without `.html`, which is what Cloudflare Pages shows (3.7). If you choose Netlify or GitHub Pages instead, ask Claude to switch that back before you give Google the sitemap.
+ 7. Add the site to Google Search Console and put its address in your Google Business Profile (3.10, 3.12).
+@@ -44,3 +44,3 @@ The site is plain files. There is no database and no build step, so any host tha
+ | **`_redirects` works** (the old farm addresses) | Yes. Redirects are 302 unless you write 301, so our file writes 301. Up to 2,000. All 22 rules of our file worked in Cloudflare's own test server. **[read] [tested here]** | Yes; the default is 301. Our file was accepted by Netlify's own open-source parser. **[not opened] [tested here]** | No server-side redirects. The only workaround is a small page per old address, which Google treats less firmly. Not tested here. |
+-| **What happens to `/wise-pie.html`** (our pages are written with `.html`) | Redirected (308) to `/wise-pie`; the page still works, and `?lang=es` is kept. **[read] [tested here]** But the site's canonical tags and sitemap name the `.html` address, so they disagree with where the visitor ends up. See step 3.7. | Both `/wise-pie` and `/wise-pie.html` are served, without a redirect, unless the "Pretty URLs" setting is on (leave it off). A Netlify support-forum answer. **[not opened]** | Not checked. |
++| **What happens to `/wise-pie.html`** (our pages are written with `.html`) | Redirected (308) to `/wise-pie`; the page still works, and `?lang=es` is kept. **[read] [tested here]** The site's canonical tags and sitemap already name the address without `.html`, so they agree with where the visitor ends up (step 3.7). | Both `/wise-pie` and `/wise-pie.html` are served, without a redirect, unless the "Pretty URLs" setting is on (leave it off). A Netlify support-forum answer. **[not opened]** | Not checked. |
+ | **What you cannot do** | You cannot turn the `.html` redirect off on Pages. **[not opened]** The bare domain needs the nameserver move. If you choose drag-and-drop you "cannot switch to Git integration later" (you can start a new project). **[read]** Cloudflare's own overview page says: "Start new projects with Workers." Pages still works and is documented. Workers can switch the `.html` redirect off (a setting called `html_handling`, shown in a configuration file), and a Workers site works only on a domain whose nameservers are on Cloudflare, so this page does not use it. **[read]** | On the free plan the site stops when the credits are used up, and nothing is billed instead. **[not opened]** | No custom headers, so no Content-Security-Policy and no way to set `X-Frame-Options`. No redirects, so the old addresses cannot be forwarded. Plus GitHub's rule: Pages "is not intended for or allowed to be used as a free web-hosting service to run your online business, e-commerce site, or any other website that is primarily directed at either facilitating commercial transactions...". A farm that sells visits and pizza is a business; whether this site counts is GitHub's decision, not ours. **[read]** |
+@@ -54,3 +54,3 @@ The site is plain files. There is no database and no build step, so any host tha
+ 
+-**The price of this choice:** Cloudflare redirects `/wise-pie.html` to `/wise-pie`, and this site announces the `.html` form to Google. Everything still works for visitors. It is a small tidy-up for Claude (step 3.7), and it is not a reason to delay going live. If you do not want that, or you would like the least change to the files, use Netlify, accept the free-plan allowance (look at its usage page every week in October), and be ready to pay for a plan if the farm gets popular. If the farm already has a GitHub account and does not mind the limits above, GitHub Pages can show the pages but cannot do the headers or redirects in this checklist.
++**The price of this choice:** Cloudflare redirects `/wise-pie.html` to `/wise-pie`, so the files announce the address without `.html` to Google (`PAGE_EXT` in `tools/pages.py`). Links inside the site still end in `.html`, so the pages also open when you double-click them on your computer. If you would like the least change to the files, use Netlify and ask Claude to set `PAGE_EXT = '.html'` and rebuild; accept the free-plan allowance (look at its usage page every week in October), and be ready to pay for a plan if the farm gets popular. If the farm already has a GitHub account and does not mind the limits above, GitHub Pages can show the pages but cannot do the headers or redirects in this checklist.
+ 
+@@ -257,3 +257,3 @@ Both files are ready. `robots.txt` lets search engines in, keeps them out of `/p
+ - [ ] If the site will live at another address, ask Claude to change them (README, "Putting it online", item 2).
+-- [ ] **Cloudflare only: ask Claude to make the page addresses extension-less before you submit the sitemap.** Today each page names itself as `https://www.wiseacresorganic.com/wise-pie.html` in its canonical tag, its share address, its structured data and the sitemap. On Cloudflare that address redirects to `/wise-pie`, so the page tells Google to use an address that bounces to itself. Visitors never notice. How Google sorts this out was not checked here. The tidy fix is small: the two address-building lines in `tools/pages.py`, a rebuild of the five pages, and the five sitemap lines. Printed QR signs that end in `index.html#menu` and `first-visit.html#farm-map` keep working through the redirect, and the browser still scrolls to the right place. **[tested here]** On Netlify this step is not needed.
++- [ ] **Cloudflare:** the files are ready. Each page names itself as `https://www.wiseacresorganic.com/wise-pie` (no `.html`) in its canonical tag, its share address, its structured data and the sitemap, which is the address Cloudflare shows. **On Netlify or GitHub Pages ask Claude to set `PAGE_EXT = '.html'` in `tools/pages.py` and rebuild before you submit the sitemap**, so the pages name the address that those hosts show without a redirect. The setting is one line, then `python3 tools/pages.py && python3 tools/i18n.py extract`. Printed QR signs that end in `index.html#menu` and `first-visit.html#farm-map` keep working through the Cloudflare redirect, and the browser still scrolls to the right place. **[tested here]**
+ 
+@@ -300,3 +300,3 @@ If you do want it (decision D5):
+ - [ ] In the left menu choose Sitemaps, type `sitemap.xml` in the box (the start of the address is already filled in), and Submit. Google's page says "Submitting" a sitemap means telling Google where the file is. **[not opened]** On Cloudflare, do the address change in 3.7 first.
+-- [ ] A few days later look at the Pages report. A list of pages "with redirect" means 3.7 is not done yet.
++- [ ] A few days later look at the Pages report. A list of pages "with redirect" means the page addresses in 3.7 do not match the host.
+ 

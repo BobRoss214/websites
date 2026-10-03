@@ -1,24 +1,24 @@
 # Decision playbook
 
-What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 (see "Dashboard ids and doc question numbers").
-Written on 3 October 2026 for commit b54427b, extended for e02b95e. Nothing here decides anything for the owner, and no optional patch has been applied.
+What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 and 14 more, d60 to d73 (see "Dashboard ids and doc question numbers").
+Written on 3 October 2026 for commit b54427b, extended for e02b95e and (d60 to d73) 05b0b72. Nothing here decides anything for the owner, and no optional patch has been applied.
 Entries d43 to d45 (added later on the dashboard, with no number in the doc) were written on 3 October 2026 for commit af1e572. On the same day the dashboard texts of d01, d10, d15, d22, d41 and d44 were reworded; this page says the same as the dashboard now.
 
 ## How to use it
 
-1. Find the question by its number (d01 to d59) or in the topic list below.
+1. Find the question by its number (d01 to d73) or in the topic list below.
 2. Read the option she chose. It lists the files and the exact setting or text, how many strings must be written in the four translations, and which tests may need an update.
 3. Make the change. Rebuild and test as in "The standard steps".
 4. If the entry names a patch, apply it only after her answer. Patches are listed in "Patches on disk".
 5. Delete the matching row in the README table "Content status" when a question is closed.
 
-Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
+Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572, entries d60 to d73 for 05b0b72. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
 
 Commit e02b95e also holds the messages feature (f45d6d9) and the plain-English rewrite (7d917e6), which changed the wording and the ids of 77 sentences.
 
 If an id is not in lang/en.json (the plain-English rewrite renamed some), search for the quoted text instead.
 "Strings" counts English sentences or words whose id changes. Each needs 4 translations (es, hi, zh, vi) in lang/src/<code>.json.
-Patch files named here are not in the repository: the helpers who made them kept them in a scratch folder on their own computer (see "Patches on disk").
+The optional patches named here are in the repository, in patches/optional/ (see "Patches on disk" and docs/OPTION_PATCHES.md).
 
 ## How the docs point into files
 
@@ -56,30 +56,30 @@ node tests/run-all.mjs consistency dated farm-seasons hero live
 node tests/run-all.mjs --list        # all test names
 ```
 
-Test names: public-site, docs, pipeline, consistency, live, dated, messages, drive, pause, gallery, analytics, print-qr, deploy, farm-seasons, npc, i18n, i18n-early, i18n-a11y, languages, axe, keyboard, map, features, hero.
+Test names: public-site, docs, owner-calendar, pipeline, consistency, live, dated, messages, drive, pause, gallery, analytics, print-qr, deploy, farm-seasons, npc, i18n, i18n-early, i18n-a11y, languages, axe, keyboard, map, features, hero, option-patches.
 Always run consistency after a change to a price, time, day, age, size, phone number or address. It reads every page in all five languages.
 
-Apply a patch from the repo root, then rebuild:
+Apply a patch from the repo root, then rebuild (docs/OPTION_PATCHES.md has the table: file, apply order, host, what to run after):
 
 ```
-patch -p1 --dry-run < path/to/the.patch    # a line "checking file ..." per file and no word FAILED = it applies
-patch -p1 < path/to/the.patch
+git apply --check patches/optional/<file>.patch    # no output = it applies
+git apply patches/optional/<file>.patch
 ```
 
 ## The 10 topics, most urgent first
 
 | # | Topic | Urgency | Questions |
 |---|---|---|---|
-| 1 | Put the site online | blocks launch | d05, d30, d38, d15 |
+| 1 | Put the site online | blocks launch | d05, d30, d38, d15, d63, d72 |
 | 2 | Wrong links and placeholder content | blocks launch | d02, d03, d46, d47, d04, d54, d06 |
-| 3 | People and photos (permission) | blocks launch | d13, d31, d32, d33, d12, d34 |
+| 3 | People and photos (permission) | blocks launch | d13, d31, d32, d33, d12, d34, d61 |
 | 4 | Pizza and food facts | wrong or risky information | d17, d16, d18, d19, d20, d21, d22, d49, d53, d08, d57 |
-| 5 | Dates, seasons and winter | wrong or risky information | d01, d09, d23, d50, d51, d24, d25, d26, d27 |
+| 5 | Dates, seasons and winter | wrong or risky information | d01, d09, d23, d50, d51, d24, d25, d26, d27, d60, d66, d68, d69, d70 |
 | 6 | Rules and promises to visitors | wrong or risky information | d41, d42, d52, d55, d44, d45, d35, d36, d43 |
-| 7 | Names, address and listings | wrong or risky information | d07, d28, d29, d39, d40 |
-| 10 | What the site says the farm offers | wrong or risky information | d48, d56, d58, d59 |
-| 8 | Drive time box and map tools | nice to have | d10, d11, d14 |
-| 9 | Translations | nice to have | d37 |
+| 7 | Names, address and listings | wrong or risky information | d07, d28, d29, d39, d40, d65 |
+| 10 | What the site says the farm offers | wrong or risky information | d48, d56, d58, d59, d67, d73 |
+| 8 | Drive time box and map tools | nice to have | d10, d11, d14, d62, d64 |
+| 9 | Translations | nice to have | d37, d71 |
 
 Urgency: "blocks launch" = answer before the site goes public. "wrong or risky information" = the site says something that may be false or unsafe. "nice to have" = can follow launch.
 Inside a topic every question has its own urgency (1, 2 or 3 in the heading). The line "Checklist says" in each entry repeats what docs/LAUNCH_CHECKLIST.md section 4 says about the matching old question.
@@ -88,9 +88,9 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 
 | Answer | Changes | Why |
 |---|---|---|
-| d05 host | d30, d15, page-address style, cache time, d10 option C | Cloudflare Pages and Netlify read _headers and _redirects. GitHub Pages reads neither. Only Cloudflare redirects /x.html to /x, which is the reason for the clean-URL patch OPT-C. A header line (d15) needs a host that sets headers. |
+| d05 host | d30, d15, page-address style, cache time, d10 option C | Cloudflare Pages and Netlify read _headers and _redirects. GitHub Pages reads neither. Only Cloudflare redirects /x.html to /x, which is the reason for the clean-URL patch clean-addresses-C. A header line (d15) needs a host that sets headers. |
 | d38 web address | share cards, QR signs, sitemap, structured data, d10 option C, d30 | One setting (tools/pages.py SITE) plus the home page tags and tools/qr_links.json "site". A new address after launch means new link previews: a changed picture needs a new file name (checklist 3.11). Old-address redirects only make sense if the new site takes over the old address. |
-| d30 redirects | d05 (which patch), d38 | OPT-A needs _redirects (Cloudflare, Netlify). OPT-B (13 small redirect pages) is for hosts without it. |
+| d30 redirects | d05 (which patch), d38 | redirects-A needs _redirects (Cloudflare, Netlify). redirects-B (13 small redirect pages) is for hosts without it. |
 | d15 header | d10, d05, analytics, Mailchimp | The line names the two map services (connect-src). Switch it on last, after d10 is final. |
 | d01 winter, d24, d25, d27, d23, d09 | each other | d24 option B is the same patch as d01 option A. d25 (Reserve window) and d27 (school banner) use the same data-only switch. d23 (fall end date) decides the November gap and overlaps winter if fall ends Nov 30. d09 (GreenHouse hours) is the same code change as d08 (Thursday). Christmas trees are sold at The GreenHouse. |
 | d16 $31 package | tests/consistency.test.mjs, d17, d20, d21, d19 | The price and the sentence "Includes 2 Wise Pie pizzas, plus $3 per person" are pinned in 3 places and 5 languages. Extras (+$9, +$3) and the pizza card (index.html from `data-t="t661d94cd"` to `data-t="td4abc72c"`) are shared with d17, d20 and d21. |
@@ -107,6 +107,15 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | d52 Cathy's email | d55, d03, messages tests | The accessibility card and the waitlist/messages feature name this address. |
 | d53 pre-order timing, d57 eat there | each other | They share the sentence index.html at `data-t="t60509a07"`. |
 | d02, d36, d03 | each other | Groups prices, school tour rules and the sign-up form are all on the School tours and Groups tabs. |
+| d60 closure | the top bar, the pizza note, Bookeo | A closure date (js/content.js, `closures`) closes the farm, The GreenHouse and Wise Pie together. The top bar and the pizza note (index.html at `data-t="t58da3033"`) are separate lines that must say the same. Bookeo is closed by hand. |
+| d61 photo credits | d13, d31, d32, d33, d12, d34 | An answer that says a picture is not hers removes it, as those cards do. One list holds all 32 photos (js/content.js, `photos`). |
+| d62 privacy note, d63 Mailchimp script | d10, d15, old Q26, old Q43 | The note and the fact sheet (docs/WHAT_THE_SITE_STORES.md) must say what the code does. Switching the Drive time box off (d10 option D) ends d62. Connecting the sign-up form (old Q26) makes d63 live and keeps Mailchimp's address in the header (d15). |
+| d65 QR strength and address line | d38, d39, d06, d28, d29 | One tool (`tools/make_qr.py`) rebuilds every sign. A new web address (d38) or a review link (d06) needs a rebuild anyway, so make the change once. |
+| d66 "new" wording | d48, d24 | If the tomatoes are removed (d48) it ends. The eight sentences go with the fall 2027 content (d24): do both in December. |
+| d67 backgrounds, d73 yellow | each other | Both change colours in css/styles.css and need new visual-check baselines. |
+| d68, d69, d70 the games | each other, d01 | All three change js/hero.js (d70 also css/extras.css). The game test is tests/games.test.mjs; the optional patch games-B (d68 A) updates it. |
+| d71 tone of the translations | d37 | Same translation files: one native speaker can answer both. |
+| d72 owner page | d60, d05 | Closed days and the notice are the first thing the form would write. The page is never uploaded: the deploy folder must leave it out. |
 | d43 farm words, d44 corn pit offer, d45 free ages | each other, d07, d16, d02, d36, tests | The corn pit line in d43 must agree with the Thursday offer in d44. The maze line in d43 uses the name chosen in d07. The age at which children are free (d45) is written next to the $3 field fee (d16, "ages 3 and up"), the party guest count (d02), the school tour admission for family members (d36) and the wagon ride line; consistency pins every one of these age sentences (see the test table below). |
 
 ## Tests that can need an update
@@ -140,35 +149,46 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | messages at `the waitlist link is a mailto: to the farm` and `an address the owner typed with a + in it` | the waitlist mailto goes to cathy@wiseacresorganic.com | d52 |
 | consistency at `age: free (infants, wagon ride, party children)` and `age: from this age people pay the field fee / school admission` | the age up to which children are free (every place must give the same number) and the age from which people pay the field fee, the pizza package extra and the school admission for family members | d45 |
 | consistency at `days: farm visits without pizza (fall)` and tools/check_facts.py at `Ages 3 and up` | both read the words "Ages 3 and up" (and "Field fee, ages 3 and up") next to the farm days and the $3 price; reword those and these two checks need the new words | d45 |
+| dated, live | closed badges on a closure date | d60 |
+| drive at `those services may keep a record of the request` | the Drive time note sentence | d62 |
+| print-qr (whole file) | QR codes: error correction level M or better, every code scans back, the signs and the six pages on paper | d64, d65 |
+| hero at `fall: the "New tomatoes" chip shows` | the "New" tomato chip (it hides itself after 2026-12-31) | d66 |
+| validity (whole file) | page style lines that browsers ignore (the two backgrounds of d67 must stay valid) | d67 |
+| hero, touch, games (whole files) | the badges and the reach of the game, a badge on a 320 pixel screen, the winter messages | d68, d69, d70 |
+| auto-dark (whole file) | every yellow part keeps dark text when Chromium's auto dark mode is on | d73 |
 | i18n, languages | every id has 4 translations; plain checks of each language | any change of English text |
 
 ## Patches on disk
 
-Nothing has been applied. Every patch below was dry-run again on 3 October 2026 (17:02 UTC) against commit af1e572 (the newest commit at that time) with patch -p1 --dry-run. "Applies" below means exactly that: no hunk failed on af1e572 on that date. Where a hunk fails, the table says which one and the one-line hand fix.
-The patch files are not in the repository: the helpers made them in scratch folders on their own computers. Ask Claude for a patch by its file name; a scratch folder may have been cleared since, and then the change has to be made again.
+The optional patches are in the repository, in patches/optional/, each with a header (what it does, which question it answers, what it cannot be combined with, hosts, what to run after). docs/OPTION_PATCHES.md is the table with the apply order. `node tests/run-all.mjs option-patches` checks that every patch applies to the files as they are and that every set that makes sense applies together; `python3 tools/option_matrix.py` rebuilds and tests every combination for each host (README, section "Optional patches (open decisions)"). Nothing is applied until someone decides.
 
-| Patch | For | Status on af1e572, 3 October 2026 |
+| Patch (in patches/optional/) | For | What it does |
 |---|---|---|
-| winter-A-on-e02b95e.patch | d01 A, d24 B | Applies (every hunk moved a few lines, none fails). Applied in a scratch copy and rebuilt: 0 missing in es, hi, zh and vi; consistency (67) and public-site (13) pass. One follow-up: the docs test then says two counts in the notes are out of date. In docs/QUESTIONS_FOR_THE_FARM.md at `eepurl.com/hZehgr` the text says 7 places and the home page then has 8; in the same file at `The u-pick farm is closed until spring` the sentence names the Reserve-button class btn btn-sm btn-red, which is then in index.html twice, not once. Change those two numbers. The browser tests (dated, farm-seasons, hero, live, messages) passed on e02b95e and were not run again on af1e572. |
-| winter-B-on-e02b95e.patch | d01 B | Applies. Applied in a scratch copy and rebuilt: 0 missing; consistency, public-site and docs pass. Browser tests not run again on af1e572. |
-| winter-A-on-b54427b.patch, winter-B-on-b54427b.patch | d01 (old) | Fail on af1e572 (2 of 9 hunks in index.html for A; the four translation files for both). Do not apply. Use the "on-e02b95e" copies. |
-| winter-A.patch | d01 A (old) | Fails on af1e572 (3 of 10 hunks in index.html, the pumpkin page and the four translation files). Use winter-A-on-e02b95e.patch. |
-| winter-B.patch | d01 B (old) | Fails on af1e572 (the four translation files). Use winter-B-on-e02b95e.patch. |
-| winter-C.patch | d01 C (old) | Fails on af1e572 (2 of 3 hunks in index.html and the one in css/hero.css). It is stale anyway: C now means "leave it as it is now" and needs no patch. |
-| reserve-window-OPTIONAL-ff5965d.patch | d25 A | Applies (index.html hunks moved a few lines, one with a small fuzz; css/styles.css and js/hero.js clean). Applied in a scratch copy and rebuilt: 0 missing; consistency, public-site and docs pass. Hides spring Reserve buttons outside the booking window. Browser tests not run. |
-| OPT-A-redirects-file.patch | d30 A, d05 A/B | One hunk fails: docs/LAUNCH_CHECKLIST.md, the bullet that starts "To use it: save the block as a file named" (it was reworded after the patch was made). Hand fix: replace that one bullet with the patch's new bullet ("To use it: leave _redirects in the top folder of the upload ..."). The _redirects file (22 lines) and the README hunks apply; applied with patch -f (the failing hunk is only wording), public-site passes (13 checks, 3 October 2026). |
-| OPT-B-redirect-pages.patch | d30 A, d05 C | Same one failing hunk as OPT-A (the "To use it" bullet in docs/LAUNCH_CHECKLIST.md): same hand fix. The 13 small redirect pages and the README hunks apply. |
-| OPT-C-clean-urls.patch | d05 A | Two things fail. (1) README.md, step 2 of the upload list "Use your real domain at the **root**": add by hand the sentence about PAGE_EXT in tools/pages.py (the patch has it). (2) The first hunk in each of the five built pages (first-visit, pumpkin-patch, school-field-trips, strawberry-picking, wise-pie): the head of the pages gained a line since. Hand fix: apply with patch -f, delete the .rej and .orig files, then run python3 tools/pages.py, which writes the new canonical tags itself. Tested on 3 October 2026 this way: canonical tags lose .html, public-site 14 and consistency 67 pass. The other hunks (tools/pages.py with fuzz, sitemap.xml, the public-site test, the launch checklist) apply. |
-| 2-OPTIONAL-cloudflare-no-html-addresses.patch | d05 A | Applies (tools/pages.py only, with fuzz and 52 lines of offset). The small version of OPT-C; then rebuild. The public-site test then needs the OPT-C edit. Prefer OPT-C. |
-| OPT-D-shorter-code-cache.patch | d05 (any host) | One hunk fails: docs/LAUNCH_CHECKLIST.md, the bullet "Update "This week at the farm"" under "Every week in season" (it was reworded). Hand fix: in that bullet change "up to an hour" to "up to five minutes (_headers keeps css/, js/ and lang/ for 5 minutes; pictures in assets/ for a year, so a changed picture needs a new file name)". The _headers hunk (css, js and lang cached 5 minutes instead of 1 hour), README and js/content.js apply. |
-| MAPPING-for-owner.txt | d30 | Old address to new page table (not a patch). /summer/ and /posts/ left out on purpose (launch decision D3). |
-| es-OPTIONAL-clock-12h.patch, vi-OPTIONAL-clock-words.patch | d37 | Fail on af1e572 (the hunk in js/features.js for both, the one in js/live.js for vi): the code around them changed. Do not apply. Ask for a redo. |
+| winter-A-hide-fall-booking.patch | d01 A, d24 B | Hides the fall booking and prices out of season; one new sentence in 4 languages. |
+| winter-B-fall-prices-note.patch | d01 B | Keeps the fall prices all year with the note "These are the fall 2026 prices and times"; one new sentence in 4 languages. |
+| reserve-window.patch | d25 A | Hides the spring Reserve buttons outside the booking window. |
+| redirects-A-redirects-file.patch | d30 A (Cloudflare Pages, Netlify) | Adds _redirects (22 lines, all 301). |
+| redirects-B-redirect-pages.patch | d30 A (any host, the only one for GitHub Pages) | 13 small redirect pages; the deploy tool uploads them; the launch check follows them. |
+| clean-addresses-C-cloudflare.patch | d05 (Cloudflare Pages), d38 | Page addresses without .html; run python3 tools/pages.py after. |
+| code-cache-D-5-minutes.patch | d05 (any host that reads _headers) | css, js and lang cached 5 minutes instead of 1 hour. |
+| phone-number-shown.patch | d04 A | The main phone number in the footer and the Google data; the consistency test allows the two known numbers. |
+| season-picker-off.patch | launch decision D6 | seasonPicker false (the three tests that click the season switcher turn it on for themselves, with or without the patch). |
 
-The patches zh-C, es-C, vi-C and hi-C (translation decisions) and the photo, share-image and checklist patches are already merged.
+The old address table (where each old address goes) is in docs/OPTION_PATCHES.md.
+
+Patches that are not in patches/optional/ (the helpers keep them in scratch folders; ask Claude for one by its file name):
+
+| Patch | For | Status |
+|---|---|---|
+| games-B.patch | d68 A | Optional. Applies to 05b0b72 (dry-run 3 October 2026: js/hero.js and tests/games.test.mjs). Not applied. The Pick button snips a sunflower on every fourth press; sunflowers grow back in 3 to 5 seconds. |
+| OPTIONAL-qr-no-duplicate-line-66c8272.patch | d65 C | Made for 66c8272. On 05b0b72 one of its two hunks in tools/make_qr.py fails (the file changed with the five-language signs): ask for a redo. |
+| (no patch file) stronger QR codes | d65 B | One letter in tools/make_qr.py (m to q), then run python3 tools/make_qr.py (tried in a scratch copy of af1e572: the print-qr test passed). |
+
+Not in the repository and not to be applied (stale): the old winter patches for b54427b, winter-A.patch and winter-C.patch (the tree wording is already in-season-only in the code, commit e081393), 2-OPTIONAL-cloudflare-no-html-addresses.patch (clean-addresses-C does the same and more), and the d37 clock patches es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch (ask for a redo). The patches zh-C, es-C, vi-C and hi-C (translation decisions) and the photo, share-image and checklist patches are already merged.
 
 ## Dashboard ids and doc question numbers
 
-The doc is docs/QUESTIONS_FOR_THE_FARM.md (and .es.md, same 54 numbers). Each question there now has a "Dashboard id" line under the question.
+The doc is docs/QUESTIONS_FOR_THE_FARM.md (and .es.md, same 68 numbers). Each question there now has a "Dashboard id" line under the question.
 Rule used to close the gap between the two lists: a doc question becomes a dashboard question only if it is an owner decision or a fact only she has, and nothing in the repo or on the live pages answers it already. Otherwise it is dropped (with the reason) or put on a later list. The public sites of the farm could not be opened from the test computer.
 
 ### Every doc question, and where it went
@@ -200,7 +220,7 @@ Rule used to close the gap between the two lists: a doc question becomes a dashb
 | Q23 | d47 | asked |
 | Q24 | d28 | asked |
 | Q25 | none | later (ask with d29): The hashtag lines are index.html at `data-t="t559ec077"` (2 places) and `data-t="t18683452"`. Ask with the hashtag sign. |
-| Q26 | none | later: The plain "Join the email list" button works today. The form needs her Mailchimp account. The checklist says it can follow launch. |
+| Q26 | none | later: The plain "Join the email list" button works today. The form needs her Mailchimp account. The checklist says it can follow launch. Its safety question (Mailchimp's script) is Q58, d63. |
 | Q27 | d06 | asked |
 | Q28 | d56 | asked |
 | Q29 | d55 | asked |
@@ -217,7 +237,7 @@ Rule used to close the gap between the two lists: a doc question becomes a dashb
 | Q40 | d13, d32 | asked |
 | Q41 | none | later: Depends on the sign-up form (old Q26). Ask after it. |
 | Q42 | d35 | asked |
-| Q43 | none | later (ask with d10): Part of d10. The page already shows a notice about the address and docs/WHAT_THE_SITE_STORES.md lists what is sent. |
+| Q43 | none | later (ask with d10): Part of d10. The page already shows a notice about the address and docs/WHAT_THE_SITE_STORES.md lists what is sent. The wording of the notice is asked in Q57, d62. |
 | Q44 | d16 | asked |
 | Q45 | d17 | asked |
 | Q46 | d49, d17 | asked |
@@ -229,6 +249,20 @@ Rule used to close the gap between the two lists: a doc question becomes a dashb
 | Q52 | d22 | asked |
 | Q53 | d19 | asked |
 | Q54 | d57 | asked |
+| Q55 | d60 | asked |
+| Q56 | d61 | asked |
+| Q57 | d62 | asked |
+| Q58 | d63 | asked |
+| Q59 | d64 | asked |
+| Q60 | d65 | asked |
+| Q61 | d66 | asked |
+| Q62 | d67 | asked |
+| Q63 | d68 | asked |
+| Q64 | d69 | asked |
+| Q65 | d70 | asked |
+| Q66 | d71 | asked |
+| Q67 | d72 | asked |
+| Q68 | d73 | asked |
 
 Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d50), Q39 (d31, d33, d13), Q40 (d13, d32). Merged into one card: Q5, Q6 and Q7 (d48); Q23 and Q48 (d47); Q29 and Q31 (d55).
 
@@ -295,6 +329,20 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d57 | Can people sit and eat at The GreenHouse? | Q54 |
 | d58 | Snacks and drinks in spring and summer? | Q15 |
 | d59 | Do you still run summer programs? | Q14 |
+| d60 | Closed Sunday, October 4 for rain? | Q55 |
+| d61 | Who owns the photos on the site? | Q56 |
+| d62 | Is the Drive time privacy note enough? | Q57 |
+| d63 | Email sign-up form: is Mailchimp's script OK? | Q58 |
+| d64 | What should the printed home page include? | Q59 |
+| d65 | QR signs: stronger codes, one address line | Q60 |
+| d66 | Stop saying "new this year" from January? | Q61 |
+| d67 | Keep two backgrounds that never showed? | Q62 |
+| d68 | Sunflower badge only works on big screens | Q63 |
+| d69 | "Every tree is lit!" appears too early | Q64 |
+| d70 | Badge pop-up covers a note on small phones | Q65 |
+| d71 | Friendly or formal in the translations? | Q66 |
+| d72 | Do you want a form to change settings? | Q67 |
+| d73 | Make the brand yellow a little paler? | Q68 |
 
 ### Dashboard questions with no number in the doc
 
@@ -336,23 +384,23 @@ Nothing can go live until the host and the web address are chosen. The files alr
 - Urgency: 1 (blocks launch). Checklist says: launch decisions D1, D10.
 - Owner fact (no sensible default): no
 - Default: A. Free, static traffic unlimited, headers and redirects tested on its own test server (checklist section 1).
-- Depends on: d30 (which redirect patch), d15 (headers need a host that sets them), d38 (domain and DNS), page-address style (OPT-C only on Cloudflare), cache time (OPT-D).
+- Depends on: d30 (which redirect patch), d15 (headers need a host that sets them), d38 (domain and DNS), page-address style (clean-addresses-C only on Cloudflare), cache time (code-cache-D).
 
 **A. Cloudflare Pages**
 
 - No site file changes to host it: upload the folder without docs/, tests/, tools/, pages/, README.md (checklist section 2).
-- Clean page addresses (no .html): apply OPT-C-clean-urls.patch (tools/pages.py PAGE_EXT = '', 5 generated pages, sitemap.xml, tests/public-site.test.mjs, README and checklist wording). Do this before submitting the sitemap (checklist 3.7). On af1e572 (checked 3 October 2026) two hunks need a hand fix: see "Patches on disk".
-- Old addresses: d30 option A with OPT-A-redirects-file.patch (a _redirects file).
+- Clean page addresses (no .html): apply patches/optional/clean-addresses-C-cloudflare.patch (tools/pages.py PAGE_EXT = '', 5 generated pages, sitemap.xml, tests/public-site.test.mjs, README and checklist wording). Do this before submitting the sitemap (checklist 3.7).
+- Old addresses: d30 option A with patches/optional/redirects-A-redirects-file.patch (a _redirects file).
 - _headers already works there (4 security notes and the cache rules). Content-Security-Policy: see d15.
-- Optional, any host: OPT-D-shorter-code-cache.patch (css/js/lang cached 5 minutes instead of 1 hour: _headers, js/content.js text, README, checklist).
+- Optional, any host: patches/optional/code-cache-D-5-minutes.patch (css/js/lang cached 5 minutes instead of 1 hour: _headers, js/content.js text, README, checklist).
 - Strings: 0
-- Tests: public-site (after OPT-C)
-- Patch: OPT-C-clean-urls.patch
+- Tests: public-site (after clean-addresses-C)
+- Patch: patches/optional/clean-addresses-C-cloudflare.patch
 
 **B. Netlify**
 
-- No site file changes to host it. Keep page addresses with .html (the current state): do NOT apply OPT-C. Leave Netlify "Pretty URLs" off.
-- Old addresses: d30 option A with OPT-A-redirects-file.patch (Netlify reads _redirects).
+- No site file changes to host it. Keep page addresses with .html (the current state): do NOT apply clean-addresses-C. Leave Netlify "Pretty URLs" off.
+- Old addresses: d30 option A with patches/optional/redirects-A-redirects-file.patch (Netlify reads _redirects).
 - _headers works if it is in the published folder. Content-Security-Policy: see d15.
 - Free plan stops the site when its monthly credits run out (checklist section 1: roughly 5,000 first visits a month, an estimate from unopened pages).
 - Strings: 0
@@ -363,11 +411,11 @@ Nothing can go live until the host and the web address are chosen. The files alr
 - Ask the host two things: does it read a _headers file, and does it read a _redirects file?
 - Reads both: same as Cloudflare or Netlify (above).
 - Reads no _headers: copy the four notes and the cache rules of _headers into the host settings; no Content-Security-Policy possible if it cannot set headers (d15 then = skip).
-- Reads no _redirects (GitHub Pages is one): old addresses (d30 option A) use OPT-B-redirect-pages.patch (13 small redirect pages: about/, contact/, faq/ ...). GitHub Pages also has a business-use rule (checklist section 1, last row).
+- Reads no _redirects (GitHub Pages is one): old addresses (d30 option A) use patches/optional/redirects-B-redirect-pages.patch (13 small redirect pages: about/, contact/, faq/ ...). GitHub Pages also has a business-use rule (checklist section 1, last row).
 - Keep .html page addresses unless the host redirects them like Cloudflare does.
 - Strings: 0
-- Tests: public-site (OPT-B adds plain pages)
-- Patch: OPT-B-redirect-pages.patch
+- Tests: public-site (redirects-B adds plain pages)
+- Patch: patches/optional/redirects-B-redirect-pages.patch
 
 ### d30. Keep the old farm web addresses working
 
@@ -375,18 +423,18 @@ Nothing can go live until the host and the web address are chosen. The files alr
 - Doc question: none (launch checklist 3.6 and D3; the doc has no question for it)
 - Urgency: 1 (blocks launch). Checklist says: launch decision D3 (3.6).
 - Owner fact (no sensible default): no
-- Default: A, only if the new site takes over the address of the current wiseacresorganic.com; use OPT-A on Cloudflare or Netlify.
-- Depends on: d05 decides which patch (OPT-A or OPT-B). d38: if the site lives on another address, redirects on the old one are done at the old host, not in these files.
+- Default: A, only if the new site takes over the address of the current wiseacresorganic.com; use redirects-A on Cloudflare or Netlify.
+- Depends on: d05 decides which patch (redirects-A or redirects-B). d38: if the site lives on another address, redirects on the old one are done at the old host, not in these files.
 
 **A. Yes, send old addresses to the new pages**
 
-- Cloudflare Pages or Netlify: apply OPT-A-redirects-file.patch. It adds _redirects (22 lines, all 301) and notes in README and the checklist. On af1e572 (checked 3 October 2026) one checklist bullet needs a hand edit: see "Patches on disk".
-- Host with no _redirects (GitHub Pages): apply OPT-B-redirect-pages.patch instead (13 folders with a small redirect page). Same one checklist bullet needs a hand edit on af1e572 (checked 3 October 2026).
-- Where each old address goes: MAPPING-for-owner.txt. /summer/ and /posts/ are left out on purpose (checklist D3: the owner decides what happens to them; today they show 404.html).
+- Cloudflare Pages or Netlify: apply patches/optional/redirects-A-redirects-file.patch. It adds _redirects (22 lines, all 301) and notes in README and the checklist.
+- Host with no _redirects (GitHub Pages): apply patches/optional/redirects-B-redirect-pages.patch instead (13 folders with a small redirect page).
+- Where each old address goes: docs/OPTION_PATCHES.md, section "Old addresses and where they go". /summer/ and /posts/ are left out on purpose (checklist D3: the owner decides what happens to them; today they show 404.html).
 - Test after upload: open all 13 old addresses (checklist section 5).
 - Strings: 0
-- Tests: public-site (OPT-B only: it scans the extra pages)
-- Patch: OPT-A-redirects-file.patch
+- Tests: public-site (redirects-B only: it scans the extra pages)
+- Patch: patches/optional/redirects-A-redirects-file.patch
 
 **B. No, start fresh**
 
@@ -441,6 +489,62 @@ Nothing can go live until the host and the web address are chosen. The files alr
 **B. Skip it**
 
 - No change. The other four security notes stay on. Checklist 3.5 says skipping this at launch is fine.
+- Strings: 0
+- Tests: none
+
+### d63. Email sign-up form: is Mailchimp's script OK?
+
+- In plain words: If the email sign-up form is connected, Mailchimp's reply is a small script that the page runs. That makes Mailchimp the only outside address allowed to run code in the page, and only after a visitor presses the button.
+- Doc question: Q58
+- Urgency: 3 (nice to have). Checklist says: can follow launch (old Q26, the Mailchimp form).
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: old Q26 (does she want the form at all; it is not on the dashboard), d15 (the ready security header lists Mailchimp's address for scripts), d05.
+- Note: The form is not connected today: the setting in js/content.js at `signup: { action:` (2 places: the instructions, then the setting) is still empty, so visitors see the plain "Join the email list" link to Mailchimp's own page. The fact sheet says "the only outside address that can run code in the page" (docs/WHAT_THE_SITE_STORES.md, section "3. What each optional feature adds"). Old Q26 is the "do you want the form" question; this one is the safety question that goes with it.
+
+**A. Yes, connect the form when I send the code**
+
+- The steps of old Q26 "If Yes": the form address in `signup.action` (js/content.js at `signup: { action:` (2 places: the instructions, then the setting)) and the interest names from the embed code (README, section "Planning features" has the part on the email signup; README row "Email signup"). Then sign up once with a real email address. Mailchimp's address is already in the ready security header (docs/LAUNCH_CHECKLIST.md, section "The Content-Security-Policy").
+- Strings: 0
+- Tests: features, messages, privacy (they already test the sign-up with a stand-in; run them after connecting)
+
+**B. No, keep the plain "Join the email list" button**
+
+- No change: leave `signup.action` empty. The plain button (index.html at `eepurl.com/hZehgr` (7 places)) stays. If the form is never wanted, ask Claude whether Mailchimp's address can then be left out of the script part of the ready header.
+- Strings: 0
+- Tests: none
+
+**C. I will ask someone I trust first**
+
+- No change until she answers.
+- Strings: 0
+- Tests: none
+
+### d72. Do you want a form to change settings?
+
+- In plain words: To close for rain or change an hour she edits text files by hand. A written proposal describes a form on her computer that writes the settings, and a facts table so a price is typed once. Nothing is built.
+- Doc question: Q67
+- Urgency: 3 (nice to have). Checklist says: launch decision D9 (who updates the site; docs/LAUNCH_CHECKLIST.md, section "4. Before you go live").
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: d60 (closing days is the first thing the form would write), d05 (the form is never uploaded: the deploy folder must leave it out).
+- Note: The proposal is the page PROPOSAL_owner_page in the docs folder (it is not in this repository yet; the helpers wrote it on 3 October 2026). Costs from it: the form 2 to 3 days (one day for the notice and closed days alone); the facts table about 3 days, touching about 100 sentences in five languages; the form must use the same rules as the "Site check" box and writes only js/content.js between two marker lines. Its four decisions: which settings first, whether a Chrome or Edge only "Save" is acceptable (other browsers get a download), whether to build the facts table and for which facts, and who tries each part.
+
+**A. Yes, start small: the notice and closed days**
+
+- Ask Claude: Part 1 of the proposal, smallest version (about one day): a page called owner.html in the site folder, never uploaded, that writes `notice`, `noticeUntil` and `closures` in js/content.js between two marker lines it adds once, with the same rules as the "Site check" box (the box is built in js/features.js; the rules would move to one shared file). It keeps content.js.bak and shows old and new lines before saving.
+- Strings: 0 for visitors (a visitor never sees the page)
+- Tests: a new test that fills every box with good and bad values; sitecheck; deploy (the deploy folder must leave the page out)
+
+**B. Yes, the form and the facts table**
+
+- Parts 1 and 2 of the proposal. Part 2: one facts file holds each fact once (fees, the $31 package, hours, phone, e-mails); sentences carry a placeholder such as {price_person} that tools/pages.py fills in. The sentence ids change, so the translations are re-keyed by a script, and a check proves the built pages are word for word what they are today before anything else changes.
+- Strings: about 100 sentences x 5 languages are touched (ids change, wording does not)
+- Tests: consistency (it reads every page in five languages), i18n, languages, pipeline, public-site, deploy
+
+**C. No, leave it as it is now**
+
+- No change. Hand editing stays; the "Site check" box keeps naming mistakes.
 - Strings: 0
 - Tests: none
 
@@ -644,7 +748,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 
 **A. I will send the link**
 
-- js/content.js at `reviewUrl: ''` -> reviewUrl: 'https://g.page/r/.../review', (steps in the comment in js/content.js from `is where every "Leave a Google review" button goes` to `tap "Leave a Google review"`).
+- js/content.js at `reviewUrl:` (2 places: the instructions, then the setting): reviewUrl: '' -> reviewUrl: 'https://g.page/r/.../review', (steps in the comment in js/content.js from `is where every "Leave a Google review" button goes` to `tap "Leave a Google review"`).
 - Then python3 tools/make_qr.py: the review QR sign (tools/qr_links.json at `"{reviewUrl}"`) appears in print/qr-signs.html and assets/qr/review.svg (until now it is skipped).
 - Check on a phone: the button opens a box with stars. README: delete the row "Google review link".
 - Strings: 0
@@ -824,6 +928,35 @@ Faces and organisation names need a yes before launch. Words printed inside pict
 **B. Keep them as they are**
 
 - No change.
+- Strings: 0
+- Tests: none
+
+### d61. Who owns the photos on the site?
+
+- In plain words: None of the 32 photos has a photographer, a source or a permission written down. Only she knows whether all of them are hers.
+- Doc question: Q56
+- Urgency: 2 (wrong or risky information). Checklist says: not listed (the permission questions for faces, words and dated pictures are d13, d31, d32 and d33).
+- Owner fact (no sensible default): yes
+- Default: none. Owner fact.
+- Depends on: d13, d31, d32, d33 (the same pictures can also be removed for another reason), d12 (originals), d34 (the sunflower pictures).
+- Note: A check of all 32 picture files on 3 October 2026 found no visitor, review or press picture that needs a credit (the community and reviews lists are empty) and no credit field for photos. The pictures that most need an answer: the Foster Village table, the family in the strawberry field (two adults, three children), the family in the sunflower field, the four with words printed on them, and the two Wise Pie pictures (another business's menu and food). The rest show nothing that points to a third party.
+
+**A. All of them are ours, no credit needed**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**B. Some belong to others (I will send a list)**
+
+- Put the credit in that photo's caption: js/content.js at `assets/photos/foster-village-table.webp` is one of the 32 entries (each has `src`, `alt`, `caption` and `tags`). A caption shows under the picture in the gallery and in the viewer, and can be written { en, es, hi, zh, vi }. Names and organisations are not translated.
+- A picture shown outside the gallery has no caption line, so a credit there needs a small code change (ask Claude). Or remove the picture the way d13 and d31 describe.
+- Strings: 0 (captions are in js/content.js, not in the translation files)
+- Tests: gallery (photo count of at least 5, tags) if a picture is removed
+
+**C. I need to check first**
+
+- No change until she answers.
 - Strings: 0
 - Tests: none
 
@@ -1139,25 +1272,24 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **A. Hide fall booking and prices out of season**
 
-- Apply winter-A-on-e02b95e.patch (source files only; it is winter-A.patch rebased onto e02b95e. winter-A.patch and the b54427b copy no longer apply: the plain-English rewrite changed the sentences next to three of their hunks).
+- Apply patches/optional/winter-A-hide-fall-booking.patch (source files only; then rebuild).
 - What it does: the "Reserve now" button in the Visit area, the "Choose your package" header, packages, included, add-ons, the "See prices" and "See packages" buttons, the "At the farm" shop block with its jump link and the "Fall:" paragraph get data-only="fall" (or "spring summer fall"). A new off-season line ("Fall at the farm usually starts again in mid-September...") with the existing "Tell me when it opens" button shows in winter, spring and summer. First-visit page: "See packages & add-ons" button hidden out of fall. css/sections.css +2 lines.
 - Then rebuild (python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build) and python3 tools/i18n.py missing es hi zh vi (0 each).
 - The pumpkin page (pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`) keeps "fall 2026" prices all year: not covered.
-- Dry run on 3 October 2026 against af1e572: applies, no hunk fails (see "Patches on disk" for the two doc counts to change afterwards).
 - The fall blocks come back about August 12 (the site then treats fall as the nearest season): answer d24 before that.
 - Strings: 1 new UI sentence (id t48ba72e7) x 4 translations, already written in the patch
 - Tests: Run on the patched e02b95e tree: consistency 66, live 20, dated 24, farm-seasons 24, hero 74, messages 173: all pass. Page-clock check: packages, shop block and Reserve now show on 2026-10-10 only; the off-season line shows from 2026-11-20 to 2027-03-01; the tree headline shows on 2026-12-01 only (same as unpatched). No test needs a change
-- Patch: winter-A-on-e02b95e.patch
+- Patch: patches/optional/winter-A-hide-fall-booking.patch
 
 **B. Keep them with a note: these are fall prices**
 
-- Apply winter-B-on-e02b95e.patch (it is winter-B.patch rebased onto e02b95e: only the four translation lines needed a new place).
+- Apply patches/optional/winter-B-fall-prices-note.patch (source files only; then rebuild).
 - What it does: one note line before "Reservation packages" (shown in winter, spring and summer): "These are the fall 2026 prices and times. New ones come later." Nothing is hidden.
 - Rebuild and check translations as in A.
 - The sentence says "2026": it must change when d24 gets the 2027 details.
 - Strings: 1 new UI sentence (id t8e365ded) x 4 translations, already written in the patch
 - Tests: Run on the patched e02b95e tree: consistency 66, live 20, dated 24, farm-seasons 24, hero 74, messages 173: all pass. Page-clock check: the note shows from 2026-11-20 to 2027-03-01, not on 2026-10-10. No test needs a change
-- Patch: winter-B-on-e02b95e.patch
+- Patch: patches/optional/winter-B-fall-prices-note.patch
 
 **C. Leave it as it is now**
 
@@ -1290,11 +1422,11 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **B. Hide fall content between seasons**
 
-- Same as d01 option A: apply winter-A-on-e02b95e.patch. Fall blocks are hidden while another season is on screen: the 2026 prices stop showing from Nov 9 until the site switches back to fall, about August 12 (checked with a page clock: hidden on 2027-08-11, shown on 2027-08-13). Then the 2026 prices show again, so send the 2027 details (option A) before that date.
+- Same as d01 option A: apply patches/optional/winter-A-hide-fall-booking.patch. Fall blocks are hidden while another season is on screen: the 2026 prices stop showing from Nov 9 until the site switches back to fall, about August 12 (checked with a page clock: hidden on 2027-08-11, shown on 2027-08-13). Then the 2026 prices show again, so send the 2027 details (option A) before that date.
 - Not covered: the pumpkin page (pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`).
 - Strings: 1 new sentence x 4 (see d01)
 - Tests: as d01 A
-- Patch: winter-A-on-e02b95e.patch
+- Patch: patches/optional/winter-A-hide-fall-booking.patch
 
 **C. Keep as is**
 
@@ -1313,12 +1445,12 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **A. Hide them out of season**
 
-- Apply reserve-window-OPTIONAL-ff5965d.patch (optional patch; dry run on 3 October 2026 against af1e572: applies). Files: css/styles.css, index.html, js/hero.js, pages/strawberry-picking.html (then python3 tools/pages.py).
+- Apply patches/optional/reserve-window.patch (optional patch). Files: css/styles.css, index.html, js/hero.js, pages/strawberry-picking.html (then python3 tools/pages.py).
 - What it does: the buttons marked data-book show only inside the booking window the site's own words give: strawberry (spring) buttons from 3 weeks before the season starts (about March 25) to its end. Summer and fall state no window, so their buttons are never hidden by it (the November 9 to 17 gap stays).
 - Phone bar keeps its buttons evenly spaced (data-count).
 - Strings: 0
 - Tests: hero, farm-seasons (run them)
-- Patch: reserve-window-OPTIONAL-ff5965d.patch
+- Patch: patches/optional/reserve-window.patch
 
 **B. Keep them**
 
@@ -1375,6 +1507,151 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - No change.
 - Strings: 0
 - Tests: none
+
+### d60. Closed Sunday, October 4 for rain?
+
+- In plain words: The home page pizza note says the farm will probably be closed on Sunday, October 4 for rain, but the "Open now" badges would still say open that day until a closure is entered.
+- Doc question: Q55
+- Urgency: 2 (wrong or risky information). Checklist says: not listed.
+- Owner fact (no sensible default): yes
+- Default: none. Only she knows. The answer is needed before Sunday morning.
+- Depends on: none.
+- Note: Asked on 3 October 2026, the day before. Checked in a browser on 3 October 2026: on Sunday, October 4 at 11 am the badges say "Open now". After October 4 the question is over (the pizza note hides itself after that day) and the same steps serve any later rain day.
+
+**A. Yes, closed (put it on the site)**
+
+- js/content.js at `closures: [],`: write `closures: ['2026-10-04'],`. The farm, The GreenHouse and Wise Pie then show as closed that day (README row "Close for rain or a holiday").
+- The bar at the top of every page: js/content.js at `notice: '',` and `noticeUntil: '',`: write the notice as { en, es, hi, zh, vi } (English: "Closed Sunday, Oct 4, for rain.") and `noticeUntil: '2026-10-05',`. The bar has no start date, so the date goes in the words. Ask Claude for the four other languages.
+- The pizza note: index.html at `data-t="t58da3033"`: change "Unless the forecast changes a lot, we'll be closed that day for rain." to a plain "We are closed that day for rain." It hides itself after October 4 (its data-until).
+- Bookeo: close the Sunday times there too. The site cannot stop people booking.
+- Strings: 1 id (t58da3033) x 4 translations (the notice words are in js/content.js, not in the translation files)
+- Tests: dated, live (the closed badges); the "Site check" box names a closure date it cannot read
+
+**B. No, we are open**
+
+- No change to js/content.js. If the sentence about rain in the pizza note should go: index.html at `data-t="t58da3033"`. The note hides itself after October 4 anyway.
+- Strings: 0 (1 id x 4 translations if that sentence is changed)
+- Tests: none
+
+**C. Not decided yet**
+
+- No change. She can write the date herself when she knows: README row "Close for rain or a holiday" has the one line. Until then nothing hides the badge.
+- Strings: 0
+- Tests: none
+
+### d66. Stop saying "new this year" from January?
+
+- In plain words: The "New this year" ribbon hides itself after December 31, 2026 (the "New" chip and badge already hide on October 31). Eight other places still call the tomatoes and basil new, and the red dot on the Tomatoes link comes back every fall.
+- Doc question: Q61
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: d48 (u-pick tomatoes this fall: if they are removed this question is gone), d24 (fall 2027 content).
+- Note: Due before 1 January 2027. The eight places: the fall hero line, the "New:" line in the Fall panel list, the add-on note, the pumpkin text, the calendar row, the season list, the FAQ answer and the pumpkin page. The ribbon, the chip and the "New" badge carry a last day, so they need no edit. The red dot is a fall-only rule in css/sections.css.
+
+**A. Stop calling them new from January 1 (words and red dot)**
+
+- Change the words in index.html at `data-t="td6ecd1d8"` (fall hero line, "plus new u-pick ..."), `data-t="t1c989256"` (the "New:" line in the Fall panel list), `data-t="tedce5b9f"` (add-on note), `data-t="tbc119a85"` (pumpkin text), `data-t="t4eb3e326"` (calendar row), `data-t="t247dcbc5"` (season list) and `data-t="t398007b0"` (FAQ answer "Yes, and it's new this year!"), and in pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes` (the rebuild copies it to the generated pumpkin-patch page).
+- The red dot: delete the rule css/sections.css at `html[data-season="fall"] .nav-tomato a::after` (and the class on index.html at `class="nav-tomato"` can stay).
+- The ribbon (index.html at `data-t="tbaeea389"`) hides itself after its last day, index.html at `data-until="2026-12-31"`; the chip (index.html at `data-t="t30661b0e"`) and the "New" badge (index.html at `data-t="tddae9ce2"`) hide themselves after index.html at `data-until="2026-10-31"` (2 places).
+- Strings: 8 ids x 4 translations (7 in index.html, 1 for the pumpkin page)
+- Tests: farm-seasons, consistency, languages, i18n; hero looks for the "New" tomatoes chip (hero at `fall: the "New tomatoes" chip shows`), which hides itself after the last day
+
+**B. Keep saying new (I will say until when)**
+
+- Change the last day in index.html at `data-until="2026-12-31"` (the ribbon) and `data-until="2026-10-31"` (2 places: the chip and the "New" badge) to her date. The eight sentences and the red dot stay as they are.
+- Strings: 0
+- Tests: none
+
+**C. I will decide in December**
+
+- No change now. Everything in A is due before 1 January 2027.
+- Strings: 0
+- Tests: none
+
+### d68. Sunflower badge only works on big screens
+
+- In plain words: The Sunflower Whisperer badge needs 100 snipped sunflowers, but only 5 are drawn, at the far edges of the picture. In a browser at 1440 pixels wide 4 of them are fully in view; at 390 pixels none is.
+- Doc question: Q63
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: d69 and d70 (the same game code, js/hero.js); d34 (the sunflower photos are a separate question).
+- Note: Checked in a browser on 3 October 2026 (summer picture). The game fixes and the game test (tests/games.test.mjs) are already in the tree; the optional patch games-B goes on top of them.
+
+**A. Let the Pick button snip sunflowers too**
+
+- The optional patch games-B.patch (see "Patches on disk"): in summer every fourth press of the "Pick a blueberry" button snips a sunflower (js/hero.js at `pick(free[Math.floor(Math.random() * free.length)]);`), and a snipped sunflower grows back in 3 to 5 seconds instead of 7 to 11 (js/hero.js at `7000 + Math.random() * 4000`). Phones and keyboards can then earn the badge.
+- Strings: 0
+- Tests: hero, touch; games (the patch updates it)
+
+**B. Lower the 100 for sunflowers (I will say the number)**
+
+- js/hero.js at `sunflower: { icon: 'sunflower', at: 100`: her number. The badge text says the number too: js/hero.js at `100 sunflowers snipped!`.
+- Strings: 1 JS string x 4 translations (the English text is the key in lang/src/<code>.json; python3 tools/i18n.py jsstrings first)
+- Tests: hero; games (it counts 99 and 100 for every badge, so it needs the new number)
+
+**C. Draw 2 or 3 sunflowers in the middle**
+
+- Ask Claude: js/hero.js at `sunflower(24, 205, 128, '')` is the first of the five (two on the left edge, three on the right); add two or three in the middle of the picture, away from the berry rows. A drawing change; they must also be tappable on a phone.
+- Strings: 0
+- Tests: hero, touch, visual-check; games
+
+**D. Leave it as it is now: big screens only**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+### d69. "Every tree is lit!" appears too early
+
+- In plain words: In winter each tap lights one of 22 trees (or sparks a fire). At the 12th light the message says "Every tree is lit!" while at least 10 trees are still dark.
+- Doc question: Q64
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: d68 and d70 (the same game code, js/hero.js), d01 (what visitors see in winter).
+- Note: Checked in a browser on 3 October 2026 (winter picture, 22 trees and 2 fires). The messages are by count: at 1 "Ooh, twinkly!", at 3 "You're a natural decorator.", at 6 "The whole farm is glowing! Real trees are at The GreenHouse.", at 12 "Every tree is lit! Bring the family to The GreenHouse.". A fire spark counts like a lit tree, so a count of 22 does not always mean 22 lit trees.
+
+**A. Say it only when all 22 trees are lit**
+
+- Ask Claude: in js/hero.js at `Every tree is lit!` the message list is chosen by the count of taps; make this last message depend on the number of lit trees instead (the 22 trees are the winter picture's trees).
+- Strings: 0
+- Tests: hero (winter part); games
+
+**B. Change the words so they are true at 12**
+
+- Change the English in js/hero.js at `Every tree is lit!` (the whole sentence is "Every tree is lit! Bring the family to {gh}."; keep {gh}, it becomes The GreenHouse). Then python3 tools/i18n.py jsstrings, the four translations in lang/src/<code>.json, python3 tools/i18n.py build.
+- Strings: 1 JS string x 4 translations
+- Tests: hero, i18n, languages; games
+
+**C. Leave it as it is now**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+### d70. Badge pop-up covers a note on small phones
+
+- In plain words: On a very small phone (320 pixels wide) the "Achievement unlocked" badge sits over the "No reservation? Visit The GreenHouse" note for 6 seconds. It has a close button.
+- Doc question: Q65
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: d68 and d69 (the same game code).
+- Note: Checked in a browser on 3 October 2026 at 320 x 568: the badge overlaps the note and the status line under it (for example "Closed today"); it was gone after 6 seconds. The badge for 1,000 picks stays about 11 seconds.
+
+**A. Leave it as it is now**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**B. Move the badge so it never covers the note**
+
+- Ask Claude: css/extras.css at `.ach-stack{position:absolute;left:0;bottom:calc(100% + 14px)` puts the badge just above the picker, and `@media (max-width:47.5em){.ach-stack{bottom:calc(100% + 10px)}` is the phone version. The note is index.html at `data-t="t854933db"`. A layout change for phones only.
+- Strings: 0
+- Tests: hero, touch, visual-check; games (a badge fits a 320 px screen in the longest language)
 
 ## Topic 6. Rules and promises to visitors
 
@@ -1734,6 +2011,40 @@ One spelling and one name everywhere, matching Google and Facebook.
 - Strings: 0
 - Tests: none
 
+### d65. QR signs: stronger codes, one address line
+
+- In plain words: The QR codes are made at a middle strength (a sign still scans if about 15 percent of the code is damaged). A stronger one would take about 25 percent, but each square prints 10 to 15 percent smaller. The directions sign prints the same address twice (English and Spanish).
+- Doc question: Q60
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: d38 (a new web address means new codes), d06, d28 and d29 (which signs exist), d39 (how the address is written on the directions sign).
+- Note: Tested on 3 October 2026 in a scratch copy: with the stronger setting every code still scans back and the print-qr test passes (105 checks). Squares across, now to stronger: Instagram 41 to 41, hashtag 41 to 45, Facebook 37 to 41, booking 41 to 45, pizza 45 to 53, menu 49 to 57, e-mail sign-up 33 to 37, map 49 to 57, directions 49 to 57. The strength is the letter in tools/make_qr.py at `qr = segno.make(url, error='m')`.
+
+**A. Leave the signs as they are now**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**B. Stronger codes only**
+
+- tools/make_qr.py at `qr = segno.make(url, error='m')`: change the letter m to q. Then run python3 tools/make_qr.py: it rebuilds the five sign pages (print/qr-signs.html and the three language sheets in print/) and the code pictures, and scans every code back. Print one sign and scan it with a phone before the signs go up.
+- Strings: 0
+- Tests: print-qr (passes; it asks for level M or better, so Q is accepted)
+
+**C. One address line only**
+
+- The optional patch OPTIONAL-qr-no-duplicate-line-66c8272.patch (see "Patches on disk"): tools/make_qr.py leaves out the Spanish line when it is the same as the English, and the sign test in tests/consistency.test.mjs accepts that. On 05b0b72 one of the two hunks in tools/make_qr.py fails, so ask Claude for a redo. Then run python3 tools/make_qr.py once.
+- Strings: 0
+- Tests: consistency (at `one booking page, one pre-order page and one e-mail signup address` the QR signs are read), print-qr
+
+**D. Both**
+
+- B and C together; run python3 tools/make_qr.py once at the end.
+- Strings: 0
+- Tests: consistency, print-qr
+
 ## Topic 10. What the site says the farm offers
 
 Urgency: wrong or risky information.
@@ -1843,7 +2154,7 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 **A. Yes, I will send the details**
 
-- Add a page or a card for summer programs (ask Claude): a new source pages/summer-programs.html built by tools/pages.py, a link in the menu and the footer, then a redirect from the old /summer/ address (MAPPING-for-owner.txt leaves /summer/ out on purpose; add it to _redirects from OPT-A or to a redirect page from OPT-B).
+- Add a page or a card for summer programs (ask Claude): a new source pages/summer-programs.html built by tools/pages.py, a link in the menu and the footer, then a redirect from the old /summer/ address (the old address table in docs/OPTION_PATCHES.md leaves /summer/ out on purpose; add it to _redirects from redirects-A or to a redirect page from redirects-B).
 - Page text, dates, ages, prices: from her.
 - Strings: about 10 to 20 new ids x 4 translations
 - Tests: public-site (the list of extra pages and the sitemap), consistency (new ages or prices), languages, axe
@@ -1855,6 +2166,63 @@ Features, prices and claims the site states as fact. They came from the farm's o
 - Tests: none
 
 **C. Not sure yet**
+
+- No change until she answers.
+- Strings: 0
+- Tests: none
+
+### d67. Keep two backgrounds that never showed?
+
+- In plain words: Two background lines in the page style are written in a way browsers ignore, so the mint graph paper in The GreenHouse section and the brown road with white dashes under the tractor never showed. The fix is already in the files, so they show.
+- Doc question: Q62
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: none.
+- Note: Before and after pictures at 390 and 1280 pixels wide exist for both (kept in a helper's scratch folder; ask Claude). The fix and the validity test (tests/validity.test.mjs), which finds this kind of mistake, are already in the tree.
+
+**A. Yes, keep them**
+
+- No change: the fix is already in css/sections.css at `.greenhouse{background:linear-gradient(` (the colour comes last in the shorthand) and css/styles.css at `.track-road{position:absolute` and `.track-road{left:26px`. The validity test keeps the mistake from coming back.
+- Strings: 0
+- Tests: none
+
+**B. No, go back to the plain look**
+
+- Ask Claude: take the background out of those two rules (css/sections.css at `.greenhouse{background:linear-gradient(`, and the two `.track-road` rules in css/styles.css). The old wrong lines must not be put back: the validity test would fail on them.
+- Strings: 0
+- Tests: validity, visual-check (new baselines)
+
+**C. I want to see them first**
+
+- No change until she has seen the pictures (ask Claude) or a trial copy.
+- Strings: 0
+- Tests: none
+
+### d73. Make the brand yellow a little paler?
+
+- In plain words: Phones and browsers that darken pages by themselves no longer change the site (it tells them to stay light). One rare case is left, a developer setting on a computer, where dark text on the yellow buttons, tabs and chips turns too pale to read.
+- Doc question: Q68
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: none.
+- Note: The one-line fix is already in (every page head and css/styles.css say "only light"; README.md, section "What's interactive", the paragraph "Light only, on purpose"). The cure for the rare case was described by the helper who tested it as a slightly paler yellow, for example #ffd03d instead of #ffc928; that figure was not measured again for this list. The farm's yellow is used in about a dozen drawings and two style files too.
+
+**A. Leave the yellow as it is now**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**B. Make the yellow slightly paler**
+
+- css/styles.css at `--sun:#ffc928;` (the yellow of buttons, tabs and chips) and the browser colour in index.html at `<meta name="theme-color" content="#ffc928">` (python3 tools/pages.py copies it to the five other pages; 404.html has its own copy). Drawings and the map highlight carry their own #ffc928 (css/features.css, css/extras.css and index.html), so decide whether they change too.
+- Test the new colour with the "auto dark" test, which switches Chromium's forced dark look on and checks every yellow part keeps readable dark text.
+- Strings: 0
+- Tests: auto-dark (the whole point), axe (contrast), visual-check (new baselines), forced-colors
+
+**C. I will explain**
 
 - No change until she answers.
 - Strings: 0
@@ -1945,6 +2313,62 @@ Works today with free outside services. The decisions are about risk, not about 
 - Strings: 0
 - Tests: map (only if the saved-map format changes)
 
+### d62. Is the Drive time privacy note enough?
+
+- In plain words: The note under the Drive time box says the website does not keep the address, but the two free map services "may keep a record of the request". We could not find how long they keep it, and we did not check children's privacy rules or other states' laws.
+- Doc question: Q57
+- Urgency: 2 (wrong or risky information). Checklist says: launch decision D11 covers the routing server (3.13); the wording of the note is not listed.
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: d10 (the same box; the lawyer question, old Q43, is part of d10), d15 (the header names the two hosts), d37 (the note is translated).
+- Note: Old Q43 asks an adviser; this question asks whether she is happy with the wording of the note itself. The same sentence is on the home page and on the First visit page (one translation id). docs/WHAT_THE_SITE_STORES.md lists what is sent.
+
+**A. The note is fine as it is**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**B. Name the two map services in the note**
+
+- Change the sentence in index.html at `data-t="t2ed7116c"` and in pages/first-visit.html at `class="fine drive-priv"` (the rebuild gives both the same id). Name OpenStreetMap's address search and the routing server run by FOSSGIS in Germany (names as in docs/WHAT_THE_SITE_STORES.md, section "2. Which other sites the website contacts").
+- Strings: 1 id (t2ed7116c) x 4 translations
+- Tests: drive MUST be updated: tests/drive.test.mjs at `those services may keep a record of the request` pins the sentence; languages, i18n
+
+**C. I will ask my adviser first**
+
+- No change now. Send the adviser the text of question 43 (docs/QUESTIONS_FOR_THE_FARM.md) and the fact sheet docs/WHAT_THE_SITE_STORES.md. Then A, B, or switch the box off as in d10 option D.
+- Strings: 0
+- Tests: none
+
+### d64. What should the printed home page include?
+
+- In plain words: The home page prints on 28 to 34 sheets (depending on language and paper size). The farm map is left out, and only the season tab and the group tab that are open on screen print.
+- Doc question: Q59
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: d65 (the QR signs are a separate printed set).
+- Note: The print rules are css/extras.css at `/* Printing.` (commit 42fd196: every page prints without buttons, tabs or animations; the First visit page prints on one sheet). Measured in a browser on 3 October 2026 (print layout, English): Letter paper 32 sheets as it is, 32 with all four seasons shown, 34 with all four seasons and all three group tabs; A4 paper 30, 31 and 32. Other languages give 28 to 34 as it is.
+
+**A. Leave printing as it is now**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**B. Print all four seasons**
+
+- Ask Claude: a print-only rule in css/extras.css (inside the block that starts at `/* Printing.`) that shows the three hidden season panels (index.html at `id="panel-summer"`, `id="panel-fall"` and `id="panel-winter"`). The tab buttons do not print, so each panel needs to say which season it is: check whether it starts with its own heading.
+- Strings: 0 if each panel carries its season name; otherwise up to 4 labels x 4 translations
+- Tests: print-qr (the pages on paper), visual-check
+
+**C. Print all four seasons and a plain farm map**
+
+- As B, and the map: css/features.css at `@media print{#farm-map,#comfort{display:none!important}}` hides the interactive map on paper. A plain list of the places is easier to print than the drawing (ask Claude; the places come from js/farm-map-data.js).
+- Strings: 0 to a few labels x 4 translations
+- Tests: print-qr, map
+
 ## Topic 9. Translations
 
 Urgency: nice to have.
@@ -1963,6 +2387,7 @@ Four AI-written translations that no native speaker has read.
 
 - No change now. When a speaker answers, edit the value of each id in lang/src/<code>.json (key = id of the English text; JS strings are keyed by the English text), then python3 tools/i18n.py build and python3 tools/i18n.py missing <code> (0). English never changes.
 - Two optional patches on disk no longer apply (stale: es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch fail on b54427b and, checked 3 October 2026, on af1e572); ask Claude to redo them from the speaker's answer. The other translation patches (zh-C, es-C, vi-C, hi-C) are already merged.
+- The speaker does not have to edit JSON: `python3 tools/review_sheet.py export <code>` makes a spreadsheet (every text in reading order, the English next to the translation), and `import` reads their corrections back, refusing a changed number, price, name or tag and saying why (README, section "Have a native speaker check a language").
 - Send the speaker first: the allergen line (d17), refund and cancel lines (d41, 3% fee), prices, hours and days, "700 degrees" (d18).
 - Strings: 0 English; only the translation values that the speaker changes
 - Tests: i18n, languages; consistency if a number, price or day changes (it compares each translation to the English)
@@ -1970,6 +2395,34 @@ Four AI-written translations that no native speaker has read.
 **B. Keep the wording as is**
 
 - No change. The AI notes stay (README.md, section "Languages", and the top of docs/QUESTIONS_FOR_THE_FARM.es.md).
+- Strings: 0
+- Tests: none
+
+### d71. Friendly or formal in the translations?
+
+- In plain words: The translations speak to the visitor in a friendly way: Spanish "tú", Chinese "你", Vietnamese "bạn" (about 100 sentences each), Hindi the polite "आप". Hindi writes English words in Hindi letters, and Vietnamese uses Southern words.
+- Doc question: Q66
+- Urgency: 3 (nice to have). Checklist says: launch decision D8 (native speakers).
+- Owner fact (no sensible default): no
+- Default: none.
+- Depends on: d37 (a native speaker; if she answers d37 A, the same reader can answer this), d17, d41, d42 (the promise sentences).
+- Note: Counted in lang/src on 3 October 2026 (1,344 sentences per language): the visitor is addressed in about 129 Spanish sentences (tú, tu, puedes ...), 96 Chinese (你; 您 once), 83 Hindi (आप, none with तुम) and 129 Vietnamese (bạn; "quý khách" none). "रिज़र्वेशन" is in 106 Hindi sentences and "प्लेग्राउंड" in 27. A review sheet with the 108 sentences reviewed on 3 October 2026 (the four languages next to the English) is in a helper's scratch folder; ask Claude. The "who can read it for us" question is d37's: it already asks whether a native speaker checks, and a friend or a paid reader could be added to its options.
+
+**A. Keep the friendly tone**
+
+- No change. The AI notes stay (README.md, section "Languages").
+- Strings: 0
+- Tests: none
+
+**B. Make Spanish and Chinese more formal (usted, 您)**
+
+- Every sentence that speaks to the visitor in lang/src/es.json (about 129) and lang/src/zh.json (about 96) is rewritten by a native speaker or checked by one (d37), then python3 tools/i18n.py build and python3 tools/i18n.py missing es (also zh): 0 missing. English never changes.
+- Strings: 0 English; about 129 Spanish and 96 Chinese values
+- Tests: i18n, languages; consistency if a number, price or day changes (it compares each translation to the English)
+
+**C. A reader of each language should decide**
+
+- No change now. Send the reader the review sheet and the question; the answer then becomes A or B for that language (Hindi and Vietnamese too: their choices are in the same files).
 - Strings: 0
 - Tests: none
 

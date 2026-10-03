@@ -199,7 +199,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
   .cta-band{padding:10px 0;border-block:2px solid #000;text-align:left}
   .cta-band .hero-cta{justify-content:flex-start}
   .site-footer{margin-top:12px;padding:8px 0 0;border-top:2px solid #000}
-  .site-footer :is(.grass,nav,.social-links,.lang-links,.brand){display:none!important}
+  .site-footer :is(.grass,nav,.social-links,.lang-links,.brand,.motion-row){display:none!important}
   .footer-inner{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;padding:0}
   .site-footer a[data-signup-link]{display:block}   /* a block inside a link that sits in a paragraph is cut off at the page end by Chrome: the link itself is the block */
   .copyright{padding:6px 0 0;font-size:.85rem}
@@ -446,6 +446,22 @@ html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animatio
 .social-links a{display:inline-flex;align-items:center;gap:.45em;padding:.5em 1em;border:2.5px solid rgba(255,255,255,.6);border-radius:999px;color:#fff;font:700 .95rem/1 var(--display);text-decoration:none;transition:background-color .2s,color .2s,transform .25s cubic-bezier(.3,1.6,.5,1)}
 @media (hover:hover){.social-links a:hover{background:#fff;color:var(--ink);transform:translateY(-2px)}}
 .social-links .ico{width:1.15em;height:1.15em}
+/* "Pause animations" (js/main.js, initMotion): a round button in the top right corner of the hero's picker card (the message
+   wraps around it; the Pick and "Say hi" buttons keep their row) and a text button in the footer, both 44px. Pressed (aria-pressed)
+   = the animations rest; the icon is then the play triangle instead of the pause bars. Neither prints (see the print rules above). */
+.motion-btn[aria-pressed="true"] .i-pause,.motion-btn[aria-pressed="false"] .i-play{display:none}
+.picker .motion-btn{position:absolute;top:6px;right:6px;display:grid;place-items:center;width:44px;height:44px;min-height:0;margin:0;padding:0;border-radius:50%}
+.picker .motion-btn .ico{width:18px;height:18px}
+.picker .motion-btn[aria-pressed="true"]{background:var(--sun)}
+.picker:has(.motion-btn:not([hidden])) #pick-msg::before{content:"";float:right;width:38px;height:40px}
+.motion-row{margin:12px 0 0}
+.motion-btn-text{display:inline-flex;align-items:center;gap:.5em;min-height:44px;padding:.5em 1em;border:2.5px solid rgba(255,255,255,.6);border-radius:999px;background:none;color:#fff;font:700 .95rem/1 var(--display);cursor:pointer}
+@media (hover:hover){.motion-btn-text:hover{background:#fff;color:var(--ink)}}
+.motion-btn-text[aria-pressed="true"]{background:var(--sun);border-color:var(--sun);color:var(--ink)}
+.motion-btn-text .ico{width:1.05em;height:1.05em}
+.motion-btn[hidden]{display:none}
+html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}   /* "Pause animations": the layers stop sliding at different speeds while scrolling (js/main.js, initScroll) */
+@media (forced-colors:active){.motion-btn[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}}
 .tag-us{display:flex;gap:12px;align-items:flex-start;max-width:40em;margin:20px auto 0;padding:.85em 1.1em;background:#fff;border:2.5px dashed var(--ink);border-radius:18px;font-weight:600;line-height:1.45}
 .flowers-copy .tag-us{margin:22px 0 0}
 .tag-us .ico{flex:none;width:1.5em;height:1.5em;margin-top:.1em;color:var(--red)}

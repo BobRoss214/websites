@@ -1,0 +1,76 @@
+Option: phone-number-shown
+Name: Show the main phone number in the footer
+Does: Adds 704-628-6232 (a tel: link) to the footer contact block of every page and "telephone" to the home page structured data. The Questions? fact and the contact cards are not changed. The consistency test already allows one main number besides the day-of number, so no test changes.
+Answers: d04 A (main phone number)
+Conflicts: none
+Requires: none
+Host: any
+Order: 60
+After: python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each)
+Strings: 1 changed footer text (new id t286f8cf3), translated (the same text in every language) inside this patch
+
+diff --git a/index.html b/index.html
+index cc2e77d..1e3c995 100644
+--- a/index.html
++++ b/index.html
+@@ -49,6 +49,7 @@
+     "description": "Family-owned, USDA Certified Organic u-pick farm offering strawberries, blueberries, u-cut flowers and pumpkins, plus Wise Pie wood-fired pizza and The GreenHouse. Farm reservations required.",
+     "url": "https://www.wiseacresorganic.com/",
+     "email": "cathy@wiseacresorganic.com",
++    "telephone": "+1-704-628-6232",
+     "image": "https://www.wiseacresorganic.com/assets/og-share.png",
+     "hasMap": "https://www.google.com/maps/search/?api=1&query=4701+Hartis+Rd+Indian+Trail+NC+28079",
+     "foundingDate": "2013-03",
+@@ -2172,9 +2173,10 @@
+           <li><a data-t="t9cc96e01" href="wise-pie.html">Wise Pie pizza</a></li>
+         </ul>
+       </nav>
+-      <address data-t="t37c5399a" class="footer-contact">
++      <address data-t="t286f8cf3" class="footer-contact">
+         4701 Hartis Road<br>Indian Trail, NC 28079<br>
+-        <a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a>
++        <a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a><br>
++        <a href="tel:+17046286232">704-628-6232</a>
+       </address>
+     </div>
+     <p data-t="tc0fb43cb" class="wrap copyright" data-year>2026 &copy; Wise Acres Organic Farm &middot; USDA Certified Organic &middot; Indian Trail, NC</p>
+diff --git a/lang/src/es.json b/lang/src/es.json
+index 9351508..ae4d145 100644
+--- a/lang/src/es.json
++++ b/lang/src/es.json
+@@ -1356,3 +1356,4 @@
+   "t37a0c221": "Pausar animaciones",
+-  "t58a21ae5": "<svg/> Pausar animaciones"
++  "t58a21ae5": "<svg/> Pausar animaciones",
++  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>"
+  }
+diff --git a/lang/src/hi.json b/lang/src/hi.json
+index 82b8076..75bf336 100644
+--- a/lang/src/hi.json
++++ b/lang/src/hi.json
+@@ -1356,3 +1356,4 @@
+   "t37a0c221": "एनिमेशन रोकें",
+-  "t58a21ae5": "<svg/> एनिमेशन रोकें"
++  "t58a21ae5": "<svg/> एनिमेशन रोकें",
++  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>"
+  }
+diff --git a/lang/src/vi.json b/lang/src/vi.json
+index ca3976c..ba60407 100644
+--- a/lang/src/vi.json
++++ b/lang/src/vi.json
+@@ -1356,3 +1356,4 @@
+   "t37a0c221": "Tạm dừng hoạt ảnh",
+-  "t58a21ae5": "<svg/> Tạm dừng hoạt ảnh"
++  "t58a21ae5": "<svg/> Tạm dừng hoạt ảnh",
++  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>"
+  }
+diff --git a/lang/src/zh.json b/lang/src/zh.json
+index 65c1c0d..95f872d 100644
+--- a/lang/src/zh.json
++++ b/lang/src/zh.json
+@@ -1356,3 +1356,4 @@
+   "t37a0c221": "暂停动画",
+-  "t58a21ae5": "<svg/> 暂停动画"
++  "t58a21ae5": "<svg/> 暂停动画",
++  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>"
+  }

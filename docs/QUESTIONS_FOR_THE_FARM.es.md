@@ -190,7 +190,7 @@ Respuesta:
 
 ### Pregunta 17
 
-**¿Son correctos estos horarios: visitas a la granja de jueves a domingo en otoño; The GreenHouse de viernes a domingo, de 10 a. m. a 8 p. m.; Wise Pie en The GreenHouse de viernes a domingo, de 4 a 8 p. m.; pizza en la granja de 10 a. m. a 4 p. m.?**
+**¿Son correctos estos horarios? Visitas a la granja: de jueves a domingo en otoño. The GreenHouse: de viernes a domingo, de 10 a. m. a 8 p. m. Wise Pie en The GreenHouse: de viernes a domingo, de 4 a 8 p. m. Pizza en la granja: de 10 a. m. a 4 p. m.**
 
 Id en el panel: d51, d09
 
@@ -631,5 +631,163 @@ Respuesta:
 Id en el panel: d57
 
 Por qué importa: El sitio dice "Por orden de llegada para comer allí o para llevar", pero no dice si hay mesas, sombra o calefacción. Una familia con niños pequeños querrá saberlo antes de venir.
+
+Respuesta:
+
+
+## 8. Más preguntas nuevas (agregadas el 3 de octubre de 2026)
+
+Estas preguntas surgieron después de las listas anteriores. Van en orden: primero las más importantes. Las tres primeras son sobre información que puede ser errónea o arriesgada (un cierre por lluvia el 4 de octubre, de quién son las fotos, una nota de privacidad); las demás pueden esperar al lanzamiento.
+
+### Pregunta 55
+
+**¿La granja cerrará el domingo 4 de octubre por la lluvia?**
+
+Id en el panel: d60
+
+Por qué importa: La nota de pizza de la página principal dice "a menos que el pronóstico cambie mucho, ese día estaremos cerrados por lluvia", pero las insignias "Abierto ahora" seguirían mostrando el domingo como abierto. Una familia que confíe en la insignia podría ir hasta allá para nada. (Bookeo también sigue aceptando reservas hasta que se cierren esos horarios allí.)
+
+Respuesta:
+
+
+### Pregunta 56
+
+**¿Quién tomó las 32 fotos de la granja que aparecen en el sitio, y se pueden usar todas? ¿Hay alguien a quien deba agradecerse o nombrarse (un fotógrafo, un amigo, Wise Pie, Foster Village)?**
+
+Id en el panel: d61
+
+Por qué importa: Ninguna de las fotos tiene anotado quién la tomó, de dónde viene ni si hay permiso, y la lista de fotos del sitio no tiene un lugar para el crédito. Las preguntas 38 a 40 piden permiso por las caras, las palabras escritas en las fotos y las fotos con fechas; esta pregunta es sobre de quién son las fotos. Cuatro fotos tienen palabras impresas, y las dos fotos de Wise Pie muestran el menú y la comida de otro negocio.
+
+Respuesta:
+
+
+### Pregunta 57
+
+**¿Están de acuerdo con la nota que aparece bajo la casilla del tiempo en auto? Dice: "Al presionar el botón, tu dirección se envía a los servicios gratuitos de OpenStreetMap. Ellos calculan las millas y los minutos. Este sitio web no guarda tu dirección, pero esos servicios pueden guardar un registro de la solicitud."**
+
+Id en el panel: d62
+
+Por qué importa: "Pueden guardar un registro" es nuestra suposición prudente: no encontramos cuánto tiempo guardan una solicitud los dos servicios gratuitos. No somos abogados y esto no es asesoría legal (la pregunta 43 es para un asesor). No revisamos las reglas de privacidad de menores ni las leyes de otros estados.
+
+Respuesta:
+
+
+### Pregunta 58
+
+**Si se conecta el formulario de correo electrónico (pregunta 26), ¿están de acuerdo con que la respuesta de Mailchimp funcione como un programa pequeño dentro de su página?**
+
+Id en el panel: d63
+
+Por qué importa: Cuando un visitante presiona "Únete a la lista de correo", la respuesta de Mailchimp es un pequeño script que la página ejecuta, así que Mailchimp es la única dirección externa que puede ejecutar código en el sitio. Eso ocurre solo después de presionar el botón y solo cuando el formulario está conectado; hoy el botón simplemente abre la página de registro de Mailchimp.
+
+Respuesta:
+
+
+### Pregunta 59
+
+**Si alguien imprime la página principal, ¿qué debería salir en el papel?**
+
+Id en el panel: d64
+
+Por qué importa: La página principal se imprime en 28 a 34 hojas, según el idioma y el papel (Carta o A4). El mapa de la granja se deja fuera, y solo se imprimen la pestaña de temporada y la de grupo que están abiertas en la pantalla: la hoja muestra una temporada de cuatro y un grupo de tres. En una prueba (inglés), mostrar las cuatro temporadas sumó como máximo una hoja, y mostrar además todas las pestañas de grupo sumó una o dos más.
+
+Respuesta:
+
+
+### Pregunta 60
+
+**¿Quieren códigos QR más resistentes en los letreros impresos, y que la dirección se imprima una sola vez, no dos, en el letrero de cómo llegar?**
+
+Id en el panel: d65
+
+Por qué importa: Los códigos están hechos para que un letrero mojado, roto o desteñido siga escaneándose si se daña hasta cerca del 15 % del código. Un ajuste más fuerte permite cerca del 25 %, pero cada cuadrito se imprime entre un 10 y un 15 % más pequeño en el mismo letrero (los códigos más grandes pasan de 49 a 57 cuadritos por lado). El letrero de cómo llegar imprime la dirección dos veces, una bajo el inglés y otra bajo el español, con las mismas palabras.
+
+Respuesta:
+
+
+### Pregunta 61
+
+**Después del 31 de diciembre de 2026, ¿el sitio debe dejar de llamar "novedad" a los tomates y la albahaca para recoger?**
+
+Id en el panel: d66
+
+Por qué importa: La cinta "Novedad de este año" se oculta sola después del 31 de diciembre de 2026 (la etiqueta "Novedad: tomates y albahaca para recoger" ya se oculta el 31 de octubre), pero otros ocho lugares siguen llamando novedad a los tomates y la albahaca, por ejemplo la respuesta de las preguntas frecuentes ("¡Sí, y es novedad este año!"). El puntito rojo del enlace "Tomates" del menú también vuelve cada otoño, no solo este.
+
+Respuesta:
+
+
+### Pregunta 62
+
+**¿Quieren conservar dos fondos que nunca se vieron: el papel cuadriculado verde menta detrás de la sección de The GreenHouse y el camino café con rayas blancas bajo el tractor en los pasos de la visita?**
+
+Id en el panel: d67
+
+Por qué importa: Una revisión del estilo de la página encontró dos líneas que los navegadores ignoran, así que esos dos fondos nunca se dibujaron: la sección se ve lisa y el camino es solo un contorno vacío. La corrección ya está en los archivos del sitio, así que ahora se ven por primera vez, y cambia el aspecto de dos partes de la página principal.
+
+Respuesta:
+
+
+### Pregunta 63
+
+**¿Está bien que la insignia "Susurrador de girasoles" (100 girasoles cortados en la imagen de verano) solo se pueda ganar en una pantalla ancha de computadora?**
+
+Id en el panel: d68
+
+Por qué importa: Solo hay 5 girasoles dibujados, en los bordes lejanos de la imagen. En una pantalla de 1440 píxeles de ancho se ven 4 de los 5; en un teléfono de 390 píxeles no se ve ninguno, así que quien use un teléfono nunca puede ganar esta insignia.
+
+Respuesta:
+
+
+### Pregunta 64
+
+**En invierno el mensaje "¡Todos los árboles están encendidos!" aparece en la luz número 12, pero la imagen tiene 22 árboles. ¿Debe cambiar?**
+
+Id en el panel: d69
+
+Por qué importa: Al tocar se enciende un árbol (o una fogata) y el mensaje cambia según el conteo. En el 12 dice que todos los árboles están encendidos cuando todavía hay al menos 10 apagados, y un niño puede pensar que el juego ya terminó.
+
+Respuesta:
+
+
+### Pregunta 65
+
+**En teléfonos muy pequeños, ¿debe la ventana de la insignia dejar de tapar la nota "¿Sin reserva? Visita The GreenHouse"?**
+
+Id en el panel: d70
+
+Por qué importa: En un teléfono de 320 píxeles de ancho, la insignia "¡Logro desbloqueado!" queda encima de esa nota, bajo la imagen, durante 6 segundos, hasta que se va sola o el visitante toca su x. No se pierde nada; solo se ve desordenado.
+
+Respuesta:
+
+
+### Pregunta 66
+
+**¿Cómo debe hablarles a los visitantes el texto en español, chino, hindi y vietnamita: de forma cercana o formal?**
+
+Id en el panel: d71
+
+Por qué importa: Hoy el español dice "tú", el chino "你" y el vietnamita "bạn" (cada uno en unas 100 oraciones), y el hindi usa el respetuoso "आप". El hindi también escribe palabras en inglés con letras hindi (por ejemplo "रिज़र्वेशन" por "reservation", en 106 oraciones) y el vietnamita usa palabras del sur. Las cuatro traducciones las escribió una IA, así que no sabemos qué prefiere quien las lea en su idioma. (La pregunta d37 del panel pregunta si una persona nativa debe revisarlas; esta es sobre el tono.)
+
+Respuesta:
+
+
+### Pregunta 67
+
+**¿Quieren un formulario en su propia computadora que cambie los ajustes del sitio por ustedes, y una tabla de datos para escribir cada precio una sola vez?**
+
+Id en el panel: d72
+
+Por qué importa: Hoy, cerrar por lluvia o cambiar un horario significa editar archivos de texto a mano, y una coma olvidada puede apagar todos los ajustes; un precio está escrito en unos nueve lugares y en cuatro traducciones. Una propuesta escrita (la propuesta de la página de dueños, en la carpeta docs, aún sin construir) describe un formulario (2 a 3 días de trabajo; un día solo para el aviso y los días cerrados) y una tabla de datos (unos 3 días).
+
+Respuesta:
+
+
+### Pregunta 68
+
+**¿Debe el amarillo de la marca ser un poco más pálido, para que se lea bien si una computadora obliga a un aspecto oscuro?**
+
+Id en el panel: d73
+
+Por qué importa: Los teléfonos y navegadores que oscurecen las páginas por su cuenta ya no cambian el sitio, porque ahora se les pide quedarse claro. Queda un caso, un ajuste de programador en una computadora, en el que el texto oscuro sobre los botones, pestañas y etiquetas amarillos se vuelve demasiado pálido para leerse; un amarillo un poco más pálido lo arreglaría, pero cambia el color de la granja. Muy pocos visitantes, si alguno, lo verían alguna vez.
 
 Respuesta:

@@ -983,7 +983,7 @@
   }
 
   function rain(kind) {
-    if (reduceMotion) return;
+    if (reduceMotion || doc.documentElement.getAttribute('data-calm') === 'all') return;   // "Pause animations" pressed (js/main.js, initMotion): the badge shows, nothing rains
     const ids = RAIN[kind], n = kind === 'time' ? 34 : 18;
     const box = doc.createElement('div');
     box.className = 'ach-rain ach-rain-' + kind;

@@ -1,5 +1,5 @@
 /* The folder to upload, made by tools/make_deploy_folder.py (needs python3 and beautifulsoup4), in a temporary copy of the site:
- *   - only what visitors need: no docs/, tests/, tools/, pages/, README.md, .gitignore, lang/src/ or translator lists; _headers and 404.html are in
+ *   - only what visitors need: no docs/, tests/, tools/, pages/, review/ (sheets for a native speaker), README.md, .gitignore, lang/src/ or translator lists; _headers and 404.html are in
  *   - FILES.txt lists every file with its size and sha256, and building twice gives the same folder (same fingerprint)
  *   - every file that a page, style, code file, manifest or the sitemap points to is in the folder; file count and size are sane
  *   - served by a plain web server (no special rules), every page in all five languages loads with no error and no missing file
@@ -21,6 +21,8 @@ if (py(ROOT, '-c', 'import bs4').status !== 0) skip(`${PY} with beautifulsoup4 i
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-deploy-'));
 const site = path.join(tmp, 'site');
 fs.cpSync(ROOT, site, { recursive: true, filter: (src) => !/(^|[\\/])(\.git|node_modules|deploy|\.visual|__pycache__)([\\/]|$)/.test(path.relative(ROOT, src)) });   // relative: the site folder itself may sit inside a folder with one of these names
+fs.mkdirSync(path.join(site, 'review'), { recursive: true });   // sheets made by tools/review_sheet.py can be lying in the folder: they are never part of the upload
+fs.writeFileSync(path.join(site, 'review', 'es.csv'), 'id,where\r\n');
 const make = (...args) => { const r = py(site, 'tools/make_deploy_folder.py', ...args); return { code: r.status, out: (r.stdout || '') + (r.stderr || '') }; };
 const files = (dir) => { const out = []; (function walk(d) { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, f.name); if (f.isDirectory()) walk(p); else out.push(path.relative(dir, p).split(path.sep).join('/')); } })(dir); return out.sort(); };
 const sha = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
@@ -37,8 +39,9 @@ try {
   const list = files(out1), top = new Set(list.map((f) => f.split('/')[0]));
 
   // ---- only what visitors need
-  const leftOut = ['docs', 'tests', 'tools', 'pages', 'README.md', '.gitignore', '.git', 'deploy'].filter((n) => top.has(n));
-  ok('no docs/, tests/, tools/, pages/, README.md, .gitignore in the folder', leftOut.length === 0, leftOut.join(', '));
+  const leftOut = ['docs', 'tests', 'tools', 'pages', 'review', 'README.md', '.gitignore', '.git', 'deploy'].filter((n) => top.has(n));
+  ok('no docs/, tests/, tools/, pages/, review/, README.md, .gitignore in the folder', leftOut.length === 0, leftOut.join(', '));
+  ok('a review/ folder of sheets in the site folder is left out, and the tool says so', !list.some((f) => f.startsWith('review/')) && /review\//.test(r1.out), last(r1.out));
   const langExtra = list.filter((f) => f.startsWith('lang/src/') || /^lang\/[^/]+\.json$/.test(f));
   ok('no lang/src/ and no translator lists (lang/*.json)', langExtra.length === 0, langExtra.join(', '));
   const codes = fs.readdirSync(path.join(site, 'lang', 'src')).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5));

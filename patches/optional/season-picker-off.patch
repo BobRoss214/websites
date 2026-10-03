@@ -1,0 +1,25 @@
+Option: season-picker-off
+Name: seasonPicker: false (no "See the farm in..." preview buttons for visitors)
+Does: Sets seasonPicker to false in js/content.js, so every visitor sees the season the calendar says and nothing to click between seasons. The three tests that click that switcher (dated, analytics, i18n-early) turn it on for themselves already, so nothing else changes.
+Answers: launch decision D6 (checklist 3.8; the playbook mentions it in the list of launch decisions)
+Profile: filled (only tried in the settings-filled run of the matrix, not multiplied into every combination)
+Conflicts: none
+Requires: none
+Host: any
+Order: 5
+After: nothing to rebuild; upload again
+Strings: none
+
+diff --git a/js/content.js b/js/content.js
+index 411b6fd..1e8958b 100644
+--- a/js/content.js
++++ b/js/content.js
+@@ -194,7 +194,7 @@
+  * when the site should simply follow the calendar.
+  */
+ window.WISE_ACRES = {
+-  seasonPicker: true,
++  seasonPicker: false,
+   reviews: [],
+   analytics: { provider: 'none' },
+   notice: '',

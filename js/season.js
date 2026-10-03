@@ -116,6 +116,7 @@
     for (var n = el; n && n !== document.documentElement; n = n.parentNode) if (n.nextSibling) return true;
     return document.readyState !== 'loading';
   };
+  var calmSystem = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   W.onParse(function (els) {
     var id = W.seasons.active, liveIds = live().map(function (s) { return s.id; }), isLive = liveIds.indexOf(id) >= 0;
     for (var i = 0; i < els.length; i++) {
@@ -133,6 +134,7 @@
       var out = el.getAttribute('data-out-of-season');   // hidden while one of those seasons is really happening ("Tell me when it opens")
       if (out) el.toggleAttribute('hidden', out.split(/\s+/).some(function (s) { return liveIds.indexOf(s) >= 0; }));
       if (el.id === 'season-switch' && W.seasonPicker !== false) el.hidden = false;
+      if (el.hasAttribute('data-motion') && !calmSystem) el.hidden = false;   // "Pause animations" (js/main.js); not when the system already asks for less motion
     }
   });
   if (window.MutationObserver && document.readyState === 'loading') {
@@ -147,6 +149,7 @@
     window.addEventListener('load', function () {
       var sw = document.getElementById('season-switch'); if (sw && !W.hero) sw.hidden = true;
       var pk = document.getElementById('picker'); if (pk && !W.hero) pk.hidden = true;   // the picking game too
+      if (!W.motion) { var mb = document.querySelectorAll('[data-motion]'); for (var i = 0; i < mb.length; i++) mb[i].hidden = true; }   // "Pause animations": js/main.js did not run
       // js/main.js takes .no-js off as its first step. Still there after the page has loaded: the file is missing, so the menu button and the toys do nothing (css/features.css, "js-failed").
       if (document.documentElement.classList.contains('no-js')) document.documentElement.classList.add('js-failed');
     });

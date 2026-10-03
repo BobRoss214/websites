@@ -1,0 +1,211 @@
+Option: winter-A
+Name: Hide fall booking and prices out of season
+Does: When the season on screen is not fall, the home page hides the Visit area Reserve now button, the packages, included list, add-ons, the See prices and See packages buttons, the At the farm shop block and the Fall paragraph, and shows one line instead ("Fall at the farm usually starts again in mid-September...") with the Tell me when it opens signup button. In fall nothing changes.
+Answers: d01 A (winter), d24 B (fall 2027 prices)
+Group: winter
+Conflicts: winter-B
+Requires: none
+Host: any
+Order: 10
+After: python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each)
+Strings: 1 new sentence (id t48ba72e7), already translated into es, hi, zh, vi inside this patch
+
+diff --git a/css/sections.css b/css/sections.css
+index 875a118..99bfdb9 100644
+--- a/css/sections.css
++++ b/css/sections.css
+@@ -138,6 +138,8 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
+ .notice{margin:16px 0 0;padding:.75em 1em;background:#fff;border:2.5px solid var(--ink);border-radius:16px;font-weight:700}
+ .notice-soft{display:flex;gap:10px;align-items:flex-start;background:transparent;border-style:dashed;font-weight:600;color:var(--ink-soft)}
+ .notice-soft .ico{flex:none;margin-top:.15em;color:var(--red)}
++.notice-offseason{flex-wrap:wrap;align-items:center}   /* the off-season line: words, then the "Tell me when it opens" button */
++.notice-offseason span{flex:1 1 15em}
+ 
+ /* ---------- seasons: four tabs, photo scenes, calendar ---------- */
+ .season-tabs{grid-template-columns:repeat(4,1fr)}
+diff --git a/docs/QUESTIONS_FOR_THE_FARM.md b/docs/QUESTIONS_FOR_THE_FARM.md
+index 8abb7d7..a2daf93 100644
+--- a/docs/QUESTIONS_FOR_THE_FARM.md
++++ b/docs/QUESTIONS_FOR_THE_FARM.md
+@@ -940,7 +940,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
+ **Question 26: Do you want an email sign-up form with interest choices (strawberries, pumpkins, pizza and so on) on the site, and can you send us the Mailchimp form code?**
+ 
+ - **If Yes:** put the form address in `signup.action` (`js/content.js` at `signup: { action:` (2 places: the instructions, then the setting)) and the interest names from the embed code (see README "Email signup with interests"). After that, sign up once with a real email.
+-- **If No:** leave `signup.action` empty; the plain "Join the email list" button (`index.html` at `eepurl.com/hZehgr` (7 places)) stays. Delete the README row "Email signup" only when it is set up.
++- **If No:** leave `signup.action` empty; the plain "Join the email list" button (`index.html` at `eepurl.com/hZehgr` (8 places)) stays. Delete the README row "Email signup" only when it is set up.
+ 
+ **Question 27: Can you send us your Google review link (in your Google Business Profile, choose "Ask for reviews")?**
+ 
+@@ -1003,7 +1003,7 @@ Everything in this section was checked against the code on 3 October 2026.
+ 
+ **Question 37: What should visitors see from January to April?**
+ 
+-- **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html` at `id="options"`), the packages (`index.html` at `class="packages"`) and the schedule (`index.html` at `id="schedule"`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js` at `function applyOnly(` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html` at `class="btn btn-sm btn-red"`), "Fall hours:" (`index.html` at `data-t="t17246313"`), the Shop sentence and note (`index.html` at `data-t="t5e315551"` and `data-t="t9cc44765"`) and "Fall 2026 special days" (`index.html` at `data-t="t7f10df40"`).
++- **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html` at `id="options"`), the packages (`index.html` at `class="packages"`) and the schedule (`index.html` at `id="schedule"`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js` at `function applyOnly(` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html` at `data-t="t90bac313" class="btn btn-sm btn-red"`), "Fall hours:" (`index.html` at `data-t="t17246313"`), the Shop sentence and note (`index.html` at `data-t="t5e315551"` and `data-t="t9cc44765"`) and "Fall 2026 special days" (`index.html` at `data-t="t7f10df40"`).
+ - **The GreenHouse has different winter hours, or is closed:** change `hours` in `js/content.js` (the `greenhouse` and `pizza` hours; they are one Friday-Sunday window all year, so separate winter hours need a small code change: ask Claude, or change them by hand when winter starts and again when it ends) and the text (README, "Change a fact everywhere", rows "The GreenHouse hours" and "Wise Pie hours"). The "Closed today. Opens Friday at 10 am" line comes from the `greenhouse` hours in `js/content.js`. For single closed days use `closures` (README, "Day-to-day changes"). Question 17 lists the other hours lines.
+ - **Trees end earlier or later than early December:** the wording "to early December" is in `index.html` at `data-t="t493369ae"`, `data-t="t28844e2e"`, `data-t="tf0d0193a"`, `data-t="t0e76cb0a"`, `data-t="t4503c39b"`, `data-t="t53cf41e8"`, `data-t="t8f55ff30"` and `data-t="t5ecd6fe5"` and the end date is in `js/season.js` at `{ id: 'winter'` (8 December). After it the site keeps the winter look until about 10 February (the closest-season rule, `js/season.js` at `// The season in progress.`) and shows "Christmas trees are here." (`index.html` at `data-t="t4503c39b"`, marked `data-only="winter"`). If trees are over by then, ask Claude to change the rule or the wording.
+ - **If the answer is "leave it":** no change; the README row "Winter and early-spring wording" stays.
+diff --git a/index.html b/index.html
+index cc2e77d..a6a55e4 100644
+--- a/index.html
++++ b/index.html
+@@ -402,7 +402,7 @@
+               <span class="step-num" aria-hidden="true"><span class="n">1</span><svg class="ico"><use href="#i-check"/></svg></span>
+               <h3 data-t="t93856060">Reserve your time</h3>
+               <p data-t="t117bfbcb">The farm is always reservation-only. Book online and pick a time. When new reservations open, many people use the site at once, so it can show a temporary error. That does not mean we are full. Please try again after the first busy period.</p>
+-              <a data-t="t90bac313" class="btn btn-sm btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve now <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
++              <a data-t="t90bac313" class="btn btn-sm btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve now <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+             </li>
+             <li class="step reveal">
+               <span class="step-num" aria-hidden="true"><span class="n">2</span><svg class="ico"><use href="#i-check"/></svg></span>
+@@ -421,14 +421,20 @@
+           </ol>
+         </div>
+ 
++        <div class="notice notice-soft notice-offseason reveal" data-only="winter spring summer" hidden>
++          <svg class="ico" aria-hidden="true"><use href="#i-info"/></svg>
++          <span data-t="t48ba72e7">Fall at the farm usually starts again in mid-September. Join our email list to hear when reservations open.</span>
++          <a data-t="t729ff1bc" class="btn btn-sm btn-red" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Tell me when it opens</a>
++        </div>
++
+         <!-- ---------- Reservation packages (Fall 2026) ---------- -->
+-        <header class="section-head reveal sub-head" id="options">
++        <header class="section-head reveal sub-head" id="options" data-only="fall">
+           <p data-t="t14925fb1" class="hand eyebrow">Fall 2026 reservations</p>
+           <h3 data-t="t0b95e8c2" class="h-lg">Choose your package</h3>
+           <p data-t="t9c63bc47" class="lead">Book with or without Wise Pie pizza. Both include the same farm fun.</p>
+         </header>
+ 
+-        <div class="packages">
++        <div class="packages" data-only="fall">
+           <article class="package reveal">
+             <span data-t="ta820ac6b" class="package-flag">Includes pizza</span>
+             <svg class="package-art" aria-hidden="true" viewBox="0 0 84 92"><use href="#pizza-slice"/></svg>
+@@ -454,7 +460,7 @@
+           </article>
+         </div>
+ 
+-        <div class="included reveal">
++        <div class="included reveal" data-only="fall">
+           <h4 data-t="t6933d769">Every reservation includes</h4>
+           <ul class="ticks ticks-cols">
+             <li data-t="t9812b413">Shaded picnic patch</li>
+@@ -465,7 +471,7 @@
+           </ul>
+         </div>
+ 
+-        <div class="addons reveal">
++        <div class="addons reveal" data-only="fall">
+           <h4 data-t="t6d120d7c">Optional add-ons</h4>
+           <ul class="addon-list">
+             <li>
+@@ -823,7 +829,7 @@
+               <ul data-ta-aria-label="td18c4de1" class="photo-strip season-pics" aria-label="Photos from the farm"><li><figure><img data-ta-alt="t33b7866d" data-zoom src="assets/photos/mums-and-red-shed.webp" alt="Rows of pink, orange and yellow mums in pots beside a little red shed" width="750" height="563" loading="lazy" decoding="async"><figcaption data-t="tb24561f2">Fall mums</figcaption></figure></li><li><figure><img data-ta-alt="tafe393d2" data-zoom src="assets/photos/mums-field-with-red-shed-and-palm.webp" alt="A field of potted mums in red, pink and white, with a small red shed and a large-leaved tropical plant behind" width="206" height="206" loading="lazy" decoding="async"><figcaption data-t="te3b0d15f">Field of mums</figcaption></figure></li><li><figure><img data-ta-alt="t1de31035" data-zoom src="assets/photos/goat-with-pumpkins.webp" alt="A baby goat standing in the grass behind four small pumpkins" width="500" height="553" loading="lazy" decoding="async"><figcaption data-t="t4fda8924">Goat meets pumpkins</figcaption></figure></li></ul>
+               <div class="card-actions">
+                 <a data-t="t0c2b8b1c" class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve a fall visit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+-                <a data-t="tb349c1e7" class="btn btn-ghost" href="#options">See prices</a>
++                <a data-t="tb349c1e7" class="btn btn-ghost" data-only="fall" href="#options">See prices</a>
+               </div>
+             </div>
+           </div>
+@@ -1138,7 +1144,7 @@
+             <p data-t="t16a7a4ce">Reservations with pizza open every <strong>Tuesday at 5:00 PM</strong> for the upcoming weekend.</p>
+             <div class="card-actions">
+               <a data-t="td5732118" class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve with pizza <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+-              <a data-t="t4237a680" class="btn btn-ghost" href="#options">See packages</a>
++              <a data-t="t4237a680" class="btn btn-ghost" data-only="fall" href="#options">See packages</a>
+             </div>
+           </article>
+           <article class="way-card way-card-alt reveal">
+@@ -1349,7 +1355,7 @@
+         <ul class="shop-jump reveal">
+           <li><a data-t="td8913263" href="#shop-pumpkins">Pumpkins</a></li>
+           <li><a data-t="t5b28566c" href="#shop-upick">U-pick &amp; u-cut</a></li>
+-          <li><a data-t="t7b7034d4" href="#shop-farm">At the farm</a></li>
++          <li data-only="fall"><a data-t="t7b7034d4" href="#shop-farm">At the farm</a></li>
+           <li><a data-t="t11999abc" href="#shop-greenhouse">At The GreenHouse</a></li>
+         </ul>
+         <p class="notice notice-soft shop-note reveal"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><span data-t="teeb109de">We&rsquo;re adding every product and price to this page. Anything marked &ldquo;Prices coming soon&rdquo; is on the way. Questions? Email <a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a>.</span></p>
+@@ -1400,7 +1406,7 @@
+           </div>
+         </div>
+ 
+-        <div class="shop-block two-col reveal" id="shop-farm">
++        <div class="shop-block two-col reveal" id="shop-farm" data-only="fall">
+           <div>
+             <header class="col-head">
+               <p data-t="t7b7034d4" class="hand eyebrow">At the farm</p>
+@@ -1923,7 +1929,7 @@
+           <details name="faq">
+             <summary data-t="t69109cd4">When do reservations open?</summary>
+             <div class="answer">
+-              <p data-t="te6cbae6c"><strong>Fall:</strong> reservations without pizza open a month or more at a time. Reservations with pizza open every Tuesday at 5:00 PM for the upcoming weekend. See the <a href="#schedule">current fall schedule</a>.</p>
++              <p data-t="te6cbae6c" data-only="fall"><strong>Fall:</strong> reservations without pizza open a month or more at a time. Reservations with pizza open every Tuesday at 5:00 PM for the upcoming weekend. See the <a href="#schedule">current fall schedule</a>.</p>
+               <p data-t="t3f9a8f85">Often, when reservations first open, so many people use the site at once that it stops working well and shows an error message. That does <strong>not</strong> mean reservations are full. Please check back after the first busy period.</p>
+               <p data-t="t0510af92"><strong>Spring:</strong> reservations open when we start to see fruit ripen, usually a few weeks before the season starts. Strawberry season is our busiest time, and reservations fill quickly. The amount of fruit rises to a peak and then falls. Peak picking is usually in late April through early May. At the start of the season we open only a small number of reservations. Then we usually open more dates each week, while we watch the field conditions and the weather.</p>
+               <p data-t="t60dfbf11">In other seasons we can usually have more visitors. But parking limits, county permits, staffing and the weather still affect how many spots are open.</p>
+diff --git a/pages/first-visit.html b/pages/first-visit.html
+index 518e03a..368d982 100644
+--- a/pages/first-visit.html
++++ b/pages/first-visit.html
+@@ -199,7 +199,7 @@ image_alt: Illustration of the farm seen from above as a map: a parking lot with
+           </header>
+           <p class="lead">A farm reservation includes the u-pick fields, animals, playgrounds and shaded picnic areas. Add a wagon ride, the corn pit or Wise Pie pizza if you like.</p>
+           <div class="card-actions">
+-            <a class="btn btn-red" href="index.html#options">See packages &amp; add-ons <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
++            <a class="btn btn-red" data-only="fall" href="index.html#options">See packages &amp; add-ons <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+             <a class="btn btn-ghost" href="index.html#seasons">What&rsquo;s in season</a>
+           </div>
+         </div>
+diff --git a/lang/src/es.json b/lang/src/es.json
+index 9351508..325b8eb 100644
+--- a/lang/src/es.json
++++ b/lang/src/es.json
+@@ -331,2 +331,3 @@
+   "t07948fd5": "Estas fechas de temporada son las típicas. El clima decide las fechas exactas de apertura.",
++  "t48ba72e7": "El otoño en la granja suele empezar de nuevo a mediados de septiembre. Únete a nuestra lista de correo para saber cuándo abren las reservas.",
+   "t040ce859": "Brown Berry",
+@@ -1358,2 +1359,2 @@
+  }
+-}
++}
+\ No newline at end of file
+diff --git a/lang/src/hi.json b/lang/src/hi.json
+index 82b8076..acdf95d 100644
+--- a/lang/src/hi.json
++++ b/lang/src/hi.json
+@@ -331,2 +331,3 @@
+   "t07948fd5": "सीज़न की तारीख़ें आमतौर पर यही रहती हैं। शुरुआत की पक्की तारीख़ें मौसम तय करता है।",
++  "t48ba72e7": "खेत पर पतझड़ का मौसम आमतौर पर सितंबर के मध्य में फिर शुरू होता है। रिज़र्वेशन कब खुलेंगे, यह जानने के लिए हमारी ईमेल सूची से जुड़ें।",
+   "t040ce859": "Brown Berry",
+@@ -1358,2 +1359,2 @@
+  }
+-}
++}
+\ No newline at end of file
+diff --git a/lang/src/vi.json b/lang/src/vi.json
+index ca3976c..91869dd 100644
+--- a/lang/src/vi.json
++++ b/lang/src/vi.json
+@@ -331,2 +331,3 @@
+   "t07948fd5": "Ngày của các mùa chỉ là ước chừng theo thường lệ. Thời tiết quyết định ngày mở cửa chính xác.",
++  "t48ba72e7": "Mùa thu ở nông trại thường bắt đầu lại vào giữa tháng 9. Tham gia danh sách email để biết khi nào mở đặt chỗ.",
+   "t040ce859": "Brown Berry",
+@@ -1358,2 +1359,2 @@
+  }
+-}
++}
+\ No newline at end of file
+diff --git a/lang/src/zh.json b/lang/src/zh.json
+index 65c1c0d..94e4325 100644
+--- a/lang/src/zh.json
++++ b/lang/src/zh.json
+@@ -331,2 +331,3 @@
+   "t07948fd5": "这些季节日期是往年惯例。具体开放日期由天气决定。",
++  "t48ba72e7": "农场的秋季通常从 9 月中旬再次开始。加入我们的邮件列表，预约开放时第一时间知道。",
+   "t040ce859": "Brown Berry",
+@@ -1358,2 +1359,2 @@
+  }
+-}
++}
+\ No newline at end of file

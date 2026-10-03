@@ -48,6 +48,7 @@ LEFT_OUT_TOP = {
     'docs': 'notes and questions for the farm, not for visitors',
     'tests': 'automatic checks for developers',
     'tools': 'the programs that build the pages and translations',
+    'review': 'the sheets a friend uses to check a language (made by tools/review_sheet.py)',
     'pages': 'the page sources that tools/pages.py turns into the pages',
     'README.md': 'instructions for whoever edits the site',
     '.git': 'the change history',

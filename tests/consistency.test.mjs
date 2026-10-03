@@ -467,7 +467,9 @@ const NAMES = ['Wise Acres', 'Wise Pie', 'The GreenHouse', 'Hartis', 'Poplin', '
 const ALLOWED_EXTRA = [[/700-degree/, '370']];   // 700 °F, and the translator adds the Celsius figure
 const SAME_HOURS = /\b[ap]\.?m\b|\d:\d\d| to \d|\d ?[–-] ?\d/i;
 
-/** What differs between an English text and its translation (empty list = the same). */
+/** What differs between an English text and its translation (empty list = the same).
+ *  tools/review_sheet.py has a Python copy of this function (it checks a friend's corrections before they are written); tests/review-sheet.test.mjs runs
+ *  both on about 20,000 pairs and fails when they disagree: when you change a rule here, change it there too. */
 function differences(en, tr, lang) {
   const e = plain(en), t = plain(tr), out = [];
   const eMoney = moneyOf(e), tMoney = moneyOf(t); if (eMoney.join() !== tMoney.join()) out.push(`prices ${eMoney.join(' ') || '-'} vs ${tMoney.join(' ') || '-'}`);

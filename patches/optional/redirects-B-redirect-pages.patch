@@ -1,0 +1,390 @@
+Option: redirects-B
+Name: Old farm addresses: 13 small "this page has moved" pages
+Does: Adds 13 folders (about/, contact/, faq/, food/ ...), each with an index.html that jumps to the matching page or section, lets tools/make_deploy_folder.py upload them, and lets tools/launch_check.py see that such a page forwards (it counts only real redirects otherwise). For hosts that ignore _redirects. Not a true 301: Google may take longer to move over.
+Answers: d30 A (old addresses), d05 (any host; the only choice on GitHub Pages)
+Group: redirects
+Conflicts: redirects-A
+Requires: tools/launch_check.py and tools/make_deploy_folder.py in the site (it edits both)
+Host: any
+Order: 30
+After: nothing to rebuild; upload again (python3 tools/make_deploy_folder.py includes the folders)
+Strings: none (the pages are outside the translation system)
+
+diff --git a/about/index.html b/about/index.html
+new file mode 100644
+index 0000000..06adb3c
+--- /dev/null
++++ b/about/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#about">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#about">Go to the About section of our home page</a>.</p>
++</body>
++</html>
+diff --git a/contact-us/index.html b/contact-us/index.html
+new file mode 100644
+index 0000000..fc5fddd
+--- /dev/null
++++ b/contact-us/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#contact">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#contact">Go to the contact section of our home page</a>.</p>
++</body>
++</html>
+diff --git a/contact/index.html b/contact/index.html
+new file mode 100644
+index 0000000..fc5fddd
+--- /dev/null
++++ b/contact/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#contact">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#contact">Go to the contact section of our home page</a>.</p>
++</body>
++</html>
+diff --git a/faq/index.html b/faq/index.html
+new file mode 100644
+index 0000000..05e5efe
+--- /dev/null
++++ b/faq/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#faq">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#faq">Go to the FAQ on our home page</a>.</p>
++</body>
++</html>
+diff --git a/flowers-photographers/index.html b/flowers-photographers/index.html
+new file mode 100644
+index 0000000..542ac6c
+--- /dev/null
++++ b/flowers-photographers/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#flowers">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#flowers">Go to the flowers section of our home page</a>.</p>
++</body>
++</html>
+diff --git a/flowers/index.html b/flowers/index.html
+new file mode 100644
+index 0000000..542ac6c
+--- /dev/null
++++ b/flowers/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#flowers">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#flowers">Go to the flowers section of our home page</a>.</p>
++</body>
++</html>
+diff --git a/food/index.html b/food/index.html
+new file mode 100644
+index 0000000..5e473fc
+--- /dev/null
++++ b/food/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/wise-pie.html">
++  <meta http-equiv="refresh" content="0; url=/wise-pie.html">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/wise-pie.html">Go to the Wise Pie page</a>.</p>
++</body>
++</html>
+diff --git a/parties-school-tours/index.html b/parties-school-tours/index.html
+new file mode 100644
+index 0000000..d454bab
+--- /dev/null
++++ b/parties-school-tours/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#groups">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#groups">Go to the groups and parties section of our home page</a>.</p>
++</body>
++</html>
+diff --git a/parties/index.html b/parties/index.html
+new file mode 100644
+index 0000000..d454bab
+--- /dev/null
++++ b/parties/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#groups">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#groups">Go to the groups and parties section of our home page</a>.</p>
++</body>
++</html>
+diff --git a/school-tours/index.html b/school-tours/index.html
+new file mode 100644
+index 0000000..3c7f7e6
+--- /dev/null
++++ b/school-tours/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/school-field-trips.html">
++  <meta http-equiv="refresh" content="0; url=/school-field-trips.html">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/school-field-trips.html">Go to the school field trips page</a>.</p>
++</body>
++</html>
+diff --git a/schooltours/index.html b/schooltours/index.html
+new file mode 100644
+index 0000000..3c7f7e6
+--- /dev/null
++++ b/schooltours/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/school-field-trips.html">
++  <meta http-equiv="refresh" content="0; url=/school-field-trips.html">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/school-field-trips.html">Go to the school field trips page</a>.</p>
++</body>
++</html>
+diff --git a/the-greenhouse/index.html b/the-greenhouse/index.html
+new file mode 100644
+index 0000000..5235221
+--- /dev/null
++++ b/the-greenhouse/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#greenhouse">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#greenhouse">Go to the GreenHouse section of our home page</a>.</p>
++</body>
++</html>
+diff --git a/tools/launch_check.py b/tools/launch_check.py
+index a0eebad..3b42e5c 100644
+--- a/tools/launch_check.py
++++ b/tools/launch_check.py
+@@ -1297,13 +1297,26 @@ class Checker(object):
+             r.add(WARN, 'http-links', '%d link%s on the pages point to http:// addresses (for example %s).' % (len(links), '' if len(links) == 1 else 's', links[0]), 'Use the https:// version of those links if the other site has one.')
+ 
+     # ---------------------------------------------------------------------------- 4. old addresses
++    def moved_page(self, resp):
++        """A page that only says "moved" and jumps on (<meta http-equiv="refresh" content="0; url=...">): the address it jumps to when that
++        answers 200 (its path), '' when it does not, None when the page is not such a page."""
++        m = re.search(r'<meta[^>]+http-equiv=["\']?refresh["\']?[^>]*content=["\']\s*\d+\s*;\s*url=([^"\'>\s]+)', resp.text(), re.I)
++        if not m:
++            return None
++        target = urldefrag(urljoin(resp.url, unescape(m.group(1))))[0]
++        try:
++            final, _ = self.follow(target, max_hops=3)
++        except FetchError:
++            return ''
++        return final.url if final.status == 200 else ''
++
+     def old_addresses(self):
+         r = self.r
+         r.head('4. Old farm addresses (your decision)')
+         if self.softok:
+             r.add(WARN, 'old-skipped', 'The old addresses were not checked because this host answers 200 for every address.')
+             return
+-        ok, gone = [], []
++        ok, gone, by_page = [], [], []
+         for path in OLD_ADDRESSES:
+             try:
+                 first = self.get(self.u(path))
+@@ -1316,15 +1329,30 @@ class Checker(object):
+                 except FetchError:
+                     final, chain = first, [first]
+                 if final.status == 200:
+-                    ok.append((path, final.url))
++                    moved = self.moved_page(final)   # a small "this page has moved" page (the redirect-pages patch): follow its jump
++                    if moved is None:
++                        ok.append((path, final.url))
++                    elif moved:
++                        ok.append((path, moved))
++                        by_page.append(path)
++                    else:
++                        r.add(WARN, 'old:' + path, '%s leads to a "this page has moved" page whose destination does not answer 200.' % path, 'Fix the address in that page (checklist step 3.6).')
+                 else:
+                     r.add(WARN, 'old:' + path, '%s redirects, but the page it leads to answers %d.' % (path, final.status), 'Fix the destination of this redirect (checklist step 3.6).')
+             elif first.status == 200:
+-                r.add(WARN, 'old:' + path, '%s answers 200 (it shows a page).' % path, 'If this is not meant, remove it; otherwise nothing to do.')
++                moved = self.moved_page(first)
++                if moved:
++                    ok.append((path, moved))
++                    by_page.append(path)
++                elif moved == '':
++                    r.add(WARN, 'old:' + path, '%s is a "this page has moved" page whose destination does not answer 200.' % path, 'Fix the address in that page (checklist step 3.6).')
++                else:
++                    r.add(WARN, 'old:' + path, '%s answers 200 (it shows a page).' % path, 'If this is not meant, remove it; otherwise nothing to do.')
+             else:
+                 gone.append(path)
+         if ok:
+-            r.add(PASS, 'old-redirects', 'Old addresses that are forwarded to a page: ' + ', '.join('%s -> %s' % (p, urlsplit(u).path or '/') for p, u in ok) + '.')
++            r.add(PASS, 'old-redirects', 'Old addresses that are forwarded to a page: ' + ', '.join('%s -> %s' % (p, urlsplit(u).path or '/') for p, u in ok) + '.'
++                  + (' %d of them through a small "this page has moved" page, not a real redirect (Google may take longer to follow it).' % len(by_page) if by_page else ''))
+         if gone:
+             r.add(WARN, 'old-gone', 'These old addresses show "page not found": %s. People who still have them bookmarked, and Google, land on an error.' % ', '.join(gone),
+                   'It is your decision. To forward them to the new pages, use one of the redirect patches (docs/DECISION_PLAYBOOK.md, d30; checklist step 3.6). Leaving them is fine if the new site replaces nothing.')
+diff --git a/tools/make_deploy_folder.py b/tools/make_deploy_folder.py
+index 5da6a46..32f79df 100644
+--- a/tools/make_deploy_folder.py
++++ b/tools/make_deploy_folder.py
+@@ -36,6 +36,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ # What a visitor needs: every .html page in the top folder (the six pages and 404.html), these files, and these folders.
+ TOP_FILES = ['robots.txt', 'sitemap.xml', 'manifest.webmanifest', '_headers', '_redirects']   # _redirects only if you made one (checklist 3.6)
+ FOLDERS = ['assets', 'css', 'js', 'lang', 'print']
++# The "this page has moved" folders of the old-address option (patches/optional/redirects-B-redirect-pages.patch): copied only if they exist.
++FOLDERS += ['about', 'contact', 'contact-us', 'faq', 'flowers', 'flowers-photographers', 'food', 'parties', 'parties-school-tours', 'school-tours', 'schooltours', 'the-greenhouse', 'wiseacres']
+ # Inside those folders, left out on purpose (path relative to the site folder, with / even on Windows):
+ LEFT_OUT_INSIDE = [
+     ('lang/src/', 'the translations as you edit them; the pages load lang/<language>.js, which tools/i18n.py builds from them'),
+diff --git a/wiseacres/index.html b/wiseacres/index.html
+new file mode 100644
+index 0000000..07190b4
+--- /dev/null
++++ b/wiseacres/index.html
+@@ -0,0 +1,15 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>This page has moved | Wise Acres Organic Farm</title>
++  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
++  <meta http-equiv="refresh" content="0; url=/#visit">
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++</head>
++<body>
++  <p>This page has moved. <a href="/#visit">Go to the Visit section of our home page</a>.</p>
++</body>
++</html>
+diff --git a/README.md b/README.md
+index f11e419..fb5b311 100644
+--- a/README.md
++++ b/README.md
+@@ -17,2 +17,3 @@ manifest.webmanifest    icon + colors for phones that bookmark the site
+ _headers                security and cache headers for Netlify / Cloudflare Pages (copy the same into other hosts)
++wiseacres/, faq/, food/ ...   13 tiny "this page has moved" pages, one folder per old wiseacresorganic.com address (/faq, /food, /schooltours ...). Only for hosts that ignore a `_redirects` file (GitHub Pages); do not upload them together with `_redirects`
+ pages/                  the short sources the extra pages are built from
+@@ -530,2 +531,3 @@ New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](do
+ 3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
++   The 13 old-address folders (`faq/`, `food/`, `schooltours/` ...) stand in for a `_redirects` file on hosts that do not read one. Upload them only if this site takes over the address of the old wiseacresorganic.com, and then open `/faq`, `/food`, `/schooltours` and `/parties/` to check they land on the right place.
+ 4. Send people to the Google Business Profile, and add your site's address there.
+diff --git a/docs/LAUNCH_CHECKLIST.md b/docs/LAUNCH_CHECKLIST.md
+index cdaf9c6..79ab175 100644
+--- a/docs/LAUNCH_CHECKLIST.md
++++ b/docs/LAUNCH_CHECKLIST.md
+@@ -201,3 +201,3 @@ It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Bot
+ 
+-**What exists.** An earlier research pass listed 13 old addresses (each also with a trailing slash where that form exists, which makes 22 lines) and wrote them as an optional patch, `redirects-optional.patch`. That patch is not part of the site files, so the file is printed below and you do not need the patch. It differs from that patch in two ways: the two page targets no longer end in `.html` (so Cloudflare does not redirect twice), and the comment no longer claims anything about GitHub. Only addresses that appeared in Google results are in it. That list was not rechecked on 2 October 2026 and may be incomplete.
++**What exists.** An earlier research pass listed 13 old addresses (each also with a trailing slash where that form exists, which makes 22 lines) and wrote them as an optional patch, `redirects-optional.patch`. For hosts that do not read a `_redirects` file (GitHub Pages) the top folder holds 13 small folders instead (`faq/`, `food/`, `schooltours/` ...), one per old address; use those or the `_redirects` block below, never both. The block is printed below so you can read the mapping. It differs from that patch in two ways: the two page targets no longer end in `.html` (so Cloudflare does not redirect twice), and the comment no longer claims anything about GitHub. Only addresses that appeared in Google results are in it. That list was not rechecked on 2 October 2026 and may be incomplete.
+ 
+@@ -245,3 +245,3 @@ It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Bot
+ 
+-- [ ] To use it: save the block as a file named `_redirects` (no `.txt`) in the top folder of the site, next to `index.html` (`tools/make_deploy_folder.py` copies it into `deploy/`; if you copy by hand, it goes in the top of the copy), then make the upload folder again and upload it.
++- [ ] To use the small folders: leave them in the top folder of the site (`tools/make_deploy_folder.py` copies them into `deploy/`; they add 13 folders and 13 files to the count in section 2), then make the upload folder again and upload it. Each folder holds one page with the line "This page has moved" and a link; the browser jumps at once. This is not a true 301, so Google may take longer to move what it knows about the old address. To use `_redirects` instead (Cloudflare Pages, Netlify): delete the 13 folders and save the block as a file named `_redirects` (no `.txt`) in the top folder.
+ - [ ] Test: open each old address in a browser. It should land on the right place. All 22 lines were tested in Cloudflare's own test server (each answers 301 and lands on a page that opens), and Netlify's open-source parser accepted the file. **[tested here]**

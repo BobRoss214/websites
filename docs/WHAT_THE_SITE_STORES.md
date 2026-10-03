@@ -2,9 +2,27 @@
 
 **This is a fact sheet, not a privacy policy.** It lists facts about what the website's own code does. It is not consent text and not legal advice.
 
-**Checked:** 2 October 2026, website version `4d80383`. The Drive time box was added later and checked on 3 October 2026, website version `2996b9f`: sections 2, 3, 5, 6, 7 and 8 and the events table were updated for it. The browser-storage and outside-sites checks were run again on 3 October 2026 for website version `979437f`, after the keyboard, language-menu, first-visit and photo changes: the same three entries in section 1, no cookies, and no contact with another site until "Get drive time" is pressed. Section 5 now also lists the two other credit links under a Drive time answer. If the code changes, these facts can change too. Ask Claude to run the checks again (see the end of this page).
+**Checked:** 2 October 2026, website version `4d80383`. The Drive time box was added later and checked on 3 October 2026, website version `2996b9f`: sections 2, 3, 5, 6, 7 and 8 and the events table were updated for it. The browser-storage and outside-sites checks were run again on 3 October 2026 for website version `979437f`, after the keyboard, language-menu, first-visit and photo changes. The result was the same three entries in section 1, no cookies, and no contact with another site until "Get drive time" is pressed. Section 5 now also lists the two other credit links under a Drive time answer. If the code changes, these facts can change too. Ask Claude to run the checks again (see the end of this page).
 
-**Checked again on 3 October 2026, website version `f478b83`** (after about 100 further changes), with a crawl: all 6 pages x 5 languages x the 4 seasons (the browser clock set to a date in each season) = 120 visits, each with scrolling to the bottom, every FAQ opened, the season switcher and the language menu; 27 longer visits to the home page and the First-visit page that also played the hero game, the goat, the gallery, the map, both reminder buttons, the Drive time box (with a made-up address) and the signup (stand-ins for the outside services); and the 404 page and the QR-sign page in 5 languages. Result: the same three entries in section 1, nothing kept before the visitor does something (and `?lang=` alone keeps nothing), no cookie, no sessionStorage, IndexedDB, Cache Storage or service worker in any visit, no other site contacted while a page is only read (0 requests in 140 reading visits), the other sites contacted only after their own button (section 2), every outside request carrying the site name only as Referer and no cookie, and the made-up address found only in the first request to the address search. These checks now run by themselves: `node tests/run-all.mjs privacy analytics` (see "How to check again"). Findings of that check that changed this sheet: the event `drive_time` is now `Drive time` and does carry the chosen place (`farm` or `greenhouse`); older Do Not Track spellings are now honoured (section 4); the signup reply is a script the page runs (section 3); `g.page` is listed (section 5).
+**Checked again on 3 October 2026, website version `f478b83`** (after about 100 further changes), with a crawl. It made:
+
+- 120 visits: all 6 pages x 5 languages x the 4 seasons (the browser clock set to a date in each season). Each visit scrolled to the bottom, opened every FAQ, and used the season switcher and the language menu.
+- 27 longer visits to the home page and the First-visit page. These also played the hero game, the goat, the gallery, the map, both reminder buttons, the Drive time box (with a made-up address) and the signup (stand-ins for the outside services).
+- Visits to the 404 page and the QR-sign page in 5 languages.
+
+The result:
+
+- The same three entries in section 1. Nothing is kept before the visitor does something (and `?lang=` alone keeps nothing).
+- No cookie, no `sessionStorage`, no `IndexedDB`, no `Cache Storage` and no service worker in any visit.
+- No other site was contacted while a page was only being read (0 requests in 140 reading visits). The other sites were contacted only after their own button (section 2).
+- Every outside request carried the site name only as Referer, and no cookie. The made-up address was found only in the first request to the address search.
+
+These checks now run by themselves: `node tests/run-all.mjs privacy analytics` (see "How to check again"). The check found four things that changed this sheet:
+
+- The event `drive_time` is now `Drive time` and does carry the chosen place (`farm` or `greenhouse`).
+- Older Do Not Track spellings are now honoured (section 4).
+- The signup reply is a script the page runs (section 3).
+- `g.page` is listed (section 5).
 
 **How it was checked**
 
@@ -30,13 +48,14 @@
 
 **Nothing else is kept.** In the test:
 - **Cookies:** none. The page itself had none (`document.cookie` was empty), the browser profile had 0 after the whole visit, and the website never sent a "Set-Cookie" header.
-- **Other browser storage:** sessionStorage was empty. There was no IndexedDB, no Cache Storage and no service worker.
+- **Other browser storage:** none. The checks looked in four other places where a site can keep things. `sessionStorage` was empty. There was no `IndexedDB`, no `Cache Storage` and no service worker.
 
 **A visitor who only reads pages leaves nothing behind**, even after scrolling through all of them.
 
 These are kept only in memory and disappear when the page is closed or reloaded:
 - picking-game counts and badges;
 - the open map place;
+- whether the animations are paused (the "Pause animations" button, or the page calming itself on a slow phone);
 - the email typed into the signup box.
 
 **The website never reads these three values and sends them anywhere.** There is one exception: with analytics switched on, the language in use is counted (see section 3).
@@ -48,7 +67,7 @@ These are kept only in memory and disappear when the page is closed or reloaded:
 | Opens any page (all 8 pages, in all 5 languages) and scrolls through it | **None.** Pages, pictures, fonts, scripts, translations and the map all come from the website itself. |
 | Uses every feature listed above, except the Drive time box | **None.** |
 | Presses "Join the email list" | Nothing is sent by the page. The button is a link to Mailchimp's own signup page (`eepurl.com`), so the visitor leaves the site. |
-| Presses "Get drive time" in the Drive time box (Contact section), after typing an address | **Two sites, only at that moment:** `nominatim.openstreetmap.org` (OpenStreetMap's address search) and `router.project-osrm.org` (the OSRM routing server). What is sent is in section 3. |
+| Presses "Get drive time" in the Drive time box (Contact section), after typing an address | **Two sites, only at that moment:** `nominatim.openstreetmap.org` (OpenStreetMap's address search) and `router.project-osrm.org` (the routing server of OSRM, the Open Source Routing Machine). What is sent is in section 3. |
 | Adds a reminder with the calendar-file button | **None.** The `.ics` file is made inside the visitor's browser. It holds only the reservation opening times and the Bookeo link. |
 
 ## 3. What each optional feature adds when it is switched on
@@ -74,11 +93,11 @@ These are kept only in memory and disappear when the page is closed or reloaded:
 - an empty field that Mailchimp uses to catch robots;
 - a one-time reply name.
 
-Everything travels inside the request's web address; that is how this kind of Mailchimp connection works. The page shows nothing from Mailchimp's reply except whether the signup went through, or whether the person is already on the list. **But the reply is a small script that the page runs** (the "JSONP" way of talking to Mailchimp), so Mailchimp's address is trusted like an analytics script: it is the only outside address that can run code in the page, and only after the button is pressed.
+Everything travels inside the request's web address; that is how this kind of Mailchimp connection works. The page shows nothing from Mailchimp's reply except whether the signup went through, or whether the person is already on the list. **But the reply is a small script that the page runs** (the "JSONP" way of talking to Mailchimp). So Mailchimp's address is trusted like an analytics script. It is the only outside address that can run code in the page, and only after the button is pressed.
 
 **What goes to the two map services when the visitor presses "Get drive time":**
-- **To `nominatim.openstreetmap.org`** (the address search run by the OpenStreetMap Foundation): the address exactly as typed (at most 200 characters), and fixed words: `format=jsonv2`, `limit=1`, `countrycodes=us`, `accept-language=en`. A second search, for the chosen place's address (the farm: `4701 Hartis Rd, Indian Trail, NC 28079`, or The GreenHouse: `5503 Poplin Rd, Indian Trail, NC 28079`; both are public business addresses), follows about 1.1 seconds later, unless `farmPoint` is set in `js/content.js`; its answer is kept in memory until the page is closed or reloaded, so later presses send only the first search.
-- **To `router.project-osrm.org`** (the routing demo server run by FOSSGIS e.V., a German non-profit): not the typed words but two pairs of map coordinates: the spot the search found for the visitor's address (six decimals, which is accurate to about a house) and the farm's spot, plus fixed options (`overview=false`, `alternatives=false`, `steps=false`).
+- **To `nominatim.openstreetmap.org`** (the address search run by the OpenStreetMap Foundation): the address exactly as typed (at most 200 characters), and fixed words: `format=jsonv2`, `limit=1`, `countrycodes=us`, `accept-language=en`. A second search follows about 1.1 seconds later, for the chosen place's address (the farm: `4701 Hartis Rd, Indian Trail, NC 28079`, or The GreenHouse: `5503 Poplin Rd, Indian Trail, NC 28079`; both are public business addresses). It is left out if `farmPoint` is set in `js/content.js`. Its answer is kept in memory until the page is closed or reloaded, so later presses send only the first search.
+- **To `router.project-osrm.org`** (the routing demo server run by FOSSGIS e.V., a German non-profit): not the typed words, but two pairs of map coordinates. One is the spot the search found for the visitor's address (six decimals, which is accurate to about a house). The other is the farm's spot. Fixed options go too (`overview=false`, `alternatives=false`, `steps=false`).
 - **What comes back and is shown:** the name of the place found (up to 140 characters; the place name is always in English, after the words "We looked up:" in the visitor's language), the distance and the time. Nothing is stored by the website: the browser's local storage, session storage and cookies were identical before and after a lookup (tested).
 - **A link, only if tapped:** under every answer there is a button "Open these directions in Google Maps". Google receives the typed address in that link's web address only if the visitor taps it.
 - **The browser's own autofill:** the box is marked as a street-address field, so a browser may offer the visitor's saved addresses and may offer to remember what is typed. That is the browser's feature, not this website's.
@@ -87,7 +106,7 @@ Everything travels inside the request's web address; that is how this kind of Ma
 **What every outside site sees on any of these requests:**
 - the visitor's internet (IP) address and browser type, as with any web request;
 - **no cookies** from the website;
-- when the analytics script is fetched, on the Mailchimp request, and on the two map-service requests, the site name only (`https://www.wiseacresorganic.com/`), never which page (tested for the map services: the browser sent the site name as Referer and Origin, and no cookie);
+- on the requests for the analytics script, to Mailchimp and to the two map services: the site name only (`https://www.wiseacresorganic.com/`), never which page. This was tested for the map services: the browser sent the site name as Referer and Origin, and no cookie;
 - for the week feed, not even the site name.
 
 **Analytics events the website sends** (only when analytics is on, and never to a visitor who has Do Not Track or Global Privacy Control switched on):
@@ -139,7 +158,7 @@ All of these are tested with Plausible switched on (a stand-in for its script) b
 | OpenStreetMap | `www.openstreetmap.org/copyright`, `www.openstreetmap.org/fixthemap` | The "© OpenStreetMap contributors" credit and the "Fix the map" link shown under a Drive time answer |
 | OSRM | `project-osrm.org` | The "Routing: OSRM" credit shown under a Drive time answer |
 | Axios | `www.axios.com` | "In the news" |
-| Email links (`mailto:`) | The visitor's own email program | Questions and the waitlist. The website sends nothing: the visitor writes and sends the email themselves. The waitlist email is pre-filled in English (the farm reads English) with the day and empty lines for a name, group size and pizza; on a page in another language each line also carries the visitor's own words, and a "Preferred language" line names that language in English. The corporate-event link works the same way. |
+| Email links (`mailto:`) | The visitor's own email program | Questions and the waitlist. The website sends nothing: the visitor writes and sends the email themselves. The waitlist email is pre-filled in English (the farm reads English) with the day and empty lines for a name, group size and pizza. On a page in another language each line also carries the visitor's own words, and a "Preferred language" line names that language in English. The corporate-event link works the same way. |
 | Phone link (`tel:`) | The visitor's phone | Calling the farm |
 
 **What the other site learns when a visitor taps a link out:** only that the visitor came from `www.wiseacresorganic.com`, not which page. This comes from the `Referrer-Policy` line in `_headers`, which Netlify and Cloudflare Pages apply.
@@ -174,7 +193,7 @@ All of these are tested with Plausible switched on (a stand-in for its script) b
   1. Open the live site in a private window.
   2. Press F12.
   3. Look under Application, then Cookies (Chrome), or Storage, then Cookies (Firefox).
-- **The two map services** keep their own records. FOSSGIS says of the routing server: "Your request for a route is sent to our server ... and is saved in the server log file." The current code of its server program also writes, for every request (unless the operator switches that off), the IP address, the referring site, the browser and the whole request, which includes both coordinate pairs. These come from the routing server's own about page and program code, read on 3 October 2026. The OpenStreetMap Foundation's privacy policy, which covers the address search, says its services record the IP address, browser, operating system and referring page; that comes from a search-engine summary of the policy and was not opened. How long either keeps its records was not found. Neither service was called from the test computer.
+- **The two map services** keep their own records. FOSSGIS says of the routing server: "Your request for a route is sent to our server ... and is saved in the server log file." The current code of its server program also writes, for every request (unless the operator switches that off), the IP address, the referring site, the browser and the whole request, which includes both coordinate pairs. These come from the routing server's own about page and program code, read on 3 October 2026. The OpenStreetMap Foundation's privacy policy, which covers the address search, says its services record the IP address, browser, operating system and referring page. That comes from a search-engine summary of the policy and was not opened. How long either keeps its records was not found. Neither service was called from the test computer.
 - **The sites in the links-out table** follow their own rules once a visitor is there.
 
 ## How to check again

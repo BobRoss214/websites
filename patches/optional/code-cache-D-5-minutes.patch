@@ -1,0 +1,71 @@
+Option: code-cache-D
+Name: Shorter code cache: 5 minutes instead of 1 hour
+Does: _headers lets browsers keep css, js and lang files for 5 minutes instead of 1 hour, so a change to js/content.js reaches visitors within minutes. Updates the matching words in js/content.js, README and the checklist.
+Answers: d05 (any host that reads _headers)
+Conflicts: none
+Requires: none
+Host: any (no effect on GitHub Pages, which ignores _headers)
+Order: 50
+After: nothing to rebuild; upload again
+Strings: none
+
+diff --git a/README.md b/README.md
+index 7b258b1..85609bb 100644
+--- a/README.md
++++ b/README.md
+@@ -72,7 +72,7 @@ and look at the site. Anything marked **ask Claude** needs a command typed into
+ 5. An apostrophe inside single quotes breaks the file. Put double quotes around the whole text instead: `notice: "We're closed Saturday.",`
+ 6. Save, then look at the site (see "Check your changes" below). A yellow "Site check" box tells you what to fix.
+ 7. Saving on your computer does not change the live site: publish the changed file the way you publish the site (see "Putting it online").
+-   Browsers may keep the old file for up to an hour. A hard refresh (Ctrl+F5, or Cmd+Shift+R on a Mac) shows the new one at once on your own screen.
++   Browsers may keep the old file for up to five minutes. A hard refresh (Ctrl+F5, or Cmd+Shift+R on a Mac) shows the new one at once on your own screen.
+ 
+ `js/content.js` has the same instructions at the top, with an example for each setting.
+ 
+diff --git a/_headers b/_headers
+index a9f70f7..32aa5cd 100644
+--- a/_headers
++++ b/_headers
+@@ -9,13 +9,13 @@
+   Cache-Control: public, max-age=31536000, immutable
+ 
+ /css/*
+-  Cache-Control: public, max-age=3600
++  Cache-Control: public, max-age=300
+ 
+ /js/*
+-  Cache-Control: public, max-age=3600
++  Cache-Control: public, max-age=300
+ 
+ /lang/*
+-  Cache-Control: public, max-age=3600
++  Cache-Control: public, max-age=300
+ 
+ /print/*
+   X-Robots-Tag: noindex
+diff --git a/docs/LAUNCH_CHECKLIST.md b/docs/LAUNCH_CHECKLIST.md
+index 0cc48d4..21f1267 100644
+--- a/docs/LAUNCH_CHECKLIST.md
++++ b/docs/LAUNCH_CHECKLIST.md
+@@ -415,7 +415,7 @@ If something is wrong: open the project's list of deployments in Cloudflare and
+ ### Every week in season (about 10 minutes)
+ 
+ - [ ] Open [OWNER_YEAR_CALENDAR.md](OWNER_YEAR_CALENDAR.md): what to do before each date to the end of 2027, with the 10-minute Monday and first-of-the-month routines that use the tools above.
+-- [ ] Update "This week at the farm" (`week` in `js/content.js`), the notice bar and any closures; and open the next pizza weekend if it is due (README, "Day-to-day changes"). Make the upload folder again and upload it (section 2); a hard refresh (Ctrl+F5, or Cmd+Shift+R on a Mac) shows the new version at once on your own screen, and other visitors may keep the old files for up to an hour.
++- [ ] Update "This week at the farm" (`week` in `js/content.js`), the notice bar and any closures; and open the next pizza weekend if it is due (README, "Day-to-day changes"). Make the upload folder again and upload it (section 2); a hard refresh (Ctrl+F5, or Cmd+Shift+R on a Mac) shows the new version at once on your own screen, and other visitors may keep the old files for up to five minutes (`_headers` keeps `css/`, `js/` and `lang/` for 5 minutes; pictures in `assets/` for a year, so a changed picture needs a new file name).
+ - [ ] Open the live site on your phone. The "Open now" badges and the countdown should match real life.
+ - [ ] Press Reserve: the Bookeo page should show the days you expect.
+ - [ ] Add `?check` to the home address. No yellow box. Press "Get drive time" once with your own address; if it fails two weeks running, tell the helper (3.13).
+diff --git a/js/content.js b/js/content.js
+index 411b6fd..9eeef35 100644
+--- a/js/content.js
++++ b/js/content.js
+@@ -22,7 +22,7 @@
+  *      hid themselves: nothing is broken). If the page looks broken, press Undo (Ctrl+Z, or Cmd+Z on a Mac)
+  *      until it works again, or put your copy back. See "Check your changes" in README.md.
+  *   8. Saving the file on your computer does not change the live website. Publish the changed file the way you publish the site.
+- *      Browsers can keep the old file for up to an hour, so give it a little while (a hard refresh, Ctrl+F5 or Cmd+Shift+R, shows
++ *      Browsers can keep the old file for up to five minutes, so give it a little while (a hard refresh, Ctrl+F5 or Cmd+Shift+R, shows
+  *      the new version at once on your own screen).
+  *
+  * PHOTOS

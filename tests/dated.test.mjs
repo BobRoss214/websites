@@ -23,7 +23,7 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const box = (p) => p.evaluate(() => { const b = document.getElementById('wa-problems'); return b ? b.textContent : ''; });
 
 await run('dated', async ({ browser, base, errs }) => {
-  const at = (iso, o = {}) => open(browser, base, 'index.html', errs, { time: iso, ...o });
+  const at = (iso, o = {}) => open(browser, base, 'index.html', errs, { time: iso, extra: 'WISE_ACRES.seasonPicker = true;', ...o });   // the test picks seasons with the switcher: it needs seasonPicker true (the farm's setting is false)
   const all = { notice: true, r1: true, r2: true, r3: true, r4: true, table: true, nopizza: true, days: true, ecd: true, hsd: true };
 
   // ---- Fri Oct 2 (the farm's own "Open now" line is true): everything is there, and the Site check box has nothing to say

@@ -10,6 +10,9 @@
  *     js/content.js from `hours: {` to `week:`     a stretch of lines
  *     `index.html` at `...`, consistency at `...`  the file name may be in backticks; a test may be named by its short name
  *     README row "Farm map", README.md, section "Languages"
+ * A setting the farm fills in later (reviewUrl, farmPoint, signup.action in js/content.js) is named by its name only, never by today's value:
+ *     js/content.js at `reviewUrl:` (2 places), not at `reviewUrl: ''`
+ * The value changes when the owner types hers, and a note that quotes the empty value would then turn this test red although it is still right.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,7 +25,7 @@ const TEXT = Object.fromEntries(DOCS.map((d) => [d, read(d)]));
 const lineOf = (s, i) => s.slice(0, i).split('\n').length;
 
 // Files that are made by a tool or by npm and are not in the repository; the docs may name them before they exist.
-const MADE_LATER = [/^deploy(\/|$)/, /^FILES\.txt$/, /^node_modules(\/|$)/, /^tests\/node_modules(\/|$)/, /^axe\.min\.js$/, /^tests\/\.visual(\/|$)/, /^report\.html$/,
+const MADE_LATER = [/^deploy(\/|$)/, /^review(\/|$)/, /^FILES\.txt$/, /^node_modules(\/|$)/, /^tests\/node_modules(\/|$)/, /^axe\.min\.js$/, /^tests\/\.visual(\/|$)/, /^report\.html$/,
   /^tests\/package-lock\.json$/, /^assets\/badges\/$/];
 // Names that are only examples in the text (a photo you might add, a test you might write).
 const EXAMPLES = ['picture.jpg', 'assets/photos/goat-in-frog-hat.webp', 'assets/og-pumpkin-patch-2.png', 'something.test.mjs'];

@@ -186,7 +186,7 @@ Answer:
 
 ### Question 17
 
-**Are these hours right: farm visits Thursday to Sunday in fall; The GreenHouse Friday to Sunday, 10 am to 8 pm; Wise Pie at The GreenHouse Friday to Sunday, 4 to 8 pm; pizza at the farm 10 am to 4 pm?**
+**Are these hours right? Farm visits: Thursday to Sunday in fall. The GreenHouse: Friday to Sunday, 10 am to 8 pm. Wise Pie at The GreenHouse: Friday to Sunday, 4 to 8 pm. Pizza at the farm: 10 am to 4 pm.**
 
 Dashboard id: d51, d09
 
@@ -401,7 +401,7 @@ Answer:
 
 ### Question 36
 
-**The Drive time box uses a free routing server whose own page says its demo is for "reasonable, non-commercial use-cases". Should we (a) write to the people who run it and ask whether a small farm website is allowed, (b) leave it as it is and watch it, (c) move to Mapbox later (it needs a free account in the farm's name), or (d) switch the box off?**
+**The Drive time box uses a free routing server whose own page says its demo is for "reasonable, non-commercial use-cases". What should we do? (a) Write to the people who run it and ask whether a small farm website is allowed. (b) Leave it as it is and watch it. (c) Move to Mapbox later (it needs a free account in the farm's name). (d) Switch the box off.**
 
 Dashboard id: d10
 
@@ -416,7 +416,7 @@ Answer:
 
 Dashboard id: d01, d09
 
-Why it matters: The site shows fall wording all year. We tried it on a computer set to 20 January: the Visit area still shows "Fall 2026 reservations", the package prices, the "Fall 2026 reservation schedule" and a "Reserve now" button, and the Shop starts its prices with "Fall 2026 prices for a farm visit". The GreenHouse is shown open Friday to Sunday, 10 am to 8 pm, all year, and "Christmas trees are here." stays up until the site switches to spring, about 10 February. The farm card itself is already right in winter: it says picking is seasonal and that strawberries come next, around mid-April. (Question 12 asks when trees start; this asks what happens after they end.)
+Why it matters: The site shows fall wording all year. We tried it on a computer set to 20 January. The Visit area still shows "Fall 2026 reservations", the package prices, the "Fall 2026 reservation schedule" and a "Reserve now" button. The Shop starts its prices with "Fall 2026 prices for a farm visit". The GreenHouse is shown open Friday to Sunday, 10 am to 8 pm, all year, and "Christmas trees are here." stays up until the site switches to spring, about 10 February. The farm card itself is already right in winter: it says picking is seasonal and that strawberries come next, around mid-April. (Question 12 asks when trees start; this asks what happens after they end.)
 
 Answer:
 
@@ -441,7 +441,7 @@ Dashboard id: d12
 - `sunflower-field-golden-light.webp`
 - `sunflowers-with-strawberry-and-blueberry-baskets.webp`
 
-Why it matters: The copies we received are only 206 pixels wide (the chat program shrank them). Our older photos are 300 to 1,400 pixels wide, and most are 500 or 750. A 206-pixel photo looks blurry when it is shown big, so the site shows these 13 only as small tiles (in photo strips, the flowers collage and the gallery), and a photo that a visitor taps opens small. With bigger files we can show them larger.
+Why it matters: The copies we received are only 206 pixels wide (the chat program shrank them). Our older photos are 300 to 1,400 pixels wide, and most are 500 or 750. A 206-pixel photo looks blurry when it is shown big. So the site shows these 13 only as small tiles (in photo strips, the flowers collage and the gallery), and a photo that a visitor taps opens small. With bigger files we can show them larger.
 
 Answer:
 
@@ -468,7 +468,7 @@ Dashboard id: d13, d32
 - `goats-on-platform-waiting-all-summer.webp`: "...ve been waiting all summer long to see you!" (cut off at the left edge)
 - `sunflowers-with-strawberry-and-blueberry-baskets.webp`: "Plenty of organic strawberries & blueberries now available! Morning & evening reservations."
 
-Why it matters: Words inside a picture can not be translated into Spanish, Hindi, Chinese or Vietnamese and can not be updated. (We repeat the words in the picture's description, so a screen reader can read them.) They also go out of date: "Happy Easter" and "Happy Father's Day" are seasonal, "now available! Morning & evening reservations" is an offer that may not be true, and "waiting all summer" is cut off. A fifth photo, `organic-tomatoes-and-basil-u-pick-signs.webp`, shows real signs with prices ("4.50$" a pound for tomatoes and "$1" per stem for basil); it is in the Tomatoes section and in the gallery, so question 7 matters: it asks whether those prices are right.
+Why it matters: Words inside a picture can not be translated into Spanish, Hindi, Chinese or Vietnamese and can not be updated. (We repeat the words in the picture's description, so a screen reader can read them.) They also go out of date: "Happy Easter" and "Happy Father's Day" are seasonal, "now available! Morning & evening reservations" is an offer that may not be true, and "waiting all summer" is cut off. A fifth photo, `organic-tomatoes-and-basil-u-pick-signs.webp`, shows real signs with prices ("4.50$" a pound for tomatoes and "$1" per stem for basil). It is in the Tomatoes section and in the gallery, so question 7 matters: it asks whether those prices are right.
 
 Answer:
 
@@ -512,11 +512,11 @@ We read your printed Fall Menu 2026 line by line and compared it with the websit
 
 ### Question 44
 
-**For the "Yes pizza" package on the site ($31 base, "Includes 2 Wise Pie pizzas, plus $3 per person"), which pizzas can a family choose, and do the gluten-free crust (+$9) and the vegan cheese (+$3) cost extra on top of the $31?**
+**The "Yes pizza" package on the site has a $31 base price and says "Includes 2 Wise Pie pizzas, plus $3 per person". Which pizzas can a family choose? Do the gluten-free crust (+$9) and the vegan cheese (+$3) cost extra on top of the $31?**
 
 Dashboard id: d16
 
-Why it matters: The printed menu does not mention the package. At menu prices two pizzas cost $30 to $34, so $31 only makes sense if the choice is limited or the package has its own rule, and a family that reads "2 Wise Pie pizzas" will assume any two. Please also check that the booking page says the same.
+Why it matters: The printed menu does not mention the package. At menu prices two pizzas cost $30 to $34, so $31 only makes sense if the choice is limited or the package has its own rule. A family that reads "2 Wise Pie pizzas" will assume any two. Please also check that the booking page says the same.
 
 Answer:
 
@@ -527,7 +527,7 @@ Answer:
 
 Dashboard id: d17
 
-Why it matters: Neither the printed menu nor the site has an allergen or cross-contact note, yet both offer "gluten-free crust" and "vegan cheese", and the site's questions answer "Is there a vegan or gluten-free option?" with "Yes". A guest with celiac disease or a food allergy may take that to mean it is safe for them. We will write only what you tell us.
+Why it matters: Neither the printed menu nor the site has an allergen or cross-contact note, yet both offer "gluten-free crust" and "vegan cheese". The site's questions answer "Is there a vegan or gluten-free option?" with "Yes". A guest with celiac disease or a food allergy may take that to mean it is safe for them. We will write only what you tell us.
 
 Answer:
 
@@ -549,7 +549,7 @@ Answer:
 
 Dashboard id: d18
 
-Why it matters: "Real pizza from a 700-degree oven" is the heading of the Wise Pie section and page, and it appears in the page description, in the translations and in the picture shown when the page is shared. The printed menu gives no temperature. In Spanish, Hindi, Chinese and Vietnamese, "700 degrees" with no unit is normally read as Celsius, which would be about 1,290°F, so we would like to write "700°F" if that is what you mean.
+Why it matters: "Real pizza from a 700-degree oven" is the heading of the Wise Pie section and page. It appears in the page description, in the translations and in the picture shown when the page is shared. The printed menu gives no temperature. In Spanish, Hindi, Chinese and Vietnamese, "700 degrees" with no unit is normally read as Celsius, which would be about 1,290°F. So we would like to write "700°F" if that is what you mean.
 
 Answer:
 
@@ -578,7 +578,7 @@ Answer:
 
 ### Question 50
 
-**The site says pizzas from a farm reservation are "ready for pick-up 1 hour after your reservation time". Is it always 1 hour, even for a late reservation (a 3:30 pm reservation would give 4:30 pm, after the farm side's 10 am to 4 pm hours on the site), and where exactly do people pick them up?**
+**The site says pizzas from a farm reservation are "ready for pick-up 1 hour after your reservation time". Is it always 1 hour, even for a late reservation (a 3:30 pm reservation would give 4:30 pm, after the farm side's 10 am to 4 pm hours on the site)? And where exactly do people pick them up?**
 
 Dashboard id: d20
 
@@ -615,7 +615,7 @@ Answer:
 
 Dashboard id: d19
 
-Why it matters: The printed menu is only pizza, so nothing from you backs up the ice cream and drinks that the site lists on the home page, in The GreenHouse section, in the Shop and on the contact card. The farm side of the site says "beer, hard cider and wine", while The GreenHouse side says "beer, wine and cider", and families may read "cider" alone as apple cider without alcohol.
+Why it matters: The printed menu is only pizza, so nothing from you backs up the ice cream and drinks that the site lists. They are on the home page, in The GreenHouse section, in the Shop and on the contact card. The farm side of the site says "beer, hard cider and wine", while The GreenHouse side says "beer, wine and cider", and families may read "cider" alone as apple cider without alcohol.
 
 Answer:
 
@@ -627,6 +627,164 @@ Answer:
 Dashboard id: d57
 
 Why it matters: The site says "First come, first served for drop-in dining or pick-up" but not whether there are tables, shade or heat. A family with small children will want to know before they come.
+
+Answer:
+
+
+## 8. More new questions (added 3 October 2026)
+
+These came up after the earlier lists. They are in order, the most important first. The first three are about information that may be wrong or risky (a rain closure on 4 October, who owns the photos, a privacy note). The rest can follow the launch.
+
+### Question 55
+
+**Will the farm be closed on Sunday, October 4 because of rain?**
+
+Dashboard id: d60
+
+Why it matters: The pizza note on the home page says "unless the forecast changes a lot, we'll be closed that day for rain", but the "Open now" badges would still show Sunday as open. A family that trusts the badge could drive out for nothing. (Bookeo also keeps taking bookings until those times are closed there.)
+
+Answer:
+
+
+### Question 56
+
+**Who took the 32 farm photos on the site, and may the site use all of them? Is anyone to be thanked or named (a photographer, a friend, Wise Pie, Foster Village)?**
+
+Dashboard id: d61
+
+Why it matters: None of the photos has a photographer, a source or a permission written down anywhere, and the photo list has no credit line. Questions 38 to 40 ask about faces, words printed on pictures and dated pictures; this one is about who owns the pictures. Four pictures have words printed on them, and the two Wise Pie pictures show another business's menu and food.
+
+Answer:
+
+
+### Question 57
+
+**Are you happy with the note under the Drive time box? It says: "When you press the button, your address goes to the free OpenStreetMap services. They find the miles and minutes. This website does not keep your address, but those services may keep a record of the request."**
+
+Dashboard id: d62
+
+Why it matters: "May keep a record" is our careful guess: we could not find how long the two free services keep a request. We are not lawyers and this is not legal advice (question 43 is for an adviser). We did not check children's privacy rules or other states' laws.
+
+Answer:
+
+
+### Question 58
+
+**If you connect the email sign-up form (question 26), are you happy that Mailchimp's reply runs as a small program inside your page?**
+
+Dashboard id: d63
+
+Why it matters: When a visitor presses "Join the email list", Mailchimp's answer is a small script that the page runs, so Mailchimp becomes the one outside address allowed to run code on the site. That happens only after the button is pressed, and only once the form is connected; today the button simply opens Mailchimp's own sign-up page.
+
+Answer:
+
+
+### Question 59
+
+**If someone prints the home page, what should come out of the printer?**
+
+Dashboard id: d64
+
+Why it matters: The home page prints on 28 to 34 sheets, depending on the language and the paper (Letter or A4). The farm map is left out, and only the season tab and the group tab that are open on the screen print, so a printout shows one season of four and one group of three. In a test (English) showing all four seasons added at most one sheet, and showing all the group tabs as well added one or two more.
+
+Answer:
+
+
+### Question 60
+
+**Do you want the QR codes on the printed signs made harder to damage, and the address printed once instead of twice on the directions sign?**
+
+Dashboard id: d65
+
+Why it matters: The codes are made so that a sign that gets wet, torn or faded still scans if about 15 percent of the code is damaged. A stronger setting allows about 25 percent, but each little square prints 10 to 15 percent smaller on the same sign (the biggest codes grow from 49 to 57 squares across). The directions sign prints the address twice, once under the English and once under the Spanish, with the same words.
+
+Answer:
+
+
+### Question 61
+
+**After 31 December 2026, should the site stop calling the u-pick tomatoes and basil "new"?**
+
+Dashboard id: d66
+
+Why it matters: The "New this year" ribbon hides itself after 31 December 2026. (The "New: u-pick tomatoes & basil" chip and badge already hide on 31 October.) But eight other places still call the tomatoes and basil new, for example the FAQ answer "Yes, and it's new this year!". The small red dot on the Tomatoes link in the menu also comes back every fall, not only this one.
+
+Answer:
+
+
+### Question 62
+
+**Do you want to keep two backgrounds that never showed before: the mint graph paper behind The GreenHouse section and the brown road with white dashes under the tractor in the visit steps?**
+
+Dashboard id: d67
+
+Why it matters: A check of the page style found two lines that browsers ignore, so these two backgrounds were never drawn: the section looks plain and the road is an empty outline. The fix is already in the site files, so they now show for the first time, which changes how two parts of the home page look.
+
+Answer:
+
+
+### Question 63
+
+**Is it all right that the "Sunflower Whisperer" badge (100 snipped sunflowers in the summer picture) can only be earned on a wide computer screen?**
+
+Dashboard id: d68
+
+Why it matters: Only 5 sunflowers are drawn, at the far edges of the picture. On a screen 1440 pixels wide 4 of the 5 are in view; on a phone 390 pixels wide none is, so a visitor on a phone can never earn this badge.
+
+Answer:
+
+
+### Question 64
+
+**In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 22 trees. Should it change?**
+
+Dashboard id: d69
+
+Why it matters: Tapping lights a tree (or sparks a fire), and the message changes as the count grows. At 12 it says that every tree is lit while at least 10 are still dark, so a child may think the game is finished.
+
+Answer:
+
+
+### Question 65
+
+**On very small phones, should the badge pop-up stop covering the "No reservation? Visit The GreenHouse" note?**
+
+Dashboard id: d70
+
+Why it matters: On a phone 320 pixels wide, the "Achievement unlocked" badge sits over that note under the picture for 6 seconds, until it goes away by itself or the visitor taps its x. Nothing is lost; it only looks untidy.
+
+Answer:
+
+
+### Question 66
+
+**How should the Spanish, Chinese, Hindi and Vietnamese text speak to visitors: friendly or formal?**
+
+Dashboard id: d71
+
+Why it matters: Now the Spanish says "tú", the Chinese "你" and the Vietnamese "bạn" (each in about 100 sentences), and the Hindi uses the polite "आप". The Hindi also writes English words in Hindi letters (for example "रिज़र्वेशन" for "reservation", in 106 sentences) and the Vietnamese uses Southern words. All four were written by AI, so we cannot tell what a local reader prefers. (The dashboard question d37 asks whether a native speaker should check them; this one is about the tone.)
+
+Answer:
+
+
+### Question 67
+
+**Would you like a form on your own computer that changes the site settings for you, and a facts table so a price is typed only once?**
+
+Dashboard id: d72
+
+Why it matters: Today, closing for rain or changing an hour means editing text files by hand. One missing comma can switch off every setting. A price is written in about nine places and four translations. A written proposal (the owner page proposal in the docs folder, not built yet) describes a form and a facts table. The form is 2 to 3 days of work (one day for just the notice and the closed days). The facts table is about 3 days.
+
+Answer:
+
+
+### Question 68
+
+**Should the brand yellow be made a little paler, so it stays readable if a computer forces a dark look?**
+
+Dashboard id: d73
+
+Why it matters: Phones and browsers that darken pages by themselves no longer change the site, because the site now tells them to stay light. One case remains: a developer setting on a computer, where the dark text on the yellow buttons, tabs and chips turns too pale to read. A slightly paler yellow would cure it but changes the farm's colour. Few visitors, if any, would ever see it.
 
 Answer:
 
@@ -732,7 +890,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 
 ### 3. Hours, prices and booking
 
-**Question 17: Are these hours right: farm visits Thursday to Sunday in fall; The GreenHouse Friday to Sunday, 10 am to 8 pm; Wise Pie at The GreenHouse Friday to Sunday, 4 to 8 pm; pizza at the farm 10 am to 4 pm?**
+**Question 17: Are these hours right? Farm visits: Thursday to Sunday in fall. The GreenHouse: Friday to Sunday, 10 am to 8 pm. Wise Pie at The GreenHouse: Friday to Sunday, 4 to 8 pm. Pizza at the farm: 10 am to 4 pm.**
 
 - **If Yes:** no change; delete the README row "Open-now badges".
 - **If No:** follow the README, "Change a fact everywhere", rows "The GreenHouse hours" and "Wise Pie hours" (`hours` in `js/content.js`; the text in `index.html`, `pages/wise-pie.html` and `pages/pumpkin-patch.html`). Pizza at the farm, 10 am to 4 pm, is written as `10 am – 4 pm` in `index.html` and `pages/wise-pie.html`, and as "At the farm" in the FAQ answers: search for both.
@@ -781,12 +939,12 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 
 **Question 26: Do you want an email sign-up form with interest choices (strawberries, pumpkins, pizza and so on) on the site, and can you send us the Mailchimp form code?**
 
-- **If Yes:** put the form address in `signup.action` (`js/content.js` at `signup: { action: '',`) and the interest names from the embed code (see README "Email signup with interests"). After that, sign up once with a real email.
+- **If Yes:** put the form address in `signup.action` (`js/content.js` at `signup: { action:` (2 places: the instructions, then the setting)) and the interest names from the embed code (see README "Email signup with interests"). After that, sign up once with a real email.
 - **If No:** leave `signup.action` empty; the plain "Join the email list" button (`index.html` at `eepurl.com/hZehgr` (7 places)) stays. Delete the README row "Email signup" only when it is set up.
 
 **Question 27: Can you send us your Google review link (in your Google Business Profile, choose "Ask for reviews")?**
 
-- **If Yes:** paste it into `reviewUrl` (`js/content.js` at `reviewUrl: '',`), then run `python3 tools/make_qr.py` so the review QR sign is made (`tools/qr_links.json` at `"{reviewUrl}"`). Delete the README row "Google review link".
+- **If Yes:** paste it into `reviewUrl` (`js/content.js` at `reviewUrl:` (2 places: the instructions, then the setting)), then run `python3 tools/make_qr.py` so the review QR sign is made (`tools/qr_links.json` at `"{reviewUrl}"`). Delete the README row "Google review link".
 - **If No:** no change.
 
 **Question 28: Do both Axios Charlotte links under "In the news" open an article about Wise Acres with the headline and year the site shows?**
@@ -949,6 +1107,94 @@ Everything in this section was checked against the code on 3 October 2026. Chang
 - **If there are tables:** say where, in the same two lines or in The GreenHouse section (`index.html` at `data-t="t8aa1a25f"`).
 - **If she does not know:** no change.
 - Delete the README row "Wise Pie facts the printed menu does not show" once questions 47, 49, 50, 51, 52 and 54 are answered.
+
+### 8. More new questions (added 3 October 2026)
+
+Everything in this section was checked against the code on 3 October 2026; the game, printing and sign facts were also checked in a browser. Changed English text needs its four translations: ask Claude. Optional patches are listed in docs/DECISION_PLAYBOOK.md, "Patches on disk".
+
+**Question 55: Will the farm be closed on Sunday, October 4 because of rain?**
+
+- **If Yes:** `js/content.js` at `closures: [],` becomes `closures: ['2026-10-04'],`. For the bar at the top of every page set `notice` and `noticeUntil: '2026-10-05'` (`js/content.js` at `notice: '',` and `noticeUntil: '',`). In the pizza note (`index.html` at `data-t="t58da3033"`) change "Unless the forecast changes a lot, we'll be closed that day for rain." to "We are closed that day for rain." (the four translations: ask Claude). Close the Sunday times in Bookeo too (README row "Close for rain or a holiday").
+- **If No:** no change. The pizza note hides itself after October 4.
+- **If she has not decided:** no change. The same steps serve any later rain day.
+
+**Question 56: Who owns the photos on the site?**
+
+- **If all are theirs:** no change.
+- **If some belong to others:** put the credit in that photo's caption (`js/content.js` at `assets/photos/foster-village-table.webp` is one of the 32 entries; each has a `caption:` line, shown under the picture in the gallery and viewer, and it can be written { en, es, hi, zh, vi }). A credit under a picture outside the gallery needs a small code change (ask Claude). Or remove the picture as in questions 38 to 40.
+- **If she has to check:** no change.
+
+**Question 57: Is the Drive time privacy note enough?**
+
+- **If the wording is fine:** no change.
+- **If she wants it changed:** edit the sentence in `index.html` at `data-t="t2ed7116c"` and `pages/first-visit.html` at `class="fine drive-priv"` (translated into four languages: ask Claude). The drive test pins the sentence and must change with it (`tests/drive.test.mjs` at `those services may keep a record of the request`).
+- **If an adviser should look first:** no change now; see question 43.
+
+**Question 58: Email sign-up form: is Mailchimp's script OK?**
+
+- **If Yes:** as question 26 "If Yes": put the form address in `signup.action` (`js/content.js` at `signup: { action:` (2 places: the instructions, then the setting)) and the interest names from the embed code; sign up once with a real email address. Mailchimp's address is already in the ready security header (`docs/LAUNCH_CHECKLIST.md`, section "The Content-Security-Policy").
+- **If No:** leave `signup.action` empty; the plain "Join the email list" button, which links to Mailchimp's own page, stays.
+- **If she wants to ask first:** no change.
+
+**Question 59: If someone prints the home page, what should come out of the printer?**
+
+- **If it should stay as it is:** no change.
+- **If all four seasons:** ask Claude for a print-only rule in `css/extras.css` (inside the block that starts at `/* Printing.`) that shows the three hidden season panels; the season buttons do not print, so each panel needs its season name. Measured (English): 32 sheets as it is and 32 with all four seasons on Letter paper, 30 and 31 on A4.
+- **If the farm map too:** `css/features.css` at `@media print{#farm-map,#comfort{display:none!important}}` hides it on paper; a plain list of the places is easier to print than the drawing (ask Claude).
+
+**Question 60: QR signs: stronger codes, one address line**
+
+- **If stronger codes:** `tools/make_qr.py` at `qr = segno.make(url, error='m')`: change the letter m to q, then run `python3 tools/make_qr.py` (it rebuilds `print/qr-signs.html`, the three language sheets and the code pictures, and scans every code back). Print one sign and scan it with a phone before putting the signs up.
+- **If one address line:** the optional patch OPTIONAL-qr-no-duplicate-line-66c8272.patch (DECISION_PLAYBOOK, "Patches on disk"); on 05b0b72 it needs a redo.
+- **If neither:** no change.
+
+**Question 61: After 31 December 2026, should the site stop calling the u-pick tomatoes and basil "new"?**
+
+- **If she stops calling them new:** change the words in `index.html` at `data-t="td6ecd1d8"`, `data-t="t1c989256"`, `data-t="tedce5b9f"`, `data-t="tbc119a85"`, `data-t="t4eb3e326"`, `data-t="t247dcbc5"` and `data-t="t398007b0"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`; delete the red-dot rule `css/sections.css` at `html[data-season="fall"] .nav-tomato a::after`. The ribbon (`index.html` at `data-until="2026-12-31"`), the chip and the "New" badge (`index.html` at `data-until="2026-10-31"` (2 places)) hide themselves.
+- **If she keeps saying new:** change those last days (`index.html` at `data-until="2026-12-31"` and at `data-until="2026-10-31"` (2 places)) to her date.
+- **If she decides in December:** no change now; it all has to be done before 1 January 2027.
+
+**Question 62: Keep two backgrounds that never showed?**
+
+- **If she wants them:** no change: the fix is already in (`css/sections.css` at `.greenhouse{background:linear-gradient(` and `css/styles.css` at `.track-road{position:absolute` and `.track-road{left:26px`).
+- **If she wants the plain look:** ask Claude to take the background out of the two rules; the old wrong lines must not come back (the validity test).
+- **If she wants to see them first:** no change; Claude has before and after pictures.
+
+**Question 63: Sunflower badge only works on big screens**
+
+- **If the Pick button snips sunflowers too:** the optional patch games-B.patch (DECISION_PLAYBOOK, "Patches on disk").
+- **If a lower number:** `js/hero.js` at `sunflower: { icon: 'sunflower', at: 100` and the badge text `js/hero.js` at `100 sunflowers snipped!` (a JavaScript string with four translations: ask Claude).
+- **If sunflowers in the middle:** `js/hero.js` at `sunflower(24, 205, 128, '')`: add two or three sunflowers near the middle of the picture (ask Claude).
+- **If she leaves it:** no change.
+
+**Question 64: In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 22 trees. Should it change?**
+
+- **If only when all 22 are lit:** `js/hero.js` at `Every tree is lit!`: the messages follow the count of taps (a fire spark counts too); the last one should follow the number of lit trees (ask Claude).
+- **If new words:** change that sentence in `js/hero.js` at `Every tree is lit!` (keep {gh}, it becomes The GreenHouse); its four translations (ask Claude).
+- **If she leaves it:** no change.
+
+**Question 65: On very small phones, should the badge pop-up stop covering the "No reservation? Visit The GreenHouse" note?**
+
+- **If she leaves it:** no change.
+- **If the badge should move:** `css/extras.css` at `.ach-stack{position:absolute;left:0;bottom:calc(100% + 14px)` and `@media (max-width:47.5em){.ach-stack{bottom:calc(100% + 10px)}` (the phone version); the note is `index.html` at `data-t="t854933db"` (ask Claude).
+
+**Question 66: How should the Spanish, Chinese, Hindi and Vietnamese text speak to visitors: friendly or formal?**
+
+- **If friendly:** no change.
+- **If Spanish and Chinese more formal:** every sentence that speaks to the visitor in `lang/src/es.json` (about 129) and `lang/src/zh.json` (about 96) is rewritten by a native speaker, then `python3 tools/i18n.py build`; English never changes (ask Claude).
+- **If a reader of each language should decide:** see the dashboard question d37; Claude has a review sheet with 108 reviewed sentences.
+
+**Question 67: Do you want a form to change settings?**
+
+- **If start small:** ask Claude for Part 1 of the owner page proposal (the page PROPOSAL_owner_page in the docs folder; it is not in the repository yet) in its smallest form (the notice and closed days, about one day): a page called owner.html in the site folder that is never uploaded and writes only `js/content.js` between two marker lines.
+- **If the form and the facts table:** Parts 1 and 2 of the proposal (the facts table touches about 100 sentences in five languages).
+- **If no:** no change.
+
+**Question 68: Should the brand yellow be made a little paler, so it stays readable if a computer forces a dark look?**
+
+- **If she leaves it:** no change.
+- **If a paler yellow:** `css/styles.css` at `--sun:#ffc928;` and `index.html` at `<meta name="theme-color" content="#ffc928">` (then `python3 tools/pages.py`); drawings and the map highlight carry their own #ffc928, so decide whether they change too. Test with `node tests/auto-dark.test.mjs`.
+- **If she will explain:** no change until she does.
 
 ## Translation notes (for a reader of Hindi or Spanish, not for the farm)
 

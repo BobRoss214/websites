@@ -1,0 +1,189 @@
+# Word lists for tools/plain_lint.py. One entry per line; "#" starts a comment. Edit this file, not the tool.
+#
+# [jargon]  words the owner should not have to meet. "word = what to write instead". A word here may not appear in an owner-facing section
+#           (tests/plain-lint.test.mjs fails on it). Matching ignores capitals and also matches the plural and "-ed" / "-ing" forms.
+#           Words inside `backticks` or "double quotes" are never checked: a file name, a command or a quoted setting is not "jargon", it is the
+#           thing itself, and a word on a screen label or in a quotation is somebody else's.
+# [known]   capital-letter abbreviations a farm owner already knows (no explanation needed).
+# [terms]   words that are fine once they are explained. The tool tells you when one is used before its explanation (it looks at the sentence
+#           that uses it and the one after). "word = how to explain it".
+# [allow]   a place where a jargon word has to stay. "file name :: word" (the file name is the file's own name, for example QUESTIONS_FOR_THE_FARM.md).
+# [hold]    a sentence that is held back from the two limits (sentence length, [jargon]) because it cannot be rewritten alone. "path :: the first words
+#           of the sentence, as the tool prints them in its list" (code in `backticks` shows as a section sign). The tool fails when an entry matches
+#           no sentence, so an entry cannot outlive the sentence it protects.
+
+[jargon]
+config = settings
+configuration = settings
+configure = set up
+deploy = put online / publish
+deployment = putting the site online
+repo = project folder
+repository = project folder
+commit = save a version / a saved change
+regex = pattern
+regular expression = pattern
+csp = the rule that decides which scripts a page may load (or leave it out)
+dom = the page
+build step = a step before publishing (the site needs none)
+hash = a short code
+cli = command line
+endpoint = web address
+cache = the copy a browser keeps
+caches = the copies a browser keeps
+caching = keeping a copy
+minify = shrink the file
+minified = shrunk
+markup = the page's code
+parse = read
+parser = reader
+runtime = while the page runs
+payload = the data sent
+boolean = yes or no
+stdout = the screen
+stderr = the screen
+refactor = tidy
+uncommitted = unsaved
+idempotent = safe to run twice
+async = at its own pace
+callback = a call back
+middleware = (leave out)
+boilerplate = standard text
+scaffold = a starting layout
+schema = layout
+serialize = save
+sanitize = clean
+placeholder text = sample text
+fallback = the plan B
+toggle = switch
+namespace = (leave out)
+widget = box on the page
+viewport = screen
+breakpoint = screen width
+heuristic = rule of thumb
+semantic = (leave out)
+mock = pretend
+stub = a stand-in
+fixture = test data
+linter = checker
+lint = check
+linting = checking
+env var = a setting on the computer
+environment variable = a setting on the computer
+dependency = something it needs
+dependencies = things it needs
+transpile = convert
+sandbox = a safe test area
+whitelist = list of allowed
+blacklist = list of blocked
+tl;dr = in short
+iframe = embedded box
+sha = a short code
+checksum = a short code
+utf-8 = (leave out)
+latency = delay
+throughput = speed
+concurrency = at the same time
+polyfill = a stand-in
+shim = a stand-in
+
+[known]
+AM
+PM
+USA
+USDA
+NC
+FAQ
+URL
+HTML
+CSS
+PDF
+QR
+SMS
+ID
+OK
+FDA
+LLC
+EIN
+IRS
+PO
+RSVP
+GPS
+WIC
+EBT
+SNAP
+PYO
+US
+UK
+EST
+EDT
+CEST
+UTC
+WA
+HQ
+DIY
+ASAP
+SEO
+PNG
+JPG
+JPEG
+GIF
+SVG
+CSV
+JSON
+MP4
+TLS
+SSL
+DNS
+HTTPS
+FTP
+SFTP
+ZIP
+USB
+FSA
+CSA
+GAP
+GMO
+NOP
+OMRI
+CCOF
+AI
+BBB
+FILES
+# words a program prints in capitals (a result label, a file name)
+PASS
+WARN
+FAIL
+NEW
+OPEN
+PATH
+README
+GB
+MB
+KB
+
+[terms]
+dns = the list kept by the company that looks after your domain
+https = the padlock in the browser
+registrar = the company you rent your domain from
+nameserver = the computers that answer for a domain name
+header = a hidden note a site sends with every page
+sitemap = the list of pages for search engines
+redirect = sending someone from an old address to a new one
+canonical = the one address a page tells Google to use
+git = a program that keeps every version of your files
+
+[allow]
+# (nothing yet)
+
+[hold]
+# A patch in patches/optional/ carries each of these lines as context (or replaces the line). Rewrite the line together with the patch, then delete the entry.
+README.md :: There is no build step.
+README.md :: The easy way: § makes § with exactly the files to upload
+README.md :: By hand: make a clean copy of the folder
+docs/LAUNCH_CHECKLIST.md :: Our file was accepted by Netlify's own open-source parser.
+docs/LAUNCH_CHECKLIST.md :: Workers can switch the § redirect off
+docs/LAUNCH_CHECKLIST.md :: If you do not want that, or you would like the least change to the files
+docs/LAUNCH_CHECKLIST.md :: To use it: save the block as a file named
+docs/LAUNCH_CHECKLIST.md :: All 22 lines were tested in Cloudflare's own test server
+docs/LAUNCH_CHECKLIST.md :: Make the upload folder again and upload it (section 2); a hard refresh

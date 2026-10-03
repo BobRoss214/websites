@@ -5,7 +5,7 @@
  * never breaks the page, and with analytics off (the default) not one request leaves the site and nothing is stored. */
 import { run, open, ok, okSoon, until } from './lib.mjs';
 
-const EXTRA = `WISE_ACRES.week = { updated: '2026-10-01', days: [ { date: '2026-10-03', farm: 'full', pizza: 'full' } ] }; WISE_ACRES.signup.demo = true;`;
+const EXTRA = `WISE_ACRES.week = { updated: '2026-10-01', days: [ { date: '2026-10-03', farm: 'full', pizza: 'full' } ] }; WISE_ACRES.signup.demo = true; WISE_ACRES.seasonPicker = true;`;   // the test clicks the season switcher
 const log = (p) => p.evaluate(() => (window.WISE_ACRES.analyticsLog || []).map((e) => e.name + (e.props && Object.keys(e.props).length ? ' ' + JSON.stringify(e.props) : '')));
 
 await run('analytics', async ({ browser, base, errs }) => {
