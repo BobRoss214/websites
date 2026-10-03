@@ -173,10 +173,12 @@
     date: fmtYmd(rel.ymd, { weekday: 'long', month: 'short', day: 'numeric' }),
     time: fmtClock(rel.at, TZ),
   });
+  // 5 PM on a Tuesday in North Carolina is early Wednesday in India, China, Australia or New Zealand: then the weekday is part of "your time".
   function yourTimeNote(rel) {
     if (!hereTz || hereTz === TZ) return '';
-    const mine = fmtClock(rel.at), theirs = fmtClock(rel.at, TZ);
-    return mine === theirs ? '' : ' ' + t('(Your time: {time})', { time: mine });
+    const sameDay = ymdOf(tzParts(rel.at, hereTz)) === ymdOf(tzParts(rel.at, TZ));
+    const mine = sameDay ? fmtClock(rel.at) : formatter(Intl.DateTimeFormat, { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(rel.at);
+    return sameDay && mine === fmtClock(rel.at, TZ) ? '' : ' ' + t('(Your time: {time})', { time: mine });
   }
 
   let relBuilt = false, relKey = '', chipKey = '';   // what the texts were last written for, so they are only rewritten when it changes
@@ -260,7 +262,8 @@
   }
   const compact = (ymd, hhmm) => ymd.replace(/-/g, '') + 'T' + hhmm.replace(':', '') + '00';
   const utcStamp = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  const addMinutes = (hhmm, n) => { const [h, m] = hhmm.split(':').map(Number), x = h * 60 + m + n; return pad(Math.floor(x / 60) % 24) + ':' + pad(x % 60); };
+  // The wall-clock reading in Eastern Time of an instant, as 20261006T170000 (so 9:00 or 23:45 openings are written right too).
+  const etStamp = (date) => { const p = tzParts(date, TZ); return compact(ymdOf(p), pad(p.h) + ':' + pad(p.min)); };
 
   function futureReleases() { const now = Date.now(); return readReleases().filter((r) => r.at > now).slice(0, 12); }
   function buildICS(list) {
@@ -276,7 +279,7 @@
       const summary = t('Wise Acres: pizza reservations open');
       const desc = t('Pizza reservations for {dates} open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}', { dates: r.forText || '', time: fmtClock(r.at, TZ), url: BOOK });
       L.push('BEGIN:VEVENT', 'UID:wa-release-' + r.ymd + '@wiseacresorganic.com', 'DTSTAMP:' + stamp,
-        'DTSTART;TZID=' + TZ + ':' + compact(r.ymd, r.time), 'DTEND;TZID=' + TZ + ':' + compact(r.ymd, addMinutes(r.time, 30)),
+        'DTSTART;TZID=' + TZ + ':' + etStamp(r.at), 'DTEND;TZID=' + TZ + ':' + etStamp(new Date(r.at.getTime() + 30 * 60e3)),
         'SUMMARY:' + icsEsc(summary), 'DESCRIPTION:' + icsEsc(desc), 'URL:' + BOOK,
         'BEGIN:VALARM', 'TRIGGER:-PT15M', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(summary), 'END:VALARM', 'END:VEVENT');
     });
@@ -361,6 +364,14 @@
     });
   }
 
+  // closures and noticeUntil (js/content.js) are read by js/live.js, which skips a date it cannot read. Say so here, so it is not silent.
+  function checkOwnerDates() {
+    const c = W.closures;
+    if (c != null && !Array.isArray(c)) warn("closures must be a list of dates: closures: ['2026-10-04', '2026-10-11']. To close several days, write each day.");
+    (Array.isArray(c) ? c : []).forEach((v) => { fixYmd(v, 'closures'); });
+    if (W.noticeUntil) fixYmd(W.noticeUntil, 'noticeUntil');
+  }
+
   /* ------------------------------------------------------------------ *
    * 2. This week at the farm
    * ------------------------------------------------------------------ */
@@ -378,7 +389,7 @@
   const AVAIL_LABEL = { open: T('Spots open'), few: T('A few spots left'), full: T('Full'), closed: T('Closed') };
 
   function autoStatus(c, now) {
-    const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const t0 = W.seasons.farmDay(now);   // the farm's day, not the visitor's
     let best = null;
     for (const yy of [t0.getFullYear(), t0.getFullYear() + 1]) {
       for (const [s, e] of c.wins(yy)) {
@@ -1074,7 +1085,7 @@
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
   const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
   if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). Open the browser console (F12) to see the line number.');
-  [expireDated, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
+  [expireDated, checkOwnerDates, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
   safe(renderDrive);

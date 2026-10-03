@@ -57,7 +57,7 @@
  *       noticeUntil: '2026-10-05',      // optional: the bar disappears after this day by itself
  *   The bar shows in English in every language. To give each language its own words, write:
  *       notice: { en: 'Closed Saturday for rain.', es: 'Cerrado el sábado por la lluvia.', hi: '...', zh: '...', vi: '...' },
- *   A language you leave out shows the English. The Site check box does not check hours, closures or the notice: look at the page yourself.
+ *   A language you leave out shows the English. The Site check box checks the dates in closures and noticeUntil, but not the hours or the words of the notice: look at the page yourself.
  *
  * REVIEWS
  * -------

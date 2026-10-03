@@ -592,7 +592,7 @@
   }
 
   function initWeekStrips() {
-    const today = new Date().getDay();
+    const today = S.farmDay(new Date()).getDay();   // the farm's weekday (Eastern Time)
     const draw = () => {
       // Jan 1, 2023 was a Sunday, so day n is Jan 1 + n.
       const letter = (d) => new Intl.DateTimeFormat(W.lang || 'en', { weekday: 'narrow', timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1 + d, 12)));
@@ -609,7 +609,7 @@
   function initFarmCalendar() {
     const cal = $('.cal');
     if (!cal) return;
-    const now = new Date();
+    const now = S.farmDay(new Date());   // the farm's date (Eastern Time)
     const dim = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     cal.style.setProperty('--today', ((now.getMonth() + (now.getDate() - 1) / dim) / 12).toFixed(4));
     cal.classList.add('has-today');

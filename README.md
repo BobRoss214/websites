@@ -244,8 +244,8 @@ Do this after you edit `js/content.js` or the pizza schedule.
    site add `?check` to the address: https://www.wiseacresorganic.com/?check . Anyone who adds ?check sees the box too, so it only ever shows what is already in the public files.
 3. Look at the bottom of the page. If something you typed cannot be used, a yellow "Site check" box says what and where. No box means the check
    found nothing wrong.
-4. The check covers `week`, `signup`, `reviewUrl`, `community`, `entrancePhoto`, the rows of the pizza schedule and every `data-until` date (it says what has already hidden itself). It does **not** check hours,
-   closures, the notice, reviews, photos or `farmPoint`: look at those yourself. For `farmPoint`, press "Get drive time" once with an address in Indian Trail and see that the miles look right.
+4. The check covers `week`, `signup`, `reviewUrl`, `community`, `entrancePhoto`, the rows of the pizza schedule and every `data-until` date (it says what has already hidden itself) and every date in `closures` and `noticeUntil` (it lists any it cannot read; write each closed day on its own, like `'2026-10-04'`). It does **not** check hours,
+   the notice words, reviews, photos or `farmPoint`: look at those yourself. For `farmPoint`, press "Get drive time" once with an address in Indian Trail and see that the miles look right.
 5. If the box says "js/content.js did not run", there is a typo in that file (most often an apostrophe inside single quotes, a missing comma, or curly
    quotes pasted from Word). Press F12 (on a Mac in Chrome: Cmd+Option+J), open Console, and the first red line names the line number. Until it is
    fixed, hours, closures, the notice bar, photos, reviews and the signup are off. Undoing your last change (Ctrl+Z) or putting your copy back also fixes it.

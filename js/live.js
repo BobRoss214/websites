@@ -30,6 +30,18 @@
       .formatToParts(d).forEach((p) => { o[p.type] = p.value; });
     return { dow: DOW[o.weekday], mins: (+o.hour) * 60 + (+o.minute), ymd: o.year + '-' + o.month + '-' + o.day };
   }
+  // Dates the owner types in js/content.js. '2026-10-4' and '10/4/2026' are read as the day the owner meant. Anything that is not a real day
+  // is ignored here, and the Site check box (js/features.js) says so, instead of the date quietly never matching.
+  function cleanYmd(v) {
+    const s = String(v == null ? '' : v).trim();
+    let m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s);
+    if (!m && (m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s))) m = [0, m[3], m[1], m[2]];
+    if (!m) return '';
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    if (d.getUTCFullYear() !== +m[1] || d.getUTCMonth() !== +m[2] - 1 || d.getUTCDate() !== +m[3]) return '';
+    return m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
+  }
+  const closedDays = () => (Array.isArray(W.closures) ? W.closures : typeof W.closures === 'string' ? [W.closures] : []).map(cleanYmd).filter(Boolean);
   const toMins = (hhmm) => { const [h, m] = hhmm.split(':'); return (+h) * 60 + (+m || 0); };
   const addDays = (ymd, n) => {
     const [y, m, d] = ymd.split('-').map(Number), dt = new Date(Date.UTC(y, m - 1, d + n));
@@ -47,7 +59,7 @@
    * Open-now status for a place that keeps a weekly schedule
    * ------------------------------------------------------------------ */
   function scheduleStatus(sch, now) {
-    const open = toMins(sch.open), close = toMins(sch.close), closures = W.closures || [];
+    const open = toMins(sch.open), close = toMins(sch.close), closures = closedDays();
     const closedOn = (ymd) => closures.includes(ymd);
     const todayOpen = sch.days.includes(now.dow) && !closedOn(now.ymd);
     if (todayOpen && now.mins >= open && now.mins < close) return { state: 'open', text: t('Open now, until {time}', { time: timeLabel(close) }) };
@@ -67,8 +79,8 @@
   function farmStatus(now, season) {
     const days = (season && W.hours && W.hours.farm && W.hours.farm[season.id]) || null;
     if (!days) return null;
-    const closed = (ymd) => (W.closures || []).includes(ymd);
-    const inSeason = (ymd) => { const [y, m, d] = ymd.split('-').map(Number); return W.seasons.inWindow(season, new Date(y, m - 1, d, 12)); };
+    const shut = closedDays(), closed = (ymd) => shut.includes(ymd);
+    const inSeason = (ymd) => W.seasons.inWindow(season, ymd);   // a calendar day, as written: no time zone shifting
     if (days.includes(now.dow) && !closed(now.ymd)) return { state: 'open', text: t('Reserved visits today') };
     for (let i = 1; i <= 7; i++) {
       const dow = (now.dow + i) % 7, ymd = addDays(now.ymd, i);
@@ -101,7 +113,7 @@
    * ------------------------------------------------------------------ */
   function renderNotice() {
     let el = $('#site-notice');
-    const until = W.noticeUntil && /^\d{4}-\d{2}-\d{2}$/.test(W.noticeUntil) ? W.noticeUntil : '';
+    const until = cleanYmd(W.noticeUntil);
     const n = W.notice, text = n && typeof n === 'object' ? (n[W.lang] || n.en || '') : (n || '');   // 'Closed Saturday.'  or  { en: '...', es: '...' }
     const live = text && (!until || easternParts(new Date()).ymd <= until);
     if (!live) { if (el) el.remove(); return; }
@@ -149,7 +161,8 @@
   function refresh() { renderBadges(); renderNotice(); renderCountdown(); renderAnnounce(); }
 
   refresh();
-  setInterval(renderBadges, 60 * 1000);
+  let seenDay = easternParts(new Date()).ymd;   // a page left open overnight: new day, new countdown number, an expired notice goes away
+  setInterval(() => { renderBadges(); const d = easternParts(new Date()).ymd; if (d !== seenDay) { seenDay = d; refresh(); } }, 60 * 1000);
   doc.addEventListener('wa:lang', refresh);
   W.live = { status: statusFor, refresh };
 })();

@@ -23,7 +23,22 @@
     { id: 'winter', crop: 'Christmas trees at The GreenHouse', start: thanksgivingFriday,                          end: function (y) { return new Date(y, 11, 8); },  next: 'the Friday after Thanksgiving' }
   ];
 
-  function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  // The farm's calendar day (Eastern Time), whoever is looking: a visitor in Sydney or Los Angeles gets the farm's date, not their own.
+  // Returned as local midnight of that date, so it compares with the season dates below.
+  var etFmt = null;
+  function farmDay(d) {
+    try {
+      etFmt = etFmt || new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: 'numeric', day: 'numeric' });
+      var p = {};
+      etFmt.formatToParts(d).forEach(function (x) { p[x.type] = +x.value; });
+      return new Date(p.year, p.month - 1, p.day);
+    } catch (e) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }   // no time zone support: the visitor's own day
+  }
+  // A date written as 'YYYY-MM-DD' is that calendar day as it stands; a moment (a Date) is turned into the farm's day.
+  function dayStart(d) {
+    if (typeof d === 'string') { var m = d.split('-'); return new Date(+m[0], +m[1] - 1, +m[2]); }
+    return farmDay(d);
+  }
 
   function inWindow(s, now) {
     var t = dayStart(now), y = t.getFullYear();
@@ -33,13 +48,13 @@
   function daysUntilStart(s, now) {
     var t = dayStart(now), st = s.start(t.getFullYear());
     if (st < t) st = s.start(t.getFullYear() + 1);
-    return (st - t) / 864e5;
+    return Math.round((st - t) / 864e5);   // whole days: a daylight-saving change in the visitor's zone must not make a tie come out differently
   }
 
   function daysSinceEnd(s, now) {
     var t = dayStart(now), e = s.end(t.getFullYear());
     if (e > t) e = s.end(t.getFullYear() - 1);
-    return (t - e) / 864e5;
+    return Math.round((t - e) / 864e5);
   }
 
   function live(now) {
@@ -77,7 +92,7 @@
   }
 
   W.rand = rand;
-  W.seasons = { list: SEASONS, live: live, current: current, inWindow: inWindow, daysUntilStart: daysUntilStart, apply: apply, active: null };
+  W.seasons = { list: SEASONS, live: live, current: current, inWindow: inWindow, daysUntilStart: daysUntilStart, farmDay: farmDay, apply: apply, active: null };
   if (W.seasonPicker === undefined) W.seasonPicker = true;
 
   document.documentElement.classList.add('js-scene');
