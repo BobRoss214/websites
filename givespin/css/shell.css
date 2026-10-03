@@ -152,11 +152,35 @@ body.is-transparent .panel { background: rgba(19, 32, 44, 0.78); }
 @media (max-width: 800px) {
   .acct [data-role="login"] { display: none; }   /* "Log in" is in the Sign up window too ("Already have an account?") */
 }
+/* 420 px and narrower (most phones): about 26 px tighter. On a 390 px phone the bar had 0.2 px to spare with the web fonts and was 6 px too wide without them. */
+@media (max-width: 420px) {
+  .topbar { gap: 6px; padding: 0 10px; }
+  .topbar__right { gap: 5px; min-width: 0; flex: 0 1 auto; }
+  .brand__mark { width: 30px; height: 30px; }
+  .balance { min-width: 0; flex: 0 1 auto; }
+  .balance__txt { min-width: 0; overflow: hidden; }
+  #btn-credit, .acct .btn { padding-left: 10px; padding-right: 10px; }
+  .acct .btn { white-space: nowrap; }   /* "Sign up" stays on one line; the balance is the piece that gives way */
+}
 @media (max-width: 380px) {
   .topbar { gap: 4px; padding: 0 8px; }
-  .topbar__right { gap: 4px; }
+  .topbar__right { gap: 4px; min-width: 0; flex: 0 1 auto; }
   .brand__mark { width: 28px; height: 28px; }
-  .balance { padding: 3px 6px; }
+  /* the balance is the one piece that may give way if a wider font ever arrives late (it clips its label instead of pushing the bar off the screen) */
+  .balance { padding: 3px 6px; min-width: 0; flex: 0 1 auto; }
+  .balance__txt { min-width: 0; overflow: hidden; }
   .topbar .iconbtn { width: 32px; height: 32px; }
   #btn-credit, .acct .btn { padding-left: 8px; padding-right: 8px; }
+}
+/* 340 px and narrower (a 320 px phone): about 30 px tighter, so the bar has at least 8 px of room left over even if the web fonts have not arrived yet and
+   the fallback fonts (about 18 px wider) are used; it was 2 px with the fonts and 16 px too wide without them. The 8 px of space at the screen edge from
+   the 380 px rule is kept, so the right-hand button never sits closer than 8 px to the edge of the screen. */
+@media (max-width: 340px) {
+  .topbar { gap: 3px; }
+  .topbar__right { gap: 2px; }
+  .brand__mark { width: 26px; height: 26px; }
+  .balance { padding: 3px 4px; }
+  .balance__lbl { letter-spacing: 0.02em; }
+  .topbar .iconbtn { width: 30px; height: 30px; }
+  #btn-credit, .acct .btn { padding-left: 5px; padding-right: 5px; }
 }
