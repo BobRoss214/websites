@@ -212,7 +212,6 @@
   "Visit with or without pizza:": "Tham quan có pizza hay không:",
   "Wagon ride route": "Tuyến xe kéo",
   "Wagon ride stop": "Điểm dừng xe kéo",
-  "Waitlist: {day}": "Danh sách chờ: {day}",
   "Wave back!": "Vẫy tay lại nào!",
   "What a pumpkin!": "Trái bí ngô gì mà to!",
   "What grows here": "Ở đây trồng gì",
@@ -292,7 +291,11 @@
   "To The GreenHouse at 5503 Poplin Rd. This time is for normal road speed with no traffic. Rush hour can add more time.": "Đến The GreenHouse tại 5503 Poplin Rd. Thời gian này tính theo tốc độ xe chạy bình thường, không kẹt xe. Giờ cao điểm có thể lâu hơn.",
   "We could not find a drive from that address to The GreenHouse. Try the Google Maps button.": "Chúng tôi không tìm được đường lái xe từ địa chỉ đó đến The GreenHouse. Hãy thử nút Google Maps.",
   "1 photo": "1 ảnh",
-  "{count} photos": "{count} ảnh"
+  "{count} photos": "{count} ảnh",
+  "Company:": "Công ty:",
+  "Approximate group size:": "Số lượng nhóm (ước tính):",
+  "Preferred date:": "Ngày mong muốn:",
+  "Preferred language:": "Ngôn ngữ ưa thích:"
  },
  "ui": {
   "t000eb0a5": "Tự cắt bó hoa của bạn trong ruộng hoa",
@@ -1338,6 +1341,8 @@
   "t0ce86084": "Trái mọng",
   "t2e2fd69b": "Lọc ảnh theo chủ đề",
   "t70af7aa7": "Mọi người và sự kiện",
-  "tafd37123": "Động vật nông trại"
+  "tafd37123": "Động vật nông trại",
+  "tf51b9c7e": "“Gửi email cho chúng tôi để vào danh sách chờ” mở một email gửi đến nông trại. Email được viết bằng tiếng Anh, kèm ngôn ngữ của bạn bên cạnh mỗi dòng, để nông trại đọc được. Bạn có thể thêm lời của mình. Sẽ không có gì được gửi cho đến khi bạn nhấn Gửi.",
+  "tf5dbb6b5": "Chúng tôi ghi lại ngôn ngữ của trang này (ví dụ tiếng Việt) để trả lời bạn bằng ngôn ngữ đó."
  }
 }

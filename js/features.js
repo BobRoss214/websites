@@ -21,6 +21,17 @@
   const t = (s, v) => (W.t ? W.t(s, v) : String(s).replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? v[k] : m)));
   const lang = () => W.lang || 'en';
   const T = (s) => s;   // marks a text for translation; it is translated by t() at the moment it is shown
+  /* Messages the farm receives (the email drafts the page builds).
+   * One rule: the farm's staff read English, so everything that goes to the farm is in English. A visitor reading another language gets
+   * their own words next to the English (in brackets after a label, or on the next line), so they can follow what the draft says, and
+   * whatever they type themselves is never touched. The draft opens in their own email program, so they see all of it before anything is sent. */
+  const LANG_NAME = { en: 'English', es: 'Spanish', hi: 'Hindi', zh: 'Chinese', vi: 'Vietnamese' };   // English names: the farm reads them
+  const fillEn = (s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => (v && Object.prototype.hasOwnProperty.call(v, k) ? v[k] : m));   // English text with its {placeholders} filled, whatever language the page is in
+  const noColon = (s) => String(s).replace(/\s*[:\uFF1A]\s*$/, '');
+  // "My name:" stays "My name:" on an English page; on another page it is "My name (我的姓名):" and the visitor types after the colon.
+  const labelBi = (en) => { const own = noColon(t(en)); return lang() === 'en' || own === noColon(en) ? en : noColon(en) + ' (' + own + '):'; };
+  // A mailto: address with an English subject and body. Line breaks in a body are %0D%0A (RFC 6068); a bare %0A is not understood by every email program.
+  const mailtoUrl = (to, subject, lines) => 'mailto:' + to + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(lines.join('\r\n'));
   // Text you wrote in js/content.js can be one string, or { en: '...', es: '...' } to give each language its own.
   // Text the owner typed is English unless it was given per language. Mark it, so a screen reader on a translated page does not read it with the wrong voice.
   const markEnglish = (el, raw, shown) => { const native = raw && typeof raw === 'object' && raw[lang()]; if (lang() !== 'en' && !native && el.textContent === String(shown)) el.setAttribute('lang', 'en'); else el.removeAttribute('lang'); };
@@ -123,15 +134,16 @@
   // A calendar date written in the reader's language (no time zone shifting).
   // Building an Intl formatter is slow, so each kind is built once and reused.
   const fmtCache = {};
-  const formatter = (Ctor, opts) => {
-    const key = Ctor.name + '|' + lang() + '|' + JSON.stringify(opts);
-    return fmtCache[key] || (fmtCache[key] = new Ctor(lang() === 'es' && Ctor === Intl.NumberFormat ? 'es-US' : lang(), opts));   // Spanish numbers like the rest of the page: 14.2 and 1,500, not 14,2 and 1500. (Clock times: see fmtClock, they stay "5:00 p. m." as in the fixed texts.)
+  const formatter = (Ctor, opts, forLang) => {
+    const l = forLang || lang();
+    const key = Ctor.name + '|' + l + '|' + JSON.stringify(opts);
+    return fmtCache[key] || (fmtCache[key] = new Ctor(l === 'es' && Ctor === Intl.NumberFormat ? 'es-US' : l, opts));   // Spanish numbers like the rest of the page: 14.2 and 1,500, not 14,2 and 1500. (Clock times: see fmtClock, they stay "5:00 p. m." as in the fixed texts.)
   };
-  const fmtYmd = (ymd, opts) => {
-    const [y, m, d] = ymd.split('-').map(Number), L = lang(), o = Object.assign({ timeZone: 'UTC' }, opts);
+  const fmtYmd = (ymd, opts, forLang) => {   // forLang: write it in another language than the page's (English, for text that goes to the farm)
+    const [y, m, d] = ymd.split('-').map(Number), L = forLang || lang(), o = Object.assign({ timeZone: 'UTC' }, opts);
     if (L === 'hi' && o.month === 'short') o.month = 'long';        // the fixed Hindi texts spell the month out: 6 अक्टूबर (the browser's short form is 6 अक्तू॰)
     if (L === 'zh' && o.weekday === 'long') o.weekday = 'short';    // and the fixed Chinese texts say 周二, not 星期二
-    const s = formatter(Intl.DateTimeFormat, o).format(new Date(Date.UTC(y, m - 1, d, 12)));
+    const s = formatter(Intl.DateTimeFormat, o, L).format(new Date(Date.UTC(y, m - 1, d, 12)));
     return L === 'hi' ? s.replace('अक्तूबर', 'अक्टूबर') : s;
   };
   // A time of day in the wording of the fixed texts: English "5:00 PM" and Spanish "5:00 p. m." come from the browser (12-hour, which Spanish
@@ -508,6 +520,7 @@
     daysBox.hidden = !days.length;
     if (days.length) {
       const tb = $('tbody', daysBox); tb.innerHTML = '';
+      let waitlisted = false;
       const ok = (v) => has(AVAIL_LABEL, v);
       const pill = (v) => ok(v) ? '<span class="av" data-v="' + v + '">' + esc(t(AVAIL_LABEL[v])) + '</span>' : '<span class="av-none" aria-hidden="true">&ndash;</span>';
       days.forEach((d) => {
@@ -521,14 +534,23 @@
         const act = $('.av-act', tr);
         const a = doc.createElement('a'); a.className = 'btn btn-sm ' + (full ? 'btn-ghost' : 'btn-red'); a.target = '_blank'; a.rel = 'noopener';
         if (full) {
-          a.href = 'mailto:' + cfg.waitlistEmail + '?subject=' + encodeURIComponent(t('Waitlist: {day}', { day: label })) + '&body=' + encodeURIComponent(t('Hi! Please add me to the waitlist for {day}.', { day: label }) + '\n\n' + t('My name:') + '\n' + t('How many people:') + '\n' + t('Visit with or without pizza:') + '\n');
-          a.removeAttribute('target'); a.textContent = t('Email us to join the waitlist'); a.setAttribute('data-track', 'Waitlist click');
+          const dayEn = fmtYmd(d.date, { weekday: 'long', month: 'short', day: 'numeric' }, 'en');   // the farm reads the day in English
+          const hello = fillEn('Hi! Please add me to the waitlist for {day}.', { day: dayEn });
+          const lines = [hello];
+          if (lang() !== 'en') lines.push(t('Hi! Please add me to the waitlist for {day}.', { day: label }));   // the visitor's own words, under the English
+          lines.push('', labelBi(T('My name:')), labelBi(T('How many people:')), labelBi(T('Visit with or without pizza:')));
+          if (lang() !== 'en') lines.push(labelBi(T('Preferred language:')).replace(/:$/, ': ') + LANG_NAME[lang()]);   // so the farm can answer in that language
+          lines.push('');
+          a.href = mailtoUrl(cfg.waitlistEmail, fillEn('Waitlist: {day}', { day: dayEn }), lines);
+          a.removeAttribute('target'); a.textContent = t('Email us to join the waitlist'); a.setAttribute('data-track', 'Waitlist click'); waitlisted = true;
         } else if (d.farm === 'closed' && (!d.pizza || d.pizza === 'closed' || d.pizza === 'none')) { a.remove(); }
         else { a.href = BOOK; a.textContent = t('Reserve'); }
         if (a.textContent) act.appendChild(a);
         if (d.note) { const n = doc.createElement('div'); n.className = 'av-note'; n.textContent = t(own(d.note)); markEnglish(n, d.note, own(d.note)); $('th', tr).appendChild(n); }
         tb.appendChild(tr);
       });
+      const wn = $('[data-waitlist-note]', daysBox);   // "the email is in English": only said on a page that is not in English
+      if (wn) wn.hidden = !(waitlisted && lang() !== 'en');
     }
 
     // header line + visibility
@@ -601,6 +623,12 @@
       const keys = $$('input[name=interest]', form).map((i) => i.value);
       Object.keys(cfg.interests || {}).forEach((k) => { if (keys.indexOf(k) < 0) warn('signup.interests: "' + q(k) + '" is not a choice on the form. Use: ' + keys.join(', ') + '.'); });
     }
+    // Optional: the name of a text field in Mailchimp (a "merge field", like LANGUAGE or MMERGE6) that gets the visitor's language in English
+    // ("Spanish"), so the farm can write back in it and can pick those people in Mailchimp. Not set = nothing is sent about the language.
+    const langField = String(cfg.languageField || '').trim();
+    if (langField && !/^[A-Za-z][A-Za-z0-9_]{0,29}$/.test(langField)) warn('signup.languageField "' + q(langField) + '" is not the name of a Mailchimp field (it looks like LANGUAGE or MMERGE6). The visitor\'s language is not sent.');
+    const langNote = $('[data-signup-lang-note]', form);   // the visitor is told when the language of the page goes along with the signup
+    if (langNote) langNote.hidden = !(mc && /^[A-Za-z][A-Za-z0-9_]{0,29}$/.test(langField));
     const live = !!(mc || cfg.demo);
     const fallback = $('[data-signup-fallback]');
     form.hidden = !live;
@@ -627,6 +655,7 @@
       // Mailchimp group checkboxes send their bit value (1, 2, 4, 8...), which is the number in the last [ ] of the field name.
       picked.forEach((p) => { const field = has(cfg.interests, p) && cfg.interests[p]; if (field) params[field] = (String(field).match(/\[(\d+)\]$/) || [])[1] || '1'; });
       if (cfg.tags) params.tags = cfg.tags;
+      if (/^[A-Za-z][A-Za-z0-9_]{0,29}$/.test(langField)) params[langField] = LANG_NAME[lang()] || 'English';
       const q = mc.searchParams; if (q.get('u') && q.get('id')) params['b_' + q.get('u') + '_' + q.get('id')] = '';   // Mailchimp's empty bot-trap field
       const res = await jsonp(mc, params);
       busy = false; btn.removeAttribute('aria-disabled');
@@ -824,6 +853,21 @@
       p.tags.forEach((x) => { if (known.indexOf(String(x).trim().toLowerCase()) < 0) warn('photo number ' + (i + 1) + ' (' + q(p.alt) + ') has the tag "' + q(x) + '", but the gallery has no button for it. The tags that work: ' + known.join(', ') + '.'); });
     });
   }
+  // Links that open an email with a prefilled form, written in the HTML (the corporate-event inquiry): the English stays as it is, and on a page that
+  // is not in English each label also shows the visitor's own words, "Company (公司):". Line breaks become %0D%0A.
+  function renderMailDrafts() {
+    $$('a[href^="mailto:"][href*="body="]').forEach((a) => {
+      if (!a.dataset.mailHref) a.dataset.mailHref = a.getAttribute('href');
+      const at = a.dataset.mailHref.indexOf('?');
+      if (at < 0) return;
+      try {
+        const parts = a.dataset.mailHref.slice(at + 1).split('&').map((kv) => { const i = kv.indexOf('='); return [kv.slice(0, i), decodeURIComponent(kv.slice(i + 1))]; });
+        const out = parts.map(([k, v]) => k + '=' + encodeURIComponent(k === 'body' ? v.split(/\r\n|\r|\n/).map((line) => (/:$/.test(line) ? labelBi(line) : line)).join('\r\n') : v));
+        a.setAttribute('href', a.dataset.mailHref.slice(0, at + 1) + out.join('&'));
+      } catch (e) { /* an address that cannot be read is left as it is */ }
+    });
+  }
+  const MAIL_LABELS = [T('Company:'), T('Approximate group size:'), T('Preferred date:')];   // the labels in the corporate-event link (index.html), so they are translated
   function initReviewLinks() {
     if (!W.reviewUrl) return;
     if (!/^https:\/\/\S+$/i.test(String(W.reviewUrl).trim())) { warn('reviewUrl "' + q(W.reviewUrl) + '" must start with https:// (copy the whole link from Google Business Profile). The buttons keep opening Google Maps.'); return; }
@@ -1118,14 +1162,14 @@
   }
 
   /* ------------------------------------------------------------------ */
-  function renderAll() { renderRelease(); renderWeek(); renderDrive(); driveShows.forEach((f) => f()); initEntrance(); initFarmMapRerender(); }
+  function renderAll() { renderMailDrafts(); renderRelease(); renderWeek(); renderDrive(); driveShows.forEach((f) => f()); initEntrance(); initFarmMapRerender(); }
   let mapReady = false;
   function initFarmMapRerender() { if (mapReady) { $$('[data-farm-map][data-rendered]').forEach((b) => drawMap(b, window.WISE_ACRES_MAP)); } }
 
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
   const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
   if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). Open the browser console (F12) to see the line number.');
-  [expireDated, checkOwnerDates, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
+  [expireDated, checkOwnerDates, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
 

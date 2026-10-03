@@ -99,6 +99,8 @@
  *         // Buttons: if either column has spots (open or few) the day gets a "Reserve" button. If a day is Full and nothing is open,
  *         // it gets an "Email us to join the waitlist" button. If the farm is closed and pizza is closed or left out, there is no button.
  *     waitlistEmail: 'cathy@wiseacresorganic.com',   // that button opens an email to this address. The family still has to press Send.
+ *                    // The email is always written in English (the farm reads English); a visitor on a page in another language also sees
+ *                    // their own words under each English line, and a "Preferred language" line, so you can answer in that language.
  *   },
  *
  *   Only use "full" if someone will read and answer the waitlist emails. Spots are typed in by hand: the page cannot see Bookeo.
@@ -128,6 +130,9 @@
  *       interests: { pumpkins: 'group[12345][1]', trees: 'group[12345][2]' },
  * The choice names you can use: strawberries, blueberries, flowers, pumpkins, tomatoes, trees, pizza, events. A choice you leave out is not sent.
  * If you would rather not use the checkboxes at all, ask Claude to hide them. Leave  tags: ''  empty.
+ * LANGUAGE OF THE PEOPLE WHO SIGN UP (optional): in Mailchimp add a text field called Language to the audience, find its name in the embed code
+ * (name="MMERGE6" or name="LANGUAGE") and write it here:  languageField: 'MMERGE6'.  Each signup then carries "English", "Spanish", "Hindi",
+ * "Chinese" or "Vietnamese" in that field, so you can write back in that language. Empty (the default) = nothing about the language is sent.
  *
  * GOOGLE REVIEW LINK
  * ------------------
@@ -186,7 +191,7 @@ window.WISE_ACRES = {
     farm:       { fall: [4, 5, 6, 0] },                               // reserved visits Thu-Sun in fall
   },
   week: {},
-  signup: { action: '', interests: {}, tags: '' },
+  signup: { action: '', interests: {}, tags: '', languageField: '' },
   reviewUrl: '',
   community: [],
   farmPoint: null,   // optional exact spot of the farm for the Drive time box; see DRIVE TIME above

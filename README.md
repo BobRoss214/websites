@@ -135,6 +135,8 @@ Rules for `week` (if you break one, that part is skipped; the "Site check" box t
   out to show a dash. A day with spots in either column gets a Reserve button. A day that is Full with nothing open gets "Email us to join
   the waitlist". If the farm column says Closed and the pizza column is Closed or left out, there is no button.
 - Use `full` only if someone will read and answer the waitlist emails. The button opens an email to `waitlistEmail`; the family still has to press Send.
+  The email is always written in **English** (subject and lines), because the farm reads English. A visitor on a Spanish, Hindi, Chinese or Vietnamese page sees a line
+  in their own language under each English line, and a "Preferred language" line, so you can answer in that language. What they type is never changed.
   If you leave `waitlistEmail` out, `cathy@wiseacresorganic.com` is used. If you type something that is not an email address, that same address is used and the "Site check" box says so.
 - `note` (and a day's note) is shown exactly as typed in every language. For other languages write `{ en: '…', es: '…', hi: '…', zh: '…', vi: '…' }`; a language you leave out shows the English.
 - Apostrophes: `note: "We're open Saturday!"` (double quotes) or `'We\'re open Saturday!'`. A single apostrophe inside single quotes stops all of `js/content.js`: hours, closures, the notice bar, photos and reviews disappear.
@@ -160,7 +162,8 @@ pizza, events) and a "Join the email list" button. The other "Tell me when" and 
 ```js
 signup: { action: 'https://YOURNAME.us21.list-manage.com/subscribe/post?u=…&id=…',
           interests: { pumpkins: 'group[12345][1]', trees: 'group[12345][2]' },   // optional, see below
-          tags: '' },
+          tags: '',
+          languageField: '' },   // optional, see "Language of the people who sign up" below
 ```
 
 4. Save, look at the site, and sign up once with your own email address. Mailchimp should send you a confirmation email; after you confirm it
@@ -172,6 +175,13 @@ signup: { action: 'https://YOURNAME.us21.list-manage.com/subscribe/post?u=…&id
 want to keep, copy the embed code again, and match each choice to its `name="group[12345][1]"` line. The choice names are `strawberries`,
 `blueberries`, `flowers`, `pumpkins`, `tomatoes`, `trees`, `pizza`, `events`. A choice with no `interests` entry is simply not sent: people can
 tick it, but Mailchimp never hears about it. If you do not want to set groups up, ask Claude to hide the choices. Leave `tags: ''` empty.
+
+*Language of the people who sign up (optional).* So you can write back in Spanish, Hindi, Chinese or Vietnamese: in Mailchimp add a **text field** to
+the audience (Audience → Settings → Audience fields and *|MERGE|* tags → Add a field → Text; call it "Language"), copy the embed code again and find the
+name of that field in it (it looks like `LANGUAGE` or `MMERGE6`: `name="MMERGE6"`). Put that name in `languageField: 'MMERGE6'`. Each signup then
+carries the language of the page in English (`English`, `Spanish`, `Hindi`, `Chinese` or `Vietnamese`) in that field, and you can pick those people in
+Mailchimp (Segment → Language is Spanish). Leave it empty and nothing about the language is sent. The Mailchimp confirmation email itself is in the
+language of the Mailchimp form, which you set in Mailchimp (the signup page and QR sign have their own language setting).
 
 **Reviews, news, photos.** *Visitors see:* in the Reviews section a "Leave a Google review" button and an **In the news** list (two Axios
 Charlotte articles, found by web search: **please open both links and confirm** the headline, year and name before launch). The photo gallery has

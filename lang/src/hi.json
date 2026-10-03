@@ -212,7 +212,6 @@
   "Visit with or without pizza:": "विज़िट, पिज़्ज़ा के साथ या बिना:",
   "Wagon ride route": "वैगन राइड का रास्ता",
   "Wagon ride stop": "वैगन राइड का स्टॉप",
-  "Waitlist: {day}": "वेटलिस्ट: {day}",
   "Wave back!": "हाथ हिलाकर जवाब दीजिए!",
   "What a pumpkin!": "क्या कद्दू है!",
   "What grows here": "यहाँ क्या उगता है",
@@ -292,7 +291,11 @@
   "To The GreenHouse at 5503 Poplin Rd. This time is for normal road speed with no traffic. Rush hour can add more time.": "यह समय 5503 Poplin Rd पर The GreenHouse तक का है। सड़क की सामान्य रफ़्तार से, बिना ट्रैफ़िक के। भीड़ के समय और ज़्यादा लग सकता है।",
   "We could not find a drive from that address to The GreenHouse. Try the Google Maps button.": "हमें उस पते से The GreenHouse तक गाड़ी का रास्ता नहीं मिला। Google Maps बटन आज़माएँ।",
   "1 photo": "1 फ़ोटो",
-  "{count} photos": "{count} फ़ोटो"
+  "{count} photos": "{count} फ़ोटो",
+  "Company:": "कंपनी:",
+  "Approximate group size:": "समूह का अनुमानित आकार:",
+  "Preferred date:": "पसंदीदा तारीख़:",
+  "Preferred language:": "पसंदीदा भाषा:"
  },
  "ui": {
   "t000eb0a5": "फूलों के खेत में अपना गुलदस्ता खुद काटें",
@@ -1338,6 +1341,8 @@
   "t0ce86084": "बेरी",
   "t2e2fd69b": "विषय के अनुसार फ़ोटो छाँटें",
   "t70af7aa7": "लोग और कार्यक्रम",
-  "tafd37123": "फ़ार्म के जानवर"
+  "tafd37123": "फ़ार्म के जानवर",
+  "tf51b9c7e": "“वेटलिस्ट में जुड़ने के लिए हमें ईमेल करें” फ़ार्म के लिए एक ईमेल खोलता है। यह अंग्रेज़ी में लिखा होता है और हर लाइन के साथ आपकी भाषा भी होती है, ताकि फ़ार्म इसे पढ़ सके। चाहें तो अपने शब्द जोड़ें। जब तक आप Send (भेजें) नहीं दबाते, कुछ नहीं भेजा जाता।",
+  "tf5dbb6b5": "हम इस पेज की भाषा (जैसे हिन्दी) नोट कर लेते हैं, ताकि हम उसी भाषा में जवाब दे सकें।"
  }
 }

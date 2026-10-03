@@ -67,6 +67,7 @@ These are kept only in memory and disappear when the page is closed or reloaded:
 - the email address;
 - one code for each ticked interest box that has a matching Mailchimp group (ticked boxes with no group are not sent);
 - the tags, if set;
+- the visitor's language in English (for example `Spanish`), only if `signup.languageField` is set in `js/content.js`; it goes into that one Mailchimp field and nowhere else;
 - the two list codes from your Mailchimp address (`u` and `id`);
 - an empty field that Mailchimp uses to catch robots;
 - a one-time reply name.
@@ -134,7 +135,7 @@ All four were tested with Plausible switched on.
 | OpenStreetMap | `www.openstreetmap.org/copyright`, `www.openstreetmap.org/fixthemap` | The "© OpenStreetMap contributors" credit and the "Fix the map" link shown under a Drive time answer |
 | OSRM | `project-osrm.org` | The "Routing: OSRM" credit shown under a Drive time answer |
 | Axios | `www.axios.com` | "In the news" |
-| Email links (`mailto:`) | The visitor's own email program | Questions and the waitlist. The website sends nothing: the visitor writes and sends the email themselves. The waitlist email is pre-filled with the day and empty lines for a name and group size. |
+| Email links (`mailto:`) | The visitor's own email program | Questions and the waitlist. The website sends nothing: the visitor writes and sends the email themselves. The waitlist email is pre-filled in English (the farm reads English) with the day and empty lines for a name, group size and pizza; on a page in another language each line also carries the visitor's own words, and a "Preferred language" line names that language in English. The corporate-event link works the same way. |
 | Phone link (`tel:`) | The visitor's phone | Calling the farm |
 
 **What the other site learns when a visitor taps a link out:** only that the visitor came from `www.wiseacresorganic.com`, not which page. This comes from the `Referrer-Policy` line in `_headers`, which Netlify and Cloudflare Pages apply.

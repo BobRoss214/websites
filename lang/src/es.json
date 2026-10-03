@@ -212,7 +212,6 @@
   "Visit with or without pizza:": "Visita con o sin pizza:",
   "Wagon ride route": "Recorrido de la carreta",
   "Wagon ride stop": "Parada de la carreta",
-  "Waitlist: {day}": "Lista de espera: {day}",
   "Wave back!": "¡Salúdame!",
   "What a pumpkin!": "¡Qué calabaza!",
   "What grows here": "Qué se cultiva aquí",
@@ -292,7 +291,11 @@
   "To The GreenHouse at 5503 Poplin Rd. This time is for normal road speed with no traffic. Rush hour can add more time.": "Hasta The GreenHouse en 5503 Poplin Rd. Este tiempo es a velocidad normal de la vía, sin tráfico. En hora pico puede tardar más.",
   "We could not find a drive from that address to The GreenHouse. Try the Google Maps button.": "No encontramos un trayecto en auto desde esa dirección hasta The GreenHouse. Prueba con el botón de Google Maps.",
   "1 photo": "1 foto",
-  "{count} photos": "{count} fotos"
+  "{count} photos": "{count} fotos",
+  "Company:": "Empresa:",
+  "Approximate group size:": "Tamaño aproximado del grupo:",
+  "Preferred date:": "Fecha preferida:",
+  "Preferred language:": "Idioma preferido:"
  },
  "ui": {
   "t000eb0a5": "Corta tu propio ramo en el campo de flores",
@@ -1338,6 +1341,8 @@
   "t0ce86084": "Fresas y arándanos",
   "t2e2fd69b": "Filtrar las fotos por tema",
   "t70af7aa7": "Personas y eventos",
-  "tafd37123": "Animales de la granja"
+  "tafd37123": "Animales de la granja",
+  "tf51b9c7e": "“Escríbenos para unirte a la lista de espera” abre un correo para la granja. Está escrito en inglés, con tu idioma junto a cada línea, para que la granja pueda leerlo. Agrega tus propias palabras si quieres. No se envía nada hasta que presiones Enviar.",
+  "tf5dbb6b5": "Anotamos el idioma de esta página (por ejemplo, español) para poder responderte en ese idioma."
  }
 }
