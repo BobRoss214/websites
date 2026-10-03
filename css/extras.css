@@ -44,7 +44,7 @@ html[data-season="summer"]{--strip:url("data:image/svg+xml,%3Csvg xmlns=%22http:
 .ann-season{display:inline-flex;align-items:center;gap:.6em;font-weight:800}
 .ann-season::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--sun)}
 .ann-season:empty{display:none}
-@media (max-width:760px){ .ann-season{display:none} }
+@media (max-width:47.5em){ .ann-season{display:none} }
 
 /* ---------------------------------------------------------------- language switcher */
 .lang{position:relative;flex:none}
@@ -60,24 +60,37 @@ html[data-season="summer"]{--strip:url("data:image/svg+xml,%3Csvg xmlns=%22http:
 .lang-link[aria-pressed="true"]{color:var(--sun);text-decoration:none}
 .lang-offer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 14px;padding:.6em var(--gutter);background:#fff3cf;border-bottom:3px solid var(--ink)}
 .lang-offer p{margin:0;font-weight:800}
-@media (max-width:1239px){ .lang{margin-left:auto} .header-inner{gap:10px} }
-@media (max-width:420px){ .lang-btn{padding:.25em .55em} .lang-btn .lang-cur{display:none} }
+@media (max-width:77.4375em){ .lang{margin-left:auto} .header-inner{gap:10px} }
+@media (max-width:26.25em){ .lang-btn{padding:.25em .55em} .lang-btn .lang-cur{display:none} }
 
-/* Fonts for scripts the self-hosted faces do not cover (the browser falls back per character). */
-html:lang(hi){--display:"Fredoka","Noto Sans Devanagari","Kohinoor Devanagari","Nirmala UI","Mangal",system-ui,sans-serif;--body:"Nunito","Noto Sans Devanagari","Kohinoor Devanagari","Nirmala UI","Mangal",system-ui,sans-serif;--hand:var(--display)}
-html:lang(zh){--display:"Fredoka","PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;--body:"Nunito","PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;--hand:var(--display)}
+/* Fonts for scripts the self-hosted faces do not cover (the browser falls back per character, in this order: the phone or computer's own Devanagari / Chinese font, then its default). */
+html:lang(hi){--display:"Fredoka","Noto Sans Devanagari","Kohinoor Devanagari","Nirmala UI","Mukta",system-ui,sans-serif;--body:"Nunito","Noto Sans Devanagari","Kohinoor Devanagari","Nirmala UI","Mukta",system-ui,sans-serif;--hand:var(--display)}
+html:lang(zh){--display:"Fredoka","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC","Noto Sans CJK SC",system-ui,sans-serif;--body:"Nunito","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC","Noto Sans CJK SC",system-ui,sans-serif;--hand:var(--display)}
 @font-face{font-family:"Nunito";src:url("../assets/fonts/nunito-vietnamese-wght-normal.woff2") format("woff2");font-weight:200 1000;font-style:normal;font-display:swap;unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}
 html:lang(vi){--display:"Nunito","Trebuchet MS",system-ui,sans-serif;--hand:var(--display)}
 html:lang(vi) h1,html:lang(vi) h2,html:lang(vi) h3,html:lang(vi) .btn,html:lang(vi) .brand-name{font-weight:800}
 html:lang(vi) body{line-height:1.65}
 html:lang(hi) body,html:lang(zh) body{line-height:1.75}
 html:lang(hi) .hero h1,html:lang(zh) .hero h1{line-height:1.25;letter-spacing:0}
+/* Marks above and below the line (Devanagari matras, stacked Vietnamese accents) touch the next line at the 1.08 used for English headings. */
+html:lang(hi) :is(h1,h2,h3,h4,h5,figcaption,.btn){line-height:1.3}
+html:lang(zh) :is(h1,h2,h3,h4,h5,.btn){line-height:1.25}
+html:lang(vi) :is(h1,h2,h3,h4,h5,.btn){line-height:1.2}
+/* Text drawn inside pictures (map name ribbons, the compass letter, the tractor's bubble) names only "Fredoka, Nunito, sans-serif" in the picture itself: give Hindi and Chinese their own stack. (Vietnamese already falls back from Fredoka to Nunito, which has every Vietnamese letter.) */
+html:is(:lang(hi),:lang(zh)) :is(.map-svg,.toot) text{font-family:var(--display)}
+/* Never slant (fake italic) Devanagari or Chinese. */
+html:lang(hi),html:lang(zh){font-synthesis:weight}
 html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;letter-spacing:0}
 /* Devanagari: letter-spacing pulls the joined top line of each word apart, and labels under 12px are hard to read. Chinese: no slanted (synthetic italic) text, and no lone character on the last line. */
 html:lang(hi) :is(.rc i,.badge-now,.fs-this,.new-ribbon,.nu-now,.rel-eyebrow,.cal-months span,.cal-today span,.way-time,.menu-addons span,.bloom-when,.choose-new-badge,.choose-tag,.fact-label,.fs-now,.gh-banner-a,.gh-banner-b,.loc-tag,.menu-name,.now-badge,.package-flag,.pill,.ss-now,.tag,.v-cat,.who-what,.sched-table th,.map-legend h3,.press h3){letter-spacing:0}
 html:lang(hi) :is(.rc i,.fs-now,.fs-this,.now-badge,.package-flag,.pill,.ss-now,.tag,.v-cat,.cal-months span,.cal-today span){font-size:12px}
 html:lang(hi) .menu-desc,html:lang(zh) .menu-desc{font-style:normal}
 html:lang(zh) body{text-wrap:pretty}
+.cal-months{grid-template-columns:repeat(12,minmax(0,1fr))}
+@media (max-width:360px){html:lang(vi) .cal-months{letter-spacing:0;text-transform:none}}
+/* A long word that cannot break (an e-mail address) wraps instead of pushing a 320px screen sideways, whatever font the phone falls back to while Nunito loads or if it fails. */
+a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
+@media (max-width:640px){.gh-banner{max-width:100%}.gh-banner span{white-space:normal}}
 
 /* ---------------------------------------------------------------- reviews */
 .reviews{background:#fff3cf}
@@ -99,10 +112,10 @@ html:lang(zh) body{text-wrap:pretty}
 .page-hero .hero-kicker{transform:rotate(-2deg);display:inline-block}
 .page-hero .hero-cta{justify-content:flex-start;margin-top:1em}
 .page-hero-art svg{width:clamp(110px,18vw,210px);height:auto;filter:drop-shadow(0 6px 0 rgba(58,36,22,.25));animation:bob 4.5s ease-in-out infinite}
-@media (max-width:700px){ .page-hero-inner{grid-template-columns:1fr} .page-hero-art{display:none} }
+@media (max-width:43.75em){ .page-hero-inner{grid-template-columns:1fr} .page-hero-art{display:none} }
 .section-tint{background:#fff3cf}
 .two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(24px,5vw,56px);align-items:start}
-@media (max-width:820px){ .two-col{grid-template-columns:1fr} }
+@media (max-width:51.25em){ .two-col{grid-template-columns:1fr} }
 .col-head{margin-bottom:.8em}
 .col-head h2{font-size:clamp(1.9rem,4vw,2.8rem)}
 .fact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin:0;padding:0;list-style:none}
@@ -122,12 +135,26 @@ html:lang(zh) body{text-wrap:pretty}
 .cta-band{background:var(--sun);border-block:3px solid var(--ink);padding-block:clamp(36px,6vw,64px);text-align:center}
 .cta-band h2{font-size:clamp(1.8rem,4vw,2.8rem);margin-bottom:.6em}
 .cta-band .hero-cta{justify-content:center}
+/* Printing. Every page: no animation, nothing hidden until you scroll to it, no decoration, cards stay in one piece.
+   The First visit page (its hero and FAQ carry .print-skip) prints just "When you arrive" and the checklist on ONE sheet. */
 @media print{
-  .announce,.site-header,.footer-field,.site-footer,.action-bar,.lang,.page-hero,.cta-band,.faq,#on-farm,#know,#before,.season-strip,[data-print]{display:none!important}
-  body{background:#fff;padding:0}
+  @page{margin:.6in}
+  *,*::before,*::after{animation:none!important;transition:none!important;box-shadow:none!important;text-shadow:none!important}
+  html{scroll-behavior:auto}
+  .announce,.skip-link,.vine,.nav,.menu-toggle,[data-lang-menu],.lang,.action-bar,.to-top,.footer-field,.site-footer,.season-strip,
+  #hero-scene,#critters,#season-switch,.picker,.bee,.cta-band,.page-hero-art,.page-hero .hero-cta,.hero-cta,.card-actions,
+  main img,.photo-strip,#gallery,.print-skip,#on-farm,#know,#before,[data-print],#arrive .drive,#arrive .more-maps,#arrive .entrance-photo,#arrive .draft-tag{display:none!important}
+  body{background:#fff!important;padding:0!important}
+  .site-header{position:static;background:none;border:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .header-inner{height:auto;padding-block:0 8px}
+  .page-hero,.hero{min-height:0!important;padding-block:8px!important;background:none!important;border:0}
+  .reveal{opacity:1!important;transform:none!important}
+  html.cv .cv-sec{content-visibility:visible!important}
   .section{padding-block:12px}
   .two-col{grid-template-columns:1fr}
   .checklist-card{box-shadow:none;border:2px solid #000}
+  .card,.fact-card,.package,.price-card,.loc-card,.choose-card,details,figure,li,tr{break-inside:avoid}
+  h1,h2,h3,h4{break-after:avoid}
 }
 .price-card{padding:22px 24px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:0 6px 0 var(--ink);display:grid;gap:12px;align-content:start}
 .price-card h3{font-size:1.4rem}
@@ -172,7 +199,7 @@ html:lang(zh) body{text-wrap:pretty}
 .collage{flex-wrap:wrap}
 .collage .polaroid{width:min(31%,220px)}
 .pol-c{--r:-2.5deg;margin-top:14px}
-@media (max-width:760px){.collage .polaroid{width:46%}.photo-strip li{flex-basis:130px}.goat-strip li{flex-basis:140px}}
+@media (max-width:47.5em){.collage .polaroid{width:46%}.photo-strip li{flex-basis:130px}.goat-strip li{flex-basis:140px}}
 .polaroid img{height:auto}
 
 /* Big hover moments: the main buttons jump, tilt, shine and ring; the "New" tomato notices pop and wiggle. */
@@ -319,7 +346,7 @@ html:lang(zh) body{text-wrap:pretty}
 .ach-rain{position:absolute;inset:0;z-index:6;overflow:hidden;pointer-events:none}
 .ach-drop{position:absolute;top:-70px;width:var(--s);height:var(--s);overflow:visible;animation:achFall var(--d) cubic-bezier(.4,.05,.8,.6) var(--dl) both}
 @keyframes achFall{0%{opacity:1;transform:translate(0,0) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translate(var(--sw),820px) rotate(var(--r))}}
-@media (max-width:760px){.ach-stack{bottom:calc(100% + 10px)}.ach-medal{width:54px;height:54px}.ach-medal svg{width:32px;height:32px}.ach-time .ach-medal{width:62px;height:62px}}
+@media (max-width:47.5em){.ach-stack{bottom:calc(100% + 10px)}.ach-medal{width:54px;height:54px}.ach-medal svg{width:32px;height:32px}.ach-time .ach-medal{width:62px;height:62px}}
 
 /* Off-screen sections stop animating (set by main.js) so the page stays light on phones */
 .is-offscreen,.is-offscreen *,.is-offscreen *::before,.is-offscreen *::after{animation-play-state:paused!important}
@@ -332,7 +359,7 @@ html.cv .cv-sec{content-visibility:auto;contain-intrinsic-size:auto 900px}
 .to-top .ico{width:26px;height:26px;transform:rotate(180deg)}
 .to-top:hover{transform:translateY(-3px)}
 .to-top:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
-@media (max-width:760px){.to-top{bottom:calc(84px + env(safe-area-inset-bottom,0px));width:46px;height:46px}}
+@media (max-width:47.5em){.to-top{bottom:calc(84px + env(safe-area-inset-bottom,0px));width:46px;height:46px}}
 @media print{.to-top{display:none!important}}
 
 /* Social links (footer) and the "tag us" note by the photos */

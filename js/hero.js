@@ -875,7 +875,7 @@
     box.className = 'particles particles-' + kind;
     box.setAttribute('aria-hidden', 'true');
     const r = rand(kind === 'snow' ? 7 : 9);
-    const many = matchMedia('(max-width: 760px)').matches ? 0.55 : 1;
+    const many = matchMedia('(max-width: 47.5em)').matches ? 0.55 : 1;
     const n = Math.round((kind === 'snow' ? 46 : 16) * many);
     const colors = ['#e8893a', '#d2492a', '#f5c033', '#c8412f', '#f0a030'];
     let html = '';

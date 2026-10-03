@@ -245,7 +245,7 @@ html[data-season="winter"] .bee{display:none}
 }
 
 /* ---------------------------------------------------------------- small screens */
-@media (max-width:760px){
+@media (max-width:47.5em){
   .hero{min-height:790px}
   .rig{--rig-from:120px;--rig-to:1140px;--rig-rest:620px;--rig-dur:22s;animation-delay:-7s}
   .rig-small{--rig-dur:26s;animation-delay:-9s}
@@ -257,7 +257,7 @@ html[data-season="winter"] .bee{display:none}
   .ss-ico{width:20px;height:20px}
   .ss-now{top:-11px;right:-3px;font-size:.58rem}
 }
-@media (max-width:360px){
+@media (max-width:22.5em){
   .season-switch button{font-size:.76rem;gap:.25em}
   .ss-ico{width:17px;height:17px}
 }

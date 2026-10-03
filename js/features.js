@@ -945,7 +945,7 @@
         $('.md-kind', detail).textContent = t(k.label) === t(it.label) ? '' : t(k.label);
         const p = $('p', detail); p.textContent = it.note ? t(it.note) : ''; p.hidden = !it.note;
         track('Map select', { kind: it.kind });
-        if (!fromMap && window.matchMedia('(max-width: 820px)').matches) wrap.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        if (!fromMap && window.matchMedia('(max-width: 51.25em)').matches) wrap.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
       }
     };
     nodes.forEach((g) => {

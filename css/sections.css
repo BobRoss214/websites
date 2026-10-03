@@ -37,8 +37,8 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .nav-more.is-open .nav-more-list{display:flex}
 .nav .nav-more-list a{padding:.6em .9em;font-size:1rem;border-radius:12px}
 .nav .nav-more-list a:hover{background:var(--cream)}
-@media (max-width:1180px){
-  :root{--header-h:64px}
+@media (max-width:73.75em){
+  :root{--header-h:4rem}
   .menu-toggle{display:grid}
   .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
   .nav{position:fixed;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
@@ -52,8 +52,8 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   .nav-cta{font-size:1.3rem;padding:.9em}
   body.nav-lock{overflow:hidden}
 }
-@media (max-width:1330px){
-  html:is([lang="es"],[lang="vi"]){--header-h:64px}
+@media (max-width:83.125em){
+  html:is([lang="es"],[lang="vi"]){--header-h:4rem}
   html:is([lang="es"],[lang="vi"]) .menu-toggle{display:grid}
   html:is([lang="es"],[lang="vi"]) .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
   html:is([lang="es"],[lang="vi"]) .nav{position:fixed;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
@@ -335,7 +335,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 /* ==========================================================================
    Responsive
    ========================================================================== */
-@media (max-width:1100px){
+@media (max-width:68.75em){
   .season-tabs{grid-template-columns:repeat(2,1fr)}
   .addon-list{grid-template-columns:1fr}
   .passes{grid-template-columns:1fr 1fr}
@@ -346,7 +346,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   .rules .ico{flex:none}
 }
 
-@media (max-width:920px){
+@media (max-width:57.5em){
   .choose,.packages,.way-grid,.gh-grid,.flowers-top,.flowers-mid,.about-grid,.follow,.schedule-grid{grid-template-columns:1fr}
   .group-tabs{grid-template-columns:1fr}
   .group-panel{grid-template-columns:1fr}
@@ -361,7 +361,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   .cal-today{left:calc(100% * var(--today,0))}
 }
 
-@media (max-width:640px){
+@media (max-width:40em){
   .ticks-cols{grid-template-columns:1fr}
   .season-tabs{grid-template-columns:1fr}
   .passes{grid-template-columns:1fr}
@@ -385,7 +385,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 /* keep tilted photos and stickers from ever creating sideways scroll */
 .about,.flowers,.greenhouse{overflow-x:clip}
 
-@media (max-width:360px){
+@media (max-width:22.5em){
   .action-bar{gap:6px;padding:6px}
   .action-bar .btn{font-size:.82rem;padding:.7em .2em;gap:.25em}
   .action-bar .ico{width:1em;height:1em}
@@ -411,7 +411,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 /* add-ons grid now has four items */
 .addon-list{grid-template-columns:repeat(2,1fr)}
 .addon-note a{font-weight:800}
-@media (max-width:1100px){.addon-list{grid-template-columns:1fr}}
+@media (max-width:68.75em){.addon-list{grid-template-columns:1fr}}
 
 /* calendar */
 .bar-tomato{background:#ff6a5b}
@@ -510,13 +510,13 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .follow .social{justify-content:flex-start}
 
 /* ---------- responsive for the additions ---------- */
-@media (max-width:920px){
+@media (max-width:57.5em){
   .tomato-hero{grid-template-columns:1fr}
   .tomato-art{order:-1}
   .tomato-art svg{max-width:340px}
   .tomato-points{grid-template-columns:1fr 1fr}
 }
-@media (max-width:640px){
+@media (max-width:40em){
   .tomato-facts{grid-template-columns:1fr}
   .tomato-facts li{flex-direction:row;align-items:baseline;gap:10px}
   .tomato-points{grid-template-columns:1fr}

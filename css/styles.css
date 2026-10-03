@@ -7,6 +7,13 @@
 @font-face{font-family:"Fredoka";src:url("../assets/fonts/fredoka-latin-wght-normal.woff2") format("woff2");font-weight:300 700;font-style:normal;font-display:swap}
 @font-face{font-family:"Nunito";src:url("../assets/fonts/nunito-latin-wght-normal.woff2") format("woff2");font-weight:200 1000;font-style:normal;font-display:swap}
 @font-face{font-family:"Caveat";src:url("../assets/fonts/caveat-latin-700-normal.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+/* Stand-ins for the two main fonts while they download (font-display:swap shows text at once, in these). They are Arial scaled to
+   Fredoka's / Nunito's width and line height, so the text does not jump or re-wrap when the real font arrives. Numbers come from
+   the font files (average letter width and ascent/descent). If Arial is not installed the browser just skips them. */
+@font-face{font-family:"Fredoka Fallback";src:local("Arial"),local("ArialMT"),local("Liberation Sans"),local("Helvetica");font-weight:300 599;size-adjust:102.5%;ascent-override:94.8%;descent-override:23%;line-gap-override:0%}
+@font-face{font-family:"Fredoka Fallback";src:local("Arial Bold"),local("Arial-BoldMT"),local("Liberation Sans Bold"),local("Helvetica Bold"),local("Helvetica-Bold");font-weight:600 700;size-adjust:95.4%;ascent-override:102.1%;descent-override:24.7%;line-gap-override:0%}
+@font-face{font-family:"Nunito Fallback";src:local("Arial"),local("ArialMT"),local("Liberation Sans"),local("Helvetica");font-weight:200 599;size-adjust:102%;ascent-override:99.2%;descent-override:34.6%;line-gap-override:0%}
+@font-face{font-family:"Nunito Fallback";src:local("Arial Bold"),local("Arial-BoldMT"),local("Liberation Sans Bold"),local("Helvetica Bold"),local("Helvetica-Bold");font-weight:600 1000;size-adjust:97.5%;ascent-override:103.6%;descent-override:36.2%;line-gap-override:0%}
 
 :root{
   --ink:#3a2416;
@@ -28,14 +35,14 @@
   --soil:#7a4b2a;
   --focus:#2b4fd8;
 
-  --display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
-  --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Fredoka","Fredoka Fallback","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Nunito Fallback",system-ui,-apple-system,"Segoe UI",sans-serif;
   --hand:"Caveat","Comic Sans MS",cursive;
 
   --gutter:clamp(16px,4vw,32px);
   --radius:24px;
   --shadow:0 6px 0 var(--ink);
-  --header-h:72px;
+  --header-h:4.5rem;
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -257,7 +264,7 @@ svg.layer-fore{overflow:visible}
 .fs-table [data-col].is-sel.fs-gh{background:#d3ebc4}
 .fs-legend{display:flex;align-items:center;justify-content:center;gap:.6em;margin:.9em 0 0;text-align:center}
 .fs-gh-key{flex:none;width:1.1em;height:1.1em;border:2px solid var(--ink);border-radius:5px;background:#cfe8c0}
-@media (max-width:520px){
+@media (max-width:32.5em){
   .fs-tabs{gap:10px}
   .fs-btn{min-height:48px;padding:4px 16px 4px 10px;font-size:1rem}
   .fs-art{height:30px}
@@ -454,12 +461,12 @@ svg.layer-fore{overflow:visible}
 /* ==========================================================================
    Responsive
    ========================================================================== */
-@media (max-width:1080px){
+@media (max-width:67.5em){
   .cards{grid-template-columns:repeat(2,1fr)}
   .facts-grid{grid-template-columns:repeat(2,1fr);gap:16px 24px}
 }
 
-@media (max-width:920px){
+@media (max-width:57.5em){
 
   .steps-wrap{padding-top:0;padding-left:84px}
   .track{left:0;right:auto;top:0;bottom:0;width:78px;height:auto}
@@ -486,7 +493,7 @@ svg.layer-fore{overflow:visible}
   .footer-brand{grid-column:1/-1}
 }
 
-@media (max-width:760px){
+@media (max-width:47.5em){
   body{padding-bottom:88px}
   .action-bar{display:grid;grid-template-columns:1.25fr 1fr 1.2fr;gap:8px;position:fixed;left:8px;right:8px;bottom:8px;z-index:60;padding:8px;background:var(--paper);border:3px solid var(--ink);border-radius:24px;box-shadow:0 5px 0 var(--ink)}
   .action-bar .btn{padding:.7em .4em;font-size:.95rem;gap:.35em;box-shadow:0 3px 0 var(--ink)}
@@ -507,7 +514,7 @@ svg.layer-fore{overflow:visible}
   .butterfly{display:none}
 }
 
-@media (max-width:480px){
+@media (max-width:30em){
   .cards{grid-template-columns:1fr}
   .card{display:grid;grid-template-columns:76px 1fr;gap:0 14px;align-items:center}
   .card-art{grid-row:span 2;height:66px;width:76px;margin:0;object-fit:contain}
