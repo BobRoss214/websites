@@ -125,7 +125,7 @@
   const fmtCache = {};
   const formatter = (Ctor, opts) => {
     const key = Ctor.name + '|' + lang() + '|' + JSON.stringify(opts);
-    return fmtCache[key] || (fmtCache[key] = new Ctor(lang(), opts));
+    return fmtCache[key] || (fmtCache[key] = new Ctor(Ctor === Intl.NumberFormat && lang() === 'es' ? 'es-US' : lang(), opts));   // Spanish numbers like the rest of the page: 14.2 and 1,500, not 14,2 and 1500
   };
   const fmtYmd = (ymd, opts) => {
     const [y, m, d] = ymd.split('-').map(Number);

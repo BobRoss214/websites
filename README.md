@@ -21,7 +21,7 @@ css/sections.css        section styles (visit, packages, pizza, GreenHouse, grou
 css/hero.css            seasonal hero: sky/card colors per season, tractor, campfire and snow animations
 css/extras.css          open-now badges, notice bar, countdown, seasonal dividers/footer, languages, reviews, inner pages
 css/features.css        pizza countdown, "this week" box, email signup, review + press, photo wall, farm map, drive times
-js/content.js           editable content: hours, closures, notice bar, reviews, analytics, photo list
+js/content.js           editable content: hours, closures, notice bar, reviews, "this week" box, email signup, review link, analytics, photo list, farm spot, season switcher
 js/season.js            season dates + "which season is it today?" (sets html[data-season])
 js/i18n.js              language switcher + text swapping (loaded first so the page paints in the chosen language)
 js/hero.js              draws the four hero scenes, footer art, and runs the picking / lighting / toot interactions
@@ -33,11 +33,13 @@ js/farm-map-data.js     the points of the farm map (written by tools/farm_map.py
 js/map-art.js           draws the illustrated farm map from those points (forest, fields with plants, parking with cars, maze, trails, icons)
 lang/src/<code>.json    the translations (you edit these)
 lang/<code>.js          built from lang/src (what the pages load; do not edit)
+lang/en.json, lang/js-strings.json   written by tools/i18n.py (the English text of the pages by id; the text JavaScript writes): do not edit
 tools/                  pages.py (builds the extra pages), i18n.py (tags text, builds translations),
                         make_qr.py + qr_links.json (QR signs), farm_map.py + saved-map.json (saved map -> js/farm-map-data.js),
                         add_photo.py (adds a photo: web size, no hidden data, listed in the gallery) + test_add_photo.py (its check)
 assets/qr/              QR codes (SVG), made by tools/make_qr.py
 print/qr-signs.html     printable signs, one per page, English + Spanish (not listed in Google)
+docs/                   notes and questions for the farm, the launch checklist, what the site stores (not for visitors: do not upload)
 assets/photos/          farm photos
 assets/fonts/           Fredoka, Nunito (+ Vietnamese letters), Caveat (SIL Open Font License), self-hosted
 ```
@@ -76,7 +78,7 @@ and look at the site. Anything marked **ask Claude** needs a command that has to
 | Turn off the season switcher | `js/content.js` → `seasonPicker: false,`. The "See the farm in…" buttons in the first screen disappear and the site follows the calendar. Do this before you launch. (The "What's on the farm" and "What's in season" tabs stay.) |
 | Add a review | `js/content.js` → inside `reviews: [ ]` add `{ quote: "…", name: "Sarah M.", source: "Google", url: "https://…", date: "May 2026" },`. `quote` and `name` are required. Only add words a reviewer really wrote, and ask first. The quote cards stay hidden until there is one. The Google, Tripadvisor and Yelp buttons always show. |
 | Add a photo | Ask Claude, and send the picture with a few words on what is in it. Claude runs `python3 tools/add_photo.py` (steps under "Adding a photo" in the Photos section below). It shrinks the picture, takes out the hidden camera and location data, saves it and lists it in the gallery. Other languages show the description in English until Claude translates it. |
-| Turn on analytics | Ask Claude. You first sign up with one of Plausible, GoatCounter, Umami or Cloudflare Web Analytics; Claude then puts the details in `analytics` in `js/content.js`. Nothing is counted until then, and never for visitors who send Do Not Track. |
+| Turn on analytics | Ask Claude. You first sign up with one of Plausible, GoatCounter, Umami or Cloudflare Web Analytics; Claude then puts the details in `analytics` in `js/content.js`. Nothing is counted until then, and never for visitors who send Do Not Track or Global Privacy Control. |
 | Change the hero text for a season | Ask Claude. (The words are in `index.html`: the `.hero-sub` lines under the big headline and the winter headline `#hero-h`. They need new translations too.) |
 | Change the booking link | Ask Claude. The Bookeo address `https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356` appears in many places and must be replaced in all of them. |
 | Open a new pizza weekend | Open `index.html` and search for `data-release`. You find the table "When pizza reservations open": one row for each Tuesday, like `<tr data-release="2026-11-03" data-until="2026-11-08"><td>Nov 3</td><td>Nov 6–8</td></tr>`. Copy one whole row (from `<tr` to `</tr>`), paste it under the last row and change four things: **1.** the date inside `data-release="…"`, which is the day reservations OPEN, written year-month-day with two digits each (`2026-11-03`; not `11/3/2026`, not `2026-11-3`); **2.** the date inside `data-until="…"`, the last visit day (`2026-11-08`), after which the row hides itself; **3.** the first date people read (`Nov 3`); **4.** the second (`Nov 6–8`, the visit days). Then change by hand the sentence under the table that starts "Open now: pizza reservations for…", and its `data-until` (the last day it is true). Save and look: the countdown box, the "Remind me" buttons and the hero chip (fall hero only) follow the rows by themselves, so check that the countdown names the right day. The 5:00 PM comes from `data-release-time="17:00"` on that table (17:00 is 5 pm); the words "Tuesday, 5 PM" in the table heading are plain text. Last, ask Claude to update the translations, otherwise Spanish, Hindi, Chinese and Vietnamese visitors see "Nov 6–8" in English letters. |
@@ -123,6 +125,7 @@ week: {
 Rules for `week` (if you break one, that part is skipped; the "Site check" box tells you which):
 
 - `updated` is required, written `'YYYY-MM-DD'` with two digits for month and day. Without it nothing else in `week` shows.
+  `expireDays: 14,` is optional: the number of days after `updated` that the note, crops and spots stay. Leave it out unless you want a different number.
 - `crops` names: `strawberries`, `blueberries`, `sunflowers`, `flowers`, `pumpkins`, `tomatoes`, `trees` (all small letters). Values: `soon`
   ("Coming soon"), `starting` ("Just starting"), `peak` ("Peak picking"), `ending` ("Winding down"), `off` (hides that crop), all small letters.
   A crop you do not mention keeps its typical dates.
@@ -138,7 +141,7 @@ Rules for `week` (if you break one, that part is skipped; the "Site check" box t
 "Spots left" and the waitlist are typed in by hand. **Live spot counts from Bookeo are not included.** Showing them needs a web developer to
 set up a small, safe connection to Bookeo (a website cannot read Bookeo directly, and Bookeo's secret keys must never be on the page). If you want
 that later, hand this paragraph to a developer: the page already has a place for it, `week.feed`. The address must return the same information
-as `week` (`updated`, `note`, `crops`, `days`; the page ignores anything else in it, including the waitlist address) and must answer with the
+as `week` (`updated`, `note`, `crops`, `days`, and `expireDays` if you send it; the page ignores anything else in it, including the waitlist address) and must answer with the
 header `Access-Control-Allow-Origin: *`, or browsers refuse to read it from your website. The page reads it once when it opens, and falls back
 to the hand-typed box if it cannot.
 
@@ -203,7 +206,7 @@ our estimates (see Content status). To change one, tell Claude the right number 
 - Both are free and come with no promise. They ask for about one request a second and may refuse without notice. The routing server's own page calls its demo "reasonable, non-commercial" use, and this is a business site, so there is a real chance they stop answering one day. Nothing breaks when that happens: the box says "The lookup is not working right now" and offers a Google Maps button.
 - **Once, before launch:** set `farmPoint` in `js/content.js` (the steps are in the comment "DRIVE TIME FROM A VISITOR'S ADDRESS"). It halves the requests and makes the answer faster.
 - If you add the Content-Security-Policy line to `_headers`, its `connect-src` must allow exactly `https://nominatim.openstreetmap.org` and `https://router.project-osrm.org`. The line in `docs/LAUNCH_CHECKLIST.md` already does; without them the box only ever says "not working right now".
-- Keep the "© OpenStreetMap contributors" link that the box shows with every answer. The routing server also asks for a credit to OSRM and a "Fix the map" link: ask Claude to add them.
+- Keep the three small links that the box shows under every answer: "© OpenStreetMap contributors", "Routing: OSRM" and "Fix the map". The two services ask for that credit.
 - To switch the box off, or to move it to a service with a contract (Mapbox, Google), see step 3.13 of `docs/LAUNCH_CHECKLIST.md`. Test the box yourself once a week in season.
 
 **Accessibility & comfort** (First-visit page, `#comfort`) only repeats facts the farm has already published (porta-johns including a
@@ -222,9 +225,8 @@ To print, open `print/qr-signs.html` in your browser and press Print (or "Save a
 4. The pizza menu sign opens the Fall Menu: update the menu on the website each season.
 5. The Mailchimp signup page the signup sign opens should show in the language of the sign (Mailchimp's form settings have a language option; check your screens).
 
-**Analytics + Google Search Console.** *Analytics* is off until you pick a provider (ask Claude; see `js/analytics.js`). Once on, it records:
-`Review click`, `Waitlist click`, `Reminder added` (type: google or ics), `Map select` (kind), `Signup submit`, `Email signup click`, `Press click`, `drive_time` (a drive-time answer was shown; nothing about the address)
-and `Directions click` (the Google, Apple Maps and Waze links all use this one name). QR signs that point at this website carry `utm_source=qr`
+**Analytics + Google Search Console.** *Analytics* is off until you pick a provider (ask Claude; see `js/analytics.js`), and it is skipped for visitors who send Do Not Track or Global Privacy Control. Once on, it records:
+`Section view` (a main section scrolled into view), taps on links (`Reserve click`, `Pizza pre-order click`, `Directions click`, `Email click`, `Phone click`, `Email signup click`, `Instagram click`, `Facebook click`, `School tour form click`; the Google, Apple Maps and Waze links all use the one name `Directions click`), `Review click`, `Waitlist click`, `Press click`, `Reminder added` (type: google or ics), `Map select` (kind), `Signup submit` (how many boxes were ticked), `Season preview`, `Language change`, `Hero played` (first tap in the game at the top) and `drive_time` (a drive-time answer was shown; nothing about the address). The Cloudflare provider counts page views only. `docs/WHAT_THE_SITE_STORES.md` has the table of what is sent. QR signs that point at this website carry `utm_source=qr`
 so an analytics tool that understands it can show scans; signs that open Instagram, Facebook, Bookeo or Google cannot be counted here.
 *Google Search Console* (so the site shows up in Google): the website must be online first. Then (the names of the buttons may differ a little,
 Google moves them): (1) go to search.google.com/search-console and sign in with the farm's Google account; (2) choose "Add property", pick the
@@ -242,8 +244,8 @@ Do this after you edit `js/content.js` or the pizza schedule.
    site add `?check` to the address: https://www.wiseacresorganic.com/?check . Anyone who adds ?check sees the box too, so it only ever shows what is already in the public files.
 3. Look at the bottom of the page. If something you typed cannot be used, a yellow "Site check" box says what and where. No box means the check
    found nothing wrong.
-4. The check covers `week`, `signup`, `reviewUrl`, `community`, `entrancePhoto` and the rows of the pizza schedule. It does **not** check hours,
-   closures, the notice, reviews or photos: look at those on the page yourself.
+4. The check covers `week`, `signup`, `reviewUrl`, `community`, `entrancePhoto`, the rows of the pizza schedule and every `data-until` date (it says what has already hidden itself). It does **not** check hours,
+   closures, the notice, reviews, photos or `farmPoint`: look at those yourself. For `farmPoint`, press "Get drive time" once with an address in Indian Trail and see that the miles look right.
 5. If the box says "js/content.js did not run", there is a typo in that file (most often an apostrophe inside single quotes, a missing comma, or curly
    quotes pasted from Word). Press F12 (on a Mac in Chrome: Cmd+Option+J), open Console, and the first red line names the line number. Until it is
    fixed, hours, closures, the notice bar, photos, reviews and the signup are off. Undoing your last change (Ctrl+Z) or putting your copy back also fixes it.
@@ -292,7 +294,7 @@ writes goes through `WISE_ACRES.t("English text")`.
   ```
 
   Then add the missing ids and texts to `lang/src/<code>.json` (or ask Claude to translate everything `missing` lists) and run `build` again.
-  `missing` also counts text that JavaScript writes (`t('…')` in `js/*.js`).
+  `missing` also counts text that JavaScript writes (`t('…')` in `js/*.js`). `python3 tools/i18n.py jsstrings` refreshes `lang/js-strings.json`, the list of that text (kept for reference; the site does not load it). `python3 tools/i18n.py orphans` lists text that would never be translated, and `stats` counts strings and words per page.
 - Words you type in `js/content.js` (the week note and a day's note, the entrance photo's alt and caption, a community photo's description and credit)
   are shown exactly as typed in every language. For the week note, a day's note and `notice` you can write `{ en: '…', es: '…', hi: '…', zh: '…', vi: '…' }`;
   a language you leave out shows the English. The entrance photo's alt and caption can be written the same way (`alt: { en: '…', es: '…' }`), or add the exact English text under `"js"` in
@@ -300,10 +302,10 @@ writes goes through `WISE_ACRES.t("English text")`.
 - Translations live in `lang/src/<code>.json` as `{ "ui": { id: text }, "js": { "English text": text } }`.
   Keep tags such as `<strong>`, `<br>`, `<svg/>` and `<a1>…</a>` (a link) exactly as in English.
   `python3 tools/i18n.py dump es 0 50` prints missing strings with their ids; `merge` folds
-  `lang/src/parts/<code>.*.json` into the main file.
+  `lang/src/parts/<code>.*.json` into the main file. Do not run `merge`: those files are old drafts (on 3 October 2026 it only added about 20 strings per language that the site no longer uses, and it would also put old wording back over any translation edited since).
 - Text that must stay as is (names, text JavaScript fills in) carries `data-no-i18n`.
 - To add a language: add it to `LANGS` in `js/i18n.js`, create `lang/src/<code>.json`, run `build`.
-  If it needs its own font, add a rule at the bottom of `css/extras.css`.
+  If it needs its own font, add a rule next to the `html:lang(hi)` rules in `css/extras.css`.
 
 ## Content status: please read
 
@@ -323,7 +325,7 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Facebook & hashtag** | Facebook links to https://www.facebook.com/wiseacresnc/ (found by web search, **please confirm it is the right page**). The photo notes ask people to tag @wiseacresorganic and use **#wiseacresorganic** (our suggestion; change it in the two `tag-us` notes in `index.html`, the Flowers section and the Photo gallery). Social links are in the footer, the Contact section and the winter "watch for details" line. |
 | **Christmas trees** | Friday after Thanksgiving to early December, at The GreenHouse. |
 | **Tomatoes & basil** | The page says "more than a dozen tomato varieties and 4 kinds of basil" because the counts you gave don't agree. Give us the right number and we'll state it. |
-| **Reviews** | The reviews section is built but empty. It needs real quotes (with permission) from you. |
+| **Reviews** | The reviews section shows only its buttons (Google, Tripadvisor, Yelp, "Leave a Google review"); the quote cards are built but stay hidden until there is a real quote. It needs real quotes (with permission) from you. |
 | **Shop section (`#shop` in `index.html`)** | **Draft.** It sits between The GreenHouse and Flowers on the main page. The layout is done and every price we know is on it (tomatoes, basil, farm fees, rides, pizza). Everything marked "Prices coming soon" (pumpkins, strawberries, blueberries, flowers, concessions, drinks, local goods, ice cream, Christmas trees) needs the real list. Edit the `#shop` section in `index.html`: change a `<dd data-t="…" class="soon">Prices coming soon</dd>` to the price, e.g. `<dd>$5 each</dd>` (this also drops the red dashed "soon" pill), then run the rebuild commands. |
 | **Farm map** | Done: your marked map is on the home page and the First-visit page. Re-mark in the tool and ask Claude to update it (`python3 tools/farm_map.py tools/saved-map.json`). The map's list says "Corn maze" (the name that came from the Farm Map Marker) while the page says "Small Sunn Hemp Maze" (the farm's own wording): please tell us which name you want. Its list also says "Restrooms" and "Concessions or farm store" where the page says "Bathrooms" and "Concessions & local goods". The "Wagon ride route" in the saved map has 4 points outside the photo (it runs off the bottom and right edge); the script pins them to the edge, so that route bends along the border: please re-mark it inside the picture. |
 | **Drive times** | Our estimates, not yours (Stallings 10, Matthews 15, Mint Hill 20, Monroe 20, Waxhaw 25, Uptown Charlotte 30 minutes, light traffic). Please check them and tell Claude the right numbers (in the HTML they are `data-drive`). |
@@ -336,7 +338,7 @@ Text, prices and links come from the wording you pasted from the current site. T
 | **Phone number** | The main number in online listings, (704) 628-6232, is **not** on the site until you confirm it. The day-of emergencies number for photographers, 704-207-6347, **is** on the site ("Day-of emergencies: call or text", in the photography section). |
 | **Drive time box (farm spot, free services)** | Built and tested with pretend services. Our test computer cannot reach the real ones, so press the button yourself once the site is live. Still open: the farm's exact spot for `farmPoint` in `js/content.js` (question 35), whether to write to the free routing server's operators about business use or move to Mapbox later (question 36), and a lawyer's view on sending a typed address to outside map services (question 43). Steps and risks: `docs/LAUNCH_CHECKLIST.md`, step 3.13. |
 | **Winter and early-spring wording** | The Visit area, the Shop and the schedule say "Fall 2026" all year, with "Reserve now" and package prices, also from January to April when the farm is closed. The GreenHouse shows Friday to Sunday, 10 am to 8 pm, all year, and "Christmas trees are here." stays up until the site switches to spring (about 10 February). The farm card itself is right in winter. Waiting for question 37. |
-| **13 new photos** | Added to `assets/photos/` on 3 October and **not used on the site yet**. They are only 206 px wide (question 38), one shows four people at a Foster Village table (question 39), four have words printed in the picture and one shows price signs (question 40). Do not list them in `js/content.js` until those are answered. |
+| **13 new photos** | Added on 3 October and now **on the site**, though the farm has not answered questions 38 to 40. Seven sit in context (the Seasons photo strips, the Tomatoes section, the goat strip at The GreenHouse, the flowers collage, the school tours panel and School field trips page, and the Strawberry picking page); twelve are in the photo gallery (all but the school bus). They are only 206 px wide, so they show only as small tiles (question 38). One shows four people at a Foster Village table (question 39). Four have words printed in the picture and are in the gallery only, and one shows price signs in the Tomatoes section (question 40). If an answer is No, take the photo out: the notes at the bottom of the questions file say where. |
 | **Bottom-bar "Email" button** | On phones the bar at the bottom has Reserve, Directions and Email. Email opens a blank message to cathy@wiseacresorganic.com, not the email list. Question 41. |
 | **Entrance and parking** | The site says "limited parking", and the farm map marks a parking area, an entrance and check-in, but nothing says in words which entrance cars use or where to park. Question 42 (the photo is question 34). |
 
@@ -395,10 +397,10 @@ and hi, zh, vi, to see what still needs translating.)
 
 - **Seasonal hero:** the first screen shows the season the farm is in today. The gray line under the headline describes only that season (strawberries, blueberries, pumpkins + tomatoes & basil, Christmas trees), and in winter the headline itself becomes "Wise Acres Christmas trees". A red, open tractor (no cab) pulls the wagon ride past the fields in **spring, summer and fall**: riders sit behind the side boards and wave (no hay: it is a wagon ride). **Fall:** pumpkin patch (tap to pick), a little barrel train on the far lane, scarecrow, crow, falling leaves. **Winter:** Christmas trees to light, campfires to stoke, a snowman, snow. **Summer:** blueberry bushes to pick, bees, sunflowers to snip. **Spring:** strawberries to pick, kids picking in the rows. A "See the farm in…" switcher changes the season, the Seasons tabs and the u-pick card color.
 - **What's on the farm** (home page, `#farm`): it opens on the current season. Spring / Summer / Fall / Winter buttons swap the cards (`data-seasons="spring summer fall winter"` on each `<li>` in `#farm-cards`; `initFarmSeasons` in `js/main.js`). The u-pick card changes crop, color and drawing per season (strawberries, blueberries, pumpkins + tomatoes & basil, Christmas trees at The GreenHouse). One-season things (haunted trail, sunn hemp maze, corn pit) only show in fall, the barrel train and wagon ride not in winter. A season-by-season table sits underneath; edit its ticks in `#farm-glance`. Seasons are the typical dates in `js/season.js`.
-- **Farm friends:** tap a kid in the strawberry rows, the sunflower cutter, a wagon rider, a barrel-train kid, the scarecrow (its crow flies off) or the snowman and they react and say something (`SAY` and `npcTalk` in `js/hero.js`; the lines are translated like other JS text).
-- **Hero reactions:** the sun beams, wobbles and blinks on hover and hops, squints and bursts into sparks when clicked (`initSun` in `js/hero.js`, styles at the bottom of `css/extras.css`). The "No reservation? Visit The GreenHouse" pill lifts, glows green and shines on hover, and pops with a spray of leaves before it glides down to The GreenHouse (`initNote`). The big buttons and the "New" tomato chip have their own hover moments. All of it is switched off by `prefers-reduced-motion`, and the hover parts only run on devices that can hover.
+- **Farm friends:** tap a kid in the strawberry rows, the sunflower cutter, a wagon rider, a barrel-train kid, the scarecrow (its crow flies off) or the snowman and they react and say something (`SAY` and `npcTalk` in `js/hero.js`; the lines are translated like other JS text). A small round "Say hi to a farm friend" button next to the basket does the same for people who use a keyboard or a screen reader.
+- **Hero reactions:** the sun beams, wobbles and blinks on hover and hops, squints and bursts into sparks when clicked (`initSun` in `js/hero.js`, styles in `css/extras.css` under "The sun is a friend"). The "No reservation? Visit The GreenHouse" pill lifts, glows green and shines on hover, and pops with a spray of leaves before it glides down to The GreenHouse (`initNote`). The big buttons and the "New" tomato chip have their own hover moments. All of it is switched off by `prefers-reduced-motion`, and the hover parts only run on devices that can hover.
 - **Achievements:** pick 100 of one kind (strawberries, blueberries, sunflowers, pumpkins, or trees lit + fires stoked in winter) and a badge pops up above the basket while that item rains down the screen; pick 1,000 in all and a gold "you've got a lot of time on your hands" badge appears. Counted per visit (`credit()` in `js/hero.js`).
-- **Menu:** Visit, On the Farm, Seasons, Tomatoes, Pizza, GreenHouse, Shop, and a **More** menu (Flowers, Groups, Our Story, FAQ, Contact). On phones it is one long list. In winter the main buttons (hero and phone bar) point to The GreenHouse, since the farm is closed. A round **back to top** button shows after scrolling.
+- **Menu:** Visit, On the Farm, Seasons, Tomatoes, Pizza, GreenHouse, Shop, and a **More** menu (First-visit guide, Flowers, Groups, Our Story, FAQ, Contact). On phones it is one long list, and the First-visit guide is its second item. In winter the main buttons (hero and phone bar) point to The GreenHouse, since the farm is closed. A round **back to top** button shows after scrolling.
 - **Seasonal touches elsewhere:** the top bar says what is in season; dividers and the footer scene change with the season.
 - **Open now** badges, a **notice bar**, and a **next-season countdown** with an email sign-up.
 - **Pizza countdown** with calendar reminders, a **this-week** box, **email signup with interests**, a **review button** and QR signs, a **farm map**, drive times, and Apple Maps / Waze links (see "Planning features").
@@ -417,7 +419,7 @@ keyboard navigable.
 New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md): which host, what to upload, the steps in order, and what to test afterwards.
 
 1. Upload the folder to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. **Leave out the `docs/` folder** (notes and questions for the farm owner, not for visitors). You can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site.
-2. Use your real domain at the **root** (`https://www.wiseacresorganic.com/`). If it lives elsewhere, change `SITE` in `tools/pages.py`, run the rebuild commands, and search & replace the domain in `index.html` (canonical, share image, structured data).
+2. Use your real domain at the **root** (`https://www.wiseacresorganic.com/`). If it lives elsewhere, change `SITE` in `tools/pages.py`, run the rebuild commands, and search & replace the domain in `index.html` (canonical, share image, structured data), and set `site` in `tools/qr_links.json` and run `python3 tools/make_qr.py` again (the QR signs carry the address).
 3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
 4. Send people to the Google Business Profile, and add your site's address there.
 5. Before launch: fill every "Prices coming soon", confirm hours, Facebook and the hashtag, and have a native speaker read each language (see Content status).

@@ -2,7 +2,7 @@
 
 **This is a fact sheet, not a privacy policy.** It lists facts about what the website's own code does. It is not consent text and not legal advice.
 
-**Checked:** 2 October 2026, website version `4d80383`. The Drive time box was added later and checked on 3 October 2026, website version `2996b9f`: sections 2, 3, 5, 6, 7 and 8 and the events table were updated for it. If the code changes, these facts can change too. Ask Claude to run the checks again (see the end of this page).
+**Checked:** 2 October 2026, website version `4d80383`. The Drive time box was added later and checked on 3 October 2026, website version `2996b9f`: sections 2, 3, 5, 6, 7 and 8 and the events table were updated for it. The browser-storage and outside-sites checks were run again on 3 October 2026 for website version `979437f`, after the keyboard, language-menu, first-visit and photo changes: the same three entries in section 1, no cookies, and no contact with another site until "Get drive time" is pressed. Section 5 now also lists the two other credit links under a Drive time answer. If the code changes, these facts can change too. Ask Claude to run the checks again (see the end of this page).
 
 **How it was checked**
 
@@ -76,7 +76,7 @@ Everything travels inside the request's web address; that is how this kind of Ma
 **What goes to the two map services when the visitor presses "Get drive time":**
 - **To `nominatim.openstreetmap.org`** (the address search run by the OpenStreetMap Foundation): the address exactly as typed (at most 200 characters), and fixed words: `format=jsonv2`, `limit=1`, `countrycodes=us`, `accept-language=en`. A second search, for the chosen place's address (the farm: `4701 Hartis Rd, Indian Trail, NC 28079`, or The GreenHouse: `5503 Poplin Rd, Indian Trail, NC 28079`; both are public business addresses), follows about 1.1 seconds later, unless `farmPoint` is set in `js/content.js`; its answer is kept in memory until the page is closed or reloaded, so later presses send only the first search.
 - **To `router.project-osrm.org`** (the routing demo server run by FOSSGIS e.V., a German non-profit): not the typed words but two pairs of map coordinates: the spot the search found for the visitor's address (six decimals, which is accurate to about a house) and the farm's spot, plus fixed options (`overview=false`, `alternatives=false`, `steps=false`).
-- **What comes back and is shown:** the name of the place found (up to 140 characters, shown in English as "We looked up: ..."), the distance and the time. Nothing is stored by the website: the browser's local storage, session storage and cookies were identical before and after a lookup (tested).
+- **What comes back and is shown:** the name of the place found (up to 140 characters; the place name is always in English, after the words "We looked up:" in the visitor's language), the distance and the time. Nothing is stored by the website: the browser's local storage, session storage and cookies were identical before and after a lookup (tested).
 - **A link, only if tapped:** under every answer there is a button "Open these directions in Google Maps". Google receives the typed address in that link's web address only if the visitor taps it.
 - **The browser's own autofill:** the box is marked as a street-address field, so a browser may offer the visitor's saved addresses and may offer to remember what is typed. That is the browser's feature, not this website's.
 - **With analytics on:** the event `drive_time` is sent after an answer is shown, with no details (table below).
@@ -131,7 +131,8 @@ All four were tested with Plausible switched on.
 | Google Forms | `docs.google.com/forms` | School tour sign-up. What it asks for is set in Google Forms, not in this website. |
 | Google Calendar | `calendar.google.com` | "Add to Google Calendar". The link carries only the opening times and the Bookeo link. |
 | Yelp, Tripadvisor | `www.yelp.com`, `www.tripadvisor.com` | Reviews |
-| OpenStreetMap | `www.openstreetmap.org/copyright` | The "© OpenStreetMap contributors" credit shown under a Drive time answer |
+| OpenStreetMap | `www.openstreetmap.org/copyright`, `www.openstreetmap.org/fixthemap` | The "© OpenStreetMap contributors" credit and the "Fix the map" link shown under a Drive time answer |
+| OSRM | `project-osrm.org` | The "Routing: OSRM" credit shown under a Drive time answer |
 | Axios | `www.axios.com` | "In the news" |
 | Email links (`mailto:`) | The visitor's own email program | Questions and the waitlist. The website sends nothing: the visitor writes and sends the email themselves. The waitlist email is pre-filled with the day and empty lines for a name and group size. |
 | Phone link (`tel:`) | The visitor's phone | Calling the farm |

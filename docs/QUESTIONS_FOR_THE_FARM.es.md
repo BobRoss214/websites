@@ -308,7 +308,7 @@ Respuesta:
 
 **¿Pueden enviarnos algunas reseñas reales de clientes, con permiso de quienes las escribieron, para mostrarlas en el sitio?**
 
-Por qué importa: La sección "Lo que dicen las familias" permanece oculta hasta que tenga citas reales.
+Por qué importa: Las tarjetas con citas de la sección "Lo que dicen las familias" permanecen ocultas hasta que haya citas reales. Los botones de Google, Tripadvisor y Yelp siempre aparecen.
 
 Respuesta:
 
@@ -369,7 +369,7 @@ Respuesta:
 - `sunflower-field-golden-light.webp`
 - `sunflowers-with-strawberry-and-blueberry-baskets.webp`
 
-Por qué importa: Las copias que recibimos miden solo 206 píxeles de ancho (el programa de chat las redujo). Nuestras otras fotos miden entre 375 y 1,999 píxeles en el lado más largo, la mayoría unos 750. Una foto de 206 píxeles se ve borrosa cuando un visitante la toca para agrandarla. Las 13 fotos todavía no están en el sitio y no las mostraremos hasta tener archivos más grandes.
+Por qué importa: Las copias que recibimos miden solo 206 píxeles de ancho (el programa de chat las redujo). Nuestras fotos más antiguas miden entre 300 y 1,400 píxeles de ancho, y la mayoría 500 o 750. Una foto de 206 píxeles se ve borrosa cuando se muestra en grande, así que el sitio muestra estas 13 solo como miniaturas (en tiras de fotos, en el collage de flores y en la galería), y la foto que un visitante toca se abre pequeña. Con archivos más grandes podemos mostrarlas más grandes.
 
 Respuesta:
 
@@ -378,21 +378,21 @@ Respuesta:
 
 **¿Podemos mostrar las fotos en las que salen personas y cómo deben darse los créditos? En particular, la foto de cuatro personas en una mesa de Foster Village (`foster-village-table.webp`): ¿quién la tomó y esas cuatro personas, y Foster Village, están de acuerdo en que salga en su sitio web? Además, ¿el animal de `goat-in-green-frog-hat.webp` es una cabra?**
 
-Por qué importa: No deben ponerse rostros ni el nombre de una organización en el sitio sin un sí. Otras dos fotos nuevas muestran el brazo o el cabello de una persona, pero no el rostro (la cabrita de Pascua y el animal con gorro de rana). También llamamos "cabra" al último por el nombre del archivo; si es un cordero u otro animal, la descripción de la imagen sería incorrecta.
+Por qué importa: No deben aparecer rostros ni el nombre de una organización en el sitio sin un sí. Esta foto ya está en la galería de fotos (la última imagen, con el pie "Mesa de Foster Village"), así que necesitamos su respuesta antes de que el sitio se publique; si es No, quitamos la imagen. Otras dos fotos nuevas muestran el brazo o el cabello de una persona, pero no el rostro (la cabrita de Pascua y el animal con gorro de rana). El animal con gorro de rana aparece en las fotos de "Conoce a las cabras" en The GreenHouse, y lo llamamos cabra solo por el nombre del archivo; su descripción en el sitio dice "un animal pequeño". Si es un cordero u otro animal, "Conoce a las cabras" sería incorrecto.
 
 Respuesta:
 
 
 ### Pregunta 40
 
-**Cuatro de las fotos nuevas tienen palabras impresas en la imagen. ¿Podemos mostrarlas en la galería o debemos dejarlas fuera? (También pueden enviar versiones sin las palabras.)**
+**Cuatro de las fotos nuevas tienen palabras impresas en la imagen. Ya están en la galería de fotos (son las últimas imágenes de la galería y no aparecen en ningún otro lugar del sitio). ¿Podemos dejarlas ahí o debemos quitarlas? (También pueden enviar versiones sin las palabras.)**
 
 - `baby-goat-bunny-hoodie-happy-easter.webp`: "Happy Easter!" (Feliz Pascua)
 - `blueberries-sunflowers-happy-fathers-day.webp`: "Happy Father's Day!" (Feliz Día del Padre)
 - `goats-on-platform-waiting-all-summer.webp`: "...ve been waiting all summer long to see you!" (cortada en el borde izquierdo)
 - `sunflowers-with-strawberry-and-blueberry-baskets.webp`: "Plenty of organic strawberries & blueberries now available! Morning & evening reservations." (hay fresas y arándanos orgánicos de sobra, reservas por la mañana y por la tarde)
 
-Por qué importa: Las palabras dentro de una imagen no se pueden traducir al español, hindi, chino ni vietnamita, no las lee un lector de pantalla y no se pueden actualizar. Además se vuelven obsoletas: "Happy Easter" y "Happy Father's Day" son de temporada, "now available! Morning & evening reservations" es una oferta que quizá ya no sea cierta, y "waiting all summer" está cortada. Una quinta foto, `organic-tomatoes-and-basil-u-pick-signs.webp`, muestra carteles reales con precios ("4.50$" la libra de tomates y "$1" por tallo de albahaca); la pregunta 7 pregunta si esos precios son correctos.
+Por qué importa: Las palabras dentro de una imagen no se pueden traducir al español, hindi, chino ni vietnamita y no se pueden actualizar. (Repetimos las palabras en la descripción de la imagen, para que un lector de pantalla pueda leerlas.) Además se vuelven obsoletas: "Happy Easter" y "Happy Father's Day" son de temporada, "now available! Morning & evening reservations" es una oferta que quizá ya no sea cierta, y "waiting all summer" está cortada. Una quinta foto, `organic-tomatoes-and-basil-u-pick-signs.webp`, muestra carteles reales con precios ("4.50$" la libra de tomates y "$1" por tallo de albahaca); está en la sección de tomates y en la galería, así que la pregunta 7 importa: pregunta si esos precios son correctos.
 
 Respuesta:
 

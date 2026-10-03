@@ -3,9 +3,15 @@
 
   python3 tools/i18n.py extract      tag every text block in the HTML pages with data-t="<id>"
                                      (and data-ta-<attr> for labels/alt text) and write lang/en.json
-  python3 tools/i18n.py missing es   list English strings that have no translation in lang/src/es.json
+  python3 tools/i18n.py jsstrings    list the text that JavaScript writes (t('...'), titles, descriptions) in lang/js-strings.json
+  python3 tools/i18n.py missing es   count the English strings and the JavaScript texts that have no translation in lang/src/es.json
+  python3 tools/i18n.py missing es --list    the same, and list them (languages: es, hi, zh, vi)
+  python3 tools/i18n.py dump es 0 50 print missing strings 0 to 49 with their ids, ready to translate
   python3 tools/i18n.py build        turn lang/src/*.json into lang/*.js (what the pages load)
+  python3 tools/i18n.py orphans      list text that would never be translated (it sits loose next to block-level tags)
   python3 tools/i18n.py stats        strings and words per page
+  python3 tools/i18n.py merge es     fold lang/src/parts/es.*.json into lang/src/es.json (those files are old drafts: do not run it
+                                     unless you mean to bring them back)
 
 Needs:  pip install beautifulsoup4
 

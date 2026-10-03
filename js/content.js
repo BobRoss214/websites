@@ -71,7 +71,7 @@
  *
  * ANALYTICS
  * ---------
- * Off. When it is on, it counts visits and button taps without cookies, and never for visitors who have "Do Not Track" switched on.
+ * Off. When it is on, it counts visits and button taps without cookies, and never for visitors who have "Do Not Track" or "Global Privacy Control" switched on.
  * To turn it on you first sign up with one service (Plausible, GoatCounter, Umami or Cloudflare Web Analytics), then paste what they give you
  * into `analytics` below. The exact lines are at the top of js/analytics.js. Ask Claude to do the pasting.
  *
@@ -163,7 +163,9 @@
  * It finds the farm by its address with the free OpenStreetMap search. Optional: give the exact spot instead, so the farm is never searched for.
  * On Google Maps, right-click the farm and click the two numbers at the top of the menu to copy them. Then change  farmPoint: null,  to
  *       farmPoint: { lat: 00.0000, lon: -00.0000 },     (your own two numbers, not these)
- * The visitor's address is sent to OpenStreetMap only when they press the button, and this website does not keep it.
+ * When a visitor presses the button, the address they typed goes to OpenStreetMap's search, and two map spots (theirs and the farm's) go to the free OSRM routing
+ * server. Nothing is sent before that, and this website does not keep the address. The Site check box does not check `farmPoint`: after you set it,
+ * press "Get drive time" once with an address in Indian Trail and see that the miles look right.
  *
  * SEASON SWITCHER
  * ---------------

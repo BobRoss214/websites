@@ -2,7 +2,7 @@
 """Builds the extra pages (first visit, pumpkin patch, strawberry picking, school field trips, Wise Pie)
 from the short page sources in pages/ and the header, footer and icons of index.html.
 
-  python3 tools/pages.py            write the pages and sitemap.xml
+  python3 tools/pages.py            write the pages, sitemap.xml and robots.txt
   python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py build     (full rebuild)
 
 Each source in pages/<slug>.html starts with a small block of settings between --- lines:
@@ -10,11 +10,13 @@ Each source in pages/<slug>.html starts with a small block of settings between -
   ---
   title: Page title for Google and the browser tab
   description: One or two sentences for search results
-  crumb: Short name for the breadcrumb (only used if you add a visible breadcrumb trail; see compose())
-  schema: LocalBusiness            (optional extra schema.org type: Event is NOT used, dates change)
+  crumb: Short name for the breadcrumb (not used today: the pages have no visible breadcrumb trail; see compose())
   image: assets/og-share.png       (optional)
   ---
   <section>...the page itself...</section>
+
+Only title, description and image are used (crumb is kept for a future breadcrumb trail); any other line in the block is ignored.
+The farm map's scripts (js/map-art.js, js/farm-map-data.js) are added only to a page whose source contains data-farm-map.
 
 Change SITE below if the website is published somewhere other than wiseacresorganic.com.
 """

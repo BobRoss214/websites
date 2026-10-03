@@ -1,6 +1,6 @@
 # Launch checklist: putting the Wise Acres website online
 
-For the farm owner, and for anyone helping, who has never put a website online. Plain English, in order. Written on 2 October 2026 for the files in this folder. Updated on 3 October 2026 for the Drive time box (steps 3.5 and 3.13, decision D11 and the tests in section 5).
+For the farm owner, and for anyone helping, who has never put a website online. Plain English, in order. Written on 2 October 2026 for the files in this folder. Updated on 3 October 2026 for the Drive time box (steps 3.5 and 3.13, decision D11 and the tests in section 5). Checked again on 3 October 2026 against the files at commit `979437f`: the file counts and sizes, steps 3.8, 3.9 and 3.13, the list of questions in section 4 and the tests in section 6 were corrected.
 
 **Not part of the upload.** This file lives in `docs/`, which stays on your computer (see section 2).
 
@@ -47,7 +47,7 @@ The site is plain files. There is no database and no build step, so any host tha
 
 ### Why Cloudflare Pages
 
-1. **The cost cannot surprise you.** A first visit to the home page downloads about 2.2 MB (measured on 3 October 2026 in a real browser, text files compressed). October is when the farm is busiest. On Netlify's free plan, going by the prices above, the allowance would last very roughly 5,000 first visits a month (arithmetic on **[not opened]** prices, not a promise). When it ran out the site would go offline until the next month. On Cloudflare's free plan the pages are free and unlimited. **[read]**
+1. **The cost cannot surprise you.** A first visit to the home page, scrolling all the way down, downloads about 2.2 to 2.4 MB (measured on 3 October 2026 in a real browser, text files compressed; the high end is when every picture has loaded). October is when the farm is busiest. On Netlify's free plan, going by the prices above, the allowance would last very roughly 5,000 first visits a month (arithmetic on **[not opened]** prices, not a promise). When it ran out the site would go offline until the next month. On Cloudflare's free plan the pages are free and unlimited. **[read]**
 2. **Everything the README set up works there**: `_headers`, `_redirects` and the friendly "page not found" page. **[tested here]**
 3. **Your email is not touched.** One `CNAME` record for `www` changes nothing else. (Moving the whole domain to another company is the step that can break email.)
 4. **The upload is drag and drop**, and later changes are "Create a new deployment" and drag again. There is also an instant rollback to an earlier version. **[read]**
@@ -80,10 +80,10 @@ How to do it, with no tools:
 
 1. Copy the whole site folder and call the copy `wise-acres-upload`.
 2. In the copy, delete `docs`, `tools`, `pages` and `README.md`, and `.git` if you can see it.
-3. What is left should be 16 items (17 with `_redirects`), 112 files, about 5.9 MB. Double-click `index.html` in the copy and check the site looks right.
+3. What is left should be 16 items (17 with `_redirects`), 112 files (113 with `_redirects`), about 6.0 MB. Double-click `index.html` in the copy and check the site looks right.
 4. Keep each uploaded folder, with the date in its name (`wise-acres-upload-2026-10-09`). If an upload goes wrong you can go back.
 
-The helper checked on 2 October 2026 that the site loads with all 8 pages and 5 languages from this reduced folder, with no missing file.
+The helper checked on 2 October 2026, and again on 3 October 2026 with the files at commit `979437f`, that the site loads with all 8 pages and 5 languages from this reduced folder, with no missing file.
 
 ## 3. The steps, in order
 
@@ -149,7 +149,7 @@ https://:version.:project.pages.dev/*
 1. **It has been tested only on the helper's computer.** It was served with the real files in a real browser, on all 8 pages in all 5 languages, with every optional feature switched on (notice bar, reviews, week box and feed, signup, review link, visitor photos, entrance photo): 40 page loads, no violation, no page error. The Drive time box was tested separately under the same policy (section 6). The outside services (Mailchimp, the two map services of the Drive time box) were stand-ins, because the test computer cannot reach them. It has never run on the real host. **[tested here]**
 2. **A wrong policy fails silently.** The browser blocks the item and the page just does not do it: the signup does nothing, the analytics count nothing, the Print button is dead. Visitors see no error and neither do you.
 3. **Four things change the policy.** (a) Analytics: every provider needs its own addresses added (table in 3.9). (b) A live week feed on another website needs its address added. (c) The Mailchimp form: the policy allows only `*.list-manage.com`, and the real form code (question 26) has not been seen yet. (d) The Drive time box: the line below already allows its two map services, `https://nominatim.openstreetmap.org` and `https://router.project-osrm.org`, and nothing else. Without them the box would only ever say "The lookup is not working right now" (tested). If the farm ever swaps one of those services (3.13), the line must change with it.
-4. **One inline click handler is allowed by a fingerprint.** The Print button on `print/qr-signs.html` has its code in the page, and the policy lists a fingerprint (hash) of exactly that text. If anyone edits that button's `onclick`, the fingerprint no longer matches and the button stops working. The fingerprint was recomputed on 2 October 2026 and matches. **[tested here]**
+4. **One inline click handler is allowed by a fingerprint.** The Print button on `print/qr-signs.html` has its code in the page, and the policy lists a fingerprint (hash) of exactly that text. If anyone edits that button's `onclick`, the fingerprint no longer matches and the button stops working. The fingerprint was recomputed on 2 October 2026 and matches, and the Print buttons were pressed again under the policy on 3 October 2026. **[tested here]**
 5. **Known limit.** The pages use `style="..."` attributes, so the policy has to allow inline styles. It stops foreign scripts, not injected styling.
 
 **The one-line change.** Open `_headers` in a plain text editor. Find the line that starts `  Permissions-Policy:` (two spaces first). Directly under it, add this single line, with the same two spaces at the start:
@@ -238,7 +238,7 @@ Both files are ready. `robots.txt` lets search engines in, keeps them out of `/p
 
 **FILES: `js/content.js`.**
 
-- [ ] In `js/content.js`, find `seasonPicker: true,` (near line 157) and change `true` to `false`. Or ask Claude to.
+- [ ] In `js/content.js`, find `seasonPicker: true,` and change `true` to `false`. Or ask Claude to.
 - [ ] What it does: the "See the farm in ..." switcher is a preview tool that lets a visitor click between seasons. With `false` the first screen simply follows today's date (the dates are in `js/season.js`). The file's own comment says to set it to `false` "when the site should simply follow the calendar". Without this change every visitor sees a switcher that shows the farm in other seasons.
 - [ ] After uploading, check that the switcher is gone from the home page.
 
@@ -246,7 +246,7 @@ Both files are ready. `robots.txt` lets search engines in, keeps them out of `/p
 
 **FILES: `js/content.js` (and the security line).**
 
-**Recommended: off at launch.** It is off today (`analytics: { provider: 'none' }`). Reasons: nothing to set up; the site contacts no other website, which `docs/WHAT_THE_SITE_STORES.md` records; no cookie or privacy question to answer; and it can be turned on later without losing anything but the earlier counts. Turn it on only if someone will actually look at the numbers (which buttons people press, which language they use).
+**Recommended: off at launch.** It is off today (`analytics: { provider: 'none' }`). Reasons: nothing to set up; no analytics company is contacted (and the site contacts no other website until a visitor presses "Get drive time"), which `docs/WHAT_THE_SITE_STORES.md` records; no cookie or privacy question to answer; and it can be turned on later without losing anything but the earlier counts. Turn it on only if someone will actually look at the numbers (which buttons people press, which language they use).
 
 If you do want it (decision D5):
 
@@ -279,9 +279,9 @@ If you do want it (decision D5):
 
 ### 3.11 The share image
 
-- [ ] `assets/og-share.png` is the picture people see when the address is pasted into Facebook, a text message or similar. It is 1200 by 630 pixels, 208 KB: the fall farm from the top of the home page (sun, barn, wagon ride, pumpkin patch, scarecrow) with the name "Wise Acres Organic Farm" and the words "Organic u-pick fun for the whole family". Every page uses it.
+- [ ] `assets/og-share.png` is the picture people see when the address is pasted into Facebook, a text message or similar. It is 1200 by 630 pixels, 213 KB: the fall farm from the top of the home page (sun, barn, wagon ride, pumpkin patch, scarecrow) with the name "Wise Acres Organic Farm" and the words "Organic u-pick fun for the whole family". Every page uses it.
 - [ ] Decision D7: keep the drawing, or use a real photo? To change it, replace the file with a new 1200 by 630 picture of the same name, or ask Claude.
-- [ ] Before launch you can replace the file under the same name. After launch, give a changed picture a new file name (change `OG_IMAGE` in `tools/pages.py`, the `og:image` line in `index.html`, and run the rebuild): `/assets/*` is cached for a year (see `_headers`), and Facebook, WhatsApp and iMessage keep old previews for days or weeks.
+- [ ] Before launch you can replace the file under the same name. After launch, give a changed picture a new file name (change `OG_IMAGE` in `tools/pages.py`, the `og:image` line and the `"image"` line of the structured data in `index.html`, and run the rebuild): `/assets/*` is cached for a year (see `_headers`), and Facebook, WhatsApp and iMessage keep old previews for days or weeks.
 - [ ] After launch, paste the home address into a new text message or a Facebook post draft (not an old one: apps keep previews for days) and look at the picture and the title.
 
 ### 3.12 Your Google Business Profile
@@ -312,7 +312,7 @@ If you do want it (decision D5):
 1. The routing server's own page calls the demo "non-commercial". A farm website that sells visits is a business, so there is a real chance that one day the service refuses it, and the farm would have no one to complain to. The free search is probably more relaxed, but its policy page could not be read.
 2. If that happens, nothing breaks. The box says "The lookup is not working right now. Try the Google Maps button instead." and offers a Google Maps button. The town list above it does not change. **[tested here]**
 3. Counting: at most two searches and one route request per press. A busy day with a few hundred presses is far below the "one request a second" rule, but a rule that says "the whole website, together" could be hit by a sudden crowd. (Community forum answers say the limit counts all of a website's visitors together; the policy page was not opened.)
-4. The credit under each answer reads "© OpenStreetMap contributors", linked to OpenStreetMap's copyright page. The routing server also asks for the OSRM name and a "fix the map" link. Ask Claude to add "Routing: OSRM" and "Fix the map" next to the credit.
+4. The credit under each answer reads "© OpenStreetMap contributors", linked to OpenStreetMap's copyright page. The routing server also asks for the OSRM name and a "fix the map" link, so two more small links sit next to the credit: "Routing: OSRM" (OSRM's project page) and "Fix the map" (OpenStreetMap's page for reporting map mistakes). **[tested here]**
 
 **Do these before launch:**
 
@@ -337,8 +337,8 @@ If you do want it (decision D5):
 
 **The questions about the farm itself** are in [QUESTIONS_FOR_THE_FARM.md](QUESTIONS_FOR_THE_FARM.md) (Spanish copy: [QUESTIONS_FOR_THE_FARM.es.md](QUESTIONS_FOR_THE_FARM.es.md)). They are not repeated here. Which ones to answer before launch:
 
-- **Before launch:** questions 1 to 9 (things that could mislead the public), question 2 especially (the school-tour form link opens the editor), questions 22 and 23 (the booking and pizza pre-order pages), and question 3 (the phone number).
-- **Can follow launch:** question 26 (the Mailchimp form; until then the signup button opens Mailchimp's own page), question 27 (the review link; see 3.12), question 28 (the news links), question 30 (will `cathy@wiseacresorganic.com` be read and answered). The site works without them.
+- **Before launch:** questions 1 to 9 (things that could mislead the public), question 2 especially (the school-tour form link opens the editor), questions 22 and 23 (the booking and pizza pre-order pages), and question 3 (the phone number). Also question 35 (the farm's exact spot for the Drive time box, step 3.13), question 39 (the photo of four people at a Foster Village table is already in the photo gallery, and the answer says whether it may stay) and question 40 (four gallery photos have greetings or an offer printed in them, and one shows prices).
+- **Can follow launch:** question 26 (the Mailchimp form; until then the signup button opens Mailchimp's own page), question 27 (the review link; see 3.12), question 28 (the news links), question 30 (will `cathy@wiseacresorganic.com` be read and answered). Questions 36 and 43 are the Drive time decision D11 below; 37 (January to April), 38, 41 and 42 can follow launch too. The site works without them.
 
 **The decisions about launching** are not in that file:
 
@@ -354,7 +354,7 @@ If you do want it (decision D5):
 | D8 | Languages: the Spanish, Hindi, Chinese and Vietnamese texts were written with AI help and no native speaker has read them (README, "Content status"). Launch all five, or only the ones that have been read? | Have someone read each before launch, or launch with only the languages that have been read. |
 | D9 | Who updates the site each week in season, and how (3.2: Create a new deployment, drag the folder)? | One named person, plus a backup person. |
 | D10 | Free plan or a paid plan if the farm gets busy? | Free to start. Cloudflare's static traffic is not limited. **[read]** |
-| D11 | The Drive time box: keep it on the free public services, switch it off, or move to a service with a contract (3.13)? Do you want the OSRM operators asked about business use? | Keep it, set `farmPoint` before launch, ask the operators, and watch it weekly. |
+| D11 | The Drive time box: keep it on the free public services, switch it off, or move to a service with a contract (3.13; questions 36 and 43)? Do you want the OSRM operators asked about business use? | Keep it, set `farmPoint` before launch, ask the operators, and watch it weekly. |
 
 ## 5. After launch
 
@@ -367,7 +367,7 @@ If you do want it (decision D5):
 - [ ] **The padlock,** `https://` and `http://`, the `www` name and the bare name, and a made-up address (should show "page not found" in the farm's style).
 - [ ] **The Site check box.** Add `?check` to the live home address. No yellow box at the bottom means nothing is wrong.
 - [ ] **QR signs.** Open `/print/qr-signs`, press Print once, then scan every printed sign with your own phone.
-- [ ] **Drive time box.** Type your own address and press "Get drive time". The miles should be close to what Google Maps says and the minutes within a few. Try an address in another town, and a nonsense address such as `zzzz`: it should say it could not find it. Press "Open these directions in Google Maps". If it says "The lookup is not working right now", either the free services are refusing or the security policy lacks their two addresses (3.5, 3.13): tell the helper, with the time.
+- [ ] **Drive time box.** Type your own address and press "Get drive time". The miles should be close to what Google Maps says and the minutes within a few. Try an address in another town, and a nonsense address such as `zzzzzzzz` (a very short one such as `zzzz` only asks for a longer address): it should say it could not find it. Press "Open these directions in Google Maps". If it says "The lookup is not working right now", either the free services are refusing or the security policy lacks their two addresses (3.5, 3.13): tell the helper, with the time.
 - [ ] **Old addresses,** if you used the redirects: open all 13.
 - [ ] **Cookies.** Open the live site in a private window, press F12, then Application, then Cookies. None should be listed. Some host options can add their own cookies, and `docs/WHAT_THE_SITE_STORES.md` (section 8) asks for exactly this check.
 - [ ] **Share and Google.** Paste the address into a new message and see the preview. Confirm Search Console shows the site as verified, the sitemap as "Success", and the Business Profile shows the new website.
@@ -390,9 +390,8 @@ If something is wrong: open the project's list of deployments in Cloudflare and 
 **Tested on 2 October 2026** (for the files at commit `fcaff91`):
 
 - The Content-Security-Policy line inside `_headers`, and the `_redirects` file, were read by Netlify's open-source parsers (`@netlify/headers-parser` 10.1.1, `@netlify/redirect-parser` 16.1.1): no errors, the policy came back unchanged, 22 redirects, all 301.
-- The reduced upload folder (112 files) and the same two files were served by Cloudflare's own Pages test server (`wrangler pages dev`, version 4.146.0). It applied the headers, redirected `/wise-pie.html` to `/wise-pie` (keeping `?lang=es`), redirected every old address with a 301, answered `/nonsense` with the friendly page, and gave `.pages.dev` addresses the noindex note but not the farm's domain.
+- The reduced upload folder (99 files at that commit) and the same two files were served by Cloudflare's own Pages test server (`wrangler pages dev`, version 4.146.0). It applied the headers, redirected `/wise-pie.html` to `/wise-pie` (keeping `?lang=es`), redirected every old address with a 301, answered `/nonsense` with the friendly page, and gave `.pages.dev` addresses the noindex note but not the farm's domain.
 - A real Chromium browser loaded all 8 pages in all 5 languages from that test server with the policy on and every optional feature switched on (stand-ins for Mailchimp and the week feed): 40 page loads, 0 policy violations, 0 page errors, 0 failed requests. The only outside request was the Mailchimp signup call, which is intended. With the policy in report-only form and no problem, the console showed no `[Report Only]` message.
-- First-visit size of the home page (re-measured on 3 October 2026): 39 files, 2.78 MB raw, about 2.2 MB with text compressed.
 
 **Tested on 3 October 2026** (for the files at commit `2996b9f`, with the Drive time box):
 
@@ -401,6 +400,15 @@ If something is wrong: open the project's list of deployments in Cloudflare and 
 - Under the new policy, a fetch to `api.openstreetmap.org`, `routing.openstreetmap.de`, a look-alike host (`nominatim.openstreetmap.org.example.net`) and `example.org` was blocked, and the same two services were allowed. The old policy (`connect-src 'self'` only) blocked the box: it said "not working right now" and the browser reported a `connect-src` violation for the search.
 - All 8 pages in all 5 languages again, with the new line: 40 page loads, 0 policy violations, 0 page errors, 0 failed requests; the only outside request was the Mailchimp signup call.
 - With `farmPoint` set the box sent one search and one route request per press, and nothing was stored in the browser (local storage, session storage and cookies were identical before and after).
+
+**Tested again on 3 October 2026** (for the files at commit `979437f`, which this page was checked against):
+
+- The reduced upload folder (112 files, 5.96 MB) was served by Cloudflare's local Pages server with the Content-Security-Policy line from 3.5 added to `_headers`. A real Chromium browser loaded all 8 pages in all 5 languages with the optional features switched on (stand-ins for Mailchimp and the week feed): 40 page loads, 0 policy violations, 0 page errors, 0 failed requests; the only outside request was the Mailchimp signup call. Both Print buttons worked.
+- The Drive time test suite, answered through the same policy, passed 45 of 45 checks. It now also checks that the three links under an answer ("© OpenStreetMap contributors", "Routing: OSRM", "Fix the map") open safely in a new tab.
+- Analytics and the week feed, with stand-ins for the services: with only the line from 3.5, the script of each provider (Plausible, GoatCounter, Umami, Cloudflare) and a feed on another website were blocked (one violation each); with the addresses from the table in 3.9 added there were no violations and the requests went out.
+- For the later files at commit `12eec95` (new share picture, two-column gallery on phones, the `add_photo.py` tool) the storage check gave the same result, and the English and Spanish pages (16 page loads, the optional features switched on, the policy line from 3.5 in `_headers`) again had 0 policy violations and 0 page errors; the only outside request was the Mailchimp signup call.
+- The storage and outside-sites check was repeated: three browser entries (`wa.lang`, `wa.offer`, `wa.checklist`), no cookies, no IndexedDB, Cache Storage or service worker, and no request to another site except when "Get drive time" is pressed.
+- First-visit size of the home page: on load 21 files, 0.9 MB (0.34 MB with text compressed). After scrolling the whole page: 46 to 52 files, 2.8 to 3.0 MB (2.2 to 2.4 MB with text compressed); the number of files depends on how fast the scrolling is, because pictures load only when they come near the screen.
 
 **Not tested:**
 
@@ -411,7 +419,7 @@ If something is wrong: open the project's list of deployments in Cloudflare and 
 - How Google treats the `.html` canonical addresses on Cloudflare, and how long Google takes to notice the redirects.
 - Whether Cloudflare's dashboard still shows the same button names. The names above come from its documentation text, and Cloudflare moves things around.
 
-## Sources (all read on 2 October 2026)
+## Sources (read on 2 October 2026; the sources for the Drive time box on 3 October 2026)
 
 **Read (the parts quoted above), from the host's own documentation source** (the public repository `cloudflare/cloudflare-docs`, branch `production`, folder `src/content/docs/pages/`): `configuration/serving-pages.mdx` (the `.html` redirect, 404 page, default headers), `configuration/headers.mdx`, `configuration/redirects.mdx`, `configuration/custom-domains.mdx`, `platform/limits.mdx`, `functions/pricing.mdx` (static requests free and unlimited), `get-started/direct-upload.mdx` (drag and drop), `index.mdx` (rollbacks) and the "Are you sure you want to use Pages?" note (`src/content/partials/pages/workers-for-new-projects.mdx`). The Workers pages `workers/static-assets/migration-guides/migrate-from-pages.mdx` and `workers/static-assets/routing/advanced/html-handling.mdx` were read for the Workers comparison.
 
