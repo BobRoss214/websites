@@ -1,5 +1,5 @@
 /*
- * Pick a Card. Face-down cards (5, or a spread of up to 52) are shuffled; you pick one and flip it to see which
+ * Pick a Card. Face-down cards (5, or a spread of up to 100) are shuffled; you pick one and flip it to see which
  * charity it hides.
  *
  * Fairness: the app draws the winner (see js/fair.js) before the cards are even dealt. Your pick is for fun:

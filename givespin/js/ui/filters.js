@@ -40,7 +40,7 @@
     var bits = [];
     if (nf) { bits.push(nf + (nf === 1 ? ' filter' : ' filters')); }
     if (off) { bits.push(off + ' switched off'); }
-    return { bad: false, html: ui.icon('target') + '<span><b>' + n + '</b> of ' + GS.charities.length + ' charities in play' + (bits.length ? ' · ' + esc(bits.join(' · ')) : '') + '</span>' };
+    return { bad: false, html: ui.icon('target') + '<span><b>' + ui.num(n) + '</b> of ' + ui.num(GS.charities.length) + ' charities in play' + (bits.length ? ' · ' + esc(bits.join(' · ')) : '') + '</span>' };
   }
 
   function renderPoolLine(el) {
@@ -127,8 +127,8 @@
     var count = modal.$('[data-role="count"]');
     count.classList.toggle('is-bad', bad);
     count.innerHTML = bad
-      ? '<b>' + n + '</b> in play. Games need at least ' + GS.config.minPool + '. Loosen a filter.'
-      : '<b>' + n + '</b> of ' + total + ' charities in play' + (off ? ' (' + off + ' switched off)' : '');
+      ? '<b>' + ui.num(n) + '</b> in play. Games need at least ' + GS.config.minPool + '. Loosen a filter.'
+      : '<b>' + ui.num(n) + '</b> of ' + ui.num(total) + ' charities in play' + (off ? ' (' + ui.num(off) + ' switched off)' : '');
     modal.$$('[data-group]').forEach(function (b) {
       var g = b.getAttribute('data-group');
       var id = b.getAttribute('data-id');

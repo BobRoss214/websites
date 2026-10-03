@@ -62,15 +62,15 @@
 
     var f = function (id, label) { return '<button type="button" class="chip' + (filter === id ? ' is-on' : '') + '" data-filter="' + id + '" aria-pressed="' + (filter === id) + '">' + label + '</button>'; };
     root.innerHTML =
-      '<header class="page-head"><div><h1>Your cards</h1><p>Every charity that wins a round for you earns a card. The less likely the win, the rarer the card. Collect a set, earn XP.</p></div></header>' +
+      '<header class="page-head"><div><h1>Your cards</h1><p>Every charity that wins a round for you earns a card, whether it won a game you played, a live pot you were in or a gift you gave directly. The less likely the win, the rarer the card. Collect a set, earn XP.</p></div></header>' +
       '<div class="stats">' +
-        '<div class="stat"><b>' + ids.length + ' of ' + total + '</b><span>Cards collected</span></div>' +
+        '<div class="stat"><b>' + ids.length + ' of ' + ui.num(total) + '</b><span>Cards collected</span></div>' +
         '<div class="stat"><b>' + byRar.common + '</b><span>Common</span></div>' +
         '<div class="stat"><b>' + byRar.rare + '</b><span>Rare</span></div>' +
         '<div class="stat"><b>' + (byRar.epic + byRar.legendary) + '</b><span>Epic and legendary</span></div>' +
       '</div>' +
       '<section class="sect panel" aria-labelledby="cd-set"><div class="sect__head"><h2 class="sect__t" id="cd-set">This month’s set <small>' + month + '</small></h2><span class="tag tag--plain">' + (claimed ? 'complete, +150 XP paid' : haveSet + ' of 6') + '</span></div>' +
-        '<p>Win all six charities this month for 150 XP and the Set Complete badge. A new set starts next month. Back one of them with <b>Back a charity</b> in any race or spin to improve your chances.</p>' +
+        '<p>Win all six charities this month for 150 XP and the Set Complete badge. A new set starts next month. Backing one of them with <b>Back a charity</b> puts it on the board if it was not there already. Every charity on the board has equal odds, so backing never tilts the draw.</p>' +
         '<div class="cardgrid">' + setIds.map(function (id) { return cardHTML(GS.charity(id), owned[id], { reveal: true }); }).join('') + '</div></section>' +
       '<section class="sect" aria-labelledby="cd-all"><div class="sect__head"><h2 class="sect__t" id="cd-all">Collection</h2></div>' +
         '<div class="chips" role="group" aria-label="Show">' + f('owned', 'Collected') + f('rare', 'Rare and better') + f('locked', 'Still to win') + f('set', 'This month’s set') + '</div>' +

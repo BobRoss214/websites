@@ -151,7 +151,7 @@
 
     var extras = '';
     if (summary.hot && summary.hot.mult > 1) {
-      extras += '<p class="rs-note">' + ui.icon('flame') + 'Hot hand ×' + summary.hot.mult.toFixed(1) + ' on this round’s XP (' + summary.hot.before + ' winning calls in a row).</p>';
+      extras += '<p class="rs-note">' + ui.icon('flame') + 'Hot hand ×' + summary.hot.mult.toFixed(1) + ' on this round’s XP (' + summary.hot.before + (summary.hot.before === 1 ? ' winning call' : ' winning calls') + ' in a row).</p>';
     }
     (summary.newCards || []).forEach(function (c) {
       var cc = GS.charity(c.charityId);

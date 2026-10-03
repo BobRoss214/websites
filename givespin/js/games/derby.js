@@ -597,15 +597,15 @@
     label: 'Derby',
     icon: 'flag-triangle-right',
     category: 'races',
-    badge: 'Up to 200',
+    badge: 'Up to 1,000',
     live: true,
-    maxSize: 200,
+    maxSize: 1000,
     sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Huge' }, { n: 48, name: 'Giant' }, { n: 120, name: 'Grand National' }],
     defaultSize: 6,
     tagline: 'A field of charities, one finish line. First across wins your gift.',
     cta: 'Start the race',
     info: [
-      'Charities line up at the start, from a classic field of six up to a Grand National of 200. Hit go and watch them race: whoever crosses the line first gets your gift.',
+      'Charities line up at the start, from a classic field of six, through a Grand National of 120, up to a thousand. Hit go and watch them race: whoever crosses the line first gets your gift.',
       'The winner is drawn first, fairly, from the charities in the race (each has equal odds), then the race is played out to match with plenty of lead changes. Back a runner and, if it wins, you earn a bonus.'
     ],
 

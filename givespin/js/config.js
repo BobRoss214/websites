@@ -5,7 +5,7 @@
  *   'demo'     Nothing is charged and no money moves. Rounds are simulated end to end so the whole
  *              experience can be played, demoed and streamed. Players get free "demo credit" to give, a
  *              "Demo mode" banner shows, and every receipt is stamped DEMO. This is the default on purpose.
- *   'redirect' After the game picks a charity, the receipt shows a "Complete your donation" button that
+ *   'redirect' After the game picks a charity, the receipt shows a "Donate $X to <charity>" button that
  *              opens a real checkout page for that charity (see `checkout.url` below). GiveSpin never
  *              touches card details or funds: the payment happens on the provider's own page.
  */
@@ -23,7 +23,8 @@
     defaultAmount: 25,
     presets: [5, 10, 25, 50, 100],
 
-    // How many times a gift can be split across rounds (every game except slots, which always has 3 reels).
+    // How many times a gift can be split across rounds. This list is for every game except the five slot machines:
+    // there, each reel is one round, so the player chooses 3 to 12 reels instead (see js/games/slots.js).
     roundOptions: [1, 3, 5, 10],
 
     // No single round may be smaller than this (whole dollars). Payment providers have minimums, and tiny

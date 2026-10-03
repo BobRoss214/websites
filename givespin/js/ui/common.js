@@ -47,6 +47,9 @@
 
     money: function (cents, compact) { return core.fmtMoney(cents, compact); },
 
+    /** A count with a thousands separator: 1042 -> "1,042". */
+    num: function (n) { return Number(n).toLocaleString('en-US'); },
+
     /** A round badge for a charity: its logo when there is one, otherwise its monogram. `size` is in px; `cls` is an optional extra class. */
     mono: function (ch, size, cls) {
       var m = GS.mono(ch);

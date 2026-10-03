@@ -168,7 +168,7 @@
       var inPlay = activePool(current);
       ui.pickCharity({
         title: 'Back a charity',
-        sub: 'Pick the one you think will win. It is always on the board. If it wins you earn a bonus; either way your gift goes to whichever charity wins.',
+        sub: 'Pick the one you think will win. It goes on the board if it was not there already, and every charity on the board has equal odds, so backing never tilts the draw. If it wins you earn a bonus; either way your gift goes to whichever charity wins.',
         charities: inPlay,
         random: true,
         onPick: function (id) { setPick(id); }
@@ -375,7 +375,7 @@
     var c = customFor(current);
     ui.chooseCharities({
       title: 'Choose your own charities',
-      sub: 'For ' + g.name + '. Pick up to ' + max + '. The winner is drawn from exactly these, each with equal odds. Your filters are ignored for this game while the list is on.',
+      sub: 'For ' + g.name + '. Pick up to ' + ui.num(max) + '. The winner is drawn from exactly these, each with equal odds. Your filters are ignored for this game while the list is on.',
       selected: c ? c.ids : [],
       min: cfg.minPool,
       max: max,
@@ -425,7 +425,7 @@
     store.setPref('sizes', sizes);
     newBoard(current);
     refreshSize();
-    if (fromInput && clamped !== n) { el.sizeHint.textContent = 'This game can show up to ' + maxFor(g) + '.'; }
+    if (fromInput && clamped !== n) { el.sizeHint.textContent = 'This game can show up to ' + ui.num(maxFor(g)) + '.'; }
   }
 
   function setPick(id) {
@@ -460,19 +460,20 @@
     var b = boards[current];
     var d = b ? b.field.length : Math.min(cur, P);
     var txt;
+    var curT = ui.num(cur), dT = ui.num(d), PT = ui.num(P); // the same numbers, with thousands separators, for the words
     if (customOn(current)) {
       txt = cur > d
-        ? cur + ' spots on the board. Your ' + d + ' custom charities fill them, ' + GS.kit.repeatsText(cur, d) + '. Every one has equal odds.'
+        ? curT + ' spots on the board. Your ' + dT + ' custom charities fill them, ' + GS.kit.repeatsText(cur, d) + '. Every one has equal odds.'
         : d < P
-          ? d + ' of your ' + P + ' custom charities are on the board, picked at random. The winner is drawn from these ' + d + ', each with equal odds.'
-          : 'All ' + P + ' of your custom charities are on the board, each with equal odds.';
+          ? dT + ' of your ' + PT + ' custom charities are on the board, picked at random. The winner is drawn from these ' + dT + ', each with equal odds.'
+          : 'All ' + PT + ' of your custom charities are on the board, each with equal odds.';
     } else if (cur > d) {
-      txt = cur + ' spots on the board. Your ' + d + (d === 1 ? ' charity' : ' charities') + ' fill them, ' + GS.kit.repeatsText(cur, d) + '. Every one of the ' + d + ' has equal odds.';
+      txt = curT + ' spots on the board. Your ' + dT + (d === 1 ? ' charity' : ' charities') + ' fill them, ' + GS.kit.repeatsText(cur, d) + '. Every one of the ' + dT + ' has equal odds.';
     } else {
-      txt = d + ' charities on the board, picked at random from the ' + P + ' in play. The winner is drawn from these ' + d + ', each with equal odds.';
+      txt = dT + ' charities on the board, picked at random from the ' + PT + ' in play. The winner is drawn from these ' + dT + ', each with equal odds.';
     }
-    if (g.snap && chosen !== cur) { txt += ' A bracket needs a power of two, so ' + chosen + ' became ' + cur + '.'; }
-    else if (chosen > maxFor(g)) { txt += ' This game can show up to ' + maxFor(g) + '.'; }
+    if (g.snap && chosen !== cur) { txt += ' A bracket needs a power of two, so ' + ui.num(chosen) + ' became ' + curT + '.'; }
+    else if (chosen > maxFor(g)) { txt += ' This game can show up to ' + ui.num(maxFor(g)) + '.'; }
     el.sizeHint.textContent = txt;
     refreshPick();
   }
@@ -605,7 +606,7 @@
       }).join('') + '</ol>' : '<p class="empty">No rounds of ' + esc(g.name) + ' yet. Your results will show up here.</p>';
     } else if (tabState === 'about') {
       h = '<div class="about">' + g.info.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') +
-        '<p><b>Odds:</b> ' + (g.setBoard ? 'every charity on the board has exactly the same chance (set how many are on it, from a few to ' + (g.maxSize || 100) + '). ' : 'every charity in play has exactly the same chance. ') + 'The result is drawn first, from a seed committed before you play, and the game then shows it.</p></div>';
+        '<p><b>Odds:</b> ' + (g.setBoard ? 'every charity on the board has exactly the same chance (set how many are on it, from a few to ' + ui.num(g.maxSize || 100) + '). ' : 'every charity in play has exactly the same chance. ') + 'The result is drawn first, from a seed committed before you play, and the game then shows it.</p></div>';
     } else {
       var pool = activePool(current).slice().sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
       h = '<p class="tabnote">' + pool.length + (customOn(current) ? ' charities in your custom list.' : ' charities in play.') + ' Tap one to read about it.</p><div class="chips chips--pool">' + pool.map(function (c) {

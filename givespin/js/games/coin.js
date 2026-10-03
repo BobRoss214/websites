@@ -1,6 +1,6 @@
 /*
- * Coin Flip Showdown. Charities in a knockout bracket (8, 16 or 32 of them); a coin is flipped for every match
- * (heads is the top charity, tails the bottom) until one charity is left standing.
+ * Coin Flip Showdown. Charities in a knockout bracket (a power of two, 2 up to 128 of them); a coin is flipped for
+ * every match (heads is the top charity, tails the bottom) until one charity is left standing.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before any coin is flipped. The
  * bracket is seeded with that charity somewhere; its matches go its way and every other match is a random

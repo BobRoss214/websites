@@ -13,6 +13,9 @@
   var GS = (window.GS = window.GS || {});
   var core = GS.core;
 
+  /** A whole number with thousands separators, for the words around a board ("1,042"). */
+  function fmt(n) { return Number(n).toLocaleString('en-US'); }
+
   var kit = {
     /** How many spots a board of `size` has (never fewer than 2). It can be more than the charities in play: they repeat. */
     sizeNow: function (size) { return Math.max(2, Math.floor(size)); },
@@ -73,8 +76,8 @@
     boardNote: function (pool, slots, pickId, where) {
       var d = pool.length;
       if (!d) { return ''; }
-      var s = d + (d === 1 ? ' charity is ' : ' charities are ') + where + '. Every one has equal odds.';
-      if (slots > d) { s += ' The ' + slots + ' spots repeat them (' + kit.repeatsText(slots, d) + '), so odds are per charity, not per spot.'; }
+      var s = fmt(d) + (d === 1 ? ' charity is ' : ' charities are ') + where + '. Every one has equal odds.';
+      if (slots > d) { s += ' The ' + fmt(slots) + ' spots repeat them (' + kit.repeatsText(slots, d) + '), so odds are per charity, not per spot.'; }
       var pick = pickId ? GS.charity(pickId) : null;
       if (pick) { s += ' You backed ' + pick.short + '.'; }
       return s;
@@ -84,7 +87,7 @@
     repeatsText: function (slots, d) {
       var lo = Math.floor(slots / d);
       var hi = Math.ceil(slots / d);
-      return 'each appearing ' + (lo === hi ? lo + (lo === 1 ? ' time' : ' times') : lo + ' or ' + hi + ' times');
+      return 'each appearing ' + (lo === hi ? fmt(lo) + (lo === 1 ? ' time' : ' times') : fmt(lo) + ' or ' + fmt(hi) + ' times');
     },
 
     /** "1st", "2nd", "3rd", "4th"... */

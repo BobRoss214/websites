@@ -27,6 +27,7 @@ const GSdata = (() => {
   return w.GS;
 })();
 const N = GSdata.charities.length;
+const NF = N.toLocaleString('en-US'); // the roster count as the pages print it, with a thousands separator
 const poolSize = (filters, excluded = []) => core.buildPool(GSdata.charities, filters, excluded).length;
 
 /* ---------- tiny static server ---------- */
@@ -313,7 +314,7 @@ if (section('5. Filters')) {
   check(await count() === N, 'starts with all ' + N + ' charities in play');
   await page.click('#btn-filters');
   await page.waitForSelector('#dlg-filters[open]');
-  check((await page.locator('#dlg-filters [data-role="count"]').innerText()).includes(N + ' of ' + N), 'dialog shows the live count');
+  check((await page.locator('#dlg-filters [data-role="count"]').innerText()).includes(NF + ' of ' + NF), 'dialog shows the live count');
   await page.click('#dlg-filters [data-group="causes"][data-id="kids"]');
   check(await count() === poolSize({ causes: ['kids'] }), 'one cause matches the independently computed pool', await count());
   await page.click('#dlg-filters [data-group="causes"][data-id="animals"]');
@@ -944,7 +945,7 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
   const page = await newPage();
   await openApp(page);
   const POOL = N;
-  const sized = [['roulette', 1000], ['plinko', 500], ['wheel', 1000], ['drop', 1000], ['lotto', 300], ['derby', 200], ['duck', 1000], ['marble', 1000], ['balloon', 1000], ['standing', 1000], ['coin', 64], ['cards', 100], ['scratch', 48]];
+  const sized = [['roulette', 1000], ['plinko', 500], ['wheel', 1000], ['drop', 1000], ['lotto', 1000], ['derby', 1000], ['duck', 1000], ['marble', 1000], ['balloon', 1000], ['standing', 1000], ['coin', 64], ['cards', 100], ['scratch', 48]];
   for (const [id, n] of sized) {
     await go(page, '#game-' + id);
     await page.waitForSelector('#panel-' + id + ':not([hidden])');
@@ -970,7 +971,7 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
     await closeReceipt(page);
   }
   const prefs = await page.evaluate(() => window.GS.store.prefs().sizes);
-  check(prefs.plinko === 500 && prefs.derby === 200 && prefs.duck === 1000, 'chosen sizes are remembered', prefs);
+  check(prefs.plinko === 500 && prefs.derby === 1000 && prefs.duck === 1000, 'chosen sizes are remembered', prefs);
 
   // typing any number: presets un-select, limits are enforced, beyond-the-pool boards repeat charities
   await go(page, '#game-derby');
@@ -980,13 +981,13 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
   check(await page.evaluate(() => window.GS.games.derby._runners()) === 37, 'the derby now has 37 runners');
   check((await page.locator('#size-hint').innerText()).includes('The winner is drawn from these 37'), 'and the hint says the winner is drawn from those 37');
   await page.fill('#size-custom', '5000');
-  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 200);
-  check((await page.locator('#size-hint').innerText()).includes('up to 200'), 'a number over the game limit is held at the limit and says so');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 1000);
+  check((await page.locator('#size-hint').innerText()).includes('up to 1,000'), 'a number over the game limit is held at the limit and says so');
   await page.fill('#size-custom', '1');
   await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 2);
   check(await page.evaluate(() => window.GS.games.derby._runners()) === 2, 'and a board needs at least two charities');
   await page.click('#size-max');
-  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 200);
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 1000);
   check(await page.locator('#size-max').isDisabled(), 'the Max button sets the biggest board and then rests');
   await go(page, '#game-plinko');
   await page.fill('#size-custom', '1000');
@@ -1436,7 +1437,7 @@ if (section('13h. Leagues, Charity Cup, cards, daily wheel, hot hand and crews')
   check(won.cards[won.id] && won.cards[won.id].rarity === 'legendary' && won.text.includes('New card') && won.text.toLowerCase().includes('legendary'), 'winning a 1-in-200 charity earns a legendary card, and the receipt says so', won.cards[won.id]);
   await closeReceipt(page);
   await go(page, '#cards');
-  check((await page.locator('#view-cards .stat').first().innerText()).includes('1 of ' + N) && await page.locator('#view-cards .tcard--legendary').count() >= 1, 'the Cards page shows the collection');
+  check((await page.locator('#view-cards .stat').first().innerText()).includes('1 of ' + NF) && await page.locator('#view-cards .tcard--legendary').count() >= 1, 'the Cards page shows the collection');
   check(await page.locator('#view-cards .cardgrid').first().locator('.tcard').count() === 6, 'this month’s set has six charities');
   // finishing the set pays XP once
   const setRes = await page.evaluate(() => {
@@ -1501,8 +1502,8 @@ if (section('13i. First-visit tour: what it is, that it is all fake, and Skip al
   await openApp(page);
   await page.waitForSelector('#tour:not([hidden])', { timeout: 6000 });
   const welcome = await page.locator('#tour .tour__card').innerText();
-  check((await page.locator('#tour-title').innerText()).includes('charity thing'), 'the welcome says it is a charity thing');
-  check(/not a crypto thing/i.test(welcome), 'and that it is not a crypto thing');
+  check((await page.locator('#tour-title').innerText()).includes('charity site'), 'the welcome says it is a charity site');
+  check(/not a betting site/i.test(welcome), 'and that it is not a betting site');
   check(/everything here is fake/i.test(welcome) && /credit is pretend/i.test(welcome), 'the very first card says everything is fake');
   check(await page.locator('#tour [data-tour="skip"]').isVisible() && await page.locator('#tour [data-tour="next"]').isVisible(), 'Skip all and Show me around are both there');
   check(await page.evaluate(() => document.activeElement && document.activeElement.id === 'tour-primary'), 'keyboard focus starts on the main button');
@@ -1563,7 +1564,7 @@ if (section('13j. Choose your own charities (solo games)')) {
   check(await page.locator('#custom-btn').isVisible() && await page.locator('#custom-chip').isHidden(), 'the game offers the button, and no chip yet');
   await page.click('#custom-btn');
   await page.waitForSelector('#dlg-chooser[open]');
-  check((await page.locator('#dlg-chooser [data-role="count"]').innerText()).includes(N + ' of ' + N), 'the dialog lists the whole roster to start with');
+  check((await page.locator('#dlg-chooser [data-role="count"]').innerText()).includes(NF + ' of ' + NF), 'the dialog lists the whole roster to start with');
   check((await page.locator('#dlg-chooser .chrow').count()) === 40, 'it draws a page of rows and offers more');
   await a11y(page, 'charity chooser');
   // search by a genre word

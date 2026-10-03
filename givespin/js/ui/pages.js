@@ -179,7 +179,7 @@
         stat('heart', String(ids.length), 'Charities supported') +
         stat('calendar-days', money(spent, true), 'This month' + (acct.signedIn && acct.limitCents ? ' of ' + money(acct.limitCents, true) + ' limit' : '')) +
       '</div>' +
-      '<section class="sect" aria-labelledby="mg-ch"><div class="sect__head"><h2 class="sect__t" id="mg-ch">Charities you’ve supported</h2><a class="linkbtn" href="#charities">Browse all ' + GS.charities.length + '</a></div>' + cards + '</section>' +
+      '<section class="sect" aria-labelledby="mg-ch"><div class="sect__head"><h2 class="sect__t" id="mg-ch">Charities you’ve supported</h2><a class="linkbtn" href="#charities">Browse all ' + ui.num(GS.charities.length) + '</a></div>' + cards + '</section>' +
       '<div class="twocol"><section class="sect panel" aria-labelledby="mg-cause"><h2 class="sect__t" id="mg-cause">Where your giving goes</h2>' + causeBars(totals) + '</section>' +
       '<section class="sect panel" aria-labelledby="mg-plans"><h2 class="sect__t" id="mg-plans">Repeat gifts <span class="tag tag--plain">preview</span></h2>' + plans + '</section></div>' +
       '<section class="sect" aria-labelledby="mg-hist"><div class="sect__head"><h2 class="sect__t" id="mg-hist">Recent rounds</h2></div><div data-role="hist"></div></section>' +
@@ -236,7 +236,7 @@
       '<div class="stats clubperks">' +
         stat('crown', core.tierFor(lv.level).tier.name, 'Tier · <a href="#leagues">Leagues</a>') +
         stat('flame', s.hot.streak ? '×' + store.hotMultiplier().toFixed(1) + ' (' + s.hot.streak + ' in a row)' : 'None yet', 'Hot hand · best ' + s.hot.best) +
-        stat('layers', Object.keys(s.cards).length + ' of ' + GS.charities.length, 'Cards · <a href="#cards">Collection</a>') +
+        stat('layers', Object.keys(s.cards).length + ' of ' + ui.num(GS.charities.length), 'Cards · <a href="#cards">Collection</a>') +
         stat('users', GS.crews && GS.crews.mine() ? GS.crews.mine().name : 'No crew', 'Crew · <a href="#crews">Crews</a>') +
       '</div>' +
       '<div class="twocol twocol--club"><section class="sect panel" aria-labelledby="cl-lad"><h2 class="sect__t" id="cl-lad">Level ladder</h2><ol class="ladder">' + ladder + '</ol></section>' +
@@ -302,8 +302,8 @@
   /* ----------------------------------------------------------------- Help */
 
   var FAQ = [
-    ['help-tour', 'What is GiveSpin? Is this a crypto thing?', function (demo) {
-      return '<p>GiveSpin is a <strong>charity thing</strong>, not a crypto thing. You pick an amount, play a game (a wheel, Plinko, roulette, a duck race and more), and the game picks which charity gets your gift. There are no coins, tokens or wallets, and nothing for you to win or cash out: the charity is always the winner.</p>' +
+    ['help-tour', 'What is GiveSpin?', function (demo) {
+      return '<p>GiveSpin is a <strong>charity site with games on top</strong>. You pick an amount, play a game (a wheel, Plinko, roulette, a duck race and more), and the game picks which charity gets your gift. It is not a betting site: there is nothing for you to win and nothing to cash out, because the charity is always the winner.</p>' +
         (demo ? '<p><strong>Right now it is all pretend.</strong> The credit is play money, nothing is charged, no donation is made, and the other players at live tables are simulated.</p>' : '') +
         '<p><button type="button" class="btn btn--sm" data-open-tour>Take the tour again</button></p>';
     }],
@@ -326,8 +326,9 @@
       return '<p>Yes, several ways. Use <strong>Filters</strong> to narrow the pool by cause, who they help, where they work, how they help and when they started. Or open <a href="#charities">Charities</a> and switch individual ones off. Or skip the luck and <strong>give directly</strong> to any charity from its profile.</p>';
     }],
     ['help-board', 'How many charities can be on a game? Can I back one?', function () {
-      return '<p>Most games have a <strong>Charities on the board</strong> control: pick a preset or type any number, from a couple up to 1,000 on Plinko, Roulette, the wheel, the drop crate, Duck Derby, Marble Run, Balloon Race and Last One Standing (200 on Charity Derby, 300 on the Lucky Draw, and fewer on cards, scratch cards and the coin flip). <strong>The board is exactly what the winner is drawn from</strong>, every charity on it with the same chance, so a bigger board means a longer shot and a smaller one a better chance. If you ask for more spots than there are charities in play, charities fill more than one spot (spread evenly, so their odds stay equal).</p>' +
-        '<p>In games that show a field (Plinko bins, roulette pockets, ducks, marbles, runners, balloons and so on) you can <strong>Back a charity</strong> first: choose one, or let the site choose, and it is always on the board. If it wins you earn bonus XP, and the longer the shot the bigger the bonus. Backing a charity never changes the odds. Cards and scratch cards are the exceptions, because you already choose there.</p>';
+      return '<p>Most games have a <strong>Charities on the board</strong> control: pick a preset or type any number, from a couple up to 1,000 on Plinko, Roulette, the wheel, the drop crate, the Lucky Draw, Charity Derby, Duck Derby, Marble Run, Balloon Race and Last One Standing. Four games stop sooner because of what they physically are: Pick a Card is a table of face-down cards (up to 100), Scratch Cards is one card with 4 to 48 panels, Coin Flip is a knockout bracket, so it takes a power of two (up to 128), and Dice is one six-sided die, so it always has six faces. The slot machines have reels instead (3 to 12). <strong>On every game with a board, the board is exactly what the winner is drawn from</strong>, every charity on it with the same chance, so a bigger board means a longer shot and a smaller one a better chance. If you ask for more spots than there are charities in play, charities fill more than one spot (spread evenly, so their odds stay equal).</p>' +
+        '<p>Dice and the slot machines have no board to set: the winner of a throw (or the charity of each reel) is drawn from all the charities in play, each with the same chance, and the six faces or the reels just show some of them, always including the winner.</p>' +
+        '<p>In the games with a board, except Pick a Card and Scratch Cards (where you already choose), you can <strong>Back a charity</strong> first: choose one, or let the site choose, and it is put on the board if it was not already there. Every charity on the board has exactly the same chance, yours included, and backing never tilts the draw towards it. If it wins you earn bonus XP, and the longer the shot the bigger the bonus. Dice and the slot machines have no Back a charity step.</p>';
     }],
     ['help-custom', 'Can I pick exactly which charities are in a game?', function () {
       return '<p>Yes. Every solo game has a <strong>Choose your own charities</strong> button. It opens a list you can search by name, cause (try “animals”), place or what a charity does, narrow with filters, and tick. Each row has a short description, a <strong>Details</strong> drawer and a link to the charity’s own website. You can choose everything that is showing in one tap, up to what the game can hold (100 for Pick a Card, up to 1,000 on Roulette and Plinko).</p>' +
@@ -340,7 +341,7 @@
     ['help-extras', 'Leagues, crews, cards, daily wheel and the rest', function (demo) {
       return '<p><strong>Everything here is play, and everything with other people is simulated.</strong> Rivals in leagues, crew-mates, chatters and sponsors are bots and say so on screen; chat never leaves your device.</p>' +
         '<ul>' +
-        '<li><strong><a href="#leagues">Leagues</a>.</strong> A weekly XP table against simulated rivals, tiers from Bronze to Diamond (higher tiers unlock bigger live-table stakes), and the <strong>Charity Cup</strong>, a three-round knockout of eight charities where you call each winner for XP.</li>' +
+        '<li><strong><a href="#leagues">Leagues</a>.</strong> A weekly XP table against simulated rivals, tiers from Bronze to Diamond (higher tiers unlock bigger live-table stakes), and the <strong>Charity Cup</strong>, a three-round knockout of eight charities: you back one champion before it starts, and only a champion win pays XP.</li>' +
         '<li><strong><a href="#crews">Crews</a>.</strong> Join a simulated crew, chat with emotes, and work towards a weekly crew goal.</li>' +
         '<li><strong><a href="#cards">Cards</a>.</strong> A collectible card for each charity you help win, rarer for longer shots. Complete the monthly set for bonus XP.</li>' +
         '<li><strong>Streaks.</strong> Back winners on the trot to build a <em>hot hand</em>, a growing XP multiplier. At live tables you can also make XP-only predictions (a pot of $500 or more, an upset win, the leading charity winning).</li>' +
@@ -349,7 +350,7 @@
         '<p>None of it costs money. XP, cards and tiers have no cash value.</p>';
     }],
     ['help-split', 'What does “split your gift” do?', function () {
-      return '<p>It divides your amount into equal parts, to the cent, and plays one round per part. Give $10 across 3 rounds and you get $3.34, $3.33 and $3.33, each going to whichever charity that round lands on. Each round needs at least $1, so small gifts have fewer split options. Slots always uses three reels.</p>';
+      return '<p>It divides your amount into equal parts, to the cent, and plays one round per part. Give $10 across 3 rounds and you get $3.34, $3.33 and $3.33, each going to whichever charity that round lands on. Each round needs at least $1, so small gifts have fewer split options. Slot machines work differently: every reel is a round, so you choose 3 to 12 reels and your gift is split evenly across them.</p>';
     }],
     ['help-repeat', 'What are weekly and monthly gifts?', function () {
       return '<p>Under Gift options you can make a gift weekly or monthly. In this preview it adds a plan to <a href="#giving">My Giving</a> with the next gift date, and nothing repeats by itself. In a live build you set the repeating gift up on the checkout page.</p>';
@@ -370,7 +371,8 @@
       return '<p>That is what it is built for. Hit the TV button at the top for <strong>Stream Mode</strong> (or add <code>?stream=1</code> to the URL). It enlarges the game and hides everything else. Add <code>&amp;transparent=1</code> for a see-through background in an OBS browser source. The space bar plays.</p>';
     }],
     ['help-data', 'About the charity information', function () {
-      return '<p>There are ' + GS.charities.length + ' charities. Names are used only to identify the organisations; GiveSpin is not affiliated with or endorsed by any of them. Where a charity has a simple logo it is shown instead of the initials circle, only to identify the organisation; logos belong to their owners. Descriptions are short summaries from public materials and official charity registers. A few entries have fewer verified details and say so on their profile. Always check a charity’s own website for the latest.</p>';
+      var unv = GS.charities.filter(function (c) { return c.unverified; }).length;
+      return '<p>There are ' + ui.num(GS.charities.length) + ' charities. Names are used only to identify the organisations; GiveSpin is not affiliated with or endorsed by any of them. Where a charity has a simple logo it is shown instead of the initials circle, only to identify the organisation; logos belong to their owners. Descriptions are short summaries from public materials and official charity registers. Charities taken from an official register (the Charity Commission for England and Wales, or the Australian charities register) have shorter, plainer descriptions and often no founding year, because a register gives a registration date rather than a founding date.' + (unv ? ' ' + ui.num(unv) + (unv === 1 ? ' entry has' : ' entries have') + ' fewer verified details and say so on their profile.' : '') + ' Always check a charity’s own website for the latest.</p>';
     }],
     ['help-privacy', 'What do you store about me?', function () {
       return '<p>Nothing leaves your browser. Your level, streak, badges, history, preferences and (if you try the preview) account details are saved in this browser’s local storage so they are still there next visit. You can wipe them any time from My Giving or your account. There are no trackers or ads.</p>';

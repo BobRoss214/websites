@@ -169,7 +169,7 @@
     var nf = filterCount();
     if (S.q.trim()) { bits.push('matching “' + S.q.trim() + '”'); }
     if (nf) { bits.push(nf + (nf === 1 ? ' filter' : ' filters')); }
-    modal.$('[data-role="count"]').innerHTML = '<b>' + list.length + '</b> of ' + GS.charities.length + ' charities' + (bits.length ? ' · ' + esc(bits.join(' · ')) : '');
+    modal.$('[data-role="count"]').innerHTML = '<b>' + ui.num(list.length) + '</b> of ' + ui.num(GS.charities.length) + ' charities' + (bits.length ? ' · ' + esc(bits.join(' · ')) : '');
     var fb = modal.$('[data-role="fcount"]');
     fb.textContent = String(nf);
     fb.hidden = !nf;

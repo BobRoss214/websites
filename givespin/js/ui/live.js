@@ -131,7 +131,7 @@
     return '<h2 class="sect__t" id="lv-t">Live ' + esc(g.name) + ': choose your table</h2>' +
       '<p class="tabnote tabnote--tables">' + tabs.length + ' tables, from ' + tabs[0].size + ' ' + esc(u) + ' to ' + tabs[tabs.length - 1].size.toLocaleString('en-US') + '. Each one has its own pot and its own players. ' +
       'The charities players back go on the board, and the rest of the ' + esc(u) + ' are filled in at random from our catalog so the board is always full; only the backed charities can win. ' +
-      'Bigger tables have more gates and more players' + (tabs[tabs.length - 1].tab.play > 20000 ? ', and the biggest ones take close to a minute to play out' : '') + '.</p>' +
+      'Bigger tables have more gates and more players' + (tabs[tabs.length - 1].tab.play > 20000 ? ', and the biggest ones take about ' + Math.round(tabs[tabs.length - 1].tab.play / 1000) + ' seconds to play out' : '') + '.</p>' +
       '<div class="lcards lcards--tables" data-role="tables">' + tabs.map(function (r) { return cardHTML(r, false); }).join('') + '</div>';
   }
 
@@ -182,6 +182,12 @@
     pageBuilt = true;
   }
 
+  /** The tail of a finished-pot line: whether you were in, and that everyone else was a simulated bot. */
+  function botNote(h) {
+    if (!h.youPlayed) { return ' · simulated bots'; }
+    return (h.youWon ? ' · you backed it' : ' · you were in') + ' · the other players were simulated bots';
+  }
+
   /** The latest finished pots across every table, newest first. */
   function renderRecent() {
     var box = $('[data-role="recent"]', $('#view-live'));
@@ -196,7 +202,7 @@
     box.innerHTML = all.length ? '<ol class="histlist">' + all.map(function (x) {
       var ch = GS.charity(x.h.winnerId);
       return '<li class="hist"><span class="hist__game">' + ui.icon(ui.gameIcon(x.room)) + '</span><div><div class="hist__main">' + esc(ch.name) + ' took the pot</div>' +
-        '<div class="hist__sub">' + esc(GS.live.room(x.id).title()) + ' · round ' + x.h.round + ' · ' + x.h.players + ' players' + (x.h.youPlayed ? (x.h.youWon ? ' · you backed it' : ' · you were in') : ' · simulated bots') + '</div></div>' +
+        '<div class="hist__sub">' + esc(GS.live.room(x.id).title()) + ' · round ' + x.h.round + ' · ' + x.h.players + ' players' + botNote(x.h) + '</div></div>' +
         '<span class="hist__amt">' + dollars(x.h.pot) + '</span></li>';
     }).join('') + '</ol>' : '<p class="empty">Finished pots will show up here as tables settle. Each one went to a single charity.</p>';
   }
@@ -828,7 +834,7 @@
     return '<ol class="histlist">' + room.history.map(function (h) {
       var ch = GS.charity(h.winnerId);
       return '<li class="hist"><span class="hist__game">' + ui.icon('trophy') + '</span><div><div class="hist__main">' + esc(ch.name) + '</div><div class="hist__sub">Round ' + h.round + ' · ' + h.players + ' players' +
-        (h.youPlayed ? (h.youWon ? ' · you backed it' : ' · you were in') : '') + '</div></div><span class="hist__amt">' + dollars(h.pot) + '</span></li>';
+        botNote(h) + '</div></div><span class="hist__amt">' + dollars(h.pot) + '</span></li>';
     }).join('') + '</ol>';
   }
 

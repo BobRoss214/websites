@@ -3,7 +3,7 @@
  *
  *  - Tiers: Bronze to Diamond by level; higher tiers open VIP stakes at live tables.
  *  - The weekly league: you against 14 simulated rivals, ranked by XP this week.
- *  - The Charity Cup: an eight-charity knockout each week. Back a champion; call it right and earn XP (never money).
+ *  - The Charity Cup: an eight-charity knockout each week. Back one champion before it starts; only a champion win earns XP (never money).
  *  - Crews: simulated groups with a chat (stays on this device), emotes and a weekly goal.
  *
  * Everyone except you is a bot for now, and the pages say so.
@@ -158,7 +158,7 @@
   function renderLeagues() {
     var root = $('#view-leagues');
     var p = store.predictions();
-    root.innerHTML = pageHead('Leagues', 'Climb the weekly league, collect your tier, call the Charity Cup. All of it runs on XP, never money.') +
+    root.innerHTML = pageHead('Leagues', 'Climb the weekly league, collect your tier, back a champion in the Charity Cup. All of it runs on XP, never money.') +
       simBanner('<b>Simulated rivals.</b> The other players in the league are bots standing in for real people. Nothing here costs or pays real money.') +
       tierHTML() + leagueHTML() + cupHTML() +
       '<section class="sect panel" aria-labelledby="lg-pred"><h2 class="sect__t" id="lg-pred">Side predictions</h2><p>At <a href="#live">live tables</a> you can predict how a round will go (will the pot pass $500, will there be an upset). Right answers earn XP. So far: <b>' + p.right + ' right of ' + p.total + '</b>. Three right earns the Oracle badge.</p></section>';

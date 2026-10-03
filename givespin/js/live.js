@@ -59,7 +59,7 @@
   var STAKES = [[5, 30], [10, 28], [20, 22], [50, 12], [100, 6], [250, 2]];   // [dollars, weight] for bots
   var HANDLES = [
     'LuckyLark', 'PocketAces', 'NovaGiver', 'DiceDaisy', 'RollingRae', 'PennyPine', 'BigHeartBen', 'MarbleMike', 'SpinDoc', 'CharityCat',
-    'CosmoCoin', 'QuietQuokka', 'MapleMoon', 'TurboTess', 'GoldfishGus', 'RiverRuby', 'OtterOllie', 'JuniperJoy', 'PixelPaw', 'SunnySid',
+    'CosmoCorgi', 'QuietQuokka', 'MapleMoon', 'TurboTess', 'GoldfishGus', 'RiverRuby', 'OtterOllie', 'JuniperJoy', 'PixelPaw', 'SunnySid',
     'MintyMo', 'BramblePie', 'KiwiKai', 'NightOwlNell', 'ZigZagZed', 'HoneyHawk', 'CloudyCleo', 'PuddleJump', 'FoxTrotFin', 'WillowWren',
     'TangoTom', 'LemonDrop', 'AtlasAnt', 'BeaconBea', 'CinderCub', 'DaphneDot', 'EmberEli', 'FernFrey', 'GlimmerGia', 'HazelHop',
     'IvyInk', 'JollyJet', 'KoalaKay', 'LanternLou', 'MosaicMia', 'NimbleNat', 'OrbitOz', 'PepperPip', 'QuillQuin', 'RobinRush',

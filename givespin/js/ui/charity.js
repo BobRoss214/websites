@@ -231,7 +231,7 @@
   function updateCount() {
     var off = store.prefs().excluded.length;
     var el = dir.root.querySelector('[data-role="count"]');
-    el.textContent = GS.charities.length + ' charities · ' + state().pool.length + ' in play' + (off ? ' · ' + off + ' switched off' : '');
+    el.textContent = ui.num(GS.charities.length) + ' charities · ' + ui.num(state().pool.length) + ' in play' + (off ? ' · ' + ui.num(off) + ' switched off' : '');
     var fb = dir.root.querySelector('[data-role="fcount"]');
     var n = ui.filters.count();
     fb.textContent = n ? String(n) : '';
@@ -249,7 +249,7 @@
     dir.root = root;
     if (!root.firstChild) {
       root.innerHTML =
-        '<header class="page-head"><div><h1>Charities</h1><p>' + GS.charities.length + ' organisations across every cause. Tap one to see what it does, visit its website or give to it directly. Switch any off and it will never come up in a game.</p></div></header>' +
+        '<header class="page-head"><div><h1>Charities</h1><p>' + ui.num(GS.charities.length) + ' organisations across every cause. Tap one to see what it does, visit its website or give to it directly. Switch any off and it will never come up in a game.</p></div></header>' +
         '<div class="dirtools">' +
           '<label class="search search--field"><span class="sr-only">Search charities</span><span class="search__ico">' + ui.icon('search') + '</span><input type="search" class="search__input" data-role="q" placeholder="Search by name, cause, place or who they help" autocomplete="off"></label>' +
           '<button type="button" class="btn btn--sm" data-open-filters>' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button>' +

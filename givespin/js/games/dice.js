@@ -53,8 +53,9 @@
   function updateNote() {
     if (!el.note) { return; }
     if (!pool.length) { el.note.textContent = ''; return; }
+    var n = Number(pool.length).toLocaleString('en-US');
     el.note.textContent = pool.length > 6
-      ? '6 of your ' + pool.length + ' charities are on the board, reshuffled every throw. Equal odds for all ' + pool.length + '.'
+      ? '6 of your ' + n + ' charities are on the board, reshuffled every throw. Equal odds for all ' + n + '.'
       : pool.length < 6
         ? 'A die has six faces, so with ' + pool.length + ' charities in play some cover more than one. Every charity still has equal odds.'
         : 'All 6 charities in play have a face. Equal odds for each.';
@@ -131,7 +132,7 @@
     cta: 'Roll the die',
     info: [
       'A six-sided die tumbles across the table and lands on one face. Each face on the board below belongs to a charity, and the winning face gets your gift.',
-      'Because a die only has six faces, the board shows six charities at a time (chosen from your pool, with the winner always among them).'
+      'Because a die only has six faces, the board shows six charities at a time (chosen from your pool, with the winner always among them). The winner itself is drawn from every charity in your pool first, each with equal odds, and the die then lands on the face that carries it.'
     ],
 
     mount: function (container, gameApi) {

@@ -298,7 +298,7 @@
         '<h2 class="modal__title" id="dlg-slotguide-title">How ' + U.esc(def.name) + ' pays</h2>' +
         '<p class="modal__sub">Nothing on this machine pays you. Your gift is split evenly across the reels, one charity each, and every one of those shares really goes to the charity that lands.</p>' +
         '<ul class="sg-list">' + list + '</ul>' +
-        '<p class="sg-foot">Every reel is a fair, equal-odds draw from the board of <b>' + pool.length + '</b> charities. The lights, the win line and the slow last reel are only for show: they never change who wins. Tap Fair Play? in the menu to check any spin yourself.</p>'
+        '<p class="sg-foot">Every reel is a fair, equal-odds draw from the board of <b>' + Number(pool.length).toLocaleString('en-US') + '</b> charities. The lights, the win line and the slow last reel are only for show: they never change who wins. Tap Fair Play? in the menu to check any spin yourself.</p>'
       );
       m.open();
     }

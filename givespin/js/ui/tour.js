@@ -1,5 +1,5 @@
 /*
- * The first-visit tour. A welcome card says what GiveSpin is (a charity thing, not a crypto thing, and in demo mode
+ * The first-visit tour. A welcome card says what GiveSpin is (a charity site with games on top, and in demo mode
  * all of it is pretend), then a short walk through the credit, the games, live tables, charities, accounts and the
  * Giving Club, spotlighting the real controls. It is never forced: "Skip all" is on every step, Esc closes it, and it
  * only appears by itself once. It can be opened again from Help.
@@ -127,11 +127,11 @@
 
   function welcomeHTML() {
     var d = demo();
-    return '<div class="tour__hero"><span class="tour__logo">' + ui.icon('heart') + '</span><div><p class="tour__eyebrow">Welcome to GiveSpin</p><h2 class="tour__title" id="tour-title">A charity thing. Not a crypto thing.</h2></div></div>' +
+    return '<div class="tour__hero"><span class="tour__logo">' + ui.icon('heart') + '</span><div><p class="tour__eyebrow">Welcome to GiveSpin</p><h2 class="tour__title" id="tour-title">' + (d ? 'A charity site, played with pretend money.' : 'A charity site with games on top.') + '</h2></div></div>' +
       (d ? '<p class="tour__fake" role="note">' + ui.icon('info') + '<span><b>First, the important bit: right now everything here is fake.</b> The credit is pretend, nothing is charged, no donation is made, and the other players are simulated.</span></p>' : '') +
       '<ul class="tour__points">' +
         '<li>' + ui.icon('hand-heart') + '<span><b>What it is.</b> You pick an amount and play a game (a wheel, Plinko, a duck race, slots and more). The game picks a real charity to receive your gift. Every round is a win for someone.</span></li>' +
-        '<li>' + ui.icon('shield-check') + '<span><b>What it is not.</b> There are no coins, tokens or wallets, and nothing to win or cash out. You are not betting: the charity is the winner, never you.</span></li>' +
+        '<li>' + ui.icon('shield-check') + '<span><b>What it is not.</b> It is not a betting site: there is nothing for you to win and nothing to cash out. The charity is the winner, never you.</span></li>' +
         '<li>' + ui.icon('sparkles') + '<span><b>Why games?</b> Because giving can be a bit more fun. Pick how many charities are on the board, back one to win, or choose exactly the causes you care about.</span></li>' +
         (d ? '' : '<li>' + ui.icon('lock') + '<span><b>Your money.</b> When a game picks a charity you finish your gift on that charity’s own checkout page. GiveSpin never sees your card.</span></li>') +
       '</ul>' +
