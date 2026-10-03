@@ -136,10 +136,6 @@
     try { return formatter(Intl.NumberFormat, { style: 'unit', unit, unitDisplay: 'long' }).formatToParts(n).find((p) => p.type === 'unit').value; }
     catch (e) { return unit + (n === 1 ? '' : 's'); }
   };
-  const unitShort = (unit, n) => {
-    try { return formatter(Intl.NumberFormat, { style: 'unit', unit, unitDisplay: 'narrow' }).format(n); }
-    catch (e) { return n + unit[0]; }
-  };
   let hereTz = '';
   try { hereTz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { /* no time zone support */ }
 

@@ -209,7 +209,6 @@
 .dr-time{color:var(--red-deep)}
 .contact-grid+.drive{margin-top:clamp(24px,4vw,40px)}
 .comfort-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-#comfort .draft-tag{margin-top:1.6em}
 @media (max-width:61.25em){ .comfort-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
 @media (max-width:38.75em){ .comfort-grid{grid-template-columns:1fr} }
 .entrance-photo{margin:18px 0 0}

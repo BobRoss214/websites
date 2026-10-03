@@ -122,7 +122,6 @@
     for (let i = 0; i < n; i++) s += `<path d="M${f1(x + i * sw)} ${y}h${f1(sw)}l${i < n / 2 ? -2 : 2} ${h}h${f1(-sw)}z" fill="${i % 2 ? c2 : c1}"/>`;
     return `<g ${sk} stroke-width="1.6">${s}</g>`;
   };
-  const sign = (label, fill = '#fff8e6', w = 26) => `<g ${sk} stroke-width="1.8"><rect x="${-w / 2}" y="-14" width="${w}" height="12" rx="3" fill="${fill}"/></g>`;
   const ICON = {
     checkin: () => shadow(17) + `<g ${sk}><rect x="-13" y="-17" width="26" height="17" fill="#fff1d0"/><rect x="-9" y="-12" width="18" height="5" fill="#cfe8f7" stroke-width="1.4"/><path d="M0 -26V-37" stroke-width="2"/></g><path d="M0 -37h11l-3 3.6 3 3.6H0z" fill="#e5334b" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>` + awning(-17, -27, 34, 10, '#e5334b', '#fff'),
     entrance: () => shadow(19) + `<g ${sk}><rect x="-19" y="-30" width="6" height="30" rx="1.5" fill="#a5673f"/><rect x="13" y="-30" width="6" height="30" rx="1.5" fill="#a5673f"/><rect x="-17" y="-37" width="34" height="11" rx="3" fill="#c98a4b"/></g><path d="M-9 -31.5h14M1 -35l5 3.5-5 3.5" fill="none" stroke="#fff8e6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M-13 -4l11-12" stroke="#7a4b2a" stroke-width="2.4" stroke-linecap="round" fill="none"/>`,
@@ -186,9 +185,9 @@
       }
     }
     plants.sort((m, n) => m[1] - n[1]);
-    const col = (i) => (cfg.colors ? cfg.colors[Math.floor(rnd() * cfg.colors.length)] : '');
+    const col = () => (cfg.colors ? cfg.colors[Math.floor(rnd() * cfg.colors.length)] : '');
     const sz = cfg.size;
-    const uses = plants.map((p, i) => `<use href="#${cfg.plant}" x="${f1(p[0] - sz / 2)}" y="${f1(p[1] - sz * 0.88)}" width="${sz}" height="${sz}"${cfg.colors ? ` color="${col(i)}"` : ''}/>`).join('');
+    const uses = plants.map((p) => `<use href="#${cfg.plant}" x="${f1(p[0] - sz / 2)}" y="${f1(p[1] - sz * 0.88)}" width="${sz}" height="${sz}"${cfg.colors ? ` color="${col()}"` : ''}/>`).join('');
     return `<clipPath id="mpc${idx}"><path d="${pathD(pts, true)}"/></clipPath>` +
       `<path class="shape" d="${pathD(pts, true)}" fill="${cfg.soil}" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>` +
       `<g clip-path="url(#mpc${idx})"><path d="${beds}" fill="none" stroke="${cfg.bed}" stroke-width="${f1(sp * 0.62)}" stroke-linecap="butt"/>` +
@@ -205,7 +204,7 @@
     const from = (u, v) => [c[0] + u * ca - v * sa, c[1] + u * sa + v * ca];
     const q = pts.map(to), b = bbox(q), pitch = 8.4, depth = 15;
     const cols = b.h >= 52 ? 2 : 1, colors = ['#d72a43', '#2b6fd8', '#f4f4f4', '#2b2b33', '#ffc928', '#43a047', '#8a8f9a', '#f58a1f', '#7a4b2a'];
-    const sx = [], lines = []; let cars = '';
+    const lines = []; let cars = '';
     const vs = cols === 2 ? [b.y0 + b.h * 0.27, b.y0 + b.h * 0.73] : [b.y0 + b.h * 0.5];
     vs.forEach((v, ci) => {
       for (let u = b.x0 + pitch * 0.6; u < b.x1 - pitch * 0.2; u += pitch) {

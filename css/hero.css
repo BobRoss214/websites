@@ -70,7 +70,6 @@ html[data-season="winter"] .bee{display:none}
 /* ---------------------------------------------------------------- fall: tractor + wagon ride */
 .rig{--rig-from:-420px;--rig-to:1660px;--rig-rest:420px;
   animation:rigDrive var(--rig-dur,40s) linear infinite;animation-delay:-13s;will-change:transform}
-.rig-small{--rig-dur:34s;animation-delay:-19s}
 .rig-barrel{--rig-dur:52s;animation-delay:-33s;--rig-from:-380px;--rig-to:1600px;--rig-rest:980px}
 .wheel.bt0,.wheel.bt1,.wheel.bt2,.wheel.bt3,.wheel.bt4,.wheel.bt5{animation-duration:1.7s}
 .rig-bounce{animation:rigBounce .46s ease-in-out infinite alternate}
@@ -248,7 +247,6 @@ html[data-season="winter"] .bee{display:none}
 @media (max-width:47.5em){
   .hero{min-height:790px}
   .rig{--rig-from:120px;--rig-to:1140px;--rig-rest:620px;--rig-dur:22s;animation-delay:-7s}
-  .rig-small{--rig-dur:26s;animation-delay:-9s}
   .rig-barrel{--rig-dur:38s;animation-delay:-20s;--rig-from:-200px;--rig-to:1100px;--rig-rest:900px}
   .hero-note{font-size:.92rem;padding:.2em .8em}
   .season-switch{gap:5px;width:100%;flex-wrap:nowrap;margin-top:12px;margin-bottom:14px}

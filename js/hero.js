@@ -368,7 +368,7 @@
   // Local box -10..140 x 0..100, ground at y = 100, facing right. `wheels` = false draws the plain icon version.
   function tractorOpen(wheels = true) {
     const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
-    const RED = '#d8322b', RED_L = '#ee5a47', RED_D = '#a8221d';
+    const RED = '#d8322b', RED_D = '#a8221d';
     return `<g ${sk}>` +
       // drawbar + hook at the back
       `<rect x="-6" y="82" width="38" height="7" rx="3" fill="#5d6770"/><circle cx="-6" cy="85.5" r="3.6" fill="none"/>` +
@@ -453,7 +453,7 @@
   }
 
   function buildRig(cfg = {}) {
-    const c = Object.assign({ y: VPY + 52, scale: 1, season: 'fall', cls: '', dur: '' }, cfg);
+    const c = Object.assign({ y: VPY + 52, scale: 1, season: 'fall' }, cfg);
     const trailer = wagonArt(c.season);
 
     const S = 1.08, TX = 202, TY = -108;
@@ -465,8 +465,8 @@
       `<text class="toot-say" x="0" y="3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="${INK}">${t('Toot toot!')}</text></g></g>`;
 
     // wheels turn at a speed that matches how far the tractor travels per second at this size
-    const sc = c.scale, vars = `--wt1:${f1(3.7 * sc)}s;--wt2:${f1(2.1 * sc)}s;--wg1:${f1(2.9 * sc)}s;--wg2:${f1(2.9 * sc)}s;` + (c.dur ? `--rig-dur:${c.dur};` : '');
-    return `<g transform="translate(0 ${c.y})"><g class="rig ${c.cls}" style="${vars}"><g transform="scale(${sc})"><g class="rig-bounce">${trailer}${tractor}</g>` +
+    const sc = c.scale, vars = `--wt1:${f1(3.7 * sc)}s;--wt2:${f1(2.1 * sc)}s;--wg1:${f1(2.9 * sc)}s;--wg2:${f1(2.9 * sc)}s;`;
+    return `<g transform="translate(0 ${c.y})"><g class="rig" style="${vars}"><g transform="scale(${sc})"><g class="rig-bounce">${trailer}${tractor}</g>` +
       `<rect class="scene-hit" data-rig x="-150" y="-190" width="520" height="200" fill="transparent"/>${riderHits()}</g></g></g>`;
   }
 

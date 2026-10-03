@@ -312,8 +312,6 @@ svg.layer-fore{overflow:visible}
 .season-copy .ticks{margin:1em 0 1.4em}
 
 /* ---------- Eat & drink ---------- */
-.section-head-light .eyebrow{color:var(--sun)}
-.section-head-light .lead{color:#dff3d4}
 .card-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:auto;padding-top:.6em}
 
 /* ---------- Flowers ---------- */
@@ -402,10 +400,9 @@ svg.layer-fore{overflow:visible}
 .loc-card address{font-weight:800;font-size:1.12rem;line-height:1.45;margin-bottom:.6em}
 .loc-note{color:var(--ink-soft);font-weight:600;font-size:.98rem}
 .loc-card .card-actions{flex-direction:column;align-items:stretch}
-.touch-list{margin-bottom:.8em}
-.touch-list a,.social a{display:inline-flex;align-items:center;gap:.55em;font-weight:800;text-decoration:none;padding:.45em 0;word-break:break-word}
-.touch-list a:hover,.social a:hover{text-decoration:underline}
-.touch-list .ico,.social .ico{color:var(--red);width:1.3em;height:1.3em}
+.social a{display:inline-flex;align-items:center;gap:.55em;font-weight:800;text-decoration:none;padding:.45em 0;word-break:break-word}
+.social a:hover{text-decoration:underline}
+.social .ico{color:var(--red);width:1.3em;height:1.3em}
 .social{display:flex;flex-direction:column}
 
 /* ---------- Footer ---------- */
