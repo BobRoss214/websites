@@ -293,7 +293,7 @@ If you do want it (decision D5):
 
 ### 3.13 The Drive time box: free public services, and what to do if they refuse
 
-**What it is.** In the Contact section a visitor can type an address and press "Get drive time" to see the miles and minutes to the farm. Nothing is contacted until the button is pressed. What is sent, and to whom, is in `docs/WHAT_THE_SITE_STORES.md`, section 3.
+**What it is.** In the Contact section a visitor can type an address and press "Get drive time" to see the miles and minutes to the farm or to The GreenHouse. Nothing is contacted until the button is pressed. What is sent, and to whom, is in `docs/WHAT_THE_SITE_STORES.md`, section 3.
 
 **It uses two free public services, with no account, no key and no cost.** They are run by volunteers and non-profits, and they come with rules:
 

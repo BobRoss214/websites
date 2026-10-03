@@ -24,7 +24,6 @@ from bs4 import BeautifulSoup
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = 'https://www.wiseacresorganic.com/'
 OG_IMAGE = 'assets/og-share.png'
-OG_IMAGE_ALT = 'Illustration of a fall farm with a smiling sun, a red barn, a tractor pulling a wagon of children, a pumpkin patch and a scarecrow, with the words Wise Acres Organic Farm. Organic u-pick fun for the whole family'   # keep identical to og:image:alt in index.html
 
 PAGES_DIR = os.path.join(ROOT, 'pages')
 
@@ -37,7 +36,7 @@ def chrome():
     try:
         return _chrome()
     except (AttributeError, ValueError):
-        sys.exit('index.html is missing a part that tools/pages.py copies into every extra page: the <head>, the skip link, the announcement bar, '
+        sys.exit('index.html is missing a part that tools/pages.py copies into every extra page: the <head> (with its og:image:alt tag), the skip link, the announcement bar, '
                  '<header class="site-header">, <div class="footer-field"> ... </footer>, <nav class="action-bar">, the icon sprite or the <script src="js/..."> tags. '
                  'Put it back the way it was, then run this again. Nothing was changed.')
 
@@ -45,6 +44,7 @@ def chrome():
 def _chrome():
     src = strip_i18n(open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read())
     head = re.search(r'<head>(.*?)</head>', src, re.S).group(1)
+    og_alt = re.search(r'<meta property="og:image:alt" content="([^"]*)">', head).group(1)   # the share picture's description: one copy, in index.html
     skip = re.search(r'\s*<a class="skip-link"[^>]*>.*?</a>', src, re.S).group(0).strip()
     announce = re.search(r'<div class="announce"[^>]*>.*?</div>\s*', src, re.S).group(0).strip()
     header = re.search(r'<header class="site-header".*?</header>', src, re.S).group(0)
@@ -56,7 +56,7 @@ def _chrome():
     def to_home(s):
         s = s.replace('href="#top"', 'href="index.html"')
         return re.sub(r'(?<!<use )href="#(?!main")', 'href="index.html#', s)   # not icons: <use href="#i-arrow"> must stay local to the page's own sprite
-    return dict(head=head, skip=skip, announce=to_home(announce), header=to_home(header), footer=to_home(footer), action=to_home(action), sprite=sprite, scripts=scripts)
+    return dict(head=head, og_alt=og_alt, skip=skip, announce=to_home(announce), header=to_home(header), footer=to_home(footer), action=to_home(action), sprite=sprite, scripts=scripts)
 
 
 def parse_source(path):
@@ -104,10 +104,10 @@ def compose(c, slug, meta, body):
     extra = (f'\n  <link rel="canonical" href="{url}">\n  <meta property="og:url" content="{url}">\n  <meta property="og:image" content="{image}">')
     if image == SITE + OG_IMAGE:   # width, height and description are for the default share picture only
         extra += (f'\n  <meta property="og:image:width" content="1200">\n  <meta property="og:image:height" content="630">'
-                  f'\n  <meta property="og:image:alt" content="{OG_IMAGE_ALT}">')
+                  f'\n  <meta property="og:image:alt" content="{c["og_alt"]}">')
     extra += '\n  <meta name="twitter:card" content="summary_large_image">'
     if image == SITE + OG_IMAGE:
-        extra += f'\n  <meta name="twitter:image:alt" content="{OG_IMAGE_ALT}">'
+        extra += f'\n  <meta name="twitter:image:alt" content="{c["og_alt"]}">'
     # No BreadcrumbList here on purpose: these pages have no visible breadcrumb trail, and structured data must match the page.
     # If you add a visible trail (Home > page), add the BreadcrumbList back using meta['crumb'].
     graph = [

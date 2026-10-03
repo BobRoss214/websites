@@ -156,7 +156,7 @@
  *
  * DRIVE TIME FROM A VISITOR'S ADDRESS
  * -----------------------------------
- * The "Drive time" box in the Contact section lets a visitor type an address and see the miles and minutes to the farm.
+ * The "Drive time" box in the Contact section lets a visitor type an address and see the miles and minutes to the farm or to The GreenHouse (they pick which).
  * It finds the farm by its address with the free OpenStreetMap search. Optional: give the exact spot instead, so the farm is never searched for.
  * On Google Maps, right-click the farm and click the two numbers at the top of the menu to copy them. Then change  farmPoint: null,  to
  *       farmPoint: { lat: 00.0000, lon: -00.0000 },     (your own two numbers, not these)

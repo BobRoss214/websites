@@ -373,6 +373,7 @@
             <div class="card-actions">
               <a data-t="taf6eb687" class="btn btn-green" href="#greenhouse">See The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
               <a data-t="t4b3f3cb5" class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+              <a data-t="t0a75fed1" class="btn btn-ghost btn-sm" data-drive-link data-drive-to="greenhouse" href="#drive-form" hidden>Drive time</a>
             </div>
           </article>
         </div>
@@ -402,6 +403,7 @@
               <p data-t="t275a5613">We&rsquo;re at 4701 Hartis Road, in a neighborhood with limited parking. Check in under the name on your reservation. Reservations are transferable, so whoever comes can use it.</p>
               <a data-t="tce5b5050" class="btn btn-sm btn-sun" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener">Get directions <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
               <a data-t="t0a13643a" class="btn btn-sm btn-ghost" href="#farm-map">Farm map</a>
+              <a data-t="t0a75fed1" class="btn btn-sm btn-ghost" data-drive-link data-drive-to="farm" href="#drive-form" hidden>Drive time</a>
             </li>
             <li class="step reveal">
               <span class="step-num" aria-hidden="true"><span class="n">3</span><svg class="ico"><use href="#i-check"/></svg></span>
@@ -2054,7 +2056,14 @@
           </ul>
           <p data-t="t9fb8ced7" class="fine">Rough times with light traffic. Rush hour can add more. Your map app can give you the time for today.</p>
           <form class="drive-form" id="drive-form" hidden novalidate>
-            <label data-t="te49f839c" class="drive-label" for="drive-addr">Type your address to see the miles and minutes to the farm</label>
+            <fieldset class="drive-to">
+              <legend data-t="t32619828">Drive to:</legend>
+              <div class="drive-opts">
+                <label class="drive-opt"><input type="radio" name="drive-to" value="farm" autocomplete="off"><span data-t="t60ba1e75">The farm (4701 Hartis Rd)</span></label>
+                <label class="drive-opt"><input type="radio" name="drive-to" value="greenhouse" autocomplete="off"><span data-t="tee27c655">The GreenHouse (5503 Poplin Rd)</span></label>
+              </div>
+            </fieldset>
+            <label data-t="t3c38402a" class="drive-label" for="drive-addr">Type your address to see the miles and minutes</label>
             <div class="su-row drive-row">
               <input data-ta-placeholder="t5caafaf3" id="drive-addr" aria-describedby="drive-result" name="address" type="text" autocomplete="street-address" maxlength="200" placeholder="Street, town and state">
               <button data-t="t89dd3672" class="btn btn-red" type="submit">Get drive time</button>

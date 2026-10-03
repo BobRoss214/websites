@@ -293,7 +293,9 @@
   "A metal bowl full of blueberries in a sunflower field at dusk, with a banner reading Happy Father’s Day! (the first letters are cut off)": "Một chiếc bát kim loại đầy việt quất giữa cánh đồng hoa hướng dương lúc chạng vạng, với biểu ngữ Happy Father’s Day! (mấy chữ cái đầu bị cắt mất)",
   "Father’s Day": "Ngày của Cha",
   "Four people behind a Foster Village information table at an event": "Bốn người đứng sau bàn thông tin Foster Village tại một sự kiện",
-  "Foster Village table": "Bàn của Foster Village"
+  "Foster Village table": "Bàn của Foster Village",
+  "To The GreenHouse at 5503 Poplin Rd. Usual road speed with no traffic. Rush hour can add more.": "Đến The GreenHouse tại 5503 Poplin Rd. Theo tốc độ đường thông thường, không có kẹt xe. Giờ cao điểm có thể lâu hơn.",
+  "We could not find a drive from that address to The GreenHouse. Try the Google Maps button.": "Chúng tôi không tìm được đường lái xe từ địa chỉ đó đến The GreenHouse. Hãy thử nút Google Maps."
  },
  "ui": {
   "t000eb0a5": "Tự cắt bó hoa của bạn trong ruộng hoa",
@@ -1334,6 +1336,10 @@
   "teabb9153": "Hoa hướng dương trong ánh vàng",
   "ted43ffcd": "Một con vật nhỏ đội chiếc mũ len xanh hình con ếch",
   "tf0991f3a": "Xe buýt trường học ở nông trại",
-  "tf8f8a118": "Một hộp cà chua bi nhiều màu và những quả bí ngô trước hai tấm biển «Organic U-pick Tomatoes» và «Organic U-pick Basil», mỗi tấm đều có giá"
+  "tf8f8a118": "Một hộp cà chua bi nhiều màu và những quả bí ngô trước hai tấm biển «Organic U-pick Tomatoes» và «Organic U-pick Basil», mỗi tấm đều có giá",
+  "t32619828": "Đi đến:",
+  "t3c38402a": "Nhập địa chỉ của bạn để xem số dặm và số phút",
+  "t60ba1e75": "Nông trại (4701 Hartis Rd)",
+  "tee27c655": "The GreenHouse (5503 Poplin Rd)"
  }
 }

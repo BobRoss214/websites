@@ -293,7 +293,9 @@
   "A metal bowl full of blueberries in a sunflower field at dusk, with a banner reading Happy Father’s Day! (the first letters are cut off)": "黄昏时分的向日葵田里，一个装满蓝莓的金属碗，旁边的横幅上写着“Happy Father’s Day!”（开头的几个字母被截掉了）",
   "Father’s Day": "父亲节",
   "Four people behind a Foster Village information table at an event": "四个人站在活动现场的 Foster Village 信息桌后面",
-  "Foster Village table": "Foster Village 的桌子"
+  "Foster Village table": "Foster Village 的桌子",
+  "To The GreenHouse at 5503 Poplin Rd. Usual road speed with no traffic. Rush hour can add more.": "到 5503 Poplin Rd 的 The GreenHouse。按正常路速、没有车流计算，高峰时段可能更久。",
+  "We could not find a drive from that address to The GreenHouse. Try the Google Maps button.": "没有找到从该地址到 The GreenHouse 的行车路线。请试试 Google Maps 按钮。"
  },
  "ui": {
   "t000eb0a5": "在花田里剪一束属于你的花束",
@@ -1334,6 +1336,10 @@
   "teabb9153": "金色阳光下的向日葵",
   "ted43ffcd": "一只戴着绿色针织青蛙帽的小动物",
   "tf0991f3a": "农场里的校车",
-  "tf8f8a118": "一小盒五颜六色的樱桃番茄和几个南瓜，摆在两块牌子前，牌子上写着“Organic U-pick Tomatoes”和“Organic U-pick Basil”，各标有价格"
+  "tf8f8a118": "一小盒五颜六色的樱桃番茄和几个南瓜，摆在两块牌子前，牌子上写着“Organic U-pick Tomatoes”和“Organic U-pick Basil”，各标有价格",
+  "t32619828": "目的地：",
+  "t3c38402a": "输入你的地址，查看有多少英里、要开多久",
+  "t60ba1e75": "农场（4701 Hartis Rd）",
+  "tee27c655": "The GreenHouse（5503 Poplin Rd）"
  }
 }

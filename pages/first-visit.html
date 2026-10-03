@@ -79,10 +79,11 @@ crumb: First visit
           <div class="card-actions">
             <a class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
             <a class="btn btn-ghost" href="#farm-map">Farm map</a>
+            <a class="btn btn-ghost" data-drive-link data-drive-to="farm" href="#drive-form" hidden>Drive time</a>
           </div>
           <p class="more-maps">Open in <a href="https://maps.apple.com/?daddr=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a href="https://waze.com/ul?q=4701%20Hartis%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
           <div class="drive">
-            <h3>Drive time from nearby towns</h3>
+            <h3>Drive time</h3>
             <ul class="drive-list">
               <li><span>Stallings</span> <span class="dr-time" data-drive="10"></span></li>
               <li><span>Matthews</span> <span class="dr-time" data-drive="15"></span></li>
@@ -92,6 +93,22 @@ crumb: First visit
               <li><span>Uptown Charlotte</span> <span class="dr-time" data-drive="30"></span></li>
             </ul>
             <p class="fine">Rough times with light traffic. Rush hour can add more. Your map app can give you the time for today.</p>
+            <form class="drive-form" id="drive-form" hidden novalidate>
+              <fieldset class="drive-to">
+                <legend>Drive to:</legend>
+                <div class="drive-opts">
+                  <label class="drive-opt"><input type="radio" name="drive-to" value="farm" autocomplete="off"><span>The farm (4701 Hartis Rd)</span></label>
+                  <label class="drive-opt"><input type="radio" name="drive-to" value="greenhouse" autocomplete="off"><span>The GreenHouse (5503 Poplin Rd)</span></label>
+                </div>
+              </fieldset>
+              <label class="drive-label" for="drive-addr">Type your address to see the miles and minutes</label>
+              <div class="su-row drive-row">
+                <input id="drive-addr" aria-describedby="drive-result" name="address" type="text" autocomplete="street-address" maxlength="200" placeholder="Street, town and state">
+                <button class="btn btn-red" type="submit">Get drive time</button>
+              </div>
+              <p class="fine drive-priv">When you press the button, your address goes to the free OpenStreetMap services to work out the drive. This website does not keep it.</p>
+              <div class="drive-result" id="drive-result" role="status" aria-live="polite"></div>
+            </form>
           </div>
         </div>
         <div class="checklist-card" id="checklist">

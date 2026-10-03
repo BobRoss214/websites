@@ -614,14 +614,24 @@
       el.textContent = t('about {time}', { time: tm });
     });
   }
-  /* Drive time from the visitor's own address.
+  /* Drive time from the visitor's own address, to the farm or to The GreenHouse.
    * Nothing is contacted until the visitor presses the button. Then OpenStreetMap's free search (Nominatim) finds the place
-   * and the public OSRM server works out the drive. The address is not stored anywhere on this website.
+   * and the public OSRM server works out the drive. The address is not stored anywhere on this website (the choice and the
+   * places found are only kept in memory until the page is closed or reloaded).
    * If either service is down, the Google Maps button still gives the answer. */
-  const FARM_ADDRESS = '4701 Hartis Rd, Indian Trail, NC 28079';
+  const PLACES = {
+    farm:       { addr: '4701 Hartis Rd, Indian Trail, NC 28079', spot: () => W.farmPoint },   // the farm can be given an exact point (farmPoint in js/content.js)
+    greenhouse: { addr: '5503 Poplin Rd, Indian Trail, NC 28079', spot: () => null },
+  };
   const GEO_URL = 'https://nominatim.openstreetmap.org/search';
   const ROUTE_URL = 'https://router.project-osrm.org/route/v1/driving/';
-  let driveShow = null;   // draws the answer again when the language changes
+  const driveShows = [];   // each Drive time box on the page draws its own answer again when the language changes
+  const driveBoxes = [];
+  const driveSpots = {};   // the two places once found
+  let driveFrom = null;    // the visitor's last address that was found, so asking for the other place needs no second search
+  let driveBusy = false;   // one lookup at a time, whichever box asked
+  // like the rest of the site: The GreenHouse is the place to go in winter (the farm is closed), the farm the rest of the year
+  const seasonTo = () => ((W.seasons.active || W.seasons.current()) === 'winter' ? 'greenhouse' : 'farm');
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   async function getJson(url, ms, soft) {   // soft: an answer with HTTP status 400 is still read (OSRM sends 400 with code NoRoute or NoSegment)
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
@@ -655,24 +665,35 @@
       return nf('hour').format(Math.floor(m / 60)) + (m % 60 ? (lang() === 'zh' ? '' : lang() === 'es' ? ' y ' : ' ') + nf('minute').format(m % 60) : '');   // 1小时15分钟, 1 hora y 15 minutos
     } catch (e) { return m + ' min'; }
   };
-  function initDriveForm() {
-    const form = $('#drive-form');
-    if (!form || !window.fetch || !window.AbortController) return;   // without these the form stays hidden
-    const input = $('#drive-addr', form), btn = $('button[type="submit"]', form), out = $('#drive-result', form);
-    if (!input || !btn || !out) return;
-    let busy = false, farm = null, state = null;
-    const mapsLink = (from) => 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(from) + '&destination=' + encodeURIComponent(FARM_ADDRESS);
+  // Every .drive-form on the page is one box with its own answer. (A page can hold more than one.)
+  function initDriveBox(form) {
+    const input = $('input[name="address"]', form), btn = $('button[type="submit"]', form), out = $('.drive-result', form);
+    const radios = $$('input[name="drive-to"]', form);
+    if (!input || !btn || !out || radios.length !== 2) return false;
+    let state = null, picked = false;
+    const chosen = () => { const r = radios.find((x) => x.checked); return r ? r.value : seasonTo(); };
+    const setTo = (to) => { radios.forEach((r) => { r.checked = r.value === to; }); };
+    const forget = () => { if (state) { state = null; show(); } };   // an answer about the other place would mislead
+    const mapsLink = (from, to) => 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(from) + '&destination=' + encodeURIComponent(PLACES[to].addr);
+    const NOTE = {
+      farm: T('To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.'),
+      greenhouse: T('To The GreenHouse at 5503 Poplin Rd. Usual road speed with no traffic. Rush hour can add more.'),
+    };
+    const NOROUTE = {
+      farm: T('We could not find a drive from that address to the farm. Try the Google Maps button.'),
+      greenhouse: T('We could not find a drive from that address to The GreenHouse. Try the Google Maps button.'),
+    };
     const MSG = {
       wait: T('Working it out…'),
       short: T('Type your street address, town and state.'),
       nf: T('We could not find that address. Add the town and state, like 123 Main St, Monroe NC.'),
-      noroute: T('We could not find a drive from that address to the farm. Try the Google Maps button.'),
       down: T('The lookup is not working right now. Try the Google Maps button instead.'),
     };
-    const show = (next) => {
+    function show(next) {
       state = next || state;
       out.textContent = '';
       if (!state) { out.removeAttribute('data-kind'); return; }
+      const to = state.to || 'farm';
       const add = (tag, text, cls) => { const el = doc.createElement(tag); if (cls) el.className = cls; el.textContent = text; out.appendChild(el); return el; };
       out.setAttribute('data-kind', state.kind);
       if (state.kind === 'ok') {
@@ -683,46 +704,74 @@
           const nm = doc.createElement('span'); nm.textContent = Array.from(state.place).slice(0, 140).join(''); if (lang() !== 'en') nm.setAttribute('lang', 'en'); p.appendChild(nm);
           p.appendChild(doc.createTextNode(bits.slice(1).join('')));
         }
-        const note = add('p', t('To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.') + ' ', 'fine');
+        const note = add('p', t(NOTE[to]) + ' ', 'fine');
         // Credits the free services ask for: OpenStreetMap, the routing source (OSRM) and a "fix the map" link. They stay in English.
         [['https://www.openstreetmap.org/copyright', '\u00a9\u00a0OpenStreetMap contributors'], ['https://project-osrm.org/', 'Routing: OSRM'], ['https://www.openstreetmap.org/fixthemap', 'Fix the map']].forEach(([href, text], i) => {
           if (i) note.appendChild(doc.createTextNode(' \u00b7 '));
           const cr = doc.createElement('a'); cr.href = href; cr.target = '_blank'; cr.rel = 'noopener'; cr.textContent = text; cr.setAttribute('lang', 'en');
           note.appendChild(cr);
         });
-      } else add('p', t(MSG[state.kind] || MSG.down), state.kind === 'wait' ? 'drive-wait' : 'drive-err');
+      } else add('p', t(state.kind === 'noroute' ? NOROUTE[to] : (MSG[state.kind] || MSG.down)), state.kind === 'wait' ? 'drive-wait' : 'drive-err');
       if (state.from && state.kind !== 'wait') {
         const a = doc.createElement('a');
-        a.className = 'btn btn-sun btn-sm'; a.href = mapsLink(state.from); a.target = '_blank'; a.rel = 'noopener';
+        a.className = 'btn btn-sun btn-sm'; a.href = mapsLink(state.from, to); a.target = '_blank'; a.rel = 'noopener';
         a.textContent = t('Open these directions in Google Maps');
         out.appendChild(a);
       }
+    }
+    const box = {
+      show: () => show(),
+      busy: (on) => { if (on) { btn.setAttribute('aria-disabled', 'true'); btn.setAttribute('aria-busy', 'true'); } else { btn.removeAttribute('aria-disabled'); btn.removeAttribute('aria-busy'); } },
+      // a button elsewhere on the page asked for one of the two places
+      pick: (to) => { if (!PLACES[to]) return; const was = chosen(); picked = true; setTo(to); if (was !== to) forget(); },
+      // the season changed (the preview switcher): follow it, unless the visitor already chose
+      follow: () => { if (picked) return; const to = seasonTo(); if (chosen() !== to) { setTo(to); forget(); } },
     };
-    driveShow = () => show();
+    setTo(seasonTo());
+    radios.forEach((r) => r.addEventListener('change', () => { picked = true; forget(); }));
+    driveBoxes.push(box); driveShows.push(box.show);
     form.hidden = false;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (busy) return;
+      if (driveBusy) return;
+      const to = chosen(), place = PLACES[to];
       const text = input.value.replace(/\s+/g, ' ').trim();
-      if (text.length < 5) { input.setAttribute('aria-invalid', 'true'); show({ kind: 'short' }); input.focus(); return; }
+      if (text.length < 5) { input.setAttribute('aria-invalid', 'true'); show({ kind: 'short', to }); input.focus(); return; }
       input.removeAttribute('aria-invalid');
-      busy = true; btn.setAttribute('aria-disabled', 'true'); btn.setAttribute('aria-busy', 'true');
-      show({ kind: 'wait' });
+      driveBusy = true; driveBoxes.forEach((b) => b.busy(true));
+      show({ kind: 'wait', to });
+      // the visitor can tap the other place while this runs; then the answer would be about a place no longer chosen, so it is dropped
+      const answer = (next) => { if (chosen() === to) show(next); else { state = null; show(); } };
       try {
-        const from = await geocode(text);
-        if (!from) { input.setAttribute('aria-invalid', 'true'); show({ kind: 'nf', from: text }); return; }
-        if (!farm) {
-          const f = W.farmPoint && goodPoint({ lat: Number(W.farmPoint.lat), lon: Number(W.farmPoint.lon) }) ? { lat: Number(W.farmPoint.lat), lon: Number(W.farmPoint.lon) } : null;
-          if (f) farm = f; else { await sleep(1100); farm = await geocode(FARM_ADDRESS); }   // the free search asks for one request a second
+        const key = text.toLowerCase();
+        let from = driveFrom && driveFrom.key === key ? driveFrom.point : null, searched = false;
+        if (!from) { from = await geocode(text); searched = true; if (from) driveFrom = { key, point: from }; }
+        if (!from) { input.setAttribute('aria-invalid', 'true'); answer({ kind: 'nf', from: text, to }); return; }
+        let dest = driveSpots[to];
+        if (!dest) {
+          const f = place.spot(), p = f ? { lat: Number(f.lat), lon: Number(f.lon) } : null;
+          if (goodPoint(p)) dest = p;
+          else { if (searched) await sleep(1100); dest = await geocode(place.addr); }   // the free search asks for one request a second
+          if (dest) driveSpots[to] = dest;
         }
-        if (!farm) { show({ kind: 'down', from: text }); return; }
-        const r = await driveBetween(from, farm);
-        if (!r) { show({ kind: 'noroute', from: text }); return; }
-        show({ kind: 'ok', miles: r.miles, minutes: r.minutes, place: from.name, from: text });
-        track('drive_time');
+        if (!dest) { answer({ kind: 'down', from: text, to }); return; }
+        const r = await driveBetween(from, dest);
+        if (!r) { answer({ kind: 'noroute', from: text, to }); return; }
+        answer({ kind: 'ok', miles: r.miles, minutes: r.minutes, place: from.name, from: text, to });
+        track('drive_time', { to });
       } catch (err) {
-        show({ kind: 'down', from: text });
-      } finally { busy = false; btn.removeAttribute('aria-disabled'); btn.removeAttribute('aria-busy'); }
+        answer({ kind: 'down', from: text, to });
+      } finally { driveBusy = false; driveBoxes.forEach((b) => b.busy(false)); }
+    });
+    return true;
+  }
+  function initDriveForm() {
+    if (!window.fetch || !window.AbortController) return;   // without these the boxes stay hidden, and so do the links to them
+    if (!$$('.drive-form').filter(initDriveBox).length) return;
+    doc.addEventListener('wa:season', () => driveBoxes.forEach((b) => b.follow()));
+    $$('a[data-drive-link]').forEach((a) => {
+      a.hidden = false;
+      a.addEventListener('click', () => { const to = a.getAttribute('data-drive-to'); if (to) driveBoxes.forEach((b) => b.pick(to)); });   // the page scrolls to the box by itself
     });
   }
   function initReviewLinks() {
@@ -997,7 +1046,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  function renderAll() { renderRelease(); renderWeek(); renderDrive(); if (driveShow) driveShow(); initEntrance(); initFarmMapRerender(); }
+  function renderAll() { renderRelease(); renderWeek(); renderDrive(); driveShows.forEach((f) => f()); initEntrance(); initFarmMapRerender(); }
   let mapReady = false;
   function initFarmMapRerender() { if (mapReady) { $$('[data-farm-map][data-rendered]').forEach((b) => drawMap(b, window.WISE_ACRES_MAP)); } }
 

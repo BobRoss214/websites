@@ -197,7 +197,7 @@ really there: for example a smooth path, drinking water or first aid are claims 
 **Drive times and map apps.** The Contact section and the First-visit page list drive times and "Open in Apple Maps or Waze" links. The times are
 our estimates (see Content status). To change one, tell Claude the right number of minutes (in the HTML it is `data-drive="10"`).
 
-**Drive time from a visitor's address.** In the Contact section a visitor can type an address, press "Get drive time" and see the miles and minutes to the farm. In plain words:
+**Drive time from a visitor's address.** In the Contact section a visitor can type an address, press "Get drive time" and see the miles and minutes to the farm or to The GreenHouse (a "Drive to" choice above the button; in winter it starts on The GreenHouse). In plain words:
 
 - It uses two free public services: OpenStreetMap's address search (Nominatim) and the OSRM routing demo server, which a German non-profit (FOSSGIS) runs. Nothing is contacted until a visitor presses the button, and this website does not keep the address. `docs/WHAT_THE_SITE_STORES.md` lists exactly what is sent.
 - Both are free and come with no promise. They ask for about one request a second and may refuse without notice. The routing server's own page calls its demo "reasonable, non-commercial" use, and this is a business site, so there is a real chance they stop answering one day. Nothing breaks when that happens: the box says "The lookup is not working right now" and offers a Google Maps button.

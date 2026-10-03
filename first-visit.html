@@ -223,10 +223,11 @@
           <div class="card-actions">
             <a data-t="t60adc929" class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
             <a data-t="t0a13643a" class="btn btn-ghost" href="#farm-map">Farm map</a>
+            <a data-t="t0a75fed1" class="btn btn-ghost" data-drive-link data-drive-to="farm" href="#drive-form" hidden>Drive time</a>
           </div>
           <p data-t="td7b709b8" class="more-maps">Open in <a href="https://maps.apple.com/?daddr=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a href="https://waze.com/ul?q=4701%20Hartis%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
           <div class="drive">
-            <h3 data-t="tf9a5cd1b">Drive time from nearby towns</h3>
+            <h3 data-t="t0a75fed1">Drive time</h3>
             <ul class="drive-list">
               <li><span data-t="t2208e27a">Stallings</span> <span class="dr-time" data-drive="10"></span></li>
               <li><span data-t="t42a1c634">Matthews</span> <span class="dr-time" data-drive="15"></span></li>
@@ -236,6 +237,22 @@
               <li><span data-t="t7ba8e959">Uptown Charlotte</span> <span class="dr-time" data-drive="30"></span></li>
             </ul>
             <p data-t="t9fb8ced7" class="fine">Rough times with light traffic. Rush hour can add more. Your map app can give you the time for today.</p>
+            <form class="drive-form" id="drive-form" hidden novalidate>
+              <fieldset class="drive-to">
+                <legend data-t="t32619828">Drive to:</legend>
+                <div class="drive-opts">
+                  <label class="drive-opt"><input type="radio" name="drive-to" value="farm" autocomplete="off"><span data-t="t60ba1e75">The farm (4701 Hartis Rd)</span></label>
+                  <label class="drive-opt"><input type="radio" name="drive-to" value="greenhouse" autocomplete="off"><span data-t="tee27c655">The GreenHouse (5503 Poplin Rd)</span></label>
+                </div>
+              </fieldset>
+              <label data-t="t3c38402a" class="drive-label" for="drive-addr">Type your address to see the miles and minutes</label>
+              <div class="su-row drive-row">
+                <input data-ta-placeholder="t5caafaf3" id="drive-addr" aria-describedby="drive-result" name="address" type="text" autocomplete="street-address" maxlength="200" placeholder="Street, town and state">
+                <button data-t="t89dd3672" class="btn btn-red" type="submit">Get drive time</button>
+              </div>
+              <p data-t="tc37c5664" class="fine drive-priv">When you press the button, your address goes to the free OpenStreetMap services to work out the drive. This website does not keep it.</p>
+              <div class="drive-result" id="drive-result" role="status" aria-live="polite"></div>
+            </form>
           </div>
         </div>
         <div class="checklist-card" id="checklist">

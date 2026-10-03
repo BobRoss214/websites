@@ -293,7 +293,9 @@
   "A metal bowl full of blueberries in a sunflower field at dusk, with a banner reading Happy Father’s Day! (the first letters are cut off)": "Un tazón de metal lleno de arándanos en un campo de girasoles al atardecer, con un cartel que dice Happy Father’s Day! (las primeras letras están cortadas)",
   "Father’s Day": "Día del Padre",
   "Four people behind a Foster Village information table at an event": "Cuatro personas detrás de una mesa de información de Foster Village en un evento",
-  "Foster Village table": "Mesa de Foster Village"
+  "Foster Village table": "Mesa de Foster Village",
+  "To The GreenHouse at 5503 Poplin Rd. Usual road speed with no traffic. Rush hour can add more.": "Hasta The GreenHouse en 5503 Poplin Rd. Velocidad normal de la vía, sin tráfico. En hora pico puede tardar más.",
+  "We could not find a drive from that address to The GreenHouse. Try the Google Maps button.": "No encontramos un trayecto en auto desde esa dirección hasta The GreenHouse. Prueba con el botón de Google Maps."
  },
  "ui": {
   "t000eb0a5": "Corta tu propio ramo en el campo de flores",
@@ -1334,6 +1336,10 @@
   "teabb9153": "Girasoles con luz dorada",
   "ted43ffcd": "Un animal pequeño con un gorro verde tejido en forma de rana",
   "tf0991f3a": "Autobús escolar en la granja",
-  "tf8f8a118": "Una cajita de tomates cherry de colores y calabazas delante de dos letreros que dicen «Organic U-pick Tomatoes» y «Organic U-pick Basil», cada uno con un precio"
+  "tf8f8a118": "Una cajita de tomates cherry de colores y calabazas delante de dos letreros que dicen «Organic U-pick Tomatoes» y «Organic U-pick Basil», cada uno con un precio",
+  "t32619828": "Destino:",
+  "t3c38402a": "Escribe tu dirección para ver las millas y los minutos",
+  "t60ba1e75": "La granja (4701 Hartis Rd)",
+  "tee27c655": "The GreenHouse (5503 Poplin Rd)"
  }
 }

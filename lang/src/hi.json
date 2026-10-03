@@ -293,7 +293,9 @@
   "A metal bowl full of blueberries in a sunflower field at dusk, with a banner reading Happy Father’s Day! (the first letters are cut off)": "शाम के समय सूरजमुखी के खेत में ब्लूबेरी से भरा धातु का कटोरा, और एक बैनर जिस पर Happy Father’s Day! लिखा है (शुरुआती अक्षर कटे हुए हैं)",
   "Father’s Day": "फ़ादर्स डे",
   "Four people behind a Foster Village information table at an event": "एक कार्यक्रम में Foster Village की सूचना मेज़ के पीछे खड़े चार लोग",
-  "Foster Village table": "Foster Village की मेज़"
+  "Foster Village table": "Foster Village की मेज़",
+  "To The GreenHouse at 5503 Poplin Rd. Usual road speed with no traffic. Rush hour can add more.": "5503 Poplin Rd पर The GreenHouse तक। सड़क की सामान्य रफ़्तार, बिना ट्रैफ़िक के। भीड़ के समय और ज़्यादा लग सकता है।",
+  "We could not find a drive from that address to The GreenHouse. Try the Google Maps button.": "हमें उस पते से The GreenHouse तक गाड़ी का रास्ता नहीं मिला। Google Maps बटन आज़माएँ।"
  },
  "ui": {
   "t000eb0a5": "फूलों के खेत में अपना गुलदस्ता खुद काटें",
@@ -1334,6 +1336,10 @@
   "teabb9153": "सुनहरी रोशनी में सूरजमुखी",
   "ted43ffcd": "हरी बुनी हुई मेंढक वाली टोपी पहने एक छोटा जानवर",
   "tf0991f3a": "फ़ार्म में स्कूल बस",
-  "tf8f8a118": "रंग-बिरंगे चेरी टमाटरों का एक डिब्बा और कद्दू, दो बोर्डों के सामने जिन पर “Organic U-pick Tomatoes” और “Organic U-pick Basil” लिखा है, दोनों पर कीमत भी है"
+  "tf8f8a118": "रंग-बिरंगे चेरी टमाटरों का एक डिब्बा और कद्दू, दो बोर्डों के सामने जिन पर “Organic U-pick Tomatoes” और “Organic U-pick Basil” लिखा है, दोनों पर कीमत भी है",
+  "t32619828": "कहाँ जाना है:",
+  "t3c38402a": "कितने मील और कितने मिनट लगेंगे, यह देखने के लिए अपना पता लिखें",
+  "t60ba1e75": "फ़ार्म (4701 Hartis Rd)",
+  "tee27c655": "The GreenHouse (5503 Poplin Rd)"
  }
 }
