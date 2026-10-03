@@ -277,12 +277,24 @@ If you do want it (decision D5):
 - [ ] In the left menu choose Sitemaps, type `sitemap.xml` in the box (the start of the address is already filled in), and Submit. Google's page says "Submitting" a sitemap means telling Google where the file is. **[not opened]** On Cloudflare, do the address change in 3.7 first.
 - [ ] A few days later look at the Pages report. A list of pages "with redirect" means 3.7 is not done yet.
 
-### 3.11 The share image
+### 3.11 The share images
 
-- [ ] `assets/og-share.png` is the picture people see when the address is pasted into Facebook, a text message or similar. It is 1200 by 630 pixels, 213 KB: the fall farm from the top of the home page (sun, barn, wagon ride, pumpkin patch, scarecrow) with the name "Wise Acres Organic Farm" and the words "Organic u-pick fun for the whole family". Every page uses it.
-- [ ] Decision D7: keep the drawing, or use a real photo? To change it, replace the file with a new 1200 by 630 picture of the same name, or ask Claude.
-- [ ] Before launch you can replace the file under the same name. After launch, give a changed picture a new file name (change `OG_IMAGE` in `tools/pages.py`, the `og:image` line and the `"image"` line of the structured data in `index.html`, and run the rebuild): `/assets/*` is cached for a year (see `_headers`), and Facebook, WhatsApp and iMessage keep old previews for days or weeks.
-- [ ] After launch, paste the home address into a new text message or a Facebook post draft (not an old one: apps keep previews for days) and look at the picture and the title.
+- [ ] Every page has its own picture for when its address is pasted into Facebook, a text message or similar. All six are 1200 by 630 pixels and under 250 KB, drawn from the site's own artwork (not stretched photos), with the name "Wise Acres Organic Farm" and that page's own heading. No prices, dates or promises are in them. Look at each one before launch.
+
+| Page | File | What the picture shows |
+| --- | --- | --- |
+| Home | `assets/og-share.png` (213 KB) | The fall farm from the top of the home page: sun, barn, wagon ride, pumpkin patch, scarecrow. "Organic u-pick fun for the whole family". |
+| Strawberry picking | `assets/og-strawberry-picking.png` (211 KB) | The spring farm: children picking in strawberry rows, wagon ride, barn, sunflowers. "U-pick organic strawberries". |
+| Pumpkin patch | `assets/og-pumpkin-patch.png` (227 KB) | A close view of the fall pumpkin patch: orange and white pumpkins, hay bales, scarecrow, wagon ride, barn. "Pumpkin patch at Wise Acres". |
+| School field trips | `assets/og-school-field-trips.png` (189 KB) | A yellow school bus on the farm lane above blueberry rows where children pick, with sunflowers and the barn. "School field trips to an organic farm". |
+| Wise Pie | `assets/og-wise-pie.png` (114 KB) | Three pizza slices and two paper cups on a red and white checked tablecloth, farm hills behind. "Real pizza from a 700-degree oven" (that is the heading of the page: if the wording on the page changes, ask for a new picture). |
+| First visit | `assets/og-first-visit.png` (182 KB) | The farm map seen from above: parking lot, entrance arch, barn, farm stand, goat pen, fire pit, pumpkin patch, maze, playground. "Your first visit to Wise Acres". |
+
+- [ ] Where it is set: the home page in `index.html` (`og:image`, `og:image:alt`, `twitter:image`, `twitter:image:alt`, and the `"image"` line of the structured data). Each extra page in its own source file `pages/<page>.html`, in the settings block at the top: `image: assets/og-<page>.png` and `image_alt: ...`. `python3 tools/pages.py` then writes the picture's address, its width and height (read from the file) and its description into the page. A page with an `image:` line but no `image_alt:` line is refused, and a page with no `image:` line uses `assets/og-share.png`.
+- [ ] The description of each picture (`image_alt:`) says only what is in the picture, and it lives only there (the home page's lives only in `index.html`; the Twitter line is a copy). If a picture changes, change its description.
+- [ ] Decision D7: keep the drawings, or use real photos? The farm's photos are mostly 206 to 750 pixels wide, so a photo would need to be a new, large one (1200 pixels wide or more). To change a picture, ask Claude.
+- [ ] Before launch you can replace a file under the same name. After launch, give a changed picture a new file name (for example `assets/og-pumpkin-patch-2.png`): `/assets/*` is cached for a year (see `_headers`), and Facebook, WhatsApp and iMessage keep old previews for days or weeks. For an extra page change its `image:` line in `pages/<page>.html`, then run `python3 tools/pages.py && python3 tools/i18n.py extract`. For the home page also change `OG_IMAGE` in `tools/pages.py`, the `og:image` and `twitter:image` lines and the `"image"` line of the structured data in `index.html`, and run the same rebuild.
+- [ ] After launch, paste each page's address (the home page and the five extra pages) into a new text message or a Facebook post draft (not an old one: apps keep previews for days) and look at the picture and the title.
 
 ### 3.12 Your Google Business Profile
 
@@ -350,7 +362,7 @@ If you do want it (decision D5):
 | D4 | When do you switch the `www` record, and when do you cancel the old hosting? | A quiet weekday; cancel a week or more later. |
 | D5 | Analytics: off, or which one? | Off at launch (3.9). |
 | D6 | `seasonPicker`: `false` before launch (3.8). | `false`. |
-| D7 | Share image: keep the drawing or use a photo (3.11)? | Your choice. |
+| D7 | Share images: keep the drawings or use photos (3.11)? | Your choice. |
 | D8 | Languages: the Spanish, Hindi, Chinese and Vietnamese texts were written with AI help and no native speaker has read them (README, "Content status"). Launch all five, or only the ones that have been read? | Have someone read each before launch, or launch with only the languages that have been read. |
 | D9 | Who updates the site each week in season, and how (3.2: Create a new deployment, drag the folder)? | One named person, plus a backup person. |
 | D10 | Free plan or a paid plan if the farm gets busy? | Free to start. Cloudflare's static traffic is not limited. **[read]** |

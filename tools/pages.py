@@ -11,16 +11,18 @@ Each source in pages/<slug>.html starts with a small block of settings between -
   title: Page title for Google and the browser tab
   description: One or two sentences for search results
   crumb: Short name for the breadcrumb (not used today: the pages have no visible breadcrumb trail; see compose())
-  image: assets/og-share.png       (optional)
+  image: assets/og-pumpkin-patch.png       (optional: this page's own share picture, 1200 x 630; without it the page uses assets/og-share.png)
+  image_alt: Illustration of ...           (needed when there is an image: what the picture shows, in one line; it is the only copy)
   ---
   <section>...the page itself...</section>
 
-Only title, description and image are used (crumb is kept for a future breadcrumb trail); any other line in the block is ignored.
+Only title, description, image and image_alt are used (crumb is kept for a future breadcrumb trail); any other line in the block is ignored.
+The share picture's size is read from the file itself. The home page's picture and its description live in index.html (og:image, og:image:alt).
 The farm map's scripts (js/map-art.js, js/farm-map-data.js) are added only to a page whose source contains data-farm-map.
 
 Change SITE below if the website is published somewhere other than wiseacresorganic.com.
 """
-import html, json, os, re, sys
+import html, json, os, re, struct, sys
 from bs4 import BeautifulSoup
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,6 +30,45 @@ SITE = 'https://www.wiseacresorganic.com/'
 OG_IMAGE = 'assets/og-share.png'
 
 PAGES_DIR = os.path.join(ROOT, 'pages')
+
+
+def image_size(rel):
+    """(width, height) of a PNG or JPEG file in the site folder, read from its first bytes, or None when it cannot be read."""
+    try:
+        with open(os.path.join(ROOT, rel), 'rb') as f:
+            data = f.read(65536)
+    except OSError:
+        return None
+    if data[:8] == b'\x89PNG\r\n\x1a\n' and data[12:16] == b'IHDR':
+        return struct.unpack('>II', data[16:24])
+    if data[:2] == b'\xff\xd8':          # JPEG: walk the blocks until the "start of frame" one
+        i = 2
+        while i + 9 < len(data):
+            if data[i] != 0xFF:
+                i += 1
+                continue
+            marker = data[i + 1]
+            if marker in (0xD8, 0x01) or 0xD0 <= marker <= 0xD7:
+                i += 2
+                continue
+            length = struct.unpack('>H', data[i + 2:i + 4])[0]
+            if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):
+                h, w = struct.unpack('>HH', data[i + 5:i + 9])
+                return w, h
+            i += 2 + length
+    return None
+
+
+def share_picture(c, slug, meta):
+    """The page's own share picture (image: and image_alt: in its settings block), else the home page's.
+    Returns (path, description ready to put inside a tag, (width, height) or None)."""
+    rel = meta.get('image') or OG_IMAGE
+    alt = html.escape(meta['image_alt'], quote=True) if meta.get('image_alt') else (c['og_alt'] if rel == OG_IMAGE else '')   # c['og_alt'] is already escaped (it is copied from index.html)
+    if rel != OG_IMAGE and not os.path.exists(os.path.join(ROOT, rel)):
+        sys.exit(f'pages/{slug}.html: image: {rel} is not in the site folder. Put the picture there, or take the image: line out to use {OG_IMAGE}.')
+    if not alt:
+        sys.exit(f'pages/{slug}.html: it has image: {rel} but no image_alt: line. Add one line saying only what the picture shows (it is read aloud and shown when the picture cannot load).')
+    return rel, alt, image_size(rel)
 
 
 def strip_i18n(s):
@@ -92,24 +133,23 @@ def faq_items(body):
 def compose(c, slug, meta, body):
     url = SITE + slug + '.html'
     title, desc = meta['title'], meta['description']
-    image = SITE + meta.get('image', OG_IMAGE)
+    image_rel, image_alt, image_dims = share_picture(c, slug, meta)
+    image = SITE + image_rel
     head = c['head']
     head = re.sub(r'<title>.*?</title>', f'<title>{html.escape(title)}</title>', head, flags=re.S)
     head = re.sub(r'<meta name="description" content="[^"]*">', f'<meta name="description" content="{html.escape(desc, quote=True)}">', head)
     head = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{html.escape(title, quote=True)}">', head)
     head = re.sub(r'<meta property="og:description" content="[^"]*">', f'<meta property="og:description" content="{html.escape(desc, quote=True)}">', head)
     head = re.sub(r'\s*<script type="application/ld\+json">.*?</script>', '', head, flags=re.S)
-    head = re.sub(r'\s*<(?:link rel="canonical"|meta property="og:(?:url|image(?::[a-z]+)?)"|meta name="twitter:(?:card|image:alt)")[^>]*>', '', head)
+    head = re.sub(r'\s*<(?:link rel="canonical"|meta property="og:(?:url|image(?::[a-z]+)?)"|meta name="twitter:(?:card|image(?::alt)?)")[^>]*>', '', head)
     # The Search Console tag belongs on the home page only (see README), so do not copy its placeholder comment or a pasted tag.
     head = re.sub(r'\s*<!-- GOOGLE SEARCH CONSOLE.*?-->', '', head, flags=re.S)
     head = re.sub(r'\s*<meta name="google-site-verification"[^>]*>', '', head)
     extra = (f'\n  <link rel="canonical" href="{url}">\n  <meta property="og:url" content="{url}">\n  <meta property="og:image" content="{image}">')
-    if image == SITE + OG_IMAGE:   # width, height and description are for the default share picture only
-        extra += (f'\n  <meta property="og:image:width" content="1200">\n  <meta property="og:image:height" content="630">'
-                  f'\n  <meta property="og:image:alt" content="{c["og_alt"]}">')
-    extra += '\n  <meta name="twitter:card" content="summary_large_image">'
-    if image == SITE + OG_IMAGE:
-        extra += f'\n  <meta name="twitter:image:alt" content="{c["og_alt"]}">'
+    if image_dims:
+        extra += f'\n  <meta property="og:image:width" content="{image_dims[0]}">\n  <meta property="og:image:height" content="{image_dims[1]}">'
+    extra += f'\n  <meta property="og:image:alt" content="{image_alt}">'
+    extra += f'\n  <meta name="twitter:card" content="summary_large_image">\n  <meta name="twitter:image" content="{image}">\n  <meta name="twitter:image:alt" content="{image_alt}">'
     # No BreadcrumbList here on purpose: these pages have no visible breadcrumb trail, and structured data must match the page.
     # If you add a visible trail (Home > page), add the BreadcrumbList back using meta['crumb'].
     graph = [

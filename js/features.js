@@ -771,6 +771,7 @@
     });
   }
   function checkPhotoTags() {   // the topic buttons above the gallery: a tag that has no button would never be found
+    if (!$('#gallery-filters')) return;   // only the home page has the gallery; the other pages load js/content.js too, but have no buttons to check against
     const known = $$('#gallery-filters [data-gtag]').map((b) => b.dataset.gtag).filter((g) => g !== 'all');
     (W.photos || []).forEach((p, i) => {
       if (!p || p.tags === undefined) return;

@@ -264,7 +264,7 @@ python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py
 The header, footer and icons are copied from `index.html`, so a change there reaches every page after
 the rebuild. The same command writes `sitemap.xml` and `robots.txt`. If the site is published somewhere
 other than www.wiseacresorganic.com, change `SITE` at the top of `tools/pages.py`.
-`assets/og-share.png` is the picture shown when a link is shared.
+The picture shown when a link is shared is `assets/og-share.png` for the home page and `assets/og-<page>.png` for each extra page (1200 x 630, set by the `image:` and `image_alt:` lines at the top of `pages/<page>.html`; the description of a picture is written only there, and the home page's only in `index.html`). A page with no `image:` line uses `assets/og-share.png`. See `docs/LAUNCH_CHECKLIST.md` 3.11.
 
 ## Languages
 
