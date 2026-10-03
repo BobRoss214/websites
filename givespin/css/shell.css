@@ -29,6 +29,7 @@
 .search__txt { display: grid; min-width: 0; }
 .search__txt b { font-size: 0.86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .search__txt small { color: var(--dim); }
+.search__item[aria-selected="true"] .search__txt small { color: #9bb3c0; } /* the highlighted row is a little lighter, so its small label needs a lighter grey to stay readable (4.5:1) */
 .search__none { padding: 12px; color: var(--dim); font-size: 0.85rem; }
 
 .topbar__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }

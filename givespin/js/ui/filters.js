@@ -110,7 +110,7 @@
     html += facetSection('serves', 'Who they help', 'Charities that focus on these groups.');
     html += facetSection('where', 'Where they work');
     html += facetSection('how', 'How they help');
-    html += facetSection('era', 'When they started', 'Founded year. Charities with no founding year on file never match this filter.');
+    html += facetSection('era', 'When they started', 'Founded year. Charities with no founding year on file, or only a register date, never match this filter.');
 
     html += '<div class="modal__foot"><button type="button" class="btn btn--ghost" data-role="clear">Clear all filters</button><button type="button" class="btn btn--green" data-role="done">Show charities</button></div>' +
       '<p class="modal__fine">Prefer to hand-pick? <a href="#charities" data-role="to-dir">Open the Charities page</a> to switch individual charities on or off.</p>';
