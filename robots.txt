@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /print/
+Disallow: /tests/
+Disallow: /docs/
 
 Sitemap: https://www.wiseacresorganic.com/sitemap.xml

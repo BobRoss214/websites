@@ -8,6 +8,7 @@
   const doc = document;
   const root = doc.documentElement;
   root.classList.remove('no-js');
+  if (window.WISE_ACRES && window.WISE_ACRES.translateNow) window.WISE_ACRES.translateNow();   // texts in the visitor's language before the rest of the page is built
 
   const $ = (sel, ctx = doc) => ctx.querySelector(sel);
   const $$ = (sel, ctx = doc) => Array.from(ctx.querySelectorAll(sel));

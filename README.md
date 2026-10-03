@@ -39,6 +39,7 @@ tools/                  pages.py (builds the extra pages), i18n.py (tags text, b
                         add_photo.py (adds a photo: web size, no hidden data, listed in the gallery) + test_add_photo.py (its check)
 assets/qr/              QR codes (SVG), made by tools/make_qr.py
 print/qr-signs.html     printable signs, one per page, English + Spanish (not listed in Google)
+tests/                  automatic browser checks for developers, not part of the website (do not upload; see tests/README.md)
 docs/                   notes and questions for the farm, the launch checklist, what the site stores (not for visitors: do not upload)
 assets/photos/          farm photos
 assets/fonts/           Fredoka, Nunito (+ Vietnamese letters), Caveat (SIL Open Font License), self-hosted
@@ -417,11 +418,15 @@ and hi, zh, vi, to see what still needs translating.)
 Everything respects `prefers-reduced-motion`, works without JavaScript (content and links), and is
 keyboard navigable.
 
+## Testing
+
+Automatic browser checks (countdown, languages, farm map, accessibility, the tools…) live in `tests/`; how to install and run them is in `tests/README.md`. You do not need them to edit the site, and the folder is not part of the website.
+
 ## Putting it online
 
 New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md): which host, what to upload, the steps in order, and what to test afterwards.
 
-1. Upload the folder to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. **Leave out the `docs/` folder** (notes and questions for the farm owner, not for visitors). You can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site.
+1. Upload the folder to a static host (Netlify, Cloudflare Pages, GitHub Pages, or any web server). There is no build step. **Leave out the `docs/` and `tests/` folders** (`docs/`: notes and questions for the farm owner; `tests/`: automatic checks for developers; neither is for visitors). You can also leave out `tools/`, `pages/` and this README, which are for whoever edits the site.
 2. Use your real domain at the **root** (`https://www.wiseacresorganic.com/`). If it lives elsewhere, change `SITE` in `tools/pages.py`, run the rebuild commands, and search & replace the domain in `index.html` (canonical, share image, structured data), and set `site` in `tools/qr_links.json` and run `python3 tools/make_qr.py` again (the QR signs carry the address).
 3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
 4. Send people to the Google Business Profile, and add your site's address there.

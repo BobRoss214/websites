@@ -1,0 +1,13 @@
+{
+  "name": "wise-acres-site-tests",
+  "private": true,
+  "description": "Browser tests for the Wise Acres site (not part of the website). See README.md in this folder.",
+  "scripts": {
+    "test": "node run-all.mjs",
+    "list": "node run-all.mjs --list"
+  },
+  "devDependencies": {
+    "axe-core": "^4.10.0",
+    "playwright": "^1.56.0"
+  }
+}

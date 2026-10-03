@@ -92,6 +92,8 @@
         el._svgs = Array.from(el.querySelectorAll('svg')).map((n) => n.outerHTML);
         el._links = (el._en.match(/<a\b[^>]*>/g)) || [];     // real opening tags of the links, in order
       }
+      if (el._code === code) return;   // already swapped (translateNow() did it before the other scripts ran): do not rebuild it, so nothing they attached is lost
+      el._code = code;
       const tr = code !== 'en' && d[el.getAttribute('data-t')];
       if (tr) {
         let i = 0;
@@ -147,6 +149,17 @@
     const d = m.el.getBoundingClientRect().top - m.top;
     if (Math.abs(d) > 1) window.scrollTo({ top: window.scrollY + d, left: 0, behavior: 'instant' });
   }
+
+  // The language is applied when the page has been read to the end (DOMContentLoaded), but the big scripts at the end of the page run before that,
+  // and the first screen can be painted in English in the meantime. main.js is the first of them: it calls this, so the texts are swapped
+  // while the page is still being built. ready() below then only finishes the job (menus, titles, the "wa:lang" event).
+  W.translateNow = () => {
+    if (W.lang === 'en' || !(W.dict[W.lang] && W.dict[W.lang].ui) || !doc.body) return;
+    const info = LANGS.find((l) => l.code === W.lang) || LANGS[0];
+    doc.documentElement.lang = info.html;
+    swapBlocks(W.lang);
+    swapMeta();
+  };
 
   function setLang(code, opts) {
     if (!CODES.includes(code)) return;

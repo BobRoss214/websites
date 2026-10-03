@@ -97,7 +97,7 @@ h1 span{display:block;margin-top:.15em;font-size:2rem;color:#6a5140;font-weight:
 .how span,.text span{display:block;color:#6a5140;font-weight:600}
 .text{margin:0;font-size:1.3rem}
 .url{margin:auto 0 0;padding-top:.2in;font:700 .95rem "Nunito",system-ui,sans-serif;color:#6a5140;overflow-wrap:anywhere}
-@media print{body{background:#fff}.bar{display:none}.sign{width:auto;max-width:none;min-height:10in;margin:0;border-radius:28px;box-shadow:none}}
+@media print{body{background:#fff}.bar{display:none}.sign{width:auto;max-width:none;min-height:10in;margin:0;padding:.3in .4in;border-radius:28px;box-shadow:none}.qr{width:4.3in;margin:.15in 0 .12in}}
 """
 
 

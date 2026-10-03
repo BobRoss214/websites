@@ -23,7 +23,7 @@ Every statement about a host company carries a tag that says how sure we are:
 ## The short version
 
 1. Use **Cloudflare Pages** on the free plan, with its drag-and-drop upload. Section 1 says why, and what to do if you would rather use Netlify.
-2. Upload a copy of the folder **without** `docs/`, `tools/`, `pages/` and `README.md` (section 2).
+2. Upload a copy of the folder **without** `docs/`, `tests/`, `tools/`, `pages/` and `README.md` (section 2).
 3. Make the owner decisions in section 4. Ask for `seasonPicker: false` before the real upload.
 4. Point `www.wiseacresorganic.com` at the host with one DNS record. Leave every other record alone, because your email depends on them (step 3.3).
 5. Check the padlock and the headers (3.4, 3.5). Decide about the old-address redirects (3.6).
@@ -72,6 +72,7 @@ The site is plain files. There is no database and no build step, so any host tha
 | Item | Why |
 |---|---|
 | `docs/` | Notes and questions for the farm, with placeholders in them. Not for visitors |
+| `tests/` | Automatic checks for developers (with a very big `node_modules` folder inside if they were ever installed). Not for visitors |
 | `tools/`, `pages/` | For whoever edits the site (they build the pages and translations) |
 | `README.md` | Instructions for whoever edits the site |
 | `.git` (a hidden folder, if you have one) | The change history of the files |
@@ -79,7 +80,7 @@ The site is plain files. There is no database and no build step, so any host tha
 How to do it, with no tools:
 
 1. Copy the whole site folder and call the copy `wise-acres-upload`.
-2. In the copy, delete `docs`, `tools`, `pages` and `README.md`, and `.git` if you can see it.
+2. In the copy, delete `docs`, `tests`, `tools`, `pages` and `README.md`, and `.git` if you can see it.
 3. What is left should be 16 items (17 with `_redirects`), 112 files (113 with `_redirects`), about 6.0 MB. Double-click `index.html` in the copy and check the site looks right.
 4. Keep each uploaded folder, with the date in its name (`wise-acres-upload-2026-10-09`). If an upload goes wrong you can go back.
 
