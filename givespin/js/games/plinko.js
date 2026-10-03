@@ -420,7 +420,7 @@
     var shown = bins.length > 250 ? bins.slice(0, 250) : bins;
     var html = shown.map(function (c, i) {
       return '<li data-i="' + i + '"' + (i === winBin ? ' class="is-win"' : ((!field && c.id === pick) || (field && backedIds[c.id]) ? ' class="is-pick"' : '')) + '><span class="rlegend__n" style="background:' + c.accent + ';color:' + U.inkOn(c.accent) + '">' + (i + 1) + '</span><span>' + U.esc(c.short) + '</span></li>';
-    }).join('') + (bins.length > shown.length ? '<li class="rlegend__more">+ ' + (bins.length - shown.length) + ' more bins down the board</li>' : '');
+    }).join('') + (bins.length > shown.length ? '<li class="rlegend__more">+ ' + GS.ui.num(bins.length - shown.length) + ' more bins down the board</li>' : '');
     // a live table asks for this on every bet: rebuild the list only when it is really different (that also keeps its scroll position)
     if (legendHTML !== html) { legendHTML = html; el.legend.innerHTML = html; }
   }

@@ -35,7 +35,7 @@
 
   function cardFormHTML() {
     return '<form class="cardform" data-role="cardform" novalidate autocomplete="off">' +
-      '<p class="note note--preview" data-role="cardwarn">' + ui.icon('info') + '<span><b>Preview only:</b> do not type a real card number. Use the sample test card.</span></p>' +
+      '<p class="note note--preview" data-role="cardwarn">' + ui.icon('info') + '<span><b>Preview only:</b> nothing is sent or charged. Do not type a real card number. Use the sample test card.</span></p>' +
       '<div class="field"><label class="field__label" for="cd-name">Name on card</label><input class="input" id="cd-name" type="text" autocomplete="off" maxlength="40" placeholder="Name on card"></div>' +
       '<div class="field"><label class="field__label" for="cd-number">Card number</label><div class="inputwrap"><input class="input" id="cd-number" type="text" inputmode="numeric" autocomplete="off" maxlength="23" placeholder="1234 5678 9012 3456"><span class="inputwrap__tag" data-role="brand"></span></div></div>' +
       '<div class="field field--2"><div><label class="field__label" for="cd-exp">Expires</label><input class="input" id="cd-exp" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="MM/YY"></div>' +
@@ -170,7 +170,7 @@
         '<div class="auth-opts"><button type="button" class="btn btn--green btn--block" data-role="addcard">' + ui.icon('credit-card') + 'Save a card for easy giving</button>' +
         '<button type="button" class="btn btn--ghost btn--block" data-role="later">Maybe later</button></div>';
     } else {
-      body = '<h2 class="modal__title" id="dlg-auth-title">Save a card</h2><p class="modal__sub">One tap next time. Optional, and you can remove it any time.</p>' + previewNotice() + cardFormHTML();
+      body = '<h2 class="modal__title" id="dlg-auth-title">Save a card</h2><p class="modal__sub">One tap next time. Optional, and you can remove it any time.</p>' + cardFormHTML();
     }
     m.set(body);
     m.setLocked(false);

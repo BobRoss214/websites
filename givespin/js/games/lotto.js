@@ -171,7 +171,7 @@
       }).join('') + shownF.map(function (e) {
         // (only the badge is faded: faded text would not be readable)
         return '<li style="color:var(--dim)" title="Fills the drum: this charity cannot win"><span style="opacity:0.55;display:inline-flex">' + GS.ui.mono(e.charity, 20) + '</span><span>' + U.esc(e.charity.short) + '</span></li>';
-      }).join('') + (fillers.length > shownF.length ? '<li class="rlegend__more">+ ' + fillers.length + ' more charities fill the drum, one ball each. They cannot win.</li>' : '');
+      }).join('') + (fillers.length > shownF.length ? '<li class="rlegend__more">+ ' + GS.ui.num(fillers.length) + ' more charities fill the drum, one ball each. They cannot win.</li>' : '');
       return;
     }
     el.legend.className = 'rlegend' + (balls.length > 30 ? ' rlegend--scroll' : '');
@@ -183,7 +183,7 @@
     var shown = order.slice(0, 150);
     el.legend.innerHTML = shown.map(function (o) {
       return '<li' + (o.c.id === pick ? ' class="is-pick"' : '') + '>' + GS.ui.mono(o.c, 20) + '<span>' + U.esc(o.c.short) + (o.n > 1 ? ' \u00d7 ' + o.n : '') + '</span></li>';
-    }).join('') + (order.length > shown.length ? '<li class="rlegend__more">+ ' + (order.length - shown.length) + ' more</li>' : '');
+    }).join('') + (order.length > shown.length ? '<li class="rlegend__more">+ ' + GS.ui.num(order.length - shown.length) + ' more</li>' : '');
   }
 
   /**

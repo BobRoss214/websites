@@ -587,7 +587,7 @@
       }).join('') + shownF.map(function (e) {
         // (only the badge is faded: faded text would not be readable)
         return '<li data-id="' + e.charity.id + '" style="color:var(--dim)" title="Fills the board: this charity cannot win"><span style="opacity:0.55;display:inline-flex">' + GS.ui.mono(e.charity, 20) + '</span><span>' + U.esc(e.charity.short) + '</span></li>';
-      }).join('') + (fillers.length > shownF.length ? '<li class="rlegend__more">+ ' + fillers.length + ' more charities fill the wheel, one pocket each. They cannot win.</li>' : '');
+      }).join('') + (fillers.length > shownF.length ? '<li class="rlegend__more">+ ' + GS.ui.num(fillers.length) + ' more charities fill the wheel, one pocket each. They cannot win.</li>' : '');
     }
     var big = live ? live.chips > (narrow() ? 6 : 14) : pockets.length > 40;
     el.legend.className = 'rlegend' + (big ? ' rlegend--scroll' : '');
@@ -602,7 +602,7 @@
       el.legend.innerHTML = shownCh.map(function (o) {
         var win = ballMode === 'pocket' && winIdx >= 0 && pockets[winIdx] && pockets[winIdx].id === o.c.id;
         return '<li' + (win ? ' class="is-win"' : (o.c.id === pick ? ' class="is-pick"' : '')) + '>' + GS.ui.mono(o.c, 20) + '<span>' + U.esc(o.c.short) + (o.n > 1 ? ' × ' + o.n : '') + '</span></li>';
-      }).join('') + (order.length > shownCh.length ? '<li class="rlegend__more">+ ' + (order.length - shownCh.length) + ' more</li>' : '');
+      }).join('') + (order.length > shownCh.length ? '<li class="rlegend__more">+ ' + GS.ui.num(order.length - shownCh.length) + ' more</li>' : '');
       return;
     }
     el.legend.innerHTML = pockets.map(function (c, i) {

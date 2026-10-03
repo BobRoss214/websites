@@ -75,12 +75,12 @@
     if (h.dedication) { rows.push(['heart', (h.dedication.kind === 'memory' ? 'In memory of ' : 'In honor of ') + h.dedication.name + (h.dedication.note ? ': “' + h.dedication.note + '”' : '')]); }
     if (h.pick) {
       var backedCh = GS.charity(h.pick.charityId);
-      if (backedCh) { rows.unshift(['target', 'You backed ' + backedCh.short + (h.pick.won ? ' and it won' : ' (it didn’t win; your gift went to the winner)') + (h.pick.board ? ' · board of ' + h.pick.board : '')]); }
+      if (backedCh) { rows.unshift(['target', 'You backed ' + backedCh.short + (h.pick.won ? ' and it won' : ' (it didn’t win; your gift went to the winner)') + (h.pick.board ? ' · board of ' + ui.num(h.pick.board) : '')]); }
     }
     if (h.live) {
       var pickCh = GS.charity(h.live.pick);
       var winCh = GS.charity(h.live.winner);
-      rows.unshift(['radio', 'Live table: ' + money(h.live.pot, true) + ' pot, ' + h.live.players + ' players (the others were bots). ' + (pickCh ? 'You backed ' + pickCh.short + (h.live.won ? ', and it won.' : winCh ? '; ' + winCh.short + ' won the pot.' : '.') : '')]);
+      rows.unshift(['radio', 'Live table: ' + money(h.live.pot, true) + ' pot, ' + ui.num(h.live.players) + ' players (the others were bots). ' + (pickCh ? 'You backed ' + pickCh.short + (h.live.won ? ', and it won.' : winCh ? '; ' + winCh.short + ' won the pot.' : '.') : '')]);
     }
     rows.push(['receipt', 'Receipt ' + h.id]);
     return '<ul class="rs-rows">' + rows.map(function (r) { return '<li>' + ui.icon(r[0]) + '<span>' + esc(r[1]) + '</span></li>'; }).join('') + '</ul>';

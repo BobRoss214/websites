@@ -36,8 +36,8 @@
       : GS.fair.verify(fairData, boardPool || core.buildPool(GS.charities, fairData.filters, fairData.excluded));
     return check.then(function (r) {
       if (r.ok) { var badges = store.noteVerify(); if (badges.length) { GS.bus.emit('badges', badges); } }
-      // older versions of the site kept only the first 300 charities of a bigger board, so such a round cannot be redone here
-      else if (fairData.board && fairData.board.length === 300) { r.cutShort = true; }
+      // a round saved by an older version of the site has its board (or switched-off list) cut to the first 300, so it cannot be redone here
+      else if (fairData.cut) { r.cutShort = true; }
       return r;
     });
   }
@@ -49,7 +49,7 @@
       row(r.hashOk, r.hashOk ? 'The secret number matches the fingerprint shown before the round (nobody swapped it)' : 'The secret number does NOT match the fingerprint shown before the round') +
       row(r.poolOk, r.poolOk ? (r.weighted ? 'The pot matches what was staked' : 'The same charities were on the board') : (r.weighted ? 'The pot does not match what was staked' : 'The charities on the board do not match')) +
       row(r.winnersOk, r.winnersOk ? 'Redoing the pick gives the same winners' : 'Redoing the pick gives different winners') +
-    '</ul>' + (r.cutShort ? '<p class="rs-fine">If this round had more than 300 charities on its board, it was saved by an older version of the site that kept only the first 300, so it cannot be checked again here. Rounds saved now keep the whole board.</p>' : '');
+    '</ul>' + (r.cutShort ? '<p class="rs-fine">This round was saved by an older version of the site that kept only the first 300 charities of its board, so it cannot be checked again here. Rounds saved now keep the whole board.</p>' : '');
   }
 
   function fairDetailsHTML(f) {
@@ -59,7 +59,7 @@
         '<dt>Fingerprint shown before the round (hash)</dt><dd class="mono">' + esc(f.serverHash) + '</dd>' +
         '<dt>Secret number, revealed now (seed)</dt><dd class="mono">' + esc(f.roundSeed) + '</dd>' +
         '<dt>Your lucky number · round #</dt><dd class="mono">' + esc(f.clientSeed) + ' · ' + f.nonce + '</dd>' +
-        (f.board && f.board.length ? '<dt>Charities on the board</dt><dd>' + f.board.length + ' (the winner is picked from these, each with the same chance)</dd>' : '') +
+        (f.board && f.board.length ? '<dt>Charities on the board</dt><dd>' + ui.num(f.board.length) + ' (the winner is picked from these, each with the same chance)</dd>' : '') +
       '</dl>' +
       '<div class="rs-fair__act"><button type="button" class="btn btn--sm" data-role="verify">' + ui.icon('refresh-cw') + 'Verify this round</button></div>' +
       '<div data-role="verify-out" aria-live="polite"></div>' +
@@ -104,7 +104,7 @@
       var pc = GS.charity(round.pick.id);
       if (pc) {
         rows.push(['target', round.pick.won
-          ? 'You backed ' + pc.short + ' and it won' + (round.pick.wins > 1 ? ' ' + round.pick.wins + ' times' : '') + '! Bonus XP for calling it (a 1 in ' + round.pick.board + ' pick).'
+          ? 'You backed ' + pc.short + ' and it won' + (round.pick.wins > 1 ? ' ' + round.pick.wins + ' times' : '') + '! Bonus XP for calling it (a 1 in ' + ui.num(round.pick.board) + ' pick).'
           : 'You backed ' + pc.short + ', which didn’t win this time. Your gift still went to the winner.']);
       }
     }

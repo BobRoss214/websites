@@ -210,6 +210,13 @@
   /* ------------------------------------------------------------------ init */
 
   function init() {
+    // storage full or blocked: the game goes on, but a reload would lose what was not saved, so say so (once per page load)
+    var saveFailTold = false;
+    window.addEventListener('gs:savefail', function () {
+      if (saveFailTold) { return; }
+      saveFailTold = true;
+      ui.toast('Your browser could not save this round (storage is full). It will be gone if you reload.', 'triangle-alert');
+    });
     store.load();
     GS.gameCount = ui.game.ORDER.length;
     document.documentElement.setAttribute('data-mode', GS.payments.mode());

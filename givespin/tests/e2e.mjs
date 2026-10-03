@@ -980,6 +980,15 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
   const keptAfter = await kept();
   check(JSON.stringify(keptAfter) === JSON.stringify(keptBefore) && keptAfter.some((n) => n > 300), 'after a reload every saved round still has its whole board (some have more than 300 charities)', { keptBefore, keptAfter });
   check(await page.evaluate(async () => { const h = window.GS.store.get().history.find((x) => x.fair.board.length > 300); return !!h && (await window.GS.ui.receipt.verifyRound(h.fair)).ok === true; }), 'a round with more than 300 charities on its board still verifies after a reload');
+  // Dice and the slots draw from the whole pool in play: the round saves that pool, so it still verifies after the roster changes
+  for (const id of ['dice', 'slots']) {
+    await go(page, '#game-' + id);
+    await page.waitForSelector('#panel-' + id + ':not([hidden])');
+    await page.click('#btn-play');
+    await waitReceipt(page);
+    check(await page.evaluate(() => window.GS.app._last.round.fair.board.length === window.GS.app.state.pool.length), id + ': the round keeps the pool it was drawn from, so it can be re-checked later');
+    await closeReceipt(page);
+  }
 
   // typing any number: presets un-select, limits are enforced, beyond-the-pool boards repeat charities
   await go(page, '#game-derby');

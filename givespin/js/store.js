@@ -19,7 +19,16 @@
   // per charity (about 3 KB for a thousand). Saves from older versions, which spelled the ids out in `fair.board`
   // and `fair.excluded`, still load.
   var ID_CODE = 3;
-  var ID_CODES = 46656; // 36 to the power of ID_CODE: the most ids one saved list can hold
+  var ID_CODES = 46656; // 36 to the power of ID_CODE: the most ids the saved list `ids` can hold
+  var ID_TABLE_SOFT = 4096; // past this many entries the table is rebuilt from the rounds that are still kept
+  var ID_PATTERN = /^[0-9a-z]+$/;
+  var LEGACY_CUT = 300; // the older version kept only the first 300 ids of a board or of the switched-off list
+  var WEIGHTS_MAX = 40; // a live table has up to 30 gates, so a live round can carry up to 30 backed charities
+  // The ids the saved text refers to, in the order they were first needed. A round points into it by number, and the table only
+  // grows (so a round's packed text never changes once it has been worked out) until it is rebuilt.
+  var idTable = [];
+  var idIndex = Object.create(null);
+  var idGen = 0; // bumped when the table is rebuilt: every round's remembered packed text is then out of date
   var GAME_IDS = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'scratch', 'cards', 'dice', 'coin', 'derby', 'lotto', 'duck', 'marble', 'balloon', 'standing', 'direct'];
 
   function demoCreditCents() { return Math.round((GS.config.demoCredit || 0) * 100); }
@@ -81,7 +90,15 @@
     try { return window.localStorage.getItem(key); } catch (e) { return key === KEY ? memory : null; }
   }
   function writeRaw(str) {
-    try { window.localStorage.setItem(KEY, str); } catch (e) { memory = str; }
+    try { window.localStorage.setItem(KEY, str); } catch (e) { memory = str; saveFailed(e); }
+  }
+  /** Saving failed (usually because storage is full). The site carries on, and tells the page, which may say so once. */
+  function saveFailed(e) {
+    try {
+      if (typeof window.dispatchEvent === 'function' && typeof window.CustomEvent === 'function') {
+        window.dispatchEvent(new window.CustomEvent('gs:savefail', { detail: { name: e && e.name } }));
+      }
+    } catch (err) { /* nobody is listening, and that is fine */ }
   }
 
   function num(v, d) { return typeof v === 'number' && isFinite(v) && v >= 0 ? v : d; }
@@ -92,18 +109,61 @@
   /** The most ids a saved board or switched-off list may hold: the biggest board (1,000), or the whole roster if that is bigger. */
   function idLimit() { return Math.max(1000, (GS.charities || []).length); }
 
-  /** The ids of a saved list: the packed form (`code`, ID_CODE characters per id, numbers into `ids`) or the older spelled-out array. */
-  function idList(plain, code, ids) {
+  /** Reads a packed list (ID_CODE base-36 characters per id, each a number into `ids`). `whole` is true when every piece was good. */
+  function unpackIds(code, ids) {
     var max = idLimit();
     var out = [];
-    if (typeof code === 'string' && code) {
-      for (var i = 0; i + ID_CODE <= code.length && out.length < max; i += ID_CODE) {
-        var id = ids[parseInt(code.substr(i, ID_CODE), 36)];
-        if (typeof id === 'string') { out.push(str(id, 60)); }
-      }
-      return out;
+    var whole = code.length % ID_CODE === 0;
+    for (var i = 0; i + ID_CODE <= code.length; i += ID_CODE) {
+      var piece = code.substr(i, ID_CODE);
+      var id = ID_PATTERN.test(piece) ? ids[parseInt(piece, 36)] : undefined;
+      if (typeof id === 'string' && out.length < max) { out.push(str(id, 60)); } else { whole = false; }
     }
-    return arr(plain).filter(function (w) { return typeof w === 'string'; }).slice(0, max).map(function (w) { return str(w, 60); });
+    return { list: out, whole: whole };
+  }
+
+  /** The ids of a saved list: the packed form (`code`) or the older spelled-out array. `code` is handed back when it can be reused as it is. */
+  function idList(plain, code, ids) {
+    if (typeof code === 'string' && code) {
+      var u = unpackIds(code, ids);
+      return { list: u.list, code: u.whole ? code : undefined };
+    }
+    return { list: arr(plain).filter(function (w) { return typeof w === 'string'; }).slice(0, idLimit()).map(function (w) { return str(w, 60); }), code: undefined };
+  }
+
+  /** Remembers the packed text of a round's lists next to the lists themselves (hidden from JSON), valid while the id table is unchanged. */
+  function remember(f, bx, ex) {
+    Object.defineProperty(f, '_pk', { value: { g: idGen, b: f.board, bx: bx, e: f.excluded, ex: ex }, writable: true, configurable: true, enumerable: false });
+  }
+
+  function resetIdTable() {
+    idTable = [];
+    idIndex = Object.create(null);
+    idGen += 1;
+  }
+
+  /** Starts the table from the one in the saved text, keeping every position (a damaged entry keeps its place). */
+  function loadIdTable(ids) {
+    resetIdTable();
+    arr(ids).slice(0, ID_CODES).forEach(function (id, i) {
+      idTable.push(typeof id === 'string' ? id : null);
+      if (typeof id === 'string' && idIndex[id] === undefined) { idIndex[id] = i; }
+    });
+  }
+
+  /** The packed text of a list of ids, adding any new id to the table; null when the table is full. */
+  function packList(list) {
+    var s = '';
+    for (var i = 0; i < list.length; i++) {
+      var n = idIndex[list[i]];
+      if (n === undefined) {
+        if (idTable.length >= ID_CODES) { return null; }
+        n = idIndex[list[i]] = idTable.length;
+        idTable.push(list[i]);
+      }
+      s += ('000' + n.toString(36)).slice(-ID_CODE);
+    }
+    return s;
   }
 
   function sanitizeHistory(h, ids) {
@@ -125,14 +185,19 @@
       if (x.pick && typeof x.pick === 'object') { out.pick = { charityId: str(x.pick.charityId, 60), won: !!x.pick.won, board: Math.floor(num(x.pick.board, 0)) }; }
       if (x.dedication && typeof x.dedication === 'object') { out.dedication = { kind: x.dedication.kind === 'memory' ? 'memory' : 'honor', name: str(x.dedication.name, 60), note: str(x.dedication.note, 140) }; }
       if (x.fair && typeof x.fair === 'object') {
+        var fb = idList(x.fair.board, x.fair.boardIx, ids);
+        var fe = idList(x.fair.excluded, x.fair.excludedIx, ids);
         out.fair = {
           roundSeed: str(x.fair.roundSeed, 80), serverHash: str(x.fair.serverHash, 80), clientSeed: str(x.fair.clientSeed, 80),
           nonce: Math.floor(num(x.fair.nonce, 0)), poolHash: str(x.fair.poolHash, 80), count: Math.floor(num(x.fair.count, 0)),
           winners: arr(x.fair.winners).filter(function (w) { return typeof w === 'string'; }).slice(0, 12),
-          board: idList(x.fair.board, x.fair.boardIx, ids),
-          weights: arr(x.fair.weights).filter(function (w) { return Array.isArray(w) && typeof w[0] === 'string'; }).slice(0, 12).map(function (w) { return [str(w[0], 60), Math.floor(num(w[1], 0))]; }),
-          filters: core.normalizeFilters(x.fair.filters), excluded: idList(x.fair.excluded, x.fair.excludedIx, ids)
+          board: fb.list,
+          weights: arr(x.fair.weights).filter(function (w) { return Array.isArray(w) && typeof w[0] === 'string'; }).slice(0, WEIGHTS_MAX).map(function (w) { return [str(w[0], 60), Math.floor(num(w[1], 0))]; }),
+          filters: core.normalizeFilters(x.fair.filters), excluded: fe.list
         };
+        // a round saved by the older version has its lists cut to 300: say so, so the verifier can explain a failed check
+        if (x.fair.cut === true || (!x.fair.boardIx && arr(x.fair.board).length === LEGACY_CUT) || (!x.fair.excludedIx && arr(x.fair.excluded).length === LEGACY_CUT)) { out.fair.cut = true; }
+        remember(out.fair, fb.code, fe.code);
       }
       return out;
     });
@@ -201,7 +266,8 @@
     d.pred = { right: Math.floor(num(pr.right, 0)), total: Math.floor(num(pr.total, 0)) };
     d.biggestPotCents = Math.floor(num(raw.biggestPotCents, 0));
     d.badges = obj(raw.badges);
-    d.history = sanitizeHistory(raw.history, arr(raw.ids).slice(0, ID_CODES));
+    loadIdTable(raw.ids);
+    d.history = sanitizeHistory(raw.history, idTable);
     d.plans = sanitizePlans(raw.plans);
     d.balanceCents = typeof raw.balanceCents === 'number' && isFinite(raw.balanceCents) && raw.balanceCents >= 0 ? Math.floor(raw.balanceCents) : d.balanceCents;
     // one stake per live table at most, and there are 70 tables, so a player can have well over twenty in flight
@@ -321,39 +387,51 @@
     return state;
   }
 
-  /** What goes into storage: the state, with each round's board and switched-off list packed against one shared list of ids. */
-  function packedState() {
-    var index = Object.create(null);
-    var ids = [];
-    function pack(list) {
-      var s = '';
-      for (var i = 0; i < list.length; i++) {
-        var n = index[list[i]];
-        if (n === undefined) {
-          if (ids.length >= ID_CODES) { continue; }
-          n = index[list[i]] = ids.length;
-          ids.push(list[i]);
-        }
-        s += ('000' + n.toString(36)).slice(-ID_CODE);
+  function copyOf(o) { var c = {}; Object.keys(o).forEach(function (k) { c[k] = o[k]; }); return c; }
+
+  /** The packed text of one round's board and switched-off list (worked out once and remembered), or null when the id table is full. */
+  function packFair(f) {
+    var pk = f._pk && f._pk.g === idGen ? f._pk : null;
+    var bx = pk && pk.b === f.board && pk.bx !== undefined ? pk.bx : packList(arr(f.board));
+    var ex = bx !== null && pk && pk.e === f.excluded && pk.ex !== undefined ? pk.ex : (bx === null ? null : packList(arr(f.excluded)));
+    if (bx === null || ex === null) { return null; }
+    remember(f, bx, ex);
+    return { bx: bx, ex: ex };
+  }
+
+  /** One pass over the history. With `spill` a round that still does not fit is written out in full instead of packed. */
+  function packHistory(spill) {
+    var out = [];
+    for (var i = 0; i < state.history.length; i++) {
+      var h = state.history[i];
+      var f = h.fair;
+      if (!f || (!arr(f.board).length && !arr(f.excluded).length)) { out.push(h); continue; }
+      var p = packFair(f);
+      if (!p) {
+        if (!spill) { return null; }
+        out.push(h); // spelled out: `board` and `excluded` stay as plain arrays, and load reads them as they are
+        continue;
       }
-      return s;
+      var c = copyOf(h);
+      var fc = copyOf(f);
+      delete fc.board;
+      delete fc.excluded;
+      if (p.bx) { fc.boardIx = p.bx; }
+      if (p.ex) { fc.excludedIx = p.ex; }
+      c.fair = fc;
+      out.push(c);
     }
-    function copy(o) { var c = {}; Object.keys(o).forEach(function (k) { c[k] = o[k]; }); return c; }
-    var out = copy(state);
-    out.history = state.history.map(function (h) {
-      if (!h.fair || (!arr(h.fair.board).length && !arr(h.fair.excluded).length)) { return h; }
-      var c = copy(h);
-      var f = copy(h.fair);
-      var b = pack(arr(f.board));
-      var e = pack(arr(f.excluded));
-      delete f.board;
-      delete f.excluded;
-      if (b) { f.boardIx = b; }
-      if (e) { f.excludedIx = e; }
-      c.fair = f;
-      return c;
-    });
-    out.ids = ids;
+    return out;
+  }
+
+  /** What goes into storage: the state, with each round's board and switched-off list packed against the shared id table. */
+  function packedState() {
+    if (idTable.length > ID_TABLE_SOFT) { resetIdTable(); }
+    var history = packHistory(false);
+    if (!history) { resetIdTable(); history = packHistory(true); }
+    var out = copyOf(state);
+    out.history = history;
+    out.ids = idTable;
     return out;
   }
 

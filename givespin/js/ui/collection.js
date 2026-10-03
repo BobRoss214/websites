@@ -77,7 +77,7 @@
         '<div class="field field--row"><label for="cd-cause" class="field__label">Cause</label><select id="cd-cause" class="input input--sm"><option value="">All causes</option>' +
           GS.causes.map(function (c) { return '<option value="' + c.id + '"' + (cause === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></div>' +
         (shown.length ? '<div class="cardgrid">' + shown.map(function (id) { return cardHTML(GS.charity(id), owned[id]); }).join('') + '</div>' +
-          (list.length > shown.length ? '<p class="tabnote">Showing ' + shown.length + ' of ' + list.length + '. Use the filters to narrow it down.</p>' : '')
+          (list.length > shown.length ? '<p class="tabnote">Showing ' + ui.num(shown.length) + ' of ' + ui.num(list.length) + '. Use the filters to narrow it down.</p>' : '')
           : '<p class="empty">' + (filter === 'owned' ? 'No cards yet. Play any game, or take a seat at a live table, and the charity that wins is yours to collect.' : 'Nothing matches that filter.') + '</p>') +
       '</section>';
     ui.hydrate(root);

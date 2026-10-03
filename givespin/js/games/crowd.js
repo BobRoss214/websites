@@ -195,7 +195,7 @@
       el.rank.innerHTML = shown.map(function (e) {
         return '<li' + (e.run.place === 1 ? ' class="is-win"' : '') + '><span class="rank__n">' + (e.run.place || '-') + '</span>' +
           '' + GS.ui.mono(e.ch, 24) + '<span class="rank__name">' + U.esc(e.ch.short) + '</span></li>';
-      }).join('') + (ordered.length > 10 ? '<li class="rank__more">+ ' + (ordered.length - 10) + ' more</li>' : '');
+      }).join('') + (ordered.length > 10 ? '<li class="rank__more">+ ' + GS.ui.num(ordered.length - 10) + ' more</li>' : '');
     }
 
     function makeEnts(list, tickets) {
@@ -229,8 +229,8 @@
         var win = winnerId === e.ch.id;
         return '<li' + (win ? ' class="is-win"' : (!field && e.ch.id === pick ? ' class="is-pick"' : '')) + '>' + GS.ui.mono(e.ch, 20) + '' +
           '<span>' + U.esc(e.ch.short) + (o.n > 1 ? ' × ' + o.n : '') + (field && e.tickets > 0 ? ' <b>' + core.fmtShare(e.tickets, tot) + '</b>' : '') + '</span></li>';
-      }).join('') + (uniq.length > shown.length ? '<li class="rlegend__more">+ ' + (uniq.length - shown.length) + ' more</li>' : '') +
-        (fillers ? '<li class="rlegend__more">+ ' + fillers + ' catalog charities fill the board · they can’t win</li>' : '');
+      }).join('') + (uniq.length > shown.length ? '<li class="rlegend__more">+ ' + GS.ui.num(uniq.length - shown.length) + ' more</li>' : '') +
+        (fillers ? '<li class="rlegend__more">+ ' + GS.ui.num(fillers) + ' catalog charities fill the board · they can’t win</li>' : '');
     }
 
     function updateNote() {

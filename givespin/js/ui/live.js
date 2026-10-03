@@ -205,7 +205,7 @@
     box.innerHTML = all.length ? '<ol class="histlist">' + all.map(function (x) {
       var ch = GS.charity(x.h.winnerId);
       return '<li class="hist"><span class="hist__game">' + ui.icon(ui.gameIcon(x.room)) + '</span><div><div class="hist__main">' + esc(ch.name) + ' took the pot</div>' +
-        '<div class="hist__sub">' + esc(GS.live.room(x.id).title()) + ' · round ' + x.h.round + ' · ' + x.h.players + ' players' + botNote(x.h) + '</div></div>' +
+        '<div class="hist__sub">' + esc(GS.live.room(x.id).title()) + ' · round ' + x.h.round + ' · ' + ui.num(x.h.players) + ' players' + botNote(x.h) + '</div></div>' +
         '<span class="hist__amt">' + dollars(x.h.pot) + '</span></li>';
     }).join('') + '</ol>' : '<p class="empty">Finished pots will show up here as tables settle. Each one went to a single charity.</p>';
   }
@@ -912,7 +912,7 @@
     if (!room.history.length) { return '<p class="empty">No finished rounds at this table yet.</p>'; }
     return '<ol class="histlist">' + room.history.map(function (h) {
       var ch = GS.charity(h.winnerId);
-      return '<li class="hist"><span class="hist__game">' + ui.icon('trophy') + '</span><div><div class="hist__main">' + esc(ch.name) + '</div><div class="hist__sub">Round ' + h.round + ' · ' + h.players + ' players' +
+      return '<li class="hist"><span class="hist__game">' + ui.icon('trophy') + '</span><div><div class="hist__main">' + esc(ch.name) + '</div><div class="hist__sub">Round ' + h.round + ' · ' + ui.num(h.players) + ' players' +
         botNote(h) + '</div></div><span class="hist__amt">' + dollars(h.pot) + '</span></li>';
     }).join('') + '</ol>';
   }

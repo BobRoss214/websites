@@ -231,7 +231,7 @@
       } else if (S.sel[c.id]) { delete S.sel[c.id]; added += 1; }
     });
     S.msg = skipped ? 'added ' + added + '; stopped at the limit of ' + S.max : '';
-    ui.announce(on ? 'Chose ' + added + ' charities.' : 'Removed ' + added + ' charities.');
+    ui.announce(on ? 'Chose ' + ui.num(added) + ' charities.' : 'Removed ' + ui.num(added) + ' charities.');
     if (S.only && !on) { paintList(true); } else { modal.$$('.chrow').forEach(function (li) { var id = li.getAttribute('data-id'); li.classList.toggle('is-on', !!S.sel[id]); li.querySelector('input[data-pick]').checked = !!S.sel[id]; }); refreshFoot(); }
   }
 

@@ -494,7 +494,7 @@
       var cls = r.run.place === 1 ? ' class="is-win"' : (field && !(r.tickets > 0) ? ' style="opacity:.62"' : '');
       return '<li' + cls + '><span class="rank__n">' + (r.run.place || '-') + '</span>' +
         '' + GS.ui.mono(r.ch, 24) + '<span class="rank__name">' + U.esc(r.ch.short) + '</span></li>';
-    }).join('') + (ordered.length > 10 ? '<li class="rank__more">+ ' + (ordered.length - 10) + ' more</li>' : '');
+    }).join('') + (ordered.length > 10 ? '<li class="rank__more">+ ' + GS.ui.num(ordered.length - 10) + ' more</li>' : '');
   }
 
   function makeRunners(list, tickets) {

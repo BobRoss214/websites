@@ -39,7 +39,7 @@
     }
     var bits = [];
     if (nf) { bits.push(nf + (nf === 1 ? ' filter' : ' filters')); }
-    if (off) { bits.push(off + ' switched off'); }
+    if (off) { bits.push(ui.num(off) + ' switched off'); }
     return { bad: false, html: ui.icon('target') + '<span><b>' + ui.num(n) + '</b> of ' + ui.num(GS.charities.length) + ' charities in play' + (bits.length ? ' · ' + esc(bits.join(' · ')) : '') + '</span>' };
   }
 

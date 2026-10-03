@@ -383,7 +383,7 @@
     el.customClear.disabled = busy;
     el.poolBox.classList.toggle('is-paused', on);
     el.customHint.textContent = on
-      ? 'This game uses only the ' + n + ' charities you chose. Your filters are paused for it; they still apply to other games.'
+      ? 'This game uses only the ' + ui.num(n) + ' charities you chose. Your filters are paused for it; they still apply to other games.'
       : (c ? 'Switched off: this game uses the charities your filters leave in play.' : 'Optional: pick exactly which charities this game uses, by name, cause or place.');
     if (!g) { el.customBtn.hidden = true; }
   }
@@ -409,7 +409,7 @@
         }
         GS.audio.click();
         customChanged();
-        ui.toast('Playing ' + g.name + ' with your ' + ids.length + ' charities.', 'list-checks');
+        ui.toast('Playing ' + g.name + ' with your ' + ui.num(ids.length) + (ids.length === 1 ? ' charity.' : ' charities.'), 'list-checks');
       }
     });
   }
@@ -472,7 +472,7 @@
     if (el.sizeSeg.getAttribute('data-sig') !== sizeHtml) { el.sizeSeg.setAttribute('data-sig', sizeHtml); el.sizeSeg.innerHTML = sizeHtml; }
     el.sizeCustom.min = String(minFor(g));
     el.sizeCustom.max = String(maxFor(g));
-    el.sizeCustom.setAttribute('aria-label', 'Number of charities on the board, ' + minFor(g) + ' to ' + maxFor(g));
+    el.sizeCustom.setAttribute('aria-label', 'Number of charities on the board, ' + ui.num(minFor(g)) + ' to ' + ui.num(maxFor(g)));
     if (document.activeElement !== el.sizeCustom) { el.sizeCustom.value = inPresets ? '' : String(cur); }
     el.sizeMax.textContent = 'Max ' + ui.num(maxFor(g));
     var busy = state().busy;
@@ -480,20 +480,21 @@
     el.sizeCustom.disabled = busy;
     el.sizeMax.disabled = busy || cur === maxFor(g);
     var P = activePool(current).length;
+    if (!P) { el.sizeHint.textContent = 'No charities in play. Loosen a filter or switch some back on.'; refreshPick(); return; }
     var b = boards[current];
     var d = b ? b.field.length : Math.min(cur, P);
     var txt;
     var curT = ui.num(cur), dT = ui.num(d), PT = ui.num(P); // the same numbers, with thousands separators, for the words
     if (customOn(current)) {
       txt = cur > d
-        ? curT + ' spots on the board. Your ' + dT + ' custom charities fill them, ' + GS.kit.repeatsText(cur, d) + '. Every one has equal odds.'
+        ? curT + ' spots on the board. Your ' + dT + (d === 1 ? ' custom charity fills' : ' custom charities fill') + ' them, ' + GS.kit.repeatsText(cur, d) + '. ' + (d === 1 ? 'It has' : 'Every one has') + ' equal odds.'
         : d < P
           ? dT + ' of your ' + PT + ' custom charities are on the board, picked at random. The winner is drawn from these ' + dT + ', each with equal odds.'
           : 'All ' + PT + ' of your custom charities are on the board, each with equal odds.';
     } else if (cur > d) {
-      txt = curT + ' spots on the board. Your ' + dT + (d === 1 ? ' charity' : ' charities') + ' fill them, ' + GS.kit.repeatsText(cur, d) + '. Every one of the ' + dT + ' has equal odds.';
+      txt = curT + ' spots on the board. Your ' + dT + (d === 1 ? ' charity fills' : ' charities fill') + ' them, ' + GS.kit.repeatsText(cur, d) + '. ' + (d === 1 ? 'It has' : 'Every one of the ' + dT + ' has') + ' equal odds.';
     } else {
-      txt = dT + ' charities on the board, picked at random from the ' + PT + ' in play. The winner is drawn from these ' + dT + ', each with equal odds.';
+      txt = dT + (d === 1 ? ' charity is' : ' charities are') + ' on the board, picked at random from the ' + PT + ' in play. The winner is drawn from ' + (d === 1 ? 'it' : 'these ' + dT) + ', each with equal odds.';
     }
     if (g.snap && chosen !== cur) { txt += ' A bracket needs a power of two, so ' + ui.num(chosen) + ' became ' + curT + '.'; }
     else if (chosen > maxFor(g)) { txt += ' This game can show up to ' + ui.num(maxFor(g)) + '.'; }
@@ -633,7 +634,7 @@
         '<p><b>Odds:</b> ' + (g.setBoard ? 'every charity on the board has exactly the same chance (set how many are on it, from a few to ' + ui.num(g.maxSize || 100) + '). ' : 'every charity in play has exactly the same chance. ') + 'The result is drawn first, from a seed committed before you play, and the game then shows it.</p></div>';
     } else {
       var pool = activePool(current).slice().sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
-      h = '<p class="tabnote">' + ui.num(pool.length) + (customOn(current) ? ' charities in your custom list.' : ' charities in play.') + ' Tap one to read about it.</p><div class="chips chips--pool">' + pool.map(function (c) {
+      h = '<p class="tabnote">' + ui.num(pool.length) + (customOn(current) ? (pool.length === 1 ? ' charity in your custom list.' : ' charities in your custom list.') : (pool.length === 1 ? ' charity in play.' : ' charities in play.')) + ' Tap one to read about it.</p><div class="chips chips--pool">' + pool.map(function (c) {
         return '<button type="button" class="chip chip--link" style="--c:' + c.accent + '" data-open-charity="' + c.id + '">' + ui.mono(c, 22) + esc(c.short) + '</button>';
       }).join('') + '</div>';
     }
@@ -715,7 +716,7 @@
 
   /* ----------------------------------------------------------------- play */
 
-  function drawWinners(pool, count, board) {
+  function drawWinners(pool, count) {
     var sorted = pool.slice().sort(function (a, b) { return a.id < b.id ? -1 : 1; });
     if (!GS.fair.available()) {
       var ws = [];
@@ -737,7 +738,9 @@
           roundSeed: f.roundSeed, serverHash: f.serverHash, clientSeed: f.clientSeed, nonce: f.nonce, poolHash: r[1], count: count,
           winners: winners.map(function (w) { return w.id; }),
           filters: core.normalizeFilters(store.prefs().filters), excluded: store.prefs().excluded.slice(),
-          board: board ? sorted.map(function (c) { return c.id; }) : []
+          // every round keeps the charities it was drawn from (the board, or for Dice and the slots the whole pool in play),
+          // so it can still be re-checked after the roster changes
+          board: sorted.map(function (c) { return c.id; })
         }
       };
     });
@@ -780,7 +783,7 @@
     var bd = g.setBoard ? boards[current] : null;
     var drawPool = bd ? bd.field : pool;
     var pid = bd ? pickFor(current) : '';
-    return drawWinners(drawPool, rounds, !!bd || customOn(current)).then(function (draw) {
+    return drawWinners(drawPool, rounds).then(function (draw) {
       lastDrawn = draw;
       renderRounds(rounds, null);
       var gameOpts = ui.opts.read();

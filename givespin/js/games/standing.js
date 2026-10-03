@@ -156,7 +156,7 @@
   }
 
   function statusText() {
-    if (!field) { return tiles.length + ' charities on the board. Last one standing takes your gift.'; }
+    if (!field) { return tiles.length.toLocaleString('en-US') + ' charities on the board. Last one standing takes your gift.'; }
     var nb = tiles.filter(function (t) { return t.tickets > 0; }).length;
     var nf = tiles.length - nb;
     return tiles.length.toLocaleString('en-US') + ' charities on the board: ' + nb + ' backed' + (nf ? ', ' + nf.toLocaleString('en-US') + ' filling it' : '') + '. The last one standing takes the pot.';

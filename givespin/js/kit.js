@@ -14,7 +14,7 @@
   var core = GS.core;
 
   /** A whole number with thousands separators, for the words around a board ("1,042"). */
-  function fmt(n) { return Number(n).toLocaleString('en-US'); }
+  function fmt(n) { var x = Number(n); return isFinite(x) ? x.toLocaleString('en-US') : ''; }
 
   var kit = {
     /** How many spots a board of `size` has (never fewer than 2). It can be more than the charities in play: they repeat. */
@@ -85,6 +85,7 @@
 
     /** "each appearing 4 times" / "each appearing 1 or 2 times": how often `d` charities repeat across `slots` spots. */
     repeatsText: function (slots, d) {
+      if (!d) { return ''; }
       var lo = Math.floor(slots / d);
       var hi = Math.ceil(slots / d);
       return 'each appearing ' + (lo === hi ? fmt(lo) + (lo === 1 ? ' time' : ' times') : fmt(lo) + ' or ' + fmt(hi) + ' times');

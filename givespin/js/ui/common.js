@@ -48,7 +48,7 @@
     money: function (cents, compact) { return core.fmtMoney(cents, compact); },
 
     /** A count with a thousands separator: 1042 -> "1,042". */
-    num: function (n) { return Number(n).toLocaleString('en-US'); },
+    num: function (n) { var x = Number(n); return isFinite(x) ? x.toLocaleString('en-US') : ''; },
 
     /** A charity's founding year for display. A year taken from an official register says so, because a register can
      *  list a later date than the one the organisation gives for itself. */
