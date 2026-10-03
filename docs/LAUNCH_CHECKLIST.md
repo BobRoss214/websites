@@ -1,6 +1,6 @@
 # Launch checklist: putting the Wise Acres website online
 
-For the farm owner, and for anyone helping, who has never put a website online. Plain English, in order. Written on 2 October 2026 for the files in this folder. Updated on 3 October 2026 for the Drive time box (steps 3.5 and 3.13, decision D11 and the tests in section 5). Checked again on 3 October 2026 against the files at commit `979437f`: the file counts and sizes, steps 3.8, 3.9 and 3.13, the list of questions in section 4 and the tests in section 6 were corrected.
+For the farm owner, and for anyone helping, who has never put a website online. Plain English, in order. Written on 2 October 2026 for the files in this folder. Updated on 3 October 2026 for the Drive time box (steps 3.5 and 3.13, decision D11 and the tests in section 5). Checked again on 3 October 2026 against the files at commit `979437f`: the file counts and sizes, steps 3.8, 3.9 and 3.13, the list of questions in section 4 and the tests in section 6 were corrected. The upload list and its counts in section 2 were checked once more against commit `13e88af`: the counts were out of date (the folder of translation parts was removed since) and are corrected, and the hidden `.gitignore` file is now on the leave-out list.
 
 **Not part of the upload.** This file lives in `docs/`, which stays on your computer (see section 2).
 
@@ -37,7 +37,7 @@ The site is plain files. There is no database and no build step, so any host tha
 
 | | **Cloudflare Pages** (recommended) | **Netlify** (second choice) | **GitHub Pages** (not recommended) |
 |---|---|---|---|
-| **Cost for this site** | Free plan. Requests for static files (which is all this site is) are "free and unlimited". Limits that matter: 20,000 files per site, 25 MiB per file; this site has 112 files, the biggest is 0.44 MB. **[read]** | Free plan with a monthly allowance of "credits". The pages say that when you reach the limit "projects pause until the next billing cycle". Reported prices: 300 credits a month on Free, 20 credits for each GB sent to visitors, 15 credits for each upload that goes live. **[not opened]** | Free. Soft limits: site up to 1 GB, 100 GB of traffic a month, 10 builds an hour. **[read]** But see the business-use rule in the last row. |
+| **Cost for this site** | Free plan. Requests for static files (which is all this site is) are "free and unlimited". Limits that matter: 20,000 files per site, 25 MiB per file; this site has 92 files, the biggest is 0.44 MB. **[read]** | Free plan with a monthly allowance of "credits". The pages say that when you reach the limit "projects pause until the next billing cycle". Reported prices: 300 credits a month on Free, 20 credits for each GB sent to visitors, 15 credits for each upload that goes live. **[not opened]** | Free. Soft limits: site up to 1 GB, 100 GB of traffic a month, 10 builds an hour. **[read]** But see the business-use rule in the last row. |
 | **Custom domain: steps** | In the project: Custom domains, Set up a domain. Then at your registrar add a `CNAME` record for `www` pointing at `<project>.pages.dev`. For the bare domain (`wiseacresorganic.com` without `www`) the whole domain must be moved to Cloudflare's nameservers. **[read]** | Add the domain on the site's page, then at your registrar a `CNAME` for `www` pointing at `<site>.netlify.app`. For the bare domain: an `ALIAS`/`ANAME` record to `apex-loadbalancer.netlify.com`, or an `A` record to `75.2.60.5`. Netlify "strongly recommend[s]" `www` as the main address. **[not opened]** | Add the domain in the repository's Settings, Pages. Then `CNAME` for `www` pointing at `<user>.github.io`; for the bare domain four `A` records (`185.199.108.153` to `185.199.111.153`). **[read]** Needs a GitHub account and a repository that holds the site. |
 | **HTTPS (the padlock)** | The pages read mention certificates only in a note about CAA records, so confirm by opening `https://` once the domain says Active. **[read]** | "We will automatically provision a certificate with Let's Encrypt." **[not opened]** | "All GitHub Pages sites, including sites that are correctly configured with a custom domain, support HTTPS". You tick "Enforce HTTPS". **[read]** |
 | **`_headers` works** (security headers, the tested Content-Security-Policy) | Yes. File `_headers` in the top folder; up to 100 rules and 2,000 characters a line. Our file was applied by Cloudflare's own test server. **[read] [tested here]** | Yes, if `_headers` is in the folder you publish. **[not opened]** (Netlify's own Content-Security-Policy page shows an example.) | No. Nothing in the GitHub pages read mentions it, and GitHub community threads say custom headers cannot be set. **[read] [not opened]** |
@@ -76,15 +76,16 @@ The site is plain files. There is no database and no build step, so any host tha
 | `tools/`, `pages/` | For whoever edits the site (they build the pages and translations) |
 | `README.md` | Instructions for whoever edits the site |
 | `.git` (a hidden folder, if you have one) | The change history of the files |
+| `.gitignore` (a hidden file, if you can see it) | A developer's note about which files to ignore. Not for visitors |
 
 How to do it, with no tools:
 
 1. Copy the whole site folder and call the copy `wise-acres-upload`.
-2. In the copy, delete `docs`, `tests`, `tools`, `pages` and `README.md`, and `.git` if you can see it.
-3. What is left should be 16 items (17 with `_redirects`), 112 files (113 with `_redirects`), about 6.0 MB. Double-click `index.html` in the copy and check the site looks right.
+2. In the copy, delete `docs`, `tests`, `tools`, `pages` and `README.md`, and `.git` and `.gitignore` if you can see them.
+3. What is left should be 16 items (17 with `_redirects`), 92 files (93 with `_redirects`), about 6.4 MB. Double-click `index.html` in the copy and check the site looks right. (In Chrome the lettering looks plainer when a page is opened this way, because Chrome does not load font files from a plain folder; online the real fonts load. **[tested here]**)
 4. Keep each uploaded folder, with the date in its name (`wise-acres-upload-2026-10-09`). If an upload goes wrong you can go back.
 
-The helper checked on 2 October 2026, and again on 3 October 2026 with the files at commit `979437f`, that the site loads with all 8 pages and 5 languages from this reduced folder, with no missing file.
+The helper checked on 2 October 2026, and again on 3 October 2026 with the files at commit `13e88af`, that the site loads with all 8 pages and 5 languages from this reduced folder, with no missing file.
 
 ## 3. The steps, in order
 

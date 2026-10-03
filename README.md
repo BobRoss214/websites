@@ -371,7 +371,7 @@ python3 tools/add_photo.py path/to/picture.jpg --name goat-in-frog-hat --alt "A 
 | Part | What it means |
 | --- | --- |
 | `picture.jpg` | A JPEG, PNG, WebP or iPhone HEIC file (HEIC needs `pip install pillow-heif`). Files that are tiny (under 120 pixels), huge (over 60 MB or 100 megapixels), animated or not pictures are refused with a plain message. The original file is never changed. |
-| `--name` | A few plain words for the file name: "goat in frog hat" becomes `assets/photos/goat-in-frog-hat.webp`. An existing picture is never overwritten, unless you add `--replace`. |
+| `--name` | A few plain words for the file name: "goat in frog hat" becomes `assets/photos/goat-in-frog-hat.webp`. An existing picture is never overwritten, unless you add `--replace`. After launch use a new name instead: pictures are kept by visitors' browsers for up to a year (`/assets/*` in `_headers`), so a picture swapped under the same name keeps showing the old one to anyone who has seen it. |
 | `--alt` | **What is visible**, read aloud to people who cannot see the picture. Never put prices, names of people or dates in it: they go out of date and can be wrong. The tool warns when it sees one. If you are not sure what an animal or a place is, say only what you can see ("a small animal wearing a green knitted frog hat"). |
 | `--caption` | Optional. A short line under the picture when it is enlarged. |
 | `--tags` | Optional. The topic buttons above the gallery it belongs under, for example `--tags berries,flowers`. Only tag what you can **see**. The tool refuses a topic that has no button and says which ones exist. Without `--tags` the picture shows under "All" only (the tool says so). |
