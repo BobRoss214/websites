@@ -313,10 +313,10 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 ## Tests
 
 ```
-node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js
+node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/readme.test.js
 ```
 
-66 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+81 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
 backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly
@@ -324,7 +324,7 @@ league and the Charity Cup field, email/phone/password/card/expiry validation, t
 against Node's own HMAC, uniformity over 30,000 rounds, tampering is caught, the standalone snippet matches), and the
 charity data (unique ids, valid vocabulary, short names and blurbs, bare hostnames, no superlatives, minimum counts per
 cause and filter), and saved rounds (a board of 300, 301 or 1,000 charities comes back whole after a reload and still
-verifies, older saves still load, and the saved text stays small).
+verifies, older saves still load, and the saved text stays small), and this README (the roster size, the board sizes per game, the unit-test count and command, the file list and the wording rules are all checked against the code).
 
 ```
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
