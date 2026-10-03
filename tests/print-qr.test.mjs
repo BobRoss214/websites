@@ -2,6 +2,9 @@
  *   - the signs: readable on a phone, not listed in search, one sign per Letter and per A4 page, English and Spanish wording for every sign,
  *     every code is big enough and has a quiet edge (module size and margin in the printed size), error correction M or better,
  *     the pages and places the codes open exist, and (with segno, zxing-cpp and pillow) every code scans back to its address
+ *   - the same signs in Hindi, Chinese and Vietnamese (print/qr-signs.hi.html, .zh.html, .vi.html): every sign has its wording from tools/qr_links.json
+ *     in that language with the English small underneath, the same code and address as the English sheet, nothing cut off, one sign per page on
+ *     Letter and A4, and no missing letters (empty boxes) in this computer's fonts
  *   - the pages: in print no button, tab, game, banner, bottom bar or live countdown is left, no text is light enough to vanish on white paper
  *     (a browser leaves background colours off), every FAQ answer is open, nothing is wider than the paper, the links people need
  *     (booking, sign-up, pre-order, the school form) show their address, and the First visit page is still exactly ONE sheet */
@@ -12,6 +15,26 @@ import { spawnSync } from 'node:child_process';
 import { run, open, ok, info, until, ROOT } from './lib.mjs';
 
 const pagesIn = (pdf) => (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
+
+/* Letters that no font on this computer can draw (they would print as empty boxes). The site's own web fonts hold only Latin letters, so for any
+ * other letter the browser must find a font of the computer; Chrome says which fonts drew a piece of text (CSS.getPlatformFontsForNode), and a
+ * letter nobody can draw is "drawn" by the web font alone. A letter that no font has at all (U+10FFFD) is the control: it must come out as missing.
+ * Only Devanagari and Chinese letters are asked about: Vietnamese letters are built from the web font's own letters and marks (no system font needed). */
+async function missingLetters(page, chars) {
+  const inWebFont = /[\u0000-\u00FF\u0131\u0152\u0153\u02BB\u02BC\u02C6\u02DA\u02DC\u0304\u0308\u0329\u2000-\u206F\u20AC\u2122\u2191\u2193\u2212\u2215\uFEFF\uFFFD]/;
+  const need = chars.filter((c) => !inWebFont.test(c) && /[\u0900-\u097F\u2E80-\u9FFF\uFF00-\uFFEF]/.test(c));
+  await page.evaluate((list) => { const box = document.createElement('div'); box.id = 'probes'; list.forEach((c) => { const s = document.createElement('div'); s.className = 'probe'; s.textContent = c; box.appendChild(s); }); document.body.appendChild(box); }, [...need, '\u{10FFFD}']);
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
+  const { root } = await cdp.send('DOM.getDocument');
+  const { nodeIds } = await cdp.send('DOM.querySelectorAll', { nodeId: root.nodeId, selector: '#probes .probe' });
+  const drawn = [];
+  for (const nodeId of nodeIds) drawn.push((await cdp.send('CSS.getPlatformFontsForNode', { nodeId })).fonts.some((f) => !f.isCustomFont));
+  await cdp.detach();
+  await page.evaluate(() => document.getElementById('probes').remove());
+  const control = drawn.pop();
+  return { usable: control === false, missing: need.filter((c, i) => !drawn[i]) };
+}
 
 await run('print-qr', async ({ browser, base, errs }) => {
   for (const width of [320, 390, 768]) {
@@ -66,6 +89,53 @@ await run('print-qr', async ({ browser, base, errs }) => {
       ok('every QR code scans back to the address in tools/qr_links.json', r.status === 0 && good === info1.signs && !/CHECK FAILED/.test(r.stdout), `${good} of ${info1.signs} scanned` + (r.stderr ? ' ' + r.stderr.trim().split('\n').pop() : ''));
     } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
   } else info('(segno, zxing-cpp or pillow is not installed: the scan-back check was skipped; pip install segno zxing-cpp pillow)');
+
+  // the signs in Hindi, Chinese and Vietnamese: the language big, the English small underneath, the same codes
+  const SHEETS = [['hi', 'hi', /[ऀ-ॿ]/], ['zh', 'zh-Hans', /[一-鿿]/], ['vi', 'vi', /[ăâêôơưđàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]/i]];
+  const read = () => [...document.querySelectorAll('.sign')].map((s) => {
+    const own = (e) => (e ? [...e.childNodes].filter((n) => !(n.nodeType === 1 && n.tagName === 'SPAN')).map((n) => n.textContent).join('') : '');
+    const small = (e) => { const x = e && e.querySelector(':scope > span[lang=en]'); return x ? x.textContent : ''; };
+    const r = s.getBoundingClientRect(), out = [...s.querySelectorAll('*')].filter((e) => { const b = e.getBoundingClientRect(); return b.width && (b.left < r.left - 1 || b.right > r.right + 1 || b.bottom > r.bottom + 1); }).map((e) => e.tagName);
+    const dark = s.querySelectorAll('.qr svg path')[1];
+    return { id: s.id, title: own(s.querySelector('h1')), titleEn: small(s.querySelector('h1')), titleLang: s.querySelector('h1').getAttribute('lang'), how: own(s.querySelector('.how')), text: own(s.querySelector('.text')), textEn: small(s.querySelector('.text')),
+      also: s.querySelector('.also') ? s.querySelector('.also').textContent : '', url: s.querySelector('.url').textContent, code: dark ? dark.getAttribute('d') : '', out, chars: [...new Set([...s.textContent].filter((c) => c.charCodeAt(0) > 127 && /\S/.test(c)))] };
+  });
+  const mainP = await open(browser, base, 'print/qr-signs.html', errs, { ready: false });
+  await mainP.emulateMedia({ media: 'print' });
+  const main = await mainP.evaluate(read);
+  ok('the English and Spanish sheet: the menu and map signs (the two that open this website) say the page is also in the other languages, no other sign does',
+    main.every((x) => (!!x.also) === /^\{site\}/.test((cfg.signs.find((s) => s.id === x.id) || {}).url || '') && (!x.also || /Español.*हिन्दी.*中文.*Tiếng Việt/.test(x.also))), main.filter((x) => x.also).map((x) => x.id).join(', '));
+  const goneMain = await missingLetters(mainP, [...new Set(main.flatMap((x) => x.chars))]);
+  if (goneMain.usable) ok('the English and Spanish sheet: the language names in the also-in line are drawn by a font of this computer (no empty boxes)', goneMain.missing.length === 0, 'missing: ' + goneMain.missing.join(' '));
+  else info('(this browser cannot say which font drew a letter, so the empty-box check was skipped)');
+  await mainP.context().close();
+  for (const [code, htmlLang, script] of SHEETS) {
+    const block = (cfg.languages || {})[code];
+    ok(`${code}: tools/qr_links.json has wording for every sign`, !!block && cfg.signs.every((s) => block.signs[s.id] && block.signs[s.id].title && block.signs[s.id].text) && !!block.how && !!block.also);
+    for (const width of [390, 1280]) {
+      const sp = await open(browser, base, `print/qr-signs.${code}.html`, errs, { viewport: { width, height: 800 }, ready: false });
+      if (width === 390) ok(`${code}: the sheet has no sideways scroll at 390 px`, (await sp.evaluate(() => document.documentElement.scrollWidth)) <= 390);
+      else {
+        await sp.emulateMedia({ media: 'print' });
+        const sheet = await sp.evaluate(read), meta = await sp.evaluate(() => ({ lang: document.documentElement.lang, robots: (document.querySelector('meta[name=robots]') || {}).content, button: (document.querySelector('.bar button') || {}).getAttribute('onclick') }));
+        ok(`${code}: the same signs as the English sheet, in the same order, with the same codes and addresses`, sheet.map((x) => x.id).join() === main.map((x) => x.id).join() && sheet.every((x, i) => x.code && x.code === main[i].code && x.url === main[i].url), sheet.map((x) => x.id).join(' '));
+        const bad = sheet.filter((x) => {
+          const w = (block && block.signs[x.id]) || {}, c = cfg.signs.find((q) => q.id === x.id);
+          const small = x.textEn === c.text_en || (x.textEn === '' && w.text === c.text_en);   // an address that is the same in both languages is printed once
+          return !(x.title === w.title && x.text === w.text && x.how === block.how && x.titleEn === c.title_en && small && x.titleLang === htmlLang && script.test(x.title + x.text));
+        });
+        ok(`${code}: every sign has its title, line and "how" in ${code} (from tools/qr_links.json) with the English underneath`, bad.length === 0, bad.map((x) => x.id).join(', '));
+        ok(`${code}: the also-in line is on the menu and map signs only and names the other four languages`, sheet.every((x) => (!!x.also) === /^\{site\}/.test(cfg.signs.find((s) => s.id === x.id).url) && (!x.also || ['English', 'Español', 'हिन्दी', '中文', 'Tiếng Việt'].filter((n) => x.also.includes(n)).length === 4)));
+        ok(`${code}: nothing sticks out of its sign`, sheet.every((x) => x.out.length === 0), sheet.filter((x) => x.out.length).map((x) => x.id + ' ' + x.out.join('/')).join(', '));
+        ok(`${code}: the page says its language, is not listed in search and keeps the Print button`, meta.lang === htmlLang && /noindex/.test(meta.robots) && meta.button === 'window.print()', JSON.stringify(meta));
+        for (const paper of ['Letter', 'A4']) { const n = pagesIn(await sp.pdf({ format: paper, printBackground: false })); ok(`${code}: ${paper} prints exactly one page per sign`, n === sheet.length, `${n} pages for ${sheet.length} signs`); }
+        const gone = await missingLetters(sp, [...new Set(sheet.flatMap((x) => x.chars))]);
+        if (gone.usable) ok(`${code}: every letter on the sheet is drawn by a font of this computer (no empty boxes)`, gone.missing.length === 0, 'missing: ' + gone.missing.join(' '));
+        else info(`(${code}: this browser cannot say which font drew a letter, so the empty-box check was skipped)`);
+      }
+      await sp.context().close();
+    }
+  }
 
   // the six pages on paper: the print width of Letter with .6 in margins is 7.3 in = 700 px
   const PAGES = ['index', 'first-visit', 'pumpkin-patch', 'strawberry-picking', 'school-field-trips', 'wise-pie'];

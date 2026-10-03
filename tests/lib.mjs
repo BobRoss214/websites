@@ -145,7 +145,7 @@ export const txt = (p, sel) => p.evaluate((s) => { const e = document.querySelec
  * ------------------------------------------------------------------ */
 // The moment every page believes it is "now" unless a test picks another one (time: '2026-11-04T10:00:00-05:00'; time: false = the real clock):
 // Friday Oct 2 2026, noon in New York: fall, the farm's "Open now" line is still true. Pinned so that a test result does not depend on the day
-// it is run on (seasons change, dated lines hide themselves, the yellow "Site check" box appears when something has expired).
+// it is run on (seasons change, dated lines hide themselves, the "Site check" box appears, green and calm, when a dated line has expired).
 export const TODAY = process.env.WA_DATE || '2026-10-02T12:00:00-04:00';
 const NOISE = /fonts\.g|net::ERR|Failed to load resource|favicon/;
 

@@ -83,5 +83,55 @@
       "text_en": "4701 Hartis Road, Indian Trail, NC",
       "text_es": "4701 Hartis Road, Indian Trail, NC"
     }
-  ]
+  ],
+  "languages": {
+    "hi": {
+      "how": "अपने फ़ोन का कैमरा इस QR कोड की ओर करें।",
+      "also": "यह पेज इन भाषाओं में भी है:",
+      "signs": {
+        "review": { "title": "आपकी विज़िट कैसी रही?", "text": "Google पर हमें रिव्यू दें। इससे दूसरे परिवारों को फ़ार्म ढूँढने में मदद मिलती है।" },
+        "instagram": { "title": "फ़ार्म को फ़ॉलो करें", "text": "Instagram पर @wiseacresorganic" },
+        "hashtag": { "title": "Instagram पर शेयर करें", "text": "फ़ोटो पोस्ट करें और @wiseacresorganic को टैग करें। #wiseacresorganic भी लगाएँ। दूसरे परिवारों की शेयर की हुई फ़ोटो देखने के लिए स्कैन करें।" },
+        "facebook": { "title": "Facebook पर हमें ढूँढें", "text": "फ़ार्म की ख़बरें और फ़ोटो।" },
+        "reserve": { "title": "अगली विज़िट रिज़र्व करें", "text": "फ़ार्म सिर्फ़ रिज़र्वेशन पर खुलता है। अपनी अगली विज़िट यहाँ बुक करें।" },
+        "pizza": { "title": "Wise Pie पिज़्ज़ा पहले से ऑर्डर करें", "text": "The GreenHouse में वुड-फ़ायर्ड पिज़्ज़ा। पहले से ऑर्डर का लिंक 5 दिन पहले पोस्ट होता है।" },
+        "menu": { "title": "Wise Pie पिज़्ज़ा का मेनू", "text": "मेनू देखने के लिए स्कैन करें।" },
+        "signup": { "title": "ईमेल से फ़ार्म की ख़बरें पाएँ", "text": "जानें कि तोड़ना कब शुरू होगा और फ़ार्म में क्या नया है।" },
+        "map": { "title": "फ़ार्म का नक्शा और पहली विज़िट की गाइड", "text": "कहाँ पार्क करें, कहाँ चेक-इन करें और फ़ार्म में रास्ता कैसे ढूँढें।" },
+        "directions": { "title": "फ़ार्म का रास्ता", "text": "4701 Hartis Road, Indian Trail, NC" }
+      }
+    },
+    "zh": {
+      "how": "请用手机相机扫描这个二维码。",
+      "also": "本页面还提供：",
+      "signs": {
+        "review": { "title": "这次玩得开心吗？", "text": "请在 Google 上给我们留下评价，帮助更多家庭找到农场。" },
+        "instagram": { "title": "关注农场", "text": "Instagram：@wiseacresorganic" },
+        "hashtag": { "title": "在 Instagram 上分享", "text": "发布照片并标记 @wiseacresorganic，再加上 #wiseacresorganic。扫码可查看其他家庭分享的照片。" },
+        "facebook": { "title": "在 Facebook 上找到我们", "text": "农场动态和照片。" },
+        "reserve": { "title": "预约下次到访", "text": "农场仅限预约。请在这里预约你的下次到访。" },
+        "pizza": { "title": "预订 Wise Pie 披萨", "text": "The GreenHouse 的柴火披萨。预订链接会提前 5 天发布。" },
+        "menu": { "title": "Wise Pie 披萨菜单", "text": "扫码查看菜单。" },
+        "signup": { "title": "通过邮件获取农场动态", "text": "了解采摘何时开放，以及农场有什么新消息。" },
+        "map": { "title": "农场地图和首次到访指南", "text": "在哪里停车、在哪里签到，以及怎样在农场里找路。" },
+        "directions": { "title": "前往农场的路线", "text": "4701 Hartis Road, Indian Trail, NC" }
+      }
+    },
+    "vi": {
+      "how": "Hướng camera điện thoại vào mã QR này.",
+      "also": "Trang này có thêm các ngôn ngữ:",
+      "signs": {
+        "review": { "title": "Bạn thấy chuyến thăm thế nào?", "text": "Hãy viết đánh giá trên Google cho chúng tôi. Điều này giúp các gia đình khác tìm thấy nông trại." },
+        "instagram": { "title": "Theo dõi nông trại", "text": "@wiseacresorganic trên Instagram" },
+        "hashtag": { "title": "Chia sẻ trên Instagram", "text": "Đăng ảnh và gắn thẻ @wiseacresorganic, thêm #wiseacresorganic. Quét mã để xem ảnh các gia đình khác đã chia sẻ." },
+        "facebook": { "title": "Tìm chúng tôi trên Facebook", "text": "Tin tức và ảnh từ nông trại." },
+        "reserve": { "title": "Đặt chỗ cho chuyến thăm tiếp theo", "text": "Nông trại chỉ nhận đặt chỗ. Đặt chuyến thăm tiếp theo của bạn tại đây." },
+        "pizza": { "title": "Đặt trước pizza Wise Pie", "text": "Pizza lò củi tại The GreenHouse. Link đặt trước được đăng 5 ngày trước." },
+        "menu": { "title": "Thực đơn pizza Wise Pie", "text": "Quét mã để xem thực đơn." },
+        "signup": { "title": "Nhận tin nông trại qua email", "text": "Biết khi nào bắt đầu mùa hái và nông trại có gì mới." },
+        "map": { "title": "Bản đồ nông trại và hướng dẫn cho lần đầu đến", "text": "Đỗ xe ở đâu, check-in ở đâu và cách tìm đường quanh nông trại." },
+        "directions": { "title": "Chỉ đường đến nông trại", "text": "4701 Hartis Road, Indian Trail, NC" }
+      }
+    }
+  }
 }

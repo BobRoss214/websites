@@ -47,14 +47,42 @@
     if (d.getUTCFullYear() !== +m[1] || d.getUTCMonth() !== +m[2] - 1 || d.getUTCDate() !== +m[3]) return '';
     return m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
   }
-  const closedDays = () => (Array.isArray(W.closures) ? W.closures : typeof W.closures === 'string' ? [W.closures] : []).map(cleanYmd).filter(Boolean);
-  const toMins = (hhmm) => { const [h, m] = hhmm.split(':'); return (+h) * 60 + (+m || 0); };
   const addDays = (ymd, n) => {
     const [y, m, d] = ymd.split('-').map(Number), dt = new Date(Date.UTC(y, m - 1, d + n));
     return dt.getUTCFullYear() + '-' + String(dt.getUTCMonth() + 1).padStart(2, '0') + '-' + String(dt.getUTCDate()).padStart(2, '0');
   };
+  // closures in js/content.js: a day ('2026-11-09') or a range of days, both ends included ('2026-11-09..2026-11-15'). Returns the list of days and
+  // what could not be read, so the Site check box (js/features.js) can say so. A range of more than 100 days is not believed (a wrong year?).
+  const MAX_RANGE = 100;
+  function expandClosures(raw) {
+    const list = Array.isArray(raw) ? raw : typeof raw === 'string' ? [raw] : [], days = [], problems = [];
+    list.forEach((v) => {
+      const s = String(v == null ? '' : v).trim(), r = /^(.*?)\s*\.\.\s*(.*)$/.exec(s);
+      if (!r) { const d = cleanYmd(s); if (d) days.push(d); else problems.push({ value: s, why: 'date' }); return; }
+      const a = cleanYmd(r[1]), b = cleanYmd(r[2]);
+      if (!a || !b) { problems.push({ value: s, why: 'range-end', end: !a ? r[1] : r[2] }); return; }
+      if (b < a) { problems.push({ value: s, why: 'range-order', from: a, to: b }); return; }
+      let n = 0; for (let d = a; d <= b && n <= MAX_RANGE; d = addDays(d, 1)) n++;
+      if (n > MAX_RANGE) { problems.push({ value: s, why: 'range-long' }); return; }
+      for (let d = a, i = 0; i < n; i++, d = addDays(d, 1)) days.push(d);
+    });
+    return { days, problems };
+  }
+  const closedDays = () => expandClosures(W.closures).days;
+  const toMins = (hhmm) => { const [h, m] = hhmm.split(':'); return (+h) * 60 + (+m || 0); };
   // Jan 1, 2023 was a Sunday, so day n is Jan 1 + n.
   const dayName = (dow) => new Intl.DateTimeFormat(lang(), { weekday: lang() === 'zh' ? 'short' : 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1 + dow, 12)));   // Chinese: 周五, as in the fixed texts (not 星期五)
+  // 'Thu, Nov 12' in the reader's language: the day and the date, for an opening that is more than a week away. The same rules as fmtYmd in js/features.js
+  // (Hindi spells the month out, Chinese writes 周四), so the dates on the page look alike everywhere.
+  const dateFmt = {};
+  function dateLabel(ymd) {
+    const [y, m, d] = ymd.split('-').map(Number), L = lang();
+    const f = dateFmt[L] || (dateFmt[L] = new Intl.DateTimeFormat(L, { weekday: 'short', month: L === 'hi' ? 'long' : 'short', day: 'numeric', timeZone: 'UTC' }));
+    const s = f.format(new Date(Date.UTC(y, m - 1, d, 12)));
+    return L === 'hi' ? s.replace('अक्तूबर', 'अक्टूबर') : s;
+  }
+  // When it opens: "tomorrow", a weekday name within the week, and the date after that ("Thu, Nov 12"), so that "Thursday" is never a week away.
+  const whenLabel = (i, dow, ymd) => (i === 1 ? t('tomorrow') : i <= 6 ? dayName(dow) : dateLabel(ymd));
   function timeLabel(mins) {
     const h = Math.floor(mins / 60), m = mins % 60;
     const own = W.clock && lang() !== 'en' ? W.clock(h, m, lang()) : '';   // Hindi, Chinese, Vietnamese: शाम 5 बजे, 下午 5 点, 5 giờ chiều (i18n.js)
@@ -75,7 +103,7 @@
     for (let i = 1; i <= 14; i++) {
       const dow = (now.dow + i) % 7;
       if (!sch.days.includes(dow) || closedOn(addDays(now.ymd, i))) continue;
-      const when = i === 1 ? t('tomorrow') : dayName(dow);
+      const when = whenLabel(i, dow, addDays(now.ymd, i));
       const lead = sch.days.includes(now.dow) && closedOn(now.ymd) ? t('Closed today.') : (todayOpen ? t('Closed now.') : t('Closed today.'));
       return { state: 'closed', text: lead + (lang() === 'zh' ? '' : ' ') + t('Opens {day} at {time}', { day: when, time: timeLabel(open) }) };
     }
@@ -90,10 +118,10 @@
     const shut = closedDays(), closed = (ymd) => shut.includes(ymd);
     const inSeason = (ymd) => W.seasons.inWindow(season, ymd);   // a calendar day, as written: no time zone shifting
     if (days.includes(now.dow) && !closed(now.ymd)) return { state: 'open', text: t('Reserved visits today') };
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 1; i <= 14; i++) {   // two weeks ahead: a week of closures must not leave the badge blank
       const dow = (now.dow + i) % 7, ymd = addDays(now.ymd, i);
       if (!inSeason(ymd)) break;   // the season ends before another reserved day
-      if (days.includes(dow) && !closed(ymd)) return { state: 'closed', text: t('No visits today. Next reserved day: {day}', { day: i === 1 ? t('tomorrow') : dayName(dow) }) };
+      if (days.includes(dow) && !closed(ymd)) return { state: 'closed', text: t('No visits today. Next reserved day: {day}', { day: whenLabel(i, dow, ymd) }) };
     }
     return null;
   }
@@ -276,5 +304,5 @@
   let seenDay = easternParts(new Date()).ymd;   // a page left open overnight: new day, new countdown number, an expired notice goes away
   setInterval(() => { renderBadges(); const d = easternParts(new Date()).ymd; if (d !== seenDay) { seenDay = d; refresh(); } }, 60 * 1000);
   doc.addEventListener('wa:lang', refresh);
-  W.live = { status: statusFor, refresh, releaseState, chipText };
+  W.live = { status: statusFor, refresh, releaseState, chipText, expandClosures, dateLabel };
 })();

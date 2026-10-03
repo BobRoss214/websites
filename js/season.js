@@ -9,6 +9,8 @@
   'use strict';
 
   var W = (window.WISE_ACRES = window.WISE_ACRES || {});
+  // The names the farm typed in js/content.js (nothing else has been added yet): js/features.js compares them with the real settings, to catch a misspelled one.
+  W.settingKeys = Object.keys(W);
 
   // Tree season starts the Friday after Thanksgiving (4th Thursday of November).
   function thanksgivingFriday(year) {

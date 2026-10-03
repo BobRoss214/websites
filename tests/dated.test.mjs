@@ -29,7 +29,7 @@ await run('dated', async ({ browser, base, errs }) => {
   let p = await at('2026-10-02T12:00:00-04:00');
   let s = await seen(p);
   ok('Oct 2: the dated lines are all shown (the "Open now" line, four weekends, the special days, "No pizza")', same(s, all), 'shown: ' + show(s));
-  ok('Oct 2: the "Site check" box is not there on the unchanged site', (await box(p)) === '', await box(p));
+  ok('Oct 2: the "Site check" box is not there on the unchanged site (no setting is misspelled, nothing is broken)', (await box(p)) === '', await box(p));
   await p.context().close();
 
   // ---- the last day is still a day it is true; the day after, it is gone (Eastern Time, whatever the visitor's own clock says)
@@ -41,7 +41,7 @@ await run('dated', async ({ browser, base, errs }) => {
   p = await at('2026-10-05T00:30:00-04:00');
   s = await seen(p);
   ok('Oct 5, 00:30 Eastern: the "Open now" line is gone and nothing else is', s.notice === false && same({ ...s, notice: true }, all), 'shown: ' + show(s));
-  await okSoon('...and the "Site check" box says what was hidden and since when', () => box(p), (v) => /Site check: 1 thing to fix/.test(v) && /Hidden since 2026-10-05/.test(v) && /Open now/.test(v));
+  await okSoon('...and the "Site check" box says what was hidden and since when', () => box(p), (v) => /Site check: nothing is broken/.test(v) && /Old lines that hid themselves/.test(v) && /Hidden since 2026-10-05/.test(v) && /Open now/.test(v) && !/thing to fix/.test(v));
   await p.context().close();
 
   p = await at('2026-10-04T21:30:00-07:00', { timezoneId: 'America/Los_Angeles' });   // 00:30 on Oct 5 in New York
@@ -65,7 +65,7 @@ await run('dated', async ({ browser, base, errs }) => {
   ok('Nov 9: every weekend is gone, so the table is gone too (no empty table)', !s.r4 && !s.table, 'shown: ' + show(s));
   ok('Nov 9: both special days are gone, so is their box', !s.ecd && !s.hsd && !s.days, 'shown: ' + show(s));
   ok('Nov 9: "No pizza: all of October and November" is still shown (until Nov 30)', s.nopizza === true, 'shown: ' + show(s));
-  await okSoon('Nov 9: the "Site check" box lists the lines that went away', () => box(p), (v) => /things to fix/.test(v) && /Hidden since/.test(v));
+  await okSoon('Nov 9: the "Site check" box lists the lines that went away', () => box(p), (v) => /Site check: nothing is broken/.test(v) && /Hidden since/.test(v) && !/to fix/.test(v));
   await p.context().close();
 
   p = await at('2026-12-01T12:00:00-05:00');   // winter on this date: look at the fall panel by picking fall, so the line is not simply out of sight

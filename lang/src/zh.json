@@ -167,6 +167,8 @@
   "Show names": "显示名称",
   "Site check: {n} thing to fix": "网站检查：有 {n} 处需要修改",
   "Site check: {n} things to fix": "网站检查：有 {n} 处需要修改",
+  "Site check: nothing is broken": "网站检查：没有出问题",
+  "Old lines that hid themselves. Nothing is broken: remove them when you like.": "已自动隐藏的旧内容。没有出问题：想删的时候再删即可。",
   "Smooth path (strollers, wheelchairs)": "平整小路（婴儿车、轮椅）",
   "Snack time": "零食时间",
   "Snip, snip! Fresh sunflowers!": "咔嚓咔嚓！新鲜的向日葵！",

@@ -1,7 +1,9 @@
 /* One fact, one answer: the same price, clock time, age, group size, phone, address, e-mail and date is written in many places (home page, five
  * other pages, FAQ answers, page descriptions, structured data, js/content.js, the QR sign list) and in five languages. This test reads the built
  * pages and lang/*.js and fails when two places give different answers, or when a translation gives a different number, price, time, weekday,
- * month, name or e-mail than its English. No browser needed. WA_FACTS=1 prints every place of every fact (file:line and the exact words). */
+ * month, name or e-mail than its English. No browser needed. WA_FACTS=1 prints every place of every fact (file:line and the exact words).
+ * Every failure says what is wrong in plain words, names the file the farm edits (pages/first-visit.html, not the built first-visit.html; lang/src/es.json,
+ * not lang/es.js) with words to search for, and says what to do next. Never a blank reason. */
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -54,6 +56,19 @@ function readPage(file) {
 const PAGES = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'strawberry-picking.html', 'school-field-trips.html', 'wise-pie.html'].map(readPage);
 const page = (f) => PAGES.find((p) => p.file === f);
 const snippet = (p, i, len) => p.text.slice(Math.max(0, i - 12), i + len + 12).replace(/\s+/g, ' ');
+
+/* Where a place is, in words an owner can use: the file she edits (not the built copy of it) and the words to search for.
+ * The five pages next to index.html are built from pages/; lang/es.js is built from lang/src/es.json. index.html is edited itself, so its line number is right. */
+const SRC = (f) => (/^lang\/(\w+)\.js$/.test(f) ? 'lang/src/' + f.slice(5, -3) + '.json' : /^[a-z0-9-]+\.html$/.test(f) && f !== 'index.html' ? 'pages/' + f : f);
+const at = (x) => { const f = SRC(x.file); return f === x.file && x.line ? f + ':' + x.line : f; };
+const loc = (p, i) => at({ file: p.file, line: p.lineOf(i) });
+const quoted = (x) => `${at(x)} "${String(x.words).replace(/\s+/g, ' ').slice(0, 70)}"`;
+const MORE = (list, n = 3) => list.slice(0, n).join('; ') + (list.length > n ? ' and ' + (list.length - n) + ' more' : '');
+const REBUILD = 'then run  python3 tools/pages.py  (and  python3 tools/i18n.py build  if you changed lang/src); README: "Change a fact everywhere"';
+/** One check. why = what is wrong, in plain words; fix = what to do next. A failing check always says something (never blank). */
+function verify(name, cond, why, fix) {
+  return ok(name, cond, cond ? '' : (String(why || '').trim() || 'no details were available: run  WA_FACTS=1 node tests/consistency.test.mjs  to see every place') + (fix ? '  TO FIX: ' + fix : ''));
+}
 
 /* what the site's own settings say (js/content.js: hours; js/season.js: season dates) */
 const contentSrc = read('js/content.js');
@@ -191,20 +206,32 @@ function collect(f) {
 }
 
 const tableRows = [];
+const perFile = (found) => { const n = {}; for (const x of found) n[SRC(x.file)] = (n[SRC(x.file)] || 0) + 1; return Object.entries(n).map(([f, c]) => f + ' (' + c + ')').join(', ') || 'nowhere'; };
 for (const f of FACTS) {
   const found = collect(f);
   const values = [...new Set(found.map((x) => x.value))];
-  const where = (v) => found.filter((x) => x.value === v).slice(0, 3).map((x) => `${x.file}:${x.line} "${x.words.slice(0, 60)}"`).join('; ');
   for (const x of found) tableRows.push([f.id, x.value, x.file + ':' + x.line, x.words]);
-  if (found.length < (f.min || 1)) { ok(f.id + ': found where it is written', false, `only ${found.length} place(s) found, expected at least ${f.min}: a sentence was reworded, so this test needs the new wording (or the fact went missing)`); continue; }
-  ok(f.id + ' (' + found.length + ' places say ' + values.join(' / ') + ')', values.length === 1, values.length === 1 ? '' : values.map((v) => v + ' at ' + where(v)).join('  vs  '));
+  if (found.length < (f.min || 1)) {
+    verify(f.id + ': found where it is written', false,
+      `found in ${found.length} place(s), expected at least ${f.min}. Found in: ${perFile(found)}. A sentence that states this was deleted or reworded (so this test no longer recognises it), or the fact moved.`,
+      found.length ? `compare the files above with the other pages and put the missing sentence back; if you changed it on purpose, give the test the new wording or lower  min: ${f.min}  for "${f.id}" in tests/consistency.test.mjs`
+        : `put the sentence back; if the farm took this fact off the site on purpose, delete "${f.id}" from the FACTS list in tests/consistency.test.mjs`);
+    continue;
+  }
+  const groups = values.map((v) => ({ v, items: found.filter((x) => x.value === v) })).sort((a, b) => b.items.length - a.items.length);
+  const tie = groups.length > 1 && groups[1].items.length === groups[0].items.length;
+  const odd = groups.slice(tie ? 0 : 1).map((g) => g.v + ' at ' + MORE(g.items.map(quoted))).join('   vs   ');
+  verify(f.id + ' (' + found.length + ' places say ' + values.join(' / ') + ')', values.length === 1,
+    `${values.length} different answers. ` + (tie ? 'About as many places say each, so ask the farm which is right: ' : `Most places (${groups[0].items.length}) say ${groups[0].v}; different: `) + odd,
+    `make every place say ${tie ? 'the right one' : groups[0].v}: edit the file named (search for the words in quotes), ${REBUILD}`);
 }
 
 /* ------------------------------------------------------------------ *
  * More answers that must agree
  * ------------------------------------------------------------------ */
 const index = PAGES[0];
-ok('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its facts are read above', PAGES.every((p) => p.jsonld.length > 0 && p.badLd === 0), PAGES.filter((p) => p.jsonld.length === 0 || p.badLd).map((p) => p.file).join(', '));
+const noLd = PAGES.filter((p) => p.jsonld.length === 0 || p.badLd).map((p) => SRC(p.file));
+verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its facts are read above', noLd.length === 0, 'the structured data block (<script type="application/ld+json">) is missing or is not valid JSON in: ' + noLd.join(', '), 'open the file, find that block in the head (a missing comma or quote mark is the usual cause; for pages/ files it is written by tools/pages.py), fix it, ' + REBUILD);
 
 // policies: every place that talks about a rule gives the same answer (no page says the opposite)
 {
@@ -217,9 +244,11 @@ ok('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its
   ];
   for (const [what, yes, no, min] of rules) {
     const found = [], contra = [];
-    for (const p of PAGES) { for (const m of p.text.matchAll(yes)) found.push(p.file + ':' + p.lineOf(m.index)); for (const m of p.text.matchAll(no)) contra.push(`${p.file}:${p.lineOf(m.index)} "${snippet(p, m.index, m[0].length)}"`); }
+    for (const p of PAGES) { for (const m of p.text.matchAll(yes)) found.push(loc(p, m.index)); for (const m of p.text.matchAll(no)) contra.push(`${loc(p, m.index)} "${snippet(p, m.index, m[0].length)}"`); }
     for (const w of found) tableRows.push(['policy: ' + what, 'yes', w, '']);
-    ok('policy: ' + what + ' (' + found.length + ' places)', found.length >= min && contra.length === 0, contra.length ? 'but ' + contra.slice(0, 3).join('; ') : found.length < min ? 'only ' + found.length + ' places found, expected at least ' + min + ': a sentence was reworded, so this test needs the new wording' : '');
+    verify('policy: ' + what + ' (' + found.length + ' places)', found.length >= min && contra.length === 0,
+      contra.length ? 'a place says the opposite of the rule "' + what + '": ' + MORE(contra) : 'the rule "' + what + '" is written in only ' + found.length + ' places, expected at least ' + min + ' (' + (found.length ? [...new Set(found.map((x) => x.split(':')[0]))].join(', ') : 'nowhere') + '): a sentence was reworded or deleted',
+      contra.length ? 'change the sentence named so it says the same rule as everywhere else (or, if the rule really changed, change every place), ' + REBUILD : 'put the sentence back in the page that lost it; if you reworded it on purpose, give this test the new wording (search for "' + what.slice(0, 30) + '" in tests/consistency.test.mjs)');
   }
 }
 
@@ -227,7 +256,9 @@ ok('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its
 {
   const menu = [...read('index.html').matchAll(/class="menu-price">\$(\d+)</g)].map((m) => +m[1]);
   const m = /\$(\d+)–\$(\d+)/.exec(index.text);
-  ok('pizza menu: the price range says the cheapest and the dearest pizza (' + (m ? '$' + m[1] + '–$' + m[2] : 'none found') + ', menu ' + Math.min(...menu) + '–' + Math.max(...menu) + ')', menu.length >= 9 && !!m && +m[1] === Math.min(...menu) && +m[2] === Math.max(...menu), menu.join(' '));
+  verify('pizza menu: the price range says the cheapest and the dearest pizza (' + (m ? '$' + m[1] + '–$' + m[2] : 'none found') + ', menu ' + Math.min(...menu) + '–' + Math.max(...menu) + ')', menu.length >= 9 && !!m && +m[1] === Math.min(...menu) && +m[2] === Math.max(...menu),
+    menu.length < 9 ? 'only ' + menu.length + ' pizzas with a price were found in the menu of index.html, expected at least 9' : !m ? 'the price range ("$15–$17") was not found in the text of index.html' : 'the range says $' + m[1] + '–$' + m[2] + ' but the menu prices in index.html are ' + menu.join(', '),
+    'make the range in index.html (search for the two prices with a dash between them) say the lowest and the highest menu price (class="menu-price"), ' + REBUILD);
 }
 
 // the pizza schedule: the opening day is a Tuesday and the words say the same day; the visits start on the Friday after; the line hides after the last visit day
@@ -248,7 +279,9 @@ ok('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its
     if (!last || last.getTime() !== u.getTime()) bad.push(`data-until ${r[4]}-${r[5]}-${r[6]} is not the last visit day in "${visits}"`);
     if (last && last.getUTCDay() !== 0) bad.push(`"${visits}" does not end on a Sunday`);
   }
-  ok('pizza schedule (' + rows.length + ' rows): Tuesday openings, matching words, visits from the next Friday to a Sunday, hide date = last visit day', rows.length >= 4 && bad.length === 0, bad.join('; '));
+  verify('pizza schedule (' + rows.length + ' rows): Tuesday openings, matching words, visits from the next Friday to a Sunday, hide date = last visit day', rows.length >= 4 && bad.length === 0,
+    bad.length ? 'index.html, the pizza schedule table (search for  data-release  ): ' + bad.join('; ') : 'only ' + rows.length + ' rows of the pizza schedule table (<tr data-release="…" data-until="…">) were read in index.html, expected at least 4: a row was deleted (fine once the season is over: then lower the 4 in tests/consistency.test.mjs) or a row lost its data-release or data-until',
+    bad.length ? 'in that row make data-release the Tuesday, the dates in words the same day, the visit dates the Friday to Sunday after it, and data-until the last Sunday' : 'put the row back, or lower the 4 for "pizza schedule" in tests/consistency.test.mjs when old weekends were removed');
 }
 
 // weekday and date written together must be the same day of the year the page is about ("Tuesday, Oct 6" is a Tuesday in 2026)
@@ -256,8 +289,10 @@ ok('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its
   const year = +(/Fall (20\d\d)/.exec(index.text) || [])[1];
   const MONS = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
   const bad = []; let n = 0;
-  for (const p of PAGES) { const re = new RegExp('(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day,? (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* (\\d{1,2})', 'g'); let m; while ((m = re.exec(p.text))) { n++; const d = new Date(Date.UTC(year, MONS[m[2]], +m[3])); if (!DAYS[d.getUTCDay()].startsWith(m[1])) bad.push(`${p.file}:${p.lineOf(m.index)} "${m[0]}" is a ${DAYS[d.getUTCDay()]} in ${year}`); } }
-  ok('every "Weekday, Month day" is that weekday in ' + year + ' (' + n + ' found)', n >= 3 && bad.length === 0, bad.join('; '));
+  for (const p of PAGES) { const re = new RegExp('(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day,? (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* (\\d{1,2})', 'g'); let m; while ((m = re.exec(p.text))) { n++; const d = new Date(Date.UTC(year, MONS[m[2]], +m[3])); if (!DAYS[d.getUTCDay()].startsWith(m[1])) bad.push(`${loc(p, m.index)} "${m[0]}" is a ${DAYS[d.getUTCDay()]} in ${year}`); } }
+  verify('every "Weekday, Month day" is that weekday in ' + year + ' (' + n + ' found)', n >= 3 && bad.length === 0,
+    bad.length ? 'a weekday does not match its date: ' + MORE(bad) : 'only ' + n + ' "Weekday, Month day" dates were found on the pages, expected at least 3 (the dates in the text were reworded or the year in "Fall ' + year + '" changed)',
+    bad.length ? 'fix the weekday or the day number in the place named (search for the words in quotes), ' + REBUILD : 'if the pages no longer write dates that way, lower the 3 for this check in tests/consistency.test.mjs');
 }
 
 // the dated lines hide on the day the words say ("Tuesday, Oct 6" hides after 2026-10-06; "Sunday, Oct 4" after 2026-10-04)
@@ -269,7 +304,9 @@ ok('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its
     if (!d) continue; n++;
     if (MONS[d[1]] !== +m[3] || +d[2] !== +m[4]) bad.push(`"${d[0]}" but data-until="${m[2]}-${m[3]}-${m[4]}"`);
   }
-  ok('lines that name a day hide after that day (' + n + ' checked)', n >= 3 && bad.length === 0, bad.join('; '));
+  verify('lines that name a day hide after that day (' + n + ' checked)', n >= 3 && bad.length === 0,
+    bad.length ? 'in index.html a line names a day but hides on another: ' + MORE(bad) : 'only ' + n + ' dated lines (data-until="…" with a "Weekday, Month day" in them) were found in index.html, expected at least 3: lines that went out of date were deleted (fine: then lower the 3 in tests/consistency.test.mjs)',
+    bad.length ? 'in index.html change that line\'s data-until to the day written in its words (or the words to the day in data-until)' : 'lower the 3 for this check in tests/consistency.test.mjs if the old lines were removed on purpose');
 }
 
 // the farm year bars (the "farm year at a glance" picture) start and end where the words next to them say
@@ -294,7 +331,9 @@ ok('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its
     if (!(b[0] >= start[0] && b[0] <= start[1])) bad.push(`"${words}": the bar starts at ${b[0]}, the words put it between ${start.map((x) => x.toFixed(2)).join(' and ')}`);
     if (end && !(b[1] >= end[0] && b[1] <= end[1])) bad.push(`"${words}": the bar ends at ${bars[0][1]}, the words put it between ${end.map((x) => x.toFixed(2)).join(' and ')} (months count from 0 = January 1; 10 = November 1)`);
   }
-  ok('farm year bars match the dates written beside them (' + n + ' checked)', n >= 6 && bad.length === 0, bad.join('; '));
+  verify('farm year bars match the dates written beside them (' + n + ' checked)', n >= 6 && bad.length === 0,
+    bad.length ? 'in index.html (the "farm year at a glance" list, search for  cal-range  ): ' + MORE(bad) : 'only ' + n + ' year bars were read in index.html, expected at least 6: the wording next to a bar was changed so the test cannot read it',
+    bad.length ? 'change the bar (--s and --e, months counted from 0 = January 1) or the words next to it so they say the same dates' : 'put the wording back to the usual form ("mid-April to early June") or lower the 6 for this check in tests/consistency.test.mjs');
 }
 
 // the words for the seasons name the same months as the dates in js/season.js and the crop dates in js/features.js
@@ -316,40 +355,68 @@ ok('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so its
   for (const [name, expect, rx] of want) { const m = rx.exec(t); if (!m) { bad.push(name + ': the words were not found'); continue; } if (m[1].toLowerCase().replace(/[ -]+/g, '') !== expect.toLowerCase().replace(/[ -]+/g, '')) bad.push(`${name}: the page says "${m[1]}", js/season.js says ${expect}`); }
   if (!(winterEnd && winterEnd.month === 'December' && /Friday after Thanksgiving to early December/.test(t) && half(winterEnd) === 'early')) bad.push('winter: "Friday after Thanksgiving to early December" does not match the end date in js/season.js');
   if (!(tom && +tom[1] === 8 && +tom[2] >= 20 && +tom[3] === 9 && +tom[4] >= 28) || !/late September through October/.test(t)) bad.push('tomatoes and basil: "late September through October" does not match the dates in js/features.js');
-  ok('season words match js/season.js and the tomato dates in js/features.js', bad.length === 0, bad.join('; '));
+  verify('season words match js/season.js and the tomato dates in js/features.js', bad.length === 0, 'the seasons in the text and in js/season.js (or the tomato dates in js/features.js) differ: ' + bad.join('; '),
+    'change the words in index.html (search for the words quoted above) or the dates in js/season.js so they say the same months, ' + REBUILD);
 }
 
 // phone numbers, e-mail addresses, street addresses and web links
 {
-  const phones = new Set(), where = [];
-  for (const p of PAGES) { for (const m of p.text.matchAll(/\b(\d{3})[-. ](\d{3})[-. ](\d{4})\b/g)) { phones.add(m[1] + m[2] + m[3]); where.push(p.file + ':' + p.lineOf(m.index)); } for (const a of p.attrs) if (a.name === 'href' && /^tel:/i.test(a.value)) { phones.add(a.value.replace(/\D/g, '').replace(/^1/, '')); where.push(p.file + ':' + a.line); } }
-  ok('phone: every number written, and every tel: link, is the same number (' + [...phones].join(', ') + ')', phones.size === 1, [...phones].join(' vs '));
+  // Phone numbers: the day-of emergency number (on the line that says "Day-of emergencies") and, once the farm agrees to show it, ONE main number. Each is written the
+  // same everywhere (text, tel: link, structured data). A second main number, or two spellings of one, fails.
+  const hits = [];
+  const dayOfWords = /Day-of|emergenc/i;
+  for (const p of PAGES) {
+    const raw = read(p.file).split('\n');
+    for (const m of p.text.matchAll(/\(?\b(\d{3})\)?[-. ] ?(\d{3})[-. ](\d{4})\b/g)) hits.push({ num: m[1] + m[2] + m[3], file: p.file, line: p.lineOf(m.index), words: snippet(p, m.index, m[0].length), dayOf: dayOfWords.test(p.text.slice(Math.max(0, m.index - 90), m.index)) });
+    for (const a of p.attrs) if (a.name === 'href' && /^tel:/i.test(a.value)) hits.push({ num: a.value.replace(/\D/g, '').replace(/^1/, ''), file: p.file, line: a.line, words: 'tel: link ' + a.value, dayOf: dayOfWords.test(raw[a.line - 1] || '') });
+  }
+  for (const j of index.jsonld) if (j.telephone) hits.push({ num: String(j.telephone).replace(/\D/g, '').replace(/^1/, ''), file: 'index.html', line: 0, words: 'structured data "telephone": ' + j.telephone, dayOf: false });
+  const dayNums = [...new Set(hits.filter((h) => h.dayOf).map((h) => h.num))], mainNums = [...new Set(hits.filter((h) => !h.dayOf).map((h) => h.num))];
+  const pretty = (n) => n.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
+  const where = (nums, dayOf) => nums.map((n) => pretty(n) + ' at ' + MORE(hits.filter((h) => h.num === n && h.dayOf === dayOf).map(quoted))).join('   vs   ');
+  verify('phone: the day-of emergency number is the same in its text and its tel: link (' + (dayNums.map(pretty).join(', ') || 'none') + ')', dayNums.length === 1,
+    dayNums.length ? 'two different day-of emergency numbers: ' + where(dayNums, true) : 'no day-of emergency number was found (the line "Day-of emergencies: call or text …" in index.html)',
+    dayNums.length ? 'make the written number and the tel: link in the "Day-of emergencies" line the same (edit index.html), ' + REBUILD : 'put the line back in index.html (search for  Day-of emergencies  )');
+  verify('phone: at most ONE main number, written the same everywhere, in text, tel: links and structured data (' + (mainNums.map(pretty).join(', ') || 'none shown yet') + ')', mainNums.length <= 1,
+    'more than one main phone number is on the site: ' + where(mainNums, false) + '. (The day-of emergency number does not count; one main number is fine.)',
+    'one of them is a typo, or an old number: make them all the same main number (edit the places named), ' + REBUILD);
   const mail = [], bad = [];
-  for (const p of PAGES) for (const m of read(p.file).matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)) { const h = /href="mailto:([^"?]+)/.exec(m[1]); if (!h) continue; const t = decode(m[2].replace(/<[^>]+>/g, ' ')); const shown = (t.match(/[\w.+-]+@[\w.-]+/) || [])[0]; mail.push(h[1].toLowerCase()); if (shown && shown.toLowerCase() !== h[1].toLowerCase()) bad.push(`${p.file}: shows ${shown} but opens ${h[1]}`); }
+  for (const p of PAGES) for (const m of read(p.file).matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)) { const h = /href="mailto:([^"?]+)/.exec(m[1]); if (!h) continue; const t = decode(m[2].replace(/<[^>]+>/g, ' ')); const shown = (t.match(/[\w.+-]+@[\w.-]+/) || [])[0]; mail.push(h[1].toLowerCase()); if (shown && shown.toLowerCase() !== h[1].toLowerCase()) bad.push(`${SRC(p.file)}: shows ${shown} but opens ${h[1]}`); }
   const written = new Set(); for (const p of PAGES) for (const m of p.text.matchAll(/[\w.+-]+@[\w-]+\.[\w.]+/g)) written.add(m[0].toLowerCase());
   const listed = new Set([...index.text.matchAll(/Who to email[\s\S]*?Send your question to the right place \|([\s\S]*?)\| Drive time/g)].flatMap((m) => [...m[1].matchAll(/[\w.+-]+@[\w-]+\.[\w.]+/g)].map((x) => x[0].toLowerCase())));
   const strange = [...written, ...mail].filter((e) => !listed.has(e));
   const ldMail = index.jsonld.map((j) => j.email).filter(Boolean);
-  ok('e-mail: an address shown in a link is the address the link opens; only the addresses in "Who to email" appear (' + [...listed].join(', ') + '); structured data uses the general one', listed.size >= 4 && bad.length === 0 && strange.length === 0 && ldMail.every((e) => listed.has(e.toLowerCase())), bad.concat(strange.map((e) => e + ' is not in the "Who to email" list')).join('; '));
+  const ldBad = ldMail.filter((e) => !listed.has(e.toLowerCase()));
+  verify('e-mail: an address shown in a link is the address the link opens; only the addresses in "Who to email" appear (' + [...listed].join(', ') + '); structured data uses the general one', listed.size >= 4 && bad.length === 0 && strange.length === 0 && ldBad.length === 0,
+    bad.concat(strange.map((e) => e + ' is written in ' + PAGES.filter((p) => p.text.toLowerCase().includes(e)).map((p) => SRC(p.file)).join(', ') + ' but is not in the "Who to email" list of index.html'), ldBad.map((e) => 'the structured data in index.html uses ' + e + ', which is not in the "Who to email" list'), listed.size < 4 ? ['only ' + listed.size + ' addresses were read in the "Who to email" list of index.html, expected at least 4'] : []).join('; '),
+    'make the written address and the address its link opens the same, and use only addresses from the "Who to email" list of index.html (a new address goes into that list first), ' + REBUILD);
   const addr = []; const street = { Hartis: '4701', Poplin: '5503' };
-  for (const p of PAGES) for (const m of p.text.matchAll(/(\d{4})? ?(Hartis|Poplin)\b/g)) if (m[1] !== street[m[2]] && !(m[1] === undefined && /(?:on|at) $|^$/.test(''))) { const before = p.text.slice(Math.max(0, m.index - 3), m.index); if (m[1] !== undefined || !/\w/.test(before)) addr.push(`${p.file}:${p.lineOf(m.index)} "${snippet(p, m.index, m[0].length)}"`); }
+  for (const p of PAGES) for (const m of p.text.matchAll(/(\d{4})? ?(Hartis|Poplin)\b/g)) if (m[1] !== street[m[2]] && !(m[1] === undefined && /(?:on|at) $|^$/.test(''))) { const before = p.text.slice(Math.max(0, m.index - 3), m.index); if (m[1] !== undefined || !/\w/.test(before)) addr.push(`${loc(p, m.index)} "${snippet(p, m.index, m[0].length)}"`); }
   const zips = new Set(); for (const p of PAGES) for (const m of p.text.matchAll(/NC (\d{5})/g)) zips.add(m[1]);
   const ld = index.jsonld.map((j) => j.address).filter(Boolean)[0] || {};
-  ok('address: 4701 goes with Hartis and 5503 with Poplin everywhere, one ZIP code (' + [...zips].join(', ') + '), structured data matches', addr.length === 0 && zips.size === 1 && ld.streetAddress === '4701 Hartis Rd' && ld.postalCode === [...zips][0], addr.slice(0, 3).join('; ') + ' ' + JSON.stringify(ld));
+  verify('address: 4701 goes with Hartis and 5503 with Poplin everywhere, one ZIP code (' + [...zips].join(', ') + '), structured data matches', addr.length === 0 && zips.size === 1 && ld.streetAddress === '4701 Hartis Rd' && ld.postalCode === [...zips][0],
+    [addr.length ? 'a street number does not go with its street (4701 Hartis, 5503 Poplin): ' + MORE(addr) : '', zips.size !== 1 ? 'the pages give ' + zips.size + ' ZIP codes: ' + [...zips].join(', ') : '', ld.streetAddress !== '4701 Hartis Rd' || ld.postalCode !== [...zips][0] ? 'the structured data in index.html says "' + ld.streetAddress + '", ZIP ' + ld.postalCode : ''].filter(Boolean).join('; '),
+    'correct the address in the place named (search for the words in quotes), ' + REBUILD);
   // every "directions" link (Google, Apple, Waze), the drive-time tool and the structured data's map link name one of the two street addresses
   const full = { farm: ld.streetAddress + ', ' + ld.addressLocality + ', ' + ld.addressRegion + ' ' + ld.postalCode, greenhouse: '5503 Poplin Rd, ' + ld.addressLocality + ', ' + ld.addressRegion + ' ' + ld.postalCode };
   const stray = []; let seen = 0;
   const dest = (u) => { try { const q = new URL(u).searchParams; return q.get('destination') || q.get('daddr') || (/waze\.com/.test(u) ? q.get('q') : null) || (/query=/.test(u) && /4701|5503/.test(u) ? q.get('query') : null); } catch (e) { return null; } };
-  for (const p of PAGES) for (const a of p.attrs) if (a.name === 'href') { const d = dest(a.value); if (d === null) continue; seen++; if (d !== full.farm && d !== full.greenhouse) stray.push(`${p.file}:${a.line} opens "${d}"`); }
+  for (const p of PAGES) for (const a of p.attrs) if (a.name === 'href') { const d = dest(a.value); if (d === null) continue; seen++; if (d !== full.farm && d !== full.greenhouse) stray.push(`${at({ file: p.file, line: a.line })} opens "${d}"`); }
   const biz = index.jsonld.find((j) => j.address) || {}, hasMap = dest(String(biz.hasMap || '')) || '';
   if (hasMap !== full.farm.replace(/,/g, '')) stray.push('structured data hasMap opens "' + hasMap + '"');
   for (const [k, v] of Object.entries({ farm: /farm:\s*\{ addr: '([^']+)'/.exec(featuresSrc), greenhouse: /greenhouse:\s*\{ addr: '([^']+)'/.exec(featuresSrc) })) if (!v || v[1] !== full[k]) stray.push('js/features.js drive-time address for the ' + k + ' is "' + (v ? v[1] : 'missing') + '"');
-  ok('directions links: all ' + seen + ' map links (Google, Apple, Waze), the drive-time tool and the structured data open "' + full.farm + '" or "' + full.greenhouse + '"', seen >= 10 && stray.length === 0, stray.slice(0, 4).join('; '));
+  verify('directions links: all ' + seen + ' map links (Google, Apple, Waze), the drive-time tool and the structured data open "' + full.farm + '" or "' + full.greenhouse + '"', seen >= 10 && stray.length === 0,
+    stray.length ? 'a map link or the drive-time address names another place: ' + MORE(stray, 4) : 'only ' + seen + ' map links were found, expected at least 10: links were removed or their form changed',
+    stray.length ? 'make the link (search for the address in its destination=, daddr= or q=) name the farm or The GreenHouse address in full, ' + REBUILD : 'put the links back, or lower the 10 for this check in tests/consistency.test.mjs');
   const links = (rx) => new Set(PAGES.flatMap((p) => p.attrs.filter((a) => a.name === 'href' && rx.test(a.value)).map((a) => a.value)));
   const book = links(/bookeo\.com/), square = links(/square\.site/), signup = links(/eepurl\.com/);
-  ok('one booking page, one pre-order page and one e-mail signup address on every page', book.size === 1 && square.size === 1 && signup.size === 1, [...book, ...square, ...signup].join(' '));
+  verify('one booking page, one pre-order page and one e-mail signup address on every page', book.size === 1 && square.size === 1 && signup.size === 1,
+    (book.size !== 1 ? book.size + ' different Bookeo (reservation) links: ' + [...book].join(' , ') + '. ' : '') + (square.size !== 1 ? square.size + ' different Square (pizza pre-order) links: ' + [...square].join(' , ') + '. ' : '') + (signup.size !== 1 ? signup.size + ' different e-mail signup links: ' + [...signup].join(' , ') : ''),
+    'use the same link on every page (search the pages/ files and index.html for the odd one out), ' + REBUILD);
   const drive = PAGES.filter((p) => p.attrs.some((a) => a.name === 'data-drive')).map((p) => p.attrs.filter((a) => a.name === 'data-drive').map((a) => a.value).join(','));
-  ok('drive minutes to each town are the same on the home page and the first-visit page (' + drive.join(' / ') + ')', drive.length === 2 && drive[0] === drive[1]);
+  verify('drive minutes to each town are the same on the home page and the first-visit page (' + drive.join(' / ') + ')', drive.length === 2 && drive[0] === drive[1],
+    drive.length !== 2 ? 'the drive times (data-drive="…") were found on ' + drive.length + ' pages, expected 2 (index.html and pages/first-visit.html)' : 'the drive minutes differ: index.html says ' + drive[0] + ', pages/first-visit.html says ' + drive[1],
+    'make the data-drive="…" numbers the same in both files, ' + REBUILD);
 }
 
 /* ------------------------------------------------------------------ *
@@ -432,10 +499,11 @@ function differences(en, tr, lang) {
   ];
   const right = [['$3 per person, ages 3 and up', '$3 por persona, a partir de los 3 años', 'es'], ['Open every Tuesday at 5:00 PM', 'Abre todos los martes a las 5:00 p. m.', 'es'], ['Open every Tuesday at 5:00 PM', 'Abre los martes a las 17:00', 'es'], ['Oct 6', '6 de oct', 'es'], ['Fri–Sun, 10 am–8 pm', 'शुक्र–रवि, सुबह 10 बजे–रात 8 बजे', 'hi'], ['Tuesday, Oct 6', '10 月 6 日周二', 'zh']];
   const blind = wrong.filter(([e, t, l]) => differences(e, t, l).length === 0), noisy = right.filter(([e, t, l]) => differences(e, t, l).length > 0);
-  ok('the language check sees a wrong price, time, age, weekday, month, name or e-mail, and accepts the same fact written another way', blind.length === 0 && noisy.length === 0, blind.map((x) => 'missed: ' + x[1]).concat(noisy.map((x) => 'false alarm: ' + x[1] + ' = ' + differences(...x).join(', '))).join('; '));
+  verify('the language check sees a wrong price, time, age, weekday, month, name or e-mail, and accepts the same fact written another way', blind.length === 0 && noisy.length === 0, blind.map((x) => 'missed: ' + x[1]).concat(noisy.map((x) => 'false alarm: ' + x[1] + ' = ' + differences(...x).join(', '))).join('; '),
+    'this is a problem in the test itself (the function differences() in tests/consistency.test.mjs), not in the site: tell the developer');
 }
 
-// the QR signs (tools/qr_links.json, printed from print/qr-signs.html): the same address and web links as the pages, a Spanish copy with the same facts
+// the QR signs (tools/qr_links.json, printed from print/qr-signs.html and the Hindi, Chinese and Vietnamese sheets): the same address and web links as the pages, a copy in every language with the same facts
 {
   const qr = JSON.parse(read('tools/qr_links.json')), printed = read('print/qr-signs.html'), bad = []; let printedCount = 0;
   const biz = index.jsonld.find((j) => j.address) || {}, addr = biz.address || {};
@@ -451,21 +519,42 @@ function differences(en, tr, lang) {
     const mine = new RegExp('<section class="sign" id="' + sign.id + '">[\\s\\S]*?<h1>([\\s\\S]*?)<span lang="es">([\\s\\S]*?)</span></h1>[\\s\\S]*?<p class="text">([\\s\\S]*?)<span lang="es">([\\s\\S]*?)</span></p>').exec(printed);
     if (!mine || [decode(mine[1]), decode(mine[2]), decode(mine[3]), decode(mine[4])].join('|') !== [sign.title_en, sign.title_es, sign.text_en, sign.text_es].join('|')) bad.push(sign.id + ': the printed sign (print/qr-signs.html) does not say what tools/qr_links.json says');
   }
-  ok('QR signs (' + qr.signs.length + ' in the list, ' + printedCount + ' printed): the address and web links match the pages, the Spanish copy has the same facts, the printed page says what the list says', printedCount >= 9 && bad.length === 0, bad.slice(0, 4).join('; '));
+  // the same signs in Hindi, Chinese and Vietnamese (the "languages" part at the end of the list): the same facts, and the printed sheet says what the list says
+  for (const code of ['hi', 'zh', 'vi']) {
+    const block = (qr.languages || {})[code]; let sheet = '';
+    try { sheet = read(`print/qr-signs.${code}.html`); } catch (e) { bad.push(`print/qr-signs.${code}.html is missing`); }
+    if (!block) { bad.push(`${code}: no wording in tools/qr_links.json`); continue; }
+    for (const sign of qr.signs) {
+      const w = block.signs && block.signs[sign.id];
+      if (!w) { bad.push(`${code} ${sign.id}: no wording`); continue; }
+      for (const k of ['title', 'text']) { const dd = differences(sign[k + '_en'], w[k], code); if (dd.length) bad.push(`${code} ${sign.id} ${k}: ${dd.join('; ')}`); }
+      if (!sheet.includes('id="' + sign.id + '"')) continue;
+      const own = (x) => decode(x.replace(/<\/?wa-en[^>]*>/g, ''));
+      const m = new RegExp('<section class="sign" id="' + sign.id + '">[\\s\\S]*?<h1 lang="[^"]*">([\\s\\S]*?)<span lang="en">([\\s\\S]*?)</span></h1>[\\s\\S]*?<p class="text" lang="[^"]*">([\\s\\S]*?)(?:<span lang="en">([\\s\\S]*?)</span>)?</p>').exec(sheet);
+      const same = m && (m[4] === undefined ? w.text === sign.text_en : decode(m[4]) === sign.text_en);   // an address that is the same in both languages is printed once
+      if (!m || !same || own(m[1]) !== w.title || decode(m[2]) !== sign.title_en || own(m[3]) !== w.text) bad.push(`${code} ${sign.id}: the printed sheet (print/qr-signs.${code}.html) does not say what tools/qr_links.json says`);
+    }
+  }
+  verify('QR signs (' + qr.signs.length + ' in the list, ' + printedCount + ' printed): the address and web links match the pages, every language has the same facts, the printed pages say what the list says', printedCount >= 9 && bad.length === 0,
+    bad.length ? 'in tools/qr_links.json or print/qr-signs.html: ' + MORE(bad, 4) : 'only ' + printedCount + ' signs are printed in print/qr-signs.html, expected at least 9',
+    bad.length ? 'fix the sign in tools/qr_links.json (the English, Spanish, Hindi, Chinese and Vietnamese words, the web address), then run  python3 tools/make_qr.py  to print the pages again' : 'run  python3 tools/make_qr.py  to make print/qr-signs.html again');
 }
 
 for (const code of LANGS) {
   const bad = []; let n = 0;
   for (const [id, tr] of Object.entries(dict[code].ui)) { const en = EN[id]; if (en === undefined) continue; n++; const d = differences(en, tr, code); if (d.length) bad.push(`${id} "${plain(en).slice(0, 70)}" → "${plain(tr).slice(0, 70)}": ${d.join('; ')}`); }
   for (const [en, tr] of Object.entries(dict[code].js)) { n++; const d = differences(en, tr, code); if (d.length) bad.push(`js "${en.slice(0, 70)}" → "${plain(tr).slice(0, 70)}": ${d.join('; ')}`); }
-  ok(code + ': ' + n + ' translated texts carry the English numbers, prices, times, weekdays, months, names and e-mail addresses', n > 500 && bad.length === 0, bad.length + ' differ. ' + bad.slice(0, 3).join('  |  '));
+  verify(code + ': ' + n + ' translated texts carry the English numbers, prices, times, weekdays, months, names and e-mail addresses', n > 500 && bad.length === 0,
+    bad.length ? bad.length + ' translation(s) in lang/src/' + code + '.json differ from their English. First: ' + bad.slice(0, 3).join('  |  ') : 'only ' + n + ' translated texts were read for ' + code + ', expected more than 500: lang/' + code + '.js is missing or was not built',
+    bad.length ? 'open lang/src/' + code + '.json, search for the id (tXXXXXXXX) or the English words quoted, make the number, price, time, weekday, month, name or e-mail the same as the English, then run  python3 tools/i18n.py build' : 'run  python3 tools/i18n.py build');
 }
 
 // the same English sentence, written in two places, is translated with the same facts in both (a fact repeated in the FAQ and on a page cannot drift)
 for (const code of LANGS) {
   const byFact = new Map(), bad = [];
   for (const [id, en] of Object.entries(EN)) { const tr = dict[code].ui[id]; if (tr === undefined) continue; const key = plain(en).toLowerCase().replace(/[^a-z0-9$%:]+/g, ' ').trim(); if (key.length < 12) continue; const sig = [moneyOf(plain(tr)).join(','), numbers(plain(tr)).sort().join(','), weekdays(plain(tr), code).join(',')].join('/'); const was = byFact.get(key); if (was && was.sig !== sig) bad.push(plain(en).slice(0, 60)); else byFact.set(key, { sig }); }
-  ok(code + ': one English wording is translated with the same facts everywhere it appears', bad.length === 0, bad.slice(0, 3).join(' | '));
+  verify(code + ': one English wording is translated with the same facts everywhere it appears', bad.length === 0, 'the same English sentence is translated with different facts in two places of lang/src/' + code + '.json: ' + bad.slice(0, 3).join(' | '),
+    'search lang/src/' + code + '.json for the English words quoted, find the two translations of it and make their numbers, prices and weekdays the same, then run  python3 tools/i18n.py build');
 }
 
 if (SHOW) { for (const r of tableRows.sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))) console.log(r.join('\t')); }

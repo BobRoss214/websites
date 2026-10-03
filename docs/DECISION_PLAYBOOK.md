@@ -42,6 +42,7 @@ python3 tools/i18n.py build
 python3 tools/i18n.py missing es     # also hi, zh, vi: each must say 0 missing
 python3 tools/make_qr.py             # only after tools/qr_links.json changed
 python3 tools/farm_map.py tools/saved-map.json   # only after a new saved map
+python3 tools/check_facts.py         # after a price, hour, phone, e-mail, address, age or year changed: every place must agree (no Node needed)
 ```
 
 Changing an English sentence changes its id (data-t). The old translations no longer match and show as missing.
@@ -96,7 +97,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | d18 oven | share picture og-wise-pie.png, tests, d37 | The heading is drawn into assets/og-wise-pie.png. consistency pins "N-degree oven" (consistency at `pizza: oven temperature`) and the Celsius figure in Chinese (consistency at `const ALLOWED_EXTRA`). |
 | d17 allergen, d41, d42, d19 | d37 | Sentences about allergies, refunds and drinks should be read by a native speaker in each language. |
 | d39 Rd or Road | d40, d11, tests | The listing (d40) shows which spelling is "right". consistency and drive pin "Rd". The QR directions sign carries the address. |
-| d04 phone | tests/consistency.test.mjs | The phone test expects exactly ONE number on all pages. The day-of number already counts. |
+| d04 phone | tests/consistency.test.mjs | The phone test accepts the day-of emergency number plus ONE main number, each written the same everywhere (text, tel: link, structured data). A typo or a second main number fails it. |
 | d06, d28, d29 | tests/print-qr.test.mjs | The QR sign test needs at least 9 signs: 9 now (no review sign), 10 with a review link, 8 without the hashtag sign. |
 | d31, d13, d32, d12, d33 | each other | Removing a photo removes it from d12 (do not ask for the original), d33 and d34. d13 and d32 name the same four photos. |
 | d10, d11, d15 | each other | farmPoint (d11) halves the requests to the free service. A Mapbox switch (d10 C) changes the header line (d15) and 5 docs. |
@@ -111,7 +112,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 
 | Test and where | Pins | Touched by |
 |---|---|---|
-| consistency at `phone: every number written` | exactly one phone number | d04 |
+| consistency at `phone: at most ONE main number` | the day-of number plus at most one main number | d04 |
 | consistency at `address: 4701 goes with Hartis` | streetAddress is "4701 Hartis Rd"; 4701 goes with Hartis, 5503 with Poplin | d39, d40 |
 | consistency from `price: farm fun with pizza, base` to `price: wagon ride, per person` | base price $31, per-person prices, regex "Includes N Wise Pie pizzas, plus $N per person" (consistency at `price: extra per person in the pizza package` and `days: farm visits with pizza`) | d16 |
 | consistency at `price: refund fee` | refund fee 3% (at least 3 places) | d41 |
@@ -579,7 +580,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 - Keep the photographers' number (index.html at `data-t="teae7efc9"`, 704-207-6347) as it is.
 - README: delete the row "Phone number". Rebuild.
 - Strings: about 3 changed strings x 4 translations (footer id t37c5399a, plus any label you add)
-- Tests: consistency MUST be updated: tests/consistency.test.mjs at `phone: every number written` requires exactly ONE phone number on all pages ("phones.size === 1"); the day-of number already counts, so a second number fails it. Allow the two known numbers there.
+- Tests: nothing to change. tests/consistency.test.mjs at `phone: at most ONE main number` accepts the day-of emergency number plus ONE main number (written the same in the text, the tel: links and the structured data "telephone"); a typo or a second main number fails it, and the failing line names the files. `python3 tools/check_facts.py phone` shows the same without Node.
 
 **B. Keep it hidden**
 
@@ -1674,7 +1675,7 @@ Features, prices and claims the site states as fact. They came from the farm's o
 - Remove the whole "Tomatoes & basil" section index.html from `id="tomatoes"` to `================= WISE PIE` and every link to it: hero line (index.html at `data-t="td6ecd1d8"`) and chip (index.html at `data-t="t30661b0e"`), the chooser card (index.html at `data-t="tddae9ce2"`), the add-on (index.html at `data-t="t48324abe"`), the calendar bar (index.html at `class="cal-bar bar-tomato"`), the Shop rows (index.html at `data-t="t1fccf389"` and `data-t="tbbaa09ab"`), the FAQ answer (index.html at `data-t="t398007b0"`), pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`, the "tomatoes" crop in js/features.js (This week box) and the farm map mark. Ask Claude: the largest removal on this list.
 - 46 UI ids and 5 JS strings mention tomatoes or basil. The photo with the price signs goes too (d13, d32).
 - Strings: about 46 UI ids + 5 JS strings (unused after removal)
-- Tests: consistency: tests/consistency.test.mjs at `price: tomatoes, per pound` and `price: basil, per stem` (prices) and from `const tom =` to `the tomato dates in js/features.js` (tomato dates); features at `auto: pumpkins, tomatoes, flowers in season`, `const WEEK =` and `override: tomatoes peak first`; hero at `fall: the "New tomatoes" chip shows` and `winter: the tomato chip and the bee are hidden`; farm-seasons
+- Tests: consistency: tests/consistency.test.mjs at `price: tomatoes, per pound` and `price: basil, per stem` (prices) and from `const tom =` to `season words match js/season.js and the tomato dates in js/features.js` (tomato dates); features at `auto: pumpkins, tomatoes, flowers in season`, `const WEEK =` and `override: tomatoes peak first`; hero at `fall: the "New tomatoes" chip shows` and `winter: the tomato chip and the bee are hidden`; farm-seasons
 
 **D. The tomato or basil prices are different**
 
@@ -1818,7 +1819,7 @@ Works today with free outside services. The decisions are about risk, not about 
 
 **A. I will send the two numbers**
 
-- js/content.js at `// optional exact spot of the farm`: farmPoint: null, -> farmPoint: { lat: 00.0000, lon: -00.0000 }, with her two numbers (steps in the comment above it: js/content.js at `DRIVE TIME FROM A VISITOR'S ADDRESS`; the code that reads it is js/features.js at `spot: () => W.farmPoint`).
+- js/content.js at `// optional exact spot of the farm`: farmPoint: null, -> farmPoint: { lat: 00.0000, lon: -00.0000 }, with her two numbers (steps in the comment above it: js/content.js at `DRIVE TIME FROM A VISITOR'S ADDRESS`; the code that reads it is js/features.js at `spot: () => readFarmPoint().point`).
 - No rebuild. Open the home page, press "Get drive time" with a nearby address and check the miles.
 - README: delete "set farmPoint" from the Drive time row (README row "Drive time box") and the launch list (README.md, section "Putting it online", item 6); docs/LAUNCH_CHECKLIST.md, section "3.13 The Drive time box" (the item "Set farmPoint").
 - If the spot is not where cars turn in, ask again (d35).

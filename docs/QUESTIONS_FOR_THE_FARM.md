@@ -637,7 +637,7 @@ Answer:
 
 *The farm does not need to read this part. Do not publish this file with the website: the questions above include internal remarks, so leave it out of the upload.*
 
-Places in files are named by words you can find with Ctrl+F, not by line numbers (line numbers drift every time a file is edited): `index.html` at `data-t="t10886e34"` means: open index.html and search for data-t="t10886e34". Each one occurs once in its file unless a number of places is given, and `node tests/docs.test.mjs` checks that they are all still there. How to edit and rebuild is in the README (see "Start here", "Change a fact everywhere", "Change one sentence and its translations, step by step" and "Languages").
+Places in files are named by words you can find with Ctrl+F, not by line numbers (line numbers drift every time a file is edited): `index.html` at `data-t="t10886e34"` means: open index.html and search for data-t="t10886e34". Each one occurs once in its file unless a number of places is given, and `node tests/docs.test.mjs` checks that they are all still there. After changing a fact, `python3 tools/check_facts.py` lists every place it is written and which disagree. How to edit and rebuild is in the README (see "Start here", "Change a fact everywhere", "Change one sentence and its translations, step by step" and "Languages").
 
 - After changing English text in `index.html` or `pages/*.html`, run `python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build`, then `python3 tools/i18n.py missing es` (also `hi`, `zh`, `vi`) to see what needs translating.
 - Edit `pages/<name>.html`, not the generated pages (`first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html`, `wise-pie.html`); the rebuild overwrites them.
@@ -660,7 +660,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 
 **Question 3: May we show your phone number, (704) 628-6232, on the website?**
 
-- **If Yes:** follow the README, "Change a fact everywhere", row "The main phone number": a `tel:+17046286232` link in the footer, under the address on the farm card and next to the "Questions?" email, and `"telephone": "+1-704-628-6232",` after the `"email"` line in the structured data at the top of `index.html`. Rebuild so the footer is copied to the other five pages. Keep the photographers' emergency number (search `Day-of emergencies`) as it is. The facts test (`tests/consistency.test.mjs`) wants exactly one phone number, so it will report two (7042076347 and 7046286232): a developer must allow the second. Delete the README row "Phone number".
+- **If Yes:** follow the README, "Change a fact everywhere", row "The main phone number": a `tel:+17046286232` link in the footer, under the address on the farm card and next to the "Questions?" email, and `"telephone": "+1-704-628-6232",` after the `"email"` line in the structured data at the top of `index.html`. Rebuild so the footer is copied to the other five pages. Keep the photographers' emergency number (search `Day-of emergencies`) as it is. The facts test (`tests/consistency.test.mjs`) accepts the day-of number plus one main number, so nothing needs changing there (`python3 tools/check_facts.py phone` lists every place). Delete the README row "Phone number".
 - **If No:** no change.
 
 **Question 4: Is there a Thursday-evening Thai dinner at The GreenHouse this fall?**
@@ -777,7 +777,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 **Question 25: Are you happy for the site to ask people to use #wiseacresorganic when they post photos?**
 
 - **If Yes:** no change.
-- **If No:** change the photo notes `index.html` at `data-t="t559ec077"` (2 places) and `data-t="t18683452"`, and the QR sign `tools/qr_links.json` at `"id": "hashtag"` (its url, text_en and text_es) (re-run `python3 tools/make_qr.py`).
+- **If No:** change the photo notes `index.html` at `data-t="t559ec077"` (2 places) and `data-t="t18683452"`, and the QR sign `tools/qr_links.json` at `"id": "hashtag"` (its url, text_en and text_es; and the same sign in Hindi, Chinese and Vietnamese in the "languages" part at the end of that file) (re-run `python3 tools/make_qr.py`).
 
 **Question 26: Do you want an email sign-up form with interest choices (strawberries, pumpkins, pizza and so on) on the site, and can you send us the Mailchimp form code?**
 
@@ -832,7 +832,7 @@ Everything in this section was checked against the code on 3 October 2026.
 
 **Question 35: Can you send us the exact spot of the farm, as two numbers from Google Maps?**
 
-- **If Yes:** in `js/content.js` at `// optional exact spot of the farm` change `farmPoint: null,` to `farmPoint: { lat: <first number>, lon: <second number> },`. The steps are in the comment `js/content.js` at `DRIVE TIME FROM A VISITOR'S ADDRESS`, and the code that reads it is `js/features.js` at `spot: () => W.farmPoint`. No rebuild is needed. Open the home page, press "Get drive time" with a nearby address and check that the miles look right. Then delete "set `farmPoint` (Drive time box);" from launch item 6 (`README.md`, section "Putting it online") and the farm-spot part of the README row "Drive time box".
+- **If Yes:** in `js/content.js` at `// optional exact spot of the farm` change `farmPoint: null,` to `farmPoint: { lat: <first number>, lon: <second number> },`. The steps are in the comment `js/content.js` at `DRIVE TIME FROM A VISITOR'S ADDRESS`, and the code that reads it is `js/features.js` at `spot: () => readFarmPoint().point`. No rebuild is needed. Open the home page, press "Get drive time" with a nearby address and check that the miles look right. Then delete "set `farmPoint` (Drive time box);" from launch item 6 (`README.md`, section "Putting it online") and the farm-spot part of the README row "Drive time box".
 - **If the spot is not the gate:** ask again for the place where cars turn in (see questions 34 and 42), because the box says "To the farm at 4701 Hartis Rd".
 - **If No:** no change. The box then searches for the farm's address (`addr` in `js/features.js` at `const PLACES =`) on the first press after each page load.
 
@@ -919,7 +919,7 @@ Everything in this section was checked against the code on 3 October 2026. Chang
 
 **Question 49: "Posted 5 days ahead": five days before what?**
 
-- **If she tells us the rule:** change "posted 5 days ahead" and "goes up 5 days before" in `index.html` at `data-t="t60509a07"` and `data-t="t86f09bf0"` and `pages/wise-pie.html` at `<p>First come, first served`, and the sign text in `tools/qr_links.json` at `"id": "pizza"` (English and Spanish; re-run `python3 tools/make_qr.py` to rebuild `print/qr-signs.html`). Add where the link is posted if she says.
+- **If she tells us the rule:** change "posted 5 days ahead" and "goes up 5 days before" in `index.html` at `data-t="t60509a07"` and `data-t="t86f09bf0"` and `pages/wise-pie.html` at `<p>First come, first served`, and the sign text in `tools/qr_links.json` at `"id": "pizza"` (English and Spanish, and the pizza sign in Hindi, Chinese and Vietnamese in the "languages" part at the end of that file; re-run `python3 tools/make_qr.py` to rebuild `print/qr-signs.html` and the three language sheets). Add where the link is posted if she says.
 - **If it is right as it is:** no change.
 
 **Question 50: Pick-up "1 hour after your reservation time"**

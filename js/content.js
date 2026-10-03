@@ -17,7 +17,8 @@
  *   6. Anything after // on a line is a note for you, and the computer skips it. To switch a line off, put // in front of it.
  *   7. Save the file and look at the website: double-click index.html (or refresh the live page; on the live site add ?check to the address,
  *      and do that after every change: visitors never see a message when this file is broken). If a yellow box called "Site check"
- *      shows at the bottom of the page, it says what to fix. If the page looks broken, press Undo (Ctrl+Z, or Cmd+Z on a Mac)
+ *      shows at the bottom of the page, it says what to fix and where, and names a misspelled setting (a green one only lists old lines that
+ *      hid themselves: nothing is broken). If the page looks broken, press Undo (Ctrl+Z, or Cmd+Z on a Mac)
  *      until it works again, or put your copy back. See "Check your changes" in README.md.
  *   8. Saving the file on your computer does not change the live website. Publish the changed file the way you publish the site.
  *      Browsers can keep the old file for up to an hour, so give it a little while (a hard refresh, Ctrl+F5 or Cmd+Shift+R, shows
@@ -52,7 +53,9 @@
  * `closures` is one list of dates when the farm, The GreenHouse and Wise Pie are all shown as closed, or as having no visits (rain, a holiday):
  *       closures: ['2026-10-04', '2026-10-11'],
  *   It does not change Bookeo, so also close those times there. Dates that have passed can stay in the list.
- *   A whole week: write all seven days (there is no range). All three places close together: you cannot close only the farm (use the notice for that).
+ *   A whole week: one range with two dots, both days count:  closures: ['2026-11-09..2026-11-15'],  (single days and ranges can be mixed; no spaces
+ *   needed; the first day goes first; at most 100 days). All three places close together: you cannot close only the farm (use the notice for that).
+ *   When the next opening is more than 6 days away the badge says the date ("Opens Fri, Nov 20"), not only the weekday.
  *   To see a closed badge today, write today's date for a minute, look at the page, then put the real date back.
  *
  * `notice` is the yellow bar at the top of every page. '' (two quote marks, nothing between) hides it.
@@ -175,8 +178,9 @@
  * number is lat, the second is lon (in North Carolina the second one starts with a minus sign). Change  farmPoint: null,  to
  *       farmPoint: { lat: FIRST_NUMBER, lon: SECOND_NUMBER },     and replace the two words with your two numbers (keep the minus sign).
  * When a visitor presses the button, the address they typed goes to OpenStreetMap's search, and two map spots (theirs and the farm's) go to the free OSRM routing
- * server. Nothing is sent before that, and this website does not keep the address. The Site check box does not check `farmPoint`: swapped numbers
- * or a missing minus sign are accepted and every answer is then wrong. After you set it, press "Get drive time" once with an address in Indian
+ * server. Nothing is sent before that, and this website does not keep the address. The Site check box checks `farmPoint`: lat must be between 24 and 50
+ * and lon between -125 and -66 (the United States). Swapped numbers, a missing minus sign, a letter in a number or numbers in quote marks are named, and a
+ * spot that is wrong is not used (the address is searched instead). After you set it, press "Get drive time" once with an address in Indian
  * Trail and see that the miles look right.
  *
  * SEASON SWITCHER

@@ -15,8 +15,8 @@ import { startSite, loadPlaywright, axeSource, ms } from './lib.mjs';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 // the cheap checks first, then the browser tests from fast to slow
-const ORDER = ['public-site', 'docs', 'pipeline', 'consistency', 'live', 'dated', 'messages', 'drive', 'pause', 'gallery', 'analytics', 'privacy', 'print-qr', 'deploy', 'farm-seasons', 'npc', 'i18n', 'i18n-early', 'i18n-a11y', 'languages', 'axe', 'map', 'features', 'hero', 'touch'];
-const NEEDS_BROWSER = (name) => !['public-site', 'docs', 'pipeline', 'consistency'].includes(name);
+const ORDER = ['public-site', 'launch-check', 'docs', 'pipeline', 'consistency', 'live', 'dated', 'sitecheck', 'messages', 'drive', 'pause', 'gallery', 'analytics', 'privacy', 'print-qr', 'deploy', 'farm-seasons', 'npc', 'i18n', 'i18n-early', 'i18n-a11y', 'languages', 'axe', 'map', 'features', 'hero', 'touch'];
+const NEEDS_BROWSER = (name) => !['public-site', 'launch-check', 'docs', 'pipeline', 'consistency'].includes(name);
 const args = process.argv.slice(2), flags = args.filter((a) => a.startsWith('--')), words = args.filter((a) => !a.startsWith('--'));
 const names = fs.readdirSync(DIR).filter((f) => f.endsWith('.test.mjs')).map((f) => f.replace(/\.test\.mjs$/, ''))
   .sort((a, b) => (ORDER.indexOf(a) < 0 ? 99 : ORDER.indexOf(a)) - (ORDER.indexOf(b) < 0 ? 99 : ORDER.indexOf(b)) || a.localeCompare(b))

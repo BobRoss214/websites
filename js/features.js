@@ -47,30 +47,40 @@
   const SVGNS = 'http://www.w3.org/2000/svg';
 
   // Mistakes in js/content.js or in the schedule table are collected here instead of breaking the page. They go to the
-  // console and, while you preview the site on your own computer (or when the address ends in ?check), into a yellow box.
-  const problems = [];
+  // console and, while you preview the site on your own computer (or when the address ends in ?check), into a box at the bottom of the page.
+  // Two kinds, kept apart: `problems` are settings to fix (yellow box), `oldLines` are dated lines that hid themselves after their date
+  // (nothing is broken: the box is green and says so).
+  const problems = [], oldLines = [];
   // A value typed in js/content.js (or sent by the live feed) is shown in the box at most 60 letters long, on one line,
   // so the box can never carry a long message of someone else's.
   const q = (v) => { const a = Array.from(String(v == null ? '' : v).replace(/\s+/g, ' ')); return a.length > 60 ? a.slice(0, 59).join('') + '\u2026' : a.join(''); };
-  const warn = (msg) => { if (problems.indexOf(msg) < 0) { problems.push(msg); try { console.warn('Wise Acres: ' + msg); } catch (e) { /* no console */ } } };
+  const warn = (msg, kind) => { const list = kind === 'old' ? oldLines : problems; if (list.indexOf(msg) < 0) { list.push(msg); try { console.warn('Wise Acres: ' + msg); } catch (e) { /* no console */ } } };
   function showProblems() {
     const local = /^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname);
-    if (!problems.length || !(local || /[?&]check\b/.test(location.search)) || !doc.body) return;
+    if (!(problems.length || oldLines.length) || !(local || /[?&]check\b/.test(location.search)) || !doc.body) return;
     let box = doc.getElementById('wa-problems');
+    const calm = !problems.length;   // only old lines: nothing to fix
     if (!box) {
-      box = doc.createElement('div'); box.id = 'wa-problems'; box.setAttribute('role', 'alert');
-      box.style.cssText = 'position:fixed;z-index:99999;left:12px;right:12px;bottom:12px;max-height:40vh;overflow:auto;padding:12px 16px;background:#fff3b0;color:#3a2416;border:3px solid #3a2416;border-radius:14px;font:600 14px/1.4 system-ui,sans-serif';
+      box = doc.createElement('div'); box.id = 'wa-problems';
       doc.body.appendChild(box);
     }
+    box.setAttribute('role', calm ? 'status' : 'alert');
+    box.style.cssText = 'position:fixed;z-index:99999;left:12px;right:12px;bottom:12px;max-height:40vh;overflow:auto;padding:12px 16px;color:#3a2416;border:3px solid #3a2416;border-radius:14px;font:600 14px/1.4 system-ui,sans-serif;background:' + (calm ? '#e6f4da' : '#fff3b0');
     box.textContent = '';
-    const h = doc.createElement('strong'); h.textContent = problems.length === 1 ? t('Site check: {n} thing to fix', { n: 1 }) : t('Site check: {n} things to fix', { n: problems.length }); box.appendChild(h);
+    const h = doc.createElement('strong');
+    h.textContent = calm ? t('Site check: nothing is broken') : problems.length === 1 ? t('Site check: {n} thing to fix', { n: 1 }) : t('Site check: {n} things to fix', { n: problems.length });
+    box.appendChild(h);
     // Say honestly who can see it: on the live site anyone who adds ?check to the address does.
     const why = doc.createElement('p'); why.style.margin = '4px 0 0'; why.style.fontWeight = '500';
     why.textContent = local ? t('You see this box because the site is open on this computer, not on the live website. Visitors do not see it.') : t('You see this box because the web address has ?check in it. Anyone who adds ?check to the address sees it too.');
     box.appendChild(why);
-    const ul = doc.createElement('ul'); ul.style.margin = '6px 0 0 18px'; ul.style.padding = '0';
-    problems.forEach((m) => { const li = doc.createElement('li'); li.textContent = m; ul.appendChild(li); });
-    box.appendChild(ul);
+    const list = (items, parent) => { const ul = doc.createElement('ul'); ul.style.margin = '6px 0 0 18px'; ul.style.padding = '0'; items.forEach((m) => { const li = doc.createElement('li'); li.textContent = m; ul.appendChild(li); }); parent.appendChild(ul); };
+    if (problems.length) list(problems, box);
+    if (oldLines.length) {   // fine as they are: the lines did their job
+      const part = doc.createElement('div'); part.style.cssText = 'margin-top:10px;font-weight:500' + (problems.length ? ';padding-top:8px;border-top:2px dashed #3a2416' : '');
+      const hh = doc.createElement('strong'); hh.textContent = t('Old lines that hid themselves. Nothing is broken: remove them when you like.'); part.appendChild(hh);
+      list(oldLines, part); box.appendChild(part);
+    }
     // The box sits on top of the page, so it must be closable (it hid the buttons under it from keyboard users). Escape closes it too.
     const hide = doc.createElement('button'); hide.type = 'button'; hide.textContent = t('Hide this box');
     hide.style.cssText = 'margin:10px 0 0;padding:.45em 1em;font:inherit;font-weight:700;font-size:14px;color:inherit;background:#fff;border:2px solid #3a2416;border-radius:10px;cursor:pointer';
@@ -382,7 +392,7 @@
       if (opens && realYmd(opens) && until < opens) { warn('A row of the pizza schedule opens ' + opens + ' but its data-until="' + until + '" is earlier (copied from another row?). Put the last day of that weekend in data-until. The row stays visible.'); return; }
       if (today <= until) return;
       el.style.setProperty('display', 'none', 'important');   // "important": the season switch toggles only the hidden attribute
-      warn('Hidden since ' + addDays(until, 1) + ' because its data-until date has passed: "' + q(el.textContent) + '". Nothing is broken: the line did its job and hid itself. To remove it for good, delete it from the page (search for data-until="' + until + '" in index.html and in the files in pages/), or if you reused it for new dates, change its data-until.');
+      warn('Hidden since ' + addDays(until, 1) + ' because its data-until date has passed: "' + q(el.textContent) + '". To remove it for good, delete it from the page (search for data-until="' + until + '" in index.html and in the files in pages/), or if you reused it for new dates, change its data-until.', 'old');
     });
     $$('[data-until-empty]').forEach((box) => {
       const items = $$('li, tbody tr, [data-until]', box);
@@ -400,11 +410,130 @@
     const missing = need[p].filter((k) => !String(a[k] == null ? '' : a[k]).trim());
     if (missing.length) warn('analytics.provider is "' + p + '" but ' + missing.map((k) => 'analytics.' + k).join(' and ') + (missing.length > 1 ? ' are' : ' is') + ' empty. Nothing is counted.');
   }
+  // closures and noticeUntil (js/content.js) are read by js/live.js, which skips a date it cannot read. Say so here, so it is not silent.
+  // A closure is a day ('2026-11-09') or a range of days with two dots ('2026-11-09..2026-11-15'); js/live.js expands the ranges (expandClosures).
   function checkOwnerDates() {
     const c = W.closures;
-    if (c != null && !Array.isArray(c)) warn("closures must be a list of dates: closures: ['2026-10-04', '2026-10-11']. To close several days, write each day.");
-    (Array.isArray(c) ? c : []).forEach((v) => { fixYmd(v, 'closures'); });
+    if (c != null && !Array.isArray(c)) warn("closures must be a list of dates: closures: ['2026-10-04', '2026-11-09..2026-11-15']. A week can be written as one range, with two dots.");
+    (Array.isArray(c) ? c : []).forEach((v) => {
+      const s = String(v == null ? '' : v).trim(), range = /^(.*?)\s*\.\.\s*(.*)$/.exec(s);
+      if (!range) {
+        if ((s.match(/\d{4}-\d{1,2}-\d{1,2}/g) || []).length === 2) warn('closures "' + q(s) + '" looks like a range of days. Write a range with two dots, like \'2026-11-09..2026-11-15\' (both days count).');
+        else fixYmd(s, 'closures');
+        return;
+      }
+      const bad = W.live && W.live.expandClosures ? W.live.expandClosures([s]).problems[0] : null;
+      if (!bad) { fixYmd(range[1], 'closures range start'); fixYmd(range[2], 'closures range end'); return; }
+      if (bad.why === 'range-end') warn('closures "' + q(s) + '": "' + q(bad.end) + '" is not a real day. Write a range like \'2026-11-09..2026-11-15\' (year-month-day, two digits each, two dots between; both days count). This closure is ignored.');
+      else if (bad.why === 'range-order') warn('closures "' + q(s) + '" ends before it starts. Write the first day first: \'' + bad.to + '..' + bad.from + '\'. This closure is ignored.');
+      else if (bad.why === 'range-long') warn('closures "' + q(s) + '" is more than 100 days long, so it is ignored. Check the years. To close for a whole season, change the hours or the season dates instead.');
+    });
     if (W.noticeUntil) fixYmd(W.noticeUntil, 'noticeUntil');
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Names in js/content.js that the site does not know. A misspelled setting (noticeUntill) is ignored by the site without a word, so the
+   * Site check box names it and, when it is close to a real one, says which. The names the farm typed at the top of the file are in W.settingKeys
+   * (js/season.js saves them before anything else is added); the names inside them are read from the settings themselves.
+   * ------------------------------------------------------------------ */
+  const SETTING_NAMES = {
+    '': ['seasonPicker', 'reviews', 'analytics', 'notice', 'noticeUntil', 'closures', 'hours', 'week', 'signup', 'reviewUrl', 'community', 'farmPoint', 'entrancePhoto', 'photos'],
+    hours: ['greenhouse', 'pizza', 'farm'],
+    'hours.greenhouse': ['days', 'open', 'close'],
+    'hours.pizza': ['days', 'open', 'close'],
+    'hours.farm': ['spring', 'summer', 'fall', 'winter'],
+    week: ['updated', 'expireDays', 'note', 'crops', 'days', 'waitlistEmail', 'feed'],
+    signup: ['action', 'interests', 'tags', 'languageField', 'demo'],
+    farmPoint: ['lat', 'lon'],
+    entrancePhoto: ['src', 'alt', 'caption'],
+  };
+  const LIST_NAMES = { 'week.days': ['date', 'farm', 'pizza', 'note'], reviews: ['quote', 'name', 'source', 'url', 'date', 'lang'], photos: ['src', 'alt', 'caption', 'tags'], community: ['src', 'alt', 'by', 'url'] };
+  function editDistance(a, b) {
+    let row = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const next = [i];
+      for (let j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      row = next;
+    }
+    return row[b.length];
+  }
+  function closestName(name, known) {   // the real name that is nearest to the one typed, or '' when none is near
+    const n = String(name).toLowerCase();
+    let best = '', bd = 99;
+    known.forEach((k) => { const d = editDistance(n, k.toLowerCase()); if (d < bd) { bd = d; best = k; } });
+    return bd <= (n.length >= 5 ? 2 : 1) ? best : '';
+  }
+  function checkSettingNames() {
+    const names = Array.isArray(W.settingKeys) ? W.settingKeys : [];
+    const check = (keys, known, where) => keys.forEach((k) => {
+      if (known.indexOf(k) >= 0) return;
+      const near = closestName(k, known);
+      warn((where ? where + ': ' : 'js/content.js: ') + '"' + q(k) + '" is not a setting the site knows, so it does nothing. ' + (near ? 'Did you mean "' + near + '"? (Spelling and capital letters must match exactly.)' : 'The names you can use here: ' + known.join(', ') + '.'));
+    });
+    check(names, SETTING_NAMES[''], '');
+    const plain = (v) => v && typeof v === 'object' && !Array.isArray(v);
+    Object.keys(SETTING_NAMES).forEach((path) => {
+      if (!path) return;
+      const v = path.split('.').reduce((o, k) => (plain(o) ? o[k] : undefined), W);
+      if (plain(v)) check(Object.keys(v), SETTING_NAMES[path], path);
+    });
+    Object.keys(LIST_NAMES).forEach((path) => {
+      const v = path.split('.').reduce((o, k) => (plain(o) || Array.isArray(o) ? o[k] : undefined), W);
+      if (Array.isArray(v)) v.forEach((item, i) => { if (plain(item)) check(Object.keys(item), LIST_NAMES[path], path + ' number ' + (i + 1)); });
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * farmPoint (js/content.js): the exact spot of the farm for the Drive time box, two numbers copied from Google Maps. Only a spot in the
+   * United States is used. A swapped pair, a missing minus sign or text instead of a number would send every visitor's route to the wrong
+   * place without a word, so such a spot is not used (the address is searched instead) and the Site check box says what is wrong.
+   * ------------------------------------------------------------------ */
+  function readFarmPoint() {
+    const fp = W.farmPoint, out = { point: null, problems: [] };
+    if (fp == null) return out;
+    if (typeof fp !== 'object' || Array.isArray(fp)) { out.problems.push('farmPoint must look like { lat: 35.0, lon: -80.6 }: two numbers between curly brackets. It is not used, the address is searched instead.'); return out; }
+    const read = (v, name, example) => {
+      if (typeof v === 'number') return v;
+      if (typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v))) { out.problems.push('farmPoint.' + name + ' "' + q(v) + '" is written as text. It works, but take the quote marks off so it is a number: ' + name + ': ' + Number(v) + '.'); return Number(v); }
+      out.problems.push(v === undefined || v === null ? 'farmPoint needs both numbers; ' + name + ' is missing. Write { lat: 35.0, lon: -80.6 } with your own two numbers.' : 'farmPoint.' + name + ' "' + q(v) + '" is not a number. Use only digits, a dot and a minus sign, like ' + name + ': ' + example + '.');
+      return NaN;
+    };
+    const lat = read(fp.lat, 'lat', '35.0'), lon = read(fp.lon, 'lon', '-80.6');
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) { if (out.problems.length) out.problems[out.problems.length - 1] += ' It is not used, the address is searched instead.'; return out; }
+    const latOk = lat >= 24 && lat <= 50, lonOk = lon >= -125 && lon <= -66;
+    if (latOk && lonOk) { out.point = { lat, lon }; return out; }
+    let msg;
+    if (lat >= -125 && lat <= -66 && lon >= 24 && lon <= 50) msg = 'farmPoint: lat and lon look swapped. The first number (lat) is about 35 here, the second (lon) about -80. Swap them.';
+    else if (latOk && lon >= 66 && lon <= 125) msg = 'farmPoint.lon is ' + lon + ' and needs a minus sign: -' + lon + ' (in North Carolina the second number starts with a minus sign).';
+    else if (lonOk && lat <= -24 && lat >= -50) msg = 'farmPoint.lat is ' + lat + ' and must not have a minus sign: ' + (-lat) + '.';
+    else msg = 'farmPoint (' + lat + ', ' + lon + ') is not in the United States: lat must be between 24 and 50 and lon between -125 and -66. Copy the two numbers from Google Maps again.';
+    out.problems.push(msg + ' It is not used, the address is searched instead.');
+    return out;
+  }
+  const checkFarmPoint = () => readFarmPoint().problems.forEach((m) => warn(m));
+
+  /* ------------------------------------------------------------------ *
+   * js/content.js itself failing: a typo stops the whole file, so every setting is off and visitors see nothing at all (no message). The little script in
+   * the <head> of the page (before js/content.js) noted the error with its line number; here it goes into the box, in plain words.
+   * ------------------------------------------------------------------ */
+  function reportContentErrors() {
+    const errors = window.WA_CONTENT_ERRORS || [];
+    const off = 'hours, closures, the notice bar, photos, reviews and the signup are all off and visitors see no message';
+    if (!errors.length) {
+      if (contentFailed) warn('js/content.js did not run, so ' + off + '. It has a typo: very often a missing comma at the end of a line, an apostrophe inside single quotes (write "We\'re open" or We\\\'re) or a curly quote mark. ' + (location.protocol === 'file:' ? 'A page opened straight from a folder is not given the line number, so it cannot be shown here: ' : '') + 'Open the browser console (F12): the red line that names content.js ends with the line number (red lines about fonts are not the problem).');
+      return;
+    }
+    errors.slice(0, 3).forEach((e) => {
+      if (e.load) { warn('js/content.js could not be loaded: the file is missing, was renamed, or is not in the js folder next to season.js. Until it is back, ' + off + '.'); return; }
+      const what = String(e.message || '').replace(/^Uncaught\s+/, '');
+      const hint = /Unexpected end of input|missing [}\]]|Unexpected token '?[}\]]/.test(what) ? 'A bracket } or ] is missing, or there is one too many.'
+        : /is not defined/.test(what) ? 'A word has no quote marks around it: put quote marks around text, and check the spelling.'
+        : /Invalid or unexpected token|Unterminated|illegal character|missing ' after|unexpected token ['"\u2018\u2019\u201c\u201d]/i.test(what) ? 'This is usually a curly quote mark (copied from Word or an email) or an apostrophe inside single quotes.'
+        : 'This is usually a comma missing at the end of the line before it.';
+      warn('js/content.js stopped ' + (e.line ? 'at line ' + e.line : '(the browser gave no line number: open the console with F12)') + ': "' + q(what) + '". ' + hint
+        + ' Look at that line and the line above it. The other usual cause is an apostrophe inside single quotes: write "We\'re open" with double quotes. '
+        + (contentFailed ? 'Until it is fixed, ' + off + '.' : 'The settings before that line were read; the ones after it are off.') + ' Fix it, save, refresh.');
+    });
   }
 
   /* ------------------------------------------------------------------ *
@@ -681,7 +810,7 @@
    * places found are only kept in memory until the page is closed or reloaded).
    * If either service is down, the Google Maps button still gives the answer. */
   const PLACES = {
-    farm:       { addr: '4701 Hartis Rd, Indian Trail, NC 28079', spot: () => W.farmPoint },   // the farm can be given an exact point (farmPoint in js/content.js)
+    farm:       { addr: '4701 Hartis Rd, Indian Trail, NC 28079', spot: () => readFarmPoint().point },   // the farm can be given an exact point (farmPoint in js/content.js; only one in the United States is used)
     greenhouse: { addr: '5503 Poplin Rd, Indian Trail, NC 28079', spot: () => null },
   };
   const GEO_URL = 'https://nominatim.openstreetmap.org/search';
@@ -1172,8 +1301,8 @@
 
   // Each feature starts on its own: if one has a problem the others still work (and the problem is reported).
   const safe = (fn) => { try { const r = fn(); if (r && r.catch) r.catch((e) => { warn(fn.name + ' stopped: ' + q(e && e.message)); showProblems(); }); } catch (e) { warn(fn.name + ' stopped: ' + q(e && e.message)); } };
-  if (contentFailed) warn('js/content.js did not run, so hours, closures, the notice bar, photos, reviews and the signup are off. It has a typo: very often an apostrophe inside single quotes (write "We\'re open" or We\\\'re). A missing comma at the end of a line or a curly quote mark does the same. Visitors see none of these features and no message. Open the browser console (F12): the red line that names content.js ends with the line number (red lines about fonts are not the problem).');
-  [expireDated, checkOwnerDates, checkAnalytics, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
+  safe(reportContentErrors);
+  [expireDated, checkOwnerDates, checkSettingNames, checkFarmPoint, checkAnalytics, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
 
@@ -1202,5 +1331,5 @@
   doc.addEventListener('wa:lang', () => { $$('.community-strip img').forEach((i) => (lang() === 'en' ? i.removeAttribute('lang') : i.setAttribute('lang', 'en'))); relBuilt = false; relCache = null; relKey = chipKey = ''; renderAll(); showProblems(); });
   doc.addEventListener('wa:season', () => renderWeek());
 
-  W.features = { zonedToUtc, readReleases, releaseState, buildICS, googleUrl, renderWeek, renderRelease, fmtYmd };
+  W.features = { zonedToUtc, readReleases, releaseState, buildICS, googleUrl, renderWeek, renderRelease, fmtYmd, readFarmPoint };
 })();
