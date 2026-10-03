@@ -192,6 +192,7 @@
       ui.armButton(b, 'Tap again to cancel', function () { store.cancelPlan(b.getAttribute('data-plan')); ui.toast('Repeat gift cancelled.', 'trash-2'); renderGiving(); });
     });
     ui.armButton($('[data-role="reset"]', root), 'Tap again to erase my progress', function () {
+      ui.takeBackOpenStakes();
       store.reset();
       GS.bus.emit('progress'); GS.bus.emit('balance'); GS.bus.emit('prefs');
       ui.toast('Your progress has been reset.');

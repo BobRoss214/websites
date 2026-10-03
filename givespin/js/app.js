@@ -229,7 +229,8 @@
     window.addEventListener('gs:savefail', function (e) {
       if (saveFailTold) { return; }
       saveFailTold = true;
-      var full = e && e.detail && e.detail.name === 'QuotaExceededError';
+      var d = (e && e.detail) || {};
+      var full = d.name === 'QuotaExceededError' || d.name === 'NS_ERROR_DOM_QUOTA_REACHED' || d.code === 22 || d.code === 1014;
       ui.toast(full ? 'Your browser could not save this round (storage is full). It will be gone if you reload.' : 'Your browser is not letting GiveSpin save (private or blocked storage). Your progress will be gone if you reload.', 'triangle-alert');
     });
     store.load();

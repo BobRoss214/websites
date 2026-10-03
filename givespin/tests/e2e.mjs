@@ -2830,9 +2830,23 @@ if (section('13v. Saved data from an older version: a round that names a charity
   const rows = await p.evaluate(() => Array.prototype.map.call(document.querySelectorAll('#view-lobby .rgift'), (e) => e.textContent));
   check(rows.every((t) => !/undefined|NaN|null/.test(t)), 'the lobby list of recent rounds shows no broken row', rows);
   check(await p.evaluate(() => window.GS.store.get().history.every((h) => h.allocations.length > 0)), 'a saved round with nothing allocated is dropped when the data is read');
-  // an old slots/Dice round has no saved board: Verify says it cannot be re-checked here instead of looking like tampering
-  const verdict = await p.evaluate(async () => { const h = window.GS.store.get().history.filter((x) => x.game === 'slots')[0]; const r = await window.GS.ui.receipt.verifyRound(h.fair); return { noPool: !!r.noPool, html: window.GS.ui.receipt.verifyHTML(r) }; });
-  check(verdict.noPool && /saved before the site kept its pool/.test(verdict.html), 'an old round without a saved pool is explained, not left to read like cheating', verdict.html.slice(0, 200));
+  // the lobby fills its list from the newest rounds that CAN be shown (the two unusable rounds above are skipped, the WaterAid one is used)
+  check(rows.length === 1 && /WaterAid/.test(rows[0]), 'the recent-rounds list skips rounds it cannot show and still lists the older usable one', rows);
+  // A genuine old slots/Dice round has no saved board and was drawn from a pool that has since grown: Verify says it cannot be re-checked here.
+  // A tampered one (a different secret) must NOT get that excuse: its red rows stand on their own.
+  const verdict = await p.evaluate(async () => {
+    const F = window.GS.fair, GSx = window.GS;
+    const pool = GSx.charities.slice(0, 100).map((c) => ({ id: c.id }));
+    const sorted = F.sortedIds(pool);
+    const commit = await F.newCommit();
+    const idx = await F.drawIndices(commit.roundSeed, 'x', 1, sorted.length, 1);
+    const base = { roundSeed: commit.roundSeed, serverHash: commit.serverHash, clientSeed: 'x', nonce: 1, poolHash: await F.poolHash(pool), count: 1, winners: [sorted[idx[0]]], board: [], weights: [], filters: GSx.core.emptyFilters(), excluded: [] };
+    const grown = await GSx.ui.receipt.verifyRound(base);
+    const swapped = await GSx.ui.receipt.verifyRound(Object.assign({}, base, { roundSeed: 'ab'.repeat(16) }));
+    return { noPool: !!grown.noPool, hashOk: grown.hashOk, html: GSx.ui.receipt.verifyHTML(grown), swappedNoPool: !!swapped.noPool, swappedHash: swapped.hashOk };
+  });
+  check(verdict.hashOk && verdict.noPool && /saved before the site kept its pool/.test(verdict.html), 'a genuine old round without a saved pool is explained, not left to read like cheating', verdict.html.slice(0, 160));
+  check(verdict.swappedHash === false && !verdict.swappedNoPool, 'a tampered old round does not get that excuse');
   await p.close();
 }
 

@@ -96,7 +96,7 @@
   function saveFailed(e) {
     try {
       if (typeof window.dispatchEvent === 'function' && typeof window.CustomEvent === 'function') {
-        window.dispatchEvent(new window.CustomEvent('gs:savefail', { detail: { name: e && e.name } }));
+        window.dispatchEvent(new window.CustomEvent('gs:savefail', { detail: { name: (e && e.name) || '', code: e && e.code } }));
       }
     } catch (err) { /* nobody is listening, and that is fine */ }
   }

@@ -67,15 +67,10 @@
   }
 
   function recent() {
-    var h = store.get().history.slice(0, 6);
+    // the six newest rounds that can be shown: one that names a charity no longer on the list (or has no allocation at all) is left out rather than stopping the page
+    var h = store.get().history.filter(function (x) { return x.allocations && x.allocations.length && GS.charity(x.allocations[0].charityId); }).slice(0, 6);
     var box = $('[data-role="recent"]', root);
     if (!box) { return; }
-    if (!h.length) {
-      box.innerHTML = '<p class="empty">Nothing here yet. Play any game and your rounds will show up here, with a link to each charity.</p>';
-      return;
-    }
-    // a round that names a charity no longer on the list (or has no allocation at all) is left out rather than stopping the page
-    h = h.filter(function (x) { return x.allocations && x.allocations.length && GS.charity(x.allocations[0].charityId); });
     if (!h.length) {
       box.innerHTML = '<p class="empty">Nothing here yet. Play any game and your rounds will show up here, with a link to each charity.</p>';
       return;

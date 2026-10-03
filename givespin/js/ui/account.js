@@ -307,6 +307,7 @@
     });
     m.$('[data-role="signout"]').addEventListener('click', function () { accounts.signOut(); GS.bus.emit('account'); GS.bus.emit('prefs'); m.close(); ui.toast('Signed out.', 'log-out'); });
     ui.armButton(m.$('[data-role="erase"]'), 'Tap again to erase everything', function () {
+      ui.takeBackOpenStakes();
       store.eraseAll();
       GS.bus.emit('account'); GS.bus.emit('prefs'); GS.bus.emit('balance'); GS.bus.emit('progress');
       GS.app.refreshPool();

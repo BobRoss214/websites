@@ -47,6 +47,11 @@
 
     money: function (cents, compact) { return core.fmtMoney(cents, compact); },
 
+    /** Takes back the visitor's stakes on live tables that are still open, so nothing is left in a table when the saved data is wiped. */
+    takeBackOpenStakes: function () {
+      try { if (GS.live && GS.live.rooms) { GS.live.rooms().forEach(function (r) { if (r && r.you && r.phase === 'open') { r.cancel(); } }); } } catch (e) { /* the wipe goes ahead anyway */ }
+    },
+
     /** A count with a thousands separator: 1042 -> "1,042". */
     num: function (n) { var x = Number(n); return isFinite(x) ? x.toLocaleString('en-US') : ''; },
 

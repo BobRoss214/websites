@@ -37,9 +37,9 @@
     return check.then(function (r) {
       if (r.ok) { var badges = store.noteVerify(); if (badges.length) { GS.bus.emit('badges', badges); } }
       // a round saved by an older version of the site has its board (or switched-off list) cut to the first 300, so it cannot be redone here
-      else if (fairData.cut) { r.cutShort = true; }
+      else if (fairData.cut && r.hashOk && !r.poolOk) { r.cutShort = true; }
       // a solo round saved before the site kept its pool (slots, Dice) is checked against today's list, which has changed
-      else if (!(fairData.board && fairData.board.length) && !(fairData.weights && fairData.weights.length)) { r.noPool = true; }
+      else if (r.hashOk && !r.poolOk && !(fairData.board && fairData.board.length) && !(fairData.weights && fairData.weights.length)) { r.noPool = true; }
       return r;
     });
   }
