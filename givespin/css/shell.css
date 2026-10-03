@@ -36,7 +36,7 @@
 .balance:hover { border-color: #4a7392; }
 .balance__ico { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 197, 66, 0.15); color: var(--gold); }
 .balance__txt { display: grid; line-height: 1.15; }
-.balance__lbl { font: 700 0.62rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+.balance__lbl { font: 700 0.6875rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
 .balance__amt { font: 800 0.98rem var(--f-display); font-variant-numeric: tabular-nums; }
 
 .acct { position: relative; display: flex; align-items: center; gap: 6px; }
@@ -51,8 +51,8 @@
 .acct__item:hover { background: rgba(255, 255, 255, 0.07); color: var(--text); }
 .acct__item .ico { color: var(--muted); }
 
-.demo-strip { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 7px 14px; background: rgba(255, 197, 66, 0.1); border-bottom: 1px solid rgba(255, 197, 66, 0.25); color: #f8e1a6; font-size: 0.8rem; text-align: center; }
-.demo-strip a { color: #ffe08a; }
+.demo-strip { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 2px 14px; background: rgba(255, 197, 66, 0.1); border-bottom: 1px solid rgba(255, 197, 66, 0.25); color: #f8e1a6; font-size: 0.8rem; text-align: center; }
+.demo-strip a { color: #ffe08a; display: inline-block; padding: 5px 0; }   /* 25 px hit area; the strip itself is trimmed below so it does not grow */
 .demo-strip__dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--gold); animation: blink 1.8s ease-in-out infinite; }
 @keyframes blink { 50% { opacity: 0.35; } }
 
@@ -85,8 +85,8 @@
 /* ------------------------------------------------------------------ footer */
 .foot { max-width: 1320px; margin: 40px auto 0; padding: 22px 0 0; border-top: 1px solid var(--line); display: grid; gap: 10px; color: var(--dim); font-size: 0.78rem; }
 .foot strong { color: var(--muted); }
-.foot__links { display: flex; gap: 16px; }
-.foot__links a { color: var(--muted); }
+.foot__links { display: flex; flex-wrap: wrap; gap: 0 16px; }
+.foot__links a { color: var(--muted); padding: 3px 0; }   /* hit area 25 px high */
 
 /* -------------------------------------------------------------- stream mode */
 .stream-exit { position: fixed; right: 16px; bottom: 16px; z-index: 90; background: #1b3040; }
@@ -129,18 +129,25 @@ body.is-transparent .panel { background: rgba(19, 32, 44, 0.78); }
   .side__list { display: flex; flex: 1; justify-content: space-around; gap: 0; }
   .side__list .side__sub, .side__list .side__rule, .side__list .side__help, .side__level { display: none; }
   .side__list li { flex: 1; }
-  .side__link { flex-direction: column; gap: 3px; width: auto; min-height: 50px; padding: 6px 2px; font-size: 0.66rem; }
+  .side__link { flex-direction: column; gap: 3px; width: auto; min-height: 50px; padding: 6px 2px; font-size: 0.6875rem; }
   .side__txt { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
   .side__link[aria-current="page"]::before { left: 20%; right: 20%; top: -6px; bottom: auto; width: auto; height: 3px; border-radius: 0 0 4px 4px; }
   .foot { margin-top: 28px; }
   .stream-exit { bottom: 90px; }
 }
 @media (max-width: 400px) {
-  .iconbtn { width: 36px; height: 36px; }
+  .topbar .iconbtn { width: 36px; height: 36px; }   /* top bar only: this used to shrink every icon button, the close buttons of dialogs included */
 }
 /* The top bar used to run off the right edge (Sign up cut off) on small phones (320 to 360 px) and on a tablet held upright (730 to 790 px). */
-@media (max-width: 960px) {
-  .topbar .search { display: none; }   /* the search box was squeezed to about 50 px here: too small to use. (Games and charities are searchable from the lobby and the Charities page.) */
+/* Search: the box sits in the top bar down to 920 px (it keeps at least 160 px there, signed in or not). Below that the bar has no room for it (it must stay
+   on one line down to 320 px), so on a small screen js/app.js (placeSearch) moves the same box to the top of the lobby, where it finds games and charities. */
+@media (max-width: 920px) {
+  .topbar .search { display: none; }
+}
+.lobbysearch { display: none; }
+@media (max-width: 920px) {
+  .lobbysearch { display: block; margin: 0 0 16px; }
+  .lobbysearch .search { max-width: none; }
 }
 @media (max-width: 800px) {
   .acct [data-role="login"] { display: none; }   /* "Log in" is in the Sign up window too ("Already have an account?") */
@@ -150,6 +157,6 @@ body.is-transparent .panel { background: rgba(19, 32, 44, 0.78); }
   .topbar__right { gap: 4px; }
   .brand__mark { width: 28px; height: 28px; }
   .balance { padding: 3px 6px; }
-  .iconbtn { width: 32px; height: 32px; }
+  .topbar .iconbtn { width: 32px; height: 32px; }
   #btn-credit, .acct .btn { padding-left: 8px; padding-right: 8px; }
 }

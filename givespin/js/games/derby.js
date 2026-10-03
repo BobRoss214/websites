@@ -490,8 +490,8 @@
     var ordered = runners.slice().sort(function (a, b) { return (a.run.place || 99999) - (b.run.place || 99999); });
     var shown = ordered.slice(0, 10);
     el.rank.innerHTML = shown.map(function (r) {
-      // on a live board the runners nobody backed only fill the board: they are shown faded
-      var cls = r.run.place === 1 ? ' class="is-win"' : (field && !(r.tickets > 0) ? ' style="opacity:.62"' : '');
+      // on a live board the runners nobody backed only fill the board: their badge is faded (the name stays readable)
+      var cls = r.run.place === 1 ? ' class="is-win"' : (field && !(r.tickets > 0) ? ' class="is-filler"' : '');
       return '<li' + cls + '><span class="rank__n">' + (r.run.place || '-') + '</span>' +
         '' + GS.ui.mono(r.ch, 24) + '<span class="rank__name">' + U.esc(r.ch.short) + '</span></li>';
     }).join('') + (ordered.length > 10 ? '<li class="rank__more">+ ' + GS.ui.num(ordered.length - 10) + ' more</li>' : '');

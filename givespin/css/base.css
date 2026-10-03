@@ -106,7 +106,8 @@ html[data-mode="demo"] .only-live { display: none !important; }
 }
 .btn:hover:not(:disabled) { background: #29465b; border-color: #4a7392; color: #fff; }
 .btn:active:not(:disabled) { transform: translateY(1px); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }   /* a disabled button keeps at least 4.5 to 1 contrast: it was 0.45 (2.6 to 3.6 to 1) */
+.btn--ghost:disabled { opacity: 0.75; }
 .btn--green { background: linear-gradient(180deg, #34f88c 0%, #17c963 100%); border-color: #17c963; color: var(--green-ink); font-weight: 800; box-shadow: 0 8px 22px -10px rgba(34, 240, 122, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
 .btn--green:hover:not(:disabled) { background: linear-gradient(180deg, #52ffa0 0%, #22d870 100%); border-color: #22d870; color: var(--green-ink); }
 .btn--outline-green { background: transparent; border-color: var(--green); color: var(--green); }
@@ -120,9 +121,9 @@ html[data-mode="demo"] .only-live { display: none !important; }
 .btn--block { width: 100%; }
 .btn--danger { color: #ff9aa6; }
 .btn.is-armed { background: #4a1a25; border-color: var(--red); color: #ffd6dc; }
-.linkbtn { background: none; border: 0; padding: 0; color: var(--green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.linkbtn { background: none; border: 0; padding: 3px 0; min-height: 24px; color: var(--green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .linkbtn:hover:not(:disabled) { color: #7dffb0; }
-.linkbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.linkbtn:disabled { opacity: 0.75; cursor: not-allowed; }
 .linkbtn.is-armed { color: #ffb3bd; }
 
 .iconbtn { display: inline-grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); transition: all 0.15s; }
@@ -137,6 +138,7 @@ html[data-mode="demo"] .only-live { display: none !important; }
 .field--2 { grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
 .field--2 > div { display: grid; gap: 8px; }
 .field__label, .fgroup__t { font: 700 0.74rem var(--f-body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.field__label small { font-size: 0.6875rem; text-transform: none; letter-spacing: 0; }   /* "(optional)": 11 px, was 9 */
 .field__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
 .field__aux { font: 600 0.78rem var(--f-body); color: var(--dim); }
 .field__hint { font-size: 0.78rem; color: var(--dim); min-height: 1.2em; }
@@ -173,14 +175,14 @@ html[data-mode="demo"] .only-live { display: none !important; }
 .amount__input:focus { outline: none; }
 .amount__btn { width: 46px; border: 0; border-left: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font: 700 0.9rem var(--f-body); }
 .amount__btn:hover:not(:disabled) { background: var(--raised); color: var(--text); }
-.amount__btn:disabled { opacity: 0.45; }
+.amount__btn:disabled { opacity: 0.75; }
 .amount--sm .amount__input { font-size: 1rem; padding: 8px; width: 90px; }
 .amount--sm .amount__cur { font-size: 1rem; }
 .presets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .preset { min-height: 36px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); font: 700 0.85rem var(--f-body); transition: all 0.12s; }
 .preset:hover:not(:disabled) { color: var(--text); border-color: #4a7392; }
 .preset[aria-pressed="true"] { color: var(--green); border-color: var(--green); background: rgba(34, 240, 122, 0.12); }
-.preset:disabled { opacity: 0.45; }
+.preset:disabled { opacity: 0.75; }
 
 /* segmented control */
 .seg { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 12px; background: #0b161f; border: 1px solid var(--line); }
@@ -188,7 +190,7 @@ html[data-mode="demo"] .only-live { display: none !important; }
 .seg__btn small { font-weight: 600; font-size: 0.7rem; opacity: 0.85; }
 .seg__btn:hover:not(:disabled):not([aria-pressed="true"]) { color: var(--text); background: rgba(255, 255, 255, 0.05); }
 .seg__btn[aria-pressed="true"] { background: rgba(34, 240, 122, 0.14); color: var(--green); box-shadow: inset 0 0 0 1px rgba(34, 240, 122, 0.55); }
-.seg__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.seg__btn:disabled { opacity: 0.75; cursor: not-allowed; }
 .seg__btn:disabled[aria-pressed="true"] { opacity: 1; cursor: default; }
 .seg__btn .ico { margin-right: 6px; }
 .seg--sm .seg__btn { min-height: 30px; padding: 4px 10px; font-size: 0.78rem; }
@@ -199,7 +201,7 @@ html[data-mode="demo"] .only-live { display: none !important; }
 .chip .ico { width: 1em; height: 1em; color: var(--c); }
 .chip:hover:not(:disabled):not([aria-pressed="true"]) { color: var(--text); border-color: color-mix(in srgb, var(--c) 60%, var(--line-2)); }
 .chip[aria-pressed="true"] { color: #fff; border-color: var(--c); background: color-mix(in srgb, var(--c) 22%, var(--panel-2)); }
-.chip:disabled { opacity: 0.5; cursor: not-allowed; }
+.chip:disabled { opacity: 0.75; cursor: not-allowed; }
 .chip__n { margin-left: 2px; font-weight: 600; font-size: 0.72rem; opacity: 0.8; }
 .chip--all { --c: var(--green); }
 .chip--link .cmono { margin-left: -4px; }
@@ -221,7 +223,7 @@ html[data-mode="demo"] .only-live { display: none !important; }
 .switchrow input:focus-visible + .switch__ui { outline: 2px solid var(--green); outline-offset: 2px; }
 .switchrow small { display: block; font-weight: 400; color: var(--dim); margin-top: 2px; }
 .checkrow { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: var(--muted); cursor: pointer; }
-.checkrow input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--green); flex: none; }
+.checkrow input { width: 24px; height: 24px; margin: 0; accent-color: var(--green); flex: none; }
 .checkrow small { color: var(--dim); }
 
 /* confetti canvas (lives in the browser's top layer via the Popover API so it shows above dialogs) */

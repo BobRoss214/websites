@@ -37,7 +37,7 @@
 .promo--b { background: linear-gradient(130deg, #d38208 0%, #b23f1a 100%); }
 .promo--c { background: linear-gradient(130deg, #0e9068 0%, #0b5c7c 100%); }
 .promo__copy { display: grid; gap: 8px; justify-items: start; align-content: center; }
-.promo__eyebrow { font: 800 0.66rem var(--f-body); letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255, 255, 255, 0.85); }
+.promo__eyebrow { font: 800 0.6875rem var(--f-body); letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255, 255, 255, 0.85); }
 .promo__t { font-size: 1.28rem; line-height: 1.12; }
 .promo__p { font-size: 0.82rem; color: rgba(255, 255, 255, 0.9); max-width: 32ch; }
 .promo__art { display: grid; place-items: center; }
@@ -57,7 +57,7 @@
 .tile__art svg { width: 100%; height: 100%; }
 /* the corner labels, stacked: the info badge, and under it (on games that also have a live table) the Live pill. Side by side they did not fit on a tile ("UP TO 1,00" with the pill drawn over the last digit) */
 .tile__tags { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-.tile__badge { padding: 3px 9px; border-radius: 999px; background: rgba(5, 12, 18, 0.62); font: 800 0.62rem var(--f-body); letter-spacing: 0.07em; text-transform: uppercase; }
+.tile__badge { padding: 3px 9px; border-radius: 999px; background: rgba(5, 12, 18, 0.62); font: 800 0.6875rem var(--f-body); letter-spacing: 0.07em; text-transform: uppercase; }
 .tile__meta { display: grid; gap: 1px; padding: 22px 14px 13px; background: linear-gradient(0deg, rgba(4, 10, 15, 0.82) 30%, transparent); }
 .tile__name { font: 800 1rem var(--f-display); letter-spacing: -0.01em; }
 .tile__by { font-size: 0.72rem; color: rgba(255, 255, 255, 0.82); }
@@ -86,7 +86,7 @@
 
 /* -------------------------------------------------------------- game screen */
 .crumbs { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; color: var(--dim); font-size: 0.82rem; }
-.crumbs a { color: var(--muted); }
+.crumbs a { color: var(--muted); padding: 3px 0; }   /* a hit area 24 px high, not just the 20 px of the words */
 .crumbs .ico { width: 0.9em; height: 0.9em; }
 .gamegrid { display: grid; grid-template-columns: 350px minmax(0, 1fr); gap: 18px; align-items: start; }
 .bet { display: grid; gap: 18px; padding: 18px; }
@@ -163,6 +163,7 @@
 .stat__ico .ico { width: 1.3rem; height: 1.3rem; }
 .stat__val { font: 800 1.5rem var(--f-display); letter-spacing: -0.02em; }
 .stat__lbl { font-size: 0.78rem; color: var(--muted); }
+.stat__lbl a { display: inline-block; padding: 4px 0; }   /* hit area 23+ px high */
 
 .twocol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 30px; }
 .twocol > .sect, .twocol > .sect.panel { margin-top: 0; }
@@ -229,8 +230,8 @@
 .levelcard__main { display: grid; gap: 8px; flex: 1; min-width: 0; }
 .ring { --p: 0; display: grid; place-items: center; flex: none; width: 118px; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(var(--green) calc(var(--p) * 1%), #0b161f 0); }
 .ring__in { display: grid; place-content: center; width: 82%; aspect-ratio: 1; border-radius: 50%; background: var(--panel); text-align: center; }
-.ring__n { font: 800 2.1rem/1 var(--f-display); }
-.ring__l { font: 700 0.62rem var(--f-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.ring__n { font: 800 2.1rem/1.15 var(--f-display); }
+.ring__l { margin-top: 5px; font: 700 0.69rem var(--f-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }   /* margin: the tall Sora digits used to touch the caption; 11 px, was 10 */
 .lvl__name { font: 800 1.35rem var(--f-display); }
 .lvl__meta { font-size: 0.82rem; color: var(--muted); }
 .lvl__tip { font-size: 0.78rem; color: var(--dim); }
@@ -344,7 +345,7 @@
 .fpgloss dt { font: 700 0.84rem var(--f-body); color: var(--green); }
 .fpgloss dd { margin: 3px 0 0; font-size: 0.88rem; line-height: 1.5; color: var(--muted); }
 .fpdiy { margin-top: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; background: var(--panel-2); }
-.fpdiy > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; font: 700 0.86rem var(--f-body); color: var(--text); list-style: none; }
+.fpdiy > summary { display: flex; align-items: center; gap: 8px; min-height: 24px; cursor: pointer; font: 700 0.86rem var(--f-body); color: var(--text); list-style: none; }
 .fpdiy > summary::-webkit-details-marker { display: none; }
 .fpdiy > summary .ico { transition: transform 0.15s; }
 .fpdiy[open] > summary .ico { transform: rotate(180deg); }

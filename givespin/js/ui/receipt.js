@@ -301,7 +301,8 @@
 
   GS.bus.on('badges', function (list) {
     if (!list || !list.length) { return; }
-    list.forEach(function (b) { ui.toast('Badge unlocked: ' + b.name, 'award'); });
+    // one message however many badges came at once: a first round can unlock four, and four toasts stacked over the board and the winner's name
+    ui.toast((list.length === 1 ? 'Badge unlocked: ' : list.length + ' badges unlocked: ') + list.map(function (b) { return b.name; }).join(', '), 'award');
     GS.audio.badge();
   });
 

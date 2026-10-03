@@ -606,7 +606,7 @@
       return;
     }
     el.legend.innerHTML = pockets.map(function (c, i) {
-      return '<li data-i="' + i + '"' + (i === winIdx && ballMode === 'pocket' ? ' class="is-win"' : (c.id === pick ? ' class="is-pick"' : '')) + '><span class="rlegend__n" style="background:' + pocketColor(i) + '">' + i + '</span><span>' + U.esc(c.short) + '</span></li>';
+      return '<li data-i="' + i + '"' + (i === winIdx && ballMode === 'pocket' ? ' class="is-win"' : (c.id === pick ? ' class="is-pick"' : '')) + '><span class="rlegend__n" style="background:' + pocketColor(i) + ';color:' + U.inkOn(pocketColor(i)) + '">' + i + '</span><span>' + U.esc(c.short) + '</span></li>';
     }).join('');
   }
 

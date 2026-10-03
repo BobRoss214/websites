@@ -5,7 +5,7 @@
 :root { --live: #ff4d6a; }
 
 /* ---------- the LIVE pill and nav dot ---------- */
-.livepill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 8px; border-radius: 999px; background: rgba(255, 77, 106, 0.14); border: 1px solid rgba(255, 77, 106, 0.5); color: #ff9aa9; font: 800 0.66rem var(--f-body); letter-spacing: 0.1em; text-transform: uppercase; vertical-align: middle; }
+.livepill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 8px; border-radius: 999px; background: rgba(255, 77, 106, 0.14); border: 1px solid rgba(255, 77, 106, 0.5); color: #ff9aa9; font: 800 0.6875rem var(--f-body); letter-spacing: 0.1em; text-transform: uppercase; vertical-align: middle; }
 .livepill i, .livedot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 0 rgba(255, 77, 106, 0.7); animation: livepulse 1.6s ease-out infinite; }
 .livedot { position: absolute; top: 9px; left: 26px; }
 .livecount { margin-left: auto; min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--live); color: #2a0510; font: 800 0.68rem var(--f-display); text-align: center; }
@@ -13,10 +13,10 @@
 @keyframes livepulse { 0% { box-shadow: 0 0 0 0 rgba(255, 77, 106, 0.6); } 70%, 100% { box-shadow: 0 0 0 8px rgba(255, 77, 106, 0); } }
 @media (prefers-reduced-motion: reduce) { .livepill i, .livedot { animation: none; } }
 
-.botpill { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px; background: rgba(154, 123, 255, 0.18); border: 1px solid rgba(154, 123, 255, 0.5); color: #c9b8ff; font: 800 0.58rem var(--f-body); letter-spacing: 0.08em; vertical-align: 1px; }
+.botpill { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 4px; background: rgba(154, 123, 255, 0.18); border: 1px solid rgba(154, 123, 255, 0.5); color: #c9b8ff; font: 800 0.6875rem var(--f-body); letter-spacing: 0.08em; vertical-align: 1px; }
 
 /* tiles of games that also have a live table */
-.tile__live { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: rgba(8, 14, 20, 0.62); border: 1px solid rgba(255, 77, 106, 0.6); color: #ffd3da; font: 800 0.58rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; }
+.tile__live { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: rgba(8, 14, 20, 0.62); border: 1px solid rgba(255, 77, 106, 0.6); color: #ffd3da; font: 800 0.6875rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; }
 .tile__live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
 
 /* ---------- simulated-table banners ---------- */
@@ -41,7 +41,7 @@
 .lcard__lead { font-size: 0.74rem; color: rgba(255, 255, 255, 0.78); min-height: 1.1em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .stack { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(0, 0, 0, 0.35); gap: 1px; }
 .stack i { display: block; min-width: 2px; }
-.phasepill { padding: 2px 9px; border-radius: 999px; font: 800 0.66rem var(--f-body); letter-spacing: 0.04em; background: rgba(0, 0, 0, 0.4); color: #fff; font-variant-numeric: tabular-nums; }
+.phasepill { padding: 2px 9px; border-radius: 999px; font: 800 0.6875rem var(--f-body); letter-spacing: 0.04em; background: rgba(0, 0, 0, 0.4); color: #fff; font-variant-numeric: tabular-nums; }
 .phasepill.is-open { background: rgba(34, 240, 122, 0.22); color: #9dffc6; }
 .phasepill.is-locked, .phasepill.is-playing { background: rgba(255, 197, 66, 0.22); color: #ffe39a; }
 .phasepill.is-result { background: rgba(53, 212, 255, 0.2); color: #b5ecff; }
@@ -195,8 +195,8 @@
 .lt-res__card, .lt-res__close, .lt-res__xp { display: flex; align-items: flex-start; gap: 8px; }
 .lt-res__card .ico, .lt-res__close .ico, .lt-res__xp .ico { flex: none; width: 1rem; height: 1rem; margin-top: 2px; }
 .lt-res__close { color: var(--gold) !important; }
-.lt-res__card a { margin-left: auto; font-size: 0.78rem; }
-.rar { display: inline-block; padding: 0 7px; border-radius: 999px; font: 800 0.62rem var(--f-body); letter-spacing: 0.06em; text-transform: uppercase; background: #2a3c4a; color: #fff; }
+.lt-res__card a { margin-left: auto; font-size: 0.78rem; white-space: nowrap; padding: 3px 0; }
+.rar { display: inline-block; padding: 0 7px; border-radius: 999px; font: 800 0.6875rem var(--f-body); letter-spacing: 0.06em; text-transform: uppercase; background: #2a3c4a; color: #fff; }
 .rar--rare { background: #1d6fb5; }
 .rar--epic { background: #7a30bd; }
 .rar--legendary { background: linear-gradient(90deg, #f0a81c, #ffe39a); color: #2a1a00; }
@@ -220,7 +220,7 @@
 
 .rs-note { display: flex; align-items: flex-start; gap: 8px; font-size: 0.84rem; color: var(--muted); padding: 8px 12px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
 .rs-note .ico { flex: none; width: 1rem; height: 1rem; margin-top: 2px; color: var(--gold); }
-.rs-note a { margin-left: auto; white-space: nowrap; }
+.rs-note a { margin-left: auto; white-space: nowrap; padding: 3px 0; }
 
 /* ---------- leagues, cup, crews ---------- */
 .tiers { display: grid; gap: 6px; margin: 12px 0; }

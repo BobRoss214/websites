@@ -44,7 +44,7 @@
   function renderBoard() {
     if (!el.board) { return; }
     el.board.innerHTML = faces.map(function (c, k) {
-      return '<li class="dtile' + (k === winFace && !rolling ? ' is-win' : '') + '" style="--c:' + c.accent + '"><span class="dtile__n">' + (k + 1) + '</span>' +
+      return '<li class="dtile' + (k === winFace && !rolling ? ' is-win' : '') + '" style="--c:' + c.accent + '" title="' + U.esc(c.name) + '"><span class="dtile__n">' + (k + 1) + '</span>' +
         '' + GS.ui.mono(c, 34) + '' +
         '<span class="dtile__name">' + U.esc(c.short) + '</span></li>';
     }).join('');

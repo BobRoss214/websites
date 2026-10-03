@@ -104,11 +104,11 @@ dialog.modal[open] { animation: modal-in 0.22s ease-out; }
 .alloc { display: grid; gap: 8px; }
 .alloc__item { --c: var(--green); display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; background: var(--bg-2); border: 1px solid var(--line); border-left: 4px solid var(--c); }
 .alloc__main { display: grid; gap: 3px; flex: 1; min-width: 0; }
-.alloc__name { justify-self: start; padding: 0; border: 0; background: none; text-align: left; font: 800 0.98rem/1.2 var(--f-display); color: var(--text); text-decoration: underline; text-decoration-color: rgba(255, 255, 255, 0.25); text-underline-offset: 3px; }
+.alloc__name { justify-self: start; padding: 3px 0; border: 0; background: none; text-align: left; font: 800 0.98rem/1.2 var(--f-display); color: var(--text); text-decoration: underline; text-decoration-color: rgba(255, 255, 255, 0.25); text-underline-offset: 3px; }
 .alloc__name:hover { text-decoration-color: var(--green); color: #fff; }
 .alloc__blurb { font-size: 0.8rem; color: var(--muted); }
 .alloc__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 8px; font-size: 0.74rem; }
-.alloc__meta a { color: var(--muted); }
+.alloc__meta a { color: var(--muted); padding: 3px 0; }
 .alloc__amt { display: grid; justify-items: end; }
 .alloc__amt b { font: 800 1.1rem var(--f-display); color: var(--gold); font-variant-numeric: tabular-nums; }
 .alloc__amt span { font-size: 0.7rem; color: var(--dim); }

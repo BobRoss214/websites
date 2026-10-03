@@ -118,15 +118,19 @@
 .dboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 520px; }
 .dtile { --c: #9bb3c0; display: flex; align-items: center; gap: 8px; min-width: 0; padding: 8px 10px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.78rem; font-weight: 700; transition: all 0.25s; }
 .dtile__n { display: grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 6px; background: #fff; color: #0b1620; font: 800 0.72rem var(--f-display); }
-/* the six names are what you are playing for: let them take two lines (a one-line name was cut to "The Pho..." on a phone) */
-.dtile__name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.2; min-width: 0; }
+/* the six names are what you are playing for: they may take three lines (a one-line name was cut to "The Pho..." on a phone) and the tile's title holds the whole name */
+.dtile__name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; line-height: 1.2; min-width: 0; }
+@media (max-width: 400px) {   /* two tiles side by side leave a name only about 30 px: the name goes on a line of its own, under the number and the badge */
+  .dtile { flex-wrap: wrap; row-gap: 6px; }
+  .dtile__name { flex: 1 1 100%; }
+}
 .dtile.is-win { border-color: var(--gold); background: rgba(255, 197, 66, 0.14); box-shadow: 0 0 22px -4px rgba(255, 197, 66, 0.55); }
 
 /* ---------- Coin Flip Showdown ---------- */
 .coingame { width: 100%; display: grid; gap: 14px; justify-items: center; }
 .bracket { --cols: 4; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 660px; }
 .bcol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.bcol__t { text-align: center; font: 800 0.62rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+.bcol__t { text-align: center; font: 800 0.6875rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
 .bcol__list { display: flex; flex-direction: column; justify-content: space-around; flex: 1; gap: 8px; }
 .match { display: grid; gap: 2px; padding: 3px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); transition: border-color 0.2s, box-shadow 0.2s; }
 .match.is-live { border-color: var(--gold); box-shadow: 0 0 18px -4px rgba(255, 197, 66, 0.6); }
@@ -182,6 +186,7 @@
 .rank { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 600px; min-height: 30px; }
 .rank li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px 3px 6px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.74rem; font-weight: 600; color: var(--muted); }
 .rank__n { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--raised); color: #fff; font: 800 0.68rem var(--f-display); }
+.rank li.is-filler .cmono, .rank li.is-filler .rank__n { opacity: 0.55; }
 .rank li.is-win { border-color: var(--gold); background: rgba(255, 197, 66, 0.14); color: #fff; }
 .rank li.is-win .rank__n { background: var(--gold); color: var(--gold-ink); }
 
@@ -226,7 +231,8 @@
 .bracket--compact .match { padding: 2px; gap: 1px; }
 .bracket--compact .bcol__list { gap: 4px; }
 .bracket--compact { max-width: 720px; gap: 6px; }
-.bracket--compact .bcol__t { font-size: 0.55rem; }
+.bracket--compact .bcol__t { font-size: 0.6875rem; letter-spacing: 0.04em; }
+@media (max-width: 560px) { .bracket--compact .bcol__t { font-size: 0.55rem; letter-spacing: 0.02em; } }   /* 11 px titles; on a phone the 9 columns of a big bracket are only about 36 px wide, so there they stay small */
 .bracket--compact .champ__name { font-size: 0.62rem; }
 
 /* ---------- small screens ---------- */
@@ -256,10 +262,10 @@
 .stand__grid--lg { --min: 62px; gap: 5px; }
 .stand__grid--xl { --min: 40px; gap: 4px; padding: 6px; }
 .stand__grid--dot { --min: 11px; gap: 2px; padding: 6px; }
-.stand__grid--dot .stile { padding: 0; aspect-ratio: 1; min-height: 0; border-radius: 3px; border: 0; background: var(--c); }
+.stand__grid--dot .stile { padding: 0; aspect-ratio: 1; min-height: 0; border-radius: 3px; border: 0; background: var(--c); color: var(--ink, var(--text)); }   /* the name is written in dark or white, whichever reads better on the tile's own colour (4.5 to 1 or more for every colour); on a tile this small it is hidden and only read out */
 .stand__grid--dot .stile .cmono { display: none; }
 .stand__grid--dot .stile__name, .stand__grid--dot .stile__share { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.stand__grid--dot .stile.is-out { background: #1b2a35; }
+.stand__grid--dot .stile.is-out { background: #1b2a35; color: var(--text); }
 .stile { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 6px 8px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.74rem; font-weight: 600; color: var(--text); transition: transform 0.28s ease, filter 0.3s ease; }
 .stile .cmono { flex: none; }
 .stile__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

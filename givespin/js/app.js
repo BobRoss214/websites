@@ -171,6 +171,20 @@
     if (search.active >= 0) { input.setAttribute('aria-activedescendant', 'sr-0'); } else { input.removeAttribute('aria-activedescendant'); }
   }
 
+  /**
+   * Where the search box lives: in the top bar on a wide screen; on a small one (the bar has no room, see css/shell.css) at the top of the lobby.
+   * It is the same box either way, so nothing else has to know.
+   */
+  function placeSearch() {
+    var box = $('#search');
+    var bar = $('#topbar');
+    if (!box || !bar) { return; }
+    var slot = document.querySelector('[data-role="lobbysearch"]');
+    var small = !!(window.matchMedia && window.matchMedia('(max-width: 920px)').matches);
+    if (small && slot) { if (box.parentNode !== slot) { slot.appendChild(box); } }
+    else if (box.parentNode !== bar) { bar.insertBefore(box, $('.topbar__right', bar)); }
+  }
+
   function chooseSearch(i) {
     var it = search.items[i];
     if (!it) { return; }
@@ -274,6 +288,9 @@
 
     window.addEventListener('hashchange', function () { onHash(false); });
     onHash(true);
+    placeSearch();
+    GS.bus.on('route', placeSearch);
+    window.addEventListener('resize', placeSearch);
 
     if (params.get('stream') === '1') { setStream(true); }
     if (params.get('transparent') === '1') { document.body.classList.add('is-transparent'); }

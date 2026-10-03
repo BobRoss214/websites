@@ -85,7 +85,8 @@
   }
 
   function build() {
-    root.innerHTML = '<h1 class="sr-only">GiveSpin lobby: casino-style games that give to charity</h1>' + promos() +
+    root.innerHTML = '<h1 class="sr-only">GiveSpin lobby: casino-style games that give to charity</h1>' +
+      '<div class="lobbysearch" data-role="lobbysearch"></div>' + promos() +
       '<section class="sect livestrip" data-role="livestrip" aria-labelledby="lb-live" hidden></section>' +
       '<div class="lobbybar"><nav class="cats" aria-label="Game categories">' + CATS.map(function (c) {
         return '<a class="cat" href="#' + c[2] + '" data-cat="' + c[0] + '">' + esc(c[1]) + '</a>';

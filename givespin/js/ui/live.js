@@ -574,7 +574,8 @@
       if (sm.hot && sm.hot.after >= 2 && you.won) { lines.push('<p class="lt-res__xp">' + ui.icon('flame') + sm.hot.after + ' winners called in a row. Your next round earns ×' + store.hotMultiplier().toFixed(1) + ' XP.</p>'); }
       (sm.newCards || []).forEach(function (c) {
         var ch = GS.charity(c.charityId);
-        lines.push('<p class="lt-res__card">' + ui.icon('layers') + (c.isNew ? 'New card: ' : c.upgraded ? 'Card upgraded: ' : 'Card again: ') + '<b>' + esc(ch.short) + '</b> <span class="rar rar--' + c.rarity + '">' + c.rarity + '</span> <a href="#cards">See your cards</a></p>');
+        // the words, the name and the rarity are one piece of text: separate flex items broke into four narrow columns on a phone
+        lines.push('<p class="lt-res__card">' + ui.icon('layers') + '<span>' + (c.isNew ? 'New card: ' : c.upgraded ? 'Card upgraded: ' : 'Card again: ') + '<b>' + esc(ch.short) + '</b> <span class="rar rar--' + c.rarity + '">' + c.rarity + '</span></span> <a href="#cards">See your cards</a></p>');
       });
     } else {
       cls += ' is-watch';

@@ -48,7 +48,7 @@
     '.stand__grid--fill .stile.is-filler .cmono{opacity:0.6}',
     '.stand__grid--dot .stile.is-out{filter:none;transform:none;transition:background-color 0.25s}',
     '.stand__grid--dot .stile.is-danger{animation:none;background:var(--red)}',
-    '.stand__grid--fill.stand__grid--dot .stile.is-filler{opacity:1;background:color-mix(in srgb,var(--c) 38%,#26343f)}',
+    '.stand__grid--fill.stand__grid--dot .stile.is-filler{opacity:1;background:color-mix(in srgb,var(--c) 38%,#26343f);color:var(--text)}',
     '.stand__grid--fill.stand__grid--dot .stile.is-filler.is-danger{background:var(--red)}',
     '.stand__grid--fill.stand__grid--dot .stile.is-filler.is-out{background:#1b2a35}',
     '@media (max-width:560px){.stand__grid--dot{--min:8px}.stand__grid--lg{--min:48px}.stand__grid--xl{--min:34px}.stand__grid--live{gap:5px}.stand__grid--live .stile{min-height:40px;padding:5px 7px;gap:6px}}'
@@ -86,8 +86,8 @@
   /** A tile of a solo board, or of the dimmed filler on a live one. */
   function tileHTML(t, tot, filler, dens) {
     var ch = t.ch;
-    if (filler && dens === 'dot') { return '<li class="stile is-filler" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + '"></li>'; }
-    return '<li class="stile' + (filler ? ' is-filler' : '') + (ch.id === (field ? livePick : pick) ? ' is-pick' : '') + '" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + '">' +
+    if (filler && dens === 'dot') { return '<li class="stile is-filler" style="--c:' + ch.accent + ';--ink:' + U.inkOn(ch.accent) + '" title="' + U.esc(ch.name) + '"></li>'; }
+    return '<li class="stile' + (filler ? ' is-filler' : '') + (ch.id === (field ? livePick : pick) ? ' is-pick' : '') + '" style="--c:' + ch.accent + ';--ink:' + U.inkOn(ch.accent) + '" title="' + U.esc(ch.name) + '">' +
       GS.ui.mono(ch, filler && narrow() && dens === 'xl' ? 18 : 24) +
       '<span class="stile__name">' + U.esc(ch.short) + '</span>' +
       (!filler && field && t.tickets > 0 ? '<b class="stile__share">' + core.fmtShare(t.tickets, tot) + '</b>' : '') + '</li>';
@@ -97,7 +97,7 @@
   function backedHTML(t, tot) {
     var ch = t.ch;
     var you = ch.id === livePick;
-    return '<li class="stile' + (you ? ' is-pick' : '') + '" style="--c:' + ch.accent + '" title="' + U.esc(ch.name) + (you ? ' (your pick)' : '') + '">' + GS.ui.mono(ch, 26) +
+    return '<li class="stile' + (you ? ' is-pick' : '') + '" style="--c:' + ch.accent + ';--ink:' + U.inkOn(ch.accent) + '" title="' + U.esc(ch.name) + (you ? ' (your pick)' : '') + '">' + GS.ui.mono(ch, 26) +
       '<span class="stile__txt"><span class="stile__name">' + U.esc(ch.short) + '</span><b class="stile__share">' + core.fmtShare(t.tickets, tot) + (you ? ' · you' : '') + '</b></span></li>';
   }
 
