@@ -6177,5 +6177,959 @@
    "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1101556"
   ],
   "note": "official register record"
+ },
+ {
+  "id": "wreaths-across-america",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Wreaths_Across_America",
+   "https://www.charitynavigator.org/ein/208362270",
+   "https://www.wreathsacrossamerica.org/About/OrganizationPartners"
+  ],
+  "note": "Search results state nonprofit established 2007 by Morrill Worcester, HQ 4 Point St, Columbia Falls ME, site wreathsacrossamerica.org; Charity Navigator profile exists."
+ },
+ {
+  "id": "operation-gratitude",
+  "evidence": [
+   "https://www.guidestar.org/profile/20-0103575",
+   "https://giving.govets.com/operation-gratitude.html",
+   "https://www.americangoldstarmothers.org/operation-gratitude.html"
+  ],
+  "note": "Results state founded 2003 from founder Carolyn Blashek's living room, HQ 19748 Dearborn St, Chatsworth CA, site operationgratitude.com; GuideStar profile exists."
+ },
+ {
+  "id": "student-veterans-of-america",
+  "evidence": [
+   "https://studentveterans.org/about/national-headquarters/",
+   "https://en.wikipedia.org/wiki/Student_Veterans_of_America",
+   "https://www.guidestar.org/profile/26-1971279"
+  ],
+  "note": "Results state officially founded 23 Jan 2008, 501(c)(3), HQ 655 15th St NW Washington DC, site studentveterans.org; GuideStar and Wikipedia pages."
+ },
+ {
+  "id": "bob-woodruff-foundation",
+  "evidence": [
+   "https://bobwoodrufffoundation.org/",
+   "https://endeavors.org/partner-spotlight/the-bob-woodruff-foundation-helping-veterans-and-military-families-thrive/",
+   "https://www.influencewatch.org/non-profit/bob-woodruff-foundation/"
+  ],
+  "note": "Results state founded 2006 after Woodruff's injury, HQ 1350 Broadway New York NY, site bobwoodrufffoundation.org."
+ },
+ {
+  "id": "pat-tillman-foundation",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Pat_Tillman_Foundation",
+   "https://www.charitynavigator.org/ein/201072336",
+   "https://pattillmanfoundation.org/"
+  ],
+  "note": "Results state founded 30 Apr 2004, HQ Chicago IL; the foundation's own pages in results are on pattillmanfoundation.org (summary text also mentioned ptf.org, which the result links did not show)."
+ },
+ {
+  "id": "swords-to-plowshares",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Swords_to_Plowshares",
+   "https://www.guidestar.org/profile/94-2260626",
+   "https://www.swords-to-plowshares.org/donate"
+  ],
+  "note": "Results state founded 1974 by six veterans, 501(c)(3), HQ 1060 Howard St San Francisco, site swords-to-plowshares.org."
+ },
+ {
+  "id": "taps",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Tragedy_Assistance_Program_for_Survivors",
+   "https://www.charitynavigator.org/ein/920152268",
+   "https://www.taps.org/donate"
+  ],
+  "note": "Results state founded 1994 by Bonnie Carroll, HQ Arlington VA, site taps.org; Charity Navigator profile exists."
+ },
+ {
+  "id": "blue-star-families",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Blue_Star_Families",
+   "https://www.guidestar.org/profile/80-0369895",
+   "https://www.charitynavigator.org/ein/800369895"
+  ],
+  "note": "Results state founded 2009 by military family members, 501(c)(3), HQ Encinitas CA, site bluestarfam.org."
+ },
+ {
+  "id": "special-operations-warrior-foundation",
+  "evidence": [
+   "https://www.guidestar.org/profile/52-1183585",
+   "https://en.wikipedia.org/wiki/Special_Operations_Warrior_Foundation",
+   "https://www.army.mil/article/30894/special_operations_warrior_foundation"
+  ],
+  "note": "Results state founded 1980 as a 501(c)(3) after Operation Eagle Claw, HQ 1137 Marbella Plaza Dr Tampa FL, site specialops.org."
+ },
+ {
+  "id": "nleomf",
+  "evidence": [
+   "https://nleomf.org/about/",
+   "https://en.wikipedia.org/wiki/National_Law_Enforcement_Officers_Memorial",
+   "https://www.guidestar.org/profile/52-1382926"
+  ],
+  "note": "Results state founded 1984, 501(c)(3), HQ 444 E St NW Washington DC, site nleomf.org."
+ },
+ {
+  "id": "concerns-of-police-survivors",
+  "evidence": [
+   "https://www.concernsofpolicesurvivors.org/aboutcops",
+   "https://www.concernsofpolicesurvivors.org/contact-us",
+   "https://www.guidestar.org/profile/52-1354370"
+  ],
+  "note": "Results state organised 1984, 501(c)(3), national office 846 Old South 5 Camdenton MO; follow-up search limited to concernsofpolicesurvivors.org returned its own About and Contact pages, confirming the domain."
+ },
+ {
+  "id": "national-fallen-firefighters-foundation",
+  "evidence": [
+   "https://www.firehero.org/about-us/",
+   "https://www.charitynavigator.org/ein/521832634",
+   "https://www.guidestar.org/profile/52-1832634"
+  ],
+  "note": "Results state founded 1992 (created by Congress), 501(c)(3), HQ Emmitsburg MD, site firehero.org."
+ },
+ {
+  "id": "stop-soldier-suicide",
+  "evidence": [
+   "https://www.guidestar.org/profile/27-3512119",
+   "https://stopsoldiersuicide.org/challenge-faqs",
+   "https://en.wikipedia.org/wiki/Brian_E._Kinsella"
+  ],
+  "note": "Results state co-founded 2010 by three Army veterans, 501(c)(3), address PO Box 110605 Durham NC, site stopsoldiersuicide.org."
+ },
+ {
+  "id": "headstrong-project",
+  "evidence": [
+   "https://theheadstrongproject.org/about/",
+   "https://www.charitynavigator.org/ein/455261907",
+   "https://www.bushcenter.org/publications/meet-the-veteran-wellness-alliance-the-headstrong-project"
+  ],
+  "note": "Results state veteran-founded in 2012, HQ 530 7th Ave New York NY, site theheadstrongproject.org; Charity Navigator profile exists."
+ },
+ {
+  "id": "elizabeth-dole-foundation",
+  "evidence": [
+   "https://www.elizabethdolefoundation.org/about",
+   "https://www.elizabethdolefoundation.org/",
+   "https://www.guidestar.org/profile/shared/7d60b958-37b3-4c52-99eb-827f131912ab"
+  ],
+  "note": "Results state founded 2012 by Elizabeth Dole, HQ Washington, site elizabethdolefoundation.org."
+ },
+ {
+  "id": "warrior-canine-connection",
+  "evidence": [
+   "https://warriorcanineconnection.org/boyds-based-warrior-canine-connection-helps-veterans-heal-with-service-dogs/",
+   "https://baltimorefishbowl.com/stories/warrior-canine-connection-helps-veterans-heal-with-service-dogs/",
+   "https://bethesdamagazine.com/2025/10/03/warrior-canine-connection-video/"
+  ],
+  "note": "Results state founded 2011 by Rick Yount, 501(c)(3), HQ 14934 Schaeffer Rd Boyds MD, site warriorcanineconnection.org."
+ },
+ {
+  "id": "veterans-community-project",
+  "evidence": [
+   "https://vcp.org/about-vcp/our-locations/kansas-city/",
+   "https://www.kcur.org/2023-02-16/veterans-community-project",
+   "https://www.kcdigitaldrive.org/article/veterans-community-project-tiny-homes-and-comprehensive-support-services-for-veterans/"
+  ],
+  "note": "Results confirm KC-based veterans nonprofit, site vcp.org, VCP Village of 49 tiny homes; founding year conflicts between sources (2015 vs 2016) so founded left null."
+ },
+ {
+  "id": "military-child-education-coalition",
+  "evidence": [
+   "https://www.guidestar.org/profile/74-2889416",
+   "https://militarychild.org/upload/files/MSTC%20MSTA/MSTC_Flyer.pdf",
+   "https://capstone.ndu.edu/Portals/83/Documents/Spouse%20Info/Resources/MilitaryChildEducationCoalition.pdf?ver=2017-04-11-071703-450"
+  ],
+  "note": "Results state 501(c)(3) founded 1998, HQ 909 Mountain Lion Cir Harker Heights TX, site militarychild.org."
+ },
+ {
+  "id": "help-for-heroes",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Help_for_Heroes",
+   "https://www.cobseo.org.uk/members/directory/help-for-heroes/",
+   "https://www.wikidata.org/wiki/Q5710145"
+  ],
+  "note": "Results state launched 1 Oct 2007 by Bryn and Emma Parry, HQ Downton, Salisbury, Wiltshire, site helpforheroes.org.uk."
+ },
+ {
+  "id": "combat-stress",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Combat_Stress_(charitable_organisation)",
+   "https://combatstress.org.uk/about-us/our-history",
+   "https://www.nam.ac.uk/whats-on/combat-stress-100-years-veterans-mental-health"
+  ],
+  "note": "Results state formed 12 May 1919 as Ex-Services Mental Welfare Society, HQ Tyrwhitt House, Leatherhead, Surrey, site combatstress.org.uk."
+ },
+ {
+  "id": "poppyscotland",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Earl_Haig_Fund_Scotland",
+   "https://www.poppyscotland.org.uk/about-us/history/our-history",
+   "https://www.poppyscotland.org.uk/about-us/who-we-are"
+  ],
+  "note": "Results state officially Earl Haig Fund Scotland, founded 1921, HQ New Haig House Edinburgh, site poppyscotland.org.uk; operates as a distinct charity within RBL group since 2011 (note: possible overlap with royal-british-legion entry, kept because it is its own registered charity)."
+ },
+ {
+  "id": "blesma",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Blesma,_The_Limbless_Veterans",
+   "https://blesma.org/about-us/",
+   "https://www.aco.uk.net/news-blogs/member-spotlight-blesma/"
+  ],
+  "note": "Results state formed 1932, HQ 115 New London Rd Chelmsford, site blesma.org."
+ },
+ {
+  "id": "veterans-aid",
+  "evidence": [
+   "https://veterans-aid.net/",
+   "https://veterans-aid.net/how-we-operate/",
+   "https://en.wikipedia.org/wiki/Veterans_Aid"
+  ],
+  "note": "Results state set up 1932 by Gwendolen Huggins, renamed Veterans Aid 2007, head office 27 Victoria Square London SW1W, registered charity 1095308; follow-up search limited to veterans-aid.net returned its own pages, confirming the domain."
+ },
+ {
+  "id": "royal-star-and-garter",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Royal_Star_%26_Garter",
+   "https://starandgarter.org/",
+   "https://starandgarter.org/press-release/remembrance-conflict-never-stops/"
+  ],
+  "note": "Results state founded 1916, HQ Castle Mews, Hampton (TW12), runs homes in Solihull, Surbiton, High Wycombe, Worthing, site starandgarter.org."
+ },
+ {
+  "id": "walking-with-the-wounded",
+  "evidence": [
+   "https://walkingwiththewounded.org.uk/about-us/",
+   "https://en.wikipedia.org/wiki/Walking_With_The_Wounded",
+   "https://www.cobseo.org.uk/members/directory/walking-with-the-wounded/"
+  ],
+  "note": "Results state launched 2010 by Ed Parker and Simon Daglish, HQ 42 Canada St Manchester, site walkingwiththewounded.org.uk."
+ },
+ {
+  "id": "scottys-little-soldiers",
+  "evidence": [
+   "https://www.royal.uk/scottys-little-soldiers",
+   "https://www.scottyslittlesoldiers.co.uk/how-we-help",
+   "https://www.gov.uk/veteran-support-organisations/scottys-little-soldiers"
+  ],
+  "note": "Results state established 2010 by Nikki Scott, HQ King's Lynn Norfolk, site scottyslittlesoldiers.co.uk."
+ },
+ {
+  "id": "erskine-veterans-charity",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Erskine_Veterans_Charity",
+   "https://www.erskine.org.uk/",
+   "https://www.charitychoice.co.uk/erskine-caring-for-veterans"
+  ],
+  "note": "Results state established 1916 as Princess Louise Scottish Hospital, registered office Erskine Home, Bishopton PA7 5PU, site erskine.org.uk."
+ },
+ {
+  "id": "royal-navy-and-royal-marines-charity",
+  "evidence": [
+   "https://www.rnrmc.org.uk/",
+   "https://en.wikipedia.org/wiki/RNRMC",
+   "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/4029159/contact-information"
+  ],
+  "note": "Results state established 2007, address HMS Excellent Whale Island Portsmouth, site rnrmc.org.uk, Charity Commission register page (no. 1117794)."
+ },
+ {
+  "id": "army-benevolent-fund",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Army_Benevolent_Fund",
+   "https://armybenevolentfund.org/80/",
+   "https://soldierscharity.org/abf-the-soldiers-charity/our-history"
+  ],
+  "note": "Results state established 15 Aug 1944, formerly ABF The Soldiers' Charity, HQ Mountbarrow House, 12 Elizabeth St London, site armybenevolentfund.org."
+ },
+ {
+  "id": "mates4mates",
+  "evidence": [
+   "https://mates4mates.org/whom-we-are",
+   "https://www.dva.gov.au/news/latest-stories/building-connection-and-camaraderie-across-australia",
+   "https://engage.forcenet.gov.au/provider/mates4mates"
+  ],
+  "note": "Results state established 2013 by RSL Queensland, HQ 274 Stafford Rd Stafford QLD, site mates4mates.org."
+ },
+ {
+  "id": "marine-corps-scholarship-foundation",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Marine_Corps_Scholarship_Foundation",
+   "https://www.mcsf.org/contact/",
+   "https://giving.govets.com/marine-corps-scholarship-foundation.html"
+  ],
+  "note": "Results state established 1962 in New York City, HQ 909 N Washington St Alexandria VA, site mcsf.org."
+ },
+ {
+  "id": "armed-services-ymca",
+  "evidence": [
+   "https://asymca.org/about/history/",
+   "https://asymca.org/about/",
+   "https://www.military.com/spouse/military-life/military-resources/armed-services-ymca.html"
+  ],
+  "note": "Results state served military families since 1861, HQ Springfield VA, 12 branches and 28 affiliates, site asymca.org."
+ },
+ {
+  "id": "equal-justice-initiative",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Equal_Justice_Initiative",
+   "https://www.guidestar.org/profile/63-1135091",
+   "https://eji.org/contact/"
+  ],
+  "note": "Results state founded 1989 by Bryan Stevenson, HQ 122 Commerce St Montgomery AL, site eji.org."
+ },
+ {
+  "id": "innocence-project",
+  "evidence": [
+   "https://innocenceproject.org/about/",
+   "https://en.wikipedia.org/wiki/Innocence_Project",
+   "https://www.influencewatch.org/non-profit/innocence-project/"
+  ],
+  "note": "Results state founded 1992 by Neufeld and Scheck, 501(c)(3), HQ 40 Worth St New York NY, site innocenceproject.org."
+ },
+ {
+  "id": "vera-institute-of-justice",
+  "evidence": [
+   "https://www.vera.org/who-we-are/locations",
+   "https://www.guidestar.org/profile/13-1941627",
+   "https://www.macfound.org/grantee/vera-institute-of-justice-2144/"
+  ],
+  "note": "Results state founded 1961, HQ Brooklyn NY since 2019, offices LA/New Orleans/DC, site vera.org."
+ },
+ {
+  "id": "human-rights-watch",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Human_Rights_Watch",
+   "https://www.guidestar.org/profile/13-2875808",
+   "https://www.britannica.com/topic/Human-Rights-Watch"
+  ],
+  "note": "Results state founded 1978 (as Helsinki Watch), renamed 1988, HQ New York City, site hrw.org, accepts no government money."
+ },
+ {
+  "id": "human-rights-first",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Human_Rights_First",
+   "https://www.charitynavigator.org/ein/133116646",
+   "https://www.guidestar.org/profile/13-3116646"
+  ],
+  "note": "Results state founded 1978, formerly Lawyers Committee for International Human Rights, renamed 2004, nonpartisan 501(c)(3), HQ 75 Broad St NYC, site humanrightsfirst.org."
+ },
+ {
+  "id": "fire-individual-rights-and-expression",
+  "evidence": [
+   "https://www.fire.org/about-us/our-history",
+   "https://en.wikipedia.org/wiki/Foundation_for_Individual_Rights_and_Expression",
+   "https://www.guidestar.org/profile/04-3467254"
+  ],
+  "note": "Results state founded 1999 by Kors and Silverglate, 501(c)(3), HQ One Washington Square Philadelphia, site fire.org (formerly thefire.org)."
+ },
+ {
+  "id": "electronic-frontier-foundation",
+  "evidence": [
+   "https://www.eff.org/about",
+   "https://en.wikipedia.org/wiki/Electronic_Frontier_Foundation",
+   "https://www.guidestar.org/profile/04-3091431"
+  ],
+  "note": "Results state formed 1990 by Gilmore, Barlow and Kapor, HQ San Francisco CA, site eff.org."
+ },
+ {
+  "id": "naacp-legal-defense-fund",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/NAACP_Legal_Defense_and_Educational_Fund",
+   "https://www.charities.org/charities/naacp-legal-defense-fund-ldf/",
+   "https://www.ebsco.com/research-starters/history/national-association-advancement-colored-people-legal-defense-and"
+  ],
+  "note": "Results state formed 12 Feb 1940 by Thurgood Marshall, independent of NAACP since 1957, HQ 40 Rector St NYC, site naacpldf.org."
+ },
+ {
+  "id": "equal-justice-works",
+  "evidence": [
+   "https://www.equaljusticeworks.org/about/",
+   "https://en.wikipedia.org/wiki/Equal_Justice_Works",
+   "https://www.influencewatch.org/non-profit/equal-justice-works/"
+  ],
+  "note": "Results state founded by law students 1986, 501(c)(3), based in Washington DC, site equaljusticeworks.org."
+ },
+ {
+  "id": "kids-in-need-of-defense",
+  "evidence": [
+   "https://www.guidestar.org/profile/26-2763038",
+   "https://www.macfound.org/grantee/kids-in-need-of-defense-43285/",
+   "https://justicecorps.org/organization/kids-in-need-of-defense-kind/"
+  ],
+  "note": "Results state started 2008 by Microsoft and Angelina Jolie, based in Washington DC, site supportkind.org, offices in 11 US cities and Mexico."
+ },
+ {
+  "id": "fortune-society",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Fortune_Society",
+   "https://www.guidestar.org/profile/13-2645436",
+   "https://fortunesociety.org/media_center/why-we-invested-in-the-fortune-society/"
+  ],
+  "note": "Results state founded 1967 by David Rothenberg, HQ 29-76 Northern Blvd Long Island City NY, site fortunesociety.org."
+ },
+ {
+  "id": "homeboy-industries",
+  "evidence": [
+   "https://homeboyindustries.org/our-story/about-homeboy/",
+   "https://en.wikipedia.org/wiki/Homeboy_Industries",
+   "https://homeboyindustries.org/our-story/father-greg/"
+  ],
+  "note": "Results state founded 1992 by Fr Greg Boyle (work began 1988), HQ 130 W Bruno St Los Angeles, site homeboyindustries.org."
+ },
+ {
+  "id": "center-for-employment-opportunities",
+  "evidence": [
+   "https://www.ceoworks.org/",
+   "https://www.ceoworks.org/policy-advocacy",
+   "https://www.zoominfo.com/c/center-for-employment-opportunities/16452327"
+  ],
+  "note": "Results state began as a Vera Institute demonstration project in the 1970s (no exact year given, so founded left null), HQ New York City, site ceoworks.org, ~30 locations in 12 states."
+ },
+ {
+  "id": "legal-aid-society-nyc",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/The_Legal_Aid_Society",
+   "https://www.wikidata.org/wiki/Q13422420",
+   "https://www.probono.net/oppsguide/organization.53884-Legal_Aid_Society"
+  ],
+  "note": "Results state founded 8 Mar 1876, nonprofit, HQ 199 Water St New York NY, site legalaidnyc.org."
+ },
+ {
+  "id": "bronx-defenders",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/The_Bronx_Defenders",
+   "https://www.guidestar.org/profile/13-3931074",
+   "https://nylscoalition.org/the-bronx-defenders"
+  ],
+  "note": "Results state founded 1997, HQ 360 E 161st St Bronx NY, site bronxdefenders.org."
+ },
+ {
+  "id": "prison-fellowship",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Prison_Fellowship",
+   "https://www.prisonfellowship.org/about/chuck-colson/",
+   "https://www.prisonfellowship.org/resources/media-information/overview-and-factsheets/"
+  ],
+  "note": "Results state founded 1976 by Charles Colson, main HQ 44180 Riverside Pkwy Lansdowne VA (one line also says Washington DC), site prisonfellowship.org."
+ },
+ {
+  "id": "fair-trials",
+  "evidence": [
+   "https://www.fairtrials.org/about-us/",
+   "https://en.wikipedia.org/wiki/Fair_Trials"
+  ],
+  "note": "Results state founded 1992 by Stephen Jakobi (as Fair Trials Abroad), based at 5 Castle Rd London NW1, site fairtrials.org."
+ },
+ {
+  "id": "prison-reform-trust",
+  "evidence": [
+   "https://prisonreformtrust.org.uk/about/",
+   "https://en.wikipedia.org/wiki/Prison_Reform_Trust"
+  ],
+  "note": "Results state founded 1981 in London, address 15 Northburgh St London EC1, site prisonreformtrust.org.uk."
+ },
+ {
+  "id": "howard-league",
+  "evidence": [
+   "https://howardleague.org/our-journey/",
+   "https://en.wikipedia.org/wiki/Howard_League_for_Penal_Reform"
+  ],
+  "note": "Results state founded 1866 as the Howard Association, renamed 1921, address 75-77 St John St London EC1M, site howardleague.org."
+ },
+ {
+  "id": "human-rights-law-centre",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Human_Rights_Law_Centre",
+   "https://www.sigrid-rausing-trust.org/grantee/human-rights-law-centre/",
+   "https://www.wikidata.org/wiki/Q65073083"
+  ],
+  "note": "Results state founded 2006, registered charity, HQ 461 Bourke St Melbourne VIC plus Sydney office, site hrlc.org.au."
+ },
+ {
+  "id": "justice-connect",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Public_Interest_Law_Clearing_House",
+   "https://justiceconnect.org.au/contact-us/",
+   "https://justiceconnect.org.au/pro-bono-members/"
+  ],
+  "note": "Results state registered ACNC charity, HQ Melbourne, founded 1992 (via PILCH NSW; merged with PILCH Vic in 2013), site justiceconnect.org.au."
+ },
+ {
+  "id": "polaris-project",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Polaris_Project",
+   "https://www.guidestar.org/profile/03-0391561",
+   "https://polarisproject.org/"
+  ],
+  "note": "Results state formed 2002 (14 Feb 2002) by Derek Ellerman and Katherine Chon, HQ Washington DC, 501(c)(3), site polarisproject.org."
+ },
+ {
+  "id": "love146",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Love146",
+   "https://www.guidestar.org/profile/20-1168284",
+   "https://love146.org/ct/"
+  ],
+  "note": "Results state founded 2002 by four co-founders, HQ New Haven CT, 501(c)(3), site love146.org."
+ },
+ {
+  "id": "national-domestic-violence-hotline",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/National_Domestic_Violence_Hotline",
+   "https://www.guidestar.org/profile/75-1658287",
+   "https://aquilacommercial.com/case-study/national-domestic-violence-hotline-case-study/"
+  ],
+  "note": "Results state first call 21 Feb 1996, HQ Austin TX, site thehotline.org."
+ },
+ {
+  "id": "rainn",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Rape,_Abuse_&_Incest_National_Network",
+   "https://www.charitynavigator.org/ein/521886511",
+   "https://www.loc.gov/item/lcwaN0008005/"
+  ],
+  "note": "Results state founded 8 Jun 1994 by Scott Berkowitz, located in Washington DC, site rainn.org."
+ },
+ {
+  "id": "safe-horizon",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Safe_Horizon",
+   "https://www.charitynavigator.org/ein/132946970",
+   "https://philanthropynewsdigest.org/features/nonprofit-spotlight/safe-horizon"
+  ],
+  "note": "Results state founded 26 May 1978 (as Victim Services Agency), incorporated as Safe Horizon in 2000, HQ 2 Lafayette St New York NY, site safehorizon.org."
+ },
+ {
+  "id": "childhelp",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Childhelp",
+   "https://www.charitynavigator.org/ein/952884608",
+   "https://www.guidestar.org/profile/95-2884608"
+  ],
+  "note": "Results state founded 1959 by Sara O'Meara and Yvonne Fedderson, HQ 6730 N Scottsdale Rd Scottsdale AZ, site childhelp.org."
+ },
+ {
+  "id": "refuge",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Refuge_(United_Kingdom_charity)",
+   "https://refuge.org.uk/about-refuge/",
+   "https://refuge.org.uk/"
+  ],
+  "note": "Results state founded 1971 (by Erin Pizzey), HQ One America Square London EC3N, site refuge.org.uk."
+ },
+ {
+  "id": "womens-aid-england",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Women's_Aid",
+   "https://www.wikidata.org/wiki/Q8030814",
+   "https://napac.org.uk/listing/womens-aid-federation-of-england/"
+  ],
+  "note": "Results state established 1974 as umbrella body; Wikipedia says the Federation was formally registered 13 Mar 1996; HQ Kings House Orchard St Bristol, site womensaid.org.uk."
+ },
+ {
+  "id": "nspcc",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/NSPCC",
+   "https://join-us.nspcc.org.uk/volunteers/our-story/",
+   "https://en.wikipedia.org/wiki/Benjamin_Waugh"
+  ],
+  "note": "Results state founded 1884 by Rev Benjamin Waugh, renamed NSPCC 1889, London, site nspcc.org.uk."
+ },
+ {
+  "id": "safelives",
+  "evidence": [
+   "https://safelives.org.uk/",
+   "https://en.wikipedia.org/wiki/SafeLives",
+   "https://safelives.org.uk/support-us/"
+  ],
+  "note": "Results state founded 2005 by Diana Barran, HQ Whitefriars Bristol BS1, site safelives.org.uk."
+ },
+ {
+  "id": "rape-crisis-england-wales",
+  "evidence": [
+   "https://rapecrisis.org.uk/about-us/",
+   "https://en.wikipedia.org/wiki/Rape_Crisis_England_&_Wales"
+  ],
+  "note": "Results confirm the national feminist charity and umbrella for member rape crisis centres, site rapecrisis.org.uk; founding year not stated and HQ ambiguous (Leeds vs London) so left unverified."
+ },
+ {
+  "id": "futures-without-violence",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Futures_Without_Violence",
+   "https://www.charitynavigator.org/ein/943110973",
+   "https://futureswithoutviolence.org/about-us/contact-us/"
+  ],
+  "note": "Results state established 1980 as Family Violence Prevention Fund, renamed 2011, offices SF/DC/Boston, site futureswithoutviolence.org."
+ },
+ {
+  "id": "joyful-heart-foundation",
+  "evidence": [
+   "https://www.joyfulheartfoundation.org/about-us/our-story/",
+   "https://www.endthebacklog.org/about-end-the-backlog/",
+   "https://time.com/collections/time100-philanthropy-2025/7286014/mariska-hargitay/"
+  ],
+  "note": "Results state founded 2004 by Mariska Hargitay, located in Brooklyn NY, site joyfulheartfoundation.org."
+ },
+ {
+  "id": "darkness-to-light",
+  "evidence": [
+   "https://www.d2l.org/",
+   "https://www.charitynavigator.org/ein/571095108",
+   "https://www.guidestar.org/profile/57-1095108"
+  ],
+  "note": "Results state founded 2000 in Charleston SC, address Mt Pleasant SC, site d2l.org."
+ },
+ {
+  "id": "ncmec",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/National_Center_for_Missing_%26_Exploited_Children",
+   "https://ojjdp.ojp.gov/programs/national-center-missing-and-exploited-children",
+   "https://www.causeiq.com/organizations/national-center-for-missing-and-exploited-children,521328557/"
+  ],
+  "note": "Results state formed 13 Jun 1984, private nonprofit, HQ 333 John Carlyle St Alexandria VA, site missingkids.org."
+ },
+ {
+  "id": "victim-support",
+  "evidence": [
+   "https://www.victimsupport.org.uk/more-us/about-us/history/",
+   "https://en.wikipedia.org/wiki/Victim_Support",
+   "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/298028/contact-information"
+  ],
+  "note": "Results state first scheme set up in Bristol 1974, Charity Commission reg 298028, HQ address Eastern Business Park, Old St Mellons, Cardiff, site victimsupport.org.uk."
+ },
+ {
+  "id": "missing-people",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Missing_People",
+   "https://www.missingpeople.org.uk/about-the-charity",
+   "https://www.wikidata.org/wiki/Q6878372"
+  ],
+  "note": "Results state registered as a charity April 1993 (founders applied 1992), HQ East Sheen London SW14, site missingpeople.org.uk; founded left null because of the 1992/1993 discrepancy."
+ },
+ {
+  "id": "childnet",
+  "evidence": [
+   "https://www.childnet.com/who-we-are/",
+   "https://en.wikipedia.org/wiki/Childnet",
+   "https://www.childnet.com/20-years-of-childnets-work/"
+  ],
+  "note": "Results state founded 1995 by Nigel Williams, based in Brockley London SE4, site childnet.com."
+ },
+ {
+  "id": "our-watch",
+  "evidence": [
+   "https://www.ourwatch.org.au/about-us",
+   "https://en.wikipedia.org/wiki/Our_Watch",
+   "https://www.ourwatch.org.au/donate"
+  ],
+  "note": "Results state established 2013, ACNC-registered charity, Melbourne VIC, site ourwatch.org.au."
+ },
+ {
+  "id": "alannah-and-madeline-foundation",
+  "evidence": [
+   "https://www.alannahandmadeline.org.au/about-us",
+   "https://en.wikipedia.org/wiki/The_Alannah_and_Madeline_Foundation",
+   "https://en.wikipedia.org/wiki/Walter_Mikac"
+  ],
+  "note": "Results state founded 30 Apr 1997, HQ 387 City Rd South Melbourne VIC, own pages on alannahandmadeline.org.au (summary also named amf.org.au)."
+ },
+ {
+  "id": "carly-ryan-foundation",
+  "evidence": [
+   "https://www.carlyryanfoundation.com/what-we-do",
+   "https://opengovau.com/charity/60858926697",
+   "https://en.wikipedia.org/wiki/Murder_of_Carly_Ryan"
+  ],
+  "note": "Results state incorporated 2010, non-profit harm prevention charity, address 41 Mount Barker Rd Stirling SA, site carlyryanfoundation.com."
+ },
+ {
+  "id": "mind-uk",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Mind_(charity)",
+   "https://policycommons.net/orgs/mind-gb/",
+   "https://www.wikiwand.com/en/Mind_(charity)"
+  ],
+  "note": "Results state founded 1946 as National Association for Mental Health, HQ Stratford London, site mind.org.uk."
+ },
+ {
+  "id": "rethink-mental-illness",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Rethink_Mental_Illness",
+   "https://www.rethink.org/aboutus/"
+  ],
+  "note": "Results state founded 1972 by John Pringle, HQ The Dumont, 28 Albert Embankment London SE1, site rethink.org."
+ },
+ {
+  "id": "mental-health-foundation-uk",
+  "evidence": [
+   "https://www.mentalhealth.org.uk/about-us/who-we-are-and-what-we-do",
+   "https://en.wikipedia.org/wiki/Mental_Health_Foundation",
+   "https://www.wikidata.org/wiki/Q6817412"
+  ],
+  "note": "Results state founded 1949, HQ Long Lane London SE1, site mentalhealth.org.uk."
+ },
+ {
+  "id": "youngminds",
+  "evidence": [
+   "https://register-of-charities.charitycommission.gov.uk/en/charity-search/-/charity-details/1016968/contact-information",
+   "https://uk.linkedin.com/company/youngminds",
+   "https://www.devex.com/organizations/youngminds-61311"
+  ],
+  "note": "Results state founded 1993, HQ Curlew St London SE1, Charity Commission reg 1016968, site youngminds.org.uk."
+ },
+ {
+  "id": "papyrus-uk",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Papyrus_UK",
+   "https://www.acamh.org/blog/papyrus/",
+   "https://causes.benevity.org/causes/826-1070896?lang=en"
+  ],
+  "note": "Results state founded 1997 by bereaved parents (Jean Kerr), HQ Crosfield St Warrington, site papyrus-uk.org."
+ },
+ {
+  "id": "calm-campaign-against-living-miserably",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Campaign_Against_Living_Miserably"
+  ],
+  "note": "Results state formed 2006, HQ London, site thecalmzone.net."
+ },
+ {
+  "id": "beyond-blue",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Beyond_Blue",
+   "https://www.wikidata.org/wiki/Q2900494",
+   "https://au.linkedin.com/company/beyondblue"
+  ],
+  "note": "Results state founded 1 Jan 2000 by Jeff Kennett, HQ Melbourne CBD, site beyondblue.org.au."
+ },
+ {
+  "id": "black-dog-institute",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Black_Dog_Institute",
+   "https://www.wikidata.org/wiki/Q4920672",
+   "https://lifeinmind.org.au/organisations/black-dog-institute"
+  ],
+  "note": "Results state founded 2002 by Gordon Parker, based in Sydney, site blackdoginstitute.org.au."
+ },
+ {
+  "id": "reachout-australia",
+  "evidence": [
+   "https://about.au.reachout.com/our-history",
+   "https://en.wikipedia.org/wiki/ReachOut.com",
+   "https://lifeinmind.org.au/organisations/reachout-australia"
+  ],
+  "note": "Results state launched March 1998 by Inspire Foundation (now ReachOut Australia), registered not-for-profit based in Sydney; site shown as au.reachout.com / about.au.reachout.com."
+ },
+ {
+  "id": "r-u-ok",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/R_U_OK%3F",
+   "https://www.wikidata.org/wiki/Q17026695",
+   "http://www.ruok.org.au/about-us"
+  ],
+  "note": "Results state founded 2009 by Gavin Larkin, HQ Sydney, site ruok.org.au."
+ },
+ {
+  "id": "strongminds",
+  "evidence": [
+   "https://strongminds.org/where-we-work/",
+   "https://www.mhinnovation.net/organisations/strongminds",
+   "https://borgenproject.org/support-mental-health-in-africa/"
+  ],
+  "note": "Results state founded 2013, HQ 515 Valley St Maplewood NJ, group therapy in Uganda and Zambia, site strongminds.org."
+ },
+ {
+  "id": "international-ocd-foundation",
+  "evidence": [
+   "https://iocdf.org/about/",
+   "https://www.guidestar.org/profile/22-2894564",
+   "https://handwiki.org/wiki/Organization:International_OCD_Foundation"
+  ],
+  "note": "Results state founded 1986 by people with OCD, address PO Box 961029 Boston MA, site iocdf.org."
+ },
+ {
+  "id": "adaa",
+  "evidence": [
+   "https://adaa.org/",
+   "https://en.wikipedia.org/wiki/Anxiety_and_Depression_Association_of_America",
+   "https://www.guidestar.org/profile/52-1248820"
+  ],
+  "note": "Results state founded 1979, HQ 8730 Georgia Ave Silver Spring MD, site adaa.org."
+ },
+ {
+  "id": "twloha",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/To_Write_Love_on_Her_Arms",
+   "https://store.twloha.com/pages/about",
+   "https://www.refinery29.com/en-us/2016/03/106241/to-write-love-on-her-arms-anniversary-history"
+  ],
+  "note": "Results state founded March 2006 by Jamie Tworkowski, HQ Melbourne FL, site twloha.com."
+ },
+ {
+  "id": "national-eating-disorders-association",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/National_Eating_Disorders_Association",
+   "https://www.nationaleatingdisorders.org/",
+   "https://www.nationaleatingdisorders.org/contact-us/"
+  ],
+  "note": "Results state founded 4 May 1987, 501(c)(3), HQ 333 Mamaroneck Ave White Plains NY, site nationaleatingdisorders.org."
+ },
+ {
+  "id": "movember-foundation",
+  "evidence": [
+   "https://us.movember.com/about/history",
+   "https://en.wikipedia.org/wiki/Movember",
+   "https://us.movember.com/story/view/id/7509/the-movember-foundation"
+  ],
+  "note": "Results state founded 2003 in Melbourne, HQ Melbourne with offices LA/London/Toronto, site movember.com."
+ },
+ {
+  "id": "butterfly-foundation",
+  "evidence": [
+   "https://butterfly.org.au/who-we-are/about-butterfly/",
+   "https://butterfly.org.au/who-we-are/contact-us/",
+   "https://lifeinmind.org.au/organisations/butterfly-foundation"
+  ],
+  "note": "Results state founded 2002 by Claire Middleton, HQ 103 Alexander St Crows Nest NSW, site butterfly.org.au."
+ },
+ {
+  "id": "oxford-house",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Oxford_House",
+   "https://test.oxfordhouse.org/oxford_house_history",
+   "https://www.communitypsychology.com/oxford-house-shows-promise-in-maintaining-sobriety/"
+  ],
+  "note": "Results state founded 1975 in Silver Spring MD, Oxford House Inc. HQ Silver Spring MD, nonprofit; site oxfordhouse.org (history page on its own domain)."
+ },
+ {
+  "id": "harm-reduction-coalition",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/National_Harm_Reduction_Coalition",
+   "https://www.comerfamilyfoundation.org/articles/two-decades-of-positive-change-a-brief-history-of-the-harm-reduction-coalition",
+   "https://www.influencewatch.org/non-profit/national-harm-reduction-coalition-nhrc/"
+  ],
+  "note": "Results state founded 1993, HQ 243 5th Ave New York NY, site harmreduction.org."
+ },
+ {
+  "id": "recovery-cafe-network",
+  "evidence": [
+   "https://recoverycafenetwork.org/the-history/",
+   "https://recoverycafe.org/about/history/",
+   "https://www.guidestar.org/profile/91-2158547"
+  ],
+  "note": "Results state Recovery Cafe founded 2003, opened Seattle 2004, Network created 2016, site recoverycafenetwork.org; HQ Seattle taken from the Seattle origin and nonprofit profile titles."
+ },
+ {
+  "id": "alcohol-change-uk",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Alcohol_Change_UK",
+   "https://findthatcharity.uk/orgid/GB-CHC-1094586"
+  ],
+  "note": "Results state founded 1984 (as Alcohol Concern), merged 2017 with Alcohol Research UK, renamed Nov 2018, address Bowling Green Lane London EC1, site alcoholchange.org.uk."
+ },
+ {
+  "id": "withyou",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/We_Are_With_You",
+   "https://www.cobseo.org.uk/members/directory/we-are-with-you-addaction/",
+   "https://www.crunchbase.com/organization/withyou"
+  ],
+  "note": "Results state founded 1967 (as Addaction), renamed Feb 2020, admin base Farringdon London, site wearewithyou.org.uk."
+ },
+ {
+  "id": "turning-point-uk",
+  "evidence": [
+   "https://www.turning-point.co.uk/about-us/our-history",
+   "https://en.wikipedia.org/wiki/Turning_Point_(charity)",
+   "https://findthatcharity.uk/orgid/GB-CHC-234887"
+  ],
+  "note": "Results state founded 1964 by Barry Richards, registered charity 234887, HQ 2 America Square London, site turning-point.co.uk."
+ },
+ {
+  "id": "penington-institute",
+  "evidence": [
+   "https://www.penington.org.au/history/",
+   "https://en.wikipedia.org/wiki/Penington_Institute",
+   "https://www.overdoseday.com/about-the-campaign/"
+  ],
+  "note": "Results state based in Carlton VIC, created 2014 but evolved from earlier organisations (founded left null), leads International Overdose Awareness Day, site penington.org.au."
+ },
+ {
+  "id": "fare-australia",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Foundation_for_Alcohol_Research_and_Education",
+   "https://www.health.gov.au/contacts/foundation-for-alcohol-research-and-education-fare-contact?language=en",
+   "https://www.wikidata.org/wiki/Q33121909"
+  ],
+  "note": "Results state established 17 Oct 2001 by Australian Parliament Act, based Deakin/Canberra ACT, independent not-for-profit, site fare.org.au."
+ },
+ {
+  "id": "smart-recovery",
+  "evidence": [
+   "https://smartrecovery.org/what-is-smart-recovery",
+   "https://en.wikipedia.org/wiki/SMART_Recovery",
+   "https://www.smartrecoveryinternational.org/our-impact"
+  ],
+  "note": "Results state founded 1994, HQ 7304 Mentor Ave Mentor OH, site smartrecovery.org."
+ },
+ {
+  "id": "caron-treatment-centers",
+  "evidence": [
+   "https://www.caron.org/",
+   "https://psychcongress.com/news-item/caron-treatment-centers-celebrates-50th-anniversary",
+   "https://www.crunchbase.com/organization/caron-foundation"
+  ],
+  "note": "Results state founded 1957, group of non-profit treatment centres HQ Wernersville PA, site caron.org."
+ },
+ {
+  "id": "family-drug-support-australia",
+  "evidence": [
+   "https://www.fds.org.au/",
+   "https://adis.health.qld.gov.au/service-providers/family-drug-support",
+   "https://qnada.org.au/location/family-drug-support/"
+  ],
+  "note": "Results state founded 1997, address 3 Robinson Rd Nundah QLD, site fds.org.au."
+ },
+ {
+  "id": "befrienders-kenya",
+  "evidence": [
+   "https://lifeline-international.com/member/kenya/",
+   "https://findahelpline.com/organizations/befrienders-kenya?expand=true",
+   "https://befrienders.org/members/trustees/"
+  ],
+  "note": "Results state registered as Samaritan Kenya in 2004, renamed 2013, located Nairobi area, site befrienderskenya.org."
+ },
+ {
+  "id": "cvv-brazil",
+  "evidence": [
+   "https://cvv.org.br/o-cvv/",
+   "https://pt.wikipedia.org/wiki/Centro_de_Valoriza%C3%A7%C3%A3o_da_Vida",
+   "https://befrienders.org/find-support-now/centro-de-valorizacao-da-vida-cvv/"
+  ],
+  "note": "Results state founded 1962 in Sao Paulo, public utility 1973, free volunteer emotional support, site cvv.org.br."
+ },
+ {
+  "id": "free-the-slaves",
+  "evidence": [
+   "https://freetheslaves.net/about-us/",
+   "https://en.wikipedia.org/wiki/Free_the_Slaves",
+   "https://www.guidestar.org/profile/56-2189635"
+  ],
+  "note": "Results state founded 2000, HQ 1320 19th St NW Washington DC, site freetheslaves.net."
+ },
+ {
+  "id": "stop-the-traffik",
+  "evidence": [
+   "https://en.wikipedia.org/wiki/Stop_the_Traffik",
+   "https://stopthetraffik.org/contact/",
+   "https://givingisgreat.org/database/charity-factsheet/?regNo=1127321"
+  ],
+  "note": "Results state founded 2006 by Steve Chalke, HQ 35-41 Lower Marsh London SE1, registered charity 1127321, site stopthetraffik.org."
+ },
+ {
+  "id": "live-love-laugh-foundation",
+  "evidence": [
+   "https://www.thelivelovelaughfoundation.org/about-us",
+   "https://en.wikipedia.org/wiki/The_Live_Love_Laugh_Foundation"
+  ],
+  "note": "Results confirm an Indian mental health awareness foundation created by actor Deepika Padukone (reported as 2015), official site thelivelovelaughfoundation.org; headquarters not stated in results, so left unverified."
  }
 ]

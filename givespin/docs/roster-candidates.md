@@ -1,6 +1,6 @@
 # What was left out of the roster, and what to check
 
-The roster is at 1,042 charities (see the README, "Charity list"). This note is about what was **not** added.
+The roster is at 1,149 charities (see the README, "Charity list"). This note is about what was **not** added.
 
 ## How the last 661 were chosen
 They come from two official registers, not from web searches:
