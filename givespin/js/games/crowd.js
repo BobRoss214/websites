@@ -91,10 +91,12 @@
       W = Math.min(w, 720);
       layout();
       dpr = Math.min(window.devicePixelRatio || 1, 2);
-      el.canvas.width = Math.round(W * dpr);
-      el.canvas.height = Math.round(H * dpr);
-      el.canvas.style.width = W + 'px';
-      el.canvas.style.height = H + 'px';
+      // (assigning a canvas size reallocates and clears it, so only do it when the size really changed: a live table calls this on every update)
+      var cw = Math.round(W * dpr), ch = Math.round(H * dpr);
+      if (el.canvas.width !== cw) { el.canvas.width = cw; }
+      if (el.canvas.height !== ch) { el.canvas.height = ch; }
+      if (el.canvas.style.width !== W + 'px') { el.canvas.style.width = W + 'px'; }
+      if (el.canvas.style.height !== H + 'px') { el.canvas.style.height = H + 'px'; }
       draw(performance.now());
     }
 
@@ -361,7 +363,7 @@
       clearField: function () { field = null; if (!racing) { rebuild(); } },
 
       activate: function () { active = true; resize(); startLoop(); },
-      deactivate: function () { active = false; },
+      deactivate: function () { active = false; if (spec.onDeactivate) { spec.onDeactivate(); } },
 
       lock: function (isLocked) {
         locked = !!isLocked;

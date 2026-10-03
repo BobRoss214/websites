@@ -1760,6 +1760,181 @@ if (section('13k. Slot machines: five themes, 3 to 12 reels, Triple Threat')) {
 }
 
 /* ======================================================================== */
+if (section('13s. Marble Run keeps its promises: the drawn marble crosses first, on any screen, and a failure cannot freeze the race')) {
+  // Every race below goes through the public game hooks (GS.games.marble.play / playLive / abort / _shown / _debug) with a winner drawn up front.
+  // The marble that is credited with place 1 must carry the drawn charity, every time and at every size; each wait is bounded so that a race that
+  // never ends is reported as a failed check instead of stalling the run.
+  const MARBLE_SIZES = [[2, 3], [3, 3], [8, 4], [24, 4], [100, 3], [500, 2], [1000, 2]];     // [marbles, races]
+  const marbleRaces = (page, count, opts = {}) => page.evaluate(async ({ count, opts }) => {
+    const g = window.GS.games.marble;
+    const dbg = g._debug;
+    const pool = window.GS.app.state.pool;
+    const out = [];
+    for (let i = 0; i < count; i++) {
+      const rounds = opts.rounds || 1;
+      const winners = [];
+      for (let r = 0; r < rounds; r++) { winners.push(pool[Math.floor(Math.random() * pool.length)]); }
+      if (rounds > 1) { winners[1] = winners[0]; }                         // the same charity can win two rounds running
+      const seen = [];
+      const play = g.play({
+        winners,
+        onReveal: (k, ch) => {
+          const first = dbg.marbles().filter((e) => e.run.place === 1).map((e) => e.ch.id);
+          const places = dbg.marbles().map((e) => e.run.place).sort((a, b) => a - b);
+          seen.push({ ok: first.length === 1 && first[0] === winners[k].id && ch.id === winners[k].id && places.every((p, j) => p === j + 1), first: first.slice(0, 2), want: winners[k].id });
+        }
+      }).then(() => 'done');
+      const state = await Promise.race([play, new Promise((r) => setTimeout(() => r('HUNG'), opts.timeoutMs || 90000))]);
+      const shown = g._shown()[0];
+      out.push({ n: dbg.marbles().length, state, rounds: seen.length, ok: state === 'done' && seen.length === rounds && seen.every((s) => s.ok) && shown === winners[rounds - 1].id, seen: seen.filter((s) => !s.ok).slice(0, 2), shown, want: winners[rounds - 1].id });
+      if (state !== 'done') { break; }
+    }
+    return out;
+  }, { count, opts });
+  const sizeMarbles = async (page, n) => {
+    await page.fill('#size-custom', String(n));
+    await page.waitForFunction((a) => window.GS.store.prefs().sizes.marble === a, n);
+    await page.waitForFunction((a) => window.GS.games.marble._debug.marbles().length === a, n);
+  };
+  const marbleVerdict = (res, count) => res.length === count && res.every((r) => r.ok);
+
+  // 1. solo races at every size: the drawn charity's marble is first
+  const page = await newPage();
+  await openApp(page, '#game-marble');
+  for (const [n, count] of MARBLE_SIZES) {
+    await sizeMarbles(page, n);
+    const res = await marbleRaces(page, count);
+    check(marbleVerdict(res, count), 'Marble Run, ' + n + ' marbles: the drawn charity\'s marble crosses first in ' + count + ' of ' + count + ' races', res.filter((r) => !r.ok).slice(0, 2));
+    if (res.some((r) => r.state !== 'done')) { break; }
+  }
+
+  // 2. a three-round quick race (the same charity twice in a row) ends every round with its drawn winner first
+  await sizeMarbles(page, 24);
+  const multi = await marbleRaces(page, 1, { rounds: 3 });
+  check(marbleVerdict(multi, 1) && multi[0].rounds === 3, 'a three-round quick race ends every round with its drawn charity first', multi);
+
+  // 3. leaving mid-race (abort) and starting again at once: the first race lets go, the next one is right
+  const aborted = await page.evaluate(async () => {
+    const g = window.GS.games.marble;
+    const dbg = g._debug;
+    const pool = window.GS.app.state.pool;
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const out = [];
+    for (const wait of [450, 60]) {
+      const w1 = pool[3];
+      const p1 = g.play({ winners: [w1] }).then(() => 'resolved');
+      await sleep(wait);
+      g.abort();
+      const first = await Promise.race([p1, sleep(3000).then(() => 'NOT resolved')]);
+      const w2 = pool[11];
+      let revealed = null;
+      const p2 = g.play({ winners: [w2], onReveal: (k, ch) => { revealed = ch.id; } }).then(() => 'resolved');
+      const second = await Promise.race([p2, sleep(60000).then(() => 'HUNG')]);
+      const f = dbg.marbles().filter((e) => e.run.place === 1).map((e) => e.ch.id);
+      out.push({ first, second, ok: first === 'resolved' && second === 'resolved' && f.length === 1 && f[0] === w2.id && revealed === w2.id && g._shown()[0] === w2.id });
+    }
+    return out;
+  });
+  check(aborted.every((a) => a.ok), 'aborting a race mid-way lets go at once, and a new race started straight away ends with its drawn charity first', aborted);
+  await page.close();
+
+  // 4. reduced motion
+  const rm = await newPage({ reducedMotion: 'reduce' });
+  await openApp(rm, '#game-marble');
+  check(await rm.evaluate(() => window.GS.util.reducedMotion()), 'the reduced-motion page really prefers reduced motion');
+  for (const n of [8, 100]) {
+    await sizeMarbles(rm, n);
+    const res = await marbleRaces(rm, 3);
+    check(marbleVerdict(res, 3), 'reduced motion, ' + n + ' marbles: the drawn charity\'s marble is first in 3 of 3 races', res.filter((r) => !r.ok).slice(0, 2));
+  }
+  await rm.close();
+
+  // 5. a live table race at real speed ends within about 10 % of the time the table asked for
+  const lv = await newPage();
+  await openApp(lv, '#game-marble', '');
+  const live = await lv.evaluate(async () => {
+    const g = window.GS.games.marble;
+    const dbg = g._debug;
+    const pool = window.GS.app.state.pool;
+    const entrants = [];
+    for (let i = 0; i < 10; i++) { entrants.push(i < 6 ? { charity: pool[i + 20], tickets: 5 + i, backed: true } : { charity: pool[i + 20], tickets: 0, filler: true }); }
+    g.setField(entrants, {});
+    const winner = entrants[2].charity;
+    const durationMs = 9000;
+    const t0 = performance.now();
+    const state = await Promise.race([Promise.resolve(g.playLive({ winner, durationMs })).then(() => 'done'), new Promise((r) => setTimeout(() => r('HUNG'), 40000))]);
+    const ms = performance.now() - t0;
+    const first = dbg.marbles().filter((e) => e.run.place === 1).map((e) => e.ch.id);
+    return { state, ms: Math.round(ms), durationMs, first, want: winner.id, shown: g._shown()[0] };
+  });
+  check(live.state === 'done' && live.first.length === 1 && live.first[0] === live.want && live.shown === live.want, 'a live race ends with the charity the table drew', live);
+  check(live.state === 'done' && live.ms >= live.durationMs * 0.85 && live.ms <= live.durationMs * 1.1, 'and it lasts about as long as the table asked (' + live.ms + ' ms for ' + live.durationMs + ' ms, within 15 % under and 10 % over)', live);
+  await lv.close();
+
+  // 6. a phone-width page with 500 marbles: the finished pack stays on the track, nothing is drawn behind the finish line or off the canvas
+  const ph = await newPage({ viewport: { width: 360, height: 780 }, mobile: true });
+  await openApp(ph, '#game-marble');
+  await sizeMarbles(ph, 500);
+  const phoneRace = await marbleRaces(ph, 1);
+  check(marbleVerdict(phoneRace, 1), 'at 360 px wide with 500 marbles the drawn charity\'s marble is first', phoneRace);
+  const phone = await ph.evaluate(() => {
+    const dbg = window.GS.games.marble._debug;
+    const g = dbg.geo();
+    const tr = g.track;
+    const R = g.r;
+    const snap = dbg.snapshot();
+    let off = 0;
+    let behind = 0;
+    snap.forEach((s) => {
+      if (s[0] < -R || s[0] > g.W + R || s[1] < -R || s[1] > g.H + R) { off++; }
+      if (Math.abs(s[1] - tr.sy[tr.last]) <= g.hw && tr.ldir * (s[0] - tr.fx) < -R) { behind++; }
+    });
+    const cell = 2 * R + 0.001;
+    const grid = {};
+    snap.forEach((s, k) => { const key = Math.floor(s[0] / cell) + ',' + Math.floor(s[1] / cell); (grid[key] = grid[key] || []).push(k); });
+    let worst = 0;
+    snap.forEach((s, k) => {
+      const gx = Math.floor(s[0] / cell);
+      const gy = Math.floor(s[1] / cell);
+      for (let ox = -1; ox <= 1; ox++) { for (let oy = -1; oy <= 1; oy++) { (grid[(gx + ox) + ',' + (gy + oy)] || []).forEach((j) => { if (j > k) { const dx = snap[j][0] - s[0]; const dy = snap[j][1] - s[1]; worst = Math.max(worst, (2 * R - Math.sqrt(dx * dx + dy * dy)) / R); } }); } }
+    });
+    return { n: snap.length, stage: Math.round(parseFloat(document.querySelector('.crowd__canvas').style.width)), off, behind, worstOverlap: +worst.toFixed(2), clipRight: Math.round(g.xB + g.rt + g.hw + 6 - g.W) };
+  });
+  check(phone.n === 500 && phone.off === 0, 'no marble ends up off the canvas on a phone', phone);
+  check(phone.behind <= 5, 'the finished pack fits the run-out: at most 5 of 500 marbles sit behind the finish line (found ' + phone.behind + ')', phone);
+  check(phone.worstOverlap <= 0.5, 'no two finished marbles are drawn on top of each other (worst overlap ' + phone.worstOverlap + ' of a radius, at most 0.5)', phone);
+  check(phone.clipRight <= 0, 'the track is not cut off at the right edge of a phone (' + phone.clipRight + ' px past the canvas)', phone);
+  await ph.close();
+
+  // 7. failure injection: the pre-simulation throws (an array that cannot be allocated). The race must still end with the drawn charity first,
+  // and the Play button must unlock within a few seconds instead of staying locked for good.
+  const fi = await newPage();
+  await openApp(fi, '#game-marble');
+  await sizeMarbles(fi, 24);
+  await fi.evaluate(() => {
+    const n = window.GS.games.marble._debug.marbles().length;
+    const Real = window.Float32Array;
+    window.__RealFloat32Array = Real;
+    window.Float32Array = new Proxy(Real, { construct(t, a, nt) { if (a[0] >= 3 * n * 8) { throw new RangeError('e2e-injected: array buffer allocation failed'); } return Reflect.construct(t, a, nt); } });
+  });
+  await fi.click('#btn-play');
+  const unlocked = await fi.waitForSelector('#dlg-result[open] .rs-title', { timeout: 12000 }).then(() => true, () => false);
+  const injected = await fi.evaluate(() => ({ w: window.GS.app._last ? window.GS.app._last.round.winners.map((x) => x.id) : [], shown: window.GS.games.marble._shown(), busy: window.GS.app.state.busy }));
+  check(unlocked, 'a failing pre-simulation does not freeze the race: the round still finishes within 12 seconds', injected);
+  check(unlocked && injected.shown[0] === injected.w[injected.w.length - 1], 'and it still ends with the charity that was drawn', injected);
+  if (unlocked) {
+    await closeReceipt(fi);
+    check(await fi.evaluate(() => !window.GS.app.state.busy && !document.getElementById('btn-play').disabled), 'the Play button is unlocked again afterwards');
+    await fi.evaluate(() => { window.Float32Array = window.__RealFloat32Array; });
+    const after = await marbleRaces(fi, 2);
+    check(marbleVerdict(after, 2), 'and the next two races (with the arrays working again) are right as well', after);
+  }
+  await fi.close();
+  // the failure above is expected: its console message must not count against the clean-console check at the end of the run
+  for (let i = problems.length - 1; i >= 0; i--) { if (problems[i].includes('e2e-injected')) { problems.splice(i, 1); } }
+}
+
+/* ======================================================================== */
 if (section('13l. Live Plinko tables: seven sizes, backed charities plus catalog fill')) {
   const page = await newPage();
   await openApp(page, '#live');

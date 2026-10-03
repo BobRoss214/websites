@@ -14,6 +14,10 @@
  * invisible hand. If the physics cannot start for any reason, the plain progress race of the shared engine runs
  * instead and still finishes with the drawn winner first.
  *
+ * Big solo races do not wait for the whole race to be worked out: the gate opens as soon as the physics has seen the first
+ * marbles cross the line (the winner is known then), and the rest of the race is worked out in small slices while the replay
+ * plays, always a little ahead of it. The next race of the same board is started the same way while this one is still playing.
+ *
  * The track is a snake: `pathAt` maps a distance along the centre line to a point and heading.
  */
 (function () {
@@ -77,17 +81,20 @@
     E_WALL: 0.55,          // bounciness against the track walls
     MU_WALL: 0.03,         // sliding friction against a wall
     V_REST: 22,            // touches slower than this (px/s) do not bounce
-    ITER: 2,               // contact passes per step
+    ITER: 2,               // contact passes per step (at most: it stops early once the deepest overlap is under TOL radii)
+    TOL: 0.04,
     BANK: 1300,            // the U-turns are banked: they pull a marble towards the inside of the bend (px/s^2)
     BANK_RAMP: 36,         // ... easing in over this many px after the straight
     LEAD_FADE: 40,         // the slope eases off over the last stretch before the line
     RUNOUT_G: 90,          // past the line the track runs out almost level: a gentle pull towards the end wall (px/s^2) ...
-    RUNOUT_DRAG: 0.2,      // ... and the drag there (1/s), which grows towards the far wall so the marbles arrive gently
+    RUNOUT_DRAG: 0.6,      // ... and the drag there (1/s), which grows towards the far wall so the marbles arrive gently (a soft mat: they roll in and stay)
     RUNOUT_RAMP: 2.4,
     E_PILE: 0.2,           // bounciness of a marble that has crossed the line (a soft landing mat)
     PILE_SUB: 6,           // marbles that have crossed are stepped this many times finer ...
+    PILE_ITER2: 14,        // ... (the later sub-steps of a step start from the first one's result, so they may need fewer)
     PILE_ITER: 14,         // ... with this many contact passes: the pack is dense
     SLEEP_MOVE: 0.25,      // a finished marble that moves less than this (px) over SLEEP_N small steps stays put
+    SLEEP_POV: 0.12,       // ... as long as it is not being pushed out of the others by more than this many radii
     SLEEP_N: 60
   };
   var FB = 32;             // recorded frames per storage block (keep a power of two: 2^5)
@@ -159,6 +166,7 @@
     var INV = 1 / PM;
     var GW = Math.ceil(tr.W / PM) + 3;
     var GH = Math.ceil(tr.H / PM) + 3;
+    var TOL = par.TOL * R;
     var DT = par.DT, REC = par.REC, SLOPE = par.SLOPE, DRAG = par.DRAG, ROLL = par.ROLL, E_BALL = par.E_BALL;
     var E_WALL = par.E_WALL, MU_WALL = par.MU_WALL, V_REST = par.V_REST, ITER = par.ITER, BANK = par.BANK, BANK_RAMP = par.BANK_RAMP;
     var head = new Int32Array(GW * GH);
@@ -204,7 +212,8 @@
     var rx = new Float64Array(n), ry = new Float64Array(n);   // where each rolling marble was when it last moved
     var pov = new Float64Array(n);                       // how far each rolling marble was pushed out of the others at the last pass
     var qa = new Int32Array(n * 8 + 64), qb = new Int32Array(n * 8 + 64), nq = 0;
-    var ROUT_G = par.RUNOUT_G, ROUT_K = par.RUNOUT_DRAG, ROUT_R = par.RUNOUT_RAMP, RUN = tr.run, E_PILE = par.E_PILE, SUB = par.PILE_SUB, PITER = par.PILE_ITER;
+    var bf = new Int32Array(n), isB = new Uint8Array(n), nbf = 0;   // marbles over the line but not yet handed to the run-out: they still push on it (and it on them)
+    var ROUT_G = par.RUNOUT_G, ROUT_K = par.RUNOUT_DRAG, ROUT_R = par.RUNOUT_RAMP, RUN = tr.run, E_PILE = par.E_PILE, SUB = par.PILE_SUB, PITER = par.PILE_ITER, PITER2 = par.PILE_ITER2 || par.PILE_ITER;
 
     var steps = 0;
     var F = 0;
@@ -307,7 +316,9 @@
       }
     }
 
+    /** One contact pass over the listed pairs. Returns the deepest overlap it found (before pushing it out). */
     function solve(posOnly) {
+      var worst = 0;
       for (var p = 0; p < np; p++) {
         var a = pa[p], b = pb[p];
         var dx = X[b] - X[a], dy = Y[b] - Y[a];
@@ -315,6 +326,7 @@
         if (d2 >= D2) { continue; }
         var d = Math.sqrt(d2), nx, ny;
         if (d < 1e-6) { nx = 1; ny = 0; } else { nx = dx / d; ny = dy / d; }
+        if (2 * R - d > worst) { worst = 2 * R - d; }
         var push = (2 * R - d) * 0.5;
         X[a] -= nx * push; Y[a] -= ny * push; X[b] += nx * push; Y[b] += ny * push;
         if (posOnly) { continue; }
@@ -326,6 +338,7 @@
           if (e) { noteHit(-rv, (X[a] + X[b]) / 2, (Y[a] + Y[b]) / 2); }
         }
       }
+      return worst;
     }
 
     /** Distance along the centre line of marble k. */
@@ -390,8 +403,14 @@
 
     /* ---- the run-out: finer steps, a nearly level floor, marbles that stop stay put ---- */
 
-    function pileSub(h) {
-      var a, k, j, c, dx, dy, d2, d, nx, ny, push, rv, e, jn;
+    var pNa2 = 0, pNm = 0, pIt = 0;
+
+    /**
+     * The run-out is worked out in three pieces that can be paused between (a whole fine step with a thousand marbles in the pile is
+     * several ms, and a caller that is short of time must be able to stop after any of its contact passes): begin, passes, end.
+     */
+    function pileBegin(h) {
+      var a, k, j, c, dx, dy;
       var na2 = aw.length;
       // forces and motion
       for (a = 0; a < na2; a++) {
@@ -409,8 +428,9 @@
       // who touches whom: the rolling marbles among themselves, and each with the ones already at rest
       for (a = 0; a < anu; a++) { aHead[aUsed[a]] = -1; }
       anu = 0;
-      for (a = 0; a < na2; a++) {
-        k = aw[a];
+      var nm = na2 + nbf;
+      for (a = 0; a < nm; a++) {
+        k = a < na2 ? aw[a] : bf[a - na2];
         c = cellIndex(X[k], Y[k]);
         aCell[k] = c;
         if (aHead[c] < 0) { aUsed[anu++] = c; }
@@ -419,10 +439,10 @@
       }
       nq = 0;
       var cap = qa.length;
-      for (a = 0; a < na2; a++) {
-        k = aw[a];
+      for (a = 0; a < nm; a++) {
+        k = a < na2 ? aw[a] : bf[a - na2];
         c = aCell[k];
-        var x = X[k], y = Y[k];
+        var x = X[k], y = Y[k], bk = isB[k];
         for (j = aNext[k]; j >= 0; j = aNext[j]) {
           dx = X[j] - x; dy = Y[j] - y;
           if (dx * dx + dy * dy < PM2 && nq < cap) { qa[nq] = k; qb[nq] = j; nq++; }
@@ -445,46 +465,61 @@
         }
       }
       for (a = 0; a < na2; a++) { pov[aw[a]] = 0; }
+      pNa2 = na2; pNm = nm; pIt = 0;
+    }
+
+    /** One contact pass over the pairs found by pileBegin. True when the contact passes of this fine step are over. */
+    function pilePass(iters) {
+      var a, k, dx, dy, d2, d, nx, ny, push, rv, e, jn;
+      var na2 = pNa2, nm = pNm;
       var tol = 0.04 * R;
-      for (var it = 0; it < PITER; it++) {
-        var worst = 0;
-        for (var p = 0; p < nq; p++) {
-          var A = qa[p], B = qb[p], fixed = B < 0;
-          if (fixed) { B = -1 - B; }
-          dx = X[B] - X[A]; dy = Y[B] - Y[A];
-          d2 = dx * dx + dy * dy;
-          if (d2 >= D2) { continue; }
-          d = Math.sqrt(d2);
-          if (d < 1e-6) { nx = 1; ny = 0; } else { nx = dx / d; ny = dy / d; }
-          push = 2 * R - d;
-          if (push > worst) { worst = push; }
-          if (push > pov[A]) { pov[A] = push; }
-          if (!fixed && push > pov[B]) { pov[B] = push; }
-          if (fixed) { X[A] -= nx * push; Y[A] -= ny * push; } else { push *= 0.5; X[A] -= nx * push; Y[A] -= ny * push; X[B] += nx * push; Y[B] += ny * push; }
-          rv = (VX[B] - VX[A]) * nx + (VY[B] - VY[A]) * ny;
-          if (rv < 0) {
-            e = -rv > V_REST ? E_PILE : 0;
-            jn = -(1 + e) * rv;
-            if (fixed) { VX[A] -= jn * nx; VY[A] -= jn * ny; } else { jn *= 0.5; VX[A] -= jn * nx; VY[A] -= jn * ny; VX[B] += jn * nx; VY[B] += jn * ny; }
-          }
+      var worst = 0;
+      for (var p = 0; p < nq; p++) {
+        var A = qa[p], B = qb[p], fixed = B < 0;
+        if (fixed) { B = -1 - B; }
+        dx = X[B] - X[A]; dy = Y[B] - Y[A];
+        d2 = dx * dx + dy * dy;
+        if (d2 >= D2) { continue; }
+        d = Math.sqrt(d2);
+        if (d < 1e-6) { nx = 1; ny = 0; } else { nx = dx / d; ny = dy / d; }
+        push = 2 * R - d;
+        if (push > worst) { worst = push; }
+        if (push > pov[A]) { pov[A] = push; }
+        if (!fixed && push > pov[B]) { pov[B] = push; }
+        if (fixed) { X[A] -= nx * push; Y[A] -= ny * push; } else { push *= 0.5; X[A] -= nx * push; Y[A] -= ny * push; X[B] += nx * push; Y[B] += ny * push; }
+        rv = (VX[B] - VX[A]) * nx + (VY[B] - VY[A]) * ny;
+        if (rv < 0) {
+          e = -rv > V_REST ? E_PILE : 0;
+          jn = -(1 + e) * rv;
+          if (fixed) { VX[A] -= jn * nx; VY[A] -= jn * ny; } else { jn *= 0.5; VX[A] -= jn * nx; VY[A] -= jn * ny; VX[B] += jn * nx; VY[B] += jn * ny; }
         }
-        // the side walls and the end wall
-        for (a = 0; a < na2; a++) {
-          k = aw[a];
-          var dd = Y[k] - SY[LAST];
-          if (dd > LIM) { Y[k] = SY[LAST] + LIM; bounce(k, 0, -1, E_PILE, false); }
-          else if (dd < -LIM) { Y[k] = SY[LAST] - LIM; bounce(k, 0, 1, E_PILE, false); }
-          if (LDIR * (X[k] - ENDX) > -R) { X[k] = ENDX - LDIR * R; bounce(k, -LDIR, 0, E_PILE, false); }
-        }
-        if (worst < tol) { break; }
-        // the overlap of the last pass is what decides whether a marble may settle: restart the tally for the next one
-        if (it < PITER - 1) { for (a = 0; a < na2; a++) { pov[aw[a]] = 0; } }
       }
+      // the side walls and the end wall (for the racing marbles near the line too: they are on the last straight)
+      for (a = 0; a < nm; a++) {
+        k = a < na2 ? aw[a] : bf[a - na2];
+        var dd = Y[k] - SY[LAST];
+        if (dd > LIM) { Y[k] = SY[LAST] + LIM; bounce(k, 0, -1, E_PILE, false); }
+        else if (dd < -LIM) { Y[k] = SY[LAST] - LIM; bounce(k, 0, 1, E_PILE, false); }
+        if (LDIR * (X[k] - ENDX) > -R) { X[k] = ENDX - LDIR * R; bounce(k, -LDIR, 0, E_PILE, false); }
+      }
+      pIt++;
+      if (worst < tol) { return true; }
+      if (pIt < iters) {
+        // the overlap of the last pass is what decides whether a marble may settle: restart the tally for the next one
+        for (a = 0; a < na2; a++) { pov[aw[a]] = 0; }
+        return false;
+      }
+      return true;
+    }
+
+    function pileEnd() {
+      var a, k, c;
+      var na2 = pNa2;
       // a marble that has stopped (it has hardly moved for a moment) stays where it is from now on
       for (a = na2 - 1; a >= 0; a--) {
         k = aw[a];
         var mdx = X[k] - rx[k], mdy = Y[k] - ry[k];
-        if (mdx * mdx + mdy * mdy > par.SLEEP_MOVE * par.SLEEP_MOVE || pov[k] > 0.12 * R) { rx[k] = X[k]; ry[k] = Y[k]; slow[k] = 0; } else { slow[k]++; }
+        if (mdx * mdx + mdy * mdy > par.SLEEP_MOVE * par.SLEEP_MOVE || pov[k] > par.SLEEP_POV * R) { rx[k] = X[k]; ry[k] = Y[k]; slow[k] = 0; } else { slow[k]++; }
         if (slow[k] >= par.SLEEP_N) {
           rest[k] = 1; nrest++;
           VX[k] = 0; VY[k] = 0;
@@ -493,6 +528,23 @@
           sHead[c] = k;
           aw[a] = aw[aw.length - 1]; aw.pop();
         }
+      }
+    }
+
+    /**
+     * The marbles around the line that still race (they have not been handed to the run-out): the run-out must feel them, and they it.
+     * That is every racing marble that is past the line, and those just before it: a finished marble that is knocked back across
+     * the line by the pile (they bounce off the end wall, or off each other) must meet the marbles that are still coming.
+     */
+    var BUF_UP = Math.max(8 * R, 30);
+    function gatherBuffer() {
+      var a, k;
+      for (a = 0; a < nbf; a++) { isB[bf[a]] = 0; }
+      nbf = 0;
+      var lo = -BUF_UP;
+      for (a = 0; a < na; a++) {
+        k = act[a];
+        if (SG[k] === LAST && LDIR * (X[k] - FX) > lo) { bf[nbf++] = k; isB[k] = 1; }
       }
     }
 
@@ -536,6 +588,7 @@
       var best = -1, bestS = -1e9, vmax = 0;
       for (var k = 0; k < n; k++) {
         var s = sOf(k);
+        if (s !== s) { throw new Error('the physics produced a number that is not a number'); }       // (a broken run is dropped at once, not after minutes of simulated time)
         buf[o] = X[k]; buf[o + 1] = Y[k]; buf[o + 2] = s;
         o += 3;
         if (s > bestS) { bestS = s; best = k; }
@@ -571,35 +624,73 @@
       record();
     };
 
-    sim.step = function () {
-      steps++;
-      integrate();
-      pairs(false);
-      for (var it = 0; it < ITER; it++) { solve(false); walls(); }
-      crossings();
-      handOff();
-      if (aw.length) { for (var s = 0; s < SUB; s++) { pileSub(DT / SUB); } }
+    /**
+     * One step of the physics, in parts: the racing marbles first, then each fine step of the run-out. A part is a few ms at most
+     * (a whole step can be tens of ms when a thousand marbles pile up at once), so a caller that is short of time can stop between
+     * parts and carry on later. Returns true when the step is finished.
+     */
+    var part = -1, pilePart = false, sub = 0, pphase = 0;
+    function stepPart() {
+      if (part < 0) {
+        steps++;
+        integrate();
+        pairs(false);
+        // contact passes: at least two, then as many as the pack still needs (up to ITER) to be clear of itself
+        for (var it = 0; it < ITER; it++) { var deep = solve(false); walls(); if (it >= 1 && deep < TOL) { break; } }
+        crossings();
+        gatherBuffer();
+        pilePart = aw.length > 0 || (nbf > 0 && nrest > 0);
+        part = 0; sub = 0; pphase = 0;
+        if (pilePart) { return false; }
+      }
+      if (pilePart) {
+        if (pphase === 0) { pileBegin(DT / SUB); pphase = 1; return false; }
+        if (pphase === 1) { if (pilePass(sub === 0 ? PITER : PITER2)) { pphase = 2; } return false; }
+        pileEnd(); sub++; pphase = 0;
+        if (sub < SUB) { return false; }
+      }
+      handOff();          // (after the run-out step: a marble handed over now has already moved once in this step)
       if (steps % REC === 0) { record(); }
-    };
+      part = -1;
+      return true;
+    }
+
+    sim.step = function () { while (!stepPart()) { /* the parts of one step */ } };
+
+    function settleAll() { for (var k = 0; k < n; k++) { if (!rest[k]) { VX[k] = 0; VY[k] = 0; } } }
+
+    /** If the race had to be cut off, the marbles that never crossed take the next places, furthest along first. */
+    function completeOrder() {
+      if (order.length >= n) { return; }
+      var seen = new Uint8Array(n), left = [], k;
+      for (k = 0; k < order.length; k++) { seen[order[k]] = 1; }
+      for (k = 0; k < n; k++) { if (!seen[k]) { left.push(k); } }
+      var sc = {};
+      for (k = 0; k < left.length; k++) { sc[left[k]] = sOf(left[k]); }
+      left.sort(function (p, q) { return sc[q] - sc[p]; });
+      var tNow = Math.max(0, (steps - 1) * DT);
+      for (k = 0; k < left.length; k++) { crossT[left[k]] = tNow; order.push(left[k]); }
+    }
 
     /** Runs up to `maxSteps` steps (or until `deadline`, a performance.now() time). True when the race is over. */
     sim.run = function (maxSteps, deadline) {
       var c = 0;
       while (!done && c < maxSteps) {
-        sim.step();
+        if (!stepPart()) { if (deadline && performance.now() > deadline) { break; } continue; }
         c++;
         if (nrest === n) { done = true; }
-        else if (order.length === n && steps * DT - lastCross > 1.5 && na === 0) {
+        else if (order.length === n && steps * DT - lastCross > 1.5) {
           // everything is over the line and the last few marbles are just shuffling: settle them where they are
           var moving = 0;
           for (var q = 0; q < aw.length; q++) { var kk = aw[q]; if (VX[kk] * VX[kk] + VY[kk] * VY[kk] > 144) { moving++; } }
-          if (moving === 0 || steps * DT - lastCross > 6) { for (var q2 = 0; q2 < aw.length; q2++) { VX[aw[q2]] = 0; VY[aw[q2]] = 0; } done = true; }
+          if ((moving === 0 && na === 0) || steps * DT - lastCross > 5) { settleAll(); done = true; }
         }
-        if (steps * DT > 120) { done = true; }
-        if (deadline && (c & 3) === 0 && performance.now() > deadline) { break; }
+        // a race that cannot finish (a pack jammed behind a full run-out) is cut off, so that the pre-simulation never runs on and on
+        if (!done && (order.length ? steps * DT - crossT[order[0]] > 16 : steps * DT > 60)) { settleAll(); done = true; }
+        if (deadline && ((c & 3) === 0 || n > 150) && performance.now() > deadline) { break; }
       }
       sim.done = done;
-      if (done && steps % REC !== 0) { record(); }
+      if (done && !sim.completed) { sim.completed = true; completeOrder(); if (steps % REC !== 0) { record(); } }
       return done;
     };
 
@@ -679,7 +770,7 @@
     var o = sim.order;
     if (o.length < 2) { return false; }
     var margin = sim.crossT[o[1]] - sim.crossT[o[0]];
-    var wantLeads = n < 6 ? 0 : n < 12 ? 2 : n < 40 ? 3 : 0;
+    var wantLeads = n < 6 ? 0 : n < 40 ? 3 : 0;
     return sim.leads >= wantLeads && margin >= 0.06 && margin <= 1.6;
   }
 
@@ -694,16 +785,18 @@
    * Works on an entry for up to `ms` milliseconds: runs races (one or several candidates) until one is good enough.
    * Returns true when the entry has its race.
    */
+  function startSim(entry) {
+    var g = entry.geo, pk = g.pack;
+    entry.sim = createSim(g.track, pk.x, pk.y, pk.sg, (entry.seed + entry.tries * 7919) >>> 0, simParams(g.n));
+    entry.sim.release();
+    entry.tries += 1;
+  }
+
   function advance(entry, ms) {
     var deadline = performance.now() + ms;
     var g = entry.geo;
     while (!entry.done) {
-      if (!entry.sim) {
-        var pk = g.pack;
-        entry.sim = createSim(g.track, pk.x, pk.y, pk.sg, (entry.seed + entry.tries * 7919) >>> 0, simParams(g.n));
-        entry.sim.release();
-        entry.tries += 1;
-      }
+      if (!entry.sim) { startSim(entry); }
       if (!entry.sim.run(1e9, deadline)) { return false; }
       var sim = entry.sim;
       if (!entry.best || scoreOf(sim, g.n) > scoreOf(entry.best, g.n)) { entry.best = sim; }
@@ -714,8 +807,22 @@
     return true;
   }
 
-  /** The physics settings for a field of n marbles: the same everywhere, except that tiny marbles are stepped a little finer. */
-  function simParams(n) { return P; }
+  /**
+   * A big field has a single race (maxTries is 1), so it can be worked out as it is shown: this runs it for up to `ms` ms and says
+   * whether the winner is known yet (the first two marbles have crossed the line) or the race is over.
+   */
+  function advanceStream(entry, ms) {
+    if (!entry.sim) { startSim(entry); entry.best = entry.sim; }
+    var sim = entry.sim;
+    if (!sim.done) { sim.run(1e9, performance.now() + ms); }
+    if (sim.done) { entry.done = true; entry.best = sim; }
+    return sim.done || sim.order.length >= 2;
+  }
+
+  /** The physics settings for a field of n marbles: the same everywhere, except that a mid-sized pack gets more contact passes per step (so the marbles stay clear of each other); the biggest fields stay cheap (their marbles are only a few pixels across). */
+  function withIter(it) { var o = {}; for (var key in P) { o[key] = P[key]; } o.ITER = it; return o; }
+  var P_SMALL = withIter(4), P_MID = withIter(6), P_BIG = withIter(4);
+  function simParams(n) { return n > 300 ? P_BIG : n > 60 ? P_MID : P_SMALL; }
 
   function entryFor(g) {
     var key = simKey(g);
@@ -723,19 +830,40 @@
     return simCache.entry;
   }
 
-  /** Big fields: start working out the race in the background as soon as the board is shown. */
+  /**
+   * Big fields: start working out the race in the background as soon as the board is shown. It works in the time the
+   * browser has to spare between frames (a small fixed slice where it cannot say), so the page stays smooth meanwhile.
+   */
   function warmUp(g) {
     if (g.n < 70 || typeof setTimeout !== 'function') { return; }
     var entry = entryFor(g);
     if (entry.done || simCache.timer) { return; }
-    var tick = function () {
+    var idle = typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function' && typeof window.cancelIdleCallback === 'function';
+    var tick = function (dl) {
       simCache.timer = 0;
       var en = simCache.entry;
       if (!en || en.done || en.claimed) { return; }
-      advance(en, 6);
-      if (!en.done) { simCache.timer = setTimeout(tick, 40); }
+      var ms = 6;
+      if (idle && dl && dl.timeRemaining) { ms = dl.didTimeout ? 4 : Math.min(11, dl.timeRemaining() - 2); }
+      try { if (ms >= 2) { advance(en, ms); } }
+      catch (err) { simCache.entry = null; if (window.console && console.error) { console.error(err); } return; }       // (the next race is just not prepared ahead: it will be worked out when it is asked for)
+      if (!en.done) { next(); }
     };
-    simCache.timer = setTimeout(tick, 400);
+    var next = function () {
+      simCache.idle = idle;
+      simCache.timer = idle ? window.requestIdleCallback(tick, { timeout: 300 }) : setTimeout(tick, 40);
+    };
+    simCache.idle = false;
+    simCache.timer = setTimeout(function () { simCache.timer = 0; next(); }, 150);
+  }
+
+  /** Leaving the game: stop working out the next race and let go of what has been worked out. */
+  function stopWarm() {
+    if (simCache.timer) {
+      if (simCache.idle) { window.cancelIdleCallback(simCache.timer); } else { clearTimeout(simCache.timer); }
+      simCache.timer = 0;
+    }
+    simCache.entry = null;
   }
 
   /** The race that the next start of this board will use (taken from the cache, so the next race gets a new one). */
@@ -743,7 +871,10 @@
     var entry = entryFor(g);
     entry.claimed = true;
     simCache.entry = null;
-    if (simCache.timer) { clearTimeout(simCache.timer); simCache.timer = 0; }
+    if (simCache.timer) {
+      if (simCache.idle) { window.cancelIdleCallback(simCache.timer); } else { clearTimeout(simCache.timer); }
+      simCache.timer = 0;
+    }
     return entry;
   }
 
@@ -773,6 +904,7 @@
     var OX = new Float32Array(n), OY = new Float32Array(n), LIFT = new Float32Array(n);
     var ANG = new Float32Array(n), HD = new Float32Array(n), SP = new Float32Array(n);
     var placed = 0, lastVt = 0, lastTs = 0, lastTick = 0, lastImp = 0;
+    var broken = false;
     var flashes = [];
     var phaseOff = new Float32Array(n), freq = new Float32Array(n);
     var big = tr.r >= 4;
@@ -823,7 +955,8 @@
 
     // ---- the shake before the gate opens
     function shakePose(t) {
-      var u = (t - t0) / (release - t0);
+      // while the physics is still being worked out the pack keeps rattling at full strength
+      var u = stage === 'sim' ? Math.min(0.79, (t - t0) / Math.max(1, relAt - t0)) : (t - t0) / (release - t0);
       u = u < 0 ? 0 : u > 1 ? 1 : u;
       var amp = reduced ? 0 : Math.sin(Math.min(1, u * 5) * HALF_PI) * (u > 0.8 ? (1 - u) / 0.2 : 1) * Math.min(0.9, tr.r * 0.14);
       var hopping = {};
@@ -865,21 +998,40 @@
       var bump = 0.5 - 0.5 * Math.cos(Math.PI * q);
       return 1 - depth * bump;
     }
+    var BOOST_MAX = 1.4;                     // the stragglers are never played faster than this (a marble should not seem to out-run its own top speed)
     function boostAt(ts) {
       // once nearly everybody is over the line the replay speeds up a little, so the last few marbles do not drag on
-      var u = (ts - Tb) / 0.5;
+      var u = (ts - Tb) / 1.0;
       if (u <= 0) { return 1; }
       u = u > 1 ? 1 : u;
       return 1 + (boost - 1) * u * u * (3 - 2 * u);
     }
     function speedAt(ts) { return slowAt(ts) * boostAt(ts); }
 
-    function plan() {
+    var RATE_MAX = 2.5;                      // a live race that is joined late is never played faster than this (it would only strobe): the first part is skipped instead
+    var ts0 = 0;                             // where in the physics the replay starts (0, unless the race was joined late)
+    var stream = n > 300 && !(a.liveSeconds > 0);   // a big solo race starts as soon as the winner is known, and the rest is worked out while it plays
+    var vtHold = 0, leadF = 1, lastWorkAt = 0, nextFed = false;
+
+    /** The real time the replay needs per unit of speed up to the physics time `upTo` (with or without the finish speed-up). */
+    function effective(upTo, withBoost) {
+      var e = 0, dt = 1 / 240;
+      for (var ts = 0; ts < upTo; ts += dt) { e += dt / (withBoost ? speedAt(ts) : slowAt(ts)); }
+      return e;
+    }
+
+    /** Who wins, and how close it is (needs the first two marbles to have crossed the line). */
+    function planStart() {
       var o = sim.order;
       Tw = sim.crossT[o[0]];
-      var gap = sim.crossT[o[1]] - Tw;
+      var gap = (o.length > 1 ? sim.crossT[o[1]] : Tw) - Tw;
       var close = Math.max(0, Math.min(1, 1 - gap / 0.45));
       depth = 0.28 + 0.4 * close;
+    }
+
+    /** When the replay ends and when the finish begins (needs the whole race). */
+    function planEnd() {
+      var o = sim.order;
       Tend = (sim.frames() - 1) * FDT;
       // the replay ends a moment after the last marble has stopped moving, not when the physics gave up waiting
       var nf = sim.frames();
@@ -892,34 +1044,56 @@
         if (moved) { Tend = Math.min(Tend, (fq + 9) * FDT); break; }
       }
       Tb = sim.crossT[o[Math.min(o.length - 1, Math.max(1, Math.ceil(0.85 * n) - 1))]];
-      // the real time the replay needs per unit of speed: to the winner, to the start of the finish, and to the end
-      function effective(upTo, withBoost) {
-        var e = 0, dt = 1 / 240;
-        for (var ts = 0; ts < upTo; ts += dt) { e += dt / (withBoost ? speedAt(ts) : slowAt(ts)); }
-        return e;
-      }
+    }
+
+    function plan() {
+      planStart();
+      Tend = 1e9; Tb = 1e9; boost = 1;
+      if (sim.done) { planEnd(); }
       var elapsed = (performance.now() - t0) / 1000;
-      var total = a.liveSeconds > 0 ? Math.max(2.5, a.liveSeconds * 0.95 - Math.max(elapsed, (release - t0) / 1000) - 0.2) : 0;
-      boost = 1;
+      var total = a.liveSeconds > 0 ? Math.max(U.dur(2500) / 1000, a.liveSeconds * 0.95 - Math.max(elapsed, (release - t0) / 1000) - 0.2) : 0;
       var ew = effective(Tw, false);
-      for (var pass = 0; pass < 2; pass++) {
-        var ee = effective(Tend, true);
-        rate = total > 0 ? ee / total : ew / Math.max(1, a.seconds);
-        // how long the last stretch would take: if it is long, play it faster
-        var tailReal = (ee - effective(Tb, true)) / rate;
-        var cap = Math.max(1.8, 0.12 * (total > 0 ? total : a.seconds * 1.15));
-        if (pass === 0 && tailReal > cap) { boost = Math.min(3, tailReal / cap); } else { break; }
+      if (!sim.done) {
+        rate = ew / Math.max(1, a.seconds);                 // (a solo race: the winner crosses after `seconds`; the finish is planned once the rest is known)
+      } else {
+        for (var pass = 0; pass < 2; pass++) {
+          var ee = effective(Tend, true);
+          rate = total > 0 ? ee / total : ew / Math.max(1, a.seconds);
+          // how long the last stretch would take: if it is long, play it faster
+          var tailReal = (ee - effective(Tb, true)) / rate;
+          var cap = Math.max(1.8, 0.12 * (total > 0 ? total : a.seconds * 1.15));
+          if (pass === 0 && tailReal > cap) { boost = Math.min(BOOST_MAX, tailReal / cap); } else { break; }
+        }
+        if (total > 0 && rate > RATE_MAX) {
+          // joined late: show the last stretch of the race at a watchable speed (and not the part that is already over)
+          var skipE = ee - total * RATE_MAX, e2 = 0, dt2 = 1 / 240;
+          ts0 = 0;
+          while (ts0 < Tw - 2 && e2 < skipE) { e2 += dt2 / speedAt(ts0); ts0 += dt2; }
+          rate = (ee - e2) / total;
+        }
       }
       rate = Math.max(0.05, Math.min(40, rate));
-      self.timing.rate = rate; self.timing.tw = Tw; self.timing.tend = Tend; self.timing.tries = entry.tries; self.timing.leads = sim.leads; self.timing.boost = boost;
+      self.timing.simSeed = (entry.seed + (entry.tries - 1) * 7919) >>> 0; self.timing.rate = rate; self.timing.tw = Tw; self.timing.tend = Tend; self.timing.tries = entry.tries; self.timing.leads = sim.leads; self.timing.boost = boost; self.timing.ts0 = ts0; self.timing.stream = stream;
+    }
+
+    /** A big solo race that started before it was over has now been worked out to the end: plan the finish (the pace of the rest does not change). */
+    function finalizePlan() {
+      planEnd();
+      var ee = effective(Tend, true);
+      var tailReal = (ee - effective(Tb, true)) / rate;
+      var cap = Math.max(1.8, 0.12 * a.seconds * 1.15);
+      if (tailReal > cap && lastTs < Tb - 1.0) { boost = Math.min(BOOST_MAX, tailReal / cap); }
+      self.timing.tend = Tend; self.timing.boost = boost; self.timing.leads = sim.leads;
     }
 
     // ---- the pre-simulation (in slices: the page must keep drawing meanwhile)
-    self.work = function (t) {
+    function work0(t) {
       if (stage === 'sim') {
-        if (!advance(entry, n > 120 ? 7 : 10)) { return; }
+        // (the pack keeps rattling while the physics is worked out; a person who is waiting gets most of every frame for it)
+        var known = stream ? advanceStream(entry, 10) : advance(entry, n > 120 ? 10 : 12);
+        if (!known) { shakePose(t); return; }
         sim = entry.sim;
-        if (!sim.order.length) { sim = null; }
+        if (!sim.order.length) { throw new Error('the physics found no winner'); }
         decideSwaps();
         var now = performance.now();
         swapFrom = Math.max(t0 + win * 0.26, now);
@@ -931,12 +1105,60 @@
         shakePose(t);
         if (t >= release) { plan(); stage = 'ready'; }
       }
+      if (stage === 'shake' || stage === 'ready' || stage === 'run') { background(); }
+    }
+
+    /**
+     * What the physics still has to do while the race is shown: a big solo race is worked out to the end as it plays, and the next
+     * race of the same board is started once this one is known (a few ms of every frame, and none if the page is struggling).
+     */
+    function background() {
+      var now = performance.now();
+      var gap = lastWorkAt ? now - lastWorkAt : 16;
+      lastWorkAt = now;
+      var ms = gap > 26 ? 2 : stage === 'run' ? (leadF < 0.9 ? 11 : 6) : 10;      // (more of the frame when the replay is waiting for the physics)
+      if (!sim.done) {
+        advanceStream(entry, ms);
+        if (sim.done && stage !== 'shake') { finalizePlan(); }
+        return;
+      }
+      if (stage === 'run' && g.n >= 70 && !nextFed) {
+        if (simCache.entry && simCache.entry.key !== simKey(g)) { nextFed = true; return; }     // the board changed under it: the new board looks after itself
+        var en = entryFor(g);
+        if (en.done || en.claimed) { nextFed = true; return; }
+        // (a failure while preparing the NEXT race must not spoil this one: it is dropped and worked out when it is asked for)
+        try { advance(en, ms); }
+        catch (err) { nextFed = true; simCache.entry = null; if (window.console && console.error) { console.error(err); } }
+      }
+    }
+
+    /** Should anything in the motion ever fail, the race is not left hanging: everybody is placed at once, the drawn winner first. */
+    function failSafe(err) {
+      if (!broken && window.console && console.error) { console.error(err); }
+      broken = true;
+      stage = 'done';
+    }
+    function finishNow() {
+      var wk = -1, k;
+      for (k = 0; k < n; k++) { if (ents[k].ch.id === winnerId) { wk = k; break; } }
+      if (wk < 0) { wk = a.winIdx || 0; }
+      var rest = [];
+      for (k = 0; k < n; k++) { if (k !== wk) { rest.push(k); } }
+      rest.sort(function (p1, p2) { return (self.runs[p2].p || 0) - (self.runs[p1].p || 0); });
+      self.runs[wk].place = 1; self.runs[wk].p = 1;
+      for (k = 0; k < rest.length; k++) { self.runs[rest[k]].place = k + 2; self.runs[rest[k]].p = 1; }
+      return true;
+    }
+
+    self.work = function (t) {
+      if (broken) { return; }
+      try { work0(t); } catch (err) { failSafe(err); }
     };
 
-    self.ready = function (t) { return stage === 'ready' || stage === 'run'; };
+    self.ready = function (t) { return broken || stage === 'ready' || stage === 'run'; };
 
     /** The photo-finish slow-motion: the speed of the replay as a fraction of full, smoothly. */
-    self.pace = function () { return stage === 'run' ? speedAt(lastTs) : 1; };
+    self.pace = function () { return stage === 'run' ? speedAt(lastTs) * leadF : 1; };
 
     self.abort = function () { stage = 'done'; self.live = true; };
 
@@ -953,9 +1175,15 @@
       return (f & 31) * n * 3;
     }
 
-    self.step = function (vt, onPlace) {
-      if (stage === 'ready') { stage = 'run'; lastVt = vt; lastTs = 0; self.timing.run = performance.now(); }
-      var ts = vt * rate;
+    function step0(vt, onPlace) {
+      if (stage === 'ready') { stage = 'run'; lastVt = vt; lastTs = ts0; self.timing.run = performance.now(); if (sim.done && Tend > 1e8) { finalizePlan(); } }
+      var ts = ts0 + (vt - vtHold) * rate;
+      if (!sim.done) {
+        // the rest of the race is still being worked out: never run past it (slow down smoothly as it gets close, and hold if it must)
+        var lim = (sim.frames() - 4) * FDT;
+        if (ts > lim) { vtHold += (ts - lim) / rate; ts = lim; }
+        leadF = Math.max(0.12, Math.min(1, (lim - ts) / 1.2));
+      } else { leadF = 1; }
       if (ts > Tend) { ts = Tend; }
       var dv = vt - lastVt;
       var f = Math.floor(ts / FDT), u = ts / FDT - f;
@@ -989,7 +1217,7 @@
       }
       // places, in the order the marbles crossed the line
       var order = sim.order;
-      while (placed < order.length && sim.crossT[order[placed]] <= ts) {
+      while (placed < order.length && (sim.crossT[order[placed]] <= ts || ts >= Tend)) {
         var slot = order[placed], ek = entOf[slot];
         var r2 = self.runs[ek];
         placed += 1;
@@ -1014,7 +1242,7 @@
         }
       }
       lastVt = vt; lastTs = ts;
-      var allDone = ts >= Tend && placed >= order.length;
+      var allDone = sim.done && ts >= Tend && placed >= order.length;
       if (allDone) {
         // a marble that was still jammed behind the pack when the run ended takes the next place, furthest along first
         var left = [];
@@ -1026,6 +1254,13 @@
         warmUp(g);
       }
       return allDone;
+    }
+
+    self.step = function (vt, onPlace) {
+      if (!broken) {
+        try { return step0(vt, onPlace); } catch (err) { failSafe(err); }
+      }
+      return finishNow();
     };
   }
   /* ======================================================================== drawing */
@@ -1034,6 +1269,8 @@
   var reducedNow = false;                 // reduced motion, looked up once per picture
   var bgCache = { key: '', canvas: null };
   var sprites = {};
+  var drawD = 1;                          // the pixel density the sprites are painted at for this picture (dpr times drawK)
+  var drawK = 1;                          // how much smaller than its track units the picture is drawn (see shape)
 
   function hexRgb(hex) { var v = parseInt(hex.slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; }
   /** A colour mixed towards white (f > 0) or black (f < 0). */
@@ -1052,7 +1289,7 @@
 
   /** The glass of one marble, painted once per colour and size: the round body, and the gloss that sits on top of the swirl. */
   function spriteFor(accent, r) {
-    var d = dprNow();
+    var d = drawD;
     var key = accent + '|' + Math.round(r * 10) + '|' + d;
     var sp = sprites[key];
     if (sp) { return sp; }
@@ -1146,7 +1383,7 @@
 
   /** The static part of the picture (sky, track, rails, banking, gate, finish line), painted once per size. */
   function trackLayer(S) {
-    var g = S.geo, W = S.W, H = S.H, d = dprNow();
+    var g = S.geo, W = g.W, H = g.H, d = dprNow() * g.k;
     var key = [W, H, d, g.n, g.xA | 0, g.xB | 0, g.finish | 0].join('|');
     if (bgCache.key === key && bgCache.canvas) { return bgCache.canvas; }
     var cv = makeCanvas(Math.round(W * d), Math.round(H * d));
@@ -1239,7 +1476,7 @@
       }
       ctx.restore();
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.font = '700 10px "Inter", sans-serif';
+      ctx.font = '700 ' + 10 / g.k + 'px "Inter", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       // the label sits just off the track, on whichever side has room
@@ -1252,6 +1489,21 @@
     return cv;
   }
 
+  /** The plain progress-based placement: only used if the physics could not start (it keeps the race fair whatever happens). */
+  function plainPlace(e, p, S) {
+    var g = S.geo;
+    var s;
+    if (p >= 1) { s = g.finish + (e._b - g.finish) * e._q; }
+    else { s = e._a + p * (g.finish - e._a); }
+    var moving = S.racing && p > 0 && p < 1;
+    var weave = moving ? Math.sin(p * 23 + e.run.phase * 6) * Math.min(g.gap * 0.4, 4) : 0;
+    var pt = pathAt(g, s);
+    var off = e._lat * (g.hw - g.r - 3) + weave;
+    var pos = e._pos || (e._pos = { x: 0, y: 0, lift: 0, ang: 0, hd: 0, sp: 0 });
+    pos.x = pt.x + pt.dy * off; pos.y = pt.y - pt.dx * off; pos.lift = 0; pos.ang = s / g.r; pos.hd = Math.atan2(pt.dy, pt.dx); pos.sp = 0;
+    return pos;
+  }
+
   /** Every marble's soft contact shadow in one go (one path, one fill: cheap even for a thousand marbles). */
   function drawShadows(ctx, S) {
     var g = S.geo, r = g.r, list = shownEnts;
@@ -1261,7 +1513,7 @@
     var round = r < 3;
     for (var i = 0; i < list.length; i++) {
       var e = list[i];
-      var pos = updatePos(e, g);
+      var pos = (!e._m && e.run && e.run.p > 0) ? plainPlace(e, e.run.p, S) : updatePos(e, g);
       var lift = pos.lift > 0.02;
       var sx = pos.x + r * 0.2, sy = pos.y + r * 0.62;
       if (round) { ctx.moveTo(sx + r * 0.9, sy); ctx.arc(sx, sy, r * 0.9, 0, TAU); }
@@ -1276,10 +1528,12 @@
 
   /** One marble: streak, glass, swirl, gloss. (x, y) is the centre; `scale` is above 1 for a marble that is tossed up. */
   function drawMarble(ctx, e, x, y, r, pos, scale) {
-    var sp = spriteFor(e.ch.accent, r * scale);
+    // (each marble remembers its sprite: looking one up by name for every marble on every frame is the dearest part of a big picture)
+    var rs = r * scale, sp = e._sp;
+    if (!sp || e._spR !== rs || e._spD !== drawD || e._spA !== e.ch.accent) { sp = spriteFor(e.ch.accent, rs); e._sp = sp; e._spR = rs; e._spD = drawD; e._spA = e.ch.accent; }
     var half = sp.size / 2;
     if (sp.base) {
-      if (pos.sp > 140 && !reducedNow && r >= 5) {
+      if (pos.sp > 140 && !reducedNow && r * drawK >= 5) {
         // a fast marble leaves a short streak of its colour behind it
         var len = Math.min(r * 3.2, pos.sp * 0.028), hx = Math.cos(pos.hd), hy = Math.sin(pos.hd);
         ctx.lineCap = 'round';
@@ -1301,6 +1555,30 @@
   var lastMotion = null;                  // the race now playing (or the last one)
   var lastGeo = null;
   var FDT = P.DT * P.REC;
+  var PAD = 10;
+
+  /**
+   * The measurements of the track for n marbles on a canvas W px wide. The size of the marbles and the number of lanes come
+   * from tier(n) and never change. A narrow canvas (a phone) instead draws the whole picture a little smaller (k below 1), so
+   * that the finished pack still has room on the last straight; all the numbers the physics and the drawing use are in
+   * the unscaled "track units" (width Wv, height Hv), and k only scales the picture onto the canvas.
+   */
+  function shape(n, W) {
+    var t = tier(n);
+    var hw = halfWidth(t);
+    var rowGap = 2 * hw + 20;
+    var rt = rowGap / 2;
+    var margin = 2 * (PAD + rt + hw + 6);                // the U-turns bulge out by rt plus the width of the track, so keep them inside the canvas
+    // past the line the finished pack settles against the end wall: the run-out has to be long enough to hold it (marbles
+    // that roll into place pack at roughly three quarters of the floor, a little less for tiny ones)
+    var packLen = n * Math.PI * t.r * t.r / ((n > 120 ? 0.55 : 0.72) * 2 * (hw - 2)) + 6 * t.r;
+    var wantW = packLen * 1.15 + 3 * t.r + 1 + 4 + margin;
+    var k = wantW <= W ? 1 : Math.max(0.3, W / wantW);
+    return {
+      t: t, hw: hw, rowGap: rowGap, rt: rt, gap: 2 * t.r + 2, margin: margin, packLen: packLen, k: k, Wv: W / k,
+      Hv: hw + 36 + (t.rows - 1) * rowGap + hw + 28
+    };
+  }
 
   var game = GS.crowdGame({
     id: 'marble',
@@ -1321,34 +1599,29 @@
       'The winner is drawn first, fairly, from the charities in the race (each has equal odds). The marbles are then played out to match, with the order changing on the way down. Back a marble and, if it wins, you earn a bonus.'
     ],
 
-    height: function (n) {
-      var t = tier(n);
-      var hw = halfWidth(t);
-      return Math.round(hw + 36 + (t.rows - 1) * (2 * hw + 20) + hw + 28);
+    height: function (n, W) {
+      var sh = shape(n, W);
+      return Math.round(sh.Hv * sh.k);
     },
 
     layout: function (ents, W, H) {
       var n = ents.length;
-      var t = tier(n);
-      var gap = 2 * t.r + 2;
-      var hw = halfWidth(t);
-      var rowGap = 2 * hw + 20;
-      var rt = rowGap / 2;
-      var pad = 10;
-      // the U-turns bulge out by rt plus the width of the track, so keep them inside the canvas
-      var xA = pad + rt + hw + 6;
-      var xB = Math.max(xA + 90, W - pad - rt - hw - 6);
+      var sh = shape(n, W);
+      var t = sh.t;
+      var gap = sh.gap;
+      var hw = sh.hw;
+      var rowGap = sh.rowGap;
+      var rt = sh.rt;
+      var xA = PAD + rt + hw + 6;
+      var xB = Math.max(xA + 90, sh.Wv - PAD - rt - hw - 6);
       var straight = xB - xA;
       var R = Math.ceil(n / t.lanes);                  // rows of marbles in the starting pack
       var gate = R * gap + 6;                          // distance along the track to the start gate (may run round the first turn)
-      // past the line the finished pack settles against the end wall: the run-out has to be long enough to hold it (marbles
-      // that roll into place pack at roughly three quarters of the floor)
-      var packLen = n * Math.PI * t.r * t.r / ((n > 120 ? 0.55 : 0.72) * 2 * (hw - 2)) + 6 * t.r;
-      var pileLen = Math.min(Math.max(packLen * 1.3, 150), straight - 4);
+      var pileLen = Math.min(Math.max(sh.packLen * 1.3, 150), straight - 4);
       var total = (t.rows - 1) * (straight + Math.PI * rt) + straight;
       var geo = {
         rows: t.rows, rowGap: rowGap, rt: rt, hw: hw, xA: xA, xB: xB, straight: straight, y0: hw + 36,
-        r: t.r, gap: gap, lanes: t.lanes, gate: gate, total: total, finish: total - pileLen, W: W, H: H, n: n
+        r: t.r, gap: gap, lanes: t.lanes, gate: gate, total: total, finish: total - pileLen, W: sh.Wv, H: sh.Hv, n: n, k: sh.k, cw: W, ch: H
       };
       geo.track = buildTrack(geo);
       var pack = packSlots(geo, n);
@@ -1379,26 +1652,23 @@
       catch (err) { if (window.console) { console.error(err); } return null; }
     },
 
+    /** The player left the game: stop working out the next race in the background and let go of it. */
+    onDeactivate: function () { stopWarm(); },
+
     background: function (ctx, S) {
       reducedNow = U.reducedMotion();
-      ctx.drawImage(trackLayer(S), 0, 0, S.W, S.H);
+      var g = S.geo;
+      drawK = g.k;
+      drawD = dprNow() * drawK;
+      // a narrow canvas draws the track units smaller (see shape); the shared engine paints its banner in canvas pixels afterwards
+      if (g.k < 1) { var d = dprNow(); ctx.setTransform(d * g.k, 0, 0, d * g.k, 0, 0); }
+      ctx.drawImage(trackLayer(S), 0, 0, g.W, g.H);
       drawShadows(ctx, S);
     },
 
     place: function (e, p, S) {
-      var g = S.geo;
-      if (e._m || !(p > 0)) { return updatePos(e, g); }
-      // the plain progress-based placement: only used if the physics could not start (it keeps the race fair whatever happens)
-      var s;
-      if (p >= 1) { s = g.finish + (e._b - g.finish) * e._q; }
-      else { s = e._a + p * (g.finish - e._a); }
-      var moving = S.racing && p > 0 && p < 1;
-      var weave = moving ? Math.sin(p * 23 + e.run.phase * 6) * Math.min(g.gap * 0.4, 4) : 0;
-      var pt = pathAt(g, s);
-      var off = e._lat * (g.hw - g.r - 3) + weave;
-      var pos = e._pos || (e._pos = { x: 0, y: 0, lift: 0, ang: 0, hd: 0, sp: 0 });
-      pos.x = pt.x + pt.dy * off; pos.y = pt.y - pt.dx * off; pos.lift = 0; pos.ang = s / g.r; pos.hd = Math.atan2(pt.dy, pt.dx); pos.sp = 0;
-      return pos;
+      if (e._m || !(p > 0)) { return updatePos(e, S.geo); }
+      return plainPlace(e, p, S);
     },
 
     entity: function (ctx, e, pos, S) {
@@ -1426,14 +1696,14 @@
       }
       if (backed) {
         // the charity you backed: a gold ring and a star, readable even when the field is tiny
-        var br = Math.max(r * 1.9, 7);
+        var br = Math.max(r * 1.9, 7 / g.k);
         ctx.beginPath();
         ctx.arc(x, y, br, 0, TAU);
         ctx.lineWidth = 2;
         ctx.strokeStyle = '#ffc542';
         ctx.stroke();
         ctx.fillStyle = '#ffc542';
-        ctx.font = '800 ' + Math.max(10, r * 1.6) + 'px "Sora", sans-serif';
+        ctx.font = '800 ' + Math.max(10 / g.k, r * 1.6) + 'px "Sora", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'alphabetic';
         ctx.fillText('\u2605', x, y - br - 2);
@@ -1441,11 +1711,11 @@
       if (e.run.place && (e.run.place <= 3 || S.n <= 12)) {
         ctx.fillStyle = MEDAL[e.run.place - 1] || '#51697a';
         ctx.beginPath();
-        ctx.arc(x + r * 0.9, y - r * 0.9, Math.max(5, r * 0.55), 0, TAU);
+        ctx.arc(x + r * 0.9, y - r * 0.9, Math.max(5 / g.k, r * 0.55), 0, TAU);
         ctx.fill();
-        if (r >= 7) {
+        if (r * g.k >= 7) {
           ctx.fillStyle = '#0b1620';
-          ctx.font = '800 9px "Sora", sans-serif';
+          ctx.font = '800 ' + 9 / g.k + 'px "Sora", sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(String(e.run.place), x + r * 0.9, y - r * 0.88);
@@ -1474,18 +1744,20 @@
           ctx.stroke();
         }
       }
+      if (g.k < 1) { var d = dprNow(); ctx.setTransform(d, 0, 0, d, 0, 0); }       // back to canvas pixels for the engine's banner
     }
   });
 
   /** Hooks for the scratch tests (they read how the marbles move and start races without the interface). */
   game._debug = {
-    P: P, createSim: createSim, buildTrack: buildTrack, segAt: segAt, packSlots: packSlots, pathAt: pathAt, Motion: Motion, simCache: simCache,
+    P: P, simParams: simParams, createSim: createSim, buildTrack: buildTrack, segAt: segAt, packSlots: packSlots, pathAt: pathAt, Motion: Motion, simCache: simCache,
     consts: function () { return { DT: P.DT, REC: P.REC, FDT: FDT }; },
     /** Where every marble is drawn right now: [[x, y, place], ...]. */
     snapshot: function () {
       return shownEnts.map(function (e) { var p = updatePos(e, lastGeo); return [p.x, p.y, e.run.place, e.ch.id]; });
     },
     marbles: function () { return shownEnts; },
+    sprites: function () { return sprites; },
     geo: function () { return lastGeo; },
     motion: function () { return lastMotion; },
     timing: function () { return lastMotion ? lastMotion.timing : null; }
