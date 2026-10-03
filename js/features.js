@@ -370,7 +370,7 @@
   /* ------------------------------------------------------------------ *
    * Dated lines that hide themselves: data-until="2026-10-04" on an element in the HTML hides it from the next day
    * on (Eastern Time). Visitors without JavaScript still see it. A box or table marked data-until-empty hides
-   * once every list item or table row in it has been hidden that way.
+   * once every list item, table row and dated line (data-until) in it has been hidden that way.
    * ------------------------------------------------------------------ */
   const goneEl = (el) => el.style.getPropertyValue('display') === 'none';
   function expireDated() {
@@ -384,7 +384,7 @@
       warn('Hidden since ' + addDays(until, 1) + ' because its data-until date has passed: "' + q(el.textContent) + '". Delete it from the page, or if you reused it for new dates, change its data-until.');
     });
     $$('[data-until-empty]').forEach((box) => {
-      const items = $$('li, tbody tr', box);
+      const items = $$('li, tbody tr, [data-until]', box);
       if (items.length && items.every(goneEl)) box.style.setProperty('display', 'none', 'important');
     });
   }

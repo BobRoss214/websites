@@ -1145,9 +1145,11 @@
    * ------------------------------------------------------------------ */
   // data-only="fall winter": shown only while one of those seasons is on screen. Add data-in-season to show it only
   // while that season is really happening (not in the weeks before or after, when the nearest season is shown).
+  // data-out-of-season="spring" is the opposite: hidden while that season is really happening ("Tell me when it opens").
   function applyOnly(id) {
-    const live = W.seasons.live().some((s) => s.id === id);
+    const now = W.seasons.live().map((s) => s.id), live = now.includes(id);
     $$('[data-only]').forEach((el) => el.toggleAttribute('hidden', !el.dataset.only.split(/\s+/).includes(id) || (el.hasAttribute('data-in-season') && !live)));   // SVG elements have no .hidden property
+    $$('[data-out-of-season]').forEach((el) => el.toggleAttribute('hidden', el.dataset.outOfSeason.split(/\s+/).some((s) => now.includes(s))));
   }
 
   function build(id) {

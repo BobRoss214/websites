@@ -486,7 +486,7 @@
           <p data-t="t7b5e0b7c" class="small">Also at the farm: u-cut seasonal flowers, concessions, beer, hard cider and wine, local goods and NC pumpkins. Outside alcohol is not permitted.</p>
         </div>
 
-        <div class="schedule reveal" id="schedule">
+        <div class="schedule reveal" id="schedule" data-until-empty>
           <div class="schedule-head">
             <svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>
             <h4 data-t="t65d35823">Fall 2026 reservation schedule</h4>
@@ -510,7 +510,8 @@
           </div>
           <!-- UPDATE WEEKLY: this block changes as new weekends open.
                Each row needs data-release="YYYY-MM-DD" (the Tuesday it opens). The countdown above follows these rows.
-               data-until="YYYY-MM-DD" is the last day a row (or the "Open now" line) is true; it hides itself after that day. -->
+               data-until="YYYY-MM-DD" is the last day a row (or the "Open now" line) is true; it hides itself after that day.
+               When every dated line in this box has passed, the whole box hides itself (data-until-empty). -->
           <div class="schedule-grid">
             <div data-until="2026-11-30">
               <h5 data-t="t78b5a064">No pizza</h5>
@@ -2168,7 +2169,7 @@
         <a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a>
       </address>
     </div>
-    <p data-t="tc0fb43cb" class="wrap copyright">2026 &copy; Wise Acres Organic Farm &middot; USDA Certified Organic &middot; Indian Trail, NC</p>
+    <p data-t="tc0fb43cb" class="wrap copyright" data-year>2026 &copy; Wise Acres Organic Farm &middot; USDA Certified Organic &middot; Indian Trail, NC</p>
   </footer>
 
   <!-- ================= MOBILE ACTION BAR ================= -->

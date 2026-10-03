@@ -160,7 +160,19 @@
     el.textContent = live ? t('In season: {crop}', { crop: t(live.crop) }) : nxt ? t('Next up: {crop}, usually {when}', { crop: t(nxt.crop), when: t(nxt.next) }) : '';
   }
 
-  function refresh() { renderBadges(); renderNotice(); renderCountdown(); renderAnnounce(); }
+  /* ------------------------------------------------------------------ *
+   * The year in the footer ("2026 © Wise Acres..."): data-year swaps the first year in the text (in any language)
+   * for this year. Without JavaScript the year typed in index.html shows.
+   * ------------------------------------------------------------------ */
+  function renderYear() {
+    const y = easternParts(new Date()).ymd.slice(0, 4);
+    $$('[data-year]').forEach((el) => {
+      const w = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let n; (n = w.nextNode());) if (/\b20\d\d\b/.test(n.nodeValue)) { n.nodeValue = n.nodeValue.replace(/\b20\d\d\b/, y); break; }
+    });
+  }
+
+  function refresh() { renderBadges(); renderNotice(); renderCountdown(); renderAnnounce(); renderYear(); }
 
   refresh();
   let seenDay = easternParts(new Date()).ymd;   // a page left open overnight: new day, new countdown number, an expired notice goes away
