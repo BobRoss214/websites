@@ -24,7 +24,7 @@ from bs4 import BeautifulSoup
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = 'https://www.wiseacresorganic.com/'
 OG_IMAGE = 'assets/og-share.png'
-OG_IMAGE_ALT = 'Illustration of a fall farm: a tractor pulling a wagon of children past a pumpkin patch, a red barn and a scarecrow, with the words Welcome to Wise Acres! Organic u-pick fun for the whole family'   # keep identical to og:image:alt in index.html
+OG_IMAGE_ALT = 'Illustration of a fall farm with a smiling sun, a red barn, a tractor pulling a wagon of children, a pumpkin patch and a scarecrow, with the words Wise Acres Organic Farm. Organic u-pick fun for the whole family'   # keep identical to og:image:alt in index.html
 
 PAGES_DIR = os.path.join(ROOT, 'pages')
 

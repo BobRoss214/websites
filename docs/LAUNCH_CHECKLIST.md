@@ -279,8 +279,9 @@ If you do want it (decision D5):
 
 ### 3.11 The share image
 
-- [ ] `assets/og-share.png` is the picture people see when the address is pasted into Facebook, a text message or similar. It is 1200 by 630 pixels, 400 KB: a drawing of the farm with the words "Welcome to Wise Acres! Organic u-pick fun for the whole family". Every page uses it.
+- [ ] `assets/og-share.png` is the picture people see when the address is pasted into Facebook, a text message or similar. It is 1200 by 630 pixels, 208 KB: the fall farm from the top of the home page (sun, barn, wagon ride, pumpkin patch, scarecrow) with the name "Wise Acres Organic Farm" and the words "Organic u-pick fun for the whole family". Every page uses it.
 - [ ] Decision D7: keep the drawing, or use a real photo? To change it, replace the file with a new 1200 by 630 picture of the same name, or ask Claude.
+- [ ] Before launch you can replace the file under the same name. After launch, give a changed picture a new file name (change `OG_IMAGE` in `tools/pages.py`, the `og:image` line in `index.html`, and run the rebuild): `/assets/*` is cached for a year (see `_headers`), and Facebook, WhatsApp and iMessage keep old previews for days or weeks.
 - [ ] After launch, paste the home address into a new text message or a Facebook post draft (not an old one: apps keep previews for days) and look at the picture and the title.
 
 ### 3.12 Your Google Business Profile
