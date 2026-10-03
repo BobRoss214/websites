@@ -36,6 +36,8 @@
       : GS.fair.verify(fairData, boardPool || core.buildPool(GS.charities, fairData.filters, fairData.excluded));
     return check.then(function (r) {
       if (r.ok) { var badges = store.noteVerify(); if (badges.length) { GS.bus.emit('badges', badges); } }
+      // older versions of the site kept only the first 300 charities of a bigger board, so such a round cannot be redone here
+      else if (fairData.board && fairData.board.length === 300) { r.cutShort = true; }
       return r;
     });
   }
@@ -47,7 +49,7 @@
       row(r.hashOk, r.hashOk ? 'The secret number matches the fingerprint shown before the round (nobody swapped it)' : 'The secret number does NOT match the fingerprint shown before the round') +
       row(r.poolOk, r.poolOk ? (r.weighted ? 'The pot matches what was staked' : 'The same charities were on the board') : (r.weighted ? 'The pot does not match what was staked' : 'The charities on the board do not match')) +
       row(r.winnersOk, r.winnersOk ? 'Redoing the pick gives the same winners' : 'Redoing the pick gives different winners') +
-    '</ul>';
+    '</ul>' + (r.cutShort ? '<p class="rs-fine">If this round had more than 300 charities on its board, it was saved by an older version of the site that kept only the first 300, so it cannot be checked again here. Rounds saved now keep the whole board.</p>' : '');
   }
 
   function fairDetailsHTML(f) {

@@ -444,7 +444,7 @@
     var chosen = Math.floor(sizeFor(current));
     var inPresets = g.sizes.some(function (s) { return s.n === cur; });
     var sizeHtml = g.sizes.map(function (s) {
-      return '<button type="button" class="seg__btn" data-n="' + s.n + '" aria-pressed="' + (s.n === cur) + '"><span>' + s.n + '</span><small>' + esc(s.name) + '</small></button>';
+      return '<button type="button" class="seg__btn" data-n="' + s.n + '" aria-pressed="' + (s.n === cur) + '"><span>' + ui.num(s.n) + '</span><small>' + esc(s.name) + '</small></button>';
     }).join('');
     if (el.sizeSeg.getAttribute('data-sig') !== sizeHtml) { el.sizeSeg.setAttribute('data-sig', sizeHtml); el.sizeSeg.innerHTML = sizeHtml; }
     el.sizeCustom.min = String(minFor(g));

@@ -270,7 +270,9 @@ Timings (betting window, lock, result), bot names and stake sizes, and the table
 2. **Draw.** The app (not the game) draws every winner: HMAC-SHA256 of the round seed with your own seed and a round
    number, read as 32-bit numbers with rejection sampling (no modulo bias), applied to **the charities on the board**
    sorted by id. That is exactly equal odds for every charity on the board. The board is recorded with the round
-   (`fair.board`), so the verifier and the standalone snippet can redo the draw from just the board.
+   (`fair.board`), so the verifier and the standalone snippet can redo the draw from just the board. This browser keeps the
+   whole board of each of your last 60 rounds, even a board of 1,000 (stored compactly: about 3 KB a round), so any of
+   them can still be re-checked after a reload.
 3. **Show.** The game then animates to the already-chosen winner. The slices, reels, bins, pockets, cards and runners
    on screen are the board itself (the charities the winner was drawn from, repeated to fill extra spots), so what you
    see is what was drawn from.
@@ -311,17 +313,18 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 ## Tests
 
 ```
-node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js
+node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js
 ```
 
-61 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+66 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
 backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly
 league and the Charity Cup field, email/phone/password/card/expiry validation, the fair-play draw (cross-checked
 against Node's own HMAC, uniformity over 30,000 rounds, tampering is caught, the standalone snippet matches), and the
 charity data (unique ids, valid vocabulary, short names and blurbs, bare hostnames, no superlatives, minimum counts per
-cause and filter).
+cause and filter), and saved rounds (a board of 300, 301 or 1,000 charities comes back whole after a reload and still
+verifies, older saves still load, and the saved text stays small).
 
 ```
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs

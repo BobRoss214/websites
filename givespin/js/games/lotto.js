@@ -625,7 +625,7 @@
     badge: 'Up to 1,000',
     live: true,
     maxSize: 1000,
-    sizes: [{ n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 50, name: 'Huge' }, { n: 100, name: 'Giant' }, { n: 300, name: 'Jumbo' }],
+    sizes: [{ n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 50, name: 'Huge' }, { n: 100, name: 'Giant' }, { n: 300, name: 'Jumbo' }, { n: 1000, name: 'Mega' }],
     defaultSize: 12,
     tagline: 'Balls tumble in the drum. One rolls out. That charity wins.',
     cta: 'Draw a ball',

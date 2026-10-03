@@ -600,7 +600,7 @@
     badge: 'Up to 1,000',
     live: true,
     maxSize: 1000,
-    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Huge' }, { n: 48, name: 'Giant' }, { n: 120, name: 'Grand National' }],
+    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Huge' }, { n: 48, name: 'Giant' }, { n: 120, name: 'Grand National' }, { n: 1000, name: 'Stampede' }],
     defaultSize: 6,
     tagline: 'A field of charities, one finish line. First across wins your gift.',
     cta: 'Start the race',

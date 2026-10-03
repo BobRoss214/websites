@@ -972,6 +972,14 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
   }
   const prefs = await page.evaluate(() => window.GS.store.prefs().sizes);
   check(prefs.plinko === 500 && prefs.derby === 1000 && prefs.duck === 1000, 'chosen sizes are remembered', prefs);
+  // a saved round keeps its whole board across a reload, so a round on a board of 1,000 still verifies afterwards
+  const kept = () => page.evaluate(() => window.GS.store.get().history.map((h) => h.fair.board.length));
+  const keptBefore = await kept();
+  await page.reload();
+  await page.waitForFunction(() => document.body.classList.contains('is-ready'));
+  const keptAfter = await kept();
+  check(JSON.stringify(keptAfter) === JSON.stringify(keptBefore) && keptAfter.some((n) => n > 300), 'after a reload every saved round still has its whole board (some have more than 300 charities)', { keptBefore, keptAfter });
+  check(await page.evaluate(async () => { const h = window.GS.store.get().history.find((x) => x.fair.board.length > 300); return !!h && (await window.GS.ui.receipt.verifyRound(h.fair)).ok === true; }), 'a round with more than 300 charities on its board still verifies after a reload');
 
   // typing any number: presets un-select, limits are enforced, beyond-the-pool boards repeat charities
   await go(page, '#game-derby');

@@ -13,6 +13,13 @@
   var KEY = 'givespin:v2';
   var LEGACY_KEY = 'givespin:v1';
   var HISTORY_MAX = 60;
+  // A saved round keeps the charities that were on its board (and the ones you had switched off) so it can be
+  // re-checked later, and a board can hold a thousand of them. Writing each id out in full costs about 21 KB a round,
+  // so the saved text lists every id once (`ids`) and each round points into that list with three base-36 characters
+  // per charity (about 3 KB for a thousand). Saves from older versions, which spelled the ids out in `fair.board`
+  // and `fair.excluded`, still load.
+  var ID_CODE = 3;
+  var ID_CODES = 46656; // 36 to the power of ID_CODE: the most ids one saved list can hold
   var GAME_IDS = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'scratch', 'cards', 'dice', 'coin', 'derby', 'lotto', 'duck', 'marble', 'balloon', 'standing', 'direct'];
 
   function demoCreditCents() { return Math.round((GS.config.demoCredit || 0) * 100); }
@@ -82,7 +89,24 @@
   function obj(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
   function str(v, max) { return typeof v === 'string' ? v.slice(0, max || 200) : ''; }
 
-  function sanitizeHistory(h) {
+  /** The most ids a saved board or switched-off list may hold: the biggest board (1,000), or the whole roster if that is bigger. */
+  function idLimit() { return Math.max(1000, (GS.charities || []).length); }
+
+  /** The ids of a saved list: the packed form (`code`, ID_CODE characters per id, numbers into `ids`) or the older spelled-out array. */
+  function idList(plain, code, ids) {
+    var max = idLimit();
+    var out = [];
+    if (typeof code === 'string' && code) {
+      for (var i = 0; i + ID_CODE <= code.length && out.length < max; i += ID_CODE) {
+        var id = ids[parseInt(code.substr(i, ID_CODE), 36)];
+        if (typeof id === 'string') { out.push(str(id, 60)); }
+      }
+      return out;
+    }
+    return arr(plain).filter(function (w) { return typeof w === 'string'; }).slice(0, max).map(function (w) { return str(w, 60); });
+  }
+
+  function sanitizeHistory(h, ids) {
     return arr(h).filter(function (x) { return x && typeof x === 'object' && Array.isArray(x.allocations); }).slice(0, HISTORY_MAX).map(function (x) {
       var out = {
         id: str(x.id, 20), ts: num(x.ts, 0), game: str(x.game, 20), totalCents: Math.floor(num(x.totalCents, 0)), rounds: Math.floor(num(x.rounds, 1)) || 1,
@@ -105,9 +129,9 @@
           roundSeed: str(x.fair.roundSeed, 80), serverHash: str(x.fair.serverHash, 80), clientSeed: str(x.fair.clientSeed, 80),
           nonce: Math.floor(num(x.fair.nonce, 0)), poolHash: str(x.fair.poolHash, 80), count: Math.floor(num(x.fair.count, 0)),
           winners: arr(x.fair.winners).filter(function (w) { return typeof w === 'string'; }).slice(0, 12),
-          board: arr(x.fair.board).filter(function (w) { return typeof w === 'string'; }).slice(0, 300).map(function (w) { return str(w, 60); }),
+          board: idList(x.fair.board, x.fair.boardIx, ids),
           weights: arr(x.fair.weights).filter(function (w) { return Array.isArray(w) && typeof w[0] === 'string'; }).slice(0, 12).map(function (w) { return [str(w[0], 60), Math.floor(num(w[1], 0))]; }),
-          filters: core.normalizeFilters(x.fair.filters), excluded: arr(x.fair.excluded).filter(function (w) { return typeof w === 'string'; }).slice(0, 300)
+          filters: core.normalizeFilters(x.fair.filters), excluded: idList(x.fair.excluded, x.fair.excludedIx, ids)
         };
       }
       return out;
@@ -177,7 +201,7 @@
     d.pred = { right: Math.floor(num(pr.right, 0)), total: Math.floor(num(pr.total, 0)) };
     d.biggestPotCents = Math.floor(num(raw.biggestPotCents, 0));
     d.badges = obj(raw.badges);
-    d.history = sanitizeHistory(raw.history);
+    d.history = sanitizeHistory(raw.history, arr(raw.ids).slice(0, ID_CODES));
     d.plans = sanitizePlans(raw.plans);
     d.balanceCents = typeof raw.balanceCents === 'number' && isFinite(raw.balanceCents) && raw.balanceCents >= 0 ? Math.floor(raw.balanceCents) : d.balanceCents;
     // one stake per live table at most, and there are 70 tables, so a player can have well over twenty in flight
@@ -297,8 +321,44 @@
     return state;
   }
 
+  /** What goes into storage: the state, with each round's board and switched-off list packed against one shared list of ids. */
+  function packedState() {
+    var index = Object.create(null);
+    var ids = [];
+    function pack(list) {
+      var s = '';
+      for (var i = 0; i < list.length; i++) {
+        var n = index[list[i]];
+        if (n === undefined) {
+          if (ids.length >= ID_CODES) { continue; }
+          n = index[list[i]] = ids.length;
+          ids.push(list[i]);
+        }
+        s += ('000' + n.toString(36)).slice(-ID_CODE);
+      }
+      return s;
+    }
+    function copy(o) { var c = {}; Object.keys(o).forEach(function (k) { c[k] = o[k]; }); return c; }
+    var out = copy(state);
+    out.history = state.history.map(function (h) {
+      if (!h.fair || (!arr(h.fair.board).length && !arr(h.fair.excluded).length)) { return h; }
+      var c = copy(h);
+      var f = copy(h.fair);
+      var b = pack(arr(f.board));
+      var e = pack(arr(f.excluded));
+      delete f.board;
+      delete f.excluded;
+      if (b) { f.boardIx = b; }
+      if (e) { f.excludedIx = e; }
+      c.fair = f;
+      return c;
+    });
+    out.ids = ids;
+    return out;
+  }
+
   function save() {
-    writeRaw(JSON.stringify(state));
+    writeRaw(JSON.stringify(packedState()));
     listeners.forEach(function (fn) { try { fn(state); } catch (e) { /* a bad listener must not break saving */ } });
   }
 
