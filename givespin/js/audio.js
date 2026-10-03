@@ -11,8 +11,18 @@
   var noiseBuffer = null;
   var muted = false;
 
+  // A browser only lets a page start sound after the visitor has touched it. Until then (a live table left running
+  // with no click yet, say) every sound is skipped instead of creating a context the browser will refuse and log.
+  var gesture = false;
+  function markGesture() {
+    gesture = true;
+    ['pointerdown', 'keydown', 'touchstart'].forEach(function (t) { document.removeEventListener(t, markGesture, true); });
+  }
+  ['pointerdown', 'keydown', 'touchstart'].forEach(function (t) { document.addEventListener(t, markGesture, true); });
+
   function ensure() {
     if (ctx) { if (ctx.state === 'suspended') { ctx.resume(); } return ctx; }
+    if (!gesture) { return null; }
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) { return null; }
     try {

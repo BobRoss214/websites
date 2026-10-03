@@ -87,8 +87,9 @@ before anything moves.
 **Back a charity.** Eleven games have a **Back a charity** step: every game with a board to put a charity on, except
 Pick a Card and Scratch Cards (where you already choose). Dice and the five slot machines have no board, so they have
 no Back a charity step either. Pick any charity, or let the site choose one at random: backing it puts it on the board
-if it was not already there, and marks it on the table (your duck wears a ring, your bin glows). Every charity on the
-board has exactly the same odds, yours included, so backing never tilts the draw. If it wins you earn bonus XP that
+if it was not already there, and marks it on the table (your duck wears a ring, your bin glows). Putting it on the
+board is what gives it a chance (with 8 spots it has 1 in 8, instead of 1 in over a thousand for a charity that is not on
+the board); once the board is set, every charity on it has exactly the same odds, yours included. If it wins you earn bonus XP that
 grows with how long the shot was (a 1-in-1,000 pick is worth far more than a 1-in-8 one), and it counts towards the
 Called It badge.
 

@@ -485,7 +485,7 @@ if (section('7. Give directly, repeat gifts, dedications and My Giving')) {
 
   await go(page, '#giving');
   check(await page.locator('#view-giving .rcard--giving').count() === 1, 'My Giving lists the charity');
-  const card = await page.locator('#view-giving .rcard--giving').innerText();
+  const card = await page.locator('#view-giving .rcard--giving').textContent(); // not innerText: an off-screen card (content-visibility: auto) can read as empty
   check(card.includes('WaterAid') && card.includes('$10.00'), 'with the total given', card);
   check(await page.locator('#view-giving .plan').count() === 1 && (await page.locator('#view-giving .plan').innerText()).includes('Monthly'), 'repeat gift is listed');
   const site = page.locator('#view-giving .rcard--giving a');
@@ -1864,6 +1864,265 @@ if (section('13p. Live boards tell the truth: no stale pick, no zero-share chips
 }
 
 /* ======================================================================== */
+if (section('13q. Audit regressions: crypto wording, tile badges, small screens, back-a-charity box, first click, focus, card warning, pots note, size caps')) {
+  const settle = (p) => p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  const text = (f) => fs.readFileSync(path.join(root, f), 'utf8');
+
+  /* ---- 1. no crypto wording anywhere a visitor can read (the owner's rule: this is a charity site) ---- */
+  // "cryptographic" is fine (a hash is), and a code snippet is not prose (the Fair Play page shows the Web Crypto call crypto.subtle);
+  // "coin" is only fine as the Coin Flip game or a fair coin, never as money ("no coins, tokens or wallets") or in a name ("CosmoCoin")
+  const CRYPTO = /crypto(?!graph)|bitcoin|ethereum|blockchain|wallet|\bNFTs?\b|\btokens?\b/gi;
+  const COIN_OK = /coin[ -]flip(?:s|ped|ping)?|fair coin|coin is flipped|coin toss/gi;
+  const near = (t, m) => '"' + t.slice(Math.max(0, m.index - 30), m.index + m[0].length + 30).trim() + '"';
+  const badWords = (raw) => {
+    const t = String(raw).replace(/\s+/g, ' ');
+    const out = Array.from(t.matchAll(CRYPTO)).map((m) => near(t, m));
+    const rest = t.replace(COIN_OK, (x) => ' '.repeat(x.length));
+    Array.from(rest.matchAll(/coin/gi)).forEach((m) => { out.push('coin: ' + near(t, m)); });
+    return out;
+  };
+  const prose = (p, sel) => p.evaluate((s) => Array.from(document.querySelectorAll(s)).map((root) => { const c = root.cloneNode(true); c.querySelectorAll('pre').forEach((n) => n.remove()); return c.textContent; }).join(' '), sel);
+
+  const tourPage = await newPage({ tour: true });
+  await openApp(tourPage);
+  await tourPage.waitForSelector('#tour:not([hidden])', { timeout: 8000 });
+  const tour = [];
+  for (let i = 0; i < 20; i++) {
+    const title = await tourPage.locator('#tour-title').innerText();
+    tour.push(await tourPage.locator('#tour .tour__card').textContent());
+    if (!(await tourPage.locator('#tour [data-tour="next"]').count())) { break; }
+    await tourPage.click('#tour [data-tour="next"]');
+    await tourPage.waitForFunction((old) => document.querySelector('#tour-title').textContent !== old, title, { timeout: 5000 }).catch(() => {});
+  }
+  await tourPage.close();
+  check(tour.length >= 5 && badWords(tour.join(' ')).length === 0, 'crypto wording: none on any of the ' + tour.length + ' tour cards', badWords(tour.join(' ')));
+
+  const sweep = await newPage();
+  await openApp(sweep);
+  const bad = {};
+  for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#leagues', '#crews', '#cards', '#giving', '#club', '#fair', '#help']) {
+    await go(sweep, r);
+    if (r === '#help') { await sweep.evaluate(() => document.querySelectorAll('#view-help details').forEach((d) => { d.open = true; })); }
+    const w = badWords(await prose(sweep, '.view:not([hidden])'));
+    if (w.length) { bad['page ' + r] = w; }
+  }
+  check(Object.keys(bad).length === 0, 'crypto wording: none on any page a visitor can open (lobby, charities, live, leagues, crews, cards, giving, club, fair play, help)', bad);
+  const gameIds = await sweep.evaluate(() => window.GS.ui.game.ORDER.slice());
+  const badAbout = {};
+  for (const id of gameIds) {
+    await go(sweep, '#game-' + id);
+    await sweep.click('#tab-about');
+    const w = badWords(await prose(sweep, '#tabp'));
+    if (w.length) { badAbout[id] = w; }
+  }
+  check(gameIds.length === GAMES.length && Object.keys(badAbout).length === 0, 'crypto wording: none on the About tab of any of the ' + gameIds.length + ' games', badAbout);
+  const badLive = {};
+  await go(sweep, '#live-wheel10');
+  for (const t of ['feed', 'last', 'fair', 'about']) {
+    await sweep.click('#tab-' + t);
+    const w = badWords(await prose(sweep, '#tabp'));
+    if (w.length) { badLive[t] = w; }
+  }
+  check(Object.keys(badLive).length === 0, 'crypto wording: none on the four tabs of a live table', badLive);
+  await sweep.close();
+
+  const quoted = (s) => Array.from(s.matchAll(/'([^'\\]*)'/g)).map((m) => m[1]);
+  const handles = quoted((text('js/live.js').match(/var HANDLES = \[([\s\S]*?)\];/) || ['', ''])[1]);
+  const leagueNames = quoted((text('js/core.js').match(/var LEAGUE_NAMES = \[([\s\S]*?)\];/) || ['', ''])[1]);
+  const crewNames = Array.from(text('js/crews.js').matchAll(/members: \[([^\]]*)\]/g)).reduce((a, m) => a.concat(quoted(m[1])), []);
+  check(handles.length >= 40 && leagueNames.length >= 14 && crewNames.length >= 20, 'the bot name lists were found in the code (live feed, league rivals, crew mates)', [handles.length, leagueNames.length, crewNames.length]);
+  const badNames = handles.concat(leagueNames, crewNames).filter((n) => /coin|crypto|bitcoin|ethereum|blockchain|wallet|token/i.test(n) || /NFT/.test(n));
+  check(badNames.length === 0, 'crypto wording: no bot handle (live feed, league rivals, crew mates) has crypto or "coin" in its name', badNames);
+  const badRoster = [];
+  GSdata.charities.forEach((c) => { const w = badWords([c.name, c.short, c.blurb, c.about, c.hq].join(' | ')); if (w.length) { badRoster.push(c.id + ': ' + w[0]); } });
+  check(badRoster.length === 0, 'crypto wording: none in the ' + N + ' charity names and descriptions', badRoster.slice(0, 5));
+
+  /* ---- 2. tile badges and the LIVE pill (audit D1) ---- */
+  const lobby = await newPage();
+  await openApp(lobby, '#lobby');
+  const overlaps = (p) => p.evaluate(() => Array.from(document.querySelectorAll('.tile')).filter((t) => !t.hidden && t.querySelector('.tile__badge') && t.querySelector('.tile__live')).map((t) => {
+    const a = t.querySelector('.tile__badge').getBoundingClientRect();
+    const b = t.querySelector('.tile__live').getBoundingClientRect();
+    const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+    const oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+    return { game: t.getAttribute('data-game'), badge: t.querySelector('.tile__badge').textContent, px: ox > 0 && oy > 0 ? Math.round(ox) : 0 };
+  }));
+  const overlapNote = (rows) => rows.filter((r) => r.px > 0).map((r) => r.game + ' "' + r.badge + '" by ' + r.px + ' px');
+  for (const w of [1280, 1440, 1920]) {
+    await lobby.setViewportSize({ width: w, height: 900 });
+    await settle(lobby);
+    const rows = await overlaps(lobby);
+    check(rows.length === LIVE_GAMES.length && overlapNote(rows).length === 0, 'lobby at ' + w + ' px wide: no game tile has its badge drawn under its LIVE pill (' + rows.length + ' tiles have both)', overlapNote(rows));
+  }
+  const badges = await lobby.evaluate(() => Array.from(document.querySelectorAll('.tile[data-game]')).map((t) => ({ game: t.getAttribute('data-game'), badge: (t.querySelector('.tile__badge') || {}).textContent || '', max: (window.GS.games[t.getAttribute('data-game')] || {}).maxSize || null })));
+  const wrongBadge = badges.filter((b) => b.max && !(b.badge.match(/\d[\d,]*/g) || []).some((n) => Number(n.replace(/,/g, '')) === b.max)).map((b) => b.game + ': the tile says "' + b.badge + '" but the game goes up to ' + b.max.toLocaleString('en-US'));
+  check(badges.filter((b) => b.max).length >= 13 && wrongBadge.length === 0, 'every tile badge names its game\'s real biggest board (as set by the game\'s maxSize)', wrongBadge);
+  const wheelBadge = (badges.find((b) => b.game === 'wheel') || {}).badge || '';
+  check(/up to 1,000/i.test(wheelBadge), 'the Lucky Wheel tile says "Up to 1,000"', wheelBadge);
+  await lobby.close();
+  const phone = await newPage({ viewport: { width: 390, height: 800 }, mobile: true });
+  await openApp(phone, '#lobby');
+  const rowsPhone = await overlaps(phone);
+  check(rowsPhone.length === LIVE_GAMES.length && overlapNote(rowsPhone).length === 0, 'lobby on a phone (390 px): no game tile has its badge drawn under its LIVE pill (' + rowsPhone.length + ' tiles have both)', overlapNote(rowsPhone));
+  await phone.close();
+
+  /* ---- 3. no sideways scrolling, and the account buttons stay on the screen (audit D3) ---- */
+  const bar = await newPage();
+  await openApp(bar, '#lobby');
+  const WIDTHS = [320, 330, 360, 390, 414, 600, 730, 768, 790, 820, 1024];
+  const measure = () => bar.evaluate(() => {
+    const de = document.documentElement;
+    const cw = de.clientWidth;
+    const clipped = (e) => { for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) { if (getComputedStyle(p).overflowX !== 'visible') { return true; } } return false; };
+    const name = (e) => (e.id ? '#' + e.id : e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className ? '.' + e.className.split(' ')[0] : '') + (e.getAttribute('data-role') ? '[' + e.getAttribute('data-role') + ']' : ''));
+    const wide = de.scrollWidth > cw ? Array.from(document.querySelectorAll('#app *')).filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > cw + 0.5 && getComputedStyle(e).position !== 'fixed' && !clipped(e); }).slice(0, 3).map((e) => name(e) + ' reaches ' + Math.round(e.getBoundingClientRect().right)) : [];
+    const box = (s) => { const e = document.querySelector(s); if (!e || !e.offsetParent) { return null; } const r = e.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)]; };
+    return { over: de.scrollWidth - cw, cw, wide, btn: { 'Sign up': box('#acct [data-role="signup"]'), 'Log in': box('#acct [data-role="login"]'), 'account menu': box('#acct [data-role="toggle"]') } };
+  });
+  const sweepWidths = async (who) => {
+    const sideways = [];
+    const off = [];
+    let seen = 0;
+    for (const w of WIDTHS) {
+      await bar.setViewportSize({ width: w, height: 800 });
+      await settle(bar);
+      const r = await measure();
+      if (r.over > 0) { sideways.push(w + ' px: scrolls sideways by ' + r.over + ' px' + (r.wide.length ? ' (' + r.wide.join('; ') + ')' : '')); }
+      Object.keys(r.btn).forEach((k) => { const b = r.btn[k]; if (b) { seen++; if (b[0] < 0 || b[1] > r.cw) { off.push(w + ' px: "' + k + '" is at ' + b[0] + ' to ' + b[1] + ', the screen is ' + r.cw + ' wide'); } } });
+    }
+    check(sideways.length === 0, 'the lobby (' + who + ') never scrolls sideways at any of ' + WIDTHS.length + ' widths from 320 to 1,024 px', sideways);
+    check(seen >= WIDTHS.length && off.length === 0, 'the top bar buttons (' + who + ') sit fully inside the screen at every width', off);
+  };
+  await sweepWidths('signed out');
+  await bar.evaluate(() => { window.GS.accounts.createAccount('email', 'sam@example.com', 'Sam'); window.GS.bus.emit('account'); });
+  await bar.waitForSelector('#acct [data-role="toggle"]');
+  await sweepWidths('signed in');
+
+  /* ---- 7. a visible warning on the sample-card form (the form is in the account settings once you are signed in) ---- */
+  await bar.setViewportSize({ width: 1440, height: 900 });
+  await bar.evaluate(() => { window.GS.ui.account.openSettings(); });
+  await bar.waitForSelector('#dlg-settings[open] [data-role="cardform"]');
+  const cardText = await bar.locator('#dlg-settings').innerText();
+  check(/do not type a real card|don.t type a real card|preview only/i.test(cardText), 'the card form says it is a preview (or not to type a real card)', cardText.replace(/\s+/g, ' ').slice(0, 160));
+  check(/(?:do not|don.t|never)\s+(?:type|enter|use|put|paste)\b[^.!?]{0,40}\breal\b[^.!?]{0,25}\bcard/i.test(cardText), 'the card form tells the visitor plainly not to type a real card number (the README and the Help page do; the form itself must too)', cardText.replace(/\s+/g, ' ').slice(0, 160));
+  await bar.close();
+
+  /* ---- 4, 5, 6. the game screen: back-a-charity box (D2), the first Play click (D4), focus after the receipt (D5) ---- */
+  const game = await newPage();
+  await openApp(game, '#game-wheel');
+  check(await game.locator('#field-pick').isVisible(), 'the Lucky Wheel offers "Back a charity" (so the next checks mean something)');
+  for (const id of SLOTS.concat(['dice'])) {
+    await go(game, '#game-wheel');
+    await go(game, '#game-' + id);
+    check(!(await game.locator('#field-pick').isVisible()), id + ': the "Back a charity" box is not shown (there is no board to back a charity on), even straight after the Lucky Wheel');
+  }
+  const sized = await game.evaluate(() => window.GS.ui.game.ORDER.filter((id) => window.GS.games[id].sizes && window.GS.games[id].maxSize));
+  const typeOverCap = async (id) => {
+    await go(game, '#game-' + id);
+    const max = await game.evaluate((g) => window.GS.games[g].maxSize, id);
+    await game.fill('#size-custom', String(max + 400));
+    await game.waitForFunction((a) => window.GS.store.prefs().sizes[a[0]] === a[1], [id, max], { timeout: 8000 }).catch(() => {});
+    await settle(game);
+  };
+  const playTop = () => game.evaluate(() => Math.round(document.querySelector('#btn-play').getBoundingClientRect().top + window.scrollY));
+  const shifts = [];
+  for (const id of sized) {
+    await typeOverCap(id);
+    const t0 = await playTop();
+    await game.locator('#size-custom').blur();
+    await settle(game);
+    const t1 = await playTop();
+    if (Math.abs(t1 - t0) > 1) { shifts.push(id + ' moved ' + (t1 - t0) + ' px'); }
+  }
+  check(sized.length >= 13 && shifts.length === 0, 'after typing a size over the cap, the Play button does not move when the size box loses focus (' + sized.length + ' games with a size box)', shifts);
+  // the first click: each game on a page of its own, so what an earlier game left behind cannot change the layout the click meets
+  for (const id of ['cards', 'scratch', 'wheel']) {
+    const fresh = await newPage();
+    await openApp(fresh, '#game-' + id);
+    const max = await fresh.evaluate((g) => window.GS.games[g].maxSize, id);
+    await fresh.fill('#size-custom', String(max + 400));
+    await fresh.waitForFunction((a) => window.GS.store.prefs().sizes[a[0]] === a[1], [id, max], { timeout: 8000 }).catch(() => {});
+    await settle(fresh);
+    await fresh.click('#btn-play');
+    const started = await fresh.waitForFunction(() => window.GS.app.state.busy || !!document.querySelector('#dlg-result[open]'), null, { timeout: 4000 }).then(() => true, () => false);
+    check(started, id + ': the first Play click after typing a size over the cap starts the round (the page must not shift under the mouse)');
+    if (started) { await waitReceipt(fresh); await closeReceipt(fresh); }
+    await fresh.close();
+  }
+  await go(game, '#game-wheel');
+  await game.waitForFunction(() => !window.GS.app.state.busy);
+  await game.focus('#btn-play');
+  await game.keyboard.press('Enter');
+  await waitReceipt(game);
+  await game.keyboard.press('Escape');
+  await game.waitForFunction(() => !document.querySelector('#dlg-result').open);
+  await game.waitForFunction(() => !window.GS.app.state.busy);
+  const focusOk = await game.waitForFunction(() => { const a = document.activeElement; return !!a && a !== document.body && document.querySelector('#view-game').contains(a); }, null, { timeout: 2500 }).then(() => true, () => false);
+  const active = await game.evaluate(() => (document.activeElement ? document.activeElement.tagName.toLowerCase() + (document.activeElement.id ? '#' + document.activeElement.id : '') : 'nothing'));
+  check(focusOk, 'after a round played with the keyboard, closing the receipt leaves keyboard focus in the game, not at the top of the page', 'focus is on ' + active);
+  await game.close();
+
+  /* ---- 8. "Pots that just went out" says the other players are simulated bots ---- */
+  const pots = await newPage();
+  await openApp(pots, '#live');
+  await pots.evaluate(() => {
+    window.GS.live.rooms().forEach((r) => { if (r.id !== 'derby10') { r._clearTimers(); } });   // no other pot lands while this one is being made
+    const r = window.GS.live.room('derby10');
+    r.openRound(0);
+    r.join(r.field()[0].charity.id, 5);
+    r.lock();
+  });
+  await pots.waitForFunction(() => { const r = window.GS.live.room('derby10'); return r.history.length > 0 && r.history[0].youPlayed; }, null, { timeout: 40000, polling: 50 });
+  await pots.evaluate(() => { window.GS.live.room('derby10')._clearTimers(); window.GS.ui.live.renderPage(); });
+  const recent = await pots.evaluate(() => {
+    const box = document.querySelector('#view-live [data-role="recent"]');
+    const sect = box.closest('section');
+    return { rows: Array.from(box.querySelectorAll('.hist')).map((li) => li.textContent), outside: Array.from(sect.children).filter((c) => !c.contains(box)).map((c) => c.textContent).join(' ') };
+  });
+  const youRows = recent.rows.filter((t) => /you (were in|backed it)/i.test(t));
+  const NOTE = /simulated|\bbots?\b/i;
+  check(youRows.length >= 1 && (NOTE.test(recent.outside) || youRows.every((t) => NOTE.test(t))), '"Pots that just went out": a pot you were in also says the other players are simulated bots (in the row or in a note beside the list)', recent);
+  await pots.close();
+
+  /* ---- 9. the Help page states each game's real biggest board (the README table is checked in tests/readme.test.js) ---- */
+  const help = await newPage();
+  await openApp(help, '#help');
+  const gamesMax = await help.evaluate(() => window.GS.ui.game.ORDER.map((id) => ({ id, max: window.GS.games[id].maxSize || null })).filter((g) => g.max));
+  const answer = (await help.$$eval('#help-board .faq__a > *', (els) => els.map((e) => e.textContent))).join('\n');
+  const tableRows = await help.$$eval('#help-board table tr', (trs) => trs.map((tr) => tr.textContent.replace(/\s+/g, ' ')));
+  const ALIAS = {
+    wheel: ['the wheel', 'Lucky Wheel'], drop: ['the drop crate', 'Drop Crate'], plinko: ['Plinko'], roulette: ['Roulette'], cards: ['Pick a Card'], scratch: ['Scratch Cards', 'scratch cards'],
+    coin: ['Coin Flip', 'the coin flip'], derby: ['Charity Derby'], duck: ['Duck Derby'], marble: ['Marble Run'], balloon: ['Balloon Race'], lotto: ['the Lucky Draw', 'Lucky Draw'], standing: ['Last One Standing']
+  };
+  const toNum = (s) => Number(s.replace(/,/g, ''));
+  const numbersIn = (g) => (g.match(/\d[\d,]*/g) || []).map(toNum);
+  const allAliases = Object.keys(ALIAS).reduce((a, k) => a.concat(ALIAS[k]), []);
+  // The answer is prose, so it is read in groups (a sentence, or a bracket): the numbers in the group that names a game must include that game's biggest board;
+  // a number that comes just after the last name of a group ("Pick a Card is a table of cards (up to 100)") belongs to it too; and what follows "fewer" is not a claim.
+  const groups = answer.split(/\n|(?<=[.!?])\s+|[()]/).map((g) => g.trim()).filter(Boolean);
+  const wrongHelp = [];
+  const claimed = new Set();
+  gamesMax.forEach((g) => {
+    (ALIAS[g.id] || []).forEach((a) => {
+      const row = tableRows.find((r) => r.indexOf(a) >= 0);
+      if (row) { claimed.add(g.id); if (numbersIn(row).indexOf(g.max) < 0) { wrongHelp.push(g.id + ': the Help table row says "' + row + '" but the game allows ' + g.max.toLocaleString('en-US')); } return; }
+      groups.forEach((grp, i) => {
+        const at = grp.indexOf(a);
+        if (at < 0 || grp.slice(0, at).indexOf('fewer') >= 0) { return; }
+        let nums = numbersIn(grp);
+        const lastAt = Math.max.apply(null, allAliases.map((x) => grp.lastIndexOf(x)));
+        if (at === lastAt && i + 1 < groups.length && !allAliases.some((x) => groups[i + 1].indexOf(x) >= 0)) { nums = nums.concat(numbersIn(groups[i + 1])); }
+        if (!nums.length) { return; }
+        claimed.add(g.id);
+        if (nums.indexOf(g.max) < 0) { wrongHelp.push(g.id + ': the Help page says "' + grp + '" but the game allows ' + g.max.toLocaleString('en-US')); }
+      });
+    });
+  });
+  check(claimed.size >= 8 && wrongHelp.length === 0, 'the Help page\'s "How many charities can be on a game?" answer gives each game its real biggest board (' + claimed.size + ' games read)', wrongHelp.length ? Array.from(new Set(wrongHelp)) : answer.slice(0, 200));
+  await help.close();
+}
+
+/* ======================================================================== */
 if (section('13m. Big boards: Roulette grows a bigger wheel, Plinko pulls the camera back')) {
   const page = await newPage();
   await openApp(page, '#game-roulette');
@@ -1893,6 +2152,71 @@ if (section('13m. Big boards: Roulette grows a bigger wheel, Plinko pulls the ca
   const pz = await page.evaluate(() => { clearInterval(window.__t); return { minZ: window.__minZ, endZ: window.GS.games.plinko._zoom() }; });
   check(pz.minZ < 0.6, 'on a 100-bin Plinko board the camera zooms out to follow the ball', pz);
   await closeReceipt(page);
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('13r. A show that outlives its round: the new board shows and the visitor still hears how their stake did')) {
+  // A tab in the background has its animation frames paused, so a live show can still be running when its table has moved on to the next
+  // round. It is emulated here: frames are held back (and document.hidden says so) while the table runs on, then released.
+  const page = await newPage();
+  await openApp(page, '#live-wheel25');
+  for (const gid of ['wheel', 'balloon']) {
+    await go(page, '#live-' + gid + '25');
+    await page.waitForSelector('#livepanel:not([hidden]) [data-role="gates"]');
+    const run = await page.evaluate(async (g) => {
+      const room = window.GS.live.room(g + '25');
+      const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+      const until = (fn, ms) => new Promise((res) => { const t0 = Date.now(); (function w() { if (fn()) { res(true); } else if (Date.now() - t0 > ms) { res(false); } else { setTimeout(w, 15); } })(); });
+      const toasts = () => Array.from(document.querySelectorAll('#toasts .toast')).map((t) => t.textContent.trim()).filter((t) => /took the/.test(t));
+      await until(() => !window.GS.ui.live.gameBusy(g), 30000);
+      room.openRound(0.2);
+      await wait(60);
+      const joined = room.join(room.field()[0].charity.id, 20).ok;
+      room.lock();
+      await until(() => window.GS.ui.live.gameBusy(g), 10000);
+      const roundN = room.round;
+      const winnerN = room.draw.winnerId;
+      // the tab goes to the background
+      let hidden = true;
+      Object.defineProperty(document, 'hidden', { configurable: true, get() { return hidden; } });
+      const queued = [];
+      const realRaf = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = (cb) => { queued.push(cb); return queued.length; };
+      await until(() => room.round === roundN + 1 && room.phase === 'open' && room.msLeft() < room.phaseMs * 0.5, 30000);
+      const out = { joined, roundN, nextOpen: room.round === roundN + 1, busyWhileHidden: window.GS.ui.live.gameBusy(g), toastsWhileHidden: toasts().length };
+      // the tab comes back
+      hidden = false;
+      window.requestAnimationFrame = realRaf;
+      queued.splice(0).forEach((cb) => realRaf(cb));
+      document.dispatchEvent(new Event('visibilitychange'));
+      out.toldAfterReturn = await until(() => toasts().some((t) => t.includes('Your $20 went to it') || t.includes('Your pick won')), 3000);
+      out.busyAfterReturn = window.GS.ui.live.gameBusy(g);
+      // the next round plays normally and its card shows the winner the board shows
+      await until(() => room.round === roundN + 1 && room.phase === 'result' && document.querySelector('#lt-result .lt-res'), 30000);
+      const shown = window.GS.games[g]._shown();
+      out.cardIsNextRound = !!document.querySelector('#lt-result .lt-res') && room.round === roundN + 1;
+      out.boardMatchesCard = Array.isArray(shown) && shown.indexOf(room.result.winnerId) >= 0;
+      out.oldWinnerShown = Array.isArray(shown) && shown.indexOf(winnerN) >= 0 && winnerN !== room.result.winnerId;
+      return out;
+    }, gid);
+    check(run && run.joined && run.nextOpen, gid + ': the table moved on to the next round while the tab was away', run);
+    check(run && run.busyWhileHidden === false, gid + ': the old show is stopped when the next round opens (it does not keep running into it)', run);
+    check(run && run.toastsWhileHidden === 0 && run.toldAfterReturn === true, gid + ': the visitor is told how their stake did when the tab is visible again', run);
+    check(run && run.busyAfterReturn === false && run.cardIsNextRound && run.boardMatchesCard && !run.oldWinnerShown, gid + ': the next round plays and its card names the winner the board shows (not the old one)', run);
+    // normal case, nothing paused: the result card shows and there is no extra "took the" toast while you are looking at the table
+    const normal = await page.evaluate(async (g) => {
+      const room = window.GS.live.room(g + '25');
+      const until = (fn, ms) => new Promise((res) => { const t0 = Date.now(); (function w() { if (fn()) { res(true); } else if (Date.now() - t0 > ms) { res(false); } else { setTimeout(w, 15); } })(); });
+      await until(() => room.phase === 'open' && room.msLeft() > room.phaseMs * 0.5 && !window.GS.ui.live.gameBusy(g), 30000);
+      document.querySelectorAll('#toasts .toast').forEach((t) => t.remove());
+      const joined = room.join(room.field()[0].charity.id, 20).ok;
+      const rn = room.round;
+      await until(() => room.round === rn && room.phase === 'result' && document.querySelector('#lt-result .lt-res'), 30000);
+      return { joined, card: !!document.querySelector('#lt-result .lt-res'), tookToasts: Array.from(document.querySelectorAll('#toasts .toast')).filter((t) => /took the/.test(t.textContent)).length, shown: window.GS.games[g]._shown(), winner: room.result && room.result.winnerId };
+    }, gid);
+    check(normal.joined && normal.card && normal.tookToasts === 0 && normal.shown.indexOf(normal.winner) >= 0, gid + ': in the normal case nothing changes (card shows, no extra toast, board shows the winner)', normal);
+  }
   await page.close();
 }
 

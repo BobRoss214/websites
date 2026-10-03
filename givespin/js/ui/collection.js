@@ -70,7 +70,7 @@
         '<div class="stat"><b>' + (byRar.epic + byRar.legendary) + '</b><span>Epic and legendary</span></div>' +
       '</div>' +
       '<section class="sect panel" aria-labelledby="cd-set"><div class="sect__head"><h2 class="sect__t" id="cd-set">This month’s set <small>' + month + '</small></h2><span class="tag tag--plain">' + (claimed ? 'complete, +150 XP paid' : haveSet + ' of 6') + '</span></div>' +
-        '<p>Win all six charities this month for 150 XP and the Set Complete badge. A new set starts next month. Backing one of them with <b>Back a charity</b> puts it on the board if it was not there already. Every charity on the board has equal odds, so backing never tilts the draw.</p>' +
+        '<p>Win all six charities this month for 150 XP and the Set Complete badge. A new set starts next month. Backing one of them with <b>Back a charity</b> puts it on the board if it was not there already. Putting it on the board is what gives it a chance (with 8 spots, 1 in 8 instead of 1 in over a thousand); once it is there, every charity on the board has equal odds.</p>' +
         '<div class="cardgrid">' + setIds.map(function (id) { return cardHTML(GS.charity(id), owned[id], { reveal: true }); }).join('') + '</div></section>' +
       '<section class="sect" aria-labelledby="cd-all"><div class="sect__head"><h2 class="sect__t" id="cd-all">Collection</h2></div>' +
         '<div class="chips" role="group" aria-label="Show">' + f('owned', 'Collected') + f('rare', 'Rare and better') + f('locked', 'Still to win') + f('set', 'This month’s set') + '</div>' +
