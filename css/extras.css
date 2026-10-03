@@ -154,7 +154,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
   *,*::before,*::after{animation:none!important;transition:none!important;box-shadow:none!important;text-shadow:none!important}
   html{scroll-behavior:auto}
   .announce,.skip-link,.vine,.nav,.menu-toggle,[data-lang-menu],.lang,.action-bar,.to-top,.footer-field,.site-footer,.season-strip,
-  #hero-scene,#critters,#season-switch,.picker,.bee,.cta-band,.page-hero-art,.page-hero .hero-cta,.hero-cta,.card-actions,
+  #hero-scene,#critters,#season-switch,.picker,.bee-fly,.cta-band,.page-hero-art,.page-hero .hero-cta,.hero-cta,.card-actions,
   main img,.photo-strip,#gallery,.print-skip,#on-farm,#know,#before,[data-print],#arrive .drive,#arrive .more-maps,#arrive .entrance-photo{display:none!important}
   body{background:#fff!important;padding:0!important}
   .site-header{position:static;background:none;border:0;-webkit-backdrop-filter:none;backdrop-filter:none}

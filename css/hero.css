@@ -43,7 +43,7 @@ html[data-season="winter"] .sun{opacity:.85}
 html[data-season="winter"] .cloud{filter:saturate(0) brightness(.97)}
 html[data-season="fall"] .butterfly,
 html[data-season="winter"] .butterfly,
-html[data-season="winter"] .bee{display:none}
+html[data-season="winter"] .bee-fly{display:none}
 
 /* Cross-fade when a visitor picks another season */
 .hero-scene svg.layer,.hero-scene .layer-critters{transition:opacity .26s ease}

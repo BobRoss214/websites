@@ -274,47 +274,90 @@
 
   /* ------------------------------------------------------------------ *
    * Hero: the bee
+   *
+   * The bee flies on the compositor. Each leg of its flight is ONE animation of the transform of #bee-fly (started when it picks a
+   * new spot); the bobbing and tilting is an endless CSS loop on the drawing inside (css/styles.css). Nothing runs per frame: a
+   * drawing frame of the hero costs the browser far more than the bee is worth, because every endless loop in the scene is
+   * restyled and repainted with it, and the old frame-by-frame bee asked for one all the time.
+   * (The flight must move a <div>: an <svg> element moved by the `translate` property is not run by the compositor.)
+   * It follows the pointer a couple of times a second, and wanders when nobody is moving one. It only flies while the hero is
+   * on screen, the tab is visible and the season shows a bee (the CSS hides it in winter).
    * ------------------------------------------------------------------ */
   function initBee() {
     const hero = $('#top');
-    const bee = $('#bee');
+    const bee = $('#bee-fly');
     if (!hero || !bee) return;
-    if (reduceMotion) { bee.setAttribute('hidden', ''); return; }   // SVG has no .hidden property
+    if (reduceMotion || !bee.animate) { bee.setAttribute('hidden', ''); return; }
+
+    // How one leg moves: it closes on the spot quickly and settles slowly (like the old per-frame glide). The same curve is used
+    // for the animation and, here, to know where the bee is part-way through a leg.
+    const CURVE = [0.2, 0.9, 0.4, 0.95], LEG = 1700;
+    const bez = (u) => {
+      const [x1, y1, x2, y2] = CURVE;
+      const at = (t, a, b) => 3 * (1 - t) * (1 - t) * t * a + 3 * (1 - t) * t * t * b + t * t * t;
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (at(m, x1, x2) < u) lo = m; else hi = m; }
+      return at((lo + hi) / 2, y1, y2);
+    };
 
     let w = hero.clientWidth, h = hero.clientHeight;
-    let x = w * 0.2, y = h * 0.55, tx = x, ty = y;
-    let lastMove = 0, running = false, facing = 1, t = 0, wander = 0;
+    let x = w * 0.2, y = h * 0.55;             // where the bee is, or was when the current leg began
+    let leg = null;                             // the leg in flight: { anim, t0, x0, y0, x1, y1 }
+    let facing = 1, lastMove = 0, lastFly = 0, wanderAt = 0, px = 0, py = 0, moved = false;
+    let onScreen = false, running = false, followTimer = 0, wanderTimer = 0;
+    const pose = (a, b, f) => `translate(${a.toFixed(1)}px, ${b.toFixed(1)}px) scaleX(${f})`;   // scaleX turns it to face the way it flies
+    const place = () => { bee.style.transform = pose(x, y, facing); };
+    place();
 
-    const setTarget = (e) => {
-      const r = hero.getBoundingClientRect();
-      tx = e.clientX - r.left - 26; ty = e.clientY - r.top - 24; lastMove = performance.now();
+    const here = (now) => {
+      if (!leg) return [x, y];
+      const e = bez(Math.min(1, (now - leg.t0) / LEG));
+      return [leg.x0 + (leg.x1 - leg.x0) * e, leg.y0 + (leg.y1 - leg.y0) * e];
     };
-    hero.addEventListener('pointermove', setTarget);
-    hero.addEventListener('pointerdown', setTarget);
+    const fly = (tx, ty) => {
+      const now = performance.now();
+      [x, y] = here(now);
+      if (Math.abs(tx - x) > 6) facing = tx > x ? 1 : -1;
+      const prev = leg;
+      const anim = bee.animate([{ transform: pose(x, y, facing) }, { transform: pose(tx, ty, facing) }],
+        { duration: LEG, easing: 'cubic-bezier(' + CURVE.join(',') + ')', fill: 'forwards' });
+      leg = { anim, t0: now, x0: x, y0: y, x1: tx, y1: ty };
+      lastFly = now;
+      if (prev) prev.anim.cancel();
+    };
+
+    const follow = () => {                      // someone is moving the pointer over the hero: go there (twice a second at most)
+      followTimer = 0;
+      if (!running || !moved) return;
+      moved = false;
+      const r = hero.getBoundingClientRect();
+      fly(px - r.left - 26, py - r.top - 24);
+    };
+    const wander = () => {                      // nobody is moving one: visit the field now and then
+      wanderTimer = 0;
+      if (!running) return;
+      const now = performance.now();
+      if (now - lastMove > 2500 && now >= wanderAt) {
+        fly(w * (0.08 + Math.random() * 0.84), h * (0.5 + Math.random() * 0.36));
+        wanderAt = now + 2200 + Math.random() * 2600;
+      }
+      wanderTimer = setTimeout(wander, Math.max(250, 2500 - (now - lastMove), wanderAt - now));   // when both waits are over
+    };
+    const onMove = (e) => {
+      px = e.clientX; py = e.clientY; moved = true; lastMove = performance.now();
+      if (running && !followTimer) followTimer = setTimeout(follow, Math.max(0, 450 - (lastMove - lastFly)));
+    };
+    hero.addEventListener('pointermove', onMove, { passive: true });
+    hero.addEventListener('pointerdown', onMove, { passive: true });
     addEventListener('resize', () => { w = hero.clientWidth; h = hero.clientHeight; }, { passive: true });
 
-    function frame(now) {
-      if (!running) return;
-      t += 0.016;
-      if (now - lastMove > 2500 && now > wander) {           // idle: visit the field
-        tx = w * (0.08 + Math.random() * 0.84);
-        ty = h * (0.5 + Math.random() * 0.36);
-        wander = now + 2200 + Math.random() * 2600;
-      }
-      const dx = tx - x;
-      x += dx * 0.045; y += (ty - y) * 0.045;
-      if (Math.abs(dx) > 6) facing = dx > 0 ? 1 : -1;
-      const bob = Math.sin(t * 9) * 5;
-      bee.style.transform = `translate3d(${x.toFixed(1)}px, ${(y + bob).toFixed(1)}px, 0) scaleX(${facing}) rotate(${(Math.sin(t * 5) * 5).toFixed(1)}deg)`;
-      raf = requestAnimationFrame(frame);
-    }
-    // It only flies while the hero is on screen, the tab is visible and the season shows a bee (the CSS hides it in winter:
-    // a hidden bee used to keep the loop, and with it a drawing frame of the whole hero, going all the time).
-    let onScreen = false, raf = 0;
     const sync = () => {
       const on = onScreen && !doc.hidden && root.getAttribute('data-season') !== 'winter';
-      if (on && !running) { running = true; raf = requestAnimationFrame(frame); }
-      if (!on) { running = false; cancelAnimationFrame(raf); }
+      if (on === running) return;
+      running = on;
+      if (running) { lastMove = Math.min(lastMove, performance.now() - 2000); wanderTimer = setTimeout(wander, 600); return; }
+      clearTimeout(followTimer); clearTimeout(wanderTimer); followTimer = wanderTimer = 0;
+      if (leg) { [x, y] = here(performance.now()); place(); leg.anim.cancel(); leg = null; }   // park it where it is
     };
     if ('IntersectionObserver' in window) new IntersectionObserver((entries) => { onScreen = entries[entries.length - 1].isIntersecting; sync(); }).observe(hero);
     else { onScreen = true; sync(); }   // no observer: the bee just keeps going

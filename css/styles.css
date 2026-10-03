@@ -162,7 +162,10 @@ svg.layer-fore{overflow:visible}
 .chips li{display:inline-flex;align-items:center;gap:.4em;background:rgba(255,255,255,.85);border:2.5px solid var(--ink);border-radius:999px;padding:.3em .85em .3em .6em;font:600 .93rem/1.2 var(--display)}
 .chips .ico{width:1.1em;height:1.1em;color:var(--green)}
 
-.bee{position:absolute;left:0;top:0;width:52px;height:auto;z-index:6;pointer-events:none;will-change:transform;filter:drop-shadow(0 4px 2px rgba(58,36,22,.18))}
+/* The bee is two boxes. The outer one (.bee-fly) is moved around by main.js, one animation per leg of the flight, and turned to face the
+   way it goes; the drawing inside bobs and tilts in a loop. Both are run by the compositor, so no script runs while it flies. */
+.bee-fly{position:absolute;left:0;top:0;width:52px;z-index:6;pointer-events:none;will-change:transform}
+.bee{display:block;width:100%;height:auto;filter:drop-shadow(0 4px 2px rgba(58,36,22,.18));animation:beeFly 1.454s ease-in-out infinite}
 .bee .wing{transform-box:fill-box;transform-origin:50% 100%;animation:buzz .09s linear infinite alternate}
 
 .picker{position:absolute;z-index:7;left:var(--gutter);bottom:clamp(12px,2.4vw,26px);display:flex;align-items:center;gap:12px;max-width:min(360px,calc(100% - 2 * var(--gutter)));background:var(--paper);border:3px solid var(--ink);border-radius:22px;padding:10px 16px 10px 10px;box-shadow:0 5px 0 var(--ink)}
@@ -433,6 +436,7 @@ svg.layer-fore{overflow:visible}
 @keyframes drift{from{transform:translateX(-30vw)}to{transform:translateX(115vw)}}
 @keyframes sway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.6deg)}}
 @keyframes flap{from{transform:scaleX(1)}to{transform:scaleX(.25)}}
+@keyframes beeFly{0%{transform:translateY(-5px) rotate(-5deg)}12.5%{transform:translateY(5px) rotate(-3.5deg)}25%{transform:translateY(-5px) rotate(0)}37.5%{transform:translateY(5px) rotate(3.5deg)}50%{transform:translateY(-5px) rotate(5deg)}62.5%{transform:translateY(5px) rotate(3.5deg)}75%{transform:translateY(-5px) rotate(0)}87.5%{transform:translateY(5px) rotate(-3.5deg)}100%{transform:translateY(-5px) rotate(-5deg)}}
 @keyframes buzz{from{transform:rotate(-14deg)}to{transform:rotate(16deg)}}
 @keyframes flutter{
   0%{transform:translate(0,0) rotate(-6deg)}
