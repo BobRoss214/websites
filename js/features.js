@@ -645,7 +645,7 @@
     try {
       const nf = (unit) => formatter(Intl.NumberFormat, { style: 'unit', unit, unitDisplay: 'long' });
       if (m < 60) return nf('minute').format(m);
-      return nf('hour').format(Math.floor(m / 60)) + (m % 60 ? ' ' + nf('minute').format(m % 60) : '');
+      return nf('hour').format(Math.floor(m / 60)) + (m % 60 ? (lang() === 'zh' ? '' : lang() === 'es' ? ' y ' : ' ') + nf('minute').format(m % 60) : '');   // 1小时15分钟, 1 hora y 15 minutos
     } catch (e) { return m + ' min'; }
   };
   function initDriveForm() {
@@ -665,15 +665,20 @@
     const show = (next) => {
       state = next || state;
       out.textContent = '';
-      if (!state) { out.hidden = true; return; }
+      if (!state) { out.removeAttribute('data-kind'); return; }
       const add = (tag, text, cls) => { const el = doc.createElement(tag); if (cls) el.className = cls; el.textContent = text; out.appendChild(el); return el; };
       out.setAttribute('data-kind', state.kind);
       if (state.kind === 'ok') {
         add('p', t('{distance}, about {time} by car', { distance: fmtMiles(state.miles), time: fmtDriveTime(state.minutes) }), 'drive-big');
-        if (state.place) { const p = add('p', t('We looked up: {place}', { place: Array.from(state.place).slice(0, 140).join('') }), 'fine'); if (lang() !== 'en') p.setAttribute('lang', 'en'); }
+        if (state.place) {
+          const p = add('p', '', 'fine'), bits = t('We looked up: {place}', { place: '\u0001' }).split('\u0001');   // the place name comes from OpenStreetMap in English; the words around it are in the page's language
+          p.appendChild(doc.createTextNode(bits[0]));
+          const nm = doc.createElement('span'); nm.textContent = Array.from(state.place).slice(0, 140).join(''); if (lang() !== 'en') nm.setAttribute('lang', 'en'); p.appendChild(nm);
+          p.appendChild(doc.createTextNode(bits.slice(1).join('')));
+        }
         const note = add('p', t('To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.') + ' ', 'fine');
         // Credits the free services ask for: OpenStreetMap, the routing source (OSRM) and a "fix the map" link. They stay in English.
-        [['https://www.openstreetmap.org/copyright', '\u00a9 OpenStreetMap contributors'], ['https://project-osrm.org/', 'Routing: OSRM'], ['https://www.openstreetmap.org/fixthemap', 'Fix the map']].forEach(([href, text], i) => {
+        [['https://www.openstreetmap.org/copyright', '\u00a9\u00a0OpenStreetMap contributors'], ['https://project-osrm.org/', 'Routing: OSRM'], ['https://www.openstreetmap.org/fixthemap', 'Fix the map']].forEach(([href, text], i) => {
           if (i) note.appendChild(doc.createTextNode(' \u00b7 '));
           const cr = doc.createElement('a'); cr.href = href; cr.target = '_blank'; cr.rel = 'noopener'; cr.textContent = text; cr.setAttribute('lang', 'en');
           note.appendChild(cr);
@@ -685,7 +690,6 @@
         a.textContent = t('Open these directions in Google Maps');
         out.appendChild(a);
       }
-      out.hidden = false;
     };
     driveShow = () => show();
     form.hidden = false;
@@ -695,11 +699,11 @@
       const text = input.value.replace(/\s+/g, ' ').trim();
       if (text.length < 5) { input.setAttribute('aria-invalid', 'true'); show({ kind: 'short' }); input.focus(); return; }
       input.removeAttribute('aria-invalid');
-      busy = true; btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+      busy = true; btn.setAttribute('aria-disabled', 'true'); btn.setAttribute('aria-busy', 'true');
       show({ kind: 'wait' });
       try {
         const from = await geocode(text);
-        if (!from) { show({ kind: 'nf', from: text }); return; }
+        if (!from) { input.setAttribute('aria-invalid', 'true'); show({ kind: 'nf', from: text }); return; }
         if (!farm) {
           const f = W.farmPoint && goodPoint({ lat: Number(W.farmPoint.lat), lon: Number(W.farmPoint.lon) }) ? { lat: Number(W.farmPoint.lat), lon: Number(W.farmPoint.lon) } : null;
           if (f) farm = f; else { await sleep(1100); farm = await geocode(FARM_ADDRESS); }   // the free search asks for one request a second
@@ -711,7 +715,7 @@
         track('drive_time');
       } catch (err) {
         show({ kind: 'down', from: text });
-      } finally { busy = false; btn.disabled = false; btn.removeAttribute('aria-busy'); }
+      } finally { busy = false; btn.removeAttribute('aria-disabled'); btn.removeAttribute('aria-busy'); }
     });
   }
   function initReviewLinks() {

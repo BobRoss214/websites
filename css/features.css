@@ -374,6 +374,7 @@
 .drive-label{display:block;margin:0 0 .55em;font:800 1.02rem/1.3 var(--display)}
 .drive-priv{margin:.7em 0 0}
 .drive-result{margin:.9em 0 0;padding:14px 16px;background:#fff8e6;border:3px solid var(--ink);border-radius:18px;overflow-wrap:anywhere}
+.drive-result:not([data-kind]){margin:0;padding:0;border:0;height:0;overflow:hidden}   /* empty: no box, but still in the page so a screen reader announces what appears in it */
 .drive-result p{margin:.4em 0 0}
 .drive-result p:first-child{margin-top:0}
 .drive-big{font:800 1.3rem/1.3 var(--display);color:var(--red-deep)}

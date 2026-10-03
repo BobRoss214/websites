@@ -261,7 +261,7 @@
   "{date} at {time} Eastern Time": "{date} lúc {time} giờ miền Đông",
   "{first}. {second}": "{first}. {second}",
   "Working it out…": "Đang tính…",
-  "Type your street address, town and state.": "Hãy nhập địa chỉ đường, thị trấn và tiểu bang.",
+  "Type your street address, town and state.": "Hãy nhập địa chỉ (số nhà và tên đường), thị trấn và tiểu bang.",
   "We could not find that address. Add the town and state, like 123 Main St, Monroe NC.": "Chúng tôi không tìm thấy địa chỉ đó. Hãy thêm thị trấn và tiểu bang, ví dụ: 123 Main St, Monroe NC.",
   "We could not find a drive from that address to the farm. Try the Google Maps button.": "Chúng tôi không tìm được đường lái xe từ địa chỉ đó đến nông trại. Hãy thử nút Google Maps.",
   "The lookup is not working right now. Try the Google Maps button instead.": "Chức năng tìm kiếm hiện không hoạt động. Hãy thử nút Google Maps.",

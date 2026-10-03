@@ -263,12 +263,12 @@
   "Working it out…": "正在计算…",
   "Type your street address, town and state.": "请输入街道地址、城镇和州。",
   "We could not find that address. Add the town and state, like 123 Main St, Monroe NC.": "没有找到这个地址。请加上城镇和州，例如：123 Main St, Monroe NC。",
-  "We could not find a drive from that address to the farm. Try the Google Maps button.": "没有找到从该地址到农场的行车路线。请试试 Google Maps 按钮。",
-  "The lookup is not working right now. Try the Google Maps button instead.": "查询暂时无法使用。请改用 Google Maps 按钮。",
+  "We could not find a drive from that address to the farm. Try the Google Maps button.": "没有找到从这个地址到农场的行车路线。请试试 Google 地图按钮。",
+  "The lookup is not working right now. Try the Google Maps button instead.": "查询暂时无法使用。请改用 Google 地图按钮。",
   "{distance}, about {time} by car": "{distance}，开车约{time}",
   "We looked up: {place}": "我们查到的地点：{place}",
-  "To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.": "到 4701 Hartis Rd 的农场。按正常路速、没有车流计算，高峰时段可能更久。",
-  "Open these directions in Google Maps": "在 Google Maps 中打开这条路线"
+  "To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.": "前往 4701 Hartis Rd 的农场。按道路正常车速估算，未计入车流，高峰时段可能更久。",
+  "Open these directions in Google Maps": "在 Google 地图中打开这条路线"
  },
  "ui": {
   "t000eb0a5": "在花田里剪一束属于你的花束",
