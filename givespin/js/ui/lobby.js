@@ -74,6 +74,12 @@
       box.innerHTML = '<p class="empty">Nothing here yet. Play any game and your rounds will show up here, with a link to each charity.</p>';
       return;
     }
+    // a round that names a charity no longer on the list (or has no allocation at all) is left out rather than stopping the page
+    h = h.filter(function (x) { return x.allocations && x.allocations.length && GS.charity(x.allocations[0].charityId); });
+    if (!h.length) {
+      box.innerHTML = '<p class="empty">Nothing here yet. Play any game and your rounds will show up here, with a link to each charity.</p>';
+      return;
+    }
     box.innerHTML = h.map(function (x) {
       var first = GS.charity(x.allocations[0].charityId);
       var nm = x.allocations.length === 1 ? first.name : first.short + ' +' + (x.allocations.length - 1) + ' more';

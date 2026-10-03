@@ -200,7 +200,7 @@
         remember(out.fair, fb.code, fe.code);
       }
       return out;
-    });
+    }).filter(function (x) { return x.allocations.length > 0; }); // a round with nothing allocated cannot be shown anywhere
   }
 
   function sanitizePlans(p) {
@@ -691,14 +691,17 @@
       var keep = { prefs: state.prefs, account: state.account, fair: state.fair };
       state = defaults();
       state.prefs = keep.prefs; state.account = keep.account; state.fair = keep.fair;
+      resetIdTable(); // the saved id table would otherwise still list the charities of the wiped rounds
       save();
     },
 
     /** Wipes everything, including the account. */
     eraseAll: function () {
-      var prefs = state.prefs;
+      // only the sound, voice and sidebar settings are kept: the dedication text, custom lists and switched-off charities go too
+      var old = state.prefs;
       state = defaults();
-      state.prefs = prefs;
+      state.prefs.muted = !!old.muted; state.prefs.voice = !!old.voice; state.prefs.sidebar = old.sidebar !== false;
+      resetIdTable();
       save();
     }
   };

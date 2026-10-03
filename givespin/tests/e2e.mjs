@@ -2810,6 +2810,32 @@ if (section('13t. Honesty wording: fair play you can check, demo or checkout wor
 }
 
 /* ======================================================================== */
+if (section('13v. Saved data from an older version: a round that names a charity no longer on the list does not stop the site, and an old round without a saved pool says why it cannot be re-checked')) {
+  const old = {
+    v: 2, ids: [],
+    history: [
+      { id: 'GS-OLDAAA', ts: Date.now() - 1000, game: 'wheel', totalCents: 1000, rounds: 1, status: 'done', pay: 'credit', freq: 'once', direct: true, allocations: [{ charityId: 'a-charity-that-left-the-list', cents: 1000 }] },
+      { id: 'GS-OLDBBB', ts: Date.now() - 2000, game: 'wheel', totalCents: 500, rounds: 1, status: 'done', pay: 'credit', freq: 'once', allocations: [] },
+      { id: 'GS-OLDCCC', ts: Date.now() - 3000, game: 'slots', totalCents: 500, rounds: 1, status: 'done', pay: 'credit', freq: 'once', allocations: [{ charityId: 'wateraid', cents: 500 }],
+        fair: { roundSeed: 'ab'.repeat(16), serverHash: 'cd'.repeat(32), clientSeed: 'x', nonce: 1, poolHash: 'ef'.repeat(32), count: 1, winners: ['wateraid'], board: [], weights: [], filters: {}, excluded: [] } }
+    ]
+  };
+  const p = await newPage({ tour: false });
+  await p.addInitScript((o) => { try { if (!sessionStorage.getItem('__seeded')) { localStorage.setItem('givespin:v2', JSON.stringify(o)); sessionStorage.setItem('__seeded', '1'); } } catch (e) { /* ignore */ } }, old);
+  const before = problems.length;
+  await p.goto(BASE + '?fast=1', { waitUntil: 'load' });
+  const ready = await p.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'), null, { timeout: 20000 }).then(() => true, () => false);
+  check(ready, 'the site finishes starting although the newest saved round names a charity that is not on the list');
+  check(problems.length === before, 'and nothing was reported in the console while it started', problems.slice(before, before + 3));
+  const rows = await p.evaluate(() => Array.prototype.map.call(document.querySelectorAll('#view-lobby .rgift'), (e) => e.textContent));
+  check(rows.every((t) => !/undefined|NaN|null/.test(t)), 'the lobby list of recent rounds shows no broken row', rows);
+  check(await p.evaluate(() => window.GS.store.get().history.every((h) => h.allocations.length > 0)), 'a saved round with nothing allocated is dropped when the data is read');
+  // an old slots/Dice round has no saved board: Verify says it cannot be re-checked here instead of looking like tampering
+  const verdict = await p.evaluate(async () => { const h = window.GS.store.get().history.filter((x) => x.game === 'slots')[0]; const r = await window.GS.ui.receipt.verifyRound(h.fair); return { noPool: !!r.noPool, html: window.GS.ui.receipt.verifyHTML(r) }; });
+  check(verdict.noPool && /saved before the site kept its pool/.test(verdict.html), 'an old round without a saved pool is explained, not left to read like cheating', verdict.html.slice(0, 200));
+  await p.close();
+}
+
 if (section('13n. Fair Play? in plain language')) {
   const page = await newPage();
   await openApp(page, '#fair');

@@ -174,7 +174,7 @@
 .search--field { position: relative; flex: 1 1 260px; max-width: 420px; }
 .dir-count { color: var(--dim); font-size: 0.8rem; margin-bottom: 12px; }
 .dir { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
-.rcard { --c: #8ad; position: relative; display: grid; align-content: start; gap: 10px; padding: 14px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); content-visibility: auto; contain-intrinsic-size: auto 190px; transition: border-color 0.15s, transform 0.15s; }
+.rcard { --c: #8ad; position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 10px; padding: 14px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); content-visibility: auto; contain-intrinsic-size: auto 190px; transition: border-color 0.15s, transform 0.15s; }
 .rcard:hover { border-color: color-mix(in srgb, var(--c) 60%, var(--line)); transform: translateY(-2px); }
 .rcard__top { display: flex; align-items: center; gap: 12px; }
 .rcard__top > div { min-width: 0; display: grid; gap: 5px; }

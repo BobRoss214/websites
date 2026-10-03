@@ -30,7 +30,7 @@
   var pageBuilt = false;
   var stripBoxes = [];
   var verifyOut = '';
-  var armed = false;         // all-in: the first press arms the button, the second places the bet
+  var armed = false;         // big stake: the first press arms the button, the second places the bet
   var oddsDown = 0;          // when a finger or the mouse went down on the odds board (0 = not pressed): its rows must not be replaced under it
   var oddsLate = false;      // a redraw was held back while it was pressed
   var ODDS_HOLD_MS = 5000;   // the longest the odds board waits for a press to end
@@ -835,7 +835,7 @@
     if (r && animating[cur.id] && showRoom[cur.id] === cur.room) { missed[cur.room.id + ':' + r.round] = r; }
     if (r) {
       ui.announce(r.winner.name + ' wins the simulated ' + dollars(r.pot + r.bonus.total) + ' pot.' + (r.you ? (r.you.won ? ' Your charity won.' : ' Your stake went to the winner.') : ''));
-      GS.audio.say(r.winner.short + ' wins the pot');
+      GS.audio.say(r.winner.short + ' wins the simulated pot');
       if (r.bonus.jackpot) { GS.audio.siren(); GS.confetti.celebrate(1.4); }
     }
     if (!animating[cur.id]) { renderAll(); celebrate(); }

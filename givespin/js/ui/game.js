@@ -226,7 +226,7 @@
       setTimeout(function () {
         var a = document.activeElement;
         if (!built || !current || isLive() || state().busy || state().view !== 'game') { return; }
-        if (a && a !== document.body && a !== document.documentElement) { return; }
+        if (a && a !== document.body && a !== document.documentElement && a.id !== 'main') { return; }
         if (document.querySelector('dialog.modal[open]')) { return; }
         if (el.play && !el.play.disabled && el.play.offsetParent !== null) { try { el.play.focus({ preventScroll: true }); } catch (e) { /* not focusable right now */ } }
       }, 0);

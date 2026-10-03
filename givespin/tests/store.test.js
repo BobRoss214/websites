@@ -305,3 +305,37 @@ test('a failed save (storage full) is swallowed, tells the page once per failure
   page.GS.store.save();
   assert.equal(page.events.length, n, 'no event when saving works');
 });
+
+test('a saved round with nothing allocated is dropped, so the lobby never meets it', async () => {
+  const page = makePage();
+  const ids = page.GS.charities.map((c) => c.id);
+  const mk = (allocations) => ({ id: 'GS-DDDDDD', ts: 1, game: 'wheel', totalCents: 500, rounds: 1, status: 'done', pay: 'credit', freq: 'once', allocations });
+  page.data.set(page.KEY, JSON.stringify({ v: 2, ids: [], history: [mk([]), mk([{}]), mk([{ charityId: 7 }]), mk([{ charityId: ids[0], cents: 500 }])] }));
+  page.GS.store.load();
+  const h = page.GS.store.get().history;
+  assert.equal(h.length, 1, 'only the round that names a charity survives');
+  assert.equal(h[0].allocations[0].charityId, ids[0]);
+});
+
+test('"Erase my data" removes the dedication text, custom lists, switched-off charities and the id table, and keeps only sound, voice and sidebar', async () => {
+  const page = makePage();
+  await playRound(page, 12, { nonce: 1 });
+  const ids = page.GS.charities.map((c) => c.id);
+  const set = (k, v) => page.GS.store.setPref(k, v);
+  set('dedication', { kind: 'memory', name: 'Grandma Rose', note: 'She loved clean water.' });
+  set('custom', { wheel: { on: true, ids: ids.slice(0, 5) } });
+  set('excluded', ids.slice(0, 10));
+  set('muted', true); set('voice', true); set('sidebar', false);
+  page.GS.store.eraseAll();
+  const p = page.GS.store.prefs();
+  assert.equal(p.dedication.name, '');
+  assert.equal(p.dedication.note, '');
+  assert.equal(JSON.stringify(p.custom), '{}');
+  assert.equal(p.excluded.length, 0);
+  assert.equal(p.muted, true);
+  assert.equal(p.voice, true);
+  assert.equal(p.sidebar, false);
+  const raw = page.data.get(page.KEY);
+  assert.ok(raw.indexOf('Grandma Rose') < 0 && raw.indexOf(ids[3]) < 0, 'nothing of the old rounds or choices is left in the saved text');
+  assert.equal(page.GS.store.get().history.length, 0);
+});

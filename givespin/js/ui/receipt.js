@@ -31,13 +31,15 @@
     if (!GS.fair.available() || !fairData || !fairData.roundSeed) { return Promise.resolve({ error: true }); }
     // a live table's round is stake-weighted: it carries the pot (weights) instead of a pool of charities
     // a live table's round carries the pot (weights); a solo round on a chosen board carries the board's charities
-    var boardPool = fairData.board && fairData.board.length ? fairData.board.map(function (id) { return GS.charity(id); }).filter(Boolean) : null;
+    var boardPool = fairData.board && fairData.board.length ? fairData.board.map(function (id) { return { id: id }; }) : null; // the pool hash needs only the ids, so a charity that has since left the list does not matter
     var check = fairData.weights && fairData.weights.length ? GS.fair.verifyWeighted(fairData)
       : GS.fair.verify(fairData, boardPool || core.buildPool(GS.charities, fairData.filters, fairData.excluded));
     return check.then(function (r) {
       if (r.ok) { var badges = store.noteVerify(); if (badges.length) { GS.bus.emit('badges', badges); } }
       // a round saved by an older version of the site has its board (or switched-off list) cut to the first 300, so it cannot be redone here
       else if (fairData.cut) { r.cutShort = true; }
+      // a solo round saved before the site kept its pool (slots, Dice) is checked against today's list, which has changed
+      else if (!(fairData.board && fairData.board.length) && !(fairData.weights && fairData.weights.length)) { r.noPool = true; }
       return r;
     });
   }
@@ -49,7 +51,7 @@
       row(r.hashOk, r.hashOk ? 'The secret number matches the fingerprint shown before the round (nobody swapped it)' : 'The secret number does NOT match the fingerprint shown before the round') +
       row(r.poolOk, r.poolOk ? (r.weighted ? 'The pot matches what was staked' : 'The same charities were on the board') : (r.weighted ? 'The pot does not match what was staked' : 'The charities on the board do not match')) +
       row(r.winnersOk, r.winnersOk ? 'Redoing the pick gives the same winners' : 'Redoing the pick gives different winners') +
-    '</ul>' + (r.cutShort ? '<p class="rs-fine">This round was saved by an older version of the site that kept only the first 300 charities of its board, so it cannot be checked again here. Rounds saved now keep the whole board.</p>' : '');
+    '</ul>' + (r.noPool ? '<p class="rs-fine">This round was saved before the site kept its pool of charities, and the list of charities has changed since, so it cannot be checked again here. Rounds saved now keep their pool.</p>' : '') + (r.cutShort ? '<p class="rs-fine">This round was saved by an older version of the site that kept only the first 300 charities of its board, so it cannot be checked again here. Rounds saved now keep the whole board.</p>' : '');
   }
 
   function fairDetailsHTML(f) {

@@ -226,10 +226,11 @@
   function init() {
     // storage full or blocked: the game goes on, but a reload would lose what was not saved, so say so (once per page load)
     var saveFailTold = false;
-    window.addEventListener('gs:savefail', function () {
+    window.addEventListener('gs:savefail', function (e) {
       if (saveFailTold) { return; }
       saveFailTold = true;
-      ui.toast('Your browser could not save this round (storage is full). It will be gone if you reload.', 'triangle-alert');
+      var full = e && e.detail && e.detail.name === 'QuotaExceededError';
+      ui.toast(full ? 'Your browser could not save this round (storage is full). It will be gone if you reload.' : 'Your browser is not letting GiveSpin save (private or blocked storage). Your progress will be gone if you reload.', 'triangle-alert');
     });
     store.load();
     GS.gameCount = ui.game.ORDER.length;
