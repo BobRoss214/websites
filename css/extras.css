@@ -79,7 +79,7 @@ html[data-season="summer"]{--strip:url("data:image/svg+xml,%3Csvg xmlns=%22http:
 html:lang(hi){--display:"Fredoka","Noto Sans Devanagari","Kohinoor Devanagari","Nirmala UI","Mukta",system-ui,sans-serif;--body:"Nunito","Noto Sans Devanagari","Kohinoor Devanagari","Nirmala UI","Mukta",system-ui,sans-serif;--hand:var(--display)}
 html:lang(zh){--display:"Fredoka","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC","Noto Sans CJK SC",system-ui,sans-serif;--body:"Nunito","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC","Noto Sans CJK SC",system-ui,sans-serif;--hand:var(--display)}
 @font-face{font-family:"Nunito";src:url("../assets/fonts/nunito-vietnamese-wght-normal.woff2") format("woff2");font-weight:200 1000;font-style:normal;font-display:swap;unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}
-html:lang(vi){--display:"Nunito","Trebuchet MS",system-ui,sans-serif;--hand:var(--display)}
+html:lang(vi){--display:"Nunito","Nunito Fallback","Trebuchet MS",system-ui,sans-serif;--hand:var(--display)}   /* the stand-in (css/styles.css) keeps headings from re-wrapping when Nunito arrives */
 html:lang(vi) h1,html:lang(vi) h2,html:lang(vi) h3,html:lang(vi) .btn,html:lang(vi) .brand-name{font-weight:800}
 html:lang(vi) body{line-height:1.65}
 html:lang(hi) body,html:lang(zh) body{line-height:1.75}

@@ -97,4 +97,50 @@
 
   document.documentElement.classList.add('js-scene');
   apply(current());
+
+  /* Before the first paint. The browser draws the page while it is still reading it, so anything a script at the
+   * end of the page shows, hides or fills in afterwards makes the text below it jump. Instead, things are set
+   * here as the browser reads them:
+   *   W.onParse(fn)  fn(elements) is called with each batch of elements the browser has just read, until the
+   *                  whole page is read. js/i18n.js uses it to put each text block in the chosen language and draw
+   *                  the language button; js/live.js for the "open now" badges, the top bar line and the pizza chip.
+   *   W.parsed(el)   true once the browser has read all of el, its children included.
+   * Below: this season's lines and buttons (data-only="fall", data-in-season, data-out-of-season), the all-year hero
+   * line between seasons and the "See the farm in" switcher, exactly as js/hero.js sets them again when it runs. */
+  var batches = [];
+  W.onParse = function (fn) { batches.push(fn); };
+  W.parsed = function (el) {
+    for (var n = el; n && n !== document.documentElement; n = n.parentNode) if (n.nextSibling) return true;
+    return document.readyState !== 'loading';
+  };
+  W.onParse(function (els) {
+    var id = W.seasons.active, liveIds = live().map(function (s) { return s.id; }), isLive = liveIds.indexOf(id) >= 0;
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i], only = el.getAttribute('data-only');
+      if (only) {
+        var show = only.split(/\s+/).indexOf(id) >= 0 && !(el.hasAttribute('data-in-season') && !isLive);
+        if (!isLive && el.classList.contains('hero-sub')) show = only === 'no-js';   // between seasons: the all-year line
+        if (!isLive && el.parentNode && el.parentNode.id === 'hero-h') {               // ...and the first (all-year) title
+          var prev = el.previousElementSibling;
+          while (prev && !prev.hasAttribute('data-only')) prev = prev.previousElementSibling;
+          show = !prev;
+        }
+        el.toggleAttribute('hidden', !show);   // SVG elements have no .hidden property
+      }
+      var out = el.getAttribute('data-out-of-season');   // hidden while one of those seasons is really happening ("Tell me when it opens")
+      if (out) el.toggleAttribute('hidden', out.split(/\s+/).some(function (s) { return liveIds.indexOf(s) >= 0; }));
+      if (el.id === 'season-switch' && W.seasonPicker !== false) el.hidden = false;
+    }
+  });
+  if (window.MutationObserver && document.readyState === 'loading') {
+    var reader = new MutationObserver(function (records) {
+      var els = [];
+      for (var i = 0; i < records.length; i++) for (var j = 0; j < records[i].addedNodes.length; j++) if (records[i].addedNodes[j].nodeType === 1) els.push(records[i].addedNodes[j]);
+      for (var k = 0; k < batches.length; k++) batches[k](els);
+    });
+    reader.observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener('DOMContentLoaded', function () { reader.disconnect(); });
+    // The switcher only works with js/hero.js. If that did not load, do not leave buttons that do nothing.
+    window.addEventListener('load', function () { var sw = document.getElementById('season-switch'); if (sw && !W.hero) sw.hidden = true; });
+  }
 })();

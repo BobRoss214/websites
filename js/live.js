@@ -3,9 +3,14 @@
  *   - "Open now" badges            <p data-live="greenhouse|pizza|farm"></p>
  *   - The notice bar               WISE_ACRES.notice
  *   - The "next up" countdown      <section data-countdown>
+ *   - The pizza-reservation rules  (js/features.js draws that countdown; the hero chip is first set here)
  *
  * Hours and closures come from js/content.js. Times are Eastern Time, whatever
  * the visitor's own time zone is.
+ *
+ * Loaded in <head> (after js/i18n.js): each badge, the top bar line, the notice and
+ * the countdown are filled in as the browser reads them (W.onParse, js/season.js),
+ * so they are already there in the first paint and nothing below them jumps.
  */
 (() => {
   'use strict';
@@ -24,9 +29,10 @@
    * ------------------------------------------------------------------ */
   const DOW = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
+  let etFormat = null;   // building an Intl formatter is slow, so it is built once
   function easternParts(d) {
     const o = {};
-    new Intl.DateTimeFormat('en-US', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short', hourCycle: 'h23' })
+    (etFormat || (etFormat = new Intl.DateTimeFormat('en-US', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short', hourCycle: 'h23' })))
       .formatToParts(d).forEach((p) => { o[p.type] = p.value; });
     return { dow: DOW[o.weekday], mins: (+o.hour) * 60 + (+o.minute), ymd: o.year + '-' + o.month + '-' + o.day };
   }
@@ -99,16 +105,15 @@
     return sch ? scheduleStatus(sch, now) : null;
   }
 
-  function renderBadges() {
-    $$('[data-live]').forEach((el) => {
-      const s = statusFor(el.dataset.live);
-      if (!s) { el.hidden = true; return; }
-      el.hidden = false;
-      el.className = 'live is-' + s.state + (el.dataset.liveClass ? ' ' + el.dataset.liveClass : '');
-      el.innerHTML = '<span class="live-dot" aria-hidden="true"></span><span class="live-text"></span>';
-      $('.live-text', el).textContent = s.text;
-    });
+  function renderBadge(el) {
+    const s = statusFor(el.dataset.live);
+    if (!s) { el.hidden = true; return; }
+    el.hidden = false;
+    el.className = 'live is-' + s.state + (el.dataset.liveClass ? ' ' + el.dataset.liveClass : '');
+    el.innerHTML = '<span class="live-dot" aria-hidden="true"></span><span class="live-text"></span>';
+    $('.live-text', el).textContent = s.text;
   }
+  function renderBadges() { $$('[data-live]').forEach(renderBadge); }
 
   /* ------------------------------------------------------------------ *
    * Notice bar
@@ -172,11 +177,100 @@
     });
   }
 
+  /* ------------------------------------------------------------------ *
+   * Pizza reservations
+   *   The release days are the rows of the schedule table, <tr data-release="2026-10-13">, opening at
+   *   <table data-release-time="17:00">. js/features.js reads them for the countdown in #schedule and
+   *   keeps the chip in the hero up to date, with the rules below. The chip is first set here, as soon as
+   *   the table is read: the chip appearing later made the hero taller and the whole picture in it jump.
+   *   Until then its line is kept free (class rel-wait, css/features.css), in case the browser draws the
+   *   hero before it gets to the table.
+   * ------------------------------------------------------------------ */
+  const JUST_OPENED_MS = 6 * 3600e3;   // a release counts as "just opened" for six hours
+  function releaseState(now, list) {   // list: the releases, each with .at (when it opens), earliest first
+    const last = list.filter((r) => r.at <= now).pop();
+    const next = list.find((r) => r.at > now);
+    if (last && now - last.at < JUST_OPENED_MS) return { mode: 'open', rel: last, list };
+    if (next) return { mode: 'wait', rel: next, list, left: next.at - now };
+    return { mode: 'none', list };
+  }
+  // A number with its unit word, written as js/features.js writes them (fmtUnit): Western digits and US separators, "5 días y 1 hora"
+  // in Spanish, and in Chinese a space between the number and the word.
+  const unitFormat = {};
+  function unitText(unit, n) {
+    const L = lang(), k = L + '|' + unit;
+    const f = unitFormat[k] || (unitFormat[k] = new Intl.NumberFormat(L === 'es' ? 'es-US' : L, { style: 'unit', unit, unitDisplay: 'long' }));
+    const s = f.formatToParts(n).map((p) => (p.type === 'decimal' ? '.' : p.type === 'group' ? ',' : p.value)).join('');
+    return L === 'zh' ? s.replace(/(\d)(?=[\u4e00-\u9fff])/g, '$1 ') : s;
+  }
+  function chipTime(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+    const part = (n, u) => { try { return unitText(u, n); } catch (e) { return n + ' ' + u + (n === 1 ? '' : 's'); } };   // "5 days", not "5d": plain words, and screen readers say them properly
+    const and = lang() === 'es' ? ' y ' : ' ';   // "5 días y 1 hora", like the drive times
+    if (d) return part(d, 'day') + (h ? and + part(h, 'hour') : '');
+    if (h) return part(h, 'hour') + (m ? and + part(m, 'minute') : '');
+    return part(Math.max(1, m), 'minute');
+  }
+  const chipText = (st) => (st.mode === 'open' ? t('Pizza reservations are open now') : t('Next pizza reservations open in {time}', { time: chipTime(st.left) }));
+
+  // A real day on the calendar (2026-11-31 is not one). Rows written wrong are skipped, as js/features.js does (it also reports them).
+  const realYmd = (s) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || '');
+    if (!m) return false;
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
+  };
+  // The moment the farm's clock (Eastern Time, summer time included) reads ymd hh:mm.
+  function farmMoment(ymd, hhmm) {
+    const [y, m, d] = ymd.split('-').map(Number), [hh, mm] = hhmm.split(':').map(Number);
+    const want = Date.UTC(y, m - 1, d, hh, mm);
+    let guess = want;
+    for (let i = 0; i < 3; i++) {
+      const p = easternParts(new Date(guess)), [py, pm, pd] = p.ymd.split('-').map(Number);
+      const diff = want - Date.UTC(py, pm - 1, pd, 0, p.mins);
+      if (!diff) break;
+      guess += diff;
+    }
+    return new Date(guess);
+  }
+  function renderChip(final) {   // final: the whole table has been read
+    const chip = $('[data-rel-chip]'), table = $('[data-release-time]');
+    if (!chip || !chip.classList.contains('rel-wait')) return;   // set already (js/features.js keeps it up to date from here on)
+    const time = table && /^\d{1,2}:\d{2}$/.test(table.dataset.releaseTime || '') ? table.dataset.releaseTime : '17:00';
+    const list = $$('tr[data-release]').filter((tr) => realYmd(tr.dataset.release)).map((tr) => ({ at: farmMoment(tr.dataset.release, time) }))
+      .filter((r) => !isNaN(r.at)).sort((a, b) => a.at - b.at);
+    const st = list.length ? releaseState(Date.now(), list) : { mode: 'none' };
+    if (st.mode === 'none' && !final) return;   // a row further down may still start a countdown
+    chip.classList.remove('rel-wait');
+    chip.classList.toggle('rel-off', st.mode === 'none');
+    if (st.mode !== 'none') $('[data-rel-chip-text]', chip).textContent = chipText(st);
+  }
+
   function refresh() { renderBadges(); renderNotice(); renderCountdown(); renderAnnounce(); renderYear(); }
 
-  refresh();
+  if (doc.readyState === 'loading' && W.onParse) {
+    const reading = new Set();   // read, but maybe not all of their contents yet
+    W.onParse((els) => {
+      els.forEach((el) => {
+        // The badges and the top bar line are empty in the HTML, so they are filled the moment they are read; the rest once read to the end.
+        if (el.matches('[data-live]')) renderBadge(el);
+        else if (el.matches('[data-ann-season]')) renderAnnounce();
+        else if (el.matches('[data-countdown], .announce, [data-release-time]')) reading.add(el);
+        if (el.matches('[data-rel-chip]') && !el.hidden) { el.classList.remove('rel-off'); el.classList.add('rel-wait'); }   // this season has the chip: keep its line
+        if (el.matches('tr[data-release]')) renderChip(false);   // the rows are in date order, so the first one still to come already decides it
+      });
+      reading.forEach((el) => {
+        if (!W.parsed(el)) return;
+        reading.delete(el);
+        if (el.matches('[data-countdown]')) renderCountdown();
+        if (el.matches('.announce')) renderNotice();
+        if (el.matches('[data-release-time]')) renderChip(true);
+      });
+    });
+    doc.addEventListener('DOMContentLoaded', () => { renderChip(true); refresh(); });   // once more with the whole page, in case anything was missed
+  } else refresh();
   let seenDay = easternParts(new Date()).ymd;   // a page left open overnight: new day, new countdown number, an expired notice goes away
   setInterval(() => { renderBadges(); const d = easternParts(new Date()).ymd; if (d !== seenDay) { seenDay = d; refresh(); } }, 60 * 1000);
   doc.addEventListener('wa:lang', refresh);
-  W.live = { status: statusFor, refresh };
+  W.live = { status: statusFor, refresh, releaseState, chipText };
 })();

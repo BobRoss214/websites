@@ -5,6 +5,7 @@
    ========================================================================== */
 
 .rel-off{display:none!important}
+.rel-wait{visibility:hidden}   /* the hero pizza chip while the page is still loading (js/live.js) */
 
 /* ---------------------------------------------------------------- reservation countdown */
 .rel-box{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px 28px;margin:0 0 20px;padding:18px 20px;background:#fff;border:3px solid var(--ink);border-radius:22px;box-shadow:0 5px 0 var(--ink)}
@@ -28,7 +29,6 @@
 }
 
 /* hero chip */
-.chips .chip-rel{background:#d9f0ff}
 .chips .chip-rel a{display:inline-flex;align-items:center;gap:.4em;color:var(--ink);text-decoration:none;font-weight:700}
 .chips .chip-rel .ico{color:var(--red-deep);transform-origin:50% 0;animation:bellRing 4.5s ease-in-out infinite}
 @keyframes bellRing{0%,84%,100%{transform:none}88%{transform:rotate(16deg)}92%{transform:rotate(-13deg)}96%{transform:rotate(6deg)}}
@@ -252,9 +252,10 @@
 /* 3. signup interest chips: 44px tap height */
 .su-chip span{min-height:44px;padding:.35em 1em}
 
-/* 4. hero pizza chip: whole pill is the link */
-.chips .chip-rel{padding:0}
-.chips .chip-rel a{padding:.3em .85em .3em .6em;min-height:40px}
+/* 4. hero pizza chip: whole pill is the link. It has a line of its own: its words change every minute, and it is
+   set while the page loads, so on its own line it never moves the other chips or makes the hero (and the picture in it) jump. */
+.chips .chip-rel{flex-basis:100%;justify-content:center;padding:0;background:none;border:0;border-radius:0}
+.chips .chip-rel a{box-sizing:content-box;padding:.3em .85em .3em .6em;min-height:calc(40px - .6em);background:#d9f0ff;border:2.5px solid var(--ink);border-radius:999px}
 
 /* 5. "Open in Apple Maps or Waze": bigger tap area */
 .more-maps a{display:inline-block;padding:.65em .25em;margin:-.65em 0}

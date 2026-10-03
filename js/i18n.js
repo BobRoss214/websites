@@ -48,6 +48,8 @@
   }
 
   W.lang = initial();
+  // Set now, before the page is drawn: the header layout and some text sizes depend on it (css :lang()).
+  doc.documentElement.lang = (LANGS.find((l) => l.code === W.lang) || LANGS[0]).html;
 
   /* ------------------------------------------------------------------ *
    * t(): text that JavaScript writes
@@ -105,32 +107,34 @@
    * ------------------------------------------------------------------ */
   const ATTR_PREFIX = 'data-ta-';
 
+  function swapBlock(el, d, code) {
+    if (el._en === undefined) {
+      el._en = el.innerHTML;
+      el._svgs = Array.from(el.querySelectorAll('svg')).map((n) => n.outerHTML);
+      el._links = (el._en.match(/<a\b[^>]*>/g)) || [];     // real opening tags of the links, in order
+    }
+    if (el._code === code) return;   // already swapped (while the page was read, or by translateNow()): do not rebuild it, so nothing the other scripts attached is lost
+    el._code = code;
+    const tr = code !== 'en' && d[el.getAttribute('data-t')];
+    if (tr) {
+      let i = 0;
+      el.innerHTML = tr.replace(/<svg\/>/g, () => el._svgs[i++] || '').replace(/<a(\d+)>/g, (m, n) => el._links[n - 1] || '<a>');
+    }
+    else if (el.innerHTML !== el._en) el.innerHTML = el._en;
+  }
+  function swapAttrs(el, d, code) {
+    for (const a of el.attributes) {
+      if (a.name.indexOf(ATTR_PREFIX) !== 0) continue;
+      const attr = a.name.slice(ATTR_PREFIX.length);
+      if (el['_en_' + attr] === undefined) el['_en_' + attr] = el.getAttribute(attr);
+      const tr = code !== 'en' && d[a.value];
+      el.setAttribute(attr, tr || el['_en_' + attr]);
+    }
+  }
   function swapBlocks(code) {
     const d = (W.dict[code] && W.dict[code].ui) || {};
-    doc.querySelectorAll('[data-t]').forEach((el) => {
-      if (el._en === undefined) {
-        el._en = el.innerHTML;
-        el._svgs = Array.from(el.querySelectorAll('svg')).map((n) => n.outerHTML);
-        el._links = (el._en.match(/<a\b[^>]*>/g)) || [];     // real opening tags of the links, in order
-      }
-      if (el._code === code) return;   // already swapped (translateNow() did it before the other scripts ran): do not rebuild it, so nothing they attached is lost
-      el._code = code;
-      const tr = code !== 'en' && d[el.getAttribute('data-t')];
-      if (tr) {
-        let i = 0;
-        el.innerHTML = tr.replace(/<svg\/>/g, () => el._svgs[i++] || '').replace(/<a(\d+)>/g, (m, n) => el._links[n - 1] || '<a>');
-      }
-      else if (el.innerHTML !== el._en) el.innerHTML = el._en;
-    });
-    doc.querySelectorAll('*').forEach((el) => {
-      for (const a of el.attributes) {
-        if (a.name.indexOf(ATTR_PREFIX) !== 0) continue;
-        const attr = a.name.slice(ATTR_PREFIX.length);
-        if (el['_en_' + attr] === undefined) el['_en_' + attr] = el.getAttribute(attr);
-        const tr = code !== 'en' && d[a.value];
-        el.setAttribute(attr, tr || el['_en_' + attr]);
-      }
-    });
+    doc.querySelectorAll('[data-t]').forEach((el) => swapBlock(el, d, code));
+    doc.querySelectorAll('*').forEach((el) => swapAttrs(el, d, code));
   }
 
   let meta = null;
@@ -203,29 +207,35 @@
    * ------------------------------------------------------------------ */
   const GLOBE = '<svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>';
 
+  function buildMenu(box) {
+    if (box._built) return;
+    box._built = true;
+    box.classList.add('lang');
+    box.innerHTML = '<button type="button" class="lang-btn" aria-haspopup="true" aria-expanded="false" aria-label="' + (LANG_WORD[W.lang] || LANG_WORD.en) + '">' + GLOBE + '<span class="lang-cur"></span></button>' +
+      '<ul class="lang-list" role="menu" hidden>' + LANGS.map((l) => '<li role="none"><button type="button" role="menuitemradio" aria-checked="false" data-lang="' + l.code + '" lang="' + l.html + '">' + l.name + '</button></li>').join('') + '</ul>';
+    const btn = box.querySelector('.lang-btn'), list = box.querySelector('.lang-list');
+    const close = () => { list.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+    // The header is sticky: moving focus inside it must not scroll the page (it used to throw the reader hundreds of pixels up).
+    btn.addEventListener('click', (e) => { e.stopPropagation(); const open = list.hidden; list.hidden = !open; btn.setAttribute('aria-expanded', String(open)); if (open) { const cur = list.querySelector('[aria-checked="true"]') || list.querySelector('button'); cur.focus({ preventScroll: true }); } });
+    list.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (b) { setLang(b.dataset.lang); close(); btn.focus({ preventScroll: true }); } });
+    list.addEventListener('keydown', (e) => {
+      const items = Array.from(list.querySelectorAll('button')), i = items.indexOf(doc.activeElement);
+      if (e.key === 'Escape') { close(); btn.focus({ preventScroll: true }); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus({ preventScroll: true }); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus({ preventScroll: true }); }
+    });
+    doc.addEventListener('click', (e) => { if (!box.contains(e.target)) close(); });
+    box.addEventListener('focusout', (e) => { if (!list.hidden && e.relatedTarget && !box.contains(e.relatedTarget)) close(); });   // Tab away closes it, like the More menu
+  }
+  function buildList(ul) {
+    if (ul._built) return;
+    ul._built = true;
+    ul.innerHTML = LANGS.map((l) => '<li><button type="button" class="lang-link" data-lang="' + l.code + '" lang="' + l.html + '">' + l.name + '</button></li>').join('');
+    ul.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (b) setLang(b.dataset.lang); });
+  }
   function buildMenus() {
-    doc.querySelectorAll('[data-lang-menu]').forEach((box) => {
-      box.classList.add('lang');
-      box.innerHTML = '<button type="button" class="lang-btn" aria-haspopup="true" aria-expanded="false" aria-label="' + (LANG_WORD[W.lang] || LANG_WORD.en) + '">' + GLOBE + '<span class="lang-cur"></span></button>' +
-        '<ul class="lang-list" role="menu" hidden>' + LANGS.map((l) => '<li role="none"><button type="button" role="menuitemradio" aria-checked="false" data-lang="' + l.code + '" lang="' + l.html + '">' + l.name + '</button></li>').join('') + '</ul>';
-      const btn = box.querySelector('.lang-btn'), list = box.querySelector('.lang-list');
-      const close = () => { list.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
-      // The header is sticky: moving focus inside it must not scroll the page (it used to throw the reader hundreds of pixels up).
-      btn.addEventListener('click', (e) => { e.stopPropagation(); const open = list.hidden; list.hidden = !open; btn.setAttribute('aria-expanded', String(open)); if (open) { const cur = list.querySelector('[aria-checked="true"]') || list.querySelector('button'); cur.focus({ preventScroll: true }); } });
-      list.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (b) { setLang(b.dataset.lang); close(); btn.focus({ preventScroll: true }); } });
-      list.addEventListener('keydown', (e) => {
-        const items = Array.from(list.querySelectorAll('button')), i = items.indexOf(doc.activeElement);
-        if (e.key === 'Escape') { close(); btn.focus({ preventScroll: true }); }
-        else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus({ preventScroll: true }); }
-        else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus({ preventScroll: true }); }
-      });
-      doc.addEventListener('click', (e) => { if (!box.contains(e.target)) close(); });
-      box.addEventListener('focusout', (e) => { if (!list.hidden && e.relatedTarget && !box.contains(e.relatedTarget)) close(); });   // Tab away closes it, like the More menu
-    });
-    doc.querySelectorAll('[data-lang-list]').forEach((ul) => {
-      ul.innerHTML = LANGS.map((l) => '<li><button type="button" class="lang-link" data-lang="' + l.code + '" lang="' + l.html + '">' + l.name + '</button></li>').join('');
-      ul.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (b) setLang(b.dataset.lang); });
-    });
+    doc.querySelectorAll('[data-lang-menu]').forEach(buildMenu);
+    doc.querySelectorAll('[data-lang-list]').forEach(buildList);
   }
 
   function markMenus() {
@@ -242,7 +252,10 @@
   /* ------------------------------------------------------------------ *
    * "Would you like this in Spanish?" — only when the browser asks for it and nothing was chosen yet
    * ------------------------------------------------------------------ */
+  let offered = false;
   function offer() {
+    if (offered || !doc.body) return;
+    offered = true;
     if (W.lang !== 'en' || store.get('wa.lang') || store.get('wa.offer')) return;
     const prefs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || '']).map((x) => String(x).toLowerCase().slice(0, 2));
     const code = prefs.find((p) => OFFER[p]);
@@ -263,4 +276,25 @@
     offer();
   }
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', ready); else ready();
+
+  // While the browser reads the page (W.onParse, js/season.js), each text block is put in the chosen language and the
+  // language button in the header is drawn, so the first paint is already right and nothing jumps when ready() runs.
+  // ready() still goes over the whole page once more, as before.
+  if (doc.readyState === 'loading' && W.onParse) {
+    const reading = new Set();   // read, but maybe not all of their contents yet
+    W.onParse((els) => {
+      const d = W.lang !== 'en' && W.dict[W.lang] && W.dict[W.lang].ui;
+      els.forEach((el) => {
+        if (el === doc.body) offer();
+        if (d) { swapAttrs(el, d, W.lang); if (el.hasAttribute('data-t')) reading.add(el); }
+        if (el.matches('[data-lang-menu]')) reading.add(el);   // the list in the footer is built by ready(), as before: it is not in the first screen
+      });
+      reading.forEach((el) => {
+        if (!W.parsed(el)) return;
+        reading.delete(el);
+        if (el.matches('[data-lang-menu]')) { buildMenu(el); markMenus(); }
+        else if (d && el.isConnected) swapBlock(el, d, W.lang);
+      });
+    });
+  }
 })();

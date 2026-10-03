@@ -355,7 +355,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   .group-panel{grid-template-columns:1fr}
   .values{grid-template-columns:1fr}
   .gh-art{max-width:420px;margin-inline:auto;width:100%;position:static}
-  .about-photo{max-width:560px;margin-inline:auto}
+  .about-photo{width:100%;max-width:560px;margin-inline:auto}   /* full width (not the photo's own width): the photo arrives late and would push the page down */
   .pizza-head{grid-template-columns:1fr;text-align:center}
   .pizza-art{justify-self:center;order:-1}
   .cal{--label-w:0px}

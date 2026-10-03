@@ -180,8 +180,6 @@
    *    The dates come from the rows of the schedule table: <tr data-release="2026-10-13">
    *    and the opening time from <table data-release-time="17:00">.
    * ------------------------------------------------------------------ */
-  const JUST_OPENED_MS = 6 * 3600e3;
-
   function readReleases() {
     const table = $('[data-release-time]');
     const time = table && /^\d{1,2}:\d{2}$/.test(table.dataset.releaseTime || '') ? table.dataset.releaseTime : '17:00';
@@ -197,14 +195,9 @@
   }
   let relCache = null;   // the schedule rows, read once per language (their "for visits" text is translated)
   const releases = () => (relCache && relCache.lang === lang() ? relCache.list : (relCache = { lang: lang(), list: readReleases() }).list);
-  function releaseState(now) {
-    const list = releases();
-    const last = list.filter((r) => r.at <= now).pop();
-    const next = list.find((r) => r.at > now);
-    if (last && now - last.at < JUST_OPENED_MS) return { mode: 'open', rel: last, list };
-    if (next) return { mode: 'wait', rel: next, list, left: next.at - now };
-    return { mode: 'none', list };
-  }
+  // "Just opened", "opens in ..." and "nothing coming": the rules are in js/live.js, which also uses them to set the hero chip
+  // before the page is first drawn.
+  const releaseState = (now) => W.live.releaseState(now, releases());
   const openingLabel = (rel) => t('{date} at {time} Eastern Time', {
     date: fmtYmd(rel.ymd, { weekday: 'long', month: 'short', day: 'numeric' }),
     time: fmtClock(rel.at, TZ),
@@ -243,19 +236,12 @@
       host.setAttribute('aria-label', t('Opens in {time}', { time: [['d', 'day'], ['h', 'hour'], ['m', 'minute']].filter(([k]) => vals[k] || k === 'm').map(([k, u]) => vals[k] + ' ' + unitLong(u, vals[k])).join(lang() === 'zh' ? '，' : ', ') }));
     }
   }
-  function chipTime(ms) {
-    const s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
-    const part = (n, u) => { try { return fmtUnit(u, n); } catch (e) { return n + ' ' + u + (n === 1 ? '' : 's'); } };   // "5 days", not "5d": plain words, and screen readers say them properly
-    const and = lang() === 'es' ? ' y ' : ' ';   // "5 días y 1 hora", like the drive times
-    if (d) return part(d, 'day') + (h ? and + part(h, 'hour') : '');
-    if (h) return part(h, 'hour') + (m ? and + part(m, 'minute') : '');
-    return part(Math.max(1, m), 'minute');
-  }
 
   function renderRelease() {
     const box = $('[data-rel-box]'), chip = $('[data-rel-chip]');
-    if (!box && !chip) return;
+    if ((!box && !chip) || !W.live) return;
     const st = releaseState(Date.now());
+    if (chip) chip.classList.remove('rel-wait');   // js/live.js keeps the chip's line free while the page loads
     if (st.mode === 'none') { if (box) box.hidden = true; if (chip) chip.classList.add('rel-off'); relKey = chipKey = ''; return; }
     const key = st.mode + '|' + st.rel.ymd + '|' + lang();
     const changed = key !== relKey;
@@ -279,7 +265,7 @@
       const s = Math.max(0, Math.floor((st.left || 0) / 1000)), ck = st.mode === 'open' ? 'open|' + lang() : Math.floor(s / 60) + '|' + lang();
       if (changed || ck !== chipKey) {
         chipKey = ck;
-        $('[data-rel-chip-text]', chip).textContent = st.mode === 'open' ? t('Pizza reservations are open now') : t('Next pizza reservations open in {time}', { time: chipTime(st.left) });
+        $('[data-rel-chip-text]', chip).textContent = W.live.chipText(st);
       }
     }
     relKey = key;
@@ -345,7 +331,7 @@
 
   function initRelease() {
     const box = $('[data-rel-box]');
-    if (!$('tr[data-release]')) return;
+    if (!$('tr[data-release]') || !W.live) return;   // js/live.js has the rules
     if (box) {
       const btn = $('[data-rel-remind]', box), menu = $('.remind-menu', box);
       const actions = btn.parentElement;
