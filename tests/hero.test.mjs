@@ -123,8 +123,12 @@ await run('hero', async ({ browser, base, errs }) => {
   const rest = await r.evaluate(() => { const rg = document.querySelector('#field .rig'), cs = getComputedStyle(rg), bb = rg.getBoundingClientRect(); return { anim: cs.animationName, x: bb.left, w: bb.width }; });
   ok('reduced motion: the tractor is parked in view', rest.anim === 'none' && rest.x > 0 && rest.x + rest.w < 1440, JSON.stringify(rest));
   ok('reduced motion: no particles', (await r.locator('.particles').count()) === 0 || !(await r.locator('.particles').first().isVisible()));
-  await choose(r, 'winter');
+  // nothing may keep moving: no endless animation runs in any season, and no drawing loop is running (the bee is hidden)
+  const still = async (s) => { await choose(r, s); await r.waitForTimeout(600); return r.evaluate(() => ({ loops: document.getAnimations().filter((a) => a.playState === 'running' && a.effect && a.effect.getComputedTiming().iterations === Infinity).map((a) => (a.animationName || a.transitionProperty) + ' on ' + (a.effect.target && a.effect.target.className && a.effect.target.className.baseVal !== undefined ? a.effect.target.className.baseVal : a.effect.target.className)), bee: getComputedStyle(document.querySelector('#bee-fly')).display })); };
+  for (const s of ['spring', 'summer', 'fall', 'winter']) { const st = await still(s); ok(`reduced motion, ${s}: no endless animation is running and the bee is hidden`, st.loops.length === 0 && st.bee === 'none', JSON.stringify(st)); }
   ok('reduced motion: trees can still be lit', (await clickPick(r)) && (await okSoon('reduced motion: a tree is lit', () => r.locator('#field .tree-pick.lit').count(), (n) => n === 1)));
+  // the "+1" that flies up from a pick would end at once, invisible, so it stays where it is for a moment
+  ok('reduced motion: the "+1" next to a lit tree stays visible', await okSoon('reduced motion: the +1 shows', () => r.evaluate(() => { const e = document.querySelector('.plus-one'); return e ? getComputedStyle(e).opacity : '0'; }), (v) => v === '1'));
   await r.context().close();
 
   // ---- seasonPicker: false

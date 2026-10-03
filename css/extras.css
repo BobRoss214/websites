@@ -20,7 +20,8 @@
 .hero-live:not(:has(.live:not([hidden]))){display:none}
 .quick-links ul{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;padding:0;list-style:none}
 .quick-links a{display:inline-flex;align-items:center;min-height:44px;padding:.5em .95em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;box-shadow:0 3px 0 var(--ink);color:var(--ink);font:700 .95rem/1.2 var(--display);text-decoration:none}
-.quick-links a:hover,.quick-links a:focus-visible{background:var(--sun)}
+.quick-links a:focus-visible{background:var(--sun)}
+@media (hover:hover){.quick-links a:hover{background:var(--sun)}}
 .fact-card[id]{scroll-margin-top:calc(var(--header-h) + 16px)}
 .gh-hours .live{margin-top:.2em}
 @keyframes livePulse{0%{transform:scale(1);opacity:1}100%{transform:scale(2.7);opacity:0}}
@@ -60,12 +61,13 @@ html[data-season="summer"]{--strip:url("data:image/svg+xml,%3Csvg xmlns=%22http:
 
 /* ---------------------------------------------------------------- language switcher */
 .lang{position:relative;flex:none}
-.lang-btn{display:inline-flex;align-items:center;gap:.4em;min-height:42px;padding:.25em .8em .25em .6em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:600 .92rem/1 var(--display);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--ink)}
-.lang-btn:hover{transform:translateY(-1px)}
+.lang-btn{display:inline-flex;align-items:center;gap:.4em;min-width:44px;min-height:44px;padding:.25em .8em .25em .6em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:600 .92rem/1 var(--display);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+@media (hover:hover){.lang-btn:hover{transform:translateY(-1px)}}
 .lang-btn .ico{width:1.25em;height:1.25em}
 .lang-list{position:absolute;right:0;top:calc(100% + 8px);z-index:80;min-width:190px;margin:0;padding:6px;list-style:none;background:#fff;border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink)}
-.lang-list button{width:100%;text-align:left;padding:.5em .8em;border:0;border-radius:12px;background:transparent;font:600 1.02rem/1.2 var(--display);color:var(--ink);cursor:pointer}
-.lang-list button:hover,.lang-list button:focus-visible{background:#fff3cf}
+.lang-list button{width:100%;min-height:44px;text-align:left;padding:.5em .8em;border:0;border-radius:12px;background:transparent;font:600 1.02rem/1.2 var(--display);color:var(--ink);cursor:pointer}
+.lang-list button:focus-visible{background:#fff3cf}
+@media (hover:hover){.lang-list button:hover{background:#fff3cf}}
 .lang-list button[aria-checked="true"]{background:var(--sun)}
 .lang-links{display:flex;flex-wrap:wrap;gap:6px 14px;margin:1em 0 0;padding:0;list-style:none}
 .lang-link{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
@@ -188,8 +190,8 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .price-list dd.soon{justify-self:end;padding:.25em .8em;border:2px dashed var(--red-deep);border-radius:999px;background:#fff1f3;color:var(--red-deep);font:700 .85rem/1.2 var(--display);text-align:center}
 .shop-note{margin:0 0 clamp(28px,4vw,48px)}
 .shop-jump{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:calc(-1 * clamp(8px,2vw,24px)) 0 clamp(20px,3vw,32px);padding:0;list-style:none}
-.shop-jump a{display:block;padding:.5em 1.1em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .98rem/1 var(--display);text-decoration:none;box-shadow:0 3px 0 var(--ink);transition:transform .2s cubic-bezier(.3,1.6,.5,1),background-color .2s}
-.shop-jump a:hover{background:var(--sun);transform:translateY(-2px)}
+.shop-jump a{display:flex;align-items:center;min-height:44px;padding:.5em 1.1em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .98rem/1 var(--display);text-decoration:none;box-shadow:0 3px 0 var(--ink);transition:transform .2s cubic-bezier(.3,1.6,.5,1),background-color .2s}
+@media (hover:hover){.shop-jump a:hover{background:var(--sun);transform:translateY(-2px)}}
 .shop-block+.shop-block{margin-top:clamp(40px,6vw,72px);padding-top:clamp(40px,6vw,72px);border-top:3px dashed var(--line,#e6d6b8)}
 
 .first-time{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.4em .6em;max-width:760px;margin:0 auto 28px;padding:.7em 1.2em;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--ink);font-weight:700;text-align:center}
@@ -202,7 +204,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .photo-strip figure{margin:0;background:#fff;padding:7px 7px 9px;border:3px solid var(--ink);border-radius:14px;box-shadow:0 5px 0 rgba(58,36,22,.22);rotate:var(--r,0deg);transition:rotate .25s,transform .25s}
 .photo-strip li:nth-child(odd) figure{--r:-1.6deg}
 .photo-strip li:nth-child(even) figure{--r:1.4deg}
-.photo-strip figure:hover{rotate:0deg;transform:scale(1.03)}
+@media (hover:hover){.photo-strip figure:hover{rotate:0deg;transform:scale(1.03)}}
 .photo-strip img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:6px;background:#eee;cursor:zoom-in}
 .photo-strip figcaption{margin-top:6px;text-align:center;font:700 1.15rem/1.1 var(--hand);color:var(--ink-soft)}
 .season-pics li{flex:1 1 110px;max-width:170px}
@@ -290,7 +292,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
   100%{opacity:0;transform:rotate(var(--a)) translateY(calc(var(--d) * -1)) rotate(220deg) scale(1.3)}
 }
 @keyframes sunRing{0%{opacity:.95;transform:scale(.7)}100%{opacity:0;transform:scale(2.4)}}
-.sun:hover svg{filter:drop-shadow(0 0 16px rgba(255,200,40,.95)) drop-shadow(0 0 42px rgba(255,150,20,.65))}
+@media (hover:hover){.sun:hover svg{filter:drop-shadow(0 0 16px rgba(255,200,40,.95)) drop-shadow(0 0 42px rgba(255,150,20,.65))}}
 @media (hover:hover){
   .sun:hover svg{scale:1.16;animation:sunWobble 1.2s ease-in-out infinite}
   .sun:hover .sun-rays{animation:spin 70s linear infinite,sunPulse .8s ease-in-out infinite}
@@ -352,8 +354,8 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .ach-title{font:700 1.08rem/1.15 var(--display)}
 .ach-msg{font-size:.86rem;line-height:1.3;font-weight:600}
 .ach-msg a{color:inherit;font-weight:800}
-.ach-close{position:absolute;top:6px;right:8px;width:26px;height:26px;border:0;border-radius:50%;background:transparent;color:var(--ink);font:700 1.3rem/1 var(--display);cursor:pointer}
-.ach-close:hover{background:rgba(58,36,22,.1)}
+.ach-close{position:absolute;top:0;right:0;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:var(--ink);font:700 1.3rem/1 var(--display);cursor:pointer}
+@media (hover:hover){.ach-close:hover{background:rgba(58,36,22,.1)}}
 .ach.is-leaving{animation:achOut .38s ease-in forwards!important}
 .ach-strawberry{--a-bg:#fff0f2;--a-ring:#e5334b;--a-medal:#ffc9d2;animation:achBounce .8s cubic-bezier(.3,1.6,.5,1) both}
 .ach-blueberry{--a-bg:#eef0ff;--a-ring:#5b5fd6;--a-medal:#cfd3ff;animation:achRoll .85s cubic-bezier(.2,.9,.3,1.08) both}
@@ -392,7 +394,7 @@ html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animatio
 .to-top{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:55;width:52px;height:52px;display:grid;place-items:center;padding:0;border:3px solid var(--ink);border-radius:50%;background:var(--sun);color:var(--ink);box-shadow:0 4px 0 var(--ink);cursor:pointer;transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
 .to-top[hidden]{display:none}
 .to-top .ico{width:26px;height:26px;transform:rotate(180deg)}
-.to-top:hover{transform:translateY(-3px)}
+@media (hover:hover){.to-top:hover{transform:translateY(-3px)}}
 .to-top:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 @media (max-width:47.5em){.to-top{bottom:calc(84px + env(safe-area-inset-bottom,0px));width:46px;height:46px}}
 @media print{.to-top{display:none!important}}
@@ -400,14 +402,14 @@ html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animatio
 /* Social links (footer) and the "tag us" note by the photos */
 .social-links{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 0;padding:0;list-style:none}
 .social-links a{display:inline-flex;align-items:center;gap:.45em;padding:.5em 1em;border:2.5px solid rgba(255,255,255,.6);border-radius:999px;color:#fff;font:700 .95rem/1 var(--display);text-decoration:none;transition:background-color .2s,color .2s,transform .25s cubic-bezier(.3,1.6,.5,1)}
-.social-links a:hover{background:#fff;color:var(--ink);transform:translateY(-2px)}
+@media (hover:hover){.social-links a:hover{background:#fff;color:var(--ink);transform:translateY(-2px)}}
 .social-links .ico{width:1.15em;height:1.15em}
 .tag-us{display:flex;gap:12px;align-items:flex-start;max-width:40em;margin:20px auto 0;padding:.85em 1.1em;background:#fff;border:2.5px dashed var(--ink);border-radius:18px;font-weight:600;line-height:1.45}
 .flowers-copy .tag-us{margin:22px 0 0}
 .tag-us .ico{flex:none;width:1.5em;height:1.5em;margin-top:.1em;color:var(--red)}
 .tag-us a{color:var(--ink);font-weight:800}
 .tag-chip{padding:.05em .55em;background:var(--sun);border-radius:999px;text-decoration:none}
-.tag-chip:hover{background:#ffe066}
+@media (hover:hover){.tag-chip:hover{background:#ffe066}}
 
 @media (prefers-reduced-motion:reduce){
   .hero-cta .btn:hover,.hero-cta .btn.btn-white:hover{transform:none;animation:none}
@@ -426,7 +428,123 @@ html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animatio
 .hero-note a{padding-block:.55em;margin-block:-.55em}
 .chips .chip-new a{padding:.75em .85em .75em .6em;margin:-.75em -.85em -.75em -.6em}
 .footer-contact a{padding-block:.6em}
-.announce a{padding-block:.5em;margin-block:-.5em}
+.announce a{padding-block:.85em;margin-block:-.85em}
 /* Vietnamese season buttons: the long names wrap to two lines on phones; without the little picture they fit on one. Opaque, so the sun no longer shows through the last one. */
 .season-switch button{background:#fff}
 @media (max-width:25.6875em){html:lang(vi) .season-switch .ss-ico{display:none}html:lang(vi) .season-switch button{white-space:nowrap;min-height:26px}}
+
+/* The skip link waits above the page; at 150-200% text its box is taller than the 60px it was moved up by, so its bottom edge showed over the banner. */
+.skip-link{top:-6em}
+
+/* ---------------------------------------------------------------- large text and small screens
+   An em in a media query is the browser's own text size. So these rules wake up when the window is short or narrow *for its text*:
+   a 768 px laptop at 150% text is 32em tall (24em at 200%); a 360 px phone at 200% is 11em wide (normal phones are 20em or more).
+   At normal text size a laptop, a tablet and a phone never meet them. */
+@media (max-height:34em),(max-width:19.9em){
+  .announce{font-size:min(.95rem,19px);line-height:1.35;padding-block:6px}
+  :root,html:is([lang="es"],[lang="vi"]){--header-h:min(4rem,56px)}
+  .lang-btn{font-size:min(.92rem,17px)}
+  .brand-name{font-size:min(1.5rem,26px)}
+  .brand-sub{font-size:min(.8rem,11px);margin-top:3px}
+  .btn{white-space:normal;text-align:center;overflow-wrap:anywhere}
+}
+@media (max-height:34em){
+  .hero{padding-top:12px}
+  .hero h1{font-size:clamp(1.9rem,min(6.2vw,7vh),4.7rem)}
+  .hero-kicker{font-size:min(clamp(1.5rem,3vw,2.1rem),30px)}
+  .season-switch{margin-top:6px;margin-bottom:8px}
+  /* the buttons and the open-now badge come before the long line under the headline (looks only: the reading order is unchanged) */
+  .hero .hero-copy{display:flex;flex-direction:column}
+  .hero .hero-sub{order:9;font-size:min(1.02rem,20px);margin:.8em auto 1em}
+  .hero-note{margin-top:.5em}
+  .chips{margin-top:.7em}
+  .hero-cta{gap:10px}
+  .hero-cta .btn-lg{font-size:min(1.2rem,26px);padding:.6em 1.2em}
+  .ss-now{font-size:min(.6875rem,12px)}
+}
+@media (max-height:34em) and (max-width:47.5em){
+  body{padding-bottom:68px}
+  .action-bar{left:6px;right:6px;bottom:6px;padding:5px;gap:6px;border-radius:18px;box-shadow:0 3px 0 var(--ink)}
+  .action-bar .btn{font-size:min(.95rem,17px);padding:.5em .3em;min-height:44px}
+}
+@media (max-height:34em) and (max-width:19.9em){
+  .action-bar{grid-template-columns:repeat(3,auto)}
+  .action-bar .btn{overflow-wrap:normal;white-space:nowrap;font-size:min(.95rem,16px);padding:.5em .6em}
+  .action-bar .btn .ico{display:none}
+}
+@media (max-height:34em) and (max-width:73.75em){
+  .nav{gap:10px;padding:12px var(--gutter) 96px}
+  .nav ul,.nav .nav-more-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
+  .nav .nav-more{grid-column:1/-1}
+  .nav ul a,.nav .nav-more-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+  .nav-cta{font-size:1.05rem;padding:.6em}
+}
+@media (max-height:34em) and (max-width:83.125em){
+  html:is([lang="es"],[lang="vi"]) .nav{gap:10px;padding:12px var(--gutter) 96px}
+  html:is([lang="es"],[lang="vi"]) .nav ul,html:is([lang="es"],[lang="vi"]) .nav .nav-more-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
+  html:is([lang="es"],[lang="vi"]) .nav .nav-more{grid-column:1/-1}
+  html:is([lang="es"],[lang="vi"]) .nav ul a,html:is([lang="es"],[lang="vi"]) .nav .nav-more-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+  html:is([lang="es"],[lang="vi"]) .nav-cta{font-size:1.05rem;padding:.6em}
+}
+/* A phone at 200% text is only about 11em wide. Everything wraps instead of pushing the page sideways; the hero is trimmed so the Reserve button still shows. */
+@media (max-width:19.9em){
+  body{overflow-wrap:anywhere}
+  .announce{font-size:min(.95rem,14px);line-height:1.3;padding-block:5px}
+  .hero h1{font-size:min(2.3rem,8vw)}
+  .hero-kicker{font-size:min(clamp(1.5rem,3vw,2.1rem),20px)}
+  .hero-note{font-size:min(.92rem,14px);padding:.15em .7em}
+  .announce p{gap:.05em .5em}
+  .hero-live .live{font-size:min(.82rem,13px)}
+  .btn{font-size:min(1.0625rem,18px);padding:.6em .9em}
+  .btn-lg,.hero-cta .btn-lg{font-size:min(1.1rem,19px);padding:.4em 1em}
+  .hero-cta{gap:8px}
+  .season-switch{flex-wrap:wrap;gap:11px 5px}
+  .season-switch button{flex:1 1 40%;font-size:min(.82rem,15px);padding-block:.15em}
+  .ss-now{top:-11px;right:-2px;font-size:10px;padding:.05em .4em}
+  .steps-wrap{padding-left:64px}
+  .track{width:58px}
+  .track-road{left:18px}
+  .track-tractor{left:-6px;width:62px;height:42px;translate:0 calc(var(--p,0) * (100cqh - 52px))}
+  .step{padding-inline:14px}
+  .step-num{left:-62px;width:52px;height:52px}
+}
+/* the menu on a phone at 200%: two columns, so more than 6 of the 14 links show without scrolling */
+@media (max-height:34em) and (max-width:19.9em){
+  .nav ul,.nav .nav-more-list,html:is([lang="es"],[lang="vi"]) .nav ul,html:is([lang="es"],[lang="vi"]) .nav .nav-more-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nav ul a,.nav .nav-more-list a,html:is([lang="es"],[lang="vi"]) .nav ul a,html:is([lang="es"],[lang="vi"]) .nav .nav-more-list a{font-size:min(1.05rem,21px)!important;padding:.4em .5em!important;white-space:normal;display:flex;align-items:center;min-height:44px;height:100%;box-sizing:border-box}
+  .nav-cta,html:is([lang="es"],[lang="vi"]) .nav-cta{font-size:min(1.05rem,19px);padding:.5em}
+}
+
+/* ---------------------------------------------------------------- tap targets, 44px
+   Season buttons, filter pills and the header links keep their look: an invisible box (a pseudo-element, part of the link) is at least 44px tall and sits on the same centre line.
+   Footer lists have room to grow, so there the links simply get taller. Links inside a sentence are left alone. */
+@media screen{
+:is(.season-switch button,.fs-table thead button,.filter-btn,.shop-jump a,.first-time a,.nav ul a,.nav-more-btn,.who-list a){position:relative}
+:is(.season-switch button,.fs-table thead button,.filter-btn,.shop-jump a,.first-time a,.nav ul a,.nav-more-btn,.who-list a)::before{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+.hero-note a{padding-block:13px;margin-block:-13px}
+.announce a{padding-block:13px;margin-block:-13px}
+.btn{min-height:44px}
+.chips .chip-new a{padding-block:.95em;margin-block:-.95em}
+button.map-toggle{min-height:44px}
+.lang-btn{min-height:44px;min-width:44px;justify-content:center}
+.brand{min-height:44px}
+.footer-links{gap:0 20px}
+.footer-links a{display:flex;align-items:center;min-height:44px}
+.footer-contact a{padding-block:.65em}
+.social-links a,.social a{min-height:44px}
+.lang-links{gap:0 6px}
+.lang-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding-inline:.35em}
+.checklist{gap:0}
+.checklist label{padding-block:8.5px;margin-block:0}
+.nav .nav-more-list a{display:flex;align-items:center;min-height:44px}
+.lang-list button{min-height:44px}
+}
+/* The fixed bottom bar must not hide the link you tabbed to or jumped to: keep its height free at the bottom of the scroll area (the fixed 96px in features.css is too small once the text is bigger). */
+@media (max-width:47.5em){:root{scroll-padding-bottom:max(96px,calc(2.4rem + 40px))}}
+@media (max-height:34em) and (max-width:47.5em){:root{scroll-padding-bottom:84px}}
+/* A phone held sideways (about 360px tall): a fixed header and a fixed bar would be a third of the screen. The bar then sits in the page, after the footer, instead of floating. */
+@media (max-height:26em) and (max-height:420px) and (max-width:47.5em){
+  body{padding-bottom:0}
+  .action-bar{position:static;margin:12px 8px 8px}
+  :root{scroll-padding-bottom:0}
+}

@@ -6,8 +6,8 @@ import { run, open as openPage, ok, okSoon, until, txt } from './lib.mjs';
 await run('features', async ({ browser, base, errs }) => {
   const b = browser, BASE = base;
   // A page whose js/content.js (and farm-map-data.js) get extra settings appended, at a chosen moment in time (time: '' = real clock).
-  const open = (url, { time = '2026-10-01T15:00:00-04:00', extra = '', mapData = '', viewport, lang, routes, timezoneId } = {}) => openPage(b, BASE, url, errs, {
-    time: time || undefined, extra, viewport, lang, timezoneId,
+  const open = (url, { time = '2026-10-01T15:00:00-04:00', extra = '', mapData = '', viewport, lang, routes, timezoneId, reducedMotion } = {}) => openPage(b, BASE, url, errs, {
+    time: time || undefined, extra, viewport, lang, timezoneId, reducedMotion,
     routes: async (p) => { if (mapData) await p.route('**/js/farm-map-data.js', (r) => r.fulfill({ contentType: 'application/javascript', body: mapData })); if (routes) await routes(p); } });
 /* ---------------------------------------------------------- 1. countdown */
 {
@@ -20,6 +20,14 @@ await run('features', async ({ browser, base, errs }) => {
   ok('hero chip shows time left', !st.chipOff && /Next pizza reservations open in 5 days 1 hour|Next pizza reservations open in 5 days 2 hours/.test(st.chip), st.chip);
   await p.clock.fastForward(60000);
   ok('seconds tick', (await txt(p, '[data-rel-count] .rc[data-k="s"] b')) !== null);
+  await p.context().close();
+
+  // reduced motion: days, hours and minutes only, and nothing changes from second to second
+  p = await open('index.html', { reducedMotion: 'reduce' });
+  const calm = async () => p.evaluate(() => ({ tiles: [...document.querySelectorAll('[data-rel-count] .rc')].map((e) => e.dataset.k + e.querySelector('b').textContent), box: document.querySelector('[data-rel-box]').hidden }));
+  const c1 = await calm(); await p.clock.fastForward(5000); const c2 = await calm();
+  ok('reduced motion: the countdown has no seconds tile', !c1.box && c1.tiles.length === 3 && !c1.tiles.some((x) => x.startsWith('s')), JSON.stringify(c1));
+  ok('reduced motion: the numbers do not change from second to second', JSON.stringify(c1.tiles) === JSON.stringify(c2.tiles), JSON.stringify([c1.tiles, c2.tiles]));
   await p.context().close();
 
   // exact switch to "open" at 5:00 PM ET

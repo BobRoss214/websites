@@ -153,11 +153,11 @@ const NOISE = /fonts\.g|net::ERR|Failed to load resource|favicon/;
  * Opens a page and waits until the site's scripts have finished starting (window.WISE_ACRES.features exists).
  *   base      address of the site (from startSite())
  *   errs      array that collects page errors
- *   opts: viewport, locale, timezoneId, lang, time (a date string: the page clock starts there; default TODAY; false = the real clock), extra (JavaScript text appended to js/content.js),
+ *   opts: viewport, touch (true: a phone or tablet with a touch screen and no mouse: tap with page.touchscreen), locale, timezoneId, lang, time (a date string: the page clock starts there; default TODAY; false = the real clock), extra (JavaScript text appended to js/content.js),
  *         routes (async (page) => ... for extra page.route calls), query, ready (false: do not wait for the scripts)
  */
 export async function open(browser, base, url, errs, opts = {}) {
-  const ctx = await browser.newContext({ viewport: opts.viewport || { width: 1440, height: 900 }, locale: opts.locale || 'en-US', timezoneId: opts.timezoneId || 'America/New_York', acceptDownloads: true, deviceScaleFactor: opts.deviceScaleFactor || 1, reducedMotion: opts.reducedMotion || 'no-preference' });
+  const ctx = await browser.newContext({ viewport: opts.viewport || { width: 1440, height: 900 }, locale: opts.locale || 'en-US', timezoneId: opts.timezoneId || 'America/New_York', acceptDownloads: true, deviceScaleFactor: opts.deviceScaleFactor || 1, reducedMotion: opts.reducedMotion || 'no-preference', forcedColors: opts.forcedColors || 'none', hasTouch: !!opts.touch, isMobile: !!opts.touch });
   const p = await ctx.newPage();
   p.setDefaultTimeout(ms(20000));
   p.on('pageerror', (e) => errs.push(url + ' pageerror: ' + e.message));

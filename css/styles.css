@@ -74,40 +74,41 @@ a[href^="tel:"]{white-space:nowrap}
 
 /* ---------- Buttons ---------- */
 .btn{--bg:#fff;--fg:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:.5em;font:700 1.0625rem/1.1 var(--display);letter-spacing:.01em;padding:.8em 1.25em;border:3px solid var(--ink);border-radius:999px;background:var(--bg);color:var(--fg);text-decoration:none;box-shadow:0 4px 0 var(--ink);transition:transform .15s,box-shadow .15s,background-color .2s;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:center}
-.btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--ink)}
+@media (hover:hover){.btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 var(--ink)}}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 .btn .ico{transition:transform .2s}
-.btn:hover .ico{transform:translateX(3px)}
+@media (hover:hover){.btn:hover .ico{transform:translateX(3px)}}
 .btn-red{--bg:var(--red);--fg:#fff}
 .btn-sun{--bg:var(--sun)}
 .btn-green{--bg:var(--green);--fg:#fff}
 .btn-white{--bg:#fff}
 .btn-ghost{--bg:transparent;box-shadow:none}
-.btn-ghost:hover{--bg:#fff;box-shadow:0 4px 0 var(--ink)}
+@media (hover:hover){.btn-ghost:hover{--bg:#fff;box-shadow:0 4px 0 var(--ink)}}
 .btn-lg{font-size:1.2rem;padding:.9em 1.5em}
 .btn-sm{font-size:.98rem;padding:.65em 1.05em}
+.btn{min-height:44px}   /* a finger needs 44px: the small buttons were 43.6px */
 
 /* ---------- Announcement + header ---------- */
-.announce{background:var(--ink);color:#fff;text-align:center;font-size:.95rem;padding:9px var(--gutter)}
+.announce{background:var(--ink);color:#fff;text-align:center;font-size:.95rem;padding:9px var(--gutter) 10px}
 .announce p{margin:0;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.3em .6em}
 .announce a{color:var(--sun);font-weight:800;display:inline-flex;align-items:center;gap:.3em}
 .announce .ico{width:1.1em;height:1.1em}
 
 .site-header{position:sticky;top:0;z-index:50;background:rgba(255,248,230,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:3px solid var(--ink)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;height:var(--header-h)}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.brand{display:flex;align-items:center;gap:10px;min-height:44px;text-decoration:none;color:var(--ink)}
 .brand-berry{width:38px;height:42px;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
-.brand:hover .brand-berry{transform:rotate(-12deg) scale(1.1)}
+@media (hover:hover){.brand:hover .brand-berry{transform:rotate(-12deg) scale(1.1)}}
 .brand-text{display:flex;flex-direction:column;line-height:1}
 .brand-name{font:700 1.5rem/1 var(--display);letter-spacing:.01em}
-.brand-sub{font:600 .8rem/1 var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--red);margin-top:4px}
+.brand-sub{font:600 .8rem/1 var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--red-deep);margin-top:4px}
 .brand-light{color:#fff}
 .brand-light .brand-sub{color:var(--sun)}
 
 .nav{display:flex;align-items:center;gap:24px}
 .nav ul{display:flex;gap:4px}
 .nav ul a{position:relative;display:block;padding:.5em .8em;font:600 1.02rem/1 var(--display);text-decoration:none;border-radius:999px;transition:background-color .2s}
-.nav ul a:hover{background:#fff}
+@media (hover:hover){.nav ul a:hover{background:#fff}}
 .nav ul a[aria-current]{background:var(--sun);box-shadow:inset 0 0 0 2.5px var(--ink)}
 .menu-toggle{display:none;width:48px;height:48px;padding:0;border:3px solid var(--ink);border-radius:16px;background:#fff;color:var(--ink);box-shadow:0 3px 0 var(--ink);cursor:pointer;place-items:center}
 .menu-toggle .ico{width:26px;height:26px}
@@ -154,7 +155,7 @@ svg.layer-fore{overflow:visible}
 .sway.s3{animation-duration:4.8s;animation-delay:-3.4s}
 .berry-hit{pointer-events:auto;cursor:pointer}
 .berry{transform-box:fill-box;transform-origin:var(--o,50% 0);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
-.berry-hit:hover .berry{transform:scale(1.28) rotate(-6deg)}
+@media (hover:hover){.berry-hit:hover .berry{transform:scale(1.28) rotate(-6deg)}}
 .berry.is-picked{animation:pluck .45s ease-in forwards}
 .berry.is-regrowing{animation:regrow .8s cubic-bezier(.3,1.6,.5,1) both}
 
@@ -194,7 +195,7 @@ svg.layer-fore{overflow:visible}
 .fact-ico .ico{width:22px;height:22px}
 .fact-label{display:block;font:600 .78rem/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase;color:#6b4a00}
 .facts a{font-weight:800;line-height:1.3;text-decoration-color:rgba(58,36,22,.35)}
-.facts a:hover{text-decoration-color:var(--ink)}
+@media (hover:hover){.facts a:hover{text-decoration-color:var(--ink)}}
 
 /* ==========================================================================
    Sections
@@ -230,9 +231,9 @@ svg.layer-fore{overflow:visible}
 .farm-head{margin-top:clamp(64px,9vw,104px)}
 .cards{display:grid;grid-template-columns:repeat(var(--fcols,4),1fr);gap:22px}
 .card{position:relative;padding:22px 20px 24px;border:3px solid var(--ink);border-radius:var(--radius);box-shadow:var(--shadow);background:var(--bg,#fff);transition:transform .25s cubic-bezier(.3,1.6,.5,1),box-shadow .25s}
-.card:hover{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 12px 0 var(--ink)}
+@media (hover:hover){.card:hover{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 12px 0 var(--ink)}}
 .card-art{width:auto;height:88px;margin-bottom:14px;transition:transform .35s cubic-bezier(.3,1.7,.5,1);transform-origin:50% 90%}
-.card:hover .card-art{transform:rotate(-8deg) scale(1.12)}
+@media (hover:hover){.card:hover .card-art{transform:rotate(-8deg) scale(1.12)}}
 .card h3{font-size:1.32rem;margin-bottom:.3em}
 .card p{margin:0;font-weight:600;font-size:.98rem;line-height:1.5}
 .tag{position:absolute;top:14px;right:14px;background:var(--ink);color:#fff;font:600 .72rem/1 var(--display);letter-spacing:.1em;text-transform:uppercase;padding:.45em .8em;border-radius:999px}
@@ -245,7 +246,7 @@ svg.layer-fore{overflow:visible}
 .fs-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
 .fs-tab{position:relative}
 .fs-btn{display:flex;align-items:center;gap:10px;min-height:54px;padding:6px 22px 6px 14px;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:999px;font:700 1.08rem/1 var(--display);cursor:pointer;box-shadow:0 4px 0 var(--ink);transition:transform .2s cubic-bezier(.3,1.6,.5,1),background-color .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
-.fs-btn:hover{transform:translateY(-2px)}
+@media (hover:hover){.fs-btn:hover{transform:translateY(-2px)}}
 .fs-btn[aria-pressed="true"]{background:var(--sun);transform:translateY(-3px);box-shadow:0 7px 0 var(--ink)}
 .fs-art{width:auto;height:36px;transition:transform .3s cubic-bezier(.3,1.7,.5,1);transform-origin:50% 90%}
 .fs-btn[aria-pressed="true"] .fs-art{transform:rotate(-10deg) scale(1.15)}
@@ -266,7 +267,7 @@ svg.layer-fore{overflow:visible}
 .fs-table tbody th{position:sticky;left:0;z-index:1;text-align:left;background:#fff;font:600 1rem/1.25 var(--display);min-width:9.5em;box-shadow:2px 0 0 #f0e6d2}
 .fs-table thead th,.fs-table thead td{border-bottom:3px solid var(--ink);background:var(--cream)}
 .fs-table thead button{font:700 1rem/1 var(--display);color:var(--ink);background:none;border:0;padding:.35em .6em;border-radius:999px;cursor:pointer}
-.fs-table thead button:hover{background:#fff}
+@media (hover:hover){.fs-table thead button:hover{background:#fff}}
 .fs-table [data-col].is-sel{background:#fff4c9}
 .fs-table thead [data-col].is-sel{background:var(--sun)}
 .fs-yes span[aria-hidden]{color:var(--green-deep);font-size:1.25rem;font-weight:800}
@@ -286,7 +287,8 @@ svg.layer-fore{overflow:visible}
 .goat-btn{position:relative;width:150px;height:134px;padding:0;border:0;background:none;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .goat{position:absolute;left:15px;bottom:14px;width:120px;height:112px;transform:translateY(70%);transition:transform .7s cubic-bezier(.3,1.5,.5,1) .25s;transform-origin:50% 100%}
 .goat-nook.in .goat{transform:translateY(0)}
-.goat-btn:hover .goat,.goat-btn:focus-visible .goat{transform:translateY(-4px) rotate(-4deg)}
+.goat-btn:focus-visible .goat{transform:translateY(-4px) rotate(-4deg)}
+@media (hover:hover){.goat-btn:hover .goat{transform:translateY(-4px) rotate(-4deg)}}
 .goat-btn.baa .goat{animation:wiggle .5s ease}
 .goat-hill{position:absolute;left:0;right:0;bottom:0;height:34px;background:var(--leaf);border:3px solid var(--ink);border-radius:60% 60% 0 0/100% 100% 0 0}
 .goat-bubble{position:relative;margin:0 0 56px;background:#fff;border:3px solid var(--ink);border-radius:20px;padding:.6em 1em;font:700 1.05rem/1.2 var(--display);max-width:230px}
@@ -296,7 +298,7 @@ svg.layer-fore{overflow:visible}
 .seasons{background:linear-gradient(#d6f0fc,#eaf8ff 60%,#fff8e6);border-block:3px solid var(--ink)}
 .season-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
 .season-tab{position:relative;display:flex;align-items:center;gap:14px;text-align:left;padding:12px 18px;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:22px;font:inherit;cursor:pointer;transition:transform .2s cubic-bezier(.3,1.6,.5,1),background-color .2s,box-shadow .2s;box-shadow:0 4px 0 var(--ink);-webkit-tap-highlight-color:transparent}
-.season-tab:hover{transform:translateY(-2px)}
+@media (hover:hover){.season-tab:hover{transform:translateY(-2px)}}
 .season-tab[aria-selected="true"]{background:var(--sun);transform:translateY(-4px);box-shadow:0 8px 0 var(--ink)}
 .tab-art{flex:none;width:auto;height:52px;aspect-ratio:1;transition:transform .4s cubic-bezier(.3,1.7,.5,1)}
 .season-tab[aria-selected="true"] .tab-art{transform:rotate(-10deg) scale(1.15)}
@@ -342,7 +344,7 @@ svg.layer-fore{overflow:visible}
 .bouquet-picker{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:14px}
 .bq-flower{width:64px;height:64px;padding:8px;display:grid;place-items:center;background:var(--cream);border:3px solid var(--ink);border-radius:50%;cursor:pointer;box-shadow:0 4px 0 var(--ink);transition:transform .2s cubic-bezier(.3,1.7,.5,1),box-shadow .2s;-webkit-tap-highlight-color:transparent}
 .bq-flower svg{width:100%;height:100%}
-.bq-flower:hover{transform:translateY(-3px) rotate(-8deg) scale(1.08)}
+@media (hover:hover){.bq-flower:hover{transform:translateY(-3px) rotate(-8deg) scale(1.08)}}
 .bq-flower:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 .bq-flower:disabled{opacity:.45;cursor:not-allowed;transform:none}
 
@@ -351,7 +353,7 @@ svg.layer-fore{overflow:visible}
 .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
 .gallery-grid li{margin:0}
 .gallery-grid button{display:block;width:100%;padding:0;border:3px solid var(--ink);border-radius:20px;overflow:hidden;background:#fff;cursor:zoom-in;box-shadow:0 5px 0 var(--ink);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
-.gallery-grid button:hover{transform:translateY(-4px) rotate(-.8deg)}
+@media (hover:hover){.gallery-grid button:hover{transform:translateY(-4px) rotate(-.8deg)}}
 .gallery-grid img{width:100%;aspect-ratio:4/3;object-fit:cover}
 .lightbox{width:min(960px,94vw);max-height:92vh;padding:12px;border:3px solid var(--ink);border-radius:24px;background:var(--paper);color:var(--ink)}
 .lightbox::backdrop{background:rgba(58,36,22,.72)}
@@ -412,7 +414,7 @@ svg.layer-fore{overflow:visible}
 .loc-note{color:var(--ink-soft);font-weight:600;font-size:.98rem}
 .loc-card .card-actions{flex-direction:column;align-items:stretch}
 .social a{display:inline-flex;align-items:center;gap:.55em;font-weight:800;text-decoration:none;padding:.45em 0;word-break:break-word}
-.social a:hover{text-decoration:underline}
+@media (hover:hover){.social a:hover{text-decoration:underline}}
 .social .ico{color:var(--red);width:1.3em;height:1.3em}
 .social{display:flex;flex-direction:column}
 
@@ -423,7 +425,7 @@ svg.layer-fore{overflow:visible}
 .footer-brand p{margin:14px 0 0;max-width:26em;color:#e8d7bb;font-weight:600}
 .footer-links{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
 .footer-links a,.footer-contact a{text-decoration:none;font-weight:700}
-.footer-links a:hover,.footer-contact a:hover{color:var(--sun);text-decoration:underline}
+@media (hover:hover){.footer-links a:hover,.footer-contact a:hover{color:var(--sun);text-decoration:underline}}
 .footer-contact{line-height:1.8;font-weight:600}
 .copyright{border-top:2px dashed rgba(246,233,211,.25);padding-block:18px 26px;margin-top:0;font-size:.9rem;color:#d3c1a3}
 
@@ -547,6 +549,7 @@ svg.layer-fore{overflow:visible}
 
 @media (prefers-reduced-motion:reduce){
   .card.fs-in,.fs-note:not([hidden]){animation:none}
+  .plus-one{animation:none;opacity:1}   /* the "+1" next to a picked berry stays put for a moment instead of flying up and vanishing in a blink */
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.001ms!important;transition-delay:0s!important}
   .grow,.crop{transform:none}

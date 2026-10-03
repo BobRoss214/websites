@@ -13,6 +13,7 @@
 .rel-eyebrow{margin:0 0 .55em;font:700 .85rem/1.25 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--red-deep)}
 .rel-box[data-mode="open"] .rel-eyebrow{color:var(--green-deep)}
 .rel-count{display:grid;grid-template-columns:repeat(4,minmax(0,76px));gap:8px}
+.rel-count-calm{grid-template-columns:repeat(3,minmax(0,76px))}
 .rc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px 6px;background:var(--sun);border:3px solid var(--ink);border-radius:16px;box-shadow:0 3px 0 var(--ink);min-width:0}
 .rc b{font:700 1.9rem/1 var(--display);font-variant-numeric:tabular-nums}
 .rc i{max-width:100%;font:700 .6875rem/1.2 var(--display);font-style:normal;letter-spacing:.05em;text-transform:uppercase;text-align:center;overflow-wrap:anywhere}
@@ -24,6 +25,7 @@
 @media (max-width:47.5em){
   .rel-box{grid-template-columns:1fr}
   .rel-count{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .rel-count-calm{grid-template-columns:repeat(3,minmax(0,1fr))}
   .rc b{font-size:1.6rem}
   .remind-menu{left:0;right:0;min-width:0}
 }
@@ -98,7 +100,7 @@
 .su-chip{position:relative;display:inline-flex;cursor:pointer}
 .su-chip input{position:absolute;inset:0;z-index:1;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
 .su-chip span{display:inline-flex;align-items:center;gap:.4em;padding:.35em .9em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .92rem/1.2 var(--display);transition:background-color .15s,color .15s,transform .15s}
-.su-chip:hover span{transform:translateY(-1px)}
+@media (hover:hover){.su-chip:hover span{transform:translateY(-1px)}}
 .su-chip input:checked+span{background:var(--ink);color:#fff}
 .su-chip input:checked+span::before{content:"\2713";font-weight:800}
 .su-chip input:focus-visible+span{outline:4px solid var(--focus);outline-offset:3px}
@@ -120,7 +122,7 @@
 .press h3{margin-bottom:.8em;font:700 .85rem/1.2 var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
 .press-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
 .press-list a{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:baseline;gap:4px 14px;padding:.75em 1.1em;background:#fff;border:2.5px solid var(--ink);border-radius:18px;text-align:left;text-decoration:none;transition:transform .15s,box-shadow .15s}
-.press-list a:hover{transform:translateY(-2px);box-shadow:0 4px 0 var(--ink)}
+@media (hover:hover){.press-list a:hover{transform:translateY(-2px);box-shadow:0 4px 0 var(--ink)}}
 .press-name{font:700 1rem/1.2 var(--display);color:var(--red-deep);white-space:nowrap}
 .press-title{font-weight:700;line-height:1.35}
 .press-year{font:700 .9rem/1 var(--display);color:var(--ink-soft)}
@@ -151,18 +153,21 @@
 .map-wrap{overflow:hidden;background:#2b6a33;border:3px solid var(--ink);border-radius:26px;box-shadow:0 6px 0 var(--ink)}
 .map-svg{display:block;width:100%;height:auto}
 .map-item{cursor:pointer;outline:none}
-.map-item:hover .shape{filter:brightness(1.07)}
+@media (hover:hover){.map-item:hover .shape{filter:brightness(1.07)}}
 .map-item.is-active .shape{stroke:#ffc928;stroke-width:3.4;filter:drop-shadow(0 0 3px #ffc928)}
 .mp-icon{transform-box:fill-box;transform-origin:50% 100%}
-.map-item:hover .mp-icon{animation:mpHop .5s ease-out}
+@media (hover:hover){.map-item:hover .mp-icon{animation:mpHop .5s ease-out}}
 .mp-ring{opacity:0;transition:opacity .2s}
 .map-item.is-active .mp-ring{opacity:1}
 .map-item.is-active .mp-icon{animation:mpBounce 1.1s ease-in-out 3}   /* a few bounces, not forever: a looping animation repaints the whole map every frame */
 .mp-flame{transform-box:fill-box;transform-origin:50% 100%}
 /* The flames, ghosts and bats only move while you point at / pick them (an endless loop repaints the whole map every frame and makes the page slow) */
-.map-item:hover .mp-flame,.map-item.is-active .mp-flame{animation:mpFlame .7s ease-in-out 8 alternate}
-.map-item:hover .mp-ghost,.map-item.is-active .mp-ghost{animation:mpFloat 3.2s ease-in-out 2}
-.map-item:hover .mp-bat,.map-item.is-active .mp-bat{animation:mpFloat 2.2s ease-in-out 3 reverse}
+.map-item.is-active .mp-flame{animation:mpFlame .7s ease-in-out 8 alternate}
+@media (hover:hover){.map-item:hover .mp-flame{animation:mpFlame .7s ease-in-out 8 alternate}}
+.map-item.is-active .mp-ghost{animation:mpFloat 3.2s ease-in-out 2}
+@media (hover:hover){.map-item:hover .mp-ghost{animation:mpFloat 3.2s ease-in-out 2}}
+.map-item.is-active .mp-bat{animation:mpFloat 2.2s ease-in-out 3 reverse}
+@media (hover:hover){.map-item:hover .mp-bat{animation:mpFloat 2.2s ease-in-out 3 reverse}}
 .mp-label,.map-note{pointer-events:none;transition:opacity .2s}
 .mp-label.is-quiet{opacity:0}
 .mp-label.is-quiet.is-active,.mp-label.is-active{opacity:1}
@@ -181,7 +186,7 @@
 .map-detail:empty{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;box-shadow:none;overflow:hidden;clip:rect(0 0 0 0)}
 .mi{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#f1f6e2;border:2px solid var(--ink)}
 .mi svg{width:30px;height:30px;overflow:visible}
-.map-toggle{justify-self:start;display:inline-flex;align-items:center;gap:.5em;min-height:40px;padding:0 1em;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:999px;font:700 .92rem/1 var(--display);cursor:pointer}
+.map-toggle{justify-self:start;display:inline-flex;align-items:center;gap:.5em;min-height:44px;padding:0 1em;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:999px;font:700 .92rem/1 var(--display);cursor:pointer}
 .map-toggle::before{content:"";width:.9em;height:.9em;border:2.5px solid var(--ink);border-radius:5px;background:#fff}
 .map-toggle[aria-pressed="true"]{background:var(--sun)}
 .map-toggle[aria-pressed="true"]::before{background:var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5.4l2 2 4-4.4' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat}
@@ -190,7 +195,7 @@
 .map-legend ol{display:grid;gap:4px;margin:0;padding:0;list-style:none}
 .map-legend button{display:flex;align-items:center;gap:10px;width:100%;padding:.25em .6em .25em .3em;background:#fff;border:2.5px solid transparent;border-radius:14px;color:var(--ink);font:700 1rem/1.25 var(--body);text-align:left;cursor:pointer}
 .map-legend .mi{width:38px;height:38px;border-width:0;background:#f1f6e2}
-.map-legend button:hover{border-color:var(--ink)}
+@media (hover:hover){.map-legend button:hover{border-color:var(--ink)}}
 .map-legend button[aria-pressed="true"]{background:var(--sun);border-color:var(--ink)}
 .map-legend button[aria-pressed="true"] .mi{background:#fff}
 .map-demo{margin:0;padding:.6em .9em;background:#fff;border:3px dashed var(--red-deep);border-radius:14px;font-weight:800;color:var(--red-deep)}
@@ -231,9 +236,13 @@
 }
 @media (max-width:24em){
   .rel-count{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rel-count-calm{grid-template-columns:repeat(3,minmax(0,1fr))}
   .rc{flex-direction:row;justify-content:center;gap:.4em;padding:8px 4px}
   .rc b{font-size:1.5rem}
   .rc i{font-size:.75rem;letter-spacing:.01em}
+  .rel-count-calm .rc{flex-direction:column;gap:3px;padding:8px 1px 6px}
+  .rel-count-calm .rc b{font-size:1.6rem}
+  .rel-count-calm .rc i{font-size:.6875rem;letter-spacing:0}
 }
 
 /* 2. "Spots left" cards: button drops under the labels on narrow phones so the day name keeps its width */
@@ -304,7 +313,7 @@
 }
 
 /* The "say hi to a farm friend" button sits next to the pick button; it is round, so the picker keeps its size. */
-.npc-btn{width:38px;height:38px;min-height:0;padding:0;margin-left:6px;border-radius:50%;vertical-align:middle;display:inline-grid;place-items:center}
+.npc-btn{width:44px;height:44px;min-height:0;padding:0;margin-left:6px;border-radius:50%;vertical-align:middle;display:inline-grid;place-items:center}
 .npc-btn[hidden]{display:none}
 .npc-btn .ico{width:22px;height:22px}
 
@@ -334,7 +343,7 @@
   .nav ul{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
   .nav-more,.nav .nav-more-list{display:contents}
   .nav ul a,.nav .nav-more-list a{padding:.45em .75em!important;font-size:1rem!important;border:0;box-shadow:none;background:none;border-radius:999px}
-  .nav ul a:hover,.nav .nav-more-list a:hover{background:#fff}
+  @media (hover:hover){.nav ul a:hover,.nav .nav-more-list a:hover{background:#fff}}
   .nav-cta{padding:.55em 1.1em;font-size:1rem}
 
   .fs-note[hidden]{display:block!important;margin-top:14px}
@@ -398,3 +407,42 @@
 .drive-result .btn{margin-top:.8em}
 .drive-result[data-kind="wait"]{border-style:dashed}
 @media print{.drive-form{display:none}}
+
+/* The farm map: tapping a picture fills the card under the map, which is below the screen on a phone. Keep the card in view, above the bottom bar,
+   without covering taps (it only shows words). The card stays in the normal flow once the screen has scrolled down to it. */
+@media (max-width:51.25em){
+  .map-layout{display:block}
+  .map-side{display:contents}
+  .map-side>.map-detail,.map-side>.map-toggle,.map-side>.map-legend,.map-side>.map-demo{margin-top:14px}
+  .map-side>.map-detail:not(:empty){position:sticky;bottom:16px;z-index:5;padding-right:64px;pointer-events:none}   /* the round "back to top" button sits over the right end */
+}
+@media (max-width:47.5em){.map-side>.map-detail:not(:empty){bottom:calc(88px + env(safe-area-inset-bottom,0px))}}
+
+/* A phone turned sideways (640x360): the sticky header and the fixed bottom bar would take 40% of the screen. The menu still has Reserve. */
+@media (max-width:47.5em) and (max-height:30em) and (orientation:landscape){
+  .action-bar{display:none}
+  body{padding-bottom:0}
+  .to-top{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+}
+
+/* Windows High Contrast (forced colours): backgrounds, shadows and gradients are dropped. A tab, filter, season, language or drive choice that is
+   shown as "chosen" only by a yellow background, a shadow or a gradient dot would look the same as the others. Highlight / HighlightText (the
+   system's "selected" pair) mark the chosen one, as the farm-season buttons above already do. Kept at the end of the last style sheet so it wins. */
+@media (forced-colors:active){
+  .season-tab[aria-selected="true"],.group-tab[aria-selected="true"],.filter-btn[aria-pressed="true"],.season-switch button[aria-checked="true"],
+  .lang-list button[aria-checked="true"],.lang-link[aria-pressed="true"],.map-toggle[aria-pressed="true"],.nav ul a[aria-current],.nav-more-btn[aria-current]{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}
+  .season-tab[aria-selected="true"] :is(.tab-name,.tab-crop),.group-tab[aria-selected="true"] :is(.tab-name,.tab-crop),.season-switch button[aria-checked="true"] .ss-name{color:HighlightText}
+  .drive-opt input:checked+span{border-color:Highlight;outline:2px solid Highlight;outline-offset:-1px}
+  .drive-opt input:checked+span::before{background:Highlight}
+}
+
+/* "Reduce transparency": the see-through header (it blurs the page behind it) and the white chips over the pictures become solid. */
+@media (prefers-reduced-transparency:reduce){
+  .site-header{background:var(--cream);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .chips li,.hero-note,.season-switch button{background:#fff}
+}
+
+/* "More contrast": the softer text colour and the red and green used for small text and buttons get darker (7:1 or better on cream and white). */
+@media (prefers-contrast:more){
+  :root{--ink-soft:#4a3322;--red:#ab1128;--red-deep:#a30f27;--green:#17602f;--green-deep:#145429}
+}

@@ -211,9 +211,12 @@
   }
 
   let relBuilt = false, relKey = '', chipKey = '';   // what the texts were last written for, so they are only rewritten when it changes
+  // With "reduce motion" there is no seconds tile: a number that changes every second is movement too. Days, hours and minutes change once a minute.
+  const calmCount = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   function buildCount(box) {
     const host = $('[data-rel-count]', box);
-    host.innerHTML = ['d', 'h', 'm', 's'].map((k) => '<span class="rc" data-k="' + k + '"><b>0</b><i></i></span>').join('');
+    host.classList.toggle('rel-count-calm', calmCount);
+    host.innerHTML = (calmCount ? ['d', 'h', 'm'] : ['d', 'h', 'm', 's']).map((k) => '<span class="rc" data-k="' + k + '"><b>0</b><i></i></span>').join('');
     host._minute = undefined;   // a language switch must re-word the spoken time at once
     relBuilt = true; relKey = ''; chipKey = '';
   }
