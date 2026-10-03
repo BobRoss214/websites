@@ -3105,9 +3105,10 @@
  {
   "id": "medical-aid-for-palestinians",
   "evidence": [
-   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1045315"
+   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1045315",
+   "https://www.map.org.uk/about-us/"
   ],
-  "note": "official register record"
+  "note": "official register record; website changed to map.org.uk, the charity's own site shown by a web search"
  },
  {
   "id": "cafod",
@@ -5864,13 +5865,6 @@
   "id": "wooden-spoon-society",
   "evidence": [
    "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/326691"
-  ],
-  "note": "official register record"
- },
- {
-  "id": "peaceful-change-initiative",
-  "evidence": [
-   "https://register-of-charities.charitycommission.gov.uk/charity-search/-/charity-details/1162997"
   ],
   "note": "official register record"
  },

@@ -1,8 +1,8 @@
 # What was left out of the roster, and what to check
 
-The roster is at 1,183 charities (see the README, "Charity list"). This note is about what was **not** added.
+The roster is at 1,182 charities (see the README, "Charity list"). This note is about what was **not** added.
 
-## How the last 661 were chosen
+## How the last 660 were chosen
 They come from two official registers, not from web searches:
 
 - **England and Wales Charity Commission**: registered charities that report working overseas, income at least about GBP 120,000.
@@ -33,3 +33,7 @@ half were left out. The reasons, in short:
 - A handful of entries lean on the reviewer's general knowledge of the charity for a cause tag or a town; the sources file says which.
 - `faith: true` is set where a register lists "advancing religion" or the activities are plainly faith-based; review it if your platform has rules about faith-based giving.
 - The roster has no European (non-UK) charities: the `where` vocabulary has no Europe value, so work in Europe is only mentioned in the description.
+
+## Removed after being added
+
+- Peaceful Change Initiative (UK): its own website says it closed at the end of 2025 and the site is now an archive, so it was removed.
