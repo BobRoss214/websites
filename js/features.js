@@ -616,11 +616,11 @@
   const ROUTE_URL = 'https://router.project-osrm.org/route/v1/driving/';
   let driveShow = null;   // draws the answer again when the language changes
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  async function getJson(url, ms) {
+  async function getJson(url, ms, soft) {   // soft: an answer with HTTP status 400 is still read (OSRM sends 400 with code NoRoute or NoSegment)
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
     try {
       const res = await fetch(url, { signal: ctl.signal, credentials: 'omit', referrerPolicy: 'strict-origin-when-cross-origin' });
-      if (!res.ok) throw new Error('http ' + res.status);
+      if (!res.ok && !(soft && res.status === 400)) throw new Error('http ' + res.status);
       return await res.json();
     } finally { clearTimeout(timer); }
   }
@@ -632,7 +632,7 @@
     return goodPoint(p) ? p : null;
   }
   async function driveBetween(a, b) {
-    const data = await getJson(ROUTE_URL + a.lon.toFixed(6) + ',' + a.lat.toFixed(6) + ';' + b.lon.toFixed(6) + ',' + b.lat.toFixed(6) + '?overview=false&alternatives=false&steps=false', 12000);
+    const data = await getJson(ROUTE_URL + a.lon.toFixed(6) + ',' + a.lat.toFixed(6) + ';' + b.lon.toFixed(6) + ',' + b.lat.toFixed(6) + '?overview=false&alternatives=false&steps=false', 12000, true);
     const r = data && data.code === 'Ok' && Array.isArray(data.routes) && data.routes[0];
     return r && Number.isFinite(r.distance) && Number.isFinite(r.duration) && r.distance >= 0 ? { miles: r.distance / 1609.344, minutes: r.duration / 60 } : null;
   }
@@ -672,8 +672,12 @@
         add('p', t('{distance}, about {time} by car', { distance: fmtMiles(state.miles), time: fmtDriveTime(state.minutes) }), 'drive-big');
         if (state.place) { const p = add('p', t('We looked up: {place}', { place: Array.from(state.place).slice(0, 140).join('') }), 'fine'); if (lang() !== 'en') p.setAttribute('lang', 'en'); }
         const note = add('p', t('To the farm at 4701 Hartis Rd. Usual road speed with no traffic. Rush hour can add more.') + ' ', 'fine');
-        const cr = doc.createElement('a'); cr.href = 'https://www.openstreetmap.org/copyright'; cr.target = '_blank'; cr.rel = 'noopener'; cr.textContent = '\u00a9 OpenStreetMap contributors'; cr.setAttribute('lang', 'en');
-        note.appendChild(cr);
+        // Credits the free services ask for: OpenStreetMap, the routing source (OSRM) and a "fix the map" link. They stay in English.
+        [['https://www.openstreetmap.org/copyright', '\u00a9 OpenStreetMap contributors'], ['https://project-osrm.org/', 'Routing: OSRM'], ['https://www.openstreetmap.org/fixthemap', 'Fix the map']].forEach(([href, text], i) => {
+          if (i) note.appendChild(doc.createTextNode(' \u00b7 '));
+          const cr = doc.createElement('a'); cr.href = href; cr.target = '_blank'; cr.rel = 'noopener'; cr.textContent = text; cr.setAttribute('lang', 'en');
+          note.appendChild(cr);
+        });
       } else add('p', t(MSG[state.kind] || MSG.down), state.kind === 'wait' ? 'drive-wait' : 'drive-err');
       if (state.from && state.kind !== 'wait') {
         const a = doc.createElement('a');

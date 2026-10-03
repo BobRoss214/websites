@@ -1,6 +1,6 @@
 # Launch checklist: putting the Wise Acres website online
 
-For the farm owner, and for anyone helping, who has never put a website online. Plain English, in order. Written on 2 October 2026 for the files in this folder.
+For the farm owner, and for anyone helping, who has never put a website online. Plain English, in order. Written on 2 October 2026 for the files in this folder. Updated on 3 October 2026 for the Drive time box (steps 3.5 and 3.13, decision D11 and the tests in section 5).
 
 **Not part of the upload.** This file lives in `docs/`, which stays on your computer (see section 2).
 
@@ -37,7 +37,7 @@ The site is plain files. There is no database and no build step, so any host tha
 
 | | **Cloudflare Pages** (recommended) | **Netlify** (second choice) | **GitHub Pages** (not recommended) |
 |---|---|---|---|
-| **Cost for this site** | Free plan. Requests for static files (which is all this site is) are "free and unlimited". Limits that matter: 20,000 files per site, 25 MiB per file; this site has 99 files, the biggest is 0.44 MB. **[read]** | Free plan with a monthly allowance of "credits". The pages say that when you reach the limit "projects pause until the next billing cycle". Reported prices: 300 credits a month on Free, 20 credits for each GB sent to visitors, 15 credits for each upload that goes live. **[not opened]** | Free. Soft limits: site up to 1 GB, 100 GB of traffic a month, 10 builds an hour. **[read]** But see the business-use rule in the last row. |
+| **Cost for this site** | Free plan. Requests for static files (which is all this site is) are "free and unlimited". Limits that matter: 20,000 files per site, 25 MiB per file; this site has 112 files, the biggest is 0.44 MB. **[read]** | Free plan with a monthly allowance of "credits". The pages say that when you reach the limit "projects pause until the next billing cycle". Reported prices: 300 credits a month on Free, 20 credits for each GB sent to visitors, 15 credits for each upload that goes live. **[not opened]** | Free. Soft limits: site up to 1 GB, 100 GB of traffic a month, 10 builds an hour. **[read]** But see the business-use rule in the last row. |
 | **Custom domain: steps** | In the project: Custom domains, Set up a domain. Then at your registrar add a `CNAME` record for `www` pointing at `<project>.pages.dev`. For the bare domain (`wiseacresorganic.com` without `www`) the whole domain must be moved to Cloudflare's nameservers. **[read]** | Add the domain on the site's page, then at your registrar a `CNAME` for `www` pointing at `<site>.netlify.app`. For the bare domain: an `ALIAS`/`ANAME` record to `apex-loadbalancer.netlify.com`, or an `A` record to `75.2.60.5`. Netlify "strongly recommend[s]" `www` as the main address. **[not opened]** | Add the domain in the repository's Settings, Pages. Then `CNAME` for `www` pointing at `<user>.github.io`; for the bare domain four `A` records (`185.199.108.153` to `185.199.111.153`). **[read]** Needs a GitHub account and a repository that holds the site. |
 | **HTTPS (the padlock)** | The pages read mention certificates only in a note about CAA records, so confirm by opening `https://` once the domain says Active. **[read]** | "We will automatically provision a certificate with Let's Encrypt." **[not opened]** | "All GitHub Pages sites, including sites that are correctly configured with a custom domain, support HTTPS". You tick "Enforce HTTPS". **[read]** |
 | **`_headers` works** (security headers, the tested Content-Security-Policy) | Yes. File `_headers` in the top folder; up to 100 rules and 2,000 characters a line. Our file was applied by Cloudflare's own test server. **[read] [tested here]** | Yes, if `_headers` is in the folder you publish. **[not opened]** (Netlify's own Content-Security-Policy page shows an example.) | No. Nothing in the GitHub pages read mentions it, and GitHub community threads say custom headers cannot be set. **[read] [not opened]** |
@@ -47,7 +47,7 @@ The site is plain files. There is no database and no build step, so any host tha
 
 ### Why Cloudflare Pages
 
-1. **The cost cannot surprise you.** A first visit to the home page downloads about 2.2 MB (measured on 2 October 2026 in a real browser, text files compressed). October is when the farm is busiest. On Netlify's free plan, going by the prices above, the allowance would last very roughly 5,000 first visits a month (arithmetic on **[not opened]** prices, not a promise). When it ran out the site would go offline until the next month. On Cloudflare's free plan the pages are free and unlimited. **[read]**
+1. **The cost cannot surprise you.** A first visit to the home page downloads about 2.2 MB (measured on 3 October 2026 in a real browser, text files compressed). October is when the farm is busiest. On Netlify's free plan, going by the prices above, the allowance would last very roughly 5,000 first visits a month (arithmetic on **[not opened]** prices, not a promise). When it ran out the site would go offline until the next month. On Cloudflare's free plan the pages are free and unlimited. **[read]**
 2. **Everything the README set up works there**: `_headers`, `_redirects` and the friendly "page not found" page. **[tested here]**
 3. **Your email is not touched.** One `CNAME` record for `www` changes nothing else. (Moving the whole domain to another company is the step that can break email.)
 4. **The upload is drag and drop**, and later changes are "Create a new deployment" and drag again. There is also an instant rollback to an earlier version. **[read]**
@@ -80,7 +80,7 @@ How to do it, with no tools:
 
 1. Copy the whole site folder and call the copy `wise-acres-upload`.
 2. In the copy, delete `docs`, `tools`, `pages` and `README.md`, and `.git` if you can see it.
-3. What is left should be 16 items (17 with `_redirects`), 99 files, about 5.7 MB. Double-click `index.html` in the copy and check the site looks right.
+3. What is left should be 16 items (17 with `_redirects`), 112 files, about 5.9 MB. Double-click `index.html` in the copy and check the site looks right.
 4. Keep each uploaded folder, with the date in its name (`wise-acres-upload-2026-10-09`). If an upload goes wrong you can go back.
 
 The helper checked on 2 October 2026 that the site loads with all 8 pages and 5 languages from this reduced folder, with no missing file.
@@ -146,26 +146,26 @@ https://:version.:project.pages.dev/*
 
 **Why it is not in `_headers` yet:**
 
-1. **It has been tested only on the helper's computer.** It was served with the real files in a real browser, on all 8 pages in all 5 languages, with every optional feature switched on (notice bar, reviews, week box and feed, signup, review link, visitor photos, entrance photo): 40 page loads, no violation, no page error. The outside services (Mailchimp, analytics) were stand-ins, because the test computer cannot reach them. It has never run on the real host. **[tested here]**
+1. **It has been tested only on the helper's computer.** It was served with the real files in a real browser, on all 8 pages in all 5 languages, with every optional feature switched on (notice bar, reviews, week box and feed, signup, review link, visitor photos, entrance photo): 40 page loads, no violation, no page error. The Drive time box was tested separately under the same policy (section 6). The outside services (Mailchimp, the two map services of the Drive time box) were stand-ins, because the test computer cannot reach them. It has never run on the real host. **[tested here]**
 2. **A wrong policy fails silently.** The browser blocks the item and the page just does not do it: the signup does nothing, the analytics count nothing, the Print button is dead. Visitors see no error and neither do you.
-3. **Three open decisions change the policy.** (a) Analytics: every provider needs its own addresses added (table in 3.9). (b) A live week feed on another website needs its address added. (c) The Mailchimp form: the policy allows only `*.list-manage.com`, and the real form code (question 26) has not been seen yet.
+3. **Four things change the policy.** (a) Analytics: every provider needs its own addresses added (table in 3.9). (b) A live week feed on another website needs its address added. (c) The Mailchimp form: the policy allows only `*.list-manage.com`, and the real form code (question 26) has not been seen yet. (d) The Drive time box: the line below already allows its two map services, `https://nominatim.openstreetmap.org` and `https://router.project-osrm.org`, and nothing else. Without them the box would only ever say "The lookup is not working right now" (tested). If the farm ever swaps one of those services (3.13), the line must change with it.
 4. **One inline click handler is allowed by a fingerprint.** The Print button on `print/qr-signs.html` has its code in the page, and the policy lists a fingerprint (hash) of exactly that text. If anyone edits that button's `onclick`, the fingerprint no longer matches and the button stops working. The fingerprint was recomputed on 2 October 2026 and matches. **[tested here]**
 5. **Known limit.** The pages use `style="..."` attributes, so the policy has to allow inline styles. It stops foreign scripts, not injected styling.
 
 **The one-line change.** Open `_headers` in a plain text editor. Find the line that starts `  Permissions-Policy:` (two spaces first). Directly under it, add this single line, with the same two spaces at the start:
 
 ```
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://*.list-manage.com 'unsafe-hashes' 'sha256-MguIPR6qNR8D3B+eAlK+bIRTZe8t3wkOY4B/56Me9FU='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://*.list-manage.com 'unsafe-hashes' 'sha256-MguIPR6qNR8D3B+eAlK+bIRTZe8t3wkOY4B/56Me9FU='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://nominatim.openstreetmap.org https://router.project-osrm.org; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
 ```
 
-It is 306 characters long (Cloudflare's limit is 2,000 per line). **[read]** Both Cloudflare's and Netlify's own header parsers read the line and return it unchanged. **[tested here]**
+It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Both Cloudflare's and Netlify's own header parsers read the line and return it unchanged. **[tested here]**
 
 **Recommended order:**
 
 - [ ] **Trial run.** Add the line with `-Report-Only` right after `Content-Security-Policy` (so it starts `  Content-Security-Policy-Report-Only: default-src ...`). In this mode the browser blocks nothing. It only prints a message in the console for anything the policy would have blocked. Netlify's own page shows a Report-Only line in `_headers`, and MDN describes the header as one that reports without enforcing. **[not opened]** Upload.
-- [ ] Open each of the 6 public pages in Chrome with F12 open on the Console tab. Scroll to the bottom, switch language, open a photo, tap the map, press every button that stays on the page. Any message that starts with `[Report Only] Refused to ...` means the policy needs a change: send it to Claude. If you see no messages at all, make sure the "Info" level is ticked in the console's level menu. With the real policy the helper saw none on 8 pages, and with a deliberately wrong policy the browser printed `[Report Only] Refused to load the image ...` for every item. **[tested here]**
+- [ ] Open each of the 6 public pages in Chrome with F12 open on the Console tab. Scroll to the bottom, switch language, open a photo, tap the map, press every button that stays on the page, and press "Get drive time" with a real address. Any message that starts with `[Report Only] Refused to ...` means the policy needs a change: send it to Claude. If you see no messages at all, make sure the "Info" level is ticked in the console's level menu. With the real policy the helper saw none on 8 pages, and with a deliberately wrong policy the browser printed `[Report Only] Refused to load the image ...` for every item. **[tested here]**
 - [ ] This only tells you what your own browser sees. The line has no report address, so nothing is collected from visitors.
-- [ ] **Switch on.** Once the decisions on analytics, the week feed and the Mailchimp form (section 4) are final and the line has been updated for them, delete `-Report-Only` from the name and upload again. Press the Print button on `/print/qr-signs` once to check it still prints.
+- [ ] **Switch on.** Once the decisions on analytics, the week feed, the Mailchimp form and the Drive time box (section 4) are final and the line has been updated for them, delete `-Report-Only` from the name and upload again. Press the Print button on `/print/qr-signs` once to check it still prints.
 - Skipping this at launch is fine. Do it a few weeks later.
 
 ### 3.6 Redirects for the old farm addresses
@@ -261,6 +261,7 @@ If you do want it (decision D5):
 | Umami | the address you put in `src` | the same address | |
 | Cloudflare Web Analytics | `https://static.cloudflareinsights.com` | `https://cloudflareinsights.com` | |
 | Live week feed (`week.feed`) | | the feed's address | |
+| Drive time box (already in the line in 3.5) | | `https://nominatim.openstreetmap.org` and `https://router.project-osrm.org` | swap these if you change service (3.13) |
 
 - After switching it on, ask Claude to re-run the storage and outside-sites check and update `docs/WHAT_THE_SITE_STORES.md`.
 - Some hosts have their own one-click analytics switch. Leave those off unless you want them, because they add scripts the site's own checks do not know about. If you turn one on, tell the helper.
@@ -289,6 +290,48 @@ If you do want it (decision D5):
 - [ ] Check that the hours, the phone number and the booking link on the profile match the site.
 - [ ] Get the short review link from the profile (Ask for reviews) and send it to Claude for `reviewUrl` in `js/content.js` (question 27). Until then every "Leave a Google review" button opens the farm on Google Maps.
 
+### 3.13 The Drive time box: free public services, and what to do if they refuse
+
+**What it is.** In the Contact section a visitor can type an address and press "Get drive time" to see the miles and minutes to the farm. Nothing is contacted until the button is pressed. What is sent, and to whom, is in `docs/WHAT_THE_SITE_STORES.md`, section 3.
+
+**It uses two free public services, with no account, no key and no cost.** They are run by volunteers and non-profits, and they come with rules:
+
+| | Address search: Nominatim | Routing: OSRM demo server |
+|---|---|---|
+| Run by | The OpenStreetMap Foundation | FOSSGIS e.V., a German non-profit **[read]** |
+| Speed rule | "An absolute maximum of 1 request per second." **[not opened]** The box sends one search per press, and a second one for the farm's address 1.1 seconds later unless `farmPoint` is set. **[tested here]** | "Do not exceed 1 request per second." **[read]** One request per press. |
+| Business use | The policy page could not be opened. Answers in the OpenStreetMap community forum say it does not forbid commercial projects. **[not opened]** | Its wiki page says the demo server "usage is restricted to reasonable, non-commercial use-cases". **[read]** An older policy page, kept as "still good practice", lets commercial products use it if they are public and credit the source. The current German terms were not opened. |
+| How it knows who you are | The visitor's browser sends the site name as the referring site, which is what the policy asks for. **[tested here]** | "Valid User-Agent identifying application. ... If known, a valid HTTP Referer." The browser sends the site name (it cannot set a User-Agent of its own). **[read] [tested here]** |
+| Credit required | OpenStreetMap: "Provide credit to OpenStreetMap by displaying our attribution notice." **[read]** The Nominatim policy asks for credit "as suitable for your medium". **[not opened]** | "Display the required attribution and display a link to 'fix the map'." An older page also asks to name OSRM as the source of the routes. **[read]** |
+| Promise of service | None. It may refuse or block. **[not opened]** | "We provide no guarantees wrt. uptime, latency, or data updates." **[read]** |
+| Reachable from a web page | Its program's default settings send the "any website may ask" header. **[read]** The live server was not called. | Its program code sends the same header. **[read]** The live server was not called. |
+
+**What this means, in plain words:**
+
+1. The routing server's own page calls the demo "non-commercial". A farm website that sells visits is a business, so there is a real chance that one day the service refuses it, and the farm would have no one to complain to. The free search is probably more relaxed, but its policy page could not be read.
+2. If that happens, nothing breaks. The box says "The lookup is not working right now. Try the Google Maps button instead." and offers a Google Maps button. The town list above it does not change. **[tested here]**
+3. Counting: at most two searches and one route request per press. A busy day with a few hundred presses is far below the "one request a second" rule, but a rule that says "the whole website, together" could be hit by a sudden crowd. (Community forum answers say the limit counts all of a website's visitors together; the policy page was not opened.)
+4. The credit under each answer reads "© OpenStreetMap contributors", linked to OpenStreetMap's copyright page. The routing server also asks for the OSRM name and a "fix the map" link. Ask Claude to add "Routing: OSRM" and "Fix the map" next to the credit.
+
+**Do these before launch:**
+
+- [ ] **Set `farmPoint` in `js/content.js`** (the steps are in the comment "DRIVE TIME FROM A VISITOR'S ADDRESS"). It halves the number of requests, makes the answer about a second faster, and means the box no longer depends on OpenStreetMap having the farm's street address right. Check the two numbers by looking at them on a map. **[tested here: one search and one route request per press]**
+- [ ] If you want a clear answer about business use, write to the routing server's operators at the address on their about page, `fossgis-routing-server@openstreetmap.de` **[read]**: say it is a small farm website, that the visitor presses a button, and that you send one request per press. Keep their reply.
+- [ ] Press the button yourself on the live site (section 5). The real services were never called from the test computer.
+
+**If the services refuse, or the farm gets busy, the choices are:**
+
+| Choice | Cost | What the owner does | The catch |
+|---|---|---|---|
+| Switch the box off (ask Claude) | Free | Nothing | The town list and the Google, Apple Maps and Waze links stay. Visitors lose the miles and minutes from their own address |
+| Mapbox for both steps | A free monthly allowance of 100,000 requests for directions and for temporary address search, then paid; a card-free trial of 10,000 a month at sign-up **[not opened]** | Make an account, make a public access token, and limit it to `https://www.wiseacresorganic.com/` (Mapbox lets a token be limited to listed web addresses **[not opened]**). The helper changes about 20 lines and the policy line (`https://api.mapbox.com`) | Mapbox's rules on showing its results were not checked |
+| Google Maps Platform | A free allowance of 10,000 calls a month for each basic product since March 2025 **[not opened]** | Make a Google Cloud account **with a card** (billing is required), make a key, limit it to the site's address | A card on file, and Google's rules on showing its results were not checked |
+| OpenRouteService (HeiGIT) for routing | Free key: 2,000 route requests a day and 40 a minute **[read]** | Make an account and a key | A key "must not be used client-side" **[read]**, so it needs a small server piece (for example a Cloudflare Pages function) that hides the key. More work, and not for a first-timer |
+| Photon, for the address step only | Free. "You are welcome to use the API for your project as long as the number of requests stay in a reasonable limit. Extensive usage will be throttled or completely banned. We do not give guarantees" **[read]** | Nothing | Replaces Nominatim only. Routing still needs a service |
+| Run your own server, or pay a company to | Money every month | A lot | Not worth it for a farm website |
+
+**The helper's suggestion:** keep the free services at launch, set `farmPoint`, and watch the weekly test in section 5. If the box fails two weeks running, or the routing operators say no, move to Mapbox with a URL-limited token, and if that is not wanted, switch the box off. This is the owner's choice (D11). Whichever you choose, the helper must change the security policy line in 3.5 to match.
+
 ## 4. Before you go live: decisions only you can make
 
 **The questions about the farm itself** are in [QUESTIONS_FOR_THE_FARM.md](QUESTIONS_FOR_THE_FARM.md) (Spanish copy: [QUESTIONS_FOR_THE_FARM.es.md](QUESTIONS_FOR_THE_FARM.es.md)). They are not repeated here. Which ones to answer before launch:
@@ -310,6 +353,7 @@ If you do want it (decision D5):
 | D8 | Languages: the Spanish, Hindi, Chinese and Vietnamese texts were written with AI help and no native speaker has read them (README, "Content status"). Launch all five, or only the ones that have been read? | Have someone read each before launch, or launch with only the languages that have been read. |
 | D9 | Who updates the site each week in season, and how (3.2: Create a new deployment, drag the folder)? | One named person, plus a backup person. |
 | D10 | Free plan or a paid plan if the farm gets busy? | Free to start. Cloudflare's static traffic is not limited. **[read]** |
+| D11 | The Drive time box: keep it on the free public services, switch it off, or move to a service with a contract (3.13)? Do you want the OSRM operators asked about business use? | Keep it, set `farmPoint` before launch, ask the operators, and watch it weekly. |
 
 ## 5. After launch
 
@@ -322,6 +366,7 @@ If you do want it (decision D5):
 - [ ] **The padlock,** `https://` and `http://`, the `www` name and the bare name, and a made-up address (should show "page not found" in the farm's style).
 - [ ] **The Site check box.** Add `?check` to the live home address. No yellow box at the bottom means nothing is wrong.
 - [ ] **QR signs.** Open `/print/qr-signs`, press Print once, then scan every printed sign with your own phone.
+- [ ] **Drive time box.** Type your own address and press "Get drive time". The miles should be close to what Google Maps says and the minutes within a few. Try an address in another town, and a nonsense address such as `zzzz`: it should say it could not find it. Press "Open these directions in Google Maps". If it says "The lookup is not working right now", either the free services are refusing or the security policy lacks their two addresses (3.5, 3.13): tell the helper, with the time.
 - [ ] **Old addresses,** if you used the redirects: open all 13.
 - [ ] **Cookies.** Open the live site in a private window, press F12, then Application, then Cookies. None should be listed. Some host options can add their own cookies, and `docs/WHAT_THE_SITE_STORES.md` (section 8) asks for exactly this check.
 - [ ] **Share and Google.** Paste the address into a new message and see the preview. Confirm Search Console shows the site as verified, the sitemap as "Success", and the Business Profile shows the new website.
@@ -333,7 +378,7 @@ If something is wrong: open the project's list of deployments in Cloudflare and 
 - [ ] Update "This week at the farm" (`week` in `js/content.js`), the notice bar and any closures; and open the next pizza weekend if it is due (README, "Day-to-day changes"). Upload again; a hard refresh (Ctrl+F5, or Cmd+Shift+R on a Mac) shows the new version at once on your own screen, and other visitors may keep the old files for up to an hour.
 - [ ] Open the live site on your phone. The "Open now" badges and the countdown should match real life.
 - [ ] Press Reserve: the Bookeo page should show the days you expect.
-- [ ] Add `?check` to the home address. No yellow box.
+- [ ] Add `?check` to the home address. No yellow box. Press "Get drive time" once with your own address; if it fails two weeks running, tell the helper (3.13).
 - [ ] Read the farm email inbox for waitlist and contact messages, and make sure someone answers them.
 - [ ] Google Business Profile: hours and holiday closures are set; reply to new reviews.
 - [ ] Once a month: Search Console (Pages and Sitemaps) for errors, and, if you chose a plan with an allowance, the host's usage page.
@@ -344,13 +389,22 @@ If something is wrong: open the project's list of deployments in Cloudflare and 
 **Tested on 2 October 2026** (for the files at commit `fcaff91`):
 
 - The Content-Security-Policy line inside `_headers`, and the `_redirects` file, were read by Netlify's open-source parsers (`@netlify/headers-parser` 10.1.1, `@netlify/redirect-parser` 16.1.1): no errors, the policy came back unchanged, 22 redirects, all 301.
-- The reduced upload folder (99 files) and the same two files were served by Cloudflare's own Pages test server (`wrangler pages dev`, version 4.146.0). It applied the headers, redirected `/wise-pie.html` to `/wise-pie` (keeping `?lang=es`), redirected every old address with a 301, answered `/nonsense` with the friendly page, and gave `.pages.dev` addresses the noindex note but not the farm's domain.
+- The reduced upload folder (112 files) and the same two files were served by Cloudflare's own Pages test server (`wrangler pages dev`, version 4.146.0). It applied the headers, redirected `/wise-pie.html` to `/wise-pie` (keeping `?lang=es`), redirected every old address with a 301, answered `/nonsense` with the friendly page, and gave `.pages.dev` addresses the noindex note but not the farm's domain.
 - A real Chromium browser loaded all 8 pages in all 5 languages from that test server with the policy on and every optional feature switched on (stand-ins for Mailchimp and the week feed): 40 page loads, 0 policy violations, 0 page errors, 0 failed requests. The only outside request was the Mailchimp signup call, which is intended. With the policy in report-only form and no problem, the console showed no `[Report Only]` message.
-- First-visit size of the home page: 39 files, 2.76 MB raw, about 2.2 MB with text compressed.
+- First-visit size of the home page (re-measured on 3 October 2026): 39 files, 2.78 MB raw, about 2.2 MB with text compressed.
+
+**Tested on 3 October 2026** (for the files at commit `2996b9f`, with the Drive time box):
+
+- The Content-Security-Policy line was changed to allow exactly the two map services in `connect-src`. Netlify's header parser read the new `_headers` without error and returned the line unchanged.
+- Cloudflare's local Pages server served the reduced upload folder with the new line. The Drive time test suite (stand-ins for the two services, answered through the real policy) passed 42 of 42 checks. They include a normal answer, hours and minutes, address not found, no route, service down, an empty box, a double press, markup typed as a place name, five languages and a phone width. Every browser request was recorded, and the browser sent the site name as the referring site and no cookie.
+- Under the new policy, a fetch to `api.openstreetmap.org`, `routing.openstreetmap.de`, a look-alike host (`nominatim.openstreetmap.org.example.net`) and `example.org` was blocked, and the same two services were allowed. The old policy (`connect-src 'self'` only) blocked the box: it said "not working right now" and the browser reported a `connect-src` violation for the search.
+- All 8 pages in all 5 languages again, with the new line: 40 page loads, 0 policy violations, 0 page errors, 0 failed requests; the only outside request was the Mailchimp signup call.
+- With `farmPoint` set the box sent one search and one route request per press, and nothing was stored in the browser (local storage, session storage and cookies were identical before and after).
 
 **Not tested:**
 
 - Nothing was uploaded to any real host and no real domain was touched.
+- The real Nominatim and OSRM servers. The test computer cannot reach them (its network proxy answers 403). Their answers, their cross-site headers and their limits come from their documentation and program code. The first real lookup on the live site is the real test (section 5).
 - Netlify's pages and prices could not be opened; every Netlify statement above is **[not opened]**.
 - The real Mailchimp and analytics services (stand-ins only).
 - How Google treats the `.html` canonical addresses on Cloudflare, and how long Google takes to notice the redirects.
@@ -362,6 +416,8 @@ If something is wrong: open the project's list of deployments in Cloudflare and 
 
 **Read (the parts quoted above), from GitHub's documentation source** (`github/docs`, branch `main`, folder `content/pages/`): `getting-started-with-github-pages/github-pages-limits.md`, `what-is-github-pages.md`, `securing-your-github-pages-site-with-https.md`, and `configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site.md`.
 
+**Read, for the Drive time box (raw files from the services' own public repositories):** Nominatim `docs/api/Search.md`, `docs/api/Output.md` and `settings/env.defaults` (`osm-search/Nominatim`); the OSRM wiki pages "Demo server" and "Api usage policy", `docs/http.md` and `src/server/request_handler.cpp` / `include/server/request_handler.hpp` (`Project-OSRM/osrm-backend`); the routing server's about page (`fossgis-routing-server/routing-chef`, `cookbooks/osrm/files/default/about.md`); the OpenStreetMap website's licence text (`openstreetmap/openstreetmap-website`, `config/locales/en.yml`); the OpenRouteService FAQ (`GIScience/openrouteservice`, `docs/frequently-asked-questions.md`); the Photon README (`komoot/photon`).
+
 **Not opened (search-engine summaries of these pages, or forums):**
 
 - Netlify: `docs.netlify.com/manage/routing/headers/`, `.../manage/routing/redirects/overview/`, `.../manage/domains/configure-domains/configure-external-dns/`, `.../manage/security/content-security-policy/`, `.../manage/accounts-and-billing/billing/billing-for-credit-based-plans/` (credit pricing), `.../start/quickstarts/netlify-drop-quickstart/`, `.../build/post-processing/overview/`, `www.netlify.com/pricing/`, and the support-forum answer `answers.netlify.com/t/pretty-urls-with-the-setting-turned-off/8743`.
@@ -369,3 +425,6 @@ If something is wrong: open the project's list of deployments in Cloudflare and 
 - GitHub: community discussions 54257 and 49832 on custom headers.
 - Google: Search Console Help "Verify your site ownership" (`support.google.com/webmasters/answer/9008080`), "Sitemaps report" (`.../answer/7451001`), and Business Profile Help "Edit your Business Profile" (`support.google.com/business/answer/3039617`).
 - MDN: `Content-Security-Policy-Report-Only`.
+- Nominatim: the usage policy `operations.osmfoundation.org/policies/nominatim/` (blocked) and community-forum threads about it; the OpenStreetMap Foundation privacy policy (`osmfoundation.org/wiki/Privacy_Policy`).
+- FOSSGIS: the German terms of use `fossgis.de/arbeitsgruppen/osm-server/nutzungsbedingungen/` (blocked).
+- Mapbox pricing and token pages (`mapbox.com/pricing`, `docs.mapbox.com/accounts/guides/tokens/`) and Google Maps Platform pricing (`developers.google.com/maps/billing-and-pricing/`), as search summaries.

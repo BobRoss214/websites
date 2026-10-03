@@ -196,6 +196,15 @@ really there: for example a smooth path, drinking water or first aid are claims 
 **Drive times and map apps.** The Contact section and the First-visit page list drive times and "Open in Apple Maps or Waze" links. The times are
 our estimates (see Content status). To change one, tell Claude the right number of minutes (in the HTML it is `data-drive="10"`).
 
+**Drive time from a visitor's address.** In the Contact section a visitor can type an address, press "Get drive time" and see the miles and minutes to the farm. In plain words:
+
+- It uses two free public services: OpenStreetMap's address search (Nominatim) and the OSRM routing demo server, which a German non-profit (FOSSGIS) runs. Nothing is contacted until a visitor presses the button, and this website does not keep the address. `docs/WHAT_THE_SITE_STORES.md` lists exactly what is sent.
+- Both are free and come with no promise. They ask for about one request a second and may refuse without notice. The routing server's own page calls its demo "reasonable, non-commercial" use, and this is a business site, so there is a real chance they stop answering one day. Nothing breaks when that happens: the box says "The lookup is not working right now" and offers a Google Maps button.
+- **Once, before launch:** set `farmPoint` in `js/content.js` (the steps are in the comment "DRIVE TIME FROM A VISITOR'S ADDRESS"). It halves the requests and makes the answer faster.
+- If you add the Content-Security-Policy line to `_headers`, its `connect-src` must allow exactly `https://nominatim.openstreetmap.org` and `https://router.project-osrm.org`. The line in `docs/LAUNCH_CHECKLIST.md` already does; without them the box only ever says "not working right now".
+- Keep the "© OpenStreetMap contributors" link that the box shows with every answer. The routing server also asks for a credit to OSRM and a "Fix the map" link: ask Claude to add them.
+- To switch the box off, or to move it to a service with a contract (Mapbox, Google), see step 3.13 of `docs/LAUNCH_CHECKLIST.md`. Test the box yourself once a week in season.
+
 **Accessibility & comfort** (First-visit page, `#comfort`) only repeats facts the farm has already published (porta-johns including a
 handicapped-accessible unit, hand washing, parking, shade, little ones, service animals). It does not say what the paths are like. When you know
 the path surfaces, quieter times and baby-changing details, tell Claude and they will be added.
@@ -213,7 +222,7 @@ To print, open `print/qr-signs.html` in your browser and press Print (or "Save a
 5. The Mailchimp signup page the signup sign opens should show in the language of the sign (Mailchimp's form settings have a language option; check your screens).
 
 **Analytics + Google Search Console.** *Analytics* is off until you pick a provider (ask Claude; see `js/analytics.js`). Once on, it records:
-`Review click`, `Waitlist click`, `Reminder added` (type: google or ics), `Map select` (kind), `Signup submit`, `Email signup click`, `Press click`
+`Review click`, `Waitlist click`, `Reminder added` (type: google or ics), `Map select` (kind), `Signup submit`, `Email signup click`, `Press click`, `drive_time` (a drive-time answer was shown; nothing about the address)
 and `Directions click` (the Google, Apple Maps and Waze links all use this one name). QR signs that point at this website carry `utm_source=qr`
 so an analytics tool that understands it can show scans; signs that open Instagram, Facebook, Bookeo or Google cannot be counted here.
 *Google Search Console* (so the site shows up in Google): the website must be online first. Then (the names of the buttons may differ a little,
@@ -374,7 +383,7 @@ New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](do
 3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
 4. Send people to the Google Business Profile, and add your site's address there.
 5. Before launch: fill every "Prices coming soon", confirm hours, Facebook and the hashtag, and have a native speaker read each language (see Content status).
-6. Also before launch: set `reviewUrl`; open both "In the news" links; confirm the drive times, the waitlist and the "Season by season" ticks; decide on the maze name; set `seasonPicker: false`; then check the live site once with `?check` added to the address.
+6. Also before launch: set `reviewUrl`; set `farmPoint` (Drive time box); open both "In the news" links; confirm the drive times, the waitlist and the "Season by season" ticks; decide on the maze name; set `seasonPicker: false`; then check the live site once with `?check` added to the address.
 
 How the page stays fast: sections far down the page are skipped until you scroll near them (`initLazyRender` in `js/main.js`), looping animations pause when they are off screen (a whole section far away, or one drawing inside a long section: `initOffscreenPause` in `js/main.js`) and while the tab is hidden, and photos load lazily. If you ever add a tall new section, nothing needs to change.
 
