@@ -135,7 +135,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .sched-table th,.sched-table td{padding:.55em .9em;text-align:left}
 .sched-table thead th{background:var(--sun);font:700 .85rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase}
 .sched-table tbody tr+tr td{border-top:1.5px dashed rgba(58,36,22,.3)}
-.sched-table thead th[data-farm-zone]::after{content:attr(data-farm-zone);font-weight:600;letter-spacing:0;text-transform:none}   /* "(Eastern Time)", only for a visitor on another clock (js/live.js) */
+.sched-table thead th[data-farm-zone]::after{content:attr(data-farm-zone);display:block;font-weight:600;letter-spacing:0;text-transform:none}   /* "(Eastern Time)", only for a visitor on another clock (js/live.js) */
 .notice{margin:16px 0 0;padding:.75em 1em;background:#fff;border:2.5px solid var(--ink);border-radius:16px;font-weight:700}
 .notice-soft{display:flex;gap:10px;align-items:flex-start;background:transparent;border-style:dashed;font-weight:600;color:var(--ink-soft)}
 .notice-soft .ico{flex:none;margin-top:.15em;color:var(--red)}

@@ -166,7 +166,12 @@
     el.hidden = false;
     el.className = 'live is-' + s.state + (el.dataset.liveClass ? ' ' + el.dataset.liveClass : '');
     el.innerHTML = '<span class="live-dot" aria-hidden="true"></span><span class="live-text"></span>';
-    $('.live-text', el).textContent = s.text;
+    // the "(Eastern Time)" label is kept on one line: the line may break before it, not inside it ("(giờ / miền Đông)"); the text is the same
+    const txt = $('.live-text', el), zone = farmZone('').trim();
+    if (zone && s.text.length > zone.length && s.text.endsWith(zone)) {
+      txt.textContent = s.text.slice(0, -zone.length);
+      const z = doc.createElement('span'); z.className = 'farm-zone'; z.textContent = zone; txt.appendChild(z);
+    } else txt.textContent = s.text;
   }
   function renderBadges() { $$('[data-live]').forEach(renderBadge); renderZoneMarks(); }
   // The heading of the pizza schedule ("Opens Tuesday, 5 PM") is written in the page: for a visitor on another clock it gets the same "(Eastern Time)"

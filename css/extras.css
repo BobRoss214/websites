@@ -5,6 +5,7 @@
 
 /* ---------------------------------------------------------------- open-now badge */
 .live{display:inline-flex;align-items:center;gap:.55em;margin:0 0 .8em;padding:.28em .95em .28em .75em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:600 .92rem/1.25 var(--display);color:var(--ink);box-shadow:0 3px 0 var(--ink);max-width:100%}
+.live .farm-zone{white-space:nowrap}   /* "(Eastern Time)" on one line (js/live.js): a badge may wrap before it, not inside it */
 .live-dot{flex:none;width:.85em;height:.85em;border-radius:50%;background:#9aa0a6;border:2px solid var(--ink)}
 .live.is-open .live-dot{background:#2fbf5b}
 /* The green ring that spreads from the open dot is a faded disc behind the dot that grows (transform + opacity: the compositor runs
