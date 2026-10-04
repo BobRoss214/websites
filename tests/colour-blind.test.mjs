@@ -13,7 +13,7 @@
  * Also: every link inside running text on the home page is underlined (or is a pill-shaped tag). The full table of every state and
  * all five simulations is in docs/COLOUR_BLIND_CHECK.md. */
 import zlib from 'node:zlib';
-import { run, open, ok, info } from './lib.mjs';
+import { run, open, ok, info, settled } from './lib.mjs';
 
 function decodePng(buf) {
   let pos = 8, w = 0, h = 0, ct = 0; const idat = [];
@@ -100,6 +100,7 @@ await run('colour-blind', async ({ browser, base, errs }) => {
       boxes = await p.evaluate(setup); await p.waitForTimeout(200);
       key = JSON.stringify(boxes.map((b) => [Math.round(b.x), Math.round(b.y)])); if (key === prev) break; prev = key;
     }
+    await settled(p, 0);   // a state that was just changed (the chosen map place) fades in with a CSS transition: the picture must be taken after it, not during it (a pale edge at load 80)
     const [sx, sy] = await p.evaluate(() => [scrollX, scrollY]);
     const l = Math.floor(Math.min(...boxes.map((b) => b.x)) - 4), t = Math.floor(Math.min(...boxes.map((b) => b.y)) - 4);
     const clip = { x: l + sx, y: t + sy, width: Math.ceil(Math.max(...boxes.map((b) => b.x + b.w)) + 4) - l, height: Math.ceil(Math.max(...boxes.map((b) => b.y + b.h)) + 4) - t, scale: DPR };
