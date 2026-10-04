@@ -41,7 +41,7 @@ index dcb86e1..bae7158 100644
 -              <a data-t="tfa23ca11" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve the farm <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
 +              <a data-t="tfa23ca11" class="btn btn-red" data-only="spring summer fall" data-book href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve the farm <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
                <a data-t="tf09e1fa4" class="btn btn-red" data-only="winter" hidden href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Tell me when <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-               <a data-t="t4b3f3cb5" class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+               <a data-t="t4b3f3cb5" class="btn btn-ghost" id="pl-farm-dir" aria-labelledby="pl-farm-dir pl-farm-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
                <a data-t="tb349c1e7" class="btn btn-ghost btn-sm" data-only="fall" href="#options">See prices</a>
 @@ -783,7 +783,7 @@
                  <li data-t="te92bb327">U-cut flowers too. The better cutting flowers start in May</li>

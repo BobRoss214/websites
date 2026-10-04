@@ -1665,7 +1665,7 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): no
 - Default: A (same booking system, same fee; two pages promise it and the third is silent).
-- Depends on: d42 is a similar policy sentence. The text exists in index.html at `data-t="t40668596"` and pages/first-visit.html at `<li>If you cancel by then`.
+- Depends on: d42 is a similar policy sentence. The text exists in index.html at `data-t="t40668596"` and pages/first-visit.html at `<li>If you cancel by then` (2 places: the "Changes and rain" card and the FAQ).
 
 **A. Add the 3 percent fee line**
 
@@ -1720,7 +1720,7 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 
 **B. Use a different email (I will send it)**
 
-- Replace cathy@wiseacresorganic.com: index.html at `cathy@wiseacresorganic.com` (18 places, one of them in the structured data); pages/first-visit.html at `cathy@wiseacresorganic.com` (2 places); js/features.js at `const WAITLIST =` (waitlistEmail default, also used by the messages feature); js/content.js at `waitlistEmail: 'cathy@` (comment); README.md. Rebuild (python3 tools/pages.py).
+- Replace cathy@wiseacresorganic.com: index.html at `cathy@wiseacresorganic.com` (19 places, one of them in the structured data); pages/first-visit.html at `cathy@wiseacresorganic.com` (2 places); js/features.js at `const WAITLIST =` (waitlistEmail default, also used by the messages feature); js/content.js at `waitlistEmail: 'cathy@` (comment); README.md. Rebuild (python3 tools/pages.py).
 - 9 UI ids contain it (t37c5399a, t4a984489, t716fd5fb, t7c90f595, t9777fabc, td03021c9, td6a5d444, teeb109de, tf8daf32f) x 4 translations.
 - Other addresses are separate: vanessa@ (school tours, index.html at `data-t="t3bad8e6f"`) and ava@ (pizza questions, index.html at `data-t="t44148f05"`).
 - Strings: 9 UI ids x 4 translations

@@ -46,6 +46,7 @@ tools/                  pages.py (builds the extra pages), i18n.py (tags text, b
                         serve.py (shows the site on your own computer at http://localhost:PORT/ for editing; close its window to stop it)
                         season_calendar.mjs (loads the pages on every day of the year and writes docs/WHAT_VISITORS_SEE_WHEN.md)
                         plain_lint.py + plain_words.txt (checks that the notes for the farm owner are written in plain words: python3 tools/plain_lint.py)
+                        visitor_walk.mjs (walks the site as a visitor who uses only the keyboard, who reads another language, or who lands on an extra page from a search; a slow walk, not a test: node tools/visitor_walk.mjs keys, leaks or arrive)
 deploy/                 the folder to upload, made fresh by tools/make_deploy_folder.py (not kept in the repository)
 review/                 the sheets for a native speaker, made by tools/review_sheet.py when you need them (not kept in the repository, not uploaded)
 patches/optional/       the farm's open decisions that change files, ready as patches (docs/OPTION_PATCHES.md says which, in what order, and what to run after)

@@ -287,6 +287,7 @@
 /* 9. drive chips: the drive time wraps as a unit and drops under a long place name */
 .drive-list li{flex-wrap:wrap;column-gap:.5em;border-radius:22px}
 .dr-time{white-space:nowrap}
+@media (max-width:20em){ .dr-time{white-space:normal} }   /* a very narrow screen or a big system font: the time may wrap instead of running past the edge (em, so it follows the font size) */
 
 /* 10. season-by-season legend: key sits next to its text */
 .fs-legend{justify-content:flex-start;text-align:left}

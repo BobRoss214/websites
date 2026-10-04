@@ -98,9 +98,10 @@ function helpers() {
     reader(lang, namesSrc) {
       const NAMES = new RegExp(namesSrc, 'g'), out = { english: [], noAlt: [], skips: [], noLabel: [], badRef: [] };
       const script = { hi: /[\u0900-\u097f]/, zh: /[\u3400-\u9fff]/ }[lang] || /[^\x00-\x7f]/;
-      const own = (e) => {   // the words of a name that are in the page's language (English names are wrapped in lang="en")
+      const own = (e, viaRef) => {   // the words of a name that are in the page's language (English names are wrapped in lang="en")
         if (e.closest('[lang="en"]')) return '';
-        const a = e.getAttribute('aria-label') || (e.getAttribute('aria-labelledby') || '').split(/\s+/).map((i) => { const t = document.getElementById(i); return t ? own(t) : ''; }).join(' ');
+        // a name built from other elements (aria-labelledby) does not follow THEIR aria-labelledby (the browser rule; a link may name itself and its heading: "selfId headingId")
+        const a = e.getAttribute('aria-label') || (viaRef ? '' : (e.getAttribute('aria-labelledby') || '').split(/\s+/).map((i) => { const t = document.getElementById(i); return t ? own(t, true) : ''; }).join(' '));
         if (a) return a;
         if (e.tagName === 'IMG') return e.alt || '';
         const c = e.cloneNode(true); c.querySelectorAll('[lang="en"], wa-en, [aria-hidden="true"], svg, .sr-only[data-no-i18n]').forEach((x) => x.remove());

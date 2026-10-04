@@ -962,7 +962,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 **Question 30: Will cathy@wiseacresorganic.com be read and answered, since the site asks visitors to email it?**
 
 - **If Yes:** delete the part about Cathy's email in the README row "Accessibility & comfort".
-- **If somebody else will answer:** replace the address everywhere it appears: `index.html` at `cathy@wiseacresorganic.com` (18 places), `js/features.js` at `const WAITLIST =` and the links in `pages/first-visit.html` at `cathy@wiseacresorganic.com` (2 places).
+- **If somebody else will answer:** replace the address everywhere it appears: `index.html` at `cathy@wiseacresorganic.com` (19 places), `js/features.js` at `const WAITLIST =` and the links in `pages/first-visit.html` at `cathy@wiseacresorganic.com` (2 places).
 
 **Question 31: Can you tell us what the paths are like (surface and slope), when the farm is quieter, and whether there is a baby-changing place?**
 

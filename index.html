@@ -233,7 +233,7 @@
       <div class="picker" id="picker">
         <div class="picker-basket">
           <svg class="picker-art" aria-hidden="true"><use href="#basket"/></svg>
-          <span class="picker-count" id="pick-count">0</span>
+          <span class="picker-count" id="pick-count" aria-hidden="true">0</span>
         </div>
         <div class="picker-text">
           <p id="pick-msg" role="status" data-no-i18n>Try it! Tap the strawberries to pick them.</p>
@@ -332,7 +332,7 @@
             <svg class="choose-art" data-only="summer" hidden aria-hidden="true" viewBox="0 0 90 92"><use href="#blueberry"/></svg>
             <svg class="choose-art" data-only="fall" aria-hidden="true" viewBox="0 0 110 92"><use href="#pumpkin"/></svg>
             <svg class="choose-art" data-only="winter" hidden aria-hidden="true" viewBox="0 0 80 110"><use href="#fir"/></svg>
-            <h3 data-t="tcf782409">The u-pick farm</h3>
+            <h3 data-t="tcf782409" id="pl-farm-h">The u-pick farm</h3>
             <p data-t="t19a4db7d" class="choose-addr"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> 4701 Hartis Rd, Indian Trail</p>
             <p class="live" data-no-i18n data-live="farm" hidden></p>
             <ul class="ticks" data-only="spring" hidden>
@@ -360,7 +360,7 @@
             <div class="card-actions">
               <a data-t="tfa23ca11" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve the farm <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
               <a data-t="tf09e1fa4" class="btn btn-red" data-only="winter" hidden href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Tell me when <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-              <a data-t="t4b3f3cb5" class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+              <a data-t="t4b3f3cb5" class="btn btn-ghost" id="pl-farm-dir" aria-labelledby="pl-farm-dir pl-farm-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
               <a data-t="tb349c1e7" class="btn btn-ghost btn-sm" data-only="fall" href="#options">See prices</a>
             </div>
           </article>
@@ -368,7 +368,7 @@
           <article class="choose-card choose-gh reveal">
             <span data-t="td4df0394" class="choose-tag choose-tag-green">Next door &middot; no reservations</span>
             <svg class="choose-art choose-art-wide" aria-hidden="true" viewBox="0 0 150 116"><use href="#greenhouse-art"/></svg>
-            <h3 data-t="t77ed2eb7">The GreenHouse</h3>
+            <h3 data-t="t77ed2eb7" id="pl-gh-h">The GreenHouse</h3>
             <p data-t="tdffcfccf" class="choose-addr"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> 5503 Poplin Rd, Indian Trail</p>
             <p class="live" data-no-i18n data-live="greenhouse" hidden></p>
             <ul class="ticks">
@@ -379,7 +379,7 @@
             </ul>
             <div class="card-actions">
               <a data-t="taf6eb687" class="btn btn-green" href="#greenhouse">See The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-              <a data-t="t4b3f3cb5" class="btn btn-ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+              <a data-t="t4b3f3cb5" class="btn btn-ghost" id="pl-gh-dir" aria-labelledby="pl-gh-dir pl-gh-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
               <a data-t="t0a75fed1" class="btn btn-ghost btn-sm" data-drive-link data-drive-to="greenhouse" href="#drive-form" hidden>Drive time</a>
             </div>
           </article>
@@ -406,9 +406,9 @@
             </li>
             <li class="step reveal">
               <span class="step-num" aria-hidden="true"><span class="n">2</span><svg class="ico"><use href="#i-check"/></svg></span>
-              <h3 data-t="t7085b601">Head to the farm</h3>
+              <h3 data-t="t7085b601" id="st-farm-h">Head to the farm</h3>
               <p data-t="tf1ab0489">We&rsquo;re at 4701 Hartis Road, in a neighborhood with limited parking. Check in under the name on your reservation. You can give your reservation to someone else, so whoever comes can use it.</p>
-              <a data-t="tce5b5050" class="btn btn-sm btn-sun" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener">Get directions <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+              <a data-t="tce5b5050" class="btn btn-sm btn-sun" id="st-farm-dir" aria-labelledby="st-farm-dir st-farm-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener">Get directions <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
               <a data-t="t0a13643a" class="btn btn-sm btn-ghost" href="#farm-map">Farm map</a>
               <a data-t="t0a75fed1" class="btn btn-sm btn-ghost" data-drive-link data-drive-to="farm" href="#drive-form" hidden>Drive time</a>
             </li>
@@ -1248,7 +1248,7 @@
           <p data-t="t54bad66d" class="small">The GreenHouse is outdoors and may close suddenly in bad weather. Please check Instagram for changes before you come.</p>
 
           <div class="card-actions">
-            <a data-t="t60adc929" class="btn btn-green" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
+            <a data-t="t60adc929" class="btn btn-green" id="gh-dir" aria-labelledby="gh-dir gh-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
             <a data-t="tf8b54143" class="btn btn-ghost" href="https://wise-pie-wood-fired-at-wise-acres.square.site/?location=CVJNFDQTZCA3B" target="_blank" rel="noopener">Pre-order pizza <svg class="ico" aria-hidden="true"><use href="#i-external"/></svg></a>
             <a data-t="t5c7f4dc5" class="btn btn-ghost" href="https://www.instagram.com/thegreenhouse5503/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-instagram"/></svg> @thegreenhouse5503</a>
           </div>
@@ -1637,6 +1637,7 @@
               <div class="card-actions">
                 <a data-t="t8297603b" class="btn btn-red" href="https://docs.google.com/forms/d/1GsxQaakokjJuBBHomYElmV7x54xCmjBkjX6Jt5q9_V4/edit" target="_blank" rel="noopener">School tour sign-up form <svg class="ico" aria-hidden="true"><use href="#i-external"/></svg></a>
                 <a data-t="t3bad8e6f" class="btn btn-ghost" href="mailto:vanessa@wiseacresorganic.com?subject=School%20tour%20question"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Email Vanessa</a>
+                <a data-t="t81116072" class="btn btn-ghost" href="school-field-trips.html">About school field trips</a>
               </div>
 
               <h4 data-t="tf2de8aa5">Your tour includes</h4>
@@ -1984,6 +1985,34 @@
             </div>
           </details>
           <details name="faq">
+            <summary data-t="t01f98f43" id="faq-park-q">Where do I park?</summary>
+            <div class="answer">
+              <p data-t="t65ba07a6">We are in a neighborhood on Hartis Road with limited parking. Vehicles are not allowed in the fields, barn or garden areas.</p>
+              <div class="card-actions"><a data-t="t0a13643a" class="btn btn-sm btn-ghost" id="faq-park-map" aria-labelledby="faq-park-map faq-park-q" href="#farm-map">Farm map</a> <a data-t="t9c2ac95a" class="btn btn-sm btn-ghost" id="faq-park-fv" aria-labelledby="faq-park-fv faq-park-q" href="first-visit.html#parking">First-visit guide</a></div>
+            </div>
+          </details>
+          <details name="faq">
+            <summary data-t="t99c12675" id="faq-stroller-q">Can I bring a stroller or wheelchair?</summary>
+            <div class="answer">
+              <p data-t="t7af61a2b">Wise Acres is a working farm. Irrigation lines, support stakes and farm equipment may be in the fields. If you have questions about getting around with a stroller or wheelchair, please email us before you come.</p>
+              <div class="card-actions"><a data-t="t719b0078" class="btn btn-sm btn-ghost" id="faq-stroller-mail" aria-labelledby="faq-stroller-mail faq-stroller-q" href="mailto:cathy@wiseacresorganic.com?subject=Accessibility%20question"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Email us</a> <a data-t="t9c2ac95a" class="btn btn-sm btn-ghost" id="faq-stroller-fv" aria-labelledby="faq-stroller-fv faq-stroller-q" href="first-visit.html#strollers">First-visit guide</a></div>
+            </div>
+          </details>
+          <details name="faq">
+            <summary data-t="te185f1c7" id="faq-bring-q">What should we bring?</summary>
+            <div class="answer">
+              <ul class="ticks">
+                <li data-t="te0a59b3f">Your reservation confirmation (email or phone)</li>
+                <li data-t="t44379eb9">Cash, a card, Apple Pay or Google Pay</li>
+                <li data-t="t65e8977a">Water and a snack for the shady picnic spots</li>
+                <li data-t="ta3321f0a">Shoes that can get dirty</li>
+                <li data-t="tb1a947f0">Sunscreen and a hat</li>
+                <li data-t="t7ef5b5f8">A cooler bag for berries on warm days</li>
+              </ul>
+              <div class="card-actions"><a data-t="t9c2ac95a" class="btn btn-sm btn-ghost" id="faq-bring-fv" aria-labelledby="faq-bring-fv faq-bring-q" href="first-visit.html#checklist">First-visit guide</a></div>
+            </div>
+          </details>
+          <details name="faq">
             <summary data-t="t25a27596">How can I receive farm updates?</summary>
             <div class="answer">
               <p data-t="t65bc9dc0">Join our email list for news about seasons, reservations and events.</p>
@@ -2028,26 +2057,26 @@
         <div class="contact-grid">
           <article class="loc-card reveal">
             <span data-t="tcf782409" class="loc-tag">The u-pick farm</span>
-            <h3 data-t="t5bf811f4">Wise Acres Organic Farm</h3>
+            <h3 data-t="t5bf811f4" id="ct-farm-h">Wise Acres Organic Farm</h3>
             <address data-t="t183fef9f">4701 Hartis Road<br>Indian Trail, NC 28079</address>
             <p data-t="t2f7f033c" class="loc-note">Reservations required. No walk-ins.</p>
             <div class="card-actions">
-              <a data-t="t60adc929" class="btn btn-red" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
+              <a data-t="t60adc929" class="btn btn-red" id="ct-farm-dir" aria-labelledby="ct-farm-dir ct-farm-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
               <a data-t="t122adc77" class="btn btn-ghost" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
             </div>
-            <p data-t="td7b709b8" class="more-maps">Open in <a href="https://maps.apple.com/?daddr=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a href="https://waze.com/ul?q=4701%20Hartis%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
+            <p data-t="td7b709b8" class="more-maps">Open in <a id="ct-farm-apple" aria-labelledby="ct-farm-apple ct-farm-h" href="https://maps.apple.com/?daddr=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a id="ct-farm-waze" aria-labelledby="ct-farm-waze ct-farm-h" href="https://waze.com/ul?q=4701%20Hartis%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
           </article>
 
           <article class="loc-card reveal">
             <span data-t="t7f53d1b9" class="loc-tag loc-tag-green">Next door</span>
-            <h3 data-t="t77ed2eb7">The GreenHouse</h3>
+            <h3 data-t="t77ed2eb7" id="ct-gh-h">The GreenHouse</h3>
             <address data-t="tcda2e54c">5503 Poplin Road<br>Indian Trail, NC 28079</address>
             <p data-t="ta38e4092" class="loc-note">Pizza, ice cream and drinks. No reservation needed. Fri&ndash;Sun, 10 am&ndash;8 pm.</p>
             <div class="card-actions">
-              <a data-t="t60adc929" class="btn btn-green" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
-              <a data-t="t0cab61e8" class="btn btn-ghost" href="https://www.instagram.com/thegreenhouse5503/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-instagram"/></svg> Instagram</a>
+              <a data-t="t60adc929" class="btn btn-green" id="ct-gh-dir" aria-labelledby="ct-gh-dir ct-gh-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
+              <a data-t="t0cab61e8" class="btn btn-ghost" id="ct-gh-ig" aria-labelledby="ct-gh-ig ct-gh-h" href="https://www.instagram.com/thegreenhouse5503/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-instagram"/></svg> Instagram</a>
             </div>
-            <p data-t="td7b709b8" class="more-maps">Open in <a href="https://maps.apple.com/?daddr=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a href="https://waze.com/ul?q=5503%20Poplin%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
+            <p data-t="td7b709b8" class="more-maps">Open in <a id="ct-gh-apple" aria-labelledby="ct-gh-apple ct-gh-h" href="https://maps.apple.com/?daddr=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a> or <a id="ct-gh-waze" aria-labelledby="ct-gh-waze ct-gh-h" href="https://waze.com/ul?q=5503%20Poplin%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a></p>
           </article>
 
           <article class="loc-card loc-touch reveal">

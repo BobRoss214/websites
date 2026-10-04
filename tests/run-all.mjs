@@ -15,7 +15,7 @@ import { startSite, loadPlaywright, axeSource, ms } from './lib.mjs';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 // the cheap checks first, then the browser tests from fast to slow
-const ORDER = ['public-site', 'seo', 'launch-check', 'option-patches', 'docs', 'owner-calendar', 'validity', 'pipeline', 'consistency', 'review-sheet', 'files-audit', 'plain-lint', 'live', 'dated', 'calendar-doc', 'sitecheck', 'sitecheck-values', 'serve', 'messages', 'drive', 'pause', 'calm', 'games', 'gallery', 'no-js', 'analytics', 'privacy', 'print-qr', 'deploy', 'farm-seasons', 'npc', 'i18n', 'i18n-early', 'i18n-a11y', 'languages', 'axe', 'keyboard', 'sprite', 'map', 'features', 'hero', 'touch', 'layout-sweep'];
+const ORDER = ['public-site', 'seo', 'launch-check', 'option-patches', 'docs', 'owner-calendar', 'validity', 'pipeline', 'consistency', 'review-sheet', 'files-audit', 'plain-lint', 'live', 'dated', 'calendar-doc', 'sitecheck', 'sitecheck-values', 'serve', 'messages', 'drive', 'pause', 'calm', 'games', 'gallery', 'no-js', 'analytics', 'privacy', 'print-qr', 'deploy', 'farm-seasons', 'npc', 'i18n', 'i18n-early', 'i18n-a11y', 'languages', 'axe', 'keyboard', 'link-names', 'sprite', 'map', 'features', 'hero', 'touch', 'layout-sweep', 'big-font'];
 const NEEDS_BROWSER = (name) => !['public-site', 'seo', 'launch-check', 'option-patches', 'docs', 'owner-calendar', 'validity', 'pipeline', 'consistency', 'review-sheet', 'files-audit', 'plain-lint'].includes(name);
 const args = process.argv.slice(2), flags = args.filter((a) => a.startsWith('--')), words = args.filter((a) => !a.startsWith('--'));
 const names = fs.readdirSync(DIR).filter((f) => f.endsWith('.test.mjs')).map((f) => f.replace(/\.test\.mjs$/, ''))
