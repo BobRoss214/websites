@@ -68,9 +68,9 @@ Cada oración en inglés que cambien necesita cuatro traducciones: español, hin
 
 ## 6. Cambiar un precio (ejemplo: el paquete de $31 pasa a $32)
 
-1. Ejecuten `python3 tools/change_fact.py price "$31" "$32"`. Deben ver `3 places in 2 files`, en `index.html` y `pages/pumpkin-patch.html`. Todavía no cambia nada.
+1. Ejecuten `python3 tools/change_fact.py price '$31' '$32'`. Dejen las comillas simples: evitan que su terminal cambie `$31`. Deben ver `3 places in 2 files`, en `index.html` y `pages/pumpkin-patch.html`. Todavía no cambia nada.
 2. Ejecuten el mismo comando con `--yes` al final. Cambia los 3 lugares, copia las 3 traducciones de cada idioma y lo revisa todo. Deben ver `Ready.`
-3. Un precio puede significar dos cosas. Si dice `means more than one thing` (`$3` también es el trencito del barril), agreguen palabras que estén junto a su precio: `python3 tools/change_fact.py price "$3" "$4" --only "per person"`.
+3. Un precio puede significar dos cosas. Si dice `means more than one thing` (`$3` también es el trencito del barril), agreguen palabras que estén junto a su precio: `python3 tools/change_fact.py price '$3' '$4' --only "per person"`.
 4. Ejecuten `python3 tools/serve.py` y miren el paquete y la tienda. Después publiquen (trabajo 8).
 5. ¿Algo salió mal? `python3 tools/change_fact.py undo` pone todo de vuelta.
 

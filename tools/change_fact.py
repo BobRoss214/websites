@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Changes one fact everywhere it is written, translations included, and checks the result. Needs Python 3.8 or newer and beautifulsoup4 (the same as pages.py).
 
-  python3 tools/change_fact.py price "$31" "$32"            a price
+  python3 tools/change_fact.py price '$31' '$32'            a price (single quote marks: a Mac, Linux or PowerShell window changes "$31" into "1")
   python3 tools/change_fact.py email old@x.com new@x.com    an e-mail address
   python3 tools/change_fact.py phone 704-207-6347 704-555-1234
   python3 tools/change_fact.py hours "Fri-Sun, 10 am-8 pm" "Fri-Sun, 10 am-9 pm"     opening hours (the days stay the same)
@@ -122,6 +122,8 @@ def run(script, *args):
 # ---------------------------------------------------------------- what the owner typed
 def clean(s, what, kind='text'):
     s = s.strip()
+    if kind == 'price' and len(s) >= 2 and s[0] == s[-1] == "'":
+        s = s[1:-1].strip()   # '$31' in single quotes: the Windows cmd window hands the quote marks over as they are (a Mac, Linux or PowerShell window removes them)
     if not s:
         raise Refuse('The %s words are empty.' % what)
     if len(s) > MAX_TEXT:
@@ -220,7 +222,7 @@ class Spec:
     def setup_price(self):
         for s, what in ((self.old, 'old'), (self.new, 'new')):
             if not re.fullmatch(r'\$\d+(?:\.\d\d)?', s):
-                raise Refuse('The %s price "%s" does not look like a price. Write it like $32 or $4.50.' % (what, s))
+                raise Refuse('The %s price "%s" does not look like a price. Write it like $32 or $4.50 with single quote marks around it: \'$32\'. (A Mac, Linux or PowerShell window removes the $ and the digits after it from "$32" in double quote marks.)' % (what, s))
         self.rx = re.compile(re.escape(self.old) + r'(?!\d)(?!\.\d)')
         self.fact_prefix, self.expected = 'price:', self.old
 
@@ -627,6 +629,13 @@ def change(kind, old, new, only, yes):
     if not yes:
         print('\nNothing was changed. To do it, run the same command with --yes on the end.')
         return 0
+    try:
+        import bs4  # noqa: F401  (pages.py needs it; find out now, before any file is changed)
+    except ImportError:
+        print('\nNothing was changed. This needs the beautifulsoup4 package. Type this once, then run the same command again:\n'
+              '    %s -m pip install beautifulsoup4\n'
+              '(On Windows type python or py -3 instead of python3. See "Commands on Windows, Mac and Linux" in README.md.)' % ('python3' if os.name != 'nt' else 'python'))
+        return 1
     folder = make_backup()
     print('\nA copy of the files is saved in %s (python3 tools/change_fact.py undo puts it back).' % folder)
     chosen = {(p['file'], p['line'], p['old']) for p in places}
@@ -726,7 +735,7 @@ def main(argv):
         if rest == ['undo']:
             return undo()
         if len(rest) != 3 or rest[0] not in KINDS:
-            print('Say what to change, the old words and the new words, for example:  python3 tools/change_fact.py price "$31" "$32"')
+            print('Say what to change, the old words and the new words, for example:  python3 tools/change_fact.py price \'$31\' \'$32\'')
             print('The kinds: ' + ', '.join(KINDS) + ', and  undo.  python3 tools/change_fact.py --help  says more.')
             return 2
         if not os.path.exists(os.path.join(ROOT, 'index.html')):

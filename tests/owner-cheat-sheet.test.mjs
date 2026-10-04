@@ -69,14 +69,14 @@ const factNames = new Set(commands.filter((c) => c.startsWith('python3 tools/che
 const factsHelp = spawnSync(PY, ['tools/check_facts.py', '--short'], { cwd: tmp, encoding: 'utf8', timeout: 90000 }).stdout || '';
 ok('every fact the sheet asks check_facts.py about (' + [...factNames].join(', ') + ') matches a fact it knows', [...factNames].every((w) => spawnSync(PY, ['tools/check_facts.py', w, '--brief'], { cwd: tmp, encoding: 'utf8' }).status === 0 && new RegExp(w.replace('-', '.?'), 'i').test(factsHelp.replace(/-/g, '-'))), [...factNames].join(', '));
 // the one-command jobs: the first command of each (without --yes) lists places and changes nothing; what the sheet says about its list is what it prints
-const DRY = [['price "$31" "$32"', ['3 places in 2 files', 'index.html', 'pages/pumpkin-patch.html', '3 page texts']], ['hours "Fri-Sun, 10 am-8 pm" "Fri-Sun, 10 am-9 pm"', ['index.html', 'js/content.js']],
+const DRY = [["price '$31' '$32'", ['3 places in 2 files', 'index.html', 'pages/pumpkin-patch.html', '3 page texts']], ['hours "Fri-Sun, 10 am-8 pm" "Fri-Sun, 10 am-9 pm"', ['index.html', 'js/content.js']],
   ['email cathy@wiseacresorganic.com office@wiseacresorganic.com', ['js/features.js', '6 page texts']], ['phone 704-207-6347 704-555-1234', ['1 page text']]];
 const HASH = 'import hashlib,os\nh=hashlib.sha256()\nfor b,d,f in sorted(os.walk(".")):\n    for n in sorted(f):\n        if "__pycache__" not in b: h.update(open(os.path.join(b,n),"rb").read())\nprint(h.hexdigest())';
 const dryBad = [];
 for (const [args, want] of DRY) {
   if (!en.includes('`python3 tools/change_fact.py ' + args + '`')) { dryBad.push('the sheet no longer has `python3 tools/change_fact.py ' + args + '`'); continue; }
   const before = spawnSync(PY, ['-c', HASH], { cwd: tmp, encoding: 'utf8' }).stdout;
-  const parts = args.match(/"[^"]*"|\S+/g).map((x) => x.replace(/^"|"$/g, ''));
+  const parts = args.match(/"[^"]*"|'[^']*'|\S+/g).map((x) => x.replace(/^"|"$/g, '').replace(/^'|'$/g, ''));
   const r = spawnSync(PY, ['tools/change_fact.py', ...parts], { cwd: tmp, encoding: 'utf8', timeout: 120000 });
   const after = spawnSync(PY, ['-c', HASH], { cwd: tmp, encoding: 'utf8' }).stdout;
   const out = (r.stdout || '') + (r.stderr || '');

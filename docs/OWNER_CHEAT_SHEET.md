@@ -64,9 +64,9 @@ Every English sentence you change needs four translations: Spanish, Hindi, Chine
 
 ## 6. Change a price (example: the $31 package becomes $32)
 
-1. Run `python3 tools/change_fact.py price "$31" "$32"`. You should see `3 places in 2 files`, in `index.html` and `pages/pumpkin-patch.html`. It changes nothing yet.
+1. Run `python3 tools/change_fact.py price '$31' '$32'`. Keep the single quote marks: they stop your terminal from changing `$31`. You should see `3 places in 2 files`, in `index.html` and `pages/pumpkin-patch.html`. It changes nothing yet.
 2. Run the same command with `--yes` on the end. It changes the 3 places, copies the 3 translations in each language and checks everything. You should see `Ready.`
-3. A price can mean two things. If it says `means more than one thing` (`$3` is also the barrel train), add words that are next to your price: `python3 tools/change_fact.py price "$3" "$4" --only "per person"`.
+3. A price can mean two things. If it says `means more than one thing` (`$3` is also the barrel train), add words that are next to your price: `python3 tools/change_fact.py price '$3' '$4' --only "per person"`.
 4. Run `python3 tools/serve.py` and look at the package and the Shop. Then publish (job 8).
 5. Wrong? `python3 tools/change_fact.py undo` puts everything back.
 

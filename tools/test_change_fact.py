@@ -296,6 +296,24 @@ class ChangeFact(unittest.TestCase):
             self.assertNotIn('Cash is welcome', r['langs'][c], 'nothing was invented')
         put_back(self, 'words', r['undo'])
 
+    def test_price_in_single_quote_marks_and_a_price_the_terminal_ate(self):
+        """The sheet says price '$31' '$32'. A Mac, Linux or PowerShell window turns "$31" in double quote marks into "1" before the tool sees it: that is refused with a plain hint, and
+        the Windows cmd window, which hands the single quote marks over as typed, works too."""
+        s = Site()
+        try:
+            for old, new in (("'$31'", "'$32'"), ('$31', '$32')):
+                code, out = s.change('price', old, new)
+                self.assertEqual(code, 0, out)
+                self.assertIn('3 places in 2 files', out)
+                self.assertIn('price: "$31" -> "$32"', out)
+            code, out = s.change('price', '1', '2')
+            self.assertEqual(code, 1, out)
+            self.assertIn('single quote marks', out)
+            self.assertNotIn('Traceback', out)
+            self.assertEqual(tree_hash(s.root), s.before, 'a list, and a refused price, must touch no file')
+        finally:
+            shutil.rmtree(s.tmp, ignore_errors=True)
+
     def test_refusals_touch_nothing_and_say_why(self):
         r = got('words_and_refusals')
         for case, (code, out) in r['hostile']:
@@ -318,6 +336,21 @@ class ChangeFact(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertIn('I found no place', out)
         self.assertTrue(r['untouched'], 'a refused change, and a list without --yes, must touch no file')
+
+    def test_without_beautifulsoup4_nothing_is_changed(self):
+        """pages.py cannot run without the helper package, so the change must say so BEFORE it touches a file. (It used to change the English, stop, and a second run then found no place to change.)"""
+        s = Site()
+        try:
+            code = "import sys, runpy; sys.modules['bs4'] = None; sys.argv = ['change_fact.py', 'price', '$31', '$32', '--yes']; runpy.run_path('tools/change_fact.py', run_name='__main__')"
+            r = subprocess.run([sys.executable, '-c', code], cwd=s.root, capture_output=True, text=True, encoding='utf-8', timeout=300, env=dict(os.environ, WA_BACKUP_DIR=s.backups))
+            out = r.stdout + r.stderr
+            self.assertEqual(r.returncode, 1, out)
+            self.assertIn('beautifulsoup4', out)
+            self.assertIn('Nothing was changed', out)
+            self.assertNotIn('Traceback', out)
+            self.assertEqual(tree_hash(s.root), s.before, 'a change that cannot be rebuilt must touch no file')
+        finally:
+            shutil.rmtree(s.tmp, ignore_errors=True)
 
     def test_source_follows_the_windows_rules(self):
         with open(os.path.join(HERE, 'change_fact.py'), encoding='utf-8') as f:
