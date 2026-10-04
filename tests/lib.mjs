@@ -8,7 +8,8 @@
  *   WA_URL     test a site that is already running, e.g. WA_URL=http://localhost:8000/  (no server is started)
  *   WA_PORT    port for the built-in server (default: any free port)
  *   WA_CHROME  path to a Chrome/Chromium program (default: the one Playwright installed)
- *   WA_SLOW    multiplier for every time limit, e.g. WA_SLOW=3 on a very busy computer (default 1)
+ *   WA_SLOW    multiplier for every time limit, e.g. WA_SLOW=3. Default: worked out from how busy the computer is (1 when it is quiet, up to 6 when
+ *              it is overloaded; see machine() below). WA_SLOW=1 switches that off. A limit is only ever used up by a check that fails, so a higher one costs nothing.
  *   WA_DATE    the moment every page believes it is "now", e.g. WA_DATE=2026-12-15T12:00:00-05:00 (default: TODAY below)
  */
 import http from 'node:http';
@@ -16,12 +17,24 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
-const SLOW = Math.max(1, Number(process.env.WA_SLOW) || 1);
-export const ms = (n) => Math.round(n * SLOW);   // a time limit, scaled by WA_SLOW
+const SLOW = process.env.WA_SLOW ? Math.max(1, Number(process.env.WA_SLOW) || 1) : 0;   // 0: not set, so look at the computer
+
+/** How busy the computer is (the 1-minute load average per core; looked at again every 5 seconds) and the multiplier for every time limit that follows from it.
+ *  A computer with 4 cores and a load of 40 is "busy" (factor 5): Chromium then needs several times the usual time for everything. A quiet computer gives 1.
+ *  `peak` is the highest load seen during this run (used by the note at the end of a failed run). */
+let seen = { at: 0, load: 0 }, peak = 0;
+export function machine() {
+  const cores = (os.cpus() || []).length || 1;
+  if (Date.now() - seen.at > 5000) { seen = { at: Date.now(), load: os.loadavg()[0] }; peak = Math.max(peak, seen.load); }
+  const ratio = seen.load / cores;
+  return { load: seen.load, cores, ratio, busy: ratio >= 2.5, factor: SLOW || (ratio < 2.5 ? 1 : Math.min(6, Math.ceil(ratio / 2))), peak: Math.max(peak, seen.load) };
+}
+export const ms = (n) => Math.round(n * machine().factor);   // a time limit, scaled by WA_SLOW or by how busy the computer is
 
 /* ------------------------------------------------------------------ *
  * Static server
@@ -91,7 +104,7 @@ export function axeSource() {
 export async function launch() {
   const { chromium } = await loadPlaywright();
   const exe = process.env.WA_CHROME || undefined;
-  try { return await chromium.launch({ executablePath: exe }); } catch (e) {
+  try { return await chromium.launch({ executablePath: exe, timeout: ms(30000) }); } catch (e) {   // 30 s is not enough to start Chromium on a computer that is overloaded
     throw new Error('Could not start Chromium (' + String(e.message).split('\n')[0] + '). Run  npx playwright install chromium  or set WA_CHROME to a Chrome program.');
   }
 }
@@ -125,16 +138,38 @@ export async function until(page, fn, arg, limit = 15000) {
   try { return await (await page.waitForFunction(fn, arg, { timeout: ms(limit), polling: 50 })).jsonValue(); } catch (e) { return false; }
 }
 
-/** Like ok(), but keeps asking `get()` (in Node) until `test(value)` is true or the time is up; the last value is shown when it fails. */
+/** Like ok(), but keeps asking `get()` (in Node) until `test(value)` is true or the time is up; the last value is shown when it fails (with the seconds it waited). */
 export async function okSoon(name, get, test, limit = 15000) {
-  const end = Date.now() + ms(limit);
+  const t0 = Date.now(), end = t0 + ms(limit);
   let v, good = false;
   for (;;) {
     try { v = await get(); good = !!test(v); } catch (e) { v = 'error: ' + e.message; good = false; }
     if (good || Date.now() > end) break;
     await new Promise((r) => setTimeout(r, 100));
   }
-  return ok(name, good, good ? '' : (typeof v === 'string' ? v : JSON.stringify(v)));
+  return ok(name, good, good ? '' : (typeof v === 'string' ? v : JSON.stringify(v)) + '  [still not true after ' + Math.round((Date.now() - t0) / 1000) + ' s]');
+}
+
+/** Waits until the page has come to rest after something moved it (a window resize, a scroll, a click). Use it instead of a fixed pause:
+ *  the page's own timers due within `virtual` ms have run (the page clock is a fake one, so that costs no real time: a "wait 200 ms" in the page's code
+ *  is over at once), the fonts are loaded, no CSS transition is still running (an endless animation is not waited for; one that starts only in the next
+ *  frame is waited for too) and frames have been drawn.
+ *  Gives up after `cap` ms (scaled by WA_SLOW or the load), so a page that never comes to rest ends in a failed check, not a hang. */
+export async function settled(page, virtual = 300, cap = 5000) {
+  if (virtual) { try { await page.clock.runFor(virtual); } catch (e) { /* the real clock is in use: nothing to fast-forward */ } }
+  try {
+    await page.evaluate(async (limit) => {
+      const t0 = performance.now(), frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      try { await document.fonts.ready; } catch (e) { /* no font list */ }
+      await frames();   // a style change made just before only starts its transitions in the first frame: look after that
+      for (let i = 0; i < 20 && performance.now() - t0 < limit; i++) {
+        const running = document.getAnimations().filter((a) => a instanceof CSSTransition && a.playState === 'running');
+        if (!running.length) break;
+        await Promise.race([Promise.all(running.map((a) => a.finished.catch(() => {}))), new Promise((r) => setTimeout(r, Math.max(50, limit - (performance.now() - t0))))]);
+      }
+      await frames();
+    }, ms(cap));
+  } catch (e) { /* the page was closed or went somewhere else: the next check says so */ }
 }
 
 /** Text of the first match, trimmed and with white space collapsed (null when there is none). */
@@ -195,6 +230,8 @@ export async function finish({ browser, site, errs = [] } = {}) {
   try { if (site) await site.close(); } catch (e) { /* closing */ }
   console.log(`\n${passes} passed, ${fails} failed`);
   console.log(fails ? fails + ' FAILED' : 'ALL PASSED');
+  const m = machine();
+  if (fails && m.peak / m.cores >= 2.5) console.log(`NOTE: the computer was busy during this test (load ${m.peak.toFixed(0)} on ${m.cores} cores; the time limits were ${m.factor} times the normal ones). A failure that does not come back on a second run is most likely the load, not the site: run this test again on its own; WA_SLOW=10 makes every limit 10 times longer.`);
   process.exitCode = fails ? 1 : 0;
 }
 

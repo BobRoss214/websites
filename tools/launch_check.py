@@ -1449,9 +1449,11 @@ class Checker(object):
             r.add(WARN, 'setting-farmpoint', 'Owner setting: the farm\'s exact spot is not set, so the Drive time box has to search for the address on every first press.',
                   'Send the two numbers from Google Maps (docs/QUESTIONS_FOR_THE_FARM.md, question 35).')
         # a leftover notice
-        m = setting('notice', r"'([^']*)'")
-        if m and m.group(1).strip():
-            r.add(WARN, 'setting-notice', 'Owner setting: a notice bar is switched on for every visitor: "%s".' % m.group(1)[:80], 'Remove it from js/content.js when it is no longer true.')
+        # (a text in single or double quotes, or in the five languages: notice: { en: '...', es: '...' }, which is how js/content.js says to write it)
+        m = setting('notice', r'''(?:'([^']*)'|"([^"]*)"|\{[^}]*?\ben\s*:\s*(?:'([^']*)'|"([^"]*)"))''')
+        text = next((g for g in m.groups() if g), '') if m else ''
+        if text.strip():
+            r.add(WARN, 'setting-notice', 'Owner setting: a notice bar is switched on for every visitor: "%s".' % text[:80], 'Remove it from js/content.js when it is no longer true.')
         # demo data
         demo = [n for n, t in (('js/content.js', src),) if re.search(r'\bdemo\s*:\s*true', conf)]
         try:

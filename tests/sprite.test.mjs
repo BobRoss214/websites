@@ -1,3 +1,6 @@
+// order: 320
+// browser: yes
+// covers: js/footer-art.js, js/hero.js, js/main.js, tools/pages.py, pages/*, *.html
 /* The light pages: every extra page carries only the drawings (icon sprite) it uses and loads js/footer-art.js, not the hero engine.
  * tools/pages.py decides what each page gets; this opens every extra page in every season and every language, scrolls it, opens the phone menu and
  * the language list, and checks that every <use href="#..."> and url(#...) that ends up on the page has its drawing on that page.

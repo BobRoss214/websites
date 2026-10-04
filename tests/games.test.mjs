@@ -1,3 +1,6 @@
+// order: 170
+// browser: yes
+// covers: js/hero.js, js/content.js, css/hero.css, css/extras.css
 /* The mini games on the home page: picking fruit, snipping sunflowers, lighting trees, stoking fires, the friends, the sun, the paper cup of flowers, the goat.
  *   - every achievement can be earned: 100 strawberries, blueberries, sunflowers, pumpkins, 100 lights and sparks in winter, 1,000 picks in all
  *     (real mouse clicks on things that really are on top; the 99th pick shows no badge, the 100th does; a computer and a phone)
@@ -111,8 +114,15 @@ await run('games', async ({ browser, base, errs }) => {
   // The decisive click is a real mouse click: it must wake the badge, and the one before it must not.
   async function lastClick(p, kind) {
     for (let i = 0; i < 3; i++) {
+      const before = await count(p);
       const f = await p.evaluate((k) => window.__g.find(k), kind);
-      if (f) { await p.mouse.click(f.x, f.y); return true; }
+      if (f) {
+        await p.mouse.click(f.x, f.y);
+        // the click must have counted. On a busy computer the scene can move a little between looking for the spot and the click arriving, and the click then
+        // lands beside the plant: look again (a click that never counts, three times, still fails the check)
+        if (await until(p, (n) => window.__g.count() > n, before, 3000)) return true;
+        continue;
+      }
       await p.clock.fastForward(12000);   // nothing free to hit right now: let the picked ones grow back
     }
     return false;
@@ -140,7 +150,8 @@ await run('games', async ({ browser, base, errs }) => {
       }
       ok(`${badge}: no badge at 99`, (await toast(p)) === null);
       ok(`${badge}: the 100th click is a real mouse click on a plant`, await lastClick(p, kind));
-      await okSoon(`${badge}: the badge opens at 100 with its title and text`, () => toast(p), (t) => t && t.cls === 'ach-' + badge && t.title === title && t.msg.startsWith(text) && t.kicker === 'Achievement unlocked!');
+      const opened = await okSoon(`${badge}: the badge opens at 100 with its title and text`, () => toast(p), (t) => t && t.cls === 'ach-' + badge && t.title === title && t.msg.startsWith(text) && t.kicker === 'Achievement unlocked!');
+      if (!opened) info(`(what the page shows: basket ${await count(p)}, ${await p.evaluate(() => document.querySelectorAll('.ach').length)} badge(s) in the page, the badge area holds "${await p.evaluate(() => String((document.querySelector('.ach-stack') || {}).innerHTML || '').slice(0, 160))}")`);   // a missing badge: was it never opened, or is it gone already?
       ok(`${badge}: the reward falls (the picked things rain down)`, (await p.locator('.ach-rain').count()) === 1);
       const cr = await p.evaluate(() => window.__g.contrast());
       ok(`${badge}: the badge text is readable (contrast at least 4.5: ${JSON.stringify(cr)})`, cr && Object.values(cr).every((v) => v >= 4.5), JSON.stringify(cr));

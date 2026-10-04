@@ -1,3 +1,6 @@
+// order: 30
+// browser: no
+// covers: *
 /* Keeps the notes in README.md, docs/ and tests/README.md true to the files they talk about (no browser needed): no line numbers,
  * every place a note names by its words is still in that file, every file path in backticks exists, every relative link and #anchor
  * works, and every python3 tools/... or node tests/... command names a script that exists.

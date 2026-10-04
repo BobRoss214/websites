@@ -1,0 +1,49 @@
+Option: qr-one-line
+Name: QR signs: print the address once on the directions sign
+Does: tools/make_qr.py leaves out the Spanish line under the English one when the two are the same, so the directions sign prints 4701 Hartis Road, Indian Trail, NC once instead of twice (a new helper es_line in tools/make_qr.py). The consistency test accepts a sign with no Spanish line when the list gives the same words in both languages. The change to print/qr-signs.html is in the patch (that one line); the codes do not change. Other signs keep both lines, and the Hindi, Chinese and Vietnamese sheets already print a same-as-English line once.
+Answers: d65 C (one address line; with qr-stronger-codes it is d65 D, both)
+Conflicts: none
+Requires: none
+Host: any
+Order: 70
+Profile: filled
+After: nothing is needed (print/qr-signs.html is in the patch); after a later change to tools/qr_links.json or reviewUrl run python3 tools/make_qr.py. If a print/ hunk does not fit because a sign changed, apply with git apply --exclude='print/*' and run python3 tools/make_qr.py
+Strings: none
+
+diff --git a/print/qr-signs.html b/print/qr-signs.html
+index e014da4..3eb053e 100644
+--- a/print/qr-signs.html
++++ b/print/qr-signs.html
+@@ -104,3 +104,3 @@ h1 span{display:block;margin-top:.15em;font-size:2rem;color:#6a5140;font-weight:
+     <p class="how">Point your phone camera at the square.<span lang="es">Apunta la cámara de tu teléfono al cuadrado.</span></p>
+-    <p class="text">4701 Hartis Road, Indian Trail, NC<span lang="es">4701 Hartis Road, Indian Trail, NC</span></p>
++    <p class="text">4701 Hartis Road, Indian Trail, NC</p>
+     <p class="url">google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079</p>
+diff --git a/tests/consistency.test.mjs b/tests/consistency.test.mjs
+index c143dac..89e178c 100644
+--- a/tests/consistency.test.mjs
++++ b/tests/consistency.test.mjs
+@@ -520,4 +520,4 @@ function differences(en, tr, lang) {
+     printedCount++;
+-    const mine = new RegExp('<section class="sign" id="' + sign.id + '">[\\s\\S]*?<h1>([\\s\\S]*?)<span lang="es">([\\s\\S]*?)</span></h1>[\\s\\S]*?<p class="text">([\\s\\S]*?)<span lang="es">([\\s\\S]*?)</span></p>').exec(printed);
+-    if (!mine || [decode(mine[1]), decode(mine[2]), decode(mine[3]), decode(mine[4])].join('|') !== [sign.title_en, sign.title_es, sign.text_en, sign.text_es].join('|')) bad.push(sign.id + ': the printed sign (print/qr-signs.html) does not say what tools/qr_links.json says');
++    const mine = new RegExp('<section class="sign" id="' + sign.id + '">[\\s\\S]*?<h1>([\\s\\S]*?)<span lang="es">([\\s\\S]*?)</span></h1>[\\s\\S]*?<p class="text">([\\s\\S]*?)(?:<span lang="es">([\\s\\S]*?)</span>)?</p>').exec(printed);   // the Spanish line is left out when it is the same as the English (the address)
++    if (!mine || [decode(mine[1]), decode(mine[2]), decode(mine[3]), decode(mine[4] === undefined ? mine[3] : mine[4])].join('|') !== [sign.title_en, sign.title_es, sign.text_en, sign.text_es].join('|')) bad.push(sign.id + ': the printed sign (print/qr-signs.html) does not say what tools/qr_links.json says');
+   }
+diff --git a/tools/make_qr.py b/tools/make_qr.py
+index 5c599ac..3c0ecc8 100644
+--- a/tools/make_qr.py
++++ b/tools/make_qr.py
+@@ -98,2 +98,7 @@ def resolve(sign, site, review):
+ 
++def es_line(en, es):
++    """The Spanish line under the English one; left out when it is the same (an address), so it is not printed twice."""
++    return f'<span lang="es">{html.escape(es)}</span>' if es.strip() and es.strip() != en.strip() else ''
++
++
+ def short(url):
+@@ -220,3 +225,3 @@ def main():
+     <p class="how">Point your phone camera at the square.<span lang="es">Apunta la cámara de tu teléfono al cuadrado.</span></p>
+-    <p class="text">{html.escape(sign['text_en'])}<span lang="es">{html.escape(sign['text_es'])}</span></p>{also}
++    <p class="text">{html.escape(sign['text_en'])}{es_line(sign['text_en'], sign['text_es'])}</p>{also}
+     <p class="url">{html.escape(short(url))}</p>

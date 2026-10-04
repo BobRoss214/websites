@@ -1,3 +1,7 @@
+// order: 270
+// browser: yes
+// quick: yes
+// covers: js/i18n.js, js/hero.js, lang/*
 /* A visitor who opens the site in another language must not see English first: the texts are swapped as soon as the page body is in place,
  * while the big scripts are still starting up, not only when the whole page has been read (DOMContentLoaded).
  * Measured by putting a note at the very top of hero.js (the script that runs right after main.js): what did the page look like at that moment? */

@@ -1,3 +1,6 @@
+// order: 165
+// browser: yes
+// covers: js/main.js, js/hero.js, css/*
 /* "Pause animations" and the calm hero (js/main.js, initMotion): the round button in the hero's picker card and the one in the footer stop
  * every endless animation and the bee and start them again (aria-pressed, keyboard, the four languages), the picture stays whole, every tap
  * still works (a badge earned while paused shows and goes away by itself, without the rain of fruit), nothing is stored, and with "reduce

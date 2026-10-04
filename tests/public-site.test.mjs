@@ -1,3 +1,6 @@
+// order: 10
+// browser: no
+// covers: robots.txt, sitemap.xml, _headers, tools/pages.py, tools/qr_links.json, *.html, pages/*, print/*
 /* Keeps the tests and the owner's notes off the public site: nothing links to tests/ or docs/, the sitemap lists only real pages, robots.txt and
  * _headers keep tests/, docs/ and print/ out of search results, and tests/ holds no web page. Also: the site's own address is written the same way
  * everywhere (a forgotten place would make Google and share cards point at another site). No browser needed. */

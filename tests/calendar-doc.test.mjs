@@ -1,3 +1,6 @@
+// order: 100
+// browser: yes
+// covers: docs/WHAT_VISITORS_SEE_WHEN.md, tools/season_calendar.mjs, js/season.js, js/live.js, js/content.js, *.html, pages/*
 /* The day-by-day document (docs/WHAT_VISITORS_SEE_WHEN.md) still says what the pages show: 12 dates (six days on which something changes, and the day
  * before each) are loaded again on all six pages, and every page must look exactly as the document recorded; the season code is asked about every day of
  * the range (one page), and the dates written in the page files are compared with the ones the document was made from. So a change to the season dates,

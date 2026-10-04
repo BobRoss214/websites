@@ -1,3 +1,6 @@
+// order: 190
+// browser: yes
+// covers: *.html, js/*.js, lang/hi.js, pages/*
 /* The site when things go wrong: JavaScript off, pictures that do not load, one file lost on the way, a slow connection.
  * A visitor on bad hotel or farm wifi gets exactly these. Four parts:
  *   1. JavaScript off (6 pages; English and ?lang=hi; 390 and 1280 wide): prices, hours, address, booking and e-mail links, the questions (details/summary), the menu
@@ -68,7 +71,7 @@ async function menuReachable(p) {
   const btn = p.locator('#menu-toggle');
   if (n < 5 && await btn.isVisible()) {
     try { await btn.click({ timeout: ms(15000) }); } catch (e) { /* the button cannot be pressed: the count below says so */ }
-    for (let i = 0; i < 20 && n < 5; i++) { await p.waitForTimeout(250); n = await links(); }   // the menu slides in
+    for (const end = Date.now() + ms(5000); n < 5 && Date.now() < end;) { await p.waitForTimeout(250); n = await links(); }   // the menu slides in
   }
   return n;
 }
@@ -186,6 +189,7 @@ await run('no-js', async ({ browser, base, errs }) => {
 
   const cases = [...SCRIPTS, ...STYLES].map((f) => [f, 'index', '']).concat([['lang/hi.js', 'index', '?lang=hi']]);
   for (const pg of ['first-visit', 'wise-pie']) for (const f of ['js/main.js', 'js/season.js']) cases.push([f, pg, '']);
+  for (const f of NOT_ON_HOME) cases.push([f, 'wise-pie', '']);   // a script only the light pages load is lost on one of them
   const missing = await inLanes(cases, LANES, async ([file, pg, q]) => {
     const label = `${file} missing, ${pg}${q ? ' ' + q : ''}`, checks = [], infos = [];
     const { p, raised } = await without(file, pg, q);
@@ -245,7 +249,8 @@ await run('no-js', async ({ browser, base, errs }) => {
       const t0 = Date.now();
       await p.goto(gz.url + pg + '.html' + (lang === 'hi' ? '?lang=hi' : ''), { waitUntil: 'load', timeout: ms(170000) });
       const loadMs = Date.now() - t0;
-      await p.waitForTimeout(1500);
+      await until(p, () => window.__paint && window.__paint['first-contentful-paint'] && window.__frames.some(([, s]) => s[4] === 'text'), null, 20000);   // the first paint has been seen (a fixed 1.5 s was not always enough on a busy computer)
+      await p.waitForTimeout(ms(1500));   // and a little longer, so that a late change of language or season would be seen too
       const r = await p.evaluate(() => ({ paint: window.__paint, frames: window.__frames, lang: document.documentElement.lang }));
       const withText = r.frames.filter(([, s]) => s[4] === 'text').map(([, s]) => s);
       const distinct = (i) => [...new Set(withText.map((s) => s[i]).filter(Boolean))];

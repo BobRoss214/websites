@@ -13,6 +13,9 @@ El sitio sigue el calendario por sí solo de muchas maneras: la temporada, las i
 - Todas las fechas son del día de la granja (hora del Este). "A más tardar" es el último día seguro: hagan la tarea ese día o antes.
 - "Dónde" es un archivo y unas palabras para buscar (Ctrl+F). `index.html` en `data-t="t58da3033"` significa: abran `index.html` y busquen esas palabras. Las filas y las secciones del README se nombran entre comillas. Las palabras del sitio entre comillas, como "Open now", están en inglés, tal como aparecen en los archivos.
 - Después de cada cambio, publiquen y luego abran el sitio en vivo con `?check` al final de la dirección. Para publicar, ejecuten `python3 tools/make_deploy_folder.py` y suban lo que hay dentro de `deploy/` (`docs/LAUNCH_CHECKLIST.md`, sección "2. What to upload, and what to leave out"). En Windows escriban `python` en lugar de `python3`.
+- Las palabras que siguen a "Dónde" describen los archivos como están hoy. Un ajuste que ya usaron se ve distinto después (`closures: [],` pasa a ser `closures: ['2026-10-04'],`). Entonces busquen su nombre y dos puntos (`closures:`, `notice:`, `noticeUntil:`, `week:`) y usen la línea que empieza con dos espacios, cerca del final de `js/content.js`. Las mismas palabras también están en las notas explicativas al principio de ese archivo. Son comentarios, no la línea que hay que cambiar. La oración que está debajo de la tabla de pizza recibe un código `data-t` nuevo la primera vez que publican un cambio, así que busquen sus palabras: `<strong>Open now:</strong> pizza reservations for`.
+- Una oración en inglés nueva o cambiada necesita sus cuatro traducciones (español, hindi, chino, vietnamita) antes de que el comando de publicar funcione. Hasta entonces se detiene con "Translations missing", una línea por idioma, y no escribe nada en `deploy/`. Envíen las palabras nuevas a Claude el mismo día (README, sección "Change one sentence and its translations, step by step"; `python3 tools/i18n.py missing es --list` muestra lo que falta). Claude también puede publicar primero y agregar las traducciones después: hasta entonces los otros cuatro idiomas muestran esa línea en inglés. **Los fines de semana de pizza son la excepción.** Las fechas de una fila de pizza, y la oración "Open now" que está debajo de la tabla con la forma que muestra la fila "Open a new pizza weekend" del README, las traduce el propio comando de publicar. No hay nada que enviar. Las otras palabras de esa oración sí necesitan traducción.
+- La barra delgada de arriba de la página ("In season: ...", "Next up: ...") se muestra solo en computadoras. Los teléfonos no la muestran.
 - "Pregunta d23" es una pregunta de su panel que todavía espera su respuesta. El sitio no la decide, y esta página tampoco.
 - Una prueba mantiene esta página al día: sus fechas, sus días de la semana y las líneas que se ocultan solas se comparan con los archivos (la última sección explica cómo).
 
@@ -24,9 +27,9 @@ En temporada (de mediados de septiembre a principios de noviembre, las semanas d
 
 1. **Miren el sitio en vivo en su teléfono.** Las insignias "Open now" deben coincidir con la realidad, y la cuenta regresiva de la pizza debe nombrar el martes correcto.
 2. **Agreguen `?check` a la dirección** (`https://www.wiseacresorganic.com/?check`). Si no aparece ningún cuadro al final, no hay nada mal. Un cuadro **amarillo** indica qué arreglar y dónde. Un cuadro **verde** enumera líneas viejas con fecha que ya se ocultaron solas: bórrenlas cuando quieran (README, sección "Check your changes").
-3. **Actualicen "This week at the farm"** (`week` en `js/content.js`): cambien `updated` a la fecha de hoy y las palabras y los cupos que cambiaron. Todo lo que contiene desaparece 14 días después de `updated`, y el cuadro amarillo lo avisa cuando está viejo (README, fila "Say what is ripe / spots left this week"). Fuera de temporada el cuadro se llena solo: sáltense este paso.
+3. **Actualicen "This week at the farm"** (`week` en `js/content.js`): cambien `updated` a la fecha de hoy y las palabras y los cupos que cambiaron. Todo lo que contiene dura 14 días después de `updated` y desaparece desde el día 15, y el cuadro amarillo lo avisa cuando está viejo (README, fila "Say what is ripe / spots left this week"). Fuera de temporada el cuadro se llena solo o se oculta: sáltense este paso.
 4. **¿Lluvia o un día cerrado en los próximos siete días?** Agreguen la fecha a `closures`, escriban el aviso y su último día, y cierren los mismos horarios en Bookeo (README, filas "Close for rain or a holiday" y "Show a banner on every page").
-5. **En otoño, ¿se abre un fin de semana de pizza este martes?** Cambien la oración que está debajo de la tabla de pizza (README, fila "Open a new pizza weekend"). Aprovechen para agregar filas de los siguientes fines de semana.
+5. **En otoño, ¿se abre un fin de semana de pizza este martes?** Cambien la oración que está debajo de la tabla de pizza (README, fila "Open a new pizza weekend"). Aprovechen para agregar filas de los siguientes fines de semana. Las fechas se traducen solas al publicar (vean "Cómo leerla").
 6. **Presionen Reserve.** Bookeo debe mostrar los días que ustedes esperan. Lean el buzón de correo de la granja (mensajes de la lista de espera y de contacto) y respondan.
 7. **Si cambiaron un precio, un horario, un número de teléfono o un correo electrónico,** ejecuten `python3 tools/check_facts.py` antes de publicar. Debe decir que todos los datos coinciden.
 8. **Publiquen** (vean "Cómo leerla"), actualicen a la fuerza (Ctrl+F5, o Cmd+Shift+R en una Mac) y miren `?check` una vez más.
@@ -35,7 +38,7 @@ En temporada (de mediados de septiembre a principios de noviembre, las semanas d
 ## 2. El primer día de cada mes: 10 minutos
 
 1. `python3 tools/launch_check.py https://www.wiseacresorganic.com/` (cerca de un minuto). Un FAIL es algo roto: arréglenlo y vuelvan a ejecutarlo. Un WARN es un ajuste o una decisión que les toca a ustedes: léanlo. Un certificado del candado vencido aparece aquí como "The padlock (HTTPS) is not ready".
-2. `python3 tools/check_facts.py --short`: debe terminar con "all agree" (cada dato está escrito igual en todos los lugares).
+2. `python3 tools/check_facts.py --short`: debe decir `0 disagree` y terminar con `Nothing disagrees.` (cada dato está escrito igual en todos los lugares).
 3. `python3 tools/make_deploy_folder.py --check`: no escribe nada y dice si las páginas y las traducciones están al día y listas para subir. Si la carpeta tools también tiene la herramienta "doctor" del sitio, ejecutarla con python3 hace los pasos 2 y 3 y más en un solo paso, y termina con READY TO UPLOAD o NOT READY.
 4. Abran el sitio en vivo con `?check` una vez más, sin nada pendiente de publicar.
 5. **Google.** Search Console: los informes Pages y Sitemaps no muestran errores. Perfil de Empresa de Google (Business Profile): los horarios y los horarios de feriados están bien, y las reseñas nuevas tienen respuesta. La página de uso de su host, si su plan tiene un límite (`docs/LAUNCH_CHECKLIST.md`, sección "Every week in season").
@@ -57,8 +60,8 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 ### mar 6 oct 2026: se abre el primer fin de semana de pizza (y cada martes hasta el mar 27 oct 2026)
 
 - **Por sí solo:** la tabla ya tiene los cuatro fines de semana: filas con `data-release="2026-10-06"`, `data-release="2026-10-13"`, `data-release="2026-10-20"` y `data-release="2026-10-27"`, que abren a las 5:00 PM (`data-release-time="17:00"`). La cuenta regresiva, los botones "Remind me" y la etiqueta de la pantalla principal de otoño siguen las filas, y durante seis horas después de las 5:00 PM la cuenta regresiva dice "just opened" con un botón Reserve. La nota "Open now: pizza reservations for Oct 2 & 3" se oculta sola el lun 5 oct 2026. Cada fila se oculta el día después de su último día de visita (sección 9).
-- **Ustedes, a más tardar a las 5:00 PM cada martes:** miren el pronóstico, abran en Bookeo los horarios de ese fin de semana y cambien la oración que está debajo de la tabla para que diga qué fin de semana está abierto ahora, con su último día.
-- **Dónde:** `index.html`, en `data-t="t58da3033"` (la oración y su `data-until`); `index.html`, en `data-release-time="17:00"` (la hora de apertura). README, fila "Open a new pizza weekend".
+- **Ustedes, a más tardar a las 5:00 PM cada martes:** miren el pronóstico, abran en Bookeo los horarios de ese fin de semana y cambien la oración que está debajo de la tabla para que diga qué fin de semana está abierto ahora, con su último día. Mantengan la forma que muestra la fila del README, y el comando de publicar la traduce (vean "Cómo leerla").
+- **Dónde:** `index.html`, en `<strong>Open now:</strong> pizza reservations for` (la oración y su `data-until`); `index.html`, en `data-release-time="17:00"` (la hora de apertura). README, fila "Open a new pizza weekend".
 - **Si se olvidan:** la cuenta regresiva igual dice "just opened" por sí sola, pero la oración que está debajo de la tabla está vieja o falta, así que los visitantes no ven qué fin de semana está abierto.
 
 ### mié 7 oct 2026 al mié 4 nov 2026: las líneas se ocultan una por una
@@ -68,10 +71,10 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 - **Dónde:** `index.html`, en `data-t="tcda0fa57"` y `data-t="t5efe64c3"` (los dos días especiales). La lista completa está en la sección 9.
 - **Si se olvidan:** no se ve nada. `?check` las enumera en su cuadro verde ("remove them when you like").
 
-### mar 27 oct 2026: se abre la última fila de pizza; el mié 28 oct 2026 desaparecen la cuenta regresiva y la etiqueta
+### mar 27 oct 2026: se abre la última fila de pizza; esa noche desaparecen la cuenta regresiva y la etiqueta
 
-- **Por sí solo:** la última fila es `data-release="2026-10-27"` (visitas del 30 de octubre al 8 de noviembre). El mié 28 oct 2026 el cuadro de la cuenta regresiva y la etiqueta de la pantalla principal de otoño desaparecen, porque ya no queda ninguna apertura por delante.
-- **Ustedes, a más tardar el mar 27 oct 2026:** si los fines de semana de pizza siguen después del 8 de noviembre, agreguen las filas ahora (pregunta **d23**). La etiqueta necesita al menos una fila cuyo día `data-release` todavía esté por delante.
+- **Por sí solo:** la última fila es `data-release="2026-10-27"` (visitas del 30 de octubre al 8 de noviembre). Seis horas después de abrir, a las 11:00 PM del mar 27 oct 2026, el cuadro de la cuenta regresiva de la pizza y la etiqueta de la pantalla principal de otoño desaparecen, porque ya no queda ninguna apertura por delante.
+- **Ustedes, a más tardar el mar 27 oct 2026:** si los fines de semana de pizza siguen después del 8 de noviembre, agreguen las filas ahora (pregunta **d23**). Las fechas se traducen solas. La etiqueta necesita al menos una fila cuyo día `data-release` todavía esté por delante.
 - **Dónde:** `index.html`, en `data-release="2026-10-27"`: copien esa fila completa y cambien sus cuatro fechas (README, fila "Open a new pizza weekend").
 - **Si se olvidan:** se vende pizza, pero no hay cuenta regresiva, ni "Remind me", ni etiqueta: los visitantes solo ven "New weekends open every Tuesday at 5:00 PM".
 
@@ -150,14 +153,14 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 ### jue 15 abr 2027: empieza la temporada de fresas (según el calendario, no según el clima)
 
 - **Por sí solo:** la barra superior dice "In season: Strawberries", la primera pantalla dice "It's strawberry season!" y el cuadro "This week" dice "In season". Nada en el sitio sigue el clima.
-- **Ustedes, a más tardar el jue 8 abr 2027:** respondan **d41** (cargo por cancelación en la página de fresas), **d54** (precios) y **d26** (¿cuándo hay flores para cortar?). Si el campo está atrasado o adelantado, avísenlo con la barra de aviso y `week` (`crops: { strawberries: 'soon' }`). Abran los horarios de Bookeo. Si reciben visitas con reserva en primavera, agreguen los días a `hours` (`farm`) para que aparezca la insignia de la granja.
+- **Ustedes, a más tardar el jue 8 abr 2027:** respondan **d41** (cargo por cancelación en la página de fresas), **d54** (precios) y **d26** (¿cuándo hay flores para cortar?). Si el campo está atrasado o adelantado, avísenlo con la barra de aviso y `week` (`crops: { strawberries: 'soon' }`). Abran los horarios de Bookeo. Si reciben visitas con reserva en primavera, agreguen los días a `hours` (`farm`) para que aparezca la insignia de la granja: `farm:       { fall: [4, 5, 6, 0], spring: [4, 5, 6, 0] }`.
 - **Dónde:** `js/content.js`, en `farm:       { fall: [4, 5, 6, 0] }` (hoy solo el otoño tiene días de la granja), `notice: '',` y `week: {},` (2 lugares).
 - **Si se olvidan:** la primera pantalla dice que es temporada de fresas un día en que el campo no está listo; sin días de la granja en primavera no hay insignia de la granja (es un hueco, no un error).
 
 ### mar 8 jun 2027 al mar 15 jun 2027: termina la primavera, empieza el verano
 
 - **Por sí solo:** el último día de la temporada de fresas es el 7 de junio. El mar 8 jun 2027 no hay ninguna temporada en curso; el aspecto cambia a verano el sáb 12 jun 2027; el mar 15 jun 2027 empieza la temporada de arándanos y girasoles ("It's blueberry season!").
-- **Ustedes, a más tardar el lun 7 jun 2027:** respondan **d59** (programas de verano), **d58** (¿botanas y bebidas en primavera y verano?) y **d68** (la insignia de girasoles solo funciona en pantallas grandes). Abran los horarios de verano en Bookeo; agreguen días de la granja de verano a `hours` si quieren la insignia; actualicen `week`.
+- **Ustedes, a más tardar el lun 7 jun 2027:** respondan **d59** (programas de verano), **d58** (¿botanas y bebidas en primavera y verano?) y **d68** (la insignia de girasoles solo funciona en pantallas grandes). Abran los horarios de verano en Bookeo; agreguen días de la granja de verano a `hours` si quieren la insignia (`summer: [4, 5, 6, 0]`, en el mismo lugar); actualicen `week`.
 - **Dónde:** `js/season.js`, en `id: 'summer'` (las fechas están en esa línea; pídanselo a Claude); `js/content.js`, en `week: {},` (2 lugares).
 - **Si se olvidan:** lo mismo que con las fresas: palabras del calendario en un día en que quizá los arándanos no estén listos.
 
@@ -197,9 +200,9 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 ### lun 13 sep 2027: empieza la temporada de otoño
 
 - **Por sí solo:** "In season: Pumpkins & tomatoes", la insignia de la granja "Reserved visits today" de jueves a domingo, la línea principal de otoño. La etiqueta "New: u-pick tomatoes" y la insignia "New" ya no vuelven.
-- **Ustedes, a más tardar el lun 6 sep 2027:** la tabla de pizza debe tener filas para los primeros fines de semana, con la primera apertura todavía por delante (la cuenta regresiva lo necesita). Escriban la oración que está debajo de la tabla cada día de apertura.
+- **Ustedes, a más tardar el lun 6 sep 2027:** la tabla de pizza debe tener filas para los primeros fines de semana, con la primera apertura todavía por delante (la cuenta regresiva lo necesita). Escriban la oración que está debajo de la tabla cada día de apertura (se traduce sola, vean "Cómo leerla").
 - **Dónde:** `index.html`, en `data-release-time="17:00"`; README, fila "Open a new pizza weekend".
-- **Si se olvidan:** sin filas que queden de 2026, todo el cuadro del calendario permanece oculto todo el otoño, y no hay cuenta regresiva ni etiqueta.
+- **Si se olvidan:** sin filas que queden de 2026, no hay cuenta regresiva ni etiqueta todo el otoño. El cuadro del calendario muestra solo sus líneas "No pizza", o permanece oculto si no renovaron su último día en agosto.
 
 ### lun 8 nov 2027 al mar 9 nov 2027: termina la temporada de otoño (como el lun 9 nov 2026)
 
@@ -217,7 +220,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 ### jue 9 dic 2027 y vie 24 dic 2027 al vie 31 dic 2027: terminan los árboles, Navidad, fin de año
 
-- **Por sí solo:** la temporada de árboles termina el jue 9 dic 2027. El vie 24 dic 2027 y el dom 26 dic 2027 son días de apertura (el sáb 25 dic 2027 también, si abren los sábados).
+- **Por sí solo:** la temporada de árboles termina el jue 9 dic 2027. El vie 24 dic 2027, el sáb 25 dic 2027 y el dom 26 dic 2027 son días de apertura (The GreenHouse y Wise Pie abren de viernes a domingo).
 - **Ustedes, a más tardar el mié 22 dic 2027:** cierres y un aviso para los días en que estén cerrados; las etiquetas "new" y "Fall 2027" para el próximo enero (vean el vie 1 ene 2027).
 - **Dónde:** `js/content.js`, en `closures: [],` y `noticeUntil: '',`.
 - **Si se olvidan:** "Open now" en un día cerrado.
@@ -233,7 +236,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 - **Cierren el día.** Agreguen la fecha a `closures` en `js/content.js` (`'2026-10-11'` para un día, `'2026-11-09..2026-11-15'` para un tramo). La granja, The GreenHouse y Wise Pie aparecen entonces como cerrados ese día, los tres juntos. No detiene a Bookeo: cierren los mismos horarios allí (README, fila "Close for rain or a holiday"). Las fechas pasadas pueden quedarse en la lista.
 - **Avísenlo en todas las páginas.** Escriban `notice` (la barra amarilla) y `noticeUntil` (el último día en que se muestra). La barra se muestra desde el momento en que publican, sin fecha de inicio, así que pongan la fecha en las palabras ("Closed Oct 10 for rain.") y, si el cierre es dentro de varias semanas, agreguen la barra más tarde. Una barra a la vez; para cada idioma escriban `{ en, es, hi, zh, vi }` (README, fila "Show a banner on every page").
-- **Cuánto dura.** Un cierre vale solo por su día. La barra se oculta sola el día después de `noticeUntil`; `?check` lo avisa entonces en su cuadro amarillo. Una barra sin `noticeUntil` se queda hasta que escriban `notice: ''`.
+- **Cuánto dura.** Un cierre vale solo por su día. La barra se oculta sola el día después de `noticeUntil`; `?check` lo avisa entonces en su cuadro verde ("nothing is broken": solo les recuerda borrar las palabras viejas). Una barra sin `noticeUntil` se queda hasta que escriban `notice: ''`.
 - **Un cierre el mismo día.** Los navegadores de los visitantes pueden guardar el archivo viejo hasta una hora después de que publican, así que avísenlo también donde la gente mira primero: Facebook, Instagram y su Perfil de Empresa de Google.
 - **Si se olvidan:** las insignias dicen "Open now", y una barra sin último día sigue puesta después del día del que hablaba.
 - **Dónde:** `js/content.js`, en `closures: [],`, `notice: '',` y `noticeUntil: '',`.
@@ -250,7 +253,7 @@ Estas líneas siguen en la página todos los días hasta que ustedes las editen.
 - **Las reseñas** que agregaron, con su `date` en texto libre.
 - **Precios e impuestos.** El sitio muestra solo los precios que ustedes escribieron, y ningún impuesto sobre las ventas. Cuando cambie un precio, sigan el README, sección "Change a fact everywhere", y luego `python3 tools/check_facts.py price`. Bookeo y Square muestran lo que se cobra al pagar.
 
-Una revisión de problemas de fechas (3 de octubre de 2026) no encontró nada en el código atado a un año. Las temporadas, los horarios, el año del pie de página y las cuentas regresivas funcionan con el reloj. Los visitantes de otras zonas horarias ven el día de la granja, no el suyo. Los datos para buscadores no tienen ninguna fecha que se venza, y el mapa del sitio no tiene una fecha de "última modificación" que mantener al día. Una página que se deja abierta pasada la medianoche o el Año Nuevo se pone al día sola. Las únicas fechas que se vuelven viejas son las que ustedes escriben en las palabras, y están enumeradas arriba.
+Una revisión de problemas de fechas (3 de octubre de 2026) no encontró nada en el código atado a un año. Las temporadas, los horarios, el año del pie de página y las cuentas regresivas funcionan con el reloj. Los visitantes de otras zonas horarias ven el día de la granja, no el suyo. Los datos para buscadores no tienen ninguna fecha que se venza, y el mapa del sitio no tiene una fecha de "última modificación" que mantener al día. Una página que se deja abierta pasada la medianoche o el Año Nuevo se pone al día sola en las insignias, la barra superior, la barra de aviso, el año del pie de página y las líneas que se ocultan solas. El aspecto de la temporada y las palabras de la primera pantalla cambian cuando la página se abre de nuevo. Las únicas fechas que se vuelven viejas son las que ustedes escriben en las palabras, y están enumeradas arriba.
 
 ## 7. Una vez al año
 
@@ -331,7 +334,7 @@ Una línea con `data-until="D"` se oculta el día después de D. Una fila de piz
 
 - Las filas de pizza abren los martes a las 5:00 PM (`data-release-time="17:00"` en `index.html`).
 - The GreenHouse abre de viernes a domingo, de 10 a. m. a 8 p. m., y Wise Pie de 4 p. m. a 8 p. m.; la granja tiene insignia solo en otoño, de jueves a domingo (`hours` en `js/content.js`).
-- "This week at the farm" desaparece 14 días después de `updated` (`expireDays: 14` en `js/features.js`).
+- "This week at the farm" dura 14 días después de `updated` y desaparece desde el día 15 (`expireDays: 14` en `js/features.js`).
 - El Domingo de Pascua de 2027 es el dom 28 mar 2027; Acción de Gracias es el jue 26 nov 2026 y el jue 25 nov 2027.
 - Año del pie de página: `data-year` en `index.html`; cambia a medianoche del 1 de enero (hora del Este).
 

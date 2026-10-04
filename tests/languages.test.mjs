@@ -1,3 +1,7 @@
+// order: 290
+// browser: yes
+// quick: yes
+// covers: js/features.js, js/live.js, js/i18n.js, lang/*, tools/i18n.py
 /* The countdown, the chip, the "This week" box and the drive times in every language (no English left over, no {placeholders}),
  * live switching back to English, and the Spanish calendar file. */
 import fs from 'node:fs';

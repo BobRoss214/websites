@@ -4,6 +4,8 @@
   "description": "Browser tests for the Wise Acres site (not part of the website). See README.md in this folder.",
   "scripts": {
     "test": "node run-all.mjs",
+    "quick": "node run-all.mjs --quick",
+    "changed": "node run-all.mjs --changed",
     "list": "node run-all.mjs --list"
   },
   "devDependencies": {

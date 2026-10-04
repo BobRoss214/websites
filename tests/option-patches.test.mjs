@@ -1,3 +1,7 @@
+// order: 25
+// browser: no
+// quick: no
+// covers: patches/*, docs/OPTION_PATCHES.md, tools/option_matrix.py
 /* The optional patches in patches/optional/ (the farm's open decisions that change files): each one has its header (what it does, which
  * question it answers, what it conflicts with, which host it is for, what to run after), each applies to the site as it is now with
  * `git apply`, every set that makes sense applies together in the documented order, docs/OPTION_PATCHES.md names every patch, and
@@ -42,7 +46,7 @@ for (const p of patches) {
   ok(`${p.file}: header has ${REQUIRED.join(', ')}`, missing.length === 0, 'missing: ' + missing.join(', '));
   ok(`${p.file}: a plain name (letters, digits, dashes), and a header before the first diff line`, /^[A-Za-z0-9]+(-[A-Za-z0-9]+)*\.patch$/.test(p.file) && p.text.indexOf('Option:') >= 0 && p.text.indexOf('Option:') < p.text.search(/^diff /m), p.file);
   ok(`${p.file}: Order is a number, Host is "any" or names hosts we know`, /^\d+$/.test(p.head.Order || '') && (/^any\b/i.test(p.head.Host || '') || HOSTS.some((h) => (p.head.Host || '').toLowerCase().includes(h))), `${p.head.Order} / ${p.head.Host}`);
-  ok(`${p.file}: "Answers" names a question number (d01 ... d59) or a launch decision (D1 ... D9)`, /\b(d\d\d|D\d)\b/.test(p.head.Answers || ''), p.head.Answers);
+  ok(`${p.file}: "Answers" names a question number (d01 ... d73) or a launch decision (D1 ... D9)`, /\b(d\d\d|D\d)\b/.test(p.head.Answers || ''), p.head.Answers);
 }
 const ids = patches.map((p) => p.head.Option);
 ok('every Option: id is different', new Set(ids).size === ids.length, ids.join(', '));
@@ -78,20 +82,39 @@ try {
   let sets = 0; const fails = [];
   const alreadyIn = new Set(patches.filter((p) => !p.absent.length).filter((p) => git(base, 'apply', '--check', '--reverse', path.join(DIR, p.file)).status === 0 && git(base, 'apply', '--check', path.join(DIR, p.file)).status !== 0).map((p) => p.file));
   const usable = ordered.filter((p) => !alreadyIn.has(p.file) && !p.absent.length);
-  for (let mask = 1; mask < (1 << usable.length); mask++) {
-    const pick = usable.filter((_, i) => mask & (1 << i));
-    if (pick.some((a, i) => pick.slice(i + 1).some((b) => conflicts(a, b)))) continue;
-    sets++;
+  // Whether a patch applies depends only on the files it touches. So the patches are put in groups that share a file (directly or through
+  // another patch), every set inside a group is tried (all of them, each applied to a fresh copy), and groups that share no file cannot
+  // disturb each other. One more set at the end puts everything together: the first choice of every group of alternatives and every patch
+  // that has no alternative, then the last choice.
+  const team = usable.map((_, i) => i);
+  const root = (i) => (team[i] === i ? i : (team[i] = root(team[i])));
+  usable.forEach((a, i) => usable.forEach((b, j) => { if (i < j && a.touched.some((f) => b.touched.includes(f))) team[root(j)] = root(i); }));
+  const groups = [...new Set(usable.map((_, i) => root(i)))].map((r) => usable.filter((_, i) => root(i) === r));
+  const tryApply = (pick) => {
     const work = path.join(tmp, 'w');
     fs.rmSync(work, { recursive: true, force: true });
     fs.cpSync(base, work, { recursive: true });
     for (const p of pick) {
       const r = git(work, 'apply', path.join(DIR, p.file));
-      if (r.status !== 0) { fails.push(`${pick.map((x) => x.head.Option).join(' + ')}: ${p.head.Option} does not apply (${(r.stderr || '').trim().split('\n')[0]})`); break; }
+      if (r.status !== 0) { fails.push(`${pick.map((x) => x.head.Option).join(' + ')}: ${p.head.Option} does not apply (${(r.stderr || '').trim().split('\n')[0]})`); return; }
     }
-    if (fails.length >= 5) break;
+  };
+  for (const grp of groups) {
+    for (let mask = 1; mask < (1 << grp.length); mask++) {
+      const pick = grp.filter((_, i) => mask & (1 << i));
+      if (pick.some((a, i) => pick.slice(i + 1).some((b) => conflicts(a, b)))) continue;
+      sets++;
+      tryApply(pick);
+      if (fails.length >= 5) break;
+    }
   }
-  ok(`all ${sets} sets of patches that do not conflict apply together, in "Order" order (git apply, no fuzz)`, fails.length === 0 && sets > 0, fails.slice(0, 3).join(' | '));
+  for (const last of [false, true]) {   // everything at once: the first (or last) of each set of alternatives, plus every patch without alternatives
+    const chosen = [];
+    for (const p of (last ? [...usable].reverse() : usable)) if (!chosen.some((c) => conflicts(c, p))) chosen.push(p);
+    sets++;
+    tryApply(ordered.filter((p) => chosen.includes(p)));
+  }
+  ok(`all ${sets} sets of patches that do not conflict apply together, in "Order" order (git apply, no fuzz): every set inside each group of patches that touch the same files, and everything at once`, fails.length === 0 && sets > 0, fails.slice(0, 3).join(' | '));
 } finally {
   fs.rmSync(tmp, { recursive: true, force: true });
 }

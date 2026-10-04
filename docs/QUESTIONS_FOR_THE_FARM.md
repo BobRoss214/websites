@@ -1144,8 +1144,9 @@ Everything in this section was checked against the code on 3 October 2026; the g
 
 **Question 60: QR signs: stronger codes, one address line**
 
-- **If stronger codes:** `tools/make_qr.py` at `qr = segno.make(url, error='m')`: change the letter m to q, then run `python3 tools/make_qr.py` (it rebuilds `print/qr-signs.html`, the three language sheets and the code pictures, and scans every code back). Print one sign and scan it with a phone before putting the signs up.
-- **If one address line:** the optional patch OPTIONAL-qr-no-duplicate-line-66c8272.patch (DECISION_PLAYBOOK, "Patches on disk"); on 05b0b72 it needs a redo.
+- **If stronger codes:** the optional patch `qr-stronger-codes.patch` (DECISION_PLAYBOOK, "Patches on disk"). Or by hand: `tools/make_qr.py` at `segno.make(url, error=`: change the letter m to q, then run `python3 tools/make_qr.py` (it rebuilds `print/qr-signs.html`, the three language sheets and the code pictures, and scans every code back). Print one sign and scan it with a phone before putting the signs up.
+- **If one address line:** the optional patch `qr-one-address-line.patch` (DECISION_PLAYBOOK, "Patches on disk").
+- **If both:** apply both patches, in either order.
 - **If neither:** no change.
 
 **Question 61: After 31 December 2026, should the site stop calling the u-pick tomatoes and basil "new"?**
@@ -1162,7 +1163,7 @@ Everything in this section was checked against the code on 3 October 2026; the g
 
 **Question 63: Sunflower badge only works on big screens**
 
-- **If the Pick button snips sunflowers too:** the optional patch games-B.patch (DECISION_PLAYBOOK, "Patches on disk").
+- **If the Pick button snips sunflowers too:** the optional patch `games-B-pick-snips-sunflowers.patch` (DECISION_PLAYBOOK, "Patches on disk").
 - **If a lower number:** `js/hero.js` at `sunflower: { icon: 'sunflower', at: 100` and the badge text `js/hero.js` at `100 sunflowers snipped!` (a JavaScript string with four translations: ask Claude).
 - **If sunflowers in the middle:** `js/hero.js` at `sunflower(24, 205, 128, '')`: add two or three sunflowers near the middle of the picture (ask Claude).
 - **If she leaves it:** no change.

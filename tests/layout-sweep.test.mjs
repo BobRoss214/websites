@@ -1,10 +1,13 @@
+// order: 370
+// browser: yes
+// covers: css/*, *.html, pages/*, lang/*, tests/layout-audit.mjs
 /* Layout sweep (small, fast version): the home page and the First-visit page in Spanish, Hindi, Chinese and Vietnamese (the long words and the other scripts)
  * on a small phone (320), a phone (390) and a computer (1280): the page must not scroll sideways, nothing may stick out past the screen edge, no text may be cut off by
  * a box with overflow hidden, no button label may run over 4 or more lines or reach outside its button, no text may sit on top of other text, no picture may be stretched
  * or broken, the bars that float over the page (top menu, bottom buttons, back-to-top) may not cover each other or too much of a 320 x 568 screen, and every
  * character on the page must have a glyph (no empty boxes in Hindi or Chinese).
  * The checking itself is tests/layout-audit.mjs, which can also be run over every page, language, season and width (see tests/README). */
-import { run, open, ok, info, until } from './lib.mjs';
+import { run, open, ok, info, until, settled, ms } from './lib.mjs';
 import { auditLayout } from './layout-audit.mjs';
 
 const PAGES = ['index.html', 'first-visit.html'];
@@ -16,30 +19,36 @@ await run('layout-sweep', async ({ browser, base, errs }) => {
   const results = [];
   // One page view per page and language, looked at on a computer window first and then shrunk to a phone and a small phone (a person who turns the phone or
   // drags the window does the same). The full sweep opens a fresh window of every width instead (see tests/README).
+  // On a phone the menu is a panel over the whole page that fades and slides away when the window gets narrower; until it has, it "covers" the page. The resting
+  // state of a closed menu: the toggle button is on show and the panel is invisible (a menu that never gets there is still a failure: the audit then sees it).
+  const menuAtRest = (p) => until(p, () => { const t = document.querySelector('.menu-toggle'), n = document.querySelector('#nav'); if (!t || !n || getComputedStyle(t).display === 'none') return true; const cs = getComputedStyle(n); return cs.visibility === 'hidden' && cs.opacity === '0'; }, null, 10000);
   async function lookAt(p, v) {
     await p.setViewportSize({ width: v.w, height: v.h });
-    await new Promise((r) => setTimeout(r, 500));   // the page's own resize handlers (they wait 200 ms) have run
-    // the menu slides away and the bars move with a CSS transition when the window gets narrower: look when they have come to rest
-    await p.evaluate(() => Promise.race([Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => {}))), new Promise((r) => setTimeout(r, 3000))]));
+    // the page's own resize handlers (they wait 200 ms) run first (the page clock is a fake one: no real wait); the menu slides away and the bars move
+    // with a CSS transition when the window gets narrower: look when they have come to rest
+    await settled(p, 500, 3000);
+    await menuAtRest(p);
     // a window as tall as the page: every section draws itself at once (no scrolling through 50,000 px), every picture loads
     await p.evaluate(() => { document.querySelectorAll('img').forEach((i) => { i.loading = 'eager'; }); });
     const tall = await p.evaluate(() => document.documentElement.scrollHeight);
     await p.setViewportSize({ width: v.w, height: Math.min(Math.max(tall, v.h), 30000) });
-    await p.evaluate(async () => {
+    await p.evaluate(async (cap) => {
       await document.fonts.ready;
       const sleep = (n) => new Promise((r) => setTimeout(r, n));
-      await Promise.all([...document.images].filter((i) => i.src).map((i) => Promise.race([i.decode().catch(() => {}), sleep(4000)])));
-      await sleep(300);
-    });
+      await Promise.all([...document.images].filter((i) => i.src).map((i) => Promise.race([i.decode().catch(() => {}), sleep(cap)])));
+    }, ms(4000));   // (4 s at most per picture, 20 s on a busy computer)
+    await settled(p, 300);   // every section has drawn itself in the tall window
     const top = await p.evaluate(auditLayout, { parts: ['page'] });
     // the window as the visitor has it: the floating bars at the top of the page and 1.8 screens down
     await p.setViewportSize({ width: v.w, height: v.h });
     await p.evaluate(() => window.scrollTo(0, 0));
-    await new Promise((r) => setTimeout(r, 300));
+    await settled(p, 300);
+    await menuAtRest(p);
     const bars0 = await p.evaluate(auditLayout, { parts: ['fixed'] });
     await p.evaluate(() => window.scrollTo(0, Math.round(innerHeight * 1.8)));
     await until(p, () => Math.abs(window.scrollY - Math.round(innerHeight * 1.8)) < 4, null, 5000);
-    await new Promise((r) => setTimeout(r, 400));
+    await settled(p, 400);
+    await menuAtRest(p);
     const down = await p.evaluate(auditLayout, { parts: ['fixed'] });
     results.push({ ...v, problems: [...top.problems, ...bars0.problems, ...down.problems] });
   }

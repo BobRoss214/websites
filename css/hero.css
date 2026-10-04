@@ -65,7 +65,7 @@ html[data-season="winter"] .bee-fly{display:none}
 .season-switch button{position:relative;display:inline-flex;align-items:center;gap:.4em;padding:.26em .85em .26em .45em;font:700 .95rem/1.2 var(--display);color:var(--ink);background:rgba(255,255,255,.9);border:2.5px solid var(--ink);border-radius:999px;cursor:pointer;box-shadow:0 3px 0 var(--ink);transition:transform .18s cubic-bezier(.3,1.6,.5,1),background-color .2s,box-shadow .2s}
 @media (hover:hover){.season-switch button:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--ink)}}
 .season-switch button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
-.season-switch button[aria-checked="true"]{background:var(--sun);box-shadow:0 3px 0 var(--ink),inset 0 0 0 2px rgba(255,255,255,.55)}
+.season-switch button[aria-checked="true"]{background:var(--sun);box-shadow:0 3px 0 var(--ink),inset 0 0 0 2px var(--ink)}   /* thicker dark edge, not only yellow (docs/COLOUR_BLIND_CHECK.md) */
 .ss-ico{width:26px;height:26px;flex:none}
 .ss-now{position:absolute;top:-12px;right:-8px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .5em;font:700 .7rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;transform:rotate(6deg);pointer-events:none}
 

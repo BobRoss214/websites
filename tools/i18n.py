@@ -2,7 +2,9 @@
 """Translation helper for the Wise Acres site.
 
   python3 tools/i18n.py extract      tag every text block in the HTML pages with data-t="<id>"
-                                     (and data-ta-<attr> for labels/alt text) and write lang/en.json
+                                     (and data-ta-<attr> for labels/alt text) and write lang/en.json. The date lines of the pizza
+                                     schedule (Oct 9–11, and the "Open now" line under the table) are translated by the tool itself:
+                                     see tools/date_phrases.py. It never replaces a line that is already in lang/src/<code>.json.
   python3 tools/i18n.py jsstrings    list the text that JavaScript writes (t('...'), titles, descriptions) in lang/js-strings.json
   python3 tools/i18n.py missing es   count the English strings and the JavaScript texts that have no translation in lang/src/es.json
   python3 tools/i18n.py missing es --list    the same, and list them (languages: es, hi, zh, vi)
@@ -32,6 +34,9 @@ except ImportError:
     sys.exit('This needs the beautifulsoup4 package. Type this once, then run the command again:\n'
              '    python3 -m pip install beautifulsoup4\n'
              '(On Windows type python instead of python3. See "Commands: one-time setup" in README.md.)')
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import date_phrases   # the pizza schedule's dates: translated by the tool, see that file
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LANG_DIR = os.path.join(ROOT, 'lang')
@@ -173,6 +178,33 @@ def cmd_extract():
         print(f'{p}: {len(strings)} strings tagged')
     json.dump(allstr, open(os.path.join(LANG_DIR, 'en.json'), 'w', encoding='utf-8', newline='\n'), ensure_ascii=False, indent=1, sort_keys=True)
     print('unique strings:', len(allstr), ' words:', sum(words(v) for v in allstr.values()))
+    autofill(allstr)
+
+
+def autofill(strings):
+    """Writes the translation of each date line that tools/date_phrases.py knows into lang/src/<code>.json, where the file has none yet.
+    A line that is already there (written by a person) is never replaced."""
+    for code in languages():
+        if code not in date_phrases.LANGS:
+            continue
+        path = os.path.join(SRC_DIR, code + '.json')
+        data = load(code)
+        new = {}
+        for i, text in strings.items():
+            if i not in data['ui']:
+                t = date_phrases.translate(code, text)
+                if t is not None:
+                    new[i] = t
+        if not new:
+            continue
+        bad = unsafe({'ui': new, 'js': {}}, strings)
+        if bad:
+            sys.exit('tools/date_phrases.py made a translation that is not safe (nothing was written):\n  ' + '\n  '.join(bad))
+        data['ui'].update(new)
+        raw = json.dumps(data, ensure_ascii=False, indent=1) + '\n'
+        open(path, 'w', encoding='utf-8', newline='\n').write(raw)
+        shown = ', '.join(re.sub(r'<[^>]+>', '', strings[i]).replace('&amp;', '&')[:36] for i in list(new)[:3])
+        print(f'lang/src/{code}.json: {len(new)} date line(s) translated by the tool ({shown}{", ..." if len(new) > 3 else ""})')
 
 
 def load(code):
@@ -280,6 +312,9 @@ def cmd_missing(code):
     if '--list' in sys.argv:
         for k, v in miss.items():
             print(k, '|', v)
+            why = date_phrases.why_not(v)   # a date line the tool did not understand: say why, in plain words
+            if why:
+                print('    (not translated by the tool: ' + why + ')')
         for k, f in jsmiss.items():
             print('js |', k, f'   (from {f}: add it under "js" in lang/src/{code}.json)')
         if miss or jsmiss:

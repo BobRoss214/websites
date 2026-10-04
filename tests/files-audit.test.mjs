@@ -1,3 +1,6 @@
+// order: 70
+// browser: no
+// covers: assets/*, css/*, js/*, *.html, manifest.webmanifest, tools/add_photo.py, tools/make_deploy_folder.py
 /* What the site ships and what is hidden in it (no browser needed):
  *   - no picture the visitor can download carries a GPS location, a camera make or model, a serial number, a person's name, a comment, XMP/IPTC data,
  *     a taken-at time or a hidden preview picture (tools/add_photo.py strips all of this from every new photo; this catches anything added by hand)
@@ -16,6 +19,9 @@ import { ROOT, ok, finish } from './lib.mjs';
 const NOT_USED = [
   ['assets/qr/', 'the QR codes as separate files for a print shop (made by tools/make_qr.py); print/qr-signs.html has its own copy of each, and they are not uploaded'],
 ];
+// Files under assets/ that nothing points to but that ARE uploaded, on purpose: the licence texts and credits that travel with the fonts and the icons
+// (the font licence asks for it; docs/CREDITS_AND_LICENCES.md, tests/licences.test.mjs).
+const UPLOADED_ON_PURPOSE = ['assets/fonts/LICENSE-OFL-', 'assets/LICENSE-icons-', 'assets/CREDITS.txt'];
 // What a picture may still say about itself: how to turn it, its resolution, its colour space and its size. Everything else in EXIF is refused.
 const HARMLESS_EXIF = new Set([0x0112, 0x011A, 0x011B, 0x0128, 0x0213, 0x8769, 0x9000, 0x9101, 0xA000, 0xA001, 0xA002, 0xA003, 0xA005, 0x0001, 0x0002]);
 const MAX_BYTES = 1_000_000;      // a shipped picture is not heavier than this (the biggest today, the printed menu, is 0.44 MB)
@@ -174,10 +180,12 @@ ok(`every file the site points to under assets/ exists (${pointedAt.size} pointe
   gone.map(([a, by]) => a + ' (named in ' + [...by].join(', ') + ')').join(' | '));
 const inAssets = everything.filter((f) => f.startsWith('assets/'));
 const allowed = (f) => NOT_USED.some(([p]) => f.startsWith(p));
-const dead = inAssets.filter((f) => !pointedAt.has(f) && !allowed(f));
-ok('every file in assets/ is used by a page, style, script or manifest, or is on the NOT_USED list at the top of this test', dead.length === 0, dead.join(', '));
+const kept = (f) => UPLOADED_ON_PURPOSE.some((p) => f.startsWith(p));
+const dead = inAssets.filter((f) => !pointedAt.has(f) && !allowed(f) && !kept(f));
+ok('every file in assets/ is used by a page, style, script or manifest, or is on the NOT_USED or UPLOADED_ON_PURPOSE list at the top of this test', dead.length === 0, dead.join(', '));
 const stale = NOT_USED.filter(([p]) => !inAssets.some((f) => f.startsWith(p)) || inAssets.filter((f) => f.startsWith(p)).some((f) => pointedAt.has(f)));
 ok('the NOT_USED list is honest: each entry still matches files, and none of them is used after all', stale.length === 0, stale.map((s) => s[0]).join(', '));
+ok('the UPLOADED_ON_PURPOSE list is honest: each entry still matches files, and they are uploaded', UPLOADED_ON_PURPOSE.every((p) => shipped.some((f) => f.startsWith(p))), UPLOADED_ON_PURPOSE.filter((p) => !shipped.some((f) => f.startsWith(p))).join(', '));
 const sent = NOT_USED.flatMap(([p]) => shipped.filter((f) => f.startsWith(p)));
 ok('what nothing uses is not uploaded either (the deploy folder leaves it out)', sent.length === 0, sent.join(', '));
 

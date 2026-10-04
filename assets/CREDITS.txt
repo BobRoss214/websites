@@ -1,0 +1,38 @@
+Wise Acres Organic Farm website: credits and licences
+=====================================================
+
+This file lists the work of other people that the website contains, and the
+licences that allow it. It is uploaded with the site, next to the licence texts
+it points to. (The full table, with who checked what, is docs/CREDITS_AND_LICENCES.md
+in the website's own folder; that folder is not uploaded.)
+
+FONTS (assets/fonts/)
+  Each font is used under the SIL Open Font License, Version 1.1. The licence
+  text, with the font's copyright line, is in the file named next to it.
+  Fredoka   Copyright 2016 The Fredoka Project Authors (https://github.com/hafontia/Fredoka-One)
+            assets/fonts/LICENSE-OFL-Fredoka.txt
+  Nunito    Copyright 2014 The Nunito Project Authors (https://github.com/googlefonts/nunito)
+            assets/fonts/LICENSE-OFL-Nunito.txt
+  Caveat    Copyright 2014 The Caveat Project Authors (https://github.com/googlefonts/caveat)
+            assets/fonts/LICENSE-OFL-Caveat.txt
+  The font files are the unchanged web versions from Fontsource (fontsource.org):
+  @fontsource-variable/fredoka 5.3.0, @fontsource-variable/nunito 5.3.0 and
+  @fontsource/caveat 5.3.0.
+
+ICONS (the small drawings in the page that start with "i-")
+  Phone, mail, map pin, calendar, bell, Facebook, Instagram, clock, info, cash, leaf
+  and "opens in a new tab" are Feather icons (Copyright Cole Bemis, MIT licence,
+  assets/LICENSE-icons-Feather-MIT.txt) or Lucide icons (Copyright Lucide Icons and
+  Contributors, ISC licence, assets/LICENSE-icons-Lucide-ISC.txt). Some were adjusted.
+
+MAP DATA AND DRIVE TIMES (the "Drive time" box)
+  (c) OpenStreetMap contributors, available under the Open Database Licence:
+  https://www.openstreetmap.org/copyright
+  Address search: Nominatim, run by the OpenStreetMap Foundation.
+  Routes: OSRM (https://project-osrm.org/), on the demo server run by FOSSGIS e.V.
+  The same credit is shown under every drive-time answer on the page.
+
+TWO SMALL ROUTINES (js/map-art.js)
+  A random-number generator ("mulberry32", Tommy Ettinger) and a point-in-polygon
+  test (the method of W. Randolph Franklin's PNPOLY). Both are published methods,
+  written out again here; they are named as a courtesy.

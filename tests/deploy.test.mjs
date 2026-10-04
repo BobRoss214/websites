@@ -1,3 +1,6 @@
+// order: 230
+// browser: yes
+// covers: tools/make_deploy_folder.py, tools/pages.py, tools/i18n.py, tools/check_facts.py, _headers, 404.html
 /* The folder to upload, made by tools/make_deploy_folder.py (needs python3 and beautifulsoup4), in a temporary copy of the site:
  *   - only what visitors need: no docs/, tests/, tools/, pages/, review/ (sheets for a native speaker), README.md, .gitignore, lang/src/ or translator lists; _headers and 404.html are in
  *   - FILES.txt lists every file with its size and sha256, and building twice gives the same folder (same fingerprint)
@@ -6,6 +9,7 @@
  *   - an out-of-date page is rebuilt (--check only reports it), settings still to set are warned about without stopping,
  *     facts that disagree (tools/check_facts.py) and a missing translation each stop it with one plain line that says how to fix it,
  *     --force builds anyway and says so (on screen and in FILES.txt), and a folder that is not its own is never wiped
+ *   - the licence texts and credits travel with the fonts and icons, and a font with no licence text next to it stops the tool (--force does not override that)
  * Your own files are not touched. */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -47,6 +51,8 @@ try {
   const codes = fs.readdirSync(path.join(site, 'lang', 'src')).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5));
   const need = ['index.html', '404.html', '_headers', 'robots.txt', 'sitemap.xml', 'manifest.webmanifest', 'FILES.txt', 'print/qr-signs.html', ...codes.map((c) => `lang/${c}.js`)];
   ok('_headers, 404.html, the pages, the translations and FILES.txt are in', need.every((f) => list.includes(f)), need.filter((f) => !list.includes(f)).join(', '));
+  const licences = ['assets/fonts/LICENSE-OFL-Fredoka.txt', 'assets/fonts/LICENSE-OFL-Nunito.txt', 'assets/fonts/LICENSE-OFL-Caveat.txt', 'assets/LICENSE-icons-Feather-MIT.txt', 'assets/LICENSE-icons-Lucide-ISC.txt', 'assets/CREDITS.txt'];
+  ok('the licence texts and the credits travel with the fonts and the icons (the font licence asks for it), and the tool does not report them as unused', licences.every((f) => list.includes(f)) && !/In the folder, but no page points to them[^\n]*LICENSE/.test(r1.out), licences.filter((f) => !list.includes(f)).join(', '));
   const pagesHere = fs.readdirSync(site).filter((f) => f.endsWith('.html')).sort();
   ok('every page of the top folder is in', pagesHere.every((f) => list.includes(f)), pagesHere.filter((f) => !list.includes(f)).join(', '));
   const odd = list.filter((f) => !/\.(html|css|js|svg|png|webp|jpe?g|woff2|txt|xml|webmanifest|ico)$/.test(f) && !['_headers', '_redirects'].includes(f));
@@ -168,6 +174,13 @@ try {
   fs.rmSync(out4, { recursive: true, force: true });
   const clean = make('--check');
   ok('the price put right again: ready again, and it says the facts agree', clean.code === 0 && /Facts agree everywhere/.test(clean.out), last(clean.out));
+
+  // ---- a font without its licence text stops it, and --force does not change that
+  const lic = path.join(site, 'assets', 'fonts', 'LICENSE-OFL-Nunito.txt'), licText = fs.readFileSync(lic);
+  fs.rmSync(lic);
+  const nl = make('--out', out3), nlf = make('--out', out3, '--force');
+  ok('a font with no licence text next to it: not ready, nothing written, and the problem names the file to add (--force does not override it)', nl.code === 1 && nlf.code === 1 && /NOT READY/.test(nl.out) && !fs.existsSync(out3) && /assets\/fonts\/nunito-latin-wght-normal\.woff2 has no licence text: add assets\/fonts\/LICENSE-OFL-Nunito\.txt/.test(nl.out), last(nl.out));
+  fs.writeFileSync(lic, licText);
 
   // ---- a missing translation stops it; --force builds anyway
   const src = path.join(site, 'pages', 'wise-pie.html'), html = fs.readFileSync(src, 'utf8');

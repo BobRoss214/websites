@@ -1,3 +1,7 @@
+// order: 20
+// browser: no
+// quick: no
+// covers: tools/launch_check.py, _headers, robots.txt, sitemap.xml, 404.html, manifest.webmanifest, assets/og-*
 /* The launch-day check (tools/launch_check.py): it fetches a site like a visitor and prints PASS / WARN / FAIL in plain words.
  * Here it runs against a small pretend host on this computer that behaves like Cloudflare Pages or Netlify (it compresses, applies the
  * _headers file, answers 404 with 404.html). On the site as it is, the check must find nothing broken (warnings about the owner's
@@ -10,7 +14,7 @@ import path from 'node:path';
 import http from 'node:http';
 import zlib from 'node:zlib';
 import { spawn, spawnSync } from 'node:child_process';
-import { ROOT, ok, info, skip, finish } from './lib.mjs';
+import { ROOT, ok, info, skip, finish, ms } from './lib.mjs';
 
 const PY = process.env.WA_PYTHON || 'python3';
 const TOOL = path.join(ROOT, 'tools', 'launch_check.py');
@@ -94,7 +98,7 @@ rewrite(good);
 const runTool = (args) => new Promise((resolve) => {
   const child = spawn(PY, [TOOL, ...args], { stdio: ['ignore', 'pipe', 'pipe'] });
   let out = '', err = '';
-  const timer = setTimeout(() => child.kill('SIGKILL'), 170000);
+  const timer = setTimeout(() => child.kill('SIGKILL'), ms(170000));
   child.stdout.on('data', (d) => { out += d; }); child.stderr.on('data', (d) => { err += d; });
   child.on('close', (code) => { clearTimeout(timer); resolve({ code, out, err }); });
 });
@@ -163,6 +167,7 @@ try {
   await broken('the host sends scripts as text/plain', 'content-types', () => { opts.jsType = 'text/plain'; }, full);
   await broken('the farm spot is set with the numbers swapped', 'setting-farmpoint', () => { opts.mutate['/js/content.js'] = (t) => t.replace(/^(\s*)farmPoint:\s*null/m, '$1farmPoint: { lat: -80.6, lon: 35.1 }'); }, full);
   await broken('a notice bar is left switched on', 'setting-notice', () => { opts.mutate['/js/content.js'] = (t) => t.replace(/^(\s*notice:\s*)''/m, "$1'Closed Saturday for rain.'"); }, full, 'WARN', 0);
+  await broken('a notice bar written in five languages is left switched on', 'setting-notice', () => { opts.mutate['/js/content.js'] = (t) => t.replace(/^(\s*notice:\s*)''/m, "$1{ en: 'Closed Saturday for rain.', es: 'Cerrado el sábado por la lluvia.' }"); }, full, 'WARN', 0);
   await broken('old farm addresses forwarded to the new pages', 'old-redirects', () => { opts.redirects['/faq'] = '/#faq'; }, full, 'PASS', 0);
 
   /* ---- an address that does not answer ---- */

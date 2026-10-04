@@ -1,3 +1,6 @@
+// order: 60
+// browser: no
+// covers: *.html, pages/*, js/content.js, js/season.js, js/features.js, lang/src/*, tools/qr_links.json, tools/check_facts.py, print/*
 /* One fact, one answer: the same price, clock time, age, group size, phone, address, e-mail and date is written in many places (home page, five
  * other pages, FAQ answers, page descriptions, structured data, js/content.js, the QR sign list) and in five languages. This test reads the built
  * pages and lang/*.js and fails when two places give different answers, or when a translation gives a different number, price, time, weekday,

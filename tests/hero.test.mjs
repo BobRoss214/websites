@@ -1,6 +1,9 @@
+// order: 350
+// browser: yes
+// covers: js/hero.js, js/season.js, js/content.js, css/hero.css, index.html
 /* The seasonal hero: which season it is on a date, the "See the farm in..." switcher, picking things, the tractor, keyboard use,
  * no sideways scrolling from phone to wide screen, reduced motion, and seasonPicker: false. */
-import { run, open, ok, okSoon, until } from './lib.mjs';
+import { run, open, ok, okSoon, until, settled } from './lib.mjs';
 
 const season = (p) => p.evaluate(() => document.documentElement.dataset.season);
 // Choose a season with the switcher and wait until the scene for it has been drawn.
@@ -124,8 +127,9 @@ await run('hero', async ({ browser, base, errs }) => {
   ok('reduced motion: the tractor is parked in view', rest.anim === 'none' && rest.x > 0 && rest.x + rest.w < 1440, JSON.stringify(rest));
   ok('reduced motion: no particles', (await r.locator('.particles').count()) === 0 || !(await r.locator('.particles').first().isVisible()));
   // nothing may keep moving: no endless animation runs in any season, and no drawing loop is running (the bee is hidden)
-  const still = async (s) => { await choose(r, s); await r.waitForTimeout(600); return r.evaluate(() => ({ loops: document.getAnimations().filter((a) => a.playState === 'running' && a.effect && a.effect.getComputedTiming().iterations === Infinity).map((a) => (a.animationName || a.transitionProperty) + ' on ' + (a.effect.target && a.effect.target.className && a.effect.target.className.baseVal !== undefined ? a.effect.target.className.baseVal : a.effect.target.className)), bee: getComputedStyle(document.querySelector('#bee-fly')).display })); };
-  for (const s of ['spring', 'summer', 'fall', 'winter']) { const st = await still(s); ok(`reduced motion, ${s}: no endless animation is running and the bee is hidden`, st.loops.length === 0 && st.bee === 'none', JSON.stringify(st)); }
+  const stillState = () => r.evaluate(() => ({ loops: document.getAnimations().filter((a) => a.playState === 'running' && a.effect && a.effect.getComputedTiming().iterations === Infinity).map((a) => (a.animationName || a.transitionProperty) + ' on ' + (a.effect.target && a.effect.target.className && a.effect.target.className.baseVal !== undefined ? a.effect.target.className.baseVal : a.effect.target.className)), bee: getComputedStyle(document.querySelector('#bee-fly')).display }));
+  // (the page's timers of the next 600 ms run first (its clock is a fake one: no real wait), so a loop that would start a moment later is seen too; then the check waits for the old scene's loops to end)
+  for (const s of ['spring', 'summer', 'fall', 'winter']) { await choose(r, s); await settled(r, 600); await okSoon(`reduced motion, ${s}: no endless animation is running and the bee is hidden`, stillState, (st) => st.loops.length === 0 && st.bee === 'none'); }
   ok('reduced motion: trees can still be lit', (await clickPick(r)) && (await okSoon('reduced motion: a tree is lit', () => r.locator('#field .tree-pick.lit').count(), (n) => n === 1)));
   // the "+1" that flies up from a pick would end at once, invisible, so it stays where it is for a moment
   ok('reduced motion: the "+1" next to a lit tree stays visible', await okSoon('reduced motion: the +1 shows', () => r.evaluate(() => { const e = document.querySelector('.plus-one'); return e ? getComputedStyle(e).opacity : '0'; }), (v) => v === '1'));

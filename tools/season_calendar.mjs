@@ -63,7 +63,7 @@ export function etNoon(ymd) {
 /* ------------------------------------------------------------------ *
  * What the page shows: runs in the page. Returns plain data (no DOM objects).
  * ------------------------------------------------------------------ */
-function collect(cfg) {
+export function collect(cfg) {
   const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
   const vis = (e) => { for (let n = e; n && n !== document.documentElement; n = n.parentElement) { if (n.hidden) return false; const cs = getComputedStyle(n); if (cs.display === 'none' || cs.visibility === 'hidden') return false; } return true; };
   const all = (sel, root) => Array.from((root || document).querySelectorAll(sel)).filter(vis);

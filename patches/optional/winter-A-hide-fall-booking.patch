@@ -209,3 +209,12 @@ index 65c1c0d..94e4325 100644
 -}
 +}
 \ No newline at end of file
+diff --git a/docs/DECISION_PLAYBOOK.md b/docs/DECISION_PLAYBOOK.md
+index c688814..7cc7aec 100644
+--- a/docs/DECISION_PLAYBOOK.md
++++ b/docs/DECISION_PLAYBOOK.md
+@@ -512,3 +512,3 @@ Nothing can go live until the host and the web address are chosen. The files alr
+ 
+-- No change: leave `signup.action` empty. The plain button (index.html at `eepurl.com/hZehgr` (7 places)) stays. If the form is never wanted, ask Claude whether Mailchimp's address can then be left out of the script part of the ready header.
++- No change: leave `signup.action` empty. The plain button (index.html at `eepurl.com/hZehgr` (8 places)) stays. If the form is never wanted, ask Claude whether Mailchimp's address can then be left out of the script part of the ready header.
+ - Strings: 0

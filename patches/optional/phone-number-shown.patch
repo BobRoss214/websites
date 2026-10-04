@@ -1,6 +1,6 @@
 Option: phone-number-shown
 Name: Show the main phone number in the footer
-Does: Adds 704-628-6232 (a tel: link) to the footer contact block of every page and "telephone" to the home page structured data. The Questions? fact and the contact cards are not changed. The consistency test already allows one main number besides the day-of number, so no test changes.
+Does: Adds 704-628-6232 (a tel: link) to the footer contact block of every page and "telephone" to the home page structured data. The Questions? fact and the contact cards are not changed. The consistency test already allows one main number besides the day-of number, so the consistency test does not change. The unit test tools/test_check_facts.py (part of the pipeline test), which puts the number into the footer itself, leaves it alone when the footer has it already.
 Answers: d04 A (main phone number)
 Conflicts: none
 Requires: none
@@ -74,3 +74,15 @@ index 65c1c0d..95f872d 100644
 +  "t58a21ae5": "<svg/> 暂停动画",
 +  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>"
   }
+diff --git a/tools/test_check_facts.py b/tools/test_check_facts.py
+index 3b2a3cd..a640a2a 100644
+--- a/tools/test_check_facts.py
++++ b/tools/test_check_facts.py
+@@ -67,3 +67,6 @@ class CheckFacts(unittest.TestCase):
+         foot = '<a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a>\n      </address>'
+-        self.edit('index.html', foot, '<a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a><br> <a href="tel:+17046286232">(704) 628-6232</a>\n      </address>')
++        with open(os.path.join(self.root, 'index.html'), encoding='utf-8') as f:
++            shown = 'tel:+17046286232' in f.read()   # the optional patch phone-number-shown has put the number in the footer already
++        if not shown:
++            self.edit('index.html', foot, '<a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a><br> <a href="tel:+17046286232">(704) 628-6232</a>\n      </address>')
+         code, out = run(self.root, 'phone')

@@ -1,3 +1,6 @@
+// order: 375
+// browser: yes
+// covers: css/*, *.html, pages/*
 /* A big system font (the browser's own "font size" setting: "very large" is 150% and a visitor with low vision may choose 200%): the page must still fit the screen.
  * The browser is told its default font size with Page.setFontSizes (the same setting a person changes in Chrome, Edge or Android), so the em-based media queries follow
  * the font as they do for a real visitor. Home page and First-visit page on a small phone (320 px) at 150% and 200%, and on a phone (390 px) at 200%:

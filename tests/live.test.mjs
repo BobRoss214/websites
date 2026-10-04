@@ -1,3 +1,7 @@
+// order: 80
+// browser: yes
+// quick: yes
+// covers: js/live.js, js/season.js, js/content.js, index.html, first-visit.html
 /* "Open now" badges (hours, closures, Eastern Time, daylight saving), the next-season countdown and the notice bar.
  * Oct 2 2026 is a Friday; New York is UTC-4 until Nov 1, then UTC-5. */
 import { run, open, ok, okSoon } from './lib.mjs';

@@ -1,3 +1,6 @@
+// order: 90
+// browser: yes
+// covers: js/live.js, js/content.js, js/season.js, *.html, pages/*
 /* Lines that hide themselves after their date (data-until="2026-10-04" in index.html), the "New: tomatoes" tags that follow the tomato dates, the
  * "Fall schedule" button that must not point at a schedule box that is gone, and the hero line between seasons.
  * The page clock is set to chosen moments (Eastern Time is what counts: a line hides from the day after its date). */

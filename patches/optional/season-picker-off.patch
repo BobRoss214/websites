@@ -1,6 +1,6 @@
 Option: season-picker-off
 Name: seasonPicker: false (no "See the farm in..." preview buttons for visitors)
-Does: Sets seasonPicker to false in js/content.js, so every visitor sees the season the calendar says and nothing to click between seasons. The three tests that click that switcher (dated, analytics, i18n-early) turn it on for themselves already, so nothing else changes.
+Does: Sets seasonPicker to false in js/content.js, so every visitor sees the season the calendar says and nothing to click between seasons. Many tests look at or click that switcher (hero, games, keyboard, calm, privacy, forced-colors, auto-dark, no-js, and dated, analytics, i18n-early) and would fail with it gone, so the patch also changes tests/lib.mjs: every page a test opens has the switcher switched on, except where a test writes js/content.js itself (the seasonPicker: false part of hero does).
 Answers: launch decision D6 (checklist 3.8; the playbook mentions it in the list of launch decisions)
 Profile: filled (only tried in the settings-filled run of the matrix, not multiplied into every combination)
 Conflicts: none
@@ -23,3 +23,16 @@ index 411b6fd..1e8958b 100644
    reviews: [],
    analytics: { provider: 'none' },
    notice: '',
+diff --git a/tests/lib.mjs b/tests/lib.mjs
+index 81ab7f1..b36fb3a 100644
+--- a/tests/lib.mjs
++++ b/tests/lib.mjs
+@@ -164,4 +164,6 @@ export async function open(browser, base, url, errs, opts = {}) {
+   p.on('console', (m) => { if (m.type() === 'error' && !NOISE.test(m.text())) errs.push(url + ' console: ' + m.text()); });
+-  if (opts.extra) await p.route('**/js/content.js', async (r) => {
+-    try { const res = await fetchRetry(r); await r.fulfill({ response: res, body: (await res.text()) + '\n' + opts.extra }); }
++  // The farm's own setting seasonPicker: false (patches/optional/season-picker-off.patch) hides the season switcher that many tests look at or click, so every page
++  // a test opens has it switched on. A test that writes js/content.js itself (a route set after this one) decides for itself.
++  await p.route('**/js/content.js', async (r) => {
++    try { const res = await fetchRetry(r); await r.fulfill({ response: res, body: (await res.text()) + '\nWISE_ACRES.seasonPicker = true;' + (opts.extra ? '\n' + opts.extra : '') }); }
+     catch (e) { errs.push('could not read js/content.js to add the test settings: ' + String(e.message).split('\n')[0]); r.continue().catch(() => {}); }

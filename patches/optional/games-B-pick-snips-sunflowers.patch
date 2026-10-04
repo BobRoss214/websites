@@ -1,0 +1,67 @@
+Option: games-B
+Name: The Pick button also snips sunflowers (the Sunflower Whisperer badge on a phone)
+Does: In summer every fourth press of the "Pick a blueberry" button snips a sunflower (if one is ready), and a snipped sunflower grows back in 3 to 5 seconds instead of 7 to 11 (js/hero.js). Only 5 sunflowers are drawn, at the edges of the picture, and a phone cannot reach them, so the 100 snips the badge needs were out of reach there; now a phone or a keyboard can earn it. Mouse clicks on the sunflowers work as before, and the other seasons are not touched. The patch adds one part to tests/games.test.mjs (a snipped sunflower is back after 5 seconds; the button alone earns the badge); no text changes.
+Answers: d68 A (let the Pick button snip sunflowers too)
+Conflicts: none
+Requires: none
+Host: any
+Order: 80
+Profile: filled
+After: nothing to rebuild; upload again
+Strings: none
+
+diff --git a/js/hero.js b/js/hero.js
+index 67c2271..fdecce4 100644
+--- a/js/hero.js
++++ b/js/hero.js
+@@ -1057,2 +1057,4 @@
+     const mine = token;
++    // only five sunflowers are drawn and the badge needs 100 of them, so a snipped one is back in 3 to 5 seconds (berries take 7 to 11)
++    const wait = el.classList.contains('flower-cut') ? 3000 + Math.random() * 2000 : 7000 + Math.random() * 4000;
+     setTimeout(() => {
+@@ -1063,3 +1065,3 @@
+       setTimeout(() => body.classList.remove('is-regrowing'), 900);
+-    }, 7000 + Math.random() * 4000);
++    }, wait);
+   }
+@@ -1166,2 +1168,3 @@
+ 
++  let presses = 0;
+   if (btnEl) btnEl.addEventListener('click', () => {
+@@ -1175,3 +1178,8 @@
+     }
+-    pick(free[Math.floor(Math.random() * free.length)]);
++    // in summer every fourth press snips a sunflower (if one is ready): the sunflowers are drawn at the far edges of the picture, out of reach on a phone,
++    // and with a keyboard the button is the only way to the "Sunflower Whisperer" badge
++    presses += 1;
++    const cut = season === 'summer' && presses % 4 === 0 ? free.filter((el) => el.classList.contains('flower-cut')) : [];
++    const from = cut.length ? cut : free;
++    pick(from[Math.floor(Math.random() * from.length)]);
+   });
+diff --git a/tests/games.test.mjs b/tests/games.test.mjs
+index 5f6424c..87b1117 100644
+--- a/tests/games.test.mjs
++++ b/tests/games.test.mjs
+@@ -440,2 +440,22 @@ await run('games', async ({ browser, base, errs }) => {
+   lap('10 320 px');
++  // ---- 10b. the Sunflower Whisperer badge without the mouse (the sunflowers are out of reach on a phone): the "Pick a blueberry" button snips one every fourth press, and they grow back in 3 to 5 seconds
++  {
++    const p = await page(1440, 900);
++    await season(p, 'summer');
++    await p.evaluate(() => { const f = document.querySelector('#hero-scene .flower-cut'); f.dispatchEvent(new MouseEvent('click', { bubbles: true })); window.__flower = f; });
++    ok('sunflower: a snipped one is picked', (await p.evaluate(() => window.__flower.dataset.state)) === 'picked');
++    await p.clock.fastForward(5200);
++    ok('sunflower: it is back after 5 seconds', (await p.evaluate(() => window.__flower.dataset.state)) === undefined);
++    let presses = 0;
++    for (; presses < 1200; presses++) {   // the blueberry badge comes first (about the 130th press); the sunflower one about the 400th
++      await p.evaluate(() => document.getElementById('pick-btn').click());
++      const t = await toast(p);
++      if (t && t.cls === 'ach-sunflower') break;
++      if (presses % 20 === 19) await p.clock.fastForward(6500);   // the snipped sunflowers grow back, a badge on screen closes
++    }
++    await okSoon(`sunflower: the button alone earns the badge (${presses + 1} presses)`, () => toast(p), (t) => t && t.cls === 'ach-sunflower' && t.title === 'Sunflower Whisperer');
++    await p.context().close();
++  }
++  lap('10b sunflower button');
++
+   // ---- 11. the badge for accessibility tools (when axe-core is installed)

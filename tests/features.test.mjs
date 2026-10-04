@@ -1,3 +1,6 @@
+// order: 340
+// browser: yes
+// covers: js/features.js, js/live.js, js/content.js, js/farm-map-data.js, css/features.css, index.html
 /* Pizza countdown + reminders, "This week at the farm", email signup (Mailchimp mocked), reviews / press / photo wall / entrance photo,
  * drive times and map-app links.  Each page is opened at a chosen moment (the page clock is set, so the dates in the test are fixed). */
 import fs from 'node:fs';

@@ -1,3 +1,6 @@
+// order: 210
+// browser: yes
+// covers: js/*.js, *.html, _headers, docs/WHAT_THE_SITE_STORES.md, docs/LAUNCH_CHECKLIST.md
 /* Privacy: what the site keeps in a visitor's browser and which other sites it contacts, checked against the allow-lists below.
  * Fails when a new storage key, cookie, IndexedDB / Cache Storage entry or service worker shows up, when another site is contacted that is not on the
  * list or before the visitor presses the button that allows it, when the address typed into the Drive time box is stored or sent anywhere but the address
@@ -5,7 +8,7 @@
  * something the site really does. docs/WHAT_THE_SITE_STORES.md is the human version of these lists: change both together. Needs a browser. */
 import fs from 'node:fs';
 import path from 'node:path';
-import { run, open, ok, okSoon, until, info, ROOT } from './lib.mjs';
+import { run, open, ok, okSoon, until, info, ROOT, ms } from './lib.mjs';
 
 /* ------------------------------------------------------------------ the allow-lists (keep in step with docs/WHAT_THE_SITE_STORES.md, sections 1 to 3) */
 // What the site may keep in localStorage: key -> what a value may look like. Nothing else (no cookies, sessionStorage, IndexedDB, Cache Storage, service worker).
@@ -134,7 +137,7 @@ await run('privacy', async ({ browser, base, errs }) => {
     const plain = /404|qr-signs/.test(pg);
     const S = await visit(pg, { lang: lang === 'en' ? undefined : lang, ready: !plain });
     if (!plain) { await scrollAll(S.p); await press(S.p, '#faq summary'); await press(S.p, '#faq summary', 1); }
-    await new Promise((r) => setTimeout(r, plain ? 1200 : 400));
+    await new Promise((r) => setTimeout(r, ms(plain ? 1200 : 400)));   // a request that comes late would still be seen (longer on a busy computer)
     const k = await kept(S);
     reading.push({ pg, lang, ext: S.ext.map((e) => e.u), kept: k, own: S.own.length });
     await S.p.context().close();
@@ -150,7 +153,7 @@ await run('privacy', async ({ browser, base, errs }) => {
   const p = S.p;
   await p.addStyleTag({ content: 'html{scroll-behavior:auto!important}' });
   await p.evaluate(() => { window.print = () => {}; });
-  await new Promise((r) => setTimeout(r, 1500));
+  await new Promise((r) => setTimeout(r, ms(1500)));
   const before = await kept(S);
   ok('right after the page opens, before anything is pressed: nothing kept, nothing sent to another site', nothingKept(before) && S.ext.length === 0, JSON.stringify(before) + ' ' + S.ext.map((e) => e.u).join(' '));
   S.phase = 'read'; await scrollAll(p); await press(p, '#faq summary');
@@ -176,7 +179,7 @@ await run('privacy', async ({ browser, base, errs }) => {
   S.phase = 'language';
   await press(p, '.lang-btn'); await press(p, '.lang-list [data-lang="es"]');
   await until(p, () => document.documentElement.lang.startsWith('es'), null, 15000);
-  await new Promise((r) => setTimeout(r, 800));
+  await new Promise((r) => setTimeout(r, ms(800)));
   const after = await kept(S);
 
   const bad = S.ext.filter((e) => !HOSTS.some((h) => h.host.test(hostOf(e.u)) && h.phase === e.ph));

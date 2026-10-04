@@ -1,9 +1,12 @@
+// order: 200
+// browser: yes
+// covers: js/analytics.js, js/content.js, js/main.js, js/features.js
 /* Privacy-friendly analytics: nothing happens until a provider is chosen; with ?track=debug the events the README lists are recorded
  * (Review click, Press click, Waitlist click, Reminder added, Map select, Signup submit, Email signup click, Directions click, ...).
  * Also, with a dummy id for each provider and stand-in provider scripts: what exactly is handed to Plausible, GoatCounter and Umami, event names
  * and details (no address, email or free text ever), Do Not Track and Global Privacy Control in every spelling, a blocked or broken provider script
  * never breaks the page, and with analytics off (the default) not one request leaves the site and nothing is stored. */
-import { run, open, ok, okSoon, until } from './lib.mjs';
+import { run, open, ok, okSoon, until, ms } from './lib.mjs';
 
 const EXTRA = `WISE_ACRES.week = { updated: '2026-10-01', days: [ { date: '2026-10-03', farm: 'full', pizza: 'full' } ] }; WISE_ACRES.signup.demo = true; WISE_ACRES.seasonPicker = true;`;   // the test clicks the season switcher
 const log = (p) => p.evaluate(() => (window.WISE_ACRES.analyticsLog || []).map((e) => e.name + (e.props && Object.keys(e.props).length ? ' ' + JSON.stringify(e.props) : '')));
@@ -88,7 +91,7 @@ await run('analytics', async ({ browser, base, errs }) => {
     });
     return { pg, seen };
   }
-  const tap = (pg, sel) => pg.evaluate(async (s) => { const deadline = Date.now() + 15000; let el; while (!(el = document.querySelector(s)) && Date.now() < deadline) await new Promise((r) => setTimeout(r, 50)); if (!el) return false; el.click(); return true; }, sel);
+  const tap = (pg, sel) => pg.evaluate(async ({ s, limit }) => { const deadline = Date.now() + limit; let el; while (!(el = document.querySelector(s)) && Date.now() < deadline) await new Promise((r) => setTimeout(r, 50)); if (!el) return false; el.click(); return true; }, { s: sel, limit: ms(15000) });
   // a visit that makes most events: links, season, hero, map, reminders, Drive time, signup, language
   async function useSite(pg) {
     await pg.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}' });

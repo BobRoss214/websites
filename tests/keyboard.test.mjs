@@ -1,3 +1,6 @@
+// order: 310
+// browser: yes
+// covers: css/*, js/main.js, js/features.js, js/hero.js, js/i18n.js, *.html, pages/*
 /* Keyboard only and screen reader: a visitor who never touches a mouse. Each of the six pages in English at 1280 px, then in Hindi or Chinese at 390 px:
  * Tab from the top to the end (and Shift+Tab back on one page): the skip link comes first and lands on the main content; every link, button, field,
  * tab, filter, FAQ question, map point, photo and mini game is reached; focus is always on screen, visible (a ring of 3:1 against what is under it),

@@ -1,9 +1,12 @@
+// order: 360
+// browser: yes
+// covers: css/*, js/hero.js, js/main.js, js/features.js
 /* Touch screens: a phone (390x844 and 360x640) and a tablet (820x1180) with a finger and no mouse. Every farm-scene object (berries, pumpkins, people, wagon, sun,
  * fires, tree lights) reacts once to one real tap (page.touchscreen), and a swipe that starts on it still scrolls the page; the bee does not trap a swipe; the photo
  * viewer does not let the page scroll behind it; the farm map shows what was tapped above the bottom bar; no :hover look is left stuck after a tap (every :hover rule is
  * inside @media (hover:hover)); fast double taps do not zoom; pulling down at the top does not reload; controls are 44px; the keyboard does not hide the drive-time box;
  * a phone turned sideways keeps its screen and menu. */
-import { run, open, ok, info, until } from './lib.mjs';
+import { run, open, ok, info, until, ms, settled, okSoon } from './lib.mjs';
 
 const PHONE = { width: 390, height: 844 }, SMALL = { width: 360, height: 640 }, TABLET = { width: 820, height: 1180 }, SIDEWAYS = { width: 640, height: 360 };
 const sleep = (t) => new Promise((r) => setTimeout(r, t));
@@ -13,7 +16,16 @@ async function drag(cdp, x0, y0, x1, y1, steps = 14) {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y: y0, id: 1 }] });
   for (let i = 1; i <= steps; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + (x1 - x0) * i / steps, y: y0 + (y1 - y0) * i / steps, id: 1 }] }); await sleep(16); }
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  await sleep(450);   // the scroll is made by the browser, not by the page: let it finish
+  await sleep(450);   // the scroll is made by the browser, not by the page: let it finish ...
+  await scrollRest(cdp);   // ... and on a busy computer, longer: until the page has really stopped
+}
+
+/** Waits until the page has stopped scrolling: the position is the same on 4 looks in a row (60 ms apart). After a swipe the browser keeps the page coasting for a
+ *  while, and how long depends on how busy the computer is; a tap while it coasts only stops the coasting (that is the phone's rule, not the page's). */
+async function scrollRest(cdp) {
+  const y = async () => { try { return (await cdp.send('Runtime.evaluate', { expression: 'Math.round(scrollY)', returnByValue: true })).result.value; } catch (e) { return null; } };
+  let last = await y(), same = 0;
+  for (const end = Date.now() + ms(6000); same < 4 && Date.now() < end;) { await sleep(60); const now = await y(); if (now === last) same++; else { same = 0; last = now; } }
 }
 
 /** A phone page: touch only, the page clock pinned (js/season: fall), instant scrolling, a recorder for clicks and the things a tap makes. */
@@ -122,12 +134,17 @@ async function bee(p) {
   const b0 = await p.evaluate(() => { const b = document.querySelector('#bee-fly'); return { pe: getComputedStyle(b).pointerEvents, shown: getComputedStyle(b).display !== 'none' && !b.hidden }; });
   ok('the bee never catches a finger (pointer-events:none), so it cannot trap a tap or a swipe', b0.pe === 'none' && b0.shown, JSON.stringify(b0));
   await p.evaluate(() => scrollTo({ top: 0, behavior: 'instant' })); await p.clock.runFor(300);
+  // The bee only follows a finger while the page knows that the hero is on screen, and it learns that from an IntersectionObserver, whose answer comes
+  // with a drawn frame (late on a busy computer). Ask the same question here: the answer to ours is delivered after the page's own.
+  await p.evaluate(() => new Promise((r) => { const io = new IntersectionObserver(() => { io.disconnect(); r(); }); io.observe(document.querySelector('#top')); }));
+  await p.clock.runFor(700);
   const tx = 300, ty = 460;   // the bare sky right of the headline
   const hero = await p.evaluate(() => { const r = document.querySelector('#top').getBoundingClientRect(); return { x: r.x, y: r.y }; });
   await p.touchscreen.tap(tx, ty);
-  await p.clock.runFor(700);   // the bee starts its flight within half a second
-  const goal = await p.evaluate(() => { const a = document.querySelector('#bee-fly').getAnimations(); if (!a.length) return null; const k = a[a.length - 1].effect.getKeyframes(), m = /translate\(([-\d.]+)px, ([-\d.]+)px/.exec(k[k.length - 1].transform || ''); return m ? [+m[1], +m[2]] : null; });
   const want = [tx - hero.x - 26, ty - hero.y - 24];   // the bee's top-left corner when its middle is on the finger
+  const flightGoal = () => p.evaluate(() => { const a = document.querySelector('#bee-fly').getAnimations(); if (!a.length) return null; const k = a[a.length - 1].effect.getKeyframes(), m = /translate\(([-\d.]+)px, ([-\d.]+)px/.exec(k[k.length - 1].transform || ''); return m ? [+m[1], +m[2]] : null; });
+  let goal = null;
+  for (let i = 0; i < 5; i++) { await p.clock.runFor(400); goal = await flightGoal(); if (goal && Math.abs(goal[0] - want[0]) < 6 && Math.abs(goal[1] - want[1]) < 6) break; }   // the bee starts its flight within half a second
   ok('a tap in the hero sends the bee to that spot', !!goal && Math.abs(goal[0] - want[0]) < 6 && Math.abs(goal[1] - want[1]) < 6, `the bee flies to ${goal && goal.map(Math.round)}, finger at ${want.map(Math.round)}`);
   const y0 = await scrollNow(p);
   await drag(p.cdp, 200, 560, 200, 300);   // a swipe that starts in the sky
@@ -171,7 +188,7 @@ async function viewer(p) {
   const y2 = await scrollNow(p);
   ok('a swipe on the dark area around the photo does not scroll the page behind the viewer either', Math.abs(y2 - v.y) <= 2 && (await p.evaluate(() => document.querySelector('#lightbox').open)), `page moved ${y2 - v.y}px`);
   ok('the photo viewer lets a pinch through (touch-action pinch-zoom: it zooms, it does not pan the page)', /pinch-zoom/.test(v.ta), v.ta);
-  await sleep(1000);   // a tap while a swipe is still coasting only stops the coasting (that is the phone's rule, not the page's): let it end
+  await sleep(ms(1000));   // a tap while a swipe is still coasting only stops the coasting (that is the phone's rule, not the page's): let it end (the coasting is not something the page can show: a time, longer when the computer is busy)
   const c = await p.evaluate(() => { const r = document.querySelector('#lightbox .lightbox-close').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
   const top = await p.evaluate(({ x, y }) => { const t = document.elementFromPoint(x, y); return t ? t.tagName + '.' + String(t.getAttribute('class') || '') : null; }, c);
   await p.touchscreen.tap(c.x, c.y);
@@ -216,18 +233,21 @@ async function swipes(p, label) {
   const c0 = await p.evaluate(() => { const r = document.querySelector('#lightbox img').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
   await p.cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: c0.x - 20, y: c0.y, id: 1 }, { x: c0.x + 20, y: c0.y, id: 2 }] });
   for (let i = 1; i <= 8; i++) { await p.cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: c0.x - 20 - i * 12, y: c0.y, id: 1 }, { x: c0.x + 20 + i * 12, y: c0.y, id: 2 }] }); await sleep(16); }
-  await p.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(500);
+  await p.cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await until(p, () => window.visualViewport.scale > 1.2, null, 5000);   // the browser applies the zoom a moment later
+  await settled(p, 300);
   const z = await p.evaluate(() => ({ s: window.visualViewport.scale, zoomed: document.getElementById('lightbox').classList.contains('is-zoomed'), ta: getComputedStyle(document.getElementById('lightbox')).touchAction }));
   ok(`${label}: a two-finger pinch zooms in (not trapped) and does not change the photo, and while zoomed one finger may move around the picture`, z.s > 1.2 && (await count(p)) === `3 of ${total}` && z.zoomed && (/pan-x/.test(z.ta) || z.ta === 'manipulation'), JSON.stringify(z));
   await swipe(-150, 0);
   ok(`${label}: zoomed in, a sideways drag moves the picture and does not change the photo`, (await count(p)) === `3 of ${total}`, await count(p));
-  await p.cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 }); await sleep(400);
+  await p.cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 });
+  await until(p, () => window.visualViewport.scale < 1.05, null, 5000); await settled(p, 300);
   ok(`${label}: zoomed back out, the swipe works again`, await (async () => { await swipe(-150, 0); return (await count(p)) === `4 of ${total}`; })(), await count(p));
   const nxt = await mid('#lightbox .lightbox-next');
-  await p.touchscreen.tap(nxt.x, nxt.y); await sleep(200);
+  await p.touchscreen.tap(nxt.x, nxt.y); await settled(p, 200);
   ok(`${label}: one tap on Next shows one photo (5 of ${total})`, (await count(p)) === `5 of ${total}`, await count(p));
   const prv = await mid('#lightbox .lightbox-prev');
-  await p.touchscreen.tap(prv.x, prv.y); await sleep(200);
+  await p.touchscreen.tap(prv.x, prv.y); await settled(p, 200);
   ok(`${label}: one tap on Previous goes back one (4 of ${total})`, (await count(p)) === `4 of ${total}`, await count(p));
   for (let i = 0; i < 4; i++) await swipe(150, 0);
   ok(`${label}: swiping right past the first photo wraps round to the last (${total} of ${total})`, (await count(p)) === `${total} of ${total}`, await count(p));

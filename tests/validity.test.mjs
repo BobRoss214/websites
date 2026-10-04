@@ -1,3 +1,6 @@
+// order: 40
+// browser: no
+// covers: *.html, css/*, js/*, lang/*, tests/*, *.json, _headers, robots.txt, sitemap.xml, manifest.webmanifest
 /* Plain mistakes that a browser quietly forgives (no browser needed, a few seconds):
  *   - HTML (the 6 pages, 404.html, print/*.html, and the pieces in pages/): the same id twice, a label / aria-controls / aria-labelledby / aria-describedby /
  *     list / <use> / #link that points at an id that does not exist, a link to another page's #anchor that is not there, a heading level skipped or empty,

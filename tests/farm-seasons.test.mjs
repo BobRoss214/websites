@@ -1,3 +1,7 @@
+// order: 240
+// browser: yes
+// quick: yes
+// covers: js/hero.js, js/season.js, js/features.js, css/features.css, index.html
 /* "What's on the farm": the Spring / Summer / Fall / Winter buttons swap the cards (data-seasons on each card), the season note and the
  * highlighted column of the season-by-season table; the hero season switcher keeps them in step. */
 import { run, open, ok, okSoon, until } from './lib.mjs';

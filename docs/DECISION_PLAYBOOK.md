@@ -8,7 +8,7 @@ Entries d43 to d45 (added later on the dashboard, with no number in the doc) wer
 
 1. Find the question by its number (d01 to d73) or in the topic list below.
 2. Read the option she chose. It lists the files and the exact setting or text, how many strings must be written in the four translations, and which tests may need an update.
-3. Make the change. Rebuild and test as in "The standard steps".
+3. Make the change. Rebuild and test as in "The standard steps". Then run `node tests/docs.test.mjs`: it lists every note (this page, the README rows, the other docs) that still names the old words or a place that moved; give those notes the new words. The steps and "Tests:" lines of the entries below were tried one by one on a copy of the site (docs/ANSWER_REHEARSAL.md says which ones, and how to try them again with `python3 tools/rehearse_answers.py --list`).
 4. If the entry names a patch, apply it only after her answer. Patches are listed in "Patches on disk".
 5. Delete the matching row in the README table "Content status" when a question is closed.
 
@@ -48,6 +48,7 @@ python3 tools/check_facts.py         # after a price, hour, phone, e-mail, addre
 Changing an English sentence changes its id (data-t). The old translations no longer match and show as missing.
 Add the 4 new translations, rebuild, and the check above must say 0 missing.
 How to find the texts to translate (`python3 tools/i18n.py missing es --list`) and where to put them is in the README, "Change one sentence and its translations, step by step".
+Exception: the dates in the pizza table and the "Open now" sentence under it, in the shape the README row "Open a new pizza weekend" shows, translate themselves when `extract` runs (tools/date_phrases.py). They count as 0 strings.
 
 Tests (needs Playwright; see tests/README.md). One word picks every test whose name contains it:
 
@@ -113,7 +114,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | d65 QR strength and address line | d38, d39, d06, d28, d29 | One tool (`tools/make_qr.py`) rebuilds every sign. A new web address (d38) or a review link (d06) needs a rebuild anyway, so make the change once. |
 | d66 "new" wording | d48, d24 | If the tomatoes are removed (d48) it ends. The eight sentences go with the fall 2027 content (d24): do both in December. |
 | d67 backgrounds, d73 yellow | each other | Both change colours in css/styles.css and need new visual-check baselines. |
-| d68, d69, d70 the games | each other, d01 | All three change js/hero.js (d70 also css/extras.css). The game test is tests/games.test.mjs; the optional patch games-B (d68 A) updates it. |
+| d68, d69, d70 the games | each other, d01 | All three change js/hero.js (d70 also css/extras.css). The game test is tests/games.test.mjs; the optional patch games-B-pick-snips-sunflowers.patch (d68 A) adds one part to it. |
 | d71 tone of the translations | d37 | Same translation files: one native speaker can answer both. |
 | d72 owner page | d60, d05 | Closed days and the notice are the first thing the form would write. The page is never uploaded: the deploy folder must leave it out. |
 | d43 farm words, d44 corn pit offer, d45 free ages | each other, d07, d16, d02, d36, tests | The corn pit line in d43 must agree with the Thursday offer in d44. The maze line in d43 uses the name chosen in d07. The age at which children are free (d45) is written next to the $3 field fee (d16, "ages 3 and up"), the party guest count (d02), the school tour admission for family members (d36) and the wagon ride line; consistency pins every one of these age sentences (see the test table below). |
@@ -133,11 +134,14 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | consistency at `pets stay home, service animals are welcome` | pets stay home, service animals welcome (8 places) | d42 |
 | consistency at `Mid-September through early November` | season words from js/season.js ("Mid-September through early November") | d23 |
 | consistency at `const ALLOWED_EXTRA` | ALLOWED_EXTRA: Celsius 370 beside "700-degree" | d18, d37 |
+| consistency at `farm year bars match the dates written beside them` | the year bars start and end where the words beside them say (early, mid or late + month; the April to July bar is read at `/^april.*`) | d23, d26, d50 |
 | dated (whole file) | the 2026 pizza rows, special days, "No pizza" block until Nov 30, Nov 8/9, Dec 1 | d23, d24 |
 | farm-seasons at `haunted trail and the maze only in fall` | /Maze/ in fall text only | d07 |
 | print-qr at `there are signs, each with a QR code` | at least 9 signs | d06, d28, d29 |
+| consistency at `printedCount >= 9 && bad.length === 0` | the QR signs check: at least 9 signs are printed in print/qr-signs.html | d06, d28, d29 |
 | public-site | one address everywhere, sitemap, robots, clean-URL checks, extra pages | d05, d30, d38 |
-| drive (whole file) | the two map services are mocked by host name; "Rd" in labels (drive at `The farm (4701 Hartis Rd)`, `farm answer names the farm`, `and pressing the button again answers for the farm` and `La granja (4701 Hartis Rd)`) | d10, d39 |
+| launch-check at `const SITE = '` and at `the farm spot is set with the numbers swapped` | the address the test treats as the live site; the farmPoint line it swaps the numbers of | d11, d38 |
+| drive (whole file) | the two map services are mocked by host name; "Rd" in labels (drive at `The farm (4701 Hartis Rd)`, `farm answer names the farm`, `and pressing the button again answers for the farm` and `La granja (4701 Hartis Rd)`), and the farm spot: the test expects `farmPoint: null` (drive at `if (opts.extra) await page.route('**/js/content.js'`) | d10, d11, d39 |
 | features at `auto: pumpkins, tomatoes, flowers in season` | flowers in season in the auto "This week" box | d26 |
 | gallery | photo count (at least 5) and tags | d13, d31, d32 |
 | consistency at `price: tomatoes, per pound` and `price: basil, per stem` | tomato price per pound and basil per stem (5 places each) | d48 |
@@ -162,29 +166,35 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 
 The optional patches are in the repository, in patches/optional/, each with a header (what it does, which question it answers, what it cannot be combined with, hosts, what to run after). docs/OPTION_PATCHES.md is the table with the apply order. `node tests/run-all.mjs option-patches` checks that every patch applies to the files as they are and that every set that makes sense applies together; `python3 tools/option_matrix.py` rebuilds and tests every combination for each host (README, section "Optional patches (open decisions)"). Nothing is applied until someone decides.
 
-| Patch (in patches/optional/) | For | What it does |
-|---|---|---|
-| winter-A-hide-fall-booking.patch | d01 A, d24 B | Hides the fall booking and prices out of season; one new sentence in 4 languages. |
-| winter-B-fall-prices-note.patch | d01 B | Keeps the fall prices all year with the note "These are the fall 2026 prices and times"; one new sentence in 4 languages. |
-| reserve-window.patch | d25 A | Hides the spring Reserve buttons outside the booking window. |
-| redirects-A-redirects-file.patch | d30 A (Cloudflare Pages, Netlify) | Adds _redirects (22 lines, all 301). |
-| redirects-B-redirect-pages.patch | d30 A (any host, the only one for GitHub Pages) | 13 small redirect pages; the deploy tool uploads them; the launch check follows them. |
-| clean-addresses-C-cloudflare.patch | d05 (Cloudflare Pages), d38 | Page addresses without .html; run python3 tools/pages.py after. |
-| code-cache-D-5-minutes.patch | d05 (any host that reads _headers) | css, js and lang cached 5 minutes instead of 1 hour. |
-| phone-number-shown.patch | d04 A | The main phone number in the footer and the Google data; the consistency test allows the two known numbers. |
-| season-picker-off.patch | launch decision D6 | seasonPicker false (the three tests that click the season switcher turn it on for themselves, with or without the patch). |
+Every row names the file, the question, what it changes and whether it was tested. "Tested: yes" says what ran after the patch was applied. "The matrix" is tools/option_matrix.py: the patch in every combination its header allows, rebuilt twice with the same result, no missing translation, and the public-site, docs and consistency tests and the launch check on a pretend host.
+
+| Patch (in patches/optional/) | For | What it changes | Tested |
+|---|---|---|---|
+| season-picker-off.patch | launch decision D6 | seasonPicker false. It also changes tests/lib.mjs so that every page a test opens has the season switcher on (the tests that look at or click it keep passing). | yes: with it applied (in the set of 11 patches, settings filled in) hero, games, dated, keyboard and calm pass; hero and games failed without the tests/lib.mjs change |
+| winter-A-hide-fall-booking.patch | d01 A, d24 B | Hides the fall booking and prices out of season; one new sentence in 4 languages. | yes: the matrix, hero, features, the page clock on 11 dates |
+| winter-B-fall-prices-note.patch | d01 B | Keeps the fall prices all year with the note "These are the fall 2026 prices and times"; one new sentence in 4 languages. | yes: the matrix, the page clock on 11 dates |
+| reserve-window.patch | d25 A | Hides the spring Reserve buttons outside the booking window. | yes: the matrix, hero (80 checks), the page clock on 11 dates; with the rebuild, dated, deploy and messages see no page error on the extra pages |
+| redirects-A-redirects-file.patch | d30 A (Cloudflare Pages, Netlify) | Adds _redirects (22 lines, all 301). | yes: the matrix, also with Cloudflare's own test server |
+| redirects-B-redirect-pages.patch | d30 A (any host, the only one for GitHub Pages) | 13 small redirect pages; the deploy tool uploads them; the launch check follows them. | yes: the matrix |
+| clean-addresses-C-cloudflare.patch | d05 (Cloudflare Pages), d38 | Page addresses without .html; run python3 tools/pages.py after. The validity test accepts the sitemap addresses without .html. | yes: the matrix, also with Cloudflare's own test server; validity passes with it |
+| code-cache-D-5-minutes.patch | d05 (any host that reads _headers) | css, js and lang cached 5 minutes instead of 1 hour. | yes: the matrix (no effect on GitHub Pages) |
+| phone-number-shown.patch | d04 A | The main phone number in the footer and the Google data; the consistency test allows the two known numbers; tools/test_check_facts.py leaves the footer alone when the number is there. | yes: the matrix; pipeline passes with it |
+| qr-one-address-line.patch | d65 C (d65 D with the next row) | The directions sign prints the address once, not twice. tools/make_qr.py leaves out a Spanish line that equals the English; the consistency test accepts that; the one changed line of print/qr-signs.html is in the patch. | yes: consistency and print-qr pass with it; running python3 tools/make_qr.py afterwards changes nothing |
+| qr-stronger-codes.patch | d65 B (d65 D with the row above) | Codes at error correction Q (about 25 percent damage still scans, not about 15); each square prints 10 to 15 percent smaller. The 8 changed pictures in assets/qr/ and the five sign pages in print/ are in the patch. | yes: print-qr (every code scans back, every square above the minimum size) and consistency pass with it; running python3 tools/make_qr.py afterwards changes nothing |
+| games-B-pick-snips-sunflowers.patch | d68 A | In summer every fourth press of the "Pick a blueberry" button snips a sunflower; sunflowers grow back in 3 to 5 seconds. One part is added to tests/games.test.mjs. | yes: games (with its new part), hero, touch, calm, keyboard and privacy pass with it |
+| map-without-traced-land.patch | d86 option 2 | Removes the roads, neighbours' houses, lawns and dirt lanes drawn from the aerial picture (Google's) from the farm map; every mark the farm made, the legend, names and drive-time chips stay. Also the farm_map.py note, the README map paragraph and CREDITS row L8. No new text. | option-patches: applies to the files as they are, alone and in every set that makes sense (checked at the join; the map drawing itself was not looked at again there) |
 
 The old address table (where each old address goes) is in docs/OPTION_PATCHES.md.
 
-Patches that are not in patches/optional/ (the helpers keep them in scratch folders; ask Claude for one by its file name):
+Choices with no patch file (docs/OPTION_PATCHES.md, "Choices that have no patch, and old copies", says why):
 
-| Patch | For | Status |
-|---|---|---|
-| games-B.patch | d68 A | Optional. Applies to 05b0b72 (dry-run 3 October 2026: js/hero.js and tests/games.test.mjs). Not applied. The Pick button snips a sunflower on every fourth press; sunflowers grow back in 3 to 5 seconds. |
-| OPTIONAL-qr-no-duplicate-line-66c8272.patch | d65 C | Made for 66c8272. On 05b0b72 one of its two hunks in tools/make_qr.py fails (the file changed with the five-language signs): ask for a redo. |
-| (no patch file) stronger QR codes | d65 B | One letter in tools/make_qr.py (m to q), then run python3 tools/make_qr.py (tried in a scratch copy of af1e572: the print-qr test passed). |
+| Choice | For | What to do | Tested |
+|---|---|---|---|
+| d37 clock words (the old es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch) | d37 A | Nothing to apply: the code already writes Spanish times as "5:00 p. m." and Vietnamese times as "5 giờ chiều" (js/features.js at `const fmtClock = (date, tz) => {`, js/live.js at `function timeLabel(mins)`, js/i18n.js at `W.clock = (h, m, code) => {`). | yes: checked in a browser on 3 October 2026 (es, vi, hi, zh) |
+| Stop saying "new this year" from January 1 | d66 A | By hand when she answers: the places are listed in d66 A below. A patch would change about 40 notes that name those ids. | no (no patch) |
+| The 2026 fall prices in 2027 | d24 | winter-A-hide-fall-booking.patch covers the months when the page is not in its fall look; from August 12, 2027 only the 2027 details (d24 A) help. | no (no patch) |
 
-Not in the repository and not to be applied (stale): the old winter patches for b54427b, winter-A.patch and winter-C.patch (the tree wording is already in-season-only in the code, commit e081393), 2-OPTIONAL-cloudflare-no-html-addresses.patch (clean-addresses-C does the same and more), and the d37 clock patches es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch (ask for a redo). The patches zh-C, es-C, vi-C and hi-C (translation decisions) and the photo, share-image and checklist patches are already merged.
+Not in the repository and not to be applied (replaced): the old winter patches for b54427b, winter-A.patch and winter-C.patch (the tree wording is already in-season-only in the code, commit e081393), and 2-OPTIONAL-cloudflare-no-html-addresses.patch (clean-addresses-C does the same and more). The patches zh-C, es-C, vi-C and hi-C (translation decisions) and the photo, share-image and checklist patches are already merged.
 
 ## Dashboard ids and doc question numbers
 
@@ -467,7 +477,7 @@ Nothing can go live until the host and the web address are chosen. The files alr
 - Share pictures: after launch a new address means new link previews; a changed picture needs a new file name (checklist 3.11).
 - Outside the files: DNS, Search Console, Business Profile, Facebook and Instagram profile links.
 - Strings: 0
-- Tests: public-site (reads SITE, canonical tags, sitemap, robots.txt, QR file); python3 tools/test_pages.py has 3 fixture lines with the old address
+- Tests: public-site (reads SITE, canonical tags, sitemap, robots.txt, QR file); python3 tools/test_pages.py has 3 fixture lines with the old address (tools/test_pages.py at `https://www.wiseacresorganic.com/assets/og-` (3 places)); launch-check: tests/launch-check.test.mjs at `const SITE = '` is the address the test treats as the live site, put the new one there (or "same folder treated as the live site" fails)
 
 ### d15. Browser safety rule for the new host
 
@@ -951,7 +961,7 @@ Faces and organisation names need a yes before launch. Words printed inside pict
 
 - Put the credit in that photo's caption: js/content.js at `assets/photos/foster-village-table.webp` is one of the 32 entries (each has `src`, `alt`, `caption` and `tags`). A caption shows under the picture in the gallery and in the viewer, and can be written { en, es, hi, zh, vi }. Names and organisations are not translated.
 - A picture shown outside the gallery has no caption line, so a credit there needs a small code change (ask Claude). Or remove the picture the way d13 and d31 describe.
-- Strings: 0 (captions are in js/content.js, not in the translation files)
+- Strings: 1 JS string x 4 translations (a caption is read as a JS string, so a new caption is listed by python3 tools/i18n.py missing es; the name in it stays the same in every language)
 - Tests: gallery (photo count of at least 5, tags) if a picture is removed
 
 **C. I need to check first**
@@ -1004,16 +1014,16 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 - The site already says "Includes 2 Wise Pie pizzas". If "any two" is what she means, no change is needed.
 - To say it in words ("any 2 pizzas"): index.html at `data-t="tf7203efa"` and index.html at `data-t="te9a8e62d"` (same sentence on pages/pumpkin-patch.html at `<dt>Farm fun with pizza</dt>`). Gluten-free crust (+$9) and vegan cheese (+$3): say if they cost extra on top of the $31 (same three places).
 - Check the booking page (Bookeo) says the same. README: delete the row "Fall pizza package and allergens" once d17 is answered too.
-- Strings: 0 if the wording stays; 2 ids x 4 translations if "any" or "extras cost more" is added
-- Tests: consistency: the regex "Includes \d+ Wise Pie pizzas, plus $N per person" (tests/consistency.test.mjs at `price: extra per person in the pizza package` and `days: farm visits with pizza`) must still match the new sentence, or be changed with it
+- Strings: 0 if the wording stays; 3 ids x 4 translations if "any" or "extras cost more" is added (the two sentences in index.html and the line on the pumpkin page)
+- Tests: consistency MUST be updated when "any" is added: three patterns read "Includes 2 Wise Pie pizzas, plus" and no longer find it: tests/consistency.test.mjs at `pizza package: number of pizzas included` (the pattern `/Includes (\d+) Wise Pie`), at `price: extra per person in the pizza package` (its first pattern, `'Includes \\d+ Wise Pie`) and at `days: farm visits with pizza` (its second pattern, `'Includes 2 Wise Pie`). In each one write `Includes (?:any )?` where it says `Includes `. "Extras cost more" needs no test change
 
 **B. Only some pizzas (I will say which)**
 
-- Add the list of allowed pizzas to the same three places: index.html at `data-t="tf7203efa"`, index.html at `data-t="te9a8e62d"`, pages/pumpkin-patch.html at `<dt>Farm fun with pizza</dt>` (same id). Names must match the menu list (index.html at `class="menu-list"`).
+- Add the list of allowed pizzas to the same three places: index.html at `data-t="tf7203efa"` (after "(ages 3+)."), index.html at `data-t="te9a8e62d"` and pages/pumpkin-patch.html at `<dt>Farm fun with pizza</dt>` (same id; in these two put the list at the very end, after "Friday&ndash;Sunday.", not between "(ages 3+)." and the days: the consistency test reads "(ages 3+). Friday&ndash;Sunday." as one piece). Names must match the menu list (index.html at `class="menu-list"`).
 - Extras (gluten-free +$9, vegan cheese +$3): say if they cost extra on top.
 - Check the booking page says the same.
-- Strings: 2 ids x 4 translations (a longer sentence)
-- Tests: consistency: same two regexes (consistency at `price: extra per person in the pizza package` and `days: farm visits with pizza`)
+- Strings: 3 ids x 4 translations (a longer sentence: the two in index.html and the line on the pumpkin page)
+- Tests: consistency: with the list at the very end, nothing changes (the patterns of A read the sentence up to "Friday&ndash;Sunday." as it is now). If the list goes anywhere else, the pattern in consistency at `days: farm visits with pizza` stops finding the days: change it with the sentence
 
 **C. Change the package price**
 
@@ -1037,14 +1047,14 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 - The share picture assets/og-wise-pie.png has the heading drawn in it: a new picture is needed (drawn artwork, ask Claude). Before launch the same file name is fine; after launch use a new file name (docs/LAUNCH_CHECKLIST.md 3.11, and the table row "Wise Pie").
 - Translations: Chinese adds a Celsius figure (about 370); keep it.
 - Strings: 1 UI id + 1 JS string = 2 x 4 translations
-- Tests: consistency MUST be updated: tests/consistency.test.mjs at `pizza: oven temperature` and `const ALLOWED_EXTRA`: the fact "oven temperature" (regex (\d+)-degree oven, min 4) and ALLOWED_EXTRA (/700-degree/ -> 370). Change both regexes to the new wording
+- Tests: consistency MUST be updated: tests/consistency.test.mjs at `pizza: oven temperature` and `const ALLOWED_EXTRA`: the fact "oven temperature" (regex (\d+)-degree oven, min 4) and ALLOWED_EXTRA (/700-degree/ -> 370). Change them like this: the fact becomes `(\d+)(?:-degree|°F) oven`, and ALLOWED_EXTRA becomes `[[/700-degree|700°F/, '370']]`. Keep the old wording in ALLOWED_EXTRA: the old translations (they carry the Celsius figure 370) stay in lang/src/*.json and are still checked. Chinese then needs its Celsius figure again in the new translations
 
 **B. Remove the number**
 
 - Take the number out: heading id t52ee3965 (index.html at `id="pizza-h"`, pages/wise-pie.html at `id="pg-h"`), description (pages/wise-pie.html at `description:`), image description (pages/wise-pie.html at `image_alt:`), for example "Real pizza from a wood-fired oven".
 - New share picture without the number (assets/og-wise-pie.png), as in A.
 - Strings: 1 UI id + 1 JS string = 2 x 4 translations
-- Tests: consistency MUST be updated: delete the fact tests/consistency.test.mjs at `pizza: oven temperature` and the ALLOWED_EXTRA entry (consistency at `const ALLOWED_EXTRA`)
+- Tests: consistency MUST be updated: delete the fact tests/consistency.test.mjs at `pizza: oven temperature` (one line). Leave consistency at `const ALLOWED_EXTRA` as it is: the old translations (they carry the Celsius figure 370) stay in lang/src/*.json and are still checked, and deleting that line stops the whole consistency test with an error
 
 **C. A different number**
 
@@ -1097,7 +1107,7 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 - Change the sentence index.html at `data-t="td4abc72c"` (shared with the "serves" sentence of d21) and pages/wise-pie.html at `Pizzas are ready for pick-up` (id tb150c178).
 - Rewrite for late reservations (for example a time cap) in her words.
 - Strings: 2 ids x 4 translations
-- Tests: consistency: fact "pizza: ready for pick-up after (hours)" (tests/consistency.test.mjs at `pizza: ready for pick-up after`, regex (\d+) hour after your reservation time, min 2): keep that phrase or change the regex
+- Tests: consistency: fact "pizza: ready for pick-up after (hours)" (tests/consistency.test.mjs at `pizza: ready for pick-up after`, regex (\d+) hour after your reservation time, min 2): the regex says "hour" (one hour), so "2 hours after your reservation time" is not found. Write `(\d+) hours? after your reservation time` (or keep the phrase "N hour after")
 
 ### d21. Pizza size
 
@@ -1339,11 +1349,11 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 **A. Open until Nov 30: I will change the end date**
 
 - js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts the Friday after Thanksgiving (Nov 27, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 4 days. Decide what shows then (ask Claude).
-- Words "early November" become "end of November": index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
+- Words "early November" become "late November" (say early, mid or late: the year-bar check and the season-words check of consistency read those words, and "end of November" is not one of them): index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
 - Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
-- The year bar (index.html at `data-t="t21bf1cf8"`) and the README rows follow the same text.
+- The year bar next to that sentence ends too early for "late November": in index.html at `--s:8.45;--e:10.25` change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
 - Strings: about 7 to 9 ids x 4 translations
-- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text (change the regex "Mid-September through early November"); dated: tests/dated.test.mjs hard-codes Nov 8/9 and Nov 30 (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`): redo those dates; farm-seasons and hero may react to the new end date, run them
+- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs hard-codes Nov 8/9 and Nov 30 (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`): redo those dates; farm-seasons and hero may react to the new end date, run them
 
 **B. Fall ends Nov 8: fix the pizza box**
 
@@ -1371,9 +1381,9 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 **B. Different dates (I will send them)**
 
 - js/season.js at `{ id: 'winter'`: the start (thanksgivingFriday) and the end (new Date(y, 11, 8)).
-- The words "Friday after Thanksgiving to early December" in 8 sentences: index.html at `data-t="t0e76cb0a"`, `data-t="t28844e2e"`, `data-t="t4503c39b"`, `data-t="t493369ae"`, `data-t="t53cf41e8"`, `data-t="t5ecd6fe5"`, `data-t="t8f55ff30"` and `data-t="tf0d0193a"` x 4 translations. README.md row "Christmas trees".
+- The words "Friday after Thanksgiving to early December" in 8 sentences: index.html at `data-t="t0e76cb0a"`, `data-t="t28844e2e"`, `data-t="t4503c39b"`, `data-t="t493369ae"`, `data-t="t53cf41e8"`, `data-t="t5ecd6fe5"`, `data-t="t8f55ff30"` and `data-t="tf0d0193a"` x 4 translations. README.md row "Christmas trees". Use the word that fits the end day: early is day 1 to 10, mid 11 to 20, late 21 and later (Dec 8 is early, Dec 22 is late). The year bar beside the first sentence ends where the words say: in index.html at `--s:10.85;--e:11.3` the end `--e:11.3` is early December; for mid-December use `--e:11.5`, for late December `--e:11.9` (months count from 0 = January 1).
 - Strings: 8 UI ids x 4 translations
-- Tests: consistency MUST follow: tests/consistency.test.mjs from `const MONTHS = '(january` to `if (/thanksgiving/.test(words))`, and `winterEnd.month === 'December'` read "early December" and "Friday after Thanksgiving to early December" against js/season.js; hero at `Dec 1 and Dec 20 are winter` (the switch to winter); dated
+- Tests: consistency MUST follow, in two places that read "early December" against js/season.js. The words check: tests/consistency.test.mjs at `winterEnd.month === ` holds "Friday after Thanksgiving to early December" and `half(winterEnd) === 'early'`: write your word and its half there (they must fit the end day in js/season.js, as above). The year bar check: tests/consistency.test.mjs at `(december)/.exec(words)` reads `/early (december)/` and lets the bar end between 11.0 and 11.34: write `/late (december)/` and `[11.6, 12.1]` for late December (`/mid (december)/` and `[11.3, 11.7]` for mid-December); hero at `Dec 1 and Dec 20 are winter` (the switch to winter); dated
 
 **C. No trees this year**
 
@@ -1399,7 +1409,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **B. Some are wrong (I will send the right hours)**
 
-- Hours and days are set in js/content.js at `hours: {` (greenhouse, pizza, farm). The text follows: about 25 sentences, for example index.html at `data-t="tb55a6fd9"`, `data-t="t1c41eab2"`, `data-t="tfb71e468"`, `data-t="t86f09bf0"`, `data-t="tb4c1e6ac"` and `data-t="ta38e4092"`; pages/pumpkin-patch.html at `Wood-fired pizza with homemade dough`; pages/wise-pie.html at `description:`, `<span class="way-time">10 am` and `At The GreenHouse, no.`, and the week strips (data-days: index.html at `data-ta-aria-label="t230f8c2d"` and `data-ta-aria-label="t97f22abe"`). The regexes in tests/consistency.test.mjs from `time: The GreenHouse open hours` to `CONTENT.hours.greenhouse.days` find every place.
+- Hours and days are set in js/content.js at `hours: {` (greenhouse, pizza, farm). The text follows: about 25 sentences, for example index.html at `data-t="tb55a6fd9"`, `data-t="t1c41eab2"`, `data-t="tfb71e468"`, `data-t="t86f09bf0"`, `data-t="tb4c1e6ac"`, `data-t="t4ffa359f"` (the hours in the "ways to get pizza" table) and `data-t="ta38e4092"`; pages/pumpkin-patch.html at `Wood-fired pizza with homemade dough`; pages/wise-pie.html at `description:`, `<span class="way-time">10 am`, `<span class="way-time">4 pm` and `At The GreenHouse, no.`, and the week strips (data-days: index.html at `data-ta-aria-label="t230f8c2d"` and `data-ta-aria-label="t97f22abe"`). The regexes in tests/consistency.test.mjs from `time: The GreenHouse open hours` to `CONTENT.hours.greenhouse.days` find every place.
 - Same code change as d09 if the hours differ by season.
 - Strings: up to 25 UI ids x 4 translations
 - Tests: consistency MUST follow: the hours and days facts (tests/consistency.test.mjs from `time: The GreenHouse open hours` to `CONTENT.hours.greenhouse.days`) read the text and js/content.js; live (open-now badges); dated
@@ -1478,7 +1488,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 - Change the 5 sentences (same lines as A) to what the box shows (flowers only during spring and summer picking and from September).
 - Strings: 5 ids x 4 translations
-- Tests: none (not pinned)
+- Tests: consistency MUST follow: the year bar (index.html at `--s:3;--e:7`, April to July) is read by tests/consistency.test.mjs at `/^april.*`: the words `july and september` and the end `[7 - 0.1, 7 + 0.1]` on that one line name the last month (months count from 0 = January 1, so June is 6). Write the new month in both, and in the bar change `--e:7` to the new number. Say it the way the bar says it, "April to June and September through first frost", or the check cannot read the words
 
 **C. Neither: I will say the months**
 
@@ -1530,7 +1540,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 **B. No, we are open**
 
 - No change to js/content.js. If the sentence about rain in the pizza note should go: index.html at `data-t="t58da3033"`. The note hides itself after October 4 anyway.
-- Strings: 0 (1 id x 4 translations if that sentence is changed)
+- Strings: 0 (the shorter sentence, "Open now: pizza reservations for Oct 2 & 3.", translates itself; 1 id x 4 translations if the rain sentence is reworded in another way)
 - Tests: none
 
 **C. Not decided yet**
@@ -1577,13 +1587,13 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: d69 and d70 (the same game code, js/hero.js); d34 (the sunflower photos are a separate question).
-- Note: Checked in a browser on 3 October 2026 (summer picture). The game fixes and the game test (tests/games.test.mjs) are already in the tree; the optional patch games-B goes on top of them.
+- Note: Checked in a browser on 3 October 2026 (summer picture). The game fixes and the game test (tests/games.test.mjs) are already in the tree; the optional patch games-B-pick-snips-sunflowers.patch goes on top of them.
 
 **A. Let the Pick button snip sunflowers too**
 
-- The optional patch games-B.patch (see "Patches on disk"): in summer every fourth press of the "Pick a blueberry" button snips a sunflower (js/hero.js at `pick(free[Math.floor(Math.random() * free.length)]);`), and a snipped sunflower grows back in 3 to 5 seconds instead of 7 to 11 (js/hero.js at `7000 + Math.random() * 4000`). Phones and keyboards can then earn the badge.
+- The optional patch games-B-pick-snips-sunflowers.patch (see "Patches on disk"): in summer every fourth press of the "Pick a blueberry" button snips a sunflower (js/hero.js at `btnEl.addEventListener('click'`), and a snipped sunflower grows back in 3 to 5 seconds instead of 7 to 11 (js/hero.js at `7000 + Math.random() * 4000`). Phones and keyboards can then earn the badge.
 - Strings: 0
-- Tests: hero, touch; games (the patch updates it)
+- Tests: hero, touch; games (the patch adds one part to it)
 
 **B. Lower the 100 for sunflowers (I will say the number)**
 
@@ -1721,9 +1731,9 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 **B. Use a different email (I will send it)**
 
 - Replace cathy@wiseacresorganic.com: index.html at `cathy@wiseacresorganic.com` (19 places, one of them in the structured data); pages/first-visit.html at `cathy@wiseacresorganic.com` (2 places); js/features.js at `const WAITLIST =` (waitlistEmail default, also used by the messages feature); js/content.js at `waitlistEmail: 'cathy@` (comment); README.md. Rebuild (python3 tools/pages.py).
-- 9 UI ids contain it (t37c5399a, t4a984489, t716fd5fb, t7c90f595, t9777fabc, td03021c9, td6a5d444, teeb109de, tf8daf32f) x 4 translations.
+- 6 UI ids contain the address itself (t37c5399a, t4a984489, t716fd5fb, t9777fabc, td6a5d444, teeb109de) x 4 translations. Three more say "Cathy" in words only (t7c90f595, td03021c9, tf8daf32f): change them only if someone else answers the mail.
 - Other addresses are separate: vanessa@ (school tours, index.html at `data-t="t3bad8e6f"`) and ava@ (pizza questions, index.html at `data-t="t44148f05"`).
-- Strings: 9 UI ids x 4 translations
+- Strings: 6 UI ids x 4 translations
 - Tests: messages: tests/messages.test.mjs at `the waitlist link is a mailto: to the farm` and `an address the owner typed with a + in it` name cathy@; features at `full day offers the waitlist` (waitlist mailto); consistency (emails in the translation check)
 
 ### d55. Strollers, wheelchairs and farm paths
@@ -1804,7 +1814,7 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 - Children aged 1 and 2 then pay. Replace "Children age 2 and younger are free" with her words (for example "Infants under 12 months are free") in all the places in the Note, and change the age from which people pay to match (for example "ages 1 and up"): index.html at `data-t="t10ffb744"` (Field fee, ages 3 and up), `data-t="tf7203efa"` and `data-t="te9a8e62d"` (pizza package, "ages 3+"), `data-t="t6d7bc03d"` (the price list), `data-t="t6c80dbc4"` (school tours: parents and siblings ages 3 and older); pages/pumpkin-patch.html at `Ages 3 and up.`, `(ages 3+)` and `ages 3 and up`; pages/school-field-trips.html at `ages 3 and older` (2 places). Then rebuild.
 - The wagon ride line ("Ages 2 and younger ride free") is a different rule: she must say whether it changes too (2 more English sentences: ids tb65a930a and tb77e4ad7).
 - Strings: about 14 English sentences x 4 translations (ids t2531639c, t3a5391d6, t6d7bc03d, tc38820e6, td4abc72c, tf355075d, tfdad55ee, t041b0712, t10ffb744, t4d23e4b7, t6c80dbc4, t8763a833, te9a8e62d, tf7203efa); 2 more if the wagon ride changes
-- Tests: consistency MUST follow: consistency at `age: free (infants, wagon ride, party children)` (give it a pattern for the new words; lower its minimum of 10 if fewer places say it), `age: from this age people pay the field fee / school admission` (minimum 11: every place must say the same new number) and `days: farm visits without pizza (fall)` (it reads "Ages 3 and up" and "Field fee, ages 3 and up" before the days). tools/check_facts.py at `Ages 3 and up` reads the same words for the $3 field fee.
+- Tests: consistency MUST follow: consistency at `age: free (infants, wagon ride, party children)` (give it a pattern for the new words; lower its minimum of 10 if fewer places say it; it also reads "Ages N and younger ride free", so if the wagon ride stays at 2 while the rest says 12 months it finds two answers: take `/[Aa]ges (\d+) and younger ride free/` out of that fact and give it a line of its own right under it, `{ id: 'age: free on the wagon ride', norm: num, min: 2, find: [/[Aa]ges (\d+) and younger ride free/] },`), `age: from this age people pay the field fee / school admission` (minimum 11: every place must say the same new number) and `days: farm visits without pizza (fall)` (it reads "Ages 3 and up" and "Field fee, ages 3 and up" before the days) and `days: farm visits with pizza` (its second pattern reads "(ages 3+)." after the price: change `\\(ages 3\\+\\)` to the new age). tools/check_facts.py at `Ages 3 and up` reads the same words for the $3 field fee.
 
 **C. I will explain**
 
@@ -1899,7 +1909,7 @@ One spelling and one name everywhere, matching Google and Facebook.
 
 - Everywhere "Corn maze". The farm map already says "Corn maze" (js/farm-map-data.js at `"label": "Corn maze"`, written from tools/saved-map.json at `"label": "Corn maze"`). Change the text that says sunn hemp: index.html at `data-t="t447b4ee9"`, `<li data-t="t39573dd5">`, `data-t="t8c64d6c3"` (heading), `<th data-t="t39573dd5"` (table row) and `data-t="t0b5eaa9e"`, and pages/pumpkin-patch.html at `<li>A small sunn hemp maze</li>`. The line index.html at `data-t="tcc37b939"` ("Wander through our little maze") can stay.
 - README rows "Farm map" and the maze mention (README.md, section "What's interactive", the item "What's on the farm").
-- Strings: 5 ids x 4 translations (t0b5eaa9e, t39573dd5, t447b4ee9, t8c64d6c3, tc2132019); the JS strings "Corn maze" and "Corn maze sign" stay
+- Strings: 5 ids change (t0b5eaa9e, t39573dd5, t447b4ee9, t8c64d6c3, tc2132019) but two of them end up as the same words, "Corn maze", so 4 new sentences x 4 translations; the JS strings "Corn maze" and "Corn maze sign" stay
 - Tests: farm-seasons: tests/farm-seasons.test.mjs at `haunted trail and the maze only in fall` looks for /Maze/ (capital M) in the fall text: change it to /maze/i if the heading becomes "Corn maze"
 
 **B. Small Sunn Hemp Maze**
@@ -1959,10 +1969,10 @@ One spelling and one name everywhere, matching Google and Facebook.
 
 **B. Skip that sign**
 
-- Delete the "hashtag" block from tools/qr_links.json (tools/qr_links.json at `"id": "hashtag"`), run python3 tools/make_qr.py (rewrites print/qr-signs.html, deletes nothing: remove assets/qr/hashtag.svg by hand).
+- Delete the "hashtag" block from tools/qr_links.json (tools/qr_links.json at `"id": "hashtag"`: the whole block from its `{` to the `},` after its text_es line) and the three lines of the Hindi, Chinese and Vietnamese signs (tools/qr_links.json at `"hashtag": { "title"` (3 places)), run python3 tools/make_qr.py (rewrites print/qr-signs.html, deletes nothing: remove assets/qr/hashtag.svg by hand).
 - README lines about the hashtag sign (README.md, section "Planning features", the "QR signs" paragraph and its item 3).
 - Strings: 0
-- Tests: print-qr MUST be updated: tests/print-qr.test.mjs at `there are signs, each with a QR code` needs at least 9 signs; there are 9 now (no review sign), so 8 fails. Lower the number to 8 (or 9 if d06 adds the review sign)
+- Tests: print-qr MUST be updated: tests/print-qr.test.mjs at `there are signs, each with a QR code` needs at least 9 signs; there are 9 now (no review sign), so 8 fails. Lower the number to 8 (or 9 if d06 adds the review sign). Consistency counts the printed signs too: in tests/consistency.test.mjs at `printedCount >= 9 && bad.length === 0` change `printedCount >= 9` to 8 (and the "expected at least 9" in the message line below it)
 
 ### d39. How your address is written
 
@@ -1975,16 +1985,16 @@ One spelling and one name everywhere, matching Google and Facebook.
 
 **A. Rd**
 
-- Change "Hartis Road" to "Hartis Rd": index.html at `data-t="tf1ab0489"` and `4701 Hartis Road<br>` (2 places); pages/first-visit.html at `<strong>4701 Hartis Road</strong>` and `a neighborhood on Hartis Road`; pages/school-field-trips.html at `is at 4701 Hartis Road`; tools/qr_links.json at `"id": "directions"` (the directions sign, then python3 tools/make_qr.py and reprint). 6 ids: t183fef9f, tf1ab0489, t37c5399a, t65ba07a6, tae0016c1, tb405649d.
+- Change "Hartis Road" to "Hartis Rd": index.html at `data-t="tf1ab0489"` and `4701 Hartis Road<br>` (2 places); pages/first-visit.html at `<strong>4701 Hartis Road</strong>` and `a neighborhood on Hartis Road`; pages/school-field-trips.html at `is at 4701 Hartis Road`; tools/qr_links.json at `"id": "directions"` (the directions sign: its text_en and text_es lines, and the Hindi, Chinese and Vietnamese lines tools/qr_links.json at `"directions": { "title"` (3 places); then python3 tools/make_qr.py and reprint). 6 ids: t183fef9f, tf1ab0489, t37c5399a, t65ba07a6, tae0016c1, tb405649d.
 - The GreenHouse has the same split: "5503 Poplin Road" in index.html at `5503 Poplin Road<br>` (2 places), "Poplin Rd" in 13 other places (and js/features.js at `5503 Poplin Rd, Indian Trail` and `To The GreenHouse at 5503 Poplin Rd`). Pick one with the farm's Google listing (d40).
 - Strings: 6 ids x 4 translations (+ Poplin ids)
-- Tests: none (the tests use "Rd": consistency at `address: 4701 goes with Hartis` reads 4701 Hartis Rd; drive at `The farm (4701 Hartis Rd)`, `farm answer names the farm`, `and pressing the button again answers for the farm` and `La granja (4701 Hartis Rd)` use "Rd")
+- Tests: consistency MUST be updated: the QR signs check expects the directions sign to say "Road" even when the structured data says "Rd": in tests/consistency.test.mjs at `.replace(/ Rd$/, ' Road')` delete that call, so the sign has to say what the structured data says. The rest already uses "Rd" (consistency at `address: 4701 goes with Hartis` reads 4701 Hartis Rd; drive at `The farm (4701 Hartis Rd)`, `farm answer names the farm`, `and pressing the button again answers for the farm` and `La granja (4701 Hartis Rd)` use "Rd")
 
 **B. Road**
 
 - Change "Hartis Rd" to "Hartis Road": index.html at `data-t="ta15d314e"`, `data-t="t19a4db7d"` and `data-t="t60ba1e75"`; pages/first-visit.html at `<span>The farm (4701 Hartis Rd)</span>`; pages/strawberry-picking.html at `<li>4701 Hartis Rd, Indian Trail, NC</li>` (4 ids: t19a4db7d, t60ba1e75, ta15d314e, tff7999ae); the structured data streetAddress (index.html at `"streetAddress": "4701 Hartis Rd"`, no translation); the Drive time notes and the address strings in js/features.js at `To the farm at 4701 Hartis Rd`, `To The GreenHouse at 5503 Poplin Rd`, `4701 Hartis Rd, Indian Trail, NC 28079` and `5503 Poplin Rd, Indian Trail` (1 + 1 JS strings x 4: "To the farm at 4701 Hartis Rd. ..." and the GreenHouse one).
-- The structured data, the Google Maps link in the Drive time box and the address search use the address as typed: keep them equal to the Business Profile.
-- Strings: 4 ids + 2 JS strings x 4 translations
+- The structured data, the Google Maps link in the Drive time box and the address search use the address as typed: keep them equal to the Business Profile. Every map link (Google, Apple, Waze) carries the street as typed, so change "Hartis+Rd" to "Hartis+Road" and "Hartis%20Rd" to "Hartis%20Road": index.html at `Hartis+Rd` (9 places) and `Hartis%20Rd` (2 places); pages/first-visit.html at `Hartis+Rd` (3 places) and `Hartis%20Rd`; pages/pumpkin-patch.html at `Hartis+Rd`; tools/qr_links.json at `Hartis+Rd` (the directions sign: then python3 tools/make_qr.py and reprint). The consistency check "directions links" compares all of them with the structured data.
+- Strings: 4 ids + 1 JS string x 4 translations (the farm one; the GreenHouse one only if you also change "Poplin Rd")
 - Tests: consistency MUST be updated: tests/consistency.test.mjs at `address: 4701 goes with Hartis` (ld.streetAddress === '4701 Hartis Rd'); drive: tests/drive.test.mjs at `The farm (4701 Hartis Rd)`, `farm answer names the farm`, `and pressing the button again answers for the farm` and `La granja (4701 Hartis Rd)` (labels and the note text use Rd)
 
 ### d40. Does The GreenHouse have its own Google listing
@@ -2019,7 +2029,7 @@ One spelling and one name everywhere, matching Google and Facebook.
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: d38 (a new web address means new codes), d06, d28 and d29 (which signs exist), d39 (how the address is written on the directions sign).
-- Note: Tested on 3 October 2026 in a scratch copy: with the stronger setting every code still scans back and the print-qr test passes (105 checks). Squares across, now to stronger: Instagram 41 to 41, hashtag 41 to 45, Facebook 37 to 41, booking 41 to 45, pizza 45 to 53, menu 49 to 57, e-mail sign-up 33 to 37, map 49 to 57, directions 49 to 57. The strength is the letter in tools/make_qr.py at `qr = segno.make(url, error='m')`.
+- Note: Tested on 3 October 2026 in a scratch copy: with the stronger setting every code still scans back and the print-qr test passes (105 checks). Squares across, now to stronger: Instagram 41 to 41, hashtag 41 to 45, Facebook 37 to 41, booking 41 to 45, pizza 45 to 53, menu 49 to 57, e-mail sign-up 33 to 37, map 49 to 57, directions 49 to 57. The strength is the letter in tools/make_qr.py at `segno.make(url, error=`.
 
 **A. Leave the signs as they are now**
 
@@ -2029,19 +2039,19 @@ One spelling and one name everywhere, matching Google and Facebook.
 
 **B. Stronger codes only**
 
-- tools/make_qr.py at `qr = segno.make(url, error='m')`: change the letter m to q. Then run python3 tools/make_qr.py: it rebuilds the five sign pages (print/qr-signs.html and the three language sheets in print/) and the code pictures, and scans every code back. Print one sign and scan it with a phone before the signs go up.
+- The optional patch qr-stronger-codes.patch (see "Patches on disk"): the letter m in tools/make_qr.py at `segno.make(url, error=` becomes q, and the patch carries the rebuilt code pictures (assets/qr/) and the five sign pages (print/qr-signs.html and the three language sheets in print/). Without the patch: change that letter, then run python3 tools/make_qr.py, which rebuilds them and scans every code back. Print one sign and scan it with a phone before the signs go up.
 - Strings: 0
 - Tests: print-qr (passes; it asks for level M or better, so Q is accepted)
 
 **C. One address line only**
 
-- The optional patch OPTIONAL-qr-no-duplicate-line-66c8272.patch (see "Patches on disk"): tools/make_qr.py leaves out the Spanish line when it is the same as the English, and the sign test in tests/consistency.test.mjs accepts that. On 05b0b72 one of the two hunks in tools/make_qr.py fails, so ask Claude for a redo. Then run python3 tools/make_qr.py once.
+- The optional patch qr-one-address-line.patch (see "Patches on disk"): tools/make_qr.py leaves out the Spanish line when it is the same as the English, the sign test in tests/consistency.test.mjs accepts that, and the patch carries the one changed line of print/qr-signs.html. Nothing else needs to run.
 - Strings: 0
 - Tests: consistency (at `one booking page, one pre-order page and one e-mail signup address` the QR signs are read), print-qr
 
 **D. Both**
 
-- B and C together; run python3 tools/make_qr.py once at the end.
+- Both patches, in either order. Running python3 tools/make_qr.py afterwards changes nothing (checked); run it only after a later change to tools/qr_links.json or reviewUrl.
 - Strings: 0
 - Tests: consistency, print-qr
 
@@ -2266,7 +2276,7 @@ Works today with free outside services. The decisions are about risk, not about 
 - Remove initDriveForm from the list in js/features.js at `initEntrance, initDriveForm`. The form (index.html at `id="drive-form"`) carries hidden, so it stays hidden; the town list above the form stays.
 - Update README.md, sections "Planning features" (the "Drive time from a visitor's address" paragraph), "Check your changes" (farmPoint) and "Putting it online" (item 6), and README row "Drive time box", and docs/WHAT_THE_SITE_STORES.md, sections "2. Which other sites the website contacts" and "3. What each optional feature adds"; _headers connect-src no longer needs the two hosts (d15).
 - Strings: 0
-- Tests: drive: remove it from the run order (tests/run-all.mjs at `const ORDER =`) or it fails; features and languages tests that open the box need the same
+- Tests: drive: delete `tests/drive.test.mjs` and its row in tests/README.md (the test runner takes the tests it finds in that folder, so nothing in `tests/run-all.mjs` needs to change) or it fails. The notes that name tests/drive.test.mjs need the same (`node tests/docs.test.mjs` lists them); features and languages tests that open the box need the same
 
 ### d11. The farm's exact spot on the map
 
@@ -2284,7 +2294,7 @@ Works today with free outside services. The decisions are about risk, not about 
 - README: delete "set farmPoint" from the Drive time row (README row "Drive time box") and the launch list (README.md, section "Putting it online", item 6); docs/LAUNCH_CHECKLIST.md, section "3.13 The Drive time box" (the item "Set farmPoint").
 - If the spot is not where cars turn in, ask again (d35).
 - Strings: 0
-- Tests: none (the drive test sets farmPoint itself)
+- Tests: launch-check MUST be updated: tests/launch-check.test.mjs at `the farm spot is set with the numbers swapped` makes a broken copy by swapping the numbers of `farmPoint: null`, so with real numbers in js/content.js it finds nothing to swap and fails. In that line change `farmPoint:\s*null` to `farmPoint:\s*(?:null|\{[^}]*\})`. And drive MUST be updated: tests/drive.test.mjs expects the farm to be searched for ("two searches (visitor, farm) and one route") and sets the spot only in its own case, so with numbers in js/content.js its other cases fail. In tests/drive.test.mjs at `if (opts.extra) await page.route('**/js/content.js'` change `if (opts.extra) await` to `await`, and `+ '\n' + opts.extra` to `+ '\nWISE_ACRES.farmPoint = null;\n' + (opts.extra || '')`, so every case starts with the spot empty.
 
 **B. Keep using the address search**
 
@@ -2386,7 +2396,7 @@ Four AI-written translations that no native speaker has read.
 **A. A native speaker checks them**
 
 - No change now. When a speaker answers, edit the value of each id in lang/src/<code>.json (key = id of the English text; JS strings are keyed by the English text), then python3 tools/i18n.py build and python3 tools/i18n.py missing <code> (0). English never changes.
-- Two optional patches on disk no longer apply (stale: es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch fail on b54427b and, checked 3 October 2026, on af1e572); ask Claude to redo them from the speaker's answer. The other translation patches (zh-C, es-C, vi-C, hi-C) are already merged.
+- The two clock patches that were once kept in scratch folders (es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch) are not needed: the code already writes Spanish times as "5:00 p. m." and Vietnamese times as "5 giờ chiều" (js/features.js at `const fmtClock = (date, tz) => {`, js/live.js at `function timeLabel(mins)`, js/i18n.js at `W.clock = (h, m, code) => {`). If the speaker wants other clock words, change those three places and the fixed texts. The other translation patches (zh-C, es-C, vi-C, hi-C) are already merged.
 - The speaker does not have to edit JSON: `python3 tools/review_sheet.py export <code>` makes a spreadsheet (every text in reading order, the English next to the translation), and `import` reads their corrections back, refusing a changed number, price, name or tag and saying why (README, section "Have a native speaker check a language").
 - Send the speaker first: the allergen line (d17), refund and cancel lines (d41, 3% fee), prices, hours and days, "700 degrees" (d18).
 - Strings: 0 English; only the translation values that the speaker changes

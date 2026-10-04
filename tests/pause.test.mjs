@@ -1,3 +1,7 @@
+// order: 160
+// browser: yes
+// quick: yes
+// covers: js/hero.js, js/main.js, css/hero.css
 /* Looping animations only run where someone can see them: a section far from the screen is paused as a whole (.is-offscreen), a long
  * section pauses its far-away drawings one by one (.anim-off), and everything pauses while the browser tab is hidden (html.anim-hidden). */
 import { run, open, ok, okSoon } from './lib.mjs';

@@ -1,3 +1,6 @@
+// order: 300
+// browser: yes
+// covers: css/*, *.html, js/main.js
 /* Accessibility: runs axe-core (WCAG 2.0/2.1 A and AA plus best practices) on the home page and the First-visit page, on a desktop and a
  * phone, in English and Chinese, with every optional box filled in (this week, signup, photo wall, entrance photo, farm map). The test
  * fails when axe finds a violation. Needs axe-core:  npm i -D axe-core */

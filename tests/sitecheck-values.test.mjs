@@ -1,8 +1,11 @@
+// order: 120
+// browser: yes
+// covers: js/content.js, js/guard.js, js/features.js, js/live.js, lang/*.js
 /* The "Site check" box, part two: the VALUES in js/content.js. A wrong time ('8 pm' for '20:00'), a close that is not after the open, a day that is not a
  * number from 0 to 6, a notice that is empty or has no English words, a review without a quote or a name, an address that does not start with https://,
  * a photo without a file or a description. Each message names the exact setting and says what to type. And the translation check:
  * ?check&lang=es lists the texts of the page that have no Spanish yet (or says every text is translated). Visitors see none of it. */
-import { run, open, ok, okSoon, until, ms } from './lib.mjs';
+import { run, open, ok, okSoon, until, ms, settled } from './lib.mjs';
 
 const box = (p) => p.evaluate(() => { const b = document.getElementById('wa-problems'); return b ? b.textContent.replace(/\s+/g, ' ') : ''; });
 const parts = (p) => p.evaluate(() => {
@@ -75,8 +78,11 @@ await run('sitecheck-values', async ({ browser, base, errs }) => {
   // ---- ?check&lang=es: the texts that have no translation yet
   const trans = async (opts = {}) => {
     const q2 = await at('', { lang: 'es', query: opts.query === undefined ? 'check' : opts.query, routes: opts.routes });
-    await until(q2, () => !!document.getElementById('wa-problems'), null, 8000);
-    await q2.waitForTimeout(500);
+    if (opts.query !== '') {   // (no ?check: there is no box to wait for; open() has waited until the scripts started, so a box would be there now)
+      await until(q2, () => !!document.getElementById('wa-problems'), null, 20000);
+      await until(q2, () => { const b = document.getElementById('wa-problems'); if (!b) return true; const t = b.textContent; return !/\((?:Spanish|Hindi|Chinese|Vietnamese)\)/.test(t) || /code text:|The texts the code writes/.test(t); }, null, 20000);   // the box is filled in again when the list of code texts has been read
+    }
+    await settled(q2, 0);
     const r = await parts(q2); const html = await q2.evaluate(() => document.documentElement.lang); await done(q2);
     return { b: r, html };
   };
@@ -108,8 +114,8 @@ await run('sitecheck-values', async ({ browser, base, errs }) => {
   });
   const live = await ctx.newPage(); live.on('pageerror', () => {});
   await live.goto('http://farm.test/index.html?check&lang=es', { waitUntil: 'load', timeout: ms(60000) });
-  await until(live, () => !!document.getElementById('wa-problems'), null, 20000);
-  await live.waitForTimeout(600);
+  await until(live, () => !!document.getElementById('wa-problems'), null, 20000);   // on a live site the code texts are not read at all, so the box is final now
+  await settled(live, 0);
   const lp = await parts(live);
   ok('on the live site with ?check&lang=es: the box lists the page texts check, and says the code texts are not checked here and how to see them', lp && lp.sections.some((s) => /Spanish/.test(s.heading) && /The texts the code writes \(buttons, messages, countdown\) are not checked here: the list is not on this site\. On your own computer run python3 tools\/i18n\.py missing es --list or open the site with python3 tools\/serve\.py\./.test(s.text)), JSON.stringify(lp).slice(0, 300));
   ok('...and it did not ask the live site for a file that is not there', failed.length === 0, failed.join(', '));

@@ -1,3 +1,6 @@
+// order: 15
+// browser: no
+// covers: *.html, pages/*, sitemap.xml, robots.txt, tools/pages.py, assets/og-*
 /* What search engines and share cards (Facebook, iMessage, WhatsApp) read from the pages, without a browser (a second or two):
  *   - every page: its own title (20 to 62 letters) and description (110 to 165 letters), both different on every page, one canonical address that is the
  *     site's own, og:url the same, the share picture present, as big as the tags say (1200 x 630) and small enough for WhatsApp (300 KB),

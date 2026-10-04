@@ -1,3 +1,6 @@
+// order: 35
+// browser: no
+// covers: docs/OWNER_YEAR_CALENDAR.md, docs/OWNER_YEAR_CALENDAR.es.md, js/content.js, js/season.js
 /* The owner's calendar (docs/OWNER_YEAR_CALENDAR.md) still says what the files say. No browser; about a second. Compared:
  *   - every weekday written with a date is that date's weekday, and every such date has its year;
  *   - the entries are in date order, inside the range (3 Oct 2026 to 1 Jan 2028), and a "You, by <date>" is never later than the last date of its heading;

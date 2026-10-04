@@ -56,6 +56,7 @@ FILES = {
     'docs/QUESTIONS_FOR_THE_FARM.md': {'skip': ['For whoever edits the site', 'Translation notes']},
     'docs/OWNER_YEAR_CALENDAR.md': {'skip': []},
     'docs/WHAT_THE_SITE_STORES.md': {'skip': []},
+    'docs/CREDITS_AND_LICENCES.md': {'skip': ['How the fonts were matched', 'How the icons were matched']},
     'docs/OPTION_PATCHES.md': {'skip': []},
     'docs/PROPOSAL_owner_page.md': {'skip': []},
 }

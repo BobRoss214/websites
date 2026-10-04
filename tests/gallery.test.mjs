@@ -1,3 +1,6 @@
+// order: 180
+// browser: yes
+// covers: js/features.js, js/content.js, css/features.css, css/sections.css
 /* The photo gallery: the topic buttons above it (Berries, Flowers, Farm animals, Fall, Pizza, People & events), the photo count that is read aloud,
  * photos without tags (shown under All only), mistakes in `tags` in js/content.js (reported in the "Site check" box), and the languages. And the photo
  * viewer: Previous / Next buttons, Left / Right arrow keys, "3 of 30", going round, only the photos a topic button shows, focus, Escape, motion, axe. */

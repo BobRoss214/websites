@@ -1,3 +1,6 @@
+// order: 150
+// browser: yes
+// covers: js/features.js, js/content.js, js/farm-map-data.js, css/features.css
 /* The "Drive time" box: type an address, get miles and minutes to the farm or to The GreenHouse (home page and first-visit page).
  * The two outside services (OpenStreetMap search, OSRM route server) are pretended: no test ever contacts the real ones.
  * Covers: nothing is sent before the button, the answer and how it is worked out, hours, every way it can go wrong, the "Drive to:" choice
@@ -33,6 +36,7 @@ async function open(opts = {}) {
   if (opts.extra) await page.route('**/js/content.js', async (r) => { const res = await r.fetch(); r.fulfill({ response: res, body: (await res.text()) + '\n' + opts.extra }); });
   page.on('crash', () => errs.push('a page crashed')); page.on('pageerror', (e) => errs.push('page error: ' + e.message));
   const calls = { geo: [], route: [], other: [] };
+  calls.gate = new Promise((r) => { calls.release = r; });   // mock: { slow: true } holds the route answer until the test calls calls.release() (a timer could run out first on a busy computer)
   const cfg = Object.assign({ visitor: 'ok', route: 'ok', dist: 22853, dur: 1432, name: '100 Main Street, Monroe, Union County, North Carolina, United States' }, opts.mock || {});
   await page.route(/nominatim\.openstreetmap\.org/, async (r) => {
     const u = new URL(r.request().url()); const q = u.searchParams.get('q') || '';
@@ -49,7 +53,7 @@ async function open(opts = {}) {
   await page.route(/router\.project-osrm\.org/, async (r) => {
     calls.route.push(r.request().url());
     const cors = { 'access-control-allow-origin': '*' };
-    if (cfg.slow) await new Promise((s) => setTimeout(s, cfg.slow));
+    if (cfg.slow) await Promise.race([calls.gate, new Promise((s) => setTimeout(s, T * 2))]);   // (the time limit only stops a test that forgot to let it go)
     if (cfg.route === 'abort') return r.abort();
     if (cfg.route === 'noroute400') return r.fulfill({ status: 400, headers: cors, contentType: 'application/json', body: JSON.stringify({ code: 'NoRoute', message: 'Impossible route between points' }) });
     if (cfg.route === 'nosegment400') return r.fulfill({ status: 400, headers: cors, contentType: 'application/json', body: JSON.stringify({ code: 'NoSegment', message: 'Could not find a matching segment' }) });
@@ -169,11 +173,12 @@ if (want(4)) { console.log('4. address not found / no route / service down / emp
 }
 
 if (want(5)) { console.log('5. double press sends one lookup; place name is text, not markup');
-  const { ctx, page, calls } = await open({ mock: { slow: 800, name: '<img src=x onerror=window.__pwn=1>Evil Place' } });
+  const { ctx, page, calls } = await open({ mock: { slow: true, name: '<img src=x onerror=window.__pwn=1>Evil Place' } });
   await page.fill('#drive-addr', '100 Main St, Monroe NC');
   await page.press('#drive-addr', 'Enter');
   await page.press('#drive-addr', 'Enter');
   await page.click('#drive-form button[type=submit]', { force: true, timeout: 1000 }).catch(() => {});
+  calls.release();   // all three presses came while the first lookup was still running
   await page.waitForFunction(() => /miles?/.test(document.querySelector('#drive-result')?.textContent || ''), null, { timeout: T });
   ok(calls.route.length === 1, 'one route lookup for repeated presses: ' + calls.route.length);
   ok(await page.evaluate(() => !window.__pwn && !document.querySelector('#drive-result img')), 'markup in a place name is shown as plain text');
@@ -327,7 +332,7 @@ if (want(10)) { console.log('10. problems name the right place; one lookup at a 
   ok(/destination=5503%20Poplin/.test(await page.getAttribute('#drive-result a.btn', 'href')) && (await radios(page)).every((x) => !x.off) && await page.locator('#drive-form button[type=submit]').isEnabled(), 'service down: Maps button to the chosen place, choice and button usable again');
   await ctx.close();
 
-  let o = await open({ mock: { slow: 2500 } });
+  let o = await open({ mock: { slow: true } });
   await pickPlace(o.page, 'greenhouse');
   await o.page.fill('#drive-addr', '100 Main St, Monroe NC');
   await o.page.press('#drive-addr', 'Enter');
@@ -335,16 +340,18 @@ if (want(10)) { console.log('10. problems name the right place; one lookup at a 
   ok(await o.page.getAttribute('#drive-form button[type=submit]', 'aria-disabled') === 'true' && await o.page.getAttribute('#drive-form button[type=submit]', 'aria-busy') === 'true', 'while working, the button says it is busy');
   ok(await o.page.evaluate(() => document.activeElement && document.activeElement.id === 'drive-addr'), 'focus stays where it was (nothing is disabled)');
   await o.page.press('#drive-addr', 'Enter');
+  o.calls.release();   // both presses came while the lookup was still running
   await waitOk(o.page);
   ok(o.calls.route.length === 1, 'repeated presses while working: one route lookup (' + o.calls.route.length + ')');
   ok(await o.page.getAttribute('#drive-form button[type=submit]', 'aria-disabled') === null && await o.page.locator('#drive-form button[type=submit]').isEnabled(), 'ready again afterwards');
   await o.ctx.close();
   // the visitor taps the other place while the lookup runs: the answer would be about a place no longer chosen, so it is not shown
-  o = await open({ mock: { slow: 2500 } });
+  o = await open({ mock: { slow: true } });
   await pickPlace(o.page, 'greenhouse');
   await ask(o.page, '100 Main St, Monroe NC');
   await busy(o.page);
   await pickPlace(o.page, 'farm');
+  o.calls.release();   // the answer arrives only now, after the other place was chosen
   await o.page.waitForFunction(() => document.querySelector('#drive-form button[type=submit]').getAttribute('aria-busy') === null, null, { timeout: T });
   await settle(o.page, 150);
   ok(await o.page.locator('#drive-result').isHidden() && (await radios(o.page))[0].on, 'changing the place while it works: no answer about the other place is shown');

@@ -1,3 +1,6 @@
+// order: 50
+// browser: no
+// covers: tools/*, lang/*, pages/*, *.html, js/farm-map-data.js, print/*, assets/qr/*
 /* The Python tools (needs python3 and beautifulsoup4; segno for the QR part):
  *   - the rebuild commands (pages.py, i18n.py extract, i18n.py build) change nothing on a finished site, and give the same result run twice
  *   - no translation is missing, no text is left loose (orphans)

@@ -1,3 +1,6 @@
+// order: 140
+// browser: yes
+// covers: js/features.js, js/content.js, lang/*, tools/i18n.py
 /* What the farm (English-speaking staff) receives, and what lands in the visitor's own calendar, whichever language the page is in.
  *
  * The rule: whatever goes TO THE FARM is English (subject, labels, the day), and a visitor on a Spanish / Hindi / Chinese / Vietnamese page gets their own

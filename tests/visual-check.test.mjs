@@ -1,3 +1,6 @@
+// order: 400
+// browser: yes
+// covers: tests/visual-check.mjs
 /* The visual check's own test (tests/visual-check.mjs): on a temporary copy of the site and one small page (Wise Pie, English, phone) it makes a
  * baseline, checks that an unchanged copy gives "Nothing looks different", that a changed heading color is reported with a picture, and that a missing
  * baseline is refused. It never touches tests/.visual (your real baseline). Needs a browser; takes one to three minutes. */

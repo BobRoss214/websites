@@ -1,0 +1,134 @@
+[
+ {
+  "lang": "es",
+  "id": "t52ee3965",
+  "kind": "numbers",
+  "reason": "The translation adds the Celsius figure for the 700 degrees (700 °F = about 370 °C), so a reader outside the United States can picture the heat. Intended, and the figure is right."
+ },
+ {
+  "lang": "es",
+  "id": "js:Wise Pie wood-fired pizza from a 700-degree oven",
+  "kind": "numbers",
+  "reason": "The translation adds the Celsius figure for the 700 degrees (700 °F = about 370 °C), so a reader outside the United States can picture the heat. Intended, and the figure is right."
+ },
+ {
+  "lang": "hi",
+  "id": "t52ee3965",
+  "kind": "numbers",
+  "reason": "The translation adds the Celsius figure for the 700 degrees (700 °F = about 370 °C), so a reader outside the United States can picture the heat. Intended, and the figure is right."
+ },
+ {
+  "lang": "hi",
+  "id": "js:Wise Pie wood-fired pizza from a 700-degree oven",
+  "kind": "numbers",
+  "reason": "The translation adds the Celsius figure for the 700 degrees (700 °F = about 370 °C), so a reader outside the United States can picture the heat. Intended, and the figure is right."
+ },
+ {
+  "lang": "zh",
+  "id": "t52ee3965",
+  "kind": "numbers",
+  "reason": "The translation adds the Celsius figure for the 700 degrees (700 °F = about 370 °C), so a reader outside the United States can picture the heat. Intended, and the figure is right."
+ },
+ {
+  "lang": "zh",
+  "id": "js:Wise Pie wood-fired pizza from a 700-degree oven",
+  "kind": "numbers",
+  "reason": "The translation adds the Celsius figure for the 700 degrees (700 °F = about 370 °C), so a reader outside the United States can picture the heat. Intended, and the figure is right."
+ },
+ {
+  "lang": "vi",
+  "id": "t52ee3965",
+  "kind": "numbers",
+  "reason": "The translation adds the Celsius figure for the 700 degrees (700 °F = about 370 °C), so a reader outside the United States can picture the heat. Intended, and the figure is right."
+ },
+ {
+  "lang": "vi",
+  "id": "js:Wise Pie wood-fired pizza from a 700-degree oven",
+  "kind": "numbers",
+  "reason": "The translation adds the Celsius figure for the 700 degrees (700 °F = about 370 °C), so a reader outside the United States can picture the heat. Intended, and the figure is right."
+ },
+ {
+  "lang": "hi",
+  "id": "t1d8c953b",
+  "kind": "words",
+  "reason": "The English says 'never walk-in'; the translation says walk-ins are not accepted / not allowed. Same rule, said the other way round."
+ },
+ {
+  "lang": "zh",
+  "id": "t1d8c953b",
+  "kind": "words",
+  "reason": "The English says 'never walk-in'; the translation says walk-ins are not accepted / not allowed. Same rule, said the other way round."
+ },
+ {
+  "lang": "vi",
+  "id": "t1d8c953b",
+  "kind": "words",
+  "reason": "The English says 'never walk-in'; the translation says walk-ins are not accepted / not allowed. Same rule, said the other way round."
+ },
+ {
+  "lang": "hi",
+  "id": "t5cc8a292",
+  "kind": "words",
+  "reason": "'Not by the slice' is said as 'sold whole only' (केवल पूरा बिकता है). Same rule, said without the second half."
+ },
+ {
+  "lang": "hi",
+  "id": "tc3127d1f",
+  "kind": "words",
+  "reason": "'Not by the slice' is said as 'sold whole only' (केवल पूरा बिकता है). Same rule, said without the second half."
+ },
+ {
+  "lang": "hi",
+  "id": "td97bf746",
+  "kind": "words",
+  "reason": "'Not by the slice' is said as 'sold whole only' (केवल पूरा बिकता है). Same rule, said without the second half."
+ },
+ {
+  "lang": "zh",
+  "id": "t202bb680",
+  "kind": "words",
+  "reason": "The Chinese gives the range 2–3 / 3–4 people without a word for 'about'; a range already says it is a guide. Left as it is, for the native reader to judge."
+ },
+ {
+  "lang": "zh",
+  "id": "t2f74e9c3",
+  "kind": "words",
+  "reason": "The Chinese gives the range 2–3 / 3–4 people without a word for 'about'; a range already says it is a guide. Left as it is, for the native reader to judge."
+ },
+ {
+  "lang": "zh",
+  "id": "t5cc8a292",
+  "kind": "words",
+  "reason": "The Chinese gives the range 2–3 / 3–4 people without a word for 'about'; a range already says it is a guide. Left as it is, for the native reader to judge."
+ },
+ {
+  "lang": "zh",
+  "id": "td4abc72c",
+  "kind": "words",
+  "reason": "The Chinese gives the range 2–3 / 3–4 people without a word for 'about'; a range already says it is a guide. Left as it is, for the native reader to judge."
+ },
+ {
+  "lang": "zh",
+  "id": "t18683452",
+  "kind": "words",
+  "reason": "'We always ask first' is written 我们一定会先征得同意 ('we will certainly ask for consent first'). Same promise, another word for 'always'."
+ },
+ {
+  "lang": "zh",
+  "id": "tecd81755",
+  "kind": "words",
+  "reason": "'The booking page always has the newest information' is written as 'go by the newest information on the booking page' (请以预约页面上的最新信息为准). Same advice."
+ },
+ {
+  "lang": "zh",
+  "id": "tf3739dbb",
+  "kind": "words",
+  "reason": "'We cannot always post menus and hours far ahead' is written 我们不一定能提前很久公布 ('we may not be able to'). Same limit."
+ },
+ {
+  "lang": "zh",
+  "id": "t9c63bc47",
+  "kind": "numbers",
+  "reason": "'Both' is written 两种 ('the two kinds'). Same meaning."
+ }
+]

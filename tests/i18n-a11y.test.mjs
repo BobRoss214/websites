@@ -1,3 +1,6 @@
+// order: 280
+// browser: yes
+// covers: js/i18n.js, lang/*, tools/i18n.py, *.html
 /* Screen readers and browser text in every language: the page language attribute, English names inside a translated sentence marked
  * lang="en" (and nothing else), the language button naming the current language, the tab title and description, and the text JavaScript
  * writes (the "now" tag, the menu button, the signup message) following a change of language.

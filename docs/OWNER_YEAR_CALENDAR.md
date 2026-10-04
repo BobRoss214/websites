@@ -9,6 +9,9 @@ The site follows the calendar by itself in many ways: the season, the "Open now"
 - Every date is the farm's day (Eastern Time). "By" is the last safe day: do the job that day or earlier.
 - "Where" is a file and a few words to search for (Ctrl+F). `index.html` at `data-t="t58da3033"` means: open `index.html` and search for those words. README rows and sections are named in quotes.
 - After every change, publish, then open the live site with `?check` on the end of the address. To publish, run `python3 tools/make_deploy_folder.py` and upload what is inside `deploy/` (`docs/LAUNCH_CHECKLIST.md`, section "2. What to upload, and what to leave out"). On Windows type `python` instead of `python3`.
+- The words after "Where" describe the files as they are today. A setting you have already used reads differently afterwards (`closures: [],` becomes `closures: ['2026-10-04'],`). Then search for its name and a colon (`closures:`, `notice:`, `noticeUntil:`, `week:`) and use the line that starts with two spaces, near the end of `js/content.js`. The same words are also in the explaining notes at the top of that file. Those are comments, not the line to change. The sentence under the pizza table gets a new `data-t` code the first time you publish an edit, so search its words instead: `<strong>Open now:</strong> pizza reservations for`.
+- A new or changed English sentence needs its four translations (Spanish, Hindi, Chinese, Vietnamese) before the publish command goes through. Until then it stops with "Translations missing", one line for each language, and writes nothing to `deploy/`. Send Claude the new words the same day (README, section "Change one sentence and its translations, step by step"; `python3 tools/i18n.py missing es --list` prints what is missing). Claude can also publish first and add the translations later: until then the other four languages show that one line in English. **Pizza weekends are the exception.** The dates in a pizza row, and the "Open now" sentence under the table in the shape the README row "Open a new pizza weekend" shows, are translated by the publish command itself. There is nothing to send. Other words in that sentence still need translations.
+- The thin bar at the top of the page ("In season: ...", "Next up: ...") shows on computers only. Phones do not show it.
 - "Question d23" is a question on your dashboard that still waits for your answer. The site does not decide it, and neither does this page.
 - A test keeps this page true: its dates, its weekdays and the lines that hide themselves are compared with the files (the last section says how).
 
@@ -20,9 +23,9 @@ In season (mid-September to early November, the tree weeks, mid-April to early J
 
 1. **Look at the live site on your phone.** The "Open now" badges should match real life, and the pizza countdown should name the right Tuesday.
 2. **Add `?check` to the address** (`https://www.wiseacresorganic.com/?check`). No box at the bottom means nothing is wrong. A **yellow** box lists what to fix and where. A **green** box lists old dated lines that hid themselves: delete them when you like (README, section "Check your changes").
-3. **Update "This week at the farm"** (`week` in `js/content.js`): change `updated` to today and the words and spots that changed. Everything in it disappears 14 days after `updated`, and the yellow box says so when it is old (README row "Say what is ripe / spots left this week"). Out of season the box fills itself: skip this.
+3. **Update "This week at the farm"** (`week` in `js/content.js`): change `updated` to today and the words and spots that changed. Everything in it stays for 14 days after `updated` and is gone from the 15th day, and the yellow box says so when it is old (README row "Say what is ripe / spots left this week"). Out of season the box fills itself or hides: skip this.
 4. **Rain or a closed day in the next seven days?** Add the date to `closures`, write the notice and its last day, and close the same times in Bookeo (README rows "Close for rain or a holiday" and "Show a banner on every page").
-5. **In the fall, is a pizza weekend opening this Tuesday?** Change the sentence under the pizza table (README row "Open a new pizza weekend"). Add rows for later weekends while you are there.
+5. **In the fall, is a pizza weekend opening this Tuesday?** Change the sentence under the pizza table (README row "Open a new pizza weekend"). Add rows for later weekends while you are there. The dates translate themselves when you publish (see "How to read it").
 6. **Press Reserve.** Bookeo should show the days you expect. Read the farm inbox (waitlist and contact messages) and answer.
 7. **If you changed a price, an hour, a phone number or an email address,** run `python3 tools/check_facts.py` before you publish. It must say that every fact agrees.
 8. **Publish** (see "How to read it"), hard refresh (Ctrl+F5, or Cmd+Shift+R on a Mac), and look at `?check` once more.
@@ -31,7 +34,7 @@ In season (mid-September to early November, the tree weeks, mid-April to early J
 ## 2. The first of every month: 10 minutes
 
 1. `python3 tools/launch_check.py https://www.wiseacresorganic.com/` (about a minute). A FAIL is broken: fix it and run it again. A WARN is a setting or decision that is yours: read it. An expired padlock certificate shows here as "The padlock (HTTPS) is not ready".
-2. `python3 tools/check_facts.py --short`: it must end with "all agree" (every fact is written the same way in every place).
+2. `python3 tools/check_facts.py --short`: it must say `0 disagree` and end with `Nothing disagrees.` (every fact is written the same way in every place).
 3. `python3 tools/make_deploy_folder.py --check`: it writes nothing and says whether the pages and translations are up to date and ready to upload. If the tools folder also holds the site "doctor" tool, running it with python3 does steps 2 and 3 and more in one go and ends with READY TO UPLOAD or NOT READY.
 4. Open the live site with `?check` once more, with nothing waiting to be published.
 5. **Google.** Search Console: the Pages and Sitemaps reports show no errors. Business Profile: hours and holiday hours are right, and new reviews have an answer. Your host's usage page, if your plan has an allowance (`docs/LAUNCH_CHECKLIST.md`, section "Every week in season").
@@ -53,8 +56,8 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 ### Tue Oct 6, 2026: the first pizza weekend opens (and every Tuesday to Tue Oct 27, 2026)
 
 - **By itself:** the table already holds the four weekends: rows with `data-release="2026-10-06"`, `data-release="2026-10-13"`, `data-release="2026-10-20"` and `data-release="2026-10-27"`, opening at 5:00 PM (`data-release-time="17:00"`). The countdown, the "Remind me" buttons and the chip in the fall hero follow the rows, and for six hours after 5:00 PM the countdown says "just opened" with a Reserve button. The note "Open now: pizza reservations for Oct 2 & 3" hides itself on Mon Oct 5, 2026. Each row hides the day after its last visit day (section 9).
-- **You, by 5:00 PM each Tuesday:** look at the forecast, open that weekend's times in Bookeo, and change the sentence under the table so it says which weekend is open now, with its last day.
-- **Where:** `index.html` at `data-t="t58da3033"` (the sentence and its `data-until`); `index.html` at `data-release-time="17:00"` (the opening time). README row "Open a new pizza weekend".
+- **You, by 5:00 PM each Tuesday:** look at the forecast, open that weekend's times in Bookeo, and change the sentence under the table so it says which weekend is open now, with its last day. Keep the shape the README row shows, and the publish command translates it (see "How to read it").
+- **Where:** `index.html` at `<strong>Open now:</strong> pizza reservations for` (the sentence and its `data-until`); `index.html` at `data-release-time="17:00"` (the opening time). README row "Open a new pizza weekend".
 - **If you forget:** the countdown still says "just opened" by itself, but the sentence under the table is old or missing, so visitors do not see which weekend is open.
 
 ### Wed Oct 7, 2026 to Wed Nov 4, 2026: lines hide one by one
@@ -64,10 +67,10 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `index.html` at `data-t="tcda0fa57"` and `data-t="t5efe64c3"` (the two special days). The full list is in section 9.
 - **If you forget:** nothing visible. `?check` lists them in its green box ("remove them when you like").
 
-### Tue Oct 27, 2026: the last pizza row opens; on Wed Oct 28, 2026 the countdown and the chip disappear
+### Tue Oct 27, 2026: the last pizza row opens; that night the countdown and the chip disappear
 
-- **By itself:** the last row is `data-release="2026-10-27"` (visits Oct 30 to Nov 8). On Wed Oct 28, 2026 the countdown box and the chip in the fall hero vanish, because no opening is left ahead.
-- **You, by Tue Oct 27, 2026:** if pizza weekends go on after Nov 8, add the rows now (question **d23**). The chip needs at least one row whose `data-release` day is still ahead.
+- **By itself:** the last row is `data-release="2026-10-27"` (visits Oct 30 to Nov 8). Six hours after it opens, at 11:00 PM on Tue Oct 27, 2026, the pizza countdown box and the chip in the fall hero vanish, because no opening is left ahead.
+- **You, by Tue Oct 27, 2026:** if pizza weekends go on after Nov 8, add the rows now (question **d23**). The dates translate themselves. The chip needs at least one row whose `data-release` day is still ahead.
 - **Where:** `index.html` at `data-release="2026-10-27"`: copy that whole row and change its four dates (README row "Open a new pizza weekend").
 - **If you forget:** pizza is on sale, but there is no countdown, no "Remind me" and no chip: visitors only see "New weekends open every Tuesday at 5:00 PM".
 
@@ -146,14 +149,14 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 ### Thu Apr 15, 2027: the strawberry season starts (by the calendar, not by the weather)
 
 - **By itself:** the top bar says "In season: Strawberries", the first screen says "It's strawberry season!" and the "This week" box says "In season". Nothing on the site follows the weather.
-- **You, by Thu Apr 8, 2027:** answer **d41** (cancel fee on the strawberry page), **d54** (prices) and **d26** (when are cut flowers available?). If the field is late or early, say so with the notice bar and `week` (`crops: { strawberries: 'soon' }`). Open the Bookeo times. If you take reserved visits in spring, add the days to `hours` (`farm`) so the farm badge shows.
+- **You, by Thu Apr 8, 2027:** answer **d41** (cancel fee on the strawberry page), **d54** (prices) and **d26** (when are cut flowers available?). If the field is late or early, say so with the notice bar and `week` (`crops: { strawberries: 'soon' }`). Open the Bookeo times. If you take reserved visits in spring, add the days to `hours` (`farm`) so the farm badge shows: `farm:       { fall: [4, 5, 6, 0], spring: [4, 5, 6, 0] }`.
 - **Where:** `js/content.js` at `farm:       { fall: [4, 5, 6, 0] }` (today only fall has farm days), `notice: '',` and `week: {},` (2 places).
 - **If you forget:** the first screen says it is strawberry season on a day the field is not ready; with no spring farm days there is no farm badge (that is a gap, not an error).
 
 ### Tue Jun 8, 2027 to Tue Jun 15, 2027: spring ends, summer begins
 
 - **By itself:** the strawberry season's last day is Jun 7. On Tue Jun 8, 2027 no season is in progress; the look turns to summer on Sat Jun 12, 2027; on Tue Jun 15, 2027 the blueberries and sunflowers season starts ("It's blueberry season!").
-- **You, by Mon Jun 7, 2027:** answer **d59** (summer programs), **d58** (snacks and drinks in spring and summer?) and **d68** (the sunflower badge works only on big screens). Open the summer times in Bookeo; add summer farm days to `hours` if you want the badge; update `week`.
+- **You, by Mon Jun 7, 2027:** answer **d59** (summer programs), **d58** (snacks and drinks in spring and summer?) and **d68** (the sunflower badge works only on big screens). Open the summer times in Bookeo; add summer farm days to `hours` if you want the badge (`summer: [4, 5, 6, 0]`, in the same place); update `week`.
 - **Where:** `js/season.js` at `id: 'summer'` (the dates are on that line; ask Claude); `js/content.js` at `week: {},` (2 places).
 - **If you forget:** the same as the strawberries: calendar words on a day the blueberries may not be ready.
 
@@ -193,9 +196,9 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 ### Mon Sep 13, 2027: the fall season starts
 
 - **By itself:** "In season: Pumpkins & tomatoes", the farm badge "Reserved visits today" Thursday to Sunday, the fall hero line. The "New: u-pick tomatoes" chip and the "New" badge stay gone for good.
-- **You, by Mon Sep 6, 2027:** the pizza table must hold rows for the first weekends, with the first opening still ahead (the countdown needs it). Write the sentence under the table on each opening day.
+- **You, by Mon Sep 6, 2027:** the pizza table must hold rows for the first weekends, with the first opening still ahead (the countdown needs it). Write the sentence under the table on each opening day (it translates itself, see "How to read it").
 - **Where:** `index.html` at `data-release-time="17:00"`; README row "Open a new pizza weekend".
-- **If you forget:** with no rows left from 2026 the whole schedule box stays hidden all fall, and there is no countdown or chip.
+- **If you forget:** with no rows left from 2026 there is no countdown and no chip all fall. The schedule box shows only its "No pizza" lines, or stays hidden if you did not renew their last day in August.
 
 ### Mon Nov 8, 2027 to Tue Nov 9, 2027: the fall season is over (as on Mon Nov 9, 2026)
 
@@ -213,7 +216,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ### Thu Dec 9, 2027 and Fri Dec 24, 2027 to Fri Dec 31, 2027: trees end, Christmas, the end of the year
 
-- **By itself:** tree season is over on Thu Dec 9, 2027. Fri Dec 24, 2027 and Sun Dec 26, 2027 are open days (Sat Dec 25, 2027 too, if you open Saturdays).
+- **By itself:** tree season is over on Thu Dec 9, 2027. Fri Dec 24, 2027, Sat Dec 25, 2027 and Sun Dec 26, 2027 are open days (The GreenHouse and Wise Pie are open Friday to Sunday).
 - **You, by Wed Dec 22, 2027:** closures and a notice for the days you are closed; the "new" and "Fall 2027" labels for next January (see Fri Jan 1, 2027).
 - **Where:** `js/content.js` at `closures: [],` and `noticeUntil: '',`.
 - **If you forget:** "Open now" on a closed day.
@@ -229,7 +232,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 - **Close the day.** Add the date to `closures` in `js/content.js` (`'2026-10-11'` for one day, `'2026-11-09..2026-11-15'` for a run). The farm, The GreenHouse and Wise Pie then show as closed on that day, all three together. It does not stop Bookeo: close the same times there (README row "Close for rain or a holiday"). Past dates may stay in the list.
 - **Say it on every page.** Write `notice` (the yellow bar) and `noticeUntil` (the last day it shows). The bar shows from the moment you publish, with no start date, so put the date in the words ("Closed Oct 10 for rain.") and, for a closure weeks away, add the bar later. One bar at a time; for each language write `{ en, es, hi, zh, vi }` (README row "Show a banner on every page").
-- **How long it stays.** A closure works on its day only. The bar hides itself the day after `noticeUntil`; `?check` then says so in its yellow box. A bar with no `noticeUntil` stays until you write `notice: ''`.
+- **How long it stays.** A closure works on its day only. The bar hides itself the day after `noticeUntil`; `?check` then says so in its green box ("nothing is broken": it only reminds you to clear the old words). A bar with no `noticeUntil` stays until you write `notice: ''`.
 - **A same-day closure.** Visitors' browsers may keep the old file for up to an hour after you publish, so also post it where people look first: Facebook, Instagram and your Business Profile.
 - **If you forget:** the badges say "Open now", and a bar with no last day stays up after the day it was about.
 - **Where:** `js/content.js` at `closures: [],`, `notice: '',` and `noticeUntil: '',`.
@@ -246,7 +249,7 @@ These stay on the page every day until you edit them. Nothing ties them to a dat
 - **Reviews** you added, with their free-text `date`.
 - **Prices and tax.** The site shows only the prices you typed, and no sales tax. When a price changes, follow README, section "Change a fact everywhere", then `python3 tools/check_facts.py price`. Bookeo and Square show what is charged at checkout.
 
-A check for date problems (3 October 2026) found nothing in the code tied to a year. The seasons, the hours, the footer year and the countdowns all work from the clock. Visitors in other time zones get the farm's day, not their own. The search-engine data has no date that runs out, and the sitemap has no "last changed" date to keep up. A page left open over midnight or New Year catches up by itself. The only dates that go stale are the ones you write in the words, and they are listed above.
+A check for date problems (3 October 2026) found nothing in the code tied to a year. The seasons, the hours, the footer year and the countdowns all work from the clock. Visitors in other time zones get the farm's day, not their own. The search-engine data has no date that runs out, and the sitemap has no "last changed" date to keep up. A page left open over midnight or New Year catches up by itself in the badges, the top bar, the notice bar, the footer year and the lines that hide themselves. The season look and the words of the first screen change when the page is opened again. The only dates that go stale are the ones you write in the words, and they are listed above.
 
 ## 7. Once a year
 
@@ -327,7 +330,7 @@ A line with `data-until="D"` hides itself on the day after D. A pizza row has bo
 
 - Pizza rows open on Tuesdays at 5:00 PM (`data-release-time="17:00"` in `index.html`).
 - The GreenHouse is open Friday to Sunday, 10 am to 8 pm, and Wise Pie 4 pm to 8 pm; the farm has a badge only in the fall, Thursday to Sunday (`hours` in `js/content.js`).
-- "This week at the farm" disappears 14 days after `updated` (`expireDays: 14` in `js/features.js`).
+- "This week at the farm" stays for 14 days after `updated` and is gone from the 15th day (`expireDays: 14` in `js/features.js`).
 - Easter Sunday 2027 is Sun Mar 28, 2027; Thanksgiving is Thu Nov 26, 2026 and Thu Nov 25, 2027.
 - Footer year: `data-year` in `index.html`; it turns over at midnight on Jan 1 (Eastern Time).
 

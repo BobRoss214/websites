@@ -1,3 +1,6 @@
+// order: 260
+// browser: yes
+// covers: js/i18n.js, lang/*, tools/i18n.py, index.html
 /* Language switcher: ?lang=, the globe menu, remembering the choice, the "Would you like this in Spanish?" offer.
  *
  * Why this test does not use Playwright's waitUntil: 'networkidle': on a busy computer the network can go quiet while the page is

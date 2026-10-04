@@ -1,3 +1,6 @@
+// order: 75
+// browser: no
+// covers: README.md, docs/*, tools/plain_lint.py
 /* The documents the farm owner reads are written in plain words. tools/plain_lint.py reads their owner-facing sections (README.md: the
  * "Start here", "Day-to-day changes", "A new year", "Check your changes", "Putting it online" and "Optional patches" parts; the launch checklist, the
  * questions, the year calendar, "What the site stores", the optional-patches table and the owner-page proposal: all of it except what is said below)
@@ -88,7 +91,7 @@ try {
 
 // ---- registered
 ok('tests/README.md lists this test', /`plain-lint`/.test(read('tests/README.md')));
-const runAll = read('tests/run-all.mjs');
-ok('tests/run-all.mjs runs it in its order, and without a browser', /const ORDER = \[[^\]]*'plain-lint'/.test(runAll) && /NEEDS_BROWSER = [^\n]*'plain-lint'/.test(runAll));
+const own = read('tests/plain-lint.test.mjs');
+ok('tests/run-all.mjs runs it in its order, and without a browser (it reads the "// order:" and "// browser: no" lines at the top of this file)', /^\/\/ order: \d+/m.test(own) && /^\/\/ browser: no/m.test(own));
 
 await finish({});

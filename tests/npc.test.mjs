@@ -1,3 +1,6 @@
+// order: 250
+// browser: yes
+// covers: js/hero.js, css/hero.css
 /* The little people in the hero scene (tap a kid, a rider, a flower cutter, the scarecrow, the snowman): each one reacts and says something. */
 import { run, open, ok, okSoon, until } from './lib.mjs';
 

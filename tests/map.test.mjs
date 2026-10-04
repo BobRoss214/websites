@@ -1,3 +1,7 @@
+// order: 330
+// browser: yes
+// quick: yes
+// covers: js/farm-map-data.js, js/map-art.js, js/features.js, css/features.css, tools/farm_map.py, tools/saved-map.json
 /* The farm map (home page and First-visit page): drawn from js/farm-map-data.js, tappable legend, keyboard, "Show names", languages,
  * phone width; names typed into the map can never inject markup; an empty or missing map hides the section. */
 import { run, open, ok, okSoon, until } from './lib.mjs';

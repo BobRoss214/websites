@@ -62,10 +62,10 @@ index dcb86e1..bae7158 100644
      <a data-t="t4b3f3cb5" class="btn btn-white" data-only="spring summer fall" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
      <a data-t="t4b3f3cb5" class="btn btn-white" data-only="winter" hidden href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
 diff --git a/js/hero.js b/js/hero.js
-index 4b9b9c9..211c9da 100644
+index 67c2271..457034e 100644
 --- a/js/hero.js
 +++ b/js/hero.js
-@@ -1182,10 +1182,27 @@
+@@ -1182,10 +1182,28 @@
    // data-only="fall winter": shown only while one of those seasons is on screen. Add data-in-season to show it only
    // while that season is really happening (not in the weeks before or after, when the nearest season is shown).
    // data-out-of-season="spring" is the opposite: hidden while that season is really happening ("Tell me when it opens").
@@ -73,14 +73,15 @@ index 4b9b9c9..211c9da 100644
 +  // data-book="spring" is about that season; data-book with no value follows the season on screen. The FAQ ("When do
 +  // reservations open?") says strawberry reservations open "usually a few weeks before the season starts", read here as
 +  // 3 weeks, and close when the season ends. Summer and fall state no window, so their buttons are never hidden by this.
-+  const BOOK_LEAD_DAYS = { spring: 21 };
-+  function bookable(id) {
-+    const s = W.seasons.list.find((x) => x.id === id), lead = BOOK_LEAD_DAYS[id];
-+    if (!s || lead === undefined) return true;
-+    const n = new Date(), t = new Date(n.getFullYear(), n.getMonth(), n.getDate()), st = s.start(t.getFullYear());
-+    return t >= new Date(st.getFullYear(), st.getMonth(), st.getDate() - lead) && t <= s.end(t.getFullYear());
-+  }
    function applyOnly(id) {
++    // (inside applyOnly on purpose: tools/pages.py copies applyOnly alone to js/footer-art.js for the extra pages, so what it uses must be in it)
++    const BOOK_LEAD_DAYS = { spring: 21 };
++    const bookable = (sid) => {
++      const s = W.seasons.list.find((x) => x.id === sid), lead = BOOK_LEAD_DAYS[sid];
++      if (!s || lead === undefined) return true;
++      const n = new Date(), t = new Date(n.getFullYear(), n.getMonth(), n.getDate()), st = s.start(t.getFullYear());
++      return t >= new Date(st.getFullYear(), st.getMonth(), st.getDate() - lead) && t <= s.end(t.getFullYear());
++    };
      const now = W.seasons.live().map((s) => s.id), live = now.includes(id);
      $$('[data-only]').forEach((el) => el.toggleAttribute('hidden', !el.dataset.only.split(/\s+/).includes(id) || (el.hasAttribute('data-in-season') && !live)));   // SVG elements have no .hidden property
      $$('[data-out-of-season]').forEach((el) => el.toggleAttribute('hidden', el.dataset.outOfSeason.split(/\s+/).some((s) => now.includes(s))));

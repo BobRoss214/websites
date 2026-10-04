@@ -1,3 +1,6 @@
+// order: 130
+// browser: yes
+// covers: tools/serve.py, js/content.js, 404.html
 /* tools/serve.py, the little web server for the person who edits the site (needs python3; a browser for the last part), run on a temporary copy of the site:
  *   - it starts, picks a free port, prints the address and how to stop it
  *   - /, a page without .html, /js/content.js, a language file and a picture come back with the right type; a missing file gives the 404 page with status 404;
@@ -70,7 +73,7 @@ await run('serve', async ({ browser, errs }) => {
     ok('a typo saved while it runs shows at once, with the line number, in the Site check box at http://localhost:' + port + '/', new RegExp('js/content\\.js stopped at line ' + line + '\\b').test(box) && /open on this computer/.test(box), box.slice(0, 260));
     fs.writeFileSync(file, original);
     await pg.reload({ waitUntil: 'load' });
-    await pg.waitForTimeout(800);
+    await until(pg, () => !!(window.WISE_ACRES && window.WISE_ACRES.features), null, 20000);   // the scripts have run: a box would be there now
     ok('after the fix is saved, a refresh shows a clean page (no box)', await pg.evaluate(() => !document.getElementById('wa-problems')), 'the box is still there');
     await ctx.close();
 

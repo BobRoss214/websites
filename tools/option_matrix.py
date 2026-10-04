@@ -64,7 +64,7 @@ LANGS = ['es', 'hi', 'zh', 'vi']
 CHEAP_TESTS = ['public-site', 'docs', 'consistency']
 HEAVY_TESTS = ['pipeline', 'deploy', 'farm-seasons', 'live', 'dated']
 EXTREME_TESTS = ['hero', 'features']
-FILLED_TESTS = ['print-qr', 'messages']
+FILLED_TESTS = ['print-qr', 'messages', 'games']   # print-qr for the QR patches, games for games-B (both are only in the settings-filled run)
 COPY_SKIP = {'.git', 'node_modules', 'deploy', '__pycache__', '.visual', '.wrangler'}
 OLD_ADDRESSES_KEPT = ['/wiseacres', '/faq', '/food', '/the-greenhouse', '/about', '/contact', '/flowers', '/schooltours', '/parties/']   # /summer/ and /posts/ are left out on purpose (decision D3)
 
@@ -808,7 +808,7 @@ def main(argv=None):
             extra = [o for o in opts if o.profile == 'filled' and e.host in o.hosts and not any(c in set(x.id for x in e.opts) for c in o.conflicts)]
             f = Combo(e.host, sorted(e.opts + extra, key=lambda o: (o.order, o.id)), 'filled')
             f.heavy = True
-            f.extra_tests = list(EXTREME_TESTS) + list(FILLED_TESTS)
+            f.extra_tests = ['hero'] + list(FILLED_TESTS)   # not features: it checks the site with the signup form NOT set up, which is what this run fills in
             chosen.append(f)
     wanted = [[t.strip() for t in spec.split(',') if t.strip()] for spec in a.only]
     wanted = [w for w in wanted if w]

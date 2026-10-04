@@ -19,13 +19,13 @@ What it does, in order:
      year written two ways) or if any translation is missing (tools/i18n.py missing, for every language). Each red thing is one plain line
      with how to fix it. --force builds the folder anyway, says so, and writes that into FILES.txt.
   3. Warns (does not stop) about settings in js/content.js that the launch checklist says to set before launch.
-  4. Copies the upload set into deploy/ (an old deploy/ is replaced), checks that every file the pages point to is there,
-     and writes deploy/FILES.txt: every file with its size and sha256 fingerprint, and one fingerprint for the whole folder
+  4. Copies the upload set into deploy/ (an old deploy/ is replaced), checks that every file the pages point to is there and that every font has its
+     licence text next to it (assets/fonts/LICENSE-OFL-<Family>.txt: the font licence asks for it), and writes deploy/FILES.txt: every file with its size and sha256 fingerprint, and one fingerprint for the whole folder
      (the same files always give the same fingerprint, so two uploads can be compared).
 
 Needs Python 3.8 or newer, and beautifulsoup4 for the rebuild (pip install beautifulsoup4), like the other tools.
 Exit code: 0 ready (warnings allowed; with --force also when checks were red), 1 not ready (a problem is printed), 2 a Python package is missing.
-A broken link inside the folder is never overridden by --force.
+A broken link inside the folder, or a font without its licence text (nothing is written then), is never overridden by --force.
 """
 import argparse, hashlib, json, os, re, shutil, subprocess, sys, tempfile
 from html.parser import HTMLParser
@@ -56,6 +56,10 @@ LEFT_OUT_TOP = {
     'deploy': 'this folder',
 }
 JUNK = re.compile(r'(^|/)(\.[^/]*|Thumbs\.db|desktop\.ini|__pycache__)(/|$)|\.(pyc|orig|rej|bak|swp|tmp|py|md)$|~$', re.I)
+# Files that are uploaded although no page points to them: the licence texts and credits that travel with the fonts and the icons
+# (docs/CREDITS_AND_LICENCES.md). They are not reported as "no page points to them".
+LICENCE_FILE = re.compile(r'^assets/(fonts/LICENSE-[^/]+\.txt|LICENSE-[^/]+\.txt|CREDITS\.txt)$')
+FONT_FILE = re.compile(r'\.(woff2?|ttf|otf)$', re.I)
 # Not copied into the temporary rebuild copy (big, or not needed to build)
 SKIP_COPY = {'.git', 'deploy', 'node_modules', '.visual', '__pycache__', 'tests'}
 
@@ -265,6 +269,21 @@ CSS_URL = re.compile(r'url\(\s*([\'"]?)([^\'")]+)\1\s*\)')
 JS_COMMENT = re.compile(r'/\*[\s\S]*?\*/|(^|[ \t])//[^\n]*')   # comments hold examples ('assets/photos/entrance.jpg') that are not real files
 
 
+def licence_problems(site, files):
+    """A font in the upload set must have its licence text next to it: assets/fonts/LICENSE-OFL-<Family>.txt, holding the SIL Open Font License.
+    `files` is the upload set (paths with /). Returns the problems, so nothing is written for a folder that would break the font licence."""
+    problems = []
+    fonts = sorted(f for f in files if f.startswith('assets/fonts/') and FONT_FILE.search(f))
+    for f in fonts:
+        family = os.path.basename(f).split('-')[0].lower()
+        found = [n for n in files if n.lower() == 'assets/fonts/license-ofl-%s.txt' % family]
+        if not found:
+            problems.append('%s has no licence text: add assets/fonts/LICENSE-OFL-%s.txt (copy the LICENSE file of the font package, word for word; see docs/CREDITS_AND_LICENCES.md)' % (f, family.capitalize()))
+        elif 'SIL OPEN FONT LICENSE' not in read(os.path.join(site, *found[0].split('/'))).decode('utf-8', 'replace').upper():
+            problems.append('%s does not hold the SIL Open Font License text' % found[0])
+    return problems
+
+
 def code_only(text):
     return JS_COMMENT.sub(lambda m: m.group(1) or '', text)
 
@@ -349,7 +368,7 @@ def check_links(out, site_url):
         if code != 'en':
             target('lang/%s.js' % code, '', 'js/i18n.js')
     entry = {f for f in have if '/' not in f or f.startswith('print/')} | {'FILES.txt'}
-    unused = sorted(have - pointed - entry)
+    unused = sorted(f for f in have - pointed - entry if not LICENCE_FILE.match(f))   # the licence texts are uploaded on purpose
     return sorted(set(problems)), unused
 
 
@@ -438,6 +457,12 @@ def main():
 
         warnings = settings_warnings(site)
         files, left = upload_set(site)
+        lic = licence_problems(site, files)
+        if lic:   # --force does not change this, and nothing is written
+            say('NOT READY: %d font(s) without their licence text (the font licence asks for it):' % len(lic))
+            for p in lic:
+                say('  ' + p)
+            sys.exit(1)
         out = prepare_out(args.out)
         for f in files:
             dst = os.path.join(out, *f.split('/'))

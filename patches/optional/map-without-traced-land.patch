@@ -1,0 +1,207 @@
+Option: map-without-traced-land
+Name: Farm map without the land traced from the aerial picture
+Does: Takes out of js/map-art.js everything the map drew from the farm's aerial picture (Google's): the two roads, the neighbours' houses, the mown lawns, the plowed field and the dirt lanes (the constant SCENERY and the function sceneryFor, and the house drawing only they used). Every mark the farm made stays (parking, entrance, restrooms, strawberries and the rest), and so do the legend, the names, the drive-time chips and the map on the First-visit page. The ground around the marks becomes the forest and the clearings the file already draws by itself. Also: tools/farm_map.py says how to draw the land again from a picture the farm owns (what it writes does not change), the map paragraph of README.md, and row L8 of docs/CREDITS_AND_LICENCES.md (now done).
+Answers: d86 (where the map outline of the land came from: option 2, take the traced land out and keep every mark the farm made)
+Conflicts: none
+Requires: docs/CREDITS_AND_LICENCES.md (the licence list)
+Host: any
+Order: 70
+After: nothing to rebuild; upload again (node tests/run-all.mjs map licences docs)
+Strings: none
+
+diff --git a/README.md b/README.md
+index 8ca4139..b50bf4d 100644
+--- a/README.md
++++ b/README.md
+@@ -273,9 +273,9 @@ a "From families who visit" row once you add photos to `community`, and the Firs
+   Only add a visitor's photo after they said yes in writing. Nothing from Instagram is embedded.
+ - **Award badges:** ask Claude (the image goes in `assets/badges/`; only with permission from whoever gave the award).
+ 
+-**Farm map.** *Visitors see:* an illustrated map (forest, mown lawn, dirt lanes, fields full of plants, a parking lot with cars, a maze, trails
++**Farm map.** *Visitors see:* an illustrated map (forest with a clearing around each mark, dirt lanes for the roads you marked, fields full of plants, a parking lot with cars, a maze, trails
+ with little characters and an icon for every pin) drawn from the points you marked, with a picture list they can tap and Apple Maps / Waze /
+-Google Maps links. The website does not publish the Google Earth photo itself (it is Google's picture). The map section (home page and
++Google Maps links. The website does not publish the Google Earth photo itself (it is Google's picture), and does not trace roads or neighbours' houses from it either: the ground around your marks is drawn by us. The map section (home page and
+ First-visit page) appears as soon as `js/farm-map-data.js` has points. **Your real map (25 points) is in.**
+ *You:* change the marks in the Farm Map Marker (a private page you were sent: parking, check-in, restrooms, fields, the maze and its sign, and so on)
+ and press "Save for Claude". Then ask Claude to update the map. *Claude:* fetches the saved JSON, saves it as `tools/saved-map.json` and runs
+diff --git a/docs/CREDITS_AND_LICENCES.md b/docs/CREDITS_AND_LICENCES.md
+index a16ebc3..3133d19 100644
+--- a/docs/CREDITS_AND_LICENCES.md
++++ b/docs/CREDITS_AND_LICENCES.md
+@@ -6,7 +6,7 @@
+ 
+ - **Fonts, icons and the map credit are done.** Each font has its licence text next to it in `assets/fonts/`, the two icon sets have theirs in `assets/`, and `assets/CREDITS.txt` names them all. They are uploaded with the site: `tools/make_deploy_folder.py` copies them, and it stops with a plain message if a font ever lacks its licence file.
+ - **No new words are needed on any page.** The licences ask for a notice that travels with the files, not for a line on the page. The one credit that must be on the page, "© OpenStreetMap contributors" under a Drive time answer, is already there.
+-- **Two things only the farm can answer.** Who took the photos (row L9, question 56, decision d61, already asked), and where the map's outline of the land came from (row L8, a new owner question).
++- **One thing only the farm can answer.** Who took the photos (row L9, question 56, decision d61, already asked). The map is no longer traced from the aerial picture (row L8: done), so it asks the farm nothing.
+ - **Keep it true.** If you ask Claude to add a font, an icon set, a script or a picture made by someone else, ask for it to be written in the table below. `tests/licences.test.mjs` fails when a font has no licence file or a row has no evidence.
+ 
+ ## The table
+@@ -22,7 +22,7 @@
+ | L5 | A random-number routine (the same trees and plants every visit) | `js/map-art.js` at `0x6D2B79F5` | "mulberry32" by Tommy Ettinger | Published as free to use (public domain, as its author says; not checked again) | Nothing | n/a. Named as a courtesy in `assets/CREDITS.txt`. | The routine in `js/map-art.js` is the well-known one: the same constant `0x6D2B79F5` and the same steps. |
+ | L6 | A test for "is this point inside this shape" | `js/map-art.js` at `const pip` | The method of W. Randolph Franklin (PNPOLY) | A method, written out again here in our own words | Nothing for a method. His own code asks for his notice if copied. | n/a. Named as a courtesy in `assets/CREDITS.txt`. | The routine `pip` in `js/map-art.js` has the same steps as PNPOLY, with other names. It was not copied from his page. |
+ | L7 | Drive time: address search and routes, and the map data behind both | `js/features.js` at `Routing: OSRM` (the credit links) and at `const GEO_URL =` | OpenStreetMap contributors; Nominatim (OpenStreetMap Foundation); OSRM (FOSSGIS e.V.) | OpenStreetMap data: Open Database Licence (ODbL). Each service also has a usage policy. | Show "© OpenStreetMap contributors" with the data, one request a second at most, a link to "fix the map". The routing demo server calls itself "non-commercial". | yes for the credit: it is in `js/features.js`. The business-use question is open: decision d10. | Under every answer the box shows "© OpenStreetMap contributors", "Routing: OSRM" and "Fix the map" (tested by `drive`). The policies are summed up in `docs/LAUNCH_CHECKLIST.md`, section 3.13. |
+-| L8 | The land around the farm on the Farm map: roads, neighbours' houses, lawns, dirt lanes | `js/map-art.js` at `traced from the aerial photo`; the points are in `tools/saved-map.json` and `js/farm-map-data.js` | Drawn by hand from the farm's aerial picture. The picture is Google's. | Google's terms for its maps and satellite pictures (not opened here) | Such terms usually do not allow tracing or copying from the pictures. This must be read by someone who can judge it. | **no**: open (owner question: the map's outline of the land) | `tools/farm_map.py` says "the satellite photo itself is never published (it is Google's picture)". `tools/saved-map.json` names the file the points were marked on: `"source": "farm-aerial.png"`. That file is not in the project and is not uploaded. |
++| L8 | The land around the farm on the Farm map (the farm's aerial picture is not traced any more: no roads, neighbours' houses, lawns or dirt lanes are drawn) | `js/map-art.js` at `Everything on the map comes from the farm's own marks`; the marks are in `tools/saved-map.json` and `js/farm-map-data.js` | Made up by us in `js/map-art.js`: a forest with a clearing around each mark. Nothing is copied or traced from the aerial picture (Google's) or from any other map. The marks are the farm's own. | None needed | Nothing | yes: nothing is traced in `js/map-art.js` (this is the map without the traced land, from `patches/optional/map-without-traced-land.patch`) | `tools/farm_map.py` reads only the marks and says how to draw the land again from a picture the farm owns. `tools/saved-map.json` still names the file the points were marked on (`"source": "farm-aerial.png"`); it is not read by the tool, is not in the project and is not uploaded. |
+ | L9 | The farm's 32 photos | `assets/photos/` (listed in `js/content.js`, in `photos`) | Not written down anywhere | Not known | Permission from whoever took each photo and from the people in it | **no**: open, question 56 (decision d61) | No photo carries a photographer or copyright line: the 17 that carry any hidden data hold only size, resolution, direction or a colour profile. `tests/files-audit.test.mjs` refuses names, places and camera makes. |
+ | L10 | Colour profiles inside 14 photos (they say how to show the colours) | `assets/photos/` | The International Color Consortium, Google and Apple | Meant to travel inside pictures | Nothing is asked of the farm | n/a | The profile names read from the files: "sRGB IEC61966-2-1 black scaled", "sRGB" (Google, 2016) and "Display P3" (Apple, 2017 and 2022). |
+ | L11 | Share pictures, the phone-screen icons and the tab icon | `assets/og-share.png`, the other `assets/og-*.png`, `assets/icon-192.png`, `assets/icon-512.png`, `assets/apple-touch-icon.png`, `assets/favicon.svg` | Drawn for the site from its own scene and lettering | The pictures show letters set in L1 to L3. The font licence does not cover pictures made with a font. | Nothing | n/a. Who owns the logo drawing is an owner question. | The files hold no hidden data. `assets/og-share.png` shows the same drawings as the home page scene. |
+@@ -67,6 +67,5 @@ The other drawings (an arrow, the menu bars, a cross, a tick, a chevron, a star,
+ ## What could not be checked
+ 
+ - **Who took the photos, and who drew the logo and the scene.** Only the farm knows. Question 56 and the owner question about the logo and the drawings.
+-- **Whether tracing the land from the aerial picture is allowed (L8).** Google's terms were not opened. The owner question gives the options.
+ - **The two routing and search services' current rules.** They were summed up from their own pages on an earlier day (`docs/LAUNCH_CHECKLIST.md`, section 3.13). Check them again before launch.
+ - **The licences of the two small routines (L5, L6).** Stated from what their authors publish; the pages were not opened.
+diff --git a/js/map-art.js b/js/map-art.js
+index 0ff2362..9687312 100644
+--- a/js/map-art.js
++++ b/js/map-art.js
+@@ -7,6 +7,11 @@
+  * trails with little characters, and an icon for every pin. It returns strings of SVG markup.
+  *
+  * Nothing here is random per visit: a seeded generator makes the trees, plants and maze come out the same every time.
++ *
++ * Everything on the map comes from the farm's own marks or is made up here. Nothing is copied or traced from a photo or
++ * from someone else's map: no roads, neighbours' houses or lawns are drawn around the marks. Do not add any shapes read off
++ * a satellite picture (those pictures are Google's). To draw the land around the farm from a picture the farm owns, see
++ * "Drawing the land around the farm" in the docstring of tools/farm_map.py.
+  */
+ (function () {
+   'use strict';
+@@ -61,20 +66,7 @@
+     return { x: pts[0][0], y: pts[0][1], dx: 1, dy: 0 };
+   }
+ 
+-  /* ------------------------------------------------------------------ *
+-   * The land around the farm, traced from the aerial photo (roads, neighbours, mown lawn, dirt lanes).
+-   * Used only for the farm the aerial belongs to; a map without it just gets forest and clearing.
+-   * ------------------------------------------------------------------ */
+-  const SCENERY = {
+-    roads: [{ pts: [[-12, 24], [110, 30], [200, 42], [250, 66], [300, 102], [394, 130]], w: 15 }, { pts: [[254, 68], [284, 22], [304, -12]], w: 12 }],
+-    plowed: [[[258, 96], [338, 104], [346, 168], [266, 170]]],
+-    lawns: [[[270, 172], [394, 168], [394, 262], [304, 270], [262, 238]], [[16, 372], [68, 360], [94, 372], [96, 455], [50, 471], [18, 441]]],
+-    houses: [[318, 152, '#c8553d'], [356, 166, '#4b7fc9'], [296, 208, '#d9a441'], [342, 214, '#8a5a9a'], [372, 132, '#4aa07a']],
+-    dirt: [[[247, 109], [248, 90], [252, 72]], [[100, 238], [104, 290], [98, 345], [103, 400]], [[222, 330], [226, 380], [232, 440], [240, 490]], [[240, 490], [214, 505], [190, 500]], [[110, 300], [168, 315], [215, 318], [243, 333]]]
+-  };
+-  const sceneryFor = (data) => (data && data.scenery !== undefined ? data.scenery : (data && data.size && data.size.width === 380 && data.size.height === 587 ? SCENERY : null));
+-
+-  // Icons, trees and name ribbons have a fixed size that suits the 380 x 587 aerial the owner marked. A map marked on a
++  // Icons, trees and name ribbons have a fixed size that suits the 380 x 587 picture the owner marked the map on. A map marked on a
+   // bigger or smaller picture is scaled to that size first, and every point is kept on the picture (as tools/farm_map.py does),
+   // so a new screenshot does not make the map unreadable and a stray point cannot blow the map up.
+   const REF = 587;
+@@ -83,7 +75,7 @@
+     if (!(w > 0 && h > 0)) return data;
+     const k = Math.abs(Math.max(w, h) - REF) < 1 ? 1 : REF / Math.max(w, h), w2 = w * k, h2 = h * k;
+     const fit = (p) => [Math.max(0, Math.min(w2, (+p[0] || 0) * k)), Math.max(0, Math.min(h2, (+p[1] || 0) * k))];
+-    return Object.assign({}, data, { scenery: sceneryFor(data), size: { width: w2, height: h2 }, items: (data.items || []).map((it) => (it && Array.isArray(it.pts) ? Object.assign({}, it, { pts: it.pts.map(fit) }) : it)) });
++    return Object.assign({}, data, { size: { width: w2, height: h2 }, items: (data.items || []).map((it) => (it && Array.isArray(it.pts) ? Object.assign({}, it, { pts: it.pts.map(fit) }) : it)) });
+   }
+   // Name ribbons should read at about 9.5 px on screen. 6.6 map units does that on a laptop; on a phone the map is shown
+   // smaller, so the ribbons are drawn bigger (features.js draws the map again when its width changes a lot).
+@@ -108,7 +100,6 @@
+     S('mp-t2', '0 0 24 28', `<g stroke="#1b4020" stroke-width=".9" stroke-linejoin="round"><rect x="10.4" y="19" width="3.2" height="8.4" rx="1" fill="#5c3f24" stroke="none"/><circle cx="12" cy="11" r="8.6" fill="#2a6a31"/><circle cx="6.6" cy="14.6" r="5.6" fill="#337437"/><circle cx="17.4" cy="14.4" r="5.6" fill="#337437"/><circle cx="12" cy="6.6" r="3.4" fill="#3d8a45" stroke="none" opacity=".7"/></g>`) +
+     S('mp-t3', '0 0 24 30', `<g stroke="#17381d" stroke-width=".9" stroke-linejoin="round"><rect x="10.6" y="23" width="2.8" height="6.4" fill="#5c3f24" stroke="none"/><path d="M12 1.5l7 11H5z" fill="#2c7236"/><path d="M12 8l9 12H3z" fill="#245f2e"/><path d="M12 15l10 10H2z" fill="#2c7236"/></g>`) +
+     S('mp-t1l', '0 0 24 28', `<g stroke="#2a6a2e" stroke-width=".9" stroke-linejoin="round"><rect x="10.4" y="19" width="3.2" height="8.4" rx="1" fill="#7a5632" stroke="none"/><circle cx="12" cy="11" r="8.6" fill="#4b9b4c"/><circle cx="7" cy="14.5" r="5.6" fill="#5aab55"/><circle cx="17.2" cy="14.8" r="5.4" fill="#5aab55"/><circle cx="9.6" cy="7.4" r="3.8" fill="#7cc46a" stroke="none" opacity=".8"/></g>`) +
+-    S('mp-house', '0 0 30 26', `<g stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"><rect x="3.5" y="11" width="23" height="13.5" fill="#fff3d6"/><path d="M1 12.4L15 1.5l14 10.9z" fill="currentColor"/><rect x="12.4" y="16.6" width="5.2" height="7.9" fill="#8a5a35"/><rect x="6" y="14.4" width="4.2" height="4.2" fill="#cfe8f7"/><rect x="19.8" y="14.4" width="4.2" height="4.2" fill="#cfe8f7"/></g>`) +
+     S('mp-tuft', '0 0 8 6', `<path d="M4 6Q3 3 1 1.5M4 6Q4 3 4 .5M4 6Q5 3 7 1.5" fill="none" stroke="#6ba14a" stroke-width="1" stroke-linecap="round"/>`);
+ 
+   /* ------------------------------------------------------------------ *
+@@ -309,7 +300,7 @@
+   }
+ 
+   /* ------------------------------------------------------------------ *
+-   * Background: forest, clearing, the neighbourhood, trees and grass
++   * Background: forest, clearing, trees and grass (drawn here around the farm's own marks)
+    * ------------------------------------------------------------------ */
+   function viewBox(data, items) {
+     const Wd = data.size.width, Ht = data.size.height;
+@@ -327,7 +318,7 @@
+   }
+ 
+   function background(data, items, vb) {
+-    const sc = sceneryFor(data), rnd = mulberry(77);
++    const rnd = mulberry(77);
+     const R = { area: 17, path: 14, pin: 22 };
+     const geo = items.map((it) => ({ it, r: R[it.type] || 14 }));
+     // distance from p to the nearest marked thing, minus how far that thing clears the woods around itself
+@@ -337,13 +328,6 @@
+         const d = g.it.type === 'area' ? dedge2(p, g.it.pts) : g.it.type === 'path' ? dpath(p, g.it.pts) : Math.hypot(p[0] - g.it.pts[0][0], p[1] - g.it.pts[0][1]);
+         m = Math.min(m, d - g.r);
+       }
+-      if (sc) {
+-        (sc.lawns || []).forEach((poly) => { m = Math.min(m, dedge2(p, poly) - 6); });
+-        (sc.plowed || []).forEach((poly) => { m = Math.min(m, dedge2(p, poly) - 6); });
+-        (sc.dirt || []).forEach((l) => { m = Math.min(m, dpath(p, l) - 9); });
+-        (sc.roads || []).forEach((rd) => { m = Math.min(m, dpath(p, rd.pts) - rd.w / 2 - 8); });
+-        (sc.houses || []).forEach((h) => { m = Math.min(m, Math.hypot(p[0] - h[0], p[1] - h[1]) - 18); });
+-      }
+       return m;
+     };
+     function dedge2(p, poly) { return pip(p, poly) ? 0 : dedge(p, poly); }
+@@ -355,34 +339,21 @@
+         else if (g.it.type === 'path') s += `<path d="${pathD(g.it.pts)}" fill="none" stroke="${fill}" stroke-width="${r * 2}" stroke-linejoin="round" stroke-linecap="round"/>`;
+         else s += `<circle cx="${g.it.pts[0][0]}" cy="${g.it.pts[0][1]}" r="${r}" fill="${fill}"/>`;
+       });
+-      if (sc) {
+-        (sc.lawns || []).concat(sc.plowed || []).forEach((poly) => { s += `<path d="${pathD(poly, true)}" fill="${fill}" stroke="${fill}" stroke-width="${(6 + extra) * 2}" stroke-linejoin="round"/>`; });
+-        (sc.dirt || []).forEach((l) => { s += `<path d="${pathD(l)}" fill="none" stroke="${fill}" stroke-width="${(9 + extra) * 2}" stroke-linecap="round" stroke-linejoin="round"/>`; });
+-      }
+       return s;
+     };
+     let out = `<rect x="${vb.x}" y="${vb.y}" width="${vb.w}" height="${vb.h}" fill="url(#mp-forest)"/>`;
+     // grass clearing: a darker rim, then the light grass, both wobbled the same way so they follow each other
+     out += `<g filter="url(#mp-wob)">${clearing(9, '#4a8f45')}${clearing(2, '#b4da7e')}</g>`;
+-    if (sc) {
+-      (sc.plowed || []).forEach((poly) => { out += `<path d="${pathD(poly, true)}" fill="#c8a272" stroke="${INK}" stroke-width="1.4" stroke-linejoin="round"/><path d="${pathD(poly, true)}" fill="none" stroke="#a9825a" stroke-width="1" stroke-dasharray="1 5"/>`; });
+-      (sc.lawns || []).forEach((poly) => { out += `<path d="${pathD(poly, true)}" fill="#a9de6b" stroke="#6aa84a" stroke-width="1.6" stroke-linejoin="round"/>`; });
+-      (sc.dirt || []).forEach((l) => { out += `<path d="${pathD(l)}" fill="none" stroke="#9a6b3c" stroke-width="7.4" stroke-linecap="round" stroke-linejoin="round"/><path d="${pathD(l)}" fill="none" stroke="#d9b480" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>`; });
+-      (sc.roads || []).forEach((rd) => { const d = pathD(rd.pts); out += `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${rd.w + 3}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#7d828c" stroke-width="${rd.w}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#f1d36b" stroke-width="1.3" stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"/>`; });
+-    }
+     // grass tufts and wildflowers on open ground
+     let decor = '';
+     for (let y = vb.y + 6; y < vb.y + vb.h; y += 9) for (let x = vb.x + 6; x < vb.x + vb.w; x += 9) {
+       const p = [x + (rnd() - 0.5) * 8, y + (rnd() - 0.5) * 8];
+       if (rnd() > 0.34 || slack(p) > -3) continue;
+       if (items.some((it) => (it.type === 'area' && pip(p, it.pts)) || (it.type === 'path' && dpath(p, it.pts) < 7))) continue;
+-      if (sc && ((sc.dirt || []).some((l) => dpath(p, l) < 8) || (sc.roads || []).some((rd) => dpath(p, rd.pts) < rd.w / 2 + 3) || (sc.lawns || []).concat(sc.plowed || []).some((poly) => pip(p, poly)))) continue;
+       if (rnd() < 0.18) decor += `<circle cx="${f1(p[0])}" cy="${f1(p[1])}" r="1.1" fill="${['#fff', '#ffd54f', '#ff8fb1', '#b79ae0'][Math.floor(rnd() * 4)]}"/>`;
+       else decor += `<use href="#mp-tuft" x="${f1(p[0] - 4)}" y="${f1(p[1] - 5)}" width="8" height="6"/>`;
+     }
+     out += decor;
+-    // neighbours
+-    if (sc) (sc.houses || []).forEach(([x, y, c]) => { out += `<ellipse cx="${x}" cy="${y + 1}" rx="14" ry="3" fill="rgba(40,60,20,.28)"/><use href="#mp-house" x="${x - 14}" y="${y - 23}" width="28" height="24" color="${c}"/>`; });
+     // the woods: bigger, lighter trees at the edge of the clearing, small dark ones deeper in
+     const trees = [];
+     for (let y = vb.y - 4; y < vb.y + vb.h + 10; y += 13) for (let x = vb.x - 4; x < vb.x + vb.w + 10; x += 13) {
+@@ -458,5 +429,5 @@
+     return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 18Q9 4 14 12T21 6" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M3 18Q9 4 14 12T21 6" fill="none" stroke="${line[0]}" stroke-width="4.2" stroke-linecap="round"${line[1] ? ` stroke-dasharray="${line[1]}"` : ''}/></svg>`;
+   }
+ 
+-  W.mapArt = { normalize, labelFont, noteTag, backgroundImage, defs, viewBox, background, area, pathArt, pinIcon, iconR, legendIcon, layoutLabels, ribbon, ribbonSize, sceneryFor, centroid, polyArea, along, dpath, pip, bbox };
++  W.mapArt = { normalize, labelFont, noteTag, backgroundImage, defs, viewBox, background, area, pathArt, pinIcon, iconR, legendIcon, layoutLabels, ribbon, ribbonSize, centroid, polyArea, along, dpath, pip, bbox };
+ })();
+diff --git a/tools/farm_map.py b/tools/farm_map.py
+index 4a3e874..2ee78d9 100644
+--- a/tools/farm_map.py
++++ b/tools/farm_map.py
+@@ -13,6 +13,17 @@ What it does
+   - rounds the points, keeps them inside the picture, trims very long text
+   - writes js/farm-map-data.js (and refuses to overwrite it when the saved map has no usable points)
+   - lists any names or notes that still need translating (Spanish, Hindi, Chinese, Vietnamese)
++
++Drawing the land around the farm
++  This tool writes the farm's own marks and nothing else: only "imageSize", "topFaces" and "items" are read from the saved map, so a
++  "scenery" or "source" field in it is ignored. The ground around the marks (forest, clearing, trees, grass) is drawn by js/map-art.js,
++  the same way for every map. No road, neighbour's house, lawn or lane is copied from the picture the points were marked on, and the
++  tool must never write one.
++  To draw the land around the farm from a picture later, the picture must be one the farm owns (its own drone photo, or a plan someone
++  drew for the farm) or one whose licence allows it, such as OpenStreetMap data (it asks for "(c) OpenStreetMap contributors" to be
++  shown with the map); never a Google Earth or Google Maps picture. Mark the map on that picture in
++  the Farm Map Marker, run this tool as above, then ask Claude to add the shapes to the background part of js/map-art.js (in the
++  same units as the points, taken from that picture only) and to write where the picture came from in docs/CREDITS_AND_LICENCES.md.
+ """
+ import json, math, os, re, sys
+ 

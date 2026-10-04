@@ -1,3 +1,6 @@
+// order: 380
+// browser: yes
+// covers: css/*
 /* Browser "auto dark mode" (Chrome / Edge / Opera on a dark phone or computer, Samsung Internet's dark mode): browsers darken light-only pages on
  * their own. Their darkening turns the dark text on the yellow buttons, tabs and chips pale (about 1.3 : 1 against the yellow). The pages say
  * <meta name="color-scheme" content="only light"> (and :root{color-scheme:only light} in css/styles.css), which opts out. This test turns the
@@ -6,7 +9,7 @@
  * (2) with the opt-out, the page is not darkened and every yellow part keeps dark text (4.5 : 1 or better). Also checks that every page has the tag. */
 import fs from 'node:fs';
 import path from 'node:path';
-import { run, ok, skip, info, ROOT, until, ms } from './lib.mjs';
+import { run, ok, skip, info, ROOT, until, ms, settled } from './lib.mjs';
 
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const PAGES = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'strawberry-picking.html', 'school-field-trips.html', 'wise-pie.html', '404.html', 'print/qr-signs.html'];
@@ -59,7 +62,7 @@ await run('auto-dark', async ({ browser, base, errs }) => {
       const n = await loc.count(); let done = false;
       for (let i = 0; i < Math.min(n, 6) && !done; i++) {
         const e = loc.nth(i); if (!(await e.isVisible())) continue;
-        await e.scrollIntoViewIfNeeded(); await p.waitForTimeout(150);
+        await e.scrollIntoViewIfNeeded(); await settled(p, 150);
         const bb = await e.boundingBox(); if (!bb || bb.width < 30 || bb.height < 20) continue;
         // the inside of the box only (not its dark border or shadow, which would read as a strong contrast on their own)
         const clip = { x: bb.x + 8, y: bb.y + 6, width: bb.width - 16, height: bb.height - 12 };

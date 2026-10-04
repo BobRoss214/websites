@@ -1,3 +1,6 @@
+// order: 315
+// browser: yes
+// covers: *.html, pages/*, js/main.js, js/features.js, js/hero.js, js/i18n.js, lang/*
 /* Link names and screen reader noise (a blind visitor listening to the list of links and walking the page): two links with the same words must lead to the same
  * place, or carry a second word that tells them apart ("Directions The u-pick farm" and "Directions The GreenHouse", built from the card's own heading, so every
  * language gets it for free); the game score in the hero is not read as a bare number; the drawings are hidden from screen readers (nothing exposes an

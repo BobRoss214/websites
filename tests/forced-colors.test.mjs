@@ -1,3 +1,7 @@
+// order: 390
+// browser: yes
+// quick: yes
+// covers: css/*
 /* Windows High Contrast (forced colours): backgrounds, shadows and gradients are dropped, so a "chosen" tab, filter, season, language or drive
  * choice must still look different from the ones that are not chosen. Checked for both system palettes (light and dark). */
 import { run, open, ok } from './lib.mjs';

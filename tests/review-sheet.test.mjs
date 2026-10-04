@@ -1,3 +1,7 @@
+// order: 65
+// browser: no
+// quick: no
+// covers: tools/review_sheet.py, lang/src/*
 /* The language review kit (tools/review_sheet.py): a friend who speaks the language corrects the site in a spreadsheet, and the corrections come back
  * into lang/src/<code>.json. Needs Python 3.8 or newer (no packages) and no browser. Everything happens in a temporary copy of the site; your files
  * are not touched.

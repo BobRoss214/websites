@@ -1,3 +1,6 @@
+// order: 110
+// browser: yes
+// covers: js/content.js, js/guard.js, js/features.js, js/live.js, tools/serve.py
 /* The "Site check" box: mistakes the owner can make in js/content.js are loud (on the owner's own computer, or on the live site with ?check) and say
  * what to fix and where. A misspelled setting (noticeUntill), a wrong farmPoint (swapped numbers, no minus sign, text), a js/content.js that stops or is
  * missing (with its line number), a range of closure days ('2026-11-09..2026-11-15'), the box's two kinds of message (settings to fix, old lines
@@ -7,7 +10,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { run, open, ok, okSoon, until, info, ROOT, ms } from './lib.mjs';
+import { run, open, ok, okSoon, until, info, ROOT, ms, settled } from './lib.mjs';
 
 const CONTENT = fs.readFileSync(path.join(ROOT, 'js/content.js'), 'utf8');
 const lineOf = (text, needle) => text.slice(0, text.indexOf(needle)).split('\n').length;   // the line a piece of text is on (1 = first)
@@ -133,8 +136,8 @@ await run('sitecheck', async ({ browser, base, errs }) => {
     });
     const pg = await ctx.newPage(); pg.on('pageerror', () => {});
     await pg.goto(url, { waitUntil: 'load', timeout: ms(60000) });
-    await until(pg, () => !!(window.WISE_ACRES && window.WISE_ACRES.features), null, 20000);
-    await pg.waitForTimeout(600);
+    await until(pg, () => !!(window.WISE_ACRES && window.WISE_ACRES.features), null, 20000);   // the box is built while the scripts start, so it is final now
+    await settled(pg, 0);
     const out = { box: await box(pg), body: await pg.evaluate(() => document.body.innerText) };
     await ctx.close(); return out;
   };

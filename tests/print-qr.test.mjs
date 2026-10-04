@@ -1,3 +1,6 @@
+// order: 220
+// browser: yes
+// covers: print/*, tools/make_qr.py, tools/qr_links.json, css/*, assets/qr/*
 /* Paper: the printable QR signs (print/qr-signs.html) and what the six pages look like when printed.
  *   - the signs: readable on a phone, not listed in search, one sign per Letter and per A4 page, English and Spanish wording for every sign,
  *     every code is big enough and has a quiet edge (module size and margin in the printed size), error correction M or better,

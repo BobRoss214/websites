@@ -1,6 +1,6 @@
 Option: clean-addresses-C
 Name: Page addresses without .html (Cloudflare Pages)
-Does: Sets PAGE_EXT = "" in tools/pages.py, so the extra pages name themselves to Google as /wise-pie, not /wise-pie.html (canonical tag, share address, structured data, sitemap). Cloudflare Pages redirects /wise-pie.html to /wise-pie, so without this the canonical tags point at an address that redirects. Updates the public-site test (a sitemap address may omit .html) and the README and checklist wording. Links inside the site keep .html.
+Does: Sets PAGE_EXT = "" in tools/pages.py, so the extra pages name themselves to Google as /wise-pie, not /wise-pie.html (canonical tag, share address, structured data, sitemap). Cloudflare Pages redirects /wise-pie.html to /wise-pie, so without this the canonical tags point at an address that redirects. Updates the public-site test (a sitemap address may omit .html) and the README and checklist wording. Links inside the site keep .html. The validity test accepts the sitemap addresses without .html (they name the page file with .html).
 Answers: d05 A (host: Cloudflare Pages), d38
 Conflicts: none
 Requires: none
@@ -98,3 +98,12 @@ index cdaf9c6..cae6c2f 100644
 -- [ ] A few days later look at the Pages report. A list of pages "with redirect" means 3.7 is not done yet.
 +- [ ] A few days later look at the Pages report. A list of pages "with redirect" means the page addresses in 3.7 do not match the host.
  
+diff --git a/tests/validity.test.mjs b/tests/validity.test.mjs
+index b29168e..e79b764 100644
+--- a/tests/validity.test.mjs
++++ b/tests/validity.test.mjs
+@@ -346,3 +346,3 @@ for (const f of fragments) { const r = checkHtml(read(f), { name: f, fragment: t
+   const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+-  const bad = locs.filter((u) => { const p = u.replace(/^https:\/\/[^/]+\//, ''); return !/^https:\/\/[^/]+\//.test(u) || !fs.existsSync(path.join(ROOT, p || 'index.html')); });
++  const bad = locs.filter((u) => { const p = u.replace(/^https:\/\/[^/]+\//, ''); return !/^https:\/\/[^/]+\//.test(u) || !(fs.existsSync(path.join(ROOT, p || 'index.html')) || fs.existsSync(path.join(ROOT, p + '.html'))); });   // an address without .html (optional patch clean-addresses-C) names the page file with .html
+   ok('sitemap.xml is well formed and every address in it is a real page', /<urlset[^>]*sitemaps\.org/.test(sm) && (sm.match(/<url>/g) || []).length === (sm.match(/<\/url>/g) || []).length && locs.length >= 6 && bad.length === 0, bad.join(', '));
