@@ -463,7 +463,7 @@ html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animatio
 .motion-btn-text .ico{width:1.05em;height:1.05em}
 .motion-btn[hidden]{display:none}
 html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}   /* "Pause animations": the layers stop sliding at different speeds while scrolling (js/main.js, initScroll) */
-@media (forced-colors:active){.motion-btn[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}}
+@media (forced-colors:active){.motion-btn[aria-pressed="true"],.picker .motion-btn[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}}
 .tag-us{display:flex;gap:12px;align-items:flex-start;max-width:40em;margin:20px auto 0;padding:.85em 1.1em;background:#fff;border:2.5px dashed var(--ink);border-radius:18px;font-weight:600;line-height:1.45}
 .flowers-copy .tag-us{margin:22px 0 0}
 .tag-us .ico{flex:none;width:1.5em;height:1.5em;margin-top:.1em;color:var(--red)}

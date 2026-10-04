@@ -34,10 +34,12 @@ await run('features', async ({ browser, base, errs }) => {
   await p.context().close();
 
   // exact switch to "open" at 5:00 PM ET
-  p = await open('index.html', { time: '2026-10-06T16:59:50-04:00' });
+  // The page clock keeps running in real time after open(): started 9 seconds before 5 PM, a computer so busy that the next call takes 9 seconds saw it already open
+  // (load 70 to 90 did, twice). Start a minute before and jump over 5 PM by hand.
+  p = await open('index.html', { time: '2026-10-06T16:59:00-04:00' });
   let m = await p.evaluate(() => document.querySelector('[data-rel-box]').dataset.mode);
-  ok('still waiting at 4:59:51 PM', m === 'wait');
-  await p.clock.fastForward(15000);
+  ok('still waiting at 4:59 PM', m === 'wait');
+  await p.clock.fastForward(66000);
   const op = await p.evaluate(() => { const b = document.querySelector('[data-rel-box]'); return { mode: b.dataset.mode, eyebrow: b.querySelector('[data-rel-eyebrow]').textContent, countHidden: b.querySelector('[data-rel-count]').hidden, reserve: !b.querySelector('[data-rel-reserve]').hidden, remind: !b.querySelector('[data-rel-remind]').hidden, chip: document.querySelector('[data-rel-chip-text]').textContent }; });
   ok('opens exactly at 5 PM: "just opened" + Reserve button', op.mode === 'open' && /just opened/.test(op.eyebrow) && op.countHidden && op.reserve && op.remind, JSON.stringify(op));
   ok('chip says open now', /open now/.test(op.chip));

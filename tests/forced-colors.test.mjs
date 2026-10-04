@@ -4,7 +4,7 @@
 // covers: css/*
 /* Windows High Contrast (forced colours): backgrounds, shadows and gradients are dropped, so a "chosen" tab, filter, season, language or drive
  * choice must still look different from the ones that are not chosen. Checked for both system palettes (light and dark). */
-import { run, open, ok } from './lib.mjs';
+import { run, open, ok, settled } from './lib.mjs';
 
 await run('forced-colors', async ({ browser, base, errs }) => {
   for (const scheme of ['light', 'dark']) {
@@ -23,6 +23,24 @@ await run('forced-colors', async ({ browser, base, errs }) => {
     for (const [name, sel] of groups) {
       const on = await look(p, sel, 'on'), off = await look(p, sel, 'off');
       ok(`${scheme}: in ${name} the chosen one looks different from the others`, !!on && !!off && on !== off, on === off ? 'identical: ' + on : '');
+    }
+    await p.context().close();
+  }
+
+  // The "Pause animations" button of the hero card has a fill of its own when it is pressed: its icon must still be told apart from that fill.
+  // (No reduced motion here: with it the buttons are hidden, as the page itself decides.)
+  const lum = (s) => { const [r, g, b] = s.match(/[\d.]+/g).slice(0, 3).map(Number).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  for (const scheme of ['light', 'dark']) {
+    const p = await open(browser, base, 'index.html', errs, { forcedColors: 'active' });
+    await p.emulateMedia({ colorScheme: scheme });
+    const there = await p.evaluate(() => { const b = document.querySelector('.picker [data-motion]'); return !!b && !b.hidden; });
+    ok(`${scheme}: the "Pause animations" button is in the hero card`, there);
+    if (there) {
+      await p.click('.picker [data-motion]');
+      await settled(p);   // the fill and the text colour change over a fraction of a second
+      const c = await p.evaluate(() => { const b = document.querySelector('.picker [data-motion]'), cs = getComputedStyle(b); return { pressed: b.getAttribute('aria-pressed'), fg: cs.color, bg: cs.backgroundColor }; });
+      ok(`${scheme}: pressed, the icon of the "Pause animations" button is told apart from its fill (contrast 3 or more)`, c.pressed === 'true' && contrast(c.fg, c.bg) >= 3, `${c.fg} on ${c.bg}: ${contrast(c.fg, c.bg).toFixed(1)}`);
     }
     await p.context().close();
   }
