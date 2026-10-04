@@ -127,7 +127,7 @@ Cada oración en inglés que cambien necesita cuatro traducciones: español, hin
 
 No es para la dueña ni para el dueño, y no se imprime.
 
-- Cómo se revisó. El 4 de octubre de 2026, en una copia del árbol después de la ola A3 con los parches opcionales, cada paso de arriba se hizo a mano y los resultados se leyeron en el navegador (con un reloj de mentira para las insignias, la barra de aviso y la cuenta regresiva de pizza). Los comandos y las palabras que deben ver son los reales.
+- Cómo se revisó. El 4 de octubre de 2026, en una copia del sitio con los parches opcionales, cada paso de arriba se hizo a mano y los resultados se leyeron en el navegador (con un reloj de mentira para las insignias, la barra de aviso y la cuenta regresiva de pizza). Los comandos y las palabras que deben ver son los reales.
 - La página para imprimir. `print/owner-cheat-sheet.html` y `print/owner-cheat-sheet.es.html` se hacen con estos dos archivos con `python3 tools/make_cheat_sheet.py`. No se suben (`tools/make_deploy_folder.py` las deja fuera). Una prueba falla cuando están desactualizadas.
 - La copia en español. `docs/OWNER_CHEAT_SHEET.es.md` tiene las mismas líneas en el mismo orden. Una prueba compara el tipo de cada línea, las palabras entre comillas invertidas y los números. Cambien los dos archivos juntos.
 - Todavía no está en el árbol, así que no está en la hoja: una herramienta de un solo comando para cerrar por un día (tools/close_today.py), una herramienta para ensayar respuestas (tools/rehearse_answers.py) y una herramienta de diagnóstico. Cuando llegue una, agreguen una línea al trabajo 2 o al trabajo 11.

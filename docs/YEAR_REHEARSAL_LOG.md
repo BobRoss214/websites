@@ -1,6 +1,6 @@
 # The owner's year, rehearsed with a pretend clock
 
-Date: 3 October 2026. Site files: the merged site (commit `05b0b72`, plus the folder of optional patches and the owner's calendar). What was rehearsed: every dated step of `docs/OWNER_YEAR_CALENDAR.md`, from 3 October 2026 to 1 January 2028, plus the entries that say "nothing to do".
+Date: 3 October 2026. Site files: the merged site (commit `f176745`, plus the folder of optional patches and the owner's calendar). What was rehearsed: every dated step of `docs/OWNER_YEAR_CALENDAR.md`, from 3 October 2026 to 1 January 2028, plus the entries that say "nothing to do".
 
 **How.** A helper played the farm owner. For each step it did exactly what the calendar says, on the day the calendar says:
 

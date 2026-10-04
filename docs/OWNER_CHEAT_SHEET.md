@@ -123,7 +123,7 @@ Every English sentence you change needs four translations: Spanish, Hindi, Chine
 
 Not for the owner, and not printed.
 
-- How it was checked. On 4 October 2026, on a copy of the tree after wave A3 with the optional patches, every step above was done by hand and the results were read in the browser (with a pretend clock for the badges, the notice bar and the pizza countdown). The commands and the words you should see are the real ones.
+- How it was checked. On 4 October 2026, on a copy of the site with the optional patches, every step above was done by hand and the results were read in the browser (with a pretend clock for the badges, the notice bar and the pizza countdown). The commands and the words you should see are the real ones.
 - The print page. `print/owner-cheat-sheet.html` and `print/owner-cheat-sheet.es.html` are made from these two files by `python3 tools/make_cheat_sheet.py`. They are not uploaded (`tools/make_deploy_folder.py` leaves them out). A test fails when they are out of date.
 - The Spanish copy. `docs/OWNER_CHEAT_SHEET.es.md` has the same lines in the same order. A test compares the kind of every line, the words in backticks and the numbers. Change both files together.
 - Not in the tree yet, so not on the sheet: a one-command tool to close for a day (tools/close_today.py), an answer-rehearsal tool (tools/rehearse_answers.py) and a doctor tool. When one arrives, add a line to job 2 or job 11.

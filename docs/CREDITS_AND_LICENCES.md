@@ -1,6 +1,6 @@
 # Credits and licences: who made what the site uses
 
-**Checked:** 3 October 2026, against website version `b0a4928`. Everything below was read from the files themselves (the fonts' own name tables, the icons' drawings, the pictures' hidden data, the code). The web pages of the services were not opened again; where the table says so, it quotes `docs/LAUNCH_CHECKLIST.md`.
+**Checked:** 3 October 2026, against website version `3396be7`. Everything below was read from the files themselves (the fonts' own name tables, the icons' drawings, the pictures' hidden data, the code). The web pages of the services were not opened again; where the table says so, it quotes `docs/LAUNCH_CHECKLIST.md`.
 
 ## In short
 

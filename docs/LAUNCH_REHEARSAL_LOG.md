@@ -1,6 +1,6 @@
 # Launch rehearsal: the whole launch, done only by following the docs, on a pretend host
 
-Date: 3 October 2026. Base: commit `05b0b72` (the merged site), plus the site doctor (`tools/doctor.py`, written against an earlier commit and re-applied here; three small hunks needed a hand fix: the tools list in `README.md`, one row in `tests/README.md`, and the test order in `tests/run-all.mjs`).
+Date: 3 October 2026. Base: commit `f176745` (the merged site), plus the site doctor (`tools/doctor.py`, written against an earlier commit and re-applied here; three small hunks needed a hand fix: the tools list in `README.md`, one row in `tests/README.md`, and the test order in `tests/run-all.mjs`).
 
 **What this is.** A helper played the owner on launch day. It used only `README.md` and `docs/LAUNCH_CHECKLIST.md` (and the docs they point to), in the checklist's order, and wrote down at each step what the text said, what it did, what happened, whether a person who has never used a terminal would have got through, and the exact words that misled. Where the fix was plain, the docs or tools were changed (listed at the end). Nothing about the farm (a price, an hour, a name, a phone number) was changed.
 
@@ -161,7 +161,7 @@ Four things that were listed here on 3 October 2026 were fixed on 4 October 2026
 
 ## The "[tested here]" claims, re-run
 
-Everything that can be re-run offline was re-run on 3 October 2026 at commit `05b0b72` with the same program versions as the checklist (wrangler 4.146.0, `@netlify/headers-parser` 10.1.1, `@netlify/redirect-parser` 16.1.1).
+Everything that can be re-run offline was re-run on 3 October 2026 at commit `f176745` with the same program versions as the checklist (wrangler 4.146.0, `@netlify/headers-parser` 10.1.1, `@netlify/redirect-parser` 16.1.1).
 
 | Claim in the checklist | Result |
 |---|---|

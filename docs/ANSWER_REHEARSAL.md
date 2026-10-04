@@ -104,7 +104,7 @@ The playbook's tests table ("Tests that can need an update") has three new rows:
 
 ## What the browser tests found
 
-One browser test for each answer that changes live text or a date (the first test the recipe names), one browser at a time, on its own port. Four rounds: the first (d02 to d23) on the earliest tree, the second (d23 to d85, the new answers) on the tree before the optional patches arrived, the third (the four optional patches and many of the rest) on the real stack with the load-aware limits of the tests (`ms()` in tests/lib.mjs), the fourth (the last 32 answers, at low priority on a busy computer) on the joined tree with wave B. Each table row is the last result of the answer. A failing browser test is run once more (`--no-retry` turns that off); a pass the second time is shown as flaky.
+One browser test for each answer that changes live text or a date (the first test the recipe names), one browser at a time, on its own port. Four rounds: the first (d02 to d23) on the earliest tree, the second (d23 to d85, the new answers) on the tree before the optional patches arrived, the third (the four optional patches and many of the rest) on the real stack with the load-aware limits of the tests (`ms()` in tests/lib.mjs), the fourth (the last 32 answers, at low priority on a busy computer) on a later version of the site, after the second set of helper changes was joined. Each table row is the last result of the answer. A failing browser test is run once more (`--no-retry` turns that off); a pass the second time is shown as flaky.
 
 100 answers have a result: 100 pass.
 
@@ -122,7 +122,7 @@ One browser test for each answer that changes live text or a date (the first tes
 | d07 A | farm-seasons | pass |
 | d07 B | map | pass |
 | d10 D | features | pass (flaky: failed once with 'still waiting at 4:59:51 PM' (the page clock ran on during a slow load); passed on the next run) |
-| d11 A | drive | pass (flaky: failed on the old playbook words (a wrong note, fixed in w167); with the drive-test change the whole drive test passed on the answer's copy (136 checks)) |
+| d11 A | drive | pass (flaky: failed on the old playbook words (a wrong note, since fixed); with the drive-test change the whole drive test passed on the answer's copy (136 checks)) |
 | d13 B | gallery | pass |
 | d13 C | gallery | pass |
 | d15 A | - | pass |
@@ -190,7 +190,7 @@ One browser test for each answer that changes live text or a date (the first tes
 | d60 B | languages | pass |
 | d61 B | languages | pass |
 | d62 B | drive | pass |
-| d63 A | features | pass (flaky: failed on the old playbook words (a wrong note, fixed); with the two features-test changes now written in the playbook (and the clock change of w198-test-flakes.patch) the whole features test passed on the answer's copy (59 checks)) |
+| d63 A | features | pass (flaky: failed on the old playbook words (a wrong note, fixed); with the two features-test changes now written in the playbook (and a change to the test's clock, see "Checks that depend on the computer") the whole features test passed on the answer's copy (59 checks)) |
 | d65 B | print-qr | pass |
 | d65 C | print-qr | pass |
 | d65 D | print-qr | pass |
@@ -211,14 +211,12 @@ One browser test for each answer that changes live text or a date (the first tes
 | d85 A | languages | pass |
 | d86 B | map | pass |
 
-
-
 ## Checks that depend on the computer, not on the answer
 
-Three of the browser failures were not the answers' fault. A joiner who sees them should run the test again on its own before looking for a cause.
+Three of the browser failures were not the answers' fault. Anyone who sees them should run the test again on its own before looking for a cause.
 
-- **features: "still waiting at 4:59:51 PM"** (tests/features.test.mjs, the first check of "exact switch to open at 5:00 PM ET"; it failed for d10 D and d63 A). The page is opened with the page clock set to 4:59:50 PM and the check expects the countdown to be still waiting a moment later, but the clock keeps running while the page loads. On a busy computer (a load of 30 to 100 on 4 cores here) the load takes longer than the 10 seconds, the clock passes 5 PM and the page says "open". The load-aware limits (`ms()`) do not touch this check, because it is not a time limit but a clock position. The file `w198-test-flakes.patch` opens the page `ms(10000)` before 5 PM instead (10 seconds on a quiet computer, 50 on a busy one): the whole features test passed (59 checks) at a load of 34.
-- **print-qr: "every letter on the sheet is drawn by a font of this computer (no empty boxes)", the vi sheet, "missing: ह"** (d29 B, once). Only the first Hindi letter was reported, not the other Hindi letters on the sheet, and the same test passes on the unchanged site and on the d29 B copy (105 checks) when run alone. The test asks the browser which font drew each probe letter right after adding the letters; on a busy computer the first one is asked before the page has laid it out. The fonts of this computer are fine: FreeSerif and Unifont have Devanagari, WenQuanYi Zen Hei has the Chinese letters. The same patch waits for the page to settle before asking.
+- **features: "still waiting at 4:59:51 PM"** (tests/features.test.mjs, the first check of "exact switch to open at 5:00 PM ET"; it failed for d10 D and d63 A). The page is opened with the page clock set to 4:59:50 PM and the check expects the countdown to be still waiting a moment later, but the clock keeps running while the page loads. On a busy computer (a load of 30 to 100 on 4 cores here) the load takes longer than the 10 seconds, the clock passes 5 PM and the page says "open". The load-aware limits (`ms()`) do not touch this check, because it is not a time limit but a clock position. The features test now opens the page at 4:59 PM and moves the clock past 5 PM by hand, so a slow load no longer reaches 5 PM before the first check.
+- **print-qr: "every letter on the sheet is drawn by a font of this computer (no empty boxes)", the vi sheet, "missing: ह"** (d29 B, once). Only the first Hindi letter was reported, not the other Hindi letters on the sheet, and the same test passes on the unchanged site and on the d29 B copy (105 checks) when run alone. The test asks the browser which font drew each probe letter right after adding the letters; on a busy computer the first one is asked before the page has laid it out. The fonts of this computer are fine: FreeSerif and Unifont have Devanagari, WenQuanYi Zen Hei has the Chinese letters. A copy of the test that waits for the page to settle before asking was tried; that change is not in the test yet.
 - **A test server on a port that another job uses.** Every browser test starts its own server on `WA_PORT`. When another job on the same computer uses that port, the test says "Could not start the test server ... EADDRINUSE", or it talks to the other job's pages ("WISE_ACRES is not defined" in the hero test for d69 B). The tool now picks a free port for each run.
 
 Four failures were wrong notes in the playbook, now fixed: d11 A (the drive test), d63 A (the features test), d47 C (the print style and two tests name the old store address) and d58 B (one card, not two), see "What was wrong". One more run was flaky: d57 C (the languages test waited 60 seconds for a download on a busy computer and passed on the second run).

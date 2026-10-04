@@ -34,7 +34,7 @@ tempfile.tempdir = TMP
 RECIPES, SKIPPED = aa.load_recipes(SITE)
 RULES = aa.load_rules(SITE)
 PLAYBOOK = aa.parse_playbook(SITE)
-DASH = os.environ.get('WA_DECISIONS', '/tmp/claude-0/dec-now2/decisions')
+DASH = os.environ.get('WA_DECISIONS', '')                                  # a folder with the dashboard's decision documents (d01.json ...); without it that test is skipped
 
 
 def wj(path, obj):
@@ -500,7 +500,7 @@ class Plan(unittest.TestCase):
 
 
 class FactChange(unittest.TestCase):
-    """The step that will hand a price, phone, email or hours change to tools/change_fact.py (the site does not have it yet): one small function, off until the rules name an answer."""
+    """The step that hands a price, phone, email or hours change to tools/change_fact.py: one small function, used only for the answers the rules name."""
 
     def item(self):
         it = aa.Item(aa.Answer('d16', 'C'), 'd16=C', 'x', 2)
@@ -522,8 +522,14 @@ class FactChange(unittest.TestCase):
         with open(os.path.join(d, 'tools', 'change_fact.py'), 'w', encoding='utf-8') as f:
             f.write('import sys\nopen("called.txt", "w", encoding="utf-8").write(" ".join(sys.argv[1:]))\nsys.exit(int(open("exit.txt", encoding="utf-8").read()) if __import__("os").path.exists("exit.txt") else 0)\n')
         spec = {'fact_change': {'d16=C': {'kind': 'price', 'args': ['$31', '{price}']}, 'd02=A': {'kind': 'price', 'args': ['{nothing}']}}}
-        self.assertTrue(aa.apply_fact_change(ra, d, self.item(), spec))
+        it = self.item()
+        it.recipe['what'] = 'the recipe says README too'
+        self.assertTrue(aa.apply_fact_change(ra, d, it, spec))
         self.assertEqual(rt(os.path.join(d, 'called.txt')), 'price $31 $36 --yes')
+        self.assertEqual(it.recipe['what'], 'the recipe says README too')                         # no 'what' in the rule: the report keeps the recipe's line
+        spec['fact_change']['d16=C']['what'] = 'what the tool changed'
+        self.assertTrue(aa.apply_fact_change(ra, d, it, spec))
+        self.assertEqual(it.recipe['what'], 'what the tool changed')                              # with one: the report prints the rule's line
         with open(os.path.join(d, 'exit.txt'), 'w', encoding='utf-8') as f:
             f.write('3')
         with self.assertRaises(aa.StepFail):
@@ -543,7 +549,8 @@ class FactChange(unittest.TestCase):
             self.assertTrue(used and used <= names, '%s: %s is not a value the owner gives' % (k, used - names))
             self.assertIn(spec['kind'], ('price', 'email', 'phone', 'hours', 'text'))
             old = spec['args'][0]                                                              # the old words must be on the site today
-            self.assertTrue(any(old in open(os.path.join(SITE, f), encoding='utf-8').read() for f in ('index.html', 'js/content.js', 'js/features.js')), '%s: "%s" is not on the site' % (k, old))
+            self.assertTrue(any(old in rt(os.path.join(SITE, f)) for f in ('index.html', 'js/content.js', 'js/features.js')), '%s: "%s" is not on the site' % (k, old))
+            self.assertTrue(isinstance(spec.get('what', ''), str), '%s: "what" is the line for the report' % k)
 
 
 class HostCheck(unittest.TestCase):

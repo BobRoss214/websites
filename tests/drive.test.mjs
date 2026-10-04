@@ -6,7 +6,7 @@
  * Covers: nothing is sent before the button, the answer and how it is worked out, hours, every way it can go wrong, the "Drive to:" choice
  * and its default by season, pressing twice, odd place names (plain text), the five languages, phone widths, links to the box, no scripts,
  * the first-visit page, nothing is kept, the farm's exact spot (farmPoint) and the analytics event.
- * Ported from the coordinator's drive-test.mjs: same checks; the harness (server, browser, report) comes from lib.mjs, and every
+ * Ported from an earlier drive-test.mjs: same checks; the harness (server, browser, report) comes from lib.mjs, and every
  * fixed pause is a wait for the thing that is checked (a few short "settle" pauses remain where a check says that NOTHING happened).
  * Run only some parts:  SECTIONS=9,10 node tests/drive.test.mjs */
 import { startSite, launch, ok as libOk, finish, ms } from './lib.mjs';

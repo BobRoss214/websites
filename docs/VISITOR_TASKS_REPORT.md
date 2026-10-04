@@ -1,7 +1,7 @@
 # Mystery visitors: can real people find what they need on this site?
 
 Dated 3 October 2026. The test itself was reading and clicking only. Updated the same day after the first round of fixes: what was fixed is marked **Fixed** and listed in "Fixed after the first run" below.
-Tested on the integration tree at commit 05b0b72, with the page clock set to Saturday 3 October 2026, 10:30 am, New York time. The fixed routes were measured again on the tree with the fixes.
+Tested on the site at commit f176745, with the page clock set to Saturday 3 October 2026, 10:30 am, New York time. The fixed routes were measured again on the tree with the fixes.
 
 ## The short answer
 

@@ -137,11 +137,11 @@
  },
 
  "fact_change": {
-  "_about": "Answers that are really a fact change (a price or an email) are handed to tools/change_fact.py when the site has it (a9c4's tool, w199): same places, and the old translations are copied and changed, so no stand-in is needed. 'kind' is the first word of its command line, 'args' are the rest ({name} is the owner's checked value from 'inputs'), and --yes is added. When the site has no tools/change_fact.py the recipe's own steps run, as before. Tried end to end on a copy of b158c3e + w193 + w199: d16 C, d47 B, d48 D and d52 B change the same pages and scripts as their recipes (d52 B does not touch README, which the tool leaves alone), the checks are green except the notes test, and the sentences need no stand-in. The one function that does this is apply_fact_change in tools/apply_answers.py.",
+  "_about": "Answers that are really a fact change (a price or an email) are made by tools/change_fact.py, the same tool you can run by hand. It changes every place that holds the old words, and it copies the old translations with the new price or address in them, so no sentence needs a stand-in translation. 'kind' is the first word of its command line, 'args' are the rest ({name} is the owner's checked value from 'inputs'), and --yes is added. 'what', when given, is the line the report prints for the answer instead of the recipe's own. If the site has no tools/change_fact.py, the recipe's own steps run instead. Each answer below was tried on a copy of the site: the same pages and scripts change as with its recipe, and the checks pass except the notes test. d52 B leaves README alone (the tool does not change README or the docs), so the README lines that still name the old address are changed by hand. The one function that does this is apply_fact_change in tools/apply_answers.py.",
   "d16=C": {"kind": "price", "args": ["$31", "{price}"]},
   "d47=B": {"kind": "price", "args": ["$9", "{gluten_free_price}"]},
   "d48=D": {"kind": "price", "args": ["$4.50", "{tomato_price}", "--only", "per pound"]},
-  "d52=B": {"kind": "email", "args": ["cathy@wiseacresorganic.com", "{email}"]}
+  "d52=B": {"kind": "email", "args": ["cathy@wiseacresorganic.com", "{email}"], "what": "Another email address instead of cathy@, made by tools/change_fact.py: every page, js/features.js, js/content.js and the translations. README still names the old address: change it there by hand"}
  },
 
  "after": {

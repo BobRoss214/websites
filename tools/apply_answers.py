@@ -780,8 +780,9 @@ class StepFail(Exception):
 def apply_fact_change(ra, work, it, rules):
     """THE place for fact changes (a price, a phone number, an email, hours). When the site has tools/change_fact.py and the rules name this answer under
     "fact_change", the change is made by that tool (no second copy of its logic here) and True is returned. Otherwise False: the caller follows the steps of
-    the recipe, which is what happens today. To switch an answer over, add it to "fact_change" in tools/apply_answers_rules.json, for example
-    "d16=C": {"kind": "price", "args": ["$31", "{price}"]}  ->  python3 tools/change_fact.py price "$31" "$35" --yes   ({name} is the owner's checked value)."""
+    the recipe, as for every answer not named there. To switch an answer over, add it to "fact_change" in tools/apply_answers_rules.json, for example
+    "d16=C": {"kind": "price", "args": ["$31", "{price}"]}  ->  python3 tools/change_fact.py price "$31" "$35" --yes   ({name} is the owner's checked value).
+    An optional "what" in the rule is the report's line for the answer, when the tool changes other files than the recipe would."""
     spec = (rules.get('fact_change') or {}).get(it.key)
     script = os.path.join(work, 'tools', 'change_fact.py')
     if not spec or it.kind != 'recipe' or not os.path.isfile(script):
@@ -794,6 +795,8 @@ def apply_fact_change(ra, work, it, rules):
     code, out = ra.run([ra.PY, script, spec['kind']] + args + ['--yes'], work)
     if code != 0:
         raise StepFail('tools/change_fact.py failed for %s: %s' % (it.key, (out.strip().split('\n') or [''])[-1][:200]))
+    if spec.get('what'):
+        it.recipe = dict(it.recipe, what=spec['what'])                          # the report says what the tool changed, not what the recipe would have
     return True
 
 

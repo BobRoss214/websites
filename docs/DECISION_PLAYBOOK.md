@@ -1,8 +1,8 @@
 # Decision playbook
 
 What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 and 14 more, d60 to d73, d74 to d87 (see "Dashboard ids and doc question numbers").
-Written on 3 October 2026 for commit b54427b, extended for e02b95e and (d60 to d73) 05b0b72. Nothing here decides anything for the owner, and no optional patch has been applied.
-Entries d74 to d87 (added to the dashboard on 3 October 2026, with no number in the doc) were written for commit 72573ab. Each answer that is a file edit was tried on a copy of the site (docs/ANSWER_REHEARSAL.md); the answers that need files from later sets of changes say so.
+Written on 3 October 2026 for commit b54427b, extended for e02b95e and (d60 to d73) f176745. Nothing here decides anything for the owner, and no optional patch has been applied.
+Entries d74 to d87 (added to the dashboard on 3 October 2026, with no number in the doc) were written for commit 9416cba. Each answer that is a file edit was tried on a copy of the site (docs/ANSWER_REHEARSAL.md); the answers that need files from later sets of changes say so.
 Entries d43 to d45 (added later on the dashboard, with no number in the doc) were written on 3 October 2026 for commit af1e572. On the same day the dashboard texts of d01, d10, d15, d22, d41 and d44 were reworded; this page says the same as the dashboard now.
 
 ## How to use it
@@ -13,7 +13,7 @@ Entries d43 to d45 (added later on the dashboard, with no number in the doc) wer
 4. If the entry names a patch, apply it only after her answer. Patches are listed in "Patches on disk".
 5. Delete the matching row in the README table "Content status" when a question is closed.
 
-Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572, entries d60 to d73 for 05b0b72, entries d74 to d87 for 72573ab. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
+Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572, entries d60 to d73 for f176745, entries d74 to d87 for 9416cba. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
 
 Commit e02b95e also holds the messages feature (f45d6d9) and the plain-English rewrite (7d917e6), which changed the wording and the ids of 77 sentences.
 
