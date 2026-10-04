@@ -127,6 +127,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 .page-hero h1{font-size:clamp(2.2rem,5.4vw,4rem);text-shadow:0 3px 0 rgba(255,255,255,.55)}
 .page-hero .lead{max-width:40em;font-weight:600;color:var(--ink)}   /* the full ink: the lighter brown was 4.0:1 on the blue top of the spring and summer sky (phones) */
 .page-hero .hero-kicker{transform:rotate(-2deg);display:inline-block}
+@media (max-width:23em){.page-hero .hero-kicker{max-width:12.5em}}   /* on a phone up to 368 px a kicker longer than 300 px takes two lines in the stand-in font too, not one that becomes two when the hand-lettered font arrives (pumpkin-patch.html: 319 px in the stand-in, 334 in Caveat, 328 of room at 360 px) */
 .page-hero .hero-cta{justify-content:flex-start;margin-top:1em}
 .page-hero-art svg{width:clamp(110px,18vw,210px);height:auto;filter:drop-shadow(0 6px 0 rgba(58,36,22,.25));animation:bob 4.5s ease-in-out infinite}
 @media (max-width:43.75em){ .page-hero-inner{grid-template-columns:1fr} .page-hero-art{display:none} }
