@@ -197,7 +197,7 @@ await run('no-js', async ({ browser, base, errs }) => {
     const f = await p.evaluate(facts);
     checks.push([label + ': not a blank page (headline, text, the booking link)', f.chars > (pg === 'index' ? baseline.chars * 0.6 : 1500) && f.h1.length > 3 && f.book > 0, `${f.chars} characters (home page, nothing missing: ${baseline.chars}), h1 "${f.h1}", book links ${f.book}`]);
     // season.js: main.js stops on its first use of the season data: a reported error for each part that needs it, and nothing from the other files
-    const unexpected = raised.filter((e) => !(file === 'js/season.js' && /Cannot read properties of undefined \(reading '(live|farmDay|current|list|inWindow|daysUntilStart)'\)/.test(e)));
+    const unexpected = raised.filter((e) => !(file === 'js/season.js' && /Cannot read properties of undefined \(reading '(live|farmDay|current|list|inWindow|daysUntilStart)'\)|mulberry32 is not a function/.test(e)));   // (mulberry32 is W.rand, also made by js/season.js: the crop rows in js/main.js need it)
     checks.push([label + ': the missing file does not make other files fail', unexpected.length === 0, unexpected.slice(0, 3).join(' | ')]);
     if (file === 'js/main.js') {
       checks.push([label + ': the page is shown as without scripts: seasons and groups stacked, no dead tabs, no dead toys', f.panels === f.panelsInPage && f.tabs === 0 && /\bjs-failed\b/.test(f.cls), `${f.cls}; panels ${f.panels}/${f.panelsInPage}, tab bars ${f.tabs}`]);
