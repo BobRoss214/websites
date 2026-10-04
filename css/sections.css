@@ -250,7 +250,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .pass-art{height:64px;width:auto;margin-bottom:6px}
 @media (max-width:17em){   /* 500% zoom (a screen 256 px wide): a card may be narrower than its longest word, which then wraps, and its button stays inside it */
   .passes>*,.packages>*{min-width:0}
-  .pass,.package{overflow-wrap:anywhere}
+  .pass,.package{overflow-wrap:break-word;overflow-wrap:anywhere}
   .pass .btn,.package .btn{max-width:100%}
 }
 .pass h4{font:700 1.4rem/1.15 var(--display)}

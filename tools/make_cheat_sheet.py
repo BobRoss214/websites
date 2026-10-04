@@ -83,7 +83,7 @@ h2{margin:0 0 .2em;padding:.1em .5em;font:700 1.02em/1.25 "Fredoka",system-ui,sa
 ol,ul{margin:0;padding-left:1.4em}
 li{margin:0 0 .12em}
 p{margin:0 0 .3em}
-code{font:600 .86em ui-monospace,Menlo,Consolas,monospace;background:#f4efe3;border-radius:3px;padding:0 .15em;overflow-wrap:anywhere}
+code{font:600 .86em ui-monospace,Menlo,Consolas,monospace;background:#f4efe3;border-radius:3px;padding:0 .15em;overflow-wrap:break-word;overflow-wrap:anywhere}
 .foot{column-span:all;margin:.1in 0 0;text-align:center;color:#6a5140;font-size:.8em}
 @media (max-width:560px){.side{columns:1;padding:.2in .15in}}
 @media print{body{background:#fff;font-size:7.7pt;line-height:1.2}.bar{display:none}.side{width:auto;max-width:none;margin:0;padding:0;border:0;border-radius:0;break-after:page;page-break-after:always}.side:last-of-type{break-after:auto;page-break-after:auto}h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}code{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'''
