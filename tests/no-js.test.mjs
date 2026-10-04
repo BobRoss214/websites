@@ -166,7 +166,7 @@ await run('no-js', async ({ browser, base, errs }) => {
   const homeHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const SCRIPTS = [...homeHtml.matchAll(/<script[^>]*\ssrc="(js\/[^"]+)"/g)].map((m) => m[1]);
   const STYLES = [...homeHtml.matchAll(/<link[^>]*rel="stylesheet"[^>]*href="(css\/[^"]+)"/g)].map((m) => m[1]);
-  const NOT_ON_HOME = ['js/footer-art.js'];   // loaded by the five extra pages only
+  const NOT_ON_HOME = ['js/footer-art.js', 'js/moved.js'];   // loaded by the five extra pages only / by the old-address pages that the optional redirects-B patch adds
   const unlisted = [...fs.readdirSync(path.join(ROOT, 'js')).map((f) => 'js/' + f), ...fs.readdirSync(path.join(ROOT, 'css')).map((f) => 'css/' + f)].filter((f) => !NOT_ON_HOME.includes(f) && !SCRIPTS.includes(f) && !STYLES.includes(f));   // js/footer-art.js is the footer drawing the five extra pages load instead of js/hero.js (tools/pages.py makes it; tests/sprite.test.mjs checks it)
   ok(`every file in js/ and css/ is loaded by the home page, so all ${SCRIPTS.length} scripts and ${STYLES.length} style sheets are tried below`, SCRIPTS.length >= 10 && STYLES.length >= 5 && unlisted.length === 0, unlisted.join(', '));
   // Opens a page as a phone with one file refused (the connection drops). Returns the page and the errors it raised.
