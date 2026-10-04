@@ -43,7 +43,7 @@ tools/                  pages.py (builds the extra pages), i18n.py (tags text, b
                         check_facts.py (lists every place a price, hour, phone, email, address, age or year is written and which disagree) + test_check_facts.py,
                         launch_check.py (checks the live site after the upload: python3 tools/launch_check.py https://...),
                         option_matrix.py (tries the optional patches together on throw-away copies; see "Optional patches"),
-                        review_sheet.py + review_notes.json + review_instructions.json (a spreadsheet of one language for a native speaker to correct, and reads it back: "Have a native speaker check a language"),
+                        review_sheet.py + review_notes.json + review_instructions.json (a spreadsheet of one language for a native speaker to correct, and reads it back; also the short "changes since" sheet for a reader who did an earlier one: "Have a native speaker check a language"),
                         review_option_texts.py (a sheet for each optional patch that adds words: what a native reader should check before the option is chosen),
                         upcoming_dates.py (what changes or runs out on the site in the next 14 days, in plain words: python3 tools/upcoming_dates.py),
                         serve.py (shows the site on your own computer at http://localhost:PORT/ for editing; close its window to stop it),
@@ -457,7 +457,7 @@ writes goes through `WISE_ACRES.t("English text")`.
 
 ## Have a native speaker check a language
 
-A friend who speaks Spanish, Hindi, Chinese or Vietnamese can check the site's words in a spreadsheet: no JSON and no commands on their side. The four steps for the farm owner (make the sheets, send the file, get it back and check it, publish) are on one page: `docs/CHECK_A_LANGUAGE.md`. Python 3.8 or newer is needed (nothing to install).
+A friend who speaks Spanish, Hindi, Chinese or Vietnamese can check the site's words in a spreadsheet: no JSON and no commands on their side. The four steps for the farm owner (make the sheets, send the file, get it back and check it, publish) are on one page: `docs/CHECK_A_LANGUAGE.md`. Who reads which sheet, in which order (the main sheet, then the short "changes since" sheet, then an option sheet only if the farm picks that option) and how the corrections get into the site: `docs/READER_HANDOUT.md`. Python 3.8 or newer is needed (nothing to install).
 
 For whoever edits the site:
 
@@ -467,6 +467,7 @@ For whoever edits the site:
 - What the sheet is made from besides the site: `tools/review_instructions.json` (the one page for the friend, in English and in each language; not site text, not checked by the language tests), `tools/review_notes.json` (the lines for priority 1, our questions, the lines changed after a check; a question disappears when the line no longer says what it doubted) and, when it is there, the allow list of the facts check. A missing file is not an error: the sheet is made without it.
 - The reply can be an `.xlsx` or a CSV (commas, semicolons, tabs, UTF-8 with or without a byte order mark, UTF-16, the older Windows letters for Spanish). A LibreOffice `.ods` file is refused with the way to save it as `.xlsx`. The "correction" and "note" columns of the `.xlsx` are formatted as text, so Excel does not turn `9/29` into a date; if it still does, the line is refused with "looks like Excel changed this".
 - Run `export` again only after the corrections are imported: it will not overwrite a sheet that already has corrections in it (`--force` does).
+- `python3 tools/review_sheet.py changes es FILE` compares a sheet that was given out (its `.csv` or `.xlsx`; keep a copy of what you hand out) with the texts of the site now, and writes the short sheet `review/es-changes.xlsx` (with `review/es-changes.csv`, `review/es-changes.html` and the e-mail text `review/es-changes-message.txt`) for a reader who already did the first one: the texts that are NEW, CHANGED (with what they said before), REPLACE an older id (the same words under a new id, printed so that the pair can go under `renamed` in `tools/review_notes.json`; `import` then says which new id an old id is) or are REMOVED. A text that already has the reader's correction is left out. The columns are those of the full sheet, so `import` reads it. A sheet of another language is refused. `docs/READER_HANDOUT.md` says when to use it.
 
 ## Content status: please read
 

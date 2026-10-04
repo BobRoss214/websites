@@ -6,6 +6,8 @@
     "intro": "Wise Acres is a small family farm in North Carolina. Its website is written in English, and we have put it into @LANG@ too, so that more families can visit. We would be so grateful if you, as a native speaker, would read it and tell us where the @LANG@ sounds wrong, odd or stiff, or means something different from the English. You do not need to know anything about websites.",
     "time_title": "How long does it take?",
     "time": "As long as you like. Rows with 1 in the priority column are the most important: what visitors see first, plus the rules about money, rain and safety (@N1@ lines, about 20 minutes). Rows with 2 come next (@N2@ lines, about an hour). Rows with 3 are the rest (@N3@ lines). If you only have 20 minutes, do the rows marked 1 and stop. Every correction helps.",
+    "changes_title": "What is in this sheet",
+    "changes": "This sheet is short. It lists only the texts that are new, or that changed, since the first sheet you received. If you already checked the first sheet, this is the only one you need. Every other line is as you saw it. The column question for you says what happened to each row: NEW, CHANGED, or REPLACES another id. A row marked REMOVED is not on the website any more, so there is nothing to do for it. The work is the same as before: type the better @LANG@ in the correction column and send the file back.",
     "do_title": "What to do",
     "do": [
       "Open the file. The sheet called Texts has one piece of text on each row. Read the English and, next to it, the current @LANG@.",
@@ -52,6 +54,8 @@
     "intro": "Wise Acres es una pequeña granja familiar en Carolina del Norte. Su sitio web está escrito en inglés y también lo hemos puesto en español, para que más familias puedan visitarnos. Te agradeceríamos muchísimo que, como hablante nativo, lo leyeras y nos dijeras dónde el español suena mal, raro o rígido, o dice algo distinto del inglés. No necesitas saber nada de páginas web.",
     "time_title": "¿Cuánto tiempo lleva?",
     "time": "El que tú quieras. Las filas con un 1 en la columna priority son las más importantes: lo primero que ven los visitantes, más las reglas sobre dinero, lluvia y seguridad (@N1@ líneas, unos 20 minutos). Las filas con un 2 siguen (@N2@ líneas, más o menos una hora). Las filas con un 3 son el resto (@N3@ líneas). Si solo tienes 20 minutos, haz las filas con 1 y listo. Cada corrección ayuda.",
+    "changes_title": "Qué hay en esta hoja",
+    "changes": "Esta hoja es corta. Solo trae los textos que son nuevos o que cambiaron desde la primera hoja que recibiste. Si ya revisaste la primera hoja, esta es la única que necesitas. Todas las demás líneas siguen como las viste. La columna question for you dice qué pasó con cada fila: NEW (nueva), CHANGED (cambiada) o REPLACES (reemplaza otra id). Una fila marcada REMOVED ya no está en el sitio, así que no hay nada que hacer con ella. El trabajo es el mismo de antes: escribe el español mejor en la columna correction y devuelve el archivo.",
     "do_title": "Qué hacer",
     "do": [
       "Abre el archivo. La hoja llamada Texts tiene un texto en cada fila. Lee el inglés y, al lado, el español actual.",
@@ -98,6 +102,8 @@
     "intro": "Wise Acres नॉर्थ कैरोलिना का एक छोटा पारिवारिक फ़ार्म है। इसकी वेबसाइट अंग्रेज़ी में लिखी है, और हमने इसे हिन्दी में भी रखा है ताकि ज़्यादा परिवार यहाँ आ सकें। हमें बहुत खुशी होगी अगर आप, हिन्दी जानने वाले के रूप में, इसे पढ़कर बताएँ कि कहाँ हिन्दी ग़लत, अटपटी या रूखी लगती है, या अंग्रेज़ी से अलग मतलब देती है। आपको वेबसाइट के बारे में कुछ भी जानने की ज़रूरत नहीं है।",
     "time_title": "कितना समय लगेगा?",
     "time": "जितना आप चाहें। priority कॉलम में 1 वाली पंक्तियाँ सबसे ज़रूरी हैं: वेबसाइट पर आने वाले लोग जो सबसे पहले देखते हैं, और पैसे, बारिश और सुरक्षा के नियम (@N1@ पंक्तियाँ, लगभग 20 मिनट)। फिर 2 वाली पंक्तियाँ (@N2@ पंक्तियाँ, लगभग एक घंटा)। 3 वाली बाक़ी सब हैं (@N3@ पंक्तियाँ)। अगर आपके पास सिर्फ़ 20 मिनट हैं, तो 1 वाली पंक्तियाँ कर लें और रुक जाएँ। हर सुधार काम आता है।",
+    "changes_title": "इस शीट में क्या है",
+    "changes": "यह शीट छोटी है। इसमें सिर्फ़ वे पाठ हैं जो आपको मिली पहली शीट के बाद नए जुड़े हैं या बदले हैं। अगर आप पहली शीट पहले ही जाँच चुके हैं, तो आपको सिर्फ़ यही शीट चाहिए। बाकी सभी पंक्तियाँ वैसी ही हैं जैसी आपने देखी थीं। question for you कॉलम बताता है कि हर पंक्ति के साथ क्या हुआ: NEW (नई), CHANGED (बदली) या REPLACES (किसी दूसरी id की जगह लेती है)। REMOVED वाली पंक्ति अब वेबसाइट पर नहीं है, इसलिए उसके लिए कुछ नहीं करना है। काम पहले जैसा ही है: correction कॉलम में बेहतर हिन्दी लिखें और फ़ाइल वापस भेज दें।",
     "do_title": "क्या करना है",
     "do": [
       "फ़ाइल खोलें। Texts नाम की शीट की हर पंक्ति में लिखा हुआ एक हिस्सा है। अंग्रेज़ी पढ़ें और उसके बग़ल में मौजूदा हिन्दी पढ़ें।",
@@ -144,6 +150,8 @@
     "intro": "Wise Acres 是北卡罗来纳州的一家小型家庭农场。网站原文是英文，我们也做了中文版，让更多家庭能来农场玩。如果你是中文母语者，能读一读，告诉我们哪里的中文读起来不对、别扭、生硬，或者和英文的意思不一样，我们会非常感激。你不需要懂任何网站方面的知识。",
     "time_title": "要花多长时间？",
     "time": "时间随你定。priority 列里标 1 的行最重要：是访客最先看到的内容，加上关于费用、下雨和安全的规定（@N1@ 行，大约 20 分钟）。标 2 的行其次（@N2@ 行，大约一小时）。标 3 的是其余部分（@N3@ 行）。如果你只有 20 分钟，做完标 1 的行就可以停了。每一处修改都有帮助。",
+    "changes_title": "这张表里有什么",
+    "changes": "这张表很短。它只列出自你收到第一张表以来新增或有改动的文字。如果你已经检查过第一张表，只需要这一张。其余各行和你看到的一样。question for you 一栏会说明每一行的情况：NEW（新增）、CHANGED（有改动）或 REPLACES（取代另一个 id）。标有 REMOVED 的行已不在网站上，不需要处理。做法和之前一样：在 correction 一栏写下更好的中文，然后把文件寄回。",
     "do_title": "怎么做",
     "do": [
       "打开文件。名为 Texts 的工作表里，每一行是一段文字。请看英文，以及它旁边现在的中文。",
@@ -190,6 +198,8 @@
     "intro": "Wise Acres là một nông trại gia đình nhỏ ở Bắc Carolina. Trang web được viết bằng tiếng Anh, và chúng tôi cũng đã làm bản tiếng Việt để nhiều gia đình hơn có thể đến thăm. Chúng tôi sẽ rất biết ơn nếu bạn, là người bản ngữ, đọc và cho biết chỗ nào tiếng Việt nghe sai, lạ, cứng, hoặc có nghĩa khác với tiếng Anh. Bạn không cần biết gì về trang web.",
     "time_title": "Mất bao lâu?",
     "time": "Tùy bạn. Các dòng có số 1 trong cột priority là quan trọng nhất: những gì khách thấy đầu tiên, cùng các quy định về tiền, mưa và an toàn (@N1@ dòng, khoảng 20 phút). Các dòng số 2 đến sau (@N2@ dòng, khoảng một giờ). Các dòng số 3 là phần còn lại (@N3@ dòng). Nếu bạn chỉ có 20 phút, hãy làm các dòng số 1 rồi dừng lại. Mỗi chỗ sửa đều có ích.",
+    "changes_title": "Bảng này có gì",
+    "changes": "Bảng này ngắn. Nó chỉ liệt kê những đoạn văn mới hoặc đã thay đổi kể từ bảng đầu tiên bạn nhận được. Nếu bạn đã kiểm tra bảng đầu tiên, bạn chỉ cần bảng này. Mọi dòng khác vẫn như bạn đã thấy. Cột question for you cho biết điều gì đã xảy ra với từng dòng: NEW (mới), CHANGED (đã đổi) hoặc REPLACES (thay cho một id khác). Dòng ghi REMOVED không còn trên trang web nên không cần làm gì với nó. Việc làm vẫn như trước: gõ bản tiếng Việt tốt hơn vào cột correction rồi gửi lại tệp.",
     "do_title": "Việc cần làm",
     "do": [
       "Mở tệp. Trang tính tên Texts có một đoạn chữ trên mỗi dòng. Hãy đọc tiếng Anh và bản tiếng Việt hiện tại ở bên cạnh.",

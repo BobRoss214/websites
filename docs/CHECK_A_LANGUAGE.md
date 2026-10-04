@@ -4,6 +4,8 @@ One page for the farm owner. A friend who reads Spanish, Hindi, Chinese or Vietn
 
 Why: the four translations were written with AI help, and no native speaker has read them. This is the dashboard question d37. The lines that matter most are the ones about money, rain, pets, allergies and safety, so the sheet puts those first.
 
+Who reads which sheet, in which order, and what happens to the corrections: `docs/READER_HANDOUT.md`.
+
 If somebody already made the sheets for you (four `.xlsx` files, one for each language, with a small text file for each e-mail), start at step 2.
 
 ## Step 1. Make the sheets
@@ -44,7 +46,7 @@ If your friend typed the better text over the old text, or in the wrong column, 
 
 If you are happy with the list, run the same command without `--dry-run`. Only the lines that were corrected change in `lang/src/es.json`. English never changes. A refused row is never written. Add `--strict` to write nothing at all when any row is refused.
 
-A correction to a line you changed by hand after making the sheet replaces your newer words. The report warns you about each such line, so read it first.
+A correction to a line you changed by hand after making the sheet replaces your newer words. Did the site change after you gave out a sheet? A friend who already did the first one does not need a new full sheet. Run `python3 tools/review_sheet.py changes es FILE` with the file you gave out. It makes a short sheet of only what changed. See `docs/READER_HANDOUT.md`. The report warns you about each such line, so read it first.
 
 ## Step 4. Publish
 

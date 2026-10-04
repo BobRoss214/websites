@@ -6,6 +6,7 @@ The owner's page, with the four steps: docs/CHECK_A_LANGUAGE.md.
   python3 tools/review_sheet.py import es FILE     read the corrections your friend wrote and put the good ones into lang/src/es.json
   python3 tools/review_sheet.py import es FILE --dry-run   say what would change, write nothing
   python3 tools/review_sheet.py import es FILE --strict    write nothing at all if any row has to be rejected
+  python3 tools/review_sheet.py changes es OLDSHEET        make the short sheet "changes since the sheet you gave out": review/es-changes.xlsx, .csv, .html and -message.txt
   (export does not overwrite a sheet that already has corrections in it, unless you add --force)
 
 Needs Python 3.8 or newer. Nothing to install (it does not use beautifulsoup4, unlike pages.py and i18n.py).
@@ -34,6 +35,14 @@ How it works
            (over the English, over the current translation, in "question for you") on a row with no correction are listed by row, never lost silently.
            QR sign wording goes into tools/qr_links.json. Exit code: 0 all fine, 1 some row was rejected or had words in a column that is not read, 2 the file could not be used.
   Neither command runs the rebuild. At the end import prints the commands to run next.
+
+  changes  Compares a sheet that was given out earlier (its .csv or .xlsx; corrections in it do no harm) with the texts of the site now, and writes a short sheet of only
+           what a reader who already did the first sheet has to look at: a text that is NEW, one that CHANGED (what it said before is in "question for you"), one that
+           REPLACES an older id (the same words with a new id: the old id and the new one are printed, to add to "renamed" in tools/review_notes.json), and one that is no
+           longer on the site (REMOVED). A text whose current words are the correction the reader wrote is not listed (it is already in). Same columns as the full sheet, so
+           `import` reads it like any sheet. Nothing is written when nothing changed.
+  renamed  "renamed" in tools/review_notes.json ({"old id": "new id"}): a corrected sheet that still has the old id of a text whose id changed, with the same words, is
+           read as the new id (the report says so). Without this entry an old id is refused as "not a text of this site".
 
 Drift: the facts check below is a port of differences() in tests/consistency.test.mjs. tests/review-sheet.test.mjs runs both on the
 same pairs and fails when they disagree, so the two cannot drift apart unnoticed. NAMES (the names that stay in English) is compared too.
@@ -110,6 +119,8 @@ PRIORITY_1, PRIORITY_2 = 150, 450   # the number of texts with priority 1 (about
 NOTES_FILE = os.path.join(ROOT, 'tools', 'review_notes.json')
 TEXTS_FILE = os.path.join(ROOT, 'tools', 'review_instructions.json')
 ALLOW_FILE = os.path.join(ROOT, 'tools', 'i18n_facts_allow.json')
+CHANGES_ASK = re.compile(r'^(NEW since the first sheet\.|CHANGED since the first sheet\.|REPLACES the line with id \S+ of the first sheet\.|REMOVED: )')   # what the "changes" sheet writes in "question for you"
+CHANGES_TIERS = ('Please check', 'Please check', 'Nothing to do')   # the three headings of the "changes" sheet (the full sheet's priorities 1, 2, 3 are not used there)
 ATTR_WORDS = {'alt': 'photo description', 'aria-label': 'screen-reader label', 'title': 'tooltip', 'placeholder': 'form hint'}
 JS_WHERE = {
     'features.js': 'boxes, buttons and messages (this-week box, drive time, signup, farm map, photo viewer, e-mail drafts)',
@@ -176,6 +187,11 @@ def squash(s):
     s = words_only(s).replace('\u00a0', ' ').replace('\u202f', ' ')
     s = s.replace('\u2019', "'").replace('\u2018', "'").replace('\u201c', '"').replace('\u201d', '"').replace('\u2013', '-').replace('\u2014', '-')
     return s.casefold()
+
+
+def loose(s):
+    """Like squash, and with every space taken out too: a mark (<span>) next to Chinese or Hindi words leaves a space in the text without it, and that is not a change of words."""
+    return re.sub(r'\s+', '', squash(s))
 
 
 def short(s, n=90):
@@ -941,6 +957,128 @@ def cmd_export(site, which, out_dir, force=False):
     return result
 
 
+# ---------------------------------------------------------------------------------------------- the short sheet: what changed since the sheet that was given out
+def compare_with_sheet(code, items, old_rows):
+    """(rows, same, applied): rows is [(status, item, note, old id)] in sheet order (old id only for REPLACES). status is NEW, CHANGED, REPLACES or REMOVED.
+    `same` counts the texts that are as the old sheet showed them, `applied` the texts whose words are now the correction the reader wrote in the old sheet."""
+    old = collections.OrderedDict()
+    for _, cells, _ in old_rows:
+        rid = cells['id'].strip().lstrip('\ufeff')
+        if rid:
+            old[rid] = cells
+    now = {it.id: it for it in items}
+    if old and not (set(old) & set(now)):
+        raise Problem('None of the ids in this sheet is a text of this site, so it is not a sheet made by `export` for this language (or the language is not the same). Nothing was written.')
+    seen = [(o, now[rid]) for rid, o in old.items() if rid in now and o['current'].strip() and now[rid].current.strip()]
+    odd = sum(1 for o, it in seen if loose(o['current']) != loose(show(it.kind, it.current)) and not (o['correction'].strip() and loose(o['correction']) == loose(show(it.kind, it.current))))
+    if len(seen) >= 5 and odd * 2 >= len(seen):
+        raise Problem('This sheet does not belong to the %s file as it is now: in %d of %d rows the "current translation" is not what lang/src/%s.json says. Either it is the sheet of another language, '
+                      'or most of the translations changed after it was made, and then a short sheet is not enough: make a full sheet with `export %s`. Nothing was written.'
+                      % (LANG_NAMES[code][0], odd, len(seen), code, code))
+    retired = [rid for rid in old if rid not in now]
+    taken, rows, same, applied = set(), [], 0, 0
+    for it in items:
+        o = old.get(it.id)
+        if o is not None:
+            eng, cur = show(it.kind, it.english), show(it.kind, it.current)
+            same_eng, same_cur = loose(o['english']) == loose(eng), loose(o['current']) == loose(cur)
+            if same_eng and same_cur:
+                same += 1
+            elif o['correction'].strip() and loose(o['correction']) == loose(cur):
+                applied += 1
+            else:
+                bits = []
+                if not same_eng:
+                    bits.append('The English said before: %s' % short(words_only(o['english']), 300))
+                if not same_cur:
+                    bits.append('The translation said before: %s' % short(words_only(o['current']), 300))
+                rows.append(('CHANGED', it, 'CHANGED since the first sheet. ' + ' '.join(bits), None))
+            continue
+        twin = next((r for r in retired if r not in taken and loose(old[r]['english']) == loose(show(it.kind, it.english))), None)
+        if twin is not None:
+            taken.add(twin)
+            same_words = loose(old[twin]['current']) == loose(show(it.kind, it.current))
+            rows.append(('REPLACES', it, 'REPLACES the line with id %s of the first sheet. %s If you corrected that line, please write the same correction here.' % (
+                twin, 'The words are the same; only a mark in the text is new, so check this line only if you have not checked the old one.' if same_words
+                else 'The translation said before: %s' % short(words_only(old[twin]['current']), 300)), twin))
+        else:
+            rows.append(('NEW', it, 'NEW since the first sheet.', None))
+    removed = []
+    for rid in retired:
+        if rid in taken:
+            continue
+        o = old[rid]
+        gone = Item(rid, 'js', rid, o['english'], o['current'], o['where'] or '', 'No longer on the website')
+        removed.append(('REMOVED', gone, 'REMOVED: this text is not on the website any more (it was changed or deleted). Nothing to do for this row.', None))
+    return rows + removed, same, applied
+
+
+def changes_blocks(code, counts):
+    """The instructions of the full sheet, with "How long does it take?" replaced by "What is in this sheet" (the text of `changes` in tools/review_instructions.json)."""
+    out = []
+    for k, (html_lang, b) in enumerate(blocks_for(code, counts)):
+        b = dict(b)
+        if b.get('changes'):
+            b['time_title'], b['time'] = b.get('changes_title', ''), b['changes']
+        b['tiers'] = [] if k == 0 else list(CHANGES_TIERS)
+        out.append((html_lang, b))
+    return out
+
+
+def changes_message_text(blocks):
+    """The short e-mail for a reader who already did the first sheet: subject, what is in this sheet, how to send it back, thanks; in their language and in English."""
+    (_, own), (_, en) = blocks
+    subject = own.get('subject', en.get('subject', ''))
+    if en.get('subject') and subject != en['subject']:
+        subject += '  /  ' + en['subject']
+    bodies = []
+    for b in (own, en):
+        send = (b.get('send') or []) + ['', '']
+        bodies.append('\n\n'.join(p for p in (b.get('time', ''), send[0], send[1], b.get('thanks', '')) if p))
+    return 'Subject: %s\n\n%s\n\n%s\n\n%s\n' % (subject, bodies[0], '-' * 40, bodies[1])
+
+
+def cmd_changes(site, code, old_path, out_dir, force=False):
+    need_language(code)
+    old_rows, warn = read_sheet(old_path, code)
+    items = rank_items(site, code)
+    rows, same, applied = compare_with_sheet(code, items, old_rows)
+    for w in warn:
+        print('Note: ' + w)
+    rel = lambda p: os.path.relpath(p, ROOT)
+    kinds = collections.Counter(r[0] for r in rows)
+    summary = '%d new, %d changed, %d replace an older id, %d no longer on the website; %d texts are as the old sheet showed them, %d already have the reader\'s correction' % (
+        kinds['NEW'], kinds['CHANGED'], kinds['REPLACES'], kinds['REMOVED'], same, applied)
+    if not rows:
+        print(on_screen('%s: nothing to send. Since %s: %s.' % (code, rel(old_path), summary)))
+        return 0
+    os.makedirs(out_dir, exist_ok=True)
+    target = os.path.join(out_dir, code + '-changes.csv')
+    busy = [t for t in (os.path.join(out_dir, code + '-changes.xlsx'), target) if not force and has_work(t, code)]
+    if busy:
+        print('%s: NOT made. %s already has corrections or notes in it, and a new sheet would wipe them out. Import it first (python3 tools/review_sheet.py import %s %s --dry-run),'
+              ' or move it somewhere else, or add --force.' % (code, rel(busy[0]), code, rel(busy[0])))
+        return 1
+    shown = []
+    for st, it, note, _ in rows:
+        it.priority = 3 if st == 'REMOVED' else 1
+        it.group = it.group if st == 'REMOVED' else {'NEW': 'New since the first sheet', 'CHANGED': 'Changed since the first sheet', 'REPLACES': 'Replaces a line of the first sheet'}[st]
+        it.ask = note + ('\n' + it.ask if it.ask and st != 'REMOVED' else '')
+        shown.append(it)
+    blocks = changes_blocks(code, counts_of(shown))
+    write_file(os.path.join(out_dir, code + '-changes.xlsx'), xlsx_bytes(code, shown, blocks))
+    write_file(target, b'\xef\xbb\xbf' + csv_text(shown).encode('utf-8'))
+    write_file(os.path.join(out_dir, code + '-changes.html'), html_text(code, shown, blocks, counts_of(shown)).encode('utf-8'))
+    write_file(os.path.join(out_dir, code + '-changes-message.txt'), changes_message_text(blocks).encode('utf-8'))
+    print('%s: %d rows (%s) -> %s, %s, %s, %s' % (code, len(shown), summary, rel(os.path.join(out_dir, code + '-changes.xlsx')), rel(target),
+                                                  rel(os.path.join(out_dir, code + '-changes.html')), rel(os.path.join(out_dir, code + '-changes-message.txt'))))
+    for st, it, _, twin in rows:
+        if st == 'REPLACES':
+            print(on_screen('    %s is the new id of %s: add "%s": "%s" under "renamed" in tools/review_notes.json, so a corrected first sheet is still read (import follows it).' % (it.id, twin, twin, it.id)))
+    print('Send the -changes.xlsx file with the text of the -changes-message.txt file. A reader who did the first sheet needs only this one. Corrections come back the same way: python3 tools/review_sheet.py import %s review/FILE --dry-run' % code)
+    return 0
+
+
 # ---------------------------------------------------------------------------------------------- reading the sheet
 def decode_file(raw, code):
     """The text of a file saved by Excel, Google Sheets, Numbers or LibreOffice, and a warning when it had to be guessed."""
@@ -1555,6 +1693,9 @@ def cmd_import(site, code, path, dry_run=False, strict=False, out=None):
     items = build_items(site, code)
     rank_items(site, code, items)   # fills in the question of each row, to know what the sheet showed in that column
     by_id = {it.id: it for it in items}
+    renamed = load_json(NOTES_FILE, {}).get('renamed', {})   # {"old id": "new id"}: a text that got a new id with the same words (see `changes`)
+    if not isinstance(renamed, dict):
+        renamed = {}
     for w in file_warn:
         say('Note: ' + w)
     # is this the sheet of this language and of this version of the site?
@@ -1581,6 +1722,10 @@ def cmd_import(site, code, path, dry_run=False, strict=False, out=None):
             continue   # nothing written: the line is fine as it is
         n_with += 1
         it = by_id.get(rid)
+        was = None
+        if it is None and isinstance(renamed.get(rid), str) and renamed[rid] in by_id:
+            was, rid = rid, renamed[rid]   # the sheet still has the old id of this text
+            it = by_id[rid]
         if it is None:
             rejected.append((n, rid, ['The id "%s" is not a text of this site (or of this language). The id column must stay exactly as it was exported: a cell may have been changed, or the rows mixed up. Nothing was changed for this row.' % short(rid, 30)], rec))
             continue
@@ -1596,6 +1741,12 @@ def cmd_import(site, code, path, dry_run=False, strict=False, out=None):
             rejected.append((n, rid, ['This id is already corrected on row %d with different words. The first one was used.' % ids_used[rid][0]], rec))
             continue
         text, why, warn = check_row(it, corr, code, flags)
+        if was:
+            note = 'this text has a new id: %s on the sheet is %s now (the same words, only a mark in the text is new)' % (short(was, 30), rid)
+            if why:
+                why = ['The sheet has the old id of this text (%s is %s now).' % (short(was, 30), rid)] + why
+            else:
+                warn.append(note + '. The correction was read as %s.' % rid)
         ids_used[rid] = (n, corr)
         if why:
             rejected.append((n, rid, why, rec))
@@ -1622,6 +1773,8 @@ def cmd_import(site, code, path, dry_run=False, strict=False, out=None):
                 continue
             if any(rx.match(cell.strip()) for rx in EXCEL_DATE) or re.match(r'^[\d.,]+$', cell.strip()):
                 continue   # Excel turns such a cell into a date or a number by itself
+            if key == 'ask' and CHANGES_ASK.match(cell.strip()):
+                continue   # the short sheet made by `changes` says in this column what happened to the row
             if squash(cell) != squash(shown):
                 edited.append((n, it.id, label, cell))
                 break
@@ -1756,11 +1909,15 @@ def main(argv):
             if len(pos) != 1:
                 raise Problem('Say which language: python3 tools/review_sheet.py export es   (languages: %s, or all)' % ', '.join(languages()))
             return cmd_export(site, pos[0], out_dir, force='--force' in flags)
+        if cmd == 'changes':
+            if len(pos) != 2:
+                raise Problem('Say the language and the sheet that was given out: python3 tools/review_sheet.py changes es review/es.csv   (the short sheet is written to review/es-changes.xlsx)')
+            return cmd_changes(site, pos[0], pos[1], out_dir, force='--force' in flags)
         if cmd == 'import':
             if len(pos) != 2:
                 raise Problem('Say the language and the file: python3 tools/review_sheet.py import es review/es.corrected.csv   (add --dry-run to only look)')
             return cmd_import(site, pos[0], pos[1], dry_run='--dry-run' in flags, strict='--strict' in flags)
-        raise Problem('Unknown command "%s". Use export or import. See: python3 tools/review_sheet.py --help' % cmd)
+        raise Problem('Unknown command "%s". Use export, import or changes. See: python3 tools/review_sheet.py --help' % cmd)
     except Problem as e:
         print(on_screen(e), file=sys.stderr)
         return 2

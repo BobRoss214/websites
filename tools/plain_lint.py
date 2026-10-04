@@ -92,6 +92,7 @@ FILES = {
     'docs/OWNER_YEAR_CALENDAR.md': {'skip': []},
     'docs/OWNER_CHEAT_SHEET.md': {'skip': ['Notes for the team']},
     'docs/WHAT_THE_SITE_STORES.md': {'skip': []},
+    'docs/READER_HANDOUT.md': {'skip': []},
     'docs/BROWSER_INTERFERENCE.md': {'skip': []},
     'docs/CREDITS_AND_LICENCES.md': {'skip': ['How the fonts were matched', 'How the icons were matched']},
     'docs/OPTION_PATCHES.md': {'skip': []},
