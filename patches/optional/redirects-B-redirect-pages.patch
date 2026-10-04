@@ -1,21 +1,21 @@
 Option: redirects-B
-Name: Old farm addresses: 13 small "this page has moved" pages
-Does: Adds 13 folders (about/, contact/, faq/, food/ ...), each with an index.html that jumps to the matching page or section, lets tools/make_deploy_folder.py upload them, and lets tools/launch_check.py see that such a page forwards (it counts only real redirects otherwise). For hosts that ignore _redirects. Not a true 301: Google may take longer to move over.
+Name: Old farm addresses: 13 small "this page has moved" pages, in the visitor's language
+Does: Adds 13 folders (about/, contact/, faq/, food/ ...), each with an index.html that jumps to the matching page or section, lets tools/make_deploy_folder.py upload them, and lets tools/launch_check.py see that such a page forwards (it counts only real redirects otherwise). For hosts that ignore _redirects. Not a true 301: Google may take longer to move over. The two lines on each page are translated like any page text: data-t ids, the translations in lang/src, and tools/i18n.py reads these folders. js/moved.js shows them in the visitor's language before the first line is drawn (?lang=, else the language saved with the language button, else the browser's list; English stays if the words do not arrive, and without JavaScript). The jump itself is unchanged.
 Answers: d30 A (old addresses), d05 (any host; the only choice on GitHub Pages)
 Group: redirects
 Conflicts: redirects-A
-Requires: tools/launch_check.py and tools/make_deploy_folder.py in the site (it edits both)
+Requires: tools/launch_check.py, tools/make_deploy_folder.py and tools/i18n.py in the site (it edits all three)
 Host: any
 Order: 30
-After: nothing to rebuild; upload again (python3 tools/make_deploy_folder.py includes the folders)
-Strings: none (the pages are outside the translation system)
+After: python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each); upload again (python3 tools/make_deploy_folder.py includes the folders)
+Strings: 10 new texts (ids t1cfe894a ("This page has moved."), td571e817, t40ab10f5, tcf68a859, t931b0dae, tebcb6448, t3bf45e4b, t47f021a8, t5289f86c, t210e3b10), already translated into es, hi, zh, vi inside this patch (needs a native reader): the line "This page has moved." and 9 "Go to ..." link lines
 
 diff --git a/about/index.html b/about/index.html
 new file mode 100644
-index 0000000..06adb3c
+index 0000000..c53580d
 --- /dev/null
 +++ b/about/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -25,18 +25,20 @@ index 0000000..06adb3c
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#about">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#about">Go to the About section of our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="td571e817" href="/#about">Go to the About section of our home page</a></p>
 +</body>
 +</html>
 diff --git a/contact-us/index.html b/contact-us/index.html
 new file mode 100644
-index 0000000..fc5fddd
+index 0000000..7225fdc
 --- /dev/null
 +++ b/contact-us/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -46,18 +48,20 @@ index 0000000..fc5fddd
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#contact">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#contact">Go to the contact section of our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t40ab10f5" href="/#contact">Go to the contact section of our home page</a></p>
 +</body>
 +</html>
 diff --git a/contact/index.html b/contact/index.html
 new file mode 100644
-index 0000000..fc5fddd
+index 0000000..7225fdc
 --- /dev/null
 +++ b/contact/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -67,18 +71,20 @@ index 0000000..fc5fddd
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#contact">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#contact">Go to the contact section of our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t40ab10f5" href="/#contact">Go to the contact section of our home page</a></p>
 +</body>
 +</html>
 diff --git a/faq/index.html b/faq/index.html
 new file mode 100644
-index 0000000..05e5efe
+index 0000000..842d65e
 --- /dev/null
 +++ b/faq/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -88,18 +94,20 @@ index 0000000..05e5efe
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#faq">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#faq">Go to the FAQ on our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="tcf68a859" href="/#faq">Go to the FAQ on our home page</a></p>
 +</body>
 +</html>
 diff --git a/flowers-photographers/index.html b/flowers-photographers/index.html
 new file mode 100644
-index 0000000..542ac6c
+index 0000000..5a94fd6
 --- /dev/null
 +++ b/flowers-photographers/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -109,18 +117,20 @@ index 0000000..542ac6c
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#flowers">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#flowers">Go to the flowers section of our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t931b0dae" href="/#flowers">Go to the flowers section of our home page</a></p>
 +</body>
 +</html>
 diff --git a/flowers/index.html b/flowers/index.html
 new file mode 100644
-index 0000000..542ac6c
+index 0000000..5a94fd6
 --- /dev/null
 +++ b/flowers/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -130,18 +140,20 @@ index 0000000..542ac6c
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#flowers">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#flowers">Go to the flowers section of our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t931b0dae" href="/#flowers">Go to the flowers section of our home page</a></p>
 +</body>
 +</html>
 diff --git a/food/index.html b/food/index.html
 new file mode 100644
-index 0000000..5e473fc
+index 0000000..7bedcf5
 --- /dev/null
 +++ b/food/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -149,20 +161,94 @@ index 0000000..5e473fc
 +  <meta name="viewport" content="width=device-width, initial-scale=1">
 +  <title>This page has moved | Wise Acres Organic Farm</title>
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
-+  <link rel="canonical" href="https://www.wiseacresorganic.com/wise-pie.html">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/wise-pie.html">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/wise-pie.html">Go to the Wise Pie page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="tebcb6448" href="/wise-pie.html">Go to the Wise Pie page</a></p>
 +</body>
 +</html>
+diff --git a/js/moved.js b/js/moved.js
+new file mode 100644
+index 0000000..13effec
+--- /dev/null
++++ b/js/moved.js
+@@ -0,0 +1,66 @@
++/* The words of the "this page has moved" pages (the folders about/, faq/, food/ ... of patches/optional/redirects-B-redirect-pages.patch).
++ *
++ *   - Those pages are English in their HTML, and they jump to the right place at once (<meta http-equiv="refresh">, and a link for a browser that does not).
++ *     Their two lines carry data-t ids like every other page, so tools/i18n.py extracts them and the translations are in lang/src/<code>.json.
++ *   - This file puts the lines in the visitor's language, the way js/i18n.js does it: ?lang=xx in the address, else the language saved with the language button
++ *     (wa.lang; saved English stays English), else, when the visitor never chose and never said "No, thanks" to the offer (wa.offer), the first language of the
++ *     browser's list that the site has. The home page itself only OFFERS that language (it has the offer bar); this page has no room for one, so it just speaks it.
++ *   - No flash of English: while the words of another language are on their way the text is hidden (html.moved-wait, set here, and styled in the page), and shown
++ *     again the moment they are in. If the file does not arrive, or has nothing for these lines, the English is shown (and after 3 seconds at the latest).
++ *   - Without JavaScript nothing of this runs: the page is English, the meta refresh and the link work as before.
++ *   - The address the page jumps to is not touched here. */
++(() => {
++  'use strict';
++  const doc = document;
++  const W = (window.WISE_ACRES = window.WISE_ACRES || {});
++  const HTML = { es: 'es', hi: 'hi', zh: 'zh-Hans', vi: 'vi' };   // the languages of js/i18n.js, with the lang attribute each one needs
++  const known = (c) => Object.prototype.hasOwnProperty.call(HTML, c);
++  const stored = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
++
++  function pick() {
++    const q = /[?&]lang=([a-z]{2})\b/i.exec(location.search);
++    if (q) return known(q[1].toLowerCase()) ? q[1].toLowerCase() : 'en';
++    const saved = stored('wa.lang');
++    if (saved) return known(saved) ? saved : 'en';
++    if (stored('wa.offer')) return 'en';
++    const prefs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || '']).map((x) => String(x).toLowerCase().slice(0, 2));
++    return prefs.find(known) || 'en';
++  }
++
++  const code = pick();
++  if (code === 'en') return;
++  const root = doc.documentElement;
++  root.classList.add('moved-wait');
++  const show = () => root.classList.remove('moved-wait');
++  setTimeout(show, 3000);
++
++  function translate() {
++    const d = W.dict && W.dict[code] && W.dict[code].ui;
++    let n = 0;
++    if (d) {
++      doc.querySelectorAll('[data-t]').forEach((el) => {
++        const t = d[el.getAttribute('data-t')];
++        if (typeof t === 'string' && t) { el.innerHTML = t; n++; }
++      });
++    }
++    if (n) {
++      root.lang = HTML[code];
++      const first = doc.querySelector('[data-t]');
++      if (first) doc.title = first.textContent + ' | Wise Acres Organic Farm';
++    }
++    show();
++  }
++
++  W.dict = W.dict || {};
++  if (doc.readyState === 'loading') {
++    // Parser-blocking on purpose, as in js/i18n.js: the words are there before the first line is drawn.
++    doc.write('<script src="/lang/' + code + '.js"><\/script>');
++    doc.addEventListener('DOMContentLoaded', translate);
++  } else {
++    const s = doc.createElement('script');
++    s.src = '/lang/' + code + '.js';
++    s.onload = translate;
++    s.onerror = show;
++    (doc.head || root).appendChild(s);
++  }
++})();
 diff --git a/parties-school-tours/index.html b/parties-school-tours/index.html
 new file mode 100644
-index 0000000..d454bab
+index 0000000..6f913a5
 --- /dev/null
 +++ b/parties-school-tours/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -172,18 +258,20 @@ index 0000000..d454bab
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#groups">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#groups">Go to the groups and parties section of our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t3bf45e4b" href="/#groups">Go to the groups and parties section of our home page</a></p>
 +</body>
 +</html>
 diff --git a/parties/index.html b/parties/index.html
 new file mode 100644
-index 0000000..d454bab
+index 0000000..6f913a5
 --- /dev/null
 +++ b/parties/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -193,18 +281,20 @@ index 0000000..d454bab
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#groups">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#groups">Go to the groups and parties section of our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t3bf45e4b" href="/#groups">Go to the groups and parties section of our home page</a></p>
 +</body>
 +</html>
 diff --git a/school-tours/index.html b/school-tours/index.html
 new file mode 100644
-index 0000000..3c7f7e6
+index 0000000..f3d3b52
 --- /dev/null
 +++ b/school-tours/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -212,20 +302,22 @@ index 0000000..3c7f7e6
 +  <meta name="viewport" content="width=device-width, initial-scale=1">
 +  <title>This page has moved | Wise Acres Organic Farm</title>
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
-+  <link rel="canonical" href="https://www.wiseacresorganic.com/school-field-trips.html">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/school-field-trips.html">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/school-field-trips.html">Go to the school field trips page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t47f021a8" href="/school-field-trips.html">Go to the school field trips page</a></p>
 +</body>
 +</html>
 diff --git a/schooltours/index.html b/schooltours/index.html
 new file mode 100644
-index 0000000..3c7f7e6
+index 0000000..f3d3b52
 --- /dev/null
 +++ b/schooltours/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -233,20 +325,22 @@ index 0000000..3c7f7e6
 +  <meta name="viewport" content="width=device-width, initial-scale=1">
 +  <title>This page has moved | Wise Acres Organic Farm</title>
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
-+  <link rel="canonical" href="https://www.wiseacresorganic.com/school-field-trips.html">
++  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/school-field-trips.html">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/school-field-trips.html">Go to the school field trips page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t47f021a8" href="/school-field-trips.html">Go to the school field trips page</a></p>
 +</body>
 +</html>
 diff --git a/the-greenhouse/index.html b/the-greenhouse/index.html
 new file mode 100644
-index 0000000..5235221
+index 0000000..4b48e85
 --- /dev/null
 +++ b/the-greenhouse/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -256,17 +350,47 @@ index 0000000..5235221
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#greenhouse">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#greenhouse">Go to the GreenHouse section of our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t5289f86c" href="/#greenhouse">Go to the GreenHouse section of our home page</a></p>
 +</body>
 +</html>
+diff --git a/tools/i18n.py b/tools/i18n.py
+index 0481612..07ed61f 100644
+--- a/tools/i18n.py
++++ b/tools/i18n.py
+@@ -82,8 +82,22 @@ WORD = re.compile(r'[A-Za-z]')
+ STRIP = re.compile(r'\sdata-(?:t|ta-[a-z-]+)="t[0-9a-f]{8}"')
+ 
+ 
++# Top folders that are never a page of words. The only other folders with an index.html are the "this page has moved" pages of the old-address option
++# (patches/optional/redirects-B-redirect-pages.patch: about/, faq/, food/ ...); they say so with the script js/moved.js, and their words are translated like any page.
++NOT_PAGE_FOLDERS = {'assets', 'css', 'js', 'lang', 'pages', 'print', 'tests', 'tools', 'docs', 'patches', 'review', 'deploy', 'node_modules'}
++
++
+ def pages():
+-    return [p for p in sorted(os.listdir(ROOT)) if p.endswith('.html') and p != '404.html']   # 404.html is plain English, no scripts
++    top = [p for p in sorted(os.listdir(ROOT)) if p.endswith('.html') and p != '404.html']   # 404.html is plain English, no scripts
++    moved = []
++    for d in sorted(os.listdir(ROOT)):
++        f = os.path.join(ROOT, d, 'index.html')
++        if d in NOT_PAGE_FOLDERS or d.startswith('.') or not os.path.isfile(f):
++            continue
++        with open(f, encoding='utf-8') as fh:
++            if 'src="/js/moved.js"' in fh.read():
++                moved.append(d + '/index.html')
++    return top + moved
+ 
+ 
+ def canon(el, counter=None):
 diff --git a/tools/launch_check.py b/tools/launch_check.py
-index a0eebad..3b42e5c 100644
+index 2ee0904..93be450 100644
 --- a/tools/launch_check.py
 +++ b/tools/launch_check.py
-@@ -1297,13 +1297,26 @@ class Checker(object):
+@@ -1314,13 +1314,26 @@ class Checker(object):
              r.add(WARN, 'http-links', '%d link%s on the pages point to http:// addresses (for example %s).' % (len(links), '' if len(links) == 1 else 's', links[0]), 'Use the https:// version of those links if the other site has one.')
  
      # ---------------------------------------------------------------------------- 4. old addresses
@@ -294,7 +418,7 @@ index a0eebad..3b42e5c 100644
          for path in OLD_ADDRESSES:
              try:
                  first = self.get(self.u(path))
-@@ -1316,15 +1329,30 @@ class Checker(object):
+@@ -1333,15 +1346,30 @@ class Checker(object):
                  except FetchError:
                      final, chain = first, [first]
                  if final.status == 200:
@@ -329,10 +453,10 @@ index a0eebad..3b42e5c 100644
              r.add(WARN, 'old-gone', 'These old addresses show "page not found": %s. People who still have them bookmarked, and Google, land on an error.' % ', '.join(gone),
                    'It is your decision. To forward them to the new pages, use one of the redirect patches (docs/DECISION_PLAYBOOK.md, d30; checklist step 3.6). Leaving them is fine if the new site replaces nothing.')
 diff --git a/tools/make_deploy_folder.py b/tools/make_deploy_folder.py
-index 5da6a46..32f79df 100644
+index 44a4a04..066f14a 100644
 --- a/tools/make_deploy_folder.py
 +++ b/tools/make_deploy_folder.py
-@@ -36,6 +36,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+@@ -70,6 +70,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
  # What a visitor needs: every .html page in the top folder (the six pages and 404.html), these files, and these folders.
  TOP_FILES = ['robots.txt', 'sitemap.xml', 'manifest.webmanifest', '_headers', '_redirects']   # _redirects only if you made one (checklist 3.6)
  FOLDERS = ['assets', 'css', 'js', 'lang', 'print']
@@ -343,10 +467,10 @@ index 5da6a46..32f79df 100644
      ('lang/src/', 'the translations as you edit them; the pages load lang/<language>.js, which tools/i18n.py builds from them'),
 diff --git a/wiseacres/index.html b/wiseacres/index.html
 new file mode 100644
-index 0000000..07190b4
+index 0000000..6516699
 --- /dev/null
 +++ b/wiseacres/index.html
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,17 @@
 +<!doctype html>
 +<html lang="en">
 +<head>
@@ -356,35 +480,104 @@ index 0000000..07190b4
 +  <meta name="description" content="This old address now lives on the Wise Acres Organic Farm website.">
 +  <link rel="canonical" href="https://www.wiseacresorganic.com/">
 +  <meta http-equiv="refresh" content="0; url=/#visit">
-+  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}a{color:#d72a43}</style>
++  <style>body{margin:0;padding:48px 16px;background:#f4efe3;color:#3a2416;font:600 1.1rem/1.5 system-ui,sans-serif;text-align:center}p{margin:.25em 0}a{color:#d72a43}html.moved-wait body{visibility:hidden}</style>
++  <script src="/js/moved.js"></script>
 +</head>
 +<body>
-+  <p>This page has moved. <a href="/#visit">Go to the Visit section of our home page</a>.</p>
++  <p data-t="t1cfe894a">This page has moved.</p>
++  <p><a data-t="t210e3b10" href="/#visit">Go to the Visit section of our home page</a></p>
 +</body>
 +</html>
 diff --git a/README.md b/README.md
-index f11e419..fb5b311 100644
+index dc19267..2561697 100644
 --- a/README.md
 +++ b/README.md
 @@ -17,2 +17,3 @@ manifest.webmanifest    icon + colors for phones that bookmark the site
  _headers                security and cache headers for Netlify / Cloudflare Pages (copy the same into other hosts)
-+wiseacres/, faq/, food/ ...   13 tiny "this page has moved" pages, one folder per old wiseacresorganic.com address (/faq, /food, /schooltours ...). Only for hosts that ignore a `_redirects` file (GitHub Pages); do not upload them together with `_redirects`
++wiseacres/, faq/, food/ ...   13 tiny "this page has moved" pages, one folder per old wiseacresorganic.com address (/faq, /food, /schooltours ...). Only for hosts that ignore a `_redirects` file (GitHub Pages); do not upload them together with `_redirects`. Their two lines are translated like any page; `js/moved.js` shows them in the visitor's language
  pages/                  the short sources the extra pages are built from
-@@ -530,2 +531,3 @@ New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](do
+@@ -619,2 +620,3 @@ New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](do
  3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
 +   The 13 old-address folders (`faq/`, `food/`, `schooltours/` ...) stand in for a `_redirects` file on hosts that do not read one. Upload them only if this site takes over the address of the old wiseacresorganic.com, and then open `/faq`, `/food`, `/schooltours` and `/parties/` to check they land on the right place.
  4. Send people to the Google Business Profile, and add your site's address there.
 diff --git a/docs/LAUNCH_CHECKLIST.md b/docs/LAUNCH_CHECKLIST.md
-index cdaf9c6..79ab175 100644
+index 2c0e75c..f5d5123 100644
 --- a/docs/LAUNCH_CHECKLIST.md
 +++ b/docs/LAUNCH_CHECKLIST.md
-@@ -201,3 +201,3 @@ It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Bot
+@@ -216,3 +216,3 @@ The policy itself (the part after the colon) is 374 characters long (399 with th
  
 -**What exists.** An earlier research pass listed 13 old addresses (each also with a trailing slash where that form exists, which makes 22 lines) and wrote them as an optional patch, `redirects-optional.patch`. That patch is not part of the site files, so the file is printed below and you do not need the patch. It differs from that patch in two ways: the two page targets no longer end in `.html` (so Cloudflare does not redirect twice), and the comment no longer claims anything about GitHub. Only addresses that appeared in Google results are in it. That list was not rechecked on 2 October 2026 and may be incomplete.
 +**What exists.** An earlier research pass listed 13 old addresses (each also with a trailing slash where that form exists, which makes 22 lines) and wrote them as an optional patch, `redirects-optional.patch`. For hosts that do not read a `_redirects` file (GitHub Pages) the top folder holds 13 small folders instead (`faq/`, `food/`, `schooltours/` ...), one per old address; use those or the `_redirects` block below, never both. The block is printed below so you can read the mapping. It differs from that patch in two ways: the two page targets no longer end in `.html` (so Cloudflare does not redirect twice), and the comment no longer claims anything about GitHub. Only addresses that appeared in Google results are in it. That list was not rechecked on 2 October 2026 and may be incomplete.
  
-@@ -245,3 +245,3 @@ It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Bot
- 
--- [ ] To use it: save the block as a file named `_redirects` (no `.txt`) in the top folder of the site, next to `index.html` (`tools/make_deploy_folder.py` copies it into `deploy/`; if you copy by hand, it goes in the top of the copy), then make the upload folder again and upload it.
-+- [ ] To use the small folders: leave them in the top folder of the site (`tools/make_deploy_folder.py` copies them into `deploy/`; they add 13 folders and 13 files to the count in section 2), then make the upload folder again and upload it. Each folder holds one page with the line "This page has moved" and a link; the browser jumps at once. This is not a true 301, so Google may take longer to move what it knows about the old address. To use `_redirects` instead (Cloudflare Pages, Netlify): delete the 13 folders and save the block as a file named `_redirects` (no `.txt`) in the top folder.
+@@ -261,2 +261,3 @@ The policy itself (the part after the colon) is 374 characters long (399 with th
+ - [ ] To use it: save the block as a file named `_redirects` (no `.txt`) in the top folder of the site, next to `index.html` (`tools/make_deploy_folder.py` copies it into `deploy/`; if you copy by hand, it goes in the top of the copy), then make the upload folder again and upload it.
++- [ ] On a host that does not read `_redirects` (GitHub Pages), use the small folders instead: leave them in the top folder of the site, then make the upload folder again and upload it (`tools/make_deploy_folder.py` copies them into `deploy/`). They add 13 folders and 14 files to the count in section 2: the 13 pages and `js/moved.js`. Each folder holds one page with the line "This page has moved" and a link; the browser jumps at once. A visitor who chose Spanish, Hindi, Chinese or Vietnamese, or whose browser asks for it, reads those two lines in that language. This is not a true 301, so Google may take longer to move what it knows about the old address. To use `_redirects` instead (Cloudflare Pages, Netlify): delete the 13 folders and save the block above as a file named `_redirects`.
  - [ ] Test: open each old address in a browser. It should land on the right place. All 22 lines were tested in Cloudflare's own test server (each answers 301 and lands on a page that opens), and Netlify's open-source parser accepted the file. **[tested here]**
+diff --git a/lang/src/es.json b/lang/src/es.json
+index 8d9f46e..f42baa8 100644
+--- a/lang/src/es.json
++++ b/lang/src/es.json
+@@ -1011,2 +1011,12 @@
+   "tad11b443": "Hasta 50 invitados",
++  "t1cfe894a": "Esta página se movió.",
++  "td571e817": "Ir a la sección «Acerca de» de nuestra página principal",
++  "t40ab10f5": "Ir a la sección de contacto de nuestra página principal",
++  "tcf68a859": "Ir a las preguntas frecuentes de nuestra página principal",
++  "t931b0dae": "Ir a la sección de flores de nuestra página principal",
++  "tebcb6448": "Ir a la página de Wise Pie",
++  "t3bf45e4b": "Ir a la sección de grupos y fiestas de nuestra página principal",
++  "t47f021a8": "Ir a la página de excursiones escolares",
++  "t5289f86c": "Ir a la sección de GreenHouse de nuestra página principal",
++  "t210e3b10": "Ir a la sección «Visita» de nuestra página principal",
+   "tad272b52": "Trae una botana, refréscate a la sombra y descansa un rato.",
+diff --git a/lang/src/hi.json b/lang/src/hi.json
+index 4dc8dd4..8217500 100644
+--- a/lang/src/hi.json
++++ b/lang/src/hi.json
+@@ -1011,2 +1011,12 @@
+   "tad11b443": "अधिकतम 50 मेहमान",
++  "t1cfe894a": "यह पेज दूसरी जगह चला गया है।",
++  "td571e817": "हमारे मुख्य पेज के “हमारे बारे में” हिस्से पर जाएँ",
++  "t40ab10f5": "हमारे मुख्य पेज के संपर्क वाले हिस्से पर जाएँ",
++  "tcf68a859": "हमारे मुख्य पेज पर सवाल-जवाब देखें",
++  "t931b0dae": "हमारे मुख्य पेज के फूलों वाले हिस्से पर जाएँ",
++  "tebcb6448": "Wise Pie पेज पर जाएँ",
++  "t3bf45e4b": "हमारे मुख्य पेज के समूह और पार्टी वाले हिस्से पर जाएँ",
++  "t47f021a8": "स्कूल फ़ील्ड ट्रिप पेज पर जाएँ",
++  "t5289f86c": "हमारे मुख्य पेज के GreenHouse वाले हिस्से पर जाएँ",
++  "t210e3b10": "हमारे मुख्य पेज के “आइए” हिस्से पर जाएँ",
+   "tad272b52": "नाश्ता साथ लाएँ, छाँव में ठंडक लें और थोड़ा आराम करें।",
+diff --git a/lang/src/vi.json b/lang/src/vi.json
+index b4ef3ef..18ff95d 100644
+--- a/lang/src/vi.json
++++ b/lang/src/vi.json
+@@ -1011,2 +1011,12 @@
+   "tad11b443": "Tối đa 50 khách",
++  "t1cfe894a": "Trang này đã được chuyển đi nơi khác.",
++  "td571e817": "Đến phần “Giới thiệu” trên trang chính của chúng tôi",
++  "t40ab10f5": "Đến phần liên hệ trên trang chính của chúng tôi",
++  "tcf68a859": "Đến phần hỏi đáp trên trang chính của chúng tôi",
++  "t931b0dae": "Đến phần hoa trên trang chính của chúng tôi",
++  "tebcb6448": "Đến trang Wise Pie",
++  "t3bf45e4b": "Đến phần nhóm và tiệc trên trang chính của chúng tôi",
++  "t47f021a8": "Đến trang tham quan trường học",
++  "t5289f86c": "Đến phần GreenHouse trên trang chính của chúng tôi",
++  "t210e3b10": "Đến phần “Ghé thăm” trên trang chính của chúng tôi",
+   "tad272b52": "Mang theo đồ ăn vặt, hóng mát dưới bóng râm và thư giãn một chút.",
+diff --git a/lang/src/zh.json b/lang/src/zh.json
+index 6df73b8..8651dbc 100644
+--- a/lang/src/zh.json
++++ b/lang/src/zh.json
+@@ -1011,2 +1011,12 @@
+   "tad11b443": "最多 50 位客人",
++  "t1cfe894a": "此页面已移到别处。",
++  "td571e817": "前往我们主页的“关于我们”部分",
++  "t40ab10f5": "前往我们主页的联系部分",
++  "tcf68a859": "前往我们主页上的常见问题",
++  "t931b0dae": "前往我们主页的鲜花部分",
++  "tebcb6448": "前往 Wise Pie 页面",
++  "t3bf45e4b": "前往我们主页的团体和派对部分",
++  "t47f021a8": "前往学校参观页面",
++  "t5289f86c": "前往我们主页的 GreenHouse 部分",
++  "t210e3b10": "前往我们主页的“来访”部分",
+   "tad272b52": "带点零食，在树荫下乘凉，歇一歇。",

@@ -883,6 +883,51 @@ def bisect_culprit(ra, base, commits, applied, test_name, args):
     return applied[hi] if hi >= 0 else None
 
 
+HOSTS = {'A': 'cloudflare', 'B': 'netlify', 'C': 'github'}                       # the answer to d05; "another host" is tried as the host that reads neither _headers nor _redirects
+
+
+def patch_ids(work, applied):
+    """The Option: names (redirects-A, clean-addresses-C ...) in the headers of the patches that were applied."""
+    ids = []
+    for it in applied:
+        for n in (it.patches if it.kind == 'patch' else []):
+            ids.append(patch_headers(os.path.join(work, 'patches', 'optional', n + '.patch')).get('option', n))
+    return ids
+
+
+def host_for_run(items, args, ids):
+    """Which host the answers choose: d05, or --host, or Cloudflare when the patch for Cloudflare was applied. None when nobody said."""
+    if 'clean-addresses-C' in ids:
+        return 'cloudflare'
+    for it in items:
+        if it.id == 'd05' and it.ans.letter in HOSTS:
+            return HOSTS[it.ans.letter]
+    return {'cloudflare': 'cloudflare', 'netlify': 'netlify', 'other': 'github'}.get((args.host or '').lower())
+
+
+def host_launch_check(work, host, ids):
+    """The check tools/option_matrix.py makes for a host: the upload folder, a pretend copy of the host, tools/launch_check.py against it. The plain launch-check test
+    cannot do this for a site whose pages are named without .html (clean-addresses-C): its server has no Cloudflare address rules. We call the matrix's own method
+    (no second copy of its logic). -> (ok or None, words)"""
+    path = os.path.join(work, 'tools')
+    if not os.path.isfile(os.path.join(path, 'option_matrix.py')) or not os.path.isfile(os.path.join(path, 'launch_check.py')):
+        return None, 'tools/option_matrix.py or tools/launch_check.py is not in this site, so the host check was skipped'
+    import importlib.util
+    import types
+    spec = importlib.util.spec_from_file_location('option_matrix_of_the_copy', os.path.join(path, 'option_matrix.py'))
+    om = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(om)
+        me = types.SimpleNamespace(py=sys.executable, a=types.SimpleNamespace(wrangler=''), log=lambda *a, **k: None)
+        combo = types.SimpleNamespace(host=host, opts=[types.SimpleNamespace(id=i) for i in ids], name=host)
+        good, why = om.Matrix.launch_check(me, combo, work)
+        if good is False and host == 'cloudflare' and 'clean-addresses-C' not in ids and 'page-redirect' in why:
+            why += ' (Cloudflare Pages redirects /x.html to /x: on this host the answer to d05 must be A, which brings the patch clean-addresses-C)'
+        return good, why
+    except Exception as e:                                                         # a failed host check must not hide the other results
+        return False, 'the host check could not run: %s: %s' % (type(e).__name__, str(e)[:160])
+
+
 def run_all(site, items, order, args, ra, recipes, rules=None):
     """Applies the ordered items to a copy and tests the result. -> dict with the facts for the report."""
     base = tempfile.mkdtemp(prefix='wa-apply-')
@@ -920,9 +965,15 @@ def run_all(site, items, order, args, ra, recipes, rules=None):
         ra.FULL[0] = (args.gate != 'quick')
         if not ra.FULL[0]:                                                       # the playbook's own rule: validity when a page or style file was edited, launch-check when a recipe says so
             merged['steps'] = [st for it in applied if it.kind == 'recipe' for st in it.recipe.get('steps', [])]
+            merged['steps'] += [{'file': f} for it in applied if it.kind == 'patch' for f in it.files]       # a patch that changes a page or a style file needs the validity test too
             if any(it.recipe.get('launch') for it in applied if it.kind == 'recipe') or any(it.kind == 'patch' for it in applied):
                 merged['launch'] = True
         ra.SKIP_CHECKS[:] = [x for x in (args.skip or '').split(',') if x]
+        ids = patch_ids(work, applied)
+        host = host_for_run(items, args, ids)
+        if 'clean-addresses-C' in ids and 'launch-check' not in ra.SKIP_CHECKS:      # replaced by the host check below
+            ra.SKIP_CHECKS.append('launch-check')
+            out['problems_note'] = 'The plain launch-check test was replaced by the Cloudflare host check: the pages are named without .html and the test server has no Cloudflare address rules.'
         if args.gate == 'none':                                                  # the steps only (for the tests of the tool itself)
             ok, stand = True, {}
         else:
@@ -935,6 +986,13 @@ def run_all(site, items, order, args, ra, recipes, rules=None):
                 if name not in ra.CHECKS and name not in ra.SKIP_CHECKS:
                     r = ra.run_test(work, name)
                     res['tests'].append(dict((k, v) for k, v in r.items() if k != 'out'))
+            if host and (ids or any(i.id == 'd05' for i in items)) and 'launch-check' not in [x for x in (args.skip or '').split(',') if x]:
+                t0 = time.time()
+                good, why = host_launch_check(work, host, ids)
+                if good is None:
+                    res['tests'].append({'name': 'launch-check on a pretend %s' % host, 'ok': True, 'skip': True, 'note': why, 'detail': '', 'secs': round(time.time() - t0, 1)})
+                else:
+                    res['tests'].append({'name': 'launch-check on a pretend %s' % host, 'ok': bool(good), 'note': why if good else '', 'detail': '' if good else why, 'secs': round(time.time() - t0, 1)})
         out['tests'] = res['tests']
         bad = [t for t in res['tests'] if not t['ok'] and not t.get('followup')]
         out['followups'] = [t for t in res['tests'] if t.get('followup')]
@@ -1046,6 +1104,8 @@ def write_report(path, site, args, answers, items, order, result, problems, open
         if args.gate in ('none', 'rebuild'):
             L.append('NOT RUN: this was a run with --gate %s, which is only for trying the tool. Do not publish it.' % args.gate)
         L.extend(say_tests(result['tests']))
+        if result.get('problems_note'):
+            L.append('- Note: ' + result['problems_note'])
         if result['problems']:
             L.extend('- PROBLEM: ' + p for p in result['problems'])
         if result.get('culprit'):

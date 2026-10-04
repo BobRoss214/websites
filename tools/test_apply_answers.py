@@ -318,8 +318,11 @@ class Rules(unittest.TestCase):
             self.assertIn(k, keys, 'patches: ' + k)
             spec = RULES['patches'][k]
             names = spec if isinstance(spec, list) else [n for v in spec['by_host'].values() for n in v]
-            for n in names:
-                self.assertTrue(os.path.isfile(os.path.join(SITE, 'patches', 'optional', n + '.patch')), 'the patch %s is not in patches/optional' % n)
+            gone = [n for n in names if not os.path.isfile(os.path.join(SITE, 'patches', 'optional', n + '.patch'))]
+            if gone:                                                                              # a site that does not have this patch (yet): the tool must say so plainly
+                code, out = plan({k.split('=')[0]: doc(words(k.split('=')[0], k.split('=')[1]))}, ['--host', 'netlify'])
+                self.assertEqual(status_of(out, k.split('=')[0]), 'helper', '%s: %s' % (k, out[:300]))
+                self.assertIn('is not there', out)
         for r in RULES['refuse'] + RULES['unsupported']:
             self.assertIn(r['a'], keys)
             self.assertIn(r['b'], keys)
@@ -504,13 +507,13 @@ class FactChange(unittest.TestCase):
         it.kind, it.recipe = 'recipe', {'steps': [], '_values': {'price': '$36'}}
         return it
 
-    def test_off_by_default_and_without_the_tool(self):
+    def test_without_the_tool_the_recipe_runs_and_an_answer_not_named_is_left_alone(self):
         import rehearse_answers as ra
         d = tempfile.mkdtemp(prefix='fact-', dir=TMP)
-        self.assertFalse(RULES.get('fact_change', {}).get('d16=C'))
-        self.assertFalse(aa.apply_fact_change(ra, d, self.item(), RULES))                        # not named in the rules
-        spec = {'fact_change': {'d16=C': {'kind': 'price', 'args': ['$31', '{price}']}}}
-        self.assertFalse(aa.apply_fact_change(ra, d, self.item(), spec))                         # named, but the site has no tools/change_fact.py
+        self.assertFalse(aa.apply_fact_change(ra, d, self.item(), RULES))                        # named in the rules, but this site has no tools/change_fact.py
+        other = self.item()
+        other.key = 'd49=A'
+        self.assertFalse(aa.apply_fact_change(ra, d, other, {'fact_change': {'d16=C': {'kind': 'price', 'args': ['$31', '{price}']}}}))   # not named
 
     def test_calls_the_tool_with_the_owners_checked_value(self):
         import rehearse_answers as ra
@@ -530,10 +533,48 @@ class FactChange(unittest.TestCase):
         with self.assertRaises(aa.StepFail):
             aa.apply_fact_change(ra, d, it, spec)
 
-    def test_the_rules_for_it_name_real_answers(self):
-        for k in RULES.get('fact_change', {}):
-            if not k.startswith('_'):
-                self.assertIn(k, RECIPES)
+    def test_the_rules_for_it_name_real_answers_and_real_values(self):
+        for k, spec in RULES.get('fact_change', {}).items():
+            if k.startswith('_'):
+                continue
+            self.assertIn(k, RECIPES)
+            names = set(d['name'] for d in RULES['inputs'].get(k, []))
+            used = set(re.findall(r'\{(\w+)\}', ' '.join(spec['args'])))
+            self.assertTrue(used and used <= names, '%s: %s is not a value the owner gives' % (k, used - names))
+            self.assertIn(spec['kind'], ('price', 'email', 'phone', 'hours', 'text'))
+            old = spec['args'][0]                                                              # the old words must be on the site today
+            self.assertTrue(any(old in open(os.path.join(SITE, f), encoding='utf-8').read() for f in ('index.html', 'js/content.js', 'js/features.js')), '%s: "%s" is not on the site' % (k, old))
+
+
+class HostCheck(unittest.TestCase):
+    """The patch for Cloudflare names pages without .html, which the plain launch-check test cannot try: the runner then asks the option matrix's own host check."""
+
+    def test_the_host_comes_from_d05_the_patch_or_the_flag(self):
+        import types
+        a = types.SimpleNamespace(host='')
+        it = aa.Item(aa.Answer('d05', 'x'), 'd05=B', 'host', 1)
+        it.ans.letter = 'B'
+        self.assertEqual(aa.host_for_run([it], a, []), 'netlify')
+        it.ans.letter = 'C'
+        self.assertEqual(aa.host_for_run([it], a, []), 'github')
+        self.assertEqual(aa.host_for_run([], a, ['clean-addresses-C']), 'cloudflare')
+        self.assertIsNone(aa.host_for_run([], a, []))
+        self.assertEqual(aa.host_for_run([], types.SimpleNamespace(host='Netlify'), []), 'netlify')
+
+    def test_the_option_names_come_from_the_patch_headers(self):
+        d = tempfile.mkdtemp(prefix='ids-', dir=TMP)
+        os.makedirs(os.path.join(d, 'patches', 'optional'))
+        with open(os.path.join(d, 'patches', 'optional', 'redirects-A-file.patch'), 'w', encoding='utf-8') as f:
+            f.write('Option: redirects-A\nName: x\n\ndiff --git a/x b/x\n')
+        it = aa.Item(aa.Answer('d30', 'A'), 'd30=A', 'x', 2)
+        it.kind, it.patches = 'patch', ['redirects-A-file']
+        self.assertEqual(aa.patch_ids(d, [it]), ['redirects-A'])
+
+    def test_a_site_without_the_option_matrix_skips_the_host_check_plainly(self):
+        d = tempfile.mkdtemp(prefix='nohost-', dir=TMP)
+        ok, why = aa.host_launch_check(d, 'cloudflare', [])
+        self.assertIsNone(ok)
+        self.assertIn('skipped', why)
 
 
 class Safety(unittest.TestCase):
@@ -614,6 +655,10 @@ class WholeRuns(unittest.TestCase):
         rec['d33=A']['steps'][0]['find'] = 'words that are nowhere on the page'
         rec['d16=C']['steps'] = rec['d16=C']['steps'][:1]
         wj(rp, rec)
+        rules_p = os.path.join(self.site, 'tools', 'apply_answers_rules.json')
+        rules = rj(rules_p)
+        rules.get('fact_change', {}).pop('d16=C', None)                                            # d16=C is a fact change: with tools/change_fact.py in the site it would skip the broken recipe
+        wj(rules_p, rules)
         self.git('commit', '-qam', 'break two recipes')
         code, out, o = self.run_tool({'d49': doc(words('d49', 'A')), 'd16': doc(words('d16', 'C'), values={'price': '$35'}), 'd33': doc(words('d33', 'A'))}, '--in-place', '--yes')
         self.assertEqual(code, 1, out)

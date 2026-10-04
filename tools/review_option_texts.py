@@ -277,6 +277,7 @@ def one_patch(opt, default_items, out_dir, keep=False):
         if not res['applied']:
             return info
         patched = load_items(tree)
+        relabel_moved_pages(patched, tree)
         titles = question_titles()
         on = turned_on_by(opt, titles)
         for c in LANGS:
@@ -306,15 +307,43 @@ def one_patch(opt, default_items, out_dir, keep=False):
             shutil.rmtree(tmp, ignore_errors=True)
 
 
+def moved_pages(tree):
+    """{folder: [text ids]} for the "this page has moved" pages of an old-address option: folders with an index.html that load js/moved.js (their words are translated through lang/src)."""
+    out = {}
+    for d in sorted(os.listdir(tree)):
+        f = os.path.join(tree, d, 'index.html')
+        if os.path.isfile(f) and d not in ('assets', 'css', 'js', 'lang', 'pages', 'print', 'tests', 'tools', 'docs', 'patches', 'review', 'deploy', 'node_modules') and not d.startswith('.'):
+            with open(f, encoding='utf-8') as fh:
+                raw = fh.read()
+            if 'src="/js/moved.js"' in raw:
+                out[d] = re.findall(r'data-t="(t[0-9a-f]{8})"', raw)
+    return out
+
+
+def relabel_moved_pages(items_by_lang, tree):
+    """review_sheet.py only knows the pages of the top folder, so the words of the moved pages would read "Not found on a page". Say where they are."""
+    where = collections.defaultdict(list)
+    for folder, ids in moved_pages(tree).items():
+        for i in ids:
+            where[i].append(folder + '/')
+    for items in items_by_lang.values():
+        for k, it in items.items():
+            if k in where and it.where.startswith('Not found on a page'):
+                shown = where[k]
+                it.where = '"This page has moved" page of an old web address: ' + ', '.join(shown[:3]) + (' and %d more' % (len(shown) - 3) if len(shown) > 3 else '')
+
+
 def english_only_pages(tree):
-    """Files the patch adds to the site (html pages outside lang/) with visible words: they are English only. Returns the file names."""
+    """Files the patch adds to the site (html pages outside lang/) with visible words and no data-t ids: they are English only. Returns the file names."""
     found = []
     for base, dirs, files in os.walk(tree):
         dirs[:] = [d for d in dirs if d not in ('tests', 'tools', 'docs', 'patches', 'assets', 'css', 'js', 'lang', 'review', 'print', 'pages')]
         for f in files:
             rel = os.path.relpath(os.path.join(base, f), tree).replace(os.sep, '/')
             if f.endswith('.html') and '/' in rel:
-                found.append(rel)
+                with open(os.path.join(base, f), encoding='utf-8', errors='replace') as fh:
+                    if 'data-t="' not in fh.read():   # a page whose words carry data-t ids is translated like any page
+                        found.append(rel)
     return sorted(found)
 
 

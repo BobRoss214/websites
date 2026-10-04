@@ -28,7 +28,7 @@ The answer used in each replay is an example (for example a price of $35, a clos
 
 ## What was tried, and what was not
 
-The playbook has 234 answers (the 87 questions d01 to d87). 108 were replayed. 126 were not:
+The playbook has 234 answers (the 87 questions d01 to d87). 110 were replayed. 124 were not:
 
 | Not replayed | Answers | Why |
 |---|---|---|
@@ -38,7 +38,6 @@ The playbook has 234 answers (the 87 questions d01 to d87). 108 were replayed. 1
 | Her own words or numbers, the same steps as another answer | 10 | d07 C, d26 C, d45 C, d53 C, d58 C, d74 C, d75 C, d76 C, d78 C, and d31 A (the optional credit: as d61 B). |
 | The same kind of edit as another answer, in many sentences | 2 | d79 B and d80 B: about eight and about twenty sentences, found by the consistency test, like d51 B. |
 | Needs her own photos or her whole 2027 content | 3 | d12 A, d34 A and d24 A. |
-| Needs files that are not in this tree yet | 2 | d75 B (tools/serve.bat) and d77 A (the folder docs/optional-github-actions/) come with later sets of changes. |
 
 `python3 tools/rehearse_answers.py --list --skipped` prints every one with its reason.
 
@@ -57,7 +56,7 @@ The entries of d65, d68 and d86 name these patches and say what each one changes
 
 ### Questions d74 to d87, and d04 with four options
 
-These were added to the playbook after the first rehearsal. Every answer that is a file edit was replayed the same way (13 replays: d04 B and D, d74 A, d76 A, d79 A and C, d80 A and C, d83 A, d84 A, d85 A, d87 A and B). All 13 pass, or are follow-ups only. The other 91 answers ran their no-browser checks on the earlier site (all of them), and every step of all 108 was checked again on the current site; the answers that had a wrong step ran the whole replay again. The notes of the entries have the same words as the dashboard (the export of 3 October 2026, d01 to d87). What the replays showed:
+These were added to the playbook after the first rehearsal. Every answer that is a file edit was replayed the same way (13 replays: d04 B and D, d74 A, d76 A, d79 A and C, d80 A and C, d83 A, d84 A, d85 A, d87 A and B). All 13 pass, or are follow-ups only. The other 91 answers ran their no-browser checks on the earlier site (all of them), and every step of all 110 was checked again on the current site; the answers that had a wrong step ran the whole replay again. The notes of the entries have the same words as the dashboard (the export of 3 October 2026, d01 to d87). What the replays showed:
 
 - d76 A (the new file `.gitattributes`) needs no other change: the file audit and the upload folder accept it.
 - d83 A (Hindi months) changes only the Hindi values, so no id changes and "missing" stays 0.
@@ -90,6 +89,10 @@ The first full pass found these. Each one is now fixed in the words of `docs/DEC
 | d07 A, d61 B (strings) | 5 ids; 0 strings. | Two ids end as the same words (4 new sentences). A new photo caption is 1 JS string. | Corrected. |
 | d51 B (hours) | Tests: live (open-now badges). | `tests/live.test.mjs` says in two places that the pizza closes at 8 pm; with 9 pm the test fails ("Pizza at 6 pm: open until 8 pm"). | The two places are named. |
 | d23 A (fall ends Nov 30) | The dated test must be redone. | It passes without a change (tried). It pins the pizza rows and the "No pizza" box. | Says so. |
+| d47 C (other pre-order page) | Replace the Square address in 6 places. | The print style names the store address too: `css/extras.css` has it in 3 places (without them the pre-order button is missing from a printed page), and two tests list it (print-qr: "wise-pie (en) prints an address for booking or sign-up"; privacy: "every web address in the shipped files is on the allow-list"). | The three places are given. |
+| d58 B (concessions in fall only) | Delete the spring and summer cards (`tbf415391` and `t7528af5c`). | There is one card for spring and summer; `t7528af5c` is the fall card, which must stay. Deleting only the lines inside the card leaves an empty card and the farm-seasons test stops with an error. | The one card is named, with its start and end. |
+| d75 B (remove the double-click file) | Delete the four checks in windows-reality. | The test also reads the file first, and a list of words the README must contain has `tools/serve.bat` in it. | The whole block and the list entry are named. Replayed now that the file is in the tree. |
+| d77 A (GitHub checks) | (not replayed: the files were not in the tree) | Now replayed: copy the two files to `.github/workflows/`; the upload folder check still passes. | The note says where the files are. |
 | d60 A (closed for rain) | Write the notice as { en, es, hi, zh, vi }. | A fault of the tool, not of the steps. `tools/launch_check.py` only saw a notice written as one plain text, so a notice left on in five languages passed unseen. | The tool reads all three ways of writing it; `tests/launch-check.test.mjs` has a case for it. |
 | d65 C and D, d68 A | "see Patches on disk". | At the time those patches were not on disk. | They are now, and are replayed (see "Optional patches"). |
 | d63 A (connect the sign-up form) | Tests: features, messages, privacy "already test the sign-up with a stand-in". | `tests/features.test.mjs` opens the page as it is served and expects the form hidden ("signup: not set up -> form hidden, old button shows"). With the address filled in that fails. | The one line to change is given. |
@@ -101,9 +104,9 @@ The playbook's tests table ("Tests that can need an update") has three new rows:
 
 ## What the browser tests found
 
-One browser test for each answer that changes live text or a date (the first test the recipe names), one browser at a time, on its own port. Three rounds: the first (d02 to d23) on the earliest tree, the second (d23 to d85, the new answers) on the tree before the optional patches arrived, the third (the rest, and the four optional patches) on the real stack with the load-aware limits of the tests (`ms()` in tests/lib.mjs). Each table row is the last result of the answer. A failing browser test is run once more (`--no-retry` turns that off); a pass the second time is shown as flaky.
+One browser test for each answer that changes live text or a date (the first test the recipe names), one browser at a time, on its own port. Four rounds: the first (d02 to d23) on the earliest tree, the second (d23 to d85, the new answers) on the tree before the optional patches arrived, the third (the four optional patches and many of the rest) on the real stack with the load-aware limits of the tests (`ms()` in tests/lib.mjs), the fourth (the last 32 answers, at low priority on a busy computer) on the joined tree with wave B. Each table row is the last result of the answer. A failing browser test is run once more (`--no-retry` turns that off); a pass the second time is shown as flaky.
 
-68 answers have a result: 68 pass.
+100 answers have a result: 100 pass.
 
 | Answer | Test | Result |
 |---|---|---|
@@ -140,20 +143,52 @@ One browser test for each answer that changes live text or a date (the first tes
 | d26 A | features | pass |
 | d26 B | languages | pass |
 | d27 A | hero | pass |
+| d28 B | languages | pass |
 | d28 C | languages | pass |
 | d29 B | print-qr | pass (flaky: failed once on the vi sheet font check (missing: one letter); run alone on the answer's copy it passes (105 checks), and so does the unchanged site) |
+| d31 B | gallery | pass |
+| d32 C | gallery | pass |
 | d33 A | languages | pass |
+| d33 B | gallery | pass |
+| d33 C | gallery | pass |
+| d35 A | languages | pass |
+| d36 A | languages | pass |
+| d37 A | languages | pass |
 | d39 A | languages | pass |
 | d39 B | drive | pass |
+| d40 A | languages | pass |
+| d41 A | languages | pass |
+| d42 A | languages | pass |
+| d42 B | languages | pass |
+| d43 A | languages | pass |
+| d44 A | languages | pass |
+| d44 B | languages | pass |
+| d44 C | languages | pass |
 | d45 B | languages | pass |
+| d46 B | features | pass |
 | d47 B | languages | pass |
+| d47 C | print-qr | pass |
 | d48 B | farm-seasons | pass |
+| d48 D | languages | pass |
+| d49 A | languages | pass |
 | d50 B | dated | pass |
 | d51 B | live | pass |
+| d52 B | messages | pass |
+| d53 B | languages | pass |
+| d54 A | languages | pass |
+| d54 B | languages | pass |
 | d55 A | languages | pass |
+| d55 B | languages | pass |
+| d55 C | languages | pass |
+| d56 B | features | pass |
+| d56 C | features | pass |
 | d57 A | languages | pass |
+| d57 B | languages | pass |
+| d57 C | languages | pass (flaky: languages: failed once (FAIL languages: the test ran to the end  page.waitForEvent: Timeout 60000ms exceeded while waiting for event "download" ) and passed on the second ru) |
+| d58 B | farm-seasons | pass |
 | d60 A | dated | pass |
 | d60 B | languages | pass |
+| d61 B | languages | pass |
 | d62 B | drive | pass |
 | d63 A | features | pass (flaky: failed on the old playbook words (a wrong note, fixed); with the two features-test changes now written in the playbook (and the clock change of w198-test-flakes.patch) the whole features test passed on the answer's copy (59 checks)) |
 | d65 B | print-qr | pass |
@@ -176,7 +211,7 @@ One browser test for each answer that changes live text or a date (the first tes
 | d85 A | languages | pass |
 | d86 B | map | pass |
 
-Not run in the browser yet (the machine was too busy): d28=B, d31=B, d32=C, d33=B, d33=C, d35=A, d36=A, d37=A, d40=A, d41=A, d42=A, d42=B, d43=A, d44=A, d44=B, d44=C, d46=B, d47=C, d48=D, d49=A, d52=B, d53=B, d54=A, d54=B, d55=B, d55=C, d56=B, d56=C, d57=B, d57=C, d58=B, d61=B.
+
 
 ## Checks that depend on the computer, not on the answer
 
@@ -186,7 +221,7 @@ Three of the browser failures were not the answers' fault. A joiner who sees the
 - **print-qr: "every letter on the sheet is drawn by a font of this computer (no empty boxes)", the vi sheet, "missing: ह"** (d29 B, once). Only the first Hindi letter was reported, not the other Hindi letters on the sheet, and the same test passes on the unchanged site and on the d29 B copy (105 checks) when run alone. The test asks the browser which font drew each probe letter right after adding the letters; on a busy computer the first one is asked before the page has laid it out. The fonts of this computer are fine: FreeSerif and Unifont have Devanagari, WenQuanYi Zen Hei has the Chinese letters. The same patch waits for the page to settle before asking.
 - **A test server on a port that another job uses.** Every browser test starts its own server on `WA_PORT`. When another job on the same computer uses that port, the test says "Could not start the test server ... EADDRINUSE", or it talks to the other job's pages ("WISE_ACRES is not defined" in the hero test for d69 B). The tool now picks a free port for each run.
 
-Two failures were wrong notes in the playbook, now fixed: d11 A (the drive test) and d63 A (the features test), see "What was wrong".
+Four failures were wrong notes in the playbook, now fixed: d11 A (the drive test), d63 A (the features test), d47 C (the print style and two tests name the old store address) and d58 B (one card, not two), see "What was wrong". One more run was flaky: d57 C (the languages test waited 60 seconds for a download on a busy computer and passed on the second run).
 
 ## Limits
 
@@ -202,7 +237,7 @@ python3 tools/rehearse_answers.py --list                    what each replay doe
 python3 tools/rehearse_answers.py --coverage                every answer of the playbook is replayed or has a reason
 python3 tools/rehearse_answers.py --steps-only --all        only: does every step still find its place (a few seconds)
 python3 tools/rehearse_answers.py d18=A d20=B               a few answers, with the rebuild and the no-browser checks
-python3 tools/rehearse_answers.py --all --jobs 3            all 108 (about an hour)
+python3 tools/rehearse_answers.py --all --jobs 3            all 110 (about an hour)
 python3 tools/rehearse_answers.py --all --quick --browser   the browser tests too, one at a time (several hours)
 python3 tools/rehearse_answers.py d18=A --keep copies       keep the changed copy in the folder "copies" to look at it
 ```

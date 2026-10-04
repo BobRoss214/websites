@@ -42,28 +42,36 @@ index 0000000..a9931df
 +/parties/                /#groups                 301
 +/parties-school-tours/   /#groups                 301
 diff --git a/README.md b/README.md
-index f11e419..c0989d5 100644
+index dc19267..e3a12d1 100644
 --- a/README.md
 +++ b/README.md
 @@ -17,2 +17,3 @@ manifest.webmanifest    icon + colors for phones that bookmark the site
  _headers                security and cache headers for Netlify / Cloudflare Pages (copy the same into other hosts)
 +_redirects              sends the old wiseacresorganic.com addresses (/faq, /food, /schooltours ...) to the matching page or section here, 301 (Netlify / Cloudflare Pages; GitHub Pages ignores it: see docs/LAUNCH_CHECKLIST.md 3.6)
  pages/                  the short sources the extra pages are built from
-@@ -530,2 +531,3 @@ New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](do
+@@ -619,2 +620,3 @@ New to this? Follow the plain-English checklist in [docs/LAUNCH_CHECKLIST.md](do
  3. Turn on HTTPS and compression (gzip/brotli) at the host. The `_headers` file is read by Netlify and Cloudflare Pages; other hosts need the same headers set in their settings.
-+   `_redirects` is read by the same two hosts; it only matters if this site takes over the address of the old wiseacresorganic.com (then, after deploying, open `/faq`, `/food`, `/schooltours` and `/parties/` to check they land on the right section). Leave it out of the upload if the site goes on a new domain. Hosts that ignore it need the same 301s in their settings.
++   `_redirects` is read by the same two hosts. It only matters if this site takes over the address of the old wiseacresorganic.com (then, after you put it online, open `/faq`, `/food`, `/schooltours` and `/parties/` to check they land on the right section). Leave it out of the upload if the site goes on a new domain. Hosts that ignore it need the same 301s in their settings.
  4. Send people to the Google Business Profile, and add your site's address there.
 diff --git a/docs/LAUNCH_CHECKLIST.md b/docs/LAUNCH_CHECKLIST.md
-index cdaf9c6..4ce7892 100644
+index 2c0e75c..535d9ea 100644
 --- a/docs/LAUNCH_CHECKLIST.md
 +++ b/docs/LAUNCH_CHECKLIST.md
-@@ -201,3 +201,3 @@ It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Bot
+@@ -216,3 +216,3 @@ The policy itself (the part after the colon) is 374 characters long (399 with th
  
 -**What exists.** An earlier research pass listed 13 old addresses (each also with a trailing slash where that form exists, which makes 22 lines) and wrote them as an optional patch, `redirects-optional.patch`. That patch is not part of the site files, so the file is printed below and you do not need the patch. It differs from that patch in two ways: the two page targets no longer end in `.html` (so Cloudflare does not redirect twice), and the comment no longer claims anything about GitHub. Only addresses that appeared in Google results are in it. That list was not rechecked on 2 October 2026 and may be incomplete.
 +**What exists.** An earlier research pass listed 13 old addresses (each also with a trailing slash where that form exists, which makes 22 lines) and wrote them as an optional patch, `redirects-optional.patch`. The file is already in the top folder as `_redirects`; it is printed below so you can read it. It differs from that patch in two ways: the two page targets no longer end in `.html` (so Cloudflare does not redirect twice), and the comment no longer claims anything about GitHub. Only addresses that appeared in Google results are in it. That list was not rechecked on 2 October 2026 and may be incomplete.
  
-@@ -245,3 +245,3 @@ It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Bot
+@@ -260,3 +260,3 @@ The policy itself (the part after the colon) is 374 characters long (399 with th
  
 -- [ ] To use it: save the block as a file named `_redirects` (no `.txt`) in the top folder of the site, next to `index.html` (`tools/make_deploy_folder.py` copies it into `deploy/`; if you copy by hand, it goes in the top of the copy), then make the upload folder again and upload it.
 +- [ ] To use it: leave `_redirects` (no `.txt`) in the top folder of the site, next to `index.html` (`tools/make_deploy_folder.py` copies it into `deploy/`; if you copy by hand, it goes in the top of the copy). To skip it, delete it. GitHub Pages and plain web servers ignore the file, so on those hosts the old addresses still show "page not found" (ask Claude for the small-redirect-pages variant). Then make the upload folder again and upload it.
  - [ ] Test: open each old address in a browser. It should land on the right place. All 22 lines were tested in Cloudflare's own test server (each answers 301 and lands on a page that opens), and Netlify's open-source parser accepted the file. **[tested here]**
+diff --git a/tools/plain_words.txt b/tools/plain_words.txt
+index 723b26f..dfc9788 100644
+--- a/tools/plain_words.txt
++++ b/tools/plain_words.txt
+@@ -186,3 +186,2 @@ docs/LAUNCH_CHECKLIST.md :: Workers can switch the § redirect off
+ docs/LAUNCH_CHECKLIST.md :: If you do not want that, or you would like the least change to the files
+-docs/LAUNCH_CHECKLIST.md :: To use it: save the block as a file named
+ docs/LAUNCH_CHECKLIST.md :: All 22 lines were tested in Cloudflare's own test server

@@ -86,6 +86,18 @@ for (const l of LANGS) {
 ok('INDEX.txt names the answer (d01 B), the patch and the sheet to hand out', /d01 B \(winter\)[^\n]*\[winter-B\]/.test(text) && /winter-B\/es\.html/.test(text), text.slice(0, 500));
 fs.rmSync(out, { recursive: true, force: true });
 
+// ---- redirects-B, when its pages speak the visitor's language (the patch says "10 new texts"): the texts reach a sheet, labelled with the old addresses, and no page is English only
+if (/new texts/.test(header('redirects-B-redirect-pages.patch').Strings || '')) {
+  const out2 = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-optsheets-'));
+  const r2 = run('--only', 'redirects-B', '--out', out2);
+  const idx2 = fs.existsSync(path.join(out2, 'index.json')) ? JSON.parse(fs.readFileSync(path.join(out2, 'index.json'), 'utf8')) : { options: [] };
+  const rb = idx2.options.find((o) => o.option === 'redirects-B');
+  ok('redirects-B: 10 new texts in every language on its sheets, nothing missing, no English-only page left', r2.status === 0 && !!rb && LANGS.every((l) => rb.texts[l] && rb.texts[l].new === 10 && rb.missing[l][0] === 0 && rb.missing[l][1] === 0) && rb.english_only.length === 0, JSON.stringify(rb && [rb.texts, rb.english_only]));
+  const rows = fs.existsSync(path.join(out2, 'redirects-B', 'es.csv')) ? fs.readFileSync(path.join(out2, 'redirects-B', 'es.csv'), 'utf8') : '';
+  ok('redirects-B: the sheet says where the texts are (the old addresses), not "Not found on a page"', /This page has moved" page of an old web address: about\//.test(rows.replace(/""/g, '"')) && !/Not found on a page/.test(rows) && /Esta página se movió\./.test(rows), rows.slice(0, 300));
+  fs.rmSync(out2, { recursive: true, force: true });
+}
+
 // ---- the docs
 ok('docs/OPTION_PATCHES.md says how to make the sheets (python3 tools/review_option_texts.py)', /python3 tools\/review_option_texts\.py/.test(read('docs/OPTION_PATCHES.md')) && /review\/options/.test(read('docs/OPTION_PATCHES.md')));
 ok('tests/README.md lists this test', /`review-option-texts`/.test(read('tests/README.md')));

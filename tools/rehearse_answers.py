@@ -40,6 +40,7 @@ Steps (each one is a dict with "op"):
   cut          file, at, start, end                                                                              delete the element (start ... end) around the place "at", inside a long line
   delete_file  file                                                                                              delete a file (a photo)
   create_file  file, text                                                                                         make a new file (for example .gitattributes)
+  copy_file    file, from                                                                                        copy a file of the site to a new place (file = the new place)
   apply_patch  file                                                                                              apply an optional patch of patches/optional/ (patch -p1): a hunk that does not fit is a wrong step
   run_same     cmd, folders                                                                                      run a command the notes say changes nothing, and check that the folders are the same
   readme_row   name                                                                                              delete the README table row that starts with name
@@ -243,6 +244,15 @@ def op_create_file(work, s):
     wr(work, s['file'], s['text'])
 
 
+def op_copy_file(work, s):
+    """Copy a file inside the site (for example the two GitHub check files into .github/workflows/)."""
+    src, dst = os.path.join(work, s['from']), os.path.join(work, s['file'])
+    if not os.path.isfile(src):
+        raise StepError('%s: there is no such file' % s['from'])
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copyfile(src, dst)
+
+
 def op_apply_patch(work, s):
     """Apply an optional patch of patches/optional/ the way the playbook says (patch -p1); a hunk that does not fit is a wrong step."""
     code, out = run('patch -p1 --no-backup-if-mismatch -i %s' % s['file'], work)
@@ -324,7 +334,7 @@ def op_run(work, s):
         raise StepError('%s: exit %d: %s' % (s['cmd'], code, out.strip().split('\n')[-1][:160]))
 
 
-OPS = {'apply_patch': op_apply_patch, 'run_same': op_run_same, 'create_file': op_create_file, 'delete_block': op_delete_block, 'json_edit': op_json_edit, 'cut': op_cut, 'delete_file': op_delete_file, 'sub': op_sub, 'sub_all': op_sub_all, 'delete_lines': op_delete_lines, 'delete_line': op_delete_line, 'insert_after': op_insert_after,
+OPS = {'copy_file': op_copy_file, 'apply_patch': op_apply_patch, 'run_same': op_run_same, 'create_file': op_create_file, 'delete_block': op_delete_block, 'json_edit': op_json_edit, 'cut': op_cut, 'delete_file': op_delete_file, 'sub': op_sub, 'sub_all': op_sub_all, 'delete_lines': op_delete_lines, 'delete_line': op_delete_line, 'insert_after': op_insert_after,
        'readme_row': op_readme_row, 'lang_value': op_lang_value, 'run': op_run}
 
 

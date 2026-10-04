@@ -179,7 +179,7 @@ Every row names the file, the question, what it changes and whether it was teste
 | winter-B-fall-prices-note.patch | d01 B | Keeps the fall prices all year with the note "These are the fall 2026 prices and times"; one new sentence in 4 languages. | yes: the matrix, the page clock on 11 dates |
 | reserve-window.patch | d25 A | Hides the spring Reserve buttons outside the booking window. | yes: the matrix, hero (80 checks), the page clock on 11 dates; with the rebuild, dated, deploy and messages see no page error on the extra pages |
 | redirects-A-redirects-file.patch | d30 A (Cloudflare Pages, Netlify) | Adds _redirects (22 lines, all 301). | yes: the matrix, also with Cloudflare's own test server |
-| redirects-B-redirect-pages.patch | d30 A (any host, the only one for GitHub Pages) | 13 small redirect pages; the deploy tool uploads them; the launch check follows them. | yes: the matrix |
+| redirects-B-redirect-pages.patch | d30 A (any host, the only one for GitHub Pages) | 13 small redirect pages, their two lines in the visitor's language (10 new texts in 4 languages); the deploy tool uploads them; the launch check follows them. | yes: the matrix, the 13 pages in 5 languages with and without JavaScript |
 | clean-addresses-C-cloudflare.patch | d05 (Cloudflare Pages), d38 | Page addresses without .html; run python3 tools/pages.py after. The validity test accepts the sitemap addresses without .html. | yes: the matrix, also with Cloudflare's own test server; validity passes with it |
 | code-cache-D-5-minutes.patch | d05 (any host that reads _headers) | css, js and lang cached 5 minutes instead of 1 hour. | yes: the matrix (no effect on GitHub Pages) |
 | phone-number-shown.patch | d04 A | The main phone number in the footer and the Google data; the consistency test allows the two known numbers; tools/test_check_facts.py leaves the footer alone when the number is there. | yes: the matrix; pipeline passes with it |
@@ -476,8 +476,8 @@ Nothing can go live until the host and the web address are chosen. The files alr
 - Host with no _redirects (GitHub Pages): apply patches/optional/redirects-B-redirect-pages.patch instead (13 folders with a small redirect page).
 - Where each old address goes: docs/OPTION_PATCHES.md, section "Old addresses and where they go". /summer/ and /posts/ are left out on purpose (checklist D3: the owner decides what happens to them; today they show 404.html).
 - Test after upload: open all 13 old addresses (checklist section 5).
-- Strings: 0
-- Tests: public-site (redirects-B only: it scans the extra pages)
+- Strings: 0 with redirects-A; 10 with redirects-B (the line "This page has moved." and 9 "Go to ..." link lines, translated into es, hi, zh and vi inside the patch; a native reader should check them: docs/OPTION_PATCHES.md)
+- Tests: public-site (redirects-B only: it scans the extra pages), moved-pages (redirects-B: the 13 pages in 5 languages, with and without JavaScript)
 - Patch: patches/optional/redirects-A-redirects-file.patch
 
 **B. No, start fresh**
@@ -718,9 +718,10 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 **C. Wrong page (I will send the right link)**
 
 - Replace https://wise-pie-wood-fired-at-wise-acres.square.site/?location=CVJNFDQTZCA3B in 6 places: index.html at `square.site` (2 places); pages/wise-pie.html at `square.site` (3 places); tools/qr_links.json at `square.site` (the pizza sign: then python3 tools/make_qr.py and reprint). Rebuild the pages (python3 tools/pages.py).
+- The print style and two tests name the same store address: css/extras.css at `wise-pie-wood-fired-at-wise-acres.square.site` (3 places: the print rules that keep the pre-order button and print its address under it; with the old address left there the button is missing from a printed page), tests/print-qr.test.mjs at `wise-pie-wood-fired-at-wise-acres\.square\.site` (the list of addresses a printed page must show; the dots have a backslash there) and tests/privacy.test.mjs at `'wise-pie-wood-fired-at-wise-acres.square.site'` (the sites the pages may link to). Write the new address where it says the old one (host name only, without the https:// and the path).
 - README.md names the address in the Wise Pie facts row.
 - Strings: 0
-- Tests: consistency: tests/consistency.test.mjs at `one booking page, one pre-order page` (one pre-order page on every page) and `['pizza', /square\.site/]` (the pizza QR sign)
+- Tests: consistency: tests/consistency.test.mjs at `one booking page, one pre-order page` (one pre-order page on every page) and `['pizza', /square\.site/]` (the pizza QR sign); print-qr and privacy MUST follow (the two lines above)
 
 ### d04. Main phone number
 
@@ -2374,9 +2375,9 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 **B. Fall only**
 
-- index.html at `data-t="te71c4e07"` (row "Concessions & local goods"): change the spring and summer cells from the tick to a dash, like the other rows. Delete the spring and summer cards "Concessions & Local Goods / Snacks, beer, hard cider and wine, and local goods." (index.html at `data-t="tbf415391"` and `data-t="t7528af5c"`, each under its heading).
-- Strings: 0 new; 2 to 3 ids become unused
-- Tests: farm-seasons (run it: it checks which cards show in each season, but names no concessions card)
+- index.html at `data-t="te71c4e07"` (row "Concessions & local goods"): change the spring and summer cells from the tick to a dash, like the other rows. Delete the spring and summer card (it is one card for both seasons: the whole `<li class="card c-orange reveal" data-seasons="spring summer">` that holds the sentence "Snacks, beer, hard cider and wine, and local goods.", index.html at `data-t="tbf415391"`, from its `<li` line to its `</li>`). The fall card (index.html at `data-t="t7528af5c"`, "... and NC pumpkins") and the winter card stay. Deleting only the lines inside the card leaves an empty card and the farm-seasons test stops with an error.
+- Strings: 0 new; 1 id (tbf415391) becomes unused
+- Tests: farm-seasons (run it: it checks which cards show in each season, and it needs every card to have its heading: a half-deleted card fails it)
 
 **C. Only some (I will say which)**
 
@@ -2766,7 +2767,7 @@ Four AI-written translations that no native speaker has read.
 ## Topic 11. How you update the site yourself
 
 Urgency: nice to have.
-Settings and helper files for whoever keeps the files, not for visitors. Three of them concern files that are added by later sets of changes (the Windows safety work and the GitHub checks) and are not in this tree yet; where that is so the entry says it.
+Settings and helper files for whoever keeps the files, not for visitors.
 
 ### d75. Keep the double-click file that starts the site on your computer?
 
@@ -2776,7 +2777,7 @@ Settings and helper files for whoever keeps the files, not for visitors. Three o
 - Owner fact (no sensible default): yes
 - Default: A, if someone can run it once on a real Windows computer.
 - Depends on: none.
-- Note: The file is tools/serve.bat (it starts tools/serve.py). It, its README lines and its checks come with the Windows safety changes and are not in this tree yet, so this entry cannot point at them by their words.
+- Note: The file is tools/serve.bat (it starts tools/serve.py). The guide names it in three places of README.md: README.md at `serve.bat (Windows: double-click it to start serve.py),`, README.md at `Preview locally:` and README.md at `**Double-click to look at the site (Windows).**`. tests/windows-reality.test.mjs checks the file.
 
 **A. Keep the double-click start file for Windows**
 
@@ -2786,7 +2787,8 @@ Settings and helper files for whoever keeps the files, not for visitors. Three o
 
 **B. Remove it: it could not be tested here**
 
-- Delete tools/serve.bat. Remove the guide lines about it from README.md: the line in the tools list, the sentence in "Preview locally" that says Windows users can double-click it, and the paragraph "Double-click to look at the site (Windows)". The test tests/windows-reality.test.mjs has four checks about the file: delete them. Not replayed: the file is not in this tree yet.
+- Delete tools/serve.bat. In README.md remove the line in the tools list (README.md at `serve.bat (Windows: double-click it to start serve.py),`), the words " (on Windows you can double-click `tools/serve.bat` instead)" in the sentence at `Preview locally:`, and the paragraph that starts `**Double-click to look at the site (Windows).**` (with the blank line after it).
+- In tests/windows-reality.test.mjs delete the block from `// tools/serve.bat: a double-click launcher` to the check `the script tools/serve.bat starts exists` (it reads the file and then makes four checks), and take 'tools/serve.bat' out of the list of words the README must contain (the list at `'Node.js is not needed', 'tools/serve.bat'`). Without that the docs part of the test still asks for the words. The notes that name tools/serve.bat need the same (node tests/docs.test.mjs lists them).
 - Strings: 0
 - Tests: windows-reality, docs
 
@@ -2831,7 +2833,7 @@ Settings and helper files for whoever keeps the files, not for visitors. Three o
 - Owner fact (no sensible default): no
 - Default: A for a public repository (free); ask first for a private one (it uses minutes of the monthly allowance).
 - Depends on: d76 (a clean checkout), d05 (where the site is hosted is not related).
-- Note: The two files are checks.yml and weekly-health.yml in the folder docs/optional-github-actions/. That folder is added by a later set of changes and is not in this tree yet; until it is, there is nothing to copy.
+- Note: The two files are checks.yml and weekly-health.yml in the folder docs/optional-github-actions/ (its README.md has the same steps, in the section "Switch it on"). Nothing runs while they stay in that folder: GitHub reads only .github/workflows/.
 
 **A. Yes: I will copy the two files to switch them on**
 
