@@ -302,5 +302,6 @@
  "{date} at {time} Eastern Time": "features.js",
  "{distance}, about {time} by car": "features.js",
  "{first}. {second}": "features.js",
- "{n} of {total}": "main.js"
+ "{n} of {total}": "main.js",
+ "{text} (Eastern Time)": "live.js"
 }

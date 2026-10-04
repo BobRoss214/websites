@@ -1,6 +1,7 @@
 {
  "js": {
   "(Your time: {time})": "(Giờ của bạn: {time})",
+  "{text} (Eastern Time)": "{text} (giờ miền Đông)",
   "100 blueberries! Your fingers must be blue by now.": "100 trái việt quất! Chắc ngón tay bạn đã nhuốm xanh tím rồi.",
   "100 lights and sparks! You are lighting up the whole farm.": "100 ánh đèn và tia lửa! Bạn đang thắp sáng cả nông trại.",
   "100 pumpkins! That is a lot of pie.": "100 trái bí ngô! Đủ làm thật nhiều bánh pie bí ngô.",

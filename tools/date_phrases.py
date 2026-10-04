@@ -19,7 +19,41 @@ Any other wording is NOT translated here: `python3 tools/i18n.py missing es --li
 The words for the months, the weekdays and the fixed sentences below were taken from the translations the farm already
 has (lang/src/*.json). tests/date-phrases.test.mjs checks that every one of those comes out letter for letter.
 """
-import re, sys
+import os, re, sys
+
+# ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
+try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
+    sys.stdout.reconfigure(errors='replace')
+except (AttributeError, ValueError, OSError):
+    pass
+
+
+def _stop_plainly(kind, err, tb):
+    """A file saved in the old Windows format (Notepad's "ANSI"), or one that is read-only or open in another program, ends a tool with a plain message, not a traceback."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if issubclass(kind, UnicodeDecodeError):
+        import glob
+        for pat in ('*.html', 'pages/*.html', 'js/*.js', 'css/*.css', 'lang/*.json', 'lang/src/*.json', 'tools/*.json'):
+            for path in sorted(glob.glob(os.path.join(root, pat))):
+                with open(path, 'rb') as f:
+                    raw = f.read()
+                try:
+                    raw.decode('utf-8')
+                except UnicodeDecodeError as bad:
+                    line = raw.split(b'\n')[raw.count(b'\n', 0, bad.start)]
+                    print('%s is not saved as UTF-8: line %d has a character in the old Windows "ANSI" format (a dash, a curly quote or a letter with an accent):\n    %s\n'
+                          'Open the file and save it again as UTF-8 (Notepad: File, Save As, then Encoding: UTF-8; VS Code: click the encoding at the bottom right, Save with Encoding, UTF-8). Then run this again.'
+                          % (os.path.relpath(path, root).replace(os.sep, '/'), raw.count(b'\n', 0, bad.start) + 1, line.decode('utf-8', 'replace').strip()[:70].encode('ascii', 'replace').decode()), file=sys.stderr)
+                    return
+    elif issubclass(kind, PermissionError) and getattr(err, 'filename', None):
+        print('I could not open or change %s: the file is read-only, or open in another program, or locked while OneDrive syncs it.\n'
+              'Right-click it, Properties, and untick Read-only; close the programs that show it; wait a moment. Then run this again.' % err.filename, file=sys.stderr)
+        return
+    sys.__excepthook__(kind, err, tb)
+
+
+sys.excepthook = _stop_plainly
+# ---- end of the Windows safety lines
 
 LANGS = ('es', 'hi', 'zh', 'vi')
 MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']

@@ -134,7 +134,7 @@
     return { y: o.year, m: o.month, d: o.day, h: o.hour, min: o.minute, s: o.second };
   }
   const ymdOf = (p) => p.y + '-' + pad(p.m) + '-' + pad(p.d);
-  const todayET = (now) => ymdOf(tzParts(now || new Date()));
+  const todayET = (now) => { const d = now || new Date(); return isNaN(d) ? '' : ymdOf(tzParts(d)); };   // '' when the clock cannot be read: every comparison with it is false, nothing throws
   // The instant when the wall clock in `tz` reads ymd hh:mm.
   function zonedToUtc(ymd, hhmm, tz) {
     const [y, m, d] = ymd.split('-').map(Number), [hh, mm] = hhmm.split(':').map(Number);
@@ -265,7 +265,7 @@
   function renderRelease() {
     const box = $('[data-rel-box]'), chip = $('[data-rel-chip]');
     if ((!box && !chip) || !W.live) return;
-    const st = releaseState(Date.now());
+    const st = W.clockOk() ? releaseState(Date.now()) : { mode: 'none' };   // no readable clock: no countdown
     if (chip) chip.classList.remove('rel-wait');   // js/live.js keeps the chip's line free while the page loads
     if (st.mode === 'none') { if (box) box.hidden = true; if (chip) chip.classList.add('rel-off'); relKey = chipKey = ''; return; }
     const key = st.mode + '|' + st.rel.ymd + '|' + lang();
@@ -314,6 +314,13 @@
   const etStamp = (date) => { const p = tzParts(date, TZ); return compact(ymdOf(p), pad(p.h) + ':' + pad(p.min)); };
 
   function futureReleases() { const now = Date.now(); return readReleases().filter((r) => r.at > now).slice(0, 12); }
+  // The words of a calendar entry. A row of the schedule with no dates cell has nothing to put after "for": it says "the coming weekend" instead.
+  function reserveText(r, weekly) {
+    const time = fmtClock(r.at, TZ);
+    return weekly || !r.forText
+      ? t('Pizza reservations for the coming weekend open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}', { time, url: BOOK })
+      : t('Pizza reservations for {dates} open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}', { dates: r.forText, time, url: BOOK });
+  }
   function buildICS(list) {
     const L = [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Wise Acres Organic Farm//Reservations//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
@@ -325,7 +332,7 @@
     const stamp = utcStamp(new Date());
     list.forEach((r) => {
       const summary = t('Wise Acres: pizza reservations open');
-      const desc = t('Pizza reservations for {dates} open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}', { dates: r.forText || '', time: fmtClock(r.at, TZ), url: BOOK });
+      const desc = reserveText(r);
       L.push('BEGIN:VEVENT', 'UID:wa-release-' + r.ymd + '@wiseacresorganic.com', 'DTSTAMP:' + stamp,
         'DTSTART;TZID=' + TZ + ':' + etStamp(r.at), 'DTEND;TZID=' + TZ + ':' + etStamp(new Date(r.at.getTime() + 30 * 60e3)),
         'SUMMARY:' + icsEsc(summary), 'DESCRIPTION:' + icsEsc(desc), 'URL:' + BOOK,
@@ -340,7 +347,7 @@
     const q = new URLSearchParams({
       action: 'TEMPLATE', text: t('Wise Acres: pizza reservations open'),
       dates: utcStamp(r.at) + '/' + utcStamp(end),
-      details: weekly ? t('Pizza reservations for the coming weekend open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}', { time: fmtClock(r.at, TZ), url: BOOK }) : t('Pizza reservations for {dates} open at {time} Eastern Time. Dates can change with the weather. Reserve here: {url}', { dates: r.forText || '', time: fmtClock(r.at, TZ), url: BOOK }),
+      details: reserveText(r, weekly),
       ctz: TZ,
     });
     if (weekly) q.set('recur', 'RRULE:FREQ=WEEKLY;COUNT=' + list.length);
@@ -454,7 +461,7 @@
     'hours.greenhouse': ['days', 'open', 'close'],
     'hours.pizza': ['days', 'open', 'close'],
     'hours.farm': ['spring', 'summer', 'fall', 'winter'],
-    week: ['updated', 'expireDays', 'note', 'crops', 'days', 'waitlistEmail', 'feed'],
+    week: ['updated', 'expireDays', 'note', 'crops', 'days', 'waitlistEmail', 'feed', 'demo'],
     signup: ['action', 'interests', 'tags', 'languageField', 'demo'],
     farmPoint: ['lat', 'lon'],
     entrancePhoto: ['src', 'alt', 'caption'],
@@ -740,6 +747,7 @@
   function renderWeek() {
     const sec = $('[data-week]');
     if (!sec) return;
+    if (!W.clockOk()) { sec.hidden = true; return; }
     const cfg = weekConfig(), now = new Date(), today = todayET(now);
     const fresh = /^\d{4}-\d{2}-\d{2}$/.test(cfg.updated || '') && daysBetween(cfg.updated, today) <= (cfg.expireDays || 14) && daysBetween(cfg.updated, today) >= -1;
 
@@ -1070,18 +1078,22 @@
       e.preventDefault();
       if (driveBusy) return;
       const to = chosen(), place = PLACES[to];
-      const text = input.value.replace(/\s+/g, ' ').trim();
+      const typed = () => input.value.replace(/\s+/g, ' ').trim(), text = typed();
       if (text.length < 5) { input.setAttribute('aria-invalid', 'true'); show({ kind: 'short', to }); input.focus(); return; }
       input.removeAttribute('aria-invalid');
       driveBusy = true; driveBoxes.forEach((b) => b.busy(true));
       show({ kind: 'wait', to });
-      // the visitor can tap the other place while this runs; then the answer would be about a place no longer chosen, so it is dropped
-      const answer = (next) => { if (chosen() === to) show(next); else { state = null; show(); } };
+      // the visitor can tap the other place, or change the address, while this runs; then the answer (and its Google Maps link) would be about a place or an address no longer chosen, so it is dropped
+      const answer = (next) => {
+        if (chosen() !== to || typed() !== text) { state = null; show(); return; }
+        if (next.kind === 'nf') input.setAttribute('aria-invalid', 'true');
+        show(next);
+      };
       try {
         const key = text.toLowerCase();
         let from = driveFrom && driveFrom.key === key ? driveFrom.point : null, searched = false;
         if (!from) { from = await geocode(text); searched = true; if (from) driveFrom = { key, point: from }; }
-        if (!from) { input.setAttribute('aria-invalid', 'true'); answer({ kind: 'nf', from: text, to }); return; }
+        if (!from) { answer({ kind: 'nf', from: text, to }); return; }
         let dest = driveSpots[to];
         if (!dest) {
           const f = place.spot(), p = f ? { lat: Number(f.lat), lon: Number(f.lon) } : null;
@@ -1113,7 +1125,9 @@
     if (!$('#gallery-filters')) return;   // only the home page has the gallery; the other pages load js/content.js too, but have no buttons to check against
     const known = $$('#gallery-filters [data-gtag]').map((b) => b.dataset.gtag).filter((g) => g !== 'all');
     (W.photos || []).forEach((p, i) => {
-      if (!p || p.tags === undefined) return;
+      if (!p || typeof p.src !== 'string' || !p.src) { warn('photo number ' + (i + 1) + (p && p.alt ? ' (' + q(p.alt) + ')' : '') + ' has no src (the name of the picture file in assets/photos), so it is not shown in the gallery.'); return; }
+      if (!String(p.alt == null ? '' : p.alt).trim()) warn('photo number ' + (i + 1) + ' (' + q(p.src) + ') has no alt (the short description for people who cannot see the picture). Add an alt line to it, next to its src.');
+      if (p.tags === undefined) return;
       if (!Array.isArray(p.tags)) { warn('photo number ' + (i + 1) + ' (' + q(p.alt) + '): tags must be a list like  tags: ["berries", "flowers"]. The photo shows under All only.'); return; }
       p.tags.forEach((x) => { if (known.indexOf(String(x).trim().toLowerCase()) < 0) warn('photo number ' + (i + 1) + ' (' + q(p.alt) + ') has the tag "' + q(x) + '", but the gallery has no button for it. The tags that work: ' + known.join(', ') + '.'); });
     });
@@ -1440,6 +1454,10 @@
   safe(reportContentErrors);
   [expireDated, checkOwnerDates, checkSettingNames, checkHours, checkNotice, checkReviewsAndPhotos, checkFarmPoint, checkTranslations, checkAnalytics, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
+  // ...and a tab that was in the background (or a phone that slept) catches up the moment it is looked at, and when the farm's day changes (js/live.js)
+  const catchUp = () => { if (doc.hidden) return; safe(expireDated); safe(renderWeek); safe(renderRelease); };
+  doc.addEventListener('visibilitychange', catchUp);
+  doc.addEventListener('wa:day', catchUp);
   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
 
   // A page opened with #something (a link from another page, a QR code): the browser scrolled there while the scripts were still adding

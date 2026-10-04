@@ -3,7 +3,7 @@
 from the short page sources in pages/ and the header, footer and icons of index.html.
 
   python3 tools/pages.py            write the pages, sitemap.xml and robots.txt
-  python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py build     (full rebuild)
+  python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py build     (full rebuild: one command after the other)
 
 Each source in pages/<slug>.html starts with a small block of settings between --- lines:
 
@@ -30,12 +30,46 @@ To keep the pages light for slow phones this also writes, from the same sources:
 Change SITE below if the website is published somewhere other than wiseacresorganic.com.
 """
 import html, json, os, re, struct, sys
+
+# ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
+try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
+    sys.stdout.reconfigure(errors='replace')
+except (AttributeError, ValueError, OSError):
+    pass
+
+
+def _stop_plainly(kind, err, tb):
+    """A file saved in the old Windows format (Notepad's "ANSI"), or one that is read-only or open in another program, ends a tool with a plain message, not a traceback."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if issubclass(kind, UnicodeDecodeError):
+        import glob
+        for pat in ('*.html', 'pages/*.html', 'js/*.js', 'css/*.css', 'lang/*.json', 'lang/src/*.json', 'tools/*.json'):
+            for path in sorted(glob.glob(os.path.join(root, pat))):
+                with open(path, 'rb') as f:
+                    raw = f.read()
+                try:
+                    raw.decode('utf-8')
+                except UnicodeDecodeError as bad:
+                    line = raw.split(b'\n')[raw.count(b'\n', 0, bad.start)]
+                    print('%s is not saved as UTF-8: line %d has a character in the old Windows "ANSI" format (a dash, a curly quote or a letter with an accent):\n    %s\n'
+                          'Open the file and save it again as UTF-8 (Notepad: File, Save As, then Encoding: UTF-8; VS Code: click the encoding at the bottom right, Save with Encoding, UTF-8). Then run this again.'
+                          % (os.path.relpath(path, root).replace(os.sep, '/'), raw.count(b'\n', 0, bad.start) + 1, line.decode('utf-8', 'replace').strip()[:70].encode('ascii', 'replace').decode()), file=sys.stderr)
+                    return
+    elif issubclass(kind, PermissionError) and getattr(err, 'filename', None):
+        print('I could not open or change %s: the file is read-only, or open in another program, or locked while OneDrive syncs it.\n'
+              'Right-click it, Properties, and untick Read-only; close the programs that show it; wait a moment. Then run this again.' % err.filename, file=sys.stderr)
+        return
+    sys.__excepthook__(kind, err, tb)
+
+
+sys.excepthook = _stop_plainly
+# ---- end of the Windows safety lines
 try:
     from bs4 import BeautifulSoup
 except ImportError:
     sys.exit('This needs the beautifulsoup4 package. Type this once, then run the command again:\n'
              '    python3 -m pip install beautifulsoup4\n'
-             '(On Windows type python instead of python3. See "Commands: one-time setup" in README.md.)')
+             '(On Windows type python or py -3 instead of python3. See "Commands on Windows, Mac and Linux" in README.md.)')
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = 'https://www.wiseacresorganic.com/'
@@ -100,6 +134,8 @@ def strip_i18n(s):
 def chrome():
     try:
         return _chrome()
+    except UnicodeDecodeError:   # a file saved in the old Windows format is not "a missing part": say so (see the top of this file)
+        raise
     except (AttributeError, ValueError):
         sys.exit('index.html is missing a part that tools/pages.py copies into every extra page: the <head> (with its og:image:alt tag), the skip link, the announcement bar, '
                  '<header class="site-header">, <div class="footer-field"> ... </footer>, <nav class="action-bar">, the icon sprite or the <script src="js/..."> tags. '
@@ -107,7 +143,7 @@ def chrome():
 
 
 def _chrome():
-    src = strip_i18n(open(os.path.join(ROOT, 'index.html'), encoding='utf-8').read())
+    src = strip_i18n(open(os.path.join(ROOT, 'index.html'), encoding='utf-8-sig').read())
     head = re.search(r'<head>(.*?)</head>', src, re.S).group(1)
     og_alt = re.search(r'<meta property="og:image:alt" content="([^"]*)">', head).group(1)   # the share picture's description: one copy, in index.html
     skip = re.search(r'\s*<a class="skip-link"[^>]*>.*?</a>', src, re.S).group(0).strip()
@@ -131,7 +167,7 @@ def parse_source(path):
     if not m:
         sys.exit(f'pages/{name}: it must start with a block of settings between two lines of ---  (title: ..., description: ...). See the top of tools/pages.py.')
     meta = {}
-    for line in m.group(1).splitlines():
+    for line in m.group(1).split('\n'):   # not splitlines(): a description pasted with a Unicode line separator or next-line character in it would be cut short there
         if ':' in line:
             k, v = line.split(':', 1)
             meta[k.strip()] = v.strip()
@@ -199,7 +235,7 @@ def footer_art_source():
     path = os.path.join(ROOT, 'js', 'hero.js')
     if not os.path.exists(path):
         return None
-    src = open(path, encoding='utf-8').read()
+    src = open(path, encoding='utf-8-sig').read()
     try:
         pieces = hero_statements(src)
     except (StopIteration, ValueError):
@@ -291,7 +327,7 @@ def js_icons(sprite, scripts, has_map):
         path = os.path.join(JS_DIR, name)
         if not os.path.exists(path):
             continue
-        text = open(path, encoding='utf-8').read()
+        text = open(path, encoding='utf-8-sig').read()
         words = set(re.findall(r"""['"`#(]([A-Za-z][\w-]*)""", text))
         every = name in ('footer-art.js', 'map-art.js', 'farm-map-data.js') or (has_map and name == 'features.js')
         found |= {w for w in words if w in ids and (every or w.startswith('i-'))}
@@ -303,7 +339,7 @@ def css_ids():
     if os.path.isdir(CSS_DIR):
         for f in os.listdir(CSS_DIR):
             if f.endswith('.css'):
-                out |= set(re.findall(r'url\(\s*["\']?#([^)"\']+)', open(os.path.join(CSS_DIR, f), encoding='utf-8').read()))
+                out |= set(re.findall(r'url\(\s*["\']?#([^)"\']+)', open(os.path.join(CSS_DIR, f), encoding='utf-8-sig').read()))
     return out
 
 
@@ -313,10 +349,11 @@ def compose(c, slug, meta, body):
     image_rel, image_alt, image_dims = share_picture(c, slug, meta)
     image = SITE + image_rel
     head = c['head']
-    head = re.sub(r'<title>.*?</title>', f'<title>{html.escape(title)}</title>', head, flags=re.S)
-    head = re.sub(r'<meta name="description" content="[^"]*">', f'<meta name="description" content="{html.escape(desc, quote=True)}">', head)
-    head = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{html.escape(title, quote=True)}">', head)
-    head = re.sub(r'<meta property="og:description" content="[^"]*">', f'<meta property="og:description" content="{html.escape(desc, quote=True)}">', head)
+    # lambdas: a replacement given as text is read for \1, \n and \d, so a backslash in a title or description would be changed or stop the run
+    head = re.sub(r'<title>.*?</title>', lambda m: f'<title>{html.escape(title)}</title>', head, flags=re.S)
+    head = re.sub(r'<meta name="description" content="[^"]*">', lambda m: f'<meta name="description" content="{html.escape(desc, quote=True)}">', head)
+    head = re.sub(r'<meta property="og:title" content="[^"]*">', lambda m: f'<meta property="og:title" content="{html.escape(title, quote=True)}">', head)
+    head = re.sub(r'<meta property="og:description" content="[^"]*">', lambda m: f'<meta property="og:description" content="{html.escape(desc, quote=True)}">', head)
     head = re.sub(r'\s*<script type="application/ld\+json">.*?</script>', '', head, flags=re.S)
     head = re.sub(r'\s*<(?:link rel="canonical"|meta property="og:(?:url|image(?::[a-z]+)?)"|meta name="twitter:(?:card|image(?::alt)?)")[^>]*>', '', head)
     # The Search Console tag belongs on the home page only (see README), so do not copy its placeholder comment or a pasted tag.
@@ -384,7 +421,7 @@ def main():
     if fa is not None:
         open(os.path.join(ROOT, FOOTER_ART), 'w', encoding='utf-8', newline='\n').write(fa)
         print('wrote', FOOTER_ART)
-    slugs = []
+    slugs, built = [], []
     for f in sorted(os.listdir(PAGES_DIR)):
         if not f.endswith('.html'):
             continue
@@ -392,9 +429,10 @@ def main():
         if not re.fullmatch(r'[a-z0-9-]+', slug):
             sys.exit(f'pages/{f}: a page file name may only use small letters, numbers and dashes (it becomes the web address and goes into sitemap.xml).')
         meta, body = parse_source(os.path.join(PAGES_DIR, f))
-        out = compose(c, slug, meta, body)
-        open(os.path.join(ROOT, slug + '.html'), 'w', encoding='utf-8', newline='\n').write(out)
+        built.append((slug, compose(c, slug, meta, body)))   # every page is made first: one with a mistake stops the run before any file is written
         slugs.append(slug)
+    for slug, out in built:
+        open(os.path.join(ROOT, slug + '.html'), 'w', encoding='utf-8', newline='\n').write(out)
         print('wrote', slug + '.html')
     urls = [SITE] + [SITE + s + '.html' for s in slugs]
     sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'  <url><loc>{u}</loc></url>\n' for u in urls) + '</urlset>\n'

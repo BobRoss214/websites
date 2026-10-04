@@ -14,7 +14,7 @@ REAL = os.path.dirname(HERE)
 
 
 def run(root, *args):
-    r = subprocess.run([sys.executable, os.path.join(root, 'tools', 'check_facts.py')] + list(args), cwd=root, capture_output=True, text=True, timeout=120)
+    r = subprocess.run([sys.executable, os.path.join(root, 'tools', 'check_facts.py')] + list(args), cwd=root, capture_output=True, universal_newlines=True, encoding='utf-8', errors='replace', env=dict(os.environ, PYTHONIOENCODING='utf-8'), timeout=120)
     return r.returncode, r.stdout + r.stderr
 
 
@@ -41,7 +41,7 @@ class CheckFacts(unittest.TestCase):
         with open(p, encoding='utf-8') as f:
             s = f.read()
         self.assertGreaterEqual(s.count(old), 1, f'{rel} no longer contains {old!r}: this test needs the new wording')
-        with open(p, 'w', encoding='utf-8') as f:
+        with open(p, 'w', encoding='utf-8', newline='\n') as f:
             f.write(s.replace(old, new, count))
 
     def test_real_site_agrees(self):
@@ -76,6 +76,13 @@ class CheckFacts(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertIn('more than one main phone number', out)
 
+    def test_day_of_link_typo(self):
+        # the number that is written and the number the link dials are one place: a typo in either is two day-of numbers
+        self.edit('index.html', 'tel:+17042076347', 'tel:+17042076348')
+        code, out = run(self.root, 'phone')
+        self.assertEqual(code, 1, out)
+        self.assertIn('two different day-of emergency numbers: 704-207-6347, 704-207-6348', out)
+
     def test_email_typo(self):
         self.edit('index.html', 'mailto:vanessa@wiseacresorganic.com', 'mailto:vanesa@wiseacresorganic.com')
         code, out = run(self.root, 'e-mail')
@@ -88,17 +95,43 @@ class CheckFacts(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertRegex(out, r'DIFFERENT: 2 answers[^\n]*\n[^\n]*\n(?:[^\n]*\n)*? +10:00-21:00 +\(1 place\(s\)\)\n +js/content\.js:\d+ ')
 
+    def test_hours_in_double_quotes_or_without_a_leading_zero_are_still_read(self):
+        # js/content.js may say "9:00" as well as '09:00': the hours there must still be compared with the pages (10:00-20:00)
+        self.edit('js/content.js', "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00' }", 'greenhouse: { days: [5, 6, 0], open: "9:00", close: "20:00" }')
+        code, out = run(self.root, 'greenhouse')
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r'09:00-20:00 +\(1 place\(s\)\)\n +js/content\.js:\d+ ')
+
     def test_a_wrong_translation_is_found(self):
         p = os.path.join(self.root, 'lang', 'src', 'es.json')
         with open(p, encoding='utf-8') as f:
             s = f.read()
         s2 = s.replace('más $3 por persona', 'más $4 por persona', 1)
         self.assertNotEqual(s, s2, 'the Spanish text this test changes was not found')
-        with open(p, 'w', encoding='utf-8') as f:
+        with open(p, 'w', encoding='utf-8', newline='\n') as f:
             f.write(s2)
         code, out = run(self.root, 'farm fee')
         self.assertEqual(code, 1, out[-800:])
         self.assertRegex(out, r'lang/src/es\.json:\d+ ')
+
+    def test_a_range_with_one_am_or_pm_is_read_the_way_a_person_reads_it(self):
+        # "11-1 pm" is 11 in the morning to 1 in the afternoon; "10-8 pm" is 10 am to 8 pm. (Both used to start in the evening and end before they began.)
+        sys.dont_write_bytecode = True
+        sys.path.insert(0, HERE)
+        import check_facts as cf
+        read = lambda text: cf.hours(re.search(cf.RANGE, text, re.I))   # the tool reads with re.I
+        for text, want in [('11-1 pm', '11:00-13:00'), ('10-8 pm', '10:00-20:00'), ('9 - 5 pm', '09:00-17:00'), ('11:30-1:30 pm', '11:30-13:30'),
+                           ('12-8 pm', '12:00-20:00'), ('12-1 pm', '12:00-13:00'), ('4-8 pm', '16:00-20:00'), ('10 am - 8 pm', '10:00-20:00'),
+                           ('4:00-8:00 PM', '16:00-20:00'), ('11 to 1 p.m.', '11:00-13:00')]:
+            self.assertEqual(read(text), want, text)
+
+    def test_a_price_with_a_thousands_comma_is_read_whole(self):
+        sys.dont_write_bytecode = True
+        sys.path.insert(0, HERE)
+        import check_facts as cf
+        for text, want in [('$1,200 per party', '$1200'), ('$12,345.50 base', '$12345.5'), ('$31 base', '$31'), ('$3.50 per person', '$3.5'), ('plus $3 per person', '$3'), ('$1,20 or $12', '$1')]:
+            m = re.search(cf.MONEY, text)
+            self.assertEqual(cf.money(m), want, text)
 
     def test_built_pages_are_not_read(self):
         self.edit('first-visit.html', 'Children age 2 and younger are free', 'Children age 7 and younger are free')

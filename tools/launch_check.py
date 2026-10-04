@@ -92,6 +92,11 @@ def origin_of(url):
     return '%s://%s' % (sp.scheme, sp.netloc.lower())
 
 
+def without_login(address):
+    """What was typed as an address with any user name and password taken out (name:secret@host): this tool never needs one and must never print one."""
+    return re.sub(r'(?i)^(\s*(?:[a-z][a-z0-9+.-]*://)?)[^/?#\s]*@', r'\1', address)
+
+
 def ext_of(url):
     path = urlsplit(url).path
     base = path.rsplit('/', 1)[-1]
@@ -423,6 +428,15 @@ class PageParser(HTMLParser):
 
 
 CSS_URL = re.compile(r'url\(\s*(["\']?)(.*?)\1\s*\)', re.I)
+# 'single' or "double" quoted text (js/content.js tells the owner to use double quotes when the text has an apostrophe): group 1 holds the words of the first, group 2 of the second
+QUOTED_TEXT = r'''(?:'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)")'''
+
+
+def quoted_text(match):
+    """The words of a QUOTED_TEXT match, whichever quote marks were used ('' when there was no match)."""
+    if not match:
+        return ''
+    return match.group(1) if match.group(1) is not None else (match.group(2) or '')
 
 
 def css_urls(text):
@@ -548,7 +562,7 @@ class Checker(object):
         self.detect_host(chain[0].headers)
         if len(chain) > 1:
             last = urlsplit(final.url)
-            new_base = '%s://%s' % (last.scheme, last.netloc)
+            new_base = '%s://%s' % (last.scheme, last.netloc.rpartition('@')[2])
             if new_base.lower() != self.base.lower() and final.status == 200:
                 r.add(PASS, 'reach-redirect', 'The address you gave sends visitors on to %s (%d redirect%s). That address is checked from here on.' % (new_base, len(chain) - 1, '' if len(chain) == 2 else 's'))
                 self.base = new_base
@@ -760,6 +774,7 @@ class Checker(object):
         text = rob.text()
         groups = {}
         cur = []
+        naming = False   # the last rule line was a User-agent line: the next User-agent line joins the same group (they share the rules that follow)
         for line in text.splitlines():
             line = line.split('#')[0].strip()
             if not line or ':' not in line:
@@ -767,9 +782,11 @@ class Checker(object):
             k, v = [x.strip() for x in line.split(':', 1)]
             k = k.lower()
             if k == 'user-agent':
-                cur = [v.lower()]
+                cur = (cur if naming else []) + [v.lower()]
+                naming = True
                 groups.setdefault(v.lower(), [])
             elif k in ('disallow', 'allow') and cur:
+                naming = False
                 for ua in cur:
                     groups[ua].append((k, v))
         rules = groups.get('*', [])
@@ -1410,7 +1427,7 @@ class Checker(object):
             r.add(PASS, 'setting-season', 'Owner setting: the season switcher is off for visitors (seasonPicker: false).')
         # analytics
         m = re.search(r'analytics\s*:\s*\{([^}]*)\}', conf)
-        prov = re.search(r"provider\s*:\s*'([^']*)'", m.group(1)).group(1) if m and re.search(r"provider\s*:\s*'([^']*)'", m.group(1)) else ''
+        prov = quoted_text(re.search(r'\bprovider\s*:\s*' + QUOTED_TEXT, m.group(1))) if m else ''
         if prov in ('', 'none'):
             r.add(PASS, 'setting-analytics', 'Owner setting: analytics is OFF (no visitor counts are collected). That is the default (checklist, decision D5).')
         elif prov in ('plausible', 'goatcounter', 'umami', 'cloudflare'):
@@ -1418,16 +1435,15 @@ class Checker(object):
         else:
             r.add(WARN, 'setting-analytics', 'Owner setting: analytics provider "%s" is not one the site knows.' % prov, 'Use none, plausible, goatcounter, umami or cloudflare (js/analytics.js explains each).')
         # email signup
-        m = setting('signup', r'\{[^}]*?action\s*:\s*\'([^\']*)\'')
-        action = m.group(1) if m else ''
+        action = quoted_text(re.search(r'^\s*signup\s*:\s*\{[^}]*?\baction\s*:\s*' + QUOTED_TEXT, conf, re.M))
         if action:
             r.add(PASS, 'setting-signup', 'Owner setting: the email signup form is connected to Mailchimp. Sign up once with your own address to be sure.')
         else:
             r.add(WARN, 'setting-signup', 'Owner setting: the email signup form is not connected yet, so visitors see a plain "Join the email list" button.', 'Optional: send the Mailchimp form code to Claude (docs/QUESTIONS_FOR_THE_FARM.md, question 26).')
         # review link
-        m = setting('reviewUrl', r"'([^']*)'")
-        if m and m.group(1).strip():
-            r.add(PASS, 'setting-review', 'Owner setting: the Google review link is set (%s).' % m.group(1))
+        review = quoted_text(re.search(r'^\s*reviewUrl\s*:\s*' + QUOTED_TEXT, conf, re.M))
+        if review.strip():
+            r.add(PASS, 'setting-review', 'Owner setting: the Google review link is set (%s).' % review)
         else:
             r.add(WARN, 'setting-review', 'Owner setting: the Google review link is not set, so "Leave a Google review" buttons only open the farm on Google Maps.', 'Paste your review link (Google Business Profile, Ask for reviews) into js/content.js (checklist step 3.12).')
         # exact farm spot
@@ -1530,7 +1546,7 @@ def normalize_address(text):
     host = sp.hostname or ''
     if sp.scheme not in ('http', 'https') or not host or not (re.match(r'^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$', host) or ':' in host and re.match(r'^[0-9A-Fa-f:.]+$', host)):
         return None
-    return '%s://%s' % (sp.scheme, sp.netloc.lower()), (sp.path not in ('', '/'))
+    return '%s://%s' % (sp.scheme, sp.netloc.rpartition('@')[2].lower()), (sp.path not in ('', '/'))   # without "name:password@": the fetcher never sends it, and it must not be printed
 
 
 def summary_text(rep, checker, address, quick):
@@ -1567,7 +1583,7 @@ def run(argv):
         return 2 if e.code else 0
     norm = normalize_address(args.address)
     if not norm:
-        print('That does not look like a web address: %s\nGive the full address, for example https://www.wiseacresorganic.com/' % args.address, file=sys.stderr)
+        print('That does not look like a web address: %s\nGive the full address, for example https://www.wiseacresorganic.com/' % without_login(args.address), file=sys.stderr)
         return 2
     base, had_path = norm
     rep = Report(args.json)

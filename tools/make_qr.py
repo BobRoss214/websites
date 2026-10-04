@@ -12,15 +12,51 @@ their wording is in the "languages" part at the end of tools/qr_links.json.
 The Google review sign needs your review link first: put it in js/content.js as  reviewUrl: 'https://...'
 Until then that sign is skipped (it says so below).
 
-Needs:  pip install segno        (and for --check:  pip install zxing-cpp pillow)
+Needs:  python3 -m pip install segno        (and for --check:  python3 -m pip install zxing-cpp pillow)
 """
 import html, io, json, os, re, sys
 from urllib.parse import urlencode
 
+# ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
+try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
+    sys.stdout.reconfigure(errors='replace')
+except (AttributeError, ValueError, OSError):
+    pass
+
+
+def _stop_plainly(kind, err, tb):
+    """A file saved in the old Windows format (Notepad's "ANSI"), or one that is read-only or open in another program, ends a tool with a plain message, not a traceback."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if issubclass(kind, UnicodeDecodeError):
+        import glob
+        for pat in ('*.html', 'pages/*.html', 'js/*.js', 'css/*.css', 'lang/*.json', 'lang/src/*.json', 'tools/*.json'):
+            for path in sorted(glob.glob(os.path.join(root, pat))):
+                with open(path, 'rb') as f:
+                    raw = f.read()
+                try:
+                    raw.decode('utf-8')
+                except UnicodeDecodeError as bad:
+                    line = raw.split(b'\n')[raw.count(b'\n', 0, bad.start)]
+                    print('%s is not saved as UTF-8: line %d has a character in the old Windows "ANSI" format (a dash, a curly quote or a letter with an accent):\n    %s\n'
+                          'Open the file and save it again as UTF-8 (Notepad: File, Save As, then Encoding: UTF-8; VS Code: click the encoding at the bottom right, Save with Encoding, UTF-8). Then run this again.'
+                          % (os.path.relpath(path, root).replace(os.sep, '/'), raw.count(b'\n', 0, bad.start) + 1, line.decode('utf-8', 'replace').strip()[:70].encode('ascii', 'replace').decode()), file=sys.stderr)
+                    return
+    elif issubclass(kind, PermissionError) and getattr(err, 'filename', None):
+        print('I could not open or change %s: the file is read-only, or open in another program, or locked while OneDrive syncs it.\n'
+              'Right-click it, Properties, and untick Read-only; close the programs that show it; wait a moment. Then run this again.' % err.filename, file=sys.stderr)
+        return
+    sys.__excepthook__(kind, err, tb)
+
+
+sys.excepthook = _stop_plainly
+# ---- end of the Windows safety lines
+
 try:
     import segno
 except ImportError:
-    sys.exit('This needs the segno package:  pip install segno')
+    sys.exit('This needs the segno package. Type this once, then run the command again:\n'
+             '    python3 -m pip install segno\n'
+             '(On Windows type python or py -3 instead of python3. See "Commands on Windows, Mac and Linux" in README.md.)')
 
 # The languages of the site, as the site's own language button names them: (code, html lang, the language's own name, its name in English)
 SITE_LANGS = [('en', 'en', 'English', 'English'), ('es', 'es', 'Español', 'Spanish'), ('hi', 'hi', 'हिन्दी', 'Hindi'),
@@ -35,7 +71,7 @@ OUT_PRINT = os.path.join(ROOT, 'print')
 
 
 def review_url():
-    src = open(os.path.join(ROOT, 'js', 'content.js'), encoding='utf-8').read()
+    src = open(os.path.join(ROOT, 'js', 'content.js'), encoding='utf-8-sig').read()
     src = re.sub(r'/\*.*?\*/', '', src, flags=re.S)          # /* comments */
     src = re.sub(r'(?m)^\s*//.*$', '', src)                   # lines the owner switched off with //
     m = re.search(r"""^\s*reviewUrl:\s*(['"])(.*?)\1""", src, re.M)
@@ -47,6 +83,8 @@ def load_config():
     path = os.path.join(ROOT, 'tools', 'qr_links.json')
     try:
         cfg = json.load(open(path, encoding='utf-8-sig'))
+    except UnicodeDecodeError:   # not saved as UTF-8: the message at the top of this file names the file
+        raise
     except ValueError as e:
         sys.exit(f'tools/qr_links.json is not valid JSON ({e}). Check commas and quotes near that spot.')
     if not isinstance(cfg, dict) or not str(cfg.get('site', '')).startswith('https://'):
@@ -120,7 +158,7 @@ h1 span{display:block;margin-top:.15em;font-size:2rem;color:#6a5140;font-weight:
 .how{margin:0 0 .15in;font:700 1.25rem "Fredoka",system-ui,sans-serif}
 .how span,.text span,.also span{display:block;color:#6a5140;font-weight:600}
 .text{margin:0;font-size:1.3rem}.also{margin:.12in 0 0;font-size:.95rem;color:#6a5140}
-.url{margin:auto 0 0;padding-top:.2in;font:700 .95rem "Nunito",system-ui,sans-serif;color:#6a5140;overflow-wrap:anywhere}
+.url{margin:auto 0 0;padding-top:.2in;font:700 .95rem "Nunito",system-ui,sans-serif;color:#6a5140;overflow-wrap:break-word;overflow-wrap:anywhere}
 @media print{body{background:#fff}.bar{display:none}.sign{width:auto;max-width:none;min-height:10in;margin:0;padding:.3in .4in;border-radius:28px;box-shadow:none}.qr{width:4.3in;margin:.15in 0 .12in}}
 """
 
@@ -189,24 +227,40 @@ def main():
     check = '--check' in sys.argv
     cfg = load_config()
     site, review = cfg['site'], review_url()
-    os.makedirs(OUT_QR, exist_ok=True)
-    os.makedirs(OUT_PRINT, exist_ok=True)
-    pages, made, bad, done = [], 0, 0, []
+    if check:
+        try:
+            import zxingcpp
+            from PIL import Image
+        except ImportError:
+            sys.exit('--check needs two more packages:  python3 -m pip install zxing-cpp pillow   (on Windows: python instead of python3)')
+    # First look at every sign (nothing is written yet): one address that is too long must not leave the signs before it rewritten and the print sheets not.
+    plan = []
     for sign in cfg['signs']:
         if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,40}', str(sign.get('id', ''))):
-            print(f"skipped  {sign.get('id')!r}: a sign id may only use a-z, 0-9 and - (it becomes a file name)")
+            plan.append((f"skipped  {sign.get('id')!r}: a sign id may only use a-z, 0-9 and - (it becomes a file name)", None, None, None))
             continue
         url = resolve(sign, site, review)
         if not url:
             raw = sign['url'].replace('{site}', site).replace('{reviewUrl}', review).strip()
             why = ('no address yet' if not raw else 'the address must start with https://  (it is: ' + raw[:60] + ')')
-            print(f"skipped  {sign['id']}: {why}" + (' (set reviewUrl in js/content.js, between the quotes)' if sign['id'] == 'review' else ''))
+            plan.append((f"skipped  {sign['id']}: {why}" + (' (set reviewUrl in js/content.js, between the quotes)' if sign['id'] == 'review' else ''), None, None, None))
             continue
         try:
             qr = segno.make(url, error='m')
         except Exception:
-            sys.exit(f"The address for the sign '{sign['id']}' is too long for a QR code ({len(url)} letters). Use a shorter link.")
-        qr.save(os.path.join(OUT_QR, sign['id'] + '.svg'), scale=10, border=4, dark='#000000', light='#ffffff', xmldecl=False, svgns=True)
+            sys.exit(f"The address for the sign '{sign['id']}' is too long for a QR code ({len(url)} letters). Use a shorter link. Nothing was changed.")
+        plan.append((None, sign, url, qr))
+    os.makedirs(OUT_QR, exist_ok=True)
+    os.makedirs(OUT_PRINT, exist_ok=True)
+    pages, made, bad, done = [], 0, 0, []
+    for skipped, sign, url, qr in plan:
+        if skipped:
+            print(skipped)
+            continue
+        svg = io.BytesIO()   # saved in memory and written as bytes: segno's own text-mode save would end the file with CR LF on Windows
+        qr.save(svg, kind='svg', scale=10, border=4, dark='#000000', light='#ffffff', xmldecl=False, svgns=True)
+        with open(os.path.join(OUT_QR, sign['id'] + '.svg'), 'wb') as f:
+            f.write(svg.getvalue())
         raw = qr.svg_inline(scale=10, border=4, dark='#000000', light='#ffffff', svgclass=None, lineclass=None, omitsize=True)
         inline = raw.replace('<svg ', '<svg role="img" aria-label="QR code: ' + html.escape(sign['title_en'], quote=True) + '" ', 1)
         # the two signs that open this website: say the page is also in the other languages
@@ -225,11 +279,6 @@ def main():
         made += 1
         line = f"made     {sign['id']:<11} {url}"
         if check:
-            try:
-                import zxingcpp
-                from PIL import Image
-            except ImportError:
-                sys.exit('--check needs:  pip install zxing-cpp pillow')
             buf = io.BytesIO()
             qr.save(buf, kind='png', scale=8, border=4)
             buf.seek(0)

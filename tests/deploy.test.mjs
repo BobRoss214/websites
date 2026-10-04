@@ -8,7 +8,9 @@
  *   - served by a plain web server (no special rules), every page in all five languages loads with no error and no missing file
  *   - an out-of-date page is rebuilt (--check only reports it), settings still to set are warned about without stopping,
  *     facts that disagree (tools/check_facts.py) and a missing translation each stop it with one plain line that says how to fix it,
- *     --force builds anyway and says so (on screen and in FILES.txt), and a folder that is not its own is never wiped
+ *     --force builds anyway and says so (on screen and in FILES.txt), and a folder that is not its own is never wiped;
+ *     one plain line each says whether _headers and _redirects are in the folder (a file saved as _redirects.txt is named), and a patches/ or .venv
+ *     folder in the site folder is left out and named
  *   - the licence texts and credits travel with the fonts and icons, and a font with no licence text next to it stops the tool (--force does not override that)
  * Your own files are not touched. */
 import fs from 'node:fs';
@@ -142,7 +144,35 @@ try {
   ok('seasonPicker still true: a warning, and the folder is still made', w.code === 0 && /WARNING: seasonPicker/.test(w.out), last(w.out));
   fs.writeFileSync(content, orig.replace(/^  seasonPicker: (true|false),/m, '  seasonPicker: false,'));
   ok('seasonPicker false: no warning about it', !/WARNING: seasonPicker/.test(make('--no-rebuild', '--out', out2).out));
+  // the same file saved with a tab instead of two spaces in front of each setting (an editor that re-indents): the warnings must not change
+  fs.writeFileSync(content, orig.replace(/^  (?=\w+:)/gm, '\t').replace(/^\tseasonPicker: (true|false),/m, '\tseasonPicker: true,').replace(/^\tfarmPoint:\s*null/m, '\tfarmPoint: { lat: 35.1, lon: -80.6 }'));
+  const tabbed = make('--no-rebuild', '--out', out2);
+  ok('settings indented with tabs: "seasonPicker is still true" is still warned about, and a farmPoint that is set is not called "not set"', /WARNING: seasonPicker/.test(tabbed.out) && !/WARNING: farmPoint/.test(tabbed.out), last(tabbed.out));
   fs.writeFileSync(content, orig);
+
+  // ---- the two files the host reads, and folders that can lie next to the site (patches/, the Python box .venv): named, never uploaded
+  const hostOut = path.join(tmp, 'out-host');
+  const withRedirects = make('--no-rebuild', '--out', hostOut);
+  ok('_headers: one plain line says it is in the folder and where (deploy-style path); _redirects: one plain line says it is not, and when that is fine', withRedirects.code === 0 && /_headers is in the upload folder, at its top \(.*_headers\): the security notes and the cache times\./.test(withRedirects.out) && /_redirects is not in the upload folder, because your site folder has no _redirects file\. That is fine unless the new site takes over the old farm addresses/.test(withRedirects.out), last(withRedirects.out));
+  fs.writeFileSync(path.join(site, '_redirects'), '/old-farm-page /wise-pie 301\n');
+  const r3 = make('--no-rebuild', '--out', hostOut);
+  ok('a _redirects file in the site folder: the line says it is in the folder, and it is', r3.code === 0 && /_redirects is in the upload folder, at its top \(.*_redirects\): the old farm addresses sent on to the new pages\./.test(r3.out) && fs.existsSync(path.join(hostOut, '_redirects')), last(r3.out));
+  fs.rmSync(path.join(site, '_redirects'));
+  fs.writeFileSync(path.join(site, '_redirects.txt'), '/old-farm-page /wise-pie 301\n');
+  const r4 = make('--no-rebuild', '--out', hostOut);
+  ok('a file saved as _redirects.txt: left out, and said so plainly in two places (the host would not read it; rename it)', r4.code === 0 && /WARNING: _redirects is NOT in the upload folder: your site folder has "_redirects\.txt".* Fix: rename it to _redirects \(no \.txt at the end\)/.test(r4.out) && /_redirects\.txt +named with an extra ending, so the host would not read it/.test(r4.out) && !fs.existsSync(path.join(hostOut, '_redirects.txt')), last(r4.out));
+  fs.rmSync(path.join(site, '_redirects.txt'));
+  fs.mkdirSync(path.join(site, 'patches', 'optional'), { recursive: true });
+  fs.writeFileSync(path.join(site, 'patches', 'optional', 'README.md'), '# optional changes\n'); fs.writeFileSync(path.join(site, 'patches', 'optional', 'a.patch'), 'x\n');
+  fs.mkdirSync(path.join(site, '.venv', 'lib'), { recursive: true }); fs.writeFileSync(path.join(site, '.venv', 'lib', 'x.py'), 'x\n');
+  const r5 = make('--no-rebuild', '--out', hostOut);
+  const inFolder = files(hostOut);
+  ok('a patches/ folder and a .venv folder in the site folder are named in "Left out" with their own reason, and nothing from them is uploaded', r5.code === 0 && /patches\/ +the optional changes for you to decide on/.test(r5.out) && /\.venv\/ +the Python packages you installed for the tools/.test(r5.out) && !inFolder.some((f) => /^(patches|\.venv)\//.test(f)), last(r5.out));
+  fs.rmSync(path.join(site, 'patches'), { recursive: true, force: true }); fs.rmSync(path.join(site, '.venv'), { recursive: true, force: true });
+  fs.renameSync(path.join(site, '_headers'), path.join(tmp, '_headers.kept'));
+  const r6 = make('--no-rebuild', '--out', hostOut);
+  ok('no _headers file: a WARNING that says the host would add no security notes and no cache times, and how to get it back', r6.code === 0 && /WARNING: _headers is NOT in the upload folder, because your site folder has no _headers file\. Without it the host adds no security notes and no cache times\. Fix: put _headers back/.test(r6.out), last(r6.out));
+  fs.renameSync(path.join(tmp, '_headers.kept'), path.join(site, '_headers'));
 
   // ---- an out-of-date page
   fs.rmSync(path.join(site, 'wise-pie.html'));
@@ -150,6 +180,16 @@ try {
   ok('--check: a page that was not rebuilt is named, and nothing is written', c.code === 1 && /wise-pie\.html/.test(c.out) && !fs.existsSync(path.join(site, 'wise-pie.html')), last(c.out));
   const u = make('--out', out2);
   ok('without --check: the page is rebuilt in the site folder and is in the upload', u.code === 0 && fs.existsSync(path.join(site, 'wise-pie.html')) && fs.existsSync(path.join(out2, 'wise-pie.html')), last(u.out));
+
+  // ---- a broken link: not ready, and no finished-looking folder is left behind to be uploaded by mistake
+  {
+    const css = path.join(site, 'css', 'hero.css'), keep = fs.readFileSync(css);
+    fs.rmSync(css);   // every page points to it
+    const b = make('--no-rebuild', '--out', out2);
+    ok('a file the pages point to is missing: NOT READY and exit code 1', b.code === 1 && /NOT READY/.test(b.out) && /hero\.css/.test(b.out), last(b.out));
+    ok('...and the folder is not left behind with a FILES.txt that makes it look finished', !fs.existsSync(path.join(out2, 'FILES.txt')), fs.existsSync(out2) ? 'out2 has ' + fs.readdirSync(out2).length + ' entries' : '');
+    fs.writeFileSync(css, keep);
+  }
 
   // ---- a folder that is not the tool's own is never wiped
   const foreign = path.join(tmp, 'mine'); fs.mkdirSync(foreign); fs.writeFileSync(path.join(foreign, 'keep.txt'), 'mine');

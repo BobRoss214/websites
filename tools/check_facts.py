@@ -15,6 +15,40 @@ Exit code: 0 = everything agrees, 1 = something disagrees.
 """
 import contextlib, glob, html, io, json, os, re, sys
 
+# ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
+try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
+    sys.stdout.reconfigure(errors='replace')
+except (AttributeError, ValueError, OSError):
+    pass
+
+
+def _stop_plainly(kind, err, tb):
+    """A file saved in the old Windows format (Notepad's "ANSI"), or one that is read-only or open in another program, ends a tool with a plain message, not a traceback."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if issubclass(kind, UnicodeDecodeError):
+        import glob
+        for pat in ('*.html', 'pages/*.html', 'js/*.js', 'css/*.css', 'lang/*.json', 'lang/src/*.json', 'tools/*.json'):
+            for path in sorted(glob.glob(os.path.join(root, pat))):
+                with open(path, 'rb') as f:
+                    raw = f.read()
+                try:
+                    raw.decode('utf-8')
+                except UnicodeDecodeError as bad:
+                    line = raw.split(b'\n')[raw.count(b'\n', 0, bad.start)]
+                    print('%s is not saved as UTF-8: line %d has a character in the old Windows "ANSI" format (a dash, a curly quote or a letter with an accent):\n    %s\n'
+                          'Open the file and save it again as UTF-8 (Notepad: File, Save As, then Encoding: UTF-8; VS Code: click the encoding at the bottom right, Save with Encoding, UTF-8). Then run this again.'
+                          % (os.path.relpath(path, root).replace(os.sep, '/'), raw.count(b'\n', 0, bad.start) + 1, line.decode('utf-8', 'replace').strip()[:70].encode('ascii', 'replace').decode()), file=sys.stderr)
+                    return
+    elif issubclass(kind, PermissionError) and getattr(err, 'filename', None):
+        print('I could not open or change %s: the file is read-only, or open in another program, or locked while OneDrive syncs it.\n'
+              'Right-click it, Properties, and untick Read-only; close the programs that show it; wait a moment. Then run this again.' % err.filename, file=sys.stderr)
+        return
+    sys.__excepthook__(kind, err, tb)
+
+
+sys.excepthook = _stop_plainly
+# ---- end of the Windows safety lines
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ---------------------------------------------------------------- reading the files
@@ -23,7 +57,7 @@ BLOCK = re.compile(r'^/?(?:p|li|ul|ol|div|section|article|header|footer|nav|main
 
 def read(rel):
     try:
-        with open(os.path.join(ROOT, rel), encoding='utf-8') as f:
+        with open(os.path.join(ROOT, rel), encoding='utf-8-sig') as f:
             return f.read()
     except OSError:
         return None
@@ -46,10 +80,22 @@ def words(text, start, end):
     return re.sub(r'\s+', ' ', text[max(0, start - 28):end + 28]).strip()
 
 
+def context(body, start, end):
+    """The whole line a place is on (in a page's words: the block between two ' | ' marks), to tell what it is about ("Day-of emergencies")."""
+    a = body.rfind('\n', 0, start) + 1
+    b = body.find('\n', end)
+    seg = body[a:len(body) if b < 0 else b]
+    if ' | ' in seg:
+        at = start - a
+        left, right = seg.rfind(' | ', 0, at), seg.find(' | ', at)
+        seg = seg[left + 3 if left >= 0 else 0:right if right >= 0 else len(seg)]
+    return re.sub(r'\s+', ' ', seg).strip()
+
+
 def source_files():
     """(file, words of the page, the file as written) for every file where a fact can be written. Same line numbers in both."""
     out = []
-    for rel in ['index.html'] + sorted(os.path.relpath(p, ROOT) for p in glob.glob(os.path.join(ROOT, 'pages', '*.html'))):
+    for rel in ['index.html'] + sorted('pages/' + os.path.basename(p) for p in glob.glob(os.path.join(ROOT, 'pages', '*.html'))):   # with /, as on every computer
         s = read(rel)
         if s is not None:
             out.append((rel, plain_text(s), s))
@@ -70,9 +116,9 @@ def translations():
             en = {}
     out = []
     for path in sorted(glob.glob(os.path.join(ROOT, 'lang', 'src', '*.json'))):
-        rel = os.path.relpath(path, ROOT)
+        rel = 'lang/src/' + os.path.basename(path)
         section = None
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding='utf-8-sig') as f:
             for n, line in enumerate(f, 1):
                 s = line.strip()
                 if s in ('"js": {', '"ui": {'):
@@ -117,9 +163,12 @@ def hours(m):
     if re.search(r'At The GreenHouse\s*,?\s*$', m.string[max(0, m.start() - 30):m.start()], re.I):
         return None   # the Wise Pie hours ("At The GreenHouse, Friday-Sunday, 4:00-8:00 PM") are another fact
     a = (m.group(1), m.group(2), m.group(3)); b = (m.group(4), m.group(5), m.group(6))
-    if not a[2] and b[2]:
+    own = bool(a[2])   # does the first time say am or pm itself?
+    if not own and b[2]:
         a = (a[0], a[1], b[2])
     s, e = clock(*a), clock(*b)
+    if not own and s > e:
+        s = clock(a[0], a[1], 'am')   # "11-1 pm", "10-8 pm": with the "pm" of the second time the first would start after it ends, so it is the morning one
     if e < s:
         e = clock(int(b[0]) + 12, b[1], None)
     return s + '-' + e
@@ -127,7 +176,7 @@ def hours(m):
 
 T = r'(\d{1,2})(?::(\d\d))? ?([ap]\.?m\.?)?'
 RANGE = T + r' ?(?:–|-|to) ?' + T.replace('([ap]\\.?m\\.?)?', '([ap]\\.?m\\.?)')
-MONEY = r'\$(\d+(?:\.\d+)?)'
+MONEY = r'\$(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)'   # $1,200 and $1200.50 are read whole
 PHONE = re.compile(r'\(?\b(\d{3})\)?[-. ] ?(\d{3})[-. ](\d{4})\b')
 
 
@@ -146,6 +195,15 @@ def one(g=1):
     return lambda m: m.group(g)
 
 
+# js/content.js: greenhouse: { days: [...], open: '10:00', close: '20:00' }. Single or double quote marks, and 9:00 as well as 09:00, are both fine in that file.
+SETTING_HOURS = r"%s:\s*\{[^}]*open:\s*['\"](\d{1,2}):(\d\d)['\"],\s*close:\s*['\"](\d{1,2}):(\d\d)['\"]"
+
+
+def setting_hours(m):
+    a, b, c, d = m.groups()
+    return '%02d:%s-%02d:%s' % (int(a), b, int(c), d)
+
+
 FACTS = [
     dict(name='price: farm fee per person', what='the field fee per person (ages 3 and up), also the extra per person in the pizza package', see='README: "Change a fact everywhere", row "$3 per person"', check='money',
          pats=[(r'plus ' + MONEY + r' per person', money), (r'\+ ' + MONEY + r' per person farm fee', money), (r'(?:Farm fun, no pizza|No pizza)[ |]{1,8}(?:[^$|]+[ |]{1,8})?' + MONEY + ' per person', money),
@@ -158,10 +216,10 @@ FACTS = [
     dict(name='price: refund fee', what='the card fee kept when a reservation is cancelled (%)', see='search for "credit card processing fee"', check='digits', pats=[(r'(\d+)% credit card', one())]),
     dict(name='hours: The GreenHouse', what='the GreenHouse opening hours (js/content.js hours.greenhouse and the words on the pages)', see='README: "Change a fact everywhere", row "The GreenHouse hours"', check='digits',
          pats=[(r'(?<!At The GreenHouse )(?:Fri–Sun|Friday–Sunday|Fri through Sun|Friday through Sunday),? ' + RANGE, hours),
-               (r"greenhouse:\s*\{[^}]*open:\s*'(\d\d):(\d\d)',\s*close:\s*'(\d\d):(\d\d)'", lambda m: '%s:%s-%s:%s' % m.groups())]),
+               (SETTING_HOURS % 'greenhouse', setting_hours)]),
     dict(name='hours: Wise Pie', what='the Wise Pie (pizza) hours at The GreenHouse', see='README: "Change a fact everywhere", row "The Wise Pie hours"', check='digits',
          pats=[(r'\| ' + RANGE + r' \| At The GreenHouse', hours), (r'first come, first served from ' + T + ' to ' + T.replace('([ap]\\.?m\\.?)?', '([ap]\\.?m\\.?)'), hours),
-               (r"pizza:\s*\{[^}]*open:\s*'(\d\d):(\d\d)',\s*close:\s*'(\d\d):(\d\d)'", lambda m: '%s:%s-%s:%s' % m.groups())]),
+               (SETTING_HOURS % 'pizza', setting_hours)]),
     dict(name='hours: pizza reservations open', what='the time on Tuesdays when pizza reservations open', see='search for "Tuesday" in index.html (and data-release-time)', check='digits',
          pats=[(r'Tuesdays? at ' + T, lambda m: clock(m.group(1), m.group(2), m.group(3))), (r'data-release-time="(\d{1,2}):(\d\d)"', lambda m: clock(m.group(1), m.group(2), None), 'raw')]),
     dict(name='phone numbers', what='every phone number (the main one, if shown, and the day-of emergency number)', see='README: "Change a fact everywhere", row "The main phone number"', check='digits', kind='phone',
@@ -212,7 +270,7 @@ def find_places(fact, files, trans):
                     continue
                 line = body.count('\n', 0, m.start()) + 1
                 if not any(p['file'] == rel and p['line'] == line and p['value'] == value for p in places):
-                    places.append(dict(file=rel, line=line, value=value, words=words(body, m.start(), m.end())))
+                    places.append(dict(file=rel, line=line, value=value, words=words(body, m.start(), m.end()), ctx=context(body, m.start(), m.end())))
     # translations: the translation of a sentence that holds this fact must hold the same numbers
     if fact['check'] in ('money', 'digits') and not fact.get('kind'):
         for rel, line, english, tr in trans:
@@ -236,7 +294,7 @@ def find_places(fact, files, trans):
                     want = numbers_in(m.group(0))   # a 12-hour time in English may be on the 24-hour clock in the translation
                 same = all(w in have or (w.isdigit() and 1 <= int(w) <= 12 and str(int(w) + 12) in have) for w in want)
                 shown = value if same else 'the translation says ' + (', '.join(re.findall(r'\$\s?\d+(?:\.\d+)?|\d+(?::\d\d)?', tr)[:6]) or 'no number')
-                places.append(dict(file=rel, line=line, value=shown, words=re.sub(r'\s+', ' ', tr)[:70]))
+                places.append(dict(file=rel, line=line, value=shown, words=re.sub(r'\s+', ' ', tr)[:70], ctx=''))
                 break
     return places
 
@@ -253,7 +311,7 @@ def report(fact, places, short):
         shown = {}
         for p in places:
             shown.setdefault(p['value'], []).append(p)
-        day = [d for d, ps in shown.items() if any(re.search(r'Day-of|emergenc', p['words'], re.I) for p in ps)]
+        day = [d for d, ps in shown.items() if any(re.search(r'Day-of|emergenc', p.get('ctx', '') + ' ' + p['words'], re.I) for p in ps)]
         others = [d for d in shown if d not in day]
         if len(day) > 1:
             problems.append('two different day-of emergency numbers: ' + ', '.join(pretty_phone(d) for d in day))

@@ -1,6 +1,7 @@
 {
  "js": {
   "(Your time: {time})": "(Tu hora: {time})",
+  "{text} (Eastern Time)": "{text} (hora del Este)",
   "100 blueberries! Your fingers must be blue by now.": "¡100 arándanos! A estas alturas tus dedos deben estar azules.",
   "100 lights and sparks! You are lighting up the whole farm.": "¡100 luces y chispas! Estás iluminando toda la granja.",
   "100 pumpkins! That is a lot of pie.": "¡100 calabazas! Eso da para muchos pays.",

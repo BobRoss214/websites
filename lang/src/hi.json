@@ -1,6 +1,7 @@
 {
  "js": {
   "(Your time: {time})": "(आपका समय: {time})",
+  "{text} (Eastern Time)": "{text} (ईस्टर्न टाइम)",
   "100 blueberries! Your fingers must be blue by now.": "100 ब्लूबेरी! अब तक आपकी उँगलियाँ नीली हो गई होंगी।",
   "100 lights and sparks! You are lighting up the whole farm.": "100 बत्तियाँ और चिंगारियाँ! आप पूरे फ़ार्म को रोशन कर रहे हैं।",
   "100 pumpkins! That is a lot of pie.": "100 कद्दू! इतने में तो ढेर सारी पाई बन जाएगी।",

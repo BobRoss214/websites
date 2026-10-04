@@ -69,7 +69,7 @@ a[href^="tel:"]{white-space:nowrap}
 :focus-visible{outline:4px solid var(--focus);outline-offset:3px;border-radius:6px}
 .reserve :focus-visible,.site-footer :focus-visible{--focus:#fff3b0}
 
-.wrap{width:min(1180px,100% - 2 * var(--gutter));margin-inline:auto}
+.wrap{width:min(1180px,100% - 2 * var(--gutter));margin-left:auto;margin-right:auto;margin-inline:auto}
 .ico{width:1.25em;height:1.25em;flex:none}
 .hand{font-family:var(--hand);font-weight:700}
 .skip-link{position:absolute;left:12px;top:-60px;z-index:100;background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;transition:top .2s}
@@ -122,7 +122,7 @@ a[href^="tel:"]{white-space:nowrap}
 
 /* growing vine = scroll progress */
 .vine{position:absolute;left:0;right:0;top:100%;height:18px;margin-top:-3px;pointer-events:none;overflow:hidden;container-type:inline-size}
-.vine-line{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='18' viewBox='0 0 64 18'%3E%3Cpath d='M0 3Q16 11 32 3T64 3' fill='none' stroke='%2323803f' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M16 8c-7 0-11 4-11 9 7 0 11-3 11-9Z' fill='%2343a047'/%3E%3Cpath d='M48 8c7 0 11 4 11 9-7 0-11-3-11-9Z' fill='%238bc34a'/%3E%3C/svg%3E") repeat-x 0 0;clip-path:inset(0 calc((1 - var(--vp,0)) * 100%) 0 0)}
+.vine-line{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='18' viewBox='0 0 64 18'%3E%3Cpath d='M0 3Q16 11 32 3T64 3' fill='none' stroke='%2323803f' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M16 8c-7 0-11 4-11 9 7 0 11-3 11-9Z' fill='%2343a047'/%3E%3Cpath d='M48 8c7 0 11 4 11 9-7 0-11-3-11-9Z' fill='%238bc34a'/%3E%3C/svg%3E") repeat-x 0 0;clip-path:inset(0 calc((1 - var(--vp,0)) * 100%) 0 0)}
 /* The strawberry and the tractor below move with translate, not left/top: moving with left/top while the page scrolls counts as
    a layout jump (CLS) every frame. 100cqw / 100cqh = the width / height of their strip (container-type). */
 .vine-head{position:absolute;top:-3px;left:14px;translate:calc(var(--vp,0) * (100cqw - 28px)) 0;width:22px;height:25px;transform:translateX(-50%) rotate(8deg);filter:drop-shadow(0 1px 0 rgba(58,36,22,.4))}
@@ -131,11 +131,11 @@ a[href^="tel:"]{white-space:nowrap}
    Hero
    ========================================================================== */
 .hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(var(--sky-1,#5fc1ee) 0%,var(--sky-2,#93d8f6) 34%,var(--sky-3,#cdeffb) 58%,var(--sky-4,#fff1c9) 100%);min-height:clamp(660px,calc(100vh - 112px),880px);min-height:clamp(660px,calc(100svh - 112px),880px);padding-top:clamp(24px,4vw,48px);border-bottom:3px solid var(--ink)}
-.hero-scene{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.hero-scene{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;z-index:1;pointer-events:none;overflow:hidden}
 .layer{position:absolute;left:0;width:100%;will-change:transform}
 svg.layer{bottom:0;height:64%}
-.layer-sky{inset:0}
-.layer-critters{inset:0}
+.layer-sky{top:0;right:0;bottom:0;left:0;inset:0}
+.layer-critters{top:0;right:0;bottom:0;left:0;inset:0}
 .layer-field,.layer-fore{height:64%}
 svg.layer-fore{overflow:visible}
 
@@ -163,7 +163,7 @@ svg.layer-fore{overflow:visible}
 .berry.is-picked{animation:pluck .45s ease-in forwards}
 .berry.is-regrowing{animation:regrow .8s cubic-bezier(.3,1.6,.5,1) both}
 
-.hero-copy{position:relative;z-index:5;width:min(880px,100% - 2 * var(--gutter));margin-inline:auto;text-align:center;pointer-events:none}
+.hero-copy{position:relative;z-index:5;width:min(880px,100% - 2 * var(--gutter));margin-left:auto;margin-right:auto;margin-inline:auto;text-align:center;pointer-events:none}
 .hero-copy a,.hero-copy .chips{pointer-events:auto}
 .hero-kicker{font-size:clamp(1.5rem,3vw,2.1rem);color:#a8182f;margin:0 0 .1em;transform:rotate(-2deg)}
 .hero h1{font-size:clamp(2.35rem,6.2vw,4.7rem);letter-spacing:-.01em;text-shadow:0 3px 0 rgba(255,255,255,.55)}
@@ -193,7 +193,7 @@ svg.layer-fore{overflow:visible}
    Quick facts
    ========================================================================== */
 .facts{background:var(--sun);border-bottom:3px solid var(--ink)}
-.facts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 24px;padding-block:22px}
+.facts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 24px;padding-top:22px;padding-bottom:22px;padding-block:22px}
 .facts-grid li{display:flex;align-items:center;gap:12px;min-width:0}
 .fact-ico{flex:none;width:46px;height:46px;display:grid;place-items:center;background:#fff;border:3px solid var(--ink);border-radius:50%}
 .fact-ico .ico{width:22px;height:22px}
@@ -204,7 +204,7 @@ svg.layer-fore{overflow:visible}
 /* ==========================================================================
    Sections
    ========================================================================== */
-.section{position:relative;padding-block:clamp(64px,9vw,112px)}
+.section{position:relative;padding-top:clamp(64px,9vw,112px);padding-bottom:clamp(64px,9vw,112px);padding-block:clamp(64px,9vw,112px)}
 .section-head{text-align:center;max-width:720px;margin:0 auto clamp(32px,5vw,56px)}
 .eyebrow{font-size:clamp(1.5rem,2.6vw,1.9rem);color:var(--red-deep);margin:0 0 .15em;transform:rotate(-1.5deg)}
 .section-head h2,.faq-head h2,.flowers-copy h2{font-size:clamp(2rem,4.6vw,3.3rem)}
@@ -299,7 +299,7 @@ svg.layer-fore{overflow:visible}
 .goat-bubble::before{content:"";position:absolute;left:-13px;bottom:14px;width:18px;height:18px;background:#fff;border-left:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:rotate(45deg)}
 
 /* ---------- Seasons ---------- */
-.seasons{background:linear-gradient(#d6f0fc,#eaf8ff 60%,#fff8e6);border-block:3px solid var(--ink)}
+.seasons{background:linear-gradient(#d6f0fc,#eaf8ff 60%,#fff8e6);border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);border-block:3px solid var(--ink)}
 .season-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
 .season-tab{position:relative;display:flex;align-items:center;gap:14px;text-align:left;padding:12px 18px;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:22px;font:inherit;cursor:pointer;transition:transform .2s cubic-bezier(.3,1.6,.5,1),background-color .2s,box-shadow .2s;box-shadow:0 4px 0 var(--ink);-webkit-tap-highlight-color:transparent}
 @media (hover:hover){.season-tab:hover{transform:translateY(-2px)}}
@@ -318,7 +318,7 @@ svg.layer-fore{overflow:visible}
 .scene-spring{background:linear-gradient(#aee3fa,#e4f7ff 60%,#fff6d8)}
 .scene-summer{background:linear-gradient(#63c3ee,#b6e6fa 62%,#fff2b8)}
 .scene-fall{background:linear-gradient(#ffc98b,#ffe2b5 55%,#fff0d0)}
-.scene-card svg{position:absolute;inset:0;width:100%;height:100%}
+.scene-card svg{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;width:100%;height:100%}
 .grow{transform-box:fill-box;transform-origin:50% 100%;transform:scale(0)}
 .season-panel.is-active .grow{animation:grow .8s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(var(--i,0) * 70ms + .1s)}
 .leaf-fall{transform-box:fill-box;animation:leafFall linear infinite}
@@ -385,7 +385,7 @@ svg.layer-fore{overflow:visible}
 .faq-list details[open] .answer{animation:fadeDown .35s ease}
 
 /* ---------- Reserve band ---------- */
-.reserve{position:relative;background:var(--red-deep) radial-gradient(rgba(255,255,255,.1) 2px,transparent 2px) 0 0/28px 28px;color:#fff;border-top:3px solid var(--ink);padding-block:clamp(64px,9vw,110px) clamp(48px,7vw,84px)}
+.reserve{position:relative;background:var(--red-deep) radial-gradient(rgba(255,255,255,.1) 2px,transparent 2px) 0 0/28px 28px;color:#fff;border-top:3px solid var(--ink);padding-top:clamp(64px,9vw,110px);padding-bottom:clamp(48px,7vw,84px);padding-block:clamp(64px,9vw,110px) clamp(48px,7vw,84px)}
 .reserve-inner{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center}
 .reserve h2{font-size:clamp(2.1rem,5vw,3.6rem);text-shadow:0 3px 0 rgba(0,0,0,.2)}
 .reserve p{font-size:1.2rem;font-weight:700;margin:.8em 0 1.4em;max-width:30em}
@@ -425,13 +425,13 @@ svg.layer-fore{overflow:visible}
 /* ---------- Footer ---------- */
 .grass{height:34px;margin-top:-34px;position:relative;z-index:2;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='34' viewBox='0 0 120 34'%3E%3Cg fill='%2343a047' stroke='%233a2416' stroke-width='3' stroke-linejoin='round'%3E%3Cpath d='M0 36V22l8 8 6-22 8 24 8-16 7 18 8-26 8 26 8-14 8 20 9-24 8 22 8-10 6 16V36Z'/%3E%3C/g%3E%3Cpath d='M0 36V26l8 6 6-16 8 18 8-10 7 12 8-18 8 20 8-8 8 14 9-18 8 16 8-6 6 10V36Z' fill='%238bc34a' opacity='.55'/%3E%3C/svg%3E") repeat-x bottom/120px 34px}
 .site-footer{background:#3a2416;color:#f6e9d3;border-top:3px solid var(--ink)}
-.footer-inner{display:grid;grid-template-columns:1.4fr 1fr 1.2fr;gap:32px;padding-block:44px 28px}
+.footer-inner{display:grid;grid-template-columns:1.4fr 1fr 1.2fr;gap:32px;padding-top:44px;padding-bottom:28px;padding-block:44px 28px}
 .footer-brand p{margin:14px 0 0;max-width:26em;color:#e8d7bb;font-weight:600}
 .footer-links{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
 .footer-links a,.footer-contact a{text-decoration:none;font-weight:700}
 @media (hover:hover){.footer-links a:hover,.footer-contact a:hover{color:var(--sun);text-decoration:underline}}
 .footer-contact{line-height:1.8;font-weight:600}
-.copyright{border-top:2px dashed rgba(246,233,211,.25);padding-block:18px 26px;margin-top:0;font-size:.9rem;color:#d3c1a3}
+.copyright{border-top:2px dashed rgba(246,233,211,.25);padding-top:18px;padding-bottom:26px;padding-block:18px 26px;margin-top:0;font-size:.9rem;color:#d3c1a3}
 
 /* ---------- Mobile action bar ---------- */
 .action-bar{display:none}
@@ -547,7 +547,7 @@ svg.layer-fore{overflow:visible}
   .hero h1{font-size:2.3rem}
   .hero-cta{gap:10px}
   .hero-cta .btn{width:100%}
-  .bouquet-picker{max-width:236px;margin-inline:auto}
+  .bouquet-picker{max-width:236px;margin-left:auto;margin-right:auto;margin-inline:auto}
   .reserve .hero-cta .btn{width:100%}
   .footer-links{grid-template-columns:1fr 1fr}
 }
@@ -568,3 +568,7 @@ svg.layer-fore{overflow:visible}
 /* the photo viewer in a browser with no <dialog> (Safari before 15.4): js/main.js adds .lb-fallback and the open attribute */
 .lightbox:not([open]){display:none}
 .lightbox.lb-fallback[open]{position:fixed;top:50%;left:50%;margin:0;transform:translate(-50%,-50%);z-index:1000;overflow:auto;box-shadow:0 0 0 100vmax rgba(58,36,22,.72)}
+/* aspect-ratio arrived in Safari 15, Firefox 89 and Chrome 88. The season cards have only drawings or a photo inside them, laid on top with position:absolute,
+   so without it they would be 0 high and vanish. A block of the right height (a percentage of its own width) gives them back the shape.
+   (The other uses of aspect-ratio only crop pictures and round the week's circles: without it the pictures show in their own shape.) */
+@supports not (aspect-ratio:1){.scene-card::after{content:"";display:block;padding-top:70.8333%}}

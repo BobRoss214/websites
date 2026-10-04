@@ -21,15 +21,49 @@ What it does, in order:
   3. Warns (does not stop) about settings in js/content.js that the launch checklist says to set before launch.
   4. Copies the upload set into deploy/ (an old deploy/ is replaced), checks that every file the pages point to is there and that every font has its
      licence text next to it (assets/fonts/LICENSE-OFL-<Family>.txt: the font licence asks for it), and writes deploy/FILES.txt: every file with its size and sha256 fingerprint, and one fingerprint for the whole folder
-     (the same files always give the same fingerprint, so two uploads can be compared).
+     (the same files always give the same fingerprint, so two uploads can be compared), and says in one plain line each whether _headers and _redirects, the two files the host reads, are in it and where.
 
 Needs Python 3.8 or newer, and beautifulsoup4 for the rebuild (pip install beautifulsoup4), like the other tools.
 Exit code: 0 ready (warnings allowed; with --force also when checks were red), 1 not ready (a problem is printed), 2 a Python package is missing.
 A broken link inside the folder, or a font without its licence text (nothing is written then), is never overridden by --force.
 """
-import argparse, hashlib, json, os, re, shutil, subprocess, sys, tempfile
+import argparse, hashlib, json, os, re, shutil, stat, subprocess, sys, tempfile
 from html.parser import HTMLParser
 from urllib.parse import unquote, urlsplit
+
+# ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
+try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
+    sys.stdout.reconfigure(errors='replace')
+except (AttributeError, ValueError, OSError):
+    pass
+
+
+def _stop_plainly(kind, err, tb):
+    """A file saved in the old Windows format (Notepad's "ANSI"), or one that is read-only or open in another program, ends a tool with a plain message, not a traceback."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if issubclass(kind, UnicodeDecodeError):
+        import glob
+        for pat in ('*.html', 'pages/*.html', 'js/*.js', 'css/*.css', 'lang/*.json', 'lang/src/*.json', 'tools/*.json'):
+            for path in sorted(glob.glob(os.path.join(root, pat))):
+                with open(path, 'rb') as f:
+                    raw = f.read()
+                try:
+                    raw.decode('utf-8')
+                except UnicodeDecodeError as bad:
+                    line = raw.split(b'\n')[raw.count(b'\n', 0, bad.start)]
+                    print('%s is not saved as UTF-8: line %d has a character in the old Windows "ANSI" format (a dash, a curly quote or a letter with an accent):\n    %s\n'
+                          'Open the file and save it again as UTF-8 (Notepad: File, Save As, then Encoding: UTF-8; VS Code: click the encoding at the bottom right, Save with Encoding, UTF-8). Then run this again.'
+                          % (os.path.relpath(path, root).replace(os.sep, '/'), raw.count(b'\n', 0, bad.start) + 1, line.decode('utf-8', 'replace').strip()[:70].encode('ascii', 'replace').decode()), file=sys.stderr)
+                    return
+    elif issubclass(kind, PermissionError) and getattr(err, 'filename', None):
+        print('I could not open or change %s: the file is read-only, or open in another program, or locked while OneDrive syncs it.\n'
+              'Right-click it, Properties, and untick Read-only; close the programs that show it; wait a moment. Then run this again.' % err.filename, file=sys.stderr)
+        return
+    sys.__excepthook__(kind, err, tb)
+
+
+sys.excepthook = _stop_plainly
+# ---- end of the Windows safety lines
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -53,15 +87,20 @@ LEFT_OUT_TOP = {
     'README.md': 'instructions for whoever edits the site',
     '.git': 'the change history',
     '.gitignore': 'a developer note about which files to ignore',
+    'patches': 'the optional changes for you to decide on (patches/optional/README.md), not for visitors',
+    '.venv': 'the Python packages you installed for the tools (README, "Commands on Windows, Mac and Linux")',
+    'venv': 'the Python packages you installed for the tools (README, "Commands on Windows, Mac and Linux")',
     'deploy': 'this folder',
 }
+# A host rules file saved with an extra ending by a text program (Notepad adds .txt, TextEdit .rtf): the host does not read it
+MISNAMED_HOST_FILE = re.compile(r'^(_headers|_redirects)\.(txt|rtf|docx?)$', re.I)
 JUNK = re.compile(r'(^|/)(\.[^/]*|Thumbs\.db|desktop\.ini|__pycache__)(/|$)|\.(pyc|orig|rej|bak|swp|tmp|py|md)$|~$', re.I)
 # Files that are uploaded although no page points to them: the licence texts and credits that travel with the fonts and the icons
 # (docs/CREDITS_AND_LICENCES.md). They are not reported as "no page points to them".
 LICENCE_FILE = re.compile(r'^assets/(fonts/LICENSE-[^/]+\.txt|LICENSE-[^/]+\.txt|CREDITS\.txt)$')
 FONT_FILE = re.compile(r'\.(woff2?|ttf|otf)$', re.I)
 # Not copied into the temporary rebuild copy (big, or not needed to build)
-SKIP_COPY = {'.git', 'deploy', 'node_modules', '.visual', '__pycache__', 'tests'}
+SKIP_COPY = {'.git', 'deploy', 'node_modules', '.visual', '__pycache__', 'tests', '.venv', 'venv', 'patches', 'review'}
 
 TEXT_EXT = ('.html', '.css', '.js', '.json', '.svg', '.txt', '.xml', '.webmanifest')
 
@@ -70,15 +109,28 @@ def say(msg=''):
     print(msg, flush=True)
 
 
+def run_tool(args, cwd):
+    """Runs a tool of the temporary copy and returns the finished process. Its words come back as UTF-8 whatever this computer's window uses
+    (an old Windows window would otherwise turn the accented letters into other letters)."""
+    return subprocess.run([sys.executable or 'python3'] + args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True,
+                          encoding='utf-8', errors='replace', env=dict(os.environ, PYTHONIOENCODING='utf-8'))
+
+
+def quoted(path):
+    """A path as it must be typed in a window: in quote marks when it has a space (C:\\Program Files\\...)."""
+    return '"%s"' % path if ' ' in path else path
+
+
 def rel(path, base):
     return os.path.relpath(path, base).replace(os.sep, '/')
 
 
 def same_text(a, b):
-    """Same file, ignoring Windows/Unix line endings."""
+    """Same file, ignoring Windows/Unix line endings and the BOM (the invisible marker Notepad's "UTF-8" puts first)."""
     if a == b:
         return True
-    return a.replace(b'\r\n', b'\n') == b.replace(b'\r\n', b'\n')
+    clean = lambda x: x[3:] if x.startswith(b'\xef\xbb\xbf') else x
+    return clean(a).replace(b'\r\n', b'\n') == clean(b).replace(b'\r\n', b'\n')
 
 
 def walk(base, skip=()):
@@ -100,12 +152,14 @@ def rebuild_copy(tmp):
     shutil.copytree(ROOT, site, ignore=lambda d, names: [n for n in names if n in SKIP_COPY])
     py = sys.executable or 'python3'
     for args in (['tools/pages.py'], ['tools/i18n.py', 'extract'], ['tools/i18n.py', 'build']):
-        r = subprocess.run([py] + args, cwd=site, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8', errors='replace')
+        r = run_tool(args, site)
         if r.returncode != 0:
             err = (r.stderr or r.stdout or '').strip()
             if ('No module named' in err and 'bs4' in err) or 'beautifulsoup4 package' in err:
                 say('Cannot rebuild: Python is missing the package beautifulsoup4, which the site tools need.')
-                say('  Fix: ' + py + ' -m pip install beautifulsoup4    (or run this again with --no-rebuild: see the top of this file)')
+                say('  Fix: ' + quoted(py) + ' -m pip install beautifulsoup4    (or run this again with --no-rebuild: see the top of this file)')
+                say('  If pip answers "externally-managed-environment" (a new Mac or Linux computer), or you made a .venv folder and have not switched it on in this window:')
+                say('  README, "Commands on Windows, Mac and Linux", step 4.')
                 sys.exit(2)
             say('The rebuild stopped at: python3 ' + ' '.join(args))
             say('  ' + err.replace('\n', '\n  '))
@@ -127,11 +181,10 @@ def stale_files(site):
 
 def missing_translations(site):
     """(language codes, one plain line for each language that is not complete, with how to fix it)."""
-    py = sys.executable or 'python3'
     codes = sorted(f[:-5] for f in os.listdir(os.path.join(site, 'lang', 'src')) if f.endswith('.json'))
     bad = []
     for code in codes:
-        r = subprocess.run([py, 'tools/i18n.py', 'missing', code], cwd=site, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8', errors='replace')
+        r = run_tool(['tools/i18n.py', 'missing', code], site)
         m = re.search(r'(\d+) missing.*JavaScript: (\d+) missing', r.stdout or '')
         if r.returncode != 0 or not m:
             bad.append('Translations: the check for %s could not run (%s). Fix: run  python3 tools/i18n.py missing %s  and read what it says.' % (code, ((r.stderr or r.stdout or '').strip().split('\n') or [''])[-1], code))
@@ -145,18 +198,17 @@ def fact_problems(site):
     script = os.path.join(site, 'tools', 'check_facts.py')
     if not os.path.isfile(script):
         return []
-    py = sys.executable or 'python3'
-    r = subprocess.run([py, 'tools/check_facts.py', '--brief'], cwd=site, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, encoding='utf-8', errors='replace')
+    r = run_tool(['tools/check_facts.py', '--brief'], site)
     lines = [l[len('DIFFERENT '):].strip() for l in (r.stdout or '').splitlines() if l.startswith('DIFFERENT ')]
     if r.returncode not in (0, 1) or (r.returncode == 1 and not lines):
         return ['Facts: the check could not run (%s). Fix: run  python3 tools/check_facts.py  and read what it says.' % ((r.stderr or r.stdout or '').strip().split('\n') or [''])[-1]]
-    return ['Facts disagree: %s. Fix: make every place say the same (the files and lines are named; README, "Change a fact everywhere"); python3 tools/check_facts.py lists every place.' % l for l in lines]
+    return ['Facts disagree: %s. Fix: make every place say the same (the files and lines are named; README, "Change a fact everywhere"). The command python3 tools/check_facts.py lists every place.' % l for l in lines]
 
 
 # ---------------------------------------------------------------- 3. settings the checklist says to set
 def setting(src, name):
     """The value of a top-level setting in js/content.js (a line '  name: value,' inside WISE_ACRES), or None."""
-    m = re.search(r'^  ' + re.escape(name) + r':\s*(.+?),?\s*(//.*)?$', src, re.M)
+    m = re.search(r'^[ \t]*' + re.escape(name) + r':\s*(.+?),?\s*(//.*)?$', src, re.M)   # any indentation: an editor that re-indents the file (4 spaces, tabs) must not make a setting look missing
     return m.group(1).strip() if m else None
 
 
@@ -167,14 +219,14 @@ def settings_warnings(site_dir):
     src = read(path).decode('utf-8', 'replace')
     warn = []
     if setting(src, 'seasonPicker') == 'true':
-        warn.append('seasonPicker is still true: every visitor sees the "See the farm in ..." season preview buttons. Set it to false before launch (checklist 3.8, decision D6).')
+        warn.append('seasonPicker is still true: every visitor sees the "See the farm in ..." buttons that show the farm in other seasons. Before launch, change true to false on that line of js/content.js (checklist, step 3.8).')
     if setting(src, 'farmPoint') in ('null', None):
-        warn.append('farmPoint is not set: the Drive time box looks up the farm\'s address on every press (one more request to a free service). Set it before launch (checklist 3.13, decision D11, question 35).')
+        warn.append('farmPoint is not set: the Drive time box has to look the farm\'s address up on every press (one more request to a free service). Before launch, put the farm\'s two map numbers on that line of js/content.js (checklist, step 3.13; the owner dashboard card is "The farm\'s exact spot on the map").')
     if setting(src, 'reviewUrl') in ("''", '""', None):
-        warn.append('reviewUrl is empty: "Leave a Google review" buttons open the farm on Google Maps. Can follow launch (checklist 3.12, question 27).')
-    m = re.search(r"^  signup:\s*\{\s*action:\s*(''|\"\")", src, re.M)
+        warn.append('reviewUrl is empty: the "Leave a Google review" buttons open the farm on Google Maps instead of the review box. This can follow the launch: paste the short review link from your Google Business Profile between the quote marks (checklist, step 3.12; the owner dashboard card is "Google review link").')
+    m = re.search(r"^[ \t]*signup:\s*\{\s*action:\s*(''|\"\")", src, re.M)
     if m:
-        warn.append('signup action is empty: the email signup button opens Mailchimp\'s own page. Can follow launch (question 26).')
+        warn.append('signup action is empty: the "Join the email list" button opens Mailchimp\'s own page instead of a form on the site. This can follow the launch: send Claude the Mailchimp form code (README, "Make the email signup work").')
     return warn
 
 
@@ -191,7 +243,9 @@ def upload_set(site):
         elif name.lower().endswith('.html') or name in TOP_FILES:
             files.append(name)
         else:
-            left.append((name, LEFT_OUT_TOP.get(name, 'not part of the website (not on the upload list in docs/LAUNCH_CHECKLIST.md, section 2)')))
+            m = MISNAMED_HOST_FILE.match(name)
+            left.append((name, ('named with an extra ending, so the host would not read it: rename it to %s (no %s at the end)' % (m.group(1).lower(), os.path.splitext(name)[1])) if m
+                         else LEFT_OUT_TOP.get(name, 'not part of the website (not on the upload list in docs/LAUNCH_CHECKLIST.md, section 2)')))
     for folder in FOLDERS:
         base = os.path.join(site, folder)
         if not os.path.isdir(base):
@@ -211,9 +265,35 @@ def upload_set(site):
     return files, left
 
 
+def host_rule_lines(site, files, shown):
+    """One plain line each for _headers and _redirects, the two files the host reads: [(kind, text, fix)].
+    kind: 'ok' (it is in the upload folder), 'look' (it is not, and that can be fine), 'red' (it is not, and it should be; fix says what to do).
+    site: the site folder; files: the upload set; shown: how the upload folder is named on screen, for example deploy."""
+    try:
+        names = set(os.listdir(site)) | set(os.listdir(ROOT))
+    except OSError:
+        names = set()
+    out = []
+    for name, what, fine_without in (('_headers', 'the security notes and the cache times', False),
+                                     ('_redirects', 'the old farm addresses sent on to the new pages', True)):
+        misnamed = sorted(n for n in names if MISNAMED_HOST_FILE.match(n) and n.lower().startswith(name))
+        if name in files:
+            out.append(('ok', '%s is in the upload folder, at its top (%s/%s): %s. Cloudflare Pages and Netlify read it.' % (name, shown, name, what), None))
+        elif misnamed:
+            out.append(('red', '%s is NOT in the upload folder: your site folder has "%s", and the host does not read a file with that ending.' % (name, misnamed[0]),
+                        'rename it to %s (no %s at the end), then make the upload folder again' % (name, os.path.splitext(misnamed[0])[1])))
+        elif fine_without:
+            out.append(('look', '%s is not in the upload folder, because your site folder has no %s file. That is fine unless the new site takes over the old farm addresses; then follow checklist step 3.6.' % (name, name), None))
+        else:
+            out.append(('red', '%s is NOT in the upload folder, because your site folder has no %s file. Without it the host adds no security notes and no cache times.' % (name, name),
+                        'put %s back from your backup (a saved copy of the folder), or ask Claude' % name))
+    return out
+
+
 def check_out(out):
     out = os.path.abspath(out)
-    if os.path.abspath(ROOT) == out or os.path.abspath(ROOT).startswith(out + os.sep):
+    here = os.path.normcase(os.path.abspath(ROOT))   # normcase: Windows does not tell C:\\Site from c:\\site
+    if here == os.path.normcase(out) or here.startswith(os.path.normcase(out) + os.sep):
         say('--out cannot be the site folder or a folder above it.')
         sys.exit(1)
     if os.path.exists(out):
@@ -226,12 +306,55 @@ def check_out(out):
     return out
 
 
+def _writable(func, path, *rest):
+    """shutil.rmtree calls this for a file it cannot delete. Windows refuses a read-only file: make it writable and try once more."""
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+
+def remove_tree(path):
+    shutil.rmtree(path, **{('onexc' if sys.version_info >= (3, 12) else 'onerror'): _writable})
+
+
+def empty_folder(path):
+    """Takes everything out of a folder but keeps the folder (Windows will not remove a folder that is open in a window).
+    FILES.txt goes last, so a stop half-way still leaves a folder that this tool recognises as its own."""
+    for name in sorted(os.listdir(path), key=lambda n: n == 'FILES.txt'):
+        full = os.path.join(path, name)
+        if os.path.isdir(full) and not os.path.islink(full):
+            remove_tree(full)
+        else:
+            try:
+                os.remove(full)
+            except PermissionError:
+                os.chmod(full, stat.S_IWRITE)
+                os.remove(full)
+
+
 def prepare_out(out):
     out = check_out(out)
-    if os.path.exists(out):
-        shutil.rmtree(out)
-    os.makedirs(out)
+    if os.path.isdir(out):
+        try:
+            empty_folder(out)
+        except OSError as e:
+            say('I could not empty ' + out + ' (' + str(e) + ').')
+            say('A file in it is probably open in another program (a Windows Explorer window showing a preview, a browser, an upload page), or OneDrive is syncing it.')
+            say('Close those, wait a moment and run this again, or choose another folder with --out. Nothing was uploaded or changed in your site.')
+            sys.exit(1)
+    os.makedirs(out, exist_ok=True)
     return out
+
+
+def copy_for_upload(src, dst):
+    """Copies one file. A text file is copied with Unix line endings and without the invisible marker some Windows editors put first,
+    so the folder, and the fingerprint in FILES.txt, are the same whichever way the files on your computer were saved."""
+    data = read(src)
+    if src.lower().endswith(TEXT_EXT) or os.path.basename(src) in TOP_FILES:
+        if data.startswith(b'\xef\xbb\xbf'):
+            data = data[3:]
+        data = data.replace(b'\r\n', b'\n')
+    with open(dst, 'wb') as f:
+        f.write(data)
 
 
 # ---------------------------------------------------------------- checking the links inside the folder
@@ -467,11 +590,16 @@ def main():
         for f in files:
             dst = os.path.join(out, *f.split('/'))
             os.makedirs(os.path.dirname(dst), exist_ok=True)
-            shutil.copyfile(os.path.join(site, *f.split('/')), dst)
+            copy_for_upload(os.path.join(site, *f.split('/')), dst)
         canon = re.search(r'<link rel="canonical" href="([^"]+)"', read(os.path.join(out, 'index.html')).decode('utf-8', 'replace')) if 'index.html' in files else None
         problems, unused = check_links(out, canon.group(1) if canon else 'https://www.wiseacresorganic.com/')
         total, whole = write_manifest(out, files, red if args.force else None)
 
+        say('')
+        shown = os.path.relpath(out, ROOT).replace(os.sep, '/') if os.path.abspath(out).startswith(os.path.abspath(ROOT) + os.sep) else out
+        say('The two files the host reads:')
+        for kind, line, fix in host_rule_lines(site, files, shown):
+            say('  ' + ('WARNING: ' if kind == 'red' else '') + line + (' Fix: ' + fix + '.' if fix else ''))
         say('')
         say('Left out (not needed by visitors):')
         for name, why in sorted(left):
@@ -488,6 +616,8 @@ def main():
             say('NOT READY: %d broken link(s) inside the folder:' % len(problems))
             for p in problems[:40]:
                 say('  ' + p)
+            shutil.rmtree(out, ignore_errors=True)   # not left behind: a folder with a FILES.txt looks finished, and would be uploaded by mistake
+            say('The half-made %s was removed again, so nothing broken can be uploaded. Fix the links above and run this again.' % out)
             sys.exit(1)
         say('Ready: %s holds %d files and FILES.txt, %s in all (folder fingerprint %s...).' % (out, len(files), mb(total), whole[:16]))
         if red:
@@ -495,7 +625,10 @@ def main():
         else:
             say('Upload what is INSIDE that folder (docs/LAUNCH_CHECKLIST.md, step 3.2).')
     finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+        try:
+            remove_tree(tmp)
+        except OSError:
+            pass   # a temporary folder that Windows will not delete now is deleted with the next clean-up of the Temp folder
 
 
 if __name__ == '__main__':

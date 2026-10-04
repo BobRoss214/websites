@@ -19,6 +19,40 @@ import argparse, mimetypes, os, signal, sys, threading, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlsplit
 
+# ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
+try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
+    sys.stdout.reconfigure(errors='replace')
+except (AttributeError, ValueError, OSError):
+    pass
+
+
+def _stop_plainly(kind, err, tb):
+    """A file saved in the old Windows format (Notepad's "ANSI"), or one that is read-only or open in another program, ends a tool with a plain message, not a traceback."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if issubclass(kind, UnicodeDecodeError):
+        import glob
+        for pat in ('*.html', 'pages/*.html', 'js/*.js', 'css/*.css', 'lang/*.json', 'lang/src/*.json', 'tools/*.json'):
+            for path in sorted(glob.glob(os.path.join(root, pat))):
+                with open(path, 'rb') as f:
+                    raw = f.read()
+                try:
+                    raw.decode('utf-8')
+                except UnicodeDecodeError as bad:
+                    line = raw.split(b'\n')[raw.count(b'\n', 0, bad.start)]
+                    print('%s is not saved as UTF-8: line %d has a character in the old Windows "ANSI" format (a dash, a curly quote or a letter with an accent):\n    %s\n'
+                          'Open the file and save it again as UTF-8 (Notepad: File, Save As, then Encoding: UTF-8; VS Code: click the encoding at the bottom right, Save with Encoding, UTF-8). Then run this again.'
+                          % (os.path.relpath(path, root).replace(os.sep, '/'), raw.count(b'\n', 0, bad.start) + 1, line.decode('utf-8', 'replace').strip()[:70].encode('ascii', 'replace').decode()), file=sys.stderr)
+                    return
+    elif issubclass(kind, PermissionError) and getattr(err, 'filename', None):
+        print('I could not open or change %s: the file is read-only, or open in another program, or locked while OneDrive syncs it.\n'
+              'Right-click it, Properties, and untick Read-only; close the programs that show it; wait a moment. Then run this again.' % err.filename, file=sys.stderr)
+        return
+    sys.__excepthook__(kind, err, tb)
+
+
+sys.excepthook = _stop_plainly
+# ---- end of the Windows safety lines
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PREFERRED_PORT = 8000
 
@@ -47,13 +81,16 @@ def make_handler(folder):
             parts = [p for p in unquote(urlsplit(urlpath).path).replace('\\', '/').split('/') if p not in ('', '.')]
             if any(p == '..' or p.startswith('.') or '\x00' in p for p in parts):
                 return None
-            path = os.path.join(folder, *parts)
-            if os.path.isdir(path):
-                path = os.path.join(path, 'index.html')
-            elif not os.path.isfile(path) and os.path.isfile(path + '.html'):
-                path += '.html'   # /wise-pie for wise-pie.html, as the live site (Cloudflare) does
-            real, base = os.path.realpath(path), os.path.realpath(folder)
-            if not os.path.isfile(real) or not real.startswith(base + os.sep):   # not a file, or a link that leads outside the folder
+            try:
+                path = os.path.join(folder, *parts)
+                if os.path.isdir(path):
+                    path = os.path.join(path, 'index.html')
+                elif not os.path.isfile(path) and os.path.isfile(path + '.html'):
+                    path += '.html'   # /wise-pie for wise-pie.html, as the live site (Cloudflare) does
+                real, base = os.path.realpath(path), os.path.realpath(folder)
+                if not os.path.isfile(real) or not real.startswith(base + os.sep):   # not a file, or a link that leads outside the folder
+                    return None
+            except (OSError, ValueError, UnicodeError):   # letters or signs this computer cannot use in a file name (an address with an accent on a computer set to plain ASCII)
                 return None
             return real
 
@@ -74,7 +111,10 @@ def make_handler(folder):
                     body = f.read()
                 self.send(200, body, content_type(real), head_only)
                 return
-            print('  not found: ' + unquote(urlsplit(self.path).path), flush=True)   # a missing picture or script is worth seeing
+            try:
+                print('  not found: ' + unquote(urlsplit(self.path).path), flush=True)   # a missing picture or script is worth seeing
+            except (OSError, ValueError):   # a closed window must not stop the answer
+                pass
             page = os.path.join(folder, '404.html')
             if os.path.isfile(page):
                 with open(page, 'rb') as f:
@@ -94,9 +134,15 @@ def make_handler(folder):
     return Handler
 
 
+def may_share_port(os_name=None):
+    """False on Windows. There, "reuse address" lets a second program take the same port while the first is still using it: two windows would both say
+    http://localhost:8000/ and show different things. Without it, the busy port is refused and start() takes another one."""
+    return (os_name or os.name) != 'nt'
+
+
 class Server(ThreadingHTTPServer):
     daemon_threads = True
-    allow_reuse_address = True
+    allow_reuse_address = may_share_port()
 
     def handle_error(self, request, client_address):   # a browser that gives up on a picture is not a problem to print
         if isinstance(sys.exc_info()[1], (ConnectionError, TimeoutError)):

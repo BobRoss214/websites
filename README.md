@@ -43,7 +43,10 @@ tools/                  pages.py (builds the extra pages), i18n.py (tags text, b
                         launch_check.py (checks the live site after the upload: python3 tools/launch_check.py https://...),
                         option_matrix.py (tries the optional patches together on throw-away copies; see "Optional patches"),
                         review_sheet.py (a spreadsheet of one language for a native speaker to correct, and reads it back: "Have a native speaker check a language"),
-                        serve.py (shows the site on your own computer at http://localhost:PORT/ for editing; close its window to stop it)
+                        upcoming_dates.py (what changes or runs out on the site in the next 14 days, in plain words: python3 tools/upcoming_dates.py),
+                        serve.py (shows the site on your own computer at http://localhost:PORT/ for editing; close its window to stop it),
+                        serve.bat (Windows: double-click it to start serve.py),
+                        doctor.py (one command that says in plain words what is wrong with the site and what to type; changes nothing)
                         season_calendar.mjs (loads the pages on every day of the year and writes docs/WHAT_VISITORS_SEE_WHEN.md)
                         slow_phone.mjs (an old Android phone in the browser: slow processor, slow line; measures how long a page takes and how smooth it stays; see docs/SLOW_PHONE_TEST.md)
                         year_rehearsal.mjs (plays the owner's year with a pretend clock, step by step, and checks what the calendar promises: node tools/year_rehearsal.mjs --quick)
@@ -51,24 +54,26 @@ tools/                  pages.py (builds the extra pages), i18n.py (tags text, b
                         rehearse_answers.py + rehearse_answers.json (tries the playbook's steps for an owner's answer on a throw-away copy: python3 tools/rehearse_answers.py --list)
                         i18n_facts.mjs + i18n_facts_allow.json (compares every translated text with its English: the same prices, numbers, times, days, dates, ages, names and promise words; node tools/i18n_facts.mjs lists every difference, the allow list holds the ones that are meant, each with its reason)
                         visitor_walk.mjs (walks the site as a visitor who uses only the keyboard, who reads another language, or who lands on an extra page from a search; a slow walk, not a test: node tools/visitor_walk.mjs keys, leaks or arrive)
+                        browser_support_table.mjs (for a developer: makes tests/browser-support.table.json, the browser versions that have each feature the site uses)
 deploy/                 the folder to upload, made fresh by tools/make_deploy_folder.py (not kept in the repository)
 review/                 the sheets for a native speaker, made by tools/review_sheet.py when you need them (not kept in the repository, not uploaded)
 patches/optional/       the farm's open decisions that change files, ready as patches (docs/OPTION_PATCHES.md says which, in what order, and what to run after)
 assets/qr/              QR codes (SVG), made by tools/make_qr.py
 print/qr-signs.html     printable signs, one per page, English + Spanish; qr-signs.hi / .zh / .vi.html the same in Hindi, Chinese, Vietnamese (not listed in Google)
 tests/                  automatic browser checks for developers, not part of the website (do not upload; see tests/README.md)
-docs/                   notes and questions for the farm, the launch checklist, what the site stores (not for visitors: do not upload)
+docs/                   notes and questions for the farm, the launch checklist, what the site stores, which phones and browsers it is made for (not for visitors: do not upload)
+docs/optional-github-actions/   two ready-made GitHub workflows (checks after every push, a weekly health check), switched off until copied to .github/workflows/
 assets/photos/          farm photos
 assets/fonts/           Fredoka, Nunito (+ Vietnamese letters), Caveat (SIL Open Font License), self-hosted, each with its licence text (LICENSE-OFL-<Family>.txt)
 assets/CREDITS.txt      who made the fonts, the icons and the map data, and under which licence; assets/LICENSE-icons-*.txt hold the two icon licences (uploaded with the site)
 ```
 
-Preview locally: run `python3 tools/serve.py` in this folder. It opens the site in your browser at an address like http://localhost:8000/ (and says that address in its window: close the window to stop it). Use it whenever you edit: the pages come the way they come from the live site, all five languages load, and the "Site check" box names the line of a typo. (Double-clicking `index.html` also shows English at once, but the other languages load less reliably and the box cannot name a line.)
+Preview locally: run `python3 tools/serve.py` in this folder (on Windows you can double-click `tools/serve.bat` instead). It opens the site in your browser at an address like http://localhost:8000/ (and says that address in its window: close the window to stop it). Use it whenever you edit: the pages come the way they come from the live site, all five languages load, and the "Site check" box names the line of a typo. (Double-clicking `index.html` also shows English at once, but the other languages load less reliably and the box cannot name a line.)
 
 ## Start here (for the farm owner)
 
 You can change many things on the site yourself, with no programming: you type words, dates and numbers into a plain text file, save it,
-and look at the site. Anything marked **ask Claude** needs a command typed into a terminal window. You can ask Claude, or set your own computer up once and type the commands yourself (see "Commands: one-time setup" below).
+and look at the site. Anything marked **ask Claude** needs a command typed into a terminal window. You can ask Claude, or set your own computer up once and type the commands yourself (see "Commands on Windows, Mac and Linux" below).
 
 **Editing a file safely**
 
@@ -76,7 +81,7 @@ and look at the site. Anything marked **ask Claude** needs a command typed into 
    Not Word, Pages or Google Docs: they turn straight quote marks into curly ones, and the page stops working.
 2. Keep a copy of the file before you start. To undo everything, put the copy back.
 3. Change only what is between quote marks, and the numbers and dates. Leave the quote marks, the commas at the ends of lines and the
-   brackets `{ } [ ]` where they are.
+   brackets `{ } [ ]` where they are. (To find a setting in `js/content.js`, press Ctrl+F and search for its whole line as this file shows it, for example `farmPoint: null,` or `reviewUrl: ''`: each of those is on one line only, the line to change. Searching for the bare name also finds the explaining notes at the top of the file.)
 4. Write dates as year-month-day with two digits each: `'2026-10-04'` is October 4, 2026.
 5. An apostrophe inside single quotes breaks the file. Put double quotes around the whole text instead: `notice: "We're closed Saturday.",`
 6. Save, then look at the site (see "Check your changes" below). A yellow "Site check" box tells you what to fix.
@@ -85,16 +90,39 @@ and look at the site. Anything marked **ask Claude** needs a command typed into 
 
 `js/content.js` has the same instructions at the top, with an example for each setting.
 
-**Commands: one-time setup** (only for the changes below that say "run")
+## Commands on Windows, Mac and Linux
 
-Changes to the words on a page, the translations, photos and the QR signs use short commands typed into a terminal window. Set this up once; after that each command is one line.
+Only the changes below that say "run" need this, and Claude can run them for you. Editing a text file and looking at the site needs no commands at all.
 
-1. Install Python 3 from python.org/downloads. On Windows, tick "Add python.exe to PATH" on the first screen of the installer.
-2. Open a terminal in the site folder. Windows: open the folder in File Explorer, click the address bar, type `cmd` and press Enter. Mac: open the Terminal app, type `cd ` (with a space after it), drag the site folder into the window and press Return.
-3. Type `python3 --version` and press Enter. It should answer `Python 3.` and some numbers. On Windows type `python --version` instead; if Windows says Python was not found, or opens the Microsoft Store, run the installer again and tick the PATH box. This file writes every command as `python3 ...`: on Windows type `python ...` (or `py ...`).
-4. Once, install the three helper packages: `python3 -m pip install beautifulsoup4 pillow segno` (`beautifulsoup4` is for `pages.py` and `i18n.py`, `pillow` for `add_photo.py`, `segno` for `make_qr.py`).
+**One-time setup**
 
-A message that ends in `No module named ...` means step 4 was skipped. `command not found`, or `'python3' is not recognized`, means step 1, or that Windows needs `python` instead of `python3`.
+1. Install Python 3.8 or newer from python.org/downloads. On Windows, tick "Add python.exe to PATH" on the first screen of the installer. Nothing else is needed (see "Node.js is not needed" below).
+2. Open a terminal in the site folder. Windows: open the folder in File Explorer, click the address bar, type `cmd` (or `powershell`) and press Enter. Mac: open the Terminal app, type `cd ` (with a space after it), drag the site folder into the window and press Return. A folder name with spaces or accents (`My Site`, `José`) is fine. When you type a folder name yourself, put it in quote marks, for example `cd "C:\Websites\José Pérez\Wise Acres site"` (on another drive start with `cd /d`).
+3. Find the word that starts Python on your computer. Type each of these until one answers `Python 3.` and some numbers (3.8 or higher):
+   - Mac and Linux: `python3 --version` (on a Mac without Python, the Terminal may offer to install the "command line developer tools" when you type this: accepting gives you Python too; look at the number it answers with, 3.8 or higher)
+   - Windows: `python --version`; if that fails, `py -3 --version` (`py` is the launcher that the python.org installer adds; it works even when the PATH box was not ticked).
+
+   Wherever this file says `python3`, type the word that worked: `python3 tools/pages.py` becomes `python tools/pages.py` or `py -3 tools/pages.py`. Slashes can lean either way (`tools/pages.py` or `tools\pages.py`). `'python3' is not recognized` only means that Windows has no `python3`: use `python` or `py -3`.
+
+   If Windows answers `Python was not found; run without arguments to install from the Microsoft Store`, or opens the Store, that is a placeholder and not Python. Install Python from python.org as in step 1, then close the window and open a new one. If `python` still opens the Store, type "app execution aliases" in the Start menu search and switch off the entries called `python.exe` and `python3.exe`.
+4. Once, install the three helper packages with the word that worked: `python -m pip install beautifulsoup4 pillow segno` (or `py -3 -m pip install ...`, or `python3 -m pip install ...`). Write `-m pip`, not `pip` alone: on Windows `pip` is often not found. `beautifulsoup4` is for `pages.py` and `i18n.py`, `pillow` for `add_photo.py`, `segno` for `make_qr.py`. `serve.py`, `check_facts.py` and `launch_check.py` need none of them.
+   **If pip answers `error: externally-managed-environment`** (a new Mac, or Ubuntu or Debian Linux: the computer's own Python is locked on purpose), do not force it. Make a private box for the packages inside the site folder, once:
+   - Mac or Linux: `python3 -m venv .venv`, then `source .venv/bin/activate`, then `python -m pip install beautifulsoup4 pillow segno`.
+   - Windows (in the `cmd` window of step 2): `python -m venv .venv`, then `.venv\Scripts\activate`, then `python -m pip install beautifulsoup4 pillow segno`.
+
+   The line then starts with `(.venv)`. Every time you open a new terminal window for the site, type the `activate` line again first; inside the box `python3` and `python` both work, so every command in this file works as written. The `.venv` folder stays on your computer: it is not part of the website, and the command that makes the upload folder leaves it out.
+
+A message that ends in `No module named ...` means step 4 was skipped, or the `.venv` box was not switched on in this window. `command not found` (Mac) or `'python3' is not recognized` (Windows) means step 1, or that you need to type `python` or `py -3` instead of `python3`.
+
+**Typing more than one command.** Type them one after the other, one on each line. Do not join them with `&&` or `;`: `&&` does not work in the PowerShell that comes with Windows 10 and 11, and `;` does not work in `cmd`.
+
+**Double-click to look at the site (Windows).** Double-click `tools/serve.bat` in File Explorer. A black window opens, says the address of the site on your computer, and your browser opens it; close the window to stop. It does what `python tools/serve.py` does and changes nothing. If Windows asks whether you want to run it (the file came from the internet), choose Run: it is plain text, and Notepad shows all of it. On a Mac, type `python3 tools/serve.py` in the Terminal: a double-click file loses the setting that lets it run when the folder is downloaded as a zip.
+
+**Saving files.** Save text files as UTF-8, which Notepad on Windows 10 and 11 does by default. In the Save As box, "Encoding" should say UTF-8, or "UTF-8 with BOM" (the tools read both), and never "ANSI". Use Save (Ctrl+S) on the file you opened, not Save As: Notepad's Save As can add ".txt" to the end of the name (content.js becomes content.js.txt); in File Explorer, View and then File name extensions shows every name in full. Windows line endings (what Notepad writes) are fine, and the upload folder is the same either way. A tool that finds a file saved as ANSI stops and names the file and the line, with what to do.
+
+**Where the folder is.** OneDrive, Dropbox and a USB stick are fine. If a command says it "could not open or change" a file, that file is open in another program, or the sync is busy with it: close it, wait a moment and run the command again. Keep the folder's address short, under about 150 letters: Windows refuses an address of more than 260 letters, the longest file inside adds 67 more, and `make_deploy_folder.py` also works in a copy under your Temp folder.
+
+**Node.js is not needed.** `node` and `npm` run only the automatic browser checks in `tests/` and `tools/season_calendar.mjs`, which are for a developer. Every `python3 tools/...` command in this file works without them. `git` and `curl` are not needed either (`docs/LAUNCH_CHECKLIST.md` shows one `curl` line as an optional extra; in PowerShell write `curl.exe`, because `curl` alone means something else there).
 
 ## Day-to-day changes
 
@@ -102,7 +130,7 @@ A message that ends in `No module named ...` means step 4 was skipped. `command 
 | --- | --- |
 | Close for rain or a holiday | `js/content.js` → in `closures` add the date between quote marks: `closures: ['2026-10-04'],`. More days: `['2026-10-04', '2026-10-11']`. A whole week: one range with two dots, and both days count: `['2026-11-09..2026-11-15']`. Ranges and single days can be mixed. Days that have passed can stay. The "Open now" badges for the farm, The GreenHouse and Wise Pie then show closed (or "No visits today") that day. **All three are closed together: you cannot close only the farm** (for that, use the banner in the next row and close the times in Bookeo). It does not stop people booking in Bookeo, so close those times in Bookeo too. To see a closed badge today, write today's date for a minute, look, then put the real date back. The badge says the weekday ("Opens Friday") when the next opening is within 6 days, and the date ("Opens Fri, Nov 20") when it is further away, in every language. The "Site check" box reads every day and range and names one it cannot read. |
 | Show a banner on every page | `js/content.js` → `notice: "Closed Saturday, Oct 10, for rain.",` and, to make it disappear by itself, `noticeUntil: '2026-10-11',` (the last day it shows). **The banner shows from the moment you publish, not from the day it is about.** There is no start date, so write the date in the words. For a closure weeks away, add the banner later, and put a reminder in your calendar. There is one banner at a time, and the words "Heads up:" are put in front of it for you. The banner is in English for everyone; to write it in each language use `notice: { en: '…', es: '…', hi: '…', zh: '…', vi: '…' },` (a language you leave out shows the English). To remove it: `notice: '',`. Write `"We're closed"` in double quotes if the words have an apostrophe. |
-| Change opening hours | `js/content.js` → `hours`. Times are Eastern Time on a 24-hour clock (`'16:00'` is 4 pm). `days`: 0 = Sunday, 1 = Monday … 6 = Saturday. **The GreenHouse and Wise Pie each have one set of days and hours for the whole year**; only `farm` can be set per season. For different winter hours, change them when winter starts and again when it ends. This changes only the green "Open now" badges. The hours written in the page text are separate, and so are their translations: see "Change a fact everywhere" below. A misspelled name (`houers:`) is silently ignored: the Site check box does not look at `hours`. |
+| Change opening hours | `js/content.js` → `hours`. Times are Eastern Time on a 24-hour clock (`'16:00'` is 4 pm). A visitor whose own clock is not the farm's sees "(Eastern Time)" after the badge text, and the weekday instead of "today" or "tomorrow" when the visitor's date is not the farm's. `days`: 0 = Sunday, 1 = Monday … 6 = Saturday. **The GreenHouse and Wise Pie each have one set of days and hours for the whole year**; only `farm` can be set per season. For different winter hours, change them when winter starts and again when it ends. This changes only the green "Open now" badges. The hours written in the page text are separate, and so are their translations: see "Change a fact everywhere" below. A misspelled name (`houers:`, or `opn:` inside `hours`) or a time such as `'8 pm'` is named in the yellow Site check box, with what to type. |
 | Change season dates | The site follows the calendar by itself, every year (the dates in `js/season.js` have no year), so you do **not** add 2027 dates: see "A new year, a new season" below. To change the usual dates, ask Claude. They move the hero scene, the season tabs, the top bar and the countdown. |
 | Turn off the season switcher | `js/content.js` → `seasonPicker: false,`. The "See the farm in…" buttons in the first screen disappear and the site follows the calendar. Do this before you launch. (The "What's on the farm" and "What's in season" tabs stay.) |
 | Add a review | `js/content.js` → inside `reviews: [ ]` add `{ quote: "…", name: "Sarah M.", source: "Google", url: "https://…", date: "May 2026" },`. `quote` and `name` are required. Only add words a reviewer really wrote, and ask first. The quote cards stay hidden until there is one. The Google, Tripadvisor and Yelp buttons always show. |
@@ -114,7 +142,7 @@ A message that ends in `No module named ...` means step 4 was skipped. `command 
 | Say what is ripe / spots left this week | `js/content.js` → `week`. Copy the example under "Planning features" (or the one at the top of that file), change every date and word, save. It shows for 14 days after `updated`, then the box goes back to its automatic "typical dates" version. If something in it cannot be used, the "Site check" box says so: see "Check your changes". |
 | Make the email signup work | `js/content.js` → `signup` → `action` (steps under "Planning features"). Easiest: paste your Mailchimp embed code to Claude. Then sign up once with your own email address to test it. |
 | Hide something after a date | In `index.html`, add `data-until="2026-10-04"` to the tag that starts it (the last day it is true, Eastern Time): from the next day it hides itself. Visitors without JavaScript still see it. If you reuse it for new dates, change the date too. |
-| Set the Google review link | `js/content.js` → `reviewUrl: 'https://g.page/r/…/review',` (steps under "Planning features"). Every "Leave a Google review" button follows it. |
+| Set the Google review link | `js/content.js` → find the line `reviewUrl: '',` and paste the link between the two quote marks, so that it reads `reviewUrl: 'https://g.page/r/…/review',` (steps under "Planning features"). Every "Leave a Google review" button follows it. The printable review QR sign does not: ask Claude to make the QR signs again (`python3 tools/make_qr.py`), or the sign is missing from `print/qr-signs.html`. |
 | Show a visitor's photo | `js/content.js` → `community`, only after they said yes in writing (steps at the top of that file). |
 | Print QR signs | Ask Claude to make the signs. Then open `print/qr-signs.html` (English + Spanish) or `print/qr-signs.hi.html`, `.zh.html`, `.vi.html` (Hindi, Chinese, Vietnamese) in your browser and press Print (Letter paper; or "Save as PDF" for a print shop). Scan every printed sign with your own phone before you put it up. |
 | Update the farm map | Change the marks in the Farm Map Marker and press "Save for Claude", then ask Claude to update the map. (Claude puts the saved file at `tools/saved-map.json` and runs `python3 tools/farm_map.py tools/saved-map.json`.) |
@@ -297,7 +325,7 @@ our estimates (see Content status). To change one, tell Claude the right number 
 
 - It uses two free public services: OpenStreetMap's address search (Nominatim) and the OSRM routing demo server, which a German non-profit (FOSSGIS) runs. Nothing is contacted until a visitor presses the button, and this website does not keep the address. `docs/WHAT_THE_SITE_STORES.md` lists exactly what is sent.
 - Both are free and come with no promise. They ask for about one request a second and may refuse without notice. The routing server's own page calls its demo "reasonable, non-commercial" use, and this is a business site, so there is a real chance they stop answering one day. Nothing breaks when that happens: the box says "The lookup is not working right now" and offers a Google Maps button.
-- **Once, before launch:** set `farmPoint` in `js/content.js`. It halves the requests and makes the answer faster. On Google Maps, right-click the farm: the first line of the menu shows two numbers like `35.0712, -80.6534` (click it to copy it). The first number is `lat`, the second is `lon` (in North Carolina it starts with a minus sign). Type them like this, with a comma between and no quote marks: `farmPoint: { lat: 35.0712, lon: -80.6534 },`. The Site check box checks them: a spot outside the United States (lat must be 24 to 50, lon -125 to -66), swapped numbers, a missing minus sign, a letter in a number or numbers in quote marks are named, and a wrong spot is not used (the address is searched instead, so no visitor gets a wrong answer). Press "Get drive time" once with an address in Indian Trail: the miles should be small.
+- **Once, before launch:** set `farmPoint` in `js/content.js`. It halves the requests and makes the answer faster. (Search the file for `farmPoint: null,`: it is on the one line to change.) On Google Maps, right-click the farm: the first line of the menu shows two numbers like `35.0712, -80.6534` (click it to copy it). The first number is `lat`, the second is `lon` (in North Carolina it starts with a minus sign). Type them like this, with a comma between and no quote marks: `farmPoint: { lat: 35.0712, lon: -80.6534 },`. The Site check box checks them: a spot outside the United States (lat must be 24 to 50, lon -125 to -66), swapped numbers, a missing minus sign, a letter in a number or numbers in quote marks are named, and a wrong spot is not used (the address is searched instead, so no visitor gets a wrong answer). Press "Get drive time" once with an address in Indian Trail: the miles should be small.
 - If you add the Content-Security-Policy line to `_headers`, its `connect-src` must allow exactly `https://nominatim.openstreetmap.org` and `https://router.project-osrm.org`. The line in `docs/LAUNCH_CHECKLIST.md` already does; without them the box only ever says "not working right now".
 - Keep the three small links that the box shows under every answer: "© OpenStreetMap contributors", "Routing: OSRM" and "Fix the map". The two services ask for that credit.
 - To switch the box off, or to move it to a service with a contract (Mapbox, Google), see step 3.13 of `docs/LAUNCH_CHECKLIST.md`. Test the box yourself once a week in season.
@@ -306,7 +334,7 @@ our estimates (see Content status). To change one, tell Claude the right number 
 handicapped-accessible unit, hand washing, parking, shade, little ones, service animals). It does not say what the paths are like. When you know
 the path surfaces, quieter times and baby-changing details, tell Claude and they will be added.
 
-**QR signs.** *You:* ask Claude to make the signs. *Claude:* runs `python3 tools/make_qr.py` (needs `pip install segno`; `--check` also needs
+**QR signs.** *You:* ask Claude to make the signs. *Claude:* runs `python3 tools/make_qr.py` (needs `python3 -m pip install segno`; `--check` also needs
 `zxing-cpp pillow` and scans every code back). It makes `assets/qr/<name>.svg` and `print/qr-signs.html`: one letter-size sign per page in English
 and Spanish for Google review (needs `reviewUrl`; if it is empty that sign is skipped and the script says so), Instagram, the hashtag, Facebook,
 reserving, pre-ordering pizza, the pizza menu, the email signup, the farm map and directions. It also makes the same signs in Hindi, Chinese and
@@ -328,13 +356,15 @@ so an analytics tool that understands it can show scans; signs that open Instagr
 *Google Search Console* (so the site shows up in Google): the website must be online first. Then (the names of the buttons may differ a little,
 Google moves them): (1) go to search.google.com/search-console and sign in with the farm's Google account; (2) choose "Add property", pick the
 **URL prefix** box (not "Domain") and type `https://www.wiseacresorganic.com/`; (3) under "Other verification methods" choose **HTML tag** and copy the
-whole line that starts `<meta name="google-site-verification"`; (4) paste it in `index.html` where the comment in the `<head>` says
-"GOOGLE SEARCH CONSOLE" (only there; the page rebuild does not copy it into the other pages), publish, and click
+whole line that starts `<meta name="google-site-verification"`; (4) paste it in `index.html` on a line of its own just **below** the comment in the `<head>` that says
+"GOOGLE SEARCH CONSOLE", after that comment's closing `-->` (not inside the comment: a tag inside a comment does nothing). Only there; the page rebuild does not copy it into the other pages. `python3 tools/doctor.py` says RED if the tag is inside the comment. Then make the upload folder again, publish, and click
 **Verify**; (5) in the left menu choose **Sitemaps**, type `sitemap.xml` in the box (the start of the address is already filled in) and click Submit.
 
 ## Check your changes
 
 Do this after you edit `js/content.js` or the pizza schedule.
+
+Not sure what is wrong, or want one answer for the whole site and the upload folder? Run `python3 tools/doctor.py` in this folder: it prints a short checklist in plain words (what is wrong, where, and what to type), ends with READY TO UPLOAD or NOT READY, and changes nothing.
 
 1. Save the file.
 2. Look at the site: in this folder run `python3 tools/serve.py`. It opens the site in your browser (the "Site check" box shows by itself on your own computer) and keeps showing it: after each save, refresh the page (F5). Close its window to stop it. On the live
@@ -357,11 +387,15 @@ Do this after you edit `js/content.js` or the pizza schedule.
 
 `first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html` and
 `wise-pie.html` are separate pages with their own titles, descriptions and FAQ markup (no breadcrumb markup: the pages have no visible breadcrumb trail).
-They are **generated**: edit the short source in `pages/<name>.html`, then run (the first time, set up the commands as in "Commands: one-time setup")
+They are **generated**: edit the short source in `pages/<name>.html`, then run (the first time, set up the commands as in "Commands on Windows, Mac and Linux")
 
 ```
-python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py build
+python3 tools/pages.py
+python3 tools/i18n.py extract
+python3 tools/i18n.py build
 ```
+
+(one after the other, one on each line: see "Commands on Windows, Mac and Linux")
 
 The header, footer and icons are copied from `index.html`, so a change there reaches every page after
 the rebuild. The same command writes `sitemap.xml` and `robots.txt`. If the site is published somewhere
@@ -374,7 +408,7 @@ English, Español, हिन्दी, 中文 (Simplified) and Tiếng Việt. A
 header or the footer. The choice is remembered. If their browser is set to one of these languages
 they are asked once, in that language, whether they'd like it.
 
-**For the owner:** you can type the commands below yourself (set the computer up once: "Commands: one-time setup", and follow "Change one sentence and its translations, step by step"), or ask Claude to update the translations after you change any wording on a page.
+**For the owner:** you can type the commands below yourself (set the computer up once: "Commands on Windows, Mac and Linux", and follow "Change one sentence and its translations, step by step"), or ask Claude to update the translations after you change any wording on a page.
 
 **The translations were written by an AI. Please have a native speaker of each language read them
 before relying on them**, especially prices, policies and anything about alcohol, allergies or safety
@@ -499,7 +533,7 @@ python3 tools/add_photo.py path/to/picture.jpg --name goat-in-frog-hat --alt "A 
 
 | Part | What it means |
 | --- | --- |
-| `picture.jpg` | A JPEG, PNG, WebP or iPhone HEIC file (HEIC needs `pip install pillow-heif`). Files that are tiny (under 120 pixels), huge (over 60 MB or 100 megapixels), animated or not pictures are refused with a plain message. The original file is never changed. |
+| `picture.jpg` | A JPEG, PNG, WebP or iPhone HEIC file (HEIC needs `python3 -m pip install pillow-heif`). Files that are tiny (under 120 pixels), huge (over 60 MB or 100 megapixels), animated or not pictures are refused with a plain message. The original file is never changed. |
 | `--name` | A few plain words for the file name: "goat in frog hat" becomes `assets/photos/goat-in-frog-hat.webp`. An existing picture is never overwritten, unless you add `--replace`. After launch use a new name instead: pictures are kept by visitors' browsers for up to a year (`/assets/*` in `_headers`), so a picture swapped under the same name keeps showing the old one to anyone who has seen it. |
 | `--alt` | **What is visible**, read aloud to people who cannot see the picture. Never put prices, names of people or dates in it: they go out of date and can be wrong. The tool warns when it sees one. If you are not sure what an animal or a place is, say only what you can see ("a small animal wearing a green knitted frog hat"). |
 | `--caption` | Optional. A short line under the picture when it is enlarged. |
@@ -564,6 +598,17 @@ get the light one. If a dark theme is ever added, remove the tag and the CSS lin
 ## Testing
 
 Automatic browser checks (countdown, languages, farm map, accessibility, the tools…) live in `tests/`; how to install and run them is in `tests/README.md`. You do not need them to edit the site, and the folder is not part of the website. `tests/visual-check.mjs` (not one of the tests: it needs a baseline made on your own computer) tells you which parts of the pages look different after a change, with a picture of each; see "The visual check" in `tests/README.md`.
+
+## Checks that run by themselves (optional)
+
+- GitHub can run the site's checks for you, so nobody has to remember to. It is optional and it is switched off.
+- Two ready-made files are in `docs/optional-github-actions/`: `checks.yml` and `weekly-health.yml`. GitHub ignores that folder, so nothing runs until someone copies them into `.github/workflows/` and pushes.
+- To switch on: `mkdir -p .github/workflows`, copy the two files there, commit and push. Step by step: `docs/optional-github-actions/README.md`.
+- `checks.yml` runs after every push and pull request: the checks that need no browser and a fixed set of fast browser tests. A red cross next to a change means something broke.
+- `weekly-health.yml` runs every Monday: the site doctor and `python3 tools/upcoming_dates.py`, which lists what changes or runs out in the next 14 days. GitHub emails you when the doctor is red or something runs out within 7 days.
+- It costs nothing on a public repository. On a private one it uses part of the monthly free minutes (the README in that folder says how many).
+- To switch it off, delete the two files from `.github/workflows/`. Nothing else changes: the website and the project files are never touched.
+- You can try the dates list on your own computer any time: `python3 tools/upcoming_dates.py` (add `--today 2026-11-02` to see it for another day).
 
 ## Putting it online
 

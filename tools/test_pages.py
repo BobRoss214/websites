@@ -40,11 +40,11 @@ class Pages(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def page(self, name, extra=''):
-        with open(os.path.join(self.root, 'pages', name + '.html'), 'w', encoding='utf-8') as f:
+        with open(os.path.join(self.root, 'pages', name + '.html'), 'w', encoding='utf-8', newline='\n') as f:
             f.write(f'---\ntitle: Test page\ndescription: A test page.\n{extra}---\n<section><h1>Test</h1></section>\n')
 
     def build(self):
-        p = subprocess.run([sys.executable, os.path.join(self.root, 'tools', 'pages.py')], capture_output=True, text=True, cwd=self.tmp)
+        p = subprocess.run([sys.executable, os.path.join(self.root, 'tools', 'pages.py')], capture_output=True, universal_newlines=True, encoding='utf-8', errors='replace', env=dict(os.environ, PYTHONIOENCODING='utf-8'), cwd=self.tmp)
         return p.returncode, p.stdout + p.stderr
 
     def out(self, name):
@@ -117,6 +117,62 @@ class Pages(unittest.TestCase):
             self.assertEqual(len(self.tags(h, key)), 1, key)
 
     # -------------------------------------------------------------
+    def test_a_backslash_in_a_title_or_description_is_kept_as_typed(self):
+        # re.sub reads "\\1", "\\n" or "\\d" in its replacement as a group, a line break or an error: a title like this must come out as typed
+        with open(os.path.join(self.root, 'pages', 'slash.html'), 'w', encoding='utf-8') as f:
+            f.write('---\ntitle: Fall \\1 Fun \\n Day\ndescription: Hay rides \\d and cider \\g<0> too.\n---\n<section><h1>Test</h1></section>\n')
+        code, text = self.build()
+        self.assertEqual(code, 0, text)
+        self.assertNotIn('Traceback', text)
+        h = self.out('slash')
+        self.assertIn('<title>Fall \\1 Fun \\n Day</title>', h)
+        self.assertEqual(self.tags(h, 'description'), ['Hay rides \\d and cider \\g&lt;0&gt; too.'])
+        self.assertEqual(self.tags(h, 'og:title'), ['Fall \\1 Fun \\n Day'])
+
+    def test_a_description_pasted_with_a_line_separator_is_not_cut_short(self):
+        # U+2028 (from text pasted out of another program) is not a line break for the settings block: the rest of the sentence belongs to the description
+        with open(os.path.join(self.root, 'pages', 'sep.html'), 'w', encoding='utf-8') as f:
+            f.write('---\ntitle: Test page\ndescription: First half\u2028second half.\n---\n<section><h1>Test</h1></section>\n')
+        code, text = self.build()
+        self.assertEqual(code, 0, text)
+        self.assertEqual(self.tags(self.out('sep'), 'description'), ['First half\u2028second half.'])
+
+    def test_a_page_saved_by_a_windows_editor_in_its_own_code_page_is_refused_in_plain_words(self):
+        # Notepad's "ANSI" saves an e with an accent or a curly quote as one byte (Windows-1252), which is not UTF-8: a message that names the file, not a Python error
+        with open(os.path.join(self.root, 'pages', 'ansi.html'), 'wb') as f:
+            f.write('---\ntitle: Caf\u00e9 day\ndescription: A \u201cquoted\u201d description.\n---\n<section><h1>Test</h1></section>\n'.encode('cp1252'))
+        code, text = self.build()
+        self.assertNotEqual(code, 0, text)
+        self.assertNotIn('Traceback', text)
+        self.assertIn('pages/ansi.html', text)
+        self.assertIn('UTF-8', text)
+        self.assertIn('line 2', text)   # where the first strange character is
+        self.assertFalse(os.path.exists(os.path.join(self.root, 'ansi.html')), 'nothing is built from a page that cannot be read')
+        with open(os.path.join(self.root, 'index.html'), 'ab') as f:   # the home page, which every page takes its header and footer from, is read the same way
+            f.write(b'<!-- caf\xe9 -->\n')
+        os.remove(os.path.join(self.root, 'pages', 'ansi.html'))
+        self.page('plain')
+        code, text = self.build()
+        self.assertNotEqual(code, 0, text)
+        self.assertNotIn('Traceback', text)
+        self.assertIn('index.html', text)
+        self.assertIn('UTF-8', text)
+
+    def test_a_page_that_cannot_be_built_leaves_every_page_as_it_was(self):
+        self.page('aaa')                                    # a good page that comes first in the list
+        self.assertEqual(self.build()[0], 0)
+        first = self.out('aaa')
+        with open(os.path.join(self.root, 'pages', 'aaa.html'), 'w', encoding='utf-8') as f:
+            f.write('---\ntitle: Changed title\ndescription: A changed page.\n---\n<section><h1>Changed</h1></section>\n')
+        with open(os.path.join(self.root, 'pages', 'bbb.html'), 'w', encoding='utf-8') as f:
+            f.write('no settings block here\n')              # a mistake in the next one
+        code, text = self.build()
+        self.assertNotEqual(code, 0)
+        self.assertIn('bbb.html', text)
+        self.assertEqual(self.out('aaa'), first, 'the good page was rewritten although the run stopped')
+        self.assertFalse(os.path.exists(os.path.join(self.root, 'bbb.html')))
+
+    # -------------------------------------------------------------
     def test_the_real_site_gives_every_extra_page_its_own_picture(self):
         pages = sorted(f[:-5] for f in os.listdir(os.path.join(REAL, 'pages')) if f.endswith('.html'))
         self.assertTrue(pages)
@@ -140,7 +196,7 @@ class Pages(unittest.TestCase):
     def test_a_list_in_an_answer_reads_as_sentences(self):
         body = ('<section data-faq><details><summary>What is the rule?</summary><div class="answer"><p>It is simple.</p>'
                 '<ul><li>Change it before noon</li><li>We refund the rest.</li><li>Call us (anytime)</li></ul></div></details></section>')
-        with open(os.path.join(self.root, 'pages', 'rule.html'), 'w', encoding='utf-8') as f:
+        with open(os.path.join(self.root, 'pages', 'rule.html'), 'w', encoding='utf-8', newline='\n') as f:
             f.write('---\ntitle: Rule\ndescription: A rule.\n---\n' + body + '\n')
         code, text = self.build()
         self.assertEqual(code, 0, text)

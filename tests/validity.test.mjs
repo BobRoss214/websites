@@ -10,6 +10,8 @@
  *   - nothing the Content-Security-Policy in docs/LAUNCH_CHECKLIST.md would block: no inline <script> (JSON-LD is data), no onclick= and other inline handlers
  *     (except print/'s "window.print()", whose hash is in that policy), no javascript: address, nothing loaded from another web site
  *   - the small files: sitemap.xml, robots.txt, manifest.webmanifest, _headers, every .json
+ *   - words that send the owner to the right place: the lines of js/content.js that the README says to change each appear once (a search finds the line, not a note),
+ *     and the Search Console comment in index.html holds no example tag and says not to paste the tag inside it
  *   - scripts: every js/*.js and lang/*.js is valid as a browser script (the way the browser reads it), every tests/*.mjs passes node --check,
  *     no console.log / debugger / eval left in js/ (the ?track=debug line of js/analytics.js is allowed)
  *   - style sheets (css/*.css): braces, brackets, quotes and comments balanced; every property is one on the list below (so a typo is caught);
@@ -353,7 +355,7 @@ for (const f of fragments) { const r = checkHtml(read(f), { name: f, fragment: t
   ok('robots.txt: only real directives, and a Sitemap line', rb.split('\n').filter((l) => l.trim() && !l.startsWith('#')).every((l) => /^(User-agent|Allow|Disallow|Sitemap|Crawl-delay):\s*\S/.test(l)) && /^Sitemap: https:\/\//m.test(rb));
   let mf = null; try { mf = JSON.parse(read('manifest.webmanifest')); } catch (e) { /* reported below */ }
   ok('manifest.webmanifest parses and its icons are files', !!mf && mf.name && mf.start_url && Array.isArray(mf.icons) && mf.icons.every((ic) => fs.existsSync(path.join(ROOT, ic.src))), mf ? '' : 'does not parse');
-  const hd = read('_headers').split('\n');
+  const hd = read('_headers').split(/\r?\n/);
   const hdBad = hd.map((l, n) => [l, n + 1]).filter(([l]) => l.trim() && !l.startsWith('#') && !(/^\/\S*$/.test(l) || /^ {2}[A-Za-z][A-Za-z0-9-]*: \S/.test(l)));
   ok('_headers: every line is a path at the left edge or an indented "Name: value"', hdBad.length === 0 && !hd.some((l) => l.includes('\t')), hdBad.slice(0, 3).map(([l, n]) => `line ${n} "${l}"`).join(' | '));
   const jsonFiles = [...list('lang', '.json'), ...list('lang/src', '.json'), ...list('tools', '.json')];
@@ -375,6 +377,21 @@ for (const f of fragments) { const r = checkHtml(read(f), { name: f, fragment: t
   const left = [];
   for (const f of list('js', '.js')) read(f).split('\n').forEach((l, n) => { if (/^\s*\/\//.test(l) || /^\s*\*/.test(l)) return; if (/\bconsole\.(log|debug|info|trace)\b/.test(l) && !(f === 'js/analytics.js' && /\bdebug\b/.test(l))) left.push(`${f}:${n + 1}`); if (/\bdebugger\b|\beval\(|new Function\(/.test(l)) left.push(`${f}:${n + 1}`); });
   ok('no console.log, debugger or eval left in js/', left.length === 0, left.join(', '));
+}
+
+// 3b. words that send the owner to the right place (README, "Editing a file safely", and the Search Console steps)
+{
+  // the whole line the owner is told to change appears once in js/content.js: Ctrl+F lands on it, not on an explaining note above it
+  const EDITED = ['farmPoint: null,', "reviewUrl: '',", 'entrancePhoto: null,'];
+  const twice = (src) => EDITED.filter((t) => src.split(t).length - 1 !== 1).map((t) => `${t} is in the file ${src.split(t).length - 1} times`);
+  ok('self-test: a settings line that an explaining note also spells out is found', twice("/* Change  farmPoint: null,  to ... */\n  farmPoint: null,\n  reviewUrl: '',\n  entrancePhoto: null,\n").length === 1);
+  const dup = twice(read('js/content.js'));
+  ok("js/content.js: the lines  farmPoint: null,   reviewUrl: ''   and  entrancePhoto: null,  each appear once, on the line to change (a search finds it, not a note)", dup.length === 0, dup.join(' | '));
+  // index.html: the Search Console comment holds no example tag and says not to paste inside it, so following its words cannot put the tag where it does nothing
+  const consoleNote = (h) => (h.match(/<!-- GOOGLE SEARCH CONSOLE[\s\S]*?-->/) || [''])[0];
+  const noteProblem = (h) => { const n = consoleNote(h); return !n ? 'there is no GOOGLE SEARCH CONSOLE comment' : /<meta|google-site-verification|right here/i.test(n) ? 'it holds an example tag or says "right here"' : !/do not paste the tag in here/i.test(n) ? 'it does not say not to paste the tag inside it' : ''; };
+  ok('self-test: the old comment (an example tag inside it, "right here") is found', noteProblem('<head><!-- GOOGLE SEARCH CONSOLE: paste the tag it gives you right here, for example\n <meta name="google-site-verification" content="XXXXXXXX"> --></head>') !== '');
+  ok('index.html: the GOOGLE SEARCH CONSOLE comment holds no example tag, never says "right here", and says not to paste the tag inside it', noteProblem(read('index.html')) === '', noteProblem(read('index.html')));
 }
 
 // 4. style sheets

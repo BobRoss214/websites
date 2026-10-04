@@ -44,6 +44,7 @@ async function open(opts = {}) {
     const cors = { 'access-control-allow-origin': '*' };
     if (/Hartis/i.test(q)) return r.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify([{ lat: '35.0700', lon: '-80.6700', display_name: 'Farm' }]) });
     if (/Poplin/i.test(q)) return r.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify([{ lat: '35.0500', lon: '-80.6900', display_name: 'GreenHouse' }]) });
+    if (cfg.slowGeo) await Promise.race([calls.gate, new Promise((s) => setTimeout(s, T * 2))]);   // mock: { slowGeo: true } holds the answer to the visitor's address until the test calls calls.release()
     if (cfg.visitor === 'none') return r.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: '[]' });
     if (cfg.visitor === 'error') return r.fulfill({ status: 500, headers: cors, body: 'boom' });
     if (cfg.visitor === 'nonsense') return r.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify({ not: 'a list' }) });
@@ -358,6 +359,29 @@ if (want(10)) { console.log('10. problems name the right place; one lookup at a 
   await ask(o.page, '100 Main St, Monroe NC');
   await waitOk(o.page);
   ok(/To the farm at 4701 Hartis Rd\./.test(await result(o.page)), 'and pressing the button again answers for the farm');
+  await o.ctx.close();
+  // the visitor edits the address while the lookup runs: an answer (and a Google Maps link) for text that is no longer in the box would mislead, so it is not shown
+  o = await open({ mock: { slow: true } });
+  await ask(o.page, '100 Main St, Monroe NC');
+  await busy(o.page);
+  await o.page.fill('#drive-addr', '200 Oak Ave, Monroe NC');
+  o.calls.release();   // the answer for the old address arrives only now, after the edit
+  await o.page.waitForFunction(() => document.querySelector('#drive-form button[type=submit]').getAttribute('aria-busy') === null, null, { timeout: T });
+  await settle(o.page, 150);
+  ok(await o.page.locator('#drive-result').isHidden() && await o.page.locator('#drive-result a').count() === 0, 'editing the address while it works: no answer, and no Maps link, for the old address');
+  ok(await o.page.inputValue('#drive-addr') === '200 Oak Ave, Monroe NC', '...and what the visitor typed is left alone');
+  await ask(o.page, '200 Oak Ave, Monroe NC');
+  await waitOk(o.page);
+  ok(/origin=200%20Oak%20Ave/.test(await o.page.getAttribute('#drive-result a.btn', 'href')), 'pressing the button again answers for the new address (the Maps link starts from it)');
+  await o.ctx.close();
+  o = await open({ mock: { visitor: 'none', slowGeo: true } });
+  await ask(o.page, '100 Main St, Monroe NC');
+  await busy(o.page);
+  await o.page.fill('#drive-addr', '200 Oak Ave, Monroe NC');
+  o.calls.release();   // "not found" for the old address arrives only now, after the edit
+  await o.page.waitForFunction(() => document.querySelector('#drive-form button[type=submit]').getAttribute('aria-busy') === null, null, { timeout: T });
+  await settle(o.page, 150);
+  ok(await o.page.locator('#drive-result').isHidden() && await o.page.getAttribute('#drive-addr', 'aria-invalid') === null, 'the old address was not found, but the visitor has already changed it: no "not found" message, and the new text is not marked as wrong');
   await o.ctx.close();
 }
 

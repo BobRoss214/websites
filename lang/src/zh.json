@@ -1,6 +1,7 @@
 {
  "js": {
   "(Your time: {time})": "（你当地时间：{time}）",
+  "{text} (Eastern Time)": "{text}（美国东部时间）",
   "100 blueberries! Your fingers must be blue by now.": "100 颗蓝莓！你的手指肯定都染蓝了。",
   "100 lights and sparks! You are lighting up the whole farm.": "100 盏灯和火花！你把整个农场都点亮了。",
   "100 pumpkins! That is a lot of pie.": "100 个南瓜！够做好多南瓜派了。",

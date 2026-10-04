@@ -49,6 +49,20 @@ await run('analytics', async ({ browser, base, errs }) => {
   ok('Season preview names the season', l.some((e) => e === 'Season preview {"season":"winter"}'));
   await p.context().close();
 
+  // "Section view" can fire for a tall section: on a phone the Visit section is thousands of pixels tall, so a rule of "35 % of the section on screen"
+  // can never be met (one screen is under 10 % of it) and the biggest sections were never counted
+  p = await open(browser, base, 'index.html?track=debug', errs, { viewport: { width: 390, height: 844 } });
+  await p.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}' });
+  const TALL = ['visit', 'pizza', 'greenhouse', 'flowers', 'about', 'contact'];
+  const tall = await p.evaluate((ids) => ids.map((id) => [id, Math.round(document.getElementById(id).getBoundingClientRect().height)]), TALL);
+  ok('on a phone these sections are more than three screens tall (the test is about tall sections)', tall.filter(([, h]) => h > 844 * 3).length >= 4, JSON.stringify(tall));
+  for (const id of TALL) {   // one after the other, each one given the time to be seen (the browser reports what is on screen once per drawn frame)
+    await p.evaluate((i) => document.getElementById(i).scrollIntoView(), id);
+    await until(p, (i) => (window.WISE_ACRES.analyticsLog || []).some((e) => e.name === 'Section view' && e.props.section === i), id, 3000);
+  }
+  await okSoon('a phone visitor who reaches a tall section is counted ("Section view" for each of them)', async () => { const l = await log(p); return TALL.filter((id) => !l.some((e) => e === 'Section view {"section":"' + id + '"}')); }, (missing) => missing.length === 0, 20000);
+  await p.context().close();
+
   // the old signup button (when Mailchimp is not connected) is counted too
   p = await open(browser, base, 'index.html?track=debug', errs);
   await p.evaluate(() => document.addEventListener('click', (e) => { if (e.target.closest('a[href]')) e.preventDefault(); }));

@@ -4,7 +4,7 @@ and lists it in the photo gallery (js/content.js).
 
   python3 tools/add_photo.py <picture> --name goat-in-frog-hat --alt "A small animal wearing a green knitted frog hat" --caption "Frog hat"
 
-  <picture>        a JPEG, PNG, WebP or HEIC (iPhone) file. For HEIC: pip install pillow-heif
+  <picture>        a JPEG, PNG, WebP or HEIC (iPhone) file. For HEIC: python3 -m pip install pillow-heif
   --name WORDS     the file name to use, in a few plain words: "goat in frog hat" becomes assets/photos/goat-in-frog-hat.webp
   --alt "TEXT"     what is VISIBLE in the picture, read aloud to people who cannot see it. No prices, no names of people, no dates.
   --caption "TEXT" (optional) a short line shown under the picture when it is enlarged
@@ -25,14 +25,50 @@ What it does
   - checks that js/content.js still works before it writes it, and warns when the picture looks like one that is already there
   - prints the next steps (translations for the alt text and caption; the topic buttons are already translated)
 
-Needs:  pip install pillow
+Needs:  python3 -m pip install pillow
 """
-import argparse, difflib, html, io, os, re, shutil, subprocess, sys, tempfile, unicodedata
+import argparse, difflib, html, io, json, os, re, shutil, subprocess, sys, tempfile, unicodedata
+
+# ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
+try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
+    sys.stdout.reconfigure(errors='replace')
+except (AttributeError, ValueError, OSError):
+    pass
+
+
+def _stop_plainly(kind, err, tb):
+    """A file saved in the old Windows format (Notepad's "ANSI"), or one that is read-only or open in another program, ends a tool with a plain message, not a traceback."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if issubclass(kind, UnicodeDecodeError):
+        import glob
+        for pat in ('*.html', 'pages/*.html', 'js/*.js', 'css/*.css', 'lang/*.json', 'lang/src/*.json', 'tools/*.json'):
+            for path in sorted(glob.glob(os.path.join(root, pat))):
+                with open(path, 'rb') as f:
+                    raw = f.read()
+                try:
+                    raw.decode('utf-8')
+                except UnicodeDecodeError as bad:
+                    line = raw.split(b'\n')[raw.count(b'\n', 0, bad.start)]
+                    print('%s is not saved as UTF-8: line %d has a character in the old Windows "ANSI" format (a dash, a curly quote or a letter with an accent):\n    %s\n'
+                          'Open the file and save it again as UTF-8 (Notepad: File, Save As, then Encoding: UTF-8; VS Code: click the encoding at the bottom right, Save with Encoding, UTF-8). Then run this again.'
+                          % (os.path.relpath(path, root).replace(os.sep, '/'), raw.count(b'\n', 0, bad.start) + 1, line.decode('utf-8', 'replace').strip()[:70].encode('ascii', 'replace').decode()), file=sys.stderr)
+                    return
+    elif issubclass(kind, PermissionError) and getattr(err, 'filename', None):
+        print('I could not open or change %s: the file is read-only, or open in another program, or locked while OneDrive syncs it.\n'
+              'Right-click it, Properties, and untick Read-only; close the programs that show it; wait a moment. Then run this again.' % err.filename, file=sys.stderr)
+        return
+    sys.__excepthook__(kind, err, tb)
+
+
+sys.excepthook = _stop_plainly
+# ---- end of the Windows safety lines
 
 try:
     from PIL import Image, ImageOps
 except ImportError:
-    sys.exit('This needs the Pillow package:  pip install pillow')
+    sys.exit('This needs the Pillow package. Type this once, then run the command again:\n'
+             '    python3 -m pip install pillow\n'
+             '(On Windows type python or py -3 instead of python3. See "Commands on Windows, Mac and Linux" in README.md.)')
 try:
     from PIL import ImageCms
 except ImportError:      # colour profiles are a nicety; without it the picture is still saved
@@ -64,6 +100,15 @@ def fail(msg):
     sys.exit('Problem: ' + msg)
 
 
+def pastable(text):
+    """The text as it can be pasted between the quote marks of a lang/src/*.json line, also in a window that cannot show every letter (a \\u escape means the same letter)."""
+    try:
+        text.encode(getattr(sys.stdout, 'encoding', None) or 'utf-8')
+        return text
+    except UnicodeEncodeError:
+        return json.dumps(text)[1:-1]
+
+
 # ---------------------------------------------------------------- the words that go into js/content.js
 
 def clean_text(text, what, limit, minimum=0):
@@ -74,7 +119,7 @@ def clean_text(text, what, limit, minimum=0):
     notes = []
     if '"' in text or "'" in text:
         text = re.sub(r'"([^"]*)"', '“\\1”', text).replace('"', '”').replace("'", '’')
-        notes.append(f'note: straight quote marks in the {what} became curly ones (“ ” ’): the translation tool cannot read straight ones inside a text.')
+        notes.append(f'note: straight quote marks in the {what} became curly ones: the translation tool cannot read straight ones inside a text.')
     if len(text) < minimum:
         fail(f'the {what} is too short. Describe what is visible in the picture in a few words, for example "A small animal wearing a green knitted frog hat".')
     if len(text) > limit:
@@ -107,6 +152,8 @@ def slug(name):
 # ---------------------------------------------------------------- the picture
 
 def open_picture(path):
+    if not os.path.isfile(path) and os.path.isfile(path.strip('"\'')):   # a path pasted with its quote marks (Windows "Copy as path")
+        path = path.strip('"\'')
     if not os.path.isfile(path):
         fail(f'I cannot find the picture "{path}". Check the spelling, or drag the file into the window to paste its full path.')
     size = os.path.getsize(path)
@@ -120,7 +167,7 @@ def open_picture(path):
         with open(path, 'rb') as f:
             head = f.read(16)
         if head[4:8] == b'ftyp' and head[8:12] in (b'heic', b'heix', b'hevc', b'heim', b'heis', b'mif1', b'msf1', b'avif'):
-            fail('this is an iPhone (HEIC) picture and I need one more package to read it:  pip install pillow-heif\n'
+            fail('this is an iPhone (HEIC) picture and I need one more package to read it:  python3 -m pip install pillow-heif\n'
                  '(or send it as a JPEG: on the iPhone choose Share, then Options, then "Most Compatible".)')
         fail('I cannot read this file as a picture. I can use JPEG, PNG, WebP or HEIC pictures. Was it saved or sent properly?')
     fmt = FORMATS.get(im.format or '')
@@ -358,7 +405,7 @@ def check_javascript(new_text, old_count_src):
     try:
         with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as f:
             f.write(new_text)
-        ok = subprocess.run([node, '--check', tmp], capture_output=True, text=True)
+        ok = subprocess.run([node, '--check', tmp], capture_output=True, text=True, encoding='utf-8', errors='replace')
     finally:
         os.remove(tmp)
     if ok.returncode != 0:
@@ -375,7 +422,11 @@ def write_content(text, crlf, bom):
         os.chmod(tmp, os.stat(CONTENT).st_mode & 0o777)
     except OSError:
         pass
-    os.replace(tmp, CONTENT)
+    try:
+        os.replace(tmp, CONTENT)
+    except OSError:   # Windows refuses when js/content.js is open in another program: do not leave the temporary file behind
+        os.remove(tmp)
+        raise
 
 
 # ---------------------------------------------------------------- the whole job
@@ -474,7 +525,7 @@ def main():
             except Exception as e:
                 if not exists:
                     os.remove(out)
-                fail(f'I could not write js/content.js ({e}). The new picture was removed again.')
+                fail(f'I could not write js/content.js ({e}). The new picture was removed again. If it says "Permission denied" or "Access is denied", the file is read-only or open in another program (OneDrive can lock it while it syncs): close it and run this again.')
         kb = os.path.getsize(out) / 1024
     else:
         kb = None
@@ -519,10 +570,11 @@ def main():
     if args.place == 'gallery':
         print(f'  {n}. python3 tools/i18n.py jsstrings         (finds the new alt text and caption)'); n += 1
         print(f'  {n}. Translate the texts below. Add them under "js" in lang/src/es.json, hi.json, zh.json and vi.json:'); n += 1
-        print(f'       "{alt}": "...",' if alt else '       (the alt text that is already in js/content.js)')
+        print(f'       "{pastable(alt)}": "...",' if alt else '       (the alt text that is already in js/content.js)')
         if caption:
-            print(f'       "{caption}": "...",')
-        print(f'  {n}. python3 tools/i18n.py build; python3 tools/i18n.py missing es   (then hi, zh, vi: each must say 0 missing)'); n += 1
+            print(f'       "{pastable(caption)}": "...",')
+        print(f'  {n}. python3 tools/i18n.py build'); n += 1
+        print(f'  {n}. python3 tools/i18n.py missing es   (then hi, zh, vi: each must say 0 missing)'); n += 1
     print(f'  {n}. Open the website and tap the picture in the gallery to see it.' if args.place == 'gallery' else f'  {n}. Ask Claude to put the picture on a page.'); n += 1
     print()
     print('To show it on a page as well, ask Claude. A small tile in a "photo strip" looks like this (then run tools/pages.py and tools/i18n.py extract):')

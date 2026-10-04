@@ -150,6 +150,7 @@ try {
   await broken('a made-up address answers 200 instead of 404', '404-status', () => { opts.soft404 = true; });
   await broken('a page says noindex', 'noindex-page:/pumpkin-patch.html', () => { opts.mutate['/pumpkin-patch.html'] = (t) => t.replace('<head>', '<head><meta name="robots" content="noindex">'); });
   await broken('robots.txt blocks the site', 'robots-allow', () => { opts.mutate['/robots.txt'] = () => 'User-agent: *\nDisallow: /\n'; });
+  await broken('robots.txt gives its rules to two user agents at once (two User-agent lines in a row: valid, the rules apply to both)', 'robots-disallow', () => { opts.mutate['/robots.txt'] = (t) => t.replace('User-agent: *', 'User-agent: *\nUser-agent: Bingbot'); }, ['--quick'], 'PASS', 0);
   await broken('robots.txt forgets the notes folders', 'robots-disallow', () => { opts.mutate['/robots.txt'] = () => 'User-agent: *\nAllow: /\n'; });
   await broken('the sitemap lists a notes page', 'sitemap-forbidden', () => { opts.mutate['/sitemap.xml'] = (t) => t.replace('</urlset>', `<url><loc>${ORIGIN}/docs/NOTES.html</loc></url></urlset>`); });
   await broken('a page redirects instead of answering (like .html to a short address)', 'page-redirect:/wise-pie.html', () => { opts.redirects['/wise-pie.html'] = '/wise-pie'; });
@@ -175,6 +176,19 @@ try {
   ok('an address that does not exist: FAIL in plain words, exit code 1', x.code === 1 && find(x.json, 'FAIL', 'reach').some((i) => /DNS may still be updating/.test(i.message)), x.json ? x.json.results.map((i) => i.message).join(' | ').slice(0, 200) : x.err);
   x = await check([], 'http://127.0.0.1:1/');
   ok('a port nobody listens on: FAIL "does not answer", exit code 1', x.code === 1 && find(x.json, 'FAIL', 'reach').some((i) => /does not answer/.test(i.message)));
+  // a user name and password typed into the address (https://name:secret@host/) are never printed: not in the heading, the notes, the JSON or an error
+  {
+    const withLogin = ORIGIN.replace('http://', 'http://visitor:S3cretWord@') + '/';
+    const t = await runTool([withLogin, '--quick']);
+    ok('an address with a user name and password: the check still runs on the site (exit code 0)', t.code === 0 && /^PASS /m.test(t.out), (t.err || t.out).slice(0, 160));
+    ok('...and the password and the user name are not printed (heading, notes)', !/S3cretWord|visitor:/i.test(t.out + t.err) && t.out.includes('for ' + ORIGIN + '/'), t.out.split('\n')[0]);
+    const j = await check(['--quick'], withLogin);
+    ok('...nor in the JSON (address, results, summary)', !!j.json && !/S3cretWord|visitor:/i.test(JSON.stringify(j.json)) && j.json.address === ORIGIN + '/', j.json ? j.json.address : j.err);
+    const gone = await runTool(['http://visitor:S3cretWord@wa-launch-check.invalid/', '--quick']);
+    ok('...nor when the address cannot be reached', !/S3cretWord|visitor:/i.test(gone.out + gone.err), (gone.out.split('\n')[0] || '').slice(0, 120));
+    const wrong = await runTool(['ftp://visitor:S3cretWord@example.com/']);
+    ok('...nor in the message for something that is not a web address (exit code 2)', wrong.code === 2 && /web address/.test(wrong.err) && !/S3cretWord|visitor:/i.test(wrong.out + wrong.err), wrong.err.slice(0, 160));
+  }
   const bad = await runTool(['not a web address ::']);
   ok('a mistyped address: a clear message and exit code 2', bad.code === 2 && /web address/.test(bad.err), bad.err.slice(0, 120));
 } finally {

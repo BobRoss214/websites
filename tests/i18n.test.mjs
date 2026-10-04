@@ -31,6 +31,24 @@ await run('i18n', async ({ browser, base, errs }) => {
   await okSoon('remembered on reload', async () => ({ nav: await nav(p), lang: await htmlLang(p) }), (v) => v.nav === 'Visita' && v.lang === 'es');
   await p.context().close();
 
+  // a slow language file must not undo a later choice: Spanish is asked for, the file is slow, the visitor changes their mind (English, or Hindi)
+  // before it arrives. The page has to stay in the language asked for last, and that is what is remembered.
+  {
+    const slowEs = async (pg) => { await pg.route('**/lang/es.js', async (r) => { await new Promise((x) => setTimeout(x, 2500)); r.continue().catch(() => {}); }); };
+    for (const later of ['en', 'hi']) {
+      const q = await open(browser, base, 'index.html', errs, { routes: slowEs });
+      await q.evaluate(() => { WISE_ACRES.setLang('es'); });
+      await q.evaluate((c) => { WISE_ACRES.setLang(c); }, later);
+      await until(q, (c) => WISE_ACRES.lang === c && document.documentElement.lang === c, later, 8000);
+      ok(`asked for Spanish, then ${later}: the page is in ${later} before the slow Spanish file arrives`, (await htmlLang(q)) === later, await htmlLang(q));
+      await until(q, () => !!(WISE_ACRES.dict && WISE_ACRES.dict.es), null, 15000);   // the Spanish file has arrived now
+      await q.evaluate(() => new Promise((r) => setTimeout(r, 300)));                    // and its load event has run
+      const after = await q.evaluate(() => ({ lang: WISE_ACRES.lang, html: document.documentElement.lang, stored: localStorage.getItem('wa.lang') }));
+      ok(`...and stays in ${later} after it arrives (the late Spanish file does not flip it back), ${later} is what is remembered`, after.lang === later && after.html === later && after.stored === later, JSON.stringify(after));
+      await q.context().close();
+    }
+  }
+
   // each language sets the right html lang
   for (const [code, html] of [['hi', 'hi'], ['zh', 'zh-Hans'], ['vi', 'vi']]) {
     const q = await open(browser, base, 'index.html', errs, { lang: code });
@@ -44,6 +62,24 @@ await run('i18n', async ({ browser, base, errs }) => {
   await p2.click('.lang-offer [data-y]');
   await okSoon('accepting switches the page', () => nav(p2), (v) => v === 'Visita');
   await p2.context().close();
+
+  // the Spanish file cannot be loaded (offline, blocked): "Yes" must not make the offer vanish with nothing happening. The page stays English, the offer stays
+  // open (so the visitor can try again, or say no), and nothing is remembered; once the file arrives, "Yes" works and the offer goes.
+  {
+    let reachable = false;
+    const p5 = await open(browser, base, 'index.html', errs, { locale: 'es-MX', routes: async (pg) => { await pg.route('**/lang/es.js', (r) => (reachable ? r.continue().catch(() => {}) : r.abort().catch(() => {}))); } });
+    ok('offline Spanish file: the offer is shown', await p5.isVisible('.lang-offer'));
+    await p5.click('.lang-offer [data-y]');
+    await until(p5, () => !document.querySelector('script[src="lang/es.js"]'), null, 15000);                      // the failed script has been taken out again: the try is over
+    await p5.evaluate(() => new Promise((r) => setTimeout(r, 300)));
+    const stuck = await p5.evaluate(() => ({ offer: document.querySelectorAll('.lang-offer').length, nav: (document.querySelector('.nav li:first-child a') || {}).textContent, html: document.documentElement.lang, stored: localStorage.getItem('wa.lang'), no: localStorage.getItem('wa.offer') }));
+    ok('"Yes" when the Spanish file does not arrive: the offer is still there (not gone with nothing happening)', stuck.offer === 1, JSON.stringify(stuck));
+    ok('...the page stays English, and nothing is remembered (not the language, not a "no")', stuck.nav === 'Visit' && stuck.html === 'en' && stuck.stored === null && stuck.no === null, JSON.stringify(stuck));
+    reachable = true;
+    await p5.click('.lang-offer [data-y]');
+    await okSoon('...pressing "Yes" again, with the file reachable: the page is Spanish and the offer closes', () => p5.evaluate(() => ({ nav: (document.querySelector('.nav li:first-child a') || {}).textContent, offer: document.querySelectorAll('.lang-offer').length })), (v) => v.nav === 'Visita' && v.offer === 0);
+    await p5.context().close();
+  }
 
   // "No, thanks" is remembered
   const p4 = await open(browser, base, 'index.html', errs, { locale: 'es-MX' });

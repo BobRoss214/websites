@@ -11,10 +11,10 @@
    it). It used to animate box-shadow, which only the main thread can do: while the hero was on screen the page drew a new frame
    (restyling and repainting every running hero animation) sixty times a second just for this dot. */
 .live.is-open .live-dot{position:relative;isolation:isolate}
-.live.is-open .live-dot::after{content:"";position:absolute;inset:-2px;z-index:-1;border-radius:50%;background:rgba(47,191,91,.55);animation:livePulse 1.8s ease-out infinite}
+.live.is-open .live-dot::after{content:"";position:absolute;top:-2px;right:-2px;bottom:-2px;left:-2px;inset:-2px;z-index:-1;border-radius:50%;background:rgba(47,191,91,.55);animation:livePulse 1.8s ease-out infinite}
 .live.is-soon .live-dot{background:var(--sun)}
 .live-lg{font-size:1.05rem;padding:.4em 1.1em .4em .9em}
-.live-center{display:flex;width:fit-content;margin:0 auto 1.2em}
+.live-center{display:flex;width:-moz-fit-content;width:fit-content;margin:0 auto 1.2em}
 .hero-live{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 8px;margin:10px 0 0}
 .hero-live .live{margin:0;font-size:.82rem}
 .hero-live:not(:has(.live:not([hidden]))){display:none}
@@ -33,7 +33,7 @@
 
 /* ---------------------------------------------------------------- countdown */
 .next-up{background:#fff3cf;border-bottom:3px solid var(--ink)}
-.next-up-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 26px;padding-block:18px}
+.next-up-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 26px;padding-top:18px;padding-bottom:18px;padding-block:18px}
 .nu-count{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:104px;padding:8px 14px;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 5px 0 var(--ink);transform:rotate(-2deg)}
 .nu-num{font:700 2.4rem/1 var(--display);color:var(--red);font-variant-numeric:tabular-nums}
 .nu-unit{font:600 .85rem/1.2 var(--display)}
@@ -103,9 +103,9 @@ html:lang(hi) :is(.rc i,.fs-now,.fs-this,.now-badge,.package-flag,.pill,.ss-now,
 html:lang(hi) .menu-desc,html:lang(zh) .menu-desc{font-style:normal}
 html:lang(zh) body{text-wrap:pretty}
 .cal-months{grid-template-columns:repeat(12,minmax(0,1fr))}
-@media (max-width:360px){.cal-months{letter-spacing:0;text-transform:none}.cal-months span{margin-inline:-3px;text-align:center}}
+@media (max-width:360px){.cal-months{letter-spacing:0;text-transform:none}.cal-months span{margin-left:-3px;margin-right:-3px;margin-inline:-3px;text-align:center}}
 /* A long word that cannot break (an e-mail address) wraps instead of pushing a 320px screen sideways, whatever font the phone falls back to while Nunito loads or if it fails. */
-a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
+a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow-wrap:anywhere}
 @media (max-width:640px){.gh-banner{max-width:100%}.gh-banner span{white-space:normal}}
 
 /* ---------------------------------------------------------------- reviews */
@@ -121,10 +121,10 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .review-links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-bottom:14px}
 
 /* ---------------------------------------------------------------- inner pages */
-.page-hero{background:linear-gradient(var(--sky-1) 0%,var(--sky-2) 40%,var(--sky-3) 75%,var(--sky-4) 100%);border-bottom:3px solid var(--ink);padding-block:clamp(36px,6vw,72px)}
+.page-hero{background:linear-gradient(var(--sky-1) 0%,var(--sky-2) 40%,var(--sky-3) 75%,var(--sky-4) 100%);border-bottom:3px solid var(--ink);padding-top:clamp(36px,6vw,72px);padding-bottom:clamp(36px,6vw,72px);padding-block:clamp(36px,6vw,72px)}
 .page-hero-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:24px 40px}
 .page-hero h1{font-size:clamp(2.2rem,5.4vw,4rem);text-shadow:0 3px 0 rgba(255,255,255,.55)}
-.page-hero .lead{max-width:40em;font-weight:600}
+.page-hero .lead{max-width:40em;font-weight:600;color:var(--ink)}   /* the full ink: the lighter brown was 4.0:1 on the blue top of the spring and summer sky (phones) */
 .page-hero .hero-kicker{transform:rotate(-2deg);display:inline-block}
 .page-hero .hero-cta{justify-content:flex-start;margin-top:1em}
 .page-hero-art svg{width:clamp(110px,18vw,210px);height:auto;filter:drop-shadow(0 6px 0 rgba(58,36,22,.25));animation:bob 4.5s ease-in-out infinite}
@@ -143,12 +143,12 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .checklist-card{padding:22px 24px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:0 6px 0 var(--ink)}
 .checklist-card h3{font-size:1.4rem}
 .checklist{margin:.6em 0 1em;padding:0;list-style:none;display:grid;gap:8px}
-.checklist label{display:flex;gap:.7em;align-items:flex-start;font-weight:700;cursor:pointer;padding-block:4px;margin-block:-4px}
+.checklist label{display:flex;gap:.7em;align-items:flex-start;font-weight:700;cursor:pointer;padding-top:4px;padding-bottom:4px;padding-block:4px;margin-top:-4px;margin-bottom:-4px;margin-block:-4px}
 .checklist input{flex:none;width:1.5rem;height:1.5rem;margin:0;accent-color:var(--green)}
 .checklist input:checked+*{text-decoration:line-through;opacity:.6}
 .checklist label:has(input:checked){text-decoration:line-through;opacity:.6}   /* its own rule: a browser without :has() would otherwise drop the line above too */
-.ticks-lg li{font-size:1.1rem;padding-block:.25em}
-.cta-band{background:var(--sun);border-block:3px solid var(--ink);padding-block:clamp(36px,6vw,64px);text-align:center}
+.ticks-lg li{font-size:1.1rem;padding-top:.25em;padding-bottom:.25em;padding-block:.25em}
+.cta-band{background:var(--sun);border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);border-block:3px solid var(--ink);padding-top:clamp(36px,6vw,64px);padding-bottom:clamp(36px,6vw,64px);padding-block:clamp(36px,6vw,64px);text-align:center}
 .cta-band h2{font-size:clamp(1.8rem,4vw,2.8rem);margin-bottom:.6em}
 .cta-band .hero-cta{justify-content:center}
 /* Printing. Every page: no animation, nothing hidden until you scroll to it, nothing that only works on a screen (buttons, tabs, filters,
@@ -169,10 +169,10 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
   button,.fs-tabs,.season-tabs,.group-tabs,.filter-row,.goat-nook,.bouquet,.rel-count,.rel-actions,.remind-menu,.next-up,.chip-rel,.live,.hero-live,.cal-today{display:none!important}
   body{background:#fff!important;padding:0!important}
   .site-header{position:static;background:none;border:0;-webkit-backdrop-filter:none;backdrop-filter:none}
-  .header-inner{height:auto;padding-block:0 8px}
-  .page-hero,.hero{min-height:0!important;padding-block:8px!important;background:none!important;border:0}
+  .header-inner{height:auto;padding-top:0;padding-bottom:8px;padding-block:0 8px}
+  .page-hero,.hero{min-height:0!important;padding-top:8px!important;padding-bottom:8px!important;padding-block:8px!important;background:none!important;border:0}
   .reveal{opacity:1!important;transform:none!important}
-  .section{padding-block:12px}
+  .section{padding-top:12px;padding-bottom:12px;padding-block:12px}
   /* Chrome does not split a CSS grid between its rows when a heading is kept with what follows (a whole sheet can stay empty, or a heading end up alone at the foot of a page), so the grids that hold headings and long lists print as plain blocks */
   .two-col,.faq-grid{display:block!important}
   .two-col>*+*{margin-top:20px}
@@ -198,7 +198,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
   a.btn[href^="https://docs.google.com/forms"]::after,a.btn[href^="https://eepurl.com"]::after,a.btn[href^="https://wise-pie-wood-fired-at-wise-acres.square.site"]::after,a.btn[href^="https://bookeo.com"]::after,
   .site-footer a[data-signup-link]::after{content:attr(href);position:static;display:block;flex:1 0 100%;width:auto;margin-top:.3em;background:none;opacity:1;transform:none;font:600 8pt/1.3 var(--body);color:#000;text-align:left;word-break:break-all}
   /* the closing "book now" band and the footer print as one plain block; the home page already has contact details, the First visit sheet is only one page */
-  .cta-band{padding:10px 0;border-block:2px solid #000;text-align:left}
+  .cta-band{padding:10px 0;border-top:2px solid #000;border-bottom:2px solid #000;border-block:2px solid #000;text-align:left}
   .cta-band .hero-cta{justify-content:flex-start}
   .site-footer{margin-top:12px;padding:8px 0 0;border-top:2px solid #000}
   .site-footer :is(.grass,nav,.social-links,.lang-links,.brand,.motion-row){display:none!important}
@@ -349,9 +349,9 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 .sun-boom .sun-eyes{animation:sunSquint 1.15s ease-in-out 1}
 .sun-boom .sun-mouth{transform:scale(1.5,2)}
 .sun-boom .sun-cheek{transform:scale(1.5);opacity:1}
-.sun-burst{position:absolute;inset:0;pointer-events:none;z-index:3}
+.sun-burst{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;pointer-events:none;z-index:3}
 .sun-burst i{position:absolute;left:50%;top:50%;width:var(--s,14px);height:var(--s,14px);margin:calc(var(--s,14px) / -2) 0 0 calc(var(--s,14px) / -2);background:var(--c,#ffd54f);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);opacity:0;animation:sunSpark .95s cubic-bezier(.1,.7,.3,1) var(--dl,0s) forwards}
-.sun-ring{position:absolute;inset:8%;border-radius:50%;border:5px solid #fff4a8;box-shadow:0 0 14px rgba(255,190,40,.9),inset 0 0 14px rgba(255,190,40,.6);opacity:0;animation:sunRing .9s ease-out var(--dl,0s) forwards}
+.sun-ring{position:absolute;top:8%;right:8%;bottom:8%;left:8%;inset:8%;border-radius:50%;border:5px solid #fff4a8;box-shadow:0 0 14px rgba(255,190,40,.9),inset 0 0 14px rgba(255,190,40,.6);opacity:0;animation:sunRing .9s ease-out var(--dl,0s) forwards}
 
 /* "No reservation? Visit The GreenHouse": the pill lifts, wobbles, glows green and shines; click squashes it and sprays leaves. */
 .hero-note{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .38s cubic-bezier(.3,1.9,.5,1),background-color .25s,box-shadow .3s}
@@ -423,7 +423,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:anywhere}
 @keyframes achGlow{0%,100%{box-shadow:0 6px 0 var(--ink),0 0 0 0 rgba(255,193,40,.8)}50%{box-shadow:0 6px 0 var(--ink),0 0 0 14px rgba(255,193,40,0)}}
 @keyframes achShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}
 @keyframes achOut{to{opacity:0;transform:translateY(14px) scale(.96)}}
-.ach-rain{position:absolute;inset:0;z-index:6;overflow:hidden;pointer-events:none}
+.ach-rain{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;z-index:6;overflow:hidden;pointer-events:none}
 .ach-drop{position:absolute;top:-70px;width:var(--s);height:var(--s);overflow:visible;animation:achFall var(--d) cubic-bezier(.4,.05,.8,.6) var(--dl) both}
 @keyframes achFall{0%{opacity:1;transform:translate(0,0) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translate(var(--sw),820px) rotate(var(--r))}}
 @media (max-width:47.5em){.ach-stack{bottom:calc(100% + 10px)}.ach-medal{width:54px;height:54px}.ach-medal svg{width:32px;height:32px}.ach-time .ach-medal{width:62px;height:62px}}
@@ -485,10 +485,10 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
   .price-list dd.soon{justify-self:start}
 }
 /* Touch targets: these links were 18-23px tall. Padding (and an equal negative margin where the box is a block or flex item) makes the clickable box taller without moving anything. */
-.hero-note a{padding-block:.55em;margin-block:-.55em}
+.hero-note a{padding-top:.55em;padding-bottom:.55em;padding-block:.55em;margin-top:-.55em;margin-bottom:-.55em;margin-block:-.55em}
 .chips .chip-new a{padding:.75em .85em .75em .6em;margin:-.75em -.85em -.75em -.6em}
-.footer-contact a{padding-block:.6em}
-.announce a{padding-block:.85em;margin-block:-.85em}
+.footer-contact a{padding-top:.6em;padding-bottom:.6em;padding-block:.6em}
+.announce a{padding-top:.85em;padding-bottom:.85em;padding-block:.85em;margin-top:-.85em;margin-bottom:-.85em;margin-block:-.85em}
 /* Vietnamese season buttons: the long names wrap to two lines on phones; without the little picture they fit on one. Opaque, so the sun no longer shows through the last one. */
 .season-switch button{background:#fff}
 @media (max-width:25.6875em){html:lang(vi) .season-switch .ss-ico{display:none}html:lang(vi) .season-switch button{white-space:nowrap;min-height:26px}}
@@ -501,12 +501,12 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
    a 768 px laptop at 150% text is 32em tall (24em at 200%); a 360 px phone at 200% is 11em wide (normal phones are 20em or more).
    At normal text size a laptop, a tablet and a phone never meet them. */
 @media (max-height:34em),(max-width:19.9em){
-  .announce{font-size:min(.95rem,19px);line-height:1.35;padding-block:6px}
+  .announce{font-size:min(.95rem,19px);line-height:1.35;padding-top:6px;padding-bottom:6px;padding-block:6px}
   :root,html:is([lang="es"],[lang="vi"]){--header-h:min(4rem,56px)}
   .lang-btn{font-size:min(.92rem,17px)}
   .brand-name{font-size:min(1.5rem,26px)}
   .brand-sub{font-size:min(.8rem,11px);margin-top:3px}
-  .btn{white-space:normal;text-align:center;overflow-wrap:anywhere}
+  .btn{white-space:normal;text-align:center;overflow-wrap:break-word;overflow-wrap:anywhere}
 }
 @media (max-height:34em){
   .hero{padding-top:12px}
@@ -550,8 +550,8 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
 }
 /* A phone at 200% text is only about 11em wide. Everything wraps instead of pushing the page sideways; the hero is trimmed so the Reserve button still shows. */
 @media (max-width:19.9em){
-  body{overflow-wrap:anywhere}
-  .announce{font-size:min(.95rem,14px);line-height:1.3;padding-block:5px}
+  body{overflow-wrap:break-word;overflow-wrap:anywhere}
+  .announce{font-size:min(.95rem,14px);line-height:1.3;padding-top:5px;padding-bottom:5px;padding-block:5px}
   .hero h1{font-size:min(2.3rem,8vw)}
   .hero-kicker{font-size:min(clamp(1.5rem,3vw,2.1rem),20px)}
   .hero-note{font-size:min(.92rem,14px);padding:.15em .7em}
@@ -561,13 +561,13 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
   .btn-lg,.hero-cta .btn-lg{font-size:min(1.1rem,19px);padding:.4em 1em}
   .hero-cta{gap:8px}
   .season-switch{flex-wrap:wrap;gap:11px 5px}
-  .season-switch button{flex:1 1 40%;font-size:min(.82rem,15px);padding-block:.15em}
+  .season-switch button{flex:1 1 40%;font-size:min(.82rem,15px);padding-top:.15em;padding-bottom:.15em;padding-block:.15em}
   .ss-now{top:-11px;right:-2px;font-size:10px;padding:.05em .4em}
   .steps-wrap{padding-left:64px}
   .track{width:58px}
   .track-road{left:18px}
   .track-tractor{left:-6px;width:62px;height:42px;translate:0 calc(var(--p,0) * (100cqh - 52px))}
-  .step{padding-inline:14px}
+  .step{padding-left:14px;padding-right:14px;padding-inline:14px}
   .step-num{left:-62px;width:52px;height:52px}
 }
 /* the menu on a phone at 200%: two columns, so more than 6 of the 14 links show without scrolling */
@@ -583,21 +583,21 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
 @media screen{
 :is(.season-switch button,.fs-table thead button,.filter-btn,.shop-jump a,.first-time a,.nav ul a,.nav-more-btn,.who-list a){position:relative}
 :is(.season-switch button,.fs-table thead button,.filter-btn,.shop-jump a,.first-time a,.nav ul a,.nav-more-btn,.who-list a)::before{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
-.hero-note a{padding-block:13px;margin-block:-13px}
-.announce a{padding-block:13px;margin-block:-13px}
+.hero-note a{padding-top:13px;padding-bottom:13px;padding-block:13px;margin-top:-13px;margin-bottom:-13px;margin-block:-13px}
+.announce a{padding-top:13px;padding-bottom:13px;padding-block:13px;margin-top:-13px;margin-bottom:-13px;margin-block:-13px}
 .btn{min-height:44px}
-.chips .chip-new a{padding-block:.95em;margin-block:-.95em}
+.chips .chip-new a{padding-top:.95em;padding-bottom:.95em;padding-block:.95em;margin-top:-.95em;margin-bottom:-.95em;margin-block:-.95em}
 button.map-toggle{min-height:44px}
 .lang-btn{min-height:44px;min-width:44px;justify-content:center}
 .brand{min-height:44px}
 .footer-links{gap:0 20px}
 .footer-links a{display:flex;align-items:center;min-height:44px}
-.footer-contact a{padding-block:.65em}
+.footer-contact a{padding-top:.65em;padding-bottom:.65em;padding-block:.65em}
 .social-links a,.social a{min-height:44px}
 .lang-links{gap:0 6px}
-.lang-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding-inline:.35em}
+.lang-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding-left:.35em;padding-right:.35em;padding-inline:.35em}
 .checklist{gap:0}
-.checklist label{padding-block:8.5px;margin-block:0}
+.checklist label{padding-top:8.5px;padding-bottom:8.5px;padding-block:8.5px;margin-top:0;margin-bottom:0;margin-block:0}
 .nav .nav-more-list a{display:flex;align-items:center;min-height:44px}
 .lang-list button{min-height:44px}
 }
@@ -619,7 +619,7 @@ button.map-toggle{min-height:44px}
    On the dark bar, the hero drawing and the dark footer a blue ring alone is hard to see: a white band sits under it.
    The "new" hero chip has a tall invisible tap box, so its ring goes round the visible pill instead. */
 .announce :focus-visible{--focus:#fff3b0}
-.announce a:focus-visible{padding-block:0;margin-block:0}
+.announce a:focus-visible{padding-top:0;padding-bottom:0;padding-block:0;margin-top:0;margin-bottom:0;margin-block:0}
 .skip-link:focus-visible,.chips .chip-rel a:focus-visible{box-shadow:0 0 0 7px #fff}
 .to-top:focus-visible{box-shadow:0 0 0 7px #fff,0 4px 0 var(--ink)}
 @supports selector(:has(*)){

@@ -82,7 +82,7 @@
     const seen = new Set();
     const io = new IntersectionObserver((entries) => entries.forEach((en) => {
       if (en.isIntersecting && !seen.has(en.target.id)) { seen.add(en.target.id); track('Section view', { section: en.target.id }); }
-    }), { threshold: 0.35 });
+    }), { rootMargin: '0px 0px -35% 0px' });   // reached: its top edge is in the upper two thirds of the screen. (A share of the section's own height, like 35 %, can never be met by a section more than three screens tall: on a phone most of them.)
     ['this-week', 'visit', 'seasons', 'tomatoes', 'pizza', 'greenhouse', 'flowers', 'groups', 'about', 'faq', 'reserve', 'contact'].forEach((id) => { const el = doc.getElementById(id); if (el) io.observe(el); });
   }
 

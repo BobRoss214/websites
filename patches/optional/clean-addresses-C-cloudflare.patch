@@ -28,10 +28,10 @@ index ada2264..11f47ed 100644
  const robots = read('robots.txt');
  ok('robots.txt keeps /tests/, /docs/ and /print/ out of search engines', ['tests', 'docs', 'print'].every((d) => new RegExp('^Disallow:\\s*/' + d + '/\\s*$', 'm').test(robots)), robots.replace(/\n/g, ' | '));
 diff --git a/tools/pages.py b/tools/pages.py
-index 5f1b897..4047ddd 100644
+index 84d58e5..3425fd5 100644
 --- a/tools/pages.py
 +++ b/tools/pages.py
-@@ -39,6 +39,10 @@ except ImportError:
+@@ -73,6 +73,10 @@ except ImportError:
  
  ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
  SITE = 'https://www.wiseacresorganic.com/'
@@ -42,7 +42,7 @@ index 5f1b897..4047ddd 100644
  OG_IMAGE = 'assets/og-share.png'
  
  PAGES_DIR = os.path.join(ROOT, 'pages')
-@@ -308,7 +312,7 @@ def css_ids():
+@@ -344,7 +348,7 @@ def css_ids():
  
  
  def compose(c, slug, meta, body):
@@ -51,9 +51,9 @@ index 5f1b897..4047ddd 100644
      title, desc = meta['title'], meta['description']
      image_rel, image_alt, image_dims = share_picture(c, slug, meta)
      image = SITE + image_rel
-@@ -396,7 +400,7 @@ def main():
+@@ -434,7 +438,7 @@ def main():
+     for slug, out in built:
          open(os.path.join(ROOT, slug + '.html'), 'w', encoding='utf-8', newline='\n').write(out)
-         slugs.append(slug)
          print('wrote', slug + '.html')
 -    urls = [SITE] + [SITE + s + '.html' for s in slugs]
 +    urls = [SITE] + [SITE + s + PAGE_EXT for s in slugs]

@@ -1,6 +1,6 @@
 # Launch checklist: putting the Wise Acres website online
 
-For the farm owner, and for anyone helping, who has never put a website online. Plain English, in order. Written on 2 October 2026 for the files in this folder. Updated on 3 October 2026 for the Drive time box (steps 3.5 and 3.13, decision D11 and the tests in section 5). Checked again on 3 October 2026 against the files at version `979437f`. These were corrected: the file counts and sizes, steps 3.8, 3.9 and 3.13, the list of questions in section 4 and the tests in section 6. The upload list and its counts in section 2 were checked once more against version `13e88af`. The counts were out of date, because the folder of translation parts was removed since, and they are corrected. The hidden `.gitignore` file is now on the leave-out list.
+For the farm owner, and for anyone helping, who has never put a website online. Plain English, in order. Written on 2 October 2026 for the files in this folder. Updated on 3 October 2026 for the Drive time box (steps 3.5 and 3.13, decision D11 and the tests in section 5). Checked again on 3 October 2026 against the files at version `979437f`. These were corrected: the file counts and sizes, steps 3.8, 3.9 and 3.13, the list of questions in section 4 and the tests in section 6. The upload list and its counts in section 2 were checked once more against version `13e88af`. The counts were out of date, because the folder of translation parts was removed since, and they are corrected. The hidden `.gitignore` file is now on the leave-out list. On 3 October 2026 the whole launch was rehearsed step by step, using only the README and this page, on a pretend Cloudflare host (version `05b0b72`). What happened at each step, and what was corrected, is in `docs/LAUNCH_REHEARSAL_LOG.md`.
 
 **Not part of the upload.** This file lives in `docs/`, which stays on your computer (see section 2).
 
@@ -38,7 +38,7 @@ The site is plain files. There is no database, and nothing to build before you u
 
 | | **Cloudflare Pages** (recommended) | **Netlify** (second choice) | **GitHub Pages** (not recommended) |
 |---|---|---|---|
-| **Cost for this site** | Free plan. Requests for static files (which is all this site is) are "free and unlimited". Limits that matter: 20,000 files per site, 25 MiB per file; this site has 92 files, the biggest is 0.44 MB. **[read]** | Free plan with a monthly allowance of "credits". The pages say that when you reach the limit "projects pause until the next billing cycle". Reported prices: 300 credits a month on Free, 20 credits for each GB sent to visitors, 15 credits for each upload that goes live. **[not opened]** | Free. Soft limits: site up to 1 GB, 100 GB of traffic a month, 10 builds an hour. **[read]** But see the business-use rule in the last row. |
+| **Cost for this site** | Free plan. Requests for static files (which is all this site is) are "free and unlimited". Limits that matter: 20,000 files per site, 25 MiB per file; this site has about 100 files, the biggest is 0.44 MB. **[read]** | Free plan with a monthly allowance of "credits". The pages say that when you reach the limit "projects pause until the next billing cycle". Reported prices: 300 credits a month on Free, 20 credits for each GB sent to visitors, 15 credits for each upload that goes live. **[not opened]** | Free. Soft limits: site up to 1 GB, 100 GB of traffic a month, 10 builds an hour. **[read]** But see the business-use rule in the last row. |
 | **Custom domain: steps** | In the project: Custom domains, Set up a domain. Then at your registrar add a `CNAME` record for `www` pointing at `<project>.pages.dev`. For the bare domain (`wiseacresorganic.com` without `www`) the whole domain must be moved to Cloudflare's nameservers. **[read]** | Add the domain on the site's page, then at your registrar a `CNAME` for `www` pointing at `<site>.netlify.app`. For the bare domain: an `ALIAS`/`ANAME` record to `apex-loadbalancer.netlify.com`, or an `A` record to `75.2.60.5`. Netlify "strongly recommend[s]" `www` as the main address. **[not opened]** | Add the domain in the project's Settings, then Pages. Then at your registrar add a `CNAME` for `www` pointing at `<user>.github.io`. For the bare domain add four `A` records (`185.199.108.153` to `185.199.111.153`). **[read]** Needs a GitHub account and a project on GitHub that holds the site. |
 | **HTTPS (the padlock)** | The pages read mention certificates only in a note about `CAA` records (the DNS records that say which companies may issue certificates for your domain), so confirm by opening `https://` once the domain says Active. **[read]** | "We will automatically provision a certificate with Let's Encrypt." **[not opened]** | "All GitHub Pages sites, including sites that are correctly configured with a custom domain, support HTTPS". You tick "Enforce HTTPS". **[read]** |
 | **`_headers` works** (security headers, the tested Content-Security-Policy) | Yes. File `_headers` in the top folder; up to 100 rules and 2,000 characters a line. Our file was applied by Cloudflare's own test server. **[read] [tested here]** | Yes, if `_headers` is in the folder you publish. **[not opened]** (Netlify's own Content-Security-Policy page shows an example.) | No. Nothing in the GitHub pages read mentions it, and GitHub community threads say custom headers cannot be set. **[read] [not opened]** |
@@ -48,7 +48,7 @@ The site is plain files. There is no database, and nothing to build before you u
 
 ### Why Cloudflare Pages
 
-1. **The cost cannot surprise you.** A first visit to the home page, scrolling all the way down, downloads about 2.2 to 2.4 MB. This was measured on 3 October 2026 in a real browser, with text files compressed. The high end is when every picture has loaded. October is when the farm is busiest. On Netlify's free plan, going by the prices above, the allowance would last very roughly 5,000 first visits a month (arithmetic on **[not opened]** prices, not a promise). When it ran out the site would go offline until the next month. On Cloudflare's free plan the pages are free and unlimited. **[read]**
+1. **The cost cannot surprise you.** A first visit to the home page, scrolling all the way down, downloads about 2.2 to 2.5 MB. This was measured on 3 October 2026 in a real browser, with text files compressed. The high end is when every picture has loaded. October is when the farm is busiest. On Netlify's free plan, going by the prices above, the allowance would last very roughly 5,000 first visits a month (arithmetic on **[not opened]** prices, not a promise). When it ran out the site would go offline until the next month. On Cloudflare's free plan the pages are free and unlimited. **[read]**
 2. **Everything the README set up works there**: `_headers`, `_redirects` and the friendly "page not found" page. **[tested here]**
 3. **Your email is not touched.** One `CNAME` record for `www` changes nothing else. (Moving the whole domain to another company is the step that can break email.)
 4. **The upload is drag and drop**, and later changes are "Create a new deployment" and drag again. There is also an instant rollback to an earlier version. **[read]**
@@ -65,16 +65,18 @@ In the site folder run
 python3 tools/make_deploy_folder.py
 ```
 
-(on Windows type `python` instead of `python3`), or ask Claude to run it. It needs Python 3.8 or newer and the `beautifulsoup4` package that the other tools use (README, "Commands: one-time setup"). It does four things and says each one in plain words:
+(on Windows type `python` or `py -3` instead of `python3`), or ask Claude to run it. It needs Python 3.8 or newer and the `beautifulsoup4` package that the other tools use (README, "Commands on Windows, Mac and Linux"). It does four things and says each one in plain words:
 
 1. It rebuilds the pages and the translations. If a page was not rebuilt after an edit, it is updated in your folder and named.
 2. It **stops** if a fact is written two ways or if a translation is missing, so no visitor sees a wrong fact or a sentence left in English. The facts are a price, an hour, a phone number, an email address, the address, an age and the year: the check is the same as `python3 tools/check_facts.py`. Each red thing is one plain line that names the file and says how to fix it.
 3. It **warns, without stopping**, about settings in `js/content.js` that this checklist asks you to set: `seasonPicker` (3.8), `farmPoint` (3.13), and, which can follow launch, `reviewUrl` (3.12) and the Mailchimp `signup`.
-4. It makes the folder `deploy/` with exactly the files a visitor needs, checks that every file the pages point to is in it, and lists what it left out and why. At version `66c8272` that is 77 files and `FILES.txt`, 5.8 MB.
+4. It makes the folder `deploy/` with exactly the files a visitor needs. It checks that every file the pages point to is in it. It says in one plain line each whether `_headers` and `_redirects` (the two files the host reads) are in it. It also lists what it left out and why. On 4 October 2026 that was 88 files and `FILES.txt`, 5.7 MB (89 files with `_redirects`). The last line the command prints gives the exact numbers for today's files. A few more or fewer is normal as the site grows.
 
 Upload what is **inside** `deploy/`: in step 3.2 drag the `deploy` folder where it says `wise-acres-upload`. `deploy/FILES.txt` lists every file with its size and a fingerprint (sha256). It is uploaded too and does no harm. Its last line is a fingerprint of the whole folder: two uploads with the same fingerprint have exactly the same files. Keep a copy of each folder you upload, with the date in its name (`wise-acres-upload-2026-10-09`), so you can go back. `deploy/` is remade from scratch each time and is never kept in the project's saved history.
 
 `python3 tools/make_deploy_folder.py --check` only says whether the pages, facts and translations are up to date, and writes nothing. `--force` builds the folder even when step 2 is red; it says so on screen and writes it into `deploy/FILES.txt`, so do not upload a folder made that way unless you know why. A broken link inside the folder is never overridden. To look at the folder before you upload it, run `python3 tools/serve.py deploy`. If `beautifulsoup4` cannot be installed, `--no-rebuild` copies the files as they are, without step 1 and the translation part of step 2 (not recommended).
+
+Before you upload, `python3 tools/doctor.py` checks the whole site and the upload folder in plain words, changes nothing, and ends with READY TO UPLOAD or NOT READY and the one command to run next.
 
 ### By hand (if you cannot run the command)
 
@@ -101,12 +103,13 @@ Upload what is **inside** `deploy/`: in step 3.2 drag the `deploy` folder where 
 | `README.md` | Instructions for whoever edits the site |
 | `.git` (a hidden folder, if you have one) | The change history of the files |
 | `.gitignore` (a hidden file, if you can see it) | A developer's note about which files to ignore. Not for visitors |
+| `.venv` (a hidden folder, only if you made one) | The Python packages for the tools, on your computer (README, "Commands on Windows, Mac and Linux", step 4). Not for visitors |
 
 How to do it, with no tools:
 
 1. Copy the whole site folder and call the copy `wise-acres-upload`.
-2. In the copy, delete `docs`, `tests`, `tools`, `pages`, `patches` and `README.md`, and `.git` and `.gitignore` if you can see them.
-3. What is left should be 16 items (17 with `_redirects`), 103 files (104 with `_redirects`), about 6.4 MB. Double-click `index.html` in the copy and check the site looks right. (In Chrome the lettering looks plainer when a page is opened this way, because Chrome does not load font files from a plain folder; online the real fonts load. **[tested here]**)
+2. In the copy, delete `docs`, `tests`, `tools`, `pages`, `patches` and `README.md`, and `.git`, `.gitignore` and `.venv` if you can see them.
+3. What is left should be 16 items (17 with `_redirects`), 103 files (104 with `_redirects`), about 6.4 MB. A few files more or fewer is fine. It is more than the command's folder because the by-hand copy keeps the QR pictures and the translators' files that the command leaves out. Double-click `index.html` in the copy and check the site looks right. (In Chrome the lettering looks plainer when a page is opened this way, because Chrome does not load font files from a plain folder; online the real fonts load. **[tested here]**)
 4. Keep each uploaded folder, with the date in its name (`wise-acres-upload-2026-10-09`). If an upload goes wrong you can go back.
 
 The helper checked that the site loads with all 8 pages and 5 languages from this reduced folder, with no missing file. This was done on 2 October 2026, and again on 3 October 2026 with the files at version `13e88af`. The same check was run on 3 October 2026 on the folder made by `tools/make_deploy_folder.py` at version `66c8272`. A plain web server with no special rules served it. There were 40 page loads (every page, including `404.html` and `print/qr-signs.html`, in all 5 languages). Every one had status 200, with no error and no missing file. **[tested here]** The command also leaves out `lang/src/`, `lang/en.json`, `lang/js-strings.json` (material for translators) and `assets/qr/` (the QR codes as separate files: `print/qr-signs.html` has its own copy of each). When you copy by hand you can leave them in; they do no harm.
@@ -154,7 +157,7 @@ Some steps change the files (marked **FILES**): `seasonPicker`, `_redirects`, th
 
 Headers are hidden notes sent with every page. `_headers` already holds four security notes, the rules for how long browsers keep pictures and code, and a "do not list in Google" note for the printable signs.
 
-How to look, with no tools: open the live home page in Chrome, press F12, open the Network tab, reload, click the first row (`www.wiseacresorganic.com`), and read "Response Headers". With a terminal: `curl -sI https://www.wiseacresorganic.com/`.
+How to look, with no tools: open the live home page in Chrome, press F12, open the Network tab, reload, click the first row (`www.wiseacresorganic.com`), and read "Response Headers". With a terminal: `curl -sI https://www.wiseacresorganic.com/` (in Windows PowerShell write `curl.exe`, because `curl` alone means something else there).
 
 - [ ] Home page shows: `x-content-type-options: nosniff`, `referrer-policy: strict-origin-when-cross-origin`, `x-frame-options: SAMEORIGIN`, `permissions-policy: camera=(), microphone=(), geolocation=()`. **[tested here]**
 - [ ] A picture such as `/assets/og-share.png` shows `cache-control: public, max-age=31536000, immutable`. `/print/qr-signs` shows `x-robots-tag: noindex`. **[tested here]**
@@ -193,12 +196,12 @@ https://:version.:project.pages.dev/*
   Content-Security-Policy: default-src 'self'; script-src 'self' https://*.list-manage.com 'unsafe-hashes' 'sha256-MguIPR6qNR8D3B+eAlK+bIRTZe8t3wkOY4B/56Me9FU='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://nominatim.openstreetmap.org https://router.project-osrm.org; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
 ```
 
-It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Both Cloudflare's and Netlify's own tools for reading headers read the line and return it unchanged. **[tested here]**
+The policy itself (the part after the colon) is 374 characters long (399 with the name in front; Cloudflare's limit is 2,000 characters for a whole line). If you chose an analytics provider in 3.9, add that provider's addresses to this line before you paste it (table in 3.9). **[read]** Both Cloudflare's and Netlify's own tools for reading headers read the line and return it unchanged. **[tested here]**
 
 **Recommended order:**
 
 - [ ] **Trial run.** Add the line with `-Report-Only` right after `Content-Security-Policy` (so it starts `  Content-Security-Policy-Report-Only: default-src ...`). In this mode the browser blocks nothing. It only prints a message in the console for anything the policy would have blocked. Netlify's own page shows a Report-Only line in `_headers`, and MDN (a reference site for web developers) describes the header as one that reports without enforcing. **[not opened]** Upload.
-- [ ] Open each of the 6 public pages in Chrome with F12 open on the Console tab. Scroll to the bottom, switch language, open a photo, tap the map, press every button that stays on the page, and press "Get drive time" with a real address. Any message that starts with `[Report Only] Refused to ...` means the policy needs a change: send it to Claude. If you see no messages at all, make sure the "Info" level is ticked in the console's level menu. With the real policy the helper saw none on 8 pages, and with a deliberately wrong policy the browser printed `[Report Only] Refused to load the image ...` for every item. **[tested here]**
+- [ ] Open each of the 6 public pages in Chrome with F12 open on the Console tab. Scroll to the bottom, switch language, open a photo, tap the map, press every button that stays on the page, and press "Get drive time" with a real address. Any message that starts with `[Report Only] Refused to ...` means the policy needs a change: send it to Claude. If analytics is switched on (3.9) and you did not add its addresses to the line, expect exactly this message for the analytics script on every page. On 3 October 2026 a Plausible site gave it on 14 of 15 page loads. It gave none once `https://plausible.io` was added to `script-src` and `connect-src`. **[tested here]** If you see no messages at all, make sure the "Info" level is ticked in the console's level menu. With the real policy the helper saw none on 8 pages, and with a deliberately wrong policy the browser printed `[Report Only] Refused to load the image ...` for every item. **[tested here]**
 - [ ] This only tells you what your own browser sees. The line has no report address, so nothing is collected from visitors.
 - [ ] **Switch on.** Once the decisions on analytics, the week feed, the Mailchimp form and the Drive time box (section 4) are final and the line has been updated for them, delete `-Report-Only` from the name and upload again. Press the Print button on `/print/qr-signs` once to check it still prints.
 - Skipping this at launch is fine. Do it a few weeks later.
@@ -265,6 +268,8 @@ It is 374 characters long (Cloudflare's limit is 2,000 per line). **[read]** Bot
 
 Both files are ready. `robots.txt` lets search engines in, keeps them out of `/print/`, and points at the sitemap. `sitemap.xml` lists the home page and the five other pages. Both use `https://www.wiseacresorganic.com/`.
 
+The last bullet below (the page addresses without `.html`, for Cloudflare) is the optional patch called OPT-C in `docs/DECISION_PLAYBOOK.md` (decision d05). It is your decision, so it is not in the files you were given. Without it, `python3 tools/launch_check.py` (section 5) answers FAIL for each of the five `.html` pages on Cloudflare and ends with NOT READY, even when everything else is fine. That is expected: either make the change, or read those five lines as the known catch and go on.
+
 - [ ] After launch open `https://www.wiseacresorganic.com/robots.txt` and `https://www.wiseacresorganic.com/sitemap.xml`. Both should show text.
 - [ ] If the site will live at another address, ask Claude to change them (README, "Putting it online", item 2).
 - [ ] **Cloudflare only: ask Claude to make the page addresses extension-less before you submit the sitemap.** Today each page names itself as `https://www.wiseacresorganic.com/wise-pie.html` in its canonical tag, its share address, its structured data and the sitemap. On Cloudflare that address redirects to `/wise-pie`, so the page tells Google to use an address that bounces to itself. Visitors never notice. How Google sorts this out was not checked here. The tidy fix is small: the two address-building lines in `tools/pages.py`, a rebuild of the five pages, and the five sitemap lines. Printed QR signs that end in `index.html#menu` and `first-visit.html#farm-map` keep working through the redirect, and the browser still scrolls to the right place. **[tested here]** On Netlify this step is not needed.
@@ -294,7 +299,7 @@ If you do want it (decision D5):
 
 - Pick one: Plausible, GoatCounter, Umami, or Cloudflare Web Analytics (page views only). Each needs a sign-up; the lines to paste are at the top of `js/analytics.js`. Ask Claude to paste them.
 - It is skipped for visitors whose browser says "Do Not Track" or "Global Privacy Control".
-- It changes the security policy. Each provider needs these addresses added to the line in 3.5 (tested only with stand-ins, not the real services):
+- It changes the security policy. Each provider needs these addresses added to the line in 3.5 (tested only with stand-ins, not the real services). If the line is already in `_headers`, add them there too; without them the counts stay empty and, in the trial run of 3.5, the console complains on every page:
 
 | Feature | Add to `script-src` | Add to `connect-src` | Also |
 |---|---|---|---|
@@ -314,7 +319,7 @@ If you do want it (decision D5):
 
 - [ ] Go to `search.google.com/search-console`, sign in with the farm's Google account (not a helper's), choose Add property, and pick the **URL prefix** box (not "Domain"). Type `https://www.wiseacresorganic.com/`.
 - [ ] Choose the **HTML tag** way of verifying. Copy the whole line that starts `<meta name="google-site-verification"`.
-- [ ] Send that line to Claude to paste into `index.html` where the comment says "GOOGLE SEARCH CONSOLE" (home page only; the other pages do not need it). Upload again. Press Verify.
+- [ ] Send that line to Claude to paste into `index.html` (home page only; the other pages do not need it). It goes on a line of its own, just **below** the comment that says "GOOGLE SEARCH CONSOLE", after that comment's closing `-->`. If it is pasted inside the comment, it does nothing and Verify fails. `python3 tools/doctor.py` says RED when it finds the tag inside the comment. Make the upload folder again, upload, and press Verify.
 - Google says the tag must be inside the `<head>` of the home page, and that it checks for it from time to time, so leave it there. **[not opened]**
 - [ ] In the left menu choose Sitemaps, type `sitemap.xml` in the box (the start of the address is already filled in), and Submit. Google's page says "Submitting" a sitemap means telling Google where the file is. **[not opened]** On Cloudflare, do the address change in 3.7 first.
 - [ ] A few days later look at the Pages report. A list of pages "with redirect" means 3.7 is not done yet.
@@ -343,7 +348,7 @@ If you do want it (decision D5):
 - [ ] Do this only after the site is live on the real domain.
 - [ ] In your Business Profile choose Edit profile, enter the website's full address with `https://` (`https://www.wiseacresorganic.com/`), and Save. **[not opened]** Google's help page "Edit your Business Profile".
 - [ ] Check that the hours, the phone number and the booking link on the profile match the site.
-- [ ] Get the short review link from the profile (Ask for reviews) and send it to Claude for `reviewUrl` in `js/content.js` (question 27). Until then every "Leave a Google review" button opens the farm on Google Maps.
+- [ ] Get the short review link from the profile (Ask for reviews) and send it to Claude for `reviewUrl` in `js/content.js` (question 27). Until then every "Leave a Google review" button opens the farm on Google Maps. The printable review sign is made only after that: ask Claude to make the QR signs again (`python3 tools/make_qr.py`) once `reviewUrl` is set, and again if the link ever changes. `python3 tools/doctor.py` says so when `reviewUrl` is set and the sheet `print/qr-signs.html` does not carry the link.
 
 ### 3.13 The Drive time box: free public services, and what to do if they refuse
 
@@ -370,7 +375,7 @@ If you do want it (decision D5):
 
 **Do these before launch:**
 
-- [ ] **Set `farmPoint` in `js/content.js`** (the steps are in the comment "DRIVE TIME FROM A VISITOR'S ADDRESS"). It halves the number of requests, makes the answer about a second faster, and means the box no longer depends on OpenStreetMap having the farm's street address right. Check the two numbers by looking at them on a map. **[tested here: one search and one route request per press]**
+- [ ] **Set `farmPoint` in `js/content.js`** (the steps are in the comment "DRIVE TIME FROM A VISITOR'S ADDRESS"; search the file for `farmPoint: null,`, which is on the one line to change). It halves the number of requests, makes the answer about a second faster, and means the box no longer depends on OpenStreetMap having the farm's street address right. Check the two numbers by looking at them on a map. **[tested here: one search and one route request per press]**
 - [ ] If you want a clear answer about business use, write to the routing server's operators at the address on their about page, `fossgis-routing-server@openstreetmap.de` **[read]**. Say it is a small farm website, that the visitor presses a button, and that you send one request per press. Keep their reply.
 - [ ] Press the button yourself on the live site (section 5). The real services were never called from the test computer.
 
@@ -472,6 +477,11 @@ If something is wrong: open the project in Cloudflare, find its list of "Deploym
 - The storage and outside-sites check was repeated: three browser entries (`wa.lang`, `wa.offer`, `wa.checklist`), no cookies, no `IndexedDB`, `Cache Storage` or service worker, and no request to another site except when "Get drive time" is pressed.
 - First-visit size of the home page: on load 21 files, 0.9 MB (0.34 MB with text compressed). After scrolling the whole page: 46 to 52 files, 2.8 to 3.0 MB (2.2 to 2.4 MB with text compressed). The number of files depends on how fast the scrolling is, because pictures load only when they come near the screen.
 
+**Tested again on 3 October 2026** (the rehearsal, for the files at version `05b0b72`; the steps and the results are in `docs/LAUNCH_REHEARSAL_LOG.md`):
+
+- Everything above that can run offline was run again with the same program versions (wrangler 4.146.0, `@netlify/headers-parser` 10.1.1, `@netlify/redirect-parser` 16.1.1). What still held: the headers and the 22 redirects. Netlify's own header and redirect readers gave the same answers. The `.pages.dev` address still got the noindex note. The fingerprint of the Print button, the storage check, the QR signs through the redirect, and the font files not loading from a plain folder all held too. The Drive time box still sent one search and one route request with `farmPoint`, and two searches without it. What had changed, and is corrected above: the file counts and sizes, and the console messages of the trial run once analytics is on (3.5).
+- The Drive time test suite now has 136 checks, and all pass (the figures 42 and 45 above are from earlier versions). The upload-folder test (every page in every language from the folder made by `make_deploy_folder.py`, served with no special rules), the doctor test, the Site check test and the local-server test all pass too.
+
 **Not tested:**
 
 - Nothing was uploaded to any real host and no real domain was touched.
@@ -479,6 +489,7 @@ If something is wrong: open the project in Cloudflare, find its list of "Deploym
 - Netlify's pages and prices could not be opened; every Netlify statement above is **[not opened]**.
 - The real Mailchimp and analytics services (stand-ins only).
 - How Google treats the `.html` canonical addresses on Cloudflare, and how long Google takes to notice the redirects.
+- `pip` on a real new Mac or Windows computer (the setup step in the README), a real phone, real printing and scanning of the QR signs, and Google Search Console accepting the verification tag.
 - Whether Cloudflare's dashboard still shows the same button names. The names above come from its documentation text, and Cloudflare moves things around.
 
 ## Sources (read on 2 October 2026; the sources for the Drive time box on 3 October 2026)

@@ -55,6 +55,41 @@ import tempfile
 import threading
 import time
 
+# ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
+try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
+    sys.stdout.reconfigure(errors='replace')
+except (AttributeError, ValueError, OSError):
+    pass
+
+
+def _stop_plainly(kind, err, tb):
+    """A file saved in the old Windows format (Notepad's "ANSI"), or one that is read-only or open in another program, ends a tool with a plain message, not a traceback."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if issubclass(kind, UnicodeDecodeError):
+        import glob
+        for pat in ('*.html', 'pages/*.html', 'js/*.js', 'css/*.css', 'lang/*.json', 'lang/src/*.json', 'tools/*.json'):
+            for path in sorted(glob.glob(os.path.join(root, pat))):
+                with open(path, 'rb') as f:
+                    raw = f.read()
+                try:
+                    raw.decode('utf-8')
+                except UnicodeDecodeError as bad:
+                    line = raw.split(b'\n')[raw.count(b'\n', 0, bad.start)]
+                    print('%s is not saved as UTF-8: line %d has a character in the old Windows "ANSI" format (a dash, a curly quote or a letter with an accent):\n    %s\n'
+                          'Open the file and save it again as UTF-8 (Notepad: File, Save As, then Encoding: UTF-8; VS Code: click the encoding at the bottom right, Save with Encoding, UTF-8). Then run this again.'
+                          % (os.path.relpath(path, root).replace(os.sep, '/'), raw.count(b'\n', 0, bad.start) + 1, line.decode('utf-8', 'replace').strip()[:70].encode('ascii', 'replace').decode()), file=sys.stderr)
+                    return
+    elif issubclass(kind, PermissionError) and getattr(err, 'filename', None):
+        print('I could not open or change %s: the file is read-only, or open in another program, or locked while OneDrive syncs it.\n'
+              'Right-click it, Properties, and untick Read-only; close the programs that show it; wait a moment. Then run this again.' % err.filename, file=sys.stderr)
+        return
+    sys.__excepthook__(kind, err, tb)
+
+
+sys.excepthook = _stop_plainly
+# ---- end of the Windows safety lines
+
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 RECIPES = os.path.join(HERE, 'rehearse_answers.json')
@@ -72,7 +107,7 @@ class StepError(Exception):
 
 
 def run(cmd, cwd, env=None, timeout=600):
-    p = subprocess.run(cmd, cwd=cwd, shell=isinstance(cmd, str), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True,
+    p = subprocess.run(cmd, cwd=cwd, shell=isinstance(cmd, str), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, encoding='utf-8', errors='replace',
                        env=env, timeout=timeout)
     return p.returncode, p.stdout
 
@@ -90,7 +125,7 @@ def rd(work, f):
 
 
 def wr(work, f, text):
-    with open(os.path.join(work, f), 'w', encoding='utf-8') as h:
+    with open(os.path.join(work, f), 'w', encoding='utf-8', newline='\n') as h:
         h.write(text)
 
 
@@ -505,7 +540,7 @@ def main():
     print('\n%d answer(s) replayed: %d pass, %d follow-up only, %d with something wrong.' % (
         len(results), sum(1 for r in results if verdict(r) in ('pass', 'no change')), sum(1 for r in results if verdict(r) == 'follow-up'), len(bad)))
     if a.json:
-        with open(a.json, 'w', encoding='utf-8') as f:
+        with open(a.json, 'w', encoding='utf-8', newline='\n') as f:
             json.dump(sorted(results, key=lambda r: r['key']), f, indent=1, ensure_ascii=False)
     return 1 if bad else 0
 

@@ -16,7 +16,7 @@
 .rel-count-calm{grid-template-columns:repeat(3,minmax(0,76px))}
 .rc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px 6px;background:var(--sun);border:3px solid var(--ink);border-radius:16px;box-shadow:0 3px 0 var(--ink);min-width:0}
 .rc b{font:700 1.9rem/1 var(--display);font-variant-numeric:tabular-nums}
-.rc i{max-width:100%;font:700 .6875rem/1.2 var(--display);font-style:normal;letter-spacing:.05em;text-transform:uppercase;text-align:center;overflow-wrap:anywhere}
+.rc i{max-width:100%;font:700 .6875rem/1.2 var(--display);font-style:normal;letter-spacing:.05em;text-transform:uppercase;text-align:center;overflow-wrap:break-word;overflow-wrap:anywhere}
 .rel-when{margin:.8em 0 0;font-weight:700}
 .rel-actions{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:10px}
 .remind-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:30;display:grid;gap:8px;min-width:min(280px,calc(100vw - 2 * var(--gutter)));padding:10px;background:#fff;border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink)}
@@ -36,7 +36,7 @@
 @keyframes bellRing{0%,84%,100%{transform:none}88%{transform:rotate(16deg)}92%{transform:rotate(-13deg)}96%{transform:rotate(6deg)}}
 
 /* ---------------------------------------------------------------- this week at the farm */
-.week{background:#e9f6dc;border-bottom:3px solid var(--ink);padding-block:clamp(28px,4vw,52px)}
+.week{background:#e9f6dc;border-bottom:3px solid var(--ink);padding-top:clamp(28px,4vw,52px);padding-bottom:clamp(28px,4vw,52px);padding-block:clamp(28px,4vw,52px)}
 .week-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 24px;margin-bottom:20px}
 .week-head .eyebrow{margin:0}
 .week-head h2{font-size:clamp(1.8rem,3.6vw,2.6rem)}
@@ -98,7 +98,7 @@
 .su-interests legend{margin:0 0 7px;padding:0;font:700 .95rem/1.3 var(--display)}
 .su-chips{display:flex;flex-wrap:wrap;gap:8px}
 .su-chip{position:relative;display:inline-flex;cursor:pointer}
-.su-chip input{position:absolute;inset:0;z-index:1;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.su-chip input{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;z-index:1;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
 .su-chip span{display:inline-flex;align-items:center;gap:.4em;padding:.35em .9em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .92rem/1.2 var(--display);transition:background-color .15s,color .15s,transform .15s}
 @media (hover:hover){.su-chip:hover span{transform:translateY(-1px)}}
 .su-chip input:checked+span{background:var(--ink);color:#fff}
@@ -306,7 +306,7 @@
 
 /* 13. hero: on phones the "Try it" picker sits in the flow under the chips instead of covering them */
 @media (max-width:47.5em){
-  .picker{position:relative;left:auto;bottom:auto;margin:18px auto 16px;width:fit-content}
+  .picker{position:relative;left:auto;bottom:auto;margin:18px auto 16px;width:-moz-fit-content;width:fit-content}
 }
 /* ...and on a short laptop screen the hero is only 660px tall, so the picker (bottom left) sat on top of the chips. Keep room for it under them. */
 @media (min-width:47.5625em){
@@ -339,8 +339,8 @@
 
   .hero{padding-bottom:0}   /* no picker, so no room reserved for it */
   .site-header{position:static}
-  .header-inner{height:auto;flex-wrap:wrap;justify-content:flex-start;gap:6px 20px;padding-block:10px}
-  .nav{position:static;inset:auto;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0;overflow:visible;background:none;opacity:1;visibility:visible;transform:none;transition:none}
+  .header-inner{height:auto;flex-wrap:wrap;justify-content:flex-start;gap:6px 20px;padding-top:10px;padding-bottom:10px;padding-block:10px}
+  .nav{position:static;top:auto;right:auto;bottom:auto;left:auto;inset:auto;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0;overflow:visible;background:none;opacity:1;visibility:visible;transform:none;transition:none}
   .nav ul{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
   .nav-more,.nav .nav-more-list{display:contents}
   .nav ul a,.nav .nav-more-list a{padding:.45em .75em!important;font-size:1rem!important;border:0;box-shadow:none;background:none;border-radius:999px}
@@ -362,8 +362,8 @@
    scripts off (the .no-js rules in css/styles.css and css/sections.css already stack the seasons and the school tabs). Keep in step with the block above. */
 html.js-failed :is(.menu-toggle,.nav-more-btn,.goat-nook,.filter-row,.bouquet,.fs-tabs,[data-print]){display:none!important}
 html.js-failed .site-header{position:static}
-html.js-failed .header-inner{height:auto;flex-wrap:wrap;justify-content:flex-start;gap:6px 20px;padding-block:10px}
-html.js-failed .nav{position:static;inset:auto;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0;overflow:visible;background:none;opacity:1;visibility:visible;transform:none;transition:none}
+html.js-failed .header-inner{height:auto;flex-wrap:wrap;justify-content:flex-start;gap:6px 20px;padding-top:10px;padding-bottom:10px;padding-block:10px}
+html.js-failed .nav{position:static;top:auto;right:auto;bottom:auto;left:auto;inset:auto;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0;overflow:visible;background:none;opacity:1;visibility:visible;transform:none;transition:none}
 html.js-failed .nav ul{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
 html.js-failed :is(.nav-more,.nav .nav-more-list){display:contents}
 html.js-failed :is(.nav ul a,.nav .nav-more-list a){padding:.45em .75em!important;font-size:1rem!important;border:0;box-shadow:none;background:none;border-radius:999px}
@@ -411,7 +411,7 @@ html.js-failed .fs-table thead button{pointer-events:none}
 .drive-to legend{padding:0;margin:0 0 .5em;font:800 1.02rem/1.3 var(--display)}
 .drive-opts{display:flex;flex-wrap:wrap;gap:8px 10px}
 .drive-opt{position:relative;display:inline-flex;max-width:100%}
-.drive-opt input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.drive-opt input{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
 .drive-opt span{display:inline-flex;align-items:center;gap:.6em;min-height:44px;padding:.4em 1em .4em .8em;background:#fff8e6;border:2.5px solid var(--ink);border-radius:22px;font:700 .95rem/1.25 var(--display)}
 .drive-opt span::before{content:"";flex:none;width:1.1em;height:1.1em;border:2.5px solid var(--ink);border-radius:50%;background:#fff}
 .drive-opt input:checked+span{background:var(--sun);box-shadow:0 3px 0 var(--ink)}
@@ -419,7 +419,7 @@ html.js-failed .fs-table thead button{pointer-events:none}
 .drive-opt input:focus-visible+span{outline:4px solid var(--focus);outline-offset:3px}
 .drive-label{display:block;margin:0 0 .55em;font:800 1.02rem/1.3 var(--display)}
 .drive-priv{margin:.7em 0 0}
-.drive-result{margin:.9em 0 0;padding:14px 16px;background:#fff8e6;border:3px solid var(--ink);border-radius:18px;overflow-wrap:anywhere}
+.drive-result{margin:.9em 0 0;padding:14px 16px;background:#fff8e6;border:3px solid var(--ink);border-radius:18px;overflow-wrap:break-word;overflow-wrap:anywhere}
 .drive-result:not([data-kind]){margin:0;padding:0;border:0;height:0;overflow:hidden}   /* empty: no box, but still in the page so a screen reader announces what appears in it */
 .drive-result p{margin:.4em 0 0}
 .drive-result p:first-child{margin-top:0}
@@ -501,6 +501,6 @@ html.js-failed .fs-table thead button{pointer-events:none}
 /* The two link chips under the hero text (New tomatoes, Pizza reservations) are 44px pills on a phone, with the link filling the pill, so they are 8px apart and do not overlap. */
 @media (max-width:47.5em){
   .chips{row-gap:13px}   /* 8px between the links, which reach 2.5px past each pill */
-  .chips .chip-new,.chips .chip-rel{min-height:44px;padding-block:0}
+  .chips .chip-new,.chips .chip-rel{min-height:44px;padding-top:0;padding-bottom:0;padding-block:0}
   .chips .chip-new a,.chips .chip-rel a{align-self:stretch;min-height:0;margin:-2.5px -.85em -2.5px -.6em;padding:0 .85em 0 .6em}   /* the pill has a 2.5px border: the link covers it too */
 }

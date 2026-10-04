@@ -18,6 +18,12 @@
     return new Date(year, 10, firstThu + 22);
   }
 
+  // A visitor's clock can be wrong (nothing can be done about that), but it can also be unreadable: no time at all (an invalid date) or a clock that
+  // throws. Then nothing that depends on the time is shown, and nothing throws. js/live.js, js/features.js and js/main.js ask this first.
+  W.clockOk = function () {
+    try { return isFinite(new Date().getTime()) && isFinite(Date.now()); } catch (e) { return false; }
+  };
+
   var SEASONS = [
     { id: 'spring', crop: 'Strawberries',                     start: function (y) { return new Date(y, 3, 15); },  end: function (y) { return new Date(y, 5, 7); },   next: 'mid-April' },
     { id: 'summer', crop: 'Blueberries & sunflowers',         start: function (y) { return new Date(y, 5, 15); },  end: function (y) { return new Date(y, 6, 10); },  next: 'mid-June' },

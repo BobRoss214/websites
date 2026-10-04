@@ -55,6 +55,16 @@ await run('sitecheck', async ({ browser, base, errs }) => {
   ok('the title counts the settings to fix and the box is yellow with role=alert', /^Site check: \d+ things to fix$/.test(b.title) && b.role === 'alert' && /255, 243, 176/.test(b.bg), b.title + ' ' + b.role + ' ' + b.bg);
   await done(p);
 
+  // ---- a photo with no picture file or no description: named in the box (it used to be silent), and the gallery does not say "undefined"
+  p = await at(`WISE_ACRES.photos.push({ src: 'assets/photos/goat-in-green-frog-hat.webp' }, { alt: 'A photo with no picture file' });`);
+  b = (await parts(p)) || { broken: [] };
+  ok('a photo with no alt: the box names it (number and file) and says what to add', b.broken.some((m) => /^photo number \d+ \(assets\/photos\/goat-in-green-frog-hat\.webp\) has no alt/.test(m)), JSON.stringify(b.broken));
+  ok('a photo with no src: the box names it and says it is not shown', b.broken.some((m) => /^photo number \d+ \(A photo with no picture file\) has no src.* so it is not shown/.test(m)), JSON.stringify(b.broken));
+  const gal = await p.evaluate(() => ({ labels: [...document.querySelectorAll('#gallery-grid button')].map((x) => x.getAttribute('aria-label')), alts: [...document.querySelectorAll('#gallery-grid img')].map((x) => x.getAttribute('alt')), srcs: [...document.querySelectorAll('#gallery-grid img')].map((x) => x.getAttribute('src')) }));
+  ok('the gallery never says or loads "undefined" (no label, no alt text, no picture file of that name)', ![...gal.labels, ...gal.alts, ...gal.srcs].some((x) => /undefined/.test(String(x))), JSON.stringify([...gal.labels, ...gal.alts].filter((x) => /undefined/.test(String(x)))));
+  ok('...the photo with no picture file is left out, the one with no alt stays (its label is just "Enlarge photo:")', gal.srcs.length === (await p.evaluate(() => WISE_ACRES.photos.length)) - 1 && gal.labels.includes('Enlarge photo:'), JSON.stringify({ n: gal.srcs.length, last: gal.labels.slice(-2) }));
+  await done(p);
+
   // ---- farmPoint
   const spot = async (value) => {
     const q = await at('WISE_ACRES.farmPoint = ' + value + ';');

@@ -13,7 +13,7 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
 .sub-head:first-child{margin-top:0}
 .pill{display:inline-flex;align-items:center;background:var(--sun);border:2.5px solid var(--ink);border-radius:999px;padding:.25em .8em;font:700 .74rem/1.2 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
 .btn-on-dark{color:#fff;border-color:#fff;box-shadow:none}
-@media (hover:hover){.btn-on-dark:hover{--bg:rgba(255,255,255,.14);box-shadow:none;color:#fff}}
+@media (hover:hover){.btn-on-dark:hover{--bg:rgba(255,255,255,.08);box-shadow:none;color:#fff}}   /* a lighter wash: at .14 the white words were 4.2:1 where a dot of the pizza background sits under them */
 .answer p+p,.answer p+ul,.answer ul+p{margin-top:.8em}
 .answer .ticks{margin-top:.6em}
 .answer a{font-weight:800}
@@ -43,7 +43,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   :root{--header-h:4rem}
   .menu-toggle{display:grid}
   .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
-  .nav{position:fixed;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+  .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
   .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
   .nav ul{flex-direction:column;gap:8px}
   .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px}
@@ -60,7 +60,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   html:is([lang="es"],[lang="vi"]){--header-h:4rem}
   html:is([lang="es"],[lang="vi"]) .menu-toggle{display:grid}
   html:is([lang="es"],[lang="vi"]) .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
-  html:is([lang="es"],[lang="vi"]) .nav{position:fixed;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+  html:is([lang="es"],[lang="vi"]) .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
   html:is([lang="es"],[lang="vi"]) .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
   html:is([lang="es"],[lang="vi"]) .nav ul{flex-direction:column;gap:8px}
   html:is([lang="es"],[lang="vi"]) .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px}
@@ -135,6 +135,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .sched-table th,.sched-table td{padding:.55em .9em;text-align:left}
 .sched-table thead th{background:var(--sun);font:700 .85rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase}
 .sched-table tbody tr+tr td{border-top:1.5px dashed rgba(58,36,22,.3)}
+.sched-table thead th[data-farm-zone]::after{content:attr(data-farm-zone);font-weight:600;letter-spacing:0;text-transform:none}   /* "(Eastern Time)", only for a visitor on another clock (js/live.js) */
 .notice{margin:16px 0 0;padding:.75em 1em;background:#fff;border:2.5px solid var(--ink);border-radius:16px;font-weight:700}
 .notice-soft{display:flex;gap:10px;align-items:flex-start;background:transparent;border-style:dashed;font-weight:600;color:var(--ink-soft)}
 .notice-soft .ico{flex:none;margin-top:.15em;color:var(--red)}
@@ -143,7 +144,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .season-tabs{grid-template-columns:repeat(4,1fr)}
 .tab-crop{font-size:.9rem}
 .scene-card.has-photo{background:#000}
-.scene-card.has-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.scene-card.has-photo img{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;width:100%;height:100%;object-fit:cover}
 .scene-winter{background:linear-gradient(#cfe3ee,#eaf3f8 60%,#fff)}
 .scene-card svg.stickers{pointer-events:none}
 
@@ -200,7 +201,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .pizza-links{justify-content:center}
 
 /* ---------- The GreenHouse ---------- */
-.greenhouse{background:linear-gradient(rgba(35,128,63,.13) 3px,transparent 3px) 0 0/96px 96px,linear-gradient(90deg,rgba(35,128,63,.13) 3px,transparent 3px) 0 0/96px 96px #d9f3e6;border-block:3px solid var(--ink)}
+.greenhouse{background:linear-gradient(rgba(35,128,63,.13) 3px,transparent 3px) 0 0/96px 96px,linear-gradient(90deg,rgba(35,128,63,.13) 3px,transparent 3px) 0 0/96px 96px #d9f3e6;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);border-block:3px solid var(--ink)}
 .gh-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(28px,5vw,64px);align-items:center}
 .gh-copy{min-width:0}
 .gh-copy h2{font-size:clamp(2.2rem,5vw,3.6rem)}
@@ -254,10 +255,10 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .pass-cta .btn{margin:10px 0 4px;font-size:.98rem;word-break:break-word}
 @media (max-width:23em){.pizza-links .btn-on-dark,.pass-cta .btn{font-size:.86rem;overflow-wrap:break-word;word-break:normal}}   /* an e-mail address inside a button label stays in one piece on a 320px phone (it broke after "...organic.co" and left ".com" alone on a line) */
 .pass-cta .small a{font-weight:800}
-.photo-rules{max-width:860px;margin-inline:auto}
+.photo-rules{max-width:860px;margin-left:auto;margin-right:auto;margin-inline:auto}
 
 /* ---------- groups: school tours, parties, corporate ---------- */
-.groups{background:#d6f0fc;border-block:3px solid var(--ink)}
+.groups{background:#d6f0fc;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);border-block:3px solid var(--ink)}
 .group-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
 .group-tab{display:flex;align-items:center;gap:14px;text-align:left;padding:12px 18px;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:22px;font:inherit;cursor:pointer;transition:transform .2s cubic-bezier(.3,1.6,.5,1),background-color .2s,box-shadow .2s;box-shadow:0 4px 0 var(--ink);-webkit-tap-highlight-color:transparent}
 @media (hover:hover){.group-tab:hover{transform:translateY(-2px)}}
@@ -358,8 +359,8 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   .group-tabs{grid-template-columns:1fr}
   .group-panel{grid-template-columns:1fr}
   .values{grid-template-columns:1fr}
-  .gh-art{max-width:420px;margin-inline:auto;width:100%;position:static}
-  .about-photo{width:100%;max-width:560px;margin-inline:auto}   /* full width (not the photo's own width): the photo arrives late and would push the page down */
+  .gh-art{max-width:420px;margin-left:auto;margin-right:auto;margin-inline:auto;width:100%;position:static}
+  .about-photo{width:100%;max-width:560px;margin-left:auto;margin-right:auto;margin-inline:auto}   /* full width (not the photo's own width): the photo arrives late and would push the page down */
   .pizza-head{grid-template-columns:1fr;text-align:center}
   .pizza-art{justify-self:center;order:-1}
   .cal{--label-w:0px}
@@ -424,7 +425,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .bar-tomato{background:#ff6a5b}
 
 /* ---------- tomatoes & basil ---------- */
-.tomatoes{background:#fff1e4 radial-gradient(rgba(215,42,67,.1) 1.8px,transparent 1.8px) 0 0/26px 26px;border-block:3px solid var(--ink);overflow-x:clip}
+.tomatoes{background:#fff1e4 radial-gradient(rgba(215,42,67,.1) 1.8px,transparent 1.8px) 0 0/26px 26px;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);border-block:3px solid var(--ink);overflow-x:clip}
 .tomato-hero{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,5vw,60px);align-items:center;background:#fff;border:3px solid var(--ink);border-radius:36px;padding:clamp(22px,4vw,48px);box-shadow:0 10px 0 var(--ink)}
 .new-ribbon{display:inline-block;margin:0 0 16px;padding:.4em 1.2em;background:var(--red);color:#fff;border:3px solid var(--ink);border-radius:999px;box-shadow:0 5px 0 var(--ink);rotate:-2deg;font:700 clamp(1.05rem,2vw,1.4rem)/1 var(--display);letter-spacing:.1em;text-transform:uppercase}
 .tomato-copy{min-width:0}
@@ -435,7 +436,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .tf-big{font:700 clamp(1.3rem,2.6vw,1.95rem)/1.1 var(--display);color:var(--red-deep)}
 .tomato-copy .small{margin:14px 0 0}
 .tomato-art{min-width:0}
-.tomato-art svg{display:block;width:100%;max-width:470px;height:auto;margin-inline:auto;overflow:visible}
+.tomato-art svg{display:block;width:100%;max-width:470px;height:auto;margin-left:auto;margin-right:auto;margin-inline:auto;overflow:visible}
 .hang{transform-box:fill-box;transform-origin:50% 0;animation:sway 4.5s ease-in-out infinite alternate}
 .hang.h1{animation-duration:5.6s;animation-delay:-1.5s}
 .hang.h2{animation-duration:3.8s;animation-delay:-2.4s}

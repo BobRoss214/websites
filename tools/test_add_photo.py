@@ -57,7 +57,10 @@ class Site(unittest.TestCase):
         for sub in ('tools', 'js', os.path.join('assets', 'photos')):
             os.makedirs(os.path.join(self.root, sub))
         shutil.copy(os.path.join(HERE, 'add_photo.py'), os.path.join(self.root, 'tools', 'add_photo.py'))
-        shutil.copy(os.path.join(REAL, 'js', 'content.js'), os.path.join(self.root, 'js', 'content.js'))
+        with open(os.path.join(REAL, 'js', 'content.js'), 'rb') as f:   # the copy has Unix line endings, whatever this checkout has (the Windows-endings test makes its own)
+            data = f.read().replace(b'\r\n', b'\n')
+        with open(os.path.join(self.root, 'js', 'content.js'), 'wb') as f:
+            f.write(data)
         for f in ('black-goat-cucumber.webp', 'goats-rubs-sign.webp'):
             src = os.path.join(REAL, 'assets', 'photos', f)
             if os.path.exists(src):
@@ -70,7 +73,7 @@ class Site(unittest.TestCase):
 
     # ------------------------------------------------------------- helpers
     def run_tool(self, *args):
-        p = subprocess.run([sys.executable, os.path.join(self.root, 'tools', 'add_photo.py')] + list(args), capture_output=True, text=True, cwd=self.tmp)
+        p = subprocess.run([sys.executable, os.path.join(self.root, 'tools', 'add_photo.py')] + list(args), capture_output=True, universal_newlines=True, encoding='utf-8', errors='replace', env=dict(os.environ, PYTHONIOENCODING='utf-8'), cwd=self.tmp)
         return p.returncode, p.stdout + p.stderr
 
     def content(self):
@@ -96,7 +99,7 @@ class Site(unittest.TestCase):
 
     def assert_node_ok(self):
         if NODE:
-            r = subprocess.run([NODE, '--check', os.path.join(self.root, 'js', 'content.js')], capture_output=True, text=True)
+            r = subprocess.run([NODE, '--check', os.path.join(self.root, 'js', 'content.js')], capture_output=True, universal_newlines=True, encoding='utf-8', errors='replace', env=dict(os.environ, PYTHONIOENCODING='utf-8'))
             self.assertEqual(r.returncode, 0, 'js/content.js no longer works: ' + r.stderr)
 
     ALT = 'A small animal wearing a green knitted frog hat'
@@ -187,7 +190,7 @@ class Site(unittest.TestCase):
 
     def test_not_a_picture_is_refused(self):
         path = os.path.join(self.pics, 'notes.jpg')
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8', newline='\n') as f:
             f.write('hello ' * 400)
         code, text = self.run_tool(path, '--name', 'text-one', '--alt', 'Rows of green plants in a field')
         self.assertEqual(code, 1)
@@ -262,6 +265,11 @@ class Site(unittest.TestCase):
         src = self.save('located.jpg', self.marked_picture(1600, 1200), format='JPEG', quality=90, exif=ex, xmp=xmp, comment=b'taken by Jane Farmer at home')
         with open(src, 'rb') as f:
             raw = f.read()
+        if b'xmpmeta' not in raw:   # Pillow 10.4 (the newest one for Python 3.8) ignores xmp= when it saves a JPEG: put the packet in by hand, right after the start of the file
+            segment = b'http://ns.adobe.com/xap/1.0/\x00' + xmp
+            raw = raw[:2] + b'\xff\xe1' + (len(segment) + 2).to_bytes(2, 'big') + segment + raw[2:]
+            with open(src, 'wb') as f:
+                f.write(raw)
         for there in (b'GPS', b'xmpmeta', b'Jane Farmer', b'SecretMaker'):
             self.assertIn(there, raw, 'the test picture should carry ' + there.decode())
         code, text = self.run_tool(src, '--name', 'located', '--alt', self.ALT)
@@ -444,7 +452,7 @@ class Site(unittest.TestCase):
     def test_unexpected_content_js_is_left_alone(self):
         path = os.path.join(self.root, 'js', 'content.js')
         broken = self.content().replace('  photos: [', '  photoz: [')
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, 'w', encoding='utf-8', newline='\n') as f:
             f.write(broken)
         src = self.save('a.jpg', picture(900, 600), format='JPEG')
         before = snapshot(self.root)
@@ -458,7 +466,7 @@ class Site(unittest.TestCase):
         text = self.content()
         start = text.index('  photos: [')
         end = text.index('\n  ],', start) + len('\n  ],')
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, 'w', encoding='utf-8', newline='\n') as f:
             f.write(text[:start] + '  photos: [],' + text[end:])
         src = self.save('a.jpg', picture(900, 600), format='JPEG')
         code, out = self.run_tool(src, '--name', 'only-one', '--alt', 'Rows of green plants in a field', '--caption', 'Green rows')
@@ -482,7 +490,7 @@ class Site(unittest.TestCase):
         path = os.path.join(self.root, 'js', 'content.js')
         text = self.content()
         text = text.replace('caption: "Foster Village table" },\n  ],', 'caption: "Foster Village table" }\n  ],')
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, 'w', encoding='utf-8', newline='\n') as f:
             f.write(text)
         src = self.save('a.jpg', picture(900, 600), format='JPEG')
         self.assertEqual(self.run_tool(src, '--name', 'after-last', '--alt', 'Rows of green plants in a field', '--seasonal-text')[0], 0)
@@ -496,7 +504,7 @@ class Site(unittest.TestCase):
             return None
         code = ("const fs=require('fs');const W={};new Function('window',fs.readFileSync(process.argv[1],'utf8'))(W);"
                 "console.log(JSON.stringify(W.WISE_ACRES.photos.find(p=>p.src.endsWith('/'+process.argv[2]+'.webp'))))")
-        r = subprocess.run([NODE, '-e', code, os.path.join(self.root, 'js', 'content.js'), name], capture_output=True, text=True)
+        r = subprocess.run([NODE, '-e', code, os.path.join(self.root, 'js', 'content.js'), name], capture_output=True, universal_newlines=True, encoding='utf-8', errors='replace', env=dict(os.environ, PYTHONIOENCODING='utf-8'))
         self.assertEqual(r.returncode, 0, r.stderr)
         import json
         return json.loads(r.stdout)
@@ -552,7 +560,7 @@ class Site(unittest.TestCase):
     def test_tags_need_the_list_of_allowed_topics(self):
         path = os.path.join(self.root, 'js', 'content.js')
         changed = self.content().replace('Allowed tags:', 'Allowed things:')
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, 'w', encoding='utf-8', newline='\n') as f:
             f.write(changed)
         src = self.save('a.jpg', picture(900, 600), format='JPEG')
         before = snapshot(self.root)

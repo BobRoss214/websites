@@ -224,7 +224,7 @@ html[data-season="winter"] .bee-fly{display:none}
 @keyframes sparkOut{0%{opacity:0;transform:translate(40px,40px) scale(.2)}20%{opacity:1}100%{opacity:0;transform:translate(calc(40px + var(--dx) * .6),calc(40px + var(--dy) * .6)) scale(1.5)}}
 
 /* ---------------------------------------------------------------- falling leaves + snow */
-.particles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.particles{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;overflow:hidden;pointer-events:none}
 .particles i{position:absolute;top:0;display:block;width:var(--s);height:var(--s);will-change:transform}
 .particles .leaf{background:var(--c);border-radius:0 100% 0 100%;border:1.5px solid rgba(58,36,22,.55);
   animation:heroFall var(--d) linear infinite var(--dl),heroSpin calc(var(--d) * .35) linear infinite var(--dl)}

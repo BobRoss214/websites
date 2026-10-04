@@ -16,6 +16,40 @@ What it does
 """
 import json, math, os, re, sys
 
+# ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
+try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
+    sys.stdout.reconfigure(errors='replace')
+except (AttributeError, ValueError, OSError):
+    pass
+
+
+def _stop_plainly(kind, err, tb):
+    """A file saved in the old Windows format (Notepad's "ANSI"), or one that is read-only or open in another program, ends a tool with a plain message, not a traceback."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if issubclass(kind, UnicodeDecodeError):
+        import glob
+        for pat in ('*.html', 'pages/*.html', 'js/*.js', 'css/*.css', 'lang/*.json', 'lang/src/*.json', 'tools/*.json'):
+            for path in sorted(glob.glob(os.path.join(root, pat))):
+                with open(path, 'rb') as f:
+                    raw = f.read()
+                try:
+                    raw.decode('utf-8')
+                except UnicodeDecodeError as bad:
+                    line = raw.split(b'\n')[raw.count(b'\n', 0, bad.start)]
+                    print('%s is not saved as UTF-8: line %d has a character in the old Windows "ANSI" format (a dash, a curly quote or a letter with an accent):\n    %s\n'
+                          'Open the file and save it again as UTF-8 (Notepad: File, Save As, then Encoding: UTF-8; VS Code: click the encoding at the bottom right, Save with Encoding, UTF-8). Then run this again.'
+                          % (os.path.relpath(path, root).replace(os.sep, '/'), raw.count(b'\n', 0, bad.start) + 1, line.decode('utf-8', 'replace').strip()[:70].encode('ascii', 'replace').decode()), file=sys.stderr)
+                    return
+    elif issubclass(kind, PermissionError) and getattr(err, 'filename', None):
+        print('I could not open or change %s: the file is read-only, or open in another program, or locked while OneDrive syncs it.\n'
+              'Right-click it, Properties, and untick Read-only; close the programs that show it; wait a moment. Then run this again.' % err.filename, file=sys.stderr)
+        return
+    sys.__excepthook__(kind, err, tb)
+
+
+sys.excepthook = _stop_plainly
+# ---- end of the Windows safety lines
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'js', 'farm-map-data.js')
 
@@ -45,11 +79,15 @@ def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
     path = sys.argv[1]
-    if not os.path.exists(path) and os.path.exists(os.path.join(ROOT, 'tools', path)):
-        path = os.path.join(ROOT, 'tools', path)   # "saved-map.json" works from the main folder too
+    for found in (path, os.path.join(ROOT, path), os.path.join(ROOT, 'tools', path)):   # as typed, or counted from the site folder (also when you run this from another folder), or from tools/
+        if os.path.isfile(found):
+            path = found
+            break
     try:
         with open(path, encoding='utf-8-sig') as f:   # utf-8-sig: Windows editors add an invisible marker at the start
             doc = json.load(f)
+    except UnicodeDecodeError:   # not saved as UTF-8: the message at the top of this file names the file
+        raise
     except OSError:
         fail(f'I cannot open {sys.argv[1]}. The map that is on the website now is tools/saved-map.json:  python3 tools/farm_map.py tools/saved-map.json')
     except ValueError as e:
@@ -70,7 +108,7 @@ def main():
         if t == 'pen':
             skipped.append(f'scribble {rid}' + (f" named {it.get('label')!r} (freehand drawings are not copied; ask the owner to redraw it as a line or outline)" if it.get('label') else ''))
             continue
-        if t not in MIN_POINTS:
+        if not isinstance(t, str) or t not in MIN_POINTS:   # a list or a block is not a word, and cannot be looked up
             skipped.append(f'{t} {rid} (unknown shape)')
             continue
         pts, raw = [], []
@@ -88,6 +126,10 @@ def main():
             continue
         label_full = re.sub(r'\s+', ' ', str(it.get('label') or '')).strip()
         note_full = re.sub(r'\s+', ' ', str(it.get('note') or '')).strip()
+        try:
+            (label_full + note_full).encode('utf-8')
+        except UnicodeEncodeError:   # half of an emoji (a text cut between its two halves): it cannot be written to a file
+            fail(f"the name or note of the {t} {rid!r} has a character that cannot be saved (half of an emoji, perhaps). Retype it in the Farm Map Marker and save again. Nothing was changed.")
         label, note = label_full[:80], note_full[:400]
         if label != label_full:
             print(f'note: the name was cut to 80 letters: {label}')
@@ -96,7 +138,7 @@ def main():
         if not label and t != 'text':
             skipped.append(f'{t} {rid} (no name)')
             continue
-        kind = it.get('kind') if it.get('kind') in KNOWN else 'other'
+        kind = it.get('kind') if isinstance(it.get('kind'), str) and it.get('kind') in KNOWN else 'other'
         if kind != it.get('kind'):
             print(f"note: kind {it.get('kind')!r} is not one the website draws; shown as 'Something else': {label}")
         rid = re.sub(r'[^A-Za-z0-9_-]', '', str(rid) if rid not in (None, '') else '')[:40] or f'item{n}'   # ids end up in page markup: letters, digits, - and _ only
@@ -124,8 +166,18 @@ def main():
     js = ('/* Farm map points for the "Farm map" section. Written by tools/farm_map.py from the map saved in the Farm Map Marker.\n'
           ' * Do not edit by hand: change the map in the Farm Map Marker and run the script again. */\n'
           'window.WISE_ACRES_MAP = ' + body + ';\n')
-    with open(OUT, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(js)
+    # written to a side file first and moved into place: a write that fails half-way (disk full, file open in another program) must not leave the website's map empty or cut off
+    side = OUT + '.new'
+    try:
+        with open(side, 'w', encoding='utf-8', newline='\n') as f:
+            f.write(js)
+        os.replace(side, OUT)
+    except OSError as e:
+        try:
+            os.remove(side)
+        except OSError:
+            pass
+        fail(f'I could not write js/farm-map-data.js ({e.strerror or e}). It was NOT changed, so the map on the website stays as it is. Close it in any other program and try again.')
     kinds = {}
     for r in items:
         kinds[r['kind']] = kinds.get(r['kind'], 0) + 1
@@ -138,8 +190,10 @@ def main():
     texts = sorted({s for r in items for s in (r['label'], r.get('note', '')) if s})
     for code in LANGS:
         try:
-            with open(os.path.join(ROOT, 'lang', 'src', code + '.json'), encoding='utf-8') as f:
+            with open(os.path.join(ROOT, 'lang', 'src', code + '.json'), encoding='utf-8-sig') as f:   # utf-8-sig: a Windows editor may add an invisible marker at the start
                 have = json.load(f).get('js', {})
+        except UnicodeDecodeError:
+            raise
         except (OSError, ValueError):
             have = {}
         need = [s for s in texts if s not in have]

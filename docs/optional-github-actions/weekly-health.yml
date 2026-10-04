@@ -1,0 +1,110 @@
+# Weekly health check for the Wise Acres website. NOT ACTIVE while it sits in docs/optional-github-actions/:
+# GitHub only reads workflow files in .github/workflows/ (see docs/optional-github-actions/README.md, "Switch it on").
+#
+# Every Monday morning (and whenever someone presses "Run workflow" on the Actions tab) it:
+#   1. runs the site doctor (python3 tools/doctor.py; until that tool exists: the facts check and the upload-folder check),
+#   2. runs python3 tools/upcoming_dates.py: what changes or runs out in the next 14 days, in plain English,
+#   3. writes both lists into the run's summary page, and turns the run RED (GitHub then sends an email) when the doctor is red
+#      or when something runs out within 7 days (a dated line, the notice bar, the "This week" box, the last pizza weekend).
+# It changes nothing in the repository and needs no passwords.
+
+name: Weekly health
+
+on:
+  schedule:
+    # Mondays at 11:23 UTC (7:23 in the morning in New York in summer, 6:23 in winter). GitHub may start it a few minutes late.
+    - cron: '23 11 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    name: Doctor and dates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Change these two to make the dates check calmer or stricter (python3 tools/upcoming_dates.py --help):
+      #   FAIL_WITHIN  turn red when something runs out within this many days
+      #   FAIL_ON      "expires,runs-out" = also dated lines that hide themselves; "runs-out" = only what visitors rely on
+      FAIL_WITHIN: '7'
+      FAIL_ON: 'expires,runs-out'
+    steps:
+      - name: Get the files
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install what the tools need
+        run: python -m pip install --disable-pip-version-check beautifulsoup4 segno pillow
+
+      - name: Site doctor
+        id: doctor
+        continue-on-error: true   # the next step must run too; the last step turns the run red
+        run: |
+          set +e
+          if [ -f tools/doctor.py ]; then
+            python3 tools/doctor.py > doctor.txt 2>&1
+            code=$?
+          else
+            # tools/doctor.py is not in this copy of the site: the two checks it is made of
+            { python3 tools/check_facts.py && python3 tools/make_deploy_folder.py --check; } > doctor.txt 2>&1
+            code=$?
+          fi
+          cat doctor.txt
+          {
+            if [ "$code" -eq 0 ]; then
+              echo '## Site doctor: green'
+              echo
+              echo 'The last lines of its report (the whole report is in the step "Site doctor" and in the download "weekly-health"):'
+              echo
+              echo '```'
+              tail -n 8 doctor.txt
+            else
+              echo '## Site doctor: RED'
+              echo
+              echo '```'
+              head -c 60000 doctor.txt
+            fi
+            echo '```'
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"
+
+      - name: Dates that change or run out
+        id: dates
+        continue-on-error: true
+        run: |
+          set +e
+          python3 tools/upcoming_dates.py --markdown --fail-within "$FAIL_WITHIN" --fail-on "$FAIL_ON" > upcoming.md
+          code=$?
+          cat upcoming.md
+          cat upcoming.md >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"
+
+      - name: Keep the two lists
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-health
+          path: |
+            doctor.txt
+            upcoming.md
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Turn the run red when something needs the owner
+        if: steps.doctor.outcome == 'failure' || steps.dates.outcome == 'failure'
+        run: |
+          echo "Doctor: ${{ steps.doctor.outcome }}. Dates: ${{ steps.dates.outcome }}."
+          echo "Open this run's summary page: it lists what needs attention, in plain English."
+          exit 1
+
+      # Optional (remove the # in front of each line to use it): look at the LIVE site the way a visitor does.
+      # Replace the address with the real one. It needs the site to be online already.
+      # - name: Check the live site
+      #   run: python3 tools/launch_check.py --quick https://www.wiseacresorganic.com/

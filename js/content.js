@@ -153,7 +153,8 @@
  *   1. Sign in to Google with the account that manages the farm's Google Business Profile (business.google.com).
  *   2. Open the farm's profile and choose "Ask for reviews" (it may be called "Get more reviews" or "Share review form").
  *   3. Choose "Copy link". It looks like  https://g.page/r/.../review
- *   4. Paste it between the quote marks:    reviewUrl: 'PASTE IT HERE',
+ *   4. Paste it between the two quote marks of the reviewUrl line, near the end of this file. To find that line, press Ctrl+F and search for
+ *      reviewUrl: followed by a space and two quote marks with nothing between them. The line starts with two spaces.
  *   5. Save, refresh, tap "Leave a Google review" on your phone. It should open a box where you can pick stars.
  * If you cannot find the button, ask Claude to build the link for you. The link must start with https:// (the Site check box tells you if it does not).
  *
@@ -170,7 +171,8 @@
  * ENTRANCE PHOTO
  * --------------
  * `entrancePhoto` is the picture on the First-visit page that shows where to park and check in. It stays hidden until you fill it in.
- * Change  entrancePhoto: null,  to the line below, with your own file and words:
+ * Find the entrancePhoto line near the end of this file (it starts with two spaces and has the word null after the colon) and replace that
+ * whole line with the line below, using your own file and words:
  *       entrancePhoto: { src: 'assets/photos/entrance.jpg', alt: 'What the photo shows', caption: 'A short line that helps people find the entrance' },
  * `alt` is required. Describe only what is really in the picture. `alt` and `caption` can also be written { en: '...', es: '...' } like the notice.
  *
@@ -179,8 +181,10 @@
  * The "Drive time" box in the Contact section lets a visitor type an address and see the miles and minutes to the farm or to The GreenHouse (they pick which).
  * It finds the farm by its address with the free OpenStreetMap search. Optional: give the exact spot instead, so the farm is never searched for.
  * On Google Maps, right-click the farm. The first line of the menu shows two numbers separated by a comma (click it to copy them). The first
- * number is lat, the second is lon (in North Carolina the second one starts with a minus sign). Change  farmPoint: null,  to
- *       farmPoint: { lat: FIRST_NUMBER, lon: SECOND_NUMBER },     and replace the two words with your two numbers (keep the minus sign).
+ * number is lat, the second is lon (in North Carolina the second one starts with a minus sign). Find the farmPoint line near the end of this file
+ * (it starts with two spaces and has the word null after the colon) and replace that whole line with the line below, replacing the two words in
+ * capitals with your two numbers (keep the minus sign):
+ *       farmPoint: { lat: FIRST_NUMBER, lon: SECOND_NUMBER },
  * When a visitor presses the button, the address they typed goes to OpenStreetMap's search, and two map spots (theirs and the farm's) go to the free OSRM routing
  * server. Nothing is sent before that, and this website does not keep the address. The Site check box checks `farmPoint`: lat must be between 24 and 50
  * and lon between -125 and -66 (the United States). Swapped numbers, a missing minus sign, a letter in a number or numbers in quote marks are named, and a

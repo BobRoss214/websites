@@ -55,7 +55,7 @@
         const n = doc.createElement('span'), alt = doc.createElement('span');   // the number is what is seen; the photo's description is only for a screen reader
         n.textContent = t('{n} of {total}', { n: at + 1, total: set.length });
         alt.className = 'sr-only'; alt.textContent = p.alt ? '. ' + p.alt : '';
-        count.replaceChildren(n, alt);
+        count.textContent = ''; count.appendChild(n); count.appendChild(alt);   // not replaceChildren(): Chrome before 86 does not have it
       }
       if (fade && !reduceMotion) { img.classList.remove('lb-fade'); void img.offsetWidth; img.classList.add('lb-fade'); }   // a short fade, never a slide
       // only the photo the visitor is heading for is fetched ahead of time, and only when the browser is idle
@@ -171,7 +171,8 @@
       by.append('\u2014 ' + r.name + (r.date ? ', ' + r.date : ''));
       if (r.source) {
         by.append(' \u00B7 ');
-        if (r.url) { const a = doc.createElement('a'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = r.source; by.appendChild(a); }
+        // a link only to a web address (https:// or http://): a javascript: or data: address from js/content.js is not made into a link
+        if (r.url && /^https?:\/\//i.test(String(r.url).trim())) { const a = doc.createElement('a'); a.href = String(r.url).trim(); a.target = '_blank'; a.rel = 'noopener'; a.textContent = r.source; by.appendChild(a); }
         else by.append(r.source);
       }
       li.append(q, by);
@@ -183,13 +184,14 @@
    * Gallery — appears only when photos are listed in js/content.js
    * ------------------------------------------------------------------ */
   function initGallery() {
-    const photos = (window.WISE_ACRES && window.WISE_ACRES.photos) || [];
+    const photos = ((window.WISE_ACRES && window.WISE_ACRES.photos) || []).filter((p) => p && typeof p.src === 'string' && p.src);   // no picture file, no photo (the Site check box says so, js/features.js)
     const section = $('#gallery');
     if (!section || !photos.length) return;
 
     const grid = $('#gallery-grid');
     const filters = $('#gallery-filters');
     const countEl = $('#gallery-count');
+    const altOf = (p) => (p.alt ? t(p.alt) : '');   // a photo without alt text is read as "undefined" otherwise
     const tagsOf = (p) => (Array.isArray(p.tags) ? p.tags : []).map((x) => String(x).trim().toLowerCase()).filter(Boolean);   // tags: ["berries", "flowers"] in js/content.js
 
     const items = photos.map((p) => {
@@ -205,13 +207,13 @@
       const it = { p, li, btn, thumb, tags: tagsOf(p) };
       btn.addEventListener('click', () => {   // the viewer goes round the photos that are shown right now (the topic button pressed), in page order
         const shown = items.filter((x) => !x.li.hidden);
-        viewer.open(shown.map((x) => ({ src: x.p.src, alt: t(x.p.alt), caption: x.p.caption ? t(x.p.caption) : '' })), Math.max(0, shown.indexOf(it)), btn);
+        viewer.open(shown.map((x) => ({ src: x.p.src, alt: altOf(x.p), caption: x.p.caption ? t(x.p.caption) : '' })), Math.max(0, shown.indexOf(it)), btn);
       });
       return it;
     });
     const words = () => items.forEach((it) => {   // alt text and button labels in the language of the page (drawn again when the language changes)
-      it.thumb.alt = t(it.p.alt);
-      it.btn.setAttribute('aria-label', t('Enlarge photo:') + ' ' + t(it.p.alt));
+      it.thumb.alt = altOf(it.p);
+      it.btn.setAttribute('aria-label', t('Enlarge photo:') + (it.p.alt ? ' ' + altOf(it.p) : ''));
     });
     words();
 
@@ -725,11 +727,16 @@
 
     // Mark what's happening now, and open that season by default.
     const now = new Date();
-    const live = S.live(now);
-    live.forEach((s) => { $('.now-badge', $('#tab-' + s.id)).hidden = false; });
+    let live = [], next = null;
+    const markNow = () => {   // also when the farm's day changes while the page is open (a season ends or starts)
+      const at = new Date();
+      live = S.live(at);
+      S.list.forEach((s) => { const b = $('.now-badge', $('#tab-' + s.id)); if (b) b.hidden = !live.some((x) => x.id === s.id); });
+      next = S.list.filter((s) => !S.inWindow(s, at)).sort((a, b) => S.daysUntilStart(a, at) - S.daysUntilStart(b, at))[0] || target;
+    };
     const target = S.list.find((s) => s.id === S.current(now));
+    markNow();
     select(target.id);
-    const next = S.list.filter((s) => !S.inWindow(s, now)).sort((a, b) => S.daysUntilStart(a, now) - S.daysUntilStart(b, now))[0] || target;
 
     // The hero's season switcher and these tabs stay in step.
     doc.addEventListener('wa:season', (e) => select(e.detail));
@@ -743,6 +750,7 @@
     };
     renderFact();
     doc.addEventListener('wa:lang', renderFact);
+    doc.addEventListener('wa:day', () => { markNow(); renderFact(); });
   }
 
   /* ------------------------------------------------------------------ *
@@ -755,11 +763,20 @@
     const list = $('#farm-cards');
     if (!root || !list) return;
     const cards = $$('li[data-seasons]', list);
-    const btns = $$('[data-fs]', $('#farm')?.parentElement || doc);
+    const farm = $('#farm');
+    const btns = $$('[data-fs]', (farm && farm.parentElement) || doc);
     const notes = $$('[data-fs-note]', root);
     const cols = $$('#farm-glance [data-col]');
-    const nowId = S.current(new Date());
-    S.live(new Date()).forEach((s) => { const b = $('[data-fs="' + s.id + '"]', root); if (b) $('.fs-now', b.parentElement).hidden = false; });
+    let nowId = '';
+    // the "Now" marks and "This season", read again when the farm's day changes (wa:day, js/live.js): a page left open overnight
+    const markNow = () => {
+      const day = new Date(), liveIds = S.live(day).map((s) => s.id);
+      nowId = S.current(day);
+      $$('[data-fs]', root).forEach((b) => { const m = $('.fs-now', b.parentElement); if (m) m.hidden = !liveIds.includes(b.dataset.fs); });
+      notes.forEach((n) => { if (!n.hidden) $('.fs-this', n).hidden = n.dataset.fsNote !== nowId; });
+    };
+    markNow();
+    doc.addEventListener('wa:day', markNow);
     let shown = null;
 
     const select = (id, animate) => {
@@ -789,6 +806,7 @@
 
     btns.forEach((b) => b.addEventListener('click', () => select(b.dataset.fs, true)));
     doc.addEventListener('wa:season', (e) => select(e.detail, true));
+    doc.addEventListener('wa:day', markNow);
     select(S.active || nowId, false);
   }
 
@@ -811,7 +829,7 @@
     };
     wireTabs(tabs, (t, focus) => select(t.dataset.panel, focus));
 
-    const byHash = {};
+    const byHash = Object.create(null);   // no inherited names: index.html#constructor must not find Object's own "constructor"
     tabs.forEach((t) => { byHash[t.dataset.hash] = t.dataset.panel; });
     const go = (hash, scroll) => {
       const panel = byHash[String(hash).replace('#', '')];
@@ -844,8 +862,8 @@
   }
 
   function initWeekStrips() {
-    const today = S.farmDay(new Date()).getDay();   // the farm's weekday (Eastern Time)
     const draw = () => {
+      const today = S.farmDay(new Date()).getDay();   // the farm's weekday (Eastern Time)
       // Jan 1, 2023 was a Sunday, so day n is Jan 1 + n.
       const letter = (d) => new Intl.DateTimeFormat(W.lang || 'en', { weekday: 'narrow', timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1 + d, 12)));
       $$('.week-strip[data-days]').forEach((el) => {
@@ -856,15 +874,21 @@
     };
     draw();
     doc.addEventListener('wa:lang', draw);
+    doc.addEventListener('wa:day', draw);   // the new day (js/live.js): a page left open overnight
   }
 
   function initFarmCalendar() {
     const cal = $('.cal');
     if (!cal) return;
-    const now = S.farmDay(new Date());   // the farm's date (Eastern Time)
-    const dim = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    cal.style.setProperty('--today', ((now.getMonth() + (now.getDate() - 1) / dim) / 12).toFixed(4));
-    cal.classList.add('has-today');
+    const place = () => {
+      if (W.clockOk && !W.clockOk()) { cal.classList.remove('has-today'); return; }   // no readable clock: no "Today" mark
+      const now = S.farmDay(new Date());   // the farm's date (Eastern Time)
+      const dim = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      cal.style.setProperty('--today', ((now.getMonth() + (now.getDate() - 1) / dim) / 12).toFixed(4));
+      cal.classList.add('has-today');
+    };
+    place();
+    doc.addEventListener('wa:day', place);   // a page left open over midnight
   }
 
   /* ------------------------------------------------------------------ *

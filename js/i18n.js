@@ -246,11 +246,13 @@
     swapMeta();
   };
 
+  let asked = 0;   // counts the requests: a language file that arrives late (slow connection) must not undo a later choice
   function setLang(code, opts) {
     if (!CODES.includes(code)) return;
-    const mark = placeMark();
+    const mark = placeMark(), mine = ++asked, done = (opts && opts.done) || (() => {});   // done(true): it is settled; done(false): its words did not arrive
     load(code, () => {
-      if (code !== 'en' && !W.dict[code]) return;   // its words did not arrive (offline, blocked): stay in the current language
+      if (mine !== asked) { done(true); return; }          // another language was asked for in the meantime: that one wins
+      if (code !== 'en' && !W.dict[code]) { done(false); return; }   // its words did not arrive (offline, blocked): stay in the current language
       W.lang = code;
       if (!(opts && opts.quiet)) store.set('wa.lang', code);
       apply(code);
@@ -259,6 +261,7 @@
       // late changes (a font that arrives, a block that redraws): once more, unless the reader has already moved
       const y = window.scrollY;
       setTimeout(() => { if (Math.abs(window.scrollY - y) < 2) restoreMark(mark); }, 500);
+      done(true);
     });
   }
   W.setLang = setLang;
@@ -328,7 +331,12 @@
     bar.className = 'lang-offer'; bar.setAttribute('role', 'region'); bar.setAttribute('lang', code); bar.setAttribute('aria-label', LANG_WORD[code] || LANG_WORD.en);
     bar.innerHTML = '<p lang="' + code + '"></p><button type="button" class="btn btn-sm btn-sun" data-y></button><button type="button" class="btn btn-sm btn-ghost" data-n></button>';
     bar.querySelector('p').textContent = q; bar.querySelector('[data-y]').textContent = yes; bar.querySelector('[data-n]').textContent = no;
-    bar.querySelector('[data-y]').addEventListener('click', () => { setLang(code); bar.remove(); });
+    let trying = false;   // one try at a time: a second press while the file is on its way would count as another request
+    bar.querySelector('[data-y]').addEventListener('click', () => {
+      if (trying) return;
+      trying = true;
+      setLang(code, { done: (arrived) => { trying = false; if (arrived) bar.remove(); } });   // the words did not arrive (offline): the offer stays, the page stays English, and "Yes" can be pressed again
+    });
     bar.querySelector('[data-n]').addEventListener('click', () => { store.set('wa.offer', '1'); bar.remove(); });
     doc.body.prepend(bar);
   }

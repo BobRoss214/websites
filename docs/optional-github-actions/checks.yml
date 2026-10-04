@@ -1,0 +1,153 @@
+# The site's automatic checks, run by GitHub on every push and pull request. NOT ACTIVE while it sits in docs/optional-github-actions/:
+# GitHub only reads workflow files in .github/workflows/ (see docs/optional-github-actions/README.md, "Switch it on").
+#
+# Four runs go side by side, each well under 15 minutes on a standard GitHub runner:
+#   no-browser   (twice) the checks that need no browser (tests/README.md lists them), on the oldest Python the tools support (3.8) and a recent one
+#   browser 1/2  a fixed set of the fast browser tests (Chromium through Playwright): the farm's hours, seasons and dated lines,
+#                the languages and screen readers, the email and calendar messages, the farm map
+#   browser 2/2  the rest of that set: the Site check box for the owner's mistakes, the photo gallery, the light pages, keyboard use,
+#                privacy, the printable signs, the day-by-day document
+# Left out on purpose (slow, or not measured for this set): hero, features, drive, deploy, games, touch, layout-sweep, auto-dark,
+# forced-colors, axe, analytics, no-js, visual-check. Run those on your own computer (node tests/run-all.mjs) before a big change.
+# The words after "node tests/run-all.mjs" are test names: each word picks every test whose name contains it ("i18n" picks i18n,
+# i18n-early and i18n-a11y). When tests/run-all.mjs has --quick and --shard, see the two "SWITCH TO" notes below.
+# A failed run keeps the test output (test-logs/) as a download on the run's page for 14 days.
+
+name: Site checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-checks-${{ github.ref }}
+  cancel-in-progress: true   # a newer push stops the older run
+
+jobs:
+  no-browser:
+    name: No browser (Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Python 3.8 is the oldest the tools support. Its newest Pillow (10.4) is too old for the picture tests' test photo
+          # (they need Pillow 11), so on 3.8 Pillow is not installed and the pipeline test skips those picture tests by itself.
+          - { os: ubuntu-22.04, python: '3.8', packages: 'beautifulsoup4 segno' }
+          - { os: ubuntu-latest, python: '3.12', packages: 'beautifulsoup4 segno pillow' }
+    steps:
+      - name: Get the files
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install what the tools need
+        run: python -m pip install --disable-pip-version-check ${{ matrix.packages }}
+
+      - name: Run the checks that need no browser
+        shell: bash
+        run: |
+          mkdir -p test-logs
+          node tests/run-all.mjs public-site launch-check docs validity pipeline consistency files-audit upcoming-dates option-patches 2>&1 | tee "test-logs/no-browser-py${{ matrix.python }}.txt"
+          # SWITCH TO (when run-all has --quick): node tests/run-all.mjs --quick --no-browser
+
+      - name: Keep the test output when something failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-no-browser-py${{ matrix.python }}
+          path: test-logs/
+          retention-days: 14
+
+  browser:
+    name: Browser tests ${{ matrix.part }}/2
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - part: 1
+            tests: 'live farm-seasons dated pause npc serve map i18n languages messages'
+          - part: 2
+            tests: 'sitecheck gallery sprite keyboard privacy print-qr calendar-doc'
+    steps:
+      - name: Get the files
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install what the tools need
+        run: python -m pip install --disable-pip-version-check beautifulsoup4 segno pillow
+
+      - name: Remember the downloaded npm packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('tests/package.json') }}
+          restore-keys: npm-${{ runner.os }}-
+
+      - name: Install Playwright and axe-core (tests/package.json)
+        working-directory: tests
+        run: npm install --no-audit --no-fund
+
+      - name: Find the Playwright version
+        id: playwright
+        working-directory: tests
+        run: echo "version=$(node -p "require('./node_modules/playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Remember the Chromium download
+        id: browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      - name: Install Chromium and its system libraries
+        if: steps.browsers.outputs.cache-hit != 'true'
+        working-directory: tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Install the system libraries Chromium needs (the browser itself came from the cache)
+        if: steps.browsers.outputs.cache-hit == 'true'
+        working-directory: tests
+        run: npx playwright install-deps chromium
+
+      - name: Run the browser tests, part ${{ matrix.part }} of 2
+        shell: bash
+        run: |
+          mkdir -p test-logs
+          node tests/run-all.mjs ${{ matrix.tests }} 2>&1 | tee "test-logs/browser-${{ matrix.part }}.txt"
+          # SWITCH TO (when run-all has --quick and --shard): node tests/run-all.mjs --quick --shard ${{ matrix.part }}/2
+
+      - name: Keep the test output when something failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-browser-${{ matrix.part }}
+          path: |
+            test-logs/
+            tests/**/*.png
+          if-no-files-found: ignore
+          retention-days: 14

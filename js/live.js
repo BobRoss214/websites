@@ -82,7 +82,7 @@
     return L === 'hi' ? s.replace('अक्तूबर', 'अक्टूबर') : s;
   }
   // When it opens: "tomorrow", a weekday name within the week, and the date after that ("Thu, Nov 12"), so that "Thursday" is never a week away.
-  const whenLabel = (i, dow, ymd) => (i === 1 ? t('tomorrow') : i <= 6 ? dayName(dow) : dateLabel(ymd));
+  const whenLabel = (i, dow, ymd, sameDay = true) => (i === 1 && sameDay ? t('tomorrow') : i <= 6 ? dayName(dow) : dateLabel(ymd));   // sameDay false: the visitor's "tomorrow" is not the farm's
   function timeLabel(mins) {
     const h = Math.floor(mins / 60), m = mins % 60;
     const own = W.clock && lang() !== 'en' ? W.clock(h, m, lang()) : '';   // Hindi, Chinese, Vietnamese: शाम 5 बजे, 下午 5 点, 5 giờ chiều (i18n.js)
@@ -92,56 +92,89 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * The visitor's own clock against the farm's
+   *   Every time on the page is the farm's (Eastern Time). A visitor whose clock reads the same as the farm's at that moment (New York, Detroit,
+   *   Toronto) gets the texts below exactly as they are. Anyone else gets "(Eastern Time)" after them, so 8 pm is not read as their own 8 pm, and
+   *   when the visitor's date is not the farm's date (evening in Europe, most of the day in Asia and the Pacific) "today" and "tomorrow" are
+   *   the farm's, so the weekday is said instead. The same wording as the pizza opening (js/features.js), which also gives "(Your time: ...)".
+   * ------------------------------------------------------------------ */
+  let hereFmt = null;
+  function hereWall(d) {   // the visitor's own date and time of day for a moment (the browser's time zone)
+    const o = {};
+    (hereFmt || (hereFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })))
+      .formatToParts(d).forEach((p) => { o[p.type] = p.value; });
+    return { ymd: o.year + '-' + o.month + '-' + o.day, mins: (+o.hour) * 60 + (+o.minute) };
+  }
+  // Does the visitor's clock read what the farm's reads at this moment? (If the browser cannot say, nothing is added.)
+  function sameClock(d) {
+    try { const h = hereWall(d), f = easternParts(d); return h.ymd === f.ymd && h.mins === f.mins; } catch (e) { return true; }
+  }
+  function sameDate(d) {
+    try { return hereWall(d).ymd === easternParts(d).ymd; } catch (e) { return true; }
+  }
+  const farmZone = (text) => t('{text} (Eastern Time)', { text });   // with '' it is just "(Eastern Time)"
+
+  /* ------------------------------------------------------------------ *
    * Open-now status for a place that keeps a weekly schedule
    * ------------------------------------------------------------------ */
-  function scheduleStatus(sch, now) {
+  function scheduleStatus(sch, now, at) {   // now: the farm's clock (easternParts), at: the moment itself
     const open = toMins(sch.open), close = toMins(sch.close), closures = closedDays();
     const closedOn = (ymd) => closures.includes(ymd);
     const todayOpen = sch.days.includes(now.dow) && !closedOn(now.ymd);
-    if (todayOpen && now.mins >= open && now.mins < close) return { state: 'open', text: t('Open now, until {time}', { time: timeLabel(close) }) };
-    if (todayOpen && now.mins < open) return { state: 'soon', text: t('Opens today at {time}', { time: timeLabel(open) }) };
+    const sameDay = sameDate(at);   // false: the visitor is on another date, so "today" and "tomorrow" would be the farm's
+    // the text, with "(Eastern Time)" when the visitor's clock is not the farm's now or at the time it names
+    const say = (state, text, named) => ({ state, text: sameClock(at) && sameClock(named) ? text : farmZone(text) });
+    if (todayOpen && now.mins >= open && now.mins < close) return say('open', t('Open now, until {time}', { time: timeLabel(close) }), farmMoment(now.ymd, sch.close));
+    if (todayOpen && now.mins < open) return say('soon', sameDay ? t('Opens today at {time}', { time: timeLabel(open) }) : t('Opens {day} at {time}', { day: dayName(now.dow), time: timeLabel(open) }), farmMoment(now.ymd, sch.open));
     for (let i = 1; i <= 14; i++) {
       const dow = (now.dow + i) % 7;
       if (!sch.days.includes(dow) || closedOn(addDays(now.ymd, i))) continue;
-      const when = whenLabel(i, dow, addDays(now.ymd, i));
-      const lead = sch.days.includes(now.dow) && closedOn(now.ymd) ? t('Closed today.') : (todayOpen ? t('Closed now.') : t('Closed today.'));
-      return { state: 'closed', text: lead + (lang() === 'zh' ? '' : ' ') + t('Opens {day} at {time}', { day: when, time: timeLabel(open) }) };
+      const when = whenLabel(i, dow, addDays(now.ymd, i), sameDay);
+      const lead = !sameDay ? t('Closed now.') : sch.days.includes(now.dow) && closedOn(now.ymd) ? t('Closed today.') : (todayOpen ? t('Closed now.') : t('Closed today.'));
+      return say('closed', lead + (lang() === 'zh' ? '' : ' ') + t('Opens {day} at {time}', { day: when, time: timeLabel(open) }), farmMoment(addDays(now.ymd, i), sch.open));
     }
     return { state: 'closed', text: t('Closed for now') };
   }
 
   // The farm has no walk-up hours: it is open for reserved visits on certain days each season.
   // `season` is the season that is really happening today (none between seasons, so no badge then).
-  function farmStatus(now, season) {
+  function farmStatus(now, season, at) {
     const days = (season && W.hours && W.hours.farm && W.hours.farm[season.id]) || null;
     if (!days) return null;
     const shut = closedDays(), closed = (ymd) => shut.includes(ymd);
     const inSeason = (ymd) => W.seasons.inWindow(season, ymd);   // a calendar day, as written: no time zone shifting
-    if (days.includes(now.dow) && !closed(now.ymd)) return { state: 'open', text: t('Reserved visits today') };
+    const sameDay = sameDate(at), say = (state, text) => ({ state, text: sameDay ? text : farmZone(text) });   // no clock time here: only "today" can be the farm's, not the visitor's
+    if (days.includes(now.dow) && !closed(now.ymd)) return say('open', t('Reserved visits today'));
     for (let i = 1; i <= 14; i++) {   // two weeks ahead: a week of closures must not leave the badge blank
       const dow = (now.dow + i) % 7, ymd = addDays(now.ymd, i);
       if (!inSeason(ymd)) break;   // the season ends before another reserved day
-      if (days.includes(dow) && !closed(ymd)) return { state: 'closed', text: t('No visits today. Next reserved day: {day}', { day: whenLabel(i, dow, ymd) }) };
+      if (days.includes(dow) && !closed(ymd)) return say('closed', t('No visits today. Next reserved day: {day}', { day: whenLabel(i, dow, ymd, sameDay) }));
     }
     return null;
   }
 
   function statusFor(name, date) {
-    const now = easternParts(date || new Date());
-    if (name === 'farm') return farmStatus(now, W.seasons.live(date || new Date())[0]);
+    const at = date || new Date(), now = easternParts(at);
+    if (name === 'farm') return farmStatus(now, W.seasons.live(at)[0], at);
     const sch = W.hours && W.hours[name];
-    return sch ? scheduleStatus(sch, now) : null;
+    return sch ? scheduleStatus(sch, now, at) : null;
   }
 
   function renderBadge(el) {
-    const s = statusFor(el.dataset.live);
+    const s = W.clockOk() ? statusFor(el.dataset.live) : null;   // no readable clock: no "open now"
     if (!s) { el.hidden = true; return; }
     el.hidden = false;
     el.className = 'live is-' + s.state + (el.dataset.liveClass ? ' ' + el.dataset.liveClass : '');
     el.innerHTML = '<span class="live-dot" aria-hidden="true"></span><span class="live-text"></span>';
     $('.live-text', el).textContent = s.text;
   }
-  function renderBadges() { $$('[data-live]').forEach(renderBadge); }
+  function renderBadges() { $$('[data-live]').forEach(renderBadge); renderZoneMarks(); }
+  // The heading of the pizza schedule ("Opens Tuesday, 5 PM") is written in the page: for a visitor on another clock it gets the same "(Eastern Time)"
+  // after it as the badges (drawn by css/sections.css from this attribute, so the heading's own words, and their translation, are not touched).
+  function renderZoneMarks() {
+    const out = W.clockOk() && !sameClock(new Date());
+    $$('[data-release-time] thead th:first-child').forEach((th) => { if (out) th.dataset.farmZone = (lang() === 'zh' ? '' : ' ') + farmZone('').trim(); else th.removeAttribute('data-farm-zone'); });
+  }
 
   /* ------------------------------------------------------------------ *
    * Notice bar
@@ -150,7 +183,8 @@
     let el = $('#site-notice');
     const until = cleanYmd(W.noticeUntil);
     const n = W.notice, text = n && typeof n === 'object' ? (n[W.lang] || n.en || '') : (n || '');   // 'Closed Saturday.'  or  { en: '...', es: '...' }
-    const live = text && (!until || easternParts(new Date()).ymd <= until);
+    const today = W.clockOk() ? easternParts(new Date()).ymd : '';   // no readable clock: the notice stays (the farm wrote it)
+    const live = text && (!until || !today || today <= until);
     if (!live) { if (el) el.remove(); return; }
     if (!el) {
       el = doc.createElement('div');
@@ -172,6 +206,7 @@
   function renderCountdown() {
     const box = $('[data-countdown]');
     if (!box) return;
+    if (!W.clockOk()) { box.hidden = true; return; }
     const S = W.seasons, now = new Date();
     const upcoming = S.list.filter((s) => !S.inWindow(s, now)).sort((a, b) => S.daysUntilStart(a, now) - S.daysUntilStart(b, now))[0];
     if (!upcoming) { box.hidden = true; return; }
@@ -192,6 +227,7 @@
   function renderAnnounce() {
     const el = $('[data-ann-season]');
     if (!el) return;
+    if (!W.clockOk()) { el.textContent = ''; return; }
     const now = new Date(), live = W.seasons.live(now)[0], nxt = upcomingSeason(now);
     el.textContent = live ? t('In season: {crop}', { crop: t(live.crop) }) : nxt ? t('Next up: {crop}, usually {when}', { crop: t(nxt.crop), when: t(nxt.next) }) : '';
   }
@@ -201,10 +237,15 @@
    * for this year. Without JavaScript the year typed in index.html shows.
    * ------------------------------------------------------------------ */
   function renderYear() {
-    const y = easternParts(new Date()).ymd.slice(0, 4);
+    if (!W.clockOk()) return;
+    const y = +easternParts(new Date()).ymd.slice(0, 4);
     $$('[data-year]').forEach((el) => {
       const w = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-      for (let n; (n = w.nextNode());) if (/\b20\d\d\b/.test(n.nodeValue)) { n.nodeValue = n.nodeValue.replace(/\b20\d\d\b/, y); break; }
+      for (let n; (n = w.nextNode());) if (/\b20\d\d\b/.test(n.nodeValue)) {
+        if (!el.dataset.yearFirst) el.dataset.yearFirst = /\b20\d\d\b/.exec(n.nodeValue)[0];   // the year typed in the page is the earliest it can say: a clock stuck in 1970 does not turn it back
+        n.nodeValue = n.nodeValue.replace(/\b20\d\d\b/, String(Math.max(y, +el.dataset.yearFirst)));
+        break;
+      }
     });
   }
 
@@ -222,7 +263,7 @@
     const last = list.filter((r) => r.at <= now).pop();
     const next = list.find((r) => r.at > now);
     if (last && now - last.at < JUST_OPENED_MS) return { mode: 'open', rel: last, list };
-    if (next) return { mode: 'wait', rel: next, list, left: next.at - now };
+    if (next && next.at - now < 400 * 864e5) return { mode: 'wait', rel: next, list, left: next.at - now };   // a countdown of more than a year is a clock that is wrong: not shown
     return { mode: 'none', list };
   }
   // A number with its unit word, written as js/features.js writes them (fmtUnit): Western digits and US separators, "5 días y 1 hora"
@@ -267,6 +308,7 @@
   function renderChip(final) {   // final: the whole table has been read
     const chip = $('[data-rel-chip]'), table = $('[data-release-time]');
     if (!chip || !chip.classList.contains('rel-wait')) return;   // set already (js/features.js keeps it up to date from here on)
+    if (!W.clockOk()) { chip.classList.remove('rel-wait'); chip.classList.add('rel-off'); return; }
     const time = table && /^\d{1,2}:\d{2}$/.test(table.dataset.releaseTime || '') ? table.dataset.releaseTime : '17:00';
     const list = $$('tr[data-release]').filter((tr) => realYmd(tr.dataset.release)).map((tr) => ({ at: farmMoment(tr.dataset.release, time) }))
       .filter((r) => !isNaN(r.at)).sort((a, b) => a.at - b.at);
@@ -301,8 +343,15 @@
     });
     doc.addEventListener('DOMContentLoaded', () => { each([() => renderChip(true)]); refresh(); });   // once more with the whole page, in case anything was missed
   } else refresh();
-  let seenDay = easternParts(new Date()).ymd;   // a page left open overnight: new day, new countdown number, an expired notice goes away
-  setInterval(() => { renderBadges(); const d = easternParts(new Date()).ymd; if (d !== seenDay) { seenDay = d; refresh(); } }, 60 * 1000);
+  let seenDay = W.clockOk() ? easternParts(new Date()).ymd : '';   // a page left open overnight: new day, new countdown number, an expired notice goes away
+  function tick() {
+    if (!W.clockOk()) return;
+    renderBadges();
+    const d = easternParts(new Date()).ymd;
+    if (d !== seenDay) { seenDay = d; refresh(); doc.dispatchEvent(new CustomEvent('wa:day', { detail: d })); }   // js/features.js and js/main.js catch up on it too
+  }
+  setInterval(tick, 60 * 1000);
+  doc.addEventListener('visibilitychange', () => { if (!doc.hidden) tick(); });   // a tab brought back after hours (or a phone woken up) catches up at once
   doc.addEventListener('wa:lang', refresh);
   W.live = { status: statusFor, refresh, releaseState, chipText, expandClosures, dateLabel };
 })();
