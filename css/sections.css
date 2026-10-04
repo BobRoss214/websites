@@ -252,7 +252,7 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
   .passes>*,.packages>*{min-width:0}
   .pass,.package{overflow-wrap:break-word;overflow-wrap:anywhere}
   .pass .btn,.package .btn{max-width:100%}
-  .passes .pass-cta .btn{overflow-wrap:anywhere}   /* the e-mail address in the button may break here: kept whole (the 23em rule below), it runs out of the button on both sides */
+  .passes .pass-cta .btn{overflow-wrap:break-word;overflow-wrap:anywhere}   /* the e-mail address in the button may break here: kept whole (the 23em rule below), it runs out of the button on both sides */
 }
 .pass h4{font:700 1.4rem/1.15 var(--display)}
 .pass p{margin:.2em 0 0;font-weight:600;color:var(--ink-soft)}
