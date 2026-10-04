@@ -113,7 +113,8 @@ def pastable(text):
 
 def clean_text(text, what, limit, minimum=0):
     """One tidy line that is safe inside a "..." string in js/content.js and that the translation tool can read."""
-    text = re.sub(r'\s+', ' ', text or '').strip()
+    text = re.sub(r'\s+', ' ', text or '')
+    text = re.sub(r'[\x00-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]', '', text).strip()   # control characters and text-direction tricks: never into js/content.js
     if re.search(r'[<>\\]', text):
         fail(f'the {what} may not contain < > or a backslash. Write the words without them.')
     notes = []
@@ -449,7 +450,10 @@ def parse_args():
 
 
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] in ('-h', '--help'):
+    if len(sys.argv) >= 2 and sys.argv[1] in ('-h', '--help'):
+        print(__doc__)
+        sys.exit(0)
+    if len(sys.argv) < 2:
         sys.exit(__doc__)
     args = parse_args()
     dry = args.dry_run

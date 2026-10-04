@@ -24,7 +24,7 @@ In season (mid-September to early November, the tree weeks, mid-April to early J
 1. **Look at the live site on your phone.** The "Open now" badges should match real life, and the pizza countdown should name the right Tuesday.
 2. **Add `?check` to the address** (`https://www.wiseacresorganic.com/?check`). No box at the bottom means nothing is wrong. A **yellow** box lists what to fix and where. A **green** box lists old dated lines that hid themselves: delete them when you like (README, section "Check your changes").
 3. **Update "This week at the farm"** (`week` in `js/content.js`): change `updated` to today and the words and spots that changed. Everything in it stays for 14 days after `updated` and is gone from the 15th day, and the yellow box says so when it is old (README row "Say what is ripe / spots left this week"). Out of season the box fills itself or hides: skip this.
-4. **Rain or a closed day in the next seven days?** Add the date to `closures`, write the notice and its last day, and close the same times in Bookeo (README rows "Close for rain or a holiday" and "Show a banner on every page").
+4. **Rain or a closed day in the next seven days?** Add the date to `closures`, write the notice and its last day, and close the same times in Bookeo (README rows "Close for rain or a holiday" and "Show a banner on every page"). On the day itself `python3 tools/close_today.py rain` does the file part (section 5).
 5. **In the fall, is a pizza weekend opening this Tuesday?** Change the sentence under the pizza table (README row "Open a new pizza weekend"). Add rows for later weekends while you are there. The dates translate themselves when you publish (see "How to read it").
 6. **Press Reserve.** Bookeo should show the days you expect. Read the farm inbox (waitlist and contact messages) and answer.
 7. **If you changed a price, an hour, a phone number or an email address,** run `python3 tools/check_facts.py` before you publish. It must say that every fact agrees.
@@ -97,10 +97,10 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ### Tue Dec 1, 2026: the schedule box hides
 
-- **By itself:** the "No pizza" block (`data-until="2026-11-30"`) was the last dated line, so the whole "Fall 2026 reservation schedule" box hides. The link "current fall schedule" then points to a hidden box.
+- **By itself:** the "No pizza" block (`data-until="2026-11-30"`) was the last dated line, so the whole "Fall 2026 reservation schedule" box hides. The sentence "See the current fall schedule" in the home page FAQ hides with it (`data-needs="schedule"`), so no link leads nowhere.
 - **You:** nothing. If you plan winter pizza dates, add rows and the box comes back.
-- **Where:** `index.html` at `data-t="te6cbae6c"` (the sentence with the link); `pages/pumpkin-patch.html` at `data-until="2026-11-30"` (2 places).
-- **If you forget:** the link in the home page FAQ leads nowhere until a new schedule is in.
+- **Where:** `index.html` at `data-t="t6fab8a7b"` (the sentence with the link); `pages/pumpkin-patch.html` at `data-until="2026-11-30"` (2 places).
+- **If you forget:** nothing. The sentence comes back by itself when a schedule box is back.
 
 ### Wed Dec 9, 2026: the tree season is over in the site's calendar
 
@@ -230,12 +230,13 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ## 5. Any day: closing for rain and other surprises
 
+- **The quick way, on the day itself.** Run `python3 tools/close_today.py rain` (or `wind`, `holiday`, `late-open 10:30`, `sold-out`). It adds the day to `closures`, writes the notice in five languages with its last day, and keeps a copy of the old file outside the website folder. Then it prints what it cannot do: the times in Bookeo, the Business Profile and Instagram, with words ready to paste (`docs/NOTICE_KIT.md`). Add `--dry-run` first to see the change. `python3 tools/close_today.py --undo` puts everything back.
 - **Close the day.** Add the date to `closures` in `js/content.js` (`'2026-10-11'` for one day, `'2026-11-09..2026-11-15'` for a run). The farm, The GreenHouse and Wise Pie then show as closed on that day, all three together. It does not stop Bookeo: close the same times there (README row "Close for rain or a holiday"). Past dates may stay in the list.
 - **Say it on every page.** Write `notice` (the yellow bar) and `noticeUntil` (the last day it shows). The bar shows from the moment you publish, with no start date, so put the date in the words ("Closed Oct 10 for rain.") and, for a closure weeks away, add the bar later. One bar at a time; for each language write `{ en, es, hi, zh, vi }` (README row "Show a banner on every page").
 - **How long it stays.** A closure works on its day only. The bar hides itself the day after `noticeUntil`; `?check` then says so in its green box ("nothing is broken": it only reminds you to clear the old words). A bar with no `noticeUntil` stays until you write `notice: ''`.
 - **A same-day closure.** Visitors' browsers may keep the old file for up to an hour after you publish, so also post it where people look first: Facebook, Instagram and your Business Profile.
 - **If you forget:** the badges say "Open now", and a bar with no last day stays up after the day it was about.
-- **Where:** `js/content.js` at `closures: [],`, `notice: '',` and `noticeUntil: '',`.
+- **Where:** `tools/close_today.py` does the edit for you. By hand it is `js/content.js` at `closures: [],`, `notice: '',` and `noticeUntil: '',`.
 
 ## 6. Lines that never switch off by themselves
 

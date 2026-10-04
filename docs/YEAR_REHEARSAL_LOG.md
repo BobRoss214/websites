@@ -30,7 +30,7 @@ Pictures and fonts were not loaded (they do not change what is being checked). N
 | R05 | Mon Nov 9: fall is over | Worked. Farm badge goes, top bar, hero line, rows, the "Fall schedule" button, fall look until Nov 18, Reserve buttons stay. The top bar is not shown on phones: the calendar now says so. |
 | R06 | Wed Nov 18: winter look | Worked. Changing the closing time in `hours` alone makes `python3 tools/check_facts.py hours` say the words disagree (20 places), as the calendar wants. |
 | R07 | Fri Nov 27: trees | Worked. Thanksgiving Thursday needs no closure. The owner's note shows in the "This week" box. |
-| R08 | Tue Dec 1: the schedule box hides | Worked (box and the link to it, at midnight). |
+| R08 | Tue Dec 1: the schedule box hides | Worked (the box and the sentence with the link to it hide together, at midnight). |
 | R09 | Wed Dec 9: tree season over | Worked. `crops: { trees: 'peak' }` keeps trees in the box, `'off'` takes them out. |
 | R10 | Fri Dec 25: Christmas | Worked. A closure range and a notice in five languages. Spanish, Hindi in their own words, gone at midnight. |
 | R11 | Fri Jan 1, 2027: the new year | Worked. Footer year and ribbon at midnight, also for a page left open and for a visitor in Los Angeles (still Dec 31 there). No date in the search-engine data or the sitemap runs out. 41 places say 2026. |

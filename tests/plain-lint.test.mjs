@@ -27,7 +27,7 @@ if (spawnSync(PY, ['--version']).status !== 0) skip('python3 is not installed');
 const TOOL = path.join(ROOT, 'tools', 'plain_lint.py');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const lint = (...args) => spawnSync(PY, [TOOL, ...args], { encoding: 'utf8', timeout: 60000 });
-const OWNER_DOCS = ['README.md', 'docs/LAUNCH_CHECKLIST.md', 'docs/QUESTIONS_FOR_THE_FARM.md', 'docs/OWNER_YEAR_CALENDAR.md', 'docs/WHAT_THE_SITE_STORES.md', 'docs/OPTION_PATCHES.md', 'docs/PROPOSAL_owner_page.md'];
+const OWNER_DOCS = ['README.md', 'docs/LAUNCH_CHECKLIST.md', 'docs/QUESTIONS_FOR_THE_FARM.md', 'docs/OWNER_YEAR_CALENDAR.md', 'docs/OWNER_CHEAT_SHEET.md', 'docs/WHAT_THE_SITE_STORES.md', 'docs/OPTION_PATCHES.md', 'docs/PROPOSAL_owner_page.md'];
 
 // ---- the tool and its word list exist, and the limits are still the agreed ones
 ok('tools/plain_lint.py and tools/plain_words.txt exist', fs.existsSync(TOOL) && fs.existsSync(path.join(ROOT, 'tools', 'plain_words.txt')));

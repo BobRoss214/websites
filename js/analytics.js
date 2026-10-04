@@ -31,6 +31,7 @@
   W.analyticsLog = log;
 
   function addScript(attrs) {
+    if (!/^https:\/\/[^\s"'<>]+$/i.test(String(attrs.src || ''))) return;   // the script address in js/content.js must be https://: nothing else is ever loaded as code
     const s = doc.createElement('script');
     s.defer = true;
     Object.keys(attrs).forEach((k) => s.setAttribute(k, attrs[k]));

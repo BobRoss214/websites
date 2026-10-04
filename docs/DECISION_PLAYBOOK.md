@@ -1,18 +1,19 @@
 # Decision playbook
 
-What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 and 14 more, d60 to d73 (see "Dashboard ids and doc question numbers").
+What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 and 14 more, d60 to d73, d74 to d87 (see "Dashboard ids and doc question numbers").
 Written on 3 October 2026 for commit b54427b, extended for e02b95e and (d60 to d73) 05b0b72. Nothing here decides anything for the owner, and no optional patch has been applied.
+Entries d74 to d87 (added to the dashboard on 3 October 2026, with no number in the doc) were written for commit 72573ab. Each answer that is a file edit was tried on a copy of the site (docs/ANSWER_REHEARSAL.md); the answers that need files from later sets of changes say so.
 Entries d43 to d45 (added later on the dashboard, with no number in the doc) were written on 3 October 2026 for commit af1e572. On the same day the dashboard texts of d01, d10, d15, d22, d41 and d44 were reworded; this page says the same as the dashboard now.
 
 ## How to use it
 
-1. Find the question by its number (d01 to d73) or in the topic list below.
+1. Find the question by its number (d01 to d87) or in the topic list below.
 2. Read the option she chose. It lists the files and the exact setting or text, how many strings must be written in the four translations, and which tests may need an update.
 3. Make the change. Rebuild and test as in "The standard steps". Then run `node tests/docs.test.mjs`: it lists every note (this page, the README rows, the other docs) that still names the old words or a place that moved; give those notes the new words. The steps and "Tests:" lines of the entries below were tried one by one on a copy of the site (docs/ANSWER_REHEARSAL.md says which ones, and how to try them again with `python3 tools/rehearse_answers.py --list`).
 4. If the entry names a patch, apply it only after her answer. Patches are listed in "Patches on disk".
 5. Delete the matching row in the README table "Content status" when a question is closed.
 
-Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572, entries d60 to d73 for 05b0b72. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
+Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572, entries d60 to d73 for 05b0b72, entries d74 to d87 for 72573ab. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
 
 Commit e02b95e also holds the messages feature (f45d6d9) and the plain-English rewrite (7d917e6), which changed the wording and the ids of 77 sentences.
 
@@ -67,20 +68,21 @@ git apply --check patches/optional/<file>.patch    # no output = it applies
 git apply patches/optional/<file>.patch
 ```
 
-## The 10 topics, most urgent first
+## The 11 topics, most urgent first
 
 | # | Topic | Urgency | Questions |
 |---|---|---|---|
 | 1 | Put the site online | blocks launch | d05, d30, d38, d15, d63, d72 |
 | 2 | Wrong links and placeholder content | blocks launch | d02, d03, d46, d47, d04, d54, d06 |
-| 3 | People and photos (permission) | blocks launch | d13, d31, d32, d33, d12, d34, d61 |
-| 4 | Pizza and food facts | wrong or risky information | d17, d16, d18, d19, d20, d21, d22, d49, d53, d08, d57 |
+| 3 | People and photos (permission) | blocks launch | d13, d31, d32, d33, d12, d34, d61, d86, d87 |
+| 4 | Pizza and food facts | wrong or risky information | d17, d16, d18, d19, d20, d21, d22, d49, d53, d08, d57, d79, d80 |
 | 5 | Dates, seasons and winter | wrong or risky information | d01, d09, d23, d50, d51, d24, d25, d26, d27, d60, d66, d68, d69, d70 |
-| 6 | Rules and promises to visitors | wrong or risky information | d41, d42, d52, d55, d44, d45, d35, d36, d43 |
-| 7 | Names, address and listings | wrong or risky information | d07, d28, d29, d39, d40, d65 |
-| 10 | What the site says the farm offers | wrong or risky information | d48, d56, d58, d59, d67, d73 |
+| 6 | Rules and promises to visitors | wrong or risky information | d41, d42, d52, d55, d44, d45, d35, d36, d43, d81, d85 |
+| 7 | Names, address and listings | wrong or risky information | d07, d28, d29, d39, d40, d65, d78 |
+| 10 | What the site says the farm offers | wrong or risky information | d48, d56, d58, d59, d67, d73, d74, d84 |
 | 8 | Drive time box and map tools | nice to have | d10, d11, d14, d62, d64 |
-| 9 | Translations | nice to have | d37, d71 |
+| 9 | Translations | nice to have | d37, d71, d82, d83 |
+| 11 | How you update the site yourself | nice to have | d75, d76, d77 |
 
 Urgency: "blocks launch" = answer before the site goes public. "wrong or risky information" = the site says something that may be false or unsafe. "nice to have" = can follow launch.
 Inside a topic every question has its own urgency (1, 2 or 3 in the heading). The line "Checklist says" in each entry repeats what docs/LAUNCH_CHECKLIST.md section 4 says about the matching old question.
@@ -118,6 +120,8 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | d71 tone of the translations | d37 | Same translation files: one native speaker can answer both. |
 | d72 owner page | d60, d05 | Closed days and the notice are the first thing the form would write. The page is never uploaded: the deploy folder must leave it out. |
 | d43 farm words, d44 corn pit offer, d45 free ages | each other, d07, d16, d02, d36, tests | The corn pit line in d43 must agree with the Thursday offer in d44. The maze line in d43 uses the name chosen in d07. The age at which children are free (d45) is written next to the $3 field fee (d16, "ages 3 and up"), the party guest count (d02), the school tour admission for family members (d36) and the wagon ride line; consistency pins every one of these age sentences (see the test table below). |
+| d79 Thursday pizza, d80 GreenHouse pizza times | d16, d51, d08, d20, d44 | The Fall line (d79) and the package cards (d16) must agree on the days of pizza. The GreenHouse pizza times (d80) are the hours of d51 and of the "Open now" badge. |
+| d74, d81, d82, d83, d85 new words | d37, d71 | New sentences in four languages: a native reader should read them (d37), in the tone chosen in d71. |
 
 ## Tests that can need an update
 
@@ -183,6 +187,8 @@ Every row names the file, the question, what it changes and whether it was teste
 | qr-stronger-codes.patch | d65 B (d65 D with the row above) | Codes at error correction Q (about 25 percent damage still scans, not about 15); each square prints 10 to 15 percent smaller. The 8 changed pictures in assets/qr/ and the five sign pages in print/ are in the patch. | yes: print-qr (every code scans back, every square above the minimum size) and consistency pass with it; running python3 tools/make_qr.py afterwards changes nothing |
 | games-B-pick-snips-sunflowers.patch | d68 A | In summer every fourth press of the "Pick a blueberry" button snips a sunflower; sunflowers grow back in 3 to 5 seconds. One part is added to tests/games.test.mjs. | yes: games (with its new part), hero, touch, calm, keyboard and privacy pass with it |
 | map-without-traced-land.patch | d86 option 2 | Removes the roads, neighbours' houses, lawns and dirt lanes drawn from the aerial picture (Google's) from the farm map; every mark the farm made, the legend, names and drive-time chips stay. Also the farm_map.py note, the README map paragraph and CREDITS row L8. No new text. | option-patches: applies to the files as they are, alone and in every set that makes sense (checked at the join; the map drawing itself was not looked at again there) |
+| faster-below-the-fold.patch | d88 | The 15 big home page sections below the first screen are drawn only when they come near the screen (about a third less work on an old phone before the page is ready). Only on a first visit by a link or the address bar: a reload, Back and a link with # in it are worked out in full, as today; print draws everything. It edits css/extras.css, js/guard.js and adds the class cv-sec to 15 sections in index.html. Letters and rounded edges inside those sections can sit up to one pixel differently, and scrolling back up after a menu link can make the page jump a little (shift score 0.16 to 0.18, today 0). | yes: option-patches (alone and in every set); with it applied layout-sweep, visual-check, keyboard, no-js, print-qr, axe, link-names, hero, features, touch, gallery, languages, i18n-a11y, big-font, forced-colors, pause, calm, games and sitecheck pass; 34 of 34 menu links land within 2 px of today; scrolling down the whole page shifts nothing (0.000) |
+| privacy-page.patch | d89 option 1 | A privacy page for visitors in plain words (privacy.html, five languages): what is kept in the browser, which other sites are contacted and only after a button, who to ask. Every sentence has its proof in docs/PRIVACY_PAGE_EVIDENCE.md. 68 new texts per language in 4 translations (a native reader is needed). Run the rebuild line after. Not legal advice. |
 
 The old address table (where each old address goes) is in docs/OPTION_PATCHES.md.
 
@@ -353,6 +359,20 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d71 | Friendly or formal in the translations? | Q66 |
 | d72 | Do you want a form to change settings? | Q67 |
 | d73 | Make the brand yellow a little paler? | Q68 |
+| d74 | Say that all farm times are Eastern Time? | none |
+| d75 | Keep the double-click file that starts the site on your computer? | none |
+| d76 | Force one kind of line ending in the project files? | none |
+| d77 | Switch on automatic checks on GitHub? | none |
+| d78 | Show photos on very old Macs too? | none |
+| d79 | Is pizza sold with a Thursday visit? | none |
+| d80 | Is Wise Pie pizza at The GreenHouse only 4 to 8 pm? | none |
+| d81 | Add skip links over the photo gallery and the map? | none |
+| d82 | Should the page not found page speak all five languages? | none |
+| d83 | Hindi month names: Hindi words or Jan, Feb, Mar? | none |
+| d84 | Make the red See the farm in label a little darker? | none |
+| d85 | Group sizes: is 100 guests in 51 to 100 or in 100 plus? | none |
+| d86 | Where did the map outline of the land come from? | none |
+| d87 | Who drew the Wise Acres logo and the farm drawings, and does the farm own them? | none |
 
 ### Dashboard questions with no number in the doc
 
@@ -379,6 +399,20 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d43 | What do your farm words mean |
 | d44 | Corn pit: buy one get one free on Thursdays |
 | d45 | Who is free: ages 2 and under |
+| d74 | Say that all farm times are Eastern Time? |
+| d75 | Keep the double-click file that starts the site on your computer? |
+| d76 | Force one kind of line ending in the project files? |
+| d77 | Switch on automatic checks on GitHub? |
+| d78 | Show photos on very old Macs too? |
+| d79 | Is pizza sold with a Thursday visit? |
+| d80 | Is Wise Pie pizza at The GreenHouse only 4 to 8 pm? |
+| d81 | Add skip links over the photo gallery and the map? |
+| d82 | Should the page not found page speak all five languages? |
+| d83 | Hindi month names: Hindi words or Jan, Feb, Mar? |
+| d84 | Make the red See the farm in label a little darker? |
+| d85 | Group sizes: is 100 guests in 51 to 100 or in 100 plus? |
+| d86 | Where did the map outline of the land come from? |
+| d87 | Who drew the Wise Acres logo and the farm drawings, and does the farm own them? |
 
 Only a note exists for d37 (the doc has a "Translation notes" section, but no question). d29 is the printed sign for the hashtag asked in Q25. d43 to d45 (farm words, the corn pit offer, free entry for ages 2 and under) were added to the dashboard after the doc was written: they have no doc number and no "Dashboard id" line there, and their entries are in Topic 6.
 
@@ -516,7 +550,7 @@ Nothing can go live until the host and the web address are chosen. The files alr
 
 - The steps of old Q26 "If Yes": the form address in `signup.action` (js/content.js at `signup: { action:` (2 places: the instructions, then the setting)) and the interest names from the embed code (README, section "Planning features" has the part on the email signup; README row "Email signup"). Then sign up once with a real email address. Mailchimp's address is already in the ready security header (docs/LAUNCH_CHECKLIST.md, section "The Content-Security-Policy").
 - Strings: 0
-- Tests: features, messages, privacy (they already test the sign-up with a stand-in; run them after connecting)
+- Tests: features MUST be updated: the first case of its sign-up part (tests/features.test.mjs at `signup: not set up -> form hidden, old button shows`) opens the page as it is served and expects the form hidden, so with the address filled in it fails. Give the `open(` line just above it the extra `extra: "WISE_ACRES.signup.action = '';"`, and do the same for the demo case below it (tests/features.test.mjs at `WISE_ACRES.signup.demo = true;`): write `WISE_ACRES.signup.action = ''; ` in front of it, or the demo form really tries to send and says "did not go through". messages and privacy set the sign-up themselves and need no change.
 
 **B. No, keep the plain "Join the email list" button**
 
@@ -697,7 +731,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 - Default: none. Owner choice. The number is already public in directories (BBB, YellowPages, Yelp), so showing it adds little risk; only do it if someone answers.
 - Depends on: consistency test (phone check). Business Profile hours and phone should match the site (checklist 3.12).
 
-**A. Show it**
+**A. Show the main number to everyone**
 
 - index.html footer contact block (index.html at `class="footer-contact"`, id t37c5399a): add the number as <a href="tel:+17046286232">. The 5 other pages copy the footer after rebuild.
 - Contact cards: farm card (index.html at `data-t="t183fef9f"`) and the "Questions?" fact (index.html at `data-t="t1ec7041a"`). Structured data: add "telephone": "+1-704-628-6232", after the "email" line (index.html at `"email": "cathy@wiseacresorganic.com"`).
@@ -706,13 +740,20 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 - Strings: about 3 changed strings x 4 translations (footer id t37c5399a, plus any label you add)
 - Tests: nothing to change. tests/consistency.test.mjs at `phone: at most ONE main number` accepts the day-of emergency number plus ONE main number (written the same in the text, the tel: links and the structured data "telephone"); a typo or a second main number fails it, and the failing line names the files. `python3 tools/check_facts.py phone` shows the same without Node.
 
-**B. Keep it hidden**
+**B. Show the day-of number to everyone, with "Running late or lost? Call or text"**
 
-- No change.
+- index.html footer contact block (index.html at `class="footer-contact"`, id t37c5399a): add one line under the e-mail address: Running late or lost? Call or text <a href="tel:+17042076347">704-207-6347</a>. The 5 other pages copy the footer after rebuild. The photographers' line (index.html at `data-t="teae7efc9"`) stays as it is.
+- The main number stays hidden. README: delete the row "Phone number" only if she also decides there is no main number to show.
+- Strings: 1 changed string x 4 translations (the footer block, id t37c5399a)
+- Tests: nothing to change: the day-of number is the one the phone check already knows. `python3 tools/check_facts.py phone` shows the same without Node.
+
+**C. No phone: email only**
+
+- No change. The site shows no main number; the day-of number stays only in the photographers' line.
 - Strings: 0
 - Tests: none
 
-**C. Show it on some pages only**
+**D. Show the main number on some pages only**
 
 - Add it only where she names (for example Contact card and footer): same edits as option A in those places only; leave structured data out if unsure.
 - Strings: 1 to 3 x 4 translations
@@ -967,6 +1008,68 @@ Faces and organisation names need a yes before launch. Words printed inside pict
 **C. I need to check first**
 
 - No change until she answers.
+- Strings: 0
+- Tests: none
+
+### d86. Where did the map outline of the land come from?
+
+- In plain words: The Farm map shows the roads around the farm, the neighbours' houses, the lawns and the dirt lanes. Someone traced them by hand from a satellite picture. The notes in the tools say the picture came from Google. Google's terms usually do not allow copying or tracing from its pictures. The farm's own marks (parking, strawberries, restrooms) are not in question.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 2 (wrong or risky information). Checklist says: not listed.
+- Owner fact (no sensible default): yes (only she can ask her adviser)
+- Default: none. Keeping the map is a small risk, not zero.
+- Depends on: d14 (the Farm Map Marker makes the marks), d12 and d13 (the same question for photos).
+- Note: The land drawing lives in js/farm-map-data.js (written from tools/saved-map.json) and is drawn by js/map-art.js. The farm's own marks are separate items of the same map and stay in every option except a full redraw.
+
+**A. Keep the map as it is: the risk is small but not zero**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**B. Take the traced land out and keep every mark the farm made: a ready fix is in patches/optional/**
+
+- The optional patch map-without-traced-land.patch (see "Patches on disk"): it takes out of js/map-art.js everything the map drew from the aerial picture (the two roads, the neighbours' houses, the mown lawns, the plowed field and the dirt lanes), keeps every mark the farm made, the legend, the names and the drive-time chips, and changes the farm_map.py note, the README map paragraph and the licence list (docs/CREDITS_AND_LICENCES.md, row L8). Nothing to rebuild; upload again. The patch needs docs/CREDITS_AND_LICENCES.md.
+- Strings: 0 (no new text)
+- Tests: map, licences, docs (what the patch's own header says to run: node tests/run-all.mjs map licences docs)
+
+**C. Redraw the land from OpenStreetMap or a picture the farm owns, such as a drone photo**
+
+- A drawing job: new land shapes from OpenStreetMap (free to use with the credit "© OpenStreetMap contributors") or from a drone photo the farm owns, then the same files as B. Ask Claude.
+- Strings: 0
+- Tests: map
+
+**D. Ask your adviser first**
+
+- No change until she answers; then it becomes A, B or C.
+- Strings: 0
+- Tests: none
+
+### d87. Who drew the Wise Acres logo and the farm drawings, and does the farm own them?
+
+- In plain words: The strawberry logo, the tab icon, the share pictures and the farm scene on the home page (barn, tractor, scarecrow, pumpkins, animals) are drawings inside the website files. Nothing in the files says who made them.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): yes
+- Default: none. Only she knows who drew what.
+- Depends on: d61 (the same question for photos), d13 (photos that carry words).
+- Note: The text about who owns what goes in README.md, section "Photos" (nothing on a public page). The written agreement itself is outside the repository.
+
+**A. The website builder drew them for the farm: write one sentence saying the farm owns them**
+
+- Add one sentence to README.md, section "Photos", after its first paragraph (README.md at `The farm photos are in`): "The logo, the tab icon, the share pictures and the farm drawings on the pages were made for the farm by its website builder. The farm owns them." Ask the builder for the same sentence in writing.
+- Strings: 0
+- Tests: docs
+
+**B. A designer drew the logo: tell us who and when, and whether there are terms**
+
+- She tells who drew it, when, and whether there are terms (for example no printing on shirts). Write that in the same place of README.md, section "Photos". If the terms limit anything the site does, change that thing (the share pictures and the printed signs carry the logo).
+- Strings: 0
+- Tests: docs
+
+**C. Not sure: leave it for now and decide later**
+
+- No change.
 - Strings: 0
 - Tests: none
 
@@ -1265,6 +1368,63 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 - Strings: 1 id x 4 translations
 - Tests: consistency at `pizza: pre-order link posted`, as above
 
+### d79. Is pizza sold with a Thursday visit?
+
+- In plain words: One line in the Fall tab says "Thursday-Sunday reservations, with or without pizza". The package cards and the pumpkin page say pizza is Friday to Sunday only. A visitor cannot tell which is true.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 2 (wrong or risky information). Checklist says: not listed.
+- Owner fact (no sensible default): yes
+- Default: none. Only she knows. A is the cheap one if the cards are right (they came from the farm's own words).
+- Depends on: d16 (the package), d08 (Thursday night), d80 (pizza at The GreenHouse), d44 (the Thursday corn pit offer).
+- Note: The line is index.html at `data-t="t26e5052f"`. The cards that say Friday-Sunday are index.html at `data-t="te9a8e62d"` and pages/pumpkin-patch.html at `<dt>Farm fun with pizza</dt>`.
+
+**A. Pizza is Friday to Sunday only: I will fix the Fall line**
+
+- index.html at `data-t="t26e5052f"`: change "Thursday-Sunday reservations, with or without pizza" to, for example, "Thursday-Sunday reservations (pizza is Friday-Sunday only)". Keep the dash as &ndash; in the file.
+- Strings: 1 UI id x 4 translations
+- Tests: consistency (it compares the weekdays of every translation with the English)
+
+**B. Pizza is also on Thursday: the package cards are wrong**
+
+- Change "Friday-Sunday" to "Thursday-Sunday" wherever pizza with a farm visit is named: index.html at `data-t="te9a8e62d"`, pages/pumpkin-patch.html at `<dt>Farm fun with pizza</dt>`, and every other place the consistency test lists. Check js/content.js at `hours: {` (the days of the farm pizza) and the Bookeo page.
+- Not replayed: about eight sentences, found by the test. Run consistency after each batch: it names every place that still says Friday-Sunday (the fact "days: farm visits with pizza, and pizza at the farm", tests/consistency.test.mjs at `days: farm visits with pizza`, 7 places today).
+- Strings: about 8 UI ids x 4 translations
+- Tests: consistency MUST follow (the fact above, its text and js/content.js); dated, live
+
+**C. Sometimes on Thursday: say check the booking page**
+
+- index.html at `data-t="t26e5052f"`: "Thursday-Sunday reservations (pizza is some Thursdays: check the booking page)". The cards stay.
+- Strings: 1 UI id x 4 translations
+- Tests: consistency (weekdays in the translations)
+
+### d80. Is Wise Pie pizza at The GreenHouse only 4 to 8 pm?
+
+- In plain words: The GreenHouse cards say "Fri-Sun, 10 am-8 pm" and "Drop in any time" right next to Wise Pie pizza. The Contact card says the same. The pizza section says GreenHouse pizza is first come, first served from 4 to 8 pm. A family that arrives at noon for pizza finds none.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 2 (wrong or risky information). Checklist says: not listed.
+- Owner fact (no sensible default): yes
+- Default: none. A is right if the pizza section is right (it matches js/content.js, which drives the "Open now" badge).
+- Depends on: d51 (the opening hours), d09 (The GreenHouse winter hours), d79 (pizza days).
+- Note: The two cards are index.html at `data-t="t93fcfff0"` (the GreenHouse card list) and index.html at `data-t="ta38e4092"` (the Contact card).
+
+**A. Pizza at The GreenHouse is 4 to 8 pm only: add the time next to Wise Pie pizza**
+
+- index.html at `data-t="t93fcfff0"`: "Wise Pie pizza (4 to 8 pm), ice cream, drinks, playground and goats". index.html at `data-t="ta38e4092"`: "Pizza (4 to 8 pm), ice cream and drinks. No reservation needed. Fri-Sun, 10 am-8 pm." Rebuild.
+- Strings: 2 UI ids x 4 translations
+- Tests: consistency (the hours facts and the weekdays of the translations)
+
+**B. Pizza at The GreenHouse is all day when open: change the pizza section**
+
+- The same places as d51 B, with 10 am to 8 pm: js/content.js at `hours: {` (hours.pizza) and about twenty sentences, found by the consistency test (the fact "time: Wise Pie at The GreenHouse (no reservation)", 11 places say 16:00-21:00 today). Not replayed: it is the same kind of edit as d51 B.
+- Strings: up to 20 UI ids x 4 translations
+- Tests: consistency MUST follow; live (open-now badges); dated
+
+**C. Hours change week by week: say check Instagram on the cards**
+
+- The same two sentences as A, with "(times change: check Instagram)" instead of "(4 to 8 pm)".
+- Strings: 2 UI ids x 4 translations
+- Tests: consistency (weekdays in the translations)
+
 ## Topic 5. Dates, seasons and winter
 
 Urgency: wrong or risky information.
@@ -1353,7 +1513,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
 - The year bar next to that sentence ends too early for "late November": in index.html at `--s:8.45;--e:10.25` change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
 - Strings: about 7 to 9 ids x 4 translations
-- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs hard-codes Nov 8/9 and Nov 30 (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`): redo those dates; farm-seasons and hero may react to the new end date, run them
+- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs pins the pizza rows and the "No pizza" box (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`); it passes without a change when only the end date and the words change (tried), so redo those dates only if you also change the rows or the box; farm-seasons and hero may react to the new end date, run them
 
 **B. Fall ends Nov 8: fix the pizza box**
 
@@ -1412,7 +1572,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Hours and days are set in js/content.js at `hours: {` (greenhouse, pizza, farm). The text follows: about 25 sentences, for example index.html at `data-t="tb55a6fd9"`, `data-t="t1c41eab2"`, `data-t="tfb71e468"`, `data-t="t86f09bf0"`, `data-t="tb4c1e6ac"`, `data-t="t4ffa359f"` (the hours in the "ways to get pizza" table) and `data-t="ta38e4092"`; pages/pumpkin-patch.html at `Wood-fired pizza with homemade dough`; pages/wise-pie.html at `description:`, `<span class="way-time">10 am`, `<span class="way-time">4 pm` and `At The GreenHouse, no.`, and the week strips (data-days: index.html at `data-ta-aria-label="t230f8c2d"` and `data-ta-aria-label="t97f22abe"`). The regexes in tests/consistency.test.mjs from `time: The GreenHouse open hours` to `CONTENT.hours.greenhouse.days` find every place.
 - Same code change as d09 if the hours differ by season.
 - Strings: up to 25 UI ids x 4 translations
-- Tests: consistency MUST follow: the hours and days facts (tests/consistency.test.mjs from `time: The GreenHouse open hours` to `CONTENT.hours.greenhouse.days`) read the text and js/content.js; live (open-now badges); dated
+- Tests: consistency MUST follow: the hours and days facts (tests/consistency.test.mjs from `time: The GreenHouse open hours` to `CONTENT.hours.greenhouse.days`) read the text and js/content.js; live MUST follow: tests/live.test.mjs at `Pizza at 6 pm: open until 8 pm` says the pizza closes at 8 pm (change the time in its name and in the expected words) and tests/live.test.mjs at `Fri 11:30 ET: The GreenHouse is open until 8 pm` says the same for The GreenHouse; dated
 
 ### d24. Fall 2027 prices, schedule and menu
 
@@ -1543,7 +1703,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Strings: 0 (the shorter sentence, "Open now: pizza reservations for Oct 2 & 3.", translates itself; 1 id x 4 translations if the rain sentence is reworded in another way)
 - Tests: none
 
-**C. Not decided yet**
+**C. Not decided yet (I will tell you later)**
 
 - No change. She can write the date herself when she knows: README row "Close for rain or a holiday" has the one line. Until then nothing hides the badge.
 - Strings: 0
@@ -1891,6 +2051,50 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 - Strings: 0
 - Tests: none
 
+### d81. Add skip links over the photo gallery and the map?
+
+- In plain words: Someone who uses the Tab key passes 39 photo stops and 25 map stops on the way down the home page. The menu avoids this. A link that jumps over the long parts would help. It adds new words in five languages.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: A. Keyboard users gain; nobody else sees the links.
+- Depends on: d37 (new words should be read by a native speaker).
+- Note: The site already has one skip link, "Skip to content" (index.html at `data-t="t0a4470d6"`, styled by css/extras.css at `.skip-link{top:-6em}`).
+
+**A. Add "Skip the photo gallery" and "Skip the map links", shown only to keyboard users**
+
+- Two new links in the same style as the existing one: the first just inside the gallery section (index.html at `id="gallery"`), the second just inside the farm map section (index.html at `id="farm-map"`), each pointing at a small anchor placed after that section's long list. The new words are 2 UI ids. Not replayed: markup, style and the keyboard test change together; ask Claude.
+- Strings: 2 UI ids x 4 translations
+- Tests: keyboard, axe, languages, i18n
+
+**B. Leave it: the menu is enough**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+### d85. Group sizes: is 100 guests in 51 to 100 or in 100 plus?
+
+- In plain words: Two lines in the Groups price list both include exactly 100 guests: "51-100 guests" and "100+ guests". The Spanish and Vietnamese say "more than 100". Chinese and Hindi say "100 and more". A group of exactly 100 cannot tell which price applies.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: A. "101+" is the one change that makes the two lines agree.
+- Depends on: d02 (company event prices), d36 (school group sizes).
+- Note: The two lines are index.html at `data-t="tf2832845"` ("51-100 guests") and index.html at `data-t="te184c66a"` ("100+ guests").
+
+**A. Change 100+ guests to 101+ guests**
+
+- index.html at `data-t="te184c66a"`: "100+ guests" becomes "101+ guests". Rebuild. The new id needs its four translations; Spanish and Vietnamese must say "101 or more" (a number that differs from the English fails the consistency test), Chinese and Hindi the same.
+- Strings: 1 UI id x 4 translations
+- Tests: consistency (numbers in the translations)
+
+**B. Leave it**
+
+- No change.
+- Strings: 0
+- Tests: none
+
 ## Topic 7. Names, address and listings
 
 Urgency: wrong or risky information.
@@ -2055,6 +2259,34 @@ One spelling and one name everywhere, matching Google and Facebook.
 - Strings: 0
 - Tests: consistency, print-qr
 
+### d78. Show photos on very old Macs too?
+
+- In plain words: The photos use a modern picture format (WebP). Very old Macs (before late 2020 software) may show empty boxes instead of photos. It is a small group of visitors. Fixing it means a second copy of every photo, which makes the site heavier. This was read from the vendor notes, not tried on a real Mac.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: A. A small group, and a heavier site slows everyone.
+- Depends on: d12 (photo originals), d13 (photos that carry words).
+- Note: The photos are in assets/photos/ and listed in js/content.js.
+
+**A. Leave photos as they are**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**B. Add a second copy of each photo for old Macs**
+
+- A second file for every photo (JPEG, next to each WebP) and a picture tag with the old format as a fallback, in index.html, the extra pages and js/content.js. Not replayed: a code and file change only Claude can make. It makes the upload folder larger: check python3 tools/make_deploy_folder.py --check afterwards.
+- Strings: 0
+- Tests: gallery, files-audit, public-site
+
+**C. I will explain**
+
+- Her own idea; the same places as B.
+- Strings: 0
+- Tests: as in B
+
 ## Topic 10. What the site says the farm offers
 
 Urgency: wrong or risky information.
@@ -2191,13 +2423,13 @@ Features, prices and claims the site states as fact. They came from the farm's o
 - Depends on: none.
 - Note: Before and after pictures at 390 and 1280 pixels wide exist for both (kept in a helper's scratch folder; ask Claude). The fix and the validity test (tests/validity.test.mjs), which finds this kind of mistake, are already in the tree.
 
-**A. Yes, keep them**
+**A. Yes, show them**
 
 - No change: the fix is already in css/sections.css at `.greenhouse{background:linear-gradient(` (the colour comes last in the shorthand) and css/styles.css at `.track-road{position:absolute` and `.track-road{left:26px`. The validity test keeps the mistake from coming back.
 - Strings: 0
 - Tests: none
 
-**B. No, go back to the plain look**
+**B. No, keep the plain look as it is today**
 
 - Ask Claude: take the background out of those two rules (css/sections.css at `.greenhouse{background:linear-gradient(`, and the two `.track-road` rules in css/styles.css). The old wrong lines must not be put back: the validity test would fail on them.
 - Strings: 0
@@ -2235,6 +2467,57 @@ Features, prices and claims the site states as fact. They came from the farm's o
 **C. I will explain**
 
 - No change until she answers.
+- Strings: 0
+- Tests: none
+
+### d74. Say that all farm times are Eastern Time?
+
+- In plain words: A visitor in another time zone now sees "(Eastern Time)" next to the live "Open now" badge and the pizza times. The fixed hours text, like "Fri-Sun 10 am-8 pm", still has no label. One short line near the hours would cover all of it. It is new wording in five languages.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): yes (her words)
+- Default: A. It costs one line and nobody can misread the hours.
+- Depends on: d37 (a native reader should look at new translated words).
+- Note: The badge and the pizza times already say it: js/features.js at `const openingLabel`.
+
+**A. Add one line: All times are Eastern Time**
+
+- index.html at `id="contact-h"`: add a new line under that heading (the Contact section lists the hours of both places), for example `<p class="loc-note">All times are Eastern Time.</p>`. Then run the standard steps: python3 tools/pages.py, python3 tools/i18n.py extract (it gives the new sentence its id), python3 tools/i18n.py jsstrings.
+- The four translations, as text to add through the pipeline (python3 tools/i18n.py missing es --list shows the id; add the line under "ui" in lang/src/<code>.json, then python3 tools/i18n.py build). Suggested words, in the words the site already uses for "Eastern Time" (a native reader should check them): Spanish "Todas las horas son hora del Este.", Hindi "सभी समय ईस्टर्न टाइम में हैं।", Chinese "所有时间均为美国东部时间。", Vietnamese "Tất cả giờ đều theo giờ miền Đông."
+- Strings: 1 UI id x 4 translations
+- Tests: consistency, i18n, languages
+
+**B. Leave it as it is now**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**C. I will explain**
+
+- Her words in the same place as A; the same steps and the same tests.
+- Strings: 1 UI id x 4 translations
+- Tests: as in A
+
+### d84. Make the red See the farm in label a little darker?
+
+- In plain words: The red handwriting label above the season buttons passes the contrast rule, but only just. In summer, against the blue sky, it is the hardest text to read on the page. A slightly darker red would help and would look almost the same.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: A.
+- Depends on: d73 (the brand yellow, the same kind of colour question).
+- Note: The colour is in css/hero.css at `.ss-label{font:700 1.5rem`: today #a8182f. Against the darkest sky colour (#5fc1ee) it gives a contrast of 3.7; 4.5 is wanted for small text.
+
+**A. Darken the red a little**
+
+- css/hero.css at `.ss-label{font:700 1.5rem`: change `color:#a8182f` to `color:#7a0f20` (contrast 5.4 against #5fc1ee). No rebuild.
+- Strings: 0
+- Tests: axe (contrast), hero (season buttons), auto-dark
+
+**B. Leave it as it is now**
+
+- No change.
 - Strings: 0
 - Tests: none
 
@@ -2397,7 +2680,7 @@ Four AI-written translations that no native speaker has read.
 
 - No change now. When a speaker answers, edit the value of each id in lang/src/<code>.json (key = id of the English text; JS strings are keyed by the English text), then python3 tools/i18n.py build and python3 tools/i18n.py missing <code> (0). English never changes.
 - The two clock patches that were once kept in scratch folders (es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch) are not needed: the code already writes Spanish times as "5:00 p. m." and Vietnamese times as "5 giờ chiều" (js/features.js at `const fmtClock = (date, tz) => {`, js/live.js at `function timeLabel(mins)`, js/i18n.js at `W.clock = (h, m, code) => {`). If the speaker wants other clock words, change those three places and the fixed texts. The other translation patches (zh-C, es-C, vi-C, hi-C) are already merged.
-- The speaker does not have to edit JSON: `python3 tools/review_sheet.py export <code>` makes a spreadsheet (every text in reading order, the English next to the translation), and `import` reads their corrections back, refusing a changed number, price, name or tag and saying why (README, section "Have a native speaker check a language").
+- The speaker does not have to edit JSON: `python3 tools/review_sheet.py export <code>` makes a spreadsheet (the 150 texts that matter most first, the English next to the translation, our questions, the instructions in the speaker's language and in English), and `import` reads their corrections back, refusing a changed number, price, name or tag and saying why. The four steps, for the owner, are on one page: `docs/CHECK_A_LANGUAGE.md` (and README, section "Have a native speaker check a language").
 - Send the speaker first: the allergen line (d17), refund and cancel lines (d41, 3% fee), prices, hours and days, "700 degrees" (d18).
 - Strings: 0 English; only the translation values that the speaker changes
 - Tests: i18n, languages; consistency if a number, price or day changes (it compares each translation to the English)
@@ -2433,6 +2716,139 @@ Four AI-written translations that no native speaker has read.
 **C. A reader of each language should decide**
 
 - No change now. Send the reader the review sheet and the question; the answer then becomes A or B for that language (Hindi and Vietnamese too: their choices are in the same files).
+- Strings: 0
+- Tests: none
+
+### d82. Should the page not found page speak all five languages?
+
+- In plain words: If someone follows an old or mistyped link, the page that says "Oops, this row is empty" is in English for everyone. A visitor who reads Hindi, Chinese, Vietnamese or Spanish sees English only.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: A when a native reader can check the words (d37).
+- Depends on: d37 (native readers), d71 (friendly or formal).
+- Note: 404.html is plain English with no scripts, and tools/i18n.py leaves it out on purpose (it must work when nothing else loads).
+
+**A. Translate its four short texts into the other four languages**
+
+- The heading, the sentence and the three buttons of 404.html in four languages, shown by a small script file that does not need the rest of the site, and the texts added to the translation files. Not replayed: new code and new strings; ask Claude.
+- Strings: the heading, the sentence and the 3 buttons x 4 translations
+- Tests: public-site (404.html must stay out of the sitemap), i18n, files-audit
+
+**B. Leave it in English**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+### d83. Hindi month names: Hindi words or Jan, Feb, Mar?
+
+- In plain words: In Hindi, the "farm year at a glance" row shows the 12 months as Jan, Feb, Mar in Latin letters. Spanish, Chinese and Vietnamese show their own. Many Hindi readers know the Latin letters, but it is the only row still in English there.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): yes (a native reader writes the names)
+- Default: A, once a native reader has written them.
+- Depends on: d37.
+- Note: The twelve labels are index.html at `class="cal-months"` (ids tefed3690 Jan, tdc8415cc Feb, tc4ba0822 Mar, tbefde54a Apr, tc94f4798 May, t6d90df3b Jun, tb7375584 Jul, t75629af5 Aug, tfdd289e3 Sep, t51327aef Oct, tbb9bfefd Nov, t997f59bc Dec).
+
+**A. Use short Hindi month names: a native reader writes them**
+
+- The English stays, so no id changes. In lang/src/hi.json, under "ui", change the value of each of the twelve ids above, for example "जन॰", "फ़र॰", "मार्च", "अप्रैल", "मई", "जून", "जुल॰", "अग॰", "सित॰", "अक्तू॰", "नव॰", "दिस॰" (a native reader decides the exact short forms). Then python3 tools/i18n.py build.
+- Strings: 12 Hindi values changed (no new English sentence; "missing" stays 0)
+- Tests: i18n, languages, consistency (it reads months in each language's own words)
+
+**B. Keep Jan, Feb, Mar**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+## Topic 11. How you update the site yourself
+
+Urgency: nice to have.
+Settings and helper files for whoever keeps the files, not for visitors. Three of them concern files that are added by later sets of changes (the Windows safety work and the GitHub checks) and are not in this tree yet; where that is so the entry says it.
+
+### d75. Keep the double-click file that starts the site on your computer?
+
+- In plain words: A file that starts the site on a Windows computer by double-clicking one file. It was checked by reading only, because the test machine cannot run Windows files. If she would rather not ship a file nobody has run, it can be removed together with the guide lines about it.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): yes
+- Default: A, if someone can run it once on a real Windows computer.
+- Depends on: none.
+- Note: The file is tools/serve.bat (it starts tools/serve.py). It, its README lines and its checks come with the Windows safety changes and are not in this tree yet, so this entry cannot point at them by their words.
+
+**A. Keep the double-click start file for Windows**
+
+- No change. Run it once on a real Windows computer: double-click it, a black window shows the address of the site, the browser opens it, closing the window stops it.
+- Strings: 0
+- Tests: none
+
+**B. Remove it: it could not be tested here**
+
+- Delete tools/serve.bat. Remove the guide lines about it from README.md: the line in the tools list, the sentence in "Preview locally" that says Windows users can double-click it, and the paragraph "Double-click to look at the site (Windows)". The test tests/windows-reality.test.mjs has four checks about the file: delete them. Not replayed: the file is not in this tree yet.
+- Strings: 0
+- Tests: windows-reality, docs
+
+**C. I will explain**
+
+- Her own choice; the same places as A or B.
+- Strings: 0
+- Tests: as in A or B
+
+### d76. Force one kind of line ending in the project files?
+
+- In plain words: Windows can save the project files with different line endings than a Mac. The tools now cope with both. A one-line project setting would make every copy identical, which also stops tiny false changes. It is a setting for whoever keeps the files on GitHub.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: A. It is one small file and changes no page.
+- Depends on: d77 (the checks on GitHub run on a clean checkout).
+
+**A. Make every checkout use the same line endings**
+
+- Make a new file named .gitattributes in the top folder (next to README.md) with one line: `* text=auto eol=lf`. It tells git to write every text file with the same line endings on every computer and to leave pictures alone. Commit it. In a copy that already exists, run `git add --renormalize .` once; if git then shows changed files, commit them too.
+- Strings: 0
+- Tests: files-audit, pipeline
+
+**B. Leave it as it is now**
+
+- No change. The tools cope with both kinds of line ending.
+- Strings: 0
+- Tests: none
+
+**C. I will explain**
+
+- Her own choice; the same file as A.
+- Strings: 0
+- Tests: as in A
+
+### d77. Switch on automatic checks on GitHub?
+
+- In plain words: Two ready-made files run all the site checks each time the files change, and once a week list the dates about to run out. They are switched off. Switching on means copying two files and costs nothing on a public repository. The weekly one is red in most weeks of the season, because something always runs out soon.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: A for a public repository (free); ask first for a private one (it uses minutes of the monthly allowance).
+- Depends on: d76 (a clean checkout), d05 (where the site is hosted is not related).
+- Note: The two files are checks.yml and weekly-health.yml in the folder docs/optional-github-actions/. That folder is added by a later set of changes and is not in this tree yet; until it is, there is nothing to copy.
+
+**A. Yes: I will copy the two files to switch them on**
+
+- Make the folder .github/workflows in the top folder and copy the two files from docs/optional-github-actions/ into it. Commit and push. Open the Actions tab of the repository on github.com; "Site checks" starts by itself, and "Weekly health" starts with "Run workflow". GitHub emails the person who last changed the cron line of the weekly file, so the owner should be the one who commits it.
+- The weekly check is red whenever something runs out within a week. To keep it for real alarms, change FAIL_ON in the weekly file from 'expires,runs-out' to 'runs-out'.
+- Strings: 0
+- Tests: none (the files were checked with a workflow linter, not yet on GitHub itself)
+
+**B. No: not now**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**C. I will ask whoever keeps the files on GitHub**
+
+- No change until the answer comes; then A or B.
 - Strings: 0
 - Tests: none
 

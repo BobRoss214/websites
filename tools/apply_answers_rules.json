@@ -1,0 +1,202 @@
+{
+ "_about": "What tools/apply_answers.py needs to know that the playbook recipes (tools/rehearse_answers.json) do not say. Read docs/APPLY_ANSWERS.md before you change this file. Every key here is checked by tools/test_apply_answers.py: a name that no longer exists, or a made-up value that is no longer in a recipe, fails the test.",
+
+ "inputs": {
+  "_about": "The recipes were written for a rehearsal, so some of them type a value that only the owner knows (a price, a link). Here each such value is named: 'invented' is the made-up text inside the recipe, 'ask' is what the owner has to send. The tool puts the owner's value in place of the made-up one, and never applies the recipe without it. 'type' is one of price, url, email, number, date, text.",
+  "d02=A": [
+   {"name": "price_1", "type": "price", "invented": "$800", "ask": "the real price of the smaller company event (the page now shows a draft of $750)"},
+   {"name": "price_2", "type": "price", "invented": "$1,500", "ask": "the real price of the larger company event (the page now shows a draft of $1,400)"}
+  ],
+  "d06=A": [
+   {"name": "review_url", "type": "url", "invented": "https://g.page/r/CaBcDeFgHiJkLmNo/review", "ask": "the Google review link (it starts with https://)"}
+  ],
+  "d11=A": [
+   {"name": "lat", "type": "number", "invented": "35.0653", "ask": "the first of the two numbers for the farm's exact spot (the latitude, for example 35.0653)"},
+   {"name": "lon", "type": "number", "invented": "-80.6710", "ask": "the second number (the longitude, for example -80.6710)"}
+  ],
+  "d16=B": [
+   {"name": "pizza_list", "type": "text", "invented": "Cheese, Pepperoni or The Dill Pickle", "ask": "which pizzas the package covers, as a short list (for example: Cheese, Pepperoni or The Dill Pickle)"}
+  ],
+  "d16=C": [
+   {"name": "price", "type": "price", "invented": "$35", "ask": "the new price of the pizza package (it is $31 now)"}
+  ],
+  "d17=A": [
+   {"name": "allergen_sentence", "type": "text", "invented": "Please tell us about any allergy before you order.", "ask": "the one sentence about allergies for the pizza page, in her words"},
+   {"name": "allergen_note", "type": "text", "invented": "ask us about allergens", "ask": "the few words next to the vegan and gluten-free lines (for example: ask us about allergens)"}
+  ],
+  "d18=C": [
+   {"name": "degrees", "type": "number", "invented": "800", "ask": "the oven temperature in degrees Fahrenheit"},
+   {"name": "celsius", "type": "derived", "from": "degrees", "fn": "f_to_c", "invented": "427"}
+  ],
+  "d19=A": [
+   {"name": "price_ice_cream", "type": "price", "invented": "$4", "ask": "the price of the Waxhaw Creamery ice cream"},
+   {"name": "price_drinks", "type": "price", "invented": "$7", "ask": "the price of beer, wine and cider"}
+  ],
+  "d20=B": [
+   {"name": "ready_time", "type": "text", "invented": "2 hours", "ask": "how long after the reservation time the pizzas are ready (a whole number of hours, for example 2 hours)", "match": "^[0-9]+ hours?$"}
+  ],
+  "d33=C": [
+   {"name": "animal", "type": "text", "invented": "A rabbit", "ask": "which animal is wearing the frog hat (for example: A rabbit)"}
+  ],
+  "d35=A": [
+   {"name": "parking_sentence", "type": "text", "invented": "Park on the grass lot on the left and walk to the red barn to check in.", "ask": "where to park and where to check in, in one sentence"},
+   {"name": "parking_short", "type": "text", "invented": "use the grass lot on the left", "ask": "the same in a few words, for the sentence about limited parking"}
+  ],
+  "d36=A": [
+   {"name": "min_students", "type": "number", "invented": "25", "ask": "the smallest class she welcomes, as a number of students (and the price, if it is not the same)"}
+  ],
+  "d38=B": [
+   {"name": "new_site", "type": "url", "invented": "https://www.greenacres.example", "ask": "the new web address of the site (it starts with https://, no slash at the end)", "strip_slash": true}
+  ],
+  "d46=B": [
+   {"name": "booking_url", "type": "url", "invented": "https://bookeo.com/wiseacres?category=99999NEWPAGE00000", "ask": "the right booking page address"}
+  ],
+  "d47=B": [
+   {"name": "gluten_free_price", "type": "price", "invented": "$10", "ask": "the right price of the gluten-free extra (the site says +$9)"}
+  ],
+  "d47=C": [
+   {"name": "preorder_url", "type": "url", "invented": "https://wise-pie-orders.square.site/?location=ZZZ999", "ask": "the right pizza pre-order page address"}
+  ],
+  "d48=D": [
+   {"name": "tomato_price", "type": "price", "invented": "$5", "ask": "the right price of tomatoes per pound (the site says $4.50)"}
+  ],
+  "d52=B": [
+   {"name": "email", "type": "email", "invented": "farm@wiseacresorganic.com", "ask": "the email address that is read and answered"}
+  ],
+  "d61=B": [
+   {"name": "credit", "type": "text", "invented": "Jordan Lee", "ask": "the name to credit for the Foster Village photo"}
+  ],
+  "d66=B": [
+   {"name": "last_day", "type": "date", "invented": "2027-01-31", "ask": "the last day the site says new (year-month-day, for example 2027-01-31)"}
+  ],
+  "d68=B": [
+   {"name": "snips", "type": "number", "invented": "50", "ask": "how many snips earn the sunflower badge (it is 100 now)"}
+  ],
+  "d87=B": [
+   {"name": "designer", "type": "text", "invented": "Jordan Lee", "ask": "the name of the person who drew the logo"},
+   {"name": "year", "type": "number", "invented": "2019", "ask": "the year the logo was drawn"}
+  ]
+ },
+
+ "ready": {
+  "_about": "Recipes that a helper read and found free of any value that only the owner knows (the choice she made is the whole answer). A recipe that is in none of 'inputs', 'manual' and 'ready' (a new one) is NOT applied: the tool says a helper has to look at it first. A recipe can also say so itself with \"checked\": true, or name its own \"owner_values\" or \"model\".",
+  "keys": ["d02=B", "d02=C", "d03=A", "d04=A", "d04=B", "d04=D", "d07=A", "d07=B", "d10=D", "d13=B", "d13=C", "d15=A", "d16=A", "d18=A", "d18=B", "d19=B", "d22=B", "d23=A", "d23=B", "d26=A", "d26=B", "d27=A", "d28=B", "d28=C", "d29=B", "d31=B", "d32=C", "d33=A", "d33=B", "d39=A", "d39=B", "d40=A", "d41=A", "d42=A", "d42=B", "d44=A", "d44=B", "d47=A", "d48=B", "d49=A", "d51=A", "d53=B", "d54=B", "d55=A", "d56=A", "d56=C", "d57=B", "d58=A", "d58=B", "d60=A", "d60=B", "d62=B", "d65=B", "d65=C", "d65=D", "d66=A", "d68=A", "d69=B", "d73=B", "d74=A", "d76=A", "d79=A", "d79=C", "d80=A", "d80=C", "d84=A", "d85=A", "d86=B", "d87=A"]
+ },
+
+ "manual": {
+  "_about": "Recipes that are only a MODEL: the steps show which files change, but the words come from the owner (or a native reader), so the tool does not apply them. It prints what the owner still has to send.",
+  "d03=B": "how families should book a school tour now (the model recipe says: by email to Vanessa)",
+  "d21=B": "the right pizza size in inches and how many adults and children one pizza serves",
+  "d37=A": "the native speaker's corrections (the sheet made by tools/review_sheet.py, with the changes marked)",
+  "d43=A": "one line for each farm word (corn pit, barrel train, halfzies and the others on the site)",
+  "d44=C": "her own rule for the corn pit offer, in her words",
+  "d45=B": "the age from which a child pays for the wagon ride (the model assumes 1 year), and the other age sentences that change",
+  "d50=B": "the real last day for Christmas trees (the model uses December 22)",
+  "d51=B": "the right closing time of Wise Pie (the model uses 9 pm) and any other hours that are wrong",
+  "d54=A": "the price of each of the twelve lines that say Prices coming soon (shop prices differ line by line)",
+  "d55=B": "what visitors with strollers or wheelchairs should do instead, in her words",
+  "d55=C": "what she wants to say about the paths, quiet times and facilities, in her words",
+  "d56=B": "which Axios link is wrong, and the right headline and web address",
+  "d57=A": "where the tables are (the model says: by the barn)",
+  "d57=C": "where the few picnic tables are",
+  "d63=A": "the address the email sign-up form posts to, and the names of the interest groups, from her email service",
+  "d71=B": "the native reader's formal wording (the model changes two Spanish sentences only)",
+  "d83=A": "the twelve short Hindi month names as a native reader writes them (the model has the names a helper chose)"
+ },
+
+ "asks": {
+  "_about": "What the owner still has to send, for the answers that have no recipe at all (the answer says 'I will send ...'). The text is printed as it is. Anything not listed here is printed from the words of the answer itself.",
+  "d05=C": "the name of the web host (who keeps the site online)",
+  "d07=C": "the name she wants for the maze, in her words",
+  "d08=A": "the details of Thai night (the dates, the times, the price)",
+  "d09=B": "the GreenHouse winter hours (the days and the times)",
+  "d09=C": "which months The GreenHouse is closed",
+  "d12=A": "the original photo files (the big ones from the camera or phone)",
+  "d14=B": "what went wrong with the Farm Map Marker on her phone (the phone, and what she saw)",
+  "d24=A": "the 2027 fall prices, dates and menu",
+  "d26=C": "the months cut flowers are available",
+  "d34=A": "the fall photos to put in place of the sunflower photos",
+  "d45=C": "her own rule for who is free, in her words",
+  "d46=C": "which page pizza visits and parties should use (the booking address)",
+  "d53=C": "when and where the pre-order link is posted, in her words",
+  "d58=C": "which snacks and drinks are sold in spring and summer",
+  "d59=A": "the details of the summer programs (what, when, price)"
+ },
+
+ "patches": {
+  "_about": "Which answer picks which patch in patches/optional/ (the table 'Which answer picks which patch' in docs/OPTION_PATCHES.md). A patch is applied with git apply --check first, then git apply, then tested like everything else. 'by_host' picks by the answer to d05 (A Cloudflare Pages, B Netlify, C another host).",
+  "d01=A": ["winter-A-hide-fall-booking"],
+  "d01=B": ["winter-B-fall-prices-note"],
+  "d24=B": ["winter-A-hide-fall-booking"],
+  "d25=A": ["reserve-window"],
+  "d05=A": ["clean-addresses-C-cloudflare"],
+  "d30=A": {"by_host": {"A": ["redirects-A-redirects-file"], "B": ["redirects-A-redirects-file"], "C": ["redirects-B-redirect-pages"]}}
+ },
+
+ "fact_change": {
+  "_about": "Answers that are really a fact change (a price, a phone number, an email, hours) can be handed to tools/change_fact.py once the site has it: add the answer here, for example \"d16=C\": {\"kind\": \"price\", \"args\": [\"$31\", \"{price}\"]} (the old value as it is on the site, the new one from the owner's checked value). Empty today: every answer follows the steps of its recipe. The one function that does this is apply_fact_change in tools/apply_answers.py."
+ },
+
+ "after": {
+  "_about": "Order rules from the playbook table 'Which answers change other answers'. 'd30': ['d05'] means: when both are answered, apply d05 before d30. Without a rule the order is urgency first (1 blocks launch, 2 wrong or risky, 3 nice to have), then the number.",
+  "d30": ["d05", "d38"],
+  "d15": ["d05", "d10", "d62", "d63"],
+  "d17": ["d16"],
+  "d19": ["d16"],
+  "d20": ["d16"],
+  "d21": ["d16"],
+  "d40": ["d39"],
+  "d11": ["d39"],
+  "d45": ["d16", "d02", "d36", "d43", "d44"],
+  "d43": ["d07", "d44"],
+  "d55": ["d52"],
+  "d03": ["d52"],
+  "d65": ["d38", "d39", "d06", "d28", "d29"],
+  "d66": ["d48", "d24"],
+  "d71": ["d37"],
+  "d60": ["d51"]
+ },
+
+ "includes": {
+  "_about": "An answer whose steps already contain the steps of another one. When both are chosen, only the bigger one is applied and the smaller one is reported as 'already included'.",
+  "d32=C": ["d13=B"],
+  "d31=B": ["d13=C"]
+ },
+
+ "refuse": [
+  {"a": "d38=B", "b": "d30=A", "why": "the redirects send the old farm addresses to the pages of the same web address; with a different address (d38 B) the redirect files would point to the wrong place. Ask her which address the old links should go to."},
+  {"a": "d61=B", "b": "d13=C", "why": "d61 B puts a photo credit on the Foster Village photo, and d13 C removes that photo."},
+  {"a": "d61=B", "b": "d31=B", "why": "d61 B puts a photo credit on the Foster Village photo, and d31 B removes that photo."},
+  {"a": "d10=D", "b": "d62=B", "why": "d10 D switches the Drive time box off, so the note about it does not need rewording. Drop one of the two."}
+ ],
+
+ "unsupported": [
+  {"a": "d07=A", "b": "d48=B", "why": "both change the same line of tests/farm-seasons.test.mjs (the one that looks for the haunted trail and the maze), and the steps for one do not expect the change of the other. A person has to merge them."},
+  {"a": "d19=A", "b": "d54=B", "why": "d54 B deletes the price-list lines that have no price, and d19 A types prices over two of those lines (the GreenHouse ice cream and drinks rows). A person has to say which of them wins."},
+  {"a": "d26=B", "b": "d54=B", "why": "d54 B deletes the price-list lines that have no price, and the flowers line is one of them: d26 B rewords a sentence in that line. A person has to say what the price list should show for flowers."}
+ ],
+
+ "aliases": {
+  "_about": "Words the owner's page uses for an option that the playbook words differently, when the meaning is the same. The key is the answer as the page writes it; the value is the playbook letter, or null when the page offers something the playbook has no option for (then the tool says so and a person decides). When the export carries the page's own list of options, the tool also matches by place when the lists have the same length.",
+  "d04": {
+   "Show the main number to everyone": "A",
+   "Show the day-of number to everyone, with Running late or lost? Call or text": "B",
+   "No phone: email only": "C",
+   "Show the main number on some pages only": "D"
+  },
+  "d67": {
+   "Yes, show them": "A",
+   "No, keep the plain look as it is today": "B"
+  }
+ },
+
+ "notes": {
+  "_about": "A line for the report, printed next to the answer when it is applied.",
+  "d03=A": "Only the end of the address changes (/edit becomes /viewform). Open the link she sent: it must be the same form as the one on the site; if it is another form, send it as a new answer.",
+  "d04=A": "This applies the playbook's full set of steps (footer, contact card, questions line, structured data). The optional patch phone-number-shown.patch is a smaller version of the same change and is not used with it.",
+  "d60=A": "For a closure on the same day the better way is tools/close_today.py (docs/NOTICE_KIT.md): it also writes the notice words in all five languages and checks the date. These steps are the same ones the playbook gives.",
+  "d22=B": "The words come from the menu (the Wise Pie menu names the cheese maker).",
+  "d26=A": "The window starts on April 15 and ends July 31, as the playbook steps say; tell the helper if she means other days.",
+  "d69=B": "The new words (The farm is twinkling!) are the playbook's suggestion, not hers. Ask her if she likes them."
+ }
+}

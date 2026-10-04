@@ -27,7 +27,7 @@ How it works
   Text that JavaScript writes goes through WISE_ACRES.t("English text") and lives under "js" in the
   language file.
 """
-import hashlib, json, os, re, sys
+import collections, hashlib, json, os, re, sys
 
 # ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
 try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
@@ -398,16 +398,44 @@ def tag_difference(english, translation):
     return ' '.join(out) + ' Copy every tag from the English exactly (a link is <a1>...</a>, a second link is <a2>...</a>).'
 
 
+TAG_TOKEN = re.compile(r'<[^<>]*>')
+# What a translation may contain when its English text is not known (an old line for text that is no longer on a page): plain marks only.
+PLAIN_MARK = re.compile(r'^</?(?:strong|b|em|i|small|u|br|svg|a[0-9]*|span)(?:\s+class="[A-Za-z0-9 _-]{1,40}")?\s*/?>$')   # a class name is not a way in: the old line is on no page
+
+
 def unsafe(data, en):
-    """Translations are inserted as HTML (ui) or as plain text (js): they may not add tags, handlers or quotes."""
+    """Translations are inserted as HTML (ui) or as plain text (js): they may not add tags, handlers or quotes.
+    A page text keeps exactly the marks of its English text, letter for letter (<strong>, <a1>, <span class="big">): a mark in capital letters
+    (<IFRAME>), one with an added address or style, or a loose < or > is refused. The page puts a translation into the page as HTML,
+    so this check is what stands between a translation file and the visitor."""
     bad = []
+    for name in ('ui', 'js'):
+        values = data.get(name, {})
+        if not isinstance(values, dict):
+            bad.append(f'{name}: must be a list of "text": "translation" lines between {{ }}')
+            continue
+        for k, v in values.items():
+            if not isinstance(k, str) or not isinstance(v, str):
+                bad.append(f'{name} {str(k)[:40]}: the translation must be text between quote marks, not {type(v).__name__}')
+    if bad:
+        return bad
     for k, v in data.get('ui', {}).items():
-        if k in en and sorted(TAG.findall(v)) != sorted(TAG.findall(en[k])):
-            bad.append(f'ui {k}: its tags differ from the English text. {tag_difference(en[k], v)}  English: {re.sub(chr(10), " ", en[k])[:100]}')
         if re.search(r'<[^>]*\son[a-z]+\s*=|javascript:', v, re.I):
             bad.append(f'ui {k}: event handler or javascript: link')
+        elif k in en:
+            e_tags, t_tags = collections.Counter(TAG_TOKEN.findall(en[k])), collections.Counter(TAG_TOKEN.findall(v))
+            loose = '<' in TAG_TOKEN.sub('', v) or '>' in TAG_TOKEN.sub('', v)
+            if sorted(TAG.findall(v)) != sorted(TAG.findall(en[k])):
+                bad.append(f'ui {k}: its tags differ from the English text. {tag_difference(en[k], v)}  English: {re.sub(chr(10), " ", en[k])[:100]}')
+            elif e_tags != t_tags or loose:
+                odd = sorted(((t_tags - e_tags) + (e_tags - t_tags)).elements())[:3]
+                bad.append(f'ui {k}: a tag is not exactly as in the English text ({", ".join(odd) or "a loose < or >"}). Copy every tag letter for letter, with whatever is inside its < >. English: {re.sub(chr(10), " ", en[k])[:100]}')
+        else:
+            odd = [t for t in TAG_TOKEN.findall(v) if not PLAIN_MARK.match(t)]
+            if odd or '<' in TAG_TOKEN.sub('', v) or '>' in TAG_TOKEN.sub('', v):
+                bad.append(f'ui {k}: this line is not on any page, and it holds a tag the pages do not use ({", ".join(odd[:3]) or "a loose < or >"})')
     for k, v in data.get('js', {}).items():
-        if re.search(r'[<>"]', v) and not re.search(r'[<>"]', k):
+        if re.search(r'[<>]', v) or (re.search(r'"', v) and '"' not in k):
             bad.append(f'js {k!r}: contains < > or "')
     return bad
 

@@ -417,6 +417,11 @@
       const items = $$('li, tbody tr, [data-until]', box);
       if (items.length && items.every(goneEl)) box.style.setProperty('display', 'none', 'important');
     });
+    // data-needs="schedule": a sentence that sends the reader to that box (a link to #schedule) hides with it, so no link goes nowhere
+    $$('[data-needs]').forEach((el) => {
+      const target = doc.getElementById(el.getAttribute('data-needs'));
+      if (target && !goneEl(target) && !target.hidden) el.style.removeProperty('display'); else el.style.setProperty('display', 'none', 'important');
+    });
   }
 
   // closures and noticeUntil (js/content.js) are read by js/live.js, which skips a date it cannot read. Say so here, so it is not silent.
@@ -428,6 +433,7 @@
     if (!has(need, p)) { warn('analytics.provider "' + q(p) + '" is not one of plausible, goatcounter, umami, cloudflare or none. Nothing is counted.'); return; }
     const missing = need[p].filter((k) => !String(a[k] == null ? '' : a[k]).trim());
     if (missing.length) warn('analytics.provider is "' + p + '" but ' + missing.map((k) => 'analytics.' + k).join(' and ') + (missing.length > 1 ? ' are' : ' is') + ' empty. Nothing is counted.');
+    ['src', 'endpoint'].forEach((k) => { if (a[k] != null && String(a[k]).trim() && !/^https:\/\/[^\s"'<>]+$/i.test(String(a[k]).trim())) warn('analytics.' + k + ' "' + q(a[k]) + '" must start with https:// (copy the whole address from your analytics service). The script is not loaded, so nothing is counted.'); });
   }
   // closures and noticeUntil (js/content.js) are read by js/live.js, which skips a date it cannot read. Say so here, so it is not silent.
   // A closure is a day ('2026-11-09') or a range of days with two dots ('2026-11-09..2026-11-15'); js/live.js expands the ranges (expandClosures).
@@ -833,7 +839,11 @@
   async function initWeek() {
     if (!$('[data-week]')) return;
     renderWeek();
-    const feed = (W.week && W.week.feed) || '';
+    let feed = (W.week && W.week.feed) || '';
+    if (feed) {   // an https:// address, or a file of this website: never javascript:, data: or a plain http:// address of another site
+      let u = null; try { u = new URL(String(feed), location.href); } catch (e) { /* not an address */ }
+      if (!u || !(u.protocol === 'https:' || u.origin === location.origin)) { warn('week.feed "' + q(feed) + '" must start with https:// (or be a file of this website). It is not used.'); feed = ''; }
+    }
     if (feed) {
       const ctl = new AbortController();
       let to = setTimeout(() => ctl.abort(), 6000);
@@ -1454,6 +1464,7 @@
   safe(reportContentErrors);
   [expireDated, checkOwnerDates, checkSettingNames, checkHours, checkNotice, checkReviewsAndPhotos, checkFarmPoint, checkTranslations, checkAnalytics, renderMailDrafts, initReviewLinks, initRelease, initWeek, initSignup, initCommunity, initEntrance, initDriveForm, checkPhotoTags].forEach(safe);
   setInterval(() => { if (!doc.hidden) safe(expireDated); }, 60 * 1000);   // a page left open overnight catches up
+  doc.addEventListener('wa:lang', () => safe(expireDated));   // a sentence that was drawn again in another language is hidden again at once, not after a minute
   // ...and a tab that was in the background (or a phone that slept) catches up the moment it is looked at, and when the farm's day changes (js/live.js)
   const catchUp = () => { if (doc.hidden) return; safe(expireDated); safe(renderWeek); safe(renderRelease); };
   doc.addEventListener('visibilitychange', catchUp);

@@ -1,0 +1,219 @@
+{
+ "about": "Extra facts the review sheet shows to the friend (tools/review_sheet.py reads this file; it is not site text). \"first\": ids of the lines that cost a visitor money or a wasted trip when wrong (refunds, rain, pets, allergies, safety, the address): they get priority 1 together with every line that has a price and every QR sign line. \"ask\": questions for a native reader, shown in the \"question for you\" column; a question is shown only while the current translation still contains the text in \"when\", so a line that was fixed stops asking. \"changed\": lines that were changed after a check; shown only while the current translation still has the new wording. Ids that no longer exist are ignored.",
+ "first": ["t0e3c1f6e", "t2c97bd46", "tb68669e6", "t40668596", "td5097209", "t6cc73b83", "t37319519", "t54bad66d", "tf1ab0489", "t117bfbcb", "t493369ae", "t60dfbf11", "tc955ad55", "tc3166c39", "t9c92799b", "ta2d4eb0f", "tf13be67c", "t168a0beb", "t775b3737", "tb63cbabc", "t788bdb17", "t3a5391d6", "t8763a833"],
+ "ask": [
+  {
+   "lang": "es",
+   "ids": ["tcf782409"],
+   "when": "La granja donde tú recoges",
+   "ask": "“The u-pick farm” means the farm where you pick the fruit yourself. “La granja donde tú recoges” is long and may sound machine-made, especially as a title. The same words are used in 8 other lines.",
+   "suggest": "“La granja de recolección” or “La granja (cosecha tú mismo)”"
+  },
+  {
+   "lang": "es",
+   "ids": ["j4c4fc7a5"],
+   "when": "Mejor momento para recoger",
+   "ask": "“Peak picking” means the days with the most fruit and the biggest crowds. “Mejor momento para recoger” says “best time to pick”. Is that the same idea?",
+   "suggest": "“Pico de la cosecha”"
+  },
+  {
+   "lang": "es",
+   "ids": ["j317ab79e"],
+   "when": "Agárrense",
+   "ask": "The wagon driver says this to everyone on the ride. “¡Agárrense fuerte!” is plural (ustedes); every other line on the site says tú. Right for a group, or should it be tú?",
+   "suggest": "“¡Agárrate fuerte!”"
+  },
+  {
+   "lang": "es",
+   "ids": ["tc8317201", "t87550955", "t5f6e51f7", "jc9c417e4"],
+   "when": "ugares disponibles",
+   "ask": "“Spots left” means open reservation places. “Lugares disponibles” is understood, but “lugares” also means “places” elsewhere on the same page (the farm and The GreenHouse). Is there a clearer word?",
+   "suggest": "“Cupos disponibles”"
+  },
+  {
+   "lang": "es",
+   "ids": ["tc94cc1ed", "t60cc5e24", "t6536e198"],
+   "when": "No se permite traer alcohol",
+   "ask": "The English is a polite request (“Please do not bring your own alcohol”), and the state rule is the reason. “No se permite” says “is not allowed”, a little stronger. Fine, or should it be softer?",
+   "suggest": "“Por favor, no traigas alcohol de afuera”"
+  },
+  {
+   "lang": "es",
+   "ids": ["tdaaf3d78", "t99c12675"],
+   "ask": "Word choice. The Spanish uses Mexican and US words almost everywhere (botana, balde, pays, estacionamiento). For berries it says “bayas” and for a stroller “cochecito”, which are also common in Spain. What would your family say?",
+   "suggest": "“frutos rojos” for berries, “carriola” for stroller"
+  },
+  {
+   "lang": "hi",
+   "ids": ["t7c9a8664"],
+   "when": "आइए",
+   "ask": "This is the menu word for the section about visiting (the noun “Visit”). “आइए” means “please come” (a verb).",
+   "suggest": "“विज़िट”, as in “पहली विज़िट की गाइड”"
+  },
+  {
+   "lang": "hi",
+   "ids": ["t509f686c", "te54f5820", "tbed86e1f"],
+   "when": "शामिल हैं",
+   "ask": "English: “We rotate our crops, plant cover crops and keep detailed records. Outside inspectors check us regularly.” The Hindi is stiff: it says the farm “includes” crop rotation, cover crops, records and inspection, instead of “we do”.",
+   "suggest": "“हम फ़सल चक्र अपनाते हैं, कवर क्रॉप लगाते हैं, विस्तृत रिकॉर्ड रखते हैं और बाहरी एजेंसी हमारी नियमित जाँच करती है।”"
+  },
+  {
+   "lang": "hi",
+   "ids": ["t9bf53880"],
+   "when": "सबसे शाही",
+   "ask": "“The gourmet cherry” means a cherry tomato for people who like fine food. “सबसे शाही” means “the most royal”.",
+   "suggest": "“चेरी टमाटरों में खाने के शौक़ीनों की पसंद”"
+  },
+  {
+   "lang": "hi",
+   "ids": ["t0f061e4c"],
+   "when": "आमतौर पर कौन-से फूल",
+   "ask": "The English says the Instagram page gives a general idea of what is blooming. “आमतौर पर कौन-से फूल खिले हैं” says “which flowers are usually blooming”, a small shift.",
+   "suggest": "“…इसका मोटा अंदाज़ा देता है कि कौन-से फूल खिले हैं”"
+  },
+  {
+   "lang": "hi",
+   "ids": ["t82b6bfe1"],
+   "when": "क्विक एक्शन",
+   "ask": "“Quick actions” is a hidden label for the buttons at the bottom of the page (a screen reader reads it). “क्विक एक्शन” is English written in Devanagari.",
+   "suggest": "“त्वरित कार्य”"
+  },
+  {
+   "lang": "hi",
+   "ids": ["j4c4fc7a5", "t8f949e39", "t0510af92", "t7218eba7", "tae57920b"],
+   "when": "तोड़ने का सबसे अच्छा समय",
+   "ask": "“Peak picking” means the days with the most fruit and the busiest crowds. “तोड़ने का सबसे अच्छा समय” says “the best time to pick”. Is that the same idea?"
+  },
+  {
+   "lang": "zh",
+   "ids": ["t29a8b135", "t02ff16ba", "te75a4809", "tbb0c8591", "ta2d4eb0f", "tf13be67c", "t775b3737", "t168a0beb"],
+   "when": "服务犬",
+   "ask": "“Service animals” means any service animal, not only dogs. “服务犬” means “service dog”. The farm’s own rule elsewhere says “registered service dog”, so this may be right. Is a wider word wanted?",
+   "suggest": "“服务动物”, only if a wider word is wanted"
+  },
+  {
+   "lang": "zh",
+   "ids": ["tdb06d078"],
+   "when": "并不是为幼童设计的",
+   "ask": "“The farm is not childproof” means the farm is not made safe for small children. “并不是为幼童设计的” says “is not designed for small children”. Is that as strong?"
+  },
+  {
+   "lang": "zh",
+   "ids": ["t252837b0", "t93fcfff0"],
+   "when": "小山羊",
+   "ask": "“Goats” is written 小山羊 (little goats), which fits baby goats best. For goats of any age 山羊 is the usual word. Natural here, or should it change?",
+   "suggest": "“山羊”"
+  },
+  {
+   "lang": "zh",
+   "ids": ["t4b6d3990", "tb89adc3c", "t49c35609", "tb2ff1037", "t46f6aa3b", "td6ecd1d8", "t0b5eaa9e"],
+   "when": "鬼屋小径",
+   "ask": "“Haunted trail” is a spooky walk in the dark on the farm. “鬼屋小径” is “haunted house path”, and a trail is not a house.",
+   "suggest": "“闹鬼小径” or “鬼影小径”"
+  },
+  {
+   "lang": "zh",
+   "ids": ["tff70a484"],
+   "when": "好评如潮",
+   "ask": "“Kind words” is a quiet heading above the reviews. “好评如潮” means “praise pouring in”: stronger than the English.",
+   "suggest": "“暖心评价”"
+  },
+  {
+   "lang": "zh",
+   "ids": ["ja6d59d67"],
+   "when": "您好",
+   "ask": "This is the first line of the e-mail a visitor sends to the farm. It says 您好 (formal you); the rest of the site says 你 (96 times, 您 once). Right for a mail to a business, but not the same register.",
+   "suggest": "Keep, or “你好”"
+  },
+  {
+   "lang": "vi",
+   "ids": ["t02ff16ba", "te75a4809", "tbb0c8591"],
+   "when": "chó phục vụ",
+   "ask": "“Service animals” means any service animal, not only dogs. “chó phục vụ” means “service dog”. The farm’s own rule elsewhere says “registered service dog”, so this may be right. Is a wider word wanted?"
+  },
+  {
+   "lang": "vi",
+   "ids": ["tfd41a510", "t0b5eaa9e", "t910a3c0c", "t277ccb16"],
+   "when": "xe kéo",
+   "ask": "“Wagon ride” is the ride on a wagon pulled by a tractor. “xe kéo” means “pulled cart”. Natural, or is there a better word?"
+  },
+  {
+   "lang": "vi",
+   "ids": ["t4f6c5f3e", "t65ba07a6", "ta41cbda2", "tab37486a", "t7f553727", "tf7ddcce0", "jef0a1e45"],
+   "ask": "“Barn” is the red farm building. Some lines say “chuồng trại” (animal pen) and some say “nhà kho” (storehouse), and “Barn or shed” has both. One word should mean the barn everywhere.",
+   "suggest": "for example “nhà kho nông trại” for the barn, and “chuồng” only for animals"
+  },
+  {
+   "lang": "vi",
+   "ids": ["tca08d18d", "t6498fda1"],
+   "when": "bắp",
+   "ask": "“bắp” (corn, a southern word) is used next to “bí ngô” (pumpkin, a northern word). Both are understood everywhere. Keep, or change?",
+   "suggest": "Keep, or “ngô” for corn"
+  }
+ ],
+ "changed": [
+  {
+   "lang": "es",
+   "id": "t80fb1a73",
+   "when": "más bien solo para fotos",
+   "why": "English says April flowers are for photos ONLY; the Spanish left 'only' out, so it read as 'mostly for photos'. A visitor could expect to cut flowers in April.",
+   "before": "Las flores de abril son más para fotos. Las mejores flores para cortar empiezan en mayo con el clima más cálido."
+  },
+  {
+   "lang": "zh",
+   "id": "t80fb1a73",
+   "when": "更多只是用来拍照的",
+   "why": "English says April flowers are for photos ONLY; the Chinese left 'only' out (更适合拍照 = 'better suited to photos').",
+   "before": "4 月的花更适合拍照。较好的切花要等天气转暖，从 5 月开始。"
+  },
+  {
+   "lang": "vi",
+   "id": "t80fb1a73",
+   "when": "chủ yếu chỉ để chụp ảnh",
+   "why": "English says April flowers are for photos ONLY; the Vietnamese left 'only' out (chủ yếu để chụp ảnh = 'mainly for photos').",
+   "before": "Hoa tháng 4 chủ yếu để chụp ảnh. Hoa cắt đẹp hơn bắt đầu từ tháng 5 khi trời ấm hơn."
+  },
+  {
+   "lang": "es",
+   "id": "j387b526e",
+   "when": "Temporada normalmente de mediados de abril",
+   "why": "English says the season is USUALLY mid-April to early June (it depends on the weather); the Spanish dropped 'usually' and gave the dates as a promise.",
+   "before": "Fresas para recoger, con certificación orgánica del USDA, en Wise Acres, Indian Trail, NC. De mediados de abril a principios de junio. Se requiere reserva."
+  },
+  {
+   "lang": "es",
+   "id": "te6cbae6c",
+   "when": "por un mes o más cada vez",
+   "why": "English: dates without pizza open a month or more AT A TIME (a block of dates). The Spanish said 'with a month or more of notice', which is a different promise (how far ahead a visitor can book).",
+   "before": "<strong>Otoño:</strong> las reservas sin pizza abren con un mes o más de anticipación. Las reservas con pizza abren todos los martes a las 5:00 p. m. para el fin de semana siguiente. Mira el <a1>calendario actual de otoño</a>."
+  },
+  {
+   "lang": "vi",
+   "id": "te6cbae6c",
+   "when": "cho một tháng hoặc hơn mỗi lần",
+   "why": "English: dates without pizza open a month or more AT A TIME (a block of dates). The Vietnamese said 'open one month or more ahead', which is a different promise (how far ahead a visitor can book).",
+   "before": "<strong>Mùa thu:</strong> đặt chỗ không có pizza mở trước một tháng hoặc hơn. Đặt chỗ có pizza mở vào mỗi Thứ Ba lúc 5 giờ chiều cho cuối tuần sắp tới. Xem <a1>lịch mùa thu hiện tại</a>."
+  },
+  {
+   "lang": "hi",
+   "id": "t8aa1a25f",
+   "when": "अमेरिकन फ़ुटबॉल",
+   "why": "English 'Football' means American football (the Spanish, Chinese and Vietnamese say so). In Hindi 'फ़ुटबॉल' alone means soccer.",
+   "before": "Wise Pie वुड-फ़ायर्ड पिज़्ज़ा, बीयर, वाइन और साइडर, Waxhaw Creamery आइसक्रीम और लोकल सामान के लिए आइए। बच्चों को प्लेग्राउंड में दौड़ना और बकरियों को सहलाना बहुत पसंद आएगा। बाहर के टीवी पर फ़ुटबॉल चलता है।"
+  },
+  {
+   "lang": "hi",
+   "id": "j6ed822da",
+   "when": "पारिवारिक स्वामित्व",
+   "why": "English says 'Family owned since 2013'. The Hindi 'पारिवारिक' alone ('family') left out that it is owned by a family; added 'स्वामित्व' (ownership). Written without a verb, as a page description.",
+   "before": "यू-पिक ऑर्गेनिक स्ट्रॉबेरी, ब्लूबेरी, सूरजमुखी और कद्दू। वुड-फ़ायर्ड पिज़्ज़ा। स्कूल टूर, पार्टियाँ और आयोजन। 2013 से पारिवारिक।"
+  },
+  {
+   "lang": "hi",
+   "id": "t62bd89f9",
+   "when": "पारंपरिक (हेयरलूम)",
+   "why": "English 'heirloom' (an old, saved-seed variety). Hindi 'देसी' means a local Indian variety, which is a different idea; 'पारंपरिक (हेयरलूम)' says old traditional variety.",
+   "before": "लाल पुरानी देसी किस्म, मीठी और फलों से लदी। पुराने बगीचे जैसा स्वाद।"
+  }
+ ]
+}

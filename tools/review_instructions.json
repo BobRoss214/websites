@@ -1,0 +1,233 @@
+{
+  "about": "The page of instructions that travels with every review sheet (tools/review_sheet.py reads it). It is NOT site text: it is not part of lang/, it is not checked by the language tests, and no visitor ever sees it. One block per language: the language of the friend, and English (the owner reads the English one). @LANG@ becomes the English name of the language (Spanish, Hindi, Chinese, Vietnamese); @N1@ @N2@ @N3@ become the number of lines with priority 1, 2 and 3. Keep it short and warm: a friend reads this, then decides to help or not.",
+  "en": {
+    "subject": "Could you check the @LANG@ on the Wise Acres website?",
+    "title": "Thank you for checking the @LANG@ on the Wise Acres website",
+    "intro": "Wise Acres is a small family farm in North Carolina. Its website is written in English, and we have put it into @LANG@ too, so that more families can visit. We would be so grateful if you, as a native speaker, would read it and tell us where the @LANG@ sounds wrong, odd or stiff, or means something different from the English. You do not need to know anything about websites.",
+    "time_title": "How long does it take?",
+    "time": "As long as you like. Rows with 1 in the priority column are the most important: what visitors see first, plus the rules about money, rain and safety (@N1@ lines, about 20 minutes). Rows with 2 come next (@N2@ lines, about an hour). Rows with 3 are the rest (@N3@ lines). If you only have 20 minutes, do the rows marked 1 and stop. Every correction helps.",
+    "do_title": "What to do",
+    "do": [
+      "Open the file. The sheet called Texts has one piece of text on each row. Read the English and, next to it, the current @LANG@.",
+      "If the @LANG@ is right and sounds natural, do nothing. Leave the row empty.",
+      "If something is wrong, sounds strange, or means something different from the English, type the better @LANG@ in the correction column. Write the whole line, not only the changed word. Do not type over the current text.",
+      "If the question for you column has a question, please answer it: type a better line in correction, or write “fine as it is” in note.",
+      "Use the note column for anything else you want to tell us."
+    ],
+    "keep_title": "What not to change",
+    "keep": [
+      "Do not change the id, English or current translation columns.",
+      "Names stay as they are: Wise Acres, Wise Pie, The GreenHouse and the other names.",
+      "Numbers, prices, times, dates and e-mail addresses stay exactly the same as in the English.",
+      "Words in curly brackets, such as {n} or {time}, and marks in angle brackets, such as <a1> or <strong>, stay exactly as they are: the website fills them in, or uses them to make links and bold words. Put them where they belong in your sentence."
+    ],
+    "send_title": "When you are done",
+    "send": [
+      "Save the file (Save, not Print). If you are asked which format to keep, keep Excel (.xlsx). If you used Google Sheets: File, Download, Microsoft Excel (.xlsx).",
+      "Send the saved file back to the person who sent it to you, as an attachment.",
+      "Cannot edit a spreadsheet? Then an e-mail with the id of the row and your better line is just as good."
+    ],
+    "thanks": "Thank you. Because of you, visitors who read @LANG@ will feel welcome.",
+    "open_line": "The file opens on a page called “Read me first”. The sheet to work on is the other one, called “Texts”.",
+    "columns_title": "The columns",
+    "columns": [
+      ["id", "a code for the row. Leave it as it is."],
+      ["priority", "1, 2 or 3: what to do first (see above)."],
+      ["where", "where the text is on the website."],
+      ["English", "the original text."],
+      ["current translation", "what the website says now in @LANG@."],
+      ["question for you", "our own question about this line, when we have one."],
+      ["correction", "type your better text here."],
+      ["note", "anything else you want to tell us."]
+    ],
+    "tiers": [
+      "Priority 1: start here (about 20 minutes)",
+      "Priority 2: next (about an hour)",
+      "Priority 3: the rest"
+    ]
+  },
+  "es": {
+    "subject": "¿Puedes revisar el español de la web de la granja Wise Acres?",
+    "title": "Gracias por revisar el español del sitio web de Wise Acres",
+    "intro": "Wise Acres es una pequeña granja familiar en Carolina del Norte. Su sitio web está escrito en inglés y también lo hemos puesto en español, para que más familias puedan visitarnos. Te agradeceríamos muchísimo que, como hablante nativo, lo leyeras y nos dijeras dónde el español suena mal, raro o rígido, o dice algo distinto del inglés. No necesitas saber nada de páginas web.",
+    "time_title": "¿Cuánto tiempo lleva?",
+    "time": "El que tú quieras. Las filas con un 1 en la columna priority son las más importantes: lo primero que ven los visitantes, más las reglas sobre dinero, lluvia y seguridad (@N1@ líneas, unos 20 minutos). Las filas con un 2 siguen (@N2@ líneas, más o menos una hora). Las filas con un 3 son el resto (@N3@ líneas). Si solo tienes 20 minutos, haz las filas con 1 y listo. Cada corrección ayuda.",
+    "do_title": "Qué hacer",
+    "do": [
+      "Abre el archivo. La hoja llamada Texts tiene un texto en cada fila. Lee el inglés y, al lado, el español actual.",
+      "Si el español está bien y suena natural, no hagas nada. Deja la fila vacía.",
+      "Si algo está mal, suena raro o significa algo distinto del inglés, escribe el español mejor en la columna correction. Escribe la frase completa, no solo la palabra que cambia. No escribas encima del texto actual.",
+      "Si la columna question for you trae una pregunta, respóndela, por favor: escribe una frase mejor en correction, o escribe “así está bien” en note.",
+      "Usa la columna note para cualquier otra cosa que quieras decirnos."
+    ],
+    "keep_title": "Qué no cambiar",
+    "keep": [
+      "No cambies las columnas id, English ni current translation.",
+      "Los nombres se quedan como están: Wise Acres, Wise Pie, The GreenHouse y los demás.",
+      "Los números, precios, horas, fechas y direcciones de correo se quedan exactamente igual que en el inglés.",
+      "Las palabras entre llaves, como {n} o {time}, y las marcas entre < >, como <a1> o <strong>, se quedan exactamente como están: el sitio las rellena o las usa para hacer enlaces y letras en negrita. Colócalas donde correspondan en tu frase."
+    ],
+    "send_title": "Cuando termines",
+    "send": [
+      "Guarda el archivo (Guardar, no Imprimir). Si te preguntan qué formato conservar, conserva Excel (.xlsx). Si usaste Google Sheets: Archivo, Descargar, Microsoft Excel (.xlsx).",
+      "Envía el archivo guardado a la persona que te lo mandó, como archivo adjunto.",
+      "¿No puedes editar una hoja de cálculo? Entonces vale igual un correo con el id de la fila y tu frase mejor."
+    ],
+    "thanks": "Gracias de corazón. Por ti, los visitantes que leen español se sentirán bienvenidos.",
+    "open_line": "El archivo se abre en una hoja llamada “Read me first”. La hoja para trabajar es la otra, llamada “Texts”.",
+    "columns_title": "Las columnas",
+    "columns": [
+      ["id", "un código de la fila. Déjalo como está."],
+      ["priority", "1, 2 o 3: qué hacer primero (ver arriba)."],
+      ["where", "dónde está el texto en el sitio web."],
+      ["English", "el texto original."],
+      ["current translation", "lo que dice ahora el sitio en español."],
+      ["question for you", "nuestra pregunta sobre esa línea, cuando la tenemos."],
+      ["correction", "escribe aquí tu texto mejor."],
+      ["note", "cualquier otra cosa que quieras decirnos."]
+    ],
+    "tiers": [
+      "Prioridad 1: empieza aquí (unos 20 minutos)",
+      "Prioridad 2: lo siguiente (más o menos una hora)",
+      "Prioridad 3: el resto"
+    ]
+  },
+  "hi": {
+    "subject": "क्या आप Wise Acres फ़ार्म की वेबसाइट की हिन्दी देख सकते हैं?",
+    "title": "Wise Acres की वेबसाइट की हिन्दी जाँचने के लिए धन्यवाद",
+    "intro": "Wise Acres नॉर्थ कैरोलिना का एक छोटा पारिवारिक फ़ार्म है। इसकी वेबसाइट अंग्रेज़ी में लिखी है, और हमने इसे हिन्दी में भी रखा है ताकि ज़्यादा परिवार यहाँ आ सकें। हमें बहुत खुशी होगी अगर आप, हिन्दी जानने वाले के रूप में, इसे पढ़कर बताएँ कि कहाँ हिन्दी ग़लत, अटपटी या रूखी लगती है, या अंग्रेज़ी से अलग मतलब देती है। आपको वेबसाइट के बारे में कुछ भी जानने की ज़रूरत नहीं है।",
+    "time_title": "कितना समय लगेगा?",
+    "time": "जितना आप चाहें। priority कॉलम में 1 वाली पंक्तियाँ सबसे ज़रूरी हैं: वेबसाइट पर आने वाले लोग जो सबसे पहले देखते हैं, और पैसे, बारिश और सुरक्षा के नियम (@N1@ पंक्तियाँ, लगभग 20 मिनट)। फिर 2 वाली पंक्तियाँ (@N2@ पंक्तियाँ, लगभग एक घंटा)। 3 वाली बाक़ी सब हैं (@N3@ पंक्तियाँ)। अगर आपके पास सिर्फ़ 20 मिनट हैं, तो 1 वाली पंक्तियाँ कर लें और रुक जाएँ। हर सुधार काम आता है।",
+    "do_title": "क्या करना है",
+    "do": [
+      "फ़ाइल खोलें। Texts नाम की शीट की हर पंक्ति में लिखा हुआ एक हिस्सा है। अंग्रेज़ी पढ़ें और उसके बग़ल में मौजूदा हिन्दी पढ़ें।",
+      "अगर हिन्दी ठीक है और स्वाभाविक लगती है, तो कुछ न करें। पंक्ति ख़ाली छोड़ दें।",
+      "अगर कुछ ग़लत है, अटपटा लगता है, या अंग्रेज़ी से अलग मतलब देता है, तो बेहतर हिन्दी correction कॉलम में लिखें। पूरा वाक्य लिखें, सिर्फ़ बदला हुआ शब्द नहीं। मौजूदा हिन्दी के ऊपर न लिखें।",
+      "अगर question for you कॉलम में कोई सवाल है, तो कृपया उसका जवाब दें: correction में बेहतर वाक्य लिखें, या note में “जैसा है ठीक है” लिखें।",
+      "और जो भी हमें बताना चाहें, वह note कॉलम में लिखें।"
+    ],
+    "keep_title": "क्या नहीं बदलना है",
+    "keep": [
+      "id, English और current translation कॉलम न बदलें।",
+      "नाम जैसे हैं वैसे ही रहेंगे: Wise Acres, Wise Pie, The GreenHouse और बाक़ी नाम।",
+      "संख्याएँ, दाम, समय, तारीख़ें और ई-मेल पते बिल्कुल अंग्रेज़ी जैसे ही रहेंगे।",
+      "{n} या {time} जैसे कर्ली ब्रैकेट वाले शब्द, और <a1> या <strong> जैसे < > वाले निशान बिल्कुल जैसे हैं वैसे ही रखें: वेबसाइट इन्हें अपने आप भरती है, या इनसे लिंक और मोटे अक्षर बनाती है। इन्हें अपने वाक्य में सही जगह पर रखें।"
+    ],
+    "send_title": "काम पूरा होने पर",
+    "send": [
+      "फ़ाइल सेव करें (Save, Print नहीं)। अगर पूछा जाए कि कौन-सा फ़ॉर्मैट रखना है, तो Excel (.xlsx) रखें। अगर आपने Google Sheets इस्तेमाल किया: File, Download, Microsoft Excel (.xlsx)।",
+      "सेव की हुई फ़ाइल उस व्यक्ति को लौटा दें जिसने आपको भेजी थी, अटैचमेंट के रूप में।",
+      "स्प्रेडशीट बदलना मुश्किल है? तब पंक्ति की id और आपका बेहतर वाक्य ई-मेल में लिखकर भेजना भी उतना ही अच्छा है।"
+    ],
+    "thanks": "बहुत-बहुत धन्यवाद। आपकी वजह से हिन्दी पढ़ने वाले मेहमान यहाँ अपनापन महसूस करेंगे।",
+    "open_line": "फ़ाइल “Read me first” नाम के पन्ने पर खुलती है। काम करने की शीट दूसरी है, जिसका नाम “Texts” है।",
+    "columns_title": "कॉलम",
+    "columns": [
+      ["id", "पंक्ति का कोड। इसे जैसा है वैसा रहने दें।"],
+      ["priority", "1, 2 या 3: पहले क्या करना है (ऊपर देखें)।"],
+      ["where", "यह हिस्सा वेबसाइट पर कहाँ है।"],
+      ["English", "मूल अंग्रेज़ी।"],
+      ["current translation", "वेबसाइट पर अभी हिन्दी में जो लिखा है।"],
+      ["question for you", "इस पंक्ति के बारे में हमारा सवाल, जब हमारे पास हो।"],
+      ["correction", "बेहतर हिन्दी यहाँ लिखें।"],
+      ["note", "और जो भी हमें बताना चाहें।"]
+    ],
+    "tiers": [
+      "प्राथमिकता 1: यहाँ से शुरू करें (लगभग 20 मिनट)",
+      "प्राथमिकता 2: उसके बाद (लगभग एक घंटा)",
+      "प्राथमिकता 3: बाक़ी सब"
+    ]
+  },
+  "zh": {
+    "subject": "你能帮忙看看 Wise Acres 农场网站的中文吗？",
+    "title": "感谢你帮忙检查 Wise Acres 网站的中文",
+    "intro": "Wise Acres 是北卡罗来纳州的一家小型家庭农场。网站原文是英文，我们也做了中文版，让更多家庭能来农场玩。如果你是中文母语者，能读一读，告诉我们哪里的中文读起来不对、别扭、生硬，或者和英文的意思不一样，我们会非常感激。你不需要懂任何网站方面的知识。",
+    "time_title": "要花多长时间？",
+    "time": "时间随你定。priority 列里标 1 的行最重要：是访客最先看到的内容，加上关于费用、下雨和安全的规定（@N1@ 行，大约 20 分钟）。标 2 的行其次（@N2@ 行，大约一小时）。标 3 的是其余部分（@N3@ 行）。如果你只有 20 分钟，做完标 1 的行就可以停了。每一处修改都有帮助。",
+    "do_title": "怎么做",
+    "do": [
+      "打开文件。名为 Texts 的工作表里，每一行是一段文字。请看英文，以及它旁边现在的中文。",
+      "如果中文没问题、读起来自然，什么都不用做，这一行留空。",
+      "如果有错、读起来别扭，或意思和英文不同，请把更好的中文写在 correction 列。请写整句话，不要只写改动的词。不要直接改 current translation 那一列。",
+      "如果 question for you 列里有问题，请回答：在 correction 里写一句更好的话，或者在 note 里写“这样就好”。",
+      "其他想告诉我们的话，写在 note 列。"
+    ],
+    "keep_title": "哪些不要改",
+    "keep": [
+      "请不要改 id、English 和 current translation 这几列。",
+      "名称保持原样：Wise Acres、Wise Pie、The GreenHouse 等。",
+      "数字、价格、时间、日期和电子邮件地址要和英文完全一致。",
+      "花括号里的词，如 {n} 或 {time}，以及尖括号里的标记，如 <a1> 或 <strong>，请原样保留：网站会自动填入它们，或用它们做链接和粗体字。请把它们放在你句子里合适的位置。"
+    ],
+    "send_title": "做完以后",
+    "send": [
+      "保存文件（点“保存”，不是“打印”）。如果被问到保留哪种格式，请保留 Excel (.xlsx)。如果你用的是 Google 表格：文件 > 下载 > Microsoft Excel (.xlsx)。",
+      "把保存好的文件作为附件，发回给发给你的那个人。",
+      "不方便编辑表格？那就发一封邮件，写上这一行的 id 和你改好的句子，同样可以。"
+    ],
+    "thanks": "非常感谢。有了你，读中文的访客会觉得被欢迎。",
+    "open_line": "文件打开时显示的是名为“Read me first”的页面。要填写的是另一个工作表，名为“Texts”。",
+    "columns_title": "各列的意思",
+    "columns": [
+      ["id", "这一行的编号，保持原样。"],
+      ["priority", "1、2 或 3：先做哪些（见上）。"],
+      ["where", "这段文字在网站上的位置。"],
+      ["English", "英文原文。"],
+      ["current translation", "网站现在的中文。"],
+      ["question for you", "我们对这句话的疑问（有的话）。"],
+      ["correction", "把更好的中文写在这里。"],
+      ["note", "其他想告诉我们的话。"]
+    ],
+    "tiers": [
+      "优先级 1：从这里开始（大约 20 分钟）",
+      "优先级 2：接下来（大约一小时）",
+      "优先级 3：其余部分"
+    ]
+  },
+  "vi": {
+    "subject": "Bạn có thể xem giúp tiếng Việt trên trang web của nông trại Wise Acres không?",
+    "title": "Cảm ơn bạn đã kiểm tra tiếng Việt trên trang web của Wise Acres",
+    "intro": "Wise Acres là một nông trại gia đình nhỏ ở Bắc Carolina. Trang web được viết bằng tiếng Anh, và chúng tôi cũng đã làm bản tiếng Việt để nhiều gia đình hơn có thể đến thăm. Chúng tôi sẽ rất biết ơn nếu bạn, là người bản ngữ, đọc và cho biết chỗ nào tiếng Việt nghe sai, lạ, cứng, hoặc có nghĩa khác với tiếng Anh. Bạn không cần biết gì về trang web.",
+    "time_title": "Mất bao lâu?",
+    "time": "Tùy bạn. Các dòng có số 1 trong cột priority là quan trọng nhất: những gì khách thấy đầu tiên, cùng các quy định về tiền, mưa và an toàn (@N1@ dòng, khoảng 20 phút). Các dòng số 2 đến sau (@N2@ dòng, khoảng một giờ). Các dòng số 3 là phần còn lại (@N3@ dòng). Nếu bạn chỉ có 20 phút, hãy làm các dòng số 1 rồi dừng lại. Mỗi chỗ sửa đều có ích.",
+    "do_title": "Việc cần làm",
+    "do": [
+      "Mở tệp. Trang tính tên Texts có một đoạn chữ trên mỗi dòng. Hãy đọc tiếng Anh và bản tiếng Việt hiện tại ở bên cạnh.",
+      "Nếu tiếng Việt đúng và nghe tự nhiên, bạn không cần làm gì. Cứ để trống dòng đó.",
+      "Nếu có chỗ sai, nghe lạ, hoặc có nghĩa khác với tiếng Anh, hãy gõ bản tiếng Việt tốt hơn vào cột correction. Viết cả câu, không chỉ từ được đổi. Đừng gõ đè lên bản hiện tại.",
+      "Nếu cột question for you có câu hỏi, xin bạn trả lời: gõ câu tốt hơn vào correction, hoặc viết “để nguyên là được” vào note.",
+      "Cột note dùng cho mọi điều khác bạn muốn nói với chúng tôi."
+    ],
+    "keep_title": "Không được sửa",
+    "keep": [
+      "Đừng sửa các cột id, English và current translation.",
+      "Tên giữ nguyên: Wise Acres, Wise Pie, The GreenHouse và các tên khác.",
+      "Số, giá tiền, giờ, ngày và địa chỉ e-mail phải giống hệt tiếng Anh.",
+      "Các từ trong dấu ngoặc nhọn như {n} hoặc {time}, và các dấu trong < > như <a1> hoặc <strong>, hãy giữ nguyên: trang web tự điền chúng, hoặc dùng chúng để tạo liên kết và chữ đậm. Hãy đặt chúng đúng chỗ trong câu của bạn."
+    ],
+    "send_title": "Khi làm xong",
+    "send": [
+      "Lưu tệp (Save, không phải Print). Nếu được hỏi giữ định dạng nào, hãy giữ Excel (.xlsx). Nếu bạn dùng Google Sheets: File, Download, Microsoft Excel (.xlsx).",
+      "Gửi tệp đã lưu lại cho người đã gửi cho bạn, dưới dạng tệp đính kèm.",
+      "Không sửa được bảng tính? Vậy một e-mail ghi id của dòng và câu tốt hơn của bạn cũng được."
+    ],
+    "thanks": "Xin cảm ơn bạn rất nhiều. Nhờ bạn, những khách đọc tiếng Việt sẽ thấy mình được chào đón.",
+    "open_line": "Tệp mở ra ở trang tên “Read me first”. Trang tính để làm việc là trang còn lại, tên “Texts”.",
+    "columns_title": "Các cột",
+    "columns": [
+      ["id", "mã của dòng. Cứ để nguyên."],
+      ["priority", "1, 2 hoặc 3: làm phần nào trước (xem ở trên)."],
+      ["where", "đoạn chữ này nằm ở đâu trên trang web."],
+      ["English", "bản gốc tiếng Anh."],
+      ["current translation", "những gì trang web đang ghi bằng tiếng Việt."],
+      ["question for you", "câu hỏi của chúng tôi về dòng này, khi có."],
+      ["correction", "gõ bản tiếng Việt tốt hơn vào đây."],
+      ["note", "mọi điều khác bạn muốn nói."]
+    ],
+    "tiers": [
+      "Ưu tiên 1: bắt đầu từ đây (khoảng 20 phút)",
+      "Ưu tiên 2: tiếp theo (khoảng một giờ)",
+      "Ưu tiên 3: phần còn lại"
+    ]
+  }
+}

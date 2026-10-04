@@ -1,0 +1,1568 @@
+[
+ {
+  "id": "a01",
+  "cat": "content",
+  "desc": "Greenhouse closing time changed to 18:00 in content.js only",
+  "ops": [
+   {
+    "file": "js/content.js",
+    "find": "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00' }",
+    "repl": "greenhouse: { days: [5, 6, 0], open: '10:00', close: '18:00' }",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency"
+  ],
+  "browser": [
+   "live"
+  ],
+  "build": false
+ },
+ {
+  "id": "a02",
+  "cat": "content",
+  "desc": "Pizza days changed to Thu-Sun in content.js only",
+  "ops": [
+   {
+    "file": "js/content.js",
+    "find": "pizza:      { days: [5, 6, 0],",
+    "repl": "pizza:      { days: [4, 5, 6, 0],",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency"
+  ],
+  "browser": [
+   "live"
+  ],
+  "build": false
+ },
+ {
+  "id": "a03",
+  "cat": "content",
+  "desc": "Missing comma in content.js (the owner edit that breaks the file)",
+  "ops": [
+   {
+    "file": "js/content.js",
+    "find": "  noticeUntil: '',\n",
+    "repl": "  noticeUntil: ''\n",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity",
+   "sitecheck-values"
+  ],
+  "browser": [
+   "live"
+  ],
+  "build": false
+ },
+ {
+  "id": "a04",
+  "cat": "content",
+  "desc": "A closure date that is not a real day",
+  "ops": [
+   {
+    "file": "js/content.js",
+    "find": "  closures: [],",
+    "repl": "  closures: ['2026-11-31'],",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "sitecheck-values"
+  ],
+  "browser": [
+   "sitecheck-values"
+  ],
+  "build": false
+ },
+ {
+  "id": "a05",
+  "cat": "content",
+  "desc": "Fall farm days changed to a number that is not a weekday",
+  "ops": [
+   {
+    "file": "js/content.js",
+    "find": "farm:       { fall: [4, 5, 6, 0] }",
+    "repl": "farm:       { fall: [4, 5, 6, 7] }",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "sitecheck-values"
+  ],
+  "browser": [
+   "sitecheck-values"
+  ],
+  "build": false
+ },
+ {
+  "id": "a06",
+  "cat": "content",
+  "desc": "A data-until date typo (month 13) on the New tomatoes chip",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "data-until=\"2026-10-31\"",
+    "repl": "data-until=\"2026-13-31\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity",
+   "dated"
+  ],
+  "browser": [
+   "dated"
+  ],
+  "build": false
+ },
+ {
+  "id": "a07",
+  "cat": "content",
+  "desc": "A data-until date written 2026-10-3 (one digit)",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "data-until=\"2026-10-31\"",
+    "repl": "data-until=\"2026-10-3\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity",
+   "dated"
+  ],
+  "browser": [
+   "dated"
+  ],
+  "build": false
+ },
+ {
+  "id": "a08",
+  "cat": "content",
+  "desc": "Fall season starts Sept 13 -> Oct 31 in season.js",
+  "ops": [
+   {
+    "file": "js/season.js",
+    "find": "start: function (y) { return new Date(y, 8, 13); }",
+    "repl": "start: function (y) { return new Date(y, 9, 31); }",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "calendar-doc",
+   "consistency"
+  ],
+  "browser": [
+   "hero"
+  ],
+  "build": false
+ },
+ {
+  "id": "a09",
+  "cat": "content",
+  "desc": "Spring starts a month early in season.js",
+  "ops": [
+   {
+    "file": "js/season.js",
+    "find": "start: function (y) { return new Date(y, 3, 15); }",
+    "repl": "start: function (y) { return new Date(y, 2, 15); }",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "calendar-doc",
+   "consistency"
+  ],
+  "browser": [
+   "hero"
+  ],
+  "build": false
+ },
+ {
+  "id": "a10",
+  "cat": "content",
+  "desc": "Price changed in index.html ($3 -> $4 per person) but not in the translations",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "plus $3 per person",
+    "repl": "plus $4 per person",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency",
+   "pipeline"
+  ],
+  "browser": [],
+  "build": true
+ },
+ {
+  "id": "a11",
+  "cat": "content",
+  "desc": "Pumpkin pound price changed in index.html only",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "$4.50 per pound",
+    "repl": "$5.50 per pound",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency",
+   "pipeline"
+  ],
+  "browser": [],
+  "build": true
+ },
+ {
+  "id": "a12",
+  "cat": "content",
+  "desc": "Phone number differs in one place",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "tel:+17042076347",
+    "repl": "tel:+17042076348",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "a13",
+  "cat": "content",
+  "desc": "Visible phone number differs from the tel: link",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "704-207-6347",
+    "repl": "704-207-6348",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "a14",
+  "cat": "content",
+  "desc": "Street address number changed in one place",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "4701 Hartis Rd, Indian Trail",
+    "repl": "4710 Hartis Rd, Indian Trail",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "a15",
+  "cat": "content",
+  "desc": "Opening hours text in index.html changed (10 am-8 pm -> 10 am-9 pm), content.js not",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "Fri&ndash;Sun, 10 am&ndash;8 pm",
+    "repl": "Fri&ndash;Sun, 10 am&ndash;9 pm",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency",
+   "pipeline"
+  ],
+  "browser": [],
+  "build": true
+ },
+ {
+  "id": "a16",
+  "cat": "content",
+  "desc": "A translation line deleted (es)",
+  "ops": [
+   {
+    "file": "lang/src/es.json",
+    "find": " \"(Your time: {time})\": \"(Tu hora: {time})\",\n",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "pipeline",
+   "review-sheet",
+   "plain-lint"
+  ],
+  "browser": [],
+  "build": true
+ },
+ {
+  "id": "a17",
+  "cat": "content",
+  "desc": "A Spanish text replaced by English (nothing translated)",
+  "ops": [
+   {
+    "file": "lang/src/es.json",
+    "find": "\"¡100 fresas! Tu canasta se desborda. ¡Hora de hacer mermelada!\"",
+    "repl": "\"100 strawberries! Your basket is overflowing. Time to make jam!\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "pipeline",
+   "review-sheet"
+  ],
+  "browser": [
+   "languages"
+  ],
+  "build": true
+ },
+ {
+  "id": "a18",
+  "cat": "content",
+  "desc": "Wrong weekday in Spanish (jueves -> miercoles)",
+  "ops": [
+   {
+    "file": "lang/src/es.json",
+    "find": "De jueves a domingo. Los niños",
+    "repl": "De miércoles a domingo. Los niños",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency"
+  ],
+  "browser": [
+   "languages"
+  ],
+  "build": true
+ },
+ {
+  "id": "a19",
+  "cat": "content",
+  "desc": "{placeholder} dropped from a translation",
+  "ops": [
+   {
+    "file": "lang/src/es.json",
+    "find": "\"(Tu hora: {time})\"",
+    "repl": "\"(Tu hora: )\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "pipeline",
+   "consistency"
+  ],
+  "browser": [
+   "languages"
+  ],
+  "build": true
+ },
+ {
+  "id": "a20",
+  "cat": "content",
+  "desc": "Price changed in the Vietnamese translation ($4.50 -> $5.50)",
+  "ops": [
+   {
+    "file": "lang/src/vi.json",
+    "find": "\"$4.50 mỗi người\"",
+    "repl": "\"$5.50 mỗi người\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency"
+  ],
+  "browser": [],
+  "build": true
+ },
+ {
+  "id": "a21",
+  "cat": "content",
+  "desc": "Built lang/es.js edited by hand (not rebuilt from lang/src)",
+  "ops": [
+   {
+    "file": "lang/es.js",
+    "find": "Tu hora",
+    "repl": "Su hora",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "pipeline"
+  ],
+  "browser": [],
+  "build": true
+ },
+ {
+  "id": "a22",
+  "cat": "content",
+  "desc": "Built first-visit.html edited by hand (source pages/first-visit.html not changed)",
+  "ops": [
+   {
+    "file": "first-visit.html",
+    "find": "<title>",
+    "repl": "<title>X ",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "pipeline",
+   "seo"
+  ],
+  "browser": [],
+  "build": true
+ },
+ {
+  "id": "b01",
+  "cat": "structure",
+  "desc": "Broken #anchor (#tomatoes -> #tomatoe)",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "href=\"#tomatoes\"",
+    "repl": "href=\"#tomatoe\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b02",
+  "cat": "structure",
+  "desc": "Image path typo in index.html",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "assets/photos/goat-with-pumpkins.webp",
+    "repl": "assets/photos/goat-with-pumpkin.webp",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "files-audit",
+   "validity"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b03",
+  "cat": "structure",
+  "desc": "An image loses its alt attribute",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "(<img[^>]*?) alt=\"[^\"]*\"",
+    "repl": "\\1",
+    "regex": true,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b04",
+  "cat": "structure",
+  "desc": "The menu button loses its aria-label",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": " aria-label=\"Open menu\"",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity",
+   "keyboard"
+  ],
+  "browser": [
+   "smoke"
+  ],
+  "build": false
+ },
+ {
+  "id": "b05",
+  "cat": "structure",
+  "desc": "A heading level skipped (h2 -> h4)",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "<h2( data-t=\"t69d94566\" id=\"week-h\">)(.*?)</h2>",
+    "repl": "<h4\\1\\2</h4>",
+    "regex": true,
+    "flags": "s",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b06",
+  "cat": "structure",
+  "desc": "Duplicate id (visit-h used twice)",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "id=\"visit-h\"",
+    "repl": "id=\"week-h\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b07",
+  "cat": "structure",
+  "desc": "A script tag removed (js/live.js)",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "  <script src=\"js/live.js\"></script>\n",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "no-js",
+   "validity",
+   "pipeline"
+  ],
+  "browser": [
+   "live"
+  ],
+  "build": false
+ },
+ {
+  "id": "b08",
+  "cat": "structure",
+  "desc": "Script order swapped: guard.js after content.js",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "  <script src=\"js/guard.js\"></script>\n  <script src=\"js/content.js\"></script>\n",
+    "repl": "  <script src=\"js/content.js\"></script>\n  <script src=\"js/guard.js\"></script>\n",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "pipeline",
+   "sitecheck"
+  ],
+  "browser": [
+   "sitecheck"
+  ],
+  "build": false
+ },
+ {
+  "id": "b09",
+  "cat": "structure",
+  "desc": "html lang attribute wrong",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "<html lang=\"en\" class=\"no-js\">",
+    "repl": "<html lang=\"enn\" class=\"no-js\">",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b10",
+  "cat": "structure",
+  "desc": "Canonical points to another host",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "<link rel=\"canonical\" href=\"https://www.wiseacresorganic.com/\">",
+    "repl": "<link rel=\"canonical\" href=\"https://wiseacresorganic.com/\">",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "public-site",
+   "seo"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b11",
+  "cat": "structure",
+  "desc": "og:image points to a file that is not there (wise-pie)",
+  "ops": [
+   {
+    "file": "wise-pie.html",
+    "find": "assets/og-wise-pie.png",
+    "repl": "assets/og-wise-pie-2.png",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "seo",
+   "public-site",
+   "files-audit"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b12",
+  "cat": "structure",
+  "desc": "Sitemap loses a page",
+  "ops": [
+   {
+    "file": "sitemap.xml",
+    "find": "  <url><loc>https://www.wiseacresorganic.com/school-field-trips.html</loc></url>\n",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "public-site",
+   "seo"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b13",
+  "cat": "structure",
+  "desc": "Manifest JSON broken (comma removed)",
+  "ops": [
+   {
+    "file": "manifest.webmanifest",
+    "find": "\"short_name\": \"Wise Acres\",",
+    "repl": "\"short_name\": \"Wise Acres\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b14",
+  "cat": "structure",
+  "desc": "_headers loses the noindex for tests/",
+  "ops": [
+   {
+    "file": "_headers",
+    "find": "/tests/*\n  X-Robots-Tag: noindex\n\n",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "public-site"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b15",
+  "cat": "structure",
+  "desc": "robots.txt blocks the whole site",
+  "ops": [
+   {
+    "file": "robots.txt",
+    "find": "Disallow: /print/",
+    "repl": "Disallow: /",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "public-site",
+   "seo",
+   "launch-check"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b16",
+  "cat": "structure",
+  "desc": "JSON-LD broken (a comma lost) on the Wise Pie page",
+  "ops": [
+   {
+    "file": "wise-pie.html",
+    "find": "\"@context\": \"https://schema.org\",",
+    "repl": "\"@context\": \"https://schema.org\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity",
+   "seo"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b17",
+  "cat": "structure",
+  "desc": "Skip link points at an id that does not exist",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "class=\"skip-link\" href=\"#main\"",
+    "repl": "class=\"skip-link\" href=\"#mian\"",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity"
+  ],
+  "browser": [
+   "keyboard"
+  ],
+  "build": false
+ },
+ {
+  "id": "b18",
+  "cat": "structure",
+  "desc": "Viewport meta removed from the home page",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity",
+   "seo"
+  ],
+  "browser": [
+   "smoke"
+  ],
+  "build": false
+ },
+ {
+  "id": "b19",
+  "cat": "structure",
+  "desc": "color-scheme only light meta removed",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "  <meta name=\"color-scheme\" content=\"only light\">\n",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity",
+   "auto-dark"
+  ],
+  "browser": [
+   "auto-dark"
+  ],
+  "build": false
+ },
+ {
+  "id": "b20",
+  "cat": "structure",
+  "desc": "404 page loses noindex",
+  "ops": [
+   {
+    "file": "404.html",
+    "find": "  <meta name=\"robots\" content=\"noindex\">\n",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "seo",
+   "public-site",
+   "launch-check"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b21",
+  "cat": "structure",
+  "desc": "Home page title is the same as another page",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "<title>Wise Acres Organic Farm | U-Pick Farm in Indian Trail, NC</title>",
+    "repl": "<title>Wise Pie</title>",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "seo"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b22",
+  "cat": "structure",
+  "desc": "mailto link mistyped",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "href=\"mailto:",
+    "repl": "href=\"mailto;",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "b23",
+  "cat": "structure",
+  "desc": "Link with target=_blank loses rel",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": " target=\"_blank\" rel=\"noopener\">Reserve your time",
+    "repl": " target=\"_blank\">Reserve your time",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "validity"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "c01",
+  "cat": "behaviour",
+  "desc": "Language choice not remembered (key renamed on write)",
+  "ops": [
+   {
+    "file": "js/i18n.js",
+    "find": "store.set('wa.lang', code)",
+    "repl": "store.set('wa.lang.x', code)",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "privacy"
+  ],
+  "browser": [
+   "i18n"
+  ],
+  "build": false
+ },
+ {
+  "id": "c02",
+  "cat": "behaviour",
+  "desc": "Season picker buttons do nothing",
+  "ops": [
+   {
+    "file": "js/hero.js",
+    "find": "function setSeason(id, userAction) {",
+    "repl": "function setSeason(id, userAction) { if (userAction) return;",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "farm-seasons"
+  ],
+  "build": false
+ },
+ {
+  "id": "c03",
+  "cat": "behaviour",
+  "desc": "FAQ answers hidden by a CSS rule",
+  "ops": [
+   {
+    "file": "css/extras.css",
+    "find": "",
+    "repl": "\n#faq details[open]>*:not(summary){display:none!important}\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "smoke"
+  ],
+  "build": false
+ },
+ {
+  "id": "c04",
+  "cat": "behaviour",
+  "desc": "Photo viewer: Right arrow goes back",
+  "ops": [
+   {
+    "file": "js/main.js",
+    "find": "if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }",
+    "repl": "if (e.key === 'ArrowRight') { e.preventDefault(); go(-1); }",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "gallery"
+  ],
+  "build": false
+ },
+ {
+  "id": "c05",
+  "cat": "behaviour",
+  "desc": "Photo viewer: the Next button goes back",
+  "ops": [
+   {
+    "file": "js/main.js",
+    "find": "next = arrow('lightbox-next', 1);",
+    "repl": "next = arrow('lightbox-next', -1);",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "gallery"
+  ],
+  "build": false
+ },
+ {
+  "id": "c06",
+  "cat": "behaviour",
+  "desc": "Drive time box calls another search host",
+  "ops": [
+   {
+    "file": "js/features.js",
+    "find": "https://nominatim.openstreetmap.org/search",
+    "repl": "https://nominatim.example-maps.org/search",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "privacy"
+  ],
+  "browser": [
+   "privacy"
+  ],
+  "build": false
+ },
+ {
+  "id": "c07",
+  "cat": "behaviour",
+  "desc": "A console error at start (call to a function that does not exist)",
+  "ops": [
+   {
+    "file": "js/main.js",
+    "find": "function initBee() {",
+    "repl": "function initBee() { missingHelper();",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "live"
+  ],
+  "build": false
+ },
+ {
+  "id": "c08",
+  "cat": "behaviour",
+  "desc": "A request to an outside host on every page",
+  "ops": [
+   {
+    "file": "js/main.js",
+    "find": "",
+    "repl": "\nnew Image().src = 'https://stats.example.net/p.gif';\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "privacy"
+  ],
+  "build": false
+ },
+ {
+  "id": "c09",
+  "cat": "behaviour",
+  "desc": "The typed address is written to localStorage",
+  "ops": [
+   {
+    "file": "js/features.js",
+    "find": "",
+    "repl": "\ndocument.addEventListener('submit', function (e) { try { var i = e.target.querySelector('input[type=text],input[type=email],input:not([type])'); if (i) localStorage.setItem('wa.last', i.value); } catch (x) { /* none */ } });\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [
+   "privacy"
+  ],
+  "browser": [
+   "privacy"
+  ],
+  "build": false
+ },
+ {
+  "id": "c10",
+  "cat": "behaviour",
+  "desc": "A cookie is set on every visit",
+  "ops": [
+   {
+    "file": "js/main.js",
+    "find": "",
+    "repl": "\ndocument.cookie = 'seen=1; path=/';\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "privacy"
+  ],
+  "build": false
+ },
+ {
+  "id": "c11",
+  "cat": "behaviour",
+  "desc": "Reserve link: one booking address differs (last digit)",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "category=41576YNUUTJ173F2927356",
+    "repl": "category=41576YNUUTJ173F2927357",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "consistency"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "c12",
+  "cat": "behaviour",
+  "desc": "Open-now badges use Chicago time",
+  "ops": [
+   {
+    "file": "js/live.js",
+    "find": "const TZ = 'America/New_York';",
+    "repl": "const TZ = 'America/Chicago';",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "live"
+  ],
+  "build": false
+ },
+ {
+  "id": "c13",
+  "cat": "behaviour",
+  "desc": "Pizza reservations open at 4 PM (default 16:00) instead of 5 PM",
+  "ops": [
+   {
+    "file": "js/features.js",
+    "find": "dataset.releaseTime || '') ? table.dataset.releaseTime : '17:00'",
+    "repl": "dataset.releaseTime || '') ? table.dataset.releaseTime : '16:00'",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "features"
+  ],
+  "build": false
+ },
+ {
+  "id": "c14",
+  "cat": "behaviour",
+  "desc": "Calendar file lines end in LF, not CRLF",
+  "ops": [
+   {
+    "file": "js/features.js",
+    "find": "return out.join('\\r\\n ');",
+    "repl": "return out.join('\\n ');",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "messages"
+  ],
+  "build": false
+ },
+ {
+  "id": "c15",
+  "cat": "behaviour",
+  "desc": "Analytics script tag removed from every page in the home page",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "  <script src=\"js/analytics.js\"></script>\n",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "pipeline",
+   "validity"
+  ],
+  "browser": [
+   "analytics"
+  ],
+  "build": false
+ },
+ {
+  "id": "c16",
+  "cat": "behaviour",
+  "desc": "Signup is sent to another host",
+  "ops": [
+   {
+    "file": "js/features.js",
+    "find": "u.pathname = '/subscribe/post-json';",
+    "repl": "u.pathname = '/subscribe/post-json'; u.hostname = 'forms.example.net';",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "privacy"
+  ],
+  "browser": [
+   "features"
+  ],
+  "build": false
+ },
+ {
+  "id": "c17",
+  "cat": "behaviour",
+  "desc": "Signup address check accepts any host",
+  "ops": [
+   {
+    "file": "js/features.js",
+    "find": "!/(^|\\.)list-manage\\.com$/i.test(u.hostname) || ",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "sitecheck-values"
+  ],
+  "build": false
+ },
+ {
+  "id": "d01",
+  "cat": "look",
+  "desc": "A CSS rule hides every red (Reserve) button",
+  "ops": [
+   {
+    "file": "css/extras.css",
+    "find": "",
+    "repl": "\n.btn-red{display:none!important}\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "smoke"
+  ],
+  "build": false
+ },
+ {
+  "id": "d02",
+  "cat": "look",
+  "desc": "Body text colour equals the background",
+  "ops": [
+   {
+    "file": "css/extras.css",
+    "find": "",
+    "repl": "\nbody{color:var(--cream)!important}\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [
+   "axe"
+  ],
+  "browser": [
+   "auto-dark"
+  ],
+  "build": false
+ },
+ {
+  "id": "d03",
+  "cat": "look",
+  "desc": "A section wider than a 320 px phone",
+  "ops": [
+   {
+    "file": "css/extras.css",
+    "find": "",
+    "repl": "\n@media (max-width:360px){.section>.wrap{min-width:420px}}\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "smoke"
+  ],
+  "build": false
+ },
+ {
+  "id": "d04",
+  "cat": "look",
+  "desc": "Keyboard focus outline removed everywhere",
+  "ops": [
+   {
+    "file": "css/extras.css",
+    "find": "",
+    "repl": "\n*:focus-visible{outline:none!important;box-shadow:none!important}\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "smoke"
+  ],
+  "build": false
+ },
+ {
+  "id": "d05",
+  "cat": "look",
+  "desc": "A 5 MB picture added and shown on the home page",
+  "ops": [
+   {
+    "write": "assets/photos/huge-original.jpg",
+    "size": 5000000
+   },
+   {
+    "file": "index.html",
+    "find": "</body>",
+    "repl": "<img src=\"assets/photos/huge-original.jpg\" alt=\"Big picture\">\n</body>",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "files-audit"
+  ],
+  "browser": [],
+  "build": false
+ },
+ {
+  "id": "d06",
+  "cat": "look",
+  "desc": "A 4-second block of the main thread at start",
+  "ops": [
+   {
+    "file": "js/main.js",
+    "find": "",
+    "repl": "\n(function () { var t = Date.now(); while (Date.now() - t < 4000) { /* busy */ } })();\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "live"
+  ],
+  "build": false
+ },
+ {
+  "id": "d07",
+  "cat": "look",
+  "desc": "Base font size 8px on small screens",
+  "ops": [
+   {
+    "file": "css/extras.css",
+    "find": "",
+    "repl": "\n@media (max-width:500px){html{font-size:8px}}\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "layout-sweep"
+  ],
+  "build": false
+ },
+ {
+  "id": "d08",
+  "cat": "look",
+  "desc": "Every picture stretched to 100px high",
+  "ops": [
+   {
+    "file": "css/extras.css",
+    "find": "",
+    "repl": "\nimg{height:100px!important;width:100%!important}\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "layout-sweep"
+  ],
+  "build": false
+ },
+ {
+  "id": "d09",
+  "cat": "look",
+  "desc": "Header covers the first screen (fixed, 60 percent high)",
+  "ops": [
+   {
+    "file": "css/extras.css",
+    "find": "",
+    "repl": "\n.site-header{position:fixed;height:60vh}\n",
+    "regex": false,
+    "flags": "",
+    "count": 0
+   }
+  ],
+  "expect": [],
+  "browser": [
+   "layout-sweep"
+  ],
+  "build": false
+ },
+ {
+  "id": "e01",
+  "cat": "tools",
+  "desc": "make_deploy_folder stops skipping tests/ while copying (EQUIVALENT: a second rule still keeps tests/ out of the upload)",
+  "ops": [
+   {
+    "file": "tools/make_deploy_folder.py",
+    "find": "'__pycache__', 'tests'}",
+    "repl": "'__pycache__'}",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "deploy"
+  ],
+  "browser": [
+   "deploy"
+  ],
+  "build": false
+ },
+ {
+  "id": "e02",
+  "cat": "tools",
+  "desc": "make_deploy_folder forgets _headers",
+  "ops": [
+   {
+    "file": "tools/make_deploy_folder.py",
+    "find": "'manifest.webmanifest', '_headers', '_redirects'",
+    "repl": "'manifest.webmanifest', '_redirects'",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "deploy"
+  ],
+  "browser": [
+   "deploy"
+  ],
+  "build": false
+ },
+ {
+  "id": "e03",
+  "cat": "tools",
+  "desc": "launch_check: robots check never fails",
+  "ops": [
+   {
+    "file": "tools/launch_check.py",
+    "find": "FORBIDDEN_IN_SITEMAP = (",
+    "repl": "FORBIDDEN_IN_SITEMAP = (\"/nothing-\",) + (",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "launch-check"
+  ],
+  "browser": [],
+  "build": false
+ }
+]

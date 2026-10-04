@@ -23,11 +23,10 @@ class CheckFacts(unittest.TestCase):
         self.tmp = tempfile.mkdtemp(prefix='facts-test-')
         self.root = os.path.join(self.tmp, 'site')
         os.makedirs(os.path.join(self.root, 'tools'))
-        os.makedirs(os.path.join(self.root, 'js'))
         os.makedirs(os.path.join(self.root, 'lang'))
         shutil.copy(os.path.join(HERE, 'check_facts.py'), os.path.join(self.root, 'tools', 'check_facts.py'))
         shutil.copy(os.path.join(REAL, 'index.html'), self.root)
-        shutil.copy(os.path.join(REAL, 'js', 'content.js'), os.path.join(self.root, 'js'))
+        shutil.copytree(os.path.join(REAL, 'js'), os.path.join(self.root, 'js'))   # the scripts hold facts too (the waitlist address, the street addresses)
         shutil.copy(os.path.join(REAL, 'lang', 'en.json'), os.path.join(self.root, 'lang'))
         shutil.copytree(os.path.join(REAL, 'pages'), os.path.join(self.root, 'pages'))
         shutil.copytree(os.path.join(REAL, 'lang', 'src'), os.path.join(self.root, 'lang', 'src'))
@@ -133,6 +132,38 @@ class CheckFacts(unittest.TestCase):
             m = re.search(cf.MONEY, text)
             self.assertEqual(cf.money(m), want, text)
 
+    def test_the_waitlist_address_in_a_script_is_checked(self):
+        # the real bug: the farm changes its e-mail address on the pages, and the waitlist button (js/features.js, WAITLIST) keeps the old one, silently
+        for rel in ('index.html', 'pages/first-visit.html', 'js/content.js'):
+            self.edit(rel, 'cathy@wiseacresorganic.com', 'office@wiseacresorganic.com', 99)
+        code, out = run(self.root, 'e-mail')
+        self.assertEqual(code, 1, out[-900:])
+        self.assertRegex(out, r'cathy@wiseacresorganic\.com is held by a script \(js/features\.js:\d+: the waitlist button uses it\) but is written on no page')
+        code, brief = run(self.root, '--brief')
+        self.assertEqual(code, 1)
+        self.assertIn('DIFFERENT cathy@wiseacresorganic.com is held by a script', brief)
+        self.edit('js/features.js', "const WAITLIST = 'cathy@wiseacresorganic.com'", "const WAITLIST = 'office@wiseacresorganic.com'")
+        code, out = run(self.root, 'e-mail')
+        self.assertEqual(code, 0, out[-900:])
+        self.assertIn('js/features.js:', out, 'the script is one of the places')
+
+    def test_street_addresses_and_the_5_pm_fallback_in_the_scripts_are_checked(self):
+        self.edit('js/features.js', "addr: '4701 Hartis Rd, Indian Trail", "addr: '4702 Hartis Rd, Indian Trail")
+        code, out = run(self.root, 'hartis')
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r'4702 +\(1 place\(s\)\)\n +js/features\.js:\d+ ')
+        self.edit('js/live.js', "table.dataset.releaseTime : '17:00'", "table.dataset.releaseTime : '16:00'")
+        code, out = run(self.root, 'reservations open')
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r'16:00 +\(1 place\(s\)\)\n +js/live\.js:\d+ ')
+
+    def test_a_comment_in_a_script_is_not_a_fact(self):
+        self.edit('js/features.js', "const WAITLIST = 'cathy@wiseacresorganic.com';", "const WAITLIST = 'cathy@wiseacresorganic.com'; // not ava.smith@wiseacresorganic.com, call 704-111-2222 or 1,500 dollars")
+        code, out = run(self.root)
+        self.assertEqual(code, 0, out[-600:])
+        self.assertNotIn('704-111-2222', out)
+        self.assertNotIn('ava.smith', out)
+
     def test_built_pages_are_not_read(self):
         self.edit('first-visit.html', 'Children age 2 and younger are free', 'Children age 7 and younger are free')
         code, out = run(self.root)
@@ -152,6 +183,6 @@ class CheckFacts(unittest.TestCase):
 if __name__ == '__main__':
     result = unittest.main(exit=False, verbosity=1)
     if result.result.wasSuccessful():
-        print('OK: tools/check_facts.py finds a wrong price, a second main phone number, an e-mail typo, other hours and a wrong translation', result.result.testsRun, 'checks')
+        print('OK: tools/check_facts.py finds a wrong price, a second main phone number, an e-mail typo, other hours, a wrong translation, a stale waitlist address and facts held by the scripts', result.result.testsRun, 'checks')
     else:
         sys.exit(1)

@@ -247,6 +247,22 @@ class Pages(unittest.TestCase):
         self.assertGreater(checked, 20)
 
 
+class HelpText(unittest.TestCase):
+    """--help prints the tool's usage and exits 0 for the four tools that used to treat it as an ordinary word (pages.py rebuilt the pages; the others complained)."""
+
+    def test_help_is_help_and_changes_nothing(self):
+        here = os.path.dirname(os.path.abspath(__file__))
+        root = os.path.dirname(here)
+        watched = [os.path.join(root, f) for f in ('sitemap.xml', 'first-visit.html', 'robots.txt', os.path.join('js', 'footer-art.js'))]
+        before = [os.stat(p).st_mtime_ns for p in watched if os.path.exists(p)]
+        for tool, word in (('pages.py', 'Builds the extra pages'), ('date_phrases.py', 'Translates the date lines'), ('farm_map.py', 'Turns the map saved'), ('add_photo.py', 'Adds a photo')):
+            for flag in ('--help', '-h'):
+                r = subprocess.run([sys.executable, os.path.join(here, tool), flag], capture_output=True, text=True, encoding='utf-8', timeout=60, cwd=root)
+                self.assertEqual(r.returncode, 0, tool + ' ' + flag + ': ' + r.stderr[-300:])
+                self.assertIn(word, r.stdout, tool + ' ' + flag + ' prints its usage')
+        self.assertEqual(before, [os.stat(p).st_mtime_ns for p in watched if os.path.exists(p)], 'asking pages.py for help must not rebuild a page')
+
+
 if __name__ == '__main__':
     result = unittest.main(exit=False, verbosity=1)
     if result.result.wasSuccessful():

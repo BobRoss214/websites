@@ -166,7 +166,7 @@
       while ((m = NAMES.exec(text))) {
         if (m.index > last) parts.push(doc.createTextNode(text.slice(last, m.index)));
         const en = doc.createElement('wa-en');
-        en.setAttribute('lang', 'en'); en.textContent = m[0];
+        en.setAttribute('lang', 'en'); en.setAttribute('translate', 'no'); en.textContent = m[0];   // translate=no: a browser's own translation (Chrome, Edge) leaves the name alone
         parts.push(en);
         last = m.index + m[0].length;
       }

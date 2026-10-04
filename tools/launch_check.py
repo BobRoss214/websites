@@ -22,7 +22,9 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import functools
 import http.client
+import ipaddress
 import json
 import os
 import random
@@ -87,6 +89,22 @@ def is_local_host(host):
     return False
 
 
+@functools.lru_cache(maxsize=256)   # one look-up for each name, not one for every page of the check
+def private_address(host):
+    """True when the name is, or points to, an address inside a private network or this computer (127.x, 10.x, 192.168.x, 169.254.x, fe80::, ::1...).
+    A site on the internet that sends the check there (a redirect) is not followed: that is how a page makes a program fetch things from the
+    router or the company network. A name that cannot be looked up is not private: the fetch then fails with its own message."""
+    host = (host or '').strip('[]')
+    try:
+        found = [ipaddress.ip_address(host.split('%')[0])]
+    except ValueError:
+        try:
+            found = [ipaddress.ip_address(a[4][0].split('%')[0]) for a in socket.getaddrinfo(host, None)]
+        except (OSError, ValueError, UnicodeError):
+            return False
+    return any((not a.is_global) or a.is_multicast for a in found)   # not a public address: private, this computer, link-local, shared (100.64/10), reserved
+
+
 def origin_of(url):
     sp = urlsplit(url)
     return '%s://%s' % (sp.scheme, sp.netloc.lower())
@@ -129,6 +147,7 @@ class Resp(object):
         self.total = 0.0
         self.encoding = ''
         self.undecoded = False
+        self.truncated = False   # the answer was longer than the limit (or unpacked to more than it): only the first part was kept
 
     def header(self, name, default=''):
         return self.headers.get(name.lower(), default)
@@ -155,6 +174,7 @@ class Resp(object):
 class Fetcher(object):
     def __init__(self, timeout=20.0, insecure=False):
         self.timeout = timeout
+        self.deadline = max(60.0, timeout * 3)   # for a whole answer: a server that sends one byte at a time must not hold the check for ever
         self.ctx = ssl.create_default_context()
         if insecure:
             self.ctx.check_hostname = False
@@ -177,6 +197,8 @@ class Fetcher(object):
     def _do(self, url, accept, method, maxbytes):
         sp = urlsplit(url)
         host = sp.hostname
+        if sp.scheme not in ('http', 'https') or not host:
+            raise FetchError('other', 'only http:// and https:// addresses are followed (this one is %s)' % (sp.scheme + ':' if sp.scheme else 'not a web address'))
         https = sp.scheme == 'https'
         port = sp.port or (443 if https else 80)
         path = quote(sp.path or '/', safe="/%:@!$&'()*+,;=-._~")
@@ -194,7 +216,16 @@ class Fetcher(object):
             conn.request(method, path, headers={'User-Agent': UA, 'Accept': '*/*', 'Accept-Encoding': accept, 'Connection': 'close'})
             resp = conn.getresponse()
             r.ttfb = time.perf_counter() - t0
-            raw = resp.read(maxbytes + 1) if method != 'HEAD' else b''
+            chunks, got = [], 0
+            while method != 'HEAD' and got <= maxbytes:
+                if time.perf_counter() - t0 > self.deadline:
+                    raise FetchError('timeout', 'the answer did not finish within %d seconds' % int(self.deadline))
+                piece = resp.read1(min(65536, maxbytes + 1 - got))   # read1: what has arrived, so the clock above is looked at even when the bytes come one by one
+                if not piece:
+                    break
+                chunks.append(piece)
+                got += len(piece)
+            raw = b''.join(chunks)
             r.total = time.perf_counter() - t0
             r.status = resp.status
             hdrs = {}
@@ -208,6 +239,8 @@ class Fetcher(object):
             raise FetchError('cert', 'the HTTPS certificate is not accepted (%s)' % (getattr(e, 'verify_message', None) or e))
         except ssl.SSLError as e:
             raise FetchError('tls', 'the secure connection could not be set up (%s)' % e)
+        except FetchError:
+            raise
         except (socket.timeout, TimeoutError):
             raise FetchError('timeout', 'no answer within %d seconds' % int(self.timeout))
         except ConnectionRefusedError:
@@ -224,14 +257,19 @@ class Fetcher(object):
         enc = r.headers.get('content-encoding', '').strip().lower()
         r.encoding = enc
         body = raw
+        limit = maxbytes   # an answer that unpacks to more than the limit is cut there (a few KB can unpack to gigabytes)
+        def inflate(wbits):
+            d = zlib.decompressobj(wbits)
+            out = d.decompress(raw, limit + 1)
+            return out[:limit], len(out) > limit
         try:
             if enc in ('gzip', 'x-gzip'):
-                body = zlib.decompress(raw, 16 + zlib.MAX_WBITS)
+                body, r.truncated = inflate(16 + zlib.MAX_WBITS)
             elif enc == 'deflate':
                 try:
-                    body = zlib.decompress(raw)
+                    body, r.truncated = inflate(zlib.MAX_WBITS)
                 except zlib.error:
-                    body = zlib.decompress(raw, -zlib.MAX_WBITS)
+                    body, r.truncated = inflate(-zlib.MAX_WBITS)
             elif enc == 'br':
                 body = b''
                 r.undecoded = True
@@ -245,11 +283,19 @@ class Fetcher(object):
         chain = []
         cur = url
         seen = set()
+        start_private = private_address(urlsplit(url).hostname)   # a practice run on this computer may redirect inside it; a site on the internet may not
         for hop in range(max_hops + 1):
             r = self.request(cur, **kw)
             chain.append(r)
             if r.status in (301, 302, 303, 307, 308) and r.location and hop < max_hops:
                 nxt = urldefrag(urljoin(cur, r.location))[0]
+                nsp = urlsplit(nxt)
+                if nsp.scheme not in ('http', 'https') or not nsp.hostname:
+                    raise FetchError('other', 'the address redirects to %s, which is not a web address (only http:// and https:// are followed)' % (nxt[:60].replace(chr(10), ' ')))
+                if nsp.username is not None or nsp.password is not None:
+                    raise FetchError('other', 'the address redirects to an address with a user name or password in it, which is not followed')
+                if not start_private and private_address(nsp.hostname):
+                    raise FetchError('other', 'the address redirects to %s, which is inside a private network (this computer or a home or office network), not on the internet. It was not followed' % nsp.hostname)
                 if nxt in seen:
                     break
                 seen.add(cur)

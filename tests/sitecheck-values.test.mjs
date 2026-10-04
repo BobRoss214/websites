@@ -74,6 +74,8 @@ await run('sitecheck-values', async ({ browser, base, errs }) => {
   b = await check("WISE_ACRES.signup.action = 'http://wise.us21.list-manage.com/subscribe/post?u=0123456789abcdef01234567&id=89abcdef01'; WISE_ACRES.reviewUrl = 'http://g.page/r/abc/review';");
   ok('the signup address starting with http://: the box says to change only the first letters', /^signup\.action starts with http:\/\/, but it must start with https:\/\/ \(change only the first letters\)\./.test(find(b, /signup\.action/)), find(b, /signup/));
   ok('...and the review link starting with http:// is named too', /^reviewUrl "http:\/\/g\.page\/r\/abc\/review" must start with https:\/\//.test(find(b, /reviewUrl/)), find(b, /reviewUrl/));
+  b = await check("WISE_ACRES.signup.action = 'https://forms.example.org/subscribe/post?u=0123456789abcdef01234567&id=89abcdef01';");
+  ok('a signup address on another site (not list-manage.com) is named and the form is not connected to it: the box says how it should look', /^signup\.action should look like https:\/\/NAME\.us21\.list-manage\.com\/subscribe\/post\?u=/.test(find(b, /signup\.action/)), find(b, /signup/) || JSON.stringify(b.broken).slice(0, 200));
 
   // ---- ?check&lang=es: the texts that have no translation yet
   const trans = async (opts = {}) => {

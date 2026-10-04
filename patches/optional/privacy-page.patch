@@ -1,0 +1,1195 @@
+Option: privacy-page
+Name: Visitor privacy page in plain words (English, Spanish, Hindi, Chinese, Vietnamese)
+Does: Adds privacy.html (built from pages/privacy.html by tools/pages.py): what the website keeps in the browser, which other sites it contacts and only after the visitor presses a button, what it does not do, how to clear the browser data, who to ask and the date it was written. The footer of every page links to it and sitemap.xml lists it (both come from the rebuild). Two sets of visit-counter sentences: js/analytics.js shows the one that is true (no counter, or a counter really runs). Every sentence is listed with its evidence in docs/PRIVACY_PAGE_EVIDENCE.md and checked by the new tests/privacy-page.test.mjs. The tests that list pages (consistency, validity, keyboard, no-js, sprite, layout-sweep, axe, privacy, auto-dark, i18n-a11y, seo, tools/test_pages.py) now include the new page, and tools/review_sheet.py makes a sheet for it. The page is not legal advice, and the Spanish, Hindi, Chinese and Vietnamese texts were written by Claude and need a native reader. It also teaches the facts audit of the translations (tools/i18n_facts.mjs) to read a day-first English date such as "4 October 2026" and two Hindi and Chinese words (tools/i18n_facts_allow.json has one entry with its reason), with test cases for a wrong day and a wrong month.
+Answers: d89 (a privacy page for visitors: option 1, add the page)
+Conflicts: none
+Requires: tools/i18n_facts.mjs, tools/i18n_facts_allow.json and tests/i18n-facts.test.mjs (the facts audit of the translations: this patch teaches it day-first dates and adds an allow-list entry; without these files the patch waits)
+Host: any
+Order: 80
+After: python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each) and node tests/run-all.mjs privacy-page privacy seo docs
+Strings: 68 new texts per language, translated inside this patch (needs a native reader): 66 texts of the page and the footer (one of them is the footer link "Privacy", id tcf01481f) and 2 script texts (the page title and description)
+
+diff --git a/README.md b/README.md
+index 7e23c73..c1beaab 100644
+--- a/README.md
++++ b/README.md
+@@ -11,6 +11,7 @@ pumpkin-patch.html
+ strawberry-picking.html
+ school-field-trips.html
+ wise-pie.html
++privacy.html            (the optional privacy page, patches/optional/privacy-page.patch; once it is applied)
+ sitemap.xml, robots.txt generated with the pages
+ 404.html                a friendly "page not found" page (plain English, expects the site at the domain root)
+ manifest.webmanifest    icon + colors for phones that bookmark the site
+@@ -163,7 +164,7 @@ The same fact is usually written in several places, and each place has four tran
+ 
+ 1. Use an editor that can search inside all the files of a folder ("Find in Files": Notepad++ and VS Code both have it, Ctrl+Shift+F). Plain Notepad searches one file at a time: open `index.html` and each file in `pages/` and press Ctrl+F in each.
+ 2. Search for the **words in the table below**, not for a whole sentence. A dash is written `&ndash;` in the files, so search `10 am`, not `10 am–8 pm`. A number can be split by a tag (`<span class="big">$3</span> per person`). Look at every hit before you change it: `$3` is also the barrel train and the vegan cheese, and `$35` is a photo pass.
+-3. Change `index.html` and the files in `pages/`. **Never** change `first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html` or `wise-pie.html` in the top folder: they are rebuilt from `pages/`, and your change would be lost.
++3. Change `index.html` and the files in `pages/`. **Never** change `first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html`, `wise-pie.html` or `privacy.html` in the top folder: they are rebuilt from `pages/`, and your change would be lost.
+ 4. Run `python3 tools/pages.py`, then `python3 tools/i18n.py extract`, then `python3 tools/i18n.py missing es --list`. Every text you changed is listed there. Translate each one (next section), then `python3 tools/i18n.py build`. A number, a phone number or an email address on its own is not listed, but every sentence that holds one is, and each needs its four translations (a price in 3 texts, an hour in 4, an email address in 6). `python3 tools/change_fact.py` does all of this for you: see the next row of "Day-to-day changes" and its last paragraph.
+ 5. Look at the site with `?check` (see "Check your changes"). Then run `python3 tools/check_facts.py` (nothing to install): for each key fact (prices, hours, phone, emails, address, ages, year) it lists every place as `file:line` and the words, marks the ones that disagree, and ends with what to do next (`python3 tools/check_facts.py phone` shows one fact). A developer can also run `node tests/consistency.test.mjs`, which checks the built pages in all five languages and names, for each failure, the file to edit and what to do.
+ 
+@@ -395,7 +396,7 @@ Not sure what is wrong, or want one answer for the whole site and the upload fol
+ ## Extra pages (for Google)
+ 
+ `first-visit.html`, `pumpkin-patch.html`, `strawberry-picking.html`, `school-field-trips.html` and
+-`wise-pie.html` are separate pages with their own titles, descriptions and FAQ markup (no breadcrumb markup: the pages have no visible breadcrumb trail).
++`wise-pie.html` (and `privacy.html`, once the optional privacy page is applied) are separate pages with their own titles, descriptions and FAQ markup (no breadcrumb markup: the pages have no visible breadcrumb trail).
+ They are **generated**: edit the short source in `pages/<name>.html`, then run (the first time, set up the commands as in "Commands on Windows, Mac and Linux")
+ 
+ ```
+@@ -486,6 +487,8 @@ What to do when the farm must close for a day (one command, the checklist for Bo
+ 
+ How safe the tools on your own computer are with words and files from other people (a photo, a review sheet, a saved map, a translation, an address): what was tried, found, fixed and left, and the checks to run again after you change a tool: [docs/TOOLS_SAFETY.md](docs/TOOLS_SAFETY.md)
+ 
++Where each sentence of the visitor privacy page comes from (for the optional patch `privacy-page.patch`; it is not legal advice): [docs/PRIVACY_PAGE_EVIDENCE.md](docs/PRIVACY_PAGE_EVIDENCE.md)
++
+ Who made the fonts, icons and map data the site uses, under which licence, what each licence asks for and what is still open: [docs/CREDITS_AND_LICENCES.md](docs/CREDITS_AND_LICENCES.md). The licence texts sit next to the fonts and icons and are uploaded with the site: do not delete them.
+ 
+ What colour-blind visitors see: every place where a colour means something, checked in five ways of seeing, the three small fixes and two ideas for you to choose: [docs/COLOUR_BLIND_CHECK.md](docs/COLOUR_BLIND_CHECK.md)
+@@ -656,6 +659,8 @@ The host must compress text files (gzip or brotli). The home page's first load i
+ 
+ Open decisions that change files are ready as patches in `patches/optional/`. They cover what visitors see in winter, the old addresses, page addresses on Cloudflare Pages, how long a browser keeps a file, the Reserve buttons, the phone number, the QR signs, the sunflower game and the map's land. Each file starts with a header: what it does, which question it answers (d01 ... d86, `docs/DECISION_PLAYBOOK.md`), what it cannot be combined with, which hosts it is for, and what to run after. `docs/OPTION_PATCHES.md` is the table: apply order, hosts, rebuild commands. Apply one with `git apply patches/optional/<file>.patch`, then the rebuild commands (the `After:` line in the header).
+ 
++`privacy-page.patch` adds a plain-words privacy page for visitors (`privacy.html`, in five languages). It also needs the rebuild line, and every sentence on it is listed with its evidence in `docs/PRIVACY_PAGE_EVIDENCE.md`. It is not legal advice: the farm may want an adviser to read it.
++
+ To try a set of options together before touching the real site, make a clean copy and run the matrix there. It refuses to run anywhere else, so it cannot change your site folder:
+ 
+ ```
+diff --git a/css/extras.css b/css/extras.css
+index 9ab7024..9b03ad8 100644
+--- a/css/extras.css
++++ b/css/extras.css
+@@ -465,6 +465,7 @@ html.anim-hidden *,html.anim-hidden *::before,html.anim-hidden *::after{animatio
+ .motion-btn-text[aria-pressed="true"]{background:var(--sun);border-color:var(--sun);color:var(--ink)}
+ .motion-btn-text .ico{width:1.05em;height:1.05em}
+ .motion-btn[hidden]{display:none}
++[data-analytics][hidden]{display:none!important}   /* privacy.html: a card or a block that js/analytics.js hides (the visit-counter sentences that are not true for this visitor) */
+ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}   /* "Pause animations": the layers stop sliding at different speeds while scrolling (js/main.js, initScroll) */
+ @media (forced-colors:active){.motion-btn[aria-pressed="true"],.picker .motion-btn[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}}
+ .tag-us{display:flex;gap:12px;align-items:flex-start;max-width:40em;margin:20px auto 0;padding:.85em 1.1em;background:#fff;border:2.5px dashed var(--ink);border-radius:18px;font-weight:600;line-height:1.45}
+diff --git a/docs/PRIVACY_PAGE_EVIDENCE.md b/docs/PRIVACY_PAGE_EVIDENCE.md
+new file mode 100644
+index 0000000..2cdbf0e
+--- /dev/null
++++ b/docs/PRIVACY_PAGE_EVIDENCE.md
+@@ -0,0 +1,118 @@
++# The privacy page: where every sentence comes from
++
++**Written:** 4 October 2026, for the page `pages/privacy.html` (it is built into `privacy.html`). It is added by the optional patch `patches/optional/privacy-page.patch`.
++
++**This is not legal advice, and the page is not a legal promise.** It says what the website's own code does, in plain words. It does not use the words of any privacy law and it does not claim that the farm follows one. If the farm wants the page read against the law, ask an adviser to read it. Give the adviser this document too.
++
++## In short
++
++- **Every sentence on the page is in the table below**, with the file or the test that shows it is true. `tests/privacy-page.test.mjs` fails when a sentence on the page is not in this document.
++- **The page says only what the code does.** It does not say what the hosting company, the map services, Mailchimp or an analytics company do with their own records. It says that they keep their own.
++- **Two settings change what is true.** If the farm turns on a visit counter, the page switches itself to the second set of sentences (rows P05 to P06 and P25 to P28). If the farm connects the Mailchimp form, the page is still true: its sentences cover both ways.
++- **The translations need a native reader.** Spanish, Hindi, Chinese and Vietnamese were written by Claude, not by a native speaker. Use `python3 tools/review_sheet.py` to make the sheets for them.
++
++## What the page leaves out on purpose
++
++- **The season and the game scores are not kept.** Some notes about this site say the season or the badges are saved in the browser. The code and the `privacy` test show they are not: only three notes are kept (rows P07 to P10). The page does not mention them as saved.
++- **The hosting company is not named.** The farm has not chosen one in the code. The page says "a hosting company" and that it keeps its own records (row P30).
++- **The live week feed is not covered.** `week.feed` in `js/content.js` is empty. If the farm sets it, the home page asks another site each time it opens. Add a sentence to the page first. `tests/privacy-page.test.mjs` fails until the setting is empty again or the page is changed.
++- **What the outside companies do with their records is not on the page.** The fact sheet `docs/WHAT_THE_SITE_STORES.md` (section 8) says what could be read about them and what could not.
++
++## When to check the page again
++
++Check it (run `node tests/run-all.mjs privacy privacy-page analytics`) and change it when any of these changes:
++
++- a new storage key, a cookie, or a new outside site (the `privacy` test fails first);
++- `analytics` in `js/content.js` (the page switches itself, but read the second set of sentences);
++- the Mailchimp form (`signup`), the drive time box, or the calendar buttons;
++- the hosting company or its settings (for example, a host that adds its own cookies);
++- the contact email in the footer.
++
++Change `docs/WHAT_THE_SITE_STORES.md` in the same change. It is the longer fact sheet that this page is made from.
++
++## The table
++
++Each row has a number, the sentence as the page says it, where the code shows it, and how it was checked. "The `privacy` test" means `tests/privacy.test.mjs`. The page says "the farm" where the code is the farm's own.
++
++| # | What the page says | Where it comes from | How it was checked |
++|---|---|---|---|
++| P01 | This page says, in plain words, what the Wise Acres website does with your information. It is not legal advice. | A statement of purpose and a warning. It makes no claim about the code. | Read by a person. |
++| P02 | You do not need an account. The website shows no ads, and its own code sets no cookies. | The only two boxes where you can type are `#su-email` and `#drive-addr`, and there is no login. No advertising site is on the list of allowed addresses in the `privacy` test. No cookie is set: `document.cookie` was empty and the browser had 0 cookies after a full visit. `_headers` has no `Set-Cookie` line. | The `privacy` test: "the only text boxes", "every web address", "the whole visit keeps only allowed things", "no cookie". |
++| P03 | If you pick a language or tick the First-visit checklist, your browser keeps a small note of it. | `js/i18n.js` at `store.set('wa.lang', code)` and `js/main.js` at `localStorage.setItem('wa.checklist'`. | The `privacy` test: "the language question", "ticking the First-visit checklist". |
++| P04 | Drive time, the email list and Google Calendar send information to other sites, and only when you press their button. | The `privacy` test lists the only outside sites the page may contact and the button that allows each one. With the settings as they are today, the email list button is a link to Mailchimp's own page (`eepurl.com`). | The `privacy` test: "every other site contacted is on the list AND only after its own button". |
++| P05 | The website's own code does not count or track your visit. (second set: see P06) | `js/content.js` at `analytics: { provider: 'none' }`. `js/analytics.js` stops at its first test when no provider is set, so no script is added and no event is sent. | The `privacy` test: reading 18 page visits contacts no other site. `tests/analytics.test.mjs`. |
++| P06 | The farm counts visits with a service from another company. See the visit counter section below. | `js/analytics.js` adds a script for Plausible, GoatCounter, Umami or Cloudflare Web Analytics when its setting is filled in. The page shows this card only then. | `tests/privacy-page.test.mjs`: the card shows with a provider and its setting, and not with only a provider name. |
++| P07 | The website keeps three small notes in your browser, and only after you choose something. Just reading the pages keeps nothing. | The allowed keys in the `privacy` test are exactly three: `wa.lang`, `wa.offer`, `wa.checklist`. | The `privacy` test: "the localStorage keys in the code are exactly the allowed keys", "reading leaves nothing behind". |
++| P08 | Language: the code of the language you picked (for example es), so your next visit opens in it | `js/i18n.js` at `store.set('wa.lang', code)` writes it when you pick a language or answer yes to the language question. `js/i18n.js` at `const s = store.get('wa.lang')` reads it when a page opens. The value is `en`, `es`, `hi`, `zh` or `vi`. | The `privacy` test: the allowed value of `wa.lang`. |
++| P09 | No thanks: a note that you said no to the language question, so it is not asked again | `js/i18n.js` at `store.set('wa.offer', '1')` writes it. The question is skipped when it is there. | The `privacy` test: "No, thanks keeps wa.offer = 1 and nothing else". |
++| P10 | Checklist: which boxes you ticked in the First-visit checklist | `js/main.js` at `localStorage.setItem('wa.checklist'` writes one true or false for each line. | The `privacy` test: "ticking the First-visit checklist keeps wa.checklist". |
++| P11 | These notes stay on your device until you clear this site's data in your browser. They have no end date. The website does not send them to the farm. | A note in local storage has no end date, and the code sets none. The code reads the notes only on the visitor's own device. The website has no server program, so nothing is sent to the farm. | The `privacy` test: no request to another site holds a note. Fact sheet `docs/WHAT_THE_SITE_STORES.md`, section 1. |
++| P12 | Some things live only while the page is open: game scores, the place open on the map, and anything you type in a box. They are gone when you close or reload the page. | Fact sheet section 1 lists what is kept only in memory. A full visit with the game, the map and both boxes left only `wa.lang` in the browser. | The `privacy` test: "the whole visit keeps only allowed things". |
++| P13 | Nothing else is kept: no cookies from the website, no session storage, no database and no background program. | No use of cookies, session storage, `IndexedDB` (the database), `Cache Storage` or a service worker (the background program) in any shipped file. | The `privacy` test: "only js/i18n.js and js/main.js touch localStorage". |
++| P14 | Three features send your information to other sites, and only after you press their button. | The same as P04. The three are the drive time box, the email list and Google Calendar. | The `privacy` test, as in P04. |
++| P15 | You type an address and press Get drive time. The address goes to OpenStreetMap's free address search. | `js/features.js` at `const GEO_URL`. The label "Get drive time" is in `index.html` at `data-t="t89dd3672"`. The typed words are in the `q=` part of the first request. | The `privacy` test: "the typed address goes to the address search and nowhere else". |
++| P16 | Two map points go to the free OSRM route server: the place found for your address, and the place you chose to drive to. The words you typed do not. | The route request holds two pairs of numbers and fixed options. The place to drive to is the farm or The GreenHouse, chosen with the radio buttons in the box. | The `privacy` test: "the route server gets two pairs of coordinates and fixed options". |
++| P17 | The website does not keep the address. The two services may keep a record of the request. | The address is not in local storage, session storage, cookies, the page address, the title or the history. The box already says the same: `index.html` at `data-t="t2ed7116c"`. Fact sheet section 8 says the services keep their own logs. | The `privacy` test: "the typed address is not in localStorage". |
++| P18 | Under the answer is a button for Google Maps. Your address goes to Google only if you press it. | The only link that holds the address is the button "Open these directions in Google Maps". | The `privacy` test: "the only link that carries the address is the tapped-only button". |
++| P19 | Your browser may offer to fill in or remember the address. That is your browser's feature. | The box is marked as a street address: `index.html` at `autocomplete="street-address"`. Fact sheet section 3 says the same. | Read in the code. |
++| P20 | If you join, your email address goes to Mailchimp, the company that sends the farm's emails. The website does not send it before you press the button. | With the settings as they are, the button is a link to Mailchimp's own page, so the address is typed there. With the form connected, the page sends it only after the button. The email is in no request before that. | The `privacy` test: "the signup went to Mailchimp (stand-in)" after the press, and nothing before. |
++| P21 | When the farm uses the form on the home page, the topics you tick go with your email address. So does your language, if the farm set that up. The form tells you. | Mailchimp gets the email, the ticked topic codes, the tags, two list codes, a robot-trap field, a reply name and, only when `signup.languageField` is set, the language. `js/features.js` at `data-signup-lang-note` tells the visitor about the language. | The `privacy` test: "Mailchimp gets only", "Mailchimp gets the language only as an English word". |
++| P22 | Google Calendar opens in a new tab with the farm's opening times and the Bookeo link. Your name and email are not sent. | The link holds only `action`, `ctz`, `dates`, `details`, `recur` and `text`, and no email address. | The `privacy` test: "the Google Calendar link carries only the opening times". |
++| P23 | The other calendar button makes a file on your device and sends nothing. | The calendar file is made in the browser. Fact sheet section 2. No other site was contacted while it was used. | The `privacy` test: the "ics-reminder" step. |
++| P24 | Other buttons and links take you to another site when you tap them. Examples are Bookeo for reservations, Square for pizza pre-orders, Google Maps, Apple Maps, Waze, Instagram, Facebook and Google Forms for school tours. After that, the other site's own rules apply. Email and phone links open your own email program or phone. | Fact sheet section 5 lists every link out. The addresses are on the list of written addresses in the `privacy` test. Email links start with `mailto:` and phone links with `tel:`. | The `privacy` test: "every web address in the shipped files is on the allow-list". |
++| P25 | No visit counter is switched on. The website's own code does not count or track your visit. | The same as P05. | As P05. |
++| P26 | The farm has switched on a visit counter, run by another company. It learns which pages are opened. Depending on the counter, it also learns which sections and buttons are used, and which language and season you pick. | `js/analytics.js` sends section views, button taps, season changes and language changes. Cloudflare Web Analytics gets page views only. Fact sheet section 3. | `tests/analytics.test.mjs`. `tests/privacy-page.test.mjs` shows this block only when a counter runs. |
++| P27 | The counter is never told what you type. It is not loaded at all if your browser asks sites not to track you (Do Not Track or Global Privacy Control). | `js/analytics.js` at `const dnt` turns the provider off for both signals. Fact sheet section 3 lists what is never sent: anything typed, including the drive time address. | `tests/analytics.test.mjs` and `tests/privacy-page.test.mjs` (with Do Not Track on, the first set shows). |
++| P28 | The counter's own script runs on your device. That company decides what else it records, so read its own privacy page. | Fact sheet section 3: what the script collects, and whether it stores anything in the browser, is decided by that company. The test computer could not load the scripts. | Stated as a limit, not tested. |
++| P29 | No accounts, logins or passwords | As P02. | As P02. |
++| P30 | Like any website, this one is served by a hosting company. Each time a page loads, that company receives your internet address (IP address) and your browser type, and it keeps its own records. | Fact sheet section 3 (what every site sees on a request) and section 8 (the hosting company keeps its own records). This is how the web works, not something the code does. | Stated from the fact sheet. |
++| P31 | No ads, and no cookies set by the website's own code | As P02. | As P02. |
++| P32 | No fonts, pictures, videos, embedded maps or social posts loaded from other sites | The fonts are files in `assets/fonts/`. No page, style sheet or font loads anything from another site, and no `iframe`, video, audio, embed or object exists. | The `privacy` test: "no page, stylesheet or font loads anything from another site", "no iframe, video, audio". |
++| P33 | No use of your location, camera or microphone | No code in `js/` asks for them. `_headers` switches them off with `Permissions-Policy` on hosts that read that file. | `tests/privacy-page.test.mjs`: no `geolocation` or `getUserMedia` in `js/`. The `privacy` test checks the header line. |
++| P34 | No place to upload a photo or a file | There is no file box and no code that reads or sends a file. | The `privacy` test: "no iframe, video, audio, embed, object or file upload anywhere". |
++| P35 | Nothing you type is kept by the website | The typed address and the typed email are not in any storage after a full visit. | The `privacy` test: "the whole visit keeps only allowed things", "the typed address is not in localStorage". |
++| P36 | The only two boxes where you can type are the email box and the address box for drive time. Neither asks for a name, an age or a photo. | The two boxes are `#su-email` and `#drive-addr`. Fact sheet section 7. | The `privacy` test: "the only text boxes". |
++| P37 | The school tour sign-up is a Google Form on Google's own site. What it asks for is set in Google Forms, not on this website. | Fact sheet sections 5 and 7. | Read in the fact sheet. |
++| P38 | The same is true for the map services, Mailchimp and any site you reach by tapping a link. Each has its own rules for what it keeps. Ask them, or read their privacy pages. | Fact sheet section 8, last two points. | Stated from the fact sheet. |
++| P39 | To remove the notes the website keeps, clear this site's data in your browser. Look in the browser's settings for "site data" or "cookies and site data", and remove wiseacresorganic.com. | The notes are in the browser's local storage for this site (rows P07 to P10). Fact sheet, "How to check again", lists where a browser shows them. The browser's menu names differ, so the page names two usual ones. The site's address is the one in `tools/pages.py` at `SITE = `. | Read in the code and the fact sheet. |
++| P40 | After that, the website forgets your language and your checklist ticks. | Those are the three notes in P07 to P10. | As P07. |
++| P41 | Questions about this page? Email the farm at cathy@wiseacresorganic.com. | The same address is in the footer of every page: `index.html` at `class="footer-contact"`. | `tests/privacy-page.test.mjs`: the address on the page is the one in the footer. |
++| P42 | This page was written on 4 October 2026, from what the website's code does that day. It is not legal advice. If the website changes, this page may need to change too. | The date this document starts with. | `tests/privacy-page.test.mjs`: the date is the same on the page and here. |
++
++## Headings and labels
++
++These hold no facts of their own. They are listed so that every piece of text on the page is in this document.
++
++- Your privacy
++- What this website keeps and shares
++- In a few words
++- The short version
++- No accounts, no ads
++- Notes on your device
++- Other sites, only on request
++- No visit counter
++- A visit counter is on
++- On your device
++- What your browser keeps
++- Only when you press a button
++- When information goes to another site
++- Drive time
++- Email list
++- Add to Google Calendar
++- Counting visits
++- Visit counter
++- What the farm does not do
++- Things you will not find here
++- Who else sees your visit
++- Records kept by other companies
++- Your choices
++- How to clear what is kept
++- Still wondering?
++- Questions
++
++## How the page was checked
++
++- **The shipped files, with the privacy test.** `node tests/run-all.mjs privacy` opens every page, uses every feature with stand-ins for the outside sites, and compares what was kept and sent with the lists at the top of `tests/privacy.test.mjs`. It passed on the tree this page was written for.
++- **The page itself, with its own test.** `node tests/run-all.mjs privacy-page` checks that every sentence is in this document, that the footer link and the sitemap entry exist, that both sets of counter sentences work, and that the page says nothing the settings in `js/content.js` contradict.
++- **The words.** The sentences are short on purpose. `tools/plain_lint.py` does not read pages, so its counting was run on the page's text by hand: 84 sentences, 11 words on average, the longest has 24 words, and the reading grade is 4.3 (the limit for owner documents is 9).
++- **What was not checked.** The page was not read by an adviser or by a native speaker of the four other languages.
+diff --git a/docs/WHAT_THE_SITE_STORES.md b/docs/WHAT_THE_SITE_STORES.md
+index 715ca49..ede1872 100644
+--- a/docs/WHAT_THE_SITE_STORES.md
++++ b/docs/WHAT_THE_SITE_STORES.md
+@@ -1,6 +1,6 @@
+ # What the website stores, and which other sites it contacts
+ 
+-**This is a fact sheet, not a privacy policy.** It lists facts about what the website's own code does. It is not consent text and not legal advice.
++**This is a fact sheet, not a privacy policy.** It lists facts about what the website's own code does. It is not consent text and not legal advice. The visitor page `privacy.html` is made from it: `docs/PRIVACY_PAGE_EVIDENCE.md` says which fact each sentence of that page comes from, so change both when this sheet changes.
+ 
+ **Checked:** 2 October 2026, website version `4d80383`. The Drive time box was added later and checked on 3 October 2026, website version `2996b9f`: sections 2, 3, 5, 6, 7 and 8 and the events table were updated for it. The browser-storage and outside-sites checks were run again on 3 October 2026 for website version `979437f`, after the keyboard, language-menu, first-visit and photo changes. The result was the same three entries in section 1, no cookies, and no contact with another site until "Get drive time" is pressed. Section 5 now also lists the two other credit links under a Drive time answer. If the code changes, these facts can change too. Ask Claude to run the checks again (see the end of this page).
+ 
+diff --git a/index.html b/index.html
+index 349925c..2fc2840 100644
+--- a/index.html
++++ b/index.html
+@@ -2193,6 +2193,7 @@
+           <li><a data-t="td3150e05" href="#groups">Groups &amp; events</a></li>
+           <li><a data-t="t5a2d8ead" href="#about">Our story</a></li>
+           <li><a data-t="t03688ba6" href="#faq">FAQ</a></li>
++          <li><a data-t="tcf01481f" href="privacy.html">Privacy</a></li>
+         </ul>
+         <ul class="footer-links footer-guides">
+           <li><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
+diff --git a/js/analytics.js b/js/analytics.js
+index e6c297f..fc0dc78 100644
+--- a/js/analytics.js
++++ b/js/analytics.js
+@@ -27,6 +27,10 @@
+ 
+   const provider = dnt ? 'none' : (cfg.provider || 'none');
+   const on = provider !== 'none' || debug;
++  // privacy.html has two versions of its visit-counter sentences: data-analytics="off" (no counter runs for this visitor) and data-analytics="on" (one does).
++  // Show the true one. "A counter runs" means a script is added below, so keep this test in step with the list of providers below.
++  const counts = (provider === 'plausible' && !!cfg.site) || (provider === 'goatcounter' && !!cfg.endpoint) || (provider === 'umami' && !!cfg.site && !!cfg.src) || (provider === 'cloudflare' && !!cfg.token);
++  doc.querySelectorAll('[data-analytics]').forEach((el) => { el.hidden = (el.getAttribute('data-analytics') === 'on') !== counts; });
+   if (!on) return;
+   W.analyticsLog = log;
+ 
+diff --git a/lang/src/es.json b/lang/src/es.json
+index 8d9f46e..0920021 100644
+--- a/lang/src/es.json
++++ b/lang/src/es.json
+@@ -1,5 +1,7 @@
+ {
+  "js": {
++  "Privacy at Wise Acres | Wise Acres Organic Farm": "Privacidad en Wise Acres | Wise Acres Organic Farm",
++  "What the Wise Acres website keeps on your device, when it sends anything to other sites, and who to ask. Plain words, written on 4 October 2026.": "Lo que el sitio web de Wise Acres guarda en tu dispositivo, cuándo envía algo a otros sitios y a quién preguntar. Palabras sencillas, escrito el 4 de octubre de 2026.",
+   "(Your time: {time})": "(Tu hora: {time})",
+   "{text} (Eastern Time)": "{text} (hora del Este)",
+   "100 blueberries! Your fingers must be blue by now.": "¡100 arándanos! A estas alturas tus dedos deben estar azules.",
+@@ -308,6 +310,72 @@
+   "Play animations": "Reproducir animaciones"
+  },
+  "ui": {
++  "t003fddc2": "No se guarda nada más: ni cookies del sitio web, ni almacenamiento de sesión, ni base de datos, ni programa en segundo plano.",
++  "t03167535": "Sin cuentas, sin anuncios",
++  "t04c39593": "El sitio web no guarda la dirección. Los dos servicios pueden guardar un registro de la solicitud.",
++  "t0b8d56e5": "No, gracias: una nota de que dijiste que no a la pregunta del idioma, para no volver a preguntarte",
++  "t1549c50b": "Después, el sitio web olvida tu idioma y las casillas que marcaste en la lista.",
++  "t1a9c5287": "No se usa tu ubicación, tu cámara ni tu micrófono",
++  "t22eb0a93": "Sin contador de visitas",
++  "t251009cb": "Contar las visitas",
++  "t29fc33ca": "La inscripción a las excursiones escolares es un Formulario de Google en el sitio de Google. Lo que pide se define en Google Forms, no en este sitio web.",
++  "t326c16d4": "Otros sitios, solo si tú lo pides",
++  "t37521740": "El tiempo en auto, la lista de correo y Google Calendar envían información a otros sitios, y solo cuando presionas su botón.",
++  "t3f301333": "Esta página explica, con palabras sencillas, qué hace el sitio web de Wise Acres con tu información. No es asesoría legal.",
++  "t439b066f": "Contador de visitas",
++  "t4b0b0a37": "El sitio web guarda tres notas pequeñas en tu navegador, y solo después de que eliges algo. Si solo lees las páginas, no se guarda nada.",
++  "t545e0399": "Registros que guardan otras empresas",
++  "t557b6fa6": "Algunas cosas solo existen mientras la página está abierta: los puntos de los juegos, el lugar abierto en el mapa y lo que escribes en un cuadro. Desaparecen cuando cierras o recargas la página.",
++  "t5a578b79": "¿Preguntas sobre esta página? Escribe a la granja a <a1>cathy@wiseacresorganic.com</a>.",
++  "t5fb9b120": "Cómo borrar lo que se guarda",
++  "t61a059e2": "El propio script del contador se ejecuta en tu dispositivo. Esa empresa decide qué más registra, así que lee su propia página de privacidad.",
++  "t635e63b5": "El código propio del sitio web no cuenta ni rastrea tu visita.",
++  "t722d85e2": "Google Calendar se abre en una pestaña nueva con los horarios de la granja y el enlace de Bookeo. No se envían tu nombre ni tu correo.",
++  "t72f97770": "Escribes una dirección y presionas “Calcula el tiempo en auto”. La dirección se envía a la búsqueda de direcciones gratuita de OpenStreetMap.",
++  "t736b558a": "Notas en tu dispositivo",
++  "t75d202f5": "Lo que no encontrarás aquí",
++  "t7a46830a": "No necesitas una cuenta. El sitio web no muestra anuncios y su propio código no crea cookies.",
++  "t7be96a3d": "Al contador nunca se le dice lo que escribes. Ni siquiera se carga si tu navegador pide a los sitios que no te rastreen (“No rastrear” o Global Privacy Control).",
++  "t8054a7e7": "Esta página se escribió el 4 de octubre de 2026, según lo que hace el código del sitio web ese día. No es asesoría legal. Si el sitio web cambia, esta página puede necesitar cambios también.",
++  "t810727ba": "Quién más ve tu visita",
++  "t86a87ec4": "Lo mismo vale para los servicios de mapas, Mailchimp y cualquier sitio al que llegues tocando un enlace. Cada uno tiene sus propias reglas sobre lo que guarda. Pregúntales o lee sus páginas de privacidad.",
++  "t888722e1": "Debajo de la respuesta hay un botón de Google Maps. Tu dirección se envía a Google solo si lo presionas.",
++  "t898e954e": "Solo cuando presionas un botón",
++  "t8fb09864": "Cuándo se envía información a otro sitio",
++  "t9a1da0dd": "Hay un contador de visitas activado",
++  "t9b164ce1": "Tus opciones",
++  "t9f091e23": "Tu navegador puede ofrecerse a completar o recordar la dirección. Eso es una función de tu navegador.",
++  "t9f8fd65a": "En tu dispositivo",
++  "ta0a9b1db": "El sitio web no guarda nada de lo que escribes",
++  "ta7bf2568": "Lo que guarda tu navegador",
++  "taa7deb3b": "Lista: las casillas que marcaste en la lista “Qué llevar” de la primera visita",
++  "tb4f27dc0": "Sin anuncios y sin cookies creadas por el código propio del sitio web",
++  "tb6195135": "Tres funciones envían tu información a otros sitios, y solo después de que presionas su botón.",
++  "tb6713cd2": "Tu privacidad",
++  "tbc30acac": "Como cualquier sitio web, este lo sirve una empresa de alojamiento. Cada vez que se carga una página, esa empresa recibe tu dirección de internet (dirección IP) y el tipo de navegador, y guarda sus propios registros.",
++  "tc19adc92": "El otro botón de calendario crea un archivo en tu dispositivo y no envía nada.",
++  "tc50833a7": "Para borrar las notas que guarda el sitio web, borra los datos de este sitio en tu navegador. Busca en los ajustes del navegador “datos de sitios” o “cookies y datos de sitios” y elimina wiseacresorganic.com.",
++  "tc5861260": "Cuando la granja usa el formulario de la página principal, los temas que marcas se envían junto con tu correo electrónico. También tu idioma, si la granja lo configuró. El formulario te lo avisa.",
++  "tc58952ba": "La granja ha activado un contador de visitas, que maneja otra empresa. Se entera de qué páginas se abren. Según el contador, también se entera de qué secciones y botones se usan, y de qué idioma y temporada eliges.",
++  "tc6c4ba4b": "Si te unes, tu correo electrónico se envía a Mailchimp, la empresa que envía los correos de la granja. El sitio web no lo envía antes de que presiones el botón.",
++  "tc8d0c378": "¿Aún tienes dudas?",
++  "tcdc4ddee": "Lo que la granja no hace",
++  "tcf01481f": "Privacidad",
++  "td378a83e": "Lo que este sitio web guarda y comparte",
++  "td5eb4cf6": "Sin lugar para subir una foto o un archivo",
++  "tdb94e553": "Idioma: el código del idioma que elegiste (por ejemplo es), para que tu próxima visita se abra en él",
++  "tddf2ab2d": "En pocas palabras",
++  "tdfa45222": "Estas notas se quedan en tu dispositivo hasta que borras los datos de este sitio en tu navegador. No tienen fecha de vencimiento. El sitio web no se las envía a la granja.",
++  "te5274ecf": "Sin cuentas, inicios de sesión ni contraseñas",
++  "te7231a38": "Lista de correo",
++  "te737ea4b": "Los únicos dos cuadros donde puedes escribir son el del correo electrónico y el de la dirección para el tiempo en auto. Ninguno pide un nombre, una edad ni una foto.",
++  "teb87b536": "Si eliges un idioma o marcas la lista “Qué llevar” de la primera visita, tu navegador guarda una nota pequeña.",
++  "tef44a3f7": "La granja cuenta las visitas con un servicio de otra empresa. Mira la sección del contador de visitas más abajo.",
++  "tf0dccf98": "Dos puntos del mapa se envían al servidor de rutas gratuito OSRM: el lugar encontrado para tu dirección y el lugar al que elegiste ir. Las palabras que escribiste no se envían.",
++  "tf2e80178": "No hay ningún contador de visitas activado. El código propio del sitio web no cuenta ni rastrea tu visita.",
++  "tf395f6bb": "Sin fuentes, imágenes, videos, mapas incrustados ni publicaciones de redes sociales cargados desde otros sitios",
++  "tf7dd5c66": "La versión corta",
++  "tf979d5e4": "Otros botones y enlaces te llevan a otro sitio cuando los tocas. Por ejemplo, Bookeo para reservas, Square para pedir pizza por adelantado, Google Maps, Apple Maps, Waze, Instagram, Facebook y Google Forms para las excursiones escolares. Desde ahí, se aplican las reglas del otro sitio. Los enlaces de correo y teléfono abren tu programa de correo o tu teléfono.",
+   "t000eb0a5": "Corta tu propio ramo en el campo de flores",
+   "t001229b7": "Flores silvestres y amapolas",
+   "t006b2982": "Dulce, como dice su nombre. Tamaño ideal para botanear.",
+diff --git a/lang/src/hi.json b/lang/src/hi.json
+index 4dc8dd4..5dd90be 100644
+--- a/lang/src/hi.json
++++ b/lang/src/hi.json
+@@ -1,5 +1,7 @@
+ {
+  "js": {
++  "Privacy at Wise Acres | Wise Acres Organic Farm": "Wise Acres पर निजता | Wise Acres Organic Farm",
++  "What the Wise Acres website keeps on your device, when it sends anything to other sites, and who to ask. Plain words, written on 4 October 2026.": "Wise Acres की वेबसाइट आपके डिवाइस पर क्या रखती है, दूसरी साइटों को कब कुछ भेजती है, और किससे पूछें। सरल शब्दों में, 4 अक्तूबर 2026 को लिखा गया।",
+   "(Your time: {time})": "(आपका समय: {time})",
+   "{text} (Eastern Time)": "{text} (ईस्टर्न टाइम)",
+   "100 blueberries! Your fingers must be blue by now.": "100 ब्लूबेरी! अब तक आपकी उँगलियाँ नीली हो गई होंगी।",
+@@ -308,6 +310,72 @@
+   "Play animations": "एनिमेशन चलाएँ"
+  },
+  "ui": {
++  "t003fddc2": "इसके अलावा कुछ भी सहेजा नहीं जाता: वेबसाइट की कोई कुकी नहीं, कोई सेशन स्टोरेज नहीं, कोई डेटाबेस नहीं और पृष्ठभूमि में चलने वाला कोई प्रोग्राम नहीं।",
++  "t03167535": "कोई खाता नहीं, कोई विज्ञापन नहीं",
++  "t04c39593": "वेबसाइट पता सहेजकर नहीं रखती। वे दोनों सेवाएँ इस अनुरोध का रिकॉर्ड रख सकती हैं।",
++  "t0b8d56e5": "नहीं, धन्यवाद: एक नोट कि आपने भाषा वाले सवाल पर ना कहा, ताकि यह सवाल दोबारा न पूछा जाए",
++  "t1549c50b": "इसके बाद वेबसाइट आपकी भाषा और चेकलिस्ट में लगाए गए निशान भूल जाती है।",
++  "t1a9c5287": "आपकी लोकेशन, कैमरे या माइक्रोफ़ोन का कोई इस्तेमाल नहीं",
++  "t22eb0a93": "कोई विज़िट काउंटर नहीं",
++  "t251009cb": "विज़िट गिनना",
++  "t29fc33ca": "स्कूल फ़ील्ड ट्रिप का साइन-अप Google की अपनी साइट पर एक Google Form है। वह क्या पूछता है, यह Google Forms में तय होता है, इस वेबसाइट पर नहीं।",
++  "t326c16d4": "दूसरी साइटें, सिर्फ़ आपके कहने पर",
++  "t37521740": "गाड़ी का समय, ईमेल लिस्ट और Google कैलेंडर दूसरी साइटों को जानकारी भेजते हैं, और सिर्फ़ तब जब आप उनका बटन दबाते हैं।",
++  "t3f301333": "यह पेज सरल शब्दों में बताता है कि Wise Acres की वेबसाइट आपकी जानकारी के साथ क्या करती है। यह कानूनी सलाह नहीं है।",
++  "t439b066f": "विज़िट काउंटर",
++  "t4b0b0a37": "वेबसाइट आपके ब्राउज़र में तीन छोटे नोट रखती है, और वह भी तभी जब आप कुछ चुनते हैं। सिर्फ़ पेज पढ़ने से कुछ भी सहेजा नहीं जाता।",
++  "t545e0399": "दूसरी कंपनियों के रिकॉर्ड",
++  "t557b6fa6": "कुछ चीज़ें सिर्फ़ तब तक रहती हैं जब तक पेज खुला है: गेम के अंक, नक्शे पर खुली जगह और किसी बॉक्स में आपका लिखा हुआ। पेज बंद करने या दोबारा लोड करने पर ये मिट जाती हैं।",
++  "t5a578b79": "इस पेज के बारे में कोई सवाल? फ़ार्म को <a1>cathy@wiseacresorganic.com</a> पर ईमेल करें।",
++  "t5fb9b120": "जो सहेजा गया है उसे कैसे मिटाएँ",
++  "t61a059e2": "काउंटर की अपनी स्क्रिप्ट आपके डिवाइस पर चलती है। वह कंपनी तय करती है कि वह और क्या दर्ज करे, इसलिए उसका अपना प्राइवेसी पेज पढ़ें।",
++  "t635e63b5": "वेबसाइट का अपना कोड आपकी विज़िट को न गिनता है, न ट्रैक करता है।",
++  "t722d85e2": "Google कैलेंडर एक नए टैब में खुलता है, जिसमें फ़ार्म के खुलने के समय और Bookeo का लिंक होता है। आपका नाम और ईमेल नहीं भेजे जाते।",
++  "t72f97770": "आप एक पता लिखते हैं और “गाड़ी का समय देखें” दबाते हैं। पता OpenStreetMap की मुफ़्त पता-खोज सेवा को जाता है।",
++  "t736b558a": "आपके डिवाइस पर नोट",
++  "t75d202f5": "ये चीज़ें आपको यहाँ नहीं मिलेंगी",
++  "t7a46830a": "आपको खाते की ज़रूरत नहीं है। वेबसाइट कोई विज्ञापन नहीं दिखाती, और इसका अपना कोड कोई कुकी नहीं बनाता।",
++  "t7be96a3d": "काउंटर को आपका लिखा हुआ कभी नहीं बताया जाता। अगर आपका ब्राउज़र साइटों से ट्रैक न करने को कहता है (Do Not Track या Global Privacy Control), तो काउंटर लोड ही नहीं होता।",
++  "t8054a7e7": "यह पेज 4 अक्तूबर 2026 को उस दिन वेबसाइट के कोड के काम के आधार पर लिखा गया था। यह कानूनी सलाह नहीं है। अगर वेबसाइट बदलती है, तो इस पेज को भी बदलने की ज़रूरत पड़ सकती है।",
++  "t810727ba": "आपकी विज़िट और कौन देखता है",
++  "t86a87ec4": "यही बात नक्शे की सेवाओं, Mailchimp और लिंक दबाकर पहुँचने वाली किसी भी साइट पर लागू होती है। हर एक के अपने नियम हैं कि वह क्या रखता है। उनसे पूछें, या उनके प्राइवेसी पेज पढ़ें।",
++  "t888722e1": "जवाब के नीचे Google Maps का एक बटन है। आपका पता Google को तभी जाता है जब आप उसे दबाते हैं।",
++  "t898e954e": "सिर्फ़ तब, जब आप बटन दबाएँ",
++  "t8fb09864": "जब जानकारी किसी दूसरी साइट को जाती है",
++  "t9a1da0dd": "विज़िट काउंटर चालू है",
++  "t9b164ce1": "आपके विकल्प",
++  "t9f091e23": "आपका ब्राउज़र पता अपने आप भरने या याद रखने का सुझाव दे सकता है। यह आपके ब्राउज़र की सुविधा है।",
++  "t9f8fd65a": "आपके डिवाइस पर",
++  "ta0a9b1db": "आपका लिखा हुआ कुछ भी वेबसाइट नहीं रखती",
++  "ta7bf2568": "आपका ब्राउज़र क्या रखता है",
++  "taa7deb3b": "चेकलिस्ट: पहली विज़िट की “क्या साथ लाएँ” सूची में आपने कौन से बॉक्स चुने",
++  "tb4f27dc0": "कोई विज्ञापन नहीं, और वेबसाइट के अपने कोड की कोई कुकी नहीं",
++  "tb6195135": "तीन सुविधाएँ आपकी जानकारी दूसरी साइटों को भेजती हैं, और सिर्फ़ तब जब आप उनका बटन दबाते हैं।",
++  "tb6713cd2": "आपकी निजता",
++  "tbc30acac": "हर वेबसाइट की तरह, इसे भी एक होस्टिंग कंपनी चलाती है। जब भी कोई पेज खुलता है, वह कंपनी आपका इंटरनेट पता (IP पता) और आपके ब्राउज़र का प्रकार पाती है, और अपने रिकॉर्ड रखती है।",
++  "tc19adc92": "दूसरा कैलेंडर बटन आपके डिवाइस पर एक फ़ाइल बनाता है और कुछ नहीं भेजता।",
++  "tc50833a7": "वेबसाइट जो नोट रखती है उन्हें हटाने के लिए अपने ब्राउज़र में इस साइट का डेटा साफ़ करें। ब्राउज़र की सेटिंग में “साइट डेटा” या “कुकीज़ और साइट डेटा” खोजें और wiseacresorganic.com हटा दें।",
++  "tc5861260": "जब फ़ार्म मुख्य पेज के फ़ॉर्म का इस्तेमाल करता है, तो आपके चुने हुए विषय आपके ईमेल पते के साथ जाते हैं। अगर फ़ार्म ने ऐसा तय किया हो, तो आपकी भाषा भी जाती है। फ़ॉर्म आपको बता देता है।",
++  "tc58952ba": "फ़ार्म ने एक विज़िट काउंटर चालू किया है, जिसे कोई दूसरी कंपनी चलाती है। उसे पता चलता है कि कौन से पेज खोले गए। काउंटर के अनुसार, उसे यह भी पता चल सकता है कि कौन से सेक्शन और बटन इस्तेमाल हुए, और आपने कौन सी भाषा और कौन सा मौसम चुना।",
++  "tc6c4ba4b": "अगर आप जुड़ते हैं, तो आपका ईमेल पता Mailchimp को जाता है, जो फ़ार्म के ईमेल भेजने वाली कंपनी है। बटन दबाने से पहले वेबसाइट इसे नहीं भेजती।",
++  "tc8d0c378": "अब भी कोई सवाल?",
++  "tcdc4ddee": "फ़ार्म क्या नहीं करता",
++  "tcf01481f": "निजता",
++  "td378a83e": "यह वेबसाइट क्या रखती और क्या साझा करती है",
++  "td5eb4cf6": "फ़ोटो या फ़ाइल अपलोड करने की कोई जगह नहीं",
++  "tdb94e553": "भाषा: आपकी चुनी हुई भाषा का कोड (जैसे es), ताकि अगली बार साइट उसी में खुले",
++  "tddf2ab2d": "कुछ शब्दों में",
++  "tdfa45222": "ये नोट आपके डिवाइस पर तब तक रहते हैं जब तक आप अपने ब्राउज़र में इस साइट का डेटा साफ़ नहीं करते। इनकी कोई अंतिम तारीख़ नहीं है। वेबसाइट इन्हें फ़ार्म को नहीं भेजती।",
++  "te5274ecf": "कोई खाता, लॉगिन या पासवर्ड नहीं",
++  "te7231a38": "ईमेल लिस्ट",
++  "te737ea4b": "सिर्फ़ दो बॉक्स हैं जिनमें आप लिख सकते हैं: ईमेल का बॉक्स और गाड़ी के समय के लिए पते का बॉक्स। दोनों में से कोई नाम, उम्र या फ़ोटो नहीं माँगता।",
++  "teb87b536": "अगर आप कोई भाषा चुनते हैं या पहली विज़िट की “क्या साथ लाएँ” सूची में निशान लगाते हैं, तो आपका ब्राउज़र उसका एक छोटा नोट रख लेता है।",
++  "tef44a3f7": "फ़ार्म किसी दूसरी कंपनी की सेवा से विज़िट गिनता है। नीचे विज़िट काउंटर वाला भाग देखें।",
++  "tf0dccf98": "नक्शे के दो बिंदु मुफ़्त OSRM रूट सर्वर को जाते हैं: आपके पते के लिए मिली जगह और वह जगह जहाँ आपने जाना चुना। आपके लिखे शब्द नहीं जाते।",
++  "tf2e80178": "कोई विज़िट काउंटर चालू नहीं है। वेबसाइट का अपना कोड आपकी विज़िट को न गिनता है, न ट्रैक करता है।",
++  "tf395f6bb": "दूसरी साइटों से लोड होने वाले कोई फ़ॉन्ट, तस्वीरें, वीडियो, एम्बेड किए नक्शे या सोशल मीडिया पोस्ट नहीं",
++  "tf7dd5c66": "छोटा सार",
++  "tf979d5e4": "दूसरे बटन और लिंक दबाने पर आप किसी दूसरी साइट पर पहुँचते हैं। जैसे रिज़र्वेशन के लिए Bookeo, पिज़्ज़ा पहले से ऑर्डर करने के लिए Square, Google Maps, Apple Maps, Waze, Instagram, Facebook और स्कूल फ़ील्ड ट्रिप के लिए Google Forms। उसके बाद उस साइट के अपने नियम लागू होते हैं। ईमेल और फ़ोन लिंक आपके अपने ईमेल प्रोग्राम या फ़ोन को खोलते हैं।",
+   "t000eb0a5": "फूलों के खेत में अपना गुलदस्ता खुद काटें",
+   "t001229b7": "जंगली फूल और पॉपी",
+   "t006b2982": "नाम की तरह मीठा। नाश्ते के लिए सही साइज़।",
+diff --git a/lang/src/vi.json b/lang/src/vi.json
+index b4ef3ef..ef22734 100644
+--- a/lang/src/vi.json
++++ b/lang/src/vi.json
+@@ -1,5 +1,7 @@
+ {
+  "js": {
++  "Privacy at Wise Acres | Wise Acres Organic Farm": "Quyền riêng tư tại Wise Acres | Wise Acres Organic Farm",
++  "What the Wise Acres website keeps on your device, when it sends anything to other sites, and who to ask. Plain words, written on 4 October 2026.": "Trang web Wise Acres lưu gì trên thiết bị của bạn, khi nào gửi thông tin đến các trang khác và hỏi ai. Viết bằng lời đơn giản, ngày 4 tháng 10 năm 2026.",
+   "(Your time: {time})": "(Giờ của bạn: {time})",
+   "{text} (Eastern Time)": "{text} (giờ miền Đông)",
+   "100 blueberries! Your fingers must be blue by now.": "100 trái việt quất! Chắc ngón tay bạn đã nhuốm xanh tím rồi.",
+@@ -308,6 +310,72 @@
+   "Play animations": "Phát hoạt ảnh"
+  },
+  "ui": {
++  "t003fddc2": "Không có gì khác được lưu: không có cookie từ trang web, không có bộ nhớ phiên, không có cơ sở dữ liệu và không có chương trình chạy nền.",
++  "t03167535": "Không tài khoản, không quảng cáo",
++  "t04c39593": "Trang web không lưu lại địa chỉ. Hai dịch vụ đó có thể lưu lại bản ghi của yêu cầu.",
++  "t0b8d56e5": "Không, cảm ơn: ghi chú rằng bạn đã trả lời không với câu hỏi về ngôn ngữ, để không hỏi lại",
++  "t1549c50b": "Sau đó, trang web sẽ quên ngôn ngữ của bạn và các ô bạn đã đánh dấu trong danh sách.",
++  "t1a9c5287": "Không dùng vị trí, camera hay micro của bạn",
++  "t22eb0a93": "Không có bộ đếm lượt truy cập",
++  "t251009cb": "Đếm lượt truy cập",
++  "t29fc33ca": "Mẫu đăng ký tham quan trường học là một Google Form trên trang của Google. Nội dung biểu mẫu hỏi được đặt trong Google Forms, không phải trên trang web này.",
++  "t326c16d4": "Các trang khác, chỉ khi bạn yêu cầu",
++  "t37521740": "Thời gian lái xe, danh sách email và Google Calendar gửi thông tin đến các trang khác, và chỉ khi bạn bấm nút của chúng.",
++  "t3f301333": "Trang này nói bằng lời đơn giản về việc trang web Wise Acres làm gì với thông tin của bạn. Đây không phải là tư vấn pháp lý.",
++  "t439b066f": "Bộ đếm lượt truy cập",
++  "t4b0b0a37": "Trang web lưu ba ghi chú nhỏ trong trình duyệt của bạn, và chỉ sau khi bạn chọn một điều gì đó. Chỉ đọc các trang thì không lưu gì cả.",
++  "t545e0399": "Bản ghi do các công ty khác lưu",
++  "t557b6fa6": "Một số thứ chỉ tồn tại khi trang đang mở: điểm trò chơi, địa điểm đang mở trên bản đồ và những gì bạn gõ vào ô nhập. Chúng mất đi khi bạn đóng hoặc tải lại trang.",
++  "t5a578b79": "Có câu hỏi về trang này? Hãy gửi email cho nông trại tại <a1>cathy@wiseacresorganic.com</a>.",
++  "t5fb9b120": "Cách xóa những gì đã lưu",
++  "t61a059e2": "Mã của bộ đếm tự chạy trên thiết bị của bạn. Công ty đó quyết định còn ghi lại những gì khác, vì vậy hãy đọc trang quyền riêng tư của họ.",
++  "t635e63b5": "Mã của chính trang web không đếm hay theo dõi lượt truy cập của bạn.",
++  "t722d85e2": "Google Calendar mở trong một thẻ mới, kèm giờ mở cửa của nông trại và liên kết Bookeo. Tên và email của bạn không được gửi.",
++  "t72f97770": "Bạn gõ một địa chỉ và bấm “Xem thời gian lái xe”. Địa chỉ được gửi đến dịch vụ tìm địa chỉ miễn phí của OpenStreetMap.",
++  "t736b558a": "Ghi chú trên thiết bị của bạn",
++  "t75d202f5": "Những thứ bạn sẽ không thấy ở đây",
++  "t7a46830a": "Bạn không cần tài khoản. Trang web không hiện quảng cáo và mã của chính nó không tạo cookie.",
++  "t7be96a3d": "Bộ đếm không bao giờ được biết những gì bạn gõ. Nó hoàn toàn không được tải nếu trình duyệt của bạn yêu cầu các trang không theo dõi bạn (Do Not Track hoặc Global Privacy Control).",
++  "t8054a7e7": "Trang này được viết ngày 4 tháng 10 năm 2026, dựa trên những gì mã của trang web làm vào ngày đó. Đây không phải là tư vấn pháp lý. Nếu trang web thay đổi, trang này cũng có thể cần thay đổi.",
++  "t810727ba": "Ai khác thấy lượt truy cập của bạn",
++  "t86a87ec4": "Điều này cũng đúng với các dịch vụ bản đồ, Mailchimp và mọi trang bạn vào bằng cách bấm liên kết. Mỗi nơi có quy định riêng về những gì họ lưu. Hãy hỏi họ, hoặc đọc trang quyền riêng tư của họ.",
++  "t888722e1": "Bên dưới câu trả lời có một nút Google Maps. Địa chỉ của bạn chỉ được gửi đến Google nếu bạn bấm nút đó.",
++  "t898e954e": "Chỉ khi bạn bấm nút",
++  "t8fb09864": "Khi nào thông tin được gửi đến trang khác",
++  "t9a1da0dd": "Bộ đếm lượt truy cập đang bật",
++  "t9b164ce1": "Lựa chọn của bạn",
++  "t9f091e23": "Trình duyệt của bạn có thể gợi ý điền sẵn hoặc ghi nhớ địa chỉ. Đó là tính năng của trình duyệt.",
++  "t9f8fd65a": "Trên thiết bị của bạn",
++  "ta0a9b1db": "Trang web không lưu bất cứ điều gì bạn gõ",
++  "ta7bf2568": "Những gì trình duyệt của bạn lưu",
++  "taa7deb3b": "Danh sách: những ô bạn đã đánh dấu trong danh sách “Nên mang gì” ở trang lần đầu đến",
++  "tb4f27dc0": "Không có quảng cáo và không có cookie do mã của chính trang web tạo ra",
++  "tb6195135": "Ba tính năng gửi thông tin của bạn đến các trang khác, và chỉ sau khi bạn bấm nút của chúng.",
++  "tb6713cd2": "Quyền riêng tư của bạn",
++  "tbc30acac": "Giống mọi trang web, trang này được một công ty lưu trữ web phục vụ. Mỗi lần trang tải, công ty đó nhận được địa chỉ internet (địa chỉ IP) và loại trình duyệt của bạn, và lưu các bản ghi của riêng họ.",
++  "tc19adc92": "Nút lịch còn lại tạo một tệp trên thiết bị của bạn và không gửi gì cả.",
++  "tc50833a7": "Để xóa các ghi chú mà trang web lưu, hãy xóa dữ liệu của trang này trong trình duyệt. Tìm trong phần cài đặt của trình duyệt mục “dữ liệu trang web” hoặc “cookie và dữ liệu trang web”, rồi xóa wiseacresorganic.com.",
++  "tc5861260": "Khi nông trại dùng biểu mẫu trên trang chủ, các chủ đề bạn đánh dấu sẽ được gửi cùng địa chỉ email của bạn. Ngôn ngữ của bạn cũng vậy, nếu nông trại đã cài đặt như thế. Biểu mẫu sẽ báo cho bạn biết.",
++  "tc58952ba": "Nông trại đã bật một bộ đếm lượt truy cập do công ty khác vận hành. Nó biết những trang nào được mở. Tùy loại bộ đếm, nó còn biết những phần và nút nào được dùng, cùng ngôn ngữ và mùa bạn chọn.",
++  "tc6c4ba4b": "Nếu bạn tham gia, địa chỉ email của bạn được gửi đến Mailchimp, công ty gửi email của nông trại. Trang web không gửi nó trước khi bạn bấm nút.",
++  "tc8d0c378": "Vẫn còn thắc mắc?",
++  "tcdc4ddee": "Những điều nông trại không làm",
++  "tcf01481f": "Quyền riêng tư",
++  "td378a83e": "Trang web này lưu và chia sẻ những gì",
++  "td5eb4cf6": "Không có chỗ để tải lên ảnh hay tệp",
++  "tdb94e553": "Ngôn ngữ: mã của ngôn ngữ bạn đã chọn (ví dụ es), để lần truy cập sau mở bằng ngôn ngữ đó",
++  "tddf2ab2d": "Nói ngắn gọn",
++  "tdfa45222": "Các ghi chú này ở lại trên thiết bị của bạn cho đến khi bạn xóa dữ liệu của trang này trong trình duyệt. Chúng không có ngày hết hạn. Trang web không gửi chúng cho nông trại.",
++  "te5274ecf": "Không có tài khoản, đăng nhập hay mật khẩu",
++  "te7231a38": "Danh sách email",
++  "te737ea4b": "Chỉ có hai ô bạn có thể gõ: ô email và ô địa chỉ để xem thời gian lái xe. Cả hai đều không hỏi tên, tuổi hay ảnh.",
++  "teb87b536": "Nếu bạn chọn ngôn ngữ hoặc đánh dấu danh sách “Nên mang gì” ở trang lần đầu đến, trình duyệt của bạn lưu một ghi chú nhỏ.",
++  "tef44a3f7": "Nông trại đếm lượt truy cập bằng dịch vụ của một công ty khác. Xem phần bộ đếm lượt truy cập bên dưới.",
++  "tf0dccf98": "Hai điểm trên bản đồ được gửi đến máy chủ chỉ đường OSRM miễn phí: nơi tìm thấy cho địa chỉ của bạn và nơi bạn chọn đến. Những chữ bạn gõ thì không được gửi.",
++  "tf2e80178": "Không có bộ đếm lượt truy cập nào được bật. Mã của chính trang web không đếm hay theo dõi lượt truy cập của bạn.",
++  "tf395f6bb": "Không có phông chữ, hình ảnh, video, bản đồ nhúng hay bài đăng mạng xã hội tải từ các trang khác",
++  "tf7dd5c66": "Bản tóm tắt",
++  "tf979d5e4": "Các nút và liên kết khác đưa bạn đến một trang khác khi bạn chạm vào. Ví dụ: Bookeo để đặt chỗ, Square để đặt trước pizza, Google Maps, Apple Maps, Waze, Instagram, Facebook và Google Forms cho các chuyến tham quan trường học. Từ đó, quy định riêng của trang kia được áp dụng. Liên kết email và điện thoại mở chương trình email hoặc điện thoại của bạn.",
+   "t000eb0a5": "Tự cắt bó hoa của bạn trong ruộng hoa",
+   "t001229b7": "Hoa dại và hoa anh túc",
+   "t006b2982": "Ngọt đúng như tên gọi. Cỡ nhỏ, hợp để ăn vặt.",
+diff --git a/lang/src/zh.json b/lang/src/zh.json
+index 6df73b8..91298a1 100644
+--- a/lang/src/zh.json
++++ b/lang/src/zh.json
+@@ -1,5 +1,7 @@
+ {
+  "js": {
++  "Privacy at Wise Acres | Wise Acres Organic Farm": "Wise Acres 隐私说明 | Wise Acres Organic Farm",
++  "What the Wise Acres website keeps on your device, when it sends anything to other sites, and who to ask. Plain words, written on 4 October 2026.": "Wise Acres 网站会在你的设备上保存什么、何时向其他网站发送内容，以及可以问谁。用简单的话写成，写于 2026 年 10 月 4 日。",
+   "(Your time: {time})": "（你当地时间：{time}）",
+   "{text} (Eastern Time)": "{text}（美国东部时间）",
+   "100 blueberries! Your fingers must be blue by now.": "100 颗蓝莓！你的手指肯定都染蓝了。",
+@@ -308,6 +310,72 @@
+   "Play animations": "播放动画"
+  },
+  "ui": {
++  "t003fddc2": "除此之外不会保存任何东西：本网站没有 Cookie，没有会话存储，没有数据库，也没有后台程序。",
++  "t03167535": "无需账号，没有广告",
++  "t04c39593": "本网站不会保存这个地址。这两项服务可能会记录这次请求。",
++  "t0b8d56e5": "不用了：记下你对语言提问回答了“不用”，这样就不会再问你",
++  "t1549c50b": "之后，本网站就会忘记你选的语言和清单上的勾选。",
++  "t1a9c5287": "不使用你的位置、摄像头或麦克风",
++  "t22eb0a93": "没有访问计数器",
++  "t251009cb": "统计访问",
++  "t29fc33ca": "学校参观的报名是 Google 自己网站上的一份 Google 表单。它问什么由 Google 表单设定，而不是由本网站设定。",
++  "t326c16d4": "其他网站，仅在你要求时",
++  "t37521740": "车程、邮件列表和 Google 日历会向其他网站发送信息，而且只在你点击它们的按钮时才发送。",
++  "t3f301333": "本页用简单的话说明 Wise Acres 网站如何处理你的信息。这不是法律意见。",
++  "t439b066f": "访问计数器",
++  "t4b0b0a37": "本网站会在你的浏览器里保存三条小记录，而且只有在你做出选择之后才保存。只是浏览页面不会保存任何东西。",
++  "t545e0399": "其他公司保留的记录",
++  "t557b6fa6": "有些内容只在页面打开期间存在：游戏得分、地图上打开的地点，以及你在输入框里输入的内容。关闭或刷新页面后，它们就消失了。",
++  "t5a578b79": "对本页有疑问？请发邮件给农场：<a1>cathy@wiseacresorganic.com</a>。",
++  "t5fb9b120": "如何清除已保存的内容",
++  "t61a059e2": "计数器自带的脚本会在你的设备上运行。它还会记录什么由那家公司决定，请阅读它自己的隐私页面。",
++  "t635e63b5": "本网站自己的代码不会统计或追踪你的访问。",
++  "t722d85e2": "Google 日历会在新标签页中打开，带有农场的开放时间和 Bookeo 链接。你的姓名和邮箱不会被发送。",
++  "t72f97770": "你输入一个地址并点击“查看车程”。该地址会发送到 OpenStreetMap 免费的地址搜索。",
++  "t736b558a": "你设备上的记录",
++  "t75d202f5": "这里没有的东西",
++  "t7a46830a": "你不需要账号。本网站不显示广告，它自己的代码也不会设置 Cookie。",
++  "t7be96a3d": "计数器永远不会得到你输入的内容。如果你的浏览器要求网站不要追踪你（“请勿跟踪”或 Global Privacy Control），计数器根本不会加载。",
++  "t8054a7e7": "本页写于 2026 年 10 月 4 日，依据的是当天网站代码的实际做法。这不是法律意见。如果网站有变化，本页也可能需要修改。",
++  "t810727ba": "还有谁会看到你的访问",
++  "t86a87ec4": "地图服务、Mailchimp，以及你点链接进入的任何网站也是如此。它们各自有保留哪些内容的规则。你可以向它们询问，或阅读它们的隐私页面。",
++  "t888722e1": "答案下方有一个 Google 地图按钮。只有你点击它，你的地址才会发送给 Google。",
++  "t898e954e": "仅在你点击按钮时",
++  "t8fb09864": "信息何时会发送到其他网站",
++  "t9a1da0dd": "已开启访问计数器",
++  "t9b164ce1": "你的选择",
++  "t9f091e23": "你的浏览器可能会提示自动填写或记住这个地址。这是浏览器自己的功能。",
++  "t9f8fd65a": "在你的设备上",
++  "ta0a9b1db": "你输入的内容，网站一概不保存",
++  "ta7bf2568": "你的浏览器保存了什么",
++  "taa7deb3b": "清单：你在首次到访页面的“带什么”清单里勾选了哪些",
++  "tb4f27dc0": "没有广告，网站自己的代码也不设置 Cookie",
++  "tb6195135": "有三项功能会把你的信息发送到其他网站，而且只在你点击它们的按钮之后才发送。",
++  "tb6713cd2": "你的隐私",
++  "tbc30acac": "和所有网站一样，本网站由一家托管公司提供服务。每次页面加载时，这家公司都会收到你的网络地址（IP 地址）和浏览器类型，并保存自己的记录。",
++  "tc19adc92": "另一个日历按钮只会在你的设备上生成一个文件，不发送任何东西。",
++  "tc50833a7": "要删除网站保存的记录，请在浏览器中清除本网站的数据。在浏览器设置里找“网站数据”或“Cookie 和网站数据”，然后删除 wiseacresorganic.com。",
++  "tc5861260": "当农场使用首页的表单时，你勾选的主题会和你的邮箱地址一起发送。如果农场这样设置，你使用的语言也会一起发送。表单会提示你。",
++  "tc58952ba": "农场开启了一个由另一家公司运营的访问计数器。它会知道哪些页面被打开。根据计数器的不同，它还可能知道哪些板块和按钮被使用，以及你选了哪种语言和哪个季节。",
++  "tc6c4ba4b": "如果你加入，你的邮箱地址会发送到 Mailchimp，也就是替农场发送邮件的公司。在你点击按钮之前，网站不会发送它。",
++  "tc8d0c378": "还有疑问？",
++  "tcdc4ddee": "农场不做的事",
++  "tcf01481f": "隐私",
++  "td378a83e": "本网站保存和分享什么",
++  "td5eb4cf6": "没有上传照片或文件的地方",
++  "tdb94e553": "语言：你所选语言的代码（例如 es），这样你下次访问时会用这种语言打开",
++  "tddf2ab2d": "简单说",
++  "tdfa45222": "这些记录会一直留在你的设备上，直到你在浏览器中清除本网站的数据。它们没有到期日期。网站不会把它们发送给农场。",
++  "te5274ecf": "没有账号、登录或密码",
++  "te7231a38": "邮件列表",
++  "te737ea4b": "你能输入文字的只有两个框：邮箱框和用于查看车程的地址框。两个都不会要求姓名、年龄或照片。",
++  "teb87b536": "如果你选了语言，或勾选了首次到访页面的“带什么”清单，你的浏览器会保存一条小记录。",
++  "tef44a3f7": "农场使用另一家公司的服务来统计访问。请看下面的访问计数器部分。",
++  "tf0dccf98": "两个地图坐标点会发送到免费的 OSRM 路线服务器：为你的地址找到的地点，以及你选择前往的地点。你输入的文字不会发送。",
++  "tf2e80178": "没有开启任何访问计数器。本网站自己的代码不会统计或追踪你的访问。",
++  "tf395f6bb": "没有从其他网站加载的字体、图片、视频、嵌入式地图或社交媒体帖子",
++  "tf7dd5c66": "简要说明",
++  "tf979d5e4": "点击其他按钮和链接会带你进入另一个网站，例如用于预约的 Bookeo、用于预订披萨的 Square、Google 地图、Apple 地图、Waze、Instagram、Facebook，以及用于学校参观的 Google 表单。到了那里，就适用那个网站自己的规则。邮件和电话链接会打开你自己的邮件程序或手机。",
+   "t000eb0a5": "在花田里剪一束属于你的花束",
+   "t001229b7": "野花和罂粟",
+   "t006b2982": "名副其实，很甜。个头小巧，适合当零食吃。",
+diff --git a/pages/privacy.html b/pages/privacy.html
+new file mode 100644
+index 0000000..38ddad5
+--- /dev/null
++++ b/pages/privacy.html
+@@ -0,0 +1,171 @@
++---
++title: Privacy at Wise Acres | Wise Acres Organic Farm
++description: What the Wise Acres website keeps on your device, when it sends anything to other sites, and who to ask. Plain words, written on 4 October 2026.
++crumb: Privacy
++---
++    <section class="page-hero" aria-labelledby="pg-h">
++      <div class="wrap page-hero-inner">
++        <div class="page-hero-copy">
++          <p class="hand hero-kicker">Your privacy</p>
++          <h1 id="pg-h">What this website keeps and shares</h1>
++          <p class="lead">This page says, in plain words, what the Wise Acres website does with your information. It is not legal advice.</p>
++        </div>
++      </div>
++    </section>
++
++    <section class="section" id="short" aria-labelledby="short-h">
++      <div class="wrap">
++        <header class="section-head">
++          <p class="hand eyebrow">In a few words</p>
++          <h2 id="short-h">The short version</h2>
++        </header>
++        <ul class="fact-grid">
++          <li class="fact-card c-mint">
++            <h3>No accounts, no ads</h3>
++            <p>You do not need an account. The website shows no ads, and its own code sets no cookies.</p>
++          </li>
++          <li class="fact-card c-sky">
++            <h3>Notes on your device</h3>
++            <p>If you pick a language or tick the First-visit checklist, your browser keeps a small note of it.</p>
++          </li>
++          <li class="fact-card c-sun">
++            <h3>Other sites, only on request</h3>
++            <p>Drive time, the email list and Google Calendar send information to other sites, and only when you press their button.</p>
++          </li>
++          <li class="fact-card c-pink" data-analytics="off">
++            <h3>No visit counter</h3>
++            <p>The website&rsquo;s own code does not count or track your visit.</p>
++          </li>
++          <li class="fact-card c-pink" data-analytics="on" hidden>
++            <h3>A visit counter is on</h3>
++            <p>The farm counts visits with a service from another company. See the visit counter section below.</p>
++          </li>
++        </ul>
++      </div>
++    </section>
++
++    <section class="section section-tint" id="device" aria-labelledby="device-h">
++      <div class="wrap two-col">
++        <div>
++          <header class="col-head">
++            <p class="hand eyebrow">On your device</p>
++            <h2 id="device-h">What your browser keeps</h2>
++          </header>
++          <p class="lead">The website keeps three small notes in your browser, and only after you choose something. Just reading the pages keeps nothing.</p>
++          <ul class="ticks ticks-lg">
++            <li>Language: the code of the language you picked (for example es), so your next visit opens in it</li>
++            <li>No thanks: a note that you said no to the language question, so it is not asked again</li>
++            <li>Checklist: which boxes you ticked in the First-visit checklist</li>
++          </ul>
++        </div>
++        <div>
++          <p>These notes stay on your device until you clear this site&rsquo;s data in your browser. They have no end date. The website does not send them to the farm.</p>
++          <p>Some things live only while the page is open: game scores, the place open on the map, and anything you type in a box. They are gone when you close or reload the page.</p>
++          <p>Nothing else is kept: no cookies from the website, no session storage, no database and no background program.</p>
++        </div>
++      </div>
++    </section>
++
++    <section class="section" id="sent" aria-labelledby="sent-h">
++      <div class="wrap">
++        <header class="section-head">
++          <p class="hand eyebrow">Only when you press a button</p>
++          <h2 id="sent-h">When information goes to another site</h2>
++          <p class="lead">Three features send your information to other sites, and only after you press their button.</p>
++        </header>
++        <ul class="fact-grid fact-grid-3">
++          <li class="fact-card">
++            <h3>Drive time</h3>
++            <p>You type an address and press Get drive time. The address goes to OpenStreetMap&rsquo;s free address search.</p>
++            <p>Two map points go to the free OSRM route server: the place found for your address, and the place you chose to drive to. The words you typed do not.</p>
++            <p>The website does not keep the address. The two services may keep a record of the request.</p>
++            <p>Under the answer is a button for Google Maps. Your address goes to Google only if you press it.</p>
++            <p>Your browser may offer to fill in or remember the address. That is your browser&rsquo;s feature.</p>
++          </li>
++          <li class="fact-card">
++            <h3>Email list</h3>
++            <p>If you join, your email address goes to Mailchimp, the company that sends the farm&rsquo;s emails. The website does not send it before you press the button.</p>
++            <p>When the farm uses the form on the home page, the topics you tick go with your email address. So does your language, if the farm set that up. The form tells you.</p>
++          </li>
++          <li class="fact-card">
++            <h3>Add to Google Calendar</h3>
++            <p>Google Calendar opens in a new tab with the farm&rsquo;s opening times and the Bookeo link. Your name and email are not sent.</p>
++            <p>The other calendar button makes a file on your device and sends nothing.</p>
++          </li>
++        </ul>
++        <p>Other buttons and links take you to another site when you tap them. Examples are Bookeo for reservations, Square for pizza pre-orders, Google Maps, Apple Maps, Waze, Instagram, Facebook and Google Forms for school tours. After that, the other site&rsquo;s own rules apply. Email and phone links open your own email program or phone.</p>
++      </div>
++    </section>
++
++    <section class="section section-tint" id="counter" aria-labelledby="counter-h">
++      <div class="wrap">
++        <header class="section-head">
++          <p class="hand eyebrow">Counting visits</p>
++          <h2 id="counter-h">Visit counter</h2>
++        </header>
++        <div data-analytics="off">
++          <p>No visit counter is switched on. The website&rsquo;s own code does not count or track your visit.</p>
++        </div>
++        <div data-analytics="on" hidden>
++          <p>The farm has switched on a visit counter, run by another company. It learns which pages are opened. Depending on the counter, it also learns which sections and buttons are used, and which language and season you pick.</p>
++          <p>The counter is never told what you type. It is not loaded at all if your browser asks sites not to track you (Do Not Track or Global Privacy Control).</p>
++          <p>The counter&rsquo;s own script runs on your device. That company decides what else it records, so read its own privacy page.</p>
++        </div>
++      </div>
++    </section>
++
++    <section class="section" id="not" aria-labelledby="not-h">
++      <div class="wrap two-col">
++        <div>
++          <header class="col-head">
++            <p class="hand eyebrow">What the farm does not do</p>
++            <h2 id="not-h">Things you will not find here</h2>
++          </header>
++          <ul class="ticks ticks-lg">
++            <li>No accounts, logins or passwords</li>
++            <li>No ads, and no cookies set by the website&rsquo;s own code</li>
++            <li>No fonts, pictures, videos, embedded maps or social posts loaded from other sites</li>
++            <li>No use of your location, camera or microphone</li>
++            <li>No place to upload a photo or a file</li>
++            <li>Nothing you type is kept by the website</li>
++          </ul>
++        </div>
++        <div>
++          <p>The only two boxes where you can type are the email box and the address box for drive time. Neither asks for a name, an age or a photo.</p>
++          <p class="fine">The school tour sign-up is a Google Form on Google&rsquo;s own site. What it asks for is set in Google Forms, not on this website.</p>
++        </div>
++      </div>
++    </section>
++
++    <section class="section section-tint" id="others" aria-labelledby="others-h">
++      <div class="wrap">
++        <header class="section-head">
++          <p class="hand eyebrow">Who else sees your visit</p>
++          <h2 id="others-h">Records kept by other companies</h2>
++        </header>
++        <p>Like any website, this one is served by a hosting company. Each time a page loads, that company receives your internet address (IP address) and your browser type, and it keeps its own records.</p>
++        <p>The same is true for the map services, Mailchimp and any site you reach by tapping a link. Each has its own rules for what it keeps. Ask them, or read their privacy pages.</p>
++      </div>
++    </section>
++
++    <section class="section" id="clear" aria-labelledby="clear-h">
++      <div class="wrap">
++        <header class="section-head">
++          <p class="hand eyebrow">Your choices</p>
++          <h2 id="clear-h">How to clear what is kept</h2>
++        </header>
++        <p>To remove the notes the website keeps, clear this site&rsquo;s data in your browser. Look in the browser&rsquo;s settings for &ldquo;site data&rdquo; or &ldquo;cookies and site data&rdquo;, and remove wiseacresorganic.com.</p>
++        <p>After that, the website forgets your language and your checklist ticks.</p>
++      </div>
++    </section>
++
++    <section class="section section-tint" id="ask" aria-labelledby="ask-h">
++      <div class="wrap">
++        <header class="section-head">
++          <p class="hand eyebrow">Still wondering?</p>
++          <h2 id="ask-h">Questions</h2>
++        </header>
++        <p>Questions about this page? Email the farm at <a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a>.</p>
++        <p class="fine">This page was written on 4 October 2026, from what the website&rsquo;s code does that day. It is not legal advice. If the website changes, this page may need to change too.</p>
++      </div>
++    </section>
+diff --git a/tests/README.md b/tests/README.md
+index a165746..2e115a5 100644
+--- a/tests/README.md
++++ b/tests/README.md
+@@ -137,7 +137,8 @@ Nothing is written into the site folder (the `pipeline` and `deploy` tests work
+ | `i18n-facts` | the facts in the translations (no browser, about 5 seconds): every translated text (page text, labels, picture descriptions, texts written by JavaScript) has the same prices, per-person / per-child words, numbers (also written out, also in Devanagari digits), clock times (am / pm matter, the 24-hour clock is the same), dates, months, early / mid / late of a month, days of the week (a range written out is the same set), ages and group sizes ("and up" is not "and under"), units (45 minutes is not 45 hours), e-mail addresses, phone numbers, names and the small words that carry a promise (free, only, always, never, no / not, about, usually, the seasons, the holidays) as its English, in Spanish, Hindi, Chinese and Vietnamese. The meant differences are on `tools/i18n_facts_allow.json`, each with its reason; an entry that matches nothing fails. The reader is tried on wrong translations made on purpose and on a temporary copy of the real lang files with a number, two weekdays, a price and two times changed. `node tools/i18n_facts.mjs` lists every difference with the English next to it |
+ | `validity` | plain mistakes a browser quietly forgives (no browser, a few seconds): in the 6 pages, `404.html`, `print/` and `pages/` the same id twice, a label, `aria-controls`, `aria-labelledby`, `#link` or `<use>` that points at an id that is not there, a skipped or empty heading, not exactly one `h1` and one `main`, a picture without `alt`, a block inside a `<p>`, a link inside a link or a button inside a link or `summary`, `target="_blank"` without `rel`, a mistyped `mailto:`, `tel:` or web address, a bad `lang`, JSON-LD that does not parse; `sitemap.xml`, `robots.txt`, `manifest.webmanifest`, `_headers` and every `.json` file; every file in `js/` and `lang/` is a valid browser script and every test passes `node --check`, no `console.log` left; in `css/` balanced braces, only properties from the list at the top of the test (a typo is caught: a new real property goes on that list), no missing `;`, no bad unit, color or keyword, a valid `background` shorthand (a color only in the last layer; browsers drop the whole line otherwise); the lines of `js/content.js` that the README says to change (`farmPoint: null,`, `reviewUrl: ''`, `entrancePhoto: null,`) each appear once, so a search finds the line and not a note, and the Search Console comment in `index.html` holds no example tag and says not to paste the tag inside it. Each check is first run on a broken sample, so one that stopped working cannot pass quietly |
+ | `browser-support` | older phones and other browsers, by reading the code (no browser, no network, a few seconds): every browser feature the scripts, style sheets and pages use (`?.`, `.at()`, `:has()`, `:focus-visible`, `inset`, `aspect-ratio`, `dvh`, container units, `<dialog>`, `requestIdleCallback`, `structuredClone`, an input type, a media feature, and so on) is in `tests/browser-support.table.json` with the first version of each browser that has it (made from MDN's browser-compat-data by `node tools/browser_support_table.mjs`, the only step that needs the network); a feature newer than iPhone and Safari 14, Chrome 90 (Android 80), Firefox 78 or Samsung Internet 13 needs a reviewed fallback, and the test checks it where it can (the old way written first, an `@supports not` block, a prefixed twin, a test before the call); a new use of `aspect-ratio`, `:is()`, `:has()`, `:focus-visible`, `rotate`, `scale`, `translate` or `<dialog>` fails until reviewed. Its reader of the code is first tried on small samples. Safari and Firefox are read, not run: `docs/BROWSER_SUPPORT.md` says what that covers |
+-| `privacy` | what the site keeps and sends, against the allow-lists at the top of the test (keep them in step with `docs/WHAT_THE_SITE_STORES.md`): reading all 8 pages in two languages contacts no other site and keeps nothing; a full home-page visit keeps only `wa.lang` (key and value shape checked), no cookie, sessionStorage, IndexedDB, Cache Storage or service worker; the other sites contacted (OpenStreetMap search, OSRM, Mailchimp, Google Calendar) are on the list **and only after their own button**; the address typed into the Drive time box reaches only the address search (not storage, the page address, the #hash, any other request or Referer); every Referer is the site name only; what Mailchimp and Google Calendar get; the language question and the checklist keys; the shipped files name no unlisted site, load nothing from another site and use storage only in `js/i18n.js` and `js/main.js`; `_headers` keeps the Referrer-Policy and Permissions-Policy; the Content-Security-Policy documented in `docs/LAUNCH_CHECKLIST.md` blocks nothing the site does. **Fails when a new storage key, cookie or outside site appears**: then decide, add it to the list in the test and to `docs/WHAT_THE_SITE_STORES.md` |
++| `privacy` | what the site keeps and sends, against the allow-lists at the top of the test (keep them in step with `docs/WHAT_THE_SITE_STORES.md`): reading all 9 pages in two languages contacts no other site and keeps nothing; a full home-page visit keeps only `wa.lang` (key and value shape checked), no cookie, sessionStorage, IndexedDB, Cache Storage or service worker; the other sites contacted (OpenStreetMap search, OSRM, Mailchimp, Google Calendar) are on the list **and only after their own button**; the address typed into the Drive time box reaches only the address search (not storage, the page address, the #hash, any other request or Referer); every Referer is the site name only; what Mailchimp and Google Calendar get; the language question and the checklist keys; the shipped files name no unlisted site, load nothing from another site and use storage only in `js/i18n.js` and `js/main.js`; `_headers` keeps the Referrer-Policy and Permissions-Policy; the Content-Security-Policy documented in `docs/LAUNCH_CHECKLIST.md` blocks nothing the site does. **Fails when a new storage key, cookie or outside site appears**: then decide, add it to the list in the test and to `docs/WHAT_THE_SITE_STORES.md` |
++| `privacy-page` | the visitor privacy page (optional patch `privacy-page.patch`; `docs/PRIVACY_PAGE_EVIDENCE.md`): every piece of text on `pages/privacy.html` is in the evidence document with the code or test that shows it; every page links to it and `sitemap.xml` lists it; the facts it states match the code (three storage keys, the four outside sites, no location, camera or microphone, analytics off, no live week feed, the footer email, the date); the two sets of visit-counter sentences switch correctly for no counter, each of the four counters, a half-filled setting, Do Not Track and Global Privacy Control, in English, Spanish and Chinese |
+ | `visual-check` | the visual check tool itself (`visual-check.mjs`, see "The visual check" below), on a temporary copy of the site and one small page: no baseline is refused, `--update` saves a small text baseline, an unchanged site gives "Nothing looks different", a changed heading color is reported with a picture. Never touches your own baseline in `tests/.visual/`. Takes one to three minutes |
+ 
+ ## The visual check: "does it still look the same?"
+diff --git a/tests/auto-dark.test.mjs b/tests/auto-dark.test.mjs
+index 5a18da6..9297df0 100644
+--- a/tests/auto-dark.test.mjs
++++ b/tests/auto-dark.test.mjs
+@@ -12,7 +12,7 @@ import path from 'node:path';
+ import { run, ok, skip, info, ROOT, until, ms, settled } from './lib.mjs';
+ 
+ const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
+-const PAGES = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'strawberry-picking.html', 'school-field-trips.html', 'wise-pie.html', '404.html', 'print/qr-signs.html'];
++const PAGES = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'strawberry-picking.html', 'school-field-trips.html', 'wise-pie.html', 'privacy.html', '404.html', 'print/qr-signs.html'];
+ const TAG = /<meta name="color-scheme" content="only light">/;
+ 
+ // pictures -> numbers: in a blank page, decode the picture of an element and say how well its text can be read against its background
+diff --git a/tests/axe.test.mjs b/tests/axe.test.mjs
+index 832780b..59e65ae 100644
+--- a/tests/axe.test.mjs
++++ b/tests/axe.test.mjs
+@@ -19,7 +19,7 @@ const STILL = '.reveal{opacity:1!important;transform:none!important}*{animation:
+ 
+ await run('axe', async ({ browser, base, errs }) => {
+   const found = {};
+-  for (const [page, width, lang] of [['index.html', 1440, 'en'], ['index.html', 390, 'en'], ['index.html', 1440, 'zh'], ['first-visit.html', 1440, 'en'], ['first-visit.html', 390, 'zh']]) {
++  for (const [page, width, lang] of [['index.html', 1440, 'en'], ['index.html', 390, 'en'], ['index.html', 1440, 'zh'], ['first-visit.html', 1440, 'en'], ['first-visit.html', 390, 'zh'], ['privacy.html', 390, 'en'], ['privacy.html', 1440, 'vi']]) {
+     const p = await open(browser, base, page, errs, { viewport: { width, height: 900 }, lang, extra: EXTRA });
+     await p.addStyleTag({ content: STILL });
+     await until(p, () => document.readyState === 'complete');
+diff --git a/tests/consistency.test.mjs b/tests/consistency.test.mjs
+index 76db011..26574ee 100644
+--- a/tests/consistency.test.mjs
++++ b/tests/consistency.test.mjs
+@@ -56,7 +56,7 @@ function readPage(file) {
+   return { file, text, marks, attrs, jsonld, badLd: ldBlocks.filter((b) => !b.data).length, lineOf: (i) => { let lo = 0, hi = marks.length - 1; while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (marks[mid][0] <= i) lo = mid; else hi = mid - 1; } return marks[lo][1]; } };
+ }
+ 
+-const PAGES = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'strawberry-picking.html', 'school-field-trips.html', 'wise-pie.html'].map(readPage);
++const PAGES = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'strawberry-picking.html', 'school-field-trips.html', 'wise-pie.html', 'privacy.html'].map(readPage);
+ const page = (f) => PAGES.find((p) => p.file === f);
+ const snippet = (p, i, len) => p.text.slice(Math.max(0, i - 12), i + len + 12).replace(/\s+/g, ' ');
+ 
+diff --git a/tests/i18n-a11y.test.mjs b/tests/i18n-a11y.test.mjs
+index 11636e1..21d6f13 100644
+--- a/tests/i18n-a11y.test.mjs
++++ b/tests/i18n-a11y.test.mjs
+@@ -48,7 +48,7 @@ await run('i18n-a11y', async ({ browser, base, errs }) => {
+   ok('no page sets a text direction (none of the languages is right to left)', await en.evaluate(() => !document.querySelector('[dir]') && getComputedStyle(document.documentElement).direction === 'ltr'));
+ 
+   for (const lang of ['es', 'hi', 'zh', 'vi']) {
+-    for (const page of ['index.html', 'wise-pie.html', 'first-visit.html']) {
++    for (const page of ['index.html', 'wise-pie.html', 'first-visit.html', 'privacy.html']) {
+       const p = await open(browser, base, page, errs, { lang, extra: EXTRA });
+       const r = await names(p);
+       ok(`${lang} ${page}: farm, pizza, street and service names carry lang="en" (${r.marked} marked)`, r.left.length === 0 && r.marked > 10 && r.badLang === 0 && r.nested === 0, JSON.stringify(r.left.slice(0, 4)));
+diff --git a/tests/i18n-facts.test.mjs b/tests/i18n-facts.test.mjs
+index 4b0fa0c..8ec394c 100644
+--- a/tests/i18n-facts.test.mjs
++++ b/tests/i18n-facts.test.mjs
+@@ -87,6 +87,15 @@ ok('every entry of tools/i18n_facts_allow.json still matches a difference (nothi
+     zh: [['$3 per person, ages 3 and up', '每人 $3，3 岁及以上'], ['Open every Tuesday at 5:00 PM', '每周二下午 5:00 开放'], ['Friday through Sunday, 4 to 8 pm', '周五至周日，下午 4 点至 8 点'], ['Oct 6', '10 月 6 日'], ['10 am – 4 pm', '上午 10 点至下午 4 点'], ['Tuesday, Nov 3, 9 am–1 pm', '11 月 3 日周二，上午 9 点至下午 1 点'], ['Six years of farming', '六年的种植经验']],
+     vi: [['$3 per person, ages 3 and up', '$3 mỗi người (từ 3 tuổi trở lên)'], ['Open every Tuesday at 5:00 PM', 'Mở vào Thứ Ba lúc 5 giờ chiều hằng tuần'], ['Friday through Sunday, 4 to 8 pm', 'Thứ Sáu đến Chủ Nhật, 4 đến 8 giờ tối'], ['Oct 6', '6 thg 10'], ['10 am – 4 pm', '10 giờ sáng – 4 giờ chiều'], ['Tuesday, Nov 3', 'Thứ Ba, 3 thg 11']],
+   };
++  // the day written first, as in the privacy page ("4 October 2026"): the right date passes, a wrong day and a wrong month are found
++  const DMY_EN = 'This page was written on 4 October 2026.';
++  const DMY = {
++    es: ['Esta página se escribió el 4 de octubre de 2026.', 'Esta página se escribió el 5 de octubre de 2026.', 'Esta página se escribió el 4 de noviembre de 2026.'],
++    hi: ['यह पेज 4 अक्तूबर 2026 को लिखा गया था।', 'यह पेज 5 अक्तूबर 2026 को लिखा गया था।', 'यह पेज 4 नवंबर 2026 को लिखा गया था।'],
++    zh: ['本页写于 2026 年 10 月 4 日。', '本页写于 2026 年 10 月 5 日。', '本页写于 2026 年 11 月 4 日。'],
++    vi: ['Trang này được viết ngày 4 tháng 10 năm 2026.', 'Trang này được viết ngày 5 tháng 10 năm 2026.', 'Trang này được viết ngày 4 tháng 11 năm 2026.'],
++  };
++  for (const l of LANGS) { WRONG[l].push(['date', DMY_EN, DMY[l][1]], ['date', DMY_EN, DMY[l][2]]); RIGHT[l].push([DMY_EN, DMY[l][0]]); }
+   const blind = [], noisy = []; let nWrong = 0, nRight = 0;
+   for (const l of LANGS) {
+     for (const [kind, en, tr] of WRONG[l]) { nWrong++; if (!compare(en, tr, l).some((d) => d.kind === kind)) blind.push(`${l} [${kind}] "${tr}"`); }
+diff --git a/tests/keyboard.test.mjs b/tests/keyboard.test.mjs
+index e564790..f10ccda 100644
+--- a/tests/keyboard.test.mjs
++++ b/tests/keyboard.test.mjs
+@@ -12,7 +12,7 @@
+ import { run, open, ok, info, until } from './lib.mjs';
+ 
+ // Which language each page is walked in besides English (Hindi or Chinese, both scripts with no Latin letters, so English left over shows).
+-const PAGES = [['index.html', 'zh'], ['first-visit.html', 'hi'], ['pumpkin-patch.html', 'zh'], ['strawberry-picking.html', 'hi'], ['school-field-trips.html', 'zh'], ['wise-pie.html', 'hi']];
++const PAGES = [['index.html', 'zh'], ['first-visit.html', 'hi'], ['pumpkin-patch.html', 'zh'], ['strawberry-picking.html', 'hi'], ['school-field-trips.html', 'zh'], ['wise-pie.html', 'hi'], ['privacy.html', 'zh']];
+ const WIDE = { width: 1280, height: 900 }, PHONE = { width: 390, height: 800 };
+ // Names that stay English in every language (the farm's own names, places, services, people), so they are not "English left over".
+ const NAMES = /Wise Acres( Organic Farm)?|Wise Pie|The GreenHouse|GreenHouse|Instagram|Facebook|Google( Maps| Calendar)?|Apple Maps|Waze|Tripadvisor|Yelp|Axios Charlotte|USDA|Indian Trail|Hartis Rd|Poplin Rd|OpenStreetMap|Bookeo|Mailchimp|Halfzies|Ricotta Pie|Dill Pickle|Bee Keeper|Farmer Cathy|Waxhaw Creamery|Uno Alla Volta|Wholly Wholesome|Follow Your Heart|English|Español|Tiếng Việt|[\w.+-]+@[\w.-]+|https?:\S+|[#@]\w+/g;
+diff --git a/tests/layout-sweep.test.mjs b/tests/layout-sweep.test.mjs
+index 2534c89..d1efddd 100644
+--- a/tests/layout-sweep.test.mjs
++++ b/tests/layout-sweep.test.mjs
+@@ -10,7 +10,7 @@
+ import { run, open, ok, info, until, settled, ms } from './lib.mjs';
+ import { auditLayout } from './layout-audit.mjs';
+ 
+-const PAGES = ['index.html', 'first-visit.html'];
++const PAGES = ['index.html', 'first-visit.html', 'privacy.html'];
+ const LANGS = ['es', 'hi', 'zh', 'vi'];
+ const SIZES = [{ w: 320, h: 568 }, { w: 390, h: 844 }, { w: 1280, h: 800 }];
+ const PARALLEL = 4;
+diff --git a/tests/no-js.test.mjs b/tests/no-js.test.mjs
+index a3d6c23..402270a 100644
+--- a/tests/no-js.test.mjs
++++ b/tests/no-js.test.mjs
+@@ -17,7 +17,7 @@ import path from 'node:path';
+ import zlib from 'node:zlib';
+ import { run, ok, info, until, ms, ROOT } from './lib.mjs';
+ 
+-const PAGES = ['index', 'first-visit', 'pumpkin-patch', 'strawberry-picking', 'school-field-trips', 'wise-pie'];
++const PAGES = ['index', 'first-visit', 'pumpkin-patch', 'strawberry-picking', 'school-field-trips', 'wise-pie', 'privacy'];
+ const HOURS = ['index', 'first-visit', 'pumpkin-patch', 'wise-pie'], PRICES = ['index', 'pumpkin-patch', 'school-field-trips'];   // where the page itself says it (the others link to the home page)
+ const LANES = 3;   // pages loaded at the same time in parts 2 to 4
+ const NOW = '2026-10-02T12:00:00-04:00';   // a Friday in fall: the farm is open
+@@ -124,14 +124,16 @@ await run('no-js', async ({ browser, base, errs }) => {
+         ok(label + ': the parts that exist only with a script (season switcher, picking game, farm map) are hidden, not empty', f.seasonSwitch === 0 && f.picker === 0 && f.mapShown === 0, `switcher ${f.seasonSwitch}, game ${f.picker}, map ${f.mapShown}`);
+         if (w === 390 && !q) info(`${f.dated} dated lines (data-until) stay on show without a script: they cannot hide themselves after their day (README: "Visitors without JavaScript still see it")`);
+       }
+-      // the questions open and close with the browser's own behavior
+-      let opened = false, why = '';
+-      try {
+-        const sum = await p.locator('details:not([open]) > summary:visible').first().elementHandle({ timeout: ms(5000) });   // a handle: after the click a locator would point at the next closed question
+-        await sum.click({ timeout: ms(10000) });
+-        opened = await sum.evaluate((s) => s.parentElement.open && [...s.parentElement.children].some((c) => c !== s && c.getClientRects().length > 0));
+-      } catch (e) { why = String(e.message).split('\n')[0]; }
+-      ok(label + ': a question opens without JavaScript and shows its answer', opened, why);
++      // the questions open and close with the browser's own behavior (the privacy page has no questions)
++      if (pg !== 'privacy') {
++        let opened = false, why = '';
++        try {
++          const sum = await p.locator('details:not([open]) > summary:visible').first().elementHandle({ timeout: ms(5000) });   // a handle: after the click a locator would point at the next closed question
++          await sum.click({ timeout: ms(10000) });
++          opened = await sum.evaluate((s) => s.parentElement.open && [...s.parentElement.children].some((c) => c !== s && c.getClientRects().length > 0));
++        } catch (e) { why = String(e.message).split('\n')[0]; }
++        ok(label + ': a question opens without JavaScript and shows its answer', opened, why);
++      }
+       await p.close();
+     }
+     await ctx.close();
+@@ -141,7 +143,7 @@ await run('no-js', async ({ browser, base, errs }) => {
+ 
+   /* ================= 2. Pictures blocked ================= */
+   const noPictures = async (p) => { await p.route('**/*', (r) => (r.request().resourceType() === 'image' ? r.abort() : r.continue())); };
+-  const unpictured = await inLanes([['index', 390], ['index', 1280], ['first-visit', 390], ['pumpkin-patch', 390], ['strawberry-picking', 390], ['school-field-trips', 390], ['wise-pie', 390]], LANES, async ([pg, w]) => {
++  const unpictured = await inLanes([['index', 390], ['index', 1280], ['first-visit', 390], ['pumpkin-patch', 390], ['strawberry-picking', 390], ['school-field-trips', 390], ['wise-pie', 390], ['privacy', 390]], LANES, async ([pg, w]) => {
+     const label = `pictures blocked, ${pg}, ${w} px`, checks = [];
+     const p = await open_(browser, base, pg + '.html', errs, w, { routes: noPictures });
+     await p.evaluate(() => document.querySelectorAll('img[loading="lazy"]').forEach((i) => { i.loading = 'eager'; }));
+diff --git a/tests/privacy-page.test.mjs b/tests/privacy-page.test.mjs
+new file mode 100644
+index 0000000..2f238f5
+--- /dev/null
++++ b/tests/privacy-page.test.mjs
+@@ -0,0 +1,99 @@
++/* The privacy page (privacy.html, built from pages/privacy.html): it exists, every page links to it and the sitemap lists it, every sentence on it is in
++ * docs/PRIVACY_PAGE_EVIDENCE.md (which says where the code shows it), the facts it states still match the code and the settings, and its two sets of
++ * visit-counter sentences switch correctly (no counter: the first set; a counter really runs: the second set; Do Not Track or a half-filled setting: the
++ * first set again), in English and in another language. The reading and storage facts themselves are tested by tests/privacy.test.mjs. Needs a browser. */
++import fs from 'node:fs';
++import path from 'node:path';
++import { run, open, ok, info, ROOT } from './lib.mjs';
++
++const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
++const has = (f) => fs.existsSync(path.join(ROOT, f));
++const decode = (s) => s.replace(/&rsquo;/g, '’').replace(/&lsquo;/g, '‘').replace(/&ldquo;/g, '“').replace(/&rdquo;/g, '”').replace(/&mdash;/g, '—').replace(/&ndash;/g, '–').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
++const plainQuotes = (s) => s.replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"');   // the page has curly quotes, the document may have straight ones
++const text = (html) => plainQuotes(decode(html.replace(/<[^>]+>/g, ''))).replace(/\s+/g, ' ').trim();
++
++/* ---------------------------------------------------------------- 1. the files (no browser needed) */
++ok('pages/privacy.html is built into privacy.html (run python3 tools/pages.py)', has('pages/privacy.html') && has('privacy.html') && /<h1[^>]*>What this website keeps and shares<\/h1>/.test(read('privacy.html')));
++const src = read('pages/privacy.html').replace(/^\s*---[\s\S]*?\n---\s*\n/, '');
++const blocks = [];
++for (const tag of ['h1', 'h2', 'h3', 'p', 'summary']) for (const m of src.matchAll(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, 'g'))) blocks.push(text(m[1]));
++for (const m of src.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)) if (!/<(p|h3|ul|li)\b/.test(m[1])) blocks.push(text(m[1]));
++const evidence = text(read('docs/PRIVACY_PAGE_EVIDENCE.md'));
++const missingFromEvidence = blocks.filter((b) => b && !evidence.includes(b));
++ok(`every one of the ${blocks.length} pieces of text on the page is in docs/PRIVACY_PAGE_EVIDENCE.md (with the code or test that shows it)`, blocks.length > 30 && missingFromEvidence.length === 0, missingFromEvidence.slice(0, 3).join(' | '));
++const rows = [...read('docs/PRIVACY_PAGE_EVIDENCE.md').matchAll(/^\| P\d\d \| (.+?) \| (.+?) \| (.+?) \|$/gm)];
++const said = (c, n) => c.trim().length > n || /^(As|The same as) P\d\d/.test(c.trim());   // "As P02." points to the row that has the evidence
++ok('every sentence row of the evidence document names where it comes from and how it was checked', rows.length >= 40 && rows.every((r) => said(r[2], 12) && said(r[3], 5)), rows.filter((r) => !(said(r[2], 12) && said(r[3], 5))).map((r) => r[1].slice(0, 30)).join(' | '));
++
++const pagesHtml = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html') && f !== '404.html');
++const noLink = pagesHtml.filter((f) => !/<a\b[^>]*href="privacy\.html"/.test(read(f)));
++ok(`every page links to the privacy page in its footer (${pagesHtml.length} pages)`, pagesHtml.length >= 7 && noLink.length === 0, noLink.join(', '));
++ok('sitemap.xml lists the privacy page, and robots.txt does not block it', /<loc>https:\/\/www\.wiseacresorganic\.com\/privacy\.html<\/loc>/.test(read('sitemap.xml')) && !/Disallow:\s*\/privacy/.test(read('robots.txt')));
++
++/* the number of new texts the patch says it brings (header "Strings:", the two doc rows) is the number the page really has */
++{
++  const idsOf = (html) => new Set([...html.matchAll(/\bdata-(?:t|ta-[a-z-]+)="(t[0-9a-f]{8})"/g)].map((m) => m[1]));
++  const footerLink = /<li><a [^>]*href="privacy\.html"[^>]*>[^<]*<\/a><\/li>/g;   // the one footer line the other pages gain from this patch
++  const others = new Set(); for (const f of pagesHtml.filter((x) => x !== 'privacy.html')) for (const id of idsOf(read(f).replace(footerLink, ''))) others.add(id);
++  const fresh = [...idsOf(read('privacy.html'))].filter((id) => !others.has(id));   // the texts of the page and the footer link ("Privacy"); a text the page shares with another page is already translated
++  const js = has('lang/js-strings.json') ? Object.keys(JSON.parse(read('lang/js-strings.json'))) : [];
++  const meta = read('pages/privacy.html').match(/^title:\s*(.+)$/m), desc = read('pages/privacy.html').match(/^description:\s*(.+)$/m);
++  const scriptTexts = [meta && meta[1].trim(), desc && desc[1].trim()].filter((t) => t && js.includes(t)).length;
++  const total = fresh.length + scriptTexts;
++  const PATCH = 'patches/optional/privacy-page.patch';
++  if (has(PATCH)) {
++    const said = (/^Strings:\s*(\d+) new texts per language/m.exec(read(PATCH)) || [])[1];
++    ok(`the patch header says ${said} new texts per language: the page and footer have ${fresh.length} and the page's title and description are ${scriptTexts}, ${total} in all`, Number(said) === total, `header ${said}, found ${total}`);
++    const rows = ['docs/OPTION_PATCHES.md', 'docs/DECISION_PLAYBOOK.md'].filter(has).flatMap((f) => read(f).split('\n').filter((l) => l.includes('privacy-page.patch') && /\d+ new texts/.test(l)).map((l) => [f, /(\d+) new texts/.exec(l)[1]]));
++    ok('the rows in docs/OPTION_PATCHES.md and docs/DECISION_PLAYBOOK.md say the same number of new texts', rows.length === 0 || rows.every(([, n]) => Number(n) === total), rows.map(([f, n]) => f + ' ' + n).join(', '));
++  } else info('patches/optional/privacy-page.patch is not there any more (it was applied for good): the count of new texts is not compared');
++}
++
++/* the facts the page states must match the code */
++const code = fs.readdirSync(path.join(ROOT, 'js')).filter((f) => f.endsWith('.js')).map((f) => [f, read('js/' + f)]);
++const keys = new Set(); for (const f of ['i18n.js', 'main.js']) for (const m of read('js/' + f).matchAll(/['"](wa\.[A-Za-z.]+)['"]/g)) keys.add(m[1]);
++ok('the page says "three small notes" and the code writes exactly three keys', /three small notes/.test(evidence) && keys.size === 3, [...keys].join(', '));
++const pv = read('tests/privacy.test.mjs'), hostLines = [...pv.matchAll(/\{ host: \/[^/]+\/, phase: '([a-z-]+)'/g)].map((m) => m[1]);
++ok('the page names every outside site the privacy test lets the page contact (address search, route server, Mailchimp, Google Calendar)', hostLines.length === 4 && ['OpenStreetMap', 'OSRM', 'Mailchimp', 'Google Calendar'].every((n) => src.includes(n)), hostLines.join(','));
++const settings = read('js/content.js');
++const provider = (/^\s*analytics:\s*\{\s*provider:\s*'(\w+)'/m.exec(settings) || [])[1];
++ok('the visit counter setting in js/content.js is one the page has sentences for (none, plausible, goatcounter, umami or cloudflare)', ['none', 'plausible', 'goatcounter', 'umami', 'cloudflare'].includes(provider), String(provider));
++info(provider === 'none' ? 'analytics is off in js/content.js: the first set of visit-counter sentences shows' : `analytics is "${provider}" in js/content.js: the second set of visit-counter sentences shows when its address or name is filled in. Read it before launch.`);
++ok('the live week feed is not set (the page does not describe it; add a sentence first if the farm sets week.feed)', /^\s*week:\s*\{\s*\},/m.test(settings));
++ok('no script asks for the location, the camera or the microphone', code.every(([f, c]) => !/geolocation|getUserMedia|mediaDevices/.test(c.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ''))), code.filter(([f, c]) => /getUserMedia|mediaDevices/.test(c)).map(([f]) => f).join(', '));
++ok('no page has a password box or a file box', pagesHtml.every((f) => !/type\s*=\s*["']?(password|file)/i.test(read(f))));
++const footerMail = (read('index.html').match(/<address[\s\S]*?mailto:([^"]+)"/) || [])[1];
++ok('the email on the page is the one in the footer', !!footerMail && src.includes('mailto:' + footerMail) && evidence.includes(footerMail), footerMail);
++const written = (src.match(/written on (\d+ \w+ 20\d\d)/) || [])[1];
++ok('the date on the page is the date in the evidence document', !!written && /\*\*Written:\*\* (\d+ \w+ 20\d\d)/.exec(read('docs/PRIVACY_PAGE_EVIDENCE.md'))[1] === written, written);
++const variants = (n) => (src.match(new RegExp(`data-analytics="${n}"`, 'g')) || []).length;
++ok('each visit-counter sentence has both versions (a card and a block for "off" and for "on"), and "on" starts hidden', variants('off') === 2 && variants('on') === 2 && /data-analytics="on" hidden/.test(src) && !/data-analytics="off"[^>]*hidden/.test(src), `off ${variants('off')}, on ${variants('on')}`);
++
++/* ---------------------------------------------------------------- 2. the two sets of sentences, in a browser */
++await run('privacy-page', async ({ browser, base, errs }) => {
++  const ORIGIN = base.replace(/\/$/, '');
++  const stand = async (pg) => { await pg.context().route((u) => u.protocol.startsWith('http') && !u.href.startsWith(ORIGIN + '/'), (r) => r.fulfill({ status: 200, contentType: 'application/javascript', body: '' })); };
++  const shown = (p) => p.evaluate(() => {
++    const vis = (n) => [...document.querySelectorAll(`[data-analytics="${n}"]`)].filter((e) => !e.hidden && getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().height > 0).length;
++    return { off: vis('off'), on: vis('on'), h1: document.querySelectorAll('h1').length };
++  });
++  const cases = [
++    ['no counter (the setting is none)', { extra: `WISE_ACRES.analytics = { provider: 'none' };` }, 'off'],
++    ['Plausible with its site name', { extra: `WISE_ACRES.analytics = { provider: 'plausible', site: 'example.test' };`, routes: stand }, 'on'],
++    ['GoatCounter with its address', { extra: `WISE_ACRES.analytics = { provider: 'goatcounter', endpoint: 'https://example.goatcounter.test/count' };`, routes: stand }, 'on'],
++    ['Umami with its site and script', { extra: `WISE_ACRES.analytics = { provider: 'umami', site: 'abc', src: 'https://umami.example.test/script.js' };`, routes: stand }, 'on'],
++    ['Cloudflare with its token', { extra: `WISE_ACRES.analytics = { provider: 'cloudflare', token: 'tok' };`, routes: stand }, 'on'],
++    ['a provider named but its setting left empty (no script is added)', { extra: `WISE_ACRES.analytics = { provider: 'plausible' };` }, 'off'],
++    ['a counter set, but the browser says Do Not Track', { extra: `Object.defineProperty(navigator, 'doNotTrack', { get: () => '1' }); WISE_ACRES.analytics = { provider: 'plausible', site: 'example.test' };`, routes: stand }, 'off'],
++    ['a counter set, but the browser sends Global Privacy Control', { extra: `Object.defineProperty(navigator, 'globalPrivacyControl', { get: () => true }); WISE_ACRES.analytics = { provider: 'plausible', site: 'example.test' };`, routes: stand }, 'off'],
++  ];
++  for (const lang of [undefined, 'es', 'zh']) for (const [name, opts, want] of cases) {
++    if (lang && !/Plausible with|no counter/.test(name)) continue;   // other languages: the first and the second set only
++    const p = await open(browser, base, 'privacy.html', errs, { ...opts, lang });
++    const s = await shown(p);
++    const right = want === 'on' ? s.on === 2 && s.off === 0 : s.off === 2 && s.on === 0;
++    ok(`${lang || 'en'}: ${name}: the ${want === 'on' ? 'second (counter is on)' : 'first (no counter)'} set of sentences shows, the other is hidden`, right && s.h1 === 1, JSON.stringify(s));
++    await p.context().close();
++  }
++  info('the page was opened with 8 settings in English and 2 of them in Spanish and Chinese');
++});
+diff --git a/tests/privacy.test.mjs b/tests/privacy.test.mjs
+index 9286657..9ed6af9 100644
+--- a/tests/privacy.test.mjs
++++ b/tests/privacy.test.mjs
+@@ -132,7 +132,7 @@ await run('privacy', async ({ browser, base, errs }) => {
+ 
+   /* ---------------------------------------------------------------- 2. just reading: every public page, English and one other language */
+   const OTHER = ['es', 'hi', 'zh', 'vi'];
+-  const pages = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'school-field-trips.html', 'strawberry-picking.html', 'wise-pie.html', '404.html', 'print/qr-signs.html'];
++  const pages = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'school-field-trips.html', 'strawberry-picking.html', 'wise-pie.html', 'privacy.html', '404.html', 'print/qr-signs.html'];
+   const reading = [];
+   for (const [i, pg] of pages.entries()) for (const lang of ['en', OTHER[i % OTHER.length]]) {
+     const plain = /404|qr-signs/.test(pg);
+@@ -144,7 +144,7 @@ await run('privacy', async ({ browser, base, errs }) => {
+     await S.p.context().close();
+   }
+   const withExt = reading.filter((r) => r.ext.length);
+-  ok(`reading ${reading.length} page visits (8 pages, English and another language each): no other site is contacted`, withExt.length === 0, withExt.map((r) => r.pg + ' ' + r.lang + ' -> ' + r.ext[0]).join(' | '));
++  ok(`reading ${reading.length} page visits (9 pages, English and another language each): no other site is contacted`, withExt.length === 0, withExt.map((r) => r.pg + ' ' + r.lang + ' -> ' + r.ext[0]).join(' | '));
+   const withKept = reading.filter((r) => !nothingKept(r.kept));
+   ok('reading leaves nothing behind: no localStorage, sessionStorage, cookie, IndexedDB, Cache Storage or service worker (also for a ?lang= link)', withKept.length === 0, withKept.map((r) => r.pg + ' ' + r.lang + ' ' + JSON.stringify(r.kept)).join(' | '));
+   info(reading.length + ' visits, ' + reading.reduce((n, r) => n + r.own, 0) + ' requests, all to the site itself');
+diff --git a/tests/seo.test.mjs b/tests/seo.test.mjs
+index 578c560..c64caeb 100644
+--- a/tests/seo.test.mjs
++++ b/tests/seo.test.mjs
+@@ -5,7 +5,7 @@
+  *   - every page: its own title (20 to 62 letters) and description (110 to 165 letters), both different on every page, one canonical address that is the
+  *     site's own, og:url the same, the share picture present, as big as the tags say (1200 x 630) and small enough for WhatsApp (300 KB),
+  *     with a description of it, twitter tags that match, lang="en", nothing that asks for a per-language address (there is none: see docs/SEARCH_AND_SHARING_CHECK.md)
+- *   - robots: the 6 pages may be indexed; 404.html and print/ may not
++ *   - robots: the 7 pages may be indexed; 404.html and print/ may not
+  *   - structured data (JSON-LD): parses; only the types the site uses; the business has a name, a postal address, its own address and an e-mail the page
+  *     shows; every extra page's WebPage says what the page's own tags say; every FAQ question is on the page; every price in it is on the page;
+  *     nothing that needs data the site does not have (a star rating, reviews, offers); an Event, if one is ever added, is complete and not in the past
+@@ -60,10 +60,10 @@ ok('self-test: a sitemap with a missing page, an extra page, a twin or a future
+ const files = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html') && f !== '404.html').sort();
+ const html = Object.fromEntries(files.map((f) => [f, read(f)]));
+ const canonOf = (f) => SITE + (f === 'index.html' ? '' : f);
+-ok('the site has the 6 pages this test knows (a new page needs a line in the sitemap and its own tags: then this count changes)', files.length === 6, files.join(', '));
++ok('the site has the 7 pages this test knows (a new page needs a line in the sitemap and its own tags: then this count changes)', files.length === 7, files.join(', '));
+ 
+ const per = (what, fn) => { const bad = files.map((f) => { const r = fn(html[f], f); return r ? f + ': ' + r : ''; }).filter(Boolean); ok(what, bad.length === 0, bad.slice(0, 4).join(' | ')); };
+-const unique = (what, fn) => { const seen = {}; const bad = []; for (const f of files) { const v = fn(html[f]); if (seen[v]) bad.push(f + ' = ' + seen[v]); seen[v] = f; } ok(what, bad.length === 0, bad.join(' | ')); };
++const unique = (what, fn, skip = []) => { const seen = {}; const bad = []; for (const f of files.filter((x) => !skip.includes(x))) { const v = fn(html[f]); if (seen[v]) bad.push(f + ' = ' + seen[v]); seen[v] = f; } ok(what, bad.length === 0, bad.join(' | ')); };
+ 
+ per('every page title is 20 to 62 letters (search results show about 50 to 60)', (h) => lengthProblem('title', titleOf(h), 20, 62));
+ per('every page description is 110 to 165 letters (search results show about 120 to 160)', (h) => lengthProblem('description', meta(h, 'description') || '', 110, 165));
+@@ -85,9 +85,9 @@ per('the share picture is on this site, is a real PNG as big as og:image:width/h
+   if (fs.statSync(path.join(ROOT, f)).size > 300 * 1024) return f + ' is over 300 KB';
+   return alt.length < 40 ? 'og:image:alt is too short' : '';
+ });
+-unique('every page has its own share picture', (h) => meta(h, 'og:image'));
++unique('every page has its own share picture (the privacy page uses the home page one: it is not made to be shared)', (h) => meta(h, 'og:image'), ['privacy.html']);
+ per('no page asks for a per-language address (no hreflang, no og:locale:alternate): the site has one address per page and swaps the words in the browser', (h) => (/hreflang|og:locale:alternate/.test(h) ? 'hreflang or og:locale:alternate found: every language needs its own address first' : ''));
+-per('no page is marked noindex (these 6 are meant to be found)', (h) => (/<meta name="robots"[^>]*(noindex|none)/i.test(h) ? 'noindex' : ''));
++per('no page is marked noindex (these 7 are meant to be found)', (h) => (/<meta name="robots"[^>]*(noindex|none)/i.test(h) ? 'noindex' : ''));
+ const notFound = read('404.html');
+ ok('404.html is marked noindex and has no canonical address', /<meta name="robots" content="noindex">/.test(notFound) && link(notFound, 'canonical').length === 0);
+ const printed = fs.readdirSync(path.join(ROOT, 'print')).filter((f) => f.endsWith('.html'));
+@@ -149,7 +149,7 @@ const sm = read('sitemap.xml');
+ const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+ const lastmods = [...sm.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]);
+ const problems = sitemapProblems(locs, files.map(canonOf), NOW, lastmods);
+-ok('sitemap.xml lists exactly the 6 pages at their canonical addresses, each once, with no future or invented lastmod', problems.length === 0, problems.join(' | '));
++ok('sitemap.xml lists exactly the 7 pages at their canonical addresses, each once, with no future or invented lastmod', problems.length === 0, problems.join(' | '));
+ const robots = read('robots.txt');
+ const blocked = [...robots.matchAll(/^Disallow:\s*(\S+)/gm)].map((m) => m[1]).filter((p) => locs.some((u) => new URL(u).pathname.startsWith(p)));
+ ok('robots.txt names the sitemap by its full address and blocks none of the pages in it', robots.includes('Sitemap: ' + SITE + 'sitemap.xml') && blocked.length === 0, blocked.join(', '));
+diff --git a/tests/sprite.test.mjs b/tests/sprite.test.mjs
+index 757d479..3bd53d7 100644
+--- a/tests/sprite.test.mjs
++++ b/tests/sprite.test.mjs
+@@ -8,7 +8,7 @@
+  * pages do not download js/hero.js. */
+ import { run, open, ok, okSoon, until } from './lib.mjs';
+ 
+-const PAGES = ['first-visit', 'pumpkin-patch', 'school-field-trips', 'strawberry-picking', 'wise-pie'];
++const PAGES = ['first-visit', 'pumpkin-patch', 'school-field-trips', 'strawberry-picking', 'wise-pie', 'privacy'];
+ const SEASON = { spring: '2026-04-25T12:00:00-04:00', summer: '2026-06-25T12:00:00-04:00', fall: '2026-10-02T12:00:00-04:00', winter: '2026-12-10T12:00:00-05:00' };
+ 
+ // every drawing the page points at, now (the ones that are on the page, and the ones that are not)
+diff --git a/tests/validity.test.mjs b/tests/validity.test.mjs
+index d10035c..4bc0605 100644
+--- a/tests/validity.test.mjs
++++ b/tests/validity.test.mjs
+@@ -308,7 +308,7 @@ function backgroundProblem(flat) {
+ }
+ 
+ /* ---------------- run ---------------- */
+-const pages = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'strawberry-picking.html', 'school-field-trips.html', 'wise-pie.html'];
++const pages = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'strawberry-picking.html', 'school-field-trips.html', 'wise-pie.html', 'privacy.html'];
+ 
+ // 0. the checks themselves, on broken samples
+ {
+diff --git a/tools/i18n_facts.mjs b/tools/i18n_facts.mjs
+index 44d8bd9..0b83892 100644
+--- a/tools/i18n_facts.mjs
++++ b/tools/i18n_facts.mjs
+@@ -71,7 +71,7 @@ const WORDS = {   // compared both ways: a promise of free that is not in the En
+ /** Words the English text has that the translation must also have (the other way round is not asked: a translation may say "solo" for "simply", or name the Christmas trees as such). */
+ const WORDS_ONE_WAY = {
+   always: [/\balways\b|\bat all times\b/i, /\bsiempre\b|en todo momento/i, /हमेशा|सदैव|हर समय|हर वक़्त/, /始终|总是|总有|一直|永远|每次都|时刻/, /\bluôn\b|mọi lúc|bất cứ lúc nào|suốt|lúc nào/i],
+-  never: [/\bnever\b/i, /\bnunca\b|\bjamás\b/i, /कभी (?:भी )?नहीं|कभी न/, /从不|绝不|永不|从来不|决不/, /không bao giờ|chẳng bao giờ/i],
++  never: [/\bnever\b/i, /\bnunca\b|\bjamás\b/i, /कभी (?:भी )?नहीं|कभी न/, /从不|绝不|永不|永远不会|永远不|从来不|决不/, /không bao giờ|chẳng bao giờ/i],
+   spring: [/\bspring\b/i, /primavera/i, /वसंत|बसंत/, /春/, /mùa xuân/i],
+   summer: [/\bsummer\b/i, /verano/i, /ग्रीष्म|गर्मी|गर्मियों/, /夏(?!洛)/, /mùa hè|mùa hạ/i],
+   fall: [/(?:\b(?:in|this|every|each|next|a|the|for|during|of|early|late|mid|until|through) |[.:] |^)fall\b|\b(?:Fall|Autumn)\b|\bfall (?:visits?|school|tours?|party|parties|hours|prices?|menu|special|reservations?|schedule|season|weekends?|days?|trips?|events?|fun)/i, /otoño/i, /शरद|पतझड़|पतझर|पतझड/, /秋/, /mùa thu/i],
+@@ -80,7 +80,7 @@ const WORDS_ONE_WAY = {
+   christmas: [/\bChristmas\b/i, /Navidad|navideñ/i, /क्रिसमस|क्रिस्मस|बड़ा दिन/, /圣诞|聖誕/, /Giáng sinh|Giáng Sinh|Noel/i],
+   easter: [/\bEaster\b/i, /Pascua/i, /ईस्टर/, /复活节/, /Phục sinh|Phục Sinh/i],
+   fathersday: [/Father'?s Day/i, /Día del Padre/i, /पिता दिवस|फ़ादर्स डे|फादर्स डे/, /父亲节/, /Ngày của Cha|Ngày Cha|Ngày của bố|Ngày của Bố|Ngày của ba/i],
+-  only: [/\bonly\b|-only\b/i, /\bsolo\b|\bsólo\b|solamente|únicamente|exclusivamente|\búnic[oa]s?\b/i, /केवल|सिर्फ़|सिर्फ|मात्र|ही|बस\s/, /仅|只有|只能|只需|只在|唯一|才|(?<![一二三四五六七八九十两几\d])只(?![山羊狗猫鸡])/, /\bchỉ\b|duy nhất/i],
++  only: [/\bonly\b|-only\b/i, /\bsolo\b|\bsólo\b|solamente|únicamente|exclusivamente|\búnic[oa]s?\b/i, /केवल|सिर्फ़|सिर्फ|मात्र|ही|तभी|बस\s/, /仅|只有|只能|只需|只在|唯一|才|(?<![一二三四五六七八九十两几\d])只(?![山羊狗猫鸡])/, /\bchỉ\b|duy nhất/i],
+   weekend: [/\bweekends?\b/i, /fin(?:es)? de semana/i, /वीकेंड|सप्ताहांत|सप्ताह के अंत/, /周末|週末/, /cuối tuần/i],
+   about: [/\b(?:about|around|approximately|roughly|nearly|almost)\s*(?:\d|\$|one|two|three|four|five|six|seven|eight|nine|ten|a (?:few|dozen|week|month|year|mile|couple)|half)/i,
+     /(?:aproximadamente|aprox\.?|alrededor de|cerca de|casi|unos|unas|más o menos)\s*(?:\$|\d|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|un |una |media)/i,
+@@ -190,6 +190,8 @@ function readDates(text, f, lang) {
+   const push = (mo, d) => { if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) f.date.push(mo + '/' + d); };
+   if (lang === 'en') {
+     text = blank(text, new RegExp(EN_MONTH_RX + '\\s+(\\d{1,2})(?!\\d)(?:\\s*(?:–|-|&|and|to|through)\\s*(?:' + EN_MONTH_RX.replace(/\\b\\\.\?$/, '') + '\\s+)?(\\d{1,2})(?!\\d))?', 'g'), (m, mo, d, mo2, d2) => { push(enMonthNo(mo), +d); if (d2) push(mo2 ? enMonthNo(mo2) : enMonthNo(mo), +d2); });
++    // the day first: "4 October 2026", "4 Oct", "23-25 October" (the year, if there is one, is read as a number later)
++    text = blank(text, new RegExp('(?<![\\d/])(\\d{1,2})(?!\\d)(?:\\s*(?:–|-|&|and|to|through)\\s*(\\d{1,2})(?!\\d))?\\s+(?:of\\s+)?' + EN_MONTH_RX, 'g'), (m, d, d2, mo) => { push(enMonthNo(mo), +d); if (d2) push(enMonthNo(mo), +d2); });
+     text = blank(text, /(?<![\d/])(\d{1,2})\/(\d{1,2})(?![\d/])/g, (m, a, b) => push(+a, +b));
+   } else if (lang === 'zh') {
+     text = blank(text, /(\d{1,2})\s*月\s*(\d{1,2})(?:\s*[日号]|(?=\s*(?:–|-|至|到|和|与|及|、|&)\s*\d{1,2}\s*[日号]))(?:\s*(?:–|-|至|到|和|与|及|、|&)\s*(?:(\d{1,2})\s*月\s*)?(\d{1,2})\s*[日号]?)?/g, (m, mo, d, mo2, d2) => { push(+mo, +d); if (d2) push(mo2 ? +mo2 : +mo, +d2); });
+diff --git a/tools/i18n_facts_allow.json b/tools/i18n_facts_allow.json
+index dbfa7c3..b72faf9 100644
+--- a/tools/i18n_facts_allow.json
++++ b/tools/i18n_facts_allow.json
+@@ -130,5 +130,11 @@
+   "id": "t9c63bc47",
+   "kind": "numbers",
+   "reason": "'Both' is written 两种 ('the two kinds'). Same meaning."
++ },
++ {
++  "lang": "hi",
++  "id": "t04c39593",
++  "kind": "numbers",
++  "reason": "'The two services may keep a record' is written वे दोनों सेवाएँ ('both services'). Same meaning, written with the word for both."
+  }
+ ]
+diff --git a/tools/plain_lint.py b/tools/plain_lint.py
+index 36e873a..943c399 100644
+--- a/tools/plain_lint.py
++++ b/tools/plain_lint.py
+@@ -95,6 +95,7 @@ FILES = {
+     'docs/BROWSER_INTERFERENCE.md': {'skip': []},
+     'docs/CREDITS_AND_LICENCES.md': {'skip': ['How the fonts were matched', 'How the icons were matched']},
+     'docs/OPTION_PATCHES.md': {'skip': []},
++    'docs/PRIVACY_PAGE_EVIDENCE.md': {'skip': []},
+     'docs/CHECK_A_LANGUAGE.md': {'skip': []},
+     'docs/PROPOSAL_owner_page.md': {'skip': []},
+ }
+diff --git a/tools/review_sheet.py b/tools/review_sheet.py
+index 22c61d4..b2bc985 100644
+--- a/tools/review_sheet.py
++++ b/tools/review_sheet.py
+@@ -103,7 +103,7 @@ FONTS = {   # the language's own font stack (system fonts only: the review folde
+     'vi': 'system-ui,"Segoe UI",Roboto,"Helvetica Neue","Trebuchet MS",Arial,sans-serif',
+ }
+ PAGE_NAMES = [('index.html', 'Home page'), ('first-visit.html', 'First visit page'), ('strawberry-picking.html', 'Strawberry picking page'),
+-              ('pumpkin-patch.html', 'Pumpkin patch page'), ('wise-pie.html', 'Wise Pie page'), ('school-field-trips.html', 'School trips page')]
++              ('pumpkin-patch.html', 'Pumpkin patch page'), ('wise-pie.html', 'Wise Pie page'), ('school-field-trips.html', 'School trips page'), ('privacy.html', 'Privacy page')]
+ HEADER = ['id', 'priority', 'where', 'English', 'current translation', 'question for you', 'correction', 'note']   # lowercase "id": a file that starts with capital ID is opened by Excel as a SYLK file
+ SHEET_NAME, README_NAME = 'Texts', 'Read me first'
+ PRIORITY_1, PRIORITY_2 = 150, 450   # the number of texts with priority 1 (about 20 minutes) and priority 2 (about an hour); all the others are 3
+diff --git a/tools/test_pages.py b/tools/test_pages.py
+index 9a0dfe4..d6b7b09 100644
+--- a/tools/test_pages.py
++++ b/tools/test_pages.py
+@@ -178,6 +178,8 @@ class Pages(unittest.TestCase):
+         self.assertTrue(pages)
+         seen = set()
+         for slug in pages:
++            if slug == 'privacy':
++                continue   # the privacy page is not made to be shared: it uses the home page's picture (tests/seo.test.mjs allows that for this one page)
+             with open(os.path.join(REAL, 'pages', slug + '.html'), encoding='utf-8-sig') as f:
+                 head = f.read().split('\n---\n')[0]
+             meta = dict(l.split(':', 1) for l in head.splitlines() if ':' in l)

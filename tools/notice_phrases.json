@@ -1,0 +1,84 @@
+{
+  "about": "The standard words of the notice bar for tools/close_today.py. Placeholders: {weekday} {date} (the day), {weekday2} {date2} (the last day of a run), {time}. The tool fills them in each language (weekday and month words come from tools/date_phrases.py). Edit a sentence here and the next closure uses it. Keep every placeholder and do not use < > \\ or straight double quotes.",
+  "native_read": {
+    "en": true,
+    "es": false,
+    "hi": false,
+    "zh": false,
+    "vi": false
+  },
+  "native_read_note": "false means the sentences were written by an AI and no native speaker has read them yet (same as the translations on the site: docs/QUESTIONS_FOR_THE_FARM.md, d37). Set a language to true here when someone has read it.",
+  "scenarios": {
+    "rain": {
+      "closes": true,
+      "one": {
+        "en": "Closed {weekday}, {date}, for rain. Thank you for understanding.",
+        "es": "Cerrado el {weekday} {date} por lluvia. Gracias por tu comprensión.",
+        "hi": "हम {weekday}, {date} को बारिश के कारण बंद रहेंगे। आपकी समझ के लिए धन्यवाद।",
+        "zh": "{date}（{weekday}）因下雨休息。感谢你的理解。",
+        "vi": "Chúng tôi đóng cửa {weekday}, {date} vì mưa. Cảm ơn bạn đã thông cảm."
+      },
+      "range": {
+        "en": "Closed {weekday}, {date}, to {weekday2}, {date2}, for rain. Thank you for understanding.",
+        "es": "Cerrado del {weekday} {date} al {weekday2} {date2} por lluvia. Gracias por tu comprensión.",
+        "hi": "हम {weekday}, {date} से {weekday2}, {date2} तक बारिश के कारण बंद रहेंगे। आपकी समझ के लिए धन्यवाद।",
+        "zh": "{date}（{weekday}）至 {date2}（{weekday2}）因下雨休息。感谢你的理解。",
+        "vi": "Chúng tôi đóng cửa từ {weekday}, {date} đến {weekday2}, {date2} vì mưa. Cảm ơn bạn đã thông cảm."
+      }
+    },
+    "wind": {
+      "closes": true,
+      "one": {
+        "en": "Closed {weekday}, {date}, for strong wind. Thank you for understanding.",
+        "es": "Cerrado el {weekday} {date} por el viento fuerte. Gracias por tu comprensión.",
+        "hi": "हम {weekday}, {date} को तेज़ हवा के कारण बंद रहेंगे। आपकी समझ के लिए धन्यवाद।",
+        "zh": "{date}（{weekday}）因大风休息。感谢你的理解。",
+        "vi": "Chúng tôi đóng cửa {weekday}, {date} vì gió lớn. Cảm ơn bạn đã thông cảm."
+      },
+      "range": {
+        "en": "Closed {weekday}, {date}, to {weekday2}, {date2}, for strong wind. Thank you for understanding.",
+        "es": "Cerrado del {weekday} {date} al {weekday2} {date2} por el viento fuerte. Gracias por tu comprensión.",
+        "hi": "हम {weekday}, {date} से {weekday2}, {date2} तक तेज़ हवा के कारण बंद रहेंगे। आपकी समझ के लिए धन्यवाद।",
+        "zh": "{date}（{weekday}）至 {date2}（{weekday2}）因大风休息。感谢你的理解。",
+        "vi": "Chúng tôi đóng cửa từ {weekday}, {date} đến {weekday2}, {date2} vì gió lớn. Cảm ơn bạn đã thông cảm."
+      }
+    },
+    "holiday": {
+      "closes": true,
+      "one": {
+        "en": "Closed {weekday}, {date}, for the holiday. See you soon!",
+        "es": "Cerrado el {weekday} {date} por el día festivo. ¡Nos vemos pronto!",
+        "hi": "हम {weekday}, {date} को छुट्टी के कारण बंद रहेंगे। जल्द मिलेंगे!",
+        "zh": "{date}（{weekday}）因假日休息。期待很快见到你！",
+        "vi": "Chúng tôi đóng cửa {weekday}, {date} nhân dịp lễ. Hẹn gặp lại bạn sớm!"
+      },
+      "range": {
+        "en": "Closed {weekday}, {date}, to {weekday2}, {date2}, for the holiday. See you soon!",
+        "es": "Cerrado del {weekday} {date} al {weekday2} {date2} por el día festivo. ¡Nos vemos pronto!",
+        "hi": "हम {weekday}, {date} से {weekday2}, {date2} तक छुट्टी के कारण बंद रहेंगे। जल्द मिलेंगे!",
+        "zh": "{date}（{weekday}）至 {date2}（{weekday2}）因假日休息。期待很快见到你！",
+        "vi": "Chúng tôi đóng cửa từ {weekday}, {date} đến {weekday2}, {date2} nhân dịp lễ. Hẹn gặp lại bạn sớm!"
+      }
+    },
+    "late-open": {
+      "closes": false,
+      "one": {
+        "en": "We open late on {weekday}, {date}: at {time}. Thank you for your patience.",
+        "es": "El {weekday} {date} abrimos tarde: a las {time}. Gracias por tu paciencia.",
+        "hi": "{weekday}, {date} को हम देर से, {time} से खुलेंगे। आपके धैर्य के लिए धन्यवाद।",
+        "zh": "{date}（{weekday}）延迟开门，{time}开放。感谢你的耐心。",
+        "vi": "Chúng tôi mở cửa muộn vào {weekday}, {date}: lúc {time}. Cảm ơn bạn đã kiên nhẫn."
+      }
+    },
+    "sold-out": {
+      "closes": false,
+      "one": {
+        "en": "Reservations are full for {weekday}, {date}. Please choose another day.",
+        "es": "Las reservas están completas para el {weekday} {date}. Elige otro día.",
+        "hi": "{weekday}, {date} के लिए रिज़र्वेशन भर चुके हैं। कृपया कोई और दिन चुनें।",
+        "zh": "{date}（{weekday}）的预约已满。请选择其他日期。",
+        "vi": "Đã hết chỗ đặt cho {weekday}, {date}. Vui lòng chọn ngày khác."
+      }
+    }
+  }
+}

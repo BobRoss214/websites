@@ -102,7 +102,7 @@ try {
   // the tools' own checks (tools/test_*.py): each builds its own throw-away folders and needs Pillow
   for (const name of fs.readdirSync(path.join(ROOT, 'tools')).filter((f) => /^test_.*\.py$/.test(f)).sort()) {
     if (py(ROOT, '-c', 'import PIL').status !== 0) { info(`(tools/${name} was skipped: Pillow is not installed; pip install pillow)`); continue; }
-    const r = spawnSync(PY, [`tools/${name}`], { cwd: tmp, encoding: 'utf8', timeout: 170000 });
+    const r = spawnSync(PY, [`tools/${name}`], { cwd: tmp, encoding: 'utf8', timeout: 900000 });   // test_change_fact.py makes seven copies of the site and rebuilds each: about 2 minutes, 5 on a very busy computer
     const out = (r.stderr || '') + (r.stdout || '');
     ok(`tools/${name} passes`, r.status === 0 && /\bOK\b/.test(out), out.trim().split('\n').slice(-3).join(' | '));
   }

@@ -8,7 +8,9 @@
                                           (tools/make_deploy_folder.py uses this before it makes the upload folder)
 
 Run it after you change a price, an hour, a phone number, an e-mail address, the address, an age or the year, and before you publish. It reads the files you
-edit (index.html, pages/*.html, js/content.js, lang/src/*.json), not the pages built from them, and needs only Python 3.8 or newer: nothing to install.
+edit (index.html, pages/*.html, the scripts js/content.js, js/features.js and the other js/*.js, lang/src/*.json), not the pages built from them, and needs only
+Python 3.8 or newer: nothing to install. A fact written inside a script counts too: the waitlist button's e-mail address (js/features.js, WAITLIST), the two street
+addresses of the drive-time box and the 5 PM fallback of the pizza countdown. An e-mail address that a script holds but no page shows is marked DIFFERENT.
 It prints each place as  file:line  and the words around the fact. A fact whose places say different things is marked DIFFERENT, with the odd one out.
 "node tests/consistency.test.mjs" does the same job on the built pages in all five languages and knows more facts, but needs Node and a browser kit.
 Exit code: 0 = everything agrees, 1 = something disagrees.
@@ -92,6 +94,23 @@ def context(body, start, end):
     return re.sub(r'\s+', ' ', seg).strip()
 
 
+# The drawing scripts hold long lists of numbers (outlines, map points) and no facts: they are not read.
+JS_NOT_READ = ('hero.js', 'footer-art.js', 'map-art.js', 'farm-map-data.js')
+
+
+def js_files():
+    """js/content.js first (the settings), then every other script that can hold a fact."""
+    names = sorted(os.path.basename(p) for p in glob.glob(os.path.join(ROOT, 'js', '*.js')))
+    return ['js/' + n for n in ['content.js'] + [n for n in names if n != 'content.js' and n not in JS_NOT_READ] if n in names]
+
+
+def js_code(src):
+    """A script without its comments (/* ... */ and // ... to the end of a line), with every line kept in place, so a line number is the line in the file.
+    A // inside a web address (https://) or at the start of a word is not a comment: a comment's // follows a space, a comma, a semicolon, a bracket or the line start."""
+    src = re.sub(r'/\*.*?\*/', lambda m: '\n' * m.group(0).count('\n'), src, flags=re.S)
+    return re.sub(r'(?m)(^|(?<=[\s,;(){}\[\]]))//.*$', '', src)
+
+
 def source_files():
     """(file, words of the page, the file as written) for every file where a fact can be written. Same line numbers in both."""
     out = []
@@ -99,9 +118,11 @@ def source_files():
         s = read(rel)
         if s is not None:
             out.append((rel, plain_text(s), s))
-    s = read('js/content.js')
-    if s is not None:
-        out.append(('js/content.js', s, s))
+    for rel in js_files():
+        s = read(rel)
+        if s is not None:
+            code = js_code(s)
+            out.append((rel, code, code))
     return out
 
 
@@ -115,6 +136,11 @@ def translations():
         except ValueError:
             en = {}
     out = []
+    # A text the scripts write is a "js" key; one that no script holds any more (lang/js-strings.json, made by tools/i18n.py jsstrings, does not list it) shows to nobody.
+    try:
+        in_use = set(json.loads(read('lang/js-strings.json') or 'null') or [])
+    except ValueError:
+        in_use = set()
     for path in sorted(glob.glob(os.path.join(ROOT, 'lang', 'src', '*.json'))):
         rel = 'lang/src/' + os.path.basename(path)
         section = None
@@ -129,6 +155,8 @@ def translations():
                 try:
                     k, v = list(json.loads('{' + s.rstrip(',') + '}').items())[0]
                 except (ValueError, IndexError):
+                    continue
+                if section == 'js' and in_use and k not in in_use:
                     continue
                 if isinstance(v, str):
                     english = en.get(k) if section == 'ui' else k
@@ -221,10 +249,11 @@ FACTS = [
          pats=[(r'\| ' + RANGE + r' \| At The GreenHouse', hours), (r'first come, first served from ' + T + ' to ' + T.replace('([ap]\\.?m\\.?)?', '([ap]\\.?m\\.?)'), hours),
                (SETTING_HOURS % 'pizza', setting_hours)]),
     dict(name='hours: pizza reservations open', what='the time on Tuesdays when pizza reservations open', see='search for "Tuesday" in index.html (and data-release-time)', check='digits',
-         pats=[(r'Tuesdays? at ' + T, lambda m: clock(m.group(1), m.group(2), m.group(3))), (r'data-release-time="(\d{1,2}):(\d\d)"', lambda m: clock(m.group(1), m.group(2), None), 'raw')]),
+         pats=[(r'Tuesdays? at ' + T, lambda m: clock(m.group(1), m.group(2), m.group(3))), (r'data-release-time="(\d{1,2}):(\d\d)"', lambda m: clock(m.group(1), m.group(2), None), 'raw'),
+               (r"releaseTime : '(\d{1,2}):(\d\d)'", lambda m: clock(m.group(1), m.group(2), None), 'raw')]),
     dict(name='phone numbers', what='every phone number (the main one, if shown, and the day-of emergency number)', see='README: "Change a fact everywhere", row "The main phone number"', check='digits', kind='phone',
          pats=[(PHONE.pattern, lambda m: m.group(1) + m.group(2) + m.group(3)), (r'tel:\+?1?(\d{10})', one(), 'raw'), (r'"telephone": "([^"]+)"', lambda m: phone_digits(m.group(1)))]),
-    dict(name='e-mail addresses', what='every e-mail address', see='README: "Change a fact everywhere", row "A staff e-mail address"', check='text', kind='email',
+    dict(name='e-mail addresses', what='every e-mail address', see='README: "Change a fact everywhere", row "An email address" (and js/features.js, WAITLIST)', check='text', kind='email',
          pats=[(r'[\w.+-]+@[\w-]+(?:\.[\w-]+)+', lambda m: m.group(0).lower()), (r'mailto:([\w.+-]+@[\w-]+(?:\.[\w-]+)+)', lambda m: m.group(1).lower(), 'raw')]),
     dict(name='address: Hartis Rd', what='the street number of the farm (Hartis Rd)', see='search for "Hartis" in index.html and pages/', check='digits', pats=[(r'(\d{4}) Hartis', one())]),
     dict(name='address: Poplin Rd', what='the street number of The GreenHouse (Poplin Rd)', see='search for "Poplin" in index.html and pages/', check='digits', pats=[(r'(\d{4}) Poplin', one())]),
@@ -338,6 +367,12 @@ def report(fact, places, short):
                     print('      %s:%s  %s' % (p['file'], p['line'], p['words']))
         for a, b in close:
             problems.append('%s and %s look like two spellings of one address (a typo?)' % (a, b))
+        on_pages = {p['value'] for p in places if not p['file'].startswith('js/')}
+        for d, ps in sorted(shown.items()):
+            held = [p for p in ps if p['file'].startswith('js/')]
+            if held and d not in on_pages:
+                where = ', '.join('%s:%s' % (p['file'], p['line']) for p in held[:3])
+                problems.append('%s is held by a script (%s: the waitlist button uses it) but is written on no page. The pages say: %s' % (d, where, ', '.join(sorted(on_pages)[:4]) or 'no address'))
         print('  ' + ('DIFFERENT: ' + '; '.join(problems) if problems else 'OK: no address looks like a misspelling of another.'))
         return problems
     groups = {}
@@ -388,7 +423,7 @@ def main(argv):
         for line in lines:
             print('DIFFERENT ' + line)
         return 1 if lines else 0
-    print('Checking %d facts in %d files (index.html, pages/*.html, js/content.js) and %d translated texts (lang/src/*.json).' % (len(chosen), len(files), len(trans)))
+    print('Checking %d facts in %d files (index.html, pages/*.html, js/*.js) and %d translated texts (lang/src/*.json).' % (len(chosen), len(files), len(trans)))
     if not trans:
         print('(lang/src/*.json or lang/en.json was not found: the translations are not checked.)')
     problems, agree = [], 0
@@ -407,6 +442,7 @@ def main(argv):
         print('     The five pages in the top folder (first-visit.html, ...) are built: change pages/first-visit.html, never the built copy.')
         print('  3. Rebuild:  python3 tools/pages.py   then   python3 tools/i18n.py extract   and   python3 tools/i18n.py build   (README: "Change a fact everywhere").')
         print('  4. Run this again until it says every fact agrees. Then look at the site with ?check on the end of the address.')
+        print('  Or let a tool do the whole change, translations included:  python3 tools/change_fact.py --help')
         return 1
     print('  Nothing disagrees. If you changed a file, rebuild (python3 tools/pages.py, then python3 tools/i18n.py extract and python3 tools/i18n.py build) and look at the site with ?check on the end of the address.')
     print('  A developer can run  node tests/consistency.test.mjs  for the same check on the built pages in all five languages.')

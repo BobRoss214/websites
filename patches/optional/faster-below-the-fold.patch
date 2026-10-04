@@ -1,0 +1,199 @@
+Option: faster-below-the-fold
+Name: Draw the home page's sections below the first screen only when they come near (content-visibility: auto), so an old phone gets to a working page sooner
+Does: The 15 big sections of the home page below the first screen (visit ... contact) are laid out and painted only when they come near the screen, each starting from a measured height (per width, 360 to 1280, with a small factor for es, vi, hi, zh) that the browser replaces by the real one after the first draw (contain-intrinsic-size: auto). It is switched on by js/guard.js only on a first visit by a link or the address bar: a reload, Back/Forward and any address with # in it are worked out in full, exactly as today, so the places they land on do not move. Print always draws everything. Browsers that do not know content-visibility, and visitors without JavaScript, get today's page. On a slow phone (4x slower CPU, measured) the time until the page is loaded drops by about a third. Known cost: inside these sections text and rounded edges can sit up to one pixel differently from today (paint containment rounds each section's start to a whole pixel); nothing moves and the page height is the same. The sections carry class cv-sec, which the layout-sweep and visual-check tests already switch off.
+Answers: d88 (owner question: faster below the fold, an owner choice)
+Conflicts: none
+Requires: none
+Host: any
+Order: 70
+After: nothing to rebuild; upload again
+Strings: none
+
+diff --git a/css/extras.css b/css/extras.css
+index 155e47e..edd939b 100644
+--- a/css/extras.css
++++ b/css/extras.css
+@@ -626,3 +626,33 @@ button.map-toggle{min-height:44px}
+   .chips .chip-new:has(> a:focus-visible){outline:4px solid var(--focus);outline-offset:3px;box-shadow:0 0 0 7px #fff}
+   .chips .chip-new > a:focus-visible{outline:none}
+ }
++
++/* FASTER BELOW THE FOLD (patches/optional/faster-below-the-fold.patch): the home page's sections below the first screen are only worked out and painted when they come near
++   the screen (content-visibility: auto). Each one is given a height to start from (the number measured on a phone and on a computer, per width: --cv-<id>, times a small
++   factor for the language); once a section has been drawn the browser remembers its real height (the "auto" in contain-intrinsic-size), so nothing jumps afterwards.
++   The sections carry class="cv-sec" (the tests switch this off with html.cv .cv-sec). html.cv is set by js/guard.js, only on a first visit that is not a reload, a Back or a link with # in it: those are worked out in full, as they always were. */
++:root{--cv-visit:10730px;--cv-farm-map:2330px;--cv-seasons:2844px;--cv-tomatoes:5376px;--cv-pizza:3896px;--cv-greenhouse:3154px;--cv-shop:5002px;--cv-flowers:4594px;--cv-groups:2725px;--cv-about:3631px;--cv-reviews:1168px;--cv-gallery:2535px;--cv-faq:2462px;--cv-reserve:703px;--cv-contact:3144px}
++@media (min-width:390px){:root{--cv-visit:10048px;--cv-farm-map:2376px;--cv-seasons:2804px;--cv-tomatoes:5195px;--cv-pizza:3735px;--cv-greenhouse:3168px;--cv-shop:4485px;--cv-flowers:4469px;--cv-groups:2700px;--cv-about:3439px;--cv-reviews:1145px;--cv-gallery:2704px;--cv-faq:2393px;--cv-reserve:703px;--cv-contact:3036px}}
++@media (min-width:414px){:root{--cv-visit:9637px;--cv-farm-map:2388px;--cv-seasons:2802px;--cv-tomatoes:5108px;--cv-pizza:3732px;--cv-greenhouse:3220px;--cv-shop:4318px;--cv-flowers:4435px;--cv-groups:2619px;--cv-about:3330px;--cv-reviews:1118px;--cv-gallery:2780px;--cv-faq:2366px;--cv-reserve:703px;--cv-contact:3036px}}
++@media (min-width:600px){:root{--cv-visit:8626px;--cv-farm-map:2586px;--cv-seasons:2519px;--cv-tomatoes:4621px;--cv-pizza:3124px;--cv-greenhouse:2687px;--cv-shop:3832px;--cv-flowers:4075px;--cv-groups:2299px;--cv-about:2934px;--cv-reviews:887px;--cv-gallery:3747px;--cv-faq:2006px;--cv-reserve:567px;--cv-contact:2611px}}
++@media (min-width:768px){:root{--cv-visit:8274px;--cv-farm-map:2816px;--cv-seasons:2455px;--cv-tomatoes:3319px;--cv-pizza:2930px;--cv-greenhouse:2638px;--cv-shop:3790px;--cv-flowers:3736px;--cv-groups:2145px;--cv-about:2631px;--cv-reviews:793px;--cv-gallery:4636px;--cv-faq:2001px;--cv-reserve:588px;--cv-contact:2524px}}
++@media (min-width:1024px){:root{--cv-visit:7063px;--cv-farm-map:1801px;--cv-seasons:1955px;--cv-tomatoes:2746px;--cv-pizza:2558px;--cv-greenhouse:2087px;--cv-shop:2971px;--cv-flowers:2774px;--cv-groups:1594px;--cv-about:1894px;--cv-reviews:842px;--cv-gallery:2997px;--cv-faq:1862px;--cv-reserve:447px;--cv-contact:1696px}}
++@media (min-width:1280px){:root{--cv-visit:6315px;--cv-farm-map:1864px;--cv-seasons:1939px;--cv-tomatoes:2646px;--cv-pizza:2435px;--cv-greenhouse:1746px;--cv-shop:3057px;--cv-flowers:2581px;--cv-groups:1571px;--cv-about:1712px;--cv-reviews:935px;--cv-gallery:2395px;--cv-faq:1902px;--cv-reserve:490px;--cv-contact:1603px}}
++html:lang(es){--cvk:1.06}html:lang(vi){--cvk:1.04}html:lang(hi){--cvk:.99}html:lang(zh-Hans){--cvk:.95}
++html.cv main>.cv-sec:not(.cv-open){content-visibility:auto;contain-intrinsic-size:auto 1200px}
++html.cv main>#visit:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-visit) * var(--cvk,1))}
++html.cv main>#farm-map:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-farm-map) * var(--cvk,1))}
++html.cv main>#seasons:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-seasons) * var(--cvk,1))}
++html.cv main>#tomatoes:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-tomatoes) * var(--cvk,1))}
++html.cv main>#pizza:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-pizza) * var(--cvk,1))}
++html.cv main>#greenhouse:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-greenhouse) * var(--cvk,1))}
++html.cv main>#shop:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-shop) * var(--cvk,1))}
++html.cv main>#flowers:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-flowers) * var(--cvk,1))}
++html.cv main>#groups:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-groups) * var(--cvk,1))}
++html.cv main>#about:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-about) * var(--cvk,1))}
++html.cv main>#reviews:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-reviews) * var(--cvk,1))}
++html.cv main>#gallery:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-gallery) * var(--cvk,1))}
++html.cv main>#faq:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-faq) * var(--cvk,1))}
++html.cv main>#reserve:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-reserve) * var(--cvk,1))}
++html.cv main>#contact:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-contact) * var(--cvk,1))}
++@media print{html.cv main>section{content-visibility:visible!important}}
+diff --git a/index.html b/index.html
+index 69dc22f..c264f87 100644
+--- a/index.html
++++ b/index.html
+@@ -318,7 +318,7 @@
+     </section>
+ 
+     <!-- ================= VISIT ================= -->
+-    <section class="section visit" id="visit" aria-labelledby="visit-h">
++    <section class="section visit cv-sec" id="visit" aria-labelledby="visit-h">
+       <div class="wrap">
+         <header class="section-head reveal">
+           <p data-t="tee79c420" class="hand eyebrow">Plan your visit</p>
+@@ -714,7 +714,7 @@
+     <!-- ================= FARM MAP =================
+          An illustrated map drawn from the points you mark in the Farm Map Marker. It stays hidden until js/farm-map-data.js has points
+          (python3 tools/farm_map.py makes that file from the saved map). -->
+-    <section class="section farm-map" id="farm-map" data-nav="visit" data-farm-map aria-labelledby="map-h" hidden>
++    <section class="section farm-map cv-sec" id="farm-map" data-nav="visit" data-farm-map aria-labelledby="map-h" hidden>
+       <div class="wrap">
+         <header class="section-head reveal">
+           <p data-t="tbe3cb72b" class="hand eyebrow">Find your way</p>
+@@ -739,7 +739,7 @@
+ 
+     <div class="season-strip" aria-hidden="true"></div>
+     <!-- ================= SEASONS ================= -->
+-    <section class="section seasons" id="seasons" aria-labelledby="seasons-h">
++    <section class="section seasons cv-sec" id="seasons" aria-labelledby="seasons-h">
+       <div class="wrap">
+         <header class="section-head reveal">
+           <p data-t="t24deac60" class="hand eyebrow">Something&rsquo;s always growing</p>
+@@ -883,7 +883,7 @@
+     </section>
+ 
+     <!-- ================= TOMATOES & BASIL (new this year) ================= -->
+-    <section class="section tomatoes" id="tomatoes" data-nav="tomatoes" aria-labelledby="tomato-h">
++    <section class="section tomatoes cv-sec" id="tomatoes" data-nav="tomatoes" aria-labelledby="tomato-h">
+       <div class="wrap">
+         <div class="tomato-hero reveal">
+           <div class="tomato-copy">
+@@ -1116,7 +1116,7 @@
+ 
+     <div class="season-strip" aria-hidden="true"></div>
+     <!-- ================= WISE PIE ================= -->
+-    <section class="section pizza" id="pizza" aria-labelledby="pizza-h">
++    <section class="section pizza cv-sec" id="pizza" aria-labelledby="pizza-h">
+       <div class="crop-row" data-crops="eat" aria-hidden="true"></div>
+       <div class="wrap">
+         <div class="pizza-head reveal">
+@@ -1213,7 +1213,7 @@
+     </section>
+ 
+     <!-- ================= THE GREENHOUSE ================= -->
+-    <section class="section greenhouse" id="greenhouse" aria-labelledby="gh-h">
++    <section class="section greenhouse cv-sec" id="greenhouse" aria-labelledby="gh-h">
+       <div class="wrap gh-grid">
+         <div class="gh-copy reveal">
+           <p class="gh-banner"><span data-t="t7f53d1b9" class="gh-banner-a">Next door</span><span data-t="t40215729" class="gh-banner-b">No reservations needed</span></p>
+@@ -1340,7 +1340,7 @@
+     </section>
+ 
+     <!-- ================= SHOP: WHAT TO BUY ================= -->
+-    <section class="section shop" id="shop" aria-labelledby="shop-h">
++    <section class="section shop cv-sec" id="shop" aria-labelledby="shop-h">
+       <div class="wrap">
+         <header class="section-head reveal">
+           <p data-t="td9176e86" class="hand eyebrow">Shop at Wise Acres</p>
+@@ -1463,7 +1463,7 @@
+     </section>
+ 
+     <!-- ================= FLOWERS & PHOTOGRAPHY ================= -->
+-    <section class="section flowers" id="flowers" aria-labelledby="flowers-h">
++    <section class="section flowers cv-sec" id="flowers" aria-labelledby="flowers-h">
+       <div class="wrap">
+         <div class="flowers-top">
+           <div class="flowers-copy reveal">
+@@ -1604,7 +1604,7 @@
+ 
+     <div class="season-strip" aria-hidden="true"></div>
+     <!-- ================= GROUPS: SCHOOL TOURS, PARTIES, CORPORATE ================= -->
+-    <section class="section groups" id="groups" aria-labelledby="groups-h">
++    <section class="section groups cv-sec" id="groups" aria-labelledby="groups-h">
+       <div class="wrap">
+         <header class="section-head reveal">
+           <p data-t="t11e9bc9a" class="hand eyebrow">Celebrate &amp; learn</p>
+@@ -1759,7 +1759,7 @@
+ 
+     <div class="season-strip" aria-hidden="true"></div>
+     <!-- ================= OUR STORY ================= -->
+-    <section class="section about" id="about" aria-labelledby="about-h">
++    <section class="section about cv-sec" id="about" aria-labelledby="about-h">
+       <div class="wrap">
+         <div class="about-grid">
+           <figure class="about-photo reveal">
+@@ -1816,7 +1816,7 @@
+ 
+     <!-- ================= GALLERY (filled from js/content.js) ================= -->
+     <!-- ================= REVIEWS ================= -->
+-    <section class="section reviews" id="reviews" data-nav="about" aria-labelledby="reviews-h">
++    <section class="section reviews cv-sec" id="reviews" data-nav="about" aria-labelledby="reviews-h">
+       <div class="wrap">
+         <header class="section-head reveal">
+           <p data-t="tff70a484" class="hand eyebrow">Kind words</p>
+@@ -1852,7 +1852,7 @@
+       </div>
+     </section>
+ 
+-    <section class="section gallery" id="gallery" aria-labelledby="gallery-h" hidden>
++    <section class="section gallery cv-sec" id="gallery" aria-labelledby="gallery-h" hidden>
+       <div class="wrap">
+         <header class="section-head reveal">
+           <p data-t="t48a2e3b7" class="hand eyebrow">Life on the farm</p>
+@@ -1888,7 +1888,7 @@
+ 
+     <div class="season-strip" aria-hidden="true"></div>
+     <!-- ================= FAQ ================= -->
+-    <section class="section faq" id="faq" aria-labelledby="faq-h">
++    <section class="section faq cv-sec" id="faq" aria-labelledby="faq-h">
+       <div class="wrap faq-grid">
+         <header class="faq-head reveal">
+           <p data-t="t79fc372d" class="hand eyebrow">Good to know</p>
+@@ -2025,7 +2025,7 @@
+     </section>
+ 
+     <!-- ================= RESERVE CTA ================= -->
+-    <section class="reserve" id="reserve" aria-labelledby="reserve-h">
++    <section class="reserve cv-sec" id="reserve" aria-labelledby="reserve-h">
+       <div class="crop-row" data-crops="reserve" aria-hidden="true"></div>
+       <div class="wrap reserve-inner">
+         <div class="reserve-copy reveal">
+@@ -2048,7 +2048,7 @@
+     </section>
+ 
+     <!-- ================= CONTACT ================= -->
+-    <section class="section contact" id="contact" aria-labelledby="contact-h">
++    <section class="section contact cv-sec" id="contact" aria-labelledby="contact-h">
+       <div class="wrap">
+         <header class="section-head reveal">
+           <p data-t="t9a79e56e" class="hand eyebrow">Come say hi</p>
+diff --git a/js/guard.js b/js/guard.js
+index c70291c..949a420 100644
+--- a/js/guard.js
++++ b/js/guard.js
+@@ -1,3 +1,6 @@
+ /* Notes where js/content.js fails, for the "Site check" box (js/features.js, reportContentErrors). It is a file of its own, loaded before js/content.js, because the
+    Content-Security-Policy in docs/LAUNCH_CHECKLIST.md does not allow inline scripts. Keep it above the js/content.js line in every page. */
+ addEventListener('error',function(e){var f=String(e.filename||(e.target&&e.target.src)||'');if(/content\.js/.test(f))(window.WA_CONTENT_ERRORS=window.WA_CONTENT_ERRORS||[]).push({message:String(e.message||''),line:e.lineno||0,col:e.colno||0,load:!!(e.target&&e.target.tagName==='SCRIPT')})},true);
++
++/* FASTER BELOW THE FOLD (patches/optional/faster-below-the-fold.patch): lets css/extras.css skip the sections below the first screen of the home page until they come near the screen. Only on a first visit by a link or the address bar: a reload, Back and Forward, or an address with # in it, are worked out in full, as before, so the browser finds the place it remembers or the place the link names exactly where it was. */
++(function(){try{var d=document.documentElement,n=performance.getEntriesByType('navigation')[0];if(window.CSS&&CSS.supports&&CSS.supports('content-visibility','auto')&&n&&n.type==='navigate'&&!location.hash)d.classList.add('cv')}catch(e){}})();

@@ -99,7 +99,7 @@ Before you upload, `python3 tools/doctor.py` checks the whole site and the uploa
 | `tests/` | Automatic checks for developers (with a very big `node_modules` folder inside if they were ever installed). Not for visitors |
 | `tools/`, `pages/` | For whoever edits the site (they build the pages and translations) |
 | `patches/` | Optional changes that wait for the farm's decisions (`docs/OPTION_PATCHES.md`). Not for visitors |
-| `review/` | The sheets a friend uses to check a language. `tools/review_sheet.py` makes them when they are needed, and they are not saved with the project. Not for visitors |
+| `review/` | The sheets a friend uses to check a language (`docs/CHECK_A_LANGUAGE.md` has the four steps). `tools/review_sheet.py` makes them when they are needed, and they are not saved with the project. Not for visitors |
 | `README.md` | Instructions for whoever edits the site |
 | `.git` (a hidden folder, if you have one) | The change history of the files |
 | `.gitignore` (a hidden file, if you can see it) | A developer's note about which files to ignore. Not for visitors |
@@ -416,7 +416,7 @@ If you do want it (decision D5):
 | D5 | Analytics: off, or which one? | Off at launch (3.9). |
 | D6 | `seasonPicker`: `false` before launch (3.8). | `false`. |
 | D7 | Share images: keep the drawings or use photos (3.11)? | Your choice. |
-| D8 | Languages: the Spanish, Hindi, Chinese and Vietnamese texts were written with AI help and no native speaker has read them (README, "Content status"). Launch all five, or only the ones that have been read? | Have someone read each before launch, or launch with only the languages that have been read. A friend can do it in a spreadsheet: README, "Have a native speaker check a language". |
+| D8 | Languages: the Spanish, Hindi, Chinese and Vietnamese texts were written with AI help and no native speaker has read them (README, "Content status"). Launch all five, or only the ones that have been read? | Have someone read each before launch, or launch with only the languages that have been read. A friend can do it in a spreadsheet: the four steps are in `docs/CHECK_A_LANGUAGE.md`. |
 | D9 | Who updates the site each week in season, and how (3.2: "Create a new deployment", drag the folder)? | One named person, plus a backup person. |
 | D10 | Free plan or a paid plan if the farm gets busy? | Free to start. Cloudflare's static traffic is not limited. **[read]** |
 | D11 | The Drive time box: keep it on the free public services, switch it off, or move to a service with a contract (3.13; questions 36 and 43)? Do you want the OSRM operators asked about business use? | Keep it, set `farmPoint` before launch, ask the operators, and watch it weekly. |
@@ -451,6 +451,7 @@ If something is wrong: open the project in Cloudflare, find its list of "Deploym
 - [ ] Google Business Profile: hours and holiday closures are set; reply to new reviews.
 - [ ] Once a month: Search Console (Pages and Sitemaps) for errors, and, if you chose a plan with an allowance, the host's usage page.
 - [ ] At each change of season: prices, hours and season dates (README), and a re-read of the translations.
+- [ ] Not sure how to do a job? The 12 most common ones are on one page: [OWNER_CHEAT_SHEET.md](OWNER_CHEAT_SHEET.md).
 
 ## 6. What was tested, and what was not
 

@@ -39,6 +39,9 @@ Steps (each one is a dict with "op"):
   json_edit    file, list, match, remove | set                                                                   change a list item of a JSON file (the saved map), as the Farm Map Marker does
   cut          file, at, start, end                                                                              delete the element (start ... end) around the place "at", inside a long line
   delete_file  file                                                                                              delete a file (a photo)
+  create_file  file, text                                                                                         make a new file (for example .gitattributes)
+  apply_patch  file                                                                                              apply an optional patch of patches/optional/ (patch -p1): a hunk that does not fit is a wrong step
+  run_same     cmd, folders                                                                                      run a command the notes say changes nothing, and check that the folders are the same
   readme_row   name                                                                                              delete the README table row that starts with name
   lang_value   lang, key, value, [section=ui|js]                                                                 set one translation by hand (instead of the stand-in)
   run          cmd                                                                                               a command from the playbook, for example python3 tools/make_qr.py
@@ -98,8 +101,23 @@ LANGS = ['es', 'hi', 'zh', 'vi']
 FAST = ['docs', 'consistency', 'files-audit', 'plain-lint', 'public-site']                                       # no browser, a few seconds each
 SLOW = ['validity', 'launch-check']                                                                           # no browser, 10 and 40 seconds
 CHECKS = FAST + SLOW
+RETRY_OFF = [False]                                                                                            # --no-retry: do not run a failing browser test a second time
 BROWSER_LOCK = threading.Lock()                                                                                # one browser at a time
 PORT = [int(os.environ.get('WA_REHEARSE_PORT') or 48167)]
+
+
+def free_port(start):
+    """The first port from `start` up that nobody listens on (another job on the same computer may use the next one)."""
+    import socket
+    port = start
+    while port < start + 200:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            try:
+                sock.bind(('127.0.0.1', port))
+                return port
+            except OSError:
+                port += 1
+    return start
 
 
 class StepError(Exception):
@@ -217,6 +235,40 @@ def op_delete_file(work, s):
     os.remove(p)
 
 
+def op_create_file(work, s):
+    p = os.path.join(work, s['file'])
+    if os.path.exists(p):
+        raise StepError('%s: the file is already there' % s['file'])
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    wr(work, s['file'], s['text'])
+
+
+def op_apply_patch(work, s):
+    """Apply an optional patch of patches/optional/ the way the playbook says (patch -p1); a hunk that does not fit is a wrong step."""
+    code, out = run('patch -p1 --no-backup-if-mismatch -i %s' % s['file'], work)
+    if code != 0:
+        raise StepError('%s does not apply: %s' % (s['file'], out.strip().split('\n')[-1][:160]))
+
+
+def _tree_digest(work, folders):
+    import hashlib
+    h = hashlib.sha1()
+    for folder in folders:
+        for root, _, files in sorted(os.walk(os.path.join(work, folder))):
+            for f in sorted(files):
+                with open(os.path.join(root, f), 'rb') as fh:
+                    h.update(os.path.join(root, f).encode() + fh.read())
+    return h.hexdigest()
+
+
+def op_run_same(work, s):
+    """Run a command that the notes say changes nothing (for example python3 tools/make_qr.py after the QR patches) and check that it changed nothing."""
+    before = _tree_digest(work, s['folders'])
+    op_run(work, s)
+    if _tree_digest(work, s['folders']) != before:
+        raise StepError('%s changed files in %s, but the notes say it changes nothing' % (s['cmd'], ', '.join(s['folders'])))
+
+
 def op_delete_block(work, s):
     """Delete an element that runs over several lines: from the line holding "from" (the line with its opening tag) to the line that closes it."""
     tag = s.get('tag', 'div')
@@ -272,7 +324,7 @@ def op_run(work, s):
         raise StepError('%s: exit %d: %s' % (s['cmd'], code, out.strip().split('\n')[-1][:160]))
 
 
-OPS = {'delete_block': op_delete_block, 'json_edit': op_json_edit, 'cut': op_cut, 'delete_file': op_delete_file, 'sub': op_sub, 'sub_all': op_sub_all, 'delete_lines': op_delete_lines, 'delete_line': op_delete_line, 'insert_after': op_insert_after,
+OPS = {'apply_patch': op_apply_patch, 'run_same': op_run_same, 'create_file': op_create_file, 'delete_block': op_delete_block, 'json_edit': op_json_edit, 'cut': op_cut, 'delete_file': op_delete_file, 'sub': op_sub, 'sub_all': op_sub_all, 'delete_lines': op_delete_lines, 'delete_line': op_delete_line, 'insert_after': op_insert_after,
        'readme_row': op_readme_row, 'lang_value': op_lang_value, 'run': op_run}
 
 
@@ -404,8 +456,15 @@ def checks(work, recipe, res, quick, browser):
     if browser:
         for name in recipe.get('browser', []):
             with BROWSER_LOCK:
-                PORT[0] += 1
+                PORT[0] = free_port(PORT[0] + 1)
                 r = run_test(work, name, True, PORT[0])
+                if not r['ok'] and not RETRY_OFF[0]:                       # a browser test that fails on a busy computer may be the computer: once more, and say so
+                    PORT[0] = free_port(PORT[0] + 1)
+                    first = r['detail']
+                    r = run_test(work, name, True, PORT[0])
+                    if r['ok']:
+                        r['note'] = 'FLAKY: failed once (%s) and passed on the second run' % first[:120]
+                        res['notes'].append('%s: %s' % (name, r['note']))
             res['tests'].append({k: v for k, v in r.items() if k != 'out'})
 
 
@@ -504,6 +563,7 @@ def main():
     ap.add_argument('--full', action='store_true', help='run every no-browser check for every answer (validity and launch-check too: about a minute more each)')
     ap.add_argument('--skip', default='', help='checks to leave out, for example --skip launch-check,validity (they are the slow ones)')
     ap.add_argument('--keep', help='keep each changed copy under this folder')
+    ap.add_argument('--no-retry', action='store_true', help='run a failing browser test once only (by default it is run once more, and a pass the second time is shown as FLAKY)')
     ap.add_argument('--json', help='write the results to this file')
     a = ap.parse_args()
     with open(RECIPES, encoding='utf-8') as f:
@@ -520,6 +580,7 @@ def main():
                 print('%-8s %s' % (k, skipped[k]))
         return 0
     FULL[0] = a.full
+    RETRY_OFF[0] = a.no_retry
     SKIP_CHECKS.extend([x for x in a.skip.split(',') if x])
     keys = sorted(recipes) if a.all else a.answers
     unknown = [k for k in keys if k not in recipes]

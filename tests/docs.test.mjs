@@ -194,7 +194,8 @@ ok('no doc names a file outside the repository (a helper\'s scratch folder, /tmp
   const part = (from, to) => { const a = pb.indexOf(from); if (a < 0) return ''; const b = pb.indexOf(to, a + from.length); return pb.slice(a, b < 0 ? undefined : b); };
   const rows = new Map([...part('### Every dashboard question, and its doc number', '\n### ').matchAll(/^\| (d\d\d) \| ([^|]+?) \| ([^|]+?) \|$/gm)].map((m) => [m[1], { title: m[2], doc: m[3] }]));
   const entries = new Map([...pb.matchAll(/^### (d\d\d)\. (.+)$/gm)].map((m) => [m[1], m[2].trim()]));
-  const topics = new Set([...part('## The 10 topics', '\n## ').matchAll(/\bd\d\d\b/g)].map((m) => m[0]));
+  const topicsHead = (pb.match(/^## The \d+ topics/m) || ['## The 11 topics'])[0];   // "The 11 topics": the number changes when a topic is added
+  const topics = new Set([...part(topicsHead, '\n## ').matchAll(/\bd\d\d\b/g)].map((m) => m[0]));
   const noNumber = new Set([...part('### Dashboard questions with no number in the doc', '\n## ').matchAll(/^\| (d\d\d) \|/gm)].map((m) => m[1]));
   const problems = [];
   const top = Math.max(0, ...[...rows.keys()].map((k) => +k.slice(1)));
@@ -202,7 +203,7 @@ ok('no doc names a file outside the repository (a helper\'s scratch folder, /tmp
   for (const [id, r] of rows) {
     if (!entries.has(id)) problems.push(id + ' has no "### ' + id + '." entry');
     else if (entries.get(id) !== r.title) problems.push(id + ' is called "' + r.title + '" in the table and "' + entries.get(id) + '" in its entry');
-    if (!topics.has(id)) problems.push(id + ' is in no topic of "The 10 topics"');
+    if (!topics.has(id)) problems.push(id + ' is in no topic of "The 11 topics"');
     const noDoc = r.doc === 'none' || r.doc.startsWith('related');   // "related: Q25" (d29) is a note, not a number
     if (noDoc !== noNumber.has(id)) problems.push(id + (noDoc ? ' has no doc number but is not in' : ' has a doc number but is in') + ' "Dashboard questions with no number in the doc"');
   }

@@ -59,6 +59,7 @@ KNOWN = {'parking', 'entrance', 'road', 'dropoff', 'checkin', 'restrooms', 'acce
          'picnic', 'firepit', 'concessions', 'barn', 'water', 'firstaid', 'staff', 'other'}
 MIN_POINTS = {'pin': 1, 'text': 1, 'area': 3, 'path': 2}
 LANGS = ('es', 'hi', 'zh', 'vi')
+MAX_FILE_MB = 20
 MAX_ITEMS = 300   # the Farm Map Marker saves a few dozen points; thousands would freeze visitors' phones
 
 
@@ -76,6 +77,9 @@ def number(v):
 
 
 def main():
+    if sys.argv[1:2] in (['--help'], ['-h']):
+        print(__doc__)
+        sys.exit(0)
     if len(sys.argv) < 2:
         sys.exit(__doc__)
     path = sys.argv[1]
@@ -83,11 +87,17 @@ def main():
         if os.path.isfile(found):
             path = found
             break
+    if os.path.isfile(path) and os.path.getsize(path) > MAX_FILE_MB * 1024 * 1024:   # a real saved map is a few hundred KB
+        fail(f'{sys.argv[1]} is {os.path.getsize(path) // 1048576} MB. A saved map is far smaller than {MAX_FILE_MB} MB, so this is not a map saved by the Farm Map Marker. Nothing was changed.')
+    if not os.path.isfile(path) and os.path.exists(path):
+        fail(f'{sys.argv[1]} is not a file. Give the saved map (a .json file). Nothing was changed.')
     try:
         with open(path, encoding='utf-8-sig') as f:   # utf-8-sig: Windows editors add an invisible marker at the start
             doc = json.load(f)
     except UnicodeDecodeError:   # not saved as UTF-8: the message at the top of this file names the file
         raise
+    except RecursionError:
+        fail(f'{sys.argv[1]} is nested far deeper than any saved map, so it is not one. Nothing was changed.')
     except OSError:
         fail(f'I cannot open {sys.argv[1]}. The map that is on the website now is tools/saved-map.json:  python3 tools/farm_map.py tools/saved-map.json')
     except ValueError as e:

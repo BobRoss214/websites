@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Language review kit: a round trip so a friend who speaks the language can correct the site, without editing any JSON.
+The owner's page, with the four steps: docs/CHECK_A_LANGUAGE.md.
 
-  python3 tools/review_sheet.py export es          make review/es.csv and review/es.html (also hi, zh, vi, or  all)
+  python3 tools/review_sheet.py export es          make review/es.xlsx, es.csv, es.html, es-instructions.html and es-message.txt (also hi, zh, vi, or  all)
   python3 tools/review_sheet.py import es FILE     read the corrections your friend wrote and put the good ones into lang/src/es.json
   python3 tools/review_sheet.py import es FILE --dry-run   say what would change, write nothing
   python3 tools/review_sheet.py import es FILE --strict    write nothing at all if any row has to be rejected
@@ -10,19 +11,28 @@
 Needs Python 3.8 or newer. Nothing to install (it does not use beautifulsoup4, unlike pages.py and i18n.py).
 
 How it works
-  export   One row for every text of the site in that language, in reading order: the home page first, then the other pages,
-           then the texts the page's code writes, then the QR sign wording. Columns: id, where, English, current translation,
+  export   One row for every text of the site in that language. Columns: id, priority, where, English, current translation, question for you,
            correction (blank), note (blank). A text that appears on several pages is listed once, and `where` names the pages.
-           review/es.csv opens in Excel (UTF-8 with a byte order mark); review/es.html is the same table for reading or printing.
+           The rows come in three groups, so a friend with 20 minutes does the first group: priority 1 (150 texts: every QR sign line, every text with a price,
+           the lines about refunds, rain, pets, allergies and safety that tools/review_notes.json names, and the texts a visitor meets first, from the top of the
+           home page down), priority 2 (the next 450) and priority 3 (the rest). Inside a group the order is reading order: the home page first, then the other
+           pages, then the texts the page's code writes, then the QR sign wording. "question for you" says what we doubt about a line, what we changed after a
+           check, and what differs from the English on purpose (tools/review_notes.json, and tools/i18n_facts_allow.json when it is there).
+           Five files, the same bytes every time (no dates, nothing random): review/es.xlsx is the file to send (a "Texts" sheet and a "Read me first" sheet with the
+           instructions in the friend's language and in English; the correction and note columns are formatted as text, so Excel cannot turn 9/29 into a date);
+           review/es.csv is the same table for programs that cannot open .xlsx (UTF-8 with a byte order mark); review/es.html is the same table for reading or
+           printing, with the one-page instructions first; review/es-instructions.html is the one page of instructions alone (to print or attach);
+           review/es-message.txt is the e-mail to send with it. The instructions are in tools/review_instructions.json.
            Ids: a page text keeps the site's own id (t and eight letters or digits, the id in lang/en.json); a text the code writes gets j and the same
            kind of fingerprint of its English words; a QR sign line is qr-<sign>-title, qr-<sign>-text, qr-how or qr-also. A text with & shows an ordinary & in the sheet.
-  import   Reads a file saved from Excel or Google Sheets (CSV with commas or semicolons, UTF-8 or UTF-8 with BOM, quoted
-           fields, Windows line ends; a plain .xlsx works too). Every row with a correction is checked with the same rules the
+  import   Reads a file saved from Excel or Google Sheets (a plain .xlsx, or CSV with commas or semicolons, UTF-8 or UTF-8 with BOM, quoted
+           fields, Windows line ends; LibreOffice .ods is refused with the way to save it as .xlsx). Every row with a correction is checked with the same rules the
            tests use: the {placeholders}, <tags>, numbers, prices, times, weekdays, months, names and e-mail addresses of the
            English must still be there. Good corrections are written into lang/src/<code>.json (only the changed lines; one
            atomic write; the order and layout of the file stay). English is never touched. A row that cannot be used is
-           reported in plain words (row number, id, what is wrong) and the rest is still applied (unless --strict).
-           QR sign wording goes into tools/qr_links.json. Exit code: 0 all fine, 1 some row was rejected, 2 the file could not be used.
+           reported in plain words (row number, id, what is wrong) and the rest is still applied (unless --strict). Words typed in a column that is not read
+           (over the English, over the current translation, in "question for you") on a row with no correction are listed by row, never lost silently.
+           QR sign wording goes into tools/qr_links.json. Exit code: 0 all fine, 1 some row was rejected or had words in a column that is not read, 2 the file could not be used.
   Neither command runs the rebuild. At the end import prints the commands to run next.
 
 Drift: the facts check below is a port of differences() in tests/consistency.test.mjs. tests/review-sheet.test.mjs runs both on the
@@ -94,7 +104,12 @@ FONTS = {   # the language's own font stack (system fonts only: the review folde
 }
 PAGE_NAMES = [('index.html', 'Home page'), ('first-visit.html', 'First visit page'), ('strawberry-picking.html', 'Strawberry picking page'),
               ('pumpkin-patch.html', 'Pumpkin patch page'), ('wise-pie.html', 'Wise Pie page'), ('school-field-trips.html', 'School trips page')]
-HEADER = ['id', 'where', 'English', 'current translation', 'correction', 'note']   # lowercase "id": a file that starts with capital ID is opened by Excel as a SYLK file
+HEADER = ['id', 'priority', 'where', 'English', 'current translation', 'question for you', 'correction', 'note']   # lowercase "id": a file that starts with capital ID is opened by Excel as a SYLK file
+SHEET_NAME, README_NAME = 'Texts', 'Read me first'
+PRIORITY_1, PRIORITY_2 = 150, 450   # the number of texts with priority 1 (about 20 minutes) and priority 2 (about an hour); all the others are 3
+NOTES_FILE = os.path.join(ROOT, 'tools', 'review_notes.json')
+TEXTS_FILE = os.path.join(ROOT, 'tools', 'review_instructions.json')
+ALLOW_FILE = os.path.join(ROOT, 'tools', 'i18n_facts_allow.json')
 ATTR_WORDS = {'alt': 'photo description', 'aria-label': 'screen-reader label', 'title': 'tooltip', 'placeholder': 'form hint'}
 JS_WHERE = {
     'features.js': 'boxes, buttons and messages (this-week box, drive time, signup, farm map, photo viewer, e-mail drafts)',
@@ -107,6 +122,19 @@ JS_WHERE = {
 }
 QR_HOW_EN = 'Point your phone camera at the square.'
 QR_ALSO_EN = 'This page is also in:'
+
+# A sheet comes from another person's computer. These limits are far above a real sheet (about 1,400 rows, a few hundred KB) and stop a file that
+# would fill the memory: a huge file, or a small .xlsx that unpacks to gigabytes (a "zip bomb").
+MAX_FILE_BYTES = 30 * 1024 * 1024
+MAX_XLSX_PART_BYTES = 40 * 1024 * 1024
+MAX_XLSX_COLUMN, MAX_XLSX_ROW = 16384, 1048576   # the largest cell Excel itself has: XFD1048576
+SCREEN_CONTROL = re.compile('[\x00-\x08\x0b-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]')
+
+
+def on_screen(text):
+    """Text from the sheet, made safe to print: control characters (they can change the window title or hide words in a terminal) become ?."""
+    return SCREEN_CONTROL.sub('?', str(text))
+
 
 NOTES_WORDS = ('ok', 'okay', 'good', 'fine', 'correct', 'yes', 'no', 'si', 'sí', 'ok.', 'n/a', 'na', 'none', 'same', 'x', '-', '--', '—', '✓', '✔', '👍')
 
@@ -211,10 +239,13 @@ def atomic_write(path, text):
 # ---------------------------------------------------------------------------------------------- the site's texts
 class Item(object):
     """One text a translator can correct."""
-    __slots__ = ('id', 'kind', 'key', 'english', 'current', 'where', 'group', 'path')
+    __slots__ = ('id', 'kind', 'key', 'english', 'current', 'where', 'group', 'path', 'quiet', 'priority', 'ask')
 
-    def __init__(self, id, kind, key, english, current, where, group, path=None):
+    def __init__(self, id, kind, key, english, current, where, group, path=None, quiet=False):
         self.id, self.kind, self.key, self.english, self.current, self.where, self.group, self.path = id, kind, key, english, current, where, group, path
+        self.quiet = quiet      # a text nobody reads on the screen (screen-reader label, photo description, tooltip, page title)
+        self.priority = 3       # 1, 2 or 3: which texts a friend with little time should do first (set by rank_items)
+        self.ask = ''           # our own question about this text, shown to the friend (set by rank_items)
 
 
 class PageScan(HTMLParser):
@@ -374,8 +405,8 @@ def build_items(site, code):
     js_keys = list(collections.OrderedDict.fromkeys(list(site.js_files.keys()) + list(src['js'].keys())))
     page_of_file = dict(site.pages())
 
-    def js_item(key, where, group):
-        return Item(js_id(key), 'js', key, key, src['js'].get(key, ''), where, group)
+    def js_item(key, where, group, quiet=False):
+        return Item(js_id(key), 'js', key, key, src['js'].get(key, ''), where, group, quiet=quiet)
 
     # page titles and search descriptions come with their page
     titles = collections.defaultdict(list)
@@ -386,7 +417,7 @@ def build_items(site, code):
     n_pages = 0
     for fname, pname in site.pages():
         for key in titles.get(fname, []):
-            items.append(js_item(key, '[page title or search description] ' + pname, pname))
+            items.append(js_item(key, '[page title or search description] ' + pname, pname, quiet=True))
             used.add(key)
         for tid in order:
             occ = seen[tid]
@@ -395,12 +426,13 @@ def build_items(site, code):
             used.add(tid)
             if tid not in site.en:
                 continue
-            items.append(Item(tid, 'ui', tid, site.en[tid], src['ui'].get(tid, ''), where_text(occ, total), pname))
+            seen_on_screen = any(attr is None or attr == 'placeholder' for _, _, attr in occ)
+            items.append(Item(tid, 'ui', tid, site.en[tid], src['ui'].get(tid, ''), where_text(occ, total), pname, quiet=not seen_on_screen))
         n_pages += 1
     # ids that no page uses (kept in en.json): at the end of the page texts
     for tid in site.en:
         if tid not in used:
-            items.append(Item(tid, 'ui', tid, site.en[tid], src['ui'].get(tid, ''), 'Not found on a page (kept in lang/en.json)', 'Other texts'))
+            items.append(Item(tid, 'ui', tid, site.en[tid], src['ui'].get(tid, ''), 'Not found on a page (kept in lang/en.json)', 'Other texts', quiet=True))
     # the texts the code writes, by file, in the order they appear in the file
     rest = [k for k in js_keys if k not in used]
     by_file = collections.defaultdict(list)
@@ -415,8 +447,9 @@ def build_items(site, code):
                 photo = site.is_photo_description(key)
                 where = '[photo description] gallery photo' if photo else 'caption or notice in the farm settings (js/content.js)'
             else:
+                photo = False
                 where = 'page code: ' + JS_WHERE.get(fname, 'other messages')
-            items.append(js_item(key, where, 'Text the page\'s code writes'))
+            items.append(js_item(key, where, 'Text the page\'s code writes', quiet=photo))
     # QR signs
     items.extend(qr_items(site, code))
     seen = collections.Counter(i.id for i in items)
@@ -451,6 +484,124 @@ def qr_items(site, code):
     return out
 
 
+# ---------------------------------------------------------------------------------------------- what the friend sees first
+def load_json(path, default):
+    """A data file of the kit (notes, instructions, the facts allow list). A missing or damaged file is not an error: the sheet is just made without it."""
+    try:
+        data = json.loads(read_text(path))
+    except (OSError, ValueError):
+        return default
+    return data if isinstance(data, type(default)) else default
+
+
+def rows_named(items, by_id, raw):
+    """The rows a data file means by an id: a page text keeps its id; 'js:English words' is a text the code writes, and may be only the first words of it
+    (the facts allow list names it so): every text of the code that starts with those words."""
+    raw = str(raw)
+    if raw.startswith('js:'):
+        return [it for it in items if it.kind == 'js' and it.english.startswith(raw[3:])]
+    return [by_id[raw]] if raw in by_id else []
+
+
+def questions_for(code, items, notes, allow):
+    """{id: the text of the 'question for you' cell}: what we changed after a check, what we doubt, what differs from the English on purpose."""
+    by_id = {it.id: it for it in items}
+    found = collections.OrderedDict()
+
+    def add(i, text):
+        if text not in found.setdefault(i, []):
+            found[i].append(text)
+
+    def still_there(it, when):
+        return not when or squash(when) in squash(it.current)
+
+    for e in notes.get('changed', []):
+        it = by_id.get(e.get('id'))
+        if e.get('lang') == code and it is not None and still_there(it, e.get('when')):
+            add(it.id, 'We changed this line after a check. %s Before it said: “%s” Please tell us if the new line is right.' % (str(e.get('why', '')).strip(), words_only(e.get('before', ''))))
+    for e in notes.get('ask', []):
+        if e.get('lang') != code:
+            continue
+        for i in e.get('ids', []):
+            it = by_id.get(i)
+            if it is not None and still_there(it, e.get('when')):
+                add(it.id, str(e.get('ask', '')).strip() + (' We suggest: %s.' % str(e['suggest']).strip().rstrip('.') if e.get('suggest') else ''))
+    for e in allow:
+        if isinstance(e, dict) and e.get('lang') == code:
+            for it in rows_named(items, by_id, e.get('id', '')):
+                add(it.id, 'On purpose: %s Tell us if you disagree.' % str(e.get('reason', '')).strip())
+    return {i: '\n'.join(v) for i, v in found.items()}
+
+
+def assign_priority(items, first_ids):
+    """1 = do these first (150 texts), 2 = next (450), 3 = the rest. Priority 1 is: every QR sign line (printed, so costly to fix later), every text with a price,
+    the hand-picked lines in tools/review_notes.json (refunds, rain, pets, allergies, safety), and then the texts a visitor meets first (the top of the home page
+    down), as many as are needed to make 150. Then the rest in reading order."""
+    chosen = set()
+    for it in items:
+        if len(chosen) < PRIORITY_1 and (it.kind == 'qr' or it.id in first_ids or (it.kind == 'ui' and not it.quiet and '$' in it.english)):
+            chosen.add(it.id)
+    for it in items:
+        if len(chosen) >= PRIORITY_1:
+            break
+        if not it.quiet:
+            chosen.add(it.id)
+    second = 0
+    for it in items:
+        if it.id in chosen:
+            it.priority = 1
+        elif second < PRIORITY_2:
+            it.priority = 2
+            second += 1
+        else:
+            it.priority = 3
+
+
+def rank_items(site, code, items=None):
+    """The items of a language in the order the friend gets them: priority 1 first, then 2, then 3, each in reading order; with priority and question filled in."""
+    items = build_items(site, code) if items is None else items
+    notes = load_json(NOTES_FILE, {})
+    assign_priority(items, set(str(i) for i in notes.get('first', [])))
+    asks = questions_for(code, items, notes, load_json(ALLOW_FILE, []))
+    for it in items:
+        it.ask = asks.get(it.id, '')
+    return sorted(items, key=lambda it: it.priority)   # a stable sort: reading order inside each priority
+
+
+def counts_of(items):
+    c = collections.Counter(it.priority for it in items)
+    return {'N1': c[1], 'N2': c[2], 'N3': c[3]}
+
+
+def blocks_for(code, counts):
+    """[(html lang, {field: text})]: the instructions in the friend's language, then in English, with @LANG@ and the counts filled in."""
+    texts = load_json(TEXTS_FILE, {})
+    out = []
+    for lang_code, html_lang in ((code, LANG_NAMES.get(code, (code, code, code))[2]), ('en', 'en')):
+        block = texts.get(lang_code) or texts.get('en') or {}
+        fill = lambda v: re.sub(r'@(LANG|N1|N2|N3)@', lambda m: LANG_NAMES.get(code, (code,))[0].split(' (')[0] if m.group(1) == 'LANG' else str(counts.get(m.group(1), '')), v) if isinstance(v, str) else v
+
+        def walk(v):
+            if isinstance(v, list):
+                return [walk(x) for x in v]
+            return fill(v)
+        out.append((html_lang, {k: walk(v) for k, v in block.items()}))
+    return out
+
+
+def message_text(code, blocks):
+    """The e-mail to paste: subject, then the short message in the friend's language and in English."""
+    (_, own), (_, en) = blocks
+    subject = own.get('subject', en.get('subject', ''))
+    if en.get('subject') and subject != en['subject']:
+        subject += '  /  ' + en['subject']
+    bodies = []
+    for b in (own, en):
+        send = (b.get('send') or []) + ['', '']
+        bodies.append('\n\n'.join(p for p in (b.get('intro', ''), b.get('time', ''), b.get('open_line', ''), send[0], send[1], b.get('thanks', '')) if p))
+    return 'Subject: %s\n\n%s\n\n%s\n\n%s\n' % (subject, bodies[0], '-' * 40, bodies[1])
+
+
 # ---------------------------------------------------------------------------------------------- writing the sheet
 def show(kind, s):
     """A text as a person reads it in the sheet: the page text writes "&" as &amp; in its HTML, the sheet shows an ordinary &."""
@@ -468,12 +619,17 @@ def safe_cell(s):
     return (' ' + s) if s[:1] in ('=', '+', '-', '@', '\t') else s
 
 
+def row_cells(it):
+    """The cells of one row, in the order of HEADER (priority is a number)."""
+    return [it.id, it.priority, it.where, show(it.kind, it.english), show(it.kind, it.current), it.ask, '', '']
+
+
 def csv_text(items):
     out = io.StringIO(newline='')
     w = csv.writer(out, lineterminator='\r\n', quoting=csv.QUOTE_MINIMAL)
     w.writerow(HEADER)
     for it in items:
-        w.writerow([it.id, safe_cell(it.where), safe_cell(show(it.kind, it.english)), safe_cell(show(it.kind, it.current)), '', ''])
+        w.writerow([c if isinstance(c, int) else safe_cell(c) for c in row_cells(it)])
     return out.getvalue()
 
 
@@ -483,16 +639,50 @@ def chips(s):
     return ''.join('<span class="tag">%s</span>' % html.escape(p) if p.startswith('<') and p.endswith('>') and len(p) > 2 else html.escape(p) for p in parts)
 
 
-def html_text(code, items):
+HOW_CSS = '''.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(24em,1fr));gap:18px;max-width:100em;margin:10px 0 22px}
+.how section{background:#f6f1e7;border:1px solid #d8cdb5;border-radius:10px;padding:6px 18px 12px}
+.how h2{font-size:22px;margin:.6em 0 .3em}
+.how h3{font-size:18px;margin:.9em 0 .2em}
+.how p,.how li{margin:.25em 0}
+.how ol,.how ul{margin:.2em 0;padding-left:1.4em}
+table.legend{border-collapse:collapse;font-size:15px}
+table.legend th,table.legend td{border:1px solid #cdbf9f;padding:2px 8px;background:#fff;font-weight:normal}
+table.legend th{font-weight:bold;white-space:nowrap}
+.tag{display:inline-block;font:13px/1.2 ui-monospace,Consolas,monospace;background:#e6eefb;border:1px solid #9ab;border-radius:4px;padding:0 4px;margin:0 1px}'''
+HOW_PRINT = ('@page{size:landscape;margin:9mm}body{padding:0;font-size:10px;line-height:1.35}h1{font-size:15px;margin:0 0 4px}.tag{font-size:9px}.how{grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 0}'
+             '.how section{padding:0 10px 4px;border-radius:6px}.how h2{font-size:13px;margin:.4em 0 .15em}.how h3{font-size:11px;margin:.45em 0 .1em}.how p,.how li{margin:.1em 0}'
+             '.how ol,.how ul{padding-left:1.2em}table.legend{font-size:9px}table.legend th,table.legend td{padding:0 5px}')
+
+
+def instructions_html(blocks):
+    """The one page of instructions: the friend's language and English side by side."""
+    cols = []
+    for html_lang, b in blocks:
+        li = lambda xs: ''.join('<li>%s</li>' % chips(x) for x in xs)
+        legend = ''.join('<tr><th scope="row">%s</th><td>%s</td></tr>' % (html.escape(n), html.escape(d)) for n, d in b.get('columns', []))
+        cols.append('<section lang="%s"><h2>%s</h2><p>%s</p><h3>%s</h3><p>%s</p><p>%s</p><h3>%s</h3><ol>%s</ol><h3>%s</h3><ul>%s</ul><h3>%s</h3><ul>%s</ul><p><b>%s</b></p>'
+                    '<h3>%s</h3><table class="legend">%s</table></section>' % (
+                        html_lang, html.escape(b.get('title', '')), html.escape(b.get('intro', '')), html.escape(b.get('time_title', '')), html.escape(b.get('time', '')),
+                        html.escape(b.get('open_line', '')), html.escape(b.get('do_title', '')), li(b.get('do', [])), html.escape(b.get('keep_title', '')), li(b.get('keep', [])),
+                        html.escape(b.get('send_title', '')), li(b.get('send', [])), html.escape(b.get('thanks', '')), html.escape(b.get('columns_title', '')), legend))
+    return '<div class="how">%s</div>' % ''.join(cols)
+
+
+def html_text(code, items, blocks=None, counts=None):
     name, own, html_lang = LANG_NAMES.get(code, (code, code, code))
+    counts = counts or counts_of(items)
+    blocks = blocks or blocks_for(code, counts)
+    tiers = blocks[0][1].get('tiers', []), blocks[1][1].get('tiers', [])
+    tier_name = lambda p: ' / '.join(t[p - 1] for t in tiers if len(t) >= p) or 'Priority %d' % p
     rows, group, n = [], None, 1
     for it in items:
         n += 1
-        if it.group != group:
-            group = it.group
-            rows.append('<tr class="group"><th colspan="7">%s</th></tr>' % html.escape(group))
-        rows.append('<tr><td class="n">%d</td><td class="id">%s</td><td class="where">%s</td><td lang="en">%s</td><td lang="%s">%s</td><td class="write"></td><td class="write"></td></tr>'
-                    % (n, html.escape(it.id), html.escape(it.where), chips(show(it.kind, it.english)), html_lang, chips(show(it.kind, it.current))))
+        if (it.priority, it.group) != group:
+            group = (it.priority, it.group)
+            rows.append('<tr class="group p%d"><th colspan="9"><span class="tier">%s</span> %s</th></tr>' % (it.priority, html.escape(tier_name(it.priority)), html.escape(it.group)))
+        rows.append('<tr class="p%d"><td class="n">%d</td><td class="n">%d</td><td class="id">%s</td><td class="where">%s</td><td lang="en">%s</td><td lang="%s">%s</td><td class="ask">%s</td><td class="write"></td><td class="write"></td></tr>'
+                    % (it.priority, n, it.priority, html.escape(it.id), html.escape(it.where), chips(show(it.kind, it.english)), html_lang, chips(show(it.kind, it.current)),
+                       '<br>'.join(html.escape(x) for x in it.ask.split('\n')) if it.ask else ''))
     font = FONTS.get(code, FONTS['es'])
     return '''<!doctype html>
 <html lang="en">
@@ -504,42 +694,197 @@ def html_text(code, items):
 <style>
 body{margin:0;padding:18px 22px;font:18px/1.5 system-ui,"Segoe UI",Roboto,Arial,sans-serif;color:#222;background:#fff}
 h1{font-size:28px;margin:0 0 6px}
-.how{max-width:62em;background:#f6f1e7;border:1px solid #d8cdb5;border-radius:10px;padding:10px 18px;margin:10px 0 18px}
-.how li{margin:.25em 0}
-table{border-collapse:collapse;width:100%%;table-layout:fixed;font-size:18px}
-th,td{border:1px solid #999;padding:8px 10px;vertical-align:top;text-align:left;overflow-wrap:anywhere}
+%(how_css)s
+table.main{border-collapse:collapse;width:100%%;table-layout:fixed;font-size:18px}
+table.main th,table.main td{border:1px solid #999;padding:8px 10px;vertical-align:top;text-align:left;overflow-wrap:anywhere}
 thead th{background:#eee;font-size:16px}
 tr.group th{background:#f1e7cf;font-size:21px;padding:12px 10px}
+tr.group.p1 th{background:#f7dd9a}
+tr.group.p3 th{background:#e9e4d8}
+.tier{display:inline-block;margin-right:10px;padding:0 8px;border-radius:5px;background:#fff8}
 td.n,td.id{font:14px/1.3 ui-monospace,Consolas,monospace;color:#555}
 td.where{font-size:15px;color:#444}
 td[lang="%(html_lang)s"]{font-family:%(font)s;font-size:20px;line-height:1.6}
+td.ask{background:#fff6dc;font-size:15px}
 td.write{height:3.6em}
-.tag{display:inline-block;font:13px/1.2 ui-monospace,Consolas,monospace;background:#e6eefb;border:1px solid #9ab;border-radius:4px;padding:0 4px;margin:0 1px}
-@media print{@page{size:landscape;margin:12mm}body{padding:0;font-size:14px}table{font-size:14px}td[lang="%(html_lang)s"]{font-size:16px}thead{display:table-header-group}tr{break-inside:avoid}.how{break-after:avoid}}
+@media print{%(how_print)s.how{break-after:page}.how+p{display:none}table.main{font-size:12px}td[lang="%(html_lang)s"]{font-size:14px}thead{display:table-header-group}tr{break-inside:avoid}}
 </style>
 </head>
 <body>
 <h1>Wise Acres website: please check the %(name)s text (%(own)s)</h1>
-<div class="how">
-<p><b>Thank you for reading the site in %(name)s.</b> Each row is one piece of text. Read the English and the current %(name)s next to it.</p>
-<ol>
-<li>If the %(name)s is right and sounds natural, leave the row alone.</li>
-<li>If something is wrong or sounds odd to you, write the better text in the <b>correction</b> column (the whole line, not only the changed word).</li>
-<li>Keep the numbers, prices, times, names (Wise Acres, Wise Pie, The GreenHouse) and e-mail addresses as they are. Keep the blue marks, such as <span class="tag">&lt;a1&gt;</span> or <span class="tag">&lt;strong&gt;</span>, and anything in curly brackets such as {n}: the page uses them.</li>
-<li>Use the <b>note</b> column for a question or a remark. Do not change the id or the English.</li>
-<li>If you use Excel: open review/%(code)s.csv, type your corrections, then choose <b>Save As, CSV UTF-8</b>, and send the file back. This table is the same content, for reading or printing.</li>
-</ol>
-</div>
-<table>
-<colgroup><col style="width:5%%"><col style="width:8%%"><col style="width:11%%"><col style="width:22%%"><col style="width:23%%"><col style="width:20%%"><col style="width:11%%"></colgroup>
-<thead><tr><th scope="col">row</th><th scope="col">id</th><th scope="col">where</th><th scope="col">English</th><th scope="col">current %(name)s</th><th scope="col">correction</th><th scope="col">note</th></tr></thead>
+%(how)s
+<p>This table is the same content as the Excel sheet, for reading or printing. Type your corrections in the Excel sheet (or write them on a printout and send a photo): the %(code)s.xlsx file is the one to send back.</p>
+<table class="main">
+<colgroup><col style="width:3%%"><col style="width:3%%"><col style="width:7%%"><col style="width:10%%"><col style="width:16%%"><col style="width:20%%"><col style="width:15%%"><col style="width:16%%"><col style="width:10%%"></colgroup>
+<thead><tr><th scope="col">row</th><th scope="col">priority</th><th scope="col">id</th><th scope="col">where</th><th scope="col">English</th><th scope="col">current %(name)s</th><th scope="col">question for you</th><th scope="col">correction</th><th scope="col">note</th></tr></thead>
 <tbody>
 %(rows)s
 </tbody>
 </table>
 </body>
 </html>
-''' % {'name': name, 'own': own, 'html_lang': html_lang, 'font': font, 'rows': '\n'.join(rows), 'code': code}
+''' % {'name': name, 'own': own, 'html_lang': html_lang, 'font': font, 'rows': '\n'.join(rows), 'code': code, 'how': instructions_html(blocks), 'how_css': HOW_CSS, 'how_print': HOW_PRINT}
+
+
+def instructions_page(code, blocks):
+    """The one page of instructions alone (to attach, to print): the same words as the top of the table page and the "Read me first" sheet."""
+    name, own, _ = LANG_NAMES.get(code, (code, code, code))
+    return '''<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Wise Acres: how to check the %(name)s text</title>
+<style>
+body{margin:0;padding:18px 22px;font:18px/1.5 system-ui,"Segoe UI",Roboto,Arial,sans-serif;color:#222;background:#fff}
+h1{font-size:28px;margin:0 0 6px}
+%(how_css)s
+@media print{%(how_print)s}
+</style>
+</head>
+<body>
+<h1>Wise Acres website: please check the %(name)s text (%(own)s)</h1>
+%(how)s
+</body>
+</html>
+''' % {'name': name, 'own': own, 'how': instructions_html(blocks), 'how_css': HOW_CSS, 'how_print': HOW_PRINT}
+
+
+# ---- the Excel file, written with the standard library (a zip of XML files), the same bytes every time
+XML_HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+NS_MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+NS_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+WIDTHS = [11, 9, 30, 46, 46, 42, 50, 30]   # the width of each column of HEADER, in characters
+# cell styles (indexes into cellXfs in STYLES): 0 plain, 1 header, 2 text, 3 grey small (id), 4 correction (text format, yellow), 5 question with words in it (orange), 6 note (text format),
+# 7 title, 8 paragraph, 9 heading, 10 / 11 / 12 priority 1 (bold, green) / 2 (blue) / 3 (grey), centred
+STYLES = XML_HEAD + (
+    '<styleSheet xmlns="%s">'
+    '<fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><sz val="10"/><color rgb="FF666666"/><name val="Calibri"/></font>'
+    '<font><b/><sz val="16"/><name val="Calibri"/></font><font><b/><sz val="12"/><name val="Calibri"/></font></fonts>'
+    '<fills count="8"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFD9D9D9"/><bgColor indexed="64"/></patternFill></fill>'
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFFFF9DB"/><bgColor indexed="64"/></patternFill></fill>'
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFFFE9B3"/><bgColor indexed="64"/></patternFill></fill>'
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFC6E0B4"/><bgColor indexed="64"/></patternFill></fill>'
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFDDEBF7"/><bgColor indexed="64"/></patternFill></fill>'
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFEDEDED"/><bgColor indexed="64"/></patternFill></fill></fills>'
+    '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'
+    '<border><left style="thin"><color rgb="FFBBBBBB"/></left><right style="thin"><color rgb="FFBBBBBB"/></right><top style="thin"><color rgb="FFBBBBBB"/></top><bottom style="thin"><color rgb="FFBBBBBB"/></bottom><diagonal/></border></borders>'
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    '<cellXfs count="13">'
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+    '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>'
+    '<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+    '<xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+    '<xf numFmtId="49" fontId="0" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+    '<xf numFmtId="49" fontId="0" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+    '<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+    '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+    '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+    '<xf numFmtId="0" fontId="1" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="top"/></xf>'
+    '<xf numFmtId="0" fontId="2" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="top"/></xf>'
+    '<xf numFmtId="0" fontId="2" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="top"/></xf>'
+    '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>') % NS_MAIN
+
+
+def xml_text(s):
+    return html.escape(re.sub('[\x00-\x08\x0b\x0c\x0e-\x1f￾￿]', '', str(s)), quote=False)
+
+
+class SharedStrings(object):
+    def __init__(self):
+        self.index, self.items, self.refs = {}, [], 0
+
+    def cell(self, ref, style, value):
+        if isinstance(value, int):
+            return '<c r="%s" s="%d"><v>%d</v></c>' % (ref, style, value)
+        self.refs += 1
+        if value not in self.index:
+            self.index[value] = len(self.items)
+            self.items.append(value)
+        return '<c r="%s" s="%d" t="s"><v>%d</v></c>' % (ref, style, self.index[value])
+
+    def xml(self):
+        return XML_HEAD + '<sst xmlns="%s" count="%d" uniqueCount="%d">%s</sst>' % (
+            NS_MAIN, self.refs, len(self.items), ''.join('<si><t xml:space="preserve">%s</t></si>' % xml_text(s) for s in self.items))
+
+
+def xlsx_bytes(code, items, blocks=None):
+    """The sheet as an .xlsx file: 'Texts' (the table, first, so a file saved again still imports) and 'Read me first' (the instructions; the file opens on it)."""
+    counts = counts_of(items)
+    blocks = blocks or blocks_for(code, counts)
+    ss = SharedStrings()
+    letters = 'ABCDEFGH'
+    last = len(items) + 1
+    rows = ['<row r="1" ht="32" customHeight="1">%s</row>' % ''.join(ss.cell('%s1' % letters[i], 1, h) for i, h in enumerate(HEADER))]
+    for n, it in enumerate(items, start=2):
+        v = [c if isinstance(c, int) else c.replace('\r\n', '\n').replace('\r', '\n') for c in row_cells(it)]
+        cells = [ss.cell('A%d' % n, 3, v[0]), ss.cell('B%d' % n, 9 + int(v[1]), v[1]), ss.cell('C%d' % n, 2, v[2]), ss.cell('D%d' % n, 2, v[3]), ss.cell('E%d' % n, 2, v[4])]
+        if v[5]:
+            cells.append(ss.cell('F%d' % n, 5, v[5]))
+        rows.append('<row r="%d">%s</row>' % (n, ''.join(cells)))
+    cols = ''.join('<col min="%d" max="%d" width="%d" customWidth="1"%s/>' % (i + 1, i + 1, w, {5: ' style="6"', 6: ' style="4"', 7: ' style="6"'}.get(i, '')) for i, w in enumerate(WIDTHS))
+    texts_sheet = (XML_HEAD + '<worksheet xmlns="%s"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:H%d"/>'
+                   '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="G2" sqref="G2"/></sheetView></sheetViews>'
+                   '<sheetFormatPr defaultRowHeight="15"/><cols>%s</cols><sheetData>%s</sheetData><autoFilter ref="A1:H%d"/>'
+                   '<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>'
+                   % (NS_MAIN, last, cols, ''.join(rows), last))
+    # the instructions: the friend's language, then English, one paragraph per row
+    lines = []
+    for k, (_, b) in enumerate(blocks):
+        if k:
+            lines.append((8, ''))
+        lines.append((7, b.get('title', '')))
+        lines.append((8, b.get('intro', '')))
+        lines.append((9, b.get('time_title', '')))
+        lines.append((8, b.get('time', '')))
+        lines.append((8, b.get('open_line', '')))
+        lines.append((9, b.get('do_title', '')))
+        lines.extend((8, '%d. %s' % (i, x)) for i, x in enumerate(b.get('do', []), start=1))
+        lines.append((9, b.get('keep_title', '')))
+        lines.extend((8, '• ' + x) for x in b.get('keep', []))
+        lines.append((9, b.get('send_title', '')))
+        lines.extend((8, '• ' + x) for x in b.get('send', []))
+        lines.append((9, b.get('thanks', '')))
+        lines.append((9, b.get('columns_title', '')))
+        lines.extend((8, '%s: %s' % (n, d)) for n, d in b.get('columns', []))
+    body = ''.join('<row r="%d">%s</row>' % (i, ss.cell('A%d' % i, st, t)) if t else '<row r="%d"/>' % i for i, (st, t) in enumerate(lines, start=1))
+    readme_sheet = (XML_HEAD + '<worksheet xmlns="%s"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:A%d"/><sheetViews><sheetView tabSelected="1" workbookViewId="0" showGridLines="0"/></sheetViews>'
+                    '<sheetFormatPr defaultRowHeight="15"/><cols><col min="1" max="1" width="100" customWidth="1"/></cols><sheetData>%s</sheetData>'
+                    '<pageMargins left="0.5" right="0.5" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup orientation="portrait" fitToWidth="1" fitToHeight="0"/></worksheet>'
+                    % (NS_MAIN, len(lines), body))
+    files = [
+        ('[Content_Types].xml', XML_HEAD + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+         '<Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+         '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+         '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+         '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+         '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>'),
+        ('_rels/.rels', XML_HEAD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" '
+         'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'),
+        ('xl/workbook.xml', XML_HEAD + '<workbook xmlns="%s" xmlns:r="%s"><bookViews><workbookView activeTab="1"/></bookViews><sheets><sheet name="%s" sheetId="1" r:id="rId1"/>'
+         '<sheet name="%s" sheetId="2" r:id="rId2"/></sheets></workbook>' % (NS_MAIN, NS_REL, SHEET_NAME, README_NAME)),
+        ('xl/_rels/workbook.xml.rels', XML_HEAD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+         '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+         '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>'
+         '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+         '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/></Relationships>'),
+        ('xl/styles.xml', STYLES),
+        ('xl/worksheets/sheet1.xml', texts_sheet),
+        ('xl/worksheets/sheet2.xml', readme_sheet),
+        ('xl/sharedStrings.xml', ss.xml()),
+    ]
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_STORED) as z:   # stored, not compressed, with a fixed date: the same bytes on every computer
+        for name, text in files:
+            info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_STORED
+            info.create_system = 3
+            info.external_attr = 0o644 << 16
+            z.writestr(info, text.encode('utf-8'))
+    return buf.getvalue()
 
 
 def has_work(path, code):
@@ -553,31 +898,46 @@ def has_work(path, code):
     return any(rec['correction'].strip() or rec['note'].strip() for _, rec, _ in rows)
 
 
+def write_file(path, data):
+    with open(path, 'wb') as f:
+        f.write(data)
+
+
 def cmd_export(site, which, out_dir, force=False):
     codes = languages() if which == 'all' else [need_language(which)]
     os.makedirs(out_dir, exist_ok=True)
     result, made = 0, []
+    rel = lambda p: os.path.relpath(p, ROOT)
     for code in codes:
         target = os.path.join(out_dir, code + '.csv')
-        if not force and has_work(target, code):
+        busy = [t for t in (os.path.join(out_dir, code + '.xlsx'), target) if not force and has_work(t, code)]
+        if busy:
             print('%s: NOT made. %s already has corrections or notes in it, and a new sheet would wipe them out. Import it first (python3 tools/review_sheet.py import %s %s --dry-run),'
-                  ' or move it somewhere else, or add --force.' % (code, os.path.relpath(target, ROOT), code, os.path.relpath(target, ROOT)))
+                  ' or move it somewhere else, or add --force.' % (code, rel(busy[0]), code, rel(busy[0])))
             result = 1
             continue
-        items = build_items(site, code)
-        with open(target, 'wb') as f:
-            f.write(b'\xef\xbb\xbf' + csv_text(items).encode('utf-8'))
-        with open(os.path.join(out_dir, code + '.html'), 'wb') as f:
-            f.write(html_text(code, items).encode('utf-8'))
+        items = rank_items(site, code)
+        counts = counts_of(items)
+        blocks = blocks_for(code, counts)
+        write_file(os.path.join(out_dir, code + '.xlsx'), xlsx_bytes(code, items, blocks))
+        write_file(target, b'\xef\xbb\xbf' + csv_text(items).encode('utf-8'))
+        write_file(os.path.join(out_dir, code + '.html'), html_text(code, items, blocks, counts).encode('utf-8'))
+        write_file(os.path.join(out_dir, code + '-message.txt'), message_text(code, blocks).encode('utf-8'))
+        write_file(os.path.join(out_dir, code + '-instructions.html'), instructions_page(code, blocks).encode('utf-8'))
         kinds = collections.Counter(i.kind for i in items)
         made.append(code)
-        print('%s: %d rows (%d page texts, %d texts the code writes, %d QR sign lines) -> %s, %s' % (
-            code, len(items), kinds['ui'], kinds['js'], kinds['qr'], os.path.relpath(target, ROOT), os.path.relpath(os.path.join(out_dir, code + '.html'), ROOT)))
+        print('%s: %d rows (%d page texts, %d texts the code writes, %d QR sign lines; priority 1: %d, 2: %d, 3: %d; %d questions) -> %s, %s, %s, %s, %s' % (
+            code, len(items), kinds['ui'], kinds['js'], kinds['qr'], counts['N1'], counts['N2'], counts['N3'], sum(1 for i in items if i.ask),
+            rel(os.path.join(out_dir, code + '.xlsx')), rel(target), rel(os.path.join(out_dir, code + '.html')), rel(os.path.join(out_dir, code + '-message.txt')),
+            rel(os.path.join(out_dir, code + '-instructions.html'))))
     if made:
+        c = made[0]
         print()
-        print('Send the .csv file to your friend (it opens in Excel or Google Sheets; the .html file is the same table for reading or printing).')
-        print('Ask them to write corrections in the "correction" column only, and to save it under a new name as "CSV UTF-8" (for example %s.corrected.csv). When the file comes back:' % made[0])
-        print('    python3 tools/review_sheet.py import %s review/%s.corrected.csv --dry-run' % (made[0], made[0]))
+        print('Send the .xlsx file to your friend, with the text in the -message.txt file as the e-mail (it opens in Excel, Numbers, Google Sheets and LibreOffice;'
+              ' the -instructions.html page is the one page of instructions alone, to print or attach; the .csv is the same table for programs that cannot open .xlsx;'
+              ' the .html is the same table, with the instructions, for reading or printing).')
+        print('Ask your friend to write corrections in the "correction" column only and to send the saved file back. When it comes back, put it in the review folder and run:')
+        print('    python3 tools/review_sheet.py import %s review/FILE-YOUR-FRIEND-SENT --dry-run' % c)
     return result
 
 
@@ -609,7 +969,7 @@ def find_header(row):
     idx = {}
     for i, n in enumerate(names):
         for want, aliases in (('id', ('id',)), ('where', ('where',)), ('english', ('english',)), ('current', ('current translation', 'current', 'translation')),
-                              ('correction', ('correction', 'corrections')), ('note', ('note', 'notes', 'comment'))):
+                              ('ask', ('question for you', 'question', 'questions')), ('correction', ('correction', 'corrections')), ('note', ('note', 'notes', 'comment'))):
             if n in aliases and want not in idx:
                 idx[want] = i
     return idx
@@ -622,10 +982,12 @@ def read_csv_rows(raw, code):
     if text.startswith('\u00ef\u00bb\u00bf'):   # a byte order mark that a program turned into three letters
         text = text[3:]
     best = None
+    too_big = False
     for delim in (',', ';', '\t'):
         try:
             recs = split_records(text, delim)
-        except csv.Error:
+        except csv.Error as e:
+            too_big = too_big or 'field larger than field limit' in str(e)
             continue
         if not recs:
             continue
@@ -633,6 +995,8 @@ def read_csv_rows(raw, code):
         if 'id' in idx and 'correction' in idx:
             best = (delim, recs, idx)
             break
+    if best is None and too_big:
+        raise Problem('A cell in this file is longer than %d letters, so it is not a sheet made by `export`. Nothing was changed.' % csv.field_size_limit())
     if best is None:
         raise Problem('This file has no header row with the columns "id" and "correction", so it is not a sheet made by `export` (or the first row was deleted). Nothing was changed.')
     delim, recs, idx = best
@@ -641,12 +1005,35 @@ def read_csv_rows(raw, code):
         if not any(c.strip() for c in rec):
             continue
         get = lambda k: (rec[idx[k]] if k in idx and idx[k] < len(rec) else '')
-        rows.append((n, {k: get(k) for k in ('id', 'where', 'english', 'current', 'correction', 'note')}, {}))
+        cells = {k: get(k) for k in ('id', 'where', 'english', 'current', 'correction', 'note')}
+        cells['ask'] = get('ask') if 'ask' in idx else None   # None: this sheet has no such column (a sheet made before it existed)
+        rows.append((n, cells, {}))
     return rows, warn
 
 
 def read_xlsx_rows(raw, code):
-    """The first sheet of an .xlsx file, read with the standard library. Numbers and dates are marked, because a correction is always text."""
+    """The first sheet of an .xlsx file, read with the standard library. Numbers and dates are marked, because a correction is always text.
+    A file that is not a real Excel file (broken, or made to use up the memory) gives a plain message, never a Python error."""
+    try:
+        return read_xlsx_unsafe(raw, code)
+    except Problem:
+        raise
+    except (zipfile.BadZipFile, zipfile.LargeZipFile, ElementTree.ParseError, ValueError, KeyError, IndexError, OverflowError, RuntimeError, NotImplementedError, EOFError, OSError, MemoryError):
+        raise Problem('This file could not be read as an Excel file (it is damaged, or it is not a sheet made by `export`). Save it again as "CSV UTF-8 (Comma delimited)" and send that. Nothing was changed.')
+
+
+def xlsx_part(z, name):
+    """One file inside the .xlsx, refused when it unpacks to more than MAX_XLSX_PART_BYTES or holds a DOCTYPE (an Excel file never does; it is how
+    an "entity bomb" is made)."""
+    if z.getinfo(name).file_size > MAX_XLSX_PART_BYTES:
+        raise Problem('This Excel file unpacks to more than %d MB, which no real sheet does. Nothing was changed. Save the sheet as "CSV UTF-8 (Comma delimited)" and send that.' % (MAX_XLSX_PART_BYTES // 1048576))
+    data = z.read(name)
+    if b'<!DOCTYPE' in data[:4096].upper() or b'<!ENTITY' in data[:65536].upper():
+        raise Problem('This Excel file has a part that no Excel file has (a DOCTYPE), so it was not read. Nothing was changed. Save the sheet as "CSV UTF-8 (Comma delimited)" and send that.')
+    return data
+
+
+def read_xlsx_unsafe(raw, code):
     ns = {'m': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
     try:
         z = zipfile.ZipFile(io.BytesIO(raw))
@@ -655,13 +1042,13 @@ def read_xlsx_rows(raw, code):
     names = z.namelist()
     shared = []
     if 'xl/sharedStrings.xml' in names:
-        root = ElementTree.fromstring(z.read('xl/sharedStrings.xml'))
+        root = ElementTree.fromstring(xlsx_part(z, 'xl/sharedStrings.xml'))
         for si in root.findall('m:si', ns):
             shared.append(''.join(t.text or '' for t in si.iter('{%s}t' % ns['m'])))
     sheets = sorted(n for n in names if re.match(r'xl/worksheets/sheet\d+\.xml$', n))
     if not sheets:
         raise Problem('This Excel file has no sheet. Nothing was changed.')
-    sheet = ElementTree.fromstring(z.read(sheets[0]))
+    sheet = ElementTree.fromstring(xlsx_part(z, sheets[0]))
     grid = {}
     kinds = {}
     for row in sheet.iter('{%s}row' % ns['m']):
@@ -674,10 +1061,12 @@ def read_xlsx_rows(raw, code):
             for ch in m.group(1):
                 col = col * 26 + (ord(ch) - 64)
             r = int(m.group(2))
+            if col > MAX_XLSX_COLUMN or r > MAX_XLSX_ROW:   # a cell farther out than Excel has: the sheet would be padded to billions of cells
+                raise Problem('This Excel file has a cell (%s) outside the sheet Excel can make, so it was not read. Nothing was changed.' % on_screen(ref[:12]))
             t = c.get('t', 'n')
             v = c.find('m:v', ns)
             if t == 's' and v is not None:
-                val = shared[int(v.text)] if int(v.text) < len(shared) else ''
+                val = shared[int(v.text)] if 0 <= int(v.text) < len(shared) else ''
             elif t == 'inlineStr':
                 val = ''.join(x.text or '' for x in c.iter('{%s}t' % ns['m']))
             elif v is not None:
@@ -695,13 +1084,15 @@ def read_xlsx_rows(raw, code):
         raise Problem('This file has no header row with the columns "id" and "correction", so it is not a sheet made by `export`. Nothing was changed.')
     rows = []
     for r in sorted({r for r, _ in grid if r > 1}):
-        rec = {k: grid.get((r, idx[k]), '') for k in ('id', 'where', 'english', 'current', 'correction', 'note') if k in idx}
+        rec = {k: grid.get((r, idx[k]), '') for k in ('id', 'where', 'english', 'current', 'correction', 'note', 'ask') if k in idx}
         for k in ('id', 'where', 'english', 'current', 'correction', 'note'):
             rec.setdefault(k, '')
-        if not any(str(v).strip() for v in rec.values()):
+        rec.setdefault('ask', None)   # None: this sheet has no such column
+        if not any(str(v or '').strip() for v in rec.values()):
             continue
         flags = {}
-        if 'correction' in idx and kinds.get((r, idx['correction']), 's') in ('n', 'd', 'b', 'e'):
+        # a number, a date: only when the cell holds a value (an empty cell that has a colour or a format is not a number: Excel and LibreOffice write those)
+        if 'correction' in idx and kinds.get((r, idx['correction']), 's') in ('n', 'd', 'b', 'e') and str(grid.get((r, idx['correction']), '')).strip() != '':
             flags['number_cell'] = True
         rows.append((r, rec, flags))
     return rows, []
@@ -709,11 +1100,17 @@ def read_xlsx_rows(raw, code):
 
 def read_sheet(path, code):
     try:
+        if os.path.exists(path) and not os.path.isfile(path):   # a folder, or something like /dev/zero that never ends (a file that is not there gets the message below)
+            raise Problem('%s is not a file, so there is nothing to read. Give the sheet your friend sent back (a .csv or .xlsx file). Nothing was changed.' % on_screen(path))
+        if os.path.isfile(path) and os.path.getsize(path) > MAX_FILE_BYTES:
+            raise Problem('%s is %d MB. A sheet is well under 1 MB, so this is not a sheet made by `export`. Nothing was changed.' % (on_screen(path), os.path.getsize(path) // 1048576))
         with open(path, 'rb') as f:
-            raw = f.read()
+            raw = f.read(MAX_FILE_BYTES + 1)
     except OSError as e:
-        raise Problem('Cannot read %s: %s' % (path, e.strerror or e))
+        raise Problem('Cannot read %s: %s' % (on_screen(path), e.strerror or e))
     if raw[:4] == b'PK\x03\x04':
+        if b'application/vnd.oasis.opendocument.spreadsheet' in raw[:300]:
+            raise Problem('This is a LibreOffice / OpenDocument (.ods) file, which this tool does not read. Open it and use File > Save As > Excel (.xlsx) or "CSV UTF-8 (Comma delimited)", and use that file. Nothing was changed.')
         return read_xlsx_rows(raw, code)
     if raw[:8] == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1':
         raise Problem('This is an old Excel (.xls) file. Please save it as "CSV UTF-8 (Comma delimited)" and send that. Nothing was changed.')
@@ -1152,10 +1549,11 @@ def replace_in_qr(text, code, changes):
 # ---------------------------------------------------------------------------------------------- import
 def cmd_import(site, code, path, dry_run=False, strict=False, out=None):
     out = out or sys.stdout
-    say = lambda s='': print(s, file=out)
+    say = lambda s='': print(on_screen(s), file=out)   # the sheet is another person's text: no control characters reach the window
     need_language(code)
     rows, file_warn = read_sheet(path, code)
     items = build_items(site, code)
+    rank_items(site, code, items)   # fills in the question of each row, to know what the sheet showed in that column
     by_id = {it.id: it for it in items}
     for w in file_warn:
         say('Note: ' + w)
@@ -1211,6 +1609,22 @@ def cmd_import(site, code, path, dry_run=False, strict=False, out=None):
         if cur_cell and it.current.strip() and not shaky and squash(cur_cell) != squash(it.current):
             warn.append('the line on the site is not what the sheet showed: it was changed after the sheet was made (or Excel changed the cell). The correction replaces the newer text.')
         accepted.append((n, rid, it, text, warn))
+    # a cell of a column that is not read (the English, the current translation, the question) with other words in it, on a row with no correction:
+    # a friend who typed the better text over the old one. Only "correction" and "note" are read, so say it, row by row.
+    edited = []
+    for n, rec, flags in rows:
+        it = by_id.get(rec['id'].strip())
+        if it is None or rec['correction'].strip() or flags.get('number_cell'):
+            continue
+        for label, key, shown in (('current translation', 'current', show(it.kind, it.current)), ('English', 'english', show(it.kind, it.english)), ('question for you', 'ask', it.ask)):
+            cell = rec.get(key)
+            if cell is None or not cell.strip():
+                continue
+            if any(rx.match(cell.strip()) for rx in EXCEL_DATE) or re.match(r'^[\d.,]+$', cell.strip()):
+                continue   # Excel turns such a cell into a date or a number by itself
+            if squash(cell) != squash(shown):
+                edited.append((n, it.id, label, cell))
+                break
     # ---- report
     say('Sheet: %s   Language: %s (lang/src/%s.json)' % (os.path.relpath(path), LANG_NAMES[code][0], code))
     say('%d rows read, %d with a correction: %d accepted, %d not used, %d the same as now.' % (len(rows), n_with, len(accepted), len(rejected), len(unchanged)))
@@ -1234,6 +1648,15 @@ def cmd_import(site, code, path, dry_run=False, strict=False, out=None):
     if unchanged:
         say('%d rows had a correction that is the same as the text already on the site (nothing to change).' % len(unchanged))
         say()
+    if edited:
+        say('%d row(s) have other words in a column that is not read. Only the "correction" and "note" columns are read, so nothing was used from these rows:' % len(edited))
+        for n, rid, label, cell in edited[:12]:
+            say('    Row %d (%s): the "%s" cell says: %s' % (n, short(rid, 30), label, short(cell, 100)))
+        if len(edited) > 12:
+            say('    ... and %d more rows.' % (len(edited) - 12))
+        say('    If your friend typed corrections there, ask them to type them in the "correction" column (or copy them there yourself) and import again.'
+            ' If the translations on the site were changed after this sheet was made, nothing is wrong.')
+        say()
     if notes:
         say('Notes your friend wrote (not applied; for you to read):')
         for n, rid, note in notes:
@@ -1242,7 +1665,7 @@ def cmd_import(site, code, path, dry_run=False, strict=False, out=None):
     # ---- write
     apply_now = accepted and not (strict and rejected)
     result = 0
-    if rejected:
+    if rejected or edited:
         result = 1
     changes_src, changes_qr = {}, {}
     for n, rid, it, text, warn in accepted:
@@ -1339,7 +1762,7 @@ def main(argv):
             return cmd_import(site, pos[0], pos[1], dry_run='--dry-run' in flags, strict='--strict' in flags)
         raise Problem('Unknown command "%s". Use export or import. See: python3 tools/review_sheet.py --help' % cmd)
     except Problem as e:
-        print(str(e), file=sys.stderr)
+        print(on_screen(e), file=sys.stderr)
         return 2
 
 

@@ -153,8 +153,8 @@ class OwnerCopy {
     if (!rx.test(s)) throw new Error('js/content.js has no setting called ' + name);
     this.write('js/content.js', s.replace(rx, '  ' + name + ': ' + value + ','));
   }
-  sh(cmd, args, timeout = 110000) {
-    const r = spawnSync(cmd, args, { cwd: this.dir, encoding: 'utf8', timeout, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1', NO_COLOR: '1' } });
+  sh(cmd, args, timeout = 110000, env = {}) {
+    const r = spawnSync(cmd, args, { cwd: this.dir, encoding: 'utf8', timeout, env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1', NO_COLOR: '1', ...env } });
     return { code: r.status, out: (r.stdout || '') + (r.stderr || '') };
   }
   py(...args) { return this.sh(PY, args); }
@@ -209,6 +209,44 @@ export const STEPS = [];
 const step = (id, doc, opts, fn) => STEPS.push({ id, doc, quick: !!opts.quick, fn, group: opts.group || 'dated' });
 
 /* ---- 3. October to December 2026 ---------------------------------------------------------- */
+
+step('S1', 'Section 5 and the same-day closure: python3 tools/close_today.py rain on Sunday Oct 4, then --undo', { quick: true }, async (S) => {
+  const bk = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-close-bk-'));
+  const env = { CLOSE_TODAY_NOW: '2026-10-04T16:00:00', CLOSE_TODAY_BACKUP_DIR: bk };   // Sunday noon on the farm clock
+  const original = fs.readFileSync(S.owner.file('js/content.js'));
+  const strip = (v) => { const o = { ...v }; delete o.errs; delete o.after; return o; };
+  const same = (a, b) => JSON.stringify(strip(a)) === JSON.stringify(strip(b));
+  const changedKeys = (a, b) => Object.keys(strip(a)).filter((k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
+  try {
+    const [bEn, bEs, bEnPhone] = await Promise.all([dayAt(S, '2026-10-04', '12:00'), dayAt(S, '2026-10-04', '12:00', { lang: 'es', device: 'phone' }), dayAt(S, '2026-10-04', '12:00', { device: 'phone' })]);
+    S.check('before: Sunday noon the farm and The GreenHouse say open, Wise Pie says it opens at 4 pm, and there is no bar', ['greenhouse', 'farm'].every((n) => badgeStates(bEn, n).includes('open')) && badgeStates(bEn, 'pizza').some((c) => c === 'open' || c === 'soon') && bEn.notice === '', JSON.stringify(bEn.live));
+    const dry = S.owner.sh(PY, ['tools/close_today.py', 'rain', '--dry-run'], 110000, env);
+    S.check('--dry-run shows what would change and writes nothing', dry.code === 0 && /closures: \['2026-10-04'\]/.test(dry.out) && /Nothing was written/.test(dry.out) && fs.readFileSync(S.owner.file('js/content.js')).equals(original), dry.out.slice(0, 160));
+    const run = S.owner.sh(PY, ['tools/close_today.py', 'rain'], 110000, env);
+    S.check('python3 tools/close_today.py rain: done, prints what it cannot do (Bookeo, Business Profile, Instagram) and the one next command', run.code === 0 && /WHAT THIS TOOL CANNOT DO/.test(run.out) && /BOOKEO/.test(run.out) && /BUSINESS PROFILE/.test(run.out) && /INSTAGRAM/.test(run.out) && /make_deploy_folder\.py/.test(run.out), run.out.slice(-200));
+    const [aEn, aEs, aEnPhone, aEsDesk] = await Promise.all([
+      dayAt(S, '2026-10-04', '12:00', { then: async (p, read) => { await p.clock.setSystemTime(farmTime('2026-10-05', '00:00')); await p.clock.runFor(61000); return read(); } }),
+      dayAt(S, '2026-10-04', '12:00', { lang: 'es', device: 'phone' }), dayAt(S, '2026-10-04', '12:00', { device: 'phone' }), dayAt(S, '2026-10-04', '12:00', { lang: 'es' })]);
+    const closed = (v) => ['greenhouse', 'pizza', 'farm'].every((n) => badgeStates(v, n).length && badgeStates(v, n).every((c) => c === 'closed'));
+    S.check('after rain for today: the farm, The GreenHouse and Wise Pie all show closed (English computer, English phone, Spanish phone, Spanish computer)', [aEn, aEnPhone, aEs, aEsDesk].every(closed), JSON.stringify([aEn.live, aEs.live]));
+    S.check('the bar says it in English ("Closed Sunday, Oct 4, for rain.") on a computer and on a phone', [aEn, aEnPhone].every((v) => /Heads up:\s*Closed Sunday, Oct 4, for rain\. Thank you for understanding\./.test(v.notice)), aEn.notice + ' | ' + aEnPhone.notice);
+    S.check('...and in Spanish, in Spanish (not in English words)', [aEs, aEsDesk].every((v) => /Cerrado el domingo 4 de oct por lluvia\. Gracias por tu comprensión\./.test(v.notice) && v.noticeLang !== 'en'), aEs.notice + ' / lang=' + aEs.noticeLang);
+    S.check('the calendar promises the bar goes by itself: a page left open past midnight loses it on Monday', aEn.after && aEn.after.notice === '', aEn.after && aEn.after.notice);
+    S.check('Reserve buttons are unchanged: they still go to Bookeo (the calendar says the site cannot stop people booking: close the times in Bookeo)', JSON.stringify(aEn.reserve) === JSON.stringify(bEn.reserve) && aEn.reserve.some((r) => r.to === 'Bookeo'), JSON.stringify(aEn.reserve.map((r) => r.text + '>' + r.to)));
+    S.check('the pizza chip and the countdown are unchanged (they follow the table rows, not the closures)', aEn.chip === bEn.chip && aEn.relBox === bEn.relBox && aEn.countdown === bEn.countdown, bEn.chip + ' | ' + aEn.chip);
+    S.check('the hero (headline, line, buttons) and the "This week" box are unchanged', aEn.h1 === bEn.h1 && aEn.sub === bEn.sub && JSON.stringify(aEn.heroButtons) === JSON.stringify(bEn.heroButtons) && JSON.stringify(aEn.week) === JSON.stringify(bEn.week), '');
+    const changed = changedKeys(bEn, aEn).filter((k) => k !== 'text');
+    S.check('only the badges, the bar and what they write changed on the page (every other part is as before)', changed.every((k) => ['live', 'badges', 'notice', 'noticeLang', 'nowTag', 'topbar', 'topbarShown', 'topbarShown2', 'dated', 'weekNote'].includes(k)), 'changed: ' + changed.join(', '));
+    const chk = S.owner.sh(PY, ['tools/close_today.py', '--check'], 110000, env);
+    S.check('--check says today is closed and the bar shows', /Closed today: YES/.test(chk.out) && /notice bar shows today: YES/.test(chk.out), chk.out.slice(0, 200));
+    const again = S.owner.sh(PY, ['tools/close_today.py', 'rain'], 110000, env);
+    S.check('closing the same day twice is refused in plain words', again.code === 1 && /already in closures/.test(again.out), again.out.slice(0, 160));
+    const undo = S.owner.sh(PY, ['tools/close_today.py', '--undo'], 110000, env);
+    S.check('--undo: js/content.js is byte for byte what it was before', undo.code === 0 && fs.readFileSync(S.owner.file('js/content.js')).equals(original), undo.out.slice(-160));
+    const [uEn, uEs, uEnPhone] = await Promise.all([dayAt(S, '2026-10-04', '12:00'), dayAt(S, '2026-10-04', '12:00', { lang: 'es', device: 'phone' }), dayAt(S, '2026-10-04', '12:00', { device: 'phone' })]);
+    S.check('after --undo the page is identical to before (English computer, English phone, Spanish phone: every part of what a visitor sees)', same(bEn, uEn) && same(bEs, uEs) && same(bEnPhone, uEnPhone), 'differs in: ' + [changedKeys(bEn, uEn), changedKeys(bEs, uEs), changedKeys(bEnPhone, uEnPhone)].flat().join(', '));
+  } finally { fs.rmSync(bk, { recursive: true, force: true }); }
+});
 
 step('R01', 'Sat Oct 3, 2026: today (d60 closed Sunday, October 4 for rain)', { quick: true }, async (S) => {
   if (!S.quick) {
@@ -375,7 +413,7 @@ step('R08', 'Tue Dec 1, 2026: the schedule box hides', { quick: true }, async (S
   const [a, b] = await Promise.all([dayAt(S, '2026-11-30', '23:59'), dayAt(S, '2026-12-01', '00:00')]);
   S.check('Nov 30 23:59: the "Fall 2026 reservation schedule" box is still shown', a.ids && a.ids.schedule === 'shown', JSON.stringify(a.ids));
   S.check('Dec 1 00:00: the box is hidden', b.ids && b.ids.schedule === 'HIDDEN', JSON.stringify(b.ids));
-  S.check('the link "current fall schedule" then points to a hidden box (the calendar says so)', b.links.some((l) => l.to === '#schedule' && l.state === 'HIDDEN'), JSON.stringify(b.links.filter((l) => l.to === '#schedule')));
+  S.check('the sentence "See the current fall schedule" hides with the box, so no link points to a hidden box (the calendar says so)', !b.links.some((l) => l.to === '#schedule' && l.state === 'HIDDEN'), JSON.stringify(b.links.filter((l) => l.to === '#schedule')));
 });
 
 step('R09', 'Wed Dec 9, 2026: the tree season is over in the site\'s calendar', { }, async (S) => {

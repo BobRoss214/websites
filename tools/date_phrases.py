@@ -244,6 +244,9 @@ SAMPLE = [
 
 if __name__ == '__main__':
     args = sys.argv[1:]
+    if args in (['--help'], ['-h']):
+        print(__doc__)
+        sys.exit(0)
     if args == ['--sample']:   # for a native speaker: the English line and what the tool writes
         for ex in SAMPLE:
             print(re.sub(r'<[^>]+>', '', ex).replace('&amp;', '&'))

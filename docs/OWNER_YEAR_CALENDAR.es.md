@@ -28,7 +28,7 @@ En temporada (de mediados de septiembre a principios de noviembre, las semanas d
 1. **Miren el sitio en vivo en su teléfono.** Las insignias "Open now" deben coincidir con la realidad, y la cuenta regresiva de la pizza debe nombrar el martes correcto.
 2. **Agreguen `?check` a la dirección** (`https://www.wiseacresorganic.com/?check`). Si no aparece ningún cuadro al final, no hay nada mal. Un cuadro **amarillo** indica qué arreglar y dónde. Un cuadro **verde** enumera líneas viejas con fecha que ya se ocultaron solas: bórrenlas cuando quieran (README, sección "Check your changes").
 3. **Actualicen "This week at the farm"** (`week` en `js/content.js`): cambien `updated` a la fecha de hoy y las palabras y los cupos que cambiaron. Todo lo que contiene dura 14 días después de `updated` y desaparece desde el día 15, y el cuadro amarillo lo avisa cuando está viejo (README, fila "Say what is ripe / spots left this week"). Fuera de temporada el cuadro se llena solo o se oculta: sáltense este paso.
-4. **¿Lluvia o un día cerrado en los próximos siete días?** Agreguen la fecha a `closures`, escriban el aviso y su último día, y cierren los mismos horarios en Bookeo (README, filas "Close for rain or a holiday" y "Show a banner on every page").
+4. **¿Lluvia o un día cerrado en los próximos siete días?** Agreguen la fecha a `closures`, escriban el aviso y su último día, y cierren los mismos horarios en Bookeo (README, filas "Close for rain or a holiday" y "Show a banner on every page"). El mismo día, `python3 tools/close_today.py rain` hace la parte del archivo (sección 5).
 5. **En otoño, ¿se abre un fin de semana de pizza este martes?** Cambien la oración que está debajo de la tabla de pizza (README, fila "Open a new pizza weekend"). Aprovechen para agregar filas de los siguientes fines de semana. Las fechas se traducen solas al publicar (vean "Cómo leerla").
 6. **Presionen Reserve.** Bookeo debe mostrar los días que ustedes esperan. Lean el buzón de correo de la granja (mensajes de la lista de espera y de contacto) y respondan.
 7. **Si cambiaron un precio, un horario, un número de teléfono o un correo electrónico,** ejecuten `python3 tools/check_facts.py` antes de publicar. Debe decir que todos los datos coinciden.
@@ -101,10 +101,10 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 ### mar 1 dic 2026: se oculta el cuadro del calendario
 
-- **Por sí solo:** el bloque "No pizza" (`data-until="2026-11-30"`) era la última línea con fecha, así que todo el cuadro "Fall 2026 reservation schedule" se oculta. El enlace "current fall schedule" entonces apunta a un cuadro oculto.
+- **Por sí solo:** el bloque "No pizza" (`data-until="2026-11-30"`) era la última línea con fecha, así que todo el cuadro "Fall 2026 reservation schedule" se oculta. La oración "See the current fall schedule" de las preguntas frecuentes de la página principal se oculta con él (`data-needs="schedule"`), así que ningún enlace lleva a ninguna parte.
 - **Ustedes:** nada. Si planean fechas de pizza para el invierno, agreguen filas y el cuadro vuelve.
-- **Dónde:** `index.html`, en `data-t="te6cbae6c"` (la oración con el enlace); `pages/pumpkin-patch.html`, en `data-until="2026-11-30"` (2 lugares).
-- **Si se olvidan:** el enlace de las preguntas frecuentes de la página principal no lleva a ninguna parte hasta que haya un calendario nuevo.
+- **Dónde:** `index.html`, en `data-t="t6fab8a7b"` (la oración con el enlace); `pages/pumpkin-patch.html`, en `data-until="2026-11-30"` (2 lugares).
+- **Si se olvidan:** nada. La oración vuelve sola cuando vuelve un cuadro del calendario.
 
 ### mié 9 dic 2026: la temporada de árboles termina en el calendario del sitio
 
@@ -234,12 +234,13 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 ## 5. Cualquier día: cerrar por lluvia y otras sorpresas
 
+- **La forma rápida, el mismo día.** Ejecuten `python3 tools/close_today.py rain` (o `wind`, `holiday`, `late-open 10:30`, `sold-out`). Agrega el día a `closures`, escribe el aviso en cinco idiomas con su último día y guarda una copia del archivo viejo fuera de la carpeta del sitio. Después imprime lo que no puede hacer: los horarios en Bookeo, el Perfil de Empresa y Instagram, con palabras listas para pegar (`docs/NOTICE_KIT.md`). Agreguen `--dry-run` antes para ver el cambio. `python3 tools/close_today.py --undo` lo deja todo como estaba.
 - **Cierren el día.** Agreguen la fecha a `closures` en `js/content.js` (`'2026-10-11'` para un día, `'2026-11-09..2026-11-15'` para un tramo). La granja, The GreenHouse y Wise Pie aparecen entonces como cerrados ese día, los tres juntos. No detiene a Bookeo: cierren los mismos horarios allí (README, fila "Close for rain or a holiday"). Las fechas pasadas pueden quedarse en la lista.
 - **Avísenlo en todas las páginas.** Escriban `notice` (la barra amarilla) y `noticeUntil` (el último día en que se muestra). La barra se muestra desde el momento en que publican, sin fecha de inicio, así que pongan la fecha en las palabras ("Closed Oct 10 for rain.") y, si el cierre es dentro de varias semanas, agreguen la barra más tarde. Una barra a la vez; para cada idioma escriban `{ en, es, hi, zh, vi }` (README, fila "Show a banner on every page").
 - **Cuánto dura.** Un cierre vale solo por su día. La barra se oculta sola el día después de `noticeUntil`; `?check` lo avisa entonces en su cuadro verde ("nothing is broken": solo les recuerda borrar las palabras viejas). Una barra sin `noticeUntil` se queda hasta que escriban `notice: ''`.
 - **Un cierre el mismo día.** Los navegadores de los visitantes pueden guardar el archivo viejo hasta una hora después de que publican, así que avísenlo también donde la gente mira primero: Facebook, Instagram y su Perfil de Empresa de Google.
 - **Si se olvidan:** las insignias dicen "Open now", y una barra sin último día sigue puesta después del día del que hablaba.
-- **Dónde:** `js/content.js`, en `closures: [],`, `notice: '',` y `noticeUntil: '',`.
+- **Dónde:** `tools/close_today.py` hace la edición por ustedes. A mano es `js/content.js`, en `closures: [],`, `notice: '',` y `noticeUntil: '',`.
 
 ## 6. Líneas que nunca se apagan solas
 

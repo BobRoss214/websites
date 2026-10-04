@@ -49,6 +49,7 @@
  * --------------------------------------------
  * `hours` drives the green "Open now" badges. Times are Eastern Time on a 24-hour clock: '10:00' is 10 am, '16:00' is 4 pm, '20:00' is 8 pm.
  * `days` are numbers: 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday.
+ * When you change a time, change the note at the end of its line too, and the hours written on the pages. One command does all three: python3 tools/change_fact.py hours (README, row "Change a price, an hour, ...").
  * For `farm` you list the days with reserved visits for each season (spring, summer, fall, winter). A season you leave out shows no farm badge.
  * The Site check box reads these values: a time that is not on the 24-hour clock ('4 pm' instead of '16:00'), a close that is not later than the open,
  * and a day that is not a number from 0 to 6 are each named, with what to type.

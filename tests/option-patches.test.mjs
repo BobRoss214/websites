@@ -82,29 +82,31 @@ try {
   let sets = 0; const fails = [];
   const alreadyIn = new Set(patches.filter((p) => !p.absent.length).filter((p) => git(base, 'apply', '--check', '--reverse', path.join(DIR, p.file)).status === 0 && git(base, 'apply', '--check', path.join(DIR, p.file)).status !== 0).map((p) => p.file));
   const usable = ordered.filter((p) => !alreadyIn.has(p.file) && !p.absent.length);
-  // Whether a patch applies depends only on the files it touches. So the patches are put in groups that share a file (directly or through
-  // another patch), every set inside a group is tried (all of them, each applied to a fresh copy), and groups that share no file cannot
-  // disturb each other. One more set at the end puts everything together: the first choice of every group of alternatives and every patch
-  // that has no alternative, then the last choice.
-  const team = usable.map((_, i) => i);
-  const root = (i) => (team[i] === i ? i : (team[i] = root(team[i])));
-  usable.forEach((a, i) => usable.forEach((b, j) => { if (i < j && a.touched.some((f) => b.touched.includes(f))) team[root(j)] = root(i); }));
-  const groups = [...new Set(usable.map((_, i) => root(i)))].map((r) => usable.filter((_, i) => root(i) === r));
-  const tryApply = (pick) => {
+  // `git apply` works file by file: a patch changes only the files in its diff, and the hunks of one file do not care what happened to another.
+  // So a set of patches applies together exactly when, for every file, the patches of the set that touch that file apply to it one after the other
+  // in the documented order. That is all that has to be tried: every set of the patches that touch the same file, one file at a time (a few
+  // hundred small applies). Trying whole sets of 15 patches would be 2^15 copies of the site. One more set at the end puts everything together:
+  // the first choice of every group of alternatives and every patch that has no alternative, then the last choice.
+  const byFile = new Map();
+  for (const p of usable) for (const f of new Set(p.touched)) byFile.set(f, [...(byFile.get(f) || []), p]);
+  const tryApply = (pick, only) => {
     const work = path.join(tmp, 'w');
     fs.rmSync(work, { recursive: true, force: true });
-    fs.cpSync(base, work, { recursive: true });
+    fs.mkdirSync(work, { recursive: true });
+    if (only) { if (fs.existsSync(path.join(base, only))) { fs.mkdirSync(path.dirname(path.join(work, only)), { recursive: true }); fs.copyFileSync(path.join(base, only), path.join(work, only)); } }
+    else fs.cpSync(base, work, { recursive: true });
     for (const p of pick) {
-      const r = git(work, 'apply', path.join(DIR, p.file));
-      if (r.status !== 0) { fails.push(`${pick.map((x) => x.head.Option).join(' + ')}: ${p.head.Option} does not apply (${(r.stderr || '').trim().split('\n')[0]})`); return; }
+      const r = git(work, 'apply', ...(only ? ['--include=' + only] : []), path.join(DIR, p.file));
+      if (r.status !== 0) { fails.push(`${only ? only + ': ' : ''}${pick.map((x) => x.head.Option).join(' + ')}: ${p.head.Option} does not apply (${(r.stderr || '').trim().split('\n')[0]})`); return; }
     }
   };
-  for (const grp of groups) {
+  for (const [f, grp] of byFile) {
+    if (grp.length < 2) continue;   // a file that only one patch changes is checked by that patch's own "git apply --check" above
     for (let mask = 1; mask < (1 << grp.length); mask++) {
       const pick = grp.filter((_, i) => mask & (1 << i));
-      if (pick.some((a, i) => pick.slice(i + 1).some((b) => conflicts(a, b)))) continue;
+      if (pick.length < 2 || pick.some((a, i) => pick.slice(i + 1).some((b) => conflicts(a, b)))) continue;
       sets++;
-      tryApply(pick);
+      tryApply(pick, f);
       if (fails.length >= 5) break;
     }
   }
@@ -114,7 +116,7 @@ try {
     sets++;
     tryApply(ordered.filter((p) => chosen.includes(p)));
   }
-  ok(`all ${sets} sets of patches that do not conflict apply together, in "Order" order (git apply, no fuzz): every set inside each group of patches that touch the same files, and everything at once`, fails.length === 0 && sets > 0, fails.slice(0, 3).join(' | '));
+  ok(`every set of patches that do not conflict applies together, in "Order" order (git apply, no fuzz): ${sets} sets of patches that touch the same file, one file at a time, and everything at once`, fails.length === 0 && sets > 0, fails.slice(0, 3).join(' | '));
 } finally {
   fs.rmSync(tmp, { recursive: true, force: true });
 }

@@ -8,7 +8,7 @@
  * something the site really does. docs/WHAT_THE_SITE_STORES.md is the human version of these lists: change both together. Needs a browser. */
 import fs from 'node:fs';
 import path from 'node:path';
-import { run, open, ok, okSoon, until, info, ROOT, ms } from './lib.mjs';
+import { run, open, ok, okSoon, until, info, ROOT, ms, finish } from './lib.mjs';
 
 /* ------------------------------------------------------------------ the allow-lists (keep in step with docs/WHAT_THE_SITE_STORES.md, sections 1 to 3) */
 // What the site may keep in localStorage: key -> what a value may look like. Nothing else (no cookies, sessionStorage, IndexedDB, Cache Storage, service worker).
@@ -33,6 +33,7 @@ const WRITTEN_HOSTS = new Set([
   'plausible.io', 'gc.zgo.at', 'static.cloudflareinsights.com',                   // analytics providers (js/analytics.js, off by default)
   'www.w3.org', 'schema.org', 'www.sitemaps.org',                                                      // XML and structured-data names, never contacted
   'YOURCODE.goatcounter.com', 'YOUR-UMAMI', 'NAME.us21.list-manage.com', 'other-site',   // examples in comments
+  'localhost',                                                                                   // the address tools/serve.py prints: this computer, never contacted (print/owner-cheat-sheet.html)
 ]);
 // Files that may use a browser storage or network API, and which one. Everything else must not.
 const API_FILES = { 'js/i18n.js': ['localStorage'], 'js/main.js': ['localStorage'] };
@@ -83,6 +84,7 @@ const publicFiles = [...fs.readdirSync(ROOT).filter((f) => /\.(html|webmanifest|
   ok('_headers: Referrer-Policy sends other sites at most the site name (strict-origin-when-cross-origin or stricter)', /^\s*Referrer-Policy:\s*(strict-origin-when-cross-origin|strict-origin|same-origin|no-referrer)\s*$/m.test(headers));
   ok('_headers: location, camera and microphone are switched off, and the site sets no cookie', /Permissions-Policy:.*geolocation=\(\)/.test(headers) && /camera=\(\)/.test(headers) && /microphone=\(\)/.test(headers) && !/set-cookie/i.test(headers));
 }
+if (process.env.WA_STATIC_ONLY) { await finish({}); process.exit(process.exitCode || 0); }   // tests/privacy-static.test.mjs runs only the checks above (no browser, a second)
 
 await run('privacy', async ({ browser, base, errs }) => {
   const ORIGIN = base.replace(/\/$/, '');

@@ -137,6 +137,9 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 .col-head h2{font-size:clamp(1.9rem,4vw,2.8rem)}
 .fact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin:0;padding:0;list-style:none}
 .fact-grid-3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+/* 500% zoom (a 256 px screen): a column may be narrower than its minimum instead of running past the edge. Browsers without min() keep the lines above. */
+.fact-grid{grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr))}
+.fact-grid-3{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
 .fact-card{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:22px 22px 20px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:0 6px 0 var(--ink)}
 .fact-card h3{font-size:1.3rem}
 .fact-card p{margin:0}

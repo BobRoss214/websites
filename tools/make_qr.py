@@ -15,7 +15,7 @@ Until then that sign is skipped (it says so below).
 Needs:  python3 -m pip install segno        (and for --check:  python3 -m pip install zxing-cpp pillow)
 """
 import html, io, json, os, re, sys
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 # ---- Windows safety: these lines open every tool in tools/ (tests/windows-reality.test.mjs checks that they are the same in all of them).
 try:   # an old Windows console, or output sent to a file (cp1252, cp437), cannot show every letter: show a ? for it instead of stopping
@@ -123,9 +123,30 @@ def load_config():
     return cfg
 
 
+def url_problem(url):
+    """A plain reason why a web address may not go on a printed sign, else ''. Printed codes cannot be taken back, so the rules are strict:
+    https:// only (never javascript:, data: or http://), no spaces or control characters, no user name or password in it."""
+    if not url:
+        return 'no address yet'
+    if not re.match(r'^https://', url):
+        return 'the address must start with https://  (it is: ' + re.sub(r'[\x00-\x1f\x7f-\x9f]', '?', url[:60]) + ')'
+    if re.search(r'[\s\x00-\x1f\x7f-\x9f]', url):
+        return 'the address has a space or a control character in it'
+    try:
+        sp = urlsplit(url)
+        host = sp.hostname
+    except ValueError:
+        return 'that is not a web address'
+    if sp.username is not None or sp.password is not None or '@' in sp.netloc:
+        return 'the address has a user name or password in it (the part before an @)'
+    if not host:
+        return 'the address has no site name in it'
+    return ''
+
+
 def resolve(sign, site, review):
-    url = sign['url'].replace('{site}', site).replace('{reviewUrl}', review)
-    if not url or not re.match(r'^https://', url):
+    url = sign['url'].replace('{site}', site).replace('{reviewUrl}', review).strip()
+    if url_problem(url):
         return None
     if sign.get('utm'):
         base, _, frag = url.partition('#')
@@ -242,7 +263,7 @@ def main():
         url = resolve(sign, site, review)
         if not url:
             raw = sign['url'].replace('{site}', site).replace('{reviewUrl}', review).strip()
-            why = ('no address yet' if not raw else 'the address must start with https://  (it is: ' + raw[:60] + ')')
+            why = url_problem(raw) or 'the address cannot be used'
             plan.append((f"skipped  {sign['id']}: {why}" + (' (set reviewUrl in js/content.js, between the quotes)' if sign['id'] == 'review' else ''), None, None, None))
             continue
         try:

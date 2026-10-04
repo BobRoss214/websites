@@ -10,12 +10,13 @@ Why use this and not a double-click on index.html: a page opened straight from t
 js/content.js has a typo, other languages load less reliably, and some browsers refuse a few things. Here the pages come over http://localhost,
 exactly like on the live site, so the yellow or green "Site check" box at the bottom of the page names the line of every mistake.
 
-It shows only on your own computer (nobody else can reach it), nothing is written, and pages are never kept in the browser's memory, so after you
-save a file a refresh (F5) shows the change at once. Close this window (or press Ctrl+C) to stop it.
+It shows only on your own computer (nobody else can reach it, and it answers only to the names localhost, 127.0.0.1 and [::1], so a page on another
+website cannot use it either), nothing is written, and pages are never kept in the browser's memory, so after you save a file a refresh (F5) shows the
+change at once. Files that look like keys or passwords (.pem, .key, .env, id_rsa...) and hidden files are never shown. Close this window (or press Ctrl+C) to stop it.
 
 Needs only Python 3.8 or newer: nothing to install. Works on Windows, Mac and Linux.
 """
-import argparse, mimetypes, os, signal, sys, threading, webbrowser
+import argparse, mimetypes, os, re, signal, sys, threading, webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlsplit
 
@@ -71,6 +72,31 @@ def content_type(path):
     return TYPES.get(ext) or mimetypes.guess_type(path)[0] or 'application/octet-stream'
 
 
+# Only this computer may talk to the server, and only by one of these names. A web page on the internet can make the browser send a request to
+# http://localhost:8000/ (and with a trick called DNS rebinding it can even read the answer), but the request then carries the other site's own
+# name in the Host line. Answering only to these names stops that.
+LOCAL_NAMES = ('localhost', '127.0.0.1', '[::1]')
+# Files that look like keys or passwords are never shown, even when one was left in the folder by mistake.
+SECRET = re.compile(r'(\.(pem|key|p12|pfx|kdbx|env|sqlite3?|db)$)|^(id_rsa|id_dsa|id_ecdsa|id_ed25519)', re.I)
+CONTROL = re.compile('[\x00-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]')
+
+
+def host_ok(value):
+    """True when the Host line names this computer (any port: a tunnel may change it). A request with no Host line is refused too."""
+    if not value:
+        return False
+    name = value.strip().lower()
+    name = name[:name.rindex(':')] if re.search(r':\d+$', name) else name
+    return name in LOCAL_NAMES
+
+
+def on_screen(text, limit=200):
+    """A path a browser asked for, made safe to print: control characters (a hostile page could make the browser ask for ones that
+    change the window title or hide text) become ?, and a very long one is cut."""
+    text = CONTROL.sub('?', text)
+    return text if len(text) <= limit else text[:limit] + '...'
+
+
 def make_handler(folder):
     class Handler(BaseHTTPRequestHandler):
         server_version = 'WiseAcresPreview'
@@ -79,7 +105,7 @@ def make_handler(folder):
         def find(self, urlpath):
             """The file for an address, or None. No folder listings, no hidden files or folders, nothing outside the folder."""
             parts = [p for p in unquote(urlsplit(urlpath).path).replace('\\', '/').split('/') if p not in ('', '.')]
-            if any(p == '..' or p.startswith('.') or '\x00' in p for p in parts):
+            if any(p == '..' or p.startswith('.') or '\x00' in p or SECRET.search(p) for p in parts):
                 return None
             try:
                 path = os.path.join(folder, *parts)
@@ -100,11 +126,17 @@ def make_handler(folder):
             self.send_header('Content-Length', str(len(body)))
             self.send_header('Cache-Control', 'no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('Cross-Origin-Resource-Policy', 'same-site')   # another site's page may not load these files into itself
             self.end_headers()
             if not head_only:
                 self.wfile.write(body)
 
         def serve(self, head_only):
+            if not host_ok(self.headers.get('Host')):
+                print('  refused a request addressed to another name: ' + on_screen(self.headers.get('Host') or '(none)', 60), flush=True)
+                body = b'This address is not allowed. Open the one the window printed, http://localhost:PORT/ , in your own browser.'
+                self.send(403, body, TYPES['.txt'], head_only)
+                return
             real = self.find(self.path)
             if real:
                 with open(real, 'rb') as f:
@@ -112,7 +144,7 @@ def make_handler(folder):
                 self.send(200, body, content_type(real), head_only)
                 return
             try:
-                print('  not found: ' + unquote(urlsplit(self.path).path), flush=True)   # a missing picture or script is worth seeing
+                print('  not found: ' + on_screen(unquote(urlsplit(self.path).path)), flush=True)   # a missing picture or script is worth seeing
             except (OSError, ValueError):   # a closed window must not stop the answer
                 pass
             page = os.path.join(folder, '404.html')

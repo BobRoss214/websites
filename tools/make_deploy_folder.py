@@ -76,6 +76,8 @@ LEFT_OUT_INSIDE = [
     ('lang/en.json', 'the list of English texts for translators (made by tools/i18n.py)'),
     ('lang/js-strings.json', 'the list of texts the code writes, for translators (made by tools/i18n.py)'),
     ('assets/qr/', 'the QR codes as separate files for a print shop; print/qr-signs.html has its own copy of each'),
+    ('print/owner-cheat-sheet.html', 'the owner\'s cheat sheet to print at home (made by tools/make_cheat_sheet.py), not for visitors'),
+    ('print/owner-cheat-sheet.es.html', 'the same sheet in Spanish, not for visitors'),
 ]
 # In the top folder, left out, with the reason given to the owner:
 LEFT_OUT_TOP = {
@@ -94,6 +96,8 @@ LEFT_OUT_TOP = {
 }
 # A host rules file saved with an extra ending by a text program (Notepad adds .txt, TextEdit .rtf): the host does not read it
 MISNAMED_HOST_FILE = re.compile(r'^(_headers|_redirects)\.(txt|rtf|docx?)$', re.I)
+# Never uploaded, wherever it is found inside the uploaded folders: files that look like a key or a password file (left behind by mistake).
+SECRET = re.compile(r'(\.(pem|key|p12|pfx|kdbx|env|sqlite3?|db)$)|(^|/)(id_rsa|id_dsa|id_ecdsa|id_ed25519)[^/]*$', re.I)
 JUNK = re.compile(r'(^|/)(\.[^/]*|Thumbs\.db|desktop\.ini|__pycache__)(/|$)|\.(pyc|orig|rej|bak|swp|tmp|py|md)$|~$', re.I)
 # Files that are uploaded although no page points to them: the licence texts and credits that travel with the fonts and the icons
 # (docs/CREDITS_AND_LICENCES.md). They are not reported as "no page points to them".
@@ -149,7 +153,7 @@ def read(path):
 def rebuild_copy(tmp):
     """Copies the site into tmp and runs the three rebuild commands there. Returns the copy's folder."""
     site = os.path.join(tmp, 'site')
-    shutil.copytree(ROOT, site, ignore=lambda d, names: [n for n in names if n in SKIP_COPY])
+    shutil.copytree(ROOT, site, symlinks=True, ignore=lambda d, names: [n for n in names if n in SKIP_COPY])   # a link stays a link, so upload_set can see it
     py = sys.executable or 'python3'
     for args in (['tools/pages.py'], ['tools/i18n.py', 'extract'], ['tools/i18n.py', 'build']):
         r = run_tool(args, site)
@@ -231,12 +235,17 @@ def settings_warnings(site_dir):
 
 
 # ---------------------------------------------------------------- 4. the upload set
+LINK_WHY = 'a link (shortcut) to another file or folder: links are never uploaded, because one could point outside the website folder'
+
+
 def upload_set(site):
     """(files to copy, left-out notes). Paths relative to the site folder, with /."""
     files, left = [], []
     for name in sorted(set(os.listdir(site)) | set(os.listdir(ROOT))):   # the copy has no tests/ or .git: name them from your folder
-        p = os.path.join(site, name) if os.path.exists(os.path.join(site, name)) else os.path.join(ROOT, name)
-        if os.path.isdir(p):
+        p = os.path.join(site, name) if os.path.lexists(os.path.join(site, name)) else os.path.join(ROOT, name)
+        if os.path.islink(p):
+            left.append((name, LINK_WHY))
+        elif os.path.isdir(p):
             if name in FOLDERS:
                 continue
             left.append((name + '/', LEFT_OUT_TOP.get(name, 'not part of the website (not on the upload list in docs/LAUNCH_CHECKLIST.md, section 2)')))
@@ -248,17 +257,28 @@ def upload_set(site):
                          else LEFT_OUT_TOP.get(name, 'not part of the website (not on the upload list in docs/LAUNCH_CHECKLIST.md, section 2)')))
     for folder in FOLDERS:
         base = os.path.join(site, folder)
-        if not os.path.isdir(base):
-            continue
-        for p in walk(base):
-            r = rel(p, site)
-            why = next((w for pre, w in LEFT_OUT_INSIDE if r == pre or (pre.endswith('/') and r.startswith(pre))), None)
-            if why:
-                continue
-            if JUNK.search(r):
-                left.append((r, 'not a website file (a hidden, backup or system file)'))
-                continue
-            files.append(r)
+        if not os.path.isdir(base) or os.path.islink(base):
+            continue   # a folder that is a link is reported above, and the links check then says which files are missing
+        for d, dirs, names in os.walk(base):
+            dirs[:] = sorted(dirs)
+            for x in list(dirs):
+                if os.path.islink(os.path.join(d, x)):   # os.walk does not go into it: say so
+                    left.append((rel(os.path.join(d, x), site) + '/', LINK_WHY))
+                    dirs.remove(x)
+            for f in sorted(names):
+                p = os.path.join(d, f)
+                r = rel(p, site)
+                why = next((w for pre, w in LEFT_OUT_INSIDE if r == pre or (pre.endswith('/') and r.startswith(pre))), None)
+                if why:
+                    continue
+                if os.path.islink(p):
+                    left.append((r, LINK_WHY))
+                elif SECRET.search(r):
+                    left.append((r, 'looks like a key or a password file: never uploaded'))
+                elif JUNK.search(r):
+                    left.append((r, 'not a website file (a hidden, backup or system file)'))
+                else:
+                    files.append(r)
     for pre, why in LEFT_OUT_INSIDE:
         if os.path.exists(os.path.join(site, pre.rstrip('/'))):
             left.append((pre, why))
@@ -295,6 +315,16 @@ def check_out(out):
     here = os.path.normcase(os.path.abspath(ROOT))   # normcase: Windows does not tell C:\\Site from c:\\site
     if here == os.path.normcase(out) or here.startswith(os.path.normcase(out) + os.sep):
         say('--out cannot be the site folder or a folder above it.')
+        sys.exit(1)
+    try:
+        inside = os.path.relpath(out, os.path.abspath(ROOT)).replace(os.sep, '/').split('/')
+    except ValueError:   # another drive on Windows: certainly not inside the site folder
+        inside = ['']
+    if inside[0] in FOLDERS:   # the next run would upload the old upload folder as part of the website
+        say('--out cannot be inside the folder "%s", because that folder is part of the website and its files are uploaded. Use a folder of its own, such as deploy.' % inside[0])
+        sys.exit(1)
+    if os.path.islink(out):
+        say(out + ' is a link (shortcut), not a folder, so it was not touched. Choose another --out.')
         sys.exit(1)
     if os.path.exists(out):
         if not os.path.isdir(out):
