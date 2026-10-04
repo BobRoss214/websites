@@ -284,10 +284,12 @@
     list.addEventListener('click', (e) => { const b = e.target.closest('[data-lang]'); if (b) { setLang(b.dataset.lang); close(); btn.focus({ preventScroll: true }); } });
     list.addEventListener('keydown', (e) => {
       const items = Array.from(list.querySelectorAll('button')), i = items.indexOf(doc.activeElement);
-      if (e.key === 'Escape') { e.stopPropagation(); close(); btn.focus({ preventScroll: true }); }   // only this list: the open phone menu around it stays open
-      else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus({ preventScroll: true }); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus({ preventScroll: true }); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus({ preventScroll: true }); }
     });
+    // Escape closes the open list wherever the keyboard is: on a language, on the globe button (Shift+Tab from the list lands there), or on nothing (a tap on the
+    // list's padding drops the focus). Caught first (the third argument), so the open phone menu around it stays open: one Escape, one box.
+    doc.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !list.hidden) { e.stopPropagation(); close(); btn.focus({ preventScroll: true }); } }, true);
     doc.addEventListener('click', (e) => { if (!box.contains(e.target)) close(); });
     box.addEventListener('focusout', (e) => { if (!list.hidden && e.relatedTarget && !box.contains(e.relatedTarget)) close(); });   // Tab away closes it, like the More menu
   }

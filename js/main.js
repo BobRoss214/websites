@@ -1131,7 +1131,12 @@
     let ticking = false;
     const update = () => { ticking = false; btn.hidden = scrollY < innerHeight * 1.6; };
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-    btn.addEventListener('click', () => { scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' }); });
+    btn.addEventListener('click', (e) => {
+      scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+      // The button hides itself once the top is near, and a button that hides takes the keyboard focus with it (focus on nothing, the next Tab starts who knows where).
+      // A key press (the click has no mouse or finger: detail 0) puts the focus on the first thing in the page instead.
+      if (e.detail === 0) { const first = $('.skip-link') || $('#site-header a, #site-header button'); if (first) { try { first.focus({ preventScroll: true }); } catch (err) { /* gone */ } } }
+    });
     doc.addEventListener('wa:lang', () => btn.setAttribute('aria-label', t('Back to top')));
     update();
   }

@@ -259,6 +259,28 @@ async function controls(p) {
   await p.keyboard.press('Escape'); await settle(p);
   ok('language menu: Enter opens it with focus on a language, ArrowDown moves, Escape closes it and gives focus back', l1 !== l2 && await p.evaluate(() => document.querySelector('.lang-btn').getAttribute('aria-expanded') === 'false' && document.activeElement.classList.contains('lang-btn')), [l1, l2, await active(p)].join(' / '));
 
+  // found by tests/monkey.test.mjs (seeds 1002 and 1006): Escape closed the list only when focus was on one of its languages
+  await focusOn(p, '.lang-btn'); await p.keyboard.press('Enter'); await settle(p);
+  await p.keyboard.press('Shift+Tab'); await settle(p);
+  const onGlobe = await p.evaluate(() => document.activeElement.classList.contains('lang-btn') && document.querySelector('.lang-btn').getAttribute('aria-expanded') === 'true');
+  await p.keyboard.press('Escape'); await settle(p);
+  const closedFromGlobe = await p.evaluate(() => document.querySelector('.lang-btn').getAttribute('aria-expanded') === 'false');
+  await focusOn(p, '.lang-btn'); await p.keyboard.press('Enter'); await settle(p);
+  await p.evaluate(() => { document.activeElement.blur(); });   // a tap on the list's padding leaves the focus on nothing and the list open
+  const onNothing = await p.evaluate(() => document.activeElement === document.body && document.querySelector('.lang-btn').getAttribute('aria-expanded') === 'true');
+  await p.keyboard.press('Escape'); await settle(p);
+  ok('language menu: Escape also closes the open list when focus is on the globe button (Shift+Tab from the list) or on nothing', onGlobe && closedFromGlobe && onNothing && await p.evaluate(() => document.querySelector('.lang-btn').getAttribute('aria-expanded') === 'false'), JSON.stringify({ onGlobe, closedFromGlobe, onNothing }));
+
+  // found by tests/monkey.test.mjs (seed 1030): "Back to top" hid itself at the top of the page with the keyboard focus still on it, and the focus was on nothing
+  await p.evaluate(() => scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+  for (let i = 0; i < 30 && await p.evaluate(() => document.querySelector('.to-top').hidden); i++) { await settle(p, 100); await p.waitForTimeout(40); }   // the scroll event and the next frame arrive in real time
+  const toTopThere = await focusOn(p, '.to-top');
+  await p.keyboard.press('Enter');
+  await until(p, () => scrollY < 40 && document.querySelector('.to-top').hidden, null, 15000);
+  await settle(p, 300);
+  const afterTop = await p.evaluate(() => { const a = document.activeElement; return a && a !== document.body && a !== document.documentElement ? a.tagName.toLowerCase() + '.' + String(a.className).slice(0, 20) : 'nothing'; });
+  ok('"Back to top" with the keyboard: after the page is at the top and the button has hidden itself, the focus is on the first thing in the page, not on nothing', toTopThere && afterTop !== 'nothing' && !/to-top/.test(afterTop), String(toTopThere) + ' ' + afterTop);
+
   await focusOn(p, '.season-switch [role="radio"][aria-checked="true"]');
   const s0 = await p.evaluate(() => document.activeElement.dataset.season); await p.keyboard.press('ArrowRight'); await settle(p, 500);
   const s1 = await p.evaluate(() => ({ focus: document.activeElement.dataset.season, checked: document.activeElement.getAttribute('aria-checked') }));
