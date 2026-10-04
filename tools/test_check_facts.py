@@ -134,7 +134,10 @@ class CheckFacts(unittest.TestCase):
 
     def test_the_waitlist_address_in_a_script_is_checked(self):
         # the real bug: the farm changes its e-mail address on the pages, and the waitlist button (js/features.js, WAITLIST) keeps the old one, silently
-        for rel in ('index.html', 'pages/first-visit.html', 'js/content.js'):
+        # every page that names the address (the optional privacy page does too), the home page and the settings
+        named = [rel for rel in ['index.html'] + ['pages/' + f for f in sorted(os.listdir(os.path.join(self.root, 'pages'))) if f.endswith('.html')]
+                 if 'cathy@wiseacresorganic.com' in open(os.path.join(self.root, rel), encoding='utf-8').read()]
+        for rel in named + ['js/content.js']:
             self.edit(rel, 'cathy@wiseacresorganic.com', 'office@wiseacresorganic.com', 99)
         code, out = run(self.root, 'e-mail')
         self.assertEqual(code, 1, out[-900:])

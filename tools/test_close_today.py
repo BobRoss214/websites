@@ -298,12 +298,15 @@ class CloseToday(unittest.TestCase):
         self.assertIn('changed by hand', out)
         self.assertEqual(sha(self.content), before)
         # a change somewhere else is fine: the closure comes out, the other change stays
+        # (flip the setting whichever way it starts: the optional patch season-picker-off makes it false)
+        was_on = "seasonPicker: true," in text
+        flipped = text.replace("seasonPicker: true,", "seasonPicker: false,") if was_on else text.replace("seasonPicker: false,", "seasonPicker: true,")
         with open(self.content, 'wb') as f:
-            f.write(text.replace("seasonPicker: true,", "seasonPicker: false,").encode('utf-8'))
+            f.write(flipped.encode('utf-8'))
         code, out = self.run_tool('--undo')
         self.assertEqual(code, 0, out)
         self.assertIn('other changes you made since', out)
-        self.assertEqual(self.settings()['seasonPicker'], False)
+        self.assertEqual(self.settings()['seasonPicker'], not was_on)
         self.assertEqual(self.settings()['closures'], [])
 
     # ---- the words

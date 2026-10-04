@@ -5,7 +5,7 @@
  *   - every page: its own title (20 to 62 letters) and description (110 to 165 letters), both different on every page, one canonical address that is the
  *     site's own, og:url the same, the share picture present, as big as the tags say (1200 x 630) and small enough for WhatsApp (300 KB),
  *     with a description of it, twitter tags that match, lang="en", nothing that asks for a per-language address (there is none: see docs/SEARCH_AND_SHARING_CHECK.md)
- *   - robots: the 6 pages may be indexed; 404.html and print/ may not
+ *   - robots: the pages may be indexed; 404.html and print/ may not
  *   - structured data (JSON-LD): parses; only the types the site uses; the business has a name, a postal address, its own address and an e-mail the page
  *     shows; every extra page's WebPage says what the page's own tags say; every FAQ question is on the page; every price in it is on the page;
  *     nothing that needs data the site does not have (a star rating, reviews, offers); an Event, if one is ever added, is complete and not in the past
@@ -59,8 +59,12 @@ ok('self-test: a sitemap with a missing page, an extra page, a twin or a future 
 /* ---- the pages ---- */
 const files = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html') && f !== '404.html').sort();
 const html = Object.fromEntries(files.map((f) => [f, read(f)]));
-const canonOf = (f) => SITE + (f === 'index.html' ? '' : f);
-ok('the site has the 6 pages this test knows (a new page needs a line in the sitemap and its own tags: then this count changes)', files.length === 6, files.join(', '));
+// the address a page names for itself: with .html, or without it when PAGE_EXT in tools/pages.py is empty (optional patch clean-addresses-C)
+const EXT = (/^PAGE_EXT = '([^']*)'/m.exec(fs.readFileSync(path.join(ROOT, 'tools', 'pages.py'), 'utf8')) || [, '.html'])[1];
+const canonOf = (f) => SITE + (f === 'index.html' ? '' : f.replace(/\.html$/, EXT));
+// the home page and one page for each file in pages/ (a new page gets its source there, a line in the sitemap and its own tags; the sitemap check below counts them too)
+const pageCount = fs.readdirSync(path.join(ROOT, 'pages')).filter((f) => f.endsWith('.html')).length + 1;
+ok(`the site has the ${pageCount} pages this test finds: the home page and one for each file in pages/`, files.length === pageCount, files.join(', '));
 
 const per = (what, fn) => { const bad = files.map((f) => { const r = fn(html[f], f); return r ? f + ': ' + r : ''; }).filter(Boolean); ok(what, bad.length === 0, bad.slice(0, 4).join(' | ')); };
 const unique = (what, fn) => { const seen = {}; const bad = []; for (const f of files) { const v = fn(html[f]); if (seen[v]) bad.push(f + ' = ' + seen[v]); seen[v] = f; } ok(what, bad.length === 0, bad.join(' | ')); };
@@ -87,7 +91,7 @@ per('the share picture is on this site, is a real PNG as big as og:image:width/h
 });
 unique('every page has its own share picture', (h) => meta(h, 'og:image'));
 per('no page asks for a per-language address (no hreflang, no og:locale:alternate): the site has one address per page and swaps the words in the browser', (h) => (/hreflang|og:locale:alternate/.test(h) ? 'hreflang or og:locale:alternate found: every language needs its own address first' : ''));
-per('no page is marked noindex (these 6 are meant to be found)', (h) => (/<meta name="robots"[^>]*(noindex|none)/i.test(h) ? 'noindex' : ''));
+per('no page is marked noindex (they are meant to be found)', (h) => (/<meta name="robots"[^>]*(noindex|none)/i.test(h) ? 'noindex' : ''));
 const notFound = read('404.html');
 ok('404.html is marked noindex and has no canonical address', /<meta name="robots" content="noindex">/.test(notFound) && link(notFound, 'canonical').length === 0);
 const printed = fs.readdirSync(path.join(ROOT, 'print')).filter((f) => f.endsWith('.html'));
@@ -149,7 +153,7 @@ const sm = read('sitemap.xml');
 const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
 const lastmods = [...sm.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]);
 const problems = sitemapProblems(locs, files.map(canonOf), NOW, lastmods);
-ok('sitemap.xml lists exactly the 6 pages at their canonical addresses, each once, with no future or invented lastmod', problems.length === 0, problems.join(' | '));
+ok('sitemap.xml lists exactly the pages at their canonical addresses, each once, with no future or invented lastmod', problems.length === 0, problems.join(' | '));
 const robots = read('robots.txt');
 const blocked = [...robots.matchAll(/^Disallow:\s*(\S+)/gm)].map((m) => m[1]).filter((p) => locs.some((u) => new URL(u).pathname.startsWith(p)));
 ok('robots.txt names the sitemap by its full address and blocks none of the pages in it', robots.includes('Sitemap: ' + SITE + 'sitemap.xml') && blocked.length === 0, blocked.join(', '));

@@ -1,6 +1,6 @@
 Option: privacy-page
 Name: Visitor privacy page in plain words (English, Spanish, Hindi, Chinese, Vietnamese)
-Does: Adds privacy.html (built from pages/privacy.html by tools/pages.py): what the website keeps in the browser, which other sites it contacts and only after the visitor presses a button, what it does not do, how to clear the browser data, who to ask and the date it was written. The footer of every page links to it and sitemap.xml lists it (both come from the rebuild). Two sets of visit-counter sentences: js/analytics.js shows the one that is true (no counter, or a counter really runs). Every sentence is listed with its evidence in docs/PRIVACY_PAGE_EVIDENCE.md and checked by the new tests/privacy-page.test.mjs. The tests that list pages (consistency, validity, keyboard, no-js, sprite, layout-sweep, axe, privacy, auto-dark, i18n-a11y, seo, tools/test_pages.py) now include the new page, and tools/review_sheet.py makes a sheet for it. The page is not legal advice, and the Spanish, Hindi, Chinese and Vietnamese texts were written by Claude and need a native reader. It also teaches the facts audit of the translations (tools/i18n_facts.mjs) to read a day-first English date such as "4 October 2026" and two Hindi and Chinese words (tools/i18n_facts_allow.json has one entry with its reason), with test cases for a wrong day and a wrong month.
+Does: Adds privacy.html (built from pages/privacy.html by tools/pages.py): what the website keeps in the browser, which other sites it contacts and only after the visitor presses a button, what it does not do, how to clear the browser data, who to ask and the date it was written. The footer of every page links to it and sitemap.xml lists it (both come from the rebuild). Two sets of visit-counter sentences: js/analytics.js shows the one that is true (no counter, or a counter really runs). Every sentence is listed with its evidence in docs/PRIVACY_PAGE_EVIDENCE.md and checked by the new tests/privacy-page.test.mjs. The tests that list pages (consistency, validity, keyboard, no-js, sprite, layout-sweep, axe, privacy, auto-dark, i18n-a11y, seo, tools/test_pages.py) now include the new page, and tools/review_sheet.py makes a sheet for it. The page is not legal advice, and the Spanish, Hindi, Chinese and Vietnamese texts were written by Claude and need a native reader. It also teaches the facts audit of the translations (tools/i18n_facts.mjs) to read a day-first English date such as "4 October 2026" and two Hindi and Chinese words (tools/i18n_facts_allow.json has one entry with its reason), with test cases for a wrong day and a wrong month. The seo change in this patch (the privacy page keeps the home page share picture) assumes the base fix of job w205: the seo test counts the pages from the files in pages/, so adding a page needs no edit there.
 Answers: d89 (a privacy page for visitors: option 1, add the page)
 Conflicts: none
 Requires: tools/i18n_facts.mjs, tools/i18n_facts_allow.json and tests/i18n-facts.test.mjs (the facts audit of the translations: this patch teaches it day-first dates and adds an allow-list entry; without these files the patch waits)
@@ -1036,52 +1036,19 @@ index 9286657..9ed6af9 100644
    ok('reading leaves nothing behind: no localStorage, sessionStorage, cookie, IndexedDB, Cache Storage or service worker (also for a ?lang= link)', withKept.length === 0, withKept.map((r) => r.pg + ' ' + r.lang + ' ' + JSON.stringify(r.kept)).join(' | '));
    info(reading.length + ' visits, ' + reading.reduce((n, r) => n + r.own, 0) + ' requests, all to the site itself');
 diff --git a/tests/seo.test.mjs b/tests/seo.test.mjs
-index 578c560..c64caeb 100644
+index c7662b8..f9ee390 100644
 --- a/tests/seo.test.mjs
 +++ b/tests/seo.test.mjs
-@@ -5,7 +5,7 @@
-  *   - every page: its own title (20 to 62 letters) and description (110 to 165 letters), both different on every page, one canonical address that is the
-  *     site's own, og:url the same, the share picture present, as big as the tags say (1200 x 630) and small enough for WhatsApp (300 KB),
-  *     with a description of it, twitter tags that match, lang="en", nothing that asks for a per-language address (there is none: see docs/SEARCH_AND_SHARING_CHECK.md)
-- *   - robots: the 6 pages may be indexed; 404.html and print/ may not
-+ *   - robots: the 7 pages may be indexed; 404.html and print/ may not
-  *   - structured data (JSON-LD): parses; only the types the site uses; the business has a name, a postal address, its own address and an e-mail the page
-  *     shows; every extra page's WebPage says what the page's own tags say; every FAQ question is on the page; every price in it is on the page;
-  *     nothing that needs data the site does not have (a star rating, reviews, offers); an Event, if one is ever added, is complete and not in the past
-@@ -60,10 +60,10 @@ ok('self-test: a sitemap with a missing page, an extra page, a twin or a future
- const files = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html') && f !== '404.html').sort();
- const html = Object.fromEntries(files.map((f) => [f, read(f)]));
- const canonOf = (f) => SITE + (f === 'index.html' ? '' : f);
--ok('the site has the 6 pages this test knows (a new page needs a line in the sitemap and its own tags: then this count changes)', files.length === 6, files.join(', '));
-+ok('the site has the 7 pages this test knows (a new page needs a line in the sitemap and its own tags: then this count changes)', files.length === 7, files.join(', '));
- 
+@@ -69,3 +69,3 @@ ok(`the site has the ${pageCount} pages this test finds: the home page and one f
  const per = (what, fn) => { const bad = files.map((f) => { const r = fn(html[f], f); return r ? f + ': ' + r : ''; }).filter(Boolean); ok(what, bad.length === 0, bad.slice(0, 4).join(' | ')); };
 -const unique = (what, fn) => { const seen = {}; const bad = []; for (const f of files) { const v = fn(html[f]); if (seen[v]) bad.push(f + ' = ' + seen[v]); seen[v] = f; } ok(what, bad.length === 0, bad.join(' | ')); };
 +const unique = (what, fn, skip = []) => { const seen = {}; const bad = []; for (const f of files.filter((x) => !skip.includes(x))) { const v = fn(html[f]); if (seen[v]) bad.push(f + ' = ' + seen[v]); seen[v] = f; } ok(what, bad.length === 0, bad.join(' | ')); };
  
- per('every page title is 20 to 62 letters (search results show about 50 to 60)', (h) => lengthProblem('title', titleOf(h), 20, 62));
- per('every page description is 110 to 165 letters (search results show about 120 to 160)', (h) => lengthProblem('description', meta(h, 'description') || '', 110, 165));
-@@ -85,9 +85,9 @@ per('the share picture is on this site, is a real PNG as big as og:image:width/h
-   if (fs.statSync(path.join(ROOT, f)).size > 300 * 1024) return f + ' is over 300 KB';
-   return alt.length < 40 ? 'og:image:alt is too short' : '';
+@@ -91,3 +91,3 @@ per('the share picture is on this site, is a real PNG as big as og:image:width/h
  });
 -unique('every page has its own share picture', (h) => meta(h, 'og:image'));
 +unique('every page has its own share picture (the privacy page uses the home page one: it is not made to be shared)', (h) => meta(h, 'og:image'), ['privacy.html']);
  per('no page asks for a per-language address (no hreflang, no og:locale:alternate): the site has one address per page and swaps the words in the browser', (h) => (/hreflang|og:locale:alternate/.test(h) ? 'hreflang or og:locale:alternate found: every language needs its own address first' : ''));
--per('no page is marked noindex (these 6 are meant to be found)', (h) => (/<meta name="robots"[^>]*(noindex|none)/i.test(h) ? 'noindex' : ''));
-+per('no page is marked noindex (these 7 are meant to be found)', (h) => (/<meta name="robots"[^>]*(noindex|none)/i.test(h) ? 'noindex' : ''));
- const notFound = read('404.html');
- ok('404.html is marked noindex and has no canonical address', /<meta name="robots" content="noindex">/.test(notFound) && link(notFound, 'canonical').length === 0);
- const printed = fs.readdirSync(path.join(ROOT, 'print')).filter((f) => f.endsWith('.html'));
-@@ -149,7 +149,7 @@ const sm = read('sitemap.xml');
- const locs = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
- const lastmods = [...sm.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]);
- const problems = sitemapProblems(locs, files.map(canonOf), NOW, lastmods);
--ok('sitemap.xml lists exactly the 6 pages at their canonical addresses, each once, with no future or invented lastmod', problems.length === 0, problems.join(' | '));
-+ok('sitemap.xml lists exactly the 7 pages at their canonical addresses, each once, with no future or invented lastmod', problems.length === 0, problems.join(' | '));
- const robots = read('robots.txt');
- const blocked = [...robots.matchAll(/^Disallow:\s*(\S+)/gm)].map((m) => m[1]).filter((p) => locs.some((u) => new URL(u).pathname.startsWith(p)));
- ok('robots.txt names the sitemap by its full address and blocks none of the pages in it', robots.includes('Sitemap: ' + SITE + 'sitemap.xml') && blocked.length === 0, blocked.join(', '));
 diff --git a/tests/sprite.test.mjs b/tests/sprite.test.mjs
 index 757d479..3bd53d7 100644
 --- a/tests/sprite.test.mjs
