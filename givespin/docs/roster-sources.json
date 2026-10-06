@@ -1323,9 +1323,10 @@
  {
   "id": "nextsense",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.nextsense.org.au/about/our-history"
   ],
-  "note": "ABN 53443272865; official register record"
+  "note": "ABN 53443272865; official register record; founding year 1860 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "mission-australia",
@@ -1337,9 +1338,10 @@
  {
   "id": "hammondcare",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/HammondCare"
   ],
-  "note": "ABN 48000026219; official register record"
+  "note": "ABN 48000026219; official register record; founding year 1932 from a web search (search-result text, the page itself was not opened) in place of the register's 1933"
  },
  {
   "id": "heart-foundation-au",
@@ -1352,37 +1354,42 @@
  {
   "id": "australian-ballet",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://australianballet.com.au/history"
   ],
-  "note": "ABN 57004849987; official register record"
+  "note": "ABN 57004849987; official register record; founding year 1962 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "fnpw-au",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Foundation_for_National_Parks_%26_Wildlife"
   ],
-  "note": "ABN 90107744771; official register record"
+  "note": "ABN 90107744771; official register record; founding year 1970 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "shepherd-centre",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://shepherdcentre.org.au/about-us/history/"
   ],
-  "note": "ABN 61000699927; official register record"
+  "note": "ABN 61000699927; official register record; founding year 1970 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "mind-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://mindaustralia.org.au/sites/default/files/2023-06/Mind_40_year_timeline.pdf"
   ],
-  "note": "ABN 22005063589; official register record (registered name: Mind Australia Limited)"
+  "note": "ABN 22005063589; official register record (registered name: Mind Australia Limited); founding year 1977 from a web search (search-result text, the page itself was not opened) in place of the register's 1974"
  },
  {
   "id": "childrens-cancer-institute-au",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.ccia.org.au/about-cci/our-story"
   ],
-  "note": "ABN 41072279559; official register record"
+  "note": "ABN 41072279559; official register record; founding year 1976 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "diabetes-australia",
@@ -1423,9 +1430,10 @@
  {
   "id": "make-a-wish-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Make-A-Wish_Australia"
   ],
-  "note": "ABN 97006497632; official register record (registered name: Make-A-Wish Foundation Of Australia Ltd.)"
+  "note": "ABN 97006497632; official register record (registered name: Make-A-Wish Foundation Of Australia Ltd.); founding year 1985 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "koorana-child-family-services",
@@ -1445,9 +1453,10 @@
  {
   "id": "your-best-life-disability-health",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://yblcatts.org.au/about-us/"
   ],
-  "note": "ABN 95450197846; official register record (registered name: Your Best Life Disability and Health Services Ltd)"
+  "note": "ABN 95450197846; official register record (registered name: Your Best Life Disability and Health Services Ltd); founding year 1988 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "childrens-cancer-foundation-au",
@@ -1459,9 +1468,10 @@
  {
   "id": "australian-rural-leadership-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://rural-leaders.org.au/history/"
   ],
-  "note": "ABN 80056874787; official register record (registered name: Australian Rural Leadership Foundation Limited)"
+  "note": "ABN 80056874787; official register record (registered name: Australian Rural Leadership Foundation Limited); founding year 1992 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "repat-foundation",
@@ -1482,23 +1492,26 @@
  {
   "id": "big-issue-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://thebigissue.org.au/media-release/the-big-issue-in-australia-turns-25/"
   ],
-  "note": "ABN 61071598439; official register record (registered name: Big Issue In Australia Limited)"
+  "note": "ABN 61071598439; official register record (registered name: Big Issue In Australia Limited); founding year 1996 from a web search (search-result text, the page itself was not opened) in place of the register's 1995"
  },
  {
   "id": "foodbank-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.foodbank.org.au/foodbanks-federated-structure/"
   ],
-  "note": "ABN 58073579254; official register record (registered name: Foodbank Australia Limited)"
+  "note": "ABN 58073579254; official register record (registered name: Foodbank Australia Limited); founding year 1996 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "ovarian-cancer-research-foundation-au",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.ocrf.com.au/about-us/strategic-plan"
   ],
-  "note": "ABN 37130949834; official register record (registered name: Ovarian Cancer Research Foundation Limited)"
+  "note": "ABN 37130949834; official register record (registered name: Ovarian Cancer Research Foundation Limited); founding year 2000 from a web search (search-result text, the page itself was not opened) in place of the register's 1999"
  },
  {
   "id": "greenfleet",
@@ -1511,9 +1524,10 @@
  {
   "id": "emerging-minds-au",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://emergingminds.com.au/corporate-information/"
   ],
-  "note": "ABN 87093479022; official register record (registered name: Australian Infant; Child; Adolescent And Family Mental Health Association Limited)"
+  "note": "ABN 87093479022; official register record (registered name: Australian Infant; Child; Adolescent And Family Mental Health Association Limited); founding year 2000 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "wise-employment",
@@ -1526,23 +1540,26 @@
  {
   "id": "life-without-barriers",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.lwb.org.au/about-us/30years/"
   ],
-  "note": "ABN 15101252171; official register record"
+  "note": "ABN 15101252171; official register record; founding year 1995 from a web search (search-result text, the page itself was not opened) in place of the register's 2002"
  },
  {
   "id": "invasive-species-council",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://invasives.org.au/about-us/our-story/"
   ],
-  "note": "ABN 27101522829; official register record (registered name: Invasive Species Council Inc.)"
+  "note": "ABN 27101522829; official register record (registered name: Invasive Species Council Inc.); founding year 2002 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "ozharvest",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.ozharvest.org/who-we-are/"
   ],
-  "note": "ABN 33107782196; official register record (registered name: Oz Harvest Limited)"
+  "note": "ABN 33107782196; official register record (registered name: Oz Harvest Limited); founding year 2004 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "deaf-services",
@@ -1554,9 +1571,10 @@
  {
   "id": "many-rivers-microfinance",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://manyrivers.org.au/about-us/"
   ],
-  "note": "ABN 58128486788; official register record (registered name: Many Rivers Microfinance Ltd)"
+  "note": "ABN 58128486788; official register record (registered name: Many Rivers Microfinance Ltd); founding year 2007 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "careertrackers-indigenous-internship",
@@ -1575,16 +1593,18 @@
  {
   "id": "bus-stop-films",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://busstopfilms.com.au/"
   ],
-  "note": "ABN 36154056630; official register record (registered name: Bus Stop Films Ltd)"
+  "note": "ABN 36154056630; official register record (registered name: Bus Stop Films Ltd); founding year 2009 from a web search (search-result text, the page itself was not opened) in place of the register's 2011"
  },
  {
   "id": "mulloon-institute",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://mullooninstitute.org/about-us/"
   ],
-  "note": "ABN 53153605531; official register record (registered name: The Mulloon Institute Limited)"
+  "note": "ABN 53153605531; official register record (registered name: The Mulloon Institute Limited); founding year 2011 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "thread-together",
@@ -1596,23 +1616,26 @@
  {
   "id": "soldier-on-au",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://soldieron.org.au/about-us/our-story/"
   ],
-  "note": "ABN 24811760786; official register record (registered name: Soldier On Ltd.)"
+  "note": "ABN 24811760786; official register record (registered name: Soldier On Ltd.); founding year 2012 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "australian-indigenous-governance-institute",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://aigi.org.au/about-us/history"
   ],
-  "note": "ABN 87158627386; official register record (registered name: Australian Indigenous Governance Institute Limited)"
+  "note": "ABN 87158627386; official register record (registered name: Australian Indigenous Governance Institute Limited); founding year 2012 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "centre-of-perinatal-excellence",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.cope.org.au/about/about/history/"
   ],
-  "note": "ABN 50203962931; official register record (registered name: Centre of Perinatal Excellence Ltd)"
+  "note": "ABN 50203962931; official register record (registered name: Centre of Perinatal Excellence Ltd); founding year 2013 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "wesley-community-services",
@@ -1625,23 +1648,26 @@
   "id": "library-for-all",
   "evidence": [
    "https://data.gov.au/data/dataset/acnc-register",
-   "https://libraryforall.org/"
+   "https://libraryforall.org/",
+   "https://libraryforall.org/about-us/"
   ],
-  "note": "ABN 57602320865; official register record (registered name: Library For All Ltd); website changed to libraryforall.org, its own site shown by a web search"
+  "note": "ABN 57602320865; official register record (registered name: Library For All Ltd); website changed to libraryforall.org, its own site shown by a web search; founding year 2010 from a web search (search-result text, the page itself was not opened) in place of the register's 2014"
  },
  {
   "id": "orange-sky-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://orangesky.org.au/our-story/"
   ],
-  "note": "ABN 85890622990; official register record (registered name: Orange Sky Australia Limited)"
+  "note": "ABN 85890622990; official register record (registered name: Orange Sky Australia Limited); founding year 2014 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "harding-miller-education-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.hardingmillereducationfoundation.org.au/"
   ],
-  "note": "ABN 51607194641; official register record (registered name: Harding Miller Education Foundation Ltd)"
+  "note": "ABN 51607194641; official register record (registered name: Harding Miller Education Foundation Ltd); founding year 2015 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "mothers-day-classic-foundation",
@@ -1675,16 +1701,18 @@
  {
   "id": "thirrili",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://thirrili.com.au/about-us/"
   ],
-  "note": "official register record; ABN 14617635828"
+  "note": "official register record; ABN 14617635828; founding year 2017 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "good-things-foundation-au",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://goodthingsaustralia.org/about-us/"
   ],
-  "note": "official register record; ABN 92618363974"
+  "note": "official register record; ABN 92618363974; founding year 2017 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "centre-for-evidence-and-implementation",
@@ -1719,9 +1747,10 @@
  {
   "id": "ochre-education-resource-library",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.originfoundation.org.au/partner/ochre-education"
   ],
-  "note": "official register record; ABN 68653070234"
+  "note": "official register record; ABN 68653070234; founding year 2021 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "salesian-society-vic",
@@ -1765,30 +1794,34 @@
  {
   "id": "multicultural-centre-for-womens-health",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.mcwh.com.au/about-mcwh/"
   ],
-  "note": "official register record; ABN 48188616970"
+  "note": "official register record; ABN 48188616970; founding year 1978 from a web search (search-result text, the page itself was not opened) in place of the register's 1977"
  },
  {
   "id": "communicare",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.communicare.org.au/who-we-are/our-journey/"
   ],
-  "note": "official register record; ABN 27768389307"
+  "note": "official register record; ABN 27768389307; founding year 1977 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "intowork-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://intowork.com.au/wp-content/uploads/2023/09/IntoWork-Annual-Report_2013_2014_Low_Res.pdf"
   ],
-  "note": "official register record; ABN 85006162152"
+  "note": "official register record; ABN 85006162152; founding year 1983 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "australian-cancer-research-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.acrf.com.au/about-acrf"
   ],
-  "note": "official register record; ABN 27076461360"
+  "note": "official register record; ABN 27076461360; founding year 1984 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "starlight-childrens-foundation-australia",
@@ -1823,16 +1856,18 @@
  {
   "id": "macular-disease-foundation-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.mdfoundation.com.au/about-mdfa/our-work/our-history/"
   ],
-  "note": "official register record; ABN 52096255177"
+  "note": "official register record; ABN 52096255177; founding year 2001 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "brave-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://bravefoundation.org.au/about-brave-foundation/"
   ],
-  "note": "official register record; ABN 24138282210"
+  "note": "official register record; ABN 24138282210; founding year 2009 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "key-assets-australia",
@@ -1866,9 +1901,10 @@
  {
   "id": "push-for-better-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.thepushupchallenge.com.au/about-us/push-for-better-foundation"
   ],
-  "note": "official register record; ABN 49645093349"
+  "note": "official register record; ABN 49645093349; founding year 2020 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "musica-viva-australia",
@@ -1881,9 +1917,10 @@
  {
   "id": "yourtown",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/BoysTown_(Beaudesert)"
   ],
-  "note": "official register record; ABN 11102379386"
+  "note": "official register record; ABN 11102379386; founding year 1961 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "royal-guide-dogs-australia",
@@ -1895,23 +1932,26 @@
  {
   "id": "one-tree-community-services",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.onetree.org.au/about-us/our-story/"
   ],
-  "note": "official register record; ABN 74914567313"
+  "note": "official register record; ABN 74914567313; founding year 1973 from a web search (search-result text, the page itself was not opened) in place of the register's 1974"
  },
  {
   "id": "australian-chamber-orchestra",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Australian_Chamber_Orchestra"
   ],
-  "note": "official register record; ABN 45001335182"
+  "note": "official register record; ABN 45001335182; founding year 1975 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "conservation-volunteers-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://conservationvolunteers.com.au/about-us/history/"
   ],
-  "note": "official register record; ABN 93006058135"
+  "note": "official register record; ABN 93006058135; founding year 1982 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "united-way-australia",
@@ -1938,44 +1978,50 @@
  {
   "id": "youth-opportunities-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://youthopportunities.com.au/organisation"
   ],
-  "note": "official register record; ABN 84615401812"
+  "note": "official register record; ABN 84615401812; founding year 1997 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "the-song-room",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.songroom.org.au/about/our-story/"
   ],
-  "note": "official register record; ABN 68790325760"
+  "note": "official register record; ABN 68790325760; founding year 1999 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "ilbijerri-theatre-company",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Ilbijerri_Theatre_Company"
   ],
-  "note": "official register record; ABN 27865864658"
+  "note": "official register record; ABN 27865864658; founding year 1990 from a web search (search-result text, the page itself was not opened) in place of the register's 1999"
  },
  {
   "id": "anzgog",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.anzgog.org.au/annual-report-2023/"
   ],
-  "note": "official register record; ABN 69138649028"
+  "note": "official register record; ABN 69138649028; founding year 2000 from a web search (search-result text, the page itself was not opened) in place of the register's 2001"
  },
  {
   "id": "jawun",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Jawun"
   ],
-  "note": "official register record; ABN 51097101169"
+  "note": "official register record; ABN 51097101169; founding year 2001 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "bravo-disability-support-network",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.bravo.org.au/about-bravo"
   ],
-  "note": "official register record; ABN 62947760546"
+  "note": "official register record; ABN 62947760546; founding year 2006 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "together-for-humanity-foundation",
@@ -1987,9 +2033,10 @@
  {
   "id": "teach-for-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Teach_For_Australia"
   ],
-  "note": "official register record; ABN 27133833762"
+  "note": "official register record; ABN 27133833762; founding year 2009 from a web search (search-result text, the page itself was not opened) in place of the register's 2008"
  },
  {
   "id": "pankind",
@@ -2002,44 +2049,50 @@
  {
   "id": "stars-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://starsfoundation.org.au/about/"
   ],
-  "note": "official register record; ABN 68604680088"
+  "note": "official register record; ABN 68604680088; founding year 2015 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "fortem-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://fortemaustralia.org.au/our-impact/"
   ],
-  "note": "official register record; ABN 58631587892"
+  "note": "official register record; ABN 58631587892; founding year 2019 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "my-room-childrens-cancer-charity",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://au.linkedin.com/company/myroom"
   ],
-  "note": "official register record; ABN 51636749570"
+  "note": "official register record; ABN 51636749570; founding year 1993 from a web search (search-result text, the page itself was not opened) in place of the register's 2019"
  },
  {
   "id": "stride-mental-health",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://stride.com.au/about/our-story/"
   ],
-  "note": "official register record; ABN 58000020146"
+  "note": "official register record; ABN 58000020146; founding year 1907 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "royal-flying-doctor-service-south-eastern",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.flyingdoctor.org.au/about-the-rfds/history/rfds-sections-history/"
   ],
-  "note": "official register record; ABN 86000032422"
+  "note": "official register record; ABN 86000032422; founding year 1936 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "cerebral-palsy-alliance",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://cerebralpalsy.org.au/about-us/our-history/"
   ],
-  "note": "official register record; ABN 45000062288"
+  "note": "official register record; ABN 45000062288; founding year 1945 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "aruma-services",
@@ -2051,37 +2104,42 @@
  {
   "id": "australian-marine-conservation-society",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.marineconservation.org.au/our-history/"
   ],
-  "note": "official register record; ABN 53409718351"
+  "note": "official register record; ABN 53409718351; founding year 1965 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "wellways-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.parliament.act.gov.au/__data/assets/pdf_file/0005/1917446/Submission-017-Wellways-Australia.pdf"
   ],
-  "note": "official register record; ABN 93093357165"
+  "note": "official register record; ABN 93093357165; founding year 1978 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "community-resources-limited",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://communityresources.org.au/"
   ],
-  "note": "official register record; ABN 90746695414"
+  "note": "official register record; ABN 90746695414; founding year 1987 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "neami-national",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.neaminational.org.au/about/history/"
   ],
-  "note": "official register record; ABN 52105082460"
+  "note": "official register record; ABN 52105082460; founding year 1987 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "interact-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://interact.com.au/about-interact/"
   ],
-  "note": "official register record; ABN 47072232083"
+  "note": "official register record; ABN 47072232083; founding year 1991 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "australian-childhood-foundation",
@@ -2094,16 +2152,18 @@
  {
   "id": "the-reach-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/The_Reach_Foundation"
   ],
-  "note": "official register record; ABN 87069837627"
+  "note": "official register record; ABN 87069837627; founding year 1994 from a web search (search-result text, the page itself was not opened) in place of the register's 1995"
  },
  {
   "id": "australian-literacy-and-numeracy-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.thebryanfoundation.org.au/partners/australian-literacy-numeracy-foundation/"
   ],
-  "note": "official register record; ABN 27098802094"
+  "note": "official register record; ABN 27098802094; founding year 1999 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "each-limited",
@@ -2115,16 +2175,18 @@
  {
   "id": "australasian-gastro-intestinal-trials-group",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://gicancer.org.au/about-us/"
   ],
-  "note": "official register record; ABN 34093854267"
+  "note": "official register record; ABN 34093854267; founding year 1991 from a web search (search-result text, the page itself was not opened) in place of the register's 2000"
  },
  {
   "id": "kids-with-cancer-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://kidswithcancer.org.au/about-us/our-vision/"
   ],
-  "note": "official register record; ABN 99095779114"
+  "note": "official register record; ABN 99095779114; founding year 1998 from a web search (search-result text, the page itself was not opened) in place of the register's 2001"
  },
  {
   "id": "clontarf-foundation",
@@ -2145,9 +2207,10 @@
  {
   "id": "givit",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.givit.org.au/about/the-givit-story"
   ],
-  "note": "official register record; ABN 21137408201"
+  "note": "official register record; ABN 21137408201; founding year 2009 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "institute-for-urban-indigenous-health",
@@ -2160,16 +2223,18 @@
  {
   "id": "mercy-works",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://institute.mercy.org.au/mercy-works-25-years-of-walking-together-changing-lives/"
   ],
-  "note": "official register record; ABN 37147042466"
+  "note": "official register record; ABN 37147042466; founding year 2000 from a web search (search-result text, the page itself was not opened) in place of the register's 2010"
  },
  {
   "id": "gidget-foundation-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.theceomagazine.com/business/health-wellbeing/how-gidget-foundation-helps-new-parents/"
   ],
-  "note": "official register record; ABN 52160202960"
+  "note": "official register record; ABN 52160202960; founding year 2001 from a web search (search-result text, the page itself was not opened) in place of the register's 2012"
  },
  {
   "id": "australian-alliance-to-end-homelessness",
@@ -2188,9 +2253,10 @@
  {
   "id": "eat-up-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://dynamicbusiness.com/topics/small-business-resources/not_for_profit/ending-hunger-for-disadvantaged-aussie-school-kids.html"
   ],
-  "note": "official register record; ABN 52609589022"
+  "note": "official register record; ABN 52609589022; founding year 2013 from a web search (search-result text, the page itself was not opened) in place of the register's 2015"
  },
  {
   "id": "no-to-violence",
@@ -2202,23 +2268,26 @@
  {
   "id": "victorian-deaf-society",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.expression.com.au/about/our-history"
   ],
-  "note": "official register record; ABN 56004058084"
+  "note": "official register record; ABN 56004058084; founding year 1884 from a web search (search-result text, the page itself was not opened) in place of the register's 1883"
  },
  {
   "id": "kids-first-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.kidsfirstaustralia.org.au/who-we-are"
   ],
-  "note": "official register record; ABN 52303567862"
+  "note": "official register record; ABN 52303567862; founding year 1896 from a web search (search-result text, the page itself was not opened) in place of the register's 1895"
  },
  {
   "id": "royal-far-west",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Royal_Far_West_Children's_Health_Scheme"
   ],
-  "note": "official register record; ABN 37821970819"
+  "note": "official register record; ABN 37821970819; founding year 1924 from a web search (search-result text, the page itself was not opened) in place of the register's 1925"
  },
  {
   "id": "australian-foundation-for-disability",
@@ -2246,16 +2315,18 @@
  {
   "id": "autism-spectrum-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.aspect.org.au/about-aspect/aspect-at-60/our-legacy-where-we-began"
   ],
-  "note": "official register record; ABN 12000637267"
+  "note": "official register record; ABN 12000637267; founding year 1966 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "kidney-health-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://link.springer.com/rwe/10.1057/978-1-349-96042-2_176"
   ],
-  "note": "official register record; ABN 37008464426. Short name Kidney Health Australia is the trading name on kidney.org.au (general knowledge; not in record other_names)."
+  "note": "official register record; ABN 37008464426. Short name Kidney Health Australia is the trading name on kidney.org.au (general knowledge; not in record other_names).; founding year 1968 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "ms-plus",
@@ -2268,23 +2339,26 @@
  {
   "id": "octec",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://octecelearning.org.au/"
   ],
-  "note": "official register record; ABN 91336868595"
+  "note": "official register record; ABN 91336868595; founding year 1976 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "ku-ring-gai-neighbourhood-centre",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://knc.org.au/pages/history"
   ],
-  "note": "official register record; ABN 22874067312. Register record has blank town/state; hq set to Ku-ring-gai, NSW from the name (the Ku-ring-gai area is in NSW)."
+  "note": "official register record; ABN 22874067312. Register record has blank town/state; hq set to Ku-ring-gai, NSW from the name (the Ku-ring-gai area is in NSW).; founding year 1979 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "opera-queensland",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Opera_Queensland"
   ],
-  "note": "official register record; ABN 83010258750"
+  "note": "official register record; ABN 83010258750; founding year 1981 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "campbell-page",
@@ -2395,9 +2469,10 @@
  {
   "id": "deaf-children-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.findandconnect.gov.au/entity/victorian-deaf-and-dumb-institution/"
   ],
-  "note": "official register record; ABN 57108025207"
+  "note": "official register record; ABN 57108025207; founding year 1860 from a web search (search-result text, the page itself was not opened) in place of the register's 1859"
  },
  {
   "id": "little-sisters-of-the-poor-au",
@@ -2416,9 +2491,10 @@
  {
   "id": "tresillian",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.tresillian.org.au/about-us/history/"
   ],
-  "note": "official register record; ABN 28521424723. Short name Tresillian is the trading name shown by site tresillian.org.au (general knowledge)."
+  "note": "official register record; ABN 28521424723. Short name Tresillian is the trading name shown by site tresillian.org.au (general knowledge).; founding year 1918 from a web search (search-result text, the page itself was not opened) in place of the register's 1919"
  },
  {
   "id": "girl-guides-nsw",
@@ -2430,16 +2506,18 @@
  {
   "id": "interrelate",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://interrelate.org.au/www_interrelate/media/Pdfs/shared-files/InfoForYou-Booklet.pdf"
   ],
-  "note": "official register record; ABN 43932956053"
+  "note": "official register record; ABN 43932956053; founding year 1926 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "sydney-film-festival",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Sydney_Film_Festival"
   ],
-  "note": "official register record; ABN 84000233741"
+  "note": "official register record; ABN 84000233741; founding year 1954 from a web search (search-result text, the page itself was not opened) in place of the register's 1953"
  },
  {
   "id": "australian-volunteer-coast-guard",
@@ -2459,9 +2537,10 @@
  {
   "id": "ted-noffs-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Ted_Noffs_Foundation"
   ],
-  "note": "official register record; ABN 49018049971"
+  "note": "official register record; ABN 49018049971; founding year 1970 from a web search (search-result text, the page itself was not opened) in place of the register's 1971"
  },
  {
   "id": "flourish-australia",
@@ -2473,9 +2552,10 @@
  {
   "id": "noahs-ark",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.noahsarkinc.org.au/about/story"
   ],
-  "note": "official register record; ABN 56770578386"
+  "note": "official register record; ABN 56770578386; founding year 1971 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "jesuit-social-services",
@@ -2494,30 +2574,34 @@
  {
   "id": "mnd-nsw",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.mndnsw.org.au/history.html"
   ],
-  "note": "official register record; ABN 12387503221"
+  "note": "official register record; ABN 12387503221; founding year 1981 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "acso",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.acso.org.au/about-acso/our-history/"
   ],
-  "note": "official register record; ABN 43037816628"
+  "note": "official register record; ABN 43037816628; founding year 1983 from a web search (search-result text, the page itself was not opened) in place of the register's 1984"
  },
  {
   "id": "jobsupport",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://jobsupport.org.au/history/"
   ],
-  "note": "official register record; ABN 38429230773"
+  "note": "official register record; ABN 38429230773; founding year 1986 from a web search (search-result text, the page itself was not opened) in place of the register's 1987"
  },
  {
   "id": "child-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://childaustralia.org.au/about/who-we-are/"
   ],
-  "note": "official register record; ABN 61986879146"
+  "note": "official register record; ABN 61986879146; founding year 1987 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "youth-insearch",
@@ -2530,9 +2614,10 @@
  {
   "id": "carers-queensland",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://carersqld.com.au/about-us/history/"
   ],
-  "note": "official register record; ABN 20061257725"
+  "note": "official register record; ABN 20061257725; founding year 1989 from a web search (search-result text, the page itself was not opened) in place of the register's 1990"
  },
  {
   "id": "epic-employment-service",
@@ -2544,9 +2629,10 @@
  {
   "id": "workways-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.bairnsdaleadvertiser.com.au/news/local-news/195-thirty-years-of-finding-jobs-with-workways"
   ],
-  "note": "official register record, ABN 50957582595"
+  "note": "official register record, ABN 50957582595; founding year 1989 from a web search (search-result text, the page itself was not opened) in place of the register's 1990"
  },
  {
   "id": "omnia-inclusive-employment",
@@ -2594,16 +2680,18 @@
  {
   "id": "wildlife-warriors",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Wildlife_Warriors"
   ],
-  "note": "official register record, ABN 13102721513"
+  "note": "official register record, ABN 13102721513; founding year 2002 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "the-pyjama-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.acnc.gov.au/media/news/getting-know-pyjama-foundation"
   ],
-  "note": "official register record, ABN 43111196742"
+  "note": "official register record, ABN 43111196742; founding year 2004 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "high-resolves",
@@ -2616,16 +2704,18 @@
  {
   "id": "sea-shepherd-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.seashepherd.org.au/who-we-are/history/"
   ],
-  "note": "official register record, ABN 38123339499"
+  "note": "official register record, ABN 38123339499; founding year 2007 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "national-affordable-housing-consortium",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.nahc.org.au/pages/about"
   ],
-  "note": "official register record, ABN 30132604552"
+  "note": "official register record, ABN 30132604552; founding year 2008 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "aeiou-foundation",
@@ -2638,30 +2728,34 @@
  {
   "id": "goodes-oloughlin-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.sydneyswans.com.au/news/238038/go-foundation-launches-in-adelaide"
   ],
-  "note": "official register record, ABN 59139676010"
+  "note": "official register record, ABN 59139676010; founding year 2009 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "shake-it-up-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Shake_it_Up_Australia_Foundation"
   ],
-  "note": "official register record, ABN 65270391304"
+  "note": "official register record, ABN 65270391304; founding year 2011 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "literacy-for-life-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Literacy_for_Life_Foundation"
   ],
-  "note": "official register record, ABN 83163634777"
+  "note": "official register record, ABN 83163634777; founding year 2013 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "good-cycles",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.goodcycles.org.au/wp-content/uploads/2020/09/Good-Cycles-Overview.pdf"
   ],
-  "note": "official register record, ABN 56162578805"
+  "note": "official register record, ABN 56162578805; founding year 2013 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "mercy-community-services-seq",
@@ -2704,9 +2798,10 @@
  {
   "id": "cottage-by-the-sea",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.vic.gov.au/cottage-sea"
   ],
-  "note": "official register record, ABN 21987748593"
+  "note": "official register record, ABN 21987748593; founding year 1890 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "surf-life-saving-nsw",
@@ -2718,37 +2813,42 @@
  {
   "id": "sdn-childrens-services",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.sdn.org.au/about-sdn/sdn-history"
   ],
-  "note": "official register record, ABN 23000014335"
+  "note": "official register record, ABN 23000014335; founding year 1905 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "the-smith-family",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.thesmithfamily.com.au/media/stories/executive-team/100-years-social-history"
   ],
-  "note": "official register record, ABN 28000030179"
+  "note": "official register record, ABN 28000030179; founding year 1922 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "northcott",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://en.wikipedia.org/wiki/Northcott_Disability_Services"
   ],
-  "note": "official register record, ABN 87302064152"
+  "note": "official register record, ABN 87302064152; founding year 1929 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "gowrie-nsw",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.gowriensw.com.au/about-us/history"
   ],
-  "note": "official register record, ABN 57001894659"
+  "note": "official register record, ABN 57001894659; founding year 1940 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "cpl-choice-passion-life",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.cpl.org.au/sites/default/files/2018-03/2016-17-cpl-annual-report_0.pdf"
   ],
-  "note": "official register record, ABN 27009942269"
+  "note": "official register record, ABN 27009942269; founding year 1948 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "ymca-canberra",
@@ -2769,16 +2869,18 @@
  {
   "id": "challenge-community-services",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://www.challengecommunity.org.au/about-us/our-story/"
   ],
-  "note": "official register record, ABN 17059209675"
+  "note": "official register record, ABN 17059209675; founding year 1958 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "alcohol-and-drug-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://adf.org.au/about/our-history/"
   ],
-  "note": "official register record, ABN 66057731192"
+  "note": "official register record, ABN 66057731192; founding year 1959 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "guide-dogs-sa-nt",
@@ -2799,16 +2901,18 @@
  {
   "id": "multicap",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://multicap.org.au/our-story/our-history/"
   ],
-  "note": "official register record, ABN 40120240686"
+  "note": "official register record, ABN 40120240686; founding year 1962 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "newcastle-meals-on-wheels",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register"
+   "https://data.gov.au/data/dataset/acnc-register",
+   "https://mow.net.au/wp-content/uploads/2021/01/Client-Handbook-2020.pdf"
   ],
-  "note": "official register record, ABN 59349207123"
+  "note": "official register record, ABN 59349207123; founding year 1963 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
  },
  {
   "id": "oxfam",

@@ -38,6 +38,8 @@ test('every charity has the fields the UI relies on, using only known vocabulary
     assert.ok(c.foundedFrom === undefined || (c.foundedFrom === 'register' && c.founded !== null), c.id + ': foundedFrom is only "register", and only next to a year');
     const regYear = /register lists an established year of (\d{4})/.exec(c.about || '');
     assert.ok(!regYear || Number(regYear[1]) !== c.founded || c.foundedFrom === 'register', c.id + ': its text says the year is the register\'s, so foundedFrom must say so');
+    const regYear2 = /established year of (\d{4}) on the register|registered with the ACNC in (\d{4}), which is also its established year/.exec(c.about || '');
+    assert.ok(!regYear2 || Number(regYear2[1] || regYear2[2]) !== c.founded || c.foundedFrom === 'register', c.id + ': its text still calls the year the register\'s, so foundedFrom must say so (or the text must say the year is the organisation\'s own)');
     assert.equal(typeof c.hq, 'string');
     assert.ok(/^#[0-9A-F]{6}$/i.test(c.accent), c.id + ': accent colour');
   });

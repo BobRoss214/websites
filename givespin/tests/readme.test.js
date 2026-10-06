@@ -137,6 +137,14 @@ test('the layers of the roster add up to the roster, and the two registers are c
   if (flagged) { assert.equal(num(flagged[1]), roster.filter((c) => c.unverified).length, 'README says ' + flagged[1] + ' charities are flagged unverified, the data has ' + roster.filter((c) => c.unverified).length); }
 });
 
+test('the README says how many charities still show a register date, and how many the second round of founding-year checks settled', () => {
+  const left = roster.filter((c) => c.foundedFrom === 'register').length;
+  const said = find(/Where a register year is kept \((\d+) entries\)/, 'the number of entries that keep a register year')[1];
+  assert.equal(num(said), left, 'README says ' + said + ' entries keep a register year, but js/data.js marks ' + left + ' with foundedFrom: "register"');
+  const round2 = find(/second round of checks on the (\d+) that were left found a clear year for (\d+) of them/, 'the second round of founding-year checks');
+  assert.equal(num(round2[1]) - num(round2[2]), left, 'README says ' + round2[1] + ' were checked and ' + round2[2] + ' settled, which leaves ' + (num(round2[1]) - num(round2[2])) + ', but ' + left + ' still keep the register year');
+});
+
 test('the logo count is right, and every logo file exists and belongs to a charity', () => {
   const ids = Object.keys(GS.logos);
   const quoted = findAll(/\((\d+) of them so far|\((\d+) so far\)/g, 'the number of logos', 2);

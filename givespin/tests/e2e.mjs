@@ -2615,7 +2615,7 @@ if (section('13u. Small regressions found in review: sound waits for a first tou
   const REG_YEAR = /register lists an established year of (\d{4})/;
   const regDated = GSdata.charities.filter((c) => { const m = REG_YEAR.exec(c.about || ''); return m && Number(m[1]) === c.founded; });
   const notFlagged = regDated.filter((c) => c.foundedFrom !== 'register').map((c) => c.id);
-  check(regDated.length >= 40 && notFlagged.length === 0, 'founding years: every charity whose text says the year is the register\'s (' + regDated.length + ' of them) carries foundedFrom "register"', { count: regDated.length, notFlagged: notFlagged.slice(0, 6), more: Math.max(0, notFlagged.length - 6) });
+  check(regDated.length >= 20 && notFlagged.length === 0, 'founding years: every charity whose text says the year is the register\'s (' + regDated.length + ' of them) carries foundedFrom "register"', { count: regDated.length, notFlagged: notFlagged.slice(0, 6), more: Math.max(0, notFlagged.length - 6) });
   const dpage = await newPage();
   await openApp(dpage, '#lobby');
   const labels = await dpage.evaluate((ids) => ids.map((id) => [id, window.GS.ui.founded(window.GS.charity(id))]), regDated.map((c) => c.id));
@@ -2629,8 +2629,8 @@ if (section('13u. Small regressions found in review: sound waits for a first tou
     await dpage.waitForFunction(() => !document.querySelector('#dlg-profile').open);
     return row;
   };
-  // the first and last of them, and two that had no label before the fix
-  const sample = [regDated[0].id, regDated[regDated.length - 1].id, 'australian-indigenous-governance-institute', 'worldshare'];
+  // the first and last of them, and two that had no label before the fix (both still keep the register date)
+  const sample = [regDated[0].id, regDated[regDated.length - 1].id, 'careertrackers-indigenous-internship', 'worldshare'];
   const rows = {};
   for (const id of sample) { rows[id] = await founded(id); }
   check(sample.every((id) => regDated.some((c) => c.id === id) && /\(register date\)/.test(rows[id])), 'founding years: the profile dialog shows "(register date)" for ' + sample.length + ' of them, including two that had no label before', rows);
