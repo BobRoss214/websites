@@ -206,7 +206,7 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   charity you are comfortable with and that your checkout provider supports. `docs/roster-candidates.md` lists what was left out
   and what to check.
 - **Names and logos.** Charity names are used only to identify the organisations. Where a charity has a simple logo it is
-  shown instead of the coloured monogram circle (137 of them so far; `docs/logo-sources.md` lists each file and where it came
+  shown instead of the coloured monogram circle (134 of them so far; `docs/logo-sources.md` lists each file and where it came
   from: either the picture the organisation chose for its own GitHub account, checked by eye, or the open `simple-icons`
   set). Everyone else keeps the monogram. `js/logos.js` lists which charities have a logo and `logos: false` in
   `js/config.js` turns them off. `node tools/fetch-logos.mjs` collects more from each charity's own website (touch icon or
@@ -394,7 +394,7 @@ js/ui/*.js          shared helpers, amount and gift options, filters, charities,
                     charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), live tables, game
                     screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
                     the first-visit tour (tour.js)
-js/logos.js         which charities have a logo file (137 so far)
+js/logos.js         which charities have a logo file (134 so far)
 js/marks.js         charity marks for the canvas games: the real logo or the illustrated emblem, as an image to draw
 tools/              fetch-logos.mjs: collects more charity logos from their own websites
 assets/logos/       the logo files (see docs/logo-sources.md)

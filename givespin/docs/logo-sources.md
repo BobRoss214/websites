@@ -102,7 +102,6 @@ Charities without a logo here show a generated emblem instead (see `js/marks.js`
 | `nmcrs` | `assets/logos/nmcrs.png` | GitHub organisation avatar @nmcrs |
 | `ocean-conservancy` | `assets/logos/ocean-conservancy.png` | GitHub account picture @ocean-conservancy; looked at by eye: blue ring of marine animals, Ocean Conservancy emblem |
 | `one-acre-fund` | `assets/logos/one-acre-fund.jpg` | GitHub account picture @oneacrefund; looked at by eye: two green leaves on a stem, no text (matches the org's sprout mark; moderately sure) |
-| `opportunity-international` | `assets/logos/opportunity-international.png` | GitHub account picture @opportunityintl; looked at by eye: O-with-i-dot mark in pink/teal on dark purple (no wordmark) |
 | `orbis` | `assets/logos/orbis.png` | GitHub account picture @orbis-international; looked at by eye: dark ring O between two cyan arcs, eyelid-like (no wordmark; unsure) |
 | `oxfam` | `assets/logos/oxfam.png` | GitHub account picture @oxfam; looked at by eye: green circle with Oxfam figure emblem |
 | `oxfam-america` | `assets/logos/oxfam-america.png` | GitHub organisation avatar @oxfamamerica |
@@ -141,14 +140,12 @@ Charities without a logo here show a generated emblem instead (see `js/marks.js`
 | `unicef-uk` | `assets/logos/unicef-uk.png` | GitHub account picture @unicef; looked at by eye: blue UNICEF wordmark with emblem (global UNICEF logo, same mark UK uses; unsure) |
 | `usa-for-unhcr` | `assets/logos/usa-for-unhcr.png` | GitHub organisation avatar @usa-for-unhcr |
 | `victim-support` | `assets/logos/victim-support.jpg` | GitHub account picture @victimsupport; looked at by eye: white VS VICTIM SUPPORT on red (198px) |
-| `virunga-foundation` | `assets/logos/virunga-foundation.png` | GitHub account picture @virunga; looked at by eye: Parc National des Virunga round gorilla emblem, name readable (park emblem used by the foundation) |
 | `voa` | `assets/logos/voa.png` | GitHub account picture @volunteersofamerica; looked at by eye: blue triangle and red slashes forming a V (no wordmark; fairly sure) |
 | `water-org` | `assets/logos/water-org.png` | GitHub account picture @waterdotorg; looked at by eye: water.org wordmark with loop mark on light blue |
 | `wateraid` | `assets/logos/wateraid.jpg` | GitHub organisation avatar @wateraid |
 | `wcs` | `assets/logos/wcs.png` | GitHub account picture @wildlife-conservation-society; looked at by eye: WCS wordmark with green/blue W mark |
 | `wikimedia` | `assets/logos/wikimedia.svg` | simple-icons: Wikimedia Foundation |
 | `withyou` | `assets/logos/withyou.png` | GitHub account picture @wearewithyou-org; looked at by eye: 'we are withyou' wordmark on blue |
-| `women-for-women` | `assets/logos/women-for-women.png` | GitHub account picture @womenforwomen; looked at by eye: teal/green stylised woman figure (no wordmark; unsure, 158px) |
 | `woodland-trust` | `assets/logos/woodland-trust.png` | GitHub account picture @woodlandtrust; looked at by eye: light and dark green oak leaves, the Woodland Trust mark (99px) |
 | `world-land-trust` | `assets/logos/world-land-trust.png` | GitHub account picture @worldlandtrust; looked at by eye: red-eyed tree frog on green striped circle (World Land Trust emblem); no text |
 | `wwf` | `assets/logos/wwf.png` | GitHub account picture @wwfus; looked at by eye: WWF panda with WWF wordmark |
