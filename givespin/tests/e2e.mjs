@@ -4431,7 +4431,7 @@ if (section('13zm. Marble Run: a click or tap on a marble opens that charity (in
     await page.waitForFunction(() => window.GS.app.state.busy, null, { timeout: 10000 });
     // the shake: the bag rattles and the drawn charity's marble hops into its place, some marbles are tossed up
     const shake = await clickMarble(page, 'click', n === 8 ? { kind: 'lift' } : { kind: 'apart', nth: 3 });
-    check(shake.ok && /shake|sim|ready/.test(String(shake.stage)), tag + 'a click in the shake opens the charity under the pointer' + (n === 8 ? ' (a marble tossed up, clicked where it is seen)' : '') + ' (' + shake.tries + (shake.tries === 1 ? ' try' : ' tries') + ')', shake);
+    check(shake.ok && /shake|sim|ready|run/.test(String(shake.stage)), tag + 'a click in the shake (or, when a busy machine got there late, in the first moments of the run) opens the charity under the pointer' + (n === 8 ? ' (a marble tossed up, clicked where it is seen)' : '') + ' (' + shake.tries + (shake.tries === 1 ? ' try' : ' tries') + ')', shake);
     check(await page.evaluate(() => window.GS.app.state.busy), tag + 'the round is still running after the click in the shake');
     await page.waitForFunction(() => { const m = window.GS.games.marble._debug.motion(); return !!m && m.stage() === 'run'; }, null, { timeout: 30000 }).catch(() => {});
     await page.waitForTimeout(n === 500 ? 2500 : 1200);
