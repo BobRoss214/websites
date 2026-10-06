@@ -1540,10 +1540,9 @@
  {
   "id": "life-without-barriers",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register",
-   "https://www.lwb.org.au/about-us/30years/"
+   "https://data.gov.au/data/dataset/acnc-register"
   ],
-  "note": "ABN 15101252171; official register record; founding year 1995 from a web search (search-result text, the page itself was not opened) in place of the register's 2002"
+  "note": "ABN 15101252171; official register record"
  },
  {
   "id": "invasive-species-council",
@@ -1648,10 +1647,9 @@
   "id": "library-for-all",
   "evidence": [
    "https://data.gov.au/data/dataset/acnc-register",
-   "https://libraryforall.org/",
-   "https://libraryforall.org/about-us/"
+   "https://libraryforall.org/"
   ],
-  "note": "ABN 57602320865; official register record (registered name: Library For All Ltd); website changed to libraryforall.org, its own site shown by a web search; founding year 2010 from a web search (search-result text, the page itself was not opened) in place of the register's 2014"
+  "note": "ABN 57602320865; official register record (registered name: Library For All Ltd); website changed to libraryforall.org, its own site shown by a web search"
  },
  {
   "id": "orange-sky-australia",
@@ -2469,10 +2467,9 @@
  {
   "id": "deaf-children-australia",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register",
-   "https://www.findandconnect.gov.au/entity/victorian-deaf-and-dumb-institution/"
+   "https://data.gov.au/data/dataset/acnc-register"
   ],
-  "note": "official register record; ABN 57108025207; founding year 1860 from a web search (search-result text, the page itself was not opened) in place of the register's 1859"
+  "note": "official register record; ABN 57108025207"
  },
  {
   "id": "little-sisters-of-the-poor-au",
@@ -2582,10 +2579,9 @@
  {
   "id": "acso",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register",
-   "https://www.acso.org.au/about-acso/our-history/"
+   "https://data.gov.au/data/dataset/acnc-register"
   ],
-  "note": "official register record; ABN 43037816628; founding year 1983 from a web search (search-result text, the page itself was not opened) in place of the register's 1984"
+  "note": "official register record; ABN 43037816628"
  },
  {
   "id": "jobsupport",
