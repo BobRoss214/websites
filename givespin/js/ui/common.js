@@ -13,6 +13,11 @@
 
   var toastBox = null;
   var liveBox = null;
+  var emblemSeq = 0;
+
+  /** The emblem for a charity as inline SVG. Every copy gets its own gradient id, because two copies with the same id on one page can
+   *  lose their colours when the first one is hidden. */
+  function emblem(ch) { return GS.emblemSVG ? GS.emblemSVG(ch, 'm' + (++emblemSeq).toString(36)) : ''; }
 
   function ensureBoxes() {
     if (!toastBox) { toastBox = $('#toasts'); }
@@ -100,22 +105,30 @@
       return String(ch.founded) + (ch.foundedFrom === 'register' ? ' (register date)' : '');
     },
 
-    /** A round badge for a charity: its logo when there is one, otherwise its monogram. `size` is in px; `cls` is an optional extra class. */
+    /** A badge for a charity: its real logo when there is one, otherwise its illustrated emblem (js/marks.js), drawn inline so it costs no
+     *  request. `size` is in px; `cls` is an optional extra class. (Without js/marks.js it falls back to the round monogram.) */
     mono: function (ch, size, cls) {
-      var m = GS.mono(ch);
       var logo = GS.logoFor ? GS.logoFor(ch) : '';
-      var base = ' style="--c:' + ch.accent + ';--s:' + (size || 40) + 'px" data-len="' + m.length + '" data-mono="' + esc(m) + '" aria-hidden="true"';
       var c = 'cmono' + (cls ? ' ' + cls : '');
-      if (logo) { return '<span class="' + c + ' is-logo"' + base + '><img src="' + esc(logo) + '" alt="" loading="lazy" decoding="async" draggable="false"></span>'; }
-      return '<span class="' + c + '"' + base + '>' + esc(m) + '</span>';
+      var st = ' style="--c:' + ch.accent + ';--s:' + (size || 40) + 'px"';
+      var m = GS.mono(ch);
+      if (logo) { return '<span class="' + c + ' is-logo"' + st + ' data-len="' + m.length + '" data-mono="' + esc(m) + '" data-ch="' + esc(ch.id) + '" aria-hidden="true"><img src="' + esc(logo) + '" alt="" loading="lazy" decoding="async" draggable="false"></span>'; }
+      var svg = emblem(ch);
+      if (svg) { return '<span class="' + c + ' is-emblem"' + st + ' aria-hidden="true">' + svg + '</span>'; }
+      return '<span class="' + c + '"' + st + ' data-len="' + m.length + '" data-mono="' + esc(m) + '" aria-hidden="true">' + esc(m) + '</span>';
     },
 
-    /** The inside of a badge you draw yourself: the logo image, or the monogram text. Add class `is-logo` and `data-mono` on the badge to match. */
+    /** The inside of a badge you draw yourself: the logo image, or the emblem (the monogram text if there is none). Add class `is-logo` and
+     *  `data-mono` on the badge when ui.markKind(ch) is 'logo'; an emblem needs no class (the page style looks for it). */
     monoInner: function (ch) {
       var logo = GS.logoFor ? GS.logoFor(ch) : '';
-      return logo ? '<img src="' + esc(logo) + '" alt="" loading="lazy" decoding="async" draggable="false">' : esc(GS.mono(ch));
+      if (logo) { return '<img src="' + esc(logo) + '" alt="" loading="lazy" decoding="async" draggable="false">'; }
+      return emblem(ch) || esc(GS.mono(ch));
     },
+    /** True only when the charity has a REAL logo (an emblem is not a logo). */
     hasLogo: function (ch) { return !!(GS.logoFor && GS.logoFor(ch)); },
+    /** 'logo' when the mark shown for this charity is its real logo, 'emblem' when it is the illustrated emblem. */
+    markKind: function (ch) { return ui.hasLogo(ch) ? 'logo' : 'emblem'; },
 
     causeTag: function (id) {
       var c = GS.cause(id);
@@ -263,13 +276,16 @@
     }
   };
 
-  // a logo that fails to load goes back to the monogram (image errors do not bubble, so listen while capturing)
+  // a logo that fails to load goes back to the charity's emblem (or the monogram text where the badge does not say which charity it is for)
+  // (image errors do not bubble, so listen while capturing)
   document.addEventListener('error', function (e) {
     var img = e.target;
     if (!img || img.tagName !== 'IMG') { return; }
     var badge = img.closest ? img.closest('.is-logo[data-mono]') : null;
     if (!badge) { return; }
     badge.classList.remove('is-logo');
-    badge.textContent = badge.getAttribute('data-mono') || '';
+    var ch = GS.charity && GS.charity(badge.getAttribute('data-ch'));
+    var svg = ch ? emblem(ch) : '';
+    if (svg) { badge.classList.add('is-emblem'); badge.innerHTML = svg; } else { badge.textContent = badge.getAttribute('data-mono') || ''; }
   }, true);
 })();

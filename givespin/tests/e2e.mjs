@@ -3033,6 +3033,191 @@ if (section('17. Opens straight from the file system')) {
 }
 
 /* ======================================================================== */
+if (section('13x. Charity marks: a real logo where there is one, an illustrated emblem for everyone else, on every page, with an honest line in the profile')) {
+  const problemsBefore = problems.length;
+  // what every mark under `sel` is: a real logo (an <img>) or an emblem (an inline <svg> with no text in it)
+  const markStats = (page, sel) => page.evaluate((s) => {
+    const out = { total: 0, logo: 0, emblem: 0, bad: [], text: 0, mono: 0, ids: [] };
+    document.querySelectorAll(s).forEach((m) => {
+      out.total++;
+      if (m.classList.contains('is-logo') && m.querySelector('img')) { out.logo++; }
+      else if (m.classList.contains('is-emblem') && m.querySelector(':scope > svg.emblem')) {
+        out.emblem++;
+        if (m.textContent.trim() !== '') { out.text++; }
+        if (m.hasAttribute('data-mono')) { out.mono++; }
+        m.querySelectorAll('linearGradient').forEach((g) => out.ids.push(g.id));
+      } else { out.bad.push(m.outerHTML.slice(0, 90)); }
+    });
+    return out;
+  }, sel);
+
+  const page = await newPage();
+  await openApp(page, '#charities');
+  await page.waitForFunction(() => document.querySelectorAll('#view-charities .rcard').length > 0);
+  const nLogos = await page.evaluate(() => window.GS.charities.filter((c) => window.GS.ui.hasLogo(c)).length);
+  check(nLogos > 0 && nLogos < N, 'some charities have a real logo and most do not (' + nLogos + ' of ' + N + ')');
+
+  /* ---- the Charities page: a mark for each of the 500 */
+  let st = await markStats(page, '#view-charities .rcard .cmono');
+  check(st.total === N && st.bad.length === 0, 'the Charities page draws a mark for every one of the ' + N + ' charities, each a logo or an emblem', { total: st.total, bad: st.bad.slice(0, 2) });
+  check(st.logo === nLogos && st.emblem === N - nLogos, 'real logos for the ' + nLogos + ' that have one, an emblem for the other ' + (N - nLogos), { logo: st.logo, emblem: st.emblem });
+  check(st.text === 0 && st.mono === 0, 'an emblem carries no letters (nothing to double up with the monogram text)', { text: st.text, mono: st.mono });
+  check(new Set(st.ids).size === st.ids.length && st.ids.length === st.emblem, 'every emblem on the page has its own gradient id, so none can pick up another one\'s colours');
+  const box = await page.evaluate(() => { const m = document.querySelector('#view-charities .rcard .cmono.is-emblem'), r = m.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height), parseFloat(m.style.getPropertyValue('--s'))]; });
+  check(box[2] > 0 && box[0] === box[2] && box[1] === box[2], 'an emblem fills the same box (the --s size) the monogram did', box);
+  await shot(page, '13x-charities');
+
+  /* ---- sizes: 22, 34, 46 and 64 px marks keep their box, and a failed logo falls back to the emblem */
+  const sizes = await page.evaluate(() => {
+    const GS = window.GS, ch = GS.charities.find((c) => !GS.ui.hasLogo(c)), box = document.createElement('div');
+    document.body.appendChild(box);
+    const out = [22, 34, 46, 64].map((s) => {
+      box.innerHTML = GS.ui.mono(ch, s);
+      const r = box.firstChild.getBoundingClientRect(), v = box.querySelector('svg').getBoundingClientRect();
+      return [Math.round(r.width), Math.round(r.height), Math.round(v.width), Math.round(v.height)].join('x');
+    });
+    box.remove();
+    return out;
+  });
+  check(JSON.stringify(sizes) === JSON.stringify(['22x22x22x22', '34x34x34x34', '46x46x46x46', '64x64x64x64']), 'emblems come out at 22, 34, 46 and 64 px, picture and box alike', sizes);
+  const fb = await page.evaluate(() => {
+    const GS = window.GS, ch = GS.charities.find((c) => GS.ui.hasLogo(c)), box = document.createElement('div');
+    document.body.appendChild(box);
+    box.innerHTML = GS.ui.mono(ch, 40);
+    const before = box.firstChild.classList.contains('is-logo') && !!box.querySelector('img');
+    box.querySelector('img').dispatchEvent(new Event('error'));   // the file did not load
+    const m = box.firstChild;
+    const out = { before, logoGone: !m.classList.contains('is-logo'), emblem: m.classList.contains('is-emblem') && !!m.querySelector('svg.emblem'), text: m.textContent.trim() };
+    box.remove();
+    return out;
+  });
+  check(fb.before && fb.logoGone && fb.emblem && fb.text === '', 'a logo file that fails to load is replaced by the charity\'s emblem (not by bare letters)', fb);
+
+  /* ---- hasLogo means a REAL logo; markKind says which of the two a charity shows */
+  const kinds = await page.evaluate(() => {
+    const GS = window.GS, logo = GS.charities.find((c) => GS.logoFor(c)), emb = GS.charities.find((c) => !GS.logoFor(c));
+    return { logo: [GS.ui.hasLogo(logo), GS.ui.markKind(logo)], emb: [GS.ui.hasLogo(emb), GS.ui.markKind(emb)], count: GS.charities.filter((c) => GS.ui.markKind(c) === 'emblem').length };
+  });
+  check(kinds.logo[0] === true && kinds.logo[1] === 'logo' && kinds.emb[0] === false && kinds.emb[1] === 'emblem', 'hasLogo stays "has a real logo"; markKind says logo or emblem', kinds);
+
+  /* ---- the profile dialog: the mark big, one honest line under it */
+  const pick = await page.evaluate(() => {
+    const GS = window.GS;
+    return { logo: GS.charities.find((c) => GS.ui.hasLogo(c)).id, emblem: GS.charities.find((c) => !GS.ui.hasLogo(c)).id };
+  });
+  const profile = async (id) => {
+    await page.evaluate((i) => window.GS.ui.charity.openProfile(i), id);
+    await page.waitForSelector('#dlg-profile[open] .prof__markline');
+    return page.evaluate(() => {
+      const mark = document.querySelector('#dlg-profile .prof__mark .cmono'), line = document.querySelector('#dlg-profile .prof__markline');
+      const a = mark.getBoundingClientRect(), b = line.getBoundingClientRect();
+      return { text: line.textContent.trim(), kind: line.getAttribute('data-mark'), cls: mark.className, w: Math.round(a.width), under: b.top >= a.bottom - 1, hasImg: !!mark.querySelector('img'), hasSvg: !!mark.querySelector('svg.emblem'), letters: mark.textContent.trim() };
+    });
+  };
+  let pr = await profile(pick.emblem);
+  check(pr.text === 'Illustrated emblem, not the charity\'s official logo.' && pr.kind === 'emblem', 'an emblem charity\'s profile says: Illustrated emblem, not the charity\'s official logo.', pr);
+  check(pr.w >= 80 && pr.under && pr.hasSvg && pr.letters === '', 'the profile shows the emblem big (at least 80 px) with that line under it', pr);
+  await shot(page, '13x-profile-emblem');
+  await page.evaluate(() => window.GS.ui.closeAllModals());
+  pr = await profile(pick.logo);
+  check(pr.text === 'Logo shown only to identify the organisation.' && pr.kind === 'logo', 'a real-logo charity\'s profile says: Logo shown only to identify the organisation.', pr);
+  check(pr.w >= 80 && pr.under && pr.hasImg && !pr.hasSvg, 'and shows the logo big with that line under it', pr);
+  await shot(page, '13x-profile-logo');
+  const sim = await markStats(page, '#dlg-profile .prof__similar .cmono');
+  check(sim.total > 0 && sim.bad.length === 0 && (sim.emblem + sim.logo) === sim.total, 'the similar-charity chips in the profile carry marks too', sim);
+  await page.evaluate(() => window.GS.ui.closeAllModals());
+
+  /* ---- canvas games: GS.markImage resolves to a loaded Image, and every emblem shape stays inside its circle */
+  const mi = await page.evaluate(async (ids) => {
+    const GS = window.GS, out = {};
+    const wait = async (ch) => { for (let i = 0; i < 100; i++) { const im = GS.markImage(ch); if (im) { return im; } await new Promise((r) => setTimeout(r, 50)); } return null; };
+    const first = GS.markImage(GS.charity(ids.emblem));
+    const im = await wait(GS.charity(ids.emblem));
+    out.firstWasNull = first === null;
+    out.isImage = !!im && im instanceof Image && im.complete && im.naturalWidth > 0;
+    out.emblemSrc = !!im && im.src.indexOf('data:image/svg+xml') === 0;
+    out.same = GS.markImage(GS.charity(ids.emblem)) === im;
+    const lg = await wait(GS.charity(ids.logo));
+    out.logoImage = !!lg && lg instanceof Image && lg.naturalWidth > 0 && lg.src.indexOf('assets/logos/' + ids.logo + '.') > 0;
+    // draw one emblem of each badge shape and look for any colour outside the circle that touches the edge of the 64 px box
+    const seen = {};
+    GS.charities.forEach((c) => { const i = GS.emblemInfo(c); if (!seen[i.shape] && !GS.ui.hasLogo(c)) { seen[i.shape] = c; } });
+    out.shapes = Object.keys(seen).length;
+    out.outside = [];
+    out.empty = [];
+    for (const shape of Object.keys(seen)) {
+      const img = await wait(seen[shape]);
+      const cv = document.createElement('canvas'); cv.width = 64; cv.height = 64;
+      const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, 64, 64);
+      const d = cx.getImageData(0, 0, 64, 64).data;
+      let outside = 0, inside = 0;
+      for (let y = 0; y < 64; y++) { for (let x = 0; x < 64; x++) {
+        const a = d[(y * 64 + x) * 4 + 3], r = Math.hypot(x + 0.5 - 32, y + 0.5 - 32);
+        if (a > 40 && r > 32.6) { outside++; }
+        if (a > 200 && r < 20) { inside++; }
+      } }
+      if (outside > 0) { out.outside.push(shape + ':' + outside); }
+      if (inside < 200) { out.empty.push(shape); }
+    }
+    return out;
+  }, pick);
+  check(mi.firstWasNull && mi.isImage && mi.emblemSrc && mi.same, 'GS.markImage gives null while loading, then the same loaded Image (an emblem as an SVG data address) for a charity with no logo', mi);
+  check(mi.logoImage, 'and the logo file for a charity that has one', mi);
+  check(mi.shapes >= 6 && mi.outside.length === 0 && mi.empty.length === 0, 'drawn on a canvas, every badge shape (' + mi.shapes + ' of them) stays inside the circle that touches the edge, so a game can clip it to a circle', mi);
+  await page.close();
+
+  /* ---- a game page, the "In play" list at 22 px, and the lobby after a round */
+  const g = await newPage();
+  await openApp(g, '#game-standing');
+  await g.waitForSelector('#view-game .stile .cmono');
+  st = await markStats(g, '#view-game .stile .cmono');
+  check(st.total >= 8 && st.bad.length === 0, 'a Last One Standing board shows a logo or emblem on every tile', st);
+  await shot(g, '13x-standing');
+  await go(g, '#game-drop');
+  await g.waitForSelector('#view-game .dcard__badge');
+  const crate = await g.evaluate(() => {
+    const els = Array.from(document.querySelectorAll('#view-game .dcard__badge'));
+    return { total: els.length, drawn: els.filter((e) => e.querySelector('img') || e.querySelector('svg.emblem')).length, round: els.filter((e) => e.querySelector('svg.emblem') && getComputedStyle(e).borderTopLeftRadius !== '0px' && e.querySelector('svg.emblem') && getComputedStyle(e).backgroundImage !== 'none').length };
+  });
+  check(crate.total >= 5 && crate.drawn === crate.total && crate.round === 0, 'Drop Crate cards show the emblem on its own, without the old round colour disc behind it', crate);
+  await shot(g, '13x-drop');
+  await go(g, '#game-slots');
+  await g.waitForSelector('#view-game .sym__badge');
+  const reels = await g.evaluate(() => { const els = Array.from(document.querySelectorAll('#view-game .sym__badge')); return { total: els.length, drawn: els.filter((e) => e.querySelector('img') || e.querySelector('svg.emblem')).length }; });
+  check(reels.total >= 6 && reels.drawn === reels.total, 'slot machine reels show a logo or emblem for every charity', reels);
+  await go(g, '#game-wheel');
+  await g.click('#tab-pool');
+  await g.waitForFunction((n) => document.querySelectorAll('#tabp .chip--link').length === n, N, { timeout: 15000 });
+  st = await markStats(g, '#tabp .chip--link .cmono');
+  check(st.total === N && st.bad.length === 0 && st.emblem === N - nLogos, 'the "In play" list shows a 22 px mark in front of every one of the ' + N + ' charity names', { total: st.total, emblem: st.emblem, bad: st.bad.slice(0, 2) });
+  check(JSON.stringify(await g.evaluate(() => { const r = document.querySelector('#tabp .chip--link .cmono').getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })) === '[22,22]', 'and those marks are 22 px');
+  await g.evaluate(() => document.querySelector('#tabp').scrollIntoView());
+  await shot(g, '13x-chips');
+  // one wheel round, then the lobby's "recent gifts" and the receipt carry marks too
+  await go(g, '#game-wheel');
+  await g.click('#btn-play');
+  await waitReceipt(g);
+  st = await markStats(g, '#dlg-result .cmono');
+  check(st.total >= 1 && st.bad.length === 0, 'the receipt shows a mark for the charity that won', st);
+  await closeReceipt(g);
+  await go(g, '#lobby');
+  st = await markStats(g, '#view-lobby .rgift .cmono');
+  check(st.total >= 1 && st.bad.length === 0, 'the lobby\'s recent gifts show a mark for the charity', st);
+  await g.close();
+
+  /* ---- a phone: the profile (mark, line and name) fits the width */
+  const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+  await openApp(ph, '#charities');
+  await ph.evaluate((id) => window.GS.ui.charity.openProfile(id), pick.emblem);
+  await ph.waitForSelector('#dlg-profile[open] .prof__markline');
+  const fit = await ph.evaluate(() => { const l = document.querySelector('#dlg-profile .prof__markline').getBoundingClientRect(), c = document.querySelector('#dlg-profile .modal__card').getBoundingClientRect(); return { fits: l.left >= c.left && l.right <= c.right && document.documentElement.scrollWidth <= window.innerWidth, w: Math.round(l.width) }; });
+  check(fit.fits && fit.w > 60, 'on a phone the honest line stays inside the profile and the page does not scroll sideways', fit);
+  await shot(ph, '13x-profile-phone');
+  await ph.close();
+  check(problems.length === problemsBefore, 'no console errors, warnings or failed requests while the marks were drawn', problems.slice(problemsBefore, problemsBefore + 4));
+}
+
+/* ======================================================================== */
 section('18. Console and network health');
 check(problems.length === 0, 'no console errors, warnings, page errors or failed requests during the whole run', problems.slice(0, 8));
 

@@ -208,7 +208,7 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
 - **Names and logos.** Charity names are used only to identify the organisations. Where a charity has a simple logo it is
   shown instead of the coloured monogram circle (134 of them so far; `docs/logo-sources.md` lists each file and where it came
   from: either the picture the organisation chose for its own GitHub account, checked by eye, or the open `simple-icons`
-  set). Everyone else keeps the monogram. `js/logos.js` lists which charities have a logo and `logos: false` in
+  set). Everyone else gets an illustrated emblem: a small badge the page draws itself (no files, no network) from what the site knows about the charity, so a water charity gets a drop, an animal charity a paw and a reading charity a book, in the colour of its cause. An emblem is a plain, generic picture and never a copy of anyone's logo; the profile dialog says so under it ("Illustrated emblem, not the charity's official logo.", or "Logo shown only to identify the organisation." for a real logo). `js/marks.js` makes the emblems. `js/logos.js` lists which charities have a logo and `logos: false` in
   `js/config.js` turns them off. `node tools/fetch-logos.mjs` collects more from each charity's own website (touch icon or
   favicon) into `assets/logos/`; it needs an open internet connection, which the build environment did not have. A
   logo is the charity's trademark: showing it to identify the organisation is common, but it can look like an
@@ -325,10 +325,10 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 ## Tests
 
 ```
-node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/readme.test.js
+node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/readme.test.js givespin/tests/marks.test.js
 ```
 
-95 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+105 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
 backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly

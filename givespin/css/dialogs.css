@@ -38,6 +38,9 @@ dialog.modal[open] { animation: modal-in 0.22s ease-out; }
 #dlg-profile .modal__body { grid-auto-rows: max-content; }
 .prof__head { --c: var(--green); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-right: 36px; }
 .prof__titles { display: grid; gap: 8px; flex: 1; min-width: 200px; }
+.prof__mark { flex: none; display: grid; justify-items: center; align-content: start; gap: 8px; width: 150px; }
+.prof__markline { margin: 0; text-align: center; font-size: 0.74rem; line-height: 1.3; color: var(--muted); }
+@media (max-width: 560px) { .prof__mark { width: auto; flex-basis: 100%; grid-template-columns: auto 1fr; justify-items: start; align-items: center; gap: 14px; } .prof__markline { text-align: left; } }
 .prof__name { font-size: 1.5rem; padding-right: 0; }
 .prof__tags { display: flex; flex-wrap: wrap; gap: 5px; }
 .prof__lead { font: 600 1rem/1.5 var(--f-body); color: var(--text); }

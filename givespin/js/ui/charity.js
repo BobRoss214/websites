@@ -57,7 +57,9 @@
     var about = ch.about && ch.about !== ch.blurb ? ch.about : '';
     var excluded = isExcluded(ch.id);
 
-    return '<header class="prof__head" style="--c:' + ch.accent + '">' + ui.mono(ch, 68) +
+    var kind = ui.markKind(ch);
+    return '<header class="prof__head" style="--c:' + ch.accent + '"><div class="prof__mark">' + ui.mono(ch, 104) +
+        '<p class="prof__markline" data-mark="' + kind + '">' + (kind === 'logo' ? 'Logo shown only to identify the organisation.' : 'Illustrated emblem, not the charity\'s official logo.') + '</p></div>' +
         '<div class="prof__titles"><h2 class="prof__name" id="dlg-profile-title">' + esc(ch.name) + '</h2>' +
         '<div class="prof__tags">' + ui.causeTags(ch) + (ch.faith ? '<span class="tag tag--plain">' + ui.icon('sparkle') + 'Faith-based</span>' : '') + '</div></div>' +
         '<span data-role="status">' + statusLine(ch) + '</span>' +
