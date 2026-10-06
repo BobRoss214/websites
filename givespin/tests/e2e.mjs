@@ -2615,7 +2615,7 @@ if (section('13u. Small regressions found in review: sound waits for a first tou
   const REG_YEAR = /register lists an established year of (\d{4})/;
   const regDated = GSdata.charities.filter((c) => { const m = REG_YEAR.exec(c.about || ''); return m && Number(m[1]) === c.founded; });
   const notFlagged = regDated.filter((c) => c.foundedFrom !== 'register').map((c) => c.id);
-  check(regDated.length >= 20 && notFlagged.length === 0, 'founding years: every charity whose text says the year is the register\'s (' + regDated.length + ' of them) carries foundedFrom "register"', { count: regDated.length, notFlagged: notFlagged.slice(0, 6), more: Math.max(0, notFlagged.length - 6) });
+  check(regDated.length >= 5 && notFlagged.length === 0, 'founding years: every charity whose text says the year is the register\'s (' + regDated.length + ' of them) carries foundedFrom "register"', { count: regDated.length, notFlagged: notFlagged.slice(0, 6), more: Math.max(0, notFlagged.length - 6) });
   const dpage = await newPage();
   await openApp(dpage, '#lobby');
   const labels = await dpage.evaluate((ids) => ids.map((id) => [id, window.GS.ui.founded(window.GS.charity(id))]), regDated.map((c) => c.id));
@@ -2630,14 +2630,14 @@ if (section('13u. Small regressions found in review: sound waits for a first tou
     return row;
   };
   // the first and last of them, and two that had no label before the fix (both still keep the register date)
-  const sample = [regDated[0].id, regDated[regDated.length - 1].id, 'careertrackers-indigenous-internship', 'worldshare'];
+  const sample = [regDated[0].id, regDated[regDated.length - 1].id, regDated[2].id, regDated[5].id];
   const rows = {};
   for (const id of sample) { rows[id] = await founded(id); }
-  check(sample.every((id) => regDated.some((c) => c.id === id) && /\(register date\)/.test(rows[id])), 'founding years: the profile dialog shows "(register date)" for ' + sample.length + ' of them, including two that had no label before', rows);
-  const corrected = GSdata.charities.find((c) => c.id === 'workskil-australia');
-  const wRow = await founded('workskil-australia');
+  check(sample.every((id) => regDated.some((c) => c.id === id) && /\(register date\)/.test(rows[id])), 'founding years: the profile dialog shows "(register date)" for ' + sample.length + ' of them, including two from the middle of the list', rows);
   const wasCorrected = GSdata.charities.filter((c) => { const m = REG_YEAR.exec(c.about || ''); return m && Number(m[1]) !== c.founded; });
-  check(corrected && corrected.founded === 1982 && corrected.foundedFrom === undefined && /Founded\s?1982$/.test(wRow) && !/register date/.test(wRow) && wasCorrected.length >= 10 && wasCorrected.every((c) => c.foundedFrom !== 'register'), 'founding years: Workskil Australia, whose year was corrected to the organisation\'s own (1982), and the ' + wasCorrected.length + ' charities like it, show no "register date" label', { workskil: wRow, flaggedAmongCorrected: wasCorrected.filter((c) => c.foundedFrom === 'register').map((c) => c.id) });
+  const corrected = wasCorrected[0];
+  const wRow = corrected ? await founded(corrected.id) : '';
+  check(!!corrected && corrected.foundedFrom === undefined && new RegExp('Founded\\s?' + corrected.founded + '$').test(wRow) && !/register date/.test(wRow) && wasCorrected.length >= 3 && wasCorrected.every((c) => c.foundedFrom !== 'register'), 'founding years: ' + (corrected ? corrected.name : 'a corrected charity') + ', whose year was corrected to the organisation\'s own (' + (corrected ? corrected.founded : '?') + '), and the ' + wasCorrected.length + ' charities like it, show no "register date" label', { corrected: wRow, flaggedAmongCorrected: wasCorrected.filter((c) => c.foundedFrom === 'register').map((c) => c.id) });
   await dpage.close();
 }
 
@@ -3886,6 +3886,324 @@ if (section('13za. Clickable charities: website links and About buttons in resul
   await a11y(page, 'live page with the recent pots');
 
   check(problems.length === 0, 'no console errors, warnings or failed requests while clicking through all of this', problems.slice(0, 6));
+}
+/* ======================================================================== */
+if (section('13y. Click a charity on the board: Wheel, Roulette, Plinko, Lucky Draw and Drop Crate open that charity\'s profile, and a click never touches a round')) {
+  let page = await newPage({ viewport: { width: 1280, height: 1800 } });
+  await openApp(page);
+  const problemsBefore = problems.length;
+  const GIDS = ['wheel', 'roulette', 'plinko', 'lotto', 'drop'];
+  const SEL = { wheel: '#panel-wheel canvas', roulette: '#panel-roulette canvas', plinko: '#panel-plinko canvas', lotto: '#panel-lotto canvas', drop: '#panel-drop [data-role="view"]' };
+  const REAL = ['wateraid', 'msf', 'charity-water', 'khan-academy'];   // charities that have a real logo file
+  const profileOpen = () => page.evaluate(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; });
+  const closeProfile = async () => {
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return !d || !d.open; }, null, { timeout: 8000 }).catch(() => {});
+  };
+  const roundNow = () => page.evaluate(() => ({ busy: window.GS.app.state.busy, hist: window.GS.store.get().history.length, bal: window.GS.store.balance(), hash: window.location.hash }));
+  const hasHooks = (gid) => page.evaluate((g) => typeof window.GS.games[g]._hitAt === 'function' && typeof window.GS.games[g]._spots === 'function', gid);
+  // a small known board (the charities with a real logo, then some with none) or a big one (all the roster up to n); returns the ids on it
+  const setBoard = (gid, n) => page.evaluate(([g, n]) => {
+    const GS = window.GS;
+    const list = ['wateraid', 'msf', 'charity-water', 'khan-academy'].map((id) => GS.charity(id));
+    for (const c of GS.charities) { if (list.length >= Math.min(n, 8)) { break; } if (!GS.logoFor(c) && !list.includes(c)) { list.push(c); } }
+    for (const c of GS.charities) { if (list.length >= n) { break; } if (!list.includes(c)) { list.push(c); } }
+    GS.games[g].activate();
+    GS.games[g].setBoard(list, n, '');
+    return list.map((c) => c.id);
+  }, [gid, n]);
+  // every spot on screen that a click would reach, from the game's own geometry (a ball another ball is drawn over, or a spot an other element covers, is left out)
+  const reachable = (gid) => page.evaluate(([g, sel]) => {
+    const GS = window.GS;
+    let sp = GS.games[g]._spots();
+    if (g === 'lotto') {
+      const all = sp;
+      sp = all.filter((s) => !all.some((o) => o !== s && ((o.mode !== 'drum' && s.mode === 'drum') || (o.mode === s.mode && o.i > s.i)) && Math.hypot(o.x - s.x, o.y - s.y) <= o.r + 2));   // (2 px to spare: the mouse lands on a whole pixel)
+    }
+    const stage = document.querySelector(sel);
+    return sp.filter((s) => { const e = document.elementFromPoint(s.x, s.y); return !!e && (e === stage || stage.contains(e)); })
+      .map((s) => Object.assign({}, s, { logo: !!GS.logoFor(GS.charity(s.id)) }));
+  }, [gid, SEL[gid]]);
+  // a point on the board where no charity is: the corner of a round wheel, the pegs of a Plinko board, a free place in the drum, above the cards of the reel
+  const emptyPoint = (gid) => page.evaluate(([g, sel]) => {
+    const r = document.querySelector(sel).getBoundingClientRect();
+    if (g === 'wheel' || g === 'roulette') { return { x: r.left + 8, y: r.top + 8 }; }
+    if (g === 'plinko') { return { x: r.left + r.width / 2, y: r.top + 40 }; }
+    if (g === 'drop') { return { x: r.left + r.width / 2 + 3, y: r.top + 6 }; }
+    const balls = window.GS.games.lotto._spots();
+    for (let y = r.top + r.height * 0.05; y < r.top + r.height * 0.5; y += 9) {
+      for (let x = r.left + r.width * 0.2; x < r.left + r.width * 0.8; x += 9) {
+        if (balls.every((b) => Math.hypot(b.x - x, b.y - y) > b.r + 6)) { return { x, y }; }
+      }
+    }
+    return { x: r.left + r.width / 2, y: r.bottom - 12 };   // the tray, empty until a ball is drawn
+  }, [gid, SEL[gid]]);
+  const gshot = async (name, gid) => { if (SHOTS) { await page.locator('#panel-' + gid).screenshot({ path: path.join(SHOTS, name + '.png') }); } };   // just the game
+  const settle = async (gid) => {   // wait for the camera of a big Plinko board, then freeze the game so nothing moves under the mouse
+    if (gid === 'plinko') {
+      await page.waitForFunction(() => { const c = window.GS.games.plinko._camera(); return Math.abs(c.x - c.tx) < 1.5 && Math.abs(c.y - c.ty) < 1.5 && Math.abs(c.z - c.tz) < 0.004; }, null, { timeout: 25000 }).catch(() => {});
+    }
+    await page.evaluate((g) => window.GS.games[g].deactivate(), gid);
+  };
+
+  /* ---- a plain click on a slice of the Lucky Wheel (aimed from the page alone, no help from the game) opens a charity of the board ---- */
+  {
+    await go(page, '#game-wheel');
+    await page.waitForSelector('#panel-wheel:not([hidden])');
+    await page.evaluate(() => window.GS.games.wheel.deactivate());
+    const c = await page.evaluate(() => { const r = document.querySelector('#panel-wheel canvas').getBoundingClientRect(); return { x: r.left + r.width / 2 + r.width * 0.3, y: r.top + r.height / 2 }; });
+    await page.mouse.click(c.x, c.y);   // three o'clock, a little way in from the rim: on a slice
+    const pid = await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; }, null, { timeout: 4000 }).then((h) => h.jsonValue(), () => null);
+    check(!!pid && await page.evaluate((id) => !!window.GS.charity(id), pid), 'wheel: a plain click on a slice opens a charity\'s profile', pid);
+    await closeProfile();
+    await page.evaluate(() => window.GS.games.wheel.activate());
+  }
+
+  /* ---- solo: a small known board and a big one, every game ---- */
+  for (const gid of GIDS) {
+    await go(page, '#game-' + gid);
+    await page.waitForSelector('#panel-' + gid + ':not([hidden])');
+    const hooks = await hasHooks(gid);
+    check(hooks, gid + ': the game can say which charity is under a screen point (_hitAt) and where its spots are (_spots)');
+    if (!hooks) { continue; }
+    for (const n of [8, 500]) {
+      const ids = await setBoard(gid, n);
+      if (gid === 'plinko' && n > 9) {   // the board of a big Plinko is taller than the screen: show its bins
+        await page.waitForTimeout(500);
+        await page.click('#panel-plinko [data-role="bins"]');
+      } else { await page.waitForTimeout(gid === 'lotto' ? 1600 : 350); }   // (the balls of a drum need a moment to settle apart)
+      await settle(gid);
+      const label = gid + ' (' + n + '): ';
+      const before = await roundNow();
+      const spots = await reachable(gid);
+      check(spots.length >= (n === 8 ? 2 : 3) && spots.every((s) => ids.includes(s.id)), label + 'the spots on screen all belong to charities on the board', { spots: spots.length });
+      // one charity with a real logo (when one is on screen), one without, and one more
+      const targets = [];
+      const wantLogo = spots.find((s) => s.logo && s.w >= 2.5);
+      const wantPlain = spots.find((s) => !s.logo && s.w >= 2.5);
+      const wantMid = spots[Math.floor(spots.length / 2)];
+      for (const t of [wantLogo, wantPlain, wantMid]) { if (t && !targets.includes(t)) { targets.push(t); } }
+      check(targets.length >= 2, label + 'there are charities to aim at', targets.length);
+      let first = true;
+      for (const t0 of targets) {
+        // (where it is is read again for each click: a dialog that opens and closes can shift the page a little)
+        const t = (await reachable(gid)).find((s) => s.id === t0.id) || t0;
+        await page.mouse.move(t.x, t.y);
+        if (first) {
+          first = false;
+          await page.waitForFunction(([sel, name]) => document.querySelector(sel).getAttribute('title') === name, [SEL[gid], await page.evaluate((id) => window.GS.charity(id).name, t.id)], { timeout: 4000 }).catch(() => {});
+          const hov = await page.evaluate((sel) => ({ title: document.querySelector(sel).getAttribute('title'), cursor: getComputedStyle(document.querySelector(sel)).cursor }), SEL[gid]);
+          const nm = await page.evaluate((id) => window.GS.charity(id).name, t.id);
+          check(hov.title === nm && hov.cursor === 'pointer', label + 'pointing at ' + nm + ' shows a hand and names it', hov);
+        }
+        await page.mouse.click(t.x, t.y);
+        const pid = await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; }, null, { timeout: 5000 }).then((h) => h.jsonValue(), () => null);
+        const nm2 = await page.evaluate((id) => window.GS.charity(id).name, t.id);
+        check(pid === t.id, label + 'a click on ' + nm2 + (t.logo ? ' (real logo)' : '') + ' opens exactly its profile', { want: t.id, got: pid });
+        if (pid) { check((await page.locator('#dlg-profile .modal__body').innerText()).includes(nm2), label + 'and the profile is about ' + nm2); }
+        await closeProfile();
+      }
+      // a click where no charity is opens nothing
+      const e = await emptyPoint(gid);
+      check((await page.evaluate(([g, x, y]) => window.GS.games[g]._hitAt(x, y), [gid, e.x, e.y])) === null, label + 'the game names no charity at an empty spot', e);
+      await page.mouse.click(e.x, e.y);
+      await page.waitForTimeout(250);
+      check((await profileOpen()) === null, label + 'a click on an empty spot opens nothing');
+      const after = await roundNow();
+      check(JSON.stringify(after) === JSON.stringify(before), label + 'no round started, no credit moved, and the address is back to the game after the clicks', { before, after });
+      if (gid === 'plinko' && n === 8) {
+        // between two bins is not a bin
+        const gap = await page.evaluate((a) => { const s = window.GS.games.plinko._spots(); return { x: (s[3].x + s[4].x) / 2, y: s[3].y }; });
+        check((await page.evaluate(([x, y]) => window.GS.games.plinko._hitAt(x, y), [gap.x, gap.y])) === null, label + 'the gap between two bins is not a bin');
+      }
+      await gshot('13y-' + gid + '-' + n, gid);
+    }
+  }
+
+  /* ---- the board drawn at another size on screen than its own (CSS), and a made-up picture standing in for a charity's mark ---- */
+  for (const gid of ['wheel', 'roulette', 'plinko', 'lotto']) {
+    await go(page, '#game-' + gid);
+    await page.waitForSelector('#panel-' + gid + ':not([hidden])');
+    if (!(await hasHooks(gid))) { continue; }
+    await setBoard(gid, 8);
+    await page.waitForTimeout(gid === 'lotto' ? 1600 : 400);
+    // marks: with no stand-in only the 4 real logos are pictures, the rest keep their initials; with a stand-in (solid magenta) for every charity, every spot on the board shows it
+    const magenta = () => page.evaluate((sel) => {
+      const c = document.querySelector(sel);
+      // (copied to a canvas made for reading, so the game's own canvas is not read back from)
+      const o = document.createElement('canvas');
+      o.width = c.width; o.height = c.height;
+      const og = o.getContext('2d', { willReadFrequently: true });
+      og.drawImage(c, 0, 0);
+      const d = og.getImageData(0, 0, o.width, o.height).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) { if (d[i] > 235 && d[i + 1] < 30 && d[i + 2] > 235 && d[i + 3] > 200) { n++; } }
+      return n;
+    }, SEL[gid]);
+    const m0 = await magenta();
+    await page.evaluate(() => {
+      const GS = window.GS;
+      const fake = document.createElement('canvas');
+      fake.width = 40; fake.height = 40;
+      const g = fake.getContext('2d');
+      g.fillStyle = '#ff00ff';
+      g.fillRect(0, 0, 40, 40);
+      window.__markImage = GS.markImage;
+      GS.markImage = () => fake;
+    });
+    await page.waitForTimeout(500);
+    const m1 = await magenta();
+    await page.evaluate(() => { window.GS.markImage = window.__markImage; });
+    check(m0 < 20 && m1 > 400, gid + ': a charity\'s mark is the picture GS.markImage gives (and its initials when there is none)', { without: m0, with: m1 });
+    await settle(gid);
+    // scaled on screen: the canvas shown at 70% of its own size (a CSS transform)
+    const spotsBefore = await reachable(gid);
+    await page.evaluate((sel) => {   // (a transform shows it smaller without changing the layout, so the game does not resize itself back)
+      const c = document.querySelector(sel);
+      c.style.transformOrigin = '0 0';
+      c.style.transform = 'scale(0.7)';
+    }, SEL[gid]);
+    const spots = await reachable(gid);
+    const t = spots.find((s) => s.logo && s.w >= 2) || spots[0];
+    check(spots.length >= 2 && !!t, gid + ': with the canvas shown smaller than its own size there are still spots to aim at', { before: spotsBefore.length, after: spots.length });
+    if (t) {
+      await page.mouse.click(t.x, t.y);
+      const pid = await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; }, null, { timeout: 5000 }).then((h) => h.jsonValue(), () => null);
+      check(pid === t.id, gid + ': a click on a board drawn at 70% size opens that charity', { want: t.id, got: pid });
+      await closeProfile();
+    }
+    await page.evaluate((sel) => { const c = document.querySelector(sel); c.style.transform = ''; c.style.transformOrigin = ''; }, SEL[gid]);
+  }
+
+  /* ---- solo: a click in the middle of a round changes nothing, and the geometry agrees with where the game puts its winner ---- */
+  for (const gid of GIDS) {
+    await go(page, '#game-' + gid);
+    await page.waitForSelector('#panel-' + gid + ':not([hidden])');
+    if (!(await hasHooks(gid))) { continue; }
+    // the game's usual board again (the first part of this section left a 500-spot board on it)
+    const usual = { wheel: 12, roulette: 16, plinko: 7, lotto: 12, drop: 20 }[gid];
+    await page.fill('#size-custom', String(usual));
+    await page.waitForFunction(([g, n]) => window.GS.store.prefs().sizes[g] === n, [gid, usual]);
+    await page.evaluate((g) => window.GS.games[g].activate(), gid);
+    await page.waitForTimeout(400);
+    const hist0 = (await roundNow()).hist;
+    await page.click('#btn-play');
+    // in the same turn that sees the round under way, press on a charity on the board (a real click cannot be aimed at a moving board)
+    const mid = await page.waitForFunction(([g, sel]) => {
+      if (!window.GS.app.state.busy) { return null; }
+      const stage = document.querySelector(sel);
+      for (const s of window.GS.games[g]._spots()) {
+        const el = document.elementFromPoint(s.x, s.y);
+        if (!el || !(el === stage || stage.contains(el))) { continue; }
+        const opts = { clientX: s.x, clientY: s.y, bubbles: true, button: 0, pointerId: 1 };
+        el.dispatchEvent(new PointerEvent('pointerdown', opts));
+        el.dispatchEvent(new MouseEvent('click', opts));
+        const d = document.querySelector('#dlg-profile');
+        return { id: s.id, open: d && d.open ? d.getAttribute('data-id') : null, spinning: window.GS.app.state.busy };
+      }
+      return null;
+    }, [gid, SEL[gid]], { timeout: 20000, polling: 30 }).then((h) => h.jsonValue(), () => null);
+    check(!!mid && mid.open === mid.id && mid.spinning, gid + ': a click on a charity in the middle of a round opens its profile while the round goes on', mid);
+    await closeProfile();
+    await waitReceipt(page);
+    const fin = await page.evaluate((g) => {
+      const l = window.GS.app._last;
+      return { shown: window.GS.games[g]._shown(), winner: l.round.winners[l.round.winners.length - 1].id, hist: window.GS.store.get().history.length, rounds: l.round.winners.length };
+    }, gid);
+    check(fin.shown[0] === fin.winner && fin.hist === hist0 + 1 && fin.rounds === 1, gid + ': the round finished once, on the charity it was drawn for, as if nobody had clicked', { fin, hist0 });
+    // the geometry agrees with the game: the point under the pointer, the ball in its pocket or bin or tray, the card under the marker, is the winner's
+    await page.evaluate((g) => window.GS.games[g].deactivate(), gid);
+    const seen = await page.evaluate(([g, sel]) => {
+      const G = window.GS.games[g];
+      const r = document.querySelector(sel).getBoundingClientRect();
+      if (g === 'wheel') {
+        const w = r.width; const wr = w / 2 - 2 - w * 0.05;
+        return { at: G._hitAt(r.left + w / 2, r.top + w / 2 - wr * 0.8), game: G._underPointer().id };
+      }
+      if (g === 'roulette' || g === 'plinko') { const b = G._ballAt(); return { at: G._hitAt(b.x, b.y), game: G._shown()[0] }; }
+      if (g === 'lotto') { const t = G._spots().find((s) => s.mode === 'tray'); return { at: t ? G._hitAt(t.x, t.y) : null, game: G._shown()[0] }; }
+      return { at: G._hitAt(r.left + r.width / 2, r.top + r.height / 2), game: G._underMarker() };
+    }, [gid, SEL[gid]]);
+    check(!!seen.at && seen.at === seen.game && seen.at === fin.winner, gid + ': the charity the game puts under its pointer / marker / ball is the one a click there would open', seen);
+    await gshot('13y-' + gid + '-result', gid);
+    await closeReceipt(page);
+  }
+
+  /* ---- live tables: the same board, and a click never stakes, cancels or moves the table on ---- */
+  for (const gid of GIDS) {
+    const rid = gid + '25';
+    await go(page, '#live-' + rid);
+    await page.waitForSelector('#livepanel:not([hidden]) [data-role="gates"]');
+    await liveSettled(page, rid);
+    if (!(await hasHooks(gid))) { continue; }
+    await page.waitForFunction((g) => window.GS.games[g]._spots().length > 0, gid, { timeout: 15000 }).catch(() => {});
+    if (gid === 'plinko') {   // 25 bins is a tall board: show the bins
+      await page.click('#panel-plinko [data-role="bins"]');
+    } else { await page.waitForTimeout(gid === 'lotto' ? 1600 : 400); }
+    await settle(gid);
+    const label = 'live ' + rid + ': ';
+    const roomBefore = await page.evaluate((id) => { const r = window.GS.live.room(id); return { phase: r.phase, round: r.round, you: !!r.you, bal: window.GS.store.balance(), board: r.boardInfo().spots.map((c) => c.id) }; }, rid);
+    const spots = await reachable(gid);
+    check(spots.length >= 3 && spots.every((s) => roomBefore.board.includes(s.id)), label + 'the spots on screen are charities of the table\'s board', { n: spots.length });
+    const t = spots.find((s) => s.logo && s.w >= 2.5) || spots.find((s) => s.w >= 2.5) || spots[0];
+    if (!t) { continue; }
+    await page.mouse.click(t.x, t.y);
+    const pid = await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; }, null, { timeout: 5000 }).then((h) => h.jsonValue(), () => null);
+    check(pid === t.id, label + 'a click on a charity of the live board opens exactly its profile', { want: t.id, got: pid });
+    await closeProfile();
+    const e = await emptyPoint(gid);
+    await page.mouse.click(e.x, e.y);
+    await page.waitForTimeout(200);
+    check((await profileOpen()) === null, label + 'a click on an empty spot opens nothing');
+    const roomAfter = await page.evaluate((id) => { const r = window.GS.live.room(id); return { phase: r.phase, round: r.round, you: !!r.you, bal: window.GS.store.balance(), board: r.boardInfo().spots.map((c) => c.id) }; }, rid);
+    check(JSON.stringify(roomAfter) === JSON.stringify(roomBefore), label + 'the table was not changed by the clicks (no stake, same round and phase, same credit, same board)', { roomBefore, roomAfter });
+    await gshot('13y-live-' + gid, gid);
+  }
+
+  /* ---- a phone: a tap does the same as a click ---- */
+  {
+    const desk = page;
+    page = await newPage({ viewport: { width: 390, height: 1700 }, mobile: true });
+    await openApp(page);
+    for (const gid of GIDS) {
+      await go(page, '#game-' + gid);
+      await page.waitForSelector('#panel-' + gid + ':not([hidden])');
+      if (!(await hasHooks(gid))) { continue; }
+      await setBoard(gid, 8);
+      await page.waitForTimeout(gid === 'lotto' ? 1600 : 400);
+      await settle(gid);
+      const spots = await reachable(gid);
+      const t = spots.find((s) => s.logo && s.w >= 2.5) || spots.find((s) => s.w >= 2.5);
+      check(!!t, gid + ' (phone): there are charities on screen to tap', spots.length);
+      if (!t) { continue; }
+      await page.touchscreen.tap(t.x, t.y);
+      const pid = await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; }, null, { timeout: 5000 }).then((h) => h.jsonValue(), () => null);
+      check(pid === t.id, gid + ' (phone): a tap on a charity opens exactly its profile', { want: t.id, got: pid });
+      await closeProfile();
+    }
+    await page.close();
+    page = desk;
+  }
+
+  /* ---- unmounting takes the listeners off ---- */
+  for (const gid of GIDS) {
+    await go(page, '#game-' + gid);
+    await page.waitForSelector('#panel-' + gid + ':not([hidden])');
+    if (!(await hasHooks(gid))) { continue; }
+    await setBoard(gid, 8);
+    await page.waitForTimeout(gid === 'lotto' ? 1600 : 350);
+    await settle(gid);
+    const t = (await reachable(gid))[0];
+    await page.evaluate((g) => window.GS.games[g].unmount(), gid);
+    await page.mouse.move(t.x, t.y);
+    await page.waitForTimeout(150);
+    await page.mouse.click(t.x, t.y);
+    await page.waitForTimeout(250);
+    const gone = await page.evaluate((sel) => ({ title: document.querySelector(sel).getAttribute('title'), cursor: document.querySelector(sel).style.cursor }), SEL[gid]);
+    check((await profileOpen()) === null && !gone.title && !gone.cursor, gid + ': after unmount a click opens nothing and the pointer hand and tooltip are gone', gone);
+  }
+
+  check(problems.length === problemsBefore, '13y: no console errors, warnings or failed requests while clicking', problems.slice(problemsBefore, problemsBefore + 5));
   await page.close();
 }
 

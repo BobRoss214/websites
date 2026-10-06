@@ -34,6 +34,9 @@
   var dealtAt = 0;       // live table: when the resting strip was last dealt, and which charities were backed then
   var dealtFor = '';
   var rolling = null;    // the roll in progress (an object that stands for it), or null
+  var focusX = 0;        // where in the strip the marker is right now (set by place)
+  var offHit = null;     // removes the click-a-charity listeners
+  var offSize = null;    // stops watching the view's size
   var settleRoll = null; // ends that roll at once (see abort)
 
   var REST_CARDS = 11;   // resting strip holds this many cards, marker on the middle one
@@ -85,10 +88,46 @@
   }
 
   function place(x) {
+    focusX = x;
     el.strip.style.transform = 'translate3d(' + (viewW / 2 - x).toFixed(2) + 'px,0,0)';
   }
 
   function cardCenter(i) { return i * cardStep + cardW / 2; }
+
+  /**
+   * The card under a screen point, as the strip is right now (it may be rolling), or null: off the cards, or in the gap between two. The card
+   * is found from the strip's position, then checked against where the page really drew it (the winner's card is drawn a little bigger).
+   */
+  function hitAt(clientX, clientY) {
+    if (!el.view || !el.strip || !cardStep) { return null; }
+    if (spinning || rolling || locked) { return null; }      // the reel is moving or the game is busy: a card is not a target then
+    var cards = el.strip.children;
+    if (!cards.length) { return null; }
+    var v = el.view.getBoundingClientRect();
+    if (clientX < v.left || clientX > v.right || clientY < v.top || clientY > v.bottom) { return null; }
+    var at = (clientX - v.left) - viewW / 2 + focusX;      // where that is along the strip
+    var c = Math.floor(at / cardStep);
+    for (var k = c - 1; k <= c + 1; k++) {
+      if (k < 0 || k >= cards.length) { continue; }
+      var r = cards[k].getBoundingClientRect();
+      if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) { return cards[k].getAttribute('data-id') || null; }
+    }
+    return null;
+  }
+
+  /** For tests: the middle of every card that is on show (where a click lands on that card), measured from the page. */
+  function spots() {
+    var v = el.view.getBoundingClientRect();
+    var out = [];
+    var cards = el.strip.children;
+    for (var i = 0; i < cards.length; i++) {
+      var r = cards[i].getBoundingClientRect();
+      var x = r.left + r.width / 2;
+      if (x < v.left + 4 || x > v.right - 4) { continue; }
+      out.push({ i: i, id: cards[i].getAttribute('data-id'), x: x, y: r.top + r.height / 2, w: r.width });
+    }
+    return out;
+  }
 
   /** n cards for filler: weighted by stake on a live table, otherwise uniform from the pool; never the same twice in a row. */
   function randomCards(n, prev) {
@@ -302,17 +341,18 @@
       el.result = container.querySelector('[data-role="result"]');
       el.open = container.querySelector('[data-role="open"]');
       el.open.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
-      // a click or tap on a card opens that charity's profile, but only while the reel is at rest and the game is not busy (the Open crate button keeps its own click)
-      el.view.addEventListener('click', function (e) {
-        var card = e.target.closest ? e.target.closest('.dcard[data-id]') : null;
-        if (!card || spinning || rolling || locked || !GS.ui.charity) { return; }
-        GS.ui.charity.openProfile(card.getAttribute('data-id'));
-      });
-      U.observeSize(el.view, function () {
+      offHit = GS.ui.charityHit(el.view, hitAt);
+      offSize = U.observeSize(el.view, function () {
         if (spinning || !current.length) { return; }
         measure();
         place(cardCenter(MID) + restOffset);
       });
+    },
+
+    /** Takes the game's listeners off again (nothing in the page unmounts a game today; this is for whoever does). */
+    unmount: function () {
+      if (offHit) { offHit(); offHit = null; }
+      if (offSize) { offSize(); offSize = null; }
     },
 
     setSize: function (n) { size = n; updateNote(); },
@@ -384,6 +424,9 @@
     },
 
     playLive: function (opts) { return rollOnce(opts.winner, false, opts.durationMs); },
+
+    _hitAt: hitAt,
+    _spots: spots,
 
     /** What the marker is really over (measured from the page, not remembered), once a roll has finished. */
     _shown: function () { if (!result) { return []; } var id = GS.games.drop._underMarker(); return id ? [id] : []; },

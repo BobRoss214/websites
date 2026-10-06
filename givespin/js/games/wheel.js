@@ -24,6 +24,7 @@
   var RUN_FILL = '#101d29';   // a run of filler slices too thin to tell apart is drawn as one dark wedge
   var THIN_PX = 1.4;          // a filler slice narrower than this (at the rim) is part of such a run
   var BULBS = 30;             // lights round the rim
+  var MARK_MIN = 14;          // a charity's mark is drawn on its slice only when it can be this many px across
 
   var el = {};
   var api = null;
@@ -43,6 +44,11 @@
   var ribs = [];           // hairlines inside those runs, as [cos, sin] pairs
   var pick = '';          // id of the charity you backed (solo), or empty
   var labels = [];
+  var marks = [];          // the round charity mark at the rim end of each slice that has room for one: { d: diameter, x: centre, reserve: space taken from its label }, else null
+  var sprites = {};        // the marks as small pictures (see markSprite)
+  var spriteN = 0;
+  var offHit = null;       // removes the click-a-charity listeners
+  var offSize = null;      // stops watching the stage's size
   var fresh = false;       // true when the on-screen slices have not been spun yet
 
   var angle = Math.random() * TAU;
@@ -103,6 +109,8 @@
     el.canvas.style.width = csize + 'px';
     el.canvas.style.height = csize + 'px';
     under = over = shade = bulbOn = disc = null;
+    sprites = {};
+    spriteN = 0;
     layoutBoard();
     draw(performance.now());
   }
@@ -133,8 +141,8 @@
   }
 
   /** The label for a slice on a solo wheel, or for a filler: one line of text as big as the slice's width allows (null when it is too thin). */
-  function plainLabel(i, a, wr, hubR, dim) {
-    var maxW = wr - hubR - csize * 0.085;
+  function plainLabel(i, a, wr, hubR, dim, reserve) {
+    var maxW = wr - hubR - csize * 0.085 - (reserve || 0);
     // slices are fat at the rim and thin near the centre, so cap the text height by the chord too
     var chord = wr * 0.7 * a;
     var maxFs = Math.min(csize * 0.05, chord * 0.62);
@@ -150,6 +158,22 @@
       text = text.slice(0, -2).replace(/\s+$/, '') + '…';
     }
     var ink = dim ? 'rgba(206,220,231,0.6)' : U.inkOn(fills[i]);
+    if (reserve && !dim && (text !== segs[i].short || fs < maxFs * 0.8)) {
+      // the mark takes room from the name: a long name may read better split over two lines (as on a live wheel) than squeezed or cut short
+      var two = twoLines(segs[i].short);
+      if (two.length === 2) {
+        var rOut = wr - csize * 0.03 - reserve;
+        var xMin = hubR + csize * 0.055;
+        var widen = Math.tan(Math.min(a, 3) / 2);
+        for (var f2 = Math.floor(maxFs); f2 >= Math.ceil(fs * 1.2); f2--) {
+          ctx.font = '700 ' + f2 + 'px ' + FONT;
+          var w2 = widest(two);
+          if (rOut - w2 >= xMin && (rOut - w2) * widen >= f2 * 1.1) {
+            return { lines: two, fs: f2, font: '700 ' + f2 + 'px ' + FONT, h: f2 * 2.2, ink: ink, shadow: ink === '#FFFFFF' };
+          }
+        }
+      }
+    }
     return { lines: [text], fs: fs, font: '700 ' + fs + 'px ' + FONT, h: fs * 1.1, ink: ink, shadow: !dim && ink === '#FFFFFF' };
   }
 
@@ -157,8 +181,8 @@
    * The label for a charity somebody backed: the biggest one that fits its slice. A long name is split over two lines when that
    * lets it be bigger, and its share of the pot goes underneath. Null when the slice is too thin to carry any text.
    */
-  function liveLabel(i, a, wr, hubR) {
-    var rOut = wr - csize * 0.03;                 // the text ends here, at the rim
+  function liveLabel(i, a, wr, hubR, reserve) {
+    var rOut = wr - csize * 0.03 - (reserve || 0);   // the text ends here, at the rim (or at the charity's mark, which sits on the rim)
     var xMin = hubR + csize * 0.055;              // and stops short of the hub
     var widen = Math.tan(Math.min(a, 3) / 2);     // half the slice's width at distance x from the centre is x * widen
     var name = segs[i].short;
@@ -174,7 +198,7 @@
         if (rOut - w >= xMin && (rOut - w) * widen >= h / 2) { best = { lines: variants[k], fs: fs, w: w, h: h }; }
       }
     }
-    if (!best) { return plainLabel(i, a, wr, hubR, false); }
+    if (!best) { return plainLabel(i, a, wr, hubR, false, reserve); }
     var ink = U.inkOn(fills[i]);
     var lb = { lines: best.lines, fs: best.fs, font: '700 ' + best.fs + 'px ' + FONT, h: best.h, ink: ink, shadow: ink === '#FFFFFF' };
     var pct = shareAt[i];
@@ -195,6 +219,7 @@
    */
   function layoutBoard() {
     labels = [];
+    marks = [];
     items = [];
     ribs = [];
     fills = [];
@@ -225,11 +250,22 @@
     }
     for (i = 0; i < n; i++) {
       var a = bounds[i + 1] - bounds[i];
+      var mk = thin(i) ? null : markFor(a, wr);
+      var reserve = mk ? mk.reserve : 0;
+      marks.push(mk);
       if (thin(i)) { labels.push(null); }
-      else if (fillerAt[i]) { labels.push(plainLabel(i, a, wr, hubR, true)); }
-      else if (field) { labels.push(liveLabel(i, a, wr, hubR)); }
-      else { labels.push(plainLabel(i, a, wr, hubR, false)); }
+      else if (fillerAt[i]) { labels.push(plainLabel(i, a, wr, hubR, true, reserve)); }
+      else if (field) { labels.push(liveLabel(i, a, wr, hubR, reserve)); }
+      else { labels.push(plainLabel(i, a, wr, hubR, false, reserve)); }
     }
+  }
+
+  /** The charity's round mark at the rim end of a slice: as wide as the slice allows (and no wider than a twelfth of the wheel), or null when that is under 14 px. */
+  function markFor(a, wr) {
+    var rim = wr - csize * 0.027;
+    var d = Math.min(csize * 0.085, 2 * (rim - csize * 0.05) * Math.sin(Math.min(a, Math.PI) / 2) * 0.8);
+    if (d < MARK_MIN) { return null; }
+    return { d: d, x: rim - d / 2, reserve: d + 5 };
   }
 
   /* --------------------------------------------------------------- drawing */
@@ -330,6 +366,67 @@
     bulbOn = bc;
   }
 
+  /** A charity's round mark centred on (x, y), `d` across, on context `g`: its logo or emblem `img` on white when it has loaded, otherwise its initials on its colour. */
+  function paintMark(g, ch, img, x, y, d) {
+    var r = d / 2;
+    g.save();
+    g.beginPath();
+    g.arc(x, y, r, 0, TAU);
+    if (img) {
+      g.fillStyle = '#fff';
+      g.fill();
+      var iw = img.naturalWidth || img.width || 1;
+      var ih = img.naturalHeight || img.height || 1;
+      var k = Math.min(d * 0.76 / iw, d * 0.76 / ih);
+      g.save();
+      g.clip();
+      g.drawImage(img, x - iw * k / 2, y - ih * k / 2, iw * k, ih * k);
+      g.restore();
+    } else {
+      var m = GS.mono(ch);
+      g.fillStyle = ch.accent;
+      g.fill();
+      g.fillStyle = U.inkOn(ch.accent);
+      g.font = '800 ' + (d * (m.length > 3 ? 0.27 : m.length > 2 ? 0.33 : 0.4)) + 'px ' + FONT;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(m, x, y + d * 0.03);
+    }
+    g.beginPath();
+    g.arc(x, y, r - 1, 0, TAU);
+    g.lineWidth = 2;
+    g.strokeStyle = img ? ch.accent : 'rgba(255,255,255,0.8)';
+    g.stroke();
+    g.restore();
+  }
+
+  /** The mark as a small picture of its own (painted once, and again when its logo has loaded): a wheel repaints every slice every frame, and a clip and a ring for each of up to a hundred marks would be slow. */
+  function markSprite(ch, d) {
+    var img = GS.markImage(ch);
+    var px = Math.max(2, Math.ceil(d * dpr));
+    var key = ch.id + '|' + px;
+    var e = sprites[key];
+    if (e && e.img === img) { return e.c; }
+    var c = document.createElement('canvas');
+    c.width = px;
+    c.height = px;
+    var g = c.getContext('2d');
+    g.setTransform(px / d, 0, 0, px / d, 0, 0);
+    paintMark(g, ch, img, d / 2, d / 2, d);
+    if (!e) {
+      if (spriteN >= 400) { sprites = {}; spriteN = 0; }   // (a live wheel's slices change size with every bet: do not keep the pictures of sizes it has left)
+      spriteN += 1;
+    }
+    sprites[key] = { c: c, img: img };
+    return c;
+  }
+
+  function drawMark(c, ch, x, y, d, alpha) {
+    if (alpha < 1) { c.globalAlpha = alpha; }
+    c.drawImage(markSprite(ch, d), x - d / 2, y - d / 2, d, d);
+    if (alpha < 1) { c.globalAlpha = 1; }
+  }
+
   /** Paints the slices and their labels, turned to `rot`, on a context whose origin is the middle of the wheel. */
   function paintDisc(c, rot) {
     var n = segs.length;
@@ -365,12 +462,15 @@
 
     c.save();
     c.rotate(rot);
-    var lx = wr - csize * 0.03;
     for (j = 0; j < n; j++) {
       var lb = labels[j];
-      if (!lb) { continue; }
+      var mk = marks[j];
+      if (!lb && !mk) { continue; }
+      var lx = wr - csize * 0.03 - (mk ? mk.reserve : 0);
       c.save();
       c.rotate((bounds[j] + bounds[j + 1]) / 2);
+      if (mk) { drawMark(c, segs[j], mk.x, 0, mk.d, fillerAt[j] ? 0.45 : 1); }
+      if (!lb) { c.restore(); continue; }
       c.font = lb.font;
       c.textAlign = 'right';
       c.textBaseline = 'middle';
@@ -492,6 +592,40 @@
   function indexAt(a) {
     for (var i = 0; i < segs.length; i++) { if (a >= bounds[i] && a < bounds[i + 1]) { return i; } }
     return Math.max(0, segs.length - 1);
+  }
+
+  /* ----------------------------------------------------- click a charity */
+
+  /** A screen point as a point on the wheel: px from its middle, in the board's own size (the canvas may be drawn at another size on screen). Null when the wheel is not on show. */
+  function boardPoint(clientX, clientY) {
+    if (!el.canvas || !csize) { return null; }
+    var rect = el.canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) { return null; }
+    return { x: (clientX - rect.left) * csize / rect.width - csize / 2, y: (clientY - rect.top) * csize / rect.height - csize / 2 };
+  }
+
+  /**
+   * The charity whose slice is under a screen point, turned with the wheel as it is right now (it may be spinning), or null: off the
+   * wheel, on the hub, or on a slice narrower than a pixel and a half where the point could not be told from its neighbour's.
+   */
+  function hitAt(clientX, clientY) {
+    var p = boardPoint(clientX, clientY);
+    if (!p || !segs.length) { return null; }
+    var r = Math.sqrt(p.x * p.x + p.y * p.y);
+    if (r > wheelRadius() || r < csize * 0.115 * 1.22) { return null; }
+    var i = indexAt(U.mod(Math.atan2(p.y, p.x) - angle, TAU));
+    if (!segs[i] || (bounds[i + 1] - bounds[i]) * r < THIN_PX) { return null; }
+    return segs[i].id;
+  }
+
+  /** For tests: the middle of every slice on screen (where a click lands on that slice), and how wide the slice is there. */
+  function spots() {
+    var rect = el.canvas.getBoundingClientRect();
+    var rr = wheelRadius() * 0.8;
+    return segs.map(function (c, i) {
+      var a = angle + (bounds[i] + bounds[i + 1]) / 2;
+      return { i: i, id: c.id, x: rect.left + (csize / 2 + Math.cos(a) * rr) * rect.width / csize, y: rect.top + (csize / 2 + Math.sin(a) * rr) * rect.height / csize, w: (bounds[i + 1] - bounds[i]) * rr, mark: !!marks[i] };
+    });
   }
 
   function segmentUnderPointer() {
@@ -675,8 +809,15 @@
       el.result = container.querySelector('[data-role="result"]');
       ctx = el.canvas.getContext('2d');
       el.hub.addEventListener('click', function () { if (!locked && !field) { api.requestPlay(); } });
-      U.observeSize(el.stage, resize);
+      offHit = GS.ui.charityHit(el.canvas, hitAt);
+      offSize = U.observeSize(el.stage, resize);
       resize();
+    },
+
+    /** Takes the game's listeners off again (nothing in the page unmounts a game today; this is for whoever does). */
+    unmount: function () {
+      if (offHit) { offHit(); offHit = null; }
+      if (offSize) { offSize(); offSize = null; }
     },
 
     setSize: function (n) { size = n; if (!spinning && !field && pool.length) { rebuild(false); } },
@@ -762,6 +903,8 @@
     /** Live table: spin the stake-sized slices to the winner. */
     playLive: function (opts) { return spinOnce(opts.winner, false, opts.durationMs); },
 
+    _hitAt: hitAt,
+    _spots: spots,
     _underPointer: function () { var i = segmentUnderPointer(); return i >= 0 ? segs[i] : null; },
     _slices: function () { return segs.length; },
     _shown: function () { var i = glowIdx >= 0 ? glowIdx : segmentUnderPointer(); return i >= 0 && segs[i] ? [segs[i].id] : []; }

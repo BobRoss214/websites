@@ -57,6 +57,9 @@
 
   var pick = '';              // id of the charity you backed (solo), or empty
   var livePick = '';          // the charity you have backed at the live table you are watching, or empty
+  var offHit = null;          // removes the click-a-charity listeners
+  var offSize = null;         // stops watching the stage's size
+  var MARK_MIN = 14;          // a charity's logo or emblem is drawn in its pocket only when it can be this many px across on screen
 
   function count() { return kit.sizeNow(size); }
   /** The charity you have put your stake on at the live table you are watching (or empty): its pockets get a gold edge. */
@@ -136,6 +139,29 @@
   /** Which colour pocket `i` is: 0 red, 1 black, 2 green (the first pocket); a live filler pocket is the muted twin (3 to 5). */
   function pocketGroup(i) { return (field && !backedAt[i] ? 3 : 0) + (i === 0 ? 2 : (i % 2 ? 0 : 1)); }
   function pocketColor(i) { return PALETTE[pocketGroup(i)]; }
+
+  /** A charity's mark (its loaded logo or emblem `img`) as a round badge `d` across, centred on the origin: the picture on white, with a ring in the charity's colour. */
+  function drawMark(img, ch, d, alpha) {
+    var r = d / 2;
+    var iw = img.naturalWidth || img.width || 1;
+    var ih = img.naturalHeight || img.height || 1;
+    var k = Math.min(d * 0.76 / iw, d * 0.76 / ih);
+    if (alpha < 1) { ctx.globalAlpha = alpha; }
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, TAU);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
+    ctx.drawImage(img, -iw * k / 2, -ih * k / 2, iw * k, ih * k);
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(0, 0, r - 0.75, 0, TAU);
+    ctx.lineWidth = Math.max(1.5, d * 0.07);
+    ctx.strokeStyle = ch.accent;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
 
   function annulus(g, r0, r1, a0, a1) {
     ctx.beginPath();
@@ -299,22 +325,30 @@
       }
 
       var mfs = Math.max(0, Math.min(arc * 0.34, 19));
+      var mdm = Math.min(arc * 0.74, (g.pockOut - g.pockIn) * 0.6);     // across the charity's round mark: as wide as the pocket allows, clear of the cap at the rim end
       if (mfs * z >= 6.5) {
         for (var jj = iFrom; jj <= iTo; jj++) {
           var j = U.mod(jj, n);
           var ca = wheelA + (jj + 0.5) * seg;
-          var m2 = GS.mono(pockets[j]);
+          var mimg = mdm * z >= MARK_MIN ? GS.markImage(pockets[j]) : null;
+          var m2 = mimg ? '' : GS.mono(pockets[j]);
           ctx.save();
           ctx.translate(Math.cos(ca) * midR, Math.sin(ca) * midR);
           ctx.rotate(ca + Math.PI / 2);
-          ctx.fillStyle = live && !backedAt[j] ? 'rgba(255,255,255,0.4)' : '#fff';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.font = '800 ' + (mfs * (m2.length > 2 ? 0.82 : 1)) + 'px "Sora", "Inter", sans-serif';
-          ctx.fillText(m2, 0, 2);
+          if (mimg) {
+            drawMark(mimg, pockets[j], mdm, live && !backedAt[j] ? 0.45 : 1);
+          } else {
+            ctx.fillStyle = live && !backedAt[j] ? 'rgba(255,255,255,0.4)' : '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = '800 ' + (mfs * (m2.length > 2 ? 0.82 : 1)) + 'px "Sora", "Inter", sans-serif';
+            ctx.fillText(m2, 0, 2);
+          }
           if (cw >= 340 && arc >= 30 && !live) {
             ctx.font = '700 ' + Math.max(8, mfs * 0.5) + 'px "Inter", sans-serif';
             ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             ctx.fillText(String(j), 0, -(g.pockOut - g.pockIn) * 0.36);
           }
           ctx.restore();
@@ -484,6 +518,61 @@
   }
 
   /* ------------------------------------------------------------ animation */
+
+  /* --------------------------------------------------- click a charity */
+
+  /** A screen point as a point on the canvas, in the board's own px (the canvas may be drawn at another size on screen). Null when the wheel is not on show. */
+  function canvasPoint(clientX, clientY) {
+    if (!el.canvas || !cw) { return null; }
+    var rect = el.canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) { return null; }
+    return { x: (clientX - rect.left) * cw / rect.width, y: (clientY - rect.top) * cw / rect.height };
+  }
+
+  /** The small map of the whole wheel in the corner (drawn while the camera is in close on a huge wheel): its middle and radius on the canvas, or null. */
+  function mapSpot() {
+    if (!G || !G.big || !(cam.z > G.zo * 1.3)) { return null; }
+    return { x: cw - 34 - 12, y: 34 + 12, r: 34 + 6 };
+  }
+
+  /**
+   * The charity whose pocket is under a screen point, as the wheel and the camera are right now, or null: off the pockets, on the corner map,
+   * or on a pocket under a pixel and a half wide on screen (where a point cannot be told from its neighbour's).
+   */
+  function hitAt(clientX, clientY) {
+    var p = canvasPoint(clientX, clientY);
+    var n = pockets.length;
+    if (!p || !G || !n) { return null; }
+    var mp = mapSpot();
+    if (mp && Math.hypot(p.x - mp.x, p.y - mp.y) <= mp.r) { return null; }
+    var bx = (p.x - cw / 2) / cam.z + cam.fx;
+    var by = (p.y - cw / 2) / cam.z + cam.fy;
+    var r = Math.hypot(bx, by);
+    if (r > G.pockOut || r < G.pockIn) { return null; }
+    var seg = TAU / n;
+    if (r * seg * cam.z < 1.5) { return null; }
+    var i = Math.floor(U.mod(Math.atan2(by, bx) - wheelA, TAU) / seg) % n;
+    return pockets[i] ? pockets[i].id : null;
+  }
+
+  /** For tests: the middle of every pocket that is on the canvas (where a click lands on that pocket), how wide the pocket is there on screen, and whether it holds a round mark. */
+  function spots() {
+    var rect = el.canvas.getBoundingClientRect();
+    var n = pockets.length;
+    var seg = TAU / n;
+    var rr = (G.pockIn + G.pockOut) / 2;
+    var mp = mapSpot();
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var a = wheelA + (i + 0.5) * seg;
+      var sx = (Math.cos(a) * rr - cam.fx) * cam.z + cw / 2;
+      var sy = (Math.sin(a) * rr - cam.fy) * cam.z + cw / 2;
+      if (sx < 2 || sy < 2 || sx > cw - 2 || sy > cw - 2) { continue; }
+      if (mp && Math.hypot(sx - mp.x, sy - mp.y) <= mp.r + 2) { continue; }
+      out.push({ i: i, id: pockets[i].id, x: rect.left + sx * rect.width / cw, y: rect.top + sy * rect.height / cw, w: rr * seg * cam.z });
+    }
+    return out;
+  }
 
   function pocketUnder(angle) {
     var n = pockets.length;
@@ -804,8 +893,15 @@
       el.spin = container.querySelector('[data-role="spin"]');
       ctx = el.canvas.getContext('2d');
       el.spin.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
-      U.observeSize(el.stage, resize);
+      offHit = GS.ui.charityHit(el.canvas, hitAt);
+      offSize = U.observeSize(el.stage, resize);
       resize();
+    },
+
+    /** Takes the game's listeners off again (nothing in the page unmounts a game today; this is for whoever does). */
+    unmount: function () {
+      if (offHit) { offHit(); offHit = null; }
+      if (offSize) { offSize(); offSize = null; }
     },
 
     setSize: function (n) { size = n; if (!spinning && !field) { rebuild(); } },
@@ -864,6 +960,14 @@
     /** Live table: spin to the winner with the stake-weighted pockets already on the wheel. */
     playLive: function (opts) { return spinOnce(opts.winner, false, opts.durationMs); },
 
+    _hitAt: hitAt,
+    _spots: spots,
+    /** For tests: where the ball is on screen. */
+    _ballAt: function () {
+      var rect = el.canvas.getBoundingClientRect();
+      var bp = ballPos(G);
+      return { x: rect.left + ((bp.x - cam.fx) * cam.z + cw / 2) * rect.width / cw, y: rect.top + ((bp.y - cam.fy) * cam.z + cw / 2) * rect.height / cw };
+    },
     _shown: function () { return winIdx >= 0 && ballMode === 'pocket' && pockets[winIdx] ? [pockets[winIdx].id] : []; },
     _pockets: function () { return pockets.length; },
     _ring: function () { return pockets.map(function (c) { return c.id; }); },

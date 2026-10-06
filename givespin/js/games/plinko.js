@@ -48,6 +48,9 @@
   var legendHTML = '';    // what the legend list under the board currently holds
 
   var pick = '';          // id of the charity you backed (solo), or empty
+  var offHit = null;      // removes the click-a-charity listeners
+  var offSize = null;     // stops watching the stage's size
+  var MARK_MIN = 14;      // a charity's logo or emblem is drawn in its bin only when it can be this many px across on screen
 
   function count() { return kit.sizeNow(size); }
   function isBig() { return bins.length > 9; }
@@ -130,7 +133,7 @@
     // on a touch screen a finger sliding up or down scrolls the page (a board that grabbed every touch would trap it: on a phone the
     // board fills most of the screen), and a sideways drag looks around; a mouse can drag any way, and the Top and Bins buttons go up and down
     el.canvas.style.touchAction = isBig() ? 'pan-y' : '';
-    el.canvas.style.cursor = isBig() ? 'grab' : '';
+    el.canvas.classList.toggle('is-pan', isBig());     // the grab hand comes from the stylesheet, so the pointer hand over a charity can replace it and give it back
     if (geo && !busy && winBin < 0 && keepView !== true) { lookTop(true); }
     draw(performance.now());
   }
@@ -156,6 +159,27 @@
     }
     if (keep > 0) { trail.splice(0, keep); }
     if (trail.length > 260) { trail.splice(0, trail.length - 260); }
+  }
+
+  /** A charity's mark (its loaded logo or emblem `img`) as a round badge `d` across at (x, y): the picture on white, with a ring in the charity's colour. */
+  function drawMark(img, ch, x, y, d) {
+    var r = d / 2;
+    var iw = img.naturalWidth || img.width || 1;
+    var ih = img.naturalHeight || img.height || 1;
+    var k = Math.min(d * 0.76 / iw, d * 0.76 / ih);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, TAU);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.clip();
+    ctx.drawImage(img, x - iw * k / 2, y - ih * k / 2, iw * k, ih * k);
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(x, y, r - 0.75, 0, TAU);
+    ctx.lineWidth = Math.max(1.5, d * 0.07);
+    ctx.strokeStyle = ch.accent;
+    ctx.stroke();
   }
 
   function draw(t) {
@@ -216,7 +240,20 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         var sdx = g.dx * z;              // a bin's width on screen
-        if (sdx >= 15) {
+        var markD = Math.min(g.dx * 0.62, 46);                                    // across the charity's round mark, if it has one to show
+        var markImg = markD * z >= MARK_MIN ? GS.markImage(ch) : null;
+        var below = 0;                                                            // how far down the bin the top part (mark or letters, and share) reaches
+        if (markImg) {
+          drawMark(markImg, ch, bx + bw / 2, g.binTop + 6 + markD / 2, markD);
+          below = 6 + markD;
+          if (field && binShare[b]) {
+            ctx.fillStyle = '#ffc542';
+            ctx.font = '800 ' + Math.max(9, Math.min(sdx * 0.2, 14)) / z + 'px "Sora", system-ui, sans-serif';
+            ctx.fillText(binShare[b], bx + bw / 2, g.binTop + below + 9 / z);
+            ctx.fillStyle = '#fff';
+            below += 18 / z;
+          }
+        } else if (sdx >= 15) {
           var mono = GS.mono(ch);
           var mfs = Math.max(8, Math.min(sdx * 0.3, 20)) * (mono.length > 2 ? 0.8 : 1) / z;
           ctx.font = '800 ' + mfs + 'px "Sora", system-ui, sans-serif';
@@ -235,7 +272,7 @@
           var fs = Math.max(9, Math.min(12, sdx * (g.big ? 0.4 : 0.17))) / z;
           ctx.font = '600 ' + fs + 'px "Inter", system-ui, sans-serif';
           ctx.textAlign = 'left';
-          var maxLen = g.binH - g.dx * 0.55 - 12;
+          var maxLen = g.binH - Math.max(g.dx * 0.55, below + 4) - 12;
           var label = ch.short;
           while (ctx.measureText(label).width > maxLen && label.length > 3) { label = label.slice(0, -2).replace(/\s+$/, '') + '…'; }
           ctx.fillStyle = 'rgba(255,255,255,0.92)';
@@ -409,6 +446,60 @@
     if (raf || !active) { return; }
     last = performance.now();
     raf = requestAnimationFrame(loop);
+  }
+
+  /* ----------------------------------------------------- click a charity */
+
+  /** Where the picture sits on screen: the canvas without its border, which the picture is squeezed into. */
+  function pictureBox() {
+    var rect = el.canvas.getBoundingClientRect();
+    var bl = el.canvas.clientLeft;
+    var bt = el.canvas.clientTop;
+    return { left: rect.left + bl, top: rect.top + bt, w: rect.width - 2 * bl, h: rect.height - 2 * bt };
+  }
+
+  /** A screen point as a point on the board's canvas, in the board's own px (the canvas may be drawn at another size on screen). Null when the board is not on show. */
+  function canvasPoint(clientX, clientY) {
+    if (!el.canvas || !geo || !W || !H) { return null; }
+    var box = pictureBox();
+    if (!(box.w > 0) || !(box.h > 0)) { return null; }
+    return { x: (clientX - box.left) * W / box.w, y: (clientY - box.top) * H / box.h };
+  }
+
+  /**
+   * The charity whose bin is under a screen point, as the camera is right now (a big board is zoomed and scrolled), or null: above the bins,
+   * between two bins, on the scroll bar, or in a bin under a pixel and a half wide on screen. Pegs and the ball are not charities.
+   */
+  function hitAt(clientX, clientY) {
+    var p = canvasPoint(clientX, clientY);
+    if (!p || !bins.length) { return null; }
+    var g = geo;
+    if (p.x < 0 || p.y < 0 || p.x > W || p.y > H || (g.big && p.x > W - 8)) { return null; }
+    var bx = (p.x - W / 2) / cam.z + cam.x;
+    var by = (p.y - H / 2) / cam.z + cam.y;
+    if (by < g.binTop || by > g.binTop + g.binH) { return null; }
+    var left = g.cx - g.n * g.dx / 2;
+    var b = Math.floor((bx - left) / g.dx);
+    if (b < 0 || b >= g.n || !bins[b]) { return null; }
+    var inset = g.big ? 1.5 : 3;                      // the gap the bins are drawn with
+    if (bx < left + b * g.dx + inset || bx > left + (b + 1) * g.dx - inset) { return null; }
+    if ((g.dx - 2 * inset) * cam.z < 1.5) { return null; }
+    return bins[b].id;
+  }
+
+  /** For tests: the middle of every bin that is on the canvas (where a click lands on that bin), and how wide the bin is there on screen. */
+  function spots() {
+    var box = pictureBox();
+    var g = geo;
+    var out = [];
+    if (!g) { return out; }
+    var sy = (g.binTop + g.binH / 2 - cam.y) * cam.z + H / 2;
+    for (var b = 0; b < bins.length; b++) {
+      var sx = (binCenter(b) - cam.x) * cam.z + W / 2;
+      if (sx < 4 || sx > W - 10 || sy < 2 || sy > H - 2) { continue; }
+      out.push({ i: b, id: bins[b].id, x: box.left + sx * box.w / W, y: box.top + sy * box.h / H, w: (g.dx - (g.big ? 3 : 6)) * cam.z });
+    }
+    return out;
   }
 
   /* ------------------------------------------------------------------ logic */
@@ -644,8 +735,15 @@
       var endDrag = function () { drag = null; };
       el.canvas.addEventListener('pointerup', endDrag);
       el.canvas.addEventListener('pointercancel', endDrag);
-      U.observeSize(el.stage, resize);
+      offHit = GS.ui.charityHit(el.canvas, hitAt);
+      offSize = U.observeSize(el.stage, resize);
       resize();
+    },
+
+    /** Takes the game's listeners off again (nothing in the page unmounts a game today; this is for whoever does). */
+    unmount: function () {
+      if (offHit) { offHit(); offHit = null; }
+      if (offSize) { offSize(); offSize = null; }
     },
 
     setSize: function (n) { size = n; if (!busy && !field) { rebuild(); } },
@@ -717,6 +815,15 @@
       });
     },
 
+    _hitAt: hitAt,
+    _spots: spots,
+    /** For tests: where the ball is on screen (null when there is none). */
+    _ballAt: function () {
+      if (!ball) { return null; }
+      var box = pictureBox();
+      return { x: box.left + ((ball.x - cam.x) * cam.z + W / 2) * box.w / W, y: box.top + ((ball.y - cam.y) * cam.z + H / 2) * box.h / H };
+    },
+    _camera: function () { return { x: cam.x, y: cam.y, z: cam.z, tx: cam.tx, ty: cam.ty, tz: cam.tz }; },
     _winningBin: function () { return winBin >= 0 ? bins[winBin] : null; },
     _shown: function () { return winBin >= 0 ? [bins[winBin].id] : []; },
     _bins: function () { return bins.length; },

@@ -53,6 +53,8 @@
 
   var pick = '';         // id of the charity you backed (solo), or empty
   var livePick = '';     // the charity you have backed at the live table you are watching, or empty
+  var offHit = null;     // removes the click-a-charity listeners
+  var offSize = null;    // stops watching the stage's size
 
   function count() { return kit.sizeNow(size); }
   /** The charity you have put your stake on at the live table you are watching (or empty): its balls get a gold ring. */
@@ -325,16 +327,33 @@
       ctx.fill();
     }
     if (text) {
-      var m = GS.mono(b.ch);
-      ctx.beginPath();
-      ctx.arc(x, y, r * 0.62, 0, TAU);
-      ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      ctx.fill();
-      ctx.fillStyle = '#0b1620';
-      ctx.font = '800 ' + (r * 0.62 * (m.length > 2 ? 0.95 : 1.15)) + 'px "Sora", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(m, x, y + 1);
+      var img = GS.markImage(b.ch);
+      if (img) {
+        // the charity's logo or emblem, on white, in the middle of the ball (what shows in the tray is the one that was drawn)
+        var mr = r * 0.78;
+        var iw = img.naturalWidth || img.width || 1;
+        var ih = img.naturalHeight || img.height || 1;
+        var k = Math.min(mr * 1.52 / iw, mr * 1.52 / ih);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, mr, 0, TAU);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.clip();
+        ctx.drawImage(img, x - iw * k / 2, y - ih * k / 2, iw * k, ih * k);
+        ctx.restore();
+      } else {
+        var m = GS.mono(b.ch);
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.62, 0, TAU);
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.fill();
+        ctx.fillStyle = '#0b1620';
+        ctx.font = '800 ' + (r * 0.62 * (m.length > 2 ? 0.95 : 1.15)) + 'px "Sora", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(m, x, y + 1);
+      }
     }
     if (dim) { ctx.globalAlpha = 1; }
   }
@@ -464,6 +483,50 @@
       b = balls[i];
       if (b.mode !== 'drum') { drawBall(b, b.x, b.y, b.mode === 'guide' ? b.rad : g.tr, b.mode === 'tray'); }
     }
+  }
+
+  /* ----------------------------------------------------- click a charity */
+
+  /** A screen point as a point on the canvas, in the board's own px (the canvas may be drawn at another size on screen). Null when the drum is not on show. */
+  function canvasPoint(clientX, clientY) {
+    if (!el.canvas || !geo || !W || !H) { return null; }
+    var rect = el.canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) { return null; }
+    return { x: (clientX - rect.left) * W / rect.width, y: (clientY - rect.top) * H / rect.height };
+  }
+
+  /** How big a ball is drawn right now (balls in the chute and the tray are drawn at the size of the chute, a ball being taken out grows to it). */
+  function ballRadius(b) { return b.mode === 'drum' ? geo.r : (b.mode === 'guide' ? b.rad : geo.tr); }
+
+  /**
+   * The charity whose ball is under a screen point, where the balls are right now (they tumble), or null: the ball drawn on top wins where
+   * two overlap (the one in the chute or the tray first). Only the ball's own disc counts, not the glass round it.
+   */
+  function hitAt(clientX, clientY) {
+    var p = canvasPoint(clientX, clientY);
+    if (!p || !balls.length) { return null; }
+    var i, b, r;
+    for (i = balls.length - 1; i >= 0; i--) {
+      b = balls[i];
+      if (b.mode === 'drum') { continue; }
+      r = ballRadius(b);
+      if ((p.x - b.x) * (p.x - b.x) + (p.y - b.y) * (p.y - b.y) <= r * r) { return b.ch.id; }
+    }
+    r = geo.r;
+    for (i = balls.length - 1; i >= 0; i--) {
+      b = balls[i];
+      if (b.mode !== 'drum') { continue; }
+      if ((p.x - b.x) * (p.x - b.x) + (p.y - b.y) * (p.y - b.y) <= r * r) { return b.ch.id; }
+    }
+    return null;
+  }
+
+  /** For tests: where every ball is on screen (a click at x, y lands on that ball unless another is drawn over it), and how big it is (r: radius, w: width). */
+  function spots() {
+    var rect = el.canvas.getBoundingClientRect();
+    return balls.map(function (b, i) {
+      return { i: i, id: b.ch.id, mode: b.mode, x: rect.left + b.x * rect.width / W, y: rect.top + b.y * rect.height / H, r: ballRadius(b) * rect.width / W, w: 2 * ballRadius(b) * rect.width / W };
+    });
   }
 
   function loop(t) {
@@ -664,7 +727,14 @@
       el.go = container.querySelector('[data-role="go"]');
       ctx = el.canvas.getContext('2d');
       el.go.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
-      U.observeSize(el.stage, resize);
+      offHit = GS.ui.charityHit(el.canvas, hitAt);
+      offSize = U.observeSize(el.stage, resize);
+    },
+
+    /** Takes the game's listeners off again (nothing in the page unmounts a game today; this is for whoever does). */
+    unmount: function () {
+      if (offHit) { offHit(); offHit = null; }
+      if (offSize) { offSize(); offSize = null; }
     },
 
     setSize: function (n) { size = n; if (!mixing && !field && !(current && current.mode !== 'tray')) { rebuild(); } },
@@ -727,6 +797,8 @@
 
     playLive: function (opts) { return draw1(opts.winner, false, opts.durationMs); },
 
+    _hitAt: hitAt,
+    _spots: spots,
     _shown: function () { return result ? [result.id] : []; },
     _balls: function () { return balls.length; },
     _labels: function () { return balls.map(function (b) { return b.ch.id; }); },

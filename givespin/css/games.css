@@ -55,6 +55,7 @@
 
 /* ---------- Plinko ---------- */
 .plinko { position: relative; width: 100%; display: grid; justify-items: center; gap: 14px; }
+.plinko__canvas.is-pan { cursor: grab; }
 .plinko__canvas { display: block; border-radius: 18px; background: radial-gradient(120% 90% at 50% 0%, rgba(255, 93, 158, 0.14), rgba(8, 16, 22, 0.9) 70%); border: 1px solid var(--line-2); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5); }
 .drop__open, .plinko__drop { display: inline-flex; align-items: center; gap: 10px; padding: 12px 26px; border-radius: 999px; border: 0; background: linear-gradient(180deg, #34f88c 0%, #17c963 100%); color: var(--green-ink); font: 800 1.05rem var(--f-display); box-shadow: 0 14px 30px -12px rgba(34, 240, 122, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.45); transition: transform 0.12s, filter 0.2s; }
 .drop__open > span { display: inline-flex; align-items: center; gap: 10px; }
