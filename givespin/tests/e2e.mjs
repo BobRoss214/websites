@@ -3337,7 +3337,7 @@ if (section('13z. Race games: click a runner, duck, balloon or tile and that cha
       const agree = await page.evaluate((g) => { const gm = window.GS.games[g]; const c = (s) => (s.x !== undefined ? [s.x, s.y] : [(s.x0 + s.x1) / 2, (s.y0 + s.y1) / 2]); const sp = gm._spots(); return { n: sp.length, ok: sp.filter((s) => gm._hitAt.apply(gm, c(s)) === s.id).length }; }, gid);
       check(agree.n > 0 && agree.ok >= agree.n * 0.99, tag + 'a click in the middle of a spot is that spot\'s charity (' + agree.ok + ' of ' + agree.n + ')', agree);
       // real clicks: up to 8 charities that no other one touches
-      const picks = all.filter((s) => (big ? apart(s, all) : alone(s, all))).filter((s, i, a) => a.findIndex((o) => o.id === s.id) === i).filter((s, i) => big ? i % 40 === 0 : true).slice(0, 8);
+      const picks = all.filter((s) => (big ? apart(s, all) : alone(s, all))).filter((s, i, a) => a.findIndex((o) => o.id === s.id) === i).filter((s, i, arr) => big ? i % Math.max(1, Math.floor(arr.length / 8)) === 0 : true).slice(0, 8);
       check(picks.length >= (big ? 2 : 8), tag + 'found charities to click on', picks.length);
       const opened = [];
       for (const s of picks) {
@@ -4103,8 +4103,10 @@ if (section('13y. Click a charity on the board: Wheel, Roulette, Plinko, Lucky D
       }
       return null;
     }, [gid, SEL[gid]], { timeout: 20000, polling: 30 }).then((h) => h.jsonValue(), () => null);
-    check(!!mid && mid.open === mid.id && mid.spinning, gid + ': a click on a charity in the middle of a round opens its profile while the round goes on', mid);
-    await closeProfile();
+    // the Drop Crate's reel is a strip of moving cards: while it rolls a card is not a target (it opens only at rest), the others open the profile mid-round
+    const midOk = !!mid && (gid === 'drop' ? mid.open === null : mid.open === mid.id) && mid.spinning;
+    check(midOk, gid === 'drop' ? 'drop: a click on a card while the reel rolls does nothing and the round goes on' : gid + ': a click on a charity in the middle of a round opens its profile while the round goes on', mid);
+    if (mid && mid.open) { await closeProfile(); }
     await waitReceipt(page);
     const fin = await page.evaluate((g) => {
       const l = window.GS.app._last;
