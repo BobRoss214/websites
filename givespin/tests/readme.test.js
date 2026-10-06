@@ -91,7 +91,7 @@ const LIVE = readLive();
 /* ------------------------------------------------------------------ the tests */
 
 test('the code the README is checked against could be read (so a green run means something)', () => {
-  assert.ok(roster.length > 1000, 'roster read: ' + roster.length);
+  assert.ok(roster.length >= 400, 'roster read: ' + roster.length);
   assert.equal(GAMES.length, 19, 'games read from js/games/*.js: ' + GAMES.map((g) => g.id).join(', '));
   assert.equal(LIVE.sizes.length, 7, 'live table sizes read from js/live.js: ' + JSON.stringify(LIVE.sizes));
   assert.equal(LIVE.games.length, 10, 'live games read from js/live.js: ' + LIVE.games.join(', '));
@@ -101,10 +101,10 @@ test('the code the README is checked against could be read (so a green run means
 test('every place the README states the roster size, it is the real size', () => {
   // (a board of "1,000 charities" is not the roster, so only the sentences about the roster are read)
   const places = {
-    'the opening paragraph': /daily wheel, (\d{1,3},\d{3}) charities/,
-    'the "charities, each with a profile" paragraph': /\*\*(\d{1,3},\d{3}) charities, each with a profile\*\*/,
-    'the Charity list note': /There are (\d{1,3},\d{3}) charities in/,
-    'the Structure list': /vocabulary and the (\d{1,3},\d{3}) charities/
+    'the opening paragraph': /daily wheel, (\d{1,3}(?:,\d{3})*) charities/,
+    'the "charities, each with a profile" paragraph': /\*\*(\d{1,3}(?:,\d{3})*) charities, each with a profile\*\*/,
+    'the Charity list note': /There are (\d{1,3}(?:,\d{3})*) charities in/,
+    'the Structure list': /vocabulary and the (\d{1,3}(?:,\d{3})*) charities/
   };
   Object.keys(places).forEach((where) => {
     const m = find(places[where], 'the number of charities (' + where + ')');
@@ -112,37 +112,37 @@ test('every place the README states the roster size, it is the real size', () =>
   });
 });
 
-test('the layers of the roster add up to the roster, and the two registers are counted right', () => {
-  const first = num(find(/first (\d+) were researched/, 'the first layer of the roster')[1]);
-  const next = num(find(/next (\d+) were each checked/, 'the second layer of the roster')[1]);
-  const later = FLAT.match(/(?:later|further) round of (\d+)/);   // a layer added after the first two (optional)
-  const rest = num(find(/remaining (\d+) come from two official government registers/, 'the register layer of the roster')[1]);
-  const layers = [first, next].concat(later ? [num(later[1])] : [], [rest]);
-  const total = layers.reduce((a, b) => a + b, 0);
-  assert.equal(total, roster.length, 'README says the roster is ' + layers.join(' + ') + ' = ' + total + ' charities, js/data.js has ' + roster.length);
-  const said = find(/There are [\d,]+ charities in (\w+) layers/, 'the number of layers')[1];
-  assert.equal(num(said), layers.length, 'README says the roster has ' + said + ' layers, but it describes ' + layers.length + ' (' + layers.join(' + ') + ')');
+test('the groups of the roster add up to the roster, and the two registers are counted right', () => {
+  const hand = num(find(/(\d+) were\s+researched from public sources/, 'the hand-picked group of the roster')[1]);
+  const web = num(find(/(\d+) were each checked with web searches/, 'the web-checked group of the roster')[1]);
+  const rest = num(find(/and (\d+) come from two official government registers/, 'the register group of the roster')[1]);
+  const groups = [hand, web, rest];
+  const total = groups.reduce((a, b) => a + b, 0);
+  assert.equal(total, roster.length, 'README says the roster is ' + groups.join(' + ') + ' = ' + total + ' charities, js/data.js has ' + roster.length);
+  const said = find(/There are [\d,]+ charities in (\w+) groups/, 'the number of groups')[1];
+  assert.equal(num(said), groups.length, 'README says the roster has ' + said + ' groups, but it describes ' + groups.length + ' (' + groups.join(' + ') + ')');
   // register records: the entries docs/roster-sources.json marks "official register record" (a charity added later by a web check is not one, even when it is Australian or British)
   const records = sources.filter((s) => byId[s.id] && /official register record/i.test(s.note));
+  const inSources = new Set(sources.map((s) => s.id));
+  assert.equal(hand, roster.filter((c) => !inSources.has(c.id)).length, 'README says ' + hand + ' charities were researched from public sources (they have no entry in docs/roster-sources.json), the data has ' + roster.filter((c) => !inSources.has(c.id)).length);
+  assert.equal(web, roster.filter((c) => inSources.has(c.id)).length - records.length, 'README says ' + web + ' were checked with web searches, docs/roster-sources.json has ' + (roster.filter((c) => inSources.has(c.id)).length - records.length));
   const ukRegister = records.filter((s) => byId[s.id].where[0] === 'uk').length;
   const auRegister = records.filter((s) => byId[s.id].where[0] === 'australia').length;
   const uk = num(find(/(\d+) list the UK first/, 'the England and Wales register charities')[1]);
   const au = num(find(/(\d+) list Australia first/, 'the Australian register charities')[1]);
   assert.equal(uk, ukRegister, 'README says ' + uk + ' England and Wales register charities list the UK first, docs/roster-sources.json has ' + ukRegister + ' register records that do');
   assert.equal(au, auRegister, 'README says ' + au + ' Australian register charities, docs/roster-sources.json has ' + auRegister + ' register records that list Australia first');
-  assert.equal(rest, records.length, 'README says the remaining ' + rest + ' come from the registers, docs/roster-sources.json has ' + records.length + ' register records');
-  assert.equal(rest, ukRegister + auRegister, 'README says ' + uk + ' + ' + au + ' register charities but the remaining ' + rest + ' are said to come from them');
+  assert.equal(rest, records.length, 'README says ' + rest + ' come from the registers, docs/roster-sources.json has ' + records.length + ' register records');
+  assert.equal(rest, ukRegister + auRegister, 'README says ' + uk + ' + ' + au + ' register charities but ' + rest + ' are said to come from them');
   assert.deepEqual(records.filter((s) => byId[s.id].where[0] === 'australia' && !/ACNC/.test(byId[s.id].about)).map((s) => s.id), [], 'these Australian register records do not say they are on the ACNC register');
   const flagged = FLAT.match(/(\w+) of them are flagged `unverified`/);
   if (flagged) { assert.equal(num(flagged[1]), roster.filter((c) => c.unverified).length, 'README says ' + flagged[1] + ' charities are flagged unverified, the data has ' + roster.filter((c) => c.unverified).length); }
 });
 
-test('the README says how many charities still show a register date, and how many the second round of founding-year checks settled', () => {
+test('the README says how many charities still show a register date', () => {
   const left = roster.filter((c) => c.foundedFrom === 'register').length;
   const said = find(/Where a register year is kept \((\d+) entries\)/, 'the number of entries that keep a register year')[1];
   assert.equal(num(said), left, 'README says ' + said + ' entries keep a register year, but js/data.js marks ' + left + ' with foundedFrom: "register"');
-  const round2 = find(/second round of checks on the (\d+) that were left found a clear year for (\d+) of them/, 'the second round of founding-year checks');
-  assert.equal(num(round2[1]) - num(round2[2]), left, 'README says ' + round2[1] + ' were checked and ' + round2[2] + ' settled, which leaves ' + (num(round2[1]) - num(round2[2])) + ', but ' + left + ' still keep the register year');
 });
 
 test('the logo count is right, and every logo file exists and belongs to a charity', () => {
@@ -303,12 +303,12 @@ test('the names the README points at really exist in the file it points at', () 
   assert.deepEqual(gone, [], 'the README Customising table points at names that are not there');
 });
 
-test('the README does not say a 1,000-spot live table takes close to a minute unless the code makes it so', () => {
-  const longest = Math.max.apply(null, LIVE.games.map((g) => Math.round(LIVE.playMs[g] * LIVE.sizeRows.filter((r) => r.size === 1000)[0].play / LIVE.playMs.plinko)));
-  const m = FLAT.match(/the 1,000-spot tables take close to a minute to play out/);
+test('the README does not say a 500-spot live table takes close to a minute unless the code makes it so', () => {
+  const longest = Math.max.apply(null, LIVE.games.map((g) => Math.round(LIVE.playMs[g] * LIVE.sizeRows.filter((r) => r.size === 500)[0].play / LIVE.playMs.plinko)));
+  const m = FLAT.match(/the 500-spot tables take close to a minute to play out/);
   if (m) {
     const secs = (longest + LIVE.lockMs) / 1000;
-    assert.ok(secs >= 50, 'README says ' + snip(m) + ' but the longest 1,000-spot show in js/live.js is ' + (longest / 1000).toFixed(1) + ' s (+ ' + (LIVE.lockMs / 1000) + ' s lock = ' + secs.toFixed(1) + ' s)');
+    assert.ok(secs >= 50, 'README says ' + snip(m) + ' but the longest 500-spot show in js/live.js is ' + (longest / 1000).toFixed(1) + ' s (+ ' + (LIVE.lockMs / 1000) + ' s lock = ' + secs.toFixed(1) + ' s)');
   }
 });
 

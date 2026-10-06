@@ -106,8 +106,8 @@
   function obj(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
   function str(v, max) { return typeof v === 'string' ? v.slice(0, max || 200) : ''; }
 
-  /** The most ids a saved board or switched-off list may hold: the biggest board (1,000), or the whole roster if that is bigger. */
-  function idLimit() { return Math.max(1000, (GS.charities || []).length); }
+  /** The most ids a saved board or switched-off list may hold: the biggest board (500), or the whole roster if that is bigger. */
+  function idLimit() { return Math.max(500, (GS.charities || []).length); }
 
   /** Reads a packed list (ID_CODE base-36 characters per id, each a number into `ids`). `whole` is true when every piece was good. */
   function unpackIds(code, ids) {
@@ -304,7 +304,7 @@
     var sz = obj(p.sizes);
     Object.keys(sz).forEach(function (k) {
       var v = sz[k];
-      if (GAME_IDS.indexOf(k) >= 0 && typeof v === 'number' && v >= 2 && v <= 1000) { d.prefs.sizes[k] = Math.floor(v); }
+      if (GAME_IDS.indexOf(k) >= 0 && typeof v === 'number' && v >= 2) { d.prefs.sizes[k] = Math.min(500, Math.floor(v)); }
     });
     d.prefs.reels = {};
     var rl = obj(p.reels);
@@ -317,7 +317,7 @@
       if (GAME_IDS.indexOf(k) < 0 || k === 'direct') { return; }
       var c0 = obj(cu[k]);
       var seen = {};
-      var ids = arr(c0.ids).filter(function (id) { if (typeof id !== 'string' || seen[id] || !GS.charity(id)) { return false; } seen[id] = true; return true; }).slice(0, 1000);
+      var ids = arr(c0.ids).filter(function (id) { if (typeof id !== 'string' || seen[id] || !GS.charity(id)) { return false; } seen[id] = true; return true; }).slice(0, 500);
       if (ids.length) { d.prefs.custom[k] = { on: c0.on !== false, ids: ids }; }
     });
     d.prefs.voice = !!p.voice;

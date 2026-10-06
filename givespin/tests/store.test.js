@@ -64,8 +64,8 @@ async function verifyFromStore(page, entry) {
   return fair.verify(f, pool);
 }
 
-test('a board of 300, 301 or 1,000 charities is still there and still verifies after a reload', async () => {
-  for (const n of [300, 301, 1000]) {
+test('a board of 300, 301 or 500 charities is still there and still verifies after a reload', async () => {
+  for (const n of [300, 301, 500]) {
     const page = makePage();
     const f = await playRound(page, n);
     assert.equal(page.GS.store.get().history[0].fair.board.length, n);
@@ -81,8 +81,8 @@ test('a board of 300, 301 or 1,000 charities is still there and still verifies a
 test('a round drawn from the whole pool keeps a long switched-off list and verifies after a reload', async () => {
   const page = makePage();
   const all = page.GS.charities.map((c) => c.id);
-  const excluded = all.slice(0, all.length - 12); // almost everything switched off: 1,000 or more ids
-  assert.ok(excluded.length > 1000);
+  const excluded = all.slice(0, all.length - 12); // almost everything switched off: about 490 ids
+  assert.ok(excluded.length > 400);
   await playRound(page, 0, { board: false, excluded });
   page.GS.store.load();
   const entry = page.GS.store.get().history[0];
@@ -101,7 +101,7 @@ test('history saved by the older version (ids spelled out, boards cut to 300) st
       { id: 'GS-AAAAAA', ts: 2, game: 'wheel', totalCents: 500, rounds: 1, status: 'done', pay: 'credit', freq: 'once', allocations: [{ charityId: ids[0], cents: 500 }],
         fair: { roundSeed: 'a', serverHash: 'b', clientSeed: 'c', nonce: 1, poolHash: 'd', count: 1, winners: [ids[0]], board: ids.slice(0, 300), excluded: ids.slice(300, 320) } },
       { id: 'GS-BBBBBB', ts: 1, game: 'roulette', totalCents: 500, rounds: 1, status: 'done', pay: 'credit', freq: 'once', allocations: [{ charityId: ids[1], cents: 500 }],
-        fair: { roundSeed: 'a', serverHash: 'b', clientSeed: 'c', nonce: 1, poolHash: 'd', count: 1, winners: [ids[1]], board: ids.slice(0, 1000) } }
+        fair: { roundSeed: 'a', serverHash: 'b', clientSeed: 'c', nonce: 1, poolHash: 'd', count: 1, winners: [ids[1]], board: ids.slice(0, 500) } }
     ]
   };
   page.data.set(page.KEY, JSON.stringify(old));
@@ -110,22 +110,22 @@ test('history saved by the older version (ids spelled out, boards cut to 300) st
   assert.equal(h.length, 2);
   assert.equal(JSON.stringify(h[0].fair.board), JSON.stringify(ids.slice(0, 300)));
   assert.equal(JSON.stringify(h[0].fair.excluded), JSON.stringify(ids.slice(300, 320)));
-  assert.equal(h[1].fair.board.length, 1000);
+  assert.equal(h[1].fair.board.length, 500);
   // and saving again turns them into the packed form without losing anything
   page.GS.store.save();
   page.GS.store.load();
   const h2 = page.GS.store.get().history;
   assert.equal(JSON.stringify(h2[0].fair.board), JSON.stringify(ids.slice(0, 300)));
-  assert.equal(h2[1].fair.board.length, 1000);
+  assert.equal(h2[1].fair.board.length, 500);
 });
 
 test('storage stays small: 20 rounds on 1,000-charity boards, and a full history of 60', async () => {
   const page = makePage();
   const all = page.GS.charities.map((c) => c.id);
-  const excluded = all.slice(0, 1000); // the worst case: a long switched-off list on every round as well
+  const excluded = all.slice(0, 500); // the worst case: a long switched-off list on every round as well
   let at20 = 0;
   for (let i = 1; i <= 60; i++) {
-    await playRound(page, 1000, { excluded, nonce: i });
+    await playRound(page, 500, { excluded, nonce: i });
     if (i === 20) { at20 = page.data.get(page.KEY).length; }
   }
   const at60 = page.data.get(page.KEY).length;
@@ -137,8 +137,8 @@ test('storage stays small: 20 rounds on 1,000-charity boards, and a full history
   const h = page.GS.store.get().history;
   assert.equal(h.length, 60);
   for (const entry of [h[0], h[59]]) {
-    assert.equal(entry.fair.board.length, 1000);
-    assert.equal(entry.fair.excluded.length, 1000);
+    assert.equal(entry.fair.board.length, 500);
+    assert.equal(entry.fair.excluded.length, 500);
     assert.equal((await verifyFromStore(page, entry)).ok, true);
   }
   console.log('# saved text: 20 rounds = ' + at20 + ' characters, 60 rounds = ' + at60 + ' characters (boards of 1,000 and 1,000 switched-off charities on every round)');
@@ -252,7 +252,7 @@ test('saving does not change the saved text, and a reload then a save gives the 
 
 test('saving 60 big rounds does not repack them: the packed text of a round is worked out once', async () => {
   const page = makePage();
-  for (let i = 1; i <= 60; i++) { await playRound(page, 1000, { nonce: i }); }
+  for (let i = 1; i <= 60; i++) { await playRound(page, 500, { nonce: i }); }
   const t0 = process.hrtime.bigint();
   for (let i = 0; i < 20; i++) { page.GS.store.save(); }
   const each = Number(process.hrtime.bigint() - t0) / 20 / 1e6;
@@ -266,16 +266,16 @@ test('the id table running out spells the lists out in full instead of dropping 
   for (let r = 1; r <= 60; r++) {
     page.GS.store.recordPlay({
       game: 'roulette', totalCents: 500, rounds: 1, status: 'done', pay: 'credit',
-      fair: { roundSeed: 's' + r, serverHash: 'h', clientSeed: 'c', nonce: r, poolHash: 'p', count: 1, winners: ['a'], filters: page.GS.core.emptyFilters(), excluded: fake(r, 'e', 1100), board: fake(r, 'b', 1100) },
+      fair: { roundSeed: 's' + r, serverHash: 'h', clientSeed: 'c', nonce: r, poolHash: 'p', count: 1, winners: ['a'], filters: page.GS.core.emptyFilters(), excluded: fake(r, 'e', 480), board: fake(r, 'b', 480) },
       allocations: [{ charityId: page.GS.charities[0].id, cents: 500, hits: 1 }]
     });
   }
   page.GS.store.load();
   const h = page.GS.store.get().history;
   assert.equal(h.length, 60);
-  assert.ok(h.every((e) => e.fair.board.length === 1100 && e.fair.excluded.length === 1100), 'every list came back whole');
+  assert.ok(h.every((e) => e.fair.board.length === 480 && e.fair.excluded.length === 480), 'every list came back whole');
   assert.equal(h[0].fair.board[0], 'x60-b-0');
-  assert.equal(h[59].fair.excluded[1099], 'x1-e-1099');
+  assert.equal(h[59].fair.excluded[479], 'x1-e-479');
 });
 
 test('reading a packed list is strict: a piece must be three base-36 digits that point at a real id', async () => {

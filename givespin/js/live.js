@@ -40,7 +40,7 @@
     { size: 50,   name: 'High',    gates: 16, bots: 2.1, play: 13000 },
     { size: 100,  name: 'Big',     gates: 20, bots: 2.7, play: 13500 },
     { size: 200,  name: 'Giant',   gates: 24, bots: 3.3, play: 14500 },
-    { size: 1000, name: 'Mega',    gates: 30, bots: 4.2, play: 30000 }
+    { size: 500, name: 'Mega',    gates: 30, bots: 4.2, play: 30000 }
   ];
   var UNITS = {
     plinko: ['bin', 'bins'], wheel: ['slice', 'slices'], drop: ['card', 'cards'], roulette: ['pocket', 'pockets'], derby: ['runner', 'runners'],

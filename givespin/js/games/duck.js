@@ -1,5 +1,5 @@
 /*
- * Duck Derby. Rubber ducks race down a river, one for each charity in play (up to 1,000). The first duck past the
+ * Duck Derby. Rubber ducks race down a river, one for each charity in play (up to 500). The first duck past the
  * buoys gets your gift.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the ducks are released. The
@@ -8,7 +8,7 @@
  *
  * Live tables: the ducks with money behind them swim in a lane of their own with their name and odds beside them. The
  * charities that only fill the river from the catalog (they cannot win) are a flock of small, faded ducks behind the
- * lanes, so a river of 1,000 ducks is still readable and about as tall as a river of 25.
+ * lanes, so a river of 500 ducks is still readable and about as tall as a river of 25.
  */
 (function () {
   'use strict';
@@ -155,8 +155,8 @@
     label: 'Duck Derby',
     icon: 'bird',
     category: 'races',
-    badge: 'Up to 1,000',
-    maxSize: 1000,
+    badge: 'Up to 500',
+    maxSize: 500,
     tagline: 'Rubber ducks down a river. First one past the buoys wins your gift.',
     cta: 'Release the ducks',
     sizes: [{ n: 8, name: 'Pond' }, { n: 24, name: 'Creek' }, { n: 48, name: 'River' }, { n: 100, name: 'Flood' }, { n: 500, name: 'Tsunami' }],

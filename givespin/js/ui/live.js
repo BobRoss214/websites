@@ -107,7 +107,7 @@
   }
 
   /**
-   * Every live game has its own lobby of tables: pick a game, then how big the board is (5, 10, 25 ... 1,000). A chip row
+   * Every live game has its own lobby of tables: pick a game, then how big the board is (5, 10, 25 ... 500). A chip row
    * switches between the games; the lobby below it lists that game's tables.
    */
   var lobbyGame = '';

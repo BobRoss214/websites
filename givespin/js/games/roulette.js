@@ -39,7 +39,7 @@
   var field = null;          // live table entrants, or null when playing solo
   var ring = null;           // live: the wheel's pockets, kept for the whole round so a new bet only changes a pocket or two
   var backedAt = [];         // live: true for a pocket whose charity somebody backed (the rest only fill the board)
-  var backedIdx = [];        // live: the indexes of those pockets (a few dozen at most, even on a 1,000-pocket wheel)
+  var backedIdx = [];        // live: the indexes of those pockets (a few dozen at most, even on a 500-pocket wheel)
   var fresh = true;
   var wheelA = Math.random() * TAU;
   var ballA = -Math.PI / 2;
@@ -776,9 +776,9 @@
     label: 'Roulette',
     icon: 'circle-dot',
     category: 'table',
-    badge: 'Up to 1,000',
+    badge: 'Up to 500',
     live: true,
-    maxSize: 1000,
+    maxSize: 500,
     sizes: [{ n: 16, name: 'Classic' }, { n: 37, name: 'Big' }, { n: 100, name: 'Giant' }, { n: 250, name: 'Mega' }],
     defaultSize: 16,
     tagline: 'The ball spins one way, the wheel the other. It skips across the pockets and settles in a charity’s.',

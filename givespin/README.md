@@ -5,7 +5,7 @@
 Pick an amount, filter by the causes you care about, then spin, roll, scratch or race your way to a charity. Nineteen
 casino-style games (five of them themed slot machines) where, in most of them, **you choose how many charities are on
 the board** (from a couple to a thousand) and can back one to put on it, or tick exactly the charities you want, **live tables** where a whole table of players backs charities and the winner takes the whole pot,
-leagues, crews, collectible cards and a daily wheel, 1,180 charities, a lobby that feels like an online casino,
+leagues, crews, collectible cards and a daily wheel, 500 charities, a lobby that feels like an online casino,
 confetti, levels and a receipt for every gift. Built for streamers and anyone who thinks giving should be a little
 more fun.
 
@@ -36,25 +36,25 @@ tables (marked **Live** below), and every live game has seven table sizes.
 
 | Game | Charities on the board | How it works |
 | --- | --- | --- |
-| Lucky Wheel (Live) | 2 to 1,000 slices | Canvas wheel with chasing LED bulbs and a ticking, flicking pointer. |
+| Lucky Wheel (Live) | 2 to 500 slices | Canvas wheel with chasing LED bulbs and a ticking, flicking pointer. |
 | Classic Slots | 3 to 12 reels | The original red-and-gold machine. Every reel is one charity and your gift splits across the reels. Three or more of the same charity is a Triple Threat. Bigger matches (four, five, six or more) get a bigger show and a win line drawn across the reels, and a **How it pays** button on every machine opens a plain-language paytable. All of that is display only: nothing pays you and every reel is an equal-odds draw. |
 | Gold Rush | 3 to 12 reels (5 by default) | A mining-themed machine with drifting gold dust. |
 | Deep Sea Treasure | 3 to 12 reels (5 by default) | An ocean machine with rising bubbles. |
 | Sweet Charity | 3 to 12 reels (6 by default) | A candy-coloured machine with sprinkles. |
 | Cosmic Spin | 3 to 12 reels (8 by default) | A space machine under a twinkling sky. |
-| Drop Crate (Live) | 2 to 1,000 cards | A case-opening strip rolls past a marker and crawls to a stop. |
-| Plinko (Live) | 2 to 1,000 bins | A ball ricochets through pegs into a charity's bin. Deliberately uniform (a real board favours the middle). Big boards are giant: the camera zooms out (more the bigger the board) and follows the glowing ball, with a long trail and a row counter, then zooms back in on the winning bin. |
-| Roulette (Live) | 2 to 1,000 pockets | The ball runs against the wheel, rolls round every pocket and settles in a charity's. Past about a hundred pockets the wheel gets bigger than the screen so pockets stay about as wide as the ball: the camera pulls back while the ball flies and closes in as it settles. |
+| Drop Crate (Live) | 2 to 500 cards | A case-opening strip rolls past a marker and crawls to a stop. |
+| Plinko (Live) | 2 to 500 bins | A ball ricochets through pegs into a charity's bin. Deliberately uniform (a real board favours the middle). Big boards are giant: the camera zooms out (more the bigger the board) and follows the glowing ball, with a long trail and a row counter, then zooms back in on the winning bin. |
+| Roulette (Live) | 2 to 500 pockets | The ball runs against the wheel, rolls round every pocket and settles in a charity's. Past about a hundred pockets the wheel gets bigger than the screen so pockets stay about as wide as the ball: the camera pulls back while the ball flies and closes in as it settles. |
 | Pick a Card | 2 to 100 cards | Cards are shuffled face down; pick one and flip it. |
 | Dice | 6 faces | A 3D die tumbles and lands on a face. The six faces show six of the charities in play, always including the winner; the winner itself is drawn from all the charities in play, each with equal odds, so Dice has no board to set. |
 | Coin Flip Showdown | 2 to 128 (a power of two) | A knockout bracket decided by coin flips. |
 | Scratch Cards | 4 to 48 panels | Scratch the foil with a finger or mouse (or reveal by keyboard) to find matching charities. |
-| Charity Derby (Live) | 2 to 1,000 runners | Charities race down lanes; the first across the line wins. |
-| Duck Derby (Live) | 2 to 1,000 ducks | Rubber ducks bob down a river; each wears its charity's colour. |
-| Marble Run (Live) | 2 to 1,000 marbles | Glass marbles roll, bump and overtake down a winding track (a small physics race that is worked out first, with the drawn charity's marble in the place that crosses first). |
-| Balloon Race (Live) | 2 to 1,000 balloons | Balloons climb to a finish line in the clouds. |
-| Lucky Draw (Live) | 2 to 1,000 balls | Balls tumble in a drum; one rolls out through the chute. |
-| Last One Standing (Live) | 2 to 1,000 tiles | Charities are knocked out wave by wave until one is left. |
+| Charity Derby (Live) | 2 to 500 runners | Charities race down lanes; the first across the line wins. |
+| Duck Derby (Live) | 2 to 500 ducks | Rubber ducks bob down a river; each wears its charity's colour. |
+| Marble Run (Live) | 2 to 500 marbles | Glass marbles roll, bump and overtake down a winding track (a small physics race that is worked out first, with the drawn charity's marble in the place that crosses first). |
+| Balloon Race (Live) | 2 to 500 balloons | Balloons climb to a finish line in the clouds. |
+| Lucky Draw (Live) | 2 to 500 balls | Balls tumble in a drum; one rolls out through the chute. |
+| Last One Standing (Live) | 2 to 500 tiles | Charities are knocked out wave by wave until one is left. |
 
 **Charities on the board.** Games that can show more than a few charities have a **Charities on the board**
 control: pick a preset or type any number, from a couple up to the game's maximum (above). Make it five or a thousand:
@@ -68,13 +68,13 @@ Four games stop sooner on purpose, because of what they are: Pick a Card is a ta
 100), a Scratch Card is one card with 4 to 48 panels, Coin Flip Showdown is a knockout bracket, so it takes a power of
 two (up to 128), and Dice is one die, so it always has six faces. Anything bigger would be too crowded to read or tap, so
 those limits are about the picture, not the fairness: the draw works the same at any size. The slot machines have 3 to 12
-reels instead of a board. Every other game goes up to 1,000.
+reels instead of a board. Every other game goes up to 500.
 
 **Choose your own charities.** Every solo game has a **Choose your own charities** button. It opens a searchable
 list: type a name, a cause ("animals"), a place or what a charity does, narrow it with the same filters as the rest of
 the site (cause, where they work, who they help, how, when founded), read each charity's description and details, open
 its own website, and tick the ones you want or choose everything that is showing. The limit is what the game can show
-(up to 100 for Pick a Card, 1,000 for Roulette and Plinko). A **Custom charities** chip with a tick then appears on the game
+(up to 100 for Pick a Card, 500 for Roulette and Plinko). A **Custom charities** chip with a tick then appears on the game
 screen: turn it off and on, edit it or remove it. While it is on the winner is drawn from exactly those charities
 (each with equal odds) and your filters are paused for that game. The list is remembered per game.
 
@@ -90,7 +90,7 @@ no Back a charity step either. Pick any charity, or let the site choose one at r
 if it was not already there, and marks it on the table (your duck wears a ring, your bin glows). Putting it on the
 board is what gives it a chance (with 8 spots it has 1 in 8, instead of 1 in over a thousand for a charity that is not on
 the board); once the board is set, every charity on it has exactly the same odds, yours included. If it wins you earn bonus XP that
-grows with how long the shot was (a 1-in-1,000 pick is worth far more than a 1-in-8 one), and it counts towards the
+grows with how long the shot was (a 1-in-500 pick is worth far more than a 1-in-8 one), and it counts towards the
 Called It badge.
 
 **Live tables.** See below.
@@ -106,7 +106,7 @@ Choices combine as OR within a
 group and AND between groups, with a live count. The same filters drive every game. Filter values that fewer
 than three charities have are hidden so a filter cannot just empty the pool.
 
-**1,180 charities, each with a profile** (see [Charities](#going-live) for where they came from). Tap any charity anywhere (a card, a receipt, My Giving, search, or a
+**500 charities, each with a profile** (see [Charities](#going-live) for where they came from). Tap any charity anywhere (a card, a receipt, My Giving, search, or a
 `#charity-<id>` link) to see what it does, who it helps, where it works, how it helps, when it started, and a
 **Visit website** link. Switch individual charities on or off for the games.
 
@@ -184,30 +184,29 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   and money-transmission rules that vary by location. The redirect design is meant to leave payment handling with
   a regulated donation platform. Confirm the details with that platform (and a lawyer if you are unsure) before
   you promote the site. The "casino" look is a visual theme only: no one stakes anything and there is no prize.
-- **Charity list.** There are 1,180 charities in four layers. The first 228 were researched from public sources and the next
-  153 were each checked with web searches (the organisation exists, its official website, and its founding year and headquarters
-  where the results stated them); the evidence links are in `docs/roster-sources.json`. The 40 entries that were first marked
-  `unverified` were later each checked again with a search limited to the charity's own website, which confirmed all 40 exist at
-  that address, filled in founding years and headquarters where the site stated them, and caught three renames (Little Kids Rock
-  is now Music Will, The Actors Fund is now the Entertainment Community Fund, VH1 Save The Music is now the Save The Music
-  Foundation). A later round of 141 (veterans and first responders, justice, mental health, abuse and safety, recovery) was checked the same way, with the evidence links in the same file; two of them were first flagged `unverified` because a founding year or headquarters could not be confirmed, and a later web check confirmed them (no entry is flagged now). The remaining 658 come from two official government registers: the Charity Commission for England and Wales
-  (registered charities that work internationally; 357 list the UK first) and the Australian Charities and Not-for-profits
-  Commission (301 list Australia first). A register record confirms the charity exists, its official name, its website and its
-  location, so those entries themselves were not researched by web search (the register number or ABN is in `docs/roster-sources.json`); afterwards the website of every one of them was checked with a search that asks whether the charity's own pages are on the host the site links to, and 16 hosts were corrected (`docs/roster-candidates.md`). Their
-  descriptions are short, neutral paraphrases of the register text (for Australia, of the register's purpose flags), so they
-  are plainer than the first 381, and `founded` is empty for most because the register gives a registration date rather than a
-  founding date. Where a register year is kept (60 entries) it is marked `foundedFrom: "register"`, shown as "(register date)", and
-  left out of the Founded filter and the oldest/newest sort, because web checks of 197 of them found the organisation's own
-  account gave an earlier year in 58 (about 39% of those that could be settled) and never a later one (the register year is often
-  when the current company was incorporated or merged); the 43 entries where the organisation's own year was clear carry that
-  year instead. A second round of checks on the 158 that were left found a clear year for 98 of them (it equals the register year for 73, is earlier for 17 and is later, by one to three years, for 8), and those carry the organisation's own year, taken from a search result; the 60 still marked are the ones where the sources disagreed, described a merger or an older predecessor, or did not state a year. About half of the register records that were considered were left out (universities and schools,
-  professional and membership bodies, grant-making trusts, religious bodies whose purpose is mainly to advance a religion,
-  think tanks, commercial arms, and records whose website belongs to a different brand). A charity that is run by a religious
-  body but whose work is care (aged care, homelessness, children) stays and carries a faith-based flag. Facts can go out of date: registers and websites change, so re-check every entry (and
-  its link) before using real money, and confirm each one is a charity you are comfortable with and that your checkout provider
-  supports. `docs/roster-candidates.md` lists what was left out and what to check.
+- **Charity list.** There are 500 charities in three groups, chosen from a longer researched list of 1,180 by how widely
+  known and trusted each one is (every charity was ranked for recognition; any with a scandal or regulator problem behind it,
+  doubt that it still operates, a mainly commercial structure or a very narrow political focus was left out). 159 were
+  researched from public sources, 171 were each checked with web searches (the organisation exists, its official website, and its
+  founding year and headquarters where the results stated them; the evidence links are in `docs/roster-sources.json`; the checks
+  caught three renames: Little Kids Rock is now Music Will, The Actors Fund is now the Entertainment Community Fund and VH1 Save The
+  Music is now the Save The Music Foundation), and 170 come from two official government registers: the Charity Commission
+  for England and Wales (registered charities that work internationally; 109 list the UK first) and the Australian Charities
+  and Not-for-profits Commission (61 list Australia first). A register record confirms the charity exists, its official name, its
+  website and its location (the register number or ABN is in `docs/roster-sources.json`); the website of each one was also checked
+  with a search that asks whether the charity's own pages are on the host the site links to, and the wrong hosts were corrected
+  (`docs/roster-candidates.md`). Their descriptions are short, neutral paraphrases of the register text (for Australia, of the
+  register's purpose flags), so they are plainer than the others, and `founded` is empty for most because the register gives a
+  registration date rather than a founding date. Where a register year is kept (16 entries) it is marked
+  `foundedFrom: "register"`, shown as "(register date)", and left out of the Founded filter and the oldest/newest sort, because
+  the register year is often when the current company was incorporated or merged rather than when the organisation began; where
+  a search gave the organisation's own clear year, the entry carries that year instead. A charity that is run by a religious
+  body but whose work is care (aged care, homelessness, children) stays and carries a faith-based flag. Facts can go out of date:
+  registers and websites change, so re-check every entry (and its link) before using real money, and confirm each one is a
+  charity you are comfortable with and that your checkout provider supports. `docs/roster-candidates.md` lists what was left out
+  and what to check.
 - **Names and logos.** Charity names are used only to identify the organisations. Where a charity has a simple logo it is
-  shown instead of the coloured monogram circle (53 of them so far; `docs/logo-sources.md` lists each file and where it came
+  shown instead of the coloured monogram circle (41 of them so far; `docs/logo-sources.md` lists each file and where it came
   from: either the picture the organisation chose for its own GitHub account, checked by eye, or the open `simple-icons`
   set). Everyone else keeps the monogram. `js/logos.js` lists which charities have a logo and `logos: false` in
   `js/config.js` turns them off. `node tools/fetch-logos.mjs` collects more from each charity's own website (touch icon or
@@ -259,14 +258,14 @@ table locks, and refunded if you close the page before the round settles.
   simulated stakes ($5 to $20 each), and the feed says so.
 
 **Every live game is a lobby of seven tables.** On the Live tables page you pick a game, then a table: 5, 10, 25, 50,
-100, 200 or 1,000 spots (Mini, Small, Classic, High, Big, Giant, Mega). A spot is a bin in Plinko, a slice on the
+100, 200 or 500 spots (Mini, Small, Classic, High, Big, Giant, Mega). A spot is a bin in Plinko, a slice on the
 wheel, a pocket in roulette, a card in the drop crate, a ball in the lucky draw, a runner, duck, marble or balloon in the
 races, and a tile in Last One Standing. Each table has its own pot, players and rounds, and you can hop between a game's
 tables from a bar inside the table. The charities players back (the gates: 5 at the smallest table, 30 at the biggest) go
 on the board, and the remaining spots are **filled in at random from the catalog** so the board is always the full size;
 if the catalog has fewer charities than spots they repeat evenly. Only backed charities hold tickets, so only they can
 win: the others are scenery (thin slivers on the wheel, runners with no percentage, faded bins). Bigger tables have more
-bots and a longer show (the 1,000-spot tables take about 27 to 44 seconds to play out, depending on the game). All 70 tables run at once, and a game's
+bots and a longer show (the 500-spot tables take about 27 to 44 seconds to play out, depending on the game). All 70 tables run at once, and a game's
 `#live-<game>` link opens its Small (10-spot) table.
 
 **Live tables are demo-only.** A pooled pot needs a server to hold the money and run the table, and this site never
@@ -283,7 +282,7 @@ Timings (betting window, lock, result), bot names and stake sizes, and the table
    number, read as 32-bit numbers with rejection sampling (no modulo bias), applied to **the charities on the board**
    sorted by id. That is exactly equal odds for every charity on the board. The board is recorded with the round
    (`fair.board`), so the verifier and the standalone snippet can redo the draw from just the board. This browser keeps the
-   whole board of each of your last 60 rounds, even a board of 1,000 (stored compactly: about 3 KB a round), so any of
+   whole board of each of your last 60 rounds, even a board of 500 (stored compactly: about 3 KB a round), so any of
    them can still be re-checked after a reload. Dice and the slot machines keep the whole pool they drew from, so they
    still check out after the charity list changes. If the browser's storage is full, the site says so once and carries on.
 3. **Show.** The game then animates to the already-chosen winner. The slices, reels, bins, pockets, cards and runners
@@ -336,7 +335,7 @@ backed charity), the bonus for backing a long shot, apportioning pockets and sli
 league and the Charity Cup field, email/phone/password/card/expiry validation, the fair-play draw (cross-checked
 against Node's own HMAC, uniformity over 30,000 rounds, tampering is caught, the standalone snippet matches), and the
 charity data (unique ids, valid vocabulary, short names and blurbs, bare hostnames, no superlatives, minimum counts per
-cause and filter), and saved rounds (a board of 300, 301 or 1,000 charities and a live round with 25 backed charities come back whole
+cause and filter), and saved rounds (a board of 300, 301 or 500 charities and a live round with 25 backed charities come back whole
 after a reload and still verify, a Dice round still verifies after the roster grows, older saves still load, a full
 storage is reported, and the saved text stays small), and this README (the roster size, the board sizes per game, the unit-test count and command, the file list and the wording rules are all checked against the code).
 
@@ -376,7 +375,7 @@ css/chooser.css     the choose-your-own-charities dialog and its chip
 css/slots.css       the slot machines and their five themes
 css/tour.css        the first-visit tour
 js/config.js        mode, limits, demo credit, checkout hook
-js/data.js          causes, filter vocabulary and the 1,180 charities
+js/data.js          causes, filter vocabulary and the 500 charities
 js/core.js          pure logic (money, RNG, filters, XP, badges, validation); unit-tested in Node
 js/fair.js          commit/reveal draws (HMAC-SHA256); unit-tested in Node
 js/store.js         player state in localStorage, with defensive loading
@@ -395,7 +394,7 @@ js/ui/*.js          shared helpers, amount and gift options, filters, charities,
                     charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), live tables, game
                     screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
                     the first-visit tour (tour.js)
-js/logos.js         which charities have a logo file (53 so far)
+js/logos.js         which charities have a logo file (41 so far)
 tools/              fetch-logos.mjs: collects more charity logos from their own websites
 assets/logos/       the logo files (see docs/logo-sources.md)
 assets/favicon.svg  the browser-tab icon

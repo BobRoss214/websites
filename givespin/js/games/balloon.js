@@ -1,5 +1,5 @@
 /*
- * Balloon Race. One balloon per charity (up to 1,000) lifts off from the meadow; the first to reach the finish
+ * Balloon Race. One balloon per charity (up to 500) lifts off from the meadow; the first to reach the finish
  * line in the clouds gets your gift.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the balloons are released. The
@@ -155,8 +155,8 @@
     label: 'Balloon Race',
     icon: 'cloud',
     category: 'races',
-    badge: 'Up to 1,000',
-    maxSize: 1000,
+    badge: 'Up to 500',
+    maxSize: 500,
     tagline: 'Balloons climb to the clouds. First one over the finish line wins your gift.',
     cta: 'Cut the ropes',
     sizes: [{ n: 8, name: 'Bunch' }, { n: 24, name: 'Festival' }, { n: 48, name: 'Sky full' }, { n: 100, name: 'Skyline' }, { n: 500, name: 'Sky-high' }],

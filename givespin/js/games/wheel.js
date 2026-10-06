@@ -638,13 +638,13 @@
     label: 'Wheel',
     icon: 'aperture',
     category: 'originals',
-    badge: 'Up to 1,000',
+    badge: 'Up to 500',
     live: true,
     sizes: [{ n: 8, name: 'Small' }, { n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 48, name: 'Huge' }, { n: 100, name: 'Giant' }],
     defaultSize: 12,
     tagline: 'Spin it. Wherever the pointer stops, that charity gets your gift.',
     cta: 'Spin the wheel',
-    maxSize: 1000,
+    maxSize: 500,
     info: [
       'A big wheel with a ticking pointer. Hit spin and it slows to a stop on a charity. Put as many charities on the wheel as you like, from a handful to a giant wheel of a thousand slices.',
       'The charities on the wheel are exactly the ones the winner is drawn from, each with equal odds. Back one of them and, if it wins, you earn a bonus. Split your gift into several rounds and it spins once per round.'

@@ -1,6 +1,6 @@
 /*
  * Lucky Draw. Charity balls tumble in a drum; one is drawn out through the chute into the tray. The drum holds
- * 12 balls or up to 1,000.
+ * 12 balls or up to 500.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the drum starts. The drum holds
  * a sample of the pool that always includes the winner; the winner's ball is steered to the chute after the mix.
@@ -636,15 +636,15 @@
     label: 'Lotto',
     icon: 'circle-dot',
     category: 'instant',
-    badge: 'Up to 1,000',
+    badge: 'Up to 500',
     live: true,
-    maxSize: 1000,
-    sizes: [{ n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 50, name: 'Huge' }, { n: 100, name: 'Giant' }, { n: 300, name: 'Jumbo' }, { n: 1000, name: 'Mega' }],
+    maxSize: 500,
+    sizes: [{ n: 12, name: 'Classic' }, { n: 24, name: 'Big' }, { n: 50, name: 'Huge' }, { n: 100, name: 'Giant' }, { n: 300, name: 'Jumbo' }, { n: 500, name: 'Mega' }],
     defaultSize: 12,
     tagline: 'Balls tumble in the drum. One rolls out. That charity wins.',
     cta: 'Draw a ball',
     info: [
-      'Charity balls tumble in the drum with a puff of air. Fill the drum with as many balls as you like, from a few to 1,000. One is picked out through the chute and drops into the tray.',
+      'Charity balls tumble in the drum with a puff of air. Fill the drum with as many balls as you like, from a few to 500. One is picked out through the chute and drops into the tray.',
       'It is the classic lottery draw, except every ball is a winner for someone and your whole gift goes to the one that rolls out. Every charity in the drum has equal odds. Back one and, if its ball rolls out, you earn a bonus.'
     ],
 

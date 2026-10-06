@@ -309,7 +309,7 @@
       badge: spec.badge,
       live: true,
       sizes: spec.sizes,
-      maxSize: spec.maxSize || 1000,
+      maxSize: spec.maxSize || 500,
       defaultSize: spec.defaultSize,
       tagline: spec.tagline,
       cta: spec.cta,

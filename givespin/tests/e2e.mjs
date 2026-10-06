@@ -426,7 +426,7 @@ if (section('6. Charities page, profiles and the in-play switches')) {
   const page = await newPage();
   await openApp(page, '#charities');
   check(await page.locator('#view-charities .rcard').count() === N, 'lists all ' + N + ' charities');
-  check(N >= 1000, 'the roster has at least a thousand charities', N);
+  check(N >= 500, 'the roster has at least 500 charities', N);
   await page.fill('#view-charities [data-role="q"]', 'wateraid');
   const n = await page.locator('#view-charities .rcard').count();
   check(n >= 1 && n < 10, 'search narrows the list', n);
@@ -982,7 +982,7 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
   const page = await newPage();
   await openApp(page);
   const POOL = N;
-  const sized = [['roulette', 1000], ['plinko', 500], ['wheel', 1000], ['drop', 1000], ['lotto', 1000], ['derby', 1000], ['duck', 1000], ['marble', 1000], ['balloon', 1000], ['standing', 1000], ['coin', 64], ['cards', 100], ['scratch', 48]];
+  const sized = [['roulette', 500], ['plinko', 500], ['wheel', 500], ['drop', 500], ['lotto', 500], ['derby', 500], ['duck', 500], ['marble', 500], ['balloon', 500], ['standing', 500], ['coin', 64], ['cards', 100], ['scratch', 48]];
   for (const [id, n] of sized) {
     await go(page, '#game-' + id);
     await page.waitForSelector('#panel-' + id + ':not([hidden])');
@@ -1008,8 +1008,8 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
     await closeReceipt(page);
   }
   const prefs = await page.evaluate(() => window.GS.store.prefs().sizes);
-  check(prefs.plinko === 500 && prefs.derby === 1000 && prefs.duck === 1000, 'chosen sizes are remembered', prefs);
-  // a saved round keeps its whole board across a reload, so a round on a board of 1,000 still verifies afterwards
+  check(prefs.plinko === 500 && prefs.derby === 500 && prefs.duck === 500, 'chosen sizes are remembered', prefs);
+  // a saved round keeps its whole board across a reload, so a round on a board of 500 still verifies afterwards
   const kept = () => page.evaluate(() => window.GS.store.get().history.map((h) => h.fair.board.length));
   const keptBefore = await kept();
   await page.reload();
@@ -1035,20 +1035,20 @@ if (section('13a. Board sizes: any number of charities, and the winner is drawn 
   check(await page.evaluate(() => window.GS.games.derby._runners()) === 37, 'the derby now has 37 runners');
   check((await page.locator('#size-hint').innerText()).includes('The winner is drawn from these 37'), 'and the hint says the winner is drawn from those 37');
   await page.fill('#size-custom', '5000');
-  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 1000);
-  check((await page.locator('#size-hint').innerText()).includes('up to 1,000'), 'a number over the game limit is held at the limit and says so');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 500);
+  check((await page.locator('#size-hint').innerText()).includes('up to 500'), 'a number over the game limit is held at the limit and says so');
   await page.fill('#size-custom', '1');
   await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 2);
   check(await page.evaluate(() => window.GS.games.derby._runners()) === 2, 'and a board needs at least two charities');
   await page.click('#size-max');
-  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 1000);
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.derby === 500);
   check(await page.locator('#size-max').isDisabled(), 'the Max button sets the biggest board and then rests');
   await go(page, '#game-plinko');
-  await page.fill('#size-custom', '1000');
-  await page.waitForFunction(() => window.GS.store.prefs().sizes.plinko === 1000);
-  // with a roster of 1,000 or more a full board needs no repeats: it is picked at random from the roster
+  await page.fill('#size-custom', '500');
+  await page.waitForFunction(() => window.GS.store.prefs().sizes.plinko === 500);
+  // with a roster of 500 or more a full board needs no repeats: it is picked at random from the roster
   const hint1000 = await page.locator('#size-hint').innerText();
-  check(await page.evaluate(() => window.GS.games.plinko._bins()) === 1000 && hint1000.includes(N >= 1000 ? 'picked at random' : 'each appearing'), N >= 1000 ? 'a 1,000-bin Plinko board is picked at random from the ' + N + ' charities, with no repeats' : 'a 1,000-bin Plinko board repeats the ' + N + ' charities and says how often', hint1000);
+  check(await page.evaluate(() => window.GS.games.plinko._bins()) === 500 && hint1000.includes(N >= 500 ? 'picked at random' : 'each appearing'), N >= 500 ? 'a 500-bin Plinko board is picked at random from the ' + N + ' charities, with no repeats' : 'a 500-bin Plinko board repeats the ' + N + ' charities and says how often', hint1000);
   await go(page, '#game-coin');
   await page.fill('#size-custom', '100');
   await page.waitForFunction(() => window.GS.store.prefs().sizes.coin === 100);
@@ -1764,7 +1764,7 @@ if (section('13s. Marble Run keeps its promises: the drawn marble crosses first,
   // Every race below goes through the public game hooks (GS.games.marble.play / playLive / abort / _shown / _debug) with a winner drawn up front.
   // The marble that is credited with place 1 must carry the drawn charity, every time and at every size; each wait is bounded so that a race that
   // never ends is reported as a failed check instead of stalling the run.
-  const MARBLE_SIZES = [[2, 3], [3, 3], [8, 4], [24, 4], [100, 3], [500, 2], [1000, 2]];     // [marbles, races]
+  const MARBLE_SIZES = [[2, 3], [3, 3], [8, 4], [24, 4], [100, 3], [500, 2]];     // [marbles, races]
   const marbleRaces = (page, count, opts = {}) => page.evaluate(async ({ count, opts }) => {
     const g = window.GS.games.marble;
     const dbg = g._debug;
@@ -1939,10 +1939,10 @@ if (section('13l. Live Plinko tables: seven sizes, backed charities plus catalog
   const page = await newPage();
   await openApp(page, '#live');
   const sizes = await page.$$eval('[data-role="tables"] .lcard__size b', (n) => n.map((x) => x.textContent.replace(/,/g, '')));
-  check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '1000']), 'the table lobby lists seven sizes, smallest first', sizes);
+  check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '500']), 'the table lobby lists seven sizes, smallest first', sizes);
   check((await page.locator('#view-live #lv-t').innerText()).includes('Plinko') && (await page.locator('#view-live #lv-t').innerText()).includes('choose your table'), 'under a "choose your table" heading');
   await a11y(page, 'live tables lobby');
-  for (const size of [5, 100, 1000]) {
+  for (const size of [5, 100, 500]) {
     await go(page, '#live-plinko' + size);
     await page.waitForSelector('#livepanel:not([hidden]) [data-role="gates"]');
     const t = await titleWith(page, size.toLocaleString('en-US') + ' bins');
@@ -1988,7 +1988,7 @@ if (section('13o. Every live game is a lobby of seven tables')) {
     await page.click('#view-live .lgame[data-lgame="' + gid + '"]');
     const sizes = await page.$$eval('#view-live [data-role="tables"] .lcard__size b', (n) => n.map((x) => x.textContent.replace(/,/g, '')));
     const unit = (await page.locator('#view-live [data-role="tables"] .lcard__size small').nth(1).innerText()).toLowerCase();   // shown in capitals by CSS
-    check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '1000']) && unit === UNIT[gid], gid + ': seven table sizes, counted in ' + UNIT[gid], [sizes, unit]);
+    check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '500']) && unit === UNIT[gid], gid + ': seven table sizes, counted in ' + UNIT[gid], [sizes, unit]);
   }
   await a11y(page, 'live lobby: last game');
   // for every game: a Classic (25) table has a full board, and the pot goes to a backed charity that the game shows winning
@@ -2011,15 +2011,15 @@ if (section('13o. Every live game is a lobby of seven tables')) {
     check(staked && !!res && res.weights.includes(res.winner) && res.size === 25 && res.game === gid, gid + ': the pot goes to a backed charity (fillers cannot win)', { staked, res });
     check(!!res && (Array.isArray(res.shown) ? res.shown.includes(res.winner) : res.shown === res.winner), gid + ': and the game shows that charity winning', res);
   }
-  // the aliases still open each game's default (10-spot) table, and the 1,000 table of a race has a full board
+  // the aliases still open each game's default (10-spot) table, and the 500 table of a race has a full board
   for (const gid of ['balloon', 'wheel']) {
     await go(page, '#live-' + gid);
     const alias = await titleWith(page, '10 ' + UNIT[gid]);
     check(alias.includes('10 ' + UNIT[gid]), '#live-' + gid + ' opens the 10-spot table', alias);
   }
-  await go(page, '#live-balloon1000');
-  await page.waitForFunction(() => { const r = window.GS.live.room('balloon1000'); return r && r.boardInfo() && r.boardInfo().spots.length === 1000; }, null, { timeout: 30000 });
-  check(true, 'the 1,000-balloon table has a board of 1,000');
+  await go(page, '#live-balloon500');
+  await page.waitForFunction(() => { const r = window.GS.live.room('balloon500'); return r && r.boardInfo() && r.boardInfo().spots.length === 500; }, null, { timeout: 30000 });
+  check(true, 'the 500-balloon table has a board of 500');
   await page.close();
   const ph = await newPage({ viewport: { width: 390, height: 800 }, mobile: true });
   await openApp(ph, '#live');
@@ -2039,7 +2039,7 @@ if (section('13p. Live boards tell the truth: no stale pick, no zero-share chips
   await page.locator('#dlg-charitypick .pickitem').first().click();
   await page.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
   check((await page.locator('#pick-chip').innerText()).includes('WaterAid'), 'a charity is backed in the solo game');
-  for (const id of ['standing25', 'standing1000']) {
+  for (const id of ['standing25', 'standing500']) {
     // the table is set up before it is looked at: a fresh open round where a bot backs that same charity (so a stale gold ring has a tile to land on),
     // and its round timer stopped so nothing changes under the checks
     await page.evaluate((rid) => { const r = window.GS.live.room(rid); r.openRound(0); r._botJoin(window.GS.charity('wateraid'), 5); r._clearTimers(); }, id);
@@ -2050,7 +2050,7 @@ if (section('13p. Live boards tell the truth: no stale pick, no zero-share chips
   }
   // on a big live Roulette wheel or Lucky Draw drum every spot owns a pocket or a ball, and the legend never lists a charity with none;
   // the worst case is set up on purpose: one charity with a $5 stake against a pot of more than $1,000 (about half a pocket on a 100-spot board)
-  for (const id of ['roulette100', 'lotto100', 'roulette1000', 'lotto1000']) {
+  for (const id of ['roulette100', 'lotto100', 'roulette500', 'lotto500']) {
     const gid = id.replace(/\d+$/, '');
     const tiny = await page.evaluate((rid) => {
       const r = window.GS.live.room(rid);
@@ -2074,7 +2074,7 @@ if (section('13p. Live boards tell the truth: no stale pick, no zero-share chips
     check(shown && r.zero === 0 && r.units >= r.spots && r.items > 0 && /\b[1-9]\d* (pocket|ball)s?\b/.test(r.tinyChip), id + ': every spot owns a ' + (gid === 'roulette' ? 'pocket' : 'ball') + ' and no legend chip says 0, not even the $5 stake in a big pot', Object.assign({ shown }, r));
   }
   // leaving a table in the middle of its round stops that round at once, so the next table shows straight away.
-  // Every game keeps its own count of what is on its board (a 1,000 table shows 1,000 or a little more, a 10 table far fewer);
+  // Every game keeps its own count of what is on its board (a 500 table shows 500 or a little more, a 10 table far fewer);
   // Drop has no such count, so there it is whether its roll is still running.
   const BOARD = { derby: '_runners', standing: '_entrants', wheel: '_slices', plinko: '_bins', roulette: '_pockets', lotto: '_balls', duck: '_entrants', marble: '_entrants', balloon: '_entrants', drop: null };
   for (const gid of ['derby', 'standing', 'wheel', 'plinko', 'roulette', 'lotto', 'duck', 'marble', 'balloon', 'drop']) {
@@ -2086,9 +2086,9 @@ if (section('13p. Live boards tell the truth: no stale pick, no zero-share chips
       const r = window.GS.live.room(a[0]);
       r.openRound(0);
       r.lock();
-    }, [gid + '1000', gid + '10']);
+    }, [gid + '500', gid + '10']);
     const playing = await page.waitForFunction((rid) => window.GS.live.room(rid).phase === 'playing', gid + '1000', { timeout: 20000 }).then(() => true, () => false);
-    await go(page, '#live-' + gid + '1000');
+    await go(page, '#live-' + gid + '500');
     const arrived = await page.waitForFunction((a) => (a[1] ? window.GS.games[a[0]][a[1]]() >= 1000 : window.GS.ui.live.gameBusy(a[0])), [gid, BOARD[gid]], { timeout: 15000 }).then(() => true, () => false);
     await page.waitForTimeout(800);
     const busy = await page.evaluate((g) => window.GS.ui.live.gameBusy(g), gid);
@@ -2196,7 +2196,7 @@ if (section('13q. Audit regressions: crypto wording, tile badges, small screens,
   const wrongBadge = badges.filter((b) => b.max && !(b.badge.match(/\d[\d,]*/g) || []).some((n) => Number(n.replace(/,/g, '')) === b.max)).map((b) => b.game + ': the tile says "' + b.badge + '" but the game goes up to ' + b.max.toLocaleString('en-US'));
   check(badges.filter((b) => b.max).length >= 13 && wrongBadge.length === 0, 'every tile badge names its game\'s real biggest board (as set by the game\'s maxSize)', wrongBadge);
   const wheelBadge = (badges.find((b) => b.game === 'wheel') || {}).badge || '';
-  check(/up to 1,000/i.test(wheelBadge), 'the Lucky Wheel tile says "Up to 1,000"', wheelBadge);
+  check(/up to 500/i.test(wheelBadge), 'the Lucky Wheel tile says "Up to 500"', wheelBadge);
   await lobby.close();
   const phone = await newPage({ viewport: { width: 390, height: 800 }, mobile: true });
   await openApp(phone, '#lobby');

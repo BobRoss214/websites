@@ -1,5 +1,5 @@
 /*
- * Charity Derby. Up to 1,000 charities race down the track; the first across the line gets your gift.
+ * Charity Derby. Up to 500 charities race down the track; the first across the line gets your gift.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the gates open. The race is
  * choreographed so that charity crosses first, with lead changes along the way. The runners on the track are a
@@ -8,7 +8,7 @@
  * Live tables: every charity with money behind it is a runner and its share of the pot is shown beside its name. The
  * rest of the board is filled with catalog charities that cannot win. A small board has one lane per runner (the
  * catalog runners are drawn faded). On a bigger board the backed charities keep a lane of their own, with name and odds,
- * and the other runners race as a pack of dots below them, so the track stays about one screen tall even at 1,000 runners.
+ * and the other runners race as a pack of dots below them, so the track stays about one screen tall even at 500 runners.
  */
 (function () {
   'use strict';
@@ -599,10 +599,10 @@
     label: 'Derby',
     icon: 'flag-triangle-right',
     category: 'races',
-    badge: 'Up to 1,000',
+    badge: 'Up to 500',
     live: true,
-    maxSize: 1000,
-    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Huge' }, { n: 48, name: 'Giant' }, { n: 120, name: 'Grand National' }, { n: 1000, name: 'Stampede' }],
+    maxSize: 500,
+    sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Huge' }, { n: 48, name: 'Giant' }, { n: 120, name: 'Grand National' }, { n: 500, name: 'Stampede' }],
     defaultSize: 6,
     tagline: 'A field of charities, one finish line. First across wins your gift.',
     cta: 'Start the race',

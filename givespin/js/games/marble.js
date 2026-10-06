@@ -1,5 +1,5 @@
 /*
- * Marble Run. Glass marbles, one per charity (up to 1,000), tumble down a winding track. The first marble over
+ * Marble Run. Glass marbles, one per charity (up to 500), tumble down a winding track. The first marble over
  * the line gets your gift.
  *
  * The marbles are real discs with mass. The snake-shaped track runs downhill (straight, U-turn, straight...), the
@@ -1672,8 +1672,8 @@
     label: 'Marble Run',
     icon: 'gem',
     category: 'races',
-    badge: 'Up to 1,000',
-    maxSize: 1000,
+    badge: 'Up to 500',
+    maxSize: 500,
     tagline: 'Glass marbles tumble down a winding track. First one over the line wins your gift.',
     cta: 'Release the marbles',
     sizes: [{ n: 8, name: 'Handful' }, { n: 24, name: 'Bag' }, { n: 48, name: 'Jar' }, { n: 100, name: 'Avalanche' }, { n: 500, name: 'Landslide' }],
