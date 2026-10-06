@@ -213,8 +213,7 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   favicon) into `assets/logos/`; it needs an open internet connection, which the build environment did not have. A
   logo is the charity's trademark: showing it to identify the organisation is common, but it can look like an
   endorsement and some charities have brand rules or ask for permission, so check before you keep any. The footer says
-  GiveSpin is not affiliated with the charities. Games drawn on a canvas (wheel, roulette, Plinko, the races) keep the
-  monogram either way.
+  GiveSpin is not affiliated with the charities. In the games, a charity's logo or emblem is drawn on its slice, pocket, bin, runner, duck, balloon or ball where there is room (about 14 px or more; smaller marks stay colour only), and clicking or tapping a charity's mark opens its profile (what it does, and a Visit website button). After a round, every charity on the receipt, in a live result and in My Giving is a link to its own website, with an About button for its profile.
 
 ## Live tables
 
