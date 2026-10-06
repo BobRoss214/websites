@@ -401,7 +401,7 @@ Answer:
 
 ### Question 36
 
-**The Drive time box uses a free routing server whose own page says its demo is for "reasonable, non-commercial use-cases". What should we do? (a) Write to the people who run it and ask whether a small farm website is allowed. (b) Leave it as it is and watch it. (c) Move to Mapbox later (it needs a free account in the farm's name). (d) Switch the box off.**
+**The Drive time box uses a free routing server whose own page says its demo is for "reasonable, non-commercial use-cases". What should we do? (a) Write to the people who run it and ask whether a small farm website is allowed. (b) Leave it as it is and watch it. (c) Move to Mapbox later (it needs an account in the farm's name; it has a free monthly allowance and may charge after that). (d) Switch the box off.**
 
 Dashboard id: d10
 
@@ -707,7 +707,7 @@ Answer:
 
 Dashboard id: d66
 
-Why it matters: The "New this year" ribbon hides itself after 31 December 2026. (The "New: u-pick tomatoes & basil" chip and badge already hide on 31 October.) But eight other places still call the tomatoes and basil new, for example the FAQ answer "Yes, and it's new this year!". The small red dot on the Tomatoes link in the menu also comes back every fall, not only this one.
+Why it matters: The "New this year" ribbon hides itself after 31 December 2026. (The "New: u-pick tomatoes & basil" chip and badge hide themselves after 31 October.) But eight other places still call the tomatoes and basil new, for example the FAQ answer "Yes, and it's new this year!". The small red dot on the Tomatoes link in the menu also comes back every fall, not only this one.
 
 Answer:
 
@@ -784,7 +784,7 @@ Answer:
 
 Dashboard id: d73
 
-Why it matters: Phones and browsers that darken pages by themselves no longer change the site, because the site now tells them to stay light. One case remains: a developer setting on a computer, where the dark text on the yellow buttons, tabs and chips turns too pale to read. A slightly paler yellow would cure it but changes the farm's colour. Few visitors, if any, would ever see it.
+Why it matters: Phones and browsers that darken pages by themselves no longer change the site, because the site now tells them to stay light. One case remains: a developer setting on a computer, where the dark text on the yellow buttons, tabs and chips turns too pale to read. A slightly paler yellow would cure it, if it is pale enough, but changes the farm's colour. Few visitors, if any, would ever see it.
 
 Answer:
 
@@ -1187,14 +1187,14 @@ Everything in this section was checked against the code on 3 October 2026; the g
 
 **Question 67: Do you want a form to change settings?**
 
-- **If start small:** ask Claude for Part 1 of the owner page proposal (the page PROPOSAL_owner_page in the docs folder; it is not in the repository yet) in its smallest form (the notice and closed days, about one day): a page called owner.html in the site folder that is never uploaded and writes only `js/content.js` between two marker lines.
+- **If start small:** ask Claude for Part 1 of the owner page proposal (the file docs/PROPOSAL_owner_page.md) in its smallest form (the notice and closed days, about one day): a page called owner.html in the site folder that is never uploaded and writes only `js/content.js` between two marker lines.
 - **If the form and the facts table:** Parts 1 and 2 of the proposal (the facts table touches about 100 sentences in five languages).
 - **If no:** no change.
 
 **Question 68: Should the brand yellow be made a little paler, so it stays readable if a computer forces a dark look?**
 
 - **If she leaves it:** no change.
-- **If a paler yellow:** `css/styles.css` at `--sun:#ffc928;` and `index.html` at `<meta name="theme-color" content="#ffc928">` (then `python3 tools/pages.py`); drawings and the map highlight carry their own #ffc928, so decide whether they change too. Test with `node tests/auto-dark.test.mjs`.
+- **If a paler yellow:** `css/styles.css` at `--sun:#ffc928;` and `index.html` at `<meta name="theme-color" content="#ffc928">` (then `python3 tools/pages.py`); drawings and the map highlight carry their own #ffc928, so decide whether they change too. Test with `node tests/auto-dark.test.mjs` (with a pale enough yellow it reports SKIP, because its control is no longer unreadable: see DECISION_PLAYBOOK, d73).
 - **If she will explain:** no change until she does.
 
 ## Translation notes (for a reader of Hindi or Spanish, not for the farm)

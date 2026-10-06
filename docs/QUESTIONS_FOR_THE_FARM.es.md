@@ -405,7 +405,7 @@ Respuesta:
 
 ### Pregunta 36
 
-**La casilla "Tiempo en auto" usa un servidor de rutas gratuito cuya propia página dice que su demostración es para "usos razonables y no comerciales". ¿Qué hacemos? (a) Escribir a quienes lo manejan y preguntar si se permite el sitio web de una granja pequeña; (b) dejarlo como está y vigilarlo; (c) pasar más adelante a Mapbox (requiere una cuenta gratuita a nombre de la granja); (d) quitar la casilla.**
+**La casilla "Tiempo en auto" usa un servidor de rutas gratuito cuya propia página dice que su demostración es para "usos razonables y no comerciales". ¿Qué hacemos? (a) Escribir a quienes lo manejan y preguntar si se permite el sitio web de una granja pequeña; (b) dejarlo como está y vigilarlo; (c) pasar más adelante a Mapbox (requiere una cuenta a nombre de la granja; tiene una cuota mensual gratuita y puede cobrar después); (d) quitar la casilla.**
 
 Id en el panel: d10
 
@@ -711,7 +711,7 @@ Respuesta:
 
 Id en el panel: d66
 
-Por qué importa: La cinta "Novedad de este año" se oculta sola después del 31 de diciembre de 2026 (la etiqueta "Novedad: tomates y albahaca para recoger" ya se oculta el 31 de octubre), pero otros ocho lugares siguen llamando novedad a los tomates y la albahaca, por ejemplo la respuesta de las preguntas frecuentes ("¡Sí, y es novedad este año!"). El puntito rojo del enlace "Tomates" del menú también vuelve cada otoño, no solo este.
+Por qué importa: La cinta "Novedad de este año" se oculta sola después del 31 de diciembre de 2026 (la etiqueta "Novedad: tomates y albahaca para recoger" se oculta sola después del 31 de octubre), pero otros ocho lugares siguen llamando novedad a los tomates y la albahaca, por ejemplo la respuesta de las preguntas frecuentes ("¡Sí, y es novedad este año!"). El puntito rojo del enlace "Tomates" del menú también vuelve cada otoño, no solo este.
 
 Respuesta:
 
@@ -788,6 +788,6 @@ Respuesta:
 
 Id en el panel: d73
 
-Por qué importa: Los teléfonos y navegadores que oscurecen las páginas por su cuenta ya no cambian el sitio, porque ahora se les pide quedarse claro. Queda un caso, un ajuste de programador en una computadora, en el que el texto oscuro sobre los botones, pestañas y etiquetas amarillos se vuelve demasiado pálido para leerse; un amarillo un poco más pálido lo arreglaría, pero cambia el color de la granja. Muy pocos visitantes, si alguno, lo verían alguna vez.
+Por qué importa: Los teléfonos y navegadores que oscurecen las páginas por su cuenta ya no cambian el sitio, porque ahora se les pide quedarse claro. Queda un caso, un ajuste de programador en una computadora, en el que el texto oscuro sobre los botones, pestañas y etiquetas amarillos se vuelve demasiado pálido para leerse; un amarillo un poco más pálido lo arreglaría, si es lo bastante pálido, pero cambia el color de la granja. Muy pocos visitantes, si alguno, lo verían alguna vez.
 
 Respuesta:

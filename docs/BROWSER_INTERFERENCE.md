@@ -104,7 +104,7 @@ Before the page uses a newer browser feature it checks that the feature is there
 These are small choices. None of them is urgent.
 
 1. **Show the email address next to the buttons that show only words?** (16 of 34 email links.) You can show the address in small type beside each button. Or, when no mail program opens, the page can show a short note with the address and a "Copy" button. That needs new words in five languages. Or you can leave it.
-2. **Rename `js/analytics.js`?** Matters only if you switch analytics on. A neutral name, such as "visits" instead of "analytics", would avoid the name filters. It is a one-time change in 14 files; I would do it and run every test.
+2. **Rename `js/analytics.js`?** Matters only if you switch analytics on. A neutral name, such as "visits" instead of "analytics", would avoid the name filters. It would help only a little, because the provider's own script is on most lists anyway. It is a one-time change in 14 files; I would do it and run every test.
 3. **Say something when a language cannot be loaded because the connection dropped?** Today nothing happens when a visitor taps a language and the line is gone. A one-line note would need words in five languages.
 4. **Should the Back button close the photo viewer (and the menu) first?** Today Back leaves the page.
 5. **Protect the farm's names in the running English text from Chrome's Translate?** You can leave it. Or the page can wrap each name, as it already does in the other four languages. That is a little extra work in every English visitor's browser. Or the page can tell Chrome never to translate it. That would also take the translate help away from visitors who read none of our five languages.

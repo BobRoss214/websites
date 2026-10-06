@@ -160,7 +160,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | dated, live | closed badges on a closure date | d60 |
 | drive at `those services may keep a record of the request` | the Drive time note sentence | d62 |
 | print-qr (whole file) | QR codes: error correction level M or better, every code scans back, the signs and the six pages on paper | d64, d65 |
-| hero at `fall: the "New tomatoes" chip shows` | the "New" tomato chip (it hides itself after 2026-12-31) | d66 |
+| hero at `fall: the "New tomatoes" chip shows` | the "New" tomato chip (it hides itself after 2026-10-31) | d66 |
 | validity (whole file) | page style lines that browsers ignore (the two backgrounds of d67 must stay valid) | d67 |
 | hero, touch, games (whole files) | the badges and the reach of the game, a badge on a 320 pixel screen, the winter messages | d68, d69, d70 |
 | auto-dark (whole file) | every yellow part keeps dark text when Chromium's auto dark mode is on | d73 |
@@ -572,7 +572,7 @@ Nothing can go live until the host and the web address are chosen. The files alr
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: d60 (closing days is the first thing the form would write), d05 (the form is never uploaded: the deploy folder must leave it out).
-- Note: The proposal is the page PROPOSAL_owner_page in the docs folder (it is not in this repository yet; the helpers wrote it on 3 October 2026). Costs from it: the form 2 to 3 days (one day for the notice and closed days alone); the facts table about 3 days, touching about 100 sentences in five languages; the form must use the same rules as the "Site check" box and writes only js/content.js between two marker lines. Its four decisions: which settings first, whether a Chrome or Edge only "Save" is acceptable (other browsers get a download), whether to build the facts table and for which facts, and who tries each part.
+- Note: The proposal is the page PROPOSAL_owner_page in the docs folder (docs/PROPOSAL_owner_page.md, written on 3 October 2026). Costs from it: the form 2 to 3 days (one day for the notice and closed days alone); the facts table about 3 days, touching about 100 sentences in five languages; the form must use the same rules as the "Site check" box and writes only js/content.js between two marker lines. Its four decisions: which settings first, whether a Chrome or Edge only "Save" is acceptable (other browsers get a download), whether to build the facts table and for which facts, and who tries each part.
 
 **A. Yes, start small: the notice and closed days**
 
@@ -668,7 +668,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 - Urgency: 1 (blocks launch). Checklist says: before launch.
 - Owner fact (no sensible default): yes
 - Default: none. Only she can see what the Bookeo page books. The address came with the farm's own wording (commit ccd629c, "real booking, pizza pre-order and email-signup links").
-- Depends on: d47 (the same check for the pizza page), d02 (parties and company events are booked by email, not here), d25 (Reserve buttons in the gaps between seasons).
+- Depends on: d47 (the same check for the pizza page), d02 (company events, larger events and full farm rentals are booked by email, not here; a party is booked here, with the "Book a party" button), d25 (Reserve buttons in the gaps between seasons).
 - Note: Old Q22.
 
 **A. Yes, it is the right page**
@@ -1416,7 +1416,7 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 
 **B. Pizza at The GreenHouse is all day when open: change the pizza section**
 
-- The same places as d51 B, with 10 am to 8 pm: js/content.js at `hours: {` (hours.pizza) and about twenty sentences, found by the consistency test (the fact "time: Wise Pie at The GreenHouse (no reservation)", 11 places say 16:00-21:00 today). Not replayed: it is the same kind of edit as d51 B.
+- The same places as d51 B, with 10 am to 8 pm: js/content.js at `hours: {` (hours.pizza) and about twenty sentences, found by the consistency test (the fact "time: Wise Pie at The GreenHouse (no reservation)", 11 places say 16:00-20:00 today). Not replayed: it is the same kind of edit as d51 B.
 - Strings: up to 20 UI ids x 4 translations
 - Tests: consistency MUST follow; live (open-now badges); dated
 
@@ -1433,7 +1433,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d01. What visitors see in winter
 
-- In plain words: From January to March the site still shows fall booking buttons and fall 2026 prices. Two ready-made fixes exist (A and B). C means leave it: the Christmas tree wording is already fixed.
+- In plain words: Fall ends on November 8, but the site shows fall booking buttons and fall 2026 prices all year, also in winter, spring and summer (nothing hides them today). Two ready-made fixes exist (A and B). C means leave it: the Christmas tree wording is already fixed.
 - Doc question: Q37 (and Q12 for the Christmas tree dates; Q12 is not on the dashboard)
 - Urgency: 2 (wrong or risky information). Checklist says: can follow launch.
 - Owner fact (no sensible default): yes
@@ -1447,7 +1447,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - What it does: the "Reserve now" button in the Visit area, the "Choose your package" header, packages, included, add-ons, the "See prices" and "See packages" buttons, the "At the farm" shop block with its jump link and the "Fall:" paragraph get data-only="fall" (or "spring summer fall"). A new off-season line ("Fall at the farm usually starts again in mid-September...") with the existing "Tell me when it opens" button shows in winter, spring and summer. First-visit page: "See packages & add-ons" button hidden out of fall. css/sections.css +2 lines.
 - Then rebuild (python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build) and python3 tools/i18n.py missing es hi zh vi (0 each).
 - The pumpkin page (pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`) keeps "fall 2026" prices all year: not covered.
-- The fall blocks come back about August 12 (the site then treats fall as the nearest season): answer d24 before that.
+- The fall blocks are hidden from Nov 18, when the page begins to look like winter (from Nov 9 to Nov 17 it still looks like fall), and come back about August 12 (the site then treats fall as the nearest season): answer d24 before that.
 - Strings: 1 new UI sentence (id t48ba72e7) x 4 translations, already written in the patch
 - Tests: Run on the patched e02b95e tree: consistency 66, live 20, dated 24, farm-seasons 24, hero 74, messages 173: all pass. Page-clock check: packages, shop block and Reserve now show on 2026-10-10 only; the off-season line shows from 2026-11-20 to 2027-03-01; the tree headline shows on 2026-12-01 only (same as unpatched). No test needs a change
 - Patch: patches/optional/winter-A-hide-fall-booking.patch
@@ -1466,7 +1466,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 - Nothing to apply: this answer means "change nothing more". The Christmas tree wording is already fixed: it is in-season-only since b54427b (commit e081393): the headline "Wise Acres Christmas trees", the "Trees" chip and "Christmas trees are here." show only from the Friday after Thanksgiving to December 8 (data-in-season; js/hero.js at `function applyOnly(` and `$$('#hero-h > [data-only]')`). Checked with a page clock on the unpatched tree: tree headline on 2026-12-01 only; 2026-11-20, 2026-12-20, 2027-01-20 and 2027-03-01 show "Organic u-pick fun for the whole family".
 - Do NOT apply the patch winter-C.patch (it is stale and does not apply any more). A naive rebase (tree headline first in the h1) is wrong: js/hero.js at `$$('#hero-h > [data-only]')` shows the FIRST title between seasons, so the tree headline would show all winter. Tested and rejected.
-- What stays wrong with C alone: from the Nov 9 gap to March the Visit and Shop areas still show "Fall 2026" prices and "Reserve now" (see A and B).
+- What stays wrong with C alone: from Nov 9 on, all winter, spring and summer, the Visit and Shop areas still show "Fall 2026" prices and "Reserve now" (see A and B).
 - Strings: 0
 - Tests: none to run: no file changes
 
@@ -1593,7 +1593,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **B. Hide fall content between seasons**
 
-- Same as d01 option A: apply patches/optional/winter-A-hide-fall-booking.patch. Fall blocks are hidden while another season is on screen: the 2026 prices stop showing from Nov 9 until the site switches back to fall, about August 12 (checked with a page clock: hidden on 2027-08-11, shown on 2027-08-13). Then the 2026 prices show again, so send the 2027 details (option A) before that date.
+- Same as d01 option A: apply patches/optional/winter-A-hide-fall-booking.patch. Fall blocks are hidden while another season is on screen: the 2026 prices stop showing from Nov 18 (when the page begins to look like winter) until the site switches back to fall, about August 12 (checked with a page clock: hidden on 2027-08-11, shown on 2027-08-13). Then the 2026 prices show again, so send the 2027 details (option A) before that date.
 - Not covered: the pumpkin page (pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`).
 - Strings: 1 new sentence x 4 (see d01)
 - Tests: as d01 A
@@ -1712,7 +1712,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d66. Stop saying "new this year" from January?
 
-- In plain words: The "New this year" ribbon hides itself after December 31, 2026 (the "New" chip and badge already hide on October 31). Eight other places still call the tomatoes and basil new, and the red dot on the Tomatoes link comes back every fall.
+- In plain words: The "New this year" ribbon hides itself after December 31, 2026 (the "New" chip and badge hide themselves after October 31). Eight other places still call the tomatoes and basil new, and the red dot on the Tomatoes link comes back every fall.
 - Doc question: Q61
 - Urgency: 3 (nice to have). Checklist says: not listed.
 - Owner fact (no sensible default): no
@@ -2450,7 +2450,7 @@ Features, prices and claims the site states as fact. They came from the farm's o
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: none.
-- Note: The one-line fix is already in (every page head and css/styles.css say "only light"; README.md, section "What's interactive", the paragraph "Light only, on purpose"). The cure for the rare case was described by the helper who tested it as a slightly paler yellow, for example #ffd03d instead of #ffc928; that figure was not measured again for this list. The farm's yellow is used in about a dozen drawings and two style files too.
+- Note: The one-line fix is already in (every page head and css/styles.css say "only light"; README.md, section "What's interactive", the paragraph "Light only, on purpose"). The cure for the rare case is a slightly paler yellow, but it has to be pale enough. Measured on 6 October 2026 with the control part of tests/auto-dark.test.mjs (the page with the opt-out taken out, worst yellow part): today's #ffc928 gives 1.27 : 1, #ffd03d gives 1.21 : 1 (no cure), and #ffd140 and every paler yellow tried, up to #ffdd66, give 8.5 : 1 or better (readable; for #ffdd66 the picture card shows dark brown buttons with light words). The farm's yellow is used in about a dozen drawings and two style files too.
 
 **A. Leave the yellow as it is now**
 
@@ -2461,7 +2461,7 @@ Features, prices and claims the site states as fact. They came from the farm's o
 **B. Make the yellow slightly paler**
 
 - css/styles.css at `--sun:#ffc928;` (the yellow of buttons, tabs and chips) and the browser colour in index.html at `<meta name="theme-color" content="#ffc928">` (python3 tools/pages.py copies it to the five other pages; 404.html has its own copy). Drawings and the map highlight carry their own #ffc928 (css/features.css, css/extras.css and index.html), so decide whether they change too.
-- Test the new colour with the "auto dark" test, which switches Chromium's forced dark look on and checks every yellow part keeps readable dark text.
+- Test the new colour with the "auto dark" test, which switches Chromium's forced dark look on and checks every yellow part keeps readable dark text. With a pale enough yellow its control is no longer unreadable, so the whole test reports SKIP and checks nothing (tried with #ffd140): change that control check when the colour changes.
 - Strings: 0
 - Tests: auto-dark (the whole point), axe (contrast), visual-check (new baselines), forced-colors
 
@@ -2502,13 +2502,13 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 ### d84. Make the red See the farm in label a little darker?
 
-- In plain words: The red handwriting label above the season buttons passes the contrast rule, but only just. In summer, against the blue sky, it is the hardest text to read on the page. A slightly darker red would help and would look almost the same.
+- In plain words: The red handwriting label beside the season buttons is large text, so it passes the contrast rule, but not by much. In summer, against the blue sky, it is the hardest text to read on the page. A slightly darker red would help and would look almost the same.
 - Doc question: none (added on the dashboard after the doc was written)
 - Urgency: 3 (nice to have). Checklist says: not listed.
 - Owner fact (no sensible default): no
 - Default: A.
 - Depends on: d73 (the brand yellow, the same kind of colour question).
-- Note: The colour is in css/hero.css at `.ss-label{font:700 1.5rem`: today #a8182f. Against the darkest sky colour (#5fc1ee) it gives a contrast of 3.7; 4.5 is wanted for small text.
+- Note: The colour is in css/hero.css at `.ss-label{font:700 1.5rem`: today #a8182f. Against the darkest sky colour (#5fc1ee) it gives a contrast of 3.6; 3 is wanted for large text like this label (24 px, bold) and 4.5 for small text.
 
 **A. Darken the red a little**
 
