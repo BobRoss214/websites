@@ -2087,9 +2087,9 @@ if (section('13p. Live boards tell the truth: no stale pick, no zero-share chips
       r.openRound(0);
       r.lock();
     }, [gid + '500', gid + '10']);
-    const playing = await page.waitForFunction((rid) => window.GS.live.room(rid).phase === 'playing', gid + '1000', { timeout: 20000 }).then(() => true, () => false);
+    const playing = await page.waitForFunction((rid) => window.GS.live.room(rid).phase === 'playing', gid + '500', { timeout: 20000 }).then(() => true, () => false);
     await go(page, '#live-' + gid + '500');
-    const arrived = await page.waitForFunction((a) => (a[1] ? window.GS.games[a[0]][a[1]]() >= 1000 : window.GS.ui.live.gameBusy(a[0])), [gid, BOARD[gid]], { timeout: 15000 }).then(() => true, () => false);
+    const arrived = await page.waitForFunction((a) => (a[1] ? window.GS.games[a[0]][a[1]]() >= 500 : window.GS.ui.live.gameBusy(a[0])), [gid, BOARD[gid]], { timeout: 15000 }).then(() => true, () => false);
     await page.waitForTimeout(800);
     const busy = await page.evaluate((g) => window.GS.ui.live.gameBusy(g), gid);
     const t0 = Date.now();
