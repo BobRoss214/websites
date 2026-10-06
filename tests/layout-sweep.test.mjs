@@ -13,7 +13,7 @@ import { auditLayout } from './layout-audit.mjs';
 const PAGES = ['index.html', 'first-visit.html'];
 const LANGS = ['es', 'hi', 'zh', 'vi'];
 const SIZES = [{ w: 320, h: 568 }, { w: 390, h: 844 }, { w: 1280, h: 800 }];
-const PARALLEL = 4;
+const PARALLEL = Math.max(1, Number(process.env.WA_PARALLEL) || 2);   // views looked at at the same time: windows up to 30000 px tall make Chromium crash its compositor at 4 on a small computer ("Target crashed"); set WA_PARALLEL=4 on a big one
 
 await run('layout-sweep', async ({ browser, base, errs }) => {
   const results = [];
@@ -75,7 +75,7 @@ await run('layout-sweep', async ({ browser, base, errs }) => {
     ok(`${w}px: no text is cut off by a box (overflow hidden) or shortened with "..."`, list(['clipped-text', 'ellipsis'], w).length === 0, list(['clipped-text', 'ellipsis'], w).slice(0, 4).join(' | '));
     ok(`${w}px: no button label runs over 4 lines or reaches outside its button`, list(['button-wrap', 'button-cut'], w).length === 0, list(['button-wrap', 'button-cut'], w).slice(0, 4).join(' | '));
     ok(`${w}px: no text sits on top of other text`, list(['overlap'], w).length === 0, list(['overlap'], w).slice(0, 4).join(' | '));
-    ok(`${w}px: no picture is stretched or broken`, list(['img-stretch', 'img-broken'], w).length === 0, list(['img-stretch', 'img-broken'], w).slice(0, 4).join(' | '));
+    ok(`${w}px: no picture is stretched, squeezed into a strip or broken`, list(['img-stretch', 'img-flat', 'img-broken'], w).length === 0, list(['img-stretch', 'img-flat', 'img-broken'], w).slice(0, 4).join(' | '));
     ok(`${w}px: the bars that float over the page do not cover each other or too much of the screen`, list(['bars', 'bars-overlap'], w).length === 0, list(['bars', 'bars-overlap'], w).slice(0, 4).join(' | '));
   }
   ok('every character on the page has a glyph in Spanish, Hindi, Chinese and Vietnamese (no empty boxes)', list(['tofu']).length === 0, [...new Set(list(['tofu']))].slice(0, 4).join(' | '));

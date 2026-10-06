@@ -8,6 +8,7 @@
  *   button-wrap    a button or link-button label runs over 3 or more lines
  *   button-cut     a button label reaches outside its own button
  *   img-stretch    a picture drawn with a different width/height ratio than the file has (object-fit fill)
+ *   img-flat       a picture 200 px or more wide that is drawn less than 0.55 as high as it is wide (a style that squeezes every picture into a strip; the flattest picture on the site is 0.7)
  *   img-broken     a picture that did not load
  *   bars           the fixed/sticky bars together cover too much of the screen (options.barsMax, default 45%)
  *   bars-overlap   two fixed bars on top of each other
@@ -154,6 +155,7 @@ export function auditLayout(options) {
     for (const img of document.images) {
       const r = img.getBoundingClientRect(); if (r.width < 4 || r.height < 4 || !visible(img)) continue;
       if (img.complete && img.naturalWidth === 0 && img.currentSrc) { add('img-broken', img, img.currentSrc.slice(-60)); continue; }
+      if (r.width >= 200 && r.height / r.width < 0.55) add('img-flat', img, `drawn ${Math.round(r.width)}x${Math.round(r.height)}: less than 0.55 as high as wide`);
       if (!img.naturalWidth || !img.naturalHeight) continue;
       const fit = cs(img).objectFit; if (fit !== 'fill') continue;
       const nat = img.naturalWidth / img.naturalHeight, drawn = r.width / r.height;

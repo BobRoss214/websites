@@ -5,7 +5,7 @@
 /* A visitor's first minute, in one short browser test (about 20 seconds on a quiet computer): the home page at a computer width, a phone width and the smallest
  * phone. The things that would be seen at once if they broke: the red Reserve buttons are on show and big enough to press (a CSS rule that hides them is found
  * here), the headline and the text can be read (colour against its background, 3:1 and 4.5:1), the second question in the FAQ opens and shows its answer, Tab shows a focus
- * ring (not removed by a style), nothing makes the page scroll sideways at 390 and 320 px, and the menu button on a phone has a name, opens the menu and the menu has
+ * ring (not removed by a style), nothing makes the page scroll sideways at 390 and 320 px, the text is not shrunk below 14 px, and the menu button on a phone has a name, opens the menu and the menu has
  * its links. Only plain facts (shown / not shown, sizes, colours), no waiting for animations, so it does not fail on a busy computer. The deeper tests (hero, keyboard,
  * layout-sweep, auto-dark, axe) look at the same things in detail; this one runs in --quick and says "something obvious is broken" first. */
 import { run, open, ok, okSoon, until } from './lib.mjs';
@@ -46,6 +46,8 @@ await run('smoke', async ({ browser, base, errs }) => {
     p = await open(browser, base, 'index.html', errs, { viewport: { width: w, height: h } });
     const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     ok(`${w} px: the page does not scroll sideways`, over <= 1, over + ' px too wide');
+    const px = await p.evaluate(() => { const e = [...document.querySelectorAll('main p')].find((x) => x.getClientRects().length && x.textContent.trim().length > 20); return e ? parseFloat(getComputedStyle(e).fontSize) : 0; });
+    ok(`${w} px: the text of a paragraph is at least 14 px high (a style has not shrunk it)`, px >= 14, px + ' px');
     if (w === 390) {
       const btn = await p.evaluate(() => { const b = document.querySelector('#menu-toggle'); return b ? { name: (b.getAttribute('aria-label') || b.textContent || '').trim(), shown: b.getBoundingClientRect().width > 20 } : null; });
       ok('390 px: the menu button is there, has a name and is on show', !!btn && btn.shown && btn.name.length > 1, JSON.stringify(btn));
