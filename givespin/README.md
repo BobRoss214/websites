@@ -324,10 +324,10 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 ## Tests
 
 ```
-node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/kit.test.js givespin/tests/readme.test.js givespin/tests/marks.test.js
+node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/kit.test.js givespin/tests/readme.test.js givespin/tests/marks.test.js givespin/tests/marble.test.js
 ```
 
-111 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+116 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
 backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly
@@ -336,7 +336,7 @@ against Node's own HMAC, uniformity over 30,000 rounds, tampering is caught, the
 charity data (unique ids, valid vocabulary, short names and blurbs, bare hostnames, no superlatives, minimum counts per
 cause and filter), and saved rounds (a board of 300, 301 or 500 charities and a live round with 25 backed charities come back whole
 after a reload and still verify, a Dice round still verifies after the roster grows, older saves still load, a full
-storage is reported, and the saved text stays small), and this README (the roster size, the board sizes per game, the unit-test count and command, the file list and the wording rules are all checked against the code).
+storage is reported, and the saved text stays small), Marble Run's click spots (a marble tossed up in the shake is clicked where it is seen) and which marbles wear their charity's mark, and this README (the roster size, the board sizes per game, the unit-test count and command, the file list and the wording rules are all checked against the code).
 
 ```
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs

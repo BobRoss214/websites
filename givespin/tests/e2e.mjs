@@ -4207,6 +4207,350 @@ if (section('13y. Click a charity on the board: Wheel, Roulette, Plinko, Lucky D
   await page.close();
 }
 
+if (section('13zm. Marble Run: a click or tap on a marble opens that charity (in the shake, in the run, at live tables, on a phone), a glass marble wears its charity\'s mark where it is big enough, and the race never notices')) {
+  const problems0 = problems.length;
+  const IDS8 = ['wateraid', 'msf', 'save-the-children', 'oxfam-america', 'feeding-america', 'khan-academy', 'charity-water', 'surfrider'];   // all have a real logo in assets/logos
+  const BACKED = [['wateraid', 60], ['msf', 25], ['khan-academy', 10]];
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  // a marble whose centre is clear of every other charity's centre (a click on its middle can only mean its charity)
+  const apart = (s, all, d = 4) => all.every((o) => o === s || o.id === s.id || dist(s, o) >= d);
+  // the emptiest point of the canvas box: the one furthest from every marble's spot (and at least 8 px from all of them)
+  const emptyPoint = (box, all) => {
+    let best = null, bd = 8;
+    for (let x = box.x + 6; x < box.x + box.w - 6; x += 7) {
+      for (let y = box.y + 6; y < box.y + box.h - 6; y += 7) {
+        let d = Infinity;
+        for (const s of all) { d = Math.min(d, dist({ x, y }, s) - s.rx); }
+        if (d > bd) { bd = d; best = { x, y }; }
+      }
+    }
+    return best;
+  };
+  const stageBox = (page) => page.evaluate(() => { const el = document.querySelector('#panel-marble canvas'); el.scrollIntoView({ block: 'center' }); const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
+  const spotsNow = async (page) => { await stageBox(page); return page.evaluate(() => window.GS.games.marble._spots()); };
+  const profileId = (page) => page.evaluate(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; });
+  const waitProfile = (page, ms) => page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return !!(d && d.open); }, null, { timeout: ms }).then(() => true, () => false);
+  const closeProfile = async (page) => { if (await profileId(page)) { await page.keyboard.press('Escape'); await page.waitForFunction(() => !document.querySelector('#dlg-profile').open); } };
+  const frames = (page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r)))));
+  // the things a click must not change: no round running or played, no money moved, the same charities on the board
+  const snap = (page) => page.evaluate(() => { const g = window.GS.games.marble; return { busy: window.GS.app.state.busy, bal: window.GS.store.balance(), hist: window.GS.store.get().history.length, n: g._entrants(), ids: g._spots().map((s) => s.id).sort().join(','), shown: g._shown().join(',') }; });
+  // a known board: your own list of charities (null: the whole roster) and a size, dealt by hopping out of the game and back in
+  const setBoard = async (page, ids, n) => {
+    await page.evaluate(([ids, n]) => {
+      const prefs = window.GS.store.prefs();
+      const custom = Object.assign({}, prefs.custom || {});
+      if (ids) { custom.marble = { on: true, ids }; } else { delete custom.marble; }
+      window.GS.store.setPref('custom', custom);
+      window.GS.store.setPref('sizes', Object.assign({}, prefs.sizes, { marble: n }));
+    }, [ids, n]);
+    await go(page, '#lobby');
+    await go(page, '#game-marble');
+    await page.waitForSelector('#panel-marble:not([hidden])');
+    await page.waitForFunction((n) => window.GS.games.marble._entrants() === n && window.GS.games.marble._spots().length > 0, n, { timeout: 15000 });
+    if (ids) { await page.waitForFunction((ids) => ids.every((id) => !!window.GS.markImage(window.GS.charity(id))), ids, { timeout: 15000 }).catch(() => {}); }   // the real logos have loaded
+    await page.waitForTimeout(250);
+  };
+  // reads the canvas three ways (the real marks, no marks at all, a stub mark that is solid magenta), each in a frame of its own, and says what differs:
+  // per marble spot and over the whole picture; also where the marbles are really stamped (the draw calls), to compare with the spots
+  const probe = (page) => page.evaluate(async () => {
+    const cv = document.querySelector('#panel-marble canvas');
+    const gm = window.GS.games.marble;
+    const real = window.GS.markImage;
+    const proto = CanvasRenderingContext2D.prototype, origDraw = proto.drawImage;
+    const nextFrames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))));
+    const copy = () => { const cp = document.createElement('canvas'); cp.width = cv.width; cp.height = cv.height; const x = cp.getContext('2d', { willReadFrequently: true }); x.drawImage(cv, 0, 0); return x.getImageData(0, 0, cp.width, cp.height); };
+    const stub = document.createElement('canvas');
+    stub.width = stub.height = 40;
+    { const x = stub.getContext('2d'); x.fillStyle = '#ff00ff'; x.fillRect(0, 0, 40, 40); }
+    let A, B, C;
+    const stamps = [];
+    try {
+      await nextFrames(); A = copy();
+      window.GS.markImage = () => null; await nextFrames(); B = copy();
+      window.GS.markImage = () => stub; await nextFrames(); C = copy();
+      window.GS.markImage = real;
+      proto.drawImage = function (img, a, b, c, d) { if (this.canvas === cv && img instanceof HTMLCanvasElement && arguments.length === 5 && c < 80) { stamps.push([a, b, c, d]); } return origDraw.apply(this, arguments); };
+      await nextFrames();
+    } finally { proto.drawImage = origDraw; window.GS.markImage = real; }
+    const rc = cv.getBoundingClientRect();
+    const k = cv.width / rc.width;
+    const g = gm._debug.geo();
+    const kk = g && g.k < 1 ? g.k : 1;
+    const magenta = (d, i) => d[i] >= 170 && d[i + 1] <= 110 && d[i + 2] >= 170;
+    const w = cv.width;
+    const box = (s) => ({ x0: Math.max(0, Math.round((s.x - s.rx - rc.left) * k)), y0: Math.max(0, Math.round((s.y - s.ry - rc.top) * k)), x1: Math.min(cv.width, Math.round((s.x + s.rx - rc.left) * k)), y1: Math.min(cv.height, Math.round((s.y + s.ry - rc.top) * k)) });
+    const over = (bx, fn) => { let n = 0; for (let y = bx.y0; y < bx.y1; y++) { for (let x = bx.x0; x < bx.x1; x++) { if (fn((y * w + x) * 4)) { n++; } } } return n; };
+    const whole = { x0: 0, y0: 0, x1: cv.width, y1: cv.height };
+    const differs = (i) => Math.abs(A.data[i] - B.data[i]) + Math.abs(A.data[i + 1] - B.data[i + 1]) + Math.abs(A.data[i + 2] - B.data[i + 2]) > 24;
+    const spots = gm._spots().filter((s) => s.x !== undefined);
+    const per = spots.length <= 40 ? spots.map((s) => ({ id: s.id, differs: over(box(s), differs), stub: over(box(s), (i) => magenta(C.data, i)), plain: over(box(s), (i) => magenta(B.data, i)) })) : [];
+    // a stamp whose middle is within 1 px of the spot's middle: the marble is where its spot says
+    const stamped = spots.filter((s) => stamps.some((st) => Math.abs((st[0] + st[2] / 2) * kk - (s.x - rc.left) * k) <= 1 && Math.abs((st[1] + st[3] / 2) * kk - (s.y - rc.top) * k) <= 1)).length;
+    return { n: spots.length, per, wholeDiffers: over(whole, differs), wholeStub: over(whole, (i) => magenta(C.data, i)), wholePlain: over(whole, (i) => magenta(B.data, i)), stamped, stamps: stamps.length };
+  });
+  // records every click as it lands: where it was, which charity the game's hit test says, and which marble is under the pointer according to the PHYSICS
+  // (as the motion has the marbles drawn right now: a marble tossed up in the shake counts first if the pointer is on it, being painted on top; otherwise the nearest middle;
+  // d is how far the pointer is from its middle, rad the marble's radius and slack the room the game gives a fingertip round it)
+  const watchClicks = (page) => page.evaluate(() => {
+    if (window.__mclk) { window.__mclk.length = 0; return; }
+    window.__mclk = [];
+    document.addEventListener('click', (e) => {
+      const gm = window.GS.games.marble, dbg = gm._debug;
+      const cv = document.querySelector('#panel-marble canvas');
+      const rc = cv.getBoundingClientRect();
+      const m = dbg.motion(), g = dbg.geo();
+      const kk = (g && g.k < 1 ? g.k : 1) * rc.width / parseFloat(cv.style.width);
+      let under = null;
+      if (m && m.stage() !== 'done' && m.ents && m.ents[0] === dbg.marbles()[0]) {
+        let near = null, lifted = null;
+        for (let k = 0; k < m.ents.length; k++) {
+          const cx = rc.left + m.OX[k] * kk, cy = rc.top + (m.OY[k] - m.LIFT[k] * g.r * 1.3) * kk;
+          const d = Math.hypot(e.clientX - cx, e.clientY - cy);
+          const rad = g.r * (1 + m.LIFT[k] * 0.16) * kk;
+          const slack = Math.max(5, rad * 1.15 + 2);
+          if (m.LIFT[k] > 0.02 && d <= rad + 1.5 && (!lifted || d < lifted.d)) { lifted = { id: m.ents[k].ch.id, d, rad, slack }; }
+          if (!near || d < near.d) { near = { id: m.ents[k].ch.id, d, rad, slack }; }
+        }
+        under = lifted || near;
+      }
+      window.__mclk.push({ x: e.clientX, y: e.clientY, hit: gm._hitAt(e.clientX, e.clientY), under });
+    }, true);
+  });
+  // picks a marble to aim at, as drawn right now: { kind: 'lift' } one that is tossed up in the shake (its drawn middle is worked out from the motion's own numbers),
+  // { kind: 'id', id } that charity's marble, { kind: 'apart', nth } a marble clear of the others. Waits (up to `ms`) until there is one.
+  const aim = (page, what, ms = 8000) => page.evaluate(({ what, ms }) => new Promise((resolve) => {
+    const gm = window.GS.games.marble, dbg = gm._debug;
+    const cv = document.querySelector('#panel-marble canvas');
+    cv.scrollIntoView({ block: 'center' });
+    const t0 = performance.now();
+    (function tick() {
+      const m = dbg.motion(), g = dbg.geo();
+      const rc = cv.getBoundingClientRect();
+      const kk = (g && g.k < 1 ? g.k : 1) * rc.width / parseFloat(cv.style.width);
+      let out = null;
+      if (what.kind === 'lift') {
+        if (m && m.stage() !== 'done' && m.ents[0] === dbg.marbles()[0]) {
+          let best = -1, bl = 0.7;
+          for (let k = 0; k < m.ents.length; k++) { if (m.LIFT[k] > bl) { bl = m.LIFT[k]; best = k; } }
+          if (best >= 0) { out = { id: m.ents[best].ch.id, x: rc.left + m.OX[best] * kk, y: rc.top + (m.OY[best] - m.LIFT[best] * g.r * 1.3) * kk, lift: m.LIFT[best], stage: m.stage() }; }
+        }
+      } else {
+        const sp = gm._spots().filter((s) => s.x !== undefined);
+        let s = null;
+        if (what.kind === 'id') { s = sp.filter((o) => o.id === what.id)[0]; }
+        else {
+          const clear = sp.filter((a) => sp.every((o) => o === a || o.id === a.id || Math.hypot(a.x - o.x, a.y - o.y) >= 4));
+          s = clear[(what.nth || 0) % Math.max(1, clear.length)];
+        }
+        if (s) { out = { id: s.id, x: s.x, y: s.y, stage: m && m.stage() }; }
+      }
+      if (out) { resolve(out); return; }
+      if (performance.now() - t0 > ms) { resolve(null); return; }
+      requestAnimationFrame(tick);
+    })();
+  }), { what, ms });
+  // aims at a marble that is moving, clicks (or taps) there with the real mouse (or finger), and checks what opened. A click only counts when the pointer
+  // ended up on a marble, give or take a fingertip (one that has rolled on in the meantime is aimed at again), and then the charity that opens must be the
+  // one of the marble under the pointer according to the physics (an answer that does not come from the game's own hit test).
+  const clickMarble = async (page, how, what, tries = 6) => {
+    const log = [];
+    for (let i = 0; i < tries; i++) {
+      await watchClicks(page);
+      const a = await aim(page, Object.assign({}, what, { nth: (what.nth || 0) + i }), 5000);
+      if (!a) { log.push({ none: 'nothing to aim at' }); break; }
+      if (how === 'tap') { await page.touchscreen.tap(a.x, a.y); } else { await page.mouse.click(a.x, a.y); }
+      const opened = (await waitProfile(page, 1500)) ? await profileId(page) : null;
+      const rec = await page.evaluate(() => window.__mclk[window.__mclk.length - 1] || null);
+      const landed = !!rec && !!rec.under && rec.under.d <= rec.under.slack;
+      await closeProfile(page);
+      log.push({ aimed: a.id, under: rec && rec.under && rec.under.id, got: opened, hit: rec && rec.hit, landed, onMarble: !!(rec && rec.under && rec.under.d <= rec.under.rad + 0.5), stage: a.stage });
+      if (landed) { return { ok: opened === rec.under.id, want: rec.under.id, aimed: a.id, got: opened, tries: i + 1, stage: a.stage, lift: a.lift, log }; }
+    }
+    return { ok: false, tries, log };
+  };
+
+  /* ---- 1. idle boards (a bag of 8, 24, 100 and 500 marbles): every marble is clickable, the gaps are not, and nothing changes ---- */
+  const page = await newPage({ viewport: { width: 1280, height: 1000 } });
+  await openApp(page, '', '');   // real speed: a race is only there to click for a few seconds
+  check(await page.evaluate((ids) => ids.every((id) => !!window.GS.logoFor(window.GS.charity(id))), IDS8), 'the test charities all have a real logo file (so real logos are what is being drawn)');
+  const withLogo = await page.evaluate(() => window.GS.charities.filter((c) => window.GS.logoFor(c)).map((c) => c.id));
+  const IDS24 = IDS8.concat(withLogo.filter((id) => !IDS8.includes(id))).slice(0, 24);
+  await watchClicks(page);
+  for (const n of [8, 24, 100, 500]) {
+    const tag = 'solo ' + n + ' marbles: ';
+    await setBoard(page, n === 8 ? IDS8 : n === 24 ? IDS24 : null, n);
+    const before = await snap(page);
+    const all = await spotsNow(page);
+    const drawn = new Set(all.map((s) => s.id));
+    check(all.length === n && drawn.size === n, tag + 'every marble on the bag has a spot to click', { spots: all.length, charities: drawn.size });
+    // the hit test and the drawing agree: the middle of each spot is that charity (a dense bag may put a marble under a neighbour's spot, so a few may differ)
+    const agree = await page.evaluate(() => { const gm = window.GS.games.marble; const sp = gm._spots(); return { n: sp.length, ok: sp.filter((s) => gm._hitAt(s.x, s.y) === s.id).length }; });
+    check(agree.n === n && agree.ok >= agree.n * 0.99, tag + 'a click in the middle of a spot is that spot\'s charity (' + agree.ok + ' of ' + agree.n + ')', agree);
+    // real clicks on marbles whose middle no other marble shares
+    const picks = all.filter((s) => apart(s, all)).filter((s, i) => (n > 100 ? i % 40 === 0 : n > 30 ? i % 6 === 0 : true)).slice(0, 8);
+    check(picks.length >= (n === 500 ? 2 : 8), tag + 'found marbles to click on', picks.length);
+    const opened = [];
+    for (const s of picks) {
+      await page.mouse.click(s.x, s.y);
+      opened.push({ want: s.id, got: (await waitProfile(page, 3000)) ? await profileId(page) : null });
+      await closeProfile(page);
+    }
+    check(picks.length > 0 && opened.every((o) => o.got === o.want), tag + 'clicking a marble opens exactly that charity\'s profile', opened.filter((o) => o.got !== o.want));
+    // the open track and the sky open nothing
+    const box = await stageBox(page);
+    const gap = emptyPoint(box, await spotsNow(page));
+    check(!!gap, tag + 'there is an empty spot on the track to try', box);
+    if (gap) {
+      await page.mouse.click(gap.x, gap.y);
+      await page.waitForTimeout(350);
+      check(!(await profileId(page)) && (await page.evaluate(([x, y]) => window.GS.games.marble._hitAt(x, y), [gap.x, gap.y])) === null, tag + 'clicking an empty spot opens nothing', gap);
+    }
+    check(JSON.stringify(await snap(page)) === JSON.stringify(before), tag + 'the clicks started and changed no round (nothing played, no money moved, the same charities on the bag)');
+    // the spots are where the marbles are really drawn, and the marks: drawn on a glass marble where it is big enough, not on a crowd of small ones
+    const pr = await probe(page);
+    check(pr.n === n && pr.stamped >= n * 0.99, tag + 'the spots are where the marbles are drawn (' + pr.stamped + ' of ' + pr.n + ' spots have a marble stamped on them)', pr);
+    if (n === 8) {
+      check(pr.per.length === 8 && pr.per.every((p) => p.differs >= 60), tag + 'every marble wears its charity\'s mark (the picture changes inside all 8 marbles when the marks are switched off)', pr.per);
+      check(pr.per.every((p) => p.stub - p.plain >= 20), tag + 'a stub mark (solid magenta) adds at least 20 magenta pixels to every marble', pr.per);
+    } else {
+      check(pr.wholeDiffers === 0 && pr.wholeStub === pr.wholePlain, tag + 'no mark is drawn on marbles too small to read (the picture does not change at all when marks are switched off, and a stub mark adds no magenta)', { differs: pr.wholeDiffers, stub: pr.wholeStub, plain: pr.wholePlain });
+    }
+    await shot(page, '13zm-solo-' + n);
+  }
+
+  /* ---- 2. a solo race at real speed (8 marbles): a click in the shake (even on a marble that is tossed up) and a click mid-run open that charity, and the race goes on to the winner it was drawn for ---- */
+  for (const n of [8, 100, 500]) {
+    const tag = 'solo race, ' + n + ' marbles: ';
+    await setBoard(page, n === 8 ? IDS8 : null, n);
+    const h0 = await page.evaluate(() => window.GS.store.get().history.length);
+    const bal0 = await balance(page);
+    await stageBox(page);
+    await page.click('#btn-play');
+    await page.waitForFunction(() => window.GS.app.state.busy, null, { timeout: 10000 });
+    // the shake: the bag rattles and the drawn charity's marble hops into its place, some marbles are tossed up
+    const shake = await clickMarble(page, 'click', n === 8 ? { kind: 'lift' } : { kind: 'apart', nth: 3 });
+    check(shake.ok && /shake|sim|ready/.test(String(shake.stage)), tag + 'a click in the shake opens the charity under the pointer' + (n === 8 ? ' (a marble tossed up, clicked where it is seen)' : '') + ' (' + shake.tries + (shake.tries === 1 ? ' try' : ' tries') + ')', shake);
+    check(await page.evaluate(() => window.GS.app.state.busy), tag + 'the round is still running after the click in the shake');
+    await page.waitForFunction(() => { const m = window.GS.games.marble._debug.motion(); return !!m && m.stage() === 'run'; }, null, { timeout: 30000 }).catch(() => {});
+    await page.waitForTimeout(n === 500 ? 2500 : 1200);
+    const run = await clickMarble(page, 'click', { kind: 'apart', nth: 5 }, 8);
+    check(run.ok && run.stage === 'run', tag + 'a click mid-run opens the charity under the pointer (' + run.tries + (run.tries === 1 ? ' try' : ' tries') + ')', run);
+    check(await page.evaluate(() => window.GS.app.state.busy), tag + 'the race is still running after the click mid-run');
+    await waitReceipt(page);
+    const info = await page.evaluate(() => { const l = window.GS.app._last; const dbg = window.GS.games.marble._debug; const first = dbg.marbles().filter((e) => e.run.place === 1).map((e) => e.ch.id); const places = dbg.marbles().map((e) => e.run.place).sort((a, b) => a - b); return { w: l.round.winners.map((x) => x.id), first, shown: window.GS.games.marble._shown(), allPlaced: places.every((p, j) => p === j + 1), hist: window.GS.store.get().history.length }; });
+    check(info.first.length === 1 && info.first[0] === info.w[info.w.length - 1] && info.shown[0] === info.first[0] && info.allPlaced, tag + 'the race finished with the drawn charity\'s marble first (and every marble placed once)', info);
+    check(info.hist === h0 + 1, tag + 'the round was played once, and clicking did not play another', { hist: info.hist, h0 });
+    await closeReceipt(page);
+    await shot(page, '13zm-race-' + n);
+  }
+  await page.close();
+
+  /* ---- 3. live tables: the backed charities and the catalog fill are clickable, no stake is placed, and the round goes on to its winner ---- */
+  const lp = await newPage({ viewport: { width: 1280, height: 1000 } });
+  await openApp(lp, '', '');
+  for (const size of [10, 100, 500]) {
+    const rid = 'marble' + size;
+    const tag = 'live ' + rid + ': ';
+    await lp.evaluate(([rid, backed]) => { const r = window.GS.live.room(rid); r.openRound(0); backed.forEach(([id, d]) => r._botJoin(window.GS.charity(id), d)); r._clearTimers(); }, [rid, BACKED]);
+    await go(lp, '#live-' + rid);
+    await lp.waitForFunction(([n, ids]) => { const gm = window.GS.games.marble; return gm._entrants() === n && ids.every((id) => gm._spots().some((s) => s.id === id)); }, [size, BACKED.map((b) => b[0])], { timeout: 30000 });
+    await frames(lp);
+    await watchClicks(lp);
+    const room = () => lp.evaluate((rid) => { const r = window.GS.live.room(rid); return { phase: r.phase, round: r.round, you: !!r.you, seats: Object.keys(r.seats).sort().join(','), bal: window.GS.store.balance() }; }, rid);
+    const before = await room();
+    const all = await spotsNow(lp);
+    const wants = BACKED.map((b) => b[0]);
+    const filler = all.filter((s) => !wants.includes(s.id) && apart(s, all))[0];
+    const targets = wants.map((id) => all.filter((s) => s.id === id)[0]).concat([filler]);
+    const opened = [];
+    for (const sp of targets) { await lp.mouse.click(sp.x, sp.y); opened.push({ want: sp.id, got: (await waitProfile(lp, 3000)) ? await profileId(lp) : null }); await closeProfile(lp); }
+    check(targets.every((t) => !!t) && opened.every((o) => o.got === o.want), tag + 'clicking each backed charity, and one that only fills the bag, opens exactly that charity', opened);
+    const gap = emptyPoint(await stageBox(lp), await spotsNow(lp));
+    if (gap) { await lp.mouse.click(gap.x, gap.y); await lp.waitForTimeout(300); }
+    check(!!gap && !(await profileId(lp)), tag + 'an empty spot opens nothing');
+    check(JSON.stringify(await room()) === JSON.stringify(before) && before.phase === 'open' && !before.you, tag + 'the clicks placed no stake and did not touch the table (same round, same phase, same charities backed)', { before, after: await room() });
+    const pr = await probe(lp);
+    check(size === 10 ? pr.stamped >= pr.n * 0.99 : pr.stamped >= pr.n * 0.99 && pr.wholeDiffers === 0, tag + 'the spots are where the marbles are drawn' + (size === 10 ? '' : ', and no mark is drawn on a crowd of small marbles'), pr);
+    // the round: bets close, the winner is drawn and the table plays it
+    await lp.evaluate((rid) => { window.GS.live.room(rid).lock(); }, rid);
+    await lp.waitForFunction((rid) => window.GS.live.room(rid).phase === 'playing', rid, { timeout: 30000, polling: 100 });
+    // (the shake: a click on a backed charity's marble, or on a tossed one, while the gate is shut)
+    const shake = await clickMarble(lp, 'click', size === 10 ? { kind: 'lift' } : { kind: 'id', id: 'wateraid' }, 6);
+    const mid1 = await room();
+    check(shake.ok && /sim|shake|ready/.test(String(shake.stage)) && mid1.phase === 'playing' && !mid1.you, tag + 'a click while the gate is shut opens the charity under the pointer, and the show is still going (' + shake.tries + (shake.tries === 1 ? ' try' : ' tries') + ')', { shake, mid1 });
+    await lp.waitForFunction(() => { const m = window.GS.games.marble._debug.motion(); return !!m && m.stage() === 'run'; }, null, { timeout: 60000 }).catch(() => {});
+    await lp.waitForTimeout(1500);
+    const run = await clickMarble(lp, 'click', size === 10 ? { kind: 'id', id: 'msf' } : { kind: 'apart', nth: 7 }, 8);
+    const mid2 = await room();
+    check(run.ok && run.stage === 'run' && mid2.phase === 'playing' && mid2.round === before.round && !mid2.you, tag + 'a click in the middle of the race opens the charity under the pointer, and the show is still going (' + run.tries + (run.tries === 1 ? ' try' : ' tries') + ')', { run, mid2 });
+    await lp.waitForFunction((rid) => window.GS.live.room(rid).phase === 'result', rid, { timeout: 90000, polling: 200 });
+    const end = await lp.evaluate((rid) => { const r = window.GS.live.room(rid); const dbg = window.GS.games.marble._debug; return { winner: r.result.winnerId, backed: r.result.weights.map((w) => w[0]), shown: window.GS.games.marble._shown(), first: dbg.marbles().filter((e) => e.run.place === 1).map((e) => e.ch.id), round: r.round }; }, rid);
+    check(end.backed.includes(end.winner) && end.shown.includes(end.winner) && end.first.length === 1 && end.first[0] === end.winner && end.round === before.round, tag + 'the show ended on the drawn winner, a charity somebody backed, with its marble first', end);
+    await shot(lp, '13zm-live-' + size);
+  }
+  await lp.close();
+
+  /* ---- 4. a phone (390 px): a tap works the same ---- */
+  const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+  await openApp(ph);
+  await watchClicks(ph);
+  for (const n of [8, 100, 500]) {
+    const tag = 'phone, ' + n + ' marbles: ';
+    await setBoard(ph, n === 8 ? IDS8 : null, n);
+    const before = await snap(ph);
+    const all = await spotsNow(ph);
+    const picks = all.filter((s) => apart(s, all, n === 500 ? 3 : 4)).filter((s, i) => (n === 8 ? true : i % 25 === 0)).slice(0, 3);
+    const got = [];
+    for (const sp of picks) { await ph.touchscreen.tap(sp.x, sp.y); got.push({ want: sp.id, got: (await waitProfile(ph, 3000)) ? await profileId(ph) : null }); await closeProfile(ph); }
+    check(picks.length === 3 && got.every((o) => o.got === o.want), tag + 'tapping a marble opens its charity\'s profile', got);
+    const gap = emptyPoint(await stageBox(ph), await spotsNow(ph));
+    if (gap) { await ph.touchscreen.tap(gap.x, gap.y); await ph.waitForTimeout(300); }
+    check(!!gap && !(await profileId(ph)), tag + 'tapping an empty spot opens nothing');
+    check(JSON.stringify(await snap(ph)) === JSON.stringify(before), tag + 'the taps started and changed no round');
+    const pr = await probe(ph);
+    check(pr.stamped >= pr.n * 0.99, tag + 'the spots are where the marbles are drawn (' + pr.stamped + ' of ' + pr.n + ')', pr);
+    if (n === 8) { check(pr.per.length === 8 && pr.per.every((p) => p.differs >= 40), tag + 'every marble wears its charity\'s mark on a phone too', pr.per); }
+    else { check(pr.wholeDiffers === 0 && pr.wholeStub === pr.wholePlain, tag + 'no mark on small marbles', { differs: pr.wholeDiffers, stub: pr.wholeStub, plain: pr.wholePlain }); }
+    check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), tag + 'the page still fits the screen');
+    await shot(ph, '13zm-phone-' + n);
+  }
+  // a race on the phone: a tap in the shake and one mid-run
+  await setBoard(ph, IDS8, 8);
+  await stageBox(ph);
+  await ph.click('#btn-play');
+  await ph.waitForFunction(() => window.GS.app.state.busy, null, { timeout: 10000 });
+  const pShake = await clickMarble(ph, 'tap', { kind: 'lift' });
+  check(pShake.ok, 'phone race: a tap on a marble tossed up in the shake opens its charity (' + pShake.tries + (pShake.tries === 1 ? ' try' : ' tries') + ')', pShake);
+  await ph.waitForFunction(() => { const m = window.GS.games.marble._debug.motion(); return !!m && m.stage() === 'run'; }, null, { timeout: 30000 }).catch(() => {});
+  await ph.waitForTimeout(1200);
+  const pRun = await clickMarble(ph, 'tap', { kind: 'apart', nth: 2 }, 8);
+  check(pRun.ok && pRun.stage === 'run' && await ph.evaluate(() => window.GS.app.state.busy), 'phone race: a tap mid-run opens the charity under the finger, and the race is still running (' + pRun.tries + (pRun.tries === 1 ? ' try' : ' tries') + ')', pRun);
+  await waitReceipt(ph);
+  const pInfo = await ph.evaluate(() => { const l = window.GS.app._last; const first = window.GS.games.marble._debug.marbles().filter((e) => e.run.place === 1).map((e) => e.ch.id); return { w: l.round.winners.map((x) => x.id), first }; });
+  check(pInfo.first.length === 1 && pInfo.first[0] === pInfo.w[pInfo.w.length - 1], 'phone race: it finished with the drawn charity\'s marble first', pInfo);
+  await closeReceipt(ph);
+  await ph.close();
+
+  /* ---- 5. taking the game down removes its clicks ---- */
+  const up = await newPage({ viewport: { width: 1280, height: 1000 } });
+  await openApp(up);
+  await setBoard(up, IDS8, 8);
+  const upAll = await spotsNow(up);
+  const upSp = upAll[0];
+  await up.mouse.click(upSp.x, upSp.y);
+  const upBefore = await waitProfile(up, 3000);
+  await closeProfile(up);
+  await up.evaluate(() => window.GS.games.marble.unmount());
+  await up.mouse.click(upSp.x, upSp.y);
+  await up.waitForTimeout(300);
+  check(upBefore && !(await profileId(up)), 'after unmount() a click on a marble opens nothing (and it did before)', { upBefore });
+  await up.mouse.move(upSp.x, upSp.y);
+  await up.waitForTimeout(150);
+  check(await up.evaluate(() => document.querySelector('#panel-marble [data-role="stage"]').style.cursor !== 'pointer'), 'and the pointer is no longer a hand');
+  await up.close();
+  check(problems.length === problems0, 'section 13zm: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+}
+
 /* ======================================================================== */
 section('18. Console and network health');
 check(problems.length === 0, 'no console errors, warnings, page errors or failed requests during the whole run', problems.slice(0, 8));

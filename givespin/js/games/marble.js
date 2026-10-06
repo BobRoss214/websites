@@ -21,12 +21,17 @@
  * keeps its size while bets come in), not who backs what, and the drawn charity is swapped in once the table has locked.
  *
  * The track is a snake: `pathAt` maps a distance along the centre line to a point and heading.
+ *
+ * Clicks and marks (drawing only, the physics and the pre-simulation are not involved): a click or tap on a marble opens that charity's profile
+ * (the shared engine does this for every crowd game; `hitSpot` below says where a marble is, including one that is tossed up in the shake). A
+ * marble of a small bag (22 px across) wears its charity's mark (GS.markImage via kit.drawMark) under the glass highlights; smaller marbles stay colour only.
  */
 (function () {
   'use strict';
   var GS = window.GS;
   var core = GS.core;
   var U = GS.util;
+  var kit = GS.kit;
   var TAU = Math.PI * 2;
   var HALF_PI = Math.PI / 2;
   var MEDAL = ['#ffc542', '#cfd9e0', '#e0a070'];
@@ -1367,6 +1372,13 @@
 
   function dprNow() { return Math.min(window.devicePixelRatio || 1, 2); }
 
+  // A charity's mark on its marble (kit.drawMark: its real logo, or its illustrated emblem): a round badge a little inside the glass, so the marble's
+  // own colour still rings it, painted over the glass body and under the swirl and the gloss. It is only drawn where the badge is big enough to read
+  // (kit.MARK_MIN px across on the screen: the bigger marbles of a small bag); the crowd of a big bag stays colour only. One options object is
+  // reused (its `min` is kept up to date by background()), so nothing is made while drawing.
+  var MARK_FILL = 0.78;                   // the badge's radius, as a share of the marble's
+  var MARK_OPTS = { ring: false, pad: 0.14, min: 14 };
+
   function makeCanvas(w, h) {
     var c = document.createElement('canvas');
     c.width = w; c.height = h;
@@ -1410,13 +1422,23 @@
       ctx.fillStyle = 'rgba(255,255,255,0.32)';
       ctx.beginPath(); ctx.arc(c * 0.4, c * 0.42, Math.max(0.7, c * 0.1), 0, TAU); ctx.fill();
     }
+    /** The glass over a mark: the shade of a ball (clear where the light falls, darker towards the far rim, so a flat badge sits inside the glass instead of on it), then the gloss. */
+    function lens(ctx) {
+      var gs = ctx.createRadialGradient(-c * 0.3, -c * 0.34, c * 0.1, 0, 0, c * 1.02);
+      gs.addColorStop(0, tint(rgb, 0.5, 0));
+      gs.addColorStop(0.5, tint(rgb, -0.2, 0.06));
+      gs.addColorStop(1, tint(rgb, -0.55, 0.55));
+      ctx.fillStyle = gs;
+      ctx.beginPath(); ctx.arc(0, 0, c, 0, TAU); ctx.fill();
+      gloss(ctx);
+    }
     function paint(fn) {
       var cv = makeCanvas(px, px), cx = cv.getContext('2d');
       cx.scale(d, d); cx.translate(size / 2, size / 2);
       fn(cx);
       return cv;
     }
-    sp = { size: size, rgb: rgb, sw: [tint(rgb, 0.7, 0.34), tint(rgb, 0.45, 0.28), tint(rgb, 0.45, 0.28)], streak: tint(rgb, 0.1, 0.16) };
+    sp = { size: size, rgb: rgb, sw: [tint(rgb, 0.7, 0.34), tint(rgb, 0.45, 0.28), tint(rgb, 0.45, 0.28)], streak: tint(rgb, 0.1, 0.16), lens: null, makeLens: function () { return paint(lens); } };
     if (r >= 4) { sp.base = paint(body); sp.gloss = paint(gloss); }
     else {
       sp.flat = paint(function (cx) {
@@ -1631,8 +1653,11 @@
         ctx.stroke();
       }
       ctx.drawImage(sp.base, x - half, y - half, sp.size, sp.size);
+      var marked = kit.drawMark(ctx, e.ch, x, y, rs * MARK_FILL, MARK_OPTS);
+      if (marked) { ctx.globalAlpha = 0.5; }       // (the swirl is fainter over a mark, so the mark can still be read)
       drawSwirl(ctx, x, y, r * scale, pos.ang, pos.hd, sp.sw);
-      ctx.drawImage(sp.gloss, x - half, y - half, sp.size, sp.size);
+      if (marked) { ctx.globalAlpha = 1; if (!sp.lens) { sp.lens = sp.makeLens(); } }
+      ctx.drawImage(marked ? sp.lens : sp.gloss, x - half, y - half, sp.size, sp.size);
     } else {
       ctx.drawImage(sp.flat, x - half, y - half, sp.size, sp.size);
     }
@@ -1723,6 +1748,7 @@
       var g = S.geo;
       drawK = g.k;
       drawD = dprNow() * drawK;
+      MARK_OPTS.min = kit.MARK_MIN / drawK;      // (the smallest badge that gets a mark, in track units)
       // a narrow canvas draws the track units smaller (see shape); the shared engine paints its banner in canvas pixels afterwards
       if (g.k < 1) { var d = dprNow(); ctx.setTransform(d * g.k, 0, 0, d * g.k, 0, 0); }
       ctx.drawImage(trackLayer(S), 0, 0, g.W, g.H);
@@ -1732,6 +1758,21 @@
     place: function (e, p, S) {
       if (e._m || !(p > 0)) { return updatePos(e, S.geo); }
       return plainPlace(e, p, S);
+    },
+
+    /**
+     * Where a click opens this marble's charity: a circle round the marble as it is drawn, with a little room for a fingertip (the nearest middle wins where
+     * circles overlap). A marble tossed up in the shake is clicked where it is seen: its circle rides with it, and the marble itself (the disc it is painted
+     * as, over its neighbours) is a spot of its own that is on top, so a click on the marble opens it and not the one it hides.
+     */
+    hitSpot: function (e, S) {
+      var g = S.geo, k = g.k > 0 && g.k < 1 ? g.k : 1;
+      var lift = e._pos && e._pos.lift > 0.02 ? e._pos.lift : 0;
+      var r = g.r * (1 + lift * 0.16) * k;
+      var x = e._x * k, y = (e._y - lift * g.r * 1.3) * k;
+      var R = Math.max(5, r * 1.15 + 2);
+      if (!lift) { return { x: x, y: y, rx: R, ry: R }; }
+      return [{ x: x, y: y, rx: r + 1.5, ry: r + 1.5, z: 1 }, { x: x, y: y, rx: R, ry: R }];
     },
 
     entity: function (ctx, e, pos, S) {
