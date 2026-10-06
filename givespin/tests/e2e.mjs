@@ -3218,6 +3218,321 @@ if (section('13x. Charity marks: a real logo where there is one, an illustrated 
 }
 
 /* ======================================================================== */
+if (section('13z. Race games: click a runner, duck, balloon or tile and that charity opens (the race is never touched), and its mark is drawn where it is big enough')) {
+  const problems0 = problems.length;
+  const IDS8 = ['wateraid', 'msf', 'save-the-children', 'oxfam-america', 'feeding-america', 'khan-academy', 'charity-water', 'surfrider'];   // all have a real logo in assets/logos
+  const RACES = ['derby', 'duck', 'balloon', 'standing'];
+  const COUNT = { derby: '_runners', duck: '_entrants', balloon: '_entrants', standing: '_entrants' };
+  const ctr = (s) => (s.x !== undefined ? { x: s.x, y: s.y } : { x: (s.x0 + s.x1) / 2, y: (s.y0 + s.y1) / 2 });
+  const hf = (s) => (s.x !== undefined ? { w: s.rx, h: s.ry } : { w: (s.x1 - s.x0) / 2, h: (s.y1 - s.y0) / 2 });
+  // a spot that no spot of another charity touches (so a click on its middle can only mean its charity)
+  const alone = (s, all) => all.every((o) => { if (o === s || o.id === s.id) { return true; } const a = ctr(s), b = ctr(o), ha = hf(s), hb = hf(o); return Math.abs(a.x - b.x) > ha.w + hb.w || Math.abs(a.y - b.y) > ha.h + hb.h; });
+  // on a crowded board (500 dots) nothing is ever clear of its neighbours' spots: here a charity's own centre must just be clear of every other charity's centre
+  const apart = (s, all) => all.every((o) => { if (o === s || o.id === s.id) { return true; } const a = ctr(s), b = ctr(o); return Math.hypot(a.x - b.x, a.y - b.y) >= 4; });
+  // the emptiest point of a box: the one furthest from every spot (and at least 8 px from all of them)
+  const emptyPoint = (box, all) => {
+    let best = null, bd = 8;
+    for (let x = box.x + 6; x < box.x + box.w - 6; x += 7) {
+      for (let y = box.y + 6; y < box.y + box.h - 6; y += 7) {
+        let d = Infinity;
+        for (const s of all) { const c = ctr(s), h = hf(s); d = Math.min(d, Math.max(Math.abs(x - c.x) - h.w, Math.abs(y - c.y) - h.h)); }
+        if (d > bd) { bd = d; best = { x, y }; }
+      }
+    }
+    return best;
+  };
+  const stageBox = (page, gid) => page.evaluate((g) => { const el = document.querySelector('#panel-' + g + (g === 'standing' ? ' .stand' : ' canvas')); el.scrollIntoView({ block: 'center' }); const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; }, gid);
+  const spotsNow = async (page, gid) => { await stageBox(page, gid); return page.evaluate((g) => window.GS.games[g]._spots(), gid); };
+  const profileId = (page) => page.evaluate(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; });
+  const waitProfile = (page, ms) => page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return !!(d && d.open); }, null, { timeout: ms }).then(() => true, () => false);
+  const closeProfile = async (page) => { if (await profileId(page)) { await page.keyboard.press('Escape'); await page.waitForFunction(() => !document.querySelector('#dlg-profile').open); } };
+  // the things a click must not change: no round running or played, no money moved, the same charities on the board
+  const snap = (page, gid) => page.evaluate(([g, c]) => ({ busy: window.GS.app.state.busy, bal: window.GS.store.balance(), hist: window.GS.store.get().history.length, n: window.GS.games[g][c](), ids: window.GS.games[g]._spots().map((s) => s.id).sort().join(','), shown: window.GS.games[g]._shown().join(',') }), [gid, COUNT[gid]]);
+  // a known board: your own list of charities (or the whole roster when ids is null) and a size, dealt by hopping out of the game and back in
+  const setBoard = async (page, gid, ids, n) => {
+    await page.evaluate(([g, ids, n]) => {
+      const prefs = window.GS.store.prefs();
+      const custom = Object.assign({}, prefs.custom || {});
+      if (ids) { custom[g] = { on: true, ids }; } else { delete custom[g]; }
+      window.GS.store.setPref('custom', custom);
+      window.GS.store.setPref('sizes', Object.assign({}, prefs.sizes, { [g]: n }));
+    }, [gid, ids, n]);
+    await go(page, '#lobby');
+    await go(page, '#game-' + gid);
+    await page.waitForSelector('#panel-' + gid + ':not([hidden])');
+    await page.waitForFunction(([g, c, n]) => window.GS.games[g][c]() === n && window.GS.games[g]._spots().length > 0, [gid, COUNT[gid], n], { timeout: 15000 });
+    await page.waitForTimeout(250);
+  };
+  // reads the pictured canvas (a copy of it, read once): pure red inside each ellipse spot (what a stubbed mark leaves), or the colour at each spot's middle
+  const pixels = (page, gid, what) => page.evaluate(([g, what]) => {
+    const cv = document.querySelector('#panel-' + g + ' canvas');
+    const rc = cv.getBoundingClientRect();
+    const k = cv.width / rc.width;
+    const cp = document.createElement('canvas');
+    cp.width = cv.width; cp.height = cv.height;
+    const ctx = cp.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(cv, 0, 0);
+    const count = (x0, y0, x1, y1) => {
+      const w = Math.max(1, Math.round((x1 - x0) * k)), h = Math.max(1, Math.round((y1 - y0) * k));
+      const d = ctx.getImageData(Math.max(0, Math.round((x0 - rc.left) * k)), Math.max(0, Math.round((y0 - rc.top) * k)), w, h).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) { if (d[i] >= 250 && d[i + 1] <= 5 && d[i + 2] <= 5) { n++; } }
+      return n;
+    };
+    if (what === 'all') { return count(rc.left, rc.top, rc.right, rc.bottom); }
+    if (what === 'red') { return window.GS.games[g]._spots().filter((s) => s.x !== undefined).map((s) => ({ id: s.id, red: count(s.x - s.rx, s.y - s.ry, s.x + s.rx, s.y + s.ry) })); }
+    // the colour at the middle of each spot: as hex, with the charity's own colour next to it
+    return window.GS.games[g]._spots().filter((s) => s.x !== undefined).map((s) => {
+      const d = ctx.getImageData(Math.round((s.x - rc.left) * k), Math.round((s.y - rc.top) * k), 1, 1).data;
+      return { id: s.id, px: [d[0], d[1], d[2]], accent: window.GS.charity(s.id).accent };
+    });
+  }, [gid, what]);
+  // a crowd of small ducks or balloons is stamped from a picture of one: records where the stamps land during two frames and says how many spots have a stamp on them
+  const stamped = (page, gid) => page.evaluate(async (g) => {
+    const cv = document.querySelector('#panel-' + g + ' canvas');
+    const proto = CanvasRenderingContext2D.prototype;
+    const orig = proto.drawImage;
+    const hits = [];
+    proto.drawImage = function (img, a, b, c, d) { if (this.canvas === cv && img instanceof HTMLCanvasElement && arguments.length === 5) { hits.push([a, b, c, d]); } return orig.apply(this, arguments); };
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    proto.drawImage = orig;
+    const rc = cv.getBoundingClientRect();
+    const k = rc.width / parseFloat(cv.style.width);
+    const spots = window.GS.games[g]._spots().filter((s) => s.x !== undefined);
+    const covered = spots.filter((s) => hits.some((h) => s.x >= rc.left + h[0] * k - 1 && s.x <= rc.left + (h[0] + h[2]) * k + 1 && s.y >= rc.top + h[1] * k - 1 && s.y <= rc.top + (h[1] + h[3]) * k + 1)).length;
+    return { stamps: hits.length, spots: spots.length, covered };
+  }, gid);
+  const stubMark = (page) => page.evaluate(() => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 40;
+    const x = c.getContext('2d');
+    x.fillStyle = '#ff0000';
+    x.fillRect(0, 0, 40, 40);
+    window.__markReal = window.GS.markImage;
+    window.__markCalls = 0;
+    window.GS.markImage = () => { window.__markCalls++; return c; };
+  });
+  const unstubMark = (page) => page.evaluate(() => { if (window.__markReal) { window.GS.markImage = window.__markReal; window.__markReal = null; } });
+  const frames = (page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r)))));
+
+  const page = await newPage({ viewport: { width: 1280, height: 1000 } });
+  await openApp(page, '', '');   // real speed: a race is only there to click for a few seconds
+  check(await page.evaluate((ids) => ids.every((id) => !!window.GS.logoFor(window.GS.charity(id))), IDS8), 'the test charities all have a real logo file (so the logos are what is being drawn)');
+
+  /* ---- 1. idle boards, small and big: every drawn charity is clickable, the gaps are not, nothing changes ---- */
+  for (const gid of RACES) {
+    for (const big of [false, true]) {
+      const n = big ? 500 : 8;
+      const tag = gid + ' (' + n + '): ';
+      await setBoard(page, gid, big ? null : IDS8, n);
+      if (!big) {
+        await page.waitForFunction((ids) => ids.every((id) => !!window.GS.markImage(window.GS.charity(id))), IDS8, { timeout: 15000 }).catch(() => {});   // the real logos have loaded
+        await frames(page);
+      }
+      const before = await snap(page, gid);
+      const all = await spotsNow(page, gid);
+      const drawn = new Set(all.map((s) => s.id));
+      check(drawn.size === (big ? 500 : 8) && (big || IDS8.every((id) => drawn.has(id))), tag + 'every charity on the board has a spot to click', { spots: all.length, charities: drawn.size });
+      // the hit test and the drawing agree: the middle of each spot is that charity (big boards overlap a little, so a few may belong to the one on top)
+      const agree = await page.evaluate((g) => { const gm = window.GS.games[g]; const c = (s) => (s.x !== undefined ? [s.x, s.y] : [(s.x0 + s.x1) / 2, (s.y0 + s.y1) / 2]); const sp = gm._spots(); return { n: sp.length, ok: sp.filter((s) => gm._hitAt.apply(gm, c(s)) === s.id).length }; }, gid);
+      check(agree.n > 0 && agree.ok >= agree.n * 0.99, tag + 'a click in the middle of a spot is that spot\'s charity (' + agree.ok + ' of ' + agree.n + ')', agree);
+      // real clicks: up to 8 charities that no other one touches
+      const picks = all.filter((s) => (big ? apart(s, all) : alone(s, all))).filter((s, i, a) => a.findIndex((o) => o.id === s.id) === i).filter((s, i) => big ? i % 40 === 0 : true).slice(0, 8);
+      check(picks.length >= (big ? 2 : 8), tag + 'found charities to click on', picks.length);
+      const opened = [];
+      for (const s of picks) {
+        const c = ctr(s);
+        await page.mouse.click(c.x, c.y);
+        const ok = await waitProfile(page, 3000);
+        opened.push({ want: s.id, got: ok ? await profileId(page) : null });
+        await closeProfile(page);
+      }
+      check(picks.length > 0 && opened.every((o) => o.got === o.want), tag + 'clicking a charity opens exactly that charity\'s profile', opened.filter((o) => o.got !== o.want));
+      // an empty spot opens nothing (a gap between tiles, the open track, the sky, the water)
+      const box = await stageBox(page, gid);
+      const gap = emptyPoint(box, await spotsNow(page, gid));
+      check(!!gap, tag + 'there is an empty spot on the board to try', box);
+      if (gap) {
+        await page.mouse.click(gap.x, gap.y);
+        await page.waitForTimeout(350);
+        check(!(await profileId(page)) && (await page.evaluate(([g, x, y]) => window.GS.games[g]._hitAt(x, y), [gid, gap.x, gap.y])) === null, tag + 'clicking an empty spot opens nothing', gap);
+      }
+      check(JSON.stringify(await snap(page, gid)) === JSON.stringify(before), tag + 'the clicks started and changed no round (nothing played, no money moved, the same charities on the board)', { before, after: await snap(page, gid) });
+      if (gid !== 'standing') {
+        // the charity's mark is drawn where it is big enough: a stubbed mark (solid red) shows up on every charity of the small board, and nowhere on the big one
+        await stubMark(page);
+        await frames(page);
+        const red = await pixels(page, gid, big ? 'all' : 'red');
+        if (big) { check(red === 0, tag + 'no mark is drawn on marks too small to read (the crowd stays colour only)', red); }
+        else { check(red.length === 8 && red.every((r) => r.red >= 25), tag + 'every charity\'s mark (here a stub image) is drawn on its runner', red); }
+        check(await page.evaluate(() => window.__markCalls) > 0 || big, tag + 'the game asks GS.markImage for the mark');
+        await unstubMark(page);
+        if (big) {
+          // and the spots are where the crowd is really drawn: the middle of a spot is the charity's own colour (or the duck's yellow), on most of them (a few are covered by a neighbour)
+          await frames(page);
+          if (gid === 'derby') {
+            const px = await pixels(page, gid, 'centre');
+            const near = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) < 60;
+            const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+            const good = px.filter((p) => near(p.px, hex(p.accent))).length;
+            check(px.length === 500 && good >= px.length * 0.8, tag + 'the spots are where the crowd is drawn (the middle of ' + good + ' of ' + px.length + ' spots is that charity\'s colour)', { good, n: px.length, sample: px.slice(0, 3) });
+          } else {
+            const st = await stamped(page, gid);
+            check(st.spots === 500 && st.stamps >= 500 && st.covered >= 495, tag + 'the spots are where the crowd is drawn (' + st.covered + ' of ' + st.spots + ' spots have a picture of the ' + gid + ' stamped on them)', st);
+          }
+        }
+      } else if (!big) {
+        const tiles = await page.evaluate(() => Array.from(document.querySelectorAll('#panel-standing .stile .cmono.is-logo img')).filter((i) => i.complete && i.naturalWidth > 0).length);
+        check(tiles === 8, tag + 'the tiles show the charities\' real logos', tiles);
+      }
+      if (gid === 'derby' && !big) {
+        // pointer over a charity: a hand and the name as the tooltip; over nothing: neither
+        const c = ctr(picks[0]);
+        await page.mouse.move(c.x, c.y);
+        await page.waitForFunction(([g, name]) => document.querySelector('#panel-' + g + ' [data-role="stage"]').getAttribute('title') === name, [gid, await page.evaluate((id) => window.GS.charity(id).name, picks[0].id)], { timeout: 3000 }).then(() => check(true, tag + 'the tooltip names the charity under the pointer'), () => check(false, tag + 'the tooltip names the charity under the pointer'));
+        check(await page.evaluate(() => document.querySelector('#panel-derby [data-role="stage"]').style.cursor) === 'pointer', tag + 'the pointer turns into a hand over a charity');
+      }
+      await shot(page, '13z-' + gid + '-' + n);
+    }
+  }
+
+  /* ---- 1b. a big derby where you backed a charity: it keeps a lane of its own (runner, name), the other 499 are dots, and both are clickable ---- */
+  await setBoard(page, 'derby', null, 500);
+  await page.evaluate(() => { const g = window.GS.games.derby; g.setBoard(window.GS.charities.slice(), 500, 'msf'); });
+  await page.waitForFunction(() => window.GS.games.derby._board() && window.GS.games.derby._board().lanes === 1, null, { timeout: 5000 });
+  await frames(page);
+  {
+    const all = await spotsNow(page, 'derby');
+    const lane = all.filter((s) => s.id === 'msf');
+    const rect = lane.find((s) => s.x0 !== undefined), dot = lane.find((s) => s.x !== undefined);
+    check(!!rect && !!dot && all.length === 501, 'derby (500, one backed): the backed charity has a runner and its name, and the other 499 have a dot each', { lane: lane.length, all: all.length });
+    const rc = ctr(rect), dc = ctr(dot);
+    const got = [];
+    for (const c of [rc, dc, ctr(all.filter((s) => s.id !== 'msf' && s.x !== undefined && apart(s, all))[0])]) { await page.mouse.click(c.x, c.y); got.push(await waitProfile(page, 3000) ? await profileId(page) : null); await closeProfile(page); }
+    check(got[0] === 'msf' && got[1] === 'msf' && got[2] && got[2] !== 'msf', 'derby (500, one backed): its name and its runner open its profile, and so does a dot of the field', got);
+  }
+  await page.close();
+
+  /* ---- 2. live tables: the backed charities and the catalog fill are clickable, no stake is placed, and the round goes on to its winner ---- */
+  const lp = await newPage({ viewport: { width: 1280, height: 1000 } });
+  await openApp(lp, '', '');
+  const BACKED = [['wateraid', 60], ['msf', 25], ['khan-academy', 10]];
+  for (const gid of RACES) {
+    const rid = gid + '25';
+    const tag = 'live ' + rid + ': ';
+    await lp.evaluate(([rid, backed]) => { const r = window.GS.live.room(rid); r.openRound(0); backed.forEach(([id, d]) => r._botJoin(window.GS.charity(id), d)); r._clearTimers(); }, [rid, BACKED]);
+    await go(lp, '#live-' + rid);
+    await lp.waitForFunction(([g, c, ids]) => { const gm = window.GS.games[g]; return gm[c]() === 25 && ids.every((id) => gm._spots().some((s) => s.id === id)); }, [gid, COUNT[gid], BACKED.map((b) => b[0])], { timeout: 20000 });
+    await frames(lp);
+    const room = () => lp.evaluate((rid) => { const r = window.GS.live.room(rid); return { phase: r.phase, round: r.round, you: !!r.you, seats: Object.keys(r.seats).sort().join(','), bal: window.GS.store.balance() }; }, rid);
+    const before = await room();
+    const all = await spotsNow(lp, gid);
+    const wants = BACKED.map((b) => b[0]);
+    const fillerSpot = all.filter((s) => !wants.includes(s.id) && (s.x === undefined || apart(s, all)) && alone(s, all))[0] || all.filter((s) => !wants.includes(s.id) && apart(s, all))[0];
+    const targets = wants.map((id) => all.filter((s) => s.id === id && s.x !== undefined).concat(all.filter((s) => s.id === id))[0]).concat([fillerSpot]);
+    const opened = [];
+    for (const sp of targets) { const c = ctr(sp); await lp.mouse.click(c.x, c.y); opened.push({ want: sp.id, got: await waitProfile(lp, 3000) ? await profileId(lp) : null }); await closeProfile(lp); }
+    check(opened.length === 4 && opened.every((o) => o.got === o.want), tag + 'clicking each backed charity, and one that only fills the board, opens exactly that charity', opened);
+    const gap = emptyPoint(await stageBox(lp, gid), await spotsNow(lp, gid));
+    if (gap) { await lp.mouse.click(gap.x, gap.y); await lp.waitForTimeout(300); }
+    check(!!gap && !(await profileId(lp)), tag + 'an empty spot opens nothing');
+    check(JSON.stringify(await room()) === JSON.stringify(before) && before.phase === 'open' && !before.you, tag + 'the clicks placed no stake and did not touch the table (same round, same phase, same charities backed)', { before, after: await room() });
+    // the round: bets close, the winner is drawn and the game plays it; a click in the middle of the show opens the charity and the show goes on to the drawn winner
+    await lp.evaluate((rid) => { window.GS.live.room(rid).lock(); }, rid);
+    await lp.waitForFunction((rid) => window.GS.live.room(rid).phase === 'playing', rid, { timeout: 30000, polling: 100 });
+    await lp.waitForFunction((g) => window.GS.ui.live.gameBusy(g), gid, { timeout: 10000 }).catch(() => {});
+    await lp.waitForTimeout(1800);
+    let got = null, tries = 0;
+    while (!got && tries < 4) {
+      tries++;
+      const sp = await spotsNow(lp, gid);
+      const mine = sp.filter((s) => s.id === 'wateraid' && s.x !== undefined).concat(sp.filter((s) => s.id === 'wateraid'))[0];
+      const c = ctr(mine);
+      await lp.mouse.click(c.x, c.y);
+      if (await waitProfile(lp, 1500)) { got = await profileId(lp); }
+    }
+    const mid = await room();
+    check(got === 'wateraid' && mid.phase === 'playing' && mid.round === before.round + 0 && !mid.you, tag + 'a click in the middle of the show opens the charity (' + tries + (tries === 1 ? ' try' : ' tries') + '), and the show is still going', { got, tries, mid });
+    await closeProfile(lp);
+    await lp.waitForFunction((rid) => window.GS.live.room(rid).phase === 'result', rid, { timeout: 60000, polling: 200 });
+    const end = await lp.evaluate(([g, rid]) => { const r = window.GS.live.room(rid); return { winner: r.result.winnerId, backed: r.result.weights.map((w) => w[0]), shown: window.GS.games[g]._shown(), round: r.round }; }, [gid, rid]);
+    check(end.backed.includes(end.winner) && end.shown.includes(end.winner) && end.round === before.round, tag + 'the show ended on the drawn winner, a charity somebody backed', end);
+  }
+  await lp.close();
+
+  /* ---- 3. a solo race at real speed: a click in the middle of it opens the charity, and the race carries on to the winner it was drawn for ---- */
+  const rp = await newPage({ viewport: { width: 1280, height: 1000 } });
+  await openApp(rp, '', '');
+  for (const gid of RACES) {
+    const tag = gid + ' race: ';
+    await setBoard(rp, gid, IDS8, 8);
+    const h0 = await rp.evaluate(() => window.GS.store.get().history.length);
+    await rp.click('#btn-play');
+    await rp.waitForFunction(() => window.GS.app.state.busy, null, { timeout: 10000 });
+    await rp.waitForTimeout(gid === 'standing' ? 1800 : 2400);
+    let got = null, want = null, tries = 0;
+    while (!got && tries < 4) {
+      tries++;
+      const sp = await spotsNow(rp, gid);
+      const mine = sp.filter((s) => alone(s, sp) && s.x !== undefined).concat(sp.filter((s) => alone(s, sp)))[tries % 3];
+      want = mine.id;
+      const c = ctr(mine);
+      await rp.mouse.click(c.x, c.y);
+      if (await waitProfile(rp, 1500)) { got = await profileId(rp); }
+    }
+    const still = await rp.evaluate(() => window.GS.app.state.busy);
+    check(got === want && still, tag + 'a click in the middle of a race opens that charity (' + tries + (tries === 1 ? ' try' : ' tries') + ') and the round is still running', { got, want, still });
+    await closeProfile(rp);
+    await waitReceipt(rp);
+    const info = await rp.evaluate((g) => { const l = window.GS.app._last; return { w: l.round.winners.map((x) => x.id), shown: window.GS.games[g]._shown(), hist: window.GS.store.get().history.length }; }, gid);
+    check(info.shown[0] === info.w[info.w.length - 1] && info.hist === h0 + 1, tag + 'the race finished on the winner it was drawn for, and was played once', { info, h0 });
+    await closeReceipt(rp);
+  }
+  await rp.close();
+
+  /* ---- 4. a phone: a tap works the same ---- */
+  const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+  await openApp(ph);
+  for (const gid of RACES) {
+    const tag = gid + ' on a phone: ';
+    await setBoard(ph, gid, IDS8, 8);
+    const all = await spotsNow(ph, gid);
+    const picks = all.filter((s) => alone(s, all)).filter((s, i, a) => a.findIndex((o) => o.id === s.id) === i).slice(0, 3);
+    const got = [];
+    for (const sp of picks) { const c = ctr(sp); await ph.touchscreen.tap(c.x, c.y); got.push({ want: sp.id, got: await waitProfile(ph, 3000) ? await profileId(ph) : null }); await closeProfile(ph); }
+    check(picks.length === 3 && got.every((o) => o.got === o.want), tag + 'tapping a charity opens its profile', got);
+    const gap = emptyPoint(await stageBox(ph, gid), await spotsNow(ph, gid));
+    if (gap) { await ph.touchscreen.tap(gap.x, gap.y); await ph.waitForTimeout(300); }
+    check(!!gap && !(await profileId(ph)), tag + 'tapping an empty spot opens nothing');
+    check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), tag + 'the page still fits the screen');
+  }
+  await ph.close();
+
+  /* ---- 5. taking a game down removes its clicks ---- */
+  const up = await newPage({ viewport: { width: 1280, height: 1000 } });
+  await openApp(up);
+  for (const gid of RACES) {
+    const tag = gid + ': ';
+    await setBoard(up, gid, IDS8, 8);
+    const all = await spotsNow(up, gid);
+    const sp = all.filter((s) => alone(s, all))[0];
+    const c = ctr(sp);
+    await up.mouse.click(c.x, c.y);
+    const before = await waitProfile(up, 3000);
+    await closeProfile(up);
+    await up.evaluate((g) => window.GS.games[g].unmount(), gid);
+    await up.mouse.click(c.x, c.y);
+    await up.waitForTimeout(300);
+    check(before && !(await profileId(up)), tag + 'after unmount() a click on a charity opens nothing (and it did before)', { before });
+    await up.mouse.move(c.x, c.y);
+    await up.waitForTimeout(150);
+    check(await up.evaluate((g) => { const st = document.querySelector('#panel-' + g + (g === 'standing' ? ' .stand' : ' [data-role="stage"]')); return st.style.cursor !== 'pointer'; }, gid), tag + 'and the pointer is no longer a hand');
+  }
+  await up.close();
+  check(problems.length === problems0, 'section 13z: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+}
+
+/* ======================================================================== */
 section('18. Console and network health');
 check(problems.length === 0, 'no console errors, warnings, page errors or failed requests during the whole run', problems.slice(0, 8));
 

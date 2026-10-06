@@ -29,6 +29,8 @@
   var stopRun = null;    // lets abort() settle the run in progress straight away
   var fillSig = '';      // live: which catalog charities the dimmed grid shows now (it is only redrawn when that changes)
 
+  var unhit = null;      // removes the click listeners again
+
   var pick = '';         // id of the charity you backed (solo), or empty
   var livePick = '';     // the charity you have backed at the live table you are watching, or empty
 
@@ -142,6 +144,18 @@
         fillers[i].node.className = 'stile is-filler';
       }
     }
+  }
+
+  /**
+   * The charity whose tile is under a click or tap (page coordinates), or null: what is on screen at that spot (a tile that is knocked out, or
+   * only a coloured dot on a big board, is still its charity's tile; the gaps between tiles, and anything on top of the board, are not).
+   */
+  function charityAt(clientX, clientY) {
+    var node = el.stage && document.elementFromPoint(clientX, clientY);
+    var li = node && node.closest ? node.closest('.stile') : null;
+    if (!li || !el.stage.contains(li)) { return null; }
+    for (var i = 0; i < tiles.length; i++) { if (tiles[i].node === li) { return tiles[i].ch.id; } }
+    return null;
   }
 
   /**
@@ -307,6 +321,7 @@
         '<p class="game-result" data-role="result" aria-live="polite"></p>' +
         '<button type="button" class="gbtn" data-role="go">' + GS.icon('swords') + '<span>Start the countdown</span></button>' +
         '<p class="game-note" data-role="note"></p>';
+      el.stage = container.querySelector('.stand');
       el.grid = container.querySelector('[data-role="grid"]');
       el.fill = container.querySelector('[data-role="fill"]');
       el.backcap = container.querySelector('[data-role="backcap"]');
@@ -316,6 +331,15 @@
       el.note = container.querySelector('[data-role="note"]');
       el.go = container.querySelector('[data-role="go"]');
       el.go.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
+      // a click or tap on a tile opens that charity's profile (it never touches the round); the tiles already carry the charity's name as their tooltip
+      if (unhit) { unhit(); unhit = null; }
+      if (GS.ui && GS.ui.charityHit) { unhit = GS.ui.charityHit(el.stage, charityAt, { title: false }); }
+    },
+
+    /** Takes the game down: no more clicks, and a round in progress is settled at once. */
+    unmount: function () {
+      if (unhit) { unhit(); unhit = null; }
+      GS.games.standing.abort();
     },
 
     setSize: function (n) { size = n; if (!playing && !field) { rebuild(); } },
@@ -386,6 +410,15 @@
 
     _shown: function () { return result ? [result.id] : []; },
     _entrants: function () { return tiles.length; },
+    /** For tests: the charity id a click at this spot (page coordinates) would open, or null. */
+    _hitAt: charityAt,
+    /** For tests: every tile as it is on screen right now, in page coordinates: [{ id, x0, y0, x1, y1 }] (tiles that are not laid out are left out). */
+    _spots: function () {
+      return tiles.filter(function (t) { return t.node; }).map(function (t) {
+        var rc = t.node.getBoundingClientRect();
+        return { id: t.ch.id, x0: rc.left, y0: rc.top, x1: rc.right, y1: rc.bottom };
+      }).filter(function (sp) { return sp.x1 > sp.x0 && sp.y1 > sp.y0; });
+    },
     _marked: function () { return field ? livePick : pick; },
     _schedule: schedule
   };

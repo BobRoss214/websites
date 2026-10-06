@@ -17,7 +17,13 @@
  *   place(e, p, S)            -> { x, y } of an entity at progress p
  *   entity(ctx, e, pos, S)    -> paints one runner
  *   foreground(ctx, S)        -> optional, painted over the runners
+ *   hitSpot(e, S)             -> optional, where to click to open this runner's charity: one spot or an array of spots, in canvas pixels, each
+ *                                an ellipse { x, y, rx, ry } or a rectangle { x0, y0, x1, y1 }, plus an optional z (higher = drawn on top).
+ *                                Without it, the spot is a circle round the runner's drawn centre (e._x, e._y) the size of geo.r (a game that draws
+ *                                its track smaller than the canvas says so in geo.k, and its e._x / e._y are then in track units).
  * }
+ * Every game built on this opens the charity's profile when its runner is clicked (GS.ui.charityHit on the stage; a click never starts, stops
+ * or changes a race). Tests: GS.games.<id>._hitAt(clientX, clientY) is the charity id under that spot, GS.games.<id>._spots() lists the spots.
  * S = { W, H, t, geo, racing, field, total, n, winnerId, lead (id -> 1..3 while racing), labels (show names), share(e) }
  */
 (function () {
@@ -57,6 +63,9 @@
     var lastReal = 0;
     var photo = false;
     var held = 0;          // since when the gate has been held shut, waiting for a game that drives its own runners to be ready
+    var lastS = null;      // the state the last frame was drawn with (the spots to click are worked out from it)
+    var unhit = null;      // removes the click listeners again
+    var unobserve = null;  // stops watching the stage's size
 
     var pick = '';
 
@@ -105,6 +114,7 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
       var s = S(t);
+      lastS = s;
       spec.background(ctx, s);
       var order = ents.slice().sort(function (a, b) { return (a._y || 0) - (b._y || 0); });
       order.forEach(function (e) {
@@ -128,6 +138,37 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(banner, W / 2, H / 2 + 2);
       }
+    }
+
+    /** The clickable spots of one runner (see spec.hitSpot), as a list. */
+    function spotsOf(e, s) {
+      if (e._x === undefined) { return []; }              // not drawn yet
+      var sp;
+      if (spec.hitSpot) { sp = spec.hitSpot(e, s); }
+      else {
+        var g = s.geo || {};
+        var k = g.k > 0 && g.k < 1 ? g.k : 1;
+        var R = Math.max(5, (g.r || 0) * k * 1.15 + 2);
+        sp = { x: e._x * k, y: e._y * k, rx: R, ry: R };
+      }
+      return !sp ? [] : (sp.length === undefined ? [sp] : sp);
+    }
+
+    /** The runner (entity) on the spot a click or tap landed on, or null: where it was drawn in the last frame. Not on the track: nothing. */
+    function entityAt(clientX, clientY) {
+      if (!el.canvas || !geo || !lastS || !ents.length) { return null; }
+      var pt = kit.canvasPoint(el.canvas, W, H, clientX, clientY);
+      if (!pt) { return null; }
+      var all = [];
+      var owner = [];
+      ents.forEach(function (e) { spotsOf(e, lastS).forEach(function (sp) { all.push(sp); owner.push(e); }); });
+      var hit = kit.pickSpot(all, pt.x, pt.y);
+      return hit ? owner[all.indexOf(hit)] : null;
+    }
+
+    function charityAt(clientX, clientY) {
+      var e = entityAt(clientX, clientY);
+      return e ? e.ch.id : null;
     }
 
     function loop(t) {
@@ -335,7 +376,20 @@
         el.go = container.querySelector('[data-role="go"]');
         ctx = el.canvas.getContext('2d');
         el.go.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
-        U.observeSize(el.stage, resize);
+        if (unhit) { unhit(); unhit = null; }
+        if (unobserve) { unobserve(); }
+        unobserve = U.observeSize(el.stage, resize);
+        // a click or tap on a runner opens that charity's profile (it never touches the race)
+        if (GS.ui && GS.ui.charityHit) { unhit = GS.ui.charityHit(el.stage, charityAt); }
+      },
+
+      /** Takes the game down: no more clicks, no more resizing, no more drawing, and a race in progress is settled at once. */
+      unmount: function () {
+        if (unhit) { unhit(); unhit = null; }
+        if (unobserve) { unobserve(); unobserve = null; }
+        active = false;
+        if (raf) { cancelAnimationFrame(raf); raf = 0; }
+        game.abort();
       },
 
       setSize: function (n) { size = n; if (!racing && !field) { rebuild(); } },
@@ -404,7 +458,22 @@
       },
 
       _shown: function () { return result ? [result.id] : []; },
-      _entrants: function () { return ents.length; }
+      _entrants: function () { return ents.length; },
+      /** For tests: the charity id a click at this spot (page coordinates) would open, or null. */
+      _hitAt: charityAt,
+      /** For tests: every clickable spot as drawn in the last frame, in page coordinates: [{ id, x, y, rx, ry } or { id, x0, y0, x1, y1 }]. */
+      _spots: function () {
+        var rc = el.canvas && el.canvas.getBoundingClientRect();
+        if (!rc || !lastS || !W) { return []; }
+        var kx = rc.width / W, ky = rc.height / H, out = [];
+        ents.forEach(function (e) {
+          spotsOf(e, lastS).forEach(function (sp) {
+            if (sp.x0 !== undefined) { out.push({ id: e.ch.id, x0: rc.left + sp.x0 * kx, y0: rc.top + sp.y0 * ky, x1: rc.left + sp.x1 * kx, y1: rc.top + sp.y1 * ky }); }
+            else { out.push({ id: e.ch.id, x: rc.left + sp.x * kx, y: rc.top + sp.y * ky, rx: sp.rx * kx, ry: sp.ry * ky }); }
+          });
+        });
+        return out;
+      }
     };
 
     GS.games[spec.id] = game;

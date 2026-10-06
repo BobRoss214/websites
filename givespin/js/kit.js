@@ -62,6 +62,93 @@
     /** True when a live board has catalog charities filling spots (not just the charities that were backed). */
     hasFillers: function (entrants) { return !!entrants && entrants.some(function (e) { return !(e.tickets > 0); }); },
 
+    /** The smallest round badge (px across) that gets a charity's mark drawn in it. Anything smaller stays colour only (or initials, where a game drew those). */
+    MARK_MIN: 14,
+
+    /**
+     * Draws a charity's mark (GS.markImage: its real logo, or its illustrated emblem) as a round badge centred on (x, y) with radius `r`:
+     * a white disc, the picture fitted inside it, and a ring in the charity's colour. Returns true when it drew the badge. It returns false and
+     * draws nothing while the picture is still loading, when there is none, or when the badge would be under MARK_MIN px across; the caller then
+     * draws what it drew before (the initials, or just the colour). `opts`: ring (false for no ring, or a colour for the ring; the charity's colour by default), pad (share of the disc kept free, 0.22), min (px).
+     */
+    drawMark: function (ctx, ch, x, y, r, opts) {
+      opts = opts || {};
+      if (!(r * 2 >= (opts.min || kit.MARK_MIN)) || !GS.markImage) { return false; }
+      var img = GS.markImage(ch);
+      if (!img) { return false; }
+      var iw = img.naturalWidth || img.width || 0;
+      var ih = img.naturalHeight || img.height || 0;
+      if (!(iw > 0 && ih > 0)) {
+        if (img.complete === false) { return false; }
+        iw = ih = 1;                       // a picture with no size of its own (some SVG files) is drawn as a square
+      }
+      var box = 2 * r * (1 - (opts.pad === undefined ? 0.22 : opts.pad));
+      var k = Math.min(box / iw, box / ih);
+      ctx.save();
+      try {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.clip();
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';       // (a 96 px logo squeezed into 15 px is smoother, and does not shimmer as the badge moves)
+        ctx.drawImage(img, x - iw * k / 2, y - ih * k / 2, iw * k, ih * k);
+      } catch (e) {
+        ctx.restore();                     // a picture the browser cannot draw: the caller falls back to the initials
+        return false;
+      }
+      ctx.restore();
+      if (opts.ring !== false) {
+        var lw = Math.max(1, r * 0.12);
+        ctx.beginPath();
+        ctx.arc(x, y, r - lw / 2, 0, Math.PI * 2);
+        ctx.lineWidth = lw;
+        ctx.strokeStyle = typeof opts.ring === 'string' ? opts.ring : ch.accent;
+        ctx.stroke();
+      }
+      return true;
+    },
+
+    /**
+     * Where a click or tap landed on a canvas, in the canvas's own drawing units (what the game drew in), or null when it is outside the canvas.
+     * `w` and `h` are the units the game draws in (the canvas's CSS size, before any scaling for pixel density).
+     */
+    canvasPoint: function (canvas, w, h, clientX, clientY) {
+      if (!canvas || !(w > 0) || !(h > 0)) { return null; }
+      var rc = canvas.getBoundingClientRect();
+      if (!rc.width || !rc.height) { return null; }
+      var x = (clientX - rc.left) * w / rc.width;
+      var y = (clientY - rc.top) * h / rc.height;
+      return x < 0 || y < 0 || x > w || y > h ? null : { x: x, y: y };
+    },
+
+    /**
+     * How far (point x, y) is into one clickable spot: below 1 when it is on it (0 at the centre), Infinity when it is not. A spot is an ellipse
+     * { x, y, rx, ry } (centre and radii) or a rectangle { x0, y0, x1, y1 } (every point on it scores just under 1, so a round mark on top of a
+     * label wins where they meet).
+     */
+    spotScore: function (sp, x, y) {
+      if (sp.x0 !== undefined) { return x >= sp.x0 && x <= sp.x1 && y >= sp.y0 && y <= sp.y1 ? 0.99 : Infinity; }
+      var dx = (x - sp.x) / sp.rx;
+      var dy = (y - sp.y) / sp.ry;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      return d <= 1 ? d : Infinity;
+    },
+
+    /** The one of `spots` that (x, y) is on, or null: the one on top first (higher `z`), then the nearest centre. A spot carries whatever else the caller put on it (an id, say). */
+    pickSpot: function (spots, x, y) {
+      var best = null, bz = -Infinity, bd = Infinity;
+      for (var i = 0; i < spots.length; i++) {
+        var d = kit.spotScore(spots[i], x, y);
+        if (d === Infinity) { continue; }
+        var z = spots[i].z || 0;
+        if (z > bz || (z === bz && d < bd)) { best = spots[i]; bz = z; bd = d; }
+      }
+      return best;
+    },
+
     /** Shortens `text` with an ellipsis until it fits `maxW` in the context's current font. */
     fit: function (ctx, text, maxW) {
       var t = text;

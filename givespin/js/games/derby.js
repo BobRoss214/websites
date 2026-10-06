@@ -57,6 +57,9 @@
   var vt = 0;            // race clock in seconds: it runs slow-motion through a photo finish
   var lastReal = 0;
   var photo = false;
+  var tagBox = null;     // pack: where the winner's name tag was drawn (to click)
+  var unhit = null;      // removes the click listeners again
+  var unobserve = null;  // stops watching the stage's size
 
   var pick = '';         // id of the charity you backed (solo), or empty
 
@@ -106,7 +109,7 @@
     } else {
       g.lanes = n;
       g.laneH = laneHFor(n);
-      g.r = g.laneH * 0.32;
+      g.r = g.laneH * (g.laneH <= 24 ? 0.36 : 0.32);       // (the narrowest lanes get a slightly bigger badge, so a logo still reads in it)
       g.bottom = g.top + n * g.laneH;
       g.nums = true;
       g.fs = Math.min(g.laneH >= 44 ? 13.5 : 12, Math.max(8, g.laneH * 0.5));
@@ -163,6 +166,9 @@
   }
 
   function runnerX(r, p) { return geo.x0 + r + p * (geo.x1 - geo.x0 - 2 * r); }
+
+  /** Where a pack runner (a dot of the field) is along the track. */
+  function dotX(ru) { return ru._sx + ru.run.p * (ru._ex - ru._sx); }
 
   /** A lane's label, fitted to the label column once (and again when the width, the odds or the fonts change). */
   function labelFor(ru) {
@@ -249,7 +255,7 @@
       ctx.beginPath();
       for (var z = 0; z < grp.idx.length; z++) {
         var ru = runners[grp.idx[z]];
-        var x = ru._sx + ru.run.p * (ru._ex - ru._sx);
+        var x = dotX(ru);
         ctx.moveTo(x + g.fr, ru._fy);
         ctx.arc(x, ru._fy, g.fr, 0, TAU);
       }
@@ -287,6 +293,7 @@
   function draw(t) {
     if (!ctx || !W || !geo) { return; }
     var g = geo;
+    tagBox = null;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
     ctx.globalAlpha = 1;
@@ -376,7 +383,8 @@
       ctx.lineWidth = win || backed ? 3 : (g.r < 8 ? 1 : 1.5);
       ctx.strokeStyle = win || backed ? '#ffc542' : 'rgba(255,255,255,0.8)';
       ctx.stroke();
-      if (g.r >= 9) {
+      // the charity's mark in the badge (its logo or emblem), when it is big enough and the picture is there; otherwise the initials, as before
+      if (!kit.drawMark(ctx, r.ch, 0, 0, g.r < 10 ? g.r - 0.8 : g.r * 0.9, win || backed ? { ring: '#ffc542' } : undefined) && g.r >= 9) {
         var mono = GS.mono(r.ch);
         ctx.fillStyle = '#0b1620';
         ctx.font = '800 ' + (g.r * (mono.length <= 2 ? 0.95 : mono.length === 3 ? 0.72 : mono.length === 4 ? 0.6 : 0.5)) + 'px "Sora", sans-serif';
@@ -402,7 +410,7 @@
           var lr = runners[lead[l]];
           if (!lr) { continue; }
           var li = lead[l];
-          var lx = li < g.lanes ? runnerX(g.r, lr.run.p) : lr._sx + lr.run.p * (lr._ex - lr._sx);
+          var lx = li < g.lanes ? runnerX(g.r, lr.run.p) : dotX(lr);
           var ly = li < g.lanes ? g.top + li * g.laneH + g.laneH / 2 : lr._fy;
           ctx.beginPath();
           ctx.arc(lx, ly, (li < g.lanes ? g.r : g.fr) + 3.5, 0, TAU);
@@ -419,14 +427,17 @@
         ctx.fill();
         ctx.font = '800 11px "Sora", sans-serif';
         var tag = kit.fit(ctx, wr.ch.short, Math.max(60, g.x1 - g.x0 - 30));
-        var tw = ctx.measureText(tag).width + 14;
+        var mk = GS.markImage && GS.markImage(wr.ch) ? 20 : 0;        // room for the charity's mark at the left of the tag
+        var tw = ctx.measureText(tag).width + 14 + mk;
         var ty = Math.max(g.fieldTop + 2, Math.min(g.fieldTop + g.fieldH - 18, wr._fy - 9));
         ctx.fillStyle = 'rgba(4,10,14,0.78)';
         ctx.fillRect(wx - tw - 10, ty, tw, 18);
+        if (mk) { kit.drawMark(ctx, wr.ch, wx - tw + 1, ty + 9, 8, { ring: false }); }
         ctx.fillStyle = '#ffe39a';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(tag, wx - tw / 2 - 10, ty + 9.5);
+        ctx.fillText(tag, wx - tw / 2 - 10 + mk / 2, ty + 9.5);
+        tagBox = { id: wr.ch.id, x0: wx - tw - 10, y0: ty, x1: wx - 10, y1: ty + 18 };
       }
     }
 
@@ -439,6 +450,37 @@
       ctx.textBaseline = 'middle';
       ctx.fillText(banner, W / 2, H / 2 + 2);
     }
+  }
+
+  /**
+   * Everything that opens a charity when it is clicked, where it was drawn: a lane runner (round, a little roomier than its badge, on top), the
+   * name and odds at the left of its lane, a dot of the field (its own size, a little roomier), and the winner's name tag. Each is
+   * { id, x, y, rx, ry } or { id, x0, y0, x1, y1 } in canvas pixels.
+   */
+  function spots() {
+    var out = [];
+    if (!geo || !runners.length) { return out; }
+    var g = geo, i, ru;
+    for (i = 0; i < g.lanes && i < runners.length; i++) {
+      ru = runners[i];
+      var y = g.top + i * g.laneH;
+      out.push({ id: ru.ch.id, x: runnerX(g.r, ru.run.p), y: y + g.laneH / 2, rx: g.r + 3, ry: Math.min(g.r + 3, g.laneH / 2), z: 1 });
+      out.push({ id: ru.ch.id, x0: 0, y0: y, x1: g.lw, y1: y + g.laneH });
+    }
+    var dr = Math.max(g.fr + 2, 4);
+    for (i = g.lanes; g.pack && i < runners.length; i++) {
+      ru = runners[i];
+      if (ru._fy !== undefined) { out.push({ id: ru.ch.id, x: dotX(ru), y: ru._fy, rx: dr, ry: dr }); }
+    }
+    if (tagBox) { out.push(tagBox); }
+    return out;
+  }
+
+  /** The charity under a click or tap (page coordinates), or null. */
+  function charityAt(clientX, clientY) {
+    var pt = geo && kit.canvasPoint(el.canvas, W, H, clientX, clientY);
+    var hit = pt ? kit.pickSpot(spots(), pt.x, pt.y) : null;
+    return hit ? hit.id : null;
   }
 
   function loop(t) {
@@ -627,7 +669,20 @@
       el.go = container.querySelector('[data-role="go"]');
       ctx = el.canvas.getContext('2d');
       el.go.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
-      U.observeSize(el.stage, resize);
+      if (unhit) { unhit(); unhit = null; }
+      if (unobserve) { unobserve(); }
+      unobserve = U.observeSize(el.stage, resize);
+      // a click or tap on a runner opens that charity's profile (it never touches the race)
+      if (GS.ui && GS.ui.charityHit) { unhit = GS.ui.charityHit(el.stage, charityAt); }
+    },
+
+    /** Takes the game down: no more clicks, no more resizing, no more drawing, and a race in progress is settled at once. */
+    unmount: function () {
+      if (unhit) { unhit(); unhit = null; }
+      if (unobserve) { unobserve(); unobserve = null; }
+      active = false;
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      GS.games.derby.abort();
     },
 
     setSize: function (n) { size = n; if (!racing && !field) { rebuild(); } },
@@ -694,6 +749,19 @@
 
     _shown: function () { return result ? [result.id] : []; },
     _runners: function () { return runners.length; },
+    /** For tests: the charity id a click at this spot (page coordinates) would open, or null. */
+    _hitAt: charityAt,
+    /** For tests: every clickable spot as drawn in the last frame, in page coordinates: [{ id, x, y, rx, ry } or { id, x0, y0, x1, y1 }]. */
+    _spots: function () {
+      var rc = el.canvas && el.canvas.getBoundingClientRect();
+      if (!rc || !W) { return []; }
+      var kx = rc.width / W, ky = rc.height / H;
+      return spots().map(function (sp) {
+        return sp.x0 !== undefined
+          ? { id: sp.id, x0: rc.left + sp.x0 * kx, y0: rc.top + sp.y0 * ky, x1: rc.left + sp.x1 * kx, y1: rc.top + sp.y1 * ky }
+          : { id: sp.id, x: rc.left + sp.x * kx, y: rc.top + sp.y * ky, rx: sp.rx * kx, ry: sp.ry * ky };
+      });
+    },
     /** How the board is laid out right now (for tests): lanes or a pack, how many lanes, and the canvas size. */
     _board: function () { return geo ? { pack: geo.pack, lanes: geo.lanes, backed: backedN, w: W, h: H } : null; }
   };

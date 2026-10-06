@@ -116,8 +116,10 @@
     var lab = labelFor(ctx, e, S, g, filler);
     var two = g.two && lab.share;
     // the label rides along beside its duck, but stops short of the buoys once the duck is past them
-    var lx = Math.max(6 + (two ? Math.max(lab.w, lab.shareW) : lab.w + (lab.share ? lab.shareW + 6 : 0)), Math.min(x - g.r - 8, g.x1 - 8));
+    var lw = two ? Math.max(lab.w, lab.shareW) : lab.w + (lab.share ? lab.shareW + 6 : 0);
+    var lx = Math.max(6 + lw, Math.min(x - g.r - 8, g.x1 - 8));
     var ny = two ? y - lab.fs * 0.55 : y;
+    e._lb = { x0: lx - lw - 2, x1: lx + 2, y0: y - (two ? lab.fs * 1.2 : lab.fs * 0.7), y1: y + (two ? lab.fs * 1.5 : lab.fs * 0.7) };   // where to click to open this charity (it rides with the duck)
     ctx.save();
     if (filler) { ctx.globalAlpha = 0.75; }
     ctx.font = '700 ' + lab.fs + 'px "Inter", sans-serif';
@@ -136,17 +138,20 @@
     ctx.restore();
   }
 
-  /** A name tag for the winner when the field is too big to label every duck. */
-  function pill(ctx, text, cx, cy, W) {
+  /** A name tag for the winner when the field is too big to label every duck (with the charity's mark in it when it has one). Returns the tag's box. */
+  function pill(ctx, text, cx, cy, W, ch) {
     ctx.font = '800 10.5px "Sora", sans-serif';
-    var w = Math.ceil(ctx.measureText(text).width) + 14;
+    var mark = !!(ch && GS.markImage && GS.markImage(ch));
+    var w = Math.ceil(ctx.measureText(text).width) + 14 + (mark ? 20 : 0);
     var x = Math.max(4, Math.min(W - w - 4, cx - w / 2));
     ctx.fillStyle = 'rgba(4,10,14,0.8)';
     ctx.fillRect(x, cy - 9, w, 18);
+    if (mark) { kit.drawMark(ctx, ch, x + 11, cy, 8, { ring: false }); }
     ctx.fillStyle = '#ffe39a';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, x + w / 2, cy + 0.5);
+    ctx.fillText(text, x + (mark ? 20 : 0) + (w - (mark ? 20 : 0)) / 2, cy + 0.5);
+    return { x0: x, y0: cy - 9, x1: x + w, y1: cy + 9 };
   }
 
   var game = GS.crowdGame({
@@ -308,6 +313,16 @@
       return { x: x, y: e._ey + bob + sway };
     },
 
+    /** Where a click opens this duck's charity: the duck itself (body, head and beak), the name beside it, and the winner's name tag. */
+    hitSpot: function (e, S) {
+      var g = S.geo;
+      var r = !g.pack || e._lane >= 0 ? g.r : g.fr;
+      var spots = [{ x: e._x + r * 0.25, y: e._y, rx: Math.max(r * 1.35 + 1.5, 5), ry: Math.max(r * 1.0 + 1.5, 5) }];
+      if (e._lb) { spots.push(e._lb); }
+      if (e._pill) { spots.push(e._pill); }
+      return spots;
+    },
+
     entity: function (ctx, e, pos, S) {
       var g = S.geo;
       var lane = !g.pack || e._lane >= 0;         // a lane of its own, with a name and odds
@@ -318,6 +333,8 @@
       var backed = !S.field && !!S.pickId && e.ch.id === S.pickId;   // the solo pick never shows on a live board
       var filler = S.field && !(e.tickets > 0);   // a catalog charity that only fills the board
 
+      e._lb = null;
+      e._pill = null;
       if (g.pack ? lane : S.labels) { drawLabel(ctx, e, x, y, S, filler, win); }
 
       if (win || rank) {
@@ -347,6 +364,8 @@
         ctx.drawImage(sp.cv, Math.round((x - sp.ox) * frameDpr) / frameDpr, Math.round((y - sp.oy) * frameDpr) / frameDpr, sp.w, sp.h);
       } else {
         paintDuck(ctx, x, y, r, e.ch.accent);
+        // a big enough duck wears the charity's mark on its flank, over the patch of its colour (a small duck stays colour only)
+        kit.drawMark(ctx, e.ch, x - r * 0.3, y + r * 0.2, r * 0.62);
       }
       if (filler) { ctx.globalAlpha = 1; }
 
@@ -359,7 +378,7 @@
         // too many ducks to label each one: name the winner
         if (!(g.pack ? lane : S.labels)) {
           var ty = y - Math.max(r * 1.5, 9) - 12;
-          pill(ctx, e.ch.short, x, ty < 10 ? y + 22 : ty, S.W);
+          e._pill = pill(ctx, e.ch.short, x, ty < 10 ? y + 22 : ty, S.W, e.ch);
         }
       }
       if (backed) {

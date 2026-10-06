@@ -13,6 +13,7 @@
 (function () {
   'use strict';
   var GS = window.GS;
+  var kit = GS.kit;
   var TAU = Math.PI * 2;
   var MEDAL = ['#ffc542', '#cfd9e0', '#e0a070'];
   var FADE = 0.55;       // how faint a catalog balloon that only fills a live sky is drawn
@@ -84,6 +85,7 @@
     var win = e.run.place === 1 && !S.racing;
     var rank = S.lead[e.idx];
     var backed = !S.field && !!S.pickId && e.ch.id === S.pickId;   // the solo pick never shows on a live board
+    e._big = !!big;                                                // (remembered for the click: a big balloon is on top of the crowd)
 
     if (win || rank) {
       ctx.beginPath();
@@ -111,7 +113,8 @@
       ctx.closePath();
       ctx.stroke();
     }
-    if (r >= 10) {
+    // a big enough balloon carries the charity's mark on its belly; until the picture is there (or when there is none) the initials, as before
+    if (r >= 10 && !kit.drawMark(ctx, e.ch, x, y - r * 0.04, rx * 0.8, { pad: 0.2, ring: 'rgba(255,255,255,0.85)' })) {
       var mono = GS.mono(e.ch);
       ctx.fillStyle = 'rgba(11,22,32,0.85)';
       ctx.font = '800 ' + (r * (mono.length > 2 ? 0.5 : 0.62)) + 'px "Sora", sans-serif';
@@ -262,6 +265,13 @@
       if (p >= 1) { y = g.yF - e._ey * e._q; }
       else { y = e._sy + p * (g.yF - e._sy); }
       return { x: x, y: y };
+    },
+
+    /** Where a click opens this balloon's charity: the balloon (a little roomier than its body), the big ones above the crowd. */
+    hitSpot: function (e, S) {
+      var g = S.geo;
+      var r = e._big ? Math.max(g.r * 1.45, 11) : S.field && !(e.tickets > 0) ? Math.max(2.5, g.r * 0.85) : g.r;
+      return { x: e._x, y: e._y, rx: Math.max(r * 0.82 * 1.15 + 1.5, 5), ry: Math.max(r * 1.05 + 1.5, 5), z: e._big ? 1 : 0 };
     },
 
     entity: function (ctx, e, pos, S) {
