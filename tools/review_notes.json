@@ -45,6 +45,13 @@
    "suggest": "“frutos rojos” for berries, “carriola” for stroller"
   },
   {
+   "lang": "es",
+   "ids": ["jc998c430"],
+   "when": "Abre {day}",
+   "ask": "This line says when a place opens next. The page fills {day} with “mañana”, a weekday or a short date, so a visitor reads “Abre mañana a las 10 a. m.”, “Abre viernes a las 10 a. m.” or “Abre vie, 23 oct a las 10 a. m.”. The fixed text of the page says “Abre el martes, 5 p. m.”. Should a weekday or a date have “el” before it, while “mañana” has none? Also, “a las” fits 10, 4 and 8 o’clock, but one o’clock would need “a la”.",
+   "suggest": "“Abre el viernes a las 10 a. m.” and “Abre mañana a las 10 a. m.”. A new text alone is not enough: the page code has to add “el” in Spanish, and the farm’s helper will do that after your answer"
+  },
+  {
    "lang": "hi",
    "ids": ["t7c9a8664"],
    "when": "आइए",
@@ -86,6 +93,13 @@
    "ask": "“Peak picking” means the days with the most fruit and the busiest crowds. “तोड़ने का सबसे अच्छा समय” says “the best time to pick”. Is that the same idea?"
   },
   {
+   "lang": "hi",
+   "ids": ["jf70f159a"],
+   "when": "में खुलेंगे",
+   "ask": "The page fills {time} in itself, for example “4 दिन 1 घंटे” (4 days 1 hour) or “1 घंटा 30 मिनट” (1 hour 30 minutes). The browser writes one hour as “घंटा”. When the hour is the last word, “में” follows it, so the page now changes it to “घंटे” (“1 घंटे में खुलेंगे”, not “1 घंटा में खुलेंगे”). Is “घंटे” the right form before “में”? Does the whole line read well with 1 day, 2 days and 1 hour 30 minutes?",
+   "suggest": "Keep “1 घंटे में”, or write one hour as “एक घंटे में”"
+  },
+  {
    "lang": "zh",
    "ids": ["t29a8b135", "t02ff16ba", "te75a4809", "tbb0c8591", "ta2d4eb0f", "tf13be67c", "t775b3737", "t168a0beb"],
    "when": "服务犬",
@@ -125,6 +139,19 @@
    "when": "您好",
    "ask": "This is the first line of the e-mail a visitor sends to the farm. It says 您好 (formal you); the rest of the site says 你 (96 times, 您 once). Right for a mail to a business, but not the same register.",
    "suggest": "Keep, or “你好”"
+  },
+  {
+   "lang": "zh",
+   "ids": ["jda15f6da", "j7a9c89f1", "j4079a441"],
+   "when": "月中旬",
+   "ask": "These three words are put into “Next up: Strawberries. Usually starts {when}.” (the countdown box) and “Next up: Strawberries, usually {when}” (the top bar). With the space after the number, the page shows “通常4 月中旬开始”: no space after 通常, one space after 4. Elsewhere the site puts a space on both sides of a number (“通常 4 月中旬至 6 月上旬”), while the dates the page writes itself have none (“10月13日”). Which spacing is right for all three?",
+   "suggest": "“4月中旬”, “6月中旬”, “9月中旬” (no spaces, like “10月13日”), or keep the spaces and add one after 通常 in the two lines asked about next"
+  },
+  {
+   "lang": "zh",
+   "ids": ["j8a39af68", "j7cc0082e"],
+   "when": "通常{when}",
+   "ask": "{when} is filled with “4 月中旬”, “6 月中旬” or “9 月中旬”, or, for the winter season, with “感恩节后的周五”. Today the line reads “通常4 月中旬开始”. If the answer for the three month words is to keep their spaces, a space is wanted after 通常 before a number but not before “感恩节后的周五”. Tell us the spacing you want for both."
   },
   {
    "lang": "vi",
