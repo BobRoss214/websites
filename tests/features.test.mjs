@@ -4,7 +4,7 @@
 /* Pizza countdown + reminders, "This week at the farm", email signup (Mailchimp mocked), reviews / press / photo wall / entrance photo,
  * drive times and map-app links.  Each page is opened at a chosen moment (the page clock is set, so the dates in the test are fixed). */
 import fs from 'node:fs';
-import { run, open as openPage, ok, okSoon, until, txt } from './lib.mjs';
+import { run, open as openPage, ok, okSoon, until, txt, fetchRetry } from './lib.mjs';
 
 await run('features', async ({ browser, base, errs }) => {
   const b = browser, BASE = base;
@@ -46,6 +46,12 @@ await run('features', async ({ browser, base, errs }) => {
   await p.clock.fastForward(6 * 3600e3 + 60000);
   m = await p.evaluate(() => { const b = document.querySelector('[data-rel-box]'); return { mode: b.dataset.mode, when: b.querySelector('[data-rel-when]').textContent }; });
   ok('6 hours later it points at Oct 13', m.mode === 'wait' && /Oct 16.18/.test(m.when) && /Tuesday, Oct 13/.test(m.when), m.when);
+  await p.context().close();
+
+  // the table gives no time (the attribute is taken out of the page): the countdown still opens at 5 PM, not at 4 PM
+  p = await open('index.html', { time: '2026-10-06T16:30:00-04:00', routes: (pg) => pg.route('**/index.html', async (r) => { const res = await fetchRetry(r); await r.fulfill({ response: res, body: (await res.text()).replace(' data-release-time="17:00"', '') }); }) });
+  const dflt = await p.evaluate(() => ({ mode: document.querySelector('[data-rel-box]').dataset.mode, when: document.querySelector('[data-rel-when]').textContent }));
+  ok('no time in the table: at 4:30 PM it still waits and says it opens at 5:00 PM', dflt.mode === 'wait' && /Opens Tuesday, Oct 6 at 5:00 PM/.test(dflt.when), JSON.stringify(dflt));
   await p.context().close();
 
   // after the last row: everything hides
@@ -160,7 +166,7 @@ await run('features', async ({ browser, base, errs }) => {
   await okSoon('Mailchimp: the request was sent', async () => seen.length, (n) => n >= 1);
   await until(p, () => /Check your email/.test(document.querySelector('[data-signup-msg]').textContent));
   const u = seen[0];
-  ok('Mailchimp: calls post-json with u, id, email, groups, tags', u && u.pathname === '/subscribe/post-json' && u.searchParams.get('u') === 'U123' && u.searchParams.get('id') === 'L456' && u.searchParams.get('EMAIL') === 'mom@example.com' && u.searchParams.get('group[1][2]') === '2' && u.searchParams.get('group[1][8]') === '8' && u.searchParams.get('tags') === '111', u && u.search.slice(0, 200));
+  ok('Mailchimp: calls post-json with u, id, email, groups, tags', u && u.hostname === 'wiseacres.us21.list-manage.com' && u.pathname === '/subscribe/post-json' && u.searchParams.get('u') === 'U123' && u.searchParams.get('id') === 'L456' && u.searchParams.get('EMAIL') === 'mom@example.com' && u.searchParams.get('group[1][2]') === '2' && u.searchParams.get('group[1][8]') === '8' && u.searchParams.get('tags') === '111', u && u.search.slice(0, 200));
   ok('Mailchimp: interest with no mapping is simply not sent', u && ![...u.searchParams.keys()].some((k) => /pizza/.test(k)));
   ok('success message + form reset', /Check your email/.test(await txt(p, '[data-signup-msg]')) && (await p.inputValue('#su-email')) === '' && !(await p.isChecked('input[value=pumpkins]')));
   await p.context().close();
