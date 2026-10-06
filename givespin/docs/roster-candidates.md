@@ -1,6 +1,19 @@
 # What was left out of the roster, and what to check
 
-The roster is at 1,180 charities (see the README, "Charity list"). This note is about what was **not** added.
+The roster is at 500 charities (see the README, "Charity list"). This note is about what was **not** added or was left out.
+
+## The final cut to 500
+The researched roster reached 1,180 charities. For the final roster the owner asked for 500 real, legitimate, good and popular charities. Five readers ranked all 1,180 from
+what they already knew (no searches), scoring how widely known and reputable each one is from 1 to 5 and noting any reason for concern. The roster keeps every
+charity scored 5 or 4 and the best of those scored 3, and leaves out: any charity with a scandal, a regulator problem or a governance dispute behind it
+(Wounded Warrior Project, Feed the Children, Islamic Relief and Islamic Relief Australia, Crisis Text Line, Sentebale), doubt that it still operates or what it is
+(Medaille Trust, Repat Foundation, Lifeline Direct), a mainly commercial structure (a zoo operator, an aquarium operator, a fee-charging treatment provider, a
+festival), a near-duplicate arm of another listed charity, and, among the less well-known ones (score 3), those with a very narrow political, abortion or
+religious-mission focus. Well-known charities with older controversies (Oxfam, WWF, the Red Cross, Save the Children, the Salvation Army, Amnesty) stay because
+they are household names that are still legitimate charities; check them against your own comfort before launch. The ranking is the readers' knowledge, not a
+fresh search, so it is an informed judgement, not a measured popularity score. About 680 charities, mostly small UK and Australian register entries, were
+dropped; the lists below describe the longer 1,180-charity roster.
+
 
 ## How the last 658 were chosen
 They come from two official registers, not from web searches:
