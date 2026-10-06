@@ -2534,10 +2534,9 @@
  {
   "id": "ted-noffs-foundation",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register",
-   "https://en.wikipedia.org/wiki/Ted_Noffs_Foundation"
+   "https://data.gov.au/data/dataset/acnc-register"
   ],
-  "note": "official register record; ABN 49018049971; founding year 1970 from a web search (search-result text, the page itself was not opened) in place of the register's 1971"
+  "note": "official register record; ABN 49018049971"
  },
  {
   "id": "flourish-australia",
@@ -2549,10 +2548,9 @@
  {
   "id": "noahs-ark",
   "evidence": [
-   "https://data.gov.au/data/dataset/acnc-register",
-   "https://www.noahsarkinc.org.au/about/story"
+   "https://data.gov.au/data/dataset/acnc-register"
   ],
-  "note": "official register record; ABN 56770578386; founding year 1971 (the register's year) confirmed by a web search (search-result text, the page itself was not opened)"
+  "note": "official register record; ABN 56770578386"
  },
  {
   "id": "jesuit-social-services",
