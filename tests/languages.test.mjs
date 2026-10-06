@@ -33,6 +33,16 @@ await run('languages', async ({ browser, base, errs }) => {
     await p.context().close();
   }
 
+  // Hindi: an hour that ends the chip's time is followed by "में", so it is घंटे ("4 दिन 1 घंटे में"), not "1 घंटा में"; in the middle of the time it stays घंटा
+  for (const [when, want] of [['2026-10-12T15:30:30-04:00', 'अगले पिज़्ज़ा रिज़र्वेशन 1 दिन 1 घंटे में खुलेंगे'], ['2026-10-13T15:59:30-04:00', 'अगले पिज़्ज़ा रिज़र्वेशन 1 घंटे में खुलेंगे'],
+    ['2026-10-13T15:29:30-04:00', 'अगले पिज़्ज़ा रिज़र्वेशन 1 घंटा 30 मिनट में खुलेंगे'], ['2026-10-12T13:59:30-04:00', 'अगले पिज़्ज़ा रिज़र्वेशन 1 दिन 3 घंटे में खुलेंगे']]) {
+    const h = await open(browser, base, 'index.html', errs, { lang: 'hi', time: when });
+    await until(h, () => document.querySelector('[data-rel-chip-text]') && document.querySelector('[data-rel-chip-text]').textContent !== '');
+    const chip = await h.evaluate(() => document.querySelector('[data-rel-chip-text]').textContent.replace(/\s+/g, ' ').trim());
+    ok('Hindi chip at ' + when + ' says: ' + want, chip === want, chip);
+    await h.context().close();
+  }
+
   // the calendar file in another language
   const p = await open(browser, base, 'index.html', errs, { lang: 'es', time: '2026-10-01T12:00:00-04:00' });
   await p.locator('[data-rel-remind]').scrollIntoViewIfNeeded();

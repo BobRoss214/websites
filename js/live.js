@@ -284,8 +284,10 @@
     const s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
     const part = (n, u) => { try { return unitText(u, n); } catch (e) { return n + ' ' + u + (n === 1 ? '' : 's'); } };   // "5 days", not "5d": plain words, and screen readers say them properly
     const and = lang() === 'es' ? ' y ' : ' ';   // "5 días y 1 hora", like the drive times
-    if (d) return part(d, 'day') + (h ? and + part(h, 'hour') : '');
-    if (h) return part(h, 'hour') + (m ? and + part(m, 'minute') : '');
+    // Hindi: the sentence goes on with "में", and an hour before it is घंटे ("4 दिन 1 घंटे में"), not the घंटा the browser writes for one hour ("1 घंटा में" is wrong)
+    const end = (s) => (lang() === 'hi' ? s.replace(/घंटा$/, 'घंटे') : s);
+    if (d) return end(part(d, 'day') + (h ? and + part(h, 'hour') : ''));
+    if (h) return end(part(h, 'hour') + (m ? and + part(m, 'minute') : ''));
     return part(Math.max(1, m), 'minute');
   }
   const chipText = (st) => (st.mode === 'open' ? t('Pizza reservations are open now') : t('Next pizza reservations open in {time}', { time: chipTime(st.left) }));
