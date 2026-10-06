@@ -69,6 +69,10 @@ W.closures = was;
 const x = W.live.expandClosures(['2026-11-09..2026-11-15', '2026-12-24']);
 ok('a closure range counts both ends: 2026-11-09..2026-11-15 is 7 days, plus one single day = 8', x.days.length === 8 && x.days[0] === '2026-11-09' && x.days[6] === '2026-11-15', JSON.stringify(x));
 ok('a day that is not on the calendar (2026-11-31) is not used and is reported', W.live.expandClosures(['2026-11-31']).days.length === 0 && W.live.expandClosures(['2026-11-31']).problems.length > 0);
+{   // kills mutant a04 (a closure of 2026-11-31 typed into js/content.js): before this only `sitecheck-values`, a browser test, read the closures (and `docs` by accident, because it quotes the line)
+  const bad = W.live.expandClosures(W.closures).problems;
+  ok(`every closure typed in js/content.js is a real day, or a range of real days with the end after the start (${(W.closures || []).length} read; it notices the break a04 of tools/mutants.json)`, (Array.isArray(W.closures) || typeof W.closures === 'string') && bad.length === 0, bad.length ? JSON.stringify(bad) : '');
+}
 
 /* ---------------------------------------------------------------- seasons */
 const season = (d) => W.seasons.current(at(d + 'T12:00:00-04:00'));

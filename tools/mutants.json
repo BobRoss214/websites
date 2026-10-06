@@ -965,6 +965,75 @@
   "build": false
  },
  {
+  "id": "b04r",
+  "cat": "structure",
+  "desc": "The menu button loses its aria-label (and the build commands run after it, so no built file is stale)",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": " aria-label=\"Open menu\"",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "code-rules"
+  ],
+  "browser": [
+   "smoke"
+  ],
+  "build": false,
+  "rebuild": true
+ },
+ {
+  "id": "b07r",
+  "cat": "structure",
+  "desc": "A script tag removed (js/live.js) (and the build commands run after it, so no built file is stale)",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "  <script src=\"js/live.js\"></script>\n",
+    "repl": "",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "code-rules"
+  ],
+  "browser": [
+   "live"
+  ],
+  "build": false,
+  "rebuild": true
+ },
+ {
+  "id": "b08r",
+  "cat": "structure",
+  "desc": "Script order swapped: guard.js after content.js (and the build commands run after it, so no built file is stale)",
+  "ops": [
+   {
+    "file": "index.html",
+    "find": "  <script src=\"js/guard.js\"></script>\n  <script src=\"js/content.js\"></script>\n",
+    "repl": "  <script src=\"js/content.js\"></script>\n  <script src=\"js/guard.js\"></script>\n",
+    "regex": false,
+    "flags": "",
+    "count": 1
+   }
+  ],
+  "expect": [
+   "code-rules"
+  ],
+  "browser": [
+   "sitecheck"
+  ],
+  "build": false,
+  "rebuild": true
+ },
+ {
   "id": "c01",
   "cat": "behaviour",
   "desc": "Language choice not remembered (key renamed on write)",
@@ -1508,8 +1577,8 @@
   "ops": [
    {
     "file": "tools/make_deploy_folder.py",
-    "find": "'__pycache__', 'tests'}",
-    "repl": "'__pycache__'}",
+    "find": "'__pycache__', 'tests', ",
+    "repl": "'__pycache__', ",
     "regex": false,
     "flags": "",
     "count": 1
@@ -1548,12 +1617,12 @@
  {
   "id": "e03",
   "cat": "tools",
-  "desc": "launch_check: robots check never fails",
+  "desc": "launch_check: the sitemap check for pages that are not for visitors never fires (its list is empty)",
   "ops": [
    {
     "file": "tools/launch_check.py",
     "find": "FORBIDDEN_IN_SITEMAP = (",
-    "repl": "FORBIDDEN_IN_SITEMAP = (\"/nothing-\",) + (",
+    "repl": "FORBIDDEN_IN_SITEMAP = () and (",
     "regex": false,
     "flags": "",
     "count": 1

@@ -6,6 +6,7 @@
  *     list / <use> / #link that points at an id that does not exist, a link to another page's #anchor that is not there, a heading level skipped or empty,
  *     more or less than one h1 and one main, a picture without alt, a <p> holding a block, a link inside a link, a button or link inside a button, link or
  *     summary, target="_blank" without rel, a mistyped mailto: / tel: / web address, a bad lang value, the same attribute twice, JSON-LD that does not parse
+ *   - the dates typed into a page (data-until="..." on a line that hides itself, data-release="..." on a row of the pizza schedule): each one a real day, written YYYY-MM-DD
  *   - aria-* names and the values of the common ones, role values: real ones only
  *   - nothing the Content-Security-Policy in docs/LAUNCH_CHECKLIST.md would block: no inline <script> (JSON-LD is data), no onclick= and other inline handlers
  *     (except print/'s "window.print()", whose hash is in that policy), no javascript: address, nothing loaded from another web site
@@ -29,6 +30,10 @@ import { ROOT, ok, info, finish } from './lib.mjs';
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const list = (dir, ext) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith(ext)).sort().map((f) => (dir ? dir + '/' : '') + f);
 const lineOf = (s, i) => s.slice(0, i).split('\n').length;
+// the dates the owner types into a page: data-until (the line hides itself after that day) and data-release: a real day, written YYYY-MM-DD (not 2026-13-31, not 2026-11-31, not 2026-10-3)
+const realDay = (t) => { const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(t); if (!m) return false; const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])); return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3]; };
+const noComments = (html) => html.replace(/<!--[\s\S]*?-->/g, '');   // (the notes for the owner in a comment show the pattern: data-until="YYYY-MM-DD")
+const badDates = (html) => [...noComments(html).matchAll(/\bdata-(until|release)="([^"]*)"/g)].filter((m) => !realDay(m[2])).map((m) => `data-${m[1]}="${m[2]}"`);
 
 /* ---------------- HTML ---------------- */
 const VOID = new Set('area base br col embed hr img input link meta source track wbr'.split(' '));
@@ -322,6 +327,7 @@ const pages = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'strawber
   ok('self-test: an inline script, an inline handler, a javascript: link and a picture from another site are found', (() => { const r = checkHtml(page('<script>var a=1</script><button onclick="go()">b</button><a href="javascript:void(0)">j</a><img src="https://example.com/a.png" alt="">'), { name: 's' }); return has(r, /inline <script>/) && has(r, /inline handler/) && has(r, /javascript:/) && has(r, /another web site/); })());
   ok('self-test: a misspelled aria attribute, a bad aria value and a bad role are found', (() => { const r = checkHtml(page('<p aria-lable="x">a</p><button aria-expanded="yes">b</button><div role="tabs">c</div>'), { name: 's' }); return has(r, /not an ARIA attribute/) && has(r, /aria-expanded="yes"/) && has(r, /not an ARIA role/); })());
   ok('self-test: broken JSON-LD (a trailing comma) is found', has(checkHtml(page('<script type="application/ld+json">{"@context":"x","a":1,}</script>'), { name: 's' }), /JSON-LD does not parse/));
+  ok('self-test: a date that is not a real day (2026-13-31, 2026-11-31), is written without its zero (2026-10-3) or is empty is found in data-until and data-release; good dates and a pattern in a comment are not', badDates('<li data-until="2026-13-31"></li><li data-until="2026-11-31"></li><li data-until="2026-10-3"></li><tr data-release=""></tr>').length === 4 && badDates('<li data-until="2026-10-31"></li><li data-until="2028-02-29"></li><tr data-release="2026-10-06" data-release-time="17:00"></tr><!-- write data-until="YYYY-MM-DD" -->').length === 0);
   const css = (t) => checkCss(t, 's.css');
   ok('self-test: CSS: a missing brace, an unknown property, a missing ";", a bad unit and a bad color are found', css('a{color:red').problems.length > 0 && has(css('a{colr:red}'), /unknown property/) && has(css('a{color:red background:blue}'), /missing ";"/) && has(css('a{width:10pxx}'), /unknown unit/) && has(css('a{color:#12345}'), /not a color/));
   ok('self-test: CSS: a bad display keyword and a bad @media feature are found', has(css('a{display:flexx}'), /not a value of display/) && has(css('@media (min-widht:3px){a{color:red}}'), /not a real one/));
@@ -339,6 +345,11 @@ for (const f of htmlFiles) {
 }
 const fragments = list('pages', '.html');
 for (const f of fragments) { const r = checkHtml(read(f), { name: f, fragment: true }); ok(`${f}: no repeated id, no bad nesting, no bad link`, r.problems.length === 0, r.problems.slice(0, 4).join(' | ')); }
+{   // the dates the owner types into the pages (kills mutants a06: data-until month 13, a07: data-until written 2026-10-3; before this only the browser test `dated`, minutes later, saw them)
+  const found = []; let n = 0;
+  for (const f of [...htmlFiles, ...fragments]) { n += (noComments(read(f)).match(/\bdata-(until|release)="/g) || []).length; for (const b of badDates(read(f))) found.push(`${f}: ${b}`); }
+  ok(`every data-until and data-release in the pages is a real day written YYYY-MM-DD (${n} dates read; it notices the breaks a06 and a07 of tools/mutants.json)`, found.length === 0 && n > 0, found.slice(0, 4).join(' | ') || (n ? '' : 'no date found: is the check reading the pages?'));
+}
 {   // links from one page to another page's #anchor
   const missing = [];
   for (const f of pages) for (const m of read(f).matchAll(/href="([a-z0-9-]+\.html)#([^"]+)"/g)) { const t = built[m[1]]; if (t && !t.ids.has(m[2])) missing.push(`${f} -> ${m[1]}#${m[2]}`); }

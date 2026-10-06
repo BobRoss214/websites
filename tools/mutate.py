@@ -9,7 +9,9 @@ break is made, and the tests are run:
   2. if nothing failed: the other cheap tests that need no browser (a catch here means the covers mapping has a hole);
   3. with --browser, if still nothing: the browser test(s) named in the mutant ("browser"), one at a time.
 It prints one line per mutant: CAUGHT by which tests, or SURVIVED, and writes the table to --out (JSON). Nothing in TREE is changed.
-Mutants are plain data (tools/mutants.json, made by hand): a stale one says NOT APPLIED instead of passing quietly."""
+Mutants are plain data (tools/mutants.json, made by hand): a stale one says NOT APPLIED instead of passing quietly.
+"rebuild": true in a mutant runs the three build commands (pages.py, i18n.py extract, i18n.py build) after the break, as the owner would; then a stale built file cannot give it away.
+Each group of tests stops at its first red test (--stop): a break is caught once, and the slow tests after it are not waited for."""
 import argparse, json, os, random, re, shutil, subprocess, sys, tempfile, time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -76,7 +78,7 @@ def apply(m, tree):
 
 def names_for(words, tree):
     rc, out, _ = sh(['node', 'tests/run-all.mjs', *words, '--list'], tree, 120)
-    return [l.split()[0] for l in out.splitlines() if re.match(r'^[a-z0-9-]+ +\[(browser|no browser)\]', l)]
+    return [re.match(r'^[a-z0-9-]+', l).group(0) for l in out.splitlines() if re.match(r'^[a-z0-9-]+ *\[(browser|no browser)\]', l)]   # (a long name runs into the column: review-option-texts[no browser])
 
 def mapped(m, tree):
     files = sorted({o.get('file') or o['write'] for o in m['ops']})
@@ -87,7 +89,7 @@ def mapped(m, tree):
 
 def run_tests(names, tree, timeout):
     if not names: return [], '', 0
-    rc, out, secs = sh(['node', 'tests/run-all.mjs', *['=' + n for n in names]], tree, timeout)
+    rc, out, secs = sh(['node', 'tests/run-all.mjs', '--stop', *['=' + n for n in names]], tree, timeout)   # --stop: the first red test is enough (a break is caught once), so a caught break does not wait for the slow tests after it
     failed = []
     for l in out.splitlines():
         if l.startswith('Failed: '): failed = [x.strip() for x in l[8:].split(',')]
@@ -102,6 +104,10 @@ def phase1(m, base, work, cheap_all, skip_slow):
     r = {'id': m['id'], 'cat': m['cat'], 'desc': m['desc'], 'tree': tree}
     bad = apply(m, tree)
     if bad: r['status'] = 'NOT APPLIED'; r['why'] = bad; return r
+    if m.get('rebuild'):   # "rebuild": true = the owner ran the three build commands after the break, so no built file is stale and only a rule about the result can notice it
+        for args in (['tools/pages.py'], ['tools/i18n.py', 'extract'], ['tools/i18n.py', 'build']):
+            rc, out, _ = sh([sys.executable or 'python3', *args], tree, 300)
+            if rc: r.update(status='CAUGHT', by=['(a build command stopped)'], first=' '.join(args) + ': ' + out.strip()[-100:], in_mapping=False); return r
     maps, files = mapped(m, tree)
     r['files'] = files; r['mapped'] = maps
     want = set(m['expect']) | ({'pipeline'} if m['build'] else set())
@@ -130,7 +136,7 @@ def main():
     if a.only: ms = [m for m in ms if m['id'] in a.only.split(',')]
     work = tempfile.mkdtemp(prefix='mutate-', dir=os.environ.get('MUTATE_TMP') or None)
     rc, out, _ = sh(['node', 'tests/run-all.mjs', '--list'], base, 120)
-    cheap_all = [l.split()[0] for l in out.splitlines() if re.match(r'^[a-z0-9-]+ +\[no browser\]', l)]
+    cheap_all = [re.match(r'^[a-z0-9-]+', l).group(0) for l in out.splitlines() if re.match(r'^[a-z0-9-]+ *\[no browser\]', l)]
     print(f'{len(ms)} mutants, cheap tests: {" ".join(cheap_all)}', flush=True)
     results = []
     by = {m['id']: m for m in ms}
