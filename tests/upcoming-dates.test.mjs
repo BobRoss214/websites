@@ -114,6 +114,19 @@ print(f(2026, 7, 1, 3, 30), f(2026, 12, 1, 4, 30), f(2026, 3, 8, 4, 30), f(2026,
   r = run(['--today', '2026-10-02'], tmp);
   ok('docs/OWNER_YEAR_CALENDAR.md (if it exists): dated lines are listed in their own words (2026-10-08, 15 Oct 2026), not the ones with no date or a day that does not exist', /Thursday, Oct 8 \(in 6 days\): Fall festival: put up the banner/.test(r.out) && /Thursday, Oct 15 \(in 13 days\): [^\n]*pumpkin delivery/.test(r.out) && !/no date on this line/.test(r.out) && !/days\): not a day/.test(r.out), r.out.slice(0, 600));
   ok('...and a dated line there never makes the check fail (it exits as before: 1, because of the lines above)', r.code === 1, 'exit code ' + r.code);
+  // the examples the owner copies keep their dates: a date inside quote marks is part of the example, a date written alone (a table's date column) is not repeated
+  w('docs/OWNER_YEAR_CALENDAR.md', [
+    '| Date | What |', '|---|---|', '| 2026-10-08 | Fall festival: put up the banner |',
+    "- **Close the day.** Add the date to `closures` in `js/content.js` (`'2026-10-09'` for one day, `'2026-10-20..2026-10-22'` for a run).",
+    '| `data-until="2026-10-15"` | the "Special Day" line | Thu Oct 15, 2026 |',
+    '- **By itself:** rows with `data-release="2026-10-06"`, `data-release="2026-10-13"` and `data-release="2026-10-20"`, opening at 5:00 PM (`data-release-time="17:00"`).', ''].join('\n'));
+  for (const extra of [[], ['--markdown']]) {
+    r = run(['--today', '2026-10-02', ...extra], tmp);
+    const how = extra.join(' ') || 'text';
+    ok(`year calendar (${how}): a "closures" example keeps its two dates ('2026-10-09' for one day, '2026-10-20..2026-10-22' for a run), not '' and '..'`, /Friday, Oct 9 \(in 7 days\)[^\n]*Add the date to closures in js\/content\.js \('2026-10-09' for one day, '2026-10-20\.\.2026-10-22' for a run\)\./.test(r.out), r.out.slice(0, 700));
+    ok(`year calendar (${how}): data-until and data-release examples keep their dates, with no space before the comma`, /Thursday, Oct 15 \(in 13 days\)[^\n]*data-until="2026-10-15" the "Special Day" line/.test(r.out) && /Tuesday, Oct 6 \(in 4 days\)[^\n]*rows with data-release="2026-10-06", data-release="2026-10-13" and data-release="2026-10-20", opening at 5:00 PM \(data-release-time="17:00"\)\./.test(r.out), r.out.slice(0, 700));
+    ok(`year calendar (${how}): the date column of a table row is still not repeated, and no example is left empty`, /Thursday, Oct 8 \(in 6 days\)[^\n]*Fall festival: put up the banner/.test(r.out) && !/2026-10-08[^\n]*Fall festival/.test(r.out) && !/data-\w+=""|\[''\]|'' for one day/.test(r.out), r.out.slice(0, 700));
+  }
   fs.rmSync(path.join(tmp, 'docs'), { recursive: true });
   r = run(['--today', '2026-10-02'], tmp);
   ok('without that document nothing is missing and nothing is said about it', r.code === 1 && !/OWNER_YEAR_CALENDAR/.test(r.out), '');
@@ -129,6 +142,12 @@ print(f(2026, 7, 1, 3, 30), f(2026, 12, 1, 4, 30), f(2026, 3, 8, 4, 30), f(2026,
   ok('the real site, 2 Oct 2026: runs, exit code 0 or 1, starts with the heading, no Python error', (r.code === 0 || r.code === 1) && /^Things that change or expire/.test(r.out) && !/Traceback/.test(r.out), r.out.slice(0, 200));
   r = run(['--today', '2026-11-20']);
   ok('the real site, 20 Nov 2026: the winter season starts on Friday, Nov 27', /Friday, Nov 27 \(in 7 days\)[^\n]*The winter season starts/.test(r.out), r.out.slice(0, 300));
+  for (const args of [['--today', '2026-10-02', '--days', '450'], ['--today', '2026-11-20', '--days', '450', '--markdown'], ['--days', '450']]) {
+    r = run(args);
+    ok(`the real site (${args.join(' ')}): no example from the owner's notes is left empty (data-until="", data-release="", closures: [''], '' for one day)`, !/data-\w+=""|\[''\]|'' for one day|\( '' |'\.\.'/.test(r.out) && !/Traceback/.test(r.out), (r.out.match(/[^\n]*(data-\w+=""|\[''\]|'' for one day)[^\n]*/) || [''])[0].slice(0, 300));
+  }
+  r = run(['--today', '2026-10-02', '--days', '450']);
+  ok('the real site: the owner\'s notes\' own examples show real dates (data-until="2026-..", a closures line with \'2026-..\')', /data-until="20\d\d-\d\d-\d\d"/.test(r.out) && /closures[^\n]*'20\d\d-\d\d-\d\d'/.test(r.out), r.out.slice(0, 300));
   r = run([]);
   ok('without --today it uses today in New York and still works', (r.code === 0 || r.code === 1) && /Today is \w+day, \w{3} \d+, 20\d\d \(farm time, Eastern\)/.test(r.out), r.out.slice(0, 160));
   const before = fs.readFileSync(path.join(ROOT, 'index.html'));

@@ -14,6 +14,8 @@ It reads the dates the site files carry:
                                 goes 14 days after it, or after expireDays)
   js/season.js                  the first and last day of spring, summer, fall and winter (the home page changes its look)
   docs/OWNER_YEAR_CALENDAR.md   if the file exists: every line that has a date written like 2026-11-08 (or Nov 8, 2026)
+                                (a date alone, such as a table's date column, is not repeated in the list; a date inside quote marks, as in
+                                data-until="2026-10-07" or closures: ['2026-10-11'], stays, so the example can be copied)
 Nothing is changed and nothing is sent anywhere. Needs Python 3.8 or newer and nothing else.
 
 The exit code is 0 when nothing runs out within --fail-within days (default 7), 1 when something does, and 2 for a wrong command.
@@ -320,8 +322,11 @@ def read_calendar_doc(root):
             except ValueError:
                 pass
         if days:
-            words = re.sub(r'[|*_`#>]+', ' ', line)
-            words = ' '.join(re.sub(r'\b\d{4}-\d{2}-\d{2}\b', '', words).split()).strip(' -:;,')
+            # A date written alone (the date column of a table row) is left out: the day is already said in front of the line. A date inside quote marks is
+            # part of an example the owner copies (data-until="2026-10-07", closures: ['2026-10-11']): it stays, or the example would read data-until="".
+            words = re.sub(r'[|*_#>]+', ' ', line.replace('`', ''))
+            words = re.sub(r'(?<!["\'])\b\d{4}-\d{2}-\d{2}\b(?!["\'])', '', words)
+            words = ' '.join(words.split()).strip(' -:;,')
             for d in sorted(set(days)):
                 out.append((d, words))
     return out
