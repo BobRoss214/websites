@@ -1,8 +1,8 @@
 # What was left out of the roster, and what to check
 
-The roster is at 1,181 charities (see the README, "Charity list"). This note is about what was **not** added.
+The roster is at 1,180 charities (see the README, "Charity list"). This note is about what was **not** added.
 
-## How the last 659 were chosen
+## How the last 658 were chosen
 They come from two official registers, not from web searches:
 
 - **England and Wales Charity Commission**: registered charities that report working overseas, income at least about GBP 120,000.
@@ -38,8 +38,17 @@ half were left out. The reasons, in short:
 
 - Peaceful Change Initiative (UK): its own website says it closed at the end of 2025 and the site is now an archive, so it was removed.
 - Disaster Relief Australia: the results of a web check say it ceased operations and went into liquidation in May 2026 (its home page shows an unavailable notice and the National Emergency Management Agency lists it), so it was removed.
+- United Purpose (UK): the results of a web check say it merged with Self Help Africa in 2021 and the combined body took the Self Help name; its old website only carries a merger notice, so it was removed.
 
 ## Website checks
 
-The websites of 321 of the 659 register-derived entries were checked by web search (does the organisation's own site have the host in the roster?): 4 were wrong and were fixed (Medical Aid for Palestinians, Baptist World Aid Australia, Library For All, Playgroup Australia), one more (International Rescue Committee UK) lives on a path of a wider site and was left. The other 338 have not been checked: the build sandbox blocks outbound traffic and its web search budget was used up. `tools/check-links.mjs` checks every website from a normal connection and reports the ones that are dead or have moved.
+The website of every one of the 658 register-derived entries was checked by web search: does the organisation's own site have the host written in the roster? One search each (a few needed a second). 18 were on a different host and were changed: Medical Aid for Palestinians, Baptist World Aid Australia, Library For All, Playgroup Australia, Campbell Page, Afrika Tikkun UK, Good Cycles, First Languages Australia, Hand in Hand International, Stella Maris (formerly Apostleship of the Sea), Near East Foundation UK, Rapid Relief Team, Education Development Trust, Orphans in Need, Wayside Chapel, Dialogue Earth (formerly China Dialogue), The Shaw Trust and Parkinson's South Australia.
 
+Left as they are, on purpose:
+
+- International Rescue Committee UK: it lives on a path of a wider site (rescue.org).
+- Working Animals International (formerly SPANA): a search summary names workinganimals.org, but no page on either host was listed, so spana.org stays until someone checks it by hand.
+- A few charities that use two hosts (for example Tikva UK, Reprieve UK, Lighthouse Construction Charity, Interact Australia, Epic Employment Service, Good Things Foundation Australia): the roster host is one of the charity's own, so nothing was changed.
+- Names that changed but whose host is right (for example Release International now operating as Voice of Persecuted Christians, Girl Guides Association (New South Wales) now Girl Guides NSW, ACT & NT, Conservation Volunteers Australia now Conservation Volunteers): the register name is kept.
+
+Several dozen of the "same" calls rest on a host that a search summary names while the listed links were directories or encyclopedia pages (marked "summary-only" in the helpers' notes). A search only shows which host the charity's own pages use; it cannot show that a host answers today. `tools/check-links.mjs` does that from a normal connection and reports the ones that are dead or have moved.

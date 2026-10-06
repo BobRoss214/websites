@@ -5,7 +5,7 @@
 Pick an amount, filter by the causes you care about, then spin, roll, scratch or race your way to a charity. Nineteen
 casino-style games (five of them themed slot machines) where, in most of them, **you choose how many charities are on
 the board** (from a couple to a thousand) and can back one to put on it, or tick exactly the charities you want, **live tables** where a whole table of players backs charities and the winner takes the whole pot,
-leagues, crews, collectible cards and a daily wheel, 1,181 charities, a lobby that feels like an online casino,
+leagues, crews, collectible cards and a daily wheel, 1,180 charities, a lobby that feels like an online casino,
 confetti, levels and a receipt for every gift. Built for streamers and anyone who thinks giving should be a little
 more fun.
 
@@ -106,7 +106,7 @@ Choices combine as OR within a
 group and AND between groups, with a live count. The same filters drive every game. Filter values that fewer
 than three charities have are hidden so a filter cannot just empty the pool.
 
-**1,181 charities, each with a profile** (see [Charities](#going-live) for where they came from). Tap any charity anywhere (a card, a receipt, My Giving, search, or a
+**1,180 charities, each with a profile** (see [Charities](#going-live) for where they came from). Tap any charity anywhere (a card, a receipt, My Giving, search, or a
 `#charity-<id>` link) to see what it does, who it helps, where it works, how it helps, when it started, and a
 **Visit website** link. Switch individual charities on or off for the games.
 
@@ -177,16 +177,16 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   and money-transmission rules that vary by location. The redirect design is meant to leave payment handling with
   a regulated donation platform. Confirm the details with that platform (and a lawyer if you are unsure) before
   you promote the site. The "casino" look is a visual theme only: no one stakes anything and there is no prize.
-- **Charity list.** There are 1,181 charities in four layers. The first 228 were researched from public sources and the next
+- **Charity list.** There are 1,180 charities in four layers. The first 228 were researched from public sources and the next
   153 were each checked with web searches (the organisation exists, its official website, and its founding year and headquarters
   where the results stated them); the evidence links are in `docs/roster-sources.json`. The 40 entries that were first marked
   `unverified` were later each checked again with a search limited to the charity's own website, which confirmed all 40 exist at
   that address, filled in founding years and headquarters where the site stated them, and caught three renames (Little Kids Rock
   is now Music Will, The Actors Fund is now the Entertainment Community Fund, VH1 Save The Music is now the Save The Music
-  Foundation). A later round of 141 (veterans and first responders, justice, mental health, abuse and safety, recovery) was checked the same way, with the evidence links in the same file; two of them were first flagged `unverified` because a founding year or headquarters could not be confirmed, and a later web check confirmed them (no entry is flagged now). The remaining 659 come from two official government registers: the Charity Commission for England and Wales
-  (registered charities that work internationally; 358 list the UK first) and the Australian Charities and Not-for-profits
+  Foundation). A later round of 141 (veterans and first responders, justice, mental health, abuse and safety, recovery) was checked the same way, with the evidence links in the same file; two of them were first flagged `unverified` because a founding year or headquarters could not be confirmed, and a later web check confirmed them (no entry is flagged now). The remaining 658 come from two official government registers: the Charity Commission for England and Wales
+  (registered charities that work internationally; 357 list the UK first) and the Australian Charities and Not-for-profits
   Commission (301 list Australia first). A register record confirms the charity exists, its official name, its website and its
-  location, so those entries were not web-searched; the register number or ABN is in `docs/roster-sources.json`. Their
+  location, so those entries themselves were not researched by web search (the register number or ABN is in `docs/roster-sources.json`); afterwards the website of every one of them was checked with a search that asks whether the charity's own pages are on the host the site links to, and 18 hosts were corrected (`docs/roster-candidates.md`). Their
   descriptions are short, neutral paraphrases of the register text (for Australia, of the register's purpose flags), so they
   are plainer than the first 381, and `founded` is empty for most because the register gives a registration date rather than a
   founding date. Where a register year is kept (159 entries) it is marked `foundedFrom: "register"`, shown as "(register date)", and
@@ -369,7 +369,7 @@ css/chooser.css     the choose-your-own-charities dialog and its chip
 css/slots.css       the slot machines and their five themes
 css/tour.css        the first-visit tour
 js/config.js        mode, limits, demo credit, checkout hook
-js/data.js          causes, filter vocabulary and the 1,181 charities
+js/data.js          causes, filter vocabulary and the 1,180 charities
 js/core.js          pure logic (money, RNG, filters, XP, badges, validation); unit-tested in Node
 js/fair.js          commit/reveal draws (HMAC-SHA256); unit-tested in Node
 js/store.js         player state in localStorage, with defensive loading
