@@ -798,7 +798,7 @@ def verdict(res):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description='Try the optional patches together on throw-away copies of the site.', formatter_class=argparse.RawDescriptionHelpFormatter,
-                                 epilog='See the top of this file (or README.md, "Trying the optional patches together") for what is run.')
+                                 epilog='See the top of this file (or README.md, "Optional patches (open decisions)") for what is run.')
     ap.add_argument('base', nargs='?', default='.', help='a clean copy of the site (default: the current folder)')
     ap.add_argument('--list', action='store_true', help='only list the combinations')
     ap.add_argument('--only', action='append', default=[], help='only combinations whose name contains all of these words (comma separated), for example cloudflare,winter-A; give --only again for "or"')

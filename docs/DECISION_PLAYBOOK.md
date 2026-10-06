@@ -1445,7 +1445,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 - Apply patches/optional/winter-A-hide-fall-booking.patch (source files only; then rebuild).
 - What it does: the "Reserve now" button in the Visit area, the "Choose your package" header, packages, included, add-ons, the "See prices" and "See packages" buttons, the "At the farm" shop block with its jump link and the "Fall:" paragraph get data-only="fall" (or "spring summer fall"). A new off-season line ("Fall at the farm usually starts again in mid-September...") with the existing "Tell me when it opens" button shows in winter, spring and summer. First-visit page: "See packages & add-ons" button hidden out of fall. css/sections.css +2 lines.
-- Then rebuild (python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build) and python3 tools/i18n.py missing es hi zh vi (0 each).
+- Then rebuild (python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build) and python3 tools/i18n.py missing es hi zh vi (0 each).
 - The pumpkin page (pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`) keeps "fall 2026" prices all year: not covered.
 - The fall blocks come back about August 12 (the site then treats fall as the nearest season): answer d24 before that.
 - Strings: 1 new UI sentence (id t48ba72e7) x 4 translations, already written in the patch

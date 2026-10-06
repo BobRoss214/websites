@@ -1,6 +1,6 @@
 {
   "_note": "Seconds one test file takes, used by --shard and --quick to balance the work. Written by: node tests/run-all.mjs --update-timings. Never edit by hand.",
-  "_measured": "2026-10-03, one run of each test alone at a load of 35 to 50 on 4 cores (axe was skipped: axe-core is not installed there). Refresh with --update-timings. Added 4 Oct 2026 for time-bombs, doctor, windows-reality, browser-support, upcoming-dates, code-read, contrast-pixels, axe-wide (measured at a load of 50 to 90 on 4 cores: inflated; refresh on a quiet computer). Added 4 Oct 2026 for review-option-texts, owner-cheat-sheet, owner-cheat-sheet-print, tools-safety, close-today, apply-answers, owner-input, interference (one run in a 3-process full run at a load of 20 to 45 on 4 cores: inflated; refresh on a quiet computer). Added 4 Oct 2026 for reader-roundtrip, moved-pages, monkey (one run in a 3-process full run at a load of 10 to 25 on 4 cores: inflated; refresh on a quiet computer).",
+  "_measured": "2026-10-03, one run of each test alone at a load of 35 to 50 on 4 cores (axe was skipped: axe-core is not installed there). Refresh with --update-timings. Added 4 Oct 2026 for time-bombs, doctor, windows-reality, browser-support, upcoming-dates, code-read, contrast-pixels, axe-wide (measured at a load of 50 to 90 on 4 cores: inflated; refresh on a quiet computer). Added 4 Oct 2026 for review-option-texts, owner-cheat-sheet, owner-cheat-sheet-print, tools-safety, close-today, apply-answers, owner-input, interference (one run in a 3-process full run at a load of 20 to 45 on 4 cores: inflated; refresh on a quiet computer). Added 4 Oct 2026 for reader-roundtrip, moved-pages, monkey (one run in a 3-process full run at a load of 10 to 25 on 4 cores: inflated; refresh on a quiet computer). Added 6 Oct 2026 for doc-commands (one run alone at a load of 17 on 4 cores).",
   "analytics": 312,
   "answer-rehearsal": 48,
   "apply-answers": 196,
@@ -79,5 +79,6 @@
   "validity": 10,
   "visual-check": 50,
   "windows-reality": 147,
-  "year-rehearsal": 228
+  "year-rehearsal": 228,
+  "doc-commands": 4
 }

@@ -245,6 +245,9 @@ def language_sheet(code, html_lang, name_en, block, done):
 
 
 def main():
+    if sys.argv[1:2] in (['--help'], ['-h']):   # help, not a rebuild of the signs
+        print(__doc__)
+        sys.exit(0)
     check = '--check' in sys.argv
     cfg = load_config()
     site, review = cfg['site'], review_url()

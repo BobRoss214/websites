@@ -4,7 +4,7 @@ For the day the farm must close, open late, or is full. Rain is the usual reason
 
 ## 1. One command for the website
 
-Open a terminal in the website folder and type one of these (add `--dry-run` at the end first, to see exactly what would change):
+Open a terminal in the website folder. On Windows type `python` or `py -3` where this page says `python3` (README, "Commands on Windows, Mac and Linux"). Then type one of these (add `--dry-run` at the end first, to see exactly what would change):
 
     python3 tools/close_today.py rain
     python3 tools/close_today.py wind

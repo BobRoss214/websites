@@ -7,7 +7,7 @@ Conflicts: winter-B
 Requires: none
 Host: any
 Order: 10
-After: python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each)
+After: python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each)
 Strings: 1 new sentence (id t48ba72e7), already translated into es, hi, zh, vi inside this patch
 
 diff --git a/css/sections.css b/css/sections.css

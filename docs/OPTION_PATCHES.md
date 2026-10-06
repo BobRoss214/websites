@@ -6,10 +6,13 @@ Nothing here decides anything. A patch changes nothing until it is applied, and 
 
 ## The table
 
-Apply in the order of the first column (the same order the checks used). "After" is what to run once the patches are applied; `REBUILD` means this whole line, then `missing` for each language (0 missing each):
+Apply in the order of the first column (the same order the checks used). "After" is what to run once the patches are applied; `REBUILD` means the first four lines, one after the other, then `missing` for each language (0 missing each):
 
 ```
-python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build
+python3 tools/pages.py
+python3 tools/i18n.py extract
+python3 tools/i18n.py jsstrings
+python3 tools/i18n.py build
 python3 tools/i18n.py missing es   (and hi, zh, vi)
 ```
 
@@ -39,12 +42,15 @@ How to apply one (from the site folder, with no unsaved changes you would miss):
 
 ```
 git apply patches/optional/winter-A-hide-fall-booking.patch
-python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build
+python3 tools/pages.py
+python3 tools/i18n.py extract
+python3 tools/i18n.py jsstrings
+python3 tools/i18n.py build
 python3 tools/i18n.py missing es    # then hi, zh, vi: 0 missing each
 node tests/run-all.mjs public-site consistency
 ```
 
-Apply several in the order of the table. `git apply` is strict (no fuzz): if it says a patch does not apply, the files changed since the patch was made. Do not force it. Run `node tests/run-all.mjs option-patches` to see which patches still apply, and send Claude the file name and the first line of the message. The two QR patches carry files that `tools/make_qr.py` makes (the codes and the sign pages). If only a `print/` or `assets/` part does not fit, apply the rest and let the tool make those files: `git apply --exclude='print/*' --exclude='assets/*' patches/optional/qr-stronger-codes.patch`, then `python3 tools/make_qr.py` (checked: the result is identical to applying the whole patch).
+Apply several in the order of the table. `git apply` is strict (no fuzz): if it says a patch does not apply, the files changed since the patch was made. Do not force it. Run `node tests/run-all.mjs option-patches` to see which patches still apply, and send Claude the file name and the first line of the message. The two QR patches carry files that `tools/make_qr.py` makes (the codes and the sign pages). If only a `print/` or `assets/` part does not fit, apply the rest and let the tool make those files: `git apply --exclude="print/*" --exclude="assets/*" patches/optional/qr-stronger-codes.patch`, then `python3 tools/make_qr.py` (checked: the result is identical to applying the whole patch).
 
 When a patch is applied for good, move it out of the open list so nobody applies it twice, and move the alternatives that were not chosen too:
 
@@ -115,6 +121,8 @@ An option that adds no words has no sheet, and the index says so. The index also
 | GitHub Pages | no | shows both | all except `redirects-A` (it needs `_redirects`), `clean-addresses-C`; `code-cache-D` does nothing |
 
 ## Trying them together
+
+This is for Claude or a helper on a Mac or Linux computer: the first line below does not work in Windows cmd or PowerShell.
 
 ```
 D=$(mktemp -d) && git archive HEAD | tar -x -C "$D" && cd "$D"

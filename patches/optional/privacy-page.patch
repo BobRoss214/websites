@@ -6,7 +6,7 @@ Conflicts: none
 Requires: tools/i18n_facts.mjs, tools/i18n_facts_allow.json and tests/i18n-facts.test.mjs (the facts audit of the translations: this patch teaches it day-first dates and adds an allow-list entry; without these files the patch waits)
 Host: any
 Order: 80
-After: python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each) and node tests/run-all.mjs privacy-page privacy seo docs
+After: python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each) and node tests/run-all.mjs privacy-page privacy seo docs
 Strings: 68 new texts per language, translated inside this patch (needs a native reader): 66 texts of the page and the footer (one of them is the footer link "Privacy", id tcf01481f) and 2 script texts (the page title and description)
 
 diff --git a/README.md b/README.md

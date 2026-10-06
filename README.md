@@ -54,6 +54,7 @@ tools/                  pages.py (builds the extra pages), i18n.py (tags text, b
                         year_rehearsal.mjs (plays the owner's year with a pretend clock, step by step, and checks what the calendar promises: node tools/year_rehearsal.mjs --quick)
                         plain_lint.py + plain_words.txt (checks that the notes for the farm owner are written in plain words: python3 tools/plain_lint.py)
                         make_cheat_sheet.py (makes the printed cheat sheet in print/ from docs/OWNER_CHEAT_SHEET.md and its Spanish copy)
+                        check_doc_commands.py (checks that every command the notes tell you to type exists and also works in Windows cmd and PowerShell: python3 tools/check_doc_commands.py)
                         change_fact.py (changes a price, an hour, a phone number, an email address or any phrase everywhere, translations included: python3 tools/change_fact.py --help) + test_change_fact.py
                         rehearse_answers.py + rehearse_answers.json (tries the playbook's steps for an owner's answer on a throw-away copy: python3 tools/rehearse_answers.py --list)
                         apply_answers.py + apply_answers_rules.json (turns the owner's answers from the dashboard into the playbook's file changes, tries them on a copy, writes a report and a patch; for whoever keeps the site: python3 tools/apply_answers.py answers.json --plan; simulate_answers.py pretends the owner answered)
@@ -105,7 +106,7 @@ Only the changes below that say "run" need this, and Claude can run them for you
 **One-time setup**
 
 1. Install Python 3.8 or newer from python.org/downloads. On Windows, tick "Add python.exe to PATH" on the first screen of the installer. Nothing else is needed (see "Node.js is not needed" below).
-2. Open a terminal in the site folder. Windows: open the folder in File Explorer, click the address bar, type `cmd` (or `powershell`) and press Enter. Mac: open the Terminal app, type `cd ` (with a space after it), drag the site folder into the window and press Return. A folder name with spaces or accents (`My Site`, `José`) is fine. When you type a folder name yourself, put it in quote marks, for example `cd "C:\Websites\José Pérez\Wise Acres site"` (on another drive start with `cd /d`).
+2. Open a terminal in the site folder. Windows: open the folder in File Explorer, click the address bar, type `cmd` (or `powershell`) and press Enter. Mac: open the Terminal app, type `cd ` (with a space after it), drag the site folder into the window and press Return. A folder name with spaces or accents (`My Site`, `José`) is fine. When you type a folder name yourself, put it in quote marks, for example `cd "C:\Websites\José Pérez\Wise Acres site"` (on another drive, in cmd start with `cd /d`; PowerShell does not need the `/d`).
 3. Find the word that starts Python on your computer. Type each of these until one answers `Python 3.` and some numbers (3.8 or higher):
    - Mac and Linux: `python3 --version` (on a Mac without Python, the Terminal may offer to install the "command line developer tools" when you type this: accepting gives you Python too; look at the number it answers with, 3.8 or higher)
    - Windows: `python --version`; if that fails, `py -3 --version` (`py` is the launcher that the python.org installer adds; it works even when the PATH box was not ticked).
@@ -576,7 +577,7 @@ To check the tool itself: `python3 tools/test_add_photo.py` (it works on a throw
 
 By hand, if you ever have to: put the shrunk picture in `assets/photos/` and add `{ src: "assets/photos/name.webp", alt: "What is visible", caption: "Optional" },`
 (and, if you like, `tags: ["berries"]` after the caption) to `photos` in `js/content.js`. The description (`alt`) is read aloud for people who cannot see the picture, so write one for every photo. The publish command stops
-until the description and caption have a translation in each language, so ask Claude for them. (Claude: run `python3 tools/i18n.py extract && python3 tools/i18n.py missing es --list`,
+until the description and caption have a translation in each language, so ask Claude for them. (Claude: run `python3 tools/i18n.py extract`, then `python3 tools/i18n.py missing es --list`,
 and hi, zh, vi, to see what still needs translating.)
 
 ## What's interactive
@@ -651,7 +652,7 @@ How the page stays fast: looping animations pause when they are off screen and w
 
 On a slow phone the page calms itself: while the hero is on the screen it counts the frames it manages to draw and the browser's long tasks, a few times after loading and then every 15 seconds. When it struggles twice in a row, it first rests the bee and the smallest decorations: sparks, smoke puffs, swaying flowers, falling leaves and snow. If that is not enough, it rests every looping animation except the few that show something: the pulsing "open now" dot, the bell and the "now" badge. A rested animation stays where it is, so the picture stays whole, and every tap still works. A good phone or computer never notices it (the check costs a few milliseconds a minute). The switch is one attribute on `<html>`, `data-calm` (`light`, `most`, or `all` when the visitor pressed "Pause animations"), set by `initMotion` in `js/main.js`; the bee in `initBee` and the style sheets read it. Nothing is stored. A browser run by a program (the tests) never calms itself.
 
-The host must compress text files (gzip or brotli). The home page's first load is about 0.95 MB as stored and about 0.35 MB with gzip (0.32 MB with brotli), because the code, styles and translations shrink to about a quarter. Netlify and Cloudflare Pages do it on their own; check it once the site is live: `curl -sI -H 'Accept-Encoding: gzip' https://www.wiseacresorganic.com/ | grep -i content-encoding` must print `content-encoding: gzip` (or `br`). If it prints nothing, turn compression on in the host's settings.
+The host must compress text files (gzip or brotli). The home page's first load is about 0.95 MB as stored and about 0.35 MB with gzip (0.32 MB with brotli), because the code, styles and translations shrink to about a quarter. Netlify and Cloudflare Pages do it on their own; check it once the site is live: `curl -sI -H "Accept-Encoding: gzip" https://www.wiseacresorganic.com/` (in PowerShell write `curl.exe`) must show a line `content-encoding: gzip` (or `br`). If there is no such line, turn compression on in the host's settings.
 
 ## Optional patches (open decisions)
 
@@ -665,6 +666,8 @@ python3 tools/option_matrix.py . --list                        # the combination
 python3 tools/option_matrix.py . --only cloudflare,winter-A    # some of them (all of these words in the name)
 python3 tools/option_matrix.py .                               # all of them: an hour or more
 ```
+
+This is for Claude or a helper on a Mac or Linux computer: the first line above does not work in Windows cmd or PowerShell.
 
 For every combination it applies the patches to a fresh copy and rebuilds. Then it runs the tests and the launch check (tools/launch_check.py) against a pretend copy of the chosen host. It prints PASS or FAIL, with the first check that failed. `node tests/run-all.mjs option-patches` is the quick check that every patch still applies to the files as they are.
 

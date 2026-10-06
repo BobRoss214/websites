@@ -7,7 +7,7 @@ Conflicts: redirects-A
 Requires: tools/launch_check.py, tools/make_deploy_folder.py and tools/i18n.py in the site (it edits all three)
 Host: any
 Order: 30
-After: python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each); upload again (python3 tools/make_deploy_folder.py includes the folders)
+After: python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each); upload again (python3 tools/make_deploy_folder.py includes the folders)
 Strings: 10 new texts (ids t1cfe894a ("This page has moved."), td571e817, t40ab10f5, tcf68a859, t931b0dae, tebcb6448, t3bf45e4b, t47f021a8, t5289f86c, t210e3b10), already translated into es, hi, zh, vi inside this patch (needs a native reader): the line "This page has moved." and 9 "Go to ..." link lines
 
 diff --git a/about/index.html b/about/index.html

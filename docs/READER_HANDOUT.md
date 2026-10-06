@@ -19,7 +19,7 @@ Each row is one text of the website: the English, the words the site has now, an
 
 ## In which order
 
-1. **The main sheet comes first.** Make it with `python3 tools/review_sheet.py export all`, and give each friend the `.xlsx` file of their language. Send the text of the matching message file (`review/es-message.txt` for Spanish) as the e-mail. It is written in the friend's language and in English.
+1. **The main sheet comes first.** Make it with `python3 tools/review_sheet.py export all` (on Windows `python` or `py -3` instead of `python3`), and give each friend the `.xlsx` file of their language. Send the text of the matching message file (`review/es-message.txt` for Spanish) as the e-mail. It is written in the friend's language and in English.
 2. **The "changes since" sheet comes second, and only for a friend who already did a main sheet.** The site changes after a sheet is given out. This short sheet lists only the texts that are new or different since then. A friend who has not started yet needs only a main sheet made today, because it already has every change.
 3. **An option sheet comes last, and only if the farm picks that option.** Some options in `docs/OPTION_PATCHES.md` add words that are not on the site yet. Nobody should read those words until the farm says yes to the option.
 

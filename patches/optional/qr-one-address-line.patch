@@ -7,7 +7,7 @@ Requires: none
 Host: any
 Order: 70
 Profile: filled
-After: nothing is needed (print/qr-signs.html is in the patch); after a later change to tools/qr_links.json or reviewUrl run python3 tools/make_qr.py. If a print/ hunk does not fit because a sign changed, apply with git apply --exclude='print/*' and run python3 tools/make_qr.py
+After: nothing is needed (print/qr-signs.html is in the patch); after a later change to tools/qr_links.json or reviewUrl run python3 tools/make_qr.py. If a print/ hunk does not fit because a sign changed, apply with git apply --exclude="print/*" and run python3 tools/make_qr.py
 Strings: none
 
 diff --git a/print/qr-signs.html b/print/qr-signs.html

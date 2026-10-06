@@ -4,7 +4,7 @@
 
 ## Before you start
 
-- Open the site folder, then open a terminal in it (README, "Commands: one-time setup"). On Windows type `python` where this sheet says `python3`.
+- Open the site folder, then open a terminal in it (README, "Commands on Windows, Mac and Linux"). On Windows type `python` (or `py -3`) where this sheet says `python3`.
 - Edit files in a plain text program: Notepad, or TextEdit with Format, Make Plain Text. Not Word.
 - First copy the whole site folder and put today's date in its name. That copy is your undo (job 9).
 - To search a file press Ctrl+F. In `index.html` a dash is written `&ndash;`, so search `10 am&ndash;8 pm`.

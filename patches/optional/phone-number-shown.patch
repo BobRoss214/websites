@@ -6,7 +6,7 @@ Conflicts: none
 Requires: none
 Host: any
 Order: 60
-After: python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py jsstrings && python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each)
+After: python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each)
 Strings: 1 changed footer text (new id t286f8cf3), translated (the same text in every language) inside this patch
 
 diff --git a/index.html b/index.html

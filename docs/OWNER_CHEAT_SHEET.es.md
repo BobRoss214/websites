@@ -8,7 +8,7 @@
 
 ## Antes de empezar
 
-- Abran la carpeta del sitio y luego abran una terminal en ella (README, "Commands: one-time setup"). En Windows escriban `python` donde esta hoja dice `python3`.
+- Abran la carpeta del sitio y luego abran una terminal en ella (README, "Commands on Windows, Mac and Linux"). En Windows escriban `python` (o `py -3`) donde esta hoja dice `python3`.
 - Editen los archivos en un programa de texto simple: el Bloc de notas, o TextEdit con Formato, Convertir en texto simple. No en Word.
 - Primero copien toda la carpeta del sitio y pongan la fecha de hoy en su nombre. Esa copia es su forma de deshacer (trabajo 9).
 - Para buscar en un archivo, presionen Ctrl+F. En `index.html` la raya se escribe `&ndash;`, así que busquen `10 am&ndash;8 pm`.

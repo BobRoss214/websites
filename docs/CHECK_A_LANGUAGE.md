@@ -10,7 +10,7 @@ If somebody already made the sheets for you (four `.xlsx` files, one for each la
 
 ## Step 1. Make the sheets
 
-Open a command window in the site folder and type:
+Open a command window in the site folder. On Windows type `python` or `py -3` where this page says `python3` (README, "Commands on Windows, Mac and Linux"). Then type:
 
 `python3 tools/review_sheet.py export all`
 
