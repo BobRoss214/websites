@@ -350,3 +350,8 @@
 .fpdiy > summary .ico { transition: transform 0.15s; }
 .fpdiy[open] > summary .ico { transform: rotate(180deg); }
 .fpdiy[open] > summary { margin-bottom: 10px; }
+
+/* a finished round chip opens its charity's profile */
+.round__open { padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.round__open:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 3px; }
+.round__open:disabled { cursor: default; }

@@ -52,7 +52,15 @@
     var label = side === 'top' ? 'Heads' : 'Tails';
     if (!ch) { return '<div class="slot is-empty" data-side="' + side + '"><span class="slot__side" title="' + label + '">' + GS.icon(icon) + '</span><span class="slot__name">To be decided</span></div>'; }
     return '<div class="slot' + (ch.id === pick ? ' is-pick' : '') + '" data-side="' + side + '" data-id="' + ch.id + '" title="' + U.esc(ch.name) + '" style="--c:' + ch.accent + '"><span class="slot__side" title="' + label + '">' + GS.icon(icon) + '</span>' +
-      GS.ui.mono(ch, compact() ? 22 : 26) + '<span class="slot__name">' + U.esc(ch.short) + '</span></div>';
+      GS.ui.markBtn(ch, compact() ? 22 : 26, { disabled: playing || locked, tab: false }) + '<span class="slot__name">' + U.esc(ch.short) + '</span></div>';
+  }
+
+  /** The marks in the bracket open a charity's profile only while no coin is being flipped and the game is not busy. */
+  function syncMarks() {
+    if (!el.bracket) { return; }
+    var off = playing || locked;
+    Array.prototype.forEach.call(el.bracket.querySelectorAll('.markbtn'), function (b) { b.disabled = off; });
+    GS.ui.roveSync(el.bracket, '.markbtn');
   }
 
   function renderBracket() {
@@ -73,6 +81,7 @@
     el.bracket.innerHTML = html;
     el.bracket.style.setProperty('--cols', String(R + 1));
     el.bracket.classList.toggle('bracket--compact', compact());
+    syncMarks();
   }
 
   function slotEl(r, m, side) { return el.bracket.querySelector('.match[data-r="' + r + '"][data-m="' + m + '"] .slot[data-side="' + side + '"]'); }
@@ -131,6 +140,7 @@
 
   function runBracket(winner, quick) {
     playing = true;
+    syncMarks();
     fresh = false;
     result = null;
     var n = entries.length;
@@ -182,6 +192,7 @@
       el.status.textContent = winner.name + ' wins the showdown';
       result = winner;
       playing = false;
+      syncMarks();
       GS.audio.thud();
       return winner;
     });
@@ -222,6 +233,7 @@
       el.note = container.querySelector('[data-role="note"]');
       el.go = container.querySelector('[data-role="go"]');
       el.go.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
+      GS.ui.rove(el.bracket, '.markbtn');
     },
 
     setSize: function (n) { size = n; if (!playing) { rebuild(); } },
@@ -244,6 +256,7 @@
 
     lock: function (isLocked) {
       locked = !!isLocked;
+      syncMarks();
       if (el.go) { el.go.disabled = locked; }
     },
 

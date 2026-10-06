@@ -27,6 +27,7 @@
   var active = false;
   var locked = false;
   var drawing = null;
+  var auto = false;      // the panels are being revealed by the game itself (a quick card), not by the player
 
   function underHTML(ch) {
     if (!ch) { return ''; }
@@ -89,12 +90,25 @@
     return total ? clear / total : 0;
   }
 
+  /**
+   * A revealed panel opens its charity's profile (it is a real button, so the keyboard reaches it too), but only when that cannot disturb the card:
+   * while the player is scratching by hand, or once the card is finished and the gift is sent. Never while the game reveals panels itself, and never
+   * while the finished card is being sent.
+   */
+  function canOpen() { return (state === 'playing' && !auto) || (state === 'done' && !locked); }
+  function syncPanel(p) {
+    if (!p.revealed) { return; }
+    var on = canOpen() && !!p.charity;
+    p.btn.disabled = !on;
+    p.btn.setAttribute('aria-label', 'Panel revealed: ' + (p.charity ? p.charity.name : '') + (on ? '. Press to read about this charity.' : ''));
+  }
+  function syncPanels() { panels.forEach(syncPanel); }
+
   function reveal(p, silent) {
     if (p.revealed) { return; }
     p.revealed = true;
     p.el.classList.add('is-revealed');
-    p.btn.disabled = true;
-    p.btn.setAttribute('aria-label', 'Panel revealed: ' + (p.charity ? p.charity.name : ''));
+    syncPanel(p);
     if (!silent) { GS.audio.flip(); }
     check();
   }
@@ -111,7 +125,7 @@
     el.reveal.hidden = true;
     panels.forEach(function (p) {
       if (!p.revealed) { p.revealed = true; p.el.classList.add('is-revealed', 'is-late'); }
-      p.btn.disabled = true;
+      syncPanel(p);
       if (p.charity.id === winner.id) { p.el.classList.add('is-win'); }
       else { p.el.classList.add('is-dim'); }
     });
@@ -144,7 +158,10 @@
     function up() { if (drawing && drawing.p === p) { drawing = null; evaluate(p); } }
     c.addEventListener('pointerup', up);
     c.addEventListener('pointercancel', up);
-    p.btn.addEventListener('click', function () { if (state === 'playing') { reveal(p); } });
+    p.btn.addEventListener('click', function () {
+      if (p.revealed) { if (canOpen() && p.charity && GS.ui.charity) { GS.ui.charity.openProfile(p.charity.id); } return; }
+      if (state === 'playing') { reveal(p); }
+    });
   }
 
   function stroke(p, a, b) {
@@ -201,7 +218,8 @@
       el.reveal.hidden = false;
       el.reveal.onclick = function () { panels.forEach(function (p) { if (!p.revealed) { p.revealed = true; p.el.classList.add('is-revealed'); } }); check(); };
       GS.audio.shuffle();
-      if (quick || GS.timeScale < 1) { autoReveal(); }
+      auto = !!(quick || GS.timeScale < 1);
+      if (auto) { autoReveal(); }
     });
   }
 
@@ -255,10 +273,15 @@
     /** A card of n panels has the winner on three of them and n - 3 other charities, so n - 2 charities in all. */
     fieldFor: function (n) { return Math.max(2, n - 2); },
     /** The board for the next card: the charities on it (what the winner is drawn from) and how many panels. */
-    setBoard: function (list, n) {
+    setBoard: function (list, n, pickId, o) {
       pool = list.slice();
       size = n;
       updateNote();
+      // the receipt has just closed: the finished card stays up (its panels can be pressed to read about their charities) until the next card is bought
+      if (o && o.afterRound && state === 'done') {
+        el.prompt.textContent = 'Three of a kind: ' + (result ? result.name : '') + '! Press a panel to read about its charity, or buy another card.';
+        return;
+      }
       if (state !== 'playing') { state = 'idle'; buildPanels(size); layout(); el.card.classList.remove('is-live'); el.prompt.textContent = pool.length ? 'Buy a card to start scratching.' : ''; }
     },
     setPool: function (list) {
@@ -273,6 +296,7 @@
     lock: function (isLocked) {
       locked = !!isLocked;
       if (el.buy) { el.buy.disabled = locked; }
+      syncPanels();
     },
 
     play: function (opts) {

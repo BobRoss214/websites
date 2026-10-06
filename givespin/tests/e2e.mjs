@@ -3531,6 +3531,363 @@ if (section('13z. Race games: click a runner, duck, balloon or tile and that cha
   await up.close();
   check(problems.length === problems0, 'section 13z: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
 }
+/* ======================================================================== */
+if (section('13za. Clickable charities: website links and About buttons in result lists, marks that open the profile in the games, Visit website on the profile')) {
+  const siteOf = (id) => 'https://' + GSdata.charities.find((c) => c.id === id).url;
+  const nameOf = (id) => GSdata.charities.find((c) => c.id === id).name;
+  const profileOpens = async (pg, id, what) => {
+    await pg.waitForSelector('#dlg-profile[open]', { timeout: 8000 }).catch(() => {});
+    const got = await pg.evaluate(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; });
+    check(got === id, what + ' opens that charity\'s profile', { want: id, got });
+  };
+  const closeProfile = async (pg) => {
+    await pg.keyboard.press('Escape');
+    await pg.waitForFunction(() => !document.querySelector('#dlg-profile') || !document.querySelector('#dlg-profile').open);
+  };
+  const idle = (pg) => pg.evaluate(() => ({ busy: window.GS.app.state.busy, plays: window.GS.store.get().plays, history: window.GS.store.get().history.length, credit: window.GS.store.balance(), receipt: !!document.querySelector('#dlg-result[open]') }));
+  // every link a receipt row carries, read from the page
+  const rowsOf = (pg, sel) => pg.$$eval(sel + ' .alloc__item', (lis) => lis.map((li) => {
+    const a = li.querySelector('a.alloc__name');
+    const logo = li.querySelector('a.sitemark');
+    const about = li.querySelector('button.aboutbtn');
+    return {
+      text: a && a.querySelector('.extlink__t').textContent, href: a && a.getAttribute('href'), target: a && a.getAttribute('target'), rel: a && a.getAttribute('rel'), label: a && a.getAttribute('aria-label'),
+      logoHref: logo && logo.getAttribute('href'), logoTarget: logo && logo.getAttribute('target'), logoRel: logo && logo.getAttribute('rel'), logoQuiet: !!logo && logo.getAttribute('aria-hidden') === 'true' && logo.getAttribute('tabindex') === '-1',
+      logoHasMark: !!(logo && logo.querySelector('.cmono')), cue: !!(a && a.querySelector('svg')),
+      about: about && about.getAttribute('data-open-charity'), aboutLabel: about && about.getAttribute('aria-label'), aboutText: about && about.textContent.trim()
+    };
+  }));
+  const rowChecks = (rows, ids, what) => {
+    check(rows.length === ids.length && ids.length > 0, what + ': one row per charity', [rows.length, ids.length]);
+    check(rows.every((r, i) => r.href === siteOf(ids[i]) && r.logoHref === siteOf(ids[i])), what + ': the name and the mark link to each charity\'s own website', rows.map((r) => r.href));
+    check(rows.every((r) => /^https:\/\/[a-z0-9.-]+(\/[^\s]*)?$/.test(r.href)), what + ': every address is a clean https link', rows.map((r) => r.href));
+    check(rows.every((r) => r.target === '_blank' && /noopener/.test(r.rel) && /noreferrer/.test(r.rel) && r.logoTarget === '_blank' && /noopener/.test(r.logoRel)), what + ': the links open in a new tab, safely');
+    check(rows.every((r, i) => r.label === nameOf(ids[i]) + ' website (opens in a new tab)' && r.text === nameOf(ids[i]) && r.cue), what + ': each link is named "<charity> website (opens in a new tab)" and shows an external-link cue', rows[0]);
+    check(rows.every((r) => r.logoQuiet && r.logoHasMark), what + ': the mark is a link too, out of the tab order and hidden from screen readers (the name link is the one for them)');
+    check(rows.every((r, i) => r.about === ids[i] && r.aboutLabel === 'About ' + nameOf(ids[i]) + ' (opens its profile)' && r.aboutText === 'About'), what + ': each row keeps a small About button for the profile', rows[0]);
+  };
+
+  const page = await newPage();
+  await openApp(page, '#game-slots');
+
+  // ---- the address of every charity ----
+  const urls = await page.evaluate(() => ({
+    bad: window.GS.charities.filter((c) => window.GS.ui.siteUrl(c) !== 'https://' + c.url.trim()).map((c) => c.id),
+    withPath: window.GS.charities.filter((c) => c.url.indexOf('/') >= 0).map((c) => window.GS.ui.siteUrl(c)),
+    odd: ['http://x.org/', '//x.org/a', '', 'no dots', 'javascript:alert(1)', 'a b.org', 'x.org"onclick="y', '<b>.org', 'x.org?q=1'].map((u) => window.GS.ui.siteUrl({ url: u })),
+    none: window.GS.ui.siteUrl(null)
+  }));
+  check(urls.bad.length === 0, 'all ' + N + ' charities give a clean https address (a plain host, or a host with a path)', urls.bad.slice(0, 5));
+  check(urls.withPath.every((u) => /^https:\/\/[a-z0-9.-]+\/[a-z0-9/_-]+$/i.test(u)), 'an address that includes a path (WaterAid) keeps it', urls.withPath);
+  check(JSON.stringify(urls.odd) === JSON.stringify(['https://x.org/', 'https://x.org/a', '', '', '', '', '', '', '']) && urls.none === '', 'a missing or odd address never becomes a broken link (no link at all)', urls.odd);
+
+  // ---- a real round: the receipt ----
+  await setAmount(page, 60);
+  await page.click('#rounds-seg [data-reels="6"]');
+  await page.click('#panel-slots [data-role="turbo"]');
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  const real = await page.evaluate(() => window.GS.app._last.round.allocs.map((a) => a.charityId));
+  rowChecks(await rowsOf(page, '#dlg-result'), real, 'a finished slots round');
+  await shot(page, '13za-receipt');
+  await a11y(page, 'receipt with website links and About buttons');
+  await page.locator('#dlg-result .alloc__item .aboutbtn').first().click();
+  await profileOpens(page, real[0], 'the About button on the receipt');
+  check(await page.evaluate(() => !document.querySelector('#dlg-result').open), 'and the receipt gives way to the profile (as before)');
+  await closeProfile(page);
+  await page.waitForFunction(() => !window.GS.app.state.busy);
+
+  // ---- the receipt with 1, 3 and 10 charities (a made-up round), on a desktop and on a phone ----
+  const craft = (pg, n) => pg.evaluate((n) => {
+    const ids = ['wateraid', 'unicef-usa', 'amf', 'acs', 'alsf', 'afsp', 'jdc', 'awf', 'african-parks', 'age-uk'].slice(0, n);
+    const per = Math.floor(5000 / n);
+    window.GS.app.setBusy(true);
+    window.GS.ui.receipt.finish({ game: 'wheel', cents: per * n, rounds: n, allocs: ids.map((id) => ({ charityId: id, cents: per, hits: 1 })), jackpot: false, triple: false, direct: false, fair: null, opts: window.GS.ui.opts.read(), collect: ids.map((id) => ({ charityId: id, rarity: 'common' })) }).then(() => window.GS.app.setBusy(false));
+    return ids;
+  }, n);
+  for (const n of [1, 3, 10]) {
+    await go(page, '#game-wheel');
+    const ids = await craft(page, n);
+    await waitReceipt(page);
+    rowChecks(await rowsOf(page, '#dlg-result'), ids, n === 1 ? '1 charity' : n + ' charities');
+    await closeReceipt(page);
+  }
+  const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+  await openApp(ph, '#game-wheel');
+  for (const n of [1, 3, 10]) {
+    const ids = await craft(ph, n);
+    await waitReceipt(ph);
+    rowChecks(await rowsOf(ph, '#dlg-result'), ids, (n === 1 ? '1 charity' : n + ' charities') + ' on a phone');
+    const fit = await ph.evaluate(() => {
+      const c = document.querySelector('#dlg-result .modal__card').getBoundingClientRect();
+      const bad = Array.from(document.querySelectorAll('#dlg-result .alloc__item')).filter((li) => { const r = li.getBoundingClientRect(); return r.left < c.left - 1 || r.right > c.right + 1; }).length;
+      const kids = Array.from(document.querySelectorAll('#dlg-result .alloc__item a, #dlg-result .alloc__item button')).filter((el) => { const r = el.getBoundingClientRect(); return r.right > window.innerWidth + 1 || r.left < -1; }).length;
+      return { card: [Math.round(c.left), Math.round(c.right)], bad, kids, wide: document.documentElement.scrollWidth > window.innerWidth };
+    });
+    check(fit.bad === 0 && fit.kids === 0 && !fit.wide && fit.card[0] >= 0 && fit.card[1] <= 390, n + ' charities on a phone: every row, link and button stays inside the screen', fit);
+    if (n === 10) { await ph.evaluate(() => { document.querySelector('#dlg-result .modal__card').scrollTop = 0; }); await shot(ph, '13za-receipt-phone-10'); await a11y(ph, 'receipt with 10 charities on a phone'); }
+    await closeReceipt(ph);
+  }
+  await ph.close();
+
+  // ---- the profile: Visit website first, and a large mark ----
+  await page.evaluate(() => window.GS.ui.charity.openProfile('wateraid'));
+  await page.waitForSelector('#dlg-profile[open]');
+  const prof = await page.evaluate(() => {
+    const d = document.querySelector('#dlg-profile');
+    const btns = Array.from(d.querySelectorAll('a.btn--green'));
+    const v = btns[0];
+    const lead = d.querySelector('.prof__lead');
+    const mark = d.querySelector('.prof__head .cmono').getBoundingClientRect();
+    return {
+      n: btns.length, text: v && v.textContent.trim(), href: v && v.getAttribute('href'), target: v && v.getAttribute('target'), rel: v && v.getAttribute('rel'), label: v && v.getAttribute('aria-label'),
+      before: !!(v && lead && (v.compareDocumentPosition(lead) & Node.DOCUMENT_POSITION_FOLLOWING)), inHead: !!(v && v.closest('.prof__head')),
+      top: v && Math.round(v.getBoundingClientRect().top - d.querySelector('.modal__card').getBoundingClientRect().top), mark: Math.round(mark.width),
+      markLink: (d.querySelector('.prof__head a.sitemark') || {}).href, factsLink: (d.querySelector('.facts a') || {}).href
+    };
+  });
+  check(prof.n === 1 && prof.text === 'Visit website' && prof.href === 'https://wateraid.org/us' && prof.target === '_blank' && /noopener/.test(prof.rel), 'the profile has one clear Visit website button, to the charity\'s https address, in a new tab', prof);
+  check(prof.inHead && prof.before && prof.top < 260 && /Visit website/.test(prof.label) && /new tab/.test(prof.label), 'it sits at the top of the profile (in the header, before the description) and is named for screen readers', prof);
+  check(prof.mark >= 90 && prof.markLink === 'https://wateraid.org/us' && prof.factsLink === 'https://wateraid.org/us', 'the mark is shown large (96 px) and links to the website too', prof);
+  await shot(page, '13za-profile');
+  await a11y(page, 'profile with Visit website at the top');
+  await closeProfile(page);
+
+  // ---- slot machine: a symbol opens its profile; the spin button and a running spin are left alone ----
+  await go(page, '#game-slots');
+  const before = await idle(page);
+  const syms = await page.evaluate(() => ({ btns: document.querySelectorAll('#panel-slots .sym--btn').length, enabled: document.querySelectorAll('#panel-slots .sym--btn:not(:disabled)').length, stops: document.querySelectorAll('#panel-slots .sym--btn[tabindex="0"]').length, reels: document.querySelectorAll('#panel-slots .reel').length }));
+  check(syms.btns === syms.reels && syms.enabled === syms.reels && syms.stops === 1, 'every reel shows its payline charity as a button, with one tab stop for the row', syms);
+  const symId = await page.locator('#panel-slots .sym--btn').nth(2).getAttribute('data-id');
+  await page.locator('#panel-slots .sym--btn').nth(2).click();
+  await profileOpens(page, symId, 'clicking a slot symbol');
+  await closeProfile(page);
+  const picId = await page.locator('#panel-slots .sym--pic').first().getAttribute('data-id');
+  await page.locator('#panel-slots .sym--pic').first().click();
+  await profileOpens(page, picId, 'clicking the symbol above the payline');
+  await closeProfile(page);
+  const after = await idle(page);
+  check(JSON.stringify(after) === JSON.stringify(before) && await page.locator('#panel-slots .reel.is-spinning').count() === 0, 'and that did not start or change a round (no spin, no credit used, no history)', { before, after });
+  await page.locator('#panel-slots .sym--btn[tabindex="0"]').focus();
+  const from = await page.evaluate(() => Array.from(document.querySelectorAll('#panel-slots .sym--btn')).indexOf(document.activeElement));
+  await page.keyboard.press('ArrowRight');
+  const moved = await page.evaluate(() => { const a = document.activeElement; return { idx: Array.from(document.querySelectorAll('#panel-slots .sym--btn')).indexOf(a), stops: document.querySelectorAll('#panel-slots .sym--btn[tabindex="0"]').length, label: a.getAttribute('aria-label') }; });
+  check(moved.idx === from + 1 && moved.stops === 1 && /^About /.test(moved.label), 'with the keyboard the arrow keys move along the payline symbols (one tab stop) and each is named "About <charity>"', moved);
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('#dlg-profile[open]');
+  await closeProfile(page);
+  await page.click('#btn-play');
+  await page.waitForFunction(() => document.querySelectorAll('#panel-slots .reel.is-spinning').length > 0, null, { timeout: 15000 });
+  const during = await page.evaluate(() => {
+    document.querySelectorAll('#panel-slots .sym').forEach((s) => s.click());
+    return { onBtn: document.querySelectorAll('#panel-slots .sym--btn:not(:disabled)').length, profile: !!document.querySelector('#dlg-profile[open]') };
+  });
+  check(during.onBtn === 0 && !during.profile, 'while the reels spin the symbols do nothing (the spin is never interrupted)', during);
+  await waitReceipt(page);
+  await closeReceipt(page);
+  check(await page.locator('#panel-slots .sym--btn:not(:disabled)').count() === syms.reels, 'and they work again once the round is over');
+
+  // ---- Pick a Card and Scratch cards (real speed: with ?fast=1 the game picks and scratches for you) ----
+  const rp = await newPage();
+  await openApp(rp, '#game-cards', '');
+  check(await rp.locator('#panel-cards .pcard:disabled').count() === 5, 'cards: face-down cards before a deal are switched off');
+  await rp.click('#btn-play');
+  await rp.waitForFunction(() => window.GS.games.cards._awaiting(), null, { timeout: 15000 });
+  check(await rp.locator('#panel-cards .pcard:not(:disabled)').count() === 5, 'cards: while you choose, the five cards are for picking');
+  await rp.locator('#panel-cards .pcard[data-i="2"]').click();
+  await waitReceipt(rp);
+  const cw = await rp.evaluate(() => ({ win: window.GS.app._last.round.winners[0].id, picked: document.querySelector('.pcard.is-win').getAttribute('data-i'), enabledWhileReceipt: document.querySelectorAll('#panel-cards .pcard:not(:disabled)').length }));
+  check(cw.picked === '2', 'cards: clicking a card still picks it (and it hides the drawn winner)', cw);
+  await closeReceipt(rp);
+  const cb = await idle(rp);
+  check(await rp.locator('#panel-cards .pcard:not(:disabled)').count() === 5 && await rp.locator('#panel-cards .pcard.is-flipped').count() === 5, 'cards: once the receipt is closed the finished table stays up and its five face-up cards can be pressed');
+  check((await rp.locator('#panel-cards .cards__prompt').innerText()).includes('Press any card to read about its charity'), 'cards: and the table says so', await rp.locator('#panel-cards .cards__prompt').innerText());
+  await rp.locator('#panel-cards .pcard.is-win').click();
+  await profileOpens(rp, cw.win, 'pressing the winning card');
+  await closeProfile(rp);
+  const other = await rp.evaluate(() => { const k = document.querySelector('#panel-cards .pcard.is-dim'); return k ? k.getAttribute('aria-label') : ''; });
+  await rp.locator('#panel-cards .pcard.is-dim').first().click();
+  await rp.waitForSelector('#dlg-profile[open]');
+  check(other.indexOf('Press to read about this charity') > 0 && (await rp.locator('#dlg-profile .prof__name').innerText()).length > 0, 'cards: any other face-up card opens its own charity too', other);
+  await closeProfile(rp);
+  check(JSON.stringify(await idle(rp)) === JSON.stringify(cb) && !(await rp.evaluate(() => window.GS.games.cards._awaiting())), 'cards: that did not deal or change anything');
+  await rp.click('#btn-play');
+  await rp.waitForFunction(() => window.GS.games.cards._awaiting(), null, { timeout: 15000 });
+  check(await rp.locator('#panel-cards .pcard:not(:disabled)').count() === 5 && await rp.locator('#panel-cards .pcard.is-flipped').count() === 0, 'cards: the next deal goes back to picking');
+  await rp.evaluate(() => window.GS.games.cards._pick(0));
+  await waitReceipt(rp);
+  await closeReceipt(rp);
+
+  await go(rp, '#game-scratch');
+  await rp.click('#btn-play');
+  await rp.waitForFunction(() => document.querySelectorAll('.spanel__btn:not([disabled])').length >= 5, null, { timeout: 15000 });
+  const panels = await rp.locator('#panel-scratch .spanel').count();
+  await rp.locator('#panel-scratch .spanel__btn').nth(0).focus();
+  await rp.keyboard.press('Enter');
+  const mid = await rp.evaluate(() => { const b = document.querySelector('#panel-scratch .spanel.is-revealed .spanel__btn'); return { off: b.disabled, label: b.getAttribute('aria-label'), covered: document.querySelectorAll('#panel-scratch .spanel:not(.is-revealed)').length }; });
+  check(!mid.off && /Press to read about this charity/.test(mid.label) && mid.covered === panels - 1, 'scratch: while you scratch by hand a panel you have uncovered can be pressed to read about its charity', mid);
+  await rp.locator('#panel-scratch .spanel.is-revealed .spanel__btn').click();
+  await rp.waitForSelector('#dlg-profile[open]');
+  const midName = await rp.locator('#dlg-profile .prof__name').innerText();
+  check(mid.label.indexOf('Panel revealed: ' + midName) === 0, 'scratch: it opens that panel\'s charity', [midName, mid.label]);
+  const midState = await rp.evaluate(() => ({ busy: window.GS.app.state.busy, receipt: !!document.querySelector('#dlg-result[open]'), covered: document.querySelectorAll('#panel-scratch .spanel:not(.is-revealed)').length }));
+  check(midState.busy && !midState.receipt && midState.covered === panels - 1, 'scratch: and the card goes on as it was (nothing else uncovered, not finished)', midState);
+  await closeProfile(rp);
+  await rp.click('#panel-scratch [data-role="reveal"]');
+  await waitReceipt(rp);
+  const sw = await rp.evaluate(() => window.GS.app._last.round.winners[0].id);
+  await closeReceipt(rp);
+  const sb = await idle(rp);
+  await rp.locator('#panel-scratch .spanel.is-win .spanel__btn:not(:disabled)').first().click();
+  await profileOpens(rp, sw, 'pressing a finished scratch panel');
+  await closeProfile(rp);
+  check(JSON.stringify(await idle(rp)) === JSON.stringify(sb) && (await rp.locator('#panel-scratch .scratch__prompt').innerText()).includes('Press a panel to read about its charity'), 'scratch: the finished card stays up with a hint, and pressing a panel did not start or change a card');
+  await rp.click('#btn-play');
+  const fresh = await rp.waitForFunction(() => document.querySelectorAll('.spanel__btn:not([disabled])').length >= 5 && document.querySelectorAll('#panel-scratch .spanel.is-revealed').length === 0, null, { timeout: 15000 }).then(() => true, () => false);
+  check(fresh, 'scratch: buying the next card gives a fresh, covered card');
+  await rp.click('#panel-scratch [data-role="reveal"]');
+  await waitReceipt(rp);
+  await closeReceipt(rp);
+  await rp.close();
+
+  // ---- Dice ----
+  await go(page, '#game-dice');
+  const dm = await page.evaluate(() => Array.from(document.querySelectorAll('#panel-dice .dtile .markbtn')).map((b) => ({ id: b.getAttribute('data-open-charity'), off: b.disabled, label: b.getAttribute('aria-label') })));
+  check(dm.length === 6 && dm.every((b) => !b.off && /^About /.test(b.label)), 'dice: each of the six faces has a mark button named "About <charity>"', dm);
+  await page.locator('#panel-dice .dtile .markbtn').nth(3).click();
+  await profileOpens(page, dm[3].id, 'pressing a dice face mark');
+  await closeProfile(page);
+  await page.click('#btn-play');
+  const diceOff = await page.waitForFunction(() => document.querySelectorAll('#panel-dice .markbtn:disabled').length === 6, null, { timeout: 15000 }).then(() => true, () => false);
+  check(diceOff, 'dice: the six marks switch off while the die rolls');
+  await waitReceipt(page);
+  await closeReceipt(page);
+  check(await page.locator('#panel-dice .markbtn:not(:disabled)').count() === 6, 'dice: and on again afterwards');
+
+  // ---- Coin Flip ----
+  await go(page, '#game-coin');
+  const cm = await page.evaluate(() => Array.from(document.querySelectorAll('#panel-coin .slot .markbtn')).map((b) => b.getAttribute('data-open-charity')));
+  check(cm.length >= 2 && await page.locator('#panel-coin .slot .markbtn:not(:disabled)').count() === cm.length && await page.locator('#panel-coin .markbtn[tabindex="0"]').count() === 1, 'coin: every charity in the bracket has a mark button (one tab stop)', cm.length);
+  await page.locator('#panel-coin .slot .markbtn').nth(1).click();
+  await profileOpens(page, cm[1], 'pressing a bracket mark');
+  await closeProfile(page);
+  await page.click('#btn-play');
+  const coinOff = await page.waitForFunction(() => document.querySelectorAll('#panel-coin .markbtn:not(:disabled)').length === 0, null, { timeout: 15000 }).then(() => true, () => false);
+  check(coinOff, 'coin: the bracket marks switch off while the coins are flipped');
+  await waitReceipt(page);
+  await closeReceipt(page);
+
+  // ---- Drop Crate ----
+  await go(page, '#game-drop');
+  await page.waitForSelector('#panel-drop .dcard');
+  // (the reel holds 11 cards with the marker on the middle one; only the middle few are in view)
+  const dcId = await page.locator('#panel-drop .dcard').nth(4).getAttribute('data-id');
+  await page.locator('#panel-drop .dcard').nth(4).click();
+  await profileOpens(page, dcId, 'clicking a card on the crate\'s reel');
+  await closeProfile(page);
+  await page.click('#btn-play');
+  await page.waitForFunction(() => document.querySelector('#panel-drop .drop__view').classList.contains('is-rolling'), null, { timeout: 15000 });
+  const dd = await page.evaluate(() => { document.querySelectorAll('#panel-drop .dcard').forEach((c) => c.click()); return !!document.querySelector('#dlg-profile[open]'); });
+  check(!dd, 'drop: while the reel rolls a click on a card does nothing');
+  await waitReceipt(page);
+  await closeReceipt(page);
+  await page.locator('#panel-drop .dcard').nth(6).click();
+  await profileOpens(page, await page.locator('#panel-drop .dcard').nth(6).getAttribute('data-id'), 'a card on the crate\'s fresh reel after the round');
+  await closeProfile(page);
+
+  // ---- the charity you back, and the lists of charities in play ----
+  await go(page, '#game-wheel');
+  await page.click('#pick-btn');
+  await page.waitForSelector('#dlg-charitypick[open]');
+  await page.fill('#cp-q', 'wateraid');
+  await page.locator('#dlg-charitypick .pickitem').first().click();
+  await page.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
+  const chipBtn = await page.evaluate(() => { const b = document.querySelector('#pick-chip .pickchip__open'); return b && { id: b.getAttribute('data-open-charity'), label: b.getAttribute('aria-label'), off: b.disabled }; });
+  check(chipBtn && chipBtn.id === 'wateraid' && !chipBtn.off && /^About /.test(chipBtn.label), 'the charity you back: its chip is a button named "About <charity>"', chipBtn);
+  await page.click('#pick-chip .pickchip__open');
+  await profileOpens(page, 'wateraid', 'the chip of the charity you back');
+  await closeProfile(page);
+  check(await page.locator('#pick-chip [data-role="clear-pick"]').count() === 1, 'and the x next to it is still there');
+  await page.click('#pick-chip [data-role="clear-pick"]');
+  check(!(await page.locator('#pick-chip').isVisible()), 'and it still stops backing the charity');
+  await page.click('#tab-pool');
+  const poolChip = await page.locator('#tabp .chip--link').first().getAttribute('data-open-charity');
+  await page.locator('#tabp .chip--link').first().click();
+  await profileOpens(page, poolChip, 'a charity chip under the game');
+  await closeProfile(page);
+  await go(page, '#game-wheel');
+  await setAmount(page, 12);
+  await page.click('#rounds-seg [data-r="3"]');
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  await closeReceipt(page);
+  const rc = await page.evaluate(() => Array.from(document.querySelectorAll('#rounds .round__open')).map((b) => ({ id: b.getAttribute('data-open-charity'), off: b.disabled })));
+  check(rc.length === 3 && rc.every((b) => !b.off), 'after a split round each finished round chip is a button that opens its charity', rc);
+  await page.locator('#rounds .round__open').nth(1).click();
+  await profileOpens(page, rc[1].id, 'a finished round chip');
+  await closeProfile(page);
+
+  // ---- My Giving: the history rows ----
+  await go(page, '#giving');
+  await page.locator('#view-giving .hrow summary').first().click();
+  const hrows = await page.$$eval('#view-giving .hrow details[open] .alloc__item', (lis) => lis.map((li) => ({ id: li.querySelector('.aboutbtn').getAttribute('data-open-charity'), href: li.querySelector('a.alloc__name').getAttribute('href'), logo: li.querySelector('a.sitemark').getAttribute('href'), rel: li.querySelector('a.alloc__name').getAttribute('rel') })));
+  check(hrows.length >= 1 && hrows.every((r) => r.href === siteOf(r.id) && r.logo === r.href && /noopener/.test(r.rel)), 'My Giving: a past round lists each charity with its website link and an About button', hrows);
+
+  // ---- live tables: the odds board, the result and the recent pots ----
+  await go(page, '#live-derby10');
+  await page.waitForSelector('#livepanel .odd');
+  const odd = await page.evaluate(() => {
+    const row = document.querySelector('#livepanel .oddrow');
+    const mark = row.querySelector('.odd__mark');
+    const mono = row.querySelector('.odd .cmono').getBoundingClientRect();
+    const hit = document.elementFromPoint(mono.left + mono.width / 2, mono.top + mono.height / 2);
+    return { hits: hit === mark, id: mark.getAttribute('data-open-charity'), label: mark.getAttribute('aria-label'), on: document.querySelectorAll('#livepanel .odd.is-on').length, marks: document.querySelectorAll('#livepanel .odd__mark').length, rows: document.querySelectorAll('#livepanel .odd').length, stops: document.querySelectorAll('#livepanel .odd__mark[tabindex="0"]').length };
+  });
+  check(odd.hits && /^About /.test(odd.label) && odd.marks === odd.rows && odd.stops === 1, 'live table: the mark on every odds row is its own About button (laid exactly over the mark, one tab stop)', odd);
+  const pickedBefore = odd.on;
+  await page.evaluate(() => document.querySelector('#livepanel .odd__mark').click());
+  await profileOpens(page, odd.id, 'the mark on a live odds row');
+  await closeProfile(page);
+  const pickedAfter = await page.evaluate(() => ({ on: document.querySelectorAll('#livepanel .odd.is-on').length, you: !!window.GS.live.room('derby10').you }));
+  check(pickedAfter.on === pickedBefore && !pickedAfter.you, 'and it did not pick that charity or place a stake');
+  await page.evaluate(() => { window.GS.live.room('derby10').openRound(0); });
+  await page.waitForFunction(() => !!window.GS.live.room('derby10').commit, null, { timeout: 10000 }).catch(() => {});
+  await page.evaluate(() => { window.GS.live.room('derby10').lock(); });
+  const live = await (await page.waitForFunction(() => {
+    const r = window.GS.live.room('derby10');
+    if (!(r.phase === 'result' && document.querySelector('#lt-result .lt-res'))) { return null; }
+    r._clearTimers();   // stop here, in the same turn that sees the card
+    const box = document.querySelector('#lt-result .lt-res__site');
+    const a = box && box.querySelector('a.extlink');
+    const logo = box && box.querySelector('a.sitemark');
+    const about = box && box.querySelector('.aboutbtn');
+    return { winner: r.result.winnerId, href: a && a.getAttribute('href'), target: a && a.getAttribute('target'), rel: a && a.getAttribute('rel'), label: a && a.getAttribute('aria-label'), logo: logo && logo.getAttribute('href'), about: about && about.getAttribute('data-open-charity'), aboutText: about && about.textContent.trim() };
+  }, null, { timeout: 60000, polling: 20 })).jsonValue();
+  check(live.href === siteOf(live.winner) && live.logo === live.href && live.target === '_blank' && /noopener/.test(live.rel) && live.label === nameOf(live.winner) + ' website (opens in a new tab)', 'live result: the winner\'s name and mark link to its website, in a new tab', live);
+  check(live.about === live.winner && live.aboutText === 'About', 'live result: the winner keeps its About button');
+  await a11y(page, 'live result card with the winner\'s website link');
+  await page.locator('#lt-result .lt-res__site .aboutbtn').click();
+  await profileOpens(page, live.winner, 'the About button on a live result');
+  await closeProfile(page);
+  await go(page, '#live');
+  await onRoute(page, 'live');
+  await page.evaluate(() => window.GS.ui.live.renderPage());   // (the page redraws the list itself every second; this only saves the wait)
+  const recentDiag = await page.evaluate(() => ({ route: window.GS.app.state.route, hist: window.GS.live.rooms().map((r) => r.history.length).join(), box: ((document.querySelector('#view-live [data-role="recent"]') || {}).innerHTML || '').slice(0, 200) }));
+  const recent = await page.waitForFunction(() => {
+    const rows = Array.from(document.querySelectorAll('#view-live [data-role="recent"] .hist--ch'));
+    if (!rows.length) { return null; }
+    return rows.map((li) => ({ text: li.querySelector('a.extlink .extlink__t').textContent, href: li.querySelector('a.extlink').getAttribute('href'), logo: li.querySelector('a.sitemark').getAttribute('href'), rel: li.querySelector('a.extlink').getAttribute('rel'), about: li.querySelector('.aboutbtn').getAttribute('data-open-charity'), sim: /simulated bots|simulated/.test(li.textContent) }));
+  }, null, { timeout: 15000 }).then((h) => h.jsonValue(), () => []);
+  check(recent.length >= 1 && recent.every((r) => { const c = GSdata.charities.find((x) => x.name === r.text); return c && r.href === 'https://' + c.url && r.logo === r.href && /noopener/.test(r.rel) && r.about === c.id; }), 'live "Pots that just went out": each winner is a website link with its mark and an About button', [recent, recentDiag]);
+  check(recent.every((r) => r.sim), 'and the rows still say the other players were simulated bots');
+  await page.locator('#view-live [data-role="recent"] .hist--ch .aboutbtn').first().click();
+  await profileOpens(page, recent[0].about, 'the About button on a recent pot');
+  await closeProfile(page);
+  await a11y(page, 'live page with the recent pots');
+
+  check(problems.length === 0, 'no console errors, warnings or failed requests while clicking through all of this', problems.slice(0, 6));
+  await page.close();
+}
 
 /* ======================================================================== */
 section('18. Console and network health');

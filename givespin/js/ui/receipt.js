@@ -127,12 +127,14 @@
       ? 'Simulated round: no money moved and nothing was charged.'
       : 'Nice pick by fate. Each gift is finished on the charity’s checkout page, on another website. The buttons below open it in a new tab, and nothing is given until you complete it there.';
 
+    // every charity that got the gift: its mark and its name are links to its website (a new tab), and the small About button opens its profile
     var items = allocs.map(function (a) {
       var ch = GS.charity(a.charityId);
-      return '<li class="alloc__item" style="--c:' + ch.accent + '">' + ui.mono(ch, 44) +
-        '<div class="alloc__main"><button type="button" class="alloc__name" data-open-charity="' + ch.id + '">' + esc(ch.name) + '</button>' +
+      var host = ui.siteHost(ch);
+      return '<li class="alloc__item" style="--c:' + ch.accent + '">' + ui.siteMark(ch, 44) +
+        '<div class="alloc__main"><div class="alloc__head">' + ui.siteName(ch, 'alloc__name') + ui.aboutBtn(ch) + '</div>' +
           (blurbs ? '<div class="alloc__blurb">' + esc(ch.blurb) + '</div>' : '') +
-          '<div class="alloc__meta">' + ui.causeTags(ch, 2) + '<a href="https://' + esc(ch.url) + '" target="_blank" rel="noopener noreferrer">' + esc(ch.url) + ' ↗</a></div></div>' +
+          '<div class="alloc__meta">' + ui.causeTags(ch, 2) + (host ? '<span class="alloc__host">' + esc(host) + '</span>' : '') + '</div></div>' +
         '<div class="alloc__amt"><b>' + money(a.cents, false) + '</b>' + (a.hits > 1 ? '<span>' + a.hits + ' rounds</span>' : '') + '</div>' +
       '</li>';
     }).join('');

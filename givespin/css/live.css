@@ -325,3 +325,17 @@
 .lgame.is-on { background: color-mix(in srgb, var(--green) 18%, var(--panel)); border-color: var(--green); color: #fff; }
 .lobbybox .sect__t { margin: 0 0 6px; }
 @media (max-width: 560px) { .lgame { flex: 1 1 calc(50% - 8px); justify-content: center; } }
+
+/* ---------- clickable charities on live tables: the mark's About button on the odds board, and the winner's website link */
+.oddrow { position: relative; }
+.odd__mark { position: absolute; left: 10px; top: 50%; z-index: 2; width: 30px; height: 30px; margin-top: -15px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.odd__mark:hover { box-shadow: 0 0 0 3px #fff, 0 0 12px 2px color-mix(in srgb, var(--c, #fff) 55%, transparent); }
+.hist--ch { flex-wrap: wrap; row-gap: 6px; }
+.hist--ch .hist__main { white-space: normal; overflow: visible; text-overflow: clip; }
+.hist__name { font-weight: 800; color: var(--text); }
+.lt-res__site { display: flex; align-items: center; gap: 12px; padding: 8px 0 2px; }
+.lt-res__site-in { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+.lt-res__name { font: 800 1rem/1.2 var(--f-display); color: #fff; }
+.pickchip__open { display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; border-radius: 999px; background: none; color: inherit; font: inherit; cursor: pointer; }
+.pickchip__open:hover:not(:disabled) span { text-decoration: underline; text-underline-offset: 3px; }
+.pickchip__open:disabled { cursor: default; }

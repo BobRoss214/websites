@@ -97,11 +97,28 @@
       info: def.info
     };
 
-    function tileHTML(ch) {
+    /**
+     * One symbol. While the reels stand still, the middle row (the payline) is a real button that opens the charity's profile (`mode` 'btn',
+     * one tab stop for the whole row, arrow keys move along it), and the rows above and below are the same for a mouse or a finger (`mode` 'pic',
+     * hidden from screen readers). While the reels spin they are plain pictures.
+     */
+    function tileHTML(ch, mode) {
       var m = GS.mono(ch);
-      return '<div class="sym" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
-        '<span class="sym__badge' + (GS.ui.hasLogo(ch) ? ' is-logo' : '') + '" data-len="' + m.length + '" data-mono="' + U.esc(m) + '">' + GS.ui.monoInner(ch) + '</span>' +
-        '<span class="sym__name">' + U.esc(ch.short) + '</span></div>';
+      var inner = '<span class="sym__badge' + (GS.ui.hasLogo(ch) ? ' is-logo' : '') + '" data-len="' + m.length + '" data-mono="' + U.esc(m) + '">' + GS.ui.monoInner(ch) + '</span>' +
+        '<span class="sym__name">' + U.esc(ch.short) + '</span>';
+      var at = ' data-id="' + ch.id + '" style="--c:' + ch.accent + '"';
+      if (mode === 'btn') { return '<button type="button" class="sym sym--btn"' + at + ' tabindex="-1" aria-label="About ' + U.esc(ch.short) + '" title="About ' + U.esc(ch.name) + '">' + inner + '</button>'; }
+      if (mode === 'pic') { return '<div class="sym sym--pic"' + at + ' aria-hidden="true" title="About ' + U.esc(ch.name) + '">' + inner + '</div>'; }
+      return '<div class="sym"' + at + '>' + inner + '</div>';
+    }
+
+    /** Switches the symbols on or off: they open a profile only while the machine stands still and is not busy (never during a spin or while the gift is being sent). */
+    function syncTiles() {
+      if (!el.reelsBox) { return; }
+      var off = locked || spinning;
+      Array.prototype.forEach.call(el.reelsBox.querySelectorAll('.sym--btn'), function (b) { b.disabled = off; });
+      el.reelsBox.classList.toggle('is-clickable', !off);
+      GS.ui.roveSync(el.reelsBox, '.sym--btn');
     }
 
     function randomFill(count, avoid) {
@@ -121,7 +138,7 @@
       r.visible = list;
       r.strip.style.transition = 'none';
       r.strip.style.transform = 'translateY(0)';
-      r.strip.innerHTML = list.map(tileHTML).join('');
+      r.strip.innerHTML = list.map(function (c, i) { return tileHTML(c, i === 1 ? 'btn' : 'pic'); }).join('');
     }
 
     function clearMarks() {
@@ -137,6 +154,7 @@
       if (!pool.length || !reels.length) { return; }
       reels.forEach(function (r) { setStatic(r, randomFill(3, null)); });
       clearMarks();
+      syncTiles();
     }
 
     /** Sizes the tiles to the width the reels actually have, so twelve reels still fit a phone. */
@@ -207,7 +225,7 @@
             '<div class="slots__fx" aria-hidden="true">' + fxHTML() + '</div>' +
             '<div class="slots__top"><span class="slots__lights" aria-hidden="true"></span><span class="slots__title">' + GS.icon(def.icon) + '<span>' + def.title + '</span></span><span class="slots__lights" aria-hidden="true"></span></div>' +
             '<div class="slots__window">' +
-              '<div class="slots__reels" data-role="reels"></div>' +
+              '<div class="slots__reels" data-role="reels" role="group" aria-label="The charities on the payline. Press one to read about it."></div>' +
               '<div class="slots__payline" aria-hidden="true"><i></i><i></i></div>' +
               '<div class="slots__winline" data-role="winline" aria-hidden="true"></div>' +
               '<div class="slots__banner" data-role="banner" role="status" aria-live="polite"></div>' +
@@ -241,6 +259,13 @@
         GS.audio.click();
       });
       el.guide.addEventListener('click', function () { openGuide(); });
+      // a click or tap on a symbol opens that charity's profile, but only while the machine stands still (the spin button and the lever keep their own click)
+      el.reelsBox.addEventListener('click', function (e) {
+        var sym = e.target.closest ? e.target.closest('.sym[data-id]') : null;
+        if (!sym || spinning || locked || !GS.ui.charity) { return; }
+        GS.ui.charity.openProfile(sym.getAttribute('data-id'));
+      });
+      GS.ui.rove(el.reelsBox, '.sym--btn');
       buildReels();
       note();
       U.observeSize(el.stage, function () { fit(); });
@@ -256,6 +281,7 @@
 
     game.lock = function (isLocked) {
       locked = !!isLocked;
+      syncTiles();
       if (el.lever) { el.lever.disabled = locked; }
       if (el.spin) { el.spin.disabled = locked; }
       if (el.machine) { el.machine.classList.toggle('is-busy', locked); }
@@ -309,6 +335,7 @@
         if (!pool.length || !opts.winners || opts.winners.length < n) { resolve([]); return; }
         spinning = true;
         clearMarks();
+        syncTiles();
         el.machine.classList.add('is-pulled');
         setTimeout(function () { el.machine.classList.remove('is-pulled'); }, 420);
         GS.audio.whoosh();
@@ -337,7 +364,7 @@
           var items = head.concat(fill, [pre, winner, post, core.pickOne(pool), core.pickOne(pool)]);
           r.strip.style.transition = 'none';
           r.strip.style.transform = 'translateY(0)';
-          r.strip.innerHTML = items.map(tileHTML).join('');
+          r.strip.innerHTML = items.map(function (c) { return tileHTML(c); }).join('');
           r.win.classList.add('is-spinning');
           var dur = (1900 * speed) + idx * stagger + (anticipate && idx === n - 1 ? 1300 : 0);
           return {
@@ -385,6 +412,7 @@
             el.machine.classList.remove('is-anticipating');
             // Re-seat each strip to just the three visible tiles (visually identical, keeps the DOM small).
             plans.forEach(function (pl) { setStatic(pl.reel, pl.reel.visible); });
+            syncTiles();
             // matches: any charity on two or more reels
             var counts = {};
             winners.forEach(function (w) { counts[w.id] = (counts[w.id] || 0) + 1; });

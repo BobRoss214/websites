@@ -302,6 +302,12 @@
       el.result = container.querySelector('[data-role="result"]');
       el.open = container.querySelector('[data-role="open"]');
       el.open.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
+      // a click or tap on a card opens that charity's profile, but only while the reel is at rest and the game is not busy (the Open crate button keeps its own click)
+      el.view.addEventListener('click', function (e) {
+        var card = e.target.closest ? e.target.closest('.dcard[data-id]') : null;
+        if (!card || spinning || rolling || locked || !GS.ui.charity) { return; }
+        GS.ui.charity.openProfile(card.getAttribute('data-id'));
+      });
       U.observeSize(el.view, function () {
         if (spinning || !current.length) { return; }
         measure();

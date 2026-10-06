@@ -182,6 +182,7 @@
         onPick: function (id) { setPick(id); }
       });
     });
+    ui.rove(el.rounds, '.round__open');   // the finished round chips are one tab stop (arrow keys move between them)
     el.pickChip.addEventListener('click', function (e) {
       if (e.target.closest('[data-role="clear-pick"]') && !state().busy) { GS.audio.click(); setPick(''); }
     });
@@ -217,7 +218,7 @@
     GS.bus.on('receipt:closed', function () {
       if (!built || !current || isLive() || state().busy || !GS.games[current].setBoard) { return; }
       sizeNote = '';
-      newBoard(current);
+      newBoard(current, true);
       refreshSize();
     });
     // The receipt tries to hand focus back to the Play button that started the round, but that button is switched off while the round starts, so
@@ -426,7 +427,7 @@
    * Chooses the charities on the board for the next round and hands them to the game. The winner is drawn from
    * exactly these (each with equal odds), so the board you set is what the ball, wheel or ducks can land on.
    */
-  function newBoard(id) {
+  function newBoard(id, afterRound) {
     var g = GS.games[id];
     if (!g || !g.setBoard) { return; }
     var slots = slotsFor(id);
@@ -434,7 +435,7 @@
     var pid = pickFor(id);
     var list = core.boardField(activePool(id), distinct, pid);
     boards[id] = { field: list, slots: slots, pv: state().poolVersion, cs: customStamp(id) };
-    g.setBoard(list, slots, pid);
+    g.setBoard(list, slots, pid, afterRound ? { afterRound: true } : undefined);   // (a card game keeps its finished table up when the receipt closes, so the cards can be read about)
   }
 
   function setBoardSize(n, fromInput) {
@@ -513,7 +514,8 @@
     el.pickBtn.lastChild.textContent = ch ? 'Change' : 'Choose a charity';
     el.pickBtn.disabled = !!state().busy;
     el.pickChip.hidden = !ch;
-    el.pickChip.innerHTML = ch ? ui.mono(ch, 24) + '<span>' + esc(ch.short) + '</span><button type="button" class="pickchip__x" data-role="clear-pick" aria-label="Stop backing ' + esc(ch.short) + '"' + (state().busy ? ' disabled' : '') + '>' + ui.icon('x') + '</button>' : '';
+    // the charity you back: its mark and name open its profile (off while a round is running); the x stops backing it
+    el.pickChip.innerHTML = ch ? '<button type="button" class="pickchip__open" data-open-charity="' + ch.id + '" aria-label="About ' + esc(ch.short) + ', the charity you are backing"' + (state().busy ? ' disabled' : '') + '>' + ui.mono(ch, 24) + '<span>' + esc(ch.short) + '</span></button><button type="button" class="pickchip__x" data-role="clear-pick" aria-label="Stop backing ' + esc(ch.short) + '"' + (state().busy ? ' disabled' : '') + '>' + ui.icon('x') + '</button>' : '';
     el.pickChip.style.setProperty('--c', ch ? ch.accent : 'transparent');
     el.pickHint.textContent = ch
       ? ch.short + ' is on the board. If it wins you earn bonus XP and the Called It badge. Your gift always goes to the winner.'
@@ -556,6 +558,8 @@
     el.pickBtn.disabled = locked;
     if (el.customBtn) { el.customBtn.disabled = locked; el.customToggle.disabled = locked; el.customEdit.disabled = locked; el.customClear.disabled = locked; }
     Array.prototype.forEach.call(el.pickChip.querySelectorAll('button'), function (b) { b.disabled = locked; });
+    Array.prototype.forEach.call(el.rounds.querySelectorAll('.round__open'), function (b) { b.disabled = locked; });
+    ui.roveSync(el.rounds, '.round__open');
     Array.prototype.forEach.call(el.roundsSeg.querySelectorAll('button'), function (b) {
       if (locked) { b.setAttribute('data-was-disabled', b.disabled ? '1' : '0'); b.disabled = true; }
       else if (b.getAttribute('data-was-disabled') !== null) { b.disabled = b.getAttribute('data-was-disabled') === '1'; b.removeAttribute('data-was-disabled'); }
@@ -589,7 +593,8 @@
     li.classList.remove('is-active');
     li.classList.add('is-done');
     li.style.setProperty('--c', charity.accent);
-    li.innerHTML = '<span class="round__n">' + (i + 1) + '</span><span class="round__name">' + esc(charity.short) + ' · ' + money(cents, false) + '</span>';
+    // once the round is over the chip opens the charity's profile (switched on again by lockUI when the game is idle)
+    li.innerHTML = '<span class="round__n">' + (i + 1) + '</span><button type="button" class="round__name round__open" data-open-charity="' + charity.id + '" aria-label="' + esc(charity.short) + ' · ' + money(cents, false) + ', about this charity" title="About ' + esc(charity.name) + '"' + (state().busy ? ' disabled' : '') + '>' + esc(charity.short) + ' · ' + money(cents, false) + '</button>';
   }
 
   /* ----------------------------------------------------------------- tabs */

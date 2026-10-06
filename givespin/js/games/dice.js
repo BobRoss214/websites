@@ -44,10 +44,20 @@
   function renderBoard() {
     if (!el.board) { return; }
     el.board.innerHTML = faces.map(function (c, k) {
+      // the mark is a button that opens the charity's profile (off while the die is rolling or the gift is being sent)
       return '<li class="dtile' + (k === winFace && !rolling ? ' is-win' : '') + '" style="--c:' + c.accent + '" title="' + U.esc(c.name) + '"><span class="dtile__n">' + (k + 1) + '</span>' +
-        '' + GS.ui.mono(c, 34) + '' +
+        GS.ui.markBtn(c, 34, { disabled: locked || rolling, tab: false }) +
         '<span class="dtile__name">' + U.esc(c.short) + '</span></li>';
     }).join('');
+    GS.ui.roveSync(el.board, '.markbtn');
+  }
+
+  /** The face marks open a profile only while the die is still and the game is not busy. */
+  function syncMarks() {
+    if (!el.board) { return; }
+    var off = locked || rolling;
+    Array.prototype.forEach.call(el.board.querySelectorAll('.markbtn'), function (b) { b.disabled = off; });
+    GS.ui.roveSync(el.board, '.markbtn');
   }
 
   function updateNote() {
@@ -91,6 +101,7 @@
   function throwDie(winner, quick) {
     return new Promise(function (resolve) {
       rolling = true;
+      syncMarks();
       fresh = false;
       result = null;
       var mine = [];
@@ -153,6 +164,7 @@
       el.roll = container.querySelector('[data-role="roll"]');
       el.die.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
       el.roll.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
+      GS.ui.rove(el.board, '.markbtn');
     },
 
     setPool: function (list) {
@@ -165,6 +177,7 @@
 
     lock: function (isLocked) {
       locked = !!isLocked;
+      syncMarks();
       if (el.roll) { el.roll.disabled = locked; }
     },
 

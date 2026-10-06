@@ -204,9 +204,10 @@
     box._sig = sig;
     box.innerHTML = all.length ? '<ol class="histlist">' + all.map(function (x) {
       var ch = GS.charity(x.h.winnerId);
-      return '<li class="hist"><span class="hist__game">' + ui.icon(ui.gameIcon(x.room)) + '</span><div><div class="hist__main">' + esc(ch.name) + ' took the pot</div>' +
+      // the winner's mark and name link to its website (a new tab); About opens its profile
+      return '<li class="hist hist--ch">' + ui.siteMark(ch, 34) + '<div><div class="hist__main">' + ui.siteName(ch, 'hist__name') + ' took the pot</div>' +
         '<div class="hist__sub">' + esc(GS.live.room(x.id).title()) + ' · round ' + x.h.round + ' · ' + ui.num(x.h.players) + ' players' + botNote(x.h) + '</div></div>' +
-        '<span class="hist__amt">' + dollars(x.h.pot) + '</span></li>';
+        ui.aboutBtn(ch) + '<span class="hist__amt">' + dollars(x.h.pot) + '</span></li>';
     }).join('') + '</ol>' : '<p class="empty">Finished pots will show up here as tables settle. Each one went to a single charity.</p>';
   }
 
@@ -309,6 +310,7 @@
     // The crowd's bets redraw the board many times a second. A press that spans a redraw would lose its click (the row it went down on is gone),
     // so the board holds still while it is pressed and catches up when the press ends (or after ODDS_HOLD_MS, in case the release is never seen).
     el.odds.addEventListener('pointerdown', function () { oddsDown = Date.now(); });
+    ui.rove(el.odds, '.odd__mark');   // the About buttons over the marks are one tab stop (arrow keys move between them)
     function oddsUp() {
       if (!oddsDown) { return; }
       oddsDown = 0;
@@ -317,6 +319,7 @@
     document.addEventListener('pointerup', oddsUp, true);
     document.addEventListener('pointercancel', oddsUp, true);
     el.odds.addEventListener('click', function (e) {
+      if (e.target.closest('[data-open-charity]')) { return; }   // the mark's own button opens the profile
       var b = e.target.closest('[data-id]');
       if (!b || b.disabled || (cur && cur.room.you)) { return; }
       GS.audio.click();
@@ -430,6 +433,11 @@
 
   function disarm() { armed = false; clearTimeout(armTimer); armTimer = 0; }
 
+  /** A button laid over a row's mark: it opens the charity's profile, and the rest of the row still backs the charity. (A button cannot sit inside the row's own button.) */
+  function oddInfo(ch) {
+    return '<button type="button" class="odd__mark" data-open-charity="' + ch.id + '" aria-label="About ' + esc(ch.name) + '" title="About ' + esc(ch.name) + '"></button>';
+  }
+
   /** The odds board: one row per charity at the table; tap one to back it. */
   function renderOdds() {
     if (!cur) { return; }
@@ -443,32 +451,43 @@
       var chance = on && !room.you && room.phase === 'open'
         ? core.fmtShare(f.tickets + stake, pot + stake) : core.fmtShare(f.tickets, pot);
       var winner = room.result && room.phase === 'result' && room.result.winnerId === f.charity.id;
-      return '<button type="button" class="odd' + (winner ? ' is-winner' : '') + (on ? ' is-on' : '') + '" role="radio" aria-checked="' + on + '" data-id="' + f.charity.id + '"' + (open ? '' : ' disabled') + ' style="--c:' + f.charity.accent + '">' +
+      return '<div class="oddrow" role="none" style="--c:' + f.charity.accent + '"><button type="button" class="odd' + (winner ? ' is-winner' : '') + (on ? ' is-on' : '') + '" role="radio" aria-checked="' + on + '" data-id="' + f.charity.id + '"' + (open ? '' : ' disabled') + ' style="--c:' + f.charity.accent + '">' +
         '<span class="odd__fill" style="width:' + Math.round(f.share * 100) + '%"></span>' +
         ui.mono(f.charity, 30) +
         '<span class="odd__main"><b>' + esc(f.charity.short) + (winner ? ' <span class="odd__crown">' + ui.icon('trophy') + '</span>' : '') + '</b>' +
           '<small>' + (f.bots ? f.bots + (f.bots === 1 ? ' bot' : ' bots') : 'no bots') + (f.you ? ' · you ' + dollars(f.you) : '') + '</small></span>' +
-        '<span class="odd__num"><b>' + chance + '</b><small>' + dollars(f.tickets) + '</small></span></button>';
+        '<span class="odd__num"><b>' + chance + '</b><small>' + dollars(f.tickets) + '</small></span></button>' + oddInfo(f.charity) + '</div>';
     });
     // a charity you picked that is not at the table yet gets a gate of its own
     if (open && pick && !room.seats[pick]) {
       var ch = GS.charity(pick);
       if (ch) {
-        rows.unshift('<button type="button" class="odd is-new is-on" role="radio" aria-checked="true" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
+        rows.unshift('<div class="oddrow" role="none" style="--c:' + ch.accent + '"><button type="button" class="odd is-new is-on" role="radio" aria-checked="true" data-id="' + ch.id + '" style="--c:' + ch.accent + '">' +
           '<span class="odd__fill" style="width:' + Math.round(stake / (pot + stake) * 100) + '%"></span>' + ui.mono(ch, 30) +
           '<span class="odd__main"><b>' + esc(ch.short) + '</b><small>new gate · you ' + dollars(stake) + '</small></span>' +
-          '<span class="odd__num"><b>' + core.fmtShare(stake, pot + stake) + '</b><small>' + dollars(0) + ' so far</small></span></button>');
+          '<span class="odd__num"><b>' + core.fmtShare(stake, pot + stake) + '</b><small>' + dollars(0) + ' so far</small></span></button>' + oddInfo(ch) + '</div>');
       }
     }
     var html = rows.join('');
     if (el.odds._html !== html) {
       el.odds._html = html;
       // the rows are replaced for every bet: the row that has keyboard focus (and where the board is scrolled to) must survive that
-      var held = document.activeElement && document.activeElement !== el.odds && el.odds.contains(document.activeElement) ? document.activeElement.getAttribute('data-id') : '';
+      var ae = document.activeElement;
+      var held = ae && ae !== el.odds && el.odds.contains(ae) ? ae.getAttribute('data-id') : '';
+      var heldInfo = ae && ae.classList && ae.classList.contains('odd__mark') ? ae.getAttribute('data-open-charity') : '';   // keyboard focus on a mark's About button
+      var stop = el.odds.querySelector('.odd__mark[tabindex="0"]');
+      var stopId = stop ? stop.getAttribute('data-open-charity') : '';
       var top = el.odds.scrollTop;
       el.odds.innerHTML = html;
       el.odds.scrollTop = top;
       el.odds._held = held;
+      var again0 = stopId ? el.odds.querySelector('.odd__mark[data-open-charity="' + stopId + '"]') : null;
+      if (again0) { again0.tabIndex = 0; }
+      ui.roveSync(el.odds, '.odd__mark');   // (keeps the one tab stop where it was)
+      if (heldInfo) {
+        var info = el.odds.querySelector('.odd__mark[data-open-charity="' + heldInfo + '"]');
+        if (info) { info.tabIndex = 0; info.focus({ preventScroll: true }); }
+      }
     }
     // the board scrolls when it is long; once every row is disabled (you have bet, or bets are closed) nothing in it can take focus, so the board itself must
     el.odds.tabIndex = open ? -1 : 0;
@@ -609,7 +628,7 @@
         '<li><span>Stakes</span><b>' + dollars(r.pot) + (bonusBits.length ? ' + ' + dollars(r.bonus.total) + ' bonus' : '') + '</b></li></ul>' +
         lines.join('') +
         '<p class="lt-res__sim">' + (you ? 'Your ' + dollars(you.dollars) + ' is demo credit. The other ' + dollars(Math.max(0, r.pot - you.dollars)) + ' came from simulated bots' : 'The whole ' + dollars(r.pot) + ' came from simulated bots') + (bonusBits.length ? ', and ' + bonusBits.join(' and ') : '') + '.</p>' +
-        '<p><button type="button" class="linkbtn" data-open-charity="' + winner.id + '">About ' + esc(winner.short) + '</button></p>' + fairBits + '</div>';
+        '<div class="lt-res__site">' + ui.siteMark(winner, 40) + '<div class="lt-res__site-in">' + ui.siteName(winner, 'lt-res__name') + ui.aboutBtn(winner) + '</div></div>' + fairBits + '</div>';
     ui.hydrate(el.result);
     var vb = $('[data-role="verify"]', el.result);
     if (vb) {
@@ -913,8 +932,8 @@
     if (!room.history.length) { return '<p class="empty">No finished rounds at this table yet.</p>'; }
     return '<ol class="histlist">' + room.history.map(function (h) {
       var ch = GS.charity(h.winnerId);
-      return '<li class="hist"><span class="hist__game">' + ui.icon('trophy') + '</span><div><div class="hist__main">' + esc(ch.name) + '</div><div class="hist__sub">Round ' + h.round + ' · ' + ui.num(h.players) + ' players' +
-        botNote(h) + '</div></div><span class="hist__amt">' + dollars(h.pot) + '</span></li>';
+      return '<li class="hist hist--ch">' + ui.siteMark(ch, 34) + '<div><div class="hist__main">' + ui.siteName(ch, 'hist__name') + '</div><div class="hist__sub">Round ' + h.round + ' · ' + ui.num(h.players) + ' players' +
+        botNote(h) + '</div></div>' + ui.aboutBtn(ch) + '<span class="hist__amt">' + dollars(h.pot) + '</span></li>';
     }).join('') + '</ol>';
   }
 

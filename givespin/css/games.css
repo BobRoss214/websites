@@ -281,3 +281,8 @@
 .stile.is-champ { border-color: var(--gold); background: rgba(255, 197, 66, 0.16); transform: scale(1.06); box-shadow: 0 0 22px rgba(255, 197, 66, 0.4); position: relative; z-index: 1; }
 @keyframes stile-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-1.5px); } 75% { transform: translateX(1.5px); } }
 @media (prefers-reduced-motion: reduce) { .stile.is-danger { animation: none; } }
+
+/* clickable charities in the card games: a face-up card or a revealed panel opens its charity's profile once the round is over (or, for a scratch card, while you scratch by hand) */
+.spanel.is-revealed .spanel__btn:not(:disabled) { pointer-events: auto; cursor: pointer; }
+.spanel.is-revealed .spanel__btn:not(:disabled):hover { background: rgba(255, 255, 255, 0.28); }
+.drop__view:not(.is-busy):not(.is-rolling) .dcard { cursor: pointer; }

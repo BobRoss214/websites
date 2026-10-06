@@ -57,24 +57,29 @@
     var about = ch.about && ch.about !== ch.blurb ? ch.about : '';
     var excluded = isExcluded(ch.id);
 
+    var site = ui.siteUrl(ch);
+    var host = ui.siteHost(ch);
     var kind = ui.markKind(ch);
-    return '<header class="prof__head" style="--c:' + ch.accent + '"><div class="prof__mark">' + ui.mono(ch, 104) +
+    // the mark is shown large with one honest line under it, and "Visit website" is the first thing under the name (the mark links to the same place for mouse and touch)
+    return '<header class="prof__head" style="--c:' + ch.accent + '"><div class="prof__mark">' + ui.siteMark(ch, 104, 'prof__mono') +
         '<p class="prof__markline" data-mark="' + kind + '">' + (kind === 'logo' ? 'Logo shown only to identify the organisation.' : 'Illustrated emblem, not the charity\'s official logo.') + '</p></div>' +
         '<div class="prof__titles"><h2 class="prof__name" id="dlg-profile-title">' + esc(ch.name) + '</h2>' +
-        '<div class="prof__tags">' + ui.causeTags(ch) + (ch.faith ? '<span class="tag tag--plain">' + ui.icon('sparkle') + 'Faith-based</span>' : '') + '</div></div>' +
-        '<span data-role="status">' + statusLine(ch) + '</span>' +
+        '<div class="prof__tags">' + ui.causeTags(ch) + (ch.faith ? '<span class="tag tag--plain">' + ui.icon('sparkle') + 'Faith-based</span>' : '') + '</div>' +
+        '<div class="prof__top">' +
+          (site ? '<a class="btn btn--green" href="' + esc(site) + '" target="_blank" rel="noopener noreferrer" aria-label="Visit website of ' + esc(ch.name) + ' (opens in a new tab)">' + ui.icon('external-link') + 'Visit website</a>' : '') +
+          '<span data-role="status">' + statusLine(ch) + '</span>' +
+        '</div></div>' +
       '</header>' +
       '<p class="prof__lead">' + esc(ch.blurb) + '</p>' +
       (about ? '<p class="prof__about">' + esc(about) + '</p>' : '') +
       '<dl class="facts">' + facts.map(function (f) {
         return '<div class="facts__row"><dt>' + ui.icon(f[0]) + esc(f[1]) + '</dt><dd>' + esc(f[2]) + '</dd></div>';
       }).join('') +
-        '<div class="facts__row"><dt>' + ui.icon('link') + 'Website</dt><dd><a href="https://' + esc(ch.url) + '" target="_blank" rel="noopener noreferrer">' + esc(ch.url) + ' ↗</a></dd></div>' +
+        '<div class="facts__row"><dt>' + ui.icon('link') + 'Website</dt><dd>' + (site ? '<a href="' + esc(site) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(host) + ' (opens in a new tab)">' + esc(host) + ' ↗</a>' : 'Not on file yet') + '</dd></div>' +
       '</dl>' +
       (ch.unverified ? '<p class="note">' + ui.icon('info') + '<span>We have fewer verified details on file for this charity. Visit its website for the full story.</span></p>' : '') +
       (t ? '<div class="prof__you">' + ui.icon('heart') + '<span>You have given <b>' + money(t.cents, false) + '</b> here across ' + t.hits + (t.hits === 1 ? ' round' : ' rounds') + (t.last ? ' · last on ' + esc(ui.fmtDate(t.last)) : '') + '.</span></div>' : '') +
       '<div class="prof__actions">' +
-        '<a class="btn btn--green" href="https://' + esc(ch.url) + '" target="_blank" rel="noopener noreferrer">' + ui.icon('external-link') + 'Visit website</a>' +
         '<button type="button" class="btn" data-role="give">' + ui.icon('hand-heart') + 'Give directly</button>' +
         '<button type="button" class="btn btn--ghost" data-role="toggle" aria-pressed="' + (!excluded) + '">' + ui.icon(excluded ? 'eye' : 'eye-off') + (excluded ? 'Switch back on' : 'Switch off in games') + '</button>' +
       '</div>' +
@@ -208,7 +213,7 @@
         '<div class="rcard__tags">' + ui.causeTags(ch, 2) + '</div></div></div>' +
       '<p class="rcard__blurb">' + esc(ch.blurb) + '</p>' +
       (t ? '<p class="rcard__given">' + ui.icon('heart') + 'You gave ' + money(t.cents, true) + '</p>' : '') +
-      '<div class="rcard__foot"><a class="rcard__link" href="https://' + esc(ch.url) + '" target="_blank" rel="noopener noreferrer">' + esc(ch.url) + ui.icon('external-link') + '</a>' +
+      '<div class="rcard__foot">' + (ui.siteUrl(ch) ? '<a class="rcard__link" href="' + esc(ui.siteUrl(ch)) + '" target="_blank" rel="noopener noreferrer">' + esc(ui.siteHost(ch)) + ui.icon('external-link') + '</a>' : '<span class="rcard__link">No website on file</span>') +
         '<span class="rcard__note" data-role="note">' + (filtered ? 'Outside filters' : '') + '</span>' +
         '<label class="switch"><input type="checkbox" role="switch" data-ch="' + ch.id + '"' + (off ? '' : ' checked') + ' aria-label="' + esc(ch.short) + ' in play"><span class="switch__ui" aria-hidden="true"></span><span class="switch__txt">In play</span></label></div>' +
     '</li>';

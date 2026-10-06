@@ -249,6 +249,26 @@ html[data-mode="demo"] .only-live { display: none !important; }
 .cmono.is-emblem { background: none; box-shadow: none; border-radius: 0; font-size: 0; }
 .cmono.is-emblem > .emblem, .dcard__badge > .emblem, .sym__badge > .emblem { display: block; width: 100%; height: 100%; }
 .dcard__badge:has(> .emblem), .sym__badge:has(> .emblem) { background: none; box-shadow: none; border-radius: 0; padding: 0; }
+/* clickable charities: a website link (name and mark), an About button, and a mark that opens the profile (js/ui/common.js: siteName, siteMark, aboutBtn, markBtn) */
+.extlink { display: inline-flex; align-items: baseline; gap: 5px; color: inherit; text-decoration: none; }
+.extlink__t { text-decoration: underline; text-decoration-color: rgba(255, 255, 255, 0.3); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.extlink .ico { width: 0.8em; height: 0.8em; flex: none; align-self: center; opacity: 0.8; }
+.extlink:hover .extlink__t { text-decoration-color: var(--green); color: #fff; }
+.sitemark { position: relative; display: inline-flex; flex: none; border-radius: 50%; text-decoration: none; }
+.sitemark__cue { position: absolute; right: -3px; bottom: -3px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line-2); color: var(--text); }
+.sitemark__cue .ico { width: 10px; height: 10px; }
+.sitemark:hover .cmono { filter: brightness(1.08); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 55%, transparent); }
+.aboutbtn { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 2px 10px 2px 8px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); font: 600 0.74rem/1 var(--f-body); white-space: nowrap; }
+.aboutbtn .ico { width: 0.95em; height: 0.95em; }
+.aboutbtn:hover:not(:disabled) { color: var(--text); border-color: var(--green); }
+.aboutbtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.markbtn { display: inline-grid; flex: none; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; line-height: 0; transition: transform 0.12s; }
+.markbtn:hover:not(:disabled) { transform: scale(1.1); }
+.markbtn:hover:not(:disabled) .cmono { box-shadow: 0 0 0 3px #fff, 0 0 12px 2px color-mix(in srgb, var(--c) 60%, transparent); }
+.markbtn:disabled { cursor: default; }
+.markbtn:focus-visible { outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .markbtn:hover:not(:disabled) { transform: none; } }
+
 .avatar { --h: 150; --s: 36px; display: inline-grid; place-items: center; flex: none; width: var(--s); height: var(--s); border-radius: 50%; background: hsl(var(--h) 62% 36%); color: #fff; font: 800 calc(var(--s) * 0.38) var(--f-display); border: 2px solid hsl(var(--h) 70% 60%); }
 
 .bar { display: block; height: 8px; border-radius: 999px; background: #0b161f; overflow: hidden; border: 1px solid var(--line); }

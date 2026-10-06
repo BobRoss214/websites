@@ -99,7 +99,8 @@
       var allocs = h.allocations.map(function (a) {
         var ch = GS.charity(a.charityId);
         if (!ch) { return ''; }
-        return '<li class="alloc__item" style="--c:' + ch.accent + '">' + ui.mono(ch, 34) + '<div class="alloc__main"><button type="button" class="alloc__name" data-open-charity="' + ch.id + '">' + esc(ch.name) + '</button></div><div class="alloc__amt"><b>' + money(a.cents, false) + '</b></div></li>';
+        // the mark and the name link to the charity's website (a new tab); About opens its profile
+        return '<li class="alloc__item" style="--c:' + ch.accent + '">' + ui.siteMark(ch, 34) + '<div class="alloc__main"><div class="alloc__head">' + ui.siteName(ch, 'alloc__name') + ui.aboutBtn(ch) + '</div></div><div class="alloc__amt"><b>' + money(a.cents, false) + '</b></div></li>';
       }).join('');
       var fairBits = h.fair && h.fair.roundSeed
         ? '<div class="hrow__fair"><button type="button" class="btn btn--sm" data-verify="' + i + '">' + ui.icon('shield-check') + 'Verify this round</button><div data-role="vout" aria-live="polite"></div>' +
@@ -161,7 +162,7 @@
         '<div class="rcard__top">' + ui.mono(ch, 46) + '<div><button type="button" class="rcard__name" data-open-charity="' + ch.id + '">' + esc(ch.name) + '</button><div class="rcard__tags">' + ui.causeTags(ch, 2) + '</div></div></div>' +
         '<p class="rcard__total"><b>' + money(t.cents, false) + '</b><span>across ' + t.hits + (t.hits === 1 ? ' round' : ' rounds') + (t.last ? ' · last ' + esc(ui.fmtDate(t.last)) : '') + '</span></p>' +
         '<div class="rcard__foot rcard__foot--btns"><button type="button" class="btn btn--sm" data-open-charity="' + ch.id + '">' + ui.icon('book-open') + 'View profile</button>' +
-        '<a class="btn btn--sm btn--ghost" href="https://' + esc(ch.url) + '" target="_blank" rel="noopener noreferrer">Website ' + ui.icon('external-link') + '</a>' +
+        (ui.siteUrl(ch) ? '<a class="btn btn--sm btn--ghost" href="' + esc(ui.siteUrl(ch)) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(ch.name) + ' website (opens in a new tab)">Website ' + ui.icon('external-link') + '</a>' : '') +
         '<button type="button" class="btn btn--sm btn--ghost" data-give="' + ch.id + '">' + ui.icon('hand-heart') + 'Give again</button></div></li>';
     }).join('') + '</ul>'
       : '<div class="emptycard">' + ui.icon('hand-heart') + '<h3>No gifts yet</h3><p>Every charity your games land on will be listed here, with its profile and a link to its website.</p><a class="btn btn--green" href="#game-wheel">' + ui.icon('play') + 'Play your first round</a></div>';

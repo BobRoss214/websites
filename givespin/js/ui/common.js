@@ -140,6 +140,88 @@
       return ids.map(ui.causeTag).join('');
     },
 
+    /**
+     * The address of a charity's website: always https, and never a broken link. Most rosters give a bare host ("unicef.org"); a few add a
+     * path ("wateraid.org/us"). A leading "http://", "https://" or "//" is dropped, anything that is not a plain host name (spaces, quotes,
+     * angle brackets, no dot) gives '' so the caller shows plain text instead of a link.
+     */
+    siteUrl: function (ch) {
+      var u = ch && typeof ch.url === 'string' ? ch.url.trim().replace(/^(https?:)?\/\//i, '') : '';
+      if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+(:\d{2,5})?(\/[A-Za-z0-9._~!$&()*+,;=:@%\/-]*)?$/i.test(u)) { return ''; }
+      return 'https://' + u;
+    },
+
+    /** The website as people read it ("wateraid.org/us"), or ''. */
+    siteHost: function (ch) {
+      var u = ui.siteUrl(ch);
+      return u ? u.replace(/^https:\/\//, '').replace(/\/$/, '') : '';
+    },
+
+    /**
+     * The charity's name as a real link to its website: opens in a new tab, ends in an external-link icon, and is named for screen readers
+     * ("WaterAid website (opens in a new tab)"). Without a usable address it is plain text. `cls` is the class of the link (or the text).
+     */
+    siteName: function (ch, cls) {
+      var href = ui.siteUrl(ch);
+      if (!href) { return '<span class="' + (cls || '') + '">' + esc(ch.name) + '</span>'; }
+      return '<a class="' + (cls || '') + ' extlink" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(ch.name) + ' website (opens in a new tab)">' +
+        '<span class="extlink__t">' + esc(ch.name) + '</span>' + GS.icon('external-link') + '</a>';
+    },
+
+    /**
+     * The charity's mark (logo or monogram) as a link to its website, for people with a mouse or a finger. It repeats the name link next to it,
+     * so it is out of the tab order and hidden from screen readers (one link per charity for them). A small arrow shows it leaves the site.
+     */
+    siteMark: function (ch, size, cls) {
+      var href = ui.siteUrl(ch);
+      if (!href) { return ui.mono(ch, size, cls); }
+      return '<a class="sitemark' + (size >= 36 ? ' sitemark--cue' : '') + '" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true">' +
+        ui.mono(ch, size, cls) + (size >= 36 ? '<span class="sitemark__cue">' + GS.icon('external-link') + '</span>' : '') + '</a>';
+    },
+
+    /** A small "About" button that opens the charity's profile (the global [data-open-charity] handler does the opening). */
+    aboutBtn: function (ch, cls) {
+      return '<button type="button" class="aboutbtn' + (cls ? ' ' + cls : '') + '" data-open-charity="' + esc(ch.id) + '" aria-label="About ' + esc(ch.name) + ' (opens its profile)">' + GS.icon('info') + 'About</button>';
+    },
+
+    /**
+     * A charity's mark as a button that opens its profile, for the games that show marks as page elements. `o.disabled` switches it off
+     * (a game that is mid-round must not be interrupted); `o.tab` false keeps it out of the tab order (see ui.rove).
+     */
+    markBtn: function (ch, size, o) {
+      o = o || {};
+      return '<button type="button" class="markbtn" data-open-charity="' + esc(ch.id) + '" aria-label="About ' + esc(ch.name) + '" title="About ' + esc(ch.name) + '"' +
+        (o.disabled ? ' disabled' : '') + (o.tab === false ? ' tabindex="-1"' : '') + '>' + ui.mono(ch, size) + '</button>';
+    },
+
+    /**
+     * One tab stop for a row or grid of buttons: only one of the `sel` buttons inside `box` is in the tab order, and the arrow keys (with
+     * Home and End) move between them. Call `ui.roveSync(box, sel)` again after the buttons are redrawn or switched on or off.
+     */
+    rove: function (box, sel) {
+      box.addEventListener('keydown', function (e) {
+        var k = e.key;
+        if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown' && k !== 'Home' && k !== 'End') { return; }
+        var list = $$(sel, box).filter(function (b) { return !b.disabled; });
+        var at = list.indexOf(document.activeElement);
+        if (at < 0) { return; }
+        var to = k === 'Home' ? 0 : k === 'End' ? list.length - 1 : (k === 'ArrowLeft' || k === 'ArrowUp') ? Math.max(0, at - 1) : Math.min(list.length - 1, at + 1);
+        e.preventDefault();
+        list.forEach(function (b, i) { b.tabIndex = i === to ? 0 : -1; });
+        list[to].focus();
+      });
+      box.addEventListener('focusin', function (e) {
+        if (!e.target.matches || !e.target.matches(sel)) { return; }
+        $$(sel, box).forEach(function (b) { b.tabIndex = b === e.target ? 0 : -1; });
+      });
+    },
+    roveSync: function (box, sel) {
+      var list = $$(sel, box);
+      var on = list.filter(function (b) { return !b.disabled; });
+      var keep = on.filter(function (b) { return b.getAttribute('tabindex') === '0'; })[0] || on[0];
+      list.forEach(function (b) { b.tabIndex = b === keep ? 0 : -1; });
+    },
+
     /** Politely announces something to screen readers (canvases and reels are not readable). */
     announce: function (text) {
       ensureBoxes();

@@ -23,6 +23,7 @@
   var locked = false;
   var awaiting = null;  // resolver while waiting for the player to pick
   var result = null;
+  var done = false;     // the deal is over and every face is showing: then a face can be pressed to read about its charity
 
   function count() { return kit.sizeNow(size); }
   function dense() { return cards.length > 10; }
@@ -60,7 +61,22 @@
       cards.push({ btn: b, charity: null });
     }
     result = null;
+    done = false;
     updateNote();
+  }
+
+  /**
+   * After a deal, with the game idle (not while it is shuffling, waiting for a pick or sending the gift), each face-up card opens its charity's profile.
+   * Choosing a card is untouched: while the game waits for a pick, the cards' click is the pick.
+   */
+  function syncFaces() {
+    var on = done && !locked && !awaiting;
+    cards.forEach(function (c, i) {
+      if (!c.charity) { return; }
+      c.btn.disabled = !on;
+      c.btn.onclick = on ? function () { if (GS.ui.charity) { GS.ui.charity.openProfile(c.charity.id); } } : null;
+      c.btn.setAttribute('aria-label', 'Card ' + (i + 1) + ': ' + c.charity.name + (on ? '. Press to read about this charity.' : ''));
+    });
   }
 
   function updateNote() {
@@ -74,11 +90,13 @@
       c.charity = null;
       c.btn.classList.remove('is-flipped', 'is-win', 'is-dim', 'is-picked');
       c.btn.disabled = true;
+      c.btn.onclick = null;
       c.btn.setAttribute('aria-label', 'Card ' + (i + 1) + ' of ' + cards.length + ', face down');
       c.btn.querySelector('.pcard__front').innerHTML = '';
       c.btn.style.setProperty('--c', 'transparent');
     });
     result = null;
+    done = false;
   }
 
   function waitPick(auto) {
@@ -179,10 +197,16 @@
 
     setSize: function (n) { size = n; if (!awaiting && pool.length) { build(); el.prompt.textContent = 'Press Deal to shuffle the cards.'; } },
     /** The board for the next deal: the charities on the table (what the winner is drawn from) and how many cards. */
-    setBoard: function (list, n) {
+    setBoard: function (list, n, pickId, o) {
       pool = list.slice();
       size = n;
       if (awaiting) { return; }
+      // the receipt has just closed: the finished table stays up (its face-up cards can be pressed to read about their charities) until the next deal
+      if (o && o.afterRound && done && count() === cards.length) {
+        updateNote();
+        el.prompt.textContent = (result ? result.name + '. ' : '') + 'Press any card to read about its charity, or Deal to play again.';
+        return;
+      }
       build();
       el.prompt.textContent = pool.length ? 'Press Deal to shuffle the cards.' : '';
     },
@@ -199,6 +223,7 @@
     lock: function (isLocked) {
       locked = !!isLocked;
       if (el.deal) { el.deal.disabled = locked; }
+      syncFaces();
     },
 
     play: function (opts) {
@@ -208,7 +233,7 @@
       var i = 0;
       return new Promise(function (resolve) {
         (function next() {
-          if (i >= count2) { resolve(winners); return; }
+          if (i >= count2) { done = true; syncFaces(); resolve(winners); return; }
           if (opts.onRound) { opts.onRound(i, count2); }
           playOne(winners[i], quick).then(function (winner) {
             if (opts.onReveal) { opts.onReveal(i, winner); }
