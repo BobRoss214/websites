@@ -52,6 +52,44 @@
       try { if (GS.live && GS.live.rooms) { GS.live.rooms().forEach(function (r) { if (r && r.you && r.phase === 'open') { r.cancel(); } }); } } catch (e) { /* the wipe goes ahead anyway */ }
     },
 
+    /**
+     * Makes a game stage clickable by charity. `hit(clientX, clientY)` returns the id of the charity under that spot (or null).
+     * A click or tap on a charity opens its profile (what it does, and a "Visit website" link); the pointer turns into a hand
+     * and the browser tooltip names the charity while it is over one. A drag is not a click (more than 8 px of movement).
+     * Returns a function that removes the listeners again.
+     */
+    charityHit: function (el, hit, opts) {
+      opts = opts || {};
+      var dx = 0, dy = 0, raf = 0, last = null;
+      function idAt(e) { var id = null; try { id = hit(e.clientX, e.clientY) || null; } catch (x) { id = null; } return id && GS.charity(id) ? id : null; }
+      function onMove(e) {
+        if (raf) { return; }
+        var cx = e.clientX, cy = e.clientY;
+        raf = requestAnimationFrame(function () {
+          raf = 0;
+          var id = idAt({ clientX: cx, clientY: cy });
+          if (id === last) { return; }
+          last = id;
+          el.style.cursor = id ? 'pointer' : '';
+          if (opts.title !== false) { if (id) { el.setAttribute('title', GS.charity(id).name); } else { el.removeAttribute('title'); } }
+        });
+      }
+      function onDown(e) { dx = e.clientX; dy = e.clientY; }
+      function onClick(e) {
+        if (e.button > 0 || Math.abs(e.clientX - dx) + Math.abs(e.clientY - dy) > 8) { return; }
+        var id = idAt(e);
+        if (id && GS.ui && GS.ui.charity) { GS.ui.charity.openProfile(id); }
+      }
+      el.addEventListener('pointermove', onMove);
+      el.addEventListener('pointerdown', onDown);
+      el.addEventListener('click', onClick);
+      return function () {
+        el.removeEventListener('pointermove', onMove); el.removeEventListener('pointerdown', onDown); el.removeEventListener('click', onClick);
+        if (raf) { cancelAnimationFrame(raf); raf = 0; }
+        el.style.cursor = ''; el.removeAttribute('title');
+      };
+    },
+
     /** A count with a thousands separator: 1042 -> "1,042". */
     num: function (n) { var x = Number(n); return isFinite(x) ? x.toLocaleString('en-US') : ''; },
 

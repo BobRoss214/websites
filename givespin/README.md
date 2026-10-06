@@ -395,6 +395,7 @@ js/ui/*.js          shared helpers, amount and gift options, filters, charities,
                     screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
                     the first-visit tour (tour.js)
 js/logos.js         which charities have a logo file (41 so far)
+js/marks.js         charity marks for the canvas games: the real logo or the illustrated emblem, as an image to draw
 tools/              fetch-logos.mjs: collects more charity logos from their own websites
 assets/logos/       the logo files (see docs/logo-sources.md)
 assets/favicon.svg  the browser-tab icon
