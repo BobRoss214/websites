@@ -72,7 +72,7 @@
     });
     list.push({
       sel: '.side__link[data-route="club"]', icon: 'crown', title: 'Levels, leagues and more',
-      body: 'Giving earns XP, levels and badges in the Giving Club. There are weekly leagues, crews, collectible cards' + (d ? ' and a daily bonus wheel' : '') + '. It is all just for fun.'
+      body: 'Every $1 you give earns 10 XP, which levels you up and unlocks badges in the Giving Club. There are weekly leagues, crews, collectible cards' + (d ? ' and a daily bonus wheel' : '') + '. It is all just for fun.'
     });
     list.push({ last: true });
     return list;

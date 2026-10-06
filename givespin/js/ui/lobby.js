@@ -58,7 +58,7 @@
           : 'Pick an amount, play any game, and the game picks the charity for your gift. You finish each gift on the charity’s checkout page.') + '</p>' +
         '<a class="btn btn--light" href="#game-wheel">' + ui.icon('play') + 'Spin the wheel</a></div><div class="promo__art" aria-hidden="true">' + GS.art.wheel() + '</div></article>' +
       '<article class="promo promo--b"><div class="promo__copy"><p class="promo__eyebrow">Giving Club</p><h2 class="promo__t">Level up as you give.</h2>' +
-        '<p class="promo__p">Earn XP every round, keep a streak alive and unlock ' + core.BADGES.length + ' badges.</p>' +
+        '<p class="promo__p">Every $1 you give earns 10 XP. Level up, keep a streak alive and unlock ' + core.BADGES.length + ' badges.</p>' +
         '<a class="btn btn--light" href="#club">' + ui.icon('crown') + 'Open the Club</a></div><div class="promo__art" aria-hidden="true">' + GS.art.coin('p') + '</div></article>' +
       '<article class="promo promo--c"><div class="promo__copy"><p class="promo__eyebrow">Fair play you can check</p><h2 class="promo__t">Check every result yourself.</h2>' +
         '<p class="promo__p">Each winner is drawn from a sealed secret before the animation starts, and you can recompute it. In this preview the secret is made on your own device.</p>' +

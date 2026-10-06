@@ -339,3 +339,32 @@ test('"Erase my data" removes the dedication text, custom lists, switched-off ch
   assert.ok(raw.indexOf('Grandma Rose') < 0 && raw.indexOf(ids[3]) < 0, 'nothing of the old rounds or choices is left in the saved text');
   assert.equal(page.GS.store.get().history.length, 0);
 });
+
+test('recordPlay: the gift earns exactly 10 XP for every $1, and bonuses and the hot hand are reported on top, separately', () => {
+  const page = makePage();
+  const { GS } = page;
+  const ids = GS.charities.map((c) => c.id);
+  const play = (cents, extra) => GS.store.recordPlay(Object.assign({
+    game: 'wheel', totalCents: cents, rounds: 1, status: 'done', pay: 'credit', receipt: 'r' + Math.random(),
+    allocations: [{ charityId: ids[0], cents, hits: 1 }]
+  }, extra || {}));
+  const a = play(500);
+  assert.equal(a.giftXp, 50, '$5 is 50 XP');
+  assert.equal(a.bonusXp, 0);
+  assert.equal(a.hotXp, 0);
+  assert.equal(a.xpGain, 50);
+  assert.equal(GS.store.get().xp, 50, 'the XP total is exactly what the receipts said');
+  const b = play(2000, { rounds: 5 });
+  assert.equal(b.giftXp, 200, 'splitting a $20 gift into five rounds adds nothing');
+  const c = play(1000, { pick: { charityId: ids[0], won: true, board: 8, wins: 1 }, bonusXp: 34 });
+  assert.equal(c.giftXp, 100);
+  assert.equal(c.bonusXp, 34, 'backing the winner is a separate bonus');
+  assert.equal(c.xpGain, 134);
+  const d = play(1000);   // the call was a hit, so the hot hand is on now
+  assert.equal(d.giftXp, 100, 'the gift part is never multiplied');
+  assert.equal(d.hotXp, 10, 'a hot hand of one adds x1.1: 10 XP on top of 100');
+  assert.equal(d.xpGain, 110);
+  const j = play(1000, { jackpot: true });
+  assert.equal(j.bonusXp, GS.core.JACKPOT_XP);
+  assert.equal(GS.store.get().xp, 50 + 200 + 134 + 110 + j.xpGain, 'every receipt adds up to the saved XP');
+});

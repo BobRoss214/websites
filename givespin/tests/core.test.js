@@ -288,11 +288,25 @@ test('levelFor maps XP to levels and progress', () => {
   assert.equal(top.pct, 100);
 });
 
-test('xpForPlay rewards bigger gifts, splits, and jackpots', () => {
-  assert.ok(core.xpForPlay(10000, 1, false) > core.xpForPlay(500, 1, false));
-  assert.ok(core.xpForPlay(2500, 3, false) > core.xpForPlay(2500, 1, false));
-  assert.ok(core.xpForPlay(2500, 1, true) > core.xpForPlay(2500, 1, false));
-  assert.equal(core.xpForPlay(10000000, 1, false), core.xpForPlay(20000, 1, false)); // capped
+test('xpForGift: every $1 given is exactly 10 XP, whatever the size, and a split never adds any', () => {
+  assert.equal(core.XP_PER_DOLLAR, 10);
+  assert.equal(core.xpForGift(100), 10);
+  assert.equal(core.xpForGift(500), 50);
+  assert.equal(core.xpForGift(5000), 500);
+  assert.equal(core.xpForGift(50), 5, '50 cents is 5 XP');
+  assert.equal(core.xpForGift(10000000), 1000000, 'there is no cap on a gift');
+  assert.equal(core.xpForGift(0), 0);
+  assert.equal(core.xpForGift(-300), 0, 'never negative');
+  assert.equal(core.xpForGift(NaN), 0);
+  assert.equal(core.xpForGift(2500) * 2, core.xpForGift(5000), 'twice the gift, twice the XP');
+});
+
+test('the levels sit on round giving milestones: about $10 given for level 2, about $900 for level 10', () => {
+  assert.equal(core.LEVELS[1].xp, 100);
+  assert.equal(core.LEVELS[core.LEVELS.length - 1].xp, 9000);
+  for (let i = 1; i < core.LEVELS.length; i++) { assert.ok(core.LEVELS[i].xp > core.LEVELS[i - 1].xp, 'levels rise: ' + core.LEVELS[i].name); }
+  assert.equal(core.levelFor(core.xpForGift(1000)).level, 2, '$10 given reaches level 2');
+  assert.equal(core.levelFor(core.xpForGift(900) - 1).level < core.LEVELS.length, true);
 });
 
 test('streaks: same day holds, next day extends, gaps reset', () => {

@@ -104,9 +104,9 @@
       var frac = core.weekFraction();
       var rng = core.seeded('crew:' + id + ':' + week);
       var botXp = 0;
-      c.members.forEach(function () { botXp += Math.round((200 + rng() * 700) * Math.pow(frac, 0.9)); });
+      c.members.forEach(function () { botXp += Math.round((400 + rng() * 1400) * Math.pow(frac, 0.9)); });
       var mine = store.weekly().xp;
-      var goal = 4000;
+      var goal = 8000;
       return { crew: c, botXp: botXp, myXp: mine, xp: botXp + mine, goal: goal, pct: Math.min(100, Math.round((botXp + mine) / goal * 100)) };
     },
 

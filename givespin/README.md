@@ -117,6 +117,13 @@ with a verify button).
 **Giving Club:** XP and 10 levels, a daily streak, 24 badges and a level ladder. Stored in the player's own
 browser (`localStorage`) and resettable.
 
+**XP is a receipt for giving: every $1 given earns 10 XP**, in any game, with no cap and nothing extra for splitting a gift
+(`xpForGift` in `js/core.js`). It cannot be bought on its own, cannot be lost in a game and never turns back into money or
+anything with a cash value; it unlocks levels, the weekly league and its tiers, and cards. Bonuses are added on top and the
+receipt shows them separately from the gift's XP: backing the winning charity, a jackpot, a finished card set, a hot hand
+and right side predictions. The levels sit on round giving milestones (level 2 at 100 XP, about $10 given; level 10 at
+9,000 XP, about $900). In demo mode the dollars are pretend, so the XP is too.
+
 **Leagues, crews and cards.** All play, no cash value, and everything with other people is simulated and labelled.
 - **Leagues.** A weekly XP table against 14 simulated rivals (the same table for everyone that week), with promotion
   and relegation zones, and **tiers** from Bronze to Diamond by level. Gold, Platinum and Diamond unlock VIP stakes
@@ -306,7 +313,7 @@ browser's random generator and the site makes no verifiability claim.
 | Amount limits, presets, split options, minimum per round, demo credit, mode, checkout links | `js/config.js` |
 | Causes, filter values and charities (names, descriptions, accent colours) | `js/data.js` |
 | Colours, fonts, spacing | the `:root` variables at the top of `css/base.css` |
-| Level names, XP, badges, tiers, card rarity | `LEVELS`, `xpForPlay`, `BADGES`, `TIERS` and `RARITIES` in `js/core.js` |
+| Level names, XP, badges, tiers, card rarity | `LEVELS`, `xpForGift`, `BADGES`, `TIERS` and `RARITIES` in `js/core.js` |
 | Live-table timings, bots, sponsor and jackpot | the constants at the top of `js/live.js` |
 | Live-table events (Giving Tuesday, Disaster Relief Night, Double Pot Hour) | `eventAt()` in `js/live.js` |
 | Crews and their chat | `js/crews.js` |
@@ -322,7 +329,7 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/readme.test.js
 ```
 
-93 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+95 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
 backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly

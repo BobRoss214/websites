@@ -570,7 +570,7 @@
         lines.push('<p>You backed ' + esc(GS.charity(you.charityId).short) + ', so it wasn’t your pick this time. The pot still goes to <b>' + esc(winner.short) + '</b>, and so does your ' + dollars(you.dollars) + '. It’s as if your charity won.</p>');
       }
       var sm = you.summary;
-      lines.push('<p class="lt-res__xp">+' + sm.xpGain + ' XP' + (you.bonusXp ? ' (including ' + you.bonusXp + ' for backing the winner)' : '') + (sm.hot && sm.hot.mult > 1 ? ' · hot hand ×' + sm.hot.mult.toFixed(1) : '') + (sm.leveledUp ? ' · Level up!' : '') + '</p>');
+      lines.push('<p class="lt-res__xp">+' + sm.xpGain + ' XP: ' + sm.giftXp + ' for your ' + dollars(you.dollars) + ' (10 XP for every $1)' + (sm.bonusXp ? ' + ' + sm.bonusXp + ' for backing the winner' : '') + (sm.hotXp ? ' + ' + sm.hotXp + ' hot hand ×' + sm.hot.mult.toFixed(1) : '') + (sm.leveledUp ? ' · Level up!' : '') + '</p>');
       if (sm.hot && sm.hot.after >= 2 && you.won) { lines.push('<p class="lt-res__xp">' + ui.icon('flame') + sm.hot.after + ' winners called in a row. Your next round earns ×' + store.hotMultiplier().toFixed(1) + ' XP.</p>'); }
       (sm.newCards || []).forEach(function (c) {
         var ch = GS.charity(c.charityId);

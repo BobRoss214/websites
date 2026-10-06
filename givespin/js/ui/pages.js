@@ -211,7 +211,7 @@
 
     var ladder = core.LEVELS.map(function (L, i) {
       var cls = i + 1 < lv.level ? 'is-done' : (i + 1 === lv.level ? 'is-now' : '');
-      return '<li class="rung ' + cls + '"><span class="rung__n">' + (i + 1) + '</span><span class="rung__t"><b>' + esc(L.name) + '</b><small>' + L.xp.toLocaleString() + ' XP</small></span>' +
+      return '<li class="rung ' + cls + '"><span class="rung__n">' + (i + 1) + '</span><span class="rung__t"><b>' + esc(L.name) + '</b><small>' + L.xp.toLocaleString() + ' XP' + (L.xp ? ' · about ' + core.fmtMoney(L.xp * 10, true) + ' given' : '') + '</small></span>' +
         '<span class="rung__s">' + (i + 1 < lv.level ? ui.icon('check') : (i + 1 === lv.level ? 'You are here' : ui.icon('lock'))) + '</span></li>';
     }).join('');
 
@@ -221,13 +221,13 @@
         (on ? '<span class="badge__when">Unlocked ' + esc(ui.fmtDate(s.badges[b.id])) + '</span>' : '') + '</li>';
     }).join('');
 
-    root.innerHTML = pageHead('Giving Club', 'Earn XP for every round you play, keep your streak going, back winners for a hot hand and collect badges. Your level and badges live on this device.') +
+    root.innerHTML = pageHead('Giving Club', 'Every $1 you give earns 10 XP. Level up as you give, keep your streak going, back winners for a hot hand and collect badges. Your level and badges live on this device.') +
       '<div class="clubtop">' +
         '<div class="panel levelcard"><div class="ring" style="--p:' + lv.pct + '"><div class="ring__in"><span class="ring__n">' + lv.level + '</span><span class="ring__l">Level</span></div></div>' +
           '<div class="levelcard__main"><div class="lvl__name">' + esc(lv.name) + '</div>' +
           '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + lv.pct + '" aria-label="Progress to next level"><i style="width:' + lv.pct + '%"></i></div>' +
           '<div class="lvl__meta">' + (lv.maxed ? 'Max level reached. ' + s.xp.toLocaleString() + ' XP in total.' : lv.into.toLocaleString() + ' / ' + lv.need.toLocaleString() + ' XP to ' + esc(lv.nextName)) + '</div>' +
-          '<p class="lvl__tip">XP comes from every round: a base, a bonus that grows with your gift, extra for splits and a Triple Threat XP bonus on the slots.</p></div></div>' +
+          '<p class="lvl__tip">10 XP for every $1 you give, whatever the game. Backing a winner, a jackpot, a finished card set and a hot hand add a little on top. <a href="#help-xp">What is XP?</a></p></div></div>' +
         '<div class="stats stats--2">' +
           stat('flame', s.streak + (s.streak === 1 ? ' day' : ' days'), 'Current streak' + (s.bestStreak > s.streak ? ' · best ' + s.bestStreak : '')) +
           stat('hand-coins', money(s.totalCents, true), demo ? 'Total given <span class="tag tag--plain">demo</span>' : 'Total sent to checkout') +
@@ -350,6 +350,12 @@
         (demo ? '<li><strong>Daily wheel.</strong> One free spin a day for demo credit.</li>' : '') +
         '</ul>' +
         '<p>None of it costs money. XP, cards and tiers have no cash value.</p>';
+    }],
+    ['help-xp', 'What is XP, and what does it do?', function (demo) {
+      return '<p><strong>Every $1 you give earns 10 XP</strong>, in any game: a $5 gift is 50 XP, a $50 gift is 500 XP. XP is a receipt for giving, so it grows as you give.</p>' +
+        '<p>It is not money. You cannot buy it on its own, you cannot lose it in a game, and it never turns back into money or anything worth money. It unlocks <a href="#club">levels</a> (the first step up is at 100 XP, about $10 given), the weekly <a href="#leagues">league</a> and its tiers, which open bigger live-table stakes, and collectible <a href="#cards">cards</a>.</p>' +
+        '<p>A few things add a little on top of the 10 per $1, always shown separately on your receipt: backing the charity that wins, a jackpot, a finished card set, a hot-hand streak and right side predictions.</p>' +
+        (demo ? '<p>In demo mode the dollars are pretend, so the XP they earn is pretend too: it only lives in this browser.</p>' : '');
     }],
     ['help-split', 'What does “split your gift” do?', function () {
       return '<p>It divides your amount into equal parts, to the cent, and plays one round per part. Give $10 across 3 rounds and you get $3.34, $3.33 and $3.33, each going to whichever charity that round lands on. Each round needs at least $1, so small gifts have fewer split options. Slot machines work differently: every reel is a round, so you choose 3 to 12 reels and your gift is split evenly across them.</p>';

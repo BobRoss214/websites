@@ -149,13 +149,17 @@
 
     var after = summary.after;
     var startPct = summary.leveledUp ? 0 : summary.before.pct;
+    var giftCents = allocs.reduce(function (s, a) { return s + a.cents; }, 0);
+    var why = summary.giftXp + ' XP for your ' + money(giftCents, false) + ' gift (10 XP for every $1)' +
+      (summary.bonusXp ? ' + ' + summary.bonusXp + ' bonus' : '') + (summary.hotXp ? ' + ' + summary.hotXp + ' hot hand' : '') + (summary.setXp ? ' + ' + summary.setXp + ' for the card set' : '') + '.';
     var xp = '<div class="xpcard"><div class="xpcard__row"><span>Level ' + after.level + ' · ' + esc(after.name) + '</span><span class="xpcard__gain">+' + summary.xpGain + ' XP</span></div>' +
       '<div class="bar"><i style="width:' + startPct + '%"></i></div>' +
+      '<p class="rs-fine xpcard__why">' + esc(why) + '</p>' +
       (summary.leveledUp ? '<div class="levelup">Level up! You are now ' + esc(after.name) + '.</div>' : '') + '</div>';
 
     var extras = '';
     if (summary.hot && summary.hot.mult > 1) {
-      extras += '<p class="rs-note">' + ui.icon('flame') + 'Hot hand ×' + summary.hot.mult.toFixed(1) + ' on this round’s XP (' + summary.hot.before + (summary.hot.before === 1 ? ' winning call' : ' winning calls') + ' in a row).</p>';
+      extras += '<p class="rs-note">' + ui.icon('flame') + 'Hot hand ×' + summary.hot.mult.toFixed(1) + ' added ' + summary.hotXp + ' XP on top (' + summary.hot.before + (summary.hot.before === 1 ? ' winning call' : ' winning calls') + ' in a row).</p>';
     }
     (summary.newCards || []).forEach(function (c) {
       var cc = GS.charity(c.charityId);

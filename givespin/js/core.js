@@ -335,26 +335,30 @@
 
   /* ------------------------------------------------------------- XP / level */
 
+  /**
+   * XP is a receipt for giving: every $1 given earns XP_PER_DOLLAR (10) XP, whatever the game. XP is not money: it cannot be
+   * bought on its own, never turns back into money and unlocks nothing with a cash value (levels, cards, league places).
+   * The levels sit on round giving milestones: level 2 is about $10 given, level 10 about $900 (bonuses get you there a little sooner).
+   */
+  var XP_PER_DOLLAR = 10;
+  var JACKPOT_XP = 75;
+
   var LEVELS = [
     { name: 'Rookie Giver', xp: 0 },
-    { name: 'Lucky Spark', xp: 60 },
-    { name: 'Good Sport', xp: 180 },
-    { name: 'Kind Roller', xp: 380 },
-    { name: 'Heart Hustler', xp: 680 },
-    { name: 'High Giver', xp: 1100 },
-    { name: 'Big Heart', xp: 1700 },
-    { name: 'Generosity Pro', xp: 2500 },
-    { name: 'Legend of Giving', xp: 3600 },
-    { name: 'Mythic Giver', xp: 5200 }
+    { name: 'Lucky Spark', xp: 100 },
+    { name: 'Good Sport', xp: 300 },
+    { name: 'Kind Roller', xp: 700 },
+    { name: 'Heart Hustler', xp: 1200 },
+    { name: 'High Giver', xp: 2000 },
+    { name: 'Big Heart', xp: 3000 },
+    { name: 'Generosity Pro', xp: 4500 },
+    { name: 'Legend of Giving', xp: 6500 },
+    { name: 'Mythic Giver', xp: 9000 }
   ];
 
-  /** XP for one completed play: a base, plus a bonus that grows with the gift (capped), plus extras. */
-  function xpForPlay(cents, rounds, isJackpot) {
-    var dollars = Math.min(cents / 100, 200);
-    var xp = 20 + Math.round(dollars * 1.5);
-    if (rounds > 1) { xp += 10 * (Math.min(rounds, 10) - 1); }
-    if (isJackpot) { xp += 75; }
-    return xp;
+  /** The XP a gift of `cents` earns: 10 XP for every $1 (so 5 XP for 50 cents), never capped and never more for a split. */
+  function xpForGift(cents) {
+    return Math.max(0, Math.round((Number(cents) || 0) / 100 * XP_PER_DOLLAR));
   }
 
   /**
@@ -523,7 +527,7 @@
     var names = seededShuffle(LEAGUE_NAMES, 'names:' + week).slice(0, 14);
     var f = Math.max(0, Math.min(1, fraction));
     var rows = names.map(function (n) {
-      var pace = 120 + Math.floor(rng() * 1100);                 // what they would reach by the end of the week
+      var pace = 240 + Math.floor(rng() * 2200);                 // what they would reach by the end of the week
       var wobble = 0.85 + 0.3 * seeded('w:' + week + n)();
       return { name: n, xp: Math.round(pace * Math.pow(f, 0.9) * wobble), you: false };
     });
@@ -695,7 +699,7 @@
     sampleSubset: sampleSubset, subsetWith: subsetWith, fillSlots: fillSlots, slotsWith: slotsWith, boardField: boardField, plinkoPath: plinkoPath, bracketOutcomes: bracketOutcomes,
     ERA_IDS: ERA_IDS, eraOf: eraOf, ageYear: ageYear, emptyFilters: emptyFilters, normalizeFilters: normalizeFilters, matchesFilters: matchesFilters,
     buildPool: buildPool, activeFilterCount: activeFilterCount, facetCounts: facetCounts, mergeAllocations: mergeAllocations,
-    LEVELS: LEVELS, xpForPlay: xpForPlay, pickBonusXp: pickBonusXp, levelFor: levelFor,
+    LEVELS: LEVELS, XP_PER_DOLLAR: XP_PER_DOLLAR, JACKPOT_XP: JACKPOT_XP, xpForGift: xpForGift, pickBonusXp: pickBonusXp, levelFor: levelFor,
     seeded: seeded, seededShuffle: seededShuffle, weekKey: weekKey, weekFraction: weekFraction, TIERS: TIERS, tierFor: tierFor, stakePresets: stakePresets,
     RARITIES: RARITIES, rarityFor: rarityFor, rarityRank: rarityRank, monthlySet: monthlySet, leagueTable: leagueTable, cupField: cupField,
     dayKey: dayKey, monthKey: monthKey, daysBetween: daysBetween, nextStreak: nextStreak, nextGiftDate: nextGiftDate,

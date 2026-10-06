@@ -1087,7 +1087,7 @@ if (section('13a2. Back a charity (pick a duck) in a solo game')) {
     rounds++;
     await page.click('#btn-play');
     await waitReceipt(page);
-    const r = await page.evaluate(() => { const l = window.GS.app._last; return { pick: l.round.pick, board: l.round.fair.board, xp: l.summary.xpGain, text: document.querySelector('#dlg-result').innerText }; });
+    const r = await page.evaluate(() => { const l = window.GS.app._last; return { pick: l.round.pick, board: l.round.fair.board, xp: l.summary.xpGain, giftXp: l.summary.giftXp, bonusXp: l.summary.bonusXp, text: document.querySelector('#dlg-result').innerText }; });
     check(r.board.includes('wateraid') && r.pick && r.pick.id === 'wateraid', 'round ' + rounds + ': the backed charity was on the board it was drawn from');
     if (r.pick.won) { won = r; }
     else { check(r.text.includes('which didn’t win this time') && r.text.includes('Your gift still went to the winner'), 'losing the call says the gift still went to the winner'); }
@@ -1095,7 +1095,7 @@ if (section('13a2. Back a charity (pick a duck) in a solo game')) {
   }
   check(!!won, 'backing one of two charities wins within a few rounds', rounds);
   if (won) {
-    check(won.text.includes('You backed WaterAid and it won') && won.xp > 20 + 38, 'a winning call is celebrated and earns bonus XP', won.xp);
+    check(won.text.includes('You backed WaterAid and it won') && won.bonusXp > 0 && won.xp >= won.giftXp + won.bonusXp, 'a winning call is celebrated and earns bonus XP on top of the gift\'s XP', won);
     const st = await state(page);
     check(st.pickWins >= 1 && !!st.badges.called, 'Called It is unlocked by a solo call', st.pickWins);
     check(st.history.some((h) => h.pick && h.pick.won && h.pick.charityId === 'wateraid'), 'the history records the pick');
@@ -1532,7 +1532,7 @@ if (section('13h. Leagues, Charity Cup, cards, daily wheel, hot hand and crews')
   // hot hand: backing winners in a row lifts XP until a call misses
   const hot = await page.evaluate(() => {
     const play = (won) => GS.store.recordPlay({ game: 'duck', totalCents: 2500, rounds: 1, status: 'demo', receipt: GS.core.receiptId(), pay: 'credit', freq: 'once', allocations: [{ charityId: 'wateraid', cents: 2500, hits: 1 }], pick: { charityId: 'wateraid', won, board: 10 } });
-    const base = GS.core.xpForPlay(2500, 1, false);
+    const base = GS.core.xpForGift(2500);
     const r = [];
     for (const won of [true, true, true, false, true]) { r.push(play(won)); }
     return { base, xp: r.map((x) => x.xpGain - 0), mults: r.map((x) => x.hot.mult), streak: GS.store.hot(), badge: !!GS.store.get().badges.hothand };
@@ -2664,7 +2664,7 @@ if (section('13t. Honesty wording: fair play you can check, demo or checkout wor
   await go(page, '#club');
   const stats = await page.locator('#view-club .stats--2').innerText();
   check(/Total given\s*demo/i.test(stats.replace(/\n/g, ' ')) && /Biggest single gift\s*demo/i.test(stats.replace(/\n/g, ' ')), 'the Giving Club labels "Total given" and "Biggest single gift" as demo', stats);
-  check(/Triple Threat XP bonus/i.test(await page.locator('#view-club').innerText()) && !/jackpot bonus/i.test(await page.locator('#view-club').innerText()), 'the Club says the slot bonus is XP (a Triple Threat XP bonus, not a "jackpot bonus")');
+  check(/10 XP for every \$1 you give/i.test(await page.locator('#view-club').innerText()) && !/jackpot bonus/i.test(await page.locator('#view-club').innerText()), 'the Club says every $1 given earns 10 XP (and does not call anything a "jackpot bonus")');
 
   await go(page, '#leagues');
   const lg = await page.locator('#view-leagues').innerText();
@@ -2862,6 +2862,35 @@ if (section('13v. Saved data from an older version: a round that names a charity
   const kept = await q.evaluate(() => ({ focused: document.activeElement && document.activeElement.id === 'search-input', text: document.getElementById('search-input').value, listOpen: !document.getElementById('search-list').hidden && document.querySelectorAll('#search-list li').length > 0 }));
   check(kept.text === 'oxfam' && kept.focused && kept.listOpen, 'widening the window keeps the typed text, the focus and the open results list', JSON.stringify(kept));
   await q.close();
+}
+
+if (section('13w. XP is a receipt for giving: every $1 given is 10 XP, shown on the receipt, in the Giving Club, in Help and nowhere else changed')) {
+  const p = await newPage({ tour: false });
+  await openApp(p, '#game-coin');
+  await p.click('#btn-play');
+  await waitReceipt(p);
+  const r = await p.evaluate(() => { const l = window.GS.app._last; const cents = l.round.allocs.reduce((s, a) => s + a.cents, 0); return { cents, giftXp: l.summary.giftXp, xp: l.summary.xpGain, bonus: l.summary.bonusXp, hot: l.summary.hotXp, total: window.GS.store.get().xp, text: document.querySelector('#dlg-result').innerText.replace(/\s+/g, ' ') }; });
+  check(r.cents > 0 && r.giftXp === Math.round(r.cents / 10), 'a gift of ' + r.cents + ' cents earned exactly ' + r.giftXp + ' XP (10 XP for every $1)', r);
+  check(r.xp === r.giftXp + r.bonus + r.hot && r.total === r.xp, 'the receipt\'s XP is the gift\'s XP plus any bonuses, and the saved total is exactly that', r);
+  check(r.text.includes(r.giftXp + ' XP for your') && /10 XP for every \$1/.test(r.text), 'the receipt says where the XP came from: "N XP for your $X gift (10 XP for every $1)"', r.text.slice(0, 400));
+  await closeReceipt(p);
+  // the Giving Club: levels sit on giving milestones
+  await go(p, '#club');
+  const club = (await p.locator('#view-club').innerText()).replace(/\s+/g, ' ');
+  check(/Every \$1 you give earns 10 XP/.test(club) && /100 XP · about \$10 given/.test(club) && /9,000 XP · about \$900 given/.test(club), 'the Giving Club says every $1 earns 10 XP and puts each level on a giving milestone (100 XP is about $10, 9,000 XP about $900)', club.slice(0, 500));
+  // Help: a plain answer, reachable by its own link
+  await go(p, '#help-xp');
+  const help = (await p.locator('#view-help').innerText()).replace(/\s+/g, ' ');
+  check(/Every \$1 you give earns 10 XP/.test(help) && /not money/.test(help) && /cannot lose it in a game/.test(help) && /never turns back into money/.test(help), 'Help answers "What is XP?": 10 per $1, not money, cannot be lost, never turns back into money', help.slice(help.indexOf('What is XP') >= 0 ? help.indexOf('What is XP') : 0, 500));
+  check(!/crypto|bitcoin|wallet|token/i.test(help.slice(help.indexOf('What is XP'), help.indexOf('What is XP') + 900)), 'and the answer uses none of the words the owner ruled out');
+  // XP can only go up: nothing in a round, a loss or a missed call takes it away
+  const monotone = await p.evaluate(() => {
+    const GSx = window.GS; const ids = GSx.charities.map((c) => c.id); const seen = [GSx.store.get().xp];
+    for (let i = 0; i < 6; i++) { GSx.store.recordPlay({ game: 'duck', totalCents: 500, rounds: 1, status: 'demo', receipt: GSx.core.receiptId(), pay: 'credit', freq: 'once', allocations: [{ charityId: ids[i], cents: 500, hits: 1 }], pick: { charityId: ids[0], won: i % 2 === 1, board: 8, wins: 1 } }); seen.push(GSx.store.get().xp); }
+    return seen;
+  });
+  check(monotone.every((x, i) => i === 0 || x > monotone[i - 1]), 'XP only ever goes up: six rounds, with missed calls among them, each added to it', monotone);
+  await p.close();
 }
 
 if (section('13n. Fair Play? in plain language')) {

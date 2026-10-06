@@ -548,7 +548,8 @@
     /**
      * Records one completed play or direct gift.
      * play = { game, totalCents, rounds, jackpot, status, pay, receipt, stream, direct, freq, dedication, fair, allocations: [{charityId, cents, hits}] }
-     * Returns { xpGain, before, after, leveledUp, newBadges: [badge objects] }.
+     * Returns { xpGain, giftXp, bonusXp, hotXp, setXp, before, after, leveledUp, newBadges: [badge objects] }
+     * (xpGain is everything: giftXp is the 10 XP per $1 of the gift, bonusXp and hotXp are extras, setXp a finished card set).
      */
     recordPlay: function (play) {
       var before = core.levelFor(state.xp);
@@ -557,11 +558,15 @@
       state.bestStreak = Math.max(state.bestStreak, state.streak);
       state.lastDay = today;
 
-      var xpGain = core.xpForPlay(play.totalCents, play.rounds, !!play.jackpot) + Math.max(0, Math.floor(play.bonusXp || 0));
-      // hot hand: backing winners back to back lifts your XP (x1.1 per win in a row, up to x1.5) until a call misses
+      // XP is a receipt for giving: exactly 10 XP for every $1 of the gift, never multiplied. Bonuses (backing the winner, a
+      // jackpot) and the hot hand are added on top and reported separately, so the receipt can show which is which.
+      var giftXp = core.xpForGift(play.totalCents);
+      var bonusXp = Math.max(0, Math.floor(play.bonusXp || 0)) + (play.jackpot ? core.JACKPOT_XP : 0);
+      // hot hand: backing winners back to back lifts this round's XP (x1.1 per win in a row, up to x1.5) until a call misses
       var hotBefore = state.hot.streak;
       var hotMult = 1 + 0.1 * Math.min(hotBefore, 5);
-      if (hotBefore > 0) { xpGain = Math.round(xpGain * hotMult); }
+      var hotXp = hotBefore > 0 ? Math.round((giftXp + bonusXp) * hotMult) - (giftXp + bonusXp) : 0;
+      var xpGain = giftXp + bonusXp + hotXp;
       var called = play.live ? !!play.live.won : (play.pick ? !!play.pick.won : null);
       if (called === true) { state.hot.streak += 1; state.hot.best = Math.max(state.hot.best, state.hot.streak); }
       else if (called === false) { state.hot.streak = 0; }
@@ -616,7 +621,7 @@
       var after = core.levelFor(state.xp);
       save();
       return {
-        xpGain: xpGain + setXp, setXp: setXp, before: before, after: after, leveledUp: after.level > before.level, newBadges: newBadgeList,
+        xpGain: xpGain + setXp, giftXp: giftXp, bonusXp: bonusXp, hotXp: hotXp, setXp: setXp, before: before, after: after, leveledUp: after.level > before.level, newBadges: newBadgeList,
         hot: { before: hotBefore, after: state.hot.streak, mult: hotBefore > 0 ? hotMult : 1 }, newCards: newCards
       };
     },
