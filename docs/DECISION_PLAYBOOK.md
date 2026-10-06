@@ -1,19 +1,19 @@
 # Decision playbook
 
-What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 and 14 more, d60 to d73, d74 to d87 (see "Dashboard ids and doc question numbers").
+What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 and 14 more, d60 to d73, d74 to d87, d88 to d92 (see "Dashboard ids and doc question numbers").
 Written on 3 October 2026 for commit b54427b, extended for e02b95e and (d60 to d73) f176745. Nothing here decides anything for the owner, and no optional patch has been applied.
-Entries d74 to d87 (added to the dashboard on 3 October 2026, with no number in the doc) were written for commit 9416cba. Each answer that is a file edit was tried on a copy of the site (docs/ANSWER_REHEARSAL.md); the answers that need files from later sets of changes say so.
+Entries d74 to d87 (added to the dashboard on 3 October 2026, with no number in the doc) were written for commit 9416cba. Entries d88 to d92 (added on 4 October 2026, with no number in the doc) were written for commit f7bebdb. Each answer that is a file edit was tried on a copy of the site (docs/ANSWER_REHEARSAL.md); the answers that need files from later sets of changes say so.
 Entries d43 to d45 (added later on the dashboard, with no number in the doc) were written on 3 October 2026 for commit af1e572. On the same day the dashboard texts of d01, d10, d15, d22, d41 and d44 were reworded; this page says the same as the dashboard now.
 
 ## How to use it
 
-1. Find the question by its number (d01 to d87) or in the topic list below.
+1. Find the question by its number (d01 to d92) or in the topic list below.
 2. Read the option she chose. It lists the files and the exact setting or text, how many strings must be written in the four translations, and which tests may need an update.
 3. Make the change. Rebuild and test as in "The standard steps". Then run `node tests/docs.test.mjs`: it lists every note (this page, the README rows, the other docs) that still names the old words or a place that moved; give those notes the new words. The steps and "Tests:" lines of the entries below were tried one by one on a copy of the site (docs/ANSWER_REHEARSAL.md says which ones, and how to try them again with `python3 tools/rehearse_answers.py --list`).
 4. If the entry names a patch, apply it only after her answer. Patches are listed in "Patches on disk".
 5. Delete the matching row in the README table "Content status" when a question is closed.
 
-Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572, entries d60 to d73 for f176745, entries d74 to d87 for 9416cba. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
+Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572, entries d60 to d73 for f176745, entries d74 to d87 for 9416cba, entries d88 to d92 for f7bebdb. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
 
 Commit e02b95e also holds the messages feature (f45d6d9) and the plain-English rewrite (7d917e6), which changed the wording and the ids of 77 sentences.
 
@@ -72,12 +72,12 @@ git apply patches/optional/<file>.patch
 
 | # | Topic | Urgency | Questions |
 |---|---|---|---|
-| 1 | Put the site online | blocks launch | d05, d30, d38, d15, d63, d72 |
+| 1 | Put the site online | blocks launch | d05, d30, d38, d15, d63, d72, d88, d90 |
 | 2 | Wrong links and placeholder content | blocks launch | d02, d03, d46, d47, d04, d54, d06 |
 | 3 | People and photos (permission) | blocks launch | d13, d31, d32, d33, d12, d34, d61, d86, d87 |
 | 4 | Pizza and food facts | wrong or risky information | d17, d16, d18, d19, d20, d21, d22, d49, d53, d08, d57, d79, d80 |
-| 5 | Dates, seasons and winter | wrong or risky information | d01, d09, d23, d50, d51, d24, d25, d26, d27, d60, d66, d68, d69, d70 |
-| 6 | Rules and promises to visitors | wrong or risky information | d41, d42, d52, d55, d44, d45, d35, d36, d43, d81, d85 |
+| 5 | Dates, seasons and winter | wrong or risky information | d01, d09, d23, d50, d51, d24, d25, d26, d27, d60, d66, d68, d69, d70, d91, d92 |
+| 6 | Rules and promises to visitors | wrong or risky information | d41, d42, d52, d55, d44, d45, d35, d36, d43, d81, d85, d89 |
 | 7 | Names, address and listings | wrong or risky information | d07, d28, d29, d39, d40, d65, d78 |
 | 10 | What the site says the farm offers | wrong or risky information | d48, d56, d58, d59, d67, d73, d74, d84 |
 | 8 | Drive time box and map tools | nice to have | d10, d11, d14, d62, d64 |
@@ -122,6 +122,8 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | d43 farm words, d44 corn pit offer, d45 free ages | each other, d07, d16, d02, d36, tests | The corn pit line in d43 must agree with the Thursday offer in d44. The maze line in d43 uses the name chosen in d07. The age at which children are free (d45) is written next to the $3 field fee (d16, "ages 3 and up"), the party guest count (d02), the school tour admission for family members (d36) and the wagon ride line; consistency pins every one of these age sentences (see the test table below). |
 | d79 Thursday pizza, d80 GreenHouse pizza times | d16, d51, d08, d20, d44 | The Fall line (d79) and the package cards (d16) must agree on the days of pizza. The GreenHouse pizza times (d80) are the hours of d51 and of the "Open now" badge. |
 | d74, d81, d82, d83, d85 new words | d37, d71 | New sentences in four languages: a native reader should read them (d37), in the tone chosen in d71. |
+| d89 privacy page, d90 item 2 | each other | privacy-page.patch edits js/analytics.js. d90 item 2 renames that file, so the rename comes after the patch (or the patch is made again). |
+| d91 closed days, d92 farm days | d60, d51, d09 | `closures` in js/content.js closes the farm, The GreenHouse and Wise Pie together (d60). `hours.farm` is the badge "Reserved visits today" (d92); the hours of The GreenHouse and Wise Pie are d09 and d51. |
 
 ## Tests that can need an update
 
@@ -187,8 +189,8 @@ Every row names the file, the question, what it changes and whether it was teste
 | qr-stronger-codes.patch | d65 B (d65 D with the row above) | Codes at error correction Q (about 25 percent damage still scans, not about 15); each square prints 10 to 15 percent smaller. The 8 changed pictures in assets/qr/ and the five sign pages in print/ are in the patch. | yes: print-qr (every code scans back, every square above the minimum size) and consistency pass with it; running python3 tools/make_qr.py afterwards changes nothing |
 | games-B-pick-snips-sunflowers.patch | d68 A | In summer every fourth press of the "Pick a blueberry" button snips a sunflower; sunflowers grow back in 3 to 5 seconds. One part is added to tests/games.test.mjs. | yes: games (with its new part), hero, touch, calm, keyboard and privacy pass with it |
 | map-without-traced-land.patch | d86 option 2 | Removes the roads, neighbours' houses, lawns and dirt lanes drawn from the aerial picture (Google's) from the farm map; every mark the farm made, the legend, names and drive-time chips stay. Also the farm_map.py note, the README map paragraph and CREDITS row L8. No new text. | option-patches: applies to the files as they are, alone and in every set that makes sense (checked at the join; the map drawing itself was not looked at again there) |
-| faster-below-the-fold.patch | d88 | The 15 big home page sections below the first screen are drawn only when they come near the screen (about a third less work on an old phone before the page is ready). Only on a first visit by a link or the address bar: a reload, Back and a link with # in it are worked out in full, as today; print draws everything. It edits css/extras.css, js/guard.js and adds the class cv-sec to 15 sections in index.html. Letters and rounded edges inside those sections can sit up to one pixel differently, and scrolling back up after a menu link can make the page jump a little (shift score 0.16 to 0.18, today 0). | yes: option-patches (alone and in every set); with it applied layout-sweep, visual-check, keyboard, no-js, print-qr, axe, link-names, hero, features, touch, gallery, languages, i18n-a11y, big-font, forced-colors, pause, calm, games and sitecheck pass; 34 of 34 menu links land within 2 px of today; scrolling down the whole page shifts nothing (0.000) |
-| privacy-page.patch | d89 option 1 | A privacy page for visitors in plain words (privacy.html, five languages): what is kept in the browser, which other sites are contacted and only after a button, who to ask. Every sentence has its proof in docs/PRIVACY_PAGE_EVIDENCE.md. 68 new texts per language in 4 translations (a native reader is needed). Run the rebuild line after. Not legal advice. |
+| faster-below-the-fold.patch | d88 B | The 15 big home page sections below the first screen are drawn only when they come near the screen (about a third less work on an old phone before the page is ready). Only on a first visit by a link or the address bar: a reload, Back and a link with # in it are worked out in full, as today; print draws everything. It edits css/extras.css, js/guard.js and adds the class cv-sec to 15 sections in index.html. Letters and rounded edges inside those sections can sit up to one pixel differently, and scrolling back up after a menu link can make the page jump a little (shift score 0.16 to 0.18, today 0). | yes: option-patches (alone and in every set); with it applied layout-sweep, visual-check, keyboard, no-js, print-qr, axe, link-names, hero, features, touch, gallery, languages, i18n-a11y, big-font, forced-colors, pause, calm, games and sitecheck pass; 34 of 34 menu links land within 2 px of today; scrolling down the whole page shifts nothing (0.000) |
+| privacy-page.patch | d89 A | A privacy page for visitors in plain words (privacy.html, five languages): what is kept in the browser, which other sites are contacted and only after a button, who to ask. Every sentence has its proof in docs/PRIVACY_PAGE_EVIDENCE.md. 68 new texts per language in 4 translations (a native reader is needed). Run the rebuild line after. Not legal advice. |
 
 The old address table (where each old address goes) is in docs/OPTION_PATCHES.md.
 
@@ -196,7 +198,7 @@ Choices with no patch file (docs/OPTION_PATCHES.md, "Choices that have no patch,
 
 | Choice | For | What to do | Tested |
 |---|---|---|---|
-| d37 clock words (the old es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch) | d37 A | Nothing to apply: the code already writes Spanish times as "5:00 p. m." and Vietnamese times as "5 giờ chiều" (js/features.js at `const fmtClock = (date, tz) => {`, js/live.js at `function timeLabel(mins)`, js/i18n.js at `W.clock = (h, m, code) => {`). | yes: checked in a browser on 3 October 2026 (es, vi, hi, zh) |
+| d37 clock words (the old es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch) | d37 A or B | Nothing to apply: the code already writes Spanish times as "5:00 p. m." and Vietnamese times as "5 giờ chiều" (js/features.js at `const fmtClock = (date, tz) => {`, js/live.js at `function timeLabel(mins)`, js/i18n.js at `W.clock = (h, m, code) => {`). | yes: checked in a browser on 3 October 2026 (es, vi, hi, zh) |
 | Stop saying "new this year" from January 1 | d66 A | By hand when she answers: the places are listed in d66 A below. A patch would change about 40 notes that name those ids. | no (no patch) |
 | The 2026 fall prices in 2027 | d24 | winter-A-hide-fall-booking.patch covers the months when the page is not in its fall look; from August 12, 2027 only the 2027 details (d24 A) help. | no (no patch) |
 
@@ -373,6 +375,11 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d85 | Group sizes: is 100 guests in 51 to 100 or in 100 plus? | none |
 | d86 | Where did the map outline of the land come from? | none |
 | d87 | Who drew the Wise Acres logo and the farm drawings, and does the farm own them? | none |
+| d88 | Make the home page ready sooner on old phones, even though it can very slightly change how it scrolls? | none |
+| d89 | Should the website have a privacy page for visitors? | none |
+| d90 | Six small improvements for odd browsers and slow lines: do you want any? | none |
+| d91 | Which days are you closed this year? | none |
+| d92 | Which days is the farm open for strawberries and blueberries? | none |
 
 ### Dashboard questions with no number in the doc
 
@@ -413,6 +420,11 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d85 | Group sizes: is 100 guests in 51 to 100 or in 100 plus? |
 | d86 | Where did the map outline of the land come from? |
 | d87 | Who drew the Wise Acres logo and the farm drawings, and does the farm own them? |
+| d88 | Make the home page ready sooner on old phones, even though it can very slightly change how it scrolls? |
+| d89 | Should the website have a privacy page for visitors? |
+| d90 | Six small improvements for odd browsers and slow lines: do you want any? |
+| d91 | Which days are you closed this year? |
+| d92 | Which days is the farm open for strawberries and blueberries? |
 
 Only a note exists for d37 (the doc has a "Translation notes" section, but no question). d29 is the printed sign for the hashtag asked in Q25. d43 to d45 (farm words, the corn pit offer, free entry for ages 2 and under) were added to the dashboard after the doc was written: they have no doc number and no "Dashboard id" line there, and their entries are in Topic 6.
 
@@ -592,6 +604,75 @@ Nothing can go live until the host and the web address are chosen. The files alr
 - Strings: 0
 - Tests: none
 
+### d88. Make the home page ready sooner on old phones, even though it can very slightly change how it scrolls?
+
+- In plain words: On a slow old phone the page needs about a third less work before it is ready, if the long home page is only drawn as people scroll to each part. It is an optional switch (faster-below-the-fold.patch). Two small costs remain: letters and rounded edges can sit one pixel differently, and if someone jumps down with a menu link and then scrolls back up, the page can jump a little. It does not make buttons answer sooner on a very slow phone.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: A, as the dashboard words say (leave it for the launch). The page works without the patch; B can follow later.
+- Depends on: none. The patch has no conflict with another optional patch: all the patches of patches/optional/ that can go together were applied with `git apply` in the order of their headers, and this one fits after every one of them.
+- Note: The patch is faster-below-the-fold.patch (order 70). It changes css/extras.css, js/guard.js, index.html and tests/validity.test.mjs. It needs no rebuild.
+
+**A. Leave it as it is (recommended for launch)**
+
+- No change. The home page works as it does today.
+- Strings: 0
+- Tests: none
+
+**B. Turn it on now and accept the two small costs**
+
+- Apply patches/optional/faster-below-the-fold.patch (source files only; nothing to rebuild; upload again).
+- What it does: the 15 big sections of the home page below the first screen (the Visit area to the contact area) are drawn only when they come near the screen, each starting from a measured height. Only on a first visit by a link or the address bar: a reload, Back and a link with # in it are worked out in full, as today, and print draws everything. A browser that does not know the feature, and a visitor without JavaScript, get today's page. On a slow phone (a test at four times slower than a computer) the page is ready about a third sooner.
+- The two costs: text and rounded edges inside those sections can sit up to one pixel differently from today; and scrolling back up after a menu link can make the page jump a little (shift score 0.16 to 0.18, today 0).
+- Checked: 34 of 34 menu links land within 2 px of today; scrolling down the whole page shifts nothing (0.000).
+- To go back: `git apply --reverse` the patch.
+- Strings: 0
+- Tests: option-patches; with the patch applied layout-sweep, visual-check, keyboard, no-js, print-qr, axe, link-names, hero, features, touch, gallery, languages, i18n-a11y, big-font, forced-colors, pause, calm, games and sitecheck pass (see "Patches on disk")
+- Patch: patches/optional/faster-below-the-fold.patch
+
+**C. Ask Claude to fix the page jump first (give the slow-loading pictures a fixed size), then decide**
+
+- No patch yet (docs/OPTION_PATCHES.md, "Which answer picks which patch": none yet, a later job). A helper first finds out what makes the page jump when she scrolls back up after a menu link, and tries to remove it. The dashboard words name one way, a fixed size for the slow-loading pictures. Then she answers again, A or B. Nothing changes on the site until then.
+- Not replayed: a code change only the helper can make; the playbook gives the owner no file steps.
+- Strings: 0
+- Tests: those of B, and a page-clock check that scrolling back up after a menu link no longer jumps
+
+### d90. Six small improvements for odd browsers and slow lines: do you want any?
+
+- In plain words: A pretend-visitor test (ad blockers, Chrome Translate, blocked storage, no connection, old phones, in-app browsers, big zoom) passed nearly everything. Two small problems are already fixed (docs/BROWSER_INTERFERENCE.md): Chrome no longer translates the farm's names in the logo, and boxes no longer run off the screen at 500% zoom. Six small things are left that need her choice. Nothing here is urgent. The site works today.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none. Nothing here is urgent.
+- Depends on: d37 (items 1 and 3 add words in five languages: a native reader should read them), d89 (privacy-page.patch edits js/analytics.js, so the rename in item 2 comes after the patch).
+- Note: The six items are the six "Questions for you" at the end of docs/BROWSER_INTERFERENCE.md, in the same order. None of them has a patch or a replay.
+
+**A. Leave all six as they are**
+
+- No change.
+- Strings: 0
+- Tests: none
+
+**B. Do all six, each one small and tested on its own before it goes in**
+
+- Not replayed: six code changes that only the helper can make; the playbook gives the owner no file steps. The six, as docs/BROWSER_INTERFERENCE.md words them:
+- 1. Email links that show only words (16 of the 34 email links on the six pages: "Email Vanessa", "Ask a question", "Request a quote", "Email us", "Email"). A visitor with no mail program taps one and sees nothing. Show the address in small type beside each one (no new words), or, when no mail program opens, a short note with the address and a Copy button (new words in five languages).
+- 2. Rename js/analytics.js to a neutral name (for example "visits"), so that the lists ad blockers use do not hide it once analytics is switched on. It matters only then, and it helps only a little, because the counting service's own file is on most of those lists. The name is written in 16 places in 14 files (the pages, README.md, two docs, two tests, two tools and a comment in js/content.js).
+- 3. Say something when a language cannot be loaded because the connection dropped. Today nothing happens and the page stays in the old language. One line, new words in five languages.
+- 4. Make the Back button close the photo viewer (and the menu) first. Today Back leaves the page. A small risk of getting stuck, so it needs tests on real phones.
+- 5. Protect the farm's names in the running English text from Chrome's Translate: wrap each name, as the page already does in the other four languages (a little extra work in every English visitor's browser), or tell Chrome never to translate the page (that also takes the translate help away from visitors who read none of our five languages), or leave it.
+- 6. A lighter page for visitors on Save-Data or a very slow line, without the web fonts and the moving farm picture. Real work, tested on its own.
+- Strings: items 1 (the note) and 3 add new words in five languages; the others add none
+- Tests: interference (tests/interference.test.mjs checks the cases above), and the tests of each file that is touched
+
+**C. Pick some: tell Claude which numbers (1 to 6)**
+
+- The numbers are hers (the order of B above). Each number she names is the same job as in B. Items 1 and 5 have more than one way: she says which. Nothing is applied until she has named the numbers.
+- Not replayed: her own choice of numbers; the same steps as B for the ones she names.
+- Strings: as B, for the numbers she names
+- Tests: as B, for the numbers she names
+
 ## Topic 2. Wrong links and placeholder content
 
 Urgency: blocks launch.
@@ -704,7 +785,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 
 **A. Right page, same prices as the menu**
 
-- No change. README.md: delete the Square part of the row "Pre-order page, drinks and ice cream" (and "Wise Pie facts" if d53 is also answered).
+- No change to the site: nothing a visitor sees changes. Only a note changes: README.md (the notes for whoever edits the site, which are not uploaded): delete the Square part of the row "Pre-order page, drinks and ice cream" (and "Wise Pie facts" if d53 is also answered). `tools/apply_answers.py` lists this answer as applied for that reason.
 - Strings: 0
 - Tests: none
 
@@ -1824,6 +1905,70 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Strings: 0
 - Tests: hero, touch, visual-check; games (a badge fits a 320 px screen in the longest language)
 
+### d91. Which days are you closed this year?
+
+- In plain words: The site says The GreenHouse is open every Friday to Sunday, so on Christmas Day, Jan 1, Easter and July 4 it says "Open now" unless she tells us. Closing a day takes one line (`closures` in js/content.js).
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 2 (wrong or risky information). Checklist says: not listed (docs/OWNER_YEAR_CALENDAR.md names each date).
+- Owner fact (no sensible default): yes
+- Default: none. Only she knows.
+- Depends on: d60 (the same `closures` setting and notice bar), d09 and d51 (the hours of The GreenHouse and Wise Pie).
+- Note: The days, and the last safe day to tell us (docs/OWNER_YEAR_CALENDAR.md): Christmas Day, Fri Dec 25, 2026 (Dec 26 and 27 are open days too): by Wed Dec 23, 2026. New Year's Day, Fri Jan 1, 2027: by Fri Dec 18, 2026. Easter Sunday, Mar 28, 2027: by Thu Mar 25, 2027. The Fourth of July, Sun Jul 4, 2027: by Thu Jul 1, 2027.
+
+**A. Open on all the usual days**
+
+- No change. On those days the badges say "Open now" in the usual hours.
+- Strings: 0
+- Tests: none
+
+**B. Closed on some days; I will list the dates (Christmas, Jan 1, Easter, July 4, others)**
+
+- js/content.js at `closures: [],`: write her dates. A day is written '2026-12-25'; a run of days with two dots, both ends counted: '2026-12-25..2026-12-27'; days and runs can be mixed (at most 100 days). The farm, The GreenHouse and Wise Pie then show as closed (README row "Close for rain or a holiday"). `closures` cannot close only one of the three places.
+- The bar at the top of every page: js/content.js at `notice: '',` and `noticeUntil: '',`: the notice in all five languages, with the day in the words (the bar has no start date: it shows from the moment it is published). The standard sentences are in tools/notice_phrases.json. For a closure on the same day or the next, `python3 tools/close_today.py holiday --date YYYY-MM-DD` writes the day and the notice together (docs/NOTICE_KIT.md); for a closure weeks away the notice is added later.
+- Bookeo: close those times there too; the site cannot stop people booking. The Business Profile: set the holiday hours.
+- Strings: 0 (the notice words are in js/content.js or tools/notice_phrases.json, not in the translation files)
+- Tests: dated, live (the closed badges)
+- Not replayed: her own dates; the same first step as d60 A.
+
+**C. Different hours on some days; I will list them**
+
+- No ready steps. `hours` in js/content.js has one set of days and times for every week, so the "Open now" badges cannot follow hours that differ on one day, and `closures` closes the farm, The GreenHouse and Wise Pie together for the whole day. What exists is the notice bar: `notice` and `noticeUntil` can say the different hours in words, and `python3 tools/close_today.py late-open 10:30` writes such a notice for today ("a notice only; nothing is closed"). A person decides how to show different hours on the badges: a code change.
+- Strings: 0 for the notice (its words in five languages are in js/content.js)
+- Tests: dated, live
+- Not replayed: her own days and hours; no steps to replay.
+
+### d92. Which days is the farm open for strawberries and blueberries?
+
+- In plain words: The green farm badge ("Reserved visits today") only knows the fall days (Thursday to Sunday). From mid April to mid July there is no farm badge, and no farm open days are written on the site.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 2 (wrong or risky information). Checklist says: not listed (docs/OWNER_YEAR_CALENDAR.md, Thu Apr 15, 2027).
+- Owner fact (no sensible default): yes
+- Default: none. Only she knows.
+- Depends on: none. d25 is about the Reserve buttons; this question is only about the farm badge.
+- Note: The setting is js/content.js at `farm:       { fall: [4, 5, 6, 0] }`: the days are numbers (0 = Sunday, 4 = Thursday, 6 = Saturday), and "a season you leave out shows no farm badge" (the comment in js/content.js). When she must tell us (docs/OWNER_YEAR_CALENDAR.md): by Thu Apr 8, 2027 for spring (the strawberry season starts Apr 15) and by Mon Jun 7, 2027 for summer (the blueberry season starts Jun 15).
+
+**A. Same days as fall: Thursday to Sunday**
+
+- js/content.js at `farm:       { fall: [4, 5, 6, 0] }`: add the same days for spring and summer: `{ fall: [4, 5, 6, 0], spring: [4, 5, 6, 0], summer: [4, 5, 6, 0] }`, and the words "in fall" at the end of the line become "in fall, spring and summer". The badge then says "Reserved visits today" on those days inside the spring and summer seasons, and "No visits today. Next reserved day: ..." on the others (js/live.js at `function farmStatus(`).
+- Two tests pin "fall only" and must follow. tests/live.test.mjs at `Farm badge hidden outside fall` expects no badge on 2026-05-05, a Tuesday in spring: change that date to a winter one (2027-01-20T16:00:00Z), its words to "Farm badge hidden in winter (no farm days)", and add a check that on that Tuesday in spring the badge says "No visits today. Next reserved day: Thursday". tests/owner-calendar.test.mjs at `farm badge in the fall only (Thu-Sun)`: that line and the pattern on the next line must name spring and summer too.
+- The notes that quote this line follow: docs/OWNER_YEAR_CALENDAR.md and its Spanish copy say "today only fall has farm days" (the docs test lists them).
+- Strings: 0
+- Tests: live and owner-calendar MUST follow (the two changes above); tried with the change: dated, farm-seasons, hero, features, year-rehearsal, time-bombs and consistency pass as they are; docs lists the notes
+
+**B. Different days; I will list them for spring and summer**
+
+- The same step as A with her days (numbers: 0 = Sunday to 6 = Saturday; spring and summer can differ).
+- Strings: 0
+- Tests: as A
+- Not replayed: her own days; the same step as A.
+
+**C. No badge; say it in words only**
+
+- No change to `hours.farm` (a season left out shows no badge). The words are hers. A person decides where they go: for example the notice bar (`notice` in js/content.js) or the note of the "This week at the farm" box (`week`, `note`), or a sentence on the page (then 1 new sentence x 4 translations).
+- Strings: 0 in the notice, 1 sentence x 4 translations on the page
+- Tests: none for the notice; dated, live if the page changes
+- Not replayed: her own words.
+
 ## Topic 6. Rules and promises to visitors
 
 Urgency: wrong or risky information.
@@ -2093,6 +2238,38 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 **B. Leave it**
 
 - No change.
+- Strings: 0
+- Tests: none
+
+### d89. Should the website have a privacy page for visitors?
+
+- In plain words: Visitors can type an address into the Drive time box, and they can join the email list. Today the only privacy note on the site is one line under the Drive time box. A short page in plain words could say what the website keeps in the browser, which other sites it contacts (only after a visitor presses a button), what it does not do, and who to ask. It is not legal advice.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 3 (nice to have). Checklist says: not listed.
+- Owner fact (no sensible default): no
+- Default: none. Not adding the page changes nothing. Whether the farm needs a privacy page, and what it must say, depends on the farm and the law: an adviser can say.
+- Depends on: d62 (the note under the Drive time box, and the fact sheet docs/WHAT_THE_SITE_STORES.md, which the patch also edits), d10 (the Drive time services the page names), d37 (the Spanish, Hindi, Chinese and Vietnamese words were written by Claude and need a native reader), d90 item 2 (the patch edits js/analytics.js).
+- Note: The patch is privacy-page.patch (order 80). It says only what the code does; every sentence is listed with its evidence in docs/PRIVACY_PAGE_EVIDENCE.md, which the patch adds.
+
+**A. Add the privacy page: a ready patch, written from what the website's code does (an adviser can still read it)**
+
+- Apply patches/optional/privacy-page.patch, then rebuild.
+- What it does: adds privacy.html (built from pages/privacy.html by tools/pages.py) in five languages: what the website keeps in the browser, which other sites it contacts and only after a button press, what it does not do, how to clear the browser data, who to ask and the date it was written. The footer of every page links to it and sitemap.xml lists it (both come from the rebuild). Two sets of visit-counter sentences: js/analytics.js shows the one that is true (no counter, or a counter really runs). The tests that list the pages (consistency, validity, keyboard, no-js, sprite, layout-sweep, axe, privacy, auto-dark, i18n-a11y, seo, tools/test_pages.py) now include the new page, and the new tests/privacy-page.test.mjs checks every sentence against its evidence.
+- Then python3 tools/pages.py, python3 tools/i18n.py extract, python3 tools/i18n.py jsstrings, python3 tools/i18n.py build, python3 tools/i18n.py missing es (also hi, zh, vi: 0 each). Then run the tests privacy-page (added by the patch), privacy, seo and docs; the command is on the line "After:" in the header of the patch.
+- The page is not legal advice. The four other languages need a native reader (d37); an adviser can read the English page too, if the farm wants that.
+- Strings: 68 new texts per language, translated inside the patch (a native reader is needed): 66 texts of the page and the footer (the footer link "Privacy", id tcf01481f) and 2 script texts (the page title and description)
+- Tests: privacy-page (new), privacy, seo, docs, and the tests that list the pages (see above)
+- Patch: patches/optional/privacy-page.patch
+
+**B. Leave it for now: the site keeps only the short note under the Drive time box**
+
+- No change. The site keeps only the one line under the Drive time box (d62).
+- Strings: 0
+- Tests: none
+
+**C. Ask your adviser first, then decide**
+
+- No change until the adviser has answered; then A or B.
 - Strings: 0
 - Tests: none
 
@@ -2674,19 +2851,26 @@ Four AI-written translations that no native speaker has read.
 - Doc question: none (only a note in the doc: "Translation notes", and the AI note at the top of docs/QUESTIONS_FOR_THE_FARM.es.md)
 - Urgency: 3 (nice to have). Checklist says: launch decision D8.
 - Owner fact (no sensible default): no
-- Default: A for the sentences that carry a promise (allergens, refund, prices, hours); the rest can follow.
+- Default: A or B (the same work, only the reader differs) for the sentences that carry a promise (allergens, refund, prices, hours); the rest can follow.
 - Depends on: d17, d18, d41, d42 (zh and vi say "service dog"), d09, d19.
 
-**A. A native speaker checks them**
+**A. A friend who speaks the language checks them (ready-to-send sheets are being prepared)**
 
 - No change now. When a speaker answers, edit the value of each id in lang/src/<code>.json (key = id of the English text; JS strings are keyed by the English text), then python3 tools/i18n.py build and python3 tools/i18n.py missing <code> (0). English never changes.
 - The two clock patches that were once kept in scratch folders (es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch) are not needed: the code already writes Spanish times as "5:00 p. m." and Vietnamese times as "5 giờ chiều" (js/features.js at `const fmtClock = (date, tz) => {`, js/live.js at `function timeLabel(mins)`, js/i18n.js at `W.clock = (h, m, code) => {`). If the speaker wants other clock words, change those three places and the fixed texts. The other translation patches (zh-C, es-C, vi-C, hi-C) are already merged.
-- The speaker does not have to edit JSON: `python3 tools/review_sheet.py export <code>` makes a spreadsheet (the 150 texts that matter most first, the English next to the translation, our questions, the instructions in the speaker's language and in English), and `import` reads their corrections back, refusing a changed number, price, name or tag and saying why. The four steps, for the owner, are on one page: `docs/CHECK_A_LANGUAGE.md` (and README, section "Have a native speaker check a language").
+- The sheets that the dashboard calls "being prepared" can be made now. The speaker does not have to edit JSON: `python3 tools/review_sheet.py export <code>` makes a spreadsheet (the 150 texts that matter most first, the English next to the translation, our questions, the instructions in the speaker's language and in English), and `import` reads their corrections back, refusing a changed number, price, name or tag and saying why. The four steps, for the owner, are on one page: `docs/CHECK_A_LANGUAGE.md` (and README, section "Have a native speaker check a language").
 - Send the speaker first: the allergen line (d17), refund and cancel lines (d41, 3% fee), prices, hours and days, "700 degrees" (d18).
 - Strings: 0 English; only the translation values that the speaker changes
 - Tests: i18n, languages; consistency if a number, price or day changes (it compares each translation to the English)
 
-**B. Keep the wording as is**
+**B. A paid reviewer checks them**
+
+- The same steps as A: the reviewer works on the same sheet (`python3 tools/review_sheet.py export <code>`, then `import`). Who the reviewer is, and what the farm pays, is hers; no file changes until the reviewer's corrections come back.
+- Send the reviewer first: the same sentences as in A.
+- Strings: 0 English; only the translation values that the reviewer changes
+- Tests: i18n, languages; consistency if a number, price or day changes (it compares each translation to the English)
+
+**C. Keep the wording as is**
 
 - No change. The AI notes stay (README.md, section "Languages", and the top of docs/QUESTIONS_FOR_THE_FARM.es.md).
 - Strings: 0
@@ -2699,7 +2883,7 @@ Four AI-written translations that no native speaker has read.
 - Urgency: 3 (nice to have). Checklist says: launch decision D8 (native speakers).
 - Owner fact (no sensible default): no
 - Default: none.
-- Depends on: d37 (a native speaker; if she answers d37 A, the same reader can answer this), d17, d41, d42 (the promise sentences).
+- Depends on: d37 (a native speaker; if she answers d37 A or B, the same reader can answer this), d17, d41, d42 (the promise sentences).
 - Note: Counted in lang/src on 3 October 2026 (1,344 sentences per language): the visitor is addressed in about 129 Spanish sentences (tú, tu, puedes ...), 96 Chinese (你; 您 once), 83 Hindi (आप, none with तुम) and 129 Vietnamese (bạn; "quý khách" none). "रिज़र्वेशन" is in 106 Hindi sentences and "प्लेग्राउंड" in 27. A review sheet with the 108 sentences reviewed on 3 October 2026 (the four languages next to the English) is in a helper's scratch folder; ask Claude. The "who can read it for us" question is d37's: it already asks whether a native speaker checks, and a friend or a paid reader could be added to its options.
 
 **A. Keep the friendly tone**

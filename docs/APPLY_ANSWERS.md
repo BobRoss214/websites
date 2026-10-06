@@ -92,7 +92,7 @@ When the steps of one answer are already part of a bigger one (d32 C removes the
 
 ### Optional patches
 
-Answers that choose an optional patch (`patches/optional/`, see `docs/OPTION_PATCHES.md`) are listed under `patches` in the rules file. The tool checks each one with `git apply --check` first and says plainly if it no longer applies (it never forces one). The host decides between `redirects-A` (Cloudflare Pages, Netlify) and `redirects-B` (another host): the tool reads d05, or you say `--host cloudflare|netlify|other`. Three more answers choose a patch: d65 C (`qr-one-address-line`), d65 D (both QR patches) and d68 A (`games-B-pick-snips-sunflowers`). The phone patch (`phone-number-shown`) is not used for d04 A: the playbook's own steps for d04 A do the same and more.
+Answers that choose an optional patch (`patches/optional/`, see `docs/OPTION_PATCHES.md`) are listed under `patches` in the rules file. The tool checks each one with `git apply --check` first and says plainly if it no longer applies (it never forces one). The host decides between `redirects-A` (Cloudflare Pages, Netlify) and `redirects-B` (another host): the tool reads d05, or you say `--host cloudflare|netlify|other`. Five more answers choose a patch: d65 C (`qr-one-address-line`), d65 D (both QR patches), d68 A (`games-B-pick-snips-sunflowers`), d88 B (`faster-below-the-fold`) and d89 A (`privacy-page`). The phone patch (`phone-number-shown`) is not used for d04 A: the playbook's own steps for d04 A do the same and more.
 
 ## The checks
 

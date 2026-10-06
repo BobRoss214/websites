@@ -28,14 +28,14 @@ The answer used in each replay is an example (for example a price of $35, a clos
 
 ## What was tried, and what was not
 
-The playbook has 234 answers (the 87 questions d01 to d87). 110 were replayed. 124 were not:
+The playbook has 250 answers (the 92 questions d01 to d92). 111 were replayed. 139 were not:
 
 | Not replayed | Answers | Why |
 |---|---|---|
-| No change (the answer leaves the files as they are) | 81 | Nothing to do, so nothing to try. |
-| A code change only Claude can make | 21 | The entry gives the owner no file steps to follow (d08 A, d09 B and C, d10 C, d32 A, d46 C, d48 C, d50 C, d59 A, d64 B and C, d67 B, d68 C, d69 A, d70 B, d72 A and B, d78 B, d81 A, d82 A, d86 C). |
-| An optional patch | 7 | `node tests/run-all.mjs option-patches` tries them (d01 A and B, d05 A and C, d24 B, d25 A, d30 A). Four more, d65 C and D, d68 A and d86 B, are replayed (see "Optional patches"). |
-| Her own words or numbers, the same steps as another answer | 10 | d07 C, d26 C, d45 C, d53 C, d58 C, d74 C, d75 C, d76 C, d78 C, and d31 A (the optional credit: as d61 B). |
+| No change (the answer leaves the files as they are) | 86 | Nothing to do, so nothing to try. |
+| A code change only Claude can make | 23 | The entry gives the owner no file steps to follow (d08 A, d09 B and C, d10 C, d32 A, d46 C, d48 C, d50 C, d59 A, d64 B and C, d67 B, d68 C, d69 A, d70 B, d72 A and B, d78 B, d81 A, d82 A, d86 C, d88 C, d90 B). |
+| An optional patch | 9 | `node tests/run-all.mjs option-patches` tries them (d01 A and B, d05 A and C, d24 B, d25 A, d30 A, d88 B, d89 A). Four more, d65 C and D, d68 A and d86 B, are replayed (see "Optional patches"). |
+| Her own words or numbers, the same steps as another answer | 16 | d07 C, d26 C, d37 B, d45 C, d53 C, d58 C, d74 C, d75 C, d76 C, d78 C, d90 C, d91 B and C, d92 B and C, and d31 A (the optional credit: as d61 B). |
 | The same kind of edit as another answer, in many sentences | 2 | d79 B and d80 B: about eight and about twenty sentences, found by the consistency test, like d51 B. |
 | Needs her own photos or her whole 2027 content | 3 | d12 A, d34 A and d24 A. |
 
@@ -63,6 +63,13 @@ These were added to the playbook after the first rehearsal. Every answer that is
 - d85 A needs its four translations: the numbers of a translation must match the English ("101").
 - d84 A: the new red (#7a0f20) has a contrast of 5.4 against the darkest sky colour. The first idea (#8f1226) gave 4.53, too close to the 4.5 limit.
 - d04 now has four options (A the main number, B the day-of number for everyone, C no phone, D some pages only). The old B (keep it hidden) is now C; the old C is now D.
+
+### Questions d88 to d92, d37 with three options, and d03 A
+
+These were added after the replays above. The dashboard offers three options for d37 (A a friend, B a paid reviewer, C keep the wording as it is), so the playbook has the same three now: the old B (keep the wording) is C. Of the new answers only d92 A is a file edit (the farm badge for spring and summer): 7 steps in js/content.js, tests/live.test.mjs and tests/owner-calendar.test.mjs. It replays with the notes test (docs) as the usual follow-up, and the browser tests live and owner-calendar pass. d88 B and d89 A are the optional patches faster-below-the-fold and privacy-page: `node tests/run-all.mjs option-patches` tries them, and the tool applies them with git apply. d88 C, d90 B and d90 C are code changes only the helper can make. d37 B, d91 B and C and d92 B and C are her own words, dates or days.
+
+- d92 A changes two tests as well, because both say that the farm badge is for fall only: live (a check that no badge shows in May) and owner-calendar (the line about the hours).
+- d03 A now waits for her link. Its steps replace the whole old address with the link she sends (the replay uses the same form with /viewform as its made-up link), so the tool no longer applies it without what she sends.
 
 ## What was wrong, and what was fixed
 

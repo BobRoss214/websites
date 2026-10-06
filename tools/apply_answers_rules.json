@@ -7,6 +7,9 @@
    {"name": "price_1", "type": "price", "invented": "$800", "ask": "the real price of the smaller company event (the page now shows a draft of $750)"},
    {"name": "price_2", "type": "price", "invented": "$1,500", "ask": "the real price of the larger company event (the page now shows a draft of $1,400)"}
   ],
+  "d03=A": [
+   {"name": "form_url", "type": "url", "invented": "https://docs.google.com/forms/d/1GsxQaakokjJuBBHomYElmV7x54xCmjBkjX6Jt5q9_V4/viewform", "match": "^https://docs\\.google\\.com/forms/", "ask": "the form's public link (it ends in /viewform: in Google Forms press Send, then the link icon)"}
+  ],
   "d06=A": [
    {"name": "review_url", "type": "url", "invented": "https://g.page/r/CaBcDeFgHiJkLmNo/review", "ask": "the Google review link (it starts with https://)"}
   ],
@@ -80,7 +83,7 @@
 
  "ready": {
   "_about": "Recipes that a helper read and found free of any value that only the owner knows (the choice she made is the whole answer). A recipe that is in none of 'inputs', 'manual' and 'ready' (a new one) is NOT applied: the tool says a helper has to look at it first. A recipe can also say so itself with \"checked\": true, or name its own \"owner_values\" or \"model\".",
-  "keys": ["d02=B", "d02=C", "d03=A", "d04=A", "d04=B", "d04=D", "d07=A", "d07=B", "d10=D", "d13=B", "d13=C", "d15=A", "d16=A", "d18=A", "d18=B", "d19=B", "d22=B", "d23=A", "d23=B", "d26=A", "d26=B", "d27=A", "d28=B", "d28=C", "d29=B", "d31=B", "d32=C", "d33=A", "d33=B", "d39=A", "d39=B", "d40=A", "d41=A", "d42=A", "d42=B", "d44=A", "d44=B", "d47=A", "d48=B", "d49=A", "d51=A", "d53=B", "d54=B", "d55=A", "d56=A", "d56=C", "d57=B", "d58=A", "d58=B", "d60=A", "d60=B", "d62=B", "d65=B", "d65=C", "d65=D", "d66=A", "d68=A", "d69=B", "d73=B", "d74=A", "d75=B", "d76=A", "d77=A", "d79=A", "d79=C", "d80=A", "d80=C", "d84=A", "d85=A", "d86=B", "d87=A"]
+  "keys": ["d02=B", "d02=C", "d04=A", "d04=B", "d04=D", "d07=A", "d07=B", "d10=D", "d13=B", "d13=C", "d15=A", "d16=A", "d18=A", "d18=B", "d19=B", "d22=B", "d23=A", "d23=B", "d26=A", "d26=B", "d27=A", "d28=B", "d28=C", "d29=B", "d31=B", "d32=C", "d33=A", "d33=B", "d39=A", "d39=B", "d40=A", "d41=A", "d42=A", "d42=B", "d44=A", "d44=B", "d47=A", "d48=B", "d49=A", "d51=A", "d53=B", "d54=B", "d55=A", "d56=A", "d56=C", "d57=B", "d58=A", "d58=B", "d60=A", "d60=B", "d62=B", "d65=B", "d65=C", "d65=D", "d66=A", "d68=A", "d69=B", "d73=B", "d74=A", "d75=B", "d76=A", "d77=A", "d79=A", "d79=C", "d80=A", "d80=C", "d84=A", "d85=A", "d86=B", "d87=A", "d92=A"]
  },
 
  "manual": {
@@ -107,6 +110,12 @@
  "asks": {
   "_about": "What the owner still has to send, for the answers that have no recipe at all (the answer says 'I will send ...'). The text is printed as it is. Anything not listed here is printed from the words of the answer itself.",
   "d05=C": "the name of the web host (who keeps the site online)",
+  "d37=B": "the paid reviewer's corrections (the sheet made by tools/review_sheet.py, with the changes marked)",
+  "d90=C": "which of the six small improvements she wants (the numbers 1 to 6 of the question); each one is then a job for a person who knows the code",
+  "d91=B": "the days she is closed (Christmas Day, Jan 1, Easter, July 4 or others), each written year-month-day, then the notice words and the closed times in Bookeo",
+  "d91=C": "the days and the hours that are different (the notice bar can say them, the Open now badges keep the usual hours)",
+  "d92=B": "the days of the week the farm is open in spring and in summer (they can differ)",
+  "d92=C": "the words that tell visitors the open days in spring and summer (where they go is decided with her)",
   "d07=C": "the name she wants for the maze, in her words",
   "d08=A": "the details of Thai night (the dates, the times, the price)",
   "d09=B": "the GreenHouse winter hours (the days and the times)",
@@ -133,6 +142,8 @@
   "d65=C": ["qr-one-address-line"],
   "d65=D": ["qr-stronger-codes", "qr-one-address-line"],
   "d68=A": ["games-B-pick-snips-sunflowers"],
+  "d88=B": ["faster-below-the-fold"],
+  "d89=A": ["privacy-page"],
   "d30=A": {"by_host": {"A": ["redirects-A-redirects-file"], "B": ["redirects-A-redirects-file"], "C": ["redirects-B-redirect-pages"]}}
  },
 
@@ -199,7 +210,15 @@
 
  "notes": {
   "_about": "A line for the report, printed next to the answer when it is applied.",
-  "d03=A": "Only the end of the address changes (/edit becomes /viewform). Open the link she sent: it must be the same form as the one on the site; if it is another form, send it as a new answer.",
+  "d03=A": "The link she sent replaces the old address (it ended in /edit) in the four places the form is used. Open it in a private window first: it must open with no sign-in.",
+  "d23=A": "Fall now ends November 30, but winter starts on the Friday after Thanksgiving (November 27, 2026): for four days both seasons are on. Ask her what the site should show on those days.",
+  "d47=A": "Nothing a visitor sees changes. The only edit is the Square part of a README row, in the notes for whoever keeps the site (the notes are not uploaded).",
+  "d51=A": "Nothing a visitor sees changes. The only edit is a README row, in the notes for whoever keeps the site (the notes are not uploaded).",
+  "d56=A": "Nothing a visitor sees changes. The only edit is a README row, in the notes for whoever keeps the site (the notes are not uploaded).",
+  "d77=A": "She said she will copy the two files herself. The files are in the patch; GitHub emails whoever last changed the schedule line of the weekly file, so she should be the one who saves it on GitHub.",
+  "d79=A": "The words (pizza is Friday-Sunday only) are the playbook's example, not hers. The dashboard says she will fix the Fall line herself: ask her if she likes them, or what she wrote.",
+  "d88=B": "The two small costs come with it: text and rounded edges can sit up to one pixel differently, and scrolling back up after a menu link can make the page jump a little. To go back: git apply --reverse the patch.",
+  "d89=A": "The Spanish, Hindi, Chinese and Vietnamese words in the patch were written by Claude and need a native reader (d37). The page is not legal advice: an adviser can read it first if the farm wants that.",
   "d04=A": "This applies the playbook's full set of steps (footer, contact card, questions line, structured data). The optional patch phone-number-shown.patch is a smaller version of the same change and is not used with it.",
   "d60=A": "For a closure on the same day the better way is tools/close_today.py (docs/NOTICE_KIT.md): it also writes the notice words in all five languages and checks the date. These steps are the same ones the playbook gives.",
   "d22=B": "The words come from the menu (the Wise Pie menu names the cheese maker).",
