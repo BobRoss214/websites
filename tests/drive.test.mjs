@@ -33,6 +33,7 @@ async function open(opts = {}) {
   if (opts.lang) await ctx.addInitScript((l) => { try { localStorage.setItem('wa.lang', l); } catch (e) {} }, opts.lang);
   if (opts.nofetch) await ctx.addInitScript(() => { delete window.fetch; });
   const page = await ctx.newPage();
+  page.setDefaultTimeout(T);   // Playwright's own 30 s is not scaled for a busy computer ("waiting for element to be stable" ran out at a load of 20 to 30 on 4 cores)
   if (opts.extra) await page.route('**/js/content.js', async (r) => { const res = await r.fetch(); r.fulfill({ response: res, body: (await res.text()) + '\n' + opts.extra }); });
   page.on('crash', () => errs.push('a page crashed')); page.on('pageerror', (e) => errs.push('page error: ' + e.message));
   const calls = { geo: [], route: [], other: [] };
