@@ -14,7 +14,7 @@ import path from 'node:path';
 import net from 'node:net';
 import http from 'node:http';
 import { spawn, spawnSync } from 'node:child_process';
-import { ROOT, ok, okSoon, run, until, ms } from './lib.mjs';
+import { ROOT, ok, okSoon, run, until, ms, TODAY } from './lib.mjs';
 
 const PY = process.env.WA_PYTHON || 'python3';
 const get = (port, pathname, method = 'GET') => new Promise((resolve, reject) => {
@@ -67,6 +67,7 @@ await run('serve', async ({ browser, errs }) => {
     fs.writeFileSync(file, original.replace("  noticeUntil: '',\n", "  noticeUntil: ''\n"));
     const line = original.split('\n').findIndex((l) => l.startsWith('  closures: [],')) + 1;
     const ctx = await browser.newContext({ viewport: { width: 1200, height: 800 } }), pg = await ctx.newPage(); pg.on('pageerror', () => {});
+    await pg.clock.install({ time: new Date(TODAY) });   // the page's day is the tests' day (Oct 2), not the real one: a line whose data-until has passed adds an "Old lines that hid themselves" note to this box, and the check below wants none
     await pg.goto('http://localhost:' + port + '/', { waitUntil: 'load', timeout: ms(60000) });
     await until(pg, () => !!document.getElementById('wa-problems'), null, 20000);
     const box = await pg.evaluate(() => (document.getElementById('wa-problems') || {}).textContent || '');
