@@ -361,7 +361,7 @@ storage is reported, and the saved text stays small), Marble Run's click spots (
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 ```
 
-About 1,490 end-to-end checks (about 1,415 without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
+About 1,670 end-to-end checks (about 1,590 without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
 the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board (500 charities), clicking a logo or slice in every game to open that charity, the website links in the results, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the lobby of seven table sizes for every live game, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, game filters checked
 against an independent computation, the filters on the Charities page (which only narrow the list, never the games), the charity directory and profiles, direct gifts, repeat plans and dedications,
