@@ -17,6 +17,10 @@ dialog.modal[open] { animation: modal-in 0.22s ease-out; }
 .modal__title { font-size: 1.45rem; padding-right: 40px; }
 .modal__sub { color: var(--muted); font-size: 0.9rem; margin-top: -6px; }
 .modal__fine { font-size: 0.78rem; color: var(--dim); }
+.modal__hint { font-size: 0.86rem; color: var(--muted); max-width: 62ch; margin-top: -4px; }
+.fbridge { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px 14px; border: 1px dashed var(--line-2); border-radius: 12px; background: var(--panel-2); }
+.fbridge__t { display: grid; gap: 2px; min-width: 0; flex: 1 1 240px; font-size: 0.84rem; }
+.fbridge__t span { color: var(--dim); font-size: 0.78rem; }
 .modal__fine .ico { vertical-align: -0.15em; }
 .modal__foot { position: sticky; bottom: -24px; z-index: 2; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin: 6px -24px -24px; padding: 14px 24px; border-top: 1px solid var(--line); background: var(--panel); border-radius: 0 0 20px 20px; }
 .modal__foot--split { position: static; margin-top: 4px; }

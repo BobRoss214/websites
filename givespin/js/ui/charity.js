@@ -37,7 +37,7 @@
 
   function statusLine(ch) {
     if (isExcluded(ch.id)) { return '<span class="pill pill--off">' + ui.icon('eye-off') + 'Switched off</span>'; }
-    if (!inPool(ch.id)) { return '<span class="pill pill--off">' + ui.icon('funnel') + 'Outside your filters</span>'; }
+    if (!inPool(ch.id)) { return '<span class="pill pill--off">' + ui.icon('funnel') + 'Outside your game filters</span>'; }
     return '<span class="pill pill--on">' + ui.icon('circle-check') + 'In play</span>';
   }
 
@@ -196,7 +196,7 @@
 
   /* ------------------------------------------------------------ directory */
 
-  var dir = { view: 'all', sort: 'az', query: '', root: null, selfChange: false };
+  var dir = { view: 'all', sort: 'az', query: '', f: core.emptyFilters(), root: null, selfChange: false };
 
   function hay(ch) {
     return (ch.name + ' ' + ch.short + ' ' + ch.blurb + ' ' + ch.hq + ' ' + ch.causes.map(function (c) { return GS.cause(c).name; }).join(' ') + ' ' +
@@ -214,7 +214,7 @@
       '<p class="rcard__blurb">' + esc(ch.blurb) + '</p>' +
       (t ? '<p class="rcard__given">' + ui.icon('heart') + 'You gave ' + money(t.cents, true) + '</p>' : '') +
       '<div class="rcard__foot">' + (ui.siteUrl(ch) ? '<a class="rcard__link" href="' + esc(ui.siteUrl(ch)) + '" target="_blank" rel="noopener noreferrer">' + esc(ui.siteHost(ch)) + ui.icon('external-link') + '</a>' : '<span class="rcard__link">No website on file</span>') +
-        '<span class="rcard__note" data-role="note">' + (filtered ? 'Outside filters' : '') + '</span>' +
+        '<span class="rcard__note" data-role="note">' + (filtered ? 'Outside game filters' : '') + '</span>' +
         '<label class="switch"><input type="checkbox" role="switch" data-ch="' + ch.id + '"' + (off ? '' : ' checked') + ' aria-label="' + esc(ch.short) + ' in play"><span class="switch__ui" aria-hidden="true"></span><span class="switch__txt">In play</span></label></div>' +
     '</li>';
   }
@@ -226,6 +226,7 @@
       if (dir.view === 'in' && !inPool(ch.id)) { return false; }
       if (dir.view === 'off' && !isExcluded(ch.id)) { return false; }
       if (dir.view === 'gave' && !totals[ch.id]) { return false; }
+      if (!core.matchesFilters(ch, dir.f)) { return false; }
       return !q || hay(ch).indexOf(q) >= 0;
     });
     if (dir.sort === 'old') { list.sort(function (a, b) { return (core.ageYear(a) || 9999) - (core.ageYear(b) || 9999) || (a.name < b.name ? -1 : 1); }); }
@@ -235,31 +236,50 @@
     return list;
   }
 
-  function updateCount() {
+  /** The chips under the toolbar that say which browse filters are on, each one removable. */
+  function activeChips() {
+    var f = dir.f;
+    var out = '';
+    ['causes', 'serves', 'where', 'how', 'era'].forEach(function (g) {
+      f[g].forEach(function (id) {
+        var name = ui.filters.labelFor(g, id);
+        out += '<button type="button" class="chip" data-group="' + g + '" data-id="' + esc(id) + '" aria-label="Remove filter: ' + esc(name) + '" aria-pressed="true">' + esc(name) + ui.icon('x') + '</button>';
+      });
+    });
+    return out;
+  }
+
+  function updateCount(shown) {
     var off = store.prefs().excluded.length;
     var el = dir.root.querySelector('[data-role="count"]');
-    el.textContent = ui.num(GS.charities.length) + ' charities · ' + ui.num(state().pool.length) + ' in play' + (off ? ' · ' + ui.num(off) + ' switched off' : '');
+    var total = GS.charities.length;
+    var narrowed = shown !== total;
+    el.innerHTML = (narrowed ? 'Showing <b>' + ui.num(shown) + '</b> of ' + ui.num(total) + ' charities' : ui.num(total) + ' charities') +
+      ' · ' + ui.num(state().pool.length) + ' in play in games' + (off ? ' · ' + ui.num(off) + ' switched off' : '');
     var fb = dir.root.querySelector('[data-role="fcount"]');
-    var n = ui.filters.count();
+    var n = core.activeFilterCount(dir.f);
     fb.textContent = n ? String(n) : '';
     fb.hidden = !n;
+    var act = dir.root.querySelector('[data-role="active"]');
+    act.hidden = !n;
+    act.querySelector('[data-role="chips"]').innerHTML = n ? activeChips() : '';
   }
 
   function renderList() {
     var list = visibleList();
     var ul = dir.root.querySelector('[data-role="list"]');
     ul.innerHTML = list.length ? list.map(cardHTML).join('') : '<li class="empty" style="grid-column:1/-1">No charities match. Try a different search or filter.</li>';
-    updateCount();
+    updateCount(list.length);
   }
 
   function renderDirectory(root) {
     dir.root = root;
     if (!root.firstChild) {
       root.innerHTML =
-        '<header class="page-head"><div><h1>Charities</h1><p>' + ui.num(GS.charities.length) + ' organisations across every cause. Tap one to see what it does, visit its website or give to it directly. Switch any off and it will never come up in a game.</p></div></header>' +
+        '<header class="page-head"><div><h1>Charities</h1><p>' + ui.num(GS.charities.length) + ' organisations across every cause. Tap one to see what it does, visit its website or give to it directly. Use Filters to look through them by cause, place and more. Switch any off and it will never come up in a game.</p></div></header>' +
         '<div class="dirtools">' +
           '<label class="search search--field"><span class="sr-only">Search charities</span><span class="search__ico">' + ui.icon('search') + '</span><input type="search" class="search__input" data-role="q" placeholder="Search by name, cause, place or who they help" autocomplete="off"></label>' +
-          '<button type="button" class="btn btn--sm" data-open-filters>' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button>' +
+          '<button type="button" class="btn btn--sm" data-role="browse-filters">' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button>' +
           '<div class="seg seg--sm" role="group" aria-label="Show" data-role="view">' +
             [['all', 'All'], ['in', 'In play'], ['off', 'Switched off'], ['gave', 'I’ve given']].map(function (p) {
               return '<button type="button" class="seg__btn" data-v="' + p[0] + '" aria-pressed="' + (dir.view === p[0]) + '">' + p[1] + '</button>';
@@ -270,9 +290,31 @@
           '</select></label>' +
           '<button type="button" class="linkbtn" data-role="allon">Turn all on</button>' +
         '</div>' +
+        '<div class="dir-active" data-role="active" hidden><span class="dir-active__l">Showing only:</span><span class="chips" data-role="chips"></span><button type="button" class="linkbtn" data-role="clearf">Clear filters</button></div>' +
         '<p class="dir-count" data-role="count" aria-live="polite"></p>' +
         '<ul class="dir" data-role="list"></ul>';
 
+      var browse = {
+        get: function () { return core.normalizeFilters(dir.f); },
+        set: function (f) { dir.f = core.normalizeFilters(f); renderList(); },
+        shown: function () { return visibleList().length; }
+      };
+      root.querySelector('[data-role="browse-filters"]').addEventListener('click', function () { ui.filters.openBrowse(browse); });
+      root.querySelector('[data-role="active"]').addEventListener('click', function (e) {
+        var b = e.target.closest('[data-group]');
+        if (b) {
+          GS.audio.click();
+          var f = core.normalizeFilters(dir.f);
+          var g = b.getAttribute('data-group');
+          f[g] = f[g].filter(function (x) { return x !== b.getAttribute('data-id'); });
+          browse.set(f);
+          ui.filters.syncBrowse();
+        } else if (e.target.closest('[data-role="clearf"]')) {
+          GS.audio.click();
+          browse.set(core.emptyFilters());
+          ui.filters.syncBrowse();
+        }
+      });
       var q = root.querySelector('[data-role="q"]');
       q.addEventListener('input', function () { dir.query = q.value.trim().toLowerCase(); renderList(); });
       root.querySelector('[data-role="view"]').addEventListener('click', function (e) {
@@ -305,9 +347,9 @@
           card.classList.toggle('is-off', !input.checked);
           var filtered = input.checked && !inPool(id);
           card.classList.toggle('is-filtered', filtered);
-          card.querySelector('[data-role="note"]').textContent = filtered ? 'Outside filters' : '';
+          card.querySelector('[data-role="note"]').textContent = filtered ? 'Outside game filters' : '';
         }
-        updateCount();
+        updateCount(dir.root.querySelectorAll('[data-role="list"] .rcard').length);
         ui.announce(ch.short + (input.checked ? ' is in play.' : ' is switched off.'));
       });
       GS.bus.on('pool', function () { if (!dir.selfChange && dir.root.closest('.view') && !dir.root.closest('.view').hidden) { renderList(); } });

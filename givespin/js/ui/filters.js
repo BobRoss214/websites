@@ -1,7 +1,10 @@
 /*
- * Filters: the full filter dialog (causes, who they help, where, how, when founded), the quick cause
- * chips shown next to the bet panel, and the "N charities in play" line. Changes apply instantly and the
- * live count updates as you tap.
+ * Filters. Two dialogs share one set of chips (causes, who they help, where, how, when founded):
+ *   - the GAME filters: which charities can come up when you play. They are saved, apply to every game, and the
+ *     quick cause chips next to the bet panel and the "N charities in play" line belong to them;
+ *   - the BROWSE filters on the Charities page: they only narrow the list you are looking at. They never change
+ *     which charities come up in a game (a separate button copies them across if you want that).
+ * Changes apply instantly and the live count updates as you tap.
  */
 (function () {
   'use strict';
@@ -14,17 +17,28 @@
   var QUICK = ['kids', 'animals', 'planet', 'hunger', 'health', 'education', 'veterans', 'disaster', 'mental', 'water', 'women', 'arts'];
   var MIN_FACET = 3; // a filter value that fewer than this many charities have is hidden: it would just empty the pool
   var counts = null;
-  var modal = null;
+  var gameDlg = null;
+  var browseDlg = null;
+  var browseCtl = null; // what the Charities page hands us: { get(): filters, set(filters), shown(): number }
 
   function facetCounts() { return counts || (counts = core.facetCounts(GS.charities)); }
   function current() { return core.normalizeFilters(store.prefs().filters); }
   function save(f) { store.setPref('filters', f); GS.app.refreshPool(); }
+  function plural(n) { return n === 1 ? 'charity' : 'charities'; }
 
   function toggled(list, id) {
     var i = list.indexOf(id);
     var out = list.slice();
     if (i >= 0) { out.splice(i, 1); } else { out.push(id); }
     return out;
+  }
+
+  /** The visible name of one filter value, for the chips that show what is active. */
+  function labelFor(group, id) {
+    if (group === 'causes') { return GS.cause(id).name; }
+    var list = GS.facets[group] || [];
+    for (var i = 0; i < list.length; i++) { if (list[i].id === id) { return list[i].name; } }
+    return id;
   }
 
   /* ------------------------------------------------------------ pool line */
@@ -87,13 +101,10 @@
       (icon ? ui.icon(icon) : '') + esc(label) + '<span class="chip__n">' + n + '</span></button>';
   }
 
-  function build() {
+  /** The chips themselves (causes, then the other four groups): the same in both dialogs. */
+  function chipsHTML() {
     var c = facetCounts();
-    var html = '<h2 class="modal__title" id="dlg-filters-title">Filters</h2>' +
-      '<p class="modal__sub" data-role="count" aria-live="polite"></p>';
-
-    // causes, grouped
-    html += '<section class="fgroup"><h3 class="fgroup__t">Causes</h3>';
+    var html = '<section class="fgroup"><h3 class="fgroup__t">Causes</h3>';
     GS.causeGroups.forEach(function (g) {
       var inGroup = GS.causes.filter(function (cs) { return cs.group === g; });
       html += '<div class="fsub"><span class="fsub__l">' + esc(g) + '</span><div class="chips">' +
@@ -111,64 +122,170 @@
     html += facetSection('where', 'Where they work');
     html += facetSection('how', 'How they help');
     html += facetSection('era', 'When they started', 'Founded year. Charities with no founding year on file, or only a register date, never match this filter.');
-
-    html += '<div class="modal__foot"><button type="button" class="btn btn--ghost" data-role="clear">Clear all filters</button><button type="button" class="btn btn--green" data-role="done">Show charities</button></div>' +
-      '<p class="modal__fine">Prefer to hand-pick? <a href="#charities" data-role="to-dir">Open the Charities page</a> to switch individual charities on or off.</p>';
     return html;
   }
 
-  function sync() {
-    if (!modal) { return; }
-    var f = current();
-    var n = GS.app.state.pool.length;
-    var total = GS.charities.length;
-    var off = store.prefs().excluded.length;
-    var bad = n < GS.config.minPool;
-    var count = modal.$('[data-role="count"]');
-    count.classList.toggle('is-bad', bad);
-    count.innerHTML = bad
-      ? '<b>' + ui.num(n) + '</b> in play. Games need at least ' + GS.config.minPool + '. Loosen a filter.'
-      : '<b>' + ui.num(n) + '</b> of ' + ui.num(total) + ' charities in play' + (off ? ' (' + ui.num(off) + ' switched off)' : '');
-    modal.$$('[data-group]').forEach(function (b) {
-      var g = b.getAttribute('data-group');
-      var id = b.getAttribute('data-id');
-      b.setAttribute('aria-pressed', String(f[g].indexOf(id) >= 0));
-    });
-    var clear = modal.$('[data-role="clear"]');
-    clear.disabled = core.activeFilterCount(f) === 0;
-    var done = modal.$('[data-role="done"]');
-    done.textContent = bad ? 'Close' : 'Show ' + ui.num(n) + ' ' + (n === 1 ? 'charity' : 'charities');
+  /**
+   * One filter dialog. `cfg`:
+   *   id, title, hint (plain text under the title), get() -> filters, set(filters),
+   *   status(filters) -> { bad, html, label } (the count line, whether it is a dead end, the text of the main button),
+   *   extra (html above the fine print, optional), onExtra(target) for clicks in it, fine (html, optional).
+   */
+  function makeDialog(cfg) {
+    var d = { modal: null };
+
+    function build() {
+      return '<h2 class="modal__title" id="dlg-' + cfg.id + '-title">' + esc(cfg.title) + '</h2>' +
+        '<p class="modal__hint">' + esc(cfg.hint) + '</p>' +
+        '<p class="modal__sub" data-role="count" aria-live="polite"></p>' +
+        chipsHTML() +
+        (cfg.extra || '') +
+        '<div class="modal__foot"><button type="button" class="btn btn--ghost" data-role="clear">Clear all filters</button><button type="button" class="btn btn--green" data-role="done"></button></div>' +
+        (cfg.fine ? '<p class="modal__fine">' + cfg.fine + '</p>' : '');
+    }
+
+    d.sync = function () {
+      var m = d.modal;
+      if (!m) { return; }
+      var f = cfg.get();
+      var st = cfg.status(f);
+      var count = m.$('[data-role="count"]');
+      count.classList.toggle('is-bad', st.bad);
+      count.innerHTML = st.html;
+      m.$$('[data-group]').forEach(function (b) {
+        b.setAttribute('aria-pressed', String(f[b.getAttribute('data-group')].indexOf(b.getAttribute('data-id')) >= 0));
+      });
+      m.$('[data-role="clear"]').disabled = core.activeFilterCount(f) === 0;
+      m.$('[data-role="done"]').textContent = st.label;
+      if (cfg.after) { cfg.after(m, f); }
+    };
+
+    d.open = function () {
+      if (!d.modal) {
+        var m = d.modal = ui.modal(cfg.id, { wide: true });
+        m.set(build());
+        m.body.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-group]');
+          if (b && b.type === 'button') {
+            GS.audio.click();
+            var f = cfg.get();
+            var g = b.getAttribute('data-group');
+            var id = b.getAttribute('data-id');
+            f[g] = toggled(f[g], id);
+            cfg.set(f);
+            d.sync();
+            return;
+          }
+          if (e.target.closest('[data-role="clear"]')) { GS.audio.click(); cfg.set(core.emptyFilters()); d.sync(); return; }
+          if (e.target.closest('[data-role="done"]')) { m.close(); return; }
+          if (e.target.closest('[data-role="to-dir"]')) { m.close(); return; }
+          if (cfg.onExtra) { cfg.onExtra(e.target, d); }
+        });
+      }
+      d.sync();
+      d.modal.open();
+    };
+    return d;
   }
 
-  function open() {
+  /* ----------------------------------------------------- the GAME filters */
+
+  gameDlg = makeDialog({
+    id: 'filters',
+    title: 'Filters for games',
+    hint: 'These choose which charities can come up when you play. They apply to every game.',
+    get: current,
+    set: save,
+    status: function () {
+      var n = GS.app.state.pool.length;
+      var total = GS.charities.length;
+      var off = store.prefs().excluded.length;
+      var bad = n < GS.config.minPool;
+      return {
+        bad: bad,
+        html: bad
+          ? '<b>' + ui.num(n) + '</b> in play. Games need at least ' + GS.config.minPool + '. Loosen a filter.'
+          : '<b>' + ui.num(n) + '</b> of ' + ui.num(total) + ' charities in play' + (off ? ' (' + ui.num(off) + ' switched off)' : ''),
+        label: bad ? 'Close' : 'Play with ' + ui.num(n) + ' ' + plural(n)
+      };
+    },
+    fine: 'Prefer to hand-pick? <a href="#charities" data-role="to-dir">Open the Charities page</a> to switch individual charities on or off.'
+  });
+  var openGame = gameDlg.open;
+  gameDlg.open = function () {
     if (GS.app.state.busy) { return; }
-    if (!modal) {
-      modal = ui.modal('filters', { wide: true });
-      modal.set(build());
-      modal.body.addEventListener('click', function (e) {
-        var b = e.target.closest('[data-group]');
-        if (b && b.type === 'button') {
-          GS.audio.click();
-          var f = current();
-          var g = b.getAttribute('data-group');
-          var id = b.getAttribute('data-id');
-          f[g] = toggled(f[g], id);
-          save(f);
-          return;
-        }
-        if (e.target.closest('[data-role="clear"]')) { GS.audio.click(); save(core.emptyFilters()); return; }
-        if (e.target.closest('[data-role="done"]')) { modal.close(); return; }
-        if (e.target.closest('[data-role="to-dir"]')) { modal.close(); }
-      });
-      GS.bus.on('pool', sync);
-    }
-    sync();
-    modal.open();
+    var first = !gameDlg.modal;
+    openGame();
+    if (first) { GS.bus.on('pool', gameDlg.sync); }
+  };
+
+  /* --------------------------------------------- the BROWSE filters (list) */
+
+  function matching(f) {
+    return GS.charities.filter(function (ch) { return core.matchesFilters(ch, f); });
+  }
+
+  browseDlg = makeDialog({
+    id: 'browse-filters',
+    title: 'Filter the charities',
+    hint: 'Look through the list by cause, who they help, where they work and more. This only changes what you see on the Charities page. It does not change which charities come up in games.',
+    get: function () { return core.normalizeFilters(browseCtl ? browseCtl.get() : null); },
+    set: function (f) { if (browseCtl) { browseCtl.set(f); } },
+    status: function (f) {
+      var n = matching(f).length;
+      var shown = browseCtl && browseCtl.shown ? browseCtl.shown() : n;
+      return {
+        bad: n === 0,
+        html: n === 0
+          ? '<b>0</b> of ' + ui.num(GS.charities.length) + ' charities match. Loosen a filter.'
+          : '<b>' + ui.num(n) + '</b> of ' + ui.num(GS.charities.length) + ' charities match',
+        label: n === 0 ? 'Close' : 'Show ' + ui.num(shown) + ' ' + plural(shown)
+      };
+    },
+    extra: '<div class="fbridge"><div class="fbridge__t"><b>Want games to use these too?</b><span data-role="bridge-note">Games keep their own filters. This copies yours across.</span></div>' +
+      '<button type="button" class="btn btn--sm" data-role="to-games">Use these filters in games</button></div>',
+    after: function (m, f) {
+      var btn = m.$('[data-role="to-games"]');
+      var note = m.$('[data-role="bridge-note"]');
+      var nf = core.activeFilterCount(f);
+      var inGames = core.buildPool(GS.charities, f, store.prefs().excluded).length;
+      var same = JSON.stringify(core.normalizeFilters(store.prefs().filters)) === JSON.stringify(f);
+      btn.disabled = nf === 0 || inGames < GS.config.minPool || same;
+      note.textContent = nf === 0 ? 'Pick a filter first.'
+        : same ? 'Games already use exactly these filters.'
+        : inGames < GS.config.minPool ? 'Too few would be left in a game. Loosen a filter.'
+        : 'Games would draw from ' + ui.num(inGames) + ' ' + plural(inGames) + '. Games keep their own filters until you do this.';
+    },
+    onExtra: function (target, d) {
+      if (!target.closest('[data-role="to-games"]') || GS.app.state.busy) { return; }
+      var f = browseCtl ? core.normalizeFilters(browseCtl.get()) : null;
+      if (!f || !core.activeFilterCount(f)) { return; }
+      var n = core.buildPool(GS.charities, f, store.prefs().excluded).length;
+      if (n < GS.config.minPool) { return; }
+      GS.audio.click();
+      save(f);
+      ui.toast('Games now draw from the ' + ui.num(n) + ' ' + plural(n) + ' that match.');
+      d.sync();
+    },
+    fine: 'Prefer to hand-pick? Use the <b>In play</b> switch on any charity to keep it out of the games.'
+  });
+
+  function openBrowse(ctl) {
+    browseCtl = ctl;
+    browseDlg.open();
   }
 
   document.addEventListener('click', function (e) {
-    if (e.target.closest('[data-open-filters]')) { open(); }
+    if (e.target.closest('[data-open-filters]')) { gameDlg.open(); }
   });
 
-  ui.filters = { open: open, quickChips: quickChips, renderPoolLine: renderPoolLine, count: function () { return core.activeFilterCount(current()); } };
+  ui.filters = {
+    open: gameDlg.open,
+    openBrowse: openBrowse,
+    syncBrowse: function () { browseDlg.sync(); },
+    labelFor: labelFor,
+    quickChips: quickChips,
+    renderPoolLine: renderPoolLine,
+    count: function () { return core.activeFilterCount(current()); }
+  };
 })();
