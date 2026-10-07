@@ -41,7 +41,7 @@
 
   /** The visible name of one filter value, for the chips that show what is active. */
   function labelFor(group, id) {
-    if (group === 'causes') { return GS.cause(id).name; }
+    if (group === 'causes') { var c = GS.cause(id); return c && c.name ? c.name : id; }
     var list = GS.facets[group] || [];
     for (var i = 0; i < list.length; i++) { if (list[i].id === id) { return list[i].name; } }
     return id;
@@ -135,7 +135,8 @@
    * One filter dialog. `cfg`:
    *   id, title, hint (plain text under the title), get() -> filters, set(filters),
    *   status(filters) -> { bad, html, label } (the count line, whether it is a dead end, the text of the main button),
-   *   extra (html above the fine print, optional), onExtra(target) for clicks in it, fine (html, optional).
+   *   extra (html above the fine print, optional), onExtra(target, dialog) for clicks in it, after(modal, filters) to
+   *   update anything in `extra` after each change, fine (html, optional).
    */
   function makeDialog(cfg) {
     var d = { modal: null };
@@ -254,8 +255,8 @@
         label: n === 0 || hidden ? 'Close' : 'Show ' + ui.num(shown) + ' ' + plural(shown)
       };
     },
-    extra: '<div class="fbridge"><div class="fbridge__t"><b>Want games to use these too?</b><span data-role="bridge-note">Games keep their own filters. This copies yours across.</span></div>' +
-      '<button type="button" class="btn btn--sm" data-role="to-games">Use these filters in games</button>' +
+    extra: '<div class="fbridge"><div class="fbridge__t"><b>Want games to use these too?</b><span id="browse-bridge-note" data-role="bridge-note">Games keep their own filters. This copies yours across.</span></div>' +
+      '<button type="button" class="btn btn--sm" data-role="to-games" aria-describedby="browse-bridge-note">Use these filters in games</button>' +
       '<span class="sr-only" role="status" aria-live="polite" data-role="bridge-live"></span></div>',
     after: function (m, f) {
       var btn = m.$('[data-role="to-games"]');
@@ -289,11 +290,17 @@
     fine: 'Want to leave out particular charities? Close this and use the <b>In play</b> switch on any charity card.'
   });
 
-  var busyHooked = false;
+  var hooked = false;
   function openBrowse(ctl) {
     browseCtl = ctl;
     browseDlg.open();
-    if (!busyHooked) { busyHooked = true; GS.bus.on('busy', browseDlg.sync); } // "Use these filters in games" looks switched off during a round
+    // keep the open dialog in step with the page behind it: "Use these filters in games" is off during a round ("busy"), and the
+    // games button and the "In play" tab follow the game pool ("pool"), and the "I've given" tab follows a live round that
+    // settles while the dialog is open ("progress")
+    if (!hooked) {
+      hooked = true;
+      ['busy', 'pool', 'progress'].forEach(function (ev) { GS.bus.on(ev, browseDlg.sync); });
+    }
   }
 
   document.addEventListener('click', function (e) {

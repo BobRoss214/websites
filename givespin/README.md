@@ -108,14 +108,16 @@ charities have are hidden so a filter cannot just empty the pool. There are two 
 - **Game filters** ("Filters for games") are opened with the Filters button on the lobby and on the game screen (the quick
   cause chips next to it set the same filters). They choose which charities can come up when you play. They are saved on the
   device, they drive every game (except one where you chose your own charities), and they set the "N of 500 charities in play"
-  line. The main button reads "Play with N charities".
+  line. Live tables follow them too, with two exceptions: a table needs at least 8 charities in play (with fewer it seats
+  from the whole roster), and during a featured event such as Disaster Relief Night the table seats that event's charities
+  whatever the filters say. The main button reads "Play with N charities".
 - **Charities-page filters** ("Filter the charities") are opened from the Filters button on the Charities page. They only
   narrow the list you are looking at, together with the search box and the All / In play / Switched off / I've given tabs.
   They never change which charities the games use, they are not saved (they are kept while you move around the site, and
   cleared on a reload), and the main button reads "Show N charities". The chosen filters also show as removable chips under
   the toolbar, with a "Clear filters" link. If you want the games to use the same filters, the dialog has a separate
   **Use these filters in games** button; it is switched off when no filter is chosen, when the games already use exactly
-  these filters, or when fewer than 2 charities would be left to play with.
+  these filters, when fewer than 2 charities would be left to play with, and while a round is in progress.
 
 **500 charities, each with a profile** (see [Charities](#going-live) for where they came from). Tap any charity anywhere (a card, a receipt, My Giving, search, or a
 `#charity-<id>` link) to see what it does, who it helps, where it works, how it helps, when it started, and a

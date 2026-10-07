@@ -306,6 +306,9 @@
       // The chip (or "Clear filters") that was pressed disappears, so keyboard focus goes to the chip that took its place,
       // or to the Filters button when none is left.
       root.querySelector('[data-role="active"]').addEventListener('click', function (e) {
+        // The row redraws under the pointer, so the second click of a double-click would land on the chip that moved into
+        // its place (or on "Clear filters" after the last chip) and remove that too: only the first click counts.
+        if (e.detail > 1) { return; }
         var row = e.currentTarget;
         var b = e.target.closest('[data-group]');
         var next = null;
