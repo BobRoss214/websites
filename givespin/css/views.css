@@ -176,6 +176,9 @@
 .dir-active[hidden] { display: none; }
 .dir-active__l { font: 700 0.72rem var(--f-body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--dim); }
 .dir-active .chip .ico { width: 0.85em; height: 0.85em; opacity: 0.8; }
+/* the toolbar's small controls were 29 to 30 px tall: 32 px is the least that is comfortable to tap */
+.dirtools .seg--sm .seg__btn { min-height: 32px; }
+.dirtools .linkbtn, .dir-active .linkbtn { display: inline-flex; align-items: center; min-height: 32px; }
 .dir-count { color: var(--dim); font-size: 0.8rem; margin-bottom: 12px; }
 .dir { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
 .rcard { --c: #8ad; position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 10px; padding: 14px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); content-visibility: auto; contain-intrinsic-size: auto 190px; transition: border-color 0.15s, transform 0.15s; }

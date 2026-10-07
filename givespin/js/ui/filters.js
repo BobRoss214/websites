@@ -142,8 +142,8 @@
         '<p class="modal__sub" data-role="count" aria-live="polite"></p>' +
         chipsHTML() +
         (cfg.extra || '') +
-        '<div class="modal__foot"><button type="button" class="btn btn--ghost" data-role="clear">Clear all filters</button><button type="button" class="btn btn--green" data-role="done"></button></div>' +
-        (cfg.fine ? '<p class="modal__fine">' + cfg.fine + '</p>' : '');
+        (cfg.fine ? '<p class="modal__fine">' + cfg.fine + '</p>' : '') +
+        '<div class="modal__foot"><button type="button" class="btn btn--ghost" data-role="clear">Clear all filters</button><button type="button" class="btn btn--green" data-role="done"></button></div>';
     }
 
     d.sync = function () {
@@ -186,6 +186,7 @@
       }
       d.sync();
       d.modal.open();
+      d.modal.body.scrollTop = 0; // always start at the title and the count, not where you left off
     };
     return d;
   }

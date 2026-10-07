@@ -25,6 +25,8 @@ dialog.modal[open] { animation: modal-in 0.22s ease-out; }
 .modal__foot { position: sticky; bottom: -24px; z-index: 2; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin: 6px -24px -24px; padding: 14px 24px; border-top: 1px solid var(--line); background: var(--panel); border-radius: 0 0 20px 20px; }
 .modal__foot--split { position: static; margin-top: 4px; }
 .modal__foot .btn--green { flex: 1 1 200px; }
+/* a dialog with sticky buttons keeps the control you tab to clear of them: the browser scrolls it to the edge of the box, which is under the buttons (the buttons are about 70 px tall, about 120 px when they wrap on a phone) */
+.modal__body:has(> .modal__foot:not(.modal__foot--split)) { scroll-padding-bottom: 88px; }
 .btn--block { display: flex; }
 
 /* filters */
@@ -154,6 +156,7 @@ dialog.modal[open] { animation: modal-in 0.22s ease-out; }
 @media (max-width: 560px) {
   .modal__body { padding: 22px 16px 18px; }
   .modal__foot { margin: 6px -16px -18px; padding: 12px 16px; bottom: -18px; }
+  .modal__body:has(> .modal__foot:not(.modal__foot--split)) { scroll-padding-bottom: 134px; }
   .facts__row { grid-template-columns: 1fr; gap: 2px; }
   .creditopts { grid-template-columns: 1fr; }
   .field--2 { grid-template-columns: 1fr 1fr; }
