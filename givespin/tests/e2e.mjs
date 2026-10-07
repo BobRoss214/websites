@@ -345,7 +345,7 @@ if (section('4. Split gifts, minimum per round, amount rules')) {
 }
 
 /* ======================================================================== */
-if (section('5. Filters')) {
+if (section('5. Game filters: which charities can come up when you play')) {
   const page = await newPage();
   await openApp(page, '#game-wheel');
   const count = () => page.evaluate(() => window.GS.app.state.pool.length);
@@ -486,6 +486,539 @@ if (section('6. Charities page, profiles and the in-play switches')) {
   check((await dl.locator('#dlg-profile .prof__name').innerText()).includes('UNICEF'), 'a #charity- link opens the profile on load');
   check(await dl.locator('#view-lobby').isVisible(), 'with the lobby behind it');
   await dl.close();
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('6b. Charities page filters only filter the list')) {
+  const problemsBefore = problems.length;
+  const R = GSdata.charities;
+  const fmt = (n) => n.toLocaleString('en-US');
+  const plural = (n) => (n === 1 ? 'charity' : 'charities');
+  const norm = (s) => s.replace(/\s+/g, ' ').trim();
+  const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+  // What each charity has, worked out here from the roster alone (the site's own matching code is not used): a filter group lets a charity through if it
+  // has ANY of the chosen values, and a charity must get through EVERY group that has something chosen. A founded year that only comes from an official
+  // register never counts for the "When they started" group.
+  const eraOfCharity = (c) => {
+    if (c.foundedFrom === 'register' || typeof c.founded !== 'number') { return null; }
+    return c.founded < 1950 ? 'e1' : c.founded < 1990 ? 'e2' : c.founded < 2010 ? 'e3' : 'e4';
+  };
+  const hasValue = (c, g, v) => (g === 'era' ? eraOfCharity(c) === v : (c[g] || []).includes(v));
+  const GROUPS = ['causes', 'serves', 'where', 'how', 'era'];
+  const F = (o) => Object.assign({ causes: [], serves: [], where: [], how: [], era: [] }, o);
+  const expectIds = (f) => R.filter((c) => GROUPS.every((g) => !(f[g] || []).length || f[g].some((v) => hasValue(c, g, v)))).map((c) => c.id).sort();
+  const withCause = (id) => R.filter((c) => c.causes.includes(id)).map((c) => c.id).sort();
+
+  // page helpers
+  const listIds = (pg) => pg.$$eval('#view-charities .rcard', (els) => els.map((e) => e.getAttribute('data-id')).sort());
+  const pageLine = async (pg) => norm(await pg.locator('#view-charities [data-role="count"]').innerText());
+  const dlgLine = async (pg) => norm(await pg.locator('#dlg-browse-filters [data-role="count"]').innerText());
+  const dlgBtn = async (pg) => norm(await pg.locator('#dlg-browse-filters [data-role="done"]').innerText());
+  const bridgeNote = async (pg) => norm(await pg.locator('#dlg-browse-filters [data-role="bridge-note"]').innerText());
+  const pick = (pg, g, id) => pg.click('#dlg-browse-filters [data-group="' + g + '"][data-id="' + id + '"]');
+  const openBrowse = async (pg) => { await pg.click('#view-charities [data-role="browse-filters"]'); await pg.waitForSelector('#dlg-browse-filters[open]'); };
+  const closeBrowse = async (pg) => { await pg.click('#dlg-browse-filters [data-role="done"]'); await pg.waitForFunction(() => !document.querySelector('#dlg-browse-filters').open); };
+  const activeText = async (pg) => ((await pg.locator('#view-charities [data-role="active"]').isVisible()) ? norm(await pg.locator('#view-charities [data-role="active"]').innerText()) : '');
+  const game = (pg) => pg.evaluate(() => ({ raw: JSON.stringify(window.GS.store.prefs().filters), n: window.GS.core.activeFilterCount(window.GS.store.prefs().filters), pool: window.GS.app.state.pool.length, off: window.GS.store.prefs().excluded.slice().sort() }));
+  const verify = async (pg, f, label, withDialog) => {
+    const exp = expectIds(f);
+    const ids = await listIds(pg);
+    check(same(ids, exp), label + ': the list is exactly the ' + exp.length + ' charities that have those properties', { got: ids.length, want: exp.length, extra: ids.filter((x) => !exp.includes(x)).slice(0, 5), missing: exp.filter((x) => !ids.includes(x)).slice(0, 5) });
+    const line = await pageLine(pg);
+    check(exp.length === N ? line.startsWith(NF + ' charities') : line.startsWith('Showing ' + fmt(exp.length) + ' of ' + NF + ' charities'), label + ': the page says how many it shows', line);
+    if (withDialog) {
+      const dl = await dlgLine(pg);
+      const db = await dlgBtn(pg);
+      check(dl.startsWith(fmt(exp.length) + ' of ' + NF + ' charities match') && db === (exp.length === 0 ? 'Close' : 'Show ' + fmt(exp.length) + ' ' + plural(exp.length)), label + ': the dialog count line and its main button agree with the list', { dl, db });
+    }
+  };
+
+  const page = await newPage();
+  await openApp(page, '#charities');
+  await page.waitForFunction(() => document.querySelectorAll('#view-charities .rcard').length > 0);
+  const start = await game(page);
+  check(start.n === 0 && start.pool === N, 'test setup: no game filter and all ' + N + ' charities in play to begin with', start);
+
+  // ---- the page with nothing chosen, and the dialog that opens from it
+  check(await listIds(page).then((a) => a.length) === N && (await pageLine(page)).startsWith(NF + ' charities · ' + NF + ' in play in games'), 'with no filter the page lists all ' + N + ' and says how many are in play in games', await pageLine(page));
+  check(await page.locator('#view-charities [data-role="fcount"]').isHidden() && !(await page.locator('#view-charities [data-role="active"]').isVisible()), 'no filter badge and no row of active filters');
+  await openBrowse(page);
+  check(await page.locator('#dlg-browse-filters .modal__title').innerText() === 'Filter the charities' && !(await page.evaluate(() => document.querySelector('#dlg-filters') && document.querySelector('#dlg-filters').open)), 'the Charities page opens the browse dialog, "Filter the charities" (not the game one)');
+  check(/only changes what you see on the Charities page/.test(await page.locator('#dlg-browse-filters .modal__hint').innerText()), 'its hint says it only changes what you see on this page');
+  check(await dlgLine(page) === NF + ' of ' + NF + ' charities match' && await dlgBtn(page) === 'Show ' + NF + ' charities', 'with nothing chosen it says all ' + N + ' match and offers "Show ' + NF + ' charities"', [await dlgLine(page), await dlgBtn(page)]);
+  check(await page.locator('#dlg-browse-filters [data-role="to-games"]').isDisabled() && (await bridgeNote(page)).includes('Pick a filter first'), 'the "Use these filters in games" button is off while no filter is chosen, and says why', await bridgeNote(page));
+  check(await page.locator('#dlg-browse-filters [data-role="clear"]').isDisabled(), 'Clear all filters is off while nothing is chosen');
+
+  // ---- the owner's story: Health Care
+  const awf = R.find((c) => c.id === 'awf');
+  const healthIds = withCause('health');
+  check(!!awf && !awf.causes.includes('health') && healthIds.length > 10 && healthIds.length < N, 'test setup: African Wildlife Foundation is not a health charity, and Health Care has ' + healthIds.length + ' charities');
+  const healthLive = await page.evaluate(() => window.GS.charities.filter((c) => c.causes.indexOf('health') >= 0).map((c) => c.id).sort());
+  check(same(healthLive, healthIds), 'the roster in the page and the one read here agree on the Health Care charities');
+  await pick(page, 'causes', 'health');
+  const ids1 = await listIds(page);
+  check(same(ids1, healthLive), 'Health Care: the list is exactly the roster entries whose causes include health (' + healthLive.length + ')', { got: ids1.length, want: healthLive.length });
+  check(!ids1.includes('awf') && (await page.locator('#view-charities .rcard[data-id="awf"]').count()) === 0 && !(await page.locator('#view-charities [data-role="list"]').innerText()).includes('African Wildlife Foundation'), 'African Wildlife Foundation is not on the page');
+  const n1 = healthLive.length;
+  check(await pageLine(page) === 'Showing ' + fmt(n1) + ' of ' + NF + ' charities · ' + NF + ' in play in games', 'the page says "Showing ' + n1 + ' of ' + NF + ' charities"', await pageLine(page));
+  check(await dlgLine(page) === fmt(n1) + ' of ' + NF + ' charities match' && await dlgBtn(page) === 'Show ' + fmt(n1) + ' charities', 'the dialog count line and the "Show ' + n1 + ' charities" button agree with the page', [await dlgLine(page), await dlgBtn(page)]);
+  check(await page.locator('#dlg-browse-filters [data-group="causes"][data-id="health"] .chip__n').innerText() === String(n1), 'the number printed on the Health Care chip is the same ' + n1);
+  check(await page.locator('#dlg-browse-filters [data-role="clear"]').isEnabled(), 'Clear all filters switches on');
+  let g = await game(page);
+  check(g.raw === start.raw && g.n === 0 && g.pool === N, 'browsing did not touch the game filters (still none) or the pool (still ' + N + ')', g);
+  await a11y(page, 'browse filters dialog with a filter on');
+
+  // ---- groups combine: OR inside a group, AND between groups
+  await pick(page, 'causes', 'animals');
+  await verify(page, F({ causes: ['health', 'animals'] }), 'two causes (OR inside the group)', true);
+  check(expectIds(F({ causes: ['health', 'animals'] })).length > n1, 'test setup: Animals adds charities to Health Care');
+  await pick(page, 'where', 'global');
+  await verify(page, F({ causes: ['health', 'animals'], where: ['global'] }), 'plus Worldwide (AND between groups)', true);
+  check(expectIds(F({ causes: ['health', 'animals'], where: ['global'] })).length < expectIds(F({ causes: ['health', 'animals'] })).length, 'test setup: a second group narrows it');
+  await pick(page, 'serves', 'children');
+  await verify(page, F({ causes: ['health', 'animals'], where: ['global'], serves: ['children'] }), 'plus Children (a third group)', true);
+  await pick(page, 'era', 'e2');
+  const f4 = F({ causes: ['health', 'animals'], where: ['global'], serves: ['children'], era: ['e2'] });
+  check(expectIds(f4).length > 0 && expectIds(f4).length < expectIds(F({ causes: ['health', 'animals'], where: ['global'], serves: ['children'] })).length, 'test setup: a fourth group narrows it again, and still leaves some (' + expectIds(f4).length + ')');
+  await verify(page, f4, 'plus a founding band, 1950 to 1989 (a fourth group)', true);
+  check(await page.locator('#view-charities [data-role="fcount"]').innerText() === '5', 'the Filters button on the page counts the 5 chosen values');
+  g = await game(page);
+  check(g.raw === start.raw && g.n === 0 && g.pool === N, 'five browse filters later the game filters are still empty and the pool is still ' + N, g);
+  await closeBrowse(page);
+  check(await page.locator('#dlg-browse-filters').evaluate((d) => !d.open), 'the main button closes the dialog and leaves the list as it is');
+  await verify(page, f4, 'after closing', false);
+  const act = await activeText(page);
+  check(/Showing only/i.test(act) && ['Health Care', 'Animals', 'Worldwide', 'Children', '1950'].every((t) => act.includes(t)) && act.includes('Clear filters') && await page.locator('#view-charities [data-role="active"] .chip').count() === 5, 'a row of 5 removable chips says what is on, with "Clear filters"', act);
+  await a11y(page, 'charities page with filters on');
+
+  // ---- the games keep showing everything
+  await go(page, '#lobby');
+  await page.waitForFunction(() => /charities in play/.test(((document.querySelector('#view-lobby [data-role="poolline"]') || {}).textContent) || ''));
+  const lobbyLine = norm(await page.locator('#view-lobby [data-role="poolline"]').innerText());
+  check(lobbyLine.startsWith(NF + ' of ' + NF + ' charities in play') && !/filter/.test(lobbyLine), 'the lobby still says "' + NF + ' of ' + NF + ' charities in play"', lobbyLine);
+  await go(page, '#game-wheel');
+  await page.waitForSelector('#panel-wheel:not([hidden])');
+  const panelLine = norm(await page.locator('#pool-line').innerText());
+  check(panelLine.startsWith(NF + ' of ' + NF + ' charities in play') && !/filter/.test(panelLine) && await page.locator('#btn-filters .count').isHidden(), 'and so does a game panel, with no filter badge on its Filters button', panelLine);
+  await go(page, '#charities');
+  await verify(page, f4, 'back on the page after leaving it', false);
+  check(await page.locator('#view-charities [data-role="active"] .chip').count() === 5, 'the browse filters are still on when you come back (the chips are still there)');
+
+  // ---- remove one chip, then clear
+  await page.click('#view-charities [data-role="active"] [data-group="era"][data-id="e2"]');
+  const f3 = F({ causes: ['health', 'animals'], where: ['global'], serves: ['children'] });
+  check(expectIds(f3).length > expectIds(f4).length, 'test setup: dropping the founding band widens the list (' + expectIds(f4).length + ' to ' + expectIds(f3).length + ')');
+  await verify(page, f3, 'after removing one chip', false);
+  check(await page.locator('#view-charities [data-role="active"] .chip').count() === 4 && await page.locator('#view-charities [data-role="fcount"]').innerText() === '4', 'one chip less, and the badge says 4');
+  await page.click('#view-charities [data-role="active"] [data-group="where"][data-id="global"]');
+  const f2 = F({ causes: ['health', 'animals'], serves: ['children'] });
+  check(expectIds(f2).length > expectIds(f3).length, 'test setup: dropping Worldwide widens the list again (' + expectIds(f3).length + ' to ' + expectIds(f2).length + ')');
+  await verify(page, f2, 'after removing a second chip', false);
+  await page.click('#view-charities [data-role="active"] [data-role="clearf"]');
+  await verify(page, F(), 'after "Clear filters"', false);
+  check(!(await page.locator('#view-charities [data-role="active"]').isVisible()) && await page.locator('#view-charities [data-role="fcount"]').isHidden(), 'the chip row and the badge are gone');
+  g = await game(page);
+  check(g.raw === start.raw && g.n === 0 && g.pool === N, 'removing chips and clearing also left the game side alone', g);
+
+  // ---- nothing matches, and almost nothing matches
+  const chipValues = [];
+  GSdata.causes.forEach((c) => chipValues.push(['causes', c.id]));
+  ['serves', 'where', 'how', 'era'].forEach((gr) => GSdata.facets[gr].forEach((v) => { if (R.filter((c) => hasValue(c, gr, v.id)).length >= 3) { chipValues.push([gr, v.id]); } }));   // the values the dialog offers (a value fewer than 3 charities have is hidden)
+  const pairWith = (want) => {
+    for (let i = 0; i < chipValues.length; i++) {
+      for (let j = i + 1; j < chipValues.length; j++) {
+        if (chipValues[i][0] === chipValues[j][0]) { continue; }
+        const n = R.filter((c) => hasValue(c, chipValues[i][0], chipValues[i][1]) && hasValue(c, chipValues[j][0], chipValues[j][1])).length;
+        if (n === want) { return [chipValues[i], chipValues[j]]; }
+      }
+    }
+    return null;
+  };
+  const none = pairWith(0);
+  const one = pairWith(1);
+  check(!!none && !!one, 'test setup: there are two filters that match nothing together, and two that match exactly one charity', { none, one });
+  const setPair = async (pr) => { for (const [gr, id] of pr) { await pick(page, gr, id); } };
+  await openBrowse(page);
+  await setPair(none);
+  const fNone = F(); none.forEach(([gr, id]) => fNone[gr].push(id));
+  await verify(page, fNone, 'two filters that match nothing', true);
+  check((await page.locator('#view-charities .empty').innerText()).includes('No charities match') && await page.locator('#view-charities .rcard').count() === 0, 'the page shows "No charities match..." and no cards', await page.locator('#view-charities [data-role="list"]').innerText());
+  check(await page.locator('#dlg-browse-filters [data-role="count"].is-bad').count() === 1 && (await dlgLine(page)).includes('Loosen a filter'), 'the dialog count line turns into a warning that says to loosen a filter', await dlgLine(page));
+  check(await page.locator('#dlg-browse-filters [data-role="to-games"]').isDisabled() && (await bridgeNote(page)).includes('Too few'), 'the games button stays off and says too few would be left', await bridgeNote(page));
+  g = await game(page);
+  check(g.raw === start.raw && g.pool === N, 'an empty browse list does not touch the game side', g);
+  await closeBrowse(page);   // its main button reads Close here
+  await page.click('#view-charities [data-role="active"] [data-role="clearf"]');
+  await openBrowse(page);
+  await setPair(one);
+  const fOne = F(); one.forEach(([gr, id]) => fOne[gr].push(id));
+  await verify(page, fOne, 'two filters that match one charity', true);
+  check(await page.locator('#dlg-browse-filters [data-role="to-games"]').isDisabled() && (await bridgeNote(page)).includes('Too few would be left in a game'), 'one match is fewer than games need (' + 2 + '): the games button stays off and says why', await bridgeNote(page));
+  const gOne = await game(page);
+  check(gOne.raw === start.raw && gOne.pool === N, 'and pressing nothing changed the game side', gOne);
+  await page.click('#dlg-browse-filters [data-role="clear"]');
+  await verify(page, F(), 'after "Clear all filters" in the dialog', true);
+  await closeBrowse(page);
+
+  // ---- search and the tabs combine with the filters
+  const q = page.locator('#view-charities [data-role="q"]');
+  await q.fill('water');
+  const waterAll = await listIds(page);
+  await openBrowse(page);
+  await pick(page, 'causes', 'health');
+  const both = await listIds(page);
+  const waterHealth = waterAll.filter((id) => healthIds.includes(id));
+  check(waterAll.length > waterHealth.length && waterHealth.length > 0 && same(both, waterHealth), 'search "water" + Health Care: the list is the search results that are health charities (' + waterHealth.length + ' of ' + waterAll.length + ')', { both: both.length, want: waterHealth.length });
+  check(await pageLine(page) === 'Showing ' + fmt(both.length) + ' of ' + NF + ' charities · ' + NF + ' in play in games', 'the page line follows the search and the filter together', await pageLine(page));
+  check(await dlgLine(page) === fmt(n1) + ' of ' + NF + ' charities match' && await dlgBtn(page) === 'Show ' + fmt(both.length) + ' ' + plural(both.length), 'the dialog counts the filter alone, and its button says how many the page will show with the search', [await dlgLine(page), await dlgBtn(page)]);
+  await closeBrowse(page);
+  await q.fill('african wildlife');
+  check((await page.locator('#view-charities .empty').innerText()).includes('No charities match'), 'searching for African Wildlife inside Health Care finds nothing');
+  await page.click('#view-charities [data-role="active"] [data-role="clearf"]');
+  check(await listIds(page).then((a) => a.includes('awf')), 'and with the filter cleared it is found again');
+  await q.fill('');
+
+  // tabs: switch some off, give once, and look at each tab with and without a filter
+  const outsiders = R.filter((c) => !c.causes.includes('health') && c.id !== 'awf');
+  const offA = outsiders[0].id;
+  const offH1 = healthIds[0];
+  const offH2 = healthIds[1];
+  const giveTo = healthIds[2];
+  await page.click('#view-charities .rcard[data-id="' + offA + '"] .switch');
+  await openBrowse(page);
+  await pick(page, 'causes', 'health');
+  const bridgeBefore = await bridgeNote(page);
+  await closeBrowse(page);
+  await page.click('#view-charities .rcard[data-id="' + offH1 + '"] .switch');
+  await page.click('#view-charities .rcard[data-id="' + offH2 + '"] .switch');
+  g = await game(page);
+  check(same(g.off, [offA, offH1, offH2].sort()) && g.n === 0 && g.pool === N - 3, 'three charities switched off by hand (' + offA + ', ' + offH1 + ', ' + offH2 + '): the pool is ' + (N - 3) + ' and the game filters are still empty', g);
+  const tab = (v) => page.click('#view-charities [data-role="view"] [data-v="' + v + '"]');
+  const offAll = [offA, offH1, offH2].sort();
+  await tab('in');
+  check(same(await listIds(page), healthIds.filter((id) => id !== offH1 && id !== offH2)), 'In play + Health Care: the health charities that are not switched off (' + (healthIds.length - 2) + ')');
+  await tab('off');
+  check(same(await listIds(page), [offH1, offH2].sort()), 'Switched off + Health Care: just the two health charities that are off');
+  await page.click('#view-charities [data-role="active"] [data-role="clearf"]');
+  check(same(await listIds(page), offAll), 'Switched off, no filter: all three that are off');
+  await tab('in');
+  check(await listIds(page).then((a) => a.length) === N - 3, 'In play, no filter: ' + (N - 3));
+  await openBrowse(page);
+  await pick(page, 'causes', 'health');
+  const bridgeOff = await bridgeNote(page);
+  check(bridgeOff.includes('Games would draw from ' + fmt(healthIds.length - 2) + ' charities'), 'with two health charities off, the games button says it would draw from ' + (healthIds.length - 2) + ' (the switches still count)', { before: bridgeBefore, after: bridgeOff });
+  await closeBrowse(page);
+  await tab('all');
+  // one gift, so "I've given" has something to show
+  await page.locator('#view-charities .rcard[data-id="' + giveTo + '"] .rcard__name').click();
+  await page.waitForSelector('#dlg-profile[open]');
+  await page.click('#dlg-profile [data-role="give"]');
+  await page.waitForSelector('#dlg-direct[open]');
+  await page.click('#dlg-direct .preset[data-amt="10"]');
+  await page.click('#dlg-direct [data-role="go"]');
+  await waitReceipt(page);
+  await closeReceipt(page);
+  await onRoute(page, 'charities');
+  await tab('gave');
+  check(same(await listIds(page), [giveTo]), 'I\'ve given + Health Care: the one health charity given to');
+  await page.click('#view-charities [data-role="active"] [data-group="causes"][data-id="health"]');
+  check(same(await listIds(page), [giveTo]), 'I\'ve given, no filter: the same one');
+  await openBrowse(page);
+  await pick(page, 'causes', 'animals');
+  check(!(await listIds(page)).length && (await page.locator('#view-charities .empty').innerText()).includes('No charities match'), 'I\'ve given + Animals: nothing (that charity is not an animal one)');
+  await page.click('#dlg-browse-filters [data-role="clear"]');
+  await closeBrowse(page);
+  await tab('all');
+  await page.click('#view-charities [data-role="allon"]');
+  g = await game(page);
+  check(g.pool === N && g.off.length === 0 && g.n === 0, '"Turn all on" puts everything back, still with no game filter', g);
+
+  // ---- the bridge: copy the browse filters to the games on purpose
+  await openBrowse(page);
+  await pick(page, 'causes', 'health');
+  check(await page.locator('#dlg-browse-filters [data-role="to-games"]').isEnabled() && (await bridgeNote(page)).includes('Games would draw from ' + fmt(n1) + ' charities'), 'with Health Care chosen the "Use these filters in games" button is on and says games would draw from ' + n1, await bridgeNote(page));
+  g = await game(page);
+  check(g.raw === start.raw && g.pool === N, 'and nothing has changed in the games yet', g);
+  await page.click('#dlg-browse-filters [data-role="to-games"]');
+  const toast = (await toastText(page)).join(' | ');
+  g = await game(page);
+  check(JSON.parse(g.raw).causes.join() === 'health' && g.n === 1 && g.pool === n1, 'pressing it sets the game filters to Health Care and the pool to ' + n1, g);
+  check(new RegExp('Games now .*draw from (the )?' + n1 + ' charities').test(toast), 'a toast says the games now draw from the ' + n1 + ' charities', toast);
+  check(await page.locator('#dlg-browse-filters [data-role="to-games"]').isDisabled() && (await bridgeNote(page)).includes('already use exactly these'), 'the button then switches off and says the games already use exactly these filters', await bridgeNote(page));
+  check(await dlgLine(page) === fmt(n1) + ' of ' + NF + ' charities match' && await dlgBtn(page) === 'Show ' + fmt(n1) + ' charities', 'the browse dialog still talks about the list (it did not turn into the game dialog)', [await dlgLine(page), await dlgBtn(page)]);
+  await closeBrowse(page);
+  check((await pageLine(page)) === 'Showing ' + fmt(n1) + ' of ' + NF + ' charities · ' + fmt(n1) + ' in play in games', 'the page line now says ' + n1 + ' in play in games', await pageLine(page));
+  await go(page, '#lobby');
+  await page.waitForFunction((n) => /charities in play/.test(((document.querySelector('#view-lobby [data-role="poolline"]') || {}).textContent) || '') && document.querySelector('#view-lobby [data-role="poolline"]').textContent.indexOf(n) >= 0, fmt(n1));
+  const lobby2 = norm(await page.locator('#view-lobby [data-role="poolline"]').innerText());
+  check(lobby2.startsWith(fmt(n1) + ' of ' + NF + ' charities in play') && lobby2.includes('1 filter'), 'the lobby now says "' + n1 + ' of ' + NF + ' charities in play · 1 filter"', lobby2);
+  check(await page.locator('#view-lobby [data-role="causes"] .chip[data-cause="health"]').getAttribute('aria-pressed') === 'true', 'and the Health Care quick chip is lit');
+
+  // ---- a game filter that leaves a charity out is marked on the Charities page
+  await page.click('#view-lobby [data-role="causes"] .chip--all');
+  await page.click('#view-lobby [data-role="causes"] .chip[data-cause="planet"]');
+  const planetIds = withCause('planet');
+  g = await game(page);
+  check(g.pool === planetIds.length && JSON.parse(g.raw).causes.join() === 'planet', 'a game filter set from the lobby (Planet) puts ' + planetIds.length + ' charities in play', g);
+  await go(page, '#charities');
+  await page.waitForFunction(() => document.querySelectorAll('#view-charities .rcard').length > 0);
+  await verify(page, F({ causes: ['health'] }), 'the browse filter (Health Care) is not changed by the games filter (Planet)', false);
+  const outHealth = healthIds.filter((id) => !planetIds.includes(id));
+  check(await page.locator('#view-charities .rcard.is-filtered').count() === outHealth.length && outHealth.length > 0 && outHealth.length < healthIds.length, 'among the Health Care list, ' + outHealth.length + ' cards are marked as outside the game filters', await page.locator('#view-charities .rcard.is-filtered').count());
+  await page.click('#view-charities [data-role="active"] [data-role="clearf"]');
+  const outAll = R.map((c) => c.id).filter((id) => !planetIds.includes(id));
+  check(await page.locator('#view-charities .rcard.is-filtered').count() === outAll.length, 'with no browse filter, ' + outAll.length + ' of ' + N + ' cards are marked "Outside game filters" (all but the ' + planetIds.length + ' Planet ones)');
+  const outId = outAll[0];
+  const inId = planetIds[0];
+  check((await page.locator('#view-charities .rcard[data-id="' + outId + '"] [data-role="note"]').innerText()).trim() === 'Outside game filters' && (await page.locator('#view-charities .rcard[data-id="' + inId + '"] [data-role="note"]').innerText()).trim() === '', 'a card left out says "Outside game filters" and a card in play says nothing');
+  check(await listIds(page).then((a) => a.length) === N && (await pageLine(page)).startsWith(NF + ' charities · ' + fmt(planetIds.length) + ' in play in games'), 'the list still shows all ' + N + ' (the game filter does not hide cards here)', await pageLine(page));
+  await page.locator('#view-charities .rcard[data-id="' + outId + '"] .rcard__name').click();
+  await page.waitForSelector('#dlg-profile[open]');
+  check(norm(await page.locator('#dlg-profile [data-role="status"]').innerText()) === 'Outside your game filters', 'the profile of a charity the game filters leave out says "Outside your game filters"', norm(await page.locator('#dlg-profile [data-role="status"]').innerText()));
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#dlg-profile').open && window.location.hash === '#charities');
+  await page.locator('#view-charities .rcard[data-id="' + inId + '"] .rcard__name').click();
+  await page.waitForSelector('#dlg-profile[open]');
+  check(norm(await page.locator('#dlg-profile [data-role="status"]').innerText()) === 'In play', 'and the profile of one that is in play says "In play"', norm(await page.locator('#dlg-profile [data-role="status"]').innerText()));
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#dlg-profile').open && window.location.hash === '#charities');
+
+  // ---- the game dialog is a different dialog
+  await go(page, '#lobby');
+  await page.click('#view-lobby [data-open-filters]');
+  await page.waitForSelector('#dlg-filters[open]');
+  check(await page.locator('#dlg-filters .modal__title').innerText() === 'Filters for games' && !(await page.evaluate(() => document.querySelector('#dlg-browse-filters').open)), 'the lobby\'s Filters button opens the game dialog, "Filters for games"');
+  check(/which charities can come up when you play/.test(await page.locator('#dlg-filters .modal__hint').innerText()) && await page.locator('#dlg-filters [data-role="to-games"]').count() === 0, 'its hint is about playing, and it has no "Use these filters in games" box');
+  const gameBtn = async () => norm(await page.locator('#dlg-filters [data-role="done"]').innerText());
+  check(await gameBtn() === 'Play with ' + fmt(planetIds.length) + ' charities', 'its main button reads "Play with ' + planetIds.length + ' charities"', await gameBtn());
+  await page.click('#dlg-filters [data-role="clear"]');
+  check(await gameBtn() === 'Play with ' + NF + ' charities', 'after Clear all filters it reads "Play with ' + NF + ' charities"', await gameBtn());
+  await page.click('#dlg-filters [data-group="' + one[0][0] + '"][data-id="' + one[0][1] + '"]');
+  await page.click('#dlg-filters [data-group="' + one[1][0] + '"][data-id="' + one[1][1] + '"]');
+  check(await gameBtn() === 'Close' && (await page.locator('#dlg-filters [data-role="count"]').innerText()).includes('Loosen a filter') && await page.locator('#dlg-filters [data-role="count"].is-bad').count() === 1, 'with only one charity left the game dialog says to loosen a filter and its main button reads "Close"', [await gameBtn(), await page.locator('#dlg-filters [data-role="count"]').innerText()]);
+  await page.click('#dlg-filters [data-role="done"]');
+  await page.waitForFunction(() => !document.querySelector('#dlg-filters').open);
+  check(await page.locator('#view-lobby .pool-line.is-bad').count() === 1, 'and closing leaves the lobby warning in place');
+  await page.click('#view-lobby [data-open-filters]');
+  await page.waitForSelector('#dlg-filters[open]');
+  await page.click('#dlg-filters [data-role="clear"]');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('#dlg-filters').open);
+  g = await game(page);
+  check(g.n === 0 && g.pool === N, 'game filters cleared again: ' + N + ' in play', g);
+
+  // ---- browse filters live in memory: a reload starts with none
+  await go(page, '#charities');
+  await openBrowse(page);
+  await pick(page, 'causes', 'health');
+  await closeBrowse(page);
+  await page.reload();
+  await page.waitForFunction(() => document.body.classList.contains('is-ready') && document.querySelectorAll('#view-charities .rcard').length > 0);
+  check(await listIds(page).then((a) => a.length) === N && !(await page.locator('#view-charities [data-role="active"]').isVisible()), 'after a reload the browse filters are gone and all ' + N + ' show again (they are not saved with the game filters)');
+  await page.close();
+
+  // ---- a phone
+  const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+  await openApp(ph, '#charities');
+  await ph.waitForFunction(() => document.querySelectorAll('#view-charities .rcard').length > 0);
+  const noSide = (pg) => pg.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+  check(await noSide(ph), 'phone: the Charities page does not scroll sideways');
+  await openBrowse(ph);
+  check(await noSide(ph), 'phone: nor with the browse dialog open');
+  const bd = await ph.locator('#dlg-browse-filters .modal__card').boundingBox();
+  check(bd.x >= 0 && bd.x + bd.width <= 391 && bd.height <= 845, 'phone: the browse dialog fits the screen', bd);
+  const fPhone = F({ causes: ['health', 'kids'], serves: ['children', 'patients'], where: ['us', 'global'], how: ['direct'] });
+  check(expectIds(fPhone).length > 0, 'test setup: the seven phone filters match some charities (' + expectIds(fPhone).length + ')');
+  for (const gr of GROUPS) { for (const id of fPhone[gr]) { await pick(ph, gr, id); } }
+  await verify(ph, fPhone, 'phone, 7 chips in 4 groups', true);
+  const tail = await ph.evaluate(() => {
+    const out = {};
+    ['clear', 'done', 'to-games'].forEach((r) => { const b = document.querySelector('#dlg-browse-filters [data-role="' + r + '"]'); b.scrollIntoView({ block: 'center' }); const x = b.getBoundingClientRect(); out[r] = [Math.round(x.left), Math.round(x.right), Math.round(x.height)]; });
+    return out;
+  });
+  check(Object.values(tail).every((r) => r[0] >= 0 && r[1] <= 390), 'phone: Clear, Show and the "Use these filters in games" button are all inside the screen width', tail);
+  check(await noSide(ph), 'phone: still no sideways scroll after scrolling the dialog');
+  await closeBrowse(ph);
+  const row = await ph.evaluate(() => {
+    const a = document.querySelector('#view-charities [data-role="active"]');
+    const r = a.getBoundingClientRect();
+    const chips = Array.prototype.slice.call(a.querySelectorAll('.chip'));
+    return { left: Math.round(r.left), right: Math.round(r.right), lines: new Set(chips.map((c) => Math.round(c.getBoundingClientRect().top))).size, chips: chips.length, over: chips.filter((c) => c.getBoundingClientRect().right > 390.5).length };
+  });
+  check(row.chips === 7 && row.lines >= 2 && row.over === 0 && row.left >= 0 && row.right <= 390.5, 'phone: the row of 7 active chips wraps onto ' + row.lines + ' lines and stays inside the screen', row);
+  check(await noSide(ph), 'phone: the Charities page with seven filters on does not scroll sideways');
+  await go(ph, '#lobby');
+  await ph.click('#view-lobby [data-open-filters]');
+  await ph.waitForSelector('#dlg-filters[open]');
+  const gd = await ph.locator('#dlg-filters .modal__card').boundingBox();
+  check(gd.x >= 0 && gd.x + gd.width <= 391 && gd.height <= 845 && await noSide(ph), 'phone: the game filters dialog fits the screen too', gd);
+  await ph.keyboard.press('Escape');
+  await ph.close();
+
+  check(problems.length === problemsBefore, '6b: no console errors, warnings or failed requests', problems.slice(problemsBefore, problemsBefore + 5));
+}
+
+/* ======================================================================== */
+if (section('6c. Filter dialogs: keyboard, focus and screen-reader details')) {
+  const problemsBefore = problems.length;
+  const page = await newPage();
+  await openApp(page, '#charities');
+  const BD = '#dlg-browse-filters';
+  const GD = '#dlg-filters';
+  const active = () => page.evaluate(() => {
+    const a = document.activeElement || {};
+    const g = (n) => (a.getAttribute ? a.getAttribute(n) : null);
+    return { tag: a.tagName, role: g('data-role'), id: g('data-id'), inDialog: !!(a.closest && a.closest('dialog')), inChips: !!(a.closest && a.closest('[data-role="active"]')) };
+  });
+  const openBrowse = async () => { await page.click('#view-charities [data-role="browse-filters"]'); await page.waitForSelector(BD + '[open]'); };
+  const openGame = async () => { await page.locator('#view-lobby button[data-open-filters]').first().click(); await page.waitForSelector(GD + '[open]'); };
+  const closeDlg = async (sel) => { await page.keyboard.press('Escape'); await page.waitForFunction((s) => !document.querySelector(s).open, sel); };
+  const pick = async (dlg, list) => { for (const [g, id] of list) { await page.click(dlg + ' [data-group="' + g + '"][data-id="' + id + '"]'); } };
+  const pressOn = async (sel) => { await page.locator(sel).focus(); await page.keyboard.press('Enter'); };
+  const text = async (sel) => (await page.locator(sel).innerText()).replace(/\s+/g, ' ').trim();
+  const resetGames = () => page.evaluate(() => { window.GS.store.setPref('filters', window.GS.core.emptyFilters()); window.GS.app.refreshPool(); });
+  const chipsOn = '#view-charities [data-role="chips"] .chip';
+
+  // the filters that are on show as buttons under the toolbar
+  await openBrowse();
+  await pick(BD, [['causes', 'health'], ['causes', 'animals'], ['causes', 'planet']]);
+  await closeDlg(BD);
+  const names = await page.evaluate(() => ['health', 'animals', 'planet'].map((id) => window.GS.cause(id).name));
+  const chips = await page.$$eval(chipsOn, (els) => els.map((e) => ({ tag: e.tagName, label: e.getAttribute('aria-label'), pressed: e.getAttribute('aria-pressed') })));
+  check(chips.length === 3 && chips.every((c) => c.tag === 'BUTTON'), 'the filters that are on are real buttons', chips);
+  check(chips.every((c, i) => c.label === 'Remove filter: ' + names[i]), 'each one is labelled "Remove filter: " and the filter name', chips.map((c) => c.label));
+  check(chips.every((c) => c.pressed === null), 'and none of them claims to be a pressed toggle (a button that removes has no aria-pressed)', chips.map((c) => c.pressed));
+
+  // removing one keeps keyboard focus on the page: on the chip that took its place, or on the Filters button
+  await pressOn(chipsOn + '[data-id="animals"]');
+  let at = await active();
+  check(at.inChips && at.id === 'planet', 'removing a chip from the middle puts focus on the chip that took its place', at);
+  await pressOn(chipsOn + '[data-id="planet"]');
+  at = await active();
+  check(at.inChips && at.id === 'health', 'removing the last chip puts focus on the one before it', at);
+  await pressOn(chipsOn + '[data-id="health"]');
+  at = await active();
+  check(at.role === 'browse-filters' && !at.inChips, 'removing the only chip puts focus on the Filters button', at);
+  check(await page.locator('#view-charities [data-role="active"]').isHidden(), 'and the row of chips is gone');
+  await openBrowse();
+  await pick(BD, [['causes', 'health'], ['where', 'uk']]);
+  await closeDlg(BD);
+  await pressOn('#view-charities [data-role="clearf"]');
+  at = await active();
+  check(at.role === 'browse-filters', 'Clear filters puts focus on the Filters button (the button that was pressed has gone)', at);
+  check(await page.locator('#view-charities [data-role="active"]').isHidden(), 'and clears every filter');
+
+  // "Clear all filters" switches itself off when it has nothing left to clear: focus goes to the main button, not to the page
+  await openBrowse();
+  await pick(BD, [['causes', 'health']]);
+  await pressOn(BD + ' [data-role="clear"]');
+  at = await active();
+  check(at.role === 'done' && at.inDialog, 'Clear all filters in the Charities-page dialog leaves focus on its main button', at);
+  check(await page.locator(BD + ' [data-role="clear"]').isDisabled(), 'while Clear all filters is switched off');
+  await closeDlg(BD);
+  await go(page, '#lobby');
+  await openGame();
+  await pick(GD, [['causes', 'health']]);
+  await pressOn(GD + ' [data-role="clear"]');
+  at = await active();
+  check(at.role === 'done' && at.inDialog, 'Clear all filters in the game dialog leaves focus on its main button', at);
+  await closeDlg(GD);
+
+  // the same filters picked in another order are the same filters
+  await page.click('#view-lobby [data-cause="health"]');
+  await page.click('#view-lobby [data-cause="animals"]');
+  await go(page, '#charities');
+  await openBrowse();
+  await pick(BD, [['causes', 'animals'], ['causes', 'health']]);
+  check(await page.locator(BD + ' [data-role="to-games"]').isDisabled(), 'the same filters picked in another order are already used by the games (the button is off)');
+  check((await text(BD + ' [data-role="bridge-note"]')) === 'Games already use exactly these filters.', 'and the note says so', await text(BD + ' [data-role="bridge-note"]'));
+  await pick(BD, [['causes', 'animals']]);
+  check(await page.locator(BD + ' [data-role="to-games"]').isEnabled() && (await text(BD + ' [data-role="bridge-note"]')).startsWith('Games would draw from'), 'but a different set is not (the button is on, and says what the games would draw from)', await text(BD + ' [data-role="bridge-note"]'));
+  await pressOn(BD + ' [data-role="clear"]');
+  await closeDlg(BD);
+  await resetGames();
+
+  // a round in progress: the games must not change under it
+  await openBrowse();
+  await pick(BD, [['causes', 'health']]);
+  check(await page.locator(BD + ' [data-role="to-games"]').isEnabled(), 'with one filter chosen and no round running, the button for the games is on');
+  await page.evaluate(() => window.GS.app.setBusy(true));
+  check(await page.locator(BD + ' [data-role="to-games"]').isDisabled(), 'while a round is in progress it switches itself off');
+  check((await text(BD + ' [data-role="bridge-note"]')) === 'A round is in progress. Try again when it has finished.', 'and the note says a round is in progress', await text(BD + ' [data-role="bridge-note"]'));
+  await page.evaluate(() => document.querySelector('#dlg-browse-filters [data-role="to-games"]').click());
+  check(await page.evaluate(() => window.GS.store.prefs().filters.causes.length === 0 && window.GS.app.state.pool.length === window.GS.charities.length), 'pressing it anyway changes nothing for the games');
+  await page.evaluate(() => window.GS.app.setBusy(false));
+  check(await page.locator(BD + ' [data-role="to-games"]').isEnabled() && (await text(BD + ' [data-role="bridge-note"]')).startsWith('Games would draw from'), 'when the round is over it is on again', await text(BD + ' [data-role="bridge-note"]'));
+
+  // pressing it: the games take the filters, the dialog says so (the toast is drawn under the open dialog), focus stays in the dialog
+  await page.click(BD + ' [data-role="to-games"]');
+  const said = await page.evaluate(() => 'Games now use these filters and draw from ' + window.GS.app.state.pool.length + ' charities.');
+  const toasts = await toastText(page); // read at once: a toast is gone after three seconds
+  await page.waitForFunction((s) => document.querySelector('#dlg-browse-filters [data-role="bridge-live"]').textContent === s, said, { timeout: 5000 }).catch(() => {});
+  const live = await page.locator(BD + ' [data-role="bridge-live"]').textContent();
+  check(live === said, 'after "Use these filters in games" the status line inside the dialog says what happened', { live, said });
+  check(toasts.some((t) => t.includes(said)), 'and it is the same sentence as the toast', toasts);
+  check(await page.evaluate(() => window.GS.store.prefs().filters.causes.join() === 'health' && window.GS.app.state.pool.length < window.GS.charities.length), 'and the games really use the filter');
+  at = await active();
+  check(at.role === 'done' && at.inDialog, 'focus is on the main button afterwards (the pressed button switched itself off)', at);
+  check(await page.locator(BD + ' [data-role="bridge-live"]').getAttribute('aria-live') === 'polite' && await page.locator(BD + ' [data-role="bridge-live"]').getAttribute('role') === 'status', 'that status line is a polite live region');
+
+  // filters that match charities while the search box then hides every one
+  await closeDlg(BD);
+  await page.fill('#view-charities [data-role="q"]', 'zzzzqq');
+  await openBrowse();
+  const hidden = await text(BD + ' [data-role="count"]');
+  check(/^\d+ of \d+ charities match\. The search or tab on the page hides them all\.$/.test(hidden), 'when the search hides every match, the count line says so', hidden);
+  check((await text(BD + ' [data-role="done"]')) === 'Close', 'and the main button reads Close, not "Show 0 charities"', await text(BD + ' [data-role="done"]'));
+  await closeDlg(BD);
+  await page.fill('#view-charities [data-role="q"]', '');
+  await openBrowse();
+  check(/^Show \d+ charit(y|ies)$/.test(await text(BD + ' [data-role="done"]')) && !(await text(BD + ' [data-role="count"]')).includes('hides'), 'with the search cleared the main button shows the matches again', await text(BD + ' [data-role="done"]'));
+  await pressOn(BD + ' [data-role="clear"]');
+  await closeDlg(BD);
+  await resetGames();
+
+  // a dialog always opens at its top, and its small print sits above the buttons (a short window makes both dialogs scroll)
+  await page.setViewportSize({ width: 1280, height: 640 });
+  for (const d of [{ id: BD, name: 'Charities-page dialog', open: openBrowse, route: '#charities' }, { id: GD, name: 'game dialog', open: openGame, route: '#lobby' }]) {
+    await go(page, d.route);
+    await d.open();
+    const end = await page.evaluate((sel) => {
+      const body = document.querySelector(sel + ' .modal__body');
+      body.scrollTop = body.scrollHeight;
+      const fine = document.querySelector(sel + ' .modal__fine').getBoundingClientRect();
+      const foot = document.querySelector(sel + ' .modal__foot').getBoundingClientRect();
+      return { scrollable: body.scrollHeight > body.clientHeight + 40, scrolled: body.scrollTop, fineBottom: Math.round(fine.bottom), footTop: Math.round(foot.top) };
+    }, d.id);
+    check(end.scrollable && end.scrolled > 0, d.name + ': it is tall enough to scroll in a short window', end);
+    check(end.fineBottom <= end.footTop + 1, d.name + ': the small print is above the buttons, not under them', end);
+    await closeDlg(d.id);
+    await d.open();
+    const top = await page.evaluate((sel) => Math.round(document.querySelector(sel + ' .modal__body').scrollTop), d.id);
+    check(top === 0, d.name + ': opened again after being scrolled to the end, it starts at the top', top);
+    await closeDlg(d.id);
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  // the count line is a live region: it is rewritten only when its words change
+  await go(page, '#lobby');
+  await openGame();
+  const writes = (trigger) => page.evaluate(async (t) => {
+    const el = document.querySelector('#dlg-filters [data-role="count"]');
+    let n = 0;
+    const mo = new MutationObserver((list) => { n += list.length; });
+    mo.observe(el, { childList: true, characterData: true, subtree: true });
+    if (t === 'pool') { window.GS.bus.emit('pool'); } else { document.querySelector('#dlg-filters [data-group="causes"][data-id="kids"]').click(); }
+    await new Promise((r) => setTimeout(r, 120));
+    mo.disconnect();
+    return n;
+  }, trigger);
+  check(await writes('pool') === 0, 'a pool update that leaves the count line the same does not rewrite it (a screen reader would read it out again)');
+  check(await writes('chip') > 0, 'but a filter that changes the numbers does');
+  await closeDlg(GD);
+  await resetGames();
+  check(problems.length === problemsBefore, 'no console errors, warnings or failed requests', problems.slice(problemsBefore, problemsBefore + 4));
   await page.close();
 }
 
@@ -2987,8 +3520,8 @@ if (section('15. Phones')) {
   await page.click('#btn-filters');
   await page.waitForSelector('#dlg-filters[open]');
   const fd = await page.locator('#dlg-filters .modal__card').boundingBox();
-  check(fd.x >= 0 && fd.x + fd.width <= 391 && fd.height <= 845, 'the filters dialog fits a phone');
-  await a11y(page, 'filters on a phone');
+  check(fd.x >= 0 && fd.x + fd.width <= 391 && fd.height <= 845, 'the game filters dialog fits a phone');
+  await a11y(page, 'game filters on a phone');
   await page.close();
 }
 
@@ -3676,16 +4209,23 @@ if (section('13za. Clickable charities: website links and About buttons in resul
   await page.keyboard.press('Enter');
   await page.waitForSelector('#dlg-profile[open]');
   await closeProfile(page);
-  await page.click('#btn-play');
-  await page.waitForFunction(() => document.querySelectorAll('#panel-slots .reel.is-spinning').length > 0, null, { timeout: 15000 });
-  const during = await page.evaluate(() => {
+  // A spin has to last long enough to be caught, so this part runs at real speed: with ?fast=1 (and Turbo) a spin is over in about a
+  // fifth of a second, and a busy machine can miss it.
+  const sp = await newPage();
+  await openApp(sp, '#game-slots', '');
+  await setAmount(sp, 60);
+  await sp.click('#rounds-seg [data-reels="6"]');
+  await sp.click('#btn-play');
+  await sp.waitForFunction(() => document.querySelectorAll('#panel-slots .reel.is-spinning').length > 0, null, { timeout: 15000 });
+  const during = await sp.evaluate(() => {
     document.querySelectorAll('#panel-slots .sym').forEach((s) => s.click());
     return { onBtn: document.querySelectorAll('#panel-slots .sym--btn:not(:disabled)').length, profile: !!document.querySelector('#dlg-profile[open]') };
   });
   check(during.onBtn === 0 && !during.profile, 'while the reels spin the symbols do nothing (the spin is never interrupted)', during);
-  await waitReceipt(page);
-  await closeReceipt(page);
-  check(await page.locator('#panel-slots .sym--btn:not(:disabled)').count() === syms.reels, 'and they work again once the round is over');
+  await waitReceipt(sp);
+  await closeReceipt(sp);
+  check(await sp.locator('#panel-slots .sym--btn:not(:disabled)').count() === syms.reels, 'and they work again once the round is over');
+  await sp.close();
 
   // ---- Pick a Card and Scratch cards (real speed: with ?fast=1 the game picks and scratches for you) ----
   const rp = await newPage();
