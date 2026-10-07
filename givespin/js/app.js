@@ -311,7 +311,10 @@
   GS.app = {
     state: state, refreshPool: refreshPool, setBusy: setBusy, go: go, route: function () { return state.route; },
     noteProfileOpen: function (id) { setHash('charity-' + id); },
-    afterProfileClose: function () { setHash(state.route); },
+    // A closed profile puts the page's own address back, but only while the address still names that profile. The dialog's "close"
+    // event comes a moment after it shuts (at the next frame), and a move made in that moment (a link, Back, a script) must win:
+    // putting the old address back first would make the router read it and stay on the old page.
+    afterProfileClose: function (id) { if (!id || window.location.hash === '#charity-' + id) { setHash(state.route); } },
     play: function () { return ui.game.play(); },
     _last: null
   };

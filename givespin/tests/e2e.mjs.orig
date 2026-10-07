@@ -4830,34 +4830,6 @@ if (section('13y. Click a charity on the board: Wheel, Roulette, Plinko, Lucky D
     check((await profileOpen()) === null && !gone.title && !gone.cursor, gid + ': after unmount a click opens nothing and the pointer hand and tooltip are gone', gone);
   }
 
-  /* ---- closing a profile never undoes a move to another page made at the same moment ---- */
-  // A closed profile puts the game's address back, from the dialog's "close" event, which comes at the next frame, not when the dialog shuts.
-  // A move to another page made in between (here in the same turn; on a busy machine the "close it, then go" of the steps above can land in that
-  // moment too) must win: before this was fixed the old address came back first, the app read it and stayed on the old game, and a wait for
-  // the new game's panel ran out after 30 seconds (two whole-suite runs stopped like that, at different places).
-  {
-    const seen = [];
-    for (let i = 0; i < 6; i++) {
-      const from = i % 2 ? 'lotto' : 'wheel';
-      const to = i % 2 ? 'wheel' : 'lotto';
-      await go(page, '#game-' + from);
-      await page.waitForSelector('#panel-' + from + ':not([hidden])');
-      await page.evaluate(() => window.GS.ui.charity.openProfile('msf'));
-      await page.waitForSelector('#dlg-profile[open]');
-      // resolves once both have happened, the profile's close and the address change, in whichever order the browser runs them
-      seen.push(await page.evaluate((g) => new Promise((resolve) => {
-        const d = document.querySelector('#dlg-profile');
-        let left = 2;
-        const both = () => { if (--left === 0) { resolve({ want: g, route: window.GS.app.state.route, hash: window.location.hash, shown: !document.querySelector('#panel-' + g).hidden }); } };
-        d.addEventListener('close', both, { once: true });
-        window.addEventListener('hashchange', both, { once: true });
-        d.querySelector('.modal__close').click();
-        window.location.hash = '#game-' + g;
-      }), to));
-    }
-    check(seen.every((s) => s.route === 'game-' + s.want && s.hash === '#game-' + s.want && s.shown), 'a profile closed at the same moment as a move to another game does not undo the move (6 tries): the new game shows and the address names it', seen.filter((s) => !(s.route === 'game-' + s.want && s.hash === '#game-' + s.want && s.shown)));
-  }
-
   check(problems.length === problemsBefore, '13y: no console errors, warnings or failed requests while clicking', problems.slice(problemsBefore, problemsBefore + 5));
   await page.close();
 }
@@ -5147,10 +5119,7 @@ if (section('13zm. Marble Run: a click or tap on a marble opens that charity (in
 
   /* ---- 4. a phone (390 px): a tap works the same ---- */
   const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
-  // real speed, like part 1: the phone race below taps in the shake and mid-run. With ?fast=1 the shake lasts about 0.1 s and the run about 1.5 s,
-  // so after the 1.2 s pause only 0.1 to 0.3 s of the race was left for the tap: a tap that came after the finish failed, and one that opened a
-  // profile just before it had the receipt open on top, so the Escape of closeProfile closed the receipt and the wait for the profile ran out after 30 s
-  await openApp(ph, '', '');
+  await openApp(ph);
   await watchClicks(ph);
   for (const n of [8, 100, 500]) {
     const tag = 'phone, ' + n + ' marbles: ';

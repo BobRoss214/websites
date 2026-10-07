@@ -96,7 +96,7 @@
     if (!profile) {
       profile = ui.modal('profile', {
         wide: true,
-        onClose: function () { GS.app.afterProfileClose(); }
+        onClose: function () { GS.app.afterProfileClose(profile.el.getAttribute('data-id')); }
       });
       profile.body.addEventListener('click', function (e) {
         var ch2 = GS.charity(profile.el.getAttribute('data-id'));
