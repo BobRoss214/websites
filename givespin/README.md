@@ -71,12 +71,12 @@ those limits are about the picture, not the fairness: the draw works the same at
 reels instead of a board. Every other game goes up to 500.
 
 **Choose your own charities.** Every solo game has a **Choose your own charities** button. It opens a searchable
-list: type a name, a cause ("animals"), a place or what a charity does, narrow it with the same filters as the rest of
-the site (cause, where they work, who they help, how, when founded), read each charity's description and details, open
+list: type a name, a cause ("animals"), a place or what a charity does, narrow it with the same kinds of filters as the rest of
+the site (cause, where they work, who they help, how, when founded; here they only help you search the list), read each charity's description and details, open
 its own website, and tick the ones you want or choose everything that is showing. The limit is what the game can show
 (up to 100 for Pick a Card, 500 for Roulette and Plinko). A **Custom charities** chip with a tick then appears on the game
 screen: turn it off and on, edit it or remove it. While it is on the winner is drawn from exactly those charities
-(each with equal odds) and your filters are paused for that game. The list is remembered per game.
+(each with equal odds) and your game filters (see Filters below) are paused for that game. The list is remembered per game.
 
 **Slot machines.** The Slots category has five themed machines on one engine. Each reel is a round: you choose how
 many reels (3, 4, 5, 6, 8, 10 or 12) and your gift is split evenly across them to the cent, one charity per reel.
@@ -102,13 +102,30 @@ payment method (demo credit or a preview saved card). You can also **give direct
 involved.
 
 **Filters.** Causes (30, in six groups), who they help, where they work, how they help and when they were founded.
-Choices combine as OR within a
-group and AND between groups, with a live count. The same filters drive every game. Filter values that fewer
-than three charities have are hidden so a filter cannot just empty the pool.
+Choices combine as OR within a group and AND between groups, with a live count. Filter values that fewer than three
+charities have are hidden so a filter cannot just empty the pool. There are two Filters dialogs and they do different jobs:
+
+- **Game filters** ("Filters for games") are opened with the Filters button on the lobby and on the game screen (the quick
+  cause chips next to it set the same filters). They choose which charities can come up when you play. They are saved on the
+  device, they drive every game (except one where you chose your own charities), and they set the "N of 500 charities in play"
+  line. The main button reads "Play with N charities".
+- **Charities-page filters** ("Filter the charities") are opened from the Filters button on the Charities page. They only
+  narrow the list you are looking at, together with the search box and the All / In play / Switched off / I've given tabs.
+  They never change which charities the games use, they are not saved (they are kept while you move around the site, and
+  cleared on a reload), and the main button reads "Show N charities". The chosen filters also show as removable chips under
+  the toolbar, with a "Clear filters" link. If you want the games to use the same filters, the dialog has a separate
+  **Use these filters in games** button; it is switched off when no filter is chosen, when the games already use exactly
+  these filters, or when fewer than 2 charities would be left to play with.
 
 **500 charities, each with a profile** (see [Charities](#going-live) for where they came from). Tap any charity anywhere (a card, a receipt, My Giving, search, or a
 `#charity-<id>` link) to see what it does, who it helps, where it works, how it helps, when it started, and a
 **Visit website** link. Switch individual charities on or off for the games.
+
+**The Charities page** (the globe in the side nav) lists all 500 as cards. Search by name, cause, place or what they do, look
+through them with the page's own Filters (they only narrow the list, see Filters above), pick a tab (All, In play, Switched off,
+I've given) and sort them. A line under the toolbar reads "Showing N of 500 charities · M in play in games": the first number is
+what you are looking at, the second is how many charities the games can currently draw from. **In play** means a charity can come up
+in a game: the switch on each card turns it off or on, and a card the game filters leave out says "Outside game filters".
 
 **My Giving** shows every charity you have given to, with totals, last gift date, a link to its profile and
 website, a "Give again" button, a breakdown by cause, repeat gift plans and your recent rounds (each expandable,
@@ -198,7 +215,7 @@ handle passwords and cards on a server, through a payment provider's hosted fiel
   (`docs/roster-candidates.md`). Their descriptions are short, neutral paraphrases of the register text (for Australia, of the
   register's purpose flags), so they are plainer than the others, and `founded` is empty for most because the register gives a
   registration date rather than a founding date. Where a register year is kept (16 entries) it is marked
-  `foundedFrom: "register"`, shown as "(register date)", and left out of the Founded filter and the oldest/newest sort, because
+  `foundedFrom: "register"`, shown as "(register date)", and left out of the "When they started" filter and the oldest/newest sort, because
   the register year is often when the current company was incorporated or merged rather than when the organisation began; where
   a search gave the organisation's own clear year, the entry carries that year instead. A charity that is run by a religious
   body but whose work is care (aged care, homelessness, children) stays and carries a faith-based flag. Facts can go out of date:
@@ -344,8 +361,8 @@ NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 
 About 1,490 end-to-end checks (about 1,415 without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
-the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board (500 charities), clicking a logo or slice in every game to open that charity, the website links in the results, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the lobby of seven table sizes for every live game, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, filters checked
-against an independent computation, the charity directory and profiles, direct gifts, repeat plans and dedications,
+the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board (500 charities), clicking a logo or slice in every game to open that charity, the website links in the results, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the lobby of seven table sizes for every live game, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, game filters checked
+against an independent computation, the filters on the Charities page (which only narrow the list, never the games), the charity directory and profiles, direct gifts, repeat plans and dedications,
 My Giving, the whole account preview (including that no password or full card number ever reaches storage), demo
 credit, the monthly limit, fair-play verification and tamper detection, stream mode, reduced motion, persistence,
 live (redirect) mode including rejecting non-https links, a phone-sized viewport, loading from `file://`, and a check

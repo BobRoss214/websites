@@ -6,7 +6,9 @@
  * Search by name, cause, place or what a charity does ("animals", "clean water", "Kenya"), narrow with the same
  * filters as the rest of the site (causes, who they help, where, how, when founded), tick the ones you want, or choose
  * everything that is showing. Every row has a short description, a details drawer and a link to the charity's own
- * website. Nothing here changes your saved filters: the list only applies to the game that opened it.
+ * website. The filters inside this dialog only help you search the list. Nothing here changes your saved game filters
+ * (the ones on the lobby and the game panel): the list only applies to the game that opened it, and while it is on it
+ * pauses those game filters for that game.
  */
 (function () {
   'use strict';

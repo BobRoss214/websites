@@ -64,7 +64,7 @@
             '<p class="field__hint" id="pick-hint"></p></div>' +
           '<div class="field" id="field-pool">' +
             '<div class="field__row"><span class="field__label" id="pool-label">Charities in play</span>' +
-              '<button type="button" class="btn btn--sm" id="btn-filters">' + ui.icon('list-filter') + 'Filters <span class="count" id="filters-count" hidden></span></button></div>' +
+              '<button type="button" class="btn btn--sm" id="btn-filters" title="Choose which charities can come up in games">' + ui.icon('list-filter') + 'Filters <span class="count" id="filters-count" hidden></span></button></div>' +
             '<div class="chips chips--quick" id="quick-causes" role="group" aria-label="Quick causes"></div>' +
             '<p class="pool-line" id="pool-line" aria-live="polite"></p>' +
             '<div class="customrow" id="custom-row">' +
@@ -346,7 +346,7 @@
     return c ? c.ids.map(function (x) { return GS.charity(x); }).filter(Boolean) : [];
   }
   function customOn(id) { var c = customFor(id); return !!(c && c.on && customList(id).length >= cfg.minPool); }
-  /** The charities this game draws from: the ones you chose for it, or whatever your filters leave in play. */
+  /** The charities this game draws from: the ones you chose for it, or whatever your game filters leave in play. */
   function activePool(id) { return customOn(id) ? customList(id) : state().pool; }
   function customStamp(id) { return customOn(id) ? customFor(id).ids.join(',') : ''; }
 
@@ -384,8 +384,8 @@
     el.customClear.disabled = busy;
     el.poolBox.classList.toggle('is-paused', on);
     el.customHint.textContent = on
-      ? 'This game uses only the ' + ui.num(n) + ' charities you chose. Your filters are paused for it; they still apply to other games.'
-      : (c ? 'Switched off: this game uses the charities your filters leave in play.' : 'Optional: pick exactly which charities this game uses, by name, cause or place.');
+      ? 'This game uses only the ' + ui.num(n) + ' charities you chose. Your game filters are paused for it; they still apply to other games.'
+      : (c ? 'Switched off: this game uses the charities your game filters leave in play.' : 'Optional: pick exactly which charities this game uses, by name, cause or place.');
     if (!g) { el.customBtn.hidden = true; }
   }
 
@@ -396,7 +396,7 @@
     var c = customFor(current);
     ui.chooseCharities({
       title: 'Choose your own charities',
-      sub: 'For ' + g.name + '. Pick up to ' + ui.num(max) + '. The winner is drawn from exactly these, each with equal odds. Your filters are ignored for this game while the list is on.',
+      sub: 'For ' + g.name + '. Pick up to ' + ui.num(max) + '. The winner is drawn from exactly these, each with equal odds. The Filters here only help you search this list; your game filters are paused for this game while it is on.',
       selected: c ? c.ids : [],
       min: cfg.minPool,
       max: max,
@@ -481,7 +481,7 @@
     el.sizeCustom.disabled = busy;
     el.sizeMax.disabled = busy || cur === maxFor(g);
     var P = activePool(current).length;
-    if (!P) { el.sizeHint.textContent = 'No charities in play. Loosen a filter or switch some back on.'; refreshPick(); return; }
+    if (!P) { el.sizeHint.textContent = 'No charities in play. Loosen a game filter or switch some back on.'; refreshPick(); return; }
     var b = boards[current];
     var d = b ? b.field.length : Math.min(cur, P);
     var txt;

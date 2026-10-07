@@ -275,7 +275,8 @@
     return false;
   }
 
-  /** Does one charity pass every active filter group? (OR inside a group, AND between groups.) */
+  /** Does one charity pass every active filter group? (OR inside a group, AND between groups.) Used both for the game filters
+   *  (which charities can come up in a game) and for the filters on the Charities page (which only narrow the list). */
   function matchesFilters(ch, filters) {
     var f = normalizeFilters(filters);
     if (!anyOf(f.causes, ch.causes || [])) { return false; }
@@ -289,7 +290,7 @@
     return true;
   }
 
-  /** Charities currently "in play": they pass the filters and the player has not switched them off. */
+  /** Charities currently "in play" in games: they pass the game filters and the player has not switched them off. */
   function buildPool(charities, filters, excludedIds) {
     var f = normalizeFilters(filters);
     var excluded = {};

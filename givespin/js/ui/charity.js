@@ -1,6 +1,7 @@
 /*
  * Charities: the profile dialog (opens from anywhere via [data-open-charity]), the "Give directly" dialog,
- * and the Charities page (searchable directory with in-play switches).
+ * and the Charities page (a searchable directory with in-play switches). The Filters on that page only narrow the list you
+ * are looking at; the filters that decide which charities come up in games are the separate GAME filters (see filters.js).
  */
 (function () {
   'use strict';
@@ -196,6 +197,8 @@
 
   /* ------------------------------------------------------------ directory */
 
+  // `f` holds the Charities page's own filters. They only narrow the list (together with the search box and the tabs) and are
+  // never saved: the filters that choose which charities the games use live in the preferences (store.prefs().filters).
   var dir = { view: 'all', sort: 'az', query: '', f: core.emptyFilters(), root: null, selfChange: false };
 
   function hay(ch) {
@@ -236,7 +239,7 @@
     return list;
   }
 
-  /** The chips under the toolbar that say which browse filters are on, each one removable. */
+  /** The chips under the toolbar that say which of the page's own filters are on (they only narrow this list), each one removable. */
   function activeChips() {
     var f = dir.f;
     var out = '';
@@ -268,7 +271,7 @@
   function renderList() {
     var list = visibleList();
     var ul = dir.root.querySelector('[data-role="list"]');
-    ul.innerHTML = list.length ? list.map(cardHTML).join('') : '<li class="empty" style="grid-column:1/-1">No charities match. Try a different search or filter.</li>';
+    ul.innerHTML = list.length ? list.map(cardHTML).join('') : '<li class="empty" style="grid-column:1/-1">No charities match. Try a different search, another tab or fewer filters.</li>';
     updateCount(list.length);
   }
 
@@ -276,10 +279,10 @@
     dir.root = root;
     if (!root.firstChild) {
       root.innerHTML =
-        '<header class="page-head"><div><h1>Charities</h1><p>' + ui.num(GS.charities.length) + ' organisations across every cause. Tap one to see what it does, visit its website or give to it directly. Use Filters to look through them by cause, place and more. Switch any off and it will never come up in a game.</p></div></header>' +
+        '<header class="page-head"><div><h1>Charities</h1><p>' + ui.num(GS.charities.length) + ' organisations across every cause. Tap one to see what it does, visit its website or give to it directly. Use Filters to look through them by cause, place and more (that only changes the list you see here). Switch a charity off and it will never come up in a game.</p></div></header>' +
         '<div class="dirtools">' +
           '<label class="search search--field"><span class="sr-only">Search charities</span><span class="search__ico">' + ui.icon('search') + '</span><input type="search" class="search__input" data-role="q" placeholder="Search by name, cause, place or who they help" autocomplete="off"></label>' +
-          '<button type="button" class="btn btn--sm" data-role="browse-filters">' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button>' +
+          '<button type="button" class="btn btn--sm" data-role="browse-filters" title="Narrow the list below (this does not change the games)">' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button>' +
           '<div class="seg seg--sm" role="group" aria-label="Show" data-role="view">' +
             [['all', 'All'], ['in', 'In play'], ['off', 'Switched off'], ['gave', 'I’ve given']].map(function (p) {
               return '<button type="button" class="seg__btn" data-v="' + p[0] + '" aria-pressed="' + (dir.view === p[0]) + '">' + p[1] + '</button>';

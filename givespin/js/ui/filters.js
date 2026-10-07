@@ -1,9 +1,11 @@
 /*
  * Filters. Two dialogs share one set of chips (causes, who they help, where, how, when founded):
- *   - the GAME filters: which charities can come up when you play. They are saved, apply to every game, and the
- *     quick cause chips next to the bet panel and the "N charities in play" line belong to them;
- *   - the BROWSE filters on the Charities page: they only narrow the list you are looking at. They never change
- *     which charities come up in a game (a separate button copies them across if you want that).
+ *   - the GAME filters ("Filters for games"): which charities can come up when you play. They are saved, apply to every
+ *     game (except one where you chose your own charities), and the quick cause chips next to the bet panel and the
+ *     "N charities in play" line belong to them;
+ *   - the BROWSE filters ("Filter the charities"), opened from the Charities page: they only narrow the list you are
+ *     looking at. They never change which charities come up in a game (a separate button inside the dialog copies
+ *     them across if you want that).
  * Changes apply instantly and the live count updates as you tap.
  */
 (function () {
@@ -15,7 +17,7 @@
   var store = GS.store;
 
   var QUICK = ['kids', 'animals', 'planet', 'hunger', 'health', 'education', 'veterans', 'disaster', 'mental', 'water', 'women', 'arts'];
-  var MIN_FACET = 3; // a filter value that fewer than this many charities have is hidden: it would just empty the pool
+  var MIN_FACET = 3; // a filter value that fewer than this many charities have is hidden: it would leave next to nothing to play with or to look at
   var counts = null;
   var gameDlg = null;
   var browseDlg = null;
@@ -193,7 +195,7 @@
   gameDlg = makeDialog({
     id: 'filters',
     title: 'Filters for games',
-    hint: 'These choose which charities can come up when you play. They apply to every game.',
+    hint: 'These choose which charities can come up when you play. They apply to every game, except one where you chose your own charities.',
     get: current,
     set: save,
     status: function () {
@@ -209,7 +211,7 @@
         label: bad ? 'Close' : 'Play with ' + ui.num(n) + ' ' + plural(n)
       };
     },
-    fine: 'Prefer to hand-pick? <a href="#charities" data-role="to-dir">Open the Charities page</a> to switch individual charities on or off.'
+    fine: 'Want to leave out particular charities? <a href="#charities" data-role="to-dir">Open the Charities page</a> and switch them off one by one.'
   });
   var openGame = gameDlg.open;
   gameDlg.open = function () {
@@ -254,7 +256,7 @@
       note.textContent = nf === 0 ? 'Pick a filter first.'
         : same ? 'Games already use exactly these filters.'
         : inGames < GS.config.minPool ? 'Too few would be left in a game. Loosen a filter.'
-        : 'Games would draw from ' + ui.num(inGames) + ' ' + plural(inGames) + '. Games keep their own filters until you do this.';
+        : 'Games would draw from ' + ui.num(inGames) + ' ' + plural(inGames) + '. ' + (core.activeFilterCount(store.prefs().filters) ? 'This replaces the filters games use now.' : 'Games keep their own filters until you do this.');
     },
     onExtra: function (target, d) {
       if (!target.closest('[data-role="to-games"]') || GS.app.state.busy) { return; }
@@ -264,10 +266,10 @@
       if (n < GS.config.minPool) { return; }
       GS.audio.click();
       save(f);
-      ui.toast('Games now draw from the ' + ui.num(n) + ' ' + plural(n) + ' that match.');
+      ui.toast('Games now use these filters and draw from ' + ui.num(n) + ' ' + plural(n) + '.');
       d.sync();
     },
-    fine: 'Prefer to hand-pick? Use the <b>In play</b> switch on any charity to keep it out of the games.'
+    fine: 'Want to leave out particular charities? Close this and use the <b>In play</b> switch on any charity card.'
   });
 
   function openBrowse(ctl) {

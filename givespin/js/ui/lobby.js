@@ -93,7 +93,7 @@
         return '<a class="cat" href="#' + c[2] + '" data-cat="' + c[0] + '">' + esc(c[1]) + '</a>';
       }).join('') + '</nav>' +
       '<div class="lobbybar__right"><button type="button" class="btn btn--sm" data-role="repeat">' + ui.icon('rotate-cw') + 'Repeat last round</button>' +
-      '<button type="button" class="btn btn--sm" data-open-filters>' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button></div></div>' +
+      '<button type="button" class="btn btn--sm" data-open-filters title="Choose which charities can come up in games">' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button></div></div>' +
       '<div class="tiles" data-role="tiles">' + tiles() + '</div>' +
       '<section class="sect" aria-labelledby="lb-causes"><h2 class="sect__t" id="lb-causes">Pick a cause first</h2>' +
         '<div class="chips chips--quick" data-role="causes" role="group" aria-label="Quick causes"></div><p class="pool-line" data-role="poolline" aria-live="polite"></p></section>' +

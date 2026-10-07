@@ -54,7 +54,7 @@
     });
     list.push({
       sel: '#view-lobby .promos, #view-lobby .tiles', icon: 'list-checks', title: 'You choose who can win',
-      body: 'Inside any game you can filter by cause, place and more, or tap <b>Choose your own charities</b> and tick exactly the ones you want. Every charity on the board has exactly the same odds.'
+      body: 'Use <b>Filters</b> (in the lobby or inside any game) to choose which causes and places can come up, or tap <b>Choose your own charities</b> in a game and tick exactly the ones you want. Every charity on the board has exactly the same odds.'
     });
     if (d) {
       list.push({
@@ -64,7 +64,7 @@
     }
     list.push({
       sel: '.side__link[data-route="charities"]', icon: 'globe', title: 'The charities',
-      body: 'Browse every charity on the roster: what it does, who it helps, where it works, and a link to its own website. Switch any of them off and they will never come up.'
+      body: 'Browse every charity on the roster: what it does, who it helps, where it works, and a link to its own website. Use <b>Filters</b> there to look through them by cause and place. Switch any of them off and they will never come up in a game.'
     });
     list.push({
       sel: '#acct', icon: 'user', title: 'Accounts are optional',
