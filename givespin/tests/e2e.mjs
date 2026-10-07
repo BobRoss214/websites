@@ -1018,6 +1018,91 @@ if (section('6c. Filter dialogs: keyboard, focus and screen-reader details')) {
   check(await writes('chip') > 0, 'but a filter that changes the numbers does');
   await closeDlg(GD);
   await resetGames();
+  // a double-click on a filter chip removes that one filter (the row redraws under the pointer, so the second click must not hit the chip that moved in)
+  await go(page, '#charities');
+  const chipIds = () => page.$$eval(chipsOn, (els) => els.map((e) => e.getAttribute('data-group') + ':' + e.getAttribute('data-id')));
+  const setChips = async (list) => { // start from a known row of chips, whatever the checks before left behind
+    if (await page.locator('#view-charities [data-role="clearf"]').isVisible()) { await page.click('#view-charities [data-role="clearf"]'); }
+    await openBrowse();
+    await pick(BD, list);
+    await closeDlg(BD);
+  };
+  await setChips([['causes', 'health'], ['where', 'africa'], ['where', 'asia']]);
+  await page.dblclick(chipsOn + '[data-id="health"]', { timeout: 5000 });
+  check((await chipIds()).join() === 'where:africa,where:asia', 'double-clicking the first of three filters removes just that one', await chipIds());
+  await setChips([['causes', 'health'], ['serves', 'children'], ['where', 'africa'], ['where', 'asia'], ['how', 'direct']]);
+  check((await chipIds()).length === 5, 'five filters are on');
+  await page.dblclick(chipsOn + '[data-id="direct"]', { timeout: 5000 });
+  check((await chipIds()).join() === 'causes:health,serves:children,where:africa,where:asia', 'double-clicking the last of five removes just that one (it does not press Clear filters and wipe the rest)', await chipIds());
+  check(await page.locator('#view-charities [data-role="clearf"]').isVisible(), 'and Clear filters is still there');
+  await setChips([['causes', 'health'], ['serves', 'children'], ['where', 'africa'], ['where', 'asia']]);
+  await page.click(chipsOn + '[data-id="asia"]', { timeout: 5000 });
+  check((await chipIds()).join() === 'causes:health,serves:children,where:africa', 'a single click still removes exactly one filter', await chipIds());
+  await page.locator(chipsOn + '[data-id="children"]').focus({ timeout: 5000 });
+  await page.keyboard.press('Space');
+  check((await chipIds()).join() === 'causes:health,where:africa', 'so does the space bar on a focused chip', await chipIds());
+  await page.locator(chipsOn + '[data-id="africa"]').focus({ timeout: 5000 });
+  await page.keyboard.press('Enter');
+  check((await chipIds()).join() === 'causes:health', 'and so does Enter', await chipIds());
+  await setChips([]);
+
+  // the open dialog follows the page behind it: a tab that leaves nothing to show, then a gift that gives it something
+  const giveTo = await page.evaluate(() => window.GS.charities.filter((c) => c.causes.includes('health'))[0].id);
+  await page.click('#view-charities [data-role="view"] [data-v="gave"]');
+  await openBrowse();
+  await pick(BD, [['causes', 'health']]);
+  check((await text(BD + ' [data-role="count"]')).endsWith('The search or tab on the page hides them all.') && (await text(BD + ' [data-role="done"]')) === 'Close', 'on the I\'ve given tab before any gift, the open dialog says the tab hides every match', await text(BD + ' [data-role="count"]'));
+  await page.evaluate((id) => window.GS.ui.charity.openProfile(id), giveTo); // the dialog stays open underneath (a click on a card would swap them)
+  await page.waitForSelector('#dlg-profile[open]');
+  await page.click('#dlg-profile [data-role="give"]');
+  await page.waitForSelector('#dlg-direct[open]');
+  await page.click('#dlg-direct .preset[data-amt="10"]');
+  await page.click('#dlg-direct [data-role="go"]');
+  await waitReceipt(page);
+  const afterGift = { line: await text(BD + ' [data-role="count"]'), button: await text(BD + ' [data-role="done"]'), open: await page.evaluate(() => document.querySelector('#dlg-browse-filters').open) };
+  check(afterGift.open && !afterGift.line.includes('hides') && afterGift.button === 'Show 1 charity', 'after a gift to one of the matches the dialog, still open, follows the list: it now shows 1 charity', afterGift);
+  await closeReceipt(page);
+  // a round that settles by itself (a live table) is recorded and announced without the app being busy: the dialog must still follow
+  await page.evaluate(() => {
+    const other = window.GS.charities.filter((c) => c.causes.includes('health'))[1].id;
+    window.GS.store.recordPlay({ game: 'direct', direct: true, totalCents: 1000, rounds: 1, status: 'demo', receipt: window.GS.core.receiptId(), pay: 'credit', freq: 'once', allocations: [{ charityId: other, cents: 1000, hits: 1 }] });
+    window.GS.bus.emit('progress');
+  });
+  check((await text(BD + ' [data-role="done"]')) === 'Show 2 charities', 'a second gift recorded while the dialog is open (no round running) is followed too: it now shows 2 charities', await text(BD + ' [data-role="done"]'));
+  if (await page.evaluate(() => document.querySelector('#dlg-browse-filters').open)) { await closeDlg(BD); }
+  await page.click('#view-charities [data-role="clearf"]');
+  await page.click('#view-charities [data-role="view"] [data-v="in"]');
+
+  // a charity switched off while the dialog is open: the games button and the main button follow the list
+  await openBrowse();
+  await pick(BD, [['causes', 'health']]);
+  const healthN = await page.evaluate(() => window.GS.charities.filter((c) => c.causes.includes('health')).length);
+  const offId = await page.evaluate(() => window.GS.charities.filter((c) => c.causes.includes('health'))[1].id);
+  check((await text(BD + ' [data-role="done"]')) === 'Show ' + healthN + ' charities' && (await text(BD + ' [data-role="bridge-note"]')).includes('Games would draw from ' + healthN + ' charities'), 'on the In play tab with Health Care picked, the main button and the games note both say ' + healthN, { done: await text(BD + ' [data-role="done"]'), note: await text(BD + ' [data-role="bridge-note"]') });
+  await page.evaluate((id) => { window.GS.store.setPref('excluded', [id]); window.GS.app.refreshPool(); }, offId);
+  const afterOff = { done: await text(BD + ' [data-role="done"]'), note: await text(BD + ' [data-role="bridge-note"]'), rows: await page.locator('#view-charities .rcard').count() };
+  check(afterOff.rows === healthN - 1 && afterOff.done === 'Show ' + (healthN - 1) + ' charities', 'switch one health charity off and the open dialog\'s main button follows the list behind it (one fewer)', afterOff);
+  check(afterOff.note.includes('Games would draw from ' + (healthN - 1) + ' charities'), 'and so does the games note', afterOff);
+  await page.evaluate(() => { window.GS.store.setPref('excluded', []); window.GS.app.refreshPool(); });
+  check((await text(BD + ' [data-role="done"]')) === 'Show ' + healthN + ' charities', 'and back when it is switched on again', await text(BD + ' [data-role="done"]'));
+
+  // the games button is described by its note
+  await pressOn(BD + ' [data-role="clear"]');
+  const described = () => page.evaluate(() => {
+    const b = document.querySelector('#dlg-browse-filters [data-role="to-games"]');
+    const id = b.getAttribute('aria-describedby');
+    const el = id ? document.getElementById(id) : null;
+    return { id, found: !!el, inside: !!(el && el.closest('#dlg-browse-filters')), text: el ? el.textContent.replace(/\s+/g, ' ').trim() : null, note: document.querySelector('#dlg-browse-filters [data-role="bridge-note"]').textContent.replace(/\s+/g, ' ').trim(), disabled: b.disabled };
+  });
+  let desc = await described();
+  check(desc.disabled && desc.found && desc.inside && desc.text === desc.note && desc.text === 'Pick a filter first.', 'the switched-off "Use these filters in games" button is described by its note ("Pick a filter first.")', desc);
+  await pick(BD, [['causes', 'health']]);
+  desc = await described();
+  check(!desc.disabled && desc.found && desc.text === desc.note && desc.text.startsWith('Games would draw from'), 'and the description follows the note when the button is on', desc);
+  await closeDlg(BD);
+  await page.click('#view-charities [data-role="view"] [data-v="all"]');
+  await page.click('#view-charities [data-role="clearf"]');
+  await resetGames();
   check(problems.length === problemsBefore, 'no console errors, warnings or failed requests', problems.slice(problemsBefore, problemsBefore + 4));
   await page.close();
 }
