@@ -175,6 +175,7 @@
 .dir-active { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 10px; }
 .dir-active[hidden] { display: none; }
 .dir-active__l { font: 700 0.72rem var(--f-body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--dim); }
+.dir-active .chip { color: #fff; border-color: var(--c); background: color-mix(in srgb, var(--c) 22%, var(--panel-2)); } /* a filter that is on (these are remove buttons, so they are not toggle buttons) */
 .dir-active .chip .ico { width: 0.85em; height: 0.85em; opacity: 0.8; }
 /* the toolbar's small controls were 29 to 30 px tall: 32 px is the least that is comfortable to tap */
 .dirtools .seg--sm .seg__btn { min-height: 32px; }

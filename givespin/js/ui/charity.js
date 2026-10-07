@@ -246,7 +246,7 @@
     ['causes', 'serves', 'where', 'how', 'era'].forEach(function (g) {
       f[g].forEach(function (id) {
         var name = ui.filters.labelFor(g, id);
-        out += '<button type="button" class="chip" data-group="' + g + '" data-id="' + esc(id) + '" aria-label="Remove filter: ' + esc(name) + '" aria-pressed="true">' + esc(name) + ui.icon('x') + '</button>';
+        out += '<button type="button" class="chip" data-group="' + g + '" data-id="' + esc(id) + '" aria-label="Remove filter: ' + esc(name) + '">' + esc(name) + ui.icon('x') + '</button>';
       });
     });
     return out;
@@ -303,20 +303,28 @@
         shown: function () { return visibleList().length; }
       };
       root.querySelector('[data-role="browse-filters"]').addEventListener('click', function () { ui.filters.openBrowse(browse); });
+      // The chip (or "Clear filters") that was pressed disappears, so keyboard focus goes to the chip that took its place,
+      // or to the Filters button when none is left.
       root.querySelector('[data-role="active"]').addEventListener('click', function (e) {
+        var row = e.currentTarget;
         var b = e.target.closest('[data-group]');
+        var next = null;
         if (b) {
           GS.audio.click();
+          var at = Array.prototype.indexOf.call(row.querySelectorAll('[data-group]'), b);
           var f = core.normalizeFilters(dir.f);
           var g = b.getAttribute('data-group');
           f[g] = f[g].filter(function (x) { return x !== b.getAttribute('data-id'); });
           browse.set(f);
           ui.filters.syncBrowse();
+          var left = row.querySelectorAll('[data-group]');
+          next = left[Math.min(at, left.length - 1)];
         } else if (e.target.closest('[data-role="clearf"]')) {
           GS.audio.click();
           browse.set(core.emptyFilters());
           ui.filters.syncBrowse();
-        }
+        } else { return; }
+        (next || root.querySelector('[data-role="browse-filters"]')).focus();
       });
       var q = root.querySelector('[data-role="q"]');
       q.addEventListener('input', function () { dir.query = q.value.trim().toLowerCase(); renderList(); });

@@ -27,6 +27,10 @@
   function current() { return core.normalizeFilters(store.prefs().filters); }
   function save(f) { store.setPref('filters', f); GS.app.refreshPool(); }
   function plural(n) { return n === 1 ? 'charity' : 'charities'; }
+  /** Do two (normalised) filter sets pick the same values? The order they were picked in does not matter. */
+  function sameFilters(a, b) {
+    return ['causes', 'serves', 'where', 'how', 'era'].every(function (g) { return a[g].slice().sort().join('|') === b[g].slice().sort().join('|'); });
+  }
 
   function toggled(list, id) {
     var i = list.indexOf(id);
@@ -146,20 +150,24 @@
         '<div class="modal__foot"><button type="button" class="btn btn--ghost" data-role="clear">Clear all filters</button><button type="button" class="btn btn--green" data-role="done"></button></div>';
     }
 
+    var lastCount = '';
     d.sync = function () {
       var m = d.modal;
       if (!m) { return; }
+      var was = document.activeElement;
       var f = cfg.get();
       var st = cfg.status(f);
       var count = m.$('[data-role="count"]');
       count.classList.toggle('is-bad', st.bad);
-      count.innerHTML = st.html;
+      if (st.html !== lastCount) { count.innerHTML = lastCount = st.html; } // the count line is a live region: say it only when it changes
       m.$$('[data-group]').forEach(function (b) {
         b.setAttribute('aria-pressed', String(f[b.getAttribute('data-group')].indexOf(b.getAttribute('data-id')) >= 0));
       });
       m.$('[data-role="clear"]').disabled = core.activeFilterCount(f) === 0;
       m.$('[data-role="done"]').textContent = st.label;
       if (cfg.after) { cfg.after(m, f); }
+      // a button the keyboard was on can switch itself off ("Clear all filters", "Use these filters in games"): hand focus to the main button
+      if (was && was.disabled && m.body.contains(was)) { var main = m.$('[data-role="done"]'); if (main) { main.focus(); } }
     };
 
     d.open = function () {
@@ -237,24 +245,28 @@
     status: function (f) {
       var n = matching(f).length;
       var shown = browseCtl && browseCtl.shown ? browseCtl.shown() : n;
+      var hidden = n > 0 && shown === 0; // they match, but the search box or the tab on the page leaves none to show
       return {
         bad: n === 0,
         html: n === 0
           ? '<b>0</b> of ' + ui.num(GS.charities.length) + ' charities match. Loosen a filter.'
-          : '<b>' + ui.num(n) + '</b> of ' + ui.num(GS.charities.length) + ' charities match',
-        label: n === 0 ? 'Close' : 'Show ' + ui.num(shown) + ' ' + plural(shown)
+          : '<b>' + ui.num(n) + '</b> of ' + ui.num(GS.charities.length) + ' charities match' + (hidden ? '. The search or tab on the page hides them all.' : ''),
+        label: n === 0 || hidden ? 'Close' : 'Show ' + ui.num(shown) + ' ' + plural(shown)
       };
     },
     extra: '<div class="fbridge"><div class="fbridge__t"><b>Want games to use these too?</b><span data-role="bridge-note">Games keep their own filters. This copies yours across.</span></div>' +
-      '<button type="button" class="btn btn--sm" data-role="to-games">Use these filters in games</button></div>',
+      '<button type="button" class="btn btn--sm" data-role="to-games">Use these filters in games</button>' +
+      '<span class="sr-only" role="status" aria-live="polite" data-role="bridge-live"></span></div>',
     after: function (m, f) {
       var btn = m.$('[data-role="to-games"]');
       var note = m.$('[data-role="bridge-note"]');
       var nf = core.activeFilterCount(f);
       var inGames = core.buildPool(GS.charities, f, store.prefs().excluded).length;
-      var same = JSON.stringify(core.normalizeFilters(store.prefs().filters)) === JSON.stringify(f);
-      btn.disabled = nf === 0 || inGames < GS.config.minPool || same;
-      note.textContent = nf === 0 ? 'Pick a filter first.'
+      var same = sameFilters(core.normalizeFilters(store.prefs().filters), f);
+      var busy = GS.app.state.busy; // the games must not change under a round that is running
+      btn.disabled = busy || nf === 0 || inGames < GS.config.minPool || same;
+      note.textContent = busy ? 'A round is in progress. Try again when it has finished.'
+        : nf === 0 ? 'Pick a filter first.'
         : same ? 'Games already use exactly these filters.'
         : inGames < GS.config.minPool ? 'Too few would be left in a game. Loosen a filter.'
         : 'Games would draw from ' + ui.num(inGames) + ' ' + plural(inGames) + '. ' + (core.activeFilterCount(store.prefs().filters) ? 'This replaces the filters games use now.' : 'Games keep their own filters until you do this.');
@@ -267,15 +279,21 @@
       if (n < GS.config.minPool) { return; }
       GS.audio.click();
       save(f);
-      ui.toast('Games now use these filters and draw from ' + ui.num(n) + ' ' + plural(n) + '.');
+      var said = 'Games now use these filters and draw from ' + ui.num(n) + ' ' + plural(n) + '.';
+      ui.toast(said); // the dialog hides the toast, so say it inside the dialog too
+      var live = d.modal.$('[data-role="bridge-live"]');
+      live.textContent = '';
+      setTimeout(function () { live.textContent = said; }, 40);
       d.sync();
     },
     fine: 'Want to leave out particular charities? Close this and use the <b>In play</b> switch on any charity card.'
   });
 
+  var busyHooked = false;
   function openBrowse(ctl) {
     browseCtl = ctl;
     browseDlg.open();
+    if (!busyHooked) { busyHooked = true; GS.bus.on('busy', browseDlg.sync); } // "Use these filters in games" looks switched off during a round
   }
 
   document.addEventListener('click', function (e) {
