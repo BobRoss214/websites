@@ -199,6 +199,11 @@
 .rcard__link .ico { width: 0.9em; height: 0.9em; }
 .rcard__link:hover { color: var(--green); }
 .rcard__note { font-size: 0.7rem; color: var(--dim); white-space: nowrap; }
+/* a card the game filters leave out: its note sits on a line of its own above the link and the switch. Beside them "In play" wrapped onto two lines and the website address was cut off after a few letters */
+.rcard__foot .switch__txt { white-space: nowrap; }
+.rcard.is-filtered .rcard__foot { flex-wrap: wrap; row-gap: 6px; }
+.rcard.is-filtered .rcard__note { order: -1; flex: 1 0 100%; }
+.rcard.is-filtered .rcard__foot a.rcard__link, .rcard.is-filtered .rcard__foot span.rcard__link { max-width: calc(100% - 96px); }
 .rcard.is-off .rcard__blurb, .rcard.is-filtered .rcard__blurb { color: #7f98a6; }
 .rcard.is-off .rcard__name, .rcard.is-filtered .rcard__name { color: #b7c8d3; }
 .rcard.is-off { border-style: dashed; background: var(--bg-2); }

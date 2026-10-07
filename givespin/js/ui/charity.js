@@ -281,7 +281,7 @@
       root.innerHTML =
         '<header class="page-head"><div><h1>Charities</h1><p>' + ui.num(GS.charities.length) + ' organisations across every cause. Tap one to see what it does, visit its website or give to it directly. Use Filters to look through them by cause, place and more (that only changes the list you see here). Switch a charity off and it will never come up in a game.</p></div></header>' +
         '<div class="dirtools">' +
-          '<label class="search search--field"><span class="sr-only">Search charities</span><span class="search__ico">' + ui.icon('search') + '</span><input type="search" class="search__input" data-role="q" placeholder="Search by name, cause, place or who they help" autocomplete="off"></label>' +
+          '<label class="search search--field"><span class="sr-only">Search charities</span><span class="search__ico">' + ui.icon('search') + '</span><input type="search" class="search__input" data-role="q" placeholder="Search by name, cause or place" autocomplete="off"></label>' +
           '<button type="button" class="btn btn--sm" data-role="browse-filters" title="Narrow the list below (this does not change the games)">' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button>' +
           '<div class="seg seg--sm" role="group" aria-label="Show" data-role="view">' +
             [['all', 'All'], ['in', 'In play'], ['off', 'Switched off'], ['gave', 'I’ve given']].map(function (p) {
