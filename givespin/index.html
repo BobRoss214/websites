@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en" data-mode="demo">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>GiveSpin | Play to give</title>
+  <meta name="description" content="The giving casino. Choose an amount, filter by the causes you care about, then spin, roll, scratch or race your way to a charity. Every round is a win for someone. Free demo play with pretend money: nothing is charged.">
+  <meta name="theme-color" content="#0a1219">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="GiveSpin | Play to give">
+  <meta property="og:description" content="Nineteen casino-style games, over a thousand charities, and every round is a win for someone. Free demo play, nothing real.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/shell.css">
+  <link rel="stylesheet" href="css/views.css">
+  <link rel="stylesheet" href="css/dialogs.css">
+  <link rel="stylesheet" href="css/games.css">
+  <link rel="stylesheet" href="css/live.css">
+  <link rel="stylesheet" href="css/chooser.css">
+  <link rel="stylesheet" href="css/slots.css">
+  <link rel="stylesheet" href="css/tour.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="app" id="app">
+    <!-- ============================================================ top bar -->
+    <header class="topbar" id="topbar">
+      <a class="brand" href="#lobby" aria-label="GiveSpin lobby">
+        <svg class="brand__mark" viewBox="0 0 40 40" aria-hidden="true">
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22f07a"/><stop offset="1" stop-color="#14b8a6"/></linearGradient></defs>
+          <rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="url(#lg)"/>
+          <circle cx="20" cy="20" r="12.5" fill="none" stroke="#03210f" stroke-opacity=".28" stroke-width="2" stroke-dasharray="3.2 3.2"/>
+          <path d="M20 28.2c-.4 0-.7-.1-1-.4-4.100-3.600-7-6.200-7-9.600 0-2.300 1.800-4.100 4-4.100 1.600 0 3.100.8 4 2.200.9-1.400 2.400-2.200 4-2.200 2.200 0 4 1.800 4 4.100 0 3.400-2.900 6-7 9.600-.3.300-.6.400-1 .4Z" fill="#03210f"/>
+        </svg>
+        <span class="brand__name">Give<b>Spin</b></span>
+      </a>
+
+      <div class="search" id="search">
+        <span class="search__ico" data-icon="search"></span>
+        <input id="search-input" class="search__input" type="search" role="combobox" aria-expanded="false" aria-controls="search-list" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search games and charities" aria-label="Search games and charities">
+        <ul class="search__list" id="search-list" role="listbox" aria-label="Search results" hidden></ul>
+      </div>
+
+      <div class="topbar__right">
+        <div class="balance only-demo" id="balance" title="Free play-money you can give. Nothing here is real.">
+          <span class="balance__ico" data-icon="coins"></span>
+          <span class="balance__txt"><span class="balance__lbl">Demo credit</span><span class="balance__amt" id="balance-amt">$0</span></span>
+        </div>
+        <button type="button" class="iconbtn only-demo daily" id="btn-daily" aria-label="Daily bonus wheel" title="Daily bonus wheel (free play credit)"></button>
+        <button type="button" class="btn btn--green btn--sm only-demo" id="btn-credit"><span data-icon="plus"></span><span class="hide-sm">Add credit</span></button>
+        <button type="button" class="iconbtn" id="btn-sound" aria-pressed="false" aria-label="Sound on"></button>
+        <button type="button" class="iconbtn hide-sm" id="btn-stream" aria-pressed="false" aria-label="Stream Mode" title="Stream Mode (bigger game, nothing else)"></button>
+        <div class="acct" id="acct"></div>
+      </div>
+    </header>
+
+    <aside class="demo-strip only-demo" aria-label="Demo mode">
+      <span class="demo-strip__dot" aria-hidden="true"></span>
+      <span><strong>Demo mode.</strong> Play-money only: nothing is charged and no real donation is made. <a href="#help-real">Real donations?</a></span>
+    </aside>
+
+    <div class="layout">
+      <!-- ============================================================ side nav -->
+      <nav class="side" id="side" aria-label="Main">
+        <ul class="side__list">
+          <li><a class="side__link" href="#lobby" data-route="lobby"><span data-icon="layout-grid"></span><span class="side__txt">Lobby</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#lobby-originals" data-route="lobby-originals"><span data-icon="sparkles"></span><span class="side__txt">Originals</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#lobby-slots" data-route="lobby-slots"><span data-icon="cherry"></span><span class="side__txt">Slots</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#lobby-table" data-route="lobby-table"><span data-icon="club"></span><span class="side__txt">Table games</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#lobby-races" data-route="lobby-races"><span data-icon="flag-triangle-right"></span><span class="side__txt">Races</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#lobby-instant" data-route="lobby-instant"><span data-icon="zap"></span><span class="side__txt">Instant wins</span></a></li>
+          <li class="only-demo"><a class="side__link side__link--live" href="#live" data-route="live"><span data-icon="radio"></span><span class="side__txt">Live tables</span><span class="livedot" aria-hidden="true"></span><span class="livecount" id="live-count" hidden>0</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#leagues" data-route="leagues"><span data-icon="trophy"></span><span class="side__txt">Leagues</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#crews" data-route="crews"><span data-icon="users"></span><span class="side__txt">Crews</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#cards" data-route="cards"><span data-icon="layers"></span><span class="side__txt">Your cards</span></a></li>
+          <li class="side__rule" aria-hidden="true"></li>
+          <li><a class="side__link" href="#giving" data-route="giving"><span data-icon="hand-heart"></span><span class="side__txt">My Giving</span></a></li>
+          <li><a class="side__link" href="#charities" data-route="charities"><span data-icon="globe"></span><span class="side__txt">Charities</span></a></li>
+          <li><a class="side__link" href="#club" data-route="club"><span data-icon="crown"></span><span class="side__txt">Giving Club</span></a></li>
+          <li class="side__rule" aria-hidden="true"></li>
+          <li class="side__help"><a class="side__link" href="#fair" data-route="fair"><span data-icon="shield-check"></span><span class="side__txt">Fair Play?</span></a></li>
+          <li class="side__help"><a class="side__link" href="#help" data-route="help"><span data-icon="circle-help"></span><span class="side__txt">Help</span></a></li>
+        </ul>
+        <div class="side__level" id="side-level"></div>
+      </nav>
+
+      <!-- ============================================================ views -->
+      <main id="main" class="main" tabindex="-1">
+        <section class="view" id="view-lobby" data-view="lobby" aria-label="Lobby" hidden></section>
+        <section class="view" id="view-game" data-view="game" aria-label="Game" hidden></section>
+        <section class="view" id="view-live" data-view="live" aria-label="Live tables" hidden></section>
+        <section class="view" id="view-leagues" data-view="leagues" aria-label="Leagues" hidden></section>
+        <section class="view" id="view-crews" data-view="crews" aria-label="Crews" hidden></section>
+        <section class="view" id="view-cards" data-view="cards" aria-label="Your cards" hidden></section>
+        <section class="view" id="view-giving" data-view="giving" aria-label="My Giving" hidden></section>
+        <section class="view" id="view-charities" data-view="charities" aria-label="Charities" hidden></section>
+        <section class="view" id="view-club" data-view="club" aria-label="Giving Club" hidden></section>
+        <section class="view" id="view-fair" data-view="fair" aria-label="Fair Play" hidden></section>
+        <section class="view" id="view-help" data-view="help" aria-label="Help" hidden></section>
+
+        <footer class="foot">
+          <p><strong>Give responsibly.</strong> Giving should feel good. You can set a monthly giving limit in your account, and every solo game gives every charity on the board equal odds, and live tables weigh each charity by what is in the pot.</p>
+          <p>Charity names are used only to identify the organisations. GiveSpin is not affiliated with or endorsed by any of them, and any logos shown belong to their owners and are used only to identify the organisations. Descriptions are short summaries, not official statements.</p>
+          <p class="foot__links"><a href="#help-tour">What is GiveSpin?</a><a href="#help">Help</a><a href="#fair">Fair Play?</a><a href="#help-privacy">Privacy</a></p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+  <div class="sr-only" id="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <noscript><p class="noscript">GiveSpin needs JavaScript for its games. Please enable it and reload.</p></noscript>
+
+  <script src="js/icons.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/fair.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/logos.js"></script>
+  <script src="js/marks.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/kit.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/confetti.js"></script>
+  <script src="js/payments.js"></script>
+  <script src="js/accounts.js"></script>
+  <script src="js/crews.js"></script>
+  <script src="js/live.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/ui/common.js"></script>
+  <script src="js/ui/amount.js"></script>
+  <script src="js/ui/opts.js"></script>
+  <script src="js/games/wheel.js"></script>
+  <script src="js/games/slots.js"></script>
+  <script src="js/games/drop.js"></script>
+  <script src="js/games/plinko.js"></script>
+  <script src="js/games/roulette.js"></script>
+  <script src="js/games/scratch.js"></script>
+  <script src="js/games/cards.js"></script>
+  <script src="js/games/dice.js"></script>
+  <script src="js/games/coin.js"></script>
+  <script src="js/games/derby.js"></script>
+  <script src="js/games/crowd.js"></script>
+  <script src="js/games/duck.js"></script>
+  <script src="js/games/marble.js"></script>
+  <script src="js/games/balloon.js"></script>
+  <script src="js/games/standing.js"></script>
+  <script src="js/games/lotto.js"></script>
+  <script src="js/ui/filters.js"></script>
+  <script src="js/ui/charity.js"></script>
+  <script src="js/ui/account.js"></script>
+  <script src="js/ui/picker.js"></script>
+  <script src="js/ui/chooser.js"></script>
+  <script src="js/ui/receipt.js"></script>
+  <script src="js/ui/live.js"></script>
+  <script src="js/ui/game.js"></script>
+  <script src="js/ui/lobby.js"></script>
+  <script src="js/ui/pages.js"></script>
+  <script src="js/ui/collection.js"></script>
+  <script src="js/ui/leagues.js"></script>
+  <script src="js/ui/tour.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
