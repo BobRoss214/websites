@@ -1,6 +1,9 @@
 name: cilh data probe (temporary)
 on:
   workflow_dispatch:
+  push:
+    branches: [claude/cool-feynman-2eza07]
+    paths: ['.github/workflows/cilh-data-probe.yml']
 permissions:
   contents: write
 jobs:
