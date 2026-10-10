@@ -1,0 +1,12 @@
+https://api.census.gov/data/2024/acs/acs5?get=NAME,B25064_001E&for=county:*&in=state:37                                            302 0b
+https://api.census.gov/data/2023/acs/acs5?get=NAME,B25064_001E&for=county:*&in=state:37                                            302 0b
+https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2024_Gazetteer/2024_Gaz_counties_national.zip                            200 141679b
+https://files.zillowstatic.com/research/public_csvs/zhvi/County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv                    200 13579570b
+https://www.freddiemac.com/pmms/docs/PMMS_history.csv                                                                              200 97509b
+https://www.huduser.gov/portal/datasets/fmr.html                                                                                   200 275709b
+https://hazards.fema.gov/nri/Content/StaticDocuments/DataDownload//NRI_Table_Counties/NRI_Table_Counties.zip                       301 134b
+https://sdmdataaccess.nrcs.usda.gov/Tabular/post.rest                                                                              400 383b
+https://www.nass.usda.gov/datasets/qs.census2022.txt.gz                                                                            200 309188711b
+https://www.ncdor.gov/taxes-forms/property-tax/property-tax-rates                                                                  200 82150b
+https://www.dol.gov/agencies/wb/topics/featured-childcare                                                                          403 418b
+https://www.epi.org/resources/budget/                                                                                              403 5479b
