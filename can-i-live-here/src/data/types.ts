@@ -54,6 +54,8 @@ export interface PlaceRecord {
   fhaLimit?: number;
   conformingLimit?: number;
   usdaIncomeLimit4?: number; usdaIncomeLimit8?: number;
+  childcareMonthly?: number;    // DOL NDCP county median, center infant care, inflated to 2026
+  muniTaxNote?: string;
   /** Where each field came from: fieldName -> source id */
   srcs?: Record<string, string>;
 }

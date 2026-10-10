@@ -85,7 +85,8 @@ function pointInRing(lon: number, lat: number, ring: number[][]): boolean {
   }
   return inside;
 }
-function pointInGeom(lon: number, lat: number, g: { type: string; coordinates: unknown }): boolean {
+function pointInGeom(lon: number, lat: number, g: { type: string; coordinates: unknown } | null): boolean {
+  if (!g) return false;
   if (g.type === 'Polygon') { const rings = g.coordinates as number[][][]; return pointInRing(lon, lat, rings[0]!) && !rings.slice(1).some((r) => pointInRing(lon, lat, r)); }
   if (g.type === 'MultiPolygon') return (g.coordinates as number[][][][]).some((poly) => pointInRing(lon, lat, poly[0]!) && !poly.slice(1).some((r) => pointInRing(lon, lat, r)));
   return false;
@@ -138,7 +139,7 @@ const agg = acs('b08013'); const workers = acs('b08134');
 for (const [geo, c] of agg) { const id = idFromGeo(geo); const p = id ? base.get(id) : undefined; if (!p) continue; const a = acsNum(c[1]); const w = acsNum(workers.get(geo)?.[1]); if (a && w && w > 0) { p.meanCommuteMin = a / w; stamp(p.id, 'meanCommuteMin', 'acs'); } }
 for (const p of base.values()) {
   if (p.medTaxPaid && p.medValue && p.medValue > 0) { const r = p.medTaxPaid / p.medValue; if (r > 0.001 && r < 0.04) { p.taxRateEff = r; stamp(p.id, 'taxRateEff', 'acs'); } }
-  if (p.pop !== undefined && p.landSqMi > 0) p.densityPerSqMi = p.pop / p.landSqMi;
+  if (p.pop !== undefined && (p.landSqMi ?? 0) > 0) p.densityPerSqMi = p.pop / p.landSqMi!;
 }
 
 // ---------- Zillow ----------
@@ -220,7 +221,8 @@ if (exists('nass_census2022_ncsc.tsv')) {
     const fips = `${r[ix('STATE_FIPS_CODE')]}${r[ix('COUNTY_CODE')]}`; const c = base.get(`c${fips}`); if (!c) continue;
     const v = num(r[ix('VALUE')]); if (v === undefined) continue;
     const d = r[ix('SHORT_DESC')];
-    const acres = c.landSqMi * 640;
+    const acres = (c.landSqMi ?? 0) * 640;
+    if (!acres) continue;
     if (d === 'AG LAND, INCL BUILDINGS - ASSET VALUE, MEASURED IN $ / ACRE') { c.landValueAcre = Math.round(v); stamp(c.id, 'landValueAcre', 'nass'); n++; }
     else if (d === 'AG LAND, CROPLAND - ACRES') c.cropAcresPct = v / acres;
     else if (d === 'AG LAND, PASTURELAND - ACRES') c.pastureAcresPct = v / acres;
@@ -306,50 +308,61 @@ if (exists('usda_ineligible.geojson')) {
 }
 
 // ---------- NC official property tax rates (NCDOR) ----------
+// County rates: "County Rates" sheet (Counties | Tax Rate per $100 | ...). Municipal rates: LG55 "Municipal Values and Tax Rates"
+// (Counties | Municipality County | Municipality | ... | Municipal Tax Rate Per $100 Value). Newest fiscal year wins.
+const muniRate = new Map<string, { rate: number; fy: string }>();
 {
-  const files = fs.readdirSync(RAW).filter((f) => f.startsWith('ncdor_') && /\.xlsx?$/i.test(f));
-  let applied = 0;
+  const files = fs.readdirSync(RAW).filter((f) => f.startsWith('ncdor_') && /\.xlsx?$/i.test(f)).sort().reverse();
+  let applied = 0; let muni = 0;
   for (const f of files) {
+    const fy = (f.match(/(\d{4}-\d{4})/) ?? [])[1] ?? '';
     try {
       const wb = XLSX.read(fs.readFileSync(path.join(RAW, f)));
       for (const sn of wb.SheetNames) {
         const rows = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[sn]!, { header: 1 });
-        for (const r of rows) {
-          const cells = r.map((c) => String(c ?? '').trim());
-          const nameIdx = cells.findIndex((c) => /^[A-Za-z .'-]+$/.test(c) && counties.some((x) => x.state === 'NC' && x.name.toLowerCase() === c.toLowerCase().replace(/ county$/, '')));
-          if (nameIdx < 0) continue;
-          const name = cells[nameIdx]!.toLowerCase().replace(/ county$/, '');
-          const c = counties.find((x) => x.state === 'NC' && x.name.toLowerCase() === name)!;
-          const rate = cells.slice(nameIdx + 1).map((x) => num(x)).find((v) => v !== undefined && v > 0.1 && v < 2.5);
-          if (rate !== undefined && c.taxRateOfficial === undefined) { c.taxRateOfficial = rate / 100; c.taxRateSource = `ncdor:${f}`; stamp(c.id, 'taxRateOfficial', 'ncdor'); applied++; }
+        const hdrIdx = rows.findIndex((r) => String(r[0] ?? '').trim() === 'Counties');
+        if (hdrIdx < 0) continue;
+        const hdr = rows[hdrIdx]!.map((c) => String(c ?? '').replace(/\s+/g, ' ').trim());
+        const rateCol = hdr.findIndex((h) => /^Tax Rate/i.test(h));
+        const muniCol = hdr.findIndex((h) => /^Municipality$/i.test(h));
+        const muniRateCol = hdr.findIndex((h) => /Municipal Tax Rate/i.test(h));
+        for (const r of rows.slice(hdrIdx + 1)) {
+          const countyName = String(r[0] ?? '').trim().toLowerCase();
+          const c = counties.find((x) => x.state === 'NC' && x.name.toLowerCase() === countyName);
+          if (!c) continue;
+          if (rateCol > 0 && muniCol < 0) {
+            const rate = num(String(r[rateCol])); if (rate !== undefined && rate > 0.1 && rate < 2.5 && c.taxRateOfficial === undefined) { c.taxRateOfficial = rate / 100; c.taxRateSource = `NCDOR county rate FY${fy}`; stamp(c.id, 'taxRateOfficial', 'ncdor'); applied++; }
+          } else if (muniCol > 0 && muniRateCol > 0) {
+            const m = String(r[muniCol] ?? '').trim(); const rate = num(String(r[muniRateCol]));
+            if (m && rate !== undefined && rate >= 0 && rate < 2.5) { const key = `${m.toLowerCase()}|${c.countyFips}`; if (!muniRate.has(key)) { muniRate.set(key, { rate: rate / 100, fy }); muni++; } }
+          }
         }
       }
     } catch (e) { warn(`could not parse ${f}: ${(e as Error).message}`); }
   }
-  console.log('ncdor county rates ->', applied);
-  // places and zips inherit the county official rate when present (municipal rates are listed separately in the raw file and shown on the place page in a later version)
-  for (const p of base.values()) if (p.kind !== 'county' && p.countyFips) { const c = base.get(`c${p.countyFips}`); if (c?.taxRateOfficial !== undefined && p.taxRateOfficial === undefined) { p.taxRateOfficial = c.taxRateOfficial; p.taxRateSource = c.taxRateSource; } }
+  console.log('ncdor county rates ->', applied, 'municipal rates ->', muni);
+  for (const p of base.values()) if (p.kind !== 'county' && p.countyFips) {
+    const c = base.get(`c${p.countyFips}`);
+    if (c?.taxRateOfficial === undefined) continue;
+    const m = p.kind === 'place' ? muniRate.get(`${p.name.toLowerCase()}|${p.countyFips}`) : undefined;
+    p.taxRateOfficial = c.taxRateOfficial + (m?.rate ?? 0); p.taxRateSource = m ? `${c.taxRateSource} + municipal ${p.name} FY${m.fy}` : `${c.taxRateSource} (county rate only; add any town rate)`; stamp(p.id, 'taxRateOfficial', 'ncdor');
+  }
 }
 
-// ---------- Childcare (DOL NDCP 2022, county median infant center price, monthly) ----------
+// ---------- Childcare (DOL NDCP 2022: MCInfant = median weekly price, center-based infant care) ----------
 const childcareByCounty = new Map<string, number>();
-if (exists('dol_ndcp2022.xlsx')) {
-  try {
-    const wb = XLSX.read(fs.readFileSync(path.join(RAW, 'dol_ndcp2022.xlsx')));
-    const ws = wb.Sheets[wb.SheetNames[0]!]!; const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
-    const keys = Object.keys(rows[0] ?? {});
-    const fipsKey = keys.find((k) => /county_fips_code|fips/i.test(k)); const yearKey = keys.find((k) => /study ?year|^year$/i.test(k));
-    const priceKey = keys.find((k) => /^MCInfant$|mc_infant|infant.*center/i.test(k)) ?? keys.find((k) => /infant/i.test(k));
-    if (fipsKey && priceKey) {
-      for (const r of rows) {
-        const fips = String(r[fipsKey]).padStart(5, '0'); if (!(fips.startsWith('37') || fips.startsWith('45'))) continue;
-        if (yearKey && String(r[yearKey]) !== '2022') continue;
-        const weekly = num(String(r[priceKey])); if (weekly) childcareByCounty.set(fips, Math.round((weekly * 52) / 12 * 1.126)); // 2022 -> 2026 at 3%/yr
-      }
-      console.log('childcare ->', childcareByCounty.size, 'counties via', priceKey);
-    } else warn(`NDCP columns not recognized: ${keys.slice(0, 12).join(', ')}`);
-  } catch (e) { warn(`NDCP parse failed: ${(e as Error).message}`); }
-}
+if (exists('dol_ndcp2022_ncsc.csv')) {
+  const rows = csvRows(read('dol_ndcp2022_ncsc.csv')); const h = rows[0]!;
+  const fi = h.indexOf('COUNTY_FIPS_CODE'); const yi = h.indexOf('STUDYYEAR'); const pi = h.indexOf('MCINFANT'); const ti = h.indexOf('MCTODDLER');
+  if (fi >= 0 && pi >= 0) {
+    for (const r of rows.slice(1)) {
+      if (yi >= 0 && r[yi] !== '2022') continue;
+      const fips = String(r[fi]).padStart(5, '0'); const weekly = num(r[pi]) ?? num(r[ti!]);
+      if (weekly && weekly > 20 && weekly < 1000) childcareByCounty.set(fips, Math.round(((weekly * 52) / 12) * 1.126)); // 2022 -> 2026 at ~3%/yr
+    }
+    console.log('childcare ->', childcareByCounty.size, 'counties');
+  } else warn(`NDCP columns not recognized: ${h.slice(0, 8).join(', ')}`);
+} else warn('childcare CSV not present');
 
 // ---------- Rates ----------
 let rates: SnapshotMeta['rates'] = { asOf: '', thirtyYear: 0, fifteenYear: 0, source: 'pmms' };
@@ -400,9 +413,9 @@ for (const s of sources) {
 const records: PlaceRecord[] = all.map((p) => {
   const o: PlaceRecord & { lsad?: string } = { ...p };
   delete o.lsad;
-  if (o.countyFips && childcareByCounty.has(o.countyFips)) (o as PlaceRecord & { childcareMonthly?: number }).childcareMonthly = childcareByCounty.get(o.countyFips);
+  if (o.countyFips && childcareByCounty.has(o.countyFips)) { o.childcareMonthly = childcareByCounty.get(o.countyFips); stamp(o.id, 'childcareMonthly', 'ndcp'); o.srcs = srcOf.get(p.id); }
   o.srcs = srcOf.get(p.id);
-  for (const k of Object.keys(o) as (keyof PlaceRecord)[]) { const v = o[k]; if (typeof v === 'number' && !Number.isInteger(v)) (o as Record<string, unknown>)[k] = Math.round(v * 10000) / 10000; }
+  for (const k of Object.keys(o) as (keyof PlaceRecord)[]) { const v = o[k]; if (typeof v === 'number' && !Number.isInteger(v)) (o as unknown as Record<string, unknown>)[k] = Math.round(v * 10000) / 10000; }
   return o;
 });
 records.sort((a, b) => a.id.localeCompare(b.id));

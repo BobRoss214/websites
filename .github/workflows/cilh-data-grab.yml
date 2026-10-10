@@ -148,6 +148,7 @@ jobs:
               N=$(basename "$U" | tr -c 'A-Za-z0-9._\n-' '_'); T="raw/ncdor_dl"; curl -sSL -A "$UA" "$U" -o "$T" && echo "got $U"
               case "$(file -b "$T")" in *Excel*|*Microsoft*) EXT=xlsx;; *PDF*) EXT=pdf;; *) EXT=bin;; esac
               [ "$EXT" = bin ] || cp "$T" "can-i-live-here/data/raw/ncdor_$(basename $P)_${N%.*}.$EXT"
+              rm -f "can-i-live-here/data/raw/ncdor_$(basename $P)_$N"
             done
           done
           if curl -sSfL -A "$UA" "https://www.dol.gov/sites/dolgov/files/WB/NDCP2022.xlsx" -o raw/ndcp.xlsx; then
@@ -163,7 +164,7 @@ jobs:
           curl -sSL -A "$UA" "https://www.epi.org/resources/budget/" -o raw/epi.html; grep -oE 'href="[^"]*(xlsx|csv|zip|download)[^"]*"' raw/epi.html | sort -u > can-i-live-here/data/raw/epi_links.txt || true; head can-i-live-here/data/raw/epi_links.txt
           curl -sSL -A "$UA" "https://www.sccounties.org/property-tax-rates" -o raw/scac.html; grep -oiE '[^"'"'"' ]*\.(pdf|xlsx)' raw/scac.html | sort -u > can-i-live-here/data/raw/scac_links.txt || true; head can-i-live-here/data/raw/scac_links.txt
           for L in $(grep -iE 'rate|millage' can-i-live-here/data/raw/scac_links.txt | head -4); do case "$L" in http*) U="$L";; *) U="https://www.sccounties.org$L";; esac; curl -sSfL -A "$UA" "$U" -o "can-i-live-here/data/raw/scac_$(basename $U)" && echo "got $U" || true; done
-          for ST in NC SC; do curl -sSL -A "$UA" "https://entp.hud.gov/idapp/html/hicost1.cfm" --data "state=$ST&sorted=county_name&county_name=&county=&msa_name=&msa_code=&in_fha=No&limit_type=FHA%20Forward&limitType=FHA" -o "can-i-live-here/data/raw/hud_fha_limits_$ST.html"; grep -c "<tr" "can-i-live-here/data/raw/hud_fha_limits_$ST.html" || true; done
+          for ST in NC SC; do curl -sSL -A "$UA" "https://entp.hud.gov/idapp/html/hicost1.cfm" --data "state=$ST&sorted=county_name&county_name=&county=&msa_name=&msa_code=&last_upd_m=01&last_upd_d=01&last_upd_y=2000&in_fha=No&limit_type=FHA%20Forward&limitType=FHA" -o "can-i-live-here/data/raw/hud_fha_limits_$ST.html"; grep -c "<tr" "can-i-live-here/data/raw/hud_fha_limits_$ST.html" || true; done
       - name: USDA Rural Development ineligible areas (ArcGIS REST, NC and SC extent)
         continue-on-error: true
         run: |
@@ -195,10 +196,10 @@ jobs:
           import duckdb,sys,json
           rel=sys.argv[1]
           con=duckdb.connect(); con.execute("INSTALL httpfs; LOAD httpfs; SET s3_region='us-west-2';")
-          q=f"""SELECT id, names."primary" AS name, categories."primary" AS cat, geometry.x() AS lon, geometry.y() AS lat
+          q=f"""SELECT id, names."primary" AS name, struct_extract(categories, 'primary') AS cat, geometry.x() AS lon, geometry.y() AS lat
                 FROM read_parquet('s3://overturemaps-us-west-2/{rel}theme=places/type=place/*', filename=true, hive_partitioning=1)
                 WHERE bbox.xmin BETWEEN -84.5 AND -75.3 AND bbox.ymin BETWEEN 31.9 AND 36.7
-                  AND categories."primary" IN ('grocery_store','supermarket','warehouse_store','wholesale_grocer')"""
+                  AND struct_extract(categories, 'primary') IN ('grocery_store','supermarket','warehouse_store','wholesale_grocer')"""
           one=f"s3://overturemaps-us-west-2/{rel}theme=places/type=place/*"
           try:
               cols=con.execute(f"DESCRIBE SELECT * FROM read_parquet('{one}') LIMIT 1").fetchall(); print('columns',[c[0] for c in cols])

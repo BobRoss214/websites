@@ -8,14 +8,14 @@ export function placeLabel(r: PlaceResult): string {
   return p.kind === 'county' ? `${p.name} County` : p.kind === 'zip' ? `ZIP ${p.name}` : p.name;
 }
 
-export function PlaceRow({ r, goal }: { r: PlaceResult; goal: Goal | undefined }) {
+export function PlaceRow({ r, goal, noIncome = false }: { r: PlaceResult; goal: Goal | undefined; noIncome?: boolean }) {
   const p = r.place;
   const sub = p.kind === 'county' ? p.state : `${p.countyName ? `${p.countyName} County, ` : ''}${p.state}`;
   let main: string; let mainLabel: string;
   if (goal === 'rent') { main = money(r.rent?.typicalRent); mainLabel = 'typical rent'; }
   else if (goal === 'land') { main = p.landValueAcre ? `${money(p.landValueAcre)}/acre` : '—'; mainLabel = 'land'; }
   else { main = moneyK(r.buy?.typicalPrice ?? p.zhvi ?? p.medValue); mainLabel = 'typical home'; }
-  const fitWord = r.fit === 'yes' ? 'Fits' : r.fit === 'stretch' ? 'Stretch' : r.fit === 'no' ? 'Over budget' : 'Not enough data';
+  const fitWord = noIncome ? 'Add income for a verdict' : r.fit === 'yes' ? 'Fits' : r.fit === 'stretch' ? 'Stretch' : r.fit === 'no' ? 'Over budget' : 'Not enough data';
   return (
     <a className={`place-row fit-${r.fit}`} href={href(`/place/${p.id}`)}>
       <span className="bar" aria-hidden="true" />
@@ -26,7 +26,7 @@ export function PlaceRow({ r, goal }: { r: PlaceResult; goal: Goal | undefined }
       <span className="right">
         <strong>{main}</strong>
         <span className="sub">{mainLabel}</span>
-        <span className={`chip ${r.fit === 'yes' ? 'chip-ok' : r.fit === 'stretch' ? 'chip-warn' : r.fit === 'no' ? 'chip-bad' : ''}`} style="margin-top:0.25rem">{fitWord}</span>
+        {!noIncome && <span className={`chip ${r.fit === 'yes' ? 'chip-ok' : r.fit === 'stretch' ? 'chip-warn' : r.fit === 'no' ? 'chip-bad' : ''}`} style="margin-top:0.25rem">{fitWord}</span>}
       </span>
     </a>
   );

@@ -56,7 +56,7 @@ export interface LandResult {
   acres: number;
   landPrice?: number;
   loan?: { down: number; rate: number; termYears: number; monthly: number };
-  setup?: { items: { key: string; label: string; low: number; high: number; on: boolean }[]; totalLow: number; totalHigh: number };
+  setup?: { items: { key: string; label: string; low: number; high: number; on: boolean; source: string; note?: string }[]; totalLow: number; totalHigh: number };
   fit: Fit;
 }
 
