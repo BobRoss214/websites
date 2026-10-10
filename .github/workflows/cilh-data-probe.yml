@@ -1,0 +1,27 @@
+name: cilh data probe (temporary)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe network and write a file
+        run: |
+          set -e
+          mkdir -p can-i-live-here/data/probe
+          for u in "https://api.census.gov/data/2024/acs/acs5?get=NAME,B25064_001E&for=county:*&in=state:37" "https://api.census.gov/data/2023/acs/acs5?get=NAME,B25064_001E&for=county:*&in=state:37" "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2024_Gazetteer/2024_Gaz_counties_national.zip" "https://files.zillowstatic.com/research/public_csvs/zhvi/County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv" "https://www.freddiemac.com/pmms/docs/PMMS_history.csv" "https://www.huduser.gov/portal/datasets/fmr.html" "https://hazards.fema.gov/nri/Content/StaticDocuments/DataDownload//NRI_Table_Counties/NRI_Table_Counties.zip" "https://sdmdataaccess.nrcs.usda.gov/Tabular/post.rest" "https://www.nass.usda.gov/datasets/qs.census2022.txt.gz" "https://www.ncdor.gov/taxes-forms/property-tax/property-tax-rates" "https://www.dol.gov/agencies/wb/topics/featured-childcare" "https://www.epi.org/resources/budget/"; do
+            printf "%-130s " "$u"; curl -sS -o /dev/null -m 40 -w "%{http_code} %{size_download}b\n" -A "Mozilla/5.0 (data probe for canilivehere)" "$u" || echo FAIL
+          done | tee can-i-live-here/data/probe/network.txt
+          curl -sS -m 40 "https://api.census.gov/data/2024/acs/acs5?get=NAME,B25064_001E&for=county:*&in=state:37" | head -c 600 > can-i-live-here/data/probe/census-sample.txt || true
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > can-i-live-here/data/probe/ran-at.txt
+      - name: Commit back
+        run: |
+          git config user.name "cilh-data-bot"
+          git config user.email "cilh-data-bot@users.noreply.github.com"
+          git add can-i-live-here/data/probe
+          git commit -m "Data probe: network check from GitHub Actions" || echo "nothing to commit"
+          git pull --rebase origin "${GITHUB_REF_NAME}" || true
+          git push origin HEAD:"${GITHUB_REF_NAME}"
