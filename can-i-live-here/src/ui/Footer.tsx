@@ -9,7 +9,7 @@ export function Footer() {
       </p>
       <p>
         Free. No ads, no accounts, no tracking. What you type stays in your browser.{' '}
-        <a href={href('/about')}>How this works and where the data comes from</a> · <a href={href('/privacy')}>Privacy</a>
+        <a href={href('/about')}>How this works and where the data comes from</a> · <a href={href('/about#privacy')}>Privacy</a>
       </p>
     </footer>
   );
