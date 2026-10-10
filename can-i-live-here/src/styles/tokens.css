@@ -1,0 +1,91 @@
+/* Design tokens. Light by default; dark follows the system unless the person picks one. */
+:root {
+  --bg: #f3f5ee;            /* morning fog over a field */
+  --bg-2: #e9ede2;          /* a shade deeper, for wells and chips */
+  --surface: #ffffff;
+  --surface-2: #f8f9f5;
+  --ink: #15261b;           /* pine, nearly black */
+  --ink-2: #44554a;         /* quieter text */
+  --ink-3: #6d7d72;         /* hints and captions */
+  --line: #d3dbcf;
+  --line-strong: #b7c3b2;
+  --pine: #1f5c3a;          /* main action color */
+  --pine-deep: #174a2e;
+  --pine-tint: #e2efe6;
+  --straw: #d9a441;         /* longleaf straw: land + "stretch" */
+  --straw-deep: #a8771c;
+  --straw-tint: #f8edd3;
+  --clay: #b23a2e;          /* red clay: "not yet" */
+  --clay-deep: #8c2d23;
+  --clay-tint: #f6dfdb;
+  --sky: #5f86a8;           /* blue ridge haze: links to outside places */
+  --sky-tint: #e1ebf3;
+  --focus: #1f5c3a;
+  --shadow: 0 1px 2px rgba(21, 38, 27, 0.06), 0 8px 24px -12px rgba(21, 38, 27, 0.18);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-pill: 999px;
+  --font-display: 'Young Serif', Georgia, 'Times New Roman', serif;
+  --font-body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --tap: 48px;
+  --measure: 38rem;
+  --ok: var(--pine);
+  --ok-tint: var(--pine-tint);
+  --warn: var(--straw-deep);
+  --warn-tint: var(--straw-tint);
+  --bad: var(--clay);
+  --bad-tint: var(--clay-tint);
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  --bg: #121a14;
+  --bg-2: #0d130f;
+  --surface: #1b2620;
+  --surface-2: #22302a;
+  --ink: #e6ebe3;
+  --ink-2: #b9c4b7;
+  --ink-3: #8d9a8e;
+  --line: #2f3d35;
+  --line-strong: #46564d;
+  --pine: #5cb57f;
+  --pine-deep: #79c797;
+  --pine-tint: #1d3528;
+  --straw: #e2b45a;
+  --straw-deep: #ecc77d;
+  --straw-tint: #3a2f16;
+  --clay: #e0695b;
+  --clay-deep: #ef8a7e;
+  --clay-tint: #3f201c;
+  --sky: #8fb3d1;
+  --sky-tint: #1d2b36;
+  --focus: #9ad8b3;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #121a14;
+    --bg-2: #0d130f;
+    --surface: #1b2620;
+    --surface-2: #22302a;
+    --ink: #e6ebe3;
+    --ink-2: #b9c4b7;
+    --ink-3: #8d9a8e;
+    --line: #2f3d35;
+    --line-strong: #46564d;
+    --pine: #5cb57f;
+    --pine-deep: #79c797;
+    --pine-tint: #1d3528;
+    --straw: #e2b45a;
+    --straw-deep: #ecc77d;
+    --straw-tint: #3a2f16;
+    --clay: #e0695b;
+    --clay-deep: #ef8a7e;
+    --clay-tint: #3f201c;
+    --sky: #8fb3d1;
+    --sky-tint: #1d2b36;
+    --focus: #9ad8b3;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
+    color-scheme: dark;
+  }
+}
