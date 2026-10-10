@@ -1,12 +1,21 @@
-name: cilh raw data grab
-# Fetches public source files from inside GitHub's network (the dev container cannot reach these hosts),
-# trims them to North and South Carolina, and commits the trimmed raw files. The build pipeline turns
-# these into the site's data snapshot.
+name: Can I Live Here data update
+# Fetches public source files, trims them to North and South Carolina, rebuilds the site's data snapshot,
+# validates it, and commits only if validation passes (otherwise the last good snapshot stays).
+# Schedules: mortgage rates weekly (Thursday night after Freddie Mac posts), prices and rents monthly,
+# everything else yearly. The "group" input lets a manual run pick a subset.
 on:
   workflow_dispatch:
+    inputs:
+      group:
+        description: 'What to refresh: all, rates, prices, yearly'
+        default: 'all'
+  schedule:
+    - cron: '17 3 * * 5'    # weekly: Friday 03:17 UTC (rates)
+    - cron: '41 4 3 * *'    # monthly: 3rd of the month 04:41 UTC (prices, rents)
+    - cron: '23 5 15 1 *'   # yearly: Jan 15 (everything else)
   push:
     branches: [claude/cool-feynman-2eza07]
-    paths: ['.github/workflows/cilh-data-grab.yml']
+    paths: ['.github/workflows/cilh-data-update.yml']
 permissions:
   contents: write
 jobs:
@@ -20,7 +29,15 @@ jobs:
         run: |
           mkdir -p raw can-i-live-here/data/raw
           echo "UA=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 canilivehere-data-bot" >> $GITHUB_ENV
+          G="${{ github.event.inputs.group }}"
+          case "${{ github.event.schedule }}" in '17 3 * * 5') G=rates;; '41 4 3 * *') G=prices;; '23 5 15 1 *') G=yearly;; esac
+          [ -z "$G" ] && G=all
+          echo "GROUP=$G" >> $GITHUB_ENV; echo "refresh group: $G"
+          echo "DO_RATES=$([ "$G" = all ] || [ "$G" = rates ] && echo 1 || echo 0)" >> $GITHUB_ENV
+          echo "DO_PRICES=$([ "$G" = all ] || [ "$G" = prices ] && echo 1 || echo 0)" >> $GITHUB_ENV
+          echo "DO_YEARLY=$([ "$G" = all ] || [ "$G" = yearly ] && echo 1 || echo 0)" >> $GITHUB_ENV
       - name: Census ACS 5-year via table-based summary files (no key needed)
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           set -e
@@ -36,6 +53,7 @@ jobs:
             if [ $ok = 1 ]; then echo "$Y" > can-i-live-here/data/raw/acs_vintage.txt; echo "ACS summary files vintage $Y ok"; break; fi
           done
       - name: Census Gazetteer 2024
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           set -e
@@ -50,6 +68,7 @@ jobs:
           (head -1 raw/zcta_county.txt; grep -E "^[0-9]*\|(27|28|29)[0-9]{3}\|" raw/zcta_county.txt || true) > can-i-live-here/data/raw/zcta_county_rel.txt
           wc -l can-i-live-here/data/raw/gaz_*.txt can-i-live-here/data/raw/zcta_county_rel.txt
       - name: Census cartographic boundaries 2024 (simplified GeoJSON via mapshaper)
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           set -e
@@ -63,6 +82,7 @@ jobs:
           mapshaper raw/cb_2020_us_zcta520_500k/cb_2020_us_zcta520_500k.shp -filter '/^(27|28|29)/.test(ZCTA5CE20)' -simplify 12% keep-shapes -o precision=0.0001 format=geojson can-i-live-here/data/raw/zctas.geojson
           ls -la can-i-live-here/data/raw/*.geojson
       - name: Zillow research data (ZHVI, ZORI) trimmed to NC and SC
+        if: env.DO_PRICES == '1'
         continue-on-error: true
         run: |
           set -e
@@ -77,15 +97,18 @@ jobs:
           PY
           done
       - name: Redfin Data Center county market tracker trimmed to NC and SC
+        if: env.DO_PRICES == '1'
         continue-on-error: true
         run: |
           curl -sSL -A "$UA" "https://redfin-public-data.s3-us-west-2.amazonaws.com/redfin_market_tracker/county_market_tracker.tsv000.gz" | zcat | awk -F'\t' 'NR==1 || $0 ~ /"North Carolina"|"South Carolina"/' > can-i-live-here/data/raw/redfin_county.tsv; wc -l can-i-live-here/data/raw/redfin_county.tsv
       - name: Mortgage rates (Freddie Mac PMMS, FRED fallback)
+        if: env.DO_RATES == '1'
         continue-on-error: true
         run: |
           curl -sSL -A "$UA" "https://www.freddiemac.com/pmms/docs/PMMS_history.csv" -o can-i-live-here/data/raw/pmms_history.csv; tail -3 can-i-live-here/data/raw/pmms_history.csv
           curl -sSL -A "$UA" "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US,MORTGAGE15US" -o can-i-live-here/data/raw/fred_mortgage.csv; tail -2 can-i-live-here/data/raw/fred_mortgage.csv
       - name: HUD Fair Market Rents (FY2027 then FY2026), FHFA loan limits
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           for Y in 2027 2026; do YY=${Y:2:2}
@@ -102,6 +125,7 @@ jobs:
           curl -sSfL -A "$UA" "https://www.fhfa.gov/document/d/cll/fullcountyloanlimitlist2026_hera-based_final_flat.xlsx" -o can-i-live-here/data/raw/fhfa_limits_2026.xlsx || echo "fhfa xlsx not at guessed url"
           curl -sSL -A "$UA" "https://www.fhfa.gov/data/conforming-loan-limit-cll-values" -o raw/fhfa.html; grep -oE 'href="[^"]*\.(xlsx|pdf)"' raw/fhfa.html | sort -u > can-i-live-here/data/raw/fhfa_links.txt || true
       - name: FEMA National Risk Index via FEMA ArcGIS services (counties and tracts, NC and SC)
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           B="https://hazards.geoplatform.gov/server/rest/services/Hosted"
@@ -124,15 +148,18 @@ jobs:
           done
           wc -l can-i-live-here/data/raw/nri_*.jsonl || true
       - name: USDA SSURGO farmland class acres by soil survey area (Soil Data Access)
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           Q="SELECT l.areasymbol, l.areaname, m.farmlndcl, SUM(m.muacres) AS acres FROM legend l INNER JOIN mapunit m ON m.lkey = l.lkey WHERE l.areasymbol LIKE 'NC%' OR l.areasymbol LIKE 'SC%' GROUP BY l.areasymbol, l.areaname, m.farmlndcl ORDER BY l.areasymbol"
           curl -sS -A "$UA" -X POST "https://sdmdataaccess.nrcs.usda.gov/Tabular/post.rest" --data-urlencode "query=$Q" --data-urlencode "format=JSON+COLUMNNAME" -o can-i-live-here/data/raw/ssurgo_farmland.json; head -c 400 can-i-live-here/data/raw/ssurgo_farmland.json
       - name: USDA Census of Agriculture 2022 county land values (bulk file, trimmed)
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           curl -sSL -A "$UA" "https://www.nass.usda.gov/datasets/qs.census2022.txt.gz" | zcat | awk -F'\t' 'NR==1 || (($0 ~ /NORTH CAROLINA|SOUTH CAROLINA/) && ($0 ~ /AG LAND, INCL BUILDINGS - ASSET VALUE, MEASURED IN \$ \/ ACRE|AG LAND, CROPLAND - ACRES|AG LAND, PASTURELAND - ACRES|AG LAND, WOODLAND - ACRES|AG LAND - ACRES|FARM OPERATIONS - NUMBER OF OPERATIONS/) && ($0 ~ /\tCOUNTY\t|\tSTATE\t/))' > can-i-live-here/data/raw/nass_census2022_ncsc.tsv; wc -l can-i-live-here/data/raw/nass_census2022_ncsc.tsv; head -2 can-i-live-here/data/raw/nass_census2022_ncsc.tsv | cut -c1-400
       - name: NC and SC property tax rate files, DOL childcare, EPI budgets
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           curl -sSL -A "$UA" "https://www.ncdor.gov/taxes-forms/property-tax/property-tax-rates" -o raw/ncdor.html; grep -oE 'href="[^"]*"' raw/ncdor.html | grep -iE 'rate|xls' | sort -u > can-i-live-here/data/raw/ncdor_links.txt; head -30 can-i-live-here/data/raw/ncdor_links.txt
@@ -164,8 +191,9 @@ jobs:
           curl -sSL -A "$UA" "https://www.epi.org/resources/budget/" -o raw/epi.html; grep -oE 'href="[^"]*(xlsx|csv|zip|download)[^"]*"' raw/epi.html | sort -u > can-i-live-here/data/raw/epi_links.txt || true; head can-i-live-here/data/raw/epi_links.txt
           curl -sSL -A "$UA" "https://www.sccounties.org/property-tax-rates" -o raw/scac.html; grep -oiE '[^"'"'"' ]*\.(pdf|xlsx)' raw/scac.html | sort -u > can-i-live-here/data/raw/scac_links.txt || true; head can-i-live-here/data/raw/scac_links.txt
           for L in $(grep -iE 'rate|millage' can-i-live-here/data/raw/scac_links.txt | head -4); do case "$L" in http*) U="$L";; *) U="https://www.sccounties.org$L";; esac; curl -sSfL -A "$UA" "$U" -o "can-i-live-here/data/raw/scac_$(basename $U)" && echo "got $U" || true; done
-          for ST in NC SC; do curl -sSL -A "$UA" "https://entp.hud.gov/idapp/html/hicost1.cfm" --data "state=$ST&sorted=county_name&county_name=&county=&msa_name=&msa_code=&last_upd_m=01&last_upd_d=01&last_upd_y=2000&in_fha=No&limit_type=FHA%20Forward&limitType=FHA" -o "can-i-live-here/data/raw/hud_fha_limits_$ST.html"; grep -c "<tr" "can-i-live-here/data/raw/hud_fha_limits_$ST.html" || true; done
+          for ST in NC SC; do curl -sSL -A "$UA" "https://entp.hud.gov/idapp/html/hicost1.cfm" --data "state=$ST&sorted=county_name&county_name=&county=&msa_name=&msa_code=&limit_type=FHA&limit_year=CY2026&last_upd_m=&last_upd_d=&last_upd_y=&in_fha=No" -o "can-i-live-here/data/raw/hud_fha_limits_$ST.html"; grep -c "<tr" "can-i-live-here/data/raw/hud_fha_limits_$ST.html" || true; done
       - name: USDA Rural Development ineligible areas (ArcGIS REST, NC and SC extent)
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           B="https://rdgdwe.sc.egov.usda.gov/arcgis/rest/services/Eligibility/Eligibility/MapServer"
@@ -187,6 +215,7 @@ jobs:
             ls -la can-i-live-here/data/raw/usda_ineligible.geojson; break
           done
       - name: Grocery stores and supermarkets from Overture Maps (DuckDB over S3)
+        if: env.DO_YEARLY == '1'
         continue-on-error: true
         run: |
           pip3 install -q duckdb
@@ -202,7 +231,7 @@ jobs:
                   AND struct_extract(categories, 'primary') IN ('grocery_store','supermarket','warehouse_store','wholesale_grocer')"""
           one=f"s3://overturemaps-us-west-2/{rel}theme=places/type=place/*"
           try:
-              cols=con.execute(f"DESCRIBE SELECT * FROM read_parquet('{one}') LIMIT 1").fetchall(); print('columns',[c[0] for c in cols])
+              cols=con.execute(f"DESCRIBE SELECT * FROM read_parquet('{one}') LIMIT 1").fetchall(); print('columns',[c[0] for c in cols]); open('can-i-live-here/data/raw/overture_columns.txt','w').write('\n'.join(f'{c[0]} {c[1]}' for c in cols))
           except Exception as e: print('describe failed',e)
           try:
               con.execute("INSTALL spatial; LOAD spatial;")
@@ -213,13 +242,26 @@ jobs:
           json.dump({'release':rel,'count':len(out),'stores':out},open('can-i-live-here/data/raw/overture_grocery.json','w'))
           print('stores',len(out))
           PY
-      - name: Record run metadata and commit
+      - name: Build and validate the snapshot (keeps the last good one on failure)
+        id: build
+        continue-on-error: true
+        working-directory: can-i-live-here
         run: |
-          date -u +"%Y-%m-%dT%H:%M:%SZ" > can-i-live-here/data/raw/fetched_at.txt
-          ls -la can-i-live-here/data/raw
-          du -sh can-i-live-here/data/raw
+          npm ci --silent
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > data/raw/fetched_at.txt
+          npx tsx scripts/data/build-snapshot.ts 2>&1 | tee ../build-log.txt
+          test "${PIPESTATUS[0]}" = 0
+      - name: Commit raw files and the new snapshot
+        run: |
           git config user.name "cilh-data-bot"; git config user.email "cilh-data-bot@users.noreply.github.com"
           git add can-i-live-here/data/raw
-          git commit -m "Data: raw source files trimmed to NC and SC (fetched by GitHub Actions)" || echo "nothing to commit"
+          if [ "${{ steps.build.outcome }}" = "success" ]; then
+            git add can-i-live-here/public/data
+            git commit -m "Data update ($GROUP): refreshed sources and rebuilt the snapshot" || echo "nothing to commit"
+          else
+            echo "::warning::Snapshot validation failed; the previous snapshot is kept. See the build log above."
+            git checkout -- can-i-live-here/public/data 2>/dev/null || true
+            git commit -m "Data update ($GROUP): fetched sources, but the new snapshot failed validation and was NOT published" || echo "nothing to commit"
+          fi
           git pull --rebase origin "${GITHUB_REF_NAME}" || true
           git push origin HEAD:"${GITHUB_REF_NAME}"
