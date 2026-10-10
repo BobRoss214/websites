@@ -30,7 +30,7 @@ jobs:
             for T in b01003 b19013 b25064 b25077 b25103 b08013 b08134 b28002 b25003 b25031 b11001 b25001 b01002 b19301; do
               U="https://www2.census.gov/programs-surveys/acs/summary_file/$Y/table-based-SF/data/5YRData/acsdt5y$Y-$T.dat"
               if ! curl -sSfL -A "$UA" "$U" -o raw/acs/$T.dat; then echo "missing $U"; ok=0; break; fi
-              (head -1 raw/acs/$T.dat; grep -E '^(0500000US(37|45)|1600000US(37|45)|8600000US(27|28|29))' raw/acs/$T.dat) > can-i-live-here/data/raw/acs_$T.txt
+              (head -1 raw/acs/$T.dat; grep -E '^(0500000US(37|45)|1600000US(37|45)|860Z200US(27|28|29))' raw/acs/$T.dat) > can-i-live-here/data/raw/acs_$T.txt
               echo "$T $(wc -l < can-i-live-here/data/raw/acs_$T.txt) rows"
             done
             if [ $ok = 1 ]; then echo "$Y" > can-i-live-here/data/raw/acs_vintage.txt; echo "ACS summary files vintage $Y ok"; break; fi
@@ -101,22 +101,27 @@ jobs:
           for L in $(grep -iE 'fmr2027|fmr2026' can-i-live-here/data/raw/hud_fmr_links.txt | head -8); do case "$L" in http*) U="$L";; /*) U="https://www.huduser.gov$L";; *) U="https://www.huduser.gov/portal/datasets/$L";; esac; N=$(basename "$U"); curl -sSfL -A "$UA" "$U" -o "can-i-live-here/data/raw/hud_$N" && echo "got $U" || echo "fail $U"; done
           curl -sSfL -A "$UA" "https://www.fhfa.gov/document/d/cll/fullcountyloanlimitlist2026_hera-based_final_flat.xlsx" -o can-i-live-here/data/raw/fhfa_limits_2026.xlsx || echo "fhfa xlsx not at guessed url"
           curl -sSL -A "$UA" "https://www.fhfa.gov/data/conforming-loan-limit-cll-values" -o raw/fhfa.html; grep -oE 'href="[^"]*\.(xlsx|pdf)"' raw/fhfa.html | sort -u > can-i-live-here/data/raw/fhfa_links.txt || true
-      - name: FEMA National Risk Index (counties, tracts trimmed)
+      - name: FEMA National Risk Index via FEMA ArcGIS services (counties and tracts, NC and SC)
         continue-on-error: true
         run: |
-          set -e
-          curl -sSL -A "$UA" "https://hazards.fema.gov/nri/Content/StaticDocuments/DataDownload/NRI_Table_Counties/NRI_Table_Counties.zip" -o raw/nri_c.zip; file raw/nri_c.zip; unzip -o -q raw/nri_c.zip -d raw/nri_c
-          f=$(ls raw/nri_c/*.csv | grep -v -i dictionary | head -1); (head -1 "$f"; grep -E '^[^,]*,[^,]*,(NC|SC),' "$f" || awk -F',' 'NR>1 && ($3=="NC"||$3=="SC"||$4=="NC"||$4=="SC")' "$f") > can-i-live-here/data/raw/nri_counties.csv; wc -l can-i-live-here/data/raw/nri_counties.csv
-          cp raw/nri_c/*ictionary*.csv can-i-live-here/data/raw/nri_dictionary.csv 2>/dev/null || true
-          curl -sSL -A "$UA" "https://hazards.fema.gov/nri/Content/StaticDocuments/DataDownload/NRI_Table_CensusTracts/NRI_Table_CensusTracts.zip" -o raw/nri_t.zip; file raw/nri_t.zip; unzip -o -q raw/nri_t.zip -d raw/nri_t
-          f=$(ls raw/nri_t/*.csv | grep -v -i dictionary | head -1); python3 - "$f" <<'PY'
-          import csv,sys
-          r=csv.reader(open(sys.argv[1],newline='')); h=next(r); si=h.index('STATEABBRV')
-          w=csv.writer(open('can-i-live-here/data/raw/nri_tracts.csv','w',newline='')); w.writerow(h); n=0
-          for row in r:
-              if row[si] in ('NC','SC'): w.writerow(row); n+=1
-          print('tracts',n)
-          PY
+          B="https://hazards.geoplatform.gov/server/rest/services/Hosted"
+          curl -sSL -A "$UA" "$B?f=json" -o raw/nri_svcs.json
+          python3 -c "import json;d=json.load(open('raw/nri_svcs.json'));print([s['name'] for s in d.get('services',[]) if 'NRI' in s['name']])" | tee can-i-live-here/data/raw/nri_services.txt
+          CSVC=$(python3 -c "import json;n=[s['name'] for s in json.load(open('raw/nri_svcs.json')).get('services',[]) if 'NRI_Counties' in s['name']];print(sorted(n)[-1] if n else '')")
+          TSVC=$(python3 -c "import json;n=[s['name'] for s in json.load(open('raw/nri_svcs.json')).get('services',[]) if 'NRI_CensusTracts' in s['name'] or 'NRI_Tracts' in s['name']];print(sorted(n)[-1] if n else '')")
+          echo "county svc: $CSVC  tract svc: $TSVC"
+          for PAIR in "c|$CSVC" "t|$TSVC"; do
+            K=${PAIR%%|*}; SVC=${PAIR#*|}; [ -z "$SVC" ] && continue
+            OFF=0; : > raw/nri_$K.jsonl
+            while :; do
+              curl -sSL -A "$UA" "$B/$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$SVC")/FeatureServer/0/query" --data-urlencode "where=STATEABBRV IN ('NC','SC')" --data-urlencode "outFields=*" --data-urlencode "returnGeometry=false" --data-urlencode "resultOffset=$OFF" --data-urlencode "resultRecordCount=1000" --data-urlencode "f=json" -o raw/nri_page.json
+              N=$(python3 -c "import json;d=json.load(open('raw/nri_page.json'));print(len(d.get('features',[])))" 2>/dev/null || echo 0)
+              python3 -c "import json;d=json.load(open('raw/nri_page.json'));[print(json.dumps(f['attributes'])) for f in d.get('features',[])]" >> raw/nri_$K.jsonl 2>/dev/null || true
+              echo "$K offset $OFF features $N"; [ "$N" -lt 1000 ] && break; OFF=$((OFF+1000)); [ $OFF -gt 20000 ] && break
+            done
+            cp raw/nri_$K.jsonl can-i-live-here/data/raw/nri_$([ $K = c ] && echo counties || echo tracts).jsonl
+          done
+          wc -l can-i-live-here/data/raw/nri_*.jsonl || true
       - name: USDA SSURGO farmland class acres by soil survey area (Soil Data Access)
         continue-on-error: true
         run: |
@@ -132,14 +137,14 @@ jobs:
           curl -sSL -A "$UA" "https://www.ncdor.gov/taxes-forms/property-tax/property-tax-rates" -o raw/ncdor.html; grep -oE 'href="[^"]*"' raw/ncdor.html | grep -iE 'rate|xls' | sort -u > can-i-live-here/data/raw/ncdor_links.txt; head -30 can-i-live-here/data/raw/ncdor_links.txt
           for L in $(grep -oE 'href="[^"]*(xlsx|xls)[^"]*"' raw/ncdor.html | sed 's/href="//;s/"$//' | sort -u | head -12); do
             case "$L" in http*) U="$L";; *) U="https://www.ncdor.gov$L";; esac
-            N=$(basename "$U" | tr -c 'A-Za-z0-9._-\n' '_'); curl -sSL -A "$UA" "$U" -o "can-i-live-here/data/raw/ncdor_$N" && echo "got $U"
+            N=$(basename "$U" | tr -c 'A-Za-z0-9._\n-' '_'); curl -sSL -A "$UA" "$U" -o "can-i-live-here/data/raw/ncdor_$N" && echo "got $U"
           done
           curl -sSL -A "$UA" "https://www.ncdor.gov/taxes-forms/property-tax/property-tax-rates/county-property-tax-rates-and-reappraisal-schedules" -o raw/ncdor2.html; grep -oE 'href="[^"]*"' raw/ncdor2.html | grep -iE 'fiscal-year|rate' | sort -u >> can-i-live-here/data/raw/ncdor_links.txt || true
           for P in fiscal-year-2026-2027 fiscal-year-2025-2026 taxes-forms/property-tax/property-tax-rates/county-and-municipal-effective-tax-rates local-government/information-unit/reports-statistics-property-tax-rates/county-and-municipal-property-tax-rates-and-year-most-recent-reappraisal; do
             curl -sSL -A "$UA" "https://www.ncdor.gov/$P" -o raw/ncp.html
             for L in $(grep -oE 'href="[^"]*(xlsx|xls|pdf)[^"]*"' raw/ncp.html | sed 's/href="//;s/"$//' | sort -u | head -10); do
               case "$L" in http*) U="$L";; *) U="https://www.ncdor.gov$L";; esac
-              N=$(basename "$U" | tr -c 'A-Za-z0-9._-\n' '_'); curl -sSL -A "$UA" "$U" -o "can-i-live-here/data/raw/ncdor_$(basename $P)_$N" && echo "got $U"
+              N=$(basename "$U" | tr -c 'A-Za-z0-9._\n-' '_'); curl -sSL -A "$UA" "$U" -o "can-i-live-here/data/raw/ncdor_$(basename $P)_$N" && echo "got $U"
             done
           done
           curl -sSfL -A "$UA" "https://www.dol.gov/sites/dolgov/files/WB/NDCP2022.xlsx" -o can-i-live-here/data/raw/dol_ndcp2022.xlsx && echo "got NDCP2022" || echo "NDCP fail"
@@ -159,7 +164,7 @@ jobs:
           mkdir -p raw/usda
           for L in 4 3 2 1 0; do
             NAME=$(python3 -c "import json;print(json.load(open('raw/usda_l$L.json')).get('name',''))")
-            case "$NAME" in *neligible*) ;; *) continue;; esac
+            case "$L" in 4) ;; *) continue;; esac
             OFF=0; PART=0
             while :; do
               curl -sSL -A "$UA" "$B/$L/query" --data-urlencode "where=1=1" --data-urlencode "geometry=-84.4,32.0,-75.4,36.7" --data-urlencode "geometryType=esriGeometryEnvelope" --data-urlencode "inSR=4326" --data-urlencode "spatialRel=esriSpatialRelIntersects" --data-urlencode "outFields=OBJECTID" --data-urlencode "outSR=4326" --data-urlencode "resultOffset=$OFF" --data-urlencode "resultRecordCount=500" --data-urlencode "f=geojson" -o raw/usda/part_$PART.geojson
@@ -179,10 +184,10 @@ jobs:
           import duckdb,sys,json
           rel=sys.argv[1]
           con=duckdb.connect(); con.execute("INSTALL httpfs; LOAD httpfs; SET s3_region='us-west-2';")
-          q=f"""SELECT id, names.primary AS name, categories.primary AS cat, geometry.x() AS lon, geometry.y() AS lat
+          q=f"""SELECT id, names."primary" AS name, categories."primary" AS cat, geometry.x() AS lon, geometry.y() AS lat
                 FROM read_parquet('s3://overturemaps-us-west-2/{rel}theme=places/type=place/*', filename=true, hive_partitioning=1)
                 WHERE bbox.xmin BETWEEN -84.5 AND -75.3 AND bbox.ymin BETWEEN 31.9 AND 36.7
-                  AND categories.primary IN ('grocery_store','supermarket','warehouse_store','wholesale_grocer')"""
+                  AND categories."primary" IN ('grocery_store','supermarket','warehouse_store','wholesale_grocer')"""
           try:
               con.execute("INSTALL spatial; LOAD spatial;")
               rows=con.execute(q.replace('geometry.x()','ST_X(ST_GeomFromWKB(geometry))').replace('geometry.y()','ST_Y(ST_GeomFromWKB(geometry))')).fetchall()
