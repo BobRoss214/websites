@@ -105,8 +105,9 @@ jobs:
         continue-on-error: true
         run: |
           B="https://hazards.geoplatform.gov/server/rest/services/Hosted"
-          curl -sSL -A "$UA" "$B?f=json" -o raw/nri_svcs.json
-          python3 -c "import json;d=json.load(open('raw/nri_svcs.json'));print([s['name'] for s in d.get('services',[]) if 'NRI' in s['name']])" | tee can-i-live-here/data/raw/nri_services.txt
+          curl -sSL -A "$UA" -w "nri services http %{http_code}\n" "$B?f=json" -o raw/nri_svcs.json; head -c 300 raw/nri_svcs.json; echo
+          python3 -c "import json;d=json.load(open('raw/nri_svcs.json'));print([s['name'] for s in d.get('services',[]) if 'NRI' in s['name']])" | tee can-i-live-here/data/raw/nri_services.txt || true
+          curl -sSL -A "$UA" "https://www.arcgis.com/sharing/rest/search?q=National%20Risk%20Index%20Counties%20owner%3AFEMA&f=json&num=10" -o raw/nri_search.json; python3 -c "import json;d=json.load(open('raw/nri_search.json'));[print(i.get('title'),i.get('url')) for i in d.get('results',[])]" || true
           CSVC=$(python3 -c "import json;n=[s['name'] for s in json.load(open('raw/nri_svcs.json')).get('services',[]) if 'NRI_Counties' in s['name']];print(sorted(n)[-1] if n else '')")
           TSVC=$(python3 -c "import json;n=[s['name'] for s in json.load(open('raw/nri_svcs.json')).get('services',[]) if 'NRI_CensusTracts' in s['name'] or 'NRI_Tracts' in s['name']];print(sorted(n)[-1] if n else '')")
           echo "county svc: $CSVC  tract svc: $TSVC"
@@ -144,15 +145,25 @@ jobs:
             curl -sSL -A "$UA" "https://www.ncdor.gov/$P" -o raw/ncp.html
             for L in $(grep -oE 'href="[^"]*(xlsx|xls|pdf)[^"]*"' raw/ncp.html | sed 's/href="//;s/"$//' | sort -u | head -10); do
               case "$L" in http*) U="$L";; *) U="https://www.ncdor.gov$L";; esac
-              N=$(basename "$U" | tr -c 'A-Za-z0-9._\n-' '_'); curl -sSL -A "$UA" "$U" -o "can-i-live-here/data/raw/ncdor_$(basename $P)_$N" && echo "got $U"
+              N=$(basename "$U" | tr -c 'A-Za-z0-9._\n-' '_'); T="raw/ncdor_dl"; curl -sSL -A "$UA" "$U" -o "$T" && echo "got $U"
+              case "$(file -b "$T")" in *Excel*|*Microsoft*) EXT=xlsx;; *PDF*) EXT=pdf;; *) EXT=bin;; esac
+              [ "$EXT" = bin ] || cp "$T" "can-i-live-here/data/raw/ncdor_$(basename $P)_${N%.*}.$EXT"
             done
           done
-          curl -sSfL -A "$UA" "https://www.dol.gov/sites/dolgov/files/WB/NDCP2022.xlsx" -o can-i-live-here/data/raw/dol_ndcp2022.xlsx && echo "got NDCP2022" || echo "NDCP fail"
+          if curl -sSfL -A "$UA" "https://www.dol.gov/sites/dolgov/files/WB/NDCP2022.xlsx" -o raw/ndcp.xlsx; then
+            pip3 install -q openpyxl && python3 - <<'PY'
+          import openpyxl, csv
+          wb=openpyxl.load_workbook('raw/ndcp.xlsx', read_only=True); ws=wb[wb.sheetnames[0]]
+          rows=ws.iter_rows(values_only=True); h=next(rows); si=list(h).index('STATE_ABBREVIATION')
+          out=[r for r in rows if r[si] in ('NC','SC')]
+          w=csv.writer(open('can-i-live-here/data/raw/dol_ndcp2022_ncsc.csv','w',newline='')); w.writerow(h); w.writerows(out); print('ndcp rows',len(out))
+          PY
+          else echo "NDCP fail"; fi
           curl -sSL -A "$UA" "https://www.dol.gov/agencies/wb/topics/featured-childcare" -o raw/dol.html; grep -oE 'href="[^"]*\.(xlsx|csv|zip)"' raw/dol.html | sort -u > can-i-live-here/data/raw/dol_childcare_links.txt || true; head can-i-live-here/data/raw/dol_childcare_links.txt
           curl -sSL -A "$UA" "https://www.epi.org/resources/budget/" -o raw/epi.html; grep -oE 'href="[^"]*(xlsx|csv|zip|download)[^"]*"' raw/epi.html | sort -u > can-i-live-here/data/raw/epi_links.txt || true; head can-i-live-here/data/raw/epi_links.txt
           curl -sSL -A "$UA" "https://www.sccounties.org/property-tax-rates" -o raw/scac.html; grep -oiE '[^"'"'"' ]*\.(pdf|xlsx)' raw/scac.html | sort -u > can-i-live-here/data/raw/scac_links.txt || true; head can-i-live-here/data/raw/scac_links.txt
           for L in $(grep -iE 'rate|millage' can-i-live-here/data/raw/scac_links.txt | head -4); do case "$L" in http*) U="$L";; *) U="https://www.sccounties.org$L";; esac; curl -sSfL -A "$UA" "$U" -o "can-i-live-here/data/raw/scac_$(basename $U)" && echo "got $U" || true; done
-          curl -sSL -A "$UA" "https://entp.hud.gov/idapp/html/hicostlook.cfm" -o can-i-live-here/data/raw/hud_fha_limits_form.html || true; grep -oiE '<(form|select|input)[^>]*>' can-i-live-here/data/raw/hud_fha_limits_form.html | head -20
+          for ST in NC SC; do curl -sSL -A "$UA" "https://entp.hud.gov/idapp/html/hicost1.cfm" --data "state=$ST&sorted=county_name&county_name=&county=&msa_name=&msa_code=&in_fha=No&limit_type=FHA%20Forward&limitType=FHA" -o "can-i-live-here/data/raw/hud_fha_limits_$ST.html"; grep -c "<tr" "can-i-live-here/data/raw/hud_fha_limits_$ST.html" || true; done
       - name: USDA Rural Development ineligible areas (ArcGIS REST, NC and SC extent)
         continue-on-error: true
         run: |
@@ -188,6 +199,10 @@ jobs:
                 FROM read_parquet('s3://overturemaps-us-west-2/{rel}theme=places/type=place/*', filename=true, hive_partitioning=1)
                 WHERE bbox.xmin BETWEEN -84.5 AND -75.3 AND bbox.ymin BETWEEN 31.9 AND 36.7
                   AND categories."primary" IN ('grocery_store','supermarket','warehouse_store','wholesale_grocer')"""
+          one=f"s3://overturemaps-us-west-2/{rel}theme=places/type=place/*"
+          try:
+              cols=con.execute(f"DESCRIBE SELECT * FROM read_parquet('{one}') LIMIT 1").fetchall(); print('columns',[c[0] for c in cols])
+          except Exception as e: print('describe failed',e)
           try:
               con.execute("INSTALL spatial; LOAD spatial;")
               rows=con.execute(q.replace('geometry.x()','ST_X(ST_GeomFromWKB(geometry))').replace('geometry.y()','ST_Y(ST_GeomFromWKB(geometry))')).fetchall()

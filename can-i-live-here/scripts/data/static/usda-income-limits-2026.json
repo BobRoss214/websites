@@ -1,0 +1,11 @@
+{
+  "_source": "USDA Rural Development Single Family Housing Guaranteed Loan Program income limits, Procedure Notice 657, effective 2026-07-13 (standard area limits $122,800 for 1-4 person households, $162,100 for 5-8). Metro-area exceptions below from the same table via web search; medium confidence. https://www.rd.usda.gov/sites/default/files/rd-gsfh-incomelimits.pdf",
+  "standard": { "p4": 122800, "p8": 162100 },
+  "areas": {
+    "Raleigh-Cary": { "p4": 149800, "p8": 197750, "counties": ["37183", "37101", "37069", "37085"] },
+    "Charlotte-Concord-Gastonia": { "p4": 129000, "p8": 170300, "counties": ["37119", "37025", "37071", "37179", "37097", "37109", "37159", "45091", "45057", "45023"] },
+    "Charleston-North Charleston": { "p4": 127500, "p8": 168300, "counties": ["45019", "45015", "45035"] },
+    "Beaufort": { "p4": 126650, "p8": 167200, "counties": ["45013"] },
+    "Winston-Salem / Greensboro-High Point": { "p4": 144500, "p8": 190750, "counties": ["37067", "37081", "37057", "37151", "37059", "37169", "37197"] }
+  }
+}

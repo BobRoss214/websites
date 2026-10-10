@@ -4,3 +4,5 @@ test-results/
 playwright-report/
 .cache/
 *.log
+data/raw/worldcover/
+data/raw/dol_ndcp2022.xlsx

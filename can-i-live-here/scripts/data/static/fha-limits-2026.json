@@ -1,0 +1,10 @@
+{
+  "_source": "HUD Mortgagee Letter 2025-23 (Dec 11, 2025): 2026 FHA forward mortgage limits. Floor $541,287, ceiling $1,249,125. Counties not listed are at the floor. See RESEARCH.md; the per-county figures below were gathered from HUD's limits lookup via web search and are marked medium confidence until the HUD file is parsed automatically.",
+  "floor": 541287,
+  "ceiling": 1249125,
+  "counties": {
+    "37063": 634800, "37135": 634800, "37037": 634800, "37145": 634800,
+    "37143": 805000, "37029": 757850, "37053": 757850, "37073": 757850, "37055": 718750,
+    "45019": 690000, "45015": 690000, "45035": 690000, "45013": 638250, "45053": 638250
+  }
+}
