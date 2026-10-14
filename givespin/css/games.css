@@ -287,3 +287,27 @@
 .spanel.is-revealed .spanel__btn:not(:disabled) { pointer-events: auto; cursor: pointer; }
 .spanel.is-revealed .spanel__btn:not(:disabled):hover { background: rgba(255, 255, 255, 0.28); }
 .drop__view:not(.is-busy):not(.is-rolling) .dcard { cursor: pointer; }
+
+/* the Track picker (js/ui/variants.js): a group of tiles, each a small drawing of a track; the chosen one is outlined; it folds up to one line */
+.variants { border: 1px solid var(--line); border-radius: 12px; background: var(--bg-2); }
+.variants > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 8px 14px; cursor: pointer; list-style: none; }
+.variants > summary::-webkit-details-marker { display: none; }
+.variants > summary::after { content: ""; width: 9px; height: 9px; margin-left: 6px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); rotate: 45deg; translate: 0 -2px; transition: rotate 0.15s; flex: none; }
+.variants[open] > summary::after { rotate: 225deg; translate: 0 2px; }
+.variants__now { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 0.8rem var(--f-body); color: var(--text); text-align: right; }
+.variants__body { display: grid; gap: 8px; padding: 2px 10px 12px; }
+.variants__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; }
+.variants__hint { min-height: 0; }
+.vtile { display: grid; align-content: start; justify-items: center; gap: 4px; min-width: 0; min-height: 44px; padding: 6px 5px 7px; border-radius: 11px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font: 700 0.74rem/1.2 var(--f-body); text-align: center; cursor: pointer; transition: border-color 0.12s, background 0.12s, color 0.12s; }
+.vtile:hover:not(:disabled):not(.is-on) { border-color: var(--line-2); color: var(--text); }
+.vtile.is-on { border-color: var(--green); background: rgba(34, 240, 122, 0.12); color: #fff; box-shadow: 0 0 0 1px var(--green); }
+.vtile:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }   /* white, so the tile the keyboard is on is not mistaken for the chosen one (green) */
+.vtile:disabled { opacity: 0.75; cursor: not-allowed; }
+.vtile.is-on:disabled { opacity: 1; cursor: default; }
+.vtile__pic { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; border-radius: 8px; background: #0b161f; }
+.vtile__pic--random { display: grid; place-items: center; color: var(--green); }
+.vtile__pic--random .ico { width: 1.7rem; height: 1.7rem; }
+.vtile__name { max-width: 100%; overflow-wrap: anywhere; }
+.vtile__sub { max-width: 100%; font: 600 0.66rem/1.2 var(--f-body); color: var(--dim); overflow-wrap: anywhere; }
+.vtile__sub:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .vtile, .variants > summary::after { transition: none; } }

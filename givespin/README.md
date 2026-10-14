@@ -51,7 +51,7 @@ tables (marked **Live** below), and every live game has seven table sizes.
 | Scratch Cards | 4 to 48 panels | Scratch the foil with a finger or mouse (or reveal by keyboard) to find matching charities. |
 | Charity Derby (Live) | 2 to 500 runners | Charities race down lanes; the first across the line wins. |
 | Duck Derby (Live) | 2 to 500 ducks | Rubber ducks bob down a river; each wears its charity's colour. |
-| Marble Run (Live) | 2 to 500 marbles | Glass marbles roll, bump and overtake down a winding track (a small physics race that is worked out first, with the drawn charity's marble in the place that crosses first). |
+| Marble Run (Live) | 2 to 500 marbles | Glass marbles roll, bump and overtake down a winding track (a small physics race that is worked out first, with the drawn charity's marble in the place that crosses first), on a track you choose (see **Tracks** below). |
 | Balloon Race (Live) | 2 to 500 balloons | Balloons climb to a finish line in the clouds. |
 | Lucky Draw (Live) | 2 to 500 balls | Balls tumble in a drum; one rolls out through the chute. |
 | Last One Standing (Live) | 2 to 500 tiles | Charities are knocked out wave by wave until one is left. |
@@ -63,6 +63,14 @@ pockets, a river of 500 ducks. **The board is exactly what the winner is drawn f
 same chance, so a bigger board is a longer shot. If you ask for more spots than there are charities in play, charities
 fill more than one spot (spread as evenly as possible, so odds stay equal). The receipt and the verifier record the
 board. Sizes are remembered per game.
+
+**Tracks (Marble Run).** Marble Run has more than one track. The **Track** box in the game panel shows a small picture of each
+one: tap a picture to race on it, or choose **Surprise me** for a different track every round (it says which one comes next).
+The box can be folded up to one line, the choice is remembered on this device, and it can be changed between rounds but not
+while the marbles are rolling. A track changes the shape and the feel of the race, never the odds: the winner is drawn first,
+from the charities on the board, each with exactly the same chance, and the marbles are then played out on whichever track is
+showing. Any race game can offer such a choice by giving its description a `variants` entry (the comment at the top of
+`js/games/crowd.js` says how); the picker itself is `js/ui/variants.js`.
 
 Four games stop sooner on purpose, because of what they are: Pick a Card is a table of face-down cards you tap (up to
 100), a Scratch Card is one card with 4 to 48 panels, Coin Flip Showdown is a knockout bracket, so it takes a power of
@@ -305,7 +313,9 @@ Timings (betting window, lock, result), bot names and stake sizes, and the table
    still check out after the charity list changes. If the browser's storage is full, the site says so once and carries on.
 3. **Show.** The game then animates to the already-chosen winner. The slices, reels, bins, pockets, cards and runners
    on screen are the board itself (the charities the winner was drawn from, repeated to fill extra spots), so what you
-   see is what was drawn from.
+   see is what was drawn from. Marble Run's track is part of the show too: the track you see never decides anything, the
+   winner is drawn first and the marbles are only the show. The receipt and My Giving note which track a round ran on
+   ("Track: Spiral Tower"), but the track is kept beside the round, never in the record the verifier redoes.
 4. **Reveal.** After the round the seed is revealed. Hash it and compare with step 1, then recompute the draws. The
    Fair Play page and every receipt have a one-click verifier, and the Fair Play page also shows a standalone
    snippet you can paste into a browser console.
@@ -343,10 +353,10 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 ## Tests
 
 ```
-node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/kit.test.js givespin/tests/readme.test.js givespin/tests/marks.test.js givespin/tests/marble.test.js
+node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/kit.test.js givespin/tests/readme.test.js givespin/tests/marks.test.js givespin/tests/marble.test.js givespin/tests/live.test.js givespin/tests/maps.test.js givespin/tests/marble-maps.test.js givespin/tests/record.test.js
 ```
 
-116 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+164 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
 backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly
@@ -355,7 +365,7 @@ against Node's own HMAC, uniformity over 30,000 rounds, tampering is caught, the
 charity data (unique ids, valid vocabulary, short names and blurbs, bare hostnames, no superlatives, minimum counts per
 cause and filter), and saved rounds (a board of 300, 301 or 500 charities and a live round with 25 backed charities come back whole
 after a reload and still verify, a Dice round still verifies after the roster grows, older saves still load, a full
-storage is reported, and the saved text stays small), Marble Run's click spots (a marble tossed up in the shake is clicked where it is seen) and which marbles wear their charity's mark, and this README (the roster size, the board sizes per game, the unit-test count and command, the file list and the wording rules are all checked against the code).
+storage is reported, and the saved text stays small), Marble Run's click spots (a marble tossed up in the shake is clicked where it is seen) and which marbles wear their charity's mark, the track of a live Marble Run table (one per round, the next one in turn, never the same twice in a row, and never part of the draw),, starting pack, race and fairness of every Marble Run map, and this README (the roster size, the board sizes per game, the unit-test count and command, the file list and the wording rules are all checked against the code).
 
 ```
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
@@ -408,8 +418,9 @@ js/icons.js         inline Lucide icons
 js/audio.js         synthesised sound effects
 js/confetti.js      confetti particle system
 js/games/*.js       the games; crowd.js is the engine behind Duck Derby, Marble Run and Balloon Race, and slots.js is one engine behind the five slot machines
+                    (marble-maps-stub.js is a stand-in list of Marble Run tracks for the tests; the page does not load it)
 js/ui/*.js          shared helpers, amount and gift options, filters, charities, account, receipt,
-                    charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), live tables, game
+                    charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), the Track picker (variants.js), live tables, game
                     screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
                     the first-visit tour (tour.js)
 js/logos.js         which charities have a logo file (134 so far)

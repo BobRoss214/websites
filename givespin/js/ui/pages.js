@@ -82,6 +82,8 @@
       var winCh = GS.charity(h.live.winner);
       rows.unshift(['radio', 'Live table: ' + money(h.live.pot, true) + ' pot, ' + ui.num(h.live.players) + ' players (the others were bots). ' + (pickCh ? 'You backed ' + pickCh.short + (h.live.won ? ', and it won.' : winCh ? '; ' + winCh.short + ' won the pot.' : '.') : '')]);
     }
+    var track = ui.receipt.trackName(h.game, h.map);   // Marble Run: which track the race ran on (a note only; it played no part in the draw)
+    if (track) { rows.push(['milestone', 'Track: ' + track]); }
     rows.push(['receipt', 'Receipt ' + h.id]);
     return '<ul class="rs-rows">' + rows.map(function (r) { return '<li>' + ui.icon(r[0]) + '<span>' + esc(r[1]) + '</span></li>'; }).join('') + '</ul>';
   }
@@ -255,6 +257,7 @@
       '<section class="sect panel panel--short" aria-labelledby="fp-short"><h2 class="sect__t" id="fp-short">The short version</h2>' +
         '<ul class="fplist">' +
           '<li>' + ui.icon('lock') + '<span><b>The winner is picked first.</b> Before the wheel spins, the ball drops or the ducks race, the result is already decided. The animation is just the show.</span></li>' +
+          '<li>' + ui.icon('milestone') + '<span><b>Any Marble Run track, the same odds.</b> The track you see never decides anything: the winner is drawn first, the marbles are only the show. Your receipt notes which track it was, and the check below works the same on every track.</span></li>' +
           '<li>' + ui.icon('shield-check') + '<span><b>It is locked in where you can see.</b> Before you play, the game shows you a “fingerprint” of its secret. If the secret were swapped afterwards, the fingerprint would no longer match and Verify would show it. In this preview the game and the secret both live on your device, so this is a demonstration, not an outside audit.</span></li>' +
           '<li>' + ui.icon('scale') + '<span><b>Everyone gets the same chance.</b> In solo games every charity on the board has exactly the same odds. At live tables each charity’s chance is its share of the pot.</span></li>' +
           '<li>' + ui.icon('circle-check') + '<span><b>You can check.</b> Press “Verify” on any past round and your browser redoes the maths and tells you whether it all adds up.</span></li>' +
@@ -296,7 +299,7 @@
         '</details></section>' +
 
       '<section class="sect panel panel--note" aria-labelledby="fp-lim"><h2 class="sect__t" id="fp-lim">The honest limits</h2>' +
-        '<p>In this version of the site, the secret number is made on <b>your own device</b>. So this proves how each result was worked out, and that it was fixed before the animation, but it is <b>not a check by an independent referee</b>. A full launch should make and publish these secrets on a server that nobody here controls. And everything you see on screen (the slices, reels, bins and decoys) is just decoration around a result that is already decided. At live tables the other players are simulated bots, so the pot you see is simulated too.</p></section>';
+        '<p>In this version of the site, the secret number is made on <b>your own device</b>. So this proves how each result was worked out, and that it was fixed before the animation, but it is <b>not a check by an independent referee</b>. A full launch should make and publish these secrets on a server that nobody here controls. And everything you see on screen (the slices, reels, bins, Marble Run tracks and decoys) is just decoration around a result that is already decided. At live tables the other players are simulated bots, so the pot you see is simulated too.</p></section>';
     ui.hydrate(root);
     ui.fairBlock.render($('[data-role="block"]', root));
     historyList($('[data-role="hist"]', root), { limit: 10, fairOnly: true });
@@ -337,6 +340,10 @@
     ['help-custom', 'Can I pick exactly which charities are in a game?', function () {
       return '<p>Yes. Every solo game has a <strong>Choose your own charities</strong> button. It opens a list you can search by name, cause (try “animals”), place or what a charity does, narrow with filters, and tick. Each row has a short description, a <strong>Details</strong> drawer and a link to the charity’s own website. You can choose everything that is showing in one tap, up to what the game can hold (100 for Pick a Card, up to 1,000 on Roulette and Plinko).</p>' +
         '<p>A <strong>Custom charities</strong> chip with a tick then appears on the game: switch it off and on, edit it or remove it. While it is on, the winner is picked from exactly those charities, each with the same chance, and your game filters are paused for that game. The filters inside the list only help you search it.</p>';
+    }],
+    ['help-track', 'Can I change the track in Marble Run?', function () {
+      return '<p>Yes. On the Marble Run page, the <strong>Track</strong> box shows a small picture of each track: tap one to race on it. <strong>Surprise me</strong> gives you a different track every round and tells you which one comes next. Your choice is remembered on this device, and you can change it between rounds (not while the marbles are rolling).</p>' +
+        '<p>Each track has its own shape and feel: some are calm with long straights, others are steep and fast. A track never changes who can win. The winner is drawn first, fairly, from the charities on the board, every one with exactly the same chance, and the marbles are then played out on whichever track is showing.</p>';
     }],
     ['help-slots', 'How do the slot machines work?', function () {
       return '<p>There are five themed machines (Classic, Gold Rush, Deep Sea, Sweet Charity and Cosmic Spin) in the <a href="#lobby-slots">Slots</a> category. Every reel is one charity, and your gift is split evenly across the reels, to the cent. You choose how many reels, from 3 up to 12 (each reel needs at least $1). More reels spread your gift across more causes; fewer give each charity a bigger share.</p>' +

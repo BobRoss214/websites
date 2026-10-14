@@ -517,3 +517,15 @@ test('the new badges unlock on their own conditions', () => {
   assert.equal(core.BADGES.length, 24);
   assert.equal(new Set(core.BADGES.map((b) => b.id)).size, 24, 'badge ids are unique');
 });
+
+test('variants: a saved track choice is cleaned, and the Track picker falls back to the first track', () => {
+  ['spiral', 'random', 'zig-zag2', 'a'].forEach((v) => assert.equal(core.cleanVariant(v), v, v + ' is a fine id'));
+  [undefined, null, 5, true, {}, ['spiral'], '', ' ', 'Spiral Tower', 'SPIRAL', '-spiral', 'sp iral', '../x', 'a'.repeat(25), '<b>'].forEach((v) => assert.equal(core.cleanVariant(v), '', JSON.stringify(v) + ' is not a track id'));
+  const ids = ['switchback', 'zigzag', 'spiral'];
+  assert.equal(core.variantChoice('spiral', ids, true), 'spiral');
+  assert.equal(core.variantChoice('switchback', ids, false), 'switchback');
+  assert.equal(core.variantChoice('random', ids, true), 'random', 'Surprise me is a choice where the game has it');
+  assert.equal(core.variantChoice('random', ids, false), 'switchback', 'and is not where the game does not');
+  [undefined, null, '', 'gone', 'Zigzag', 7].forEach((v) => assert.equal(core.variantChoice(v, ids, true), 'switchback', JSON.stringify(v) + ' falls back to the first track'));
+  assert.equal(core.variantChoice('spiral', [], true), '', 'no tracks at all: nothing is selected');
+});

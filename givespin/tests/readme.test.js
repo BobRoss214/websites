@@ -55,7 +55,8 @@ function readGames() {
   fs.readdirSync(path.join(ROOT, 'js/games')).filter((f) => f.endsWith('.js') && f !== 'crowd.js' && f !== 'slots.js').forEach((f) => {
     const src = read('js/games/' + f);
     const crowd = /GS\.crowdGame\(/.test(src);   // js/games/crowd.js is the engine behind Duck Derby, Marble Run and Balloon Race: it gives them live tables and a board
-    const hits = Array.from(src.matchAll(/\bid: '([a-z]+)',\s*\n\s*name: '([^']+)'/g));
+    // (a map of Marble Run also has an id and a name, followed by a blurb: it is not a game)
+    const hits = Array.from(src.matchAll(/\bid: '([a-z]+)',\s*\n\s*name: '([^']+)'(?!,\s*\n\s*blurb:)/g));
     hits.forEach((h, i) => {
       const body = src.slice(h.index, i + 1 < hits.length ? hits[i + 1].index : src.length);
       const max = body.match(/\bmaxSize:\s*(\d+)/);

@@ -5210,6 +5210,675 @@ if (section('13zm. Marble Run: a click or tap on a marble opens that charity (in
 }
 
 /* ======================================================================== */
+// DRAFT, written against the STAND-IN registry (js/games/marble-maps-stub.js): the page is index.html with that one script put in after js/games/marble.js.
+// Nothing here depends on what the maps are: the expectations come from GS.games.marble.variants itself, so with the real registry the only change is
+// to take the stub out (set USE_STUB to false). The one check that needs the stub's own behaviour (a new random track every round) is marked.
+if (section('13zn. Marble Run: the Track picker')) {
+  const problems0 = problems.length;
+  const USE_STUB = false;
+  const TILES = '#field-variants .vtile';
+  const withStub = async (pg) => {
+    if (!USE_STUB) { return; }
+    await pg.route('**/index.html*', async (route) => {
+      const r = await route.fetch();
+      const body = (await r.text()).replace('<script src="js/games/marble.js"></script>', '<script src="js/games/marble.js"></script>\n<script src="js/games/marble-maps-stub.js"></script>');
+      await route.fulfill({ response: r, body });
+    });
+  };
+  const mkPage = async (opts) => { const pg = await newPage(opts); await withStub(pg); return pg; };
+  const items = (pg) => pg.evaluate(() => window.GS.games.marble.variants.items().map((it) => ({ id: it.id, name: it.name, blurb: it.blurb })));
+  const choice = (pg) => pg.locator(TILES + '[aria-checked="true"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-v')));
+  const pref = (pg) => pg.evaluate(() => window.GS.store.prefs().marbleMap);
+  const norm2 = (s) => s.replace(/\s+/g, ' ').trim();
+  const active = (pg) => pg.evaluate(() => { const a = document.activeElement; return a ? a.getAttribute('data-v') : null; });
+  // counts how often the board is dealt again (every change of the number of marbles does it once), and every call of the round-end hook
+  const watch = (pg) => pg.evaluate(() => {
+    const gm = window.GS.games.marble;
+    window.__deals = 0; window.__ends = 0;
+    const set = gm.setBoard;
+    gm.setBoard = function () { window.__deals += 1; return set.apply(this, arguments); };
+    const v = gm.variants, end = v.onRoundEnd;
+    v.onRoundEnd = function () { window.__ends += 1; return end ? end.apply(this, arguments) : undefined; };
+  });
+  const counts = (pg) => pg.evaluate(() => ({ deals: window.__deals, ends: window.__ends }));
+  const nextName = (pg) => pg.evaluate(() => { const v = window.GS.games.marble.variants; const id = v.next(); const it = v.items().filter((x) => x.id === id)[0]; return it ? it.name : id; });
+  // (a page that is reloaded or closed while the charities' logos are still coming in reports them as failed requests: let them arrive first)
+  const settle = (pg) => pg.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+  // (the dialog's "close" event, which tells the panel the receipt is closed, comes a moment after the dialog stops being open: wait for the round-end call before counting it)
+  const rolled = async (pg) => { await pg.waitForFunction(() => window.__ends >= 1, null, { timeout: 4000 }).catch(() => {}); await pg.waitForTimeout(300); };
+
+  const page = await mkPage();
+  await openApp(page, '#game-marble');
+  await page.waitForSelector(TILES);
+  const its = await items(page);
+  check(its.length >= 2 && its.every((i) => i.id && i.name && i.blurb), 'the game offers its tracks (' + its.length + '), each with an id, a name and one plain sentence', its);
+
+  /* ---- the picker: what is on the page ---- */
+  const tiles = await page.locator(TILES).evaluateAll((els) => els.map((e) => ({
+    v: e.getAttribute('data-v'), role: e.getAttribute('role'), checked: e.getAttribute('aria-checked'), tab: e.tabIndex, text: e.innerText.replace(/\s+/g, ' ').trim(),
+    desc: (document.getElementById(e.getAttribute('aria-describedby')) || {}).textContent || '', hidden: (e.querySelector('canvas') || { getAttribute: () => 'x' }).getAttribute('aria-hidden'),
+    ink: (() => { const c = e.querySelector('canvas'); if (!c) { return -1; } const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) { if (d[i] > 0) { n++; } } return n; })()
+  })));
+  const hasRandom = await page.evaluate(() => typeof window.GS.games.marble.variants.next === 'function');
+  check(tiles.length === its.length + (hasRandom ? 1 : 0) && its.every((i, k) => tiles[k].v === i.id), 'one tile per track in the game\'s order' + (hasRandom ? ', and a "Surprise me" tile last' : ''), tiles.map((t) => t.v));
+  check(tiles.every((t) => t.role === 'radio') && await page.locator('#field-variants [role="radiogroup"]').count() === 1, 'the tiles are radio buttons in one radio group');
+  check(norm2(await page.locator('#field-variants [role="radiogroup"]').evaluate((g) => document.getElementById(g.getAttribute('aria-labelledby')).textContent)) === 'Track', 'the group is named by its visible label, "Track"');
+  check(its.every((i, k) => tiles[k].text.startsWith(i.name) && tiles[k].desc === i.blurb), 'each tile is named after its track and described by its sentence (for a screen reader)', tiles);
+  check(tiles.filter((t) => t.v !== 'random').every((t) => t.ink > 200 && t.hidden === 'true'), 'each track has a small picture drawn on its tile, hidden from screen readers (the name says it all)', tiles.map((t) => t.ink));
+  check(tiles.filter((t) => t.checked === 'true').length === 1 && tiles[0].checked === 'true', 'for a new visitor exactly one tile is chosen: the first track');
+  check(tiles.filter((t) => t.tab === 0).length === 1 && tiles[0].tab === 0, 'and the group is one tab stop (the chosen tile)');
+  check(norm2(await page.locator('#field-variants summary').textContent()) === 'Track ' + its[0].name, 'the folded-up line says "Track" and the chosen track', norm2(await page.locator('#field-variants summary').textContent()));
+  const hint0 = norm2(await page.locator('#field-variants [data-role="hint"]').innerText());
+  check(hint0.includes(its[0].blurb) && hint0.includes('exactly the same chance'), 'the hint says what the track is like, and that the track never changes the odds', hint0);
+  check(!(await page.locator('#field-variants').evaluate((e) => e.hidden)) && await page.locator('#field-variants').boundingBox().then((b) => !!b && b.height > 40), 'the picker is shown in the game panel');
+  await shot(page, '13zn-picker');
+  await a11y(page, 'Marble Run with the Track picker');
+
+  /* ---- choosing a track deals the board again, like a change of the number of marbles ---- */
+  await watch(page);
+  const entrants0 = await page.evaluate(() => window.GS.games.marble._entrants());
+  await page.click('#field-size [data-n="24"]');
+  const sizeDeals = (await counts(page)).deals;
+  await page.click('#field-size [data-n="8"]');
+  const base = (await counts(page)).deals;
+  await page.click(TILES + '[data-v="' + its[1].id + '"]');
+  const afterPick = (await counts(page)).deals;
+  check(sizeDeals === 1 && afterPick - base === sizeDeals, 'choosing another track deals the board again exactly as a change of the number of marbles does (' + sizeDeals + ' time)', { sizeDeals, pick: afterPick - base });
+  check(await pref(page) === its[1].id && (await choice(page)).join() === its[1].id, 'it is saved as the choice (' + its[1].id + ') and that tile is the chosen one', { pref: await pref(page), choice: await choice(page) });
+  check(await page.evaluate(() => window.GS.games.marble._entrants()) === entrants0, 'with the same number of marbles on the board', entrants0);
+  check(norm2(await page.locator('#field-variants summary').textContent()) === 'Track ' + its[1].name && (await page.locator('#field-variants [data-role="hint"]').innerText()).includes(its[1].blurb), 'the folded-up line and the hint follow');
+  check((await page.locator(TILES + '[tabindex="0"]').evaluateAll((e) => e.map((x) => x.getAttribute('data-v')))).join() === its[1].id, 'and the tab stop moved to the chosen tile');
+  await page.click(TILES + '[data-v="' + its[1].id + '"]');
+  check((await counts(page)).deals === afterPick, 'choosing the track that is already chosen changes nothing');
+  await settle(page);
+  await page.reload();
+  await page.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
+  await page.waitForSelector(TILES);
+  check((await choice(page)).join() === its[1].id, 'after a reload the same track is still chosen');
+  await page.evaluate(() => { window.GS.store.setPref('marbleMap', 'a-track-that-is-gone'); });
+  await settle(page);
+  await page.reload();
+  await page.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
+  await page.waitForSelector(TILES);
+  check((await choice(page)).join() === its[0].id && (await pref(page)) === 'a-track-that-is-gone', 'a saved track the game does not have is treated as the first track (nothing breaks)', await choice(page));
+
+  /* ---- the keyboard ---- */
+  await page.click(TILES + '[data-v="' + its[0].id + '"]');
+  await page.focus(TILES + '[data-v="' + its[0].id + '"]');
+  const last = tiles[tiles.length - 1].v;
+  await page.keyboard.press('ArrowRight');
+  check(await active(page) === tiles[1].v && (await choice(page)).join() === its[0].id, 'the arrow keys move between the tiles without choosing (right: ' + tiles[1].v + ')');
+  check((await page.locator(TILES + '[tabindex="0"]').count()) === 1, 'and there is still exactly one tab stop');
+  await page.keyboard.press('End');
+  check(await active(page) === last, 'End goes to the last tile');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('ArrowDown');
+  check(await active(page) === tiles[1].v, 'Home goes to the first tile, and the down arrow to the next');
+  await page.keyboard.press('Space');
+  check((await choice(page)).join() === tiles[1].v && await pref(page) === tiles[1].v, 'Space chooses the tile the keyboard is on', await choice(page));
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('Enter');
+  check((await choice(page)).join() === tiles[0].v, 'and so does Enter', await choice(page));
+  check(await active(page) === tiles[0].v, 'keyboard focus stays on the tile after it is chosen');
+  await page.focus('#size-max');
+  await page.keyboard.press('Tab');
+  check((await page.evaluate(() => document.activeElement.className.includes('vtile') ? document.activeElement.getAttribute('data-v') : (document.activeElement.id || document.activeElement.tagName))) !== null, 'Tab reaches the picker in one stop');
+
+  /* ---- Surprise me (needs a game that can say what the next round uses) ---- */
+  if (hasRandom) {
+    await page.click(TILES + '[data-v="random"]');
+    check(await pref(page) === 'random' && (await choice(page)).join() === 'random', 'Surprise me is saved as "random" and shown as chosen');
+    const nx = await nextName(page);
+    check((await page.locator(TILES + '[data-v="random"]').innerText()).includes('Next: ' + nx), 'and its tile says which track the next round will use (' + nx + ')', await page.locator(TILES + '[data-v="random"]').innerText());
+    const sumR = norm2(await page.locator('#field-variants summary').textContent());
+    check(sumR.includes('Surprise me') && sumR.includes(nx), 'so does the folded-up line', sumR);
+    check(/different track every round/.test(await page.locator('#field-variants [data-role="hint"]').innerText()) && (await page.locator('#field-variants [data-role="hint"]').innerText()).includes('exactly the same chance'), 'and the hint explains it, with the odds sentence');
+  }
+
+  /* ---- a round: the picker is switched off while it runs, and the next track is rolled afterwards ---- */
+  await page.evaluate(() => window.GS.store.setPref('rounds', 1));
+  await settle(page);
+  await page.reload();
+  await page.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
+  await page.waitForSelector(TILES);
+  await watch(page);
+  const beforeNext = await nextName(page);
+  await page.click('#btn-play');
+  await page.waitForFunction(() => window.GS.app.state.busy);
+  const during = await page.locator(TILES).evaluateAll((els) => els.map((e) => e.disabled));
+  check(during.every(Boolean), 'while the marbles roll every tile is switched off', during);
+  const prefBusy = await pref(page);
+  await page.evaluate(() => { const t = document.querySelector('#field-variants .vtile:not([aria-checked="true"])'); if (t) { t.click(); } });
+  check(await pref(page) === prefBusy, 'and a press on one changes nothing');
+  await waitReceipt(page);
+  check(await page.evaluate(() => { const a = window.GS.app._last; const first = window.GS.games.marble._debug.marbles().filter((e) => e.run.place === 1).map((e) => e.ch.id); return first.length === 1 && first[0] === a.round.winners[a.round.winners.length - 1].id; }), 'the drawn charity\'s marble crossed the line first, whichever track is chosen');
+  await closeReceipt(page);
+  await page.waitForFunction(() => !window.GS.app.state.busy);
+  await rolled(page);
+  const after = await page.locator(TILES).evaluateAll((els) => els.map((e) => e.disabled));
+  check(after.every((d) => !d), 'when it is over the tiles are on again', after);
+  const c1 = await counts(page);
+  check(c1.ends === 1, 'the game was told once that the round was over (the hook that rolls the next random track)', c1);
+  if (hasRandom) {
+    const nx2 = await nextName(page);
+    check((await page.locator(TILES + '[data-v="random"]').innerText()).includes('Next: ' + nx2), 'the "Next:" line on the Surprise me tile shows the track now rolled for the next round (' + nx2 + ')');
+    if (USE_STUB) { check(nx2 !== beforeNext, 'STUB ONLY: a new random track was rolled (never the same one twice running)', { beforeNext, nx2 }); }
+  }
+  // a fixed choice stays put after a round
+  await page.click(TILES + '[data-v="' + its[1].id + '"]');
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  await closeReceipt(page);
+  check(await pref(page) === its[1].id && await page.evaluate(() => window.GS.games.marble.variants.next()) === its[1].id, 'a track you chose stays chosen after a round');
+  // a gift split into three rounds: all three rounds run on ONE track; the next track is rolled once, when the whole play is over (the receipt is closed), never between the rounds
+  if (hasRandom) {
+    await page.click(TILES + '[data-v="random"]');
+    await page.evaluate(() => { window.GS.store.setPref('rounds', 3); });
+    await settle(page);
+    await page.reload();
+    await page.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
+    await page.waitForSelector(TILES);
+    await watch(page);
+    // the track the board is on (the game's own answer where it has one, else the one the picker says is next)
+    const trackNow = (pg) => pg.evaluate(() => { const gm = window.GS.games.marble; return gm.currentMap ? gm.currentMap().id : gm.variants.next(); });
+    const used = await trackNow(page);   // what a play that starts now runs on (and what a record of the play would name)
+    await page.evaluate(() => {
+      const gm = window.GS.games.marble;
+      window.__seen = {};
+      window.__timer = setInterval(() => { const id = gm.currentMap ? gm.currentMap().id : gm.variants.next(); window.__seen[id] = (window.__seen[id] || 0) + 1; }, 40);
+    });
+    await page.click('#btn-play');
+    await waitReceipt(page);
+    const mid = await page.evaluate(() => { clearInterval(window.__timer); return { seen: Object.keys(window.__seen), ends: window.__ends, next: window.GS.games.marble.variants.next() }; });
+    check(mid.seen.length === 1 && mid.seen[0] === used, 'a gift split into three rounds runs every round on the track the play started on (' + used + ')', mid);
+    check(mid.ends === 0 && mid.next === used, 'the next track is not rolled between the rounds, nor before the receipt is closed (0 calls, "Next:" unchanged)', mid);
+    await closeReceipt(page);
+    await page.waitForFunction(() => !window.GS.app.state.busy);
+    await rolled(page);
+    const done3 = await counts(page);
+    check(done3.ends === 1, 'it is rolled once, when the receipt of the whole play is closed (1 call, not 3)', done3);
+    const nx3 = await page.evaluate(() => window.GS.games.marble.variants.next());
+    check(nx3 !== used && await trackNow(page) === nx3, 'and then the board is on the new track, never the same one twice running (' + used + ' -> ' + nx3 + ')', { used, nx3 });
+    await page.evaluate(() => { window.GS.store.setPref('rounds', 1); });
+  }
+
+  /* ---- fold it up ---- */
+  await settle(page);
+  await page.reload();
+  await page.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
+  await page.waitForSelector(TILES);
+  await page.click('#field-variants summary');
+  check(await page.locator('#field-variants details').evaluate((d) => !d.open) && !(await page.locator(TILES).first().isVisible()), 'the picker folds up to one line');
+  check(norm2(await page.locator('#field-variants summary').textContent()).startsWith('Track '), 'which still names the track');
+  await page.evaluate(() => { window.GS.bus.emit('prefs'); window.GS.bus.emit('pool'); });
+  check(await page.locator('#field-variants details').evaluate((d) => !d.open), 'and it stays folded when the panel refreshes');
+  await page.click('#field-variants summary');
+  check(await page.locator(TILES).first().isVisible(), 'and opens again');
+
+  /* ---- a live table forces a track for its round: the player's own choice is left alone ---- */
+  if (await page.evaluate(() => typeof window.GS.games.marble.variants.force === 'function')) {
+    await page.click(TILES + '[data-v="' + its[1].id + '"]');
+    const other = its.filter((i) => i.id !== its[1].id)[0].id;
+    await page.evaluate((id) => { window.GS.games.marble.variants.force(id); window.GS.bus.emit('prefs'); }, other);
+    check(await pref(page) === its[1].id && (await choice(page)).join() === its[1].id, 'a track forced by a live table (' + other + ') does not change the saved choice or what the picker shows', { pref: await pref(page), choice: await choice(page) });
+    await page.evaluate(() => { window.GS.games.marble.variants.force(null); window.GS.bus.emit('prefs'); });
+    check(await pref(page) === its[1].id && (await choice(page)).join() === its[1].id, 'and letting go of it leaves them as they were');
+  }
+
+  /* ---- only where it belongs ---- */
+  await go(page, '#game-derby');
+  check(await page.locator('#field-variants').evaluate((e) => e.hidden), 'Duck Derby has no Track picker');
+  await go(page, '#game-wheel');
+  check(await page.locator('#field-variants').evaluate((e) => e.hidden), 'neither has the wheel');
+  await go(page, '#game-marble');
+  check(!(await page.locator('#field-variants').evaluate((e) => e.hidden)), 'Marble Run has it again');
+  await go(page, '#live-marble');
+  await page.waitForSelector('#livepanel:not([hidden])');
+  check(await page.locator('#field-variants').evaluate((e) => !e.offsetParent), 'and a live table does not show it (a table is shared by everyone at it)');
+
+  /* ---- the words ---- */
+  await go(page, '#game-marble');
+  await page.click('#tab-about');
+  const about = norm2(await page.locator('#tabp').innerText());
+  check(/Track:/.test(about) && about.includes('exactly the same chance'), 'the About tab says there are tracks, and that they never change the odds', about.slice(-300));
+  await go(page, '#help-track');
+  const faq = await page.locator('#help-track').innerText();
+  check(faq.startsWith('Can I change the track in Marble Run?') && /never changes who can win/.test(faq) && /Surprise me/.test(faq), 'the Help page has "Can I change the track in Marble Run?" and says the same', faq.slice(0, 200));
+  await settle(page);
+  await page.close();
+
+  /* ---- phones ---- */
+  for (const w of [390, 320]) {
+    const ph = await mkPage({ viewport: { width: w, height: 800 } });
+    await openApp(ph, '#game-marble');
+    await ph.waitForSelector(TILES);
+    await ph.locator('#field-variants').scrollIntoViewIfNeeded();
+    const m = await ph.evaluate(() => {
+      const g = document.querySelector('#field-variants .variants__grid').getBoundingClientRect();
+      const t = Array.from(document.querySelectorAll('#field-variants .vtile')).map((e) => { const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), l: Math.round(r.left), r: Math.round(r.right), top: Math.round(r.top) }; });
+      const lines = new Set(t.map((x) => x.top)).size;
+      return { sw: document.documentElement.scrollWidth, iw: window.innerWidth, gl: Math.round(g.left), gr: Math.round(g.right), t, lines };
+    });
+    check(m.sw <= m.iw, w + ' px wide: no sideways scroll', { sw: m.sw, iw: m.iw });
+    check(m.t.every((x) => x.l >= 0 && x.r <= m.iw && x.l >= m.gl - 1 && x.r <= m.gr + 1), w + ' px wide: every tile is inside the box and the screen', m);
+    check(m.t.every((x) => x.h >= 40 && x.w >= 40), w + ' px wide: every tile is at least 40 px each way to tap (smallest ' + Math.min.apply(null, m.t.map((x) => Math.min(x.w, x.h))) + ')', m.t);
+    check(m.t.length <= 3 || m.lines >= 2, w + ' px wide: the tiles wrap onto more lines when they do not fit (' + m.lines + ' lines)');
+    await shot(ph, '13zn-picker-' + w);
+    await settle(ph);
+    await ph.close();
+  }
+  check(problems.length === problems0, 'section 13zn: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+}
+
+/* ======================================================================== */
+if (section('13zo. Marble Run: the track is recorded and shown, and never changes who wins')) {
+  const problems0 = problems.length;
+  const page = await newPage();
+  await openApp(page);
+  // The list of tracks and the game's one accessor for the track its board is on (GS.games.marble.currentMap): the real ones once js/games/marble.js
+  // has them, otherwise the stand-in js/games/marble-maps-stub.js (which index.html never loads), put in here.
+  const addStub = async () => {
+    const real = await page.evaluate(() => !!window.GS.marbleMaps);
+    if (!real) { await page.addScriptTag({ content: fs.readFileSync(path.join(root, 'js/games/marble-maps-stub.js'), 'utf8') }); }
+    return !real;
+  };
+  const stub = await addStub();
+  const maps = await page.evaluate(() => window.GS.marbleMaps.list().map((m) => ({ id: m.id, name: m.name })));
+  check(maps.length >= 2 && await page.evaluate(() => typeof window.GS.games.marble.currentMap === 'function'), 'there are tracks to choose from, and the game says which one its board is on' + (stub ? ' (stand-in list)' : ''), maps);
+  const IDS8 = ['wateraid', 'msf', 'save-the-children', 'oxfam-america', 'feeding-america', 'khan-academy', 'charity-water', 'surfrider'];
+  const sameMap = (a, b) => !!a && !!b && a.id === b.id && a.name === b.name;
+  // a known board of 8 on the given track, dealt by hopping out of the game and back in (as 13zm does)
+  const useMap = async (id) => {
+    await page.evaluate(([ids, mid]) => {
+      const prefs = window.GS.store.prefs();
+      window.GS.store.setPref('custom', Object.assign({}, prefs.custom || {}, { marble: { on: true, ids } }));
+      window.GS.store.setPref('sizes', Object.assign({}, prefs.sizes, { marble: 8 }));
+      window.GS.store.setPref('marbleMap', mid);
+    }, [IDS8, id]);
+    await go(page, '#lobby');
+    await go(page, '#game-marble');
+    await page.waitForSelector('#panel-marble:not([hidden])');
+    await page.waitForFunction(() => window.GS.games.marble._entrants() === 8, null, { timeout: 15000 });
+  };
+  const verifyTicks = async (scope) => {
+    await page.waitForSelector(scope + ' .vfy li');
+    return page.locator(scope + ' .vfy li.is-ok').count();
+  };
+
+  /* ---- a round on a track that is not the first one: the record, the receipt, My Giving and Fair Play ---- */
+  const pick = maps[maps.length - 1];
+  await useMap(pick.id);
+  check(sameMap(await page.evaluate(() => window.GS.games.marble.currentMap()), pick), 'the game reports the chosen track (' + pick.name + ')');
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  const rec = await page.evaluate(() => {
+    const l = window.GS.app._last;
+    const h = window.GS.store.get().history[0];
+    return { game: h.game, roundMap: l.round.map || null, histMap: h.map || null, fairKeys: Object.keys(h.fair), fairText: JSON.stringify(h.fair), savedFair: JSON.stringify(JSON.parse(localStorage.getItem('givespin:v2')).history[0].fair) };
+  });
+  check(rec.game === 'marble' && sameMap(rec.roundMap, pick) && sameMap(rec.histMap, pick), 'the round, and its saved record, note the track it ran on', rec);
+  check(!rec.fairKeys.includes('map') && !rec.fairText.includes(pick.name) && !rec.savedFair.includes(pick.name) && !rec.savedFair.includes('"map"'), 'the track is not part of the fair-play record (in the page or in the saved text)', rec.fairKeys);
+  const rows = await page.locator('#dlg-result .rs-rows').innerText();
+  check(rows.includes('Track: ' + pick.name), 'the receipt has a quiet "Track: ' + pick.name + '" line', rows);
+  await page.click('#dlg-result .rs-fair > summary');
+  await page.click('#dlg-result [data-role="verify"]');
+  check(await verifyTicks('#dlg-result') === 3, 'the round verifies from the receipt (hash, board, winner)');
+  await closeReceipt(page);
+  await go(page, '#giving');
+  const first = page.locator('#view-giving .hrow').first();
+  await first.locator('summary').click();
+  check((await first.locator('.rs-rows').innerText()).includes('Track: ' + pick.name), 'My Giving shows the track on that round', await first.locator('.rs-rows').innerText());
+  await go(page, '#fair');
+  const fairText = await page.locator('#view-fair').innerText();
+  check(fairText.includes('The track you see never decides anything: the winner is drawn first, the marbles are only the show.'), 'Fair Play says the track never decides anything');
+  const fFirst = page.locator('#view-fair .hrow').first();
+  await fFirst.locator('summary').click();
+  check((await fFirst.locator('.rs-rows').innerText()).includes('Track: ' + pick.name), 'the Fair Play list of rounds shows the track too');
+  await fFirst.locator('[data-verify]').click();
+  check(await verifyTicks('#view-fair .hrow:first-child') === 3, 'and the round verifies from there');
+
+  /* ---- the same seeds and the same board on three tracks: the same winner and the very same fair-play record ---- */
+  const commit = await page.evaluate(() => window.GS.fair.newCommit());
+  const runs = [];
+  for (const m of maps.slice(0, 3)) {
+    await useMap(m.id);
+    await page.evaluate((c) => window.GS.store.setFair({ roundSeed: c.roundSeed, serverHash: c.serverHash, clientSeed: 'same-lucky-number', nonce: 41 }), commit);
+    await page.click('#btn-play');
+    await waitReceipt(page);
+    runs.push(await page.evaluate(() => {
+      const l = window.GS.app._last;
+      return { map: l.round.map ? l.round.map.id : null, winners: l.round.winners.map((w) => w.id).join(','), shown: window.GS.games.marble._shown().join(','), fair: JSON.stringify(l.round.fair) };
+    }));
+    await closeReceipt(page);
+  }
+  check(runs.map((r) => r.map).join(',') === maps.slice(0, 3).map((m) => m.id).join(','), 'each of the three rounds noted its own track', runs.map((r) => r.map));
+  check(runs.every((r) => r.winners === runs[0].winners && r.fair === runs[0].fair), 'the same seeds and board give the same winner and the very same fair-play record on every track', runs.map((r) => ({ map: r.map, winners: r.winners })));
+  check(runs.every((r) => r.shown === r.winners.split(',').slice(-1)[0]), 'and on every track the drawn charity\'s marble is the one shown winning', runs.map((r) => ({ map: r.map, shown: r.shown, winners: r.winners })));
+
+  /* ---- another game never shows a track ---- */
+  await go(page, '#game-wheel');
+  await page.waitForSelector('#panel-wheel:not([hidden])');
+  await page.click('#btn-play');
+  await waitReceipt(page);
+  const wheel = await page.evaluate(() => ({ round: 'map' in window.GS.app._last.round, hist: 'map' in window.GS.store.get().history[0] }));
+  check(!wheel.round && !wheel.hist && !(await page.locator('#dlg-result').innerText()).includes('Track:'), 'a Wheel round has no track line and saves no track', wheel);
+  await closeReceipt(page);
+
+  /* ---- saved rounds from older or newer versions: no track, one this version does not know, garbage ---- */
+  await page.evaluate((m1) => {
+    const saved = JSON.parse(localStorage.getItem('givespin:v2'));
+    const base = saved.history.find((h) => h.game === 'marble');
+    const mk = (n, map) => { const e = JSON.parse(JSON.stringify(base)); e.id = 'GS-OLD' + n; delete e.map; if (map !== undefined) { e.map = map; } return e; };
+    saved.history = [mk(1), mk(2, { id: 'moon-base', name: 'Moon Base' }), mk(3, { id: m1 }), mk(4, 'spiral'), mk(5, { id: 'x', name: '<img src=x onerror="window.__pwned=1">' }), mk(6, [1, 2])].concat(saved.history).slice(0, 60);
+    localStorage.setItem('givespin:v2', JSON.stringify(saved));
+  }, maps[1].id);
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
+  await addStub();
+  await go(page, '#giving');
+  const oldRows = await page.evaluate(() => Array.from(document.querySelectorAll('#view-giving .hrow')).slice(0, 6).map((r) => (r.querySelector('.rs-rows') || {}).textContent || ''));
+  const want = [null, 'Moon Base', maps[1].name, null, '<img src=x onerror="window.__pwned=1">', null];
+  check(oldRows.length === 6 && want.every((w, i) => (w === null ? !oldRows[i].includes('Track:') : oldRows[i].includes('Track: ' + w))), 'older saves load: no track, a track this version does not know (its saved name), an id alone (today\'s name), and garbage (no line)', oldRows);
+  check(await page.evaluate(() => !document.querySelector('#view-giving .hrow img[src="x"]') && window.__pwned === undefined), 'a saved track name is shown as text, never as page code');
+  const g4 = page.locator('#view-giving .hrow').nth(3);
+  await g4.locator('summary').click();
+  await g4.locator('[data-verify]').click();
+  await page.waitForSelector('#view-giving .hrow:nth-child(4) .vfy li');
+  check(await page.locator('#view-giving .hrow:nth-child(4) .vfy li.is-ok').count() === 3, 'a saved round with a garbage track still verifies');
+  check(problems.length === problems0, 'section 13zo: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+  await page.close();
+}
+
+/* ======================================================================== */
+if (section('13zp. Marble Run: every map plays a round (the drawn charity first, every marble finished and on the canvas, the chosen map drawn, a click still opens a charity)')) {
+  const problems0 = problems.length;
+  // The maps come from the registry when there is one (so a new map is covered the day it is added); until then the one track there is.
+  // How a map is chosen: the picker tile of the game panel if there is one (what a player clicks), otherwise the saved choice and a fresh board
+  // (hopping out of the game and back in deals the board again, exactly as the picker's own relayout does).
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const apart = (s, all, d = 4) => all.every((o) => o === s || o.id === s.id || dist(s, o) >= d);
+  const stageBox = (pg) => pg.evaluate(() => { const el = document.querySelector('#panel-marble canvas'); el.scrollIntoView({ block: 'center' }); const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
+  const spotsNow = async (pg) => { await stageBox(pg); return pg.evaluate(() => window.GS.games.marble._spots().filter((s) => s.x !== undefined)); };
+  const profileId = (pg) => pg.evaluate(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; });
+  const waitProfile = (pg, ms) => pg.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return !!(d && d.open); }, null, { timeout: ms }).then(() => true, () => false);
+  const closeProfile = async (pg) => { if (await profileId(pg)) { await pg.keyboard.press('Escape'); await pg.waitForFunction(() => !document.querySelector('#dlg-profile').open); } };
+  const mapPref = (pg) => pg.evaluate(() => (window.GS.games.marble.variants && window.GS.games.marble.variants.pref) || 'marbleMap');
+  // the map the board on the stage is really drawn for: the game's own answer (currentMap(), or geo.map), null while the game cannot say
+  const mapDrawn = (pg) => pg.evaluate(() => {
+    const g = window.GS.games.marble;
+    if (typeof g.currentMap === 'function') { const m = g.currentMap(); return m && m.id ? m.id : m || null; }
+    const geo = g._debug && g._debug.geo && g._debug.geo();
+    return geo && geo.map ? (geo.map.id || geo.map) : null;
+  });
+  // a board of n marbles (the whole roster), dealt by hopping out of the game and back in; the map is chosen first when there is one to choose
+  const dealBoard = async (pg, n, mapId) => {
+    await pg.evaluate(([n, id, pref]) => {
+      const prefs = window.GS.store.prefs();
+      const custom = Object.assign({}, prefs.custom || {});
+      delete custom.marble;
+      window.GS.store.setPref('custom', custom);
+      window.GS.store.setPref('sizes', Object.assign({}, prefs.sizes, { marble: n }));
+      if (id) { window.GS.store.setPref(pref, id); }
+    }, [n, mapId, await mapPref(pg)]);
+    await go(pg, '#lobby');
+    await go(pg, '#game-marble');
+    await pg.waitForSelector('#panel-marble:not([hidden])');
+    await pg.waitForFunction((n) => window.GS.games.marble._entrants() === n && window.GS.games.marble._spots().length > 0, n, { timeout: 20000 });
+    let how = 'the saved choice';
+    if (mapId) {
+      // what a player does: press the map's tile in the game panel (when the panel has them), and let the board be laid out again
+      const tile = pg.locator('#view-game .vtile[data-v="' + mapId + '"]');
+      if (await tile.count()) {
+        const lit = await tile.getAttribute('aria-checked');
+        if (lit !== 'true') { await tile.scrollIntoViewIfNeeded(); await tile.click(); }
+        how = 'its picker tile';
+      }
+      await pg.waitForFunction(([n, id, pref]) => window.GS.store.prefs()[pref] === id && window.GS.games.marble._entrants() === n && window.GS.games.marble._spots().length > 0, [n, mapId, await mapPref(pg)], { timeout: 20000 });
+    }
+    await pg.waitForTimeout(250);
+    return how;
+  };
+
+  const ids = await (async () => {
+    const tmp = await newPage();
+    await openApp(tmp);
+    const out = await tmp.evaluate(() => { const r = window.GS.marbleMaps; return r && typeof r.list === 'function' ? r.list().map((m) => m.id) : null; });
+    await tmp.close();
+    return out;
+  })();
+  const REGISTRY = !!ids && ids.length > 0;
+  const MAPS = REGISTRY ? ids : [null];     // null: no registry yet, the one track
+  const name = (id) => id || 'the one track';
+  check(!REGISTRY || (ids.length === new Set(ids).size && ids[0] === 'switchback'), REGISTRY ? 'the registry lists ' + ids.length + ' maps (' + ids.join(', ') + '), Switchback first' : 'there is no map registry yet: the one track is played', ids);
+
+  const CEILING = 100000;                     // ms: a round that takes longer than this is hung
+  const base = {};                            // how long the first map (Switchback) took, per size and screen: the others get twice that
+  const fingerprints = {};                    // the track each map draws, per size and screen
+  let canSay = false;                         // the game can say which map is on the stage
+
+  async function playRound(pg, tag, phone, mapId, n) {
+    const pBefore = problems.length;
+    const how = await dealBoard(pg, n, mapId);
+    const key = (phone ? 'p' : 'd') + n;
+    const idle = await mapDrawn(pg);
+    if (REGISTRY) {
+      check((await pg.evaluate(([p]) => window.GS.store.prefs()[p], [await mapPref(pg)])) === mapId, tag + 'choosing it (' + how + ') saves the choice');
+    }
+    if (idle !== null) { canSay = true; check(idle === mapId, tag + 'the board on the stage is the chosen map\'s (the game says ' + idle + ')', idle); }
+    const fp = await pg.evaluate(() => { const g = window.GS.games.marble._debug.geo(); const cv = document.querySelector('#panel-marble canvas'); return JSON.stringify([Math.round(g.total), Math.round(g.H), cv.style.height, Math.round(g.pack.s0), (g.pegs || (g.track && g.track.pegs) || []).length]); });
+    (fingerprints[key] = fingerprints[key] || {})[mapId] = fp;
+
+    // (e) a click or tap on a marble of this map's idle board opens that charity
+    const spots = await spotsNow(pg);
+    const picks = spots.filter((s) => apart(s, spots)).filter((s, i) => (n > 100 ? i % 60 === 0 : n > 30 ? i % 9 === 0 : true)).slice(0, 2);
+    check(spots.length === n && picks.length >= 1, tag + 'every marble of the board has a spot, and some can be clicked cleanly', { spots: spots.length, picks: picks.length });
+    const opened = [];
+    for (const s of picks) {
+      if (phone) { await pg.touchscreen.tap(s.x, s.y); } else { await pg.mouse.click(s.x, s.y); }
+      opened.push({ want: s.id, got: (await waitProfile(pg, 3000)) ? await profileId(pg) : null });
+      await closeProfile(pg);
+    }
+    check(opened.length > 0 && opened.every((o) => o.got === o.want), tag + (phone ? 'tapping' : 'clicking') + ' a marble opens exactly that charity\'s profile', opened);
+
+    // the round: Play, and wait for the receipt (the only thing that is certain to be there for long enough to see)
+    const bal0 = await balance(pg);
+    const hist0 = await pg.evaluate(() => window.GS.store.get().history.length);
+    await stageBox(pg);
+    const t0 = Date.now();
+    await pg.click('#btn-play');
+    await waitReceipt(pg);
+    const took = Date.now() - t0;
+    const info = await pg.evaluate(() => {
+      const l = window.GS.app._last;
+      const dbg = window.GS.games.marble._debug;
+      const ents = dbg.marbles();
+      const g = dbg.geo();
+      const snap = dbg.snapshot();
+      const places = ents.map((e) => e.run.place).sort((a, b) => a - b);
+      const cv = document.querySelector('#panel-marble canvas');
+      return {
+        winners: l.round.winners.map((w) => w.id),
+        first: ents.filter((e) => e.run.place === 1).map((e) => e.ch.id),
+        n: ents.length,
+        allPlaced: places.every((p, i) => p === i + 1),
+        outside: snap.filter((s) => !(s[0] >= -1 && s[0] <= g.W + 1 && s[1] >= -1 && s[1] <= g.H + 1)).length,
+        nonNumbers: snap.filter((s) => !(isFinite(s[0]) && isFinite(s[1]))).length,
+        stage: dbg.motion() ? dbg.motion().stage() : null,
+        hist: window.GS.store.get().history.length,
+        canvasRight: Math.round(cv.getBoundingClientRect().right),
+        scrollW: document.documentElement.scrollWidth, innerW: window.innerWidth
+      };
+    });
+    // (a) the drawn charity's marble crosses the line first
+    check(info.winners.length === 1 && info.first.length === 1 && info.first[0] === info.winners[0], tag + 'the first marble over the line is the drawn charity\'s (' + info.winners[0] + ')', info);
+    // (b) every marble finished, and none ended outside the canvas
+    check(info.n === n && info.allPlaced && info.stage === 'done', tag + 'every one of the ' + n + ' marbles finished and holds its own place', { n: info.n, allPlaced: info.allPlaced, stage: info.stage });
+    check(info.outside === 0 && info.nonNumbers === 0, tag + 'no marble ends outside the canvas (' + info.outside + ' outside, ' + info.nonNumbers + ' without a place)', info);
+    check(info.hist === hist0 + 1 && (await balance(pg)) < bal0, tag + 'the round was played once and paid for with demo credit');
+    // (c) still the chosen map's board after the round
+    const after = await mapDrawn(pg);
+    if (after !== null) { check(after === mapId, tag + 'and the board is still that map\'s after the round (the game says ' + after + ')', after); }
+    if (phone) { check(info.scrollW <= info.innerW + 1 && info.canvasRight <= info.innerW + 1, tag + 'the page and the board fit the phone screen', info); }
+    await shot(pg, '13zp-' + (mapId || 'track') + '-' + key);
+    await closeReceipt(pg);
+    // (f) the time of the whole round
+    if (mapId === MAPS[0]) { base[key] = took; }
+    const budget = mapId === MAPS[0] ? CEILING : Math.min(CEILING, 2 * (base[key] || CEILING / 2) + 3000);
+    check(took <= budget, tag + 'the whole round took ' + (took / 1000).toFixed(1) + ' s' + (mapId === MAPS[0] ? ' (the budget for the others is twice this plus 3 s)' : ', within the budget of ' + (budget / 1000).toFixed(1) + ' s (twice the first map\'s ' + ((base[key] || 0) / 1000).toFixed(1) + ' s plus 3 s)'), { took, budget });
+    // (d) quiet console
+    check(problems.length === pBefore, tag + 'no console errors, warnings or failed requests', problems.slice(pBefore, pBefore + 4));
+  }
+
+  /* ---- a desktop (1280 px): 8, 100 and 500 marbles on every map. The clock is squeezed (?fast=1); the pre-simulation is not, so the work is the real work. ---- */
+  const dp = await newPage({ viewport: { width: 1280, height: 1000 } });
+  await openApp(dp, '#game-marble');
+  await setAmount(dp, 5);
+  for (const mapId of MAPS) {
+    for (const n of [8, 100, 500]) { await playRound(dp, name(mapId) + ', ' + n + ' marbles, desktop: ', false, mapId, n); }
+  }
+  await dp.close();
+
+  /* ---- a phone (390 px) at real speed: 8 and 100 marbles on every map (a tap in the idle bag; with ?fast=1 the shake and the run are too short to see) ---- */
+  const pp = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+  await openApp(pp, '#game-marble', '');
+  await setAmount(pp, 5);
+  for (const mapId of MAPS) {
+    for (const n of [8, 100]) { await playRound(pp, name(mapId) + ', ' + n + ' marbles, phone: ', true, mapId, n); }
+  }
+  await pp.close();
+
+  /* ---- the maps are different maps: when the game can say which one it draws, no two maps draw the same track ---- */
+  if (REGISTRY && MAPS.length > 1 && canSay) {
+    const same = [];
+    for (const key of Object.keys(fingerprints)) {
+      const seen = {};
+      for (const m of MAPS) { const fp = fingerprints[key][m]; if (seen[fp]) { same.push(key + ': ' + seen[fp] + ' and ' + m); } else { seen[fp] = m; } }
+    }
+    check(same.length === 0, 'no two maps draw the same track at the same size and screen (their length, height and start differ)', same.slice(0, 4));
+  } else if (REGISTRY && MAPS.length > 1) {
+    console.log('  skip: the game cannot say which map it draws yet (no GS.games.marble.currentMap() or geo.map), so the maps are not compared');
+  }
+  check(problems.length === problems0, 'section 13zp: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+}
+
+/* ======================================================================== */
+if (section('13zq. Live Marble Run: a track per round, chosen by the table and shown on it, never the player\'s own choice and never part of the draw')) {
+  const problems0 = problems.length;
+  // Until the real map list exists the stand-in (js/games/marble-maps-stub.js, three pretend tracks) is put in after marble.js; index.html does not load it.
+  // Against the stand-in the race itself still runs on the one real track, so this checks the choice, the label, the hand-over to the game and the record.
+  const STUB = !fs.readFileSync(path.join(root, 'js/games/marble.js'), 'utf8').includes('GS.marbleMaps');
+  const page = await newPage();
+  if (STUB) {
+    await page.route((u) => u.pathname.endsWith('/index.html'), async (route) => {
+      const res = await route.fetch();
+      const html = (await res.text()).replace('<script src="js/games/marble.js"></script>', '<script src="js/games/marble.js"></script><script src="js/games/marble-maps-stub.js"></script>');
+      await route.fulfill({ response: res, body: html });
+    });
+  }
+  await openApp(page, '#live-marble');
+  await page.waitForSelector('#livepanel:not([hidden]) [data-role="gates"]');
+  const setup = await page.evaluate(() => ({
+    ids: window.GS.marbleMaps.list().map((m) => m.id), names: window.GS.marbleMaps.list().map((m) => m.name),
+    force: typeof (window.GS.games.marble.variants || {}).force === 'function', pref: window.GS.store.prefs().marbleMap,
+    saved: (localStorage.getItem('givespin:v2') || '').indexOf('marbleMap') >= 0
+  }));
+  check(setup.ids.length >= 2 && setup.force, 'test setup: Marble Run has ' + setup.ids.length + ' tracks (' + (STUB ? 'the stand-in list' : 'the real list') + ') and a live table can hand one over', setup);
+  const pref0 = setup.pref;
+  // every hand-over is written down (the screen looks the function up each time, so this sees them all)
+  await page.evaluate(() => { const v = window.GS.games.marble.variants; const f = v.force; window.__forced = []; v.force = function (id) { window.__forced.push(id); return f.apply(this, arguments); }; });
+
+  // watch the table for five rounds: what the engine says, what the game was handed, and what the stage bar shows, ten times a second
+  await page.evaluate(() => {
+    window.__maps = [];
+    window.__mapsTimer = setInterval(() => {
+      const r = window.GS.live.room('marble');
+      const cur = window.GS.ui.live.current();
+      const tag = document.querySelector('#lt-stagebar [data-map]');
+      window.__maps.push({ round: r.round, phase: r.phase, mapId: r.mapId, msIn: Date.now() - r.phaseStart, handed: window.GS.marbleMaps.current(), label: tag ? tag.getAttribute('data-map') : '', text: tag ? tag.textContent : '', attached: !!(cur && cur.room === r), anim: window.GS.ui.live.gameBusy('marble') });
+    }, 100);
+  });
+  const r0 = await page.evaluate(() => window.GS.live.room('marble').round);
+  await page.waitForFunction((r) => window.GS.live.room('marble').round >= r + 5, r0, { timeout: 120000, polling: 200 }).catch(() => {});
+  const samples = await page.evaluate(() => { clearInterval(window.__mapsTimer); return window.__maps; });
+  const rounds = {};
+  samples.forEach((s) => { (rounds[s.round] = rounds[s.round] || []).push(s); });
+  const seq = Object.keys(rounds).map(Number).sort((a, b) => a - b).filter((r) => r > r0 && r < r0 + 5);
+  check(seq.length >= 4, 'four whole rounds were watched (' + seq.length + ')', seq);
+  const perRound = seq.map((r) => ({ round: r, maps: Array.from(new Set(rounds[r].map((s) => s.mapId))) }));
+  check(perRound.every((x) => x.maps.length === 1 && setup.ids.includes(x.maps[0])), 'every round is played on one track from start to finish (while bets come in, locked, the race, the result)', perRound);
+  const order = perRound.map((x) => x.maps[0]);
+  check(order.every((m, i) => i === 0 || m !== order[i - 1]), 'the next round is always on another track', order);
+  const expect = await page.evaluate((a) => a.rounds.map((r) => window.GS.live.mapForRound(window.GS.live.room('marble').id, r, a.ids)), { rounds: seq, ids: setup.ids });
+  check(JSON.stringify(order) === JSON.stringify(expect), 'and it is the one the table and the round number say (the same for every viewer of that round)', { order, expect });
+  // the stage bar names the track while bets are open (a moment's grace for the bar to be drawn)
+  const openSamples = samples.filter((s) => seq.includes(s.round) && s.phase === 'open' && s.msIn > 400);
+  const badLabel = openSamples.filter((s) => s.label !== s.mapId || !s.text.includes(setup.names[setup.ids.indexOf(s.mapId)]));
+  check(openSamples.length > 0 && badLabel.length === 0, 'while bets are open the stage bar says "Track: <name>" for this round\'s track (' + openSamples.length + ' looks)', badLabel.slice(0, 3));
+  // and the game was handed that track for the board it lays out (not while an earlier race is still being shown)
+  const handedBad = openSamples.filter((s) => s.attached && !s.anim && s.handed !== s.mapId);
+  check(handedBad.length === 0, 'the game is handed this round\'s track whenever it lays the board out', handedBad.slice(0, 3));
+  if (!STUB) {
+    const drawn = await page.evaluate(() => { const g = window.GS.games.marble._debug.geo(); return { map: g && g.map, want: window.GS.live.room('marble').mapId }; });
+    check(drawn.map === drawn.want, 'the board on the stage is laid out on that track', drawn);
+  }
+
+  // put a stake on a round: the result names the track, the draw is checked as usual, and the saved round keeps the track beside its fair-play record
+  await page.evaluate(() => { const s = window.GS.store; const orig = s.recordPlay; window.__plays = []; s.recordPlay = function (p) { window.__plays.push(JSON.parse(JSON.stringify(p))); return orig.apply(this, arguments); }; });
+  const staked = await stakeNow(page, 'marble');
+  check(staked, 'a $20 stake goes onto the table');
+  const res = await page.waitForFunction(() => {
+    const r = window.GS.live.room('marble');
+    if (!(r.phase === 'result' && r.result && r.result.you && document.querySelector('#lt-result .lt-res'))) { return null; }
+    r._clearTimers();
+    return { round: r.round, mapId: r.mapId, map: r.result.map, eyebrow: document.querySelector('#lt-result .lt-res__eyebrow').textContent, fair: r.result.fair, weights: r.result.weights, winner: r.result.winnerId };
+  }, null, { timeout: 90000, polling: 100 }).then((h) => h.jsonValue(), () => null);
+  check(!!res && res.map && res.map.id === res.mapId && res.eyebrow.includes('Track: ' + res.map.name), 'the result card names the track the race was played on', res && { map: res.map, eyebrow: res.eyebrow });
+  const play = await page.evaluate(() => (window.__plays || []).slice(-1)[0] || null);
+  check(!!play && play.map && res && play.map.id === res.mapId && play.map.name === res.map.name, 'the saved round says which track it was played on', play && play.map);
+  check(!!play && !!play.fair && JSON.stringify(play.fair).indexOf('"map"') < 0 && res && JSON.stringify(play.fair).indexOf(res.mapId) < 0, 'and the track is not part of its fair-play record', play && Object.keys(play.fair || {}));
+  if (res && res.fair) {
+    const v = await page.evaluate((f) => window.GS.fair.verifyWeighted(f), res.fair);
+    check(v.ok && v.derived[0] === res.winner, 'the round verifies like any other live round (the draw never sees the track)', v);
+  }
+  const prefsNow = await page.evaluate(() => ({ pref: window.GS.store.prefs().marbleMap, saved: (localStorage.getItem('givespin:v2') || '').indexOf('marbleMap') >= 0 }));
+  check(prefsNow.pref === pref0 && prefsNow.saved === setup.saved, 'watching and joining did not touch your own track choice', { before: pref0, after: prefsNow });
+
+  // hop to the 25 table: its own track; leave for the solo game: your own track again; come back: the table's track
+  await page.evaluate(() => window.GS.live.room('marble')._clearTimers());
+  await go(page, '#live-marble25');
+  await page.waitForFunction(() => { const c = window.GS.ui.live.current(); return c && c.room.id === 'marble25' && !window.GS.ui.live.gameBusy('marble'); }, null, { timeout: 30000 }).catch(() => {});
+  const hop = await page.evaluate(() => ({ want: window.GS.live.room('marble25').mapId, handed: window.GS.marbleMaps.current(), last: window.__forced[window.__forced.length - 1] }));
+  check(hop.want && hop.handed === hop.want && hop.last === hop.want, 'at the 25 table the game is handed that table\'s track', hop);
+  await go(page, '#game-marble');
+  const solo = await page.evaluate(() => ({ handed: window.GS.marbleMaps.current(), own: window.GS.marbleMaps.resolve(window.GS.store.prefs().marbleMap), last: window.__forced[window.__forced.length - 1], bar: !document.querySelector('#lt-stagebar') || document.querySelector('#lt-stagebar').hidden }));
+  check(solo.handed === solo.own && solo.last === null && solo.bar, 'back in the solo game the board is your own track again (the table let go of its track), and the stage bar is gone', solo);
+  await go(page, '#live-marble25');
+  await page.waitForFunction(() => { const c = window.GS.ui.live.current(); return c && c.room.id === 'marble25'; }, null, { timeout: 30000 }).catch(() => {});
+  check(await page.evaluate(() => window.GS.marbleMaps.current() === window.GS.live.room('marble25').mapId || window.GS.ui.live.gameBusy('marble')), 'and at the table again, the table\'s track');
+
+  // the How it works tab says how the track is chosen; the lobby of tables names each table's track
+  await page.click('#tab-about').catch(() => {});
+  await page.waitForTimeout(200);
+  const about = await page.evaluate(() => document.querySelector('#tabp').innerText);
+  check(/Track this round: /.test(about) && /never changes who wins/.test(about), 'the How it works tab says which track this round uses and that it never changes who wins', about.slice(0, 200));
+  await go(page, '#live');
+  await page.click('.lgame[data-lgame="marble"]').catch(() => {});
+  // (the cards are brought up to date once a second, so a table that has just opened a round can be a second behind: wait for a moment when all are current)
+  const cardsOk = await page.waitForFunction(() => {
+    const els = Array.from(document.querySelectorAll('[data-role="tables"] [data-room]'));
+    return els.length === 7 && els.every((e) => { const m = window.GS.live.room(e.getAttribute('data-room')).mapInfo(); const t = e.querySelector('[data-f="map"]'); return !!m && !!t && t.textContent === 'Track: ' + m.name; });
+  }, null, { timeout: 15000, polling: 100 }).then(() => true, () => false);
+  const cards = await page.$$eval('[data-role="tables"] [data-room]', (els) => els.map((e) => ({ id: e.getAttribute('data-room'), map: (e.querySelector('[data-f="map"]') || {}).textContent || '' })));
+  check(cardsOk, 'each Marble Run table in the lobby says which track it is on', cards);
+  await page.close();
+  check(problems.length === problems0, 'section 13zq: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+}
+
+
+
+
+
+/* ======================================================================== */
 section('18. Console and network health');
 check(problems.length === 0, 'no console errors, warnings, page errors or failed requests during the whole run', problems.slice(0, 8));
 

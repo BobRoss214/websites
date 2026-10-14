@@ -30,6 +30,11 @@
   var idIndex = Object.create(null);
   var idGen = 0; // bumped when the table is rebuilt: every round's remembered packed text is then out of date
   var GAME_IDS = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'scratch', 'cards', 'dice', 'coin', 'derby', 'lotto', 'duck', 'marble', 'balloon', 'standing', 'direct'];
+  // The games whose rounds note the map (track) they were played on. Only a note about the show: it is kept beside the round, never in `fair`,
+  // so it takes no part in the draw, the fingerprints or the verifier.
+  var MAP_GAMES = ['marble'];
+  var MAP_ID = /^[a-z0-9][a-z0-9-]{0,23}$/;
+  var MAP_NAME_MAX = 40;
 
   function demoCreditCents() { return Math.round((GS.config.demoCredit || 0) * 100); }
 
@@ -77,7 +82,8 @@
         amount: GS.config.defaultAmount, filters: core.emptyFilters(), excluded: [], game: 'wheel', rounds: 1,
         freq: 'once', pay: 'credit', muted: false, dedication: { kind: 'honor', name: '', note: '' }, sidebar: true, sizes: {}, liveStake: 20, voice: false,
         custom: {},        // game id -> { on, ids }: the charities you chose yourself for that game
-        reels: {}          // slot machine id -> how many reels you chose
+        reels: {},         // slot machine id -> how many reels you chose
+        marbleMap: ''      // the track chosen for Marble Run: a track id, 'random' (surprise me), or '' for the first one
       }
     };
   }
@@ -105,6 +111,18 @@
   function arr(v) { return Array.isArray(v) ? v : []; }
   function obj(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
   function str(v, max) { return typeof v === 'string' ? v.slice(0, max || 200) : ''; }
+
+  /**
+   * The map a round was played on, as it is saved: { id, name } (a short id, and the name the map had then, so a round still reads right after a
+   * map is renamed or removed), or null. Anything else gives null: a string, a number, a list, an object with neither a usable id nor a name.
+   * An id that is not a short plain id (a newer or damaged save) is dropped and the name kept; the name loses control characters and is cut to 40.
+   */
+  function cleanMap(v) {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) { return null; }
+    var id = typeof v.id === 'string' && MAP_ID.test(v.id) ? v.id : '';
+    var name = typeof v.name === 'string' ? v.name.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, MAP_NAME_MAX).trim() : '';
+    return id || name ? { id: id, name: name } : null;
+  }
 
   /** The most ids a saved board or switched-off list may hold: the biggest board (500), or the whole roster if that is bigger. */
   function idLimit() { return Math.max(500, (GS.charities || []).length); }
@@ -184,6 +202,8 @@
       }
       if (x.pick && typeof x.pick === 'object') { out.pick = { charityId: str(x.pick.charityId, 60), won: !!x.pick.won, board: Math.floor(num(x.pick.board, 0)) }; }
       if (x.dedication && typeof x.dedication === 'object') { out.dedication = { kind: x.dedication.kind === 'memory' ? 'memory' : 'honor', name: str(x.dedication.name, 60), note: str(x.dedication.note, 140) }; }
+      var mp = MAP_GAMES.indexOf(out.game) >= 0 ? cleanMap(x.map) : null;   // (a round saved before maps existed has none, and that is fine)
+      if (mp) { out.map = mp; }
       if (x.fair && typeof x.fair === 'object') {
         var fb = idList(x.fair.board, x.fair.boardIx, ids);
         var fe = idList(x.fair.excluded, x.fair.excludedIx, ids);
@@ -320,6 +340,7 @@
       var ids = arr(c0.ids).filter(function (id) { if (typeof id !== 'string' || seen[id] || !GS.charity(id)) { return false; } seen[id] = true; return true; }).slice(0, 500);
       if (ids.length) { d.prefs.custom[k] = { on: c0.on !== false, ids: ids }; }
     });
+    d.prefs.marbleMap = core.cleanVariant(p.marbleMap); // (only the shape is checked here: a track the game no longer has falls back to the first one when it is drawn)
     d.prefs.voice = !!p.voice;
     d.prefs.liveStake = typeof p.liveStake === 'number' && p.liveStake >= 1 && p.liveStake <= 1000 ? Math.floor(p.liveStake) : 20;
     return d;
@@ -466,6 +487,7 @@
     setPref: function (key, value) { state.prefs[key] = value; save(); },
     onChange: function (fn) { listeners.push(fn); },
     save: save,
+    cleanMap: cleanMap,
 
     /* ---------------- demo credit ---------------- */
     balance: function () { return state.balanceCents; },
@@ -547,7 +569,8 @@
 
     /**
      * Records one completed play or direct gift.
-     * play = { game, totalCents, rounds, jackpot, status, pay, receipt, stream, direct, freq, dedication, fair, allocations: [{charityId, cents, hits}] }
+     * play = { game, totalCents, rounds, jackpot, status, pay, receipt, stream, direct, freq, dedication, fair, allocations: [{charityId, cents, hits}], map }
+     * (`map`, { id, name }: the Marble Run track the round was played on. It is kept beside the round, never in `fair`.)
      * Returns { xpGain, giftXp, bonusXp, hotXp, setXp, before, after, leveledUp, newBadges: [badge objects] }
      * (xpGain is everything: giftXp is the 10 XP per $1 of the gift, bonusXp and hotXp are extras, setXp a finished card set).
      */
@@ -611,6 +634,8 @@
       if (play.pick) { entry.pick = { charityId: String(play.pick.charityId || '').slice(0, 60), won: !!play.pick.won, board: Math.floor(play.pick.board || 0) }; }
       if (play.live) { entry.live = { pot: play.live.pot, players: play.live.players, stake: play.totalCents, pick: play.live.pick, won: !!play.live.won, winner: play.live.winner }; }
       if (play.dedication && play.dedication.name) { entry.dedication = play.dedication; }
+      var mp = MAP_GAMES.indexOf(play.game) >= 0 ? cleanMap(play.map) : null;
+      if (mp) { entry.map = mp; }
       if (play.fair) { entry.fair = play.fair; }
       state.history.unshift(entry);
       state.history = state.history.slice(0, HISTORY_MAX);

@@ -3,7 +3,8 @@
  * seed rotation) and the receipt dialog. Games and the direct-give dialog both end here.
  *
  * round = { game, cents, rounds, allocs: [{ charityId, cents, hits }], jackpot, triple, direct, fair,
- *           opts: { freq, dedication, pay } }
+ *           opts: { freq, dedication, pay }, map }
+ * (`map` is the Marble Run track, { id, name }; when the caller leaves it out it is read from the game, see trackAtStart.)
  */
 (function () {
   'use strict';
@@ -23,6 +24,40 @@
   }
 
   function isDemo() { return GS.payments.mode() === 'demo'; }
+
+  /* ---------------------------------------------------------- the track */
+
+  // Marble Run can be played on several maps (tracks). Which one a round ran on is remembered with the round as a plain note
+  // ("Track: Spiral Tower"), and nothing more: the winner is drawn before the race and the track is never part of the draw, of
+  // `round.fair` or of the check that redoes it. The game says which map its board is laid out on through ONE accessor,
+  // GS.games.marble.currentMap() -> { id, name }; it is read once, when a solo round starts (the app turns busy just before the
+  // draw), because after a race the game may already lay out the next round's map.
+  var trackAtStart = null;
+
+  function trackNow() {
+    var g = GS.games && GS.games.marble;
+    if (!g || typeof g.currentMap !== 'function' || !ui.game || typeof ui.game.current !== 'function' || ui.game.current() !== 'marble') { return null; }
+    try { return store.cleanMap(g.currentMap()); } catch (e) { return null; }
+  }
+
+  GS.bus.on('busy', function (on) { if (on) { trackAtStart = trackNow(); } });
+
+  /**
+   * The name of the track a round was played on, for its quiet "Track: …" line, or '' for no line: the name saved with the round (the name it had
+   * then), else today's name for that id if the game still has that map, else ''. Only Marble Run rounds have a track. Never throws.
+   */
+  function trackName(game, map) {
+    if (game !== 'marble') { return ''; }
+    var m = store.cleanMap(map);
+    if (!m) { return ''; }
+    if (m.name) { return m.name; }
+    try {
+      var reg = GS.marbleMaps;
+      var e = m.id && reg && typeof reg.get === 'function' ? reg.get(m.id) : null;
+      var known = e && e.id === m.id ? store.cleanMap({ name: e.name }) : null;   // (a registry that answers an unknown id with its default map must not rename it)
+      return known ? known.name : '';
+    } catch (err) { return ''; }
+  }
 
   /* ---------------------------------------------------------- verification */
 
@@ -113,6 +148,8 @@
     if (o.dedication) {
       rows.push(['heart', (o.dedication.kind === 'memory' ? 'In memory of ' : 'In honor of ') + o.dedication.name + (o.dedication.note ? ': “' + o.dedication.note + '”' : '')]);
     }
+    var track = round.direct ? '' : trackName(round.game, round.map);
+    if (track) { rows.push(['milestone', 'Track: ' + track]); }
     if (!rows.length) { return ''; }
     return '<ul class="rs-rows">' + rows.map(function (r) { return '<li>' + ui.icon(r[0]) + '<span>' + esc(r[1]) + '</span></li>'; }).join('') + '</ul>';
   }
@@ -260,6 +297,10 @@
 
   /** Sends, records and celebrates one finished round. Resolves when the receipt is up. */
   function finish(round) {
+    // the track this round ran on (Marble Run only): what the caller says, or what the game said when the round started
+    var mp = round.game === 'marble' && !round.direct ? store.cleanMap(round.map === undefined ? trackAtStart : round.map) : null;
+    if (mp) { round.map = mp; } else { delete round.map; }
+    trackAtStart = null;
     var demo = isDemo();
     if (demo) { showSending(round); }
     var o = round.opts;
@@ -276,7 +317,7 @@
       var summary = store.recordPlay({
         game: round.game, totalCents: round.cents, rounds: round.rounds, jackpot: round.jackpot,
         status: pay.status, receipt: pay.receipt, pay: pay.pay, stream: GS.app.state.stream, direct: !!round.direct,
-        freq: o.freq, dedication: o.dedication, fair: round.fair, allocations: round.allocs,
+        freq: o.freq, dedication: o.dedication, fair: round.fair, allocations: round.allocs, map: round.map || null,
         pick: round.pick ? { charityId: round.pick.id, won: round.pick.won, board: round.pick.board } : null,
         collect: round.collect || null,
         bonusXp: round.pick && round.pick.won ? core.pickBonusXp(round.pick.board, round.pick.wins) : 0
@@ -314,5 +355,5 @@
     GS.audio.badge();
   });
 
-  ui.receipt = { finish: finish, abort: abort, verifyRound: verifyRound, verifyHTML: verifyHTML, last: function () { return last; } };
+  ui.receipt = { finish: finish, abort: abort, verifyRound: verifyRound, verifyHTML: verifyHTML, trackName: trackName, last: function () { return last; } };
 })();

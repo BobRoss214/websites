@@ -39,6 +39,8 @@
 .lcard__stats { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 0.78rem; color: rgba(255, 255, 255, 0.82); }
 .lcard__stats b { color: #fff; font-family: var(--f-display); }
 .lcard__lead { font-size: 0.74rem; color: rgba(255, 255, 255, 0.78); min-height: 1.1em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* a Marble Run table: the track this round is played on (it changes every round) */
+.lcard__map { font-size: 0.74rem; color: rgba(255, 255, 255, 0.78); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .stack { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(0, 0, 0, 0.35); gap: 1px; }
 .stack i { display: block; min-width: 2px; }
 .phasepill { padding: 2px 9px; border-radius: 999px; font: 800 0.6875rem var(--f-body); letter-spacing: 0.04em; background: rgba(0, 0, 0, 0.4); color: #fff; font-variant-numeric: tabular-nums; }
@@ -99,6 +101,8 @@
 
 .lt-stagebar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 14px; padding: 8px 12px; border-radius: 12px; background: #0b161f; border: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .lt-stagebar b { color: #fff; font-family: var(--f-display); }
+/* a live Marble Run table: the track of this round gets a line of its own under the round and the pot (it changes every round) */
+.lt-stagebar__m { order: 3; flex: 1 0 100%; }
 
 /* ---------- result card ---------- */
 .lt-res { display: grid; gap: 8px; padding: 14px; border-radius: 14px; border: 1px solid var(--line-2); background: var(--bg-2); }

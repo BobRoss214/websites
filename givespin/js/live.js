@@ -144,6 +144,44 @@
     return p && p.length >= need ? p : GS.charities;
   }
 
+  /* ------------------------------------------------------------------ maps */
+
+  // A game can come in several maps (Marble Run has several tracks). A live table of such a game plays each round on one map, chosen when the
+  // round opens and kept until the next round opens, so the board does not change under people while bets come in. The choice only depends on the
+  // table and the round number (every viewer of a round would agree on it), uses no random number, and has nothing to do with the draw: the
+  // winner is still drawn from the pot in lock() below, and the race is only played out to it.
+
+  /**
+   * Where a table starts its rotation: its place among its game's tables (5, 10, 25 ... 500 are 0, 1, 2 ... 6), so the tables of one game are spread
+   * over the maps; a steady number made from the id for any other table.
+   */
+  function startOf(roomId) {
+    var s = String(roomId);
+    var m = /^([a-z]+)(\d+)$/.exec(s);
+    var tabs = m && TABLES[m[1]];
+    for (var i = 0; tabs && i < tabs.length; i++) { if (String(tabs[i].size) === m[2]) { return i; } }
+    var h = 5381;
+    for (var k = 0; k < s.length; k++) { h = ((h * 33) ^ s.charCodeAt(k)) >>> 0; }
+    return h;
+  }
+
+  /** The map for round `round` of table `roomId`, out of `ids` (in display order): the next one each round, so never the same one twice in a row. '' when there are none. */
+  function mapForRound(roomId, round, ids) {
+    var list = (ids || []).filter(function (id) { return typeof id === 'string' && id && id !== 'random'; });
+    if (!list.length) { return ''; }
+    var r = Math.max(0, Math.floor(Number(round) || 0));
+    return list[(startOf(roomId) + r) % list.length];
+  }
+
+  /** The maps a live table of game `gid` rotates through: those of a game whose variants can be forced for a round (see js/games/crowd.js), else none. */
+  function mapsOf(gid) {
+    var g = GS.games && GS.games[gid];
+    var v = g && g.variants;
+    if (!v || typeof v.force !== 'function' || typeof v.items !== 'function') { return []; }
+    var items = v.items() || [];
+    return items.filter(function (it) { return it && typeof it.id === 'string' && it.id && it.id !== 'random'; });
+  }
+
   /** The charities that fall off the bottom of a heavy tail: 1, 0.8, 0.64 ... (a few charities are much more popular than the rest). */
   function popularity(n) {
     var w = [];
@@ -184,11 +222,20 @@
     this.pred = {};          // your side predictions: key -> true | false
     this.lastCall = false;
     this.chat = null;        // stream chat vote: { on, votes: { charityId: n }, lead }
+    this.mapId = '';         // the map this round is played on (games with several maps only; '' otherwise): fixed from the moment the round opens
   }
 
   var R = Room.prototype;
 
   R.game = function () { return GS.games[this.gid]; };
+
+  /** The map of this round as { id, name }, or null for a game that has only one. */
+  R.mapInfo = function () {
+    var id = this.mapId;
+    if (!id) { return null; }
+    var m = mapsOf(this.gid).filter(function (it) { return it.id === id; })[0];
+    return { id: id, name: m && m.name ? String(m.name) : id };
+  };
 
   /** What a spot on this game's board is called: "bin", "slice", "pocket", "duck"... (plural by default). */
   R.unit = function (n) {
@@ -225,7 +272,7 @@
     // (the newcomer takes the place of a catalog charity that dropped off), so slices, bins and pockets do not all jump around
     var prev = self._board && self._board.round === self.round ? self._board.spots : null;
     spots = prev && prev.length === spots.length ? keepOrder(prev, spots) : core.seededShuffle(spots, 'board:' + self.id + ':' + self.round);
-    self._board = { key: key, round: self.round, spots: spots, size: self.size, backed: backed.length, fillers: Math.max(0, Math.min(self.size, distinct.length) - backed.length), distinct: distinct.length };
+    self._board = { key: key, round: self.round, spots: spots, size: self.size, backed: backed.length, fillers: Math.max(0, Math.min(self.size, distinct.length) - backed.length), distinct: distinct.length, mapId: self.mapId };
     return self._board;
   };
 
@@ -312,6 +359,11 @@
     frac = frac || 0;
     self._clearTimers();
     self.round += 1;
+    // the map of this round (games with several maps): the next one in turn, and never the one the last round used
+    var mapIds = mapsOf(self.gid).map(function (it) { return it.id; });
+    var mapId = mapForRound(self.id, self.round, mapIds);
+    if (mapId && mapId === self.mapId && mapIds.length > 1) { mapId = mapIds[(mapIds.indexOf(mapId) + 1) % mapIds.length]; }   // (only if the list of maps changed)
+    self.mapId = mapId;
     self.phase = 'open';
     self.seats = {};
     self.feed = [];
@@ -491,6 +543,7 @@
       winShare: pot ? winTickets / pot : 0, leaderId: self.leaderId, closeCall: closeCall(self.weights, self.draw.ticket),
       bonus: { match: matchBonus, matchWhy: self.match ? self.match.why : '', jackpot: self.jackpot, total: matchBonus + self.jackpot },
       event: self.event ? self.event.name : '',
+      map: self.mapInfo(),       // the map the race was played on (games with several maps; null otherwise): not part of the draw or of `fair`
       distinct: self.distinct(), weights: self.weights, ts: Date.now(),
       fair: self.commit && self.draw.fair ? {
         roundSeed: self.commit.roundSeed, serverHash: self.commit.serverHash, clientSeed: self.draw.clientSeed, nonce: self.round,
@@ -519,7 +572,7 @@
       var won = self.you.charityId === winner.id;
       var receipt = core.receiptId();
       var bonusXp = won ? 30 + Math.min(50, Math.floor(pot / 20)) : 0;
-      var summary = store.recordPlay({
+      var rec = {
         game: self.gid, totalCents: cents, rounds: 1, jackpot: false, status: 'demo', receipt: receipt, pay: 'credit', stream: false, direct: false,
         freq: 'once', dedication: null, bonusXp: bonusXp,
         fair: result.fair ? {
@@ -529,13 +582,16 @@
         allocations: [{ charityId: winner.id, cents: cents, hits: 1 }],
         live: { pot: pot * 100, players: self.players(), pick: self.you.charityId, won: won, winner: winner.id, prepaid: true },
         collect: [{ charityId: winner.id, rarity: core.rarityFor(result.winShare) }]
-      });
+      };
+      // a Marble Run round remembers the map its race was played on (beside `fair`, never in it: the map is not part of the draw)
+      if (self.gid === 'marble' && result.map) { rec.map = { id: result.map.id, name: result.map.name }; }
+      var summary = store.recordPlay(rec);
       result.you = { charityId: self.you.charityId, dollars: self.you.dollars, won: won, receipt: receipt, bonusXp: bonusXp, summary: summary };
       if (summary.newBadges.length) { GS.bus.emit('badges', summary.newBadges); }
     }
     self.phase = 'result';
     self.result = result;
-    self.history.unshift({ round: result.round, winnerId: winner.id, pot: pot, players: result.players, ts: result.ts, youWon: !!(result.you && result.you.won), youPlayed: !!result.you });
+    self.history.unshift({ round: result.round, winnerId: winner.id, pot: pot, players: result.players, ts: result.ts, youWon: !!(result.you && result.you.won), youPlayed: !!result.you, map: result.map });
     if (self.history.length > 6) { self.history.length = 6; }
     self._note({ kind: 'result', winnerId: winner.id, pot: pot });
     self._hold = null;
@@ -661,6 +717,8 @@
     event: function () { return forcedEvent !== undefined ? forcedEvent : eventAt(new Date()); },
     setEvent: function (ev) { forcedEvent = ev; },
     eventAt: eventAt,
-    closeCall: closeCall
+    closeCall: closeCall,
+    /** The map a table plays a round on (see "maps" above): mapForRound(tableId, round, [map ids]). */
+    mapForRound: mapForRound
   };
 })();

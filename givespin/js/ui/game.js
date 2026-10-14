@@ -26,6 +26,7 @@
   var el = {};
   var amount = null;
   var opts = null;
+  var variantsPicker = null;   // the "Track" picker (js/ui/variants.js), for a game that offers variants
   var tabState = 'fair';
   var liveTabState = 'feed';
   var lastDrawn = null;
@@ -59,6 +60,7 @@
             '<div class="lt-other"><label for="size-custom">Any number</label><span class="size-custom"><span class="lt-money"><input id="size-custom" type="number" inputmode="numeric" min="2" step="1" placeholder="e.g. 250"></span>' +
             '<button type="button" class="btn btn--sm" id="size-max">Max</button></span></div>' +
             '<p class="field__hint" id="size-hint"></p></div>' +
+          '<div class="field field--variants" id="field-variants" hidden></div>' +
           '<div class="field" id="field-pick" hidden><span class="field__label" id="pick-label">Back a charity <small>(optional)</small></span>' +
             '<div class="pickrow"><button type="button" class="btn btn--sm" id="pick-btn">' + ui.icon('target') + 'Choose a charity</button><span class="pickchip" id="pick-chip" hidden></span></div>' +
             '<p class="field__hint" id="pick-hint"></p></div>' +
@@ -101,7 +103,7 @@
 
     el = {
       crumb: $('#g-crumb'), crumbRoot: $('#g-crumb-root'), livePanel: $('#livepanel'), moreTitle: $('#more-t'), title: $('#g-title'), tag: $('#g-tag'), games: $('#games'), rounds: $('#rounds'), stage: $('#stage'),
-      roundsSeg: $('#rounds-seg'), roundsHint: $('#rounds-hint'), sizeBox: $('#field-size'), sizeSeg: $('#size-seg'), sizeHint: $('#size-hint'), sizeCustom: $('#size-custom'), sizeMax: $('#size-max'),
+      roundsSeg: $('#rounds-seg'), roundsHint: $('#rounds-hint'), sizeBox: $('#field-size'), variantsBox: $('#field-variants'), sizeSeg: $('#size-seg'), sizeHint: $('#size-hint'), sizeCustom: $('#size-custom'), sizeMax: $('#size-max'),
       customBtn: $('#custom-btn'), customChip: $('#custom-chip'), customToggle: $('#custom-toggle'), customLabel: $('#custom-label'), customEdit: $('#custom-edit'), customClear: $('#custom-clear'), customHint: $('#custom-hint'), poolBox: $('#field-pool'),
       pickBox: $('#field-pick'), pickBtn: $('#pick-btn'), pickChip: $('#pick-chip'), pickHint: $('#pick-hint'), poolLine: $('#pool-line'), filtersBtn: $('#btn-filters'), filtersCount: $('#filters-count'),
       play: $('#btn-play'), playLabel: $('#btn-play-label'), playSub: $('#btn-play-sub'), optsSum: $('#opts-sum'), optsBox: $('#opts'),
@@ -110,6 +112,7 @@
 
     amount = ui.amount.mount(root.querySelector('[data-role="amount"]'), function () { refreshBet(); });
     opts = ui.opts.mount(root.querySelector('[data-role="opts"]'));
+    variantsPicker = ui.variants.mount(el.variantsBox, { onPick: setVariant });
     ui.filters.quickChips($('#quick-causes'), { max: 8 });
 
     el.filtersBtn.addEventListener('click', function () { ui.filters.open(); });
@@ -218,8 +221,11 @@
     GS.bus.on('receipt:closed', function () {
       if (!built || !current || isLive() || state().busy || !GS.games[current].setBoard) { return; }
       sizeNote = '';
+      var gv = GS.games[current].variants;
+      if (gv && gv.onRoundEnd) { gv.onRoundEnd(); }   // a game that rolls a new track for every play does it now, once the whole play (all rounds of a split gift) is over, before the next board is dealt
       newBoard(current, true);
       refreshSize();
+      refreshVariants();
     });
     // The receipt tries to hand focus back to the Play button that started the round, but that button is switched off while the round starts, so
     // after a keyboard-played round focus fell to the top of the page. When the receipt is closed, put it back on Play (only if nothing else has it).
@@ -434,7 +440,7 @@
     var distinct = g.fieldFor ? g.fieldFor(slots) : slots;
     var pid = pickFor(id);
     var list = core.boardField(activePool(id), distinct, pid);
-    boards[id] = { field: list, slots: slots, pv: state().poolVersion, cs: customStamp(id) };
+    boards[id] = { field: list, slots: slots, pv: state().poolVersion, cs: customStamp(id), v: variantKey(id) };
     g.setBoard(list, slots, pid, afterRound ? { afterRound: true } : undefined);   // (a card game keeps its finished table up when the receipt closes, so the cards can be read about)
   }
 
@@ -457,6 +463,41 @@
     newBoard(current);
     refreshSize();
     refreshPick();
+  }
+
+  /** What the next board is dealt for, when the game has variants (a track): the id it will use ('random' is already resolved), or '' without variants. */
+  function variantKey(id) {
+    var v = GS.games[id] && GS.games[id].variants;
+    if (!v) { return ''; }
+    return String(v.next ? v.next() : store.prefs()[v.pref]);
+  }
+
+  /** The "Track" picker: shown for a game that offers variants (never at a live table), in step with the saved choice. */
+  function refreshVariants() {
+    if (!built || !el.variantsBox) { return; }
+    var g = game();
+    var v = g && g.variants;
+    if (!v || !current || state().live) { el.variantsBox.hidden = true; return; }
+    el.variantsBox.hidden = false;
+    var ids = v.items().map(function (it) { return it.id; });
+    var withRandom = typeof v.next === 'function' && v.random !== false;
+    variantsPicker.update(v, { choice: core.variantChoice(store.prefs()[v.pref], ids, withRandom), next: v.next ? v.next() : '', locked: !!state().busy });
+  }
+
+  /** A tile of the picker was chosen: save it and deal the board again, the way a change of the number of marbles does. */
+  function setVariant(id) {
+    var g = game();
+    var v = g && g.variants;
+    if (!v || !current || state().busy) { return; }
+    var ids = v.items().map(function (it) { return it.id; });
+    var withRandom = typeof v.next === 'function' && v.random !== false;
+    if (id === core.variantChoice(store.prefs()[v.pref], ids, withRandom)) { return; }
+    GS.audio.click();
+    store.setPref(v.pref, id);
+    newBoard(current);
+    refreshSize();
+    refreshVariants();
+    ui.announce((v.label || 'Track') + ': ' + (id === 'random' ? 'Surprise me' : (v.items().filter(function (it) { return it.id === id; })[0] || { name: id }).name) + '.');
   }
 
   /** The "charities on the board" control: presets and any number, up to what the game can show. */
@@ -528,6 +569,7 @@
     el.playLabel.textContent = g.cta;
     refreshRounds();
     refreshSize();
+    refreshVariants();
     var ok = amount.valid().ok;
     var rounds = roundsNow();
     var sub;
@@ -556,6 +598,7 @@
     el.sizeCustom.disabled = locked;
     el.sizeMax.disabled = locked;
     el.pickBtn.disabled = locked;
+    refreshVariants();
     if (el.customBtn) { el.customBtn.disabled = locked; el.customToggle.disabled = locked; el.customEdit.disabled = locked; el.customClear.disabled = locked; }
     Array.prototype.forEach.call(el.pickChip.querySelectorAll('button'), function (b) { b.disabled = locked; });
     Array.prototype.forEach.call(el.rounds.querySelectorAll('.round__open'), function (b) { b.disabled = locked; });
@@ -635,7 +678,10 @@
         return '<li class="hist"><span class="hist__game">' + ui.icon(g.icon) + '</span><div><div class="hist__main">' + esc(nm) + '</div><div class="hist__sub">' + esc(ui.fmtWhen(x.ts)) + (x.rounds > 1 ? ' · ' + x.rounds + ' rounds' : '') + '</div></div><span class="hist__amt">' + money(x.totalCents, true) + '</span></li>';
       }).join('') + '</ol>' : '<p class="empty">No rounds of ' + esc(g.name) + ' yet. Your results will show up here.</p>';
     } else if (tabState === 'about') {
-      h = '<div class="about">' + g.info.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') +
+      var vl = g.variants ? (g.variants.label || 'Track') : '';
+      // how to use the picker, then what the game says about it (variants.about), or by default that it never changes the odds
+      var vInfo = g.variants ? '<p><b>' + esc(vl) + ':</b> ' + esc('Pick a ' + vl.toLowerCase() + ' in the panel on the left, or choose Surprise me for a different one every round. ' + (g.variants.about || 'It changes how the race looks and plays out, never who can win: every charity on the board still has exactly the same chance, whichever ' + vl.toLowerCase() + ' you pick.')) + '</p>' : '';
+      h = '<div class="about">' + g.info.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + vInfo +
         '<p><b>Odds:</b> ' + (g.setBoard ? 'every charity on the board has exactly the same chance (set how many are on it, from a few to ' + ui.num(g.maxSize || 100) + '). ' : 'every charity in play has exactly the same chance. ') + 'The result is drawn first, from a seed committed before you play, and the game then shows it.</p></div>';
     } else {
       var pool = activePool(current).slice().sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
@@ -681,7 +727,7 @@
       if (g.setReels) { g.setReels(reelsFor(id)); }
       if (g.setBoard) {
         var bd = boards[id];
-        if (!bd || bd.pv !== state().poolVersion || bd.slots !== slotsFor(id) || bd.cs !== customStamp(id)) { newBoard(id); }
+        if (!bd || bd.pv !== state().poolVersion || bd.slots !== slotsFor(id) || bd.cs !== customStamp(id) || bd.v !== variantKey(id)) { newBoard(id); }
       } else {
         if (g.setSize) { g.setSize(sizeFor(id)); }
         if (m.pv !== state().poolVersion || m.cs !== customStamp(id)) { g.setPool(activePool(id)); m.pv = state().poolVersion; m.cs = customStamp(id); }

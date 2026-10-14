@@ -304,6 +304,21 @@
     return f.causes.length + f.serves.length + f.where.length + f.how.length + f.era.length;
   }
 
+  /* ----------------------------------------------------- variants (the "Track" picker of a race game) */
+
+  /** A saved choice of variant (a track): a short lower-case word that may hold digits and dashes. Anything else is '', which means "the game's own default". */
+  function cleanVariant(v) { return typeof v === 'string' && /^[a-z0-9][a-z0-9-]{0,23}$/.test(v) ? v : ''; }
+
+  /**
+   * Which tile of the picker is selected. `ids` are the variants in display order, the default first. A saved 'random' ("Surprise me") counts only
+   * where the game allows it; a saved id the game does not know (an old save, a typo, a track that was removed) falls back to the first one.
+   */
+  function variantChoice(saved, ids, allowRandom) {
+    if (saved === 'random' && allowRandom) { return 'random'; }
+    var v = cleanVariant(saved);
+    return v && ids.indexOf(v) >= 0 ? v : (ids.length ? ids[0] : '');
+  }
+
   /** Static counts per facet value across the whole roster, used for the numbers on filter chips. */
   function facetCounts(charities) {
     var out = { causes: {}, serves: {}, where: {}, how: {}, era: {} };
@@ -700,6 +715,7 @@
     sampleSubset: sampleSubset, subsetWith: subsetWith, fillSlots: fillSlots, slotsWith: slotsWith, boardField: boardField, plinkoPath: plinkoPath, bracketOutcomes: bracketOutcomes,
     ERA_IDS: ERA_IDS, eraOf: eraOf, ageYear: ageYear, emptyFilters: emptyFilters, normalizeFilters: normalizeFilters, matchesFilters: matchesFilters,
     buildPool: buildPool, activeFilterCount: activeFilterCount, facetCounts: facetCounts, mergeAllocations: mergeAllocations,
+    cleanVariant: cleanVariant, variantChoice: variantChoice,
     LEVELS: LEVELS, XP_PER_DOLLAR: XP_PER_DOLLAR, JACKPOT_XP: JACKPOT_XP, xpForGift: xpForGift, pickBonusXp: pickBonusXp, levelFor: levelFor,
     seeded: seeded, seededShuffle: seededShuffle, weekKey: weekKey, weekFraction: weekFraction, TIERS: TIERS, tierFor: tierFor, stakePresets: stakePresets,
     RARITIES: RARITIES, rarityFor: rarityFor, rarityRank: rarityRank, monthlySet: monthlySet, leagueTable: leagueTable, cupField: cupField,

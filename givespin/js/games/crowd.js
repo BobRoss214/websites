@@ -21,6 +21,20 @@
  *                                an ellipse { x, y, rx, ry } or a rectangle { x0, y0, x1, y1 }, plus an optional z (higher = drawn on top).
  *                                Without it, the spot is a circle round the runner's drawn centre (e._x, e._y) the size of geo.r (a game that draws
  *                                its track smaller than the canvas says so in geo.k, and its e._x / e._y are then in track units).
+ *   variants                  -> optional: the game has several tracks (or boards, or looks) to choose from, and the game panel shows a "Track" picker (js/ui/variants.js):
+ *                                { pref,      the key in GS.store.prefs() that holds the choice: an item id, or 'random' for "Surprise me"
+ *                                  label,     the plain label of the picker ("Track")
+ *                                  items(),   [{ id, name, blurb }] in display order, the default first
+ *                                  thumb(id, ctx, w, h),   draws a small picture of that item on a canvas context of w x h CSS pixels
+ *                                  next(),    optional: the id the NEXT round will use (resolves 'random'); a game without it has no "Surprise me" tile
+ *                                  random,    optional: false takes the "Surprise me" tile away
+ *                                  onRoundEnd(),  optional: called ONCE when a whole play is over (every round of a gift split into several: the receipt is
+ *                                               closed and the next board is about to be dealt; js/ui/game.js calls it, this file never does). A game that rolls
+ *                                               a new random item for every play does it here; it must only change what next() says. The rounds of one play all
+ *                                               use the same item: nothing may change it between them,
+ *                                  about }    optional: a sentence for the "About this game" tab (a default says the choice never changes the odds)
+ *                                The game reads the choice itself, inside layout() (store.prefs()[variants.pref]), and keys what it caches by it: choosing another one
+ *                                lays the board out again exactly as a change of the number of runners does (js/ui/game.js writes the pref, then deals the board again).
  * }
  * Every game built on this opens the charity's profile when its runner is clicked (GS.ui.charityHit on the stage; a click never starts, stops
  * or changes a race). Tests: GS.games.<id>._hitAt(clientX, clientY) is the charity id under that spot, GS.games.<id>._spots() lists the spots.
@@ -355,6 +369,7 @@
       tagline: spec.tagline,
       cta: spec.cta,
       info: spec.info,
+      variants: spec.variants || null,
 
       mount: function (container, gameApi) {
         api = gameApi;
@@ -439,7 +454,9 @@
               if (opts.onReveal) { opts.onReveal(i, winner); }
               i += 1;
               return U.sleep(count2 > 1 ? 900 : 500);
-            }).then(next);
+            }).then(function () {
+              next();   // (the next round is dealt on the same track: a game with variants rolls a new one only between plays, see js/ui/game.js)
+            });
           })();
         });
       },

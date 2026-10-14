@@ -368,3 +368,38 @@ test('recordPlay: the gift earns exactly 10 XP for every $1, and bonuses and the
   assert.equal(j.bonusXp, GS.core.JACKPOT_XP);
   assert.equal(GS.store.get().xp, 50 + 200 + 134 + 110 + j.xpGain, 'every receipt adds up to the saved XP');
 });
+
+test('the Marble Run track choice is saved, comes back after a reload, and a missing or damaged one means the first track', () => {
+  const page = makePage();
+  const { GS } = page;
+  assert.equal(GS.store.prefs().marbleMap, '', 'a new visitor has no choice, which means the first track');
+  GS.store.setPref('marbleMap', 'spiral');
+  GS.store.load();
+  assert.equal(GS.store.prefs().marbleMap, 'spiral', 'a chosen track survives a reload');
+  GS.store.setPref('marbleMap', 'random');
+  GS.store.load();
+  assert.equal(GS.store.prefs().marbleMap, 'random', 'so does Surprise me');
+  // saved data from before there were tracks has no such key
+  const old = JSON.parse(page.data.get(page.KEY));
+  delete old.prefs.marbleMap;
+  page.data.set(page.KEY, JSON.stringify(old));
+  GS.store.load();
+  assert.equal(GS.store.prefs().marbleMap, '', 'older saved data without the key loads, as the first track');
+  // junk in the saved text never gets through (only a short lower-case id does; whether the game still has that track is the game\'s business)
+  [5, null, true, ['spiral'], { id: 'spiral' }, 'Spiral Tower', '', 'a'.repeat(40), '../../x', '<script>'].forEach((junk) => {
+    const d = JSON.parse(page.data.get(page.KEY));
+    d.prefs.marbleMap = junk;
+    page.data.set(page.KEY, JSON.stringify(d));
+    GS.store.load();
+    assert.equal(GS.store.prefs().marbleMap, '', JSON.stringify(junk) + ' is dropped');
+  });
+  const d2 = JSON.parse(page.data.get(page.KEY));
+  d2.prefs.marbleMap = 'a-track-from-the-future';
+  page.data.set(page.KEY, JSON.stringify(d2));
+  GS.store.load();
+  assert.equal(GS.store.prefs().marbleMap, 'a-track-from-the-future', 'a well-formed id the store has never heard of is kept (the game decides what it means)');
+  GS.store.setPref('marbleMap', 'zigzag');
+  GS.store.eraseAll();
+  assert.equal(GS.store.prefs().marbleMap, '', '"Erase my data" forgets the track too');
+  assert.ok(page.data.get(page.KEY).indexOf('zigzag') < 0, 'and it is gone from the saved text');
+});

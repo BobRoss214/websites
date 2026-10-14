@@ -58,6 +58,20 @@
 
   function botTag() { return '<span class="botpill" title="A simulated player">BOT</span>'; }
 
+  /** "Track: Spiral Tower" for a table whose game has several maps (Marble Run), '' otherwise. `map` is { id, name } or null. */
+  function mapText(map) { return map ? 'Track: ' + map.name : ''; }
+
+  /**
+   * Tells a game with several maps which one to lay out next: the map of the table's round, or null for the player's own choice
+   * (see variants.force in js/games/crowd.js). It never writes the player's preference, and it is only called when a board is about to be laid out,
+   * never while a race is running, so a map never changes under a race.
+   */
+  function forceMap(gid, mapId) {
+    var g = GS.games[gid];
+    var v = g && g.variants;
+    if (v && typeof v.force === 'function') { v.force(mapId || null); }
+  }
+
   /* ------------------------------------------------------- cards (page + strip) */
 
   function cardHTML(room, compact) {
@@ -73,6 +87,7 @@
         '<span class="lcard__stats"><span data-f="pot"></span><span data-f="players"></span></span>' +
         '<span class="stack" data-f="stack" aria-hidden="true"></span>' +
         '<span class="lcard__lead" data-f="lead"></span>' +
+        (sized && room.mapId ? '<span class="lcard__map" data-f="map"></span>' : '') +
       '</span></a>';
   }
 
@@ -89,6 +104,8 @@
     var lead = field[0];
     // the share comes first so that a long name that gets cut with an ellipsis cannot hide it
     f('lead').textContent = lead ? 'Leading: ' + core.fmtShare(lead.tickets, pot) + ' ' + lead.charity.short : '';
+    var mp = f('map');
+    if (mp) { mp.textContent = mapText(room.mapInfo()); }
     node.classList.toggle('has-bet', !!room.you && room.phase !== 'result');
   }
 
@@ -549,7 +566,9 @@
     el.gates.textContent = room.distinct() + '/' + room.maxGates;
     if (room.phase === 'open' && room.you) { el.joinSub.textContent = dollars(room.you.dollars) + ' on ' + GS.charity(room.you.charityId).short + ' · bets close in ' + clock(left); }
     if (el.stagebar) {
+      var map = room.mapInfo();
       el.stagebar.innerHTML = '<span class="lt-stagebar__a"><b>Round ' + room.round + '</b> · ' + esc(txt) + (room.phase === 'open' || room.phase === 'result' ? ' <b>' + clock(left) + '</b>' : '') + '</span>' +
+        (map ? '<span class="lt-stagebar__m" data-map="' + esc(map.id) + '">Track: <b>' + esc(map.name) + '</b></span>' : '') +
         '<span class="lt-stagebar__b"><b>' + dollars(room.pot()) + '</b> pot · ' + room.players() + ' players · bots simulated</span>';
     }
   }
@@ -621,7 +640,7 @@
           '<div class="rs-fair__act"><button type="button" class="btn btn--sm" data-role="verify">' + ui.icon('refresh-cw') + 'Verify this round</button></div><div data-role="verify-out" aria-live="polite">' + verifyOut + '</div></details>'
       : '';
     el.result.innerHTML =
-      '<div class="' + cls + '"><p class="lt-res__eyebrow">Round ' + r.round + ' result' + (r.event ? ' · ' + esc(r.event) : '') + '</p>' +
+      '<div class="' + cls + '"><p class="lt-res__eyebrow">Round ' + r.round + ' result' + (r.map ? ' · ' + esc(mapText(r.map)) : '') + (r.event ? ' · ' + esc(r.event) : '') + '</p>' +
         '<h2 class="lt-res__t">' + esc(winner.name) + ' takes the simulated pot: <em>' + dollars(total) + '</em></h2>' +
         '<ul class="lt-res__who">' + '<li><span>Winner</span><b>' + esc(winner.short) + ' · ' + core.fmtShare(r.weights.filter(function (w) { return w[0] === winner.id; })[0][1], r.pot) + ' chance</b></li>' +
         '<li><span>Players</span><b>' + r.players + ' (' + r.bots + ' bots)</b></li>' +
@@ -721,6 +740,7 @@
     if (backed.length < 2) { return; }
     var g = GS.games[cur.id];
     var info = cur.room.boardInfo();
+    forceMap(cur.id, cur.room.mapId);         // (the board below is laid out on the map of this round)
     g.setField(cur.id === 'plinko' ? backed : boardEntrants(cur.room, backed, info), info);
     g.lock(false);
   }
@@ -902,6 +922,8 @@
     if (cur) {
       // leaving a table whose drop is still playing (one canvas serves every Plinko table): stop that drop
       if (animating[cur.id] && GS.games[cur.id].abort) { GS.games[cur.id].abort(); }
+      // the game goes back to the player's own map (the race above has been stopped, so this never changes a map under a race)
+      forceMap(cur.id, null);
       if (!animating[cur.id]) { GS.games[cur.id].clearField(); }
       var sb = $('#lt-stagebar');
       if (sb) { sb.hidden = true; }
@@ -932,7 +954,7 @@
     if (!room.history.length) { return '<p class="empty">No finished rounds at this table yet.</p>'; }
     return '<ol class="histlist">' + room.history.map(function (h) {
       var ch = GS.charity(h.winnerId);
-      return '<li class="hist hist--ch">' + ui.siteMark(ch, 34) + '<div><div class="hist__main">' + ui.siteName(ch, 'hist__name') + '</div><div class="hist__sub">Round ' + h.round + ' · ' + ui.num(h.players) + ' players' +
+      return '<li class="hist hist--ch">' + ui.siteMark(ch, 34) + '<div><div class="hist__main">' + ui.siteName(ch, 'hist__name') + '</div><div class="hist__sub">Round ' + h.round + (h.map ? ' · ' + esc(h.map.name) : '') + ' · ' + ui.num(h.players) + ' players' +
         botNote(h) + '</div></div>' + ui.aboutBtn(ch) + '<span class="hist__amt">' + dollars(h.pot) + '</span></li>';
     }).join('') + '</ol>';
   }
@@ -952,7 +974,11 @@
     var tableNote = cur.room.tab
       ? '<p><b>This table: ' + esc(cur.room.tab.name) + ', ' + cur.room.size.toLocaleString('en-US') + ' ' + esc(cur.room.unit(cur.room.size)) + '.</b> Up to ' + cur.room.maxGates + ' different charities can be backed here. Every charity somebody backs gets a spot; the remaining ' + esc(cur.room.unit(2)) + ' are filled in at random from our catalog so the board is always ' + cur.room.size.toLocaleString('en-US') + ' ' + esc(cur.room.unit(cur.room.size)) + '. Only backed charities hold tickets, so only they can win; the others are scenery. If the catalog has fewer charities than ' + esc(cur.room.unit(2)) + ', charities repeat evenly.</p>'
       : '';
-    return '<div class="about">' + tableNote + '<p><b>Live ' + esc(g.name) + '.</b> A new round opens about once a minute. Everyone at it backs a charity with a stake, and every dollar is a ticket in a draw, so a charity with 30% of the pot wins 30% of the time. ' +
+    var map = cur.room.mapInfo();
+    var mapNote = map
+      ? '<p><b>Track this round: ' + esc(map.name) + '.</b> This table changes track every round, taking each track in turn, so you see them all. The track is chosen when the round opens and stays until the next one. It never changes who wins: the winner is drawn from the pot when bets close, and the race is then played out to that charity.</p>'
+      : '';
+    return '<div class="about">' + tableNote + mapNote + '<p><b>Live ' + esc(g.name) + '.</b> A new round opens about once a minute. Everyone at it backs a charity with a stake, and every dollar is a ticket in a draw, so a charity with 30% of the pot wins 30% of the time. ' +
       'Whichever charity is drawn gets the <b>whole pot</b>, whether you backed it or not.</p>' +
       '<p><b>Where does your stake go?</b> Always to the charity that wins the table, never to a prize for players. If your charity loses, your stake still lands on the winner, so every round is a win for someone.</p>' +
       '<p><b>Are the other players real?</b> Not yet. They are bots standing in for a real multiplayer table, and their stakes are simulated. A real launch would run tables on a server.</p>' +

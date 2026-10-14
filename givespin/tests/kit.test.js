@@ -117,3 +117,57 @@ test('drawMark fits the picture inside a round badge: white disc, picture kept i
   const cv = load(() => ({ width: 40, height: 40 }));
   assert.equal(cv.drawMark(fakeCtx(), ch, 5, 5, 10), true);
 });
+
+/** js/games/crowd.js (the race engine behind Duck Derby, Marble Run and Balloon Race) on its own, on a pretend page: no canvas, and races that finish at once. */
+function loadCrowd(variants) {
+  const GS = {
+    core: {
+      randomInt: () => 0,
+      fillSlots: (pool, n) => Array.from({ length: n }, (_, i) => pool[i % pool.length]),
+      slotsWith: (pool, winner, n) => [winner].concat(Array.from({ length: n - 1 }, (_, i) => pool[i % pool.length]))
+    },
+    util: { dur: () => 0, sleep: () => Promise.resolve(), esc: (s) => String(s) },
+    audio: { whoosh() {}, tick() {}, thump() {}, drum() {}, ring() {} },
+    icon: () => '',
+    games: {}
+  };
+  const sandbox = { GS, performance: { now: () => Date.now() }, setTimeout, clearTimeout, console };
+  sandbox.window = sandbox;
+  sandbox.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 0);
+  sandbox.cancelAnimationFrame = (id) => clearTimeout(id);
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/kit.js'), 'utf8'), sandbox);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/games/crowd.js'), 'utf8'), sandbox);
+  const game = GS.crowdGame({
+    id: 'testrace', name: 'Test Race', label: 'Test Race', icon: 'x', category: 'races', sizes: [{ n: 8, name: 'Eight' }], defaultSize: 8, seconds: 1, variants,
+    // the pretend race: every runner is on the line at once, and the drawn winner is first
+    motion: (o) => {
+      const runs = o.ents.map((e, k) => ({ p: 0, place: 0, k }));
+      return { runs, step: () => { runs.forEach((r) => { r.p = 1; r.place = r.k === o.winIdx ? 1 : r.k + 2; }); return true; } };
+    }
+  });
+  return game;
+}
+
+test('a gift split into rounds runs every round on one track: the race engine never rolls the next track between rounds (js/ui/game.js does it once, after the play)', async () => {
+  const pool = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => ({ id: 'c' + i, short: 'C' + i, name: 'Charity ' + i }));
+  let track = 'a', rolls = 0;
+  const variants = { pref: 'testTrack', label: 'Track', items: () => [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], thumb() {}, next: () => track, onRoundEnd: () => { rolls += 1; track = track === 'a' ? 'b' : 'a'; } };
+  const game = loadCrowd(variants);
+  assert.equal(game.variants, variants, 'the game carries the description of its tracks');
+  game.activate();
+  game.setBoard(pool, 8, '');
+  const seen = [];
+  const winners = [pool[2], pool[5], pool[7]];
+  const out = await game.play({ winners, quick: true, onRound: () => seen.push(track), onReveal: () => seen.push('rolls ' + rolls) });
+  game.deactivate();
+  assert.equal(out.length, 3, 'all three rounds were played');
+  assert.deepEqual(seen, ['a', 'rolls 0', 'a', 'rolls 0', 'a', 'rolls 0'], 'every round started on the same track and nothing was rolled while the play ran');
+  assert.equal(rolls, 0, 'and nothing was rolled when it ended either (the page rolls once, when the receipt is closed)');
+  // one round is the same
+  game.activate();
+  game.setBoard(pool, 8, '');
+  await game.play({ winners: [pool[1]], quick: true });
+  game.deactivate();
+  assert.equal(rolls, 0, 'a one-round play does not roll either');
+});
