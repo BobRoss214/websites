@@ -1,0 +1,35 @@
+# Hand-off, 21 Oct 2026 (end of a long working session)
+
+Branch: `claude/wise-acres-redesign-w9m4bi` (the repo's default branch). Nothing here is a pull request.
+This folder (`work-notes/`) is NOT part of the website. It only keeps notes and tools from the session so nothing is lost.
+
+## In the branch now (each one tested by the helper who made it)
+1. Tractor and barrel train no longer freeze: "calm mode" used to rest them (`js/main.js`, `tests/calm.test.mjs`).
+2. Add-ons list: a real corn pit picture; the barrel train there has 5 barrels and 5 kids who wave like the wagon riders.
+3. "Small Sunn Hemp Maze" card: a better maze picture and a sunn hemp plant on each side (`#sunnhemp`, `#sunnhemp-pods`).
+4. Red barn in the hero lost its top on wide windows (a picture strip clipped it): fixed in `css/styles.css`; `tests/barn.test.mjs`.
+5. Top menu: Pizza (and the other links) lit the wrong link when the site is shown inside a sandboxed frame like the claude.ai preview (the scroll-spy `rootMargin` is ignored there): fixed in `initNav` (`js/main.js`); `tests/nav-highlight.test.mjs`.
+6. First-visit guide is now a section on the home page (`#first-visit`), so the menu link never leaves the page; `tests/first-visit-guide.test.mjs`. The full guide page `first-visit.html` is unchanged and linked from the section.
+7. Products section: the existing Shop section ("What to buy at Wise Acres", `#shop`) now lists every product from the farm's own signs, in 12 groups, each with a price and a small drawing (62 pictures, ids `p-<slug>`). All new texts are translated (es, hi, zh, vi) and were read through once by a second reviewer. Prices not confirmed by the farm show "Prices coming soon".
+
+## Not finished / still to do
+- Hero barrel train: 3 more barrels and 3 more waving kids (6 and 6). A helper finished the code; see the bottom of this file for whether it was merged.
+- Fix wording in the Shop that the photo audit found unsupported (`AUDIT-photos.md`): pizza "wood-fired style", kettle corn "big bag", Izze "sparkling juice", "tokens at the barn", the wearables notes (sizes, colours), the candle "14 oz" (a saved photo says 16 oz), and the 16 oz elderberry syrup size (a digit is cut off on the sign).
+- English wording flagged by all four translation reviewers: the beer/cider/wine note is a fragment ("All beer, cider and wine."), "Pots in yellow, orange, gold and pink" reads as if the pots are coloured (it is the mums), and the pumpkin note ("Medium ones are $4.00") is unclear. Changing English means redoing the key in 4 languages.
+- Prices still unconfirmed (the Shop says "Prices coming soon"): jam ($8 vs $9 on two signs), elderberry shrub ($20.99 vs $21.99), hats, T-shirts, sweatshirts, bags, pizza, Christmas trees. Questions for Miss Cathy and Rob were posted in the old Terminal (ids `k-new-*`, see `PRODUCTS.md`).
+- A native-speaker read of the es/hi/zh/vi texts would still help (AI-written, AI-reviewed).
+- Not run on the final merged state: the slow checks (axe-wide, hero, big-font, touch, colour-blind, calm, layout-sweep, slow-phone, answer-rehearsal and others). Failing before this work, untouched: `plain-lint` (one 45-word README sentence), `option-patches` (privacy page). `sitecheck-values` failed once under heavy load and passed again.
+- The older optional patches (map, winter trees, holiday photos, sunflower field, spots-marks, share picture) are NOT applied; they wait for the owner's say-so (`patches/optional/`, `docs/OPTION_PATCHES.md`).
+- The GitHub repo is public. Nothing private is stored here.
+
+## How to rebuild things
+- Pages and translations: `python3 tools/pages.py && python3 tools/i18n.py extract && python3 tools/i18n.py build`. Never run `tools/pages.py` alone (it strips the translation tags). Edit translations only in `lang/src/<code>.json`.
+- Tests: `NODE_PATH=/opt/node22/lib/node_modules AXE_PATH=<axe-core>/axe.min.js PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node tests/run-all.mjs <test names>`. One at a time; the machine was slow.
+- Preview artifact (the claude.ai page): `preview/build-artifact.py` builds one self-contained page plus the 5 inner pages from the repo, `preview/arttest.mjs` checks it, then it is published with the Artifact tool. The scripts have absolute paths from this session; fix the two path lines at the top.
+- Product pictures: the drawings live inside `index.html` (sprite at the bottom). `preview/merge_art.py` was the merge step.
+
+## Other files here
+- `PRODUCTS.md`: what every photo of the farm's signs said (transcribed), with the gaps.
+- `SHOP-LIST.md`: the list the Shop was built from (slug, name, price, note). `?` = price not confirmed.
+- `AUDIT-photos.md`: a second reading of the saved photos against that list (the corrections above).
+- `terminal-source-oct21.tar.gz`: code only (no answers, no state) of the "Terminal" question page the owner has now moved to a separate project.
