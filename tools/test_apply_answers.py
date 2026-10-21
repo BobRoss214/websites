@@ -249,13 +249,13 @@ class Values(unittest.TestCase):
         new, missing, bad = aa.substitute(rec, RULES['inputs']['d19=A'], {'price_ice_cream': '$6', 'price_drinks': '$9'})
         self.assertEqual((missing, bad), ([], []))
         tos = [s.get('to') for s in new['steps']]
-        self.assertIn('<dd>$6</dd>', tos)
-        self.assertIn('<dd>$9</dd>', tos)
-        self.assertEqual(rec['steps'][0]['to'], '<dd>$4</dd>')                                       # the recipe itself is not changed
+        self.assertIn('$6', tos)
+        self.assertIn('$9', tos)
+        self.assertEqual(rec['steps'][0]['to'], '$5')                                       # the recipe itself is not changed
         new, missing, bad = aa.substitute(rec, RULES['inputs']['d19=A'], {'price_ice_cream': '$6'})
         self.assertIsNone(new)
         self.assertEqual(len(missing), 1)
-        self.assertIn('beer, wine and cider', missing[0])
+        self.assertIn('beer, hard cider and wine', missing[0])
 
     def test_html_files_get_the_ampersand_written_the_html_way(self):
         rec = {'steps': [{'op': 'sub', 'file': 'index.html', 'at': 'a', 'find': 'a', 'to': 'Tom X'}, {'op': 'sub', 'file': 'js/content.js', 'at': 'a', 'find': 'a', 'to': 'Tom X'}]}
@@ -428,7 +428,7 @@ class Plan(unittest.TestCase):
                          ({'d61': doc(words('d61', 'B'), values={'credit': 'Jo Kim'}), 'd31': doc(words('d31', 'B'))}, ('d61', 'd31')),
                          ({'d01': doc(words('d01', 'B')), 'd24': doc(words('d24', 'B'))}, ('d01', 'd24')),
                          ({'d07': doc(words('d07', 'A')), 'd48': doc(words('d48', 'B'))}, ('d07', 'd48')),
-                         ({'d19': doc(words('d19', 'A'), values={'price_ice_cream': '$4', 'price_drinks': '$7'}), 'd54': doc(words('d54', 'B'))}, ('d19', 'd54')),
+                         ({'d19': doc(words('d19', 'A'), values={'price_ice_cream': '$5', 'price_drinks': '$7'}), 'd54': doc(words('d54', 'B'))}, ('d19', 'd54')),
                          ({'d26': doc(words('d26', 'B')), 'd54': doc(words('d54', 'B'))}, ('d26', 'd54'))):
             code, out = plan(ans)
             self.assertEqual(code, 3, out)

@@ -243,8 +243,8 @@ def do_contradict(a, site, recipes, skipped, rules, playbook, dash):
         ('d61=B d31=B', 'a photo credit for a photo that is removed'),
         ('d01=B d24=B', 'two winter patches that cannot be combined'),
         ('d07=A d48=B', 'two answers that edit the same test line'),
-        ('d19=A d54=B', 'prices typed over two GreenHouse rows, and the same "Prices coming soon" rows deleted'),
-        ('d26=B d54=B', 'a flowers sentence reworded, and the price-list line that holds it deleted (found by a random bundle: it first failed half way)'),
+        ('d19=A d54=B', 'two Shop prices corrected, and the Shop cards with no price deleted'),
+        ('d26=B d54=B', 'a flowers sentence reworded, and the Shop cards with no price deleted (found by a random bundle: it first failed half way)'),
         ('d10=D d62=B', 'the Drive time box off and its note reworded'),
     ]
     rows = []

@@ -32,8 +32,8 @@
    {"name": "celsius", "type": "derived", "from": "degrees", "fn": "f_to_c", "invented": "427"}
   ],
   "d19=A": [
-   {"name": "price_ice_cream", "type": "price", "invented": "$4", "ask": "the price of the Waxhaw Creamery ice cream"},
-   {"name": "price_drinks", "type": "price", "invented": "$7", "ask": "the price of beer, wine and cider"}
+   {"name": "price_ice_cream", "type": "price", "invented": "$5", "ask": "the price of one scoop of Waxhaw Creamery ice cream"},
+   {"name": "price_drinks", "type": "price", "invented": "$7", "ask": "the price of beer, hard cider and wine"}
   ],
   "d20=B": [
    {"name": "ready_time", "type": "text", "invented": "2 hours", "ask": "how long after the reservation time the pizzas are ready (a whole number of hours, for example 2 hours)", "match": "^[0-9]+ hours?$"}
@@ -96,7 +96,7 @@
   "d45=B": "the age from which a child pays for the wagon ride (the model assumes 1 year), and the other age sentences that change",
   "d50=B": "the real last day for Christmas trees (the model uses December 22)",
   "d51=B": "the right closing time of Wise Pie (the model uses 9 pm) and any other hours that are wrong",
-  "d54=A": "the price of each of the twelve lines that say Prices coming soon (shop prices differ line by line)",
+  "d54=A": "the price of each of the thirteen Shop cards that say Prices coming soon (the prices differ card by card)",
   "d55=B": "what visitors with strollers or wheelchairs should do instead, in her words",
   "d55=C": "what she wants to say about the paths, quiet times and facilities, in her words",
   "d56=B": "which Axios link is wrong, and the right headline and web address",
@@ -190,8 +190,8 @@
 
  "unsupported": [
   {"a": "d07=A", "b": "d48=B", "why": "both change the same line of tests/farm-seasons.test.mjs (the one that looks for the haunted trail and the maze), and the steps for one do not expect the change of the other. A person has to merge them."},
-  {"a": "d19=A", "b": "d54=B", "why": "d54 B deletes the price-list lines that have no price, and d19 A types prices over two of those lines (the GreenHouse ice cream and drinks rows). A person has to say which of them wins."},
-  {"a": "d26=B", "b": "d54=B", "why": "d54 B deletes the price-list lines that have no price, and the flowers line is one of them: d26 B rewords a sentence in that line. A person has to say what the price list should show for flowers."}
+  {"a": "d19=A", "b": "d54=B", "why": "d54 B deletes the Shop cards that have no price, and d19 A corrects the prices on two other Shop cards (the ice cream and the beer, hard cider and wine). They have not been tried together: apply one, look at the page, then the other."},
+  {"a": "d26=B", "b": "d54=B", "why": "d54 B deletes the Shop cards that have no price, and d26 B rewords the flowers sentence that sits under the Shop cards. They have not been tried together: apply one, look at the page, then the other."}
  ],
 
  "aliases": {

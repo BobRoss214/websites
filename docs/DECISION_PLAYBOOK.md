@@ -843,24 +843,24 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 
 ### d54. Prices for pumpkins, berries, flowers and trees
 
-- In plain words: The Shop section shows a red "Prices coming soon" tag next to pumpkins, strawberries, blueberries, flowers, snacks, drinks, local goods, ice cream and Christmas trees. Visitors cannot see what these cost.
+- In plain words: The Shop section shows a red "Prices coming soon" tag next to u-pick pumpkins, u-pick strawberries and blueberries, Christmas trees, the caps, hats, shirts and bags, the jam, the elderberry shrub, the strawberry lemonade and the apple cider. Visitors cannot see what these cost. Every other product carries the price read from the farm's own signs and photos on 21 October 2026.
 - Doc question: Q19
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): yes
 - Default: none. The prices are owner facts. If they cannot come before launch, B removes the empty tags.
-- Depends on: d19 (drinks and ice cream: the rows index.html at `data-t="t3699e70a"` and `data-t="t02fc833c"` are in both), d16 (the $31 package), d50 (tree dates share the row index.html at `data-t="t53cf41e8"`), d02 (draft prices).
+- Depends on: d19 (drinks and ice cream: the cards index.html at `data-t="t3699e70a"` and `data-t="t5cc2b160"` are in both), d16 (the $31 package), d50 (tree dates share the card index.html at `data-t="t53cf41e8"`), d02 (draft prices).
 - Note: Old Q19 asked the same list in one question; d19 already covers the two drinks rows.
 
 **A. I will send the price list**
 
-- Type the prices over the tag "Prices coming soon" and remove class="soon" (the red pill goes too): index.html at `class="soon"` (12 places: pumpkins twice, strawberries, blueberries, flowers, concessions, beer, hard cider and wine, local goods, ice cream, beer, wine and cider, local goods, Christmas trees). Prices carry no translation id.
-- Then change the note index.html at `data-t="teeb109de"` ("We're adding every product and price ... Anything marked Prices coming soon is on the way") x 4, and README.md: delete the row "Shop section".
+- Type the prices over the tag "Prices coming soon" and change the class (the red pill goes too): index.html at `class="shop-price shop-soon"` (13 places: the apple cider, the strawberry lemonade, the jam, the elderberry shrub, the five wear cards, u-pick pumpkins, Christmas trees, u-pick strawberries and u-pick blueberries). Change `<p data-t="..." class="shop-price shop-soon">Prices coming soon</p>` to `<p class="shop-price hand">$5</p>`. Prices carry no translation id.
+- Then change the note index.html at `data-t="taa947919"` ("Prices are for fall 2026 and can change ... Anything marked Prices coming soon is still being confirmed") x 4, and README.md: delete the row "Shop section".
 - Strings: 0 for prices; 1 id x 4 for the note (and the row labels if she renames a product)
 - Tests: none pinned (these prices are in no facts test); consistency passes unless a number appears twice
 
 **B. Remove the lines with no price**
 
-- Delete the rows with no price (the <div><dt>..</dt><dd class="soon">..</dd></div> lines above) and rewrite the note index.html at `data-t="teeb109de"` so it no longer promises prices. Ask Claude if a whole price card ends up empty (pumpkins: index.html at `data-t="t7a752a57"`, the "Pumpkin prices" card).
+- Delete the cards with no price (each `<li class="shop-card">` that holds `class="shop-price shop-soon"`) and rewrite the note index.html at `data-t="taa947919"` so it no longer says prices are being confirmed. Ask Claude if a whole group ends up empty (the "Wear Wise Acres" group, index.html at `id="shop-wear"`, has five cards and all of them say coming soon).
 - Strings: 1 id x 4 translations (the note); the row labels become unused
 - Tests: none
 
@@ -1212,7 +1212,7 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 
 **C. Change the package price**
 
-- Change "$31" in index.html at `data-t="t661d94cd"`, index.html at `data-t="te0ae7737"` and pages/pumpkin-patch.html at `<dt>Farm fun with pizza</dt>` (id t041b0712 holds the whole line). The number is inside the translations, so the ids change: 3 ids x 4.
+- Change "$31" in index.html at `data-t="t661d94cd"`, in the Shop card index.html at `<span class="hand">$31</span>` (no translation id) and pages/pumpkin-patch.html at `<dt>Farm fun with pizza</dt>` (id t041b0712 holds the whole line). The number is inside the translations of the first and the last, so those ids change: 2 ids x 4.
 - Also change the booking page and the Bookeo price, outside the repo.
 - Strings: 3 ids x 4 translations
 - Tests: consistency: fact "price: farm fun with pizza, base" (tests/consistency.test.mjs at `price: farm fun with pizza, base`) needs the new number to be the same in all 3 places (it reads the pages, no edit if all places agree); the $3 farm fee facts (consistency at `price: extra per person in the pizza package`) only if $3 changes
@@ -1259,16 +1259,16 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 
 **A. I will send names and prices**
 
-- Type the prices over "Prices coming soon": index.html at `data-t="t3699e70a"` (Waxhaw Creamery ice cream) and `data-t="t02fc833c"` (Beer, wine & cider). Remove class="soon" from those dd tags. Prices carry no translation id.
-- Names that change (if she corrects them): index.html at `data-t="t3517c259"`, `data-t="t8aa1a25f"`, `data-t="t1d93180c"`, `data-t="t7b10f100"` and `data-t="ta38e4092"`, pages/pumpkin-patch.html at `<h3>No reservation?</h3>` and pages/wise-pie.html at `src="assets/photos/wise-pie-pizza-and-drinks.webp"`. The GreenHouse side says "cider", the farm side says "hard cider" (index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="t8e063e7b"`, `data-t="t5cc2b160"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`): make the wording agree.
+- The prices are on the site now, read from the farm's own signs (ice cream $4 for one scoop and $6 for two, beer, hard cider and wine $6): index.html at `data-t="t3699e70a"` (Waxhaw Creamery ice cream) and `data-t="t5cc2b160"` (Beer, hard cider & wine). If she corrects one, change the number in the `<span class="so-p hand">` or `<p class="shop-price hand">` of that card. Prices carry no translation id.
+- Names that change (if she corrects them): index.html at `data-t="t3517c259"`, `data-t="t8aa1a25f"`, `data-t="t1d93180c"`, `data-t="t7b10f100"` and `data-t="ta38e4092"`, pages/pumpkin-patch.html at `<h3>No reservation?</h3>` and pages/wise-pie.html at `src="assets/photos/wise-pie-pizza-and-drinks.webp"`. The GreenHouse side says "cider", the farm side says "hard cider" (index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="t5cc2b160"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`): make the wording agree.
 - README: delete the part about drinks in the row "Pre-order page, drinks and ice cream".
 - Strings: 0 for prices only; up to 23 ids x 4 if names change (ids containing ice cream, drinks or cider)
 - Tests: none (prices of drinks are not in the facts test); consistency "price:" facts only if you add a pinned price
 
 **B. Remove the drinks line**
 
-- Delete the drinks mentions on The GreenHouse side: index.html at `data-t="t7b10f100"` (list item "Beer, wine & cider") and `data-t="t02fc833c"` (price line), the sentences index.html at `data-t="t3517c259"` and `data-t="t8aa1a25f"`, and index.html at `data-t="ta38e4092"` if it names drinks.
-- The farm side (hard cider, beer and wine at the farm: index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="t8e063e7b"`, `data-t="t5cc2b160"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`) is a separate claim: not asked on the dashboard (doc Q15 covers spring and summer snacks); leave or ask.
+- Delete the drinks mentions on The GreenHouse side: index.html at `data-t="t7b10f100"` (list item "Beer, wine & cider"), the sentences index.html at `data-t="t3517c259"` and `data-t="t8aa1a25f"`, and index.html at `data-t="ta38e4092"` if it names drinks.
+- The farm side (hard cider, beer and wine at the farm: index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="t5cc2b160"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`) is a separate claim, and so is the Shop card "Beer, hard cider & wine" (it is shared by the farm and The GreenHouse): not asked on the dashboard (doc Q15 covers spring and summer snacks); leave or ask.
 - Strings: 2 to 6 changed sentences x 4 translations
 - Tests: none
 
@@ -1525,7 +1525,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 **A. Hide fall booking and prices out of season**
 
 - Apply patches/optional/winter-A-hide-fall-booking.patch (source files only; then rebuild).
-- What it does: the "Reserve now" button in the Visit area, the "Choose your package" header, packages, included, add-ons, the "See prices" and "See packages" buttons, the "At the farm" shop block with its jump link and the "Fall:" paragraph get data-only="fall" (or "spring summer fall"). A new off-season line ("Fall at the farm usually starts again in mid-September...") with the existing "Tell me when it opens" button shows in winter, spring and summer. First-visit page: "See packages & add-ons" button hidden out of fall. css/sections.css +2 lines.
+- What it does: the "Reserve now" button in the Visit area, the "Choose your package" header, packages, included, add-ons, the "See prices" and "See packages" buttons, the "Farm visit, rides & picking" group of the Shop with its jump link and the "Fall:" paragraph get data-only="fall" (or "spring summer fall"). A new off-season line ("Fall at the farm usually starts again in mid-September...") with the existing "Tell me when it opens" button shows in winter, spring and summer. First-visit page: "See packages & add-ons" button hidden out of fall. css/sections.css +2 lines.
 - Then rebuild (python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build) and python3 tools/i18n.py missing es hi zh vi (0 each).
 - The pumpkin page (pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`) keeps "fall 2026" prices all year: not covered.
 - The fall blocks are hidden from Nov 18, when the page begins to look like winter (from Nov 9 to Nov 17 it still looks like fall), and come back about August 12 (the site then treats fall as the nearest season): answer d24 before that.
@@ -1667,7 +1667,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **A. I will send the 2027 details**
 
-- When she sends the 2027 details, replace the 2026 data. Places: header "Fall 2026" index.html at `Reservation packages (Fall 2026)`, `data-t="t14925fb1"`, `data-t="t65d35823"`, `data-t="t5e315551"`, `data-t="t9cc44765"` and `data-t="t7f10df40"`; the packages and add-ons (index.html from `Reservation packages (Fall 2026)` to `data-t="te7f1d0c8"`); the schedule and pizza table index.html from `id="schedule"` to `data-t="t58da3033"` (data-release and data-until dates); special days index.html at `<div class="side-note" data-until-empty>`; the Shop index.html from `data-t="t5e315551"` to `data-t="t9cc44765"`; pumpkin page pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`; the printed menu picture assets/photos/wise-pie-fall-menu-2026.webp (index.html at `data-t="tf8e1e093"`).
+- When she sends the 2027 details, replace the 2026 data. Places: header "Fall 2026" index.html at `Reservation packages (Fall 2026)`, `data-t="t14925fb1"`, `data-t="t65d35823"`, `data-t="taa947919"` and `data-t="t7f10df40"`; the packages and add-ons (index.html from `Reservation packages (Fall 2026)` to `data-t="te7f1d0c8"`); the schedule and pizza table index.html from `id="schedule"` to `data-t="t58da3033"` (data-release and data-until dates); special days index.html at `<div class="side-note" data-until-empty>`; the Shop index.html from `data-t="taa947919"` to `id="shop-farm"`; pumpkin page pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`; the printed menu picture assets/photos/wise-pie-fall-menu-2026.webp (index.html at `data-t="tf8e1e093"`).
 - README: update the content rows and the "year of the fall prices" wording.
 - Strings: about 7 ids with "Fall 2026" + every changed price/date line, x 4 translations
 - Tests: consistency: the fact "year of the fall prices, menu and schedule" (tests/consistency.test.mjs at `year of the fall prices`, min 9) and the price facts; dated: tests/dated.test.mjs hard-codes the 2026 rows and special days: rewrite for 2027
@@ -1722,7 +1722,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 **A. The text is right**
 
 - js/features.js at `{ id: 'flowers'` (crop "flowers", wins): make it one window April to July: [[new Date(y, 3, 15), new Date(y, 6, 31)], [new Date(y, 8, 1), new Date(y, 10, 8)]]. Today it follows spring (4/15-6/7) and summer (6/15-7/10), so there are holes.
-- The text stays: index.html at `data-t="tb15f8314"`, `data-t="tad408a60"`, `data-t="ta7a386b9"` and `data-t="t4c712247"`, and pages/pumpkin-patch.html at `Cut your own bouquet in the flower field` (ids t4c712247, ta7a386b9, tad408a60, tb15f8314, tc5aa3586).
+- The text stays: index.html at `data-t="tb15f8314"`, `data-t="ta7a386b9"` (2 places) and `data-t="t4c712247"`, and pages/pumpkin-patch.html at `Cut your own bouquet in the flower field` (ids t4c712247, ta7a386b9, tad408a60, tb15f8314, tc5aa3586).
 - Strings: 0
 - Tests: features (the auto in-season case: tests/features.test.mjs at `auto: pumpkins, tomatoes, flowers in season`), farm-seasons
 
@@ -2289,7 +2289,7 @@ One spelling and one name everywhere, matching Google and Facebook.
 
 **A. Corn maze**
 
-- Everywhere "Corn maze". The farm map already says "Corn maze" (js/farm-map-data.js at `"label": "Corn maze"`, written from tools/saved-map.json at `"label": "Corn maze"`). Change the text that says sunn hemp: index.html at `data-t="t447b4ee9"`, `<li data-t="t39573dd5">`, `data-t="t8c64d6c3"` (heading), `<th data-t="t39573dd5"` (table row) and `data-t="t0b5eaa9e"`, and pages/pumpkin-patch.html at `<li>A small sunn hemp maze</li>`. The line index.html at `data-t="tcc37b939"` ("Wander through our little maze") can stay.
+- Everywhere "Corn maze". The farm map already says "Corn maze" (js/farm-map-data.js at `"label": "Corn maze"`, written from tools/saved-map.json at `"label": "Corn maze"`). Change the text that says sunn hemp: index.html at `data-t="t447b4ee9"`, `<li data-t="t39573dd5">`, `data-t="t8c64d6c3"` (heading), `<th data-t="t39573dd5"` (table row), `<h4 data-t="t39573dd5"` (Shop card) and `data-t="t0b5eaa9e"`, and pages/pumpkin-patch.html at `<li>A small sunn hemp maze</li>`. The line index.html at `data-t="tcc37b939"` ("Wander through our little maze") can stay.
 - README rows "Farm map" and the maze mention (README.md, section "What's interactive", the item "What's on the farm").
 - Strings: 5 ids change (t0b5eaa9e, t39573dd5, t447b4ee9, t8c64d6c3, tc2132019) but two of them end up as the same words, "Corn maze", so 4 new sentences x 4 translations; the JS strings "Corn maze" and "Corn maze sign" stay
 - Tests: farm-seasons: tests/farm-seasons.test.mjs at `haunted trail and the maze only in fall` looks for /Maze/ (capital M) in the fall text: change it to /maze/i if the heading becomes "Corn maze"
@@ -2368,7 +2368,7 @@ One spelling and one name everywhere, matching Google and Facebook.
 **A. Rd**
 
 - Change "Hartis Road" to "Hartis Rd": index.html at `data-t="tf1ab0489"` and `4701 Hartis Road<br>` (2 places); pages/first-visit.html at `<strong>4701 Hartis Road</strong>` and `a neighborhood on Hartis Road`; pages/school-field-trips.html at `is at 4701 Hartis Road`; tools/qr_links.json at `"id": "directions"` (the directions sign: its text_en and text_es lines, and the Hindi, Chinese and Vietnamese lines tools/qr_links.json at `"directions": { "title"` (3 places); then python3 tools/make_qr.py and reprint). 6 ids: t183fef9f, tf1ab0489, t37c5399a, t65ba07a6, tae0016c1, tb405649d.
-- The GreenHouse has the same split: "5503 Poplin Road" in index.html at `5503 Poplin Road<br>` (2 places), "Poplin Rd" in 13 other places (and js/features.js at `5503 Poplin Rd, Indian Trail` and `To The GreenHouse at 5503 Poplin Rd`). Pick one with the farm's Google listing (d40).
+- The GreenHouse has the same split: "5503 Poplin Road" in index.html at `5503 Poplin Road<br>` (3 places), "Poplin Rd" in 13 other places (and js/features.js at `5503 Poplin Rd, Indian Trail` and `To The GreenHouse at 5503 Poplin Rd`). Pick one with the farm's Google listing (d40).
 - Strings: 6 ids x 4 translations (+ Poplin ids)
 - Tests: consistency MUST be updated: the QR signs check expects the directions sign to say "Road" even when the structured data says "Rd": in tests/consistency.test.mjs at `.replace(/ Rd$/, ' Road')` delete that call, so the sign has to say what the structured data says. The rest already uses "Rd" (consistency at `address: 4701 goes with Hartis` reads 4701 Hartis Rd; drive at `The farm (4701 Hartis Rd)`, `farm answer names the farm`, `and pressing the button again answers for the farm` and `La granja (4701 Hartis Rd)` use "Rd")
 
@@ -2495,14 +2495,14 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 **C. No u-pick tomatoes and basil this fall**
 
-- Remove the whole "Tomatoes & basil" section index.html from `id="tomatoes"` to `================= WISE PIE` and every link to it: hero line (index.html at `data-t="td6ecd1d8"`) and chip (index.html at `data-t="t30661b0e"`), the chooser card (index.html at `data-t="tddae9ce2"`), the add-on (index.html at `data-t="t48324abe"`), the calendar bar (index.html at `class="cal-bar bar-tomato"`), the Shop rows (index.html at `data-t="t1fccf389"` and `data-t="tbbaa09ab"`), the FAQ answer (index.html at `data-t="t398007b0"`), pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`, the "tomatoes" crop in js/features.js (This week box) and the farm map mark. Ask Claude: the largest removal on this list.
+- Remove the whole "Tomatoes & basil" section index.html from `id="tomatoes"` to `================= WISE PIE` and every link to it: hero line (index.html at `data-t="td6ecd1d8"`) and chip (index.html at `data-t="t30661b0e"`), the chooser card (index.html at `data-t="tddae9ce2"`), the add-on (index.html at `data-t="t48324abe"`), the calendar bar (index.html at `class="cal-bar bar-tomato"`), the Shop card (index.html at `id="shop-upick"`), the FAQ answer (index.html at `data-t="t398007b0"`), pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`, the "tomatoes" crop in js/features.js (This week box) and the farm map mark. Ask Claude: the largest removal on this list.
 - 46 UI ids and 5 JS strings mention tomatoes or basil. The photo with the price signs goes too (d13, d32).
 - Strings: about 46 UI ids + 5 JS strings (unused after removal)
 - Tests: consistency: tests/consistency.test.mjs at `price: tomatoes, per pound` and `price: basil, per stem` (prices) and from `const tom =` to `season words match js/season.js and the tomato dates in js/features.js` (tomato dates); features at `auto: pumpkins, tomatoes, flowers in season`, `const WEEK =` and `override: tomatoes peak first`; hero at `fall: the "New tomatoes" chip shows` and `winter: the tomato chip and the bee are hidden`; farm-seasons
 
 **D. The tomato or basil prices are different**
 
-- Change the price in 7 sentences: index.html at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"`, `data-t="t1fccf389"`, `data-t="tbbaa09ab"` and `data-t="t398007b0"`, and pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`. 7 UI ids x 4 translations (t1fccf389, t398007b0, t48324abe, t6b47c02f, tbbaa09ab, tcc1be24a, te71161d2).
+- Change the price in 5 sentences and in the Shop card: index.html at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"` and `data-t="t398007b0"`, the two prices of the u-pick card index.html at `id="shop-upick"` (no translation id), and pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`. 5 UI ids x 4 translations (t398007b0, t48324abe, t6b47c02f, tcc1be24a, te71161d2).
 - Strings: 7 UI ids x 4 translations
 - Tests: consistency: facts "price: tomatoes, per pound" and "price: basil, per stem" (tests/consistency.test.mjs at `price: tomatoes, per pound` and `price: basil, per stem`, at least 5 places each): all places must agree, no edit if they do
 

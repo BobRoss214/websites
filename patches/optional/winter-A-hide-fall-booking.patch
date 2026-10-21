@@ -1,6 +1,6 @@
 Option: winter-A
 Name: Hide fall booking and prices out of season
-Does: When the season on screen is not fall, the home page hides the Visit area Reserve now button, the packages, included list, add-ons, the See prices and See packages buttons, the At the farm shop block and the Fall paragraph, and shows one line instead ("Fall at the farm usually starts again in mid-September...") with the Tell me when it opens signup button. In fall nothing changes.
+Does: When the season on screen is not fall, the home page hides the Visit area Reserve now button, the packages, included list, add-ons, the See prices and See packages buttons, the "Farm visit, rides & picking" group of the Shop and the Fall paragraph, and shows one line instead ("Fall at the farm usually starts again in mid-September...") with the Tell me when it opens signup button. In fall nothing changes.
 Answers: d01 A (winter), d24 B (fall 2027 prices)
 Group: winter
 Conflicts: winter-B
@@ -40,8 +40,8 @@ index 8abb7d7..a2daf93 100644
  
  **Question 37: What should visitors see from January to April?**
  
--- **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html` at `id="options"`), the packages (`index.html` at `class="packages"`) and the schedule (`index.html` at `id="schedule"`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js` at `function applyOnly(` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html` at `class="btn btn-sm btn-red"`), "Fall hours:" (`index.html` at `data-t="t17246313"`), the Shop sentence and note (`index.html` at `data-t="t5e315551"` and `data-t="t9cc44765"`) and "Fall 2026 special days" (`index.html` at `data-t="t7f10df40"`).
-+- **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html` at `id="options"`), the packages (`index.html` at `class="packages"`) and the schedule (`index.html` at `id="schedule"`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js` at `function applyOnly(` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html` at `data-t="t90bac313" class="btn btn-sm btn-red"`), "Fall hours:" (`index.html` at `data-t="t17246313"`), the Shop sentence and note (`index.html` at `data-t="t5e315551"` and `data-t="t9cc44765"`) and "Fall 2026 special days" (`index.html` at `data-t="t7f10df40"`).
+-- **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html` at `id="options"`), the packages (`index.html` at `class="packages"`) and the schedule (`index.html` at `id="schedule"`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js` at `function applyOnly(` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html` at `class="btn btn-sm btn-red"`), "Fall hours:" (`index.html` at `data-t="t17246313"`), the Shop note (`index.html` at `data-t="taa947919"`) and "Fall 2026 special days" (`index.html` at `data-t="t7f10df40"`).
++- **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html` at `id="options"`), the packages (`index.html` at `class="packages"`) and the schedule (`index.html` at `id="schedule"`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js` at `function applyOnly(` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html` at `data-t="t90bac313" class="btn btn-sm btn-red"`), "Fall hours:" (`index.html` at `data-t="t17246313"`), the Shop note (`index.html` at `data-t="taa947919"`) and "Fall 2026 special days" (`index.html` at `data-t="t7f10df40"`).
  - **The GreenHouse has different winter hours, or is closed:** change `hours` in `js/content.js` (the `greenhouse` and `pizza` hours; they are one Friday-Sunday window all year, so separate winter hours need a small code change: ask Claude, or change them by hand when winter starts and again when it ends) and the text (README, "Change a fact everywhere", rows "The GreenHouse hours" and "Wise Pie hours"). The "Closed today. Opens Friday at 10 am" line comes from the `greenhouse` hours in `js/content.js`. For single closed days use `closures` (README, "Day-to-day changes"). Question 17 lists the other hours lines.
  - **Trees end earlier or later than early December:** the wording "to early December" is in `index.html` at `data-t="t493369ae"`, `data-t="t28844e2e"`, `data-t="tf0d0193a"`, `data-t="t0e76cb0a"`, `data-t="t4503c39b"`, `data-t="t53cf41e8"`, `data-t="t8f55ff30"` and `data-t="t5ecd6fe5"` and the end date is in `js/season.js` at `{ id: 'winter'` (8 December). After it the site keeps the winter look until about 10 February (the closest-season rule, `js/season.js` at `// The season in progress.`) and shows "Christmas trees are here." (`index.html` at `data-t="t4503c39b"`, marked `data-only="winter"`). If trees are over by then, ask Claude to change the rule or the wording.
  - **If the answer is "leave it":** no change; the README row "Winter and early-spring wording" stays.
@@ -117,24 +117,24 @@ index cc2e77d..a6a55e4 100644
              </div>
            </article>
            <article class="way-card way-card-alt reveal">
-@@ -1349,7 +1355,7 @@
-         <ul class="shop-jump reveal">
-           <li><a data-t="td8913263" href="#shop-pumpkins">Pumpkins</a></li>
-           <li><a data-t="t5b28566c" href="#shop-upick">U-pick &amp; u-cut</a></li>
--          <li><a data-t="t7b7034d4" href="#shop-farm">At the farm</a></li>
-+          <li data-only="fall"><a data-t="t7b7034d4" href="#shop-farm">At the farm</a></li>
-           <li><a data-t="t11999abc" href="#shop-greenhouse">At The GreenHouse</a></li>
+@@ -1359,7 +1365,7 @@
+           <li class="sg-plants"><a href="#shop-plants"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-lavender-plant"/></svg><span data-t="t39cf4606">Plants to take home</span></a></li>
+           <li class="sg-fall"><a href="#shop-pumpkins"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-pumpkin"/></svg><span data-t="t45421e94">Fall &amp; holidays</span></a></li>
+           <li class="sg-flowers"><a href="#shop-flowers"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-flower-jar"/></svg><span data-t="td4e7d7d3">Flowers</span></a></li>
+-          <li class="sg-farm"><a href="#shop-farm"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#tractor"/></svg><span data-t="t8063a5d8">Farm visit, rides &amp; picking</span></a></li>
++          <li class="sg-farm" data-only="fall"><a href="#shop-farm"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#tractor"/></svg><span data-t="t8063a5d8">Farm visit, rides &amp; picking</span></a></li>
          </ul>
-         <p class="notice notice-soft shop-note reveal"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><span data-t="teeb109de">We&rsquo;re adding every product and price to this page. Anything marked &ldquo;Prices coming soon&rdquo; is on the way. Questions? Email <a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a>.</span></p>
-@@ -1400,7 +1406,7 @@
+         <p class="notice notice-soft shop-note reveal"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><span data-t="taa947919">Prices are for fall 2026 and can change. We read them from the farm&rsquo;s own signs. Anything marked &ldquo;Prices coming soon&rdquo; is still being confirmed. Questions? Email <a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a>.</span></p>
+ 
+@@ -1950,7 +1956,7 @@
            </div>
          </div>
  
--        <div class="shop-block two-col reveal" id="shop-farm">
-+        <div class="shop-block two-col reveal" id="shop-farm" data-only="fall">
-           <div>
-             <header class="col-head">
-               <p data-t="t7b7034d4" class="hand eyebrow">At the farm</p>
+-        <div class="shop-group sg-farm reveal" id="shop-farm">
++        <div class="shop-group sg-farm reveal" id="shop-farm" data-only="fall">
+           <header class="shop-band">
+             <svg class="shop-band-ico" aria-hidden="true" focusable="false"><use href="#tractor"/></svg>
+             <h3 data-t="t8063a5d8" class="shop-band-h">Farm visit, rides &amp; picking</h3>
 @@ -1923,7 +1929,7 @@
            <details name="faq">
              <summary data-t="t69109cd4">When do reservations open?</summary>

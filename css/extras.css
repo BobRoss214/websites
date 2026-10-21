@@ -239,9 +239,121 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 .price-list dd.soon{justify-self:end;padding:.25em .8em;border:2px dashed var(--red-deep);border-radius:999px;background:#fff1f3;color:var(--red-deep);font:700 .85rem/1.2 var(--display);text-align:center}
 .shop-note{margin:0 0 clamp(28px,4vw,48px)}
 .shop-jump{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:calc(-1 * clamp(8px,2vw,24px)) 0 clamp(20px,3vw,32px);padding:0;list-style:none}
-.shop-jump a{display:flex;align-items:center;min-height:44px;padding:.5em 1.1em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .98rem/1 var(--display);text-decoration:none;box-shadow:0 3px 0 var(--ink);transition:transform .2s cubic-bezier(.3,1.6,.5,1),background-color .2s}
-@media (hover:hover){.shop-jump a:hover{background:var(--sun);transform:translateY(-2px)}}
-.shop-block+.shop-block{margin-top:clamp(40px,6vw,72px);padding-top:clamp(40px,6vw,72px);border-top:3px dashed var(--line,#e6d6b8)}
+.shop-jump a{display:flex;align-items:center;gap:.5em;min-height:44px;padding:.35em 1.1em .35em .45em;background:var(--g,#fff);color:var(--gt,var(--ink));border:2.5px solid var(--ink);border-radius:999px;font:700 .98rem/1.1 var(--display);text-decoration:none;box-shadow:0 3px 0 var(--ink);transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
+@media (hover:hover){.shop-jump a:hover{transform:translateY(-2px)}}
+.shop-pill-ico{flex:none;width:30px;height:30px;padding:3px;background:#fff;border:2px solid var(--ink);border-radius:50%}
+
+/* ---------- Shop: every product, in colourful groups (index.html #shop) ----------
+   Each group has a band (title, and where it is sold) and a grid of small cards: a round pastel bubble with the picture (the symbols p-<slug> in the sprite),
+   the name and the price in the hand-lettered font beside it, and at most one line of note under both. 4 cards across on a wide screen, 3 on a laptop or tablet,
+   2 on a phone. The group's colours are three tokens: --g the band (and the jump pill), --gt the text on it, --gp the pale bubble.
+   Nothing here moves by itself, so there is nothing for "Pause animations" to stop. */
+.shop{--shop-cols:4;--shop-gap:16px}
+@media (max-width:73.75em){.shop{--shop-cols:3}}
+@media (max-width:47.5em){.shop{--shop-cols:2;--shop-gap:12px}}
+.sg-snacks{--g:#ffc928;--gt:var(--ink);--gp:#fff0b3}
+.sg-icecream{--g:#ff8fb1;--gt:var(--ink);--gp:#ffdde4}
+.sg-pizza{--g:#d72a43;--gt:#fff;--gp:#ffd9de}
+.sg-drinks{--g:#8fd3f4;--gt:var(--ink);--gp:#d6effb}
+.sg-pantry{--g:#d9a066;--gt:var(--ink);--gp:#f6e2c8}
+.sg-bread{--g:#7a4b2a;--gt:#fff;--gp:#ecd9c6}
+.sg-gifts{--g:#7b3fa0;--gt:#fff;--gp:#eadcf4}
+.sg-wear{--g:#4b5bb8;--gt:#fff;--gp:#dde1f6}
+.sg-plants{--g:#23803f;--gt:#fff;--gp:#d9f3e6}
+.sg-fall{--g:#f58a1f;--gt:var(--ink);--gp:#ffe0bd}
+.sg-flowers{--g:#c43c7a;--gt:#fff;--gp:#fbdbe9}
+.sg-farm{--g:#8bc34a;--gt:var(--ink);--gp:#e4f2cf}
+.shop-group{margin-top:clamp(26px,3.6vw,40px)}
+.shop-note+.shop-group{margin-top:0}
+.shop-band{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 0 14px;padding:6px 16px 6px 7px;background:var(--g);color:var(--gt);border:3px solid var(--ink);border-radius:40px;box-shadow:0 4px 0 var(--ink)}
+.shop-band-ico{flex:none;width:46px;height:46px;padding:4px;background:#fff;border:2.5px solid var(--ink);border-radius:50%}
+.shop-band-h{flex:1 1 6em;min-width:0;margin:0;color:inherit;font-size:clamp(1.3rem,2.4vw,1.7rem);line-height:1.1}
+.shop-where{margin:0 0 0 auto;padding:.28em .85em;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:999px;font:700 .85rem/1.2 var(--display)}
+.shop-intro{max-width:44em;margin:0 auto 14px;text-align:center;font-weight:600;color:var(--ink-soft)}
+.shop-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--shop-gap);margin:0;padding:0;list-style:none}
+.shop-card{--w:calc((100% - (var(--shop-cols) - 1) * var(--shop-gap)) / var(--shop-cols));flex:0 0 var(--w);max-width:var(--w);min-width:0;display:flex;flex-wrap:wrap;align-items:center;align-content:flex-start;gap:4px 12px;padding:11px 12px;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--ink);overflow-wrap:break-word;overflow-wrap:anywhere}
+.shop-bubble{flex:none;display:grid;place-items:center;width:62px;height:62px;background:var(--gp);border:2.5px solid var(--ink);border-radius:50%;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.shop-ico{width:78%;height:78%}
+@media (hover:hover){.shop-card:hover .shop-bubble{transform:rotate(-7deg) scale(1.07)}}
+.shop-body{flex:1 1 0;min-width:0;display:grid;gap:2px;justify-items:start}
+.shop-name{margin:0;font:700 1.02rem/1.2 var(--display)}
+.shop-price{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 .35em;color:var(--red-deep)}
+.shop-price.hand,.shop-price .hand{font-size:1.95rem;line-height:1.05;color:var(--red-deep)}
+.sp-u{font:700 .86rem/1.2 var(--body);color:var(--ink-soft)}
+.shop-soon{margin:3px 0;padding:.2em .75em;border:2px dashed var(--red-deep);border-radius:999px;background:#fff1f3;font:700 .82rem/1.25 var(--display)}
+.shop-sub{flex:1 1 100%;margin:0;font:600 .82rem/1.3 var(--body);color:var(--ink-soft)}
+.shop-opts{display:grid;gap:1px;width:100%;margin:0;padding:0;list-style:none}
+.shop-opts li{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 8px;padding:0 2px 2px;border-bottom:2px dashed var(--line,#e6d6b8)}
+.shop-opts li:last-child{border-bottom:0}
+.so-l{font:700 .86rem/1.2 var(--body);color:var(--ink-soft);text-align:left}
+.so-p{margin-left:auto;text-align:right;color:var(--red-deep)}
+.so-p.hand,.so-p .hand{font-size:1.5rem;line-height:1.05}
+.shop-opts-u li{display:block}
+.shop-opts-u .so-p{display:block;margin:0;text-align:left}
+/* wide cards: the farm visit pair (side by side), and the ice cream and the pizza (the whole row) */
+.shop-half{--w:calc((100% - var(--shop-gap)) / 2);padding:12px 16px;column-gap:16px}
+.shop-half .shop-bubble{width:72px;height:72px}
+.shop-full{--w:100%;justify-content:flex-start;gap:10px 22px;padding:12px 18px}
+.shop-full .shop-bubble{width:72px;height:72px}
+.shop-full-main{flex:1 1 9em;display:grid;gap:3px;min-width:0}
+.shop-full-actions{display:flex;flex-wrap:wrap;gap:10px}
+.shop-ice .shop-opts{width:min(100%,15em)}
+.shop-flavors{flex:2 1 18em;min-width:0}
+.shop-flavors-h{margin:0 0 5px;font:700 1.4rem/1 var(--hand);color:var(--ink-soft)}
+.shop-chips{display:flex;flex-wrap:wrap;gap:6px 8px;margin:0;padding:0;list-style:none}
+.shop-chips li{padding:.25em .8em;background:var(--gp);border:2px solid var(--ink);border-radius:999px;font:700 .86rem/1.25 var(--display)}
+/* the wagon ride and the barrel train are long pictures: a wide capsule in place of the round bubble */
+.shop-ride .shop-bubble{width:92px;height:62px;border-radius:30px}
+.shop-ride .shop-ico{width:92%;height:92%}
+.shop-facts{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 20px;margin:12px 0 0;padding:0;list-style:none}
+.shop-facts li{display:flex;align-items:center;gap:.5em;font-weight:700;font-size:.93rem;line-height:1.3;text-align:left}
+.shop-facts .ico{color:var(--green-deep)}
+.shop-facts a:not(.btn){display:inline-flex;align-items:center;min-height:44px}
+/* Hindi letters have a small body: a little bigger, as elsewhere on the site */
+html:lang(hi) .shop-name{font-size:1.1rem}
+html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .shop-facts li,html:lang(hi) .shop-where,html:lang(hi) .shop-soon,html:lang(hi) .shop-chips li{font-size:.92rem}
+@media (max-width:47.5em){
+  .shop-jump{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .shop-jump a{height:100%;padding-right:.7em;font-size:.9rem}
+  .shop-band{padding-right:12px}
+  .shop-where{margin-left:0}
+}
+/* phones: smaller, picture and words side by side, the note under both */
+@media (max-width:30em){
+  .shop-card{gap:3px 9px;padding:8px 8px 9px}
+  .shop-bubble{width:50px;height:50px}
+  .shop-name{font-size:.95rem}
+  .shop-price.hand,.shop-price .hand{font-size:1.65rem}
+  .shop-opts li{gap:0 4px}
+  .so-l{font-size:.8rem}
+  .so-p.hand,.so-p .hand{font-size:1.3rem}
+  .shop-soon{font-size:.7rem;padding:.2em .6em;border-width:1.5px;overflow-wrap:normal;word-break:normal}
+  .shop-sub{font-size:.78rem}
+  html:lang(hi) .shop-sub,html:lang(hi) .so-l{font-size:.84rem}
+  html:lang(hi) .shop-soon{font-size:.76rem}
+  html:lang(hi) .shop-name{font-size:1rem}
+  .shop-half,.shop-full{--w:100%}
+  .shop-half{padding:10px 12px;column-gap:12px}
+  .shop-half .shop-bubble,.shop-full .shop-bubble{width:60px;height:60px}
+  .shop-full{padding:10px 12px;gap:8px 12px}
+  .shop-flavors,.shop-full-actions{flex-basis:100%}
+  .shop-ride .shop-bubble{width:64px;height:44px;border-radius:24px}
+  .shop-facts{justify-content:flex-start}
+  .shop .btn-sm{font-size:.9rem;padding:.5em .85em}
+}
+@media (max-width:22.5em){.shop-card{padding-left:5px;padding-right:5px;padding-inline:5px}.shop-name{font-size:1rem}.shop-soon{overflow-wrap:break-word;overflow-wrap:anywhere}}
+@media print{
+  .shop-pill-ico,.shop-band-ico,.shop-bubble{display:none!important}
+  .shop-band{padding:2px 0;background:none!important;color:#000!important;border:0;border-bottom:2px solid #000;border-radius:0;box-shadow:none}
+  .shop-where{border:0;padding:0;margin-left:auto}
+  .shop-grid{display:block;columns:2;column-gap:20px}
+  .shop-card,.shop-half,.shop-full{display:block;max-width:none;margin:0 0 6px;padding:4px 0;border:0;border-bottom:1px solid #000;border-radius:0;box-shadow:none;text-align:left;break-inside:avoid}
+  .shop-price,.shop-price.hand,.shop-price .hand{display:inline;color:#000;font-size:1.1rem}
+  .shop-soon{border:0;background:none;padding:0;font-size:.95rem}
+  .shop-chips li{border:1px solid #000;background:none}
+  .shop-group{break-inside:auto}
+  .shop-band,.shop-intro{break-after:avoid}
+}
 
 .first-time{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.4em .6em;max-width:760px;margin:0 auto 28px;padding:.7em 1.2em;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--ink);font-weight:700;text-align:center}
 .first-time .ico{width:1.3em;height:1.3em;color:var(--red)}

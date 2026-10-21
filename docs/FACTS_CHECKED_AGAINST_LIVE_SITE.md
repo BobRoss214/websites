@@ -74,7 +74,7 @@ Ordered by how soon a visitor could be affected.
 
 ## Facts no hint covered
 
-- Tomatoes $4.50 per pound and basil $1 per stem (index.html at `data-t="t1fccf389"`). S13 said: "the search results don't contain the specific pricing you mentioned ($4.50 per pound for tomatoes) or information about basil stems."
+- Tomatoes $4.50 per pound and basil $1 per stem (index.html at `id="shop-upick"`). S13 said: "the search results don't contain the specific pricing you mentioned ($4.50 per pound for tomatoes) or information about basil stems."
 - The day-of number 704-207-6347 (index.html at `data-t="teae7efc9"`) and the e-mail pranee@wiseacresorganic.com.
 - The other pizza prices: Cheese $15, The Farmer Cathy $16, Pepperoni $16, Nitrate Free Pepperoni $17, The Dill Pickle $15 (S12 gave no price for Pepperoni or Dill Pickle).
 - The pizza weekend table (index.html at `data-release="2026-10-13"` and its neighbours), the barrel train price ($3 per child), and everything on the Bookeo and Square pages.
