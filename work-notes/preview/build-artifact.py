@@ -24,6 +24,23 @@ dicts = '\n'.join(read('lang/%s.js' % c) for c in ('es', 'hi', 'zh', 'vi'))
 # Preview-only extras. They are NOT in the real site: the signup form works in "demo" mode, and example
 # weekly spots + an example farm map are shown, each clearly labelled as an example.
 PREVIEW = r'''
+// The preview runs in a frame from another origin. There the browser ignores `rootMargin` for an observer that has no root, so the
+// menu highlight (it watches a band in the middle of the screen), the fade-ins and the farm-map pre-drawing all behave differently from
+// the real page: the highlight goes to whichever section edge came into view last (Tomatoes when you click Pizza). Naming the document
+// as the root brings the margins back (same result as on the real site). An old browser that cannot do it is left alone.
+(function () {
+  var Native = window.IntersectionObserver;
+  if (!Native || Native.__waRoot) return;
+  try { new Native(function () {}, { root: document }).disconnect(); } catch (e) { return; }
+  function Observer(callback, options) {
+    var o = {}, k;
+    if (options) for (k in options) o[k] = options[k];
+    if (!o.root) o.root = document;
+    return new Native(callback, o);
+  }
+  Observer.prototype = Native.prototype; Observer.__waRoot = true;
+  window.IntersectionObserver = Observer;
+})();
 (function () {
   var W = window.WISE_ACRES;
   function ymd(n) { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(Date.now() + n * 864e5)); }
