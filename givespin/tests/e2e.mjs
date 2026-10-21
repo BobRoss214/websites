@@ -1733,15 +1733,16 @@ if (section('13b. Live tables: the page, the lobby strip and a live room')) {
   check((await page.locator('.livestrip').innerText()).includes('bots'), 'the strip says the other players are bots');
   check(await page.locator('.side__link[data-route="live"]').isVisible(), 'the side nav has Live tables');
   await go(page, '#live');
-  check(await page.locator('#view-live').isVisible() && await page.locator('#view-live .lgame').count() === LIVE_GAMES.length, 'the Live tables page has a chip for each of the ' + LIVE_GAMES.length + ' live games', await page.locator('#view-live .lgame').count());
-  check(await page.locator('#view-live .lcards--tables .lcard').count() === 7 && await page.evaluate(() => GS.live.rooms().length) === LIVE_TABLES, 'and lists that game\'s seven tables (' + LIVE_TABLES + ' tables run in all)', await page.locator('#view-live .lcards--tables .lcard').count());
+  check(await page.locator('#view-live').isVisible() && await page.locator('#view-live .tile').count() === LIVE_GAMES.length, 'the Live tables page has a portrait game tile for each of the ' + LIVE_GAMES.length + ' live games', await page.locator('#view-live .tile').count());
+  check(await page.locator('#view-live .lgame, #view-live .lgames').count() === 0 && await page.evaluate(() => GS.live.rooms().length) === LIVE_TABLES, 'the row of small game chips is gone, and ' + LIVE_TABLES + ' tables run in all', await page.locator('#view-live .lgame, #view-live .lgames').count());
   check((await page.locator('#view-live .simbanner').innerText()).includes('bot'), 'a banner says the tables are simulated and the players are bots');
   check(await page.locator('.side__link[aria-current="page"]').getAttribute('data-route') === 'live', 'the nav marks Live tables as current');
   check((await page.locator('#view-live').innerText()).includes('whole pot goes to it, whether you backed it or not'), 'the page explains that the whole pot goes to the winner');
   await shot(page, '13-live-page');
   await a11y(page, 'live tables page');
-  await page.click('#view-live .lgame[data-lgame="derby"]');
-  check(await page.locator('#view-live .lcards--tables .lcard[data-game="derby"]').count() === 7, 'picking a game lists its seven tables');
+  await page.click('#view-live .tile[data-game="derby"]');
+  await onRoute(page, 'tables-derby');
+  check(await page.locator('#view-live .lcards--tables .lcard[data-game="derby"]').count() === 7, 'picking a game (its tile) lists its seven tables');
   await page.click('#view-live .lcard[data-room="derby10"]');
   await page.waitForSelector('#livepanel:not([hidden])');
   check(await page.evaluate(() => window.location.hash) === '#live-derby10', 'a table opens at #live-<game><size>');
@@ -1767,6 +1768,162 @@ if (section('13b. Live tables: the page, the lobby strip and a live room')) {
   check(await page.locator('.bet:not(#livepanel)').isVisible() && !(await page.locator('#livepanel').isVisible()), 'back in solo mode the gift panel returns');
   check(await page.locator('#size-seg').isVisible(), 'and so does the board size control');
   await page.close();
+}
+
+/* ======================================================================== */
+if (section('13b. Live tables, second part: the lobby\'s portrait tiles on the Live tables page, and a page of table sizes for each game')) {
+  const problems0 = problems.length;
+  const page = await newPage();
+  await openApp(page, '#live');
+  // everything said to a screen reader is written down, so that what each page announces can be read afterwards
+  await page.evaluate(() => {
+    window.__said = [];
+    new MutationObserver(() => { window.__said.push(document.querySelector('#sr-live').textContent); }).observe(document.querySelector('#sr-live'), { childList: true, characterData: true, subtree: true });
+  });
+  const said = (text) => page.waitForFunction((t) => window.__said.some((x) => x.includes(t)), text, { timeout: 5000 }).then(() => true, () => false);
+  const navCurrent = () => page.evaluate(() => { const a = document.querySelector('.side__link[aria-current="page"]'); return a ? a.getAttribute('data-route') : '(no link is marked current)'; });   // (a missing mark is a failed check, not a 30 s wait)
+  const headings = () => page.evaluate(() => Array.from(document.querySelectorAll('#view-live h1, #view-live h2, #view-live h3, #view-live h4')).map((h) => Number(h.tagName.charAt(1))));
+  const orderOk = (levels) => levels.length > 0 && levels[0] === 1 && levels.filter((l) => l === 1).length === 1 && levels.every((l, i) => i === 0 || l - levels[i - 1] <= 1);   // one h1, and no level is skipped going down the page
+
+  /* ---- the tiles: one for every game that has live tables, with its picture, its name and a line saying what tables it has ---- */
+  const exp = await page.evaluate(() => GS.ui.game.ORDER.filter((id) => GS.live.tables(id).length > 0).map((id) => { const t = GS.live.tables(id); return { id, name: GS.games[id].name, n: t.length, lo: t[0].size, hi: t[t.length - 1].size, unit: t[0].unit(2) }; }));
+  const tiles = await page.$$eval('#view-live .tile', (els) => els.map((e) => ({
+    game: e.getAttribute('data-game'), tag: e.tagName, href: e.getAttribute('href'), art: !!e.querySelector('.tile__art svg'), label: e.getAttribute('aria-label') || '', hover: !!e.querySelector('.tile__play'),
+    name: (e.querySelector('.tile__meta .tile__name') || {}).textContent || '', by: (e.querySelector('.tile__meta .tile__by') || {}).textContent || '',
+    live: (e.querySelector('.tile__tags .tile__live') || {}).textContent || '', badge: (e.querySelector('.tile__tags .tile__badge') || {}).textContent || ''
+  })));
+  check(exp.length === LIVE_GAMES.length && JSON.stringify(tiles.map((t) => t.game)) === JSON.stringify(exp.map((e) => e.id)), 'one tile for every game that has live tables, in the lobby\'s order', { tiles: tiles.map((t) => t.game), expected: exp.map((e) => e.id) });
+  const wrong = [];
+  tiles.forEach((t, i) => {
+    const e = exp[i];
+    if (!e) { wrong.push(t.game + ': a tile for a game with no live tables'); return; }
+    if (t.tag !== 'A' || t.href !== '#tables-' + e.id) { wrong.push(e.id + ': not a link to #tables-' + e.id + ' (' + t.tag + ' ' + t.href + ')'); }
+    if (!t.art) { wrong.push(e.id + ': no picture'); }
+    if (t.name !== e.name) { wrong.push(e.id + ': the name is "' + t.name + '"'); }
+    if (t.by !== e.lo + ' to ' + e.hi.toLocaleString('en-US') + ' ' + e.unit) { wrong.push(e.id + ': the line under the name is "' + t.by + '"'); }
+    if (t.live !== 'Live') { wrong.push(e.id + ': the Live marker says "' + t.live + '"'); }
+    if (t.badge !== e.n + ' tables') { wrong.push(e.id + ': the badge says "' + t.badge + '"'); }
+    if (!t.hover || t.label.indexOf(e.name + ',') !== 0) { wrong.push(e.id + ': no hover pill, or a spoken name that does not start with the game: "' + t.label + '"'); }
+  });
+  check(wrong.length === 0, 'every tile is a link with its picture, the game\'s name, a Live marker and a line with its range of tables ("5 to 500 bins")', wrong);
+  check(await page.locator('#view-live .lgame, #view-live .lgames, #view-live .lobbybox').count() === 0, 'no chip row is left on the page');
+  check(orderOk(await headings()), 'the page\'s headings are in order: one h1 and no level skipped', await headings());
+  // the text of a tile is never cut off or pushed out of it, on the big screen and on the phone sizes (it may wrap onto a second line)
+  const tileFit = (p) => p.evaluate(() => Array.from(document.querySelectorAll('#view-live .tile')).map((t) => {
+    const r = t.getBoundingClientRect();
+    const bad = [];
+    t.querySelectorAll('.tile__name, .tile__by, .tile__badge, .tile__live').forEach((e) => {
+      const b = e.getBoundingClientRect();
+      if (b.left < r.left - 0.5 || b.right > r.right + 0.5 || b.top < r.top - 0.5 || b.bottom > r.bottom + 0.5 || e.scrollWidth > e.clientWidth + 1) { bad.push(e.className.split(' ')[0]); }
+    });
+    return bad.length ? t.getAttribute('data-game') + ': ' + bad.join(', ') : '';
+  }).filter(Boolean));
+  const fit = await tileFit(page);
+  check(fit.length === 0, 'at 1440 px no tile text is cut off or pushed out of its tile', fit);
+
+  /* ---- the same look and size as the lobby's tiles ---- */
+  const box = (p, sel) => p.evaluate((s) => { const r = document.querySelector(s).getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }, sel);
+  const live1 = await box(page, '#view-live .tile[data-game="wheel"]');
+  await go(page, '#lobby');
+  const lobby1 = await box(page, '#view-lobby .tile[data-game="wheel"]');
+  check(Math.abs(live1[0] - lobby1[0]) <= 1 && Math.abs(live1[1] - lobby1[1]) <= 1 && lobby1[1] > lobby1[0], 'a live tile is as big as a lobby tile, portrait (' + live1.join('x') + ' and ' + lobby1.join('x') + ')');
+  const lobbyTiles = await page.evaluate(() => ({ all: document.querySelectorAll('#view-lobby .tile').length, pills: Array.from(document.querySelectorAll('#view-lobby .tile__live')).map((e) => e.textContent), play: (document.querySelector('#view-lobby .tile .tile__play') || {}).textContent }));
+  check(lobbyTiles.all === GAMES.length + 1 && lobbyTiles.pills.length === LIVE_GAMES.length && lobbyTiles.pills.every((t) => t === 'Live table') && lobbyTiles.play === 'Play', 'the lobby\'s own tiles are as they were (' + lobbyTiles.all + ' tiles, "Live table" on the ' + LIVE_GAMES.length + ' live games, "Play" on hover)', lobbyTiles);
+  check(await page.locator('.livestrip .lcard').count() === 4, 'and its "live now" strip still shows four tables');
+  await page.click('.livestrip .linkbtn');
+  await onRoute(page, 'live');
+  check(await page.locator('#view-live .tile').count() === LIVE_GAMES.length, 'whose "All tables" link opens the tiles');
+
+  /* ---- keyboard: tab to a tile, see the focus ring and the hover pill, press Enter ---- */
+  await page.focus('#view-live .quicklinks a:last-child');
+  await page.keyboard.press('Tab');
+  // (the hover pill fades in over a fifth of a second: wait until it is fully there rather than for a fixed time, a busy machine can be slow to draw the frames)
+  await page.waitForFunction(() => { const a = document.activeElement; const p = a && a.querySelector ? a.querySelector('.tile__play') : null; return !!p && Number(getComputedStyle(p).opacity) === 1; }, null, { timeout: 4000 }).catch(() => {});
+  const foc = await page.evaluate(() => { const a = document.activeElement; const cs = getComputedStyle(a); const play = a.querySelector('.tile__play'); return { game: a.getAttribute('data-game'), ring: cs.outlineStyle + ' ' + cs.outlineWidth, pill: play ? Number(getComputedStyle(play).opacity) : -1 }; });
+  check(foc.game === 'wheel' && foc.ring.indexOf('solid') === 0 && parseFloat(foc.ring.split(' ')[1]) >= 2 && foc.pill === 1, 'Tab reaches the first tile, which shows a visible focus ring and its hover pill', foc);
+  await page.keyboard.press('Enter');
+  check(await onRoute(page, 'tables-wheel') && await page.evaluate(() => window.location.hash) === '#tables-wheel', 'Enter on a focused tile opens that game\'s page (#tables-wheel)');
+  check(await said('Live Lucky Wheel: choose your table'), 'and the screen reader is told which page it is on', await page.evaluate(() => window.__said));
+
+  /* ---- a game's page of table sizes ---- */
+  const gp = await page.evaluate(() => ({
+    h1: (document.querySelector('#view-live h1') || {}).textContent, title: document.title, tiles: document.querySelectorAll('#view-live .tile').length,
+    sizes: Array.from(document.querySelectorAll('#view-live [data-role="tables"] .lcard__size b')).map((x) => x.textContent.replace(/,/g, '')),
+    cards: Array.from(document.querySelectorAll('#view-live [data-role="tables"] .lcard')).map((a) => a.getAttribute('href')),
+    crumb: Array.from(document.querySelectorAll('#view-live .crumbs a')).map((a) => a.textContent + '>' + a.getAttribute('href')), here: (document.querySelector('#view-live .crumbs [aria-current="page"]') || {}).textContent,
+    back: Array.from(document.querySelectorAll('#view-live a.btn')).map((a) => a.textContent.trim() + '>' + a.getAttribute('href')), banner: (document.querySelector('#view-live .simbanner') || {}).textContent || '',
+    note: (document.querySelector('#view-live .tabnote--tables') || {}).textContent || ''
+  }));
+  check(gp.h1 === 'Live Lucky Wheel: choose your table' && gp.title === 'Live Lucky Wheel tables | GiveSpin', 'the page says "Live Lucky Wheel: choose your table" and the browser title says so too', [gp.h1, gp.title]);
+  check(JSON.stringify(gp.sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '500']) && gp.cards.join() === ['5', '10', '25', '50', '100', '200', '500'].map((n) => '#live-wheel' + n).join() && gp.tiles === 0, 'it lists the seven tables (5 to 500), each a link to its live table, and no game tiles', gp);
+  check(gp.crumb.join() === 'Live tables>#live' && gp.here === 'Lucky Wheel' && gp.back.join().indexOf('All live games>#live') >= 0, 'there is a way back: a breadcrumb and an "All live games" link, both to the tiles', gp);
+  check(/simulated/i.test(gp.banner) && /bot/.test(gp.banner) && /its own pot and its own simulated players/.test(gp.note), 'the simulated-tables notice and the explanatory note are there', [gp.banner.slice(0, 60), gp.note.slice(0, 80)]);
+  check(await navCurrent() === 'live', 'the side nav still marks Live tables as current');
+  check(orderOk(await headings()), 'headings are in order on the page of table sizes', await headings());
+  const cardsLive = await page.evaluate(() => Array.from(document.querySelectorAll('#view-live [data-role="tables"] .lcard')).every((c) => /Betting open|Bets closed|Playing|Result/.test(c.querySelector('[data-f="phase"]').textContent) && /pot/.test(c.querySelector('[data-f="pot"]').textContent) && /players/.test(c.querySelector('[data-f="players"]').textContent)));
+  check(cardsLive, 'every card shows its live phase, pot and players');
+
+  /* ---- Back returns to the tiles; a size opens the live table; Back again returns to the sizes ---- */
+  await page.goBack();
+  check(await onRoute(page, 'live') && await page.locator('#view-live .tile').count() === LIVE_GAMES.length && await page.title() === 'Live tables | GiveSpin', 'the browser Back button returns to the tiles');
+  check(await said('Live tables. Choose a game.') && await navCurrent() === 'live', 'which are announced, and the nav still marks Live tables');
+  await page.click('#view-live .tile[data-game="plinko"]');
+  check(await onRoute(page, 'tables-plinko') && await page.title() === 'Live Plinko tables | GiveSpin' && (await page.evaluate(() => (document.querySelector('#view-live h1') || {}).textContent || '')).includes('Live Plinko: choose your table'), 'a click on the Plinko tile opens Plinko\'s own page');
+  await page.click('#view-live .lcard[data-room="plinko25"]');
+  check(await onRoute(page, 'live-plinko25'), 'a click on a size opens that live table (#live-plinko25)');
+  await page.waitForSelector('#livepanel:not([hidden]) [data-role="gates"]');
+  check((await titleWith(page, '25 bins')).includes('25 bins') && await navCurrent() === 'live', 'the table opens (25 bins) and the nav still marks Live tables');
+  await page.goBack();
+  check(await onRoute(page, 'tables-plinko') && await page.locator('#view-live .lcards--tables .lcard').count() === 7, 'Back from the table returns to Plinko\'s sizes');
+  await page.click('#view-live a.lv-back');
+  check(await onRoute(page, 'live') && await page.locator('#view-live .tile').count() === LIVE_GAMES.length, 'the "All live games" link returns to the tiles');
+  await page.goBack();
+  check(await onRoute(page, 'tables-plinko') && (await page.evaluate(() => (document.querySelector('#view-live .crumbs a') || {}).textContent)) === 'Live tables', 'and Back from the tiles comes back to the sizes again');
+  await page.click('#view-live .crumbs a');
+  check(await onRoute(page, 'live') && await page.locator('#view-live .tile').count() === LIVE_GAMES.length, 'the breadcrumb returns to the tiles too');
+
+  /* ---- an address for a game that has no live tables goes back to the tiles ---- */
+  const badIds = ['#tables-nothing', '#tables-slots', '#tables-', '#tables-Plinko', '#tables-plinko25'];
+  const strays = [];
+  for (const bad of badIds) {
+    await go(page, bad);
+    const r = await page.evaluate(() => ({ route: GS.app.state.route, hash: window.location.hash, tiles: document.querySelectorAll('#view-live .tile').length, shown: !document.querySelector('#view-live').hidden, lobby: !document.querySelector('#view-lobby').hidden }));
+    if (!(r.route === 'live' && r.hash === '#live' && r.tiles === LIVE_GAMES.length && r.shown && !r.lobby)) { strays.push(bad + ' -> ' + JSON.stringify(r)); }
+  }
+  check(strays.length === 0, 'an unknown game (' + badIds.join(', ') + ') shows the tiles and puts the address right (#live)', strays);
+  await page.close();
+
+  /* ---- a phone: two tiles to a row, the same size as the lobby's, and nothing scrolls sideways (390 px, then 320 px) ---- */
+  const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+  await openApp(ph, '#lobby');
+  const lobbyPhone = await box(ph, '#view-lobby .tile[data-game="wheel"]');
+  await go(ph, '#live');
+  const grid = await ph.$$eval('#view-live .tile', (els) => els.map((e) => { const r = e.getBoundingClientRect(); return { x: Math.round(r.left), y: Math.round(r.top + window.scrollY), w: Math.round(r.width), h: Math.round(r.height) }; }));
+  check(grid.length === LIVE_GAMES.length && grid[0].y === grid[1].y && grid[1].x > grid[0].x && grid[2].y > grid[0].y && grid[2].x === grid[0].x && grid[3].y === grid[2].y, 'at 390 px the tiles are two to a row', grid.slice(0, 4));
+  check(grid.every((g) => g.w === grid[0].w && g.h === grid[0].h) && Math.abs(grid[0].w - lobbyPhone[0]) <= 1 && Math.abs(grid[0].h - lobbyPhone[1]) <= 1, 'and as big as the lobby\'s tiles on a phone (' + grid[0].w + 'x' + grid[0].h + ' and ' + lobbyPhone.join('x') + ')', [grid[0], lobbyPhone]);
+  check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the tiles page does not scroll sideways at 390 px');
+  const fitPhone = await tileFit(ph);
+  check(fitPhone.length === 0, 'at 390 px no tile text is cut off or pushed out of its tile', fitPhone);
+  await go(ph, '#tables-standing');
+  check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth) && await ph.evaluate(() => Array.from(document.querySelectorAll('#view-live [data-role="tables"] .lcard')).every((c) => c.getBoundingClientRect().right <= window.innerWidth + 0.5)), 'the page of table sizes fits at 390 px, every card inside the screen');
+  await ph.setViewportSize({ width: 320, height: 640 });
+  await ph.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  const narrow = [];
+  for (const r of ['#live', '#tables-standing', '#tables-plinko', '#tables-balloon']) {
+    await go(ph, r);
+    await ph.evaluate(() => new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res))));
+    const w = await ph.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
+    if (w.sw > w.cw) { narrow.push(r + ' ' + w.sw + '>' + w.cw); }
+    if (r === '#live') {
+      const g320 = await ph.$$eval('#view-live .tile', (els) => els.map((e) => Math.round(e.getBoundingClientRect().top + window.scrollY)));
+      if (!(g320[0] === g320[1] && g320[2] > g320[0])) { narrow.push('#live: not two tiles to a row at 320 px ' + JSON.stringify(g320.slice(0, 3))); }
+      const f320 = await tileFit(ph);
+      if (f320.length) { narrow.push('#live at 320 px: ' + f320.join('; ')); }
+    }
+  }
+  check(narrow.length === 0, 'nothing scrolls sideways at 320 px (the tiles, and three games\' pages of table sizes), two tiles still to a row, no tile text cut off', narrow);
+  await ph.close();
+  check(problems.length === problems0, 'section 13b (tiles): no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
 }
 
 /* ======================================================================== */
@@ -2556,6 +2713,8 @@ if (section('13s. Marble Run keeps its promises: the drawn marble crosses first,
 if (section('13l. Live Plinko tables: seven sizes, backed charities plus catalog fill')) {
   const page = await newPage();
   await openApp(page, '#live');
+  await page.click('#view-live .tile[data-game="plinko"]');
+  await onRoute(page, 'tables-plinko');
   const sizes = await page.$$eval('[data-role="tables"] .lcard__size b', (n) => n.map((x) => x.textContent.replace(/,/g, '')));
   check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '500']), 'the table lobby lists seven sizes, smallest first', sizes);
   check((await page.locator('#view-live #lv-t').innerText()).includes('Plinko') && (await page.locator('#view-live #lv-t').innerText()).includes('choose your table'), 'under a "choose your table" heading');
@@ -2603,7 +2762,9 @@ if (section('13o. Every live game is a lobby of seven tables')) {
   await openApp(page, '#live');
   const UNIT = { plinko: 'bins', wheel: 'slices', drop: 'cards', roulette: 'pockets', derby: 'runners', duck: 'ducks', marble: 'marbles', balloon: 'balloons', standing: 'tiles', lotto: 'balls' };
   for (const gid of LIVE_GAMES) {
-    await page.click('#view-live .lgame[data-lgame="' + gid + '"]');
+    await go(page, '#live');
+    await page.click('#view-live .tile[data-game="' + gid + '"]');
+    await onRoute(page, 'tables-' + gid);
     const sizes = await page.$$eval('#view-live [data-role="tables"] .lcard__size b', (n) => n.map((x) => x.textContent.replace(/,/g, '')));
     const unit = (await page.locator('#view-live [data-role="tables"] .lcard__size small').nth(1).innerText()).toLowerCase();   // shown in capitals by CSS
     check(JSON.stringify(sizes) === JSON.stringify(['5', '10', '25', '50', '100', '200', '500']) && unit === UNIT[gid], gid + ': seven table sizes, counted in ' + UNIT[gid], [sizes, unit]);
@@ -2642,6 +2803,8 @@ if (section('13o. Every live game is a lobby of seven tables')) {
   const ph = await newPage({ viewport: { width: 390, height: 800 }, mobile: true });
   await openApp(ph, '#live');
   check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'the live lobby fits a phone without sideways scrolling');
+  await go(ph, '#tables-wheel');
+  check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'and so does a game\'s page of table sizes');
   await ph.close();
 }
 
@@ -2756,13 +2919,13 @@ if (section('13q. Audit regressions: crypto wording, tile badges, small screens,
   const sweep = await newPage();
   await openApp(sweep);
   const bad = {};
-  for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#leagues', '#crews', '#cards', '#giving', '#club', '#fair', '#help']) {
+  for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#tables-plinko', '#tables-standing', '#leagues', '#crews', '#cards', '#giving', '#club', '#fair', '#help']) {
     await go(sweep, r);
     if (r === '#help') { await sweep.evaluate(() => document.querySelectorAll('#view-help details').forEach((d) => { d.open = true; })); }
     const w = badWords(await prose(sweep, '.view:not([hidden])'));
     if (w.length) { bad['page ' + r] = w; }
   }
-  check(Object.keys(bad).length === 0, 'crypto wording: none on any page a visitor can open (lobby, charities, live, leagues, crews, cards, giving, club, fair play, help)', bad);
+  check(Object.keys(bad).length === 0, 'crypto wording: none on any page a visitor can open (lobby, charities, live and a live game\'s table sizes, leagues, crews, cards, giving, club, fair play, help)', bad);
   const gameIds = await sweep.evaluate(() => window.GS.ui.game.ORDER.slice());
   const badAbout = {};
   for (const id of gameIds) {
@@ -3544,6 +3707,8 @@ if (section('14. Real-donation mode (redirect to checkout) never handles money')
   check(!(await page.locator('.side__link[data-route="live"]').isVisible()) && await page.evaluate(() => !GS.live.enabled() && GS.live.ids().length === 0), 'live tables are switched off (a shared pot needs a server and real money is never handled here)');
   await go(page, '#live-derby');
   check(await page.locator('#view-lobby').isVisible(), 'a live table link falls back to the lobby');
+  await go(page, '#tables-plinko');
+  check(await page.locator('#view-lobby').isVisible() && !(await page.locator('#view-live').isVisible()), 'and so does a game\'s page of live table sizes');
   await go(page, '#game-wheel');
   await page.click('#btn-play');
   await waitReceipt(page);
@@ -3577,7 +3742,7 @@ if (section('14. Real-donation mode (redirect to checkout) never handles money')
 if (section('15. Phones')) {
   const page = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
   await openApp(page);
-  const routes = ['#lobby', '#lobby-table', ...GAMES.map((g) => '#game-' + g), '#live', ...LIVE_GAMES.map((g) => '#live-' + g), '#leagues', '#crews', '#cards', '#giving', '#charities', '#club', '#fair', '#help'];
+  const routes = ['#lobby', '#lobby-table', ...GAMES.map((g) => '#game-' + g), '#live', ...LIVE_GAMES.map((g) => '#tables-' + g), ...LIVE_GAMES.map((g) => '#live-' + g), '#leagues', '#crews', '#cards', '#giving', '#charities', '#club', '#fair', '#help'];
   const wide = [];
   for (const r of routes) {
     await go(page, r);
@@ -3616,7 +3781,7 @@ if (section('16. Accessibility scan (needs AXE) and page health')) {
     const page = await newPage();
     await openApp(page);
     for (const g of GAMES) { await go(page, '#game-' + g); await page.waitForTimeout(500); await a11y(page, 'game: ' + g); }
-    for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#leagues', '#crews', '#cards']) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
+    for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#tables-plinko', '#leagues', '#crews', '#cards']) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
     for (const g of LIVE_GAMES) { await go(page, '#live-' + g); await page.waitForTimeout(500); await liveSettled(page, g); await a11y(page, 'live room: ' + g); }
     // the rooms above are scanned while their betting is open; one table is also stopped on its settled result card (the other screen of a live table)
     await go(page, '#live-derby10');
@@ -5862,7 +6027,8 @@ if (section('13zq. Live Marble Run: a track per round, chosen by the table and s
   const about = await page.evaluate(() => document.querySelector('#tabp').innerText);
   check(/Track this round: /.test(about) && /never changes who wins/.test(about), 'the How it works tab says which track this round uses and that it never changes who wins', about.slice(0, 200));
   await go(page, '#live');
-  await page.click('.lgame[data-lgame="marble"]').catch(() => {});
+  await page.click('#view-live .tile[data-game="marble"]').catch(() => {});
+  await onRoute(page, 'tables-marble');
   // (the cards are brought up to date once a second, so a table that has just opened a round can be a second behind: wait for a moment when all are current)
   const cardsOk = await page.waitForFunction(() => {
     const els = Array.from(document.querySelectorAll('[data-role="tables"] [data-room]'));

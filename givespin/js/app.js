@@ -43,6 +43,8 @@
     if ((m = /^game-([a-z]+)$/.exec(h)) && ui.game.ORDER.indexOf(m[1]) >= 0) { return { view: 'game', id: m[1], route: h }; }
     if (GS.live.enabled()) {
       if (h === 'live') { return { view: 'live', route: 'live' }; }
+      // a game's own page of table sizes (#tables-plinko); a game that has none goes back to the tiles, and the address is put right (see showView)
+      if ((m = /^tables-(.*)$/.exec(h))) { return ui.live.games().indexOf(m[1]) >= 0 ? { view: 'live', game: m[1], route: h } : { view: 'live', route: 'live', fix: true }; }
       if ((m = /^live-([a-z]+\d*)$/.exec(h)) && GS.live.supports(m[1])) { var tb = GS.live.room(m[1]); return { view: 'game', id: tb.gid, live: true, table: tb.id, route: h }; }
     }
     if ((m = /^charity-([a-z0-9-]+)$/.exec(h))) { return { view: 'charity', id: m[1], route: h }; }
@@ -66,13 +68,17 @@
     var title = 'GiveSpin | Play to give';
     if (view === 'lobby') { ui.lobby.render(r.cat); }
     else if (view === 'game') { ui.game.enter(r.id, { live: !!r.live, table: r.table }); title = null; }
-    else if (view === 'live') { ui.live.renderPage(); title = 'Live tables | GiveSpin'; }
+    else if (view === 'live') {
+      ui.live.renderPage(r.game);
+      title = (r.game ? 'Live ' + GS.games[r.game].name + ' tables' : 'Live tables') + ' | GiveSpin';
+      if (r.fix) { setHash(r.route); }
+    }
     else if (view === 'charities') { ui.charity.renderDirectory($('#view-charities')); title = TITLES.charities + ' | GiveSpin'; }
     else if (ui.pages[view]) { ui.pages[view](); title = TITLES[view] + ' | GiveSpin'; }
     if (title) { document.title = title; }
 
-    // side nav: games count as "Lobby"
-    var activeRoute = view === 'game' ? (r.live ? 'live' : 'lobby') : (view === 'help' ? 'help' : r.route);
+    // side nav: games count as "Lobby", and both Live tables pages (the tiles and a game's table sizes) as "Live tables"
+    var activeRoute = view === 'game' ? (r.live ? 'live' : 'lobby') : (view === 'help' || view === 'live' ? view : r.route);
     Array.prototype.forEach.call(document.querySelectorAll('.side__link'), function (a) {
       if (a.getAttribute('data-route') === activeRoute) { a.setAttribute('aria-current', 'page'); } else { a.removeAttribute('aria-current'); }
     });

@@ -124,70 +124,47 @@
   }
 
   /**
-   * Every live game has its own lobby of tables: pick a game, then how big the board is (5, 10, 25 ... 500). A chip row
-   * switches between the games; the lobby below it lists that game's tables.
+   * The Live tables page is two screens, each with an address of its own, so the Back button and a shared link both work:
+   *   #live            the portrait tiles of the lobby, one for every game that has live tables;
+   *   #tables-<game>   that game's own page of table sizes (5, 10, 25 ... 500), whose cards open the live table itself (#live-<table>).
    */
-  var lobbyGame = '';
-  function lobbyGames() {
+  var pageGame = '';         // what the page is drawn as right now: a game id for that game's table sizes, '' for the tiles
+
+  /** The games that have a lobby of tables, in the lobby's order. */
+  function liveGames() {
     var gids = [];
     GS.live.rooms().forEach(function (r) { if (r.tab && gids.indexOf(r.gid) < 0) { gids.push(r.gid); } });
     return gids;
   }
 
-  function lobbyChips() {
-    return lobbyGames().map(function (gid) {
-      var g = GS.games[gid];
-      var on = gid === lobbyGame;
-      return '<button type="button" class="lgame' + (on ? ' is-on' : '') + '" data-lgame="' + gid + '" aria-pressed="' + on + '">' + ui.icon(g.icon) + '<span>' + esc(g.name) + '</span></button>';
-    }).join('');
+  /** The range of a game's tables in its own unit: "5 to 500 bins". */
+  function rangeText(tabs) {
+    return tabs[0].size.toLocaleString('en-US') + ' to ' + tabs[tabs.length - 1].size.toLocaleString('en-US') + ' ' + tabs[0].unit(2);
   }
 
-  function lobbyTables() {
-    var gid = lobbyGame;
+  /** A game's tile on the Live tables page: the lobby's tile (js/ui/lobby.js), with the number of tables as its badge and the range of sizes under the name. */
+  function gameTile(gid) {
     var g = GS.games[gid];
     var tabs = GS.live.tables(gid);
-    if (!g || !tabs.length) { return ''; }
-    var u = tabs[0].unit(2);
-    return '<h2 class="sect__t" id="lv-t">Live ' + esc(g.name) + ': choose your table</h2>' +
-      '<p class="tabnote tabnote--tables">' + tabs.length + ' tables, from ' + tabs[0].size + ' ' + esc(u) + ' to ' + tabs[tabs.length - 1].size.toLocaleString('en-US') + '. Each one has its own pot and its own simulated players. ' +
-      'The charities players back go on the board, and the rest of the ' + esc(u) + ' are filled in at random from our catalog so the board is always full; only the backed charities can win. ' +
-      'Bigger tables have more gates and more players' + (tabs[tabs.length - 1].tab.play > 20000 ? ', and the biggest ones take about ' + Math.round(tabs[tabs.length - 1].tab.play / 1000) + ' seconds to play out' : '') + '.</p>' +
-      '<div class="lcards lcards--tables" data-role="tables">' + tabs.map(function (r) { return cardHTML(r, false); }).join('') + '</div>';
-  }
-
-  function tableSections() {
-    if (!lobbyGame || lobbyGames().indexOf(lobbyGame) < 0) { lobbyGame = lobbyGames().indexOf('plinko') >= 0 ? 'plinko' : (lobbyGames()[0] || ''); }
-    return '<section class="sect" aria-labelledby="lv-games-t"><div class="sect__head"><h2 class="sect__t" id="lv-games-t">Choose a live game</h2></div>' +
-      '<div class="lgames" data-role="lgames" role="group" aria-label="Live games">' + lobbyChips() + '</div>' +
-      '<div class="lobbybox" data-role="lobby">' + lobbyTables() + '</div></section>';
-  }
-
-  /** Switches the lobby to another game. The chips stay in place (so keyboard focus stays on the one you pressed); the cards are updated every second, so they are not a live region: one short announcement says what changed. */
-  function chooseLobby(gid) {
-    if (!gid || gid === lobbyGame) { return; }
-    lobbyGame = gid;
-    var root = $('#view-live');
-    Array.prototype.forEach.call(root.querySelectorAll('.lgame'), function (b) {
-      var on = b.getAttribute('data-lgame') === gid;
-      b.classList.toggle('is-on', on);
-      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    var count = tabs.length + ' tables';
+    var range = rangeText(tabs);
+    return ui.lobby.tileHTML({
+      href: '#tables-' + gid, id: gid, label: g.name + ', ' + count + ', live, ' + range, art: GS.art[gid]('lv'), badge: count,
+      live: 'Live', liveTip: 'Live tables with simulated players', icon: 'layout-grid', play: 'Tables', name: g.name, by: range
     });
-    $('[data-role="lobby"]', root).innerHTML = lobbyTables();
-    updateCards(root);
-    var g = GS.games[gid];
-    ui.announce('Showing the ' + GS.live.tables(gid).length + ' ' + (g ? g.name : '') + ' tables.');
   }
 
-  function buildPage() {
-    var root = $('#view-live');
-    root.innerHTML =
-      '<header class="page-head"><div><h1>Live tables <span class="livepill"><i aria-hidden="true"></i>Live</span></h1>' +
+  /** The page of every live game: a tile for each. */
+  function tilesPage() {
+    return '<header class="page-head"><div><h1>Live tables <span class="livepill"><i aria-hidden="true"></i>Live</span></h1>' +
         '<p>Pick a charity, put up a stake (default $20) and watch the whole table fill up. Every dollar is a ticket, so a charity’s share of the pot is its chance of winning. ' +
         'When the table locks, one charity is drawn and <strong>the whole pot goes to it, whether you backed it or not</strong>.</p></div></header>' +
       banner() +
+      '<section class="sect" aria-labelledby="lv-games-t"><div class="sect__head"><h2 class="sect__t" id="lv-games-t">Choose a live game</h2></div>' +
+        '<p class="tabnote tabnote--tables">Pick a game, then how big a board you want. Every table has its own pot and its own simulated players.</p>' +
+        '<div class="tiles" data-role="livetiles">' + liveGames().map(gameTile).join('') + '</div></section>' +
       '<div class="evbar" data-role="evbar"></div>' +
       '<nav class="quicklinks" aria-label="More ways to play"><a class="btn btn--sm" href="#leagues">' + ui.icon('trophy') + 'Leagues and the Charity Cup</a><a class="btn btn--sm" href="#crews">' + ui.icon('users') + 'Crews</a><a class="btn btn--sm" href="#cards">' + ui.icon('layers') + 'Your cards</a></nav>' +
-      tableSections() +
       '<section class="sect" aria-labelledby="lv-recent"><div class="sect__head"><h2 class="sect__t" id="lv-recent">Pots that just went out</h2></div><div data-role="recent"></div></section>' +
       '<section class="sect panel" aria-labelledby="lv-how"><h2 class="sect__t" id="lv-how">How a live table works</h2>' +
         '<ol class="steps3 steps3--live">' +
@@ -195,10 +172,28 @@
           '<li><b>2. Watch the odds move</b><span>The board shows who has backed what and each charity’s chance. Change your mind or take your bet back until the table locks.</span></li>' +
           '<li><b>3. One charity takes the pot</b><span>The draw is fair and checkable. The race, wheel or drop plays out, and the winner gets every dollar in the pot. It is as if your charity won, even if you backed another one.</span></li>' +
         '</ol></section>';
-    root.addEventListener('click', function (e) {
-      var b = e.target.closest ? e.target.closest('[data-lgame]') : null;
-      if (b) { chooseLobby(b.getAttribute('data-lgame')); }
-    });
+  }
+
+  /** One game's page of table sizes: the seven tables (5, 10, 25 ... 500), each a card that opens it. */
+  function gamePage(gid) {
+    var g = GS.games[gid];
+    var tabs = GS.live.tables(gid);
+    var big = tabs[tabs.length - 1];
+    var u = tabs[0].unit(2);
+    return '<nav class="crumbs" aria-label="Breadcrumb"><a href="#live">Live tables</a><span aria-hidden="true">' + ui.icon('chevron-right') + '</span><span aria-current="page">' + esc(g.name) + '</span></nav>' +
+      '<header class="page-head"><div><h1 id="lv-t">Live ' + esc(g.name) + ': choose your table</h1>' +
+        '<p class="tabnote tabnote--tables">' + tabs.length + ' tables, from ' + tabs[0].size + ' ' + esc(u) + ' to ' + big.size.toLocaleString('en-US') + '. Each one has its own pot and its own simulated players. ' +
+        'The charities players back go on the board, and the rest of the ' + esc(u) + ' are filled in at random from our catalog so the board is always full; only the backed charities can win. ' +
+        'Bigger tables have more gates and more players' + (big.tab.play > 20000 ? ', and the biggest ones take about ' + Math.round(big.tab.play / 1000) + ' seconds to play out' : '') + '.</p>' +
+        '<a class="btn btn--sm lv-back" href="#live">' + ui.icon('arrow-left') + 'All live games</a></div></header>' +
+      banner() +
+      '<section aria-labelledby="lv-t"><div class="lcards lcards--tables" data-role="tables">' + tabs.map(function (r) { return cardHTML(r, false); }).join('') + '</div></section>';
+  }
+
+  /** Draws the page as the tiles ('') or as one game's table sizes. Nothing on it takes a click handler: the tiles and the cards are links. */
+  function buildPage(gid) {
+    $('#view-live').innerHTML = gid ? gamePage(gid) : tilesPage();
+    pageGame = gid;
     pageBuilt = true;
   }
 
@@ -242,12 +237,18 @@
     if (box.getAttribute('data-sig') !== html) { box.setAttribute('data-sig', html); box.innerHTML = html; }
   }
 
-  function renderPage() {
+  /**
+   * Shows the page: the tiles of every live game, or (with a game id) that game's table sizes. A game that has no tables of sizes gets the tiles.
+   * The page is drawn again only when it changes from one to the other, then its cards are brought up to date (and again every second, see slowTick).
+   */
+  function renderPage(gid) {
     if (!GS.live.enabled()) { return; }
-    if (!pageBuilt) { buildPage(); }
+    var game = gid && liveGames().indexOf(gid) >= 0 ? gid : '';
+    if (!pageBuilt || pageGame !== game) { buildPage(game); }
     updateCards($('#view-live'));
     renderRecent();
     renderEventBar();
+    ui.announce(game ? 'Live ' + GS.games[game].name + ': choose your table. ' + GS.live.tables(game).length + ' tables.' : 'Live tables. Choose a game.');
   }
 
   /* ------------------------------------------------------------ lobby strip */
@@ -1066,7 +1067,7 @@
   }
 
   ui.live = {
-    init: init, renderPage: renderPage, mountStrip: mountStrip, attach: attach, detach: detach, renderTab: renderTab,
+    init: init, renderPage: renderPage, games: liveGames, mountStrip: mountStrip, attach: attach, detach: detach, renderTab: renderTab,
     gameBusy: function (id) { return !!animating[id]; },
     current: function () { return cur; },
     _pick: function (id) { pick = id; if (cur) { renderOdds(); renderJoin(); } }

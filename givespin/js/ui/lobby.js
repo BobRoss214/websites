@@ -31,22 +31,36 @@
     return t.replace(/^((?:Reel )?up to )([\d,]+)/i, function (all, lead) { return lead + g.maxSize.toLocaleString('en-US'); });
   }
 
+  /**
+   * One portrait game tile: the picture, the corner labels (a badge and, when `live` is set, the Live pill), the pill that shows on hover or focus,
+   * the name and one line under it. The lobby and the Live tables page both draw their tiles with this, so they look and behave the same.
+   * `o` is { href, id (the game: it sets the colours), cat (the lobby's category filter; optional), label (what a screen reader says), art (inline SVG),
+   * badge, live (the Live pill's text; '' for no pill), liveTip (its tooltip), icon + play (the hover pill), name, by }.
+   */
+  function tileHTML(o) {
+    return '<a class="tile" href="' + o.href + '" data-game="' + o.id + '"' + (o.cat ? ' data-cat="' + o.cat + '"' : '') + ' aria-label="' + esc(o.label) + '">' +
+      '<span class="tile__art">' + o.art + '</span>' +
+      '<span class="tile__tags"><span class="tile__badge">' + esc(o.badge) + '</span>' +
+      (o.live ? '<span class="tile__live" title="' + esc(o.liveTip) + '">' + esc(o.live) + '</span>' : '') + '</span>' +
+      '<span class="tile__play" aria-hidden="true">' + ui.icon(o.icon) + esc(o.play) + '</span>' +
+      '<span class="tile__meta"><span class="tile__name">' + esc(o.name) + '</span><span class="tile__by">' + esc(o.by) + '</span></span>' +
+    '</a>';
+  }
+
   function tiles() {
     var html = ui.game.ORDER.map(function (id) {
       var g = GS.games[id];
       var badge = badgeFor(g);
-      return '<a class="tile" href="#game-' + id + '" data-game="' + id + '" data-cat="' + g.category + '" aria-label="' + esc(g.name) + ', ' + esc(badge) + '">' +
-        '<span class="tile__art">' + GS.art[id]('l') + '</span>' +
-        '<span class="tile__tags"><span class="tile__badge">' + esc(badge) + '</span>' +
-        (g.live && GS.live.enabled() ? '<span class="tile__live" title="This game also has a live table">Live table</span>' : '') + '</span>' +
-        '<span class="tile__play" aria-hidden="true">' + ui.icon('play') + 'Play</span>' +
-        '<span class="tile__meta"><span class="tile__name">' + esc(g.name) + '</span><span class="tile__by">' + BY[g.category] + '</span></span>' +
-      '</a>';
+      return tileHTML({
+        href: '#game-' + id, id: id, cat: g.category, label: g.name + ', ' + badge, art: GS.art[id]('l'), badge: badge,
+        live: g.live && GS.live.enabled() ? 'Live table' : '', liveTip: 'This game also has a live table',
+        icon: 'play', play: 'Play', name: g.name, by: BY[g.category]
+      });
     }).join('');
-    html += '<a class="tile" href="#charities" data-game="direct" data-cat="direct" aria-label="Give Direct, you pick the charity">' +
-      '<span class="tile__art">' + GS.art.direct() + '</span><span class="tile__tags"><span class="tile__badge">Your pick</span></span>' +
-      '<span class="tile__play" aria-hidden="true">' + ui.icon('hand-heart') + 'Browse</span>' +
-      '<span class="tile__meta"><span class="tile__name">Give Direct</span><span class="tile__by">Hand-picked</span></span></a>';
+    html += tileHTML({
+      href: '#charities', id: 'direct', cat: 'direct', label: 'Give Direct, you pick the charity', art: GS.art.direct(), badge: 'Your pick',
+      live: '', liveTip: '', icon: 'hand-heart', play: 'Browse', name: 'Give Direct', by: 'Hand-picked'
+    });
     return html;
   }
 
@@ -133,5 +147,5 @@
     refreshBits();
   }
 
-  ui.lobby = { render: render };
+  ui.lobby = { render: render, tileHTML: tileHTML };
 })();

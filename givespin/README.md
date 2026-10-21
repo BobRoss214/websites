@@ -292,8 +292,13 @@ table locks, and refunded if you close the page before the round settles.
 - **Crews.** If you are in a crew, two or three of its simulated members back the same charity as you with small
   simulated stakes ($5 to $20 each), and the feed says so.
 
-**Every live game is a lobby of seven tables.** On the Live tables page you pick a game, then a table: 5, 10, 25, 50,
-100, 200 or 500 spots (Mini, Small, Classic, High, Big, Giant, Mega). A spot is a bin in Plinko, a slice on the
+**Every live game is a lobby of seven tables.** The Live tables page shows the same portrait tiles as the lobby, one for
+each live game: the picture, the game's name, a "Live" marker and, under the name, the range of its tables ("5 to 500
+bins"). A tile opens that game's own page of tables (`#tables-<game>`, for example `#tables-plinko`), where you pick a table: 5, 10, 25, 50,
+100, 200 or 500 spots (Mini, Small, Classic, High, Big, Giant, Mega). Each table is a card that shows its pot, its players
+and its phase as they change, and a card opens the live table itself (`#live-<game><size>`). The "All live games" link
+and the breadcrumb on that page lead back to the tiles, and so does the browser's Back button when you came from them. The address of a
+game that has no live tables simply shows the tiles. A spot is a bin in Plinko, a slice on the
 wheel, a pocket in roulette, a card in the drop crate, a ball in the lucky draw, a runner, duck, marble or balloon in the
 races, and a tile in Last One Standing. Each table has its own pot, players and rounds, and you can hop between a game's
 tables from a bar inside the table. The charities players back (the gates: 5 at the smallest table, 30 at the biggest) go
@@ -382,7 +387,7 @@ NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 
 About 1,670 end-to-end checks (about 1,590 without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
-the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board (500 charities), clicking a logo or slice in every game to open that charity, the website links in the results, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the lobby of seven table sizes for every live game, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, game filters checked
+the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board (500 charities), clicking a logo or slice in every game to open that charity, the website links in the results, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the game tiles, each game's page of seven table sizes, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, game filters checked
 against an independent computation, the filters on the Charities page (which only narrow the list, never the games), the charity directory and profiles, direct gifts, repeat plans and dedications,
 My Giving, the whole account preview (including that no password or full card number ever reaches storage), demo
 credit, the monthly limit, fair-play verification and tamper detection, stream mode, reduced motion, persistence,
