@@ -9,7 +9,7 @@ Entries d43 to d45 (added later on the dashboard, with no number in the doc) wer
 
 1. Find the question by its number (d01 to d92) or in the topic list below.
 2. Read the option she chose. It lists the files and the exact setting or text, how many strings must be written in the four translations, and which tests may need an update.
-3. Make the change. Rebuild and test as in "The standard steps". Then run `node tests/docs.test.mjs`: it lists every note (this page, the README rows, the other docs) that still names the old words or a place that moved; give those notes the new words. The steps and "Tests:" lines of the entries below were tried one by one on a copy of the site (docs/ANSWER_REHEARSAL.md says which ones, and how to try them again with `python3 tools/rehearse_answers.py --list`).
+3. Make the change. If it changes a sentence of pages/first-visit.html, check whether index.html at `id="first-visit"` (the short first-visit guide on the home page) has the same sentence and change it there too: `node tests/first-visit-guide.test.mjs` names every sentence that is no longer the same. Rebuild and test as in "The standard steps". Then run `node tests/docs.test.mjs`: it lists every note (this page, the README rows, the other docs) that still names the old words or a place that moved; give those notes the new words. The steps and "Tests:" lines of the entries below were tried one by one on a copy of the site (docs/ANSWER_REHEARSAL.md says which ones, and how to try them again with `python3 tools/rehearse_answers.py --list`).
 4. If the entry names a patch, apply it only after her answer. Patches are listed in "Patches on disk".
 5. Delete the matching row in the README table "Content status" when a question is closed.
 
@@ -761,7 +761,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 
 **B. It is the wrong page (I will send the right one)**
 
-- Replace https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356 in all 29 places (7 source files): index.html at `bookeo.com/wiseacres` (19 places); pages/first-visit.html at `bookeo.com/wiseacres` (3 places); pages/pumpkin-patch.html at `bookeo.com/wiseacres` (2 places); pages/strawberry-picking.html at `bookeo.com/wiseacres` (2 places); pages/wise-pie.html at `bookeo.com/wiseacres`; js/features.js at `const BOOK` (BOOK, used by the calendar files and the messages); tools/qr_links.json at `bookeo.com/wiseacres`.
+- Replace https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356 in all 30 places (7 source files): index.html at `bookeo.com/wiseacres` (20 places); pages/first-visit.html at `bookeo.com/wiseacres` (3 places); pages/pumpkin-patch.html at `bookeo.com/wiseacres` (2 places); pages/strawberry-picking.html at `bookeo.com/wiseacres` (2 places); pages/wise-pie.html at `bookeo.com/wiseacres`; js/features.js at `const BOOK` (BOOK, used by the calendar files and the messages); tools/qr_links.json at `bookeo.com/wiseacres`.
 - Then python3 tools/pages.py (the 5 generated pages follow) and python3 tools/make_qr.py (print/qr-signs.html, assets/qr/reserve.svg; reprint the Reserve sign). README.md also names the address.
 - Strings: 0 (an address, not words)
 - Tests: consistency passes if every place is replaced (tests/consistency.test.mjs at `one booking page, one pre-order page` (one booking page) and `['reserve', /bookeo\.com/]` (the Reserve sign)). features at `ICS description unfolds to the booking link` and `open day offers Reserve (Bookeo)` and messages at `the description keeps the booking address whole` and `its text keeps the booking address` look for "bookeo.com/wiseacres?category=4...": change them if the new address is not on bookeo.com/wiseacres
@@ -1981,11 +1981,11 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): no
 - Default: A (same booking system, same fee; two pages promise it and the third is silent).
-- Depends on: d42 is a similar policy sentence. The text exists in index.html at `data-t="t40668596"` and pages/first-visit.html at `<li>If you cancel by then` (2 places: the "Changes and rain" card and the FAQ).
+- Depends on: d42 is a similar policy sentence. The text exists in index.html at `data-t="t40668596"` (2 places: the FAQ and the short first-visit guide) and pages/first-visit.html at `<li>If you cancel by then` (2 places: the "Changes and rain" card and the FAQ).
 
 **A. Add the 3 percent fee line**
 
-- pages/strawberry-picking.html at `<summary>What is your rain policy?</summary>` (the FAQ and its answer): add the sentence "If you cancel by then, we refund the cost of your reservation, minus the 3% credit card processing fee" (the wording of index.html at `data-t="t40668596"`). The answer is id t0e3c1f6e. The rebuild copies the answer into the page data.
+- pages/strawberry-picking.html at `<summary>What is your rain policy?</summary>` (the FAQ and its answer): add the sentence "If you cancel by then, we refund the cost of your reservation, minus the 3% credit card processing fee" (the wording of index.html at `data-t="t40668596"` (2 places)). The answer is id t0e3c1f6e. The rebuild copies the answer into the page data.
 - Strings: 1 changed answer x 4 translations (the 3% stays in each)
 - Tests: consistency: "price: refund fee" (tests/consistency.test.mjs at `price: refund fee`, min 3) stays satisfied; its translation check pins the 3%
 
@@ -2036,7 +2036,7 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 
 **B. Use a different email (I will send it)**
 
-- Replace cathy@wiseacresorganic.com: index.html at `cathy@wiseacresorganic.com` (19 places, one of them in the structured data); pages/first-visit.html at `cathy@wiseacresorganic.com` (2 places); js/features.js at `const WAITLIST =` (waitlistEmail default, also used by the messages feature); js/content.js at `waitlistEmail: 'cathy@` (comment); README.md. Rebuild (python3 tools/pages.py).
+- Replace cathy@wiseacresorganic.com: index.html at `cathy@wiseacresorganic.com` (20 places, one of them in the structured data); pages/first-visit.html at `cathy@wiseacresorganic.com` (2 places); js/features.js at `const WAITLIST =` (waitlistEmail default, also used by the messages feature); js/content.js at `waitlistEmail: 'cathy@` (comment); README.md. Rebuild (python3 tools/pages.py).
 - 6 UI ids contain the address itself (t37c5399a, t4a984489, t716fd5fb, t9777fabc, td6a5d444, teeb109de) x 4 translations. Three more say "Cathy" in words only (t7c90f595, td03021c9, tf8daf32f): change them only if someone else answers the mail.
 - Other addresses are separate: vanessa@ (school tours, index.html at `data-t="t3bad8e6f"`) and ava@ (pizza questions, index.html at `data-t="t44148f05"`).
 - Strings: 6 UI ids x 4 translations

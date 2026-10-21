@@ -156,7 +156,10 @@ def _chrome():
 
     def to_home(s):
         s = s.replace('href="#top"', 'href="index.html"')
-        return re.sub(r'(?<!<use )href="#(?!main")', 'href="index.html#', s)   # not icons: <use href="#i-arrow"> must stay local to the page's own sprite
+        s = re.sub(r'(?<!<use )href="#(?!main")', 'href="index.html#', s)   # not icons: <use href="#i-arrow"> must stay local to the page's own sprite
+        # On the home page the "First-visit guide" links (menu, More list, footer) go to the short guide on the page itself (#first-visit), because
+        # some viewers cannot open another page file. On the extra pages they must still open the real guide page.
+        return s.replace('href="index.html#first-visit"', 'href="first-visit.html"')
     return dict(head=head, og_alt=og_alt, skip=skip, announce=to_home(announce), header=to_home(header), footer=to_home(footer), action=to_home(action), sprite=sprite, scripts=scripts)
 
 

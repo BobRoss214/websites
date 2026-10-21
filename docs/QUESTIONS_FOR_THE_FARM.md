@@ -920,7 +920,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 **Question 22: Is bookeo.com/wiseacres?category=41576YNUUTJ173F2927356 the right booking page for every farm visit (with or without pizza, and parties)?**
 
 - **If Yes:** no change.
-- **If No:** search and replace the address (README "Change the booking link"): `index.html` at `bookeo.com/wiseacres` (19 places), `pages/first-visit.html` at `bookeo.com/wiseacres` (3 places), `pages/pumpkin-patch.html` at `bookeo.com/wiseacres` (2 places), `pages/strawberry-picking.html` at `bookeo.com/wiseacres` (2 places), `pages/wise-pie.html` at `bookeo.com/wiseacres`, `tools/qr_links.json` at `bookeo.com/wiseacres` (re-run `python3 tools/make_qr.py`) and `js/features.js` at `const BOOK =` (calendar reminders).
+- **If No:** search and replace the address (README "Change the booking link"): `index.html` at `bookeo.com/wiseacres` (20 places), `pages/first-visit.html` at `bookeo.com/wiseacres` (3 places), `pages/pumpkin-patch.html` at `bookeo.com/wiseacres` (2 places), `pages/strawberry-picking.html` at `bookeo.com/wiseacres` (2 places), `pages/wise-pie.html` at `bookeo.com/wiseacres`, `tools/qr_links.json` at `bookeo.com/wiseacres` (re-run `python3 tools/make_qr.py`) and `js/features.js` at `const BOOK =` (calendar reminders).
 
 **Question 23: Is wise-pie-wood-fired-at-wise-acres.square.site/?location=CVJNFDQTZCA3B the page where people pre-order Wise Pie pizza?**
 
@@ -962,7 +962,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 **Question 30: Will cathy@wiseacresorganic.com be read and answered, since the site asks visitors to email it?**
 
 - **If Yes:** delete the part about Cathy's email in the README row "Accessibility & comfort".
-- **If somebody else will answer:** replace the address everywhere it appears: `index.html` at `cathy@wiseacresorganic.com` (19 places), `js/features.js` at `const WAITLIST =` and the links in `pages/first-visit.html` at `cathy@wiseacresorganic.com` (2 places).
+- **If somebody else will answer:** replace the address everywhere it appears: `index.html` at `cathy@wiseacresorganic.com` (20 places), `js/features.js` at `const WAITLIST =` and the links in `pages/first-visit.html` at `cathy@wiseacresorganic.com` (2 places).
 
 **Question 31: Can you tell us what the paths are like (surface and slope), when the farm is quieter, and whether there is a baby-changing place?**
 

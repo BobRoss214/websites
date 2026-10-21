@@ -92,7 +92,7 @@
       <nav data-ta-aria-label="td1883058" class="nav" id="nav" aria-label="Main">
         <ul>
           <li><a data-t="t7c9a8664" href="#visit">Visit</a></li>
-          <li class="nav-first"><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
+          <li class="nav-first"><a data-t="t9c2ac95a" href="#first-visit">First-visit guide</a></li>
           <li><a data-t="te9db7dd6" href="#farm">On the Farm</a></li>
           <li><a data-t="t27d882d4" href="#seasons">Seasons</a></li>
           <li class="nav-tomato"><a data-t="t3a209b3e" href="#tomatoes">Tomatoes</a></li>
@@ -102,7 +102,7 @@
           <li class="nav-more">
             <button data-t="t1e6fa7b2" class="nav-more-btn" type="button" aria-expanded="false" aria-controls="nav-more-list">More <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
             <ul class="nav-more-list" id="nav-more-list">
-              <li class="nav-first-more"><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
+              <li class="nav-first-more"><a data-t="t9c2ac95a" href="#first-visit">First-visit guide</a></li>
               <li><a data-t="td4e7d7d3" href="#flowers">Flowers</a></li>
               <li><a data-t="tae9629f4" href="#groups">Groups</a></li>
               <li><a data-t="tc8927cf4" href="#about">Our Story</a></li>
@@ -391,7 +391,7 @@
           <h3 data-t="ta2d0667d" class="h-lg">Three steps to a farm day</h3>
         </header>
 
-        <p data-t="tfab7082b" class="first-time reveal"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> First time at Wise Acres? <a href="first-visit.html">Read the first-visit guide</a> for check-in, what to bring and the rain policy.</p>
+        <p data-t="tfab7082b" class="first-time reveal"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg> First time at Wise Acres? <a href="#first-visit">Read the first-visit guide</a> for check-in, what to bring and the rain policy.</p>
 
         <div class="steps-wrap" id="steps">
           <div class="track" aria-hidden="true">
@@ -733,6 +733,79 @@
           <a data-t="t8ef529c3" class="btn btn-red" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions in Google Maps</a>
           <a data-t="t204a9876" class="btn btn-ghost" href="https://maps.apple.com/?daddr=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079&amp;dirflg=d" target="_blank" rel="noopener">Apple Maps</a>
           <a data-t="te8fdcb08" class="btn btn-ghost" href="https://waze.com/ul?q=4701%20Hartis%20Rd%2C%20Indian%20Trail%2C%20NC%2028079&amp;navigate=yes" target="_blank" rel="noopener">Waze</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FIRST-VISIT GUIDE =================
+         The main points of first-visit.html, here on the home page: the menu's "First-visit guide" link goes to this section (#first-visit) so that
+         it works in a viewer that cannot open another page file. The words are the same as in pages/first-visit.html, so they are already translated:
+         when you change a sentence there, change it here too (node tests/first-visit-guide.test.mjs names the ones that differ). The "What to bring" list has six lines
+         like the FAQ answer "What should we bring?": the pets line of the full page is left out on purpose. The last button opens the full page. -->
+    <section class="section section-tint first-visit" id="first-visit" aria-labelledby="fv-h">
+      <div class="wrap">
+        <header class="section-head reveal">
+          <p data-t="t9c2ac95a" class="hand eyebrow">First-visit guide</p>
+          <h2 data-t="t5a5d4d83" id="fv-h">Your first visit to Wise&nbsp;Acres</h2>
+          <p data-t="te7053ad8" class="lead">Everything to know before you come: how reservations work, what to bring and what to expect when you arrive.</p>
+        </header>
+        <ul class="fact-grid comfort-grid reveal">
+          <li class="fact-card c-pink">
+            <h3 data-t="td94af496">Reserve a time</h3>
+            <p data-t="t117bfbcb">The farm is always reservation-only. Book online and pick a time. When new reservations open, many people use the site at once, so it can show a temporary error. That does not mean we are full. Please try again after the first busy period.</p>
+            <a data-t="t90bac313" class="btn btn-red btn-sm" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve now <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          </li>
+          <li class="fact-card c-sky">
+            <h3 data-t="tad05658a">Changes and rain</h3>
+            <p data-t="t37319519">We&rsquo;re farmers, so a little rain doesn&rsquo;t close the farm.</p>
+            <ul class="ticks">
+              <li data-t="tb68669e6">You can change your reservation at no charge until 11:59 PM the night before your visit</li>
+              <li data-t="t40668596">If you cancel by then, we refund the cost of your reservation, minus the 3% credit card processing fee</li>
+              <li data-t="t2c97bd46">If severe weather forces us to close, we&rsquo;ll email you and give a full refund</li>
+            </ul>
+          </li>
+          <li class="fact-card c-mint">
+            <h3 data-t="t9d75e060">Paying</h3>
+            <p data-t="t3b8b1f71">Cash is preferred. We also accept all major credit cards, Apple Pay and Google Pay.</p>
+          </li>
+          <li class="fact-card c-sun">
+            <h3 data-t="tf799dcf5">When you arrive</h3>
+            <p data-t="tae0016c1">We&rsquo;re at <strong>4701 Hartis Road</strong> in Indian Trail, in a neighborhood with limited parking. Check in under the name on your reservation.</p>
+            <ul class="ticks">
+              <li data-t="t4a5431cf">No reservation? <a href="#greenhouse">The GreenHouse</a> next door at 5503 Poplin Rd welcomes drop-ins.</li>
+            </ul>
+          </li>
+          <li class="fact-card c-pink">
+            <h3 data-t="t8f38df68">What to bring</h3>
+            <ul class="ticks">
+              <li data-t="te0a59b3f">Your reservation confirmation (email or phone)</li>
+              <li data-t="t44379eb9">Cash, a card, Apple Pay or Google Pay</li>
+              <li data-t="t65e8977a">Water and a snack for the shady picnic spots</li>
+              <li data-t="ta3321f0a">Shoes that can get dirty</li>
+              <li data-t="tb1a947f0">Sunscreen and a hat</li>
+              <li data-t="t7ef5b5f8">A cooler bag for berries on warm days</li>
+            </ul>
+          </li>
+          <li class="fact-card">
+            <h3 data-t="t83f3dbc5">Dogs</h3>
+            <p data-t="tf13be67c">Unfortunately, pets must stay home because of liability and food-safety regulations. We love dogs! Service animals are welcome.</p>
+          </li>
+          <li class="fact-card c-mint">
+            <h3 data-t="t2a0b1c26">Bathrooms</h3>
+            <p data-t="t788bdb17">We offer portable toilets (porta-johns) and portable hand-washing stations with foot pumps throughout the farm. One toilet is accessible for people with disabilities. Our farm uses well water and a septic system, so portable facilities are our only option for now.</p>
+          </li>
+          <li class="fact-card c-sky">
+            <h3 data-t="tc08fa4e5" id="fv-stroller-h">Strollers &amp; wheelchairs</h3>
+            <p data-t="t7af61a2b">Wise Acres is a working farm. Irrigation lines, support stakes and farm equipment may be in the fields. If you have questions about getting around with a stroller or wheelchair, please email us before you come.</p>
+            <a data-t="t719b0078" class="btn btn-ghost btn-sm" id="fv-stroller-mail" aria-labelledby="fv-stroller-mail fv-stroller-h" href="mailto:cathy@wiseacresorganic.com?subject=Accessibility%20question"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Email us</a>
+          </li>
+          <li class="fact-card c-sun">
+            <h3 data-t="taef05c28">Parking</h3>
+            <p data-t="t65ba07a6">We are in a neighborhood on Hartis Road with limited parking. Vehicles are not allowed in the fields, barn or garden areas.</p>
+          </li>
+        </ul>
+        <div class="fv-more reveal">
+          <a data-t="t363d0898" class="btn btn-red btn-lg" href="first-visit.html">Open the full first-visit guide <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
         </div>
       </div>
     </section>
@@ -2195,7 +2268,7 @@
           <li><a data-t="t03688ba6" href="#faq">FAQ</a></li>
         </ul>
         <ul class="footer-links footer-guides">
-          <li><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
+          <li><a data-t="t9c2ac95a" href="#first-visit">First-visit guide</a></li>
           <li><a data-t="tbc7509fd" href="pumpkin-patch.html">Pumpkin patch</a></li>
           <li><a data-t="t7c910e1a" href="strawberry-picking.html">Strawberry picking</a></li>
           <li><a data-t="t9d722faf" href="school-field-trips.html">School field trips</a></li>

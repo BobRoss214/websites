@@ -83,6 +83,21 @@ class Pages(unittest.TestCase):
         self.assertEqual(self.tags(h, 'twitter:image:alt'), [home_alt])
         self.assertEqual((self.tags(h, 'og:image:width'), self.tags(h, 'og:image:height')), (['1200'], ['630']))
 
+    def test_the_first_visit_links_of_the_home_page_open_the_real_guide_page_on_the_extra_pages(self):
+        # on the home page the menu, the More list and the footer go to the short guide on the page itself (#first-visit);
+        # on an extra page the same links must open first-visit.html, and every other menu link still goes to the home page
+        with open(os.path.join(self.root, 'index.html'), encoding='utf-8') as f:
+            home = f.read()
+        self.assertGreaterEqual(home.count('href="#first-visit"'), 4, 'the home page links to #first-visit (menu, More, footer, "First time" line)')
+        self.page('three')
+        code, text = self.build()
+        self.assertEqual(code, 0, text)
+        h = self.out('three')
+        self.assertNotIn('index.html#first-visit', h)
+        self.assertEqual(len(re.findall(r'<li class="nav-first(?:-more)?"><a [^>]*href="first-visit\.html">', h)), 2, 'menu bar and More list')
+        self.assertIn('href="index.html#visit"', h)
+        self.assertIn('href="index.html#faq"', h)
+
     def test_a_picture_without_a_description_is_refused(self):
         self.page('three', 'image: assets/og-own.png\n')
         code, text = self.build()

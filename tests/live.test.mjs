@@ -35,7 +35,7 @@ await run('live', async ({ browser, base, errs }) => {
   ok('next-season countdown shows', cd.vis && +cd.days > 20, JSON.stringify(cd));
   ok('badges are drawn', (await p.locator('.live:not([hidden])').count()) >= 3);
   ok('the hero shows the same "open now" badges for the farm and The GreenHouse', (await p.locator('.hero-live [data-live=farm]:not([hidden])').count()) === 1 && (await p.locator('.hero-live [data-live=greenhouse]:not([hidden])').count()) === 1);
-  ok('the menu has a "First-visit guide" link to first-visit.html', (await p.locator('#nav a[href="first-visit.html"]').count()) >= 1);
+  ok('the menu has a "First-visit guide" link to the short guide on this page (#first-visit), which exists', (await p.locator('#nav a[href="#first-visit"]').count()) >= 1 && (await p.locator('main > section#first-visit').count()) === 1);
 
   // notice bar: shows, expires by date, and can be written per language
   await p.evaluate(() => { WISE_ACRES.notice = 'Closed Sunday for rain.'; WISE_ACRES.live.refresh(); });

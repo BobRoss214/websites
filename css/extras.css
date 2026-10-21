@@ -245,6 +245,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 
 .first-time{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.4em .6em;max-width:760px;margin:0 auto 28px;padding:.7em 1.2em;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--ink);font-weight:700;text-align:center}
 .first-time .ico{width:1.3em;height:1.3em;color:var(--red)}
+.fv-more{display:flex;justify-content:center;margin-top:clamp(28px,4vw,44px)}   /* the button under the short first-visit guide on the home page (#first-visit): it opens the full page */
 .footer-guides{margin-top:1.2em}
 
 /* Photo strips: small framed photos that open in the viewer when tapped */

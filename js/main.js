@@ -325,10 +325,12 @@
 
     // Scroll-spy: highlight the nav link for the section in the middle of the screen.
     if (!('IntersectionObserver' in window)) return;
-    const links = new Map($$('.nav ul a[href^="#"]').map((a) => [a.getAttribute('href').slice(1), a]));
+    // A place can have two links (the "First-visit guide" link is in the menu bar for the phone menu and under More for the wide bar): all of them are kept.
+    const links = new Map();
+    $$('.nav ul a[href^="#"]').forEach((a) => { const key = a.getAttribute('href').slice(1); links.set(key, (links.get(key) || []).concat(a)); });
     const setCurrent = (id) => {
-      links.forEach((a, key) => (key === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
-      if (moreBtn) { const inMore = !!(links.get(id) && more.contains(links.get(id))); if (inMore) moreBtn.setAttribute('aria-current', 'true'); else moreBtn.removeAttribute('aria-current'); }
+      links.forEach((list, key) => list.forEach((a) => (key === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current'))));
+      if (moreBtn) { const inMore = (links.get(id) || []).some((a) => more.contains(a)); if (inMore) moreBtn.setAttribute('aria-current', 'true'); else moreBtn.removeAttribute('aria-current'); }
     };
     const onSpy = (entries) => {
       entries.forEach((en) => { if (en.isIntersecting) setCurrent(en.target.dataset.nav || en.target.id); });
