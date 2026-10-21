@@ -39,7 +39,7 @@ body:has(#view-game:not([hidden])) .main { padding-top: 12px; padding-bottom: 32
 #view-game .bet__optbtn { display: none; }
 
 /* ------------------------------------------------------------------ the stage */
-#view-game .stage { gap: 10px; padding: 14px; }
+#view-game .stage { gap: 10px; padding: 14px; grid-template-columns: minmax(0, 1fr); }   /* (the one-line header must not widen the column: that made the page scroll sideways on a 900 to 1330 px window) */
 #view-game .stage__head { flex-wrap: nowrap; align-items: center; gap: 10px 14px; }
 #view-game .stage__titles { min-width: 0; flex: 1 1 auto; }
 #view-game .stage__title { font-size: 1.35rem; }

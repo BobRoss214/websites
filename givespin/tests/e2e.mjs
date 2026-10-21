@@ -147,7 +147,12 @@ const receiptOpen = (page) => page.evaluate(() => !!document.querySelector('#dlg
 const balance = (page) => page.evaluate(() => window.GS.store.balance());
 const state = (page) => page.evaluate(() => window.GS.store.get());
 const amountInput = (page) => page.locator('#view-game .amount__input');
-const setAmount = async (page, v) => { const el = amountInput(page); await el.fill(String(v)); await el.blur(); };
+// On a phone the gift panel is docked: only the presets and Play show until the Options button opens the rest. Open it when a field is needed.
+const openOptions = async (page) => {
+  const b = page.locator('#btn-opts');
+  if (await b.count() && await b.isVisible() && (await b.getAttribute('aria-expanded')) !== 'true') { await b.click(); await page.waitForTimeout(150); }
+};
+const setAmount = async (page, v) => { const el = amountInput(page); if (!(await el.isVisible())) { await openOptions(page); } await el.fill(String(v)); await el.blur(); };
 const toastText = (page) => page.locator('#toasts .toast').allTextContents();
 const a11y = async (page, label) => {
   if (!AXE) { return; }
@@ -1835,7 +1840,7 @@ if (section('13b. Live tables, second part: the lobby\'s portrait tiles on the L
   check(await page.locator('#view-live .tile').count() === LIVE_GAMES.length, 'whose "All tables" link opens the tiles');
 
   /* ---- keyboard: tab to a tile, see the focus ring and the hover pill, press Enter ---- */
-  await page.focus('#view-live .quicklinks a:last-child');
+  await page.focus('#main');          // (the tiles come right after the intro and the simulated-tables notice, neither of which has a link: the first Tab from the top of the page reaches the first tile)
   await page.keyboard.press('Tab');
   // (the hover pill fades in over a fifth of a second: wait until it is fully there rather than for a fixed time, a busy machine can be slow to draw the frames)
   await page.waitForFunction(() => { const a = document.activeElement; const p = a && a.querySelector ? a.querySelector('.tile__play') : null; return !!p && Number(getComputedStyle(p).opacity) === 1; }, null, { timeout: 4000 }).catch(() => {});
@@ -2472,6 +2477,7 @@ if (section('13j. Choose your own charities (solo games)')) {
   // a phone
   const ph = await newPage({ viewport: { width: 390, height: 780 }, mobile: true });
   await openApp(ph, '#game-wheel');
+  await openOptions(ph);
   await ph.click('#custom-btn');
   await ph.waitForSelector('#dlg-chooser[open]');
   check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1) && (await ph.locator('#dlg-chooser .modal__card').boundingBox()).width <= 391, 'the chooser fits a phone');
@@ -2529,6 +2535,7 @@ if (section('13k. Slot machines: five themes, 3 to 12 reels, Triple Threat')) {
   // a phone, with the busiest machine
   const ph = await newPage({ viewport: { width: 390, height: 780 }, mobile: true });
   await openApp(ph, '#game-cosmic');
+  await openOptions(ph);
   await ph.click('#rounds-seg [data-reels="12"]');
   check(await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'twelve reels fit a phone without sideways scrolling');
   await ph.close();
@@ -2567,6 +2574,7 @@ if (section('13s. Marble Run keeps its promises: the drawn marble crosses first,
     return out;
   }, { count, opts });
   const sizeMarbles = async (page, n) => {
+    if (!(await page.locator('#size-custom').isVisible())) { await openOptions(page); }   // (docked panel on a phone)
     await page.fill('#size-custom', String(n));
     await page.waitForFunction((a) => window.GS.store.prefs().sizes.marble === a, n);
     await page.waitForFunction((a) => window.GS.games.marble._debug.marbles().length === a, n);
@@ -3767,6 +3775,7 @@ if (section('15. Phones')) {
   check(dlg.x >= 0 && dlg.x + dlg.width <= 391, 'the receipt fits the screen width');
   await a11y(page, 'receipt on a phone');
   await closeReceipt(page);
+  await openOptions(page);   // the Filters button is in the phone's Options sheet
   await page.click('#btn-filters');
   await page.waitForSelector('#dlg-filters[open]');
   const fd = await page.locator('#dlg-filters .modal__card').boundingBox();
@@ -5616,6 +5625,7 @@ if (section('13zn. Marble Run: the Track picker')) {
   for (const w of [390, 320]) {
     const ph = await mkPage({ viewport: { width: w, height: 800 } });
     await openApp(ph, '#game-marble');
+    await openOptions(ph);   // the Track picker is in the phone's Options sheet
     await ph.waitForSelector(TILES);
     await ph.locator('#field-variants').scrollIntoViewIfNeeded();
     const m = await ph.evaluate(() => {
@@ -5835,8 +5845,10 @@ if (section('13zp. Marble Run: every map plays a round (the drawn charity first,
 
     // (e) a click or tap on a marble of this map's idle board opens that charity
     const spots = await spotsNow(pg);
-    const picks = spots.filter((s) => apart(s, spots)).filter((s, i) => (n > 100 ? i % 60 === 0 : n > 30 ? i % 9 === 0 : true)).slice(0, 2);
-    check(spots.length === n && picks.length >= 1, tag + 'every marble of the board has a spot, and some can be clicked cleanly', { spots: spots.length, picks: picks.length });
+    // (a tall board is drawn smaller to fit the screen, so its marbles lie closer on the screen: the "cleanly apart" distance shrinks with the picture)
+    const drawScale = await pg.evaluate(() => { const p = document.querySelector('#games .game:not([hidden]) > :first-child'); const m = p && /matrix\(([^,]+)/.exec(getComputedStyle(p).transform); return m ? Number(m[1]) : 1; });
+    const picks = spots.filter((s) => apart(s, spots, Math.max(1.5, 4 * drawScale))).filter((s, i) => (n > 100 ? i % 60 === 0 : n > 30 ? i % 9 === 0 : true)).slice(0, 2);
+    check(spots.length === n && picks.length >= 1, tag + 'every marble of the board has a spot, and some can be clicked cleanly', { spots: spots.length, picks: picks.length, drawScale });
     const opened = [];
     for (const s of picks) {
       if (phone) { await pg.touchscreen.tap(s.x, s.y); } else { await pg.mouse.click(s.x, s.y); }
@@ -6043,6 +6055,492 @@ if (section('13zq. Live Marble Run: a track per round, chosen by the table and s
 
 
 
+
+/* ======================================================================== */
+if (section('13zs. One screen per game: the picture, the gift choices and Play are all on the first screen, with no scrolling')) {
+  const SCREENS = [
+    { name: 'a laptop (1366x768)', w: 1366, h: 768, phone: false },
+    { name: 'a short laptop (1280x720)', w: 1280, h: 720, phone: false },
+    { name: 'a phone (390x844)', w: 390, h: 844, phone: true },
+    { name: 'a small phone (375x667)', w: 375, h: 667, phone: true }
+  ];
+  // Where things land on the first screen of a game (the page scrolled to the top, as it is when a game is opened).
+  const firstScreen = (page) => page.evaluate(() => {
+    const box = (sel) => {
+      const e = document.querySelector(sel);
+      if (!e) { return null; }
+      const r = e.getBoundingClientRect();
+      const cs = getComputedStyle(e);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || (r.width === 0 && r.height === 0)) { return null; }
+      return { top: Math.round(r.top), bottom: Math.round(r.bottom), left: Math.round(r.left), right: Math.round(r.right) };
+    };
+    const pic = document.querySelector('#games .game:not([hidden]) > :first-child');
+    const tr = pic ? /matrix\(([^,]+)/.exec(getComputedStyle(pic).transform) : null;
+    const dock = document.querySelector('#bet-panel');
+    const docked = !!dock && getComputedStyle(dock).position === 'fixed';
+    return {
+      vh: window.innerHeight, vw: window.innerWidth, scrollY: Math.round(window.scrollY),
+      play: box('#btn-play'), presets: box('#field-amount .presets'), pic: pic ? box('#games .game:not([hidden]) > :first-child') : null,
+      dockTop: docked ? Math.round(dock.getBoundingClientRect().top) : null, docked,
+      scale: tr ? Number(tr[1]) : 1, sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
+    };
+  });
+  for (const sc of SCREENS) {
+    const page = await newPage({ viewport: { width: sc.w, height: sc.h }, mobile: sc.phone });
+    await openApp(page);
+    const noPlay = []; const noPresets = []; const cutOff = []; const tiny = []; const sideways = [];
+    for (const g of GAMES) {
+      await go(page, '#game-' + g);
+      await page.waitForSelector('#panel-' + g + ':not([hidden])');
+      await page.waitForTimeout(650);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForTimeout(120);
+      const m = await firstScreen(page);
+      const floor = m.dockTop !== null ? m.dockTop : m.vh;      // whatever the picture must stay above: the docked panel on a phone, else the window's bottom
+      if (!(m.play && m.play.top >= 0 && m.play.bottom <= m.vh)) { noPlay.push(g + ' ' + JSON.stringify(m.play)); }
+      if (!(m.presets && m.presets.top >= 0 && m.presets.bottom <= m.vh)) { noPresets.push(g + ' ' + JSON.stringify(m.presets)); }
+      if (!(m.pic && m.pic.top >= 0 && m.pic.bottom <= floor + 1)) { cutOff.push(g + ' picture ' + JSON.stringify(m.pic) + ' floor ' + floor); }
+      if (m.scale < 0.5 - 0.001) { tiny.push(g + ' ' + m.scale); }
+      if (m.sideways) { sideways.push(g); }
+    }
+    check(noPlay.length === 0, 'on ' + sc.name + ' the Play button is on the first screen in all 19 games', noPlay);
+    check(noPresets.length === 0, 'and so are the amount buttons', noPresets);
+    check(cutOff.length === 0, 'and the whole game picture, clear of the gift panel', cutOff);
+    check(tiny.length === 0, 'and the picture is never shrunk below half size', tiny);
+    check(sideways.length === 0, 'and no game screen scrolls sideways', sideways);
+    await page.context().close();
+  }
+
+  /* ---- a phone: the docked panel and its Options sheet ---- */
+  const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+  await openApp(ph, '#game-roulette');
+  await ph.waitForSelector('#panel-roulette:not([hidden])');
+  await ph.waitForTimeout(600);
+  const d0 = await ph.evaluate(() => {
+    const vis = (sel) => { const e = document.querySelector(sel); if (!e) { return false; } const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0; };
+    const nav = document.querySelector('#side').getBoundingClientRect();
+    const bet = document.querySelector('#bet-panel').getBoundingClientRect();
+    return { play: vis('#btn-play'), presets: vis('#field-amount .presets'), input: vis('.amount__input'), more: vis('.bet__more'), opts: vis('#btn-opts'), expanded: document.querySelector('#btn-opts').getAttribute('aria-expanded'), betBottom: Math.round(bet.bottom), navTop: Math.round(nav.top) };
+  });
+  check(d0.play && d0.presets && d0.opts && !d0.input && !d0.more, 'a phone docks the gift panel: amount buttons, Play and an Options button, and nothing else yet', d0);
+  check(d0.expanded === 'false' && d0.betBottom <= d0.navTop + 1, 'the panel sits right above the navigation bar, and Options says it is closed', d0);
+  await ph.click('#btn-opts');
+  await ph.waitForTimeout(250);
+  const d1 = await ph.evaluate(() => {
+    const vis = (sel) => { const e = document.querySelector(sel); if (!e) { return false; } const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0; };
+    const play = document.querySelector('#btn-play').getBoundingClientRect();
+    return { input: vis('.amount__input'), size: vis('#field-size'), expanded: document.querySelector('#btn-opts').getAttribute('aria-expanded'), play: vis('#btn-play'), playInView: play.top >= 0 && play.bottom <= window.innerHeight };
+  });
+  check(d1.input && d1.size && d1.expanded === 'true' && d1.play && d1.playInView, 'Options opens the rest (any amount, board size) and Play stays in view at the bottom of the sheet', d1);
+  await setAmount(ph, 12);
+  check((await ph.locator('#btn-play-sub').innerText()).includes('12'), 'an amount typed there reaches the Play button', await ph.locator('#btn-play-sub').innerText());
+  await ph.focus('.amount__input');
+  await ph.keyboard.press('Escape');
+  await ph.waitForTimeout(250);
+  check(await ph.evaluate(() => document.querySelector('#btn-opts').getAttribute('aria-expanded')) === 'false' && !(await ph.locator('.amount__input').isVisible()), 'Escape (from a field in the sheet) folds the sheet away again');
+  // a round from the docked panel: the in-picture button is not shown twice, the docked Play does the job
+  const ownBtn = await ph.evaluate(() => { const b = document.querySelector('#games .game:not([hidden]) .gbtn:not(.gbtn--ghost)'); return !b || getComputedStyle(b).display === 'none'; });
+  check(ownBtn, 'the big button under the picture is not shown a second time next to the docked Play button');
+  await ph.click('#btn-play');
+  await waitReceipt(ph);
+  check(await receiptOpen(ph), 'the docked Play button plays a round and opens the receipt');
+  await closeReceipt(ph);
+  // the footer can be scrolled clear of the dock
+  await ph.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
+  await ph.waitForTimeout(300);
+  const ft = await ph.evaluate(() => { const l = document.querySelector('.foot__links a:last-child'); const r = l.getBoundingClientRect(); const bet = document.querySelector('#bet-panel').getBoundingClientRect(); return { bottom: Math.round(r.bottom), betTop: Math.round(bet.top) }; });
+  check(ft.bottom <= ft.betTop + 1, 'the footer links scroll up clear of the docked panel', ft);
+  await ph.context().close();
+
+  /* ---- a laptop: the panel follows the page and keeps Play in view ---- */
+  const lap = await newPage({ viewport: { width: 1366, height: 768 } });
+  await openApp(lap, '#game-plinko');
+  await lap.waitForSelector('#panel-plinko:not([hidden])');
+  await lap.waitForTimeout(600);
+  await lap.evaluate(() => window.scrollTo(0, 400));
+  await lap.waitForTimeout(250);
+  const sticky = await lap.evaluate(() => { const r = document.querySelector('#btn-play').getBoundingClientRect(); const bet = document.querySelector('#bet-panel').getBoundingClientRect(); return { playTop: Math.round(r.top), playBottom: Math.round(r.bottom), betTop: Math.round(bet.top), vh: window.innerHeight }; });
+  check(sticky.playTop >= 0 && sticky.playBottom <= sticky.vh, 'on a laptop the gift panel follows the page, so Play is still in view after scrolling down', sticky);
+  await lap.context().close();
+}
+
+/* ======================================================================== */
+if (section('13zr. Ranks: a rank from $1,000 given, "Rank 2 · Level 6", the emblem next to every name, and the rank-up moment')) {
+  const problems0 = problems.length;
+  const RANK_NAMES = ['Patron', 'Benefactor', 'Champion', 'Guardian', 'Paragon', 'Luminary', 'Titan', 'Immortal'];
+  const RANK_GIVEN = ['$1,000', '$5,000', '$10,000', '$20,000', '$50,000', '$100,000', '$500,000', '$1,000,000'];
+  const flat = (t) => String(t).replace(/\s+/g, ' ').trim();
+  // a save as an older version would have written it: a total given (in cents) and the XP that earns, and no rank anywhere (the rank is worked out from the total)
+  const saveOf = (cents, extra) => Object.assign({ v: 2, xp: Math.floor(cents / 10), totalCents: cents, plays: 20, streak: 2, bestStreak: 4 }, extra || {});
+  const seeded = async (cents, extra, opts) => {
+    const p = await newPage(opts || {});
+    await p.addInitScript((o) => { try { if (!sessionStorage.getItem('__seeded')) { localStorage.setItem('givespin:v2', JSON.stringify(o)); sessionStorage.setItem('__seeded', '1'); } } catch (e) { /* ignore */ } }, saveOf(cents, extra));
+    return p;
+  };
+  // puts another save in storage and reloads, so one page can be looked at with several totals
+  // (a reload, not a goto: going to the same address with only the part after # different does not load the page again)
+  const reseed = async (p, cents, extra, hash) => {
+    await p.evaluate((o) => { localStorage.setItem('givespin:v2', JSON.stringify(o)); }, saveOf(cents, extra));
+    await p.reload({ waitUntil: 'load' });
+    await p.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
+    if (hash) { await go(p, hash); }
+  };
+  const ADA = { account: { signedIn: true, name: 'Ada Lovelace', type: 'email', contact: 'ada@example.com', hue: 200, createdAt: 1 } };
+  const noSideways = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
+  // every chip on the page: named for a screen reader in full, with a tooltip, with an emblem when it has a rank
+  const chipAudit = (p, scope) => p.evaluate((sel) => {
+    const bad = [];
+    const chips = Array.from(document.querySelectorAll(sel + ' .rchip'));
+    chips.forEach((c) => {
+      const label = c.getAttribute('aria-label') || '';
+      const ranked = /^Rank [1-8], [A-Z][a-z]+, level (10|[1-9])$/.test(label);
+      const level = /^Level (10|[1-9]), [A-Z][A-Za-z ]+$/.test(label);
+      if (c.getAttribute('role') !== 'img' || !(ranked || level) || !c.getAttribute('title')) { bad.push('name: ' + label); }
+      if (ranked !== !!c.querySelector('.rchip__e svg')) { bad.push('emblem: ' + label); }
+      const r = c.getBoundingClientRect();
+      if (r.width < 8 || r.height < 8) { bad.push('size: ' + label); }
+    });
+    return { n: chips.length, bad };
+  }, scope);
+
+  /* ---------- the Giving Club for a player with $7,500 given (rank 2, level 6) ---------- */
+  const club = await seeded(750000, null, { viewport: { width: 1366, height: 768 } });
+  await openApp(club, '#club');
+  const ct = flat(await club.locator('#view-club').innerText());
+  check(/Rank 2 · Level 6/.test(await club.locator('#view-club .rankcard__title').innerText()) && await club.locator('#view-club .rankcard__name').textContent() === 'Benefactor', 'the Giving Club card says "Rank 2 · Level 6" and the rank\'s name for a $7,500 save', ct.slice(0, 300));
+  check(/Next: Level 7 at \$8,000 \(\$500 to go\)/.test(ct), 'it says what is next: "Next: Level 7 at $8,000 ($500 to go)" (rank 2 spreads its ten levels over $5,000 to $10,000: level 6 began at $7,500)', ct.slice(0, 400));
+  const rows = await club.evaluate(() => Array.from(document.querySelectorAll('#view-club .rk__row')).map((r) => ({ name: r.querySelector('b').textContent, cls: r.className, text: r.innerText.replace(/\s+/g, ' '), svg: !!r.querySelector('.rk__e svg') })));
+  check(rows.length === 8 && rows.map((r) => r.name).join('|') === RANK_NAMES.map((n, i) => 'Rank ' + (i + 1) + ' · ' + n).join('|'), 'the Ranks ladder lists all eight, in order, by number and name', rows.map((r) => r.name));
+  check(RANK_GIVEN.every((g, i) => rows[i] && rows[i].text.includes(g + ' given')), 'each with the amount given that earns it ($1,000, $5,000, $10,000, $20,000, $50,000, $100,000, $500,000, $1,000,000)', rows.map((r) => r.text));
+  check(/is-done/.test(rows[0].cls) && /Reached/.test(rows[0].text) && /is-now/.test(rows[1].cls) && /You are here · Level 6/.test(rows[1].text) && rows.slice(2).every((r) => /is-locked/.test(r.cls) && /Locked/.test(r.text)), 'rank 1 is reached, rank 2 says "You are here · Level 6" and the other six are locked', rows.map((r) => r.cls));
+  check(rows.every((r) => r.svg) && await club.locator('#view-club .rankcard__ring > svg').count() === 1, 'every rank has its emblem in the ladder, and the card has the emblem inside its ring of ten level segments');
+  const dim = await club.evaluate(() => { const l = document.querySelector('.rk__row.is-locked'); const e = l.querySelector('.rk__e'); const cs = getComputedStyle(e); const nowE = getComputedStyle(document.querySelector('.rk__row.is-now .rk__e')); return { filter: cs.filter, opacity: getComputedStyle(l).opacity, nowFilter: nowE.filter, w: l.getBoundingClientRect().width }; });
+  check(dim.filter !== 'none' && dim.nowFilter === 'none' && dim.opacity === '1' && dim.w > 100, 'locked ranks are shown darker (their emblem is dimmed) but still plainly there', dim);
+  check(await club.locator('#view-club .rung').count() === 10 && await club.locator('#view-club .rung.is-done').count() === 10 && await club.locator('#view-club .badge').count() === core.BADGES.length, 'the XP level ladder is still there with its ten levels (all ticked, since the ten levels are done) and every badge');
+  check(/receipt for giving/i.test(ct) && /nothing with a cash value/i.test(ct) && /not money/i.test(ct), 'the page says ranks are a receipt for giving, not money, and unlock nothing with a cash value', ct.slice(ct.indexOf('Ranks'), ct.indexOf('Ranks') + 600));
+  check(/simulated/i.test(ct.slice(ct.indexOf('Ranks'))) && /Every \$1 you give earns 10 XP/.test(ct), 'and that the other players\' ranks are simulated; the XP words are still there');
+  check(/Mythic Giver/.test(ct) && /XP: 75,000/.test(ct), 'the card still says where the XP stands (the XP level drives the league tier)', ct.slice(0, 300));
+  const clubChips = await chipAudit(club, '#view-club');
+  check(clubChips.bad.length === 0, 'the Giving Club has no chip without a full accessible name', clubChips);
+  check(await noSideways(club), 'the Giving Club does not scroll sideways at 1366 px');
+  await shot(club, '13zr-club-rank');
+  await a11y(club, 'Giving Club with a rank');
+  // Help: the plain answer, reachable by its own link, and the XP answer points at it
+  await go(club, '#help-ranks');
+  check(await club.locator('#help-ranks').evaluate((d) => d.open), 'a #help-ranks link opens "What are ranks?"');
+  const hr = flat(await club.locator('#help-ranks').innerText());
+  check(/\$1,000/.test(hr) && /Patron/.test(hr) && /Immortal/.test(hr) && /levels 1 to 10/.test(hr) && /Rank 2 · Level 6/.test(hr) && /\$7,500/.test(hr), 'Help explains the eight ranks, their own levels 1 to 10 and the "Rank 2 · Level 6" example', hr.slice(0, 300));
+  check(/not money/.test(hr) && /nothing with a cash value/.test(hr) && /simulated/.test(hr) && /demo mode the dollars are pretend/.test(hr), 'and says a rank is not money, has no cash value, is pretend in demo mode and that the other players\' ranks are simulated', hr.slice(-400));
+  await go(club, '#help-xp');
+  check(/rank/i.test(await club.locator('#help-xp').innerText()), 'the answer about XP mentions the rank that comes after level 10');
+  const wording = flat(await club.evaluate(() => { const parts = [document.querySelector('#help-ranks'), document.querySelector('#help-xp')].map((e) => e.textContent); return parts.join(' '); }));
+  check(!/crypto(?!graph)|bitcoin|ethereum|blockchain|wallet|\bNFTs?\b|\btokens?\b|\bcoins?\b/i.test(wording + ' ' + ct), 'no word the owner ruled out (crypto, coins, tokens, wallets) in the rank words');
+  await a11y(club, 'Help with the rank answer');
+  await club.close();
+
+  /* ---------- the boundaries, through saved data: $999.99, $1,000.00, $1,000,000 and beyond ---------- */
+  const edge = await seeded(99999);
+  await openApp(edge, '#club');
+  let et = flat(await edge.locator('#view-club').innerText());
+  check(!(await edge.locator('#view-club .rankcard').count()) && /Mythic Giver/.test(et) && /Next rank: Patron at \$1,000 \(\$0\.01 to go\)/.test(et), '$999.99 is not ranked: still the old level 10 card, with the first rank as the goal ("$0.01 to go")', et.slice(0, 400));
+  check(await edge.locator('#view-club .rk__row.is-locked').count() === 8 && await edge.locator('#view-club .rk__row.is-now, #view-club .rk__row.is-done').count() === 0, 'and all eight ranks show as locked');
+  check(await edge.evaluate(() => GS.ui.rankui.sideHTML().includes('lvlcard__n') && !/lvlcard--rank/.test(GS.ui.rankui.sideHTML())), 'the side-nav card is still the plain level card before $1,000');
+  check(await edge.evaluate(() => { const t = document.createElement('div'); t.innerHTML = GS.ui.rankui.sideHTML(); return t.innerHTML === document.querySelector('#side-level').innerHTML; }), 'and it is exactly the card the page draws in the side nav today, so a player with no rank sees no change');
+  await reseed(edge, 100000, null, '#club');
+  et = flat(await edge.locator('#view-club').innerText());
+  check(/Rank 1 · Level 1/.test(await edge.locator('#view-club .rankcard__title').innerText()) && await edge.locator('#view-club .rankcard__name').textContent() === 'Patron', 'exactly $1,000.00 is Rank 1 · Level 1: Patron');
+  check(/Next: Level 2 at \$1,400 \(\$400 to go\)/.test(et) && await edge.locator('#view-club .rk__row.is-now').count() === 1 && await edge.locator('#view-club .rk__row.is-locked').count() === 7, 'with the next level at $1,400 and seven ranks still locked', et.slice(0, 400));
+  check(await edge.evaluate(() => /lvlcard--rank/.test(GS.ui.rankui.sideHTML()) && /Rank 1, Patron, level 1/.test(GS.ui.rankui.sideHTML())), 'the side-nav card function names the rank for a ranked player ("Rank 1, Patron, level 1")');
+  await reseed(edge, 100000000, null, '#club');
+  et = flat(await edge.locator('#view-club').innerText());
+  check(/Rank 8 · Level 1/.test(await edge.locator('#view-club .rankcard__title').innerText()) && await edge.locator('#view-club .rankcard__name').textContent() === 'Immortal' && await edge.locator('#view-club .rk__row.is-done').count() === 7, '$1,000,000 is Rank 8 · Level 1: Immortal, with seven ranks reached');
+  check(/Next: Level 2 at \$1,100,000 \(\$100,000 to go\)/.test(et), 'the top rank has no next rank, so its levels step every $100,000', et.slice(0, 400));
+  await reseed(edge, 190000000, null, '#club');
+  et = flat(await edge.locator('#view-club').innerText());
+  check(/Rank 8 · Level 10/.test(await edge.locator('#view-club .rankcard__title').innerText()) && /Max rank and level reached/.test(et), 'from $1,900,000 it is Rank 8 · Level 10 and says it is the top');
+  await reseed(edge, 999999999, null, '#club');
+  check(/Rank 8 · Level 10/.test(await edge.locator('#view-club .rankcard__title').innerText()), 'and it stays there with more');
+  // an old save: lots given, hardly any XP: the rank still follows the total
+  await reseed(edge, 750000, { xp: 40 }, '#club');
+  check(/Rank 2 · Level 6/.test(await edge.locator('#view-club .rankcard__title').innerText()) && await edge.locator('#view-club .rung.is-now').count() === 1, 'an old save with $7,500 given and little XP is Rank 2 · Level 6 (the XP ladder keeps its own place)');
+  await edge.close();
+
+  /* ---------- crossing $1,000 in a real round shows the rank-up moment, once ---------- */
+  const cross = await seeded(99000, ADA);   // $990.00 given, and so level 10
+  await openApp(cross, '#game-coin');
+  await setAmount(cross, 25);
+  await cross.evaluate(() => {
+    window.__rkOpens = 0; window.__fan = { levelUp: 0, win: 0 };
+    new MutationObserver((recs) => { recs.forEach((r) => { if (r.target.id === 'dlg-rankup' && r.target.open) { window.__rkOpens += 1; } }); }).observe(document.body, { attributes: true, attributeFilter: ['open'], subtree: true });
+    ['levelUp', 'win'].forEach((k) => { const o = GS.audio[k]; GS.audio[k] = function () { window.__fan[k] += 1; return o.apply(this, arguments); }; });
+  });
+  check(await cross.evaluate(() => GS.store.standing().label) === 'Level 10', '$990.00 given is still the old level 10');
+  await cross.click('#btn-play');
+  await waitReceipt(cross);
+  const gotMoment = await cross.waitForSelector('#dlg-rankup[open]', { timeout: 20000 }).then(() => true, () => false);
+  check(gotMoment, 'the gift that takes the total past $1,000 opens the rank-up moment');
+  const mo = await cross.evaluate(() => {
+    const d = document.querySelector('#dlg-rankup');
+    const s = GS.app._last.summary;
+    const em = d.querySelector('.rkup__emblem svg');
+    const box = d.querySelector('.rkup__emblem');   // (its layout size: the box is still popping in, and a bounding box would measure that scale)
+    return {
+      text: d.innerText.replace(/\s+/g, ' '), title: (d.querySelector('#dlg-rankup-title') || {}).textContent, labelled: d.getAttribute('aria-labelledby'), modal: d.matches(':modal'),
+      emblem: !!em, big: box.offsetWidth, focus: document.activeElement && document.activeElement.getAttribute('data-role'),
+      sum: { up: s.rankedUp, lv: s.levelUp, old: s.leveledUp, b: s.rankBefore.label, a: s.rankAfter.label, total: GS.store.get().totalCents }
+    };
+  });
+  check(mo.title === 'You reached Rank 1: Patron' && mo.labelled === 'dlg-rankup-title' && mo.modal, 'it says "You reached Rank 1: Patron" and is a proper dialog named by that title', mo);
+  check(mo.emblem && mo.big >= 150, 'with the emblem shown big', [mo.emblem, mo.big]);
+  check(/Rank 1 · Level 1/.test(mo.text) && /You have given \$1,015 in total/.test(mo.text) && /Next: Level 2 at \$1,400 \(\$385 to go\)/.test(mo.text), 'and the level, the total given and the next goal ("Next: Level 2 at $1,400 ($385 to go)")', mo.text);
+  check(/not money/.test(mo.text) && /nothing with a cash value/.test(mo.text) && /pretend/.test(mo.text), 'it says a rank is not money, has no cash value, and is pretend in demo mode', mo.text);
+  check(mo.sum.up === true && mo.sum.lv === false && mo.sum.old === false && mo.sum.b === 'Level 10' && mo.sum.a === 'Rank 1 · Level 1' && mo.sum.total === 101500, 'the round reports rankedUp (and not levelUp), from "Level 10" to "Rank 1 · Level 1"', mo.sum);
+  check(mo.focus === 'rankup-done', 'keyboard focus is on the "Keep giving" button');
+  await shot(cross, '13zr-rank-up-moment');
+  await a11y(cross, 'the rank-up moment');
+  await cross.waitForFunction(() => window.__fan.win >= 2, null, { timeout: 8000 }).catch(() => {});   // (the win sound comes a moment after the jingle; wait for it rather than for a fixed time)
+  const fan = await cross.evaluate(() => window.__fan);
+  check(fan.levelUp === 1 && fan.win >= 2, 'the fanfares play (the level-up jingle once, and the win sound again on top of the receipt\'s own)', fan);
+  await cross.click('#dlg-rankup [data-role="rankup-done"]');
+  await cross.waitForFunction(() => !document.querySelector('#dlg-rankup').open);
+  const rx = flat(await cross.locator('#dlg-result .xpcard').innerText());
+  check(/Rank 1 · Level 1 · Patron/.test(rx) && /Rank up! You reached Rank 1: Patron\./.test(rx) && /Next: Level 2 at \$1,400/.test(rx) && /\+250 XP/.test(rx), 'the receipt\'s XP card says the new rank, "Rank up!", what is next and still the 250 XP', rx);
+  check(await cross.locator('#dlg-result .xpcard .xpcard__e > svg').count() === 1, 'with the emblem on it');
+  await cross.waitForTimeout(1200);
+  check(await cross.evaluate(() => window.__rkOpens) === 1 && await cross.evaluate(() => document.querySelectorAll('dialog#dlg-rankup').length) === 1 && !(await cross.evaluate(() => document.querySelector('#dlg-rankup').open)), 'the moment opened exactly once, and stays closed');
+  const acctBtn = await cross.evaluate(() => ({ label: document.querySelector('#acct [data-role="toggle"]').getAttribute('aria-label'), pin: !!document.querySelector('#acct .acct__rank svg') }));
+  check(/Rank 1, Patron, level 1/.test(acctBtn.label) && acctBtn.pin, 'the account button now carries the emblem, and its name says the rank', acctBtn);
+  await closeReceipt(cross);
+  // the next gift is the same rank and level: no new moment
+  await cross.click('#btn-play');
+  await waitReceipt(cross);
+  await cross.waitForTimeout(1500);
+  const again = await cross.evaluate(() => { const s = GS.app._last.summary; return { up: s.rankedUp, lv: s.levelUp, a: s.rankAfter.label, opens: window.__rkOpens, open: document.querySelector('#dlg-rankup').open }; });
+  check(again.up === false && again.lv === false && again.a === 'Rank 1 · Level 1' && again.opens === 1 && !again.open, 'the next gift (still Rank 1 · Level 1) shows no new moment', again);
+  const rx2 = flat(await cross.locator('#dlg-result .xpcard').innerText());
+  check(/Rank 1 · Level 1 · Patron/.test(rx2) && !/Rank up!/.test(rx2) && !/Level up!/.test(rx2), 'and its receipt shows the rank with no "Rank up!"', rx2);
+  await closeReceipt(cross);
+  // nothing about the rank is saved: it is worked out from the total given
+  const stored = await cross.evaluate(() => { const raw = localStorage.getItem('givespin:v2'); const o = JSON.parse(raw); return { keys: Object.keys(o).filter((k) => /rank|standing/i.test(k)), histKeys: Object.keys(o.history[0]).filter((k) => /rank|standing/i.test(k)), total: o.totalCents }; });
+  check(stored.keys.length === 0 && stored.histKeys.length === 0 && stored.total === 99000 + 5000, 'nothing about a rank is saved: only the total given (and what a save always had)', stored);
+  await cross.reload();
+  await cross.waitForFunction(() => window.GS && window.GS.app && document.body.classList.contains('is-ready'));
+  check(await cross.evaluate(() => GS.store.standing().label) === 'Rank 1 · Level 1', 'and a reload gives the same rank back');
+  await cross.close();
+
+  /* ---------- a level-up inside a rank is the lighter version; a phone gets the whole moment too ---------- */
+  const lvl = await seeded(749000);   // $7,490: rank 2 level 5; the next gift reaches $7,500
+  await openApp(lvl, '#game-coin');
+  await setAmount(lvl, 25);
+  await lvl.click('#btn-play');
+  await waitReceipt(lvl);
+  await lvl.waitForTimeout(1200);
+  const lv = await lvl.evaluate(() => { const s = GS.app._last.summary; return { up: s.rankedUp, lv: s.levelUp, b: s.rankBefore.label, a: s.rankAfter.label, open: document.querySelector('#dlg-rankup') ? document.querySelector('#dlg-rankup').open : false }; });
+  const lvx = flat(await lvl.locator('#dlg-result .xpcard').innerText());
+  check(lv.lv === true && lv.up === false && lv.b === 'Rank 2 · Level 5' && lv.a === 'Rank 2 · Level 6', 'a gift that takes $7,490 to $7,515 reports levelUp, not rankedUp: Rank 2 · Level 5 to Rank 2 · Level 6', lv);
+  check(/Level up! You are now Rank 2 · Level 6\./.test(lvx) && !lv.open, 'the receipt says "Level up! You are now Rank 2 · Level 6." and no big moment opens for it', lvx);
+  await lvl.close();
+
+  const small = await seeded(99000, null, { viewport: { width: 390, height: 844 }, mobile: true });
+  await openApp(small, '#game-coin');
+  await setAmount(small, 25);
+  await small.click('#btn-play');
+  await waitReceipt(small);
+  await small.waitForSelector('#dlg-rankup[open]', { timeout: 20000 }).catch(() => {});
+  const sm = await small.evaluate(() => {
+    const d = document.querySelector('#dlg-rankup .modal__card');
+    const r = d ? d.getBoundingClientRect() : null;
+    const b = document.querySelector('#dlg-rankup [data-role="rankup-done"]');
+    const br = b ? b.getBoundingClientRect() : null;
+    return { open: !!document.querySelector('#dlg-rankup[open]'), x: r && Math.round(r.left), right: r && Math.round(r.right), top: r && Math.round(r.top), bottom: r && Math.round(r.bottom), vw: window.innerWidth, vh: window.innerHeight, btn: br && [Math.round(br.top), Math.round(br.bottom)], sideways: document.documentElement.scrollWidth <= window.innerWidth + 1 };
+  });
+  check(sm.open && sm.x >= 0 && sm.right <= sm.vw && sm.top >= 0 && sm.bottom <= sm.vh && sm.btn && sm.btn[1] <= sm.vh && sm.sideways, 'on a 390 px phone the whole moment fits the screen, "Keep giving" included', sm);
+  await shot(small, '13zr-rank-up-phone');
+  await small.close();
+
+  // reduced motion: the moment has no animation, and the confetti is the small version (the page still works)
+  const calm = await seeded(99000, null, { reducedMotion: 'reduce' });
+  await openApp(calm, '#game-coin');
+  await setAmount(calm, 25);
+  await calm.click('#btn-play');
+  await waitReceipt(calm);
+  await calm.waitForSelector('#dlg-rankup[open]', { timeout: 20000 }).catch(() => {});
+  const still = await calm.evaluate(() => { const e = document.querySelector('#dlg-rankup .rkup__emblem'); const g = document.querySelector('#dlg-rankup .rkup__glow'); return { emblem: e && getComputedStyle(e).animationName, glow: g && getComputedStyle(g).animationName }; });
+  check(still.emblem === 'none' && still.glow === 'none', 'with reduced motion on, the rank-up moment does not animate', still);
+  await calm.close();
+
+  /* ---------- the live tables: the player's chip next to "You", a simulated rank for every bot ---------- */
+  const live = await seeded(750000, null, { viewport: { width: 1366, height: 768 } });
+  await openApp(live, '#live-derby');
+  check(await stakeNow(live, 'derby'), 'a $20 stake goes onto a live table');
+  await live.click('#tab-feed');
+  await live.waitForFunction(() => document.querySelectorAll('#tabp .feed__row').length >= 4);
+  // freeze the table so that nothing changes while the feed is read
+  await live.evaluate(() => { GS.live.room('derby')._clearTimers(); });
+  const feed = await live.evaluate(() => {
+    const rows = Array.from(document.querySelectorAll('#tabp .feed__row')).filter((r) => !r.classList.contains('feed__row--sys') && !r.classList.contains('feed__row--crew'));
+    return rows.map((r) => {
+      const chip = r.querySelector('.rchip');
+      return { you: r.classList.contains('is-you'), name: r.querySelector('b').textContent, label: chip && chip.getAttribute('aria-label'), title: chip && chip.getAttribute('title'), bot: chip && chip.getAttribute('data-bot'), svg: !!(chip && chip.querySelector('svg')), pill: !!r.querySelector('.botpill'), chips: r.querySelectorAll('.rchip').length, before: !!(chip && chip.previousElementSibling && chip.previousElementSibling.tagName === 'B') };
+    });
+  });
+  const mine = feed.filter((r) => r.you);
+  const bots = feed.filter((r) => !r.you);
+  check(mine.length >= 1 && mine.every((r) => r.name === 'You' && r.label === 'Rank 2, Benefactor, level 6' && r.svg && r.chips === 1 && !r.pill), 'the live feed shows your chip next to "You" ("Rank 2, Benefactor, level 6", with its emblem, and no BOT tag)', mine);
+  check(bots.length >= 3 && bots.every((r) => r.label === core.botStanding(r.name).words && r.chips === 1 && r.pill && r.bot === '1' && r.before), 'every bot in the feed has a chip next to its name, the rank it always has (the same as core.botStanding), and keeps its BOT tag', bots.slice(0, 4));
+  check(bots.every((r) => r.svg === (core.botStanding(r.name).rank > 0)) && bots.every((r) => /simulated/.test(r.title)), 'bots with a rank have an emblem, those without have just their level, and every bot chip\'s tooltip says "simulated"', bots.map((r) => [r.name, r.svg]));
+  const names = bots.map((r) => r.name);
+  check(new Set(names.map((n) => core.botStanding(n).label)).size >= 2, 'the bots at a table do not all have the same standing');
+  const feedAudit = await chipAudit(live, '#tabp');
+  check(feedAudit.n >= 4 && feedAudit.bad.length === 0, 'every chip in the feed is named in full', feedAudit);
+  // the feed is only rewritten when it really changed: drawing the same feed again (with new emblem ids) leaves the list in place
+  const same = await live.evaluate(() => { GS.ui.game.refreshLiveTab(); const f = document.querySelector('#tabp .feed'); GS.ui.game.refreshLiveTab(); GS.ui.game.refreshLiveTab(); return !!f && document.querySelector('#tabp .feed') === f; });
+  check(same, 'a feed that has not changed is not rewritten (the emblems\' own ids do not count as a change)');
+  check(await noSideways(live) && await live.evaluate(() => { const f = document.querySelector('#tabp .feed'); return f.scrollWidth <= f.clientWidth + 1; }), 'the feed does not scroll sideways');
+  await shot(live, '13zr-live-feed');
+  await a11y(live, 'live feed with ranks');
+  await live.close();
+
+  /* ---------- a live result that crosses $1,000, at the table, and away from it ---------- */
+  const liveUp = await seeded(99500);   // $995.00: the $20 stake makes $1,015
+  await openApp(liveUp, '#live-derby');
+  await liveUp.evaluate(() => {
+    window.__sums = []; window.__rkOpens = 0;
+    const s = GS.store; const orig = s.recordPlay; s.recordPlay = function (p) { const r = orig.apply(this, arguments); window.__sums.push({ up: r.rankedUp, lv: r.levelUp, a: r.rankAfter.label, b: r.rankBefore.label }); return r; };
+    new MutationObserver((recs) => { recs.forEach((r) => { if (r.target.id === 'dlg-rankup' && r.target.open) { window.__rkOpens += 1; } }); }).observe(document.body, { attributes: true, attributeFilter: ['open'], subtree: true });
+  });
+  check(await stakeNow(liveUp, 'derby'), 'a $20 stake goes onto the table');
+  // the result card is only up for a moment with ?fast=1 (the table moves on 0.8 s later), so its words are read in the turn that sees them
+  const lcard = flat(await liveUp.waitForFunction(() => { const x = document.querySelector('#lt-result .lt-res__xp'); return x && /Rank up!/.test(x.textContent) ? document.querySelector('#lt-result').innerText : null; }, null, { timeout: 90000, polling: 40 }).then((h) => h.jsonValue(), () => ''));
+  const liveMoment = await liveUp.waitForSelector('#dlg-rankup[open]', { timeout: 90000 }).then(() => true, () => false);
+  check(liveMoment, 'a live result that takes the total past $1,000 opens the rank-up moment too');
+  const lm = await liveUp.evaluate(() => ({ sums: window.__sums, title: (document.querySelector('#dlg-rankup-title') || {}).textContent, card: (document.querySelector('#lt-result') || {}).innerText || '', next: (document.querySelector('#dlg-rankup .rkup__next') || {}).textContent }));
+  check(lm.sums.length === 1 && lm.sums[0].up === true && lm.sums[0].b === 'Level 10' && lm.sums[0].a === 'Rank 1 · Level 1' && lm.title === 'You reached Rank 1: Patron', 'it reports the same rank-up and says so', lm);
+  await liveUp.waitForTimeout(1500);
+  check(await liveUp.evaluate(() => window.__rkOpens) === 1, 'once');
+  check(/Rank up! Rank 1 · Level 1 \(Patron\)/.test(lcard) && /You reached Rank 1: Patron\./.test(lcard), 'and the result card says "Rank up! Rank 1 · Level 1 (Patron)" and "You reached Rank 1: Patron."', lcard.slice(0, 400));
+  await liveUp.close();
+
+  const away = await seeded(99500);
+  await openApp(away, '#live-derby');
+  await away.evaluate(() => { window.__rkOpens = 0; new MutationObserver((recs) => { recs.forEach((r) => { if (r.target.id === 'dlg-rankup' && r.target.open) { window.__rkOpens += 1; } }); }).observe(document.body, { attributes: true, attributeFilter: ['open'], subtree: true }); });
+  check(await stakeNow(away, 'derby'), 'a $20 stake goes onto the table (and then the visitor leaves it)');
+  await go(away, '#lobby');
+  const awayMoment = await away.waitForSelector('#dlg-rankup[open]', { timeout: 90000 }).then(() => true, () => false);
+  check(awayMoment && /You reached Rank 1: Patron/.test(await away.locator('#dlg-rankup-title').innerText()), 'a visitor who has left the table is still told about the new rank when it settles');
+  await away.close();
+
+  const inRank = await seeded(749500);   // $7,495: the $20 stake makes $7,515, so level 6
+  await openApp(inRank, '#live-derby');
+  check(await stakeNow(inRank, 'derby'), 'a $20 stake goes onto the table (rank 2, level 5)');
+  const toast = await inRank.waitForSelector('#toasts .toast--rank', { timeout: 90000 }).then(() => true, () => false);
+  check(toast && /Level up! Rank 2 · Level 6/.test(await inRank.locator('#toasts .toast--rank').first().innerText()) && !(await inRank.evaluate(() => { const d = document.querySelector('#dlg-rankup'); return !!d && d.open; })), 'a level-up inside a rank at a live table is a light toast, "Level up! Rank 2 · Level 6", not the big moment');
+  await inRank.close();
+
+  /* ---------- leagues, crews and the account: the emblem next to every name ---------- */
+  const lg = await seeded(750000, Object.assign({ crew: 'tide', crewEver: true }, ADA), { viewport: { width: 1366, height: 768 } });
+  await openApp(lg, '#leagues');
+  const lrows = await lg.evaluate(() => Array.from(document.querySelectorAll('#view-leagues .lrow')).map((r) => {
+    const nm = r.querySelector('.lrow__name');
+    const chip = nm.querySelector('.rchip');
+    return { you: r.classList.contains('is-you'), name: nm.childNodes[0].textContent.trim(), label: chip && chip.getAttribute('aria-label'), pill: !!nm.querySelector('.botpill'), svg: !!(chip && chip.querySelector('svg')) };
+  }));
+  check(lrows.length === 15 && lrows.filter((r) => r.you).length === 1, 'the weekly league still lists you and 14 rivals');
+  const meRow = lrows.filter((r) => r.you)[0];
+  check(meRow.name === 'Ada Lovelace' && meRow.label === 'Rank 2, Benefactor, level 6' && meRow.svg && !meRow.pill, 'your row has your name and your chip', meRow);
+  const rivals = lrows.filter((r) => !r.you);
+  check(rivals.length === 14 && rivals.every((r) => r.pill && r.label === core.botStanding(r.name).words), 'each of the 14 rivals keeps its BOT tag and has its simulated rank (the same as core.botStanding)', rivals.slice(0, 3));
+  const place = flat(await lg.locator('#view-leagues .sect.panel').nth(1).locator('p').first().innerText());
+  check(await lg.locator('#view-leagues .sect.panel p .rchip').count() >= 1 && /^You .* are #\d+/.test(place), 'and "your place" line has your chip: "You [Rank 2 · Level 6] are #…"', place.slice(0, 120));
+  const tier = flat(await lg.locator('#view-leagues #lg-tier').locator('xpath=..').locator('p').first().innerText());
+  check(/Your rank is Rank 2 · Level 6 \(Benefactor\), and tiers follow your XP level/.test(tier), 'the tier text keeps the tiers on the XP level and names the rank', tier);
+  check((await chipAudit(lg, '#view-leagues')).bad.length === 0 && await noSideways(lg), 'every chip on Leagues is named in full, and the page does not scroll sideways');
+  await a11y(lg, 'Leagues with ranks');
+  await go(lg, '#crews');
+  await lg.waitForSelector('[data-role="chatlog"] .cmsg');
+  const mates = await lg.evaluate(() => Array.from(document.querySelectorAll('#view-crews .crewmates li')).map((li) => ({ you: li.classList.contains('is-you'), name: li.childNodes[0].textContent.trim(), label: (li.querySelector('.rchip') || document.createElement('i')).getAttribute('aria-label'), pill: !!li.querySelector('.botpill') })));
+  check(mates.length === 8 && mates[0].you && mates[0].name === 'You' && mates[0].label === 'Rank 2, Benefactor, level 6', 'the crew list has you (with your chip) and seven crewmates', mates);
+  check(mates.slice(1).every((m) => m.pill && m.label === core.botStanding(m.name).words), 'each crewmate keeps its BOT tag and has its simulated rank', mates.slice(1, 3));
+  await lg.evaluate(() => { GS.crews.say('hello crew'); });
+  await lg.waitForFunction(() => Array.from(document.querySelectorAll('[data-role="chatlog"] .cmsg.is-you')).length >= 1);
+  const chat = await lg.evaluate(() => Array.from(document.querySelectorAll('[data-role="chatlog"] .cmsg')).map((m) => ({ you: m.classList.contains('is-you'), name: m.querySelector('b').textContent, label: (m.querySelector('.rchip') || document.createElement('i')).getAttribute('aria-label'), pill: !!m.querySelector('.botpill') })));
+  check(chat.some((m) => m.you) && chat.filter((m) => m.you).every((m) => m.name === 'You' && m.label === 'Rank 2, Benefactor, level 6'), 'your chat lines carry your chip', chat.filter((m) => m.you));
+  check(chat.filter((m) => !m.you).length >= 1 && chat.filter((m) => !m.you).every((m) => m.pill && m.label === core.botStanding(m.name).words), 'and the bots\' chat lines keep their BOT tag and carry their simulated rank', chat.filter((m) => !m.you).slice(0, 3));
+  check((await chipAudit(lg, '#view-crews')).bad.length === 0 && await noSideways(lg), 'every chip on Crews is named in full, and the page does not scroll sideways');
+  await shot(lg, '13zr-crews');
+  await a11y(lg, 'Crews with ranks');
+  // the account menu and card
+  await lg.click('#acct [data-role="toggle"]');
+  const menu = await lg.evaluate(() => ({ label: document.querySelector('#acct [data-role="toggle"]').getAttribute('aria-label'), pin: !!document.querySelector('#acct .acct__rank svg'), who: document.querySelector('#acct .acct__who').innerText.replace(/\s+/g, ' '), chip: (document.querySelector('#acct .acct__who .rchip') || document.createElement('i')).getAttribute('aria-label') }));
+  check(/Account menu for Ada Lovelace, Rank 2, Benefactor, level 6/.test(menu.label) && menu.pin, 'the account button carries the emblem, and is named with the rank', menu);
+  check(menu.chip === 'Rank 2, Benefactor, level 6' && /Ada Lovelace/.test(menu.who) && /Benefactor/.test(menu.who), 'the account menu shows the name with the rank chip and rank name', menu.who);
+  await a11y(lg, 'account menu with a rank');
+  await lg.click('#acct [data-role="settings"]');
+  await lg.waitForSelector('#dlg-settings[open]');
+  const card = flat(await lg.locator('#dlg-settings .acctcard').innerText());
+  check(await lg.locator('#dlg-settings .acctcard .rchip').count() === 1 && /Benefactor/.test(card) && /Ada Lovelace/.test(card), 'the account card shows it too', card);
+  await lg.keyboard.press('Escape');
+  await lg.close();
+
+  // before $1,000 the account keeps its old words, and has no emblem
+  const young = await seeded(20000, ADA);   // $200 given, so 2,000 XP
+  await openApp(young, '#lobby');
+  await young.click('#acct [data-role="toggle"]');
+  const L = core.levelFor(2000);
+  const yu = await young.evaluate(() => ({ who: document.querySelector('#acct .acct__who small').innerText.replace(/\s+/g, ' '), pin: !!document.querySelector('#acct .acct__rank'), chip: document.querySelectorAll('#acct .acct__who .rchip').length, label: document.querySelector('#acct [data-role="toggle"]').getAttribute('aria-label') }));
+  check(yu.who === 'Level ' + L.level + ' · ' + L.name && !yu.pin && yu.chip === 0 && yu.label === 'Account menu for Ada Lovelace', 'before $1,000 the account menu says "Level ' + L.level + ' · ' + L.name + '", with no emblem and no rank in the button\'s name', yu);
+  await young.close();
+
+  // phone: the places that grew a chip still fit at 390 px
+  const ph = await seeded(750000, Object.assign({ crew: 'tide', crewEver: true }, ADA), { viewport: { width: 390, height: 844 }, mobile: true });
+  for (const hash of ['#club', '#leagues', '#crews']) {
+    await openApp(ph, hash);
+    check(await noSideways(ph), hash + ' does not scroll sideways at 390 px');
+  }
+  await openApp(ph, '#live-derby');
+  check(await stakeNow(ph, 'derby'), 'a stake goes onto a table on the phone');
+  await ph.click('#tab-feed');
+  await ph.waitForFunction(() => document.querySelectorAll('#tabp .feed__row').length >= 3);
+  check(await noSideways(ph) && (await chipAudit(ph, '#tabp')).bad.length === 0, 'the live feed (with chips) fits 390 px and every chip is named in full');
+  await shot(ph, '13zr-live-feed-phone');
+  await ph.close();
+
+  // the pieces other code relies on
+  const api = await newPage();
+  await openApp(api, '');
+  const apiOk = await api.evaluate((nodeRanks) => ({
+    same: JSON.stringify(GS.core.RANKS) === nodeRanks, emb: typeof GS.ranks.emblem === 'function' && typeof GS.ranks.ring === 'function' && GS.ranks.META.length === 8,
+    ids: GS.ranks.META.map((m) => m.id).join() === GS.core.RANKS.map((r) => r.id).join(), hex: GS.ranks.META.every((m) => /^#[0-9a-fA-F]{3,8}$/.test(m.color) && /^#[0-9a-fA-F]{3,8}$/.test(m.accent) && typeof m.blurb === 'string' && m.blurb.length > 0),
+    svg: [1, 2, 3, 4, 5, 6, 7, 8].every((n) => /^<svg[\s>]/.test(GS.ranks.emblem(n, 40, {})) && /^<svg[\s>]/.test(GS.ranks.ring(n, 5, 112, {})) && /aria-hidden="true"/.test(GS.ranks.emblem(n, 40, {})) && /role="img"/.test(GS.ranks.emblem(n, 40, { title: 'x' }))),
+    e1: GS.ui.rankEmblem(1, 24, {}).trim().indexOf('<svg') === 0, none: GS.ui.rankEmblem(0, 24, {}) === '', chipNone: GS.ui.rankChip(null) === '',
+    fresh: GS.ui.rankChip(GS.core.standingFor(0, 0)).replace(/<[^>]*>/g, '').trim(), fallback: (() => { const k = GS.ranks; GS.ranks = null; const t = GS.ui.rankChip(GS.core.standingFor(0, 750000)); GS.ranks = k; return t.indexOf('R2 · L6') > 0 && t.indexOf('<svg') < 0 && t.indexOf('aria-label="Rank 2, Benefactor, level 6"') > 0; })()
+  }), JSON.stringify(core.RANKS));
+  check(apiOk.same && apiOk.emb && apiOk.ids && apiOk.hex && apiOk.svg, 'the page and the tests agree on the ranks, and the emblem contract is met: META in rank order with the same ids, a #hex colour and accent and a blurb for each, and an inline <svg> from emblem() and ring() that is hidden from screen readers unless it is given a title', apiOk);
+  check(apiOk.e1 && apiOk.none && apiOk.chipNone && apiOk.fresh === 'L1' && apiOk.fallback, 'a chip is just "L1" for a new player, has no emblem for no rank, and still reads right (text and name) if the emblem file is missing', apiOk);
+  // one result is celebrated once, however many places hear about it; a new result is celebrated again; a gift that changed nothing is not
+  const guard = await api.evaluate(() => {
+    const S = GS.core;
+    window.__opens = 0;
+    new MutationObserver((recs) => { recs.forEach((r) => { if (r.target.id === 'dlg-rankup' && r.target.open) { window.__opens += 1; } }); }).observe(document.body, { attributes: true, attributeFilter: ['open'], subtree: true });
+    const result = (cents0, cents1, xp) => ({ rankBefore: S.standingFor(xp, cents0), rankAfter: S.standingFor(xp, cents1), rankedUp: S.standingFor(xp, cents1).rank > S.standingFor(xp, cents0).rank, levelUp: S.standingFor(xp, cents1).rank === S.standingFor(xp, cents0).rank && S.standingFor(xp, cents1).level > S.standingFor(xp, cents0).level });
+    const first = result(99000, 101500, 9900);
+    const out = { a: GS.ui.rankup.show(first), b: GS.ui.rankup.show(first), c: GS.ui.rankup.show(first, { toast: true }) };
+    out.none = GS.ui.rankup.show(result(101500, 101600, 10000));
+    out.nothing = GS.ui.rankup.show(null);
+    out.lightNoToast = GS.ui.rankup.show(result(749999, 750000, 75000));
+    out.lightToast = GS.ui.rankup.show(result(749999, 750000, 75000), { toast: true });
+    return out;
+  });
+  await api.waitForTimeout(300);
+  check(guard.a === true && guard.b === false && guard.c === false && await api.evaluate(() => window.__opens) === 1, 'one result is celebrated once, however many places hear about it', guard);
+  await api.evaluate(() => { document.querySelector('#dlg-rankup').close(); });
+  const second = await api.evaluate(() => GS.ui.rankup.show({ rankBefore: GS.core.standingFor(1e5, 499999), rankAfter: GS.core.standingFor(1e5, 500000), rankedUp: true, levelUp: false }));
+  await api.waitForTimeout(200);
+  check(second === true && await api.evaluate(() => window.__opens) === 2 && /Rank 2: Benefactor/.test(await api.locator('#dlg-rankup-title').innerText()), 'a new result (a new rank) is celebrated again, with its own words');
+  check(guard.none === false && guard.nothing === false && guard.lightNoToast === false && guard.lightToast === true, 'a gift that changed nothing, no result at all, and a level inside a rank where no toast is wanted (a receipt says it itself) show nothing; with a toast wanted it does', guard);
+  await api.close();
+  check(problems.length === problems0, 'section 13zr: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+}
 
 /* ======================================================================== */
 section('18. Console and network health');
