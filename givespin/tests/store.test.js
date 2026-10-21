@@ -403,3 +403,172 @@ test('the Marble Run track choice is saved, comes back after a reload, and a mis
   assert.equal(GS.store.prefs().marbleMap, '', '"Erase my data" forgets the track too');
   assert.ok(page.data.get(page.KEY).indexOf('zigzag') < 0, 'and it is gone from the saved text');
 });
+
+/* ------------------------------------------------------------------ ranks: what a round reports, and that nothing about them is stored */
+
+/** Records one pretend gift of `cents` and returns what the store says about it. */
+function give(GS, cents, extra) {
+  const ids = GS.charities.map((c) => c.id);
+  return GS.store.recordPlay(Object.assign({
+    game: 'wheel', totalCents: cents, rounds: 1, status: 'done', pay: 'credit', receipt: 'GS-R' + Math.random().toString(36).slice(2, 8),
+    allocations: [{ charityId: ids[0], cents, hits: 1 }]
+  }, extra || {}));
+}
+/** A page whose player has already given `cents` (and has the XP that earns, unless `xp` says otherwise). */
+function pageWith(cents, xp) {
+  const page = makePage();
+  const s = page.GS.store.get();
+  s.totalCents = cents;
+  s.xp = xp === undefined ? Math.round(cents / 10) : xp;
+  return page;
+}
+
+test('a round that crosses $1,000 reports the rank-up once: rankBefore, rankAfter and rankedUp (and the next gift does not report it again)', () => {
+  const page = pageWith(99900);                       // $999.00 given: still the old level 10
+  const { GS } = page;
+  assert.equal(GS.store.standing().label, 'Level 10');
+  const a = give(GS, 100);                            // $1.00 more is exactly $1,000.00
+  assert.equal(GS.store.get().totalCents, 100000);
+  assert.deepEqual([a.rankBefore.label, a.rankBefore.rank], ['Level 10', 0]);
+  assert.deepEqual([a.rankAfter.label, a.rankAfter.rank, a.rankAfter.name, a.rankAfter.level], ['Rank 1 · Level 1', 1, 'Patron', 1]);
+  assert.equal(a.rankedUp, true, 'exactly $1,000.00 is the first rank');
+  assert.equal(a.levelUp, false, 'a rank-up is not also a level-up');
+  assert.equal(a.leveledUp, false, 'the XP level was already 10: the old flag is untouched');
+  const b = give(GS, 100);                            // $1,001.00: still rank 1 level 1
+  assert.deepEqual([b.rankedUp, b.levelUp, b.rankBefore.label, b.rankAfter.label], [false, false, 'Rank 1 · Level 1', 'Rank 1 · Level 1']);
+  assert.equal(GS.store.standing().label, 'Rank 1 · Level 1');
+});
+
+test('$999.99 is not ranked and exactly $1,000.00 is rank 1, checked to the cent', () => {
+  const page = pageWith(99998);
+  const { GS } = page;
+  const a = give(GS, 1);                              // $999.99
+  assert.equal(GS.store.get().totalCents, 99999);
+  assert.deepEqual([a.rankedUp, a.rankAfter.label], [false, 'Level 10']);
+  const b = give(GS, 1);                              // $1,000.00
+  assert.deepEqual([b.rankedUp, b.rankAfter.label], [true, 'Rank 1 · Level 1']);
+});
+
+test('a round inside a rank reports levelUp when it crosses a level (rank 2: level 6 begins at $7,500), and neither flag when it does not', () => {
+  const page = pageWith(749000);                      // $7,490.00: rank 2 level 5
+  const { GS } = page;
+  const stay = give(GS, 500);                         // $7,495.00
+  assert.deepEqual([stay.rankedUp, stay.levelUp, stay.rankAfter.label], [false, false, 'Rank 2 · Level 5']);
+  const up = give(GS, 500);                           // $7,500.00
+  assert.equal(GS.store.get().totalCents, 750000);
+  assert.deepEqual([up.rankedUp, up.levelUp, up.rankBefore.label, up.rankAfter.label], [false, true, 'Rank 2 · Level 5', 'Rank 2 · Level 6']);
+  assert.equal(up.leveledUp, false, 'the XP level is the old one and did not move');
+  const next = give(GS, 100);
+  assert.deepEqual([next.rankedUp, next.levelUp], [false, false]);
+  // one big gift can lift several levels at once: still one level-up, naming where it ended
+  const big = give(GS, 140000);                       // $8,901: levels 6, 7, 8
+  assert.deepEqual([big.rankedUp, big.levelUp, big.rankAfter.level], [false, true, 8]);
+});
+
+test('the last level of a rank leads into the next rank, and one big gift that jumps several ranks is one rank-up that ends on the final rank', () => {
+  const page = pageWith(999000);                      // $9,990.00: rank 2 level 10
+  const { GS } = page;
+  const r = give(GS, 1000);                           // $10,000.00
+  assert.deepEqual([r.rankedUp, r.levelUp, r.rankBefore.label, r.rankAfter.label, r.rankAfter.name], [true, false, 'Rank 2 · Level 10', 'Rank 3 · Level 1', 'Champion']);
+  const lateral = pageWith(110000);                   // $1,100: rank 1 level 1
+  const l = give(lateral.GS, 600000);                 // +$6,000 = $7,100: rank 2 level 5
+  assert.deepEqual([l.rankedUp, l.levelUp, l.rankBefore.label, l.rankAfter.label], [true, false, 'Rank 1 · Level 1', 'Rank 2 · Level 5'], 'landing on a higher level of the new rank is still only a rank-up');
+  const jump = pageWith(90000);                       // $900 given
+  const j = give(jump.GS, 6000000);                   // +$60,000 = $60,900
+  assert.deepEqual([j.rankedUp, j.rankBefore.rank, j.rankAfter.rank, j.rankAfter.name], [true, 0, 5, 'Paragon']);
+  const top = pageWith(99999000);                     // $999,990.00
+  const t = give(top.GS, 1000);                       // $1,000,000.00
+  assert.deepEqual([t.rankedUp, t.rankAfter.label, t.rankAfter.name], [true, 'Rank 8 · Level 1', 'Immortal']);
+  const more = give(top.GS, 10000000);                // +$100,000
+  assert.deepEqual([more.rankedUp, more.levelUp, more.rankAfter.label], [false, true, 'Rank 8 · Level 2']);
+});
+
+test('before $1,000 given, levelUp is the old XP level-up, and the rank flags stay off', () => {
+  const page = makePage();
+  const { GS } = page;
+  const first = give(GS, 1000);                       // $10 = 100 XP = level 2
+  assert.deepEqual([first.leveledUp, first.levelUp, first.rankedUp, first.rankBefore.label, first.rankAfter.label], [true, true, false, 'Level 1', 'Level 2']);
+  const flat = give(GS, 100);
+  assert.deepEqual([flat.leveledUp, flat.levelUp, flat.rankedUp], [false, false, false]);
+  const bonus = give(GS, 100, { bonusXp: 200 });      // a bonus can lift the level without much money
+  assert.equal(bonus.leveledUp, bonus.levelUp);
+  assert.equal(bonus.rankedUp, false);
+  assert.equal(bonus.rankAfter.label, 'Level ' + GS.core.levelFor(GS.store.get().xp).level);
+});
+
+test('XP that is not tied to a gift (a prediction, the Charity Cup) can lift a level before $1,000, and can never lift a rank', () => {
+  const young = makePage();
+  const g = young.GS.store.grantXp(150);              // level 2 at 100 XP
+  assert.deepEqual([g.leveledUp, g.levelUp, g.rankedUp, g.rankAfter.label], [true, true, false, 'Level 2']);
+  const ranked = pageWith(750000, 50);                // $7,500 given but little XP (an old save)
+  const r = ranked.GS.store.grantXp(900000);
+  assert.deepEqual([r.rankedUp, r.levelUp, r.rankBefore.label, r.rankAfter.label], [false, false, 'Rank 2 · Level 6', 'Rank 2 · Level 6'], 'a pile of XP does not move a rank');
+  assert.equal(r.leveledUp, true, 'it still lifts the XP level, which still drives the league tiers');
+});
+
+test('nothing about ranks is stored: the rank is worked out from totalCents, so the saved text has no rank in it', () => {
+  const page = pageWith(99900);
+  const { GS } = page;
+  const before = Object.keys(JSON.parse(page.data.get(page.KEY) || '{}'));
+  give(GS, 100);
+  give(GS, 100);
+  const saved = JSON.parse(page.data.get(page.KEY));
+  assert.equal(saved.totalCents, 100100, '$999.00 and two gifts of $1.00');
+  assert.ok(!/rank|standing|patron/i.test(page.data.get(page.KEY)), 'no rank anywhere in the saved text');
+  assert.ok(!Object.keys(saved).some((k) => /rank|standing/i.test(k)));
+  assert.ok(!Object.keys(saved.history[0]).some((k) => /rank|standing/i.test(k)), 'nor in a saved round');
+  const added = Object.keys(saved).filter((k) => before.indexOf(k) < 0 && before.length);
+  assert.deepEqual(added, [], 'no new key was added to the save');
+});
+
+test('older saves just work: a save with a big total and no rank anywhere gets the rank its total gives it', () => {
+  const page = makePage();
+  const { GS } = page;
+  page.data.set(page.KEY, JSON.stringify({ v: 2, xp: 40, totalCents: 750000, plays: 12 }));   // a lot given, hardly any XP
+  GS.store.load();
+  assert.equal(GS.store.standing().label, 'Rank 2 · Level 6');
+  assert.equal(GS.store.standing().name, 'Benefactor');
+  assert.equal(GS.core.levelFor(GS.store.get().xp).level, 1, 'the XP level (and so the tier) is still the XP\'s own: 40 XP is level 1');
+  // the first-ever version\'s save, under its own key
+  const legacy = makePage();
+  legacy.data.set('givespin:v1', JSON.stringify({ xp: 9500, totalCents: 100000 }));
+  legacy.GS.store.load();
+  assert.equal(legacy.GS.store.standing().label, 'Rank 1 · Level 1');
+  // exactly one cent short, and damaged totals, are not ranked
+  [{ totalCents: 99999 }, { totalCents: -5 }, { totalCents: 'a lot' }, { totalCents: null }, { totalCents: NaN }].forEach((o) => {
+    const p = makePage();
+    p.data.set(p.KEY, JSON.stringify(Object.assign({ v: 2, xp: 9000 }, o)));
+    p.GS.store.load();
+    assert.equal(p.GS.store.standing().rank, 0, JSON.stringify(o) + ' is not ranked');
+  });
+  // a save that is already past the top
+  const top = makePage();
+  top.data.set(top.KEY, JSON.stringify({ v: 2, xp: 5, totalCents: 250000000 }));
+  top.GS.store.load();
+  assert.deepEqual([top.GS.store.standing().label, top.GS.store.standing().maxed], ['Rank 8 · Level 10', true]);
+});
+
+test('"Reset my progress" and "Erase my data" take the rank away with the total, and a reload keeps it', () => {
+  const page = pageWith(750000);
+  const { GS } = page;
+  give(GS, 100);
+  GS.store.load();
+  assert.equal(GS.store.standing().label, 'Rank 2 · Level 6', 'a reload keeps the rank (it comes from the saved total)');
+  GS.store.reset();
+  assert.equal(GS.store.standing().label, 'Level 1');
+  const other = pageWith(1200000);
+  give(other.GS, 100);
+  other.GS.store.eraseAll();
+  assert.equal(other.GS.store.standing().label, 'Level 1');
+});
+
+test('what a round reports about ranks is plain data: it survives JSON, and the numbers agree with core.standingFor', () => {
+  const page = pageWith(499900);
+  const { GS } = page;
+  const s = give(GS, 100);
+  const copy = JSON.parse(JSON.stringify({ a: s.rankBefore, b: s.rankAfter, up: s.rankedUp, lv: s.levelUp }));
+  assert.deepEqual(copy.b, JSON.parse(JSON.stringify(GS.core.standingFor(GS.store.get().xp, GS.store.get().totalCents))));
+  assert.equal(copy.up, true);
+  assert.equal(s.rankAfter.label, 'Rank 2 · Level 1');
+  assert.equal(copy.b.nextRank.name, 'Champion');
+});

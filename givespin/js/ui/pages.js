@@ -210,13 +210,27 @@
     var s = store.get();
     var demo = GS.payments.mode() === 'demo';
     var lv = core.levelFor(s.xp);
+    var st = core.standingFor(s.xp, s.totalCents);
     var unlocked = core.BADGES.filter(function (b) { return s.badges[b.id]; }).length;
 
+    // (a player with a rank has finished the ten XP levels, so the ladder ticks all of them and the Ranks ladder says where they are)
+    var finished = st.rank > 0 && lv.maxed;
     var ladder = core.LEVELS.map(function (L, i) {
-      var cls = i + 1 < lv.level ? 'is-done' : (i + 1 === lv.level ? 'is-now' : '');
+      var done = i + 1 < lv.level || finished;
+      var cls = done ? 'is-done' : (i + 1 === lv.level ? 'is-now' : '');
       return '<li class="rung ' + cls + '"><span class="rung__n">' + (i + 1) + '</span><span class="rung__t"><b>' + esc(L.name) + '</b><small>' + L.xp.toLocaleString() + ' XP' + (L.xp ? ' · about ' + core.fmtMoney(L.xp * 10, true) + ' given' : '') + '</small></span>' +
-        '<span class="rung__s">' + (i + 1 < lv.level ? ui.icon('check') : (i + 1 === lv.level ? 'You are here' : ui.icon('lock'))) + '</span></li>';
+        '<span class="rung__s">' + (done ? ui.icon('check') : (i + 1 === lv.level ? 'You are here' : ui.icon('lock'))) + '</span></li>';
     }).join('');
+
+    // before $1,000 given: the level card it always was, plus the first rank as the next goal; after: the rank card
+    var card = st.rank
+      ? ui.rankui.cardHTML(st, lv, s)
+      : '<div class="panel levelcard"><div class="ring" style="--p:' + lv.pct + '"><div class="ring__in"><span class="ring__n">' + lv.level + '</span><span class="ring__l">Level</span></div></div>' +
+          '<div class="levelcard__main"><div class="lvl__name">' + esc(lv.name) + '</div>' +
+          '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + lv.pct + '" aria-label="Progress to next level"><i style="width:' + lv.pct + '%"></i></div>' +
+          '<div class="lvl__meta">' + (lv.maxed ? 'Max level reached. ' + s.xp.toLocaleString() + ' XP in total.' : lv.into.toLocaleString() + ' / ' + lv.need.toLocaleString() + ' XP to ' + esc(lv.nextName)) + '</div>' +
+          ui.rankui.goalHTML(st) +
+          '<p class="lvl__tip">10 XP for every $1 you give, whatever the game. Backing a winner, a jackpot, a finished card set and a hot hand add a little on top. <a href="#help-xp">What is XP?</a> At ' + core.fmtMoney(core.RANKS[0].at * 100, true) + ' given you earn a rank. <a href="#help-ranks">What are ranks?</a></p></div></div>';
 
     var badges = core.BADGES.map(function (b) {
       var on = !!s.badges[b.id];
@@ -224,13 +238,9 @@
         (on ? '<span class="badge__when">Unlocked ' + esc(ui.fmtDate(s.badges[b.id])) + '</span>' : '') + '</li>';
     }).join('');
 
-    root.innerHTML = pageHead('Giving Club', 'Every $1 you give earns 10 XP. Level up as you give, keep your streak going, back winners for a hot hand and collect badges. Your level and badges live on this device.') +
+    root.innerHTML = pageHead('Giving Club', 'Every $1 you give earns 10 XP. Level up as you give, then earn a rank at ' + core.fmtMoney(core.RANKS[0].at * 100, true) + ' given. Keep your streak going, back winners for a hot hand and collect badges. Your level, rank and badges live on this device.') +
       '<div class="clubtop">' +
-        '<div class="panel levelcard"><div class="ring" style="--p:' + lv.pct + '"><div class="ring__in"><span class="ring__n">' + lv.level + '</span><span class="ring__l">Level</span></div></div>' +
-          '<div class="levelcard__main"><div class="lvl__name">' + esc(lv.name) + '</div>' +
-          '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + lv.pct + '" aria-label="Progress to next level"><i style="width:' + lv.pct + '%"></i></div>' +
-          '<div class="lvl__meta">' + (lv.maxed ? 'Max level reached. ' + s.xp.toLocaleString() + ' XP in total.' : lv.into.toLocaleString() + ' / ' + lv.need.toLocaleString() + ' XP to ' + esc(lv.nextName)) + '</div>' +
-          '<p class="lvl__tip">10 XP for every $1 you give, whatever the game. Backing a winner, a jackpot, a finished card set and a hot hand add a little on top. <a href="#help-xp">What is XP?</a></p></div></div>' +
+        card +
         '<div class="stats stats--2">' +
           stat('flame', s.streak + (s.streak === 1 ? ' day' : ' days'), 'Current streak' + (s.bestStreak > s.streak ? ' · best ' + s.bestStreak : '')) +
           stat('hand-coins', money(s.totalCents, true), demo ? 'Total given <span class="tag tag--plain">demo</span>' : 'Total sent to checkout') +
@@ -244,6 +254,7 @@
         stat('layers', Object.keys(s.cards).length + ' of ' + ui.num(GS.charities.length), 'Cards · <a href="#cards">Collection</a>') +
         stat('users', GS.crews && GS.crews.mine() ? GS.crews.mine().name : 'No crew', 'Crew · <a href="#crews">Crews</a>') +
       '</div>' +
+      ui.rankui.ladderSection(st) +
       '<div class="twocol twocol--club"><section class="sect panel" aria-labelledby="cl-lad"><h2 class="sect__t" id="cl-lad">Level ladder</h2><ol class="ladder">' + ladder + '</ol></section>' +
       '<section class="sect panel" aria-labelledby="cl-bad"><div class="sect__head"><h2 class="sect__t" id="cl-bad">Badges</h2><span class="tag tag--plain">' + unlocked + ' / ' + core.BADGES.length + '</span></div><ul class="badgegrid">' + badges + '</ul></section></div>';
   }
@@ -362,9 +373,17 @@
     }],
     ['help-xp', 'What is XP, and what does it do?', function (demo) {
       return '<p><strong>Every $1 you give earns 10 XP</strong>, in any game: a $5 gift is 50 XP, a $50 gift is 500 XP. XP is a receipt for giving, so it grows as you give.</p>' +
-        '<p>It is not money. You cannot buy it on its own, you cannot lose it in a game, and it never turns back into money or anything worth money. It unlocks <a href="#club">levels</a> (the first step up is at 100 XP, about $10 given), the weekly <a href="#leagues">league</a> and its tiers, which open bigger live-table stakes, and collectible <a href="#cards">cards</a>.</p>' +
+        '<p>It is not money. You cannot buy it on its own, you cannot lose it in a game, and it never turns back into money or anything worth money. It unlocks <a href="#club">levels</a> (the first step up is at 100 XP, about $10 given), the weekly <a href="#leagues">league</a> and its tiers, which open bigger live-table stakes, and collectible <a href="#cards">cards</a>. After level 10, at ' + core.fmtMoney(core.RANKS[0].at * 100, true) + ' given, you earn a <a href="#help-ranks">rank</a>.</p>' +
         '<p>A few things add a little on top of the 10 per $1, always shown separately on your receipt: backing the charity that wins, a jackpot, a finished card set, a hot-hand streak and right side predictions.</p>' +
         (demo ? '<p>In demo mode the dollars are pretend, so the XP they earn is pretend too: it only lives in this browser.</p>' : '');
+    }],
+    ['help-ranks', 'What are ranks?', function (demo) {
+      var R = core.RANKS;
+      return '<p>Once you have finished the ten levels and given <strong>' + core.fmtMoney(R[0].at * 100, true) + '</strong> in total, you earn a <strong>rank</strong>, with an emblem that shows next to your name wherever a name is shown: at live tables, in leagues and crews, and in your account. ' +
+        'There are eight, in this order: ' + R.map(function (r) { return r.name + ' (' + core.fmtMoney(r.at * 100, true) + ')'; }).join(', ') + '. Each one is cooler than the last.</p>' +
+        '<p>Every rank has <strong>its own levels 1 to 10</strong>, spread evenly over the dollars up to the next rank, so you can be “Rank 2 · Level 6”. Rank 2 covers ' + core.fmtMoney(R[1].at * 100, true) + ' to ' + core.fmtMoney(R[2].at * 100, true) + ', so its level 6 starts at ' + core.fmtMoney(core.rankLevelAt(2, 6), true) + '. The top rank has no next rank, so its levels step every ' + core.fmtMoney(core.LAST_RANK_STEP * 100, true) + '. Before ' + core.fmtMoney(R[0].at * 100, true) + ' you are simply “Level 7”, from the ten XP levels.</p>' +
+        '<p>A rank is a receipt for giving, like XP: it comes from the total you have given, it only ever goes up, and it is <strong>not money</strong>. It cannot be bought on its own and it unlocks nothing with a cash value. Your <a href="#club">Giving Club</a> page shows all eight ranks and how far there is to go.' + (demo ? ' In demo mode the dollars are pretend, so the rank is too: it only lives in this browser.' : '') + '</p>' +
+        '<p><strong>Everyone else is simulated.</strong> The other players at live tables, in leagues and in crews are bots, and so are their ranks: each bot has a made-up rank that stays the same for that name, most with none and fewer and fewer with each rank above.</p>';
     }],
     ['help-split', 'What does “split your gift” do?', function () {
       return '<p>It divides your amount into equal parts, to the cent, and plays one round per part. Give $10 across 3 rounds and you get $3.34, $3.33 and $3.33, each going to whichever charity that round lands on. Each round needs at least $1, so small gifts have fewer split options. Slot machines work differently: every reel is a round, so you choose 3 to 12 reels and your gift is split evenly across them.</p>';

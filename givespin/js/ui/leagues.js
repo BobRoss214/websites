@@ -41,6 +41,7 @@
 
   function tierHTML() {
     var lv = core.levelFor(store.get().xp);
+    var st = ui.myStanding();
     var t = core.tierFor(lv.level);
     var next = t.next;
     var perks = core.TIERS.map(function (x, i) {
@@ -48,7 +49,7 @@
         '<div><b>' + x.name + '</b><small>Level ' + x.minLevel + '+ · ' + esc(x.perk) + '</small></div></li>';
     }).join('');
     return '<section class="sect panel" aria-labelledby="lg-tier"><h2 class="sect__t" id="lg-tier">Your tier: <span class="tier-name tier-name--' + t.tier.id + '">' + t.tier.name + '</span></h2>' +
-      '<p>You are level ' + lv.level + ' (' + esc(lv.name) + ').' + (next ? ' Reach level ' + next.minLevel + ' for ' + next.name + ': ' + esc(next.perk) : ' You are at the top tier.') + '</p>' +
+      '<p>' + (st.rank ? 'Your rank is ' + esc(st.label) + ' (' + esc(st.name) + '), and tiers follow your XP level, which is ' + lv.level + ' (' + esc(lv.name) + ').' : 'You are level ' + lv.level + ' (' + esc(lv.name) + ').') + (next ? ' Reach level ' + next.minLevel + ' for ' + next.name + ': ' + esc(next.perk) : ' You are at the top tier.') + '</p>' +
       '<ul class="tiers">' + perks + '</ul>' +
       '<p class="tabnote">VIP stakes show up beside the usual presets at <a href="#live">live tables</a>.</p></section>';
   }
@@ -61,9 +62,9 @@
     var rows = core.leagueTable(week, core.weekFraction(), store.weekly().xp, s.account.signedIn && s.account.name ? s.account.name : 'You');
     var me = rows.filter(function (r) { return r.you; })[0];
     return '<section class="sect panel" aria-labelledby="lg-league"><div class="sect__head"><h2 class="sect__t" id="lg-league">This week’s league <small>' + week + '</small></h2><span class="tag tag--plain">ends in ' + timeLeftInWeek() + '</span></div>' +
-      '<p>You are <b>#' + me.rank + '</b> with <b>' + me.xp + ' XP</b> this week. The top three are in the green zone and the bottom three in the red zone. This preview has one league, so nobody actually moves up or down. Earn XP by giving, backing winners, predicting and finishing card sets.</p>' +
+      '<p>You ' + ui.youChip() + ' are <b>#' + me.rank + '</b> with <b>' + me.xp + ' XP</b> this week. The top three are in the green zone and the bottom three in the red zone. This preview has one league, so nobody actually moves up or down. Earn XP by giving, backing winners, predicting and finishing card sets.</p>' +
       '<ol class="league" aria-label="Weekly league standings">' + rows.map(function (r) {
-        return '<li class="lrow lrow--' + r.zone + (r.you ? ' is-you' : '') + '"><span class="lrow__rank">' + r.rank + '</span><span class="lrow__name">' + esc(r.name) + (r.you ? ' <small>(you)</small>' : ' ' + botTag()) + '</span><span class="lrow__xp">' + r.xp + ' XP</span></li>';
+        return '<li class="lrow lrow--' + r.zone + (r.you ? ' is-you' : '') + '"><span class="lrow__rank">' + r.rank + '</span><span class="lrow__name">' + esc(r.name) + ' ' + (r.you ? ui.youChip() + ' <small>(you)</small>' : ui.botChip(r.name) + botTag()) + '</span><span class="lrow__xp">' + r.xp + ' XP</span></li>';
       }).join('') + '</ol>' +
       '<p class="tabnote">The other players are simulated rivals; their totals are the same for everyone this week and grow as the week goes on. Nothing here is money.</p></section>';
   }
@@ -192,7 +193,7 @@
     var msgs = GS.crews.chat(id).slice(-30);
     return msgs.length ? msgs.map(function (m) {
       var em = m.emote ? GS.crews.EMOTES.filter(function (x) { return x.id === m.emote; })[0] : null;
-      return '<li class="cmsg' + (m.bot ? '' : ' is-you') + '"><b>' + esc(m.name) + '</b>' + (m.bot ? ' ' + botTag() : '') + ' ' + (em ? '<span class="cmsg__emote">' + ui.icon(em.icon) + esc(em.label) + '</span>' : esc(m.text)) + '</li>';
+      return '<li class="cmsg' + (m.bot ? '' : ' is-you') + '"><b>' + esc(m.name) + '</b> ' + (m.bot ? ui.botChip(m.name, { px: 16 }) + botTag() : ui.youChip({ px: 16 })) + ' ' + (em ? '<span class="cmsg__emote">' + ui.icon(em.icon) + esc(em.label) + '</span>' : esc(m.text)) + '</li>';
     }).join('') : '<li class="empty">No messages yet. Say hello.</li>';
   }
 
@@ -210,7 +211,7 @@
       body = '<section class="sect panel" aria-labelledby="cr-me"><div class="sect__head"><h2 class="sect__t" id="cr-me">' + esc(mine.name) + '</h2><button type="button" class="btn btn--sm btn--ghost" data-role="crew-leave">Leave the crew</button></div>' +
         '<p>' + esc(mine.blurb) + '</p>' +
         '<div class="jpmeter"><div class="jpmeter__t">' + ui.icon('trophy') + '<b>Weekly crew goal</b> <span class="jpmeter__v">' + g.xp + ' / ' + g.goal + ' XP</span></div><div class="jpmeter__bar" role="img" aria-label="Crew goal ' + g.pct + '% done"><i style="width:' + g.pct + '%"></i></div><small>Your ' + g.myXp + ' XP this week plus your crewmates’ (simulated) ' + g.botXp + '.</small></div>' +
-        '<h3 class="crew__h">Crewmates</h3><ul class="crewmates"><li class="is-you">You</li>' + mine.members.map(function (n) { return '<li>' + esc(n) + ' ' + botTag() + '</li>'; }).join('') + '</ul>' +
+        '<h3 class="crew__h">Crewmates</h3><ul class="crewmates"><li class="is-you">You ' + ui.youChip() + '</li>' + mine.members.map(function (n) { return '<li>' + esc(n) + ' ' + ui.botChip(n) + botTag() + '</li>'; }).join('') + '</ul>' +
         '<p class="tabnote">When you put a stake on a charity at a live table, two or three crewmates back it too (simulated stakes).</p></section>' +
         '<section class="sect panel" aria-labelledby="cr-chat"><h2 class="sect__t" id="cr-chat">Crew chat</h2>' +
         '<ol class="chatlog" data-role="chatlog" tabindex="0" aria-label="Crew chat">' + chatHTML(mine.id) + '</ol>' +

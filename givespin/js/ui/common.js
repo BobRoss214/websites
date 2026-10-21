@@ -282,6 +282,68 @@
       return '<span class="avatar" style="--h:' + (acct.hue || 150) + ';--s:' + (size || 36) + 'px" aria-hidden="true">' + esc(ui.initials(acct.name)) + '</span>';
     },
 
+    /* ----------------------------------------------------------------- ranks */
+    // The emblems themselves are drawn by js/ranks.js. Everything here still reads right if that file is missing: the text carries the meaning.
+
+    /** The emblem of rank `n` (1 to 8) as inline SVG, `px` square; '' for no rank (before $1,000 given) or when the emblems are not there. */
+    rankEmblem: function (n, px, opts) {
+      if (!(n >= 1) || !GS.ranks || typeof GS.ranks.emblem !== 'function') { return ''; }
+      try { return GS.ranks.emblem(n, px, opts || {}) || ''; } catch (e) { return ''; }
+    },
+
+    /** The emblem inside a ring of ten level segments with `level` lit (rank card). */
+    rankRing: function (n, level, px, opts) {
+      if (!(n >= 1) || !GS.ranks || typeof GS.ranks.ring !== 'function') { return ''; }
+      try { return GS.ranks.ring(n, level, px, opts || {}) || ''; } catch (e) { return ''; }
+    },
+
+    /** The inline style that gives a rank's theme colours to an element (empty when the art did not say). */
+    rankTheme: function (n) {
+      var m = n >= 1 && GS.ranks && GS.ranks.META ? GS.ranks.META[n - 1] : null;
+      var hex = /^#[0-9a-fA-F]{3,8}$/;
+      if (!m || !hex.test(m.color || '') || !hex.test(m.accent || '')) { return ''; }
+      return ' style="--rc:' + m.color + ';--ra:' + m.accent + '"';
+    },
+
+    /** How the visitor stands now: a level before $1,000 given, a rank and the level inside it after (core.standingFor). */
+    myStanding: function () {
+      var s = GS.store.get();
+      return core.standingFor(s.xp, s.totalCents);
+    },
+
+    /**
+     * A small chip for a player's standing, to sit next to a name: the rank's emblem (18 px by default) and the short text ("R2 · L6"; before $1,000
+     * given there is no emblem and it is just "L7"). `st` comes from core.standingFor (you) or core.botStanding (a simulated player).
+     * It is named for screen readers in full ("Rank 2, Benefactor, level 6"). `o.bot` marks a simulated player: it looks the same, its tooltip says
+     * "simulated", and the BOT tag the caller already prints next to the name stays. `o.px` sets the emblem size, `o.cls` adds a class.
+     */
+    rankChip: function (st, o) {
+      if (!st) { return ''; }
+      o = o || {};
+      var ranked = st.rank > 0;
+      var e = ranked ? ui.rankEmblem(st.rank, o.px || 18, { animated: false }) : '';
+      return '<span class="rchip ' + (ranked ? 'rchip--r' + st.rank : 'rchip--lvl') + (o.bot ? ' is-bot' : '') + (o.cls ? ' ' + o.cls : '') + '"' + ui.rankTheme(st.rank) + ' role="img" aria-label="' + esc(st.words) +
+        '" title="' + esc(st.label + ' · ' + st.name + (o.bot ? ' (simulated)' : '')) + '"' + (o.bot ? ' data-bot="1"' : '') + '>' +
+        (e ? '<span class="rchip__e" aria-hidden="true">' + e + '</span>' : '') + '<span class="rchip__t" aria-hidden="true">' + esc(st.short) + '</span></span>';
+    },
+
+    /** The chip of a simulated player, from the name alone (the same rank on every screen and on every visit). */
+    botChip: function (name, o) {
+      var opt = { bot: true };
+      if (o) { Object.keys(o).forEach(function (k) { opt[k] = o[k]; }); }
+      return ui.rankChip(core.botStanding(name), opt);
+    },
+
+    /** The visitor's own chip. */
+    youChip: function (o) {
+      return ui.rankChip(ui.myStanding(), o);
+    },
+
+    /** "Level 7 · Kind Roller" before $1,000 given; the chip and the rank's name ("R2 · L6 Benefactor") after. */
+    standingLine: function (st) {
+      return st.rank ? ui.rankChip(st) + ' <span class="rname">' + esc(st.name) + '</span>' : esc(st.label) + ' · ' + esc(st.name);
+    },
+
     gameName: function (id) {
       var g = GS.games[id];
       return g ? g.name : (id === 'direct' ? 'Direct gift' : 'Game');

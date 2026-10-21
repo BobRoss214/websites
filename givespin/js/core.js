@@ -406,6 +406,146 @@
     };
   }
 
+  /* ------------------------------------------------------------------ ranks */
+
+  /**
+   * Ranks come after the ten levels. Like XP they are a receipt for giving: they are earned by the TOTAL GIVEN (the whole dollars-and-cents
+   * total the player has given, `store.get().totalCents`), never bought, never lost, and they unlock nothing with a cash value. They are worked
+   * out from that total every time they are needed and never stored, so a save from any older version simply has the rank its total gives it.
+   * `at` is in dollars. Everything below works in whole cents, so there is no rounding drift at a boundary.
+   */
+  var RANKS = [
+    { n: 1, id: 'patron',     name: 'Patron',     at: 1000 },
+    { n: 2, id: 'benefactor', name: 'Benefactor', at: 5000 },
+    { n: 3, id: 'champion',   name: 'Champion',   at: 10000 },
+    { n: 4, id: 'guardian',   name: 'Guardian',   at: 20000 },
+    { n: 5, id: 'paragon',    name: 'Paragon',    at: 50000 },
+    { n: 6, id: 'luminary',   name: 'Luminary',   at: 100000 },
+    { n: 7, id: 'titan',      name: 'Titan',      at: 500000 },
+    { n: 8, id: 'immortal',   name: 'Immortal',   at: 1000000 }
+  ];
+  var RANK_LEVELS = 10;          // every rank has its own levels 1 to 10
+  var LAST_RANK_STEP = 100000;   // dollars: the top rank has no next rank, so its levels step by this much instead
+
+  /** Anything (a number, a numeric string, junk, a fraction, a negative) to a whole number of cents, never below 0 and never past what whole-number maths can hold. */
+  function wholeCents(c) {
+    var n = Math.floor(Number(c));
+    return isFinite(n) && n > 0 ? Math.min(n, 1e14) : 0;
+  }
+
+  /** The cents at which level `level` (1 to 10) of rank `n` (1 to 8) begins: ten equal steps from this rank to the next ($100,000 steps in the top rank). */
+  function rankLevelAt(n, level) {
+    var r = RANKS[n - 1];
+    if (!r) { return 0; }
+    var from = r.at * 100;
+    var step = Math.max(0, Math.min(RANK_LEVELS, Math.floor(level)) - 1);
+    if (n >= RANKS.length) { return from + step * LAST_RANK_STEP * 100; }
+    return from + Math.ceil(step * (RANKS[n].at * 100 - from) / RANK_LEVELS);
+  }
+
+  /**
+   * Where `cents` given puts a player on the rank ladder, from money alone (no XP):
+   *   { rank (0 = not ranked yet, else 1 to 8), id, name, at (dollars), level (0 when unranked, else 1 to 10), cents,
+   *     pct (0 to 100, how far through this level; at level 10 the way to the next rank), rankPct (0 to 100, how far through this rank),
+   *     nextAt (the cents at which the next level, or the next rank from level 10, begins; null at the very top),
+   *     toNextCents (the cents still to give to get there), nextRank (the next rank in RANKS, or null), toRankCents (to the next rank), maxed }
+   * Exactly $1,000.00 is rank 1 level 1 and $999.99 is not ranked. Each rank's ten levels are spread evenly over the dollars up to the next rank
+   * (rank 2 covers $5,000 to $10,000, so level 6 begins at $7,500); the top rank steps every $100,000 and is "maxed" from level 10 ($1,900,000).
+   */
+  function rankFor(cents) {
+    var c = wholeCents(cents);
+    var n = 0;
+    for (var i = 0; i < RANKS.length; i++) { if (c >= RANKS[i].at * 100) { n = i + 1; } }
+    if (!n) {
+      var first = RANKS[0].at * 100;
+      var p0 = Math.floor(c * 100 / first);
+      return { rank: 0, id: '', name: '', at: 0, level: 0, cents: c, pct: p0, rankPct: p0, nextAt: first, toNextCents: first - c, nextRank: RANKS[0], toRankCents: first - c, maxed: false };
+    }
+    var r = RANKS[n - 1];
+    var level = 1;
+    for (var L = RANK_LEVELS; L > 1; L--) { if (c >= rankLevelAt(n, L)) { level = L; break; } }
+    var top = n >= RANKS.length;
+    var start = rankLevelAt(n, level);
+    var end = level < RANK_LEVELS ? rankLevelAt(n, level + 1) : (top ? null : RANKS[n].at * 100);
+    var from = r.at * 100;
+    var nextRank = top ? null : RANKS[n];
+    return {
+      rank: n, id: r.id, name: r.name, at: r.at, level: level, cents: c,
+      pct: end === null ? 100 : Math.floor((c - start) * 100 / (end - start)),
+      rankPct: top ? 100 : Math.floor((c - from) * 100 / (nextRank.at * 100 - from)),
+      nextAt: end, toNextCents: end === null ? 0 : end - c, nextRank: nextRank, toRankCents: top ? null : nextRank.at * 100 - c,
+      maxed: top && level === RANK_LEVELS
+    };
+  }
+
+  /** "Rank 2 · Level 6" / "R2 · L6" for a ranked player and "Level 7" / "L7" before $1,000, plus the same in full words for a screen reader. */
+  function standingText(rank, level, name) {
+    return rank
+      ? { label: 'Rank ' + rank + ' · Level ' + level, short: 'R' + rank + ' · L' + level, words: 'Rank ' + rank + ', ' + name + ', level ' + level }
+      : { label: 'Level ' + level, short: 'L' + level, words: 'Level ' + level + ', ' + name };
+  }
+
+  /**
+   * The one object the screens use to say how a player stands. Before $1,000 given it wraps the XP level (levelFor): "Level 7" / "L7", and `name` is
+   * the level's name. From $1,000 it is the rank and the level inside it: "Rank 2 · Level 6" / "R2 · L6", and `name` is the rank's name.
+   *   { rank (0 to 8), id ('' when unranked), name, level (1 to 10), label, short, words,
+   *     pct (how far through this level, 0 to 100: before $1,000 that is the XP bar; at level 10 it is the way to the next rank),
+   *     rankPct (how far to the next rank, 0 to 100), nextLabel ("Level 7", or "Rank 3: Champion" from level 10; '' at the very top),
+   *     nextAt (cents at which that begins, or null when it is an XP level), toNextCents (cents still to give for it, or null), nextRank (the next rank, or null),
+   *     toRankCents (cents to the next rank, or null), maxed (nothing left to climb: rank 8, level 10), cents, xp }
+   * The rank comes from `cents` alone, so XP can never move it; before $1,000 the level comes from `xp` alone, so dollars cannot move it.
+   */
+  function standingFor(xp, cents) {
+    var rk = rankFor(cents);
+    var x = Number(xp);
+    x = isFinite(x) && x > 0 ? x : 0;
+    if (!rk.rank) {
+      var lv = levelFor(x);
+      var t0 = standingText(0, lv.level, lv.name);
+      return {
+        rank: 0, id: '', name: lv.name, level: lv.level, label: t0.label, short: t0.short, words: t0.words,
+        pct: lv.maxed ? rk.rankPct : lv.pct, rankPct: rk.rankPct,
+        nextLabel: lv.maxed ? 'Rank 1: ' + RANKS[0].name : 'Level ' + (lv.level + 1),
+        nextAt: lv.maxed ? rk.nextAt : null, toNextCents: lv.maxed ? rk.toNextCents : null,
+        nextRank: RANKS[0], toRankCents: rk.toRankCents, maxed: false, cents: rk.cents, xp: x
+      };
+    }
+    var t = standingText(rk.rank, rk.level, rk.name);
+    return {
+      rank: rk.rank, id: rk.id, name: rk.name, level: rk.level, label: t.label, short: t.short, words: t.words,
+      pct: rk.pct, rankPct: rk.rankPct,
+      nextLabel: rk.level < RANK_LEVELS ? 'Level ' + (rk.level + 1) : (rk.nextRank ? 'Rank ' + rk.nextRank.n + ': ' + rk.nextRank.name : ''),
+      nextAt: rk.nextAt, toNextCents: rk.nextAt === null ? null : rk.toNextCents, nextRank: rk.nextRank, toRankCents: rk.toRankCents, maxed: rk.maxed, cents: rk.cents, xp: x
+    };
+  }
+
+  // How the simulated players are spread over the ranks, in percent: most have none, and fewer and fewer have each rank above.
+  var BOT_RANK_MIX = [55, 20, 10, 6, 4, 2.5, 1.5, 0.8, 0.2];   // not ranked, rank 1, rank 2 ... rank 8 (adds up to 100)
+
+  /**
+   * A made-up standing for a simulated player (a bot at a live table, a league rival, a crew mate). It comes from the name alone, so a bot
+   * has the same rank on every screen and on every visit, and it never changes how a real player stands. Same shape as standingFor, with
+   * `bot: true`; it has no progress, because a bot is not going anywhere.
+   */
+  function botStanding(name) {
+    var rng = seeded('rank:' + String(name));
+    var roll = rng() * 100;
+    var rank = 0;
+    var acc = 0;
+    for (var i = 0; i < BOT_RANK_MIX.length; i++) {
+      acc += BOT_RANK_MIX[i];
+      if (roll < acc) { rank = i; break; }
+      rank = i;
+    }
+    var level = 1 + Math.floor(rng() * RANK_LEVELS);
+    var nm = rank ? RANKS[rank - 1].name : LEVELS[level - 1].name;
+    var t = standingText(rank, level, nm);
+    return {
+      rank: rank, id: rank ? RANKS[rank - 1].id : '', name: nm, level: level, label: t.label, short: t.short, words: t.words,
+      pct: 0, rankPct: 0, nextLabel: '', nextAt: null, toNextCents: null, nextRank: null, toRankCents: null, maxed: false, cents: 0, xp: 0, bot: true
+    };
+  }
+
   /* ------------------------------------------------------------ dates / streak */
 
   /** Local calendar day as "YYYY-MM-DD" (local time on purpose: a "day" is the player's day). */
@@ -717,6 +857,7 @@
     buildPool: buildPool, activeFilterCount: activeFilterCount, facetCounts: facetCounts, mergeAllocations: mergeAllocations,
     cleanVariant: cleanVariant, variantChoice: variantChoice,
     LEVELS: LEVELS, XP_PER_DOLLAR: XP_PER_DOLLAR, JACKPOT_XP: JACKPOT_XP, xpForGift: xpForGift, pickBonusXp: pickBonusXp, levelFor: levelFor,
+    RANKS: RANKS, RANK_LEVELS: RANK_LEVELS, LAST_RANK_STEP: LAST_RANK_STEP, BOT_RANK_MIX: BOT_RANK_MIX, rankLevelAt: rankLevelAt, rankFor: rankFor, standingFor: standingFor, botStanding: botStanding,
     seeded: seeded, seededShuffle: seededShuffle, weekKey: weekKey, weekFraction: weekFraction, TIERS: TIERS, tierFor: tierFor, stakePresets: stakePresets,
     RARITIES: RARITIES, rarityFor: rarityFor, rarityRank: rarityRank, monthlySet: monthlySet, leagueTable: leagueTable, cupField: cupField,
     dayKey: dayKey, monthKey: monthKey, daysBetween: daysBetween, nextStreak: nextStreak, nextGiftDate: nextGiftDate,

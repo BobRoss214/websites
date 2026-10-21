@@ -262,13 +262,14 @@
     var a = store.account();
     var spent = store.monthSpent();
     var lv = core.levelFor(store.get().xp);
+    var st = ui.myStanding();
     var cardHTML = a.card
       ? '<div class="cardrow">' + ui.icon('credit-card') + '<div><b>' + esc(core.BRAND_NAMES[a.card.brand]) + ' ending ' + esc(a.card.last4) + '</b><small>Expires ' + esc(a.card.exp) + ' · preview, never charged</small></div>' +
           '<button type="button" class="btn btn--sm btn--ghost" data-role="rmcard">Remove</button></div>'
       : '<p class="muted">No card saved.</p>' + cardFormHTML();
     m.set(
       '<h2 class="modal__title" id="dlg-settings-title">Your account</h2>' +
-      '<div class="acctcard">' + ui.avatar(a, 52) + '<div><b>' + esc(a.name) + '</b><small>' + esc(accounts.maskContact(a.type, a.contact)) + ' · Level ' + lv.level + ' ' + esc(lv.name) + '</small></div></div>' +
+      '<div class="acctcard">' + ui.avatar(a, 52) + '<div><b>' + esc(a.name) + '</b><small>' + esc(accounts.maskContact(a.type, a.contact)) + ' · ' + (st.rank ? ui.standingLine(st) : 'Level ' + lv.level + ' ' + esc(lv.name)) + '</small></div></div>' +
       previewNotice() +
       '<section class="fgroup"><h3 class="fgroup__t">Saved card</h3>' + cardHTML + '</section>' +
       '<section class="fgroup"><h3 class="fgroup__t">Monthly giving limit</h3>' +
@@ -363,9 +364,12 @@
 
   function menuHTML(a) {
     var lv = core.levelFor(store.get().xp);
-    return '<button type="button" class="acct__btn" data-role="toggle" aria-expanded="' + menuOpen + '" aria-controls="acct-menu" aria-label="Account menu for ' + esc(a.name) + '">' + ui.avatar(a, 34) + '</button>' +
+    var st = ui.myStanding();
+    // a ranked player's emblem sits on the corner of the avatar button, and the button's name says the rank
+    var pin = st.rank ? '<span class="acct__rank" aria-hidden="true">' + ui.rankEmblem(st.rank, 22, { animated: false }) + '</span>' : '';
+    return '<button type="button" class="acct__btn' + (st.rank ? ' has-rank' : '') + '" data-role="toggle" aria-expanded="' + menuOpen + '" aria-controls="acct-menu" aria-label="Account menu for ' + esc(a.name) + (st.rank ? ', ' + esc(st.words) : '') + '">' + ui.avatar(a, 34) + pin + '</button>' +
       '<div class="acct__menu" id="acct-menu"' + (menuOpen ? '' : ' hidden') + '>' +
-        '<div class="acct__who">' + ui.avatar(a, 40) + '<div><b>' + esc(a.name) + '</b><small>Level ' + lv.level + ' · ' + esc(lv.name) + '</small></div></div>' +
+        '<div class="acct__who">' + ui.avatar(a, 40) + '<div><b>' + esc(a.name) + '</b><small>' + (st.rank ? ui.standingLine(st) : 'Level ' + lv.level + ' · ' + esc(lv.name)) + '</small></div></div>' +
         '<a class="acct__item" href="#giving">' + ui.icon('hand-heart') + 'My Giving</a>' +
         '<a class="acct__item" href="#club">' + ui.icon('crown') + 'Giving Club</a>' +
         '<button type="button" class="acct__item" data-role="settings">' + ui.icon('credit-card') + 'Card &amp; giving limit</button>' +

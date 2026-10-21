@@ -187,14 +187,26 @@
     }
 
     var after = summary.after;
-    var startPct = summary.leveledUp ? 0 : summary.before.pct;
+    // how the player stands: a level before $1,000 given, a rank and the level inside it after (the bar is how far through that level)
+    var ra = summary.rankAfter;
+    var ranked = !!(ra && ra.rank);
+    var climbed = !!(summary.rankedUp || summary.levelUp || summary.leveledUp);
+    var startPct = climbed ? 0 : (summary.rankBefore ? summary.rankBefore.pct : summary.before.pct);
+    var endPct = ra ? ra.pct : after.pct;
     var giftCents = allocs.reduce(function (s, a) { return s + a.cents; }, 0);
     var why = summary.giftXp + ' XP for your ' + money(giftCents, false) + ' gift (10 XP for every $1)' +
       (summary.bonusXp ? ' + ' + summary.bonusXp + ' bonus' : '') + (summary.hotXp ? ' + ' + summary.hotXp + ' hot hand' : '') + (summary.setXp ? ' + ' + summary.setXp + ' for the card set' : '') + '.';
-    var xp = '<div class="xpcard"><div class="xpcard__row"><span>Level ' + after.level + ' · ' + esc(after.name) + '</span><span class="xpcard__gain">+' + summary.xpGain + ' XP</span></div>' +
+    var who = ranked
+      ? '<span class="xpcard__who"><span class="xpcard__e" aria-hidden="true">' + ui.rankEmblem(ra.rank, 26, { animated: false }) + '</span><span>' + esc(ra.label) + ' · ' + esc(ra.name) + '</span></span>'
+      : '<span>Level ' + after.level + ' · ' + esc(after.name) + '</span>';
+    var up = summary.rankedUp ? '<div class="levelup levelup--rank">Rank up! You reached Rank ' + ra.rank + ': ' + esc(ra.name) + '.</div>'
+      : summary.levelUp && ranked ? '<div class="levelup">Level up! You are now ' + esc(ra.label) + '.</div>'
+      : summary.leveledUp ? '<div class="levelup">' + (ranked ? 'XP level up! Your XP level is now ' : 'Level up! You are now ') + esc(after.name) + '.</div>' : '';
+    // what comes next: always for a ranked player, and for a player with no rank once the ten levels are done
+    var goal = ranked || (ra && after.maxed) ? '<p class="rs-fine xpcard__next">' + esc(ui.rankui.nextLine(ra)) + '</p>' : '';
+    var xp = '<div class="xpcard' + (ranked ? ' has-rank' : '') + '"' + (ranked ? ui.rankTheme(ra.rank) : '') + '><div class="xpcard__row">' + who + '<span class="xpcard__gain">+' + summary.xpGain + ' XP</span></div>' +
       '<div class="bar"><i style="width:' + startPct + '%"></i></div>' +
-      '<p class="rs-fine xpcard__why">' + esc(why) + '</p>' +
-      (summary.leveledUp ? '<div class="levelup">Level up! You are now ' + esc(after.name) + '.</div>' : '') + '</div>';
+      '<p class="rs-fine xpcard__why">' + esc(why) + '</p>' + goal + up + '</div>';
 
     var extras = '';
     if (summary.hot && summary.hot.mult > 1) {
@@ -236,7 +248,7 @@
     m.open();
 
     var bar = m.$('.bar i');
-    if (bar) { requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.width = after.pct + '%'; }); }); }
+    if (bar) { requestAnimationFrame(function () { requestAnimationFrame(function () { bar.style.width = endPct + '%'; }); }); }
 
     m.$('[data-role="again"]').addEventListener('click', function () {
       m.close();
@@ -260,8 +272,11 @@
 
     if (round.jackpot) { GS.audio.jackpot(); GS.confetti.celebrate(1.7); GS.confetti.shower(2600); }
     else { GS.audio.win(); GS.confetti.celebrate(round.direct ? 0.8 : 1); }
-    if (summary.leveledUp) { setTimeout(GS.audio.levelUp, 700); }
-    if (summary.newBadges.length) { setTimeout(GS.audio.badge, summary.leveledUp ? 1300 : 800); }
+    var lifted = !!(summary.leveledUp || summary.levelUp);
+    if (lifted) { setTimeout(GS.audio.levelUp, 700); }
+    if (summary.newBadges.length) { setTimeout(GS.audio.badge, lifted ? 1300 : 800); }
+    // a new rank gets its own moment on top of the receipt, a moment after the receipt has had its say (once: see ui.rankup)
+    if (summary.rankedUp) { setTimeout(function () { ui.rankup.show(summary); }, GS.util.dur(1300)); }
   }
 
   function share(round, demo) {

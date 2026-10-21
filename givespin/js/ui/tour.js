@@ -71,8 +71,8 @@
       body: 'You do not need an account to play. If you want one, you can sign up, save a card for easy giving and set a monthly giving limit.' + (d ? ' For now this is a <b>preview</b>: nothing is sent anywhere and nothing real is stored.' : '')
     });
     list.push({
-      sel: '.side__link[data-route="club"]', icon: 'crown', title: 'Levels, leagues and more',
-      body: 'Every $1 you give earns 10 XP, which levels you up and unlocks badges in the Giving Club. There are weekly leagues, crews, collectible cards' + (d ? ' and a daily bonus wheel' : '') + '. It is all just for fun.'
+      sel: '.side__link[data-route="club"]', icon: 'crown', title: 'Levels, ranks, leagues and more',
+      body: 'Every $1 you give earns 10 XP, which levels you up and unlocks badges in the Giving Club. After level 10, at $1,000 given, you earn a <b>rank</b> with its own emblem next to your name (a receipt for giving, not money). There are weekly leagues, crews, collectible cards' + (d ? ' and a daily bonus wheel' : '') + '. It is all just for fun.'
     });
     list.push({ last: true });
     return list;

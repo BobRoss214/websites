@@ -588,6 +588,13 @@
 
   /* ------------------------------------------------------------- result card */
 
+  /** The end of the XP line: a new rank, a level-up inside a rank, or (before $1,000 given) the plain level-up. */
+  function levelNote(sm) {
+    if (sm.rankedUp) { return ' · Rank up! ' + sm.rankAfter.label + ' (' + sm.rankAfter.name + ')'; }
+    if (sm.levelUp && sm.rankAfter.rank) { return ' · Level up! ' + sm.rankAfter.label; }
+    return sm.leveledUp ? ' · Level up!' : '';
+  }
+
   function renderResult() {
     if (!cur || !panel) { return; }
     var room = cur.room;
@@ -609,7 +616,10 @@
         lines.push('<p>You backed ' + esc(GS.charity(you.charityId).short) + ', so it wasn’t your pick this time. The pot still goes to <b>' + esc(winner.short) + '</b>, and so does your ' + dollars(you.dollars) + '. It’s as if your charity won.</p>');
       }
       var sm = you.summary;
-      lines.push('<p class="lt-res__xp">+' + sm.xpGain + ' XP: ' + sm.giftXp + ' for your ' + dollars(you.dollars) + ' (10 XP for every $1)' + (sm.bonusXp ? ' + ' + sm.bonusXp + ' for backing the winner' : '') + (sm.hotXp ? ' + ' + sm.hotXp + ' hot hand ×' + sm.hot.mult.toFixed(1) : '') + (sm.leveledUp ? ' · Level up!' : '') + '</p>');
+      lines.push('<p class="lt-res__xp">+' + sm.xpGain + ' XP: ' + sm.giftXp + ' for your ' + dollars(you.dollars) + ' (10 XP for every $1)' + (sm.bonusXp ? ' + ' + sm.bonusXp + ' for backing the winner' : '') + (sm.hotXp ? ' + ' + sm.hotXp + ' hot hand ×' + sm.hot.mult.toFixed(1) : '') + levelNote(sm) + '</p>');
+      if (sm.rankedUp) {
+        lines.push('<p class="lt-res__rank">' + ui.rankEmblem(sm.rankAfter.rank, 36, { animated: false }) + '<span><b>You reached Rank ' + sm.rankAfter.rank + ': ' + esc(sm.rankAfter.name) + '.</b> Your rank shows next to your name now.</span></p>');
+      }
       if (sm.hot && sm.hot.after >= 2 && you.won) { lines.push('<p class="lt-res__xp">' + ui.icon('flame') + sm.hot.after + ' winners called in a row. Your next round earns ×' + store.hotMultiplier().toFixed(1) + ' XP.</p>'); }
       (sm.newCards || []).forEach(function (c) {
         var ch = GS.charity(c.charityId);
@@ -773,6 +783,13 @@
   /** The line a visitor gets when a table they are not looking at (or whose result card they missed) settles. */
   function resultToast(room, r) {
     ui.toast(room.title() + ': ' + r.winner.short + ' took the simulated ' + dollars(r.pot) + ' pot. ' + (r.you.won ? 'Your pick won!' : 'Your ' + dollars(r.you.dollars) + ' went to it.'), r.you.won ? 'award' : 'trophy');
+    rankNews(r);
+  }
+
+  /** A stake that lifted the visitor to a new rank (or a new level inside one) is celebrated, once, wherever they are when the table settles. */
+  function rankNews(r) {
+    var sm = r && r.you && r.you.summary;
+    if (sm && sm.rankAfter && (sm.rankedUp || sm.levelUp)) { setTimeout(function () { ui.rankup.show(sm, { toast: true }); }, U.dur(700)); }
   }
 
   /**
@@ -849,6 +866,7 @@
     if (!r || !r.you) { return; }
     if (r.you.won) { GS.audio.win(); GS.confetti.celebrate(1); }
     else { GS.audio.coin(); }
+    rankNews(r);
   }
 
   function onPhase() {
@@ -934,16 +952,28 @@
 
   /* ------------------------------------------------------------------- tabs */
 
+  // The feed is drawn again for every bet, and a rank emblem is drawn with ids of its own (so that many can share a page), which would make the text
+  // differ from one draw to the next even when nothing has changed. So what was drawn is kept, with what it was drawn from, and handed back while that is the same.
+  var feedMemo = { sig: '', html: '' };
+
   function renderFeed() {
     var room = cur.room;
     if (!room.feed.length) { return '<p class="empty">Nothing yet. Bets will show up here as they come in.</p>'; }
+    var sig = room.id + ':' + room.round + ':' + ui.myStanding().label + ':' + JSON.stringify(room.feed.slice(0, 24));
+    if (feedMemo.sig === sig) { return feedMemo.html; }
+    var html = feedHTML(room);
+    feedMemo = { sig: sig, html: html };
+    return html;
+  }
+
+  function feedHTML(room) {
     return '<p class="tabnote">Newest first. Every player marked ' + botTag() + ' is a simulated bot.</p><ol class="feed" tabindex="0" aria-label="Live feed, newest first">' + room.feed.slice(0, 24).map(function (n) {
       var ch = GS.charity(n.charityId || n.winnerId);
       if (n.kind === 'join' || n.kind === 'cancel') {
-        var who = n.who === 'you' ? '<b>You</b>' : '<b>' + esc(n.name) + '</b> ' + botTag();
+        var who = n.who === 'you' ? '<b>You</b> ' + ui.youChip() : '<b>' + esc(n.name) + '</b> ' + ui.botChip(n.name) + botTag();
         return '<li class="feed__row' + (n.who === 'you' ? ' is-you' : '') + '">' + who + (n.kind === 'cancel' ? ' took back ' : ' put ') + '<b>' + dollars(n.dollars) + '</b>' + (n.kind === 'cancel' ? ' from ' : ' on ') + '<span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span></li>';
       }
-      if (n.kind === 'crew') { return '<li class="feed__row feed__row--crew">' + ui.icon('users') + '<b>' + esc(n.name) + '</b> ' + botTag() + ' crewmates ' + esc(n.members.join(', ')) + ' put <b>' + dollars(n.dollars) + '</b> on <span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span> with you</li>'; }
+      if (n.kind === 'crew') { return '<li class="feed__row feed__row--crew">' + ui.icon('users') + '<b>' + esc(n.name) + '</b> ' + botTag() + ' crewmates ' + n.members.map(function (m) { return esc(m) + ' ' + ui.botChip(m); }).join(', ') + ' put <b>' + dollars(n.dollars) + '</b> on <span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span> with you</li>'; }
       if (n.kind === 'chat') { return '<li class="feed__row feed__row--crew">' + ui.icon('radio') + '<b>Chat</b> ' + botTag() + ' voted for <span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span> (' + n.votes + ' votes) and put <b>' + dollars(n.dollars) + '</b> on it</li>'; }
       if (n.kind === 'lock') { return '<li class="feed__row feed__row--sys">Bets closed. The pot is <b>' + dollars(n.pot) + '</b>. Drawing the winner…</li>'; }
       return '<li class="feed__row feed__row--sys">' + esc(ch.name) + ' wins the <b>' + dollars(n.pot) + '</b> pot.</li>';

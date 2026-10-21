@@ -144,9 +144,7 @@
   }
 
   function renderSideLevel() {
-    var lv = core.levelFor(store.get().xp);
-    $('#side-level').innerHTML = '<a class="lvlcard" href="#club" aria-label="Level ' + lv.level + ', ' + ui.esc(lv.name) + '. Open the Giving Club">' +
-      '<span class="lvlcard__n">' + lv.level + '</span><span class="lvlcard__t"><b>' + ui.esc(lv.name) + '</b><span class="bar"><i style="width:' + lv.pct + '%"></i></span></span></a>';
+    $('#side-level').innerHTML = ui.rankui.sideHTML();   // the level card, with the rank once there is one (js/ui/rankui.js)
   }
 
   /* ---------------------------------------------------------------- search */

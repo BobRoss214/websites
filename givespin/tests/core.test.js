@@ -309,6 +309,274 @@ test('the levels sit on round giving milestones: about $10 given for level 2, ab
   assert.equal(core.levelFor(core.xpForGift(900) - 1).level < core.LEVELS.length, true);
 });
 
+/* ------------------------------------------------------------------ ranks (a receipt for giving, earned by the total given) */
+
+const RANK_DOLLARS = [1000, 5000, 10000, 20000, 50000, 100000, 500000, 1000000];
+const RANK_IDS = ['patron', 'benefactor', 'champion', 'guardian', 'paragon', 'luminary', 'titan', 'immortal'];
+const RANK_NAMES = ['Patron', 'Benefactor', 'Champion', 'Guardian', 'Paragon', 'Luminary', 'Titan', 'Immortal'];
+/** The cents at which level `level` of rank `k` (1 to 8) begins, worked out here with BigInt so it is independent of the code under test. */
+function levelStartCents(k, level) {
+  const A = BigInt(RANK_DOLLARS[k - 1]) * 100n;
+  if (k === 8) { return Number(A + BigInt(level - 1) * 100000n * 100n); }
+  const B = BigInt(RANK_DOLLARS[k]) * 100n;
+  return Number(A + (BigInt(level - 1) * (B - A) + 9n) / 10n);
+}
+/** The same rule written the way the design states it, for a total in cents: rank 0 is "not ranked yet". */
+function expectedRank(cents) {
+  let k = 0;
+  RANK_DOLLARS.forEach((d, i) => { if (BigInt(cents) >= BigInt(d) * 100n) { k = i + 1; } });
+  if (!k) { return { rank: 0, level: 0 }; }
+  const A = BigInt(RANK_DOLLARS[k - 1]) * 100n;
+  const c = BigInt(cents);
+  if (k === 8) { return { rank: 8, level: Math.min(10, 1 + Number((c - A) / 10000000n)) }; }
+  const B = BigInt(RANK_DOLLARS[k]) * 100n;
+  const level = 1n + (10n * (c - A)) / (B - A);
+  return { rank: k, level: Number(level > 10n ? 10n : level) };
+}
+const rankKey = (cents) => { const r = core.rankFor(cents); return r.rank * 100 + r.level; };
+
+test('RANKS: eight ranks in the owner\'s order, at the owner\'s dollar amounts, and ranks never touch the ten XP levels', () => {
+  assert.equal(core.RANKS.length, 8);
+  assert.deepEqual(core.RANKS.map((r) => r.id), RANK_IDS);
+  assert.deepEqual(core.RANKS.map((r) => r.name), RANK_NAMES);
+  assert.deepEqual(core.RANKS.map((r) => r.at), RANK_DOLLARS, 'the first rank is at $1,000, then $5,000, $10,000, $20,000, $50,000, $100,000, $500,000 and $1,000,000');
+  assert.deepEqual(core.RANKS.map((r) => r.n), [1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.equal(core.RANK_LEVELS, 10, 'every rank has its own levels 1 to 10');
+  assert.equal(core.LEVELS.length, 10, 'the XP levels are exactly as they were');
+  assert.equal(core.LEVELS[9].xp, 9000);
+  assert.equal(core.levelFor(9000).level, 10);
+});
+
+test('rankFor: every boundary, one cent either side, from $999.99 to $1,000,000.00', () => {
+  assert.equal(core.rankFor(0).rank, 0);
+  assert.equal(core.rankFor(core.toCents(999.99)).rank, 0, '$999.99 is not ranked yet');
+  assert.equal(core.rankFor(core.toCents('1,000.00')).rank, 1, 'exactly $1,000.00 is rank 1');
+  assert.equal(core.rankFor(core.toCents('1,000.00')).level, 1, 'and level 1 of it');
+  RANK_DOLLARS.forEach((d, i) => {
+    const k = i + 1;
+    const below = core.rankFor(d * 100 - 1);
+    const at = core.rankFor(d * 100);
+    assert.equal(below.rank, k - 1, '$' + (d - 0.01).toFixed(2) + ' is still rank ' + (k - 1));
+    assert.equal(below.level, k === 1 ? 0 : 10, 'and the last level of it');
+    assert.equal(at.rank, k, '$' + d + '.00 is rank ' + k);
+    assert.equal(at.level, 1, 'at level 1');
+    assert.equal(at.id, RANK_IDS[i]);
+    assert.equal(at.name, RANK_NAMES[i]);
+    assert.equal(core.rankFor(d * 100 + 1).rank, k, 'a cent more is the same rank');
+  });
+  assert.equal(core.rankFor(core.toCents('4,999.99')).rank, 1);
+  assert.equal(core.rankFor(core.toCents('5,000.00')).rank, 2);
+  assert.equal(core.rankFor(core.toCents('1,000,000.00')).rank, 8);
+  assert.equal(core.rankFor(core.toCents('1,000,000,000.00')).rank, 8, 'and beyond: still the top rank');
+});
+
+test('rankFor: each rank\'s ten levels are spread evenly over the dollars up to the next rank (rank 2 level 6 begins at $7,500)', () => {
+  assert.equal(core.rankFor(749999).rank, 2);
+  assert.equal(core.rankFor(749999).level, 5);
+  assert.equal(core.rankFor(750000).level, 6, 'rank 2 covers $5,000 to $10,000, so level 6 begins at $7,500');
+  assert.equal(core.rankLevelAt(2, 6), 750000);
+  for (let k = 1; k <= 7; k++) {
+    const A = RANK_DOLLARS[k - 1] * 100;
+    const B = RANK_DOLLARS[k] * 100;
+    for (let level = 1; level <= 10; level++) {
+      const start = levelStartCents(k, level);
+      assert.equal(start, A + (level - 1) * (B - A) / 10, 'level ' + level + ' of rank ' + k + ' begins a tenth of the way along, ' + (level - 1) + ' tenths in');
+      assert.equal(core.rankLevelAt(k, level), start);
+      const at = core.rankFor(start);
+      assert.deepEqual([at.rank, at.level], [k, level], 'rank ' + k + ' level ' + level + ' begins exactly at ' + core.fmtMoney(start));
+      const before = core.rankFor(start - 1);
+      assert.deepEqual([before.rank, before.level], level === 1 ? (k === 1 ? [0, 0] : [k - 1, 10]) : [k, level - 1], 'one cent less is the level before');
+    }
+  }
+  // the same answer as the rule written out with big numbers, over a spread of totals
+  for (let c = 0; c < 130000000; c += 99991) {
+    const want = expectedRank(c);
+    const got = core.rankFor(c);
+    assert.deepEqual([got.rank, got.level], [want.rank, want.level], 'at ' + core.fmtMoney(c));
+  }
+});
+
+test('rankFor: the top rank has no next rank, so its levels step every $100,000 and it is maxed from level 10 ($1,900,000)', () => {
+  assert.deepEqual([core.rankFor(100000000).rank, core.rankFor(100000000).level], [8, 1]);
+  assert.deepEqual([core.rankFor(109999999).rank, core.rankFor(109999999).level], [8, 1]);
+  assert.deepEqual([core.rankFor(110000000).rank, core.rankFor(110000000).level], [8, 2], 'level 2 from $1,100,000');
+  for (let level = 1; level <= 10; level++) {
+    const start = 100000000 + (level - 1) * 10000000;
+    assert.equal(core.rankLevelAt(8, level), start);
+    assert.deepEqual([core.rankFor(start).rank, core.rankFor(start).level], [8, level]);
+  }
+  assert.equal(core.rankFor(189999999).level, 9);
+  assert.equal(core.rankFor(190000000).level, 10, 'level 10 from $1,900,000');
+  assert.equal(core.rankFor(189999999).maxed, false);
+  assert.equal(core.rankFor(190000000).maxed, true);
+  const far = core.rankFor(9e12);
+  assert.deepEqual([far.rank, far.level, far.maxed], [8, 10, true], 'then it stays level 10');
+  assert.equal(far.nextRank, null);
+  assert.equal(core.rankFor(100000000).nextRank, null);
+  for (let k = 1; k <= 7; k++) { assert.equal(core.rankFor(RANK_DOLLARS[k - 1] * 100).maxed, false, 'only the top rank can be maxed'); }
+});
+
+test('rankFor: more given never lowers the standing (every boundary, a cent either side, and a long climb)', () => {
+  const edges = [0];
+  for (let k = 1; k <= 8; k++) { for (let level = 1; level <= 10; level++) { edges.push(levelStartCents(k, level)); } }
+  const points = [];
+  edges.forEach((e) => { [e - 1, e, e + 1, e + 99, e + 100].forEach((p) => { if (p >= 0) { points.push(p); } }); });
+  points.sort((a, b) => a - b);
+  for (let i = 1; i < points.length; i++) { assert.ok(rankKey(points[i]) >= rankKey(points[i - 1]), core.fmtMoney(points[i - 1]) + ' to ' + core.fmtMoney(points[i])); }
+  // a long climb in small, odd steps: one cent at a time near the boundaries is covered above, this covers the long way round
+  let c = 0;
+  let last = 0;
+  let steps = 0;
+  const rng = core.seeded('rank-climb');
+  while (c < 260000000) { c += 1 + Math.floor(rng() * 400000); const now = rankKey(c); assert.ok(now >= last, 'at ' + core.fmtMoney(c)); last = now; steps += 1; }
+  assert.ok(steps > 600);
+  // the progress bars never run backwards inside a level either
+  for (let cents = 100000; cents < 100000 + 400000; cents += 997) { const a = core.rankFor(cents); const b = core.rankFor(cents + 997); if (a.level === b.level && a.rank === b.rank) { assert.ok(b.pct >= a.pct); } }
+});
+
+test('rankFor: money is whole cents, so junk, fractions, negatives and numeric strings cannot give a wrong rank', () => {
+  [undefined, null, NaN, -5, -100000, 'abc', {}, [], Infinity, -Infinity].forEach((v) => {
+    const r = core.rankFor(v);
+    assert.deepEqual([r.rank, r.level, r.cents], [0, 0, 0], String(v) + ' counts as nothing given');
+  });
+  assert.equal(core.rankFor(99999.9).rank, 0, 'a fraction of a cent short of $1,000.00 is not rank 1');
+  assert.equal(core.rankFor(100000.4).rank, 1, 'and a fraction over it is');
+  assert.equal(core.rankFor('100000').rank, 1, 'a numeric string works');
+  assert.equal(core.rankFor(0.1 + 0.2).cents, 0);
+  assert.equal(core.rankFor(1e300).rank, 8);
+  // the sums the store makes (whole cents added up) land exactly on the boundary
+  let total = 0;
+  for (let i = 0; i < 40; i++) { total += 2499; }
+  assert.equal(total, 99960);
+  assert.equal(core.rankFor(total).rank, 0);
+  assert.equal(core.rankFor(total + 40).rank, 1, '$999.60 + $0.40 is exactly $1,000.00');
+});
+
+test('rankFor: progress inside a level and inside a rank, and what comes next', () => {
+  const a = core.rankFor(750000 + 25000);   // halfway through rank 2 level 6 ($7,500 to $8,000)
+  assert.deepEqual([a.rank, a.level, a.pct, a.nextAt, a.toNextCents], [2, 6, 50, 800000, 25000]);
+  assert.equal(a.rankPct, 55, '$7,750 is 55% of the way from $5,000 to $10,000');
+  assert.equal(a.nextRank.name, 'Champion');
+  assert.equal(a.toRankCents, 1000000 - 775000);
+  const t = core.rankFor(950000);   // rank 2 level 10 ($9,500 to $10,000): the way to the next rank
+  assert.deepEqual([t.level, t.pct, t.nextAt, t.toNextCents, t.toRankCents], [10, 0, 1000000, 50000, 50000]);
+  assert.equal(core.rankFor(999999).pct, 99, 'the bar never shows 100% before the step is reached');
+  const none = core.rankFor(40000);
+  assert.deepEqual([none.rank, none.level, none.pct, none.rankPct, none.nextAt, none.toNextCents, none.nextRank.name], [0, 0, 40, 40, 100000, 60000, 'Patron'], 'before $1,000 the next step is the first rank');
+  const top = core.rankFor(2e8);
+  assert.deepEqual([top.pct, top.rankPct, top.nextAt, top.toNextCents, top.toRankCents, top.maxed], [100, 100, null, 0, null, true]);
+});
+
+test('standingFor: before $1,000 it is the XP level ("Level 7" / "L7"); from $1,000 it is the rank and the level inside it', () => {
+  const l7 = core.standingFor(core.LEVELS[6].xp, 30000);
+  assert.deepEqual([l7.rank, l7.id, l7.level, l7.label, l7.short, l7.name], [0, '', 7, 'Level 7', 'L7', 'Big Heart']);
+  assert.equal(l7.words, 'Level 7, Big Heart');
+  assert.equal(l7.pct, core.levelFor(core.LEVELS[6].xp).pct, 'before $1,000 the bar is the XP bar of levelFor');
+  const part = core.standingFor(core.LEVELS[6].xp + 750, 30000);
+  assert.equal(part.pct, core.levelFor(core.LEVELS[6].xp + 750).pct);
+  assert.ok(part.pct > 0 && part.pct < 100);
+  const r26 = core.standingFor(12345, 750000);
+  assert.deepEqual([r26.rank, r26.id, r26.level, r26.label, r26.short, r26.name], [2, 'benefactor', 6, 'Rank 2 · Level 6', 'R2 · L6', 'Benefactor']);
+  assert.equal(r26.words, 'Rank 2, Benefactor, level 6');
+  assert.equal(core.standingFor(9000, 99999).label, 'Level 10', '$999.99 is still the old level 10');
+  assert.equal(core.standingFor(9000, 99999).short, 'L10');
+  assert.equal(core.standingFor(9000, 100000).label, 'Rank 1 · Level 1', 'and $1,000.00 is rank 1 level 1');
+  assert.equal(core.standingFor(9000, 100000).short, 'R1 · L1');
+  assert.equal(core.standingFor(0, 0).label, 'Level 1');
+  assert.equal(core.standingFor(undefined, undefined).label, 'Level 1', 'a missing value is nothing, not an error');
+  assert.equal(core.standingFor(NaN, NaN).pct, 0);
+  assert.equal(core.standingFor(1e9, 190000000).label, 'Rank 8 · Level 10');
+  RANK_DOLLARS.forEach((d, i) => { const s = core.standingFor(0, d * 100); assert.equal(s.label, 'Rank ' + (i + 1) + ' · Level 1'); assert.equal(s.short, 'R' + (i + 1) + ' · L1'); });
+});
+
+test('standingFor: the rank comes from the dollars only, and before $1,000 the level comes from XP only', () => {
+  [0, 1, 500, 9000, 123456, 1e9].forEach((xp) => {
+    const s = core.standingFor(xp, 750000);
+    assert.deepEqual([s.rank, s.level], [2, 6], 'XP ' + xp + ' cannot move a rank');
+  });
+  [0, 1000, 50000, 99999].forEach((c) => {
+    assert.equal(core.standingFor(3000, c).label, 'Level 7', c + ' cents cannot move an XP level');
+  });
+  // an old save with a lot given and little XP still has the rank its total gives it
+  const old = core.standingFor(40, 5000 * 100);
+  assert.deepEqual([old.rank, old.level, old.label], [2, 1, 'Rank 2 · Level 1']);
+  assert.equal(core.tierFor(core.levelFor(40).level).tier.id, 'bronze', 'and the tier still follows the XP level, exactly as before');
+});
+
+test('standingFor: what comes next, in words, and how far there is to go', () => {
+  const mid = core.standingFor(0, 750000);
+  assert.deepEqual([mid.nextLabel, mid.nextAt, mid.toNextCents, mid.nextRank.name], ['Level 7', 800000, 50000, 'Champion']);
+  const ten = core.standingFor(0, 950000);
+  assert.deepEqual([ten.nextLabel, ten.nextAt, ten.toNextCents, ten.nextRank.name, ten.rankPct], ['Rank 3: Champion', 1000000, 50000, 'Champion', 90]);
+  assert.equal(core.standingFor(0, 190000000).nextLabel, '');
+  assert.equal(core.standingFor(0, 190000000).maxed, true);
+  assert.equal(core.standingFor(0, 150000000).maxed, false);
+  const young = core.standingFor(250, 30000);   // before $1,000: the next step is an XP level, the rank is the goal behind it
+  assert.deepEqual([young.nextLabel, young.nextAt, young.toNextCents, young.nextRank.name, young.toRankCents, young.maxed], ['Level 3', null, null, 'Patron', 70000, false]);
+  const ready = core.standingFor(9500, 95000);   // level 10 already: the next step is the first rank
+  assert.deepEqual([ready.nextLabel, ready.nextAt, ready.toNextCents, ready.pct, ready.maxed], ['Rank 1: Patron', 100000, 5000, 95, false]);
+});
+
+test('botStanding: a simulated player has the same standing every time, from the name alone', () => {
+  const names = ['LuckyLark', 'PocketAces', 'NovaGiver', 'MarbleMike', 'IvyInk', 'ZenZoe', 'You', '', 'Bot 99'];
+  names.forEach((n) => {
+    const a = core.botStanding(n);
+    const b = core.botStanding(n);
+    assert.deepEqual(a, b, 'the same standing for ' + JSON.stringify(n) + ' on every call');
+    assert.ok(a.rank >= 0 && a.rank <= 8 && a.level >= 1 && a.level <= 10 && Number.isInteger(a.rank) && Number.isInteger(a.level));
+    assert.equal(a.bot, true);
+    assert.equal(a.label, a.rank ? 'Rank ' + a.rank + ' · Level ' + a.level : 'Level ' + a.level);
+    assert.equal(a.short, a.rank ? 'R' + a.rank + ' · L' + a.level : 'L' + a.level);
+    assert.equal(a.name, a.rank ? RANK_NAMES[a.rank - 1] : core.LEVELS[a.level - 1].name);
+    assert.equal(a.id, a.rank ? RANK_IDS[a.rank - 1] : '');
+  });
+  assert.equal(core.botStanding('LuckyLark').label, core.botStanding('LuckyLark').label);
+  const seen = new Set(names.map((n) => core.botStanding(n).label));
+  assert.ok(seen.size > 3, 'different names do not all get the same standing');
+  assert.notEqual(core.botStanding(undefined).label, undefined, 'a missing name does not throw');
+});
+
+test('botStanding: over 2,000 names the spread is most unranked, then fewer and fewer at each rank (within a few points of 55, 20, 10, 6, 4, 2.5, 1.5, 0.8, 0.2 percent)', () => {
+  assert.equal(core.BOT_RANK_MIX.reduce((a, b) => a + b, 0), 100);
+  const want = [55, 20, 10, 6, 4, 2.5, 1.5, 0.8, 0.2];
+  const N = 2000;
+  const counts = new Array(9).fill(0);
+  const levels = new Array(11).fill(0);
+  const first = ['Lucky', 'Pocket', 'Nova', 'Dice', 'Rolling', 'Penny', 'Big', 'Marble', 'Spin', 'Charity', 'Cosmo', 'Quiet', 'Maple', 'Turbo', 'Gold', 'River', 'Otter', 'Juniper', 'Pixel', 'Sunny'];
+  const second = ['Lark', 'Aces', 'Giver', 'Daisy', 'Rae', 'Pine', 'Ben', 'Mike', 'Doc', 'Cat', 'Corgi', 'Quokka', 'Moon', 'Tess', 'Gus', 'Ruby', 'Ollie', 'Joy', 'Paw', 'Sid'];
+  for (let i = 0; i < N; i++) {
+    const name = first[i % 20] + second[Math.floor(i / 20) % 20] + (i % 7 === 0 ? '' : String(Math.floor(i / 400) + 10 + (i % 91)));
+    const s = core.botStanding(name + '#' + i);
+    counts[s.rank] += 1;
+    levels[s.level] += 1;
+  }
+  counts.forEach((n, r) => {
+    const pct = n / N * 100;
+    assert.ok(Math.abs(pct - want[r]) <= 3, (r ? 'rank ' + r : 'unranked') + ': ' + pct.toFixed(1) + '% of 2,000 names, wanted about ' + want[r] + '%');
+  });
+  for (let r = 1; r < 8; r++) { assert.ok(counts[r] >= counts[r + 1], 'fewer and fewer at each higher rank (rank ' + r + ' ' + counts[r] + ', rank ' + (r + 1) + ' ' + counts[r + 1] + ')'); }
+  assert.ok(counts[0] > counts.slice(1).reduce((a, b) => a + b, 0), 'most are unranked');
+  assert.ok(counts[8] <= 20 && counts[7] <= 40, 'the top ranks are rare');
+  for (let l = 1; l <= 10; l++) { assert.ok(levels[l] > N / 10 * 0.6 && levels[l] < N / 10 * 1.4, 'level ' + l + ' turns up about a tenth of the time: ' + levels[l]); }
+});
+
+test('botStanding: the made-up players in the live feed, the leagues and the crews all get a believable standing', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const quoted = (s) => Array.from(s.matchAll(/'([^'\\]*)'/g)).map((m) => m[1]);
+  const read = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+  const handles = quoted(read('js/live.js').match(/var HANDLES = \[([\s\S]*?)\];/)[1]);
+  const crews = Array.from(read('js/crews.js').matchAll(/members: \[([^\]]*)\]/g)).reduce((a, m) => a.concat(quoted(m[1])), []);
+  const names = Array.from(new Set(handles.concat(core.leagueTable('2026-W40', 1, 0, 'Me').filter((r) => !r.you).map((r) => r.name), crews)));
+  assert.ok(names.length >= 60);
+  const ranks = names.map((n) => core.botStanding(n).rank);
+  const unranked = ranks.filter((r) => r === 0).length;
+  assert.ok(unranked > names.length * 0.35 && unranked < names.length * 0.75, 'most of the real bot names are unranked: ' + unranked + ' of ' + names.length);
+  assert.ok(ranks.filter((r) => r >= 1).length >= 10, 'and some have a rank');
+  assert.ok(ranks.filter((r) => r >= 3).length >= 3, 'and a few have a high one, so the better emblems turn up now and then');
+  assert.ok(Math.max.apply(null, ranks) >= 4);
+});
+
 test('streaks: same day holds, next day extends, gaps reset', () => {
   assert.equal(core.nextStreak(null, 0, '2026-01-10'), 1);
   assert.equal(core.nextStreak('2026-01-10', 4, '2026-01-10'), 4);

@@ -488,6 +488,8 @@
     onChange: function (fn) { listeners.push(fn); },
     save: save,
     cleanMap: cleanMap,
+    /** How the player stands right now (core.standingFor): "Level 7" before $1,000 given, "Rank 2 · Level 6" after. Worked out, never stored. */
+    standing: function () { return core.standingFor(state.xp, state.totalCents); },
 
     /* ---------------- demo credit ---------------- */
     balance: function () { return state.balanceCents; },
@@ -571,11 +573,16 @@
      * Records one completed play or direct gift.
      * play = { game, totalCents, rounds, jackpot, status, pay, receipt, stream, direct, freq, dedication, fair, allocations: [{charityId, cents, hits}], map }
      * (`map`, { id, name }: the Marble Run track the round was played on. It is kept beside the round, never in `fair`.)
-     * Returns { xpGain, giftXp, bonusXp, hotXp, setXp, before, after, leveledUp, newBadges: [badge objects] }
+     * Returns { xpGain, giftXp, bonusXp, hotXp, setXp, before, after, leveledUp, rankBefore, rankAfter, rankedUp, levelUp, newBadges: [badge objects] }
      * (xpGain is everything: giftXp is the 10 XP per $1 of the gift, bonusXp and hotXp are extras, setXp a finished card set).
+     * `before` / `after` are the XP levels (levelFor), exactly as before. `rankBefore` / `rankAfter` are how the player stood (core.standingFor: a
+     * level before $1,000 given, a rank and the level inside it after); `rankedUp` is true when the round crossed into a higher rank (including the
+     * first one, at $1,000), and `levelUp` when the level went up inside the same rank, or the XP level before $1,000. Nothing here is stored:
+     * the rank is worked out from `totalCents` whenever it is needed.
      */
     recordPlay: function (play) {
       var before = core.levelFor(state.xp);
+      var rankBefore = core.standingFor(state.xp, state.totalCents);
       var today = core.dayKey();
       state.streak = core.nextStreak(state.lastDay, state.streak, today);
       state.bestStreak = Math.max(state.bestStreak, state.streak);
@@ -644,9 +651,11 @@
       var setXp = play.collect ? checkSet() : 0;
       var newBadgeList = awardBadges();
       var after = core.levelFor(state.xp);
+      var rankAfter = core.standingFor(state.xp, state.totalCents);
       save();
       return {
         xpGain: xpGain + setXp, giftXp: giftXp, bonusXp: bonusXp, hotXp: hotXp, setXp: setXp, before: before, after: after, leveledUp: after.level > before.level, newBadges: newBadgeList,
+        rankBefore: rankBefore, rankAfter: rankAfter, rankedUp: rankAfter.rank > rankBefore.rank, levelUp: rankAfter.rank === rankBefore.rank && rankAfter.level > rankBefore.level,
         hot: { before: hotBefore, after: state.hot.streak, mult: hotBefore > 0 ? hotMult : 1 }, newCards: newCards
       };
     },
@@ -656,14 +665,20 @@
     /** Adds XP that is not tied to a play (side predictions, the Charity Cup, a finished card set, the daily wheel). */
     grantXp: function (xp) {
       var before = core.levelFor(state.xp);
+      var rankBefore = core.standingFor(state.xp, state.totalCents);
       xp = Math.max(0, Math.floor(xp));
       state.xp += xp;
       rollWeek();
       state.weekly.xp += xp;
       var badges = awardBadges();
       var after = core.levelFor(state.xp);
+      var rankAfter = core.standingFor(state.xp, state.totalCents);
       save();
-      return { xpGain: xp, before: before, after: after, leveledUp: after.level > before.level, newBadges: badges };
+      // (XP never moves a rank, so `rankedUp` is always false here; before $1,000 given it can lift the level)
+      return {
+        xpGain: xp, before: before, after: after, leveledUp: after.level > before.level, newBadges: badges,
+        rankBefore: rankBefore, rankAfter: rankAfter, rankedUp: rankAfter.rank > rankBefore.rank, levelUp: rankAfter.rank === rankBefore.rank && rankAfter.level > rankBefore.level
+      };
     },
     weekly: function () { rollWeek(); return state.weekly; },
     hot: function () { return state.hot; },

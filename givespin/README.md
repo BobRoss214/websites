@@ -6,7 +6,7 @@ Pick an amount, filter by the causes you care about, then spin, roll, scratch or
 casino-style games (five of them themed slot machines) where, in most of them, **you choose how many charities are on
 the board** (from a couple to a thousand) and can back one to put on it, or tick exactly the charities you want, **live tables** where a whole table of players backs charities and the winner takes the whole pot,
 leagues, crews, collectible cards and a daily wheel, 500 charities, a lobby that feels like an online casino,
-confetti, levels and a receipt for every gift. Built for streamers and anyone who thinks giving should be a little
+confetti, levels, ranks with their own emblems and a receipt for every gift. Built for streamers and anyone who thinks giving should be a little
 more fun.
 
 Plain HTML, CSS and vanilla JavaScript. No build step, no dependencies, no network requests, no tracking.
@@ -150,7 +150,7 @@ in a game: the switch on each card turns it off or on, and a card the game filte
 website, a "Give again" button, a breakdown by cause, repeat gift plans and your recent rounds (each expandable,
 with a verify button).
 
-**Giving Club:** XP and 10 levels, a daily streak, 24 badges and a level ladder. Stored in the player's own
+**Giving Club:** XP and 10 levels, then eight ranks, a daily streak, 24 badges and a level ladder. Stored in the player's own
 browser (`localStorage`) and resettable.
 
 **XP is a receipt for giving: every $1 given earns 10 XP**, in any game, with no cap and nothing extra for splitting a gift
@@ -159,6 +159,23 @@ anything with a cash value; it unlocks levels, the weekly league and its tiers, 
 receipt shows them separately from the gift's XP: backing the winning charity, a jackpot, a finished card set, a hot hand
 and right side predictions. The levels sit on round giving milestones (level 2 at 100 XP, about $10 given; level 10 at
 9,000 XP, about $900). In demo mode the dollars are pretend, so the XP is too.
+
+**Ranks come after level 10.** Once a player has given $1,000 in total they earn a rank, with an emblem that shows next to
+their name wherever a name is shown (the live tables' feed, the weekly league, a crew's mates and chat, the account button,
+menu and card), and the receipt and the Giving Club show it too. There are eight, in this order: Patron ($1,000), Benefactor ($5,000),
+Champion ($10,000), Guardian ($20,000), Paragon ($50,000), Luminary ($100,000), Titan ($500,000) and Immortal
+($1,000,000). Every rank has its own levels 1 to 10, spread evenly over the dollars up to the next rank (`RANKS`,
+`rankFor` and `standingFor` in `js/core.js`), so a player can be "Rank 2 · Level 6" (rank 2 covers $5,000 to $10,000, so
+its level 6 starts at $7,500); before $1,000 they are simply "Level 7". The top rank has no next rank, so its levels step
+every $100,000 and it is maxed from level 10, at $1,900,000. A rank comes from the total given, in whole cents, so it is
+worked out each time and never stored: an older save simply has the rank its total gives it, and it only goes up (until the player resets their progress).
+Like XP it is a receipt for giving, not money: it cannot be bought and unlocks nothing with a cash value, and in demo
+mode the dollars are pretend, so it is too. XP still drives the league tiers and the live-table stakes. When a round or a
+live result takes the total across a rank boundary there is a short celebration (the emblem big, "You reached Rank 1:
+Patron", the next goal, confetti and a fanfare; it is calmer with reduced motion and silent when the sound is off); a new
+level inside a rank gets a lighter one. Everyone else on those pages is a simulated bot, and so is their rank: `botStanding` gives each bot name a
+made-up rank that never changes (about 55% have none, then fewer and fewer at each rank), next to its BOT tag. The emblems
+are drawn by `js/ranks.js` and `css/ranks.css`, the screens are `js/ui/rankui.js` and `css/rankui.css`.
 
 **Leagues, crews and cards.** All play, no cash value, and everything with other people is simulated and labelled.
 - **Leagues.** A weekly XP table against 14 simulated rivals (the same table for everyone that week), with promotion
@@ -355,6 +372,8 @@ browser's random generator and the site makes no verifiability claim.
 | Causes, filter values and charities (names, descriptions, accent colours) | `js/data.js` |
 | Colours, fonts, spacing | the `:root` variables at the top of `css/base.css` |
 | Level names, XP, badges, tiers, card rarity | `LEVELS`, `xpForGift`, `BADGES`, `TIERS` and `RARITIES` in `js/core.js` |
+| Rank names and the dollar amounts they begin at | `RANKS` in `js/core.js` |
+| How the simulated players are spread over the ranks | `BOT_RANK_MIX` in `js/core.js` |
 | Live-table timings, bots, sponsor and jackpot | the constants at the top of `js/live.js` |
 | Live-table events (Giving Tuesday, Disaster Relief Night, Double Pot Hour) | `eventAt()` in `js/live.js` |
 | Crews and their chat | `js/crews.js` |
@@ -367,11 +386,13 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 ## Tests
 
 ```
-node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/kit.test.js givespin/tests/readme.test.js givespin/tests/marks.test.js givespin/tests/marble.test.js givespin/tests/live.test.js givespin/tests/maps.test.js givespin/tests/marble-maps.test.js givespin/tests/record.test.js
+node --test givespin/tests/*.test.js
 ```
 
-166 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
-within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
+198 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+within a group, AND between), XP, levels, ranks (every boundary from $999.99 to $1,000,000.00 and beyond, a cent either
+side, the ten levels inside each rank, the top rank, the standing never going down, labels, the simulated players' spread
+and what a round reports about a rank-up), streaks, badges, boards of any size (fill spots evenly, always include the
 backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly
 league and the Charity Cup field, email/phone/password/card/expiry validation, the fair-play draw (cross-checked
@@ -389,7 +410,7 @@ About 1,670 end-to-end checks (about 1,590 without the accessibility scan) in he
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
 the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board (500 charities), clicking a logo or slice in every game to open that charity, the website links in the results, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the game tiles, each game's page of seven table sizes, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, game filters checked
 against an independent computation, the filters on the Charities page (which only narrow the list, never the games), the charity directory and profiles, direct gifts, repeat plans and dedications,
-My Giving, the whole account preview (including that no password or full card number ever reaches storage), demo
+My Giving, ranks (the Giving Club card and ladder for saves either side of every boundary, the rank-up moment once at a solo round and at a live table, the emblem and its accessible name next to every name), the whole account preview (including that no password or full card number ever reaches storage), demo
 credit, the monthly limit, fair-play verification and tamper detection, stream mode, reduced motion, persistence,
 live (redirect) mode including rejecting non-https links, a phone-sized viewport, loading from `file://`, and a check
 that the site never contacts another host and the console stays clean. Set `SHOTS=/some/dir` to save screenshots,
@@ -417,9 +438,12 @@ css/chooser.css     the choose-your-own-charities dialog and its chip
 css/slots.css       the slot machines and their five themes
 css/tour.css        the first-visit tour
 css/fit.css         one screen per game: the tighter gift panel with Play right under the choices, the phone's docked panel (js/ui/game.js fits the picture to the screen)
+css/ranks.css       the rank emblems: their classes and animation
+css/rankui.css      rank chips next to names, the rank card and ladder, the rank-up moment
 js/config.js        mode, limits, demo credit, checkout hook
 js/data.js          causes, filter vocabulary and the 500 charities
-js/core.js          pure logic (money, RNG, filters, XP, badges, validation); unit-tested in Node
+js/core.js          pure logic (money, RNG, filters, XP, ranks, badges, validation); unit-tested in Node
+js/ranks.js         the eight rank emblems as inline SVG (GS.ranks: emblem, ring and each rank's colours)
 js/fair.js          commit/reveal draws (HMAC-SHA256); unit-tested in Node
 js/store.js         player state in localStorage, with defensive loading
 js/payments.js      the money step (demo credit or redirect)
@@ -437,7 +461,7 @@ js/games/*.js       the games; crowd.js is the engine behind Duck Derby, Marble 
 js/ui/*.js          shared helpers, amount and gift options, filters, charities, account, receipt,
                     charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), the Track picker (variants.js), live tables, game
                     screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
-                    the first-visit tour (tour.js)
+                    the first-visit tour (tour.js), rank card, ladder, side-nav card and rank-up moment (rankui.js)
 js/logos.js         which charities have a logo file (134 so far)
 js/marks.js         charity marks for the canvas games: the real logo or the illustrated emblem, as an image to draw
 tools/              fetch-logos.mjs: collects more charity logos from their own websites
