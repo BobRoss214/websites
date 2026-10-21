@@ -330,9 +330,14 @@
       links.forEach((a, key) => (key === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
       if (moreBtn) { const inMore = !!(links.get(id) && more.contains(links.get(id))); if (inMore) moreBtn.setAttribute('aria-current', 'true'); else moreBtn.removeAttribute('aria-current'); }
     };
-    const spy = new IntersectionObserver((entries) => {
+    const onSpy = (entries) => {
       entries.forEach((en) => { if (en.isIntersecting) setCurrent(en.target.dataset.nav || en.target.id); });
-    }, { rootMargin: '-45% 0px -50% 0px' });
+    };
+    // root: doc keeps the band in the middle of the screen when the site is shown inside a frame from another address (the claude.ai
+    // preview is one). Without it the browser ignores rootMargin there, the whole screen counts, and the section that comes into view last
+    // wins: scrolling up to Pizza lit Tomatoes, whose end sits under the header. Older browsers do not take a page as root: the plain way then.
+    let spy;
+    try { spy = new IntersectionObserver(onSpy, { root: doc, rootMargin: '-45% 0px -50% 0px' }); } catch (e) { spy = new IntersectionObserver(onSpy, { rootMargin: '-45% 0px -50% 0px' }); }
     $$('main > section[id], #farm, #farm-cards').forEach((s) => spy.observe(s));
   }
 
