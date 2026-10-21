@@ -144,7 +144,7 @@ const descCache = {};
  *   { id, n, W, H (canvas height), geo, k (scale), VW, VH (the track's own size: canvas / k), r, total, finish, gate,
  *     at(s) -> { x, y, dx, dy } (the centre line), hwAt(s) (half-width), pegs [{ x, y, r }], pack { x, y } }
  * ADAPT: written for the geo that marble.js makes today (the Switchback snake). For the generalised model take the centre line, the half-width,
- * the pegs and the gate from whatever MAP_API.md says; everything below uses only this object.
+ * the pegs and the gate from whatever docs/marble-maps.md says; everything below uses only this object.
  */
 function describe(id, n, W) {
   const key = id + '|' + n + '|' + W;

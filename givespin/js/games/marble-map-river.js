@@ -7,7 +7,7 @@
  * The three runs are the same wave, one under the other, so the banks run side by side. The track is 1.6 times as wide as usual, which is
  * what leaves room for stones (they keep 2.2 marble widths from each other and from the banks).
  *
- * A map is a short program for the pen of js/games/marble.js (see MAP_API.md): start, straight, turn, peg, finish.
+ * A map is a short program for the pen of js/games/marble.js (see docs/marble-maps.md): start, straight, turn, peg, finish.
  * It only changes the scenery and the way the race plays out, never who wins: the winner is drawn first, as on every track.
  */
 (function () {

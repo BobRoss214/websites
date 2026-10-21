@@ -6,7 +6,7 @@
  * The bumpers are kept to three or four lines of them per bed and to one or two beds (one from 121 marbles up), and a marble that hits one
  * slides round it instead of bouncing back, so the last marble is never far behind the first (at most about 1.5 x the winner's time). The track is 1.6 times as wide as usual, which is what leaves room for the bumpers.
  *
- * A map is a short program for the pen of js/games/marble.js (see MAP_API.md): start, straight, turn, peg, finish.
+ * A map is a short program for the pen of js/games/marble.js (see docs/marble-maps.md): start, straight, turn, peg, finish.
  * It only changes the scenery and the way the race plays out, never who wins: the winner is drawn first, as on every track.
  */
 (function () {

@@ -3,7 +3,7 @@
  * loop a little narrower than the last, and the track ends in a straight pool in the very middle of the tower. The bends are lightly
  * banked and the marbles slow down in them, so the pack bunches up at every corner, jostles and swaps places all the way in.
  *
- * A map is a short program for the pen of js/games/marble.js (see MAP_API.md in the notes): start, straight, turn, finish. The loops are
+ * A map is a short program for the pen of js/games/marble.js (see docs/marble-maps.md): start, straight, turn, finish. The loops are
  * laid out as a rounded rectangle with the corners of both laps round the same four centres, so the air between two laps is the same
  * everywhere. The chute stands LBL units outside the right wall and the hole in the middle is LBL units wider on its left, which gives the
  * words START and FINISH (drawn by the engine beside the track, on its left) some dark room instead of a neighbouring rail. It only changes
