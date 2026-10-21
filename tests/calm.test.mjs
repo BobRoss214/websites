@@ -187,8 +187,10 @@ await run('calm', async ({ browser, base, errs }) => {
   ok('...the small decorations rest, the bigger loops (clouds, the wagon) still run', small.small > 0 && small.smallRunning === 0 && small.otherRunning > 0, JSON.stringify(small));
   const most = await until(slow, () => document.documentElement.getAttribute('data-calm') === 'most', null, 45000);
   const m = await now(slow);
-  const shows = await slow.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect.getTiming().iterations === Infinity).map((a) => a.effect.target.matches('.live-dot, .chip-rel .ico, .now-badge')));
-  ok('...still slow: data-calm="most", every endless animation rests except the ones that show something ("open now" dot, bell, "now" badge)', most && shows.every(Boolean), `${JSON.stringify(m)} running: ${shows}`);
+  const shows = await slow.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect.getTiming().iterations === Infinity).map((a) => a.effect.target.matches('.live-dot, .chip-rel .ico, .now-badge, .rig, .rig *')));
+  ok('...still slow: data-calm="most", every endless animation rests except the ones that show something ("open now" dot, bell, "now" badge) and the tractor and the barrel train', most && shows.every(Boolean), `${JSON.stringify(m)} running: ${shows}`);
+  const drive = await slow.evaluate(() => [...document.querySelectorAll('.rig')].map((r) => { const a = r.getAnimations().find((x) => x.animationName === 'rigDrive'); return a ? a.playState : 'none'; }));
+  ok('...and the tractor and the barrel train are still driving (they used to freeze here)', drive.length >= 2 && drive.every((x) => x === 'running'), JSON.stringify(drive));
   await slow.click(HERO);
   const back = await now(slow);
   ok('one press on the (pressed) button: motion is back', back.calm === null && back.pressed === 'false,false' && back.loopsRunning > 5, JSON.stringify(back));

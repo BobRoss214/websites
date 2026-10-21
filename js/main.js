@@ -455,7 +455,8 @@
    *     data-calm="light" the page found the hero struggling (a slow phone): the bee and the smallest decorations of the hero
    *                       rest (sparks, smoke puffs, swaying flowers, falling leaves and snow, butterflies, the little bees, tree lights)
    *     data-calm="most"  still struggling after that: every endless animation rests except the few that show something
-   *                       (the pulsing "open now" dot, the bell of the reservation chip, the "now" season badge)
+   *                       (the pulsing "open now" dot, the bell of the reservation chip, the "now" season badge) and the
+   *                       tractor and the barrel train, which keep driving (they froze on slow computers before)
    *     data-calm="all"   the visitor pressed "Pause animations": every endless animation rests, the bee stops and the hero's
    *                       layers no longer slide at different speeds while scrolling
    *   The buttons show pressed while any of these is set, so one press turns all motion back on (and the page never switches
@@ -473,13 +474,14 @@
     const hero = $('#top');
     const SMALL = '.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *';
     const SHOWS = '.live-dot, .chip-rel .ico, .now-badge';
+    const DRIVES = '.rig, .rig *';   // the tractor and the barrel train (wheels, bounce, waving riders): they keep driving by themselves, only the visitor's "Pause animations" stops them
     let level = '', visitor = false;
     const held = new Set();   // the animations rested here, so that turning motion on again can start them
     const wanted = (a) => {
       const el = a.effect && a.effect.target;
       if (typeof a.animationName !== 'string' || !el || a.effect.getTiming().iterations !== Infinity) return false;   // endless CSS animations only
       if (level === 'all') return true;
-      if (level === 'most') return !el.matches(SHOWS);
+      if (level === 'most') return !el.matches(SHOWS) && !el.matches(DRIVES);
       return !!hero && hero.contains(el) && el.matches(SMALL);
     };
     const rest = () => { if (level) doc.getAnimations().forEach((a) => { if (!held.has(a) && wanted(a)) { a.pause(); held.add(a); } }); };
