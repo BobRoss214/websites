@@ -277,7 +277,8 @@
     E_WALL: 0.55,          // bounciness against the track walls
     E_PEG: 0.7,            // bounciness against a map's pegs (bumpers)
     MU_PEG: 0,             // ... with no sliding friction: a marble that comes to rest near a peg's crown rolls off (with a wall's friction it could balance there)
-    PEG_NUDGE: 60,         // ... and one that sits right on a peg's crown is nudged off it (px/s^2)
+    PEG_NUDGE: 60,         // ... and one pressed on a peg where the pull has less than this part round it is nudged round it, that way (px/s^2)
+    PEG_FREE: 0,           // new maps (not Switchback): a marble that has leant on pegs this long (s) without getting a radius further is pushed round, see integrate
     VCAP: 0,               // a marble never moves further than this many radii in one step (0: no limit; every map but Switchback has 1.5, so nothing can pass through anything)
     MU_WALL: 0.03,         // sliding friction against a wall
     V_REST: 22,            // touches slower than this (px/s) do not bounce
@@ -441,8 +442,12 @@
     var PX = tr.px, PY = tr.py, TX = tr.tx, TY = tr.ty, NX = tr.nx, NY = tr.ny, SL = tr.sl, CS = tr.cs, WPX = tr.wpx, WPY = tr.wpy, WMX = tr.wmx, WMY = tr.wmy;
     var EASE = tr.ease, LIM1 = tr.lim1;
     var NPEG = tr.npeg, PGX = tr.pgx, PGY = tr.pgy, PGR = tr.pgr, PGW = tr.pgw, PGH = tr.pgh, PGS = tr.pgs, PGI = tr.pgi, E_PEG = par.E_PEG;
-    // a marble that leans on a peg is nudged round it, downstream (else one that met a peg dead centre could balance there for ever)
+    // a marble that leans on a peg is nudged round it, the way the pull takes it (else one that met a peg dead centre could balance there for ever)
     var MU_PEG = par.MU_PEG, PEG_KICK = par.PEG_NUDGE, KX = NPEG ? new Float64Array(n) : null, KY = NPEG ? new Float64Array(n) : null, onPeg = NPEG ? new Uint8Array(n) : null;
+    // ... and one that pegs hold back all the same (PEG_FREE: how long it may lean on them without getting a radius further) is pushed round
+    // harder than they can hold it: PA how far along it last got, PC how many steps it has leant on a peg since, PL the way round (0: not pushed)
+    var FREE_N = NPEG && par.PEG_FREE > 0 ? Math.round(par.PEG_FREE / par.DT) : 0, FREE_CLEAR = Math.round(0.25 / par.DT), PA = null, PC = null, PL = null;
+    if (FREE_N) { PA = new Float64Array(n); PC = new Int32Array(n); PL = new Int8Array(n); for (var i0 = 0; i0 < n; i0++) { PA[i0] = -1e9; } }
     var rand = rng(seed);
     var i;
     for (i = 0; i < GW * GH; i++) { head[i] = -1; }
@@ -481,7 +486,7 @@
     var lastCross = 0;
     var leader = -1, leads = 0;
     var done = false;
-    var sim = { n: n, X: X, Y: Y, VX: VX, VY: VY, SG: SG, crossT: crossT, order: order, blocks: blocks, rest: rest };
+    var sim = { n: n, X: X, Y: Y, VX: VX, VY: VY, SG: SG, crossT: crossT, order: order, blocks: blocks, rest: rest, freed: 0 };   // (freed: how many times a marble was pushed off the pegs)
 
     function noteHit(strength, x, y) { if (strength > impMax) { impMax = strength; impAtX = x; impAtY = y; } }
 
@@ -602,17 +607,9 @@
         if (dd > 1e-6) { nx = dx / dd; ny = dy / dd; }
         X[k] = PGX[p] + nx * rr; Y[k] = PGY[p] + ny * rr;
         bounce(k, nx, ny, E_PEG, true, MU_PEG);
-        // (pegs have no sliding friction, so a marble near a peg's crown rolls off it; one that sits right on the crown, where the pull points
-        // straight into the peg, is nudged off to the side it leans to, or by its number when it does not lean at all)
-        if (!PEG_KICK) { continue; }
-        var j = SG[k], tx, ty;
-        if (KIND[j] === 0) { tx = DIR[j]; ty = 0; }
-        else if (KIND[j] === 2) { tx = TX[j]; ty = TY[j]; }
-        else { var ax = X[k] - CX[j], ay = Y[k] - CY[j], rho = Math.sqrt(ax * ax + ay * ay) || 1; tx = -CW[j] * ay / rho; ty = CW[j] * ax / rho; }
-        if (nx * tx + ny * ty > -0.995) { continue; }          // not on the crown (more than about 6 degrees off it)
-        var gx = -ny, gy = nx, along = gx * tx + gy * ty;
-        if (along < 0 || (along === 0 && (k & 1))) { gx = -gx; gy = -gy; }
-        KX[k] = gx; KY[k] = gy; onPeg[k] = 1;
+        // (pegs have no sliding friction, so a marble near a peg's crown rolls off it; the next step nudges one that leans on a peg round it,
+        // see integrate: the contact is kept here)
+        KX[k] = nx; KY[k] = ny; onPeg[k] = 1;
       }
     }
 
@@ -734,14 +731,39 @@
           }
         }
         var gs = PULL[j];
-        if (onPeg !== null && onPeg[k]) { if (PEG_KICK) { vx += KX[k] * PEG_KICK * DT; vy += KY[k] * PEG_KICK * DT; } onPeg[k] = 0; }
         if (j === LAST) {
           var u = LK === 0 ? LDIR * (x - FX) : (x - FX) * LTX + (y - FY) * LTY;
           if (u > 0) { gs = 0.4; } else if (u > -fade) { gs = 0.4 - 0.6 * u / fade; }
         }
+        var fx = SLOPE * gs * tx + bx, fy = SLOPE * gs * ty + by;
+        if (onPeg !== null && onPeg[k]) {
+          // a marble on a peg (contact normal KX, KY). Pressed on it by a pull (with the bank of a bend) that has little or no part round the
+          // peg, it is nudged round the way that part points (by its number when there is none). It is the pull that counts, not the line of
+          // the track: a nudge that went against the pull would hold the marble where the two cancel, for ever
+          onPeg[k] = 0;
+          var cnx = KX[k], cny = KY[k], side = fy * cnx - fx * cny, push = 0;
+          if (FREE_N) {
+            // and should it lean on pegs for PEG_FREE (1 s) without getting a radius further along all the same (a bend whose bank swings
+            // round with it as it goes round, a jam of marbles), it is pushed round, the way it leans, harder than its pull can hold it, for
+            // as long as it is on a peg (PL: that way; PC then counts the steps since it was last on one, see below)
+            if (PL[k] === 0) {
+              var sk = sOf(k);
+              if (sk > PA[k] + R) { PA[k] = sk; PC[k] = 0; }
+              else if (++PC[k] >= FREE_N) { PL[k] = side > 0 || (side === 0 && (k & 1) === 0) ? 1 : -1; sim.freed++; }
+            }
+            if (PL[k] !== 0) { PC[k] = 0; push = PL[k] * (Math.sqrt(fx * fx + fy * fy) + PEG_KICK); }
+          }
+          if (push === 0 && PEG_KICK && fx * cnx + fy * cny < 0 && side < PEG_KICK && side > -PEG_KICK) {
+            push = side > 0 || (side === 0 && (k & 1) === 0) ? PEG_KICK : -PEG_KICK;
+          }
+          if (push !== 0) { vx -= cny * push * DT; vy += cnx * push * DT; }
+        } else if (PL !== null && PL[k] !== 0 && ++PC[k] >= FREE_CLEAR) {
+          // pushed off a peg and clear of them for a quarter of a second: done
+          PL[k] = 0; PC[k] = 0; PA[k] = sOf(k);
+        }
         var den = 1 + DRAG * KF[k] * DT;
-        vx = (vx + (SLOPE * gs * tx + bx) * DT) / den;
-        vy = (vy + (SLOPE * gs * ty + by) * DT) / den;
+        vx = (vx + fx * DT) / den;
+        vy = (vy + fy * DT) / den;
         var sp = Math.sqrt(vx * vx + vy * vy);
         if (sp > 0) {
           var fr = sp > ROLL * DT ? 1 - ROLL * DT / sp : 0;
@@ -1529,8 +1551,9 @@
    * Returns true when the entry has its race.
    */
   function startSim(entry) {
-    var g = entry.geo, pk = g.pack;
-    entry.sim = createSim(g.track, pk.x, pk.y, pk.sg, (entry.seed + entry.tries * 7919) >>> 0, simParams(g.n, g.phys));
+    var g = entry.geo, pk = g.pack, seed = (entry.seed + entry.tries * 7919) >>> 0;
+    entry.sim = createSim(g.track, pk.x, pk.y, pk.sg, seed, simParams(g.n, g.phys));
+    entry.sim.seed = seed;               // (the race that is shown is the best of the tries, not always the last: timing.simSeed says which)
     entry.sim.release();
     entry.tries += 1;
   }
@@ -1579,6 +1602,7 @@
       o.VCAP = phys.vcap;
       o.RUNOUT_CAMBER = 60;
       o.RUNOUT_SUPPORT = 1;
+      o.PEG_FREE = 1;
       phys.cache[key] = o;
     }
     return phys.cache[key];
@@ -1868,7 +1892,7 @@
         }
       }
       rate = Math.max(0.05, Math.min(40, rate));
-      self.timing.simSeed = (entry.seed + (entry.tries - 1) * 7919) >>> 0; self.timing.rate = rate; self.timing.tw = Tw; self.timing.tend = Tend; self.timing.tries = entry.tries; self.timing.leads = sim.leads; self.timing.boost = boost; self.timing.ts0 = ts0; self.timing.stream = stream;
+      self.timing.simSeed = sim.seed != null ? sim.seed : (entry.seed + (entry.tries - 1) * 7919) >>> 0; self.timing.rate = rate; self.timing.tw = Tw; self.timing.tend = Tend; self.timing.tries = entry.tries; self.timing.leads = sim.leads; self.timing.boost = boost; self.timing.ts0 = ts0; self.timing.stream = stream;
     }
 
     /** A big solo race that started before it was over has now been worked out to the end: plan the finish (the pace of the rest does not change). */
@@ -2456,7 +2480,7 @@
 
   /**
    * What is wrong with a map for n marbles on a canvas W px wide: a list of plain sentences, empty when nothing is. It builds the map and checks
-   * the rules of MAP_API.md: it fits the canvas and a sensible height, turns are not too tight, the track is wide enough (and at most 1.6 times the
+   * the rules of docs/marble-maps.md: it fits the canvas and a sensible height, turns are not too tight, the track is wide enough (and at most 1.6 times the
    * usual width), it never runs over itself, every piece pulls the marbles on, the pegs leave room (2.2 marble widths), there are no pegs at the start,
    * on the line or in the run-out, and the run-out can hold the finished pack.
    */

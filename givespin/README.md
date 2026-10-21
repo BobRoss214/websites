@@ -70,7 +70,7 @@ The box can be folded up to one line, the choice is remembered on this device, a
 while the marbles are rolling. A track changes the shape and the feel of the race, never the odds: the winner is drawn first,
 from the charities on the board, each with exactly the same chance, and the marbles are then played out on whichever track is
 showing. Any race game can offer such a choice by giving its description a `variants` entry (the comment at the top of
-`js/games/crowd.js` says how); the picker itself is `js/ui/variants.js`.
+`js/games/crowd.js` says how); the picker itself is `js/ui/variants.js`. To write another Marble Run track, see `docs/marble-maps.md`.
 
 Four games stop sooner on purpose, because of what they are: Pick a Card is a table of face-down cards you tap (up to
 100), a Scratch Card is one card with 4 to 48 panels, Coin Flip Showdown is a knockout bracket, so it takes a power of
@@ -356,7 +356,7 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 node --test givespin/tests/core.test.js givespin/tests/fair.test.js givespin/tests/data.test.js givespin/tests/store.test.js givespin/tests/kit.test.js givespin/tests/readme.test.js givespin/tests/marks.test.js givespin/tests/marble.test.js givespin/tests/live.test.js givespin/tests/maps.test.js givespin/tests/marble-maps.test.js givespin/tests/record.test.js
 ```
 
-164 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+166 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, streaks, badges, boards of any size (fill spots evenly, always include the
 backed charity), the bonus for backing a long shot, apportioning pockets and slices by stake, the stake-weighted draw
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly
@@ -418,7 +418,7 @@ js/icons.js         inline Lucide icons
 js/audio.js         synthesised sound effects
 js/confetti.js      confetti particle system
 js/games/*.js       the games; crowd.js is the engine behind Duck Derby, Marble Run and Balloon Race, and slots.js is one engine behind the five slot machines
-                    (marble-maps-stub.js is a stand-in list of Marble Run tracks for the tests; the page does not load it)
+                    (marble.js holds Marble Run's first track, Switchback, and the list of tracks; every other track is one file, marble-map-<name>.js)
 js/ui/*.js          shared helpers, amount and gift options, filters, charities, account, receipt,
                     charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), the Track picker (variants.js), live tables, game
                     screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
@@ -430,7 +430,7 @@ assets/logos/       the logo files (see docs/logo-sources.md)
 assets/favicon.svg  the browser-tab icon
 assets/fonts/       the Sora and Inter font files (loaded from here, never from another site)
 assets/licenses/    the licence texts for the fonts and the icons
-docs/               roster-sources.json (evidence for the added charities), roster-candidates.md (what was left out), logo-sources.md
+docs/               roster-sources.json (evidence for the added charities), roster-candidates.md (what was left out), logo-sources.md, marble-maps.md (how to write a Marble Run track)
 js/app.js           boots everything, routing, top bar, search
 tests/              unit and end-to-end tests
 tools/              check-links.mjs: asks every charity website whether it still answers or has moved (run it from a normal connection)

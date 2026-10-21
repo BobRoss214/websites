@@ -3,19 +3,24 @@
  * narrow neck right after every U-turn: the field comes out of the bend already mixed, squeezes through the neck two or three abreast
  * (more in the big tiers), jostles, and fans out again on the rest of the row. Steel rails, yellow and black clamps at every neck.
  *
- * A map is a short program for the pen of js/games/marble.js (see MAP_API.md in the notes): start, straight, turn, hwTo, finish.
+ * A map is a short program for the pen of js/games/marble.js (see docs/marble-maps.md): start, straight, turn, hwTo, finish.
  * It only changes the scenery and the way the race plays out, never who wins: the winner is drawn first, as on every track.
  */
 (function () {
   'use strict';
   var GS = window.GS;
   var WIDE = 1.15;                          // the track is a little wider than Switchback's, so that the necks stand out
+  // The steepest a neck's wall may lean (how much the half-width changes per unit along the track). The engine keeps a marble's centre
+  // hw - 2 - r from the centre line, measured square to the centre line; where the wall leans at slope s that leaves the marble only
+  // r / sqrt(1 + s * s) from the wall, so it overlaps the wall by 1 - 1 / sqrt(1 + s * s) of a radius (0.27 r at the slope 0.94 that
+  // steeper necks had). At 0.4 it is 0.07 r.
+  var LEAN = 0.4;
 
   /**
    * The shape of the track for a picture W track units wide, n marbles of radius r, half-width hw and the run-out the finish needs.
    * Rows are level and 2R apart, and a U-turn of radius R joins them (as on Switchback). Rows between the first (the starting pack) and the
-   * last (the finish) start with a neck: a short run out of the bend, the width eases from hw down to hn, stays there for a short stretch
-   * and eases back out. The last row runs to the far wall and holds the finish line and the run-out.
+   * last (the finish) start with a neck: right out of the bend the width eases from hw down to hn, stays there for a short stretch and
+   * eases back out, the walls never leaning more than LEAN. The last row runs to the far wall and holds the finish line and the run-out.
    * Up to 12 marbles every such row has a neck; from 13 marbles up only every other row has one, and it is a little wider: every neck holds
    * the back of the field up a little, and with a crowd the last marble would otherwise cross nearly twice as late as the winner, which
    * makes a round some 5 s longer than on Switchback (measured in the game: 22 to 24 s against 17 to 18 s at 100 and 500 marbles).
@@ -25,15 +30,15 @@
     var hn = Math.max(1.2 * d + 2, (crowd ? 0.7 : 0.55) * baseHw);    // the neck: at least 2.4 marbles across, about half to two thirds of the usual track
     var dw = hw - hn;
     var R = hw + 10, side = pad + R + hw + 6;
-    // a short run out of the bend, ease in, the narrow neck itself, ease out (the walls open more gently than they close; with the biggest
-    // marbles the walls are never steeper than a narrowing over two marble widths, or a marble that runs into one stops dead)
-    var lead = 0.3 * hw, inA = Math.max(1.6 * dw, 2 * d), len = Math.max(2 * d, 0.4 * hw), outA = Math.max(2.2 * dw, 2 * d);
+    // ease in (from the end of the bend), the narrow neck itself, ease out: a smooth S whose steepest lean (1.5 x the change / its length)
+    // is LEAN, and never shorter than two marble widths (or a big marble that runs into it stops dead)
+    var lead = 0, inA = Math.max(1.5 * dw / LEAN, 2 * d), len = Math.max(2 * d, 0.4 * hw), outA = inA;
     var neck = lead + inA + len + outA;
     var xA = side, xB = W - side, row = xB - xA;
     var y0 = hw + 30, gapY = 2 * R;
     // the finish row runs from the last U-turn to the far wall, without a neck (the finish looks like every other map's)
     var finRow = W - pad - 8 - xA;
-    // rows: enough track for a race that plays at a sensible pace (see the pace rule in MAP_API.md), and never a page taller than 2.18 times its width
+    // rows: enough track for a race that plays at a sensible pace (see the pace rule in docs/marble-maps.md), and never a page taller than 2.18 times its width
     var want = n > 48 ? 2050 : n > 24 ? 1750 : 1500;
     var rows = 5;                            // (at least three necks on any page)
     function pre(N) { return (N - 1) * row + (N - 1) * Math.PI * R + finRow - runout; }       // (the track before the line)
@@ -52,7 +57,7 @@
     p.gateX = c.gate < p.row ? p.xA + c.gate : p.xB;        // (a long starting pack reaches into the first bend: the word is then by the bend)
     var lastLeft = (p.rows - 1) % 2 === 1;
     p.finX = lastLeft ? p.xB - (p.finRow - c.runout) : p.xA + (p.finRow - c.runout);
-    p.finAbove = lastLeft;                 // (heading left, the word goes above the last row, next to the row before it)
+    p.finDir = lastLeft ? -1 : 1;          // (the engine writes the word below a rightward row and above a leftward one, unless there is no room)
     var key = c.W + '|' + c.n;
     if (!built[key]) { builtKeys.push(key); if (builtKeys.length > 12) { delete built[builtKeys.shift()]; } }
     built[key] = p;
@@ -61,7 +66,7 @@
 
   /** The neck after a U-turn: ease in, the neck, ease out. */
   function neck(m, p, hw) {
-    m.straight(p.lead);
+    if (p.lead > 0) { m.straight(p.lead); }
     m.hwTo(p.hn, p.inA);
     m.straight(p.len);
     m.hwTo(hw, p.outA);
@@ -69,7 +74,7 @@
 
   var map = {
     id: 'pinch', name: 'Pinch Points',            // (id and name on one line, see marble.js)
-    blurb: 'A winding track pinched into a narrow neck after every bend, where the field squeezes through and jostles for places.',
+    blurb: 'A winding track pinched into narrow necks, where the field squeezes through and jostles for places.',
     order: 45,
     wide: WIDE,
     physics: { pull: 1 },                     // (the usual pull: the folded track is long enough for a race that plays at a good pace)
@@ -85,6 +90,13 @@
         var stripe = Math.max(4, 6 / d.k);
         var word = 34 / d.k;
         function near(x0, x1, x) { return x + word > x0 && x - word < x1; }
+        // Which side of the last row the engine writes FINISH on (marble.js, line() in the track layer, for a level row): half its height
+        // plus 5 screen pixels beyond the rail, on the usual side (below a rightward row, above a leftward one) unless that is off the
+        // picture or on the track and the other side is free. Above the last row it lies in the gap next to the row before it, and a long
+        // neck on that row leaves the gap free where its clamp is drawn: no clamp is drawn under the word there.
+        var px = 1 / d.k, off = d.hw + 6 + 10 * px, vy = 9 * px, finY = p.y0 + (p.rows - 1) * p.gapY;
+        function free(y) { return y > vy && y < d.H - vy && !d.onTrack(p.finX, y, -2); }
+        var finAbove = !free(finY + p.finDir * off) && free(finY - p.finDir * off) ? p.finDir > 0 : p.finDir < 0;
         function clamp(x0, x1, yc, noTop, noBottom) {
           var top = yc - d.hw - 10, h = d.hw - p.hn + 10;
           for (var side = 0; side < 2; side++) {
@@ -111,7 +123,7 @@
           var yc = p.y0 + i * p.gapY, rightward = i % 2 === 0;
           var a = rightward ? p.xA + p.lead : p.xB - p.neck, b = rightward ? p.xA + p.neck : p.xB - p.lead;
           a += p.inA * 0.2; b -= p.outA * 0.2;
-          clamp(a, b, yc, i === 1 && near(a, b, p.gateX), i === p.rows - 2 && p.finAbove && near(a, b, p.finX));
+          clamp(a, b, yc, i === 1 && near(a, b, p.gateX), i === p.rows - 2 && finAbove && near(a, b, p.finX));
         }
         // a few rivets in the sky, off the track
         ctx.fillStyle = 'rgba(160,170,185,0.25)';
@@ -128,7 +140,7 @@
       var side = c.pad + p.R + c.hw + 6;
       // (from 13 marbles up a narrow phone draws the picture a little smaller, as Switchback does, so that it has room for seven rows: the race
       // would otherwise be short to watch)
-      return Math.max(2 * side + p.neck + 30, side + c.pad + 8 + c.runout + 24 + 2 * c.r, c.r <= 3 ? 440 : c.r <= 7 ? 400 : 0);
+      return Math.max(2 * side + p.neck + 5, side + c.pad + 8 + c.runout + 24 + 2 * c.r, c.r <= 3 ? 440 : c.r <= 7 ? 400 : 0);
     },
     build: function (m, c) {
       var p = shapeOf(c), hw = c.hw, R = p.R;

@@ -497,6 +497,80 @@ test('pegs have no sliding friction: a marble that meets one just off its crown 
   assert.ok(sim.sOf(0) > 137 && sim.sOf(1) > 137, 'both got past the peg');
 });
 
+/** The longest a marble stood (nearly) still before the line, in s (under 3 px/s between two recorded frames), and how many never got over it. */
+function stillBeforeLine(sim, g, n) {
+  const F = sim.frames(), still = new Int32Array(n);
+  let worst = 0, short = 0;
+  for (let f = 1; f < F; f++) {
+    const a = frame(sim, n, f - 1), b = frame(sim, n, f);
+    for (let k = 0; k < n; k++) {
+      if (b[3 * k + 2] >= g.finish) { still[k] = 0; continue; }
+      still[k] = Math.hypot(b[3 * k] - a[3 * k], b[3 * k + 1] - a[3 * k + 1]) * 60 < 3 ? still[k] + 1 : 0;
+      worst = Math.max(worst, still[k]);
+    }
+  }
+  const last = frame(sim, n, F - 1);
+  for (let k = 0; k < n; k++) { if (last[3 * k + 2] < g.finish) { short++; } }
+  return { stillS: worst / 60, short };
+}
+
+test('River Rapids: races where a big marble used to stop against a stone for good now run through (every marble crosses, none stands still)', () => {
+  // (seeds from the full check of the six maps: a marble stood against a stone 18 s and never got over the line; the cause was the old crown
+  // nudge, which pushed along the line of the track while the pull with the bend's bank points elsewhere, and so held the marble where the two cancelled)
+  const site = load({ map: 'river' });
+  for (const [n, W, seed] of [[8, 563, 1230627166], [8, 563, 1368451399], [8, 358, 1997997180], [2, 563, 349874641]]) {
+    const g = board(site, n, W);
+    assert.equal(g.map, 'river');
+    const sim = race(site, g, seed);
+    const r = stillBeforeLine(sim, g, n);
+    assert.equal(r.short, 0, n + ' marbles, W=' + W + ', seed ' + seed + ': everybody got over the line');
+    assert.ok(r.stillS <= 1.5, n + ' marbles, W=' + W + ', seed ' + seed + ': a marble stood still ' + r.stillS.toFixed(2) + ' s');
+    assert.ok(sim.time() < 20, 'the race was not cut off (' + sim.time().toFixed(1) + ' s)');
+  }
+});
+
+test('a stone in a steeply banked bend cannot hold a marble: after a second on it without getting further, it is pushed round', () => {
+  // a bend banked three times as hard as Switchback's U-turns, with a stone where the bank starts: as the marble goes round the stone the bank
+  // swings round with it, so the pull holds it there (the nudge alone does not free it). The push after PEG_FREE does.
+  const extra = `window.GS.marbleMaps.add({ id: 'stone', name: 'Stone Test', blurb: 'A stone in a steep bend.', order: 904, wide: 1.6,
+    physics: { pegBounce: 0 }, width: function () { return 900; },
+    build: function (m, c) {
+      var hw = c.hw, R = c.minTurn;
+      m.start(600, 40, 90).straight(c.gate + 140);
+      var q = m.pos(), room = hw - 2 - 4.4 * c.r - 0.5 - 6, th = 15 * Math.PI / 180;
+      m.turn(R, 90, { bank: 3 });
+      m.peg(q.x - R + (R + 0.5 * room) * Math.cos(th), q.y + (R + 0.5 * room) * Math.sin(th), 6);
+      m.straight(60).finish(400, 200);
+      return { H: m.pos().y + hw + 60 };
+    } });`;
+  const site = load({ map: 'stone', extra });
+  const g = site.maps.build('stone', 2, 900);
+  assert.equal(g.pegs.length, 1);
+  const pg = g.pegs[0];
+  const base = site.dbg.simParams(2, g.phys);
+  assert.equal(base.PEG_FREE, 1, 'new maps have the push');
+  assert.equal(site.dbg.simParams(2, null).PEG_FREE, 0, 'Switchback (no pegs) has not');
+  function onStone(par) {
+    const sim = site.dbg.createSim(g.track, [602, 599], [40 + g.gate + 60, 60], [0, 0], 96, par);
+    sim.release();
+    const on = [0, 0], most = [0, 0];
+    for (let st = 0; st < 120 * 25 && sim.order.length < 2; st++) {
+      sim.step();
+      for (let k = 0; k < 2; k++) {
+        const touching = sim.crossT[k] < 0 && Math.hypot(sim.X[k] - pg.x, sim.Y[k] - pg.y) < pg.r + g.r + 1;
+        on[k] = touching ? on[k] + 1 : 0; most[k] = Math.max(most[k], on[k]);
+      }
+    }
+    return { crossed: sim.order.length, longest: Math.max(most[0], most[1]) / 120, freed: sim.freed };
+  }
+  const held = onStone(Object.assign({}, base, { PEG_FREE: 0 }));
+  assert.ok(held.longest > 10 && held.crossed === 1, 'without the push a marble stays on the stone (' + held.longest.toFixed(1) + ' s): the test still tests something');
+  const r = onStone(base);
+  assert.equal(r.crossed, 2, 'with it both marbles get over the line');
+  assert.ok(r.longest < 2, 'no marble stays on the stone more than 2 s (' + r.longest.toFixed(2) + ' s)');
+  assert.ok(r.freed >= 1, 'it was the push that freed it');
+});
+
 test('on every map but Switchback the speed is limited: at 500 marbles no marble moves more than 4 radii between two recorded frames', () => {
   const site = load({ map: 'zigzag' });
   for (const [W, seed] of [[720, 99], [390, 7]]) {
