@@ -18,7 +18,9 @@ This folder (`work-notes/`) is NOT part of the website. It only keeps notes and 
 - English wording flagged by all four translation reviewers: the beer/cider/wine note is a fragment ("All beer, cider and wine."), "Pots in yellow, orange, gold and pink" reads as if the pots are coloured (it is the mums), and the pumpkin note ("Medium ones are $4.00") is unclear. Changing English means redoing the key in 4 languages.
 - Prices still unconfirmed (the Shop says "Prices coming soon"): jam ($8 vs $9 on two signs), elderberry shrub ($20.99 vs $21.99), hats, T-shirts, sweatshirts, bags, pizza, Christmas trees. Questions for Miss Cathy and Rob were posted in the old Terminal (ids `k-new-*`, see `PRODUCTS.md`).
 - A native-speaker read of the es/hi/zh/vi texts would still help (AI-written, AI-reviewed).
-- Not run on the final merged state: the slow checks (axe-wide, hero, big-font, touch, colour-blind, calm, layout-sweep, slow-phone, answer-rehearsal and others). Failing before this work, untouched: `plain-lint` (one 45-word README sentence), `option-patches` (privacy page). `sitecheck-values` failed once under heavy load and passed again.
+- Checked on the final merged state and PASSING: validity, consistency, docs, files-audit, public-site, sprite, hero, barn, calm, pause, nav-highlight, first-visit-guide, i18n-facts, i18n-a11y, languages, link-names, keyboard, axe, axe-wide, layout-sweep, smoke, privacy-static, pipeline, and `tools/check_facts.py` (21 of 21 facts agree).
+- FAILING, not caused by this session's merges: `apply-answers` (scenario "2 in place needs yes a clean folder and a patch that passed" ends RED; it fails the same on the commit before the Shop and first-visit merges; the temporary report folder says which check is red: rerun `node tests/run-all.mjs apply-answers` and read `APPLY_REPORT.md`), `plain-lint` (one 45-word README sentence), `option-patches` (privacy page, two checks). `sitecheck-values` failed once under heavy load and passed again.
+- NOT run on the final merged state: windows-reality, review-sheet, reader-roundtrip, date-phrases, tools-safety, owner-cheat-sheet, launch-check, deploy, doctor, i18n, slow-phone, interference, dated, contrast-pixels, print-qr, features, games, monkey, owner-input, messages, colour-blind, touch, big-font, no-js.
 - The older optional patches (map, winter trees, holiday photos, sunflower field, spots-marks, share picture) are NOT applied; they wait for the owner's say-so (`patches/optional/`, `docs/OPTION_PATCHES.md`).
 - The GitHub repo is public. Nothing private is stored here.
 
@@ -40,3 +42,8 @@ This folder (`work-notes/`) is NOT part of the website. It only keeps notes and 
 - `SHOP-LIST.md`: the list the Shop was built from (slug, name, price, note). `?` = price not confirmed.
 - `AUDIT-photos.md`: a second reading of the saved photos against that list (the corrections above).
 - `terminal-source-oct21.tar.gz`: code only (no answers, no state) of the "Terminal" question page the owner has now moved to a separate project.
+
+## Small things the last helpers noticed (not fixed)
+- On screens about 680 to 760 px wide the wagon ride (not the barrel train) still shows at the right edge when its loop ends.
+- The Shop notes say "weight station" as the farm's sign does; "weigh station" is the usual word. Also "Medium ones are $4.00" under "$0.84 a pound" does not say whether $4.00 is a flat price.
+- The old "Terminal" page stays published as it was (version 3, plus the 14 questions posted today). Its answers to the price questions are the way to confirm the "Prices coming soon" items.
