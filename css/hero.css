@@ -72,8 +72,10 @@ html[data-season="winter"] .bee-fly{display:none}
 /* ---------------------------------------------------------------- fall: tractor + wagon ride */
 .rig{--rig-from:-420px;--rig-to:1660px;--rig-rest:420px;
   animation:rigDrive var(--rig-dur,40s) linear infinite;animation-delay:-13s;will-change:transform}
+/* The barrel train (six barrels, about 190 units long) starts and ends its loop fully off the 1440-unit picture, so it never pops in or out in view.
+   It drives 38 units a second here and on a phone (js/hero.js, barrelRig, turns its wheels to match): change a distance and its time together. */
 .rig-barrel{--rig-dur:52s;animation-delay:-33s;--rig-from:-380px;--rig-to:1600px;--rig-rest:980px}
-.wheel.bt0,.wheel.bt1,.wheel.bt2,.wheel.bt3,.wheel.bt4,.wheel.bt5{animation-duration:1.7s}
+.wheel.bt{animation-duration:var(--bt,.56s)}
 .rig-bounce{animation:rigBounce .46s ease-in-out infinite alternate}
 .rig.tooting .rig-bounce{animation-duration:.16s}
 .wheel{transform-box:fill-box;transform-origin:50% 50%;animation:wheelSpin linear infinite}
@@ -249,7 +251,7 @@ html[data-season="winter"] .bee-fly{display:none}
 @media (max-width:47.5em){
   .hero{min-height:790px}
   .rig{--rig-from:120px;--rig-to:1140px;--rig-rest:620px;--rig-dur:22s;animation-delay:-7s}
-  .rig-barrel{--rig-dur:38s;animation-delay:-20s;--rig-from:-200px;--rig-to:1100px;--rig-rest:900px}
+  .rig-barrel{--rig-dur:30s;animation-delay:-14s;--rig-from:100px;--rig-to:1240px;--rig-rest:720px}   /* a phone shows about x 330 to 1110 of the picture (x 520 to 920 at 390 px): the whole train is out of sight at both ends, and parked in sight with reduced motion */
   .hero-note{font-size:.92rem;padding:.2em .8em}
   .season-switch{gap:5px;width:100%;flex-wrap:nowrap;margin-top:12px;margin-bottom:14px}
   .ss-label{display:none}

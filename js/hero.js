@@ -472,21 +472,28 @@
 
   // A small tractor pulling plastic barrels laid on their sides. Each barrel has a hole cut in the top,
   // a chair inside and a steering wheel for the kid (who waves with the other hand), wheels underneath,
-  // and they are hitched together. Local box 0..334 x -20..100 (ground y = 96).
-  // `animated` adds the wheel classes and the puffs of smoke; `ref` points at the #tractor icon instead of drawing it.
-  function barrelTrain(animated = false, ref = false) {
+  // and they are hitched together. `cars` barrels, 64 apart, the tractor in front of the last one (on the right):
+  // local box 0..142 + 64 * cars x -20..100 (ground y = 96); 3 cars (the icon) is 0..334.
+  // `animated` adds the wheel classes, the waving and the puffs of smoke; `ref` points at the #tractor icon instead of drawing it.
+  // The kids from the back of the train to the front; with fewer cars the ones at the front are used.
+  const BARREL_KIDS = [['#ff7a3d', 'hair'], ['#ff8fb1', 'pony'], ['#4b5bb8', 'straw'], ['#e5334b', 'beanie'], ['#ffc928', 'cap'], ['#43a047', 'straw']];
+  // When each kid's wave starts (seconds into the 1.4 s swing there and back), so they do not all wave at once
+  const BARREL_WAVE = [-0.5, -1.1, -0.2, -0.8, -1.3, -0.35];
+  function barrelTrain(animated = false, ref = false, cars = 3) {
     const sk = `stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
-    const kids = [['#e5334b', 'beanie'], ['#ffc928', 'cap'], ['#43a047', 'straw']];
+    const kids = BARREL_KIDS.slice(-cars), more = 64 * (cars - 3);
     const skin = '#f7c9a0';
     const hatSvg = (h) => h === 'beanie' ? `<path d="M-8.6 -9.2a8.6 8.6 0 0 1 17.2 0Z" fill="#e5334b"/><path d="M-8.8 -10h17.6" stroke="#ffc928" stroke-width="2.6"/>`
       : h === 'cap' ? `<path d="M-8.2 -9.4a8.2 8.2 0 0 1 16.4 0Z" fill="#4b5bb8"/><path d="M-1 -9.6h12" stroke-width="2.8"/>`
+      : h === 'hair' ? `<path d="M-8.8 -10.2a8.8 8.8 0 0 1 17.6 0c-3.8 -4.2 -13.2 -4.2 -17.6 0Z" fill="#8a5a35"/><path d="M-5.6 -16.2q2.8 -1.7 5.6 0" fill="none" stroke="#b97a4a" stroke-width="1.3"/>`
+      : h === 'pony' ? `<path d="M-8.8 -10.2a8.8 8.8 0 0 1 17.6 0c-3.8 -4.2 -13.2 -4.2 -17.6 0Z" fill="#c8602a"/><path d="M7.4 -14q8.4 1 5.6 8.4" fill="none" stroke="#c8602a" stroke-width="3.4"/><path d="M7.4 -14q8.4 1 5.6 8.4" fill="none" stroke-width=".8"/><circle cx="8" cy="-13.4" r="1.8" fill="#ff4d8d" stroke-width="1.3"/>`
       : `<path d="M-12 -10h24" stroke-width="2.8"/><path d="M-7.4 -10a7.4 7.4 0 0 1 14.8 0Z" fill="#e9c46a"/><path d="M-7.4 -11.4h14.8" stroke="#e5334b" stroke-width="2"/>`;
-    let out = `<ellipse cx="167" cy="97" rx="162" ry="3.8" fill="rgba(58,36,22,.22)"/>`;
-    for (let i = 0; i < 3; i++) {
+    let out = `<ellipse cx="${167 + more / 2}" cy="97" rx="${162 + more / 2}" ry="3.8" fill="rgba(58,36,22,.22)"/>`;
+    for (let i = 0; i < cars; i++) {
       const ox = 8 + i * 64, [shirt, hat] = kids[i], cx = ox + 29;
       // wheels and frame under the barrel
       out += `<g ${sk}><rect x="${ox + 4}" y="76" width="50" height="5" rx="2" fill="#5d6770"/>` +
-        [ox + 13, ox + 45].map((x, k) => `<g class="${animated ? 'wheel bt' + (i * 2 + k) : ''}"><circle cx="${x}" cy="86" r="9.4" fill="#2b2b30"/><circle cx="${x}" cy="86" r="4.8" fill="#c9d1d8" stroke-width="2.2"/><circle cx="${x}" cy="86" r="1.5" fill="${INK}" stroke="none"/></g>`).join('') + `</g>`;
+        [ox + 13, ox + 45].map((x) => `<g class="${animated ? 'wheel bt' : ''}"><circle cx="${x}" cy="86" r="9.4" fill="#2b2b30"/><circle cx="${x}" cy="86" r="4.8" fill="#c9d1d8" stroke-width="2.2"/><circle cx="${x}" cy="86" r="1.5" fill="${INK}" stroke="none"/></g>`).join('') + `</g>`;
       // the barrel: blue plastic, ribbed
       out += `<g ${sk}><rect x="${ox}" y="42" width="58" height="38" rx="15" fill="#2f6fd6"/>` +
         `<path d="M${ox + 12} 42v38M${ox + 29} 42v38M${ox + 46} 42v38" fill="none" stroke="#1f4fa0" stroke-width="2.6"/>` +
@@ -496,7 +503,7 @@
       out += `<ellipse cx="${cx}" cy="44" rx="17" ry="6" fill="#0f1b3d" stroke="${INK}" stroke-width="3"/>` +
         `<g ${sk}><rect x="${cx - 15}" y="26" width="6.4" height="19" rx="2.6" fill="#ff8a3d"/></g>` +
         `<g class="npc-body" data-r="${i}"><g transform="translate(${cx + 2} 38)" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">` +
-          `<g class="${animated ? 'wave' : ''}"><path d="M-4 3l-8 -12" fill="none" stroke-width="5.2"/><path d="M-4 3l-8 -12" fill="none" stroke="${shirt}" stroke-width="2.6"/><circle cx="-12.6" cy="-10" r="3.1" fill="${skin}"/></g>` +
+          `<g class="${animated ? 'wave' : ''}"${animated ? ` style="animation-delay:${BARREL_WAVE[(BARREL_KIDS.length - cars + i) % BARREL_WAVE.length]}s"` : ''}><path d="M-4 3l-8 -12" fill="none" stroke-width="5.2"/><path d="M-4 3l-8 -12" fill="none" stroke="${shirt}" stroke-width="2.6"/><circle cx="-12.6" cy="-10" r="3.1" fill="${skin}"/></g>` +
           `<rect x="-7.6" y="-1" width="15.2" height="12" rx="5" fill="${shirt}"/>` +
           `<circle cx="0" cy="-9" r="8.4" fill="${skin}"/>${hatSvg(hat)}` +
           `<circle cx="-3" cy="-9.2" r="1.1" fill="${INK}" stroke="none"/><circle cx="3" cy="-9.2" r="1.1" fill="${INK}" stroke="none"/><path d="M-2.6 -5.2q2.6 2.4 5.2 0" fill="none" stroke-width="1.5"/>` +
@@ -508,20 +515,24 @@
         `<ellipse cx="${cx + 17}" cy="35" rx="8" ry="3" transform="rotate(-22 ${cx + 17} 35)" fill="none" stroke-width="4.4"/><ellipse cx="${cx + 17}" cy="35" rx="8" ry="3" transform="rotate(-22 ${cx + 17} 35)" fill="none" stroke="#ffc928" stroke-width="2"/></g>` +
         `<path d="M${cx - 17} 44a17 6 0 0 0 34 0" fill="none" stroke="#dbe7ff" stroke-width="2.4" stroke-linecap="round"/>` +
         // the hitch to the next car
-        (i < 2 ? `<g ${sk}><rect x="${ox + 56}" y="68" width="10" height="4.6" rx="2" fill="#5d6770"/><circle cx="${ox + 62}" cy="70.3" r="1.5" fill="#c9d1d8" stroke-width="1.4"/></g>` : '');
+        (i < cars - 1 ? `<g ${sk}><rect x="${ox + 56}" y="68" width="10" height="4.6" rx="2" fill="#5d6770"/><circle cx="${ox + 62}" cy="70.3" r="1.5" fill="#c9d1d8" stroke-width="1.4"/></g>` : '');
     }
     // the tractor up front: clearly bigger than the kids, with a puff of smoke from its exhaust
-    const S = 0.8, TX = 218.8, TY = 16;
-    out += `<g ${sk}><path d="M196 71L214 86" fill="none" stroke-width="8"/><path d="M196 71L214 86" fill="none" stroke="#5d6770" stroke-width="3.6"/></g>` +
+    const S = 0.8, TX = 218.8 + more, TY = 16;
+    out += `<g ${sk}><path d="M${196 + more} 71L${214 + more} 86" fill="none" stroke-width="8"/><path d="M${196 + more} 71L${214 + more} 86" fill="none" stroke="#5d6770" stroke-width="3.6"/></g>` +
       `<g transform="translate(${TX} ${TY}) scale(${S})">${ref ? '<use href="#tractor" x="-10" y="0" width="150" height="100"/>' : tractorOpen(animated)}</g>` +
       (animated ? `<g class="rig-smoke" transform="translate(${f1(TX + 105 * S)} ${f1(TY + 13 * S)})" fill="#fff" stroke="#cfcfcf" stroke-width="1.5"><circle class="puff p1" r="7"/><circle class="puff p2" r="5.5"/><circle class="puff p3" r="6.5"/></g>` : '');
     return out;
   }
 
-  // The little barrel train, drawn small for the distance (the lane itself comes from `lanes`)
+  // The little barrel train in the hero, drawn small for the distance (the lane itself comes from `lanes`): six barrels, a kid waving in each.
+  // It drives BARREL_SPEED field units a second on every screen (css/hero.css, .rig-barrel: 1980 units in 52 s, on a phone 1140 in 30 s),
+  // and each wheel turns once for every turn's length of road it rolls (2 pi r, r at this size), so the wheels never slide or race.
+  const BARREL_CARS = 6, BARREL_SPEED = 38;
   function barrelRig(y, sc) {
-    const sp = sc / 0.46;
-    return `<g transform="translate(0 ${y})"><g class="rig rig-barrel" style="--wt1:${f1(1.9 * sp)}s;--wt2:${f1(1.1 * sp)}s;"><g transform="scale(${sc})"><g class="rig-bounce"><g transform="translate(-167 -96)">${barrelTrain(true)}</g></g></g></g></g>`;
+    const half = (142 + 64 * BARREL_CARS) / 2;   // the train is centred on the rig's own x
+    const turn = (r) => (2 * Math.PI * r * sc / BARREL_SPEED).toFixed(2) + 's';
+    return `<g transform="translate(0 ${y})"><g class="rig rig-barrel" style="--wt1:${turn(27 * 0.8)};--wt2:${turn(13 * 0.8)};--bt:${turn(9.4)}"><g transform="scale(${sc})"><g class="rig-bounce"><g transform="translate(${-half} -96)">${barrelTrain(true, false, BARREL_CARS)}</g></g></g></g></g>`;
   }
 
   function fallField() {

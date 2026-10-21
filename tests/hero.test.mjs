@@ -80,6 +80,46 @@ await run('hero', async ({ browser, base, errs }) => {
   ok('fall: falling leaves', (await p.locator('.particles .leaf').count()) > 8);
   ok('fall: wheels spin', (await p.evaluate(() => getComputedStyle(document.querySelector('.wheel.wt1')).animationName)) === 'wheelSpin');
 
+  // ---- the barrel train (spring, summer, fall): six barrels, a kid waving in each (not all in step), the tractor in front, wheels that turn
+  const train = await p.evaluate(() => {
+    const rig = document.querySelector('#field .rig-barrel');
+    if (!rig) return null;
+    const waves = [...rig.querySelectorAll('.wave')].map((w) => getComputedStyle(w));
+    // the tractor: drawn after every kid (so on top of them) and ahead of every barrel (the train drives to the right)
+    const tractor = rig.querySelector('.wheel.wt1'), cx = (e) => { const r = e.getBoundingClientRect(); return r.left + r.width / 2; };
+    const kids = [...rig.querySelectorAll('.npc-body')], hits = [...rig.querySelectorAll('.npc-hit[data-npc=barrel]')];
+    return { barrels: hits.length, kids: kids.length,
+      waving: waves.filter((w) => w.animationName === 'wave').length, delays: new Set(waves.map((w) => w.animationDelay)).size,
+      wheels: [...rig.querySelectorAll('.wheel.bt')].filter((w) => getComputedStyle(w).animationName === 'wheelSpin').length,
+      tractorInFront: !!tractor && kids.every((k) => k.compareDocumentPosition(tractor) & Node.DOCUMENT_POSITION_FOLLOWING) && hits.every((h) => cx(tractor) > cx(h)) };
+  });
+  ok('the barrel train has six barrels and six kids, all of them waving, not all in step', !!train && train.barrels === 6 && train.kids === 6 && train.waving === 6 && train.delays >= 5, JSON.stringify(train));
+  ok('...twelve barrel wheels turn and the tractor is drawn in front', !!train && train.wheels === 12 && train.tractorInFront, JSON.stringify(train));
+  // where the train is at the very start and the very end of its loop: out of sight both times, so it never pops in or out
+  const loopEnds = (q) => q.evaluate(() => {
+    const rig = document.querySelector('#field .rig-barrel'), hero = document.getElementById('top').getBoundingClientRect();
+    const a = rig.getAnimations().find((x) => x.animationName === 'rigDrive');
+    if (!a) return null;
+    const dur = a.effect.getComputedTiming().duration, t0 = a.effect.getTiming().delay + dur;   // (a negative delay: the 2nd loop starts at currentTime delay + duration)
+    a.pause();
+    const at = (t) => { a.currentTime = t0 + t; const r = rig.getBoundingClientRect(); return { left: Math.round(r.left - hero.left), right: Math.round(r.right - hero.left) }; };
+    const out = { start: at(0), end: at(dur - 1), width: Math.round(hero.width) };
+    a.play();
+    return out;
+  });
+  for (const [w, h] of [[1366, 768], [1920, 1080], [390, 800], [760, 800]]) {
+    const q = await page(w, h);
+    const bad = [];
+    for (const s of ['spring', 'summer', 'fall']) {
+      await q.evaluate((x) => WISE_ACRES.hero.setSeason(x), s);
+      await until(q, (x) => document.documentElement.dataset.season === x && !!document.querySelector('#field .rig-barrel'), s);
+      const e = await loopEnds(q);
+      if (!e || !(e.start.right < 0 && e.end.left > e.width)) bad.push(s + ' ' + JSON.stringify(e));
+    }
+    ok(`${w} x ${h}: the barrel train starts and ends its loop out of sight`, bad.length === 0, bad.join(' | '));
+    await q.context().close();
+  }
+
   // ---- winter: trees, fires, snow
   await choose(p, 'winter');
   ok('winter: the tomato chip and the bee are hidden', !(await p.locator('.chip-new').isVisible()) && !(await p.locator('.bee').isVisible()));
