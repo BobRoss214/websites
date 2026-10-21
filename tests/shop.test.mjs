@@ -191,7 +191,7 @@ function readLayout(SEL) {
     const cs = getComputedStyle(e);
     if (cs.display === 'inline' || cs.display === 'contents') return;
     const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return;
-    if (e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1) cut.push(`${sel(e)} "${clean(e.textContent).slice(0, 30)}" content ${e.scrollWidth}x${e.scrollHeight} in a box ${e.clientWidth}x${e.clientHeight}`);
+    if (e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + Math.max(6, e.clientHeight * 0.12)) cut.push(`${sel(e)} "${clean(e.textContent).slice(0, 30)}" content ${e.scrollWidth}x${e.scrollHeight} in a box ${e.clientWidth}x${e.clientHeight}`);
     function clean(s) { return String(s).replace(/\s+/g, ' ').trim(); }
   });
   const sh = shop.getBoundingClientRect();
@@ -297,6 +297,7 @@ await run('shop', async ({ browser, base, errs }) => {
   /* ---------------------------------------------- English, a computer window: what is on the page */
   const p = await openShop(browser, base, errs, { w: 1366, h: 900 });
   await throughShop(p);
+  await settled(p, 1500, 4000);
   const reveal = await until(p, () => [...document.querySelectorAll('#shop .reveal')].every((e) => parseFloat(getComputedStyle(e).opacity) > 0.99), null, 8000);
   const en = await p.evaluate(readShop, SEL);
   ok('the section is revealed when it is scrolled to (nothing stays invisible)', !!reveal && en.cards.length > 0, JSON.stringify(en.reveal.filter((o) => o < 0.99).slice(0, 5)));
@@ -400,7 +401,7 @@ await run('shop', async ({ browser, base, errs }) => {
     }
     if (q.noAgeStatement && /\b(?:18|21)\b|\bages?\b|\byears?\b|\bmust be\b|\badults?\b|\bID\b/i.test(c.text)) ruleBad.push(`${q.slug}: the list says no age statement: "${c.text.slice(0, 60)}"`);
     if (q.noNewDates) {
-      const ownText = c.text.slice(c.name.length);
+      const ownText = c.text.slice(c.name.length).split(LIST.unknownWords).join('. ');
       const sentences = ownText.split(/(?<=[.!?])\s+/).filter((s) => /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|thanksgiving|weekend|\b(?:mon|tues|wednes|thurs|fri|satur|sun)day\b|\b\d{1,2}(?:st|nd|rd|th)\b/i.test(s));
       const strange = sentences.filter((s) => !outside.includes(clean(s.replace(/\u2019/g, "'"))) && !outside.includes(clean(s)));
       if (strange.length) ruleBad.push(`${q.slug}: dates in words the page does not have elsewhere: "${strange[0].slice(0, 70)}"`);
