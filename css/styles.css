@@ -130,14 +130,19 @@ a[href^="tel:"]{white-space:nowrap}
 /* ==========================================================================
    Hero
    ========================================================================== */
-.hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(var(--sky-1,#5fc1ee) 0%,var(--sky-2,#93d8f6) 34%,var(--sky-3,#cdeffb) 58%,var(--sky-4,#fff1c9) 100%);min-height:clamp(660px,calc(100vh - 112px),880px);min-height:clamp(660px,calc(100svh - 112px),880px);padding-top:clamp(24px,4vw,48px);border-bottom:3px solid var(--ink)}
+.hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(var(--sky-1,#5fc1ee) 0%,var(--sky-2,#93d8f6) 34%,var(--sky-3,#cdeffb) 58%,var(--sky-4,#fff1c9) 100%);min-height:max(clamp(660px,calc(100vh - 112px),880px),calc(31.2vw + 230px));min-height:max(clamp(660px,calc(100svh - 112px),880px),calc(31.2vw + 230px));padding-top:clamp(24px,4vw,48px);border-bottom:3px solid var(--ink)}
+/* 31.2vw + 230px: the farm picture grows with the width of the window, so a wide and short window needs a taller hero, or the barn on the far hill
+   climbs over the sun and then out of the top (tests/barn.test.mjs). It only counts on a window wider than about 1380 px that is also short, and on screens
+   wider than about 2080 px; everywhere else the 660 to 880 px rule is the larger one. */
 .hero-scene{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;z-index:1;pointer-events:none;overflow:hidden}
 .layer{position:absolute;left:0;width:100%;will-change:transform}
-svg.layer{bottom:0;height:64%}
+/* The drawn layers fill the width, so on a wide, short window their picture (1440 x 520) is taller than their box. overflow:visible lets
+   the part above the box show (the hero itself still frames the scene): an inner <svg> cuts at its own edge by default, and that cut
+   off the top of the barn, the tallest thing on the far hill, at 1920 x 1080 and on any window wider than about 2 : 1 (tests/barn.test.mjs). */
+svg.layer{bottom:0;height:64%;overflow:visible}
 .layer-sky{top:0;right:0;bottom:0;left:0;inset:0}
 .layer-critters{top:0;right:0;bottom:0;left:0;inset:0}
 .layer-field,.layer-fore{height:64%}
-svg.layer-fore{overflow:visible}
 
 .sun{position:absolute;right:7%;top:6%;width:clamp(96px,13vw,190px);aspect-ratio:1}
 .sun svg{width:100%;height:100%;overflow:visible}
