@@ -51,6 +51,8 @@
         '</div>' +
         '<div hidden data-role="descs"></div>' +
       '</details>';
+    // on a short window the box starts folded up to its one line ("Track · Switchback"), so the gift choices and Play stay on the first screen; a tap opens it
+    if (window.innerHeight < 800) { box.querySelector('[data-role="det"]').removeAttribute('open'); }
     var grid = box.querySelector('[data-role="grid"]');
     var descs = box.querySelector('[data-role="descs"]');
     var label = box.querySelector('[data-role="label"]');

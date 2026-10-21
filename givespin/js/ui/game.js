@@ -50,7 +50,7 @@
     root.innerHTML =
       '<nav class="crumbs" aria-label="Breadcrumb"><a href="#lobby" id="g-crumb-root">Lobby</a><span aria-hidden="true">' + ui.icon('chevron-right') + '</span><span id="g-crumb" aria-current="page"></span></nav>' +
       '<div class="gamegrid">' +
-        '<section class="bet panel" aria-labelledby="bet-t">' +
+        '<section class="bet panel" id="bet-panel" aria-labelledby="bet-t">' +
           '<h2 class="bet__title" id="bet-t">Your gift</h2>' +
           '<div class="field" data-role="amount" id="field-amount"></div>' +
           '<div class="field" id="field-rounds"><span class="field__label" id="rounds-label">Split your gift</span>' +
@@ -64,24 +64,31 @@
           '<div class="field" id="field-pick" hidden><span class="field__label" id="pick-label">Back a charity <small>(optional)</small></span>' +
             '<div class="pickrow"><button type="button" class="btn btn--sm" id="pick-btn">' + ui.icon('target') + 'Choose a charity</button><span class="pickchip" id="pick-chip" hidden></span></div>' +
             '<p class="field__hint" id="pick-hint"></p></div>' +
-          '<div class="field" id="field-pool">' +
-            '<div class="field__row"><span class="field__label" id="pool-label">Charities in play</span>' +
-              '<button type="button" class="btn btn--sm" id="btn-filters" title="Choose which charities can come up in games">' + ui.icon('list-filter') + 'Filters <span class="count" id="filters-count" hidden></span></button></div>' +
-            '<div class="chips chips--quick" id="quick-causes" role="group" aria-label="Quick causes"></div>' +
-            '<p class="pool-line" id="pool-line" aria-live="polite"></p>' +
-            '<div class="customrow" id="custom-row">' +
-              '<button type="button" class="btn btn--sm" id="custom-btn">' + ui.icon('list-checks') + '<span>Choose your own charities</span></button>' +
-              '<span class="customchip" id="custom-chip" hidden>' +
-                '<button type="button" id="custom-toggle" role="switch" aria-checked="true"><span class="customchip__tick" aria-hidden="true">' + ui.icon('check') + '</span><span id="custom-label">Custom charities</span></button>' +
-                '<button type="button" class="customchip__edit" id="custom-edit">Edit</button>' +
-                '<button type="button" class="customchip__x" id="custom-clear" aria-label="Remove my custom list">' + ui.icon('x') + '</button>' +
-              '</span>' +
-            '</div>' +
-            '<p class="field__hint" id="custom-hint"></p>' +
+          // the Play button comes right after the choices that every round needs (amount, split, board, track, back a charity), so it is on the first screen;
+          // "Charities in play" and the gift options come after it (a phone keeps them behind the Options button)
+          '<div class="bet__act">' +
+            '<button type="button" class="bet__optbtn" id="btn-opts" aria-expanded="false" aria-controls="bet-panel" aria-label="More options for this gift">' + ui.icon('settings-2') + '<span>Options</span></button>' +
+            '<button type="button" class="playbtn" id="btn-play"><span class="playbtn__main"><span data-icon="play"></span><span id="btn-play-label">Play</span></span><span class="playbtn__sub" id="btn-play-sub"></span></button>' +
           '</div>' +
-          '<details class="opts" id="opts"><summary>Gift options <span class="opts__sum" id="opts-sum"></span></summary><div class="opts__body" data-role="opts"></div></details>' +
-          '<button type="button" class="playbtn" id="btn-play"><span class="playbtn__main"><span data-icon="play"></span><span id="btn-play-label">Play</span></span><span class="playbtn__sub" id="btn-play-sub"></span></button>' +
           '<p class="kbd-hint">Tip: press <kbd>Space</kbd> to play.</p>' +
+          '<div class="bet__more" id="bet-more">' +
+            '<div class="field" id="field-pool">' +
+              '<div class="field__row"><span class="field__label" id="pool-label">Charities in play</span>' +
+                '<button type="button" class="btn btn--sm" id="btn-filters" title="Choose which charities can come up in games">' + ui.icon('list-filter') + 'Filters <span class="count" id="filters-count" hidden></span></button></div>' +
+              '<div class="chips chips--quick" id="quick-causes" role="group" aria-label="Quick causes"></div>' +
+              '<p class="pool-line" id="pool-line" aria-live="polite"></p>' +
+              '<div class="customrow" id="custom-row">' +
+                '<button type="button" class="btn btn--sm" id="custom-btn">' + ui.icon('list-checks') + '<span>Choose your own charities</span></button>' +
+                '<span class="customchip" id="custom-chip" hidden>' +
+                  '<button type="button" id="custom-toggle" role="switch" aria-checked="true"><span class="customchip__tick" aria-hidden="true">' + ui.icon('check') + '</span><span id="custom-label">Custom charities</span></button>' +
+                  '<button type="button" class="customchip__edit" id="custom-edit">Edit</button>' +
+                  '<button type="button" class="customchip__x" id="custom-clear" aria-label="Remove my custom list">' + ui.icon('x') + '</button>' +
+                '</span>' +
+              '</div>' +
+              '<p class="field__hint" id="custom-hint"></p>' +
+            '</div>' +
+            '<details class="opts" id="opts"><summary>Gift options <span class="opts__sum" id="opts-sum"></span></summary><div class="opts__body" data-role="opts"></div></details>' +
+          '</div>' +
         '</section>' +
         '<section class="bet bet--live panel" id="livepanel" aria-labelledby="lt-title" hidden></section>' +
         '<section class="stage panel" id="stage" aria-label="Game stage">' +
@@ -107,7 +114,7 @@
       customBtn: $('#custom-btn'), customChip: $('#custom-chip'), customToggle: $('#custom-toggle'), customLabel: $('#custom-label'), customEdit: $('#custom-edit'), customClear: $('#custom-clear'), customHint: $('#custom-hint'), poolBox: $('#field-pool'),
       pickBox: $('#field-pick'), pickBtn: $('#pick-btn'), pickChip: $('#pick-chip'), pickHint: $('#pick-hint'), poolLine: $('#pool-line'), filtersBtn: $('#btn-filters'), filtersCount: $('#filters-count'),
       play: $('#btn-play'), playLabel: $('#btn-play-label'), playSub: $('#btn-play-sub'), optsSum: $('#opts-sum'), optsBox: $('#opts'),
-      tabs: $('#below-tabs'), tabp: $('#tabp'), more: $('#moregames'), bet: root.querySelector('.bet')
+      tabs: $('#below-tabs'), tabp: $('#tabp'), more: $('#moregames'), bet: root.querySelector('.bet'), optBtn: $('#btn-opts')
     };
 
     amount = ui.amount.mount(root.querySelector('[data-role="amount"]'), function () { refreshBet(); });
@@ -133,6 +140,12 @@
       customChanged();
     });
     el.play.addEventListener('click', function () { play(); });
+    el.optBtn.addEventListener('click', function () { setMore(!el.bet.classList.contains('is-more')); });
+    el.bet.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && el.bet.classList.contains('is-more') && isDocked()) { e.stopPropagation(); setMore(false); el.optBtn.focus(); }
+    });
+    window.addEventListener('resize', fitSoon);
+    if (window.ResizeObserver) { fitObs = new ResizeObserver(fitSoon); fitObs.observe(el.stage); fitObs.observe(el.bet); }
 
     el.roundsSeg.addEventListener('click', function (e) {
       var b = e.target.closest('.seg__btn');
@@ -748,6 +761,10 @@
     buildTabs();
     selectTab(live ? liveTabState : tabState);
     if (live) { ui.live.attach((opts && opts.table) || id); } else { refreshBet(); }
+    el.bet.classList.remove('is-more');
+    el.optBtn.setAttribute('aria-expanded', 'false');
+    observeFit();
+    fitSoon();
   }
 
   function leave() {
@@ -802,11 +819,12 @@
     if (ui.live && ui.live.gameBusy(current)) { ui.toast('That table is mid-round. Try again in a few seconds.', 'info'); return Promise.resolve(); }
     var g = game();
     var v = amount.valid();
-    if (!v.ok) { amount.flash(v.message); return Promise.resolve(); }
+    if (!v.ok) { setMore(true); amount.flash(v.message); return Promise.resolve(); }
     var cents = amount.cents();
     var rounds = roundsNow();
     var minC = cfg.minPerRound * 100;
     if (Math.floor(cents / rounds) < minC) {
+      setMore(true);
       amount.flash(g.name + ' needs at least ' + money(rounds * minC, true) + ' for ' + rounds + (g.fixedRounds ? ' reels.' : ' rounds.'));
       return Promise.resolve();
     }
@@ -825,6 +843,7 @@
 
     var parts = core.splitCents(cents, rounds);
     var round = null;
+    setMore(false);
     GS.app.setBusy(true);
     GS.audio.unlock();
     ui.announce('Playing ' + g.name + '.');
@@ -878,6 +897,88 @@
       ui.receipt.abort();
       ui.toast(err && err.message === 'Not enough demo credit.' ? 'Not enough demo credit.' : 'Something went wrong. Nothing was charged. Please try again.', 'info');
     }).then(function () { GS.app.setBusy(false); });
+  }
+
+  /* ------------------------------------------------- one screen: the options sheet and the fit of the picture */
+
+  // On a phone (single column) the gift panel is docked at the bottom of the screen: the amount presets and the Play button are always there,
+  // and the Options button opens the rest of the choices as a sheet over the stage. On a wider screen the panel is the left column, nothing is docked.
+  var MQ_SINGLE = '(max-width: 900px)';
+  function isDocked() { return !!(window.matchMedia && window.matchMedia(MQ_SINGLE).matches) && !isLive(); }
+
+  function setMore(on) {
+    if (!el.bet) { return; }
+    on = !!on;
+    el.bet.classList.toggle('is-more', on);
+    el.optBtn.setAttribute('aria-expanded', on ? 'true' : 'false');
+    // a control that was inside the sheet is gone when it closes: keep the keyboard on the Play button instead of losing it
+    var ae = document.activeElement;
+    if (!on && ae && ae !== document.body && el.bet.contains(ae) && ae.offsetParent === null) { el.play.focus(); }
+    fitSoon();
+  }
+
+  // Every game's picture (the first element of its panel) is shrunk, when it has to be, so that the picture, the gift choices and the Play button all
+  // fit on the first screen and nothing needs scrolling to start a round. It is scaled with CSS (transform): the games already allow for a canvas that is
+  // drawn at another size on the screen (they turn a click or a touch into a point on the canvas with rect.width / the canvas size).
+  var FIT_MIN = 0.5;
+  var fitRaf = 0, fitObs = null, fitKey = '';
+
+  function fitReset(prim) {
+    prim.style.transform = '';
+    prim.style.transformOrigin = '';
+    prim.style.marginBottom = '';
+    prim.classList.remove('is-fit');
+  }
+
+  /** The height at the bottom of a phone that the dock and the navigation bar use, so the picture is not shrunk to fit under them. */
+  function dockSpace() {
+    var nav = document.querySelector('.side');
+    var navH = nav && window.getComputedStyle(nav).position === 'fixed' ? nav.offsetHeight : 0;
+    return navH + (isDocked() && el.bet.offsetHeight ? el.bet.offsetHeight : 0);
+  }
+
+  function fitStage() {
+    fitRaf = 0;
+    if (!built || !current || !mounted[current] || state().view !== 'game') { return; }
+    var panel = mounted[current].panel;
+    var prim = panel && panel.firstElementChild;
+    if (!prim || panel.hidden) { return; }
+    var docked = isDocked();
+    if (docked && el.bet.classList.contains('is-more')) { return; }          // the sheet is only laid over the picture: leave the fit as it was
+    var wide = !(window.matchMedia && window.matchMedia(MQ_SINGLE).matches);
+    if (isLive() && !wide) { fitReset(prim); return; }                         // (a live table keeps its own long panel on a phone for now)
+    fitReset(prim);
+    var H = prim.offsetHeight;
+    if (!H) { return; }
+    var space = docked ? dockSpace() : 0;
+    if (docked) { document.documentElement.style.setProperty('--dock-h', (el.bet.offsetHeight + 8) + 'px'); } else { document.documentElement.style.removeProperty('--dock-h'); }
+    // the first screen is the page scrolled to the top: where the picture starts there, and how much room is left under it for the result line and the
+    // in-stage button (wide screens) or for the dock and the navigation bar (phones)
+    var top = prim.getBoundingClientRect().top + (window.pageYOffset || 0);
+    var reserve = wide ? 44 : 14 + space;
+    var room = window.innerHeight - top - reserve;
+    var s = Math.max(FIT_MIN, Math.min(1, room / H));
+    if (s >= 0.995) { return; }
+    prim.classList.add('is-fit');
+    prim.style.transformOrigin = '50% 0';
+    prim.style.transform = 'scale(' + s.toFixed(4) + ')';
+    prim.style.marginBottom = (-(1 - s) * H).toFixed(1) + 'px';
+  }
+
+  function fitSoon() {
+    if (!fitRaf) { fitRaf = requestAnimationFrame(fitStage); }
+  }
+
+  function observeFit() {
+    if (!fitObs || !current || !mounted[current]) { return; }
+    var prim = mounted[current].panel.firstElementChild;
+    if (fitKey !== current && prim) {
+      fitObs.disconnect();
+      fitObs.observe(el.stage);
+      fitObs.observe(el.bet);
+      fitObs.observe(prim);
+      fitKey = current;
+    }
   }
 
   function scrollStage() {

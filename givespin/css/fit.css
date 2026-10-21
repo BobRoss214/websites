@@ -1,0 +1,129 @@
+/* ==========================================================================
+   One screen: the game, the gift choices and the Play button together.
+   Loaded last on purpose. It only tightens the game screen: less page around the game, a tighter gift panel with Play right under
+   the choices every round needs, and, on a phone, the panel docked at the bottom of the screen (amount presets and Play are always
+   there; the Options button opens the rest as a sheet). The picture itself is fitted to the screen by js/ui/game.js (fitStage).
+   ========================================================================== */
+
+:root { --nav-h: calc(62px + env(safe-area-inset-bottom, 0px)); }
+
+/* ------------------------------------------------------- less page around a game */
+body:has(#view-game:not([hidden])) .demo-strip { min-height: 0; padding-block: 0; font-size: 0.74rem; line-height: 1.4; }
+body:has(#view-game:not([hidden])) .main { padding-top: 12px; padding-bottom: 32px; }
+#view-game .crumbs { margin-bottom: 8px; font-size: 0.78rem; }
+#view-game .gamegrid { gap: 14px; }
+
+/* ------------------------------------------------------------- the gift panel */
+#view-game .bet { gap: 10px; padding: 14px; }
+#view-game .bet__title { font-size: 0.72rem; }
+#view-game .bet .field { gap: 6px; }
+#view-game .bet .field__row { min-height: 22px; }
+#view-game .bet .field__label { font-size: 0.7rem; }
+#view-game .bet .amount__cur { padding: 0 3px 0 12px; font-size: 1.15rem; }
+#view-game .bet .amount__input { padding: 7px 6px; font-size: 1.25rem; }
+#view-game .bet .amount__btn { width: 40px; }
+#view-game .bet .preset { min-height: 32px; }
+#view-game .bet .seg { padding: 3px; gap: 3px; }
+#view-game .bet .seg__btn { min-height: 32px; padding: 4px 6px; }
+#view-game .bet .field__hint { font-size: 0.72rem; line-height: 1.3; min-height: 0; }
+#view-game .bet .field__msg { min-height: 0; font-size: 0.74rem; }
+#view-game .bet .lt-other { font-size: 0.72rem; }
+#view-game .bet .lt-money input { min-height: 28px; font-size: 0.82rem; }
+#view-game .bet .pickrow { gap: 8px; }
+#view-game .bet .playbtn { padding: 9px 16px; border-radius: 12px; }
+#view-game .bet .playbtn__main { font-size: 1.05rem; }
+#view-game .bet .playbtn__sub { min-height: 1em; font-size: 0.72rem; }
+#view-game .bet .kbd-hint { margin-top: -4px; font-size: 0.7rem; }
+#view-game .bet__more { display: grid; gap: 10px; }
+#view-game .bet__act { display: contents; }       /* a wide screen: just the Play button */
+#view-game .bet__optbtn { display: none; }
+
+/* ------------------------------------------------------------------ the stage */
+#view-game .stage { gap: 10px; padding: 14px; }
+#view-game .stage__head { flex-wrap: nowrap; align-items: center; gap: 10px 14px; }
+#view-game .stage__titles { min-width: 0; flex: 1 1 auto; }
+#view-game .stage__title { font-size: 1.35rem; }
+#view-game .stage__tag { margin-top: 0; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#view-game .stage__badges { flex: none; }
+#view-game .stage__body { min-height: 0; padding: 8px; }
+/* the picture that fitStage() has shrunk: it keeps its own size for layout and is scaled from its top middle */
+#view-game .game > .is-fit { will-change: transform; }
+
+/* The board size: its label and the "any number" box share a row, so the buttons come right under them */
+#view-game .bet #field-size { grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; align-items: center; }
+#view-game .bet #field-size > .field__label { grid-column: 1; grid-row: 1; }
+#view-game .bet #field-size > .lt-other { grid-column: 2; grid-row: 1; gap: 6px; }
+#view-game .bet #field-size > .seg { grid-column: 1 / -1; grid-row: 2; }
+#view-game .bet #field-size > .field__hint { grid-column: 1 / -1; grid-row: 3; }
+#view-game .bet #field-size .lt-other > label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#view-game .bet #field-size .size-custom { gap: 6px; }
+#view-game .bet #field-size .btn--sm { min-height: 30px; padding: 3px 10px; }
+
+/* A short laptop window: the sub-labels under the board sizes ("Easy", "Classic" ...) are not needed to choose, and the tagline is the first thing to go */
+@media (max-height: 760px) {
+  #view-game .bet #size-seg .seg__btn small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #view-game .bet #size-seg .seg__btn { min-height: 30px; }
+}
+
+/* ------------------------------ two columns (a laptop, a desktop): the panel follows the page and keeps Play in view */
+@media (min-width: 901px) {
+  #view-game:not(.is-live) .bet {
+    position: sticky; top: calc(var(--top-h) + 12px); align-self: start;
+    max-height: calc(100vh - 150px); overflow: auto; overscroll-behavior: contain; scroll-padding-block-end: 84px;   /* (a control that gets the keyboard is scrolled clear of the pinned Play button) */
+  }
+  /* "Your gift" still names the panel for a screen reader; the words are not needed on the screen */
+  #view-game:not(.is-live) .bet__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* Play stays at the bottom of the panel even when the choices above it are taller than the window (the panel then scrolls inside itself) */
+  #view-game:not(.is-live) .bet__act { display: block; position: sticky; bottom: -14px; z-index: 1; margin: 0 -14px -14px; padding: 8px 14px 14px; background: linear-gradient(180deg, transparent 0, var(--panel) 14px); }
+}
+
+/* ------------------------------------------------- one column (a phone, a tablet held upright): the docked panel */
+@media (max-width: 900px) {
+  /* room under the page for the dock, so the footer can be scrolled clear of it */
+  body:has(#view-game:not([hidden])) .main { padding-bottom: calc(var(--dock-h, 128px) + 16px); }
+  #view-game:not(.is-live) .bet {
+    position: fixed; z-index: 65; right: 0; left: var(--side-w); bottom: 0; margin: 0;
+    padding: 8px 12px 10px; gap: 8px; border-width: 1px 0 0; border-radius: 14px 14px 0 0;
+    box-shadow: 0 -14px 30px -12px rgba(0, 0, 0, 0.65);
+    max-height: min(78vh, calc(100vh - var(--top-h) - 24px)); max-height: min(78dvh, calc(100dvh - var(--top-h) - 24px)); overflow: auto; overscroll-behavior: contain; scroll-padding-block-end: 84px;
+  }
+  /* docked and closed: only the amount presets and the Play button (with the Options button next to it) */
+  #view-game:not(.is-live) .bet:not(.is-more) > .bet__title,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-rounds,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-size,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-variants,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-pick,
+  #view-game:not(.is-live) .bet:not(.is-more) .bet__more,
+  #view-game:not(.is-live) .bet:not(.is-more) .kbd-hint,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-amount .field__row,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-amount .amount,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-amount .field__msg { display: none; }
+  #view-game:not(.is-live) .bet:not(.is-more) .preset { min-height: 36px; }
+  #view-game:not(.is-live) .bet__act { display: flex; align-items: stretch; gap: 8px; }
+  #view-game:not(.is-live) .bet__act .playbtn { flex: 1 1 auto; width: auto; }
+  #view-game:not(.is-live) .bet__optbtn {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex: none; min-width: 60px;
+    padding: 4px 8px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel-2); color: var(--muted); font: 700 0.66rem var(--f-body);
+  }
+  #view-game:not(.is-live) .bet__optbtn:hover { color: var(--text); border-color: #4a7392; }
+  #view-game:not(.is-live) .bet__optbtn[aria-expanded="true"] { color: var(--green); border-color: var(--green); background: rgba(34, 240, 122, 0.1); }
+  /* docked and open: every choice, scrollable, with Play kept at the bottom of the sheet */
+  #view-game:not(.is-live) .bet.is-more .bet__act { order: 2; position: sticky; bottom: -10px; margin: 0 -12px -10px; padding: 8px 12px 10px; background: var(--panel); border-top: 1px solid var(--line); z-index: 1; }
+  #view-game:not(.is-live) .bet.is-more .bet__more { order: 1; }
+  #view-game:not(.is-live) .bet.is-more .kbd-hint { display: none; }
+  /* the big button under a game's picture does what the docked Play button does, so it is not shown a second time (it would only cost room) */
+  #view-game:not(.is-live) .game .gbtn:not(.gbtn--ghost), #view-game:not(.is-live) .plinko__drop, #view-game:not(.is-live) .drop__open { display: none; }
+}
+/* a phone: the navigation bar is at the bottom, so the dock sits on top of it */
+@media (max-width: 720px) {
+  #view-game:not(.is-live) .bet { left: 0; bottom: var(--nav-h); }
+  body:has(#view-game:not([hidden])) .main { padding: 8px 12px calc(var(--nav-h) + var(--dock-h, 128px) + 16px); }
+  #view-game .crumbs { margin-bottom: 6px; }
+  #view-game .stage { padding: 10px; gap: 8px; }
+  #view-game .stage__head { flex-wrap: wrap; gap: 4px 10px; }
+  #view-game .stage__title { font-size: 1.15rem; }
+  #view-game .stage__tag { display: none; }
+  #view-game .stage__badges { gap: 4px; }
+  #view-game .stage__body { padding: 6px 2px; }
+  body:has(#view-game:not([hidden])) .toasts { bottom: calc(var(--nav-h) + var(--dock-h, 128px) + 4px); }
+}

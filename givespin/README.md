@@ -72,6 +72,15 @@ from the charities on the board, each with exactly the same chance, and the marb
 showing. Any race game can offer such a choice by giving its description a `variants` entry (the comment at the top of
 `js/games/crowd.js` says how); the picker itself is `js/ui/variants.js`. To write another Marble Run track, see `docs/marble-maps.md`.
 
+**One screen per game.** Opening a game puts the game, the gift choices (amount, split, board size, back a charity) and the Play
+button together on the first screen, on a phone and on a laptop, so nobody has to scroll to start a round. The picture is shrunk
+to fit the window when it has to be (never below half size; `fitStage` in `js/ui/game.js` does it with a CSS scale, which the
+games already allow for when they work out where a click landed). On a wide screen the gift panel sits beside the picture with
+Play right under the choices every round needs, pinned to the bottom of the panel if the window is short; "Charities in play" and the
+gift options come after it. On a phone the panel is docked at the bottom of the screen with the amount presets and Play, and the
+**Options** button opens everything else as a sheet over the picture. Everything about the game (the tabs, more games) is below,
+as before. The rules are in `css/fit.css`.
+
 Four games stop sooner on purpose, because of what they are: Pick a Card is a table of face-down cards you tap (up to
 100), a Scratch Card is one card with 4 to 48 panels, Coin Flip Showdown is a knockout bracket, so it takes a power of
 two (up to 128), and Dice is one die, so it always has six faces. Anything bigger would be too crowded to read or tap, so
@@ -402,6 +411,7 @@ css/live.css        live tables, leagues, crews, cards, the daily wheel and the 
 css/chooser.css     the choose-your-own-charities dialog and its chip
 css/slots.css       the slot machines and their five themes
 css/tour.css        the first-visit tour
+css/fit.css         one screen per game: the tighter gift panel with Play right under the choices, the phone's docked panel (js/ui/game.js fits the picture to the screen)
 js/config.js        mode, limits, demo credit, checkout hook
 js/data.js          causes, filter vocabulary and the 500 charities
 js/core.js          pure logic (money, RNG, filters, XP, badges, validation); unit-tested in Node
