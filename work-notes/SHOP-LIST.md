@@ -63,7 +63,7 @@ The slug is the icon id: the picture is the SVG symbol `p-<slug>` (so `p-hot-pre
 ### 7. Gifts & home (the gift corner at the barn)
 - candle | Soy candle | $20 | wood wick, 14 oz. Scents change, like Christmas Hearth, Tobacco Barn, Kokomo, Apple Harvest | an amber jar with a gold lid and a little flame
 - room-spray | Room & linen spray | $17 | 8 oz. Scents like Christmas Hearth, Tobacco Barn, Apple Harvest | an amber spray bottle with a white label
-- soap | Handmade soap | $5 | in a little organza bag | a flower-shaped soap in a sheer bag with a ribbon
+- soap | Soap | $5 | in a little organza bag | a flower-shaped soap in a sheer bag with a ribbon
 - lavender-oil | Lavender oil | $15 | made with flowers grown and dried here, in a sunflower-oil carrier | an amber dropper bottle with a lavender sprig
 - eucalyptus-oil | Eucalyptus oil | $15 | in a sunflower-oil carrier, with lemon | an amber bottle with eucalyptus leaves
 - lip-balm | Lip balm | $4 | | a little tin or tube with a bee/flower

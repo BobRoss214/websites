@@ -178,3 +178,7 @@ WEARABLES (no prices yet, except maybe youth shirts $12, unsure): trucker cap, c
 - Seed packet price and what they are.
 - What flavors are the pasta, olives, bag candy and jar candy?
 - OK to name the makers (Crowe's Dough, Barnhardt Sweets, Best Jam Ever, Almeria Gold, Sweet's Elderberry, Brian Severson Farms, the honey beekeeper)? Recommend: name them without contact details.
+
+## Batch 14 (2 pictures, text only, not saved to disk)
+- Framed sign on a metal shelf: "Honey with Honeycomb $20." (hand-written). A quilted glass jar of honey with a piece of honeycomb inside, next to a basket of beekeeping books, a smiling bee figurine and 16 oz "Pure Honey" jars (beekeeper's label; no contact details are used on the site).
+- => product: Honey with honeycomb $20 (a jar with a piece of comb inside).
