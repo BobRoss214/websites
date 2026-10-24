@@ -9,12 +9,14 @@
  * What it guards against: the boxes that fade in as they come up the screen (".reveal") start 26 px lower. The browser works out where to scroll
  * when the link is clicked, and a box that is still hidden is drawn 26 px lower at that moment. So "On the Farm", the pizza schedule and the
  * "Fall & holidays" and "Farm visit" groups of the Shop ended 26 px too high, the top of the box under the header, once the box had slid up. The
- * heights of everything above them did not change (css/styles.css, .reveal). Also a link to a place inside such a box (the Drive time box). */
+ * heights of everything above them did not change (css/styles.css, .reveal). Also a link to a place inside such a box (the Drive time box).
+ * The First visit page (first-visit.html): the cards with an id (Parking, Bathrooms, Dogs, Strollers & wheelchairs) had a scroll margin of their own
+ * on top of the page's, and their links ended 88 px lower than every other link (css/extras.css, .fact-card[id]). */
 import { run, open, ok, settled, ms } from './lib.mjs';
 
 const sleep = (n) => new Promise((r) => setTimeout(r, n));
 const TOL = 4;                       // px: how far from the usual line counts as the same place
-const OWN_MARGIN = ['drive-form', 'follow-signup'];   // places that keep a margin of their own on purpose (css/features.css): the line is the usual one plus that margin
+const OWN_MARGIN = ['drive-form', 'follow-signup'];   // the only places with a scroll margin of their own (css/features.css): their line is the usual one plus that margin. Any other place must end on the usual line
 const SIZES = [['laptop 1366x768', 1366, 768], ['full HD 1920x1080', 1920, 1080], ['narrow window 1100x700', 1100, 700], ['phone 390x844', 390, 844]];
 
 await run('anchor-landing', async ({ browser, base, errs }) => {
@@ -122,6 +124,32 @@ await run('anchor-landing', async ({ browser, base, errs }) => {
     await attempt(name + ' in winter', { width, height, time: '2026-12-15T12:00:00-05:00', extra: 'WISE_ACRES.signup.demo = true;' }, '#follow-signup',
       async (f) => check(f, name + ' in winter', 'a "Tell me when" button', 'follow-signup', await click(f, 'a[data-signup-link]:visible')));
   }
+
+  // 6. the First visit page: the four cards of "Good to know" (Parking, Bathrooms, Dogs, Strollers & wheelchairs) end on the same line as every other place
+  const CARDS = ['parking', 'bathrooms', 'dogs', 'strollers'];
+  const card = (f, tag, id, from) => check(f, tag, `"${id}" in Good to know`, id, from);
+  for (const [name, width, height] of SIZES) {
+    await attempt(name + ', First visit page', { page: 'first-visit.html', width, height }, 'the quick links', async (f) => {
+      for (const id of CARDS) await card(f, name + ', First visit page', id, await click(f, `.quick-links a[href="#${id}"]`));
+    });
+  }
+  await attempt('phone 390x844 in Spanish, First visit page', { page: 'first-visit.html', width: 390, height: 844, lang: 'es' }, 'the quick links', async (f) => {
+    for (const id of CARDS) await card(f, 'phone 390x844 in Spanish, First visit page', id, await click(f, `.quick-links a[href="#${id}"]`));
+  });
+  await attempt('in a preview frame, phone 390x844, First visit page', { page: 'first-visit.html', width: 390, height: 844, framed: true }, 'the quick links', async (f) => {
+    for (const id of CARDS) await card(f, 'in a preview frame, phone 390x844, First visit page', id, await click(f, `.quick-links a[href="#${id}"]`));
+  });
+  // ...also a link from another page (the home page's questions send people to first-visit.html#parking, #strollers and #checklist) and the Drive time box of this page (a margin of its own, on purpose)
+  for (const [name, width, height, ids] of [[SIZES[0][0], 1366, 768, ['parking', 'checklist']], [SIZES[3][0], 390, 844, ['strollers']]]) {
+    for (const id of ids) {
+      await attempt(name + ', First visit page', { page: 'first-visit.html#' + id, width, height, asIs: true }, 'first-visit.html#' + id, async (f) => {
+        const t0 = await f.evaluate(() => performance.now());
+        await f.waitForFunction((t0) => !!(window.WISE_ACRES && window.WISE_ACRES.features) && performance.now() > t0 + 1800, t0, { timeout: ms(30000) });
+        await check(f, name + ', First visit page', `opening the page at #${id}`, id);
+      });
+    }
+  }
+  await attempt(SIZES[0][0] + ', First visit page', { page: 'first-visit.html', width: 1366, height: 768 }, '#drive-form', async (f) => check(f, SIZES[0][0] + ', First visit page', 'the "Drive time" button', 'drive-form', await click(f, 'a[data-drive-link]:visible')));
 
   // In a sandboxed frame the browser refuses the site's fonts (they are sent without a CORS header and the frame's address is "null"), so the
   // text shows in the stand-in fonts. That is the frame, not the site: only those messages are left out of the page errors.

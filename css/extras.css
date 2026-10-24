@@ -23,7 +23,6 @@
 .quick-links a{display:inline-flex;align-items:center;min-height:44px;padding:.5em .95em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;box-shadow:0 3px 0 var(--ink);color:var(--ink);font:700 .95rem/1.2 var(--display);text-decoration:none}
 .quick-links a:focus-visible{background:var(--sun)}
 @media (hover:hover){.quick-links a:hover{background:var(--sun)}}
-.fact-card[id]{scroll-margin-top:calc(var(--header-h) + 16px)}
 .gh-hours .live{margin-top:.2em}
 @keyframes livePulse{0%{transform:scale(1);opacity:1}100%{transform:scale(2.7);opacity:0}}
 
