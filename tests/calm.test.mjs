@@ -136,6 +136,9 @@ await run('calm', async ({ browser, base, errs }) => {
   ok('keyboard: Space on the footer button pauses everything again', sp.calm === 'all' && sp.pressed === 'true,true' && sp.loopsRunning === 0, JSON.stringify(sp));
   ok('nothing was stored (local storage, session storage, cookies are as before)', (await stored(p)) === store0, (await stored(p)) + ' vs ' + store0);
   await p.click(FOOT); await p.clock.runFor(300);
+  // The page runs the farm drawing in the footer only while it is within 160 px of the screen (js/main.js initOffscreenPause). The click can leave the page scrolled
+  // to the very bottom, where that drawing is about 330 px above the screen and rests: only the five "open now" pulses are left (5, not more than 5). Put it in view first.
+  await p.evaluate(() => document.querySelector('.footer-field').scrollIntoView({ block: 'center', behavior: 'instant' })); await p.clock.runFor(300);
   await okSoon('...and the footer button starts them again; far-away sections are still paused by the page as before', () => p.evaluate(() => ({ calm: document.documentElement.getAttribute('data-calm'), off: document.querySelector('#faq').classList.contains('is-offscreen'), run: document.getAnimations().filter((a) => a.playState === 'running' && a.effect.getTiming().iterations === Infinity).length })), (v) => v.calm === null && v.off === true && v.run > 5);
   await p.context().close();
 
