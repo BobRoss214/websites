@@ -53,7 +53,7 @@ computer; "blocked" in particular is two to three times what the projection belo
 - **Nothing jumps**, also while scrolling the whole home page (31 more files and 2.0 MB of pictures come in on the way).
 - **The download is small:** the home page is 21 files and about 360 KB with the text compressed (1.0 MB unpacked); the other pages 19 to 21 files and 280 to 300 KB.
   A second visit downloads nothing but a check of the page's own address (a few hundred bytes at most).
-- In memory: 2.2 MB of script data (JS heap) on the home page, and 36,411 nodes (7,378 elements, plus the copy each of the 880 small drawings makes).
+- In memory: 2.2 MB of script data (JS heap) on the home page, and about 43,100 nodes (9,802 elements, plus the copy each of the 1,020 small drawings makes). Before the "What to buy" section with its 62 pictures it was 36,411 nodes (7,378 elements, 880 drawings); the test limit for the home page went from 42,000 to 46,000 nodes for that.
 
 ## How much work the phone has to do
 
@@ -103,7 +103,7 @@ A browser run by a program never switches by itself (the tool turns that off to 
 
 ## Where the time goes
 
-1. **Drawing the page** is most of it. The home page is 7,378 elements and 880 small drawings, so the browser holds 36,411 nodes. Before the page has loaded the processor spends
+1. **Drawing the page** is most of it. The home page is 9,802 elements and 1,020 small drawings, so the browser holds about 43,100 nodes (it was 7,378 elements, 880 drawings and 36,411 nodes before the "What to buy" section; the times below were measured before that section was added and have not been measured again). Before the page has loaded the processor spends
    about 820 ms on it (3.3 s on a 4x phone): about 290 ms working out styles, 110 layout, 70 paint, 65 layers. No single script is heavy; it is the sum.
 2. **The moving parts of the picture repaint the whole picture.** In this Chromium an endless animation of a part that sits inside another group of the drawing runs on the main thread
    and repaints the whole layer on each frame (a part that is a direct child of the drawing is moved by the graphics side and costs nothing; a small test page showed the difference).

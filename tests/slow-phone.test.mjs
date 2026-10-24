@@ -22,7 +22,7 @@ const KB = 1024;
 const chk = (name, cond, detail = '') => ok(name, cond, cond ? '' : detail);   // the detail is only shown when a check fails
 // first visit, Slow 4G: [files, kilobytes, nodes in the page when it has loaded]
 const BUDGET = {
-  'index.html': { reqs: 24, kb: 420, nodes: 42000 },
+  'index.html': { reqs: 24, kb: 420, nodes: 46000 },   // 42000 while the page held 36,548 nodes; the "What to buy" section (62 pictures) made it 43,140 on 24 Oct 2026; the count is the same on every run
   'first-visit.html': { reqs: 24, kb: 400, nodes: 30000 },
   'pumpkin-patch.html': { reqs: 22, kb: 300, nodes: 12000 },
 };
