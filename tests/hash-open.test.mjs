@@ -5,7 +5,8 @@
  * must be on the usual line under the sticky header (88 px on a computer, 80 px on a phone) the moment the browser first jumps to it, and stay there.
  * Every frame is looked at (scrollY and the top of the place) from the start until 2 s after the page has loaded, in real time, with smooth scrolling
  * left on as a visitor has it, on a laptop and a phone, in English and Spanish, in a sandboxed frame from another address (the claude.ai preview) and with
- * reduced motion, on the home page and on First visit.
+ * reduced motion, on the home page and on First visit; on a laptop and a phone also on the four other pages (Pumpkin patch #plan, Strawberry picking
+ * #care, School field trips #dates, Wise Pie #pies).
  * What it guards against: "html{scroll-behavior:smooth}" also smoothed the browser's first jump to the #place, made while the page was still being built.
  * That jump became a glide that ran past the place by thousands of pixels on a laptop (about 270 px on a phone) and stayed there until the page put the
  * place back in view 1.5 s after loading (keepHashTarget in js/features.js). The check fails when, after its first move, the page is ever more than
@@ -53,6 +54,11 @@ await run('hash-open', async ({ browser, base, errs }) => {
   const OPEN = [
     ['laptop', 'index.html', ['menu', 'farm']], ['phone', 'index.html', ['farm', 'varieties']],
     ['laptop', 'first-visit.html', ['parking', 'checklist']], ['phone', 'first-visit.html', ['strollers']],
+    // the four other pages (they load js/features.js and css/styles.css too): one real section of each, below the first screen
+    ['laptop', 'pumpkin-patch.html', ['plan']], ['phone', 'pumpkin-patch.html', ['plan']],
+    ['laptop', 'strawberry-picking.html', ['care']], ['phone', 'strawberry-picking.html', ['care']],
+    ['laptop', 'school-field-trips.html', ['dates']], ['phone', 'school-field-trips.html', ['dates']],
+    ['laptop', 'wise-pie.html', ['pies']], ['phone', 'wise-pie.html', ['pies']],
     ['laptop in Spanish', 'index.html', ['menu'], { lang: 'es' }], ['phone in Spanish', 'index.html', ['farm'], { lang: 'es' }],
     ['laptop in a preview frame', 'index.html', ['menu'], { framed: true }], ['phone in a preview frame', 'index.html', ['farm'], { framed: true }],
     ['laptop with reduced motion', 'index.html', ['menu'], { reduced: true }],
