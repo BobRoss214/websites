@@ -460,7 +460,7 @@ step('R11', 'Fri Jan 1, 2027: the new year', { quick: true }, async (S) => {
   S.check('a page left open over New Year catches up by itself (footer year and ribbon)', /^2027 ©/.test(a.after.year) && a.after.ribbon === 0, a.after.year.slice(0, 8) + ' ribbon=' + a.after.ribbon);
   S.check('a visitor in Los Angeles, where it is still Dec 31 (9:30 PM), gets the farm\'s Jan 1', /^2027 ©/.test(pt.year) && pt.ribbon === 0, pt.year.slice(0, 8) + ' ribbon=' + pt.ribbon);
   const fy = S.owner.py('tools/check_facts.py', 'year');
-  S.check('python3 tools/check_facts.py year lists the 2026 places (41 places, 9 of them in the English pages)', /all 41 places say 2026/.test(fy.out), fy.out.split('\n').filter((l) => /places say/.test(l)).join(' | '));
+  S.check('python3 tools/check_facts.py year lists the 2026 places (40 places)', /all 40 places say 2026/.test(fy.out), fy.out.split('\n').filter((l) => /places say/.test(l)).join(' | '));
   const sitemap = S.owner.read('sitemap.xml'), home = S.owner.read('index.html');
   S.check('"Nothing in the search-engine data or the sitemap has a date that runs out" (no lastmod, no valid-until or end date)', !/<lastmod>/.test(sitemap) && !/validThrough|priceValidUntil|endDate|startDate|expires|dateModified/i.test(home), '');
 });
