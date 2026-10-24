@@ -1,0 +1,532 @@
+/* ==========================================================================
+   One screen: the game, the gift choices and the Play button together.
+   Loaded last on purpose. It only tightens the game screen: less page around a game, a tighter gift panel with Play right under
+   the choices every round needs, and three layouts that all keep the amount and Play on the first screen:
+     - wide (over 900 px):      the panel is the left column, sticky, scrolling inside itself with Play kept in view;
+     - single column (up to 900 px wide, over 520 px tall: a phone held upright, a tablet): the panel is DOCKED at the bottom of the screen
+       (amount presets and Play always there; the Options button opens the rest as a sheet);
+     - landscape (up to 900 px wide, up to 520 px tall: a phone held sideways, a short window): two columns again, the panel on the left
+       scrolls inside itself with the Play bar kept at its bottom, the picture on the right is fitted to the height.
+   The picture itself is fitted to the screen by js/ui/game.js (fitStage); the same three breakpoints are in that file (MQ_SINGLE, MQ_NARROW).
+   ========================================================================== */
+
+:root { --nav-h: calc(62px + env(safe-area-inset-bottom, 0px)); }
+
+/* ------------------------------------------------------- less page around a game */
+body:has(#view-game:not([hidden])) .demo-strip { min-height: 0; padding-block: 0; font-size: 0.74rem; line-height: 1.4; }
+body:has(#view-game:not([hidden])) .main { padding-top: 12px; padding-bottom: 32px; }
+#view-game .crumbs { margin-bottom: 8px; font-size: 0.78rem; }
+#view-game .gamegrid { gap: 14px; }
+
+/* ------------------------------------------------------------- the gift panel */
+#view-game .bet { gap: 10px; padding: 14px; }
+#view-game .bet__title { font-size: 0.72rem; }
+#view-game .bet__scroll { display: contents; }     /* (no box of its own: the choices lie in the panel's grid. The two narrow layouts below give it a box and let it scroll.) */
+#view-game .bet .field { gap: 6px; }
+#view-game .bet .field__row { min-height: 22px; }
+#view-game .bet .field__label { font-size: 0.7rem; }
+#view-game .bet .amount__cur { padding: 0 3px 0 12px; font-size: 1.15rem; }
+#view-game .bet .amount__input { padding: 7px 6px; font-size: 1.25rem; }
+#view-game .bet .amount__btn { width: 40px; }
+#view-game .bet .preset { min-height: 32px; }
+#view-game .bet .seg { padding: 3px; gap: 3px; }
+#view-game .bet .seg__btn { min-height: 32px; padding: 4px 6px; }
+#view-game .bet .field__hint { font-size: 0.72rem; line-height: 1.3; min-height: 0; }
+#view-game .bet .field__msg { min-height: 0; font-size: 0.74rem; }
+#view-game .bet .lt-other { font-size: 0.72rem; }
+#view-game .bet .lt-money input { min-height: 28px; font-size: 0.82rem; }
+#view-game .bet .pickrow { gap: 8px; }
+#view-game .bet .playbtn { padding: 9px 16px; border-radius: 12px; }
+#view-game .bet .playbtn__main { font-size: 1.05rem; }
+#view-game .bet .playbtn__sub { min-height: 1em; font-size: 0.72rem; }
+#view-game .bet .kbd-hint { margin-top: -4px; font-size: 0.7rem; }
+#view-game .bet__more { display: grid; gap: 10px; }
+#view-game .bet__act { display: contents; }       /* a wide screen: just the Play button */
+#view-game .bet__optbtn { display: none; }
+
+/* ------------------------------------------------------------------ the stage */
+/* (one column that may never grow past the stage: a long tagline or the picture's own width used to push the title row and the picture out of the panel) */
+#view-game .stage { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px; }
+#view-game .stage__head { flex-wrap: nowrap; align-items: center; gap: 10px 14px; }
+#view-game .stage__titles { min-width: 0; flex: 1 1 auto; }
+#view-game .stage__title { font-size: 1.35rem; }
+#view-game .stage__tag { margin-top: 0; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#view-game .stage__badges { flex: none; }
+#view-game .stage__body { min-height: 0; padding: 8px; }
+/* The picture may get narrower with the window (a phone turned upright again, a laptop window made smaller). A grid column sizes itself to what is in it unless it
+   is told it may be smaller, and the games work out their picture's size from the width of their own box: they never saw the narrower window and kept the old,
+   bigger picture (a Lucky Wheel 85 px wider than the screen after turning the phone back upright). */
+#view-game .stage__body, #view-game .game { grid-template-columns: minmax(0, 1fr); }
+#view-game .game > * { min-width: 0; }
+/* the picture that fitStage() has shrunk: it keeps its own size for layout and is scaled from its top middle */
+#view-game .game > .is-fit { will-change: transform; }
+
+/* The board size: its label and the "any number" box share a row, so the buttons come right under them */
+#view-game .bet #field-size { grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; align-items: center; }
+#view-game .bet #field-size > .field__label { grid-column: 1; grid-row: 1; }
+#view-game .bet #field-size > .lt-other { grid-column: 2; grid-row: 1; gap: 6px; }
+#view-game .bet #field-size > .seg { grid-column: 1 / -1; grid-row: 2; }
+#view-game .bet #field-size > .field__hint { grid-column: 1 / -1; grid-row: 3; }
+#view-game .bet #field-size .lt-other > label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#view-game .bet #field-size .size-custom { gap: 6px; }
+#view-game .bet #field-size .btn--sm { min-height: 30px; padding: 3px 10px; }
+
+/* ------------------------------------------- a short window: less page above the picture */
+/* The sub-labels under the board sizes ("Easy", "Classic" ...) are not needed to choose, and the tagline (it is also in "About this game") is the first thing to go */
+@media (max-height: 760px) {
+  #view-game .bet #size-seg .seg__btn small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #view-game .bet #size-seg .seg__btn { min-height: 30px; }
+  #view-game:not(.is-live) .stage__tag { display: none; }
+  #view-game:not(.is-live) .stage { padding: 10px 12px; gap: 6px; }
+  #view-game:not(.is-live) .stage__body { padding: 4px; }
+  body:has(#view-game:not([hidden]):not(.is-live)) .main { padding-top: 8px; }
+}
+@media (max-width: 400px) and (max-height: 760px) {
+  #view-game:not(.is-live) .stage__title { font-size: 1.05rem; }   /* ("Coin Flip Showdown" and its pill then share one row) */
+}
+/* A short phone: the "Demo credit" pill is left out (the demo strip right above and the balance in the top bar both say it), so the title and the other pill share one row */
+@media (max-width: 720px) and (max-height: 760px) {
+  #view-game:not(.is-live) .stage__badges .pill--demo { display: none; }
+}
+/* An even shorter one: the breadcrumb ("Lobby > Game") is not shown (the page title says where you are and the navigation has the Lobby),
+   but it is still there for a screen reader and shows itself over the top of the page when the keyboard reaches it. */
+@media (max-height: 740px) {
+  #view-game:not(.is-live) .crumbs { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #view-game:not(.is-live) .crumbs:focus-within { position: fixed; z-index: 66; left: 8px; top: calc(var(--top-h) + 6px); width: auto; height: auto; margin: 0; padding: 4px 12px; overflow: visible; clip: auto; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line-2); box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.7); }
+}
+
+/* ------------------------------ two columns (a laptop, a desktop): the panel follows the page and keeps Play in view */
+@media (min-width: 901px) {
+  #view-game:not(.is-live) .bet {
+    position: sticky; top: calc(var(--top-h) + 12px); align-self: start;
+    max-height: calc(100vh - 150px); overflow: auto; overscroll-behavior: contain;
+    scroll-padding-bottom: 96px;   /* a control reached with the keyboard is scrolled clear of the Play bar, not left under it */
+  }
+  /* (the breadcrumb is not shown on a window this short, so the panel starts higher and may be taller) */
+  @media (max-height: 740px) { #view-game:not(.is-live) .bet { max-height: calc(100vh - 118px); } }
+  /* "Your gift" still names the panel for a screen reader; the words are not needed on the screen */
+  #view-game:not(.is-live) .bet__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* Play stays at the bottom of the panel even when the choices above it are taller than the window (the panel then scrolls inside itself) */
+  #view-game:not(.is-live) .bet__act { display: block; position: sticky; bottom: -14px; z-index: 1; margin: 0 -14px -14px; padding: 8px 14px 14px; background: linear-gradient(180deg, transparent 0, var(--panel) 14px); }
+  /* (the Play bar reaches 14 px down over what follows it, so the hint under it starts below that, or the top of its words is hidden) */
+  #view-game:not(.is-live) .kbd-hint { margin-top: 9px; }
+}
+
+/* ------------------------------------------------- one column (a phone, a tablet held upright): the docked panel */
+@media (max-width: 900px) and (min-height: 521px), (max-width: 560px) {
+  /* room under the page for the dock, so the footer can be scrolled clear of it */
+  body:has(#view-game:not([hidden])) .main { padding-bottom: calc(var(--dock-h, 128px) + 16px); }
+  #view-game:not(.is-live) .bet {
+    position: fixed; z-index: 65; right: 0; left: var(--side-w); bottom: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 8px 12px 10px; border-width: 1px 0 0; border-radius: 14px 14px 0 0;
+    box-shadow: 0 -14px 30px -12px rgba(0, 0, 0, 0.65);
+    max-height: min(78vh, calc(100vh - var(--top-h) - 24px)); max-height: min(78dvh, calc(100dvh - var(--top-h) - 24px)); overflow: hidden;
+  }
+  /* docked and closed: only the amount presets and the Play button (with the Options button next to it) */
+  #view-game:not(.is-live) .bet:not(.is-more) > .bet__title,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-rounds,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-size,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-variants,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-pick,
+  #view-game:not(.is-live) .bet:not(.is-more) .bet__more,
+  #view-game:not(.is-live) .bet:not(.is-more) .kbd-hint,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-amount .field__row,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-amount .amount,
+  #view-game:not(.is-live) .bet:not(.is-more) #field-amount .field__msg { display: none; }
+  #view-game:not(.is-live) .bet:not(.is-more) .preset { min-height: 36px; }
+  #view-game:not(.is-live) .bet__act { display: flex; align-items: stretch; gap: 8px; }
+  #view-game:not(.is-live) .bet__act .playbtn { flex: 1 1 auto; width: auto; }
+  #view-game:not(.is-live) .bet__optbtn {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex: none; min-width: 60px;
+    padding: 4px 8px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel-2); color: var(--muted); font: 700 0.6875rem var(--f-body);
+  }
+  #view-game:not(.is-live) .bet__optbtn:hover { color: var(--text); border-color: #4a7392; }
+  #view-game:not(.is-live) .bet__optbtn[aria-expanded="true"] { color: var(--green); border-color: var(--green); background: rgba(34, 240, 122, 0.1); }
+  /* docked and open: a sheet. The choices scroll in a box of their own, and the Play bar is kept under that box (never over it), so no choice can be half hidden by it */
+  #view-game:not(.is-live) .bet.is-more { padding-bottom: var(--act-h, 76px); }
+  #view-game:not(.is-live) .bet.is-more .bet__scroll { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-content: start; flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; margin: 0 -6px; padding: 4px 6px 8px; }   /* (the margin and padding give the focus rings room: the box clips what is outside it) */
+  #view-game:not(.is-live) .bet.is-more .bet__act { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 8px 12px 10px; background: var(--panel); border-top: 1px solid var(--line); }
+  #view-game:not(.is-live) .bet.is-more .kbd-hint { display: none; }
+  /* the big button under a game's picture does what the docked Play button does, so it is not shown a second time (it would only cost room) */
+  #view-game:not(.is-live) .game .gbtn:not(.gbtn--ghost), #view-game:not(.is-live) .plinko__drop, #view-game:not(.is-live) .drop__open, #view-game:not(.is-live) .slots__spin { display: none; }
+}
+/* a phone: the navigation bar is at the bottom, so the dock sits on top of it */
+@media (max-width: 720px) and (min-height: 521px), (max-width: 560px) {
+  #view-game:not(.is-live) .bet { left: 0; bottom: var(--nav-h); }
+  body:has(#view-game:not([hidden])) .main { padding: 8px 12px calc(var(--nav-h) + var(--dock-h, 128px) + 16px); }
+  body:has(#view-game:not([hidden])) .toasts { bottom: calc(var(--nav-h) + var(--dock-h, 128px) + 4px); }
+}
+@media (max-width: 720px) {
+  #view-game .crumbs { margin-bottom: 6px; }
+  #view-game .stage { padding: 10px; gap: 8px; }
+  #view-game .stage__head { flex-wrap: wrap; gap: 4px 10px; }
+  #view-game .stage__title { font-size: 1.15rem; }
+  #view-game .stage__tag { display: none; }
+  #view-game .stage__badges { gap: 4px; }
+  #view-game .stage__body { padding: 6px 2px; }
+}
+
+/* -------------------------------- landscape (a phone held sideways, a short window): two columns, the picture fitted to the height */
+@media (min-width: 561px) and (max-width: 900px) and (max-height: 520px) {
+  html:has(#view-game:not([hidden]):not(.is-live)) { --top-h: 46px; --nav-h: calc(40px + env(safe-area-inset-bottom, 0px)); }
+  body:has(#view-game:not([hidden]):not(.is-live)) .main { padding: 4px 14px 10px; }
+  #view-game:not(.is-live) .gamegrid { grid-template-columns: clamp(250px, 34vw, 300px) minmax(0, 1fr); gap: 10px; }
+  #view-game:not(.is-live) .stage { order: 0; padding: 6px 10px 8px; gap: 4px; }
+  #view-game:not(.is-live) .stage__body { min-height: 0; padding: 2px; }
+  #view-game:not(.is-live) .stage__title { font-size: 1.1rem; }
+  #view-game:not(.is-live) .stage__badges .pill--demo { display: none; }
+  #view-game:not(.is-live) .stage__head { flex-wrap: nowrap; gap: 4px 8px; }
+  /* the demo notice and the title row take one line each (on the narrowest phones both used to wrap, which cost the picture about a quarter of its height) */
+  body:has(#view-game:not([hidden])) .demo-strip { gap: 6px; padding-inline: 8px; font-size: 0.7rem; }   /* (a live table too: the strip was two lines there up to about 600 px wide) */
+  #view-game:not(.is-live) .stage__badges .pill { padding: 3px 8px; gap: 4px; font-size: 0.68rem; }
+  /* the gift panel: the left column, as tall as the window leaves room for; the choices scroll in it and the Play bar stays at its bottom */
+  #view-game:not(.is-live) .bet {
+    position: sticky; top: calc(var(--top-h) + 6px); align-self: start;
+    height: calc(100vh - var(--top-h) - 38px); max-height: none;
+    display: flex; flex-direction: column; gap: 0;
+    padding: 8px 10px var(--act-h, 74px); overflow: hidden;
+  }
+  #view-game:not(.is-live) .bet__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #view-game:not(.is-live) .bet__scroll { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-content: start; flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; margin: 0 -6px; padding: 4px 6px 8px; }
+  #view-game:not(.is-live) .bet__act { display: block; position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 6px 10px 8px; background: var(--panel); border-top: 1px solid var(--line); border-radius: 0 0 var(--r-lg) var(--r-lg); }
+  #view-game:not(.is-live) .bet .kbd-hint { display: none; }
+  #view-game:not(.is-live) .bet .field__hint { font-size: 0.7rem; }
+  /* the Play bar takes one line: the amount and the split are in the panel above it, and a long label ("Start the countdown") is cut with dots rather than wrapped */
+  #view-game:not(.is-live) .bet .playbtn { padding: 8px 12px; }
+  #view-game:not(.is-live) .bet .playbtn__sub { display: none; }
+  #view-game:not(.is-live) .bet .playbtn__main { max-width: 100%; min-width: 0; font-size: 1rem; }
+  #view-game:not(.is-live) .bet .playbtn__main > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #view-game:not(.is-live) .bet #rounds-seg { flex-wrap: wrap; }   /* (the four buttons need about 286 px in one row: the panel is narrower, so they go two and two) */
+  #view-game:not(.is-live) .bet #rounds-seg .seg__btn { flex: 1 1 40%; }
+  /* the big button under a game's picture does what the Play bar does, so it is not shown a second time */
+  #view-game:not(.is-live) .game .gbtn:not(.gbtn--ghost), #view-game:not(.is-live) .plinko__drop, #view-game:not(.is-live) .drop__open, #view-game:not(.is-live) .slots__spin { display: none; }
+}
+/* the shortest windows (a 375 or 360 px tall phone held sideways): "Gift amount" and the credit line are for the screen reader only (the credit is in the top bar too) */
+@media (max-height: 400px) {
+  #view-game:not(.is-live) .bet #field-amount .field__row { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+/* a landscape phone up to 720 px wide has the navigation bar at the bottom: it is kept low and thin there, and the page leaves room for it */
+@media (min-width: 561px) and (max-width: 720px) and (max-height: 520px) {
+  body:has(#view-game:not([hidden]):not(.is-live)) .main { padding-bottom: calc(var(--nav-h) + 10px); }
+  body:has(#view-game:not([hidden]):not(.is-live)) .side { padding: 2px 6px calc(2px + env(safe-area-inset-bottom, 0px)); }
+  body:has(#view-game:not([hidden]):not(.is-live)) .side__link { flex-direction: row; gap: 6px; min-height: 36px; padding: 4px 2px; }
+  #view-game:not(.is-live) .bet { height: calc(100vh - var(--top-h) - 38px - var(--nav-h)); }
+  body:has(#view-game:not([hidden])) .toasts { bottom: calc(var(--nav-h) + 8px); }
+}
+
+/* ---------------------------------------------------- the keyboard: a focused control is scrolled clear of the bars */
+html:has(#view-game:not([hidden]):not(.is-live)) { scroll-padding-top: calc(var(--top-h) + 10px); }
+@media (max-width: 900px) and (min-height: 521px), (max-width: 560px) {
+  html:has(#view-game:not([hidden]):not(.is-live)) { scroll-padding-bottom: calc(var(--dock-h, 128px) + 10px); }
+}
+@media (max-width: 720px) and (min-height: 521px), (max-width: 560px) {
+  html:has(#view-game:not([hidden]):not(.is-live)) { scroll-padding-bottom: calc(var(--nav-h) + var(--dock-h, 128px) + 10px); }
+}
+@media (min-width: 561px) and (max-width: 720px) and (max-height: 520px) {
+  html:has(#view-game:not([hidden]):not(.is-live)) { scroll-padding-bottom: calc(var(--nav-h) + 10px); }
+}
+
+/* ==========================================================================
+   LIVE TABLES ON ONE SCREEN  (the fitLive block: keep it together, it is all for #view-game.is-live)
+   The live panel (#livepanel, built in js/ui/live.js) has two parts:
+     .lt-scroll  the body: the clock, the odds board ("Who is backing what"), the table sizes, the pot, the side predictions, the notes
+     .lt-foot    the foot: your stake (presets, other amount), any message, and the join button (with the Options button on a phone)
+   Wide screen: the panel is a sticky column, the body scrolls inside it and the foot stays at the bottom of the panel.
+   One column (a phone, a tablet held upright): the panel is docked at the bottom of the screen like the solo gift panel. Shut, only the foot shows
+   (the stake presets, Options, join); Options opens the body as a sheet above the foot. "Pick a charity" (the join button before a charity is chosen)
+   opens the sheet at the odds board.
+   A phone held sideways (up to 900 px wide, up to 520 px tall): two columns again, the panel on the left is as tall as the window, the body scrolls
+   in it and the foot stays at its bottom (the same three layouts as the solo screens above).
+   js/ui/game.js fits the picture to what is left of the screen (fitStage); its breakpoints (MQ_SINGLE, MQ_SIDE) are the ones used here.
+   ========================================================================== */
+
+/* ------------------------------------------------------------- all layouts: the same two parts, tighter */
+/* (one column that may never grow past the stage: a long tagline or the picture's own width pushed the title row and the picture out of a narrow stage) */
+#view-game.is-live .stage { grid-template-columns: minmax(0, 1fr); }
+#view-game.is-live #livepanel { display: flex; flex-direction: column; gap: 0; padding: 14px 14px 0; overflow: hidden; }
+#view-game.is-live .lt-scroll { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-content: start; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: 12px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+#view-game.is-live #livepanel .field { grid-template-columns: minmax(0, 1fr); }
+#view-game.is-live .lt-foot { flex: none; display: flex; flex-direction: column; margin: 0 -14px; padding: 8px 14px 12px; border-top: 1px solid var(--line); background: var(--panel); }
+#view-game.is-live .lt-stake { gap: 5px; margin-bottom: 7px; }
+#view-game.is-live .lt-stake .field__row { min-height: 26px; gap: 8px; }
+#view-game.is-live .lt-stake .lt-other { gap: 6px; }
+#view-game.is-live .lt-foot .field__msg:not(:empty) { margin-bottom: 8px; }
+/* the join button: a long charity name is cut short rather than wrapped */
+#view-game.is-live .playbtn { grid-template-columns: minmax(0, 1fr); }
+#view-game.is-live .playbtn__main { max-width: 100%; min-width: 0; }
+#view-game.is-live .playbtn__main > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the line under it stays on one row (it is redrawn every second, a wrapping line would make the foot jump), except the long "press again to place it" */
+#view-game.is-live .playbtn__sub { max-width: 100%; min-height: 1.3em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* (a line with words in it is 1.22 em tall: the room is kept when it is empty, so the button does not change height from one phase to the next) */
+#view-game.is-live .playbtn.is-armed .playbtn__sub { overflow: visible; white-space: normal; text-align: center; }
+
+/* the table sizes: a label, then one row of small buttons */
+#view-game.is-live .tablebar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 5px 8px 6px; }
+#view-game.is-live .tablebar__l { flex: 1 0 100%; margin: 0; font-size: 0.64rem; line-height: 1.2; }
+#view-game.is-live .tbtn { flex: 1 1 0; min-width: 0; height: 27px; padding: 0 2px; border-radius: 8px; font-size: 0.76rem; }
+#view-game.is-live .lt-status { gap: 4px; }
+#view-game.is-live .lt-phase { font-size: 0.86rem; }
+#view-game.is-live .lt-clock { font-size: 1.05rem; }
+#view-game.is-live .lt-bar { height: 5px; }
+#view-game.is-live .lt-chips { gap: 4px; }
+#view-game.is-live .chip-ev { padding: 2px 8px 2px 6px; font-size: 0.68rem; }
+#view-game.is-live .lt-oddsfield .field__row { min-height: 26px; }
+#view-game.is-live .odds { gap: 4px; }
+#view-game.is-live .odd { min-height: 44px; padding-block: 4px; }
+#view-game.is-live .lt-pot { gap: 6px; }
+#view-game.is-live .lt-pot > div { padding: 5px 9px; border-radius: 10px; }
+#view-game.is-live .lt-pot span { font-size: 0.58rem; }
+#view-game.is-live .lt-pot b { font-size: 0.98rem; }
+#view-game.is-live .simnote { padding: 7px 10px; font-size: 0.74rem; line-height: 1.4; }
+#view-game.is-live .lt-pred > summary { padding: 8px 10px; font-size: 0.8rem; }
+#view-game.is-live .lt-pred__rows { gap: 6px; padding: 0 10px 10px; }
+#view-game.is-live .lt-toggles { gap: 4px 14px; }
+#view-game.is-live .lt-chat { padding: 8px 10px; }
+#view-game.is-live .lt-fine { margin-top: 0; font-size: 0.7rem; }
+#view-game.is-live .lt-stagebar__last { color: var(--red); font-weight: 800; }
+
+/* ------------------------------------------------ two columns wide (a laptop, a desktop): a sticky column, the foot pinned at the bottom of it */
+@media (min-width: 901px) {
+  #view-game.is-live #livepanel { position: sticky; top: calc(var(--top-h) + 12px); align-self: start; max-height: calc(100vh - 150px); }
+  /* "Live table" still names the panel for a screen reader; the words are not needed on the screen (the stage title says "Live") */
+  #view-game.is-live #livepanel .bet__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* the odds board shows the first few charities and scrolls inside itself; the rest of the panel's body is under it */
+  #view-game.is-live .odds { max-height: clamp(200px, calc(100vh - 560px), 440px); }
+}
+
+/* ------------------------------------------- a short window (a laptop with a small window, a phone held sideways): less page above the picture */
+@media (max-height: 740px) {
+  #view-game.is-live .stage__tag { display: none; }
+  #view-game.is-live .stage { padding: 10px 12px; gap: 6px; }
+  #view-game.is-live .stage__body { padding: 4px; }
+  body:has(#view-game.is-live:not([hidden])) .main { padding-top: 8px; }
+  /* the breadcrumb ("Live tables > Plinko") is not shown (the navigation has Live tables), but it is still there for a screen reader and shows itself when the keyboard reaches it */
+  #view-game.is-live .crumbs { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #view-game.is-live .crumbs:focus-within { position: fixed; z-index: 66; left: 8px; top: calc(var(--top-h) + 6px); width: auto; height: auto; margin: 0; padding: 4px 12px; overflow: visible; clip: auto; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line-2); box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.7); }
+}
+@media (min-width: 901px) and (max-height: 740px) {
+  /* (the page above the panel is shorter now, so the panel may be taller and still end inside the window) */
+  #view-game.is-live #livepanel { max-height: calc(100vh - 114px); }
+}
+
+/* ------------------------------------------- a very short window (a phone held sideways, wide enough for the panel): the board first, the foot compact */
+@media (min-width: 561px) and (max-height: 520px) {
+  /* the board is what a table is for: the table sizes, the event chips and the rest come after it */
+  #view-game.is-live .tablebar { order: 1; }
+  #view-game.is-live .lt-chips, #view-game.is-live .lt-pot, #view-game.is-live .simnote, #view-game.is-live .lt-pred, #view-game.is-live .lt-chat, #view-game.is-live .lt-toggles, #view-game.is-live .lt-fine { order: 2; }
+  #view-game.is-live .lt-foot { padding: 6px 14px 8px; }
+  #view-game.is-live .lt-stake { gap: 4px; margin-bottom: 5px; }
+  #view-game.is-live .lt-stake .field__row { min-height: 22px; flex-wrap: nowrap; }
+  #view-game.is-live .lt-stake .field__label { white-space: nowrap; }
+  /* ("Other amount": the box keeps its $ and its hint, and its label stays for a screen reader) */
+  #view-game.is-live .lt-other label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #view-game.is-live .lt-oddsfield .field__row { flex-wrap: nowrap; }
+  #view-game.is-live .lt-oddsfield .field__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #view-game.is-live .lt-oddsfield .field__row .btn { flex: none; white-space: nowrap; }
+  #view-game.is-live .bet .playbtn { padding: 6px 12px; }
+  #view-game.is-live .lt-status .lt-bar { display: none; }
+}
+
+/* ------------- a phone held sideways (two columns again, a short window): the panel is the left column, as tall as the window leaves room for */
+@media (min-width: 561px) and (max-width: 900px) and (max-height: 520px) {
+  body:has(#view-game.is-live:not([hidden])) { --top-h: 46px; --nav-h: calc(40px + env(safe-area-inset-bottom, 0px)); }
+  body:has(#view-game.is-live:not([hidden])) .main { padding: 6px 14px 12px; }
+  #view-game.is-live .gamegrid { grid-template-columns: clamp(250px, 34vw, 300px) minmax(0, 1fr); gap: 10px; }
+  #view-game.is-live .stage { order: 0; padding: 8px 10px; gap: 4px; }
+  #view-game.is-live .stage__body { min-height: 0; padding: 2px; }
+  #view-game.is-live .stage__title { font-size: 0.95rem; line-height: 1.2; }
+  #view-game.is-live .stage__head { flex-wrap: nowrap; gap: 4px 8px; }
+  /* "Checkable result" is a shield on its own here (its words are still in the page for a screen reader, and in its tooltip), so the title has the row */
+  #view-game.is-live #stage-fair { font-size: 0; line-height: 0; gap: 0; padding: 5px 7px; }
+  #view-game.is-live #stage-fair .ico { width: 17px; height: 17px; }
+  /* the round and pot bar: two short lines, it is on the first screen above the picture and the picture needs the room */
+  #view-game.is-live .lt-stagebar { padding: 3px 8px; font-size: 0.7rem; line-height: 1.3; border-radius: 8px; }
+  #view-game.is-live #livepanel { position: sticky; top: calc(var(--top-h) + 6px); align-self: start; height: calc(100vh - var(--top-h) - 38px); max-height: none; padding: 8px 10px 0; }
+  #view-game.is-live #livepanel .bet__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #view-game.is-live .lt-foot { margin: 0 -10px; padding: 6px 10px 8px; }
+  #view-game.is-live .odds { max-height: none; }
+}
+/* a phone held sideways, 400 px tall or less: every line counts. The clock row of the panel is left out (the round bar above the picture says the same, "Round 2 · Betting open 0:22"),
+   the board gets its room, and the join button's hint line goes (it is still in the button's name for a screen reader) unless it carries the confirmation to press again */
+@media (min-width: 561px) and (max-height: 400px) {
+  #view-game.is-live .lt-status { display: none; }
+  #view-game.is-live .lt-oddsfield .field__row { min-height: 0; }
+  #view-game.is-live .lt-oddsfield .btn--sm { min-height: 26px; padding: 2px 8px; font-size: 0.76rem; }
+  #view-game.is-live .lt-foot { padding: 4px 10px 5px; }
+  #view-game.is-live .lt-stake { margin-bottom: 3px; }
+  #view-game.is-live .lt-stake .seg__btn { min-height: 28px; }
+  #view-game.is-live .bet .playbtn { padding: 4px 12px; }
+  #view-game.is-live .stage { padding: 6px 10px 7px; gap: 3px; }
+  #view-game.is-live .lt-stagebar { gap: 1px 10px; padding: 2px 8px; font-size: 0.68rem; line-height: 1.25; }
+  #view-game.is-live .stage__title { font-size: 0.88rem; }
+  #view-game.is-live .playbtn:not(.is-armed) .playbtn__sub { position: absolute; width: 1px; height: 1px; min-height: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* The stake choice takes one row, not two: the presets and the "other amount" box side by side ("Your stake" is for the screen reader only: the buttons say what they are).
+     That, a board row 37 px tall instead of 48, and a one-line demo notice give the odds board 2 rows at 568 x 320 (it was a third of one), 3 at 640 x 360 and 4 and more
+     from 740 x 360 up. */
+  #view-game.is-live #livepanel .lt-stake { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 6px; }
+  #view-game.is-live #livepanel .lt-stake .field__row { display: contents; }
+  #view-game.is-live #livepanel .lt-stake .field__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #view-game.is-live #livepanel .lt-stake .seg { grid-column: 1; grid-row: 1; }
+  #view-game.is-live #livepanel .lt-stake .lt-other { grid-column: 2; grid-row: 1; }
+  #view-game.is-live #livepanel .lt-stake .seg { padding: 3px; gap: 2px; }
+  #view-game.is-live #livepanel .lt-stake .seg__btn { flex: 1 1 0; min-width: 28px; padding: 4px 2px; font-size: 0.76rem; }   /* (equal buttons: "$5" is not a narrower target than "$100") */
+  #view-game.is-live .lt-money { padding: 0 8px; }
+  #view-game.is-live .lt-money input { width: 4.4em; min-height: 28px; font-size: 0.82rem; }
+  #view-game.is-live .lt-oddsfield .field__label { font-size: 0.64rem; letter-spacing: 0.05em; }
+  #view-game.is-live .odd { min-height: 36px; padding-block: 2px; }
+  #view-game.is-live .odd__main, #view-game.is-live .odd__num { gap: 0; line-height: 1.2; }
+  #view-game.is-live .odd__num b { line-height: 1.15; }
+  #view-game.is-live .odds { gap: 3px; }
+  #view-game.is-live .lt-scroll { gap: 4px; }
+  #view-game.is-live #livepanel { padding-top: 4px; }
+  /* the result card is read by scrolling the page (it is taller than the room here): it is made as short as it can be without losing a line */
+  #view-game.is-live .lt-res { gap: 4px; padding: 9px 10px; border-radius: 10px; }
+  #view-game.is-live .lt-res p, #view-game.is-live .lt-res__who li { font-size: 0.76rem; line-height: 1.3; }
+  #view-game.is-live .lt-res__t { font-size: 1rem; line-height: 1.2; }
+  #view-game.is-live .lt-res__who { gap: 1px; }
+  #view-game.is-live .lt-res__site { gap: 8px; padding: 4px 0 0; }
+}
+/* ... and the round bar's lines (the round, a Marble Run table's track, the pot) are stacked, one line each: side by side in the narrow box the first one wrapped to three */
+@media (min-width: 561px) and (max-width: 599px) and (max-height: 400px) {
+  #view-game.is-live .stage .lt-stagebar { grid-template-columns: minmax(0, 1fr); grid-template-areas: "a" "m" "b"; }   /* (more specific than the rule for 599 px and narrower further down) */
+}
+/* ... and the panel is wider (the picture here is fitted to the height, so a narrower box costs it little), so the presets, the box and the board's names have room */
+@media (min-width: 561px) and (max-width: 900px) and (max-height: 400px) {
+  #view-game.is-live .gamegrid { grid-template-columns: clamp(272px, 48vw, 330px) minmax(0, 1fr); }
+  #view-game.is-live .stage__title { font-size: 0.82rem; }
+}
+/* up to 720 px wide the navigation bar is at the bottom: it is kept low and thin there, and the page leaves room for it */
+@media (min-width: 561px) and (max-width: 720px) and (max-height: 520px) {
+  body:has(#view-game.is-live:not([hidden])) .main { padding-bottom: calc(var(--nav-h) + 10px); }
+  body:has(#view-game.is-live:not([hidden])) .side { padding: 2px 6px calc(2px + env(safe-area-inset-bottom, 0px)); }
+  body:has(#view-game.is-live:not([hidden])) .side__link { flex-direction: row; gap: 6px; min-height: 36px; padding: 4px 2px; }
+  #view-game.is-live #livepanel { height: calc(100vh - var(--top-h) - 38px - var(--nav-h)); }
+  body:has(#view-game.is-live:not([hidden])) .toasts { bottom: calc(var(--nav-h) + 8px); }
+}
+
+/* ------------------------------------ one column (a phone, a tablet held upright): the panel docked at the bottom of the screen */
+@media (max-width: 900px) and (min-height: 521px), (max-width: 560px) {
+  #view-game.is-live #livepanel {
+    position: fixed; z-index: 65; right: 0; left: var(--side-w); bottom: 0; margin: 0;
+    padding: 6px 12px 8px; border-width: 1px 0 0; border-radius: 14px 14px 0 0;
+    box-shadow: 0 -14px 30px -12px rgba(0, 0, 0, 0.65);
+    max-height: min(78vh, calc(100vh - var(--top-h) - 24px)); max-height: min(78dvh, calc(100dvh - var(--top-h) - 24px));
+  }
+  /* shut: only the foot (the stake presets, Options, join); open: the body above it, which scrolls, with the foot kept at the bottom of the sheet */
+  #view-game.is-live #livepanel:not(.is-more) .lt-scroll { display: none; }
+  #view-game.is-live #livepanel:not(.is-more) .lt-stake .field__row { display: none; }
+  #view-game.is-live .lt-foot { margin: 0; padding: 0; border: 0; background: transparent; }
+  #view-game.is-live #livepanel.is-more .lt-foot { margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--line); }
+  #view-game.is-live #livepanel.is-more .lt-scroll { padding-bottom: 8px; }
+  /* the clock stays at the top of the sheet while the body scrolls under it (a control reached with the keyboard is scrolled clear of it) */
+  #view-game.is-live .lt-status { position: sticky; top: 0; z-index: 2; margin: 0 -2px; padding: 4px 2px 6px; background: var(--panel); }
+  #view-game.is-live .lt-scroll { scroll-padding-top: 48px; }
+  /* in the sheet the odds board is as long as it is (the sheet scrolls, the board does not scroll inside it) */
+  #view-game.is-live .odds { max-height: none; }
+  /* the stake presets look like the solo gift panel's: five buttons in a row (they wrap when a high level adds the VIP stakes) */
+  #view-game.is-live #lt-stake { gap: 6px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  #view-game.is-live #lt-stake .seg__btn { flex: 1 1 52px; min-height: 36px; border: 1px solid var(--line-2); border-radius: 9px; background: var(--panel-2); }
+  #view-game.is-live #lt-stake .seg__btn:hover:not(:disabled):not([aria-pressed="true"]) { border-color: #4a7392; }
+  #view-game.is-live #lt-stake .seg__btn[aria-pressed="true"] { border-color: var(--green); background: rgba(34, 240, 122, 0.12); box-shadow: none; }
+  #view-game.is-live .tbtn { height: 40px; }
+  /* Options and join side by side */
+  #view-game.is-live .bet__act { display: flex; align-items: stretch; gap: 8px; }
+  #view-game.is-live .bet__act .playbtn { flex: 1 1 auto; width: auto; min-width: 0; }
+  #view-game.is-live .bet__optbtn {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex: none; min-width: 60px;
+    padding: 4px 8px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel-2); color: var(--muted); font: 700 0.66rem var(--f-body);
+  }
+  #view-game.is-live .bet__optbtn:hover { color: var(--text); border-color: #4a7392; }
+  #view-game.is-live .bet__optbtn[aria-expanded="true"] { color: var(--green); border-color: var(--green); background: rgba(34, 240, 122, 0.1); }
+}
+/* a phone: the navigation bar is at the bottom, so the dock sits on top of it; the header over the picture takes less room */
+@media (max-width: 720px) and (min-height: 521px), (max-width: 560px) {
+  #view-game.is-live #livepanel { left: 0; bottom: var(--nav-h); }
+  #view-game.is-live .stage { gap: 6px; padding: 8px 10px 10px; }
+  #view-game.is-live .stage__head { flex-wrap: nowrap; align-items: center; gap: 8px; }
+  #view-game.is-live .stage__title { font-size: 1rem; line-height: 1.2; }
+  /* "Checkable result" is a shield on its own here (its words are still in the page for a screen reader, and in its tooltip) */
+  #view-game.is-live #stage-fair { font-size: 0; line-height: 0; gap: 0; padding: 5px 7px; }
+  #view-game.is-live #stage-fair .ico { width: 17px; height: 17px; }
+}
+@media (max-width: 599px) {
+  /* the round and the pot on two lines that keep their shape as the clock ticks (a Marble Run table's track is named at the end of the first line) */
+  #view-game.is-live .lt-stagebar { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "a m" "b b"; gap: 0 10px; padding: 5px 10px; font-size: 0.74rem; line-height: 1.35; border-radius: 10px; }
+  #view-game.is-live .lt-stagebar__a { grid-area: a; }
+  #view-game.is-live .lt-stagebar__m { grid-area: m; order: 0; flex: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #view-game.is-live .lt-stagebar__b { grid-area: b; }
+}
+/* The bar keeps its shape (finalReview): its two lines never wrap into more, and a phone held sideways (600 to 900 px wide) gets the same two-line bar. The bar used to be one line
+   when its words fitted and two when they did not, and the picture under it changed size (8 to 20 per cent) every time a clock digit, the pot or the phase made it wrap or unwrap. */
+@media (min-width: 600px) and (max-width: 900px) and (max-height: 520px) {
+  #view-game.is-live .lt-stagebar { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "a m" "b b"; gap: 0 10px; }
+  #view-game.is-live .lt-stagebar__a { grid-area: a; }
+  #view-game.is-live .lt-stagebar__m { grid-area: m; order: 0; flex: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #view-game.is-live .lt-stagebar__b { grid-area: b; }
+}
+@media (max-width: 599px), (min-width: 600px) and (max-width: 900px) and (max-height: 520px) {
+  #view-game.is-live .lt-stagebar__a, #view-game.is-live .lt-stagebar__b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+/* ---------------------------------------------------- the keyboard: a focused control is scrolled clear of the bars (the same as the solo screens above) */
+html:has(#view-game.is-live:not([hidden])) { scroll-padding-top: calc(var(--top-h) + 10px); }
+@media (max-width: 900px) and (min-height: 521px), (max-width: 560px) {
+  html:has(#view-game.is-live:not([hidden])) { scroll-padding-bottom: calc(var(--dock-h, 128px) + 10px); }
+}
+@media (max-width: 720px) and (min-height: 521px), (max-width: 560px) {
+  html:has(#view-game.is-live:not([hidden])) { scroll-padding-bottom: calc(var(--nav-h) + var(--dock-h, 128px) + 10px); }
+}
+@media (min-width: 561px) and (max-width: 720px) and (max-height: 520px) {
+  html:has(#view-game.is-live:not([hidden])) { scroll-padding-bottom: calc(var(--nav-h) + 10px); }
+}
+
+/* ==========================================================================
+   A NARROW WINDOW THAT IS ALSO SHORT  (up to 560 px wide and up to 520 px tall; solo games and live tables)
+   An upright phone with its keyboard open (390 x 400), a small phone held sideways (480 x 320), a small browser window. It uses the docked panel (a picture and a side
+   panel cannot share a window this narrow), and the top bar, the navigation bar and the dock together would leave no room for a picture. So all three are kept low and thin,
+   the Play button and the amount buttons stay in the dock, and the page scrolls: the picture is fitted to the room between the bars (js/ui/game.js, fitStage) and a round
+   brings it fully into view by itself (scrollStage). The Options sheet is kept under the top bar (it used to reach up over half of it).
+   ========================================================================== */
+@media (max-width: 560px) and (max-height: 520px) {
+  html:has(#view-game:not([hidden])) { --top-h: 46px; --nav-h: calc(44px + env(safe-area-inset-bottom, 0px)); }
+  body:has(#view-game:not([hidden])) .side { padding: 2px 6px calc(2px + env(safe-area-inset-bottom, 0px)); }
+  body:has(#view-game:not([hidden])) .side__link { gap: 1px; min-height: 40px; padding: 3px 2px; }
+  body:has(#view-game:not([hidden])) .side__link .ico { width: 1.1rem; height: 1.1rem; }
+  /* the dock: the presets and the Play button a little lower */
+  #view-game:not(.is-live) .bet { gap: 5px; padding: 5px 10px 6px; }
+  #view-game:not(.is-live) .bet:not(.is-more) .preset { min-height: 32px; }
+  #view-game .bet .playbtn { padding: 6px 14px; }
+  #view-game.is-live #livepanel { padding: 5px 10px 6px; }
+  #view-game.is-live #lt-stake .seg__btn { min-height: 32px; }
+  /* a sheet never reaches up over the top bar */
+  #view-game:not(.is-live) .bet, #view-game.is-live #livepanel { max-height: calc(100vh - var(--top-h) - var(--nav-h) - 8px); max-height: calc(100dvh - var(--top-h) - var(--nav-h) - 8px); }
+}
+@media (max-width: 560px) and (max-height: 400px) {
+  /* (no line of small print under the Play button's words) */
+  #view-game:not(.is-live) .bet__act .playbtn__sub, #view-game.is-live .playbtn:not(.is-armed) .playbtn__sub { position: absolute; width: 1px; height: 1px; min-height: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }   /* (still in the button's name for a screen reader) */
+}
+/* wide enough for the navigation bar's words beside their icons (as on a phone held sideways, 561 px and up): one thin row */
+@media (min-width: 440px) and (max-width: 560px) and (max-height: 520px) {
+  html:has(#view-game:not([hidden])) { --nav-h: calc(40px + env(safe-area-inset-bottom, 0px)); }
+  body:has(#view-game:not([hidden])) .side__link { flex-direction: row; gap: 6px; min-height: 36px; padding: 4px 2px; }
+  body:has(#view-game:not([hidden])) .side__link .livedot { left: calc(50% - 30px); top: 6px; }   /* (the red dot sits on the icon of "Live tables": the link is narrower here, so its content starts further left) */
+}
+
+/* ==========================================================================
+   THE NARROWEST PHONES  (a window up to 340 px wide, held upright: 320 x 568 and 320 x 640)
+   The picture, the amount buttons and Play have to share a screen with a three-line demo notice and a title row that wraps. Three things give the picture back some room: the
+   "Checkable result" pill is its shield only (as at a live table; its words are still there for a screen reader and in its tooltip), so a long title ("Last One Standing")
+   shares its row with it; the demo notice is two lines, not three; and the dock is a little tighter, so a long Play label ("Start the countdown") stays on one line.
+   ========================================================================== */
+@media (max-width: 340px) {
+  #view-game:not(.is-live) #stage-fair { font-size: 0; line-height: 0; gap: 0; padding: 5px 7px; }
+  #view-game:not(.is-live) #stage-fair .ico { width: 17px; height: 17px; }
+  #view-game:not(.is-live) .bet { gap: 6px; padding-inline: 10px; }
+  #view-game .bet .playbtn { padding: 8px 10px; }
+  #view-game .bet .playbtn__main { gap: 6px; font-size: 0.98rem; }
+  #view-game .bet__optbtn { min-width: 50px; padding: 4px 4px; }
+  #view-game.is-live #livepanel { padding-inline: 10px; }
+  /* the demo notice takes two lines instead of three: its pulsing dot (only a decoration) is left out and its side padding is smaller, so "Real donations?" fits on the second line */
+  body:has(#view-game:not([hidden])) .demo-strip { padding-inline: 8px; }
+  body:has(#view-game:not([hidden])) .demo-strip__dot { display: none; }
+}

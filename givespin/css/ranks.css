@@ -1,0 +1,90 @@
+/* ==========================================================================
+   Rank emblems (js/ranks.js): the badge next to a player's name. Each emblem is an inline
+   <svg class="rk rk-N [rk-sm] [rk-anim] [rk-ring]"> (N = rank 1..8).
+     .rk-sm    40 px and under: the simpler drawing, which never moves
+     .rk-anim  bigger than 40 px and asked to move; it only moves for people who have not asked for reduced motion
+     .rk-ring  drawn inside the 10-segment level ring (segments: .rk-lit, the newest .rk-now, unlit .rk-dim)
+   Moving parts inside an emblem: .rk-glint .rk-twinkle .rk-shine .rk-pulse .rk-drift .rk-spin .rk-spin-r .rk-ember
+   .rk-bolt .rk-float .rk-flame .rk-orbit .rk-halo .rk-foil, staggered by .rk-d1 ... .rk-d6.
+   ========================================================================== */
+
+.rk { display: inline-block; vertical-align: middle; flex: none; forced-color-adjust: none; }
+
+/* pivots: whole-emblem turns spin about the middle of the 100 x 100 drawing; small parts about their own middle or base */
+.rk-spin, .rk-spin-r, .rk-orbit, .rk-halo { transform-box: view-box; transform-origin: 50px 50px; }
+.rk-glint, .rk-twinkle { transform-box: fill-box; transform-origin: 50% 50%; }
+.rk-flame { transform-box: fill-box; transform-origin: 50% 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .rk-anim .rk-glint { animation: rk-glint 5s ease-in-out infinite; }
+  .rk-anim .rk-twinkle { animation: rk-twinkle 2.4s ease-in-out infinite; }
+  .rk-anim .rk-shine { animation: rk-shine 4.5s ease-in-out infinite; }
+  .rk-anim .rk-pulse { animation: rk-pulse 2.8s ease-in-out infinite alternate; }
+  .rk-anim .rk-drift { animation: rk-drift 4.2s ease-in-out infinite; }
+  .rk-anim .rk-spin { animation: rk-spin 40s linear infinite; }
+  .rk-anim .rk-spin-r { animation: rk-spin 64s linear infinite reverse; }
+  .rk-anim .rk-ember { animation: rk-ember 3.3s ease-out infinite; }
+  .rk-anim .rk-bolt { animation: rk-bolt 3.1s linear infinite; }
+  .rk-anim .rk-float { animation: rk-float 3.4s ease-in-out infinite alternate; }
+  .rk-anim .rk-flame { animation: rk-flame .9s ease-in-out infinite alternate; }
+  .rk-anim .rk-orbit { animation: rk-spin 14s linear infinite; }
+  .rk-anim .rk-halo { animation: rk-spin 22s linear infinite; }
+  .rk-anim .rk-foil { animation: rk-foil 5s linear infinite; }
+  .rk-anim .rk-now { animation: rk-pulse 1.6s ease-in-out infinite alternate; }
+
+  /* staggered starts so neighbours do not move in step */
+  .rk-anim .rk-d1 { animation-delay: -0.5s; }
+  .rk-anim .rk-d2 { animation-delay: -1.3s; }
+  .rk-anim .rk-d3 { animation-delay: -2.1s; }
+  .rk-anim .rk-d4 { animation-delay: -2.7s; }
+  .rk-anim .rk-d5 { animation-delay: -1.7s; }
+  .rk-anim .rk-d6 { animation-delay: -3.0s; }
+}
+
+@keyframes rk-glint {
+  0%, 72%, 100% { opacity: 0; transform: scale(.2) rotate(0deg); }
+  82% { opacity: 1; transform: scale(1.15) rotate(45deg); }
+  92% { opacity: .5; transform: scale(.55) rotate(90deg); }
+}
+@keyframes rk-twinkle {
+  0%, 100% { opacity: .35; transform: scale(.65); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+@keyframes rk-shine {
+  0% { transform: translateX(0); }
+  45%, 100% { transform: translateX(150px); }
+}
+@keyframes rk-pulse {
+  from { opacity: .5; }
+  to { opacity: 1; }
+}
+@keyframes rk-drift {
+  0% { opacity: 0; transform: translateY(5px); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-9px); }
+}
+@keyframes rk-spin { to { transform: rotate(360deg); } }
+@keyframes rk-ember {
+  0% { opacity: 0; transform: translate(0, 6px); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(2px, -24px); }
+}
+@keyframes rk-bolt {
+  0%, 100% { opacity: .2; }
+  2% { opacity: 1; }
+  4% { opacity: .35; }
+  6% { opacity: 1; }
+  12% { opacity: .2; }
+  48% { opacity: .2; }
+  50% { opacity: .95; }
+  53% { opacity: .2; }
+}
+@keyframes rk-float {
+  from { transform: translateY(1.6px); }
+  to { transform: translateY(-2.4px); }
+}
+@keyframes rk-flame {
+  from { transform: scale(1, .9) skewX(-3deg); }
+  to { transform: scale(1.05, 1.08) skewX(3deg); }
+}
+@keyframes rk-foil { to { transform: translateX(-100px); } }
