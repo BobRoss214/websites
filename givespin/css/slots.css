@@ -142,3 +142,12 @@
   #view-game .slots__bar { margin-top: 8px; }
   #view-game .slots.is-short .sym__name { -webkit-line-clamp: 1; font-size: 0.68rem; }
 }
+
+/* A short window (a phone held sideways): the machine is shrunk to about half its size, so the Turbo and "How it pays" buttons and the lever were about 18 px on the screen.
+   They are taller (and side by side) in the machine, and their hit area reaches a little beyond them, so they come out about a finger's size once it is shrunk. */
+@media (max-height: 520px) {
+  #view-game .slots__tools { flex-wrap: nowrap; gap: 6px; }
+  #view-game .slots__turbo { position: relative; min-height: 46px; padding: 0 10px; white-space: nowrap; }
+  #view-game .slots__turbo::after { content: ""; position: absolute; inset: -3px -2px; }
+  #view-game .slots__lever { right: 0; width: 44px; }   /* (wider, about the same centre; it reaches a few px over the edge of the last reel) */
+}

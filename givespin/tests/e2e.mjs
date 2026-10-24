@@ -6103,6 +6103,7 @@ if (section('13zu. Live tables on one screen: the picture, the stake choice and 
     { name: 'a laptop (1366x768)', w: 1366, h: 768, phone: false, kind: 'wide' },
     { name: 'a short laptop (1280x720)', w: 1280, h: 720, phone: false, kind: 'wide' },
     { name: 'a phone (390x844)', w: 390, h: 844, phone: true, kind: 'dock' },
+    { name: 'a narrow phone (320x640)', w: 320, h: 640, phone: true, kind: 'dock', min: 0.27 },
     { name: 'a phone held sideways (568x320, the smallest)', w: 568, h: 320, phone: true, kind: 'side' }
   ];
   for (const sc of SCREENS) {
@@ -6127,7 +6128,7 @@ if (section('13zu. Live tables on one screen: the picture, the stake choice and 
         if (m.scale < 0.2 - 0.002) { tiny.push(g + ' ' + m.scale); }
       } else {
         if (!(m.pic && m.pic.top >= 0 && m.pic.bottom <= m.floor + 1)) { cutOff.push(g + ' picture ' + JSON.stringify(m.pic) + ' floor ' + m.floor); }
-        if (m.scale < 0.34 - 0.002) { tiny.push(g + ' ' + m.scale); }
+        if (m.scale < (sc.min || 0.34) - 0.002) { tiny.push(g + ' ' + m.scale); }
       }
       if (m.sideways) { sideways.push(g); }
       // a laptop and a phone held sideways show the odds board beside the picture; a docked phone keeps it in the sheet (and shows the Options button)
@@ -6136,7 +6137,7 @@ if (section('13zu. Live tables on one screen: the picture, the stake choice and 
     check(noJoin.length === 0, 'on ' + sc.name + ' the join button is on the first screen at all ' + LIVE_GAMES.length + ' live games', noJoin);
     check(noPresets.length === 0, 'and so are the stake buttons', noPresets);
     check(cutOff.length === 0, 'and ' + (sc.kind === 'side' ? 'the game picture starts on the first screen' : 'the whole game picture, clear of the panel and the navigation bar'), cutOff);
-    check(tiny.length === 0, 'and the picture is never shrunk below ' + (sc.kind === 'side' ? 'a fifth' : 'a third') + ' of its size', tiny);
+    check(tiny.length === 0, 'and the picture is never shrunk below ' + (sc.kind === 'side' ? 'a fifth' : sc.min ? 'a quarter' : 'a third') + ' of its size', tiny);
     check(sideways.length === 0, 'and no live table scrolls sideways', sideways);
     check(noOdds.length === 0, sc.kind === 'dock' ? 'and the odds board is in the sheet behind an Options button' : 'and the odds board is beside the picture, with no Options button', noOdds);
     if (sc.name.startsWith('a laptop') || sc.kind === 'dock' || sc.kind === 'side') { await liveSettled(page, T('wheel')); await go(page, '#live-' + T('wheel')); await liveSettled(page, T('wheel')); await a11y(page, 'a live table on ' + sc.name); }
@@ -6352,7 +6353,9 @@ if (section('13zs. One screen per game: the picture, the gift choices and Play a
     { name: 'a laptop (1366x768)', w: 1366, h: 768, phone: false },
     { name: 'a short laptop (1280x720)', w: 1280, h: 720, phone: false },
     { name: 'a phone (390x844)', w: 390, h: 844, phone: true },
-    { name: 'a small phone (375x667)', w: 375, h: 667, phone: true }
+    { name: 'a small phone (375x667)', w: 375, h: 667, phone: true },
+    { name: 'a narrow phone (320x640)', w: 320, h: 640, phone: true },
+    { name: 'the narrowest phone (320x568)', w: 320, h: 568, phone: true }
   ];
   // Where things land on the first screen of a game (the page scrolled to the top, as it is when a game is opened).
   const firstScreen = (page) => page.evaluate(() => {
@@ -6753,6 +6756,268 @@ if (section('13zt. One screen on a phone held sideways and on a short window')) 
       await page.context().close();
     }
   }
+  /* ---- the smallest windows, part 1: a charity mark, Turbo, "How it pays" and the lever are still something a finger can hit when the picture is shrunk (568x320) ---- */
+  {
+    const page = await newPage({ viewport: { width: 568, height: 320 }, mobile: true });
+    await openApp(page);
+    const profileId = () => page.evaluate(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; });
+    const closeProfile = async () => {
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return !d || !d.open; }, null, { timeout: 8000 }).catch(() => {});
+    };
+    // Coin Flip (the eight-charity bracket) and Dice: the whole slot (tile) opens its charity, so a touch at the far corner of it, away from the small mark, still gets there
+    for (const [gid, box] of [['coin', '.slot[data-id]'], ['dice', '.dtile']]) {
+      await go(page, '#game-' + gid);
+      await page.waitForSelector('#panel-' + gid + ':not([hidden])');
+      await page.waitForTimeout(700);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const boxes = await page.evaluate((b) => [...document.querySelectorAll(b)].map((e) => {
+        const r = e.getBoundingClientRect(); const mk = e.querySelector('.markbtn');
+        const t = document.elementFromPoint(r.right - 2, r.bottom - 2);
+        return { id: mk ? mk.getAttribute('data-open-charity') : '', x: r.right - 2, y: r.bottom - 2, w: r.width, h: r.height, onScreen: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight, hit: !!t && !!mk && (t === mk || mk.contains(t)) };
+      }), box);
+      const some = boxes.filter((b) => b.onScreen && b.id);
+      check(some.length >= 4 && some.every((b) => b.hit), gid + ' at 568x320: the corner of every slot (tile) on screen belongs to its mark\'s button (' + some.length + ' of them)', some.filter((b) => !b.hit).slice(0, 3));
+      check(some.every((b) => b.w >= 18 && b.h >= 12), gid + ' at 568x320: no slot (tile) is smaller than 18 x 12 px on the screen (the whole of it is the mark\'s hit area; the mark itself is about 12 px)', some.map((b) => Math.round(b.w) + 'x' + Math.round(b.h)).slice(0, 8));
+      const seen = [];
+      for (const b of some.filter((s, i, a) => a.findIndex((o) => o.id === s.id) === i).slice(0, 3)) {
+        await page.touchscreen.tap(b.x, b.y);
+        const pid = await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; }, null, { timeout: 5000 }).then((h) => h.jsonValue(), () => null);
+        seen.push({ want: b.id, got: pid });
+        await closeProfile();
+      }
+      check(seen.length === 3 && seen.every((s) => s.got === s.want), gid + ' at 568x320: a touch at the corner of a slot (tile), away from the mark, opens that charity\'s profile', seen);
+      check((await profileId()) === null, gid + ': no profile is left open');
+    }
+    // the slot machine: Turbo and "How it pays" are about a finger's size once the machine is shrunk (their hit area also reaches 3 px of the machine's size beyond them), and so is the lever
+    for (const gid of ['slots', 'cosmic']) {
+      await go(page, '#game-' + gid);
+      await page.waitForSelector('#panel-' + gid + ':not([hidden])');
+      await page.waitForTimeout(700);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const t = await page.evaluate((id) => {
+        const q = (s) => {
+          const e = document.querySelector('#panel-' + id + ' ' + s); const r = e.getBoundingClientRect(); const k = r.height / (e.offsetHeight || r.height);
+          const at = (x, y) => { const h = document.elementFromPoint(x, y); return !!h && (h === e || e.contains(h)); };
+          return { w: Math.round(r.width * 10) / 10, h: Math.round(r.height * 10) / 10, k: Math.round(k * 100) / 100, above: at(r.left + r.width / 2, r.top - 1.5 * k), below: at(r.left + r.width / 2, r.bottom + 1.5 * k) };
+        };
+        return { turbo: q('.slots__turbo:not(.slots__guidebtn)'), guide: q('.slots__guidebtn'), lever: q('.slots__lever') };
+      }, gid);
+      check(t.turbo.w >= 24 && t.turbo.h + 6 * t.turbo.k >= 24 && t.turbo.above && t.turbo.below && t.guide.w >= 24 && t.guide.h + 6 * t.guide.k >= 24 && t.guide.above && t.guide.below,
+        gid + ' at 568x320: Turbo and "How it pays" are 24 px wide and, with their hit area, 24 px tall', t);
+      check(t.lever.w >= 22 && t.lever.h >= 40, gid + ' at 568x320: the lever is at least 22 px wide', t.lever);
+    }
+    // every other button, link and field on the first screen of every game is at least 24 px in both ways. (A slot machine with many reels keeps its small symbol buttons:
+    // 12 reels cannot be wider than about 15 px in a 270 px box, and they only open a charity's profile.)
+    const small = [];
+    for (const g of GAMES) {
+      await go(page, '#game-' + g);
+      await page.waitForSelector('#panel-' + g + ':not([hidden])');
+      await page.waitForTimeout(500);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const bad = await page.evaluate(() => {
+        const out = [];
+        document.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea, summary, [role=button], [role=radio], [role=tab]').forEach((e) => {
+          if (e.disabled || e.closest('[hidden], dialog:not([open])') || e.classList.contains('sym--btn')) { return; }
+          let r = e.getBoundingClientRect(); const cs = getComputedStyle(e);
+          if (cs.display === 'none' || cs.visibility === 'hidden' || (r.width === 0 && r.height === 0) || (cs.position === 'absolute' && r.width <= 1.5)) { return; }
+          if (!(r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth)) { return; }
+          const own = e.classList.contains('markbtn') ? e.closest('.slot, .dtile') : null;
+          if (own) { r = own.getBoundingClientRect(); }
+          if (e.classList.contains('slots__turbo')) { const k = r.height / (e.offsetHeight || r.height); r = { width: r.width, height: r.height + 6 * k }; }
+          if (own && own.matches('.slot') && r.width >= 18 && r.height >= 12) { return; }   // (a Coin Flip slot: checked above)
+          if (Math.min(r.width, r.height) < 23.5) { out.push((e.id ? '#' + e.id : '') + '.' + String(e.className).split(' ')[0] + ' ' + Math.round(r.width) + 'x' + Math.round(r.height)); }
+        });
+        return out;
+      });
+      if (bad.length) { small.push(g + ': ' + bad.join(', ')); }
+    }
+    check(small.length === 0, 'at 568x320 nothing a finger has to hit on the first screen of a game is smaller than 24 px, except the symbols of a slot machine with many reels', small);
+    await page.context().close();
+  }
+
+  /* ---- the smallest windows, part 2: narrower than 561 px AND shorter than about 520 px (a small phone held sideways, a phone with its keyboard open): the docked panel,
+          the Play button always reachable, the picture scrolled into view above it, never hidden behind it ---- */
+  {
+    const readTight = (page, live) => page.evaluate((isLive) => {
+      const box = (sel) => { const e = document.querySelector(sel); if (!e) { return null; } const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden' || (r.width === 0 && r.height === 0)) { return null; } return { top: Math.round(r.top), bottom: Math.round(r.bottom) }; };
+      const dock = document.querySelector(isLive ? '#livepanel' : '#bet-panel');
+      const pic = document.querySelector('#games .game:not([hidden]) > :first-child');
+      const tr = pic ? /matrix\(([^,]+)/.exec(getComputedStyle(pic).transform) : null;
+      return {
+        vh: innerHeight, docked: getComputedStyle(dock).position === 'fixed', dock: box(isLive ? '#livepanel' : '#bet-panel'), nav: box('#side'), bar: box('#topbar'),
+        play: box(isLive ? '#livepanel [data-role="join"]' : '#btn-play'), presets: box(isLive ? '#lt-stake' : '#field-amount .presets'), pic: box('#games .game:not([hidden]) > :first-child'),
+        scale: tr ? Number(tr[1]) : 1, sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+        stageTop: Math.round(document.querySelector('#stage').getBoundingClientRect().top + window.scrollY)
+      };
+    }, live);
+    const TIGHT = [
+      { name: 'a small phone held sideways (480x320)', w: 480, h: 320 },
+      { name: 'a phone with its keyboard open (390x400)', w: 390, h: 400 },
+      { name: 'an upright phone with a half-open keyboard (360x500)', w: 360, h: 500 }
+    ];
+    for (const sc of TIGHT) {
+      const page = await newPage({ viewport: { width: sc.w, height: sc.h }, mobile: true, reducedMotion: 'reduce' });
+      await openApp(page);
+      const bad = { dock: [], play: [], presets: [], pic: [], sideways: [], thin: [], tiny: [] };
+      for (const g of GAMES) {
+        await go(page, '#game-' + g);
+        await page.waitForSelector('#panel-' + g + ':not([hidden])');
+        await page.waitForTimeout(600);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(100);
+        const m = await readTight(page, false);
+        if (!(m.docked && m.dock && m.nav && m.bar && m.dock.top >= m.bar.bottom - 1 && m.dock.bottom <= m.nav.top + 1)) { bad.dock.push(g + ' ' + JSON.stringify({ d: m.dock, n: m.nav, b: m.bar })); }
+        if (!(m.play && m.bar && m.nav && m.play.top >= m.bar.bottom - 1 && m.play.bottom <= m.nav.top + 1)) { bad.play.push(g + ' ' + JSON.stringify(m.play)); }
+        if (!(m.presets && m.bar && m.nav && m.presets.top >= m.bar.bottom - 1 && m.presets.bottom <= m.nav.top + 1)) { bad.presets.push(g + ' ' + JSON.stringify(m.presets)); }
+        if (m.sideways) { bad.sideways.push(g); }
+        if (!(m.nav && m.bar && m.nav.bottom - m.nav.top <= 48 && m.bar.bottom <= 48)) { bad.thin.push(g + ' ' + JSON.stringify({ n: m.nav, b: m.bar })); }
+        if (m.scale < 0.17 - 0.002) { bad.tiny.push(g + ' ' + m.scale); }
+        // the page scrolled to the stage as a round does it (the stage right under the top bar): the whole picture lies between the top bar and the dock
+        await page.evaluate((y) => window.scrollTo(0, y), Math.max(0, m.stageTop - m.bar.bottom - 8));
+        await page.waitForTimeout(100);
+        const s = await readTight(page, false);
+        if (!(s.pic && s.pic.top >= s.bar.bottom - 1 && s.pic.bottom <= s.dock.top + 1)) { bad.pic.push(g + ' ' + JSON.stringify({ pic: s.pic, bar: s.bar.bottom, dock: s.dock.top, scale: s.scale })); }
+      }
+      check(bad.dock.length === 0, sc.name + ': the docked panel is under the top bar and above the navigation bar in all 19 games', bad.dock);
+      check(bad.play.length === 0 && bad.presets.length === 0, sc.name + ': the Play button and the amount buttons are always on the screen, in the dock', { play: bad.play, presets: bad.presets });
+      check(bad.pic.length === 0, sc.name + ': scrolled to the stage (as a round does), the whole picture lies between the top bar and the dock', bad.pic);
+      check(bad.sideways.length === 0 && bad.tiny.length === 0, sc.name + ': no sideways scroll, and no picture smaller than a sixth of its size', { sideways: bad.sideways, tiny: bad.tiny });
+      check(bad.thin.length === 0, sc.name + ': the top bar and the navigation bar are kept thin (the top bar 46 px, the navigation bar up to 48 px)', bad.thin);
+      // pressing Play brings the picture into view by itself, above the dock, and the round plays
+      const played = [];
+      for (const g of ['wheel', 'derby', 'plinko']) {
+        await go(page, '#game-' + g);
+        await page.waitForSelector('#panel-' + g + ':not([hidden])');
+        await page.waitForTimeout(600);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.click('#btn-play');
+        await page.waitForTimeout(250);
+        const s = await readTight(page, false);
+        if (!(s.pic && s.pic.top >= s.bar.bottom - 1 && s.pic.bottom <= s.dock.top + 2)) { played.push(g + ' ' + JSON.stringify({ pic: s.pic, bar: s.bar.bottom, dock: s.dock.top })); }
+        await waitReceipt(page);
+        await closeReceipt(page);
+      }
+      check(played.length === 0, sc.name + ': pressing Play scrolls the picture into view between the top bar and the dock (Lucky Wheel, Charity Derby, Plinko), and the round plays', played);
+      await page.context().close();
+    }
+    // the same for a live table: the stake buttons and the join button are in the dock, the picture is reached by scrolling
+    for (const sc of TIGHT.slice(0, 2)) {
+      const page = await newPage({ viewport: { width: sc.w, height: sc.h }, mobile: true });
+      await openApp(page);
+      const bad = [];
+      for (const g of ['wheel', 'plinko', 'derby', 'standing']) {
+        await go(page, '#live-' + g + '25');
+        await page.waitForSelector('#livepanel:not([hidden]) .odd', { state: 'attached' });
+        await page.evaluate((t) => { const r = window.GS.live.room(t); r.openRound(0.5); r._clearTimers(); }, g + '25');
+        await page.waitForTimeout(700);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(100);
+        const m = await readTight(page, true);
+        if (!(m.docked && m.dock && m.dock.top >= m.bar.bottom - 1 && m.dock.bottom <= m.nav.top + 1)) { bad.push(g + ' dock ' + JSON.stringify({ d: m.dock, n: m.nav, b: m.bar })); }
+        if (!(m.play && m.play.top >= m.bar.bottom - 1 && m.play.bottom <= m.nav.top + 1 && m.presets && m.presets.top >= m.bar.bottom - 1 && m.presets.bottom <= m.nav.top + 1)) { bad.push(g + ' join or stake buttons ' + JSON.stringify({ p: m.play, s: m.presets })); }
+        if (m.sideways) { bad.push(g + ' sideways'); }
+        await page.evaluate((y) => window.scrollTo(0, y), Math.max(0, m.stageTop - m.bar.bottom - 8));
+        await page.waitForTimeout(100);
+        const s = await readTight(page, true);
+        if (!(s.pic && s.pic.top >= s.bar.bottom - 1 && s.pic.top < s.dock.top - 20)) { bad.push(g + ' picture does not start above the dock ' + JSON.stringify({ pic: s.pic, dock: s.dock.top })); }
+      }
+      check(bad.length === 0, sc.name + ': live tables (Lucky Wheel, Plinko, Derby, Last One Standing): the stake buttons and the join button are in the dock, nothing scrolls sideways, the picture starts above the dock once scrolled to', bad);
+      await page.context().close();
+    }
+  }
+
+  /* ---- the smallest windows, part 3: a phone with its keyboard open. A 390x844 page, the amount field focused in the Options sheet, then the window shrinks to 400 px tall ---- */
+  for (const live of [false, true]) {
+    const tid = 'wheel25';
+    const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+    await openApp(ph, live ? '#live-' + tid : '#game-roulette');
+    if (live) { await ph.waitForSelector('#livepanel:not([hidden]) .odd', { state: 'attached' }); await liveSettled(ph, tid); await openLiveOptions(ph); await ph.focus('#lt-custom'); }
+    else { await ph.waitForSelector('#panel-roulette:not([hidden])'); await ph.waitForTimeout(600); await openOptions(ph); await ph.focus('.amount__input'); }
+    await ph.setViewportSize({ width: 390, height: 400 });
+    await ph.waitForTimeout(700);
+    const k = await ph.evaluate((isLive) => {
+      const r = (e) => { const b = e.getBoundingClientRect(); return { top: Math.round(b.top), bottom: Math.round(b.bottom) }; };
+      const dock = document.querySelector(isLive ? '#livepanel' : '#bet-panel');
+      const f = document.activeElement; const fr = f.getBoundingClientRect();
+      const top = document.elementFromPoint(fr.left + fr.width / 2, fr.top + fr.height / 2);
+      return { vh: innerHeight, open: dock.classList.contains('is-more'), sheet: r(dock), bar: r(document.querySelector('#topbar')), nav: r(document.querySelector('#side')), play: r(document.querySelector(isLive ? '#livepanel [data-role="join"]' : '#btn-play')),
+        field: { id: f.id, top: Math.round(fr.top), bottom: Math.round(fr.bottom) }, covered: !!top && top !== f && !f.contains(top) && !top.contains(f), sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1 };
+    }, live);
+    const tag = (live ? 'live table' : 'solo game') + ' with the keyboard open (390x844 shrunk to 390x400): ';
+    check(k.open && k.sheet.top >= k.bar.bottom - 1 && k.sheet.bottom <= k.nav.top + 1, tag + 'the Options sheet stays open, under the top bar and above the navigation bar (no part of the top bar is covered)', k);
+    check(k.field.top >= k.sheet.top && k.field.bottom <= k.play.top + 1 && !k.covered, tag + 'the field the visitor is typing in is on the screen, above the Play (join) button, and not covered by anything', k);
+    check(k.play.top >= k.sheet.top && k.play.bottom <= k.nav.top + 1 && !k.sideways, tag + 'the Play (join) button is on the screen above the navigation bar, and nothing scrolls sideways', k);
+    if (!live) {
+      await ph.evaluate(() => document.activeElement.select());
+      await ph.keyboard.type('37');
+      await ph.waitForTimeout(150);
+      check(await ph.evaluate(() => window.GS.ui.game.amountCents()) === 3700, tag + 'what is typed reaches the amount (37)');
+      await ph.click('#btn-play');
+      await waitReceipt(ph);
+      check(await receiptOpen(ph), tag + 'Play plays the round from the sheet');
+      await closeReceipt(ph);
+    }
+    await ph.setViewportSize({ width: 390, height: 844 });
+    await ph.waitForTimeout(700);
+    const back = await ph.evaluate((isLive) => { const dock = document.querySelector(isLive ? '#livepanel' : '#bet-panel'); const b = dock.getBoundingClientRect(); const n = document.querySelector('#side').getBoundingClientRect(); return { docked: getComputedStyle(dock).position === 'fixed', bottom: Math.round(b.bottom), navTop: Math.round(n.top), sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1 }; }, live);
+    check(back.docked && back.bottom <= back.navTop + 1 && !back.sideways, tag + 'when the keyboard goes away the panel is docked above the navigation bar again', back);
+    await ph.context().close();
+  }
+
+  /* ---- axe's target-size rule (every target 24 px, or enough room round it) where the panel scrolls: 844x390, 1280x600, and the smallest phone. A control that is cut in two by
+          the edge of the scrolling panel (or by the Play bar over it) has only a few pixels showing, and axe reports it as too small whatever its real size: that is only where the
+          scrolling stops, not a small target. So the panel is scrolled through the places where nothing is cut, and the scan must come out clean at one of them (a button that
+          really is too small, or too close to its neighbour, is reported at every place). ---- */
+  if (AXE) {
+    // the places the panel's scroll box can rest at, best first: the ones where no control is cut by the box's edges or lies half under the Play bar
+    const PLACES = () => {
+      const bet = document.querySelector('#bet-panel');
+      const inner = bet.querySelector('.bet__scroll');
+      const sc = inner && getComputedStyle(inner).display !== 'contents' ? inner : bet;
+      const bar = bet.querySelector('.bet__act');
+      const ctrls = [...sc.querySelectorAll('button, input, select, summary, a[href], textarea')].filter((e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 1.5 && r.height > 1.5 && !(bar && bar.contains(e)); });
+      const edges = () => { const a = sc.getBoundingClientRect(); const bb = bar ? bar.getBoundingClientRect() : null; return { top: a.top, bottom: bb && bb.top < a.bottom && bb.bottom > a.top ? Math.min(a.bottom, bb.top) : a.bottom }; };
+      // (a control that is not wholly inside the box but still on the screen: cut by an edge, or half hidden under the Play bar)
+      const cut = () => { const e = edges(); return ctrls.filter((c) => { const b = c.getBoundingClientRect(); const on = b.bottom > 0 && b.top < innerHeight; return on && !(b.top >= e.top - 0.5 && b.bottom <= e.bottom + 0.5) && !(b.bottom <= e.top + 0.5 && b.top < e.top - 40); }).length; };
+      const e0 = edges(); const y0 = sc.scrollTop; const cand = new Set([0, y0]);
+      ctrls.forEach((c) => { const b = c.getBoundingClientRect(); cand.add(Math.round(y0 + b.top - e0.top)); cand.add(Math.round(y0 + b.bottom - e0.bottom)); });
+      const max = sc.scrollHeight - sc.clientHeight;
+      const list = [...cand].filter((v) => v >= 0 && v <= max + 1).map((y) => { sc.scrollTop = y; return { y: sc.scrollTop, n: cut() }; });
+      sc.scrollTop = y0;
+      return list.sort((a, b) => a.n - b.n || a.y - b.y).slice(0, 8);
+    };
+    const AX = [
+      { name: 'a phone held sideways (844x390)', w: 844, h: 390, mobile: true, games: ['wheel', 'dice', 'plinko', 'coin', 'slots', 'roulette', 'marble'] },
+      { name: 'a short laptop window (1280x600)', w: 1280, h: 600, mobile: false, games: ['wheel', 'dice', 'plinko', 'coin', 'slots', 'roulette', 'marble'] },
+      { name: 'the smallest phone held sideways (568x320)', w: 568, h: 320, mobile: true, games: ['dice', 'wheel', 'slots', 'coin', 'derby'] }
+    ];
+    for (const sc of AX) {
+      const page = await newPage({ viewport: { width: sc.w, height: sc.h }, mobile: sc.mobile });
+      await openApp(page);
+      const out = []; let atRest = 0;
+      for (const g of sc.games) {
+        await go(page, '#game-' + g);
+        await page.waitForSelector('#panel-' + g + ':not([hidden])');
+        await page.waitForTimeout(600);
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.addScriptTag({ content: AXE }).catch(() => {});
+        const places = await page.evaluate(`(${PLACES.toString()})()`);
+        let last = null; let clean = false; let tried = 0;
+        for (const p of places) {
+          tried++;
+          await page.evaluate((y) => { const bet = document.querySelector('#bet-panel'); const inner = bet.querySelector('.bet__scroll'); (inner && getComputedStyle(inner).display !== 'contents' ? inner : bet).scrollTop = y; }, p.y);
+          await page.waitForTimeout(100);
+          last = await page.evaluate(async () => { const r = await window.axe.run(document, { runOnly: { type: 'rule', values: ['target-size'] }, resultTypes: ['violations'] }); return r.violations.flatMap((v) => v.nodes.map((n) => n.target.join(' ') + ' ' + (n.failureSummary || '').split('\n').slice(1, 2).join('').slice(0, 90))); });
+          if (!last.length) { clean = true; if (tried === 1 && p.y === 0) { atRest++; } break; }
+        }
+        if (!clean) { out.push(g + ' (tried ' + tried + ' places) ' + (last || []).join(' ; ')); }
+      }
+      check(out.length === 0, 'axe target-size on ' + sc.name + ' (' + sc.games.length + ' games): the scan is clean at a place where the panel\'s edge cuts no control (' + atRest + ' of them were clean at the top too): no target is too small or too close to another', out);
+      await page.context().close();
+    }
+  }
+
 }
 
 /* ======================================================================== */

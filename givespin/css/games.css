@@ -401,3 +401,11 @@
   #view-game .coingame .bracket.is-mirror .slot .cmono { --s: 22px !important; }
   #view-game .coin3d { --cs: 38px; --chop-h: 14px; }
 }
+
+/* Small windows: a picture that is shrunk to fit makes its charity marks smaller than a finger (a Coin Flip mark was 8 to 12 px on the smallest phone held sideways).
+   The mark in a bracket slot or a die tile opens that charity's profile, and the whole slot (tile) is its hit area, so a touch near the mark still reaches it. The slots and
+   tiles lie side by side without overlapping, so no neighbour loses any room. (The hover enlargement is left out there: it would change the box the hit area is measured from
+   while the pointer is on it.) */
+.slot, .dtile { position: relative; }
+.slot .markbtn::after, .dtile .markbtn::after { content: ""; position: absolute; inset: 0; }
+.slot .markbtn:hover:not(:disabled), .dtile .markbtn:hover:not(:disabled) { transform: none; }

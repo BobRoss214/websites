@@ -81,14 +81,17 @@ Play right under the choices every round needs, pinned to the bottom of the pane
 gift options come after it. On a phone the panel is docked at the bottom of the screen with the amount presets and Play, and the
 **Options** button opens everything else as a sheet over the picture. Held sideways (or in any short window up to 900 px wide) the panel
 is a narrow column beside the picture that scrolls inside itself with Play kept at its bottom. Turning the phone or resizing the window
-while a game is open refits the picture; the choices are kept. Everything about the game (the tabs, more games) is below,
-as before. The rules are in `css/fit.css`.
+while a game is open refits the picture; the choices are kept. In a window under 561 px wide that is also under 521 px tall (a small phone held
+sideways, a phone with its keyboard open) the panel stays docked, the top bar and the navigation bar are kept thin, and the picture is fitted to the room between
+them (as small as a sixth of its size); Play and the amount buttons are always in the dock, and pressing Play scrolls the picture into view above it. Everything about
+the game (the tabs, more games) is below, as before. The rules are in `css/fit.css`.
 
 **Live tables follow it too** (all seventy of them: see "A table fits on one screen" under Live tables). The picture, your stake and the
 join button are on the first screen in the same three layouts: on a laptop the odds board sits beside the picture with the stake and the join
 button pinned under it; on a phone the stake buttons, **Options** and the join button are docked, the board is in the sheet, and "Pick a charity"
-opens the sheet at the board. A table can have up to 500 spots, so its picture may be shrunk further than a solo game's (to a third of its size, and
-to a fifth on the smallest phone held sideways, where the page's own bars leave very little room). When a round ends the page scrolls to the result
+opens the sheet at the board. A table can have up to 500 spots, so its picture may be shrunk further than a solo game's (to about a quarter of its size, and
+to a fifth on the smallest phone held sideways, where the page's own bars leave very little room; there the panel is wider and the odds board shows
+two to four rows). When a round ends the page scrolls to the result
 card, and it comes back up when the next round opens. The rules are the block for `#view-game.is-live` at the end of `css/fit.css`.
 
 Four games stop sooner on purpose, because of what they are: Pick a Card is a table of face-down cards you tap (up to
@@ -433,7 +436,7 @@ storage is reported, and the saved text stays small), Marble Run's click spots (
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 ```
 
-About 2,530 end-to-end checks (a few dozen fewer without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
+About 2,620 end-to-end checks (a few dozen fewer without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
 the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board (500 charities), clicking a logo or slice in every game to open that charity, the website links in the results, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the game tiles, each game's page of seven table sizes, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, game filters checked
 against an independent computation, the filters on the Charities page (which only narrow the list, never the games), the charity directory and profiles, direct gifts, repeat plans and dedications,

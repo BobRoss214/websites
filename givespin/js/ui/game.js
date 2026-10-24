@@ -971,6 +971,7 @@
   //     choices as a sheet over the stage;
   //   landscape (561 to 900 px wide and up to 520 px tall: a phone held sideways, a short window): two columns again, the panel on the left scrolls inside
   //     itself with the Play bar kept at its bottom, and the picture on the right is fitted to the height.
+  //   (a window up to 560 px wide that is also up to 520 px tall, MQ_TIGHT below, is the single column with thinner bars: see fitStage)
   var MQ_SINGLE = '(max-width: 900px) and (min-height: 521px), (max-width: 560px)';
   function matches(q) { return !!(window.matchMedia && window.matchMedia(q).matches); }
   function isDocked() { return matches(MQ_SINGLE); }
@@ -1018,8 +1019,11 @@
   var FIT_MIN_LAND = 0.34;   // (a window up to 520 px tall, a phone held sideways: about 250 px of height is left for the picture)
   // A live table has a bigger board (up to 500), so its picture can be taller, and above it come the round bar and the sheet's dock: it may be shrunk further (it is
   // still the whole picture, and the odds board has the names), rather than being cut off by the dock or the navigation bar.
-  var FIT_MIN_LIVE = 0.34;
+  var FIT_MIN_LIVE = 0.27;   // (it was 0.34: Last One Standing's 25-tile board then ended under the dock on a 360 x 640 or 320 x 568 phone; a board that tall is read from the odds board anyway)
   var FIT_MIN_LIVE_LAND = 0.2;
+  var FIT_MIN_TIGHT = 0.17;   // (a narrow window that is also short, 480 x 320: a Lucky Wheel is then about 80 px across, the most that fits between the bars)
+  var TAP_PICTURE = { cards: 1, scratch: 1 };   // the games whose picture is what you tap (a card, a panel): in a narrow, short window that cannot give them half size on the first screen they get the room the page offers when it is scrolled to them, never a miniature
+  var MQ_TIGHT = '(max-width: 560px) and (max-height: 520px)';   // narrow and short (css/fit.css, "A narrow window that is also short"): docked, with no room for a picture on the first screen
   var fitRaf = 0, fitObs = null, fitKey = '';
 
   function fitReset(prim) {
@@ -1060,7 +1064,17 @@
     // (a solo game needs only the panel's own padding under the picture; a table's result card is scrolled into view when it comes, so it needs no room kept under the picture either)
     var reserve = single ? 14 + space : (shortWin ? (isLive() ? 10 : 14) : 44) + space;
     var room = window.innerHeight - top - reserve;
-    var s = Math.max(isLive() ? (shortWin ? FIT_MIN_LIVE_LAND : FIT_MIN_LIVE) : (shortWin ? FIT_MIN_LAND : FIT_MIN), Math.min(1, room / H));
+    var tight = single && matches(MQ_TIGHT);
+    var minS = isLive() ? (shortWin ? FIT_MIN_LIVE_LAND : FIT_MIN_LIVE) : (shortWin ? FIT_MIN_LAND : FIT_MIN);
+    if (tight) { minS = Math.min(minS, FIT_MIN_TIGHT); }
+    var s = Math.max(minS, Math.min(1, room / H));
+    // A narrow, short window (a phone with its keyboard open, a small window) may not hold the picture on the first screen even at the smallest size. It is then fitted to the
+    // room between the top bar and the dock as the page is scrolled to it (a round does that by itself, see scrollStage), instead of being left a smudge under the dock.
+    if (tight && (room / H < minS || (TAP_PICTURE[current] && s < FIT_MIN))) {
+      var tbar = document.querySelector('.topbar');
+      var head = top - (el.stage.getBoundingClientRect().top + (window.pageYOffset || 0));   // (what is above the picture inside the stage: the title row, a table's round bar)
+      s = Math.max(s, Math.min(1, (window.innerHeight - ((tbar ? tbar.offsetHeight : 46) + 8) - head - reserve) / H));
+    }
     if (s >= 0.995) { return; }
     prim.classList.add('is-fit');
     prim.style.transformOrigin = '50% 0';
