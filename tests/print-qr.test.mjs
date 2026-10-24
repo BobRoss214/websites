@@ -32,7 +32,13 @@ async function missingLetters(page, chars) {
   const { root } = await cdp.send('DOM.getDocument');
   const { nodeIds } = await cdp.send('DOM.querySelectorAll', { nodeId: root.nodeId, selector: '#probes .probe' });
   const drawn = [];
-  for (const nodeId of nodeIds) drawn.push((await cdp.send('CSS.getPlatformFontsForNode', { nodeId })).fonts.some((f) => !f.isCustomFont));
+  for (const nodeId of nodeIds) {
+    let fonts = (await cdp.send('CSS.getPlatformFontsForNode', { nodeId })).fonts;
+    // An EMPTY answer means Chrome has not laid this letter out yet (on a busy computer it made this check fail by chance, in about 1 run in 4, on a different language each time).
+    // A letter that no font can draw is answered with the web font's empty box, which is not an empty answer, so asking again hides no real missing letter.
+    for (let t = 0; t < 60 && fonts.length === 0; t++) { await new Promise((r) => setTimeout(r, 50)); fonts = (await cdp.send('CSS.getPlatformFontsForNode', { nodeId })).fonts; }
+    drawn.push(fonts.some((f) => !f.isCustomFont));
+  }
   await cdp.detach();
   await page.evaluate(() => document.getElementById('probes').remove());
   const control = drawn.pop();
