@@ -95,9 +95,11 @@ await run('hero', async ({ browser, base, errs }) => {
   });
   ok('the barrel train has six barrels and six kids, all of them waving, not all in step', !!train && train.barrels === 6 && train.kids === 6 && train.waving === 6 && train.delays >= 5, JSON.stringify(train));
   ok('...twelve barrel wheels turn and the tractor is drawn in front', !!train && train.wheels === 12 && train.tractorInFront, JSON.stringify(train));
-  // where the train is at the very start and the very end of its loop: out of sight both times, so it never pops in or out
-  const loopEnds = (q) => q.evaluate(() => {
-    const rig = document.querySelector('#field .rig-barrel'), hero = document.getElementById('top').getBoundingClientRect();
+  // where the train and the wagon ride are at the very start and the very end of their loops: out of sight both times, so they never pop in or out
+  // (the wagon showed at the right edge of a screen 680 to 760 px wide when its loop ended)
+  const RIGS = [['barrel train', '#field .rig-barrel'], ['wagon ride', '#field .rig:not(.rig-barrel)']];
+  const loopEnds = (q, sel) => q.evaluate((sel) => {
+    const rig = document.querySelector(sel), hero = document.getElementById('top').getBoundingClientRect();
     const a = rig.getAnimations().find((x) => x.animationName === 'rigDrive');
     if (!a) return null;
     const dur = a.effect.getComputedTiming().duration, t0 = a.effect.getTiming().delay + dur;   // (a negative delay: the 2nd loop starts at currentTime delay + duration)
@@ -106,17 +108,19 @@ await run('hero', async ({ browser, base, errs }) => {
     const out = { start: at(0), end: at(dur - 1), width: Math.round(hero.width) };
     a.play();
     return out;
-  });
-  for (const [w, h] of [[1366, 768], [1920, 1080], [390, 800], [760, 800]]) {
+  }, sel);
+  for (const [w, h] of [[1366, 768], [1920, 1080], [390, 800], [600, 800], [680, 800], [720, 800], [760, 800], [761, 800]]) {
     const q = await page(w, h);
-    const bad = [];
+    const bad = { 'barrel train': [], 'wagon ride': [] };
     for (const s of ['spring', 'summer', 'fall']) {
       await q.evaluate((x) => WISE_ACRES.hero.setSeason(x), s);
-      await until(q, (x) => document.documentElement.dataset.season === x && !!document.querySelector('#field .rig-barrel'), s);
-      const e = await loopEnds(q);
-      if (!e || !(e.start.right < 0 && e.end.left > e.width)) bad.push(s + ' ' + JSON.stringify(e));
+      await until(q, (x) => document.documentElement.dataset.season === x && !!document.querySelector('#field .rig-barrel') && !!document.querySelector('#field .rig:not(.rig-barrel)'), s);
+      for (const [name, sel] of RIGS) {
+        const e = await loopEnds(q, sel);
+        if (!e || !(e.start.right < 0 && e.end.left > e.width)) bad[name].push(s + ' ' + JSON.stringify(e));
+      }
     }
-    ok(`${w} x ${h}: the barrel train starts and ends its loop out of sight`, bad.length === 0, bad.join(' | '));
+    for (const [name] of RIGS) ok(`${w} x ${h}: the ${name} starts and ends its loop out of sight`, bad[name].length === 0, bad[name].join(' | '));
     await q.context().close();
   }
 
