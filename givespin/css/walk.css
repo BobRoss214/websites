@@ -1,0 +1,81 @@
+/* ==========================================================================
+   Walk-through fixes: small things found by looking at every page on upright phones, tablets and big screens.
+   Loaded last, after css/fit.css, so that it only has to say what is different. Each rule says which window it is for.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ Giving Club, My Giving, Your cards */
+/* All windows: the rank card and the four stats beside (or above) it had no gap to the four cards under them (Diamond, Hot hand, Cards, Crew), so the cards touched. */
+.clubtop { margin-bottom: 12px; }
+/* Tablets and phones: four stat cards used to be as many columns as fitted (3 and then 1 left over on a tablet held upright, 640 to 800 px of room; four tall cards,
+   one under the other, on a phone). Now two by two, and four in a row only where the page is wide enough (1000 px and over). */
+.stats:not(.stats--2) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 1000px) {
+  .stats:not(.stats--2) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+/* A phone 320 to 440 px wide: a big total such as "$1,500,000" (the top rank) did not fit in a half-width card and ran out of it. The number is a little smaller there. */
+@media (max-width: 560px) {
+  .stat__val { font-size: clamp(1.05rem, 5.4vw, 1.5rem); }
+}
+
+/* ------------------------------------------------------------------ Crews */
+/* Four crew cards: two by two on a tablet or a small laptop (561 to 1339 px; three columns left "The Long Shots" alone on a second row at 900 to 1000 px of room), four in a row on a
+   big window. A phone keeps one column. */
+@media (min-width: 561px) {
+  .crewgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* The Join buttons of the cards in one row sat at different heights (a one-line description against a two-line one): the description takes the spare room, so the buttons line up. */
+.crewcard { grid-template-rows: auto 1fr auto auto; }
+@media (min-width: 1340px) {
+  .crewgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ------------------------------------------------------------------ Live tables: the cards of a game's table sizes */
+/* Tablets and bigger (a card is narrow there, 250 to 320 px): the status pill ("Betting open 0:02", "Result", "Playing") sat beside the name when it was short and under it when
+   it was long, so the cards of one row had their pot, players and bar at different heights. The pill is now always under the name. (A phone has one wide card per row: the pill
+   fits beside the name there, as before.) */
+@media (min-width: 761px) {
+  .lcard--table .lcard__top { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+
+/* A laptop or a tablet held sideways (901 px and over): the page of a game's table sizes spent about 270 px on the heading, four lines of words and a button before the first card
+   (on a 1180 x 820 window the seventh card was cut off by the bottom of the screen, and on 1366 x 768 it started only 51 px above the bottom edge). The "All live games" button now sits
+   at the right of the heading and the words run wider (three lines): all seven cards are on the first screen at 1180 x 820 and 1440 x 900, and on 1366 x 768 the last row starts 47 px higher. */
+@media (min-width: 901px) {
+  #view-live .page-head:has(.lv-back) > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; align-items: center; }
+  #view-live .page-head:has(.lv-back) h1 { grid-column: 1; }
+  #view-live .page-head:has(.lv-back) .lv-back { grid-column: 2; grid-row: 1; margin-top: 0; }
+  #view-live .page-head:has(.lv-back) p { grid-column: 1 / -1; max-width: 104ch; }
+}
+
+/* ------------------------------------------------------------------ Live tables: the first screen of a phone */
+/* A phone up to 560 px wide: the heading, the long first paragraph and the "Simulated tables" notice used to fill the whole first screen (on 375 x 667 and 320 x 640 not one
+   tile or table card showed without scrolling). Tighter type and gaps, so the first tiles (or the first table card) start on the first screen. The words are all still there. */
+@media (max-width: 560px) {
+  #view-live .page-head { gap: 8px; margin-bottom: 12px; }
+  #view-live .page-head h1 { font-size: 1.5rem; line-height: 1.15; }
+  #view-live .page-head p { margin-top: 6px; font-size: 0.86rem; line-height: 1.45; }
+  #view-live .simbanner { gap: 8px; margin-bottom: 12px; padding: 8px 10px; font-size: 0.76rem; line-height: 1.4; }
+  #view-live .lv-back { margin-top: 8px; }
+  #view-live .sect__head { margin-bottom: 8px; }
+  #view-live .tabnote--tables { margin-bottom: 8px; font-size: 0.8rem; line-height: 1.4; }
+}
+
+/* ------------------------------------------------------------------ the search box in the top bar */
+/* A tablet or a small laptop (921 to 1100 px): the box is 300 px wide and its words were cut in the middle of a word ("Search games and charitie"). Now they end in dots. */
+.search__input, .search__input::placeholder { text-overflow: ellipsis; }
+
+/* ------------------------------------------------------------------ the first-visit tour on a short phone */
+/* A phone about 667 px tall or less (375 x 667, 320 x 640): the tour's card is only 60 percent of the screen high (the welcome card, the whole screen) and scrolls inside itself,
+   and its buttons were at the end of the words: "Show me around" (the first thing a new visitor has to press) and "Next" were cut in half or out of sight until the card was
+   scrolled. The row of buttons now stays at the bottom of the card while the words scroll above it. On a taller phone, and on a laptop, nothing moves: the card has no need to scroll. */
+.tour__foot { position: sticky; bottom: -16px; z-index: 1; margin: -10px -20px 0; padding: 10px 20px 16px; background: linear-gradient(180deg, transparent 0, var(--panel) 10px); }
+.tour__foot:last-child { margin-bottom: -16px; }
+.tour__foot + .tour__fine { margin-top: -20px; }
+
+/* ------------------------------------------------------------------ thumbs: the small links at the bottom of the page and on the charity cards */
+/* A phone (up to 720 px wide, touch): the four footer links ("What is GiveSpin?", "Help", "Fair Play?", "Privacy") were 25 px high and 4 to 6 px apart, and the web address on each
+   charity card was 18 px high: easy to hit the wrong one with a thumb. The same words, with more room around them (about 41 px and 30 px high); the card itself is still one tap to open. */
+@media (max-width: 720px) {
+  .foot__links a { padding: 9px 0; }
+  .rcard__link { padding-block: 6px; }
+}

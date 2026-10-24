@@ -465,6 +465,7 @@ css/chooser.css     the choose-your-own-charities dialog and its chip
 css/slots.css       the slot machines and their five themes
 css/tour.css        the first-visit tour
 css/fit.css         one screen per game, solo and live tables: the gift panel (or a table's panel) in three layouts (wide, a phone's docked panel and Options sheet, a landscape phone's two columns); js/ui/game.js fits the picture to the screen
+css/walk.css        small fixes found by walking every page on phones, tablets and big screens (loaded last, each rule says which window it is for)
 css/ranks.css       the rank emblems: their classes and animation
 css/rankui.css      rank chips next to names, the rank card and ladder, the rank-up moment
 js/config.js        mode, limits, demo credit, checkout hook
