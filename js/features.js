@@ -1474,10 +1474,14 @@
   // A page opened with #something (a link from another page, a QR code): the browser scrolled there while the scripts were still adding
   // content above it (the countdown, "this week", the farm map), so the place can end up lower down than the screen. Put it in place
   // again once the page has loaded, unless the reader has already started to move.
+  // The browser's own jump to the place must be one step, not a glide: css/styles.css holds smooth scrolling back until <html> has "wa-ready". The
+  // class comes after the load (the jump is made right after it) and, on a page opened at a place, after the two re-scrolls below.
   safe(function keepHashTarget() {
-    if (location.hash.length < 2) return;
     const nav = window.performance && performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
-    if (nav && (nav.type === 'reload' || nav.type === 'back_forward')) return;   // the browser puts a returning reader back where they were
+    const onLoad = (f) => { if (doc.readyState === 'complete') f(); else addEventListener('load', f, { once: true }); };
+    const ready = () => doc.documentElement.classList.add('wa-ready');
+    // nothing to put in place: no #place, or a returning reader (the browser puts them back where they were)
+    if (location.hash.length < 2 || (nav && (nav.type === 'reload' || nav.type === 'back_forward'))) { onLoad(ready); return; }
     let moved = false;
     const stop = () => { moved = true; };
     ['wheel', 'touchstart', 'mousedown', 'keydown'].forEach((ev) => addEventListener(ev, stop, { passive: true, once: true }));
@@ -1488,8 +1492,7 @@
       try { el = doc.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { /* not a place on this page */ }
       if (el && el.getClientRects().length) el.scrollIntoView({ block: 'start', behavior: 'instant' });
     };
-    const after = () => { setTimeout(settle, 300); setTimeout(settle, 1500); };
-    if (doc.readyState === 'complete') after(); else addEventListener('load', after, { once: true });
+    onLoad(() => { setTimeout(settle, 300); setTimeout(() => { settle(); ready(); }, 1500); });
   });
   safe(renderDrive);
   showProblems();

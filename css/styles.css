@@ -57,6 +57,11 @@
 
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:calc(var(--header-h) + 16px);-webkit-text-size-adjust:100%}
+/* A page opened at a #place (a link from another page, a QR code) makes the browser jump to that place while the page is still being built. With smooth
+   scrolling that jump became a glide towards a place worked out from a half-built page: it ran past the place by thousands of pixels and stayed there
+   until keepHashTarget (js/features.js) put the place back. So links glide only once js/features.js has put "wa-ready" on <html> (after the load, and
+   after the place has been put right when the page was opened at one). Without JavaScript the page jumps instead of gliding. */
+html:not(.wa-ready){scroll-behavior:auto}
 body{margin:0;font:500 1.0625rem/1.6 var(--body);color:var(--ink);background:var(--cream);overflow-x:clip;-webkit-font-smoothing:antialiased}
 img,svg{display:block;max-width:100%}
 h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.08;margin:0;text-wrap:balance}
