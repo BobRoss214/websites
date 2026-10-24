@@ -174,7 +174,8 @@ mode the dollars are pretend, so it is too. XP still drives the league tiers and
 live result takes the total across a rank boundary there is a short celebration (the emblem big, "You reached Rank 1:
 Patron", the next goal, confetti and a fanfare; it is calmer with reduced motion and silent when the sound is off); a new
 level inside a rank gets a lighter one. Everyone else on those pages is a simulated bot, and so is their rank: `botStanding` gives each bot name a
-made-up rank that never changes (about 55% have none, then fewer and fewer at each rank), next to its BOT tag. The emblems
+made-up rank that never changes (about 55% have none, then fewer and fewer at each rank; the live tables only have 60 handles, so two of them, `BOT_RANK_PINS`, are
+given Luminary and Immortal by name so the top emblems are seen now and then), next to its BOT tag. The emblems
 are drawn by `js/ranks.js` and `css/ranks.css`, the screens are `js/ui/rankui.js` and `css/rankui.css`.
 
 **Leagues, crews and cards.** All play, no cash value, and everything with other people is simulated and labelled.
@@ -373,7 +374,7 @@ browser's random generator and the site makes no verifiability claim.
 | Colours, fonts, spacing | the `:root` variables at the top of `css/base.css` |
 | Level names, XP, badges, tiers, card rarity | `LEVELS`, `xpForGift`, `BADGES`, `TIERS` and `RARITIES` in `js/core.js` |
 | Rank names and the dollar amounts they begin at | `RANKS` in `js/core.js` |
-| How the simulated players are spread over the ranks | `BOT_RANK_MIX` in `js/core.js` |
+| How the simulated players are spread over the ranks (and which two handles wear the top ranks) | `BOT_RANK_MIX`, `BOT_RANK_PINS` in `js/core.js` |
 | Live-table timings, bots, sponsor and jackpot | the constants at the top of `js/live.js` |
 | Live-table events (Giving Tuesday, Disaster Relief Night, Double Pot Hour) | `eventAt()` in `js/live.js` |
 | Crews and their chat | `js/crews.js` |
@@ -389,7 +390,7 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 node --test givespin/tests/*.test.js
 ```
 
-198 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+200 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, ranks (every boundary from $999.99 to $1,000,000.00 and beyond, a cent either
 side, the ten levels inside each rank, the top rank, the standing never going down, labels, the simulated players' spread
 and what a round reports about a rank-up), streaks, badges, boards of any size (fill spots evenly, always include the

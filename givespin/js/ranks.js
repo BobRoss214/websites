@@ -542,7 +542,8 @@
       path(heartD(50, 51, 34), lin('h', 0, 0, 0, 1, [[0, '#ff8aa5'], [1, '#d4103f']]), sw('#2a0010', 3));
   };
   SMALLS[7] = function () {
-    return path(poly(CREST), '#120b1f', sw('#a873ff', 6)) + path(poly(CREST), 'none', sw('#05030a', 2)) +
+    // (a near-black body vanished on the dark page and left two thin lines; a violet-lit body with one bold edge keeps its shape at 16 px)
+    return path(poly(CREST), lin('b', 0, 0, 0, 1, [[0, '#4b3a97'], [1, '#150d30']]), sw('#b58cff', 6)) +
       path('M30 30L20 26 26 22 12 16', 'none', 'stroke="#d8b8ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"') +
       path(heartD(50, 47, 40), lin('h', 0, 0, 0, 1, [[0, '#ffffff'], [1, '#b9a6ff']]), sw('#1b0f33', 3.2));
   };

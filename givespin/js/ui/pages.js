@@ -255,7 +255,7 @@
         stat('users', GS.crews && GS.crews.mine() ? GS.crews.mine().name : 'No crew', 'Crew · <a href="#crews">Crews</a>') +
       '</div>' +
       ui.rankui.ladderSection(st) +
-      '<div class="twocol twocol--club"><section class="sect panel" aria-labelledby="cl-lad"><h2 class="sect__t" id="cl-lad">Level ladder</h2><ol class="ladder">' + ladder + '</ol></section>' +
+      '<div class="twocol twocol--club"><section class="sect panel" aria-labelledby="cl-lad"><h2 class="sect__t" id="cl-lad">' + (st.rank ? 'XP level ladder' : 'Level ladder') + '</h2><ol class="ladder">' + ladder + '</ol></section>' +
       '<section class="sect panel" aria-labelledby="cl-bad"><div class="sect__head"><h2 class="sect__t" id="cl-bad">Badges</h2><span class="tag tag--plain">' + unlocked + ' / ' + core.BADGES.length + '</span></div><ul class="badgegrid">' + badges + '</ul></section></div>';
   }
 

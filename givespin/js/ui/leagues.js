@@ -64,7 +64,7 @@
     return '<section class="sect panel" aria-labelledby="lg-league"><div class="sect__head"><h2 class="sect__t" id="lg-league">This week’s league <small>' + week + '</small></h2><span class="tag tag--plain">ends in ' + timeLeftInWeek() + '</span></div>' +
       '<p>You ' + ui.youChip() + ' are <b>#' + me.rank + '</b> with <b>' + me.xp + ' XP</b> this week. The top three are in the green zone and the bottom three in the red zone. This preview has one league, so nobody actually moves up or down. Earn XP by giving, backing winners, predicting and finishing card sets.</p>' +
       '<ol class="league" aria-label="Weekly league standings">' + rows.map(function (r) {
-        return '<li class="lrow lrow--' + r.zone + (r.you ? ' is-you' : '') + '"><span class="lrow__rank">' + r.rank + '</span><span class="lrow__name">' + esc(r.name) + ' ' + (r.you ? ui.youChip() + ' <small>(you)</small>' : ui.botChip(r.name) + botTag()) + '</span><span class="lrow__xp">' + r.xp + ' XP</span></li>';
+        return '<li class="lrow lrow--' + r.zone + (r.you ? ' is-you' : '') + '"><span class="lrow__rank">' + r.rank + '</span><span class="lrow__name">' + esc(r.name) + ' <span class="lrow__tags">' + (r.you ? ui.youChip() + ' <small>(you)</small>' : ui.botChip(r.name) + botTag()) + '</span></span><span class="lrow__xp">' + r.xp + ' XP</span></li>';
       }).join('') + '</ol>' +
       '<p class="tabnote">The other players are simulated rivals; their totals are the same for everyone this week and grow as the week goes on. Nothing here is money.</p></section>';
   }

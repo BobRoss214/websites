@@ -6195,7 +6195,8 @@ if (section('13zr. Ranks: a rank from $1,000 given, "Rank 2 · Level 6", the emb
       const label = c.getAttribute('aria-label') || '';
       const ranked = /^Rank [1-8], [A-Z][a-z]+, level (10|[1-9])$/.test(label);
       const level = /^Level (10|[1-9]), [A-Z][A-Za-z ]+$/.test(label);
-      if (c.getAttribute('role') !== 'img' || !(ranked || level) || !c.getAttribute('title')) { bad.push('name: ' + label); }
+      if (c.getAttribute('role') !== 'img' || !(ranked || level) || !(c.querySelector('.rchip__t') || {}).title) { bad.push('name: ' + label); }
+      if (c.hasAttribute('title')) { bad.push('title on the chip itself (a screen reader would read it as well as the name): ' + label); }   // (the tooltip lives on its aria-hidden parts)
       if (ranked !== !!c.querySelector('.rchip__e svg')) { bad.push('emblem: ' + label); }
       const r = c.getBoundingClientRect();
       if (r.width < 8 || r.height < 8) { bad.push('size: ' + label); }
@@ -6381,7 +6382,7 @@ if (section('13zr. Ranks: a rank from $1,000 given, "Rank 2 · Level 6", the emb
     const rows = Array.from(document.querySelectorAll('#tabp .feed__row')).filter((r) => !r.classList.contains('feed__row--sys') && !r.classList.contains('feed__row--crew'));
     return rows.map((r) => {
       const chip = r.querySelector('.rchip');
-      return { you: r.classList.contains('is-you'), name: r.querySelector('b').textContent, label: chip && chip.getAttribute('aria-label'), title: chip && chip.getAttribute('title'), bot: chip && chip.getAttribute('data-bot'), svg: !!(chip && chip.querySelector('svg')), pill: !!r.querySelector('.botpill'), chips: r.querySelectorAll('.rchip').length, before: !!(chip && chip.previousElementSibling && chip.previousElementSibling.tagName === 'B') };
+      return { you: r.classList.contains('is-you'), name: r.querySelector('b').textContent, label: chip && chip.getAttribute('aria-label'), title: chip && (chip.querySelector('.rchip__t') || {}).title, bot: chip && chip.getAttribute('data-bot'), svg: !!(chip && chip.querySelector('svg')), pill: !!r.querySelector('.botpill'), chips: r.querySelectorAll('.rchip').length, before: !!(chip && chip.previousElementSibling && chip.previousElementSibling.tagName === 'B') };
     });
   });
   const mine = feed.filter((r) => r.you);
@@ -6497,6 +6498,15 @@ if (section('13zr. Ranks: a rank from $1,000 given, "Rank 2 · Level 6", the emb
     await openApp(ph, hash);
     check(await noSideways(ph), hash + ' does not scroll sideways at 390 px');
   }
+  // the league rows at 390 px: a chip never makes a row taller than its neighbours, and the chip and the BOT tag are never split over two lines
+  await openApp(ph, '#leagues');
+  const lrowFit = await ph.evaluate(() => {
+    const rows = Array.from(document.querySelectorAll('#view-leagues .lrow'));
+    const hs = rows.map((r) => Math.round(r.getBoundingClientRect().height));
+    const split = rows.filter((r) => { const c = r.querySelector('.rchip'); const b = r.querySelector('.botpill'); return c && b && Math.abs(c.getBoundingClientRect().top - b.getBoundingClientRect().top) > 6; }).length;
+    return { n: rows.length, min: Math.min.apply(null, hs), max: Math.max.apply(null, hs), split };
+  });
+  check(lrowFit.n === 15 && lrowFit.split === 0 && lrowFit.max <= lrowFit.min + 4, 'at 390 px every league row is one line high (a chip does not make a row taller) and no chip is parted from its BOT tag', lrowFit);
   await openApp(ph, '#live-derby');
   check(await stakeNow(ph, 'derby'), 'a stake goes onto a table on the phone');
   await ph.click('#tab-feed');

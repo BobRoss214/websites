@@ -521,6 +521,9 @@
 
   // How the simulated players are spread over the ranks, in percent: most have none, and fewer and fewer have each rank above.
   var BOT_RANK_MIX = [55, 20, 10, 6, 4, 2.5, 1.5, 0.8, 0.2];   // not ranked, rank 1, rank 2 ... rank 8 (adds up to 100)
+  // The live tables draw from only 60 made-up handles, and the 0.2% / 0.8% shares above give the top ranks to none of them, so Luminary and Immortal would never be
+  // seen on a bot. Two regulars are given those ranks by name: one handle in sixty each, so they stay rare (one row in sixty), but the emblems do turn up.
+  var BOT_RANK_PINS = { BigHeartBen: 6, CharityCat: 8 };
 
   /**
    * A made-up standing for a simulated player (a bot at a live table, a league rival, a crew mate). It comes from the name alone, so a bot
@@ -537,6 +540,7 @@
       if (roll < acc) { rank = i; break; }
       rank = i;
     }
+    if (Object.prototype.hasOwnProperty.call(BOT_RANK_PINS, String(name))) { rank = BOT_RANK_PINS[String(name)]; }
     var level = 1 + Math.floor(rng() * RANK_LEVELS);
     var nm = rank ? RANKS[rank - 1].name : LEVELS[level - 1].name;
     var t = standingText(rank, level, nm);
@@ -857,7 +861,7 @@
     buildPool: buildPool, activeFilterCount: activeFilterCount, facetCounts: facetCounts, mergeAllocations: mergeAllocations,
     cleanVariant: cleanVariant, variantChoice: variantChoice,
     LEVELS: LEVELS, XP_PER_DOLLAR: XP_PER_DOLLAR, JACKPOT_XP: JACKPOT_XP, xpForGift: xpForGift, pickBonusXp: pickBonusXp, levelFor: levelFor,
-    RANKS: RANKS, RANK_LEVELS: RANK_LEVELS, LAST_RANK_STEP: LAST_RANK_STEP, BOT_RANK_MIX: BOT_RANK_MIX, rankLevelAt: rankLevelAt, rankFor: rankFor, standingFor: standingFor, botStanding: botStanding,
+    RANKS: RANKS, RANK_LEVELS: RANK_LEVELS, LAST_RANK_STEP: LAST_RANK_STEP, BOT_RANK_MIX: BOT_RANK_MIX, BOT_RANK_PINS: BOT_RANK_PINS, rankLevelAt: rankLevelAt, rankFor: rankFor, standingFor: standingFor, botStanding: botStanding,
     seeded: seeded, seededShuffle: seededShuffle, weekKey: weekKey, weekFraction: weekFraction, TIERS: TIERS, tierFor: tierFor, stakePresets: stakePresets,
     RARITIES: RARITIES, rarityFor: rarityFor, rarityRank: rarityRank, monthlySet: monthlySet, leagueTable: leagueTable, cupField: cupField,
     dayKey: dayKey, monthKey: monthKey, daysBetween: daysBetween, nextStreak: nextStreak, nextGiftDate: nextGiftDate,

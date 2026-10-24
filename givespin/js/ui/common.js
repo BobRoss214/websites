@@ -322,9 +322,11 @@
       o = o || {};
       var ranked = st.rank > 0;
       var e = ranked ? ui.rankEmblem(st.rank, o.px || 18, { animated: false }) : '';
+      // the tooltip is on the two aria-hidden parts, not on the chip: a title on a role="img" element is read out as well as its aria-label ("Rank 2, Benefactor, level 6 ... Rank 2 · Level 6 · Benefactor")
+      var tip = ' title="' + esc(st.label + ' · ' + st.name + (o.bot ? ' (simulated)' : '')) + '"';
       return '<span class="rchip ' + (ranked ? 'rchip--r' + st.rank : 'rchip--lvl') + (o.bot ? ' is-bot' : '') + (o.cls ? ' ' + o.cls : '') + '"' + ui.rankTheme(st.rank) + ' role="img" aria-label="' + esc(st.words) +
-        '" title="' + esc(st.label + ' · ' + st.name + (o.bot ? ' (simulated)' : '')) + '"' + (o.bot ? ' data-bot="1"' : '') + '>' +
-        (e ? '<span class="rchip__e" aria-hidden="true">' + e + '</span>' : '') + '<span class="rchip__t" aria-hidden="true">' + esc(st.short) + '</span></span>';
+        '"' + (o.bot ? ' data-bot="1"' : '') + '>' +
+        (e ? '<span class="rchip__e" aria-hidden="true"' + tip + '>' + e + '</span>' : '') + '<span class="rchip__t" aria-hidden="true"' + tip + '>' + esc(st.short) + '</span></span>';
     },
 
     /** The chip of a simulated player, from the name alone (the same rank on every screen and on every visit). */

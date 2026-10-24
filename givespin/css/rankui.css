@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------ the chip */
 .rchip { --rc: #7f98a7; --ra: #c4d6df; display: inline-flex; align-items: center; gap: 4px; margin: 0 1px; padding: 0 8px 0 2px; border-radius: 999px; background: color-mix(in srgb, var(--rc) 16%, var(--bg-2)); border: 1px solid color-mix(in srgb, var(--rc) 50%, transparent); color: var(--ra); font: 700 0.75rem/1.3 var(--f-body); letter-spacing: 0.01em; font-variant-numeric: tabular-nums; white-space: nowrap; vertical-align: middle; }
 .rchip--lvl { padding-left: 8px; }
-.rchip__e { display: inline-flex; flex: none; width: 18px; height: 18px; }
+.rchip__e { display: inline-flex; flex: none; width: 1.5em; height: 1.5em; }   /* 18 px at the usual size, and it grows with the text for people who enlarge it */
 .rchip__e svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .rname { color: var(--ra, var(--muted)); font-weight: 700; }
 b + .rchip, .rchip + .botpill { margin-left: 4px; }
@@ -15,6 +15,8 @@ b + .rchip, .rchip + .botpill { margin-left: 4px; }
 .feed__row .rchip, .cmsg .rchip { margin-block: -2px; }
 .cmsg .rchip, .crewmates .rchip { font-size: 0.7rem; }
 .lrow__name { min-width: 0; overflow-wrap: anywhere; }
+.lrow__tags { white-space: nowrap; }   /* the chip and the BOT tag go to a second line together, never split */
+@media (max-width: 480px) { .lrow { grid-template-columns: 1.7rem minmax(0, 1fr) auto; gap: 8px; padding-inline: 10px; } }
 .crewmates li { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .acct__who small { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
 .acctcard small { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
@@ -62,7 +64,7 @@ b + .rchip, .rchip + .botpill { margin-left: 4px; }
 .rk__row.is-now { border-color: var(--rc); background: linear-gradient(135deg, color-mix(in srgb, var(--rc) 16%, var(--bg-2)), var(--bg-2)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 50%, transparent), 0 12px 30px -16px var(--rc); }
 .rk__row.is-now .rk__s { color: var(--ra); }
 /* locked ranks are darker, but still easy to see and to read */
-.rk__row.is-locked .rk__e { filter: grayscale(0.7) brightness(0.62); }
+.rk__row.is-locked .rk__e { filter: grayscale(0.45) brightness(0.78); }   /* dimmed, but the design is still there to look forward to */
 .rk__row.is-locked .rk__t b { color: var(--muted); }
 @media (max-width: 860px) { .rk__list { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 480px) {

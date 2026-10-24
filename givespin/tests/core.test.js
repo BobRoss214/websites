@@ -577,6 +577,51 @@ test('botStanding: the made-up players in the live feed, the leagues and the cre
   assert.ok(Math.max.apply(null, ranks) >= 4);
 });
 
+test('botStanding: the live tables draw from 60 handles, and the top ranks (Luminary, Titan, Immortal) are each worn by a few of them, so those emblems do turn up, and stay rare', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const quoted = (s) => Array.from(s.matchAll(/'([^'\\]*)'/g)).map((m) => m[1]);
+  const handles = quoted(fs.readFileSync(path.join(__dirname, '../js/live.js'), 'utf8').match(/var HANDLES = \[([\s\S]*?)\];/)[1]);
+  assert.equal(handles.length, 60);
+  const count = (r) => handles.filter((n) => core.botStanding(n).rank === r).length;
+  // (only the handles are checked: they are the names a live table really uses, and with 60 of them a 0.2% share would hand the top rank to nobody at all)
+  [6, 7, 8].forEach((r) => { assert.ok(count(r) >= 1 && count(r) <= 2, 'rank ' + r + ' is worn by 1 or 2 of the 60 handles, not ' + count(r)); });
+  assert.ok(count(8) <= count(5) && count(8) <= count(4), 'and the million-dollar rank is never the commonest of the high ones');
+  const ranked = handles.filter((n) => core.botStanding(n).rank > 0).length;
+  assert.ok(ranked >= 20 && ranked <= 36, 'about half of them have a rank: ' + ranked);
+  // the pins name real handles, give the rank they say, and leave every other name to the hash
+  Object.keys(core.BOT_RANK_PINS).forEach((n) => {
+    assert.ok(handles.includes(n), n + ' is a real handle');
+    assert.equal(core.botStanding(n).rank, core.BOT_RANK_PINS[n]);
+    assert.ok(core.botStanding(n).level >= 1 && core.botStanding(n).level <= 10);
+    assert.equal(core.botStanding(n).label, core.botStanding(n).label, 'and it never changes');
+    assert.ok(core.BOT_RANK_PINS[n] >= 6, 'a pin is only for the top ranks');
+  });
+  assert.equal(core.botStanding('CharityCat1').rank === 8 && core.botStanding('CharityCat2').rank === 8, false, 'a name that only starts like a pinned one is not pinned');
+  assert.equal(core.botStanding('hasOwnProperty').bot, true, 'a name like an Object method is just a name');
+  assert.equal(core.botStanding('constructor').bot, true);
+  assert.equal(core.botStanding('__proto__').bot, true);
+});
+
+test('standingFor: junk XP counts as no XP, a numeric string counts as the number, and the rank never moves for either', () => {
+  [-5, NaN, 'abc', null, undefined, {}, [], Infinity, -Infinity].forEach((x) => {
+    const s = core.standingFor(x, 0);
+    assert.deepEqual([s.level, s.rank, s.xp], [1, 0, 0], String(x));
+    assert.deepEqual([core.standingFor(x, 750000).rank, core.standingFor(x, 750000).level], [2, 6], 'rank 2 level 6 for ' + String(x));
+  });
+  assert.equal(core.standingFor('3000', 0).label, 'Level 7', 'a numeric string is the number');
+  assert.equal(core.standingFor(3000, '750000').label, 'Rank 2 · Level 6', 'and so is a numeric string of cents');
+  // nothing in what it returns is NaN or undefined, for any odd pair of inputs
+  [-1, 0, 99999, 100000, 1e9, 1e300, NaN, undefined].forEach((c) => {
+    [-1, 0, 8999, 9000, 1e12, NaN].forEach((x) => {
+      const s = core.standingFor(x, c);
+      ['rank', 'level', 'pct', 'rankPct', 'cents', 'xp'].forEach((k) => assert.ok(Number.isFinite(s[k]), k + ' is a number for xp ' + x + ', cents ' + c));
+      assert.ok(s.pct >= 0 && s.pct <= 100 && s.rankPct >= 0 && s.rankPct <= 100, 'both bars stay between 0 and 100');
+      assert.ok(typeof s.label === 'string' && s.label.length > 0 && !/undefined|NaN/.test(s.label + s.short + s.words + s.name));
+    });
+  });
+});
+
 test('streaks: same day holds, next day extends, gaps reset', () => {
   assert.equal(core.nextStreak(null, 0, '2026-01-10'), 1);
   assert.equal(core.nextStreak('2026-01-10', 4, '2026-01-10'), 4);
