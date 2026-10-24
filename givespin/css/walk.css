@@ -79,3 +79,7 @@
   .foot__links a { padding: 9px 0; }
   .rcard__link { padding-block: 6px; }
 }
+
+/* The receipt's buttons (Play again, Share, My Giving, Done) stay at the bottom of the receipt while its long body scrolls, so a visitor on a phone does not have to scroll down to find them */
+.modal--result .rs-actions { position: sticky; bottom: -24px; z-index: 2; margin: 0 -24px -24px; padding: 12px 24px 14px; border-top: 1px solid var(--line); background: var(--panel); }
+.modal--result .modal__body:has(> .rs-actions) { scroll-padding-bottom: 96px; }
