@@ -55,6 +55,7 @@ async function reach(p, sel, { anchor = '#top', steps = [0, 150, 300, 450] } = {
   for (const off of steps) {
     await p.evaluate(({ y }) => scrollTo({ top: Math.max(0, y), behavior: 'instant' }), { y: home + off });
     await p.clock.runFor(200);   // the scene drifts a little with the scroll: measure after it settled
+    await followed(p);
     const pt = await p.evaluate((sel) => {
       const KINDS = 'a[href],button,.sun,.hero-note,[data-rig],[data-fire],[data-npc],[data-pick],.map-item,.npc-hit,.scene-hit';
       const kind = (n) => { const c = n && n.closest ? n.closest(KINDS) : null; return c ? c.tagName + (c.dataset.pick !== undefined ? 'P' : '') + (c.dataset.npc || '') + (c.matches('.sun,.hero-note') ? c.className : '') + (c.matches('[data-rig],[data-fire]') ? 'R' : '') : ''; };
@@ -86,6 +87,9 @@ const THINGS = {
 };
 const onIt = (p, pt, sel) => p.evaluate(({ x, y, sel }) => { const t = document.elementFromPoint(x, y); return !!t && [...document.querySelectorAll(sel)].some((e) => e === t || e.contains(t)); }, { x: pt.x, y: pt.y, sel });
 const scrollNow = (p) => p.evaluate(() => Math.round(scrollY));
+// The hero's layers follow the page's scroll one drawn frame later (js/main.js initScroll: a scroll event, then requestAnimationFrame). On a page as big as this one
+// that frame can come after a fixed wait of the page clock, and the farm scene then moves about 60 px (the rig 12 px) between aiming and tapping: wait for the layers themselves.
+const followed = (p) => until(p, () => { const y = scrollY, hero = document.querySelector('#top'); if (!hero || y >= hero.offsetHeight + 40) return true; return [...document.querySelectorAll('.layer[data-depth]')].every((el) => { const m = /translate3d\(0(?:px)?,\s*(-?[\d.]+)px/.exec(el.style.transform || ''); return Math.abs((m ? parseFloat(m[1]) : 0) - y * parseFloat(el.dataset.depth)) < 0.6; }); }, null, 5000);
 
 /** 1. the farm scene: one tap, one reaction; a swipe that starts on the same thing still scrolls the page */
 async function scene(p, label, seasons, lenient = false) {   // lenient: on a tablet the chips and pills lie over most of the wagon, so only the berries and pumpkins must be reachable
@@ -107,6 +111,7 @@ async function scene(p, label, seasons, lenient = false) {   // lenient: on a ta
       ok(`${label}, ${season}: a swipe starting on ${name} scrolls the page (${a2.y - b2.y}px of 220) and picks or says nothing`, a2.y - b2.y >= 150 && a2.click === 0 && a2.count === b2.count && a2.say === 0 && a2.plus === 0, `clicks ${a2.click} (last on ${a2.last}), count ${b2.count} -> ${a2.count}`);
       await p.evaluate((y) => scrollTo({ top: y, behavior: 'instant' }), y0);
       await p.clock.runFor(250);
+      await followed(p);
       if (!(await onIt(p, pt, sel))) pt = await reach(p, sel);   // the scene drifted a little: look again
       if (!pt) continue;
       // one tap
