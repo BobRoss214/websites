@@ -9,7 +9,7 @@ website**: do not upload this folder (see "Keeping the tests off the public site
 Install once (next section), then run from the site folder. A word picks every test whose name contains it (`=map`: exactly the test `map`).
 
 ```
-node tests/run-all.mjs --quick          # the fast checks after every change: about 2 minutes on a quiet computer, about 10 minutes when the computer is very busy
+node tests/run-all.mjs --quick          # the fast checks after every change: about 4 minutes on a quiet computer, about 10 minutes when the computer is very busy
 node tests/run-all.mjs --changed        # which tests cover the files you changed (git) and the command to run them (add --run to run them now)
 node tests/run-all.mjs                  # everything, one test at a time, then a table with the seconds each took
 node tests/run-all.mjs map i18n         # only these tests
@@ -24,7 +24,7 @@ On Windows a line that starts with `WA_SLOW=5` does not work. In cmd type `set W
 * `--changed` reads the `// covers:` line at the top of every test. For a file nobody lists it says so and suggests `--quick`. Without git: `--files=css/styles.css,js/live.js`. Compared with an older commit: `--changed=main`.
 * `--shard i/n` is for running the whole list on several computers or jobs at once. It splits by the seconds in `tests/timings.json`, so the parts take about equally long. After tests are added or slowed down, run `node tests/run-all.mjs --update-timings` once (on a quiet computer) and commit that file.
 * `--stop` ends at the first failing test, `--retry` runs a failing test once more (a pass the second time is shown as FLAKY, never hidden), `--list` shows every test with its kind and usual seconds.
-* A full run is about ten minutes on a quiet computer; the table at the end shows what it took, next to the usual seconds.
+* A full run is about an hour on a quiet 4-core computer (55 minutes for 86 tests in October 2026); the table at the end shows what it took, next to the usual seconds.
 
 ## Install (once)
 
@@ -46,7 +46,7 @@ without `segno`). The `launch-check` and `review-sheet` tests need only Python 3
 ## What a run prints, and the settings
 
 A test prints `PASS` or `FAIL` for each check (a failing line says what it saw) and ends with `ALL PASSED` or `N FAILED`; the exit
-code is 0 only when everything passed. A full run takes about ten minutes on a quiet computer; when the computer is shared and very busy (a load of 40 on 4 cores) it took 85 minutes (`drive`, `sitecheck`, `features` and `games` are the slow ones: `node tests/run-all.mjs --list`).
+code is 0 only when everything passed. A full run takes about an hour on a quiet 4-core computer (55 minutes for 86 tests in October 2026); when the computer is shared and very busy (a load of 40 on 4 cores) it took 85 minutes (`drive`, `sitecheck`, `features` and `games` are the slow ones: `node tests/run-all.mjs --list`).
 
 No setup is needed: every test (also under `run-all`) starts a small web server of its own **on a free port** and serves this folder's parent (the site).
 Nothing is written into the site folder (the `pipeline` and `deploy` tests work in a temporary copy) and no pictures are saved.
