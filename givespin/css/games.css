@@ -103,7 +103,7 @@
 .dice__scene { --ds: clamp(88px, 22vw, 118px); position: relative; width: var(--ds); height: var(--ds); perspective: 800px; }
 .die__hop { position: relative; width: 100%; height: 100%; }
 .die__hop.is-throw { animation: dhop var(--hop, 2s) ease-out; }
-@keyframes dhop { 0%, 100% { transform: translateY(0); } 18% { transform: translateY(-74px); } 36% { transform: translateY(0); } 48% { transform: translateY(-22px); } 60% { transform: translateY(0); } 72% { transform: translateY(-8px); } 84% { transform: translateY(0); } }
+@keyframes dhop { 0%, 100% { transform: translateY(0); } 18% { transform: translateY(calc(var(--hop-h, 74px) * -1)); } 36% { transform: translateY(0); } 48% { transform: translateY(calc(var(--hop-h, 74px) * -0.297)); } 60% { transform: translateY(0); } 72% { transform: translateY(calc(var(--hop-h, 74px) * -0.108)); } 84% { transform: translateY(0); } }   /* (74, 22 and 8 px: a short window gives --hop-h a smaller value so the die stays on its table) */
 .die__tilt { width: 100%; height: 100%; transform-style: preserve-3d; transform: rotateX(-14deg) rotateY(18deg); }
 .die { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
 .die__face { position: absolute; inset: 0; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 13%; border-radius: 16%; background: linear-gradient(145deg, #ffffff, #d9e3e9); border: 1px solid #aebdc6; }
@@ -155,7 +155,7 @@
 .coinstage { display: grid; justify-items: center; gap: 8px; }
 .coin3d { --cs: 70px; width: var(--cs); height: var(--cs); perspective: 600px; }
 .coin3d.is-hop { animation: chop var(--hop, 0.9s) ease-out; }
-@keyframes chop { 0%, 100% { transform: none; } 40% { transform: translateY(-34px); } 80% { transform: none; } 90% { transform: translateY(-6px); } }
+@keyframes chop { 0%, 100% { transform: none; } 40% { transform: translateY(calc(var(--chop-h, 34px) * -1)); } 80% { transform: none; } 90% { transform: translateY(calc(var(--chop-h, 34px) * -0.176)); } }
 .coin3d__in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
 .coin3d__face { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: radial-gradient(circle at 35% 30%, #fff2b5, #ffc542 55%, #b07a10); border: 3px solid #fff4c4; box-shadow: inset 0 0 0 5px rgba(176, 122, 16, 0.45); color: #7a4a05; }
 .coin3d__face .ico { width: 46%; height: 46%; }
@@ -311,3 +311,93 @@
 .vtile__sub { max-width: 100%; font: 600 0.66rem/1.2 var(--f-body); color: var(--dim); overflow-wrap: anywhere; }
 .vtile__sub:empty { display: none; }
 @media (prefers-reduced-motion: reduce) { .vtile, .variants > summary::after { transition: none; } }
+
+/* ---------- a short window (a laptop with its toolbars, a phone): the compact look of the games whose parts are real text and buttons ----------
+   These can not be shrunk much without their words and buttons becoming too small to use, so on a short window they are drawn lower and tighter instead
+   (css/fit.css shrinks only what is left over). Nothing changes on a window taller than 760 px. */
+@media (max-height: 760px) {
+  /* Dice: a lower table and a smaller die (the hop is lower too, so the die stays on the table) */
+  #view-game .dice { gap: 10px; }
+  #view-game .dice__table { height: 140px; }
+  #view-game .dice__scene { --ds: clamp(64px, 17vw, 84px); --hop-h: 30px; }
+  #view-game .die__shadow { bottom: -10px; height: 12px; }
+  /* Coin Flip: a smaller coin, a one-line hint, a tighter bracket */
+  #view-game .coingame { gap: 8px; }
+  #view-game .coinstage { gap: 4px; }
+  #view-game .coin3d { --cs: 46px; --chop-h: 18px; }
+  #view-game .coin__status { min-height: 0; font-size: 0.74rem; line-height: 1.3; }
+  #view-game .coingame .bracket { gap: 6px; }
+  #view-game .coingame .bcol__list { gap: 5px; }
+  #view-game .coingame .match { padding: 2px; gap: 1px; }
+  #view-game .coingame .slot { padding: 2px 4px; }
+  #view-game .coingame .bracket:not(.is-mirror) .slot .cmono { --s: 20px !important; }
+  #view-game .coingame .champ { padding: 6px 4px; gap: 3px; }
+  #view-game .coingame .champ__ico { width: 30px; height: 30px; }
+}
+@media (max-height: 760px) and (max-width: 560px) {
+  /* Last One Standing: two columns of tiles on a phone (one column of eight rows was too tall) */
+  #view-game .stand__grid--sm { --min: 128px; }
+}
+@media (max-height: 520px) and (max-width: 720px) {
+  /* ... and on a phone held sideways, where the picture is only about 240 px wide: two narrower columns, or the list is shrunk until its names cannot be read */
+  #view-game .stand__grid--sm { --min: 104px; }
+}
+
+/* ---------- a window up to 520 px tall (a phone held sideways): the games with real text and buttons are drawn smaller by their own sizes ----------
+   About 200 to 250 px of height is left for the picture there. Sizes that follow the height of the window (vh) keep each game's words and buttons usable;
+   whatever is still too big is shrunk by css/fit.css. */
+@media (max-height: 520px) {
+  /* Pick a Card: small cards, all of a default deal in one row */
+  #view-game .cards { gap: 6px; }
+  #view-game .cards__row { gap: 6px; padding: 2px 4px; }
+  #view-game .pcard { width: clamp(52px, 16vh, 72px); }
+  #view-game .pcard__front { gap: 3px; padding: 4px 3px; }
+  #view-game .pcard__name { font-size: 0.7rem; }
+  #view-game .pcard__cause { display: none; }
+  #view-game .cards__prompt { min-height: 1.3em; font-size: 0.9rem; }
+  /* Scratch Cards: a smaller, flatter card */
+  #view-game .scratch { gap: 6px; }
+  #view-game .scard { width: min(100%, clamp(230px, 76vh, 430px)); padding: 8px; border-width: 2px; border-radius: 14px; }
+  #view-game .scard__head { padding: 0 2px 6px; }
+  #view-game .scard .spanel { aspect-ratio: 1.45; }
+  #view-game .scratch__prompt { min-height: 1.2em; font-size: 0.85rem; }
+  /* Drop Crate: a lower reel with lower cards */
+  #view-game .drop { gap: 6px; }
+  #view-game .drop__view { height: 148px; }
+  #view-game .dcard { height: 122px; width: clamp(96px, 28vh, 124px); gap: 4px; padding: 6px; }
+  #view-game .dcard__badge { width: 40px; font-size: 1rem; }
+  #view-game .dcard__name { font-size: 0.8rem; }
+  #view-game .dcard__cause, #view-game .dcard__odds { line-height: 1.15; }   /* (the name and the cause each take up to two lines: with the page's own line height they did not fit the card and the name was cut in half) */
+  /* Dice: a flatter table, and the face numbers stay readable */
+  #view-game .dice__table { height: 112px; }
+  #view-game .dice__scene { --ds: clamp(52px, 15vh, 68px); --hop-h: 22px; }
+}
+@media (max-height: 760px) {
+  #view-game .dtile__n { width: 24px; height: 24px; font-size: 0.85rem; }   /* the number that joins a face of the die to its charity: it was 22 px and shrank with the picture */
+}
+
+/* Coin Flip: on a short window or a phone the bracket is drawn as two halves that meet at the final (js/games/coin.js gives every box its column and row), half as tall */
+@media (max-height: 760px), (max-width: 560px) {
+  #view-game .bracket.is-mirror { grid-template-columns: repeat(var(--mc, 5), minmax(0, 1fr)); grid-template-rows: auto repeat(var(--mr, 2), auto); align-items: center; gap: 6px; }
+  #view-game .bracket.is-mirror .bcol, #view-game .bracket.is-mirror .bcol__list { display: contents; }
+  #view-game .bracket.is-mirror .bcol__t { grid-column: var(--gc); grid-row: 1; }
+  #view-game .bracket.is-mirror .match, #view-game .bracket.is-mirror .champ { grid-column: var(--gc); grid-row: var(--gr); }
+  #view-game .bracket.is-mirror .bcol--champ .bcol__t { display: none; }
+}
+@media (max-height: 520px) and (max-width: 900px) {
+  /* a phone held sideways leaves a picture only about 340 to 440 px wide: three tiles of the die's board have no room for names (they broke in the middle of a word; the mark opens the profile, the tile's title has the name) */
+  #view-game .dtile__name { display: none; }
+}
+@media (max-height: 520px) and (max-width: 800px) {
+  /* ... and the bracket's round titles do not fit its five columns */
+  #view-game .bracket.is-mirror .bcol__t { display: none; }
+}
+@media (max-width: 560px) {
+  #view-game .bracket.is-mirror .bcol__t { display: none; }   /* (a phone: five columns about 56 px wide; "QUARTERS" does not fit) */
+}
+@media (max-height: 520px) {
+  /* (five narrow columns: the marks are enough, and a little smaller) */
+  #view-game .bracket.is-mirror .slot__name { display: none; }
+  #view-game .coingame .bracket.is-mirror .slot .cmono { --s: 22px !important; }
+  #view-game .coin3d { --cs: 38px; --chop-h: 14px; }
+}

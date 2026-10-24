@@ -82,7 +82,9 @@
     var first = el.strip.firstElementChild;
     if (first) {
       var gap = parseFloat(getComputedStyle(el.strip).columnGap || getComputedStyle(el.strip).gap) || 0;
-      cardW = first.getBoundingClientRect().width;
+      // the card's own width, not the width it is drawn at (the picture may be shrunk to fit the screen, and the winner's card is drawn a little bigger):
+      // the strip is moved in its own pixels, so every distance along it is worked out in them
+      cardW = parseFloat(getComputedStyle(first).width) || first.offsetWidth;
       cardStep = cardW + gap;
     }
   }
@@ -105,7 +107,8 @@
     if (!cards.length) { return null; }
     var v = el.view.getBoundingClientRect();
     if (clientX < v.left || clientX > v.right || clientY < v.top || clientY > v.bottom) { return null; }
-    var at = (clientX - v.left) - viewW / 2 + focusX;      // where that is along the strip
+    var k0 = v.width > 0 && viewW > 0 ? v.width / viewW : 1;   // how much smaller than its own size the reel is drawn (the picture is shrunk to fit a short screen)
+    var at = (clientX - v.left) / k0 - viewW / 2 + focusX;      // where that is along the strip
     var c = Math.floor(at / cardStep);
     for (var k = c - 1; k <= c + 1; k++) {
       if (k < 0 || k >= cards.length) { continue; }

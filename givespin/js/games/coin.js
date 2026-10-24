@@ -67,19 +67,38 @@
     if (!el.bracket) { return; }
     var n = entries.length || bracketSize();
     var R = Math.round(Math.log(n) / Math.LN2);
+    // A short window (and a phone) draws the bracket as two halves that meet at the final, which is half as tall as the rounds side by side. The same elements
+    // are used, so nothing else changes; each one carries where it goes in that layout (--gc column, --gr row) and css/games.css uses it only when it asks for it.
+    var mirror = R >= 2;
+    var half = Math.max(1, n >> 2);                       // matches of the first round in one half
+    var rows = R === 2 ? 2 : half;                        // rows under the titles (the champion shares the middle rows with the final)
+    var mid = R >= 3 ? 1 + half / 2 : 2;                  // the row of the final
     var html = '';
     for (var r = 0; r < R; r++) {
       var matches = n >> (r + 1);
-      html += '<div class="bcol" data-r="' + r + '"><span class="bcol__t">' + title(r, R) + '</span><div class="bcol__list">';
+      var inHalf = matches / 2;
+      html += '<div class="bcol" data-r="' + r + '"><span class="bcol__t"' + (mirror ? ' style="--gc:' + (r === R - 1 ? R : r + 1) + '"' : '') + '>' + title(r, R) + '</span><div class="bcol__list">';
       for (var m = 0; m < matches; m++) {
-        html += '<div class="match" data-r="' + r + '" data-m="' + m + '">' +
+        var pos = '';
+        if (mirror) {
+          if (r === R - 1) { pos = ' style="--gc:' + R + ';--gr:' + mid + '"'; }
+          else {
+            var left = m < inHalf;
+            var j = left ? m : m - inHalf;
+            pos = ' style="--gc:' + (left ? r + 1 : 2 * R - 1 - r) + ';--gr:' + (2 + j * (1 << r)) + ' / span ' + (1 << r) + '"';
+          }
+        }
+        html += '<div class="match" data-r="' + r + '" data-m="' + m + '"' + pos + '>' +
           (r === 0 ? slotHTML(entries[2 * m], 'top') + slotHTML(entries[2 * m + 1], 'bottom') : slotHTML(null, 'top') + slotHTML(null, 'bottom')) + '</div>';
       }
       html += '</div></div>';
     }
-    html += '<div class="bcol bcol--champ"><span class="bcol__t">Winner</span><div class="bcol__list"><div class="champ" data-role="champ"><span class="champ__ico" aria-hidden="true">' + GS.icon('trophy') + '</span><span class="champ__name">To be decided</span></div></div></div>';
+    html += '<div class="bcol bcol--champ"><span class="bcol__t">Winner</span><div class="bcol__list"><div class="champ" data-role="champ"' + (mirror ? ' style="--gc:' + R + ';--gr:' + (mid + 1) + '"' : '') + '><span class="champ__ico" aria-hidden="true">' + GS.icon('trophy') + '</span><span class="champ__name">To be decided</span></div></div></div>';
     el.bracket.innerHTML = html;
     el.bracket.style.setProperty('--cols', String(R + 1));
+    el.bracket.style.setProperty('--mc', String(2 * R - 1));
+    el.bracket.style.setProperty('--mr', String(rows));
+    el.bracket.classList.toggle('is-mirror', mirror);
     el.bracket.classList.toggle('bracket--compact', compact());
     syncMarks();
   }

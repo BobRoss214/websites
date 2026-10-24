@@ -52,6 +52,9 @@
       '<div class="gamegrid">' +
         '<section class="bet panel" id="bet-panel" aria-labelledby="bet-t">' +
           '<h2 class="bet__title" id="bet-t">Your gift</h2>' +
+          // every choice sits in one wrapper: on a wide screen it adds no box of its own (display: contents), and on a phone sheet or a landscape
+          // phone it is the part that scrolls, with the Play bar kept apart from it so nothing ever slides under that bar
+          '<div class="bet__scroll" id="bet-scroll">' +
           '<div class="field" data-role="amount" id="field-amount"></div>' +
           '<div class="field" id="field-rounds"><span class="field__label" id="rounds-label">Split your gift</span>' +
             '<div class="seg" id="rounds-seg" role="group" aria-labelledby="rounds-label"></div><p class="field__hint" id="rounds-hint"></p></div>' +
@@ -89,6 +92,7 @@
             '</div>' +
             '<details class="opts" id="opts"><summary>Gift options <span class="opts__sum" id="opts-sum"></span></summary><div class="opts__body" data-role="opts"></div></details>' +
           '</div>' +
+          '</div>' +
         '</section>' +
         '<section class="bet bet--live panel" id="livepanel" aria-labelledby="lt-title" hidden></section>' +
         '<section class="stage panel" id="stage" aria-label="Game stage">' +
@@ -114,7 +118,7 @@
       customBtn: $('#custom-btn'), customChip: $('#custom-chip'), customToggle: $('#custom-toggle'), customLabel: $('#custom-label'), customEdit: $('#custom-edit'), customClear: $('#custom-clear'), customHint: $('#custom-hint'), poolBox: $('#field-pool'),
       pickBox: $('#field-pick'), pickBtn: $('#pick-btn'), pickChip: $('#pick-chip'), pickHint: $('#pick-hint'), poolLine: $('#pool-line'), filtersBtn: $('#btn-filters'), filtersCount: $('#filters-count'),
       play: $('#btn-play'), playLabel: $('#btn-play-label'), playSub: $('#btn-play-sub'), optsSum: $('#opts-sum'), optsBox: $('#opts'),
-      tabs: $('#below-tabs'), tabp: $('#tabp'), more: $('#moregames'), bet: root.querySelector('.bet'), optBtn: $('#btn-opts')
+      tabs: $('#below-tabs'), tabp: $('#tabp'), more: $('#moregames'), bet: root.querySelector('.bet'), optBtn: $('#btn-opts'), act: root.querySelector('.bet__act')
     };
 
     amount = ui.amount.mount(root.querySelector('[data-role="amount"]'), function () { refreshBet(); });
@@ -140,12 +144,49 @@
       customChanged();
     });
     el.play.addEventListener('click', function () { play(); });
-    el.optBtn.addEventListener('click', function () { setMore(!el.bet.classList.contains('is-more')); });
+    el.optBtn.addEventListener('click', function (e) {
+      var on = !el.bet.classList.contains('is-more');
+      setMore(on);
+      // Opened with the keyboard (or a screen reader, which sends a click with no mouse behind it): the choices come before this button in the page, so the next Tab
+      // would skip them all and land on Play. Start on the first choice instead. (A touch or a mouse click leaves the focus alone: it would raise the on-screen keyboard.)
+      if (on && e.detail === 0 && isDocked()) {
+        var first = el.bet.querySelector('.amount__input');
+        if (first && first.offsetParent !== null) { first.focus(); }
+      }
+    });
     el.bet.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && el.bet.classList.contains('is-more') && isDocked()) { e.stopPropagation(); setMore(false); el.optBtn.focus(); }
     });
+    // The sheet is laid over the picture and the page: when the keyboard moves on past the last choice of the sheet (or back before the first), the sheet folds
+    // away instead of leaving the focus on something it covers. (A dialog opened from the sheet takes the focus away and gives it back: the sheet stays.)
+    el.bet.addEventListener('focusout', function (e) {
+      var to = e.relatedTarget;
+      if (!to || !el.bet.classList.contains('is-more') || !isDocked() || el.bet.contains(to)) { return; }
+      if (to.closest && to.closest('dialog')) { return; }
+      setMore(false);
+    });
+    // a live table has the same Options button and sheet. Its panel is built by js/ui/live.js the first time a table is opened, so the clicks are caught here
+    el.livePanel.addEventListener('click', function (e) {
+      var ob = e.target.closest ? e.target.closest('[data-role="sheet-btn"]') : null;
+      if (ob) { setMore(!el.livePanel.classList.contains('is-more')); }
+    });
+    el.livePanel.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && el.livePanel.classList.contains('is-more') && isDocked()) {
+        e.stopPropagation();
+        setMore(false);
+        var lb = liveOptBtn();
+        if (lb) { lb.focus(); }
+      }
+    });
+    // (and the same as the solo sheet above: the keyboard that moves on past the live sheet folds it away, rather than going on to what it covers)
+    el.livePanel.addEventListener('focusout', function (e) {
+      var to = e.relatedTarget;
+      if (!to || !el.livePanel.classList.contains('is-more') || !isDocked() || el.livePanel.contains(to)) { return; }
+      if (to.closest && to.closest('dialog')) { return; }
+      setMore(false);
+    });
     window.addEventListener('resize', fitSoon);
-    if (window.ResizeObserver) { fitObs = new ResizeObserver(fitSoon); fitObs.observe(el.stage); fitObs.observe(el.bet); }
+    if (window.ResizeObserver) { fitObs = new ResizeObserver(fitSoon); fitObs.observe(el.stage); fitObs.observe(el.bet); fitObs.observe(el.act); fitObs.observe(el.livePanel); }
 
     el.roundsSeg.addEventListener('click', function (e) {
       var b = e.target.closest('.seg__btn');
@@ -763,6 +804,10 @@
     if (live) { ui.live.attach((opts && opts.table) || id); } else { refreshBet(); }
     el.bet.classList.remove('is-more');
     el.optBtn.setAttribute('aria-expanded', 'false');
+    // (a table you hop to starts with its sheet shut, like a game does)
+    el.livePanel.classList.remove('is-more');
+    var lob = liveOptBtn();
+    if (lob) { lob.setAttribute('aria-expanded', 'false'); }
     observeFit();
     fitSoon();
   }
@@ -830,6 +875,7 @@
     }
     var pool = activePool(current);
     if (pool.length < cfg.minPool) {
+      setMore(true);   // (on a phone the sheet opens behind the dialog, so the "charities in play" line that says what is wrong is there when the dialog closes)
       ui.toast('Put at least ' + cfg.minPool + ' charities in play.', 'info');
       ui.filters.open();
       return Promise.resolve();
@@ -901,26 +947,62 @@
 
   /* ------------------------------------------------- one screen: the options sheet and the fit of the picture */
 
-  // On a phone (single column) the gift panel is docked at the bottom of the screen: the amount presets and the Play button are always there,
-  // and the Options button opens the rest of the choices as a sheet over the stage. On a wider screen the panel is the left column, nothing is docked.
-  var MQ_SINGLE = '(max-width: 900px)';
-  function isDocked() { return !!(window.matchMedia && window.matchMedia(MQ_SINGLE).matches) && !isLive(); }
+  // Three layouts (css/fit.css has the same breakpoints), for a solo game's gift panel and for a live table's panel (#livepanel, js/ui/live.js) alike:
+  //   wide (over 900 px): the panel is the left column, nothing is docked;
+  //   single column (up to 900 px wide and taller than 520 px: a phone held upright, a tablet; or any window narrower than 561 px): the panel is DOCKED at the
+  //     bottom of the screen, the amount (or stake) presets and the Play (or join) button are always there and the Options button opens the rest of the
+  //     choices as a sheet over the stage;
+  //   landscape (561 to 900 px wide and up to 520 px tall: a phone held sideways, a short window): two columns again, the panel on the left scrolls inside
+  //     itself with the Play bar kept at its bottom, and the picture on the right is fitted to the height.
+  var MQ_SINGLE = '(max-width: 900px) and (min-height: 521px), (max-width: 560px)';
+  function matches(q) { return !!(window.matchMedia && window.matchMedia(q).matches); }
+  function isDocked() { return matches(MQ_SINGLE); }
+  /** The panel the visitor is using: the live table's, or the solo gift panel. */
+  function activeBet() { return isLive() ? el.livePanel : el.bet; }
+  function liveOptBtn() { return el.livePanel ? el.livePanel.querySelector('[data-role="sheet-btn"]') : null; }
 
   function setMore(on) {
-    if (!el.bet) { return; }
+    var bet = activeBet();
+    if (!bet) { return; }
+    var btn = isLive() ? liveOptBtn() : el.optBtn;
     on = !!on;
-    el.bet.classList.toggle('is-more', on);
-    el.optBtn.setAttribute('aria-expanded', on ? 'true' : 'false');
-    // a control that was inside the sheet is gone when it closes: keep the keyboard on the Play button instead of losing it
+    bet.classList.toggle('is-more', on);
+    if (btn) { btn.setAttribute('aria-expanded', on ? 'true' : 'false'); }
+    // a control that was inside the sheet is gone when it closes: keep the keyboard on the Play (or join) button instead of losing it
     var ae = document.activeElement;
-    if (!on && ae && ae !== document.body && el.bet.contains(ae) && ae.offsetParent === null) { el.play.focus(); }
+    if (!on && ae && ae !== document.body && bet.contains(ae) && ae.offsetParent === null) {
+      var back = isLive() ? bet.querySelector('[data-role="join"]') : el.play;
+      if (back) { back.focus(); }
+    }
+    syncAct();
     fitSoon();
+  }
+
+  /** True while the options sheet is open over the picture (a docked panel only). */
+  function sheetOpen() {
+    var bet = activeBet();
+    return !!bet && bet.classList.contains('is-more') && isDocked();
+  }
+
+  /** The Play bar of an open sheet (or of the landscape panel) is kept apart from the choices that scroll above it: the room it needs is set here, from its real height. */
+  function syncAct() {
+    if (!el.bet || !el.act) { return; }
+    var h = el.act.offsetHeight;
+    if (h > 0 && el.bet.getAttribute('data-act-h') !== String(h)) {
+      el.bet.setAttribute('data-act-h', String(h));
+      el.bet.style.setProperty('--act-h', h + 'px');
+    }
   }
 
   // Every game's picture (the first element of its panel) is shrunk, when it has to be, so that the picture, the gift choices and the Play button all
   // fit on the first screen and nothing needs scrolling to start a round. It is scaled with CSS (transform): the games already allow for a canvas that is
   // drawn at another size on the screen (they turn a click or a touch into a point on the canvas with rect.width / the canvas size).
   var FIT_MIN = 0.5;
+  var FIT_MIN_LAND = 0.34;   // (a window up to 520 px tall, a phone held sideways: about 250 px of height is left for the picture)
+  // A live table has a bigger board (up to 500), so its picture can be taller, and above it come the round bar and the sheet's dock: it may be shrunk further (it is
+  // still the whole picture, and the odds board has the names), rather than being cut off by the dock or the navigation bar.
+  var FIT_MIN_LIVE = 0.34;
+  var FIT_MIN_LIVE_LAND = 0.2;
   var fitRaf = 0, fitObs = null, fitKey = '';
 
   function fitReset(prim) {
@@ -930,11 +1012,12 @@
     prim.classList.remove('is-fit');
   }
 
-  /** The height at the bottom of a phone that the dock and the navigation bar use, so the picture is not shrunk to fit under them. */
-  function dockSpace() {
+  /** The height at the bottom of a phone that the navigation bar uses (and, when the panel is docked, the dock too), so the picture is not shrunk to fit under them. */
+  function dockSpace(docked) {
     var nav = document.querySelector('.side');
     var navH = nav && window.getComputedStyle(nav).position === 'fixed' ? nav.offsetHeight : 0;
-    return navH + (isDocked() && el.bet.offsetHeight ? el.bet.offsetHeight : 0);
+    var bet = activeBet();
+    return navH + (docked && bet && bet.offsetHeight ? bet.offsetHeight : 0);
   }
 
   function fitStage() {
@@ -944,20 +1027,23 @@
     var prim = panel && panel.firstElementChild;
     if (!prim || panel.hidden) { return; }
     var docked = isDocked();
-    if (docked && el.bet.classList.contains('is-more')) { return; }          // the sheet is only laid over the picture: leave the fit as it was
-    var wide = !(window.matchMedia && window.matchMedia(MQ_SINGLE).matches);
-    if (isLive() && !wide) { fitReset(prim); return; }                         // (a live table keeps its own long panel on a phone for now)
+    var bet = activeBet();
+    if (docked && bet.classList.contains('is-more')) { syncAct(); return; }   // the sheet is only laid over the picture: leave the fit as it was
+    var single = docked;                                                       // (one column: the panel is under the picture, not beside it)
+    if (!docked) { syncAct(); }
     fitReset(prim);
     var H = prim.offsetHeight;
     if (!H) { return; }
-    var space = docked ? dockSpace() : 0;
-    if (docked) { document.documentElement.style.setProperty('--dock-h', (el.bet.offsetHeight + 8) + 'px'); } else { document.documentElement.style.removeProperty('--dock-h'); }
+    var space = dockSpace(docked);
+    if (docked) { document.documentElement.style.setProperty('--dock-h', (bet.offsetHeight + 8) + 'px'); } else { document.documentElement.style.removeProperty('--dock-h'); }
     // the first screen is the page scrolled to the top: where the picture starts there, and how much room is left under it for the result line and the
-    // in-stage button (wide screens) or for the dock and the navigation bar (phones)
+    // in-stage button (two columns) or for the dock and the navigation bar (a phone held upright)
     var top = prim.getBoundingClientRect().top + (window.pageYOffset || 0);
-    var reserve = wide ? 44 : 14 + space;
+    var shortWin = matches('(max-height: 520px)');
+    // (a solo game needs only the panel's own padding under the picture; a table's result card is scrolled into view when it comes, so it needs no room kept under the picture either)
+    var reserve = single ? 14 + space : (shortWin ? (isLive() ? 10 : 14) : 44) + space;
     var room = window.innerHeight - top - reserve;
-    var s = Math.max(FIT_MIN, Math.min(1, room / H));
+    var s = Math.max(isLive() ? (shortWin ? FIT_MIN_LIVE_LAND : FIT_MIN_LIVE) : (shortWin ? FIT_MIN_LAND : FIT_MIN), Math.min(1, room / H));
     if (s >= 0.995) { return; }
     prim.classList.add('is-fit');
     prim.style.transformOrigin = '50% 0';
@@ -976,18 +1062,30 @@
       fitObs.disconnect();
       fitObs.observe(el.stage);
       fitObs.observe(el.bet);
+      fitObs.observe(el.act);
+      fitObs.observe(el.livePanel);
       fitObs.observe(prim);
       fitKey = current;
     }
   }
 
+  /**
+   * Before a round starts: if the picture is not wholly in view, scroll so that the stage sits right under the top bar. "In view" means between the top bar
+   * and whatever covers the bottom of the screen (the docked gift panel, or the navigation bar on a phone), so a round never plays half hidden under them.
+   */
   function scrollStage() {
-    var r = el.stage.getBoundingClientRect();
-    var vh = window.innerHeight;
-    var visible = Math.min(r.bottom, vh) - Math.max(r.top, 70);
-    if (visible < Math.min(r.height, vh) * 0.7 && !state().stream) {
-      el.stage.scrollIntoView({ behavior: GS.util.reducedMotion() ? 'auto' : 'smooth', block: 'center' });
-    }
+    if (state().stream) { return; }
+    var prim = mounted[current] && mounted[current].panel.firstElementChild;
+    var pr = (prim || el.stage).getBoundingClientRect();
+    var bar = document.querySelector('.topbar');
+    var topLimit = bar ? bar.getBoundingClientRect().bottom : 0;
+    var bottomLimit = window.innerHeight;
+    var nav = document.querySelector('.side');
+    if (nav && window.getComputedStyle(nav).position === 'fixed') { bottomLimit = Math.min(bottomLimit, nav.getBoundingClientRect().top); }
+    if (isDocked() && el.bet.offsetHeight) { bottomLimit = Math.min(bottomLimit, el.bet.getBoundingClientRect().top); }
+    if (pr.top >= topLimit - 2 && pr.bottom <= bottomLimit + 2) { return; }
+    var y = (window.pageYOffset || 0) + el.stage.getBoundingClientRect().top - topLimit - 8;
+    window.scrollTo({ top: Math.max(0, y), behavior: GS.util.reducedMotion() ? 'auto' : 'smooth' });
   }
 
   /** Sets up the last non-direct round again (same game, amount, split and frequency). */
@@ -1010,6 +1108,8 @@
   ui.game = {
     ORDER: ORDER, enter: enter, leave: leave, play: play, repeatLast: repeatLast, poolChanged: poolChanged,
     current: function () { return current; }, refreshLiveTab: refreshLiveTab,
+    // the docked panel and its sheet (a live table's panel uses them too): is the panel docked, open or shut the sheet, is it open
+    isDocked: isDocked, setSheet: setMore, sheetOpen: sheetOpen,
     amountCents: function () { return amount ? amount.cents() : NaN; },
     lastDraw: function () { return lastDrawn; },
     mountedGame: function (id) { return mounted[id] ? GS.games[id] : null; }

@@ -74,12 +74,22 @@ showing. Any race game can offer such a choice by giving its description a `vari
 
 **One screen per game.** Opening a game puts the game, the gift choices (amount, split, board size, back a charity) and the Play
 button together on the first screen, on a phone and on a laptop, so nobody has to scroll to start a round. The picture is shrunk
-to fit the window when it has to be (never below half size; `fitStage` in `js/ui/game.js` does it with a CSS scale, which the
-games already allow for when they work out where a click landed). On a wide screen the gift panel sits beside the picture with
+to fit the window when it has to be (never below half size on a laptop or a phone held upright, about a third on a phone held
+sideways; `fitStage` in `js/ui/game.js` does it with a CSS scale, which the games already allow for when they work out where a click
+landed). On a wide screen the gift panel sits beside the picture with
 Play right under the choices every round needs, pinned to the bottom of the panel if the window is short; "Charities in play" and the
 gift options come after it. On a phone the panel is docked at the bottom of the screen with the amount presets and Play, and the
-**Options** button opens everything else as a sheet over the picture. Everything about the game (the tabs, more games) is below,
+**Options** button opens everything else as a sheet over the picture. Held sideways (or in any short window up to 900 px wide) the panel
+is a narrow column beside the picture that scrolls inside itself with Play kept at its bottom. Turning the phone or resizing the window
+while a game is open refits the picture; the choices are kept. Everything about the game (the tabs, more games) is below,
 as before. The rules are in `css/fit.css`.
+
+**Live tables follow it too** (all seventy of them: see "A table fits on one screen" under Live tables). The picture, your stake and the
+join button are on the first screen in the same three layouts: on a laptop the odds board sits beside the picture with the stake and the join
+button pinned under it; on a phone the stake buttons, **Options** and the join button are docked, the board is in the sheet, and "Pick a charity"
+opens the sheet at the board. A table can have up to 500 spots, so its picture may be shrunk further than a solo game's (to a third of its size, and
+to a fifth on the smallest phone held sideways, where the page's own bars leave very little room). When a round ends the page scrolls to the result
+card, and it comes back up when the next round opens. The rules are the block for `#view-game.is-live` at the end of `css/fit.css`.
 
 Four games stop sooner on purpose, because of what they are: Pick a Card is a table of face-down cards you tap (up to
 100), a Scratch Card is one card with 4 to 48 panels, Coin Flip Showdown is a knockout bracket, so it takes a power of
@@ -210,6 +220,14 @@ Never type a real card number into a preview. The sample card `4242 4242 4242 42
 **Polish:** synthesised sound effects (no audio files, mutable), confetti that draws above dialogs, reduced-motion
 support, keyboard-operable everywhere, screen-reader announcements for results, a phone-friendly layout.
 
+**One screen per game.** On every solo game the picture, the amount and the Play button fit on the first screen, so nobody has to scroll to
+start a round (what is below, such as the charities in play and the tabs, is one scroll away). On a laptop or a desktop the gift panel is the left
+column and keeps Play in view; on a phone held upright it is docked at the bottom (the amount presets and Play, with an Options button that opens
+everything else as a sheet over the picture); on a phone held sideways, or in any short window, it is a narrow left column that scrolls inside itself
+with the Play bar kept at its bottom. The picture is shrunk to fit when it has to be (`fitStage` in `js/ui/game.js`); the games made of real text and buttons
+(the slot machines, Dice, Coin Flip, Last One Standing and, on a phone held sideways, Pick a Card, Scratch Cards and Drop Crate) and the Plinko board are drawn
+lower and tighter on a short window instead, so their words and buttons stay readable.
+
 ## Going live
 
 Everything about real money lives in `js/config.js`.
@@ -326,6 +344,14 @@ win: the others are scenery (thin slivers on the wheel, runners with no percenta
 bots and a longer show (the 500-spot tables take about 27 to 44 seconds to play out, depending on the game). All 70 tables run at once, and a game's
 `#live-<game>` link opens its Small (10-spot) table.
 
+**A table fits on one screen.** The picture, your stake and the join button are on the first screen, so nobody scrolls to take a seat.
+On a laptop the panel beside the picture keeps the odds board (it scrolls inside itself) with your stake and the join button pinned under it.
+On a phone the stake presets and the join button are docked at the bottom of the screen, and **Options** opens everything else (the clock,
+the odds board, the table sizes, the side predictions, the chat vote) as a sheet above them. Before a charity is picked the join button reads
+"Pick a charity" and opens that sheet at the odds board; choosing one closes it and the button names the charity. A phone held sideways gets the
+panel in a column beside the picture. When a round ends the page scrolls down to the result card. The layout is in `css/fit.css` (the block for
+`#view-game.is-live`) and the fit and dock code in `js/ui/game.js`; the panel's markup is `ensurePanel()` in `js/ui/live.js`.
+
 **Live tables are demo-only.** A pooled pot needs a server to hold the money and run the table, and this site never
 handles real money, so in `redirect` mode the live tables are switched off and hidden. To make them real you would
 run the tables, seeds and pots on a server and replace the bots in `js/live.js` with players.
@@ -407,7 +433,7 @@ storage is reported, and the saved text stays small), Marble Run's click spots (
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 ```
 
-About 2,340 end-to-end checks (a few dozen fewer without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
+About 2,530 end-to-end checks (a few dozen fewer without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
 the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board (500 charities), clicking a logo or slice in every game to open that charity, the website links in the results, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the game tiles, each game's page of seven table sizes, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, game filters checked
 against an independent computation, the filters on the Charities page (which only narrow the list, never the games), the charity directory and profiles, direct gifts, repeat plans and dedications,
@@ -438,7 +464,7 @@ css/live.css        live tables, leagues, crews, cards, the daily wheel and the 
 css/chooser.css     the choose-your-own-charities dialog and its chip
 css/slots.css       the slot machines and their five themes
 css/tour.css        the first-visit tour
-css/fit.css         one screen per game: the tighter gift panel with Play right under the choices, the phone's docked panel (js/ui/game.js fits the picture to the screen)
+css/fit.css         one screen per game, solo and live tables: the gift panel (or a table's panel) in three layouts (wide, a phone's docked panel and Options sheet, a landscape phone's two columns); js/ui/game.js fits the picture to the screen
 css/ranks.css       the rank emblems: their classes and animation
 css/rankui.css      rank chips next to names, the rank card and ladder, the rank-up moment
 js/config.js        mode, limits, demo credit, checkout hook

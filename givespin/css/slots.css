@@ -132,3 +132,13 @@
 .sym--btn:focus-visible { outline: 3px solid #fff; outline-offset: -4px; }
 .slots__reels.is-clickable .sym--btn, .slots__reels.is-clickable .sym--pic { cursor: pointer; }
 .slots__reels.is-clickable .sym--btn:hover .sym__badge, .slots__reels.is-clickable .sym--pic:hover .sym__badge { box-shadow: 0 0 0 3px #fff, 0 0 16px color-mix(in srgb, var(--c) 80%, transparent); }
+
+/* A short window (a laptop with its toolbars, a phone): a lower, tighter machine, so it fits the first screen at its own size next to the gift choices.
+   js/games/slots.js (fit) shortens the rows (--rh) and puts the names on one line (.is-short) or leaves them out (.is-dense); these rules take the spare space out of the frame. */
+@media (max-height: 760px) {
+  #view-game .slots { padding-top: 4px; }
+  #view-game .slots__machine { padding: 10px 40px 10px 10px; border-radius: 22px; }
+  #view-game .slots__top { margin-bottom: 8px; }
+  #view-game .slots__bar { margin-top: 8px; }
+  #view-game .slots.is-short .sym__name { -webkit-line-clamp: 1; font-size: 0.68rem; }
+}

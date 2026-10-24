@@ -64,7 +64,12 @@
     if (!isBig()) {
       var margin = W * 0.04;
       var dx = (W - margin * 2) / n;
-      H = Math.round(W * (W < 480 ? 1.32 : 1.12));
+      // a tall board (taller than it is wide); on a short window (a laptop with its toolbars, a phone, a phone held sideways) a lower one, so it fits
+      // the first screen at a size its bin names can be read, instead of being shrunk to a third of itself
+      var vh = window.innerHeight || 900;
+      var ratio = W < 480 ? 1.32 : 1.12;
+      if (vh < 521) { ratio = 0.8; } else if (vh < 761) { ratio = W < 480 ? 1.12 : 0.92; } else if (vh < 901 && W >= 480) { ratio = 1; }
+      H = Math.round(W * ratio);
       var binH = W < 480 ? H * 0.27 : H * 0.235;
       var binTop = H - binH - 4;
       var y0 = H * 0.12;
@@ -137,6 +142,8 @@
     if (geo && !busy && winBin < 0 && keepView !== true) { lookTop(true); }
     draw(performance.now());
   }
+
+  function onWindowResize() { if (!busy && geo && !geo.big) { resize(true); } }
 
   /* ---------------------------------------------------------------- drawing */
 
@@ -737,6 +744,7 @@
       el.canvas.addEventListener('pointercancel', endDrag);
       offHit = GS.ui.charityHit(el.canvas, hitAt);
       offSize = U.observeSize(el.stage, resize);
+      window.addEventListener('resize', onWindowResize);   // (a window that only changes in height does not change the width of the stage, but it changes the board's height)
       resize();
     },
 
@@ -744,6 +752,7 @@
     unmount: function () {
       if (offHit) { offHit(); offHit = null; }
       if (offSize) { offSize(); offSize = null; }
+      window.removeEventListener('resize', onWindowResize);
     },
 
     setSize: function (n) { size = n; if (!busy && !field) { rebuild(); } },

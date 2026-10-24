@@ -157,17 +157,25 @@
       syncTiles();
     }
 
-    /** Sizes the tiles to the width the reels actually have, so twelve reels still fit a phone. */
+    /**
+     * Sizes the tiles to the width the reels actually have, so twelve reels still fit a phone, and to the height of the window: on a short window
+     * (a laptop with its toolbars, a phone) the rows are lower and the names take one line, and on a very short one (a phone held sideways) the
+     * names are left out, so the whole machine fits the first screen at its own size instead of being shrunk until its buttons and names are too small to use.
+     */
     function fit() {
-      if (!el.stage || !el.reelsBox) { return; }
+      if (!el.stage || !el.reelsBox || spinning) { return; }   // (the rows keep their height while the reels roll: the stop is worked out in pixels)
       var w = el.reelsBox.clientWidth || el.stage.clientWidth || 400;
+      var h = window.innerHeight || 900;
+      var short = h < 761;
+      var low = h < 521;
       var per = w / n;
-      var bs = Math.max(20, Math.min(56, Math.floor(per * 0.66)));
-      var dense = per < 74;
-      var th = bs + (dense ? 16 : 40);
+      var bs = Math.max(20, Math.min(low ? 40 : short ? 48 : 56, Math.floor(per * 0.66)));
+      var dense = per < 74 || low;
+      var th = bs + (dense ? (short ? 14 : 16) : short ? 24 : 40);
       el.stage.style.setProperty('--bs', bs + 'px');
       el.stage.style.setProperty('--rh', (th * 3) + 'px');
       el.stage.classList.toggle('is-dense', dense);
+      el.stage.classList.toggle('is-short', short && !dense);
     }
 
     function tileH() { return reels[0].win.clientHeight / 3; }
@@ -269,6 +277,7 @@
       buildReels();
       note();
       U.observeSize(el.stage, function () { fit(); });
+      window.addEventListener('resize', function () { fit(); });   // (a window that only changes in height does not change the width of the stage)
     };
 
     game.setPool = function (list) {
@@ -412,6 +421,7 @@
             el.machine.classList.remove('is-anticipating');
             // Re-seat each strip to just the three visible tiles (visually identical, keeps the DOM small).
             plans.forEach(function (pl) { setStatic(pl.reel, pl.reel.visible); });
+            fit();   // (a window that changed size during the spin gets its row height now)
             syncTiles();
             // matches: any charity on two or more reels
             var counts = {};

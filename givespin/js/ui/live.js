@@ -36,8 +36,14 @@
   var ODDS_HOLD_MS = 5000;   // the longest the odds board waits for a press to end
   var armTimer = 0;
   var sirenRound = {};       // room id -> round the jackpot siren already sounded for
+  var pickMode = false;      // a phone: the sheet was opened by "Pick a charity", so it closes again once a charity is chosen
+  var wasDocked = null;      // whether the panel was docked at the bottom of the screen the last time the window changed size
+  var revealed = null;       // { from, to }: where the page was, and where it was scrolled to so that a result card is in view (see revealResult)
 
   function dollars(n) { return money(n * 100, true); }
+
+  /** A phone (one column): the panel is docked at the bottom of the screen and the odds board is in its sheet, not on the page. */
+  function docked() { return !!(ui.game && ui.game.isDocked && ui.game.isDocked()); }
   function scale() { return GS.timeScale || 1; }
 
   function clock(ms) {
@@ -281,26 +287,37 @@
   function ensurePanel() {
     if (panel) { return; }
     panel = $('#livepanel');
+    // Two parts, so a table fits one screen (css/fit.css): the body (everything to read and choose from: the clock, the odds board, the table sizes, the
+    // side predictions ...) scrolls inside the panel, and the foot (your stake, any message, and the join button) is always in view under it. On a phone
+    // the panel is docked at the bottom of the screen and only the foot shows; the Options button opens the body as a sheet above it.
     panel.innerHTML =
-      '<h2 class="bet__title" id="lt-title">Live table <span class="livepill"><i aria-hidden="true"></i>Live</span></h2>' +
-      '<nav class="tablebar" data-role="tablebar" aria-label="Table size" hidden></nav>' +
-      '<p class="simnote">' + ui.icon('bot') + '<span><b>Simulated table.</b> The other players are bots standing in for real people. <a href="#help-live">How it works</a></span></p>' +
-      '<div class="lt-status"><div class="lt-status__row"><span class="lt-phase" data-role="phase"></span><span class="lt-clock" data-role="clock"></span></div>' +
-        '<div class="lt-bar" aria-hidden="true"><i data-role="bar"></i></div></div>' +
-      '<div class="lt-chips" data-role="chips"></div>' +
-      '<div class="lt-pot"><div><span>Pot</span><b data-role="pot">$0</b></div><div><span>Players</span><b data-role="players">0</b></div><div><span>Gates</span><b data-role="gates">0/8</b></div></div>' +
-      '<div class="field"><span class="field__label" id="lt-stake-label">Your stake</span><div class="seg" id="lt-stake" role="group" aria-labelledby="lt-stake-label"></div>' +
-        '<div class="lt-other"><label for="lt-custom">Other amount</label><span class="lt-money"><span aria-hidden="true">$</span><input id="lt-custom" type="number" inputmode="numeric" min="1" max="' + GS.config.maxAmount + '" step="1" placeholder="e.g. 35"></span></div></div>' +
-      '<div class="field"><div class="field__row"><span class="field__label" id="lt-odds-label">Who is backing what</span>' +
-        '<button type="button" class="btn btn--sm" data-role="add">' + ui.icon('plus') + 'Add charity</button></div>' +
-        '<div class="odds" data-role="odds" role="radiogroup" aria-labelledby="lt-odds-label"></div><p class="field__hint" data-role="oddshint"></p></div>' +
-      '<button type="button" class="playbtn" data-role="join"><span class="playbtn__main"><span data-icon="radio"></span><span data-role="join-label">Put up your stake</span></span><span class="playbtn__sub" data-role="join-sub"></span></button>' +
-      '<p class="field__msg field__msg--block" data-role="msg" role="alert"></p>' +
-      '<details class="lt-pred" data-role="pred" open><summary>' + ui.icon('sparkles') + 'Side predictions <small>XP only, never money</small></summary><div class="lt-pred__rows" data-role="pred-rows"></div></details>' +
-      '<div class="lt-chat" data-role="chat" hidden></div>' +
-      '<div class="lt-toggles"><label class="check"><input type="checkbox" data-role="chat-on"><span>Stream chat vote (simulated viewers)</span></label>' +
-        '<label class="check" data-role="voice-wrap"><input type="checkbox" data-role="voice-on"><span>Croupier voice</span></label></div>' +
-      '<p class="kbd-hint lt-fine">Live stakes use demo credit and are refunded if you cancel before the table locks.</p>';
+      '<div class="lt-scroll" data-role="scroll">' +
+        '<h2 class="bet__title" id="lt-title">Live table <span class="livepill"><i aria-hidden="true"></i>Live</span></h2>' +
+        '<nav class="tablebar" data-role="tablebar" aria-label="Table size" hidden></nav>' +
+        '<div class="lt-status" data-role="status"><div class="lt-status__row"><span class="lt-phase" data-role="phase"></span><span class="lt-clock" data-role="clock"></span></div>' +
+          '<div class="lt-bar" aria-hidden="true"><i data-role="bar"></i></div></div>' +
+        '<div class="lt-chips" data-role="chips"></div>' +
+        '<div class="field lt-oddsfield" data-role="oddsfield"><div class="field__row"><span class="field__label" id="lt-odds-label">Who is backing what</span>' +
+          '<button type="button" class="btn btn--sm" data-role="add">' + ui.icon('plus') + 'Add charity</button></div>' +
+          '<div class="odds" data-role="odds" role="radiogroup" aria-labelledby="lt-odds-label"></div><p class="field__hint" data-role="oddshint"></p></div>' +
+        '<div class="lt-pot"><div><span>Pot</span><b data-role="pot">$0</b></div><div><span>Players</span><b data-role="players">0</b></div><div><span>Gates</span><b data-role="gates">0/8</b></div></div>' +
+        '<p class="simnote">' + ui.icon('bot') + '<span><b>Simulated table.</b> The other players are bots standing in for real people. <a href="#help-live">How it works</a></span></p>' +
+        '<details class="lt-pred" data-role="pred" open><summary>' + ui.icon('sparkles') + 'Side predictions <small>XP only, never money</small></summary><div class="lt-pred__rows" data-role="pred-rows"></div></details>' +
+        '<div class="lt-chat" data-role="chat" hidden></div>' +
+        '<div class="lt-toggles"><label class="check"><input type="checkbox" data-role="chat-on"><span>Stream chat vote (simulated viewers)</span></label>' +
+          '<label class="check" data-role="voice-wrap"><input type="checkbox" data-role="voice-on"><span>Croupier voice</span></label></div>' +
+        '<p class="kbd-hint lt-fine">Live stakes use demo credit and are refunded if you cancel before the table locks.</p>' +
+      '</div>' +
+      '<div class="lt-foot">' +
+        '<div class="field lt-stake"><div class="field__row"><span class="field__label" id="lt-stake-label">Your stake</span>' +
+          '<div class="lt-other"><label for="lt-custom">Other amount</label><span class="lt-money"><span aria-hidden="true">$</span><input id="lt-custom" type="number" inputmode="numeric" min="1" max="' + GS.config.maxAmount + '" step="1" placeholder="e.g. 35"></span></div></div>' +
+          '<div class="seg" id="lt-stake" role="group" aria-labelledby="lt-stake-label"></div></div>' +
+        '<p class="field__msg field__msg--block" data-role="msg" role="alert"></p>' +
+        '<div class="bet__act lt-act">' +
+          '<button type="button" class="bet__optbtn" data-role="sheet-btn" aria-expanded="false" aria-controls="livepanel" aria-label="More options for this table">' + ui.icon('settings-2') + '<span>Options</span></button>' +
+          '<button type="button" class="playbtn" data-role="join"><span class="playbtn__main"><span data-icon="radio"></span><span data-role="join-label">Put up your stake</span></span><span class="playbtn__sub" data-role="join-sub"></span></button>' +
+        '</div>' +
+      '</div>';
     ui.hydrate(panel);
     el = {
       phase: $('[data-role="phase"]', panel), clock: $('[data-role="clock"]', panel), bar: $('[data-role="bar"]', panel), chips: $('[data-role="chips"]', panel),
@@ -309,7 +326,8 @@
       add: $('[data-role="add"]', panel), join: $('[data-role="join"]', panel), joinLabel: $('[data-role="join-label"]', panel), joinSub: $('[data-role="join-sub"]', panel),
       msg: $('[data-role="msg"]', panel), result: $('#lt-result'), stagebar: $('#lt-stagebar'),
       pred: $('[data-role="pred-rows"]', panel), chat: $('[data-role="chat"]', panel), chatOn: $('[data-role="chat-on"]', panel),
-      voiceOn: $('[data-role="voice-on"]', panel), voiceWrap: $('[data-role="voice-wrap"]', panel)
+      voiceOn: $('[data-role="voice-on"]', panel), voiceWrap: $('[data-role="voice-wrap"]', panel),
+      scroll: $('[data-role="scroll"]', panel), status: $('[data-role="status"]', panel), oddsField: $('[data-role="oddsfield"]', panel)
     };
     stake = store.prefs().liveStake || 20;
     buildPresets();
@@ -345,6 +363,7 @@
       disarm();
       renderOdds();
       renderJoin();
+      pickDone();
     });
     el.add.addEventListener('click', openPicker);
     el.join.addEventListener('click', onJoin);
@@ -365,6 +384,39 @@
       GS.audio.setVoice(el.voiceOn.checked);
       store.setPref('voice', el.voiceOn.checked);
       if (el.voiceOn.checked) { GS.audio.unlock(); GS.audio.say('Place your bets'); }
+    });
+    // turning the phone (or resizing the window) can dock the panel or undock it: the join button says "Pick a charity" differently in the two
+    wasDocked = docked();
+    window.addEventListener('resize', function () {
+      var d = docked();
+      if (d === wasDocked) { return; }
+      wasDocked = d;
+      // (a sheet that is open when the phone is turned sideways is shut: it would come back over the picture, unasked, when the phone is turned upright again)
+      if (!d) { pickMode = false; if (cur && ui.game.setSheet) { ui.game.setSheet(false); } }
+      if (cur) { renderJoin(); }
+    });
+  }
+
+  /**
+   * A phone: the sheet that "Pick a charity" opened is a picker, so it closes as soon as a charity is chosen (the join button then names it and the picture
+   * and the clock are back in view). A sheet opened with the Options button stays open until it is closed, or until the stake is placed.
+   */
+  function pickDone() {
+    if (!pickMode) { return; }
+    pickMode = false;
+    if (ui.game.sheetOpen && ui.game.sheetOpen()) { ui.game.setSheet(false); }
+  }
+
+  /** A phone: "Pick a charity" opens the sheet with the odds board at the top of it and the first charity ready for the keyboard. */
+  function openSheetAtBoard() {
+    pickMode = true;
+    ui.game.setSheet(true);
+    requestAnimationFrame(function () {
+      if (!el.scroll || !el.oddsField) { return; }
+      var head = el.status ? el.status.offsetHeight : 0;
+      el.scroll.scrollTop = Math.max(0, el.oddsField.offsetTop - head - 8);
+      var first = el.odds.querySelector('.odd:not([disabled])');
+      if (first) { try { first.focus({ preventScroll: true }); } catch (err) { /* not focusable right now */ } }
     });
   }
 
@@ -520,21 +572,32 @@
       room.distinct() + ' of ' + room.maxGates + ' gates used' + (open ? (gates > 0 ? ', ' + gates + ' open for a new charity.' : '. The table is full: back one of these.') : '.');
   }
 
+  /** The line under "Take my bet back": the time left first (so a long charity name that is cut short never hides it), then what you have on the table. */
+  function youSub(room, left) {
+    return 'Bets close in ' + clock(left) + ' · ' + dollars(room.you.dollars) + ' on ' + GS.charity(room.you.charityId).short;
+  }
+
   function renderJoin() {
     if (!cur) { return; }
     var room = cur.room;
-    var label, sub = '', disabled = false;
+    var label, sub = '', disabled = false, picking = false;
     if (room.phase !== 'open') {
       label = room.phase === 'result' ? 'Next table opens soon' : 'Bets are closed';
       disabled = true;
       sub = room.you ? 'You have ' + dollars(room.you.dollars) + ' on ' + GS.charity(room.you.charityId).short : '';
     } else if (room.you) {
       label = 'Take my bet back';
-      sub = dollars(room.you.dollars) + ' on ' + GS.charity(room.you.charityId).short + ' · bets close in ' + clock(room.msLeft());
+      sub = youSub(room, room.msLeft());
     } else if (!pick) {
       label = 'Pick a charity';
-      disabled = true;
-      sub = 'Tap one above, or add your own';
+      if (docked()) {
+        // a phone: the odds board is in the sheet, so this button is not dead, it opens the sheet at the board
+        sub = 'Tap to see who is backing what';
+        picking = true;
+      } else {
+        disabled = true;
+        sub = 'Tap one above, or add your own';
+      }
     } else {
       var ch = GS.charity(pick);
       var seat = room.seats[pick];
@@ -546,6 +609,7 @@
     el.join.disabled = disabled;
     el.join.classList.toggle('is-cancel', !!room.you && room.phase === 'open');
     el.join.classList.toggle('is-armed', armed);
+    el.join.classList.toggle('is-pick', picking);
     renderStake();
   }
 
@@ -565,10 +629,11 @@
     el.pot.textContent = dollars(room.pot());
     el.players.textContent = String(room.players());
     el.gates.textContent = room.distinct() + '/' + room.maxGates;
-    if (room.phase === 'open' && room.you) { el.joinSub.textContent = dollars(room.you.dollars) + ' on ' + GS.charity(room.you.charityId).short + ' · bets close in ' + clock(left); }
+    if (room.phase === 'open' && room.you) { el.joinSub.textContent = youSub(room, left); }
     if (el.stagebar) {
       var map = room.mapInfo();
-      el.stagebar.innerHTML = '<span class="lt-stagebar__a"><b>Round ' + room.round + '</b> · ' + esc(txt) + (room.phase === 'open' || room.phase === 'result' ? ' <b>' + clock(left) + '</b>' : '') + '</span>' +
+      // (the last call is said here too: on a phone the panel's own clock is in the sheet, and this bar is always on the first screen)
+      el.stagebar.innerHTML = '<span class="lt-stagebar__a"><b>Round ' + room.round + '</b> · ' + (last ? '<span class="lt-stagebar__last">Last call!</span>' : esc(txt)) + (room.phase === 'open' || room.phase === 'result' ? ' <b>' + clock(left) + '</b>' : '') + '</span>' +
         (map ? '<span class="lt-stagebar__m" data-map="' + esc(map.id) + '">Track: <b>' + esc(map.name) + '</b></span>' : '') +
         '<span class="lt-stagebar__b"><b>' + dollars(room.pot()) + '</b> pot · ' + room.players() + ' players · bots simulated</span>';
     }
@@ -599,7 +664,13 @@
     if (!cur || !panel) { return; }
     var room = cur.room;
     var r = room.result;
-    if (room.phase !== 'result' || !r || animating[cur.id]) { el.result.innerHTML = ''; el.result.removeAttribute('data-round'); return; }
+    if (room.phase !== 'result' || !r || animating[cur.id]) {
+      var back = revealBack();
+      el.result.innerHTML = '';
+      el.result.removeAttribute('data-round');
+      if (back !== null) { scrollPage(back); }
+      return;
+    }
     if (el.result.getAttribute('data-round') === String(r.round) + room.id) { return; }   // already showing this round's result
     el.result.setAttribute('data-round', String(r.round) + room.id);
     var winner = r.winner;
@@ -671,6 +742,49 @@
         }).catch(function () { var out = $('[data-role="verify-out"]', el.result); if (out) { out.innerHTML = ui.receipt.verifyHTML({ error: true }); } });
       });
     }
+    revealResult();
+  }
+
+  /**
+   * The card sits under the picture, and the picture now fills the first screen: so when a result arrives and the visitor is still looking at that first
+   * screen, the page scrolls down just far enough to show the whole card (above the docked panel and the navigation bar on a phone). It is gone again when
+   * the next round opens, and the page comes back up by itself. Somebody who has scrolled away to read something else is left where they are.
+   */
+  function revealResult() {
+    var box = el.result;
+    if (!box || !box.firstElementChild || (window.pageYOffset || 0) > 200) { return; }
+    if (ui.game.sheetOpen && ui.game.sheetOpen()) { return; }   // a phone with the options sheet open: the visitor is busy there, the card is still under the picture
+    var bar = document.getElementById('topbar');
+    var topEdge = (bar ? bar.offsetHeight : 60) + 10;
+    var covered = 0;
+    if (docked() && panel) {
+      var nav = document.querySelector('.side');
+      covered = panel.offsetHeight + (nav && window.getComputedStyle(nav).position === 'fixed' ? nav.offsetHeight : 0);
+    }
+    var bottomEdge = window.innerHeight - covered - 10;
+    var r = box.getBoundingClientRect();
+    if (r.bottom <= bottomEdge && r.top >= topEdge) { return; }                   // all of it is in view already
+    var dy = r.height > bottomEdge - topEdge ? r.top - topEdge : r.bottom - bottomEdge;   // (a card taller than the room: its top first)
+    var y = Math.max(0, (window.pageYOffset || 0) + dy);
+    revealed = { from: window.pageYOffset || 0, to: y };
+    scrollPage(y);
+  }
+
+  function scrollPage(y) {
+    try { window.scrollTo({ top: y, behavior: U.reducedMotion() ? 'auto' : 'smooth' }); } catch (err) { window.scrollTo(0, y); }
+  }
+
+  /**
+   * The card is gone (the next round opened): when the page was scrolled down to show it, and the visitor has not scrolled since, the page goes back to where it
+   * was, so the picture of the new round is on the first screen again. Returns that place (or null), and must be asked BEFORE the card is taken out, because
+   * the page gets shorter and the browser moves it by itself.
+   */
+  function revealBack() {
+    var r = revealed;
+    revealed = null;
+    if (!r) { return null; }
+    var now = window.pageYOffset || 0;   // (a smooth scroll that has not ended yet is somewhere between the two places)
+    return now >= Math.min(r.from, r.to) - 80 && now <= Math.max(r.from, r.to) + 80 ? r.from : null;
   }
 
   /* ----------------------------------------------------------------- actions */
@@ -685,7 +799,11 @@
       return;
     }
     if (room.phase !== 'open') { return; }
-    if (!pick) { say('Pick a charity first.'); return; }
+    if (!pick) {
+      if (docked()) { openSheetAtBoard(); return; }   // a phone: the board is in the sheet
+      say('Pick a charity first.');
+      return;
+    }
     var gate = ui.opts.check(stake * 100);
     if (!gate.ok && gate.limit) { say(gate.message); return; }
     GS.audio.unlock();
@@ -709,6 +827,9 @@
     GS.audio.coin();
     ui.announce('Bet placed: ' + dollars(stake) + ' on ' + GS.charity(pick).name + '.');
     renderAll();
+    // a phone: the stake is in, so the sheet closes and the picture (and the clock above it) is back in view
+    pickMode = false;
+    if (ui.game.sheetOpen && ui.game.sheetOpen()) { ui.game.setSheet(false); }
   }
 
   function openPicker() {
@@ -718,7 +839,7 @@
       title: 'Add a charity to the table',
       sub: 'There ' + (room.gatesOpen() === 1 ? 'is 1 gate' : 'are ' + room.gatesOpen() + ' gates') + ' open. Pick any charity and it joins this table with your stake.',
       note: function (c) { return room.seats[c.id] ? 'already at the table' : ''; },
-      onPick: function (id) { pick = id; renderOdds(); renderJoin(); }
+      onPick: function (id) { pick = id; renderOdds(); renderJoin(); pickDone(); }
     });
   }
 
@@ -874,6 +995,7 @@
     say('');
     disarm();
     dropStaleShow();
+    if (room.phase !== 'open') { pickDone(); }   // a phone: bets are closed, so the sheet that was opened to pick a charity has nothing left to do and must not cover the show
     if (room.phase === 'open') {
       verifyOut = '';
       if (!animating[cur.id]) { setFieldNow(); }
@@ -913,6 +1035,8 @@
     $('#lt-stagebar').hidden = false;
     el.stagebar = $('#lt-stagebar');
     el.msg.textContent = '';
+    pickMode = false;
+    revealed = null;
     disarm();
     el.voiceOn.checked = GS.audio.voiceOn();
     if (GS.app.state.stream && !room.chat.on) { room.setChat(true); }
@@ -938,6 +1062,7 @@
     clearInterval(clockTimer);
     clearTimeout(fieldTimer);
     fieldTimer = 0;
+    revealed = null;
     if (cur) {
       // leaving a table whose drop is still playing (one canvas serves every Plinko table): stop that drop
       if (animating[cur.id] && GS.games[cur.id].abort) { GS.games[cur.id].abort(); }
