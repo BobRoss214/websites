@@ -377,7 +377,7 @@ html.js-failed .fs-table tbody th{box-shadow:2px 0 0 #f0e6d2}
 html.js-failed .fs-table thead button{pointer-events:none}
 
 /* the "Tell me when" links land on the heading, clear of the sticky header */
-.follow-signup{scroll-margin-top:90px}
+.follow-signup{scroll-margin-top:calc(90px + var(--rise,0px))}   /* --rise: the box it sits in has not slid in yet (css/styles.css, .reveal) */
 
 /* ---- Accessibility fixes (from the keyboard and screen-reader review) ---- */
 
@@ -406,7 +406,7 @@ html.js-failed .fs-table thead button{pointer-events:none}
 
 /* 11. drive time from the visitor's own address */
 .drive-form{margin:1.2em 0 0;padding-top:1em;border-top:2.5px dashed rgba(58,36,22,.35)}
-.drive-form{scroll-margin-top:1.5rem}   /* a link to the box lands just under the header (the page already keeps room for it) */
+.drive-form{scroll-margin-top:calc(1.5rem + var(--rise,0px))}   /* a link to the box lands just under the header (the page already keeps room for it); --rise: the box it sits in has not slid in yet (css/styles.css, .reveal) */
 .drive-to{min-width:0;margin:0 0 1em;padding:0;border:0}
 .drive-to legend{padding:0;margin:0 0 .5em;font:800 1.02rem/1.3 var(--display)}
 .drive-opts{display:flex;flex-wrap:wrap;gap:8px 10px}

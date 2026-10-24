@@ -444,10 +444,16 @@ svg.layer{bottom:0;height:64%;overflow:visible}
 /* ==========================================================================
    Reveal + keyframes
    ========================================================================== */
-.reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .7s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--d,0) * 80ms)}
-.reveal.in{opacity:1;transform:none}
-.reveal:has(:focus-visible){opacity:1;transform:none;transition:none}   /* a control reached with the keyboard is visible at once, not after the fade (a mouse click does not match: the button must not jump under the pointer) */
-.no-js .reveal{opacity:1;transform:none}
+/* A box fades in from --rise lower as it comes up the screen. A link that scrolls to a box (a menu item, a button, a link from another page) aims at
+   the box where it is drawn at that moment: --rise lower while it is still hidden. The link then ended --rise too high once the box had slid up (the
+   heights above it do not change). So the box a link points to (:target) does not slide, only fades. A hidden box also has a scroll margin of --rise,
+   which gives the --rise back to any other way of scrolling to it, and a place inside a box (the Drive time box, the signup block) adds the --rise of
+   its box to its own scroll margin (css/features.css). The margin goes when the box is shown. */
+.reveal{--rise:26px;opacity:0;transform:translateY(var(--rise));scroll-margin-top:var(--rise);transition:opacity .6s ease,transform .7s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--d,0) * 80ms)}
+.reveal.in{--rise:0px;opacity:1;transform:none}
+.reveal:target{--rise:0px;transform:none;transition:opacity .6s ease}
+.reveal:has(:focus-visible){--rise:0px;opacity:1;transform:none;transition:none}   /* a control reached with the keyboard is visible at once, not after the fade (a mouse click does not match: the button must not jump under the pointer) */
+.no-js .reveal{--rise:0px;opacity:1;transform:none}
 .no-js .season-panel{margin-bottom:24px}
 .no-js .season-panel[hidden]{display:grid!important}
 .no-js .season-tabs{display:none}

@@ -104,7 +104,7 @@
   "css-prop:unicode-range", "css-prop:vertical-align", "css-prop:visibility", "css-prop:white-space", "css-prop:width", "css-prop:will-change",
   "css-prop:word-break", "css-prop:z-index", "css-pseudo:active", "css-pseudo:after", "css-pseudo:before", "css-pseudo:checked", "css-pseudo:disabled",
   "css-pseudo:empty", "css-pseudo:first-child", "css-pseudo:focus", "css-pseudo:hover", "css-pseudo:lang", "css-pseudo:last-child",
-  "css-pseudo:last-of-type", "css-pseudo:not", "css-pseudo:nth-child", "css-pseudo:placeholder", "css-pseudo:root", "css-unit:ab", "css-unit:ac",
+  "css-pseudo:last-of-type", "css-pseudo:not", "css-pseudo:nth-child", "css-pseudo:placeholder", "css-pseudo:root", "css-pseudo:target", "css-unit:ab", "css-unit:ac",
   "css-unit:bc", "css-unit:ch", "css-unit:da", "css-unit:dc", "css-unit:deg", "css-unit:em", "css-unit:fr", "css-unit:in", "css-unit:ms",
   "css-unit:pt", "css-unit:px", "css-unit:rem", "css-unit:s", "css-unit:vh", "css-unit:vmax", "css-unit:vw", "html-attr:a.class", "html-attr:a.hidden",
   "html-attr:a.href", "html-attr:a.id", "html-attr:a.rel", "html-attr:a.target", "html-attr:address.class", "html-attr:article.class",
