@@ -1,22 +1,31 @@
 // order: 325
 // browser: yes
-// covers: index.html, css/*, lang/*, js/i18n.js, js/main.js, tests/shop-list.json, tests/layout-audit.mjs
-/* "What to buy" (the products section, #shop in index.html), checked against the farm's own products list: tests/shop-list.json, made from SHOP-LIST.md by
+// covers: index.html, css/*, lang/*, js/i18n.js, js/main.js, tests/shop-list.json, tests/shop-list.make.mjs, work-notes/SHOP-LIST.md, tests/layout-audit.mjs
+/* "What to buy" (the products section, #shop in index.html), checked against the farm's own products list: tests/shop-list.json, made from work-notes/SHOP-LIST.md by
  * tests/shop-list.make.mjs. The page maker's work is never used to decide what is right; prices are shown to the public, so a second author checks them.
+ *   0  the list file is the list: tests/shop-list.json carries the fingerprint of work-notes/SHOP-LIST.md (when that file is there), so a changed list
+ *      cannot go unnoticed and the file cannot be edited by hand
  *   1  every product of the list is on the page exactly once, in its group, with its name; no card the list does not have (the few extra cards that the
  *      published page had before are named in the list file); the groups are the list's groups
- *   2  the prices: the dollar amounts of each card are the list's (with their small words: small / large, 1 scoop, 8 oz, a pound), a price the farm has not
- *      confirmed shows the page's own "Prices coming soon" and no dollar sign, free things say free, and no number appears that the list does not give
+ *   2  the prices: the dollar amounts of each card are the list's (with their small words: small / large, 1 scoop, 8 oz, a pound; a range like $15 to $17
+ *      shows both ends), a price the farm has not confirmed shows the page's own "Prices coming soon" and no dollar sign, free things say free, and no
+ *      number appears that the list does not give (the pizza prices and hours and the ages of the two rides are the farm's older words and are in the list);
+ *      the sentences the list makes a card say are there (the pretzel's nuts, "the same price" for beer and wine, the pumpkin note), and the words that
+ *      were taken out on purpose do not come back
  *   3  the pictures: every <use href="#p-..."> has its <symbol>, none is empty, each card shows the picture of its own product, no picture serves two
  *   4  words that must never be there, in any language: phone numbers, the elderberry brand's health claims and dose figures, the maker's own name
- *   5  the five languages: the same dollar amounts on every card, every text block has its translation, no English left over
- *   6  links: every #shop... link in the site's html pages has its target; each jump button lands its group under the sticky header
- *   7  layout at 320, 360, 390, 768, 1024, 1366 and 1920 px wide (and the long languages on a phone): nothing sideways, no cut text, 2 / 3 / 4 columns
+ *   5  the five languages: the same dollar amounts on every card, every text block has its translation, no English left over (a scent's or maker's name stays
+ *      as written, and "pound" stays in Vietnamese because the site's other Vietnamese texts say it)
+ *   6  links: every #shop... link in the site's html pages has its target; each jump button lands its group under the sticky header and is named for it
+ *      (two buttons are named for a card of their group, because the top menu has links called Pizza and Flowers that go elsewhere)
+ *   7  layout at 320, 360, 390, 768, 1024, 1366 and 1920 px wide (and the long languages on a phone): nothing sideways, no cut text, 2 / 3 / 4 columns,
+ *      every group fades in when it is scrolled to (none stays invisible)
  *   8  reading aids: pictures hidden from screen readers, every card in a list item, heading order, readable price text (and axe, when it is installed)
  *   9  (information) how tall #shop is on a computer and on a phone
  * The names of the page's own parts (the class names) are in SEL below: if the markup is renamed, change them there and nowhere else. */
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { run, open, ok, info, until, settled, axeSource, ROOT, ms } from './lib.mjs';
 import { auditLayout } from './layout-audit.mjs';
@@ -24,9 +33,10 @@ import { auditLayout } from './layout-audit.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const LIST = JSON.parse(fs.readFileSync(path.join(HERE, 'shop-list.json'), 'utf8'));
 const PRODUCTS = LIST.products, GROUPS = LIST.groups, EXTRAS = LIST.extras || [];
+const NAMES = LIST.names || [], LOANWORDS = LIST.loanwords || [];   // names that stay as written in every language; English words a language of the site uses as its own
 const LANGS = ['en', 'es', 'hi', 'zh', 'vi'];
 const WIDTHS = [1366, 1920, 1024, 768, 390, 360, 320];   // the first one gets every check; the others get the layout checks
-const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full' };
+const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', price: '.shop-price, .shop-opts', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full' };
 const STILL = '.reveal{opacity:1!important;transform:none!important}*{animation:none!important;transition:none!important}html{scroll-behavior:auto!important}html.cv .cv-sec{content-visibility:visible!important}';
 
 /* ------------------------------------------------------------------ small helpers (Node side) */
@@ -113,7 +123,7 @@ function readShop(SEL) {
   const cards = [...shop.querySelectorAll(SEL.card)].map((c, i) => {
     const g = c.closest(SEL.group), h = g && g.querySelector(SEL.groupHead), n = c.querySelector(SEL.name);
     return {
-      i, group: h ? clean(h.textContent) : '', groupId: g ? g.id : '', name: n ? textOf(n) : '', text: textOf(c),
+      i, group: h ? clean(h.textContent) : '', groupId: g ? g.id : '', name: n ? textOf(n) : '', text: textOf(c), priceText: [...c.querySelectorAll(SEL.price)].map((e) => textOf(e)).join(' '),
       uses: [...c.querySelectorAll('use')].map((u) => u.getAttribute('href') || u.getAttribute('xlink:href') || ''),
       keys: [...c.querySelectorAll('[data-t]')].map((e) => ({ key: e.getAttribute('data-t'), text: textOf(e), plain: textOf(e, true), tag: e.tagName.toLowerCase() })),
       links: [...c.querySelectorAll('a')].map((a) => a.getAttribute('href') || ''),
@@ -137,7 +147,7 @@ function readShop(SEL) {
   const attrKeys = [...new Set([...shop.querySelectorAll('*')].flatMap((e) => [...e.attributes].filter((a) => a.name.indexOf('data-ta-') === 0).map((a) => a.value)))];
   return {
     lang: window.WISE_ACRES ? WISE_ACRES.lang : '', htmlLang: document.documentElement.lang, cards, stray, strayAttrs,
-    groups: [...shop.querySelectorAll(SEL.group)].map((g) => { const h = g.querySelector(SEL.groupHead); return { id: g.id, head: h ? clean(h.textContent) : '', tag: h ? h.tagName.toLowerCase() : '', cards: g.querySelectorAll(SEL.card).length }; }),
+    groups: [...shop.querySelectorAll(SEL.group)].map((g) => { const h = g.querySelector(SEL.groupHead); return { id: g.id, head: h ? clean(h.textContent) : '', tag: h ? h.tagName.toLowerCase() : '', cards: g.querySelectorAll(SEL.card).length, text: textOf(g) }; }),
     pills: [...shop.querySelectorAll(SEL.jump)].map((a) => ({ href: a.getAttribute('href') || '', text: clean(a.textContent) })),
     headings: [...shop.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((h) => ({ tag: h.tagName.toLowerCase(), text: clean(h.textContent) })),
     allText: textOf(shop) + ' ' + attrText.join(' '), shopText: textOf(shop),
@@ -231,10 +241,16 @@ async function scrolled(p, cap = 6000) {   // until the page has stopped moving 
   return last;
 }
 async function throughShop(p) {   // scroll down the whole section once, like a visitor, so everything that reveals itself on the way has done so
+  // The page scrolls smoothly (css: scroll-behavior), so a jump of the test would only start a slow glide that the next jump cuts short, and the glide would
+  // never get past the top of the section. The test's own jumps are instant (an inline style); the page's setting is back when the walk is over.
+  await p.evaluate(() => document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important'));
   const box = await p.evaluate(() => { const s = document.getElementById('shop'), r = s.getBoundingClientRect(); return { top: r.top + window.scrollY, h: r.height, vh: window.innerHeight }; });
-  for (let y = box.top - box.vh * 0.3; y < box.top + box.h; y += box.vh * 0.6) { await p.evaluate((v) => window.scrollTo(0, v), Math.max(0, Math.round(y))); await p.waitForTimeout(50); }
-  await p.evaluate((v) => window.scrollTo(0, v), Math.round(box.top));
+  // (two drawn frames after each jump: the page notices what came into view when a frame is drawn, and a busy computer may draw none in 50 ms)
+  const jump = (v) => p.evaluate((n) => { window.scrollTo(0, n); return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); }, v);
+  for (let y = box.top - box.vh * 0.3; y < box.top + box.h; y += box.vh * 0.6) { await jump(Math.max(0, Math.round(y))); await p.waitForTimeout(50); }
+  await jump(Math.round(box.top));
   await settled(p, 300);
+  await p.evaluate(() => document.documentElement.style.removeProperty('scroll-behavior'));
 }
 async function openShop(browser, base, errs, o = {}) {
   const p = await open(browser, base, 'index.html', errs, { viewport: { width: o.w || 1366, height: o.h || 900 }, lang: o.lang });
@@ -248,6 +264,13 @@ async function openShop(browser, base, errs, o = {}) {
   const slugs = PRODUCTS.map((p) => p.slug);
   ok('the list file is sane: 12 groups, every product in one group, no slug twice, a price rule and a picture for each', GROUPS.length === 12 && new Set(slugs).size === slugs.length && PRODUCTS.every((p) => GROUPS.some((g) => g.n === p.group && g.slugs.includes(p.slug)) && p.symbols.length && (p.unknown || p.free || p.amounts.length)) && GROUPS.every((g) => g.slugs.every((s) => slugs.includes(s))), `${PRODUCTS.length} products`);
   info(`the list: ${PRODUCTS.length} products in ${GROUPS.length} groups; ${PRODUCTS.filter((p) => p.unknown).length} have no confirmed price ("${LIST.unknownWords}"), ${PRODUCTS.filter((p) => p.free).length} are free; ${EXTRAS.length} extra cards are allowed because the published page already had them (${EXTRAS.map((e) => e.name).join(', ')})`);
+  // 0: the list file is made from the farm's list. work-notes/SHOP-LIST.md is not part of the website; when it is here, its fingerprint must be the one in the file.
+  const MD = path.join(ROOT, 'work-notes', (LIST._source || {}).file || 'SHOP-LIST.md');
+  if (fs.existsSync(MD)) {
+    const sha = crypto.createHash('sha256').update(fs.readFileSync(MD, 'utf8').replace(/\r\n/g, '\n')).digest('hex');   // (CR LF line ends of a Windows copy do not count)
+    const synced = sha === (LIST._source || {}).sha256;
+    ok('0: tests/shop-list.json is made from the list as it is now (work-notes/SHOP-LIST.md)', synced, synced ? '' : 'the list changed, or the file was edited by hand: run  node tests/shop-list.make.mjs  (it reads work-notes/SHOP-LIST.md)');
+  } else info('0: work-notes/SHOP-LIST.md is not here, so tests/shop-list.json was not compared with it');
   ok(`the words for an unconfirmed price ("${LIST.unknownWords}") are in the page's own text list (lang/en.json)`, !!UNKNOWN_KEY, UNKNOWN_KEY || 'not found');
   ok('index.html has the section #shop (the products)', SHOP_SRC.length > 2000, `${SHOP_SRC.length} characters`);
 
@@ -349,7 +372,7 @@ await run('shop', async ({ browser, base, errs }) => {
   ok('1: each card is shown once in its own group box (no group is empty, no card sits outside a group)', en.groups.every((g) => g.cards > 0) && en.cards.every((c) => c.groupId), few(en.cards.filter((c) => !c.groupId).map((c) => c.name)));
 
   /* ---- 2: the prices */
-  const priceBad = [], pairBad = [], unitBad = [], soonBad = [], freeBad = [], numBad = [], ruleBad = [];
+  const priceBad = [], pairBad = [], unitBad = [], soonBad = [], freeBad = [], numBad = [], ruleBad = [], saysBad = [], avoidBad = [];
   const soonKey = UNKNOWN_KEY;
   const label = (o) => {   // how the page may write the small word of an option: small, 1 scoop, 8 oz, 8" (8 inch, 8-inch, 8 in), basil
     const t = o.label.toLowerCase();
@@ -372,6 +395,9 @@ await run('shop', async ({ browser, base, errs }) => {
       const allowed = q.amounts.concat(q.noteAmounts);
       if (!within(q.amounts, have)) priceBad.push(`${q.slug}: page ${have.map((a) => '$' + a).join(' ') || 'no price'}, list ${q.amounts.map((a) => '$' + a).join(' ')}`);
       else if (!within(rest(q.amounts, have), q.noteAmounts) && rest(q.amounts, have).length) priceBad.push(`${q.slug}: page also shows ${rest(q.amounts, have).filter((a) => !q.noteAmounts.includes(a)).map((a) => '$' + a).join(' ')} (list: ${allowed.map((a) => '$' + a).join(' ')})`);
+      const head = amountsIn(c.priceText || '');
+      if (!same(head, q.amounts.slice().sort((a, b) => a - b))) priceBad.push(`${q.slug}: the price part of the card shows ${head.map((a) => '$' + a).join(' ') || 'no price'}, the list's price is ${q.amounts.map((a) => '$' + a).join(' ')} (an amount in a note is not the price)`);
+      if (q.range && !new RegExp('\\$\\s*' + q.range[0] + '\\s*(?:[\\u2013\\u2014-]|to)\\s*\\$\\s*' + q.range[1] + '(?![\\d.])').test(digits(text))) priceBad.push(`${q.slug}: should show the range $${q.range[0]} to $${q.range[1]}, not "${text.slice(q.name.length).trim().slice(0, 30)}"`);
       if (soonKey && c.keys.some((k) => k.key === soonKey)) soonBad.push(`${q.slug}: has a price but also says "${LIST.unknownWords}"`);
       // each option's small word sits next to its own amount (not swapped): the nearest amount to the word is the right one
       for (const o of q.options) {
@@ -394,11 +420,15 @@ await run('shop', async ({ browser, base, errs }) => {
     if (extraNums.length) numBad.push(`${q.slug}: "${extraNums.join(' ')}" is not in the list`);
     // the list's own orders to the page maker
     if (q.linkTo && !c.links.some((h) => h.replace(/^\.?\//, '') === q.linkTo)) ruleBad.push(`${q.slug}: should link to ${q.linkTo}`);
-    if (q.noHours) {
-      const g = en.groups.find((x) => x.id === c.groupId), grpText = c.text;
-      if (/\b\d{1,2}(?::\d{2})?\s?(?:a\.?m\.?|p\.?m\.?)\b|\b\d{1,2}:\d{2}\b|\b(?:mon|tues|wednes|thurs|fri|satur|sun)day\b/i.test(grpText) || /\bopen\b/i.test(grpText)) ruleBad.push(`${q.slug}: the list says do not copy opening hours here: "${grpText.slice(0, 60)}"`);
-      void g;
+    if (q.hoursOk) {   // opening hours may show in this card's group (the farm's older words), but only the clock times of the list
+      const g = en.groups.find((x) => x.id === c.groupId);
+      const flat = (t) => t.toLowerCase().replace(/[\s.]/g, '');
+      const odd = ((g && g.text) || '').match(/\b\d{1,2}(?::\d{2})?\s?(?:a\.?m\.?|p\.?m\.?)(?![a-z])/gi) || [];
+      const bad = odd.filter((t) => !q.hoursOk.some((h) => flat(h) === flat(t)));
+      if (bad.length) ruleBad.push(`${q.slug}: the group shows the clock time ${bad.join(', ')}, the list gives ${q.hoursOk.join(' and ')}`);
     }
+    for (const s of q.says || []) if (!norm(c.text).includes(norm(s))) saysBad.push(`${q.slug}: should say "${s.slice(0, 60)}"`);
+    for (const a of q.avoid || []) if (norm(c.text).includes(norm(a.words))) avoidBad.push(`${q.slug}: says "${a.words}" (${a.why})`);
     if (q.noAgeStatement && /\b(?:18|21)\b|\bages?\b|\byears?\b|\bmust be\b|\badults?\b|\bID\b/i.test(c.text)) ruleBad.push(`${q.slug}: the list says no age statement: "${c.text.slice(0, 60)}"`);
     if (q.noNewDates) {
       const ownText = c.text.slice(c.name.length).split(LIST.unknownWords).join('. ');
@@ -414,13 +444,16 @@ await run('shop', async ({ browser, base, errs }) => {
     if (bad.length) numBad.push(`extra "${e.name}": "${bad.join(' ')}" is not on the published page`);
   }
   const withCard = PRODUCTS.filter((q) => where.has(q.slug));
-  ok(`2: every priced product shows the amounts of the list, and no other amount (${withCard.filter((q) => !q.unknown && !q.free).length} priced)`, priceBad.length === 0, few(priceBad));
-  ok('2: a product with sizes or kinds shows each small word next to its own amount ($3 small, $4 large; 1 scoop $4, 2 scoops $6; 8 oz, 16 oz; 8", 10", 12"; basil, tomatoes)', pairBad.length === 0, few(pairBad));
+  ok(`2: every priced product shows the amounts of the list as its price, and no other amount except the ones its note may name (${withCard.filter((q) => !q.unknown && !q.free).length} priced)`, priceBad.length === 0, few(priceBad));
+  ok('2: a product with sizes or kinds shows each small word next to its own amount ($3 small, $4 large; 1 scoop $4, 2 scoops $6; the 8 oz syrup; 8", 10", 12"; basil, tomatoes)', pairBad.length === 0, few(pairBad));
   ok('2: a price per pound, per stem or each says so', unitBad.length === 0, few(unitBad));
   ok(`2: every product with no confirmed price says "${LIST.unknownWords}" (the page's own words) and shows no dollar sign (${PRODUCTS.filter((q) => q.unknown).length} of them)`, soonBad.length === 0, few(soonBad));
   ok('2: a free thing says Free and shows no dollar sign', freeBad.length === 0, few(freeBad));
   ok('2: no number on a card that the list does not give for that product (sizes, counts, ages, dates)', numBad.length === 0, few(numBad));
-  ok('2: the list\'s own orders: pizza links to its page and shows no hours, beer and wine have no age statement, Christmas trees have only the page\'s own dates', ruleBad.length === 0, few(ruleBad));
+  ok('2: the list\'s own orders: pizza links to its page and its group shows no clock time but the older page\'s 10 am and 8 pm, beer and wine have no age statement, Christmas trees have only the page\'s own dates', ruleBad.length === 0, few(ruleBad));
+  const saysTotal = PRODUCTS.reduce((n, q) => n + (q.says || []).length, 0);
+  ok(`2: the sentences the list makes a card say are on the card (${saysTotal}: the pretzel's nuts, the slushie board note, "the same price" for beer and wine, the pumpkin note)`, saysTotal >= 4 && saysBad.length === 0, few(saysBad));
+  ok(`2: the words taken out of a card on purpose have not come back (${PRODUCTS.reduce((n, q) => n + (q.avoid || []).length, 0)}: "big bag", "handmade" soap, "sparkling juice" after Izze)`, avoidBad.length === 0, few(avoidBad));
 
   /* ---- 3: the pictures */
   const expected = [...new Set(PRODUCTS.flatMap((q) => q.symbols))];
@@ -471,7 +504,9 @@ await run('shop', async ({ browser, base, errs }) => {
   /* ---- 6: the jump buttons: where each lands the group (a computer window first) */
   async function pills(page, tag) {
     const list = await page.evaluate(readShop, SEL).then((r) => r.pills);
+    // a button reads like its group's heading, except the two the list names (the group's `button`): the top menu already has links called Pizza and Flowers
     const bad = [], heads = new Map(en.groups.map((g) => [g.id, norm(g.head)]));
+    const reads = new Map(en.groups.map((g) => { const lg = GROUPS.find((x) => norm(x.name) === norm(g.head)); return [g.id, norm((lg && lg.button) || g.head)]; }));
     for (const pill of list) {
       await page.evaluate(() => window.scrollTo(0, 0)); await scrolled(page, 3000);
       const sel = `#shop ${SEL.jump}[href="${pill.href}"]`;
@@ -487,9 +522,9 @@ await run('shop', async ({ browser, base, errs }) => {
       const low = m.sticky ? m.hb - 1 : -1;
       if (m.top < Math.max(0, low) || m.top > 220) bad.push(`${pill.text} (${pill.href}): lands ${m.top}px from the top, the header covers 0-${m.hb}px`);
       if (!heads.has(pill.href.slice(1))) bad.push(`${pill.text}: ${pill.href} is not one of the groups`);
-      else if (norm(pill.text) !== heads.get(pill.href.slice(1))) bad.push(`"${pill.text}" jumps to the group "${heads.get(pill.href.slice(1))}"`);
+      else if (norm(pill.text) !== reads.get(pill.href.slice(1))) bad.push(`"${pill.text}" jumps to the group "${heads.get(pill.href.slice(1))}"` + (reads.get(pill.href.slice(1)) !== heads.get(pill.href.slice(1)) ? `, whose button should read "${reads.get(pill.href.slice(1))}"` : ''));
     }
-    ok(`6: ${tag}: each of the ${list.length} jump buttons lands its group below the sticky header (0 to 220 px from the top), and the group has the button's name`, list.length === GROUPS.length && bad.length === 0, few(bad.concat(list.length === GROUPS.length ? [] : [`${list.length} buttons for ${GROUPS.length} groups`])));
+    ok(`6: ${tag}: each of the ${list.length} jump buttons lands its group below the sticky header (0 to 220 px from the top), and is named for it (${GROUPS.filter((g) => g.button).length} are named for a card of their group, as the list says)`, list.length === GROUPS.length && bad.length === 0, few(bad.concat(list.length === GROUPS.length ? [] : [`${list.length} buttons for ${GROUPS.length} groups`])));
   }
   await p.evaluate(() => { document.documentElement.style.scrollBehavior = ''; });
   await p.addStyleTag({ content: 'html{scroll-behavior:smooth!important}' }).catch(() => {});   // as a visitor has it
@@ -516,6 +551,10 @@ await run('shop', async ({ browser, base, errs }) => {
   await p.context().close();
   for (const w of WIDTHS.slice(1)) {
     const q = await openShop(browser, base, errs, { w, h: w < 700 ? 800 : 900 });
+    // every group fades in when about a twentieth of it is on the screen: a very tall group on a small window must still come (before the still style shows all at once)
+    await throughShop(q);
+    const shown = await until(q, () => [...document.querySelectorAll('#shop .reveal')].every((e) => parseFloat(getComputedStyle(e).opacity) > 0.99), null, 8000);
+    ok(`7: ${w}px: every part of #shop shows itself when it is scrolled to (nothing stays invisible)`, !!shown, shown ? '' : JSON.stringify(await q.evaluate(() => [...document.querySelectorAll('#shop .reveal')].filter((e) => parseFloat(getComputedStyle(e).opacity) < 0.99).map((e) => e.id || e.className.slice(0, 20)))));
     await q.addStyleTag({ content: STILL });
     const rec = await layout(q, w + 'px', w);
     heights[w] = rec.shopH;
@@ -527,11 +566,17 @@ await run('shop', async ({ browser, base, errs }) => {
   /* ---- 4, 5 and 7 in the other languages (a phone window: the longest words) */
   const enKeys = new Map(en.cards.flatMap((c) => c.keys.map((k) => [k.key, k.text])));
   const STOP = /\b(?:the|and|with|from|your|for|per|at|of|all|each|are|is|free|bring|buy|only|plus|ages?|every|small|large|big|bag|jar|bottle|cup|pound|stem|person|child|children|scoops?|soon|coming|prices?|made|farm|fresh|barn|open)\b/i;
-  const stoplist = (t) => t.match(STOP) ? t.match(STOP)[0] : '';
+  // A scent's or maker's name (the list's `names`) stays as written. An English word that the list calls a loan word of a language stays too, but only when
+  // that language's page uses it outside #shop as well ("mỗi pound" in the Vietnamese tomato prices): then it is the site's own word, not a left-over.
+  const stripNames = (t) => NAMES.reduce((s, n) => s.split(n).join(' '), t);
+  const stoplist = (t, loan = []) => { for (const m of stripNames(t).matchAll(new RegExp(STOP.source, 'gi'))) if (!loan.includes(m[0].toLowerCase())) return m[0]; return ''; };
   for (const lang of LANGS.slice(1)) {
     const q = await openShop(browser, base, errs, { w: 360, h: 800, lang });
     const L = await q.evaluate(readShop, SEL);
     const tag = `${lang}`;
+    const outsideL = await q.evaluate(readOutside);
+    const loan = LOANWORDS.filter((l) => l.lang === lang && new RegExp('(?<![A-Za-z])' + l.word + '(?![A-Za-z])', 'i').test(outsideL)).map((l) => l.word.toLowerCase());
+    if (loan.length) info(`${tag}: "${loan.join('", "')}" is left in English in #shop because the ${tag} texts outside #shop use it too`);
     ok(`5: ${tag}: the page is in the language (${L.htmlLang}), with the same ${en.cards.length} cards and ${en.groups.length} groups`, L.lang === lang && L.cards.length === en.cards.length && L.groups.length === en.groups.length, `${L.cards.length} cards, ${L.groups.length} groups`);
     // the same amounts on every card
     const diff = [];
@@ -546,7 +591,7 @@ await run('shop', async ({ browser, base, errs }) => {
     const leaks = [];
     for (const c of L.cards) for (const k of c.keys) {
       const en0 = enKeys.get(k.key) || '';
-      const stop = stoplist(k.plain);
+      const stop = stoplist(k.plain, loan);
       if (stop) leaks.push(`"${k.plain.slice(0, 34)}" has the English word "${stop}"`);
       else if (clean(k.text) === clean(en0) && /(?<![A-Za-z])[a-z]{4,}/.test(en0) && !/^\$|^\d/.test(en0)) leaks.push(`"${en0.slice(0, 34)}" is still English`);
     }
