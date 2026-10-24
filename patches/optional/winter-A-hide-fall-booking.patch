@@ -117,10 +117,10 @@ index cc2e77d..a6a55e4 100644
              </div>
            </article>
            <article class="way-card way-card-alt reveal">
-@@ -1359,7 +1365,7 @@
+@@ -1432,7 +1438,7 @@
            <li class="sg-plants"><a href="#shop-plants"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-lavender-plant"/></svg><span data-t="t39cf4606">Plants to take home</span></a></li>
            <li class="sg-fall"><a href="#shop-pumpkins"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-pumpkin"/></svg><span data-t="t45421e94">Fall &amp; holidays</span></a></li>
-           <li class="sg-flowers"><a href="#shop-flowers"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-flower-jar"/></svg><span data-t="td4e7d7d3">Flowers</span></a></li>
+           <li class="sg-flowers"><a href="#shop-flowers"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-flower-jar"/></svg><span data-t="t63849ec2">U-cut flower jar</span></a></li>
 -          <li class="sg-farm"><a href="#shop-farm"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#tractor"/></svg><span data-t="t8063a5d8">Farm visit, rides &amp; picking</span></a></li>
 +          <li class="sg-farm" data-only="fall"><a href="#shop-farm"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#tractor"/></svg><span data-t="t8063a5d8">Farm visit, rides &amp; picking</span></a></li>
          </ul>
