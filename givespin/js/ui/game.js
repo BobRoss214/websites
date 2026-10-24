@@ -168,7 +168,18 @@
     // a live table has the same Options button and sheet. Its panel is built by js/ui/live.js the first time a table is opened, so the clicks are caught here
     el.livePanel.addEventListener('click', function (e) {
       var ob = e.target.closest ? e.target.closest('[data-role="sheet-btn"]') : null;
-      if (ob) { setMore(!el.livePanel.classList.contains('is-more')); }
+      if (ob) {
+        var onL = !el.livePanel.classList.contains('is-more');
+        setMore(onL);
+        // (as for the solo sheet above: the sheet's body comes before the Options button in the page, so a keyboard that opened it would otherwise Tab on to the join button
+        // and never reach the table sizes or the odds board. Start on the first control of the body.)
+        if (onL && e.detail === 0 && isDocked()) {
+          var cands = el.livePanel.querySelectorAll('.lt-scroll a[href], .lt-scroll button:not([disabled]), .lt-scroll input:not([disabled])');
+          for (var ci = 0; ci < cands.length; ci++) {
+            if (cands[ci].offsetParent !== null) { try { cands[ci].focus({ preventScroll: true }); } catch (err) { /* not focusable right now */ } break; }
+          }
+        }
+      }
     });
     el.livePanel.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && el.livePanel.classList.contains('is-more') && isDocked()) {
@@ -803,6 +814,12 @@
     selectTab(live ? liveTabState : tabState);
     if (live) { ui.live.attach((opts && opts.table) || id); } else { refreshBet(); }
     el.bet.classList.remove('is-more');
+    // (a panel that scrolls inside itself (a laptop, a phone held sideways) is one box for every game: the next game starts at its first choice, not scrolled to where the last one was left)
+    el.bet.scrollTop = 0;
+    var choices = $('#bet-scroll');
+    if (choices) { choices.scrollTop = 0; }
+    var tableBody = el.livePanel.querySelector('.lt-scroll');
+    if (tableBody) { tableBody.scrollTop = 0; }
     el.optBtn.setAttribute('aria-expanded', 'false');
     // (a table you hop to starts with its sheet shut, like a game does)
     el.livePanel.classList.remove('is-more');

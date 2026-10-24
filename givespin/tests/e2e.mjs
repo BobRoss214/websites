@@ -7144,6 +7144,222 @@ if (section('13zr. Ranks: a rank from $1,000 given, "Rank 2 · Level 6", the emb
 }
 
 /* ======================================================================== */
+if (section('13zv. Final review: the cancel line names what was staked at THAT table, a sheet opened with Options stays open, the keyboard reaches a table\'s sheet, a result card is not left under a solo game, a big Plinko board follows a finger 1 to 1')) {
+  const problems0 = problems.length;
+  // freezes a table in an open betting window (its clock stops, so nothing changes under the test)
+  const freezeOpen = async (page, id) => {
+    await page.waitForFunction((rid) => { const r = window.GS.live.room(rid); if (!(r && r.phase === 'open' && r.msLeft() > Math.min(7000, r.phaseMs * 0.4))) { return false; } r._clearTimers(); return true; }, id, { timeout: 70000, polling: 50 });
+  };
+
+  // 1. "Take my bet back" says what was put on THIS table, not the stake that was chosen at another table in between
+  {
+    const page = await newPage({ viewport: { width: 1366, height: 768 } });
+    await openApp(page);
+    const before = await balance(page);
+    await go(page, '#live-wheel10');
+    await freezeOpen(page, 'wheel10');
+    await page.click('#livepanel [data-stake="20"]');
+    await page.click('#livepanel .odd:not([disabled]) >> nth=0');
+    await page.click('#livepanel [data-role="join"]');
+    const staked = await page.evaluate(() => { const y = window.GS.live.room('wheel10').you; return y ? y.dollars : 0; });
+    check(staked === 20, 'a $20 stake is on the table of 10', staked);
+    await page.evaluate(() => window.GS.live.room('wheel10')._clearTimers());
+    await go(page, '#live-wheel25');
+    await freezeOpen(page, 'wheel25');
+    await page.click('#livepanel [data-stake="100"]');
+    await go(page, '#live-wheel10');
+    await page.evaluate(() => window.GS.live.room('wheel10')._clearTimers());
+    const shown = await page.evaluate(() => Array.from(document.querySelectorAll('#lt-stake .seg__btn')).filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.textContent.trim()));
+    check(shown.length === 1 && shown[0] === '$20', 'back at the table of 10 the stake buttons show the $20 that is staked there, not the $100 chosen at the other table', shown);
+    await page.click('#livepanel [data-role="join"]');
+    await page.waitForFunction(() => /Bet taken back/.test(document.querySelector('#toasts').textContent));
+    const toast = (await toastText(page)).filter((t) => /Bet taken back/.test(t)).join(' | ');   // (only this toast: a table can toast a jackpot of its own at the same moment)
+    check(/\$20 is back in your credit/.test(toast) && !/\$100/.test(toast), 'and the line under "Take my bet back" says $20 is back, which is what came back', toast);
+    check(await balance(page) === before, 'the credit is back where it was', [before, await balance(page)]);
+    await page.close();
+  }
+
+  // 2 and 3. A phone: "Pick a charity" opens the sheet for a pick and closes it again; a sheet opened with Options is the visitor's own and stays open. The keyboard reaches it.
+  {
+    const page = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+    await openApp(page);
+    await go(page, '#live-wheel10');
+    await freezeOpen(page, 'wheel10');
+    const sheet = () => page.evaluate(() => ({ open: document.querySelector('#livepanel').classList.contains('is-more'), exp: document.querySelector('#livepanel [data-role="sheet-btn"]').getAttribute('aria-expanded') }));
+    await page.click('#livepanel [data-role="join"]');           // "Pick a charity": the sheet opens at the odds board
+    await page.waitForTimeout(250);
+    let sh = await sheet();
+    check(sh.open && sh.exp === 'true', '"Pick a charity" opens the sheet', sh);
+    await page.keyboard.press('Escape');                          // folded away without choosing anything
+    await page.waitForTimeout(150);
+    sh = await sheet();
+    check(!sh.open && sh.exp === 'false', 'Escape folds it away, and aria-expanded follows', sh);
+    await page.click('#livepanel [data-role="sheet-btn"]');       // now opened with Options
+    await page.waitForTimeout(250);
+    await page.click('#livepanel .odd:not([disabled]) >> nth=1');
+    await page.waitForTimeout(250);
+    sh = await sheet();
+    check(sh.open && sh.exp === 'true', 'a sheet opened with Options stays open when a charity is chosen in it (it does not close as if "Pick a charity" had opened it)', sh);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(150);
+    // the keyboard: Enter on Options puts the focus inside the sheet's body (it comes before the button in the page: Tab would skip it)
+    await page.focus('#livepanel [data-role="sheet-btn"]');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(250);
+    const where = await page.evaluate(() => { const a = document.activeElement; return { inBody: !!(a && a.closest && a.closest('#livepanel .lt-scroll')), tag: a && a.tagName, open: document.querySelector('#livepanel').classList.contains('is-more') }; });
+    check(where.open && where.inBody, 'Enter on Options (the keyboard) opens the sheet and puts the focus on its first control', where);
+    await page.close();
+  }
+
+  // 4. The result card of a table is not left under a solo game
+  {
+    const page = await newPage({ viewport: { width: 1366, height: 768 } });
+    await openApp(page);
+    await go(page, '#live-wheel10');
+    await page.waitForFunction(() => { const r = window.GS.live.room('wheel10'); if (r.phase === 'result' && document.querySelector('#lt-result .lt-res')) { r._clearTimers(); return true; } return false; }, null, { timeout: 90000, polling: 50 });
+    check(await page.evaluate(() => document.querySelector('#lt-result').innerHTML.length > 100), 'a table in its result phase shows the result card');
+    await go(page, '#game-wheel');
+    check(await page.evaluate(() => document.querySelector('#lt-result').innerHTML === ''), 'the card is gone when a solo game is opened (it was left under the wheel)');
+    await go(page, '#live-wheel10');
+    await page.waitForTimeout(300);
+    check(await page.evaluate(() => document.querySelector('#lt-result').innerHTML.length > 100), 'and it is drawn again when the table is opened again');
+    await page.close();
+  }
+
+  // 5. A ranked player whose XP level rises sees "XP level up!" (the receipt says the same); a player with no rank sees "Level up!"
+  for (const ranked of [true, false]) {
+    const page = await newPage({ viewport: { width: 1366, height: 768 } });
+    await openApp(page);
+    await page.evaluate((rk) => { const s = window.GS.store.get(); s.xp = 95; s.totalCents = rk ? 150000 : 0; window.GS.store.save(); window.GS.bus.emit('progress'); }, ranked);
+    await go(page, '#live-wheel10');
+    await page.click('#livepanel [data-stake="5"]').catch(() => {});
+    const placed = await stakeNow(page, 'wheel10');
+    if (!placed) { check(false, 'a stake could not be put on the table'); await page.close(); continue; }
+    await page.waitForFunction(() => document.querySelector('#lt-result .lt-res__xp'), null, { timeout: 90000 });
+    const line = await page.locator('#lt-result .lt-res__xp').first().innerText();
+    check(ranked ? /XP level up!/.test(line) : (/Level up!/.test(line) && !/XP level up/.test(line)), (ranked ? 'a ranked player: the XP line ends "XP level up!"' : 'a player with no rank: the XP line ends "Level up!"'), line);
+    await page.close();
+  }
+
+  // 6. A big Plinko board is dragged 1 to 1 with the finger even when the picture has been shrunk to fit a short window
+  {
+    const page = await newPage({ viewport: { width: 844, height: 390 }, mobile: false });
+    await openApp(page);
+    await go(page, '#game-plinko');
+    await page.evaluate(() => { const i = document.getElementById('size-custom'); i.value = 500; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); });
+    await page.waitForTimeout(1200);
+    const info = await page.evaluate(() => { const c = document.querySelector('#panel-plinko canvas'); const r = c.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, scale: r.width / parseFloat(c.style.width) }; });
+    check(info.scale < 0.9, 'the Plinko picture is shrunk to fit this short window (scale ' + info.scale.toFixed(2) + ')', info);
+    const cam0 = await page.evaluate(() => window.GS.games.plinko._camera());
+    await page.mouse.move(info.x, info.y);
+    await page.mouse.down();
+    await page.mouse.move(info.x - 60, info.y, { steps: 6 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+    const cam1 = await page.evaluate(() => window.GS.games.plinko._camera());
+    const moved = cam1.tx - cam0.tx;                         // board px the view moved
+    const want = 60 / (cam0.z * info.scale);                 // 60 screen px, in board px
+    check(Math.abs(moved - want) / want < 0.03, 'dragging 60 px moves the board by 60 screen px (' + moved.toFixed(1) + ' board px, wanted ' + want.toFixed(1) + ')', { moved, want, scale: info.scale });
+    await page.close();
+  }
+  // 7. The gift panel that scrolls inside itself (a short laptop, a phone held sideways) is one box for every game: the next game starts at the top of it
+  for (const sc of [{ name: 'a short laptop (1366x600)', w: 1366, h: 600 }, { name: 'a phone held sideways (844x390)', w: 844, h: 390 }]) {
+    const page = await newPage({ viewport: { width: sc.w, height: sc.h } });
+    await openApp(page);
+    await go(page, '#game-plinko');
+    await page.waitForTimeout(500);
+    const scrolled = await page.evaluate(() => {
+      const b = document.querySelector('#bet-panel'); const s = document.querySelector('#bet-scroll');
+      const box = getComputedStyle(s).display === 'contents' ? b : s;      // (whichever of the two is the box that scrolls)
+      box.scrollTop = 99999;
+      return box.scrollTop;
+    });
+    await go(page, '#game-wheel');
+    await page.waitForTimeout(500);
+    const after = await page.evaluate(() => {
+      const b = document.querySelector('#bet-panel'); const s = document.querySelector('#bet-scroll');
+      const a = document.querySelector('#field-amount').getBoundingClientRect();
+      const box = getComputedStyle(s).display === 'contents' ? b : s;
+      const r = box.getBoundingClientRect();
+      return { top: box.scrollTop, amountInView: a.top >= r.top - 1 && a.bottom <= r.bottom + 1 };
+    });
+    check(scrolled > 50, 'on ' + sc.name + ' the gift panel was scrolled down in Plinko (' + scrolled + ' px)', scrolled);
+    check(after.top === 0 && after.amountInView, 'and Lucky Wheel opens with the panel at the top, the amount in view', after);
+    if (sc.h === 390) {
+      // a live table's body is the same box for every table
+      await go(page, '#live-wheel10');
+      await page.evaluate(() => { document.querySelector('#livepanel .lt-scroll').scrollTop = 99999; });
+      await go(page, '#live-drop10');
+      await page.waitForTimeout(300);
+      check(await page.evaluate(() => document.querySelector('#livepanel .lt-scroll').scrollTop) === 0, 'and a live table opens with its panel at the top too');
+    }
+    await page.close();
+  }
+  // 8. A big stake that was armed for one charity must be confirmed again after another charity is picked (Add charity)
+  {
+    const page = await newPage({ viewport: { width: 1366, height: 768 } });
+    await openApp(page);
+    await go(page, '#live-wheel25');
+    await freezeOpen(page, 'wheel25');
+    await page.fill('#lt-custom', '500');
+    await page.click('#livepanel .odd:not([disabled]) >> nth=0');
+    const label = () => page.locator('#livepanel [data-role="join-label"]').innerText();
+    await page.click('#livepanel [data-role="join"]');
+    check(/^Confirm: \$500 on /.test(await label()) && await page.evaluate(() => !window.GS.live.room('wheel25').you), 'a $500 stake (half the credit) asks for a second press', await label());
+    await page.click('#livepanel [data-role="add"]');
+    await page.waitForSelector('#dlg-charitypick[open]');
+    await page.fill('#cp-q', 'wateraid');
+    await page.locator('#dlg-charitypick .pickitem').first().click();
+    await page.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
+    check(/^Put \$500 on /.test(await label()), 'another charity picked from the dialog: the button is back to "Put $500 on ...", not still armed for the old pick', await label());
+    await page.click('#livepanel [data-role="join"]');
+    check(/^Confirm: \$500 on /.test(await label()) && await page.evaluate(() => !window.GS.live.room('wheel25').you), 'and the next press only arms it again (nothing was placed)', await label());
+    await page.close();
+  }
+  // 9. The round bar over a live table keeps its shape through a whole round (betting, locked, playing, result), so the picture under it does not change size as its words change
+  for (const sc of [{ name: 'a phone held sideways (844x390)', w: 844, h: 390 }, { name: 'a small phone held sideways (568x320)', w: 568, h: 320 }, { name: 'a phone (390x844)', w: 390, h: 844 }]) {
+    const page = await newPage({ viewport: { width: sc.w, height: sc.h }, mobile: sc.w < 700 });
+    await openApp(page);
+    await go(page, '#live-wheel25');
+    await page.waitForTimeout(500);
+    const bars = new Set(); const scales = new Set(); const phases = new Set();
+    const t0 = Date.now();
+    while (Date.now() - t0 < 11000) {
+      const r = await page.evaluate(() => {
+        const room = window.GS.ui.live.current().room;
+        const prim = document.querySelector('#games .game:not([hidden])').firstElementChild;
+        return { ph: room.phase, bar: Math.round(document.querySelector('#lt-stagebar').getBoundingClientRect().height), sc: (prim.style.transform.match(/scale\(([^)]+)\)/) || [0, '1'])[1] };
+      });
+      bars.add(r.bar); scales.add(Number(r.sc).toFixed(3)); phases.add(r.ph);
+      await page.waitForTimeout(100);
+    }
+    check(phases.size >= 3, 'on ' + sc.name + ' the table went through ' + phases.size + ' phases while it was watched', [...phases]);
+    check(bars.size === 1 && scales.size === 1, 'the round bar stayed one height (' + [...bars].join(', ') + ' px) and the picture one size (' + [...scales].join(', ') + ') through all of them', { bars: [...bars], scales: [...scales] });
+    await page.close();
+  }
+  // 10. A live table's sheet that is open when the phone is turned sideways is folded away, and does not come back over the picture when it is turned upright again
+  // (a solo game keeps its sheet as it was left: that is section 13zt's own check)
+  {
+    const page = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
+    await openApp(page);
+    await go(page, '#live-wheel25');
+    await freezeOpen(page, 'wheel25');
+    await page.waitForTimeout(400);
+    await page.click('#livepanel [data-role="sheet-btn"]');
+    await page.waitForTimeout(250);
+    check(await page.evaluate(() => document.querySelector('#livepanel').classList.contains('is-more')), 'a live table: the sheet is open on the upright phone');
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(500);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(500);
+    const st = await page.evaluate(() => ({ open: document.querySelector('#livepanel').classList.contains('is-more'), exp: document.querySelector('#livepanel [data-role="sheet-btn"]').getAttribute('aria-expanded') }));
+    check(!st.open && st.exp === 'false', 'turned sideways and back upright, the live table\'s sheet is shut (it does not reopen over the picture), and Options says so', st);
+    await page.close();
+  }
+  check(problems.length === problems0, 'section 13zv: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+}
+
+/* ======================================================================== */
 section('18. Console and network health');
 check(problems.length === 0, 'no console errors, warnings, page errors or failed requests during the whole run', problems.slice(0, 8));
 

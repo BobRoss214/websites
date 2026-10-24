@@ -426,6 +426,17 @@ html:has(#view-game:not([hidden]):not(.is-live)) { scroll-padding-top: calc(var(
   #view-game.is-live .lt-stagebar__m { grid-area: m; order: 0; flex: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #view-game.is-live .lt-stagebar__b { grid-area: b; }
 }
+/* The bar keeps its shape (finalReview): its two lines never wrap into more, and a phone held sideways (600 to 900 px wide) gets the same two-line bar. The bar used to be one line
+   when its words fitted and two when they did not, and the picture under it changed size (8 to 20 per cent) every time a clock digit, the pot or the phase made it wrap or unwrap. */
+@media (min-width: 600px) and (max-width: 900px) and (max-height: 520px) {
+  #view-game.is-live .lt-stagebar { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "a m" "b b"; gap: 0 10px; }
+  #view-game.is-live .lt-stagebar__a { grid-area: a; }
+  #view-game.is-live .lt-stagebar__m { grid-area: m; order: 0; flex: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #view-game.is-live .lt-stagebar__b { grid-area: b; }
+}
+@media (max-width: 599px), (min-width: 600px) and (max-width: 900px) and (max-height: 520px) {
+  #view-game.is-live .lt-stagebar__a, #view-game.is-live .lt-stagebar__b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
 
 /* ---------------------------------------------------- the keyboard: a focused control is scrolled clear of the bars (the same as the solo screens above) */
 html:has(#view-game.is-live:not([hidden])) { scroll-padding-top: calc(var(--top-h) + 10px); }

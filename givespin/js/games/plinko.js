@@ -737,7 +737,10 @@
       });
       el.canvas.addEventListener('pointermove', function (e) {
         if (!drag) { return; }
-        lookAt(drag.cx - (e.clientX - drag.x) / cam.z, drag.cy - (e.clientY - drag.y) / cam.z, true);
+        // (the board may be shrunk on screen by the fit of the window: a finger then moves further on screen than the board does, so the board follows it 1 to 1)
+        var pb = pictureBox();
+        var kx = pb.w > 0 && W ? pb.w / W : 1, ky = pb.h > 0 && H ? pb.h / H : 1;
+        lookAt(drag.cx - (e.clientX - drag.x) / (cam.z * kx), drag.cy - (e.clientY - drag.y) / (cam.z * ky), true);
       });
       var endDrag = function () { drag = null; };
       el.canvas.addEventListener('pointerup', endDrag);

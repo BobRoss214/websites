@@ -367,6 +367,9 @@
     });
     el.add.addEventListener('click', openPicker);
     el.join.addEventListener('click', onJoin);
+    // A sheet opened with the Options button is the visitor's own, however "Pick a charity" left pickMode: a sheet that was opened to pick and then folded away
+    // (Escape, tabbing out) must not close by itself the next time they choose something in the sheet they opened with Options.
+    panel.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-role="sheet-btn"]')) { pickMode = false; } });
     el.pred.addEventListener('click', function (e) {
       var b = e.target.closest('[data-pred]');
       if (!b || b.disabled || !cur) { return; }
@@ -441,13 +444,15 @@
 
   function renderStake() {
     buildPresets();
-    var inPresets = presetsNow().indexOf(stake) >= 0;
+    // (at a table where you already have a bet, the buttons show that bet: the amount chosen at another table you hopped to since is not what is staked here)
+    var shown = cur && cur.room.you ? cur.room.you.dollars : stake;
+    var inPresets = presetsNow().indexOf(shown) >= 0;
     var locked = !!(cur && cur.room.you) || !cur || cur.room.phase !== 'open';
     Array.prototype.forEach.call(el.stake.querySelectorAll('button'), function (b) {
-      b.setAttribute('aria-pressed', String(Number(b.getAttribute('data-stake')) === stake));
+      b.setAttribute('aria-pressed', String(Number(b.getAttribute('data-stake')) === shown));
       b.disabled = locked;
     });
-    if (document.activeElement !== el.custom) { el.custom.value = inPresets ? '' : String(stake); }
+    if (document.activeElement !== el.custom) { el.custom.value = inPresets ? '' : String(shown); }
     el.custom.disabled = locked;
   }
 
@@ -633,7 +638,8 @@
     if (el.stagebar) {
       var map = room.mapInfo();
       // (the last call is said here too: on a phone the panel's own clock is in the sheet, and this bar is always on the first screen)
-      el.stagebar.innerHTML = '<span class="lt-stagebar__a"><b>Round ' + room.round + '</b> · ' + (last ? '<span class="lt-stagebar__last">Last call!</span>' : esc(txt)) + (room.phase === 'open' || room.phase === 'result' ? ' <b>' + clock(left) + '</b>' : '') + '</span>' +
+      // (the short words while the table is locked: "Bets closed · drawing the winner" wrapped the bar to another line and made the picture above it change size for a second; the panel's clock says the long form)
+      el.stagebar.innerHTML = '<span class="lt-stagebar__a"><b>Round ' + room.round + '</b> · ' + (last ? '<span class="lt-stagebar__last">Last call!</span>' : esc(room.phase === 'locked' ? 'Bets closed' : txt)) + (room.phase === 'open' || room.phase === 'result' ? ' <b>' + clock(left) + '</b>' : '') + '</span>' +
         (map ? '<span class="lt-stagebar__m" data-map="' + esc(map.id) + '">Track: <b>' + esc(map.name) + '</b></span>' : '') +
         '<span class="lt-stagebar__b"><b>' + dollars(room.pot()) + '</b> pot · ' + room.players() + ' players · bots simulated</span>';
     }
@@ -657,7 +663,7 @@
   function levelNote(sm) {
     if (sm.rankedUp) { return ' · Rank up! ' + sm.rankAfter.label + ' (' + sm.rankAfter.name + ')'; }
     if (sm.levelUp && sm.rankAfter.rank) { return ' · Level up! ' + sm.rankAfter.label; }
-    return sm.leveledUp ? ' · Level up!' : '';
+    return sm.leveledUp ? (sm.rankAfter.rank ? ' · XP level up!' : ' · Level up!') : '';   // (a ranked player's level is the one inside the rank: this is the XP level, as the receipt says)
   }
 
   function renderResult() {
@@ -795,7 +801,8 @@
     if (!cur) { return; }
     var room = cur.room;
     if (room.phase === 'open' && room.you) {
-      if (room.cancel()) { GS.audio.click(); ui.toast('Bet taken back. ' + dollars(stake) + ' is back in your credit.', 'rotate-ccw'); say(''); renderAll(); }
+      var back = room.you.dollars;   // (what was staked at THIS table: the stake buttons may have been moved to another amount at a table you hopped to since)
+      if (room.cancel()) { GS.audio.click(); ui.toast('Bet taken back. ' + dollars(back) + ' is back in your credit.', 'rotate-ccw'); say(''); renderAll(); }
       return;
     }
     if (room.phase !== 'open') { return; }
@@ -839,7 +846,7 @@
       title: 'Add a charity to the table',
       sub: 'There ' + (room.gatesOpen() === 1 ? 'is 1 gate' : 'are ' + room.gatesOpen() + ' gates') + ' open. Pick any charity and it joins this table with your stake.',
       note: function (c) { return room.seats[c.id] ? 'already at the table' : ''; },
-      onPick: function (id) { pick = id; renderOdds(); renderJoin(); pickDone(); }
+      onPick: function (id) { pick = id; disarm(); renderOdds(); renderJoin(); pickDone(); }   // (a big stake that was armed for another charity must be confirmed again for this one)
     });
   }
 
@@ -1063,6 +1070,8 @@
     clearTimeout(fieldTimer);
     fieldTimer = 0;
     revealed = null;
+    // the result card of the table you are leaving: it lives in the stage, which a solo game uses too (it would be left under the wheel, the slots ...)
+    if (el.result) { el.result.innerHTML = ''; el.result.removeAttribute('data-round'); }
     if (cur) {
       // leaving a table whose drop is still playing (one canvas serves every Plinko table): stop that drop
       if (animating[cur.id] && GS.games[cur.id].abort) { GS.games[cur.id].abort(); }

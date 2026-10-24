@@ -9,7 +9,6 @@ Last saved: the preview is version 27. Everything below the line "Done" is in th
 - Tests: 290 unit tests and about 2,530 end-to-end checks pass (one Plinko camera timing check in section 13m can fail once under heavy machine load; it passes alone).
 
 ## Open, small (each is a few lines)
-- `js/ui/live.js`, function `levelNote`: a ranked player whose XP level goes up sees " · Level up!"; the receipt says "XP level up". Suggested: `return sm.leveledUp ? (sm.rankAfter.rank ? ' · XP level up!' : ' · Level up!') : '';` (cosmetic, only on odd saves).
 - A win that is also a rank-up plays a win sound, the rank-up jingle and a second win sound within 0.6 s with two confetti bursts. It is deliberate (a rank-up should feel big); to tone it down remove the delayed `GS.audio.win` in `moment()` in `js/ui/rankui.js` and adjust one check in section 13zr.
 - Landscape and live layouts are cramped on very small windows: 568 x 320 live tables (the odds board is about 1.5 rows high), Coin Flip marks (8 to 12 px), slot Turbo and "How it pays" buttons (about 18 px tall). Windows narrower than 561 px and shorter than about 520 px cannot fit a picture.
 - axe reports a "partially obscured" target-size item on whichever control straddles the bottom of the scrolling landscape panel (a geometry artefact, not checked by the tests).
