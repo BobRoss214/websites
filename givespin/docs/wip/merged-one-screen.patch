@@ -1,7 +1,34 @@
-diff -ruN -x e2e.mjs a/README.md b/README.md
---- a/README.md	2026-10-21 14:08:47.940094568 +0000
-+++ b/README.md	2026-10-21 14:28:23.316884803 +0000
-@@ -209,6 +209,14 @@
+diff -ruN -x wip a/README.md b/README.md
+--- a/README.md	2026-10-24 00:43:21.000000000 +0000
++++ b/README.md	2026-10-24 02:09:55.717267989 +0000
+@@ -74,13 +74,23 @@
+ 
+ **One screen per game.** Opening a game puts the game, the gift choices (amount, split, board size, back a charity) and the Play
+ button together on the first screen, on a phone and on a laptop, so nobody has to scroll to start a round. The picture is shrunk
+-to fit the window when it has to be (never below half size; `fitStage` in `js/ui/game.js` does it with a CSS scale, which the
+-games already allow for when they work out where a click landed). On a wide screen the gift panel sits beside the picture with
++to fit the window when it has to be (never below half size on a laptop or a phone held upright, about a third on a phone held
++sideways; `fitStage` in `js/ui/game.js` does it with a CSS scale, which the games already allow for when they work out where a click
++landed). On a wide screen the gift panel sits beside the picture with
+ Play right under the choices every round needs, pinned to the bottom of the panel if the window is short; "Charities in play" and the
+ gift options come after it. On a phone the panel is docked at the bottom of the screen with the amount presets and Play, and the
+-**Options** button opens everything else as a sheet over the picture. Everything about the game (the tabs, more games) is below,
++**Options** button opens everything else as a sheet over the picture. Held sideways (or in any short window up to 900 px wide) the panel
++is a narrow column beside the picture that scrolls inside itself with Play kept at its bottom. Turning the phone or resizing the window
++while a game is open refits the picture; the choices are kept. Everything about the game (the tabs, more games) is below,
+ as before. The rules are in `css/fit.css`.
+ 
++**Live tables follow it too** (all seventy of them: see "A table fits on one screen" under Live tables). The picture, your stake and the
++join button are on the first screen in the same three layouts: on a laptop the odds board sits beside the picture with the stake and the join
++button pinned under it; on a phone the stake buttons, **Options** and the join button are docked, the board is in the sheet, and "Pick a charity"
++opens the sheet at the board. A table can have up to 500 spots, so its picture may be shrunk further than a solo game's (to a third of its size, and
++to a fifth on the smallest phone held sideways, where the page's own bars leave very little room). When a round ends the page scrolls to the result
++card, and it comes back up when the next round opens. The rules are the block for `#view-game.is-live` at the end of `css/fit.css`.
++
+ Four games stop sooner on purpose, because of what they are: Pick a Card is a table of face-down cards you tap (up to
+ 100), a Scratch Card is one card with 4 to 48 panels, Coin Flip Showdown is a knockout bracket, so it takes a power of
+ two (up to 128), and Dice is one die, so it always has six faces. Anything bigger would be too crowded to read or tap, so
+@@ -210,6 +220,14 @@
  **Polish:** synthesised sound effects (no audio files, mutable), confetti that draws above dialogs, reduced-motion
  support, keyboard-operable everywhere, screen-reader announcements for results, a phone-friendly layout.
  
@@ -16,7 +43,7 @@ diff -ruN -x e2e.mjs a/README.md b/README.md
  ## Going live
  
  Everything about real money lives in `js/config.js`.
-@@ -325,6 +333,14 @@
+@@ -326,6 +344,14 @@
  bots and a longer show (the 500-spot tables take about 27 to 44 seconds to play out, depending on the game). All 70 tables run at once, and a game's
  `#live-<game>` link opens its Small (10-spot) table.
  
@@ -31,18 +58,18 @@ diff -ruN -x e2e.mjs a/README.md b/README.md
  **Live tables are demo-only.** A pooled pot needs a server to hold the money and run the table, and this site never
  handles real money, so in `redirect` mode the live tables are switched off and hidden. To make them real you would
  run the tables, seeds and pots on a server and replace the bots in `js/live.js` with players.
-@@ -437,7 +453,7 @@
+@@ -438,7 +464,7 @@
  css/chooser.css     the choose-your-own-charities dialog and its chip
  css/slots.css       the slot machines and their five themes
  css/tour.css        the first-visit tour
 -css/fit.css         one screen per game: the tighter gift panel with Play right under the choices, the phone's docked panel (js/ui/game.js fits the picture to the screen)
-+css/fit.css         one screen per game: the gift panel in three layouts (wide, a phone's docked panel and Options sheet, a landscape phone's two columns); js/ui/game.js fits the picture to the screen
++css/fit.css         one screen per game, solo and live tables: the gift panel (or a table's panel) in three layouts (wide, a phone's docked panel and Options sheet, a landscape phone's two columns); js/ui/game.js fits the picture to the screen
  css/ranks.css       the rank emblems: their classes and animation
  css/rankui.css      rank chips next to names, the rank card and ladder, the rank-up moment
  js/config.js        mode, limits, demo credit, checkout hook
-diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
---- a/css/fit.css	2026-10-21 14:11:00.586082442 +0000
-+++ b/css/fit.css	2026-10-21 14:28:23.336019490 +0000
+diff -ruN -x wip a/css/fit.css b/css/fit.css
+--- a/css/fit.css	2026-10-24 00:43:21.000000000 +0000
++++ b/css/fit.css	2026-10-24 02:09:55.725736330 +0000
 @@ -1,8 +1,13 @@
  /* ==========================================================================
     One screen: the game, the gift choices and the Play button together.
@@ -68,7 +95,7 @@ diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
  #view-game .bet .field { gap: 6px; }
  #view-game .bet .field__row { min-height: 22px; }
  #view-game .bet .field__label { font-size: 0.7rem; }
-@@ -39,7 +45,8 @@
+@@ -39,13 +45,19 @@
  #view-game .bet__optbtn { display: none; }
  
  /* ------------------------------------------------------------------ the stage */
@@ -78,7 +105,18 @@ diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
  #view-game .stage__head { flex-wrap: nowrap; align-items: center; gap: 10px 14px; }
  #view-game .stage__titles { min-width: 0; flex: 1 1 auto; }
  #view-game .stage__title { font-size: 1.35rem; }
-@@ -59,18 +66,39 @@
+ #view-game .stage__tag { margin-top: 0; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ #view-game .stage__badges { flex: none; }
+ #view-game .stage__body { min-height: 0; padding: 8px; }
++/* The picture may get narrower with the window (a phone turned upright again, a laptop window made smaller). A grid column sizes itself to what is in it unless it
++   is told it may be smaller, and the games work out their picture's size from the width of their own box: they never saw the narrower window and kept the old,
++   bigger picture (a Lucky Wheel 85 px wider than the screen after turning the phone back upright). */
++#view-game .stage__body, #view-game .game { grid-template-columns: minmax(0, 1fr); }
++#view-game .game > * { min-width: 0; }
+ /* the picture that fitStage() has shrunk: it keeps its own size for layout and is scaled from its top middle */
+ #view-game .game > .is-fit { will-change: transform; }
+ 
+@@ -59,33 +71,57 @@
  #view-game .bet #field-size .size-custom { gap: 6px; }
  #view-game .bet #field-size .btn--sm { min-height: 30px; padding: 3px 10px; }
  
@@ -120,7 +158,9 @@ diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
    /* "Your gift" still names the panel for a screen reader; the words are not needed on the screen */
    #view-game:not(.is-live) .bet__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
    /* Play stays at the bottom of the panel even when the choices above it are taller than the window (the panel then scrolls inside itself) */
-@@ -78,14 +106,15 @@
+   #view-game:not(.is-live) .bet__act { display: block; position: sticky; bottom: -14px; z-index: 1; margin: 0 -14px -14px; padding: 8px 14px 14px; background: linear-gradient(180deg, transparent 0, var(--panel) 14px); }
++  /* (the Play bar reaches 14 px down over what follows it, so the hint under it starts below that, or the top of its words is hidden) */
++  #view-game:not(.is-live) .kbd-hint { margin-top: 9px; }
  }
  
  /* ------------------------------------------------- one column (a phone, a tablet held upright): the docked panel */
@@ -139,7 +179,7 @@ diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
    }
    /* docked and closed: only the amount presets and the Play button (with the Options button next to it) */
    #view-game:not(.is-live) .bet:not(.is-more) > .bet__title,
-@@ -103,21 +132,25 @@
+@@ -103,21 +139,25 @@
    #view-game:not(.is-live) .bet__act .playbtn { flex: 1 1 auto; width: auto; }
    #view-game:not(.is-live) .bet__optbtn {
      display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex: none; min-width: 60px;
@@ -171,7 +211,7 @@ diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
    #view-game .crumbs { margin-bottom: 6px; }
    #view-game .stage { padding: 10px; gap: 8px; }
    #view-game .stage__head { flex-wrap: wrap; gap: 4px 10px; }
-@@ -125,5 +158,241 @@
+@@ -125,5 +165,276 @@
    #view-game .stage__tag { display: none; }
    #view-game .stage__badges { gap: 4px; }
    #view-game .stage__body { padding: 6px 2px; }
@@ -188,6 +228,9 @@ diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
 +  #view-game:not(.is-live) .stage__title { font-size: 1.1rem; }
 +  #view-game:not(.is-live) .stage__badges .pill--demo { display: none; }
 +  #view-game:not(.is-live) .stage__head { flex-wrap: nowrap; gap: 4px 8px; }
++  /* the demo notice and the title row take one line each (on the narrowest phones both used to wrap, which cost the picture about a quarter of its height) */
++  body:has(#view-game:not([hidden]):not(.is-live)) .demo-strip { gap: 6px; padding-inline: 8px; font-size: 0.7rem; }
++  #view-game:not(.is-live) .stage__badges .pill { padding: 3px 8px; gap: 4px; font-size: 0.68rem; }
 +  /* the gift panel: the left column, as tall as the window leaves room for; the choices scroll in it and the Play bar stays at its bottom */
 +  #view-game:not(.is-live) .bet {
 +    position: sticky; top: calc(var(--top-h) + 6px); align-self: start;
@@ -265,7 +308,7 @@ diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
 +#view-game.is-live .playbtn__main { max-width: 100%; min-width: 0; }
 +#view-game.is-live .playbtn__main > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 +/* the line under it stays on one row (it is redrawn every second, a wrapping line would make the foot jump), except the long "press again to place it" */
-+#view-game.is-live .playbtn__sub { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
++#view-game.is-live .playbtn__sub { max-width: 100%; min-height: 1.3em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* (a line with words in it is 1.22 em tall: the room is kept when it is empty, so the button does not change height from one phase to the next) */
 +#view-game.is-live .playbtn.is-armed .playbtn__sub { overflow: visible; white-space: normal; text-align: center; }
 +
 +/* the table sizes: a label, then one row of small buttons */
@@ -342,12 +385,32 @@ diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
 +  #view-game.is-live .gamegrid { grid-template-columns: clamp(250px, 34vw, 300px) minmax(0, 1fr); gap: 10px; }
 +  #view-game.is-live .stage { order: 0; padding: 8px 10px; gap: 4px; }
 +  #view-game.is-live .stage__body { min-height: 0; padding: 2px; }
-+  #view-game.is-live .stage__title { font-size: 1.1rem; }
++  #view-game.is-live .stage__title { font-size: 0.95rem; line-height: 1.2; }
 +  #view-game.is-live .stage__head { flex-wrap: nowrap; gap: 4px 8px; }
++  /* "Checkable result" is a shield on its own here (its words are still in the page for a screen reader, and in its tooltip), so the title has the row */
++  #view-game.is-live #stage-fair { font-size: 0; line-height: 0; gap: 0; padding: 5px 7px; }
++  #view-game.is-live #stage-fair .ico { width: 17px; height: 17px; }
++  /* the round and pot bar: two short lines, it is on the first screen above the picture and the picture needs the room */
++  #view-game.is-live .lt-stagebar { padding: 3px 8px; font-size: 0.7rem; line-height: 1.3; border-radius: 8px; }
 +  #view-game.is-live #livepanel { position: sticky; top: calc(var(--top-h) + 6px); align-self: start; height: calc(100vh - var(--top-h) - 38px); max-height: none; padding: 8px 10px 0; }
 +  #view-game.is-live #livepanel .bet__title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 +  #view-game.is-live .lt-foot { margin: 0 -10px; padding: 6px 10px 8px; }
 +  #view-game.is-live .odds { max-height: none; }
++}
++/* a phone held sideways, 400 px tall or less: every line counts. The clock row of the panel is left out (the round bar above the picture says the same, "Round 2 · Betting open 0:22"),
++   the board gets its room, and the join button's hint line goes (it is still in the button's name for a screen reader) unless it carries the confirmation to press again */
++@media (min-width: 561px) and (max-height: 400px) {
++  #view-game.is-live .lt-status { display: none; }
++  #view-game.is-live .lt-oddsfield .field__row { min-height: 0; }
++  #view-game.is-live .lt-oddsfield .btn--sm { min-height: 30px; padding: 3px 10px; }
++  #view-game.is-live .lt-foot { padding: 5px 10px 6px; }
++  #view-game.is-live .lt-stake { margin-bottom: 4px; }
++  #view-game.is-live .lt-stake .seg__btn { min-height: 30px; }
++  #view-game.is-live .bet .playbtn { padding: 4px 12px; }
++  #view-game.is-live .stage { padding: 6px 10px 7px; gap: 3px; }
++  #view-game.is-live .lt-stagebar { padding: 2px 8px; line-height: 1.25; }
++  #view-game.is-live .stage__title { font-size: 0.88rem; }
++  #view-game.is-live .playbtn:not(.is-armed) .playbtn__sub { position: absolute; width: 1px; height: 1px; min-height: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 +}
 +/* up to 720 px wide the navigation bar is at the bottom: it is kept low and thin there, and the page leaves room for it */
 +@media (min-width: 561px) and (max-width: 720px) and (max-height: 520px) {
@@ -413,10 +476,22 @@ diff -ruN -x e2e.mjs a/css/fit.css b/css/fit.css
 +  #view-game.is-live .lt-stagebar__a { grid-area: a; }
 +  #view-game.is-live .lt-stagebar__m { grid-area: m; order: 0; flex: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 +  #view-game.is-live .lt-stagebar__b { grid-area: b; }
++}
++
++/* ---------------------------------------------------- the keyboard: a focused control is scrolled clear of the bars (the same as the solo screens above) */
++html:has(#view-game.is-live:not([hidden])) { scroll-padding-top: calc(var(--top-h) + 10px); }
++@media (max-width: 900px) and (min-height: 521px), (max-width: 560px) {
++  html:has(#view-game.is-live:not([hidden])) { scroll-padding-bottom: calc(var(--dock-h, 128px) + 10px); }
++}
++@media (max-width: 720px) and (min-height: 521px), (max-width: 560px) {
++  html:has(#view-game.is-live:not([hidden])) { scroll-padding-bottom: calc(var(--nav-h) + var(--dock-h, 128px) + 10px); }
++}
++@media (min-width: 561px) and (max-width: 720px) and (max-height: 520px) {
++  html:has(#view-game.is-live:not([hidden])) { scroll-padding-bottom: calc(var(--nav-h) + 10px); }
  }
-diff -ruN -x e2e.mjs a/css/games.css b/css/games.css
---- a/css/games.css	2026-10-14 19:18:05.000989891 +0000
-+++ b/css/games.css	2026-10-21 14:23:27.630619563 +0000
+diff -ruN -x wip a/css/games.css b/css/games.css
+--- a/css/games.css	2026-10-24 00:43:21.000000000 +0000
++++ b/css/games.css	2026-10-24 02:09:55.732924327 +0000
 @@ -103,7 +103,7 @@
  .dice__scene { --ds: clamp(88px, 22vw, 118px); position: relative; width: var(--ds); height: var(--ds); perspective: 800px; }
  .die__hop { position: relative; width: 100%; height: 100%; }
@@ -435,7 +510,7 @@ diff -ruN -x e2e.mjs a/css/games.css b/css/games.css
  .coin3d__in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
  .coin3d__face { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: radial-gradient(circle at 35% 30%, #fff2b5, #ffc542 55%, #b07a10); border: 3px solid #fff4c4; box-shadow: inset 0 0 0 5px rgba(176, 122, 16, 0.45); color: #7a4a05; }
  .coin3d__face .ico { width: 46%; height: 46%; }
-@@ -311,3 +311,84 @@
+@@ -311,3 +311,93 @@
  .vtile__sub { max-width: 100%; font: 600 0.66rem/1.2 var(--f-body); color: var(--dim); overflow-wrap: anywhere; }
  .vtile__sub:empty { display: none; }
  @media (prefers-reduced-motion: reduce) { .vtile, .variants > summary::after { transition: none; } }
@@ -466,6 +541,10 @@ diff -ruN -x e2e.mjs a/css/games.css b/css/games.css
 +  /* Last One Standing: two columns of tiles on a phone (one column of eight rows was too tall) */
 +  #view-game .stand__grid--sm { --min: 128px; }
 +}
++@media (max-height: 520px) and (max-width: 720px) {
++  /* ... and on a phone held sideways, where the picture is only about 240 px wide: two narrower columns, or the list is shrunk until its names cannot be read */
++  #view-game .stand__grid--sm { --min: 104px; }
++}
 +
 +/* ---------- a window up to 520 px tall (a phone held sideways): the games with real text and buttons are drawn smaller by their own sizes ----------
 +   About 200 to 250 px of height is left for the picture there. Sizes that follow the height of the window (vh) keep each game's words and buttons usable;
@@ -490,6 +569,8 @@ diff -ruN -x e2e.mjs a/css/games.css b/css/games.css
 +  #view-game .drop__view { height: 148px; }
 +  #view-game .dcard { height: 122px; width: clamp(96px, 28vh, 124px); gap: 4px; padding: 6px; }
 +  #view-game .dcard__badge { width: 40px; font-size: 1rem; }
++  #view-game .dcard__name { font-size: 0.8rem; }
++  #view-game .dcard__cause, #view-game .dcard__odds { line-height: 1.15; }   /* (the name and the cause each take up to two lines: with the page's own line height they did not fit the card and the name was cut in half) */
 +  /* Dice: a flatter table, and the face numbers stay readable */
 +  #view-game .dice__table { height: 112px; }
 +  #view-game .dice__scene { --ds: clamp(52px, 15vh, 68px); --hop-h: 22px; }
@@ -506,9 +587,12 @@ diff -ruN -x e2e.mjs a/css/games.css b/css/games.css
 +  #view-game .bracket.is-mirror .match, #view-game .bracket.is-mirror .champ { grid-column: var(--gc); grid-row: var(--gr); }
 +  #view-game .bracket.is-mirror .bcol--champ .bcol__t { display: none; }
 +}
-+@media (max-height: 520px) and (max-width: 800px) {
-+  /* a phone held sideways leaves a picture only about 340 px wide: three tiles of the die's board have no room for names (the mark opens the profile, the tile's title has the name), and the bracket's round titles do not fit its five columns */
++@media (max-height: 520px) and (max-width: 900px) {
++  /* a phone held sideways leaves a picture only about 340 to 440 px wide: three tiles of the die's board have no room for names (they broke in the middle of a word; the mark opens the profile, the tile's title has the name) */
 +  #view-game .dtile__name { display: none; }
++}
++@media (max-height: 520px) and (max-width: 800px) {
++  /* ... and the bracket's round titles do not fit its five columns */
 +  #view-game .bracket.is-mirror .bcol__t { display: none; }
 +}
 +@media (max-width: 560px) {
@@ -520,9 +604,9 @@ diff -ruN -x e2e.mjs a/css/games.css b/css/games.css
 +  #view-game .coingame .bracket.is-mirror .slot .cmono { --s: 22px !important; }
 +  #view-game .coin3d { --cs: 38px; --chop-h: 14px; }
 +}
-diff -ruN -x e2e.mjs a/css/slots.css b/css/slots.css
---- a/css/slots.css	2026-10-06 03:28:52.146858171 +0000
-+++ b/css/slots.css	2026-10-21 14:23:27.758793495 +0000
+diff -ruN -x wip a/css/slots.css b/css/slots.css
+--- a/css/slots.css	2026-10-24 00:43:21.000000000 +0000
++++ b/css/slots.css	2026-10-24 00:00:48.691552401 +0000
 @@ -132,3 +132,13 @@
  .sym--btn:focus-visible { outline: 3px solid #fff; outline-offset: -4px; }
  .slots__reels.is-clickable .sym--btn, .slots__reels.is-clickable .sym--pic { cursor: pointer; }
@@ -537,9 +621,9 @@ diff -ruN -x e2e.mjs a/css/slots.css b/css/slots.css
 +  #view-game .slots__bar { margin-top: 8px; }
 +  #view-game .slots.is-short .sym__name { -webkit-line-clamp: 1; font-size: 0.68rem; }
 +}
-diff -ruN -x e2e.mjs a/js/games/coin.js b/js/games/coin.js
---- a/js/games/coin.js	2026-10-06 03:28:52.165111317 +0000
-+++ b/js/games/coin.js	2026-10-21 14:23:27.781309922 +0000
+diff -ruN -x wip a/js/games/coin.js b/js/games/coin.js
+--- a/js/games/coin.js	2026-10-24 00:43:21.000000000 +0000
++++ b/js/games/coin.js	2026-10-24 00:00:48.691880662 +0000
 @@ -67,19 +67,38 @@
      if (!el.bracket) { return; }
      var n = entries.length || bracketSize();
@@ -582,9 +666,9 @@ diff -ruN -x e2e.mjs a/js/games/coin.js b/js/games/coin.js
      el.bracket.classList.toggle('bracket--compact', compact());
      syncMarks();
    }
-diff -ruN -x e2e.mjs a/js/games/drop.js b/js/games/drop.js
---- a/js/games/drop.js	2026-10-06 03:31:02.305168708 +0000
-+++ b/js/games/drop.js	2026-10-21 14:23:27.845798168 +0000
+diff -ruN -x wip a/js/games/drop.js b/js/games/drop.js
+--- a/js/games/drop.js	2026-10-24 00:43:21.000000000 +0000
++++ b/js/games/drop.js	2026-10-24 00:00:48.692220873 +0000
 @@ -82,7 +82,9 @@
      var first = el.strip.firstElementChild;
      if (first) {
@@ -606,9 +690,9 @@ diff -ruN -x e2e.mjs a/js/games/drop.js b/js/games/drop.js
      var c = Math.floor(at / cardStep);
      for (var k = c - 1; k <= c + 1; k++) {
        if (k < 0 || k >= cards.length) { continue; }
-diff -ruN -x e2e.mjs a/js/games/plinko.js b/js/games/plinko.js
---- a/js/games/plinko.js	2026-10-06 03:31:02.253672838 +0000
-+++ b/js/games/plinko.js	2026-10-21 14:23:27.956958860 +0000
+diff -ruN -x wip a/js/games/plinko.js b/js/games/plinko.js
+--- a/js/games/plinko.js	2026-10-24 00:43:21.000000000 +0000
++++ b/js/games/plinko.js	2026-10-24 00:00:48.692579897 +0000
 @@ -64,7 +64,12 @@
      if (!isBig()) {
        var margin = W * 0.04;
@@ -648,9 +732,9 @@ diff -ruN -x e2e.mjs a/js/games/plinko.js b/js/games/plinko.js
      },
  
      setSize: function (n) { size = n; if (!busy && !field) { rebuild(); } },
-diff -ruN -x e2e.mjs a/js/games/slots.js b/js/games/slots.js
---- a/js/games/slots.js	2026-10-06 03:28:52.186361491 +0000
-+++ b/js/games/slots.js	2026-10-21 14:23:27.993011511 +0000
+diff -ruN -x wip a/js/games/slots.js b/js/games/slots.js
+--- a/js/games/slots.js	2026-10-24 00:43:21.000000000 +0000
++++ b/js/games/slots.js	2026-10-24 00:00:48.693153777 +0000
 @@ -157,17 +157,25 @@
        syncTiles();
      }
@@ -698,9 +782,9 @@ diff -ruN -x e2e.mjs a/js/games/slots.js b/js/games/slots.js
              syncTiles();
              // matches: any charity on two or more reels
              var counts = {};
-diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
---- a/js/ui/game.js	2026-10-21 13:05:05.861004056 +0000
-+++ b/js/ui/game.js	2026-10-21 14:32:23.960831301 +0000
+diff -ruN -x wip a/js/ui/game.js b/js/ui/game.js
+--- a/js/ui/game.js	2026-10-24 00:43:21.000000000 +0000
++++ b/js/ui/game.js	2026-10-24 02:10:05.809603434 +0000
 @@ -52,6 +52,9 @@
        '<div class="gamegrid">' +
          '<section class="bet panel" id="bet-panel" aria-labelledby="bet-t">' +
@@ -728,7 +812,21 @@ diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
      };
  
      amount = ui.amount.mount(root.querySelector('[data-role="amount"]'), function () { refreshBet(); });
-@@ -144,8 +148,29 @@
+@@ -140,12 +144,49 @@
+       customChanged();
+     });
+     el.play.addEventListener('click', function () { play(); });
+-    el.optBtn.addEventListener('click', function () { setMore(!el.bet.classList.contains('is-more')); });
++    el.optBtn.addEventListener('click', function (e) {
++      var on = !el.bet.classList.contains('is-more');
++      setMore(on);
++      // Opened with the keyboard (or a screen reader, which sends a click with no mouse behind it): the choices come before this button in the page, so the next Tab
++      // would skip them all and land on Play. Start on the first choice instead. (A touch or a mouse click leaves the focus alone: it would raise the on-screen keyboard.)
++      if (on && e.detail === 0 && isDocked()) {
++        var first = el.bet.querySelector('.amount__input');
++        if (first && first.offsetParent !== null) { first.focus(); }
++      }
++    });
      el.bet.addEventListener('keydown', function (e) {
        if (e.key === 'Escape' && el.bet.classList.contains('is-more') && isDocked()) { e.stopPropagation(); setMore(false); el.optBtn.focus(); }
      });
@@ -753,13 +851,20 @@ diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
 +        if (lb) { lb.focus(); }
 +      }
 +    });
++    // (and the same as the solo sheet above: the keyboard that moves on past the live sheet folds it away, rather than going on to what it covers)
++    el.livePanel.addEventListener('focusout', function (e) {
++      var to = e.relatedTarget;
++      if (!to || !el.livePanel.classList.contains('is-more') || !isDocked() || el.livePanel.contains(to)) { return; }
++      if (to.closest && to.closest('dialog')) { return; }
++      setMore(false);
++    });
      window.addEventListener('resize', fitSoon);
 -    if (window.ResizeObserver) { fitObs = new ResizeObserver(fitSoon); fitObs.observe(el.stage); fitObs.observe(el.bet); }
 +    if (window.ResizeObserver) { fitObs = new ResizeObserver(fitSoon); fitObs.observe(el.stage); fitObs.observe(el.bet); fitObs.observe(el.act); fitObs.observe(el.livePanel); }
  
      el.roundsSeg.addEventListener('click', function (e) {
        var b = e.target.closest('.seg__btn');
-@@ -763,6 +788,10 @@
+@@ -763,6 +804,10 @@
      if (live) { ui.live.attach((opts && opts.table) || id); } else { refreshBet(); }
      el.bet.classList.remove('is-more');
      el.optBtn.setAttribute('aria-expanded', 'false');
@@ -770,7 +875,7 @@ diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
      observeFit();
      fitSoon();
    }
-@@ -830,6 +859,7 @@
+@@ -830,6 +875,7 @@
      }
      var pool = activePool(current);
      if (pool.length < cfg.minPool) {
@@ -778,7 +883,7 @@ diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
        ui.toast('Put at least ' + cfg.minPool + ' charities in play.', 'info');
        ui.filters.open();
        return Promise.resolve();
-@@ -901,26 +931,58 @@
+@@ -901,26 +947,62 @@
  
    /* ------------------------------------------------- one screen: the options sheet and the fit of the picture */
  
@@ -843,10 +948,14 @@ diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
    // drawn at another size on the screen (they turn a click or a touch into a point on the canvas with rect.width / the canvas size).
    var FIT_MIN = 0.5;
 +  var FIT_MIN_LAND = 0.34;   // (a window up to 520 px tall, a phone held sideways: about 250 px of height is left for the picture)
++  // A live table has a bigger board (up to 500), so its picture can be taller, and above it come the round bar and the sheet's dock: it may be shrunk further (it is
++  // still the whole picture, and the odds board has the names), rather than being cut off by the dock or the navigation bar.
++  var FIT_MIN_LIVE = 0.34;
++  var FIT_MIN_LIVE_LAND = 0.2;
    var fitRaf = 0, fitObs = null, fitKey = '';
  
    function fitReset(prim) {
-@@ -930,11 +992,12 @@
+@@ -930,11 +1012,12 @@
      prim.classList.remove('is-fit');
    }
  
@@ -862,7 +971,7 @@ diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
    }
  
    function fitStage() {
-@@ -944,20 +1007,21 @@
+@@ -944,20 +1027,23 @@
      var prim = panel && panel.firstElementChild;
      if (!prim || panel.hidden) { return; }
      var docked = isDocked();
@@ -885,14 +994,16 @@ diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
 +    // in-stage button (two columns) or for the dock and the navigation bar (a phone held upright)
      var top = prim.getBoundingClientRect().top + (window.pageYOffset || 0);
 -    var reserve = wide ? 44 : 14 + space;
-+    var reserve = single ? 14 + space : (matches('(max-height: 520px)') ? 26 : 44) + space;
++    var shortWin = matches('(max-height: 520px)');
++    // (a solo game needs only the panel's own padding under the picture; a table's result card is scrolled into view when it comes, so it needs no room kept under the picture either)
++    var reserve = single ? 14 + space : (shortWin ? (isLive() ? 10 : 14) : 44) + space;
      var room = window.innerHeight - top - reserve;
 -    var s = Math.max(FIT_MIN, Math.min(1, room / H));
-+    var s = Math.max(matches('(max-height: 520px)') ? FIT_MIN_LAND : FIT_MIN, Math.min(1, room / H));
++    var s = Math.max(isLive() ? (shortWin ? FIT_MIN_LIVE_LAND : FIT_MIN_LIVE) : (shortWin ? FIT_MIN_LAND : FIT_MIN), Math.min(1, room / H));
      if (s >= 0.995) { return; }
      prim.classList.add('is-fit');
      prim.style.transformOrigin = '50% 0';
-@@ -976,18 +1040,30 @@
+@@ -976,18 +1062,30 @@
        fitObs.disconnect();
        fitObs.observe(el.stage);
        fitObs.observe(el.bet);
@@ -929,7 +1040,7 @@ diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
    }
  
    /** Sets up the last non-direct round again (same game, amount, split and frequency). */
-@@ -1010,6 +1086,8 @@
+@@ -1010,6 +1108,8 @@
    ui.game = {
      ORDER: ORDER, enter: enter, leave: leave, play: play, repeatLast: repeatLast, poolChanged: poolChanged,
      current: function () { return current; }, refreshLiveTab: refreshLiveTab,
@@ -938,15 +1049,16 @@ diff -ruN -x e2e.mjs a/js/ui/game.js b/js/ui/game.js
      amountCents: function () { return amount ? amount.cents() : NaN; },
      lastDraw: function () { return lastDrawn; },
      mountedGame: function (id) { return mounted[id] ? GS.games[id] : null; }
-diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
---- a/js/ui/live.js	2026-10-21 14:08:26.039792878 +0000
-+++ b/js/ui/live.js	2026-10-21 14:28:23.305354779 +0000
-@@ -36,8 +36,13 @@
+diff -ruN -x wip a/js/ui/live.js b/js/ui/live.js
+--- a/js/ui/live.js	2026-10-24 00:43:21.000000000 +0000
++++ b/js/ui/live.js	2026-10-24 00:46:04.303499115 +0000
+@@ -36,8 +36,14 @@
    var ODDS_HOLD_MS = 5000;   // the longest the odds board waits for a press to end
    var armTimer = 0;
    var sirenRound = {};       // room id -> round the jackpot siren already sounded for
 +  var pickMode = false;      // a phone: the sheet was opened by "Pick a charity", so it closes again once a charity is chosen
 +  var wasDocked = null;      // whether the panel was docked at the bottom of the screen the last time the window changed size
++  var revealed = null;       // { from, to }: where the page was, and where it was scrolled to so that a result card is in view (see revealResult)
  
    function dollars(n) { return money(n * 100, true); }
 +
@@ -955,7 +1067,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
    function scale() { return GS.timeScale || 1; }
  
    function clock(ms) {
-@@ -281,26 +286,37 @@
+@@ -281,26 +287,37 @@
    function ensurePanel() {
      if (panel) { return; }
      panel = $('#livepanel');
@@ -1012,7 +1124,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
      ui.hydrate(panel);
      el = {
        phase: $('[data-role="phase"]', panel), clock: $('[data-role="clock"]', panel), bar: $('[data-role="bar"]', panel), chips: $('[data-role="chips"]', panel),
-@@ -309,7 +325,8 @@
+@@ -309,7 +326,8 @@
        add: $('[data-role="add"]', panel), join: $('[data-role="join"]', panel), joinLabel: $('[data-role="join-label"]', panel), joinSub: $('[data-role="join-sub"]', panel),
        msg: $('[data-role="msg"]', panel), result: $('#lt-result'), stagebar: $('#lt-stagebar'),
        pred: $('[data-role="pred-rows"]', panel), chat: $('[data-role="chat"]', panel), chatOn: $('[data-role="chat-on"]', panel),
@@ -1022,7 +1134,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
      };
      stake = store.prefs().liveStake || 20;
      buildPresets();
-@@ -345,6 +362,7 @@
+@@ -345,6 +363,7 @@
        disarm();
        renderOdds();
        renderJoin();
@@ -1030,7 +1142,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
      });
      el.add.addEventListener('click', openPicker);
      el.join.addEventListener('click', onJoin);
-@@ -366,6 +384,38 @@
+@@ -366,6 +385,39 @@
        store.setPref('voice', el.voiceOn.checked);
        if (el.voiceOn.checked) { GS.audio.unlock(); GS.audio.say('Place your bets'); }
      });
@@ -1040,7 +1152,8 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
 +      var d = docked();
 +      if (d === wasDocked) { return; }
 +      wasDocked = d;
-+      if (!d) { pickMode = false; }
++      // (a sheet that is open when the phone is turned sideways is shut: it would come back over the picture, unasked, when the phone is turned upright again)
++      if (!d) { pickMode = false; if (cur && ui.game.setSheet) { ui.game.setSheet(false); } }
 +      if (cur) { renderJoin(); }
 +    });
 +  }
@@ -1069,7 +1182,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
    }
  
    function buildPresets() {
-@@ -520,21 +570,32 @@
+@@ -520,21 +572,32 @@
        room.distinct() + ' of ' + room.maxGates + ' gates used' + (open ? (gates > 0 ? ', ' + gates + ' open for a new charity.' : '. The table is full: back one of these.') : '.');
    }
  
@@ -1106,7 +1219,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
      } else {
        var ch = GS.charity(pick);
        var seat = room.seats[pick];
-@@ -546,6 +607,7 @@
+@@ -546,6 +609,7 @@
      el.join.disabled = disabled;
      el.join.classList.toggle('is-cancel', !!room.you && room.phase === 'open');
      el.join.classList.toggle('is-armed', armed);
@@ -1114,7 +1227,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
      renderStake();
    }
  
-@@ -565,10 +627,11 @@
+@@ -565,10 +629,11 @@
      el.pot.textContent = dollars(room.pot());
      el.players.textContent = String(room.players());
      el.gates.textContent = room.distinct() + '/' + room.maxGates;
@@ -1128,7 +1241,22 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
          (map ? '<span class="lt-stagebar__m" data-map="' + esc(map.id) + '">Track: <b>' + esc(map.name) + '</b></span>' : '') +
          '<span class="lt-stagebar__b"><b>' + dollars(room.pot()) + '</b> pot · ' + room.players() + ' players · bots simulated</span>';
      }
-@@ -671,6 +734,30 @@
+@@ -599,7 +664,13 @@
+     if (!cur || !panel) { return; }
+     var room = cur.room;
+     var r = room.result;
+-    if (room.phase !== 'result' || !r || animating[cur.id]) { el.result.innerHTML = ''; el.result.removeAttribute('data-round'); return; }
++    if (room.phase !== 'result' || !r || animating[cur.id]) {
++      var back = revealBack();
++      el.result.innerHTML = '';
++      el.result.removeAttribute('data-round');
++      if (back !== null) { scrollPage(back); }
++      return;
++    }
+     if (el.result.getAttribute('data-round') === String(r.round) + room.id) { return; }   // already showing this round's result
+     el.result.setAttribute('data-round', String(r.round) + room.id);
+     var winner = r.winner;
+@@ -671,6 +742,49 @@
          }).catch(function () { var out = $('[data-role="verify-out"]', el.result); if (out) { out.innerHTML = ui.receipt.verifyHTML({ error: true }); } });
        });
      }
@@ -1143,6 +1271,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
 +  function revealResult() {
 +    var box = el.result;
 +    if (!box || !box.firstElementChild || (window.pageYOffset || 0) > 200) { return; }
++    if (ui.game.sheetOpen && ui.game.sheetOpen()) { return; }   // a phone with the options sheet open: the visitor is busy there, the card is still under the picture
 +    var bar = document.getElementById('topbar');
 +    var topEdge = (bar ? bar.offsetHeight : 60) + 10;
 +    var covered = 0;
@@ -1155,11 +1284,29 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
 +    if (r.bottom <= bottomEdge && r.top >= topEdge) { return; }                   // all of it is in view already
 +    var dy = r.height > bottomEdge - topEdge ? r.top - topEdge : r.bottom - bottomEdge;   // (a card taller than the room: its top first)
 +    var y = Math.max(0, (window.pageYOffset || 0) + dy);
++    revealed = { from: window.pageYOffset || 0, to: y };
++    scrollPage(y);
++  }
++
++  function scrollPage(y) {
 +    try { window.scrollTo({ top: y, behavior: U.reducedMotion() ? 'auto' : 'smooth' }); } catch (err) { window.scrollTo(0, y); }
++  }
++
++  /**
++   * The card is gone (the next round opened): when the page was scrolled down to show it, and the visitor has not scrolled since, the page goes back to where it
++   * was, so the picture of the new round is on the first screen again. Returns that place (or null), and must be asked BEFORE the card is taken out, because
++   * the page gets shorter and the browser moves it by itself.
++   */
++  function revealBack() {
++    var r = revealed;
++    revealed = null;
++    if (!r) { return null; }
++    var now = window.pageYOffset || 0;   // (a smooth scroll that has not ended yet is somewhere between the two places)
++    return now >= Math.min(r.from, r.to) - 80 && now <= Math.max(r.from, r.to) + 80 ? r.from : null;
    }
  
    /* ----------------------------------------------------------------- actions */
-@@ -685,7 +772,11 @@
+@@ -685,7 +799,11 @@
        return;
      }
      if (room.phase !== 'open') { return; }
@@ -1172,7 +1319,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
      var gate = ui.opts.check(stake * 100);
      if (!gate.ok && gate.limit) { say(gate.message); return; }
      GS.audio.unlock();
-@@ -709,6 +800,9 @@
+@@ -709,6 +827,9 @@
      GS.audio.coin();
      ui.announce('Bet placed: ' + dollars(stake) + ' on ' + GS.charity(pick).name + '.');
      renderAll();
@@ -1182,7 +1329,7 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
    }
  
    function openPicker() {
-@@ -718,7 +812,7 @@
+@@ -718,7 +839,7 @@
        title: 'Add a charity to the table',
        sub: 'There ' + (room.gatesOpen() === 1 ? 'is 1 gate' : 'are ' + room.gatesOpen() + ' gates') + ' open. Pick any charity and it joins this table with your stake.',
        note: function (c) { return room.seats[c.id] ? 'already at the table' : ''; },
@@ -1191,11 +1338,705 @@ diff -ruN -x e2e.mjs a/js/ui/live.js b/js/ui/live.js
      });
    }
  
-@@ -913,6 +1007,7 @@
+@@ -874,6 +995,7 @@
+     say('');
+     disarm();
+     dropStaleShow();
++    if (room.phase !== 'open') { pickDone(); }   // a phone: bets are closed, so the sheet that was opened to pick a charity has nothing left to do and must not cover the show
+     if (room.phase === 'open') {
+       verifyOut = '';
+       if (!animating[cur.id]) { setFieldNow(); }
+@@ -913,6 +1035,8 @@
      $('#lt-stagebar').hidden = false;
      el.stagebar = $('#lt-stagebar');
      el.msg.textContent = '';
 +    pickMode = false;
++    revealed = null;
      disarm();
      el.voiceOn.checked = GS.audio.voiceOn();
      if (GS.app.state.stream && !room.chat.on) { room.setChat(true); }
+@@ -938,6 +1062,7 @@
+     clearInterval(clockTimer);
+     clearTimeout(fieldTimer);
+     fieldTimer = 0;
++    revealed = null;
+     if (cur) {
+       // leaving a table whose drop is still playing (one canvas serves every Plinko table): stop that drop
+       if (animating[cur.id] && GS.games[cur.id].abort) { GS.games[cur.id].abort(); }
+diff -ruN -x wip a/tests/e2e.mjs b/tests/e2e.mjs
+--- a/tests/e2e.mjs	2026-10-24 00:43:21.000000000 +0000
++++ b/tests/e2e.mjs	2026-10-24 02:09:55.760923321 +0000
+@@ -152,6 +152,12 @@
+   const b = page.locator('#btn-opts');
+   if (await b.count() && await b.isVisible() && (await b.getAttribute('aria-expanded')) !== 'true') { await b.click(); await page.waitForTimeout(150); }
+ };
++// The live panel is docked on a phone too: only the stake buttons, Options and the join button show until Options opens the rest (the odds board, other amount,
++// table sizes, predictions) as a sheet. Open it when a control in it is needed.
++const openLiveOptions = async (page) => {
++  const b = page.locator('#livepanel [data-role="sheet-btn"]');
++  if (await b.count() && await b.isVisible() && (await b.getAttribute('aria-expanded')) !== 'true') { await b.click(); await page.waitForTimeout(150); }
++};
+ const setAmount = async (page, v) => { const el = amountInput(page); if (!(await el.isVisible())) { await openOptions(page); } await el.fill(String(v)); await el.blur(); };
+ const toastText = (page) => page.locator('#toasts .toast').allTextContents();
+ const a11y = async (page, label) => {
+@@ -1933,15 +1939,19 @@
+ 
+ /* ======================================================================== */
+ if (section('13c. Live tables: staking, cancelling, adding a charity (real time)')) {
+-  const page = await newPage();
++ // the same checks on a laptop (the panel is a column, the odds board is on the page) and on a phone (the panel is docked: the board, other amount and Add charity are in the Options sheet)
++ for (const phone of [false, true]) {
++  console.log(phone ? '  -- on a phone (390x844, touch)' : '  -- on a laptop (1440x900)');
++  const page = await newPage(phone ? { viewport: { width: 390, height: 844 }, mobile: true } : {});
+   await openApp(page, '#live-derby', '');
+   await page.evaluate(() => { GS.live.room('derby').openRound(0); });
+-  await page.waitForSelector('#livepanel .lt-phase.is-open');
++  await page.waitForSelector('#livepanel .lt-phase.is-open', { state: 'attached' });
+   await page.waitForTimeout(300);
+   check(await page.locator('#lt-stake [aria-pressed="true"]').innerText() === '$20', 'the default stake is $20');
+-  check((await page.locator('#livepanel [data-role="join"]').innerText()).includes('Pick a charity') && await page.locator('#livepanel [data-role="join"]').isDisabled(), 'you pick a charity before you can join');
++  check((await page.locator('#livepanel [data-role="join"]').innerText()).includes('Pick a charity') && (await page.locator('#livepanel [data-role="join"]').isDisabled()) === !phone, 'you pick a charity before you can join (on a phone the button opens the board instead of being switched off)');
+   await page.click('#lt-stake [data-stake="50"]');
+   check(await page.evaluate(() => GS.store.prefs().liveStake) === 50, 'the stake you choose is remembered');
++  await openLiveOptions(page);
+   await page.locator('#livepanel .odd').nth(1).click();
+   const label = await page.locator('#livepanel [data-role="join-label"]').innerText();
+   check(/^Put \$50 on /.test(label), 'the button says what you are about to do', label);
+@@ -1953,12 +1963,14 @@
+   const rm = await page.evaluate(() => { const r = GS.live.room('derby'); return { you: r.you, pot: r.pot(), pending: GS.store.get().pending.length }; });
+   check(rm.you && rm.you.dollars === 50 && rm.pot >= potBefore + 50 && rm.pending === 1, 'your stake is in the pot and recorded as pending', rm);
+   check((await page.locator('#livepanel [data-role="join"]').innerText()).includes('Take my bet back'), 'the join button becomes Take my bet back');
++  await openLiveOptions(page);   // (a phone shuts the sheet once the stake is in)
+   check(await page.locator('#livepanel .odd.is-on small').first().innerText().then((t) => t.includes('you $50')), 'your stake shows on the odds board');
+   check((await page.locator('#tabp').innerText()).includes('You'), 'and in the live feed');
+   await page.click('#livepanel [data-role="join"]');
+   check(await balance(page) === before, 'cancelling gives the stake back');
+   check(await page.evaluate(() => GS.live.room('derby').you === null && GS.store.get().pending.length === 0), 'and clears the pending marker');
+   // a custom stake
++  await openLiveOptions(page);
+   await page.fill('#lt-custom', '35');
+   check(await page.locator('#lt-stake [aria-pressed="true"]').count() === 0, 'typing another amount un-selects the presets');
+   await page.locator('#livepanel .odd').first().click();
+@@ -1966,6 +1978,7 @@
+   check(await page.evaluate(() => GS.live.room('derby').you.dollars) === 35 && await balance(page) === before - 3500, 'a custom stake of $35 works');
+   await page.click('#livepanel [data-role="join"]');
+   // add a charity that is not at the table
++  await openLiveOptions(page);
+   await page.click('#lt-stake [data-stake="20"]');
+   await page.click('#livepanel [data-role="add"]');
+   await page.waitForSelector('#dlg-charitypick[open]');
+@@ -1973,6 +1986,7 @@
+   await a11y(page, 'add a charity to the table');
+   await page.locator('#dlg-charitypick .pickitem').first().click();
+   await page.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
++  await openLiveOptions(page);   // (a phone shuts the sheet after a charity is added from the dialog, to show the join button naming it)
+   const pseudo = await page.locator('#livepanel .odd.is-new').count();
+   check(pseudo === 1 && (await page.locator('#livepanel .odd.is-new').innerText()).includes('new gate'), 'a charity you add gets a gate of its own on the board');
+   await page.click('#livepanel [data-role="join"]');
+@@ -1989,14 +2003,16 @@
+   check(full.distinct === 8 && full.res.ok === false && full.res.code === 'full' && full.still === null, 'a full table (8 charities) turns away a ninth', full);
+   // not enough credit
+   await page.evaluate(() => { GS.live.room('derby').openRound(0); GS.store.spend(GS.store.balance() - 500); GS.bus.emit('balance'); });
+-  await page.waitForSelector('#livepanel .lt-phase.is-open');
++  await page.waitForSelector('#livepanel .lt-phase.is-open', { state: 'attached' });
+   await page.waitForTimeout(200);
++  await openLiveOptions(page);
+   await page.locator('#livepanel .odd').first().click();
+   await page.click('#livepanel [data-role="join"]');
+   await page.waitForSelector('#dlg-credit[open]');
+   check(await balance(page) === 500 && await page.evaluate(() => GS.live.room('derby').you === null), 'without enough credit it opens Add credit and takes nothing');
+   await page.keyboard.press('Escape');
+   await page.close();
++ }
+ }
+ 
+ /* ======================================================================== */
+@@ -6052,6 +6068,280 @@
+   check(problems.length === problems0, 'section 13zq: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+ }
+ 
++/* ======================================================================== */
++if (section('13zu. Live tables on one screen: the picture, the stake choice and the join button are all on the first screen, with no scrolling')) {
++  const problems0 = problems.length;
++  const T = (g) => g + '25';   // the table of 25 for every game
++  // Where things land on the first screen of a live table (the page scrolled to the top, as it is when a table is opened).
++  const liveScreen = (page) => page.evaluate(() => {
++    const box = (sel) => {
++      const e = document.querySelector(sel);
++      if (!e) { return null; }
++      const r = e.getBoundingClientRect();
++      const cs = getComputedStyle(e);
++      if (cs.display === 'none' || cs.visibility === 'hidden' || (r.width === 0 && r.height === 0)) { return null; }
++      return { top: Math.round(r.top), bottom: Math.round(r.bottom), left: Math.round(r.left), right: Math.round(r.right) };
++    };
++    const pic = document.querySelector('#games .game:not([hidden]) > :first-child');
++    const tr = pic ? /matrix\(([^,]+)/.exec(getComputedStyle(pic).transform) : null;
++    const panel = document.querySelector('#livepanel');
++    const docked = !!panel && getComputedStyle(panel).position === 'fixed';
++    const nav = document.querySelector('#side');
++    const vh = window.innerHeight;
++    const navBar = !!nav && getComputedStyle(nav).position === 'fixed' && nav.getBoundingClientRect().top > vh / 2;   // (the bar at the bottom of a phone, not the rail beside a laptop)
++    // what covers the bottom of the screen: the navigation bar (on a phone) and the docked panel
++    const navTop = navBar ? Math.round(nav.getBoundingClientRect().top) : vh;
++    const floor = docked ? Math.min(navTop, Math.round(panel.getBoundingClientRect().top)) : navTop;
++    return {
++      vh, vw: window.innerWidth, floor, navTop, docked, scrollY: Math.round(window.scrollY),
++      join: box('#livepanel [data-role="join"]'), presets: box('#lt-stake'), pic: box('#games .game:not([hidden]) > :first-child'), scale: tr ? Number(tr[1]) : 1,
++      odds: box('#livepanel .odds'), optBtn: box('#livepanel [data-role="sheet-btn"]'), custom: box('#lt-custom'),
++      sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
++    };
++  });
++  const SCREENS = [
++    { name: 'a laptop (1366x768)', w: 1366, h: 768, phone: false, kind: 'wide' },
++    { name: 'a short laptop (1280x720)', w: 1280, h: 720, phone: false, kind: 'wide' },
++    { name: 'a phone (390x844)', w: 390, h: 844, phone: true, kind: 'dock' },
++    { name: 'a phone held sideways (568x320, the smallest)', w: 568, h: 320, phone: true, kind: 'side' }
++  ];
++  for (const sc of SCREENS) {
++    const page = await newPage({ viewport: { width: sc.w, height: sc.h }, mobile: sc.phone });
++    await openApp(page);
++    const noJoin = []; const noPresets = []; const cutOff = []; const tiny = []; const sideways = []; const noOdds = [];
++    for (const g of LIVE_GAMES) {
++      await go(page, '#live-' + T(g));
++      await page.waitForSelector('#livepanel:not([hidden]) .odd', { state: 'attached' });
++      // an open round with its bots seated, and the table's clock stopped: a result card that arrives (with ?fast=1 one comes every few seconds) scrolls the page down to it,
++      // and a first screen is measured with the page at the top
++      await page.evaluate((t) => { const r = window.GS.live.room(t); r.openRound(0.5); r._clearTimers(); }, T(g));
++      await page.waitForTimeout(g === 'lotto' ? 1500 : 700);
++      await page.evaluate(() => window.scrollTo(0, 0));
++      await page.waitForTimeout(150);
++      const m = await liveScreen(page);
++      if (!(m.join && m.join.top >= 0 && m.join.bottom <= m.navTop + 1)) { noJoin.push(g + ' ' + JSON.stringify(m.join) + ' floor ' + m.floor); }
++      if (!(m.presets && m.presets.top >= 0 && m.presets.bottom <= m.navTop + 1)) { noPresets.push(g + ' ' + JSON.stringify(m.presets)); }
++      if (sc.kind === 'side') {
++        // the smallest window: the round bar and the page's own bars leave about 80 px, so the picture is shown from its top (the tall boards are cut by the navigation bar; the page scrolls)
++        if (!(m.pic && m.pic.top >= 0 && m.pic.top < m.floor - 40)) { cutOff.push(g + ' picture ' + JSON.stringify(m.pic) + ' floor ' + m.floor); }
++        if (m.scale < 0.2 - 0.002) { tiny.push(g + ' ' + m.scale); }
++      } else {
++        if (!(m.pic && m.pic.top >= 0 && m.pic.bottom <= m.floor + 1)) { cutOff.push(g + ' picture ' + JSON.stringify(m.pic) + ' floor ' + m.floor); }
++        if (m.scale < 0.34 - 0.002) { tiny.push(g + ' ' + m.scale); }
++      }
++      if (m.sideways) { sideways.push(g); }
++      // a laptop and a phone held sideways show the odds board beside the picture; a docked phone keeps it in the sheet (and shows the Options button)
++      if (sc.kind === 'dock' ? !(m.optBtn && !m.odds) : !(m.odds && !m.optBtn)) { noOdds.push(g + ' odds ' + JSON.stringify(m.odds) + ' options ' + JSON.stringify(m.optBtn)); }
++    }
++    check(noJoin.length === 0, 'on ' + sc.name + ' the join button is on the first screen at all ' + LIVE_GAMES.length + ' live games', noJoin);
++    check(noPresets.length === 0, 'and so are the stake buttons', noPresets);
++    check(cutOff.length === 0, 'and ' + (sc.kind === 'side' ? 'the game picture starts on the first screen' : 'the whole game picture, clear of the panel and the navigation bar'), cutOff);
++    check(tiny.length === 0, 'and the picture is never shrunk below ' + (sc.kind === 'side' ? 'a fifth' : 'a third') + ' of its size', tiny);
++    check(sideways.length === 0, 'and no live table scrolls sideways', sideways);
++    check(noOdds.length === 0, sc.kind === 'dock' ? 'and the odds board is in the sheet behind an Options button' : 'and the odds board is beside the picture, with no Options button', noOdds);
++    if (sc.name.startsWith('a laptop') || sc.kind === 'dock' || sc.kind === 'side') { await liveSettled(page, T('wheel')); await go(page, '#live-' + T('wheel')); await liveSettled(page, T('wheel')); await a11y(page, 'a live table on ' + sc.name); }
++    await page.context().close();
++  }
++
++  /* ---- a phone: the docked bar and the sheet, for Wheel and for Plinko ---- */
++  for (const g of ['wheel', 'plinko']) {
++    const tid = T(g);
++    const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
++    await openApp(ph, '#live-' + tid);
++    await ph.waitForSelector('#livepanel:not([hidden]) .odd', { state: 'attached' });
++    await liveSettled(ph, tid);          // an open betting window, with the table's clock stopped so that the steps below are not hurried
++    await ph.waitForTimeout(500);
++    const vis = (sel) => ph.evaluate((s) => { const e = document.querySelector(s); if (!e) { return false; } const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0; }, sel);
++    const st = () => ph.evaluate(() => {
++      const p = document.querySelector('#livepanel');
++      const j = document.querySelector('#livepanel [data-role="join"]');
++      const nav = document.querySelector('#side').getBoundingClientRect();
++      const ae = document.activeElement;
++      return {
++        open: p.classList.contains('is-more'), expanded: document.querySelector('#livepanel [data-role="sheet-btn"]').getAttribute('aria-expanded'), pos: getComputedStyle(p).position,
++        label: document.querySelector('#livepanel [data-role="join-label"]').textContent, sub: document.querySelector('#livepanel [data-role="join-sub"]').textContent, joinDisabled: j.disabled,
++        panelBottom: Math.round(p.getBoundingClientRect().bottom), navTop: Math.round(nav.top), you: !!GS.live.room(GS.ui.live.current().room.id).you, route: GS.app.state.route,
++        activeJoin: ae === j, activeOptions: !!ae && ae.getAttribute('data-role') === 'sheet-btn', activeOdd: !!ae && ae.classList.contains('odd'), balance: GS.store.balance()
++      };
++    });
++    let s = await st();
++    check(s.pos === 'fixed' && (await vis('#lt-stake')) && (await vis('#livepanel [data-role="sheet-btn"]')) && (await vis('#livepanel [data-role="join"]')) && !(await vis('#livepanel .odds')) && !(await vis('#lt-custom')),
++      g + ': a phone docks the live panel: stake buttons, Options and the join button, and nothing else yet', s);
++    check(s.expanded === 'false' && s.panelBottom <= s.navTop + 1, g + ': the panel sits right above the navigation bar, and Options says it is shut', s);
++    check(/Pick a charity/.test(s.label) && !s.joinDisabled, g + ': before a charity is chosen the join button says "Pick a charity" and can be tapped (it opens the board)', { label: s.label, disabled: s.joinDisabled });
++    const optName = await ph.locator('#livepanel [data-role="sheet-btn"]').getAttribute('aria-label');
++    check(!!optName && /options/i.test(optName), g + ': the Options button has a name a screen reader can say', optName);
++    // "Pick a charity" opens the sheet at the board
++    await ph.tap('#livepanel [data-role="join"]');
++    await ph.waitForTimeout(450);
++    s = await st();
++    const board = await ph.evaluate(() => {
++      const sc = document.querySelector('#livepanel .lt-scroll').getBoundingClientRect();
++      const od = document.querySelector('#livepanel .odds').getBoundingClientRect();
++      const rg = document.querySelector('#livepanel .odds');
++      const lab = document.getElementById(rg.getAttribute('aria-labelledby'));
++      return { odTop: Math.round(od.top), scTop: Math.round(sc.top), scBottom: Math.round(sc.bottom), role: rg.getAttribute('role'), label: lab ? lab.textContent : '', radios: rg.querySelectorAll('[role="radio"]').length };
++    });
++    check(s.open && s.expanded === 'true' && board.odTop >= board.scTop - 1 && board.odTop < board.scTop + 150 && board.odTop < board.scBottom, g + ': tapping "Pick a charity" opens the sheet at the odds board', { s, board });
++    check(board.role === 'radiogroup' && /backing/i.test(board.label) && board.radios >= 2, g + ': the board is a radio group with a name, and each charity is a radio', board);
++    check(s.activeOdd, g + ': the first charity has the keyboard focus');
++    // pick a charity: the sheet closes, the join button names the charity
++    await ph.locator('#livepanel .odd').nth(1).tap();
++    await ph.waitForTimeout(450);
++    s = await st();
++    const picked = await ph.evaluate(() => { const o = document.querySelectorAll('#livepanel .odd')[1]; return o ? o.querySelector('.odd__main b').textContent.trim() : ''; });
++    check(!s.open && s.expanded === 'false', g + ': choosing a charity closes the sheet (it was opened to pick)', s);
++    check(/^Put \$20 on /.test(s.label) && s.label.indexOf(picked.slice(0, 5)) > 0, g + ': and the join button names the charity: ' + s.label, { label: s.label, picked });
++    check(s.activeJoin, g + ': the keyboard focus is on the join button, not lost');
++    // a stake, then the bet
++    await ph.tap('#lt-stake [data-stake="50"]');
++    const bal0 = (await st()).balance;
++    await ph.tap('#livepanel [data-role="join"]');
++    await ph.waitForTimeout(400);
++    s = await st();
++    check(s.you && s.balance === bal0 - 5000 && /Take my bet back/.test(s.label) && !s.open, g + ': the join button puts $50 on the table, takes it from the credit, and the sheet is shut', s);
++    check(/Bets close in/.test(s.sub) && /\$50 on /.test(s.sub), g + ': the line under it counts down to the lock and names the stake: ' + s.sub, s.sub);
++    await ph.tap('#livepanel [data-role="join"]');
++    await ph.waitForTimeout(300);
++    s = await st();
++    check(!s.you && s.balance === bal0 && /^Put \$50 on /.test(s.label), g + ': "Take my bet back" gives the stake back until the table locks', s);
++    // Options, then Add charity: the picker dialog, and the pick comes back to the table
++    await openLiveOptions(ph);
++    check((await st()).open && (await vis('#lt-custom')) && (await vis('#livepanel .tablebar')) && (await vis('#livepanel .lt-pred')), g + ': Options opens the rest as a sheet: other amount, the seven table sizes, side predictions');
++    await ph.tap('#livepanel [data-role="add"]');
++    await ph.waitForSelector('#dlg-charitypick[open]');
++    check((await st()).open, g + ': the sheet stays while the charity dialog is open');
++    await ph.fill('#cp-q', 'wateraid');
++    await ph.locator('#dlg-charitypick .pickitem').first().tap();
++    await ph.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
++    await ph.waitForTimeout(400);
++    s = await st();
++    check(/^Put \$50 on WaterAid/.test(s.label), g + ': the charity added from the dialog is the pick: ' + s.label, s);
++    // Escape closes the sheet and puts the keyboard back on Options
++    await ph.tap('#livepanel [data-role="sheet-btn"]');
++    await ph.waitForTimeout(250);
++    await ph.focus('#lt-custom');
++    await ph.keyboard.press('Escape');
++    await ph.waitForTimeout(250);
++    s = await st();
++    check(!s.open && s.expanded === 'false' && s.activeOptions, g + ': Escape (from a field in the sheet) shuts it and the keyboard goes back to Options', s);
++    // the keyboard moving on past the sheet shuts it instead of leaving the focus under it
++    await ph.tap('#livepanel [data-role="sheet-btn"]');
++    await ph.waitForTimeout(250);
++    await ph.focus('#livepanel [data-role="join"]');
++    await ph.keyboard.press('Tab');
++    await ph.waitForTimeout(250);
++    const tabOut = await ph.evaluate(() => { const e = document.activeElement; const r = e.getBoundingClientRect(); const top = document.elementFromPoint(Math.round(r.left + r.width / 2), Math.round(Math.min(Math.max(r.top + r.height / 2, 0), innerHeight - 1))); return { open: document.querySelector('#livepanel').classList.contains('is-more'), inPanel: !!e.closest('#livepanel'), covered: !!top && top !== e && !e.contains(top) && !top.contains(e), what: (e.id || e.className || e.tagName).toString().slice(0, 30) }; });
++    check(!tabOut.open && !tabOut.inPanel && !tabOut.covered, g + ': Tab past the end of the sheet folds it away, and the control that gets the focus is not under anything', tabOut);
++    // a control reached by keyboard far down the page is scrolled clear of the docked panel and the navigation bar
++    const reach = await ph.evaluate(() => { const l = document.querySelector('.foot__links a:last-child'); l.focus(); const r = l.getBoundingClientRect(); const p = document.querySelector('#livepanel').getBoundingClientRect(); return { bottom: Math.round(r.bottom), top: Math.round(r.top), dockTop: Math.round(p.top) }; });
++    check(reach.bottom <= reach.dockTop + 1 && reach.top >= 0, g + ': the last footer link, reached by keyboard, is scrolled clear of the docked panel', reach);
++    await ph.evaluate(() => window.scrollTo(0, 0));
++    // another table size: the table bar is in the sheet, and the new table starts with its sheet shut
++    await ph.tap('#livepanel [data-role="sheet-btn"]');
++    await ph.waitForTimeout(250);
++    await ph.locator('#livepanel .tablebar .tbtn >> text=50').first().tap();
++    await onRoute(ph, 'live-' + g + '50');
++    await ph.waitForTimeout(700);
++    s = await st();
++    const m2 = await liveScreen(ph);
++    check(s.route === 'live-' + g + '50' && !s.open && s.expanded === 'false', g + ': a tap on another table size goes there with the sheet shut', s);
++    check(m2.join && m2.join.bottom <= m2.navTop + 1 && m2.pic && m2.pic.bottom <= m2.floor + 1 && m2.presets && m2.presets.bottom <= m2.vh, g + ': and the picture, the stake buttons and the join button are on its first screen', m2);
++    // turning the phone: a sheet that was open is shut, and the board is shown beside the picture; turning back, the sheet is not stuck open
++    await ph.tap('#livepanel [data-role="sheet-btn"]');
++    await ph.waitForTimeout(250);
++    await ph.setViewportSize({ width: 844, height: 390 });
++    await ph.waitForTimeout(800);
++    const side = await ph.evaluate(() => { const p = document.querySelector('#livepanel'); const o = document.querySelector('#livepanel [data-role="sheet-btn"]'); const j = document.querySelector('#livepanel [data-role="join"]').getBoundingClientRect(); return { pos: getComputedStyle(p).position, open: p.classList.contains('is-more'), optShown: getComputedStyle(o).display !== 'none', odds: !!document.querySelector('#livepanel .odds').offsetParent, joinBottom: Math.round(j.bottom), vh: innerHeight, sw: document.documentElement.scrollWidth, vw: innerWidth }; });
++    check(side.pos !== 'fixed' && !side.open && !side.optShown && side.odds && side.joinBottom <= side.vh && side.sw <= side.vw, g + ': turned sideways, the panel is a column beside the picture (board shown, no Options button, join button on screen, no sideways scroll)', side);
++    await ph.setViewportSize({ width: 390, height: 844 });
++    await ph.waitForTimeout(800);
++    s = await st();
++    const back = await liveScreen(ph);
++    check(s.pos === 'fixed' && !s.open && s.expanded === 'false' && back.join && back.join.bottom <= back.navTop + 1 && back.pic && back.pic.bottom <= back.floor + 1, g + ': turned upright again, the panel is docked with its sheet shut and the picture is back on the first screen', { s, back });
++    await ph.context().close();
++  }
++
++  /* ---- a phone: a whole round (accelerated clocks), the result card in view, and the page back for the next round ---- */
++  for (const sc of [{ w: 390, h: 844 }, { w: 360, h: 740 }]) {
++    const tid = T('wheel');
++    const ph = await newPage({ viewport: { width: sc.w, height: sc.h }, mobile: true });
++    await openApp(ph, '#live-' + tid);
++    await ph.waitForSelector('#livepanel:not([hidden]) .odd', { state: 'attached' });
++    check(await stakeNow(ph, tid), sc.w + 'x' + sc.h + ': a $20 stake goes onto the table in an open betting window');
++    await ph.waitForFunction((t) => { const r = GS.live.room(t); if (r.phase === 'result' && document.querySelector('#lt-result .lt-res')) { r._clearTimers(); return true; } return false; }, tid, { timeout: 90000, polling: 20 });
++    // the page scrolls smoothly to the card: let that end
++    let y0 = -1;
++    for (let i = 0; i < 30; i++) { const y = await ph.evaluate(() => Math.round(window.scrollY)); if (y === y0) { break; } y0 = y; await ph.waitForTimeout(150); }
++    const card = await ph.evaluate(() => {
++      const r = (s) => { const e = document.querySelector(s); const b = e.getBoundingClientRect(); return { top: Math.round(b.top), bottom: Math.round(b.bottom), h: Math.round(b.height) }; };
++      const dock = r('#livepanel'); const nav = r('#side'); const bar = r('#topbar');
++      return { card: r('#lt-result .lt-res'), floor: Math.min(dock.top, nav.top), ceil: bar.bottom, y: Math.round(window.scrollY) };
++    });
++    const room = card.floor - card.ceil;
++    // (the card of a round you staked in is 500 to 650 px tall: it is all in view when the room between the bars is that big, else it is shown from its top)
++    check(card.card.top >= card.ceil - 1 && (card.card.h <= room ? card.card.bottom <= card.floor + 1 : card.card.top <= card.ceil + 20), sc.w + 'x' + sc.h + ': the result card is in view, under the top bar and above the docked panel and the navigation bar (all of it when it fits, else from its top)', Object.assign({ room }, card));
++    await shot(ph, '13zu-result-' + sc.w + 'x' + sc.h);
++    // the next round opens: the card goes and the page comes back, with the new round's picture on the first screen
++    await ph.evaluate((t) => GS.live.room(t).openRound(0), tid);
++    await ph.waitForFunction(() => !document.querySelector('#lt-result .lt-res'));
++    await ph.waitForTimeout(1200);
++    const nxt = await liveScreen(ph);
++    check(nxt.scrollY <= 2 && nxt.pic && nxt.pic.top >= 0 && nxt.pic.bottom <= nxt.floor + 1, sc.w + 'x' + sc.h + ': the next round brings the page back up, with the picture on the first screen', nxt);
++    await ph.context().close();
++  }
++
++  /* ---- accelerated clocks (?fast=1): the join button is redrawn every second and must not jump or overflow ---- */
++  {
++    const ph = await newPage({ viewport: { width: 360, height: 740 }, mobile: true });
++    await openApp(ph, '#live-derby25');
++    await ph.waitForSelector('#livepanel:not([hidden]) .odd', { state: 'attached' });
++    const samples = [];
++    for (let i = 0; i < 40; i++) {
++      samples.push(await ph.evaluate(() => {
++        const p = document.querySelector('#livepanel').getBoundingClientRect();
++        const j = document.querySelector('#livepanel [data-role="join"]');
++        const jr = j.getBoundingClientRect();
++        const l = document.querySelector('#livepanel [data-role="join-label"]');
++        const sb = document.querySelector('#livepanel [data-role="join-sub"]');
++        // (a long charity name is cut short with dots on purpose: what must not happen is text outside the button, or the button wider than the panel)
++        const out = (e) => { const r = e.getBoundingClientRect(); return r.left < jr.left - 1 || r.right > jr.right + 1 || r.top < jr.top - 1 || r.bottom > jr.bottom + 1; };
++        return { panelH: Math.round(p.height), joinH: Math.round(jr.height), joinW: Math.round(jr.width), over: j.scrollWidth > j.clientWidth + 1 || out(l) || out(sb) || jr.right > p.right + 1, sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1, label: l.textContent };
++      }));
++      if (i === 8) { await ph.evaluate(() => { const o = document.querySelectorAll('#livepanel .odd:not([disabled])')[1]; if (o) { o.click(); } }); }   // a charity with a long name is picked part way through
++      await ph.waitForTimeout(150);
++    }
++    const hs = samples.map((x) => x.panelH); const jh = samples.map((x) => x.joinH); const jw = samples.map((x) => x.joinW);
++    check(samples.every((x) => !x.over) && samples.every((x) => !x.sideways), 'with accelerated clocks the join button text never overflows the button and the page never scrolls sideways (40 samples over several rounds)', samples.filter((x) => x.over || x.sideways).slice(0, 3));
++    check(Math.max(...jh) - Math.min(...jh) <= 1 && Math.max(...jw) - Math.min(...jw) <= 1, 'and the join button keeps its size as the text changes (the docked panel does not jump)', { jh: [Math.min(...jh), Math.max(...jh)], jw: [Math.min(...jw), Math.max(...jw)], labels: [...new Set(samples.map((x) => x.label))] });
++    check(Math.max(...hs) - Math.min(...hs) <= 2, 'and the docked panel keeps its height from one phase to the next', { panelH: [Math.min(...hs), Math.max(...hs)] });
++    await ph.context().close();
++  }
++
++  /* ---- a laptop: the stake and the join button stay put while the odds board scrolls ---- */
++  {
++    const lap = await newPage({ viewport: { width: 1366, height: 768 } });
++    await openApp(lap, '#live-' + T('plinko'));
++    await lap.waitForSelector('#livepanel:not([hidden]) .odd', { state: 'attached' });
++    await liveSettled(lap, T('plinko'));
++    await lap.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));   // (a result card that was on screen when the table was opened has scrolled the page, and the next round brings it back, smoothly)
++    await lap.waitForTimeout(500);
++    const w0 = await liveScreen(lap);
++    check(w0.odds && w0.presets && w0.join && w0.join.bottom <= w0.vh && !w0.optBtn, 'on a laptop the panel is a column with the board, the stake buttons and the join button together, and no Options button', w0);
++    await lap.evaluate(() => { document.querySelector('#livepanel .lt-scroll').scrollTop = 9999; });
++    await lap.waitForTimeout(150);
++    const w1 = await liveScreen(lap);
++    const sc = await lap.evaluate(() => { const e = document.querySelector('#livepanel .lt-scroll'); return { top: e.scrollTop, h: e.scrollHeight, c: e.clientHeight }; });
++    check(sc.h > sc.c && sc.top > 0 && JSON.stringify(w1.join) === JSON.stringify(w0.join), 'the body of the panel (board, pot, predictions) scrolls inside itself while the join button stays where it is', { sc, before: w0.join, after: w1.join });
++    await lap.evaluate(() => window.scrollTo(0, 60));
++    await lap.waitForTimeout(250);
++    const w2 = await lap.evaluate(() => { const p = document.querySelector('#livepanel').getBoundingClientRect(); const j = document.querySelector('#livepanel [data-role="join"]').getBoundingClientRect(); return { panelTop: Math.round(p.top), panelBottom: Math.round(p.bottom), joinBottom: Math.round(j.bottom), vh: innerHeight }; });
++    check(w2.panelTop >= 0 && w2.panelBottom <= w2.vh && w2.joinBottom <= w2.vh, 'and with the page scrolled a little the panel is still whole in the window', w2);
++    await lap.context().close();
++  }
++  check(problems.length === problems0, 'section 13zu: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++}
++
+ 
+ 
+ 
+@@ -6165,6 +6455,307 @@
+ }
+ 
+ /* ======================================================================== */
++if (section('13zt. One screen on a phone held sideways and on a short window')) {
++  const SIDEWAYS = [
++    { name: 'a phone held sideways (844x390)', w: 844, h: 390, phone: true },
++    { name: 'a small phone held sideways (667x375)', w: 667, h: 375, phone: true },
++    { name: 'the smallest phone held sideways (568x320)', w: 568, h: 320, phone: true },
++    { name: 'a short laptop window (1280x600)', w: 1280, h: 600, phone: false }
++  ];
++  const FIT_MIN_LAND = 0.34;
++  // Where things land on the first screen (the page scrolled to the top, as it is when a game is opened). On a phone up to 720 px wide the navigation
++  // bar is fixed along the bottom edge, so that is the floor for everything; wider than that it is a rail down the left side and takes no height.
++  const firstScreenL = (page) => page.evaluate(() => {
++    const box = (sel) => {
++      const e = document.querySelector(sel);
++      if (!e) { return null; }
++      const r = e.getBoundingClientRect();
++      const cs = getComputedStyle(e);
++      if (cs.display === 'none' || cs.visibility === 'hidden' || (r.width === 0 && r.height === 0)) { return null; }
++      return { top: Math.round(r.top), bottom: Math.round(r.bottom), left: Math.round(r.left), right: Math.round(r.right), w: Math.round(r.width), h: Math.round(r.height) };
++    };
++    const pic = document.querySelector('#games .game:not([hidden]) > :first-child');
++    const tr = pic ? /matrix\(([^,]+)/.exec(getComputedStyle(pic).transform) : null;
++    const nav = document.querySelector('#side');
++    const navBottom = !!nav && getComputedStyle(nav).position === 'fixed';
++    const bar = document.querySelector('.topbar');
++    const label = document.querySelector('#field-amount .field__row');
++    const lcs = label ? getComputedStyle(label) : null;
++    return {
++      vh: window.innerHeight, vw: window.innerWidth, scrollY: Math.round(window.scrollY),
++      play: box('#btn-play'), presets: box('#field-amount .presets'), pic: box('#games .game:not([hidden]) > :first-child'), bet: box('#bet-panel'), opts: box('#btn-opts'),
++      topBottom: bar ? Math.round(bar.getBoundingClientRect().bottom) : 0,
++      navTop: navBottom ? Math.round(nav.getBoundingClientRect().top) : null,
++      label: label ? { text: label.textContent.trim(), w: Math.round(label.getBoundingClientRect().width), pos: lcs.position, clip: lcs.clip, none: lcs.display === 'none' || lcs.visibility === 'hidden' } : null,
++      scale: tr ? Number(tr[1]) : 1, sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
++    };
++  });
++  for (const sc of SIDEWAYS) {
++    const page = await newPage({ viewport: { width: sc.w, height: sc.h }, mobile: sc.phone });
++    await openApp(page);
++    const noPlay = []; const noPresets = []; const cutOff = []; const tiny = []; const sideways = []; const dockedBad = []; const labelBad = []; const panelBad = [];
++    for (const g of GAMES) {
++      await go(page, '#game-' + g);
++      await page.waitForSelector('#panel-' + g + ':not([hidden])');
++      await page.waitForTimeout(650);
++      await page.evaluate(() => window.scrollTo(0, 0));
++      await page.waitForTimeout(120);
++      const m = await firstScreenL(page);
++      const floor = m.navTop !== null ? m.navTop : m.vh;    // whatever must stay above the bottom: the navigation bar of a phone, else the window's bottom
++      if (!(m.play && m.play.top >= 0 && m.play.bottom <= floor + 1)) { noPlay.push(g + ' ' + JSON.stringify(m.play) + ' floor ' + floor); }
++      if (!(m.presets && m.presets.top >= 0 && m.presets.bottom <= floor + 1)) { noPresets.push(g + ' ' + JSON.stringify(m.presets) + ' floor ' + floor); }
++      if (!(m.pic && m.pic.top >= m.topBottom - 1 && m.pic.bottom <= floor + 1)) { cutOff.push(g + ' picture ' + JSON.stringify(m.pic) + ' between ' + m.topBottom + ' and ' + floor); }
++      if (!(m.bet && m.bet.top >= 0 && m.bet.bottom <= floor + 1)) { panelBad.push(g + ' panel ' + JSON.stringify(m.bet) + ' floor ' + floor); }
++      if (m.scale < FIT_MIN_LAND - 0.001) { tiny.push(g + ' ' + m.scale); }
++      if (m.sideways) { sideways.push(g); }
++      if (m.opts) { dockedBad.push(g + ' Options button shown'); }   // (the panel is a column of its own here, nothing is docked or folded into a sheet)
++      // "Gift amount" and the credit line: on a window up to 400 px tall they are for the screen reader only (a 1 px wide, clipped box that is still in the page), else they show
++      const sr = !!m.label && !m.label.none && m.label.pos === 'absolute' && m.label.w <= 1 && /rect\(0(px)?, 0(px)?, 0(px)?, 0(px)?\)/.test(m.label.clip);
++      if (!m.label || m.label.none || (sc.h <= 400 ? !sr : sr) || !/Gift amount/.test(m.label.text)) { labelBad.push(g + ' ' + JSON.stringify(m.label)); }
++    }
++    check(noPlay.length === 0, 'on ' + sc.name + ' the Play button is on the first screen in all 19 games', noPlay);
++    check(noPresets.length === 0, 'and so are the amount buttons', noPresets);
++    check(labelBad.length === 0, 'and "Gift amount" is ' + (sc.h <= 400 ? 'kept for the screen reader only (the room goes to the picture)' : 'on show'), labelBad);
++    check(cutOff.length === 0, 'and the whole game picture, clear of the top bar' + (sc.w <= 720 ? ' and the navigation bar' : ''), cutOff);
++    check(panelBad.length === 0, 'and the gift panel ends inside the window (its choices scroll inside it)', panelBad);
++    check(tiny.length === 0, 'and the picture is never shrunk below ' + FIT_MIN_LAND + ' of its size', tiny);
++    check(sideways.length === 0, 'and no game screen scrolls sideways', sideways);
++    check(dockedBad.length === 0, 'and the panel is not docked (no Options button)', dockedBad);
++    await page.context().close();
++  }
++
++  /* ---- a round started from the Play bar of the smallest phone held sideways: it finishes, the picture shows the drawn winner, the receipt opens ---- */
++  {
++    const page = await newPage({ viewport: { width: 568, height: 320 }, mobile: true });
++    await openApp(page);
++    const bad = [];
++    for (const id of GAMES) {
++      await go(page, '#game-' + id);
++      await page.waitForSelector('#panel-' + id + ':not([hidden])');
++      await page.waitForTimeout(500);
++      await page.click('#btn-play');
++      await waitReceipt(page);
++      const info = await page.evaluate((gid) => {
++        const last = window.GS.app._last;
++        const ids = last.round.winners.map((w) => w.id);
++        return { ids, shown: window.GS.games[gid]._shown(), total: last.round.allocs.reduce((s, a) => s + a.cents, 0) };
++      }, id);
++      const want = SLOTS.includes(id) ? info.ids : info.ids.slice(-1);
++      if (JSON.stringify(info.shown) !== JSON.stringify(want) || info.total !== 2500) { bad.push(id + ' ' + JSON.stringify(info)); }
++      await closeReceipt(page);
++    }
++    check(bad.length === 0, 'on 568x320 a round from the Play bar finishes in all 19 games, the picture shows the drawn winner (the winners, for a slot machine) and the receipt opens', bad);
++    await page.context().close();
++  }
++
++  /* ---- the shrunk picture still answers a touch or a click: Wheel, Plinko and Roulette open the profile of the charity that was touched ---- */
++  for (const sc of [SIDEWAYS[2], SIDEWAYS[0], SIDEWAYS[3]]) {
++    const page = await newPage({ viewport: { width: sc.w, height: sc.h }, mobile: sc.phone });
++    await openApp(page);
++    const profileOpen = () => page.evaluate(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; });
++    const closeProfile = async () => {
++      await page.keyboard.press('Escape');
++      await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return !d || !d.open; }, null, { timeout: 8000 }).catch(() => {});
++    };
++    for (const gid of ['wheel', 'plinko', 'roulette']) {
++      await go(page, '#game-' + gid);
++      await page.waitForSelector('#panel-' + gid + ':not([hidden])');
++      // a small known board (eight charities), then the game is held still so nothing moves under the finger
++      const ids = await page.evaluate(([g]) => {
++        const GS = window.GS;
++        const list = ['wateraid', 'msf', 'charity-water', 'khan-academy', 'save-the-children', 'oxfam-america', 'feeding-america', 'surfrider'].map((id) => GS.charity(id));
++        GS.games[g].activate();
++        GS.games[g].setBoard(list, 8, '');
++        return list.map((c) => c.id);
++      }, [gid]);
++      await page.waitForTimeout(500);
++      await page.evaluate(() => window.scrollTo(0, 0));
++      await page.waitForTimeout(150);
++      await page.evaluate((g) => window.GS.games[g].deactivate(), gid);
++      const m = await firstScreenL(page);
++      const tag = gid + ' on ' + sc.name + ': ';
++      check(m.scale < 0.999 && m.scale >= FIT_MIN_LAND - 0.001, tag + 'the picture is shrunk to fit (scale ' + m.scale + '), so the click has to allow for it', m);
++      const spots = await page.evaluate(([g, sel]) => {
++        const stage = document.querySelector(sel);
++        return window.GS.games[g]._spots().filter((s) => { const e = document.elementFromPoint(s.x, s.y); return s.x >= 0 && s.y >= 0 && s.x < window.innerWidth && s.y < window.innerHeight && !!e && (e === stage || stage.contains(e)); });
++      }, [gid, '#panel-' + gid + ' canvas']);
++      check(spots.length >= 3 && spots.every((s) => ids.includes(s.id)), tag + 'the spots on screen belong to the charities on the board (' + spots.length + ' of them are on the first screen)', spots.length);
++      const targets = spots.filter((s, i, a) => a.findIndex((o) => o.id === s.id) === i).slice(0, 4);
++      const opened = [];
++      for (const t of targets) {
++        if (sc.phone) { await page.touchscreen.tap(t.x, t.y); } else { await page.mouse.click(t.x, t.y); }
++        const pid = await page.waitForFunction(() => { const d = document.querySelector('#dlg-profile'); return d && d.open ? d.getAttribute('data-id') : null; }, null, { timeout: 5000 }).then((h) => h.jsonValue(), () => null);
++        opened.push({ want: t.id, got: pid });
++        await closeProfile();
++      }
++      check(opened.length >= 3 && opened.every((o) => o.got === o.want), tag + (sc.phone ? 'touching' : 'clicking') + ' a charity opens exactly that charity\'s profile', opened);
++      await page.evaluate((g) => window.GS.games[g].activate(), gid);
++    }
++    check((await profileOpen()) === null, 'no profile is left open on ' + sc.name);
++    await page.context().close();
++  }
++
++  /* ---- turning the phone, or making the window taller or shorter, while a game is open: the picture is fitted again as on a fresh load, the choices are kept, nothing is stuck ---- */
++  {
++    const readFit = (page) => page.evaluate(() => {
++      const pic = document.querySelector('#games .game:not([hidden]) > :first-child');
++      const tr = pic ? /matrix\(([^,]+)/.exec(getComputedStyle(pic).transform) : null;
++      const game = document.querySelector('#games .game:not([hidden])');
++      const bet = document.querySelector('#bet-panel');
++      const opts = document.querySelector('#btn-opts');
++      const play = document.querySelector('#btn-play').getBoundingClientRect();
++      const nav = document.querySelector('#side');
++      const navTop = nav && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().top : window.innerHeight;
++      const pr = pic.getBoundingClientRect();
++      return {
++        scale: tr ? Number(tr[1]) : 1, picW: pic.offsetWidth, boxW: game.clientWidth, docked: getComputedStyle(bet).position === 'fixed',
++        optsShown: getComputedStyle(opts).display !== 'none', expanded: opts.getAttribute('aria-expanded'), sheet: bet.classList.contains('is-more'),
++        playIn: play.top >= 0 && play.bottom <= navTop + 1, picIn: pr.top >= 0 && pr.bottom <= navTop + 1 || getComputedStyle(bet).position === 'fixed',
++        cents: window.GS.ui.game.amountCents(), rounds: window.GS.store.prefs().rounds, sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
++      };
++    });
++    // (the picture is fitted a moment after the window changes: wait until its transform has stopped changing, so a slow machine is not read half way)
++    const settle = async (page, w, h) => {
++      await page.setViewportSize({ width: w, height: h });
++      await page.waitForTimeout(500);
++      await page.evaluate(() => window.scrollTo(0, 0));
++      let last = '';
++      for (let i = 0; i < 40; i++) {
++        const now = await page.evaluate(() => { const p = document.querySelector('#games .game:not([hidden]) > :first-child'); return getComputedStyle(p).transform + '|' + p.offsetWidth + '|' + document.querySelector('#bet-panel').offsetHeight; });
++        if (now === last && i > 2) { break; }
++        last = now;
++        await page.waitForTimeout(150);
++      }
++    };
++    const SCENES = [
++      { name: 'a phone turned sideways and upright again', a: [390, 844], b: [844, 390], mobile: true },
++      { name: 'a small phone turned sideways and upright again', a: [360, 740], b: [568, 320], mobile: true },
++      { name: 'a laptop window made short and tall again', a: [1366, 900], b: [1366, 600], mobile: false }
++    ];
++    for (const sc of SCENES) {
++      const page = await newPage({ viewport: { width: sc.a[0], height: sc.a[1] }, mobile: sc.mobile });
++      await openApp(page);
++      const bad = [];
++      for (const gid of ['wheel', 'roulette', 'plinko', 'derby', 'slots', 'coin']) {
++        await go(page, '#game-' + gid);
++        await page.waitForSelector('#panel-' + gid + ':not([hidden])');
++        await page.waitForTimeout(600);
++        await setAmount(page, 37);
++        await page.click('#rounds-seg .seg__btn:nth-child(2)');
++        const rounds0 = (await page.evaluate(() => window.GS.store.prefs().rounds));
++        await page.evaluate(() => { const b = document.querySelector('#btn-opts'); if (b && b.offsetParent !== null && b.getAttribute('aria-expanded') === 'true') { b.click(); } });
++        await settle(page, sc.a[0], sc.a[1]);
++        const a = await readFit(page);
++        await settle(page, sc.b[0], sc.b[1]);
++        const b = await readFit(page);
++        await settle(page, sc.a[0], sc.a[1]);
++        const c = await readFit(page);
++        const tag = gid + ': ';
++        if (!b.playIn) { bad.push(tag + 'sideways: Play is off the first screen'); }
++        if (b.docked !== (sc.b[1] > 520 && sc.b[0] <= 900)) { bad.push(tag + 'sideways: wrong layout (docked ' + b.docked + ')'); }
++        if (b.sideways || c.sideways) { bad.push(tag + 'the page scrolls sideways'); }
++        if (b.picW > b.boxW + 1) { bad.push(tag + 'sideways: the picture (' + b.picW + ') is wider than its box (' + b.boxW + ')'); }
++        if (!c.playIn || !c.picIn) { bad.push(tag + 'back: Play or the picture is off the first screen ' + JSON.stringify(c)); }
++        if (c.docked !== a.docked || c.optsShown !== a.optsShown) { bad.push(tag + 'back: the layout is not the one it started with'); }
++        if (Math.abs(c.scale - a.scale) > 0.02) { bad.push(tag + 'back: the picture is at scale ' + c.scale + ', it was ' + a.scale + ' before'); }
++        if (c.picW > c.boxW + 1) { bad.push(tag + 'back: the picture (' + c.picW + ') is wider than its box (' + c.boxW + ')'); }
++        if (c.expanded !== 'false' || c.sheet) { bad.push(tag + 'back: the Options sheet is open (stuck)'); }
++        if (b.cents !== 3700 || c.cents !== 3700 || b.rounds !== rounds0 || c.rounds !== rounds0) { bad.push(tag + 'the amount or the split was lost ' + JSON.stringify({ b, c, rounds0 })); }
++      }
++      check(bad.length === 0, sc.name + ': the picture is fitted again each time (as after a fresh load), Play stays on the first screen, no sideways scroll, no stuck sheet, and the amount and the split are kept (Lucky Wheel, Roulette, Plinko, Charity Derby, Classic Slots, Coin Flip)', bad);
++      await page.context().close();
++    }
++    // a sheet that is open when the phone is turned is still where it was when it is turned back, closes with Escape, and the picture is then fitted as before
++    {
++      const page = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
++      await openApp(page, '#game-wheel');
++      await page.waitForSelector('#panel-wheel:not([hidden])');
++      await page.waitForTimeout(600);
++      const a = await readFit(page);
++      await openOptions(page);
++      await settle(page, 844, 390);
++      const b = await readFit(page);
++      check(!b.docked && !b.optsShown && b.playIn, 'an open Options sheet does not follow the phone into the sideways layout (no sheet, no Options button, Play on the first screen)', b);
++      await settle(page, 390, 844);
++      const c = await readFit(page);
++      check(c.docked && c.expanded === 'true', 'turned upright again, the sheet is as it was left (open)', c);
++      await page.focus('.amount__input');
++      await page.keyboard.press('Escape');
++      await page.waitForTimeout(700);
++      const d = await readFit(page);
++      check(d.expanded === 'false' && Math.abs(d.scale - a.scale) <= 0.02 && d.playIn, 'and Escape closes it and the picture is fitted again, not left at the sideways size', { a: a.scale, d });
++      await page.context().close();
++    }
++  }
++
++  /* ---- the keyboard: the Options sheet, and the controls of the panel are never hidden behind the Play bar, the dock or the navigation bar ---- */
++  {
++    const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
++    await openApp(ph, '#game-wheel');
++    await ph.waitForSelector('#panel-wheel:not([hidden])');
++    await ph.waitForTimeout(600);
++    const active = () => ph.evaluate(() => { const a = document.activeElement; return a ? (a.id + ' ' + a.className + ' ' + a.tagName) : ''; });
++    const sheetOpen = () => ph.evaluate(() => document.querySelector('#btn-opts').getAttribute('aria-expanded') === 'true' && document.querySelector('#bet-panel').classList.contains('is-more'));
++    await ph.focus('#btn-opts');
++    await ph.keyboard.press('Enter');
++    await ph.waitForTimeout(300);
++    check(await sheetOpen() && (await active()).includes('amount__input'), 'Options opened with the keyboard starts on the first choice (the amount), not on Play, so the next Tab does not skip the choices', await active());
++    for (const [btn, dlg] of [['#btn-filters', '#dlg-filters'], ['#pick-btn', '#dlg-charitypick'], ['#custom-btn', '#dlg-chooser']]) {
++      await ph.focus(btn);
++      await ph.keyboard.press('Enter');
++      await ph.waitForFunction((d) => document.querySelector(d).open, dlg, { timeout: 8000 }).catch(() => {});
++      const during = await sheetOpen();
++      await ph.keyboard.press('Escape');
++      await ph.waitForFunction((d) => !document.querySelector(d).open, dlg, { timeout: 8000 }).catch(() => {});
++      await ph.waitForTimeout(250);
++      check(during && await sheetOpen() && (await ph.evaluate((b) => document.activeElement === document.querySelector(b), btn)), 'a dialog opened from the sheet (' + btn + ') leaves the sheet open, and closing it gives the focus back to that button');
++    }
++    await ph.focus('#opts > summary');
++    await ph.keyboard.press('Tab');
++    await ph.waitForTimeout(300);
++    check(!(await sheetOpen()), 'the sheet folds away when the keyboard leaves it');
++    await ph.context().close();
++
++    // Tab through a panel: every control reached is on screen and not under another element (the Play bar, the dock, the navigation bar, the top bar)
++    const WALKS = [
++      { name: 'a phone held upright (390x844)', w: 390, h: 844, mobile: true, start: '#btn-play', max: 6, inPanelOnly: false },
++      { name: 'a phone held sideways (844x390)', w: 844, h: 390, mobile: true, start: '.amount__input', max: 45, inPanelOnly: true },
++      { name: 'the smallest phone held sideways (568x320)', w: 568, h: 320, mobile: true, start: '.amount__input', max: 45, inPanelOnly: true },
++      { name: 'a short laptop window (1280x600)', w: 1280, h: 600, mobile: false, start: '.amount__input', max: 45, inPanelOnly: true }
++    ];
++    for (const wk of WALKS) {
++      const page = await newPage({ viewport: { width: wk.w, height: wk.h }, mobile: wk.mobile });
++      await openApp(page, '#game-plinko');
++      await page.waitForSelector('#panel-plinko:not([hidden])');
++      await page.waitForTimeout(600);
++      await page.focus(wk.start);
++      const lost = [];
++      let steps = 0;
++      for (let i = 0; i < wk.max; i++) {
++        await page.keyboard.press('Tab');
++        await page.waitForTimeout(100);
++        const f = await page.evaluate(() => {
++          const a = document.activeElement;
++          if (!a || a === document.body) { return null; }
++          const r = a.getBoundingClientRect();
++          const x = Math.min(Math.max(r.left + r.width / 2, 1), window.innerWidth - 1);
++          const y = Math.min(Math.max(r.top + Math.min(r.height / 2, 6), 1), window.innerHeight - 1);
++          const top = document.elementFromPoint(x, y);
++          const bar = document.querySelector('.topbar').getBoundingClientRect().bottom;
++          return { name: (a.id || a.className || a.tagName).toString().slice(0, 40), text: (a.textContent || '').trim().slice(0, 20), inPanel: !!a.closest('#bet-panel'), in: r.top >= bar - 1 && r.bottom <= window.innerHeight + 1, free: !!top && (top === a || a.contains(top) || top.contains(a)) && top.tagName !== 'HTML' && top.tagName !== 'BODY' };
++        });
++        if (!f) { continue; }
++        if (wk.inPanelOnly && !f.inPanel) { break; }
++        steps++;
++        if (!f.in || !f.free) { lost.push(f.name + ' "' + f.text + '" ' + JSON.stringify({ in: f.in, free: f.free })); }
++      }
++      check(steps >= (wk.inPanelOnly ? 12 : 4) && lost.length === 0, 'tabbing through the panel on ' + wk.name + ': all ' + steps + ' controls reached are on screen and not covered by anything', lost.length ? lost : steps);
++      await page.context().close();
++    }
++  }
++}
++
++/* ======================================================================== */
+ if (section('13zr. Ranks: a rank from $1,000 given, "Rank 2 · Level 6", the emblem next to every name, and the rank-up moment')) {
+   const problems0 = problems.length;
+   const RANK_NAMES = ['Patron', 'Benefactor', 'Champion', 'Guardian', 'Paragon', 'Luminary', 'Titan', 'Immortal'];

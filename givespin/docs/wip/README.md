@@ -1,22 +1,24 @@
-# Unfinished work, saved as a patch
+# Saved, ready to add: phones held sideways and live tables on one screen
 
-`one-screen-landscape-and-live.patch` is work that was in progress when the session had to stop. It is **not applied** to the site and
-**not fully tested**. Apply it from the `givespin/` folder with `patch -p1 < docs/wip/one-screen-landscape-and-live.patch`.
+`merged-one-screen.patch` is NOT applied to the site yet. It is the finished work of two helpers merged together (and merged with the rank fixes that are
+already in the site), made against the code as committed when this was saved. Apply it from the `givespin/` folder:
 
-It is two helpers' work merged together (the merge applied cleanly against the code as committed when this was saved):
+    patch -p1 < docs/wip/merged-one-screen.patch
 
-1. **Phones held sideways and short windows** (the part that has been measured). `css/fit.css` gets a third layout for a window up to 520 px tall
-   (two columns: the gift panel on the left scrolls inside itself with the Play bar kept at its bottom, the picture on the right is fitted to the height),
-   `js/ui/game.js` learns about it, and a few games get their own short-window rules: `js/games/slots.js` and `css/slots.css` (lower reels),
-   `js/games/plinko.js` (a lower board), `js/games/coin.js` and `css/games.css` (a two-halves bracket, a smaller Dice and Last One Standing),
-   and `js/games/drop.js` (a **real bug fix**: a Drop Crate shrunk by the fit could stop on the wrong card, because it took a card's width as drawn instead of its real width).
-   Measured with `measure-fit` over 19 games in 12 window sizes (four of them phones held sideways, down to 568 x 320): Play, the amount buttons and the whole
-   picture were on the first screen everywhere. The unit tests passed (288/288). The end-to-end sections were NOT run against this merge, except a partial run
-   whose result is in the hand-off note, so run them before committing it.
-2. **Live tables on one screen** (not measured, not tested). `js/ui/live.js` splits the live panel into a scrolling body and a foot (stake and join button), docks it on a
-   phone like the solo panel with an Options sheet, and adds a "Pick a charity" button that opens the odds board; `css/fit.css` has the matching block at its end;
-   `js/ui/game.js` shares the docking code. The live end-to-end sections (13o, 13q, 13zq, 15, 16) have not been run against it, and some of them touch controls
-   that this moves into the sheet.
+What it adds:
+- **Solo games on a phone held sideways and on short laptop windows** (landQA, notes in `notes/landQA-sideways-phones.md`): a two-column layout, a rotation fix,
+  a cramped-568x320 fix, Drop Crate / Slots / Plinko / Coin Flip / Last One Standing short-window rules, a Drop Crate bug fix. New test section 13zt (79 checks).
+- **Live tables on one screen** (liveQA, notes in `notes/liveQA-live-tables.md`): a docked stake and join bar with an Options sheet on a phone, a "Pick a charity"
+  button that opens the odds board, the result card scrolled into view, keyboard fixes, sideways-phone layout. New test section 13zu (87 checks); section 13c now runs
+  on a laptop and a phone.
+- Rank notes for the record are in `notes/rankQA-ranks.md` (those fixes are already in the site).
 
-When you finish it: apply the patch, run the unit tests, run `tests/e2e.mjs` (sections 13zs, 13o, 13q, 13b, 15, 16 first), fix what the live layout broke, update the
-README's list of what the screens do, and delete this folder.
+How it was checked: each helper ran the WHOLE end-to-end suite on its own copy (landQA 2,425 checks, liveQA 2,452 checks, 0 failures; 290/290 unit tests on the merge).
+The two were then merged by hand in one place (`js/ui/game.js`, the line that works out how much room to keep under the picture): this merged result has had the
+unit tests and a syntax check; the whole end-to-end suite on the MERGED tree may not have been run yet. Run it before committing:
+`cd givespin && patch -p1 < docs/wip/merged-one-screen.patch && node --test tests/*.test.js`, then the end-to-end suite (see the README, "Tests"), fix what fails,
+set the README's end-to-end count to the real total, delete this `docs/wip/` folder, commit and publish.
+
+Known limits (details in the notes): Chromium only (no real phone, Safari or Firefox); windows narrower than 561 px and shorter than about 520 px cannot fit a
+picture; a few landscape controls are small when the picture is shrunk (Coin Flip marks, slot Turbo / How it pays); axe reports a "partially obscured" target-size
+item on whichever control straddles the bottom of the scrolling landscape panel (a geometry artefact); live tables on a 568x320 phone are cramped.
