@@ -96,7 +96,7 @@
   "d45=B": "the age from which a child pays for the wagon ride (the model assumes 1 year), and the other age sentences that change",
   "d50=B": "the real last day for Christmas trees (the model uses December 22)",
   "d51=B": "the right closing time of Wise Pie (the model uses 9 pm) and any other hours that are wrong",
-  "d54=A": "the price of each of the thirteen Shop cards that say Prices coming soon (the prices differ card by card)",
+  "d54=A": "the price of each of the eleven Shop cards that say Prices coming soon (the prices differ card by card)",
   "d55=B": "what visitors with strollers or wheelchairs should do instead, in her words",
   "d55=C": "what she wants to say about the paths, quiet times and facilities, in her words",
   "d56=B": "which Axios link is wrong, and the right headline and web address",

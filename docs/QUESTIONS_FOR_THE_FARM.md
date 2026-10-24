@@ -902,7 +902,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 
 **Question 19: Can you send us your current prices for pumpkins, strawberries, blueberries, flowers, snacks and drinks, ice cream and Christmas trees?**
 
-- **If Yes:** type each price over "Prices coming soon" (`index.html` at `class="shop-price shop-soon"` (13 places), and the note above the shop, `index.html` at `data-t="taa947919"`). In the HTML change `<p data-t="..." class="shop-price shop-soon">Prices coming soon</p>` to `<p class="shop-price hand">$5</p>` (this also removes the red dashed "soon" pill). Delete the README row "Shop section".
+- **If Yes:** type each price over "Prices coming soon" (`index.html` at `class="shop-price shop-soon"` (11 places), and the note above the shop, `index.html` at `data-t="taa947919"`). In the HTML change `<p data-t="..." class="shop-price shop-soon">Prices coming soon</p>` to `<p class="shop-price hand">$5</p>` (this also removes the red dashed "soon" pill). Delete the README row "Shop section".
 - **If No:** no change.
 
 **Question 20: Are you happy for the site to say "We're the only USDA-certified organic strawberry farm in the area"?**

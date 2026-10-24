@@ -843,7 +843,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 
 ### d54. Prices for pumpkins, berries, flowers and trees
 
-- In plain words: The Shop section shows a red "Prices coming soon" tag next to u-pick pumpkins, u-pick strawberries and blueberries, Christmas trees, the caps, hats, shirts and bags, the jam, the elderberry shrub, the strawberry lemonade and the apple cider. Visitors cannot see what these cost. Every other product carries the price read from the farm's own signs and photos on 21 October 2026.
+- In plain words: The Shop section shows a red "Prices coming soon" tag next to u-pick pumpkins, u-pick strawberries and blueberries, Christmas trees, the caps, hats, shirts and bags, the jam and the elderberry shrub. Visitors cannot see what these cost. Every other product carries the price read from the farm's own signs and photos on 21 October 2026.
 - Doc question: Q19
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): yes
@@ -853,7 +853,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 
 **A. I will send the price list**
 
-- Type the prices over the tag "Prices coming soon" and change the class (the red pill goes too): index.html at `class="shop-price shop-soon"` (13 places: the apple cider, the strawberry lemonade, the jam, the elderberry shrub, the five wear cards, u-pick pumpkins, Christmas trees, u-pick strawberries and u-pick blueberries). Change `<p data-t="..." class="shop-price shop-soon">Prices coming soon</p>` to `<p class="shop-price hand">$5</p>`. Prices carry no translation id.
+- Type the prices over the tag "Prices coming soon" and change the class (the red pill goes too): index.html at `class="shop-price shop-soon"` (11 places: the jam, the elderberry shrub, the five wear cards, u-pick pumpkins, Christmas trees, u-pick strawberries and u-pick blueberries). Change `<p data-t="..." class="shop-price shop-soon">Prices coming soon</p>` to `<p class="shop-price hand">$5</p>`. Prices carry no translation id.
 - Then change the note index.html at `data-t="taa947919"` ("Prices are for fall 2026 and can change ... Anything marked Prices coming soon is still being confirmed") x 4, and README.md: delete the row "Shop section".
 - Strings: 0 for prices; 1 id x 4 for the note (and the row labels if she renames a product)
 - Tests: none pinned (these prices are in no facts test); consistency passes unless a number appears twice
