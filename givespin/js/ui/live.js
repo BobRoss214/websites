@@ -125,8 +125,8 @@
   /* ------------------------------------------------------------------- page */
 
   function banner() {
-    return '<aside class="simbanner">' + ui.icon('bot') + '<div><b>Simulated tables.</b> Every other player here is a bot standing in for a real person, and their stakes are simulated too. ' +
-      'Only your own stake (demo credit) is yours. Real multiplayer tables would need a server, so they are not switched on yet.</div></aside>';
+    return '<div class="simbanner" role="note">' + ui.icon('bot') + '<div><b>Simulated tables.</b> Every other player here is a bot standing in for a real person, and their stakes are simulated too. ' +
+      'Only your own stake (demo credit) is yours. Real multiplayer tables would need a server, so they are not switched on yet.</div></div>';
   }
 
   /**

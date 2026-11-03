@@ -14,8 +14,8 @@
 
   var params = new URLSearchParams(window.location.search);
   var state = { pool: [], poolVersion: 0, busy: false, stream: false, route: 'lobby', view: null, live: false };
-  var PAGES = ['giving', 'charities', 'club', 'fair', 'help', 'leagues', 'crews', 'cards'];
-  var TITLES = { giving: 'My Giving', charities: 'Charities', club: 'Giving Club', fair: 'Fair Play?', help: 'Help', leagues: 'Leagues', crews: 'Crews', cards: 'Your cards' };
+  var PAGES = ['giving', 'charities', 'club', 'fair', 'help', 'leagues', 'crews', 'cards', 'me', 'quests', 'boards', 'spotlights', 'make-it-real'];
+  var TITLES = { giving: 'My Giving', charities: 'Charities', club: 'Giving Club', fair: 'Fair Play?', help: 'Help', leagues: 'Leagues', crews: 'Crews', cards: 'Your cards', me: 'My profile', quests: 'Quests', boards: 'Leaderboards', spotlights: 'Charity of the week', 'make-it-real': 'Make it real' };
 
   /* ------------------------------------------------------------------ pool */
 

@@ -188,6 +188,8 @@ const liveSettled = async (page, id) => {
   await page.evaluate((rid) => { const r = window.GS.live.room(rid); if (r) { r._clearTimers(); } }, id).catch(() => {});
 };
 
+// the pages added after the first release: every check that walks "all the pages" includes them
+const NEW_PAGES = ['#me', '#quests', '#boards', '#spotlights', '#make-it-real'];
 const GAMES = ['wheel', 'slots', 'goldrush', 'deepsea', 'sweets', 'cosmic', 'drop', 'plinko', 'roulette', 'cards', 'dice', 'coin', 'scratch', 'derby', 'duck', 'marble', 'balloon', 'lotto', 'standing'];
 const SLOTS = ['slots', 'goldrush', 'deepsea', 'sweets', 'cosmic'];
 const LIVE_TABLES = 10 * 7; // ten live games, each with seven table sizes
@@ -2943,7 +2945,7 @@ if (section('13q. Audit regressions: crypto wording, tile badges, small screens,
   const sweep = await newPage();
   await openApp(sweep);
   const bad = {};
-  for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#tables-plinko', '#tables-standing', '#leagues', '#crews', '#cards', '#giving', '#club', '#fair', '#help']) {
+  for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#tables-plinko', '#tables-standing', '#leagues', '#crews', '#cards', '#giving', '#club', '#fair', '#help', ...NEW_PAGES]) {
     await go(sweep, r);
     if (r === '#help') { await sweep.evaluate(() => document.querySelectorAll('#view-help details').forEach((d) => { d.open = true; })); }
     const w = badWords(await prose(sweep, '.view:not([hidden])'));
@@ -3766,7 +3768,7 @@ if (section('14. Real-donation mode (redirect to checkout) never handles money')
 if (section('15. Phones')) {
   const page = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
   await openApp(page);
-  const routes = ['#lobby', '#lobby-table', ...GAMES.map((g) => '#game-' + g), '#live', ...LIVE_GAMES.map((g) => '#tables-' + g), ...LIVE_GAMES.map((g) => '#live-' + g), '#leagues', '#crews', '#cards', '#giving', '#charities', '#club', '#fair', '#help'];
+  const routes = ['#lobby', '#lobby-table', ...GAMES.map((g) => '#game-' + g), '#live', ...LIVE_GAMES.map((g) => '#tables-' + g), ...LIVE_GAMES.map((g) => '#live-' + g), '#leagues', '#crews', '#cards', '#giving', '#charities', '#club', '#fair', '#help', ...NEW_PAGES];
   const wide = [];
   for (const r of routes) {
     await go(page, r);
@@ -3806,7 +3808,7 @@ if (section('16. Accessibility scan (needs AXE) and page health')) {
     const page = await newPage();
     await openApp(page);
     for (const g of GAMES) { await go(page, '#game-' + g); await page.waitForTimeout(500); await a11y(page, 'game: ' + g); }
-    for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#tables-plinko', '#leagues', '#crews', '#cards']) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
+    for (const r of ['#lobby', '#lobby-originals', '#lobby-races', '#charities', '#live', '#tables-plinko', '#leagues', '#crews', '#cards', ...NEW_PAGES]) { await go(page, r); await page.waitForTimeout(400); await a11y(page, 'page ' + r); }
     for (const g of LIVE_GAMES) { await go(page, '#live-' + g); await page.waitForTimeout(500); await liveSettled(page, g); await a11y(page, 'live room: ' + g); }
     // the rooms above are scanned while their betting is open; one table is also stopped on its settled result card (the other screen of a live table)
     await go(page, '#live-derby10');

@@ -419,7 +419,7 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 node --test givespin/tests/*.test.js
 ```
 
-200 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+205 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, ranks (every boundary from $999.99 to $1,000,000.00 and beyond, a cent either
 side, the ten levels inside each rank, the top rank, the standing never going down, labels, the simulated players' spread
 and what a round reports about a rank-up), streaks, badges, boards of any size (fill spots evenly, always include the
@@ -468,6 +468,13 @@ css/chooser.css     the choose-your-own-charities dialog and its chip
 css/slots.css       the slot machines and their five themes
 css/tour.css        the first-visit tour
 css/fit.css         one screen per game, solo and live tables: the gift panel (or a table's panel) in three layouts (wide, a phone's docked panel and Options sheet, a landscape phone's two columns); js/ui/game.js fits the picture to the screen
+css/ticker.css      the live ticker and the charity-of-the-week strip
+css/sharecard.css   share cards and the fair-play showcase
+css/profile.css     the profile page (#me)
+css/quests.css      quests, the season track and the side-menu badge
+css/boards.css      leaderboards and crew goals
+css/stream.css      the Stream Mode overlay
+css/app.css         the Make it real page, the waitlist and the install button
 css/walk.css        small fixes found by walking every page on phones, tablets and big screens (loaded last, each rule says which window it is for)
 css/ranks.css       the rank emblems: their classes and animation
 css/rankui.css      rank chips next to names, the rank card and ladder, the rank-up moment
@@ -480,6 +487,11 @@ js/store.js         player state in localStorage, with defensive loading
 js/payments.js      the money step (demo credit or redirect)
 js/accounts.js      the account and saved-card PREVIEW
 js/util.js          small shared helpers for the games and the UI (maths, timing, escaping, the ?fast=1 speed-up)
+js/local.js         small storage helper for the newer features: one key each, nothing required, memory when storage is blocked (unit-tested in Node)
+js/weekly.js        week keys, the charity of the week and past spotlights (pure logic, unit-tested in Node)
+js/quests.js        quests and the season track, worked out from the saved history (pure logic, unit-tested in Node)
+js/boards.js        leaderboards for crews, charities and players, with your own row always shown (pure logic, unit-tested in Node)
+js/transport.js     the interface the live rooms talk through, so a server could be plugged in later (pure logic, unit-tested in Node)
 js/kit.js           shared game toolkit: board samples that include the winner, the race choreography
 js/live.js          live tables: rooms, rounds, bots, stakes, events, sponsor match, jackpot and the weighted draw (no DOM)
 js/crews.js         simulated crews: members, chat lines, emotes, weekly goal

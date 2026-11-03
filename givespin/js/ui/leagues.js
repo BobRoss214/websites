@@ -25,7 +25,7 @@
   }
 
   function simBanner(text) {
-    return '<aside class="simbanner">' + ui.icon('bot') + '<div>' + text + '</div></aside>';
+    return '<div class="simbanner" role="note">' + ui.icon('bot') + '<div>' + text + '</div></div>';
   }
 
   function timeLeftInWeek() {

@@ -22,6 +22,13 @@
   <link rel="stylesheet" href="css/tour.css">
   <link rel="stylesheet" href="css/ranks.css">
   <link rel="stylesheet" href="css/rankui.css">
+  <link rel="stylesheet" href="css/ticker.css">
+  <link rel="stylesheet" href="css/sharecard.css">
+  <link rel="stylesheet" href="css/profile.css">
+  <link rel="stylesheet" href="css/quests.css">
+  <link rel="stylesheet" href="css/boards.css">
+  <link rel="stylesheet" href="css/stream.css">
+  <link rel="stylesheet" href="css/app.css">
   <link rel="stylesheet" href="css/fit.css">
   <link rel="stylesheet" href="css/walk.css">
 </head>
@@ -65,6 +72,8 @@
       <span><strong>Demo mode.</strong> Play-money only: nothing is charged and no real donation is made. <a href="#help-real">Real donations?</a></span>
     </aside>
 
+    <aside class="ticker" id="ticker" aria-label="Recent gifts from simulated players" hidden></aside>
+
     <div class="layout">
       <!-- ============================================================ side nav -->
       <nav class="side" id="side" aria-label="Main">
@@ -79,6 +88,8 @@
           <li class="side__sub"><a class="side__link" href="#leagues" data-route="leagues"><span data-icon="trophy"></span><span class="side__txt">Leagues</span></a></li>
           <li class="side__sub"><a class="side__link" href="#crews" data-route="crews"><span data-icon="users"></span><span class="side__txt">Crews</span></a></li>
           <li class="side__sub"><a class="side__link" href="#cards" data-route="cards"><span data-icon="layers"></span><span class="side__txt">Your cards</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#quests" data-route="quests"><span data-icon="list-checks"></span><span class="side__txt">Quests</span><span class="side__badge" id="quests-badge" hidden>0</span></a></li>
+          <li class="side__sub"><a class="side__link" href="#boards" data-route="boards"><span data-icon="medal"></span><span class="side__txt">Leaderboards</span></a></li>
           <li class="side__rule" aria-hidden="true"></li>
           <li><a class="side__link" href="#giving" data-route="giving"><span data-icon="hand-heart"></span><span class="side__txt">My Giving</span></a></li>
           <li><a class="side__link" href="#charities" data-route="charities"><span data-icon="globe"></span><span class="side__txt">Charities</span></a></li>
@@ -103,11 +114,16 @@
         <section class="view" id="view-club" data-view="club" aria-label="Giving Club" hidden></section>
         <section class="view" id="view-fair" data-view="fair" aria-label="Fair Play" hidden></section>
         <section class="view" id="view-help" data-view="help" aria-label="Help" hidden></section>
+        <section class="view" id="view-me" data-view="me" aria-label="My profile" hidden></section>
+        <section class="view" id="view-quests" data-view="quests" aria-label="Quests" hidden></section>
+        <section class="view" id="view-boards" data-view="boards" aria-label="Leaderboards" hidden></section>
+        <section class="view" id="view-spotlights" data-view="spotlights" aria-label="Charity of the week" hidden></section>
+        <section class="view" id="view-make-it-real" data-view="make-it-real" aria-label="Make it real" hidden></section>
 
         <footer class="foot">
           <p><strong>Give responsibly.</strong> Giving should feel good. You can set a monthly giving limit in your account, and every solo game gives every charity on the board equal odds, and live tables weigh each charity by what is in the pot.</p>
           <p>Charity names are used only to identify the organisations. GiveSpin is not affiliated with or endorsed by any of them, and any logos shown belong to their owners and are used only to identify the organisations. Descriptions are short summaries, not official statements.</p>
-          <p class="foot__links"><a href="#help-tour">What is GiveSpin?</a><a href="#help">Help</a><a href="#fair">Fair Play?</a><a href="#help-privacy">Privacy</a></p>
+          <p class="foot__links"><a href="#help-tour">What is GiveSpin?</a><a href="#help">Help</a><a href="#fair">Fair Play?</a><a href="#make-it-real">Make it real</a><a href="#help-privacy">Privacy</a></p>
         </footer>
       </main>
     </div>
@@ -127,6 +143,7 @@
   <script src="js/logos.js"></script>
   <script src="js/marks.js"></script>
   <script src="js/util.js"></script>
+  <script src="js/local.js"></script>
   <script src="js/kit.js"></script>
   <script src="js/store.js"></script>
   <script src="js/audio.js"></script>
@@ -135,6 +152,10 @@
   <script src="js/accounts.js"></script>
   <script src="js/crews.js"></script>
   <script src="js/live.js"></script>
+  <script src="js/weekly.js"></script>
+  <script src="js/quests.js"></script>
+  <script src="js/boards.js"></script>
+  <script src="js/transport.js"></script>
   <script src="js/art.js"></script>
   <script src="js/ui/common.js"></script>
   <script src="js/ui/rankui.js"></script>
@@ -174,6 +195,15 @@
   <script src="js/ui/pages.js"></script>
   <script src="js/ui/collection.js"></script>
   <script src="js/ui/leagues.js"></script>
+  <script src="js/ui/ticker.js"></script>
+  <script src="js/ui/spotlight.js"></script>
+  <script src="js/ui/sharecard.js"></script>
+  <script src="js/ui/fairshow.js"></script>
+  <script src="js/ui/profile.js"></script>
+  <script src="js/ui/quests.js"></script>
+  <script src="js/ui/boards.js"></script>
+  <script src="js/ui/stream.js"></script>
+  <script src="js/ui/makereal.js"></script>
   <script src="js/ui/tour.js"></script>
   <script src="js/app.js"></script>
 </body>
