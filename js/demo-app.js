@@ -109,9 +109,11 @@
       UI.toast(had ? 'Welcome back. This email already had an account here, so you are signed in.'
         : 'Account created. We added a sample family and a sample visit.' + (acct.eventKind && acct.eventKind !== 'none' ? ' My event is in your tabs.' : ''), { kind: 'good' });
     });
-    return h('section', { class: 'demo-card demo-signup', 'data-tour': 'acct-signup', 'aria-labelledby': 'demo-su-h' },
+    var card = h('section', { class: 'demo-card demo-signup', 'data-tour': 'acct-signup', 'aria-labelledby': 'demo-su-h' },
       h('h2', { id: 'demo-su-h' }, 'Create an account'),
       h('p', 'Try the family side of Wise Acres. We add a sample family and a sample visit, so you can try every button.'), form);
+    card.resetQuestion = function () { pick.set('none'); };   // Sign out and Start over: the question begins again with No
+    return card;
   }
   function signInCard() {
     var form = h('form', { novalidate: true, class: 'demo-form' },
@@ -165,7 +167,7 @@
     parts.auth = h('div', { class: 'demo-auth', hidden: true },
       h('h1', { class: 'demo-h1', tabindex: '-1' }, 'My account'),
       h('p', { class: 'demo-lead' }, 'Sign in to see your visits, change a day, change your pizza order and ask the farm a question. It is all pretend: the farm only sees what you do here.'),
-      h('div', { class: 'demo-auth-grid' }, signUpCard(), signInCard()));
+      h('div', { class: 'demo-auth-grid' }, parts.signUp = signUpCard(), signInCard()));
     parts.hello = h('p', { class: 'demo-hello' });
     parts.h1 = h('h1', { class: 'demo-h1', id: 'demo-title', tabindex: '-1' }, 'My account');
     parts.bellCount = h('span', { class: 'demo-count', hidden: true });
@@ -247,7 +249,7 @@
     var acct = Store.current();
     if (!acct) {
       var leaving = mode === 'account';
-      if (mode !== 'auth') { mode = 'auth'; seenNotices = null; closeBell(false); }
+      if (mode !== 'auth') { mode = 'auth'; seenNotices = null; closeBell(false); if (parts.signUp) parts.signUp.resetQuestion(); }
       parts.account.hidden = true; parts.auth.hidden = false;
       document.title = 'Demo: Sign in | Wise Acres Organic Farm';
       focusPanelNext = false;

@@ -109,6 +109,7 @@ await run('account-event', async ({ browser, base, errs }) => {
     await p.waitForSelector('.demo-modal');
     const buttons = (await p.locator('.demo-modal-actions button').allInnerTexts()).map((x) => x.trim());
     ok('the link opens a box with the three kinds (A party / A school trip / Another event) and "Not now", and Vanessa\'s link for school trips', buttons.join(' | ') === 'A party | A school trip | Another event | Not now' && await p.locator(`.demo-modal-body a[href="${VANESSA}"]`).innerText() === 'Questions? Email Vanessa', buttons.join(' | '));
+    ok('the box opens with "A party" in focus (not the mail link, so a quick Enter does not open a mail program)', await p.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-demo-action') === 'party'));
     await axeOn(p, 'the "I also plan an event" box', '.demo-modal');
     await p.click('.demo-modal-actions button:has-text("Not now")');
     await p.waitForTimeout(150);
@@ -161,6 +162,9 @@ await run('account-event', async ({ browser, base, errs }) => {
     await p.waitForTimeout(300);
     ok('after her yes the party has 30 guests and the screen says so', /Your guest count is now 30 guests/.test(await p.locator('#demo-panel').innerText()) && /30\s*Guests/.test((await p.locator('#demo-panel').innerText()).replace(/\s+/g, ' ')));
     await axeOn(p, 'My event (a party, with an answered request)', '#demo-panel');
+    await p.click('[data-demo-signout]');
+    await p.waitForSelector('.demo-signup', { state: 'visible' });
+    ok('after Sign out the sign-up question begins again with No chosen', await radio(p, 'No').isChecked() && !await radio(p, 'Yes: a party').isChecked());
     await p.context().close();
   }
 

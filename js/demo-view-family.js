@@ -50,7 +50,7 @@
       return { label: k.short, id: k.key, onClick: function () { pick(k.key); } };
     });
     d.ui.modal({
-      title: 'I also plan an event',
+      title: 'I also plan an event', focus: 'button[data-demo-action="' + (kinds.length ? kinds[0].id : '') + '"]',   // the first kind, not Vanessa's link, has the focus when the box opens
       body: [
         uh('p', null, 'What kind of event do you plan? We add a sample one to try, and a My event tab shows in your tabs.'),
         vanessa ? uh('p', { class: 'demo-hint' }, ['A school trip: ', uh('a', { href: vanessa.href }, vanessa.text)]) : null

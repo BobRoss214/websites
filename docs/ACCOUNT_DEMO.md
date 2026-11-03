@@ -133,5 +133,7 @@ These invisible `data-tour` names are put on the key controls so the tour can po
 
 - `tests/demo-store.test.mjs`: the store and the rules, with a fake storage and a fake clock (no browser, about a second).
 - `tests/demo-data.test.mjs`: every price, age, day and pizza of the demo against the site's own pages (no browser).
+- `tests/account-event.test.mjs`: the family's screens in a real browser: the sign-up question and each answer, My event shown only to a family that has an event, "I also plan an event", no My year, the contact links (Vanessa, Ava, the kitchen line) and an accessibility check (axe) of the new boxes.
+- `tests/tour-demo-script.test.mjs`: the tour's chapter on the demo, card by card, against the real store (no browser).
 - `tests/seo.test.mjs`: the three pages are `noindex`, have no canonical address, no share picture and no line in the sitemap.
 - `tests/privacy.test.mjs`: the demo files may use browser storage only in `js/demo-store.js` (one key) and `js/demo-header.js` (one hint for the tab), and may build their own form, text box and list. Everything else stays refused.
