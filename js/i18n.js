@@ -309,7 +309,7 @@
     doc.querySelectorAll('.lang-cur').forEach((n) => { n.textContent = cur.short; });
     const word = LANG_WORD[cur.code] || LANG_WORD.en;
     doc.querySelectorAll('[data-lang-list]').forEach((n) => n.setAttribute('aria-label', word));
-    doc.querySelectorAll('.lang-btn').forEach((n) => n.setAttribute('aria-label', word + (cur.code === 'zh' ? '\uff1a' : ': ') + cur.name));   // "Language: English": a screen reader hears the current language, not just "Language"
+    doc.querySelectorAll('.lang-btn').forEach((n) => n.setAttribute('aria-label', word + (cur.code === 'zh' ? '\uff1a' : ': ') + cur.name + (cur.code === 'zh' ? '' : ', ' + cur.short)));   // "Language: English": a screen reader hears the current language, not just "Language"
     doc.querySelectorAll('[data-lang]').forEach((b) => {
       const on = b.dataset.lang === cur.code;
       if (b.classList.contains('lang-link')) b.setAttribute('aria-pressed', String(on));
