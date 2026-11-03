@@ -19,7 +19,7 @@ Every fact below comes from the code or the generated list `docs/WHAT_VISITORS_S
 - "In season" (`live`) means today is between the two dates. Between seasons nothing is in season, and the page keeps the look of the NEAREST season
   (`current()`): Dec 9 to Feb 9 winter look, Feb 10 to Jun 11 spring look, Jun 12 to Aug 11 summer look, Aug 12 to Nov 17 fall look, Nov 18 to Nov 26 winter look
   (the exact days are in `docs/WHAT_VISITORS_SEE_WHEN.md`). On those days the all-year headline and line show, and a `data-in-season` line is hidden.
-- About 150 days of the year are in season (54 + 26 + 57 + 12); the other 215 days are "between seasons".
+- About 149 days of a year are in season (54 + 26 + 57 + 12 in 2026); the other 216 days are "between seasons".
 - Today in the story (3 Nov 2026) is fall, in season (Sep 13 to Nov 8).
 
 ## 2. How the page switches season (what the tour can use)
@@ -40,7 +40,7 @@ Peeking with the page's own buttons does NOT change the parts that follow the cl
 
 | # | Part (selector) | Spring | Summer | Fall | Winter | Driven by |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Strip at the very top (`.announce [data-ann-season]`) | In season: Strawberries | In season: Blueberries & sunflowers | In season: Pumpkins & tomatoes | In season: Christmas trees at The GreenHouse | Clock. Between seasons: "Next up: {crop}, usually {when}" |
+| 1 | Strip at the very top (`.announce [data-ann-season]`) | In season: Strawberries | In season: Blueberries & sunflowers | In season: Pumpkins & tomatoes | In season: Christmas trees at The GreenHouse | Clock. Between seasons: "Next up: {crop}, usually {when}". On a phone (up to 47.5em wide) the season part is HIDDEN by css/extras.css, so only the reservation words show; the card says so |
 | 2 | First screen text (`.hero-copy`): headline `#hero-h`, line `.hero-sub`, buttons `.hero-cta`, note `.hero-note`, chips | Headline "Organic u-pick fun for the whole family"; line "It's strawberry season!..."; buttons "Reserve your visit" + "See what's in season"; note "No reservation? Visit The GreenHouse next door" | line "It's blueberry season! Fill a bucket..."; the rest as spring | line "It's pumpkin season! Pick pumpkins, plus new u-pick organic tomatoes and basil, with wagon rides and a haunted trail."; the chip "New: u-pick tomatoes & basil" (`data-until` 2026-10-31) and the pizza chip (fall only) | Headline "Wise Acres Christmas trees"; line "Pick out a North Carolina Christmas tree at The GreenHouse next door..."; the red button is "Visit The GreenHouse"; the note is HIDDEN | Peek. Between seasons: the all-year headline and line |
 | 3 | First screen picture (`#hero-scene`) | strawberry rows with pickers, the wagon ride and barrel train | blueberry bushes with pickers and bees | pumpkin rows, the wagon and barrel train, falling leaves (`particles: 'leaves'`), no butterflies | snowy rows of Christmas trees, campfires, a snowman, falling snow (`particles: 'snow'`), no butterflies, no bee | Peek (js/hero.js `SCENES`, css/hero.css) |
 | 4 | Open-now badges (`.hero-live`, also in the farm card of "Two places") | no farm badge (`hours.farm` has only `fall`); GreenHouse badge by its hours | same | farm badge "Reserved visits today" / "No visits today. Next reserved day: ..." (Thu to Sun) | no farm badge; GreenHouse badge by its hours | Clock + `hours` in js/content.js |
@@ -52,7 +52,7 @@ Peeking with the page's own buttons does NOT change the parts that follow the cl
 | 10 | What's in season (`#season-tabs`, `.season-stage`) | "Strawberry season", mid-April to early June | "Blueberries & sunflower season", mid- to late June through early July | "Pumpkin & tomato season", mid-September through early November; Thursday to Sunday reservations; "See prices" | "NC Christmas tree season", Friday after Thanksgiving to early December; no reservation; "Get farm updates" | Peek; the "Happening now" tab mark by the clock |
 | 11 | GreenHouse: "Christmas trees are here" line (`.gh-trees`) | hidden | hidden | hidden | shows | Peek, `data-in-season` (only on the real tree days) |
 | 12 | Mobile action bar (`#action-bar`, phones only) | Reserve + Directions (farm) | same | same | GreenHouse + Directions (GreenHouse) | Peek |
-| 13 | Menu | "Playgrounds" goes to the playground card; "Things to Do" has a red dot | same, no dot | same, dot (tomato season) | "Playgrounds" goes to What's on the farm instead; no dot | Peek (js/main.js `aim`; css/sections.css) |
+| 13 | Menu | "Playgrounds" goes to the playground card; no dot on "Things to Do" | same | same, and a red dot on "Things to Do" (tomato season, `html[data-season="fall"]`) | "Playgrounds" goes to What's on the farm instead (there is no playground card at the farm); no dot | Peek (js/main.js `aim`; css/sections.css) |
 | 14 | Menu "Christmas trees" line (`data-coming="winter"`) | no | no | bold with a red dot from 60 days before tree season (from Sep 28) | bold with a red dot until Dec 8 | Clock, once when the page loads |
 | 15 | Drive time (`#contact .drive`) | default place: the farm | the farm | the farm | The GreenHouse | Peek (js/features.js `seasonTo`) |
 | 16 | The "Season by season" strip and the footer picture (`.season-strip`, `#footer-art`) | pattern and scene of the season | same | same | same | Peek (css/extras.css `--strip`, js/hero.js `footerArt`) |

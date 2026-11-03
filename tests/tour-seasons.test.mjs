@@ -46,7 +46,7 @@ const welcome = (p, name) => okSoon(name || 'the welcome card opens', () => look
 /* what the page looks like to a visitor, for comparing before and after: the season, the lines of a season, the parts that follow the clock, the lines with a last day, the open tabs, Date itself */
 const SNAP = `(() => {
   // the words a visitor can see; a box that is not drawn (hidden) counts as '[hidden]': the page leaves old words inside a hidden pizza countdown, which nobody sees
-  const text = (sel) => { const e = document.querySelector(sel); if (!e) return null; return e.getClientRects().length ? e.innerText.replace(/\\s+/g, ' ').replace(/\\d+/g, '#').trim() : '[hidden]'; };   // numbers become # (a countdown moves on by itself)
+  const text = (sel) => { const e = document.querySelector(sel); if (!e) return null; return e.getClientRects().length ? e.innerText.replace(/\\s+/g, ' ').replace(/\\d+/g, '#').replace(/\\b(day|hour|minute|second)s\\b/gi, '$1').trim() : '[hidden]'; };   // numbers become # and 'days' become 'day' (a countdown moves on by itself)
   return JSON.stringify({
     season: document.documentElement.getAttribute('data-season'),
     lines: Array.from(document.querySelectorAll('[data-only],[data-out-of-season]')).map((e) => (e.hasAttribute('hidden') ? 1 : 0)).join(''),

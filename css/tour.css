@@ -61,6 +61,9 @@
 .wa-tour-card.is-sheet .wa-tour-body{font-size:1rem}
 .wa-tour-card.is-sheet .wa-tour-actions .btn{flex:1 1 auto}
 
+/* Windows High Contrast (forced colours) drops backgrounds and shadows: the pressed small button is marked with the system's "selected" pair, as the site's own season buttons are (css/features.css) */
+@media (forced-colors:active){.wa-tour-choice[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}}
+
 /* calm mode ("Pause animations", or a slow phone) and reduced motion: nothing slides or fades, the lit box just appears */
 .wa-tour.is-still *{transition:none!important;animation:none!important}
 @media (prefers-reduced-motion:reduce){.wa-tour *{transition:none!important;animation:none!important}}

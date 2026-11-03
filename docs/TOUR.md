@@ -24,7 +24,7 @@ To go to other pages the tour keeps the switch on for itself. With `?tour` it ta
 3. **Contents** lists every part with the number of steps in it. The part they are in is marked. A press on a part goes to its first step.
 4. The last card has **Finish** and **Start again**.
 5. They can stop at any time. The next time they press the button, the welcome card has a **Continue where I stopped** button and says at which step they stopped. This works after the page was closed, and on another day, on the same computer and browser.
-6. Ten steps are about parts of the site that change with the season. Their card has a row of four small buttons, **Spring, Summer, Fall and Winter** (the season walk, below). Pressing one switches the whole page to that season, the lit part stays lit, and the card says what the part shows now and what is different from the season before. **Next, Back, Contents and Close put the page back** as it was.
+6. Some steps are about parts of the site that change with the season (ten today: the strip, the first screen, the badges, the game, the countdown, This week, the two places, What's in season, What's on the farm, the trees at The GreenHouse). Their card has a row of four small buttons, **Spring, Summer, Fall and Winter** (the season walk, below). Pressing one switches the whole page to that season, the lit part stays lit, and the card says what the part shows now and what is different from the season before. **Next, Back, Contents and Close put the page back** as it was.
 
 Keys: the Right arrow is Next, the Left arrow is Back, Enter is Next, Esc closes. Tab and Shift+Tab stay inside the card. A screen reader hears each step once, politely.
 On a phone the card is a sheet at the bottom of the screen and the lit box is moved above it.
@@ -131,6 +131,7 @@ Writing the words of a season: what the lit box shows in that season and what is
 when that button is pressed (`tests/tour-targets.test.mjs` presses every button and checks it). A phrase the page says on another day (for example what the strip says after a season ends) goes in single curly quotes (‘...’):
 those are not checked against the lit box (the strip step's are checked against the page on the day after the season's last day). A "Month day" in the card of a season must be that season's first or last day in `js/season.js`
 (also checked). A part that does **not** change with the season gets no buttons; its card says so (for example "This box stays all year").
+On a phone the site's own style leaves out a few words (the “In season:” part of the strip, `css/extras.css`): the card of the strip says so, and at phone width the check only notes such a phrase.
 
 ## For the person who builds the preview
 

@@ -52,7 +52,7 @@ const OTHER_DAYS = [
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const exists = (f) => fs.existsSync(path.join(ROOT, f));
 const wordsOf = (s) => String(s).trim().split(/\s+/).filter(Boolean);
-const numbersAside = (t) => String(t == null ? '' : t).replace(/\d+/g, '#');
+const numbersAside = (t) => String(t == null ? '' : t).replace(/\d+/g, '#').replace(/\b(day|hour|minute|second)s\b/gi, '$1');
 const squash = (t) => String(t).toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim();   // words compared without capitals, curly quotes or odd spaces
 const stripTags = (html) => html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#?\w+;/g, ' ');
 
@@ -172,7 +172,7 @@ const IN_PAGE = `(() => {
   const opacity = (el) => { let o = 1; for (let a = el; a && a.nodeType === 1; a = a.parentElement) o *= parseFloat(getComputedStyle(a).opacity); return o; };
   const find = (sel) => { let all = []; try { all = Array.from(document.querySelectorAll(sel)); } catch (e) { return { bad: true, n: 0 }; } const el = all.find(visible) || null; return { n: all.length, el, bad: false }; };
   // the words a visitor can see; a box that is not drawn (hidden) counts as '[hidden]': the page leaves old words inside a hidden pizza countdown, which nobody sees
-  const text = (sel) => { const e = document.querySelector(sel); if (!e) return null; return e.getClientRects().length ? e.innerText.replace(/\\s+/g, ' ').replace(/\\d+/g, '#').trim() : '[hidden]'; };   // numbers become # (a countdown moves on by itself)
+  const text = (sel) => { const e = document.querySelector(sel); if (!e) return null; return e.getClientRects().length ? e.innerText.replace(/\\s+/g, ' ').replace(/\\d+/g, '#').replace(/\\b(day|hour|minute|second)s\\b/gi, '$1').trim() : '[hidden]'; };   // numbers become # and 'days' become 'day' (a countdown moves on by itself)
   const snapshot = () => JSON.stringify([
     document.documentElement.getAttribute('data-season'),
     Array.from(document.querySelectorAll('[aria-expanded="true"],[aria-selected="true"],[aria-checked="true"],[aria-pressed="true"]')).map((e) => (e.id || e.className || e.tagName) + '|' + (e.getAttribute('data-season') || e.getAttribute('data-fs') || e.getAttribute('data-lang') || '')),
@@ -236,6 +236,7 @@ const IN_PAGE = `(() => {
       return (b.id || b.getAttribute('data-season') || b.textContent.trim().slice(0, 20));
     },
     boxText(sel) { const f = find(sel); return f.el ? f.el.innerText.replace(/\\s+/g, ' ').trim() : null; },   // what is written in the lit box now (as shown: capitals of a heading included)
+    boxAll(sel) { const f = find(sel); return f.el ? f.el.textContent.replace(/\\s+/g, ' ').trim() : null; },   // everything written in it, also what the site's own style leaves out on a phone
     dataSeason() { return document.documentElement.getAttribute('data-season'); },
     choiceList(id) { const s = this.stepById(id); const l = typeof s.choices === 'function' ? s.choices({}) : s.choices; return l ? l.map((c) => ({ label: c.label, title: c.title, text: c.text, pressed: !!c.pressed })) : []; },
     startChoice(id, i) {   // like start(), for the run() of the small button i (a fresh list is asked for, as the engine does when the card shows)
@@ -333,7 +334,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
     const buttons = full && pr.shown ? await p.evaluate(([id]) => window.__tour.choiceList(id), [s.id]) : [];
     if (buttons.length) {
       const boxBefore = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
-      const seen = [];
+      const seen = [], seenAll = [], phone = size.width < 600;   // on a phone the site's own style leaves some words out (the "In season:" part of the top strip): the tour is made for the computer first
       for (let i = 0; i < buttons.length; i++) {
         const c = buttons[i], nm = name + ' - button "' + c.label + '"';
         const r = await hook(p, s.id, i);
@@ -348,14 +349,22 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
           if (now !== c.label.toLowerCase()) bad.push('the page is in "' + now + '", not in ' + c.label.toLowerCase());
         }
         const box = (await p.evaluate(([t]) => window.__tour.boxText(t), [s.target])) || '';
-        seen.push(box);
+        const all = phone ? (await p.evaluate(([t]) => window.__tour.boxAll(t), [s.target])) || '' : '';
+        seen.push(box); seenAll.push(all || box);
         const phrases = [...String((c.title || '') + ' ' + (c.text || '')).matchAll(/\u201c([^\u201d]+)\u201d/g)].map((m) => m[1]);
-        const missing = phrases.filter((ph) => !squash(box).includes(squash(ph)));
+        const lost = phrases.filter((ph) => !squash(box).includes(squash(ph)));
+        const hid = lost.filter((ph) => phone && squash(all).includes(squash(ph)));   // there in the page, left out by the style on a phone
+        const missing = lost.filter((ph) => !hid.includes(ph));
+        if (hid.length) info('note: on a phone the site leaves out ' + hid.map((m) => '\u201c' + m + '\u201d').join(', ') + ' in ' + s.target + ' (the computer shows it)');
         if (missing.length) bad.push('the card quotes ' + missing.map((m) => '\u201c' + m + '\u201d').join(', ') + ' but the lit box says: ' + box.slice(0, 260));
         if (process.env.WA_TOUR_SHOW) info(c.label + ': ' + box.slice(0, 330));
         rec(nm + ': the lit box is on the page and shows what the card says (' + phrases.length + ' quoted phrase' + (phrases.length === 1 ? '' : 's') + ')' + (full ? '' : ''), bad.length === 0, bad.join(' | '));
       }
-      if (buttons.length > 1) rec(name + ': the buttons show different things in the lit box (' + new Set(seen).size + ' different of ' + seen.length + ')', new Set(seen).size > 1, 'every button left the lit box as it was: ' + (seen[0] || '').slice(0, 200));
+      if (buttons.length > 1) {
+        const shown = new Set(seen).size, written = new Set(seenAll).size;
+        if (phone && shown < 2 && written > 1) info('note: on a phone the lit box looks the same for every button; the words that change are left out by the site\'s own style (' + s.target + ')');
+        rec(name + ': the buttons show different things in the lit box (' + shown + ' different of ' + seen.length + ')', shown > 1 || (phone && written > 1), 'every button left the lit box as it was: ' + (seen[0] || '').slice(0, 200));
+      }
       const a2 = await hook(p, s.id, 'after');
       if (a2.error) { rec(name + ': after() ran without an error', false, a2.error); continue; }
       if (a2.ran) await settled(p, 300);

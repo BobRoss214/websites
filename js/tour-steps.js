@@ -208,7 +208,7 @@
     {
       id: 'ch2-strip', order: 201, chapter: 2, page: 'index', target: '.announce',
       title: 'The strip at the very top',
-      text: 'This strip is on every page. It says the farm takes reservations only, and The GreenHouse needs none. It also says what is in season, or what comes next, from the calendar. Press a season.',
+      text: 'This strip is on every page. It says the farm takes reservations only, and The GreenHouse needs none. It also says what is in season, or what comes next, from the calendar. On a phone, that part is left out. Press a season.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring, April 15 to June 7. The strip begins “In season: Strawberries”. After June 7 it says ‘Next up: Blueberries & sunflowers, usually mid-June’.',
@@ -271,9 +271,9 @@
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring. It says “Happening now: Strawberries” and “Next up: Blueberries & sunflowers”, usually mid-June, with the days to go.',
-        summer: 'Summer. Now “Happening now: Blueberries & sunflowers” and “Next up: Pumpkins & tomatoes”, usually mid-September.',
-        fall: 'Fall. “Happening now: Pumpkins & tomatoes” and “Next up: Christmas trees at The GreenHouse”, usually the Friday after Thanksgiving.',
-        winter: 'Winter. “Happening now: Christmas trees at The GreenHouse” and “Next up: Strawberries”, usually mid-April. The count of days is the longest of the year.'
+        summer: 'Summer. It changes to “Happening now: Blueberries & sunflowers” and “Next up: Pumpkins & tomatoes”, usually mid-September.',
+        fall: 'Fall. It says “Happening now: Pumpkins & tomatoes” and “Next up: Christmas trees at The GreenHouse”, usually the Friday after Thanksgiving.',
+        winter: 'Winter. It says “Happening now: Christmas trees at The GreenHouse” and “Next up: Strawberries”, usually mid-April. The count of days is the longest of the year.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
@@ -309,7 +309,7 @@
         spring: 'Spring. The farm card shows a strawberry: “U-pick organic strawberries, plus u-cut flowers”. The button is “Reserve the farm”. The GreenHouse card never changes.',
         summer: 'Summer. A blueberry: “U-pick organic blueberries, plus u-cut sunflowers and flowers”. The button stays “Reserve the farm”.',
         fall: 'Fall. A pumpkin. The card adds wagon rides, the corn pit, a small sunn hemp maze and a haunted trail. A “See prices” button joins “Reserve the farm”.',
-        winter: 'Winter. A Christmas tree. “Picking is seasonal”, with strawberries next. “Reserve the farm” becomes “Tell me when”, and a new line says “Christmas trees are at The GreenHouse”.'
+        winter: 'Winter. A Christmas tree. “Picking is seasonal”, with strawberries next. The button ‘Reserve the farm’ becomes “Tell me when”, and a new line says “Christmas trees are at The GreenHouse”.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },

@@ -143,7 +143,7 @@ await run('tour', async ({ browser, base, errs }) => {
   await okSoon('scrolled down, the round "back to top" button shows, and the tour button does not cover it', async () => { const t = await rectOf(p, '.to-top'), b = await rectOf(p, '.wa-tour-pill'); return t && t.w > 0 && (await p.evaluate(() => !document.querySelector('.to-top').hidden)) ? overlap(t, b) : -1; }, (v) => v === 0);
   const scrollBefore = 1700;
 
-  await press(p, 'Take a tour');
+  await p.getByRole('button', { name: 'Take a tour', exact: true }).click();   // the round button is on the page, not in the card
   await okSoon('the button opens a welcome card: a dialog with a name, the words of the plan, and its three buttons', () => look(p), (s) => s && s.dialog === 'dialog' && s.name === 'Your website tour' && /^This is a tour of your new website\. It takes about \d+ minutes\. You can stop any time/.test(s.text) && /Continue where I stopped/.test(s.text) && /Contents lets you jump to any part/.test(s.text));
   const s0 = await look(p);
   ok('the welcome card has Start the tour, Choose a part and Not now (and no "Continue" button the first time), and the first button has the focus', s0.buttons.join('|') === 'Start the tour|Choose a part|Not now|Close' && s0.focus === 'Start the tour', s0.buttons.join('|') + ' / ' + s0.focus);
