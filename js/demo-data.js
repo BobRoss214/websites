@@ -269,7 +269,7 @@
       family: {
         name: 'Alex', adults: [{ name: 'Alex' }, { name: 'Jordan' }], kids: KIDS.map(function (k) { return { name: k.name, age: k.age }; }),
         allergies: 'Riley: peanut allergy.', glutenFree: false, vegan: false,
-        phone: SAMPLE_PHONE, notify: { text: true, email: true }   // "Tell me when": the pretend phone, and where the messages go (text, email or both; at least one stays on)
+        phone: SAMPLE_PHONE, notifyBy: { text: true, email: true }   // "Tell me when": the pretend phone, and where the messages go (text, email or both; at least one stays on)
       },
       visits: [upcoming, recent, older],
       orders: [order],

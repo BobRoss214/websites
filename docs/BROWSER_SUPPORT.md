@@ -50,7 +50,7 @@ Everything else (Internet Explorer, Opera Mini, UC Browser in "extreme" mode, iO
    - `prefix-pair`: the `-webkit-` form is written next to the plain one.
    - `guard`: the script tests for the feature before using it.
    - `own`: the word is the site's own name for something (a function called `close`), and the test checks it is never used as the browser's method.
-   - `manual`: a person weighed each use (`:is()`, `:has()`, `:focus-visible`, `rotate`, `scale`, `translate`, `<dialog>`). A new use fails the test until it is reviewed.
+   - `manual`: a person weighed each use (`:is()`, `:has()`, `:focus-visible`, `rotate`, `scale`, `translate`, `<dialog>`, and the alignment words `start`, `end` and `safe`: the compat data dates `start` and `end` for flex boxes, and every use on the site is on a grid box, where they are old). A new use fails the test until it is reviewed.
    - `progressive` and `na`: the page works without it, or it only matters to a mouse or to one maker's browser.
 4. The test also tries its own reader on small samples first, so a reader that stopped working cannot make the test pass.
 

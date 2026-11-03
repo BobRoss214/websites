@@ -101,7 +101,7 @@ const said = KINDS.map((k) => [k.key, k.label + ' ' + k.note + ' ' + k.notice]);
 ok('no hour is made up: every time written in these words is on the home page', said.every(([, t]) => (t.match(TIMES) || []).every((m) => has(homeText, m))), said.map(([k, t]) => k + ': ' + (t.match(TIMES) || []).join('/')).join(', '));
 ok('no day or date is made up: the only choice that names a weekday is the reservations one, and it is the site\'s sentence', said.filter(([, t]) => (t.match(DAYS_OR_MONTHS) || []).length).map(([k]) => k).join() === 'reservations');
 ok('the pretend phone number is a made-up one: it is in the block set aside for made-up numbers (555-0100 to 555-0199) and is not a number the site shows',
-  /^\(\d{3}\) 555-01\d\d$/.test(Data.SAMPLE_PHONE) && !homeText.includes(Data.SAMPLE_PHONE) && !home.includes(Data.SAMPLE_PHONE.replace(/\D/g, '')) && Data.sample('2026-11-03').family.phone === Data.SAMPLE_PHONE && JSON.stringify(Data.sample('2026-11-03').family.notify) === '{"text":true,"email":true}');
+  /^\(\d{3}\) 555-01\d\d$/.test(Data.SAMPLE_PHONE) && !homeText.includes(Data.SAMPLE_PHONE) && !home.includes(Data.SAMPLE_PHONE.replace(/\D/g, '')) && Data.sample('2026-11-03').family.phone === Data.SAMPLE_PHONE && JSON.stringify(Data.sample('2026-11-03').family.notifyBy) === '{"text":true,"email":true}');
 
 /* ---------------- the demo's scripts keep to the data file ---------------- */
 const demoJs = fs.readdirSync(path.join(ROOT, 'js')).filter((f) => /^demo-.*\.js$/.test(f) && f !== 'demo-data.js');

@@ -71,7 +71,7 @@ can pass a fake storage). State in `localStorage['wa-demo-v1']`; falls back to m
   `reply(id, {answer: 'yes'|'no'|'suggest', note, suggestion: {patch, summary}})`: yes applies `patch` to the target, no changes nothing,
   suggest keeps the suggestion and sets `suggested`; `respond(id, 'ok'|'decline')`: ok applies `suggestion.patch` (status `accepted`), decline keeps the old
   (status `declined`); `cancel(id)`. Every step is added to `request.history` with a time and a plain sentence, and makes a notice for the other side.
-- Messages: `post(threadId, from: 'family'|'cathy', text)`, `thread(threadId)`. Notices: `notify(text, link)`, `markRead(id)`.
+- Messages: `post(threadId, from: 'family'|'cathy', text)`, `thread(threadId)`. Notices: `postNotice(text, link)` (it was called `notify` until 3 Nov 2026; that is also the name of a browser property), `markRead(id)`.
 - Weather: `closeDay(date, reason)` (marks every visit on that date `closed: true`, makes a notice for the family), `openDay(date)`.
 - Alerts: `setAlert(key, bool)`, `alertCounts()`, `fireAlert(key)` (notice for the family if subscribed).
 - Reviews and photos: `submitReview({visitId, stars, text, photoName})` (status `waiting`), `decideReview(id, true|false)`.

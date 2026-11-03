@@ -11,7 +11,7 @@
 
    What it touches: ONLY the store, js/demo-store.js (DemoStore), never browser storage itself. It reads: orders, visits, requests
    (kind 'pizza-change', to 'kitchen'), family. It writes: DemoStore.reply(id, {answer: 'yes'|'no'|'suggest', note, suggestion}),
-   DemoStore.update('orders', id, {status: 'confirmed'}) and DemoStore.notify(text, '#pizza'). The names are in
+   DemoStore.update('orders', id, {status: 'confirmed'}) and DemoStore.postNotice(text, '#pizza'). The names are in
    work-notes/ACCOUNT-DEMO-PLAN.md and docs/ACCOUNT_DEMO.md. It listens with DemoStore.subscribe, so a change made in another tab
    shows at once (the answer buttons, the editor and a note being typed all survive a redraw).
 
@@ -620,7 +620,7 @@
 
     function confirmOrder(card) {
       store.update('orders', card.id, { status: 'confirmed' });
-      store.notify('The kitchen confirmed your pizza order for ' + dayLabel(card.date) + ' at ' + time12(card.pickup) + '.', '#pizza');
+      store.postNotice('The kitchen confirmed your pizza order for ' + dayLabel(card.date) + ' at ' + time12(card.pickup) + '.', '#pizza');
       backToCard(card.id);
     }
 
