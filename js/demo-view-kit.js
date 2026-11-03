@@ -1,5 +1,5 @@
-/* The account demo: shared helpers for the family's extra screens (My family, Tell me when, My year, Receipts and questions, Photos and reviews,
- * My event). It is only helpers: it draws nothing by itself, and it is only loaded on the demo page (account.html). The six js/demo-view-*.js files use it.
+/* The account demo: shared helpers for the family's extra screens (My family, Tell me when, Receipts and questions, Photos and reviews,
+ * My event). It is only helpers: it draws nothing by itself, and it is only loaded on the demo page (account.html). The five js/demo-view-*.js files use it.
  *
  * Rules every screen follows (the demo is pretend, nothing is sent anywhere):
  *  - Text from the family (names, notes, questions) goes into the page with textContent only, never as markup.

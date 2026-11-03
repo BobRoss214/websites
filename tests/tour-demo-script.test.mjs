@@ -7,9 +7,9 @@
  * store (js/demo-store.js), in the before() of the card that SHOWS the result. This test runs those before() functions in order, in Node, with the real store on a fake
  * storage and a fake page (every target is "on the screen"), and checks what the store holds after each card. It does not need a browser. tests/tour-targets.test.mjs
  * (D2) checks, in a real browser, that every card's target is on the real demo pages.
- *   - walking the 25 cards forward: the sample family exists at card 3; the request waits at card 6 and is answered yes at card 8 (the visit moved, the pizza pick-up
+ *   - walking the 24 cards forward (the cards are numbered 1 to 25 as before; number 17, My year, was taken out): the sample family exists at card 3; the request waits at card 6 and is answered yes at card 8 (the visit moved, the pizza pick-up
  *     followed it); the pizza request is sent at card 11, suggested at card 12 and accepted at card 13; the alert is on and sent once; the question and the answer are
- *     in the farm thread; the review waits at card 19 and is approved at card 21; the day of the visit is closed at card 23; each card opens its tab;
+ *     in the farm thread; the review waits at card 19 and is approved at card 21, where My event shows (it shows only for a family that has an event); the day of the visit is closed at card 23; each card opens its tab;
  *   - every before() can run twice in a row without changing anything the second time;
  *   - Back: card 12 after card 13 shows the suggestion again; card 7 after card 8 shows a waiting request and the visit on its first day; card 22 after 23 opens the day;
  *     card 20 after 21 makes the review wait again; the same answer comes the second time round;
@@ -48,6 +48,7 @@ function world(opts = {}) {
   // run the before() of card n (its order is 1000 + n) and wait for it
   w.run = async (n) => {
     const s = w.steps.find((x) => x.order === 1000 + n);
+    if (!s) return null;   // there is no card with that number (17 was My year)
     w.waited.length = 0;
     let r;
     try { r = s.before ? s.before({}) : undefined; await r; } catch (e) { w.errors.push(n + ': ' + e.message); }
@@ -67,7 +68,13 @@ const dayAfter = (d) => Data.addDays(d, 1);
 /* ------------------------------------------------------------------ the cards */
 {
   const w = world();
-  ok('the chapter has 25 cards, orders 1001 to 1025 one after the other', w.steps.length === 25 && w.steps.every((s, i) => s.order === 1001 + i && s.chapter === 10), w.steps.map((s) => s.order).join(','));
+  const orders = [...Array(16).keys()].map((i) => 1001 + i).concat([...Array(8).keys()].map((i) => 1018 + i));   // 1001 to 1016 and 1018 to 1025: 1017 was My year
+  ok('the chapter has 24 cards, orders 1001 to 1016 and 1018 to 1025, increasing, each with its own id', w.steps.length === 24 && w.steps.every((s, i) => s.order === orders[i] && s.chapter === 10) && new Set(w.steps.map((s) => s.id)).size === 24, w.steps.map((s) => s.order).join(','));
+  ok('My year is gone from the tour: no card with its id, its hook (acct-year) or its tab (year)', !w.steps.some((s) => /year/i.test(s.id + ' ' + s.target + ' ' + s.title)) && !/acct-year|'year'/.test(SOURCE));
+  ok('the chapter\'s first card does not promise a year screen', !/year|badge/i.test(w.steps[0].text + ' ' + w.steps[0].title));
+  const ev = w.steps.find((s) => s.id === 'ch10-event'), su = w.steps.find((s) => s.id === 'ch10-signup');
+  ok('the My event card keeps its id, order and target, and says the tab shows only for families who said yes at sign-up', !!ev && ev.order === 1021 && ev.target === '[data-tour="acct-event"]' && /only for families who said yes at sign-up/.test(ev.text), ev && ev.text);
+  ok('the sign-up card says the family is asked about a party, an event or a school trip', !!su && su.order === 1002 && /party, an event or a school trip/.test(su.text));
   ok('every card is skipped when its target is missing, and is on a demo page', w.steps.every((s) => s.skipIfMissing === true && ['account', 'farm-desk', 'kitchen'].includes(s.page)));
   ok('no card has an after() (Back must never answer a request)', w.steps.every((s) => !('after' in s)));
 }
@@ -118,7 +125,7 @@ const dayAfter = (d) => Data.addDays(d, 1);
   const alertText = Data.alertKinds.filter((k) => k.key === 'pumpkins')[0].notice;
   ok('card 16: the alert reached the family\'s bell, once', w.notices().filter((n) => n.text === alertText).length === 1);
   await w.run(17);
-  ok('card 17: My year is open', w.tab === 'year');
+  ok('there is no card 17 any more: running it changes nothing', w.tab === 'alerts' && w.errors.length === 0);
   await w.run(18);
   const talk = S.thread('farm');
   ok('card 18: the farm thread holds the family\'s question and Mrs. Cathy\'s reply (the FAQ\'s words), Receipts and questions is open', talk.length === 2 && talk[0].from === 'family' && talk[1].from === 'cathy' && /Hartis Road/.test(talk[1].text) && w.tab === 'messages');
@@ -128,7 +135,7 @@ const dayAfter = (d) => Data.addDays(d, 1);
   await w.run(20);
   ok('card 20 (the desk): the review still waits', S.list('reviews')[0].status === 'waiting');
   await w.run(21);
-  ok('card 21: the review is approved and My event is open', S.list('reviews').length === 1 && S.list('reviews')[0].status === 'approved' && w.tab === 'event');
+  ok('card 21: the review is approved and My event is open (the sample family has its school trip)', S.list('reviews').length === 1 && S.list('reviews')[0].status === 'approved' && w.tab === 'event' && S.list('events').length === 1 && S.list('events')[0].kind === 'school' && S.current().eventKind === 'school');
   await w.run(22);
   ok('card 22 (the desk): no day is closed yet', S.list('closedDays').length === 0 && !w.visit().closed);
   await w.run(23);
@@ -203,11 +210,12 @@ const dayAfter = (d) => Data.addDays(d, 1);
   for (let n = 3; n <= 23; n++) {
     const w = world();
     const s = await w.run(n);
+    if (!s) continue;   // (card 17 does not exist)
     if (!w.store.current() || !w.visit()) failed.push(n);
     if (s.before && !w.waited.includes(s.target)) notWaiting.push(n);
     if (w.errors.length) failed.push(n + ' threw');
   }
-  ok('entering any card from 3 to 23 first makes the sample family it needs', failed.length === 0, failed.join(','));
+  ok('entering any card from 3 to 23 first (17 is gone) makes the sample family it needs', failed.length === 0, failed.join(','));
   ok('and each of them waits for its own target', notWaiting.length === 0, notWaiting.join(','));
   const want = { 6: ['visit-change', 'waiting'], 7: ['visit-change', 'waiting'], 8: ['visit-change', 'yes'], 11: ['pizza-change', 'waiting'], 12: ['pizza-change', 'suggested'], 13: ['pizza-change', 'accepted'] };
   const wrong = [];
@@ -255,11 +263,22 @@ const dayAfter = (d) => Data.addDays(d, 1);
   ok('the family cancelled the request: the desk card gets a new one', w.req('visit-change').status === 'waiting' && S.list('requests').length === 2);
 }
 
+/* ------------------------------------------------------------------ a family that said No at sign-up still gets the My event card */
+{
+  const w = world();
+  w.store.createAccount({ name: 'Alex', email: Data.SAMPLE_ACCOUNT.email, eventKind: 'none' });
+  ok('a family that said No at sign-up has no event (so My event is not on its tab bar)', w.store.list('events').length === 0 && w.store.current().eventKind === 'none');
+  await w.run(21);
+  ok('card 21 still has something to show: it adds the sample school trip for that family (and the account keeps the kind)', w.store.list('events').length === 1 && w.store.list('events')[0].kind === 'school' && w.store.current().eventKind === 'school' && w.tab === 'event' && w.errors.length === 0);
+  await w.run(21);
+  ok('and running the card again adds nothing more', w.store.list('events').length === 1);
+}
+
 /* ------------------------------------------------------------------ never an error */
 {
   const none = world({ noStore: true });
   const outs = [];
-  for (let n = 1; n <= 25; n++) { const s = none.steps[n - 1]; try { outs.push(s.before ? s.before({}) : undefined); } catch (e) { none.errors.push(n + ': ' + e.message); } }
+  none.steps.forEach((s, i) => { try { outs.push(s.before ? s.before({}) : undefined); } catch (e) { none.errors.push((i + 1) + ': ' + e.message); } });
   ok('without the demo (no store on the page) no before() does anything or throws', none.errors.length === 0 && outs.every((o) => o === undefined));
   const bad = world({ brokenStore: true });
   await bad.walk(1, 25);

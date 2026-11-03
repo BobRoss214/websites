@@ -66,7 +66,7 @@ rebuilt: pull the menu commit before writing chapter 3; see `work-notes/MENU-PLA
 10. The account demo (pretend): create an account (sample family loads); My visits and the paid details; Request a different day -> "Waiting for a reply from Mrs. Cathy"; switch to
     Mrs. Cathy's desk: the request waits with Yes / No / Suggest (the tour sends a reply for you); back on the family side the answer arrives; My pizza: the family can change everything,
     the 1 hour rule, asking for an earlier time; the kitchen screen: Yes / No / Change it, and the family's OK; family details and allergies; Tell me when (and the desk's counts of who is
-    waiting); My year (badges); Receipts and questions for the farm; Photos and reviews and the approvals on the desk; My event (groups and schools); closing a day for weather and every
+    waiting); Receipts and questions for the farm; Photos and reviews and the approvals on the desk; My event (groups and schools: the tab shows only for families who said yes at sign-up); closing a day for weather and every
     booked family seeing it with one tap to pick a new day. Say plainly what a real version needs (a place for logins, a link to the booking tool, alerts to you and the kitchen, care with
     kids' info, an updated privacy page) and that the booking tool may already do some of it: "worth asking".
 11. What we need from you (last card, as a short list): the prices above; full-size original photos straight from the phone (many of ours are tiny, about 200 px); who changes the weekly box

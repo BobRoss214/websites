@@ -1,5 +1,7 @@
 # Notes from helper B: My family, Tell me when, My year (and the shared kit), 3 Nov 2026
 
+> Update, 3 Nov 2026 (second wave): the My year screen described below was taken out at the builder's request (no visit counts, no badges, nothing about how many times a family came). `js/demo-view-year.js`, the `badges` in the store and the `acct-year` hook are gone. See `work-notes/NOTES-account.md`. The rest of this note is as it was written.
+
 Notes only, not part of the website. For the main session to apply or keep.
 
 ## Files I made (all of them mine)
