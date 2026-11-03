@@ -68,7 +68,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 - **Por sí solo:** el mié 7 oct 2026: la línea "Exceptional Children Day". El lun 12 oct 2026, el lun 19 oct 2026 y el lun 26 oct 2026: las filas de pizza. El dom 1 nov 2026: la etiqueta "New: u-pick tomatoes & basil" y la insignia "New". El mié 4 nov 2026: la línea "Home School Day". Cuando todas las líneas del cuadro "Fall 2026 special days" han desaparecido, el cuadro se oculta solo.
 - **Ustedes:** nada.
-- **Dónde:** `index.html`, en `data-t="tcda0fa57"` y `data-t="t5efe64c3"` (los dos días especiales). La lista completa está en la sección 9.
+- **Dónde:** `index.html`, en `data-t="tcda0fa57"` y `data-t="te8f8cb7a"` (los dos días especiales). La lista completa está en la sección 9.
 - **Si se olvidan:** no se ve nada. `?check` las enumera en su cuadro verde ("remove them when you like").
 
 ### mar 27 oct 2026: se abre la última fila de pizza; esa noche desaparecen la cuenta regresiva y la etiqueta

@@ -452,7 +452,7 @@ Answer:
 
 Dashboard id: d31, d33
 
-Why it matters: Faces and an organization's name should not be on the website without a yes. This photo is already in the photo gallery (the last picture, captioned "Foster Village table"), so we need your answer before the site goes live; if it is No, we take the picture out. Two other new photos show a person's arm or hair but no face (the Easter baby goat and the frog-hat animal). The frog-hat animal is in the "Meet the goats" pictures at The GreenHouse, and we called it a goat only from its file name; its description on the site says "a small animal". If it is a lamb or another animal, "Meet the goats" would be wrong.
+Why it matters: Faces and an organization's name should not be on the website without a yes. This photo is already in the photo gallery (the last picture, captioned "Foster Village table"), so we need your answer before the site goes live; if it is No, we take the picture out. Two other new photos show a person's arm or hair but no face (the Easter baby goat and the frog-hat animal). The frog-hat animal is in the "Meet the animals" pictures at The GreenHouse, and we called it a goat only from its file name; its description on the site says "a small animal". If it is a lamb or another animal, we change the file name and its description.
 
 Answer:
 
@@ -1017,7 +1017,7 @@ Everything in this section was checked against the code on 3 October 2026.
 
 - **If the people agreed (and Foster Village, for its name):** keep the picture and change its `caption` to `"Photo: <name>"` (the gallery shows the caption) in `js/content.js` at `src: "assets/photos/foster-village-table.webp"`, the last entry in `photos`.
 - **If No, or no answer:** delete that entry (`js/content.js` at `src: "assets/photos/foster-village-table.webp"`), delete `assets/photos/foster-village-table.webp` and the rule that mentions it (`css/extras.css` at `img[src$="foster-village-table.webp"]`).
-- **If the animal is a goat:** use an `alt` such as "A goat kid wearing a green knitted frog hat" in `js/content.js` at `src: "assets/photos/goat-in-green-frog-hat.webp"` and at its tile in "Meet the goats" (`index.html` at `data-ta-alt="ted43ffcd"`); both are translated in four languages, so ask Claude. **If it is another animal:** rename `goat-in-green-frog-hat.webp` (in both places), write the right `alt`, and take it out of the "Meet the goats" strip.
+- **If the animal is a goat:** use an `alt` such as "A goat kid wearing a green knitted frog hat" in `js/content.js` at `src: "assets/photos/goat-in-green-frog-hat.webp"` and at its tile in "Meet the animals" (`index.html` at `data-ta-alt="ted43ffcd"`); both are translated in four languages, so ask Claude. **If it is another animal:** rename `goat-in-green-frog-hat.webp` (in both places), write the right `alt`, and take it out of the "Meet the animals" strip.
 
 **Question 40: Photos with words in the picture**
 

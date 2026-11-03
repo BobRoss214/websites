@@ -456,7 +456,7 @@ Respuesta:
 
 Id en el panel: d31, d33
 
-Por qué importa: No deben aparecer rostros ni el nombre de una organización en el sitio sin un sí. Esta foto ya está en la galería de fotos (la última imagen, con el pie "Mesa de Foster Village"), así que necesitamos su respuesta antes de que el sitio se publique; si es No, quitamos la imagen. Otras dos fotos nuevas muestran el brazo o el cabello de una persona, pero no el rostro (la cabrita de Pascua y el animal con gorro de rana). El animal con gorro de rana aparece en las fotos de "Conoce a las cabras" en The GreenHouse, y lo llamamos cabra solo por el nombre del archivo; su descripción en el sitio dice "un animal pequeño". Si es un cordero u otro animal, "Conoce a las cabras" sería incorrecto.
+Por qué importa: No deben aparecer rostros ni el nombre de una organización en el sitio sin un sí. Esta foto ya está en la galería de fotos (la última imagen, con el pie "Mesa de Foster Village"), así que necesitamos su respuesta antes de que el sitio se publique; si es No, quitamos la imagen. Otras dos fotos nuevas muestran el brazo o el cabello de una persona, pero no el rostro (la cabrita de Pascua y el animal con gorro de rana). El animal con gorro de rana aparece en las fotos de "Conoce a los animales" en The GreenHouse, y lo llamamos cabra solo por el nombre del archivo; su descripción en el sitio dice "un animal pequeño". Si es un cordero u otro animal, cambiamos el nombre del archivo y su descripción.
 
 Respuesta:
 
