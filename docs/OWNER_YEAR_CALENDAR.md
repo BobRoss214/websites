@@ -64,7 +64,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 - **By itself:** Wed Oct 7, 2026: the "Exceptional Children Day" line. Mon Oct 12, 2026, Mon Oct 19, 2026 and Mon Oct 26, 2026: the pizza rows. Sun Nov 1, 2026: the "New: u-pick tomatoes & basil" chip and the "New" badge. Wed Nov 4, 2026: the "Home School Day" line. When every line in the "Fall 2026 special days" box has gone, the box hides itself.
 - **You:** nothing.
-- **Where:** `index.html` at `data-t="tcda0fa57"` and `data-t="t5efe64c3"` (the two special days). The full list is in section 9.
+- **Where:** `index.html` at `data-t="tcda0fa57"` and `data-t="te8f8cb7a"` (the two special days). The full list is in section 9.
 - **If you forget:** nothing visible. `?check` lists them in its green box ("remove them when you like").
 
 ### Tue Oct 27, 2026: the last pizza row opens; that night the countdown and the chip disappear

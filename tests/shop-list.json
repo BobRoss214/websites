@@ -1,6 +1,6 @@
 {
  "_about": "Made by tests/shop-list.make.mjs from the farm's products list (work-notes/SHOP-LIST.md). Do not edit by hand: change the list, then run  node tests/shop-list.make.mjs work-notes/SHOP-LIST.md",
- "_source": {"file":"SHOP-LIST.md","sha256":"2eea23dbd1fcbb92c5e9c89e1ebf10e4814023a41770c11d1750c8b972bc410b"},
+ "_source": {"file":"SHOP-LIST.md","sha256":"ac26b55f942eebf4d8c671f036e94ab06fe66428ea43d4a1aab4dfd8c6770cb0"},
  "unknownWords": "Prices coming soon",
  "names": ["Tobacco Barn","Christmas Hearth","Apple Harvest","Kokomo"],
  "loanwords": [{"lang":"vi","word":"pound","why":"the Vietnamese texts of the tomato prices use \"mỗi pound\"; the Shop uses the same words (the same text block)"}],
@@ -75,7 +75,7 @@
   {"slug":"christmas-tree","group":10,"name":"Christmas trees","price":"?","unknown":true,"free":false,"amounts":[],"options":[],"unit":"","note":"from the NC mountains. Dates: keep the page's existing wording only (the farm has two different dates on file); details and pre-orders are on this website","noteAmounts":[],"symbols":["p-christmas-tree"],"noNewDates":true},
   {"slug":"flower-jar","group":11,"name":"U-cut flower jar","price":"$18.50","unknown":false,"free":false,"amounts":[18.5],"options":[],"unit":"","note":"Buy a jar at the register, pick up clippers, head to the field","noteAmounts":[],"symbols":["p-flower-jar"]},
   {"slug":"farmhouse-jar","group":11,"name":"Farmhouse jar","price":"$3","unknown":false,"free":false,"amounts":[3],"options":[],"unit":"","note":"An empty jar for your flowers","noteAmounts":[],"symbols":["p-farmhouse-jar"]},
-  {"slug":"wagon-ride","group":12,"name":"Wagon ride","price":"$4.50","unknown":false,"free":false,"amounts":[4.5],"options":[],"unit":"","note":"Ages 3 and younger ride free. These words come from the site builder (Nov 3 2026); the farm's older page said 2 and younger","noteAmounts":[],"symbols":["tractor","wagon"],"oldPage":"index.html at commit e3a195f"},
+  {"slug":"wagon-ride","group":12,"name":"Wagon ride","price":"$4.50","unknown":false,"free":false,"amounts":[4.5],"options":[],"unit":"","note":"Ages 3 and younger ride free. The farm's older page said 2 and younger; the site builder changed it to 3 on Nov 3 2026","noteAmounts":[],"symbols":["tractor","wagon"],"says":["Ages 3 and younger ride free."]},
   {"slug":"barrel-train","group":12,"name":"Barrel train","price":"$3","unknown":false,"free":false,"amounts":[3],"options":[],"unit":"","note":"Ages 12 and under only. These words come from the farm's older page and stay","noteAmounts":[],"symbols":["barrel-train"],"oldPage":"index.html at commit e3a195f"},
   {"slug":"corn-pit","group":12,"name":"Corn pit","price":"$4","unknown":false,"free":false,"amounts":[4],"options":[],"unit":"","note":"Buy one, get one free on Thursdays with reservations. These words come from the farm's older page and stay","noteAmounts":[],"symbols":["p-corn-cob"],"oldPage":"index.html at commit e3a195f"},
   {"slug":"scavenger-hunt","group":12,"name":"Scavenger hunt","price":"Free","unknown":false,"free":true,"amounts":[],"options":[],"unit":"","note":"","noteAmounts":[],"symbols":["p-scavenger-hunt"]},

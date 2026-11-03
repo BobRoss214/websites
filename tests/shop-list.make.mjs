@@ -47,6 +47,7 @@ const SAYS = {
   slushie: ['Also on the board with the slushies: organic strawberry lemonade, apple cider'],
   pumpkin: ['Big pumpkins are sold by the pound.', 'Weigh them at the weight station by the barn.', 'On the barn display, each mini pumpkin is $1.50 and each medium pumpkin is $4.00.'],
   'beer-wine': ['Every beer, hard cider and wine is the same price.', "What's pouring changes."],
+  'wagon-ride': ['Ages 3 and younger ride free.'],   // the site builder's age since Nov 3 2026 (the farm's older page said 2): the card must carry this sentence, so the old age cannot come back unseen
 };
 
 /* ---- words that were taken out of a card on purpose because no sign or photo says them: they must not come back. The card's own name is kept by the test anyway. */
@@ -67,11 +68,11 @@ const NAMES = ['Tobacco Barn', 'Christmas Hearth', 'Apple Harvest', 'Kokomo'];
 const LOANWORDS = [{ lang: 'vi', word: 'pound', why: 'the Vietnamese texts of the tomato prices use "mỗi pound"; the Shop uses the same words (the same text block)' }];
 
 /* ---- words of the list that are the farm's own older text and are on no sign: the older page of the site (before the Shop was built, commit e3a195f) has them,
- *      and this script checks that (only when git and that commit are here). Pizza prices and hours: decision 2; the ages of the two rides: decision 6. */
+ *      and this script checks that (only when git and that commit are here). Pizza prices and hours: decision 2; the age of the barrel train: decision 6.
+ *      The wagon ride is not here any more: its age (3 and younger ride free) was changed by the site builder on Nov 3 2026 and is not on the older page (SAYS holds it). */
 const OLD_PAGE = { commit: 'e3a195f', file: 'index.html' };
 const OLD_FACTS = {
   pizza: ['<dd>$15&ndash;$17</dd>', 'Gluten-free crust is +$9 and vegan cheese is +$3.', 'Open Friday&ndash;Sunday, 10 am&ndash;8 pm'],
-  'wagon-ride': ['Ages 3 and younger ride free.'],
   'barrel-train': ['Ages 12 and under only.'],
   'corn-pit': ['Buy one, get one free on Thursdays with reservations.'],
   upick: ['Every weekend, late September through October.'],
