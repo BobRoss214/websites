@@ -117,9 +117,9 @@ closeDay, alerts, reset, and that two stores on the same storage see each other'
 6. My year: the kids' badges and the pumpkin basket count (reuse the achievements the hero game already keeps: find where in `js/` it stores them and read
    the same keys; do not change that code), visits so far, "Visits this year". A line: "On a real account this would follow you to any phone."
 7. Receipts and questions: receipts list with itemized lines; "Ask the farm" box (a message thread with Mrs. Cathy; her reply shows here).
-8. Photos and reviews: after a past visit: choose a photo (file input; keep only a small thumbnail, 160 px, as a data URL; or just the file name if
-   storage is full) and give 1-5 stars and a sentence. Status "Waiting for Mrs. Cathy to approve" -> approved shows under "Shared with the farm (demo)".
-   It never touches the real gallery or the real reviews.
+8. Photos and reviews: after a past visit: pick ONE OF THREE SAMPLE PICTURES (from `assets/photos`; there is NO file picker anywhere: the site's privacy rule and
+   `tests/privacy.test.mjs` forbid it; a real version would let families add their own) and give 1-5 stars and a sentence. Status "Waiting for Mrs. Cathy to
+   approve" -> approved shows under "Shared with the farm (demo)". It never touches the real gallery or the real reviews.
 9. My event (groups and schools): a sample school trip ("Sample Elementary, 2nd grade") that follows the page's own rules (Groups section and
    `school-field-trips.html`: $11 per student, minimum group size 100 students, parents and siblings ages 3 and up who come also pay $11): a head count of
    100 students or more (editable as a request), a checklist (permission slips received so far, sample), the amount computed from those page prices, and a
