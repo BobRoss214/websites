@@ -1,0 +1,25 @@
+# Rules the repo's tests enforce on every new file (found by reviewer R1 by running a throw-away copy; main decided the exceptions)
+
+## For EVERYONE who writes JS, CSS or HTML
+- Run the quick no-browser tests FIRST and often (about 5 s): `node tests/run-all.mjs code-rules validity browser-support privacy-static seo`.
+- Every JS file is ONE IIFE: `(function () { 'use strict'; ... })();`, no top-level const / let / function. Share only through `window.<Name>`. (The preview build joins every script after js/main.js into one <script>: one name clash kills the whole preview page.)
+- ES2017 syntax only: NO `?.`, `??`, `??=`, `||=`, `&&=` (tests/code-read), no `.at()`, `structuredClone`, `crypto.randomUUID`, `<dialog>` (use `div role="dialog"`), `:has`.
+- CSS the old way: top/right/bottom/left (no `inset`, `aspect-ratio`, `backdrop-filter`, the `translate` property, `mask-image`) unless that exact line already exists in the site's CSS with its fallback; every CSS property must be in tests/validity KNOWN_PROPERTIES (add a missing one there, with a comment). Nothing newer than Safari 14 / Chrome 80 / Firefox 78. No inline `on...=` attributes, no `eval`, no `console.log`.
+- No year such as 2026 anywhere in js/ or css/ (time-bomb test); dates are computed from today. Tour and demo text never say "2026".
+- These words must not appear in ANY shipped .js or .html, not even in a comment, except in the files named below: localStorage, sessionStorage, indexedDB, cookie, FormData, FileReader. Write "browser storage" in comments. Never `type="file"`: there is NO file picker; "Photos" = pick one of 3 sample pictures from assets/photos.
+- No `<input>`, `<textarea>` or `<select>` written in any .html file (the demo shells have none): build fields in JavaScript. `createElement('textarea' | 'select' | 'form')` is allowed ONLY in js/demo-*.js (a documented exception, added to the privacy test by A); everywhere else it is refused. Prefer `input type=text`, radio buttons and button groups.
+- Storage files allowed (edit `API_FILES` in tests/privacy.test.mjs, line ~39, in the SAME commit): js/demo-store.js -> localStorage; js/demo-header.js -> sessionStorage; js/tour.js -> sessionStorage and localStorage. Every other demo or tour file touches storage only through those (DemoStore, the flag helper).
+- "The home page loads every script in js/": tests/code-rules and tests/no-js (line ~169, NOT_ON_HOME) need a pattern for demo-*, tour*, demo*.css, tour.css (A does demo, D1 does tour; same line, main merges).
+- New <script> tags in index.html go AFTER `js/main.js` (tools/pages.py cuts the sprite at that tag; before it, pages.py exits).
+- Do NOT edit (main applies them once, from your notes): tests/browser-support.table.json, tests/timings.json, README.md, tests/README.md, docs/WHAT_THE_SITE_STORES.md. Put the text you would add in `work-notes/NOTES-<yourname>.md` in your clone and commit that.
+- No `#tour` hash on the demo pages: the account tabs use the hash (#visits, #pizza ...). The tour resumes across pages from browser storage alone (sessionStorage, no query strings, no hash).
+
+## A (foundation): tools and tests to change in the foundation commit
+- tools/pages.py builds EVERY file in pages/ into sitemap.xml and gives it canonical + og:image + JSON-LD; it has no page list. Add page settings: `robots: noindex` (adds `<meta name="robots" content="noindex">`; no canonical, og:*, twitter or JSON-LD; page NOT in sitemap.xml), `scripts:` and `styles:` (extra files for that page only, in order). parse_source keeps only title, description, image, image_alt today.
+- tests/seo.test.mjs, tools/test_pages.py and tools/launch_check.py (~line 755) must count only pages WITHOUT noindex. `_headers`: add `X-Robots-Tag: noindex` for /account.html, /farm-desk.html, /kitchen.html.
+- tools/i18n.py: js_strings() skips files starting `demo-` or `tour`, and skips the titles/descriptions of noindex pages; analyse() skips elements that have a data-no-i18n ANCESTOR (aria-label, title, alt, placeholder inside such a box are still extracted today). Demo and tour containers get `lang="en"`.
+- demo-header.js adds the class `wa-demo` on <html> when demo mode is on (the header CSS uses it).
+- `createElement('textarea'|'select'|'form')` exception for js/demo-*.js in tests/privacy.test.mjs, narrow and commented ("pretend demo, only runs in demo mode"). Keep FormData, FileReader, type=file, iframes etc. refused everywhere.
+
+## Menu helper + A: header width
+R1 measured with the real fonts: the wide bar needs about 1258 px (en) and 1304-1307 px (es, vi) WITHOUT Sign in; an icon-only Sign in adds 64 px; the words "Sign in" add 113 px. Decisions: (1) tighten the category buttons (padding .55/.75em -> .4/.5em, gap 20 -> 14; touch height stays 44 px): en then fits from 1180 px, es/vi from 1280 px; (2) Sign in is an ICON-ONLY person button next to the language button (aria-label "Sign in (demo)"); (3) the menu's CSS gets a second switch point under `html.wa-demo` (about +4.5em) so the bar never wraps in demo mode (the phone-style menu starts a little earlier there). Menu helper writes the CSS; A adds the class.
