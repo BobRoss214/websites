@@ -1,0 +1,368 @@
+// order: 96
+// browser: yes
+// quick: no
+// covers: js/tour-steps*.js, index.html, first-visit.html, tools/plain_words.txt
+/* The words of the tour "Take a tour" (js/tour-steps.js, js/tour-steps-b.js, js/tour-steps-c.js) against the real pages. The engine (js/tour.js) is NOT
+ * loaded: the three steps files are read from disk and put into the page by hand, so this test says if the WORDS and the TARGETS are right even when the
+ * engine is broken or missing.
+ *
+ *   Words (no browser needed for these): every step has the fields the engine reads and no other, an id and an order that nobody else has (order is
+ *   chapter * 100 + the place in the chapter), a chapter that has a title, a page the site has, a title of 9 words at most, a text of 45 words at most
+ *   with no sentence over 25 words (a line that starts with "- " is a bullet line and counts as its own sentence), no web address, e-mail address, year,
+ *   markup, "Kathy" or jargon word from tools/plain_words.txt, and every dollar amount in a text is an amount that the site's own pages show (a price is
+ *   never invented).
+ *   Targets (a browser): the steps are walked in order, the way the engine walks them, in ONE browser context per window size: on the page the step names
+ *   (the pretend-demo pages only when their files exist, and with ?demo), before() is run (with an EMPTY object: it must never read what the engine hands
+ *   it), the page is let to settle, the first visible match of the target must be there (a box that hides itself by date says skipIfMissing: true and is
+ *   listed here, not failed), it is scrolled into view and must be fully drawn (a box that is still fading in does not count), have a size and show
+ *   something; for a step that lets the owners click, a click on another tab or season button is tried; then after() is run and the page must be
+ *   as it was before (the season, the open tab, the open menus). This is done at 1440 and at 390 px wide.
+ *   The same walk without the scrolling is repeated on five other days (the real day, winter, a day when nothing is in season, spring and summer) on the
+ *   home page: a target that disappears on one of those days must say skipIfMissing, because the owners may open the tour in any month.
+ *   The Store's "Prices coming soon" cards must be exactly the ones that chapters 7 and 11 name, and a number that a text quotes from the page ("Fifteen
+ *   common questions") must be the page's own.
+ *   WA_WORDS_ONLY=1 node tests/tour-targets.test.mjs runs only the first part (no browser, about a second); WA_TOUR_ONLY=3,ch2-game limits the walks to
+ *   chapter 3 and the step ch2-game. */
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { run, open, ok, info, finish, settled, until, ROOT, ms } from './lib.mjs';
+
+const FILES = ['js/tour-steps.js', 'js/tour-steps-b.js', 'js/tour-steps-c.js'];
+const PAGE_FILE = { index: 'index.html', 'first-visit': 'first-visit.html', account: 'account.html', 'farm-desk': 'farm-desk.html', kitchen: 'kitchen.html' };
+const DEMO_PAGES = ['account', 'farm-desk', 'kitchen'];
+const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after'];
+const SIZES = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
+const OTHER_DAYS = [
+  ['2026-11-03T12:00:00-05:00', 'the real day (3 Nov 2026)'],
+  ['2026-12-01T12:00:00-05:00', 'winter (Christmas trees)'],
+  ['2027-02-10T12:00:00-05:00', 'a day when nothing is in season'],
+  ['2027-04-20T12:00:00-04:00', 'spring'],
+  ['2027-06-25T12:00:00-04:00', 'summer'],
+];
+
+const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
+const exists = (f) => fs.existsSync(path.join(ROOT, f));
+const wordsOf = (s) => String(s).trim().split(/\s+/).filter(Boolean);
+const stripTags = (html) => html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#?\w+;/g, ' ');
+
+/* ---------------------------------------------------------------- the steps files, read without a browser */
+const present = FILES.filter(exists);
+const missingFiles = FILES.filter((f) => !exists(f));
+const win = {};
+const loadErrors = [];
+for (const f of present) {
+  try { vm.runInNewContext(read(f), { window: win, document: {} }, { filename: f }); } catch (e) { loadErrors.push(f + ': ' + String(e && e.message).split('\n')[0]); }
+}
+const steps = (win.WA_TOUR_STEPS || []).slice().sort((a, b) => a.order - b.order);
+const chapters = win.WA_TOUR_CHAPTERS || [];
+
+/* ---------------------------------------------------------------- what the site's own pages say */
+const SITE_PAGES = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'school-field-trips.html', 'strawberry-picking.html', 'wise-pie.html'];
+const siteText = SITE_PAGES.filter(exists).map((f) => stripTags(read(f))).join(' ');
+const siteAmounts = new Set((siteText.match(/\$\d[\d,]*(?:\.\d+)?/g) || []).map((a) => a.replace(/,/g, '')));
+const jargon = (() => {
+  if (!exists('tools/plain_words.txt')) return [];
+  const out = []; let on = false;
+  for (const line of read('tools/plain_words.txt').split('\n')) {
+    if (/^\[/.test(line)) { on = /^\[jargon\]/.test(line); continue; }
+    if (!on || /^\s*#/.test(line) || !line.includes('=')) continue;
+    const w = line.split('=')[0].trim().toLowerCase();
+    if (w) out.push(w);
+  }
+  return out;
+})();
+
+/* ---------------------------------------------------------------- the rules for the words */
+function sentencesOf(text) {
+  const out = [];
+  for (const line of String(text).split('\n')) {
+    const body = line.replace(/^\s*-\s+/, '').replace(/\bMrs\./g, 'Mrs');
+    for (const s of body.split(/(?<=[.!?])\s+/)) if (s.trim()) out.push(s.trim());
+  }
+  return out;
+}
+const countWords = (text) => String(text).split('\n').reduce((n, l) => n + wordsOf(l.replace(/^\s*-\s+/, '')).length, 0);
+
+function wordProblems(s) {
+  const p = [];
+  for (const k of Object.keys(s)) if (!FIELDS.includes(k)) p.push('unknown field "' + k + '" (the engine does not read it; a typo?)');
+  if (typeof s.id !== 'string' || !/^[a-z0-9][a-z0-9-]*$/.test(s.id)) p.push('id must be a short name in small letters, digits and dashes');
+  if (!Number.isInteger(s.order) || s.order < 100) p.push('order must be a whole number: chapter * 100 + the place in the chapter');
+  if (!Number.isInteger(s.chapter) || !chapters.some((c) => c.n === s.chapter)) p.push('chapter ' + s.chapter + ' has no title in WA_TOUR_CHAPTERS');
+  else if (Math.floor(s.order / 100) !== s.chapter) p.push('order ' + s.order + ' does not belong to chapter ' + s.chapter + ' (order = chapter * 100 + the place)');
+  if (!Object.prototype.hasOwnProperty.call(PAGE_FILE, s.page)) p.push('page must be one of ' + Object.keys(PAGE_FILE).join(', '));
+  if (!(s.target === null || (typeof s.target === 'string' && s.target.trim() !== ''))) p.push('target must be one CSS selector or null');
+  if (typeof s.title !== 'string' || !s.title.trim()) p.push('a step needs a title');
+  else if (wordsOf(s.title).length > 9) p.push('title has ' + wordsOf(s.title).length + ' words (9 at most)');
+  if (typeof s.text !== 'string' || !s.text.trim()) p.push('a step needs a text');
+  else {
+    const n = countWords(s.text), raw = wordsOf(s.text).length;
+    if (n > 45) p.push('text has ' + n + ' words (45 at most)');
+    else if (raw > 45) p.push('text has ' + raw + ' words with the bullet dashes counted (45 at most, so a stricter counter agrees)');
+    for (const sen of sentencesOf(s.text)) if (wordsOf(sen).length > 25) p.push('a sentence has ' + wordsOf(sen).length + ' words (25 at most): "' + sen.slice(0, 60) + '..."');
+  }
+  for (const k of ['title', 'text']) {
+    const v = typeof s[k] === 'string' ? s[k] : '';
+    if (/[<>]/.test(v)) p.push(k + ' has markup (< or >); the engine shows plain text');
+    if (/https?:\/\/|www\.|\b[\w-]+\.(?:com|org|net|html)\b|\S+@\S+\.\S+/i.test(v)) p.push(k + ' has a web address or e-mail address (the privacy test reads every js file for those)');
+    if (/\b20[0-3]\d\b/.test(v)) p.push(k + ' has a year (tests/time-bombs.test.mjs: no year in js files; say "this fall")');
+    if (/\bkathy\b/i.test(v)) p.push(k + ' spells Cathy as Kathy');
+    for (const j of jargon) if (new RegExp('\\b' + j.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:s|es|ed|ing)?\\b', 'i').test(v)) p.push(k + ' uses the word "' + j + '" (tools/plain_words.txt lists it as jargon)');
+  }
+  for (const a of (typeof s.text === 'string' ? s.text : '').match(/\$\d[\d,]*(?:\.\d+)?/g) || []) if (!siteAmounts.has(a.replace(/,/g, ''))) p.push('the amount ' + a + ' is not on any page of the site (never invent a price)');
+  for (const k of ['allowClicks', 'skipIfMissing']) if (s[k] !== undefined && typeof s[k] !== 'boolean') p.push(k + ' must be true or false');
+  for (const k of ['before', 'after']) if (s[k] !== undefined && typeof s[k] !== 'function') p.push(k + ' must be a function');
+  return p;
+}
+
+/* ---------------------------------------------------------------- in the page: what a visitor can see of a target */
+const IN_PAGE = `(() => {
+  const visible = (el) => {
+    const r = el.getBoundingClientRect();
+    if (r.width < 4 || r.height < 4) return false;
+    for (let a = el; a && a.nodeType === 1; a = a.parentElement) {
+      const cs = getComputedStyle(a);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || a.hidden) return false;
+    }
+    return true;
+  };
+  const opacity = (el) => { let o = 1; for (let a = el; a && a.nodeType === 1; a = a.parentElement) o *= parseFloat(getComputedStyle(a).opacity); return o; };
+  const find = (sel) => { let all = []; try { all = Array.from(document.querySelectorAll(sel)); } catch (e) { return { bad: true, n: 0 }; } const el = all.find(visible) || null; return { n: all.length, el, bad: false }; };
+  const snapshot = () => JSON.stringify([
+    document.documentElement.getAttribute('data-season'),
+    Array.from(document.querySelectorAll('[aria-expanded="true"],[aria-selected="true"],[aria-checked="true"]')).map((e) => (e.id || e.className || e.tagName) + '|' + (e.getAttribute('data-season') || e.getAttribute('data-fs') || e.getAttribute('data-lang') || '')),
+    !!(document.getElementById('nav') && document.getElementById('nav').classList.contains('is-open')),
+  ]);
+  window.__tour = {
+    snapshot,
+    stepById: (id) => (window.WA_TOUR_STEPS || []).find((s) => s.id === id),
+    start(id, which) {   // not waited for here: a hook may return a Promise that needs the page clock to move (the test moves it)
+      const st = { ran: false, done: false, error: '' };
+      window.__tourRun = st;
+      const s = this.stepById(id);
+      if (!s || typeof s[which] !== 'function') { st.done = true; return; }
+      st.ran = true;
+      try { Promise.resolve(s[which]({})).then(() => { st.done = true; }, (e) => { st.error = String((e && e.message) || e); st.done = true; }); }
+      catch (e) { st.error = String((e && e.message) || e); st.done = true; }
+    },
+    probe(sel) {
+      if (sel === null) return { centred: true };
+      const f = find(sel);
+      if (f.bad) return { bad: true };
+      if (!f.el) { return { n: f.n, shown: false, why: f.n ? 'the page has ' + f.n + ' match(es) but none is visible' : 'nothing on the page matches' }; }
+      const r = f.el.getBoundingClientRect();
+      let inner = 1;   // the boxes inside that fade in one after the other (.reveal): the ones on the screen must all be drawn
+      for (const d of (f.el.classList.contains('reveal') ? [f.el] : []).concat(Array.from(f.el.querySelectorAll('.reveal')))) {
+        const rr = d.getBoundingClientRect();
+        if (rr.width < 4 || rr.height < 4 || rr.bottom < 0 || rr.top > innerHeight || !visible(d)) continue;
+        inner = Math.min(inner, opacity(d));
+      }
+      return { n: f.n, shown: true, w: Math.round(r.width), h: Math.round(r.height), top: Math.round(r.top), opacity: +opacity(f.el).toFixed(2), inner: +inner.toFixed(2),
+        something: !!(f.el.innerText && f.el.innerText.trim() !== '') || !!f.el.querySelector('img,svg,canvas,input,button,select,textarea,a'), vh: innerHeight };
+    },
+    bringIntoView(sel) {
+      const f = find(sel); if (!f.el) return false;
+      f.el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });   // also scrolls a menu that scrolls inside itself (the phone menu)
+      const r = f.el.getBoundingClientRect();
+      if (r.height > innerHeight - 220) window.scrollBy({ top: r.top - 120, behavior: 'instant' });   // a tall box: its top just under the sticky header
+      return true;
+    },
+    covered(sel) {
+      const f = find(sel); if (!f.el) return '';
+      const r = f.el.getBoundingClientRect();
+      let top = Math.max(r.top, 0);
+      const bottom = Math.min(r.bottom, innerHeight);
+      if (r.bottom > 140 && top < 90) top = 90;   // a box that goes under the sticky header: look at the part below it
+      const x = Math.min(innerWidth - 2, Math.max(2, r.left + r.width / 2)), y = Math.min(innerHeight - 2, Math.max(2, (top + bottom) / 2));
+      const hit = document.elementFromPoint(x, y);
+      if (!hit || f.el.contains(hit) || hit.contains(f.el)) return '';
+      return hit.tagName.toLowerCase() + (hit.className && typeof hit.className === 'string' ? '.' + hit.className.split(' ')[0] : '');
+    },
+    tryClick(sel) {   // what an owner may do in a step that says allowClicks: choose another season or tab
+      const f = find(sel); if (!f.el) return '';
+      const b = Array.from(f.el.querySelectorAll('[aria-checked="false"],[aria-selected="false"]')).find((x) => visible(x) && x.tagName === 'BUTTON');
+      if (!b) return '';
+      b.click();
+      return (b.id || b.getAttribute('data-season') || b.textContent.trim().slice(0, 20));
+    },
+    soonCards() {
+      return Array.from(document.querySelectorAll('.shop-card')).filter((c) => c.querySelector('.shop-soon')).map((c) => (c.querySelector('.shop-name') || {}).textContent.trim());
+    },
+  };
+})();`;
+
+/* ---------------------------------------------------------------- helpers that drive the page */
+async function putStepsInPage(p) {
+  await p.evaluate(() => { window.WA_TOUR_STEPS = []; window.WA_TOUR_CHAPTERS = undefined; });
+  for (const f of present) await p.addScriptTag({ content: read(f) });
+  await p.addScriptTag({ content: IN_PAGE });
+}
+async function goPage(p, base, page) {
+  await p.goto(base + PAGE_FILE[page] + (DEMO_PAGES.includes(page) ? '?demo' : ''), { waitUntil: 'load', timeout: ms(60000) });
+  if (!DEMO_PAGES.includes(page)) await until(p, () => !!(window.WISE_ACRES && window.WISE_ACRES.features), null, 30000);
+  try { await p.clock.runFor(DEMO_PAGES.includes(page) ? 1500 : 1200); } catch (e) { /* the real clock is in use */ }
+  await settled(p, 300);
+}
+/** Runs before() or after() of a step with an EMPTY object and waits until it is over (a returned Promise too, moving the page clock meanwhile). */
+async function hook(p, id, which) {
+  await p.evaluate(([i, w]) => window.__tour.start(i, w), [id, which]);
+  const end = Date.now() + ms(12000);
+  for (;;) {
+    const st = await p.evaluate(() => window.__tourRun);
+    if (st.done) return st;
+    if (Date.now() > end) return { ran: true, done: false, error: 'it did not finish within 12 seconds' };
+    try { await p.clock.runFor(250); } catch (e) { await new Promise((r) => setTimeout(r, 100)); }
+  }
+}
+// WA_TOUR_ONLY=3,ch2-game limits the browser walks to chapter 3 and the step ch2-game (the word rules always look at every step): quick to use while writing one step
+const ONLY = (process.env.WA_TOUR_ONLY || '').split(',').map((x) => x.trim()).filter(Boolean);
+const wanted = (s) => !ONLY.length || ONLY.some((x) => (/^\d+$/.test(x) ? +x === s.chapter : x === s.id));
+const label = (s) => String(s.order).padStart(4) + ' ' + s.id + (s.target ? '  ' + s.target : '  (card in the middle)');
+
+/** Walks the steps in order. `full` = the real walk (scrolls, waits for the fade-in, tries clicks); otherwise the light one for other days. */
+async function walk({ browser, base, errs, size, full, time, pages, tag }) {
+  const list = steps.filter((s) => pages.includes(s.page) && wanted(s));
+  if (!list.length) return { skipped: [], seen: 0 };
+  let p = await open(browser, base, PAGE_FILE[list[0].page], errs, { viewport: size, time, query: DEMO_PAGES.includes(list[0].page) ? 'demo' : '' });
+  let on = list[0].page;
+  await putStepsInPage(p);
+  const skipped = [];
+  let bad = 0;
+  const rec = (name, cond, detail) => { if (!cond) bad++; if (full || !cond) ok(name, cond, detail); };   // the light walks print only what fails, and one line at the end
+  for (const s of list) {
+    if (s.page !== on) { await goPage(p, base, s.page); on = s.page; await putStepsInPage(p); }
+    const name = tag + '  ' + label(s);
+    const site = !DEMO_PAGES.includes(s.page);   // the demo changes its own state on purpose: only the site pages are compared before and after
+    const before = site ? await p.evaluate(() => window.__tour.snapshot()) : '';
+    const b = await hook(p, s.id, 'before');
+    if (b.error) { rec(name + ': before() ran without an error', false, b.error); continue; }
+    if (b.ran) await settled(p, 300);   // a menu or a tab that before() opened needs a moment
+    let pr = await p.evaluate(([t]) => window.__tour.probe(t), [s.target]);
+    if (pr.bad) { rec(name + ': the target is a valid CSS selector', false, s.target); continue; }
+    if (pr.centred) { rec(name + ': a card in the middle of the screen (no target)', true); }
+    else if (!pr.shown) {
+      if (s.skipIfMissing) { skipped.push(tag + '  ' + label(s) + '  (' + pr.why + ')'); rec(name + ': target not shown here, and the step says skipIfMissing', true, pr.why); }
+      else rec(name + ': the target is on the page and visible' + (full ? '' : ' (a step whose target can hide on some days needs skipIfMissing: true)'), false, pr.why);
+    } else {
+      let detail = pr.w + 'x' + pr.h + ' px';
+      let good = true;
+      if (full) {
+        await p.evaluate(([t]) => window.__tour.bringIntoView(t), [s.target]);
+        await settled(p, 600);
+        const drawn = await until(p, ([t]) => { const r = window.__tour.probe(t); return r.shown && r.opacity >= 0.95 && r.inner >= 0.95; }, [s.target], 6000);
+        pr = await p.evaluate(([t]) => window.__tour.probe(t), [s.target]);
+        if (!drawn) { good = false; detail += '  [still fading in after scrolling to it: opacity ' + pr.opacity + ', boxes inside ' + pr.inner + ']'; }
+      }
+      if (!pr.something) { good = false; detail += '  [the target has nothing in it to look at]'; }
+      rec(name + ': the target is on the page, visible' + (full ? ', fully drawn' : ''), good, detail);
+      if (full) {
+        const cover = await p.evaluate(([t]) => window.__tour.covered(t), [s.target]);
+        if (cover) info('note: something else (' + cover + ') is on top of the middle of the target ' + s.target);
+        if (pr.h > pr.vh) info('note: the target is taller than the window (' + pr.h + ' of ' + pr.vh + ' px): ' + s.id);
+        if (s.allowClicks) {
+          const clicked = await p.evaluate(([t]) => window.__tour.tryClick(t), [s.target]);
+          if (clicked) { await settled(p, 600); info('tried a click on "' + clicked + '" inside the target (the step allows clicks)'); }
+        }
+      }
+    }
+    const a = await hook(p, s.id, 'after');
+    if (a.error) { rec(name + ': after() ran without an error', false, a.error); continue; }
+    if (a.ran) await settled(p, 300);
+    if (site && (s.before || s.after)) {
+      const afterSnap = await p.evaluate(() => window.__tour.snapshot());
+      rec(name + ': after() puts the page back as it was (season, open tab, open menus)', afterSnap === before, afterSnap === before ? '' : 'before ' + before + '  after ' + afterSnap);
+    }
+  }
+  await p.context().close();
+  if (!full && !bad) ok(tag + ': all ' + list.length + ' steps have a visible target or say skipIfMissing', true);
+  return { skipped, seen: list.length };
+}
+
+/* ================================================================ the test */
+/** The checks that need no browser (about a second): WA_WORDS_ONLY=1 node tests/tour-targets.test.mjs runs only these, handy while writing a step. */
+function wordChecks() {
+  ok('the steps files that are here run without an error', loadErrors.length === 0, loadErrors.join('; '));
+  ok('js/tour-steps.js is here and gives the titles of all 11 chapters (WA_TOUR_CHAPTERS)', present.includes('js/tour-steps.js') && chapters.length === 11 && chapters.every((c, i) => c.n === i + 1 && typeof c.title === 'string' && c.title.trim() !== '' && wordsOf(c.title).length <= 6), JSON.stringify(chapters).slice(0, 200));
+  for (const f of missingFiles) info(f + ' is not here (yet): its chapters are not checked');
+  ok('there are steps (' + steps.length + ' in ' + present.length + ' file(s))', steps.length > 0);
+  const ids = new Map(), orders = new Map();
+  for (const s of steps) { ids.set(s.id, (ids.get(s.id) || 0) + 1); orders.set(s.order, (orders.get(s.order) || 0) + 1); }
+  ok('every id is used once', [...ids.values()].every((n) => n === 1), [...ids].filter(([, n]) => n > 1).map(([k]) => k).join(', '));
+  ok('every order number is used once', [...orders.values()].every((n) => n === 1), [...orders].filter(([, n]) => n > 1).map(([k]) => k).join(', '));
+  let wordFails = 0;
+  for (const s of steps) { const p = wordProblems(s); if (p.length) { wordFails++; ok('the words of step ' + s.order + ' ' + s.id, false, p.join(' | ')); } }
+  ok('the words of all ' + steps.length + ' steps follow the rules (fields, 9-word title, 45-word text, 25-word sentences, no address, year, jargon or invented price)', wordFails === 0);
+  const perChapter = {};
+  for (const s of steps) perChapter[s.chapter] = (perChapter[s.chapter] || 0) + 1;
+  info('steps per chapter: ' + chapters.map((c) => c.n + ': ' + (perChapter[c.n] || 0)).join(', ') + '  (total ' + steps.length + ')');
+  if (!missingFiles.length) {
+    const empty = chapters.filter((c) => !perChapter[c.n]).map((c) => c.n);
+    ok('every chapter has at least one step (all three files are here)', empty.length === 0, 'chapters without a step: ' + empty.join(', '));
+  }
+}
+
+if (process.env.WA_WORDS_ONLY) { wordChecks(); await finish({}); }
+else await run('tour-targets', async ({ browser, base, errs }) => {
+  wordChecks();
+
+  /* ---- 2. what the texts say about the page: the Prices coming soon cards (chapters 7 and 11) and the numbers they quote */
+  const p0 = await open(browser, base, 'index.html', errs, {});
+  await putStepsInPage(p0);
+  const soon = await p0.evaluate(() => window.__tour.soonCards());
+  const norm = (t) => String(t).toLowerCase().replace(/&/g, 'and').replace(/[‘’]/g, "'").replace(/\s+/g, ' ');
+  const priced = await p0.evaluate(() => Array.from(document.querySelectorAll('.shop-card')).filter((c) => !c.querySelector('.shop-soon')).map((c) => (c.querySelector('.shop-name') || {}).textContent.trim()));
+  ok('the Store has cards that say Prices coming soon (' + soon.length + ': ' + soon.join(', ') + ')', soon.length > 0);
+  for (const ch of [7, 11]) {
+    const mine = steps.filter((s) => s.chapter === ch);
+    if (!mine.length) { info('chapter ' + ch + ' has no steps here yet: its list of Prices coming soon cards is not checked'); continue; }
+    const text = norm(mine.map((s) => s.text).join(' '));
+    const unnamed = soon.filter((n) => {
+      const m = norm(n).match(/^u-pick (.+)$/);
+      return m ? !(text.includes('u-pick') && text.includes(m[1])) : !text.includes(norm(n));
+    });
+    ok('chapter ' + ch + ' names every card that says Prices coming soon', unnamed.length === 0, 'not named: ' + unnamed.join(', '));
+    const wrong = priced.filter((n) => text.includes(norm(n)) && !soon.some((c) => norm(c).includes(norm(n)) || norm(n).includes(norm(c))));
+    ok('chapter ' + ch + ' does not name a Store card that already has a price', wrong.length === 0, 'named but priced: ' + wrong.join(', '));
+  }
+  // numbers that a text quotes from the page ("Fifteen common questions", "Six towns"): they must still be true. Each pattern is narrow on purpose.
+  const WORD_NUMBERS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20 };
+  const CLAIMS = [
+    [/\b(\w+) cards in the Store still say/i, () => soon.length, 'cards in the Store that say Prices coming soon'],
+    [/\b(\w+) (?:common )?questions are answered/i, '#faq .faq-list > details', 'questions in the FAQ'],
+    [/\b(\w+) towns? show/i, '.drive-list > li', 'towns in the drive-time list'],
+    [/\b(\w+) pizzas at \$/i, '#menu .menu-list > li', 'pizzas on the menu'],
+    [/\bin (\w+) groups\b/i, '#shop .shop-jump > li', 'groups in the Store'],
+    [/\b(\w+) tabs show what visitors/i, '#season-tabs .season-tab', 'season tabs'],
+    [/\b(\w+) lists:/i, '#nav .nav-group', 'lists in the top bar'],
+  ];
+  for (const [re, sel, what] of CLAIMS) {
+    for (const st of steps) {
+      const m = st.text.match(re);
+      if (!m) continue;
+      const said = /^\d+$/.test(m[1]) ? +m[1] : WORD_NUMBERS[m[1].toLowerCase()];
+      if (!said) continue;
+      const real = typeof sel === 'function' ? sel() : await p0.evaluate((q) => document.querySelectorAll(q).length, sel);
+      ok('step ' + st.order + ' ' + st.id + ' says ' + m[1] + ' ' + what + ' and the page has ' + real, said === real);
+    }
+  }
+  await p0.context().close();
+
+  /* ---- 3. the walk, at 1440 and 390 px, on the test day */
+  const pagesHere = Object.keys(PAGE_FILE).filter((pg) => !DEMO_PAGES.includes(pg) || exists(PAGE_FILE[pg]));
+  const noPage = [...new Set(steps.filter((s) => !pagesHere.includes(s.page)).map((s) => s.page))];
+  if (noPage.length) info('the pages ' + noPage.join(', ') + ' are not here yet (' + steps.filter((s) => noPage.includes(s.page)).length + ' steps listed, not checked)');
+  const listed = [];
+  for (const size of SIZES) {
+    const r = await walk({ browser, base, errs, size, full: true, time: undefined, pages: pagesHere, tag: size.width + ' px' });
+    listed.push(...r.skipped);
+  }
+  if (listed.length) { info('steps whose target was not shown (skipIfMissing: true, so the engine skips them):'); listed.forEach((l) => info('  ' + l)); }
+
+  /* ---- 4. the same walk on other days (home page and first-visit page only, no scrolling) */
+  for (const [time, what] of OTHER_DAYS) {
+    for (const size of SIZES) {
+      await walk({ browser, base, errs, size, full: false, time, pages: ['index', 'first-visit'].filter((pg) => pagesHere.includes(pg)), tag: size.width + ' px, ' + what });
+    }
+  }
+});

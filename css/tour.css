@@ -1,0 +1,61 @@
+/* ==========================================================================
+   Wise Acres: the look of the "Take a tour" (js/tour.js). OWNER-ONLY: this file is asked for only when tour mode is on (docs/TOUR.md).
+   Same look as the rest of the site (ink outlines, rounded cards, the .btn buttons of css/styles.css). Plain old CSS on purpose:
+   no inset, gap in flex boxes, :focus-visible, aspect-ratio or dvh (tests/browser-support lists what the site may use).
+   ========================================================================== */
+
+/* the button that opens the tour: bottom right, ABOVE the round "back to top" button (52px high, 16px from the bottom; 46px high, 98px from the bottom on a phone),
+   so it covers neither that button nor the basket box at the bottom left of the first screen */
+.wa-tour-pill{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:70;margin:0}
+@media (max-width:47.5em){.wa-tour-pill{bottom:calc(158px + env(safe-area-inset-bottom,0px))}}
+
+/* the tour: a dimmer with a hole round the lit box, and the card */
+.wa-tour{position:fixed;top:0;left:0;width:0;height:0;z-index:9000;font-family:var(--body,sans-serif);color:var(--ink,#3a2416)}
+.wa-tour-shield{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;background:transparent}   /* it stops clicks reaching the page behind */
+.wa-tour.no-hole .wa-tour-shield{background:rgba(58,36,22,.74)}
+.wa-tour.is-free .wa-tour-shield{pointer-events:none}   /* a step that says "try it": the page can be clicked */
+.wa-tour-hole{position:fixed;z-index:9001;box-sizing:border-box;pointer-events:none;border:3px solid transparent;border-radius:16px;box-shadow:0 0 0 4px var(--sun,#ffc928),0 0 0 9999px rgba(58,36,22,.74)}   /* the transparent border is what High Contrast colors show */
+.wa-tour.no-hole .wa-tour-hole{display:none}
+
+.wa-tour-card{position:fixed;z-index:9002;box-sizing:border-box;display:flex;flex-direction:column;width:380px;max-width:calc(100vw - 28px);max-height:calc(100vh - 28px);margin:0;padding:18px 20px;background:var(--paper,#fffdf6);color:var(--ink,#3a2416);border:3px solid var(--ink,#3a2416);border-radius:22px;box-shadow:0 6px 0 var(--ink,#3a2416),0 18px 44px rgba(0,0,0,.35);animation:wa-tour-in .22s ease-out both}
+.wa-tour-card:focus{outline:none}
+@keyframes wa-tour-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.wa-tour-card.is-busy .wa-tour-actions{opacity:.55}
+
+.wa-tour-progress{margin:0 46px 8px 0;font:700 .8rem/1.3 var(--display,sans-serif);letter-spacing:.06em;text-transform:uppercase;color:var(--red-deep,#c8203a)}
+.wa-tour-chapter{display:block;margin-top:2px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink-soft,#6a5140)}
+.wa-tour-bar{flex:none;height:10px;margin:0 52px 12px 0;border:2px solid var(--ink,#3a2416);border-radius:999px;background:#fff;overflow:hidden}
+.wa-tour-bar i{display:block;width:0;height:100%;background:var(--green,#23803f);transition:width .3s ease}
+.wa-tour-title{flex:none;margin:0 46px 8px 0;font:700 1.45rem/1.15 var(--display,sans-serif)}
+.wa-tour-body{flex:1 1 auto;min-height:0;overflow-y:auto;font-size:1.0625rem;line-height:1.5}
+.wa-tour-body p{margin:0 0 .7em;white-space:pre-line}
+.wa-tour-body ul{margin:0 0 .7em;padding:0 0 0 1.25em;list-style:disc}
+.wa-tour-body li{margin:0 0 .3em}
+.wa-tour-actions{flex:none;display:flex;flex-wrap:wrap;margin:6px -4px -4px}
+.wa-tour-actions .btn{margin:4px}
+.wa-tour-x{position:absolute;top:8px;right:8px;width:44px;height:44px;margin:0;padding:0;display:grid;place-items:center;border:3px solid var(--ink,#3a2416);border-radius:50%;background:#fff;color:var(--ink,#3a2416);font:700 1.7rem/1 var(--display,sans-serif);box-shadow:0 3px 0 var(--ink,#3a2416);cursor:pointer}
+@media (hover:hover){.wa-tour-x:hover{background:#fff3cf}}
+
+/* "Contents": one button for each part of the tour */
+.wa-tour-chapters{margin:0 0 .5em;padding:0;list-style:none}
+.wa-tour-chap{display:flex;align-items:baseline;justify-content:space-between;width:100%;min-height:44px;margin:0 0 6px;padding:.5em .9em;text-align:left;font:600 1.0625rem/1.25 var(--display,sans-serif);color:var(--ink,#3a2416);background:#fff;border:3px solid var(--ink,#3a2416);border-radius:14px;cursor:pointer}
+.wa-tour-chap-count{flex:none;margin-left:12px;font:600 .85rem/1.25 var(--body,sans-serif);white-space:nowrap;color:var(--ink-soft,#6a5140)}
+.wa-tour-chap.is-here{background:var(--sun,#ffc928)}
+.wa-tour-chap.is-here .wa-tour-chap-count{color:var(--ink,#3a2416)}
+@media (hover:hover){.wa-tour-chap:hover{background:#fff3cf}.wa-tour-chap.is-here:hover{background:var(--sun,#ffc928)}}
+
+/* the lit box and the card slide from one step to the next */
+.wa-tour.is-gliding .wa-tour-hole{transition:left .3s ease,top .3s ease,width .3s ease,height .3s ease,border-radius .3s ease}
+.wa-tour.is-gliding .wa-tour-card{transition:left .3s ease,top .3s ease}
+
+/* a phone: the card is a sheet at the bottom of the screen (js/tour.js puts is-sheet on it at 640px and narrower) */
+.wa-tour-card.is-sheet{left:8px;right:8px;top:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));width:auto;max-width:none;max-height:min(58vh,460px);padding:14px 16px;border-radius:20px}
+.wa-tour-card.is-sheet .wa-tour-title{font-size:1.25rem}
+.wa-tour-card.is-sheet .wa-tour-body{font-size:1rem}
+.wa-tour-card.is-sheet .wa-tour-actions .btn{flex:1 1 auto}
+
+/* calm mode ("Pause animations", or a slow phone) and reduced motion: nothing slides or fades, the lit box just appears */
+.wa-tour.is-still *{transition:none!important;animation:none!important}
+@media (prefers-reduced-motion:reduce){.wa-tour *{transition:none!important;animation:none!important}}
+
+@media print{.wa-tour,.wa-tour-pill{display:none!important}}
