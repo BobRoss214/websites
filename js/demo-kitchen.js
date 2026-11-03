@@ -30,6 +30,10 @@
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+  // The kitchen's contact line, a quiet footer. Ava's address is already public on the site (the Wise Pie page and the GreenHouse buttons, with the same subject line).
+  // Only this address is shown: no phone number and nothing else.
+  var CONTACT = { label: 'Pizza kitchen contact: ', email: 'ava@wiseacresorganic.com', href: 'mailto:ava@wiseacresorganic.com?subject=Wise%20Pie%20question' };
+
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
   function toInt(v, fallback) { var n = parseInt(v, 10); return isNaN(n) ? fallback : n; }
   function clone(o) { return o === undefined ? undefined : JSON.parse(JSON.stringify(o)); }
@@ -542,10 +546,12 @@
         h('p', { text: 'To see one now, open the family page and create the sample account. It comes with a pizza order.' }),
         h('p', null, h('a', { 'class': 'btn btn-red kit-big', href: 'account.html' }, h('span', { text: 'Open the family page' }))));
       parts.queue = h('div', { 'class': 'kit-queue', 'data-tour': 'kit-queue' });
+      parts.contact = h('p', { 'class': 'kit-contact' }, CONTACT.label, h('a', { href: CONTACT.href }, CONTACT.email));
       rootEl.appendChild(parts.head);
       rootEl.appendChild(parts.live);
       rootEl.appendChild(parts.empty);
       rootEl.appendChild(parts.queue);
+      rootEl.appendChild(parts.contact);
     }
 
     /* ---------- answering ---------- */
@@ -871,7 +877,7 @@
     boot: boot,
     // the pure part, for tests
     buildModel: buildModel, diff: diff, summarize: summarize, statusOf: statusOf, pickRequest: pickRequest, orderLines: orderLines,
-    time12: time12, dayLabel: dayLabel, minutes: minutes, fromMinutes: fromMinutes, STATUS_LABEL: STATUS_LABEL
+    time12: time12, dayLabel: dayLabel, minutes: minutes, fromMinutes: fromMinutes, STATUS_LABEL: STATUS_LABEL, CONTACT: CONTACT
   };
   win.DemoKitchen = api;
   if (typeof module === 'object' && module && module.exports) module.exports = api;
