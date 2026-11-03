@@ -390,7 +390,7 @@
       if (next.text === now.text && next.email === now.email) return next;
       return edit(function (st) { st.family = st.family || {}; st.family.notify = next; return next; });
     }
-    // -> { strawberries, blueberries, pumpkins, trees, spot, days: { 'YYYY-MM-DD': n } }: how many are waiting for each. One family here, so 0 or 1 for a switch.
+    // -> { spot, reservations, strawberries, blueberries, pumpkins, trees, days: { 'YYYY-MM-DD': n } }: how many are waiting for each. One family here, so 0 or 1 for a switch.
     function alertCounts() {
       var st = read(), out = { days: {} };
       Data.alertKinds.forEach(function (k) { out[k.key] = k.key === 'spot' ? 0 : (st.alerts[k.key] ? 1 : 0); });

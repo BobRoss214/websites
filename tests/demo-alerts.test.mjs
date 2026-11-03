@@ -73,6 +73,12 @@ await run('demo-alerts', async ({ browser, base, errs }) => {
   ok('the focus stays on that switch, and nothing was saved or announced as a change', (await focused(p)) === 'notify-text' && (await toasts(p)).length === told);
   await sms(p).click();
   ok('pressing it again leaves the note there, and the switch on', (await note.textContent()) === KEEP && (await checked(sms(p))) === 'true' && (await way(p)) === '{"text":true,"email":false}');
+  await p.evaluate(() => { window.location.hash = '#visits'; });
+  await settled(p);
+  await p.evaluate(() => { window.location.hash = '#alerts'; });
+  await until(p, () => !!document.querySelector('[data-tour="acct-alerts"]'), null, 15000);
+  await settled(p);
+  ok('the note is old news when the family leaves the tab and comes back: it is gone, and the choice is as it was', (await p.locator('.dva-way-note').textContent()) === '' && (await way(p)) === '{"text":true,"email":false}' && (await checked(sms(p))) === 'true' && (await checked(email(p))) === 'false');
   await email(p).click();
   await settled(p);
   ok('turning "Email" on again: both are on, the note is gone, the account keeps both', (await checked(email(p))) === 'true' && (await checked(sms(p))) === 'true' && (await way(p)) === '{"text":true,"email":true}' && (await p.locator('.dva-way-note').textContent()) === '' && (await toasts(p)).some((t) => t === 'We will send your messages by text message and email.'));
