@@ -187,7 +187,18 @@ await run('account-event', async ({ browser, base, errs }) => {
     ok('My event shows a school tour: students and chaperones, $11 each, the admission total', (await p.locator('[data-tour="acct-event"] .dvk-chip').innerText()).trim() === 'School tour' && /Sample Elementary, 2nd grade/.test(text) && /Admission total/.test(text) && /\$1,188/.test(text) && /Permission slips back/.test(text), text.slice(0, 300));
     const van = p.locator(`#demo-panel a[href="${VANESSA}"]`);
     ok('a school trip shows "Questions? Email Vanessa", a mailto link to the address the site already shows', await van.count() === 1 && (await van.innerText()).trim() === 'Questions? Email Vanessa');
-    await axeOn(p, 'My event (a school trip)', '#demo-panel');
+    // the head count of a school trip is still a request (students and chaperones), with the page's minimum
+    await p.fill('#demo-panel input[data-k="ev-students"]', '99');
+    await p.fill('#demo-panel input[data-k="ev-guests"]', '8');
+    await p.click('#demo-panel [data-k="ev-send"]');
+    await p.waitForTimeout(250);
+    ok('under 100 students is refused with the page\'s own rule, and nothing is sent', /minimum group size for a school tour is 100 students/.test(await p.locator('#demo-panel .dvk-err').first().innerText()) && await p.evaluate(() => window.DemoStore.list('requests').length === 0));
+    await p.fill('#demo-panel input[data-k="ev-students"]', '102');
+    await p.fill('#demo-panel input[data-k="ev-guests"]', '6');
+    await p.click('#demo-panel [data-k="ev-send"]');
+    await p.waitForSelector('[data-k="ev-status"]');
+    ok('102 students and 6 chaperones is a request to Mrs. Cathy (students and guests), and the trip is not changed before her answer', await p.evaluate(() => { const r = window.DemoStore.list('requests')[0]; return r.kind === 'event-change' && r.status === 'waiting' && JSON.stringify(r.patch) === '{"students":102,"guests":6}' && /head count from 100 students and 8 chaperones to 102 students and 6 chaperones/.test(r.summary) && window.DemoStore.list('events')[0].students === 100; }));
+    await axeOn(p, 'My event (a school trip, with a request waiting)', '#demo-panel');
     // all tabs: none of the words about how many times a family came, no telephone link on the screens of the contacts
     const seen = [];
     for (const name of ['visits', 'pizza', 'family', 'alerts', 'messages', 'photos', 'event']) {
