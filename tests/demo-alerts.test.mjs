@@ -14,7 +14,7 @@
  *     second, separate switch that the desk counts and sends, and the four seasons are unchanged;
  *   - no sideways scroll on a phone, and axe-core (WCAG 2.0 and 2.1 A and AA) finds nothing on the screen.
  * The store's own rules are in tests/demo-store.test.mjs (no browser). Run: node tests/demo-alerts.test.mjs */
-import { run, open, ok, okSoon, settled, until, axeSource, info } from './lib.mjs';
+import { run, open, ok, okSoon, settled, until, axeSource, info, ms } from './lib.mjs';
 
 const NOW = '2026-11-03T12:00:00-05:00';   // a Tuesday in the fall: the next days the farm offers are Thursday Nov 5 to Sunday Nov 8
 const PHONE = '(555) 010-0123';
@@ -29,6 +29,7 @@ const checked = (loc) => loc.getAttribute('aria-checked');
 const way = (p) => p.evaluate(() => JSON.stringify(window.DemoStore.getNotify()));
 const toasts = (p) => p.evaluate(() => [...document.querySelectorAll('.demo-toast')].map((t) => t.textContent.trim()));
 const focused = (p) => p.evaluate(() => (document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('data-k')) || '');
+const unread = (p) => p.evaluate(() => Number((document.querySelector('.demo-bell').getAttribute('aria-label').match(/\d+/) || ['0'])[0]));   // "Notices, 3 new"
 const gotList = (p) => p.evaluate(() => [...document.querySelectorAll('[data-tour="acct-alerts"] .dva-got li span:first-child')].map((s) => s.textContent.trim()));
 
 async function family(browser, base, errs, viewport, who = { name: 'Alex', email: 'alex@example.com' }) {
@@ -131,19 +132,22 @@ await run('demo-alerts', async ({ browser, base, errs }) => {
   ok('choosing another day moves the waitlist entry (the old one is switched off, nothing deleted), and the desk counts one family for that day', waits.all.join() === '2026-11-05:false,2026-11-06:true' && waits.counts.spot === 1 && waits.counts.days['2026-11-06'] === 1 && waits.counts.reservations === 1, JSON.stringify(waits));
 
   const desk = await p.context().newPage();
+  desk.setDefaultTimeout(ms(20000));
   desk.on('pageerror', (e) => errs.push('desk pageerror: ' + e.message));
-  await desk.goto(base + 'farm-desk.html?demo', { waitUntil: 'load' });
+  await desk.goto(base + 'farm-desk.html?demo', { waitUntil: 'load', timeout: ms(60000) });
   await desk.clock.runFor(1500);
   const rows = () => desk.evaluate(() => [...document.querySelectorAll('[data-tour="desk-people"] .ds-person')].map((li) => ({ t: li.querySelector('strong').textContent.trim(), n: li.querySelector('.ds-person-n').textContent.trim(), can: !li.querySelector('button').disabled })));
   await okSoon('the desk lists "Reservations open" and the chosen day among the people waiting, with one family each', async () => { await desk.clock.runFor(200); return rows(); },
     (r) => r.some((x) => x.t === 'Reservations open' && /^1 family is waiting/.test(x.n) && x.can) && r.some((x) => x.t === 'A spot opens on Friday, Nov 6' && /^1 family is waiting/.test(x.n) && x.can));
   const labels = (await rows()).map((x) => x.t);
   ok('the desk shows every choice once: the four seasons and reservations, then a line for each day somebody waits for', JSON.stringify(labels) === JSON.stringify(['Reservations open', 'Strawberries open', 'Blueberries and sunflowers open', 'Pumpkins and tomatoes open', 'Christmas trees arrive', 'A spot opens on Friday, Nov 6']), labels.join(' | '));
+  const unread0 = await unread(p);
   await desk.locator('.ds-person', { hasText: 'Reservations open' }).getByRole('button', { name: /Send the alert/ }).click();
   await desk.locator('.ds-person', { hasText: 'A spot opens on Friday, Nov 6' }).getByRole('button', { name: /Send the alert/ }).click();
   await desk.clock.runFor(300);
-  await okSoon('the alerts reach the family: both are listed under "Alerts you got" with the farm\'s words, and the bell counts them', async () => { await settled(p); return gotList(p); },
+  await okSoon('the alerts reach the family: both are listed under "Alerts you got" with the farm\'s words', async () => { await settled(p); return gotList(p); },
     (g) => g.includes('New reservations are open at Wise Acres.') && g.includes('A spot opened on Friday, Nov 6.'));
+  ok('...and the bell under the top bar counts the two new notices', (await unread(p)) === unread0 + 2, unread0 + ' before, ' + (await unread(p)) + ' after');
   ok('the sent days switch off by themselves: the full-day switch is Off again and nobody is waiting; reservations stay on', (await checked(spot)) === 'false' && (await p.evaluate(() => window.DemoStore.alertCounts().spot)) === 0 && (await checked(text(p, 'Reservations open'))) === 'true');
   await desk.close();
 
