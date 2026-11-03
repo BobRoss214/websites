@@ -17,7 +17,7 @@
 import { run, open, ok, okSoon, settled, until, axeSource, info, ms } from './lib.mjs';
 
 const NOW = '2026-11-03T12:00:00-05:00';   // a Tuesday in the fall: the next days the farm offers are Thursday Nov 5 to Sunday Nov 8
-const PHONE = '(555) 010-0123';
+const PHONE = '(704) 555-0123';
 const LABELS = ['A spot opens on a full day', 'Reservations open', 'Strawberries open', 'Blueberries and sunflowers open', 'Pumpkins and tomatoes open', 'Christmas trees arrive'];
 const KEEP = 'Keep at least one on, so we can reach you.';
 const axe = axeSource();
@@ -55,7 +55,7 @@ await run('demo-alerts', async ({ browser, base, errs }) => {
   const sw = await p.evaluate(() => [...document.querySelectorAll('.dva-way button')].map((b) => { const r = b.getBoundingClientRect(); return { role: b.getAttribute('role'), checked: b.getAttribute('aria-checked'), w: Math.round(r.width), h: Math.round(r.height), text: b.textContent.replace(/\s+/g, ' ').trim() }; }));
   ok('two big switch buttons under the question: "Text message" with the pretend phone number and "Email" with the account email, in that order, both on', sw.length === 2 && sw.every((s) => s.role === 'switch' && s.checked === 'true') && /^Text message\s*\(555\) 010-0123\s*On$/.test(sw[0].text) && /^Email\s*alex@example\.com\s*On$/.test(sw[1].text), JSON.stringify(sw));
   ok('each is a big target: at least 44 px high (and wide), as the other switches of the demo are', sw.every((s) => s.h >= 44 && s.w >= 150), JSON.stringify(sw.map((s) => s.w + 'x' + s.h)));
-  ok('a screen reader meets them as switches named "Text message (555) 010-0123" and "Email alex@example.com", both on, inside a group that is named by the question',
+  ok('a screen reader meets them as switches named "Text message (704) 555-0123" and "Email alex@example.com", both on, inside a group that is named by the question',
     (await sms(p).count()) === 1 && (await email(p).count()) === 1 && (await checked(sms(p))) === 'true' && (await checked(email(p))) === 'true' && (await p.evaluate(() => { const b = document.querySelector('.dva-way button'); const s = b.closest('section'); return !!s && s.getAttribute('aria-labelledby') && document.getElementById(s.getAttribute('aria-labelledby')).textContent === 'Where should we send these messages?'; })));
   ok('the pretend phone number is the sample one and the account keeps both ways on at the start', (await p.evaluate(() => window.DemoStore.get('family').phone)) === PHONE && (await way(p)) === '{"text":true,"email":true}');
   ok('there is no note at the start, and the note place is a polite status line', (await p.evaluate(() => { const n = document.querySelector('.dva-way-note'); return !!n && n.getAttribute('role') === 'status' && n.textContent === ''; })));

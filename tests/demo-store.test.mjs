@@ -240,7 +240,7 @@ const last = (list) => list[list.length - 1];
   ok('reservations: switched off it is not counted and does not fire; the full-day switch is not changed by it', st.alertCounts().reservations === 0 && st.fireAlert('reservations') === false && st.get('alerts').spot === true);
 
   // where the messages go: text message, email or both (pretend: nothing is sent)
-  ok('the sample family has the pretend phone number, and a new account sends to both ways', st.get('family').phone === Data.SAMPLE_PHONE && /^\(555\) /.test(Data.SAMPLE_PHONE) && JSON.stringify(st.getNotify()) === '{"text":true,"email":true}');
+  ok('the sample family has the pretend phone number, and a new account sends to both ways', st.get('family').phone === Data.SAMPLE_PHONE && /^\(\d{3}\) 555-01\d\d$/.test(Data.SAMPLE_PHONE) && JSON.stringify(st.getNotify()) === '{"text":true,"email":true}');
   let heard = 0; const stop = st.subscribe(() => { heard++; });
   const emailOnly = st.setNotify({ text: false });
   ok('turning text off leaves email on, answers with the new choice, saves it in the family and tells the subscribers once', JSON.stringify(emailOnly) === '{"text":false,"email":true}' && JSON.stringify(st.getNotify()) === '{"text":false,"email":true}' && st.get('family').notify.text === false && heard === 1);

@@ -103,8 +103,8 @@
   var SLOTS = ['10:00', '11:00', '12:00', '13:00', '14:00'];
 
   // The pretend phone number the "Tell me when" screen shows next to "Text message" (the sample family has it; the family record keeps it as `phone`).
-  // Not a real number: 555 is not a working area code, so it cannot ring anyone. Never put a real number here.
-  var SAMPLE_PHONE = '(555) 010-0123';
+  // Not a real number: the exchange 555 with a line from 0100 to 0199 is set aside for made-up numbers, so it cannot ring anyone. Never put a real number here.
+  var SAMPLE_PHONE = '(704) 555-0123';
 
   // The "Tell me when" choices, in the order the family sees them: the two about a visit first (a spot on a full day, then new reservations), then the farm's seasons
   // in the site's season order. `label` is the title, `note` the line under it, `notice` what the family reads in the bell when the farm sends it.
