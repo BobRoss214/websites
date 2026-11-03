@@ -16,6 +16,8 @@
 .kit-lead{flex:1 0 100%;font-size:1.3rem;font-weight:700;margin:0}
 .kit-banner-slot{flex:1 1 auto;display:flex;flex-wrap:wrap}
 .kit-demo{margin:0 0 0 auto;padding:.3em .9em;font:700 1rem/1.3 var(--display);background:#fff;border:2.5px solid var(--ink);border-radius:999px;box-shadow:0 3px 0 var(--ink)}
+.kit-contact{margin:22px 0 0;font:600 1rem/1.4 var(--display);color:var(--ink-soft)}
+.kit-contact a{color:var(--ink);font-weight:700;text-decoration:underline}
 .kit-banner{display:inline-flex;align-items:center;flex-wrap:wrap;gap:.2em .7em;margin:0;padding:.3em 1em;border:3px solid var(--ink);border-radius:999px;font:700 1.12rem/1.25 var(--display);box-shadow:0 3px 0 var(--ink)}
 .kit-banner .kit-ico{width:1.3em;height:1.3em}
 .kit-banner-alert{background:var(--red-deep);color:#fff;--focus:#fff3b0}
