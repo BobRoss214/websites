@@ -228,6 +228,25 @@ const IN_PAGE = `(() => {
       if (!hit || f.el.contains(hit) || hit.contains(f.el)) return '';
       return hit.tagName.toLowerCase() + (hit.className && typeof hit.className === 'string' ? '.' + hit.className.split(' ')[0] : '');
     },
+    openersOutside(sel) {   // buttons in the lit part that open something (aria-expanded + aria-controls): what they open must stay inside the lit box, or the visitor can open it but not use it
+      const f = find(sel); if (!f.el) return [];
+      const box = f.el.getBoundingClientRect(), found = [];
+      const list = Array.from(f.el.querySelectorAll('[aria-expanded][aria-controls]'));
+      if (f.el.matches('[aria-expanded][aria-controls]')) list.unshift(f.el);
+      list.forEach((b) => {
+        if (!visible(b)) return;
+        const c = document.getElementById(b.getAttribute('aria-controls')); if (!c) return;
+        const name = '"' + (b.getAttribute('aria-label') || b.textContent || b.id || '?').trim().replace(/\\s+/g, ' ').slice(0, 30) + '"';
+        if (!f.el.contains(c)) { found.push(name + ' opens #' + (c.id || '?') + ', which is not inside the lit part'); return; }
+        const was = b.getAttribute('aria-expanded') === 'true';
+        if (!was) b.click();
+        const r = c.getBoundingClientRect();
+        const out = r.width > 0 && r.height > 0 && (r.left < box.left - 12 || r.right > box.right + 12 || r.top < box.top - 12 || r.bottom > box.bottom + 12);
+        if (!was) b.click();
+        if (out) found.push(name + ' opens #' + (c.id || '?') + ', which reaches outside the lit box');
+      });
+      return found;
+    },
     tryClick(sel) {   // what an owner may do in a step that says allowClicks: choose another season or tab
       const f = find(sel); if (!f.el) return '';
       const b = Array.from(f.el.querySelectorAll('[aria-checked="false"],[aria-selected="false"]')).find((x) => visible(x) && x.tagName === 'BUTTON');
@@ -292,7 +311,23 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
   let on = list[0].page;
   await putStepsInPage(p);
   const skipped = [];
-  let bad = 0;
+  let bad = 0, menusChecked = 0, menusBad = 0;
+  if (full) {   // the check for a lit part that opens something outside its box, tried first on made-up samples: it must find the two bad ones and leave the good one alone
+    const sample = await p.evaluate(() => {
+      const made = [];
+      const mk = (id, inner) => { const d = document.createElement('div'); d.id = id; d.style.cssText = 'position:absolute;left:0;top:0;width:200px;height:40px'; d.innerHTML = inner; document.body.appendChild(d); made.push(d); return d; };
+      const wire = (d) => { const b = d.querySelector('button'); b.addEventListener('click', () => { const o = b.getAttribute('aria-expanded') !== 'true'; b.setAttribute('aria-expanded', String(o)); document.getElementById(b.getAttribute('aria-controls')).hidden = !o; }); };
+      mk('t-far', '<button type="button" aria-expanded="false" aria-controls="t-far-list">Menu</button>');
+      const far = document.createElement('ul'); far.id = 't-far-list'; far.hidden = true; far.textContent = 'x'; document.body.appendChild(far); made.push(far);
+      wire(document.getElementById('t-far'));
+      wire(mk('t-hang', '<button type="button" aria-expanded="false" aria-controls="t-hang-list">Menu</button><ul id="t-hang-list" hidden style="position:absolute;left:0;top:44px;width:150px;height:120px">x</ul>'));
+      wire(mk('t-fit', '<button type="button" aria-expanded="false" aria-controls="t-fit-list">Menu</button><ul id="t-fit-list" hidden style="position:absolute;left:60px;top:2px;width:100px;height:30px;margin:0">x</ul>'));
+      const r = { far: window.__tour.openersOutside('#t-far').length, hang: window.__tour.openersOutside('#t-hang').length, fit: window.__tour.openersOutside('#t-fit').length, closedAgain: ['t-hang-list', 't-fit-list', 't-far-list'].every((id) => document.getElementById(id).hidden) };
+      made.forEach((n) => n.remove());
+      return r;
+    });
+    ok('(tried first on made-up samples) the check for a lit part that opens something outside its box finds the list that is not inside it and the list that hangs out of it, leaves a list that fits alone, and closes what it opened', sample.far === 1 && sample.hang === 1 && sample.fit === 0 && sample.closedAgain, JSON.stringify(sample));
+  }
   const rec = (name, cond, detail) => { if (!cond) bad++; if (full || !cond) ok(name, cond, detail); };   // the light walks print only what fails, and one line at the end
   for (const s of list) {
     if (s.page !== on) { await goPage(p, base, s.page); on = s.page; await putStepsInPage(p); }
@@ -324,6 +359,11 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
         const cover = await p.evaluate(([t]) => window.__tour.covered(t), [s.target]);
         if (cover) info('note: something else (' + cover + ') is on top of the middle of the target ' + s.target);
         if (pr.h > pr.vh) info('note: the target is taller than the window (' + pr.h + ' of ' + pr.vh + ' px): ' + s.id);
+        if (s.allowClicks !== true) {   // the lit part may be used, but only inside its own box: a button that opens something outside it is a trap (the opened part is dimmed and blocked)
+          const outside = await p.evaluate(([t]) => window.__tour.openersOutside(t), [s.target]);
+          menusChecked++;
+          if (outside.length) { menusBad++; rec(name + ': nothing in the lit part opens something outside its box (or the step says allowClicks: true)', false, outside.join('; ') + '  -> give the step allowClicks: true (the whole page may be used), or light the opened part'); }
+        }
         if (s.allowClicks) {
           const clicked = await p.evaluate(([t]) => window.__tour.tryClick(t), [s.target]);
           if (clicked) { await settled(p, 600); info('tried a click on "' + clicked + '" inside the target (the step allows clicks)'); }
@@ -385,6 +425,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
     }
   }
   await p.context().close();
+  if (full && menusChecked) ok(tag + ': no lit part opens something outside its own box, except in steps that say allowClicks: true (' + menusChecked + ' steps looked at)', menusBad === 0);
   if (!full && !bad) ok(tag + ': all ' + list.length + ' steps have a visible target or say skipIfMissing', true);
   return { skipped, seen: list.length };
 }

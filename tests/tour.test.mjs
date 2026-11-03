@@ -96,7 +96,7 @@ const look = (p) => p.evaluate(() => {
   const live = document.querySelector('.wa-tour [role="status"]');
   return {
     kicker: k.replace(/\s+/g, ' ').trim(), n: m ? +m[1] : 0, of: m ? +m[2] : 0, title: (c.querySelector('.wa-tour-title') || {}).textContent || '', text: (c.querySelector('.wa-tour-body') || {}).innerText || '',
-    buttons: [...c.querySelectorAll('button')].map((b) => (b.getAttribute('aria-label') || b.textContent).trim() + (b.disabled ? ' (off)' : '')), busy: c.classList.contains('is-busy'),
+    buttons: [...c.querySelectorAll('button')].map((b) => (b.getAttribute('aria-label') || b.textContent).trim() + (b.disabled ? ' (off)' : '')), busy: c.classList.contains('is-busy') || c.getAttribute('aria-busy') === 'true',   // the class goes when the new words are on the card; aria-busy only when the lit box is placed and the focus is on the card
     card: rect(c), hole: root.classList.contains('no-hole') ? null : rect(document.querySelector('.wa-tour-hole')), free: root.classList.contains('is-free'), still: root.classList.contains('is-still'),
     sheet: c.classList.contains('is-sheet'), focus: document.activeElement ? (document.activeElement.getAttribute('aria-label') || document.activeElement.textContent || '').trim() : '', inCard: c.contains(document.activeElement),
     live: live ? live.textContent : '', scrollY: window.scrollY, vw: document.documentElement.clientWidth, vh: window.innerHeight, bodyScroll: (c.querySelector('.wa-tour-body') || {}).scrollHeight > (c.querySelector('.wa-tour-body') || {}).clientHeight + 1,
@@ -113,7 +113,19 @@ const lit = (hole, t, pad = 8) => !!(hole && t && near(hole.x, t.x - pad) && nea
 const inside = (c, vw, vh) => !!(c && c.x >= 0 && c.y >= 0 && c.r <= vw + 0.5 && c.b <= vh + 0.5);
 const btn = (p, name) => p.locator('.wa-tour-card').getByRole('button', { name, exact: true });
 const press = async (p, name) => { await btn(p, name).click(); };
-const atStep = (p, n, name) => okSoon(name || `the card shows step ${n}`, () => look(p), (s) => s && s.n === n && !s.busy);
+// The tour at rest: its own animations (the card fading in, the lit box and the card sliding to the next place, 0.2 to 0.3 s) are over. A position is measured after this:
+// a quick computer is done with the slide before the next look, a busy one is not.
+const rest = (p) => p.evaluate(async (cap) => {
+  const t0 = performance.now(), frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  await frames();
+  for (let i = 0; i < 30 && performance.now() - t0 < cap; i++) {
+    const moving = document.getAnimations().filter((a) => a.playState === 'running' && a.effect && a.effect.target && a.effect.target.closest && a.effect.target.closest('.wa-tour'));
+    if (!moving.length) break;
+    await Promise.race([Promise.all(moving.map((a) => a.finished.catch(() => {}))), new Promise((r) => setTimeout(r, 250))]);
+  }
+  await frames();
+}, ms(4000));
+const atStep = async (p, n, name) => { const r = await okSoon(name || `the card shows step ${n}`, () => look(p), (s) => s && s.n === n && !s.busy); await rest(p); return r; };
 const logOf = (p) => p.evaluate(() => (window.__log || []).slice());
 const PHONE = { width: 390, height: 844 };
 
@@ -129,6 +141,27 @@ const inject = (p) => p.evaluate(() => {
   document.addEventListener('click', () => { window.__docClicks++; });
 });
 const store = (p) => p.evaluate(() => ({ ls: localStorage.getItem('wa-tour'), ss: sessionStorage.getItem('wa-tour'), keys: Object.keys(localStorage) }));
+// Makes a link with this address (and these attributes), presses it as a program would (a.click()), and says what happened: did the address change, what note did the card
+// show, is the page still the same page (a word set before the press is still there: a page that is loaded again has lost it), is a photo viewer open.
+const poke = async (p, href, attrs = {}) => {
+  await p.evaluate(() => { window.__kept = 'kept'; const old = document.querySelector('.wa-tour-flash'); if (old) old.remove(); });   // a note from an earlier press is not this press's
+  const r = await p.evaluate(([h, at]) => {
+    const a = document.createElement('a'); a.setAttribute('href', h); a.textContent = 'poke'; a.setAttribute('data-poke', '');
+    Object.keys(at).forEach((k) => a.setAttribute(k, at[k]));
+    document.body.appendChild(a);
+    if (at['data-zoom'] != null && window.WISE_ACRES && window.WISE_ACRES.bindZoom) window.WISE_ACRES.bindZoom(a);
+    const was = location.href;
+    a.click();
+    const n = document.querySelector('.wa-tour-flash');
+    return { moved: location.href !== was, now: location.pathname + location.search + location.hash, note: n ? n.textContent : '', viewer: !!document.querySelector('dialog[open]') };
+  }, [href, attrs]);
+  await p.waitForTimeout(450);
+  let same = false, said = '';
+  try { same = await p.evaluate(() => window.__kept === 'kept'); said = await p.evaluate(() => (document.querySelector('.wa-tour [role="status"]:not(.wa-tour-flash)') || {}).textContent || ''); } catch (e) { same = false; }
+  try { await p.evaluate(() => { const d = document.querySelector('dialog[open]'); if (d) d.close(); document.querySelectorAll('[data-poke]').forEach((x) => x.remove()); const n = document.querySelector('.wa-tour-flash'); if (n) n.remove(); history.replaceState(null, '', location.pathname + location.search); }); } catch (e) { /* the page went away */ }
+  return { ...r, same, said };
+};
+const switchedOff = (r) => /switched off/.test(r.note) && !r.moved && r.same;
 
 await run('tour', async ({ browser, base, errs }) => {
   /* ================================================================ 1. a computer: the button, the welcome card, a walk through the steps */
@@ -144,7 +177,8 @@ await run('tour', async ({ browser, base, errs }) => {
   const scrollBefore = 1700;
 
   await p.getByRole('button', { name: 'Take a tour', exact: true }).click();   // the round button is on the page, not in the card
-  await okSoon('the button opens a welcome card: a dialog with a name, the words of the plan, and its three buttons', () => look(p), (s) => s && s.dialog === 'dialog' && s.name === 'Your website tour' && /^This is a tour of your new website\. It takes about \d+ minutes\. You can stop any time/.test(s.text) && /Continue where I stopped/.test(s.text) && /Contents lets you jump to any part/.test(s.text));
+  await okSoon('the button opens a welcome card: a dialog with a name, the words of the plan, and its three buttons', () => look(p), (s) => s && s.dialog === 'dialog' && s.name === 'Your website tour' && /^This is a tour of your new website\. It takes about \d+ minutes\. You can stop any time/.test(s.text) && /Continue where I stopped/.test(s.text) && /Contents lets you jump to any part/.test(s.text) && !s.busy);
+  await rest(p);
   const s0 = await look(p);
   ok('the welcome card has Start the tour, Choose a part and Not now (and no "Continue" button the first time), and the first button has the focus', s0.buttons.join('|') === 'Start the tour|Choose a part|Not now|Close' && s0.focus === 'Start the tour', s0.buttons.join('|') + ' / ' + s0.focus);
   ok('the minutes come from the number of steps (11 steps: about 5 minutes, 15 seconds a step to the nearest 5)', /about 5 minutes/.test(s0.text), s0.text.slice(0, 120));
@@ -228,6 +262,10 @@ await run('tour', async ({ browser, base, errs }) => {
     await okSoon('step 6: pressing a question in the lit section opens it (the page sees the press)', () => p.evaluate((i) => document.querySelectorAll('#faq details')[i].open, q1.i), (v) => v === true);
     await okSoon('...and the lit box grows or shrinks with it (the box still has the section\'s size)', async () => { const h = await look(p); const t2 = await rectOf(p, '#faq'); return { h, t2 }; }, (v) => v.h.hole && Math.abs(v.h.hole.h - (v.t2.h + 16)) <= 3);
   }
+  // the test button sits at the top left of the window: it must be outside the lit section to prove anything, so the page is scrolled until the section starts below it
+  await p.evaluate(() => { const f = document.querySelector('#faq'); window.scrollBy(0, f.getBoundingClientRect().top - 300); });
+  await okSoon('...and the cut in the dimmer follows the section when it is scrolled (the section now starts below the test button)', async () => ({ h: await look(p), t: await rectOf(p, '#faq'), b: await rectOf(p, '#t-btn') }), (v) => v.h.hole && v.t.y > v.b.b + 20 && Math.abs(v.h.hole.y - (v.t.y - 8)) <= 3);
+  await rest(p);
   const tb3 = await rectOf(p, '#t-btn');
   await p.mouse.click(tb3.x + tb3.w / 2, tb3.y + tb3.h / 2);
   ok('step 6: a press outside the lit section is still stopped (the test button did not count it)', (await p.evaluate(() => window.__btn)) === behind, String(await p.evaluate(() => window.__btn)));
@@ -246,6 +284,16 @@ await run('tour', async ({ browser, base, errs }) => {
   await p.waitForTimeout(400);
   ok('step 6: a link that leads away from the page does nothing and the card says so', (await p.evaluate(() => location.href)) === urlBefore && (await p.evaluate(() => /switched off/.test((document.querySelector('.wa-tour-flash') || {}).textContent || ''))), await p.evaluate(() => (document.querySelector('.wa-tour-flash') || {}).textContent));
   await p.evaluate(() => { const e = document.getElementById('t-out'); if (e) e.remove(); const h = document.getElementById('t-here'); if (h) h.remove(); });
+  // the page is index.html?tour here: a link to this file, with or without a query, or with an empty address, loads it again (the tour would be gone); one that differs after # only does not
+  const viewerLink = await poke(p, 'assets/photos/wise-pie-fall-menu-2026.webp', { 'data-zoom': '' });
+  ok('step 6: the site\'s own photo link (data-zoom) is not switched off: it opens the photo viewer, with no note in the card', viewerLink.viewer && viewerLink.note === '' && viewerLink.same, JSON.stringify(viewerLink));
+  const same1 = await poke(p, 'index.html'), same2 = await poke(p, 'index.html?x=1'), same3 = await poke(p, ''), same4 = await poke(p, 'index.html?tour');
+  ok('step 6: a link to this same page (index.html, index.html?x=1, an empty address, index.html?tour) is switched off like a link to another page, and the page is not loaded again', switchedOff(same1) && switchedOff(same2) && switchedOff(same3) && switchedOff(same4), JSON.stringify({ same1, same2, same3, same4 }));
+  const hashOnly = await poke(p, '#visit'), hashSame = await poke(p, 'index.html?tour#visit'), hashTwin = await poke(p, './?tour#visit');
+  ok('step 6: a link that differs only after the # (#visit, index.html?tour#visit) works: the address changes, no note, the page stays', hashOnly.now === '/index.html?tour#visit' && hashOnly.note === '' && hashOnly.same && hashSame.now === '/index.html?tour#visit' && hashSame.note === '' && hashSame.same, JSON.stringify({ hashOnly, hashSame }));
+  ok('step 6: "./?tour#visit" is this page spelled the other way ("/" for "/index.html"): the browser would load it again, so the tour only moves to the place (the address stays /index.html?tour, with #visit)', hashTwin.now === '/index.html?tour#visit' && hashTwin.note === '' && hashTwin.same, JSON.stringify(hashTwin));
+  const away = await poke(p, 'https://example.com/away');
+  ok('step 6: when a link is switched off the note is also said in the polite line of the card (a paragraph that appears with its words is often not read out)', switchedOff(away) && /switched off/.test(away.said), JSON.stringify(away));
 
   // step 7: allowClicks
   await press(p, 'Next');
@@ -312,10 +360,12 @@ await run('tour', async ({ browser, base, errs }) => {
   await atStep(p, 7, 'the Right arrow is Next');
   await p.keyboard.press('ArrowLeft');
   await atStep(p, 6, 'the Left arrow is Back');
-  let inCard = true;
-  for (let i = 0; i < 12; i++) { await p.keyboard.press('Tab'); inCard = inCard && (await look(p)).inCard; }
-  for (let i = 0; i < 12; i++) { await p.keyboard.press('Shift+Tab'); inCard = inCard && (await look(p)).inCard; }
-  ok('Tab and Shift+Tab go round the buttons of the card and never leave it', inCard);
+  // step 6 lights a section and says nothing about clicks: the keyboard may use the card and what is inside the lit section (a question), and nothing else
+  const placeOf = () => p.evaluate(() => { const a = document.activeElement; return a && a.closest('.wa-tour-card') ? 'card' : a && a.closest('#faq') ? 'section' : 'page'; });
+  const went = new Set();
+  for (let i = 0; i < 12; i++) { await p.keyboard.press('Tab'); went.add(await placeOf()); }
+  for (let i = 0; i < 12; i++) { await p.keyboard.press('Shift+Tab'); went.add(await placeOf()); }
+  ok('Tab and Shift+Tab go round the buttons of the card and the lit section and never reach the rest of the page', !went.has('page') && went.has('card') && went.has('section'), [...went].join());
   await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.keyboard.press('Enter');
   await atStep(p, 7, 'Enter with nothing focused is Next');
@@ -377,6 +427,16 @@ await run('tour', async ({ browser, base, errs }) => {
   ok('the address did not change', p.url() === before, p.url());
   ok('with one step the welcome card says "about 5 minutes" (never less)', /about 5 minutes/.test((await look(p)).text));
   await p.context().close();
+  // the home page is "/" on the real site and "index.html" in a link: they are one page
+  p = await open(browser, base, '', errs, { routes: async (pg) => { await pg.addInitScript(() => { window.WA_TOUR = true; }); await serve({ a: STEPS_ONE() })(pg); } });
+  await p.click('.wa-tour-pill');
+  await okSoon('the page served as "/": the welcome card opens', () => look(p), (x) => x && x.name === 'Your website tour');
+  ok('the address of this page is "/" (no index.html, no query)', new URL(p.url()).pathname === '/' && new URL(p.url()).search === '', p.url());
+  const root1 = await poke(p, 'index.html#visit'), root2 = await poke(p, '#visit');
+  ok('"/" and "index.html" are the same page: a link to index.html#visit works (the tour moves to the place and the address stays "/"), and so does #visit', root1.now === '/#visit' && root1.note === '' && root1.same && root2.now === '/#visit' && root2.note === '' && root2.same, JSON.stringify({ root1, root2 }));
+  const root3 = await poke(p, 'index.html'), root4 = await poke(p, './'), root5 = await poke(p, 'first-visit.html#top'), root6 = await poke(p, 'index.html?x=1#visit');
+  ok('"/": a link to the page itself (index.html, ./), to another page, or to the same page with another query is switched off, and the page is not loaded again', switchedOff(root3) && switchedOff(root4) && switchedOff(root5) && switchedOff(root6), JSON.stringify({ root3, root4, root5, root6 }));
+  await p.context().close();
   // an old place is not resumed; a fresh one is (the jump of the tour itself)
   const placeAt = (v) => async (pg) => { await pg.addInitScript((val) => { try { if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); sessionStorage.setItem('wa-tour', JSON.stringify(val)); } } catch (e) { /* blocked */ } }, v); await serve({ a: STEPS_A, b: STEPS_B })(pg); };
   p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: placeAt({ run: 1, id: 'a5', ch: 3, go: 1000 }) });
@@ -396,12 +456,12 @@ await run('tour', async ({ browser, base, errs }) => {
   await atStep(p, 1);
   ok('demo mode off: 11 steps, not 12', (await look(p)).of === 11, String((await look(p)).of));
   await p.context().close();
-  p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: async (pg) => { await pg.addInitScript(() => { window.WA_DEMO_MODE = () => true; }); await serve({ a: withAccount, b: STEPS_B })(pg); } });
+  p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: async (pg) => { await pg.addInitScript(() => { window.WA_DEMO = true; }); await serve({ a: withAccount, b: STEPS_B })(pg); } });   // WA_DEMO is the flag the preview build sets; js/demo-header.js (on every page) turns it into window.WA_DEMO_MODE()
   await p.click('.wa-tour-pill');
   await okSoon('demo mode on', () => look(p), (x) => x && x.name === 'Your website tour');
   await press(p, 'Start the tour');
   await atStep(p, 1);
-  ok('demo mode on (window.WA_DEMO_MODE() is true): the account step is counted, 12 steps', (await look(p)).of === 12, String((await look(p)).of));
+  ok('demo mode on (window.WA_DEMO is true, so window.WA_DEMO_MODE() is true): the account step is counted, 12 steps', (await look(p)).of === 12, String((await look(p)).of));
   await p.context().close();
 
   // no steps at all, and no part list
@@ -490,7 +550,9 @@ await run('tour', async ({ browser, base, errs }) => {
   await okSoon('phone: scrolled down, the round button shows and the tour button does not cover it', async () => (await p.evaluate(() => !document.querySelector('.to-top').hidden)) ? overlap(await rectOf(p, '.to-top'), await rectOf(p, '.wa-tour-pill')) : -1, (v) => v === 0);
   await p.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0); });
   await p.tap('.wa-tour-pill');
-  s = await okSoon('phone: the welcome card is a sheet at the bottom, 8 px from the edges', () => look(p), (x) => x && x.name === 'Your website tour' && x.sheet);
+  await okSoon('phone: the welcome card is a sheet at the bottom, 8 px from the edges', () => look(p), (x) => x && x.name === 'Your website tour' && x.sheet && !x.busy);
+  await rest(p);
+  s = await look(p);   // (okSoon says whether it was true; it does not give the value back)
   ok('phone: the sheet is 8 px from the left, the right and the bottom', near(s.card.x, 8, 1) && near(s.card.r, 382, 1) && near(s.card.b, 836, 2), JSON.stringify(s.card));
   await p.tap('text=Start the tour');
   await atStep(p, 1);
@@ -636,7 +698,8 @@ await run('tour', async ({ browser, base, errs }) => {
   await btn(p, 'Next').tap();
   await atStep(p, 2, 'choices (phone): step 2 shows');
   await btn(p, 'Two').tap();
-  s = await okSoon('choices (phone): a tap presses a small button and the card changes', () => look(p), (x) => x.choices === 'One|Two*|Three' && x.text === 'Text of two.');
+  await okSoon('choices (phone): a tap presses a small button and the card changes', () => look(p), (x) => x.choices === 'One|Two*|Three' && x.text === 'Text of two.');
+  s = await look(p);
   target = await rectOf(p, '.announce');
   ok('choices (phone): the sheet with the row is inside the window and the page does not scroll sideways', s.sheet && inside(s.card, s.vw, s.vh) && (await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 1, JSON.stringify({ card: s.card }));
   await p.context().close();

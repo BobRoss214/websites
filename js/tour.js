@@ -111,7 +111,7 @@
     const s = make('script');
     let done = false;
     const end = () => { if (!done) { done = true; resolve(); } };
-    s.src = BASE + file; s.async = true; s.onload = end; s.onerror = end;
+    s.src = BASE + file; s.async = false; s.onload = end; s.onerror = end;   // not async: the files are fetched together but run in the order they are asked for, so when two files use one id the earlier file's step is the one that shows
     setTimeout(end, 12000);
     (doc.head || root).appendChild(s);
   });
@@ -564,7 +564,7 @@
   const reachable = () => {   // what Tab can reach: the card's buttons, and (when the page may be used) what is inside the lit box
     const mine = $$('button:not([disabled])', ui.card).filter((b) => !b.hidden);
     if (!(view === 'step' && curStep && curStep.allowClicks !== false && curEl)) return mine;
-    const sel = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+    const sel = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
     let more = $$(sel, curEl);
     if (curEl.matches(sel)) more.unshift(curEl);
     $$('[aria-controls][aria-expanded="true"]', curEl).forEach((c) => { const t = doc.getElementById(c.getAttribute('aria-controls')); if (t) more = more.concat($$(sel, t)); });
@@ -602,21 +602,33 @@
     let n = $('.wa-tour-flash', ui.card);
     if (!n) { n = make('p', 'wa-tour-flash'); n.setAttribute('role', 'status'); ui.card.insertBefore(n, ui.actions); }
     n.textContent = text;
+    say(text);   // a paragraph that appears with its words already in it is often not read out: the card's polite line says them too
     clearTimeout(flashTimer);
     flashTimer = setTimeout(() => { if (n.parentNode) n.parentNode.removeChild(n); }, 4000);
   };
-  const leaves = (a) => {   // does this link go anywhere but a place on the page that is open now?
+  const leaves = (a) => {   // does this link go anywhere but a place on the page that is open now? Only the part after # may differ: a link to this same file (index.html, index.html?x=1, an empty address) loads the page again, and the tour is gone
     const href = a.getAttribute('href') || '';
     if (href.charAt(0) === '#' || /^javascript:/i.test(href)) return false;
     if (/^(mailto|tel|sms):/i.test(href)) return true;
-    try { const u = new URL(href, win.location.href); return u.origin !== win.location.origin || u.pathname !== win.location.pathname; } catch (e) { return false; }
+    try {
+      const u = new URL(href, win.location.href), here = win.location, one = (p) => p.replace(/\/index\.html$/, '/');   // "/" and "/index.html" are the same page
+      return u.origin !== here.origin || one(u.pathname) !== one(here.pathname) || u.search !== here.search || href.indexOf('#') < 0;
+    } catch (e) { return false; }
   };
   const onLink = (e) => {
     if (!ui || !e.target || !e.target.closest || inTour(e.target)) return;
     const a = e.target.closest('a[href]');
-    if (!a || !leaves(a)) return;
-    e.preventDefault(); e.stopPropagation();
-    flash('This link is switched off during the tour, because it would take you away from it.');
+    if (!a || a.hasAttribute('data-zoom')) return;   // a link marked data-zoom only opens the photo viewer (js/main.js): it goes nowhere
+    if (leaves(a)) {
+      e.preventDefault(); e.stopPropagation();
+      flash('This link is switched off during the tour, because it would take you away from it.');
+      return;
+    }
+    // "/" and "/index.html" are one page, but the browser loads the page again for a link that spells it the other way, and the tour would be gone: only the place is moved to
+    if (e.type !== 'click' || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    let u = null;
+    try { u = new URL(a.getAttribute('href') || '', win.location.href); } catch (err) { u = null; }
+    if (u && u.origin === win.location.origin && u.pathname !== win.location.pathname) { e.preventDefault(); e.stopPropagation(); win.location.hash = u.hash; }
   };
   const onForm = (e) => {
     const f = e.target;

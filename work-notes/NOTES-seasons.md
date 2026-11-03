@@ -105,7 +105,7 @@ Steps with Spring / Summer / Fall / Winter buttons (10): ch2-strip, ch2-seasons 
 Steps added (3): ch1-seasons (a card about the buttons), ch3-countdown, ch6-trees. Step removed (1): ch2-headline (its words are now the first-screen walk).
 Steps changed: ch2-seasons (was "Peek at the other seasons": now the first-screen walk, lit box `.hero-copy`, no `allowClicks`), ch3-week (order 301 -> 302), ch5-tabs (was the row of tabs
 with `allowClicks`: now the open panel `#seasons .season-stage`), ch5-tomatoes and ch5-flowers ("This box stays all year."), ch7-soon-fall ("This group shows all year.").
-Total: 77 steps in the three files (was 75), 52 when the pretend account is off. The welcome card counts a step with buttons as three steps of 15 seconds: "about 25 minutes" (was 20).
+Total: 76 steps in the three files (the base had 75; my changes added 2, and the merge of the integration branch took one step out of chapter 10), 52 when the pretend account is off. The welcome card counts a step with buttons as three steps of 15 seconds: "about 25 minutes" (was 20).
 
 Engine (js/tour.js, documented in docs/TOUR.md "A row of small buttons on a card"): `step.choices` (a list, or a function that gives the list when the card shows), `step.choicesLabel`,
 `choice.pressed`; a press runs `choice.run(ctx)` and then changes the card's title and text; the engine waits for a press before running `after()`; a press is ignored while the tour moves on;
@@ -124,5 +124,30 @@ Questions the cards now raise for Mrs. Cathy and Rob (these are facts of the pag
 
 - tests/timings.json: a line for the new test `tour-seasons` (about 2 minutes on a quiet computer; order 193). tests/README.md: one line for it. I did not edit either.
 - tests/browser-support.table.json is not touched. `browser-support` is red ONLY for two names that came with the demo files (js-name `notify` in js/demo-kitchen.js and js/demo-store.js, css-prop `resize` in css/demo-visits.css); my files add no new name.
-- js/tour-steps-c.js, chapter 10: nothing to change (the numbers did not move). `ch10-paid` (order 1004) has a text of 47 words, 2 over the limit of the words test; it was already so at b02d6a0.
+- js/tour-steps-c.js, chapter 10: nothing to change (the numbers did not move). `ch10-paid` had 47 words at b02d6a0; the integration branch shortened it (green now). One line is needed: `ch10-bell` gets `allowClicks: true` (section 8).
 - The preview build: nothing new to add (it takes every js/tour-steps*.js). The season walk needs `window.WISE_ACRES.hero`, `.live` and `.features` (all on the home page).
+
+## 8. After the first report: main's sweep and the review (R2)
+
+Merged into this branch: the integration branch at 446736d (alerts, account changes, brand link, the shorter `ch10-paid` card). `js/tour-steps-c.js` is not touched; the words test is now green. Chapters: not renumbered.
+
+**tour-off** (3 problems in main's list, 2 were not real):
+- "js/tour.js is the last script" was the test's old rule. The page builder (`tools/pages.py`, its header) puts a page's own `scripts:` AFTER the site's footer scripts, and `tour.js` is one of the footer scripts. Nothing in `tour.js` needs to be last (it starts at once and begins its work after the page has loaded). Fixed in the test and in docs/TOUR.md: `tour.js` is there once, and after it come only the page's own scripts (the `scripts:` line of pages/<page>.html). No page was changed.
+- The home page "identical with an empty js/tour.js" check differed by the bee or butterfly (picked by chance at each load): the test now loads both pages with `?critter=bee`.
+- One thing for main (not my file): the comment at js/demo-header.js line ~102 says "js/tour.js is the last script of the page". On the three pretend-account pages it is not. Harmless (the code asks after everything has loaded), only the comment.
+
+**tour engine test** (14 to 26 checks failed under load, at the base b02d6a0 and at the integration head alike). The causes, all found and fixed:
+1. The steps files were loaded as async scripts and ran in the order they arrived. The test serves a repeated id in file b ("the first one wins"); under load file b sometimes ran first, its copy won, there were 6 chapters instead of 5 and every step number moved by one. Fix in js/tour.js: `async = false` (the files are still fetched together but run in the order asked for, so the first file's step always wins).
+2. `atStep` waited for the card to be "not busy", but the engine clears that mark as soon as the new words are on the card, before the lit box is placed and the focus is set (it first waits for the page to stop scrolling). The test read the lit box too early. It now waits for the engine's own `aria-busy` mark, and for the card's and the lit box's slide to end.
+3. Step 6, "a press outside the lit section is still stopped": the test button was inside the lit section, so the press went through the window in the dimmer, as designed. The page is now scrolled until the section starts below the button.
+4. Tab: since batch 1 the keyboard also reaches the lit part. The test now says the focus goes round the card and the lit section and never reaches the rest of the page.
+5. Demo mode on: the test set a function that js/demo-header.js (on every page) replaces. It now sets `window.WA_DEMO`.
+6. `s = await okSoon(...)` is `true` or `false`, not the card: a TypeError in the phone part ended the test early ("the test ran to the end") and hid everything after it, my checks for the small buttons included. Fixed in two places.
+
+**Review items (R2)**, in js/tour.js unless said:
+- The site's own photo links (`a[data-zoom]`, "View the printed menu") are no longer switched off; with the tour open the viewer opens (tested).
+- A link to this same page (`index.html`, `index.html?x=1`, an empty address, `./`) is switched off; only a link that differs after the `#` works. "/" and "/index.html" count as one page, but the browser loads the page again for a link that spells it the other way (the tour would be gone), so for such a link (`index.html#visit` on a page served as "/") the tour moves to the place by hand and the address stays as it is. Tested on "/" and on "index.html?tour".
+- The note of a switched-off link is also said in the card's polite line. `reachable()` no longer takes a disabled select or textarea.
+- The menu trap: docs/TOUR.md and the header of js/tour-steps.js say it (a lit part that opens something outside its own box needs `allowClicks: true`, or the opened part is lit itself); `tests/tour-targets.test.mjs` fails a step that does not (tried first on made-up samples). Every step passes it (62 looked at, at each width) except one in a file that is not mine:
+  - **For main: `js/tour-steps-c.js`, step `ch10-bell` (line ~367) needs `allowClicks: true`.** The bell opens `#demo-bell-panel`, which lies outside the bell's own box: the opened list would be dimmed and a click on it lost (Tab would reach it). Until the line is added, `tests/tour-targets.test.mjs` is red for that step only (4 lines: 2 widths x 2). I did not edit that file.
+- docs/TOUR.md and the header of js/tour-steps.js: `allowClicks` (nothing = the lit part can be used and links that leave are switched off; true = the whole page; false = nothing) and Tab (also reaches the lit part).

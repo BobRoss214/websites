@@ -26,7 +26,7 @@ To go to other pages the tour keeps the switch on for itself. With `?tour` it ta
 5. They can stop at any time. The next time they press the button, the welcome card has a **Continue where I stopped** button and says at which step they stopped. This works after the page was closed, and on another day, on the same computer and browser.
 6. Some steps are about parts of the site that change with the season (ten today: the strip, the first screen, the badges, the game, the countdown, This week, the two places, What's in season, What's on the farm, the trees at The GreenHouse). Their card has a row of four small buttons, **Spring, Summer, Fall and Winter** (the season walk, below). Pressing one switches the whole page to that season, the lit part stays lit, and the card says what the part shows now and what is different from the season before. **Next, Back, Contents and Close put the page back** as it was.
 
-Keys: the Right arrow is Next, the Left arrow is Back, Enter is Next, Esc closes. Tab and Shift+Tab stay inside the card. A screen reader hears each step once, politely.
+Keys: the Right arrow is Next, the Left arrow is Back, Enter is Next, Esc closes. Tab and Shift+Tab go round the card's buttons and, in a step that lights a part of the page, the things inside that lit part too (a question, a link); they never reach the rest of the page. A screen reader hears each step once, politely.
 On a phone the card is a sheet at the bottom of the screen and the lit box is moved above it.
 
 ## What it does to the page
@@ -44,7 +44,7 @@ On a phone the card is a sheet at the bottom of the screen and the lit box is mo
 
 ## How to add or change a step
 
-The steps are written in plain JavaScript files in the `js` folder: tour-steps.js (parts 1 to 5 and 11, and the helpers of the season walk), tour-steps-b.js (parts 6 to 9) and tour-steps-c.js (part 10, the pretend account). They are read only when the tour is opened. A file may be missing.
+The steps are written in plain JavaScript files in the `js` folder: tour-steps.js (parts 1 to 5 and 11, and the helpers of the season walk), tour-steps-b.js (parts 6 to 9) and tour-steps-c.js (part 10, the pretend account). They are read only when the tour is opened. A file may be missing. The files are fetched together but run in this order (tour-steps.js, then -b, then -c), so when two files use the same id, the first one's step is the one that shows.
 
 Each file adds its steps to one list:
 
@@ -58,7 +58,9 @@ Each file adds its steps to one list:
     target: '.hero-cta .btn-red',    // ONE CSS selector, or null for a card in the middle
     title: 'The Reserve button',
     text: 'It goes to your booking tool.\nA visitor can reserve in one tap.',   // plain text: \n is a line break, a line that starts with "- " is a bullet. 45 words at most
-    allowClicks: false,              // true: the owner may click the page while the card is up ("try it" steps)
+    // allowClicks (usually left out): without it the lit part can be used (a question opens, a tab changes), nothing else can, and a link that leaves the page is switched off.
+    //   allowClicks: true   the whole page may be used while the card is up ("try it" steps, and any step whose lit part opens something outside its own box, such as a menu bar with drop-down lists)
+    //   allowClicks: false  nothing can be clicked
     skipIfMissing: false,            // true: leave the step out when its target is not there (a card that only shows in some seasons)
     before: function (ctx) { /* runs before the card shows: open a menu, choose a tab ... may return a Promise */ },
     after: function (ctx) { /* runs when the step is left (and when the tour is closed on it) */ },
@@ -76,6 +78,7 @@ Without it the parts are called "Part 2" and so on.
 What to know:
 
 - **The target** is the first box that matches the selector and can be seen (it is not hidden, not inside a hidden box, and has a size). If you need something to point at, add an invisible `data-tour="name"` to the page and use `[data-tour="name"]`. Do not put one inside the top bar (the menu is rebuilt from time to time).
+- **Clicks.** A step with no `allowClicks` lets the owner use the lit part, but only inside its own box (the window cut in the dimmer is that box). A link that would take the visitor away does nothing but say so: another page, another website, an e-mail address, a phone number, or this same page loaded again (`index.html`, `index.html?x=1`, an empty address); only a link that differs after the `#` works, and so does the site's own photo link (`data-zoom`: it only opens the photo viewer). A form that would send something to another website is stopped the same way. **If the lit part has a button that opens something outside its own box** (a menu bar with drop-down lists), use `allowClicks: true`, or light the opened part itself (the language list step does): otherwise the list is dimmed and a click on it is lost. `tests/tour-targets.test.mjs` looks for this.
 - **before and after** may do anything with plain page code (click a button, open a menu). The engine waits up to 8 seconds for a Promise from `before` and 3 seconds for `after`, and an error in either is caught. Make them safe to run twice (the owner can press Back). `ctx` has `step`, `page`, `$` and `$$` (find boxes), `wait(ms)`, `waitFor(selectorOrFunction, ms)` (waits until something is on the page, gives it back, or gives back nothing after `ms`) and `undo(fn)` (runs `fn` when the tour closes). A menu left open (`aria-expanded="true"` with `aria-controls`) is closed by the engine when the tour closes, but tabs and other choices are not: put them back in `after`.
 - **Another page**: a step with another `page` makes the tour go there and carry on when it has loaded. Never move the page inside `before`. The next page continues from the tour's own place in the browser, so the switch must be on there too (see "How to show it").
 - **The pretend account pages** (account, farm-desk, kitchen) only exist in demo mode. When demo mode is off (`WA_DEMO_MODE()` is false) their steps are left out completely: they are not counted and not in Contents.
@@ -145,11 +148,11 @@ On a phone the site's own style leaves out a few words (the “In season:” par
 
 | File | What it is |
 | --- | --- |
-| `js/tour.js` | the engine (one script, the last one on every page) |
+| `js/tour.js` | the engine (one script, after the site's own scripts on every page; the three pretend-account pages add their own scripts after it) |
 | `css/tour.css` | its look |
-| `tests/tour.test.mjs` | the engine, with made-up steps: the button, the welcome card, a walk through the steps, the lit box and the card, keys, other pages, stopping and continuing, the small buttons of a step (`choices`), calm mode, a phone |
-| `tests/tour-off.test.mjs` | with the switch off nothing changes on any page |
-| `tests/tour-targets.test.mjs` | the real steps: their words, their targets on the real pages (1440 and 390 px, six days), and every small button of every step pressed in turn, the quoted words checked against the lit box |
+| `tests/tour.test.mjs` | the engine, with made-up steps: the button, the welcome card, a walk through the steps, the lit box and the card, keys, links that leave the page, other pages, stopping and continuing, the small buttons of a step (`choices`), calm mode, a phone |
+| `tests/tour-off.test.mjs` | with the switch off nothing changes on any page (`js/tour.js` comes after the site's own scripts; a page's own scripts come after it) |
+| `tests/tour-targets.test.mjs` | the real steps: their words, their targets on the real pages (1440 and 390 px, six days), and every small button of every step pressed in turn, the quoted words checked against the lit box, and no lit part that opens something outside its own box unless the step says `allowClicks: true` |
 | `tests/tour-seasons.test.mjs` | the season walk with the real engine and the real steps, on a fall day and a spring day: the whole page changes, Next / Back / Contents / Esc / Finish put it back, a phone, the keyboard, the whole tour walked |
 
 Run them with `node tests/run-all.mjs tour tour-off tour-targets tour-seasons`, as described in `tests/README.md`.
