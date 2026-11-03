@@ -24,10 +24,10 @@ ok('index.html has the section id="first-visit" (once)', a >= 0 && index.split('
 ok('it has a heading and the one button to the full page at the end', /<h2[^>]*id="fv-h"/.test(sec) && sec.trimEnd().match(/<a [^>]*href="first-visit\.html"[^>]*>[^<]*Open the full first-visit guide/) !== null && (sec.match(/href="first-visit\.html"/g) || []).length === 1);
 
 // the places that said first-visit.html now say #first-visit (the FAQ buttons keep first-visit.html#parking, #strollers, #checklist: they are not the menu)
-const hrefs = (re) => [...index.matchAll(re)].map((m) => m[1]);
 const visitList = (txt) => ((txt.match(/<ul class="nav-group-list" id="nav-list-visit"[^>]*>([\s\S]*?)<\/ul>/) || [])[1] || '');
 ok('the Visit list of the menu has one First-visit guide line and it links to #first-visit', [...visitList(index).matchAll(/<a [^>]*href="([^"]*)">First-visit guide<\/a>/g)].map((m) => m[1]).join(' ') === '#first-visit');
-ok('the footer link and the "First time at Wise Acres?" line link to #first-visit', hrefs(/<li><a [^>]*href="([^"]*)">First-visit guide<\/a><\/li>/g).join(' ') === '#first-visit' && /class="first-time[^"]*">.*?<a href="#first-visit">/.test(index));
+const footerHtml = index.slice(index.indexOf('<footer class="site-footer">'));   // (the menu's own line is checked above; it is written the same way, so look in the footer only)
+ok('the footer link and the "First time at Wise Acres?" line link to #first-visit', footerHtml.length > 100 && [...footerHtml.matchAll(/<li><a [^>]*href="([^"]*)">First-visit guide<\/a><\/li>/g)].map((m) => m[1]).join(' ') === '#first-visit' && /class="first-time[^"]*">.*?<a href="#first-visit">/.test(index));
 const plain = [...index.matchAll(/href="first-visit\.html"/g)].length;
 ok('the only link to first-visit.html (without a place in it) on the home page is the button at the end of the guide', plain === 1, plain === 1 ? '' : plain + ' found');
 
@@ -87,7 +87,7 @@ function check(label, st, wide, lang, navigations) {
   ok(`${label}: no other page was loaded`, navigations.every((u) => /\/index\.html/.test(u) || /\/host\.html/.test(u) || u === 'about:blank'), navigations.join(' | '));
   ok(`${label}: the guide is at the top of the screen, just under the header, not the bottom of the page`, st.top >= 0 && st.top <= st.header + 40 && st.fromBottom > 600, `top ${st.top}, header ${st.header}, ${st.fromBottom}px above the bottom`);
   ok(`${label}: the menu is closed again`, wide ? !st.listOpen : !st.menuOpen && !st.locked, JSON.stringify({ list: st.listOpen, menu: st.menuOpen, locked: st.locked }));
-  ok(`${label}: the First-visit guide line is highlighted (in its list${wide ? ', and the Visit button' : ', in the phone menu'}), the "The two places & hours" line is not`, st.visitLine === false && st.guideLine && st.visitButton, JSON.stringify(st));
+  ok(`${label}: the First-visit guide line is highlighted (in its list${wide ? ', and the Visit button' : ', in the phone menu'}), the "Hours & locations" line is not`, st.visitLine === false && st.guideLine && st.visitButton, JSON.stringify(st));
   ok(`${label}: the cards are shown (the fade-in ran)`, st.shown);
   ok(`${label}: the page is in ${lang}`, st.lang.slice(0, 2) === lang, st.lang);
 }

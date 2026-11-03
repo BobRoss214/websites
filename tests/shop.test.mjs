@@ -9,7 +9,8 @@
  *      published page had before are named in the list file); the groups are the list's groups
  *   2  the prices: the dollar amounts of each card are the list's (with their small words: small / large, 1 scoop, 8 oz, a pound; a range like $15 to $17
  *      shows both ends), a price the farm has not confirmed shows the page's own "Prices coming soon" and no dollar sign, free things say free, and no
- *      number appears that the list does not give (the pizza prices and hours and the ages of the two rides are the farm's older words and are in the list);
+ *      number appears that the list does not give (the pizza prices and hours and the barrel train's age are the farm's older words and are in the list; the
+ *      wagon ride's age, 3 and younger ride free, is the site builder's of Nov 3 2026 and the card must say it word for word);
  *      the sentences the list makes a card say are there (the pretzel's nuts, "the same price" for beer and wine, the pumpkin note), and the words that
  *      were taken out on purpose do not come back
  *   3  the pictures: every <use href="#p-..."> has its <symbol>, none is empty, each card shows the picture of its own product, no picture serves two
@@ -18,7 +19,8 @@
  *      as written, and "pound" stays in Vietnamese because the site's other Vietnamese texts say it)
  *   6  links: every #shop... link in the site's html pages has its target; each jump button lands its group under the sticky header and is named for it
  *      (two buttons are named for a card of their group, because the top menu has links called Pizza and Flowers that go elsewhere)
- *   7  layout at 320, 360, 390, 768, 1024, 1366 and 1920 px wide (and the long languages on a phone): nothing sideways, no cut text, 2 / 3 / 4 columns,
+ *   7  layout at 320, 360, 390, 768, 1024, 1366 and 1920 px wide (and the long languages on a phone): nothing sideways, no cut text, 2 / 3 / 4 / 5 columns
+ *      (5 over 1180 px, 4 over 992 px, 3 over 760 px, 2 below), the ice cream and pizza groups side by side over 992 px and stacked below it,
  *      every group fades in when it is scrolled to (none stays invisible)
  *   8  reading aids: pictures hidden from screen readers, every card in a list item, heading order, readable price text (and axe, when it is installed)
  *   9  (information) how tall #shop is on a computer and on a phone
@@ -205,7 +207,10 @@ function readLayout(SEL) {
     function clean(s) { return String(s).replace(/\s+/g, ' ').trim(); }
   });
   const sh = shop.getBoundingClientRect();
-  return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut };
+  // the ice cream group and the pizza group: side by side from 62em (css/extras.css, "#shop > .wrap"). offsetTop and offsetWidth are not moved by the groups' fade-in.
+  const ice = shop.querySelector('.shop-group.sg-icecream'), pie = shop.querySelector('.shop-group.sg-pizza');   // (the jump buttons carry the same colour classes)
+  const pair = ice && pie ? { topA: ice.offsetTop, topB: pie.offsetTop, wA: ice.offsetWidth, wB: pie.offsetWidth, wrapW: ice.parentElement.clientWidth } : null;
+  return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, pair };
 }
 function contrastOf() {   // the text colour against what is behind it, for every part that carries a price, "Prices coming soon" or "Free"
   const lum = (r, g, b) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
@@ -540,9 +545,13 @@ await run('shop', async ({ browser, base, errs }) => {
     ok(`7: ${tag}: no sideways scroll: the page and #shop fit the ${rec.innerWidth}px window`, rec.pageW <= rec.innerWidth + 1 && rec.shopW <= rec.shopClientW + 1 && rec.shopLeft >= -1 && rec.shopRight <= rec.innerWidth + 1 && !mine.some((q) => q.kind === 'sideways' || q.kind === 'sideways-culprit' || q.kind === 'sticks-out') , `page ${rec.pageW}, #shop ${rec.shopW}/${rec.shopClientW} at ${rec.shopLeft}..${rec.shopRight}; ${few(shopProblems.filter((s) => /^(sideways|sticks)/.test(s)), 3)}`);
     ok(`7: ${tag}: no text is cut off in #shop (names, prices, notes, labels: nothing wider or taller inside than its box, nothing shortened with "...")`, rec.cut.length === 0 && !mine.some((q) => q.inShop && /^(clipped-text|ellipsis|button-cut|overlap|tofu)$/.test(q.kind)), few(rec.cut.concat(shopProblems.filter((s) => /^(clipped|ellipsis|button-cut|overlap|tofu)/.test(s))), 4));
     ok(`7: ${tag}: no picture in #shop is stretched, squeezed or broken, no button label runs over 4 lines`, !mine.some((q) => q.inShop && /^(img-|button-wrap)/.test(q.kind) && (q.kind !== 'button-wrap' || Number((/over (\d+) lines/.exec(q.info) || [, 9])[1]) >= 4)), few(shopProblems.filter((s) => /^(img-|button-wrap)/.test(s)), 4));
-    const want = w >= 1100 ? [4] : w >= 700 ? [3] : w >= 340 ? [2] : [1, 2];
-    const wantOk = w === 1024 ? [3, 4] : want;
-    ok(`7: ${tag}: the product grids show ${wantOk.join(' or ')} columns (${w < 700 ? 'a phone' : w < 1100 ? 'a tablet' : 'a wide computer'})`, rec.grids.length > 0 && rec.grids.every((g) => wantOk.includes(g.cols)), rec.grids.map((g) => `${g.id}: ${g.cols} of ${g.cards}`).join(', '));
+    // the Store is dense (css/extras.css, ".shop"): 5 cards across over 73.75em (1180 px), 4 over 62em (992 px), 3 over 47.5em (760 px), 2 below. A group with fewer cards fills its one row.
+    const want = w > 1180 ? [5] : w > 992 ? [4] : w > 760 ? [3] : w >= 340 ? [2] : [1, 2];
+    ok(`7: ${tag}: the product grids show ${want.join(' or ')} columns (${w <= 760 ? 'a phone' : w <= 992 ? 'a tablet' : w <= 1180 ? 'a laptop' : 'a wide computer'}; a group with fewer cards fills one row)`, rec.grids.length > 0 && rec.grids.every((g) => want.some((n) => g.cols === Math.min(n, g.cards))), rec.grids.map((g) => `${g.id}: ${g.cols} of ${g.cards}`).join(', '));
+    // from 62em (992 px) the ice cream group and the pizza group (a wide card each) share a row; below it they are stacked
+    const pr = rec.pair, beside = w > 992;
+    ok(`7: ${tag}: the ice cream group and the pizza group ${beside ? 'sit side by side, each about half the width' : 'are stacked, one above the other, each the whole width'}`,
+      !!pr && (beside ? Math.abs(pr.topA - pr.topB) <= 2 && Math.abs(pr.wA - pr.wB) <= 2 && pr.wA >= pr.wrapW * 0.4 && pr.wA <= pr.wrapW * 0.55 : pr.topB > pr.topA + 40 && pr.wA >= pr.wrapW - 2 && pr.wB >= pr.wrapW - 2), JSON.stringify(pr));
     return rec;
   };
   const heights = {};

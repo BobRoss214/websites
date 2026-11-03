@@ -306,8 +306,10 @@ async function popupRun(browser, base, size) {
     if (!opened) continue;
     if (!pop.modal) {
       let left = 0;
-      for (let i = 1; i <= 30 && !left; i++) { await p.keyboard.press('Tab'); await p.clock.runFor(50); if (!(await inside())) left = i; }
-      rows.push([`keyboard: ${pop.name} is no keyboard trap (Tab leaves it)`, left > 0, left ? `after ${left} Tab(s)` : 'still inside after 30']);
+      // Tab must be able to walk past every control of the menu (the phone menu has all 37 lines) and then leave: the limit is the number of controls in it plus 10, never less than 30
+      const cap = Math.max(30, 10 + await p.evaluate((w) => document.querySelectorAll(w + ' a[href], ' + w + ' button, ' + w + ' input, ' + w + ' select, ' + w + ' textarea, ' + w + ' [tabindex]').length, pop.within));
+      for (let i = 1; i <= cap && !left; i++) { await p.keyboard.press('Tab'); await p.clock.runFor(50); if (!(await inside())) left = i; }
+      rows.push([`keyboard: ${pop.name} is no keyboard trap (Tab leaves it)`, left > 0, left ? `after ${left} Tab(s)` : `still inside after ${cap}`]);
       if (!(await p.evaluate(pop.isOpen))) { await p.focus(pop.trigger); await p.keyboard.press('Enter'); await p.clock.runFor(300); }
     }
     await p.keyboard.press('Escape'); await p.clock.runFor(400);

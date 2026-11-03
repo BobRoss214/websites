@@ -120,7 +120,7 @@ const FACTS = [
   { id: 'price: extra per person in the pizza package, the photo passes\' farm fee and the no-pizza field fee', norm: money, min: 9, find: [
     new RegExp('Includes \\d+ Wise Pie pizzas, plus ' + MONEY + ' per person'), new RegExp('\\+ ' + MONEY + ' per person farm fee'),
     new RegExp('No pizza \\| (?:[^$|]+\\| )?' + MONEY + ' per person'), new RegExp('Farm fun, no pizza \\| ' + MONEY), new RegExp('farm fun without pizza is ' + MONEY + ' per person')] },
-  { id: 'price: corn pit, per person', norm: money, min: 5, find: [new RegExp('Corn pit[ |]{1,4}' + MONEY + ' per person'), new RegExp('corn pit \\(' + MONEY + ' per person\\)'), new RegExp('the corn pit is ' + MONEY + ' per person')] },
+  { id: 'price: corn pit, per person', norm: money, min: 5, find: [new RegExp('Corn pit[ |]{1,4}' + MONEY + ' per person'), new RegExp('corn pit \\(' + MONEY + ' per person\\)'), new RegExp('[Tt]he corn pit is ' + MONEY + ' per person')] },   /* "The corn pit is $4 per person" now starts a sentence in the pumpkin patch FAQ (the wagon ride age is said before it) */
   { id: 'price: wagon ride, per person', norm: money, min: 5, find: [new RegExp('Wagon ride[ |]{1,4}' + MONEY + ' per person'), new RegExp('wagon ride \\(' + MONEY + ' per person\\)'), new RegExp('Wagon rides are ' + MONEY + ' per person')] },
   { id: 'price: barrel train, per child', norm: money, min: 4, find: [new RegExp('Barrel train[ |]{1,4}' + MONEY + ' per child'), new RegExp('barrel train is ' + MONEY + ' per child')] },
   { id: 'price: tomatoes, per pound', norm: money, min: 5, find: [new RegExp(MONEY + ' per pound')] },
@@ -156,7 +156,7 @@ const FACTS = [
     extra: () => [{ file: 'js/content.js', line: contentLine(/greenhouse:/), value: dayList(CONTENT.hours.greenhouse.days), words: 'hours.greenhouse.days' }, { file: 'js/content.js', line: contentLine(/pizza:\s*\{/), value: dayList(CONTENT.hours.pizza.days), words: 'hours.pizza.days' }, ...stripDays('GreenHouse')] },
   /* ---- ages ---- */
   { id: 'age: free (infants, party children)', norm: num, min: 8, find: [/[Ii]nfants (\d+) and under are free/, /[Cc]hildren (\d+) and under are free/, /[Cc]hildren age (\d+) and younger are free/] },
-  { id: 'age: wagon ride free', norm: num, min: 3, find: [/[Aa]ges (\d+) and younger ride (?:the wagon )?free/] },
+  { id: 'age: wagon ride free', norm: num, min: 8, find: [/[Aa]ges (\d+) and younger ride (?:the wagon )?free/] },
   { id: 'age: from this age people pay the field fee / school admission', norm: num, min: 11, find: [/[Aa]ges (\d+) and up/, /\(ages (\d+)\+\)/, /ages (\d+) and older/, /ages (\d+) and up/] },
   { id: 'age: barrel train (and under only)', norm: num, min: 3, find: [/Ages (\d+) and under only/] },
   /* ---- group sizes ---- */

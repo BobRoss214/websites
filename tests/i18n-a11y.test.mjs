@@ -9,7 +9,8 @@ import { run, open, ok, okSoon, until, txt } from './lib.mjs';
 
 const EXTRA = `WISE_ACRES.signup.demo = true;`;
 const HTML_LANG = { en: 'en', es: 'es', hi: 'hi', zh: 'zh-Hans', vi: 'vi' };
-const BUTTON = { en: 'Language: English', es: 'Idioma: Español', hi: 'भाषा: हिन्दी', zh: '语言：中文', vi: 'Ngôn ngữ: Tiếng Việt' };
+// the language button's name: the word, the language, and (except in Chinese, where the button's own words are the name) the short code on the button, so the words you see are in the name (WCAG 2.5.3)
+const BUTTON = { en: 'Language: English, EN', es: 'Idioma: Español, ES', hi: 'भाषा: हिन्दी, हिं', zh: '语言：中文', vi: 'Ngôn ngữ: Tiếng Việt, VI' };
 const NOW = { es: 'ahora', hi: 'अभी', zh: '现在', vi: 'bây giờ' };
 const MENU = { es: ['Abrir menú', 'Cerrar menú'], hi: ['मेनू खोलें', 'मेनू बंद करें'], zh: ['打开菜单', '关闭菜单'], vi: ['Mở menu', 'Đóng menu'] };
 
@@ -44,7 +45,7 @@ await run('i18n-a11y', async ({ browser, base, errs }) => {
   const en = await open(browser, base, 'index.html', errs, { extra: EXTRA });
   const enTitle = await en.title();
   const enDesc = await en.evaluate(() => document.querySelector('meta[name=description]').content);
-  ok('English: html lang = en, no wrapper, the button says "Language: English"', (await en.evaluate(() => document.documentElement.lang)) === 'en' && (await en.locator('wa-en').count()) === 0 && (await en.getAttribute('.lang-btn', 'aria-label')) === BUTTON.en, await en.getAttribute('.lang-btn', 'aria-label'));
+  ok('English: html lang = en, no wrapper, the button says "Language: English, EN"', (await en.evaluate(() => document.documentElement.lang)) === 'en' && (await en.locator('wa-en').count()) === 0 && (await en.getAttribute('.lang-btn', 'aria-label')) === BUTTON.en, await en.getAttribute('.lang-btn', 'aria-label'));
   ok('no page sets a text direction (none of the languages is right to left)', await en.evaluate(() => !document.querySelector('[dir]') && getComputedStyle(document.documentElement).direction === 'ltr'));
 
   for (const lang of ['es', 'hi', 'zh', 'vi']) {
