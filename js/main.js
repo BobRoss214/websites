@@ -384,110 +384,193 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Hero: the bee
+   * Hero: the bee and the butterfly
    *
-   * The bee flies on the compositor. Each leg of its flight is ONE animation of the transform of #bee-fly (started when it picks a
-   * new spot); the bobbing and tilting is an endless CSS loop on the drawing inside (css/styles.css). Nothing runs per frame: a
-   * drawing frame of the hero costs the browser far more than the bee is worth, because every endless loop in the scene is
-   * restyled and repainted with it, and the old frame-by-frame bee asked for one all the time.
+   * What follows the pointer is a bee or a butterfly. The page picks one at random when it loads, and every 45 to 75 seconds (random) while the
+   * visitor stays it flies off the edge of the hero and comes back as the other kind. The address can pick the kind instead (?critter=bee or
+   * ?critter=butterfly; only this page reads it, nothing is stored): then it stays that kind, which is what the tests and a person showing the
+   * page need. window.WISE_ACRES.critter.kind says which one it is, and .swap() starts the change at once.
+   * Both kinds fly the same way. Each leg of the flight is ONE animation of the transform of #bee-fly (started when it picks a new spot); the
+   * wings and the bobbing are endless CSS loops on the drawing inside (css/styles.css). Nothing runs per frame: a drawing frame of the hero costs
+   * the browser far more than the creature is worth, because every endless loop in the scene is restyled and repainted with it, and the old
+   * frame-by-frame bee asked for one all the time.
    * (The flight must move a <div>: an <svg> element moved by the `translate` property is not run by the compositor.)
-   * It follows the pointer a couple of times a second, and wanders when nobody is moving one. It only flies while the hero is
-   * on screen, the tab is visible and the season shows a bee (the CSS hides it in winter).
+   * The bee goes straight and fast, and turns to face the way it goes. The butterfly takes longer and curves: each leg has a few keyframes along an
+   * arc with a little wobble, bending to the other side every time, and it banks a little towards the way it goes.
+   * It follows the pointer a couple of times a second, and wanders when nobody is moving one. It settles next to the hero's own buttons and cards
+   * instead of on them (it may fly over them, not rest on them), so it never hides one for long.
+   * What parks it (and nothing else): the hero is scrolled out of sight, the tab is hidden, the season is winter (the CSS hides it), or the visitor
+   * pressed "Pause animations" (data-calm="all"). The page's own calm mode (data-calm="light" or "most", set when the hero struggles on a slow
+   * computer) rests only the endless loops (wings, bobbing: see initMotion); the flight stays, because a flight is one compositor animation that costs
+   * next to nothing. It used to park the bee for good on any data-calm, and the page never took the calm mode back, so a bee that had once been
+   * frozen by a slow moment stayed frozen until the page was loaded again.
+   * Where it is (when a leg is cut short, or parked) is read from the leg's own animation, not worked out from a clock of ours.
+   * A pointer over the hero proves that the hero is on screen, whatever an observer last said (a viewer that shows the page in a frame can be wrong
+   * about that), so a pointer wakes a creature that was parked by mistake. With "reduce motion" it is not shown at all.
    * ------------------------------------------------------------------ */
   function initBee() {
     const hero = $('#top');
-    const bee = $('#bee-fly');
+    const bee = $('#bee-fly');                  // the box that flies; the bee and the butterfly are both drawn inside it, one of them shown (data-kind)
     if (!hero || !bee) return;
     if (reduceMotion || !bee.animate) { bee.setAttribute('hidden', ''); return; }
 
-    // How one leg moves: it closes on the spot quickly and settles slowly (like the old per-frame glide). The same curve is used
-    // for the animation and, here, to know where the bee is part-way through a leg.
-    const CURVE = [0.2, 0.9, 0.4, 0.95], LEG = 1700;
-    const bez = (u) => {
-      const [x1, y1, x2, y2] = CURVE;
-      const at = (t, a, b) => 3 * (1 - t) * (1 - t) * t * a + 3 * (1 - t) * t * t * b + t * t * t;
-      let lo = 0, hi = 1;
-      for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (at(m, x1, x2) < u) lo = m; else hi = m; }
-      return at((lo + hi) / 2, y1, y2);
+    // How a leg moves: it closes on the spot quickly and settles slowly (like the old per-frame glide). The butterfly's legs are a little slower and softer.
+    const KINDS = {
+      bee: { leg: 1700, curve: [0.2, 0.9, 0.4, 0.95], rest: [2200, 2600] },                // rest: how long it stays before it visits another spot (ms: least, then up to this much more)
+      butterfly: { leg: 2300, curve: [0.3, 0.75, 0.35, 1], rest: [1500, 2200] },
     };
+    const HUES = ['monarch', 'morpho', 'admiral'];   // the butterfly's colours (css/styles.css)
+    const BW = 52, BH = 40;                     // the box (px): what has to be clear of a button
+    const asked = new URLSearchParams(location.search).get('critter');
+    const pinned = asked === 'bee' || asked === 'butterfly' ? asked : '';
+    const later = () => 45000 + Math.random() * 30000;   // the next change of kind
 
     let w = hero.clientWidth, h = hero.clientHeight;
-    let x = w * 0.2, y = h * 0.55;             // where the bee is, or was when the current leg began
-    let leg = null;                             // the leg in flight: { anim, t0, x0, y0, x1, y1 }
-    let facing = 1, lastMove = 0, lastFly = 0, wanderAt = 0, px = 0, py = 0, moved = false;
-    let onScreen = false, running = false, followTimer = 0, wanderTimer = 0;
-    const pose = (a, b, f) => `translate(${a.toFixed(1)}px, ${b.toFixed(1)}px) scaleX(${f})`;   // scaleX turns it to face the way it flies
-    const place = () => { bee.style.transform = pose(x, y, facing); };
-    place();
+    let x = w * 0.2, y = h * 0.55, tilt = 0;    // where it is, or was when the current leg began (tilt: the butterfly's lean, in degrees)
+    let kind = pinned || (Math.random() < 0.5 ? 'bee' : 'butterfly');
+    let leg = null;                             // the leg in flight: { anim, pts, r0, r1 }
+    let facing = 1, bend = 1, lastMove = 0, lastFly = 0, wanderAt = 0, swapAt = pinned ? Infinity : performance.now() + later(), px = 0, py = 0, moved = false;
+    let onScreen = false, running = false, followTimer = 0, wanderTimer = 0, swapTimer = 0, leaving = 0;   // leaving: -1 or 1, the side it flies out of while it changes kind
+    const clamp2 = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
-    const here = (now) => {
-      if (!leg) return [x, y];
-      const e = bez(Math.min(1, (now - leg.t0) / LEG));
-      return [leg.x0 + (leg.x1 - leg.x0) * e, leg.y0 + (leg.y1 - leg.y0) * e];
+    const setKind = (k) => {
+      kind = k; bee.dataset.kind = k;
+      if (k === 'butterfly') bee.dataset.hue = HUES[Math.floor(Math.random() * HUES.length)];
+    };
+    const pose = (a, b, f, r) => `translate(${a.toFixed(1)}px, ${b.toFixed(1)}px) ` + (kind === 'bee' ? `scaleX(${f})` : `rotate(${r.toFixed(1)}deg)`);   // scaleX turns the bee to face the way it flies
+    const place = () => { bee.style.transform = pose(x, y, facing, tilt); };
+    setKind(kind); place();
+    bee.classList.add('is-ready');
+
+    const here = () => {                        // where it is right now, part-way through a leg: [x, y, tilt]
+      if (!leg) return [x, y, tilt];
+      const p = leg.anim.effect.getComputedTiming().progress;   // the leg's progress after its easing (null before the first frame draws it)
+      const e = typeof p === 'number' ? clamp2(p, 0, 1) : 0, n = leg.pts.length - 1, i = Math.min(n - 1, Math.floor(e * n)), f = e * n - i;
+      const a = leg.pts[i], b = leg.pts[i + 1];
+      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, leg.r0 + (leg.r1 - leg.r0) * e];
+    };
+    // the points one leg passes: the bee, two (a straight line); the butterfly, seven along an arc with a little wobble, bending to the other side each time
+    const route = (x0, y0, x1, y1) => {
+      const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy);
+      if (kind === 'bee' || d < 24) return [[x0, y0], [x1, y1]];
+      const nx = -dy / d, ny = dx / d, amp = Math.min(70, 14 + d * 0.16) * bend, pts = [];
+      for (let i = 0; i <= 6; i++) { const t = i / 6, off = Math.sin(Math.PI * t) * amp + Math.sin(3 * Math.PI * t) * amp * 0.25; pts.push([x0 + dx * t + nx * off, y0 + dy * t + ny * off]); }
+      return pts;
     };
     const fly = (tx, ty) => {
-      const now = performance.now();
-      [x, y] = here(now);
-      if (Math.abs(tx - x) > 6) facing = tx > x ? 1 : -1;
+      const now = performance.now(), K = KINDS[kind];
+      [x, y, tilt] = here();
+      if (kind === 'bee' && Math.abs(tx - x) > 6) facing = tx > x ? 1 : -1;
+      const pts = route(x, y, tx, ty), r0 = tilt, r1 = kind === 'butterfly' ? clamp2((tx - x) / 12, -18, 18) : 0;
+      bend = -bend;
       const prev = leg;
-      const anim = bee.animate([{ transform: pose(x, y, facing) }, { transform: pose(tx, ty, facing) }],
-        { duration: LEG, easing: 'cubic-bezier(' + CURVE.join(',') + ')', fill: 'forwards' });
-      leg = { anim, t0: now, x0: x, y0: y, x1: tx, y1: ty };
+      const anim = bee.animate(pts.map(([a, b], i) => ({ transform: pose(a, b, facing, r0 + (r1 - r0) * i / (pts.length - 1)) })),
+        { duration: K.leg, easing: 'cubic-bezier(' + K.curve.join(',') + ')', fill: 'forwards' });
+      leg = { anim, pts, r0, r1 };
       lastFly = now;
       if (prev) prev.anim.cancel();
     };
 
+    // The hero's own buttons and cards: the creature settles next to them, not on them. The box's top-left corner is moved to the nearest spot, just above,
+    // below or beside a button, where the box touches none of them (the pointer keeps the button, the creature keeps the pointer company).
+    const keep = $$('.hero-cta a, .hero-note, .hero-note a, .season-switch, .chips a, .picker', hero);
+    const clearOf = (tx, ty) => {
+      const r = hero.getBoundingClientRect();
+      const boxes = keep.filter((el) => el.getClientRects().length).map((el) => { const b = el.getBoundingClientRect(); return [b.left - r.left - BW + 2, b.top - r.top - BH + 2, b.right - r.left - 2, b.bottom - r.top - 2]; });   // where the box's corner would touch the button
+      const inside = (b, cx, cy) => cx > b[0] && cx < b[2] && cy > b[1] && cy < b[3];
+      if (!boxes.some((b) => inside(b, tx, ty))) return [tx, ty];
+      const spots = [];
+      boxes.forEach((b) => spots.push([tx, b[1]], [tx, b[3]], [b[0], ty], [b[2], ty]));
+      const free = spots.filter((c) => c[0] >= -BW / 2 && c[0] <= w - BW / 2 && c[1] >= 0 && c[1] <= h - BH && !boxes.some((b) => inside(b, c[0], c[1])))
+        .sort((a, b) => Math.hypot(a[0] - tx, a[1] - ty) - Math.hypot(b[0] - tx, b[1] - ty));
+      return free.length ? free[0] : [tx, ty];
+    };
+
     const follow = () => {                      // someone is moving the pointer over the hero: go there (twice a second at most)
       followTimer = 0;
-      if (!running || !moved) return;
+      if (!running || !moved || leaving) return;
       moved = false;
       const r = hero.getBoundingClientRect();
-      fly(px - r.left - 26, py - r.top - 24);
+      fly(...clearOf(px - r.left - 26, py - r.top - 24));
     };
     const wander = () => {                      // nobody is moving one: visit the field now and then
       wanderTimer = 0;
       if (!running) return;
-      const now = performance.now();
-      if (now - lastMove > 2500 && now >= wanderAt) {
-        fly(w * (0.08 + Math.random() * 0.84), h * (0.5 + Math.random() * 0.36));
-        wanderAt = now + 2200 + Math.random() * 2600;
+      const now = performance.now(), K = KINDS[kind];
+      if (!leaving && now >= swapAt) swap();
+      else if (!leaving && now - lastMove > 2500 && now >= wanderAt) {
+        fly(...clearOf(w * (0.08 + Math.random() * 0.84), h * (0.5 + Math.random() * 0.36)));
+        wanderAt = now + K.rest[0] + Math.random() * K.rest[1];
       }
       wanderTimer = setTimeout(wander, Math.max(250, 2500 - (now - lastMove), wanderAt - now));   // when both waits are over
     };
+    // The change of kind: it flies out over the nearer side edge of the hero (the hero hides what is outside it), and when that flight is over the
+    // other kind is put there and flies in from the same side, to the pointer if it has just been moved, else to a spot in the field.
+    function swap() {
+      if (leaving || !running) return;
+      clearTimeout(followTimer); followTimer = 0;
+      const [cx, cy] = here();
+      leaving = cx < w / 2 ? -1 : 1;
+      fly(leaving < 0 ? -BW - 40 : w + 40, clamp2(cy - 30, 0, h - BH));
+      swapTimer = setTimeout(arrive, KINDS[kind].leg + 150);
+    }
+    function arrive() {
+      swapTimer = 0;
+      const side = leaving; leaving = 0;
+      if (leg) { leg.anim.cancel(); leg = null; }
+      const r = hero.getBoundingClientRect(), now = performance.now();
+      setKind(kind === 'bee' ? 'butterfly' : 'bee');
+      swapAt = pinned ? Infinity : now + later();
+      wanderAt = now + KINDS[kind].rest[0];   // it does not set off again the moment it is back
+      if (!running) { x = side < 0 ? 12 : w - BW - 12; y = clamp2(y, 40, h - BH - 12); place(); return; }   // parked (Pause, a hidden tab) while it was away: it is back where it can be seen
+      x = side < 0 ? -BW - 40 : w + 40; place();
+      const near = now - lastMove < 3000;
+      fly(...clearOf(near ? px - r.left - 26 : w * (0.15 + Math.random() * 0.7), near ? py - r.top - 24 : h * (0.5 + Math.random() * 0.3)));
+      moved = false;
+    }
     const onMove = (e) => {
       px = e.clientX; py = e.clientY; moved = true; lastMove = performance.now();
+      if (!onScreen) { onScreen = true; sync(); }   // a pointer here: the hero is on screen
       if (running && !followTimer) followTimer = setTimeout(follow, Math.max(0, 450 - (lastMove - lastFly)));
     };
     hero.addEventListener('pointermove', onMove, { passive: true });
     hero.addEventListener('pointerdown', onMove, { passive: true });
     addEventListener('resize', () => { w = hero.clientWidth; h = hero.clientHeight; }, { passive: true });
 
-    const sync = () => {
-      const on = onScreen && !doc.hidden && root.getAttribute('data-season') !== 'winter' && !root.hasAttribute('data-calm');
+    function sync() {
+      const on = onScreen && !doc.hidden && root.getAttribute('data-season') !== 'winter' && root.getAttribute('data-calm') !== 'all';
       if (on === running) return;
       running = on;
-      if (running) { lastMove = Math.min(lastMove, performance.now() - 2000); wanderTimer = setTimeout(wander, 600); return; }
+      if (running) {
+        const now = performance.now();
+        lastMove = Math.min(lastMove, now - 2000); swapAt = Math.max(swapAt, now + 8000);   // not at once after a visitor comes back
+        wanderTimer = setTimeout(wander, 600);
+        return;
+      }
       clearTimeout(followTimer); clearTimeout(wanderTimer); followTimer = wanderTimer = 0;
-      if (leg) { [x, y] = here(performance.now()); place(); leg.anim.cancel(); leg = null; }   // park it where it is
-    };
+      if (leg) { [x, y, tilt] = here(); place(); leg.anim.cancel(); leg = null; }   // park it where it is
+      if (leaving) { clearTimeout(swapTimer); arrive(); }                           // away while it changed kind: it comes back, parked, in the other kind
+    }
     if ('IntersectionObserver' in window) new IntersectionObserver((entries) => { onScreen = entries[entries.length - 1].isIntersecting; sync(); }).observe(hero);
-    else { onScreen = true; sync(); }   // no observer: the bee just keeps going
+    else { onScreen = true; sync(); }   // no observer: it just keeps going
     doc.addEventListener('visibilitychange', sync);
     doc.addEventListener('wa:season', sync);
-    doc.addEventListener('wa:calm', sync);   // "Pause animations" or the calm mode: it lands where it is
+    doc.addEventListener('wa:calm', sync);   // "Pause animations" parks it where it is; the calm mode (light, most) does not touch it
+    W.critter = { get kind() { return kind; }, swap };
   }
 
   /* ------------------------------------------------------------------ *
    * Motion: the "Pause animations" buttons and the automatic calm mode
    *   One switch on <html>, data-calm, set here and read by the scripts (the bee) and the CSS (the hero's layers):
    *     (not set)         everything moves as drawn
-   *     data-calm="light" the page found the hero struggling (a slow phone): the bee and the smallest decorations of the hero
-   *                       rest (sparks, smoke puffs, swaying flowers, falling leaves and snow, butterflies, the little bees, tree lights)
+   *     data-calm="light" the page found the hero struggling (a slow phone): the smallest decorations of the hero rest (sparks,
+   *                       smoke puffs, swaying flowers, falling leaves and snow, butterflies, the little bees, tree lights, and the
+   *                       wings and bobbing of the bee that follows the pointer; the bee itself keeps flying and following)
    *     data-calm="most"  still struggling after that: every endless animation rests except the few that show something
    *                       (the pulsing "open now" dot, the bell of the reservation chip, the "now" season badge) and the
    *                       tractor and the barrel train, which keep driving (they froze on slow computers before)
-   *     data-calm="all"   the visitor pressed "Pause animations": every endless animation rests, the bee stops and the hero's
-   *                       layers no longer slide at different speeds while scrolling
+   *     data-calm="all"   the visitor pressed "Pause animations": every endless animation rests, the bee stops where it is and the
+   *                       hero's layers no longer slide at different speeds while scrolling
    *   The buttons show pressed while any of these is set, so one press turns all motion back on (and the page never switches
    *   by itself again). A rested animation stops where it is, so the picture stays whole. What a tap starts (picking, the wagon's
    *   toot, a tree, a farm friend) still plays; anything endless it starts rests a moment later. With "all" a new badge still
@@ -501,7 +584,7 @@
     const btns = $$('[data-motion]');
     if (reduceMotion || typeof doc.getAnimations !== 'function') { btns.forEach((b) => { b.hidden = true; }); return; }
     const hero = $('#top');
-    const SMALL = '.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *';
+    const SMALL = '.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *, .bfly, .bfly *';
     const SHOWS = '.live-dot, .chip-rel .ico, .now-badge';
     const DRIVES = '.rig, .rig *';   // the tractor and the barrel train (wheels, bounce, waving riders): they keep driving by themselves, only the visitor's "Pause animations" stops them
     let level = '', visitor = false;

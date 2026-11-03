@@ -94,7 +94,7 @@ and the main thread is 0.0 to 0.1% busy. The picture in view is drawn about 50 t
 | --- | --- | --- |
 | as it comes (spring / fall) | 25.6 ms / 10.3 ms | 48 / 65 |
 | the visitor pressed "Pause animations" | 0.3 ms / 0.4 ms | 0 / 0 |
-| the page's own switch, first step ("light": the bee and small decorations rest) | not measured / 10.9 ms | not measured / 33 |
+| the page's own switch, first step ("light": the small decorations and the wings of the bee rest; the bee keeps flying) | not measured / 10.9 ms | not measured / 33 |
 | the page's own switch, second step ("most") | 1.0 ms / 0.9 ms | 2 / 3 |
 
 The page looks at the picture by itself after it has loaded; on a 4x or 6x phone it made the first step within 1 to 4 seconds of the phone being slowed, and went on to the second (it needs two bad 2-second looks for each step).

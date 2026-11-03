@@ -5,7 +5,7 @@
  * every endless animation and the bee and start them again (aria-pressed, keyboard, the four languages), the picture stays whole, every tap
  * still works (a badge earned while paused shows and goes away by itself, without the rain of fruit), nothing is stored, and with "reduce
  * motion" in the system the buttons are not there. The automatic switch for a phone that cannot draw the hero smoothly (Chromium's processor
- * slowed down 6x): first the bee and the smallest decorations rest (data-calm="light"), then every endless animation but the ones that show
+ * slowed down 6x): first the smallest decorations and the bee's wings rest (data-calm="light"; the bee keeps flying), then every endless animation but the ones that show
  * something (data-calm="most"), the buttons show pressed and one press turns motion back on for good; at full speed it does not switch
  * (skipped when this computer itself cannot draw 40 frames a second). */
 import { run, open, ok, okSoon, info, until, ms } from './lib.mjs';
@@ -26,7 +26,7 @@ const now = (p) => p.evaluate(() => {
   return {
     loops: loops.length, loopsRunning: loops.filter((a) => a.playState === 'running').length,
     running: all.filter((a) => a.playState === 'running').map(name),
-    bee: document.querySelector('#bee-fly') ? document.querySelector('#bee-fly').getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length : 0,
+    bee: document.querySelector('#bee-fly') ? document.querySelector('#bee-fly').getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && a.effect && a.effect.getTiming().iterations === Infinity).length : 0,   // the endless loops of the bee (wings, bobbing); its flight is not counted: it goes on in light and most (tests/critter.test.mjs)
     calm: document.documentElement.getAttribute('data-calm'),
     pressed: [...document.querySelectorAll('[data-motion]')].filter((b) => !b.hidden).map((b) => b.getAttribute('aria-pressed')).join(','),
   };
@@ -70,7 +70,7 @@ await run('calm', async ({ browser, base, errs }) => {
   ok('it covers nothing: not Reserve, the "open now" pills, the chips, the season buttons or the picker\'s own text and buttons', cover.length === 0, cover.join(', '));
   await p.clock.runFor(1500);
   const before = await now(p);
-  ok('before: endless animations are running and the bee flies', before.loopsRunning > 5 && before.bee > 0 && before.calm === null, JSON.stringify(before));
+  ok('before: endless animations are running, the bee\'s wings and bobbing too', before.loopsRunning > 5 && before.bee > 0 && before.calm === null, JSON.stringify(before));
   const store0 = await stored(p);
 
   await p.click(HERO);
@@ -78,7 +78,7 @@ await run('calm', async ({ browser, base, errs }) => {
   const paused = await now(p);
   ok('pressed: both buttons show pressed, <html data-calm="all">', paused.calm === 'all' && paused.pressed === 'true,true', JSON.stringify(paused));
   ok('...no endless animation is running in the page (document.getAnimations())', paused.loops > 5 && paused.loopsRunning === 0, JSON.stringify(paused));
-  ok('...the bee stopped', paused.bee === 0, JSON.stringify(paused));
+  ok('...the bee stopped (no loop, no flight)', paused.bee === 0 && (await p.evaluate(() => document.querySelector('#bee-fly').getAnimations().length)) === 0, JSON.stringify(paused));
   ok('...the button\'s tooltip says "Play animations"', (await p.getAttribute(HERO, 'title')) === 'Play animations');
   const b1 = await beeAt(p); await p.clock.runFor(2500); await realWait(500);
   ok('...the bee stays where it is', JSON.stringify(await beeAt(p)) === JSON.stringify(b1), JSON.stringify([b1, await beeAt(p)]));
@@ -127,7 +127,7 @@ await run('calm', async ({ browser, base, errs }) => {
   ok('keyboard: Enter turns motion back on (not pressed, no data-calm, loops run, the bee flies again)', on.calm === null && on.pressed === 'false,false' && on.loopsRunning > 5, JSON.stringify(on));
   await p.evaluate(() => window.WISE_ACRES.hero.setSeason('fall'));
   await p.clock.runFor(1500);
-  await okSoon('...the bee flies again', () => now(p), (v) => v.bee > 0, 8000);
+  await okSoon('...the bee\'s wings and bobbing run again', () => now(p), (v) => v.bee > 0, 8000);
   await p.focus(FOOT);
   const r2 = await ring(p);
   ok('the footer button shows a focus ring too (3:1 against the footer)', r2.visible && r2.style !== 'none' && r2.width >= 2 && r2.ratio >= 3, JSON.stringify(r2));
@@ -181,10 +181,10 @@ await run('calm', async ({ browser, base, errs }) => {
   const slow = await open(browser, base, 'index.html', errs, real(6));
   const light = await until(slow, () => document.documentElement.getAttribute('data-calm'), null, 45000);
   const l = await now(slow);
-  ok('6x slower: the page switches to data-calm="light" by itself, the buttons show pressed, the bee stops', light === 'light' && l.pressed === 'true,true' && l.bee === 0, `${light} ${JSON.stringify(l)}`);
+  ok('6x slower: the page switches to data-calm="light" by itself, the buttons show pressed, the bee\'s wings and bobbing stop (it keeps flying: tests/critter.test.mjs)', light === 'light' && l.pressed === 'true,true' && l.bee === 0, `${light} ${JSON.stringify(l)}`);
   const small = await slow.evaluate(() => {
     const a = document.getAnimations().filter((x) => x.effect && x.effect.target && x.effect.getTiming().iterations === Infinity && document.querySelector('#top').contains(x.effect.target));
-    const s = (x) => x.effect.target.matches('.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *');
+    const s = (x) => x.effect.target.matches('.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *, .bfly, .bfly *');
     return { smallRunning: a.filter((x) => s(x) && x.playState === 'running').length, small: a.filter(s).length, otherRunning: a.filter((x) => !s(x) && x.playState === 'running').length };
   });
   ok('...the small decorations rest, the bigger loops (clouds, the wagon) still run', small.small > 0 && small.smallRunning === 0 && small.otherRunning > 0, JSON.stringify(small));
