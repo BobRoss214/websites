@@ -892,11 +892,20 @@
     let html = '';
     for (let i = 0; i < n; i++) {
       const size = kind === 'snow' ? 3 + r() * 6 : 14 + r() * 12;
-      html += `<i class="${kind === 'snow' ? 'flake' : 'leaf'}" style="left:${(r() * 100).toFixed(1)}%;--s:${size.toFixed(1)}px;--d:${(kind === 'snow' ? 8 + r() * 9 : 10 + r() * 9).toFixed(1)}s;--dl:${(-r() * 16).toFixed(1)}s;--sw:${(20 + r() * 50).toFixed(0)}px;--c:${colors[Math.floor(r() * colors.length)]};--rot:${Math.floor(r() * 360)}deg"></i>`;
+      const flutter = kind === 'snow' ? '' : `;--sd:${(1.6 + r() * 1.8).toFixed(1)}s;--rk:${Math.round(32 + r() * 30)}deg`;   // a leaf: how long one drift to the side takes, and how far it tips
+      html += `<i class="${kind === 'snow' ? 'flake' : 'leaf'}" style="left:${(r() * 100).toFixed(1)}%;--s:${size.toFixed(1)}px;--d:${(kind === 'snow' ? 8 + r() * 9 : 10 + r() * 9).toFixed(1)}s;--dl:${(-r() * 16).toFixed(1)}s;--sw:${(20 + r() * 50).toFixed(0)}px;--c:${colors[Math.floor(r() * colors.length)]};--rot:${Math.floor(r() * 360)}deg${flutter}"></i>`;
     }
     box.innerHTML = html;
     crittersEl.appendChild(box);
+    fallHeight();
   }
+  // How far a leaf falls: the height of the hero's picture (the CSS has 100vh until this is set, and again when the window changes size)
+  function fallHeight() {
+    if (!crittersEl) return;
+    const box = $('.particles', crittersEl), h = crittersEl.clientHeight;
+    if (box && h > 0) box.style.setProperty('--fh', h + 'px');
+  }
+  if (crittersEl) addEventListener('resize', fallHeight, { passive: true });
 
   /* ------------------------------------------------------------------ *
    * Picking / lighting

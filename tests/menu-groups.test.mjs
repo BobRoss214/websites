@@ -18,9 +18,9 @@ const TOL = 4;   // px: how far from the usual line counts as the same place
 
 // [group name, list id, [line, address on the home page]]; "What’s in season" has the curly apostrophe the site uses everywhere
 const MENU = [
-  ['Visit', 'visit', [['The two places & hours', '#visit'], ['Reserve a time', '#steps'], ['Choose your package', '#options'], ['First-visit guide', '#first-visit'], ['Farm map', '#farm-map'], ['Directions', '#contact']]],
-  ['Things to Do', 'things', [['What’s in season', '#seasons'], ['U-pick', '#farm'], ['Tomatoes & basil', '#tomatoes'], ['U-cut flowers', '#flowers'], ['Rides & add-ons', '#addons'], ['Meet the animals', '#farm-animals'], ['Playgrounds', '#farm-playgrounds'], ['Photography', '#photography']]],
-  ['GreenHouse', 'greenhouse', [['About The GreenHouse', '#greenhouse'], ['Wise Pie pizza', '#pizza'], ['Ice cream', '#shop-icecream'], ['Drinks', '#shop-drinks'], ['Meet the goats', '#goats'], ['Christmas trees', '#shop-pumpkins']]],
+  ['Visit', 'visit', [['Hours & locations', '#visit'], ['Reserve a time', '#steps'], ['Choose your package', '#options'], ['First-visit guide', '#first-visit'], ['Farm map', '#farm-map'], ['Directions', '#contact']]],
+  ['Things to Do', 'things', [['What’s in season', '#seasons'], ['U-pick', '#farm'], ['Tomatoes & basil', '#tomatoes'], ['U-cut flowers', '#flowers'], ['Rides & add-ons', '#addons'], ['Meet the animals', '#animals'], ['Playgrounds', '#farm-playgrounds'], ['Photography', '#photography']]],
+  ['GreenHouse', 'greenhouse', [['About The GreenHouse', '#greenhouse'], ['Wise Pie pizza', '#pizza'], ['Ice cream', '#shop-icecream'], ['Drinks', '#shop-drinks'], ['Christmas trees', '#shop-pumpkins']]],
   ['Store', 'store', [['Everything in the store', '#shop'], ['Snacks', '#shop-snacks'], ['Ice cream', '#shop-icecream'], ['Pizza', '#shop-greenhouse'], ['Drinks', '#shop-drinks'], ['Pantry & bakery', '#shop-pantry'], ['Gifts & merchandise', '#shop-gifts'], ['Plants & seasonal', '#shop-plants']]],
   ['Groups & Parties', 'groups', [['School tours', '#school-tours'], ['Parties at the farm', '#parties'], ['Corporate events', '#corporate']]],
   ['About Us', 'about', [['Our story', '#about'], ['Reviews', '#reviews'], ['Photos', '#gallery']]],
@@ -33,7 +33,7 @@ const SPY = {
   Store: ['shop'], 'Groups & Parties': ['groups'], 'About Us': ['about', 'reviews', 'gallery'], Contact: ['faq', 'contact'],
 };
 const PAGES = ['index.html', 'first-visit.html', 'pumpkin-patch.html', 'school-field-trips.html', 'strawberry-picking.html', 'wise-pie.html'];
-const SEASONAL = { '#farm-animals': 'spring summer fall', '#farm-playgrounds': 'spring summer fall' };   // the lines whose place only some seasons show: winter goes to #farm
+const SEASONAL = { '#farm-playgrounds': 'spring summer fall' };   // the lines whose place only some seasons show: winter goes to #farm (the animals and the goats are one block that shows all year)
 const TABS = { '#school-tours': 'school', '#parties': 'parties', '#corporate': 'corporate' };
 const OWN_MARGIN = { '#follow-signup': 90 };   // the signup block keeps 90 px of its own under the header (css/features.css)
 
@@ -184,27 +184,45 @@ await run('menu-groups', async ({ browser, base, errs }) => {
     await q.addStyleTag({ content: '#wa-problems{display:none!important}' });
     const hrefs = await q.evaluate(() => Object.fromEntries([...document.querySelectorAll('.nav-group-list a[data-seasons]')].map((a) => [a.textContent.trim(), a.getAttribute('href')])));
     const wantHref = (h) => (SEASONAL[h].split(' ').includes(season) ? h : '#farm');
-    ok(`${name}: "Meet the animals" and "Playgrounds" go to their cards when the farm shows them, and to #farm when it does not`, hrefs['Meet the animals'] === wantHref('#farm-animals') && hrefs['Playgrounds'] === wantHref('#farm-playgrounds'), JSON.stringify(hrefs));
-    const cards = await q.evaluate(() => ['farm-animals', 'farm-playgrounds'].map((id) => document.getElementById(id).getClientRects().length > 0));
-    ok(`${name}: a line goes to a card only when the card is on the page (shown: ${cards.join(', ')})`, cards.every((c) => c === (season !== 'winter')) && [hrefs['Meet the animals'], hrefs['Playgrounds']].every((h, i) => (h === '#farm') === !cards[i]), JSON.stringify([cards, hrefs]));
-    const dot = await q.evaluate(() => { const b = document.querySelector('.nav-tomato .nav-group-btn'), a = getComputedStyle(b, '::after'); return { content: a.content, w: a.width, color: a.backgroundColor, onOthers: [...document.querySelectorAll('.nav-group:not(.nav-tomato) .nav-group-btn')].filter((x) => getComputedStyle(x, '::after').content !== 'none').length }; });
+    ok(`${name}: "Playgrounds" goes to its card when the farm shows it, and to #farm when it does not`, hrefs['Playgrounds'] === wantHref('#farm-playgrounds'), JSON.stringify(hrefs));
+    const cards = await q.evaluate(() => ['farm-playgrounds'].map((id) => document.getElementById(id).getClientRects().length > 0));
+    ok(`${name}: a line goes to a card only when the card is on the page (shown: ${cards.join(', ')})`, cards.every((c) => c === (season !== 'winter')) && [hrefs['Playgrounds']].every((h, i) => (h === '#farm') === !cards[i]), JSON.stringify([cards, hrefs]));
+    const animals = await q.evaluate(() => { const a = [...document.querySelectorAll('.nav-group-list a')].filter((x) => x.textContent.trim() === 'Meet the animals'), b = document.getElementById('animals'); return { lines: a.length, href: a[0] && a[0].getAttribute('href'), seasonal: a[0] && a[0].hasAttribute('data-seasons'), shown: !!b && b.getClientRects().length > 0, goats: !!b && /goat/i.test(b.textContent), farm: !!b && /farm animals/i.test(b.textContent), oldGoatsLine: [...document.querySelectorAll('.nav-group-list a')].some((x) => /Meet the goats/.test(x.textContent)) }; });
+    ok(`${name}: one "Meet the animals" line (no "Meet the goats"), always to #animals, a block that is on the page and speaks of the farm animals and the goats`, animals.lines === 1 && animals.href === '#animals' && !animals.seasonal && animals.shown && animals.goats && animals.farm && !animals.oldGoatsLine, JSON.stringify(animals));
+    const dot = await q.evaluate(() => { const b = document.querySelector('.nav-tomato .nav-group-btn'), a = getComputedStyle(b, '::after'); return { content: a.content, w: a.width, color: a.backgroundColor, onOthers: [...document.querySelectorAll('.nav-group:not(.nav-tomato):not(.has-coming) .nav-group-btn')].filter((x) => getComputedStyle(x, '::after').content !== 'none').length }; });
     ok(`${name}: the red dot is ${season === 'fall' ? 'on the Things to Do button' : 'not there'}, and on no other button`, dot.onOthers === 0 && (season === 'fall' ? dot.content === '""' && dot.w === '9px' : dot.content === 'none'), JSON.stringify(dot));
     if (season === 'fall') {
       // the picker in the first screen changes the season on the page: the two lines follow it
       await q.click('#season-switch button[data-season="winter"]');
-      await okSoon('fall: choosing Winter in the first-screen picker sends the two lines to #farm', () => q.evaluate(() => [...document.querySelectorAll('.nav-group-list a[data-seasons]')].map((a) => a.getAttribute('href')).join()), (v) => v === '#farm,#farm', 4000);
+      await okSoon('fall: choosing Winter in the first-screen picker sends the two lines to #farm', () => q.evaluate(() => [...document.querySelectorAll('.nav-group-list a[data-seasons]')].map((a) => a.getAttribute('href')).join()), (v) => v === '#farm', 4000);
       await q.click('#season-switch button[data-season="spring"]');
-      await okSoon('...and Spring sends them back to their cards', () => q.evaluate(() => [...document.querySelectorAll('.nav-group-list a[data-seasons]')].map((a) => a.getAttribute('href')).join()), (v) => v === '#farm-animals,#farm-playgrounds', 4000);
+      await okSoon('...and Spring sends them back to their cards', () => q.evaluate(() => [...document.querySelectorAll('.nav-group-list a[data-seasons]')].map((a) => a.getAttribute('href')).join()), (v) => v === '#farm-playgrounds', 4000);
     }
     await q.context().close();
   }
-  {   // the other pages: the same two lines in winter (index.html#farm) and fall (index.html#farm-animals)
-    for (const [time, wantA] of [['2026-12-15T12:00:00-05:00', 'index.html#farm'], ['2026-10-02T12:00:00-04:00', 'index.html#farm-animals']]) {
+  {   // the other pages: the Playgrounds line in winter (index.html#farm) and fall (index.html#farm-playgrounds); "Meet the animals" always goes to index.html#animals
+    for (const [time, wantA] of [['2026-12-15T12:00:00-05:00', 'index.html#farm'], ['2026-10-02T12:00:00-04:00', 'index.html#farm-playgrounds']]) {
       const q = await open(browser, base, 'wise-pie.html', errs, { viewport: { width: 1440, height: 900 }, time });
       const got = await q.evaluate(() => [...document.querySelectorAll('.nav-group-list a[data-seasons]')].map((a) => a.getAttribute('href')));
-      ok(`wise-pie.html on ${time.slice(0, 10)}: "Meet the animals" goes to ${wantA}`, got[0] === wantA, got.join());
+      ok(`wise-pie.html on ${time.slice(0, 10)}: "Playgrounds" goes to ${wantA}`, got[0] === wantA, got.join());
+      const animalsHref = await q.evaluate(() => [...document.querySelectorAll('.nav-group-list a')].filter((x) => x.textContent.trim() === 'Meet the animals').map((x) => x.getAttribute('href')));
+      ok(`wise-pie.html on ${time.slice(0, 10)}: "Meet the animals" goes to index.html#animals`, animalsHref.length === 1 && animalsHref[0] === 'index.html#animals', animalsHref.join());
       await q.context().close();
     }
+  }
+
+  // ---------------------------------------------------------------- 6b. "coming up": the Christmas trees line is bold with a red dot from 60 days before tree season until it ends, and its group's button has the dot too
+  for (const [time, want] of [['2026-07-01T12:00:00-04:00', false], ['2026-09-20T12:00:00-04:00', false], ['2026-10-02T12:00:00-04:00', true], ['2026-12-01T12:00:00-05:00', true], ['2026-12-15T12:00:00-05:00', false]]) {
+    const q = await open(browser, base, 'index.html', errs, { viewport: { width: 1440, height: 900 }, time });
+    const c = await q.evaluate(() => {
+      const a = [...document.querySelectorAll('.nav-group-list a')].find((x) => x.textContent.trim().startsWith('Christmas trees')), g = a && a.closest('.nav-group');
+      const dot = (el, ps) => { const s = getComputedStyle(el, ps); return s.content === '""' && s.width === '9px'; };
+      return { line: !!a && a.classList.contains('is-coming'), weight: a && getComputedStyle(a).fontWeight, lineDot: !!a && dot(a, '::after'), group: !!g && g.classList.contains('has-coming'), btnDot: !!g && dot(g.querySelector('.nav-group-btn'), '::after'), hint: a ? [...a.parentNode.querySelectorAll('.sr-only')].map((x) => x.textContent.trim()).join() : '', words: a ? a.textContent.trim() : '', others: document.querySelectorAll('.nav-group.has-coming').length };
+    });
+    const inSeason = time.startsWith('2026-12-01');
+    ok(`${time.slice(0, 10)}: Christmas trees ${want ? 'is bold with a red dot and its group button has the dot' : 'is a plain line'}${want ? (inSeason ? '' : ' (and a screen reader hears "coming soon")') : ''}`,
+      want ? c.line && Number(c.weight) >= 700 && c.lineDot && c.group && c.btnDot && c.others === 1 && c.words === 'Christmas trees' && (inSeason ? c.hint === '' : /coming soon/i.test(c.hint)) : !c.line && !c.lineDot && !c.group && c.others === 0 && c.hint === '', JSON.stringify(c));
+    await q.context().close();
   }
 
   // ---------------------------------------------------------------- 7. an extra page: the lists open and close there too, and a line leads to the home page

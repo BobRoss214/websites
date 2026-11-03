@@ -82,7 +82,7 @@
     perPerson: 3,         // field fee, ages 3 and up (both packages): $3 per person
     freeAge: 2,           // children age 2 and younger are free
     wagon: 4.5,           // wagon ride, $4.50 per person
-    wagonFreeAge: 2,      // ages 2 and younger ride free
+    wagonFreeAge: 3,      // ages 3 and younger ride the wagon free (the site builder, Nov 3 2026; the farm's older page said 2 and younger)
     barrel: 3,            // barrel train, $3 per child
     barrelMaxAge: 12,     // ages 12 and under only
     corn: 4,              // corn pit, $4 per person (on Thursdays buy one, get one free, with a reservation)

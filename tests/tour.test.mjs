@@ -10,7 +10,7 @@
  *     sticky bar, the box following the page when it scrolls, a boxes that is still waiting to fade in (the preview frame may never fire its observers) shown at once
  *   - the steps: sorted by order from several files, a repeated id ignored, a missing file fine, a step whose target is missing is skipped (skipIfMissing) or shown in the
  *     middle, before / after run in order and are waited for, a hook that throws does not stop the tour, ctx.undo and a menu left open are put back when it closes
- *   - clicks: blocked behind the dimmer unless the step says allowClicks; a press inside the tour never reaches the page's own "click anywhere else" rules
+ *   - clicks: blocked behind the dimmer, except the lit part of the page (a question opens, a tab changes; links that leave the page are switched off) and, in a step that says allowClicks, the whole page; a press inside the tour never reaches the page's own "click anywhere else" rules
  *   - keys and screen readers: the card is a dialog, focus goes to Next after each step and stays in the card (Tab / Shift+Tab), Right / Left / Enter / Esc, one polite line
  *     for each step, axe finds nothing in the card
  *   - other pages: a step on another page goes there (no #tour, no hash) and carries on from the tour's place in browser storage; Back goes back; an old place is not resumed
@@ -191,6 +191,36 @@ await run('tour', async ({ browser, base, errs }) => {
   await p.evaluate(() => window.scrollBy(0, 130));
   await okSoon('the lit box follows the section when the page is scrolled by hand', () => look(p), (x) => x.hole && Math.abs(x.hole.y - (hy - 130)) <= 3);
   ok('clicks inside the tour never reach the page: pressing Next did not make the page see a click', await (async () => { const before = await p.evaluate(() => window.__docClicks); await press(p, 'Back'); await atStep(p, 5); await press(p, 'Next'); await atStep(p, 6); return (await p.evaluate(() => window.__docClicks)) === before; })(), '');
+
+  // step 6 again: a step without allowClicks that lights a part of the page: that part can be used (open a question), nothing else can
+  ok('step 6 (a lit section, no allowClicks): the dimmer is cut open where the section is, the dialog says it is not modal, and the whole page is not free', await p.evaluate(() => { const b = document.querySelector('.wa-tour'); return b.classList.contains('is-try') && !b.classList.contains('is-free') && /polygon/.test(b.querySelector('.wa-tour-shield').style.clipPath) && document.querySelector('.wa-tour-card').getAttribute('aria-modal') === 'false'; }), '');
+  await p.evaluate(() => { const d = document.querySelector('#faq details:not([open])'); if (d) d.scrollIntoView({ block: 'center' }); });
+  await p.waitForTimeout(300);
+  const q1 = await p.evaluate(() => { const ds = Array.from(document.querySelectorAll('#faq details')), d = ds.find((x) => !x.open); if (!d) return null; const r = d.querySelector('summary').getBoundingClientRect(); return { i: ds.indexOf(d), x: r.x + 40, y: r.y + r.height / 2 }; });
+  ok('step 6: a closed question can be found in the lit section', !!q1, JSON.stringify(q1));
+  if (q1) {
+    await p.mouse.click(q1.x, q1.y);
+    await okSoon('step 6: pressing a question in the lit section opens it (the page sees the press)', () => p.evaluate((i) => document.querySelectorAll('#faq details')[i].open, q1.i), (v) => v === true);
+    await okSoon('...and the lit box grows or shrinks with it (the box still has the section\'s size)', async () => { const h = await look(p); const t2 = await rectOf(p, '#faq'); return { h, t2 }; }, (v) => v.h.hole && Math.abs(v.h.hole.h - (v.t2.h + 16)) <= 3);
+  }
+  const tb3 = await rectOf(p, '#t-btn');
+  await p.mouse.click(tb3.x + tb3.w / 2, tb3.y + tb3.h / 2);
+  ok('step 6: a press outside the lit section is still stopped (the test button did not count it)', (await p.evaluate(() => window.__btn)) === behind, String(await p.evaluate(() => window.__btn)));
+  // a link in the lit section that leads away does nothing but say so; a link to a place on the page works
+  await p.evaluate(() => {
+    const host = document.querySelector('#faq .faq-list') || document.querySelector('#faq');
+    const a = document.createElement('a'); a.id = 't-out'; a.href = 'https://example.com/away'; a.target = '_blank'; a.textContent = 'Away link'; a.style.cssText = 'display:inline-block;padding:8px';
+    const b = document.createElement('a'); b.id = 't-here'; b.href = '#visit'; b.textContent = 'Here link'; b.style.cssText = 'display:inline-block;padding:8px';
+    host.appendChild(a); host.appendChild(b); window.__popups = 0; window.open = () => { window.__popups++; return null; };
+    a.scrollIntoView({ block: 'center' });
+  });
+  await p.waitForTimeout(300);
+  const outBox = await rectOf(p, '#t-out');
+  const urlBefore = await p.evaluate(() => location.href);
+  await p.mouse.click(outBox.x + outBox.w / 2, outBox.y + outBox.h / 2);
+  await p.waitForTimeout(400);
+  ok('step 6: a link that leads away from the page does nothing and the card says so', (await p.evaluate(() => location.href)) === urlBefore && (await p.evaluate(() => /switched off/.test((document.querySelector('.wa-tour-flash') || {}).textContent || ''))), await p.evaluate(() => (document.querySelector('.wa-tour-flash') || {}).textContent));
+  await p.evaluate(() => { const e = document.getElementById('t-out'); if (e) e.remove(); const h = document.getElementById('t-here'); if (h) h.remove(); });
 
   // step 7: allowClicks
   await press(p, 'Next');

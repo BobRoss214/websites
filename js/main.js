@@ -342,6 +342,30 @@
     aim(S.active || S.current());
     doc.addEventListener('wa:season', (e) => aim(e.detail));
 
+    // Coming up: a line that says which season it belongs to (data-coming="winter") is bold with a little red dot from 60 days before that season
+    // starts until it ends, and so is the button of its group (the class has-coming), so a visitor who has not opened the list sees it too.
+    // A screen reader is told "coming soon" (a hint the line is described by) until the season has started. The day is the farm's day (the season code works it out).
+    const COMING_DAYS = 60;
+    if (W.clockOk && W.clockOk() && S && S.list) {
+      const today = new Date();
+      $$('a[data-coming]', nav).forEach((a) => {
+        const s = S.list.filter((x) => x.id === a.dataset.coming)[0];
+        if (!s) return;
+        const now = S.inWindow(s, today);
+        if (!now && S.daysUntilStart(s, today) > COMING_DAYS) return;
+        a.classList.add('is-coming');
+        if (!now) {   // beside the link, not inside it: the words of the line stay the words of the line
+          const hint = doc.createElement('span');
+          hint.className = 'sr-only'; hint.id = 'coming-' + s.id;
+          const say = () => { hint.textContent = t('Coming soon'); };
+          say(); doc.addEventListener('wa:lang', say);
+          a.parentNode.appendChild(hint); a.setAttribute('aria-describedby', hint.id);
+        }
+        const g = a.closest('.nav-group');
+        if (g) g.classList.add('has-coming');
+      });
+    }
+
     // Scroll-spy: light the group button (and the line, if its list is open) for the section in the middle of the screen.
     if (!('IntersectionObserver' in window)) return;
     // A place can have several lines (Ice cream and Drinks are under GreenHouse and under Store): all of them are kept.
@@ -390,21 +414,19 @@
    * visitor stays it flies off the edge of the hero and comes back as the other kind. The address can pick the kind instead (?critter=bee or
    * ?critter=butterfly; only this page reads it, nothing is stored): then it stays that kind, which is what the tests and a person showing the
    * page need. window.WISE_ACRES.critter.kind says which one it is, and .swap() starts the change at once.
-   * Both kinds fly the same way. Each leg of the flight is ONE animation of the transform of #bee-fly (started when it picks a new spot); the
-   * wings and the bobbing are endless CSS loops on the drawing inside (css/styles.css). Nothing runs per frame: a drawing frame of the hero costs
-   * the browser far more than the creature is worth, because every endless loop in the scene is restyled and repainted with it, and the old
-   * frame-by-frame bee asked for one all the time.
+   * HOW IT MOVES: it chases a spot the way a living thing does, in one smooth glide, never in hops. Ten times a second it looks where it wants to be
+   * (the pointer, or a spot of the field when nobody is moving one), works out how fast to go (far away: fast; close: slower and slower, so it
+   * settles by itself) and starts a short straight leg of 240 ms from where it is right now. Where it is right now is read from the running leg
+   * (a leg is a Web Animation of the transform of #bee-fly), so every new leg starts exactly where the last one has got to and the path has no
+   * joins. A leg costs the compositor next to nothing; nothing runs per frame, because a drawing frame of the hero costs the browser far more than
+   * the creature is worth (every endless loop in the scene is restyled and repainted with it).
    * (The flight must move a <div>: an <svg> element moved by the `translate` property is not run by the compositor.)
-   * The bee goes straight and fast, and turns to face the way it goes. The butterfly takes longer and curves: each leg has a few keyframes along an
-   * arc with a little wobble, bending to the other side every time, and it banks a little towards the way it goes.
-   * It follows the pointer a couple of times a second, and wanders when nobody is moving one. It settles next to the hero's own buttons and cards
-   * instead of on them (it may fly over them, not rest on them), so it never hides one for long.
+   * The bee goes straight and turns to face the way it goes. The butterfly is slower and lighter and drifts a little from side to side as it
+   * flies, and it banks towards the way it goes. The wings and the bobbing are endless CSS loops on the drawing inside (css/styles.css).
+   * It settles next to the hero's own buttons and cards instead of on them (it may fly over them, not rest on them), so it never hides one for long.
    * What parks it (and nothing else): the hero is scrolled out of sight, the tab is hidden, the season is winter (the CSS hides it), or the visitor
    * pressed "Pause animations" (data-calm="all"). The page's own calm mode (data-calm="light" or "most", set when the hero struggles on a slow
-   * computer) rests only the endless loops (wings, bobbing: see initMotion); the flight stays, because a flight is one compositor animation that costs
-   * next to nothing. It used to park the bee for good on any data-calm, and the page never took the calm mode back, so a bee that had once been
-   * frozen by a slow moment stayed frozen until the page was loaded again.
-   * Where it is (when a leg is cut short, or parked) is read from the leg's own animation, not worked out from a clock of ours.
+   * computer) never stops the flight: a flight is a few compositor animations that cost next to nothing (see initMotion for what it rests).
    * A pointer over the hero proves that the hero is on screen, whatever an observer last said (a viewer that shows the page in a frame can be wrong
    * about that), so a pointer wakes a creature that was parked by mistake. With "reduce motion" it is not shown at all.
    * ------------------------------------------------------------------ */
@@ -414,10 +436,12 @@
     if (!hero || !bee) return;
     if (reduceMotion || !bee.animate) { bee.setAttribute('hidden', ''); return; }
 
-    // How a leg moves: it closes on the spot quickly and settles slowly (like the old per-frame glide). The butterfly's legs are a little slower and softer.
+    const TICK = 100, LEG = 240;                // ms: how often it looks where to go, and how long one leg is (a leg is cut short by the next one)
+    // gain: how fast it goes for each pixel it still has to go (px per second per px); min, max: the slowest and fastest it goes (px per second);
+    // wander*: the same for a stroll through the field; rest: how long it stays before it strolls to another spot (ms: least, then up to this much more)
     const KINDS = {
-      bee: { leg: 1700, curve: [0.2, 0.9, 0.4, 0.95], rest: [2200, 2600] },                // rest: how long it stays before it visits another spot (ms: least, then up to this much more)
-      butterfly: { leg: 2300, curve: [0.3, 0.75, 0.35, 1], rest: [1500, 2200] },
+      bee: { gain: 3.4, min: 45, max: 860, wanderGain: 1.5, wanderMax: 210, rest: [2200, 2600], sway: 0 },
+      butterfly: { gain: 2.4, min: 35, max: 540, wanderGain: 1.1, wanderMax: 150, rest: [1500, 2200], sway: 11 },
     };
     const HUES = ['monarch', 'morpho', 'admiral'];   // the butterfly's colours (css/styles.css)
     const BW = 52, BH = 40;                     // the box (px): what has to be clear of a button
@@ -426,48 +450,34 @@
     const later = () => 45000 + Math.random() * 30000;   // the next change of kind
 
     let w = hero.clientWidth, h = hero.clientHeight;
-    let x = w * 0.2, y = h * 0.55, tilt = 0;    // where it is, or was when the current leg began (tilt: the butterfly's lean, in degrees)
+    let x = w * 0.2, y = h * 0.55, tilt = 0, flip = 1;   // where it is, or was when the current leg began (tilt: the butterfly's lean, in degrees; flip: the bee's scaleX, 1 or -1 and between while it turns)
     let kind = pinned || (Math.random() < 0.5 ? 'bee' : 'butterfly');
-    let leg = null;                             // the leg in flight: { anim, pts, r0, r1 }
-    let facing = 1, bend = 1, lastMove = 0, lastFly = 0, wanderAt = 0, swapAt = pinned ? Infinity : performance.now() + later(), px = 0, py = 0, moved = false;
-    let onScreen = false, running = false, followTimer = 0, wanderTimer = 0, swapTimer = 0, leaving = 0;   // leaving: -1 or 1, the side it flies out of while it changes kind
+    let leg = null;                             // the leg in flight: { anim, x0, y0, x1, y1, r0, r1 }
+    let aim = null;                             // where it is going: { follow } (the pointer) or { x, y } (a spot), plus gain, max, near and done
+    let facing = 1, lastMove = 0, wanderAt = 0, swapAt = pinned ? Infinity : performance.now() + later(), px = 0, py = 0;
+    let onScreen = false, running = false, tickTimer = 0, wanderTimer = 0, leaving = 0;   // leaving: -1 or 1, the side it flies out of while it changes kind
     const clamp2 = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
     const setKind = (k) => {
       kind = k; bee.dataset.kind = k;
       if (k === 'butterfly') bee.dataset.hue = HUES[Math.floor(Math.random() * HUES.length)];
     };
-    const pose = (a, b, f, r) => `translate(${a.toFixed(1)}px, ${b.toFixed(1)}px) ` + (kind === 'bee' ? `scaleX(${f})` : `rotate(${r.toFixed(1)}deg)`);   // scaleX turns the bee to face the way it flies
-    const place = () => { bee.style.transform = pose(x, y, facing, tilt); };
+    const pose = (a, b, f, r) => `translate(${a.toFixed(1)}px, ${b.toFixed(1)}px) ` + (kind === 'bee' ? `scaleX(${f.toFixed(2)})` : `rotate(${r.toFixed(1)}deg)`);   // scaleX turns the bee to face the way it flies
+    const place = () => { bee.style.transform = pose(x, y, flip, tilt); };
     setKind(kind); place();
     bee.classList.add('is-ready');
 
-    const here = () => {                        // where it is right now, part-way through a leg: [x, y, tilt]
-      if (!leg) return [x, y, tilt];
-      const p = leg.anim.effect.getComputedTiming().progress;   // the leg's progress after its easing (null before the first frame draws it)
-      const e = typeof p === 'number' ? clamp2(p, 0, 1) : 0, n = leg.pts.length - 1, i = Math.min(n - 1, Math.floor(e * n)), f = e * n - i;
-      const a = leg.pts[i], b = leg.pts[i + 1];
-      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, leg.r0 + (leg.r1 - leg.r0) * e];
+    const here = () => {                        // where it is right now, part-way through a leg: [x, y, tilt, flip]
+      if (!leg) return [x, y, tilt, flip];
+      const p = leg.anim.effect.getComputedTiming().progress;   // the leg's progress (null before the first frame draws it); the legs are linear
+      const e = typeof p === 'number' ? clamp2(p, 0, 1) : 0;
+      return [leg.x0 + (leg.x1 - leg.x0) * e, leg.y0 + (leg.y1 - leg.y0) * e, leg.r0 + (leg.r1 - leg.r0) * e, leg.f0 + (leg.f1 - leg.f0) * e];
     };
-    // the points one leg passes: the bee, two (a straight line); the butterfly, seven along an arc with a little wobble, bending to the other side each time
-    const route = (x0, y0, x1, y1) => {
-      const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy);
-      if (kind === 'bee' || d < 24) return [[x0, y0], [x1, y1]];
-      const nx = -dy / d, ny = dx / d, amp = Math.min(70, 14 + d * 0.16) * bend, pts = [];
-      for (let i = 0; i <= 6; i++) { const t = i / 6, off = Math.sin(Math.PI * t) * amp + Math.sin(3 * Math.PI * t) * amp * 0.25; pts.push([x0 + dx * t + nx * off, y0 + dy * t + ny * off]); }
-      return pts;
-    };
-    const fly = (tx, ty) => {
-      const now = performance.now(), K = KINDS[kind];
-      [x, y, tilt] = here();
-      if (kind === 'bee' && Math.abs(tx - x) > 6) facing = tx > x ? 1 : -1;
-      const pts = route(x, y, tx, ty), r0 = tilt, r1 = kind === 'butterfly' ? clamp2((tx - x) / 12, -18, 18) : 0;
-      bend = -bend;
+    const go = (x1, y1, r1, f1, ms) => {        // one leg, straight and even, from where it is right now
+      [x, y, tilt, flip] = here();
       const prev = leg;
-      const anim = bee.animate(pts.map(([a, b], i) => ({ transform: pose(a, b, facing, r0 + (r1 - r0) * i / (pts.length - 1)) })),
-        { duration: K.leg, easing: 'cubic-bezier(' + K.curve.join(',') + ')', fill: 'forwards' });
-      leg = { anim, pts, r0, r1 };
-      lastFly = now;
+      const anim = bee.animate([{ transform: pose(x, y, flip, tilt) }, { transform: pose(x1, y1, f1, r1) }], { duration: ms, easing: 'linear', fill: 'forwards' });
+      leg = { anim, x0: x, y0: y, x1, y1, r0: tilt, r1, f0: flip, f1 };
       if (prev) prev.anim.cancel();
     };
 
@@ -485,53 +495,73 @@
         .sort((a, b) => Math.hypot(a[0] - tx, a[1] - ty) - Math.hypot(b[0] - tx, b[1] - ty));
       return free.length ? free[0] : [tx, ty];
     };
-
-    const follow = () => {                      // someone is moving the pointer over the hero: go there (twice a second at most)
-      followTimer = 0;
-      if (!running || !moved || leaving) return;
-      moved = false;
+    const spotOf = (a) => {                     // where the aim is right now (the pointer moves, so a following aim is worked out each time)
+      if (!a.follow) return [a.x, a.y];
       const r = hero.getBoundingClientRect();
-      fly(...clearOf(px - r.left - 26, py - r.top - 24));
+      return clearOf(px - r.left - 26, py - r.top - 24);
     };
-    const wander = () => {                      // nobody is moving one: visit the field now and then
+
+    const setAim = (a) => { aim = a; if (running && !tickTimer) chase(); };
+    function chase() {                          // the one step of the glide: look, work out the speed, start a leg, look again in a moment
+      tickTimer = 0;
+      if (!running || !aim) return;
+      const K = KINDS[kind], a = aim;
+      const [cx, cy] = here();
+      const [tx, ty] = spotOf(a);
+      const dx = tx - cx, dy = ty - cy, d = Math.hypot(dx, dy);
+      if (d < (a.near || 4)) {                  // there
+        if (a.follow && performance.now() - lastMove < 700) { tickTimer = setTimeout(chase, TICK); return; }   // the pointer is still about: stay with it
+        aim = null;
+        if (a.done) a.done();
+        return;
+      }
+      const speed = clamp2(d * a.gain, K.min, a.max), step = Math.min(d, speed * LEG / 1000), ms = Math.max(60, step / speed * 1000);
+      let ex = cx + dx / d * step, ey = cy + dy / d * step;
+      if (K.sway) { const k = Math.sin(performance.now() / 280) * K.sway * Math.min(1, d / 90); ex += -dy / d * k; ey += dx / d * k; }   // the butterfly drifts to one side and the other
+      if (kind === 'bee' && Math.abs(dx) > 18) facing = dx > 0 ? 1 : -1;
+      go(ex, ey, kind === 'butterfly' ? clamp2(dx / 14, -18, 18) : 0, kind === 'bee' ? facing : 1, ms);
+      tickTimer = setTimeout(chase, TICK);
+    }
+    const followAim = () => ({ follow: true, gain: KINDS[kind].gain, max: KINDS[kind].max });
+
+    const wander = () => {                      // nobody is moving a pointer: stroll through the field now and then, slowly
       wanderTimer = 0;
       if (!running) return;
       const now = performance.now(), K = KINDS[kind];
       if (!leaving && now >= swapAt) swap();
-      else if (!leaving && now - lastMove > 2500 && now >= wanderAt) {
-        fly(...clearOf(w * (0.08 + Math.random() * 0.84), h * (0.5 + Math.random() * 0.36)));
+      else if (!leaving && !aim && now - lastMove > 2500 && now >= wanderAt) {
+        const [sx, sy] = clearOf(w * (0.08 + Math.random() * 0.84), h * (0.5 + Math.random() * 0.36));
         wanderAt = now + K.rest[0] + Math.random() * K.rest[1];
+        setAim({ x: sx, y: sy, gain: K.wanderGain, max: K.wanderMax, near: 8 });
       }
       wanderTimer = setTimeout(wander, Math.max(250, 2500 - (now - lastMove), wanderAt - now));   // when both waits are over
     };
-    // The change of kind: it flies out over the nearer side edge of the hero (the hero hides what is outside it), and when that flight is over the
+    // The change of kind: it flies out over the nearer side edge of the hero (the hero hides what is outside it), and when it is out the
     // other kind is put there and flies in from the same side, to the pointer if it has just been moved, else to a spot in the field.
     function swap() {
       if (leaving || !running) return;
-      clearTimeout(followTimer); followTimer = 0;
       const [cx, cy] = here();
       leaving = cx < w / 2 ? -1 : 1;
-      fly(leaving < 0 ? -BW - 40 : w + 40, clamp2(cy - 30, 0, h - BH));
-      swapTimer = setTimeout(arrive, KINDS[kind].leg + 150);
+      setAim({ x: leaving < 0 ? -BW - 40 : w + 40, y: clamp2(cy - 30, 0, h - BH), gain: 2, max: KINDS[kind].max * 0.6, near: 6, done: arrive });
     }
     function arrive() {
-      swapTimer = 0;
       const side = leaving; leaving = 0;
+      aim = null; clearTimeout(tickTimer); tickTimer = 0;
       if (leg) { leg.anim.cancel(); leg = null; }
       const r = hero.getBoundingClientRect(), now = performance.now();
       setKind(kind === 'bee' ? 'butterfly' : 'bee');
       swapAt = pinned ? Infinity : now + later();
       wanderAt = now + KINDS[kind].rest[0];   // it does not set off again the moment it is back
+      facing = flip = side < 0 ? 1 : -1; tilt = 0;
       if (!running) { x = side < 0 ? 12 : w - BW - 12; y = clamp2(y, 40, h - BH - 12); place(); return; }   // parked (Pause, a hidden tab) while it was away: it is back where it can be seen
       x = side < 0 ? -BW - 40 : w + 40; place();
-      const near = now - lastMove < 3000;
-      fly(...clearOf(near ? px - r.left - 26 : w * (0.15 + Math.random() * 0.7), near ? py - r.top - 24 : h * (0.5 + Math.random() * 0.3)));
-      moved = false;
+      if (now - lastMove < 3000) setAim(followAim());
+      else { const [sx, sy] = clearOf(w * (0.15 + Math.random() * 0.7), h * (0.5 + Math.random() * 0.3)); setAim({ x: sx, y: sy, gain: 1.6, max: KINDS[kind].max * 0.5, near: 8 }); }
     }
     const onMove = (e) => {
-      px = e.clientX; py = e.clientY; moved = true; lastMove = performance.now();
+      px = e.clientX; py = e.clientY; lastMove = performance.now();
       if (!onScreen) { onScreen = true; sync(); }   // a pointer here: the hero is on screen
-      if (running && !followTimer) followTimer = setTimeout(follow, Math.max(0, 450 - (lastMove - lastFly)));
+      if (running && !leaving && !(aim && aim.follow)) setAim(followAim());
     };
     hero.addEventListener('pointermove', onMove, { passive: true });
     hero.addEventListener('pointerdown', onMove, { passive: true });
@@ -547,15 +577,15 @@
         wanderTimer = setTimeout(wander, 600);
         return;
       }
-      clearTimeout(followTimer); clearTimeout(wanderTimer); followTimer = wanderTimer = 0;
-      if (leg) { [x, y, tilt] = here(); place(); leg.anim.cancel(); leg = null; }   // park it where it is
-      if (leaving) { clearTimeout(swapTimer); arrive(); }                           // away while it changed kind: it comes back, parked, in the other kind
+      clearTimeout(tickTimer); clearTimeout(wanderTimer); tickTimer = wanderTimer = 0; aim = null;
+      if (leg) { [x, y, tilt, flip] = here(); place(); leg.anim.cancel(); leg = null; }   // park it where it is
+      if (leaving) arrive();                                                         // away while it changed kind: it comes back, parked, in the other kind
     }
     if ('IntersectionObserver' in window) new IntersectionObserver((entries) => { onScreen = entries[entries.length - 1].isIntersecting; sync(); }).observe(hero);
     else { onScreen = true; sync(); }   // no observer: it just keeps going
     doc.addEventListener('visibilitychange', sync);
     doc.addEventListener('wa:season', sync);
-    doc.addEventListener('wa:calm', sync);   // "Pause animations" parks it where it is; the calm mode (light, most) does not touch it
+    doc.addEventListener('wa:calm', sync);   // "Pause animations" parks it where it is; the calm mode (light, most) does not touch the flight
     W.critter = { get kind() { return kind; }, swap };
   }
 
@@ -564,8 +594,8 @@
    *   One switch on <html>, data-calm, set here and read by the scripts (the bee) and the CSS (the hero's layers):
    *     (not set)         everything moves as drawn
    *     data-calm="light" the page found the hero struggling (a slow phone): the smallest decorations of the hero rest (sparks,
-   *                       smoke puffs, swaying flowers, falling leaves and snow, butterflies, the little bees, tree lights, and the
-   *                       wings and bobbing of the bee that follows the pointer; the bee itself keeps flying and following)
+   *                       smoke puffs, swaying flowers, falling leaves and snow, butterflies, the little bees, tree lights; the bee or
+   *                       butterfly that follows the pointer keeps its wings and its flying)
    *     data-calm="most"  still struggling after that: every endless animation rests except the few that show something
    *                       (the pulsing "open now" dot, the bell of the reservation chip, the "now" season badge) and the
    *                       tractor and the barrel train, which keep driving (they froze on slow computers before)
@@ -577,7 +607,7 @@
    *   shows, but no fruit rains down the hero (js/hero.js, rain). Nothing is stored: it lasts
    *   until the page is left.
    *   The automatic check costs next to nothing: it watches only while the hero is on the screen and the tab is visible, 2 seconds
-   *   at a time (6 times after the page has loaded, then every 15 s), counting frames and the browser's long tasks.
+   *   at a time (6 times, starting 4 seconds after the page has loaded, then every 15 s), counting frames and the browser's long tasks.
    *   With "reduce motion" on in the visitor's system the CSS stops the animations itself: the buttons stay hidden, nothing here runs.
    * ------------------------------------------------------------------ */
   function initMotion() {
@@ -594,7 +624,7 @@
       if (typeof a.animationName !== 'string' || !el || a.effect.getTiming().iterations !== Infinity) return false;   // endless CSS animations only
       if (level === 'all') return true;
       if (level === 'most') return !el.matches(SHOWS) && !el.matches(DRIVES);
-      return !!hero && hero.contains(el) && el.matches(SMALL);
+      return !!hero && hero.contains(el) && el.matches(SMALL) && !el.closest('#bee-fly');   // the bee or butterfly that follows the pointer keeps its wings and its bobbing in "light": a creature that flies on with frozen wings looks broken
     };
     const rest = () => { if (level) doc.getAnimations().forEach((a) => { if (!held.has(a) && wanted(a)) { a.pause(); held.add(a); } }); };
     const wake = () => {
@@ -625,10 +655,11 @@
     label();
     W.motion = { get level() { return level; } };
 
-    // The automatic check: is the hero struggling? Two bad 2-s spells in a row move one step (light, then most).
+    // The automatic check: is the hero struggling? Three bad 2-s spells in a row move one step (light, then most). A page that was put at "light" by this check
+    // (never by the visitor) goes back to full motion once, after four good spells in a row: a slow moment while the page loaded must not freeze the falling leaves for good.
     // A browser run by a program (the tests, tests/visual-check.mjs) never switches by itself: its speed is that of a busy test computer.
     if (!hero || !('IntersectionObserver' in window) || navigator.webdriver) return;
-    let onScreen = false, ready = false, sampling = false, timer = 0, bad = 0, quick = 6, longs = [], seen = null;
+    let onScreen = false, ready = false, sampling = false, timer = 0, bad = 0, good = 0, recovered = false, quick = 6, longs = [], seen = null;
     try {
       seen = new PerformanceObserver((list) => { if (sampling) longs = longs.concat(list.getEntries()); });
       seen.observe({ type: 'longtask' });
@@ -650,7 +681,9 @@
           const fps = frames * 1000 / span, busy = longs.filter((e) => e.startTime + e.duration > t0).reduce((sum, e) => sum + e.duration, 0);
           const struggling = fps < 35 && (seen ? busy >= 150 : fps < 25);
           bad = struggling ? bad + 1 : 0;
-          if (bad >= 2) { bad = 0; quick = 4; set(level ? 'most' : 'light', 'auto'); }
+          good = struggling ? 0 : good + 1;
+          if (bad >= 3) { bad = 0; good = 0; quick = 4; set(level ? 'most' : 'light', 'auto'); }
+          else if (level === 'light' && !visitor && !recovered && good >= 4) { recovered = true; good = 0; set('', 'auto'); }   // only once: a computer that struggles again stays calm
         }
         later(quick > 0 ? (quick--, 0) : 15000);
       };
@@ -658,7 +691,7 @@
     }
     new IntersectionObserver((entries) => { onScreen = entries[entries.length - 1].isIntersecting; if (onScreen) later(500); else clearTimeout(timer); }).observe(hero);
     doc.addEventListener('visibilitychange', () => later(500));
-    const start = () => setTimeout(() => { ready = true; later(0); }, 1500);   // after the page has loaded: loading itself is busy on every phone
+    const start = () => setTimeout(() => { ready = true; later(0); }, 4000);   // well after the page has loaded: loading itself is busy on every phone, and a page in a frame (a preview) is slower still
     if (doc.readyState === 'complete') start(); else addEventListener('load', start);
   }
 

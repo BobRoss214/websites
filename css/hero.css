@@ -228,18 +228,18 @@ html[data-season="winter"] .bee-fly{display:none}
 /* ---------------------------------------------------------------- falling leaves + snow */
 .particles{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;overflow:hidden;pointer-events:none}
 .particles i{position:absolute;top:0;display:block;width:var(--s);height:var(--s);will-change:transform}
-.particles .leaf{background:var(--c);border-radius:0 100% 0 100%;border:1.5px solid rgba(58,36,22,.55);
-  animation:heroFall var(--d) linear infinite var(--dl),heroSpin calc(var(--d) * .35) linear infinite var(--dl)}
+.particles .leaf{animation:heroFall var(--d) linear infinite var(--dl),heroSway var(--sd,2.6s) cubic-bezier(.37,0,.63,1) infinite alternate var(--dl)}   /* a leaf falls straight down and drifts to one side and the other, smoothly (js/hero.js sets --fh, the height it falls through, --sd, --sw and --rk) */
+.particles .leaf::before{content:"";display:block;width:var(--s);height:var(--s);background:var(--c);border-radius:0 100% 0 100%;border:1.5px solid rgba(58,36,22,.55);
+  animation:heroRock var(--sd,2.6s) cubic-bezier(.37,0,.63,1) infinite alternate var(--dl)}   /* ...while the leaf itself tips the way it drifts; only its drawing turns, so the drifting stays level */
 .particles .flake{background:#fff;border-radius:50%;opacity:.92;box-shadow:0 0 0 1px rgba(110,150,200,.4);
   animation:heroSnow var(--d) linear infinite var(--dl)}
 @keyframes heroFall{
-  0%{translate:0 -8vh;opacity:0}8%{opacity:1}
-  25%{translate:var(--sw) 26vh}
-  50%{translate:calc(var(--sw) * -.7) 52vh}
-  75%{translate:calc(var(--sw) * 1.1) 78vh}
-  100%{translate:calc(var(--sw) * -.3) 108vh;opacity:.9}
+  0%{translate:0 -40px;opacity:0}6%{opacity:1}
+  100%{translate:0 calc(var(--fh,100vh) + 34px);opacity:1}   /* from just above the hero to just below it, whatever its height */
 }
-@keyframes heroSpin{from{rotate:var(--rot)}to{rotate:calc(var(--rot) + 360deg)}}
+@keyframes heroSway{from{transform:translateX(calc(var(--sw) * -1))}to{transform:translateX(var(--sw))}}
+@keyframes heroRock{from{rotate:calc(var(--rot) - var(--rk,50deg))}to{rotate:calc(var(--rot) + var(--rk,50deg))}}
+html[data-calm="light"] .particles,html[data-calm="most"] .particles{opacity:0;transition:opacity .6s}   /* the automatic calm mode: a leaf that stopped in mid-air looks broken, so the falling leaves and snow fade out instead (the visitor's own Pause keeps the picture as it is) */
 @keyframes heroSnow{
   0%{translate:0 -6vh;opacity:0}8%{opacity:.92}
   33%{translate:var(--sw) 34vh}

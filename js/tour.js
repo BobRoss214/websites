@@ -176,7 +176,7 @@
   let idx = -1, curStep = null, curEl = null, curRad = 14, entered = null, seq = 0, arrivedFor = null;
   let view = 'none', backView = 'welcome';
   let opener = null, savedScroll = null, wasOpen = [];
-  let frame = 0, placed = '', glide = 0, cardAt = null, styled = true;
+  let frame = 0, placed = '', glide = 0, cardAt = null, styled = true, clip = '';   // clip: the window cut out of the shield, as last written
 
   const pill = make('button', 'btn btn-sun btn-sm wa-tour-pill', 'Take a tour');
   pill.type = 'button'; pill.id = 'wa-tour-pill'; pill.hidden = true; pill.lang = 'en';
@@ -280,6 +280,7 @@
   };
   // what the card shows: a line above the title, the title, the text, and a row of buttons ([label, handler, kind]; the last one marked "primary" gets the focus)
   const setCard = (o) => {
+    const old = $('.wa-tour-flash', ui.card); if (old) old.remove();
     ui.progress.textContent = o.kicker || ''; ui.progress.hidden = !o.kicker;
     if (o.sub) ui.progress.appendChild(make('span', 'wa-tour-chapter', ' ' + o.sub));
     ui.bar.parentNode.hidden = o.pct == null;
@@ -295,8 +296,9 @@
       ui.actions.appendChild(b);
       if (def[3]) ui.primary = b;
     });
-    ui.card.setAttribute('aria-modal', o.free ? 'false' : 'true');
-    ui.box.classList.toggle('is-free', !!o.free);
+    ui.card.setAttribute('aria-modal', o.free || o.tryIt ? 'false' : 'true');
+    ui.box.classList.toggle('is-free', !!o.free);   // a "Try it" step: the whole page may be used
+    ui.box.classList.toggle('is-try', !!o.tryIt);    // any other step with a lit box: the lit part may be used, and nothing else (see place)
     ui.box.classList.toggle('is-still', calm());
     ui.card.classList.toggle('is-busy', false);
     ui.body.scrollTop = 0;
@@ -305,11 +307,19 @@
   /* The lit box and the card follow the target while a step shows: one measure per frame, a style change only when something moved. */
   const place = (force) => {
     if (!ui) return;
-    const { box, hole, card } = ui;
+    const { box, hole, card, shield } = ui;
     if (view === 'step' && curStep && curStep.target && (!curEl || !curEl.isConnected)) { const again = find(curStep.target); if (again) { curEl = again; curRad = 14; } }   // a re-drawn page part: found again
     let r = null;
     if (curEl && curEl.isConnected) { const b = curEl.getBoundingClientRect(); if (b.width > 0 || b.height > 0) r = b; }
     box.classList.toggle('no-hole', !r);
+    // A step with a lit box lets the visitor use what is lit (open a question, choose a tab) and nothing else: the shield that stops clicks has a window cut out of it
+    // where the lit part of the page is (the part's own box, not the glow around it). It is cut again whenever the part moves or grows (an opened answer).
+    let cut = '';
+    if (r && box.classList.contains('is-try')) {
+      const x1 = Math.round(r.left), y1 = Math.round(r.top), x2 = Math.round(r.right), y2 = Math.round(r.bottom);
+      cut = 'polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ' + x1 + 'px ' + y1 + 'px, ' + x1 + 'px ' + y2 + 'px, ' + x2 + 'px ' + y2 + 'px, ' + x2 + 'px ' + y1 + 'px, ' + x1 + 'px ' + y1 + 'px)';
+    }
+    if (cut !== clip) { clip = cut; shield.style.clipPath = cut; }
     const vw = root.clientWidth || win.innerWidth, vh = win.innerHeight, phone = vw <= 640;
     const hl = r ? r.left - 8 : 0, ht = r ? r.top - 8 : 0, hw = r ? r.width + 16 : 0, hh = r ? r.height + 16 : 0;
     const key = [hl, ht, hw, hh, vw, vh, card.offsetWidth, card.offsetHeight].map(Math.round).join();
@@ -377,7 +387,7 @@
     view = 'step';
     setCard({
       kicker: 'Step ' + (n + 1) + ' of ' + steps.length + ' - ' + (ch ? ch.title : ''), sub: ch ? 'Chapter ' + (chapters.indexOf(ch) + 1) + ' of ' + chapters.length : '', pct: (n + 1) / steps.length,
-      title: s.title, text: s.text, free: !!s.allowClicks,
+      title: s.title, text: s.text, free: s.allowClicks === true, tryIt: s.allowClicks !== true && s.allowClicks !== false && !!el,
       buttons: [['Back', n > 0 ? back : null, 'white'], ['Contents', () => openContents('step'), 'white'], last ? ['Start again', again, 'sun'] : null, last ? ['Finish', () => endTour(true), 'green', true] : ['Next', next, 'red', true]],
     });
     gliding();
@@ -444,7 +454,7 @@
     stopTracking(); curStep = null; curEl = null;
     setCard({
       title: 'Your website tour',
-      text: 'This is a tour of your new website. It takes about ' + minutes() + ' minutes. You can stop any time and do the rest later: come back and press "Continue where I stopped". Use Next and Back. Contents lets you jump to any part.' +
+      text: 'This is a tour of your new website. It takes about ' + minutes() + ' minutes. You can stop any time and do the rest later: come back and press "Continue where I stopped". Use Next and Back. Contents lets you jump to any part. Whatever is lit up on the page, you can click and try.' +
         (at > 0 ? '\n\nYou stopped at step ' + (at + 1) + ' of ' + steps.length + '.' : ''),
       buttons: [
         at > 0 ? ['Continue where I stopped', () => goTo(at, 1), 'red', true] : null,
@@ -495,8 +505,8 @@
   const inTour = (n) => !!(ui && n && ui.box.contains(n));
   const reachable = () => {   // what Tab can reach: the card's buttons, and (when the page may be used) what is inside the lit box
     const mine = $$('button:not([disabled])', ui.card).filter((b) => !b.hidden);
-    if (!(curStep && curStep.allowClicks && curEl)) return mine;
-    const sel = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+    if (!(view === 'step' && curStep && curStep.allowClicks !== false && curEl)) return mine;
+    const sel = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
     let more = $$(sel, curEl);
     if (curEl.matches(sel)) more.unshift(curEl);
     $$('[aria-controls][aria-expanded="true"]', curEl).forEach((c) => { const t = doc.getElementById(c.getAttribute('aria-controls')); if (t) more = more.concat($$(sel, t)); });
@@ -526,6 +536,38 @@
   };
   const onResize = () => { if (ui) { placed = ''; place(true); } };
 
+  // While the tour is open, a link that would take the visitor away from this page (to another page, another website, an e-mail or a phone call) does nothing
+  // but say so; a place on this same page (#...) still scrolls. A form that would send something to another website is stopped the same way.
+  let flashTimer = 0;
+  const flash = (text) => {   // a short note in the card, gone after a few seconds (or at the next step)
+    if (!ui) return;
+    let n = $('.wa-tour-flash', ui.card);
+    if (!n) { n = make('p', 'wa-tour-flash'); n.setAttribute('role', 'status'); ui.card.insertBefore(n, ui.actions); }
+    n.textContent = text;
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => { if (n.parentNode) n.parentNode.removeChild(n); }, 4000);
+  };
+  const leaves = (a) => {   // does this link go anywhere but a place on the page that is open now?
+    const href = a.getAttribute('href') || '';
+    if (href.charAt(0) === '#' || /^javascript:/i.test(href)) return false;
+    if (/^(mailto|tel|sms):/i.test(href)) return true;
+    try { const u = new URL(href, win.location.href); return u.origin !== win.location.origin || u.pathname !== win.location.pathname; } catch (e) { return false; }
+  };
+  const onLink = (e) => {
+    if (!ui || !e.target || !e.target.closest || inTour(e.target)) return;
+    const a = e.target.closest('a[href]');
+    if (!a || !leaves(a)) return;
+    e.preventDefault(); e.stopPropagation();
+    flash('This link is switched off during the tour, because it would take you away from it.');
+  };
+  const onForm = (e) => {
+    const f = e.target;
+    if (!ui || !f || !f.action || inTour(f)) return;
+    let out = false;
+    try { out = new URL(f.action, win.location.href).origin !== win.location.origin; } catch (err) { out = false; }
+    if (out) { e.preventDefault(); e.stopPropagation(); flash('Forms are switched off during the tour.'); }
+  };
+
   const openTour = (how, at) => beginTour(how, at).catch((e) => warn('opening', e));
   const beginTour = async (how, at) => {   // how: 'welcome' (the button, a link, #tour) or 'resume' (the page after a jump: carry on at step at)
     if (ui || closing) return;
@@ -537,6 +579,9 @@
     ui.box.classList.toggle('is-still', calm());
     win.addEventListener('keydown', onKey, true);
     win.addEventListener('resize', onResize);
+    doc.addEventListener('click', onLink, true);
+    doc.addEventListener('auxclick', onLink, true);
+    doc.addEventListener('submit', onForm, true);
     setCard({ title: 'Your website tour', text: 'Getting the tour ready...', buttons: [['Not now', () => endTour(false), 'ghost', true]] });
     setBusy(true); place(true);
     styled = await loadCss();
@@ -571,6 +616,10 @@
     try {
       win.removeEventListener('keydown', onKey, true);
       win.removeEventListener('resize', onResize);
+      doc.removeEventListener('click', onLink, true);
+      doc.removeEventListener('auxclick', onLink, true);
+      doc.removeEventListener('submit', onForm, true);
+      clearTimeout(flashTimer);
       clearTimeout(glide);
       ui.box.remove();
     } catch (e) { warn('closing', e); }

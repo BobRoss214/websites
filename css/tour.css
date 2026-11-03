@@ -14,6 +14,7 @@
 .wa-tour-shield{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;background:transparent}   /* it stops clicks reaching the page behind */
 .wa-tour.no-hole .wa-tour-shield{background:rgba(58,36,22,.74)}
 .wa-tour.is-free .wa-tour-shield{pointer-events:none}   /* a step that says "try it": the page can be clicked */
+.wa-tour-flash{flex:none;margin:0 0 .6em;padding:.45em .75em;border:2px solid var(--sun,#ffc928);border-radius:12px;background:#fff3cf;font-weight:700;font-size:.95rem;line-height:1.35}   /* a short note under the text: a link that is switched off during the tour */
 .wa-tour-hole{position:fixed;z-index:9001;box-sizing:border-box;pointer-events:none;border:3px solid transparent;border-radius:16px;box-shadow:0 0 0 4px var(--sun,#ffc928),0 0 0 9999px rgba(58,36,22,.74)}   /* the transparent border is what High Contrast colors show */
 .wa-tour.no-hole .wa-tour-hole{display:none}
 

@@ -5,7 +5,7 @@
  * every endless animation and the bee and start them again (aria-pressed, keyboard, the four languages), the picture stays whole, every tap
  * still works (a badge earned while paused shows and goes away by itself, without the rain of fruit), nothing is stored, and with "reduce
  * motion" in the system the buttons are not there. The automatic switch for a phone that cannot draw the hero smoothly (Chromium's processor
- * slowed down 6x): first the smallest decorations and the bee's wings rest (data-calm="light"; the bee keeps flying), then every endless animation but the ones that show
+ * slowed down 6x): first the smallest decorations rest (data-calm="light"; the bee or butterfly keeps flying and keeps its wings), then every endless animation but the ones that show
  * something (data-calm="most"), the buttons show pressed and one press turns motion back on for good; at full speed it does not switch
  * (skipped when this computer itself cannot draw 40 frames a second). */
 import { run, open, ok, okSoon, info, until, ms } from './lib.mjs';
@@ -181,10 +181,10 @@ await run('calm', async ({ browser, base, errs }) => {
   const slow = await open(browser, base, 'index.html', errs, real(6));
   const light = await until(slow, () => document.documentElement.getAttribute('data-calm'), null, 45000);
   const l = await now(slow);
-  ok('6x slower: the page switches to data-calm="light" by itself, the buttons show pressed, the bee\'s wings and bobbing stop (it keeps flying: tests/critter.test.mjs)', light === 'light' && l.pressed === 'true,true' && l.bee === 0, `${light} ${JSON.stringify(l)}`);
+  ok('6x slower: the page switches to data-calm="light" by itself, the buttons show pressed, the bee\'s wings and bobbing keep going (a creature with frozen wings looks broken; its flight: tests/critter.test.mjs)', light === 'light' && l.pressed === 'true,true' && l.bee > 0, `${light} ${JSON.stringify(l)}`);
   const small = await slow.evaluate(() => {
     const a = document.getAnimations().filter((x) => x.effect && x.effect.target && x.effect.getTiming().iterations === Infinity && document.querySelector('#top').contains(x.effect.target));
-    const s = (x) => x.effect.target.matches('.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *, .bfly, .bfly *');
+    const s = (x) => x.effect.target.matches('.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *, .bfly, .bfly *') && !x.effect.target.closest('#bee-fly');   // the follower's own wings keep going
     return { smallRunning: a.filter((x) => s(x) && x.playState === 'running').length, small: a.filter(s).length, otherRunning: a.filter((x) => !s(x) && x.playState === 'running').length };
   });
   ok('...the small decorations rest, the bigger loops (clouds, the wagon) still run', small.small > 0 && small.smallRunning === 0 && small.otherRunning > 0, JSON.stringify(small));
@@ -202,7 +202,7 @@ await run('calm', async ({ browser, base, errs }) => {
   await slow.context().close();
 
   const fast = await open(browser, base, 'index.html', errs, real(1));
-  await realWait(ms(15000));   // the page looks 6 times, 2 s each, from 1.5 s after loading
+  await realWait(ms(17000));   // the page looks 6 times, 2 s each, from 4 s after loading
   const f = await fast.evaluate(() => ({ calm: document.documentElement.getAttribute('data-calm'), fps: window.__fps }));
   const busy = f.fps.some((x, i) => i > 0 && x < 40);   // this computer could not keep up even at full speed
   if (busy && f.calm) info(`this computer is too busy to judge full speed (frames per second, 2 s at a time: ${f.fps.join(' ')}); the full-speed check is skipped`);

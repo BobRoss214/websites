@@ -71,7 +71,7 @@ const LOANWORDS = [{ lang: 'vi', word: 'pound', why: 'the Vietnamese texts of th
 const OLD_PAGE = { commit: 'e3a195f', file: 'index.html' };
 const OLD_FACTS = {
   pizza: ['<dd>$15&ndash;$17</dd>', 'Gluten-free crust is +$9 and vegan cheese is +$3.', 'Open Friday&ndash;Sunday, 10 am&ndash;8 pm'],
-  'wagon-ride': ['Ages 2 and younger ride free.'],
+  'wagon-ride': ['Ages 3 and younger ride free.'],
   'barrel-train': ['Ages 12 and under only.'],
   'corn-pit': ['Buy one, get one free on Thursdays with reservations.'],
   upick: ['Every weekend, late September through October.'],

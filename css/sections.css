@@ -30,6 +30,11 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
 /* fall: a little red dot on the Things to Do button (the new Tomatoes & basil line is in its list); in the phone menu it sits after the group's name */
 html[data-season="fall"] .nav-tomato .nav-group-btn::after{content:"";position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
 html[data-season="fall"] .nav-tomato .nav-group-title::after{content:"";display:inline-block;width:9px;height:9px;margin-left:.5em;vertical-align:.1em;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
+/* coming up: a line for something that is nearly here (or here now) is bold with a little red dot, and so is the button of its group (js/main.js, initNav) */
+.nav-group-list a.is-coming{font-weight:800}
+.nav-group-list a.is-coming::after{content:"";display:inline-block;width:9px;height:9px;margin-left:.5em;vertical-align:.1em;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
+.nav-group.has-coming .nav-group-btn::after{content:"";position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
+.nav-group.has-coming .nav-group-title::after{content:"";display:inline-block;width:9px;height:9px;margin-left:.5em;vertical-align:.1em;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
 /* a group: its button, its name (only shown in the phone menu) and its list of lines */
 .nav-group{position:relative}
 .nav-group-btn{display:flex;align-items:center;gap:.2em;padding:.5em .4em .5em .5em;border:0;border-radius:999px;background:none;color:inherit;font:600 .95rem/1 var(--display);white-space:nowrap;cursor:pointer;transition:background-color .2s}

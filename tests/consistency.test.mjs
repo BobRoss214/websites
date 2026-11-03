@@ -155,7 +155,8 @@ const FACTS = [
     new RegExp(DAYTXT + ',? \\d to \\d pm', 'i')],
     extra: () => [{ file: 'js/content.js', line: contentLine(/greenhouse:/), value: dayList(CONTENT.hours.greenhouse.days), words: 'hours.greenhouse.days' }, { file: 'js/content.js', line: contentLine(/pizza:\s*\{/), value: dayList(CONTENT.hours.pizza.days), words: 'hours.pizza.days' }, ...stripDays('GreenHouse')] },
   /* ---- ages ---- */
-  { id: 'age: free (infants, wagon ride, party children)', norm: num, min: 10, find: [/[Ii]nfants (\d+) and under are free/, /[Aa]ges (\d+) and younger ride free/, /[Cc]hildren (\d+) and under are free/, /[Cc]hildren age (\d+) and younger are free/] },
+  { id: 'age: free (infants, party children)', norm: num, min: 8, find: [/[Ii]nfants (\d+) and under are free/, /[Cc]hildren (\d+) and under are free/, /[Cc]hildren age (\d+) and younger are free/] },
+  { id: 'age: wagon ride free', norm: num, min: 3, find: [/[Aa]ges (\d+) and younger ride (?:the wagon )?free/] },
   { id: 'age: from this age people pay the field fee / school admission', norm: num, min: 11, find: [/[Aa]ges (\d+) and up/, /\(ages (\d+)\+\)/, /ages (\d+) and older/, /ages (\d+) and up/] },
   { id: 'age: barrel train (and under only)', norm: num, min: 3, find: [/Ages (\d+) and under only/] },
   /* ---- group sizes ---- */

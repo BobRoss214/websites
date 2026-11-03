@@ -11,7 +11,7 @@
  * That jump became a glide that ran past the place by thousands of pixels on a laptop (about 270 px on a phone) and stayed there until the page put the
  * place back in view 1.5 s after loading (keepHashTarget in js/features.js). The check fails when, after its first move, the page is ever more than
  * 40 px from the place where it ends (a glide, an overshoot, a jump later), or when the place ends off the usual line.
- * The places the top menu's lines go to are among them (#addons, #farm-animals, #goats, #shop-icecream, #steps and the farm map and the photo gallery, which a script shows after the load).
+ * The places the top menu's lines go to are among them (#addons, #animals, #shop-icecream, #steps and the farm map and the photo gallery, which a script shows after the load).
  * Also: once the page has loaded, links on the page still glide (smooth scrolling is only held back while a page opens). */
 import { run, open, ok, ms } from './lib.mjs';
 
@@ -53,7 +53,7 @@ await run('hash-open', async ({ browser, base, errs }) => {
 
   // 1. a page opened at a #place: look at every frame until 2 s after the load
   const OPEN = [
-    ['laptop', 'index.html', ['menu', 'farm', 'addons', 'farm-animals', 'goats', 'shop-icecream']], ['phone', 'index.html', ['farm', 'varieties', 'steps', 'farm-playgrounds']],
+    ['laptop', 'index.html', ['menu', 'farm', 'addons', 'animals', 'shop-icecream']], ['phone', 'index.html', ['farm', 'varieties', 'steps', 'farm-playgrounds']],
     // the places of the menu that are hidden until a script shows them (the farm map, the photo gallery)
     ['laptop', 'index.html', ['farm-map', 'gallery']],
     ['laptop', 'first-visit.html', ['parking', 'checklist']], ['phone', 'first-visit.html', ['strollers']],

@@ -83,7 +83,7 @@ closeDay, alerts, reset, and that two stores on the same storage see each other'
 ## Prices and rules (all from this website; check them against `index.html` before you use them, and add a test that the numbers in `demo-data.js` still appear on the page)
 - Visit with pizza (Friday, Saturday, Sunday): $31 base price, includes 2 Wise Pie pizzas, plus $3 per person ages 3 and up. Children 2 and younger are free.
 - Farm fun only (Thursday to Sunday): $3 per person ages 3 and up; 2 and younger free.
-- Add-ons: wagon ride $4.50 per person (2 and younger free); barrel train $3 per child (ages 12 and under only); corn pit $4 per person (on Thursdays buy one,
+- Add-ons: wagon ride $4.50 per person (3 and younger free); barrel train $3 per child (ages 12 and under only); corn pit $4 per person (on Thursdays buy one,
   get one free with a reservation: keep the sample visit off Thursdays, or compute it). Tomatoes and basil are paid by weight at pick-up, not in the visit.
 - THE PIZZA RULE: pizzas are ready 1 hour after the reservation time (a 2:00 pm visit means pizza at 3:00 pm). That is the default pizza time. The family can
   ask for earlier or later; the kitchen decides.
