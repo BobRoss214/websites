@@ -8,7 +8,9 @@
  * yes, no, a suggestion then OK, a suggestion then "No thanks", and cancel (history, notices for the other side, one open request per visit or order, nothing
  * changes before the farm says yes); a weather closing (visits marked, notice, the "new day" request, open again); "Tell me when" (switches, the day waitlist,
  * the counts, firing an alert); messages, reviews and photos; the pizza follows the visit time; Start over; two stores on one storage seeing each other; storage
- * that is blocked or full (the demo carries on in memory); that what the store hands out is a copy. Run: node tests/demo-store.test.mjs */
+ * that is blocked or full (the demo carries on in memory); that what the store hands out is a copy; the sign-up question "Do you plan or manage a party, an event or a school trip?"
+ * (each answer, what the account keeps, the event of that kind, no event for No, adding one later, the ready-made sample keeping its school trip); that there is no My year
+ * (no badges). Run: node tests/demo-store.test.mjs */
 import vm from 'node:vm';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -63,7 +65,7 @@ const last = (list) => list[list.length - 1];
   ok('an account needs a name and an email that looks like one', st.createAccount({ name: '', email: 'a@b.co' }) === null && st.createAccount({ name: 'Alex', email: 'alex' }) === null && st.createAccount({ name: 'Alex', email: 'a@b' }) === null && st.current() === null);
   const a = st.createAccount({ name: '  Alex  ', email: ' Alex@Example.COM ' });
   ok('createAccount returns the account (name trimmed, email in small letters) and signs it in', a && a.name === 'Alex' && a.email === 'alex@example.com' && st.current().email === 'alex@example.com');
-  ok('creating an account loads the sample family: 3 visits, 1 pizza order, 1 school trip, the family and a first notice', st.list('visits').length === 3 && st.list('orders').length === 1 && st.list('events').length === 1 && st.get('family').name === 'Alex' && st.noticesFor('family').length === 1 && st.flag('sampleNote') === true);
+  ok('creating an account (with no answer to the event question: the ready-made sample) loads the sample family: 3 visits, 1 pizza order, 1 school trip, the family and a first notice', st.list('visits').length === 3 && st.list('orders').length === 1 && st.list('events').length === 1 && st.get('family').name === 'Alex' && st.noticesFor('family').length === 1 && st.flag('sampleNote') === true);
   st.signOut();
   ok('signOut: nobody is signed in, the sample stays (the desk and the kitchen still see it)', st.current() === null && st.list('visits').length === 3);
   ok('signIn: an email nobody created here is refused', st.signIn('nobody@example.com') === null && st.current() === null);
@@ -318,7 +320,7 @@ const last = (list) => list[list.length - 1];
   ok('update merges into the record and returns it; an unknown id or list gives null', st.update('events', 'e2', { title: 'A big party' }).title === 'A big party' && st.get('events', 'e2').id === 'e2' && st.update('events', 'e404', {}) === null && st.update('cats', 'x', {}) === null);
   ok('remove takes a record out', st.remove('events', 'e9') === true && st.get('events', 'e9') === null && st.remove('events', 'e9') === false);
   ok('family: get, update with or without the middle null, getFamily / setFamily', st.get('family').kids.length === 3 && st.update('family', null, { allergies: 'Casey: eggs.' }).allergies === 'Casey: eggs.' && st.update('family', { glutenFree: true }).glutenFree === true && st.getFamily().glutenFree === true && st.setFamily({ vegan: true }).vegan === true && st.get('family').name === 'Alex');
-  ok('badges: sample picks are there and can be changed', st.get('badges').strawberry === 100 && st.update('badges', null, { winter: 7 }).winter === 7 && st.setBadges({ pumpkin: 70 }).pumpkin === 70);
+  ok('My year is gone: the store keeps no badges (no list, no setBadges, nothing in the sample or in a saved state)', st.get('badges') === null && st.update('badges', null, { winter: 7 }) === null && typeof st.setBadges === 'undefined' && !('badges' in st.snapshot()) && !('badges' in Data.sample(TODAY)));
   ok('flags: the sample note is on after sign-up and can be switched off', st.flag('sampleNote') === true && (st.setFlag('sampleNote', false), st.flag('sampleNote') === false) && st.flag('never') === false);
   ok('get of an unknown list or id is null, list of an unknown list is empty', st.get('cats', 'x') === null && st.get('visits', 'zzz') === null && st.list('cats').length === 0 && Array.isArray(st.list('closedDays')) && Array.isArray(st.get('closedDays')));
   ok('the pretend clock rules the stamps (the store asks for the time in the farm\'s own clock)', st.now().date === TODAY && st.today() === TODAY);
@@ -357,6 +359,65 @@ const last = (list) => list[list.length - 1];
   const R = Store.create(small, { now: () => ({ date: TODAY, time: '10:00' }) });
   ok('and a reload (a new store on that storage) finds the demo without the picture', R.list('visits').length === 3 && R.list('photos').length === 1 && R.list('photos')[0].thumb === '');
   ok('a storage with rubbish in it is treated as empty', (() => { const g = new Fake(); g.m.set(KEY, '{not json'); const x = Store.create(g, {}); const empty = x.current() === null && x.list('visits').length === 0; const g2 = new Fake(); g2.m.set(KEY, JSON.stringify({ v: 99 })); return empty && Store.create(g2, {}).list('visits').length === 0; })());
+}
+
+/* ---------------- 13. "Do you plan or manage a party, an event or a school trip?" at sign-up, and adding an event later ---------------- */
+{
+  const make = (extra) => { const x = fresh({ bare: true }); const acct = x.st.createAccount({ name: 'Alex', email: 'alex@example.com', ...extra }); return { ...x, acct }; };
+  const no = make({ eventKind: 'none' });
+  ok('answer No: the account keeps it, there is no event and no event message, and the rest of the sample family is there',
+    no.acct.eventKind === 'none' && no.st.current().eventKind === 'none' && no.st.list('events').length === 0 && no.st.list('messages').length === 0 && no.st.list('visits').length === 3 && no.st.list('orders').length === 1 && no.st.get('family').name === 'Alex');
+  const party = make({ eventKind: 'party' }), pe = party.st.list('events')[0];
+  ok('answer "a party": the account keeps it and has a party, with guests only (no students), room for them (up to 50) and the party price from the page',
+    party.st.current().eventKind === 'party' && party.st.list('events').length === 1 && pe.kind === 'party' && pe.guests >= 1 && pe.guests <= Data.PRICES.partyMaxGuests && !('students' in pe) && Data.eventProblem(pe) === '' && Data.priceEvent(pe).total === 300, JSON.stringify(pe));
+  ok('the party has its thread with a first message from Mrs. Cathy (and no notice about it)', pe.thread === 'event-' + pe.id && party.st.thread(pe.thread).length === 1 && party.st.thread(pe.thread)[0].from === 'cathy' && /party/.test(party.st.thread(pe.thread)[0].text) && party.st.noticesFor('family').length === 1);
+  const school = make({ eventKind: 'school' }), se = school.st.list('events')[0];
+  ok('answer "a school trip": the account keeps it and has the school trip of the page: at least 100 students, $11 each, parents and siblings 3+ pay $11 too', school.st.current().eventKind === 'school' && se.kind === 'school' && se.students >= 100 && Data.eventProblem(se) === '' && Data.priceEvent(se).total === (se.students + se.guests) * 11);
+  const other = make({ eventKind: 'other' }), oe = other.st.list('events')[0];
+  ok('answer "another event": the account keeps it and has an event with guests and NO price (the website names none)', other.st.current().eventKind === 'other' && oe.kind === 'other' && oe.guests >= 1 && Data.priceEvent(oe).total === null && Data.eventProblem(oe) === '' && other.st.thread(oe.thread).length === 1);
+  const plain = make({});
+  ok('no answer given at all is the ready-made sample, with its school trip; no argument at all is the sample account Alex, who planned a school trip', plain.st.current().eventKind === 'school' && plain.st.list('events').length === 1 && plain.st.list('events')[0].kind === 'school'
+    && (() => { const x = fresh({ bare: true }); x.st.createAccount(); return x.st.current().email === 'alex@example.com' && x.st.current().eventKind === 'school' && x.st.list('events').length === 1; })());
+  ok('an answer that is not one of the four is read as No', ['banana', '', null, 0].every((v) => { const x = make({ eventKind: v }); return x.st.current().eventKind === 'none' && x.st.list('events').length === 0; }) && make({ eventKind: 'PARTY' }).st.list('events')[0].kind === 'party');
+  {
+    const x = make({ eventKind: 'none' });
+    x.st.createAccount({ name: 'Other', email: 'alex@example.com', eventKind: 'party' });
+    ok('the same email again is a sign-in: the answer it was made with stays (No stays No)', x.st.current().eventKind === 'none' && x.st.list('events').length === 0);
+    x.st.createAccount({ name: 'Sam Two', email: 'sam@example.com', eventKind: 'party' });
+    ok('a different email starts a new family with its own answer', x.st.current().eventKind === 'party' && x.st.list('events').length === 1 && x.st.list('events')[0].kind === 'party');
+  }
+  {
+    const x = make({ eventKind: 'none' }), seen = [];
+    x.st.subscribe(() => seen.push(1));
+    ok('addEvent refuses a kind it does not know, and "none"', x.st.addEvent('none') === null && x.st.addEvent('banana') === null && x.st.addEvent() === null && x.st.list('events').length === 0 && seen.length === 0);
+    const e = x.st.addEvent('party');
+    ok('addEvent("party") later: the party is added with its thread and Mrs. Cathy\'s first message, the account keeps the kind, and the subscribers hear of it once',
+      !!e && e.kind === 'party' && e.thread === 'event-' + e.id && x.st.list('events').length === 1 && x.st.thread(e.thread).length === 1 && x.st.thread(e.thread)[0].from === 'cathy' && x.st.current().eventKind === 'party' && seen.length === 1, JSON.stringify(e));
+    ok('a family has one event here: adding another changes nothing (and tells nobody)', x.st.addEvent('school') === null && x.st.list('events').length === 1 && x.st.list('events')[0].kind === 'party' && seen.length === 1);
+    const q = x.st.ask({ kind: 'event-change', to: 'cathy', target: { coll: 'events', id: e.id }, patch: { guests: 30 }, from: 'family', summary: 'Change the guest count from 24 guests to 30 guests' });
+    x.st.reply(q.id, { answer: 'yes' });
+    ok('a party\'s guest count can be changed by a request like the school trip\'s head count, and nothing changes before the answer', q.status === 'waiting' && x.st.get('events', e.id).guests === 30 && x.st.get('requests', q.id).status === 'yes' && x.st.get('events', e.id).kind === 'party');
+    const s2 = make({ eventKind: 'none' }).st.addEvent('school');
+    ok('addEvent("school") and addEvent("other") give those events', s2.kind === 'school' && s2.students >= 100 && make({ eventKind: 'none' }).st.addEvent('other').kind === 'other');
+  }
+  {
+    const x = make({ eventKind: 'none' });
+    x.st.seedSample();
+    ok('the ready-made sample (seedSample, which the tour uses) always has the school trip, whatever was answered, and the account keeps that', x.st.list('events').length === 1 && x.st.list('events')[0].kind === 'school' && x.st.current().eventKind === 'school' && x.st.get('family').name === 'Alex' && x.st.thread('event-e1').length === 1);
+    const y = make({ eventKind: 'party' });
+    y.st.seedSample();
+    ok('and the same from a party: the sample school trip replaces it', y.st.list('events').length === 1 && y.st.list('events')[0].kind === 'school' && y.st.list('events')[0].id === 'e1');
+  }
+  {
+    const x = make({ eventKind: 'party' });
+    x.st.signOut(); x.st.signIn('alex@example.com');
+    const shared = new Fake(), A = fresh({ storage: shared, bare: true }).st;
+    A.createAccount({ name: 'Alex', email: 'alex@example.com', eventKind: 'other' });
+    const B = Store.create(shared, { now: () => ({ date: TODAY, time: '10:00' }) });
+    ok('the answer survives signing out and in, and a second store on the same storage (another page, a reload) sees it', x.st.current().eventKind === 'party' && x.st.list('events').length === 1 && B.current().eventKind === 'other' && B.list('events')[0].kind === 'other');
+    A.reset();
+    ok('Start over forgets the answer with everything else', B.current() === null && B.list('events').length === 0 && A.createAccount({ name: 'Riley', email: 'riley@example.com', eventKind: 'none' }).eventKind === 'none' && A.list('events').length === 0);
+  }
 }
 
 await finish({});

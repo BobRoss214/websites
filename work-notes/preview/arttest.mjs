@@ -160,7 +160,7 @@ function staticChecks() {
   // links and pictures
   const strip = (t) => t.replace(SCRIPT, '').replace(/<style\b[\s\S]*?<\/style>/gi, '').replace(/<!--[\s\S]*?-->/g, '');
   const ids = Object.fromEntries(PAGES.map((n) => [n, new Set([...strip(html[n]).matchAll(/\b(?:id|name)\s*=\s*"([^"]+)"/g)].map((m) => m[1]))]));
-  const DYNAMIC = /^(?:tour|visits|pizza|family|alerts|year|messages|photos|event)(?:\?.*)?$/;
+  const DYNAMIC = /^(?:tour|visits|pizza|family|alerts|messages|photos|event)(?:\?.*)?$/;
   const bad = [], badHash = [];
   for (const n of PAGES) {
     const t = strip(html[n]);

@@ -9,7 +9,7 @@
  *   This week            who is coming each day (people, never a capacity), pizzas by pick-up time
  *   Weather              close or open a day; every family booked that day gets a notice
  *   People waiting       how many asked "tell me when", and a button that sends the alert
- *   Groups and schools   the sample school trip and its messages
+ *   Groups and schools   the family's event (a school trip, a party or another event, when the family has one) and its messages
  *
  * How it is built: render(state) draws the whole screen from the store's state, and the store calls it again whenever anything changes (also when
  * another tab changes it), so a request sent from the family's page arrives here by itself. Cards that did not change are kept as they are, so
@@ -265,7 +265,8 @@
   // A trip's head count: students, and the guests who come with them (parents and siblings 3 and up). The store's field is `guests`; the sentence says
   // "chaperones", as the family's own request does.
   const guestsOf = (e) => num(e && (e.guests != null ? e.guests : e.chaperones));
-  const headText = (students, guests) => plural(num(students), 'student', 'students') + ' and ' + plural(num(guests), 'chaperone', 'chaperones');
+  // (a party or another event has guests only, with no `students` at all: then it is "24 guests")
+  const headText = (students, guests) => (students == null ? plural(num(guests), 'guest', 'guests') : plural(num(students), 'student', 'students') + ' and ' + plural(num(guests), 'chaperone', 'chaperones'));
   function slipsText(e) {
     if (e.slipsReceived != null) return num(e.slipsReceived) + ' of ' + num(e.students) + ' received (sample)';
     const s = e.slips || e.permissionSlips;
@@ -367,7 +368,7 @@
 
     parts.empty = el('div', { class: 'ds-card ds-nodata', hidden: '' }, [
       el('h2', { text: 'No family has signed up in this browser yet' }),
-      el('p', { text: 'Open the family page and make an account. That loads a sample family with a visit, a pizza order and a school trip. Then come back here.' }),
+      el('p', { text: 'Open the family page and make an account. That loads a sample family with a visit and a pizza order. Say yes to the question about a party, an event or a school trip to get one of those too. Then come back here.' }),
       el('a', { class: 'btn btn-red btn-lg', href: 'account.html' }, ['Open the family page ', icon('arrow')])
     ]);
 
@@ -469,15 +470,15 @@
           return { patch: { date: day, time }, summary: when(day, time) };
         };
       } else if (kind === 'group') {
-        const p = r.patch || {}, ev = target || {};
+        const p = r.patch || {}, ev = target || {}, guestsOnly = ev.students == null && p.students == null;   // a party or another event has guests only
         box.appendChild(el('div', { class: 'ds-row2' }, [
-          field(id + '-st', 'Students', el('input', { id: id + '-st', class: 'ds-select', type: 'number', min: '0', inputmode: 'numeric', value: str(ui.val['sgst:' + r.id] != null ? ui.val['sgst:' + r.id] : (p.students != null ? p.students : ev.students)), 'data-focus': id + '-st', oninput: (e) => { ui.val['sgst:' + r.id] = e.target.value; } })),
-          field(id + '-ch', 'Chaperones', el('input', { id: id + '-ch', class: 'ds-select', type: 'number', min: '0', inputmode: 'numeric', value: str(ui.val['sgch:' + r.id] != null ? ui.val['sgch:' + r.id] : (p.guests != null ? p.guests : p.chaperones != null ? p.chaperones : guestsOf(ev))), 'data-focus': id + '-ch', oninput: (e) => { ui.val['sgch:' + r.id] = e.target.value; } }))
+          guestsOnly ? null : field(id + '-st', 'Students', el('input', { id: id + '-st', class: 'ds-select', type: 'number', min: '0', inputmode: 'numeric', value: str(ui.val['sgst:' + r.id] != null ? ui.val['sgst:' + r.id] : (p.students != null ? p.students : ev.students)), 'data-focus': id + '-st', oninput: (e) => { ui.val['sgst:' + r.id] = e.target.value; } })),
+          field(id + '-ch', guestsOnly ? 'Guests' : 'Chaperones', el('input', { id: id + '-ch', class: 'ds-select', type: 'number', min: '0', inputmode: 'numeric', value: str(ui.val['sgch:' + r.id] != null ? ui.val['sgch:' + r.id] : (p.guests != null ? p.guests : p.chaperones != null ? p.chaperones : guestsOf(ev))), 'data-focus': id + '-ch', oninput: (e) => { ui.val['sgch:' + r.id] = e.target.value; } }))
         ]));
         build = () => {
           const s = num(ui.val['sgst:' + r.id] != null ? ui.val['sgst:' + r.id] : (p.students != null ? p.students : ev.students));
           const c = num(ui.val['sgch:' + r.id] != null ? ui.val['sgch:' + r.id] : (p.guests != null ? p.guests : p.chaperones != null ? p.chaperones : guestsOf(ev)));
-          return { patch: { students: s, guests: c }, summary: headText(s, c) };
+          return guestsOnly ? { patch: { guests: c }, summary: headText(null, c) } : { patch: { students: s, guests: c }, summary: headText(s, c) };
         };
       } else {
         box.appendChild(field(id + '-w', 'What do you suggest?', el('input', { id: id + '-w', class: 'ds-select', type: 'text', value: str(ui.val['sgw:' + r.id] || ''), 'data-focus': id + '-w', oninput: (e) => { ui.val['sgw:' + r.id] = e.target.value; } })));

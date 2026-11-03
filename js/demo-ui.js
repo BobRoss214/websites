@@ -6,6 +6,7 @@
  *   DemoUI.modal({ title, body, actions, wide, onClose })  a dialog: returns { el, body, actions, close }      DemoUI.confirm({ title, text, yes, no })  a Promise of true or false
  *   DemoUI.toast(text, { kind })          a short message that fades by itself (one place for the whole demo)
  *   DemoUI.chip(text, kind)               a small status label (kind: wait, good, no, info, weather)         DemoUI.requestStatus(request)  { text, kind }
+ *   DemoUI.choices({ name, legend, hint, options, value, onChange })  a question with big buttons, one chosen: { el, value(), set(v) }  (the sign-up question)
  *   DemoUI.download(name, text, type)     saves a file (the preview page saves files its own way)            DemoUI.addToCalendar(visit, order)
  * Plain JavaScript, no libraries, written for the same browsers as the rest of the site (no newer syntax). */
 (function () {
@@ -70,6 +71,23 @@
     return { text: q.status, kind: 'info' };
   }
   function chip(text, kind) { return h('span', { class: 'demo-chip' + (kind ? ' is-' + kind : '') }, text); }
+
+  /* ---------------------------------------------------------------- a question with big buttons: only one can be chosen */
+  // choices({ name, legend, hint, options: [{ value, label }], value, onChange(value) }) -> { el, value(), set(value) }
+  // The buttons are real radio buttons (the arrow keys and a screen reader work as people expect), drawn big. They are built here, never written in a page.
+  function choices(o) {
+    var name = o.name || 'demo-choice-' + (++seq), cur = o.value, inputs = [];
+    var list = h('div', { class: 'demo-choices-list' });
+    (o.options || []).forEach(function (op, i) {
+      var id = name + '-' + i, input = h('input', { type: 'radio', name: name, id: id, value: op.value });
+      input.checked = op.value === cur;
+      input.addEventListener('change', function () { if (input.checked) { cur = op.value; if (o.onChange) o.onChange(cur); } });
+      inputs.push(input);
+      list.appendChild(h('label', { class: 'demo-choice', for: id }, input, h('span', { class: 'demo-choice-text' }, h('span', { class: 'demo-choice-mark', 'aria-hidden': 'true' }), op.label)));   // (the tick drawn by the style sheet sits in a hidden span, so a screen reader says only the words)
+    });
+    var box = h('fieldset', { class: 'demo-choices', 'aria-describedby': o.hint ? name + '-h' : null }, h('legend', null, o.legend), list, o.hint ? h('p', { class: 'demo-hint', id: name + '-h' }, o.hint) : null);
+    return { el: box, value: function () { return cur; }, set: function (v) { cur = v; inputs.forEach(function (i) { i.checked = i.value === v; }); } };
+  }
 
   /* ---------------------------------------------------------------- focus */
   var FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
@@ -161,6 +179,6 @@
   window.DemoUI = {
     h: h, icon: icon, clear: clear, focusables: focusables,
     dateLong: Data.dateLong, dateShort: Data.dateShort, weekdayName: Data.weekdayName, time12: Data.time12, money: Data.money, when: when, side: side,
-    chip: chip, requestStatus: requestStatus, modal: modal, confirm: confirmBox, toast: toast, download: download, addToCalendar: addToCalendar
+    chip: chip, choices: choices, requestStatus: requestStatus, modal: modal, confirm: confirmBox, toast: toast, download: download, addToCalendar: addToCalendar
   };
 })();
