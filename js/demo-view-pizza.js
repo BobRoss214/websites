@@ -30,6 +30,11 @@
   var ICON = { check: 'M5 12.5l4.5 4.5L19 7.5', clock: 'M12 7v5l3 2M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0', swap: 'M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4', pizza: 'M12 21L4 7a14 14 0 0 1 16 0z' };
 
   var money = function (n) { return UI.money(n); };
+  // "Pizza questions? Email Ava": her address is already on the site (the Wise Pie page). It is the only contact shown here: no phone number.
+  function askAva(ctx) {
+    var c = ctx && ctx.data && ctx.data.CONTACTS ? ctx.data.CONTACTS.ava : null;
+    return c ? h('p', { class: 'demo-hint dp-contact' }, h('a', { href: c.href }, c.text)) : null;
+  }
   function apply(order, patch) { return Object.assign({}, order, patch || {}); }
   function orderSig(o) { return JSON.stringify([o.pizzas, o.pickup, o.notes || '']); }
 
@@ -181,14 +186,16 @@
         card.appendChild(h('div', { class: 'demo-actions' }, btn));
       }
     }
+    if (!editing) { var ava = askAva(ctx); if (ava) card.appendChild(ava); }   // (while the family edits, the pizza editor has the same line of its own)
     return card;
   }
 
-  function emptyCard() {
+  function emptyCard(ctx) {
     return h('section', { class: 'demo-card dp-card', 'data-tour': 'acct-pizza-card' },
       h('h3', null, 'You have no pizza order yet'),
       h('p', null, 'At the farm, pizza comes with a reservation that includes pizza. When you have one, your pizza order shows here, and you can change it.'),
-      h('div', { class: 'demo-actions' }, h('a', { class: 'btn btn-sun', href: 'index.html#menu' }, 'See the Fall Menu')));
+      h('div', { class: 'demo-actions' }, h('a', { class: 'btn btn-sun', href: 'index.html#menu' }, 'See the Fall Menu')),
+      askAva(ctx));
   }
 
   App.view('pizza', {
@@ -196,7 +203,7 @@
     render: function (root, ctx) {
       var shown = ctx.store.list('orders').map(function (o) { return { order: o, visit: ctx.store.get('visits', o.visitId) }; })
         .filter(function (x) { return x.visit && x.visit.date >= ctx.today; });
-      if (!shown.length) { draft = null; root.appendChild(emptyCard()); return; }
+      if (!shown.length) { draft = null; root.appendChild(emptyCard(ctx)); return; }
       shown.forEach(function (x) { root.appendChild(orderCard(ctx, x.order, x.visit)); });
       if (focusNext) {
         var want = focusNext;

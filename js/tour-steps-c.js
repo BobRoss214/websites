@@ -1,6 +1,7 @@
 /* The tour, chapter 10: the account demo (PRETEND). Written for Mrs. Cathy and Rob; English only.
  *
- * What this file is: 25 steps (order 1001 to 1025) that walk through the pretend account pages (account.html, farm-desk.html, kitchen.html).
+ * What this file is: 24 steps (order 1001 to 1025, without 1017: the "My year" screen was taken out of the demo) that walk through the pretend account pages
+ * (account.html, farm-desk.html, kitchen.html).
  * The engine (js/tour.js) merges them with the steps of js/tour-steps.js and js/tour-steps-b.js and sorts them by order.
  * The words of the cards are the only thing the owners read; the rest of the file makes the demo ready for each card.
  *
@@ -236,6 +237,13 @@
     if (mine && mine.status === 'waiting') call('decideReview', mine.id, true);
   }
 
+  // The My event tab shows only for a family that has an event. The tour's sample family said yes at sign-up (a school trip); a family made another way gets the sample trip here.
+  function eventShown() {
+    if (!account()) return;
+    reviewApproved();
+    if (!rows('events').length) call('addEvent', 'school');
+  }
+
   function daysOpened() {   // every closed day opens again
     rows('closedDays').forEach(function (d) { call('openDay', typeof d === 'string' ? d : d.date); });
   }
@@ -274,7 +282,7 @@
     {
       id: 'ch10-signup', order: CHAPTER * 100 + 2, chapter: CHAPTER, page: 'account', target: hook('acct-signup'), skipIfMissing: true,
       title: 'Create an account',
-      text: 'A visitor types a name and an email. In this demo any password works and nothing is saved on a server. Press Next and the tour creates a sample family for you.',
+      text: 'A visitor types a name and an email, and says if they plan a party, an event or a school trip. In this demo any password works and nothing is saved on a server. Press Next and the tour creates a sample family for you.',
       before: scene(function () { if (ready() && call('current')) call('reset'); }, hook('acct-signup'))
     },
     {
@@ -362,12 +370,6 @@
       before: scene(alertSent, hook('acct-bell'))
     },
     {
-      id: 'ch10-year', order: CHAPTER * 100 + 17, chapter: CHAPTER, page: 'account', target: hook('acct-year'), skipIfMissing: true,
-      title: 'My year',
-      text: 'The badges shown here are samples. The game on the home page keeps badges for one visit only and saves nothing, on purpose, for privacy. A real account could keep them.',
-      before: scene(account, hook('acct-year'), 'year')
-    },
-    {
       id: 'ch10-messages', order: CHAPTER * 100 + 18, chapter: CHAPTER, page: 'account', target: hook('acct-messages'), skipIfMissing: true,
       title: 'Receipts and questions',
       text: 'Receipts are kept here, line by line. A family can also ask the farm a question, and your reply shows in the same place. The tour sent a sample question and reply.',
@@ -388,8 +390,8 @@
     {
       id: 'ch10-event', order: CHAPTER * 100 + 21, chapter: CHAPTER, page: 'account', target: hook('acct-event'), skipIfMissing: true,
       title: 'My event, for groups and schools',
-      text: 'A school sees its trip here: head count, checklist, payment status and messages. A head count change is a request to you. The sample follows your school tour prices: $11 per student, at least 100 students.',
-      before: scene(function () { if (account()) reviewApproved(); }, hook('acct-event'), 'event')
+      text: 'This tab shows only for families who said yes at sign-up to a party, an event or a school trip. The sample family said yes: a school trip. It has a head count, a checklist and messages. A head count change is a request to you. Prices follow your school tours: $11 per student, at least 100 students.',
+      before: scene(eventShown, hook('acct-event'), 'event')
     },
     {
       id: 'ch10-desk-weather', order: CHAPTER * 100 + 22, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-weather'), skipIfMissing: true,

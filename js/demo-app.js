@@ -7,25 +7,34 @@
  *   ctx   { store, data, ui, app, account, today, params, go(name, params), rerender() }
  *         store = DemoStore, data = DemoData, ui = DemoUI, params = what came after "?" in the #hash (#photos?visit=v2) or was given to go()
  * The shell clears root and calls render again on every change of the store (not while a field of the view has the focus: it waits until the focus leaves).
- * So a screen never subscribes itself and never writes to the store while it draws. The tabs are #visits (the first), #pizza, #family, #alerts, #year, #messages,
- * #photos and #event; a tab shows only when its file has registered it. A #hash that is none of them (the tour uses #tour) shows the first tab and is left alone. */
+ * So a screen never subscribes itself and never writes to the store while it draws. The tabs are #visits (the first), #pizza, #family, #alerts, #messages,
+ * #photos and #event; a tab shows only when its file has registered it. A screen may also say when it is shown:  { label, shownIf: function (store) { return true or false }, render }
+ * (My event shows only when the family has an event: they said yes at sign-up, or added one later). The hash of a tab that is not shown, and a #hash that is none of the
+ * tabs (the tour uses #tour), show the first tab and are left alone. */
 (function () {
   'use strict';
 
   var UI = window.DemoUI, Data = window.DemoData, Store = window.DemoStore, h = UI.h;
-  var ORDER = ['visits', 'pizza', 'family', 'alerts', 'year', 'messages', 'photos', 'event'];
+  var ORDER = ['visits', 'pizza', 'family', 'alerts', 'messages', 'photos', 'event'];
   var views = {}, names = [];
   var app = null, parts = null, tabNames = '', booted = false, mode = null, pending = false, focusPanelNext = false, kept = null, seenNotices = null, typingWait = false, drawn = false;
 
   function view(name, def) {
     if (!name || !def || typeof def.render !== 'function') return;
-    views[name] = { name: name, label: def.label || name, render: def.render };
+    views[name] = { name: name, label: def.label || name, render: def.render, shownIf: typeof def.shownIf === 'function' ? def.shownIf : null };
     if (names.indexOf(name) < 0) names.push(name);
     if (booted) schedule();
   }
+  // Is this tab on the bar right now? A screen without a shownIf function always is; a shownIf function that fails counts as yes.
+  function shown(name) {
+    var v = views[name];
+    if (!v) return false;
+    if (!v.shownIf) return true;
+    try { return !!v.shownIf(Store); } catch (e) { return true; }
+  }
   function ordered() {
-    var known = ORDER.filter(function (n) { return views[n]; });
-    return known.concat(names.filter(function (n) { return ORDER.indexOf(n) < 0; }));
+    var known = ORDER.filter(function (n) { return shown(n); });
+    return known.concat(names.filter(function (n) { return ORDER.indexOf(n) < 0 && shown(n); }));
   }
 
   /* ---------------------------------------------------------------- the #hash router */
@@ -38,7 +47,7 @@
     return { name: q < 0 ? raw : raw.slice(0, q), params: params };
   }
   function current() {
-    var r = parseHash(), list = ordered(), name = views[r.name] ? r.name : list[0];
+    var r = parseHash(), list = ordered(), name = shown(r.name) ? r.name : list[0];   // a tab that is not shown (My event without an event) opens the first tab
     var params = r.params;
     if (kept && kept.name === name) Object.keys(kept.params).forEach(function (k) { params[k] = kept.params[k]; });
     else kept = null;   // another tab is shown now: what go() carried is forgotten
@@ -65,16 +74,25 @@
   }
   var EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   function signUpCard() {
+    // The one question: "Do you plan or manage a party, an event or a school trip?" Only a yes gives the family a My event tab. "No" is chosen to begin with.
+    var vanessa = Data.CONTACTS.vanessa;
+    var pick = UI.choices({
+      name: 'demo-su-event', legend: 'Do you plan or manage a party, an event or a school trip?', value: 'none',
+      options: Data.EVENT_KINDS.map(function (k) { return { value: k.key, label: k.label }; }),
+      hint: ['Only a yes adds the My event tab. You can add an event later in My family. School trips: ', h('a', { href: vanessa.href }, vanessa.text)]
+    });
     var form = h('form', { novalidate: true, class: 'demo-form' },
       field('demo-su-name', 'Your name', { type: 'text', name: 'name', autocomplete: 'name' }),
       field('demo-su-email', 'Email', { type: 'email', name: 'email', autocomplete: 'email', inputmode: 'email' }),
       field('demo-su-pass', 'Password (pretend)', { type: 'password', name: 'pass', autocomplete: 'off' }, 'Demo: any password works. It is not saved.'),
+      pick.el,
       h('div', { class: 'demo-actions' },
         h('button', { type: 'submit', class: 'btn btn-red' }, 'Create account'),
         h('button', { type: 'button', class: 'demo-linkbtn', 'data-demo-fill': '' }, 'Fill in sample details')));
     form.addEventListener('click', function (e) {
       if (!e.target.closest('[data-demo-fill]')) return;
       form.querySelector('#demo-su-name').value = Data.SAMPLE_ACCOUNT.name; form.querySelector('#demo-su-email').value = Data.SAMPLE_ACCOUNT.email;
+      pick.set(Data.SAMPLE_ACCOUNT.eventKind);   // the sample family planned a school trip
       ['demo-su-name', 'demo-su-email'].forEach(function (id) { fieldError(form, id, ''); });
       form.querySelector('#demo-su-pass').focus({ preventScroll: true });
     });
@@ -85,10 +103,11 @@
       fieldError(form, 'demo-su-email', EMAIL.test(email) ? '' : 'Please type an email address, like ' + Data.SAMPLE_ACCOUNT.email + '.');
       bad = !name ? 'demo-su-name' : !EMAIL.test(email) ? 'demo-su-email' : null;
       if (bad) { form.querySelector('#' + bad).focus(); return; }
-      var had = Store.hasAccount(email), acct = Store.createAccount({ name: name, email: email });
+      var had = Store.hasAccount(email), acct = Store.createAccount({ name: name, email: email, eventKind: pick.value() });
       if (!acct) { fieldError(form, 'demo-su-email', 'That did not work. Please check your name and email.'); return; }
       focusPanelNext = true;
-      UI.toast(had ? 'Welcome back. This email already had an account here, so you are signed in.' : 'Account created. We added a sample family and a sample visit.', { kind: 'good' });
+      UI.toast(had ? 'Welcome back. This email already had an account here, so you are signed in.'
+        : 'Account created. We added a sample family and a sample visit.' + (acct.eventKind && acct.eventKind !== 'none' ? ' My event is in your tabs.' : ''), { kind: 'good' });
     });
     return h('section', { class: 'demo-card demo-signup', 'data-tour': 'acct-signup', 'aria-labelledby': 'demo-su-h' },
       h('h2', { id: 'demo-su-h' }, 'Create an account'),

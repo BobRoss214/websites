@@ -9,10 +9,11 @@ It is hidden from real visitors. Only the person who shows it sees it.
 1. Open the home page with `?demo` at the end of the address, for example `index.html?demo` on your computer or `https://www.wiseacresorganic.com/?demo` once the site is online. The claude.ai preview of the site has the demo switched on by itself.
 2. A round person button appears next to the language button in the top bar. It opens the family's account page (`account.html`).
 3. A yellow strip under the top bar says "Demo: pretend accounts. Nothing is saved on a server or sent to anyone." It stays on every demo screen. It holds three links, **Family**, **Mrs. Cathy's desk** and **Kitchen**, a **Start over** button and, when the tour is on, **Take a tour**.
-4. On the account page press **Create account** (or **Fill in sample details** and then **Create account**). The page loads a sample family: Alex, Jordan, Riley (8), Casey (6) and baby Sam (2), one visit next Saturday with pizza, two past visits and one school trip. A green line says "We added a sample visit so you can try the buttons."
+4. On the account page press **Create account** (or **Fill in sample details** and then **Create account**). The form asks one plain question: "Do you plan or manage a party, an event or a school trip?" It has four big buttons: **No**, **Yes: a party**, **Yes: a school trip** and **Yes: another event**. **No** is chosen to begin with, and **Fill in sample details** fills in the name and the email and chooses the school trip. The page loads a sample family: Alex, Jordan, Riley (8), Casey (6) and baby Sam (2), one visit next Saturday with pizza and two past visits. Only a yes adds an event of that kind. A green line says "We added a sample visit so you can try the buttons."
 5. The password is pretend: any password works and it is never saved.
 6. Try a change on the family side, for example **Request a different day**. The visit says "Waiting for a reply from Mrs. Cathy". Then open **Mrs. Cathy's desk** (it is the same browser, so it sees the request), press Yes, No or Suggest, and go back to **Family** to see the answer. Pizza changes go to the kitchen the same way.
 7. The bell on the account page shows the newest notices (answers, alerts, weather) with a count. Each one leads to the right tab.
+8. The **My event** tab is on the bar only for a family that has an event: one that said yes at sign-up, or one that added an event later. Without an event the tab is not there, and the address `account.html#event` opens the first tab. A family that said No can add one with the small link **I also plan an event** at the bottom of **My family**: it asks for the kind (a party, a school trip or another event), adds a sample one and opens the tab.
 
 The three pages remember that the demo is on while you move between them in the same browser tab. A new tab needs `?demo` again.
 
@@ -40,8 +41,8 @@ To remove the demo from the site completely, delete the three page files in `pag
 
 | Pretend | Real |
 |---|---|
-| The family, the visits, the receipts, the pizza orders, the school trip, the messages, the photos and reviews, the "people waiting" | The prices, the ages, the days and the pizza menu: they are copied from the site's own pages |
-| The accounts and the password | The farm's address (4701 Hartis Rd) on the Directions button |
+| The family, the visits, the receipts, the pizza orders, the school trip, party or other event, the messages, the photos and reviews, the "people waiting" | The prices, the ages, the days and the pizza menu: they are copied from the site's own pages. The party price ($300 for the whole party, up to 50 guests) and the school tour price ($11 per student, at least 100 students) too. No price is shown for "another event": the site names none (its corporate prices are still a draft) |
+| The accounts and the password | The farm's address (4701 Hartis Rd) on the Directions button. Two e-mail links the site already shows: **Questions? Email Vanessa** (school trips) and **Pizza questions? Email Ava** (My pizza), and Ava's address on the kitchen screen. No phone number is shown for them |
 | The replies of Mrs. Cathy and the kitchen: whoever shows the demo presses the buttons | The "Add to calendar" file (a real calendar file, marked as pretend) |
 | The sample times (on the hour from 10 am to 2 pm) | The rule that pizzas are ready 1 hour after the visit time |
 
@@ -80,14 +81,14 @@ After a change, rebuild with the three commands, one after the other: `python3 t
 
 ### Adding a screen to the account page
 
-One call: `DemoApp.view('year', { label: 'My year', render: function (root, ctx) { ... } })`.
+One call: `DemoApp.view('pizza', { label: 'My pizza', render: function (root, ctx) { ... } })`.
 
 - `root` is an empty element inside the tab's panel. The shell has already printed the tab's heading (an `h2` with the label).
 - `ctx` has `store`, `data`, `ui`, `app`, `account`, `today`, `params`, `go(name, params)` and `rerender()`.
 - The shell clears `root` and calls `render` again after every change of the store, but not while a field of the view has the focus. A screen never subscribes itself and never writes to the store while it draws.
-- The tabs are `#visits` (the first one), `#pizza`, `#family`, `#alerts`, `#year`, `#messages`, `#photos` and `#event`. A tab shows only when its file registered it. A `#hash` that is none of these shows the first tab and is left alone. `go('photos', { visit: 'v2' })` opens a tab and hands over `params` in memory, so the address stays a plain `#photos`.
-- Do not give an element the id of a tab (`pizza`, `year` ...): the browser would scroll to it.
-- Use `DemoUI.toast(text)` for a short message and `DemoUI.modal(...)` or `DemoUI.confirm(...)` for a box. There is one toast place and one modal for the whole demo.
+- The tabs are `#visits` (the first one), `#pizza`, `#family`, `#alerts`, `#messages`, `#photos` and `#event`. A tab shows only when its file registered it. A screen can also give `shownIf: function (store) { return true or false }` to say when its tab is on the bar: My event shows only when the family has an event. A `#hash` that is none of these, or the hash of a tab that is not shown, shows the first tab and is left alone. `go('photos', { visit: 'v2' })` opens a tab and hands over `params` in memory, so the address stays a plain `#photos`.
+- Do not give an element the id of a tab (`pizza`, `event` ...): the browser would scroll to it.
+- Use `DemoUI.toast(text)` for a short message and `DemoUI.modal(...)` or `DemoUI.confirm(...)` for a box. There is one toast place and one modal for the whole demo. `DemoUI.choices({ name, legend, options, value })` draws a question with big buttons (real radio buttons; the sign-up question is one). Every field is built in JavaScript: no page file holds an `<input>`, a `<textarea>` or a `<select>`.
 
 ### The store (`js/demo-store.js`)
 
@@ -95,15 +96,17 @@ All methods are synchronous and return plain copies. The state lives in the brow
 
 | Area | Names |
 |---|---|
-| Account | `createAccount({ name, email })` (no argument: the sample account Alex), `signIn(email)`, `signOut()`, `current()`, `hasAccount(email)`, `reset()`, `seedSample()` |
+| Account | `createAccount({ name, email, eventKind })` (no argument: the sample account Alex), `signIn(email)`, `signOut()`, `current()`, `hasAccount(email)`, `reset()`, `seedSample()`, `addEvent(kind)` |
 | Lists | `list(coll)`, `get(coll, id)`, `add(coll, obj)`, `update(coll, id, patch)`, `remove(coll, id)`. Lists: `visits`, `orders`, `requests`, `messages`, `notices`, `reviews`, `photos`, `events`, `waitlist`. |
-| Single objects | `get('family')`, `update('family', patch)` or `update('family', null, patch)`; the same for `alerts` and `badges`; `getFamily()`, `setFamily(patch)`, `setBadges(patch)`; `list('closedDays')`; `flag(key)`, `setFlag(key, bool)` |
+| Single objects | `get('family')`, `update('family', patch)` or `update('family', null, patch)`; the same for `alerts`; `getFamily()`, `setFamily(patch)`; `list('closedDays')`; `flag(key)`, `setFlag(key, bool)` |
 | Requests | `ask({ kind, to, target: { coll, id }, patch, from, summary, note, weather })`, `reply(id, { answer: 'yes'/'no'/'suggest', note, suggestion: { patch, summary } })`, `respond(id, 'ok'/'decline')`, `cancel(id)`, `openRequestFor(coll, id)`, `requestsFor(coll, id)`, `openRequests(to)` |
 | Messages and notices | `post(thread, 'family'/'cathy', text)`, `thread(id)`, `threadsWaiting()`, `notify(text, link, to)`, `noticesFor(to)`, `markRead(id)`, `markAllRead(to)` |
 | Weather | `closeDay(date, reason)`, `openDay(date)`, `isClosed(date)`, `openDays(from, package, n)` |
 | Tell me when | `setAlert(key, bool)`, `alertCounts()`, `fireAlert(key, day)` |
 | Reviews and photos | `submitReview({ visitId, stars, text, photoName, thumb })`, `decideReview(id, bool)`, `submitPhoto({ visitId, name, thumb })`, `decidePhoto(id, bool)` |
 | Other | `subscribe(fn)` (returns the function that stops it), `now()`, `today()`, `snapshot()`, `saveStatus()` |
+
+**The sign-up question and My event.** `createAccount({ name, email, eventKind })` takes the answer to "Do you plan or manage a party, an event or a school trip?": `'none'` (the button **No**), `'party'`, `'school'` or `'other'`. The account keeps it as `eventKind` (read it with `current().eventKind`), and the sample it loads has an event of that kind: with `'none'` it has none. Leaving `eventKind` out gives the ready-made sample, which has the school trip (so does `createAccount()` with no argument, and `DemoData.SAMPLE_ACCOUNT` says `eventKind: 'school'`); anything that is not one of the four is read as `'none'`. `seedSample()` always loads the ready-made sample, with the school trip, and the account keeps `'school'`: the tour starts from it. `addEvent(kind)` is "I also plan an event": it adds the sample event of that kind (`'party'`, `'school'` or `'other'`) with Mrs. Cathy's first message in its thread, and the account keeps the kind; it does nothing (the answer is `null`) when the family already has an event or the kind is not one of those three. The My event tab is shown exactly when `list('events')` is not empty.
 
 **One pattern for every change: a request.** Ask, waiting, reply, the family says OK, done. Nothing changes until the farm says yes. The statuses are `waiting`, `yes`, `no`, `suggested`, `accepted`, `declined` and `cancelled`. A visit and an order have at most one open request (`waiting` or `suggested`): `ask` gives `null` when there is one. A reply of yes applies the `patch` to the target. A suggestion keeps its own patch until the family answers OK (it is applied) or No thanks (nothing changes). Every step is written into the request's `history` with a time and a plain sentence, and makes a notice for the other side.
 
@@ -116,13 +119,15 @@ Two rules are built in. When a visit moves to another time, the pizza pick-up mo
 - **order:** `{ id, visitId, pickup: 'HH:MM', pizzas: [{ type, count, toppings: [...], glutenFree, vegan }], notes, status: 'new' or 'confirmed' }`. `type` is an id from `DemoData.PIZZAS`.
 - **request:** `{ id, kind, to, from, target, patch, before, summary, note, weather, status, suggestion, reply, history: [{ at, who, text }], created, updated }`. `before` holds the target's values for the patch keys when the request was made, so a screen can show before and after.
 - **family:** `{ name, adults: [{ name }], kids: [{ name, age }], allergies, glutenFree, vegan }`.
-- **event (school trip):** `{ id, kind: 'school', title, date, students, guests, slipsReceived, thread }`. The price is `DemoData.priceEvent(event)`: $11 for each student, and $11 for each parent or sibling age 3 or older who comes. The minimum is 100 students (`DemoData.eventProblem`).
+- **account:** `{ id, name, email, created, eventKind }` with `eventKind` one of `'none'`, `'party'`, `'school'`, `'other'`.
+- **event:** one per family. A school trip is `{ id, kind: 'school', title, date, students, guests, slipsReceived, thread }`: $11 for each student, and $11 for each parent or sibling age 3 or older who comes; the minimum is 100 students. A party is `{ id, kind: 'party', title, date, guests, thread }`: one price for the whole party ($300, the farm entry fee included), up to 50 guests; children age 2 and younger are free and do not count. Another event is `{ id, kind: 'other', title, date, guests, thread }`: no price, because the site names none. `DemoData.priceEvent(event)` gives `{ lines, total }` (`total` is `null` for another event) and `DemoData.eventProblem(event)` the page's rule in plain words (or an empty text). The numbers of a sample (the head counts, the permission slips, the dates) are made up; no start time or deposit is shown, because the site gives none. A head-count request changes `{ students, guests }` for a school trip and `{ guests }` for the others.
+- **contacts:** `DemoData.CONTACTS` holds the two e-mail addresses the pretend account shows, both already on the site: `vanessa` (school tours: **Questions? Email Vanessa**) and `ava` (pizza: **Pizza questions? Email Ava**). Each has `name`, `email`, `href` (the mailto link, with the subject line the site uses) and `text` (the words of the link). Nothing else about them is shown.
 - **notice:** `{ id, to: 'family' / 'cathy' / 'kitchen', text, link, at, read }`. **message:** `{ id, thread, from: 'family' / 'cathy', text, at }`; threads are `farm` and `event-<id>`. **review:** `{ id, visitId, stars, text, photoName, thumb, status: 'waiting' / 'approved' / 'declined', at }`. **photo:** `{ id, visitId, name, thumb, status, at }`. **waitlist:** `{ id, day, party }`. **alerts:** `{ strawberries, blueberries, pumpkins, trees, spot }` with true or false.
 - **Dates and times** are `YYYY-MM-DD` and `HH:MM` (24 hours), the farm's own clock. `DemoData` writes them as "Saturday, Nov 14" and "2:00 pm".
 
 ### Hooks for the tour
 
-These invisible `data-tour` names are put on the key controls so the tour can point at them. The shell and the header have: `demo-bar`, `demo-switch`, `demo-reset`, `acct-signup`, `acct-sample-note`, `acct-bell`. The family screens have `acct-visit-card`, `acct-paid`, `acct-request-day`, `acct-request-status`, `acct-reply`, `acct-pizza-card`, `acct-pizza-edit`, `acct-pizza-time`, `acct-family`, `acct-alerts`, `acct-year`, `acct-messages`, `acct-photos`, `acct-event` and `acct-closed-banner`. The desk has `desk-waiting`, `desk-card`, `desk-yes`, `desk-no`, `desk-suggest`, `desk-week`, `desk-weather`, `desk-people`, `desk-approvals` and `desk-groups`. The kitchen has `kit-queue`, `kit-card`, `kit-yes`, `kit-no`, `kit-change` and `kit-notes`. The tour drives the demo with the store functions above, so their names must stay as they are.
+These invisible `data-tour` names are put on the key controls so the tour can point at them. The shell and the header have: `demo-bar`, `demo-switch`, `demo-reset`, `acct-signup`, `acct-sample-note`, `acct-bell`. The family screens have `acct-visit-card`, `acct-paid`, `acct-request-day`, `acct-request-status`, `acct-reply`, `acct-pizza-card`, `acct-pizza-edit`, `acct-pizza-time`, `acct-family`, `acct-alerts`, `acct-messages`, `acct-photos`, `acct-event` and `acct-closed-banner`. The desk has `desk-waiting`, `desk-card`, `desk-yes`, `desk-no`, `desk-suggest`, `desk-week`, `desk-weather`, `desk-people`, `desk-approvals` and `desk-groups`. The kitchen has `kit-queue`, `kit-card`, `kit-yes`, `kit-no`, `kit-change` and `kit-notes`. The tour drives the demo with the store functions above, so their names must stay as they are.
 
 ### The checks
 

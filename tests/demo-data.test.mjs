@@ -1,7 +1,7 @@
 // order: 48
 // browser: no
 // quick: yes
-// covers: js/demo-data.js, js/demo-pizza-data.js, index.html, pages/first-visit.html, pages/school-field-trips.html, assets/photos/wise-pie-fall-menu-2026.webp
+// covers: js/demo-data.js, js/demo-pizza-data.js, js/demo-view-event.js, js/demo-view-pizza.js, js/demo-kitchen.js, index.html, pages/first-visit.html, pages/school-field-trips.html, assets/photos/wise-pie-fall-menu-2026.webp
 /* The numbers of the account demo against the site's own pages (no browser, about a second). js/demo-data.js copies prices, ages, days and the Fall Menu from the
  * pages on purpose: the demo may show only what the site says. This test reads index.html, pages/first-visit.html and pages/school-field-trips.html and fails when a
  * number, a name or a sentence in the demo's data is not on the page any more (a price changed, a pizza was renamed, a package changed its days). When it fails
@@ -45,6 +45,42 @@ ok('the printed menu picture is in the site (the prices were read from it)', fs.
 ok('school tours: $11 per student, minimum group size 100 students (Groups section and school-field-trips.html)', has(homeText, '$11 per student') && has(homeText, 'Minimum group size: 100 students') && has(school, '$11 per student') && has(school, 'Minimum 100 students') && P.schoolPerStudent === 11 && P.schoolMinStudents === 100);
 ok('parents and siblings ages 3 and older who come on the tour pay the same $11', has(homeText, 'If parents and siblings ages 3 and older come on the tour, they pay the $11 admission fee') && has(school, 'Adults and siblings $11 each'));
 ok('the minimum-group sentence of the demo is the page\'s own', has(school, 'The minimum group size for a traditional fall school tour is 100 students') && /minimum group size for a school tour is 100 students/.test(Data.eventProblem({ students: 1 })));
+
+/* ---------------- parties and other events (the Parties card, the Corporate events card; "Do you plan or manage a party, an event or a school trip?") ---------------- */
+ok('parties: $300 per party (not per person), the farm entry fee is included in it', has(homeText, '$300 per party') && has(homeText, 'The per-person farm entry fee is included in the party cost') && P.partyPrice === 300);
+ok('parties: up to 50 guests; children age 2 and younger are free and do not count toward the total', has(homeText, 'Up to 50 guests') && has(homeText, 'Children age 2 and younger are free and do not count toward the total') && P.partyMaxGuests === 50 && P.freeAge === 2);
+ok('parties: the party time sentence of the demo is the page\'s own (2.5 hours in all)', has(homeText, '2.5 hours') && has(homeText, Data.RULES.partyTime), Data.RULES.partyTime);
+ok('larger events and full farm rentals are for Mrs. Cathy to quote: the page says so, and the corporate prices there are still a DRAFT, so the demo shows no price for "another event"',
+  has(homeText, 'For larger events or full farm rentals, email') && has(homeText, 'Draft pricing') && Data.priceEvent({ kind: 'other', guests: 30 }).total === null && Data.priceEvent({ kind: 'other', guests: 30 }).lines.length === 0);
+ok('a party costs the one page price, whatever the guest count; a school trip is $11 each as before; no price is invented for another kind', Data.priceEvent({ kind: 'party', guests: 24 }).total === 300 && Data.priceEvent({ kind: 'party', guests: 50 }).total === 300 && Data.priceEvent({ students: 100, guests: 8 }).total === 1188 && Data.priceEvent({ kind: 'school', students: 100, guests: 0 }).total === 1100);
+ok('the party rule: more than 50 guests is a problem (the page\'s limit), 50 is fine; another event has no head-count rule; the school minimum is unchanged',
+  Data.eventProblem({ kind: 'party', guests: 51 }) !== '' && /up to 50 guests/.test(Data.eventProblem({ kind: 'party', guests: 51 })) && Data.eventProblem({ kind: 'party', guests: 50 }) === '' && Data.eventProblem({ kind: 'other', guests: 500 }) === '' && Data.eventProblem({ students: 99 }) !== '' && Data.eventProblem({ kind: 'school', students: 100 }) === '');
+const kinds = Data.EVENT_KINDS;
+ok('the sign-up question has four big buttons with exactly these words: No / Yes: a party / Yes: a school trip / Yes: another event; the first one is no event', kinds.map((k) => k.label).join(' | ') === 'No | Yes: a party | Yes: a school trip | Yes: another event' && kinds.map((k) => k.key).join() === 'none,party,school,other');
+ok('an answer is read as one of the four keys: nothing given is the ready-made sample (a school trip), anything unknown is no event', Data.eventKindOf(undefined) === 'school' && Data.eventKindOf('party') === 'party' && Data.eventKindOf('PARTY') === 'party' && ['none', null, '', 'banana', 0, {}].every((x) => Data.eventKindOf(x) === 'none'));
+ok('the ready-made sample account (Alex) planned a school trip, so it has a My event tab', Data.SAMPLE_ACCOUNT.eventKind === 'school' && Data.sample('2026-11-03', '10:00').events.length === 1 && Data.sample('2026-11-03', '10:00').events[0].kind === 'school');
+{
+  const day = '2026-11-03', party = Data.sample(day, '10:00', 'party').events[0], school = Data.sample(day, '10:00', 'school').events[0], other = Data.sample(day, '10:00', 'other').events[0], none = Data.sample(day, '10:00', 'none');
+  ok('the sample party has guests only, at most 50, on a Saturday after today; the sample school trip has at least 100 students; another event has guests and no price', party.kind === 'party' && party.guests >= 1 && party.guests <= P.partyMaxGuests && !('students' in party) && Data.weekday(party.date) === 6 && party.date > day
+    && school.kind === 'school' && school.students >= P.schoolMinStudents && other.kind === 'other' && other.guests >= 1 && !('students' in other), JSON.stringify([party, school, other]));
+  ok('answer No: the sample has no event and no event message at all; the rest of the sample is the same', none.events.length === 0 && none.messages.length === 0 && none.visits.length === 3 && none.orders.length === 1 && Data.sample(day, '10:00', 'party').visits.length === 3);
+  ok('the sample has no badges, visit counts or points of any kind', !('badges' in Data.sample(day, '10:00')) && !Object.keys(Data.sample(day, '10:00')).some((k) => /badge|stamp|streak|points|count/i.test(k)));
+}
+
+/* ---------------- contacts: Vanessa for school tours, Ava for pizza (both already public on the site) ---------------- */
+const VAN = Data.CONTACTS.vanessa, AVA = Data.CONTACTS.ava;
+ok('Vanessa\'s address and its subject line are on the home page and the school tours page, and the demo\'s link is the same', has(home, 'href="' + VAN.href + '"') && has(read('pages/school-field-trips.html'), 'href="' + VAN.href + '"') && VAN.email === 'vanessa@wiseacresorganic.com' && VAN.text === 'Questions? Email Vanessa');
+ok('Ava\'s address and its subject line are on the home page and the Wise Pie page, and the demo\'s link is the same', has(home, 'href="' + AVA.href + '"') && has(read('pages/wise-pie.html'), 'href="' + AVA.href + '"') && AVA.email === 'ava@wiseacresorganic.com' && AVA.text === 'Pizza questions? Email Ava');
+ok('a contact is a name, an address, a link and the words of the link, nothing else (no phone number)', [VAN, AVA].every((c) => Object.keys(c).sort().join() === 'email,href,name,text' && /^mailto:[a-z]+@wiseacresorganic\.com\?subject=[A-Za-z0-9%]+$/.test(c.href)));
+{
+  const addresses = new Set();
+  for (const f of fs.readdirSync(path.join(ROOT, 'js')).filter((x) => /^(demo-.*|tour-steps-c)\.js$/.test(x))) {
+    const code = read('js/' + f).replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"\\])\/\/[^\n]*/g, '$1');
+    for (const m of code.matchAll(/[A-Za-z0-9._+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g)) addresses.add(m[0].toLowerCase());
+  }
+  const allowed = new Set(['alex@example.com', 'vanessa@wiseacresorganic.com', 'ava@wiseacresorganic.com']);
+  ok('the only e-mail addresses in the demo scripts and the tour steps are the sample family\'s example address and these two, which the site already shows', [...addresses].every((a) => allowed.has(a)), [...addresses].join(', '));
+}
 
 /* ---------------- changes, rain, links ---------------- */
 ok('the sentences about changes and severe weather are the site\'s own ("Changes and rain", First visit)', has(visit, Data.RULES.change) && has(visit, Data.RULES.weather), Data.RULES.change);
