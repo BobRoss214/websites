@@ -297,6 +297,15 @@
       after: seasonsEnd
     },
     {
+      id: 'ch3-menu', order: 303, chapter: 3, page: 'index', target: '#nav, #menu-toggle', allowClicks: true, skipIfMissing: true,   // the lists open below the bar, outside its box: so the whole page may be used here
+      title: 'The menu at the top',
+      text: 'Seven buttons group the whole site: Visit, Things to Do, GreenHouse, Store, Groups & Parties, About Us and Contact. Press one to open its short list. A red dot marks something new or coming soon, like Christmas trees. Try it.',
+      after: function () {   // a list the visitor opened is shut again
+        var open = document.querySelector('.nav-group.is-open .nav-group-btn');
+        if (open) open.click();
+      }
+    },
+    {
       id: 'ch3-reserve', order: 304, chapter: 3, page: 'index', target: '.nav-cta, #action-bar a[href*="bookeo"]', skipIfMissing: true,
       title: 'The Reserve button',
       text: 'The red Reserve button waits in the top bar and stays there as you scroll. On a phone the bar at the bottom has one too, except in winter. A visitor can book from any part of the page.'
