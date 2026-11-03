@@ -44,6 +44,8 @@
     '.dvk .dva-sw-detail{font:700 1rem/1.25 var(--body);overflow-wrap:anywhere}',
     '.dvk .dva-sw[aria-checked="false"] .dva-sw-detail{color:var(--ink-soft)}',
     '.dvk .dva-sw-state{display:inline-flex;align-items:center;gap:10px}',
+    /* a phone: the switch goes under the words, so a whole email fits on one line */
+    '@media (max-width:40em){.dvk .dvk-switch.dva-sw{grid-template-columns:minmax(0,1fr);gap:8px;padding:10px 14px 12px}.dvk .dvk-switch.dva-sw-pic{grid-template-columns:auto minmax(0,1fr);padding-left:10px}.dvk .dva-sw-state{grid-column:1/-1;justify-self:start}}',
     '.dvk .dva-way-note{margin:0;font:800 1rem/1.35 var(--body);color:var(--ink)}',
     '.dvk .dva-way-note:not(:empty){margin-top:12px;padding:.5em .9em;background:#fff1b8;border:2.5px solid var(--ink);border-radius:14px}',
     '@media (forced-colors:active){.dvk .dva-sw[aria-checked="true"]{outline:3px solid Highlight}}'

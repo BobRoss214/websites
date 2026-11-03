@@ -52,7 +52,7 @@ await run('demo-alerts', async ({ browser, base, errs }) => {
 
   // the two big switches
   const sw = await p.evaluate(() => [...document.querySelectorAll('.dva-way button')].map((b) => { const r = b.getBoundingClientRect(); return { role: b.getAttribute('role'), checked: b.getAttribute('aria-checked'), w: Math.round(r.width), h: Math.round(r.height), text: b.textContent.replace(/\s+/g, ' ').trim() }; }));
-  ok('two big switch buttons under the question: "Text message" with the pretend phone number and "Email" with the account email, in that order, both on', sw.length === 2 && sw.every((s) => s.role === 'switch' && s.checked === 'true') && /^Text message \(555\) 010-0123 On/.test(sw[0].text) && /^Email alex@example\.com On/.test(sw[1].text), JSON.stringify(sw));
+  ok('two big switch buttons under the question: "Text message" with the pretend phone number and "Email" with the account email, in that order, both on', sw.length === 2 && sw.every((s) => s.role === 'switch' && s.checked === 'true') && /^Text message\s*\(555\) 010-0123\s*On$/.test(sw[0].text) && /^Email\s*alex@example\.com\s*On$/.test(sw[1].text), JSON.stringify(sw));
   ok('each is a big target: at least 44 px high (and wide), as the other switches of the demo are', sw.every((s) => s.h >= 44 && s.w >= 150), JSON.stringify(sw.map((s) => s.w + 'x' + s.h)));
   ok('a screen reader meets them as switches named "Text message (555) 010-0123" and "Email alex@example.com", both on, inside a group that is named by the question',
     (await sms(p).count()) === 1 && (await email(p).count()) === 1 && (await checked(sms(p))) === 'true' && (await checked(email(p))) === 'true' && (await p.evaluate(() => { const b = document.querySelector('.dva-way button'); const s = b.closest('section'); return !!s && s.getAttribute('aria-labelledby') && document.getElementById(s.getAttribute('aria-labelledby')).textContent === 'Where should we send these messages?'; })));
@@ -119,6 +119,7 @@ await run('demo-alerts', async ({ browser, base, errs }) => {
   const first = await p.evaluate(() => window.DemoStore.list('waitlist').filter((w) => w.active !== false).map((w) => w.day));
   ok('turning it on puts the family on the waitlist for the first day offered (Thursday, Nov 5) and opens the day box', (await checked(spot)) === 'true' && first.join() === '2026-11-05' && !(await pick.isDisabled()) && (await pick.inputValue()) === '2026-11-05');
   await pick.selectOption('2026-11-06');
+  await pick.blur();   // the screen is not drawn again while a box has the focus: the family has moved on
   await settled(p);
   const waits = await p.evaluate(() => ({ all: window.DemoStore.list('waitlist').map((w) => w.day + ':' + (w.active !== false)), counts: window.DemoStore.alertCounts() }));
   ok('choosing another day moves the waitlist entry (the old one is switched off, nothing deleted), and the desk counts one family for that day', waits.all.join() === '2026-11-05:false,2026-11-06:true' && waits.counts.spot === 1 && waits.counts.days['2026-11-06'] === 1 && waits.counts.reservations === 1, JSON.stringify(waits));
@@ -150,6 +151,14 @@ await run('demo-alerts', async ({ browser, base, errs }) => {
     await p.evaluate(axe);
     const bad = await p.evaluate(async () => (await window.axe.run(document.querySelector('[data-tour="acct-alerts"]'), { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'] } })).violations.map((v) => v.id + ' [' + v.impact + '] ' + v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' ; ')));
     ok('axe-core finds nothing on the screen (computer window)', bad.length === 0, bad.join(' | '));
+    const proof = await p.evaluate(async () => {   // prove that axe really looks: a picture with no text alternative put on the screen for a moment is reported
+      const host = document.querySelector('[data-tour="acct-alerts"]');
+      host.insertAdjacentHTML('beforeend', '<img id="axe-self-test" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">');
+      const ids = (await window.axe.run(host, { runOnly: { type: 'tag', values: ['wcag2a'] } })).violations.map((v) => v.id);
+      document.getElementById('axe-self-test').remove();
+      return ids;
+    });
+    ok('axe really runs here: it reports a deliberate mistake (an image with no text alternative)', proof.includes('image-alt'), proof.join(','));
     await p.evaluate(() => { window.DemoStore.setNotify({ text: true, email: true }); });
     await settled(p);
     await sms(p).click();     // text off: email is the last way left
