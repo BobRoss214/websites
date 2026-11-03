@@ -6,8 +6,8 @@
  * A fake storage and a fake clock make every answer known. Checked: loading the file touches no storage and the page's store is made on first use; the account
  * (create, sign out, sign in, a wrong email, one family per browser); the sample family and its visit (the paid lines add up from the page prices); a request with
  * yes, no, a suggestion then OK, a suggestion then "No thanks", and cancel (history, notices for the other side, one open request per visit or order, nothing
- * changes before the farm says yes); a weather closing (visits marked, notice, the "new day" request, open again); "Tell me when" (switches, the day waitlist,
- * the counts, firing an alert); messages, reviews and photos; the pizza follows the visit time; Start over; two stores on one storage seeing each other; storage
+ * changes before the farm says yes); a weather closing (visits marked, notice, the "new day" request, open again); "Tell me when" (switches, reservations, the day waitlist,
+ * the counts, firing an alert, where to send the messages: text, email or both, never none); messages, reviews and photos; the pizza follows the visit time; Start over; two stores on one storage seeing each other; storage
  * that is blocked or full (the demo carries on in memory); that what the store hands out is a copy. Run: node tests/demo-store.test.mjs */
 import vm from 'node:vm';
 import fs from 'node:fs';

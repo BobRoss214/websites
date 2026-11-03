@@ -263,8 +263,8 @@
   }
 
   var api = {
-    PRICES: PRICES, PACKAGES: PACKAGES, PIZZAS: PD.PIZZAS, SLOTS: SLOTS, alertKinds: alertKinds, LINKS: LINKS, RULES: RULES, WHO: WHO, SAMPLE_ACCOUNT: SAMPLE_ACCOUNT,
     SAMPLE_PHONE: SAMPLE_PHONE,
+    PRICES: PRICES, PACKAGES: PACKAGES, PIZZAS: PD.PIZZAS, SLOTS: SLOTS, alertKinds: alertKinds, LINKS: LINKS, RULES: RULES, WHO: WHO, SAMPLE_ACCOUNT: SAMPLE_ACCOUNT,
     FARM_OPENS: PD.FARM_OPENS, FARM_CLOSES: PD.FARM_CLOSES,
     // dates and times
     farmParts: farmParts, today: today, parse: parse, isDate: isDate, addDays: addDays, weekday: weekday, daysBetween: daysBetween, nextWeekday: nextWeekday, prevWeekday: prevWeekday,
