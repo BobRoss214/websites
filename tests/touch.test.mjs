@@ -146,11 +146,13 @@ async function bee(p) {
   const tx = 300, ty = 460;   // the bare sky right of the headline
   const hero = await p.evaluate(() => { const r = document.querySelector('#top').getBoundingClientRect(); return { x: r.x, y: r.y }; });
   await p.touchscreen.tap(tx, ty);
-  const want = [tx - hero.x - 26, ty - hero.y - 24];   // the bee's top-left corner when its middle is on the finger
-  const flightGoal = () => p.evaluate(() => { const a = document.querySelector('#bee-fly').getAnimations(); if (!a.length) return null; const k = a[a.length - 1].effect.getKeyframes(), m = /translate\(([-\d.]+)px, ([-\d.]+)px/.exec(k[k.length - 1].transform || ''); return m ? [+m[1], +m[2]] : null; });
-  let goal = null;
-  for (let i = 0; i < 5; i++) { await p.clock.runFor(400); goal = await flightGoal(); if (goal && Math.abs(goal[0] - want[0]) < 6 && Math.abs(goal[1] - want[1]) < 6) break; }   // the bee starts its flight within half a second
-  ok('a tap in the hero sends the bee to that spot', !!goal && Math.abs(goal[0] - want[0]) < 6 && Math.abs(goal[1] - want[1]) < 6, `the bee flies to ${goal && goal.map(Math.round)}, finger at ${want.map(Math.round)}`);
+  // The bee glides to the finger in short legs (js/main.js, initBee): the middle of its box comes to the finger within a few seconds. A leg is run by the browser's animation clock,
+  // which the page's pretend clock does not move, so this waits in real time (tests/critter.test.mjs looks at the flight itself).
+  const want = [tx - hero.x, ty - hero.y];
+  const centre = () => p.evaluate(() => { const r = document.querySelector('#bee-fly').getBoundingClientRect(), h = document.querySelector('#top').getBoundingClientRect(); return [r.x - h.x + r.width / 2, r.y - h.y + r.height / 2]; });
+  let at = await centre();
+  for (const end = Date.now() + ms(15000); Math.hypot(at[0] - want[0], at[1] - want[1]) > 60 && Date.now() < end;) { await sleep(100); at = await centre(); }
+  ok('a tap in the hero sends the bee to that spot (its middle comes within 60 px of the finger)', Math.hypot(at[0] - want[0], at[1] - want[1]) <= 60, `the bee is at ${at.map(Math.round)}, the finger at ${want.map(Math.round)}`);
   const y0 = await scrollNow(p);
   await drag(p.cdp, 200, 560, 200, 300);   // a swipe that starts in the sky
   ok('a swipe that starts in the hero (bee flying) scrolls the page', (await scrollNow(p)) - y0 >= 150);

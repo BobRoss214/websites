@@ -5,9 +5,10 @@
  * every endless animation and the bee and start them again (aria-pressed, keyboard, the four languages), the picture stays whole, every tap
  * still works (a badge earned while paused shows and goes away by itself, without the rain of fruit), nothing is stored, and with "reduce
  * motion" in the system the buttons are not there. The automatic switch for a phone that cannot draw the hero smoothly (Chromium's processor
- * slowed down 6x): first the smallest decorations rest (data-calm="light"; the bee or butterfly keeps flying and keeps its wings), then every endless animation but the ones that show
- * something (data-calm="most"), the buttons show pressed and one press turns motion back on for good; at full speed it does not switch
- * (skipped when this computer itself cannot draw 40 frames a second). */
+ * slowed down 6x): first the smallest decorations rest and the falling leaves fade out (data-calm="light"; the bee or butterfly keeps flying and keeps its wings), then every endless animation but the ones
+ * that show something (data-calm="most"; the follower keeps flying, its wings rest), the buttons show pressed and one press turns motion back on for good; a page that calmed itself to "light" goes
+ * back to full motion by itself, once, when the computer is fast again; at full speed it does not switch (skipped when this computer itself cannot draw 40 frames a second). After Pause and Play
+ * the falling leaves still tip the way they drift. */
 import { run, open, ok, okSoon, info, until, ms } from './lib.mjs';
 
 const LABELS = {   // "Pause animations" / "Play animations", as in lang/src/<code>.json
@@ -35,6 +36,16 @@ const count = (p) => p.evaluate(() => +document.querySelector('#pick-count').tex
 const stored = (p) => p.evaluate(() => JSON.stringify([Object.keys(localStorage).sort(), Object.keys(sessionStorage).sort(), document.cookie]));
 const beeAt = (p) => p.evaluate(() => { const r = document.querySelector('#bee-fly').getBoundingClientRect(); return [Math.round(r.x), Math.round(r.y)]; });
 const realWait = (t) => new Promise((r) => setTimeout(r, t));
+// the follower: the middle of its box in the hero's own coordinates, and a touch on the hero (made inside the page, so that no click follows a link); it glides to the finger within a few
+// seconds (a leg of its flight is run by the browser's animation clock, not by the page's pretend clock: this waits in real time)
+const beeMiddle = (p) => p.evaluate(() => { const r = document.querySelector('#bee-fly').getBoundingClientRect(), h = document.querySelector('#top').getBoundingClientRect(); return [r.x - h.x + r.width / 2, r.y - h.y + r.height / 2]; });
+async function beeGoes(p, x, y, limit = 40000) {
+  const h = await p.evaluate(() => { const r = document.querySelector('#top').getBoundingClientRect(); return [r.x, r.y]; }), want = [x - h[0], y - h[1]];
+  await p.evaluate(([x, y]) => document.querySelector('#top').dispatchEvent(new PointerEvent('pointerdown', { clientX: x, clientY: y, bubbles: true, pointerType: 'touch' })), [x, y]);
+  let at = await beeMiddle(p);
+  for (const end = Date.now() + ms(limit); Math.hypot(at[0] - want[0], at[1] - want[1]) > 60 && Date.now() < end;) { await realWait(200); at = await beeMiddle(p); }
+  return { ok: Math.hypot(at[0] - want[0], at[1] - want[1]) <= 60, at: at.map(Math.round), want: want.map(Math.round) };
+}
 // the focus ring of the element that has focus: a real outline, and its colour against the first solid background around the button (3:1, as in the keyboard test)
 const ring = (p) => p.evaluate(() => {
   const e = document.activeElement, st = getComputedStyle(e);
@@ -160,6 +171,25 @@ await run('calm', async ({ browser, base, errs }) => {
   ok('...and it stops every endless animation there too', sv.calm === 'all' && sv.loops > 0 && sv.loopsRunning === 0, JSON.stringify(sv));
   await s.context().close();
 
+  // the falling leaves: each one drifts to the side (its own animation) and its drawing tips the way it drifts (an animation of its ::before); Play starts both again together
+  const lf = await open(browser, base, 'index.html', errs, { viewport: PHONE });
+  await lf.click(HERO); await lf.clock.runFor(300); await realWait(600);
+  const leavesStep = () => lf.evaluate(() => {
+    const all = document.getAnimations(), list = [...document.querySelectorAll('.particles .leaf')];
+    const apart = list.filter((l) => {
+      const a = all.find((x) => x.effect && x.effect.target === l && x.animationName === 'heroSway'), b = all.find((x) => x.effect && x.effect.target === l && x.animationName === 'heroRock');
+      if (!a || !b) return true;
+      const p = a.effect.getComputedTiming(), q = b.effect.getComputedTiming();
+      return !(Math.abs(p.progress - q.progress) < 0.03 && p.currentIteration === q.currentIteration);
+    }).length;
+    return { n: list.length, apart };
+  });
+  const lp = await leavesStep();
+  ok('Pause: the falling leaves rest, drifting and tipping together', lp.n > 4 && lp.apart === 0, JSON.stringify(lp));
+  await lf.click(HERO); await lf.clock.runFor(300);
+  await okSoon('Play: the falling leaves drift and tip in step again (the tipping of a leaf is started again together with its drifting)', leavesStep, (v) => v.n > 4 && v.apart === 0, 8000);
+  await lf.context().close();
+
   const r = await open(browser, base, 'index.html', errs, { viewport: PHONE, reducedMotion: 'reduce' });
   const rv = await r.evaluate(() => ({ shown: [...document.querySelectorAll('[data-motion]')].filter((b) => b.checkVisibility()).length, calm: document.documentElement.getAttribute('data-calm'), motion: !!window.WISE_ACRES.motion }));
   ok('"reduce motion" in the system: no button (the system\'s choice wins, the CSS has already stopped the animations), no data-calm', rv.shown === 0 && rv.calm === null && !rv.motion, JSON.stringify(rv));
@@ -178,28 +208,52 @@ await run('calm', async ({ browser, base, errs }) => {
       if (rate > 1) { const cdp = await pg.context().newCDPSession(pg); await cdp.send('Emulation.setCPUThrottlingRate', { rate }); }
     },
   });
-  const slow = await open(browser, base, 'index.html', errs, real(6));
-  const light = await until(slow, () => document.documentElement.getAttribute('data-calm'), null, 45000);
-  const l = await now(slow);
-  ok('6x slower: the page switches to data-calm="light" by itself, the buttons show pressed, the bee\'s wings and bobbing keep going (a creature with frozen wings looks broken; its flight: tests/critter.test.mjs)', light === 'light' && l.pressed === 'true,true' && l.bee > 0, `${light} ${JSON.stringify(l)}`);
-  const small = await slow.evaluate(() => {
-    const a = document.getAnimations().filter((x) => x.effect && x.effect.target && x.effect.getTiming().iterations === Infinity && document.querySelector('#top').contains(x.effect.target));
-    const s = (x) => x.effect.target.matches('.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *, .bfly, .bfly *') && !x.effect.target.closest('#bee-fly');   // the follower's own wings keep going
-    return { smallRunning: a.filter((x) => s(x) && x.playState === 'running').length, small: a.filter(s).length, otherRunning: a.filter((x) => !s(x) && x.playState === 'running').length };
-  });
-  ok('...the small decorations rest, the bigger loops (clouds, the wagon) still run', small.small > 0 && small.smallRunning === 0 && small.otherRunning > 0, JSON.stringify(small));
-  const most = await until(slow, () => document.documentElement.getAttribute('data-calm') === 'most', null, 45000);
-  const m = await now(slow);
-  const shows = await slow.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect.getTiming().iterations === Infinity).map((a) => a.effect.target.matches('.live-dot, .chip-rel .ico, .now-badge, .rig, .rig *')));
-  ok('...still slow: data-calm="most", every endless animation rests except the ones that show something ("open now" dot, bell, "now" badge) and the tractor and the barrel train', most && shows.every(Boolean), `${JSON.stringify(m)} running: ${shows}`);
-  const drive = await slow.evaluate(() => [...document.querySelectorAll('.rig')].map((r) => { const a = r.getAnimations().find((x) => x.animationName === 'rigDrive'); return a ? a.playState : 'none'; }));
-  ok('...and the tractor and the barrel train are still driving (they used to freeze here)', drive.length >= 2 && drive.every((x) => x === 'running'), JSON.stringify(drive));
-  await slow.click(HERO);
-  const back = await now(slow);
-  ok('one press on the (pressed) button: motion is back', back.calm === null && back.pressed === 'false,false' && back.loopsRunning > 5, JSON.stringify(back));
-  await realWait(ms(7000));
-  ok('...and the page does not switch by itself again, however slow it is', (await now(slow)).calm === null);
-  await slow.context().close();
+  const mainFlow = async () => {
+    const slow = await open(browser, base, 'index.html', errs, real(6));
+    const light = await until(slow, () => document.documentElement.getAttribute('data-calm'), null, 45000);
+    const l = await now(slow);
+    ok('6x slower: the page switches to data-calm="light" by itself, the buttons show pressed, the bee\'s wings and bobbing keep going (a creature with frozen wings looks broken; its flight: tests/critter.test.mjs)', light === 'light' && l.pressed === 'true,true' && l.bee > 0, `${light} ${JSON.stringify(l)}`);
+    const small = await slow.evaluate(() => {
+      const a = document.getAnimations().filter((x) => x.effect && x.effect.target && x.effect.getTiming().iterations === Infinity && document.querySelector('#top').contains(x.effect.target));
+      const s = (x) => x.effect.target.matches('.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *, .bfly, .bfly *') && !x.effect.target.closest('#bee-fly');   // the follower's own wings keep going
+      return { smallRunning: a.filter((x) => s(x) && x.playState === 'running').length, small: a.filter(s).length, otherRunning: a.filter((x) => !s(x) && x.playState === 'running').length };
+    });
+    ok('...the small decorations rest, the bigger loops (clouds, the wagon) still run', small.small > 0 && small.smallRunning === 0 && small.otherRunning > 0, JSON.stringify(small));
+    const top = await slow.evaluate(() => document.querySelector('#top').getBoundingClientRect().y);
+    const g1 = await beeGoes(slow, 300, top + 300);   // (bare sky above the big buttons: on a phone a spot on a button would send it beside the button)
+    ok('...and the bee or butterfly still glides to a touch on the hero (its flight goes on in "light")', g1.ok, JSON.stringify(g1));
+    const most = await until(slow, () => document.documentElement.getAttribute('data-calm') === 'most', null, 45000);
+    const m = await now(slow);
+    const shows = await slow.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect.getTiming().iterations === Infinity).map((a) => a.effect.target.matches('.live-dot, .chip-rel .ico, .now-badge, .rig, .rig *')));
+    ok('...still slow: data-calm="most", every endless animation rests except the ones that show something ("open now" dot, bell, "now" badge) and the tractor and the barrel train', most && shows.every(Boolean), `${JSON.stringify(m)} running: ${shows}`);
+    ok('...in "most" the follower\'s wings and bobbing rest too', most && m.bee === 0, JSON.stringify(m));
+    const g2 = await beeGoes(slow, 80, top + 250);
+    ok('...but it still flies to a touch on the hero (the flight is never stopped by the calm mode)', g2.ok, JSON.stringify(g2));
+    const drive = await slow.evaluate(() => [...document.querySelectorAll('.rig')].map((r) => { const a = r.getAnimations().find((x) => x.animationName === 'rigDrive'); return a ? a.playState : 'none'; }));
+    ok('...and the tractor and the barrel train are still driving (they used to freeze here)', drive.length >= 2 && drive.every((x) => x === 'running'), JSON.stringify(drive));
+    await slow.click(HERO);
+    const back = await now(slow);
+    ok('one press on the (pressed) button: motion is back', back.calm === null && back.pressed === 'false,false' && back.loopsRunning > 5, JSON.stringify(back));
+    await okSoon('...the follower\'s wings and bobbing run again', () => now(slow), (v) => v.bee > 0, 10000);
+    await realWait(ms(7000));
+    ok('...and the page does not switch by itself again, however slow it is', (await now(slow)).calm === null);
+    await slow.context().close();
+  };
+  // A page that calmed itself to "light" (never by the visitor) goes back to full motion once, after four good looks in a row: a slow moment while the page loaded must not leave the
+  // falling leaves and everything else resting for good. (It needs a computer that is fast at full speed: when this one cannot draw 40 frames a second the check is skipped.)
+  const recoverFlow = async () => {
+    const q = await open(browser, base, 'index.html', errs, real(6));
+    const cdp = await q.context().newCDPSession(q);
+    const first = await until(q, () => document.documentElement.getAttribute('data-calm'), null, 45000);
+    await q.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important}' });   // (the drawing of the page costs next to nothing now, whatever else this computer is busy with: the looks of the page count only what the page itself needs)
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });   // the computer is fast again
+    const gone = await until(q, () => document.documentElement.getAttribute('data-calm') === null, null, 60000);
+    const fps = await q.evaluate(() => window.__fps), end = await now(q);
+    if (!gone && fps.slice(-3).some((x) => x < 40)) info(`this computer is too busy to judge the way back from "light" (frames per second, 2 s at a time: ${fps.join(' ')}); that check is skipped`);
+    else ok('a page that calmed itself ("light") goes back to full motion by itself when the computer is fast again, and the buttons show not pressed', first === 'light' && gone && end.pressed === 'false,false', `${first} then ${end.calm}, ${JSON.stringify(end)}`);
+    await q.context().close();
+  };
+  await Promise.all([mainFlow(), recoverFlow()]);
 
   const fast = await open(browser, base, 'index.html', errs, real(1));
   await realWait(ms(17000));   // the page looks 6 times, 2 s each, from 4 s after loading
