@@ -87,8 +87,8 @@ iPhone and once in Firefox before a launch. Words that a script writes into the 
 
 - **Chrome 80 to 83 and Samsung Internet 13**: rows of buttons touch (flex `gap` is Chrome 84 / Samsung 14); `inset` and the logical sizes (Chrome 87) are written the
   old way so nothing moves; `replaceChildren` (Chrome 86) is not used any more (the photo counter was the one place), so the photo viewer works.
-- **Chrome before 88**: rules written with `:is()` are dropped whole: the Spanish and Vietnamese phone menu rules for windows 1180 to 1330 pixels wide, a few line heights for
-  Hindi, Chinese and Vietnamese, the larger touch area around some buttons. Reading and every button work.
+- **Chrome before 88**: rules written with `:is()` are dropped whole: a few line heights for
+  Hindi, Chinese and Vietnamese, the larger touch area around some buttons. Reading and every button work. (The menu's switch to the phone menu does not use `:is()`: every language has its own rule.)
 - **Chrome before 104** (a computer or phone that never updated): tilts, pops and falling leaves are not drawn (`rotate`, `scale`, `translate`); the progress tractor is placed with
   `left` where container units are missing (Chrome before 105), which is where `translate` is also missing.
 - **Chrome before 105 and Samsung Internet before 20**: no `:has()` (the same two small things as on iOS before 15.4); no container units; no `dvh`/`svh` (108) so the hero uses `vh`.

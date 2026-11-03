@@ -307,30 +307,52 @@
     });
     addEventListener('resize', () => { if (getComputedStyle(toggle).display === 'none') setOpen(false); });
 
-    // "More" dropdown: click to open, Escape or an outside click to close, and it closes when focus leaves.
-    const more = $('.nav-more', nav);
-    const moreBtn = more && $('.nav-more-btn', more);
-    const setMore = (open) => {
-      if (!more) return;
-      more.classList.toggle('is-open', open);
-      moreBtn.setAttribute('aria-expanded', String(open));
+    // The seven drop-down groups (Visit, Things to Do, GreenHouse, Store, Groups & Parties, About Us, Contact): a click on a button opens its list under it,
+    // a second click, Escape, a click anywhere else or tabbing out closes it. Only one list is open at a time. A click on a line closes the list and the browser
+    // goes to the line's place. (In the phone menu the buttons are hidden and every list is shown: the CSS does that, nothing here runs for it.)
+    const groups = $$('.nav-group', nav);
+    const btnOf = (g) => $('.nav-group-btn', g);
+    const isOpen = (g) => g.classList.contains('is-open');
+    const setGroup = (g, open) => {
+      g.classList.toggle('is-open', open);
+      btnOf(g).setAttribute('aria-expanded', String(open));
     };
-    if (more) {
-      moreBtn.addEventListener('click', () => setMore(!more.classList.contains('is-open')));
-      more.addEventListener('keydown', (e) => { if (e.key === 'Escape') { setMore(false); moreBtn.focus(); } });
-      more.addEventListener('focusout', (e) => { if (!more.contains(e.relatedTarget)) setMore(false); });
-      doc.addEventListener('click', (e) => { if (!more.contains(e.target)) setMore(false); });
-      more.addEventListener('click', (e) => { if (e.target.closest('a')) setMore(false); });
-    }
+    const closeGroups = (except) => groups.forEach((g) => { if (g !== except && isOpen(g)) setGroup(g, false); });
+    groups.forEach((g) => {
+      const btn = btnOf(g);
+      btn.addEventListener('click', () => { const open = !isOpen(g); closeGroups(g); setGroup(g, open); });
+      g.addEventListener('focusout', (e) => { if (!g.contains(e.relatedTarget)) setGroup(g, false); });
+      g.addEventListener('click', (e) => { if (e.target.closest('a')) setGroup(g, false); });
+    });
+    // a press or a click anywhere else closes the open list (pointerdown also covers a tap where the browser sends no click to the page)
+    const outside = (e) => { if (!(e.target.closest && e.target.closest('.nav-group'))) closeGroups(); };
+    doc.addEventListener('pointerdown', outside);
+    doc.addEventListener('click', outside);
+    // Escape closes the open list and puts the focus back on its button (also when the focus was not inside the list)
+    doc.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      groups.filter(isOpen).forEach((g) => { const keep = g.contains(doc.activeElement) || doc.activeElement === doc.body; setGroup(g, false); if (keep) btnOf(g).focus(); });
+    });
 
-    // Scroll-spy: highlight the nav link for the section in the middle of the screen.
+    // A line for something that only some seasons show (the "Meet the animals" and "Playgrounds" cards are not there in winter) goes to its
+    // data-fallback place in the other seasons. The place is the line's own address with the part after # changed, so it also works on the other pages.
+    const seasonal = $$('a[data-seasons]', nav);
+    seasonal.forEach((a) => { a.dataset.href = a.getAttribute('href'); });
+    const aim = (id) => seasonal.forEach((a) => a.setAttribute('href', a.dataset.seasons.split(/\s+/).indexOf(id) >= 0 ? a.dataset.href : a.dataset.href.replace(/#.*$/, '#' + a.dataset.fallback)));
+    aim(S.active || S.current());
+    doc.addEventListener('wa:season', (e) => aim(e.detail));
+
+    // Scroll-spy: light the group button (and the line, if its list is open) for the section in the middle of the screen.
     if (!('IntersectionObserver' in window)) return;
-    // A place can have two links (the "First-visit guide" link is in the menu bar for the phone menu and under More for the wide bar): all of them are kept.
+    // A place can have several lines (Ice cream and Drinks are under GreenHouse and under Store): all of them are kept.
     const links = new Map();
-    $$('.nav ul a[href^="#"]').forEach((a) => { const key = a.getAttribute('href').slice(1); links.set(key, (links.get(key) || []).concat(a)); });
+    $$('.nav a[href^="#"]', nav).forEach((a) => { const key = a.getAttribute('href').slice(1); links.set(key, (links.get(key) || []).concat(a)); });
+    // each group says which sections belong to it (data-spy on the group, in index.html)
+    const groupOf = new Map();
+    groups.forEach((g) => (g.dataset.spy || '').split(/\s+/).filter(Boolean).forEach((key) => groupOf.set(key, g)));
     const setCurrent = (id) => {
       links.forEach((list, key) => list.forEach((a) => (key === id ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current'))));
-      if (moreBtn) { const inMore = (links.get(id) || []).some((a) => more.contains(a)); if (inMore) moreBtn.setAttribute('aria-current', 'true'); else moreBtn.removeAttribute('aria-current'); }
+      groups.forEach((g) => { if (groupOf.get(id) === g) btnOf(g).setAttribute('aria-current', 'true'); else btnOf(g).removeAttribute('aria-current'); });
     };
     const onSpy = (entries) => {
       entries.forEach((en) => { if (en.isIntersecting) setCurrent(en.target.dataset.nav || en.target.id); });

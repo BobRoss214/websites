@@ -12,9 +12,9 @@ const CASES = [['es', 'es', 'Visita'], ['hi', 'hi', null], ['zh', 'zh-Hans', nul
 await run('i18n-early', async ({ browser, base, errs }) => {
   for (const [lang, html, nav] of CASES) {
     const p = await open(browser, base, 'index.html', errs, { lang, routes: async (pg) => {
-      await pg.route('**/js/hero.js', async (r) => { const res = await r.fetch(); r.fulfill({ response: res, body: "window.__atHero = { lang: document.documentElement.lang, nav: (document.querySelector('.nav li:first-child a') || {}).textContent, title: document.title };\n" + (await res.text()) }); });
+      await pg.route('**/js/hero.js', async (r) => { const res = await r.fetch(); r.fulfill({ response: res, body: "window.__atHero = { lang: document.documentElement.lang, nav: (document.querySelector('.nav .nav-group-btn span') || {}).textContent, title: document.title };\n" + (await res.text()) }); });
     } });
-    const m = await p.evaluate(() => ({ at: window.__atHero, nav: document.querySelector('.nav li:first-child a').textContent, title: document.title }));
+    const m = await p.evaluate(() => ({ at: window.__atHero, nav: document.querySelector('.nav .nav-group-btn span').textContent, title: document.title }));
     ok(`${lang}: the page is already in ${lang} when hero.js starts (html lang, menu text and title)`, m.at && m.at.lang === html && m.at.nav === m.nav && m.at.nav !== 'Visit' && m.at.title === m.title && (!nav || m.at.nav === nav), JSON.stringify(m.at));
     ok(`${lang}: the page is still in ${lang} when it has loaded`, (await p.evaluate(() => document.documentElement.lang)) === html && m.nav !== 'Visit');
     await p.context().close();
@@ -32,6 +32,6 @@ await run('i18n-early', async ({ browser, base, errs }) => {
   await p.click('.lang-btn');
   ok('es: the language menu opens', await p.isVisible('.lang-list'));
   await p.click('.lang-list [data-lang="en"]');
-  await okSoon('es: switching back to English still works', () => p.evaluate(() => ({ lang: document.documentElement.lang, nav: document.querySelector('.nav li:first-child a').textContent })), (v) => v.lang === 'en' && v.nav === 'Visit');
+  await okSoon('es: switching back to English still works', () => p.evaluate(() => ({ lang: document.documentElement.lang, nav: document.querySelector('.nav .nav-group-btn span').textContent })), (v) => v.lang === 'en' && v.nav === 'Visit');
   await p.context().close();
 });

@@ -98,7 +98,8 @@ html:is(:lang(hi),:lang(zh)) :is(.map-svg,.toot) text{font-family:var(--display)
 html:lang(hi),html:lang(zh){font-synthesis:weight}
 html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;letter-spacing:0}
 /* Devanagari: letter-spacing pulls the joined top line of each word apart, and labels under 12px are hard to read. Chinese: no slanted (synthetic italic) text, and no lone character on the last line. */
-html:lang(hi) :is(.rc i,.badge-now,.fs-this,.new-ribbon,.nu-now,.rel-eyebrow,.cal-months span,.cal-today span,.way-time,.menu-addons span,.bloom-when,.choose-new-badge,.choose-tag,.fact-label,.fs-now,.gh-banner-a,.gh-banner-b,.loc-tag,.menu-name,.now-badge,.package-flag,.pill,.ss-now,.tag,.v-cat,.who-what,.sched-table th,.map-legend h3,.press h3){letter-spacing:0}
+html:lang(hi) :is(.rc i,.badge-now,.fs-this,.new-ribbon,.nu-now,.rel-eyebrow,.cal-months span,.cal-today span,.way-time,.menu-addons span,.bloom-when,.choose-new-badge,.choose-tag,.fact-label,.fs-now,.gh-banner-a,.gh-banner-b,.loc-tag,.menu-name,.now-badge,.package-flag,.pill,.ss-now,.tag,.v-cat,.who-what,.sched-table th,.map-legend h3,.press h3,.nav-group-title){letter-spacing:0}
+html:lang(zh) .nav-group-title{letter-spacing:0}
 html:lang(hi) :is(.rc i,.fs-now,.fs-this,.now-badge,.package-flag,.pill,.ss-now,.tag,.v-cat,.cal-months span,.cal-today span){font-size:12px}
 html:lang(hi) .menu-desc,html:lang(zh) .menu-desc{font-style:normal}
 html:lang(zh) body{text-wrap:pretty}
@@ -651,19 +652,53 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
   .action-bar .btn .ico{display:none}
   body{padding-bottom:max(68px,5.5rem)}   /* room for a second row (68px at the normal size) */
 }
-@media (max-height:34em) and (max-width:73.75em){
-  .nav{gap:10px;padding:12px var(--gutter) 96px}
-  .nav ul,.nav .nav-more-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
-  .nav .nav-more{grid-column:1/-1}
-  .nav ul a,.nav .nav-more-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
-  .nav-cta{font-size:1.05rem;padding:.6em}
+@media (max-height:34em) and (max-width:79.9em){
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav{gap:10px;padding:12px var(--gutter) 96px}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav > ul{gap:12px}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-title{margin-bottom:5px;font-size:.8rem}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul a,html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-cta{font-size:1.05rem;padding:.6em}
 }
-@media (max-height:34em) and (max-width:83.125em){
-  html:is([lang="es"],[lang="vi"]) .nav{gap:10px;padding:12px var(--gutter) 96px}
-  html:is([lang="es"],[lang="vi"]) .nav ul,html:is([lang="es"],[lang="vi"]) .nav .nav-more-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
-  html:is([lang="es"],[lang="vi"]) .nav .nav-more{grid-column:1/-1}
-  html:is([lang="es"],[lang="vi"]) .nav ul a,html:is([lang="es"],[lang="vi"]) .nav .nav-more-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
-  html:is([lang="es"],[lang="vi"]) .nav-cta{font-size:1.05rem;padding:.6em}
+@media (max-height:34em) and (max-width:76.75em){
+  html[lang|="en"] .nav,html[lang|="hi"] .nav{gap:10px;padding:12px var(--gutter) 96px}
+  html[lang|="en"] .nav > ul,html[lang|="hi"] .nav > ul{gap:12px}
+  html[lang|="en"] .nav .nav-group-title,html[lang|="hi"] .nav .nav-group-title{margin-bottom:5px;font-size:.8rem}
+  html[lang|="en"] .nav .nav-group-list,html[lang|="hi"] .nav .nav-group-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
+  html[lang|="en"] .nav ul a,html[lang|="en"] .nav .nav-group-list a,html[lang|="hi"] .nav ul a,html[lang|="hi"] .nav .nav-group-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+  html[lang|="en"] .nav-cta,html[lang|="hi"] .nav-cta{font-size:1.05rem;padding:.6em}
+}
+@media (max-height:34em) and (max-width:69.25em){
+  html[lang|="zh"] .nav{gap:10px;padding:12px var(--gutter) 96px}
+  html[lang|="zh"] .nav > ul{gap:12px}
+  html[lang|="zh"] .nav .nav-group-title{margin-bottom:5px;font-size:.8rem}
+  html[lang|="zh"] .nav .nav-group-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
+  html[lang|="zh"] .nav ul a,html[lang|="zh"] .nav .nav-group-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+  html[lang|="zh"] .nav-cta{font-size:1.05rem;padding:.6em}
+}
+@media (max-height:34em) and (max-width:84.9em){
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav{gap:10px;padding:12px var(--gutter) 96px}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav > ul{gap:12px}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-title{margin-bottom:5px;font-size:.8rem}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul a,html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-cta{font-size:1.05rem;padding:.6em}
+}
+@media (max-height:34em) and (max-width:81.75em){
+  html.wa-demo[lang|="en"] .nav,html.wa-demo[lang|="hi"] .nav{gap:10px;padding:12px var(--gutter) 96px}
+  html.wa-demo[lang|="en"] .nav > ul,html.wa-demo[lang|="hi"] .nav > ul{gap:12px}
+  html.wa-demo[lang|="en"] .nav .nav-group-title,html.wa-demo[lang|="hi"] .nav .nav-group-title{margin-bottom:5px;font-size:.8rem}
+  html.wa-demo[lang|="en"] .nav .nav-group-list,html.wa-demo[lang|="hi"] .nav .nav-group-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
+  html.wa-demo[lang|="en"] .nav ul a,html.wa-demo[lang|="en"] .nav .nav-group-list a,html.wa-demo[lang|="hi"] .nav ul a,html.wa-demo[lang|="hi"] .nav .nav-group-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+  html.wa-demo[lang|="en"] .nav-cta,html.wa-demo[lang|="hi"] .nav-cta{font-size:1.05rem;padding:.6em}
+}
+@media (max-height:34em) and (max-width:74.25em){
+  html.wa-demo[lang|="zh"] .nav{gap:10px;padding:12px var(--gutter) 96px}
+  html.wa-demo[lang|="zh"] .nav > ul{gap:12px}
+  html.wa-demo[lang|="zh"] .nav .nav-group-title{margin-bottom:5px;font-size:.8rem}
+  html.wa-demo[lang|="zh"] .nav .nav-group-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:6px}
+  html.wa-demo[lang|="zh"] .nav ul a,html.wa-demo[lang|="zh"] .nav .nav-group-list a{font-size:1.05rem!important;padding:.4em .7em!important;border-width:2.5px;border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+  html.wa-demo[lang|="zh"] .nav-cta{font-size:1.05rem;padding:.6em}
 }
 /* A phone at 200% text is only about 11em wide. Everything wraps instead of pushing the page sideways; the hero is trimmed so the Reserve button still shows. */
 @media (max-width:19.9em){
@@ -687,19 +722,19 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
   .step{padding-left:14px;padding-right:14px;padding-inline:14px}
   .step-num{left:-62px;width:52px;height:52px}
 }
-/* the menu on a phone at 200%: two columns, so more than 6 of the 14 links show without scrolling */
+/* the menu on a phone at 200%: two columns, so more of its lines show without scrolling */
 @media (max-height:34em) and (max-width:19.9em){
-  .nav ul,.nav .nav-more-list,html:is([lang="es"],[lang="vi"]) .nav ul,html:is([lang="es"],[lang="vi"]) .nav .nav-more-list{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .nav ul a,.nav .nav-more-list a,html:is([lang="es"],[lang="vi"]) .nav ul a,html:is([lang="es"],[lang="vi"]) .nav .nav-more-list a{font-size:min(1.05rem,21px)!important;padding:.4em .5em!important;white-space:normal;display:flex;align-items:center;min-height:44px;height:100%;box-sizing:border-box}
-  .nav-cta,html:is([lang="es"],[lang="vi"]) .nav-cta{font-size:min(1.05rem,19px);padding:.5em}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list,html[lang|="en"] .nav .nav-group-list,html[lang|="hi"] .nav .nav-group-list,html[lang|="zh"] .nav .nav-group-list,html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list,html.wa-demo[lang|="en"] .nav .nav-group-list,html.wa-demo[lang|="hi"] .nav .nav-group-list,html.wa-demo[lang|="zh"] .nav .nav-group-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul a,html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list a,html[lang|="en"] .nav ul a,html[lang|="en"] .nav .nav-group-list a,html[lang|="hi"] .nav ul a,html[lang|="hi"] .nav .nav-group-list a,html[lang|="zh"] .nav ul a,html[lang|="zh"] .nav .nav-group-list a,html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul a,html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list a,html.wa-demo[lang|="en"] .nav ul a,html.wa-demo[lang|="en"] .nav .nav-group-list a,html.wa-demo[lang|="hi"] .nav ul a,html.wa-demo[lang|="hi"] .nav .nav-group-list a,html.wa-demo[lang|="zh"] .nav ul a,html.wa-demo[lang|="zh"] .nav .nav-group-list a{font-size:min(1.05rem,21px)!important;padding:.4em .5em!important;white-space:normal;display:flex;align-items:center;min-height:44px;height:100%;box-sizing:border-box}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-cta,html[lang|="en"] .nav-cta,html[lang|="hi"] .nav-cta,html[lang|="zh"] .nav-cta,html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-cta,html.wa-demo[lang|="en"] .nav-cta,html.wa-demo[lang|="hi"] .nav-cta,html.wa-demo[lang|="zh"] .nav-cta{font-size:min(1.05rem,19px);padding:.5em}
 }
 
 /* ---------------------------------------------------------------- tap targets, 44px
    Season buttons, filter pills and the header links keep their look: an invisible box (a pseudo-element, part of the link) is at least 44px tall and sits on the same centre line.
    Footer lists have room to grow, so there the links simply get taller. Links inside a sentence are left alone. */
 @media screen{
-:is(.season-switch button,.fs-table thead button,.filter-btn,.shop-jump a,.first-time a,.nav ul a,.nav-more-btn,.who-list a){position:relative}
-:is(.season-switch button,.fs-table thead button,.filter-btn,.shop-jump a,.first-time a,.nav ul a,.nav-more-btn,.who-list a)::before{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+:is(.season-switch button,.fs-table thead button,.filter-btn,.shop-jump a,.first-time a,.nav ul a,.nav-group-btn,.who-list a){position:relative}
+:is(.season-switch button,.fs-table thead button,.filter-btn,.shop-jump a,.first-time a,.nav ul a,.nav-group-btn,.who-list a)::before{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
 .hero-note a{padding-top:13px;padding-bottom:13px;padding-block:13px;margin-top:-13px;margin-bottom:-13px;margin-block:-13px}
 .announce a{padding-top:13px;padding-bottom:13px;padding-block:13px;margin-top:-13px;margin-bottom:-13px;margin-block:-13px}
 .btn{min-height:44px}
@@ -715,7 +750,7 @@ button.map-toggle{min-height:44px}
 .lang-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding-left:.35em;padding-right:.35em;padding-inline:.35em}
 .checklist{gap:0}
 .checklist label{padding-top:8.5px;padding-bottom:8.5px;padding-block:8.5px;margin-top:0;margin-bottom:0;margin-block:0}
-.nav .nav-more-list a{display:flex;align-items:center;min-height:44px}
+.nav .nav-group-list a{display:flex;align-items:center;min-height:44px}
 .lang-list button{min-height:44px}
 }
 /* The round "back to top" button (68px from the bottom edge) must not hide the link you tabbed to: keep that much free at the bottom of the scroll area. */

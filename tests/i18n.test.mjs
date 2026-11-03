@@ -8,7 +8,7 @@
  * end (DOMContentLoaded). open() waits for the "load" event instead, and later checks wait for the thing they check. */
 import { run, open, ok, okSoon, until, txt } from './lib.mjs';
 
-const nav = (p) => txt(p, '.nav li:first-child a');
+const nav = (p) => txt(p, '.nav .nav-group-btn span');
 const htmlLang = (p) => p.evaluate(() => document.documentElement.lang);
 
 await run('i18n', async ({ browser, base, errs }) => {
@@ -72,12 +72,12 @@ await run('i18n', async ({ browser, base, errs }) => {
     await p5.click('.lang-offer [data-y]');
     await until(p5, () => !document.querySelector('script[src="lang/es.js"]'), null, 15000);                      // the failed script has been taken out again: the try is over
     await p5.evaluate(() => new Promise((r) => setTimeout(r, 300)));
-    const stuck = await p5.evaluate(() => ({ offer: document.querySelectorAll('.lang-offer').length, nav: (document.querySelector('.nav li:first-child a') || {}).textContent, html: document.documentElement.lang, stored: localStorage.getItem('wa.lang'), no: localStorage.getItem('wa.offer') }));
+    const stuck = await p5.evaluate(() => ({ offer: document.querySelectorAll('.lang-offer').length, nav: (document.querySelector('.nav .nav-group-btn span') || {}).textContent, html: document.documentElement.lang, stored: localStorage.getItem('wa.lang'), no: localStorage.getItem('wa.offer') }));
     ok('"Yes" when the Spanish file does not arrive: the offer is still there (not gone with nothing happening)', stuck.offer === 1, JSON.stringify(stuck));
     ok('...the page stays English, and nothing is remembered (not the language, not a "no")', stuck.nav === 'Visit' && stuck.html === 'en' && stuck.stored === null && stuck.no === null, JSON.stringify(stuck));
     reachable = true;
     await p5.click('.lang-offer [data-y]');
-    await okSoon('...pressing "Yes" again, with the file reachable: the page is Spanish and the offer closes', () => p5.evaluate(() => ({ nav: (document.querySelector('.nav li:first-child a') || {}).textContent, offer: document.querySelectorAll('.lang-offer').length })), (v) => v.nav === 'Visita' && v.offer === 0);
+    await okSoon('...pressing "Yes" again, with the file reachable: the page is Spanish and the offer closes', () => p5.evaluate(() => ({ nav: (document.querySelector('.nav .nav-group-btn span') || {}).textContent, offer: document.querySelectorAll('.lang-offer').length })), (v) => v.nav === 'Visita' && v.offer === 0);
     await p5.context().close();
   }
 

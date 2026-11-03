@@ -1804,7 +1804,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 **A. Stop calling them new from January 1 (words and red dot)**
 
 - Change the words in index.html at `data-t="td6ecd1d8"` (fall hero line, "plus new u-pick ..."), `data-t="t1c989256"` (the "New:" line in the Fall panel list), `data-t="tedce5b9f"` (add-on note), `data-t="tbc119a85"` (pumpkin text), `data-t="t4eb3e326"` (calendar row), `data-t="t247dcbc5"` (season list) and `data-t="t398007b0"` (FAQ answer "Yes, and it's new this year!"), and in pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes` (the rebuild copies it to the generated pumpkin-patch page).
-- The red dot: delete the rule css/sections.css at `html[data-season="fall"] .nav-tomato a::after` (and the class on index.html at `class="nav-tomato"` can stay).
+- The red dot: delete the two rules css/sections.css at `html[data-season="fall"] .nav-tomato .nav-group-btn::after` and `html[data-season="fall"] .nav-tomato .nav-group-title::after` (and the class on index.html at `class="nav-group nav-tomato"` can stay).
 - The ribbon (index.html at `data-t="tbaeea389"`) hides itself after its last day, index.html at `data-until="2026-12-31"`; the chip (index.html at `data-t="t30661b0e"`) and the "New" badge (index.html at `data-t="tddae9ce2"`) hide themselves after index.html at `data-until="2026-10-31"` (2 places).
 - Strings: 8 ids x 4 translations (7 in index.html, 1 for the pumpkin page)
 - Tests: farm-seasons, consistency, languages, i18n; hero looks for the "New" tomatoes chip (hero at `fall: the "New tomatoes" chip shows`), which hides itself after the last day

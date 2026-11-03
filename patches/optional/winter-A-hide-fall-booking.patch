@@ -94,8 +94,8 @@ index cc2e77d..a6a55e4 100644
            </ul>
          </div>
  
--        <div class="addons reveal">
-+        <div class="addons reveal" data-only="fall">
+-        <div class="addons reveal" id="addons">
++        <div class="addons reveal" id="addons" data-only="fall">
            <h4 data-t="t6d120d7c">Optional add-ons</h4>
            <ul class="addon-list">
              <li>

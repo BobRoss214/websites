@@ -98,7 +98,7 @@ await run('i18n-a11y', async ({ browser, base, errs }) => {
     // the language file does not arrive (offline, blocked): the page is English and says so everywhere, and no name is marked
     {
       const f = await open(browser, base, 'index.html', errs, { lang, routes: (pg) => pg.route(`**/lang/${lang}.js`, (r) => r.abort()) });
-      const got = await f.evaluate(() => ({ lang: document.documentElement.lang, btn: document.querySelector('.lang-btn').getAttribute('aria-label'), marked: document.querySelectorAll('wa-en').length, nav: document.querySelector('.nav li:first-child a').textContent.trim() }));
+      const got = await f.evaluate(() => ({ lang: document.documentElement.lang, btn: document.querySelector('.lang-btn').getAttribute('aria-label'), marked: document.querySelectorAll('wa-en').length, nav: document.querySelector('.nav .nav-group-btn span').textContent.trim() }));
       ok(`${lang}: language file missing: English page, html lang = en, the button says so, no wrapper`, got.lang === 'en' && got.btn === BUTTON.en && got.marked === 0 && got.nav === 'Visit', JSON.stringify(got));
       await f.context().close();
     }

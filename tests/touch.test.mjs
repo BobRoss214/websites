@@ -310,7 +310,8 @@ async function menus(p, label) {
   await (await p.$('.lang-btn')).tap(); await p.clock.runFor(300);   // closed again
   await (await p.$('.menu-toggle')).tap(); await p.clock.runFor(500);
   const nav = await p.evaluate(() => { const n = document.querySelector('.nav').getBoundingClientRect(); return { x: n.x + n.width / 2, y: n.y + n.height / 2 }; });
-  for (let k = 0; k < 6; k++) await drag(p.cdp, nav.x, nav.y + 100, nav.x, nav.y - 100, 8);
+  let last = -1;   // the menu is long (7 groups, 37 lines): drag until it stops moving
+  for (let k = 0; k < 30; k++) { await drag(p.cdp, nav.x, nav.y + 100, nav.x, nav.y - 100, 8); const st = await p.evaluate(() => document.querySelector('.nav').scrollTop); if (st === last) break; last = st; }
   const end = await p.evaluate(() => { const links = [...document.querySelectorAll('.nav a')].filter((a) => a.getBoundingClientRect().width > 0), l = links[links.length - 1].getBoundingClientRect(), bar = document.querySelector('.action-bar').getBoundingClientRect(); return { bottom: Math.round(l.bottom), bar: Math.round(bar.top) }; });
   ok(`${label}: the open menu scrolls with a finger to its last item, clear of the bottom bar`, end.bottom <= end.bar, JSON.stringify(end));
 }

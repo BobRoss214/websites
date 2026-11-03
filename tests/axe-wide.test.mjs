@@ -5,7 +5,7 @@
 /* Accessibility, wide: the real axe-core (WCAG 2.0/2.1 A and AA plus best practices; no rule is switched off) over 35 pages chosen from the whole
  * matrix of 6 pages x 5 languages x 4 seasons (the clock is moved into each) x phone and desktop x light and dark, so that EVERY PAIR of those is in
  * it (checked below), plus the home page in all four seasons on both sizes and the 404 page; then 18 states a normal load never shows (photo viewer,
- * language / More / phone / "Remind me" menus, achievement badge, signup with an error, Site check box with and without problems, the language offer,
+ * language / Store and Things to Do / phone / "Remind me" menus, achievement badge, signup with an error, Site check box with and without problems, the language offer,
  * the drive-time answer, the map legend note, the notice bar, a season picked in the hero) and every tab of "What's in season" and "What's on the farm". Then what axe
  * cannot do: (1) text on a gradient or a picture, which axe reports as "could not decide": the first screen of 20 of those pages is photographed with
  * the text made invisible and the colour of the text is compared with the pixels behind it (WCAG 4.5:1, large text 3:1); (2) a focus mark on every
@@ -186,10 +186,13 @@ const STATES = [
     ['photo viewer open: a photo (zh, desktop)', async (p) => { await p.keyboard.press('Escape'); await p.clock.runFor(300); await p.evaluate(() => [...document.querySelectorAll('img[data-zoom]')].find((i) => i.getBoundingClientRect().width > 20).click()); await waitFor(p, () => document.getElementById('lightbox').open, null, 'the viewer did not open'); }],
   ] },
   { vp: 'phone', steps: [['photo viewer open on a phone (en)', async (p) => { await p.evaluate(() => [...document.querySelectorAll('img[data-zoom]')].find((i) => i.getBoundingClientRect().width > 20).click()); await waitFor(p, () => document.getElementById('lightbox').open, null, 'the viewer did not open'); }]] },
-  { vp: 'desktop', lang: 'hi', steps: [['language menu open (hi, desktop)', async (p) => { await p.click('header .lang-btn'); await waitFor(p, () => !document.querySelector('header .lang-list').hidden, null, 'the menu did not open'); }]] },
+  { vp: 'desktop', lang: 'hi', steps: [
+    ['language menu open (hi, desktop)', async (p) => { await p.click('header .lang-btn'); await waitFor(p, () => !document.querySelector('header .lang-list').hidden, null, 'the menu did not open'); }],
+    ['Things to Do menu open (hi, desktop)', async (p) => { await p.keyboard.press('Escape'); await p.click('button[aria-controls="nav-list-things"]'); await waitFor(p, () => document.querySelector('button[aria-controls="nav-list-things"]').getAttribute('aria-expanded') === 'true', null, 'the menu did not open'); }],
+  ] },
   { vp: 'phone', steps: [['language menu open (en, phone)', async (p) => { await p.click('header .lang-btn'); await waitFor(p, () => !document.querySelector('header .lang-list').hidden, null, 'the menu did not open'); }]] },
   { vp: 'desktop', lang: 'es', steps: [
-    ['More menu open (es, desktop)', async (p) => { await p.click('.nav-more-btn'); await waitFor(p, () => document.querySelector('.nav-more-btn').getAttribute('aria-expanded') === 'true', null, 'the menu did not open'); }],
+    ['Store menu open (es, desktop)', async (p) => { await p.click('button[aria-controls="nav-list-store"]'); await waitFor(p, () => document.querySelector('button[aria-controls="nav-list-store"]').getAttribute('aria-expanded') === 'true', null, 'the menu did not open'); }],
     ['"Remind me" menu open (es, desktop)', async (p) => { await p.keyboard.press('Escape'); await p.evaluate(() => document.querySelector('[data-rel-remind]').scrollIntoView({ block: 'center' })); await p.click('[data-rel-remind]'); await waitFor(p, () => !document.getElementById('rel-menu').hidden, null, 'the menu did not open'); }],
   ] },
   { vp: 'phone', lang: 'vi', steps: [['phone menu open (vi)', async (p) => { await p.click('#menu-toggle'); await waitFor(p, () => document.getElementById('menu-toggle').getAttribute('aria-expanded') === 'true', null, 'the menu did not open'); }]] },
@@ -279,7 +282,7 @@ async function focusRun(browser, base, page, size, lang) {
 const POPUPS = {
   desktop: [
     { name: 'language menu', trigger: 'header .lang-btn', isOpen: () => !document.querySelector('header .lang-list').hidden, within: 'header .lang' },
-    { name: 'More menu', trigger: '.nav-more-btn', isOpen: () => document.querySelector('.nav-more-btn').getAttribute('aria-expanded') === 'true', within: '.nav-more' },
+    { name: 'Store menu', trigger: 'button[aria-controls="nav-list-store"]', isOpen: () => document.querySelector('button[aria-controls="nav-list-store"]').getAttribute('aria-expanded') === 'true', within: '#nav > ul > li:nth-child(4)' },
     { name: '"Remind me" menu', trigger: '[data-rel-remind]', isOpen: () => !document.getElementById('rel-menu').hidden, within: '#rel-menu', pre: (p) => p.evaluate(() => document.querySelector('[data-rel-remind]').scrollIntoView({ block: 'center' })) },
     { name: 'photo viewer (a link)', trigger: 'a[data-zoom]', isOpen: () => document.getElementById('lightbox').open, within: '#lightbox', modal: true, pre: (p) => p.evaluate(() => document.querySelector('a[data-zoom]').scrollIntoView({ block: 'center' })) },
     { name: 'photo viewer (a photo)', trigger: '[data-kbd]', isOpen: () => document.getElementById('lightbox').open, within: '#lightbox', modal: true, pre: (p) => p.evaluate(() => { const e = [...document.querySelectorAll('img[data-zoom]')].find((x) => { const r = x.getBoundingClientRect(); return r.width > 20 && r.height > 20 && !x.closest('[hidden]'); }); e.setAttribute('data-kbd', ''); e.scrollIntoView({ block: 'center' }); }) },

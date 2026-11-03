@@ -91,23 +91,83 @@
 
       <nav data-ta-aria-label="td1883058" class="nav" id="nav" aria-label="Main">
         <ul>
-          <li><a data-t="t7c9a8664" href="#visit">Visit</a></li>
-          <li class="nav-first"><a data-t="t9c2ac95a" href="#first-visit">First-visit guide</a></li>
-          <li><a data-t="te9db7dd6" href="#farm">On the Farm</a></li>
-          <li><a data-t="t27d882d4" href="#seasons">Seasons</a></li>
-          <li class="nav-tomato"><a data-t="t3a209b3e" href="#tomatoes">Tomatoes</a></li>
-          <li><a data-t="t01eb73e0" href="#pizza">Pizza</a></li>
-          <li><a data-t="t1dc91a78" href="#greenhouse">GreenHouse</a></li>
-          <li><a data-t="t55de8870" href="#shop">Shop</a></li>
-          <li class="nav-more">
-            <button data-t="t1e6fa7b2" class="nav-more-btn" type="button" aria-expanded="false" aria-controls="nav-more-list">More <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
-            <ul class="nav-more-list" id="nav-more-list">
-              <li class="nav-first-more"><a data-t="t9c2ac95a" href="#first-visit">First-visit guide</a></li>
-              <li><a data-t="td4e7d7d3" href="#flowers">Flowers</a></li>
-              <li><a data-t="tae9629f4" href="#groups">Groups</a></li>
-              <li><a data-t="tc8927cf4" href="#about">Our Story</a></li>
-              <li><a data-t="t03688ba6" href="#faq">FAQ</a></li>
-              <li><a data-t="tb37456c4" href="#contact">Contact</a></li>
+          <li class="nav-group" data-spy="visit this-week farm-map first-visit reserve">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-visit"><span data-t="t7c9a8664">Visit</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t7c9a8664" class="nav-group-title" id="nav-title-visit">Visit</span>
+            <ul class="nav-group-list" id="nav-list-visit" aria-labelledby="nav-title-visit">
+              <li><a data-t="t62fe6fee" href="#visit">The two places &amp; hours</a></li>
+              <li><a data-t="td94af496" href="#steps">Reserve a time</a></li>
+              <li><a data-t="t0b95e8c2" href="#options">Choose your package</a></li>
+              <li><a data-t="t9c2ac95a" href="#first-visit">First-visit guide</a></li>
+              <li><a data-t="t0a13643a" href="#farm-map">Farm map</a></li>
+              <li><a data-t="tf814a9fb" href="#contact">Directions</a></li>
+            </ul>
+          </li>
+          <li class="nav-group nav-tomato" data-spy="farm farm-cards seasons tomatoes flowers">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-things"><span data-t="tad085e05">Things to Do</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="tad085e05" class="nav-group-title" id="nav-title-things">Things to Do</span>
+            <ul class="nav-group-list" id="nav-list-things" aria-labelledby="nav-title-things">
+              <li><a data-t="t018f1d8a" href="#seasons">What&rsquo;s in season</a></li>
+              <li><a data-t="td150e085" href="#farm">U-pick</a></li>
+              <li><a data-t="tffd483ee" href="#tomatoes">Tomatoes &amp; basil</a></li>
+              <li><a data-t="tec7e08fa" href="#flowers">U-cut flowers</a></li>
+              <li><a data-t="tf0a3eea8" href="#addons">Rides &amp; add-ons</a></li>
+              <li><a data-t="t5210baa9" href="#farm-animals" data-seasons="spring summer fall" data-fallback="farm">Meet the animals</a></li>
+              <li><a data-t="t2472110c" href="#farm-playgrounds" data-seasons="spring summer fall" data-fallback="farm">Playgrounds</a></li>
+              <li><a data-t="tb987e3f1" href="#photography">Photography</a></li>
+            </ul>
+          </li>
+          <li class="nav-group" data-spy="greenhouse pizza">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-greenhouse"><span data-t="t1dc91a78">GreenHouse</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t1dc91a78" class="nav-group-title" id="nav-title-greenhouse">GreenHouse</span>
+            <ul class="nav-group-list" id="nav-list-greenhouse" aria-labelledby="nav-title-greenhouse">
+              <li><a data-t="t3d7eea72" href="#greenhouse">About The GreenHouse</a></li>
+              <li><a data-t="t9cc96e01" href="#pizza">Wise Pie pizza</a></li>
+              <li><a data-t="t1242a215" href="#shop-icecream">Ice cream</a></li>
+              <li><a data-t="tcd3fe557" href="#shop-drinks">Drinks</a></li>
+              <li><a data-t="t37656560" href="#goats">Meet the goats</a></li>
+              <li><a data-t="t05db350a" href="#shop-pumpkins">Christmas trees</a></li>
+            </ul>
+          </li>
+          <li class="nav-group" data-spy="shop">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-store"><span data-t="t0d8a7046">Store</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t0d8a7046" class="nav-group-title" id="nav-title-store">Store</span>
+            <ul class="nav-group-list" id="nav-list-store" aria-labelledby="nav-title-store">
+              <li><a data-t="td718f331" href="#shop">Everything in the store</a></li>
+              <li><a data-t="t8da6d949" href="#shop-snacks">Snacks</a></li>
+              <li><a data-t="t1242a215" href="#shop-icecream">Ice cream</a></li>
+              <li><a data-t="t01eb73e0" href="#shop-greenhouse">Pizza</a></li>
+              <li><a data-t="tcd3fe557" href="#shop-drinks">Drinks</a></li>
+              <li><a data-t="t16570e6e" href="#shop-pantry">Pantry &amp; bakery</a></li>
+              <li><a data-t="tf0eaffbb" href="#shop-gifts">Gifts &amp; merchandise</a></li>
+              <li><a data-t="td7ee4888" href="#shop-plants">Plants &amp; seasonal</a></li>
+            </ul>
+          </li>
+          <li class="nav-group" data-spy="groups">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-groups"><span data-t="t4c852472">Groups &amp; Parties</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t4c852472" class="nav-group-title" id="nav-title-groups">Groups &amp; Parties</span>
+            <ul class="nav-group-list" id="nav-list-groups" aria-labelledby="nav-title-groups">
+              <li><a data-t="t0e491ed8" href="#school-tours">School tours</a></li>
+              <li><a data-t="t47aeb2c0" href="#parties">Parties at the farm</a></li>
+              <li><a data-t="t8321dc82" href="#corporate">Corporate events</a></li>
+            </ul>
+          </li>
+          <li class="nav-group nav-group-end" data-spy="about reviews gallery">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-about"><span data-t="tc887b9d3">About Us</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="tc887b9d3" class="nav-group-title" id="nav-title-about">About Us</span>
+            <ul class="nav-group-list" id="nav-list-about" aria-labelledby="nav-title-about">
+              <li><a data-t="t5a2d8ead" href="#about">Our story</a></li>
+              <li><a data-t="tb83c4cda" href="#reviews">Reviews</a></li>
+              <li><a data-t="tc8b2e864" href="#gallery">Photos</a></li>
+            </ul>
+          </li>
+          <li class="nav-group nav-group-end" data-spy="faq contact">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-contact"><span data-t="tb37456c4">Contact</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="tb37456c4" class="nav-group-title" id="nav-title-contact">Contact</span>
+            <ul class="nav-group-list" id="nav-list-contact" aria-labelledby="nav-title-contact">
+              <li><a data-t="t4832e458" href="#contact">Contact us</a></li>
+              <li><a data-t="tf16d36d6" href="#faq">Questions (FAQ)</a></li>
+              <li><a data-t="t03765231" href="#follow-signup">Email sign-up</a></li>
             </ul>
           </li>
         </ul>
@@ -466,7 +526,7 @@
           </ul>
         </div>
 
-        <div class="addons reveal">
+        <div class="addons reveal" id="addons">
           <h4 data-t="t6d120d7c">Optional add-ons</h4>
           <ul class="addon-list">
             <li>
@@ -610,7 +670,7 @@
             <p data-t="t8aea10f7">Pick out a North Carolina Christmas tree at The GreenHouse next door, starting the Friday after Thanksgiving.</p>
             <span data-t="t11999abc" class="tag">At The GreenHouse</span>
           </li>
-          <li class="card c-sky reveal" data-seasons="spring summer fall">
+          <li class="card c-sky reveal" id="farm-animals" data-seasons="spring summer fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 120 112"><use href="#goat"/></svg>
             <h3 data-t="t1eece26f">Meet the Animals</h3>
             <p data-t="t38dfa5d4">Say hello to the farm animals &mdash; and help feed them.</p>
@@ -621,7 +681,7 @@
             <p data-t="t2a765f16">The kids can run on the playground and pet the goats at The GreenHouse.</p>
             <span data-t="t11999abc" class="tag">At The GreenHouse</span>
           </li>
-          <li class="card c-sun reveal" data-seasons="spring summer fall">
+          <li class="card c-sun reveal" id="farm-playgrounds" data-seasons="spring summer fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 152 100"><use href="#playground"/></svg>
             <h3 data-t="t2472110c">Playgrounds</h3>
             <p data-t="td348b539">Free play areas, including a 100% recycled-tire playground.</p>
@@ -1406,7 +1466,7 @@
           </div>
         </div>
       </div>
-          <div class="wrap gh-goats reveal">
+          <div class="wrap gh-goats reveal" id="goats">
         <h3 data-t="t37656560">Meet the goats</h3>
         <ul class="photo-strip goat-strip"><li><figure><img data-ta-alt="tf9dc5559" data-zoom src="assets/photos/black-goat-cucumber.webp" alt="A black goat nibbling a cucumber through the fence" width="500" height="667" loading="lazy" decoding="async"><figcaption data-t="ta27e4fec">Snack time</figcaption></figure></li><li><figure><img data-ta-alt="t1a8781b2" data-zoom src="assets/photos/goats-rubs-sign.webp" alt="Goats behind a hand-painted sign reading rubs make us happy, corn makes us sick" width="500" height="500" loading="lazy" decoding="async"><figcaption data-t="t3909fa7a">Rubs make us happy</figcaption></figure></li><li><figure><img data-ta-alt="tfb13d6cc" data-zoom src="assets/photos/baby-goat-under-heat-lamp.webp" alt="A baby goat resting in straw under the red glow of a heat lamp" width="750" height="563" loading="lazy" decoding="async"><figcaption data-t="td51ddf23">Baby goat</figcaption></figure></li><li><figure><img data-ta-alt="t1de31035" data-zoom src="assets/photos/goat-with-pumpkins.webp" alt="A baby goat standing in the grass behind four small pumpkins" width="500" height="553" loading="lazy" decoding="async"><figcaption data-t="t4fda8924">Goat meets pumpkins</figcaption></figure></li><li><figure><img data-ta-alt="ted43ffcd" data-zoom src="assets/photos/goat-in-green-frog-hat.webp" alt="A small animal wearing a green knitted frog hat" width="206" height="206" loading="lazy" decoding="async"><figcaption data-t="t5120a3d8">Frog hat</figcaption></figure></li></ul>
       </div>

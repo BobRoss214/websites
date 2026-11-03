@@ -7,7 +7,7 @@
  * stopped moving, on a laptop, a full HD screen, a narrow window and a phone, in English and Spanish, inside a sandboxed frame from another address
  * (the way the claude.ai preview shows the site) and with reduced motion.
  * What it guards against: the boxes that fade in as they come up the screen (".reveal") start 26 px lower. The browser works out where to scroll
- * when the link is clicked, and a box that is still hidden is drawn 26 px lower at that moment. So "On the Farm", the pizza schedule and the
+ * when the link is clicked, and a box that is still hidden is drawn 26 px lower at that moment. So "What's on the farm" (the menu line U-pick), the pizza schedule and the
  * "Fall & holidays" and "Farm visit" groups of the Shop ended 26 px too high, the top of the box under the header, once the box had slid up. The
  * heights of everything above them did not change (css/styles.css, .reveal). Also a link to a place inside such a box (the Drive time box).
  * The First visit page (first-visit.html): the cards with an id (Parking, Bathrooms, Dogs, Strollers & wheelchairs) had a scroll margin of their own
@@ -48,11 +48,17 @@ await run('anchor-landing', async ({ browser, base, errs }) => {
       hash: location.hash, y: Math.round(scrollY), max: document.documentElement.scrollHeight - innerHeight,
     };
   }, id);
-  // click a link (opening the phone menu first when the links are behind the menu button) and say where the page was
+  // click a link (opening the phone menu first when the lines are behind the menu button, or the list of the line's group on a wide window) and say where the page was
   const click = async (f, sel) => {
-    if (sel.startsWith('.nav ') && await f.evaluate(() => getComputedStyle(document.getElementById('menu-toggle')).display !== 'none')) {
-      await f.click('#menu-toggle');
-      await f.waitForFunction(() => { const n = document.getElementById('nav'); return n.classList.contains('is-open') && getComputedStyle(n).opacity === '1'; }, null, { timeout: ms(5000) }).catch(() => {});
+    if (sel.startsWith('.nav-group-list ')) {
+      if (await f.evaluate(() => getComputedStyle(document.getElementById('menu-toggle')).display !== 'none')) {
+        await f.click('#menu-toggle');
+        await f.waitForFunction(() => { const n = document.getElementById('nav'); return n.classList.contains('is-open') && getComputedStyle(n).opacity === '1'; }, null, { timeout: ms(5000) }).catch(() => {});
+      } else {
+        const list = await f.evaluate((s) => document.querySelector(s).closest('.nav-group-list').id, sel);
+        await f.click(`button[aria-controls="${list}"]`);
+        await f.waitForSelector('#' + list, { state: 'visible', timeout: ms(5000) }).catch(() => {});
+      }
     }
     const from = await f.evaluate(() => Math.round(scrollY));
     await f.click(sel);
@@ -79,10 +85,10 @@ await run('anchor-landing', async ({ browser, base, errs }) => {
 
   // the way there: a link from the menu, a button on the first screen, or a button of the Shop (reached through the menu first, so the groups below it were never on the screen)
   const CASES = [
-    { id: 'farm', what: '"On the Farm" in the menu', link: '.nav ul > li > a[href="#farm"]' },
+    { id: 'farm', what: '"U-pick" in the menu (Things to Do)', link: '.nav-group-list a[href="#farm"]' },
     { id: 'schedule', what: 'the "Pizza reservations" button', link: '.chip-rel a[href="#schedule"]' },
-    { id: 'shop-pumpkins', what: 'the "Fall & holidays" button of the Shop', via: '.nav ul > li > a[href="#shop"]', link: '.shop-jump a[href="#shop-pumpkins"]' },
-    { id: 'shop-farm', what: 'the "Farm visit" button of the Shop', via: '.nav ul > li > a[href="#shop"]', link: '.shop-jump a[href="#shop-farm"]' },
+    { id: 'shop-pumpkins', what: 'the "Fall & holidays" button of the Shop', via: '.nav-group-list a[href="#shop"]', link: '.shop-jump a[href="#shop-pumpkins"]' },
+    { id: 'shop-farm', what: 'the "Farm visit" button of the Shop', via: '.nav-group-list a[href="#shop"]', link: '.shop-jump a[href="#shop-farm"]' },
   ];
   const MENU = ['seasons', 'tomatoes', 'pizza', 'greenhouse', 'shop'];   // plain sections, for comparison: they were always right
   const home = async (tag, opts, only) => {
@@ -90,7 +96,7 @@ await run('anchor-landing', async ({ browser, base, errs }) => {
       await attempt(tag, opts, '#' + c.id, async (f) => {
         if (c.via) await rest(f, await click(f, c.via));
         await check(f, tag, c.what, c.id, await click(f, c.link));
-        if (c.id === 'farm') for (const id of MENU) await check(f, tag, `"${id}" in the menu, going down,`, id, await click(f, `.nav ul > li > a[href="#${id}"]`));
+        if (c.id === 'farm') for (const id of MENU) await check(f, tag, `"${id}" in the menu, going down,`, id, await click(f, `.nav-group-list a[href="#${id}"]`));
       });
     }
   };
