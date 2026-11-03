@@ -19,6 +19,12 @@
  *   as it was before (the season, the open tab, the open menus). This is done at 1440 and at 390 px wide.
  *   The same walk without the scrolling is repeated on five other days (the real day, winter, a day when nothing is in season, spring and summer) on the
  *   home page: a target that disappears on one of those days must say skipIfMissing, because the owners may open the tour in any month.
+ *   Steps with small buttons on their card (step.choices: the season walk, docs/TOUR.md): the list is asked for with no page (it must work without one), every button has a
+ *   short label and words that follow the same rules as a step's (9-word title, 45-word text, no address, year, jargon or invented price), the step has an after();
+ *   in the browser every button is PRESSED in turn (its run()), as an owner would: the lit box must still be on the page and show something, a Spring / Summer / Fall / Winter
+ *   button must leave the whole page in that season, every phrase the card puts in double curly quotes (“...”) must be written in the lit box, the buttons must show
+ *   different things, and after() must put the words of the lit box and the whole page (season, open tabs, the lines of a season, the parts that follow the clock)
+ *   back as they were. A "Month day" in the card of a season must be the first or the last day of that season in js/season.js.
  *   The Store's "Prices coming soon" cards must be exactly the ones that chapters 7 and 11 name, and a number that a text quotes from the page ("Fifteen
  *   common questions") must be the page's own.
  *   WA_WORDS_ONLY=1 node tests/tour-targets.test.mjs runs only the first part (no browser, about a second); WA_TOUR_ONLY=3,ch2-game limits the walks to
@@ -46,6 +52,7 @@ const OTHER_DAYS = [
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const exists = (f) => fs.existsSync(path.join(ROOT, f));
 const wordsOf = (s) => String(s).trim().split(/\s+/).filter(Boolean);
+const numbersAside = (t) => String(t == null ? '' : t).replace(/\d+/g, '#');
 const squash = (t) => String(t).toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim();   // words compared without capitals, curly quotes or odd spaces
 const stripTags = (html) => html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#?\w+;/g, ' ');
 
@@ -164,14 +171,16 @@ const IN_PAGE = `(() => {
   };
   const opacity = (el) => { let o = 1; for (let a = el; a && a.nodeType === 1; a = a.parentElement) o *= parseFloat(getComputedStyle(a).opacity); return o; };
   const find = (sel) => { let all = []; try { all = Array.from(document.querySelectorAll(sel)); } catch (e) { return { bad: true, n: 0 }; } const el = all.find(visible) || null; return { n: all.length, el, bad: false }; };
-  const text = (sel) => { const e = document.querySelector(sel); return e ? e.innerText.replace(/\\s+/g, ' ').trim() : null; };
+  // the words a visitor can see; a box that is not drawn (hidden) counts as '[hidden]': the page leaves old words inside a hidden pizza countdown, which nobody sees
+  const text = (sel) => { const e = document.querySelector(sel); if (!e) return null; return e.getClientRects().length ? e.innerText.replace(/\\s+/g, ' ').replace(/\\d+/g, '#').trim() : '[hidden]'; };   // numbers become # (a countdown moves on by itself)
   const snapshot = () => JSON.stringify([
     document.documentElement.getAttribute('data-season'),
     Array.from(document.querySelectorAll('[aria-expanded="true"],[aria-selected="true"],[aria-checked="true"],[aria-pressed="true"]')).map((e) => (e.id || e.className || e.tagName) + '|' + (e.getAttribute('data-season') || e.getAttribute('data-fs') || e.getAttribute('data-lang') || '')),
     !!(document.getElementById('nav') && document.getElementById('nav').classList.contains('is-open')),
     // what the season walk changes and must put back: the lines that belong to a season, and the boxes that follow the clock (their words)
     Array.from(document.querySelectorAll('[data-only],[data-out-of-season]')).map((e) => (e.hasAttribute('hidden') ? 1 : 0)).join(''),
-    ['.announce [data-ann-season]', '.next-up', '#this-week', '.hero-live', '#fact-season'].map(text),
+    ['.announce [data-ann-season]', '.next-up', '#this-week', '.hero-live', '#fact-season', '[data-rel-chip]', '[data-rel-box]', '#season-tabs .now-badge:not([hidden])', '.fs-now:not([hidden])'].map(text),
+    Array.from(document.querySelectorAll('.week-strip .day.today')).map((e) => e.textContent).join() + '|' + ((document.querySelector('.cal') || { style: { getPropertyValue: () => '' } }).style.getPropertyValue('--today')),
     Array.from(document.querySelectorAll('#farm-cards > li')).filter((e) => !e.hidden).length,
   ]);
   window.__tour = {
@@ -351,7 +360,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
       if (a2.error) { rec(name + ': after() ran without an error', false, a2.error); continue; }
       if (a2.ran) await settled(p, 300);
       const boxAfter = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
-      rec(name + ': after() put the words of the lit box back as they were', boxAfter === boxBefore, boxAfter === boxBefore ? '' : 'before: ' + String(boxBefore).slice(0, 160) + ' | after: ' + String(boxAfter).slice(0, 160));
+      rec(name + ': after() put the words of the lit box back as they were (numbers aside: a countdown moves on by itself)', numbersAside(boxAfter) === numbersAside(boxBefore), boxAfter === boxBefore ? '' : 'before: ' + String(boxBefore).slice(0, 160) + ' | after: ' + String(boxAfter).slice(0, 160));
       if (site) {
         const afterSnap = await p.evaluate(() => window.__tour.snapshot());
         rec(name + ': after() puts the page back as it was (season, open tab, open menus, the lines of a season, the parts that follow the clock)', afterSnap === before, afterSnap === before ? '' : 'before ' + before + '  after ' + afterSnap);
@@ -454,6 +463,20 @@ else await run('tour-targets', async ({ browser, base, errs }) => {
     }
   }
   info(datesChecked + ' dates in the cards of the season buttons were checked against js/season.js');
+  // what the strip at the top says AFTER a season ends (the words in single curly quotes in the strip step) is what the page says on the day after the season's last day
+  const stripStep = steps.find((x) => x.id === 'ch2-strip');
+  if (stripStep) {
+    for (const c of choicesOf(stripStep).list || []) {
+      const id = String(c.label).toLowerCase();
+      const later = (String(c.text).match(/\u2018([^\u2019]+)\u2019/g) || []).map((x) => x.slice(1, -1));
+      if (!seasonDates[id] || !later.length) continue;
+      const day = await p0.evaluate((sid) => { const d = window.WISE_ACRES.seasons.list.find((x) => x.id === sid).end(2026); return [d.getFullYear(), d.getMonth(), d.getDate() + 1]; }, id);
+      await p0.clock.setSystemTime(new Date(day[0], day[1], day[2], 12, 0, 0));
+      await p0.evaluate(() => window.WISE_ACRES.live.refresh());
+      const said = await p0.evaluate(() => document.querySelector('.announce [data-ann-season]').textContent.trim());
+      ok('step ch2-strip, ' + c.label + ': the day after the season, the strip says ' + JSON.stringify(later[0]) + ' (the page says ' + JSON.stringify(said) + ')', later.every((l) => squash(said) === squash(l)), said);
+    }
+  }
   await p0.context().close();
 
   /* ---- 3. the walk, at 1440 and 390 px, on the test day */

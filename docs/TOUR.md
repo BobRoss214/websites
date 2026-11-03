@@ -19,11 +19,12 @@ To go to other pages the tour keeps the switch on for itself. With `?tour` it ta
 
 ## What the owners see
 
-1. The button opens a **welcome card**. It says how long the tour takes (about 15 seconds for each step, to the nearest 5 minutes). It has three buttons: **Start the tour**, **Choose a part** and **Not now**.
+1. The button opens a **welcome card**. It says how long the tour takes (about 15 seconds for each step, a step with small buttons counting as three, to the nearest 5 minutes). It has three buttons: **Start the tour**, **Choose a part** and **Not now**.
 2. Each **step** dims the page and lights one box. The card says "Step 23 of 78" and the name of the part, and under it "Chapter 4 of 11". It has **Back**, **Next**, **Contents** and a round **Close** button.
 3. **Contents** lists every part with the number of steps in it. The part they are in is marked. A press on a part goes to its first step.
 4. The last card has **Finish** and **Start again**.
 5. They can stop at any time. The next time they press the button, the welcome card has a **Continue where I stopped** button and says at which step they stopped. This works after the page was closed, and on another day, on the same computer and browser.
+6. Ten steps are about parts of the site that change with the season. Their card has a row of four small buttons, **Spring, Summer, Fall and Winter** (the season walk, below). Pressing one switches the whole page to that season, the lit part stays lit, and the card says what the part shows now and what is different from the season before. **Next, Back, Contents and Close put the page back** as it was.
 
 Keys: the Right arrow is Next, the Left arrow is Back, Enter is Next, Esc closes. Tab and Shift+Tab stay inside the card. A screen reader hears each step once, politely.
 On a phone the card is a sheet at the bottom of the screen and the lit box is moved above it.
@@ -43,7 +44,7 @@ On a phone the card is a sheet at the bottom of the screen and the lit box is mo
 
 ## How to add or change a step
 
-The steps are written in plain JavaScript files in the `js` folder: tour-steps.js (parts 1 to 5 and 11), tour-steps-b.js (parts 6 to 9) and tour-steps-c.js (part 10, the pretend account). They are read only when the tour is opened. A file may be missing.
+The steps are written in plain JavaScript files in the `js` folder: tour-steps.js (parts 1 to 5 and 11, and the helpers of the season walk), tour-steps-b.js (parts 6 to 9) and tour-steps-c.js (part 10, the pretend account). They are read only when the tour is opened. A file may be missing.
 
 Each file adds its steps to one list:
 
@@ -100,6 +101,7 @@ choices: [                                  // or a function(ctx) that gives the
 ```
 
 - A card shown anew starts with no button pressed (and the step's own words), unless a choice says `pressed: true`. Contents and Back from Contents show the same step again with the same button pressed.
+- `choicesLabel` (on the step, 6 words at most) is shown in small capitals above the row, and is the name of the group for a screen reader (without it the group is called "Choose" and nothing is shown above the row).
 - Every button is a real button: Tab reaches it, Enter or Space presses it, a screen reader hears "pressed". The new title and text are announced once.
 - The step needs an `after()` that puts the page back. `tests/tour-targets.test.mjs` runs every `run` of every step, one after the other, and then `after()`, and checks the page is as it was.
 
@@ -118,15 +120,17 @@ What a press does (the helpers are in `js/tour-steps.js`; `js/tour-steps-b.js` u
 
 1. The page's own season switch (`WISE_ACRES.hero.setSeason`, the same as the "See the farm in" buttons): the picture, the headline and buttons, the "What's in season" tabs, the farm cards, the menu link to Playgrounds.
 2. The lines marked `data-in-season` (they show only while that season is really on) are shown, as they would be on those days.
-3. The parts that follow the clock (the strip at the top, the countdown, "This week at the farm", the open-now badges) draw themselves again for a **pretend day**: the Saturday on or before the middle of that season's dates (`js/season.js`),
-   in the latest year when that day is not after today. The clock is pretended only while they draw (an instant), then it is the real one again. A pretend day is never after today, so no line with a last day (`data-until`) is hidden by it.
+3. The parts that follow the clock (the strip at the top, the countdown, "This week at the farm", the open-now badges, the "In season" fact, the "Happening now" and "Now" marks) draw themselves again, the way the page does it when the farm's day changes
+   (`WISE_ACRES.live.refresh()`, then the `wa:day` event), for a **pretend day**: the Saturday on or before the middle of that season's dates (`js/season.js`), in the latest year when that day is not after today, at noon in New York.
+   The clock is pretended only while they draw (an instant), then it is the real one again. A pretend day is never after today, so no line with a last day (`data-until`) is hidden by it.
 
 `seasonsEnd` (in `after`) puts everything back: the season switch, every `data-only` line as it was, the open tabs, and the clock parts drawn again with the real date. It also runs when the owner presses Next, Back, a part in Contents or Close.
 Changes and the putting back are made one after the other, so a quick Next never leaves the page half-changed.
 
-Writing the words of a season: what the lit box shows in that season and what is new or gone compared with the season before. A phrase in double curly quotes (“...”) must be in the lit box in that season
-(`tests/tour-targets.test.mjs` checks it); a phrase the page says on another day (for example what the strip says after a season ends) goes in single curly quotes (‘...’), which are not checked there.
-Dates are the ones in `js/season.js` and on the site's own pages. A part that does **not** change with the season gets no buttons; its card says so.
+Writing the words of a season: what the lit box shows in that season and what is new or gone compared with the season before. A phrase in double curly quotes (“...”) in the card of a button must be written in the lit box
+when that button is pressed (`tests/tour-targets.test.mjs` presses every button and checks it). A phrase the page says on another day (for example what the strip says after a season ends) goes in single curly quotes (‘...’):
+those are not checked against the lit box (the strip step's are checked against the page on the day after the season's last day). A "Month day" in the card of a season must be that season's first or last day in `js/season.js`
+(also checked). A part that does **not** change with the season gets no buttons; its card says so (for example "This box stays all year").
 
 ## For the person who builds the preview
 
@@ -142,7 +146,9 @@ Dates are the ones in `js/season.js` and on the site's own pages. A part that do
 | --- | --- |
 | `js/tour.js` | the engine (one script, the last one on every page) |
 | `css/tour.css` | its look |
-| `tests/tour.test.mjs` | the engine, with made-up steps: the button, the welcome card, a walk through the steps, the lit box and the card, keys, other pages, stopping and continuing, calm mode, a phone |
+| `tests/tour.test.mjs` | the engine, with made-up steps: the button, the welcome card, a walk through the steps, the lit box and the card, keys, other pages, stopping and continuing, the small buttons of a step (`choices`), calm mode, a phone |
 | `tests/tour-off.test.mjs` | with the switch off nothing changes on any page |
+| `tests/tour-targets.test.mjs` | the real steps: their words, their targets on the real pages (1440 and 390 px, six days), and every small button of every step pressed in turn, the quoted words checked against the lit box |
+| `tests/tour-seasons.test.mjs` | the season walk with the real engine and the real steps, on a fall day and a spring day: the whole page changes, Next / Back / Contents / Esc / Finish put it back, a phone, the keyboard, the whole tour walked |
 
-Run them with `node tests/run-all.mjs tour` (both), as described in `tests/README.md`.
+Run them with `node tests/run-all.mjs tour tour-off tour-targets tour-seasons`, as described in `tests/README.md`.

@@ -42,7 +42,7 @@ Peeking with the page's own buttons does NOT change the parts that follow the cl
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Strip at the very top (`.announce [data-ann-season]`) | In season: Strawberries | In season: Blueberries & sunflowers | In season: Pumpkins & tomatoes | In season: Christmas trees at The GreenHouse | Clock. Between seasons: "Next up: {crop}, usually {when}" |
 | 2 | First screen text (`.hero-copy`): headline `#hero-h`, line `.hero-sub`, buttons `.hero-cta`, note `.hero-note`, chips | Headline "Organic u-pick fun for the whole family"; line "It's strawberry season!..."; buttons "Reserve your visit" + "See what's in season"; note "No reservation? Visit The GreenHouse next door" | line "It's blueberry season! Fill a bucket..."; the rest as spring | line "It's pumpkin season! Pick pumpkins, plus new u-pick organic tomatoes and basil, with wagon rides and a haunted trail."; the chip "New: u-pick tomatoes & basil" (`data-until` 2026-10-31) and the pizza chip (fall only) | Headline "Wise Acres Christmas trees"; line "Pick out a North Carolina Christmas tree at The GreenHouse next door..."; the red button is "Visit The GreenHouse"; the note is HIDDEN | Peek. Between seasons: the all-year headline and line |
-| 3 | First screen picture (`#hero-scene`) | strawberries, butterflies | blueberries and sunflowers, butterflies | pumpkins, falling leaves, no butterflies | snow, lit trees, no butterflies, no bee | Peek (js/hero.js `SCENES`, css/hero.css) |
+| 3 | First screen picture (`#hero-scene`) | strawberry rows with pickers, the wagon ride and barrel train | blueberry bushes with pickers and bees | pumpkin rows, the wagon and barrel train, falling leaves (`particles: 'leaves'`), no butterflies | snowy rows of Christmas trees, campfires, a snowman, falling snow (`particles: 'snow'`), no butterflies, no bee | Peek (js/hero.js `SCENES`, css/hero.css) |
 | 4 | Open-now badges (`.hero-live`, also in the farm card of "Two places") | no farm badge (`hours.farm` has only `fall`); GreenHouse badge by its hours | same | farm badge "Reserved visits today" / "No visits today. Next reserved day: ..." (Thu to Sun) | no farm badge; GreenHouse badge by its hours | Clock + `hours` in js/content.js |
 | 5 | The basket game (`#picker`) | "Try it! Tap the strawberries to pick them." / button "Pick a strawberry" | "Try it! Tap the blueberries to pick them, or snip a sunflower." / "Pick a blueberry" | "Try it! Tap the pumpkins to pick one, or tap the wagon." / "Pick a pumpkin" | "Tap the trees to light them up. Tap a fire to stoke it." / "Light a tree" (a tree instead of the basket) | Peek (js/hero.js `SCENES.*.hud`) |
 | 6 | Countdown box (`.next-up`) | Happening now: Strawberries; Next up: Blueberries & sunflowers (mid-June) | Happening now: Blueberries & sunflowers; Next up: Pumpkins & tomatoes (mid-September) | Happening now: Pumpkins & tomatoes; Next up: Christmas trees at The GreenHouse | Happening now: Christmas trees at The GreenHouse; Next up: Strawberries (mid-April) | Clock. Between seasons the "Happening now" line is empty |
@@ -76,20 +76,53 @@ A step with `choices: seasonWalk({...})`, `before: seasonsBegin`, `after: season
 
 1. `hero.setSeason(id)` (the page's own switch), and waits 320 ms for the new picture to be drawn;
 2. shows the `data-in-season` lines of that season (what the page itself does when a season is really on);
-3. draws the clock parts again (`WISE_ACRES.live.refresh()`, `WISE_ACRES.features.renderWeek()`) for a PRETEND day: the Saturday on or before the middle of the
-   season's dates, in the latest year when that day is not after today (spring about May 9, summer about June 27, fall about Oct 10, winter about Nov 28/29 of the
-   latest year not after today; at 17:00 UTC, noon or 1 pm in New York). `Date` is replaced only while those two functions draw, then put back.
-   A pretend day is never after today, so a `data-until` line is never hidden by it (`expireDated` only hides, it never un-hides).
+3. draws the clock parts again, exactly as js/live.js does when the farm's day changes: `WISE_ACRES.live.refresh()` (strip, countdown, badges, year), then the `wa:day`
+   event (This week at the farm, the "In season" fact, the "Happening now" and "Now" marks, the week strips, the farm-year "Today" marker, the pizza countdown), for a
+   PRETEND day: the Saturday on or before the middle of the season's dates, in the latest year when that day is not after today (spring about May 9, summer about June 27,
+   fall about Oct 10, winter about Nov 28 or 29, of the latest year not after today; at 17:00 UTC, which is noon or 1 pm in New York). `Date` is replaced only while those
+   functions draw, then put back. A pretend day is never after today, so a `data-until` line is never hidden by it (`expireDated` only hides, it never un-hides).
 
-`seasonsEnd` puts everything back: the season switch, every `data-only` line as it was, the open "What's in season" tab and farm tab, and the clock parts with the real date.
-It runs when the owner presses Next, Back, a part in Contents or Close (the engine waits for a press that is still being carried out first).
-Not done: the "In season" fact, the "Happening now"/"Now" marks and the farm-year "Today" marker (they need the `wa:day` event, which also redraws the pizza countdown and hides
-dated lines); they keep showing the real date during the walk.
+`seasonsEnd` puts everything back: the season switch, every `data-only` line as it was, the open "What's in season" tab and farm tab, and the clock parts drawn again with the
+real date. It runs when the owner presses Next, Back, a part in Contents, Close or Esc (the engine waits for a press that is still being carried out first).
+
+What was checked by looking (a page at 3 Nov, fall): after Spring, Summer, Fall, Winter and the end, every box above is exactly as it was at the start (the strip, the countdown,
+This week, the badges, the facts line, the tabs' "Happening now", the farm tabs' "Now" and "This season", the lines of a season).
+
+Things to know:
+- The "Site check" box (`#wa-problems`) only shows on a computer's own address (127.0.0.1, localhost), never in the claude.ai preview. In tests it covers the tour on any day after
+  the first `data-until` date (Oct 4), so tests/tour-seasons.test.mjs hides it.
+- A badge is re-drawn by the page every minute with the real clock (`tick`). If the owner stays more than a minute on one button, the open-now badges in the lit box go back to the real
+  day's words (the rest stays as pressed). Nothing else in the walk is re-drawn by a timer.
+- The page's own "See the farm in" buttons can still be pressed while the first-screen step is up (they are inside its lit box). They change the season but not the clock parts; the
+  step puts everything back all the same.
 
 ## 6. Changes in the tour
 
-(filled in at the end)
+Chapters: NOT renumbered (still 1 to 11, same titles). The seasons are walked IN PLACE, where each part comes up, not in a chapter of their own: the owners meet each part
+with its other seasons right there, and chapter 10 (the pretend account, js/tour-steps-c.js, orders 1001 to 1025) keeps its number. Main has nothing to change in chapter 10.
+
+Steps with Spring / Summer / Fall / Winter buttons (10): ch2-strip, ch2-seasons (the first screen), ch2-badges, ch2-game, ch3-countdown, ch3-week, ch4-places, ch5-tabs, ch5-cards, ch6-trees.
+Steps added (3): ch1-seasons (a card about the buttons), ch3-countdown, ch6-trees. Step removed (1): ch2-headline (its words are now the first-screen walk).
+Steps changed: ch2-seasons (was "Peek at the other seasons": now the first-screen walk, lit box `.hero-copy`, no `allowClicks`), ch3-week (order 301 -> 302), ch5-tabs (was the row of tabs
+with `allowClicks`: now the open panel `#seasons .season-stage`), ch5-tomatoes and ch5-flowers ("This box stays all year."), ch7-soon-fall ("This group shows all year.").
+Total: 77 steps in the three files (was 75), 52 when the pretend account is off. The welcome card counts a step with buttons as three steps of 15 seconds: "about 25 minutes" (was 20).
+
+Engine (js/tour.js, documented in docs/TOUR.md "A row of small buttons on a card"): `step.choices` (a list, or a function that gives the list when the card shows), `step.choicesLabel`,
+`choice.pressed`; a press runs `choice.run(ctx)` and then changes the card's title and text; the engine waits for a press before running `after()`; a press is ignored while the tour moves on;
+after a press a box taller than the room is left where it is while part of it shows (the step's run() may have scrolled). The welcome card's minutes count a step with buttons as three.
+css/tour.css: the row (`.wa-tour-choices`, `.wa-tour-choice`), the pressed button yellow with a thick dark edge.
+
+Not changed on purpose: the "between seasons" days have no button. They are told in the words: the strip ("After June 7 it says Next up ..."), the countdown ("Between seasons its happening now line is empty"),
+This week ("When nothing is near, the box hides"). Showing them as a fifth button would need the page's "all-year" hero look, which `hero.setSeason` cannot draw.
+
+Questions the cards now raise for Mrs. Cathy and Rob (these are facts of the page as it is; nothing was decided for them):
+- The farm badge ("Reserved visits today") exists only in fall: `hours.farm` in js/content.js has no days for spring or summer.
+- Between seasons the farm's "Reserve" buttons still show (docs/WHAT_VISITORS_SEE_WHEN.md, section 3).
+- The Tomatoes & basil box, the U-cut flowers box and the Store's "Fall & holidays" group (pumpkins, Christmas trees) stay on the page all year.
 
 ## 7. For main to apply by hand
 
-(filled in at the end)
+- tests/timings.json: a line for the new test `tour-seasons` (about 2 minutes on a quiet computer; order 193). tests/README.md: one line for it. I did not edit either.
+- tests/browser-support.table.json is not touched. `browser-support` is red ONLY for two names that came with the demo files (js-name `notify` in js/demo-kitchen.js and js/demo-store.js, css-prop `resize` in css/demo-visits.css); my files add no new name.
+- js/tour-steps-c.js, chapter 10: nothing to change (the numbers did not move). `ch10-paid` (order 1004) has a text of 47 words, 2 over the limit of the words test; it was already so at b02d6a0.
+- The preview build: nothing new to add (it takes every js/tour-steps*.js). The season walk needs `window.WISE_ACRES.hero`, `.live` and `.features` (all on the home page).

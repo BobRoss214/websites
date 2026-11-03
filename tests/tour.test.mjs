@@ -71,7 +71,7 @@ window.__log = window.__log || [];
       { label: 'Three', title: 'Third', text: 'Text of three.', run: function () { window.__log.push('run:three'); throw new Error('boom'); } }
     ] },
   { id: 'c3', order: 103, chapter: 1, page: 'index', target: '#faq', title: 'List from a function', text: 'Function text.',
-    choices: function (ctx) { window.__log.push('choices:c3:' + (ctx && ctx.step && ctx.step.id)); return [{ label: 'Only', text: 'Only text.' }, null, { label: '' }, 'junk', { text: 'no label' }]; } },
+    choices: function (ctx) { window.__log.push('choices:c3:' + (ctx && ctx.step && ctx.step.id)); return [{ label: 'Only', text: 'Only text.' }, null, { label: '' }, 'junk', { text: 'no label' }, { label: 'Preset', text: 'Already in effect.', pressed: true }]; } },
   { id: 'c4', order: 104, chapter: 1, page: 'index', target: null, title: 'Last card', text: 'End.' }
 );
 window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Choices' }];
@@ -111,7 +111,7 @@ const overlap = (a, b) => (a && b ? Math.max(0, Math.min(a.r, b.r) - Math.max(a.
 const near = (a, b, tol = 3) => Math.abs(a - b) <= tol;
 const lit = (hole, t, pad = 8) => !!(hole && t && near(hole.x, t.x - pad) && near(hole.y, t.y - pad) && near(hole.w, t.w + 2 * pad) && near(hole.h, t.h + 2 * pad));
 const inside = (c, vw, vh) => !!(c && c.x >= 0 && c.y >= 0 && c.r <= vw + 0.5 && c.b <= vh + 0.5);
-const btn = (p, name) => p.getByRole('button', { name, exact: true });
+const btn = (p, name) => p.locator('.wa-tour-card').getByRole('button', { name, exact: true });
 const press = async (p, name) => { await btn(p, name).click(); };
 const atStep = (p, n, name) => okSoon(name || `the card shows step ${n}`, () => look(p), (s) => s && s.n === n && !s.busy);
 const logOf = (p) => p.evaluate(() => (window.__log || []).slice());
@@ -568,9 +568,10 @@ await run('tour', async ({ browser, base, errs }) => {
 
   // a list given by a function: asked when the card shows; a bad entry (null, no label, a word) is left out
   s = await look(p);
-  ok('a list given by a function: it was asked with the step in ctx; only the good entry is a button; no words above it, the group is called "Choose"', log.includes('choices:c3:c3') && s.choices === 'Only' && s.choicesRow.label === '' && s.choicesRow.name === 'Choose', JSON.stringify({ c: s.choices, r: s.choicesRow }));
+  ok('a list given by a function: it was asked with the step in ctx; only the good entries are buttons (a null, a word, an entry without a label are left out); no words above them, the group is called "Choose"', log.includes('choices:c3:c3') && /^Only\|Preset\*?$/.test(s.choices) && s.choicesRow.label === '' && s.choicesRow.name === 'Choose', JSON.stringify({ c: s.choices, r: s.choicesRow }));
+  ok('a choice that says pressed: true (before() has already done it) shows pressed, with its own words, and no run() is called for it', s.choices === 'Only|Preset*' && s.title === 'List from a function' && s.text === 'Already in effect.', JSON.stringify({ c: s.choices, t: s.text }));
   await btn(p, 'Only').click();
-  await okSoon('a choice with no run() and no title: only the text changes', () => look(p), (x) => x.title === 'List from a function' && x.text === 'Only text.' && x.choices === 'Only*');
+  await okSoon('a choice with no run() and no title: only the text changes', () => look(p), (x) => x.title === 'List from a function' && x.text === 'Only text.' && x.choices === 'Only*|Preset');
 
   // Back: the step starts again with nothing pressed
   await press(p, 'Back');
@@ -616,6 +617,15 @@ await run('tour', async ({ browser, base, errs }) => {
   log = await logOf(p);
   ok('...the slow run() was over before the tour was taken away, after() of the step ran, and the undo of a press ran', log.lastIndexOf('run:two:done') > -1 && log.lastIndexOf('after:c2') > log.lastIndexOf('run:two:done') && log.includes('undo:one'), log.join(','));
   await p.context().close();
+
+  // the welcome card's minutes: a step with small buttons counts as three (there is more to look at), a plain step as one; 15 seconds each, to the nearest 5 minutes
+  const many = (extra) => `(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push.apply(window.WA_TOUR_STEPS, Array.from({ length: 20 }, function (_, i) { return { id: 'm' + i, order: 101 + i, chapter: 1, page: 'index', target: null, title: 'M' + i, text: 'm'${extra} }; }));`;
+  for (const [extra, minutes, what] of [['', 5, '20 plain steps'], [", choices: [{ label: 'A', text: 'a' }]", 15, '20 steps with small buttons']]) {
+    p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: serve({ a: many(extra) }) });
+    await p.click('.wa-tour-pill');
+    await okSoon('the welcome card for ' + what + ' says about ' + minutes + ' minutes', () => look(p), (x) => x && x.name === 'Your website tour' && new RegExp('It takes about ' + minutes + ' minutes\\.').test(x.text));
+    await p.context().close();
+  }
 
   // a phone: the row wraps inside the sheet
   p = await open(browser, base, 'index.html', errs, { query: 'tour', viewport: PHONE, touch: true, routes: serve({ a: STEPS_CHOICES }) });

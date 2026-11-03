@@ -225,7 +225,7 @@
     }
     return false;
   };
-  const bring = async (el) => {   // bring the box to a comfortable place under the sticky bar (and above the sheet on a phone), then wait until it stops moving
+  const bring = async (el, keep) => {   // bring the box to a comfortable place under the sticky bar (and above the sheet on a phone), then wait until it stops moving; keep: after a press on a small button, a box taller than the room stays where it is while part of it shows (the step's run() may have scrolled to what matters)
     snapReveal(el);
     if (pinned(el)) return;
     if (inScroller(el)) { try { el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' }); } catch (e) { /* an old browser */ } }
@@ -233,7 +233,7 @@
     const top = headerH() + 14, bottom = vh - 14 - (sheet() && ui ? ui.card.offsetHeight + 8 : 0);
     let dy = 0;
     if (r.height <= bottom - top) { if (r.top < top || r.bottom > bottom) dy = r.top - (top + (bottom - top - r.height) / 2); }
-    else dy = r.top - top;   // taller than the free room: its top just under the bar
+    else if (!(keep && r.top < bottom && r.bottom > top)) dy = r.top - top;   // taller than the free room: its top just under the bar
     if (Math.abs(dy) >= 1) jump(win.scrollY + dy);
     await still(el);
   };
@@ -323,7 +323,7 @@
         ui.title.textContent = title; fill(ui.body, text); ui.body.scrollTop = 0;
         const el = s.target ? find(s.target) : null;   // the part may have been drawn again, or be gone in this choice (then the page is dimmed all over)
         curEl = el;
-        if (el) await bring(el);
+        if (el) await bring(el, true);
         if (!same()) return;
         placed = ''; place(true);
         say(title + '. ' + String(text || '').replace(/\n+/g, ' '));
@@ -505,7 +505,7 @@
   /* ------------------------------------------------------------------ *
    * 7. The cards that are not steps: the welcome, the contents, a note.
    * ------------------------------------------------------------------ */
-  const minutes = () => Math.max(5, Math.round(steps.length * 15 / 300) * 5);   // about 15 seconds a step, to the nearest 5 minutes
+  const minutes = () => Math.max(5, Math.round(steps.reduce((n, s) => n + (s.choices ? 3 : 1), 0) * 15 / 300) * 5);   // about 15 seconds a step (a step with small buttons counts as three: there is more to look at), to the nearest 5 minutes
   const showWelcome = () => {
     view = 'welcome';
     const ready = steps.length > 0, at = ready ? savedIndex() : -1;
