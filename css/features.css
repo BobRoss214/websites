@@ -334,19 +334,21 @@
    1. Things that only work with a script are hidden, so nothing looks tappable and does nothing.
    2. Menu: the phone menu button and the seven drop-down buttons cannot open, so every link sits in a wrapped row under the logo (each group's name stays, as a small label).
    3. Content that a script would normally reveal is shown: each season's dates and the season-by-season table. */
+/* The menu rules below start with html:not(#nj) (an id no page has): the phone menu rules start with html[lang|="en"] and so on, which are more specific
+   than a plain .nav, so without it the menu stayed hidden (position fixed, invisible) on a phone with scripts off and nothing could be reached. */
 @media (scripting: none){
   .menu-toggle,.nav-group-btn,[data-lang-menu],.picker,.goat-nook,.filter-row,.bouquet,.fs-tabs,[data-print]{display:none!important}
 
   .hero{padding-bottom:0}   /* no picker, so no room reserved for it */
   .site-header{position:static}
   .header-inner{height:auto;flex-wrap:wrap;justify-content:flex-start;gap:6px 20px;padding-top:10px;padding-bottom:10px;padding-block:10px}
-  .nav{position:static;top:auto;right:auto;bottom:auto;left:auto;inset:auto;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0;overflow:visible;background:none;opacity:1;visibility:visible;transform:none;transition:none}
-  .nav ul{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
-  .nav-group,.nav .nav-group-list{display:contents}
-  .nav-group-title{display:block;padding:.45em .3em .45em .8em;font:700 .8rem/1 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
-  .nav ul a,.nav .nav-group-list a{padding:.45em .75em!important;font-size:1rem!important;border:0;box-shadow:none;background:none;border-radius:999px}
-  @media (hover:hover){.nav ul a:hover,.nav .nav-group-list a:hover{background:#fff}}
-  .nav-cta{padding:.55em 1.1em;font-size:1rem}
+  html:not(#nj) .nav{position:static;top:auto;right:auto;bottom:auto;left:auto;inset:auto;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0;overflow:visible;background:none;opacity:1;visibility:visible;transform:none;transition:none}
+  html:not(#nj) .nav ul{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
+  html:not(#nj) .nav-group,html:not(#nj) .nav .nav-group-list{display:contents}
+  html:not(#nj) .nav-group-title{display:block;padding:.45em .3em .45em .8em;font:700 .8rem/1 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+  html:not(#nj) .nav ul a,html:not(#nj) .nav .nav-group-list a{padding:.45em .75em!important;font-size:1rem!important;border:0;box-shadow:none;background:none;border-radius:999px}
+  @media (hover:hover){html:not(#nj) .nav ul a:hover,html:not(#nj) .nav .nav-group-list a:hover{background:#fff}}
+  html:not(#nj) .nav-cta{padding:.55em 1.1em;font-size:1rem}
 
   .fs-note[hidden]{display:block!important;margin-top:14px}
   .fs-this{display:none}
@@ -364,12 +366,12 @@
 html.js-failed :is(.menu-toggle,.nav-group-btn,.goat-nook,.filter-row,.bouquet,.fs-tabs,[data-print]){display:none!important}
 html.js-failed .site-header{position:static}
 html.js-failed .header-inner{height:auto;flex-wrap:wrap;justify-content:flex-start;gap:6px 20px;padding-top:10px;padding-bottom:10px;padding-block:10px}
-html.js-failed .nav{position:static;top:auto;right:auto;bottom:auto;left:auto;inset:auto;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0;overflow:visible;background:none;opacity:1;visibility:visible;transform:none;transition:none}
-html.js-failed .nav ul{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
-html.js-failed :is(.nav-group,.nav .nav-group-list){display:contents}
-html.js-failed .nav-group-title{display:block;padding:.45em .3em .45em .8em;font:700 .8rem/1 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
-html.js-failed :is(.nav ul a,.nav .nav-group-list a){padding:.45em .75em!important;font-size:1rem!important;border:0;box-shadow:none;background:none;border-radius:999px}
-html.js-failed .nav-cta{padding:.55em 1.1em;font-size:1rem}
+html.js-failed:not(#nj) .nav{position:static;top:auto;right:auto;bottom:auto;left:auto;inset:auto;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:0;overflow:visible;background:none;opacity:1;visibility:visible;transform:none;transition:none}
+html.js-failed:not(#nj) .nav ul{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
+html.js-failed:not(#nj) :is(.nav-group,.nav .nav-group-list){display:contents}
+html.js-failed:not(#nj) .nav-group-title{display:block;padding:.45em .3em .45em .8em;font:700 .8rem/1 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+html.js-failed:not(#nj) :is(.nav ul a,.nav .nav-group-list a){padding:.45em .75em!important;font-size:1rem!important;border:0;box-shadow:none;background:none;border-radius:999px}
+html.js-failed:not(#nj) .nav-cta{padding:.55em 1.1em;font-size:1rem}
 html.js-failed .fs-note[hidden]{display:block!important;margin-top:14px}
 html.js-failed .fs-this{display:none}
 html.js-failed .fs-table [data-col]:not(.is-sel){display:table-cell}
