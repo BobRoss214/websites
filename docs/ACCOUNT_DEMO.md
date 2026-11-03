@@ -101,7 +101,7 @@ All methods are synchronous and return plain copies. The state lives in the brow
 | Requests | `ask({ kind, to, target: { coll, id }, patch, from, summary, note, weather })`, `reply(id, { answer: 'yes'/'no'/'suggest', note, suggestion: { patch, summary } })`, `respond(id, 'ok'/'decline')`, `cancel(id)`, `openRequestFor(coll, id)`, `requestsFor(coll, id)`, `openRequests(to)` |
 | Messages and notices | `post(thread, 'family'/'cathy', text)`, `thread(id)`, `threadsWaiting()`, `notify(text, link, to)`, `noticesFor(to)`, `markRead(id)`, `markAllRead(to)` |
 | Weather | `closeDay(date, reason)`, `openDay(date)`, `isClosed(date)`, `openDays(from, package, n)` |
-| Tell me when | `setAlert(key, bool)`, `alertCounts()`, `fireAlert(key, day)` |
+| Tell me when | `setAlert(key, bool)`, `alertCounts()`, `fireAlert(key, day)`; where to send the messages: `getNotify()`, `setNotify({ text, email })` |
 | Reviews and photos | `submitReview({ visitId, stars, text, photoName, thumb })`, `decideReview(id, bool)`, `submitPhoto({ visitId, name, thumb })`, `decidePhoto(id, bool)` |
 | Other | `subscribe(fn)` (returns the function that stops it), `now()`, `today()`, `snapshot()`, `saveStatus()` |
 
@@ -115,10 +115,28 @@ Two rules are built in. When a visit moves to another time, the pizza pick-up mo
 - **visit:** `{ id, date, time, package: 'pizza' or 'farm', party: { adults, kids: [{ name, age }] }, addons: [{ id: 'wagon' / 'barrel' / 'corn', qty }], paid: { receipt, on, lines: [{ id, label, qty, unit, amount }], total }, closed, closedReason }`. There is no status: a visit is past when its date is before today.
 - **order:** `{ id, visitId, pickup: 'HH:MM', pizzas: [{ type, count, toppings: [...], glutenFree, vegan }], notes, status: 'new' or 'confirmed' }`. `type` is an id from `DemoData.PIZZAS`.
 - **request:** `{ id, kind, to, from, target, patch, before, summary, note, weather, status, suggestion, reply, history: [{ at, who, text }], created, updated }`. `before` holds the target's values for the patch keys when the request was made, so a screen can show before and after.
-- **family:** `{ name, adults: [{ name }], kids: [{ name, age }], allergies, glutenFree, vegan }`.
+- **family:** `{ name, adults: [{ name }], kids: [{ name, age }], allergies, glutenFree, vegan, phone, notify }`. `phone` and `notify` belong to Tell me when (see "The Tell me when screen" below).
 - **event (school trip):** `{ id, kind: 'school', title, date, students, guests, slipsReceived, thread }`. The price is `DemoData.priceEvent(event)`: $11 for each student, and $11 for each parent or sibling age 3 or older who comes. The minimum is 100 students (`DemoData.eventProblem`).
-- **notice:** `{ id, to: 'family' / 'cathy' / 'kitchen', text, link, at, read }`. **message:** `{ id, thread, from: 'family' / 'cathy', text, at }`; threads are `farm` and `event-<id>`. **review:** `{ id, visitId, stars, text, photoName, thumb, status: 'waiting' / 'approved' / 'declined', at }`. **photo:** `{ id, visitId, name, thumb, status, at }`. **waitlist:** `{ id, day, party }`. **alerts:** `{ strawberries, blueberries, pumpkins, trees, spot }` with true or false.
+- **notice:** `{ id, to: 'family' / 'cathy' / 'kitchen', text, link, at, read }`. **message:** `{ id, thread, from: 'family' / 'cathy', text, at }`; threads are `farm` and `event-<id>`. **review:** `{ id, visitId, stars, text, photoName, thumb, status: 'waiting' / 'approved' / 'declined', at }`. **photo:** `{ id, visitId, name, thumb, status, at }`. **waitlist:** `{ id, day, party }`. **alerts:** `{ spot, reservations, strawberries, blueberries, pumpkins, trees }` with true or false (see "The Tell me when screen" below).
 - **Dates and times** are `YYYY-MM-DD` and `HH:MM` (24 hours), the farm's own clock. `DemoData` writes them as "Saturday, Nov 14" and "2:00 pm".
+
+### The Tell me when screen
+
+`js/demo-view-alerts.js` draws it. From top to bottom:
+
+1. **Where should we send these messages?** Two big switches: **Text message** (it shows the pretend phone number) and **Email** (it shows the account's email). One or both can be on. The last one cannot be turned off: it stays on, and a short note says "Keep at least one on, so we can reach you." Nothing is sent. The choice is only kept in the pretend account.
+2. **A spot opens on a full day**, with a day to choose. It puts the family on the waitlist for that day. This is the first choice.
+3. **Reservations open**, a plain switch. Its line says only what the site says: reservations with pizza open every Tuesday at 5:00 PM for the upcoming weekend.
+4. The farm's seasons, in the site's order: strawberries, blueberries and sunflowers, pumpkins and tomatoes, Christmas trees.
+5. **Alerts you got**: the alerts that the desk sent, newest first.
+
+How it is kept:
+
+- The choices come from `DemoData.alertKinds`: for each one a `key`, a `label` (the title), a `note` (the line under it) and a `notice` (what the bell says when the farm sends it). The order of that list is the order on the screen, and the desk reads the same list. To add a choice, add one entry there and a picture and a colour in `js/demo-view-alerts.js`.
+- A switch is `alerts[key]`, set with `setAlert(key, bool)`. The key `spot` also has one waitlist entry for the chosen day (`{ id, day, party, active }`). Choosing another day, or switching off, sets the old entry to `active: false`. The desk's "Send the alert" for that day makes the notice "A spot opened on Saturday, Nov 14." (`fireAlert('spot', day)`).
+- Where to send is `family.notify`, `{ text: bool, email: bool }`. Both are on until the family changes it. `getNotify()` reads it. `setNotify({ text, email })` changes one or both and answers with the new choice. When the change would turn both off it answers `null` and saves nothing. It tells the page with the same `wa-demo-change` event as every other change. It lives in the family record, so Start over and a new sample put both back on, and a state saved before it existed reads as both on.
+- The pretend phone number is `family.phone`. The sample family has `DemoData.SAMPLE_PHONE`. It is a made-up number: never put a real one there. The screen shows the sample number when a family has none, and the account's own email next to **Email**.
+- The desk's "People waiting" box lists the seasons and reservations from `DemoData.alertKinds` (one row each) and then a row for each day somebody waits for.
 
 ### Hooks for the tour
 
@@ -128,5 +146,6 @@ These invisible `data-tour` names are put on the key controls so the tour can po
 
 - `tests/demo-store.test.mjs`: the store and the rules, with a fake storage and a fake clock (no browser, about a second).
 - `tests/demo-data.test.mjs`: every price, age, day and pizza of the demo against the site's own pages (no browser).
+- `tests/demo-alerts.test.mjs`: the Tell me when screen in a real browser, on a computer window and on a phone: the order, the two switches for text message and email, the rule that one stays on, the full-day choice and reservations with the desk, and axe-core.
 - `tests/seo.test.mjs`: the three pages are `noindex`, have no canonical address, no share picture and no line in the sitemap.
 - `tests/privacy.test.mjs`: the demo files may use browser storage only in `js/demo-store.js` (one key) and `js/demo-header.js` (one hint for the tab), and may build their own form, text box and list. Everything else stays refused.

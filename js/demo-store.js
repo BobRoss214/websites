@@ -373,7 +373,24 @@
       if (!kindOf(key)) return null;
       return edit(function (st) { st.alerts[key] = !!on; return true; });
     }
-    // -> { strawberries, blueberries, pumpkins, trees, spot, days: { 'YYYY-MM-DD': n } }: how many are waiting for each. One family here, so 0 or 1 for a switch.
+    // Where the family wants the farm's messages to go (pretend: nothing is sent): { text: bool, email: bool }. Both are on until the family changes it, and at least
+    // one always stays on. It is kept inside the family record (family.notify), so a state saved before this existed still works, and Start over or a new sample sets
+    // both back on.
+    function notifyOf(st) {
+      var n = (st.family && st.family.notify) || {}, text = n.text !== false, email = n.email !== false;
+      return text || email ? { text: text, email: email } : { text: true, email: true };   // a hand-edited "both off" is read as both on
+    }
+    function getNotify() { return notifyOf(read()); }
+    // setNotify({ text: bool, email: bool }) changes one or both and returns the new answer. It returns null, and saves nothing, when the change would turn both off,
+    // or when it names neither. A change that changes nothing is not saved (the subscribers hear nothing).
+    function setNotify(patch) {
+      if (!patch || typeof patch !== 'object' || (!('text' in patch) && !('email' in patch))) return null;
+      var now = notifyOf(read()), next = { text: 'text' in patch ? !!patch.text : now.text, email: 'email' in patch ? !!patch.email : now.email };
+      if (!next.text && !next.email) return null;
+      if (next.text === now.text && next.email === now.email) return next;
+      return edit(function (st) { st.family = st.family || {}; st.family.notify = next; return next; });
+    }
+    // -> { spot, reservations, strawberries, blueberries, pumpkins, trees, days: { 'YYYY-MM-DD': n } }: how many are waiting for each. One family here, so 0 or 1 for a switch.
     function alertCounts() {
       var st = read(), out = { days: {} };
       Data.alertKinds.forEach(function (k) { out[k.key] = k.key === 'spot' ? 0 : (st.alerts[k.key] ? 1 : 0); });
@@ -450,7 +467,7 @@
       ask: ask, reply: reply, respond: respond, cancel: cancel, openRequestFor: openRequestFor, requestsFor: requestsFor, openRequests: openRequests,
       post: post, thread: thread, threadsWaiting: threadsWaiting, notify: notify, noticesFor: noticesFor, markRead: markRead, markAllRead: markAllRead,
       closeDay: closeDay, openDay: openDay, isClosed: isClosed, openDays: openDays,
-      setAlert: setAlert, alertCounts: alertCounts, fireAlert: fireAlert,
+      setAlert: setAlert, alertCounts: alertCounts, fireAlert: fireAlert, getNotify: getNotify, setNotify: setNotify,
       submitReview: submitReview, decideReview: decideReview, submitPhoto: submitPhoto, decidePhoto: decidePhoto,
       subscribe: subscribe, now: now, today: function () { return now().date; }, snapshot: function () { return clone(read()); }, saveStatus: function () { return io.status(); }
     };

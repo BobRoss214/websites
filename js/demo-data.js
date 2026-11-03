@@ -102,13 +102,21 @@
   // Sample time slots: on the hour from 10 am to 2 pm. Pretend: the demo says "sample times" next to them.
   var SLOTS = ['10:00', '11:00', '12:00', '13:00', '14:00'];
 
-  // The "Tell me when" switches. `spot` also has one entry per chosen day in the waitlist (see js/demo-store.js).
+  // The pretend phone number the "Tell me when" screen shows next to "Text message" (the sample family has it; the family record keeps it as `phone`).
+  // Not a real number: 555 is not a working area code, so it cannot ring anyone. Never put a real number here.
+  var SAMPLE_PHONE = '(555) 010-0123';
+
+  // The "Tell me when" choices, in the order the family sees them: the two about a visit first (a spot on a full day, then new reservations), then the farm's seasons
+  // in the site's season order. `label` is the title, `note` the line under it, `notice` what the family reads in the bell when the farm sends it.
+  // `spot` also has one entry per chosen day in the waitlist (see js/demo-store.js). The sentence about when reservations with pizza open is the site's own
+  // (home page, Wise Pie page); tests/demo-data.test.mjs checks it against the page.
   var alertKinds = [
-    { key: 'strawberries', label: 'Strawberries open', notice: 'Strawberries are open at Wise Acres.' },
-    { key: 'blueberries', label: 'Blueberries and sunflowers open', notice: 'Blueberries and sunflowers are open at Wise Acres.' },
-    { key: 'pumpkins', label: 'Pumpkins and tomatoes open', notice: 'Pumpkins and tomatoes are open at Wise Acres.' },
-    { key: 'trees', label: 'Christmas trees arrive', notice: 'Christmas trees have arrived at Wise Acres.' },
-    { key: 'spot', label: 'A spot opens on a full day', notice: 'A spot opened on a day you were waiting for.' }
+    { key: 'spot', label: 'A spot opens on a full day', notice: 'A spot opened on a day you were waiting for.', note: 'Choose a day that is full. If a spot opens up, you hear about it.' },
+    { key: 'reservations', label: 'Reservations open', notice: 'New reservations are open at Wise Acres.', note: 'A notice when new reservations open. Reservations with pizza open every Tuesday at 5:00 PM for the upcoming weekend.' },
+    { key: 'strawberries', label: 'Strawberries open', notice: 'Strawberries are open at Wise Acres.', note: 'A notice when strawberry picking opens.' },
+    { key: 'blueberries', label: 'Blueberries and sunflowers open', notice: 'Blueberries and sunflowers are open at Wise Acres.', note: 'A notice when blueberry and sunflower picking opens.' },
+    { key: 'pumpkins', label: 'Pumpkins and tomatoes open', notice: 'Pumpkins and tomatoes are open at Wise Acres.', note: 'A notice when pumpkin and tomato picking opens.' },
+    { key: 'trees', label: 'Christmas trees arrive', notice: 'Christmas trees have arrived at Wise Acres.', note: 'A notice when the Christmas trees arrive.' }
   ];
 
   // Links that already exist on the site.
@@ -208,7 +216,8 @@
     return {
       family: {
         name: 'Alex', adults: [{ name: 'Alex' }, { name: 'Jordan' }], kids: KIDS.map(function (k) { return { name: k.name, age: k.age }; }),
-        allergies: 'Riley: peanut allergy.', glutenFree: false, vegan: false
+        allergies: 'Riley: peanut allergy.', glutenFree: false, vegan: false,
+        phone: SAMPLE_PHONE, notify: { text: true, email: true }   // "Tell me when": the pretend phone, and where the messages go (text, email or both; at least one stays on)
       },
       visits: [upcoming, recent, older],
       orders: [order],
@@ -254,6 +263,7 @@
   }
 
   var api = {
+    SAMPLE_PHONE: SAMPLE_PHONE,
     PRICES: PRICES, PACKAGES: PACKAGES, PIZZAS: PD.PIZZAS, SLOTS: SLOTS, alertKinds: alertKinds, LINKS: LINKS, RULES: RULES, WHO: WHO, SAMPLE_ACCOUNT: SAMPLE_ACCOUNT,
     FARM_OPENS: PD.FARM_OPENS, FARM_CLOSES: PD.FARM_CLOSES,
     // dates and times
