@@ -99,9 +99,38 @@
     }).join('');
   }
 
+  /*
+   * Blocks that other features add to the lobby, between the welcome promos and the live strip (the charity of the week, the fair-play checker ...).
+   *   ui.lobby.addBlock({ id: 'spotlight', order: 20, label: 'Charity of the week', mount: function (el) { ... }, refresh: function (el) { ... } })
+   * `mount` runs once when the lobby is first drawn, `refresh` on every visit to it. Lower `order` comes first.
+   */
+  var blocks = [];
+  function addBlock(b) {
+    blocks.push(b);
+    blocks.sort(function (x, y) { return (x.order || 50) - (y.order || 50); });
+    if (root && root.firstChild) { drawBlocks(); }
+  }
+  function drawBlocks() {
+    var host = root && root.querySelector('[data-role="blocks"]');
+    if (!host) { return; }
+    blocks.forEach(function (b) {
+      var el = host.querySelector('[data-block="' + b.id + '"]');
+      if (!el) {
+        el = document.createElement('section');
+        el.className = 'sect lobbyblock';
+        el.setAttribute('data-block', b.id);
+        if (b.label) { el.setAttribute('aria-label', b.label); }
+        host.appendChild(el);
+        if (b.mount) { b.mount(el); }
+      }
+      if (b.refresh) { b.refresh(el); }
+    });
+    blocks.forEach(function (b) { var el = host.querySelector('[data-block="' + b.id + '"]'); if (el) { host.appendChild(el); } });   // keep them in `order`
+  }
+
   function build() {
     root.innerHTML = '<h1 class="sr-only">GiveSpin lobby: casino-style games that give to charity</h1>' +
-      '<div class="lobbysearch" data-role="lobbysearch"></div>' + promos() +
+      '<div class="lobbysearch" data-role="lobbysearch"></div>' + promos() + '<div class="lobbyblocks" data-role="blocks"></div>' +
       '<section class="sect livestrip" data-role="livestrip" aria-labelledby="lb-live" hidden></section>' +
       '<div class="lobbybar"><nav class="cats" aria-label="Game categories">' + CATS.map(function (c) {
         return '<a class="cat" href="#' + c[2] + '" data-cat="' + c[0] + '">' + esc(c[1]) + '</a>';
@@ -144,8 +173,9 @@
       var c = t.getAttribute('data-cat');
       t.hidden = !(cat === 'all' || c === cat);
     });
+    drawBlocks();
     refreshBits();
   }
 
-  ui.lobby = { render: render, tileHTML: tileHTML };
+  ui.lobby = { render: render, tileHTML: tileHTML, addBlock: addBlock };
 })();

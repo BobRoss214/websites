@@ -2,3 +2,7 @@
    The live ticker and the charity-of-the-week strip.
    Loaded before fit.css and walk.css, so the one-screen layout rules still win.
    ========================================================================== */
+
+/* the lobby's block area (js/ui/lobby.js addBlock): blocks stack with the same gap as the other lobby sections */
+.lobbyblocks:empty { display: none; }
+.lobbyblocks { display: grid; gap: 18px; margin-bottom: 18px; }
