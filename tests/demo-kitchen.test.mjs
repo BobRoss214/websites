@@ -8,8 +8,10 @@
  * off, the order's note); the queue (by day, then by pick-up time, with the pizza count of each day); the family's allergy note and flags; a visit that the farm
  * closed; and the way times and days are written ("3:00 pm", "Saturday, Nov 14"). The page itself (buttons, editor, two tabs) is looked at by the browser test
  * of the account demo. */
+import fs from 'node:fs';
+import path from 'node:path';
 import { createRequire } from 'node:module';
-import { ok, finish } from './lib.mjs';
+import { ok, finish, ROOT } from './lib.mjs';
 
 const require = createRequire(import.meta.url);
 const K = require('../js/demo-kitchen.js');
@@ -35,6 +37,10 @@ ok('times: 15:00 is 3:00 pm, 00:05 is 12:05 am, 12:00 is 12:00 pm, 09:30 is 9:30
 ok('days: 2026-11-14 is "Saturday, Nov 14"; a day that is not a date gives nothing', K.dayLabel('2026-11-14') === 'Saturday, Nov 14' && K.dayLabel('soon') === '');
 ok('minutes and back: 14:45 is 885 minutes', K.minutes('14:45') === 885 && K.fromMinutes(885) === '14:45');
 ok('the four status words are the plan\'s words', JSON.stringify(Object.values(K.STATUS_LABEL)) === JSON.stringify(['New', 'Change waiting for you', "Waiting for the family's OK", 'Confirmed']));
+const kitchenSource = fs.readFileSync(path.join(ROOT, 'js/demo-kitchen.js'), 'utf8');
+ok('the quiet contact line says "Pizza kitchen contact:" and links to Ava by mailto, an address the site already shows; the script has no phone number',
+  K.CONTACT.label === 'Pizza kitchen contact: ' && K.CONTACT.email === 'ava@wiseacresorganic.com' && K.CONTACT.href.startsWith('mailto:ava@wiseacresorganic.com') && fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').includes('mailto:ava@wiseacresorganic.com')
+  && /kit-contact/.test(kitchenSource) && /href: CONTACT\.href/.test(kitchenSource) && !/\d{3}[-. )]+\d{3}[-. ]\d{4}/.test(kitchenSource));
 
 /* ---------------------------------------------------------------- which status, which request */
 const o1 = order('o1', 'v1', '15:00', [line('pepperoni', 2), line('margherita', 1, { glutenFree: true })]);

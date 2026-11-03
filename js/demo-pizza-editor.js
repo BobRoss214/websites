@@ -167,6 +167,10 @@
       noteBox = el('div', { class: 'dp-field dp-notes' }, [el('label', { for: pre + '-notes', text: 'Anything else the kitchen should know? (you do not have to write anything)' }), ta]);
     }
 
+    // ----- "Pizza questions? Email Ava" (family only): her address is already on the site (js/demo-data.js, CONTACTS). The kitchen screen has its own line, so not in kitchen mode.
+    var ava = !kitchen && window.DemoData && window.DemoData.CONTACTS ? window.DemoData.CONTACTS.ava : null;
+    var contactLine = ava ? el('p', { class: 'dp-hint dp-contact' }, el('a', { href: ava.href, text: ava.text })) : null;
+
     // ----- what the family sees while editing: now, you asked, the difference and what it adds to the price
     function paintSummary(out) {
       summaryBox.textContent = '';
@@ -206,6 +210,7 @@
     form.appendChild(el('div', { class: 'dp-add-row' }, addBtn));
     form.appendChild(timeSet);
     if (noteBox) form.appendChild(noteBox);
+    if (contactLine) form.appendChild(contactLine);
     if (summaryBox) form.appendChild(summaryBox);
     form.appendChild(msg);
     form.appendChild(el('div', { class: 'dp-actions' }, [submit, cancel]));

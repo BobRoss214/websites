@@ -36,6 +36,36 @@
   var clean = function (s) { return String(s || '').replace(/\s+/g, ' ').trim(); };
   K.onSignOut(function () { work = null; workFor = ''; dirty = false; saved = ''; });   // Sign out or Start over: the next family starts from the store again
 
+  /* ---- "I also plan an event": a small, quiet link at the very bottom, only while the family has no event. It opens a box with the three kinds; pressing one adds that
+   * sample event (DemoStore.addEvent) and opens the My event tab, which is not on the bar until there is an event. */
+  function openEventBox(d) {
+    var uh = d.ui.h, vanessa = d.data.CONTACTS ? d.data.CONTACTS.vanessa : null;
+    function pick(kind) {   // (the box closes itself after its button's action)
+      var made = d.store.addEvent(kind);
+      if (!made) { K.toast('That did not work. Please try again.'); return; }
+      K.toast('Added. My event is now in your tabs.');
+      if (d.ctx && typeof d.ctx.go === 'function') d.ctx.go('event');
+    }
+    var kinds = d.data.EVENT_KINDS.filter(function (k) { return k.key !== 'none'; }).map(function (k) {
+      return { label: k.short, id: k.key, onClick: function () { pick(k.key); } };
+    });
+    d.ui.modal({
+      title: 'I also plan an event', focus: 'button[data-demo-action="' + (kinds.length ? kinds[0].id : '') + '"]',   // the first kind, not Vanessa's link, has the focus when the box opens
+      body: [
+        uh('p', null, 'What kind of event do you plan? We add a sample one to try, and a My event tab shows in your tabs.'),
+        vanessa ? uh('p', { class: 'demo-hint' }, ['A school trip: ', uh('a', { href: vanessa.href }, vanessa.text)]) : null
+      ],
+      actions: kinds.concat([{ label: 'Not now', kind: 'ghost' }])
+    });
+  }
+  function eventLink(d) {
+    var has = true;
+    if (!d.ui || typeof d.ui.modal !== 'function' || !d.data || !d.data.EVENT_KINDS || !d.store || typeof d.store.addEvent !== 'function') return null;
+    try { has = (d.store.list('events') || []).length > 0; } catch (e) { has = true; }
+    if (has) return null;
+    return h('p', { class: 'dvf-event' }, K.h('button', { type: 'button', class: 'demo-linkbtn', 'data-k': 'fam-event', onclick: function () { openEventBox(d); } }, 'I also plan an event'));
+  }
+
   K.css('dvf-css', [
     '.dvk .dvf-grid{align-items:stretch}',
     '.dvk .dvf-after{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}',
@@ -50,7 +80,8 @@
     '.dvk .dvf-save{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:10px}',
     '.dvk .dvf-status{margin:0;font:700 .98rem/1.3 var(--display);color:var(--green-deep)}',
     '.dvk .dvf-status:empty{display:none}',
-    '.dvk .dvf-status.is-bad{color:var(--red-deep)}'
+    '.dvk .dvf-status.is-bad{color:var(--red-deep)}',
+    '.dvk .dvf-event{margin:0}'
   ].join('\n'));
 
   function paint(root, d, redraw) {
@@ -154,7 +185,8 @@
       K.head(null, null, null, 'Keep your family up to date. The kitchen sees your food notes on every pizza order.'),
       name || email ? h('p', { class: 'dvf-who' }, [K.chip('info', 'Your account'), (name ? name : '') + (name && email ? ' · ' : '') + email]) : null,
       form,
-      h('div', { class: 'dvf-after' }, [h('p', { class: 'dvk-note' }, 'Saving this does not change a visit you already booked.'), h('a', { class: 'btn btn-ghost btn-sm', href: '#visits' }, 'Change a visit')])
+      h('div', { class: 'dvf-after' }, [h('p', { class: 'dvk-note' }, 'Saving this does not change a visit you already booked.'), h('a', { class: 'btn btn-ghost btn-sm', href: '#visits' }, 'Change a visit')]),
+      eventLink(d)
     ]));
   }
 
