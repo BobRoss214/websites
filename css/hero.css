@@ -226,7 +226,7 @@ html[data-season="winter"] .bee-fly{display:none}
 @keyframes sparkOut{0%{opacity:0;transform:translate(40px,40px) scale(.2)}20%{opacity:1}100%{opacity:0;transform:translate(calc(40px + var(--dx) * .6),calc(40px + var(--dy) * .6)) scale(1.5)}}
 
 /* ---------------------------------------------------------------- falling leaves + snow */
-.particles{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;overflow:hidden;pointer-events:none}
+.particles{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;overflow:hidden;pointer-events:none;transition:opacity .6s}
 .particles i{position:absolute;top:0;display:block;width:var(--s);height:var(--s);will-change:transform}
 .particles .leaf{animation:heroFall var(--d) linear infinite var(--dl),heroSway var(--sd,2.6s) cubic-bezier(.37,0,.63,1) infinite alternate var(--dl)}   /* a leaf falls straight down and drifts to one side and the other, smoothly (js/hero.js sets --fh, the height it falls through, --sd, --sw and --rk) */
 .particles .leaf::before{content:"";display:block;width:var(--s);height:var(--s);background:var(--c);border-radius:0 100% 0 100%;border:1.5px solid rgba(58,36,22,.55);
@@ -239,13 +239,14 @@ html[data-season="winter"] .bee-fly{display:none}
 }
 @keyframes heroSway{from{transform:translateX(calc(var(--sw) * -1))}to{transform:translateX(var(--sw))}}
 @keyframes heroRock{from{rotate:calc(var(--rot) - var(--rk,50deg))}to{rotate:calc(var(--rot) + var(--rk,50deg))}}
-html[data-calm="light"] .particles,html[data-calm="most"] .particles{opacity:0;transition:opacity .6s}   /* the automatic calm mode: a leaf that stopped in mid-air looks broken, so the falling leaves and snow fade out instead (the visitor's own Pause keeps the picture as it is) */
-@keyframes heroSnow{
-  0%{translate:0 -6vh;opacity:0}8%{opacity:.92}
-  33%{translate:var(--sw) 34vh}
-  66%{translate:calc(var(--sw) * -.8) 70vh}
-  100%{translate:calc(var(--sw) * .4) 108vh;opacity:.92}
+html[data-calm="light"] .particles,html[data-calm="most"] .particles{opacity:0}   /* the automatic calm mode: a leaf that stopped in mid-air looks broken, so the falling leaves and snow fade out instead (the visitor's own Pause keeps the picture as it is); the layer's own transition (above) fades it out and, when motion comes back, in again, and js/main.js (initMotion) lets what is under it rest only when it has faded */
+@keyframes heroSnow{   /* like the leaves: from just above the hero to just below it, whatever its height (js/hero.js sets --fh; 100vh until it has) */
+  0%{translate:0 -14px;opacity:0}8%{opacity:.92}
+  33%{translate:var(--sw) calc(var(--fh,100vh) * .34)}
+  66%{translate:calc(var(--sw) * -.8) calc(var(--fh,100vh) * .7)}
+  100%{translate:calc(var(--sw) * .4) calc(var(--fh,100vh) + 14px);opacity:.92}
 }
+@supports not (translate:0 0){.particles{display:none}}   /* a browser without the single-property transforms (Chrome before 104, Safari before 14.1) would show the leaves and snow hanging in a row along the top edge, swaying: nothing is better */
 
 /* ---------------------------------------------------------------- small screens */
 @media (max-width:47.5em){

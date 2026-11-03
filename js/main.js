@@ -428,6 +428,8 @@
    * What parks it (and nothing else): the hero is scrolled out of sight, the tab is hidden, the season is winter (the CSS hides it), or the visitor
    * pressed "Pause animations" (data-calm="all"). The page's own calm mode (data-calm="light" or "most", set when the hero struggles on a slow
    * computer) never stops the flight: a flight is a few compositor animations that cost next to nothing (see initMotion for what it rests).
+   * A change of kind always ends: if the creature has not got out of the hero after 12 seconds (whatever went wrong) the other kind is put there anyway. Parked while it is
+   * still in sight, it stays where it is, as what it is; parked out of sight, it is put back inside the hero as the other kind. A window made smaller puts it back inside the hero.
    * A pointer over the hero proves that the hero is on screen, whatever an observer last said (a viewer that shows the page in a frame can be wrong
    * about that), so a pointer wakes a creature that was parked by mistake. With "reduce motion" it is not shown at all.
    * ------------------------------------------------------------------ */
@@ -437,7 +439,7 @@
     if (!hero || !bee) return;
     if (reduceMotion || !bee.animate) { bee.setAttribute('hidden', ''); return; }
 
-    const TICK = 100, LEG = 240;                // ms: how often it looks where to go, and how long one leg is (a leg is cut short by the next one)
+    const TICK = 100, LEG = 240, LEAVE_MAX = 12000;   // ms: how often it looks where to go, how long one leg is (a leg is cut short by the next one), and the longest the flight out of the hero may last (see swap)
     // gain: how fast it goes for each pixel it still has to go (px per second per px); min, max: the slowest and fastest it goes (px per second);
     // wander*: the same for a stroll through the field; rest: how long it stays before it strolls to another spot (ms: least, then up to this much more)
     const KINDS = {
@@ -456,7 +458,7 @@
     let leg = null;                             // the leg in flight: { anim, x0, y0, x1, y1, r0, r1 }
     let aim = null;                             // where it is going: { follow } (the pointer) or { x, y } (a spot), plus gain, max, near and done
     let facing = 1, lastMove = 0, wanderAt = 0, swapAt = pinned ? Infinity : performance.now() + later(), px = 0, py = 0;
-    let onScreen = false, running = false, tickTimer = 0, wanderTimer = 0, leaving = 0;   // leaving: -1 or 1, the side it flies out of while it changes kind
+    let onScreen = false, running = false, tickTimer = 0, wanderTimer = 0, swapGuard = 0, leaving = 0;   // leaving: -1 or 1, the side it flies out of while it changes kind
     const clamp2 = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
     const setKind = (k) => {
@@ -507,13 +509,14 @@
     const spotOf = (a) => {                     // where the aim is right now (the pointer moves, so a following aim is worked out each time)
       if (!a.follow) return [a.x, a.y];
       const r = hero.getBoundingClientRect();
-      return clearOf(px - r.left - 26, py - r.top - 24);
+      return clearOf(clamp2(px - r.left - 26, -BW / 2, w - BW / 2), clamp2(py - r.top - 24, 0, Math.max(0, h - BH)));   // (a pointer that has been left outside the hero by a smaller window is followed to the edge of it)
     };
 
     const setAim = (a) => { aim = a; if (running && !tickTimer) chase(); };
     function chase() {                          // the one step of the glide: look, work out the speed, start a leg, look again in a moment
       tickTimer = 0;
       if (!running || !aim) return;
+      if (leg && leg.t0 === null && (leg.anim.pending === true || leg.anim.startTime === null)) { tickTimer = setTimeout(chase, TICK); return; }   // (a browser that took no start time) the last leg is not drawn yet: a new one would throw it away before it moved
       const K = KINDS[kind], a = aim, t = clock();
       const [cx, cy] = here(t);
       const [tx, ty] = spotOf(a);
@@ -551,10 +554,12 @@
       if (leaving || !running) return;
       const [cx, cy] = here();
       leaving = cx < w / 2 ? -1 : 1;
+      clearTimeout(swapGuard); swapGuard = setTimeout(() => { swapGuard = 0; if (leaving) arrive(); }, LEAVE_MAX);   // whatever goes wrong, the change of kind ends: while it lasts the pointer is not followed
       setAim({ x: leaving < 0 ? -BW - 40 : w + 40, y: clamp2(cy - 30, 0, h - BH), gain: 2, max: KINDS[kind].max * 0.6, near: 6, done: arrive });
     }
     function arrive() {
       const side = leaving; leaving = 0;
+      clearTimeout(swapGuard); swapGuard = 0;
       aim = null; clearTimeout(tickTimer); tickTimer = 0;
       if (leg) { leg.anim.cancel(); leg = null; }
       const r = hero.getBoundingClientRect(), now = performance.now();
@@ -574,7 +579,18 @@
     };
     hero.addEventListener('pointermove', onMove, { passive: true });
     hero.addEventListener('pointerdown', onMove, { passive: true });
-    addEventListener('resize', () => { w = hero.clientWidth; h = hero.clientHeight; }, { passive: true });
+    // The window changed size: a creature that now lies outside the hero (at rest or parked: the hero hides what is outside it) is put back inside, and so is the spot it was going to
+    // for a stroll. One that is following the pointer is looked after by its next look.
+    const fit = () => {
+      if (leaving) return;
+      const lo = -BW / 2, hiX = w - BW / 2, hiY = Math.max(0, h - BH);
+      if (aim && !aim.follow && !aim.done) { aim.x = clamp2(aim.x, lo, hiX); aim.y = clamp2(aim.y, 0, hiY); }
+      const [cx, cy, r, f] = here(), nx = clamp2(cx, lo, hiX), ny = clamp2(cy, 0, hiY);
+      if (nx === cx && ny === cy) return;
+      if (leg) { leg.anim.cancel(); leg = null; }
+      x = nx; y = ny; tilt = r; flip = f; place();
+    };
+    addEventListener('resize', () => { w = hero.clientWidth; h = hero.clientHeight; fit(); }, { passive: true });
 
     function sync() {
       const on = onScreen && !doc.hidden && root.getAttribute('data-season') !== 'winter' && root.getAttribute('data-calm') !== 'all';
@@ -588,7 +604,10 @@
       }
       clearTimeout(tickTimer); clearTimeout(wanderTimer); tickTimer = wanderTimer = 0; aim = null;
       if (leg) { [x, y, tilt, flip] = here(); place(); leg.anim.cancel(); leg = null; }   // park it where it is
-      if (leaving) arrive();                                                         // away while it changed kind: it comes back, parked, in the other kind
+      if (leaving) {
+        if (x + BW > 8 && x < w - 8) { leaving = 0; clearTimeout(swapGuard); swapGuard = 0; swapAt = pinned ? Infinity : performance.now() + later(); }   // still in sight: it stays where it is, as what it is, and changes some other time
+        else arrive();                                                               // out of sight: it comes back, parked, in the other kind
+      }
     }
     if ('IntersectionObserver' in window) new IntersectionObserver((entries) => { onScreen = entries[entries.length - 1].isIntersecting; sync(); }).observe(hero);
     else { onScreen = true; sync(); }   // no observer: it just keeps going
@@ -603,11 +622,14 @@
    *   One switch on <html>, data-calm, set here and read by the scripts (the bee) and the CSS (the hero's layers):
    *     (not set)         everything moves as drawn
    *     data-calm="light" the page found the hero struggling (a slow phone): the smallest decorations of the hero rest (sparks,
-   *                       smoke puffs, swaying flowers, falling leaves and snow, butterflies, the little bees, tree lights; the bee or
-   *                       butterfly that follows the pointer keeps its wings and its flying)
+   *                       smoke puffs, swaying flowers, butterflies, the little bees, tree lights; the falling leaves and snow fade
+   *                       out (css/hero.css) and rest when they have faded, so that none freezes in mid-air in sight); the bee or
+   *                       butterfly that follows the pointer keeps its wings and its flying
    *     data-calm="most"  still struggling after that: every endless animation rests except the few that show something
-   *                       (the pulsing "open now" dot, the bell of the reservation chip, the "now" season badge) and the
-   *                       tractor and the barrel train, which keep driving (they froze on slow computers before)
+   *                       (the pulsing "open now" dot, the bell of the reservation chip, the "now" season badge), the
+   *                       tractor and the barrel train, which keep driving (they froze on slow computers before), and the wings
+   *                       and bobbing of the bee or butterfly that follows the pointer (it flies on, and a creature that flies on
+   *                       with frozen wings looks broken)
    *     data-calm="all"   the visitor pressed "Pause animations": every endless animation rests, the bee stops where it is and the
    *                       hero's layers no longer slide at different speeds while scrolling
    *   The buttons show pressed while any of these is set, so one press turns all motion back on (and the page never switches
@@ -626,14 +648,17 @@
     const SMALL = '.spark, .puff, .sway, .leaf, .flake, .butterfly, .bw, .bzz, .bzz *, .bulb, .bee, .bee *, .bfly, .bfly *';
     const SHOWS = '.live-dot, .chip-rel .ico, .now-badge';
     const DRIVES = '.rig, .rig *';   // the tractor and the barrel train (wheels, bounce, waving riders): they keep driving by themselves, only the visitor's "Pause animations" stops them
-    let level = '', visitor = false;
+    const FADE = 650;   // ms: the falling leaves and snow fade out in .6 s (css/hero.css); what they are made of rests when they are gone
+    let level = '', visitor = false, fadeEnd = 0;
     const held = new Set();   // the animations rested here, so that turning motion on again can start them
     const wanted = (a) => {
       const el = a.effect && a.effect.target;
       if (typeof a.animationName !== 'string' || !el || a.effect.getTiming().iterations !== Infinity) return false;   // endless CSS animations only
       if (level === 'all') return true;
+      if (el.closest('#bee-fly')) return false;   // the bee or butterfly that follows the pointer keeps its wings and its bobbing in "light" and in "most": a creature that flies on with frozen wings looks broken
+      if (performance.now() < fadeEnd && el.closest('.particles')) return false;   // the leaves and snow are fading out: they go on falling until they are gone, they must not freeze in mid-air in sight
       if (level === 'most') return !el.matches(SHOWS) && !el.matches(DRIVES);
-      return !!hero && hero.contains(el) && el.matches(SMALL) && !el.closest('#bee-fly');   // the bee or butterfly that follows the pointer keeps its wings and its bobbing in "light": a creature that flies on with frozen wings looks broken
+      return !!hero && hero.contains(el) && el.matches(SMALL);
     };
     const rest = () => { if (level) doc.getAnimations().forEach((a) => { if (!held.has(a) && wanted(a)) { a.pause(); held.add(a); } }); };
     const wake = () => {
@@ -653,9 +678,11 @@
     };
     function set(next, by) {   // the steps only add to what rests (light, most), or go back to nothing
       if (next === level) return;
+      const faded = level === 'light' || level === 'most';   // (the layer of leaves and snow is out of sight already)
       level = next;
       if (next) root.setAttribute('data-calm', next); else root.removeAttribute('data-calm');
-      if (next) rest(); else wake();
+      fadeEnd = (next === 'light' || next === 'most') && !faded ? performance.now() + FADE : 0;
+      if (next) { rest(); if (fadeEnd) setTimeout(rest, FADE + 30); } else wake();
       label();
       doc.dispatchEvent(new CustomEvent('wa:calm', { detail: { level: next, by } }));
     }
@@ -666,6 +693,8 @@
 
     // The automatic check: is the hero struggling? Three bad 2-s spells in a row move one step (light, then most). A page that was put at "light" by this check
     // (never by the visitor) goes back to full motion once, after four good spells in a row: a slow moment while the page loaded must not freeze the falling leaves for good.
+    // But resting the small decorations is often what makes a weak phone fast, so the four good spells do not prove that it can do without: after that one way back the very next look
+    // comes at once, and one bad spell is enough to put it back to "light" (a real false alarm, slow only while loading, still stays at full motion).
     // A browser run by a program (the tests, tests/visual-check.mjs) never switches by itself: its speed is that of a busy test computer.
     if (!hero || !('IntersectionObserver' in window) || navigator.webdriver) return;
     let onScreen = false, ready = false, sampling = false, timer = 0, bad = 0, good = 0, recovered = false, quick = 6, longs = [], seen = null;
@@ -691,8 +720,8 @@
           const struggling = fps < 35 && (seen ? busy >= 150 : fps < 25);
           bad = struggling ? bad + 1 : 0;
           good = struggling ? 0 : good + 1;
-          if (bad >= 3) { bad = 0; good = 0; quick = 4; set(level ? 'most' : 'light', 'auto'); }
-          else if (level === 'light' && !visitor && !recovered && good >= 4) { recovered = true; good = 0; set('', 'auto'); }   // only once: a computer that struggles again stays calm
+          if (bad >= (recovered && !level ? 1 : 3)) { bad = 0; good = 0; quick = 4; set(level ? 'most' : 'light', 'auto'); }   // (after the one way back a single bad spell is enough: a phone that needs "light" would otherwise struggle for a minute before it got it again)
+          else if (level === 'light' && !visitor && !recovered && good >= 4) { recovered = true; good = 0; quick = 1; set('', 'auto'); }   // only once: a computer that struggles again stays calm; the next look comes at once
         }
         later(quick > 0 ? (quick--, 0) : 15000);
       };

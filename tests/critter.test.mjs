@@ -21,7 +21,14 @@
  * for 6 s, then rests for 20 s. Every step is looked at (none bigger than the kind can fly in that time, none back), and so are the company it keeps with the pointer, where it rests and how
  * it strolls. A light look at the real box a few times a second proves that the browser draws what the legs say. (A look at the box every frame would cost the busy page so much that its
  * timers run late, and the busy page is what must be judged: those checks that depend on the timing say so and are left out when the legs came 300 ms apart or more.) The page's own calm mode
- * is only simulated here (the attribute and the event); the real switch (a slow processor), with the wings of the follower running in "light" and the flight going on, is in tests/calm.test.mjs. */
+ * is only simulated here (the attribute and the event); the real switch (a slow processor), with the wings of the follower running in "light" and in "most" and the flight going on, is in tests/calm.test.mjs.
+ *
+ * A BUSY PAGE (busy): every frame the page draws costs 90 ms of its own turn (the browser's own requestAnimationFrame, taken before the pretend clock replaces it), so the page draws about ten
+ * frames a second at best, much fewer on a busy computer. The creature must still reach the pointer three times, never go back on the way, every leg must have its start time at once, and a change
+ * of kind must end. Once more in a browser that takes no start time for an animation (NO_START: the page's fallback, which asks the leg how far it is and waits for a leg that is not drawn yet).
+ * A CHANGE OF KIND THAT CANNOT GET OUT (stuck): the animation clock of the page is made to stand still, so the creature can never reach the edge; 5 s on it is still what it was, 13 s on the
+ * other kind is there. "Pause animations" while the change starts (the creature is in sight): it stays where it is, as what it is; when it is already out of sight: it is back, parked inside the
+ * hero, as the other kind. A window made smaller puts a parked creature, and one that follows a pointer beyond the new edge, back inside the hero. */
 import { run, open, ok, info, until, ms, machine } from './lib.mjs';
 
 const DESK = { width: 1440, height: 900 };
@@ -85,6 +92,26 @@ const LEG_LOG = () => {
   };
 };
 const legsLog = (p) => p.evaluate(() => window.__legs.slice());
+// Written into the page before its own scripts, and so before the pretend clock replaces it: the browser's own requestAnimationFrame (for the busy page below).
+const REAL_RAF = () => { window.__raf = window.requestAnimationFrame.bind(window); };
+// A browser that does not take a start time for an animation (the setter is there and does nothing): the page then asks the leg how far it is, as it did before it gave every leg its start time.
+const NO_START = () => {
+  const d = Object.getOwnPropertyDescriptor(Animation.prototype, 'startTime');
+  Object.defineProperty(Animation.prototype, 'startTime', { configurable: true, enumerable: d.enumerable, get: d.get, set() { /* refused */ } });
+};
+// A busy page: every frame it draws costs `jank` ms of its own turn, so it draws about ten at best and its timers come in between (a slow phone, a laptop with many things open).
+// Resolves with the frames a second it manages.
+const busyStart = (p, jank) => p.evaluate((jank) => new Promise((resolve) => {
+  let n = 0; const t0 = performance.now();
+  (function loop() { window.__raf(() => { const t = performance.now(); while (performance.now() - t < jank); if (++n === 5) resolve(Math.round(n * 1000 / (performance.now() - t0))); loop(); }); })();
+}), jank);
+// how far the creature gets from a spot (hero coordinates) after it has been nearer, every 50 ms from inside the page: a creature that goes straight for the spot never gets farther
+const tripStart = (p, target) => p.evaluate((t) => {
+  const el = document.querySelector('#bee-fly'), w = el.offsetWidth / 2, h = el.offsetHeight / 2, rows = [];
+  window.__trip = { rows, iv: setInterval(() => { const m = new DOMMatrixReadOnly(getComputedStyle(el).transform); rows.push(Math.hypot(m.m41 + w - t[0], m.m42 + h - t[1])); }, 50) };
+}, target);
+const tripStop = (p) => p.evaluate(() => { clearInterval(window.__trip.iv); return window.__trip.rows; });
+const regress = (rows) => { let best = Infinity, worst = 0; for (const d of rows) { best = Math.min(best, d); worst = Math.max(worst, d - best); } return worst; };
 
 const TF = /translate\(([-\d.]+)px, ([-\d.]+)px\) (?:scaleX\(([-\d.]+)\)|rotate\(([-\d.]+)deg\))/;
 const legOf = (l) => {
@@ -119,8 +146,8 @@ function legChecks(raw, kind, { joins = false } = {}) {
 const said = (list) => (list.length ? list.slice(0, 3).join(' | ') + (list.length > 3 ? ` ... (${list.length})` : '') : '');
 
 // Moves the pointer to (x, y) over the hero (window pixels) and leaves it there; waits (real time) until the middle of the creature's box is within `tol` px of it.
-async function follows(p, x, y, { tol = 60, limit = 15000 } = {}) {
-  await p.mouse.move(x, y, { steps: 5 });
+async function follows(p, x, y, { tol = 60, limit = 15000, steps = 5 } = {}) {
+  await p.mouse.move(x, y, { steps });
   const want = await inHero(p, x, y), t0 = Date.now(), end = t0 + ms(limit);
   let at = await centre(p);
   while (dist(at, want) > tol && Date.now() < end) { await realWait(80); at = await centre(p); }
@@ -283,6 +310,26 @@ async function behaviour(browser, base, errs, kind, ck) {
   f = await farFollows(p);
   ck(`${kind}: back to spring: it follows`, f.ok, told(f));
 
+  // the window made smaller while the pointer rests beyond the new right edge of the hero (the page still has the pointer's last place): the creature comes to the edge, inside, not out of sight
+  f = await follows(p, 1100, 400);
+  ck(`${kind}: (it is at the pointer, on the right of the big window)`, f.ok, told(f));
+  await hold(p, 1100, 400);
+  await p.setViewportSize({ width: 820, height: 700 });
+  await soon(ck, `${kind}: the window made 820 px wide while the pointer rests at x 1100: the ${kind} comes to the right edge of the hero, inside it`, () => p.evaluate(() => { const r = document.querySelector('#bee-fly').getBoundingClientRect(), h = document.querySelector('#top').getBoundingClientRect(); return { cx: Math.round(r.x - h.x + r.width / 2), cy: Math.round(r.y - h.y + r.height / 2), w: Math.round(h.width), h: Math.round(h.height) }; }), (v) => v.cx <= v.w + 1 && v.cx >= v.w - 60 && v.cy >= 0 && v.cy <= v.h, 8000);
+  await release(p);
+  await p.setViewportSize(DESK); await realWait(500);
+  // a creature that is PARKED (Pause) beyond the new right edge is put back inside it at once: the hero hides what lies outside, and a parked creature does not move again by itself
+  f = await follows(p, 1100, 400);
+  await p.evaluate((sel) => document.querySelector(sel).click(), PAUSE);
+  await soon(ck, `${kind}: (Pause: no flight is running)`, () => legsOf(p), (n) => n === 0, 6000);
+  const right = await centre(p);
+  await p.setViewportSize({ width: 820, height: 700 });
+  await soon(ck, `${kind}: parked at x ${Math.round(right[0])}, the window is made 820 px wide: the ${kind} is put back inside the hero (it used to be left outside, hidden)`, () => p.evaluate(() => { const r = document.querySelector('#bee-fly').getBoundingClientRect(), h = document.querySelector('#top').getBoundingClientRect(); return { cx: Math.round(r.x - h.x + r.width / 2), cy: Math.round(r.y - h.y + r.height / 2), w: Math.round(h.width), h: Math.round(h.height) }; }), (v) => right[0] > v.w + 40 && v.cx <= v.w + 1 && v.cx > 0 && v.cy >= 0 && v.cy <= v.h, 6000);
+  s = await stays(p, 800);
+  ck(`${kind}: ...and it stays there, parked (moved ${s.moved} px, flights ${s.legs})`, s.still && s.legs === 0, JSON.stringify(s));
+  await p.setViewportSize(DESK); await realWait(500);
+  await p.evaluate((sel) => document.querySelector(sel).click(), PAUSE);   // Play
+  ck(`${kind}: ...Play, the big window again: data-calm is gone`, (await calmOf(p)) === null);
   await p.setViewportSize({ width: 820, height: 700 }); await realWait(700);
   await p.setViewportSize(DESK); await realWait(900);
   f = await farFollows(p);
@@ -348,10 +395,44 @@ async function behaviour(browser, base, errs, kind, ck) {
     await realWait(600);
     f = await farFollows(p);
     ck(`${kind}: ...and then it follows the pointer, as the other kind`, f.ok, told(f));
-    const before2 = await kindOf(p);
-    await p.evaluate(() => window.WISE_ACRES.critter.swap()); await realWait(300);
-    await p.click(PAUSE);
-    await soon(ck, `${kind}: "Pause animations" while it is away changing kind: it is back at once, in the other kind, parked inside the hero`, () => p.evaluate(() => { const r = document.querySelector('#bee-fly').getBoundingClientRect(), h = document.querySelector('#top').getBoundingClientRect(); return { kind: document.querySelector('#bee-fly').dataset.kind, x: Math.round(r.x - h.x), legs: document.querySelector('#bee-fly').getAnimations().length, w: Math.round(h.width) }; }), (v) => v.kind !== before2 && v.legs === 0 && v.x > -10 && v.x < v.w, 8000);
+    // "Pause animations" the moment the change of kind starts (one turn of the page: the creature has not moved yet, it is in sight): it stays where it is, as what it is, and the change waits
+    // (it used to be put at the edge in the other kind: a jump from the middle of the sky to x 12)
+    const k1 = await kindOf(p);
+    const still = await p.evaluate((sel) => {
+      const el = document.querySelector('#bee-fly'), hero = document.querySelector('#top');
+      const mid = () => { const r = el.getBoundingClientRect(), h = hero.getBoundingClientRect(); return [r.x - h.x + r.width / 2, r.y - h.y + r.height / 2]; };
+      const before = mid(), was = el.dataset.kind;
+      window.WISE_ACRES.critter.swap();
+      document.querySelector(sel).click();
+      return { before, after: mid(), was, now: el.dataset.kind, legs: el.getAnimations().length, w: hero.clientWidth, calm: document.documentElement.getAttribute('data-calm') };
+    }, PAUSE);
+    ck(`${kind}: "Pause animations" just as the change of kind starts (it is still in sight): it stays where it is (moved ${r1(dist(still.before, still.after))} px, from x ${Math.round(still.before[0])}), as a ${still.was}, nothing flies`, still.calm === 'all' && still.now === still.was && still.was === k1 && still.legs === 0 && dist(still.before, still.after) < 2 && still.after[0] > 0 && still.after[0] < still.w, JSON.stringify(still));
+    s = await stays(p, 1000);
+    ck(`${kind}: ...and it stays there (moved ${s.moved} px)`, s.still && s.legs === 0, JSON.stringify(s));
+    await p.evaluate((sel) => document.querySelector(sel).click(), PAUSE);   // Play
+    f = await farFollows(p);
+    ck(`${kind}: ...Play: it follows the pointer, still a ${k1}`, f.ok && (await kindOf(p)) === k1, told(f));
+    // ... when it is already out of sight, changing kind, Pause brings it back at once as the other kind, parked inside the hero (a creature outside the hero would never be seen again)
+    const gone = await p.evaluate((sel) => new Promise((resolve) => {
+      const el = document.querySelector('#bee-fly'), hero = document.querySelector('#top'), was = el.dataset.kind, t0 = performance.now();
+      window.WISE_ACRES.critter.swap();
+      const iv = setInterval(() => {
+        const r = el.getBoundingClientRect(), h = hero.getBoundingClientRect(), out = r.right <= h.left + 6 || r.left >= h.right - 6;   // (fewer than 8 px of its box inside the hero: out of sight, by the page's own rule)
+        if (el.dataset.kind !== was) { clearInterval(iv); resolve({ missed: true, was, now: el.dataset.kind }); return; }   // it was back before this looked: nothing to judge
+        if (out || performance.now() - t0 > 25000) {
+          clearInterval(iv); document.querySelector(sel).click();
+          const r2 = el.getBoundingClientRect(), h2 = hero.getBoundingClientRect();
+          resolve({ out, was, now: el.dataset.kind, x: Math.round(r2.x - h2.x), legs: el.getAnimations().length, w: Math.round(h2.width), calm: document.documentElement.getAttribute('data-calm') });
+        }
+      }, 16);
+    }), PAUSE);
+    if (gone.missed) info(`${kind}: the change of kind was over before it could be looked at while out of sight (too busy to judge Pause while it is away)`);
+    else ck(`${kind}: "Pause animations" while it is out of sight changing kind: it is back at once, in the other kind, parked inside the hero (x ${gone.x} of ${gone.w})`, gone.out && gone.calm === 'all' && gone.now !== gone.was && gone.legs === 0 && gone.x > -10 && gone.x < gone.w, JSON.stringify(gone));
+    s = await stays(p, 800);
+    ck(`${kind}: ...and it stays there, parked (moved ${s.moved} px)`, s.still && s.legs === 0, JSON.stringify(s));
+    await p.evaluate((sel) => document.querySelector(sel).click(), PAUSE);   // Play
+    f = await farFollows(p);
+    ck(`${kind}: ...Play: it follows the pointer`, f.ok, told(f));
   }
 
   // ---- 8. all the legs this page started: short, straight, transform only, not faster than the kind, and every one has its start time at once
@@ -525,12 +606,85 @@ async function guests(browser, base, errs, kind, ck) {
   await ph.context().close();
 }
 
+/* ---------------------------------------------------------------- a busy page: a computer that draws a frame only now and then */
+// The page is made busy the way a slow phone is: every frame it draws costs 90 ms of its own turn. A leg that waits for the next DRAWN frame to start is then not started when the next look comes
+// (the look found it "not started", threw it away and began again, and the creature stood still or went back); the creature must still glide to the pointer, never go back, and a change of kind must end.
+// With { nostart: true } the browser takes no start time for an animation (the fallback of the page: it asks the leg how far it is, and waits for a leg that is not drawn yet).
+async function busy(browser, base, errs, kind, ck, { nostart = false } = {}) {
+  const tag = `${kind}, a busy page${nostart ? ' in a browser that takes no start time' : ''}`;
+  const p = await open(browser, base, 'index.html', errs, { viewport: DESK, query: 'critter=' + kind, routes: async (pg) => {
+    await pg.addInitScript(LEG_LOG); await pg.addInitScript(REAL_RAF);
+    if (nostart) await pg.addInitScript(NO_START);
+  } });
+  await seen(p);
+  const fps = await busyStart(p, 90);
+  info(`${tag}: the page manages ${fps} frames a second`);
+  const trips = [];
+  for (const [x, y] of nostart ? [[1200, 520], [250, 420]] : [[1200, 520], [250, 420], [900, 300]]) {
+    await tripStart(p, await inHero(p, x, y));
+    const f = await follows(p, x, y, { limit: 25000, steps: 1 });   // (one pointer event: the spot is the same from the first look to the last, so any step away from it is the creature's own)
+    trips.push({ f, back: regress(await tripStop(p)) });
+  }
+  ck(`${tag}: it flies to the pointer, ${trips.length} far spots one after the other (${trips.map((t) => t.f.ok ? t.f.secs.toFixed(1) + ' s' : 'NOT').join(', ')})`, trips.every((t) => t.f.ok), trips.map((t) => told(t.f)).join(' | '));
+  const back = Math.max(...trips.map((t) => t.back));
+  // (without a start time of its own a leg is read at the last drawn frame, which on a busy page is up to a tenth of a second behind: a small step back is all that is left of the old jumping)
+  const most = nostart ? 70 : 25;
+  ck(`${tag}: ...and on the way it never goes back (at worst ${Math.round(back)} px farther from the spot than it had been; at most ${most})`, back <= most, trips.map((t) => Math.round(t.back)).join(', '));
+  const raw = await legsLog(p);
+  if (nostart) ck(`${tag}: (the browser really took no start time: no leg had one at once)`, raw.length > 5 && raw.every((l) => l.pending === true), JSON.stringify(raw.slice(0, 2)));
+  else {
+    const legs = legChecks(raw, kind, { joins: true });
+    ck(`${tag}: ...its ${legs.n} legs are short and straight, each has its start time at once and begins where the one before it had got to`, legs.n > 10 && legs.bad.shape.length + legs.bad.speed.length + legs.bad.start.length + legs.bad.join.length === 0, said([...legs.bad.shape, ...legs.bad.speed, ...legs.bad.start, ...legs.bad.join]) || `${legs.n} legs`);
+  }
+  if (!nostart) {   // a change of kind in a busy page ends, and the new kind flies to the pointer
+    const was = await kindOf(p);
+    await p.evaluate(() => window.WISE_ACRES.critter.swap());
+    await soon(ck, `${tag}: a change of kind ends (the other kind is there)`, () => kindOf(p), (k) => k !== was, 30000);
+    const f = await farFollows(p, { limit: 25000 });
+    ck(`${tag}: ...and the new kind flies to the pointer`, f.ok, told(f));
+  }
+  await p.context().close();
+}
+
+/* ---------------------------------------------------------------- a change of kind that cannot get out */
+// However it goes wrong, a change of kind ends (while it lasts the pointer is not followed): at the latest 12 s after it began, the other kind is there. The fault is made on purpose: the
+// animation clock of the page stands still, so the creature can never tell that a leg has got anywhere and never reaches the edge of the hero. The pretend clock is held and moved by hand.
+async function stuck(browser, base, errs, kind, ck) {
+  const other = kind === 'bee' ? 'butterfly' : 'bee';
+  const p = await open(browser, base, 'index.html', errs, { viewport: DESK, query: 'critter=' + kind });
+  await seen(p);
+  let f = await farFollows(p);
+  ck(`${kind}: (it follows the pointer, before the change of kind that cannot get out)`, f.ok, told(f));
+  await p.evaluate(() => {
+    const c = document.timeline.currentTime;
+    Object.defineProperty(document.timeline, 'currentTime', { configurable: true, get: () => c });   // the clock of the animations stands still
+    window.WISE_ACRES.critter.swap();
+  });
+  await p.clock.pauseAt(new Date((await p.evaluate(() => Date.now())) + 1000));
+  await p.clock.fastForward(4000);
+  await realWait(300);
+  ck(`${kind}: the change of kind starts but the creature cannot get out: 5 s on it is still a ${kind} (the change is given time to fly out)`, (await kindOf(p)) === kind, await kindOf(p));
+  await p.clock.fastForward(8000);
+  await soon(ck, `${kind}: ...13 s on the ${other} is there whatever went wrong (a change of kind can never stay stuck)`, () => kindOf(p), (k) => k === other, 6000);
+  await p.evaluate(() => { delete document.timeline.currentTime; });
+  await p.clock.resume();
+  f = await farFollows(p);
+  ck(`${kind}: ...and the ${other} follows the pointer (nothing of the change was left behind)`, f.ok, told(f));
+  await p.context().close();
+}
+
 await run('critter', async ({ browser, base, errs }) => {
   const load = machine();
   info(`the computer's load while this test started: ${load.load.toFixed(1)} on ${load.cores} cores`);
   const t0 = Date.now();
   const plan = [];
-  for (const kind of KINDS) for (const [name, fn] of [['behaviour', behaviour], ['smoothness', smoothness], ['guests', guests]]) {
+  // (the rest of the guests, a busy page and a change of kind that cannot get out are run one after the other in one chain: a busy page uses a whole processor)
+  const guestsAll = async (browser, base, errs, kind, ck) => {
+    for (const [name, fn] of [['guests', guests], ['busy', busy], ['busy, no start time', (...a) => busy(...a, { nostart: true })], ['stuck', stuck]]) {
+      try { await fn(browser, base, errs, kind, ck); } catch (e) { ck(`${kind}: ${name}: the test ran to the end`, false, String(e && e.stack ? e.stack.split('\n').slice(0, 3).join(' / ') : e)); }
+    }
+  };
+  for (const kind of KINDS) for (const [name, fn] of [['behaviour', behaviour], ['smoothness', smoothness], ['guests', guestsAll]]) {
     plan.push((async () => {
       const c = chain();
       try { await fn(browser, base, errs, kind, c.ck); } catch (e) { c.ck(`${kind}: ${name}: the test ran to the end`, false, String(e && e.stack ? e.stack.split('\n').slice(0, 3).join(' / ') : e)); }

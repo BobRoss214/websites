@@ -6,9 +6,11 @@
  * still works (a badge earned while paused shows and goes away by itself, without the rain of fruit), nothing is stored, and with "reduce
  * motion" in the system the buttons are not there. The automatic switch for a phone that cannot draw the hero smoothly (Chromium's processor
  * slowed down 6x): first the smallest decorations rest and the falling leaves fade out (data-calm="light"; the bee or butterfly keeps flying and keeps its wings), then every endless animation but the ones
- * that show something (data-calm="most"; the follower keeps flying, its wings rest), the buttons show pressed and one press turns motion back on for good; a page that calmed itself to "light" goes
- * back to full motion by itself, once, when the computer is fast again; at full speed it does not switch (skipped when this computer itself cannot draw 40 frames a second). After Pause and Play
- * the falling leaves still tip the way they drift. */
+ * that show something (data-calm="most"; the follower keeps flying and keeps its wings: only the visitor's Pause stops it), the buttons show pressed and one press turns motion back on for good; a page that
+ * calmed itself to "light" goes back to full motion by itself, once, when the computer is fast again; at full speed it does not switch (skipped when this computer itself cannot draw 40 frames a second).
+ * After Pause and Play the falling leaves still tip the way they drift. The automatic check is also run on a pretend clock with pretend frames (section 5: nothing in it depends on how busy this computer
+ * is): a computer that is only fine once "light" is set goes light, full, and light again after ONE bad look (not after three); one that was only slow while the page loaded stays at full motion; one that
+ * never gets better goes on to "most"; and the falling leaves keep going for the 0.6 s they fade out in, and rest only after. */
 import { run, open, ok, okSoon, info, until, ms } from './lib.mjs';
 
 const LABELS = {   // "Pause animations" / "Play animations", as in lang/src/<code>.json
@@ -224,9 +226,9 @@ await run('calm', async ({ browser, base, errs }) => {
     ok('...and the bee or butterfly still glides to a touch on the hero (its flight goes on in "light")', g1.ok, JSON.stringify(g1));
     const most = await until(slow, () => document.documentElement.getAttribute('data-calm') === 'most', null, 45000);
     const m = await now(slow);
-    const shows = await slow.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect.getTiming().iterations === Infinity).map((a) => a.effect.target.matches('.live-dot, .chip-rel .ico, .now-badge, .rig, .rig *')));
-    ok('...still slow: data-calm="most", every endless animation rests except the ones that show something ("open now" dot, bell, "now" badge) and the tractor and the barrel train', most && shows.every(Boolean), `${JSON.stringify(m)} running: ${shows}`);
-    ok('...in "most" the follower\'s wings and bobbing rest too', most && m.bee === 0, JSON.stringify(m));
+    const shows = await slow.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect.getTiming().iterations === Infinity).map((a) => a.effect.target.matches('.live-dot, .chip-rel .ico, .now-badge, .rig, .rig *, #bee-fly, #bee-fly *')));
+    ok('...still slow: data-calm="most", every endless animation rests except the ones that show something ("open now" dot, bell, "now" badge), the tractor and the barrel train, and the follower\'s wings', most && shows.every(Boolean), `${JSON.stringify(m)} running: ${shows}`);
+    ok('...in "most" the follower keeps its wings and its bobbing too (a creature that flies on with frozen wings looks broken; only the visitor\'s Pause stops it)', most && m.bee > 0, JSON.stringify(m));
     const g2 = await beeGoes(slow, 80, top + 250);
     ok('...but it still flies to a touch on the hero (the flight is never stopped by the calm mode)', g2.ok, JSON.stringify(g2));
     const drive = await slow.evaluate(() => [...document.querySelectorAll('.rig')].map((r) => { const a = r.getAnimations().find((x) => x.animationName === 'rigDrive'); return a ? a.playState : 'none'; }));
@@ -234,7 +236,7 @@ await run('calm', async ({ browser, base, errs }) => {
     await slow.click(HERO);
     const back = await now(slow);
     ok('one press on the (pressed) button: motion is back', back.calm === null && back.pressed === 'false,false' && back.loopsRunning > 5, JSON.stringify(back));
-    await okSoon('...the follower\'s wings and bobbing run again', () => now(slow), (v) => v.bee > 0, 10000);
+    await okSoon('...the follower\'s wings and bobbing are running', () => now(slow), (v) => v.bee > 0, 10000);
     await realWait(ms(7000));
     ok('...and the page does not switch by itself again, however slow it is', (await now(slow)).calm === null);
     await slow.context().close();
@@ -253,7 +255,76 @@ await run('calm', async ({ browser, base, errs }) => {
     else ok('a page that calmed itself ("light") goes back to full motion by itself when the computer is fast again, and the buttons show not pressed', first === 'light' && gone && end.pressed === 'false,false', `${first} then ${end.calm}, ${JSON.stringify(end)}`);
     await q.context().close();
   };
-  await Promise.all([mainFlow(), recoverFlow()]);
+  // ---------------------------------------------------------------- 5. the same automatic check on a pretend clock with pretend frames
+  // The check counts the frames the page draws in 2-s spells (requestAnimationFrame, the page's clock). Here both are the pretend ones: the clock is moved by hand (runFor) and every pretend frame comes
+  // 50 ms (20 a second: struggling) or 16 ms (60 a second: fine) after the last, so the result does not depend on how busy this computer is. No long-task timing (Safari and Firefox have none): frames
+  // alone count. Every change of data-calm is written down with the pretend time (the page's own "wa:calm" event), and 0.3 s and 0.75 s after it the falling leaves are counted (how many rest) and the
+  // follower's loops (how many run).
+  //   A: slow while nothing rests, fine once "light" is set (a phone that needs the calm mode): "light", then full motion after four good spells, then "light" AGAIN after one bad spell (it used to take three).
+  //   B: slow whatever rests: "light", then "most"; the follower keeps its wings in both.
+  //   C: slow only for the first 6 s (a page that was only slow while it loaded): "light", then full motion, and it stays there.
+  const simulate = async (name, { slowUntil, onlyUncalm, sim }) => {
+    const q = await open(browser, base, 'index.html', errs, {
+      viewport: { width: 1440, height: 900 }, query: 'critter=bee',
+      routes: async (pg) => {
+        await pg.addInitScript(() => {
+          Object.defineProperty(Navigator.prototype, 'webdriver', { configurable: true, get: () => false });   // (a browser run by a program never switches by itself)
+          window.PerformanceObserver = function () { this.observe = function () { throw new Error('no long tasks here'); }; this.takeRecords = function () { return []; }; };
+        });
+      },
+    });
+    await realWait(1000);   // (the page's observers need a real drawn frame to say that the hero is in sight)
+    await q.evaluate(({ slowUntil, onlyUncalm }) => {
+      const log = window.__calmLog = [];
+      let t0 = null;
+      window.requestAnimationFrame = function (cb) {
+        if (t0 === null) t0 = performance.now();
+        const slow = onlyUncalm ? !document.documentElement.getAttribute('data-calm') : performance.now() - t0 < slowUntil;
+        return window.setTimeout(function () { cb(performance.now()); }, slow ? 50 : 16);
+      };
+      window.cancelAnimationFrame = function (id) { window.clearTimeout(id); };
+      const leaves = () => { const box = document.querySelector('.particles'), l = box ? box.getAnimations({ subtree: true }).filter((a) => a.animationName === 'heroFall') : []; return { n: l.length, paused: l.filter((a) => a.playState === 'paused').length }; };
+      const wings = () => document.querySelector('#bee-fly').getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && a.effect.getTiming().iterations === Infinity).length;
+      document.addEventListener('wa:calm', (e) => {
+        const rec = { at: Math.round(performance.now()), level: e.detail.level, by: e.detail.by, attr: document.documentElement.getAttribute('data-calm') || '' };
+        log.push(rec);
+        setTimeout(() => { rec.leaves300 = leaves(); rec.wings300 = wings(); }, 300);
+        setTimeout(() => { rec.leaves750 = leaves(); rec.wings750 = wings(); }, 750);
+      });
+    }, { slowUntil, onlyUncalm });
+    await q.clock.pauseAt(new Date((await q.evaluate(() => Date.now())) + 4000));   // (the page started its first look 4 s after it loaded)
+    const t0 = await q.evaluate(() => Math.round(performance.now()));
+    for (let t = 0; t < sim; t += 2000) await q.clock.runFor(2000);
+    const log = (await q.evaluate(() => window.__calmLog)).map((r) => ({ ...r, at: r.at - t0 }));
+    await q.context().close();
+    return log;
+  };
+  const shown = (log) => log.map((r) => `${r.level || 'full motion'} at ${(r.at / 1000).toFixed(1)} s`).join(', ');
+  const simA = async () => {
+    const log = await simulate('A', { slowUntil: Infinity, onlyUncalm: true, sim: 28000 });
+    const seq = log.map((r) => r.level).join(',');
+    ok(`a computer that is only slow while nothing rests (pretend frames): light, then full motion, then light again, all by the page itself, and it stays there (${shown(log)})`, seq === 'light,,light' && log.every((r) => r.by === 'auto' && r.attr === r.level), `${seq} ${JSON.stringify(log)}`);
+    if (log.length >= 3) {
+      ok(`...it goes back to full motion after four good looks of 2 s (${((log[1].at - log[0].at) / 1000).toFixed(1)} s later)`, log[1].at - log[0].at >= 7500 && log[1].at - log[0].at <= 11000);
+      ok(`...and ONE bad look puts it back to "light" (${((log[2].at - log[1].at) / 1000).toFixed(1)} s after the way back; it used to take three looks, over 10 s, in which the phone struggled again)`, log[2].at - log[1].at <= 3500, JSON.stringify(log.map((r) => r.at)));
+    }
+    const lights = log.filter((r) => r.level === 'light' && r.leaves750);
+    ok('...the falling leaves keep falling for the 0.3 s of their fade and rest after it (0 of them rest after 0.3 s, all after 0.75 s), each time "light" is set', lights.length >= 2 && lights.every((r) => r.leaves300.n > 4 && r.leaves300.paused === 0 && r.leaves750.paused === r.leaves750.n), JSON.stringify(lights.map((r) => [r.leaves300, r.leaves750])));
+    ok('...the follower\'s wings run in "light" (after 0.75 s), and when full motion is back', log.filter((r) => r.wings750 !== undefined).every((r) => r.wings750 > 0), JSON.stringify(log.map((r) => r.wings750)));
+    const full = log.find((r) => r.level === '' && r.leaves750);
+    ok('...and when full motion is back no leaf rests', !!full && full.leaves750.n > 4 && full.leaves750.paused === 0, JSON.stringify(full && full.leaves750));
+  };
+  const simB = async () => {
+    const log = await simulate('B', { slowUntil: Infinity, onlyUncalm: false, sim: 16000 });
+    ok(`a computer that is slow whatever rests (pretend frames): light, then most (${shown(log)})`, log.map((r) => r.level).join(',') === 'light,most' && log.every((r) => r.by === 'auto'), JSON.stringify(log));
+    ok('...the follower keeps its wings and its bobbing in both (only the visitor\'s Pause stops it)', log.length === 2 && log.every((r) => r.wings750 > 0), JSON.stringify(log.map((r) => r.wings750)));
+    ok('...going from "light" to "most" the leaves are rested already (the layer is out of sight) and stay so', log.length === 2 && log[1].leaves300.paused === log[1].leaves300.n && log[1].leaves300.n > 4, JSON.stringify(log.map((r) => r.leaves300)));
+  };
+  const simC = async () => {
+    const log = await simulate('C', { slowUntil: 6000, onlyUncalm: false, sim: 28000 });
+    ok(`a computer that was only slow for the first 6 s (pretend frames): light, then full motion, and it stays at full motion (${shown(log)})`, log.map((r) => r.level).join(',') === 'light,' && log.every((r) => r.by === 'auto'), JSON.stringify(log));
+  };
+  await Promise.all([mainFlow(), recoverFlow(), simA(), simB(), simC()]);
 
   const fast = await open(browser, base, 'index.html', errs, real(1));
   await realWait(ms(17000));   // the page looks 6 times, 2 s each, from 4 s after loading
