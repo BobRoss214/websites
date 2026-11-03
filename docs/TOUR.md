@@ -60,7 +60,11 @@ Each file adds its steps to one list:
     allowClicks: false,              // true: the owner may click the page while the card is up ("try it" steps)
     skipIfMissing: false,            // true: leave the step out when its target is not there (a card that only shows in some seasons)
     before: function (ctx) { /* runs before the card shows: open a menu, choose a tab ... may return a Promise */ },
-    after: function (ctx) { /* runs when the step is left (and when the tour is closed on it) */ }
+    after: function (ctx) { /* runs when the step is left (and when the tour is closed on it) */ },
+    choicesLabel: 'See it in:',      // optional: a few words above the row of small buttons below (also the name of that group for a screen reader)
+    choices: [                       // optional: a row of small buttons on the card (see "A row of small buttons" below)
+      { label: 'Spring', title: 'Spring', text: 'What shows now.', run: function (ctx) { /* change the page; may return a Promise */ } }
+    ]
   }
 );
 ```
@@ -76,6 +80,53 @@ What to know:
 - **The pretend account pages** (account, farm-desk, kitchen) only exist in demo mode. When demo mode is off (`WA_DEMO_MODE()` is false) their steps are left out completely: they are not counted and not in Contents.
 - The same id twice: the first one wins. Two steps with the same order keep the order of the files and of the list.
 - Pictures, prices and hours in a card must come from the site itself. Never invent one.
+
+## A row of small buttons on a card (`choices`)
+
+A step may put a row of small buttons on its card, between the words and Back / Next. Pressing one runs the button's own `run(ctx)` (a Promise is waited for, 8 seconds at most; one that throws does not stop the card),
+and then the card shows that button's `title` and `text` instead of the step's own, and the lit box is measured again (the part may have grown, shrunk or moved).
+The engine remembers nothing else: **what `run` changed on the page is put back by the step's `after()`** (or by `ctx.undo`), like everything else a step does. The tour waits for a press that is still being carried out
+before it runs `after()`, and a press is ignored while the tour is moving to another step.
+
+```
+choices: [                                  // or a function(ctx) that gives the list when the card shows (so it can look at what before() did)
+  { label: 'Spring',                        // the words on the button (required: an entry without a label is left out)
+    title: 'Spring',                        // optional: the card's title while this button is pressed (the step's own title when left out)
+    text: 'What the lit box shows now.',    // optional: the card's text while this button is pressed (the step's own text when left out). 45 words at most
+    run: function (ctx) { /* change the page */ },   // optional
+    pressed: false },                       // optional: true when this choice is already in effect when the card shows (because before() did it)
+  ...
+]
+```
+
+- A card shown anew starts with no button pressed (and the step's own words), unless a choice says `pressed: true`. Contents and Back from Contents show the same step again with the same button pressed.
+- Every button is a real button: Tab reaches it, Enter or Space presses it, a screen reader hears "pressed". The new title and text are announced once.
+- The step needs an `after()` that puts the page back. `tests/tour-targets.test.mjs` runs every `run` of every step, one after the other, and then `after()`, and checks the page is as it was.
+
+### The season walk (`js/tour-steps.js`)
+
+Every part of the site that changes with the season has a row of four buttons, Spring, Summer, Fall and Winter. Pressing one switches the **whole page** to that season, as a visitor would see it in the middle of it, while the lit box stays on that part,
+and the card says what the lit part shows now and what is different from the season before. The step is written like this:
+
+```
+{ id: 'ch3-week', order: 302, chapter: 3, page: 'index', target: '#this-week', title: '...', text: 'What the box is. Press a season to see it.',
+  choices: seasonWalk({ spring: 'What shows in spring.', summer: { title: 'Optional own title', text: 'What shows in summer.' }, fall: '...', winter: '...' }),
+  before: seasonsBegin, after: seasonsEnd }
+```
+
+What a press does (the helpers are in `js/tour-steps.js`; `js/tour-steps-b.js` uses them as `window.WA_TOUR_SEASONS`):
+
+1. The page's own season switch (`WISE_ACRES.hero.setSeason`, the same as the "See the farm in" buttons): the picture, the headline and buttons, the "What's in season" tabs, the farm cards, the menu link to Playgrounds.
+2. The lines marked `data-in-season` (they show only while that season is really on) are shown, as they would be on those days.
+3. The parts that follow the clock (the strip at the top, the countdown, "This week at the farm", the open-now badges) draw themselves again for a **pretend day**: the Saturday on or before the middle of that season's dates (`js/season.js`),
+   in the latest year when that day is not after today. The clock is pretended only while they draw (an instant), then it is the real one again. A pretend day is never after today, so no line with a last day (`data-until`) is hidden by it.
+
+`seasonsEnd` (in `after`) puts everything back: the season switch, every `data-only` line as it was, the open tabs, and the clock parts drawn again with the real date. It also runs when the owner presses Next, Back, a part in Contents or Close.
+Changes and the putting back are made one after the other, so a quick Next never leaves the page half-changed.
+
+Writing the words of a season: what the lit box shows in that season and what is new or gone compared with the season before. A phrase in double curly quotes (“...”) must be in the lit box in that season
+(`tests/tour-targets.test.mjs` checks it); a phrase the page says on another day (for example what the strip says after a season ends) goes in single curly quotes (‘...’), which are not checked there.
+Dates are the ones in `js/season.js` and on the site's own pages. A part that does **not** change with the season gets no buttons; its card says so.
 
 ## For the person who builds the preview
 

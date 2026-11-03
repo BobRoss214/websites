@@ -43,20 +43,140 @@
    * Small helpers for before() and after(): plain page code, nothing from the engine
    * ------------------------------------------------------------------ */
   function q(selector) { return document.querySelector(selector); }
-
-  // Peeking at another season with the buttons on the first screen: remember the real season and put it back when the step is left.
-  var heroSeasonAtStart = '';
-  function heroSeason() {
-    var on = q('#season-switch [aria-checked="true"]');
-    return on ? on.getAttribute('data-season') : '';
-  }
-
-  // Trying the four tabs of "What's in season": the same.
-  var tabAtStart = '';
-  function chosenTab() {
+  function all(selector) { return Array.prototype.slice.call(document.querySelectorAll(selector)); }
+  function click(selector) { var e = q(selector); if (e) e.click(); }
+  function pause(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+  function site() { return W.WISE_ACRES || {}; }
+  function onScreen(selector) { var e = q(selector); return !!(e && e.getClientRects().length); }
+  function pageSeason() { return document.documentElement.getAttribute('data-season') || ''; }
+  function chosenTab() {   // the tab of "What's in season" that is open
     var on = q('#season-tabs [aria-selected="true"]');
     return on ? on.getAttribute('data-season') : '';
   }
+  function chosenFarm() {   // the season picked above the "What's on the farm" cards
+    var on = q('#farm-seasons .fs-btn[aria-pressed="true"]');
+    return on ? on.getAttribute('data-fs') : '';
+  }
+
+  /* ------------------------------------------------------------------ *
+   * The season walk. A step with  choices: seasonWalk({ spring: ..., summer: ..., fall: ..., winter: ... }),  before: seasonsBegin  and
+   * after: seasonsEnd  shows Spring, Summer, Fall and Winter on its card. Pressing one changes the WHOLE page to that season, as a visitor
+   * would see it in the middle of it, and the card says what the lit part shows. When the step is left the page is put back as it was.
+   * What a press does, in this order:
+   *   1. the page's own season switch (WISE_ACRES.hero.setSeason, as the "See the farm in" buttons do): the picture, the headline and buttons,
+   *      the "What's in season" tabs, the farm cards, the menu link to Playgrounds;
+   *   2. the lines that say data-in-season (shown only while that season is really on) are shown, as on those days;
+   *   3. the parts that follow the clock (the strip at the top, the countdown, "This week at the farm", the open-now badges) draw themselves again
+   *      for a PRETEND day: the Saturday on or before the middle of that season's dates (js/season.js), in the latest year when that day is not after today.
+   *      The clock is pretended only while they draw (an instant), then it is the real one. A pretend day is never after today, so a line with a
+   *      last day (data-until) is never hidden by it.
+   * Putting back: the season switch again, then every data-only line as it was, the open tabs, and the clock parts drawn again with the real date.
+   * One change after the other (a press is waited for before the page is put back). The walk is also offered to tour-steps-b.js as window.WA_TOUR_SEASONS.
+   * ------------------------------------------------------------------ */
+  var SEASON_IDS = ['spring', 'summer', 'fall', 'winter'];
+  var SEASON_LABELS = { spring: 'Spring', summer: 'Summer', fall: 'Fall', winter: 'Winter' };
+  var SWAP = 320;                  // the page draws a new season 240 ms after the press
+  var walk = null;                 // while a step has changed the page: how it was before, and which season is pretended now
+  var line = Promise.resolve();    // the changes are made, and put back, one after the other
+
+  function queued(job) {
+    line = line.then(job).then(null, function () { /* one change that fails must not stop the ones after it */ });
+    return line;
+  }
+
+  // Runs job() while new Date() and Date.now() say it is `at` (the clock goes on from there); the real Date is back before this returns, whatever happens.
+  function withNow(at, job) {
+    var Real = W.Date, delta = at - Real.now();
+    function Pretend() {
+      if (!(this instanceof Pretend)) return new Real(Real.now() + delta).toString();   // Date() without new gives text
+      if (arguments.length === 0) return new Real(Real.now() + delta);
+      return new (Function.prototype.bind.apply(Real, [null].concat(Array.prototype.slice.call(arguments))))();
+    }
+    Pretend.prototype = Real.prototype;
+    Pretend.now = function () { return Real.now() + delta; };
+    Pretend.UTC = Real.UTC;
+    Pretend.parse = Real.parse;
+    W.Date = Pretend;
+    try { job(); } finally { W.Date = Real; }
+  }
+
+  // The pretend day of a season: the Saturday on or before the middle of its dates, in the latest year when it is not after today (the farm's day).
+  // As a moment: 17:00 UTC, which is noon or 1 pm in New York, so the open-now badges read the same whatever time of day the tour is looked at.
+  function pretendAt(id) {
+    var S = site().seasons, def = null, i, y, today, a, b, mid, sat;
+    if (!S || !S.list || !S.farmDay) return null;
+    for (i = 0; i < S.list.length; i++) if (S.list[i].id === id) def = S.list[i];
+    if (!def) return null;
+    today = S.farmDay(new Date());
+    for (y = today.getFullYear(); y >= today.getFullYear() - 1; y--) {
+      a = def.start(y); b = def.end(y);
+      mid = new Date(a.getFullYear(), a.getMonth(), a.getDate() + Math.floor(Math.round((b - a) / 864e5) / 2));
+      sat = new Date(mid.getFullYear(), mid.getMonth(), mid.getDate() - ((mid.getDay() + 1) % 7));
+      if (sat < a) sat = a;
+      if (sat <= today) return Date.UTC(sat.getFullYear(), sat.getMonth(), sat.getDate(), 17, 0, 0);
+    }
+    return null;
+  }
+
+  function redrawClock() {   // the parts that follow the clock draw themselves again (the page's own code, run for a new day)
+    var S = site();
+    try { if (S.live && S.live.refresh) S.live.refresh(); } catch (e) { /* the page's own problem */ }
+    try { if (S.features && S.features.renderWeek) S.features.renderWeek(); } catch (e) { /* same */ }
+  }
+
+  function take() {   // how the page is now
+    return {
+      season: pageSeason(), tab: chosenTab(), farm: chosenFarm(), pretend: '',
+      lines: all('[data-only]').map(function (el) { return [el, el.hasAttribute('hidden')]; })
+    };
+  }
+
+  function seasonsBegin() { return queued(function () { if (!walk) walk = take(); }); }
+
+  function showSeason(id) {
+    return queued(function () {
+      if (!walk) walk = take();
+      var hero = site().hero, same = pageSeason() === id;
+      if (hero && !same) hero.setSeason(id);
+      return (hero && !same ? pause(SWAP) : Promise.resolve()).then(function () {
+        all('[data-only]').forEach(function (el) {
+          if (el.getAttribute('data-only').split(/\s+/).indexOf(id) >= 0) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+        });
+        var at = pretendAt(id);
+        if (at !== null) withNow(at, redrawClock);
+        walk.pretend = id;
+      });
+    });
+  }
+
+  function seasonsEnd() {
+    return queued(function () {
+      var was = walk, hero = site().hero, away;
+      if (!was) return null;
+      walk = null;
+      away = !!hero && pageSeason() !== was.season;
+      if (away) hero.setSeason(was.season);
+      return (away ? pause(SWAP) : Promise.resolve()).then(function () {
+        was.lines.forEach(function (l) { if (l[1]) l[0].setAttribute('hidden', ''); else l[0].removeAttribute('hidden'); });
+        if (was.tab && chosenTab() !== was.tab) click('#season-tabs [data-season="' + was.tab + '"]');
+        if (was.farm && chosenFarm() !== was.farm) click('#farm-seasons .fs-btn[data-fs="' + was.farm + '"]');
+        if (was.pretend) redrawClock();
+      });
+    });
+  }
+
+  // The four buttons of a step, given the words for each season: a text, or { title, text } when the card's title changes too. Written as a function
+  // because the engine asks for the list when the card shows (the button of a season that is already pretended is shown pressed).
+  function seasonWalk(words) {
+    return function () {
+      return SEASON_IDS.map(function (id) {
+        var w = words[id], one = typeof w === 'string' ? { text: w } : w;
+        return { label: SEASON_LABELS[id], title: one.title, text: one.text, pressed: !!walk && walk.pretend === id, run: function () { return showSeason(id); } };
+      });
+    };
+  }
+
+  W.WA_TOUR_SEASONS = { ids: SEASON_IDS, begin: seasonsBegin, end: seasonsEnd, show: showSeason, walk: seasonWalk, onScreen: onScreen };
 
   var steps = [
 
@@ -71,35 +191,48 @@
       title: 'What is real, and what is pretend',
       text: 'The words, hours and prices come from your own signs, photos and older web page. A few prices are still waiting for you. The account area near the end is a pretend demo. It sends nothing to anyone.'
     },
+    {
+      id: 'ch1-seasons', order: 103, chapter: 1, page: 'index', target: null,
+      title: 'The page changes with the seasons',
+      text: 'Some parts of the site change with the seasons. Those steps have Spring, Summer, Fall and Winter buttons on the card. Press one to switch the whole page. Tell us what is not right, or what should not vanish. Next puts the page back.'
+    },
 
     /* ---------------------------------------------------------------- 2. The first screen */
     {
       id: 'ch2-strip', order: 201, chapter: 2, page: 'index', target: '.announce',
       title: 'The strip at the very top',
-      text: 'This strip is on every page. It says the farm takes reservations only, and The GreenHouse needs none. It also says what is in season, or what comes next, and changes by itself.'
+      text: 'This strip is on every page. It says the farm takes reservations only, and The GreenHouse needs none. It also says what is in season, or what comes next, from the calendar. Press a season.',
+      choices: seasonWalk({
+        spring: 'Spring, April 15 to June 7. The strip begins “In season: Strawberries”. After June 7 it says ‘Next up: Blueberries & sunflowers, usually mid-June’.',
+        summer: 'Summer, June 15 to July 10. It now says “In season: Blueberries & sunflowers”. After July 10 it says ‘Next up: Pumpkins & tomatoes, usually mid-September’.',
+        fall: 'Fall, September 13 to November 8. It says “In season: Pumpkins & tomatoes”. After November 8 it says ‘Next up: Christmas trees at The GreenHouse, usually the Friday after Thanksgiving’.',
+        winter: 'Winter, the Friday after Thanksgiving to December 8. It says “In season: Christmas trees at The GreenHouse”. After December 8 it says ‘Next up: Strawberries, usually mid-April’.'
+      }),
+      before: seasonsBegin, after: seasonsEnd
     },
     {
-      id: 'ch2-seasons', order: 202, chapter: 2, page: 'index', target: '#season-switch', allowClicks: true, skipIfMissing: true,
-      title: 'Peek at the other seasons',
-      text: 'The page dresses itself for the real season, using the calendar. These buttons let you peek at the other seasons. Try Winter. Your site builder can switch these buttons off.',
-      before: function () { if (!heroSeasonAtStart) heroSeasonAtStart = heroSeason(); },
-      after: function () {
-        if (heroSeasonAtStart && heroSeason() !== heroSeasonAtStart) {
-          var button = q('#season-switch [data-season="' + heroSeasonAtStart + '"]');
-          if (button) button.click();
-        }
-        heroSeasonAtStart = '';
-      }
-    },
-    {
-      id: 'ch2-headline', order: 203, chapter: 2, page: 'index', target: '#hero-h',
-      title: 'The words follow the season',
-      text: 'The line under the headline changes with the season. In fall it talks about pumpkins and tomatoes. In winter the headline changes too, and points to the Christmas trees at The GreenHouse.'
+      id: 'ch2-seasons', order: 202, chapter: 2, page: 'index', target: '.hero-copy',
+      title: 'The first screen follows the season',
+      text: 'The page dresses itself for the real season, using the calendar. Headline, line, buttons and picture all follow it. Visitors can peek at other seasons with the buttons at the top. Your site builder can switch them off. Press a season to see it.',
+      choices: seasonWalk({
+        spring: 'Spring. The line says “It’s strawberry season!” and talks about strawberries, flowers and the animals. The buttons are “Reserve your visit” and “See what’s in season”, with a note about The GreenHouse.',
+        summer: 'Summer. The line changes to “It’s blueberry season!” with blueberries, sunflowers and flowers. The buttons and the note stay the same.',
+        fall: 'Fall. The line says “It’s pumpkin season!” and adds tomatoes and basil, wagon rides and a haunted trail. The buttons stay the same. Leaves fall in the picture.',
+        winter: 'Winter. The headline becomes “Wise Acres Christmas trees”. The red button turns into “Visit The GreenHouse”, and the note about The GreenHouse is gone. Snow falls in the picture.'
+      }),
+      before: seasonsBegin, after: seasonsEnd
     },
     {
       id: 'ch2-badges', order: 204, chapter: 2, page: 'index', target: '.hero-live', skipIfMissing: true,
       title: 'Open now, or closed today',
-      text: 'These badges say if the farm and The GreenHouse are open. They follow your real hours and the clock. For a rain day, your site builder adds the date and the badges show closed. Your booking tool needs its own change.'
+      text: 'These badges say if the farm and The GreenHouse are open, from your hours and the clock. For a rain day, your site builder adds the date and they show closed. Your booking tool needs its own change. Press a season.',
+      choices: seasonWalk({
+        spring: 'Spring, on a Saturday at noon. Only The GreenHouse has a badge: “Open now, until 8 pm”. The farm has none, because no farm days are set for spring.',
+        summer: 'Summer, on a Saturday at noon. The same: only The GreenHouse badge, “Open now, until 8 pm”. No farm days are set for summer.',
+        fall: 'Fall, on a Saturday at noon. The farm gets a badge too: “Reserved visits today”. The farm days set are Thursday to Sunday. On other days it names the next reserved day.',
+        winter: 'Winter, on a Saturday at noon. Only The GreenHouse badge, “Open now, until 8 pm”. The farm badge is gone.'
+      }),
+      before: seasonsBegin, after: seasonsEnd
     },
     {
       id: 'ch2-reserve', order: 205, chapter: 2, page: 'index', target: '.hero-cta',
@@ -109,14 +242,43 @@
     {
       id: 'ch2-game', order: 206, chapter: 2, page: 'index', target: '#picker', allowClicks: true,
       title: 'The basket game',
-      text: 'Try it: press the yellow button to pick. Kids can also tap fruit, flowers or trees in the picture. Picking 100 of one kind earns a badge, like Pumpkin Champion. It is only for fun, and nothing is saved.'
+      text: 'Try it: press the yellow button to pick. Kids can also tap fruit, flowers or trees in the picture. Picking 100 of one kind earns a badge, like Pumpkin Champion. It is only for fun, and nothing is saved. Press a season.',
+      choices: seasonWalk({
+        spring: 'Spring. The box says “Try it! Tap the strawberries to pick them.” The yellow button says “Pick a strawberry”.',
+        summer: 'Summer. “Try it! Tap the blueberries to pick them, or snip a sunflower.” The button says “Pick a blueberry”.',
+        fall: 'Fall. “Try it! Tap the pumpkins to pick one, or tap the wagon.” The button says “Pick a pumpkin”.',
+        winter: 'Winter. The game is about trees: “Tap the trees to light them up. Tap a fire to stoke it.” The button says “Light a tree”.'
+      }),
+      before: seasonsBegin, after: seasonsEnd
     },
 
     /* ---------------------------------------------------------------- 3. This week and the menu */
     {
-      id: 'ch3-week', order: 301, chapter: 3, page: 'index', target: '#this-week', skipIfMissing: true,
+      id: 'ch3-countdown', order: 301, chapter: 3, page: 'index', target: '.next-up',
+      title: 'The countdown to the next season',
+      text: 'This box counts the days to the next season. It follows the calendar. Between seasons its “happening now” line is empty. Its button lets visitors ask to hear when picking opens. Press a season to see it.',
+      choices: seasonWalk({
+        spring: 'Spring. It says “Happening now: Strawberries” and “Next up: Blueberries & sunflowers”, usually mid-June, with the days to go.',
+        summer: 'Summer. Now “Happening now: Blueberries & sunflowers” and “Next up: Pumpkins & tomatoes”, usually mid-September.',
+        fall: 'Fall. “Happening now: Pumpkins & tomatoes” and “Next up: Christmas trees at The GreenHouse”, usually the Friday after Thanksgiving.',
+        winter: 'Winter. “Happening now: Christmas trees at The GreenHouse” and “Next up: Strawberries”, usually mid-April. The days to go are the most of the year.'
+      }),
+      before: seasonsBegin, after: seasonsEnd
+    },
+    {
+      id: 'ch3-week', order: 302, chapter: 3, page: 'index', target: '#this-week', skipIfMissing: true,
       title: 'This week at the farm',
-      text: 'This box fills itself from today\'s date and lists what is usually in season. Your site builder can type in a note and a Spots left table by hand. They hide themselves after 14 days. The page cannot read your booking tool.'
+      text: 'This box fills itself from the date and lists what is usually in season. Your site builder can add a note and a Spots left table by hand. They hide after 14 days. The page cannot read your booking tool. Press a season.',
+      choices: seasonWalk({
+        spring: 'Spring. “Strawberries” and “U-cut flowers”, both “In season”. A crop that starts within 21 days shows ‘Usually starts’ and its date. When nothing is near, the box hides.',
+        summer: 'Summer. “Blueberries”, “Sunflowers” and “U-cut flowers” are all “In season”.',
+        fall: 'Fall. “Pumpkins”, “Tomatoes & basil” and “U-cut flowers” are “In season”. The tomatoes stop at the end of October, so this list gets shorter.',
+        winter: 'Winter. Only “Christmas trees” shows, marked “At The GreenHouse” and “In season”. The farm crops are gone.'
+      }),
+      before: function () {   // the box hides itself when nothing is near: then the season the page is dressed in is shown first, so the step still has a box to light
+        return seasonsBegin().then(function () { if (!onScreen('#this-week')) return showSeason(site().seasons.current()); });
+      },
+      after: seasonsEnd
     },
     {
       id: 'ch3-reserve', order: 304, chapter: 3, page: 'index', target: '.nav-cta, #action-bar a[href*="bookeo"]', skipIfMissing: true,
@@ -128,7 +290,14 @@
     {
       id: 'ch4-places', order: 401, chapter: 4, page: 'index', target: '#visit .choose',
       title: 'Two places, one family',
-      text: 'Visitors choose the farm or The GreenHouse next door. The farm is always by reservation, never walk-in. The GreenHouse needs no reservation and is open Friday to Sunday, 10 am to 8 pm.'
+      text: 'Visitors choose the farm or The GreenHouse next door. The farm is always by reservation, never walk-in. The GreenHouse needs no reservation and is open Friday to Sunday, 10 am to 8 pm. Press a season to see the farm card change.',
+      choices: seasonWalk({
+        spring: 'Spring. The farm card shows a strawberry: “U-pick organic strawberries, plus u-cut flowers”. The button is “Reserve the farm”. The GreenHouse card never changes.',
+        summer: 'Summer. A blueberry: “U-pick organic blueberries, plus u-cut sunflowers and flowers”. The button stays “Reserve the farm”.',
+        fall: 'Fall. A pumpkin. The card adds wagon rides, the corn pit, a small sunn hemp maze and a haunted trail. A “See prices” button joins “Reserve the farm”.',
+        winter: 'Winter. A Christmas tree. “Picking is seasonal”, with strawberries next. “Reserve the farm” becomes “Tell me when”, and a green line says the trees are at The GreenHouse.'
+      }),
+      before: seasonsBegin, after: seasonsEnd
     },
     {
       id: 'ch4-steps', order: 402, chapter: 4, page: 'index', target: '#steps',
@@ -163,32 +332,38 @@
 
     /* ---------------------------------------------------------------- 5. What is in season */
     {
-      id: 'ch5-tabs', order: 501, chapter: 5, page: 'index', target: '#season-tabs', allowClicks: true,
+      id: 'ch5-tabs', order: 501, chapter: 5, page: 'index', target: '#seasons .season-stage',
       title: 'What\'s in season',
-      text: 'Four tabs show what visitors can pick, cut and do in each season. The tab for today\'s season says Happening now. It follows the calendar by itself. Tap a tab to look.',
-      before: function () { if (!tabAtStart) tabAtStart = chosenTab(); },
-      after: function () {
-        if (tabAtStart && chosenTab() !== tabAtStart) {
-          var tab = q('#season-tabs [data-season="' + tabAtStart + '"]');
-          if (tab) tab.click();
-        }
-        tabAtStart = '';
-      }
+      text: 'Four tabs show what visitors can pick, cut and do in each season. The tab for today\'s season says Happening now, by the calendar. This panel is what the open tab shows. Press a season to see it.',
+      choices: seasonWalk({
+        spring: 'Spring. “Strawberry season”, “Usually mid-April to early June”. This is the busiest time, and reservations fill quickly. The button says “Reserve a strawberry visit”.',
+        summer: 'Summer. “Blueberries & sunflower season”, “Usually mid- to late June through early July”. The button says “Reserve a summer visit”.',
+        fall: 'Fall. “Pumpkin & tomato season”, “Mid-September through early November”. Reservations are Thursday to Sunday. Buttons: “Reserve a fall visit” and “See prices”.',
+        winter: 'Winter. “NC Christmas tree season”, “Friday after Thanksgiving to early December”, at The GreenHouse, with no reservation. The button is “Get farm updates”.'
+      }),
+      before: seasonsBegin, after: seasonsEnd
     },
     {
       id: 'ch5-cards', order: 502, chapter: 5, page: 'index', target: '#farm-cards',
       title: 'What\'s on the farm',
-      text: 'These cards show what is on the farm right now, such as u-pick, animals, playgrounds and rides. Pick another season above the cards and they change. In winter, the fun moves next door to The GreenHouse.'
+      text: 'These cards show what is on the farm right now, such as u-pick, animals, playgrounds and rides. Pick another season above the cards and they change. In winter, the fun moves next door to The GreenHouse. Press a season to see them.',
+      choices: seasonWalk({
+        spring: 'Spring, six cards. “U-Pick Strawberries” leads, then “Meet the Animals”, “Playgrounds”, “Shaded Picnic Patch”, “Concessions & Local Goods” and “Wagon Ride & Barrel Train”.',
+        summer: 'Summer, six cards. “U-Pick Blueberries” takes the place of the strawberries. The other five stay.',
+        fall: 'Fall, eight cards. “U-Pick Pumpkins” takes over. New: “Haunted Trail” and “Small Sunn Hemp Maze”. The wagon card becomes “Wagon, Corn Pit & Barrel Train”.',
+        winter: 'Winter, only three cards, each marked “At The GreenHouse”: “Christmas Trees”, “Playground & Goats” and “Pizza, Ice Cream & Drinks”. The farm cards are gone.'
+      }),
+      before: seasonsBegin, after: seasonsEnd
     },
     {
       id: 'ch5-tomatoes', order: 503, chapter: 5, page: 'index', target: '.tomato-copy',
       title: 'Tomatoes and basil',
-      text: 'New this year: u-pick organic tomatoes and basil, every weekend from late September through October. Tomatoes are $4.50 per pound and basil is $1 per stem. The New labels hide themselves after their end date.'
+      text: 'New this year: u-pick organic tomatoes and basil, every weekend from late September through October. Tomatoes are $4.50 per pound and basil is $1 per stem. The New labels hide themselves after their end date. This box stays all year.'
     },
     {
       id: 'ch5-flowers', order: 504, chapter: 5, page: 'index', target: '#flowers .flowers-copy',
       title: 'U-cut flowers',
-      text: 'Visitors can cut their own flowers from April to July and from September to the first frost. The page links to a flower Instagram account for bloom updates.'
+      text: 'Visitors can cut their own flowers from April to July and from September to the first frost. The page links to a flower Instagram account for bloom updates. This box stays all year.'
     },
     {
       id: 'ch5-photos', order: 505, chapter: 5, page: 'index', target: '.passes',

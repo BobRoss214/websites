@@ -16,7 +16,10 @@
  *   - other pages: a step on another page goes there (no #tour, no hash) and carries on from the tour's place in browser storage; Back goes back; an old place is not resumed
  *   - stopping and coming back: "Continue where I stopped" after a reload, Finish forgets, Start again; Contents (with the number of steps in each part)
  *   - ways in: ?tour, #tour, window.WA_TOUR, a link with data-tour-open; WA_TOUR_INLINE asks for no file; the pretend-account steps only count when demo mode is on
- *   - calm mode and reduced motion (nothing slides), a phone (the card is a sheet at the bottom; the target is above it), a long text scrolls inside the card */
+ *   - calm mode and reduced motion (nothing slides), a phone (the card is a sheet at the bottom; the target is above it), a long text scrolls inside the card
+ *   - a step's own row of small buttons (step.choices, used by the season walk of the real steps): not there on other steps, one button each with the pressed one marked,
+ *     run() waited for and a run() that throws not stopping the card, the card's title and text changing, the lit box measured again, a press ignored while the tour moves on,
+ *     Next / Back / Contents / Esc while a press is still being carried out, a list given by a function, a phone, axe */
 import { run, open, ok, okSoon, until, info, settled, ms, axeSource, ROOT } from './lib.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -54,6 +57,25 @@ const STEPS_B = `
 `;
 const STEPS_LONG = `(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push({ id: 'l1', order: 101, chapter: 1, page: 'index', target: '#visit', title: 'A long one', text: '${LONG}' });`;
 const STEPS_ONE = (extra) => `(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push({ id: 'o1', order: 101, chapter: 1, page: 'index', target: '.announce', title: 'One', text: 'One.' }${extra || ''});`;
+// steps with a row of small buttons (step.choices): a plain card, one with three buttons (a slow one, one that throws), one whose list comes from a function, a last card
+const STEPS_CHOICES = `
+window.__log = window.__log || [];
+(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push(
+  { id: 'c1', order: 101, chapter: 1, page: 'index', target: null, title: 'Plain card', text: 'No buttons here.' },
+  { id: 'c2', order: 102, chapter: 1, page: 'index', target: '.announce', title: 'Pick one', text: 'Intro text.', choicesLabel: 'See it as:',
+    before: function () { window.__log.push('before:c2'); },
+    after: function () { window.__log.push('after:c2'); },
+    choices: [
+      { label: 'One', title: 'First choice', text: 'Text of one.\\n- a\\n- b', run: function (ctx) { window.__log.push('run:one:' + (ctx && ctx.step && ctx.step.id)); ctx.undo(function () { window.__log.push('undo:one'); }); } },
+      { label: 'Two', text: 'Text of two.', run: function () { window.__log.push('run:two:start'); return new Promise(function (r) { setTimeout(function () { window.__log.push('run:two:done'); r(); }, 450); }); } },
+      { label: 'Three', title: 'Third', text: 'Text of three.', run: function () { window.__log.push('run:three'); throw new Error('boom'); } }
+    ] },
+  { id: 'c3', order: 103, chapter: 1, page: 'index', target: '#faq', title: 'List from a function', text: 'Function text.',
+    choices: function (ctx) { window.__log.push('choices:c3:' + (ctx && ctx.step && ctx.step.id)); return [{ label: 'Only', text: 'Only text.' }, null, { label: '' }, 'junk', { text: 'no label' }]; } },
+  { id: 'c4', order: 104, chapter: 1, page: 'index', target: null, title: 'Last card', text: 'End.' }
+);
+window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Choices' }];
+`;
 const js = (body) => ({ contentType: 'text/javascript', body });
 // the routes of a page: which steps files exist (a missing one answers 404)
 const serve = (files, log = []) => async (page) => {
@@ -79,6 +101,9 @@ const look = (p) => p.evaluate(() => {
     sheet: c.classList.contains('is-sheet'), focus: document.activeElement ? (document.activeElement.getAttribute('aria-label') || document.activeElement.textContent || '').trim() : '', inCard: c.contains(document.activeElement),
     live: live ? live.textContent : '', scrollY: window.scrollY, vw: document.documentElement.clientWidth, vh: window.innerHeight, bodyScroll: (c.querySelector('.wa-tour-body') || {}).scrollHeight > (c.querySelector('.wa-tour-body') || {}).clientHeight + 1,
     pillShown: !!document.querySelector('.wa-tour-pill') && !document.querySelector('.wa-tour-pill').hidden, dialog: c.getAttribute('role'), name: (document.getElementById(c.getAttribute('aria-labelledby')) || {}).textContent || '',
+    choices: [...c.querySelectorAll('.wa-tour-choice')].map((b) => b.textContent.trim() + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join('|'),
+    choicesRow: (() => { const r = c.querySelector('.wa-tour-choices'); return r && !r.hidden ? { label: (r.querySelector('.wa-tour-choices-label') || {}).textContent || '', role: r.getAttribute('role'), name: r.getAttribute('aria-label'), busy: r.getAttribute('aria-busy') } : null; })(),
+    items: c.querySelectorAll('.wa-tour-body li').length,
   };
 });
 const rectOf = (p, sel) => p.evaluate((s) => { const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height, r: b.right, b: b.bottom }; }, sel);
@@ -492,5 +517,117 @@ await run('tour', async ({ browser, base, errs }) => {
   await atStep(p, 1, 'a step with a very long text shows');
   s = await look(p);
   ok('a very long text (160 words) in a low window: the card stays inside the window, the text scrolls inside it and the buttons stay in view', inside(s.card, s.vw, s.vh) && s.bodyScroll && (await p.evaluate(() => { const b = document.querySelector('.wa-tour-actions').getBoundingClientRect(); return b.bottom <= innerHeight && b.top >= 0; })), JSON.stringify({ card: s.card, scroll: s.bodyScroll }));
+  await p.context().close();
+
+  /* ================================================================ 7. a step's own row of small buttons (step.choices) */
+  p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: serve({ a: STEPS_CHOICES }) });
+  await p.click('.wa-tour-pill');
+  await okSoon('choices: welcome', () => look(p), (x) => x && x.name === 'Your website tour');
+  await press(p, 'Start the tour');
+  await atStep(p, 1, 'choices: a card without choices shows first');
+  s = await look(p);
+  ok('a step without choices has no row of small buttons: the row is hidden and empty', s.choicesRow === null && s.choices === '' && (await p.evaluate(() => document.querySelector('.wa-tour-choices').hidden && document.querySelector('.wa-tour-choices').childElementCount === 0)), JSON.stringify(s.choicesRow));
+  await press(p, 'Next');
+  await atStep(p, 2, 'choices: step 2 (three small buttons) shows');
+  s = await look(p);
+  ok('a step with choices: the row has its words above the buttons and is a group with that name; one button each, none pressed; the step\'s own title and text show', !!s.choicesRow && s.choicesRow.label === 'See it as:' && s.choicesRow.role === 'group' && s.choicesRow.name === 'See it as:' && s.choicesRow.busy === 'false' && s.choices === 'One|Two|Three' && s.title === 'Pick one' && s.text === 'Intro text.', JSON.stringify({ r: s.choicesRow, c: s.choices, t: s.title }));
+  const order = await p.evaluate(() => { const r = (q) => document.querySelector(q).getBoundingClientRect(); return { body: r('.wa-tour-body').bottom, row: [r('.wa-tour-choices').top, r('.wa-tour-choices').bottom], actions: r('.wa-tour-actions').top, minH: Math.min(...[...document.querySelectorAll('.wa-tour-choice')].map((b) => b.getBoundingClientRect().height)) }; });
+  target = await rectOf(p, '.announce');
+  ok('the row sits between the text and Back / Next, each button is a finger high (44 px), the focus is still on Next, and the lit box is the strip with the card clear of it', order.body <= order.row[0] + 1 && order.row[1] <= order.actions + 1 && order.minH >= 43.5 && s.focus === 'Next' && lit(s.hole, target) && overlap(s.card, target) === 0 && inside(s.card, s.vw, s.vh), JSON.stringify({ order, f: s.focus }));
+  ok('(the step\'s before() ran, and no run() has run yet: nothing is pressed for the owner)', (await logOf(p)).join() === 'before:c2');
+
+  await btn(p, 'One').click();
+  await okSoon('pressing One: it is pressed (the others are not), the card shows that choice\'s title and its text (a list too), and the lit box is still the strip', () => look(p), (x) => x.choices === 'One*|Two|Three' && x.title === 'First choice' && x.text.startsWith('Text of one.') && x.items === 2 && x.choicesRow.busy === 'false' && lit(x.hole, target));
+  log = await logOf(p);
+  ok('run(ctx) of One ran once, with the step in ctx', log.filter((l) => /^run:/.test(l)).join() === 'run:one:c2', log.join(','));
+  await okSoon('a screen reader hears the new title and text in one polite line', () => look(p), (x) => /First choice\. Text of one\. - a - b/.test(x.live));
+  await btn(p, 'One').click();
+  await p.waitForTimeout(300);
+  ok('pressing the pressed button again does nothing (run() did not run twice)', (await logOf(p)).filter((l) => /^run:one/.test(l)).length === 1);
+
+  // a slow run(): the button is pressed at once, the old text stays until it is over, and a press meanwhile is ignored
+  await btn(p, 'Two').click();
+  s = await look(p);
+  ok('Two (a run() that takes a while): pressed at once, the row says it is busy, the old title and text stay until it is over', s.choices === 'One|Two*|Three' && s.choicesRow.busy === 'true' && s.title === 'First choice', JSON.stringify({ c: s.choices, b: s.choicesRow && s.choicesRow.busy, t: s.title }));
+  await btn(p, 'Three').click();
+  await okSoon('...then the card shows the text of Two, and since Two has no title of its own the step\'s title is back', () => look(p), (x) => x.title === 'Pick one' && x.text === 'Text of two.' && x.choicesRow.busy === 'false' && x.choices === 'One|Two*|Three');
+  log = await logOf(p);
+  ok('run() of Two was waited for, and the press on Three while it was running was ignored', log.indexOf('run:two:start') > -1 && log.indexOf('run:two:start') < log.indexOf('run:two:done') && !log.includes('run:three'), log.join(','));
+
+  // a run() that throws does not stop the card
+  await btn(p, 'Three').click();
+  await okSoon('Three (its run() throws): the card still shows its title and text', () => look(p), (x) => x.title === 'Third' && x.text === 'Text of three.' && x.choices === 'One|Two|Three*');
+  ok('...and run() of Three did run', (await logOf(p)).includes('run:three'));
+
+  // Next while a slow run() is still going: it is waited for before after() runs
+  await btn(p, 'Two').click();
+  await press(p, 'Next');
+  await atStep(p, 3, 'choices: Next while a press is still being carried out goes on to step 3');
+  log = await logOf(p);
+  ok('after() of the step ran only after the slow run() was over', log.lastIndexOf('run:two:start') > -1 && log.lastIndexOf('run:two:done') > log.lastIndexOf('run:two:start') && log.indexOf('after:c2') > log.lastIndexOf('run:two:done'), log.join(','));
+
+  // a list given by a function: asked when the card shows; a bad entry (null, no label, a word) is left out
+  s = await look(p);
+  ok('a list given by a function: it was asked with the step in ctx; only the good entry is a button; no words above it, the group is called "Choose"', log.includes('choices:c3:c3') && s.choices === 'Only' && s.choicesRow.label === '' && s.choicesRow.name === 'Choose', JSON.stringify({ c: s.choices, r: s.choicesRow }));
+  await btn(p, 'Only').click();
+  await okSoon('a choice with no run() and no title: only the text changes', () => look(p), (x) => x.title === 'List from a function' && x.text === 'Only text.' && x.choices === 'Only*');
+
+  // Back: the step starts again with nothing pressed
+  await press(p, 'Back');
+  await atStep(p, 2, 'choices: Back shows step 2 again');
+  s = await look(p);
+  ok('coming back to the step: nothing is pressed and the step\'s own title and text show again; before() ran again', s.choices === 'One|Two|Three' && s.title === 'Pick one' && s.text === 'Intro text.' && (await logOf(p)).filter((l) => l === 'before:c2').length === 2, s.choices);
+
+  // Contents and back: the pressed button and its text stay (the page was not changed back)
+  await btn(p, 'One').click();
+  await okSoon('One is pressed again', () => look(p), (x) => x.choices === 'One*|Two|Three' && x.title === 'First choice');
+  const afters = (await logOf(p)).filter((l) => l === 'after:c2').length;
+  await press(p, 'Contents');
+  s = await okSoon('Contents has no small buttons of its own', () => look(p), (x) => x && x.title === 'Choose a part' && x.choicesRow === null && x.choices === '');
+  await btn(p, 'Back').click();
+  await okSoon('Back from Contents: the same step, with One still pressed and its text, and after() did not run meanwhile', async () => ({ l: await look(p), a: (await logOf(p)).filter((x) => x === 'after:c2').length }), (v) => v.l && v.l.n === 2 && v.l.choices === 'One*|Two|Three' && v.l.title === 'First choice' && v.a === afters);
+  await press(p, 'Contents');
+  await okSoon('Contents opens again', () => look(p), (x) => x && x.title === 'Choose a part');
+  await p.getByRole('button', { name: /^1\. Choices/ }).click();
+  await atStep(p, 1, 'choices: a part chosen in Contents goes to its first step');
+  ok('...and after() of step 2 ran when it was left that way', (await logOf(p)).filter((l) => l === 'after:c2').length === afters + 1);
+
+  // the keyboard: the small buttons are in the Tab round, and Enter presses one
+  await press(p, 'Next');
+  await atStep(p, 2, 'choices: step 2 again, for the keyboard');
+  let reached = '';
+  for (let i = 0; i < 4 && !/^(One|Two|Three)$/.test(reached); i++) { await p.keyboard.press('Shift+Tab'); reached = (await look(p)).focus; }
+  ok('Shift+Tab from Next reaches the small buttons (Contents, Back, then Three)', reached === 'Three', reached);
+  await p.keyboard.press('Enter');
+  await okSoon('Enter on the small button presses it', () => look(p), (x) => x.choices === 'One|Two|Three*' && x.title === 'Third');
+
+  // axe on the card with its row
+  const ax2 = axeSource();
+  if (ax2) {
+    await p.evaluate(ax2);
+    const res2 = await p.evaluate(async () => { const r = await window.axe.run({ include: [['#wa-tour']] }, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'] } }); return r.violations.map((v) => v.id + ': ' + v.nodes.map((n) => n.target.join(' ')).join(' | ')); });
+    ok('axe (WCAG 2.1 A and AA, best practices) finds nothing wrong in the card with its row of small buttons', res2.length === 0, res2.join(' ;; '));
+  } else info('axe-core is not installed here: the accessibility check of the row was skipped');
+
+  // Esc while a slow press is going: the card goes, the press is waited for (a short while), after() and the undo of the earlier press ran
+  await btn(p, 'Two').click();
+  await p.keyboard.press('Escape');
+  await okSoon('Esc while a press is still being carried out closes the tour', () => p.evaluate(() => !document.querySelector('.wa-tour')), (v) => v === true);
+  log = await logOf(p);
+  ok('...the slow run() was over before the tour was taken away, after() of the step ran, and the undo of a press ran', log.lastIndexOf('run:two:done') > -1 && log.lastIndexOf('after:c2') > log.lastIndexOf('run:two:done') && log.includes('undo:one'), log.join(','));
+  await p.context().close();
+
+  // a phone: the row wraps inside the sheet
+  p = await open(browser, base, 'index.html', errs, { query: 'tour', viewport: PHONE, touch: true, routes: serve({ a: STEPS_CHOICES }) });
+  await p.tap('.wa-tour-pill');
+  await okSoon('choices (phone): welcome', () => look(p), (x) => x && x.name === 'Your website tour');
+  await p.tap('text=Start the tour');
+  await atStep(p, 1);
+  await btn(p, 'Next').tap();
+  await atStep(p, 2, 'choices (phone): step 2 shows');
+  await btn(p, 'Two').tap();
+  s = await okSoon('choices (phone): a tap presses a small button and the card changes', () => look(p), (x) => x.choices === 'One|Two*|Three' && x.text === 'Text of two.');
+  target = await rectOf(p, '.announce');
+  ok('choices (phone): the sheet with the row is inside the window and the page does not scroll sideways', s.sheet && inside(s.card, s.vw, s.vh) && (await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 1, JSON.stringify({ card: s.card }));
   await p.context().close();
 });

@@ -258,17 +258,19 @@
     card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'wa-tour-title');
     const progress = make('p', 'wa-tour-progress'), bar = make('div', 'wa-tour-bar'), fillBar = make('i');
     const title = make('h2', 'wa-tour-title'), body = make('div', 'wa-tour-body'), actions = make('div', 'wa-tour-actions');
+    const choices = make('div', 'wa-tour-choices');   // a step's own row of small buttons (step.choices), between the text and Back / Next
     const x = make('button', 'wa-tour-x', '×');
     title.id = 'wa-tour-title'; bar.setAttribute('aria-hidden', 'true'); bar.appendChild(fillBar);
+    choices.setAttribute('role', 'group'); choices.hidden = true;
     x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', () => endTour(false));
-    card.append(progress, bar, title, body, actions, x);
+    card.append(progress, bar, title, body, choices, actions, x);
     const live = make('div', 'sr-only');
     live.setAttribute('role', 'status'); live.setAttribute('aria-live', 'polite'); live.setAttribute('aria-atomic', 'true');
     box.append(shield, hole, card, live);
     // a press inside the tour never reaches the page: its own "click anywhere else closes me" rules (the menus) must not fire for the tour's buttons
     ['click', 'pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart'].forEach((ev) => box.addEventListener(ev, (e) => e.stopPropagation()));
     doc.body.appendChild(box);
-    return { box, shield, hole, card, progress, bar: fillBar, title, body, actions, x, live, primary: null };
+    return { box, shield, hole, card, progress, bar: fillBar, title, body, choices, actions, x, live, primary: null };
   };
 
   const say = (text) => { const live = ui && ui.live; if (!live) return; live.textContent = ''; setTimeout(() => { if (ui && ui.live === live) live.textContent = text; }, 60); };
@@ -278,6 +280,57 @@
     if (handler) b.addEventListener('click', handler); else b.disabled = true;
     return b;
   };
+  // A step's own row of small buttons (step.choices, docs/TOUR.md): a few words above them, one button each, the chosen one pressed. Pressing one runs its
+  // run(ctx) (a Promise is waited for), then the card shows that choice's title and text and the lit box is measured again (the page part may have changed size).
+  // The tour keeps no other record of it: whatever run() changed on the page is put back by the step's after() (or ctx.undo), like everything else a step does.
+  let defs = null, chosen = -1, choosing = null;   // the choices of the step that shows, the pressed one (-1: none), and the press still being carried out
+  const drawChoices = (list, label, on) => {
+    const row = ui.choices;
+    row.textContent = '';
+    row.hidden = !(list && list.length);
+    if (row.hidden) { row.removeAttribute('aria-label'); row.removeAttribute('aria-busy'); return; }
+    row.setAttribute('aria-label', label || 'Choose');
+    row.setAttribute('aria-busy', 'false');
+    if (label) row.appendChild(make('p', 'wa-tour-choices-label', label));
+    const line = make('div', 'wa-tour-choices-row');
+    list.forEach((d, i) => {
+      const b = make('button', 'btn btn-sm btn-white wa-tour-choice', d.label);
+      b.type = 'button'; b.setAttribute('aria-pressed', i === on ? 'true' : 'false');
+      b.addEventListener('click', () => choose(i));
+      line.appendChild(b);
+    });
+    row.appendChild(line);
+  };
+  const choicesOf = (s) => {   // step.choices is a list, or a function that gives the list when the card shows (so it can look at the page a before() has just set up)
+    let list = s.choices;
+    if (typeof list === 'function') { try { list = list(makeCtx(s)); } catch (e) { warn('step ' + s.id, e); list = null; } }
+    list = Array.isArray(list) ? list.filter((d) => d && typeof d === 'object' && typeof d.label === 'string' && d.label !== '') : [];
+    return list.length ? list : null;
+  };
+  const choose = (i) => {
+    const s = curStep, d = defs && defs[i];
+    if (!ui || view !== 'step' || !s || !d || choosing || i === chosen || ui.card.classList.contains('is-busy')) return;   // busy: the tour is moving to another step
+    const mine = seq;
+    chosen = i;
+    $$('.wa-tour-choice', ui.choices).forEach((b, k) => b.setAttribute('aria-pressed', k === i ? 'true' : 'false'));
+    ui.choices.setAttribute('aria-busy', 'true');
+    const same = () => mine === seq && !!ui && curStep === s && view === 'step';   // false once the owner has gone to another step, opened Contents or closed the tour meanwhile
+    choosing = run(d.run, s, 8000).then(async () => {
+      try {
+        if (ui) ui.choices.setAttribute('aria-busy', 'false');
+        if (!same()) return;
+        const title = d.title || s.title || '', text = d.text != null ? d.text : s.text;
+        ui.title.textContent = title; fill(ui.body, text); ui.body.scrollTop = 0;
+        const el = s.target ? find(s.target) : null;   // the part may have been drawn again, or be gone in this choice (then the page is dimmed all over)
+        curEl = el;
+        if (el) await bring(el);
+        if (!same()) return;
+        placed = ''; place(true);
+        say(title + '. ' + String(text || '').replace(/\n+/g, ' '));
+      } finally { choosing = null; }
+    });
+  };
+
   // what the card shows: a line above the title, the title, the text, and a row of buttons ([label, handler, kind]; the last one marked "primary" gets the focus)
   const setCard = (o) => {
     const old = $('.wa-tour-flash', ui.card); if (old) old.remove();
@@ -288,6 +341,7 @@
     ui.title.textContent = o.title || '';
     fill(ui.body, o.text);
     if (o.list) ui.body.appendChild(o.list);
+    drawChoices(o.choices, o.choicesLabel, o.chosen);
     ui.actions.textContent = '';
     ui.primary = null;
     (o.buttons || []).forEach((def) => {
@@ -379,7 +433,10 @@
     $$('[aria-expanded="true"][aria-controls]').forEach((b) => { if (wasOpen.indexOf(b) < 0 && !(ui && ui.box.contains(b))) { try { b.click(); } catch (e) { /* gone */ } } });
   };
 
-  const present = async (n, s, el, mine) => {   // the step is ready: show its card, bring the box into place, start following it
+  const present = async (n, s, el, mine, keep) => {   // the step is ready: show its card, bring the box into place, start following it (keep: the same step again, after Contents)
+    if (!(keep && curStep === s && defs)) { defs = choicesOf(s); chosen = defs ? defs.findIndex((d) => d.pressed === true) : -1; }   // a step shown anew starts with no choice pressed (unless a choice says pressed: true, because before() has already done it); one shown again keeps the choice the page is still showing
+    const pick = defs && chosen >= 0 ? defs[chosen] : null;
+    const title = pick && pick.title ? pick.title : s.title, text = pick && pick.text != null ? pick.text : s.text;
     idx = n; curStep = s; curEl = el; curRad = 14;
     if (el) { const c = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0; curRad = clamp(c + 8, 14, 32); }
     remember(true, s, 0);
@@ -387,7 +444,7 @@
     view = 'step';
     setCard({
       kicker: 'Step ' + (n + 1) + ' of ' + steps.length + ' - ' + (ch ? ch.title : ''), sub: ch ? 'Chapter ' + (chapters.indexOf(ch) + 1) + ' of ' + chapters.length : '', pct: (n + 1) / steps.length,
-      title: s.title, text: s.text, free: s.allowClicks === true, tryIt: s.allowClicks !== true && s.allowClicks !== false && !!el,
+      title, text, choices: defs, choicesLabel: s.choicesLabel, chosen, free: s.allowClicks === true, tryIt: s.allowClicks !== true && s.allowClicks !== false && !!el,
       buttons: [['Back', n > 0 ? back : null, 'white'], ['Contents', () => openContents('step'), 'white'], last ? ['Start again', again, 'sun'] : null, last ? ['Finish', () => endTour(true), 'green', true] : ['Next', next, 'red', true]],
     });
     gliding();
@@ -397,7 +454,7 @@
     startTracking();
     setBusy(false);
     focusCard();
-    say('Step ' + (n + 1) + ' of ' + steps.length + (ch ? '. ' + ch.title : '') + '. ' + (s.title || '') + '. ' + String(s.text || '').replace(/\n+/g, ' '));
+    say('Step ' + (n + 1) + ' of ' + steps.length + (ch ? '. ' + ch.title : '') + '. ' + (title || '') + '. ' + String(text || '').replace(/\n+/g, ' '));
     doc.dispatchEvent(new CustomEvent('wa:tour', { detail: { type: 'step', id: s.id, index: n } }));
   };
 
@@ -406,6 +463,7 @@
     const mine = ++seq, step = dir || 1;
     setBusy(true);
     const leaving = entered; entered = null;
+    if (choosing) await choosing;   // a choice still being carried out finishes first, so that after() puts back everything it did
     if (leaving) await run(leaving.after, leaving, 3000);
     if (mine !== seq || !ui) return;
     for (let n = i; n >= 0 && n < steps.length; n += step) {
@@ -497,7 +555,7 @@
     focusCard();
     say('Contents. Choose a part of the tour.');
   }
-  const renderBackToStep = () => { present(idx, curStep, find(curStep.target), seq); };
+  const renderBackToStep = () => { present(idx, curStep, find(curStep.target), seq, true); };
 
   /* ------------------------------------------------------------------ *
    * 8. Open, close, and the keys.
@@ -609,6 +667,8 @@
     try {   // what the steps did is put back; whatever goes wrong here, the tour is still taken away below
       stopTracking();
       const leaving = entered; entered = null; curStep = null; curEl = null;
+      if (choosing) await Promise.race([choosing, wait(600)]);
+      defs = null; chosen = -1;
       if (leaving) await run(leaving.after, leaving, 600);
       while (undos.length) { const f = undos.pop(); try { f(); } catch (e) { warn('undo', e); } }
       closeOpened();

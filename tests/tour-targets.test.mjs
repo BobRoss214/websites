@@ -31,7 +31,9 @@ import { run, open, ok, info, finish, settled, until, ROOT, ms } from './lib.mjs
 const FILES = ['js/tour-steps.js', 'js/tour-steps-b.js', 'js/tour-steps-c.js'];
 const PAGE_FILE = { index: 'index.html', 'first-visit': 'first-visit.html', account: 'account.html', 'farm-desk': 'farm-desk.html', kitchen: 'kitchen.html' };
 const DEMO_PAGES = ['account', 'farm-desk', 'kitchen'];
-const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after'];
+const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after', 'choices', 'choicesLabel'];
+const CHOICE_FIELDS = ['label', 'title', 'text', 'run', 'pressed'];
+const SEASON_NAMES = ['spring', 'summer', 'fall', 'winter'];
 const SIZES = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
 const OTHER_DAYS = [
   ['2026-11-03T12:00:00-05:00', 'the real day (3 Nov 2026)'],
@@ -44,6 +46,7 @@ const OTHER_DAYS = [
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const exists = (f) => fs.existsSync(path.join(ROOT, f));
 const wordsOf = (s) => String(s).trim().split(/\s+/).filter(Boolean);
+const squash = (t) => String(t).toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim();   // words compared without capitals, curly quotes or odd spaces
 const stripTags = (html) => html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#?\w+;/g, ' ');
 
 /* ---------------------------------------------------------------- the steps files, read without a browser */
@@ -84,6 +87,54 @@ function sentencesOf(text) {
 }
 const countWords = (text) => String(text).split('\n').reduce((n, l) => n + wordsOf(l.replace(/^\s*-\s+/, '')).length, 0);
 
+/** The rules for the title and the text of a card (a step's own, or one that a small button of the step shows). `who` starts every message. */
+function copyProblems(o, who, { needTitle, needText }) {
+  const p = [];
+  if (o.title === undefined ? needTitle : (typeof o.title !== 'string' || !o.title.trim())) p.push(who + 'needs a title');
+  else if (typeof o.title === 'string' && wordsOf(o.title).length > 9) p.push(who + 'title has ' + wordsOf(o.title).length + ' words (9 at most)');
+  if (o.text === undefined ? needText : (typeof o.text !== 'string' || !o.text.trim())) p.push(who + 'needs a text');
+  else if (typeof o.text === 'string') {
+    const n = countWords(o.text), raw = wordsOf(o.text).length;
+    if (n > 45) p.push(who + 'text has ' + n + ' words (45 at most)');
+    else if (raw > 45) p.push(who + 'text has ' + raw + ' words with the bullet dashes counted (45 at most, so a stricter counter agrees)');
+    for (const sen of sentencesOf(o.text)) if (wordsOf(sen).length > 25) p.push(who + 'a sentence has ' + wordsOf(sen).length + ' words (25 at most): "' + sen.slice(0, 60) + '..."');
+  }
+  for (const k of ['title', 'text']) {
+    const v = typeof o[k] === 'string' ? o[k] : '';
+    if (/[<>]/.test(v)) p.push(who + k + ' has markup (< or >); the engine shows plain text');
+    if (/https?:\/\/|www\.|\b[\w-]+\.(?:com|org|net|html)\b|\S+@\S+\.\S+/i.test(v)) p.push(who + k + ' has a web address or e-mail address (the privacy test reads every js file for those)');
+    if (/\b20[0-3]\d\b/.test(v)) p.push(who + k + ' has a year (tests/time-bombs.test.mjs: no year in js files; say "this fall")');
+    if (/\bkathy\b/i.test(v)) p.push(who + k + ' spells Cathy as Kathy');
+    for (const j of jargon) if (new RegExp('\\b' + j.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:s|es|ed|ing)?\\b', 'i').test(v)) p.push(who + k + ' uses the word "' + j + '" (tools/plain_words.txt lists it as jargon)');
+  }
+  for (const a of (typeof o.text === 'string' ? o.text : '').match(/\$\d[\d,]*(?:\.\d+)?/g) || []) if (!siteAmounts.has(a.replace(/,/g, ''))) p.push(who + 'the amount ' + a + ' is not on any page of the site (never invent a price)');
+  return p;
+}
+
+/** The list of small buttons of a step (step.choices is a list, or a function that gives it), asked here with no page: it must work without one. */
+function choicesOf(s) {
+  if (s.choices === undefined) return { list: null, problems: [] };
+  let list = s.choices;
+  if (typeof list === 'function') { try { list = list({}); } catch (e) { return { list: null, problems: ['choices() threw: ' + String(e && e.message).split('\n')[0]] }; } }
+  if (!Array.isArray(list) || !list.length) return { list: null, problems: ['choices must be a list (or a function that gives one) with at least one entry'] };
+  const problems = [];
+  if (s.choicesLabel !== undefined && (typeof s.choicesLabel !== 'string' || !s.choicesLabel.trim() || wordsOf(s.choicesLabel).length > 6)) problems.push('choicesLabel must be a few words (6 at most)');
+  if (typeof s.after !== 'function') problems.push('a step with choices needs an after() that puts the page back');
+  const seen = new Set();
+  list.forEach((c, i) => {
+    const who = 'choice ' + (i + 1) + ': ';
+    if (!c || typeof c !== 'object') { problems.push(who + 'must be an object'); return; }
+    for (const k of Object.keys(c)) if (!CHOICE_FIELDS.includes(k)) problems.push(who + 'unknown field "' + k + '"');
+    if (typeof c.label !== 'string' || !c.label.trim()) problems.push(who + 'needs a label'); else if (wordsOf(c.label).length > 2) problems.push(who + 'label has ' + wordsOf(c.label).length + ' words (2 at most: it is a small button)');
+    else if (seen.has(c.label)) problems.push(who + 'the label "' + c.label + '" is used twice'); else seen.add(c.label);
+    if (c.run !== undefined && typeof c.run !== 'function') problems.push(who + 'run must be a function');
+    if (c.pressed !== undefined && typeof c.pressed !== 'boolean') problems.push(who + 'pressed must be true or false');
+    problems.push(...copyProblems(c, who, { needTitle: false, needText: false }));
+    if (c.title === undefined && c.text === undefined) problems.push(who + 'has neither a title nor a text: pressing it would change nothing on the card');
+  });
+  return { list, problems };
+}
+
 function wordProblems(s) {
   const p = [];
   for (const k of Object.keys(s)) if (!FIELDS.includes(k)) p.push('unknown field "' + k + '" (the engine does not read it; a typo?)');
@@ -93,26 +144,10 @@ function wordProblems(s) {
   else if (Math.floor(s.order / 100) !== s.chapter) p.push('order ' + s.order + ' does not belong to chapter ' + s.chapter + ' (order = chapter * 100 + the place)');
   if (!Object.prototype.hasOwnProperty.call(PAGE_FILE, s.page)) p.push('page must be one of ' + Object.keys(PAGE_FILE).join(', '));
   if (!(s.target === null || (typeof s.target === 'string' && s.target.trim() !== ''))) p.push('target must be one CSS selector or null');
-  if (typeof s.title !== 'string' || !s.title.trim()) p.push('a step needs a title');
-  else if (wordsOf(s.title).length > 9) p.push('title has ' + wordsOf(s.title).length + ' words (9 at most)');
-  if (typeof s.text !== 'string' || !s.text.trim()) p.push('a step needs a text');
-  else {
-    const n = countWords(s.text), raw = wordsOf(s.text).length;
-    if (n > 45) p.push('text has ' + n + ' words (45 at most)');
-    else if (raw > 45) p.push('text has ' + raw + ' words with the bullet dashes counted (45 at most, so a stricter counter agrees)');
-    for (const sen of sentencesOf(s.text)) if (wordsOf(sen).length > 25) p.push('a sentence has ' + wordsOf(sen).length + ' words (25 at most): "' + sen.slice(0, 60) + '..."');
-  }
-  for (const k of ['title', 'text']) {
-    const v = typeof s[k] === 'string' ? s[k] : '';
-    if (/[<>]/.test(v)) p.push(k + ' has markup (< or >); the engine shows plain text');
-    if (/https?:\/\/|www\.|\b[\w-]+\.(?:com|org|net|html)\b|\S+@\S+\.\S+/i.test(v)) p.push(k + ' has a web address or e-mail address (the privacy test reads every js file for those)');
-    if (/\b20[0-3]\d\b/.test(v)) p.push(k + ' has a year (tests/time-bombs.test.mjs: no year in js files; say "this fall")');
-    if (/\bkathy\b/i.test(v)) p.push(k + ' spells Cathy as Kathy');
-    for (const j of jargon) if (new RegExp('\\b' + j.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:s|es|ed|ing)?\\b', 'i').test(v)) p.push(k + ' uses the word "' + j + '" (tools/plain_words.txt lists it as jargon)');
-  }
-  for (const a of (typeof s.text === 'string' ? s.text : '').match(/\$\d[\d,]*(?:\.\d+)?/g) || []) if (!siteAmounts.has(a.replace(/,/g, ''))) p.push('the amount ' + a + ' is not on any page of the site (never invent a price)');
+  p.push(...copyProblems(s, '', { needTitle: true, needText: true }));
   for (const k of ['allowClicks', 'skipIfMissing']) if (s[k] !== undefined && typeof s[k] !== 'boolean') p.push(k + ' must be true or false');
   for (const k of ['before', 'after']) if (s[k] !== undefined && typeof s[k] !== 'function') p.push(k + ' must be a function');
+  p.push(...choicesOf(s).problems);
   return p;
 }
 
@@ -129,10 +164,15 @@ const IN_PAGE = `(() => {
   };
   const opacity = (el) => { let o = 1; for (let a = el; a && a.nodeType === 1; a = a.parentElement) o *= parseFloat(getComputedStyle(a).opacity); return o; };
   const find = (sel) => { let all = []; try { all = Array.from(document.querySelectorAll(sel)); } catch (e) { return { bad: true, n: 0 }; } const el = all.find(visible) || null; return { n: all.length, el, bad: false }; };
+  const text = (sel) => { const e = document.querySelector(sel); return e ? e.innerText.replace(/\\s+/g, ' ').trim() : null; };
   const snapshot = () => JSON.stringify([
     document.documentElement.getAttribute('data-season'),
-    Array.from(document.querySelectorAll('[aria-expanded="true"],[aria-selected="true"],[aria-checked="true"]')).map((e) => (e.id || e.className || e.tagName) + '|' + (e.getAttribute('data-season') || e.getAttribute('data-fs') || e.getAttribute('data-lang') || '')),
+    Array.from(document.querySelectorAll('[aria-expanded="true"],[aria-selected="true"],[aria-checked="true"],[aria-pressed="true"]')).map((e) => (e.id || e.className || e.tagName) + '|' + (e.getAttribute('data-season') || e.getAttribute('data-fs') || e.getAttribute('data-lang') || '')),
     !!(document.getElementById('nav') && document.getElementById('nav').classList.contains('is-open')),
+    // what the season walk changes and must put back: the lines that belong to a season, and the boxes that follow the clock (their words)
+    Array.from(document.querySelectorAll('[data-only],[data-out-of-season]')).map((e) => (e.hasAttribute('hidden') ? 1 : 0)).join(''),
+    ['.announce [data-ann-season]', '.next-up', '#this-week', '.hero-live', '#fact-season'].map(text),
+    Array.from(document.querySelectorAll('#farm-cards > li')).filter((e) => !e.hidden).length,
   ]);
   window.__tour = {
     snapshot,
@@ -186,6 +226,20 @@ const IN_PAGE = `(() => {
       b.click();
       return (b.id || b.getAttribute('data-season') || b.textContent.trim().slice(0, 20));
     },
+    boxText(sel) { const f = find(sel); return f.el ? f.el.innerText.replace(/\\s+/g, ' ').trim() : null; },   // what is written in the lit box now (as shown: capitals of a heading included)
+    dataSeason() { return document.documentElement.getAttribute('data-season'); },
+    choiceList(id) { const s = this.stepById(id); const l = typeof s.choices === 'function' ? s.choices({}) : s.choices; return l ? l.map((c) => ({ label: c.label, title: c.title, text: c.text, pressed: !!c.pressed })) : []; },
+    startChoice(id, i) {   // like start(), for the run() of the small button i (a fresh list is asked for, as the engine does when the card shows)
+      const st = { ran: false, done: false, error: '' };
+      window.__tourRun = st;
+      const s = this.stepById(id);
+      const l = s ? (typeof s.choices === 'function' ? s.choices({}) : s.choices) : null;
+      const c = l && l[i];
+      if (!c || typeof c.run !== 'function') { st.done = true; return; }
+      st.ran = true;
+      try { Promise.resolve(c.run({})).then(() => { st.done = true; }, (e) => { st.error = String((e && e.message) || e); st.done = true; }); }
+      catch (e) { st.error = String((e && e.message) || e); st.done = true; }
+    },
     soonCards() {
       return Array.from(document.querySelectorAll('.shop-card')).filter((c) => c.querySelector('.shop-soon')).map((c) => (c.querySelector('.shop-name') || {}).textContent.trim());
     },
@@ -205,8 +259,8 @@ async function goPage(p, base, page) {
   await settled(p, 300);
 }
 /** Runs before() or after() of a step with an EMPTY object and waits until it is over (a returned Promise too, moving the page clock meanwhile). */
-async function hook(p, id, which) {
-  await p.evaluate(([i, w]) => window.__tour.start(i, w), [id, which]);
+async function hook(p, id, which) {   // which: 'before', 'after', or the number of a small button of the step (its run())
+  await p.evaluate(([i, w]) => (typeof w === 'number' ? window.__tour.startChoice(i, w) : window.__tour.start(i, w)), [id, which]);
   const end = Date.now() + ms(12000);
   for (;;) {
     const st = await p.evaluate(() => window.__tourRun);
@@ -265,6 +319,44 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
           if (clicked) { await settled(p, 600); info('tried a click on "' + clicked + '" inside the target (the step allows clicks)'); }
         }
       }
+    }
+    // the small buttons of the step (the season walk): press each one in turn, the way an owner would, and look at the lit box after each press
+    const buttons = full && pr.shown ? await p.evaluate(([id]) => window.__tour.choiceList(id), [s.id]) : [];
+    if (buttons.length) {
+      const boxBefore = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
+      const seen = [];
+      for (let i = 0; i < buttons.length; i++) {
+        const c = buttons[i], nm = name + ' - button "' + c.label + '"';
+        const r = await hook(p, s.id, i);
+        if (r.error) { rec(nm + ': run() ran without an error', false, r.error); continue; }
+        await settled(p, 600);
+        const bad = [];
+        const there = await p.evaluate(([t]) => window.__tour.probe(t), [s.target]);
+        if (!there.shown) bad.push('the lit box is not on the page any more (' + there.why + ')');
+        else if (!there.something) bad.push('the lit box has nothing in it to look at');
+        if (SEASON_NAMES.includes(c.label.toLowerCase())) {
+          const now = await p.evaluate(() => window.__tour.dataSeason());
+          if (now !== c.label.toLowerCase()) bad.push('the page is in "' + now + '", not in ' + c.label.toLowerCase());
+        }
+        const box = (await p.evaluate(([t]) => window.__tour.boxText(t), [s.target])) || '';
+        seen.push(box);
+        const phrases = [...String((c.title || '') + ' ' + (c.text || '')).matchAll(/\u201c([^\u201d]+)\u201d/g)].map((m) => m[1]);
+        const missing = phrases.filter((ph) => !squash(box).includes(squash(ph)));
+        if (missing.length) bad.push('the card quotes ' + missing.map((m) => '\u201c' + m + '\u201d').join(', ') + ' but the lit box says: ' + box.slice(0, 260));
+        if (process.env.WA_TOUR_SHOW) info(c.label + ': ' + box.slice(0, 330));
+        rec(nm + ': the lit box is on the page and shows what the card says (' + phrases.length + ' quoted phrase' + (phrases.length === 1 ? '' : 's') + ')' + (full ? '' : ''), bad.length === 0, bad.join(' | '));
+      }
+      if (buttons.length > 1) rec(name + ': the buttons show different things in the lit box (' + new Set(seen).size + ' different of ' + seen.length + ')', new Set(seen).size > 1, 'every button left the lit box as it was: ' + (seen[0] || '').slice(0, 200));
+      const a2 = await hook(p, s.id, 'after');
+      if (a2.error) { rec(name + ': after() ran without an error', false, a2.error); continue; }
+      if (a2.ran) await settled(p, 300);
+      const boxAfter = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
+      rec(name + ': after() put the words of the lit box back as they were', boxAfter === boxBefore, boxAfter === boxBefore ? '' : 'before: ' + String(boxBefore).slice(0, 160) + ' | after: ' + String(boxAfter).slice(0, 160));
+      if (site) {
+        const afterSnap = await p.evaluate(() => window.__tour.snapshot());
+        rec(name + ': after() puts the page back as it was (season, open tab, open menus, the lines of a season, the parts that follow the clock)', afterSnap === before, afterSnap === before ? '' : 'before ' + before + '  after ' + afterSnap);
+      }
+      continue;
     }
     const a = await hook(p, s.id, 'after');
     if (a.error) { rec(name + ': after() ran without an error', false, a.error); continue; }
@@ -346,6 +438,22 @@ else await run('tour-targets', async ({ browser, base, errs }) => {
       ok('step ' + st.order + ' ' + st.id + ' says ' + m[1] + ' ' + what + ' and the page has ' + real, said === real);
     }
   }
+  // the dates in the season buttons' words: a "Month day" in the card of a season must be the first or the last day of that season in js/season.js
+  const seasonDates = await p0.evaluate(() => { const f = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }); const out = {}; window.WISE_ACRES.seasons.list.forEach((x) => { out[x.id] = [f(x.start(2026)), f(x.end(2026))]; }); return out; });
+  const MONTH_DAY = /\b(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}\b/g;
+  let datesChecked = 0;
+  for (const st of steps) {
+    const { list } = choicesOf(st);
+    for (const c of list || []) {
+      const id = String(c.label).toLowerCase();
+      if (!seasonDates[id]) continue;
+      for (const d of String((c.title || '') + ' ' + (c.text || '')).match(MONTH_DAY) || []) {
+        datesChecked++;
+        ok('step ' + st.id + ', ' + c.label + ': the date "' + d + '" is the first or the last day of that season in js/season.js (' + seasonDates[id].join(' and ') + ')', seasonDates[id].includes(d));
+      }
+    }
+  }
+  info(datesChecked + ' dates in the cards of the season buttons were checked against js/season.js');
   await p0.context().close();
 
   /* ---- 3. the walk, at 1440 and 390 px, on the test day */
