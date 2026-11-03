@@ -23,3 +23,9 @@
 
 ## Menu helper + A: header width
 R1 measured with the real fonts: the wide bar needs about 1258 px (en) and 1304-1307 px (es, vi) WITHOUT Sign in; an icon-only Sign in adds 64 px; the words "Sign in" add 113 px. Decisions: (1) tighten the category buttons (padding .55/.75em -> .4/.5em, gap 20 -> 14; touch height stays 44 px): en then fits from 1180 px, es/vi from 1280 px; (2) Sign in is an ICON-ONLY person button next to the language button (aria-label "Sign in (demo)"); (3) the menu's CSS gets a second switch point under `html.wa-demo` (about +4.5em) so the bar never wraps in demo mode (the phone-style menu starts a little earlier there). Menu helper writes the CSS; A adds the class.
+
+## browser-support (added after helper C hit it)
+tests/browser-support.test.mjs fails on any CSS property or JS method name that is not yet in tests/browser-support.table.json, and the table can only be rebuilt with network access (main does that ONCE, after the merges). So: (1) prefer CSS properties and JS methods the site already uses; (2) if the test is red ONLY because a name is "not in the table" (not because it is "newer than the oldest browsers without a reviewed fallback"), do not fight it: list the new names in your NOTES file and carry on; (3) if it says a feature is newer than the oldest browsers (Safari 14, Chrome 80, Firefox 78) with no fallback, change your code. Never commit the table.
+
+## Job changes (3 Nov)
+- C (desk) is done and waits for A's shell: C now ALSO takes the family's "My pizza" screen (js/demo-view-pizza.js) from A, plus a shared pizza editor module js/demo-pizza-editor.js (used by My pizza AND by the kitchen, C2) and the pizza data js/demo-pizza-data.js (types, toppings, prices read from the page and the menu picture). A keeps the foundation and "My visits".
