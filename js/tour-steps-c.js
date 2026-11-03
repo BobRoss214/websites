@@ -364,7 +364,7 @@
       before: scene(alertOn, hook('desk-people'))
     },
     {
-      id: 'ch10-bell', order: CHAPTER * 100 + 16, chapter: CHAPTER, page: 'account', target: hook('acct-bell'), skipIfMissing: true,
+      id: 'ch10-bell', order: CHAPTER * 100 + 16, chapter: CHAPTER, page: 'account', target: hook('acct-bell'), skipIfMissing: true, allowClicks: true,   // the bell opens its list outside its own box
       title: 'The alert arrives',
       text: 'The tour sent the alert. The family sees it in the bell at the top. Replies, alerts and weather notices all land there, and each one links to the right screen.',
       before: scene(alertSent, hook('acct-bell'))

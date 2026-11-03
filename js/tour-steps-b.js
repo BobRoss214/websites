@@ -10,6 +10,9 @@
  * and each one undoes only what it did itself, so the order the engine calls them in does not matter.
  * Rules for the words: 45 words at most a card, short sentences, "you", no price or fact that is not on the site's own pages,
  * no year, no web or email address (those are checked by the site's tests). Plain ES5 on purpose (old phones read this file too).
+ * A step may have a row of Spring / Summer / Fall / Winter buttons on its card (choices: seasonWalk({...}), before: seasonsBegin, after: seasonsEnd): see
+ * "The season walk" in js/tour-steps.js and docs/TOUR.md. The helpers live in js/tour-steps.js (window.WA_TOUR_SEASONS); they are asked for when they are used,
+ * because the engine may run this file first.
  */
 (function () {
   'use strict';
@@ -18,6 +21,11 @@
   var mem = {};   // what a step changed on the page, so that it can be put back
 
   function one(selector) { return document.querySelector(selector); }
+
+  /* ---- the season buttons of a card: the helpers are in js/tour-steps.js (loaded in any order), so they are looked for when they are needed ---- */
+  function seasonWalk(words, then) { return function () { var w = window.WA_TOUR_SEASONS; return w ? w.walk(words, then)() : []; }; }
+  function seasonsBegin() { var w = window.WA_TOUR_SEASONS; return w ? w.begin() : undefined; }
+  function seasonsEnd() { var w = window.WA_TOUR_SEASONS; return w ? w.end() : undefined; }
 
   /* ---- the three group tabs: school tours, parties, corporate events (steps 801 to 803) ---- */
   function groupTab() {
@@ -112,6 +120,25 @@
       text: 'Friday to Sunday, 10 am to 8 pm. The line under it says Open now or Closed today. ' +
             'If weather closes you, your site builder can switch on a closure. The page also sends visitors to Instagram for sudden changes, so post there too.'
     },
+    {
+      id: 'ch6-trees', order: 606, chapter: 6, page: 'index',
+      target: '#greenhouse .gh-copy',
+      title: 'Christmas trees at The GreenHouse',
+      text: 'The list says “Christmas trees in season” all year. A green line, “Christmas trees are here”, shows only in tree season. It sits under the yellow reservations note. Press a season.',
+      choicesLabel: 'See this part in:',
+      choices: seasonWalk({
+        spring: 'Spring. No green line. Only the list item “Christmas trees in season” is there, with the pizza, ice cream, drinks and goats.',
+        summer: 'Summer. The same: no green line, only “Christmas trees in season” in the list.',
+        fall: 'Fall. Still no green line. It waits for tree season.',
+        winter: 'Winter. A green line appears: “Christmas trees are here.” It says tree season runs from the Friday after Thanksgiving to early December, right at The GreenHouse.'
+      }, function () {   // the line sits low in this tall box: the reservations note above it is brought just under the top bar, so the line shows above the card (on a phone too)
+        var note = one('#greenhouse .gh-callout'), bar = one('.site-header');
+        if (!note) return;
+        var dy = note.getBoundingClientRect().top - ((bar ? bar.getBoundingClientRect().height : 80) + 24);
+        try { window.scrollTo({ top: window.pageYOffset + dy, behavior: 'instant' }); } catch (e) { window.scrollTo(0, window.pageYOffset + dy); }
+      }),
+      before: seasonsBegin, after: seasonsEnd
+    },
 
     /* ============ 7  The Store ============ */
     {
@@ -155,7 +182,7 @@
       target: '#shop-pumpkins',
       title: 'Prices coming soon: fall, trees and u-pick',
       text: 'U-pick pumpkins and Christmas trees wait for a price. In the farm group below, so do U-pick strawberries and blueberries. ' +
-            'The three u-pick cards already said “Prices coming soon” on your older page. Please send us each price.'
+            'The three u-pick cards already said “Prices coming soon” on your older page. Please send us each price. This group shows all year.'
     },
 
     /* ============ 8  Groups, story, reviews, photos, questions, contact ============ */

@@ -334,7 +334,7 @@
       groups.filter(isOpen).forEach((g) => { const keep = g.contains(doc.activeElement) || doc.activeElement === doc.body; setGroup(g, false); if (keep) btnOf(g).focus(); });
     });
 
-    // A line for something that only some seasons show (the "Meet the animals" and "Playgrounds" cards are not there in winter) goes to its
+    // A line for something that only some seasons show (the "Playgrounds" card is not there in winter) goes to its
     // data-fallback place in the other seasons. The place is the line's own address with the part after # changed, so it also works on the other pages.
     const seasonal = $$('a[data-seasons]', nav);
     seasonal.forEach((a) => { a.dataset.href = a.getAttribute('href'); });

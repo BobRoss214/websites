@@ -19,6 +19,12 @@
  *   as it was before (the season, the open tab, the open menus). This is done at 1440 and at 390 px wide.
  *   The same walk without the scrolling is repeated on five other days (the real day, winter, a day when nothing is in season, spring and summer) on the
  *   home page: a target that disappears on one of those days must say skipIfMissing, because the owners may open the tour in any month.
+ *   Steps with small buttons on their card (step.choices: the season walk, docs/TOUR.md): the list is asked for with no page (it must work without one), every button has a
+ *   short label and words that follow the same rules as a step's (9-word title, 45-word text, no address, year, jargon or invented price), the step has an after();
+ *   in the browser every button is PRESSED in turn (its run()), as an owner would: the lit box must still be on the page and show something, a Spring / Summer / Fall / Winter
+ *   button must leave the whole page in that season, every phrase the card puts in double curly quotes (“...”) must be written in the lit box, the buttons must show
+ *   different things, and after() must put the words of the lit box and the whole page (season, open tabs, the lines of a season, the parts that follow the clock)
+ *   back as they were. A "Month day" in the card of a season must be the first or the last day of that season in js/season.js.
  *   The Store's "Prices coming soon" cards must be exactly the ones that chapters 7 and 11 name, and a number that a text quotes from the page ("Fifteen
  *   common questions") must be the page's own.
  *   WA_WORDS_ONLY=1 node tests/tour-targets.test.mjs runs only the first part (no browser, about a second); WA_TOUR_ONLY=3,ch2-game limits the walks to
@@ -31,7 +37,9 @@ import { run, open, ok, info, finish, settled, until, ROOT, ms } from './lib.mjs
 const FILES = ['js/tour-steps.js', 'js/tour-steps-b.js', 'js/tour-steps-c.js'];
 const PAGE_FILE = { index: 'index.html', 'first-visit': 'first-visit.html', account: 'account.html', 'farm-desk': 'farm-desk.html', kitchen: 'kitchen.html' };
 const DEMO_PAGES = ['account', 'farm-desk', 'kitchen'];
-const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after'];
+const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after', 'choices', 'choicesLabel'];
+const CHOICE_FIELDS = ['label', 'title', 'text', 'run', 'pressed'];
+const SEASON_NAMES = ['spring', 'summer', 'fall', 'winter'];
 const SIZES = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
 const OTHER_DAYS = [
   ['2026-11-03T12:00:00-05:00', 'the real day (3 Nov 2026)'],
@@ -44,6 +52,8 @@ const OTHER_DAYS = [
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const exists = (f) => fs.existsSync(path.join(ROOT, f));
 const wordsOf = (s) => String(s).trim().split(/\s+/).filter(Boolean);
+const numbersAside = (t) => String(t == null ? '' : t).replace(/\d+/g, '#').replace(/\b(day|hour|minute|second)s\b/gi, '$1');
+const squash = (t) => String(t).toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim();   // words compared without capitals, curly quotes or odd spaces
 const stripTags = (html) => html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&#?\w+;/g, ' ');
 
 /* ---------------------------------------------------------------- the steps files, read without a browser */
@@ -84,6 +94,54 @@ function sentencesOf(text) {
 }
 const countWords = (text) => String(text).split('\n').reduce((n, l) => n + wordsOf(l.replace(/^\s*-\s+/, '')).length, 0);
 
+/** The rules for the title and the text of a card (a step's own, or one that a small button of the step shows). `who` starts every message. */
+function copyProblems(o, who, { needTitle, needText }) {
+  const p = [];
+  if (o.title === undefined ? needTitle : (typeof o.title !== 'string' || !o.title.trim())) p.push(who + 'needs a title');
+  else if (typeof o.title === 'string' && wordsOf(o.title).length > 9) p.push(who + 'title has ' + wordsOf(o.title).length + ' words (9 at most)');
+  if (o.text === undefined ? needText : (typeof o.text !== 'string' || !o.text.trim())) p.push(who + 'needs a text');
+  else if (typeof o.text === 'string') {
+    const n = countWords(o.text), raw = wordsOf(o.text).length;
+    if (n > 45) p.push(who + 'text has ' + n + ' words (45 at most)');
+    else if (raw > 45) p.push(who + 'text has ' + raw + ' words with the bullet dashes counted (45 at most, so a stricter counter agrees)');
+    for (const sen of sentencesOf(o.text)) if (wordsOf(sen).length > 25) p.push(who + 'a sentence has ' + wordsOf(sen).length + ' words (25 at most): "' + sen.slice(0, 60) + '..."');
+  }
+  for (const k of ['title', 'text']) {
+    const v = typeof o[k] === 'string' ? o[k] : '';
+    if (/[<>]/.test(v)) p.push(who + k + ' has markup (< or >); the engine shows plain text');
+    if (/https?:\/\/|www\.|\b[\w-]+\.(?:com|org|net|html)\b|\S+@\S+\.\S+/i.test(v)) p.push(who + k + ' has a web address or e-mail address (the privacy test reads every js file for those)');
+    if (/\b20[0-3]\d\b/.test(v)) p.push(who + k + ' has a year (tests/time-bombs.test.mjs: no year in js files; say "this fall")');
+    if (/\bkathy\b/i.test(v)) p.push(who + k + ' spells Cathy as Kathy');
+    for (const j of jargon) if (new RegExp('\\b' + j.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:s|es|ed|ing)?\\b', 'i').test(v)) p.push(who + k + ' uses the word "' + j + '" (tools/plain_words.txt lists it as jargon)');
+  }
+  for (const a of (typeof o.text === 'string' ? o.text : '').match(/\$\d[\d,]*(?:\.\d+)?/g) || []) if (!siteAmounts.has(a.replace(/,/g, ''))) p.push(who + 'the amount ' + a + ' is not on any page of the site (never invent a price)');
+  return p;
+}
+
+/** The list of small buttons of a step (step.choices is a list, or a function that gives it), asked here with no page: it must work without one. */
+function choicesOf(s) {
+  if (s.choices === undefined) return { list: null, problems: [] };
+  let list = s.choices;
+  if (typeof list === 'function') { try { list = list({}); } catch (e) { return { list: null, problems: ['choices() threw: ' + String(e && e.message).split('\n')[0]] }; } }
+  if (!Array.isArray(list) || !list.length) return { list: null, problems: ['choices must be a list (or a function that gives one) with at least one entry'] };
+  const problems = [];
+  if (s.choicesLabel !== undefined && (typeof s.choicesLabel !== 'string' || !s.choicesLabel.trim() || wordsOf(s.choicesLabel).length > 6)) problems.push('choicesLabel must be a few words (6 at most)');
+  if (typeof s.after !== 'function') problems.push('a step with choices needs an after() that puts the page back');
+  const seen = new Set();
+  list.forEach((c, i) => {
+    const who = 'choice ' + (i + 1) + ': ';
+    if (!c || typeof c !== 'object') { problems.push(who + 'must be an object'); return; }
+    for (const k of Object.keys(c)) if (!CHOICE_FIELDS.includes(k)) problems.push(who + 'unknown field "' + k + '"');
+    if (typeof c.label !== 'string' || !c.label.trim()) problems.push(who + 'needs a label'); else if (wordsOf(c.label).length > 2) problems.push(who + 'label has ' + wordsOf(c.label).length + ' words (2 at most: it is a small button)');
+    else if (seen.has(c.label)) problems.push(who + 'the label "' + c.label + '" is used twice'); else seen.add(c.label);
+    if (c.run !== undefined && typeof c.run !== 'function') problems.push(who + 'run must be a function');
+    if (c.pressed !== undefined && typeof c.pressed !== 'boolean') problems.push(who + 'pressed must be true or false');
+    problems.push(...copyProblems(c, who, { needTitle: false, needText: false }));
+    if (c.title === undefined && c.text === undefined) problems.push(who + 'has neither a title nor a text: pressing it would change nothing on the card');
+  });
+  return { list, problems };
+}
+
 function wordProblems(s) {
   const p = [];
   for (const k of Object.keys(s)) if (!FIELDS.includes(k)) p.push('unknown field "' + k + '" (the engine does not read it; a typo?)');
@@ -93,26 +151,10 @@ function wordProblems(s) {
   else if (Math.floor(s.order / 100) !== s.chapter) p.push('order ' + s.order + ' does not belong to chapter ' + s.chapter + ' (order = chapter * 100 + the place)');
   if (!Object.prototype.hasOwnProperty.call(PAGE_FILE, s.page)) p.push('page must be one of ' + Object.keys(PAGE_FILE).join(', '));
   if (!(s.target === null || (typeof s.target === 'string' && s.target.trim() !== ''))) p.push('target must be one CSS selector or null');
-  if (typeof s.title !== 'string' || !s.title.trim()) p.push('a step needs a title');
-  else if (wordsOf(s.title).length > 9) p.push('title has ' + wordsOf(s.title).length + ' words (9 at most)');
-  if (typeof s.text !== 'string' || !s.text.trim()) p.push('a step needs a text');
-  else {
-    const n = countWords(s.text), raw = wordsOf(s.text).length;
-    if (n > 45) p.push('text has ' + n + ' words (45 at most)');
-    else if (raw > 45) p.push('text has ' + raw + ' words with the bullet dashes counted (45 at most, so a stricter counter agrees)');
-    for (const sen of sentencesOf(s.text)) if (wordsOf(sen).length > 25) p.push('a sentence has ' + wordsOf(sen).length + ' words (25 at most): "' + sen.slice(0, 60) + '..."');
-  }
-  for (const k of ['title', 'text']) {
-    const v = typeof s[k] === 'string' ? s[k] : '';
-    if (/[<>]/.test(v)) p.push(k + ' has markup (< or >); the engine shows plain text');
-    if (/https?:\/\/|www\.|\b[\w-]+\.(?:com|org|net|html)\b|\S+@\S+\.\S+/i.test(v)) p.push(k + ' has a web address or e-mail address (the privacy test reads every js file for those)');
-    if (/\b20[0-3]\d\b/.test(v)) p.push(k + ' has a year (tests/time-bombs.test.mjs: no year in js files; say "this fall")');
-    if (/\bkathy\b/i.test(v)) p.push(k + ' spells Cathy as Kathy');
-    for (const j of jargon) if (new RegExp('\\b' + j.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:s|es|ed|ing)?\\b', 'i').test(v)) p.push(k + ' uses the word "' + j + '" (tools/plain_words.txt lists it as jargon)');
-  }
-  for (const a of (typeof s.text === 'string' ? s.text : '').match(/\$\d[\d,]*(?:\.\d+)?/g) || []) if (!siteAmounts.has(a.replace(/,/g, ''))) p.push('the amount ' + a + ' is not on any page of the site (never invent a price)');
+  p.push(...copyProblems(s, '', { needTitle: true, needText: true }));
   for (const k of ['allowClicks', 'skipIfMissing']) if (s[k] !== undefined && typeof s[k] !== 'boolean') p.push(k + ' must be true or false');
   for (const k of ['before', 'after']) if (s[k] !== undefined && typeof s[k] !== 'function') p.push(k + ' must be a function');
+  p.push(...choicesOf(s).problems);
   return p;
 }
 
@@ -129,10 +171,17 @@ const IN_PAGE = `(() => {
   };
   const opacity = (el) => { let o = 1; for (let a = el; a && a.nodeType === 1; a = a.parentElement) o *= parseFloat(getComputedStyle(a).opacity); return o; };
   const find = (sel) => { let all = []; try { all = Array.from(document.querySelectorAll(sel)); } catch (e) { return { bad: true, n: 0 }; } const el = all.find(visible) || null; return { n: all.length, el, bad: false }; };
+  // the words a visitor can see; a box that is not drawn (hidden) counts as '[hidden]': the page leaves old words inside a hidden pizza countdown, which nobody sees
+  const text = (sel) => { const e = document.querySelector(sel); if (!e) return null; return e.getClientRects().length ? e.innerText.replace(/\\s+/g, ' ').replace(/\\d+/g, '#').replace(/\\b(day|hour|minute|second)s\\b/gi, '$1').trim() : '[hidden]'; };   // numbers become # and 'days' become 'day' (a countdown moves on by itself)
   const snapshot = () => JSON.stringify([
     document.documentElement.getAttribute('data-season'),
-    Array.from(document.querySelectorAll('[aria-expanded="true"],[aria-selected="true"],[aria-checked="true"]')).map((e) => (e.id || e.className || e.tagName) + '|' + (e.getAttribute('data-season') || e.getAttribute('data-fs') || e.getAttribute('data-lang') || '')),
+    Array.from(document.querySelectorAll('[aria-expanded="true"],[aria-selected="true"],[aria-checked="true"],[aria-pressed="true"]')).map((e) => (e.id || e.className || e.tagName) + '|' + (e.getAttribute('data-season') || e.getAttribute('data-fs') || e.getAttribute('data-lang') || '')),
     !!(document.getElementById('nav') && document.getElementById('nav').classList.contains('is-open')),
+    // what the season walk changes and must put back: the lines that belong to a season, and the boxes that follow the clock (their words)
+    Array.from(document.querySelectorAll('[data-only],[data-out-of-season]')).map((e) => (e.hasAttribute('hidden') ? 1 : 0)).join(''),
+    ['.announce [data-ann-season]', '.next-up', '#this-week', '.hero-live', '#fact-season', '[data-rel-chip]', '[data-rel-box]', '#season-tabs .now-badge:not([hidden])', '.fs-now:not([hidden])'].map(text),
+    Array.from(document.querySelectorAll('.week-strip .day.today')).map((e) => e.textContent).join() + '|' + ((document.querySelector('.cal') || { style: { getPropertyValue: () => '' } }).style.getPropertyValue('--today')),
+    Array.from(document.querySelectorAll('#farm-cards > li')).filter((e) => !e.hidden).length,
   ]);
   window.__tour = {
     snapshot,
@@ -179,12 +228,46 @@ const IN_PAGE = `(() => {
       if (!hit || f.el.contains(hit) || hit.contains(f.el)) return '';
       return hit.tagName.toLowerCase() + (hit.className && typeof hit.className === 'string' ? '.' + hit.className.split(' ')[0] : '');
     },
+    openersOutside(sel) {   // buttons in the lit part that open something (aria-expanded + aria-controls): what they open must stay inside the lit box, or the visitor can open it but not use it
+      const f = find(sel); if (!f.el) return [];
+      const box = f.el.getBoundingClientRect(), found = [];
+      const list = Array.from(f.el.querySelectorAll('[aria-expanded][aria-controls]'));
+      if (f.el.matches('[aria-expanded][aria-controls]')) list.unshift(f.el);
+      list.forEach((b) => {
+        if (!visible(b)) return;
+        const c = document.getElementById(b.getAttribute('aria-controls')); if (!c) return;
+        const name = '"' + (b.getAttribute('aria-label') || b.textContent || b.id || '?').trim().replace(/\\s+/g, ' ').slice(0, 30) + '"';
+        if (!f.el.contains(c)) { found.push(name + ' opens #' + (c.id || '?') + ', which is not inside the lit part'); return; }
+        const was = b.getAttribute('aria-expanded') === 'true';
+        if (!was) b.click();
+        const r = c.getBoundingClientRect();
+        const out = r.width > 0 && r.height > 0 && (r.left < box.left - 12 || r.right > box.right + 12 || r.top < box.top - 12 || r.bottom > box.bottom + 12);
+        if (!was) b.click();
+        if (out) found.push(name + ' opens #' + (c.id || '?') + ', which reaches outside the lit box');
+      });
+      return found;
+    },
     tryClick(sel) {   // what an owner may do in a step that says allowClicks: choose another season or tab
       const f = find(sel); if (!f.el) return '';
       const b = Array.from(f.el.querySelectorAll('[aria-checked="false"],[aria-selected="false"]')).find((x) => visible(x) && x.tagName === 'BUTTON');
       if (!b) return '';
       b.click();
       return (b.id || b.getAttribute('data-season') || b.textContent.trim().slice(0, 20));
+    },
+    boxText(sel) { const f = find(sel); return f.el ? f.el.innerText.replace(/\\s+/g, ' ').trim() : null; },   // what is written in the lit box now (as shown: capitals of a heading included)
+    boxAll(sel) { const f = find(sel); return f.el ? f.el.textContent.replace(/\\s+/g, ' ').trim() : null; },   // everything written in it, also what the site's own style leaves out on a phone
+    dataSeason() { return document.documentElement.getAttribute('data-season'); },
+    choiceList(id) { const s = this.stepById(id); const l = typeof s.choices === 'function' ? s.choices({}) : s.choices; return l ? l.map((c) => ({ label: c.label, title: c.title, text: c.text, pressed: !!c.pressed })) : []; },
+    startChoice(id, i) {   // like start(), for the run() of the small button i (a fresh list is asked for, as the engine does when the card shows)
+      const st = { ran: false, done: false, error: '' };
+      window.__tourRun = st;
+      const s = this.stepById(id);
+      const l = s ? (typeof s.choices === 'function' ? s.choices({}) : s.choices) : null;
+      const c = l && l[i];
+      if (!c || typeof c.run !== 'function') { st.done = true; return; }
+      st.ran = true;
+      try { Promise.resolve(c.run({})).then(() => { st.done = true; }, (e) => { st.error = String((e && e.message) || e); st.done = true; }); }
+      catch (e) { st.error = String((e && e.message) || e); st.done = true; }
     },
     soonCards() {
       return Array.from(document.querySelectorAll('.shop-card')).filter((c) => c.querySelector('.shop-soon')).map((c) => (c.querySelector('.shop-name') || {}).textContent.trim());
@@ -205,8 +288,8 @@ async function goPage(p, base, page) {
   await settled(p, 300);
 }
 /** Runs before() or after() of a step with an EMPTY object and waits until it is over (a returned Promise too, moving the page clock meanwhile). */
-async function hook(p, id, which) {
-  await p.evaluate(([i, w]) => window.__tour.start(i, w), [id, which]);
+async function hook(p, id, which) {   // which: 'before', 'after', or the number of a small button of the step (its run())
+  await p.evaluate(([i, w]) => (typeof w === 'number' ? window.__tour.startChoice(i, w) : window.__tour.start(i, w)), [id, which]);
   const end = Date.now() + ms(12000);
   for (;;) {
     const st = await p.evaluate(() => window.__tourRun);
@@ -228,7 +311,23 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
   let on = list[0].page;
   await putStepsInPage(p);
   const skipped = [];
-  let bad = 0;
+  let bad = 0, menusChecked = 0, menusBad = 0;
+  if (full) {   // the check for a lit part that opens something outside its box, tried first on made-up samples: it must find the two bad ones and leave the good one alone
+    const sample = await p.evaluate(() => {
+      const made = [];
+      const mk = (id, inner) => { const d = document.createElement('div'); d.id = id; d.style.cssText = 'position:absolute;left:0;top:0;width:200px;height:40px'; d.innerHTML = inner; document.body.appendChild(d); made.push(d); return d; };
+      const wire = (d) => { const b = d.querySelector('button'); b.addEventListener('click', () => { const o = b.getAttribute('aria-expanded') !== 'true'; b.setAttribute('aria-expanded', String(o)); document.getElementById(b.getAttribute('aria-controls')).hidden = !o; }); };
+      mk('t-far', '<button type="button" aria-expanded="false" aria-controls="t-far-list">Menu</button>');
+      const far = document.createElement('ul'); far.id = 't-far-list'; far.hidden = true; far.textContent = 'x'; document.body.appendChild(far); made.push(far);
+      wire(document.getElementById('t-far'));
+      wire(mk('t-hang', '<button type="button" aria-expanded="false" aria-controls="t-hang-list">Menu</button><ul id="t-hang-list" hidden style="position:absolute;left:0;top:44px;width:150px;height:120px">x</ul>'));
+      wire(mk('t-fit', '<button type="button" aria-expanded="false" aria-controls="t-fit-list">Menu</button><ul id="t-fit-list" hidden style="position:absolute;left:60px;top:2px;width:100px;height:30px;margin:0">x</ul>'));
+      const r = { far: window.__tour.openersOutside('#t-far').length, hang: window.__tour.openersOutside('#t-hang').length, fit: window.__tour.openersOutside('#t-fit').length, closedAgain: ['t-hang-list', 't-fit-list', 't-far-list'].every((id) => document.getElementById(id).hidden) };
+      made.forEach((n) => n.remove());
+      return r;
+    });
+    ok('(tried first on made-up samples) the check for a lit part that opens something outside its box finds the list that is not inside it and the list that hangs out of it, leaves a list that fits alone, and closes what it opened', sample.far === 1 && sample.hang === 1 && sample.fit === 0 && sample.closedAgain, JSON.stringify(sample));
+  }
   const rec = (name, cond, detail) => { if (!cond) bad++; if (full || !cond) ok(name, cond, detail); };   // the light walks print only what fails, and one line at the end
   for (const s of list) {
     if (s.page !== on) { await goPage(p, base, s.page); on = s.page; await putStepsInPage(p); }
@@ -260,11 +359,62 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
         const cover = await p.evaluate(([t]) => window.__tour.covered(t), [s.target]);
         if (cover) info('note: something else (' + cover + ') is on top of the middle of the target ' + s.target);
         if (pr.h > pr.vh) info('note: the target is taller than the window (' + pr.h + ' of ' + pr.vh + ' px): ' + s.id);
+        if (s.allowClicks !== true) {   // the lit part may be used, but only inside its own box: a button that opens something outside it is a trap (the opened part is dimmed and blocked)
+          const outside = await p.evaluate(([t]) => window.__tour.openersOutside(t), [s.target]);
+          menusChecked++;
+          if (outside.length) { menusBad++; rec(name + ': nothing in the lit part opens something outside its box (or the step says allowClicks: true)', false, outside.join('; ') + '  -> give the step allowClicks: true (the whole page may be used), or light the opened part'); }
+        }
         if (s.allowClicks) {
           const clicked = await p.evaluate(([t]) => window.__tour.tryClick(t), [s.target]);
           if (clicked) { await settled(p, 600); info('tried a click on "' + clicked + '" inside the target (the step allows clicks)'); }
         }
       }
+    }
+    // the small buttons of the step (the season walk): press each one in turn, the way an owner would, and look at the lit box after each press
+    const buttons = full && pr.shown ? await p.evaluate(([id]) => window.__tour.choiceList(id), [s.id]) : [];
+    if (buttons.length) {
+      const boxBefore = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
+      const seen = [], seenAll = [], phone = size.width < 600;   // on a phone the site's own style leaves some words out (the "In season:" part of the top strip): the tour is made for the computer first
+      for (let i = 0; i < buttons.length; i++) {
+        const c = buttons[i], nm = name + ' - button "' + c.label + '"';
+        const r = await hook(p, s.id, i);
+        if (r.error) { rec(nm + ': run() ran without an error', false, r.error); continue; }
+        await settled(p, 600);
+        const bad = [];
+        const there = await p.evaluate(([t]) => window.__tour.probe(t), [s.target]);
+        if (!there.shown) bad.push('the lit box is not on the page any more (' + there.why + ')');
+        else if (!there.something) bad.push('the lit box has nothing in it to look at');
+        if (SEASON_NAMES.includes(c.label.toLowerCase())) {
+          const now = await p.evaluate(() => window.__tour.dataSeason());
+          if (now !== c.label.toLowerCase()) bad.push('the page is in "' + now + '", not in ' + c.label.toLowerCase());
+        }
+        const box = (await p.evaluate(([t]) => window.__tour.boxText(t), [s.target])) || '';
+        const all = phone ? (await p.evaluate(([t]) => window.__tour.boxAll(t), [s.target])) || '' : '';
+        seen.push(box); seenAll.push(all || box);
+        const phrases = [...String((c.title || '') + ' ' + (c.text || '')).matchAll(/\u201c([^\u201d]+)\u201d/g)].map((m) => m[1]);
+        const lost = phrases.filter((ph) => !squash(box).includes(squash(ph)));
+        const hid = lost.filter((ph) => phone && squash(all).includes(squash(ph)));   // there in the page, left out by the style on a phone
+        const missing = lost.filter((ph) => !hid.includes(ph));
+        if (hid.length) info('note: on a phone the site leaves out ' + hid.map((m) => '\u201c' + m + '\u201d').join(', ') + ' in ' + s.target + ' (the computer shows it)');
+        if (missing.length) bad.push('the card quotes ' + missing.map((m) => '\u201c' + m + '\u201d').join(', ') + ' but the lit box says: ' + box.slice(0, 260));
+        if (process.env.WA_TOUR_SHOW) info(c.label + ': ' + box.slice(0, 330));
+        rec(nm + ': the lit box is on the page and shows what the card says (' + phrases.length + ' quoted phrase' + (phrases.length === 1 ? '' : 's') + ')' + (full ? '' : ''), bad.length === 0, bad.join(' | '));
+      }
+      if (buttons.length > 1) {
+        const shown = new Set(seen).size, written = new Set(seenAll).size;
+        if (phone && shown < 2 && written > 1) info('note: on a phone the lit box looks the same for every button; the words that change are left out by the site\'s own style (' + s.target + ')');
+        rec(name + ': the buttons show different things in the lit box (' + shown + ' different of ' + seen.length + ')', shown > 1 || (phone && written > 1), 'every button left the lit box as it was: ' + (seen[0] || '').slice(0, 200));
+      }
+      const a2 = await hook(p, s.id, 'after');
+      if (a2.error) { rec(name + ': after() ran without an error', false, a2.error); continue; }
+      if (a2.ran) await settled(p, 300);
+      const boxAfter = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
+      rec(name + ': after() put the words of the lit box back as they were (numbers aside: a countdown moves on by itself)', numbersAside(boxAfter) === numbersAside(boxBefore), boxAfter === boxBefore ? '' : 'before: ' + String(boxBefore).slice(0, 160) + ' | after: ' + String(boxAfter).slice(0, 160));
+      if (site) {
+        const afterSnap = await p.evaluate(() => window.__tour.snapshot());
+        rec(name + ': after() puts the page back as it was (season, open tab, open menus, the lines of a season, the parts that follow the clock)', afterSnap === before, afterSnap === before ? '' : 'before ' + before + '  after ' + afterSnap);
+      }
+      continue;
     }
     const a = await hook(p, s.id, 'after');
     if (a.error) { rec(name + ': after() ran without an error', false, a.error); continue; }
@@ -275,6 +425,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
     }
   }
   await p.context().close();
+  if (full && menusChecked) ok(tag + ': no lit part opens something outside its own box, except in steps that say allowClicks: true (' + menusChecked + ' steps looked at)', menusBad === 0);
   if (!full && !bad) ok(tag + ': all ' + list.length + ' steps have a visible target or say skipIfMissing', true);
   return { skipped, seen: list.length };
 }
@@ -344,6 +495,36 @@ else await run('tour-targets', async ({ browser, base, errs }) => {
       if (!said) continue;
       const real = typeof sel === 'function' ? sel() : await p0.evaluate((q) => document.querySelectorAll(q).length, sel);
       ok('step ' + st.order + ' ' + st.id + ' says ' + m[1] + ' ' + what + ' and the page has ' + real, said === real);
+    }
+  }
+  // the dates in the season buttons' words: a "Month day" in the card of a season must be the first or the last day of that season in js/season.js
+  const seasonDates = await p0.evaluate(() => { const f = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }); const out = {}; window.WISE_ACRES.seasons.list.forEach((x) => { out[x.id] = [f(x.start(2026)), f(x.end(2026))]; }); return out; });
+  const MONTH_DAY = /\b(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}\b/g;
+  let datesChecked = 0;
+  for (const st of steps) {
+    const { list } = choicesOf(st);
+    for (const c of list || []) {
+      const id = String(c.label).toLowerCase();
+      if (!seasonDates[id]) continue;
+      for (const d of String((c.title || '') + ' ' + (c.text || '')).match(MONTH_DAY) || []) {
+        datesChecked++;
+        ok('step ' + st.id + ', ' + c.label + ': the date "' + d + '" is the first or the last day of that season in js/season.js (' + seasonDates[id].join(' and ') + ')', seasonDates[id].includes(d));
+      }
+    }
+  }
+  info(datesChecked + ' dates in the cards of the season buttons were checked against js/season.js');
+  // what the strip at the top says AFTER a season ends (the words in single curly quotes in the strip step) is what the page says on the day after the season's last day
+  const stripStep = steps.find((x) => x.id === 'ch2-strip');
+  if (stripStep) {
+    for (const c of choicesOf(stripStep).list || []) {
+      const id = String(c.label).toLowerCase();
+      const later = (String(c.text).match(/\u2018([^\u2019]+)\u2019/g) || []).map((x) => x.slice(1, -1));
+      if (!seasonDates[id] || !later.length) continue;
+      const day = await p0.evaluate((sid) => { const d = window.WISE_ACRES.seasons.list.find((x) => x.id === sid).end(2026); return [d.getFullYear(), d.getMonth(), d.getDate() + 1]; }, id);
+      await p0.clock.setSystemTime(new Date(day[0], day[1], day[2], 12, 0, 0));
+      await p0.evaluate(() => window.WISE_ACRES.live.refresh());
+      const said = await p0.evaluate(() => document.querySelector('.announce [data-ann-season]').textContent.trim());
+      ok('step ch2-strip, ' + c.label + ': the day after the season, the strip says ' + JSON.stringify(later[0]) + ' (the page says ' + JSON.stringify(said) + ')', later.every((l) => squash(said) === squash(l)), said);
     }
   }
   await p0.context().close();
