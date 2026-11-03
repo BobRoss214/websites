@@ -52,6 +52,21 @@ ok('the Directions link is the one the site already has', has(home.replace(/&amp
 ok('What to bring leads to the checklist card of First visit; the First visit page and the home page exist', has(read('pages/first-visit.html'), 'id="checklist"') && Data.LINKS.whatToBring === 'first-visit.html#checklist' && fs.existsSync(path.join(ROOT, 'index.html')) && fs.existsSync(path.join(ROOT, Data.LINKS.firstVisit)));
 ok('the farm address is the site\'s own', has(homeText, '4701 Hartis Road') && /^4701 Hartis Rd, Indian Trail, NC 28079$/.test(Data.LINKS.address));
 
+/* ---------------- "Tell me when": the choices and the pretend phone ---------------- */
+const KINDS = Data.alertKinds, kindOf = (key) => KINDS.find((k) => k.key === key) || {};
+const WHEN_SENTENCE = 'Reservations with pizza open every Tuesday at 5:00 PM for the upcoming weekend';
+ok('the choices are in this order: a spot on a full day, reservations open, then the seasons as the site has them (strawberries, blueberries and sunflowers, pumpkins and tomatoes, Christmas trees)',
+  KINDS.map((k) => k.key).join() === 'spot,reservations,strawberries,blueberries,pumpkins,trees' && KINDS.map((k) => k.label).join(' | ') === 'A spot opens on a full day | Reservations open | Strawberries open | Blueberries and sunflowers open | Pumpkins and tomatoes open | Christmas trees arrive');
+ok('every choice has a title, a line under it and the words the family reads in the bell; no two are the same', KINDS.every((k) => k.key && k.label && k.note && k.notice) && new Set(KINDS.map((k) => k.key)).size === KINDS.length && new Set(KINDS.map((k) => k.notice)).size === KINDS.length);
+ok('"Reservations open" says only what the site says: reservations with pizza open every Tuesday at 5:00 PM for the upcoming weekend (home page, Wise Pie page, Pumpkin patch page)',
+  has(homeText, WHEN_SENTENCE) && has(text(read('pages/wise-pie.html')), WHEN_SENTENCE) && has(text(read('pages/pumpkin-patch.html')), WHEN_SENTENCE) && kindOf('reservations').note.includes(WHEN_SENTENCE));
+const TIMES = /\b\d{1,2}(?::\d{2})?\s?(?:AM|PM|am|pm)\b/g, DAYS_OR_MONTHS = /\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|January|February|March|April|May|June|July|August|September|October|November|December)\b/g;
+const said = KINDS.map((k) => [k.key, k.label + ' ' + k.note + ' ' + k.notice]);
+ok('no hour is made up: every time written in these words is on the home page', said.every(([, t]) => (t.match(TIMES) || []).every((m) => has(homeText, m))), said.map(([k, t]) => k + ': ' + (t.match(TIMES) || []).join('/')).join(', '));
+ok('no day or date is made up: the only choice that names a weekday is the reservations one, and it is the site\'s sentence', said.filter(([, t]) => (t.match(DAYS_OR_MONTHS) || []).length).map(([k]) => k).join() === 'reservations');
+ok('the pretend phone number is a made-up one: it is in the block set aside for made-up numbers (555-0100 to 555-0199) and is not a number the site shows',
+  /^\(\d{3}\) 555-01\d\d$/.test(Data.SAMPLE_PHONE) && !homeText.includes(Data.SAMPLE_PHONE) && !home.includes(Data.SAMPLE_PHONE.replace(/\D/g, '')) && Data.sample('2026-11-03').family.phone === Data.SAMPLE_PHONE && JSON.stringify(Data.sample('2026-11-03').family.notify) === '{"text":true,"email":true}');
+
 /* ---------------- the demo's scripts keep to the data file ---------------- */
 const demoJs = fs.readdirSync(path.join(ROOT, 'js')).filter((f) => /^demo-.*\.js$/.test(f) && f !== 'demo-data.js');
 const stray = [];

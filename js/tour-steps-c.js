@@ -346,7 +346,7 @@
     {
       id: 'ch10-alerts', order: CHAPTER * 100 + 14, chapter: CHAPTER, page: 'account', target: hook('acct-alerts'), skipIfMissing: true, allowClicks: true,
       title: 'Tell me when',
-      text: 'Visitors switch on what they want to hear about. The choices are strawberries, blueberries and sunflowers, pumpkins and tomatoes, Christmas trees, or a spot on a full day. Your email sign-up asks about interests too.',
+      text: 'Families choose where messages go: text, email or both. The first choice is a spot on a full day. For visits there are two kinds of "when": a spot opens, or reservations open. Strawberries, blueberries and sunflowers, pumpkins and tomatoes, and Christmas trees follow.',
       before: scene(alertOn, hook('acct-alerts'), 'alerts')
     },
     {
