@@ -294,7 +294,7 @@
     {
       id: 'ch10-paid', order: CHAPTER * 100 + 4, chapter: CHAPTER, page: 'account', target: hook('acct-paid'), skipIfMissing: true,
       title: 'What was paid',
-      text: "Every paid line is listed, with the total. The sample uses your site's prices: the $31 base price with 2 pizzas and $3 per person ages 3 and up. The wagon ride is $4.50 (ages 3 and younger ride free) and the barrel train $3 per child.",
+      text: "Every paid line is listed, with the total. The sample uses your site's prices: the $31 base price with 2 pizzas and $3 per person ages 3 and up. The wagon ride is $4.50 (ages 3 and younger free), the barrel train $3 per child.",
       before: scene(function () { visitIs('none'); }, hook('acct-paid'), 'visits')
     },
     {
