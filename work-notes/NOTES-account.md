@@ -47,3 +47,13 @@ Branch `account` in /tmp/account-clone (made from integ b02d6a0). Three requests
 - The sample dates and head counts (a party of 24 guests on a Saturday two weeks after the sample visit, another event of 30 guests) are made up, like the rest of the sample.
 - `DemoStore.createAccount({ name, email })` with no `eventKind` still gives the ready-made sample WITH the school trip (so older callers and tests keep working); the sign-up form
   always sends an answer.
+
+## Update: making `tests/browser-support.test.mjs` green (branch `support`, 3 Nov 2026)
+- `DemoStore.notify` is now `DemoStore.postNotice(text, link, to)` (js/demo-store.js, js/demo-kitchen.js, docs, plan): `notify` is also the name of a browser property, and the test watches that word.
+  The same word on the Tell me when preference was flagged too (`family.notify`), so the key is now `family.notifyBy` (js/demo-store.js, js/demo-data.js, tests, docs). `getNotify()`/`setNotify()` keep their names (not flagged).
+  A demo state saved a day ago with the old key simply reads as both on.
+- The table was made again from the compat data 8.1.8 (`node tools/browser_support_table.mjs --bcd /tmp/bcd-dl/package`). The six names that needed a person: `css-prop:resize` and
+  `css-value:resize:vertical` (`na`: the drag handle of a text box, iPhones have none), `css-value:align-content:start`, `css-value:align-self:start`, `css-value:place-items:end` (`manual`: dated for flex boxes,
+  every use on the site is on a grid box) and `css-value:justify-content:safe` (`manual`: the empty visitor photo strip; Chrome 90 to 114 know the word but ignore `safe`, so a strip with many photos could lose its first photo at the left).
+  Every older entry kept its `how` and `fallback`. The `css-prop:translate` line is exactly as it was (the leaf CSS is still being changed); its pinned count for css/hero.css is 10, the tree uses 7.
+- `docs/BROWSER_SUPPORT.md`: the `manual` line names the alignment words.

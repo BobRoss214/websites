@@ -236,6 +236,12 @@ await run('account-event', async ({ browser, base, errs }) => {
     ok('the kitchen screen ends with a quiet line "Pizza kitchen contact: ava@wiseacresorganic.com" and the address is a mailto link', (await line.innerText()).trim() === 'Pizza kitchen contact: ava@wiseacresorganic.com' && await line.locator(`a[href="${AVA}"]`).count() === 1 && await p.locator('.kit a[href^="tel:"]').count() === 0);
     ok('it comes after the queue of orders', await p.evaluate(() => { const c = document.querySelector('.kit-contact'), q = document.querySelector('.kit-queue'); return !!(q.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING); }));
     await axeOn(p, 'the kitchen screen\'s contact line', '.kit-contact');
+    // the kitchen confirms the sample order: the family gets its notice (DemoStore.postNotice, the store's own function)
+    await p.evaluate(() => window.DemoStore.createAccount());
+    await p.waitForSelector('[data-tour="kit-confirm"]', { timeout: 30000 });
+    await p.click('[data-tour="kit-confirm"]');
+    await p.waitForTimeout(300);
+    ok('"Confirm order" on the kitchen screen makes the family a notice that leads to My pizza (the store function that makes notices works)', await p.evaluate(() => { const n = window.DemoStore.noticesFor('family')[0]; return !!n && /^The kitchen confirmed your pizza order for /.test(n.text) && n.link === '#pizza' && window.DemoStore.list('orders')[0].status === 'confirmed' && typeof window.DemoStore.notify === 'undefined' && typeof window.DemoStore.postNotice === 'function'; }));
     await p.context().close();
   }
   info('the axe checks ' + (axe ? 'ran' : 'did NOT run: axe-core was not found (set AXE_PATH to its axe.min.js)'));

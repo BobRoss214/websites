@@ -245,7 +245,7 @@ const last = (list) => list[list.length - 1];
   ok('the sample family has the pretend phone number, and a new account sends to both ways', st.get('family').phone === Data.SAMPLE_PHONE && /^\(\d{3}\) 555-01\d\d$/.test(Data.SAMPLE_PHONE) && JSON.stringify(st.getNotify()) === '{"text":true,"email":true}');
   let heard = 0; const stop = st.subscribe(() => { heard++; });
   const emailOnly = st.setNotify({ text: false });
-  ok('turning text off leaves email on, answers with the new choice, saves it in the family and tells the subscribers once', JSON.stringify(emailOnly) === '{"text":false,"email":true}' && JSON.stringify(st.getNotify()) === '{"text":false,"email":true}' && st.get('family').notify.text === false && heard === 1);
+  ok('turning text off leaves email on, answers with the new choice, saves it in the family and tells the subscribers once', JSON.stringify(emailOnly) === '{"text":false,"email":true}' && JSON.stringify(st.getNotify()) === '{"text":false,"email":true}' && st.get('family').notifyBy.text === false && heard === 1);
   ok('the last way cannot be turned off: refused (null), nothing saved, nobody told', st.setNotify({ email: false }) === null && st.setNotify({ text: false, email: false }) === null && JSON.stringify(st.getNotify()) === '{"text":false,"email":true}' && heard === 1);
   ok('a change that changes nothing saves nothing; a call with no words, or something else, is refused', JSON.stringify(st.setNotify({ text: false })) === '{"text":false,"email":true}' && heard === 1 && st.setNotify({}) === null && st.setNotify() === null && st.setNotify(null) === null && st.setNotify('text') === null && st.setNotify({ phone: 'x' }) === null && heard === 1);
   ok('both can be on again, and either one can be turned off while the other stays', JSON.stringify(st.setNotify({ text: true })) === '{"text":true,"email":true}' && heard === 2 && st.setNotify({ email: false }).text === true && st.getNotify().email === false && st.setNotify({ email: true, text: false }).email === true && st.getNotify().text === false && heard === 4);
@@ -264,10 +264,10 @@ const last = (list) => list[list.length - 1];
 
   // a state saved before the choice existed, and a hand-edited one
   const old = new Fake(), first = fresh({ storage: old }).st, saved = JSON.parse(old.m.get(KEY));
-  delete saved.family.notify; delete saved.family.phone; old.m.set(KEY, JSON.stringify(saved));
+  delete saved.family.notifyBy; delete saved.family.phone; old.m.set(KEY, JSON.stringify(saved));
   const later = Store.create(old, { now: () => ({ date: TODAY, time: '10:00' }) });
-  ok('a state saved before this existed reads as both on, and the choice can be set on it without losing the family', JSON.stringify(later.getNotify()) === '{"text":true,"email":true}' && JSON.stringify(later.setNotify({ email: false })) === '{"text":true,"email":false}' && later.get('family').kids.length === 3 && first.get('family').notify.email === false);
-  saved.family.notify = { text: false, email: false }; old.m.set(KEY, JSON.stringify(saved));
+  ok('a state saved before this existed reads as both on, and the choice can be set on it without losing the family', JSON.stringify(later.getNotify()) === '{"text":true,"email":true}' && JSON.stringify(later.setNotify({ email: false })) === '{"text":true,"email":false}' && later.get('family').kids.length === 3 && first.get('family').notifyBy.email === false);
+  saved.family.notifyBy = { text: false, email: false }; old.m.set(KEY, JSON.stringify(saved));
   ok('a hand-edited "both off" is read as both on (never none)', JSON.stringify(Store.create(old, {}).getNotify()) === '{"text":true,"email":true}');
   const bare = fresh({ bare: true }).st;
   ok('before anyone has an account the answer is both on, and the call works', JSON.stringify(bare.getNotify()) === '{"text":true,"email":true}' && bare.setNotify({ text: false }).email === true);

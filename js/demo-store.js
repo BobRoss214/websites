@@ -350,7 +350,7 @@
       read().messages.forEach(function (m) { if (!last[m.thread]) order.push(m.thread); last[m.thread] = m; });
       return clone(order.filter(function (t) { return last[t].from === 'family'; }).map(function (t) { return { thread: t, last: last[t] }; }));
     }
-    function notify(text, link, to) {
+    function postNotice(text, link, to) {   // a notice in the bell of one side (the family by default); not called notify: that is also the name of a browser property
       if (!trim(text)) return null;
       return edit(function (st) { return noteTo(st, to || 'family', trim(text), link); });
     }
@@ -398,10 +398,10 @@
       return edit(function (st) { st.alerts[key] = !!on; return true; });
     }
     // Where the family wants the farm's messages to go (pretend: nothing is sent): { text: bool, email: bool }. Both are on until the family changes it, and at least
-    // one always stays on. It is kept inside the family record (family.notify), so a state saved before this existed still works, and Start over or a new sample sets
+    // one always stays on. It is kept inside the family record (family.notifyBy), so a state saved before this existed still works, and Start over or a new sample sets
     // both back on.
     function notifyOf(st) {
-      var n = (st.family && st.family.notify) || {}, text = n.text !== false, email = n.email !== false;
+      var n = (st.family && st.family.notifyBy) || {}, text = n.text !== false, email = n.email !== false;
       return text || email ? { text: text, email: email } : { text: true, email: true };   // a hand-edited "both off" is read as both on
     }
     function getNotify() { return notifyOf(read()); }
@@ -412,7 +412,7 @@
       var now = notifyOf(read()), next = { text: 'text' in patch ? !!patch.text : now.text, email: 'email' in patch ? !!patch.email : now.email };
       if (!next.text && !next.email) return null;
       if (next.text === now.text && next.email === now.email) return next;
-      return edit(function (st) { st.family = st.family || {}; st.family.notify = next; return next; });
+      return edit(function (st) { st.family = st.family || {}; st.family.notifyBy = next; return next; });
     }
     // -> { spot, reservations, strawberries, blueberries, pumpkins, trees, days: { 'YYYY-MM-DD': n } }: how many are waiting for each. One family here, so 0 or 1 for a switch.
     function alertCounts() {
@@ -489,7 +489,7 @@
       createAccount: createAccount, signIn: signIn, signOut: signOut, current: current, hasAccount: hasAccount, reset: reset, seedSample: seedSample, addEvent: addEvent,
       list: list, get: get, add: add, update: update, remove: remove, getFamily: getFamily, setFamily: setFamily, flag: flag, setFlag: setFlag,
       ask: ask, reply: reply, respond: respond, cancel: cancel, openRequestFor: openRequestFor, requestsFor: requestsFor, openRequests: openRequests,
-      post: post, thread: thread, threadsWaiting: threadsWaiting, notify: notify, noticesFor: noticesFor, markRead: markRead, markAllRead: markAllRead,
+      post: post, thread: thread, threadsWaiting: threadsWaiting, postNotice: postNotice, noticesFor: noticesFor, markRead: markRead, markAllRead: markAllRead,
       closeDay: closeDay, openDay: openDay, isClosed: isClosed, openDays: openDays,
       setAlert: setAlert, alertCounts: alertCounts, fireAlert: fireAlert, getNotify: getNotify, setNotify: setNotify,
       submitReview: submitReview, decideReview: decideReview, submitPhoto: submitPhoto, decidePhoto: decidePhoto,
