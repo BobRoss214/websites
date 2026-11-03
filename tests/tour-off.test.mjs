@@ -3,7 +3,8 @@
 // covers: js/tour.js, css/tour.css, *.html, pages/*
 /* The tour is OFF on the real site, and with it off NOTHING may change on any page (docs/TOUR.md). Every page that loads js/tour.js is checked: the 6 pages, and the
  * three pretend-account pages when they exist. Tour mode is on only with window.WA_TOUR === true, ?tour, or an address ending in #tour.
- *   1. (no browser) every page loads js/tour.js once, as the last script; the part of js/tour.js before its "mode is off, stop here" line uses no storage, no cookie,
+ *   1. (no browser) every page loads js/tour.js once, after the site's own scripts (a page's own scripts, the `scripts:` line of its pages/*.html, are added after
+ *      it by tools/pages.py; nothing else comes after it); the part of js/tour.js before its "mode is off, stop here" line uses no storage, no cookie,
  *      no page-building call and no listener (so the flag is read without touching storage), and `?tourist`, `#tours` and the like are not tour mode.
  *   2. (browser) with the mode off: window.WA_TOUR_MODE() is false, no tour button, no tour box, no tour style sheet, no steps file asked for, nothing written
  *      to localStorage / sessionStorage / cookies, no element or listener made by js/tour.js (its calls are caught by looking at which script is running), and the
@@ -20,10 +21,17 @@ const PAGES = ['index', 'first-visit', 'pumpkin-patch', 'strawberry-picking', 's
 
 /* ---------------------------------------------------------------- 1. what the files say (no browser) */
 const TAG = '<script src="js/tour.js"></script>';
+// A page's own scripts: the `scripts:` line at the top of pages/<page>.html. tools/pages.py loads them after the site's footer scripts (tour.js is one of those), so they come after tour.js.
+const ownScripts = (pg) => {
+  const f = path.join(ROOT, 'pages', pg + '.html');
+  const m = fs.existsSync(f) ? /^scripts:[ \t]*(.*)$/m.exec(fs.readFileSync(f, 'utf8').split(/^---[ \t]*$/m)[1] || '') : null;
+  return m ? m[1].trim().split(/\s+/).filter(Boolean).map((s) => s.replace(/^js\//, '')) : [];
+};
 for (const pg of PAGES) {
   const html = read(pg + '.html');
   const tags = [...html.matchAll(/<script src="js\/([a-z0-9-]+\.js)"><\/script>/g)].map((m) => m[1]);
-  ok(`${pg}: js/tour.js is loaded once, as the last script of the page`, html.split(TAG).length === 2 && tags[tags.length - 1] === 'tour.js', tags.join(' '));
+  const after = tags.slice(tags.indexOf('tour.js') + 1), own = ownScripts(pg);
+  ok(`${pg}: js/tour.js is loaded once, and only the page's own scripts (${own.length}) come after it`, html.split(TAG).length === 2 && tags.indexOf('tour.js') >= 0 && after.join(' ') === own.join(' '), tags.join(' ') + '  | the page\'s own: ' + own.join(' '));
 }
 const src = read('js/tour.js');
 const cut = src.indexOf('if (!tourMode()) return;');
@@ -62,6 +70,7 @@ const SPY = `(() => {
   window.__globalsAtStart = Object.getOwnPropertyNames(window);
 })();`;
 
+const PIN = 'critter=bee';   // the bee that follows the pointer on the home page is a bee or a butterfly, picked by chance at each load: the address pins it, or two loads of the same page would differ (js/main.js)
 const mask = (html) => html.replace(/(data-k="s"><b>)\d+(<\/b>)/g, '$1#$2');   // the pizza countdown's seconds tick in real time: they are the one thing that differs between two loads of the same page
 
 // Loads a page and says what is on it. `empty`: js/tour.js is replaced by an empty script (the page as if the tag were not there).
@@ -101,8 +110,8 @@ await run('tour-off', async ({ browser, base, errs }) => {
   info('with ?tour, js/tour.js made these calls while it first ran: ' + [...kinds].join(', '));
 
   for (const pg of PAGES) {
-    const normal = await look(browser, base, errs, pg);
-    const empty = await look(browser, base, errs, pg, { empty: true });
+    const normal = await look(browser, base, errs, pg, { query: PIN });
+    const empty = await look(browser, base, errs, pg, { query: PIN, empty: true });
     ok(`${pg}: tour mode is off (window.WA_TOUR_MODE() is false)`, normal.mode === false, String(normal.mode));
     ok(`${pg}: js/tour.js made no call to storage, cookies, page building, listeners, timers or requests`, normal.calls.length === 0, normal.calls.join(', '));
     ok(`${pg}: no tour button, no tour box, no tour style sheet or steps file in the page, no tour object`, !normal.pill && !normal.box && normal.sheets === 0 && normal.links === 0 && !normal.tourObject, JSON.stringify({ pill: normal.pill, box: normal.box, sheets: normal.sheets, links: normal.links, obj: normal.tourObject }));
@@ -119,8 +128,8 @@ await run('tour-off', async ({ browser, base, errs }) => {
   // the same on a phone, for the two pages with the most in them
   for (const pg of ['index', 'first-visit']) {
     const viewport = { width: 390, height: 844 };
-    const normal = await look(browser, base, errs, pg, { viewport });
-    const empty = await look(browser, base, errs, pg, { viewport, empty: true });
+    const normal = await look(browser, base, errs, pg, { viewport, query: PIN });
+    const empty = await look(browser, base, errs, pg, { viewport, query: PIN, empty: true });
     ok(`${pg}, phone: no tour button or box, and the page is identical to the same page with an empty js/tour.js`, !normal.pill && !normal.box && normal.html === empty.html && normal.sw === empty.sw && normal.sh === empty.sh && normal.calls.length === 0, `${normal.html.length}/${empty.html.length} chars, ${normal.sw}x${normal.sh} / ${empty.sw}x${empty.sh}, calls ${normal.calls.join()}`);
   }
 

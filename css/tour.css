@@ -32,6 +32,12 @@
 .wa-tour-body p{margin:0 0 .7em;white-space:pre-line}
 .wa-tour-body ul{margin:0 0 .7em;padding:0 0 0 1.25em;list-style:disc}
 .wa-tour-body li{margin:0 0 .3em}
+/* a step's own row of small buttons (step.choices, docs/TOUR.md): for example Spring, Summer, Fall and Winter. The pressed one is yellow with a thick dark edge (not colour alone) */
+.wa-tour-choices{flex:none;margin:4px 0 6px}
+.wa-tour-choices-label{margin:0 0 3px;font:700 .8rem/1.3 var(--display,sans-serif);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft,#6a5140)}
+.wa-tour-choices-row{display:flex;flex-wrap:wrap;margin:0 -3px}
+.wa-tour-choice{flex:1 1 auto;margin:3px;padding:.45em .7em}
+.wa-tour-choice[aria-pressed="true"]{--bg:var(--sun,#ffc928);box-shadow:0 4px 0 var(--ink,#3a2416),inset 0 0 0 2px var(--ink,#3a2416)}
 .wa-tour-actions{flex:none;display:flex;flex-wrap:wrap;margin:6px -4px -4px}
 .wa-tour-actions .btn{margin:4px}
 .wa-tour-x{position:absolute;top:8px;right:8px;width:44px;height:44px;margin:0;padding:0;display:grid;place-items:center;border:3px solid var(--ink,#3a2416);border-radius:50%;background:#fff;color:var(--ink,#3a2416);font:700 1.7rem/1 var(--display,sans-serif);box-shadow:0 3px 0 var(--ink,#3a2416);cursor:pointer}
@@ -54,6 +60,9 @@
 .wa-tour-card.is-sheet .wa-tour-title{font-size:1.25rem}
 .wa-tour-card.is-sheet .wa-tour-body{font-size:1rem}
 .wa-tour-card.is-sheet .wa-tour-actions .btn{flex:1 1 auto}
+
+/* Windows High Contrast (forced colours) drops backgrounds and shadows: the pressed small button is marked with the system's "selected" pair, as the site's own season buttons are (css/features.css) */
+@media (forced-colors:active){.wa-tour-choice[aria-pressed="true"]{forced-color-adjust:none;background:Highlight;color:HighlightText;border-color:Highlight}}
 
 /* calm mode ("Pause animations", or a slow phone) and reduced motion: nothing slides or fades, the lit box just appears */
 .wa-tour.is-still *{transition:none!important;animation:none!important}
