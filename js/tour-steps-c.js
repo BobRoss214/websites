@@ -282,7 +282,7 @@
     {
       id: 'ch10-signup', order: CHAPTER * 100 + 2, chapter: CHAPTER, page: 'account', target: hook('acct-signup'), skipIfMissing: true,
       title: 'Create an account',
-      text: 'A visitor types a name and an email, and says if they plan a party, an event or a school trip. In this demo any password works and nothing is saved on a server. Press Next and the tour creates a sample family for you.',
+      text: 'A visitor types a name and an email, and says if they plan a party, an event or a school trip. Any password works here, and nothing is saved on a server. Press Next and the tour creates a sample family for you.',
       before: scene(function () { if (ready() && call('current')) call('reset'); }, hook('acct-signup'))
     },
     {
@@ -390,7 +390,7 @@
     {
       id: 'ch10-event', order: CHAPTER * 100 + 21, chapter: CHAPTER, page: 'account', target: hook('acct-event'), skipIfMissing: true,
       title: 'My event, for groups and schools',
-      text: 'This tab shows only for families who said yes at sign-up to a party, an event or a school trip. The sample family said yes: a school trip. It has a head count, a checklist and messages. A head count change is a request to you. Prices follow your school tours: $11 per student, at least 100 students.',
+      text: 'This tab shows only for families who said yes at sign-up to a party, an event or a school trip. The sample family said yes. Its school trip has a head count, a checklist and messages. Changes are requests to you.',
       before: scene(eventShown, hook('acct-event'), 'event')
     },
     {

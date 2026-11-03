@@ -32,6 +32,8 @@ await run('account-event', async ({ browser, base, errs }) => {
   ok('My year is gone from the files: no js/demo-view-year.js, no script tag for it in the page source or the built page, no tab called year in the shell', !fs.existsSync(path.join(ROOT, 'js/demo-view-year.js'))
     && !/demo-view-year/.test(read('pages/account.html') + read('account.html')) && !/'year'/.test(read('js/demo-app.js')) && !/acct-year|dvy-/.test(read('js/demo-view-kit.js') + read('js/tour-steps-c.js') + read('css/demo.css')));
 
+  const KEY = { 'No': 'none', 'Yes: a party': 'party', 'Yes: a school trip': 'school', 'Yes: another event': 'other' };   // the button words and what the account keeps
+  const radio = (p, words) => p.locator(`.demo-signup input[type=radio][value="${KEY[words]}"]`);
   const tabsOf = (p) => p.locator('.demo-tabs [role=tab]').allInnerTexts();
   const selected = (p) => p.locator('.demo-tabs [aria-selected=true]').innerText();
   const goTab = async (p, name) => { await p.click(`.demo-tabs [data-tab="${name}"]`); await p.waitForSelector(`.demo-view[data-view="${name}"]`); await p.waitForTimeout(150); };
@@ -46,7 +48,7 @@ await run('account-event', async ({ browser, base, errs }) => {
     await p.waitForSelector('.demo-signup');
     await p.fill('#demo-su-name', 'Pat');
     await p.fill('#demo-su-email', 'pat@example.com');
-    if (answer) await p.getByRole('radio', { name: answer, exact: true }).check();
+    if (answer) await radio(p, answer).check();
     await p.click('.demo-signup button[type=submit]');
     await p.waitForSelector('.demo-tabs [role=tab]');
     await p.waitForTimeout(200);
@@ -61,16 +63,22 @@ await run('account-event', async ({ browser, base, errs }) => {
     ok('the sign-up asks ONE plain question', legend.trim() === 'Do you plan or manage a party, an event or a school trip?' && await p.locator('.demo-signup fieldset').count() === 1, legend);
     ok('with four big buttons, in this order: No / Yes: a party / Yes: a school trip / Yes: another event', labels.map((x) => x.trim()).join(' | ') === 'No | Yes: a party | Yes: a school trip | Yes: another event', labels.join(' | '));
     ok('they are real radio buttons of one group (the arrow keys and a screen reader work), and No is chosen to begin with', await p.locator('.demo-signup input[type=radio]').count() === 4 && await p.locator('.demo-signup input[type=radio][name="demo-su-event"]').count() === 4
-      && await p.getByRole('radio', { name: 'No', exact: true }).isChecked() && !await p.getByRole('radio', { name: 'Yes: a party', exact: true }).isChecked());
+      && await radio(p, 'No').isChecked() && !await radio(p, 'Yes: a party').isChecked());
+    ok('a screen reader hears only the words: the four radio buttons are named exactly No, Yes: a party, Yes: a school trip and Yes: another event (the tick that shows the chosen one is not part of the name)',
+      (await Promise.all(Object.keys(KEY).map((w) => p.getByRole('radio', { name: w, exact: true }).count()))).join() === '1,1,1,1');
     const boxes = await p.locator('.demo-signup .demo-choice').evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }));
     ok('each button is big: at least 44 px tall and wide (a finger can press it)', boxes.every(([w, h]) => w >= 120 && h >= 44), JSON.stringify(boxes));
-    await p.getByRole('radio', { name: 'No', exact: true }).focus();
+    await radio(p, 'No').focus();
     await p.keyboard.press('ArrowDown');
-    ok('the arrow keys move the choice (Down from No chooses "Yes: a party")', await p.getByRole('radio', { name: 'Yes: a party', exact: true }).isChecked());
+    ok('the arrow keys move the choice (Down from No chooses "Yes: a party")', await radio(p, 'Yes: a party').isChecked());
     await p.click('.demo-signup [data-demo-fill]');
-    ok('"Fill in sample details" fills in the name and the email and chooses "Yes: a school trip"', await p.inputValue('#demo-su-name') === 'Alex' && await p.inputValue('#demo-su-email') === 'alex@example.com' && await p.getByRole('radio', { name: 'Yes: a school trip', exact: true }).isChecked());
+    ok('"Fill in sample details" fills in the name and the email and chooses "Yes: a school trip"', await p.inputValue('#demo-su-name') === 'Alex' && await p.inputValue('#demo-su-email') === 'alex@example.com' && await radio(p, 'Yes: a school trip').isChecked());
     ok('the hint says only a yes adds the My event tab, and has Vanessa\'s link for school trips', /Only a yes adds the My event tab/.test(await p.locator('.demo-signup .demo-choices .demo-hint').innerText()) && await p.locator(`.demo-signup a[href="${VANESSA}"]`).innerText() === 'Questions? Email Vanessa');
     await axeOn(p, 'the sign-up card (with the question)', '.demo-signup');
+    if (axe) {   // prove once that axe really reports a mistake here (a picture without a text alternative), so a silent axe cannot pass everything
+      const bad = await p.evaluate(async (rules) => { document.body.insertAdjacentHTML('beforeend', '<img id="axe-self-test" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">'); const r = (await window.axe.run(document, rules)).violations.map((v) => v.id); document.getElementById('axe-self-test').remove(); return r; }, RULES);
+      ok('axe really runs: it reports a deliberate mistake (an image without alt)', bad.includes('image-alt'), bad.join(','));
+    }
     const wide = await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
     ok('the page does not scroll sideways', wide);
     await p.context().close();
@@ -129,13 +137,26 @@ await run('account-event', async ({ browser, base, errs }) => {
     const text = (await p.locator('#demo-panel').innerText()).replace(/\s+/g, ' ');
     ok('My event shows a party: the chip, the guests (no students), the one price for the whole party and the page\'s rules', /Party/.test(await p.locator('[data-tour="acct-event"] .dvk-chip').innerText()) && /Sample birthday party/.test(text) && /24\s*Guests/.test(text) && /50\s*Most guests/.test(text) && !/Students|Chaperones/.test(text)
       && /\$300 for the whole party/.test(text) && /farm entry fee for every guest is included/.test(text) && /up to 50 guests/.test(text) && /Children age 2 and younger are free and do not count/.test(text) && /2\.5 hours/.test(text), text.slice(0, 400));
-    ok('a party has no school contact: no Vanessa link there', await p.locator(`a[href="${VANESSA}"]`).count() === 0);
+    ok('a party has no school contact: no Vanessa link there', await p.locator(`#demo-panel a[href="${VANESSA}"]`).count() === 0);
     ok('the checklist is the Parties card\'s "How it works" (cake, decorate, check-in, no outside alcohol)', /Bring cake and snacks for your guests/.test(text) && /Decorate your party space/.test(text) && /they are with your party when they check in/.test(text) && /not to bring their own alcohol/.test(text));
     // the guest count can be changed as a request
     await p.fill('#demo-panel input[data-k="ev-guests"]', '30');
     await p.click('#demo-panel [data-k="ev-send"]');
     await p.waitForSelector('[data-k="ev-status"]');
     ok('a new guest count is a REQUEST to Mrs. Cathy (guests only), and nothing changes before she answers', await p.evaluate(() => { const r = window.DemoStore.list('requests')[0]; return r.kind === 'event-change' && r.status === 'waiting' && JSON.stringify(r.patch) === '{"guests":30}' && /guest count from 24 guests to 30 guests/.test(r.summary) && window.DemoStore.list('events')[0].guests === 24; }));
+    // Mrs. Cathy's desk (the same browser) reads a party as guests, not as students and chaperones
+    const desk = await p.context().newPage();
+    desk.on('pageerror', (e) => errs.push('farm-desk.html pageerror: ' + e.message));
+    await desk.goto(base + 'farm-desk.html?demo', { waitUntil: 'load' });
+    await desk.waitForSelector('[data-tour="desk-card"][data-req-kind="event-change"]', { timeout: 40000 });
+    const deskCard = (await desk.locator('[data-tour="desk-card"][data-req-kind="event-change"]').innerText()).replace(/\s+/g, ' ');
+    const deskGroups = (await desk.locator('[data-tour="desk-groups"]').innerText()).replace(/\s+/g, ' ');
+    ok('the desk reads the party as guests: the request says "Booked now: 24 guests" and the Groups card "24 guests", with no students or chaperones', /Booked now: 24 guests/.test(deskCard) && /24 guests/.test(deskGroups) && !/student|chaperone/i.test(deskCard + ' ' + deskGroups), deskCard.slice(0, 200) + ' || ' + deskGroups.slice(0, 200));
+    await desk.click('[data-tour="desk-card"][data-req-kind="event-change"] [data-tour="desk-suggest"]');
+    await desk.waitForTimeout(300);
+    const asks = (await desk.locator('[data-tour="desk-card"][data-req-kind="event-change"] label').allInnerTexts()).map((x) => x.trim());
+    ok('and her "suggest" form asks for Guests (no Students, no Chaperones)', asks.includes('Guests') && !asks.includes('Students') && !asks.includes('Chaperones'), asks.join(' | '));
+    await desk.close();
     await p.evaluate(() => { const S = window.DemoStore, r = S.list('requests')[0]; S.reply(r.id, { answer: 'yes', note: 'Fine.' }); });
     await p.waitForTimeout(300);
     ok('after her yes the party has 30 guests and the screen says so', /Your guest count is now 30 guests/.test(await p.locator('#demo-panel').innerText()) && /30\s*Guests/.test((await p.locator('#demo-panel').innerText()).replace(/\s+/g, ' ')));

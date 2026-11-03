@@ -83,9 +83,9 @@
       input.checked = op.value === cur;
       input.addEventListener('change', function () { if (input.checked) { cur = op.value; if (o.onChange) o.onChange(cur); } });
       inputs.push(input);
-      list.appendChild(h('label', { class: 'demo-choice', for: id }, input, h('span', { class: 'demo-choice-text' }, op.label)));
+      list.appendChild(h('label', { class: 'demo-choice', for: id }, input, h('span', { class: 'demo-choice-text' }, h('span', { class: 'demo-choice-mark', 'aria-hidden': 'true' }), op.label)));   // (the tick drawn by the style sheet sits in a hidden span, so a screen reader says only the words)
     });
-    var box = h('fieldset', { class: 'demo-choices' }, h('legend', null, o.legend), list, o.hint ? h('p', { class: 'demo-hint' }, o.hint) : null);
+    var box = h('fieldset', { class: 'demo-choices', 'aria-describedby': o.hint ? name + '-h' : null }, h('legend', null, o.legend), list, o.hint ? h('p', { class: 'demo-hint', id: name + '-h' }, o.hint) : null);
     return { el: box, value: function () { return cur; }, set: function (v) { cur = v; inputs.forEach(function (i) { i.checked = i.value === v; }); } };
   }
 
