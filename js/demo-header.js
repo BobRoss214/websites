@@ -99,7 +99,7 @@
       reset.addEventListener('click', startOver);
       tools.appendChild(reset);
     }
-    if (typeof window.WA_TOUR_MODE === 'function' && window.WA_TOUR_MODE()) {   // js/tour.js is the last script of the page, so ask once everything has loaded
+    if (typeof window.WA_TOUR_MODE === 'function' && window.WA_TOUR_MODE()) {   // js/tour.js loads before the page's own demo scripts, so ask once everything has loaded
       var tour = el('a', 'demo-bar-btn', 'Take a tour');
       tour.href = 'index.html#tour'; tour.setAttribute('data-tour-open', '');
       tools.appendChild(tour);
