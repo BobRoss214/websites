@@ -55,7 +55,7 @@ select.demo-input{padding-right:.4em}
 /* ---------- a question with big buttons (the sign-up: "Do you plan or manage a party, an event or a school trip?"); real radio buttons, drawn as buttons ---------- */
 .demo-choices{min-width:0;margin:0;padding:0;border:0}
 .demo-choices legend{max-width:100%;padding:0;margin:0 0 8px;font-weight:800}
-.demo-choices-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9.5rem),1fr));gap:10px}
+.demo-choices-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .demo-choices .demo-hint{margin-top:8px}
 .demo-choice{position:relative;display:flex;min-width:0}
 .demo-choice input{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
