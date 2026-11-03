@@ -102,6 +102,8 @@ export function collect(cfg) {
   // The top menu: a line for a season that is near (or in progress) is bold with a red dot, and so is the button of its group (js/main.js, initNav). Read from the markup, not from
   // what shows: on a phone the lists of the menu are closed. Each is written as "group › line".
   out.coming = uniq(Array.from(document.querySelectorAll('.nav a.is-coming')).map((a) => { const g = a.closest('.nav-group'), b = g && g.querySelector('.nav-group-btn'); return (b ? norm(b.textContent) + ' › ' : '') + norm(a.textContent); })).sort();
+  // ... and until that season has started a screen reader is told "Coming soon" after the line (a hint the line is described by).
+  out.comingHint = uniq(Array.from(document.querySelectorAll('.nav a.is-coming[aria-describedby]')).map((a) => { const h = document.getElementById(a.getAttribute('aria-describedby')); return h ? norm(a.textContent) + ' › ' + norm(h.textContent) : ''; }).filter(Boolean)).sort();
 
   // "Reserve ..." buttons and where they go
   const reserve = {};
@@ -190,7 +192,7 @@ export function fieldsOf(fp) {
     week: fp.week ? { crops: fp.week.crops.map(digits), note: fp.week.note, days: fp.week.days } : null,
     schedule: fp.schedule, signup: fp.signup, signupForm: fp.signupForm, reserve: fp.reserve.map((r) => r.text + ' → ' + r.to + (r.target ? ' ' + r.target : '')).sort(),
     links: fp.links.map((l) => counts(l.text) + ' → ' + l.to + ' ' + l.state).sort(), ids: fp.ids || null, tags: fp.tags, dated: fp.dated, emptyHeadings: fp.emptyHeadings, emptyBoxes: fp.emptyBoxes, errors: fp.errors,
-    pastDates: fp.pastDates, coming: fp.coming || [],
+    pastDates: fp.pastDates, coming: fp.coming || [], comingHint: fp.comingHint || [],
   };
 }
 export const FIELD_NAMES = Object.keys(fieldsOf({ badges: [], reserve: [], links: [], week: null }));
@@ -489,7 +491,7 @@ const REASONS = {
   notice: ['The notice bar', 'notice and noticeUntil in js/content.js'],
   only: ['A line that belongs to one season shows only in that season', 'data-only / data-in-season on the line; SEASONS in js/season.js'],
   out: ['“Tell me when it opens” hides while that season is in progress', 'data-out-of-season on the button'],
-  coming: ['A menu line for a season that is near is bold with a red dot from 60 days before the season starts until its last day, and the button of its group gets the dot too', 'data-coming on that line of the menu in index.html; COMING_DAYS in js/main.js; SEASONS in js/season.js'],
+  coming: ['A menu line for a season that is near is bold with a red dot from 60 days before the season starts until its last day, and the button of its group gets the dot too; until the season starts a screen reader says “Coming soon” after the line', 'data-coming on that line of the menu in index.html; COMING_DAYS in js/main.js; SEASONS in js/season.js'],
   pastDate: ['A date written in the text has gone by', 'the text of that line (a data-until would hide it)'],
   other: ['Something on the page depends on the date', 'see “What switches”'],
 };
@@ -533,7 +535,10 @@ function diffLook(prev, cur, pg, day) {
   const lk = sd(a.links, b.links).added.concat(sd(a.links, b.links).removed).filter((x) => / (HIDDEN|MISSING)$/.test(x));
   if (lk.length) { const d = sd(a.links, b.links); out.push({ kind: 'only', text: 'links to something that is not on the page: ' + [d.added.filter((x) => / (HIDDEN|MISSING)$/.test(x)).length ? 'now ' + list(d.added.filter((x) => / (HIDDEN|MISSING)$/.test(x)).map((x) => quote(ellipsis(x.replace(/ (HIDDEN|MISSING)$/, ''), 50)))) : '', d.removed.filter((x) => / (HIDDEN|MISSING)$/.test(x)).length ? 'no longer ' + list(d.removed.filter((x) => / (HIDDEN|MISSING)$/.test(x)).map((x) => quote(ellipsis(x.replace(/ (HIDDEN|MISSING)$/, ''), 50)))) : ''].filter(Boolean).join(', ') }); }
   const cm = sd(a.coming, b.coming), say = (xs) => xs.map((x) => { const [g, l] = x.split(' › '); return quote(l) + ' (' + g + ' list)'; });
-  if (cm.added.length || cm.removed.length) out.push({ kind: 'coming', text: 'top menu: ' + [cm.added.length ? list(say(cm.added)) + ' is now bold with a red dot, and the button of its list too' : '', cm.removed.length ? list(say(cm.removed)) + ' is no longer bold with a red dot, and the button of its list loses it too' : ''].filter(Boolean).join('; ') });
+  const ch = sd(a.comingHint, b.comingHint), hear = (xs, no) => xs.map((x) => { const [l, h] = x.split(' › '); return 'after ' + quote(l) + ' a screen reader ' + (no ? 'no longer says ' : 'says ') + quote(h); });
+  const menu = [cm.added.length ? list(say(cm.added)) + ' is now bold with a red dot, and the button of its list too' : '', cm.removed.length ? list(say(cm.removed)) + ' is no longer bold with a red dot, and the button of its list loses it too' : '',
+    ch.added.length ? list(hear(ch.added)) : '', ch.removed.length ? list(hear(ch.removed, true)) : ''].filter(Boolean);
+  if (menu.length) out.push({ kind: 'coming', text: 'top menu: ' + menu.join('; ') });
   if (JSON.stringify(a.pastDates) !== JSON.stringify(b.pastDates)) out.push({ kind: 'pastDate', text: 'dates in the text that are already past: ' + (b.pastDates.length ? list(b.pastDates.slice(0, 3).map((x) => quote(ellipsis(x.split('  in:')[0], 30)))) : 'none') });
   if (JSON.stringify(a.errors) !== JSON.stringify(b.errors)) out.push({ kind: 'other', text: 'page errors: ' + (b.errors.length ? b.errors.join(' | ') : 'none') });
   if (!out.length && JSON.stringify(a) !== JSON.stringify(b)) out.push({ kind: 'other', text: 'something else changed (' + FIELD_NAMES.filter((f) => JSON.stringify(a[f]) !== JSON.stringify(b[f])).join(', ') + ')' });
