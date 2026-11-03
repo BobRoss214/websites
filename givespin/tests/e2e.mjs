@@ -10,7 +10,7 @@ import { createRequire } from 'node:module';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -7624,6 +7624,23 @@ if (section('13zv. Final review: the cancel line names what was staked at THAT t
     await page.close();
   }
   check(problems.length === problems0, 'section 13zv: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
+}
+
+/* ======================================================================== */
+// The sections for the newer features live in their own files, tests/sections/*.mjs (run in file-name order). Each file has a default export:
+//   export default async function (h) { if (h.section('19a. Title')) { ... h.check(cond, 'label') ... } }
+// and is handed the helpers of this script below, so a feature's tests never have to be edited into this big file.
+{
+  const dir = path.join(root, 'tests', 'sections');
+  const h = {
+    section, check, newPage, openApp, go, shot, receiptOpen, balance, state, amountInput, setAmount, openOptions, openLiveOptions, toastText, a11y,
+    waitReceipt, closeReceipt, onRoute, titleWith, settleScroll, problems, GAMES, LIVE_GAMES, NEW_PAGES, BASE, ORIGIN, root, core, GSdata, N, NF, poolSize
+  };
+  const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.mjs')).sort() : [];
+  for (const f of files) {
+    const mod = await import(pathToFileURL(path.join(dir, f)).href);
+    await mod.default(h);
+  }
 }
 
 /* ======================================================================== */

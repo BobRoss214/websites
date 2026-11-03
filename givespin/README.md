@@ -445,6 +445,7 @@ credit, the monthly limit, fair-play verification and tamper detection, stream m
 live (redirect) mode including rejecting non-https links, a phone-sized viewport, loading from `file://`, and a check
 that the site never contacts another host and the console stays clean. Set `SHOTS=/some/dir` to save screenshots,
 and `AXE=/path/to/axe.min.js` to add an axe-core accessibility scan of every page and dialog.
+`ONLY=13zs,19z` runs just those sections. The checks for the newer features live in their own files, `tests/sections/*.mjs` (run in file-name order, each handed the helpers of `tests/e2e.mjs`), so a feature's tests never have to be edited into the big file. The axe-core version the checks were run with is 4.10.3 (a newer one, 4.14, also flags the games' tile labels and the side card as "label in name" mismatches).
 
 Append `?fast=1` to the URL to squeeze every animation (the tests use it; it is handy for quick demos too).
 
