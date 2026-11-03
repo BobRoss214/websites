@@ -44,7 +44,9 @@ Shared files:
 - `js/demo-data.js`: sample family, prices, slots, pizza menu (read from the page, see below), `sample(todayDate)`. Owner: A.
 - `js/demo-app.js` (the family shell: tabs, sign-in state, notices bell, view registry `DemoApp.view(name, {label, render(root, ctx)})`), `js/demo-ui.js`
   (formatters: "Saturday, Nov 14", "2:00 pm", money; a modal; a toast), `css/demo.css` (shared look). Owner: A.
-- `js/demo-view-visits.js`, `js/demo-view-pizza.js`: A. `js/demo-view-family.js`, `-alerts.js`, `-year.js`, `-messages.js`, `-photos.js`, `-event.js`: B.
+- `js/demo-view-visits.js`, `js/demo-view-pizza.js`: A. `js/demo-view-family.js`, `-alerts.js`, `-year.js`: B (who also owns `js/demo-view-kit.js`, a small shared helper for the
+  family views: DOM builder, fields, switch, chip, toast, redraw-on-change; load it before the view files; it should use `DemoUI` from A where that exists, one toast
+  only). `js/demo-view-messages.js`, `-photos.js`, `-event.js`: B2.
 - `js/demo-desk.js`, `js/demo-kitchen.js`, `css/demo-staff.css`: C.
 - `docs/ACCOUNT_DEMO.md`: plain words for the builder: what it is, how to show it, how to start over, how to turn it on and off, what is pretend, what a
   real version would need (a place for logins, a link to the booking tool, alerts to Mrs. Cathy and the kitchen, care with kids' info, an updated
@@ -118,8 +120,10 @@ closeDay, alerts, reset, and that two stores on the same storage see each other'
 8. Photos and reviews: after a past visit: choose a photo (file input; keep only a small thumbnail, 160 px, as a data URL; or just the file name if
    storage is full) and give 1-5 stars and a sentence. Status "Waiting for Mrs. Cathy to approve" -> approved shows under "Shared with the farm (demo)".
    It never touches the real gallery or the real reviews.
-9. My event (groups and schools): a sample school trip ("Sample Elementary, 2nd grade"): head count (students and chaperones, editable as a request),
-   a checklist (permission slips 18 of 24 received, sample), deposit and balance status, and a message thread with Mrs. Cathy.
+9. My event (groups and schools): a sample school trip ("Sample Elementary, 2nd grade") that follows the page's own rules (Groups section and
+   `school-field-trips.html`: $11 per student, minimum group size 100 students, parents and siblings ages 3 and up who come also pay $11): a head count of
+   100 students or more (editable as a request), a checklist (permission slips received so far, sample), the amount computed from those page prices, and a
+   message thread with Mrs. Cathy. Show a deposit only if the page mentions one.
 10. A bell with the latest notices (replies, alerts, weather) and a count; each links to the right tab.
 
 ## Farm desk (`farm-desk.html`, for Mrs. Cathy and Rob; no login, a line says "Demo: you are Mrs. Cathy / Rob")
