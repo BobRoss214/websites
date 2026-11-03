@@ -153,7 +153,7 @@ def analyse(src):
         strings[i] = c
         marks.setdefault((el.sourceline, el.sourcepos, el.name), {})['data-t'] = i
     for el in soup.find_all(True):
-        if el.name in ('svg', 'script', 'style') or el.find_parent(['svg', 'script', 'style', 'head']) or el.has_attr('data-no-i18n'):
+        if el.name in ('svg', 'script', 'style') or el.find_parent(['svg', 'script', 'style', 'head']) or el.has_attr('data-no-i18n') or el.find_parent(attrs={'data-no-i18n': True}):   # not inside a box that is left alone either
             continue
         for a in ATTRS:
             v = el.get(a)
@@ -291,7 +291,7 @@ def js_strings():
     found = {}
     jsdir = os.path.join(ROOT, 'js')
     for f in sorted(os.listdir(jsdir)):
-        if not f.endswith('.js') or f in ('i18n.js',):
+        if not f.endswith('.js') or f in ('i18n.js',) or f.startswith(('demo-', 'tour')):   # the account demo (js/demo-*.js) and the tour (js/tour*.js) are English only: their words are not translated
             continue
         src = open(os.path.join(jsdir, f), encoding='utf-8-sig').read()
         src = re.sub(r'/\*.*?\*/', '', src, flags=re.S)           # comments are not text on the page
@@ -307,6 +307,8 @@ def js_strings():
         if not f.endswith('.html') or f == '404.html':
             continue
         page = open(os.path.join(ROOT, f), encoding='utf-8-sig').read()
+        if '<meta name="robots" content="noindex">' in page:   # a demo page (account.html ...): English only, no translated title or description
+            continue
         for pat in (r'<title>(.*?)</title>', r'<meta name="description" content="([^"]*)"', r'<meta property="og:(?:title|description)" content="([^"]*)"'):
             for m in re.finditer(pat, page, re.S):
                 found[_html.unescape(m.group(1)).strip()] = f

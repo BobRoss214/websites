@@ -25,6 +25,13 @@ def png_size(path):
     return struct.unpack('>II', d[16:24])
 
 
+def is_noindex(slug):
+    """True for a page whose settings say `robots: noindex` (the pages of the pretend account demo): it is not in the sitemap and has no share picture."""
+    with open(os.path.join(REAL, 'pages', slug + '.html'), encoding='utf-8-sig') as f:
+        head = f.read().split('\n---\n')[0]
+    return any(l.split(':', 1)[0].strip() == 'robots' and l.split(':', 1)[1].strip() == 'noindex' for l in head.splitlines() if ':' in l)
+
+
 class Pages(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix='pages-test-')
@@ -69,6 +76,39 @@ class Pages(unittest.TestCase):
         self.assertEqual(self.tags(h, 'twitter:image:alt'), [alt])
         self.assertEqual(self.tags(h, 'twitter:card'), ['summary_large_image'])
         self.assertNotIn('og-share.png', h)
+
+    def test_a_page_marked_noindex_has_no_address_picture_or_data_and_is_not_in_the_sitemap(self):
+        for sub in ('css', 'js'):
+            os.makedirs(os.path.join(self.root, sub))
+        for f in ('css/demo.css', 'js/demo-a.js', 'js/demo-b.js'):
+            with open(os.path.join(self.root, f), 'w', encoding='utf-8') as fh:
+                fh.write('/* a file */\n')
+        self.page('secret', 'robots: noindex\nstyles: css/demo.css\nscripts: js/demo-a.js js/demo-b.js\n')
+        self.page('plain')
+        code, text = self.build()
+        self.assertEqual(code, 0, text)
+        h = self.out('secret')
+        self.assertIn('<meta name="robots" content="noindex">', h)
+        for gone in ('rel="canonical"', 'og:image', 'og:url', 'twitter:image', 'ld+json'):
+            self.assertNotIn(gone, h, gone)
+        self.assertLess(h.index('href="css/features.css"'), h.index('href="css/demo.css"'), 'the page\'s own style sheet comes after the site\'s')
+        self.assertLess(h.index('src="js/analytics.js"'), h.index('src="js/demo-a.js"'))
+        self.assertLess(h.index('src="js/demo-a.js"'), h.index('src="js/demo-b.js"'), 'the scripts keep the order the page names them in')
+        plain = self.out('plain')
+        self.assertIn('rel="canonical"', plain)
+        self.assertNotIn('noindex', plain)
+        self.assertNotIn('demo-a.js', plain, 'the scripts of one page do not go to another')
+        with open(os.path.join(self.root, 'sitemap.xml'), encoding='utf-8') as f:
+            sitemap = f.read()
+        self.assertIn('/plain.html', sitemap)
+        self.assertNotIn('secret', sitemap)
+
+    def test_the_styles_and_scripts_of_a_page_must_be_files_of_the_site(self):
+        self.page('typo', 'scripts: js/missing.js\n')
+        code, text = self.build()
+        self.assertNotEqual(code, 0)
+        self.assertIn('js/missing.js', text)
+        self.assertFalse(os.path.exists(os.path.join(self.root, 'typo.html')), 'nothing is written when a page names a file that is not there')
 
     def test_a_page_without_one_uses_the_home_picture_and_its_description(self):
         self.page('two')
@@ -189,7 +229,7 @@ class Pages(unittest.TestCase):
 
     # -------------------------------------------------------------
     def test_the_real_site_gives_every_extra_page_its_own_picture(self):
-        pages = sorted(f[:-5] for f in os.listdir(os.path.join(REAL, 'pages')) if f.endswith('.html'))
+        pages = sorted(f[:-5] for f in os.listdir(os.path.join(REAL, 'pages')) if f.endswith('.html') and not is_noindex(f[:-5]))   # a page marked `robots: noindex` has no share picture
         self.assertTrue(pages)
         seen = set()
         for slug in pages:
@@ -221,7 +261,7 @@ class Pages(unittest.TestCase):
 
     # -------------------------------------------------------------
     def real_pages(self):
-        pages = ['index'] + sorted(f[:-5] for f in os.listdir(os.path.join(REAL, 'pages')) if f.endswith('.html'))
+        pages = ['index'] + sorted(f[:-5] for f in os.listdir(os.path.join(REAL, 'pages')) if f.endswith('.html') and not is_noindex(f[:-5]))
         out = {}
         for slug in pages:
             with open(os.path.join(REAL, slug + '.html'), encoding='utf-8') as f:

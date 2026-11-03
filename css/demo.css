@@ -1,0 +1,127 @@
+/* ==========================================================================
+   Wise Acres account demo: the look shared by the three demo pages (account.html, farm-desk.html, kitchen.html) and the "Sign in" button the header gets in demo
+   mode. Same style as the rest of the site: ink borders, rounded cards, hard shadows, the site's colours and fonts (css/styles.css). The demo is pretend: see
+   docs/ACCOUNT_DEMO.md. Nothing here changes a page that is not in demo mode, except that the stylesheet is loaded by the three demo pages only.
+   ========================================================================== */
+
+/* The person button in the header is on every page in demo mode, so js/demo-header.js adds its few rules itself (this file is loaded by the three demo pages only). */
+
+/* ---------- the demo bar under the header (the DEMO label is always there) ---------- */
+.demo-bar{position:relative;z-index:40;background:var(--sun);border-bottom:3px solid var(--ink);padding-top:16px;padding-bottom:8px}   /* the 16px on top leaves room for the vine that hangs under the header */
+@media (min-width:48em){.demo-bar{position:sticky;top:calc(var(--header-h) + 3px)}}
+.demo-bar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 24px}
+.demo-bar-note{margin:0;font-weight:700;font-size:.95rem;line-height:1.35}
+.demo-tag{display:inline-block;padding:0 .55em;margin-right:.1em;background:#fff;border:2px solid var(--ink);border-radius:999px;font-family:var(--display);font-weight:700;letter-spacing:.02em}
+.demo-bar-tools{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.demo-switch{display:flex;flex-wrap:wrap;gap:6px}
+.demo-switch-link,.demo-bar-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.3em .9em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:600 .92rem/1.1 var(--display);color:var(--ink);text-decoration:none;cursor:pointer}
+.demo-switch-link[aria-current]{background:var(--ink);color:#fff}
+@media (hover:hover){.demo-switch-link:hover,.demo-bar-btn:hover{background:var(--cream)}.demo-switch-link[aria-current]:hover{background:var(--ink)}}
+.demo-bar-btn{background:transparent;border-style:dashed}
+
+html.wa-demo{scroll-padding-top:calc(var(--header-h) + 16px + var(--demo-bar-h,0px))}   /* a link to a place on the page lands under the header and the sticky demo bar */
+
+/* ---------- the page ---------- */
+.demo-page{padding-top:clamp(28px,5vw,56px);padding-bottom:clamp(40px,6vw,80px)}
+.demo-guard{max-width:34em;margin:0 auto;padding:clamp(22px,4vw,36px);background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:0 6px 0 var(--ink);text-align:center}
+.demo-guard h1{font-size:clamp(1.8rem,4vw,2.4rem);margin-bottom:.4em}
+.demo-guard p{margin:0 0 1.2em}
+.demo-h1{font-size:clamp(1.9rem,4vw,2.8rem)}
+.demo-lead{margin:.6em 0 0;max-width:44em;font-size:1.1rem;font-weight:600;color:var(--ink-soft)}
+.demo-muted{color:var(--ink-soft)}
+.demo-hello{margin:.35em 0 0;font-weight:700;color:var(--ink-soft)}
+.demo-account-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px 24px;margin-bottom:18px}
+.demo-account-tools{display:flex;align-items:center;gap:10px}
+
+/* ---------- cards, forms, small buttons ---------- */
+.demo-card{padding:clamp(18px,3vw,26px);background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:0 6px 0 var(--ink)}
+.demo-card h2,.demo-card h3{font-size:1.4rem;margin-bottom:.4em}
+.demo-card p{margin:0 0 .8em}
+.demo-auth-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:22px;margin-top:22px;align-items:start}
+.demo-form{display:grid;gap:14px}
+.demo-field{display:grid;gap:4px}
+.demo-field label{font-weight:800}
+.demo-input{width:100%;min-height:44px;padding:.5em .8em;font:600 1.05rem/1.3 var(--body);color:var(--ink);background:#fff;border:2.5px solid var(--ink);border-radius:14px}
+textarea.demo-input{min-height:5.5em}
+select.demo-input{padding-right:.4em}
+.demo-input[aria-invalid="true"]{border-color:var(--red-deep);box-shadow:0 0 0 2px var(--red-deep)}
+.demo-hint{margin:0;font-size:.95rem;font-weight:600;color:var(--ink-soft)}
+.demo-error{margin:0;font-size:.95rem;font-weight:800;color:var(--red-deep)}
+.demo-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.demo-linkbtn{padding:.5em .2em;min-height:44px;background:none;border:0;font:700 .98rem/1.2 var(--body);color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px;cursor:pointer}
+.demo-note{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 16px;margin:0 0 18px;padding:6px 14px 6px 18px;background:#d9f3e6;border:3px solid var(--ink);border-radius:18px;font-weight:700}
+.demo-note p{margin:0}
+
+/* ---------- the tabs (#visits, #pizza ...) ---------- */
+.demo-tabs{display:flex;flex-wrap:wrap;gap:8px 10px;margin:0 0 22px}
+.demo-tab{display:inline-flex;align-items:center;min-height:44px;padding:.35em 1em;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:999px;box-shadow:0 3px 0 var(--ink);font:600 .98rem/1.1 var(--display);text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+@media (hover:hover){.demo-tab:hover{background:var(--cream)}}
+.demo-tab[aria-selected="true"]{background:var(--sun);box-shadow:0 6px 0 var(--ink),inset 0 0 0 2.5px var(--ink);transform:translateY(-3px);font-weight:700}
+.demo-panel{min-width:0}
+.demo-view-title{font-size:clamp(1.5rem,3vw,2rem);margin-bottom:.7em}
+.demo-view-title:focus{outline:none}
+.demo-h1:focus{outline:none}
+.demo-view{display:grid;gap:22px}
+
+/* ---------- the bell ---------- */
+.demo-bell-wrap{position:relative}
+.demo-bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;padding:0;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:16px;box-shadow:0 3px 0 var(--ink);cursor:pointer}
+.demo-bell .ico{width:26px;height:26px}
+.demo-count{position:absolute;top:-9px;right:-9px;min-width:24px;height:24px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .8rem/1 var(--display)}
+.demo-bell-panel{position:absolute;right:0;top:calc(100% + 10px);z-index:30;width:min(92vw,23rem);padding:12px;background:#fff;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink)}
+.demo-bell-h{font-size:1.1rem;margin:0 0 6px 4px}
+.demo-notices{display:grid;gap:4px;margin:0 0 6px}
+.demo-notice{display:grid;gap:2px;padding:.55em .7em;border-radius:12px;color:var(--ink);text-decoration:none;font-weight:600;line-height:1.3}
+.demo-notice.is-new{background:#fff3cf;box-shadow:inset 4px 0 0 var(--red)}
+.demo-notice-text{overflow-wrap:break-word;overflow-wrap:anywhere}
+.demo-notice-when{font-size:.85rem;font-weight:700;color:var(--ink-soft)}
+.demo-notice-empty{padding:.6em .7em;font-weight:600;color:var(--ink-soft)}
+@media (hover:hover){a.demo-notice:hover{background:var(--cream)}}
+
+/* ---------- small things views use ---------- */
+.demo-chip{display:inline-flex;align-items:center;gap:.4em;padding:.3em .8em;background:#fff1b8;border:2.5px solid var(--ink);border-radius:999px;font:700 .86rem/1.2 var(--display);color:var(--ink)}
+.demo-chip.is-good{background:#d9f3e6}
+.demo-chip.is-no{background:#ffdde4}
+.demo-chip.is-info{background:#d9f0ff}
+.demo-chip.is-weather{background:#c9e6f7}
+.demo-kv{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;margin:0}
+.demo-kv dt{font-weight:800}
+.demo-kv dd{margin:0}
+.demo-lines{width:100%;border-collapse:collapse}
+.demo-lines th,.demo-lines td{padding:.45em .3em;text-align:left;border-bottom:2px solid #eadfc7;vertical-align:top}
+.demo-lines td:last-child,.demo-lines th:last-child{text-align:right;white-space:nowrap}
+.demo-lines tfoot td,.demo-lines tfoot th{border-bottom:0;border-top:3px solid var(--ink);font-weight:800}
+.demo-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------- the modal and the toast ---------- */
+html.demo-modal-open{overflow:hidden}
+.demo-modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:clamp(12px,5vh,64px) 14px 14px;background:rgba(58,36,22,.55);overflow-y:auto}
+.demo-modal-box{position:relative;width:min(100%,30rem);padding:24px 22px 20px;background:#fff;border:3px solid var(--ink);border-radius:26px;box-shadow:0 8px 0 var(--ink)}
+.demo-modal-box.is-wide{width:min(100%,44rem)}
+.demo-modal-box:focus{outline:none}
+.demo-modal-title{font-size:1.5rem;margin:0 2.2rem .5em 0}
+.demo-modal-body{display:grid;gap:12px;margin-bottom:18px}
+.demo-modal-body p{margin:0}
+.demo-modal-actions{display:flex;flex-wrap:wrap;gap:10px}
+.demo-modal-x{position:absolute;top:10px;right:10px;width:44px;height:44px;padding:0;background:#fff;border:2.5px solid var(--ink);border-radius:50%;font:700 1.5rem/1 var(--display);color:var(--ink);cursor:pointer}
+.demo-toasts{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:210;display:grid;gap:8px;width:min(92vw,28rem);transform:translateX(-50%);pointer-events:none}
+.demo-toast{margin:0;padding:.7em 1em;background:var(--ink);color:#fff;border:3px solid #fff;border-radius:16px;box-shadow:0 4px 0 rgba(58,36,22,.5);font-weight:700;line-height:1.35;pointer-events:auto}
+.demo-toast.is-good{background:var(--green-deep)}
+@media (min-width:48em){.demo-toasts{bottom:24px}}
+@media (prefers-reduced-motion:no-preference){
+  html:not([data-calm="all"]) .demo-toast{animation:demoToast .25s ease-out}
+  html:not([data-calm="all"]) .demo-modal-box{animation:demoPop .2s ease-out}
+}
+@keyframes demoToast{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes demoPop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- phones ---------- */
+@media (max-width:30em){
+  .demo-bar-inner{gap:6px 12px}
+  .demo-tab{padding:.3em .8em;font-size:.92rem}
+  .demo-kv{grid-template-columns:1fr;gap:0}
+  .demo-kv dd{margin-bottom:.6em}
+}
+@media (forced-colors:active){
+  .demo-tab[aria-selected="true"],.demo-switch-link[aria-current]{forced-color-adjust:none;background:Highlight;color:HighlightText}
+}

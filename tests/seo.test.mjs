@@ -57,13 +57,18 @@ ok('self-test: an Event that is over, has no place or has a bad price is caught'
 ok('self-test: a sitemap with a missing page, an extra page, a twin or a future lastmod is caught', sitemapProblems(['a', 'a', 'x'], ['a', 'b'], NOW, ['2999-01-01', 'soon']).length === 5 && sitemapProblems(['a'], ['a'], NOW, ['2026-10-03']).length === 0);
 
 /* ---- the pages ---- */
-const files = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html') && f !== '404.html').sort();
+const NOINDEX = /<meta name="robots" content="noindex">/;
+const everyFile = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html') && f !== '404.html').sort();
+// The three pages of the pretend account demo (docs/ACCOUNT_DEMO.md) are noindex on purpose (`robots: noindex` in their settings): no canonical address, no share picture,
+// no structured data, not in the sitemap. They are checked at the end of this test, and the checks below count only the pages that are meant to be found.
+const DEMO_PAGES = ['account.html', 'farm-desk.html', 'kitchen.html'];
+const files = everyFile.filter((f) => !NOINDEX.test(read(f)));
 const html = Object.fromEntries(files.map((f) => [f, read(f)]));
 // the address a page names for itself: with .html, or without it when PAGE_EXT in tools/pages.py is empty (optional patch clean-addresses-C)
 const EXT = (/^PAGE_EXT = '([^']*)'/m.exec(fs.readFileSync(path.join(ROOT, 'tools', 'pages.py'), 'utf8')) || [, '.html'])[1];
 const canonOf = (f) => SITE + (f === 'index.html' ? '' : f.replace(/\.html$/, EXT));
 // the home page and one page for each file in pages/ (a new page gets its source there, a line in the sitemap and its own tags; the sitemap check below counts them too)
-const pageCount = fs.readdirSync(path.join(ROOT, 'pages')).filter((f) => f.endsWith('.html')).length + 1;
+const pageCount = fs.readdirSync(path.join(ROOT, 'pages')).filter((f) => f.endsWith('.html') && !/^robots:\s*noindex\s*$/m.test(read('pages/' + f).split('\n---\n')[0])).length + 1;
 ok(`the site has the ${pageCount} pages this test finds: the home page and one for each file in pages/`, files.length === pageCount, files.join(', '));
 
 const per = (what, fn) => { const bad = files.map((f) => { const r = fn(html[f], f); return r ? f + ': ' + r : ''; }).filter(Boolean); ok(what, bad.length === 0, bad.slice(0, 4).join(' | ')); };
@@ -157,5 +162,23 @@ ok('sitemap.xml lists exactly the pages at their canonical addresses, each once,
 const robots = read('robots.txt');
 const blocked = [...robots.matchAll(/^Disallow:\s*(\S+)/gm)].map((m) => m[1]).filter((p) => locs.some((u) => new URL(u).pathname.startsWith(p)));
 ok('robots.txt names the sitemap by its full address and blocks none of the pages in it', robots.includes('Sitemap: ' + SITE + 'sitemap.xml') && blocked.length === 0, blocked.join(', '));
+
+/* ---- the pages of the pretend account demo: found by nobody ---- */
+const demoNow = everyFile.filter((f) => NOINDEX.test(read(f)));
+ok('exactly the three pages of the account demo are marked noindex: ' + DEMO_PAGES.join(', '), demoNow.join() === DEMO_PAGES.join(), demoNow.join(', '));
+const headers = read('_headers');
+const demoBad = DEMO_PAGES.map((f) => {
+  const h = read(f), slug = f.replace(/\.html$/, '');
+  const notes = [];
+  if (link(h, 'canonical').length) notes.push('has a canonical address');
+  if (/property="og:(image|url)"|name="twitter:image"/.test(h)) notes.push('has a share picture or address');
+  if (/application\/ld\+json/.test(h)) notes.push('has structured data');
+  if (locs.some((u) => u.includes('/' + slug))) notes.push('is in sitemap.xml');
+  if (!new RegExp('^/' + slug + '\\*?\\s*\\n\\s+X-Robots-Tag:\\s*noindex', 'm').test(headers)) notes.push('has no X-Robots-Tag: noindex in _headers');
+  if (!/<title>[^<]{20,62}<\/title>/.test(h) || lengthProblem('description', meta(h, 'description') || '', 110, 165)) notes.push('has a title or description of the wrong length');
+  return notes.length ? f + ' ' + notes.join(', ') : '';
+}).filter(Boolean);
+ok('the demo pages have no canonical address, no share picture, no structured data and no line in sitemap.xml, send X-Robots-Tag: noindex from _headers, and have a title and a description of a normal length', demoBad.length === 0, demoBad.join(' | '));
+ok('robots.txt does not block the demo pages (a search engine must be able to read the noindex)', !/^Disallow:\s*\/(account|farm-desk|kitchen)/m.test(robots));
 
 await finish({});

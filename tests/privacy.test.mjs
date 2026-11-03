@@ -36,7 +36,9 @@ const WRITTEN_HOSTS = new Set([
   'localhost',                                                                                   // the address tools/serve.py prints: this computer, never contacted (print/owner-cheat-sheet.html)
 ]);
 // Files that may use a browser storage or network API, and which one. Everything else must not.
-const API_FILES = { 'js/i18n.js': ['localStorage'], 'js/main.js': ['localStorage'] };
+// The pretend account demo (docs/ACCOUNT_DEMO.md): pretend demo, only runs in demo mode (js/demo-header.js switches it on only for ?demo or the preview page). js/demo-store.js keeps
+// its state under the one key wa-demo-v1, js/demo-header.js one hint for the tab. Every other demo file touches storage only through the store.
+const API_FILES = { 'js/i18n.js': ['localStorage'], 'js/main.js': ['localStorage'], 'js/demo-store.js': ['localStorage'], 'js/demo-header.js': ['sessionStorage'] };
 const PROBE = 'SECRETPROBE 4242 Zephyr Lane, Zzyzxville, NC 99999';   // the "address" typed into the Drive time box
 const MAIL = 'privacy-probe@example.com';
 const MC = `WISE_ACRES.signup = { action: 'https://wiseacres.us21.list-manage.com/subscribe/post?u=U123&id=L456', interests: { pumpkins: 'group[1][2]' }, tags: '111', languageField: 'LANGUAGE' };`;
@@ -60,7 +62,10 @@ const publicFiles = [...fs.readdirSync(ROOT).filter((f) => /\.(html|webmanifest|
   ok('no page, stylesheet or font loads anything from another site (fonts are local)', loads.length === 0, loads.slice(0, 4).join(' | '));
   // no embedded frames, videos, audio or plug-ins; no file upload; the only places a visitor can type are the signup email and the Drive time address
   const embeds = [];
-  for (const f of publicFiles.filter((x) => /\.(html|js)$/.test(x) && !x.startsWith('lang/'))) { const code = read(f); for (const m of code.matchAll(/<(iframe|video|audio|embed|object)\b|createElement\(\s*['"](iframe|video|audio|embed|object|form|textarea|select)['"]|type\s*=\s*["']file["']|FormData|FileReader/g)) embeds.push(m[0] + ' in ' + f); }
+  for (const f of publicFiles.filter((x) => /\.(html|js)$/.test(x) && !x.startsWith('lang/'))) {
+    const code = read(f), demo = /^js\/demo-[a-z-]+\.js$/.test(f);   // pretend demo, only runs in demo mode: the demo screens may build their own form, text box and list (nothing else: no frame, no upload, no file picker)
+    for (const m of code.matchAll(/<(iframe|video|audio|embed|object)\b|createElement\(\s*['"](iframe|video|audio|embed|object|form|textarea|select)['"]|type\s*=\s*["']file["']|FormData|FileReader/g)) if (!(demo && /createElement\(\s*['"](form|textarea|select)['"]/.test(m[0]))) embeds.push(m[0] + ' in ' + f);
+  }
   ok('no iframe, video, audio, embed, object or file upload anywhere (no embedded maps or social posts; nobody can upload a photo)', embeds.length === 0, embeds.slice(0, 5).join(', '));
   const typing = [];
   for (const f of publicFiles.filter((x) => /\.html$/.test(x))) for (const m of read(f).matchAll(/<(input|textarea|select)\b[^>]*>/g)) { const tag = m[0], type = (/type\s*=\s*["']?(\w+)/.exec(tag) || [, 'text'])[1], id = (/\bid\s*=\s*["']([^"']+)/.exec(tag) || [, ''])[1]; if (!['checkbox', 'radio'].includes(type) && !['su-email', 'drive-addr'].includes(id)) typing.push(f + ' ' + tag.slice(0, 80)); }
@@ -69,7 +74,7 @@ const publicFiles = [...fs.readdirSync(ROOT).filter((f) => /\.(html|webmanifest|
   const apis = ['localStorage', 'sessionStorage', 'indexedDB', 'document.cookie', 'cookieStore', 'caches.open', 'serviceWorker', 'sendBeacon', 'WebSocket', 'EventSource', 'XMLHttpRequest'];
   const stray = [];
   for (const f of [...publicFiles.filter((x) => /\.(js|html)$/.test(x) && !x.startsWith('lang/'))]) { const code = read(f); for (const a of apis) if (code.includes(a) && !(API_FILES[f] || []).includes(a)) stray.push(a + ' in ' + f); }
-  ok('only js/i18n.js and js/main.js touch localStorage; nothing uses cookies, sessionStorage, IndexedDB, caches, service workers, beacons or sockets', stray.length === 0, stray.join(', '));
+  ok('only js/i18n.js and js/main.js touch localStorage (and, in demo mode only, js/demo-store.js and js/demo-header.js one key and one hint); nothing uses cookies, IndexedDB, caches, service workers, beacons or sockets', stray.length === 0, stray.join(', '));
   // the keys written are the allowed ones
   const written = new Set(); for (const f of ['js/i18n.js', 'js/main.js']) for (const m of read(f).matchAll(/['"](wa\.[A-Za-z.]+)['"]/g)) written.add(m[1]);
   ok('the localStorage keys in the code are exactly the allowed keys', [...written].sort().join() === Object.keys(KEYS).sort().join(), [...written].join(', '));

@@ -101,7 +101,8 @@ JS_NOT_READ = ('hero.js', 'footer-art.js', 'map-art.js', 'farm-map-data.js')
 def js_files():
     """js/content.js first (the settings), then every other script that can hold a fact."""
     names = sorted(os.path.basename(p) for p in glob.glob(os.path.join(ROOT, 'js', '*.js')))
-    return ['js/' + n for n in ['content.js'] + [n for n in names if n != 'content.js' and n not in JS_NOT_READ] if n in names]
+    # js/demo-*.js (the pretend account demo) and js/tour*.js (the tour) copy facts from the pages on purpose and are English only: tests/demo-data.test.mjs checks the demo's numbers against the pages
+    return ['js/' + n for n in ['content.js'] + [n for n in names if n != 'content.js' and n not in JS_NOT_READ and not n.startswith(('demo-', 'tour'))] if n in names]
 
 
 def js_code(src):

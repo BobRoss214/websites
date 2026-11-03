@@ -23,5 +23,15 @@
 /tests/*
   X-Robots-Tag: noindex
 
+# the three pages of the pretend account demo (docs/ACCOUNT_DEMO.md): not for search engines
+/account*
+  X-Robots-Tag: noindex
+
+/farm-desk*
+  X-Robots-Tag: noindex
+
+/kitchen*
+  X-Robots-Tag: noindex
+
 /docs/*
   X-Robots-Tag: noindex

@@ -55,10 +55,11 @@ ok('(tried on a bad sample first) scripts in the wrong order are found', misplac
 const order = PAGES.map((f) => [f, misplaced(loaded(html[f]))]).filter(([, m]) => m.length);
 ok('the scripts of every page come in an order that works (guard, content, season, i18n and live, main, features)', order.length === 0, order.map(([f, m]) => f + ': ' + m.join(', ')).join(' | '));
 const homeScripts = loaded(html['index.html']);
-const notLoaded = (list, jsFiles) => jsFiles.filter((f) => f !== 'footer-art.js' && !list.includes(f));   // footer-art.js: only the five extra pages load it (instead of hero.js)
-ok('(tried on a bad sample first) a script the home page does not load is found', notLoaded(['guard.js'], ['guard.js', 'live.js']).length === 1 && notLoaded(['guard.js'], ['guard.js', 'footer-art.js']).length === 0);
+const notLoaded = (list, jsFiles) => jsFiles.filter((f) => f !== 'footer-art.js' && !/^(demo-|tour)/.test(f) && !list.includes(f));   // footer-art.js: only the five extra pages load it (instead of hero.js); the scripts of the account demo (demo-*) and of the tour (tour*) load on their own pages, and only in demo or tour mode
+ok('(tried on a bad sample first) a script the home page does not load is found', notLoaded(['guard.js'], ['guard.js', 'live.js']).length === 1 && notLoaded(['guard.js'], ['guard.js', 'footer-art.js', 'demo-ui.js', 'tour.js']).length === 0);
 const unloaded = notLoaded(homeScripts, files.map((f) => path.basename(f)));
-ok(`the home page loads every script in js/ (${files.length} files, js/footer-art.js is the extra pages' own)`, homeScripts.length >= 10 && unloaded.length === 0, unloaded.join(', '));
+ok('the home page loads js/demo-header.js, the switch of the account demo (it does nothing unless demo mode is on); every page loads it', homeScripts.includes('demo-header.js') && PAGES.filter((f) => f !== '404.html').every((f) => loaded(html[f]).includes('demo-header.js')));
+ok(`the home page loads every script in js/ (${files.length} files, js/footer-art.js is the extra pages' own; the demo and tour scripts load on their own pages)`, homeScripts.length >= 10 && unloaded.length === 0, unloaded.join(', '));
 const unnamed = (text) => [...text.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)].filter((m) => !/\b(?:aria-label|aria-labelledby|title)="[^"]+"/.test(m[1]) && !m[2].replace(/<[^>]*>/g, '').trim()).map((m) => (m[1].match(/\b(?:id|class)="([^"]*)"/) || [, 'a button'])[1]);
 ok('(tried on a bad sample first) a button with only a picture and no name is found, one with a name is not', unnamed('<button class="x"><svg aria-hidden="true"></svg></button>').length === 1 && unnamed('<button aria-label="Open menu"><svg></svg></button><button>Send</button>').length === 0);
 const nameless = PAGES.map((f) => [f, unnamed(html[f])]).filter(([, n]) => n.length);

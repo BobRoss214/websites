@@ -16,7 +16,12 @@ Each source in pages/<slug>.html starts with a small block of settings between -
   ---
   <section>...the page itself...</section>
 
-Only title, description, image and image_alt are used (crumb is kept for a future breadcrumb trail); any other line in the block is ignored.
+Only title, description, image and image_alt are used (crumb is kept for a future breadcrumb trail); any other line in the block is ignored,
+except these three, which the pages of the pretend account demo use (docs/ACCOUNT_DEMO.md):
+  robots: noindex            the page is not for visitors: it gets <meta name="robots" content="noindex">, no canonical address, no share picture (og:, twitter:) and no
+                             structured data, and it is left out of sitemap.xml
+  styles: css/demo.css ...   style sheets for this page only, loaded after the site's own, in this order (spaces between them; each must be a file in css/)
+  scripts: js/demo-data.js ...  scripts for this page only, loaded after the site's own footer scripts, in this order (spaces between them; each must be a file in js/)
 The share picture's size is read from the file itself. The home page's picture and its description live in index.html (og:image, og:image:alt).
 The farm map's scripts (js/map-art.js, js/farm-map-data.js) are added only to a page whose source contains data-farm-map.
 
@@ -332,7 +337,7 @@ def js_icons(sprite, scripts, has_map):
             continue
         text = open(path, encoding='utf-8-sig').read()
         words = set(re.findall(r"""['"`#(]([A-Za-z][\w-]*)""", text))
-        every = name in ('footer-art.js', 'map-art.js', 'farm-map-data.js') or (has_map and name == 'features.js')
+        every = name in ('footer-art.js', 'map-art.js', 'farm-map-data.js') or (has_map and name == 'features.js') or name.startswith('demo-')   # the demo's screens draw any picture of the sprite by its name
         found |= {w for w in words if w in ids and (every or w.startswith('i-'))}
     return found
 
@@ -346,10 +351,28 @@ def css_ids():
     return out
 
 
+def is_noindex(meta):
+    return meta.get('robots', '').strip().lower() == 'noindex'
+
+
+def page_files(meta, key, prefix):
+    """The addresses a page names in its `styles:` or `scripts:` line: each must be a file of the site (so a typo is found here, not by a visitor)."""
+    out = []
+    for f in meta.get(key, '').split():
+        if not re.fullmatch(prefix + r'[a-z0-9-]+\.' + ('css' if prefix == 'css/' else 'js'), f) or not os.path.exists(os.path.join(ROOT, f)):
+            sys.exit(f'pages: "{key}: {f}" is not a file in {prefix}. Nothing was changed.')
+        out.append(f)
+    return out
+
+
 def compose(c, slug, meta, body):
     url = SITE + slug + '.html'
     title, desc = meta['title'], meta['description']
-    image_rel, image_alt, image_dims = share_picture(c, slug, meta)
+    noindex = is_noindex(meta)
+    if noindex:   # nobody should find or share this page: no share picture is looked for
+        image_rel, image_alt, image_dims = OG_IMAGE, '', None
+    else:
+        image_rel, image_alt, image_dims = share_picture(c, slug, meta)
     image = SITE + image_rel
     head = c['head']
     # lambdas: a replacement given as text is read for \1, \n and \d, so a backslash in a title or description would be changed or stop the run
@@ -362,6 +385,10 @@ def compose(c, slug, meta, body):
     # The Search Console tag belongs on the home page only (see README), so do not copy its placeholder comment or a pasted tag.
     head = re.sub(r'\s*<!-- GOOGLE SEARCH CONSOLE.*?-->', '', head, flags=re.S)
     head = re.sub(r'\s*<meta name="google-site-verification"[^>]*>', '', head)
+    if meta.get('styles'):   # this page's own style sheets, after the site's own
+        sheets = re.findall(r'<link rel="stylesheet" href="css/[^"]+">', head)
+        if sheets:
+            head = head.replace(sheets[-1], sheets[-1] + ''.join('\n  <link rel="stylesheet" href="%s">' % f for f in page_files(meta, 'styles', 'css/')), 1)
     extra = (f'\n  <link rel="canonical" href="{url}">\n  <meta property="og:url" content="{url}">\n  <meta property="og:image" content="{image}">')
     if image_dims:
         extra += f'\n  <meta property="og:image:width" content="{image_dims[0]}">\n  <meta property="og:image:height" content="{image_dims[1]}">'
@@ -376,11 +403,15 @@ def compose(c, slug, meta, body):
     if faq:
         graph.append({'@type': 'FAQPage', 'mainEntity': faq})
     ld = '\n  <script type="application/ld+json">\n' + json.dumps({'@context': 'https://schema.org', '@graph': graph}, indent=2, ensure_ascii=False).replace('<', '\\u003c') + '\n  </script>'
+    if noindex:
+        extra, ld = '\n  <meta name="robots" content="noindex">', ''
     # The farm map's drawing code and points are only loaded by a page that has a map (data-farm-map).
     scripts = [s for s in c['scripts'] if 'data-farm-map' in body or not re.search(r'js/(map-art|farm-map-data)\.js', s)]
     # A page without the hero picture does not need the hero engine, only its footer art (js/footer-art.js, written below by main()).
     if 'id="hero-scene"' not in body and os.path.exists(os.path.join(JS_DIR, 'hero.js')):
         scripts = [s.replace('js/hero.js', FOOTER_ART) for s in scripts]
+    if meta.get('scripts'):   # this page's own scripts come last, in the order the page source gives
+        scripts = scripts + ['<script src="%s"></script>' % f for f in page_files(meta, 'scripts', 'js/')]
     sprite = c['sprite']
     if os.path.isdir(JS_DIR):
         # Only the drawings this page uses. Everything the page's own HTML points at, what scripts draw into it, and what the style sheets point at.
@@ -433,7 +464,8 @@ def main():
             sys.exit(f'pages/{f}: a page file name may only use small letters, numbers and dashes (it becomes the web address and goes into sitemap.xml).')
         meta, body = parse_source(os.path.join(PAGES_DIR, f))
         built.append((slug, compose(c, slug, meta, body)))   # every page is made first: one with a mistake stops the run before any file is written
-        slugs.append(slug)
+        if not is_noindex(meta):
+            slugs.append(slug)   # a page marked noindex is not in sitemap.xml
     for slug, out in built:
         open(os.path.join(ROOT, slug + '.html'), 'w', encoding='utf-8', newline='\n').write(out)
         print('wrote', slug + '.html')
