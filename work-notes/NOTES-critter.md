@@ -62,8 +62,9 @@ now started again with it.
 - tests/calm.test.mjs: the real slow-processor switch also checks that the follower flies to a touch in "light" and in "most", that its wings run in both, and that they run after the press;
   a second slow page checks the way back from "light" by itself (skipped when this computer is too busy at full speed); after Pause and Play the falling leaves drift and tip in step.
   New in R2 (section 5): the automatic check on a pretend clock with pretend frames (no dependence on how busy this computer is): "light", full motion after four good looks, "light"
-  again after ONE bad look; a computer that was only slow for the first 6 s stays at full motion; one that never gets better goes light, most; in all of them the follower keeps its wings,
-  and the leaves keep falling for 0.3 s after the change and rest by 0.75 s.
+  again after ONE bad look; a computer that was only slow for the first 6 s stays at full motion; in both the follower keeps its wings, and the leaves keep falling for 0.3 s after the
+  change and rest by 0.75 s. (The real slow-processor page still checks "light" then "most" and the wings in both.) The check that the small decorations rest after the first step now looks
+  for a few seconds, because the leaves go on falling until their layer has faded.
 - tests/hero.test.mjs: every fall leaf has its three animations (heroFall, heroSway on the leaf, heroRock on its ::before), alternate and eased, `--fh` is the hero's height (also at 7 widths
   and after a resize), every leaf falls from above the top edge to below the bottom edge, light / most fade the layer out (opacity 0, snow too), the visitor's Pause (all) does not.
   New in R2: the layer's base transition (a transition runs both when the calm mode comes and when it goes), the `@supports not (translate:0 0)` rule, the snow's keyframes use `--fh`,

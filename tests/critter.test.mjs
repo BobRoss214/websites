@@ -255,7 +255,7 @@ async function behaviour(browser, base, errs, kind, ck) {
   ck(`${kind}: the wings flap (two wings, a loop each) and it bobs (one loop)`, flaps.length === 2 && bob.length === 1 && d.loops.length === 3, JSON.stringify(d.loops));
   if (kind === 'butterfly') {
     ck('butterfly: its wings flap faster than the two butterflies of the scene (.32 s per half beat), and are direct children of the drawing', flaps.length === 2 && flaps.every((l) => l.ms < 200 && l.ms >= 60) && d.wingParents.length === 2 && d.wingParents.every((id) => id === 'bfly'), JSON.stringify([flaps, d.wingParents]));
-    ck(`butterfly: coloured from the site's palette (${d.hue || 'monarch'})`, ['', 'morpho', 'admiral'].includes(d.hue) && d.size[0] === 52, JSON.stringify([d.hue, d.size]));
+    ck(`butterfly: coloured from the site's palette (${d.hue || 'monarch'})`, ['', 'monarch', 'morpho', 'admiral'].includes(d.hue) && d.size[0] === 52, JSON.stringify([d.hue, d.size]));
   } else ck('bee: the wings buzz faster still (.09 s per half beat)', flaps.length === 2 && flaps.every((l) => l.ms <= 100), JSON.stringify(flaps));
   ck(`${kind}: everything that loops moves by transform only (the compositor runs it: no repaint, no script)`, d.props.length === 1 && d.props[0] === 'transform', JSON.stringify(d.props));
   const keep = await keepRects(p);
