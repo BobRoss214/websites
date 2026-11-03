@@ -99,6 +99,9 @@ export function collect(cfg) {
   out.schedule = sched && vis(sched) ? { rows: all('.sched-table tbody tr', sched).map((r) => text(r.cells[0]) + ' → ' + text(r.cells[1])), head: text(sched.querySelector('h4')) } : null;
   out.signup = all('[data-signup-link]').map(text);
   out.signupForm = !!(document.querySelector('#signup') && vis(document.querySelector('#signup')));
+  // The top menu: a line for a season that is near (or in progress) is bold with a red dot, and so is the button of its group (js/main.js, initNav). Read from the markup, not from
+  // what shows: on a phone the lists of the menu are closed. Each is written as "group › line".
+  out.coming = uniq(Array.from(document.querySelectorAll('.nav a.is-coming')).map((a) => { const g = a.closest('.nav-group'), b = g && g.querySelector('.nav-group-btn'); return (b ? norm(b.textContent) + ' › ' : '') + norm(a.textContent); })).sort();
 
   // "Reserve ..." buttons and where they go
   const reserve = {};
@@ -187,7 +190,7 @@ export function fieldsOf(fp) {
     week: fp.week ? { crops: fp.week.crops.map(digits), note: fp.week.note, days: fp.week.days } : null,
     schedule: fp.schedule, signup: fp.signup, signupForm: fp.signupForm, reserve: fp.reserve.map((r) => r.text + ' → ' + r.to + (r.target ? ' ' + r.target : '')).sort(),
     links: fp.links.map((l) => counts(l.text) + ' → ' + l.to + ' ' + l.state).sort(), ids: fp.ids || null, tags: fp.tags, dated: fp.dated, emptyHeadings: fp.emptyHeadings, emptyBoxes: fp.emptyBoxes, errors: fp.errors,
-    pastDates: fp.pastDates,
+    pastDates: fp.pastDates, coming: fp.coming || [],
   };
 }
 export const FIELD_NAMES = Object.keys(fieldsOf({ badges: [], reserve: [], links: [], week: null }));
@@ -486,6 +489,7 @@ const REASONS = {
   notice: ['The notice bar', 'notice and noticeUntil in js/content.js'],
   only: ['A line that belongs to one season shows only in that season', 'data-only / data-in-season on the line; SEASONS in js/season.js'],
   out: ['“Tell me when it opens” hides while that season is in progress', 'data-out-of-season on the button'],
+  coming: ['A menu line for a season that is near is bold with a red dot from 60 days before the season starts until its last day, and the button of its group gets the dot too', 'data-coming on that line of the menu in index.html; COMING_DAYS in js/main.js; SEASONS in js/season.js'],
   pastDate: ['A date written in the text has gone by', 'the text of that line (a data-until would hide it)'],
   other: ['Something on the page depends on the date', 'see “What switches”'],
 };
@@ -528,6 +532,8 @@ function diffLook(prev, cur, pg, day) {
   }
   const lk = sd(a.links, b.links).added.concat(sd(a.links, b.links).removed).filter((x) => / (HIDDEN|MISSING)$/.test(x));
   if (lk.length) { const d = sd(a.links, b.links); out.push({ kind: 'only', text: 'links to something that is not on the page: ' + [d.added.filter((x) => / (HIDDEN|MISSING)$/.test(x)).length ? 'now ' + list(d.added.filter((x) => / (HIDDEN|MISSING)$/.test(x)).map((x) => quote(ellipsis(x.replace(/ (HIDDEN|MISSING)$/, ''), 50)))) : '', d.removed.filter((x) => / (HIDDEN|MISSING)$/.test(x)).length ? 'no longer ' + list(d.removed.filter((x) => / (HIDDEN|MISSING)$/.test(x)).map((x) => quote(ellipsis(x.replace(/ (HIDDEN|MISSING)$/, ''), 50)))) : ''].filter(Boolean).join(', ') }); }
+  const cm = sd(a.coming, b.coming), say = (xs) => xs.map((x) => { const [g, l] = x.split(' › '); return quote(l) + ' (' + g + ' list)'; });
+  if (cm.added.length || cm.removed.length) out.push({ kind: 'coming', text: 'top menu: ' + [cm.added.length ? list(say(cm.added)) + ' is now bold with a red dot, and the button of its list too' : '', cm.removed.length ? list(say(cm.removed)) + ' is no longer bold with a red dot, and the button of its list loses it too' : ''].filter(Boolean).join('; ') });
   if (JSON.stringify(a.pastDates) !== JSON.stringify(b.pastDates)) out.push({ kind: 'pastDate', text: 'dates in the text that are already past: ' + (b.pastDates.length ? list(b.pastDates.slice(0, 3).map((x) => quote(ellipsis(x.split('  in:')[0], 30)))) : 'none') });
   if (JSON.stringify(a.errors) !== JSON.stringify(b.errors)) out.push({ kind: 'other', text: 'page errors: ' + (b.errors.length ? b.errors.join(' | ') : 'none') });
   if (!out.length && JSON.stringify(a) !== JSON.stringify(b)) out.push({ kind: 'other', text: 'something else changed (' + FIELD_NAMES.filter((f) => JSON.stringify(a[f]) !== JSON.stringify(b[f])).join(', ') + ')' });
@@ -611,7 +617,7 @@ export function buildDoc(res) {
   L.push('');
   L.push('*Made by `node tools/season_calendar.mjs` from the pages themselves. Do not edit by hand: run the command again after changing the season dates, a `data-until`, a release row, or any wording in the first screen (`--check` says whether this page is out of date).*');
   L.push('');
-  L.push('The site changes with the calendar: seasons, the line under the headline, which buttons show, the open-now badges, the pizza chip, the schedule box, the countdown, the “New” tags, the footer year. This page lists what a visitor sees on every day from **' + long(o.from) + '** to **' + long(o.to) + '**, so the owner can look at a date and know.');
+  L.push('The site changes with the calendar: seasons, the line under the headline, which buttons show, the open-now badges, the pizza chip, the schedule box, the countdown, the “New” tags, the red dot in the top menu, the footer year. This page lists what a visitor sees on every day from **' + long(o.from) + '** to **' + long(o.to) + '**, so the owner can look at a date and know.');
   L.push('');
   L.push('**How it was looked at.** Each day, the home page and the five other pages were opened in English, at phone width (' + o.width + ' px), with the page clock set to **noon in New York** on that day (the farm’s day, whatever time zone the visitor is in). A sample was taken every ' + o.step + ' days and next to every date written in the page files and every season change; every gap between two different looks was halved until the exact day was found. Days with the same look on all six pages are one row below.');
   L.push('');
