@@ -413,13 +413,14 @@
    * What follows the pointer is a bee or a butterfly. The page picks one at random when it loads, and every 45 to 75 seconds (random) while the
    * visitor stays it flies off the edge of the hero and comes back as the other kind. The address can pick the kind instead (?critter=bee or
    * ?critter=butterfly; only this page reads it, nothing is stored): then it stays that kind, which is what the tests and a person showing the
-   * page need. window.WISE_ACRES.critter.kind says which one it is, and .swap() starts the change at once.
+   * page need. window.WISE_ACRES.critter.kind says which one it is, .swap() starts the change at once and .changeIn says how many ms are left until it comes by itself.
    * HOW IT MOVES: it chases a spot the way a living thing does, in one smooth glide, never in hops. Ten times a second it looks where it wants to be
    * (the pointer, or a spot of the field when nobody is moving one), works out how fast to go (far away: fast; close: slower and slower, so it
-   * settles by itself) and starts a short straight leg of 240 ms from where it is right now. Where it is right now is read from the running leg
-   * (a leg is a Web Animation of the transform of #bee-fly), so every new leg starts exactly where the last one has got to and the path has no
-   * joins. A leg costs the compositor next to nothing; nothing runs per frame, because a drawing frame of the hero costs the browser far more than
-   * the creature is worth (every endless loop in the scene is restyled and repainted with it).
+   * settles by itself) and starts a short straight leg of 240 ms from where it is right now. Where it is right now is worked out from the running leg's
+   * own start time and length (a leg is a Web Animation of the transform of #bee-fly, and it is given its start time at once, see clock() below), so every
+   * new leg starts exactly where the last one has got to and the path has no joins, however slowly the computer draws its frames. A leg costs the
+   * compositor next to nothing; nothing runs per frame, because a drawing frame of the hero costs the browser far more than the creature is worth
+   * (every endless loop in the scene is restyled and repainted with it).
    * (The flight must move a <div>: an <svg> element moved by the `translate` property is not run by the compositor.)
    * The bee goes straight and turns to face the way it goes. The butterfly is slower and lighter and drifts a little from side to side as it
    * flies, and it banks towards the way it goes. The wings and the bobbing are endless CSS loops on the drawing inside (css/styles.css).
@@ -467,17 +468,25 @@
     setKind(kind); place();
     bee.classList.add('is-ready');
 
-    const here = () => {                        // where it is right now, part-way through a leg: [x, y, tilt, flip]
+    // The clock every leg is run by (ms): the browser's animation clock. A leg gets its start time from it at once, and where the creature is at a moment is
+    // worked out from that start time, not asked of the browser: a leg that is left to start "at the next drawn frame" is not started yet in the eyes of the
+    // script while the compositor already draws it, and a computer that draws a frame only now and then (a slow phone, a busy laptop) then sent the
+    // creature back to where the last leg began, again and again: it jumped back and forth instead of gliding (tests/critter.test.mjs: "every leg has its start time at once").
+    const clock = () => { const t = doc.timeline && doc.timeline.currentTime; return typeof t === 'number' ? t : performance.now(); };
+    const here = (t = clock()) => {             // where it is at the moment t, part-way through a leg: [x, y, tilt, flip]
       if (!leg) return [x, y, tilt, flip];
-      const p = leg.anim.effect.getComputedTiming().progress;   // the leg's progress (null before the first frame draws it); the legs are linear
-      const e = typeof p === 'number' ? clamp2(p, 0, 1) : 0;
+      let e;
+      if (leg.t0 !== null) e = clamp2((t - leg.t0) / leg.ms, 0, 1);   // the legs are linear
+      else { const p = leg.anim.effect.getComputedTiming().progress; e = typeof p === 'number' ? clamp2(p, 0, 1) : 0; }   // a browser that does not take a start time: ask the leg
       return [leg.x0 + (leg.x1 - leg.x0) * e, leg.y0 + (leg.y1 - leg.y0) * e, leg.r0 + (leg.r1 - leg.r0) * e, leg.f0 + (leg.f1 - leg.f0) * e];
     };
-    const go = (x1, y1, r1, f1, ms) => {        // one leg, straight and even, from where it is right now
-      [x, y, tilt, flip] = here();
+    const go = (x1, y1, r1, f1, ms, t = clock()) => {   // one leg, straight and even, from where it is right now (t: the moment it is looked at)
+      [x, y, tilt, flip] = here(t);
       const prev = leg;
       const anim = bee.animate([{ transform: pose(x, y, flip, tilt) }, { transform: pose(x1, y1, f1, r1) }], { duration: ms, easing: 'linear', fill: 'forwards' });
-      leg = { anim, x0: x, y0: y, x1, y1, r0: tilt, r1, f0: flip, f1 };
+      let t0 = t;
+      try { anim.startTime = t; if (!(Math.abs(anim.startTime - t) < 0.5)) t0 = null; } catch (e) { t0 = null; }
+      leg = { anim, t0, ms, x0: x, y0: y, x1, y1, r0: tilt, r1, f0: flip, f1 };
       if (prev) prev.anim.cancel();
     };
 
@@ -505,8 +514,8 @@
     function chase() {                          // the one step of the glide: look, work out the speed, start a leg, look again in a moment
       tickTimer = 0;
       if (!running || !aim) return;
-      const K = KINDS[kind], a = aim;
-      const [cx, cy] = here();
+      const K = KINDS[kind], a = aim, t = clock();
+      const [cx, cy] = here(t);
       const [tx, ty] = spotOf(a);
       const dx = tx - cx, dy = ty - cy, d = Math.hypot(dx, dy);
       if (d < (a.near || 4)) {                  // there
@@ -519,7 +528,7 @@
       let ex = cx + dx / d * step, ey = cy + dy / d * step;
       if (K.sway) { const k = Math.sin(performance.now() / 280) * K.sway * Math.min(1, d / 90); ex += -dy / d * k; ey += dx / d * k; }   // the butterfly drifts to one side and the other
       if (kind === 'bee' && Math.abs(dx) > 18) facing = dx > 0 ? 1 : -1;
-      go(ex, ey, kind === 'butterfly' ? clamp2(dx / 14, -18, 18) : 0, kind === 'bee' ? facing : 1, ms);
+      go(ex, ey, kind === 'butterfly' ? clamp2(dx / 14, -18, 18) : 0, kind === 'bee' ? facing : 1, ms, t);
       tickTimer = setTimeout(chase, TICK);
     }
     const followAim = () => ({ follow: true, gain: KINDS[kind].gain, max: KINDS[kind].max });
@@ -586,7 +595,7 @@
     doc.addEventListener('visibilitychange', sync);
     doc.addEventListener('wa:season', sync);
     doc.addEventListener('wa:calm', sync);   // "Pause animations" parks it where it is; the calm mode (light, most) does not touch the flight
-    W.critter = { get kind() { return kind; }, swap };
+    W.critter = { get kind() { return kind; }, swap, get changeIn() { return swapAt - performance.now(); } };   // changeIn: ms left until it changes kind by itself (Infinity when the address picked the kind)
   }
 
   /* ------------------------------------------------------------------ *
@@ -629,7 +638,7 @@
     const rest = () => { if (level) doc.getAnimations().forEach((a) => { if (!held.has(a) && wanted(a)) { a.pause(); held.add(a); } }); };
     const wake = () => {
       const els = new Set();
-      held.forEach((a) => { const el = a.effect && a.effect.target; if (el && el.isConnected) { if (a.effect.pseudoElement) a.play(); else els.add(el); } });
+      held.forEach((a) => { const el = a.effect && a.effect.target; if (el && el.isConnected) { if (a.effect.pseudoElement) { a.currentTime = 0; a.play(); } else els.add(el); } });   // (a part of a drawing that is a ::before restarts too, like the element it belongs to: the tipping of a falling leaf must stay in step with its drifting)
       held.clear();
       // Started again as new CSS animations, so the CSS keeps pausing them off screen and in a hidden tab.
       els.forEach((el) => { const was = el.style.animationName; el.style.animationName = 'none'; void getComputedStyle(el).animationName; el.style.animationName = was; });
