@@ -20,6 +20,14 @@ Branch `account` in /tmp/account-clone (made from integ b02d6a0). Three requests
 - Desk (nobody owned it in this wave): `js/demo-desk.js` got 4 small hunks so a party or another event (guests only, no students) reads "24 guests" instead of
   "0 students and 24 chaperones", and its empty-state sentence no longer promises a school trip to every sample family.
 
+## What I ran (on this branch, 3 Nov, the computer was busy: load 11 to 20 on 4 cores)
+- Quick: `code-rules`, `validity`, `privacy-static`, `seo` pass; `demo-store` 122, `demo-data` 37, `demo-kitchen` 42, `tour-demo-script` 68 pass; `pipeline` 50 passes (the rebuild commands change nothing).
+- Browser: the new `tests/account-event.test.mjs` passes (61 checks, with axe really running: the AXE_PATH main corrected). `WA_TOUR_ONLY=10 node tests/tour-targets.test.mjs`
+  (chapter 10 in a real browser at 1440 and 390 px) passes except the words check below.
+- Red, and not caused by this work (the same at b02d6a0): `browser-support` (`notify` and `resize` are not in the table), `docs` (docs/DECISION_PLAYBOOK.md names words that moved),
+  `consistency` (corn pit found in 4 places, 5 expected), `tour-targets` words check (`ch10-paid` has 47 words, 45 allowed).
+- Also not new: the card `ch10-answer` is always skipped (its target `acct-reply` exists only when Mrs. Cathy SUGGESTS something, and the tour answers yes). The test only prints it as a note.
+
 ## Hunks in files that other helpers also touch (main merges by hand)
 - `js/demo-data.js`, `js/demo-store.js`, `tests/demo-data.test.mjs`, `tests/demo-store.test.mjs`: alerts (H-A) trial-merged my commit 96eeec9 and says these merge cleanly.
 - `docs/ACCOUNT_DEMO.md`: conflicts with alerts in "The shapes" list (family / event / notice lines): keep both.
