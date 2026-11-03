@@ -94,10 +94,13 @@ and the main thread is 0.0 to 0.1% busy. The picture in view is drawn about 50 t
 | --- | --- | --- |
 | as it comes (spring / fall) | 25.6 ms / 10.3 ms | 48 / 65 |
 | the visitor pressed "Pause animations" | 0.3 ms / 0.4 ms | 0 / 0 |
-| the page's own switch, first step ("light": the small decorations and the wings of the bee rest; the bee keeps flying) | not measured / 10.9 ms | not measured / 33 |
+| the page's own switch, first step ("light": the small decorations rest and the falling leaves and snow fade out; the bee or butterfly that follows the pointer keeps flying and keeps its wings moving) | not measured / 10.9 ms (*) | not measured / 33 (*) |
 | the page's own switch, second step ("most") | 1.0 ms / 0.9 ms | 2 / 3 |
 
-The page looks at the picture by itself after it has loaded; on a 4x or 6x phone it made the first step within 1 to 4 seconds of the phone being slowed, and went on to the second (it needs two bad 2-second looks for each step).
+(*) These two numbers were measured with the first version of the calm mode, when the bee rested too. They have not been measured again.
+
+The page looks at the picture by itself after it has loaded; on a 4x or 6x phone it made the first step within 1 to 4 seconds of the phone being slowed, and went on to the second (it needed two bad 2-second looks for each step when this was measured).
+Today a step needs several bad looks in a row, and the first look comes a few seconds after the page has loaded, so the steps come later than the times measured here. Those times have not been measured again.
 The first step alone does not help in fall (the frame still costs 11 ms): the parts that cost most are not among the small decorations, the second step is the one that matters.
 A browser run by a program never switches by itself (the tool turns that off to be able to see it).
 

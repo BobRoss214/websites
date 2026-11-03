@@ -52,7 +52,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 ### sáb 3 oct 2026: hoy
 
-- **Por sí solo:** hoy no cambia nada. La temporada de otoño está en curso (del 13 de septiembre al 8 de noviembre): aspecto de otoño, la insignia de la granja "Reserved visits today" de jueves a domingo, la cuenta regresiva de la pizza contando hasta el martes a las 5:00 PM.
+- **Por sí solo:** hoy no cambia nada. La temporada de otoño está en curso (del 13 de septiembre al 8 de noviembre): aspecto de otoño, la insignia de la granja "Reserved visits today" de jueves a domingo, la cuenta regresiva de la pizza contando hasta el martes a las 5:00 PM. En el menú de arriba, la línea "Christmas trees" (lista GreenHouse) está en negrita con un puntito rojo, y también el botón GreenHouse, porque la temporada de árboles empieza en 60 días o menos. Un lector de pantalla dice "Coming soon" después de la línea hasta que empiece la temporada.
 - **Ustedes, a más tardar el sáb 3 oct 2026:** respondan **d60** ("¿Cierre por lluvia el 4 de octubre?"). Si la respuesta es sí: pongan el cierre y un aviso en el sitio, y cierren los horarios del domingo en Bookeo.
 - **Dónde:** `js/content.js`, en `closures: [],`, `notice: '',` y `noticeUntil: '',` (README, filas "Close for rain or a holiday" y "Show a banner on every page").
 - **Si se olvidan:** el domingo las insignias "Open now" dicen que están abiertos mientras la nota de pizza dice que probablemente estarán cerrados.
@@ -94,7 +94,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 ### vie 27 nov 2026: empieza la temporada de árboles de Navidad (el viernes después de Acción de Gracias)
 
-- **Por sí solo:** la temporada de invierno está en curso hasta el 8 de diciembre: la barra superior dice "In season: Christmas trees at The GreenHouse", el titular pasa a ser "Wise Acres Christmas trees", y el cuadro "This week" muestra los árboles "In season". El jue 26 nov 2026 (Día de Acción de Gracias) no es día de apertura, así que no necesita cierre.
+- **Por sí solo:** la temporada de invierno está en curso hasta el 8 de diciembre: la barra superior dice "In season: Christmas trees at The GreenHouse", el titular pasa a ser "Wise Acres Christmas trees", y el cuadro "This week" muestra los árboles "In season". El jue 26 nov 2026 (Día de Acción de Gracias) no es día de apertura, así que no necesita cierre. En el menú de arriba, la línea "Christmas trees" conserva la negrita y el puntito rojo hasta el 8 de diciembre, y un lector de pantalla deja de decir "Coming soon" después de ella.
 - **Ustedes, a más tardar el mié 25 nov 2026:** confirmen las fechas y los precios de los árboles (**d50**, **d54**). Agreguen una nota breve a `week` ("Trees arrive Friday"; `updated` es hoy).
 - **Dónde:** `js/content.js`, en `week: {},` (2 lugares: el ajuste y la nota que habla de él); `index.html`, en `data-t="t53cf41e8"` (las fechas de los árboles en la Shop). README, fila "Say what is ripe / spots left this week".
 - **Si se olvidan:** el sitio dice que los árboles están en temporada desde el 27 de noviembre sin importar sus existencias, y la línea de la Shop dice "Prices coming soon".
@@ -108,7 +108,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 ### mié 9 dic 2026: la temporada de árboles termina en el calendario del sitio
 
-- **Por sí solo:** el último día de árboles en el código es el 8 de diciembre. Desde el mié 9 dic 2026 no hay ninguna temporada en curso: la barra superior dice "Next up: Strawberries, usually mid-April", el titular es el de todo el año, y los árboles salen del cuadro "This week".
+- **Por sí solo:** el último día de árboles en el código es el 8 de diciembre. Desde el mié 9 dic 2026 no hay ninguna temporada en curso: la barra superior dice "Next up: Strawberries, usually mid-April", el titular es el de todo el año, y los árboles salen del cuadro "This week". En el menú de arriba, la línea "Christmas trees" vuelve a ser una línea normal, y el botón GreenHouse pierde su puntito rojo.
 - **Ustedes, a más tardar el vie 4 dic 2026:** si venden árboles después del 8 de diciembre, o se les acaban antes, díganlo (pregunta **d50**). Mientras Claude mueve la fecha de fin, usen la barra de aviso y `week` (`crops: { trees: 'peak' }`, o `'off'` cuando ya no haya).
 - **Dónde:** `js/season.js`, en `id: 'winter'`; `js/content.js`, en `notice: '',`.
 - **Si se olvidan:** el sitio deja de decir que los árboles están en temporada el 9 de diciembre mientras ustedes todavía los venden, o sigue diciéndolo cuando ya se acabaron.
@@ -204,6 +204,13 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 - **Dónde:** `index.html`, en `data-release-time="17:00"`; README, fila "Open a new pizza weekend".
 - **Si se olvidan:** sin filas que queden de 2026, no hay cuenta regresiva ni etiqueta todo el otoño. El cuadro del calendario muestra solo sus líneas "No pizza", o permanece oculto si no renovaron su último día en agosto.
 
+### lun 27 sep 2027: el menú de arriba muestra que la temporada de árboles está cerca
+
+- **Por sí solo:** en el menú de arriba, la línea "Christmas trees" (lista GreenHouse) se pone en negrita con un puntito rojo, y también el botón GreenHouse. La temporada de árboles empieza en 60 días (vie 26 nov 2027). Un lector de pantalla dice "Coming soon" después de la línea hasta entonces.
+- **Ustedes:** nada.
+- **Dónde:** `index.html`, en `data-coming="winter"`; `js/main.js`, en `const COMING_DAYS = 60;`.
+- **Si se olvidan:** nada.
+
 ### lun 8 nov 2027 al mar 9 nov 2027: termina la temporada de otoño (como el lun 9 nov 2026)
 
 - **Por sí solo:** la insignia de la granja desaparece el lun 8 nov 2027; ninguna temporada en curso el mar 9 nov 2027; las filas ya no están.
@@ -220,7 +227,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 ### jue 9 dic 2027 y vie 24 dic 2027 al vie 31 dic 2027: terminan los árboles, Navidad, fin de año
 
-- **Por sí solo:** la temporada de árboles termina el jue 9 dic 2027. El vie 24 dic 2027, el sáb 25 dic 2027 y el dom 26 dic 2027 son días de apertura (The GreenHouse y Wise Pie abren de viernes a domingo).
+- **Por sí solo:** la temporada de árboles termina el jue 9 dic 2027. El vie 24 dic 2027, el sáb 25 dic 2027 y el dom 26 dic 2027 son días de apertura (The GreenHouse y Wise Pie abren de viernes a domingo). En el menú de arriba, la línea "Christmas trees" vuelve a ser una línea normal, y el botón GreenHouse pierde su puntito rojo.
 - **Ustedes, a más tardar el mié 22 dic 2027:** cierres y un aviso para los días en que estén cerrados; las etiquetas "new" y "Fall 2027" para el próximo enero (vean el vie 1 ene 2027).
 - **Dónde:** `js/content.js`, en `closures: [],` y `noticeUntil: '',`.
 - **Si se olvidan:** "Open now" en un día cerrado.

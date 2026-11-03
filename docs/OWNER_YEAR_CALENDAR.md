@@ -48,7 +48,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ### Sat Oct 3, 2026: today
 
-- **By itself:** nothing changes today. The fall season is in progress (Sep 13 to Nov 8): fall look, the farm badge "Reserved visits today" Thursday to Sunday, the pizza countdown counting down to Tuesday 5:00 PM.
+- **By itself:** nothing changes today. The fall season is in progress (Sep 13 to Nov 8): fall look, the farm badge "Reserved visits today" Thursday to Sunday, the pizza countdown counting down to Tuesday 5:00 PM. In the top menu the "Christmas trees" line (GreenHouse list) is bold with a small red dot, and so is the GreenHouse button, because tree season starts in 60 days or less. A screen reader says "Coming soon" after the line until the season starts.
 - **You, by Sat Oct 3, 2026:** answer **d60** ("Closed Sunday, October 4 for rain?"). If yes: put the closure and a notice on the site, and close the Sunday times in Bookeo.
 - **Where:** `js/content.js` at `closures: [],`, `notice: '',` and `noticeUntil: '',` (README rows "Close for rain or a holiday" and "Show a banner on every page").
 - **If you forget:** on Sunday the "Open now" badges say open while the pizza note says you will probably be closed.
@@ -90,7 +90,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ### Fri Nov 27, 2026: Christmas tree season starts (the Friday after Thanksgiving)
 
-- **By itself:** the winter season is in progress until Dec 8: the top bar says "In season: Christmas trees at The GreenHouse", the headline becomes "Wise Acres Christmas trees", and the "This week" box lists trees "In season". Thu Nov 26, 2026 (Thanksgiving Day) is not an open day, so it needs no closure.
+- **By itself:** the winter season is in progress until Dec 8: the top bar says "In season: Christmas trees at The GreenHouse", the headline becomes "Wise Acres Christmas trees", and the "This week" box lists trees "In season". Thu Nov 26, 2026 (Thanksgiving Day) is not an open day, so it needs no closure. In the top menu the "Christmas trees" line keeps its bold and its red dot until Dec 8, and a screen reader stops saying "Coming soon" after it.
 - **You, by Wed Nov 25, 2026:** confirm the tree dates and prices (**d50**, **d54**). Add a short note to `week` ("Trees arrive Friday"; `updated` is today).
 - **Where:** `js/content.js` at `week: {},` (2 places: the setting and the note about it); `index.html` at `data-t="t53cf41e8"` (the tree dates in the Shop). README row "Say what is ripe / spots left this week".
 - **If you forget:** the site says trees are in season from Nov 27 whatever your stock, and the Shop line says "Prices coming soon".
@@ -104,7 +104,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ### Wed Dec 9, 2026: the tree season is over in the site's calendar
 
-- **By itself:** the code's last tree day is Dec 8. From Wed Dec 9, 2026 no season is in progress: the top bar says "Next up: Strawberries, usually mid-April", the headline is the all-year one, and trees leave the "This week" box.
+- **By itself:** the code's last tree day is Dec 8. From Wed Dec 9, 2026 no season is in progress: the top bar says "Next up: Strawberries, usually mid-April", the headline is the all-year one, and trees leave the "This week" box. In the top menu the "Christmas trees" line is a plain line again, and the GreenHouse button loses its red dot.
 - **You, by Fri Dec 4, 2026:** if you sell trees after Dec 8, or sell out earlier, say so (question **d50**). Until Claude moves the end date, use the notice bar and `week` (`crops: { trees: 'peak' }`, or `'off'` when they are gone).
 - **Where:** `js/season.js` at `id: 'winter'`; `js/content.js` at `notice: '',`.
 - **If you forget:** the site stops saying trees are in season on Dec 9 while you still sell them, or keeps saying it after they are gone.
@@ -200,6 +200,13 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `index.html` at `data-release-time="17:00"`; README row "Open a new pizza weekend".
 - **If you forget:** with no rows left from 2026 there is no countdown and no chip all fall. The schedule box shows only its "No pizza" lines, or stays hidden if you did not renew their last day in August.
 
+### Mon Sep 27, 2027: the top menu shows that tree season is near
+
+- **By itself:** in the top menu the "Christmas trees" line (GreenHouse list) turns bold with a small red dot, and so does the GreenHouse button. Tree season starts in 60 days (Fri Nov 26, 2027). A screen reader says "Coming soon" after the line until then.
+- **You:** nothing.
+- **Where:** `index.html` at `data-coming="winter"`; `js/main.js` at `const COMING_DAYS = 60;`.
+- **If you forget:** nothing.
+
 ### Mon Nov 8, 2027 to Tue Nov 9, 2027: the fall season is over (as on Mon Nov 9, 2026)
 
 - **By itself:** the farm badge goes on Mon Nov 8, 2027; no season in progress on Tue Nov 9, 2027; the rows are gone.
@@ -216,7 +223,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ### Thu Dec 9, 2027 and Fri Dec 24, 2027 to Fri Dec 31, 2027: trees end, Christmas, the end of the year
 
-- **By itself:** tree season is over on Thu Dec 9, 2027. Fri Dec 24, 2027, Sat Dec 25, 2027 and Sun Dec 26, 2027 are open days (The GreenHouse and Wise Pie are open Friday to Sunday).
+- **By itself:** tree season is over on Thu Dec 9, 2027. Fri Dec 24, 2027, Sat Dec 25, 2027 and Sun Dec 26, 2027 are open days (The GreenHouse and Wise Pie are open Friday to Sunday). In the top menu the "Christmas trees" line is a plain line again, and the GreenHouse button loses its red dot.
 - **You, by Wed Dec 22, 2027:** closures and a notice for the days you are closed; the "new" and "Fall 2027" labels for next January (see Fri Jan 1, 2027).
 - **Where:** `js/content.js` at `closures: [],` and `noticeUntil: '',`.
 - **If you forget:** "Open now" on a closed day.
