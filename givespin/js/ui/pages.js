@@ -326,7 +326,7 @@
     }],
     ['help-real', 'Is this real money?', function (demo) {
       return demo
-        ? '<p>Not yet. This site is in <strong>demo mode</strong>: you play with free demo credit, rounds are simulated from start to finish, nothing is charged and no donation is made. Every receipt is stamped DEMO so nobody is misled. The site owner can connect real checkout in <code>js/config.js</code> (see the README).</p>'
+        ? '<p>Not yet. This site is in <strong>demo mode</strong>: you play with free demo credit, rounds are simulated from start to finish, nothing is charged and no donation is made. Every receipt is stamped DEMO so nobody is misled. The site owner can connect real checkout in <code>js/config.js</code> (see the README). <a href="#make-it-real">What would it take?</a></p>'
         : '<p>Yes. When a game picks a charity you finish your gift on a checkout page run by the donation platform. GiveSpin never sees or stores your card details.</p>';
     }],
     ['help-money', 'How we make money: we do not.', function (demo) {
@@ -352,7 +352,7 @@
     ['help-board', 'How many charities can be on a game? Can I back one?', function () {
       return '<p>Most games have a <strong>Charities on the board</strong> control: pick a preset or type any number, from a couple up to 500 on Plinko, Roulette, the wheel, the drop crate, the Lucky Draw, Charity Derby, Duck Derby, Marble Run, Balloon Race and Last One Standing. Four games stop sooner because of what they physically are: Pick a Card is a table of face-down cards (up to 100), Scratch Cards is one card with 4 to 48 panels, Coin Flip is a knockout bracket, so it takes a power of two (up to 128), and Dice is one six-sided die, so it always has six faces. The slot machines have reels instead (3 to 12). <strong>On every game with a board, the board is exactly what the winner is drawn from</strong>, every charity on it with the same chance, so a bigger board means a longer shot and a smaller one a better chance. If you ask for more spots than there are charities in play, charities fill more than one spot (spread evenly, so their odds stay equal).</p>' +
         '<p>Dice and the slot machines have no board to set: the winner of a throw (or the charity of each reel) is drawn from all the charities in play, each with the same chance, and the six faces or the reels just show some of them, always including the winner.</p>' +
-        '<p>In the games with a board, except Pick a Card and Scratch Cards (where you already choose), you can <strong>Back a charity</strong> first: choose one, or let the site choose, and it is put on the board if it was not already there. Putting it on the board is what gives it a chance (with 8 spots it has 1 in 8, instead of 1 in over a thousand for a charity that is not on the board); once the board is set, every charity on it has exactly the same chance, yours included. If it wins you earn bonus XP, and the longer the shot the bigger the bonus. Dice and the slot machines have no Back a charity step.</p>';
+        '<p>In the games with a board, except Pick a Card and Scratch Cards (where you already choose), you can <strong>Back a charity</strong> first: choose one, or let the site choose, and it is put on the board if it was not already there. Putting it on the board is what gives it a chance (with 8 spots it has 1 in 8, instead of about 1 in 500 for a charity that is not on the board); once the board is set, every charity on it has exactly the same chance, yours included. If it wins you earn bonus XP, and the longer the shot the bigger the bonus. Dice and the slot machines have no Back a charity step.</p>';
     }],
     ['help-custom', 'Can I pick exactly which charities are in a game?', function () {
       return '<p>Yes. Every solo game has a <strong>Choose your own charities</strong> button. It opens a list you can search by name, cause (try “animals”), place or what a charity does, narrow with filters, and tick. Each row has a short description, a <strong>Details</strong> drawer and a link to the charity’s own website. You can choose everything that is showing in one tap, up to what the game can hold (100 for Pick a Card, up to 1,000 on Roulette and Plinko).</p>' +
@@ -391,6 +391,11 @@
         '<p>A rank is a receipt for giving, like XP: it comes from the total you have given, it only ever goes up, and it is <strong>not money</strong>. It cannot be bought on its own and it unlocks nothing with a cash value. Your <a href="#club">Giving Club</a> page shows all eight ranks and how far there is to go.' + (demo ? ' In demo mode the dollars are pretend, so the rank is too: it only lives in this browser.' : '') + '</p>' +
         '<p><strong>Everyone else is simulated.</strong> The other players at live tables, in leagues and in crews are bots, and so are their ranks: each bot has a made-up rank that stays the same for that name, most with none and fewer and fewer with each rank above.</p>';
     }],
+    ['help-quests', 'What are quests?', function () {
+      return '<p>Little goals, new every day and every week: three daily quests and three weekly ones, the same for everyone, picked from the date. Finish one (for example “Give to 3 different charities today”), press <strong>Claim</strong> on the <a href="#quests">Quests</a> page, and it adds season points.</p>' +
+        '<p>The <strong>season</strong> is a calendar month with a track of 30 tiers. Every round you play adds ' + GS.quests.POINTS.round + ' points (the first ' + GS.quests.ROUND_CAP + ' of a day), a daily quest ' + GS.quests.POINTS.daily + ' and a weekly one ' + GS.quests.POINTS.weekly + '; every ' + GS.quests.TIER_POINTS + ' points opens a tier. The rewards are free and never money: a little bonus XP, emblem frames and profile titles for your <a href="#me">profile</a>, card backs and confetti styles. Joined late? Each day of the season gone before you arrive is worth ' + GS.quests.CATCHUP_PER_DAY + ' points (up to ' + GS.quests.CATCHUP_MAX + '), so tier 10 is only a few days away.</p>' +
+        '<p>Points come from playing and finishing quests, never from how much you give. Nothing here pays out or turns into anything with a cash value, and it all lives on this device.</p>';
+    }],
     ['help-split', 'What does “split your gift” do?', function () {
       return '<p>It divides your amount into equal parts, to the cent, and plays one round per part. Give $10 across 3 rounds and you get $3.34, $3.33 and $3.33, each going to whichever charity that round lands on. Each round needs at least $1, so small gifts have fewer split options. Slot machines work differently: every reel is a round, so you choose 3 to 12 reels and your gift is split evenly across them.</p>';
     }],
@@ -407,11 +412,27 @@
     ['help-fees', 'Are there fees or tax receipts?', function () {
       return '<p>GiveSpin adds no fee of its own. Any processing fees are set by the checkout provider and shown before you pay. Tax receipts come from the charity or provider that processes the gift, not from GiveSpin, and demo receipts are not tax documents.</p>';
     }],
+    ['help-install', 'Can I install this?', function () {
+      return '<p>Where your browser allows it, yes. An <strong>Install the app</strong> button shows at the bottom of any page (it is never on a game screen). On an iPhone or iPad, Safari has no such button: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>. If you see neither, your browser does not offer installing for this site.</p>' +
+        '<p>It is the same site, kept like an app: it opens full screen and, once you have opened it online from a normal web address (https), it opens with no network too, because the games are saved on your device. There is no store, no account and nothing is sent from it. It is still play money: nothing is charged.</p>' +
+        '<p>If you ever see an old version, add <code>?nosw=1</code> to the address once: it removes the saved copy.</p>';
+    }],
+    ['help-reminders', 'Can GiveSpin remind me when a table starts?', function () {
+      return '<p>If you ask it to. On the <a href="#live">Live tables</a> page there is a switch, <strong>Remind me when my table is about to start</strong>. It is off until you turn it on and your browser says yes to notifications, and then it nudges you a couple of minutes before the live tables\u2019 next featured event (Double Pot Hour, Disaster Relief Night or Giving Tuesday).</p>' +
+        '<p><strong>Reminders only work while GiveSpin is open or installed and the browser keeps it alive.</strong> There is no push server and nothing is sent from here, so nothing arrives if the app is closed. The tables themselves are simulated and the money is pretend.</p>';
+    }],
+    ['help-makereal', 'Could this be made real? What would it take?', function () {
+      return '<p>Not today: it is all pretend. <a href="#make-it-real">Make it real</a> lists in plain words what real giving would need (a payment provider, receipts from it, agreements with each charity, legal and tax advice, a privacy policy, a plan for refunds and fraud) and says honestly that none of it has been started. Real live tables with real people would also need a server.</p>' +
+        '<p>Want real tables one day? On the <a href="#live">Live tables</a> page you can leave a note to yourself. It is saved on this device only and nothing is sent anywhere.</p>';
+    }],
     ['help-limit', 'Responsible giving: can I limit how much I give?', function () {
       return '<p>Yes. Giving should feel good, so there is a monthly limit for you to set. When you are signed in, open <strong>Card &amp; responsible giving</strong> from your account menu and pick a limit. Games and direct gifts stop when you reach it, and you can change or remove it any time.</p>';
     }],
     ['help-stream', 'Can I use this on stream?', function (demo) {
-      return '<p>That is what it is built for. Hit the TV button at the top for <strong>Stream Mode</strong> (or add <code>?stream=1</code> to the URL). It enlarges the game and hides everything else' + (demo ? ', except a one-line demo notice so viewers know it is play-money' : '') + '. Add <code>&amp;transparent=1</code> for a see-through background in an OBS browser source. The space bar plays.</p>';
+      return '<p>That is what it is built for. Hit the TV button at the top for <strong>Stream Mode</strong> (or add <code>?stream=1</code> to the URL). It enlarges the game and hides everything else' + (demo ? ', except a one-line demo notice so viewers know it is play-money' : '') + '. Add <code>&amp;transparent=1</code> for a see-through background in an OBS browser source. The space bar plays. For an OBS browser source use the overlay link instead: see <a href="#help-stream-howto">How to use this on a stream</a>.</p>';
+    }],
+    ['help-stream-howto', 'How to use this on a stream', function () {
+      return ui.streamui ? ui.streamui.helpHTML() : '';
     }],
     ['help-ticker', 'Who is in the ticker under the top bar?', function (demo) {
       if (!demo) { return '<p>The ticker of simulated players is part of demo mode, so it is switched off in this version.</p>'; }
@@ -419,6 +440,10 @@
     }],
     ['help-spotlight', 'What is the charity of the week?', function () {
       return '<p>One charity in the spotlight each week, a new one every Monday. It is picked automatically by walking through the whole list in a fixed shuffled order, so every charity gets a turn before any comes round again: it is not a ranking and not an endorsement. Back it in the <strong>Back a charity</strong> step of a game and you earn ' + GS.weekly.SPOTLIGHT_XP + ' extra XP once a round, whether it wins or not. XP only, never money. See <a href="#spotlights">this week and the past spotlights</a>.</p>';
+    }],
+    ['help-boards', 'What are the leaderboards?', function (demo) {
+      return '<p>Scoreboards for giving, with one catch: <strong>everyone on them except you is a bot</strong>. The <a href="#boards">Leaderboards</a> rank crews, charities and players for this week and for all time. The bots are made-up players, each marked <strong>BOT</strong>, and their numbers are made up too (each bot\u2019s total fits the rank chip next to its name). A crew\u2019s total is its bot members added up, plus your own gifts if you have joined it, and each crew has a weekly goal that fills as the week goes on and starts again on Monday. A charity\u2019s \u201ctimes backed\u201d counts every time a gift lands on it, from the bots and from you: it is not a ranking of how good a charity is and not an endorsement.</p>' +
+        '<p>Your own row is always there, at your real rank, even when it is far down the list' + (demo ? '' : ' (in real-donation mode it counts what you sent to checkout)') + '. It is worked out from the gifts saved on this device, so nothing is sent anywhere. The Share my crew button makes a picture of your crew\u2019s week to save or send; it holds no name of yours.</p>';
     }],
     ['help-data', 'About the charity information', function () {
       var unv = GS.charities.filter(function (c) { return c.unverified; }).length;
@@ -428,7 +453,7 @@
       return '<p>Nothing leaves your browser. Your level, streak, badges, history, preferences and (if you try the preview) account details are saved in this browser’s local storage so they are still there next visit. You can wipe them any time from My Giving or your account. There are no trackers or ads.</p>';
     }],
     ['help-keys', 'Keyboard shortcuts', function () {
-      return '<p><kbd>Space</kbd> plays the current game when nothing else is focused. <kbd>Esc</kbd> closes any pop-up. Everything else works with Tab and Enter.</p>';
+      return '<p><kbd>Space</kbd> plays the current game when nothing else is focused. <kbd>Esc</kbd> closes any pop-up. Everything else works with Tab and Enter. Stream Mode has a few more keys: see <a href="#help-stream-howto">How to use this on a stream</a>.</p>';
     }]
   ];
 

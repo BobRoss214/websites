@@ -9,6 +9,12 @@
  *             credit balance goes down (free play money); a "saved card" payment is just labelled.
  *   redirect  builds a checkout link per charity with config.checkout.url. The player finishes on the
  *             provider's own page; GiveSpin never handles card details or funds.
+ *
+ * This file is the only place a gift changes hands, and it moves nothing real: in demo mode it takes play money out of the
+ * demo balance, in redirect mode it hands back links (https only; anything else becomes null) and returns at once. There is no
+ * payment provider, no key and no network request here, and none should be added to this file without the steps in
+ * docs/make-it-real.md. The shapes: process() resolves { status: 'demo' | 'checkout', receipt, links: [{ charityId, cents,
+ * url | null }], pay: 'credit' | 'card' | 'checkout' }, and rejects with an Error when the demo credit is not enough.
  */
 (function () {
   'use strict';

@@ -83,3 +83,35 @@
 /* The receipt's buttons (Play again, Share, My Giving, Done) stay at the bottom of the receipt while its long body scrolls, so a visitor on a phone does not have to scroll down to find them */
 .modal--result .rs-actions { position: sticky; bottom: -24px; z-index: 2; margin: 0 -24px -24px; padding: 12px 24px 14px; border-top: 1px solid var(--line); background: var(--panel); }
 .modal--result .modal__body:has(> .rs-actions) { scroll-padding-bottom: 96px; }
+
+/* ==========================================================================
+   Walk-through, second round (phones, tablets and big screens, after the lobby blocks, the quests, the boards and Stream Mode were added)
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ Stream Mode on a phone and on a tablet held upright */
+/* Stream Mode hides the side menu, the bottom bar and the top bar, but three things kept leaving room for them:
+   1. an old rule (css/shell.css) makes the game grid "330 px, then the rest", and it beat the one-column rule of the narrow windows: on a phone 320 px wide the picture's box was 330 px
+      and the page scrolled sideways (a vote bar and a toolbar button were cut off); on a tablet held upright (768 px) the picture sat in a 330 px column with half the screen empty;
+   2. the docked gift panel started 68 px from the left on a tablet (room for the side rail that is not there in Stream Mode);
+   3. on a phone the docked panel floated 63 px above the bottom edge (room for the bottom bar that is not there), leaving an empty strip under it.
+   Now the picture's box is as wide as the page and the panel is at the left and bottom edges, in the same windows as the docked panel itself. */
+body.is-stream { --side-w: 0px; }
+@media (max-width: 900px) and (min-height: 521px), (max-width: 560px) {
+  body.is-stream #view-game .gamegrid { grid-template-columns: minmax(0, 1fr); }
+  body.is-stream #view-game:not(.is-live) .bet, body.is-stream #view-game.is-live #livepanel { left: 0; bottom: 0; }
+}
+
+/* ------------------------------------------------------------------ keyboard focus behind the top bar and the bottom bar (every page that is not a game) */
+/* The top bar is sticky, and on a phone (up to 720 px wide) a bar of five places is fixed along the bottom edge. Tabbing through a page scrolled a control only to the edge of the screen, so
+   it could sit half or fully UNDER a bar and a keyboard (or switch) user could not see where they were: Tab went under the bottom bar on the lobby ("Try the checker", "See all spotlights"),
+   Leaderboards ("Join"), My profile ("Save name", "Share my profile") and the footer links; Shift+Tab went under the top bar on every page and every window size (the chips, "Join", Help's
+   questions, the game tiles). Now a page keeps the height of the bars (and a little more) clear when it scrolls to a control. The game screens already had their own settings (css/fit.css),
+   which win where they apply. */
+html { scroll-padding-top: calc(var(--top-h) + 12px); }
+@media (max-width: 720px) {
+  html { scroll-padding-bottom: calc(var(--nav-h) + 12px); }
+}
+
+/* ------------------------------------------------------------------ the lobby's quests line */
+/* "Ends in 27 days. 2 rewards to claim" broke between the number and its words on a phone (the "2" ended one line, "rewards to claim" began the next). The pair stays together. */
+.qblock__ready { white-space: nowrap; }

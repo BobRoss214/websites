@@ -245,7 +245,7 @@
       var inPlay = activePool(current);
       ui.pickCharity({
         title: 'Back a charity',
-        sub: 'Pick the one you think will win. It goes on the board if it was not there already, which is what gives it a chance (with 8 spots, 1 in 8 instead of 1 in over a thousand); once it is there, every charity on the board has equal odds. If it wins you earn a bonus; either way your gift goes to whichever charity wins.',
+        sub: 'Pick the one you think will win. It goes on the board if it was not there already, which is what gives it a chance (with 8 spots, 1 in 8 instead of about 1 in 500); once it is there, every charity on the board has equal odds. If it wins you earn a bonus; either way your gift goes to whichever charity wins.',
         charities: inPlay,
         note: function (c) { return ui.spotlight && ui.spotlight.isPick(c.id) ? 'Charity of the week, +' + ui.spotlight.XP + ' XP' : ''; },
         random: true,
@@ -1024,6 +1024,7 @@
   // still the whole picture, and the odds board has the names), rather than being cut off by the dock or the navigation bar.
   var FIT_MIN_LIVE = 0.27;   // (it was 0.34: Last One Standing's 25-tile board then ended under the dock on a 360 x 640 or 320 x 568 phone; a board that tall is read from the odds board anyway)
   var FIT_MIN_LIVE_LAND = 0.2;
+  var STREAM_GROW = 1.7;   // Stream Mode (a big screen): the picture may be enlarged up to this much (js/ui/stream.js, css/stream.css)
   var FIT_MIN_TIGHT = 0.17;   // (a narrow window that is also short, 480 x 320: a Lucky Wheel is then about 80 px across, the most that fits between the bars)
   var TAP_PICTURE = { cards: 1, scratch: 1 };   // the games whose picture is what you tap (a card, a panel): in a narrow, short window that cannot give them half size on the first screen they get the room the page offers when it is scrolled to them, never a miniature
   var MQ_TIGHT = '(max-width: 560px) and (max-height: 520px)';   // narrow and short (css/fit.css, "A narrow window that is also short"): docked, with no room for a picture on the first screen
@@ -1066,11 +1067,21 @@
     var shortWin = matches('(max-height: 520px)');
     // (a solo game needs only the panel's own padding under the picture; a table's result card is scrolled into view when it comes, so it needs no room kept under the picture either)
     var reserve = single ? 14 + space : (shortWin ? (isLive() ? 10 : 14) : 44) + space;
+    if (state().stream && !single) {
+      // Stream Mode is one screen with no scrolling: keep exactly what lies under the picture on the page (the caption, the stage's padding, the page's bottom padding)
+      var mainBox = document.getElementById('main');
+      var under = el.stage.getBoundingClientRect().bottom - prim.getBoundingClientRect().bottom + (mainBox ? parseFloat(window.getComputedStyle(mainBox).paddingBottom) || 0 : 0);
+      reserve = Math.max(0, under) + 2 + space;
+    }
     var room = window.innerHeight - top - reserve;
     var tight = single && matches(MQ_TIGHT);
     var minS = isLive() ? (shortWin ? FIT_MIN_LIVE_LAND : FIT_MIN_LIVE) : (shortWin ? FIT_MIN_LAND : FIT_MIN);
     if (tight) { minS = Math.min(minS, FIT_MIN_TIGHT); }
-    var s = Math.max(minS, Math.min(1, room / H));
+    if (state().stream && !single) { minS = Math.min(minS, FIT_MIN_LAND); }   // (Stream Mode is one screen with no scrolling: a small picture beats one that runs off the screen)
+    // Stream Mode on a big screen may also ENLARGE the picture to fill the room (never wider than its own box); a phone or a short window never does
+    var grow = state().stream && !docked && !shortWin ? STREAM_GROW : 1;
+    var s = Math.max(minS, Math.min(grow, room / H));
+    if (s > 1) { s = Math.max(1, Math.min(s, (panel.clientWidth - 8) / (prim.offsetWidth || 1))); }
     // A narrow, short window (a phone with its keyboard open, a small window) may not hold the picture on the first screen even at the smallest size. It is then fitted to the
     // room between the top bar and the dock as the page is scrolled to it (a round does that by itself, see scrollStage), instead of being left a smudge under the dock.
     if (tight && (room / H < minS || (TAP_PICTURE[current] && s < FIT_MIN))) {
@@ -1078,7 +1089,7 @@
       var head = top - (el.stage.getBoundingClientRect().top + (window.pageYOffset || 0));   // (what is above the picture inside the stage: the title row, a table's round bar)
       s = Math.max(s, Math.min(1, (window.innerHeight - ((tbar ? tbar.offsetHeight : 46) + 8) - head - reserve) / H));
     }
-    if (s >= 0.995) { return; }
+    if (s >= 0.995 && s <= 1.005) { return; }
     prim.classList.add('is-fit');
     prim.style.transformOrigin = '50% 0';
     prim.style.transform = 'scale(' + s.toFixed(4) + ')';
@@ -1145,6 +1156,12 @@
     // the docked panel and its sheet (a live table's panel uses them too): is the panel docked, open or shut the sheet, is it open
     isDocked: isDocked, setSheet: setMore, sheetOpen: sheetOpen,
     amountCents: function () { return amount ? amount.cents() : NaN; },
+    // for Stream Mode (js/ui/stream.js): the charity you back, whether this game has a "Back a charity" step, backing one, and the ids this game draws from
+    pickId: function () { return current && !isLive() ? pickFor(current) : ''; },
+    canPick: function () { return !!current && !isLive() && canPick(game()); },
+    setPick: function (id) { if (current && !isLive() && !state().busy && canPick(game()) && (id === '' || activePool(current).some(function (c) { return c.id === id; }))) { setPick(id); return true; } return false; },
+    poolIds: function () { return current && !isLive() ? activePool(current).map(function (c) { return c.id; }) : []; },
+    fit: fitSoon,
     lastDraw: function () { return lastDrawn; },
     mountedGame: function (id) { return mounted[id] ? GS.games[id] : null; }
   };

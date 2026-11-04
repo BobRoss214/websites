@@ -190,7 +190,7 @@
       verify: null,
       verifyNote: '',
       tagline: TAGLINE,
-      note: i.demo ? 'Simulated round: no money moved and nothing was charged' : 'Gifts are finished on each charity’s own checkout page',
+      note: i.demo ? 'Simulated: no money moved and nothing was charged' : 'Gifts are finished on each charity’s own checkout page',
       site: str(i.site)
     };
   }

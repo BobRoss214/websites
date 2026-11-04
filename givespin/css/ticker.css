@@ -5,7 +5,8 @@
 
 /* the lobby's block area (js/ui/lobby.js addBlock): blocks stack with the same gap as the other lobby sections */
 .lobbyblocks:empty { display: none; }
-.lobbyblocks { display: grid; gap: 18px; margin-bottom: 18px; }
+.lobbyblocks { display: grid; gap: 18px; margin: 22px 0 18px; }   /* under the game tiles (js/ui/lobby.js): the games come first */
+
 
 /* ------------------------------------------------------------------ the ticker bar */
 /* One fixed height (36 px) whatever the bar says: the lines are cut with an ellipsis, never wrapped, so nothing under it ever moves. It sits in the page,

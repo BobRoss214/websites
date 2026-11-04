@@ -31,7 +31,7 @@ const NF = N.toLocaleString('en-US'); // the roster count as the pages print it,
 const poolSize = (filters, excluded = []) => core.buildPool(GSdata.charities, filters, excluded).length;
 
 /* ---------- tiny static server ---------- */
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.json': 'application/json' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   let file = path.join(root, decodeURIComponent(url.pathname));

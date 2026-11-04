@@ -17,6 +17,8 @@ import path from 'node:path';
 export default async function (h) {
   const { check, newPage, openApp, go, section, a11y, core, GSdata, problems } = h;
   const IDS = GSdata.charities.map((c) => c.id);
+  // the six frames and four titles the season track (js/ui/quests.js, section 26i) adds to the same lists: these checks are about the profile's own eight and eight
+  const SEASON = ['marquee', 'chip', 'suits', 'clover', 'ribbon', 'crown', 'quest-starter', 'season-regular', 'quest-keeper', 'season-finisher'];
   const money = (c) => core.fmtMoney(c, true);
   const KEY = 'givespin:x:profile';
   const ADA = { signedIn: true, name: 'Ada Lovelace', type: 'email', contact: 'ada@example.com', hue: 200, createdAt: 1 };
@@ -111,9 +113,9 @@ export default async function (h) {
     check(lockedHow, 'each locked badge says how to earn it');
     check(await p.locator('#view-me .rgift').count() === 0 && await p.locator('#view-me [data-open-charity]').count() === 0, 'no recent gifts and no charity links when nothing has been given');
     check(await p.locator('#view-me [data-role="share"]').count() === 1 && /Share my profile/.test(await p.locator('#view-me [data-role="share"]').innerText()), 'the Share my profile button is shown now that the share cards exist');
-    const frames = await p.evaluate(() => Array.from(document.querySelectorAll('#view-me [data-role="frames"] .pickcard')).map((l) => ({ id: l.querySelector('input').value, off: l.querySelector('input').disabled, on: l.querySelector('input').checked, how: /How to unlock: /.test(l.textContent) })));
+    const frames = (await p.evaluate(() => Array.from(document.querySelectorAll('#view-me [data-role="frames"] .pickcard')).map((l) => ({ id: l.querySelector('input').value, off: l.querySelector('input').disabled, on: l.querySelector('input').checked, how: /How to unlock: /.test(l.textContent) })))).filter((f) => !SEASON.includes(f.id));
     check(frames.length === 8 && frames.filter((f) => !f.off).map((f) => f.id).join() === 'plain' && frames.every((f) => f.off === f.how) && frames[0].on, 'eight frames are listed; only Plain is open and checked; each locked one says how to unlock it', frames);
-    const titles = await p.evaluate(() => Array.from(document.querySelectorAll('#view-me [data-role="titles"] .pickcard')).map((l) => ({ id: l.querySelector('input').value, off: l.querySelector('input').disabled, on: l.querySelector('input').checked, how: /How to unlock: /.test(l.textContent) })));
+    const titles = (await p.evaluate(() => Array.from(document.querySelectorAll('#view-me [data-role="titles"] .pickcard')).map((l) => ({ id: l.querySelector('input').value, off: l.querySelector('input').disabled, on: l.querySelector('input').checked, how: /How to unlock: /.test(l.textContent) })))).filter((t) => !SEASON.includes(t.id));
     check(titles.length === 9 && titles[0].id === '' && titles[0].on && titles.slice(1).every((t) => t.off && t.how), 'nine title choices: "No title" is checked, the eight real titles are all locked and say how to unlock', titles);
     const words = await p.evaluate(() => document.querySelector('#view-me').innerText);
     check(!/\b(crypto(?!graphic)|bitcoin|ethereum|blockchain|wallet|NFTs?|tokens?|coins?|winnings|payout|prize|jackpot|cash out|real players)\b/i.test(words), 'the page uses none of the banned words');
@@ -286,7 +288,7 @@ export default async function (h) {
     const save = saveOf(750000, { plays: 20, streak: 2, bestStreak: 4, biggestCents: 12000, liveRounds: 2, verifies: 0, cards: cardsOf(12), badges: badgesOf(5), history: HISTORY, charityCounts: Object.fromEntries(IDS.slice(0, 10).map((id) => [id, 1])) });
     const p = await seeded(save, { viewport: { width: 1366, height: 800 } });
     await openMe(p);
-    const state = (kind) => p.evaluate((k) => Array.from(document.querySelectorAll('#view-me [data-role="' + k + 's"] .pickcard')).map((l) => { const i = l.querySelector('input'); return { id: i.value, off: i.disabled, on: i.checked, lock: (l.querySelector('.pickcard__lock') || { textContent: '' }).textContent.trim() }; }), kind);
+    const state = async (kind) => (await p.evaluate((k) => Array.from(document.querySelectorAll('#view-me [data-role="' + k + 's"] .pickcard')).map((l) => { const i = l.querySelector('input'); return { id: i.value, off: i.disabled, on: i.checked, lock: (l.querySelector('.pickcard__lock') || { textContent: '' }).textContent.trim() }; }), kind)).filter((x) => !SEASON.includes(x.id));
     const openFrames = ['plain', 'laurel', 'halo'];
     const fr = await state('frame');
     check(fr.filter((f) => !f.off).map((f) => f.id).join() === openFrames.join() && fr.filter((f) => f.off).map((f) => f.id).join() === 'flame,stars,hex,diamond,rays', 'frames: Plain, Laurel and Halo are open; Flame, Stars, Hexagon, Diamond and Sunburst are locked', fr);
@@ -339,7 +341,7 @@ export default async function (h) {
     });
     const more = await p.evaluate(() => ({ f: Array.from(document.querySelectorAll('#view-me [data-role="frames"] .pickcard')).length, t: Array.from(document.querySelectorAll('#view-me [data-role="titles"] .pickcard')).length,
       sg: document.querySelector('#view-me .pickcard:has(input[value="season-gold"])').textContent, qm: document.querySelector('#view-me .pickcard:has(input[value="quest-master"]) input').disabled }));
-    check(more.f === 9 && more.t === 10 && /Reach tier 30 of the season track/.test(more.sg) && more.qm === false, 'GS.profileFrames.add / GS.profileTitles.add: a feature\'s own frame (locked, with its line) and title (open) show up in the pickers', more);
+    check(more.f === 9 + 6 && more.t === 10 + 4 && /Reach tier 30 of the season track/.test(more.sg) && more.qm === false, 'GS.profileFrames.add / GS.profileTitles.add: a feature\'s own frame (locked, with its line) and title (open) show up in the pickers', more);
     check(await p.locator('#view-me .pickcard:has(input[value="season-gold"]) .pframe--season-gold').count() === 1 && await p.locator('#view-me .pickcard:has(input[value="season-gold"]) .pframe__art circle').count() === 2, 'a frame with no picture of its own is drawn as the plain ring');
     check(await noSideways(p), 'no sideways scroll');
     await h.shot(p, '25e-profile-pickers');
@@ -678,7 +680,7 @@ export default async function (h) {
     check(lbl === 'Total sent to checkout' && await p.locator('#view-me .pstats .tag').count() === 0, 'the first total says "Total sent to checkout", with no demo tag', lbl);
     const words = await p.evaluate(() => document.querySelector('#view-me').innerText);
     check(!/Total given|demo|play-money|pretend/i.test(words), 'the page has no "Total given" or demo wording in this mode');
-    check(await p.locator('#view-me .phero__name').count() === 1 && await p.locator('#view-me .pickcard').count() === 17 && await noSideways(p), 'the rest of the page is the same and does not scroll sideways');
+    check(await p.locator('#view-me .phero__name').count() === 1 && await p.locator('#view-me .pickcard').count() === 17 + SEASON.length && await noSideways(p), 'the rest of the page is the same and does not scroll sideways');
     await p.close();
     check(problems.length === problems0, 'section 25l: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
   }

@@ -7,6 +7,7 @@
   var GS = (window.GS = window.GS || {});
 
   var COLORS = ['#22F07A', '#FFC542', '#FF5D9E', '#35D4FF', '#9A7BFF', '#FFFFFF', '#FF8A3D'];
+  var SHAPES = ['rect', 'rect', 'rect', 'circle', 'ribbon'];
   var MAX_PARTICLES = 650;
 
   var canvas = null;
@@ -18,6 +19,20 @@
   var reduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
 
   function rand(a, b) { return a + Math.random() * (b - a); }
+
+  /**
+   * The confetti style the visitor chose (they earn more on the season track, js/quests.js): { colors, shapes }. The classic mix when nothing was chosen,
+   * when the quests code is not there or when anything about it cannot be read. Looked up once per burst, not once per piece.
+   */
+  function style() {
+    try {
+      if (GS.quests && GS.cosmetics) {
+        var st = GS.quests.confettiStyle(GS.cosmetics.active('confetti'));
+        if (st && st.colors && st.colors.length && st.shapes && st.shapes.length) { return st; }
+      }
+    } catch (e) { /* the classic mix */ }
+    return { colors: COLORS, shapes: SHAPES };
+  }
 
   function ensureCanvas() {
     if (canvas) { return; }
@@ -52,7 +67,9 @@
     var angle = opts.angle; // radians, 0 = right, -PI/2 = up
     var spread = opts.spread;
     var power = opts.power;
-    var shapes = ['rect', 'rect', 'rect', 'circle', 'ribbon'];
+    var st = opts.style || style();
+    var colors = st.colors;
+    var shapes = st.shapes;
     var p = {
       x: x, y: y,
       vx: Math.cos(angle + rand(-spread / 2, spread / 2)) * power * rand(0.45, 1),
@@ -60,7 +77,7 @@
       w: rand(7, 13), h: rand(4, 8),
       rot: rand(0, Math.PI * 2), vr: rand(-9, 9),
       tilt: rand(0, Math.PI * 2), vt: rand(4, 11),
-      color: COLORS[(Math.random() * COLORS.length) | 0],
+      color: colors[(Math.random() * colors.length) | 0],
       shape: shapes[(Math.random() * shapes.length) | 0],
       life: 0, max: rand(2.6, 4.4),
       g: opts.gravity || 1500,
@@ -68,6 +85,7 @@
     };
     if (p.shape === 'ribbon') { p.w = rand(3, 5); p.h = rand(16, 26); }
     if (p.shape === 'circle') { p.h = p.w = rand(5, 9); }
+    if (p.shape === 'heart' || p.shape === 'star') { p.h = p.w = rand(10, 15); }
     return p;
   }
 
@@ -116,6 +134,23 @@
         ctx.beginPath();
         ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
         ctx.fill();
+      } else if (p.shape === 'heart') {
+        var hs = p.w / 2;
+        ctx.beginPath();
+        ctx.moveTo(0, hs * 0.9);
+        ctx.bezierCurveTo(-hs * 1.5, -hs * 0.2, -hs * 0.6, -hs * 1.2, 0, -hs * 0.35);
+        ctx.bezierCurveTo(hs * 0.6, -hs * 1.2, hs * 1.5, -hs * 0.2, 0, hs * 0.9);
+        ctx.fill();
+      } else if (p.shape === 'star') {
+        var ss = p.w / 2;
+        ctx.beginPath();
+        for (var k = 0; k < 10; k++) {
+          var ang = -Math.PI / 2 + k * Math.PI / 5;
+          var rad = k % 2 ? ss * 0.45 : ss;
+          ctx.lineTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
+        }
+        ctx.closePath();
+        ctx.fill();
       } else {
         ctx.scale(1, Math.cos(p.tilt));
         ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
@@ -143,8 +178,9 @@
       var x = o.x == null ? window.innerWidth / 2 : o.x;
       var y = o.y == null ? window.innerHeight * 0.55 : o.y;
       var list = [];
+      var st = style();
       for (var i = 0; i < count; i++) {
-        list.push(spawn(x, y, { angle: o.angle == null ? -Math.PI / 2 : o.angle, spread: o.spread || Math.PI * 2, power: o.power || 900, gravity: o.gravity }));
+        list.push(spawn(x, y, { angle: o.angle == null ? -Math.PI / 2 : o.angle, spread: o.spread || Math.PI * 2, power: o.power || 900, gravity: o.gravity, style: st }));
       }
       add(list);
     },
@@ -168,11 +204,12 @@
       if (reduce.matches) { return; }
       var end = performance.now() + (ms || 1800);
       var self = this;
+      var st = style();
       (function tick() {
         if (performance.now() > end) { return; }
         var list = [];
         for (var i = 0; i < 6; i++) {
-          list.push(spawn(rand(0, window.innerWidth), -20, { angle: Math.PI / 2, spread: 0.6, power: 260, gravity: 420 }));
+          list.push(spawn(rand(0, window.innerWidth), -20, { angle: Math.PI / 2, spread: 0.6, power: 260, gravity: 420, style: st }));
         }
         add(list);
         setTimeout(tick, 70);

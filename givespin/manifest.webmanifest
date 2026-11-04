@@ -1,0 +1,22 @@
+{
+  "id": "./",
+  "name": "GiveSpin Arcade",
+  "short_name": "GiveSpin",
+  "description": "A gambling website, but it is for charity. Play-money games where every round is a gift. Demo play: nothing is charged and no real money moves.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0a1219",
+  "background_color": "#0a1219",
+  "categories": ["entertainment", "games"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Live tables", "short_name": "Live", "url": "./#live", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ]
+}

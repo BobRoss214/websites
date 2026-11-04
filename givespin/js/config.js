@@ -8,6 +8,30 @@
  *   'redirect' After the game picks a charity, the receipt shows a "Donate $X to <charity>" button that
  *              opens a real checkout page for that charity (see `checkout.url` below). GiveSpin never
  *              touches card details or funds: the payment happens on the provider's own page.
+ *
+ * WHAT 'redirect' DOES AND DOES NOT DO (read before changing `mode`; the plain-words version is the Make it real page,
+ * `#make-it-real`, and the owner's checklist is docs/make-it-real.md)
+ *   - It takes nothing here. The only thing it does is show a link; the payment, the receipt and the money belong to
+ *     whoever runs the checkout page.
+ *   - Only https links are accepted (js/payments.js drops any other link), and `checkout.url` below returns null until
+ *     someone fills it in, so with the shipped file a charity shows "no checkout link set up" and there is no button.
+ *   - The site cannot tell whether a visitor finished checkout, so a round is recorded as "sent to checkout", not as a
+ *     completed gift.
+ *   - The demo credit, the DEMO stamp, the live tables, the bots and the ticker of simulated players are switched off.
+ *   - Nothing else about real money exists here: no payment provider, no keys, no accounts that work. Do not add them to this
+ *     file. Real payments need a provider, receipts from it, agreements with each charity, a legal and tax review, a privacy
+ *     policy and refund handling first (see the checklist).
+ *
+ * The shape of the settings (every key below is read somewhere; nothing else in this file is):
+ *   brand           string                     the name in titles and share text
+ *   mode            'demo' | 'redirect'        see above; anything else is treated as 'demo' (js/payments.js)
+ *   minAmount, maxAmount, defaultAmount, presets   whole dollars
+ *   roundOptions    number[]                   how many rounds a gift can be split into
+ *   minPerRound, minPool                       whole dollars; the fewest charities a game needs
+ *   logos           boolean                    show charity logos where there is one
+ *   demoCredit, creditTopUps                   demo mode only
+ *   checkout.url    (charity, cents, opts) => https URL string | null     redirect mode only
+ *                   opts = { frequency: 'once'|'weekly'|'monthly', dedication: { kind, name, note } | null }
  */
 (function () {
   'use strict';

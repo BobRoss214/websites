@@ -140,6 +140,7 @@
     $('#stream-exit').hidden = !on;
     if (on && state.view !== 'game') { go('game-' + store.prefs().game); }
     if (on) { window.scrollTo(0, 0); }
+    GS.bus.emit('stream', on);   // js/ui/stream.js builds (or takes down) the toolbar, the pot and the vote bar
     setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 80);
   }
 
@@ -306,10 +307,13 @@
     GS.bus.on('route', placeSearch);
     window.addEventListener('resize', placeSearch);
 
-    if (params.get('stream') === '1') { setStream(true); }
+    // ?overlay=1 is Stream Mode for an OBS-style browser source: a see-through page (js/ui/stream.js, css/stream.css), and no tour over the picture
+    var overlay = params.get('overlay') === '1';
+    if (overlay) { document.body.classList.add('is-overlay', 'is-transparent'); }
+    if (params.get('stream') === '1' || overlay) { setStream(true); }
     if (params.get('transparent') === '1') { document.body.classList.add('is-transparent'); }
     document.body.classList.add('is-ready');
-    ui.tour.maybeStart();
+    if (!overlay) { ui.tour.maybeStart(); }
   }
 
   GS.app = {

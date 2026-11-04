@@ -132,7 +132,7 @@
     var rows = [];
     var o = round.opts;
     if (pay.status === 'demo') {
-      rows.push(['coins', o.pay === 'card' && store.account().card ? 'Paid with ' + ui.opts.cardLabel(store.account().card) + ' (preview, not charged)' : 'Paid with demo credit · ' + money(store.balance(), true) + ' left']);
+      rows.push(['coins', o.pay === 'card' && store.account().card ? 'Paid with ' + ui.opts.cardLabel(store.account().card) + ' (preview, not charged)' : 'Paid with demo credit' + (ui.streamui && ui.streamui.hidesCredit() ? '' : ' · ' + money(store.balance(), true) + ' left')]);   // (Stream Mode keeps your credit off the screen unless you show it)
     }
     if (o.freq !== 'once' && plan) {
       rows.push(['calendar-days', ui.opts.freqLabel(o.freq) + ' gift added (preview). Next one: ' + ui.fmtDate(plan.next) + '. Manage it in My Giving.']);

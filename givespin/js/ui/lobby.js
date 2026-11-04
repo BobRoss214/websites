@@ -100,7 +100,7 @@
   }
 
   /*
-   * Blocks that other features add to the lobby, between the welcome promos and the live strip (the charity of the week, the fair-play checker ...).
+   * Blocks that other features add to the lobby, under the game tiles and above "Pick a cause first" (the charity of the week, the fair-play checker, quests, this week's leaders ...). They sit under the games on purpose: the games come first on every screen.
    *   ui.lobby.addBlock({ id: 'spotlight', order: 20, label: 'Charity of the week', mount: function (el) { ... }, refresh: function (el) { ... } })
    * `mount` runs once when the lobby is first drawn, `refresh` on every visit to it. Lower `order` comes first.
    */
@@ -130,7 +130,7 @@
 
   function build() {
     root.innerHTML = '<h1 class="sr-only">GiveSpin lobby: casino-style games that give to charity</h1>' +
-      '<div class="lobbysearch" data-role="lobbysearch"></div>' + promos() + ui.voice.houseStrip() + '<div class="lobbyblocks" data-role="blocks"></div>' +
+      '<div class="lobbysearch" data-role="lobbysearch"></div>' + promos() + ui.voice.houseStrip() +
       '<section class="sect livestrip" data-role="livestrip" aria-labelledby="lb-live" hidden></section>' +
       '<div class="lobbybar"><nav class="cats" aria-label="Game categories">' + CATS.map(function (c) {
         return '<a class="cat" href="#' + c[2] + '" data-cat="' + c[0] + '">' + esc(c[1]) + '</a>';
@@ -138,6 +138,7 @@
       '<div class="lobbybar__right"><button type="button" class="btn btn--sm" data-role="repeat">' + ui.icon('rotate-cw') + 'Repeat last round</button>' +
       '<button type="button" class="btn btn--sm" data-open-filters title="Choose which charities can come up in games">' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button></div></div>' +
       '<div class="tiles" data-role="tiles">' + tiles() + '</div>' +
+      '<div class="lobbyblocks" data-role="blocks"></div>' +
       '<section class="sect" aria-labelledby="lb-causes"><h2 class="sect__t" id="lb-causes">Pick a cause first</h2>' +
         '<div class="chips chips--quick" data-role="causes" role="group" aria-label="Quick causes"></div><p class="pool-line" data-role="poolline" aria-live="polite"></p></section>' +
       '<section class="sect" aria-labelledby="lb-recent"><div class="sect__head"><h2 class="sect__t" id="lb-recent">Your latest rounds</h2><a class="linkbtn" href="#giving">See all in My Giving</a></div>' +
