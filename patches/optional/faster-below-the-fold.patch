@@ -13,7 +13,7 @@ diff --git a/css/extras.css b/css/extras.css
 index 155e47e..edd939b 100644
 --- a/css/extras.css
 +++ b/css/extras.css
-@@ -626,3 +626,33 @@ button.map-toggle{min-height:44px}
+@@ -825,3 +825,36 @@ button.map-toggle{min-height:44px}
    .chips .chip-new:has(> a:focus-visible){outline:4px solid var(--focus);outline-offset:3px;box-shadow:0 0 0 7px #fff}
    .chips .chip-new > a:focus-visible{outline:none}
  }
@@ -21,14 +21,17 @@ index 155e47e..edd939b 100644
 +/* FASTER BELOW THE FOLD (patches/optional/faster-below-the-fold.patch): the home page's sections below the first screen are only worked out and painted when they come near
 +   the screen (content-visibility: auto). Each one is given a height to start from (the number measured on a phone and on a computer, per width: --cv-<id>, times a small
 +   factor for the language); once a section has been drawn the browser remembers its real height (the "auto" in contain-intrinsic-size), so nothing jumps afterwards.
++   The Store (#shop) has two steps of its own, because its layout changes there: at 992 px (two columns: it is then about 40% shorter) and at 1264 px (three cards across in a column).
 +   The sections carry class="cv-sec" (the tests switch this off with html.cv .cv-sec). html.cv is set by js/guard.js, only on a first visit that is not a reload, a Back or a link with # in it: those are worked out in full, as they always were. */
-+:root{--cv-visit:10730px;--cv-farm-map:2330px;--cv-seasons:2844px;--cv-tomatoes:5376px;--cv-pizza:3896px;--cv-greenhouse:3154px;--cv-shop:8680px;--cv-flowers:4594px;--cv-groups:2725px;--cv-about:3631px;--cv-reviews:1168px;--cv-gallery:2535px;--cv-faq:2462px;--cv-reserve:703px;--cv-contact:3144px}
-+@media (min-width:390px){:root{--cv-visit:10048px;--cv-farm-map:2376px;--cv-seasons:2804px;--cv-tomatoes:5195px;--cv-pizza:3735px;--cv-greenhouse:3168px;--cv-shop:8224px;--cv-flowers:4469px;--cv-groups:2700px;--cv-about:3439px;--cv-reviews:1145px;--cv-gallery:2704px;--cv-faq:2393px;--cv-reserve:703px;--cv-contact:3036px}}
-+@media (min-width:414px){:root{--cv-visit:9637px;--cv-farm-map:2388px;--cv-seasons:2802px;--cv-tomatoes:5108px;--cv-pizza:3732px;--cv-greenhouse:3220px;--cv-shop:7995px;--cv-flowers:4435px;--cv-groups:2619px;--cv-about:3330px;--cv-reviews:1118px;--cv-gallery:2780px;--cv-faq:2366px;--cv-reserve:703px;--cv-contact:3036px}}
-+@media (min-width:600px){:root{--cv-visit:8626px;--cv-farm-map:2586px;--cv-seasons:2519px;--cv-tomatoes:4621px;--cv-pizza:3124px;--cv-greenhouse:2687px;--cv-shop:7463px;--cv-flowers:4075px;--cv-groups:2299px;--cv-about:2934px;--cv-reviews:887px;--cv-gallery:3747px;--cv-faq:2006px;--cv-reserve:567px;--cv-contact:2611px}}
-+@media (min-width:768px){:root{--cv-visit:8274px;--cv-farm-map:2816px;--cv-seasons:2455px;--cv-tomatoes:3319px;--cv-pizza:2930px;--cv-greenhouse:2638px;--cv-shop:6358px;--cv-flowers:3736px;--cv-groups:2145px;--cv-about:2631px;--cv-reviews:793px;--cv-gallery:4636px;--cv-faq:2001px;--cv-reserve:588px;--cv-contact:2524px}}
-+@media (min-width:1024px){:root{--cv-visit:7063px;--cv-farm-map:1801px;--cv-seasons:1955px;--cv-tomatoes:2746px;--cv-pizza:2558px;--cv-greenhouse:2087px;--cv-shop:6007px;--cv-flowers:2774px;--cv-groups:1594px;--cv-about:1894px;--cv-reviews:842px;--cv-gallery:2997px;--cv-faq:1862px;--cv-reserve:447px;--cv-contact:1696px}}
-+@media (min-width:1280px){:root{--cv-visit:6315px;--cv-farm-map:1864px;--cv-seasons:1939px;--cv-tomatoes:2646px;--cv-pizza:2435px;--cv-greenhouse:1746px;--cv-shop:5446px;--cv-flowers:2581px;--cv-groups:1571px;--cv-about:1712px;--cv-reviews:935px;--cv-gallery:2395px;--cv-faq:1902px;--cv-reserve:490px;--cv-contact:1603px}}
++:root{--cv-visit:10070px;--cv-farm-map:2330px;--cv-seasons:2844px;--cv-tomatoes:5334px;--cv-pizza:3915px;--cv-greenhouse:3396px;--cv-shop:8398px;--cv-flowers:4621px;--cv-groups:2463px;--cv-about:3658px;--cv-reviews:1195px;--cv-gallery:2557px;--cv-faq:2475px;--cv-reserve:703px;--cv-contact:3143px}
++@media (min-width:390px){:root{--cv-visit:9378px;--cv-farm-map:2376px;--cv-seasons:2804px;--cv-tomatoes:5222px;--cv-pizza:3775px;--cv-greenhouse:3384px;--cv-shop:8000px;--cv-flowers:4469px;--cv-groups:2439px;--cv-about:3466px;--cv-reviews:1145px;--cv-gallery:2726px;--cv-faq:2393px;--cv-reserve:703px;--cv-contact:3051px}}
++@media (min-width:414px){:root{--cv-visit:9124px;--cv-farm-map:2388px;--cv-seasons:2802px;--cv-tomatoes:5108px;--cv-pizza:3750px;--cv-greenhouse:3436px;--cv-shop:7727px;--cv-flowers:4388px;--cv-groups:2357px;--cv-about:3354px;--cv-reviews:1117px;--cv-gallery:2802px;--cv-faq:2366px;--cv-reserve:703px;--cv-contact:3051px}}
++@media (min-width:600px){:root{--cv-visit:8022px;--cv-farm-map:2586px;--cv-seasons:2519px;--cv-tomatoes:4621px;--cv-pizza:3124px;--cv-greenhouse:2850px;--cv-shop:6814px;--cv-flowers:4102px;--cv-groups:2082px;--cv-about:2934px;--cv-reviews:887px;--cv-gallery:3768px;--cv-faq:2006px;--cv-reserve:567px;--cv-contact:2594px}}
++@media (min-width:768px){:root{--cv-visit:7759px;--cv-farm-map:2815px;--cv-seasons:2455px;--cv-tomatoes:3319px;--cv-pizza:2930px;--cv-greenhouse:2839px;--cv-shop:5846px;--cv-flowers:3736px;--cv-groups:1973px;--cv-about:2631px;--cv-reviews:793px;--cv-gallery:4663px;--cv-faq:2001px;--cv-reserve:588px;--cv-contact:2564px}}
++@media (min-width:992px){:root{--cv-shop:3406px}}
++@media (min-width:1024px){:root{--cv-visit:6577px;--cv-farm-map:1801px;--cv-seasons:1982px;--cv-tomatoes:2744px;--cv-pizza:2558px;--cv-greenhouse:2222px;--cv-shop:3409px;--cv-flowers:2774px;--cv-groups:1594px;--cv-about:1894px;--cv-reviews:842px;--cv-gallery:3031px;--cv-faq:1862px;--cv-reserve:447px;--cv-contact:1739px}}
++@media (min-width:1264px){:root{--cv-shop:3068px}}
++@media (min-width:1280px){:root{--cv-visit:5830px;--cv-farm-map:1864px;--cv-seasons:1939px;--cv-tomatoes:2625px;--cv-pizza:2435px;--cv-greenhouse:1881px;--cv-shop:3013px;--cv-flowers:2581px;--cv-groups:1571px;--cv-about:1712px;--cv-reviews:935px;--cv-gallery:2429px;--cv-faq:1902px;--cv-reserve:490px;--cv-contact:1646px}}
 +html:lang(es){--cvk:1.06}html:lang(vi){--cvk:1.04}html:lang(hi){--cvk:.99}html:lang(zh-Hans){--cvk:.95}
 +html.cv main>.cv-sec:not(.cv-open){content-visibility:auto;contain-intrinsic-size:auto 1200px}
 +html.cv main>#visit:not(.cv-open){contain-intrinsic-size:auto calc(var(--cv-visit) * var(--cvk,1))}

@@ -19,14 +19,18 @@
  *      as written, and "pound" stays in Vietnamese because the site's other Vietnamese texts say it)
  *   6  links: every #shop... link in the site's html pages has its target; each jump button lands its group under the sticky header and is named for it
  *      (two buttons are named for a card of their group, because the top menu has links called Pizza and Flowers that go elsewhere)
- *   7  layout at 320, 360, 390, 768, 992, 1024, 1240, 1366 and 1920 px wide (and the long languages on a phone, and at 1240 px, where a card is narrowest): nothing
+ *   7  layout at 320, 360, 390, 768, 992, 1024, 1240, 1264, 1280, 1366 and 1920 px wide (and the long languages on a phone, and at 1264 px, where a card is narrowest): nothing
  *      sideways, no cut text, no word broken in the middle (from 390 px up), no card or band touching or overlapping another (the 4 px shadow counts) or sticking
  *      out of its group, and the Store is dense on purpose (css/extras.css, "Store on a computer"):
  *        from 992 px the 12 groups run in two columns (down the left one, then down the right one: the page's order), each about half the width, none cut between
- *        the columns, the columns about as tall as each other, the farm visit group last and across both; 2 cards across in a column (3 from 1240 px) and 4 rides
- *        across (5 from 1240 px);
+ *        the columns, the columns about as tall as each other, the farm visit group last and across both; 2 cards across in a column (3 from 1264 px) and 4 rides
+ *        across (5 from 1264 px);
  *        below 992 px one column, the groups stacked in the page's order, 3 cards across over 760 px and 2 below;
  *      in the farm group the two Farm fun cards end, with their shadow, at least a card gap above the first ride card (they touched once);
+ *      the green farm visit bar, which runs across both columns, has at least 12 px of clear space above it at 992, 1100, 1180, 1240, 1264, 1280, 1366, 1440 and 1920 px in all five
+ *      languages, measured from the lowest bottom edge of everything above it (a shadow counts, at least 4 px) to the top of the bar (it once sat right on the column end);
+ *      the Spanish cards in a Chromium that shows classic scroll bars (15 to 17 px; the test browser hides them, a visitor's computer often does not) at 1240, 1250, 1264
+ *        and 1270 px: no word broken in the middle ("próximamente" was, at 1240 px with a bar), no text cut off, and 2 cards across below 1264 px and 3 from there;
  *      names, prices and notes no smaller than .95, 1.5 and .78 rem;
  *      every group fades in when it is scrolled to (none stays invisible)
  *   8  reading aids: pictures hidden from screen readers, every card in a list item, heading order, readable price text (and axe, when it is installed)
@@ -36,7 +40,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { run, open, ok, info, until, settled, axeSource, ROOT, ms } from './lib.mjs';
+import { run, open, ok, info, until, settled, axeSource, loadPlaywright, ROOT, ms } from './lib.mjs';
 import { auditLayout } from './layout-audit.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -44,8 +48,8 @@ const LIST = JSON.parse(fs.readFileSync(path.join(HERE, 'shop-list.json'), 'utf8
 const PRODUCTS = LIST.products, GROUPS = LIST.groups, EXTRAS = LIST.extras || [];
 const NAMES = LIST.names || [], LOANWORDS = LIST.loanwords || [];   // names that stay as written in every language; English words a language of the site uses as its own
 const LANGS = ['en', 'es', 'hi', 'zh', 'vi'];
-const WIDTHS = [1366, 1920, 1240, 1024, 992, 768, 390, 360, 320];   // the first one gets every check; the others get the layout checks (992 and 1240 are where the layout changes: two columns, three cards across)
-const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', price: '.shop-price, .shop-opts', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full', band: '.shop-band', note: '.shop-sub', hand: '.shop-price.hand, .shop-price .hand', farm: '#shop-farm' };
+const WIDTHS = [1366, 1920, 1280, 1264, 1240, 1024, 992, 768, 390, 360, 320];   // the first one gets every check; the others get the layout checks (992 and 1264 are where the layout changes: two columns, three cards across; 1280 is where the section gets wider)
+const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', price: '.shop-price, .shop-opts', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full', band: '.shop-band', note: '.shop-sub', hand: '.shop-price.hand, .shop-price .hand', farm: '#shop-farm', groups: '.shop-groups' };
 const STILL = '.reveal{opacity:1!important;transform:none!important}*{animation:none!important;transition:none!important}html{scroll-behavior:auto!important}html.cv .cv-sec{content-visibility:visible!important}';
 
 /* ------------------------------------------------------------------ small helpers (Node side) */
@@ -256,6 +260,42 @@ function readLayout(SEL) {
   const minPx = (sel) => { const v = [...shop.querySelectorAll(sel)].filter((e) => e.getClientRects().length).map((e) => parseFloat(getComputedStyle(e).fontSize)); return v.length ? Math.min(...v) : null; };
   const type = { name: minPx(SEL.name), price: minPx(SEL.hand), note: minPx(SEL.note) };
   return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, flow, touching, outside, farm, broken, type };
+}
+function readFarmGap(SEL) {   // the clear space above the farm visit bar: from the lowest bottom edge of everything above it (a shadow counts: at least 4 px, as a card has) to the top of the bar
+  const shop = document.getElementById('shop'), farm = shop.querySelector(SEL.farm), band = farm && farm.querySelector(SEL.band);
+  if (!band) return { clear: null, what: 'no farm visit bar' };
+  const top = band.getBoundingClientRect().top;
+  const reach = (cs) => {   // how far a box-shadow reaches under its box (x, y, blur, spread)
+    if (!cs.boxShadow || cs.boxShadow === 'none') return 0;
+    let m = 0;
+    for (const sh of cs.boxShadow.split(/,(?![^(]*\))/)) {
+      const n = (sh.replace(/rgba?\([^)]*\)/g, '').match(/-?[\d.]+px/g) || []).map(parseFloat);
+      if (n.length >= 2) m = Math.max(m, n[1] + (n[2] || 0) + (n[3] || 0));
+    }
+    return m;
+  };
+  let lowest = -Infinity, what = '';
+  for (const e of shop.querySelectorAll(SEL.groups + ' *')) {
+    if (farm.contains(e) || (e.closest('svg') && e.tagName.toLowerCase() !== 'svg')) continue;
+    const r = e.getBoundingClientRect(), cs = getComputedStyle(e);
+    if (r.width <= 1 || r.height <= 1 || cs.visibility === 'hidden' || cs.display === 'none' || cs.position === 'absolute') continue;   // (a hidden or clipped helper text paints nothing)
+    const paints = reach(cs) > 0 || parseFloat(cs.borderBottomWidth) > 0 || !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor || 'transparent') || e.tagName.toLowerCase() === 'svg' || [...e.childNodes].some((n) => n.nodeType === 3 && n.data.trim());
+    if (!paints) continue;
+    const bottom = r.bottom + Math.max(4, reach(cs));
+    if (bottom > lowest) { lowest = bottom; what = e.tagName.toLowerCase() + '.' + String(typeof e.className === 'string' ? e.className : '').split(' ')[0] + ' "' + (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 24) + '"'; }
+  }
+  return { clear: Math.round((top - lowest) * 100) / 100, what };
+}
+const CLASSIC_WIDTHS = [1240, 1250, 1264, 1270];   // windows with a classic scroll bar, around the switch to three cards across (1264): the old switch, 1240, broke a Spanish word
+const GAP_WIDTHS = [992, 1100, 1180, 1240, 1264, 1280, 1366, 1440, 1920];
+async function farmGaps(page) {   // the same page at each width (the window is made wider or narrower, nothing is loaded again)
+  const out = [];
+  for (const w of GAP_WIDTHS) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await page.waitForTimeout(ms(350));
+    out.push({ w, ...(await page.evaluate(readFarmGap, SEL)) });
+  }
+  return out;
 }
 function contrastOf() {   // the text colour against what is behind it, for every part that carries a price, "Prices coming soon" or "Free"
   const lum = (r, g, b) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
@@ -591,12 +631,12 @@ await run('shop', async ({ browser, base, errs }) => {
     ok(`7: ${tag}: no text is cut off in #shop (names, prices, notes, labels: nothing wider or taller inside than its box, nothing shortened with "...")`, rec.cut.length === 0 && !mine.some((q) => q.inShop && /^(clipped-text|ellipsis|button-cut|overlap|tofu)$/.test(q.kind)), few(rec.cut.concat(shopProblems.filter((s) => /^(clipped|ellipsis|button-cut|overlap|tofu)/.test(s))), 4));
     ok(`7: ${tag}: no picture in #shop is stretched, squeezed or broken, no button label runs over 4 lines`, !mine.some((q) => q.inShop && /^(img-|button-wrap)/.test(q.kind) && (q.kind !== 'button-wrap' || Number((/over (\d+) lines/.exec(q.info) || [, 9])[1]) >= 4)), few(shopProblems.filter((s) => /^(img-|button-wrap)/.test(s)), 4));
     // The Store is dense on purpose (css/extras.css, "Store on a computer"). From 62em (992 px) the groups run in two columns: 2 cards across in a column, 3 from
-    // 77.5em (1240 px), and the farm visit group runs across both columns with 4 rides across, 5 from 1240 px. Below 992 px there is one column: 3 cards across
+    // 79em (1264 px), and the farm visit group runs across both columns with 4 rides across, 5 from 1264 px. Below 992 px there is one column: 3 cards across
     // over 47.5em (760 px), 2 below. A group with fewer cards fills its one row.
-    const two = w >= 992, wide = w >= 1240;
+    const two = w >= 992, wide = w >= 1264;
     const single = w > 760 ? [3] : w >= 340 ? [2] : [1, 2];
     const want = (id) => (id === 'shop-farm' ? (wide ? [5] : two ? [4] : single) : (wide ? [3] : two ? [2] : single));
-    const kind = w <= 760 ? 'a phone' : w < 992 ? 'a tablet' : w < 1240 ? 'a laptop' : 'a wide computer';
+    const kind = w <= 760 ? 'a phone' : w < 992 ? 'a tablet' : w < 1264 ? 'a laptop' : 'a wide computer';
     ok(`7: ${tag}: the product grids show ${two ? (wide ? '3 cards across in a column and 5 rides' : '2 cards across in a column and 4 rides') : single.join(' or ')} across (${kind}; a group with fewer cards fills one row)`, rec.grids.length > 0 && rec.grids.every((g) => want(g.id).some((n) => g.cols === Math.min(n, g.cards))), rec.grids.map((g) => `${g.id}: ${g.cols} of ${g.cards}`).join(', '));
     const F = rec.flow, W = F.wrap, mid = (W.l + W.r) / 2, farm = F.groups.find((g) => g.id === 'shop-farm'), others = F.groups.filter((g) => g.id !== 'shop-farm');
     const brief = (g) => `${g.id.replace('shop-', '')} ${Math.round(g.l)}..${Math.round(g.r)} x ${Math.round(g.t)}..${Math.round(g.b)}`;
@@ -623,8 +663,16 @@ await run('shop', async ({ browser, base, errs }) => {
     ok(`7: ${tag}: the type stays readable: names at least .95 rem, prices 1.5 rem, notes .78 rem (smallest: ${T.name} / ${T.price} / ${T.note} px)`, T.name >= 15.19 && T.price >= 23.99 && T.note >= 12.47, JSON.stringify(T));
     return rec;
   };
+  // the green farm visit bar runs across both columns and must not sit on whatever ends the taller column: at least 12 px of clear space above it at every computer width.
+  // (A margin at the end of a column is cut, so a bar placed after the columns once touched the shadow of the last card: 0 px.)
+  const farmBar = async (page, tag) => {
+    const g = await farmGaps(page), worst = g.reduce((a, b) => (b.clear < a.clear ? b : a));
+    ok(`7: ${tag}: the green farm visit bar has at least 12 px of clear space above it (from the lowest bottom edge above it, a shadow of at least 4 px included, to the bar) at ${GAP_WIDTHS.join(', ')} px`,
+      g.every((x) => x.clear !== null && x.clear >= 11.9), g.map((x) => `${x.w}: ${x.clear}`).join(', ') + (worst.clear < 11.9 ? `; smallest at ${worst.w} px, under ${worst.what}` : ''));
+  };
   const heights = {};
   heights[1366] = (await layout(p, '1366px', 1366)).shopH;
+  await farmBar(p, 'English');
   const phone = {};
   await p.context().close();
   for (const w of WIDTHS.slice(1)) {
@@ -678,10 +726,41 @@ await run('shop', async ({ browser, base, errs }) => {
     ok(`4: ${tag}: no phone number, health claim, dose figure or the maker's name in #shop`, badL.length === 0, badL.join(', '));
     await q.addStyleTag({ content: STILL });
     await layout(q, `${lang} on a 360px phone`, 360);
-    // the same page on a computer where a card is narrowest (3 across in a column from 1240 px: Spanish "Precios proximamente" has to stay on its lines)
-    await q.setViewportSize({ width: 1240, height: 900 });
+    // the same page on a computer where a card is narrowest (3 across in a column from 1264 px, a card 186 px wide: Spanish "Precios proximamente" has to stay on its lines)
+    await q.setViewportSize({ width: 1264, height: 900 });
     await q.waitForTimeout(ms(400));
-    await layout(q, `${lang} at 1240px`, 1240);
+    await layout(q, `${lang} at 1264px`, 1264);
+    await farmBar(q, lang);
     await q.context().close();
+  }
+
+  /* ---- 7: the Spanish cards in a window with a classic scroll bar. The test browser hides its scroll bars (like a phone), but most computers show one of 15 to 17 px, and then the
+     page is that much narrower than the window: the media queries count the whole window, the layout does not. With a bar a window of 1240 px made a Spanish card 183 px wide,
+     and the word "próximamente" of "Precios próximamente" broke in the middle. So this window is a Chromium that keeps its scroll bars (it is a second browser). */
+  {
+    const { chromium } = await loadPlaywright();
+    const classic = await chromium.launch({ executablePath: process.env.WA_CHROME || undefined, ignoreDefaultArgs: ['--hide-scrollbars'], timeout: ms(30000) });
+    try {
+      const rows = [], bad = [];
+      let bars = 0;
+      for (const w of CLASSIC_WIDTHS) {
+        const q = await openShop(classic, base, errs, { w, h: 900, lang: 'es' });
+        await q.addStyleTag({ content: STILL });
+        await throughShop(q);
+        const rec = await q.evaluate(readLayout, SEL);
+        const bar = await q.evaluate(() => window.innerWidth - document.documentElement.clientWidth);
+        const card = await q.evaluate((sel) => Math.round(Math.min(...[...document.querySelectorAll('#shop ' + sel)].filter((c) => c.getClientRects().length).map((c) => c.getBoundingClientRect().width))), SEL.card);
+        bars = Math.max(bars, bar);
+        const across = w >= 1264 ? 3 : 2;   // (the media query counts the bar: a window of 1263 px is still two across, one of 1264 px is three)
+        const grids = rec.grids.filter((g) => g.id !== 'shop-farm');
+        rows.push(`${w}: bar ${bar}px, cards from ${card}px, ${grids.length ? grids[0].cols : '?'} across`);
+        if (rec.broken.length) bad.push(`${w}: ${few(rec.broken, 3)}`);
+        if (rec.cut.length) bad.push(`${w}: ${few(rec.cut, 2)}`);
+        if (!grids.length || !grids.every((g) => g.cols === Math.min(across, g.cards))) bad.push(`${w}: ${grids.map((g) => g.id + ' ' + g.cols).join(', ') || 'no grid'} across, ${across} wanted`);
+        await q.context().close();
+      }
+      if (bars < 10) info(`7: es with a classic scroll bar: NOT CHECKED, this Chromium showed no scroll bar (${rows.join('; ')})`);
+      else ok(`7: es with a classic scroll bar (15 to 17 px) at ${CLASSIC_WIDTHS.join(', ')} px: no word broken in the middle, no text cut off, 2 cards across below 1264 px and 3 from there`, bad.length === 0, rows.join('; ') + (bad.length ? ' | ' + bad.join(' | ') : ''));
+    } finally { await classic.close().catch(() => {}); }
   }
 });
