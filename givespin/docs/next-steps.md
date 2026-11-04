@@ -18,6 +18,14 @@ Last saved: the "make it popular and memorable" round (all twelve items below ar
 - Earlier work, still in: ranks (eight emblem ranks from $1,000 to $1,000,000), one screen per game on laptops, phones upright and sideways (all 19 games), live tables that fit one screen, an accessibility scan (axe 4.10.3) with no violations on the pages checked.
 - Tests: see the README ("Tests") for the unit-test and end-to-end counts. A few timing-based checks (13j, 13m, 13c, 13za, 13zp, 13zr, 13zu, 25f, 25h) can fail once under heavy machine load; each passes alone.
 
+## Round 3 (stopped part-way, NOT in the site)
+Four helpers were built and almost finished in private copies under the session's scratchpad when work was stopped at the owner's request. None of it is merged, pushed or tested together, so the repo and the published preview (version 30) do not contain it. If the scratchpad is gone, redo it from this list; if it survived, merge `ag-lobby`, `ag-a11y`, `ag-share` and `ag-polish` (each has `handoff/CHANGES.md` and `handoff/changes.patch`, made against the version-30 tree), run the unit tests and the whole end-to-end suite, have an independent reviewer read it, then push and publish.
+- **lobby**: a game tile on the first screen of the lobby at every size (smaller welcome banners; the Live tables strip right under the first row of tiles; categories as one swipe row on phones), and today's quests before the 30-row season track on phones.
+- **a11y**: the live-table name list as one keyboard stop (`ui.rove`), bigger hit areas for small links and buttons, the receipt dialog no longer pans sideways, the overlay and toast fixes.
+- **share**: a Share button on live-table results (marked as a simulated table), a finished-season card, "Try the checker" on the Fair Play page, one copy of the card-drawing code, a "Your crew" row.
+- **polish**: seven charities (NSPCC, Daniel Morcombe Foundation, Missing & Exploited Kids, STOP THE TRAFFIK, HALO Trust, IRC UK, Mines Advisory Group) get a new "Protects people" tag instead of "Protects land & wildlife", quest links, a midnight refresh on Quests, the chosen name in the account dialog, the Back-a-charity chip click, "Show all" on the Players tab.
+- Still waiting for the owner: the "bots standing in for a real person" wording, and the questions below.
+
 ## Questions for the owner (nothing is blocked on them; each has a default)
 **Wording and the brand**
 - **A 1,000-dollar live table?** The biggest board now is 500. (Recommendation: not yet.)
