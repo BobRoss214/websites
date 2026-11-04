@@ -233,7 +233,7 @@
       text: 'The page dresses itself for the real season, using the calendar. Headline, line, buttons and picture all follow it. Visitors can peek at other seasons with the buttons at the top. Your site builder can switch them off. Press a season to see it.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
-        spring: 'Spring. The line says “It’s strawberry season!” and talks about strawberries, flowers and the animals. The buttons are “Reserve your visit” and “See what’s in season”, with a note about The GreenHouse.',
+        spring: 'Spring. The line says “It’s strawberry season!” and talks about strawberries, flowers and the animals. The buttons are “Reserve your visit” and “See what’s in season”, with a note about The GreenHouse. In the picture, kids pick strawberries in the rows.',
         summer: 'Summer. The line changes to “It’s blueberry season!” with blueberries, sunflowers and flowers. The buttons and the note stay the same.',
         fall: 'Fall. The line says “It’s pumpkin season!” and adds tomatoes and basil, wagon rides and a haunted trail. The buttons stay the same. Leaves fall in the picture.',
         winter: 'Winter. The headline becomes “Wise Acres Christmas trees”. The red button turns into “Visit The GreenHouse”, and the note about The GreenHouse is gone. Snow falls in the picture.'
@@ -264,7 +264,7 @@
       text: 'Try it: press the yellow button to pick. Kids can also tap fruit, flowers or trees in the picture. Picking 100 of one kind earns a badge, like Pumpkin Champion. It is only for fun, and nothing is saved. Press a season.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
-        spring: 'Spring. The box says “Try it! Tap the strawberries to pick them.” The yellow button says “Pick a strawberry”.',
+        spring: 'Spring. The box says “Try it! Tap the strawberries to pick them, or snip a sunflower.” The button says “Pick a strawberry”. The sunflowers at the sides can be snipped too: tap one and it grows back.',
         summer: 'Summer. “Try it! Tap the blueberries to pick them, or snip a sunflower.” The button says “Pick a blueberry”.',
         fall: 'Fall. “Try it! Tap the pumpkins to pick one, or tap the wagon.” The button says “Pick a pumpkin”.',
         winter: 'Winter. The game is about trees: “Tap the trees to light them up. Tap a fire to stoke it.” The button says “Light a tree”.'
