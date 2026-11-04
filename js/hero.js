@@ -899,13 +899,17 @@
     crittersEl.appendChild(box);
     fallHeight();
   }
-  // How far a leaf falls: the height of the hero's picture (the CSS has 100vh until this is set, and again when the window changes size)
+  // How far a leaf or a flake falls: the height of the hero's picture (the CSS has 100vh until this is set). The hero is not yet at its final height when the layer is made (the first
+  // drawing, the fonts, a season's own words), so it is set again whenever the picture changes size (a resize observer; the window's resize event where there is none).
   function fallHeight() {
     if (!crittersEl) return;
     const box = $('.particles', crittersEl), h = crittersEl.clientHeight;
     if (box && h > 0) box.style.setProperty('--fh', h + 'px');
   }
-  if (crittersEl) addEventListener('resize', fallHeight, { passive: true });
+  if (crittersEl) {
+    if ('ResizeObserver' in window) new ResizeObserver(fallHeight).observe(crittersEl);
+    addEventListener('resize', fallHeight, { passive: true });
+  }
 
   /* ------------------------------------------------------------------ *
    * Picking / lighting

@@ -2,7 +2,10 @@
 // browser: yes
 // covers: js/hero.js, js/season.js, js/content.js, css/hero.css, index.html
 /* The seasonal hero: which season it is on a date, the "See the farm in..." switcher, picking things, the tractor, keyboard use,
- * no sideways scrolling from phone to wide screen, reduced motion, and seasonPicker: false. */
+ * no sideways scrolling from phone to wide screen, reduced motion, and seasonPicker: false. The falling leaves of fall: each one has its three animations (it falls
+ * through the hero's own height, it drifts to one side and the other, its drawing tips the way it drifts), they fall from above the top edge to below the bottom edge
+ * of the hero whatever its height (the snow too: 1440 x 600), --fh follows the hero's picture when the window does not change (a resize observer), and on a slow computer (the page's own calm mode,
+ * data-calm light or most) the layer fades out instead of freezing in mid-air (a transition of its own, out and in), and is hidden where `translate` is not understood (@supports). */
 import { run, open, ok, okSoon, until, settled } from './lib.mjs';
 
 const season = (p) => p.evaluate(() => document.documentElement.dataset.season);
@@ -78,6 +81,79 @@ await run('hero', async ({ browser, base, errs }) => {
   const t1 = await p.evaluate(() => getComputedStyle(document.querySelector('#field .rig')).transform);
   await okSoon('fall: the tractor moves', () => p.evaluate(() => getComputedStyle(document.querySelector('#field .rig')).transform), (v) => v !== t1, 20000);
   ok('fall: falling leaves', (await p.locator('.particles .leaf').count()) > 8);
+  // each leaf: falls through the hero's own height (heroFall, the leaf's `translate`), drifts to one side and the other (heroSway, its transform, smooth and back and forth) and its
+  // drawing tips the way it drifts (heroRock, on its ::before: only the drawing turns, so the drifting stays level)
+  const leaves = await p.evaluate(() => {
+    const box = document.querySelector('.particles'), all = document.getAnimations(), list = [...box.querySelectorAll('.leaf')];
+    const sets = list.map((l) => all.filter((a) => a.effect && a.effect.target === l).map((a) => (a.effect.pseudoElement || 'self') + ':' + a.animationName).sort().join(' + '));
+    const timing = (name) => { const a = all.find((x) => x.effect && x.effect.target === list[0] && x.animationName === name), t = a && a.effect.getTiming(); return t && { dir: t.direction, iterations: t.iterations, easing: a.effect.getKeyframes()[0].easing }; };   // (a CSS animation's easing is on its keyframes)
+    return { n: list.length, sets: [...new Set(sets)], fh: box.style.getPropertyValue('--fh'), heroH: document.querySelector('#top').clientHeight, fall: timing('heroFall'), sway: timing('heroSway'), rock: timing('heroRock') };
+  });
+  ok('fall: every leaf has its three animations (it falls, it drifts, its drawing tips)', leaves.n > 8 && leaves.sets.length === 1 && leaves.sets[0] === '::before:heroRock + self:heroFall + self:heroSway', JSON.stringify(leaves.sets));
+  ok('...the drifting and the tipping go back and forth smoothly (alternate, endless, eased), so a leaf never jumps when they start over', !!leaves.sway && !!leaves.rock && leaves.sway.dir === 'alternate' && leaves.rock.dir === 'alternate' && leaves.sway.iterations === Infinity && leaves.rock.iterations === Infinity && leaves.sway.easing === leaves.rock.easing && leaves.sway.easing !== 'linear', JSON.stringify([leaves.sway, leaves.rock]));
+  ok(`...the height a leaf falls through is the hero's own (--fh is ${leaves.fh}, the hero is ${leaves.heroH}px high)`, leaves.fh === leaves.heroH + 'px', leaves.fh);
+  // a leaf begins its fall above the top edge of the hero (all of it) and ends it below the bottom edge (all of it), whatever the height: looked at part-way through each leaf's own fall
+  const edges = await p.evaluate(() => {
+    const hero = document.querySelector('#top').getBoundingClientRect(), box = document.querySelector('.particles'), all = document.getAnimations(), out = [];
+    for (const leaf of box.querySelectorAll('.leaf')) {
+      const a = all.find((x) => x.effect && x.effect.target === leaf && x.animationName === 'heroFall'), delay = a.effect.getTiming().delay, dur = a.effect.getComputedTiming().duration;
+      a.pause();
+      const at = (f) => { a.currentTime = delay + (2 + f) * dur; const r = leaf.getBoundingClientRect(); return [r.top - hero.top, r.bottom - hero.top]; };   // (the third time round: the time is never negative, and a negative time shows nothing of the animation)
+      out.push({ start: at(0.001), mid: at(0.5), end: at(0.999) });
+      a.play();
+    }
+    return { out, h: document.querySelector('#top').clientHeight };
+  });
+  const badEdges = edges.out.filter((e) => !(e.start[1] < 0 && e.end[0] > edges.h && e.mid[0] > 0 && e.mid[1] < edges.h));
+  ok(`...and every leaf falls from above the top edge to below the bottom edge of the hero (${edges.out.length} leaves, hero ${edges.h}px high; ${badEdges.length} do not)`, edges.out.length > 8 && badEdges.length === 0, JSON.stringify(badEdges.slice(0, 2)));
+  // the page's own calm mode (a slow computer): the layer fades out, it does not freeze in mid-air; the visitor's own Pause keeps the picture as it is
+  for (const level of ['light', 'most']) {
+    await p.evaluate((l) => document.documentElement.setAttribute('data-calm', l), level);
+    await okSoon(`fall, calm "${level}": the falling leaves fade out (the layer's opacity goes to 0) instead of freezing in mid-air`, () => p.evaluate(() => getComputedStyle(document.querySelector('.particles')).opacity), (v) => v === '0', 6000);
+  }
+  await p.evaluate(() => document.documentElement.setAttribute('data-calm', 'all'));
+  await okSoon('...the visitor\'s own "Pause animations" (data-calm="all") keeps the leaves where they are, in sight', () => p.evaluate(() => getComputedStyle(document.querySelector('.particles')).opacity), (v) => v === '1', 6000);
+  // the layer fades by a transition of its own (the base rule, not only the calm rules): it fades OUT when the calm mode comes and IN again when it goes, and js/main.js (initMotion) lets
+  // the leaves rest only when it has faded (tests/calm.test.mjs), so that none is ever frozen in mid-air in sight
+  const fadeIn = await p.evaluate(() => {
+    const box = document.querySelector('.particles'), cs = getComputedStyle(box);
+    const own = { property: cs.transitionProperty, duration: cs.transitionDuration };   // (with no data-calm: the base rule)
+    document.documentElement.setAttribute('data-calm', 'light'); void cs.opacity;
+    const out = box.getAnimations().filter((a) => a.transitionProperty === 'opacity').length;
+    box.getAnimations().forEach((a) => { if (a.transitionProperty === 'opacity') a.finish(); });
+    document.documentElement.removeAttribute('data-calm'); void cs.opacity;
+    const back = box.getAnimations().filter((a) => a.transitionProperty === 'opacity').length;
+    return { own, out, back, opacityNow: cs.opacity };
+  });
+  ok('the layer of leaves has a transition of its own (opacity, .6 s) with no calm mode set', fadeIn.own.property === 'opacity' && fadeIn.own.duration === '0.6s', JSON.stringify(fadeIn.own));
+  ok('...it fades out when "light" is set and fades in again when the calm mode is gone (a transition runs both times: it does not jump)', fadeIn.out === 1 && fadeIn.back === 1 && fadeIn.opacityNow === '0', JSON.stringify(fadeIn));
+  await okSoon('...and with no calm mode the layer is fully there again', () => p.evaluate(() => getComputedStyle(document.querySelector('.particles')).opacity), (v) => v === '1', 6000);
+  // a browser without the single-property transforms (Chrome before 104, Safari before 14.1) cannot move a leaf along its fall (the page does it with `translate`): it must not show them hanging in a row
+  // along the top edge, so the layer is hidden there. This browser has the property, so the rule can only be looked at, not seen at work.
+  const guard = await p.evaluate(() => {
+    const out = [];
+    for (const s of document.styleSheets) {
+      let rules; try { rules = s.cssRules; } catch (e) { continue; }
+      for (const r of rules) if (r.type === CSSRule.SUPPORTS_RULE) out.push({ cond: r.conditionText, inner: [...r.cssRules].map((x) => (x.selectorText || '') + '{' + (x.style ? x.style.display : '') + '}') });
+    }
+    const snow = [...document.styleSheets].reduce((all, s) => { try { return all.concat([...s.cssRules]); } catch (e) { return all; } }, []).find((r) => r.type === CSSRule.KEYFRAMES_RULE && r.name === 'heroSnow');
+    return { rule: out.find((r) => /^not \(translate:\s*0 0\)$/.test(r.cond)) || null, snowUsesFh: !!snow && /var\(--fh/.test(snow.cssText), snowUses108vh: !!snow && /vh/.test(snow.cssText.replace(/var\(--fh,100vh\)/g, '')) };
+  });
+  ok('the layer is hidden where `translate` is not understood: @supports not (translate:0 0) { .particles { display:none } }', !!guard.rule && guard.rule.inner.length === 1 && guard.rule.inner[0] === '.particles{none}', JSON.stringify(guard.rule));
+  ok('the snow, like the leaves, falls through --fh (the hero\'s own height) and not through a part of the window\'s height', guard.snowUsesFh && !guard.snowUses108vh, JSON.stringify(guard));
+  // the window changes size: the height the leaves fall through follows it
+  const fhNow = () => p.evaluate(() => ({ fh: document.querySelector('.particles').style.getPropertyValue('--fh'), h: document.querySelector('#top').clientHeight }));
+  await p.setViewportSize({ width: 1000, height: 700 });
+  await okSoon('a smaller window: --fh follows the new height of the hero', fhNow, (v) => v.fh === v.h + 'px' && v.h !== leaves.heroH, 6000);
+  await p.setViewportSize({ width: 1440, height: 900 });
+  await okSoon('...and back to the big window', fhNow, (v) => v.fh === v.h + 'px' && v.h === leaves.heroH, 6000);
+  // The hero's picture can change size with no change of the window (the first drawing, a font that arrives late, the words of a season wrapping differently): --fh follows it, a resize observer
+  // on the picture (a window resize alone left it stale: the leaves then stopped short of the bottom edge or fell on for nothing)
+  const fhPic = () => p.evaluate(() => ({ fh: document.querySelector('.particles').style.getPropertyValue('--fh'), h: document.querySelector('#critters').clientHeight }));
+  await p.evaluate(() => { document.querySelector('#critters').style.height = '500px'; });
+  await okSoon('the hero\'s picture made lower with the window as it was: --fh follows it (500px)', fhPic, (v) => v.fh === '500px' && v.h === 500, 6000);
+  await p.evaluate(() => { document.querySelector('#critters').style.height = ''; });
+  await okSoon('...and back to its own height', fhPic, (v) => v.fh === v.h + 'px' && v.h > 600, 6000);
   ok('fall: wheels spin', (await p.evaluate(() => getComputedStyle(document.querySelector('.wheel.wt1')).animationName)) === 'wheelSpin');
 
   // ---- the barrel train (spring, summer, fall): six barrels, a kid waving in each (not all in step), the tractor in front, wheels that turn
@@ -134,6 +210,27 @@ await run('hero', async ({ browser, base, errs }) => {
   await p.evaluate(() => document.querySelector('#field [data-fire]').dispatchEvent(new MouseEvent('click', { bubbles: true })));
   ok('winter: tapping a campfire flares it', (await p.locator('#field .campfire.flare').count()) === 1);
   ok('winter: snowflakes', (await p.locator('.particles .flake').count()) > 20);
+  await p.evaluate(() => document.documentElement.setAttribute('data-calm', 'light'));
+  await okSoon('winter, calm "light": the snow fades out too', () => p.evaluate(() => getComputedStyle(document.querySelector('.particles')).opacity), (v) => v === '0', 6000);
+  await p.evaluate(() => document.documentElement.removeAttribute('data-calm'));
+  // the snow falls from above the top edge to below the bottom edge of the hero, whatever its height. A window much lower than the hero tells "the hero's own height" (--fh) from "a part of the
+  // window's height" (it used to end at 108vh, short of the bottom edge): 1440 x 600, where the hero is about 750px high.
+  await p.setViewportSize({ width: 1440, height: 600 });
+  await okSoon('winter, a window 600px high: --fh follows the hero (higher than the window)', fhNow, (v) => v.fh === v.h + 'px' && v.h > 600 * 1.08 + 20, 6000);
+  const snow = await p.evaluate(() => {
+    const hero = document.querySelector('#top').getBoundingClientRect(), box = document.querySelector('.particles'), all = document.getAnimations(), out = [];
+    for (const flake of box.querySelectorAll('.flake')) {
+      const a = all.find((x) => x.effect && x.effect.target === flake && x.animationName === 'heroSnow'), delay = a.effect.getTiming().delay, dur = a.effect.getComputedTiming().duration;
+      a.pause();
+      const at = (f) => { a.currentTime = delay + (2 + f) * dur; const r = flake.getBoundingClientRect(); return [r.top - hero.top, r.bottom - hero.top]; };
+      out.push({ start: at(0.001), mid: at(0.5), end: at(0.999) });
+      a.play();
+    }
+    return { out, h: document.querySelector('#top').clientHeight };
+  });
+  const badSnow = snow.out.filter((e) => !(e.start[1] < 0 && e.end[0] > snow.h && e.mid[0] > 0 && e.mid[1] < snow.h));
+  ok(`...and every flake falls from above the top edge to below the bottom edge of the hero (${snow.out.length} flakes, hero ${Math.round(snow.h)}px high; ${badSnow.length} do not)`, snow.out.length > 20 && badSnow.length === 0, JSON.stringify(badSnow.slice(0, 2)));
+  await p.setViewportSize({ width: 1440, height: 900 });
   ok('winter: flames animate', (await p.evaluate(() => getComputedStyle(document.querySelector('.campfire .f1')).animationName)) === 'flick1');
 
   // ---- keyboard on the switcher
@@ -150,14 +247,16 @@ await run('hero', async ({ browser, base, errs }) => {
   // ---- no sideways scrolling, phone to wide screen, every season
   for (const w of [320, 375, 414, 768, 1024, 1440, 1920]) {
     const q = await page(w, w < 500 ? 740 : 900);
-    const bad = [];
+    const bad = []; let fh = null;
     for (const s of ['spring', 'summer', 'fall', 'winter']) {
       await q.evaluate((x) => WISE_ACRES.hero.setSeason(x), s);
       await until(q, (x) => document.documentElement.dataset.season === x, s);
       await frames(q);
       const ov = await q.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       if (ov > 0) bad.push(s + ' ' + ov);
+      if (s === 'fall') fh = await q.evaluate(() => ({ fh: (document.querySelector('.particles') || { style: { getPropertyValue: () => '' } }).style.getPropertyValue('--fh'), h: document.querySelector('#top').clientHeight }));
     }
+    ok(`${w}px: the leaves fall through the hero's own height (--fh ${fh && fh.fh}, the hero is ${fh && fh.h}px high)`, !!fh && fh.fh === fh.h + 'px', JSON.stringify(fh));
     ok(`${w}px: no horizontal overflow in any season`, bad.length === 0, bad.join(', '));
     const sw = await q.evaluate(() => { const r = document.querySelector('#season-switch').getBoundingClientRect(); return { left: r.left, right: r.right }; });
     ok(`${w}px: the switcher is inside the viewport`, sw.left >= 0 && sw.right <= w + 0.5, JSON.stringify(sw));
