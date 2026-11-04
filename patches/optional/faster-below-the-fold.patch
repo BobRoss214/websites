@@ -203,6 +203,6 @@ index d10035c..e11e53f 100644
 +++ b/tests/validity.test.mjs
 @@ -161,3 +161,3 @@ border-bottom-style border-bottom-width border-collapse border-color border-imag
  border-right-color border-right-style border-right-width border-spacing border-style border-top border-top-color border-top-left-radius border-top-right-radius border-top-style border-top-width border-width bottom box-decoration-break
--box-shadow box-sizing break-after break-before break-inside caption-side caret-color clear clip clip-path color color-scheme column-count column-gap column-rule columns container container-name container-type content content-visibility
-+box-shadow box-sizing break-after break-before break-inside caption-side caret-color clear clip clip-path color color-scheme column-count column-gap column-rule columns container container-name container-type contain-intrinsic-size content content-visibility
+-box-shadow box-sizing break-after break-before break-inside caption-side caret-color clear clip clip-path color color-scheme column-count column-gap column-rule column-span columns container container-name container-type content content-visibility
++box-shadow box-sizing break-after break-before break-inside caption-side caret-color clear clip clip-path color color-scheme column-count column-gap column-rule column-span columns container container-name container-type contain-intrinsic-size content content-visibility
  counter-increment counter-reset cursor direction display empty-cells fill fill-opacity fill-rule filter flex flex-basis flex-direction flex-flow flex-grow flex-shrink flex-wrap float font font-family font-feature-settings font-kerning

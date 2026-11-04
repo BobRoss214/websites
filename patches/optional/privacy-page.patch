@@ -244,8 +244,8 @@ index 8d9f46e..0920021 100644
    "(Your time: {time})": "(Tu hora: {time})",
    "{text} (Eastern Time)": "{text} (hora del Este)",
    "100 blueberries! Your fingers must be blue by now.": "¡100 arándanos! A estas alturas tus dedos deben estar azules.",
-@@ -308,6 +310,72 @@
-   "Play animations": "Reproducir animaciones"
+@@ -309,6 +311,72 @@
+   "Try it! Tap the strawberries to pick them, or snip a sunflower.": "¡Pruébalo! Toca las fresas para recogerlas, o corta un girasol."
   },
   "ui": {
 +  "t003fddc2": "No se guarda nada más: ni cookies del sitio web, ni almacenamiento de sesión, ni base de datos, ni programa en segundo plano.",
@@ -329,8 +329,8 @@ index 4dc8dd4..5dd90be 100644
    "(Your time: {time})": "(आपका समय: {time})",
    "{text} (Eastern Time)": "{text} (ईस्टर्न टाइम)",
    "100 blueberries! Your fingers must be blue by now.": "100 ब्लूबेरी! अब तक आपकी उँगलियाँ नीली हो गई होंगी।",
-@@ -308,6 +310,72 @@
-   "Play animations": "एनिमेशन चलाएँ"
+@@ -309,6 +311,72 @@
+   "Try it! Tap the strawberries to pick them, or snip a sunflower.": "आज़माइए! स्ट्रॉबेरी तोड़ने के लिए उन पर टैप करें, या एक सूरजमुखी काटें।"
   },
   "ui": {
 +  "t003fddc2": "इसके अलावा कुछ भी सहेजा नहीं जाता: वेबसाइट की कोई कुकी नहीं, कोई सेशन स्टोरेज नहीं, कोई डेटाबेस नहीं और पृष्ठभूमि में चलने वाला कोई प्रोग्राम नहीं।",
@@ -414,8 +414,8 @@ index b4ef3ef..ef22734 100644
    "(Your time: {time})": "(Giờ của bạn: {time})",
    "{text} (Eastern Time)": "{text} (giờ miền Đông)",
    "100 blueberries! Your fingers must be blue by now.": "100 trái việt quất! Chắc ngón tay bạn đã nhuốm xanh tím rồi.",
-@@ -308,6 +310,72 @@
-   "Play animations": "Phát hoạt ảnh"
+@@ -309,6 +311,72 @@
+   "Try it! Tap the strawberries to pick them, or snip a sunflower.": "Thử đi! Chạm vào dâu tây để hái, hoặc cắt một bông hướng dương."
   },
   "ui": {
 +  "t003fddc2": "Không có gì khác được lưu: không có cookie từ trang web, không có bộ nhớ phiên, không có cơ sở dữ liệu và không có chương trình chạy nền.",
@@ -499,8 +499,8 @@ index 6df73b8..91298a1 100644
    "(Your time: {time})": "（你当地时间：{time}）",
    "{text} (Eastern Time)": "{text}（美国东部时间）",
    "100 blueberries! Your fingers must be blue by now.": "100 颗蓝莓！你的手指肯定都染蓝了。",
-@@ -308,6 +310,72 @@
-   "Play animations": "播放动画"
+@@ -309,6 +311,72 @@
+   "Try it! Tap the strawberries to pick them, or snip a sunflower.": "试试看！点草莓来采摘，或者剪一朵向日葵。"
   },
   "ui": {
 +  "t003fddc2": "除此之外不会保存任何东西：本网站没有 Cookie，没有会话存储，没有数据库，也没有后台程序。",
