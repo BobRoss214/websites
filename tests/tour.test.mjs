@@ -22,7 +22,9 @@
  *     Next / Back / Contents / Esc while a press is still being carried out, a list given by a function, a phone, axe
  *   - what an independent walk of the real tour found (section 8): a form nobody handles is stopped (the sign-up preview), a dialog the page opens over the tour is above the
  *     dimmer and keeps its Esc, the first Esc on a part of the page brings the focus back to the card, a link to a place on the page brings the lit part back, the card keeps off the
- *     buttons of a wide lit box, the lit part is brought under the sticky demo bar too */
+ *     buttons of a wide lit box, the lit part is brought under the sticky demo bar too
+ *   - a wide, short lit part in a laptop window (section 9: a strip 1,300 px wide and 96 px high at 1366x768, 1280x800 and 992x800): there is no room beside it for the card, so the part is
+ *     brought to the top of the free room and the card goes under it, whole in the window and not on the part */
 import { run, open, ok, okSoon, until, info, settled, ms, axeSource, ROOT } from './lib.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -867,4 +869,35 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
   const secT = await rectOf(p, '#faq'), barT = await rectOf(p, '#t-bar'), headT = await p.evaluate(() => document.querySelector('.site-header').getBoundingClientRect().bottom);
   ok('walk (demo bar): the lit section starts below the top bar AND the sticky demo bar under it, so nothing of it is hidden behind them', barT.y >= headT - 1 && secT.y >= barT.b - 1, JSON.stringify({ section: secT.y, bar: [barT.y, barT.b], head: headT }));
   await p.context().close();
+
+  /* ================================================================ 9. a wide, short part in a laptop window (the Store's row of group buttons: 1,300 px wide and 96 px high, on a screen 768 px high) */
+  // There is no room beside it for the card (380 px wide). When the part is brought to the middle of the window there is no room above or below it either: the card is about 390 px high and
+  // wants 26 px of air, and the window leaves about 280 px on each side of a 96 px part. So the part is brought to the top of the free room (the card goes under it): the card is whole in
+  // the window, not cut off at the top and not on the part. (Found by looking at the real Store at 1366x768, 1280x800, 1100x800 and 992x800.)
+  const WORDS55 = Array.from({ length: 55 }, (_, i) => 'word' + i).join(' ');
+  const STRIP_STEP = (title, text) => `(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push({ id: 's1', order: 101, chapter: 1, page: 'index', target: '#t-strip', title: '${title}', text: '${text}' });`;
+  const STORE_WORDS = 'Everything for sale at the farm and The GreenHouse is listed here, in twelve groups. Each product has a name, a price and a small drawing. These buttons jump straight to a group. Visitors can check a price before they ask.';   // the words of the Store's own first step: a card of about 390 px
+  // two cards: the one above, and one with a long text (about 570 px: at 1366x768 it does not fit under the strip even when the strip is at the top of the free room, so the strip goes to the bottom and the card above it)
+  const CARDS = [['a short text', STRIP_STEP('The Store: twelve groups, all in one place', STORE_WORDS)], ['a long text', STRIP_STEP('A wide strip of buttons, all in one place', WORDS55)]];
+  for (const [w, h, what, STEPS_STRIP] of [[1366, 768], [1280, 800], [992, 800]].flatMap(([a, b]) => CARDS.map(([n, st]) => [a, b, n, st]))) {
+    const tag = `wide strip, ${w}x${h}, ${what}: `;
+    p = await open(browser, base, 'index.html', errs, { query: 'tour', viewport: { width: w, height: h }, routes: serve({ a: STEPS_STRIP }) });
+    await p.evaluate(() => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      const sec = document.querySelector('#faq'), d = document.createElement('div');
+      d.id = 't-strip'; d.style.cssText = 'box-sizing:border-box;width:calc(100% - 64px);max-width:1300px;margin:60px auto;height:96px;padding:8px;display:flex;flex-wrap:wrap;gap:8px;background:#fffdf6;border:2px solid #3a2416';
+      for (let i = 1; i <= 12; i++) { const a = document.createElement('a'); a.href = '#faq'; a.textContent = 'Group ' + i; a.style.cssText = 'padding:6px 12px;border:1px solid #3a2416;border-radius:20px;background:#fff'; d.appendChild(a); }
+      sec.parentNode.insertBefore(d, sec);
+    });
+    await p.click('.wa-tour-pill');
+    await okSoon(tag + 'the welcome card opens', () => look(p), (x) => x && x.name === 'Your website tour' && !x.busy);
+    await press(p, 'Start the tour');
+    await atStep(p, 1, tag + 'step 1 lights the strip');
+    s = await look(p);
+    const strip = await rectOf(p, '#t-strip'), headB = await p.evaluate(() => document.querySelector('.site-header').getBoundingClientRect().bottom);
+    ok(tag + 'the card is tall (' + Math.round(s.card.h) + ' px): with the strip in the middle of the window it would fit neither above nor below it', s.card.h + 26 > (s.vh - headB - 28 - strip.h) / 2, JSON.stringify({ card: s.card, strip, headB, vh: s.vh }));
+    ok(tag + 'the strip is whole in the window, under the top bar, and lit', strip.y >= headB - 1 && strip.b <= s.vh && lit(s.hole, strip), JSON.stringify({ strip, hole: s.hole, headB, vh: s.vh }));
+    ok(tag + 'the card is whole in the window and not on the strip', inside(s.card, s.vw, s.vh) && overlap(s.card, strip) === 0, JSON.stringify({ card: s.card, strip }));
+    await p.context().close();
+  }
 });
