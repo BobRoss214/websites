@@ -1165,7 +1165,7 @@ Everything in this section was checked against the code on 3 October 2026; the g
 
 - **If the Pick button snips sunflowers too:** the optional patch `games-B-pick-snips-sunflowers.patch` (DECISION_PLAYBOOK, "Patches on disk").
 - **If a lower number:** `js/hero.js` at `sunflower: { icon: 'sunflower', at: 100` and the badge text `js/hero.js` at `100 sunflowers snipped!` (a JavaScript string with four translations: ask Claude).
-- **If sunflowers in the middle:** `js/hero.js` at `sunflower(24, 205, 128, '')`: add two or three sunflowers near the middle of the picture (ask Claude).
+- **If sunflowers in the middle:** `js/hero.js` at `snippable(24, 205, 128, '')`: add two or three sunflowers near the middle of the picture (ask Claude).
 - **If she leaves it:** no change.
 
 **Question 64: In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 22 trees. Should it change?**
