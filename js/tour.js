@@ -237,7 +237,20 @@
     const r = el.getBoundingClientRect(), vh = win.innerHeight;
     const top = headerH() + 14, bottom = vh - 14 - (sheet() && ui ? ui.card.offsetHeight + 8 : 0);
     let dy = 0;
-    if (r.height <= bottom - top) { if (r.top < top || r.bottom > bottom) dy = r.top - (top + (bottom - top - r.height) / 2); }
+    if (r.height <= bottom - top) {
+      let want = r.top;   // where the part's top should be
+      if (r.top < top || r.bottom > bottom) want = top + (bottom - top - r.height) / 2;   // not in the free room: its middle
+      // A wide part leaves no room beside it for the card (a computer): the card goes above or below it. If it would fit neither way, the part goes to the top of the free room
+      // (the card below it) or to the bottom (the card above it): the card is then whole in the window and does not sit on the part.
+      if (!sheet() && ui) {
+        const vw = root.clientWidth || win.innerWidth, cw = ui.card.offsetWidth, ch = ui.card.offsetHeight, gap = 26, M = 14;
+        const above = (y) => y - gap - ch >= M, below = (y) => y + r.height + gap + ch <= vh - M;
+        if (Math.max(r.left, vw - r.right) < cw + gap + M && !above(want) && !below(want)) {
+          if (below(top)) want = top; else if (above(bottom - r.height)) want = bottom - r.height;
+        }
+      }
+      dy = r.top - want;
+    }
     else if (!(keep && r.top < bottom && r.bottom > top)) dy = r.top - top;   // taller than the free room: its top just under the bar
     if (Math.abs(dy) >= 1) jump(win.scrollY + dy);
     await still(el);
@@ -420,12 +433,13 @@
       let best = null, bestScore = Infinity;
       const keep = keepClear();
       opts.forEach((o) => {
-        const out = Math.max(0, M - o[0]) + Math.max(0, o[0] + w - (vw - M)) + Math.max(0, M - o[1]) + Math.max(0, o[1] + h - (vh - M));
+        const out = Math.max(0, M - o[0]) + Math.max(0, o[0] + w - (vw - M)) + Math.max(0, M - o[1]) + Math.max(0, o[1] + h - (vh - M));   // how far it comes within the margin of the window's edge
+        const cut = Math.max(0, -o[0]) + Math.max(0, o[0] + w - vw) + Math.max(0, -o[1]) + Math.max(0, o[1] + h - vh);   // how much of it the window cuts off
         const ox = Math.max(0, Math.min(o[0] + w, hl + hw) - Math.max(o[0], hl)), oy = Math.max(0, Math.min(o[1] + h, ht + hh) - Math.max(o[1], ht));
         let hit = 0;   // how much of the buttons, fields, switches and headings of the lit box this place would cover, each by its weight
         keep.forEach((x) => { hit += x.k * Math.max(0, Math.min(o[0] + w, x.b.right) - Math.max(o[0], x.b.left)) * Math.max(0, Math.min(o[1] + h, x.b.bottom) - Math.max(o[1], x.b.top)); });
         const under = dr ? Math.max(0, Math.min(o[0] + w, dr.right) - Math.max(o[0], dr.left)) * Math.max(0, Math.min(o[1] + h, dr.bottom) - Math.max(o[1], dr.top)) : 0;   // how much of the dialog's box
-        const score = out * 1000 + ox * oy + hit + under * 8;
+        const score = (cut > 0 ? 1e9 : 0) + out * 1000 + ox * oy + hit + under * 8;   // a place where the window cuts the card off loses to every place where it does not, however much of the lit box the card would then cover
         if (score < bestScore) { best = o; bestScore = score; }
       });
       x = best[0]; y = best[1];

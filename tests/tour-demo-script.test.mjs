@@ -15,9 +15,10 @@
  *     card 20 after 21 makes the review wait again; the same answer comes the second time round;
  *   - any card entered first (a fresh browser) makes what it needs; a stale sample (its visit is over) is made again;
  *   - the owner answers by hand (No, Suggest at the desk, Yes at the kitchen): the next cards go on from that answer and never answer twice;
- *   - the seven cards whose lit part has a button that opens a dialog (the visit card, the request, the family box, the closed-day banner, the strip with Start over) leave with an
- *     after() that closes a dialog still open through the demo's own DemoUI.closeModals() and touches nothing else (five of them, the request, the banner and the strip, also let the
- *     owner click while the card is up); no other card has an after();
+ *   - every card, when it is left (Next, Back, Contents or Close), takes away the toasts that are still on the screen through the demo's own DemoUI.clearToasts(), so an old message
+ *     (the kitchen's "suggests something else") never sits on top of the lit choices of the next card; the seven cards whose lit part has a button that opens a dialog (the visit
+ *     card, the request, the family box, the closed-day banner, the strip with Start over) also close a dialog still open through DemoUI.closeModals(); nothing else is touched, and the
+ *     store is the same after leaving (five of the seven, the request, the banner and the strip, also let the owner click while the card is up); no other card closes a dialog;
  *   - the bell does not grow when the owner goes Back and forth (the same notice is never in it twice); a family the owner made by hand is kept (the sign-up card only signs it out);
  *   - the words: the closed day is closed for rain (the desk's own sentence), the cards do not say "the sample family" when the family may be hand-made, the family-OK card
  *     names the button as it is written in js/demo-view-pizza.js, the alerts card says where messages go before it lists the choices;
@@ -42,12 +43,13 @@ const BASE = TODAY.slice(0, 10);
 function world(opts = {}) {
   const clock = { date: opts.date || BASE, time: '09:00' };
   const store = Store.create(null, { now: () => ({ date: clock.date, time: clock.time }) });
-  const w = { clock, store, tab: 'visits', waited: [], errors: [], closedDialogs: 0 };
+  const w = { clock, store, tab: 'visits', waited: [], errors: [], closedDialogs: 0, clearedToasts: 0 };
   const el = { getBoundingClientRect: () => ({ width: 10, height: 10 }), getAttribute: () => null, click() {} };
   const document = { querySelectorAll: (s) => { w.waited.push(s); return [el]; }, querySelector: () => el };
   const win = { DemoStore: opts.noStore ? undefined : (opts.brokenStore ? new Proxy({}, { get: () => () => { throw new Error('broken'); } }) : store), DemoData: opts.noStore ? undefined : Data,
     DemoApp: { route: () => ({ name: w.tab }), go: (n) => { w.tab = n; } },
-    DemoUI: opts.noUI ? undefined : { closeModals: () => { if (opts.brokenUI) throw new Error('broken'); w.closedDialogs++; return 0; } } };
+    DemoUI: opts.noUI ? undefined : Object.assign({ closeModals: () => { if (opts.brokenUI || opts.brokenModals) throw new Error('broken'); w.closedDialogs++; return 0; } },
+      opts.oldUI ? {} : { clearToasts: () => { if (opts.brokenUI) throw new Error('broken'); w.clearedToasts++; return 0; } }) };   // oldUI: a page whose DemoUI has no clearToasts yet
   win.window = win;
   vm.runInNewContext(SOURCE, { window: win, document, setTimeout, clearTimeout }, { filename: 'js/tour-steps-c.js' });
   w.steps = win.WA_TOUR_STEPS.slice().sort((a, b) => a.order - b.order);
@@ -92,9 +94,18 @@ const dayAfter = (d) => Data.addDays(d, 1);
   ok('the My event card is true for any family: it does not say "the sample family said yes" (a family made by hand may have said no, and still gets the sample trip)', !/sample family|said yes\. /i.test(ev.text.replace(/only for families who said yes at sign-up/, '')) && /This family has one/.test(ev.text), ev.text);
   ok('the sign-up card says the family is asked about a party, an event or a school trip, and does not promise to create a family (a hand-made one is kept)', !!su && su.order === 1002 && /party, an event or a school trip/.test(su.text) && !/creates a sample family/.test(su.text), su && su.text);
   ok('every card is skipped when its target is missing, and is on a demo page', w.steps.every((s) => s.skipIfMissing === true && ['account', 'farm-desk', 'kitchen'].includes(s.page)));
-  const withAfter = w.steps.filter((s) => 'after' in s).map((s) => s.id);
-  ok('only seven cards have an after(): the ones whose lit part has a button that opens a dialog (the visit card, the request, the family box, the closed-day banner, the strip with Start over three times)', withAfter.join() === 'ch10-intro,ch10-sample,ch10-request,ch10-family,ch10-closed,ch10-real-needs,ch10-worth-asking' && w.steps.filter((s) => 'after' in s).every((s) => typeof s.after === 'function'), withAfter.join());
-  ok('...and five of them let the owner click while the card is up: the request, the closed-day banner and the strip (allowClicks: true)', w.steps.filter((s) => 'after' in s && s.allowClicks === true).map((s) => s.id).join() === 'ch10-intro,ch10-request,ch10-closed,ch10-real-needs,ch10-worth-asking');
+  // What each card does when it is left: leave every card on its own in a fresh world and count the demo's own calls (the fake DemoUI counts closeModals() and clearToasts()).
+  const probe = world(), left = [];
+  for (const s of probe.steps) {
+    const was = [probe.closedDialogs, probe.clearedToasts];
+    if (typeof s.after === 'function') await s.after({});
+    left.push({ id: s.id, hasAfter: typeof s.after === 'function', dialogs: probe.closedDialogs - was[0], toasts: probe.clearedToasts - was[1], clicks: s.allowClicks === true });
+  }
+  const withDialog = left.filter((c) => c.dialogs > 0);
+  ok('every card has an after(), and leaving it takes the toasts away once, with the demo\'s own DemoUI.clearToasts() (an old message must not sit on top of the next card, as on "Tell me when")', left.length === 24 && left.every((c) => c.hasAfter && c.toasts === 1), left.filter((c) => !c.hasAfter || c.toasts !== 1).map((c) => c.id).join());
+  ok('only seven cards close a dialog when they are left: the ones whose lit part has a button that opens one (the visit card, the request, the family box, the closed-day banner, the strip with Start over three times), each one once', withDialog.map((c) => c.id).join() === 'ch10-intro,ch10-sample,ch10-request,ch10-family,ch10-closed,ch10-real-needs,ch10-worth-asking' && withDialog.every((c) => c.dialogs === 1), withDialog.map((c) => c.id).join());
+  ok('...and five of them let the owner click while the card is up: the request, the closed-day banner and the strip (allowClicks: true)', withDialog.filter((c) => c.clicks).map((c) => c.id).join() === 'ch10-intro,ch10-request,ch10-closed,ch10-real-needs,ch10-worth-asking');
+  ok('the cards take the toasts away only through the demo\'s own DemoUI.clearToasts(): this file names no toast box or toast class of its own', /clearToasts/.test(SOURCE) && !/demo-toast|data-demo-toasts/.test(SOURCE));
   const pick = (id) => w.steps.find((s) => s.id === id);
   const PIZZA_VIEW = fs.readFileSync(path.join(ROOT, 'js/demo-view-pizza.js'), 'utf8'), VISITS = fs.readFileSync(path.join(ROOT, 'js/demo-view-visits.js'), 'utf8');
   ok('the family-OK card names the "no" button as it is written on the My pizza screen: No thanks, keep my order as it is (not "keep mine")', PIZZA_VIEW.includes("'No thanks, keep my order as it is'") && pick('ch10-family-ok').text.includes("'No thanks, keep my order as it is'") && !/keep mine/.test(pick('ch10-family-ok').text), pick('ch10-family-ok').text);
@@ -304,22 +315,31 @@ const dayAfter = (d) => Data.addDays(d, 1);
   ok('and running the card again adds nothing more', w.store.list('events').length === 1);
 }
 
-/* ------------------------------------------------------------------ the cards that open a dialog: leaving them closes it, and nothing else */
+/* ------------------------------------------------------------------ leaving a card: the dialog it opened is closed, the toasts are taken away, and nothing else */
 {
   const ids = ['ch10-intro', 'ch10-sample', 'ch10-request', 'ch10-family', 'ch10-closed', 'ch10-real-needs', 'ch10-worth-asking'];
   const w = world();
   await w.walk(1, 5);
   const snap = w.snap();
-  const leave = async (x, id) => { const s = x.steps.find((y) => y.id === id); if (s && typeof s.after === 'function') await s.after({}); };
+  const leave = async (x, id) => { const s = x.steps.find((y) => y.id === id); try { if (s && typeof s.after === 'function') await s.after({}); } catch (e) { x.errors.push('after ' + id + ': ' + e.message); } };
   for (const id of ids) await leave(w, id);
   ok('leaving each of the seven cards closes the open dialogs with the demo\'s own DemoUI.closeModals(), once for each card', w.closedDialogs === 7, String(w.closedDialogs));
+  ok('...and takes the toasts away with DemoUI.clearToasts(), once for each card', w.clearedToasts === 7, String(w.clearedToasts));
   ok('...and changes nothing in the demo (a dialog left open, then Back or Next, never sends or answers a request)', w.snap() === snap);
-  const noUI = world({ noUI: true }), broken = world({ brokenUI: true });
-  for (const x of [noUI, broken]) { await x.walk(1, 5); for (const id of ids) await leave(x, id); }
-  ok('...without DemoUI on the page, or with a closeModals() that throws, an after() does nothing and throws nothing', noUI.errors.length === 0 && broken.errors.length === 0);
+  const noUI = world({ noUI: true }), broken = world({ brokenUI: true }), old = world({ oldUI: true }), stuck = world({ brokenModals: true });
+  for (const x of [noUI, broken, old, stuck]) { await x.walk(1, 5); for (const id of ids) await leave(x, id); }
+  ok('...without DemoUI on the page, with an older DemoUI that has no clearToasts(), or with a closeModals() or clearToasts() that throws, an after() does nothing and throws nothing', noUI.errors.length === 0 && broken.errors.length === 0 && old.errors.length === 0 && stuck.errors.length === 0, [noUI, broken, old, stuck].map((x) => x.errors.join(';')).join('|'));
+  ok('...the older DemoUI still has its dialogs closed, and when closing a dialog fails the toasts are taken away all the same', old.closedDialogs === 7 && stuck.clearedToasts === 7, old.closedDialogs + ' / ' + stuck.clearedToasts);
   const w2 = world(), changed = [];
   for (let n = 1; n <= 25; n++) { await w2.run(n); const a = w2.snap(); await w2.leave(n); if (w2.snap() !== a) changed.push(n); }
   ok('leaving any card at any point of the walk changes nothing in the store', changed.length === 0 && w2.errors.length === 0, changed.join(','));
+  ok('...and every one of the 24 cards took the toasts away once (Next or Back leaves a card; so does Close), only seven of them closed a dialog', w2.clearedToasts === 24 && w2.closedDialogs === 7, w2.clearedToasts + ' / ' + w2.closedDialogs);
+  // the engine runs a card's after() also when the card is skipped (its target is missing) and when the tour is closed on it: one call, the same effect
+  const w3 = world();
+  await w3.walk(1, 11);
+  const kitchen = w3.snap();
+  await w3.leave(11);
+  ok('leaving a card in the middle of the walk (card 11, the kitchen screen, a page of its own) takes the toasts away once, and the store is the same after leaving', w3.clearedToasts === 1 && w3.closedDialogs === 0 && w3.snap() === kitchen && w3.errors.length === 0);
 }
 
 /* ------------------------------------------------------------------ Back and forth: the bell does not grow */

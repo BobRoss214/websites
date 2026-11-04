@@ -4,6 +4,8 @@
 /* The pretend account, as a family sees it (account.html?demo and kitchen.html?demo, a real browser):
  *   - the sign-up asks ONE plain question, "Do you plan or manage a party, an event or a school trip?", with four big buttons (real radio buttons made in JavaScript: the
  *     page files hold no input, text box or list): No / Yes: a party / Yes: a school trip / Yes: another event; No is chosen to begin with; "Fill in sample details" chooses the school trip;
+ *     on a computer screen (1440 x 900) the whole question shows without scrolling (the name and the email share a line, and the question comes right after the email, before the
+ *     pretend password); on a phone the name and the email are one under the other;
  *   - each answer: what the account keeps, which tabs there are, what the My event screen says for that kind (the page's own prices: a party is one price for the whole party,
  *     a school trip $11 each, another event shows no price);
  *   - My event is on the tab bar ONLY for a family that has an event; its address (#event) opens the first tab for the others; "I also plan an event" at the bottom of My family
@@ -15,6 +17,8 @@
  *     a day closed by the desk says why in one sentence ("The farm is closed that day because of rain."), the new-day box says the same reason, and so does the desk's own promise;
  *   - DemoUI.closeModals() closes every open dialog by the demo's own close, and the cards of tour chapter 10 that light a button which opens a dialog (js/tour-steps-c.js, run
  *     here on the real screen) close it when they are left, find their boxes (the answer card is no longer skipped), and keep a family made by hand;
+ *   - DemoUI.clearToasts() takes away every toast that is on the screen and nothing else (a dialog stays, the store is the same), and says how many there were; the real cards of
+ *     chapter 10 do it when they are left, so the message that a new notice makes (the kitchen's "suggests something else") never sits on top of the next card;
  *   - accessibility (axe, when axe-core is installed): the sign-up card, the three kinds of My event, My family with its box, My pizza and its editor have no violations.
  * Run: node tests/account-event.test.mjs  (or: node tests/run-all.mjs account-event) */
 import fs from 'node:fs';
@@ -66,6 +70,15 @@ await run('account-event', async ({ browser, base, errs }) => {
     const labels = await p.locator('.demo-signup .demo-choice').allInnerTexts();
     ok('the sign-up asks ONE plain question', legend.trim() === 'Do you plan or manage a party, an event or a school trip?' && await p.locator('.demo-signup fieldset').count() === 1, legend);
     ok('with four big buttons, in this order: No / Yes: a party / Yes: a school trip / Yes: another event', labels.map((x) => x.trim()).join(' | ') === 'No | Yes: a party | Yes: a school trip | Yes: another event', labels.join(' | '));
+    // the first screen of a computer (1440 x 900, not scrolled): the whole question can be seen, and why: the name and the email share a line, and the question comes before the pretend password
+    const first = await p.evaluate(() => {
+      const R = (s) => { const e = document.querySelector(s), r = e ? e.getBoundingClientRect() : null; return r ? { x: r.left, y: r.top, right: r.right, bottom: r.bottom, w: r.width } : null; };
+      const after = (a, b) => !!(document.querySelector(a).compareDocumentPosition(document.querySelector(b)) & Node.DOCUMENT_POSITION_FOLLOWING);
+      return { vh: window.innerHeight, scrolled: window.scrollY, legend: R('.demo-signup fieldset legend'), last: Math.max(...[...document.querySelectorAll('.demo-signup .demo-choice')].map((e) => e.getBoundingClientRect().bottom)),
+        name: R('#demo-su-name'), email: R('#demo-su-email'), order: after('#demo-su-email', '.demo-signup fieldset') && after('.demo-signup fieldset', '#demo-su-pass') };
+    });
+    ok('on a computer screen (1440 x 900) the whole question shows without scrolling: its words and all four buttons end at least 20 px above the bottom edge', first.vh === 900 && first.scrolled === 0 && first.legend.y > 0 && first.last <= first.vh - 20, JSON.stringify(first));
+    ok('...the name and the email share one line (each wide enough to type in), and the question comes right after the email, before the pretend password', Math.abs(first.name.y - first.email.y) < 2 && first.email.x > first.name.right && first.name.w >= 200 && first.email.w >= 200 && first.order, JSON.stringify(first));
     ok('they are real radio buttons of one group (the arrow keys and a screen reader work), and No is chosen to begin with', await p.locator('.demo-signup input[type=radio]').count() === 4 && await p.locator('.demo-signup input[type=radio][name="demo-su-event"]').count() === 4
       && await radio(p, 'No').isChecked() && !await radio(p, 'Yes: a party').isChecked());
     ok('a screen reader hears only the words: the four radio buttons are named exactly No, Yes: a party, Yes: a school trip and Yes: another event (the tick that shows the chosen one is not part of the name)',
@@ -88,6 +101,7 @@ await run('account-event', async ({ browser, base, errs }) => {
     await p.context().close();
     const phone = await open(browser, base, 'account.html', errs, { query: 'demo', viewport: { width: 390, height: 844 } });
     await phone.waitForSelector('.demo-signup');
+    ok('on a phone the name and the email are one under the other (the card is too narrow for two columns), each wide enough to type in', await phone.evaluate(() => { const n = document.querySelector('#demo-su-name').getBoundingClientRect(), e = document.querySelector('#demo-su-email').getBoundingClientRect(); return e.top >= n.bottom && Math.abs(e.left - n.left) < 2 && n.width >= 240 && e.width >= 240; }));
     ok('on a phone the four buttons still fit inside the card and the page does not scroll sideways', await phone.evaluate(() => { const c = document.querySelector('.demo-signup').getBoundingClientRect(); return document.documentElement.scrollWidth <= window.innerWidth && [...document.querySelectorAll('.demo-signup .demo-choice')].every((e) => e.getBoundingClientRect().right <= c.right + 1); }));
     await phone.context().close();
   }
@@ -376,6 +390,51 @@ await run('account-event', async ({ browser, base, errs }) => {
     ok('what the desk promises the family is what the family\'s bell gets: "The farm is closed on <day> because of rain. Pick a new day for your visit."', quoted === 'The farm is closed on ' + await long(day) + ' because of rain. Pick a new day for your visit.' && notice === quoted, quoted + ' | ' + notice);
     ok('...and the banner and the new-day box say the same reason (rain)', await said() === 'The farm is closed that day because of rain.');
     await desk.close();
+    await p.context().close();
+  }
+
+  /* ---- the toasts: a small message that fades by itself is taken away when a card is left (js/tour-steps-c.js on the real screen) ---- */
+  {
+    const p = await open(browser, base, 'account.html', errs, { query: 'demo' });
+    await signUp(p, 'No');   // Pat, made by hand (the sign-up makes a toast of its own, "Account created...")
+    await p.evaluate(() => { window.WA_TOUR_STEPS = []; });
+    await p.addScriptTag({ content: read('js/tour-steps-c.js') });
+    const card = (id, which) => p.evaluate(async ([i, w]) => { const st = window.WA_TOUR_STEPS.find((x) => x.id === i); if (!st || typeof st[w] !== 'function') return 'none'; await st[w]({}); return 'done'; }, [id, which]);
+    const toasts = () => p.locator('[data-demo-toasts] .demo-toast').count();
+    const store = (fn, arg) => p.evaluate(fn, arg);
+    const whole = () => store(() => JSON.stringify(window.DemoStore.snapshot()));
+    ok('every one of the 24 cards of the real chapter 10 has an after()', await store(() => window.WA_TOUR_STEPS.length === 24 && window.WA_TOUR_STEPS.every((s) => typeof s.after === 'function')));
+    await store(() => { window.DemoUI.clearToasts(); });   // the sign-up's own toast goes, so the next check sees only the toast of the notice
+
+    // the real thing: a notice arrives while the page is open (the alert the tour sends on "The alert arrives") and the page makes a toast for it
+    await card('ch10-bell', 'before');
+    await p.waitForSelector('[data-demo-toasts] .demo-toast');
+    const said = (await p.locator('[data-demo-toasts] .demo-toast').first().innerText()).trim();
+    ok('a notice that arrives while the page is open makes one toast, with the notice\'s own words', await toasts() === 1 && said === await store(() => window.DemoStore.noticesFor('family')[0].text), said);
+    const had = await whole();
+    await card('ch10-bell', 'after');
+    ok('leaving the card takes that toast away, and the demo is the same (nothing is sent, answered or read)', await toasts() === 0 && await whole() === had);
+
+    // DemoUI.clearToasts() itself: only toasts go; a dialog that is open stays, and nothing is sent
+    await store(() => { window.DemoUI.toast('First message', { ms: 60000 }); window.DemoUI.toast('Second message', { kind: 'info', ms: 60000 }); });
+    await card('ch10-request', 'before');
+    await p.locator('[data-tour="acct-request-day"]').first().click();
+    await p.waitForSelector('.demo-modal');
+    const asked = await store(() => window.DemoStore.list('requests').length);
+    ok('two toasts and a dialog are on the screen', await toasts() === 2 && await p.locator('.demo-modal').count() === 1);
+    ok('DemoUI.clearToasts() takes away both toasts and says 2; the open dialog stays open and no request was sent', await store(() => window.DemoUI.clearToasts()) === 2 && await toasts() === 0 && await p.locator('.demo-modal').count() === 1 && await store(() => window.DemoStore.list('requests').length) === asked);
+    await store(() => window.DemoUI.closeModals());
+    ok('with no toast on the screen it does nothing and says 0', await store(() => window.DemoUI.clearToasts()) === 0);
+
+    // any card: an old toast that is still on the screen is gone when the card is left
+    const ids = await store(() => window.WA_TOUR_STEPS.map((s) => s.id)), stuck = [];
+    for (const id of ids) {
+      await store(() => { window.DemoUI.toast('An old message', { ms: 60000 }); });
+      if (await toasts() !== 1) { stuck.push(id + ' (no toast to begin with)'); continue; }
+      await card(id, 'after');
+      if (await toasts() !== 0) stuck.push(id);
+    }
+    ok('leaving any of the 24 cards takes an old toast away', ids.length === 24 && stuck.length === 0, stuck.join(', '));
     await p.context().close();
   }
 

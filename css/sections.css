@@ -172,6 +172,8 @@ html[data-season="fall"] .nav-tomato .nav-group-title::after{content:"";display:
 .choose-addr{display:flex;align-items:center;gap:.4em;font-weight:800;margin:0 0 .8em}
 .choose-addr .ico{color:var(--red)}
 .choose-card .ticks{margin:0 0 1.2em}
+.choose-ask{display:flex;align-items:center;gap:.4em;margin:-.3em 0 1.2em;font-weight:700;font-size:.95rem;color:var(--ink)}   /* Ava's address under the GreenHouse card's list (a long address wraps by the mailto rule in css/extras.css) */
+.choose-ask .ico{flex:none;color:var(--red)}
 
 /* ---------- visit: packages ---------- */
 .packages{display:grid;grid-template-columns:1fr 1fr;gap:26px}
