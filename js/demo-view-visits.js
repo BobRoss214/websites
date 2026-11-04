@@ -5,7 +5,8 @@
  * Changing a day is a request (the one pattern of the demo): ask({ kind: 'visit-change', to: 'cathy', target: { coll: 'visits', id }, patch: { date, time }, summary, note })
  * and nothing changes until she says yes. She answers Yes, No, or "Suggest another day or time": then the family sees her suggestion and answers OK
  * (respond(id, 'ok')) or "No thanks" (respond(id, 'decline')). When a day is closed for weather (the desk does that) the visit says so and one tap starts the same
- * request, marked as a weather move. Tour hooks: acct-visit-card, acct-paid, acct-request-day, acct-request-status, acct-reply, acct-closed-banner.
+ * request, marked as a weather move. Tour hooks: acct-visit-card, acct-paid, acct-request-day, acct-request-status, acct-closed-banner, and acct-reply: the box with Mrs. Cathy's
+ * answer, in every state it can be in (her suggestion with its two buttons, or what is left once the family has answered: yes, no, OK, kept).
  * The shell (js/demo-app.js) clears the screen and draws it again on every change of the store, so what has to survive a drawing is kept here. */
 (function () {
   'use strict';
@@ -31,6 +32,8 @@
     return list.length ? list.join(', ') : 'none';
   }
   function whenText(date, time) { return UI.dateLong(date) + ', ' + UI.time12(time); }
+  // Why the farm is closed, in the words the desk used ("rain", "strong wind", or the owner's own words); "weather" when none was given. The same words as the family's notice.
+  function closedWhy(v) { return String(v.closedReason || '').replace(/^\s+|[\s.!]+$/g, '') || 'weather'; }
   function orderOf(ctx, v) {
     var all = ctx.store.list('orders');
     for (var i = 0; i < all.length; i++) if (all[i].visitId === v.id) return all[i];
@@ -85,7 +88,7 @@
     var pizzaHint = v.package === 'pizza' ? h('p', { class: 'demo-hint' }, 'Your pizzas are ready 1 hour after your visit time, so they move with your visit unless you chose your own pizza time.') : null;
     var body = h('div', { class: 'dv-form' },
       weather
-        ? h('p', null, 'The farm is closed on ' + UI.dateLong(v.date) + ' because of weather. Pick a new day and Mrs. Cathy will confirm it.')
+        ? h('p', null, 'The farm is closed on ' + UI.dateLong(v.date) + ' because of ' + closedWhy(v) + '. Pick a new day and Mrs. Cathy will confirm it.')
         : h('p', null, 'You now have ' + whenText(v.date, v.time) + '. Pick a new day and time, and Mrs. Cathy will answer. Nothing changes until she says yes.'),
       dayBox, timeBox, pizzaHint,
       h('div', { class: 'demo-field' }, h('label', { for: id + '-note' }, 'A note for Mrs. Cathy (optional)'), note), error);
@@ -145,7 +148,7 @@
     var text = { yes: 'Mrs. Cathy said yes. Your visit is moved.', no: 'Mrs. Cathy said no. Your visit stays as it was.', accepted: 'You said OK to Mrs. Cathy’s plan. Your visit is moved.', declined: 'You kept your visit as it was.' }[q.status];
     if (!text) return null;
     var good = q.status === 'yes' || q.status === 'accepted';
-    return h('div', { class: 'dp-request dp-' + (good ? 'is-good' : 'is-plain'), 'data-dv-status': '', tabindex: '-1' },
+    return h('div', { class: 'dp-request dp-' + (good ? 'is-good' : 'is-plain'), 'data-dv-status': '', tabindex: '-1', 'data-tour': 'acct-reply' },
       h('p', { class: 'dp-request-head' }, h('strong', null, text)),
       q.summary ? h('p', { class: 'demo-hint' }, 'You asked: ' + q.summary) : null,
       note ? h('p', { class: 'demo-hint' }, 'Mrs. Cathy wrote: “' + note + '”') : null,
@@ -172,7 +175,7 @@
       var pick = h('button', { type: 'button', class: 'btn btn-sun' }, 'Pick a new day');
       pick.addEventListener('click', function () { openRequestForm(v, ctx, true); });
       card.appendChild(h('div', { class: 'dv-weather', 'data-tour': 'acct-closed-banner', role: 'status' },
-        h('p', null, h('strong', null, 'The farm is closed that day because of weather.'), v.closedReason ? ' ' + v.closedReason : ''),
+        h('p', null, h('strong', null, 'The farm is closed that day because of ' + closedWhy(v) + '.')),
         h('div', { class: 'demo-actions' }, pick)));
     }
     if (open && open.status === 'waiting') card.appendChild(waitingBlock(open, v, ctx));
