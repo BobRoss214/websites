@@ -725,11 +725,11 @@ Answer:
 
 ### Question 63
 
-**Is it all right that the "Sunflower Whisperer" badge (100 snipped sunflowers in the summer picture) can only be earned on a wide computer screen?**
+**Is it all right that the "Sunflower Whisperer" badge (100 snipped sunflowers in the spring and summer pictures) can only be earned on a wide computer screen?**
 
 Dashboard id: d68
 
-Why it matters: Only 5 sunflowers are drawn, at the far edges of the picture. On a screen 1440 pixels wide 4 of the 5 are in view; on a phone 390 pixels wide none is, so a visitor on a phone can never earn this badge.
+Why it matters: Only 5 sunflowers are drawn in each of those pictures, at the far edges. On a screen 1440 pixels wide 4 of the 5 are in view; on a phone 390 pixels wide none is, so a visitor on a phone can never earn this badge.
 
 Answer:
 

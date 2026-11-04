@@ -259,7 +259,7 @@ FACTS = [
     dict(name='address: Hartis Rd', what='the street number of the farm (Hartis Rd)', see='search for "Hartis" in index.html and pages/', check='digits', pats=[(r'(\d{4}) Hartis', one())]),
     dict(name='address: Poplin Rd', what='the street number of The GreenHouse (Poplin Rd)', see='search for "Poplin" in index.html and pages/', check='digits', pats=[(r'(\d{4}) Poplin', one())]),
     dict(name='address: ZIP code', what='the ZIP code', see='search for "NC 28" in index.html and pages/', check='digits', pats=[(r'NC (\d{5})', one())]),
-    dict(name='age: free', what='the age up to which children are free', see='search for "are free" and "ride free"', check='digits',
+    dict(name='age: free', what='the age up to which children are free', see='search for "are free" (the wagon ride has its own fact below)', check='digits',
          pats=[(r'[Ii]nfants (\d+) and under are free', one()), (r'[Cc]hildren (\d+) and under are free', one()), (r'[Cc]hildren age (\d+) and younger are free', one())]),
     dict(name='age: wagon ride free', what='the age up to which children ride the wagon free', see='search for "ride free"', check='digits',
          pats=[(r'[Aa]ges (\d+) and younger ride (?:the wagon )?free', one())]),

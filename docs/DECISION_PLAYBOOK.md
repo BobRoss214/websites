@@ -1829,7 +1829,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: d69 and d70 (the same game code, js/hero.js); d34 (the sunflower photos are a separate question).
-- Note: Checked in a browser on 3 October 2026 (summer picture). The game fixes and the game test (tests/games.test.mjs) are already in the tree; the optional patch games-B-pick-snips-sunflowers.patch goes on top of them.
+- Note: Checked in a browser on 3 October 2026 (summer picture; the spring picture has the same five sunflowers, and they can be snipped there too). The game fixes and the game test (tests/games.test.mjs) are already in the tree; the optional patch games-B-pick-snips-sunflowers.patch goes on top of them.
 
 **A. Let the Pick button snip sunflowers too**
 
