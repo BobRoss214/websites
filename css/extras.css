@@ -277,6 +277,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 .shop-where{margin:0 0 0 auto;padding:.28em .85em;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:999px;font:700 .85rem/1.2 var(--display)}
 .shop-intro{max-width:44em;margin:0 auto 14px;text-align:center;font-weight:600;color:var(--ink-soft)}
 .shop-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--shop-gap);margin:0;padding:0;list-style:none}
+.shop-grid + .shop-grid{margin-top:var(--shop-gap)}   /* the farm group has two lists in a row (the two Farm fun cards, then the rides): the same space between them as between the cards */
 .shop-card{--w:calc((100% - (var(--shop-cols) - 1) * var(--shop-gap)) / var(--shop-cols));flex:0 0 var(--w);max-width:var(--w);min-width:0;display:flex;flex-wrap:wrap;align-items:center;align-content:flex-start;gap:3px 10px;padding:9px 10px;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--ink);overflow-wrap:break-word;overflow-wrap:anywhere}
 .shop-bubble{flex:none;display:grid;place-items:center;width:56px;height:56px;background:var(--gp);border:2.5px solid var(--ink);border-radius:50%;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
 .shop-ico{width:78%;height:78%}
