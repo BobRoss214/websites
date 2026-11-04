@@ -19,8 +19,15 @@
  *      as written, and "pound" stays in Vietnamese because the site's other Vietnamese texts say it)
  *   6  links: every #shop... link in the site's html pages has its target; each jump button lands its group under the sticky header and is named for it
  *      (two buttons are named for a card of their group, because the top menu has links called Pizza and Flowers that go elsewhere)
- *   7  layout at 320, 360, 390, 768, 1024, 1366 and 1920 px wide (and the long languages on a phone): nothing sideways, no cut text, 2 / 3 / 4 / 5 columns
- *      (5 over 1180 px, 4 over 992 px, 3 over 760 px, 2 below), the ice cream and pizza groups side by side over 992 px and stacked below it,
+ *   7  layout at 320, 360, 390, 768, 992, 1024, 1240, 1366 and 1920 px wide (and the long languages on a phone, and at 1240 px, where a card is narrowest): nothing
+ *      sideways, no cut text, no word broken in the middle (from 390 px up), no card or band touching or overlapping another (the 4 px shadow counts) or sticking
+ *      out of its group, and the Store is dense on purpose (css/extras.css, "Store on a computer"):
+ *        from 992 px the 12 groups run in two columns (down the left one, then down the right one: the page's order), each about half the width, none cut between
+ *        the columns, the columns about as tall as each other, the farm visit group last and across both; 2 cards across in a column (3 from 1240 px) and 4 rides
+ *        across (5 from 1240 px);
+ *        below 992 px one column, the groups stacked in the page's order, 3 cards across over 760 px and 2 below;
+ *      in the farm group the two Farm fun cards end, with their shadow, at least a card gap above the first ride card (they touched once);
+ *      names, prices and notes no smaller than .95, 1.5 and .78 rem;
  *      every group fades in when it is scrolled to (none stays invisible)
  *   8  reading aids: pictures hidden from screen readers, every card in a list item, heading order, readable price text (and axe, when it is installed)
  *   9  (information) how tall #shop is on a computer and on a phone
@@ -37,8 +44,8 @@ const LIST = JSON.parse(fs.readFileSync(path.join(HERE, 'shop-list.json'), 'utf8
 const PRODUCTS = LIST.products, GROUPS = LIST.groups, EXTRAS = LIST.extras || [];
 const NAMES = LIST.names || [], LOANWORDS = LIST.loanwords || [];   // names that stay as written in every language; English words a language of the site uses as its own
 const LANGS = ['en', 'es', 'hi', 'zh', 'vi'];
-const WIDTHS = [1366, 1920, 1024, 768, 390, 360, 320];   // the first one gets every check; the others get the layout checks
-const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', price: '.shop-price, .shop-opts', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full' };
+const WIDTHS = [1366, 1920, 1240, 1024, 992, 768, 390, 360, 320];   // the first one gets every check; the others get the layout checks (992 and 1240 are where the layout changes: two columns, three cards across)
+const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', price: '.shop-price, .shop-opts', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full', band: '.shop-band', note: '.shop-sub', hand: '.shop-price.hand, .shop-price .hand', farm: '#shop-farm' };
 const STILL = '.reveal{opacity:1!important;transform:none!important}*{animation:none!important;transition:none!important}html{scroll-behavior:auto!important}html.cv .cv-sec{content-visibility:visible!important}';
 
 /* ------------------------------------------------------------------ small helpers (Node side) */
@@ -207,10 +214,48 @@ function readLayout(SEL) {
     function clean(s) { return String(s).replace(/\s+/g, ' ').trim(); }
   });
   const sh = shop.getBoundingClientRect();
-  // the ice cream group and the pizza group: side by side from 62em (css/extras.css, "#shop > .wrap"). offsetTop and offsetWidth are not moved by the groups' fade-in.
-  const ice = shop.querySelector('.shop-group.sg-icecream'), pie = shop.querySelector('.shop-group.sg-pizza');   // (the jump buttons carry the same colour classes)
-  const pair = ice && pie ? { topA: ice.offsetTop, topB: pie.offsetTop, wA: ice.offsetWidth, wB: pie.offsetWidth, wrapW: ice.parentElement.clientWidth } : null;
-  return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, pair };
+  // where everything sits, in page coordinates (the test switches the groups' fade-in off, so nothing is moved by it)
+  const abs = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top + window.scrollY, b: r.bottom + window.scrollY, w: r.width }; };
+  const wrap = abs(shop.querySelector('.wrap'));
+  const flow = { wrap, groups: [...shop.querySelectorAll(SEL.group)].map((g) => Object.assign({ id: g.id }, abs(g))) };   // (the jump buttons carry the same colour classes, but not .shop-group)
+  // cards and bands: none touches or overlaps another (a card has a 4 px shadow under it, which counts), none sticks out of its group
+  const boxes = [...shop.querySelectorAll(SEL.card + ',' + SEL.band)].map((e) => ({ e, g: e.closest(SEL.group), r: abs(e) }));
+  const said = (b) => b.e.textContent.replace(/\s+/g, ' ').trim().slice(0, 22);
+  const touching = [], outside = [];
+  boxes.forEach((a, i) => {
+    const gr = abs(a.g);
+    if (a.r.l < gr.l - 1 || a.r.r > gr.r + 1 || a.r.b > gr.b + 1) outside.push(`"${said(a)}" sticks out of its group`);
+    for (let j = i + 1; j < boxes.length; j++) {
+      const b = boxes[j];
+      if (Math.min(a.r.r, b.r.r) - Math.max(a.r.l, b.r.l) <= 1) continue;      // side by side
+      const up = a.r.t <= b.r.t ? a : b, dn = up === a ? b : a;
+      if (dn.r.t < up.r.b + 4 - 0.5) touching.push(`"${said(up)}" and "${said(dn)}" are ${Math.round((dn.r.t - up.r.b) * 10) / 10}px apart (the shadow is 4)`);
+    }
+  });
+  // the farm group has two lists: the Farm fun cards, then the rides (they touched once)
+  const lists = [...shop.querySelectorAll(SEL.farm + ' ' + SEL.grid)];
+  const farm = { lists: lists.length };
+  if (lists.length === 2) {
+    const up = [...lists[0].querySelectorAll(SEL.card)].map((c) => abs(c).b), dn = [...lists[1].querySelectorAll(SEL.card)].map((c) => abs(c).t);
+    Object.assign(farm, { funCards: up.length, rideCards: dn.length, funBottom: Math.round(Math.max(...up) * 10) / 10, rideTop: Math.round(Math.min(...dn) * 10) / 10, gap: parseFloat(getComputedStyle(lists[1]).rowGap) || 0 });
+  }
+  // a word that the box is too narrow for is cut in the middle by overflow-wrap (Chinese has no words: left out)
+  const broken = [];
+  const tw = document.createTreeWalker(shop, NodeFilter.SHOW_TEXT);
+  for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+    if (!n.parentElement || n.parentElement.closest('svg,script,style,template')) continue;
+    const re = /[\p{L}\p{M}\p{N}'’]{5,}/gu;
+    for (let m; (m = re.exec(n.data)); ) {
+      if (/[　-鿿]/.test(m[0])) continue;
+      const rg = document.createRange(); rg.setStart(n, m.index); rg.setEnd(n, m.index + m[0].length);
+      const rs = [...rg.getClientRects()].filter((x) => x.width > 0 && x.height > 0);
+      if (rs.length > 1 && Math.max(...rs.map((x) => x.top)) - Math.min(...rs.map((x) => x.top)) > 4) broken.push(`"${m[0]}" in ${n.parentElement.className.split(' ')[0]} (${Math.round(n.parentElement.getBoundingClientRect().width)}px wide)`);
+    }
+  }
+  // the smallest type of the names, the prices and the notes (px; 1 rem = 16 px)
+  const minPx = (sel) => { const v = [...shop.querySelectorAll(sel)].filter((e) => e.getClientRects().length).map((e) => parseFloat(getComputedStyle(e).fontSize)); return v.length ? Math.min(...v) : null; };
+  const type = { name: minPx(SEL.name), price: minPx(SEL.hand), note: minPx(SEL.note) };
+  return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, flow, touching, outside, farm, broken, type };
 }
 function contrastOf() {   // the text colour against what is behind it, for every part that carries a price, "Prices coming soon" or "Free"
   const lum = (r, g, b) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
@@ -545,13 +590,37 @@ await run('shop', async ({ browser, base, errs }) => {
     ok(`7: ${tag}: no sideways scroll: the page and #shop fit the ${rec.innerWidth}px window`, rec.pageW <= rec.innerWidth + 1 && rec.shopW <= rec.shopClientW + 1 && rec.shopLeft >= -1 && rec.shopRight <= rec.innerWidth + 1 && !mine.some((q) => q.kind === 'sideways' || q.kind === 'sideways-culprit' || q.kind === 'sticks-out') , `page ${rec.pageW}, #shop ${rec.shopW}/${rec.shopClientW} at ${rec.shopLeft}..${rec.shopRight}; ${few(shopProblems.filter((s) => /^(sideways|sticks)/.test(s)), 3)}`);
     ok(`7: ${tag}: no text is cut off in #shop (names, prices, notes, labels: nothing wider or taller inside than its box, nothing shortened with "...")`, rec.cut.length === 0 && !mine.some((q) => q.inShop && /^(clipped-text|ellipsis|button-cut|overlap|tofu)$/.test(q.kind)), few(rec.cut.concat(shopProblems.filter((s) => /^(clipped|ellipsis|button-cut|overlap|tofu)/.test(s))), 4));
     ok(`7: ${tag}: no picture in #shop is stretched, squeezed or broken, no button label runs over 4 lines`, !mine.some((q) => q.inShop && /^(img-|button-wrap)/.test(q.kind) && (q.kind !== 'button-wrap' || Number((/over (\d+) lines/.exec(q.info) || [, 9])[1]) >= 4)), few(shopProblems.filter((s) => /^(img-|button-wrap)/.test(s)), 4));
-    // the Store is dense (css/extras.css, ".shop"): 5 cards across over 73.75em (1180 px), 4 over 62em (992 px), 3 over 47.5em (760 px), 2 below. A group with fewer cards fills its one row.
-    const want = w > 1180 ? [5] : w > 992 ? [4] : w > 760 ? [3] : w >= 340 ? [2] : [1, 2];
-    ok(`7: ${tag}: the product grids show ${want.join(' or ')} columns (${w <= 760 ? 'a phone' : w <= 992 ? 'a tablet' : w <= 1180 ? 'a laptop' : 'a wide computer'}; a group with fewer cards fills one row)`, rec.grids.length > 0 && rec.grids.every((g) => want.some((n) => g.cols === Math.min(n, g.cards))), rec.grids.map((g) => `${g.id}: ${g.cols} of ${g.cards}`).join(', '));
-    // from 62em (992 px) the ice cream group and the pizza group (a wide card each) share a row; below it they are stacked
-    const pr = rec.pair, beside = w > 992;
-    ok(`7: ${tag}: the ice cream group and the pizza group ${beside ? 'sit side by side, each about half the width' : 'are stacked, one above the other, each the whole width'}`,
-      !!pr && (beside ? Math.abs(pr.topA - pr.topB) <= 2 && Math.abs(pr.wA - pr.wB) <= 2 && pr.wA >= pr.wrapW * 0.4 && pr.wA <= pr.wrapW * 0.55 : pr.topB > pr.topA + 40 && pr.wA >= pr.wrapW - 2 && pr.wB >= pr.wrapW - 2), JSON.stringify(pr));
+    // The Store is dense on purpose (css/extras.css, "Store on a computer"). From 62em (992 px) the groups run in two columns: 2 cards across in a column, 3 from
+    // 77.5em (1240 px), and the farm visit group runs across both columns with 4 rides across, 5 from 1240 px. Below 992 px there is one column: 3 cards across
+    // over 47.5em (760 px), 2 below. A group with fewer cards fills its one row.
+    const two = w >= 992, wide = w >= 1240;
+    const single = w > 760 ? [3] : w >= 340 ? [2] : [1, 2];
+    const want = (id) => (id === 'shop-farm' ? (wide ? [5] : two ? [4] : single) : (wide ? [3] : two ? [2] : single));
+    const kind = w <= 760 ? 'a phone' : w < 992 ? 'a tablet' : w < 1240 ? 'a laptop' : 'a wide computer';
+    ok(`7: ${tag}: the product grids show ${two ? (wide ? '3 cards across in a column and 5 rides' : '2 cards across in a column and 4 rides') : single.join(' or ')} across (${kind}; a group with fewer cards fills one row)`, rec.grids.length > 0 && rec.grids.every((g) => want(g.id).some((n) => g.cols === Math.min(n, g.cards))), rec.grids.map((g) => `${g.id}: ${g.cols} of ${g.cards}`).join(', '));
+    const F = rec.flow, W = F.wrap, mid = (W.l + W.r) / 2, farm = F.groups.find((g) => g.id === 'shop-farm'), others = F.groups.filter((g) => g.id !== 'shop-farm');
+    const brief = (g) => `${g.id.replace('shop-', '')} ${Math.round(g.l)}..${Math.round(g.r)} x ${Math.round(g.t)}..${Math.round(g.b)}`;
+    if (two) {
+      // two columns: the left one, then the right one, in the page's order (so the keyboard and the jump buttons go the way the eye does); none is cut in two
+      const col = (g) => ((g.l + g.r) / 2 < mid ? 0 : 1), left = others.filter((g) => col(g) === 0), right = others.filter((g) => col(g) === 1);
+      const spans = (list) => (list.length ? Math.max(...list.map((g) => g.b)) - Math.min(...list.map((g) => g.t)) : 0);
+      const hl = spans(left), hr = spans(right);
+      const half = others.every((g) => g.w >= W.w * 0.44 && g.w <= W.w * 0.5) && left.every((g) => Math.abs(g.l - W.l) <= 2) && right.every((g) => Math.abs(g.r - W.r) <= 2);
+      const seq = others.map((g) => col(g) * 1e7 + g.t);
+      ok(`7: ${tag}: the groups run in two columns, down the left one and then down the right one, in the page's order, each group whole in one column and about half the width`,
+        others.length === GROUPS.length - 1 && left.length >= 3 && right.length >= 3 && half && seq.every((v, i) => i === 0 || v > seq[i - 1]), `left ${left.length}, right ${right.length}: ${few(others.map(brief), 12)}; wrap ${Math.round(W.l)}..${Math.round(W.r)}`);
+      ok(`7: ${tag}: the two columns are about as tall as each other (${Math.round(hl)} and ${Math.round(hr)} px; the difference is at most a quarter)`, hl > 0 && hr > 0 && Math.abs(hl - hr) <= 0.25 * Math.max(hl, hr), `${Math.round(hl)} / ${Math.round(hr)}`);
+      ok(`7: ${tag}: the farm visit group, the last, runs across both columns below all the others`, !!farm && farm.w >= W.w - 2 && Math.abs(farm.l - W.l) <= 2 && farm.t >= Math.max(...others.map((g) => g.b)) - 1 && F.groups[F.groups.length - 1] === farm, farm ? brief(farm) : 'no #shop-farm');
+    } else {
+      ok(`7: ${tag}: the groups are stacked, one above the other, each the whole width, in the page's order`, F.groups.length === GROUPS.length && F.groups.every((g, i) => g.w >= W.w - 2 && (i === 0 || g.t >= F.groups[i - 1].b - 1)), few(F.groups.map(brief), 12));
+    }
+    ok(`7: ${tag}: no card or band touches or overlaps another (a card's 4 px shadow counts) or sticks out of its group`, rec.touching.length === 0 && rec.outside.length === 0, few(rec.touching.concat(rec.outside), 4));
+    const fg = rec.farm;
+    ok(`7: ${tag}: in the farm group the two Farm fun cards, with their 4 px shadow, end at least one card gap (${fg.gap || '?'} px) above the first ride card`, fg.lists === 2 && fg.funCards === 2 && fg.rideCards > 2 && fg.gap > 0 && fg.funBottom + 4 + fg.gap <= fg.rideTop + 0.5, JSON.stringify(fg));
+    // (a word cut in the middle: a phone narrower than 390 px did that before the Store was made dense, with the long Spanish and Vietnamese words, so only 390 and up is looked at)
+    if (w >= 390) ok(`7: ${tag}: no word is broken in the middle over two lines (a box too narrow for its longest word)`, rec.broken.length === 0, few(rec.broken, 4));
+    const T = rec.type;
+    ok(`7: ${tag}: the type stays readable: names at least .95 rem, prices 1.5 rem, notes .78 rem (smallest: ${T.name} / ${T.price} / ${T.note} px)`, T.name >= 15.19 && T.price >= 23.99 && T.note >= 12.47, JSON.stringify(T));
     return rec;
   };
   const heights = {};
@@ -609,6 +678,10 @@ await run('shop', async ({ browser, base, errs }) => {
     ok(`4: ${tag}: no phone number, health claim, dose figure or the maker's name in #shop`, badL.length === 0, badL.join(', '));
     await q.addStyleTag({ content: STILL });
     await layout(q, `${lang} on a 360px phone`, 360);
+    // the same page on a computer where a card is narrowest (3 across in a column from 1240 px: Spanish "Precios proximamente" has to stay on its lines)
+    await q.setViewportSize({ width: 1240, height: 900 });
+    await q.waitForTimeout(ms(400));
+    await layout(q, `${lang} at 1240px`, 1240);
     await q.context().close();
   }
 });
