@@ -245,10 +245,11 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 
 /* ---------- Shop: every product, in colourful groups (index.html #shop) ----------
    Each group has a band (title, and where it is sold) and a grid of small cards: a round pastel bubble with the picture (the symbols p-<slug> in the sprite),
-   the name and the price in the hand-lettered font beside it, and at most one line of note under both. 4 cards across on a wide screen, 3 on a laptop or tablet,
-   2 on a phone. The group's colours are three tokens: --g the band (and the jump pill), --gt the text on it, --gp the pale bubble.
+   the name and the price in the hand-lettered font beside it, and at most one line of note under both. Under 62em (a tablet, a phone) the groups are one
+   column with 3 cards across over 47.5em and 2 below; from 62em they run in two columns with 2 cards across in each (3 from 77.5em), see "Store on a computer"
+   below. The group's colours are three tokens: --g the band (and the jump pill), --gt the text on it, --gp the pale bubble.
    Nothing here moves by itself, so there is nothing for "Pause animations" to stop. */
-.shop{--shop-cols:5;--shop-gap:14px}   /* the Store is long: five cards across where there is room, and tighter spacing all through (the look is the same). From 62em the groups run in two columns with fewer cards across: see "Store on a computer" below */
+.shop{--shop-cols:5;--shop-gap:14px}   /* --shop-cols: how many cards stand across; --shop-gap: the space between them. The 5 and the 4 here are left over from the one-column Store: from 62em .shop-groups sets its own number ("Store on a computer" below), and under 62em it is 3, then 2 */
 @media (max-width:73.75em){.shop{--shop-cols:4}}
 @media (max-width:62em){.shop{--shop-cols:3}}
 @media (max-width:47.5em){.shop{--shop-cols:2;--shop-gap:10px}}
@@ -355,7 +356,7 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .shop-groups{--shop-cols:3}
   .shop-groups > .sg-farm{--shop-cols:5}
 }
-@media screen and (min-width:80em){.shop > .wrap{width:min(1380px,100% - 2 * var(--gutter))}}   /* a big screen: the Store may be a little wider than the other sections, so more fits on one screen */
+@media screen and (min-width:80em){.shop > .wrap{width:min(1380px,100% - 2 * var(--gutter))}}   /* a big screen (from 1280 px): the Store may be up to 1380 px wide while the other sections stay 1180 px, so more fits on one screen */
 @media (max-width:47.5em){
   .shop-jump{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .shop-jump a{height:100%;padding-right:.7em;font-size:.9rem}

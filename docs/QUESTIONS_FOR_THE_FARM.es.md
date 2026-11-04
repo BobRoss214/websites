@@ -729,11 +729,11 @@ Respuesta:
 
 ### Pregunta 63
 
-**¿Está bien que la insignia "Susurrador de girasoles" (100 girasoles cortados en la imagen de verano) solo se pueda ganar en una pantalla ancha de computadora?**
+**¿Está bien que la insignia "Susurrador de girasoles" (100 girasoles cortados en las imágenes de primavera y verano) solo se pueda ganar en una pantalla ancha de computadora?**
 
 Id en el panel: d68
 
-Por qué importa: Solo hay 5 girasoles dibujados, en los bordes lejanos de la imagen. En una pantalla de 1440 píxeles de ancho se ven 4 de los 5; en un teléfono de 390 píxeles no se ve ninguno, así que quien use un teléfono nunca puede ganar esta insignia.
+Por qué importa: Solo hay 5 girasoles dibujados en cada una de esas imágenes, en los bordes lejanos. En una pantalla de 1440 píxeles de ancho se ven 4 de los 5; en un teléfono de 390 píxeles no se ve ninguno, así que quien use un teléfono nunca puede ganar esta insignia.
 
 Respuesta:
 
