@@ -165,6 +165,49 @@ calm:
 - The two pages that look at the real frame rate (the real slow page and the way back) used to run together with the two pretend-clock pages, which work the computer hard for a while. The pretend-clock pages now run first, together;
   then the two real ones.
 
+## The spring field: more people at the left and right, and the sunflowers can be snipped (branch `spring`, on top of integ 86e426f)
+
+Code: only the KIDS table in `springField()` (js/hero.js) and its comment. Everything else in 86e426f stays (`snippable()` for the five sunflowers, `kindOf()`, the hint and its four translations).
+
+Final table (row = index in FIELD_T, entries [k, shirt, hat, faces left]; 10 kids, 3 in the middle rows behind the words as before, 7 at the sides: 3 left, 4 right):
+
+    6:  [-1.5 #e5334b straw 0] [1.5 #4b5bb8 cap 1]          (middle, behind the words: as before)
+    8:  [-4.6 #ffc928 cap 0]   [4.15 #e5334b hair 1]
+    9:  [0.5 #ffc928 beanie 0 (middle, as before)] [-2.85 #ff8fb1 pony 1]
+    10: [-2.1 #43a047 straw 0] [3.65 #4b5bb8 cap 0]
+    11: [2.15 #e5334b cap 1]
+    12: [4.5 #ffc928 beanie 0]
+
+(86e426f had 9 kids: rows 6 x2, 8, 9 x3, 10 x2, 11.) With the test's own measure at 1440 x 900 (a grid of 6 x 6 over each kid, only the points where the kid is drawn, covered by the page's words, chips, pills,
+buttons and card, by plants, sunflowers or another kid): 86e426f 2 of 9 kids have more than half of their drawing free (0 at the left); this table 7 of 10 (2 at the left, 4 at the right, one in the middle).
+
+How it was found (scripts in scratchpad/spring): every row 6 to 12 and every k from -6.6 to 6.4 in steps of .25 was drawn as a kid at each of 6 window sizes (explore.mjs, ex3-*.json: how much of the kid, and of its face, is free);
+then a hill-climb on the real page (search.mjs, 45 steps: the table is changed, the scene is drawn again, every kid measured at 1440, 1920 and 1280); then by hand, one kid at a time (variants.mjs). The pictures:
+spring-final-1920/1600/1440/1280/1100/992.png (the real page, a kid bends over the rows as it does) and spring-phone-390.png.
+What decided it:
+- On a computer there are two free zones at each side: at 1440 the left one lies between the little sunflower (x about 250) and the chips (x about 515), the picker card (32 to 392 px, bottom) takes the rest; the right one between the
+  pills (x about 1055) and the big sunflower (x about 1250). About three people fit into each without hiding each other's faces. At 1920 and 1600 there is more room at both sides, at 1100 and 992 less (the card and the chips take
+  more of the picture; the kid at the far right, row 12, is outside the window below about 1250 px).
+- A person standing in the rows is covered by the plants of its own row and of the next one: the share of its drawing that can be seen is at most about 50 to 65 % even when nobody is in front of it (a kid with 90 to 100 % free stands
+  free of the plants, with its feet showing). "More than half" is therefore met just (53 to 64 %) by the kids that stand well; I took the position of each kid from where the share is highest without a neighbour in front.
+- Kids that stand one behind the other in rows next to each other must be at least 50 px apart across, or a head is hidden (T1, T2, T3, V1, V2 in scratchpad/spring/cands*.log: 8 and 9 side kids gave fewer free kids than 6).
+Static pose (the bending animation off), at each window size, kids with more than half of their drawing free / with a clear head (80 % of the upper half free), final table: 1920 x 1080: 8 / 6; 1600 x 900: 7 / 5; 1440 x 900: 7 / 7;
+1280 x 800: 7 / 6; 1100 x 800: 5 / 5; 992 x 800: 4 / 5. 86e426f (9 kids): 1920: 3 / 3; 1600: 3 / 3; 1440: 2 / 3; 1280: 4 / 3; 1100: 2 / 2; 992: 2 / 2.
+At 390 px nothing is broken (the scene is mostly behind the words there, as before); no error in the console in any of the five languages at 1440, 1920 and 390.
+
+The sunflowers (checked, nothing to change): a click on a head snips it (`.berry` gets `is-picked`, the basket counts one, it grows back after 7 to 11 s like the summer ones: tests/hero.test.mjs); the badge: 100 snips in spring alone are
+"Sunflower Whisperer" (tests/games.test.mjs, new section 1c, real mouse clicks for the first four and the 100th); the five heads can be hit with the mouse at 1440 (reach 5 of 5) and none of them lies over a kid's face (the kids were
+measured with the sunflowers as covering). The hit area is the top 42 % of the plant, in the layer in front of the kids: where a head lies over a kid the click goes to the flower, nowhere else; the buttons, the chips and the card are HTML
+above the scene (z-index 5 and 7), so a head can never take a click from them. Keyboard and screen reader: nothing is drawn tabbable in any season (the scene is hidden from screen readers: `aria-hidden`); the round "Pick a strawberry" button
+takes one of everything that can be picked and is not picked now, and in spring that now includes the sunflowers, exactly as in summer (its label says "strawberry" in spring and "blueberry" in summer, as it did). Summer is unchanged
+(the same `snippable()`, `kindOf()` gives 'sunflower' for a cut flower in every season).
+One thing on the side: the new spring hint is a third line in Vietnamese (the picker card is 135 px high instead of 116) and at 1440 x 900 the card's bottom edge then lies 47 px below the window (it is as high as it already was in summer,
+whose hint is just as long). Spanish, Hindi and Chinese stay at two lines.
+
+Tests: tests/hero.test.mjs (new block after the seasons: at least 5 people can be seen at 1440, 2 at each side; the hint is the new sentence; five snippable sunflowers; a real click on a head snips one, the flower is drawn picked and
+grows back, the basket's button takes one more), tests/games.test.mjs (the fruit loops click `:not(.flower-cut)`, which spring needs now; new section 1c: the spring badge for sunflowers), tests/npc.test.mjs (every person in the spring
+field can be tapped: a tap lands on that person), tests/touch.test.mjs (the spring list: a strawberry is not a sunflower; a sunflower, "pick?").
+
 ## What I could not do / am unsure about
 
 - I did not change the 240 ms leg or the 100 ms look. On a computer that is so busy that its timers come 300 ms late or more, a leg ends before the next one begins and the creature

@@ -80,7 +80,7 @@ async function reach(p, sel, { anchor = '#top', steps = [0, 150, 300, 450] } = {
 
 // What the scene has in each season: [name, selector, what one tap must do]. A "?" after the kind: nice to have, a phone may have it under other things.
 const THINGS = {
-  spring: [['a strawberry', '[data-pick]:not(.tree-pick)', 'pick'], ['a rider on the wagon', '.npc-hit[data-npc=rider]', 'say?'], ['the tractor and wagon', '[data-rig]', 'rig'], ['the sun', '.sun', 'sun?']],
+  spring: [['a strawberry', '[data-pick]:not(.tree-pick):not(.flower-cut)', 'pick'], ['a sunflower', '.flower-cut[data-pick]', 'pick?'], ['a rider on the wagon', '.npc-hit[data-npc=rider]', 'say?'], ['the tractor and wagon', '[data-rig]', 'rig'], ['the sun', '.sun', 'sun?']],
   summer: [['a blueberry', '[data-pick]:not(.tree-pick):not(.flower-cut)', 'pick'], ['a sunflower', '.flower-cut[data-pick]', 'pick?']],
   fall: [['a pumpkin', '[data-pick]:not(.tree-pick)', 'pick'], ['a rider on the wagon', '.npc-hit[data-npc=rider]', 'say?'], ['the scarecrow', '.npc-hit[data-npc=scarecrow]', 'say?'], ['the tractor and wagon', '[data-rig]', 'rig']],
   winter: [['a Christmas tree', '.tree-pick', 'tree'], ['a campfire', '[data-fire]', 'fire'], ['the sun', '.sun', 'sun?']],
