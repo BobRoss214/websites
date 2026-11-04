@@ -468,6 +468,10 @@ function wordChecks() {
   }
   // what the owners are told about clicking is said once, in the same words: on the welcome card (js/tour.js) and on the first step
   const clicking = 'Whatever is lit up on the page, you can click and try.', hello = steps.find((s) => s.id === 'ch1-hello');
+  {   // the card about the season buttons: which day a button pretends, and what 'single quotes' in the other cards mean
+    const c = steps.find((s) => s.id === 'ch1-seasons');
+    ok('the card about the season buttons says that a button pretends a Saturday at noon in the middle of the season, and that words in ‘single quotes’ show on another day', !!c && /pretends it is a Saturday at noon, in the middle of that season/.test(c.text) && /Words in ‘single quotes’ show on another day/.test(c.text), c && c.text);
+  }
   ok('the welcome card and the first step say the same about clicking: "' + clicking + '"', read('js/tour.js').includes(clicking) && !!hello && hello.text.includes(clicking), hello ? hello.text.slice(0, 120) : 'no step ch1-hello');
 }
 

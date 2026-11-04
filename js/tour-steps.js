@@ -213,7 +213,7 @@
     {
       id: 'ch1-seasons', order: 103, chapter: 1, page: 'index', target: null,
       title: 'The page changes with the seasons',
-      text: 'Some parts of the site change with the seasons. Those steps have Spring, Summer, Fall and Winter buttons on the card. Press one to switch the whole page. Is it right? Does something disappear that should stay? Tell us. Next puts the page back.'
+      text: 'Parts of the site change with the seasons. Their steps have season buttons. A button pretends it is a Saturday at noon, in the middle of that season. Words in ‘single quotes’ show on another day. Is it right? Tell us. Next puts it back.'
     },
 
     /* ---------------------------------------------------------------- 2. The first screen */
