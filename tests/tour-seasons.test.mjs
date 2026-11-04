@@ -318,16 +318,18 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
       const on = (el) => { const q = el.getBoundingClientRect(); return document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2) === el; };
       const area = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
       const controls = [...box.querySelectorAll('button, input, textarea, a[href]')].filter((e) => e.getClientRects().length);
-      return { z: cs.zIndex, bg: cs.backgroundColor, pe: cs.pointerEvents, boxPe: getComputedStyle(box).pointerEvents, nextOnTop: on(nx), controls: controls.length, controlsUnderCard: controls.filter((e) => area(e.getBoundingClientRect(), c) > 0).length, buttonsOnTop: [...box.querySelectorAll('.demo-modal-actions button, .demo-modal-x')].every(on) };
+      const deep = (q, k) => Math.min(q.right, k.right) - Math.max(q.left, k.left) >= 4 && Math.min(q.bottom, k.bottom) - Math.max(q.top, k.top) >= 4;   // really under the card, not a hair's width
+      return { z: cs.zIndex, bg: cs.backgroundColor, pe: cs.pointerEvents, boxPe: getComputedStyle(box).pointerEvents, nextOnTop: on(nx), controls: controls.length, controlsUnderCard: controls.filter((e) => deep(e.getBoundingClientRect(), c)).map((e) => (e.className || e.tagName) + ' ' + (e.textContent || e.name || '').trim().slice(0, 20)), buttonsOnTop: [...box.querySelectorAll('.demo-modal-actions button, .demo-modal-x')].every(on) };
     });
-    ok(tag + 'the dialog is above the dimmer, its own overlay does not dim or block, the card sits off its buttons and fields, and its buttons and Next are the things at their places', dlg.z === '9100' && dlg.bg === 'rgba(0, 0, 0, 0)' && dlg.pe === 'none' && dlg.boxPe === 'auto' && dlg.nextOnTop && dlg.controlsUnderCard === 0 && dlg.buttonsOnTop && dlg.controls > 5, JSON.stringify(dlg));
+    ok(tag + 'the dialog is above the dimmer, its own overlay does not dim or block, the card sits off its buttons and fields, and its buttons and Next are the things at their places', dlg.z === '9100' && dlg.bg === 'rgba(0, 0, 0, 0)' && dlg.pe === 'none' && dlg.boxPe === 'auto' && dlg.nextOnTop && dlg.controlsUnderCard.length === 0 && dlg.buttonsOnTop && dlg.controls > 5, JSON.stringify(dlg));
     const before = await d.evaluate(() => [...document.querySelectorAll('.demo-modal input[type="radio"]')].findIndex((r) => r.checked));
     await d.locator('.demo-modal label.dv-choice').nth(1).click();
     ok(tag + 'a real click on a choice inside the dialog works (the other day is picked)', (await d.evaluate(() => [...document.querySelectorAll('.demo-modal input[type="radio"]')].findIndex((r) => r.checked))) !== before, '');
     await press(d, 'Next');
     await atTitle(d, 'Waiting for a reply', tag + 'Next works with the dialog still open: the next card shows');
     ok(tag + '...and the step closed the dialog when it was left', await d.evaluate(() => !document.querySelector('.demo-modal') && !document.documentElement.classList.contains('demo-modal-open')), '');
-    await d.keyboard.press('Escape');
+    await d.keyboard.press('Escape');   // the focus went back to the lit button when the dialog closed: this Esc brings it to the card...
+    await d.keyboard.press('Escape');   // ...and this one closes the tour
     await okSoon(tag + 'the tour closes (the dialog is gone, so Esc is the tour\'s)', () => d.evaluate(() => !document.querySelector('.wa-tour')), (v) => v === true);
     await d.context().close();
   }

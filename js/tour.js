@@ -363,15 +363,18 @@
     ui.body.scrollTop = 0;
   };
 
-  // What the card should not sit on when it has to sit on the lit box: its buttons, links, fields, switches and headings, and what an open button of it shows (a list, a panel)
-  const KEEP_CLEAR = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, label, [role="button"], [role="switch"], [role="tab"], [role="checkbox"], [role="radio"], h1, h2, h3, h4, h5, h6';
+  // What the card should not sit on when it has to sit on the lit box: its buttons, links, fields and switches (what the text names: weight 10), its headings and labels
+  // (weight 5), and what an open button of it shows (a list, a panel: weight 10). Each is a rectangle and a weight.
+  const KEEP_CONTROLS = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="switch"], [role="tab"], [role="checkbox"], [role="radio"]';
+  const KEEP_WORDS = 'h1, h2, h3, h4, h5, h6, label';
   const keepClear = () => {
     const out = [];
     if (!curEl || !curEl.isConnected) return out;
-    const add = (n) => { if (out.length < 400 && shown(n)) { const b = n.getBoundingClientRect(); if (b.width >= 8 && b.height >= 8) out.push(b); } };
-    $$(KEEP_CLEAR, curEl).forEach(add);
-    if (curEl.matches(KEEP_CLEAR)) add(curEl);
-    $$('[aria-controls][aria-expanded="true"]', curEl).forEach((c) => { const p = doc.getElementById(c.getAttribute('aria-controls')); if (p) add(p); });
+    const add = (n, k) => { if (out.length < 400 && shown(n)) { const b = n.getBoundingClientRect(); if (b.width >= 8 && b.height >= 8) out.push({ b, k }); } };
+    $$(KEEP_CONTROLS, curEl).forEach((n) => add(n, 10));
+    $$(KEEP_WORDS, curEl).forEach((n) => add(n, 5));
+    if (curEl.matches(KEEP_CONTROLS)) add(curEl, 10); else if (curEl.matches(KEEP_WORDS)) add(curEl, 5);
+    $$('[aria-controls][aria-expanded="true"]', curEl).forEach((c) => { const p = doc.getElementById(c.getAttribute('aria-controls')); if (p) add(p, 10); });
     return out;
   };
 
@@ -419,10 +422,10 @@
       opts.forEach((o) => {
         const out = Math.max(0, M - o[0]) + Math.max(0, o[0] + w - (vw - M)) + Math.max(0, M - o[1]) + Math.max(0, o[1] + h - (vh - M));
         const ox = Math.max(0, Math.min(o[0] + w, hl + hw) - Math.max(o[0], hl)), oy = Math.max(0, Math.min(o[1] + h, ht + hh) - Math.max(o[1], ht));
-        let hit = 0;   // how much of the buttons, fields, switches and headings of the lit box this place would cover
-        keep.forEach((b) => { hit += Math.max(0, Math.min(o[0] + w, b.right) - Math.max(o[0], b.left)) * Math.max(0, Math.min(o[1] + h, b.bottom) - Math.max(o[1], b.top)); });
+        let hit = 0;   // how much of the buttons, fields, switches and headings of the lit box this place would cover, each by its weight
+        keep.forEach((x) => { hit += x.k * Math.max(0, Math.min(o[0] + w, x.b.right) - Math.max(o[0], x.b.left)) * Math.max(0, Math.min(o[1] + h, x.b.bottom) - Math.max(o[1], x.b.top)); });
         const under = dr ? Math.max(0, Math.min(o[0] + w, dr.right) - Math.max(o[0], dr.left)) * Math.max(0, Math.min(o[1] + h, dr.bottom) - Math.max(o[1], dr.top)) : 0;   // how much of the dialog's box
-        const score = out * 1000 + ox * oy + hit * 5 + under * 8;
+        const score = out * 1000 + ox * oy + hit + under * 8;
         if (score < bestScore) { best = o; bestScore = score; }
       });
       x = best[0]; y = best[1];
