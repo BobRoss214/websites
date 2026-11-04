@@ -1,0 +1,138 @@
+/* ==========================================================================
+   Quests, the season track and the side-menu badge.
+   Loaded before fit.css and walk.css, so the one-screen layout rules still win.
+   The track is a strip you scroll sideways on a wide screen and a list on a phone; nothing here loops or moves when the visitor prefers reduced motion.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ the side-menu badge (how many things can be claimed) */
+.side__badge { position: absolute; right: 10px; top: 50%; translate: 0 -50%; min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--gold); color: var(--gold-ink); font: 800 0.68rem var(--f-display); text-align: center; }
+.side__badge[hidden] { display: none; }
+@media (max-width: 1100px) {
+  .side__badge { right: 0; top: 2px; translate: none; }
+}
+
+/* ------------------------------------------------------------------ card backs: one set of colours, used on face-down cards and in the pickers */
+.qart--back[data-back="emerald"], body[data-cardback="emerald"] { --qback: repeating-linear-gradient(45deg, #0b3b2a 0 8px, #0f5a3c 8px 16px); --qedge: #22f07a; }
+.qart--back[data-back="sunset"], body[data-cardback="sunset"] { --qback: repeating-linear-gradient(-30deg, #ff5d9e 0 9px, #ff8a3d 9px 18px); --qedge: #ffe9ad; }
+.qart--back[data-back="midnight"], body[data-cardback="midnight"] {
+  --qback: radial-gradient(circle at 20% 28%, #fff 0 1.1px, transparent 1.6px), radial-gradient(circle at 72% 58%, #fff 0 1px, transparent 1.5px), radial-gradient(circle at 42% 84%, #cfe 0 1px, transparent 1.5px), radial-gradient(circle at 82% 16%, #cfe 0 0.9px, transparent 1.4px), linear-gradient(160deg, #0b1233, #231f6b);
+  --qedge: #9a7bff;
+}
+.qart--back[data-back="goldleaf"], body[data-cardback="goldleaf"] { --qback: repeating-linear-gradient(135deg, #7a5a12 0 6px, #c9962b 6px 12px); --qedge: #ffe39a; }
+.qart--back[data-back="classic"] { --qback: repeating-linear-gradient(45deg, #14325a 0 8px, #0e2646 8px 16px); --qedge: var(--gold); }
+
+/* a chosen card back (anything but the classic one) on the cards that are face down: the Pick a Card game, and the cards still to win in your collection */
+body[data-cardback]:not([data-cardback="classic"]) .pcard__back { background: var(--qback); border-color: var(--qedge); }
+body[data-cardback]:not([data-cardback="classic"]) .tcard.is-locked { background: var(--qback); border: 2px solid var(--qedge); color: #fff; }
+body[data-cardback]:not([data-cardback="classic"]) .tcard.is-locked .tcard__mono { background: rgba(8, 16, 22, 0.78); color: #fff; }
+body[data-cardback]:not([data-cardback="classic"]) .tcard.is-locked b, body[data-cardback]:not([data-cardback="classic"]) .tcard.is-locked small { padding: 1px 8px; border-radius: 8px; background: rgba(8, 16, 22, 0.82); color: #fff; }
+
+/* ------------------------------------------------------------------ little pictures of rewards */
+.qart { display: inline-grid; place-items: center; flex: none; }
+.qart--xp, .qart--title { width: 44px; height: 44px; border-radius: 12px; background: var(--panel-2); color: var(--gold); }
+.qart--xp .ico, .qart--title .ico { width: 22px; height: 22px; }
+.qart--back { width: 34px; height: 46px; border-radius: 6px; background: var(--qback); border: 2px solid var(--qedge, var(--gold)); }
+.qart--dots { display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 56px; height: 44px; flex-wrap: wrap; align-content: center; }
+.qart--dots i { display: block; width: 11px; height: 11px; border-radius: 50%; }
+.qart--dots i.is-hi { translate: 0 -5px; }
+.qart--frame .pframe--sm { --fs: 60px; }
+.qdisc { display: block; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--rc, var(--green)) 36%, #0b161f), #0b161f 74%); border: 2px solid var(--rc, var(--green)); }
+
+/* ------------------------------------------------------------------ the season */
+.qseason { display: grid; gap: 16px; min-width: 0; }
+.qseason > * { min-width: 0; }
+.qseason__top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; }
+.qseason__eyebrow { font: 700 0.72rem var(--f-body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+.qseason .sect__t { margin: 2px 0 6px; font-size: clamp(1.5rem, 3.4vw, 2.1rem); }
+.qseason__ends { display: inline-flex; align-items: center; gap: 6px; color: var(--text); font-weight: 600; }
+.qseason__ends .ico { color: var(--gold); }
+.qseason__stats { display: flex; flex-wrap: wrap; gap: 10px; }
+.qstat { min-width: 92px; padding: 10px 16px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); text-align: center; }
+.qstat b { display: block; font: 800 1.45rem/1.15 var(--f-display); }
+.qstat b small { font: 600 0.8rem var(--f-body); color: var(--muted); }
+.qstat span { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.qseason__bar { display: grid; gap: 6px; }
+.qbar { height: 12px; }
+.qseason__bartxt { color: var(--muted); font-size: 0.86rem; }
+.qseason__head { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 197, 66, 0.08); border: 1px solid rgba(255, 197, 66, 0.35); color: #f8e1a6; font-size: 0.88rem; }
+.qseason__head .ico { flex: none; margin-top: 2px; color: var(--gold); }
+.qseason__act { display: flex; flex-wrap: wrap; gap: 10px; }
+.qseason__note { color: var(--muted); font-size: 0.84rem; }
+
+/* the track: a strip on a wide screen ... */
+.qtrack { list-style: none; display: flex; gap: 10px; margin: 0; padding: 6px 2px 14px; overflow-x: auto; overscroll-behavior-x: contain; }
+.qtier { flex: none; width: 136px; display: flex; }
+.qtier__btn { position: relative; flex: 1; display: grid; grid-template-rows: auto auto 1fr auto; justify-items: center; gap: 6px; padding: 12px 8px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg-2); color: var(--text); text-align: center; cursor: default; font: inherit; }
+.qtier__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line-2); font: 800 0.82rem var(--f-display); color: var(--text); }
+.qtier__art { display: grid; place-items: center; min-height: 64px; }
+.qtier__txt { display: grid; gap: 2px; align-content: start; min-width: 0; }
+.qtier__txt b { font: 800 0.86rem/1.2 var(--f-display); overflow-wrap: anywhere; }
+.qtier__txt small { font-size: 0.72rem; color: var(--muted); }
+.qtier__state { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 28px; padding: 3px 10px; border-radius: 999px; font: 700 0.75rem var(--f-body); background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.qtier__state .ico { width: 0.95em; height: 0.95em; }
+.qtier.is-claimed .qtier__btn { background: color-mix(in srgb, var(--green) 6%, var(--bg-2)); border-color: color-mix(in srgb, var(--green) 35%, var(--line)); }
+.qtier.is-claimed .qtier__state { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, var(--line)); }
+.qtier.is-ready .qtier__btn { cursor: pointer; border-color: var(--gold); background: color-mix(in srgb, var(--gold) 9%, var(--bg-2)); box-shadow: 0 0 0 1px var(--gold), 0 10px 26px -14px rgba(255, 197, 66, 0.8); }
+.qtier.is-ready .qtier__state { background: linear-gradient(180deg, #ffd467, var(--gold)); color: var(--gold-ink); border-color: var(--gold); font-weight: 800; }
+.qtier.is-ready .qtier__btn:hover { border-color: #ffe39a; }
+.qtier.is-next .qtier__btn { border-color: var(--green); }
+.qtier.is-next .qtier__n { background: var(--green); color: var(--green-ink); border-color: var(--green); }
+.qtier__btn:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+
+/* ... and a list on a phone */
+@media (max-width: 720px) {
+  .qtrack { flex-direction: column; overflow: visible; padding-bottom: 4px; }
+  .qtier { width: auto; }
+  .qtier__btn { grid-template-columns: 28px 64px minmax(0, 1fr) auto; grid-template-rows: auto; align-items: center; justify-items: start; gap: 10px; padding: 8px 10px; text-align: left; min-height: 64px; }
+  .qtier__art { min-height: 0; justify-self: center; }
+  .qart--frame .pframe--sm { --fs: 54px; }
+  .qtier__state { justify-self: end; }
+  .qseason__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
+  .qstat { min-width: 0; padding: 10px 6px; }
+}
+
+/* ------------------------------------------------------------------ the quests */
+.qquests { margin-top: 18px; }
+.qquests > .sect.panel, .qquests > .sect.panel + .sect.panel { min-width: 0; margin-top: 0; }
+.qlist { list-style: none; display: grid; gap: 10px; margin: 0; padding: 0; }
+.qcard { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 14px; padding: 12px 14px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
+.qcard:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+.qcard__main { display: grid; gap: 7px; min-width: 0; }
+.qcard__t { font: 700 0.95rem/1.3 var(--f-display); overflow-wrap: anywhere; }
+.qcard__n { font-size: 0.8rem; color: var(--muted); }
+.qcard__act { display: grid; justify-items: end; }
+.qcard.is-done { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 7%, var(--bg-2)); }
+.qcard.is-claimed .qcard__t { color: var(--muted); }
+.qcard.is-claimed .qbar i, .qcard.is-done .qbar i { background: linear-gradient(90deg, #ffd467, var(--gold)); }
+.qpts { font: 700 0.8rem var(--f-body); color: var(--muted); white-space: nowrap; }
+.qdone { color: var(--green); }
+@media (max-width: 480px) {
+  .qcard { grid-template-columns: minmax(0, 1fr); }
+  .qcard__act { justify-items: start; }
+}
+
+/* ------------------------------------------------------------------ cosmetics and the explanation */
+.qcos__intro, .qpick__note { color: var(--muted); font-size: 0.88rem; }
+.qpick { margin-top: 16px; }
+.qpick__note { margin: -4px 0 10px; }
+.qcos__act { margin-top: 14px; }
+.qhow p + p { margin-top: 10px; }
+.qhow p { max-width: 74ch; }
+
+/* ------------------------------------------------------------------ the block on the lobby */
+.qblock { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
+.qblock__ico { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 12px; background: var(--panel-2); color: var(--gold); }
+.qblock__txt { flex: 1; min-width: 0; }
+.qblock__txt .sect__t { margin: 0 0 2px; font-size: 1rem; }
+.qblock__txt p { color: var(--muted); font-size: 0.86rem; }
+.qblock__ready { color: var(--gold); font-weight: 700; }
+@media (max-width: 520px) {
+  .qblock { flex-wrap: wrap; }
+  .qblock .btn { margin-left: auto; }
+}
+
+/* ------------------------------------------------------------------ reduced motion: bars fill without sliding */
+@media (prefers-reduced-motion: reduce) {
+  .qbar i { transition: none; }
+  .qtier__btn { transition: none; }
+}

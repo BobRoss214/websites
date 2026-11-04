@@ -1,0 +1,187 @@
+/* ==========================================================================
+   GiveSpin shell: top bar, side nav, page frame, footer, stream mode
+   ========================================================================== */
+
+.app { min-height: 100vh; }
+
+/* ------------------------------------------------------------------ top bar */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60; height: var(--top-h);
+  display: flex; align-items: center; gap: 14px; padding: 0 clamp(12px, 2vw, 22px);
+  background: #0b141c; border-bottom: 1px solid var(--line);
+}
+.brand { display: inline-flex; align-items: center; gap: 10px; flex: none; text-decoration: none; color: var(--text); }
+.brand:hover { color: var(--text); }
+.brand__mark { width: 34px; height: 34px; }
+.brand__name { font: 800 1.3rem var(--f-display); letter-spacing: -0.03em; }
+.brand__name b { color: var(--green); font-weight: 800; }
+
+.search { position: relative; flex: 1 1 auto; max-width: 440px; }
+.search__ico { position: absolute; left: 13px; top: 50%; translate: 0 -50%; color: var(--dim); display: grid; pointer-events: none; }
+.search__input { width: 100%; min-height: 40px; padding: 8px 12px 8px 40px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: 500 0.88rem var(--f-body); }
+.search__input::placeholder { color: #7c93a1; }   /* was #6e8796: 4.4 to 1 on the panel colour, a little under the 4.5 to 1 a reader needs */
+.search__input:focus { outline: none; border-color: var(--green); box-shadow: var(--ring); }
+.search__input::-webkit-search-cancel-button { filter: invert(0.7); }
+.search__list { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 70; padding: 6px; border-radius: 14px; background: #162838; border: 1px solid var(--line-2); box-shadow: 0 22px 50px -16px rgba(0, 0, 0, 0.85); max-height: 70vh; overflow: auto; }
+.search__item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; cursor: pointer; }
+.search__item[aria-selected="true"], .search__item:hover { background: rgba(34, 240, 122, 0.12); }
+.search__thumb { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--raised); color: var(--green); }
+.search__txt { display: grid; min-width: 0; }
+.search__txt b { font-size: 0.86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search__txt small { color: var(--dim); }
+.search__item[aria-selected="true"] .search__txt small { color: #9bb3c0; } /* the highlighted row is a little lighter, so its small label needs a lighter grey to stay readable (4.5:1) */
+.search__none { padding: 12px; color: var(--dim); font-size: 0.85rem; }
+
+.topbar__right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
+.balance { display: flex; align-items: center; gap: 10px; padding: 5px 14px 5px 10px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--panel); cursor: pointer; }
+.balance:hover { border-color: #4a7392; }
+.balance__ico { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 197, 66, 0.15); color: var(--gold); }
+.balance__txt { display: grid; line-height: 1.15; }
+.balance__lbl { font: 700 0.6875rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+.balance__amt { font: 800 0.98rem var(--f-display); font-variant-numeric: tabular-nums; }
+
+.acct { position: relative; display: flex; align-items: center; gap: 6px; }
+.acct__btn { display: inline-grid; padding: 2px; border-radius: 50%; border: 0; background: transparent; }
+.acct__btn:hover .avatar { filter: brightness(1.15); }
+.acct__menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: 250px; padding: 8px; border-radius: 14px; background: #162838; border: 1px solid var(--line-2); box-shadow: 0 22px 50px -16px rgba(0, 0, 0, 0.85); display: grid; gap: 2px; }
+.acct__who { display: flex; align-items: center; gap: 10px; padding: 8px 8px 12px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.acct__who div { display: grid; min-width: 0; }
+.acct__who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct__who small { color: var(--dim); }
+.acct__item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 9px; border: 0; background: transparent; color: var(--text); font: 600 0.88rem var(--f-body); text-decoration: none; text-align: left; }
+.acct__item:hover { background: rgba(255, 255, 255, 0.07); color: var(--text); }
+.acct__item .ico { color: var(--muted); }
+
+.demo-strip { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 2px 14px; background: rgba(255, 197, 66, 0.1); border-bottom: 1px solid rgba(255, 197, 66, 0.25); color: #f8e1a6; font-size: 0.8rem; text-align: center; }
+.demo-strip a { color: #ffe08a; display: inline-block; padding: 5px 0; }   /* 25 px hit area; the strip itself is trimmed below so it does not grow */
+.demo-strip__dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--gold); animation: blink 1.8s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: 0.35; } }
+
+/* ------------------------------------------------------------------ layout */
+.layout { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); align-items: start; }
+.main { min-width: 0; padding: 22px clamp(14px, 2.4vw, 34px) 48px; outline: none; }
+.view { max-width: 1320px; margin-inline: auto; }
+
+.side {
+  position: sticky; top: calc(var(--top-h) + env(safe-area-inset-top, 0px)); height: calc(100vh - var(--top-h)); overflow: auto;
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 10px 14px 12px;
+  background: var(--bg-2); border-right: 1px solid var(--line);
+}
+.side__list { display: grid; gap: 2px; }
+.side__link { position: relative; display: flex; align-items: center; gap: 12px; min-height: 42px; padding: 9px 12px; border-radius: 10px; color: var(--muted); font: 600 0.9rem var(--f-body); text-decoration: none; transition: background 0.12s, color 0.12s; }
+.side__link .ico { width: 1.25rem; height: 1.25rem; }
+.side__link:hover { background: rgba(255, 255, 255, 0.06); color: var(--text); }
+.side__link[aria-current="page"] { background: rgba(34, 240, 122, 0.12); color: var(--green); }
+.side__link[aria-current="page"]::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 4px; border-radius: 0 4px 4px 0; background: var(--green); }
+.side__sub .side__link { margin-left: 14px; min-height: 36px; font-size: 0.84rem; font-weight: 500; }
+.side__sub .side__link .ico { width: 1.05rem; height: 1.05rem; }
+.side__rule { height: 1px; margin: 8px 6px; background: var(--line); }
+.side__level { margin-top: auto; }
+.lvlcard { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); text-decoration: none; color: var(--text); }
+.lvlcard:hover { border-color: var(--line-2); color: var(--text); }
+.lvlcard__n { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 10px; background: linear-gradient(180deg, var(--gold), #e3a008); color: var(--gold-ink); font: 800 1.1rem var(--f-display); }
+.lvlcard__t { display: grid; gap: 6px; min-width: 0; flex: 1; }
+.lvlcard__t b { font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ------------------------------------------------------------------ footer */
+.foot { max-width: 1320px; margin: 40px auto 0; padding: 22px 0 0; border-top: 1px solid var(--line); display: grid; gap: 10px; color: var(--dim); font-size: 0.78rem; }
+.foot strong { color: var(--muted); }
+.foot__links { display: flex; flex-wrap: wrap; gap: 0 16px; }
+.foot__links a { color: var(--muted); padding: 3px 0; }   /* hit area 25 px high */
+
+/* -------------------------------------------------------------- stream mode */
+.stream-exit { position: fixed; right: 16px; bottom: 16px; z-index: 90; background: #1b3040; }
+body.is-stream .topbar, body.is-stream .side, body.is-stream .foot,
+body.is-stream .crumbs, body.is-stream .below, body.is-stream .moregames, body.is-stream .stage__badges { display: none; }
+body.is-stream .layout { grid-template-columns: minmax(0, 1fr); }
+body.is-stream .main { padding-top: 16px; }
+body.is-stream .view { max-width: 1500px; }
+body.is-stream .gamegrid { grid-template-columns: 330px minmax(0, 1fr); }
+body.is-stream .stage__title { font-size: 1.6rem; }
+body.is-transparent .topbar, body.is-transparent .demo-strip, body.is-transparent .side, body.is-transparent .foot { background: transparent; }
+body.is-transparent .panel { background: rgba(19, 32, 44, 0.78); }
+
+/* --------------------------------------------------------------- responsive */
+@media (max-width: 1100px) {
+  :root { --side-w: 68px; }
+  .side { padding: 12px 8px; align-items: center; }
+  .side__txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .side__link { justify-content: center; padding: 10px; width: 46px; }
+  .side__sub .side__link { margin-left: 0; }
+  .side__link[aria-current="page"]::before { left: -8px; }
+  .lvlcard { padding: 6px; }
+  .lvlcard__t { display: none; }
+  .search { max-width: 300px; }
+}
+@media (max-width: 720px) {
+  :root { --top-h: 56px; }
+  .topbar { gap: 8px; }
+  .brand__name { display: none; }
+  .topbar .search { display: none; }   /* only the top bar's own search: the Charities page and the charity chooser have a search field of their own that must stay */
+  .balance { padding: 4px 10px 4px 8px; }
+  .balance__ico { display: none; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .main { padding: 16px 16px calc(92px + env(safe-area-inset-bottom, 0px)); }
+  .side {
+    position: fixed; z-index: 70; left: 0; right: 0; bottom: 0; top: auto; width: auto; height: auto;
+    flex-direction: row; padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); border-right: 0; border-top: 1px solid var(--line); background: #0b141c;
+    overflow: visible;
+  }
+  .side__list { display: flex; flex: 1; justify-content: space-around; gap: 0; }
+  .side__list .side__sub, .side__list .side__rule, .side__list .side__help, .side__level { display: none; }
+  .side__list li { flex: 1; }
+  .side__link { flex-direction: column; gap: 3px; width: auto; min-height: 50px; padding: 6px 2px; font-size: 0.6875rem; }
+  .side__txt { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .side__link[aria-current="page"]::before { left: 20%; right: 20%; top: -6px; bottom: auto; width: auto; height: 3px; border-radius: 0 0 4px 4px; }
+  .foot { margin-top: 28px; }
+  .stream-exit { bottom: 90px; }
+}
+@media (max-width: 400px) {
+  .topbar .iconbtn { width: 36px; height: 36px; }   /* top bar only: this used to shrink every icon button, the close buttons of dialogs included */
+}
+/* The top bar used to run off the right edge (Sign up cut off) on small phones (320 to 360 px) and on a tablet held upright (730 to 790 px). */
+/* Search: the box sits in the top bar down to 920 px (it keeps at least 160 px there, signed in or not). Below that the bar has no room for it (it must stay
+   on one line down to 320 px), so on a small screen js/app.js (placeSearch) moves the same box to the top of the lobby, where it finds games and charities. */
+@media (max-width: 920px) {
+  .topbar .search { display: none; }
+}
+.lobbysearch { display: none; }
+@media (max-width: 920px) {
+  .lobbysearch { display: block; margin: 0 0 16px; }
+  .lobbysearch .search { max-width: none; }
+}
+@media (max-width: 800px) {
+  .acct [data-role="login"] { display: none; }   /* "Log in" is in the Sign up window too ("Already have an account?") */
+}
+/* 420 px and narrower (most phones): about 26 px tighter. On a 390 px phone the bar had 0.2 px to spare with the web fonts and was 6 px too wide without them. */
+@media (max-width: 420px) {
+  .topbar { gap: 6px; padding: 0 10px; }
+  .topbar__right { gap: 5px; min-width: 0; flex: 0 1 auto; }
+  .brand__mark { width: 30px; height: 30px; }
+  .balance { min-width: 0; flex: 0 1 auto; }
+  .balance__txt { min-width: 0; overflow: hidden; }
+  #btn-credit, .acct .btn { padding-left: 10px; padding-right: 10px; }
+  .acct .btn { white-space: nowrap; }   /* "Sign up" stays on one line; the balance is the piece that gives way */
+}
+@media (max-width: 380px) {
+  .topbar { gap: 4px; padding: 0 8px; }
+  .topbar__right { gap: 4px; min-width: 0; flex: 0 1 auto; }
+  .brand__mark { width: 28px; height: 28px; }
+  /* the balance is the one piece that may give way if a wider font ever arrives late (it clips its label instead of pushing the bar off the screen) */
+  .balance { padding: 3px 6px; min-width: 0; flex: 0 1 auto; }
+  .balance__txt { min-width: 0; overflow: hidden; }
+  .topbar .iconbtn { width: 32px; height: 32px; }
+  #btn-credit, .acct .btn { padding-left: 8px; padding-right: 8px; }
+}
+/* 340 px and narrower (a 320 px phone): about 30 px tighter, so the bar has at least 8 px of room left over even if the web fonts have not arrived yet and
+   the fallback fonts (about 18 px wider) are used; it was 2 px with the fonts and 16 px too wide without them. The 8 px of space at the screen edge from
+   the 380 px rule is kept, so the right-hand button never sits closer than 8 px to the edge of the screen. */
+@media (max-width: 340px) {
+  .topbar { gap: 3px; }
+  .topbar__right { gap: 2px; }
+  .brand__mark { width: 26px; height: 26px; }
+  .balance { padding: 3px 4px; }
+  .balance__lbl { letter-spacing: 0.02em; }
+  .topbar .iconbtn { width: 30px; height: 30px; }
+  #btn-credit, .acct .btn { padding-left: 5px; padding-right: 5px; }
+}
