@@ -208,6 +208,27 @@ Tests: tests/hero.test.mjs (new block after the seasons: at least 5 people can b
 grows back, the basket's button takes one more), tests/games.test.mjs (the fruit loops click `:not(.flower-cut)`, which spring needs now; new section 1c: the spring badge for sunflowers), tests/npc.test.mjs (every person in the spring
 field can be tapped: a tap lands on that person), tests/touch.test.mjs (the spring list: a strawberry is not a sunflower; a sunflower, "pick?").
 
+## The falling leaves, calmer (item d of the second review of the spring field)
+
+Mrs. Cathy asked for calmer leaves. The acceptance walk found the fall (60 px/s) and the turning (44 degrees/s) good, but the sideways drift twice as fast as the first leaves had (42 px/s, a swing every 2.5 s). Now (js/hero.js,
+`particles()`; css/hero.css has only the defaults and the comment; the random stream is the same, so the leaves are in the same places, of the same size and colour, with the same delays):
+
+| a leaf, 16 in the hero | first leaves | integ 1048193 | now |
+|---|---|---|---|
+| falls (px/s; hero 800 px high, 874 px of fall) | 70 on average | 60 on average, 47 to 87 | 41 on average, 36 to 53 (worked out: 35 to 53; at most 60 up to a hero 916 px high) |
+| sideways, the mean speed of a sine: 2 * reach / (time of one drift) | 21 | 45 on average, up to 79 | 16.6 on average, at most 19.4 (worked out: 16 and 20.4) |
+| a whole swing, there and back (2 * the time of one drift) | about 7 s | 3.2 to 6.4 s | 5.6 to 9.2 s |
+| how far it reaches to each side | 20 to 70 px, in kinks | 25 to 66 px | 15 to 42 px (reach = drift time * 5.5 to 10, so a long drift reaches farther and the speed stays low) |
+| tips (degrees/s, 2 * tip / time of one drift) | 70, a spin | 46 on average, up to 74 | 24 on average, at most 36 (the tip is 26 to 50 degrees) |
+
+"Measured" is the page itself: the middle of each of the 16 leaves every 100 ms for 24 s at 1440 x 900 (scratchpad/critter/leafpath2.mjs; the pictures of the paths are leafpaths-before.png and leafpaths-after.png there: the
+new paths are smooth sines with fewer, wider swings, none is a straight line). The "worked out" numbers are the same seeded stream the page uses, taken from the values that js/hero.js gives each leaf (leafnums.mjs).
+
+The path stays a sine (the same `heroSway`, eased in and out, alternating), the tipping stays in step with the drifting (`heroRock`, the same time), nothing else moved: the calm modes (light and most fade the layer, the visitor's Pause
+keeps the picture) are untouched. The test measures it on the animations themselves (tests/hero.test.mjs, in the fall block: each leaf stopped at the start and the end of one of its own drifts): the fall 25 to 60 px/s, the sideways at
+most 21 px/s (8 or more on average, a reach of 10 px or more so that no leaf goes straight down), a whole swing 4.5 s or more, the turning at most 44 degrees/s. At a hero taller than 916 px (a screen wider than about 2200 px) the shortest falls
+come to a little over 60 px/s; the first leaves fell at 70 to 95 there.
+
 ## What I could not do / am unsure about
 
 - I did not change the 240 ms leg or the 100 ms look. On a computer that is so busy that its timers come 300 ms late or more, a leg ends before the next one begins and the creature
