@@ -198,9 +198,10 @@
     {
       id: 'ch8-school', order: 801, chapter: 8, page: 'index',
       target: '#school-tours .price-card',
+      also: '#school-tours .card-actions',   // the buttons under the words: the sign-up form and Vanessa's email
       title: 'School tours and group events',
       text: 'Schools, parties and companies each get a tab, and menu links open the right one. ' +
-            'School tours cost $11 per student, with 100 students at least. Teachers use the sign-up form, and you contact them.',
+            'School tours cost $11 per student, with 100 students at least. Teachers use the sign-up form, and you contact them. Questions? Vanessa’s email is here.',
       before: function () { showGroupTab('gtab-school'); },
       after: function () { restoreGroupTab('gtab-school'); }
     },

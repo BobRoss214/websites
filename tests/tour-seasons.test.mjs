@@ -444,6 +444,27 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
     await p.context().close();
   }
 
+  /* ================================================================ the school tours step: the price card, and the buttons under the words (the sign-up form and Vanessa's email), all lit and usable */
+  {
+    const tag = 'school tours: ';
+    const p = await openPage(browser, base, errs, { time: DAYS[0][0] });
+    await p.click('.wa-tour-pill');
+    await welcome(p, tag + 'the welcome card opens');
+    await goto(p, 'ch8-school');
+    await atTitle(p, 'School tours and group events', tag + 'the step shows');
+    await settled(p, 600);
+    const boxOf = (sel) => p.evaluate((s) => { const b = document.querySelector(s).getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }, sel);
+    const meet = (sel) => p.evaluate((s) => { const e = document.querySelector(s); const r = e.getBoundingClientRect(), h = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { self: !!h && (h === e || e.contains(h)), stopped: !!(h && h.closest('.wa-tour-shield')) }; }, sel);
+    const rings = await p.evaluate(() => [...document.querySelectorAll('.wa-tour-ring')].map((g) => { const b = g.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }));
+    const row = await boxOf('#school-tours .card-actions'), s2 = await look(p);
+    const near = (a, b, d = 4) => Math.abs(a - b) <= d;
+    ok(tag + 'the buttons under the words (the sign-up form, Email Vanessa, About school field trips) are lit with the price card (a yellow edge 8 px round them)', rings.length === 1 && near(rings[0].x, row.x - 8) && near(rings[0].y, row.y - 8) && near(rings[0].w, row.w + 16) && near(rings[0].h, row.h + 16), JSON.stringify({ rings, row }));
+    const mail = await meet('#school-tours a[href^="mailto:vanessa"]'), form = await meet('#school-tours a[href*="docs.google.com/forms"]');
+    ok(tag + 'Vanessa\'s email button and the sign-up form button can be pressed (not behind the click stopper)', mail.self && !mail.stopped && form.self && !form.stopped, JSON.stringify({ mail, form }));
+    ok(tag + 'the card names her: "Questions? Vanessa\'s email is here."', /Questions\? Vanessa’s email is here\./.test(s2.text), s2.text);
+    await p.context().close();
+  }
+
   /* ================================================================ the spring picture, as the cards of the basket game and of the first screen describe it (20 Apr) */
   {
     const tag = 'spring picture: ';
