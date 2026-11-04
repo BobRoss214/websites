@@ -9,14 +9,16 @@
 .wa-tour-pill{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:70;margin:0}
 @media (max-width:47.5em){.wa-tour-pill{bottom:calc(158px + env(safe-area-inset-bottom,0px))}}
 
-/* a dialog the page opens while the tour is on (the pretend account's .demo-modal, z-index 200, with a dim overlay of its own) is lifted above the tour's dimmer so that it can
-   be read and used, but its overlay no longer dims or blocks anything: the tour's own dimmer keeps dimming the page, and the tour's card (below it, in its own layer) stays reachable.
-   Only the box of the dialog takes clicks. js/tour.js puts the class on <html> while the tour is open */
+/* The layers, from the bottom: the page; the click stopper (9000); the dimmer with the lit hole (9001); a dialog the page opens while the tour is on (9100); the card (9200).
+   The dialog is the pretend account's .demo-modal (z-index 200 with a dim overlay of its own): it is lifted above the dimmer so that it can be read and used, its overlay no longer
+   dims or blocks anything (the tour's own dimmer keeps dimming the page), only its box takes clicks, and the card stays above it so that Next and Back can always be pressed.
+   The layers have to be layers of the page itself (.wa-tour is no box of its own), or the dialog could not go between them. js/tour.js puts the class on <html> while the tour
+   is open, and keeps the card off the dialog's box. */
 html.wa-tour-open .demo-modal{z-index:9100;background:transparent;pointer-events:none}
 html.wa-tour-open .demo-modal-box{pointer-events:auto}
 
 /* the tour: a dimmer with a hole round the lit box, and the card */
-.wa-tour{position:fixed;top:0;left:0;width:0;height:0;z-index:9000;font-family:var(--body,sans-serif);color:var(--ink,#3a2416)}
+.wa-tour{font-family:var(--body,sans-serif);color:var(--ink,#3a2416)}   /* no box of its own (not fixed, no z-index): its children are fixed to the window, each with its own layer */
 .wa-tour-shield{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;background:transparent}   /* it stops clicks reaching the page behind */
 .wa-tour.no-hole .wa-tour-shield{background:rgba(58,36,22,.74)}
 .wa-tour.is-free .wa-tour-shield{pointer-events:none}   /* a step that says "try it": the page can be clicked */
@@ -24,7 +26,7 @@ html.wa-tour-open .demo-modal-box{pointer-events:auto}
 .wa-tour-hole{position:fixed;z-index:9001;box-sizing:border-box;pointer-events:none;border:3px solid transparent;border-radius:16px;box-shadow:0 0 0 4px var(--sun,#ffc928),0 0 0 9999px rgba(58,36,22,.74)}   /* the transparent border is what High Contrast colors show */
 .wa-tour.no-hole .wa-tour-hole{display:none}
 
-.wa-tour-card{position:fixed;z-index:9002;box-sizing:border-box;display:flex;flex-direction:column;width:380px;max-width:calc(100vw - 28px);max-height:calc(100vh - 28px);margin:0;padding:18px 20px;background:var(--paper,#fffdf6);color:var(--ink,#3a2416);border:3px solid var(--ink,#3a2416);border-radius:22px;box-shadow:0 6px 0 var(--ink,#3a2416),0 18px 44px rgba(0,0,0,.35);animation:wa-tour-in .22s ease-out both}
+.wa-tour-card{position:fixed;z-index:9200;box-sizing:border-box;display:flex;flex-direction:column;width:380px;max-width:calc(100vw - 28px);max-height:calc(100vh - 28px);margin:0;padding:18px 20px;background:var(--paper,#fffdf6);color:var(--ink,#3a2416);border:3px solid var(--ink,#3a2416);border-radius:22px;box-shadow:0 6px 0 var(--ink,#3a2416),0 18px 44px rgba(0,0,0,.35);animation:wa-tour-in .22s ease-out both}
 .wa-tour-card:focus{outline:none}
 @keyframes wa-tour-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .wa-tour-card.is-busy .wa-tour-actions{opacity:.55}

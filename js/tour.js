@@ -393,7 +393,9 @@
     if (cut !== clip) { clip = cut; shield.style.clipPath = cut; }
     const vw = root.clientWidth || win.innerWidth, vh = win.innerHeight, phone = vw <= 640;
     const hl = r ? r.left - 8 : 0, ht = r ? r.top - 8 : 0, hw = r ? r.width + 16 : 0, hh = r ? r.height + 16 : 0;
-    const key = [hl, ht, hw, hh, vw, vh, card.offsetWidth, card.offsetHeight].map(Math.round).join();
+    const dbox = $('.demo-modal-box'), dr = dbox && shown(dbox) ? dbox.getBoundingClientRect() : null;   // a dialog of the page is open (the pretend account's): the card keeps off its box
+    const dk = dr ? [dr.left, dr.top, dr.width, dr.height].map(Math.round).join() : '';
+    const key = [hl, ht, hw, hh, vw, vh, card.offsetWidth, card.offsetHeight].map(Math.round).join() + '|' + dk;
     if (!force && key === placed) return;
     placed = key;
     if (r) {
@@ -404,8 +406,8 @@
     // the card on a computer: beside the box (the side with more room first), then below, then above, then a corner; never over the box when it can be helped
     const w = card.offsetWidth, h = card.offsetHeight, M = 14, G = 18;
     const at = cardAt;
-    if (!force && r && at && Math.abs(at[0] - hl) < 30 && Math.abs(at[1] - ht) < 30 && Math.abs(at[2] - hw) < 30 && Math.abs(at[3] - hh) < 30 && at[4] === w && at[5] === h && at[6] === vw && at[7] === vh) return;   // it drifted a little: the card stays where it is
-    cardAt = [hl, ht, hw, hh, w, h, vw, vh];
+    if (!force && r && at && Math.abs(at[0] - hl) < 30 && Math.abs(at[1] - ht) < 30 && Math.abs(at[2] - hw) < 30 && Math.abs(at[3] - hh) < 30 && at[4] === w && at[5] === h && at[6] === vw && at[7] === vh && at[8] === dk) return;   // it drifted a little: the card stays where it is
+    cardAt = [hl, ht, hw, hh, w, h, vw, vh, dk];
     let x, y;
     if (!r) { x = (vw - w) / 2; y = Math.max(M, (vh - h) / 2); }
     else {
@@ -419,7 +421,8 @@
         const ox = Math.max(0, Math.min(o[0] + w, hl + hw) - Math.max(o[0], hl)), oy = Math.max(0, Math.min(o[1] + h, ht + hh) - Math.max(o[1], ht));
         let hit = 0;   // how much of the buttons, fields, switches and headings of the lit box this place would cover
         keep.forEach((b) => { hit += Math.max(0, Math.min(o[0] + w, b.right) - Math.max(o[0], b.left)) * Math.max(0, Math.min(o[1] + h, b.bottom) - Math.max(o[1], b.top)); });
-        const score = out * 1000 + ox * oy + hit * 5;
+        const under = dr ? Math.max(0, Math.min(o[0] + w, dr.right) - Math.max(o[0], dr.left)) * Math.max(0, Math.min(o[1] + h, dr.bottom) - Math.max(o[1], dr.top)) : 0;   // how much of the dialog's box
+        const score = out * 1000 + ox * oy + hit * 5 + under * 8;
         if (score < bestScore) { best = o; bestScore = score; }
       });
       x = best[0]; y = best[1];

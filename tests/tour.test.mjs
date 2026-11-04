@@ -741,7 +741,7 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
     document.body.appendChild(wide);
     // a dialog of the page, built like the pretend account's (css/demo.css: fixed, z-index 200; js/demo-ui.js: Esc is heard on the document, in the capture phase)
     const st = document.createElement('style');
-    st.textContent = '.demo-modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:80px 14px;background:rgba(0,0,0,.45)}.demo-modal-box{background:#fff;border:3px solid #000;padding:20px}';
+    st.textContent = '.demo-modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:80px 14px;background:rgba(0,0,0,.45)}.demo-modal-box{position:relative;box-sizing:border-box;width:min(100%,44rem);height:360px;background:#fff;border:3px solid #000;padding:20px}';
     document.head.appendChild(st);
     window.__modalClicks = 0; window.__modalEsc = 0;
     window.__openModal = () => {
@@ -790,14 +790,16 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
 
   // a dialog of the page opened over the tour (the pretend account's .demo-modal): above the dimmer and the card, usable, and it keeps its Esc
   await p.evaluate(() => window.__openModal());
+  await p.waitForTimeout(500);   // the card moves off the dialog on the next frame or two
   const mz = await p.evaluate(() => { const back = document.querySelector('.demo-modal'), okb = document.getElementById('t-m-ok'), r = okb.getBoundingClientRect(), hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { z: getComputedStyle(back).zIndex, onTop: hit === okb }; });
   ok('walk: a dialog the page opens while the tour is open is above the dimmer (z-index 9100), and its button is the thing at that place', mz.z === '9100' && mz.onTop, JSON.stringify(mz));
   const reach = await p.evaluate(() => {
-    const back = document.querySelector('.demo-modal'), box = back.querySelector('.demo-modal-box'), cs = getComputedStyle(back);
-    const nx = [...document.querySelectorAll('.wa-tour-card button')].find((b) => b.textContent.trim() === 'Next'), r = nx.getBoundingClientRect();
-    return { bg: cs.backgroundColor, pe: cs.pointerEvents, boxPe: getComputedStyle(box).pointerEvents, nextOnTop: document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === nx };
+    const back = document.querySelector('.demo-modal'), box = back.querySelector('.demo-modal-box'), cs = getComputedStyle(back), card = document.querySelector('.wa-tour-card');
+    const nx = [...card.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Next'), r = nx.getBoundingClientRect(), c = card.getBoundingClientRect(), d = box.getBoundingClientRect(), o = document.getElementById('t-m-ok').getBoundingClientRect();
+    const area = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+    return { bg: cs.backgroundColor, pe: cs.pointerEvents, boxPe: getComputedStyle(box).pointerEvents, nextOnTop: document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === nx, cardOverBox: Math.round(100 * area(c, d) / (d.width * d.height)), cardOverOk: area(c, o) };
   });
-  ok('walk: the dialog\'s own dim overlay does not dim or block (transparent, no pointer events), only its box takes clicks, and the Next button of the card is still the thing at its place', reach.bg === 'rgba(0, 0, 0, 0)' && reach.pe === 'none' && reach.boxPe === 'auto' && reach.nextOnTop, JSON.stringify(reach));
+  ok('walk: the dialog\'s own dim overlay does not dim or block (transparent, no pointer events), only its box takes clicks, the Next button of the card is still the thing at its place, and the card sits off the dialog (it covers its button not at all and its box by ' + reach.cardOverBox + ' percent)', reach.bg === 'rgba(0, 0, 0, 0)' && reach.pe === 'none' && reach.boxPe === 'auto' && reach.nextOnTop && reach.cardOverOk === 0 && reach.cardOverBox <= 10, JSON.stringify(reach));
   await p.click('#t-m-ok');
   ok('walk: ...a real click on the dialog\'s button reaches it', (await p.evaluate(() => window.__modalClicks)) === 1, '');
   await press(p, 'Next');
