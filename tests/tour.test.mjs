@@ -24,12 +24,25 @@
  *     dimmer and keeps its Esc, the first Esc on a part of the page brings the focus back to the card, a link to a place on the page brings the lit part back, the card keeps off the
  *     buttons of a wide lit box, the lit part is brought under the sticky demo bar too
  *   - a wide, short lit part in a laptop window (section 9: a strip 1,300 px wide and 96 px high at 1366x768, 1280x800 and 992x800): there is no room beside it for the card, so the part is
- *     brought to the top of the free room and the card goes under it, whole in the window and not on the part */
+ *     brought to the top of the free room and the card goes under it, whole in the window and not on the part
+ *   - what is lit besides the target (section 10): a list that a lit button opens (aria-controls, aria-expanded: a menu bar's list, a bell's panel) is lit too, with a yellow edge of its own and the
+ *     dimmer in layers, and can be used; the parts a step names with "also" (the basket game's picture) likewise; everything else stays locked, a real click on it does nothing; Tab reaches
+ *     the list; a step with allowClicks: false lights nothing more */
 import { run, open, ok, okSoon, until, info, settled, ms, axeSource, ROOT } from './lib.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 
 const CSS = fs.readFileSync(path.join(ROOT, 'css/tour.css'), 'utf8');
+// the colour of one pixel of the window: a 1 x 1 screenshot (an 8-bit PNG: RGB or RGBA, one row)
+const pixel = async (p, x, y) => {
+  const png = await p.screenshot({ clip: { x: Math.round(x), y: Math.round(y), width: 1, height: 1 } });
+  let pos = 8, ct = 0;
+  const idat = [];
+  while (pos < png.length) { const len = png.readUInt32BE(pos), type = png.toString('latin1', pos + 4, pos + 8), data = png.subarray(pos + 8, pos + 8 + len); if (type === 'IHDR') ct = data[9]; else if (type === 'IDAT') idat.push(data); pos += 12 + len; }
+  const raw = zlib.inflateSync(Buffer.concat(idat));   // one row: a filter byte, then the pixel (the filter of a single pixel changes nothing: its neighbours are 0)
+  return [raw[1], raw[2], raw[3], ct === 6 ? raw[4] : 255];
+};
 
 /* ---------------------------------------------------------------- the made-up steps (served instead of the real files) */
 const LONG = Array.from({ length: 160 }, (_, i) => 'word' + i).join(' ');
@@ -900,4 +913,104 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
     ok(tag + 'the card is whole in the window and not on the strip', inside(s.card, s.vw, s.vh) && overlap(s.card, strip) === 0, JSON.stringify({ card: s.card, strip }));
     await p.context().close();
   }
+
+  /* ================================================================ 10. what is lit besides the target: a list a lit button opens, a part a step names with "also" */
+  // The lit part can be used and nothing else can. A button of it that opens a list (aria-controls, aria-expanded) lights the list too, and the list can be used; so can the parts a step names
+  // with "also" (the basket game's picture). Everything else stays locked, in every step. (Found by an independent walk of the real tour: ten steps left the whole page free.)
+  const STEPS_LIT = `
+(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push(
+  { id: 'm1', order: 101, chapter: 1, page: 'index', target: '#t-bar', title: 'A bar with a list', text: 'Press Menu. Its list is lit too.' },
+  { id: 'm2', order: 102, chapter: 1, page: 'index', target: '#t-picker', also: '#t-play', title: 'A game', text: 'The picture is the playground.' },
+  { id: 'm3', order: 103, chapter: 1, page: 'index', target: '#t-bellbox', title: 'A bell', text: 'The bell opens a list that is not inside it.' },
+  { id: 'm4', order: 104, chapter: 1, page: 'index', target: '#t-bar', allowClicks: false, title: 'Nothing', text: 'Nothing can be pressed here.' }
+);
+window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Lit' }];
+`;
+  p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: serve({ a: STEPS_LIT }) });
+  await p.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'auto';
+    window.__hits = { other: 0, fruit: 0, away: 0, notice: 0 };
+    const add = (html) => { const d = document.createElement('div'); d.innerHTML = html; document.body.appendChild(d.firstElementChild); };
+    const toggle = (btn) => btn.addEventListener('click', () => { const o = btn.getAttribute('aria-expanded') !== 'true'; btn.setAttribute('aria-expanded', String(o)); document.getElementById(btn.getAttribute('aria-controls')).hidden = !o; });
+    // a bar with a Menu button; its list hangs below the bar (the way the site's menu bar does it)
+    add('<div id="t-bar" style="position:fixed;left:60px;top:100px;width:640px;height:56px;z-index:55;background:#fffdf6;border:2px solid #3a2416"><button id="t-menu" type="button" aria-expanded="false" aria-controls="t-list" style="margin:8px">Menu</button>'
+      + '<ul id="t-list" hidden style="position:absolute;left:8px;top:60px;width:240px;margin:0;padding:6px;list-style:none;background:#fff;border:2px solid #3a2416"><li><a id="t-l1" href="#visit">Hours</a></li><li><a id="t-l2" href="https://example.com/away">Away</a></li></ul></div>');
+    // a part of the page that is not lit: a button that counts the presses it gets
+    add('<button id="t-other" type="button" style="position:fixed;left:20px;top:780px;width:160px;height:50px;z-index:55;background:#fff;border:0;margin:0">Other</button>');
+    // the game: a picker, and a picture that is its playground (named with "also"); a button further away that is neither
+    add('<div id="t-picker" style="position:fixed;left:60px;top:560px;width:240px;height:70px;z-index:55;background:#fff">Pick</div>');
+    add('<div id="t-play" style="position:fixed;left:400px;top:250px;width:520px;height:380px;z-index:55;background:#e8f4ff"><button id="t-fruit" type="button" style="position:absolute;left:200px;top:150px;width:100px;height:50px">Fruit</button></div>');
+    add('<button id="t-away" type="button" style="position:fixed;left:1000px;top:700px;width:120px;height:44px;z-index:55;background:#fff">Away</button>');
+    // a bell: its list is NOT inside it
+    add('<div id="t-bellbox" style="position:fixed;left:1100px;top:100px;width:70px;height:60px;z-index:55;background:#fffdf6;border:2px solid #3a2416"><button id="t-bell" type="button" aria-expanded="false" aria-controls="t-panel">Bell</button></div>');
+    add('<div id="t-panel" hidden style="position:fixed;left:900px;top:170px;width:300px;height:140px;z-index:55;background:#fff;border:2px solid #000"><button id="t-p1" type="button">Notice</button></div>');
+    toggle(document.getElementById('t-menu')); toggle(document.getElementById('t-bell'));
+    [['t-other', 'other'], ['t-fruit', 'fruit'], ['t-away', 'away'], ['t-p1', 'notice']].forEach(([id, k]) => document.getElementById(id).addEventListener('click', () => { window.__hits[k]++; }));
+  });
+  const hits = () => p.evaluate(() => JSON.stringify(window.__hits));
+  const litNow = () => p.evaluate(() => {
+    const box = document.querySelector('.wa-tour'), rect = (e) => { const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height, r: b.right, b: b.bottom }; };
+    return { extra: box.classList.contains('has-extra'), rings: [...document.querySelectorAll('.wa-tour-ring')].map(rect), dimLayers: document.querySelectorAll('.wa-tour-dim, .wa-tour-dim .wa-tour-layer').length, stopLayers: document.querySelectorAll('.wa-tour-shield, .wa-tour-shield .wa-tour-layer').length };
+  });
+  const topAt = (x, y) => p.evaluate(([a, b]) => { const e = document.elementFromPoint(a, b); return { id: e ? e.id : '', stopped: !!(e && e.closest('.wa-tour-shield')) }; }, [x, y]);
+  const mid = (r) => [r.x + r.w / 2, r.y + r.h / 2];
+  const clickOn = async (sel) => { const r = await rectOf(p, sel); await p.mouse.click(...mid(r)); };
+  await p.click('.wa-tour-pill');
+  await okSoon('lit parts: the welcome card opens', () => look(p), (x) => x && x.name === 'Your website tour' && !x.busy);
+  await press(p, 'Start the tour');
+  await atStep(p, 1, 'lit parts: step 1 lights the bar');
+  let ls = await litNow();
+  ok('lit parts: before the menu is pressed only the bar is lit (one window in the dimmer, no second yellow edge)', !ls.extra && ls.rings.length === 0 && ls.stopLayers === 1, JSON.stringify(ls));
+  await clickOn('#t-menu');
+  await okSoon('lit parts: the Menu button opens its list, and the list is lit with the bar: a yellow edge of its own, 8 px round it, and a dimmer made of two layers', async () => ({ ls: await litNow(), list: await rectOf(p, '#t-list') }), (v) => v.ls.extra && v.ls.rings.length === 1 && lit(v.ls.rings[0], v.list) && v.ls.dimLayers === 2 && v.ls.stopLayers === 2);
+  await rest(p);
+  const list = await rectOf(p, '#t-list');
+  s = await look(p);
+  ok('lit parts: the card keeps off the opened list and off the bar', overlap(s.card, list) === 0 && overlap(s.card, await rectOf(p, '#t-bar')) === 0 && inside(s.card, s.vw, s.vh), JSON.stringify({ card: s.card, list }));
+  const white = await pixel(p, list.r - 6, list.b - 6), page = await pixel(p, (await rectOf(p, '#t-other')).x + 8, (await rectOf(p, '#t-other')).y + 8);
+  ok('lit parts: the opened list is not dimmed (its white is still white) and the white button outside is (it is dark now)', white[0] >= 250 && white[1] >= 250 && white[2] >= 250 && page[0] < 200 && page[1] < 200 && page[2] < 200, JSON.stringify({ white, page }));
+  const onLink = await topAt(...mid(await rectOf(p, '#t-l1'))), onOther = await topAt(...mid(await rectOf(p, '#t-other')));
+  ok('lit parts: a press on a link of the list reaches the link; a press on the button outside meets the click stopper', onLink.id === 't-l1' && !onLink.stopped && onOther.stopped, JSON.stringify({ onLink, onOther }));
+  await clickOn('#t-other');
+  ok('lit parts: a real click on the button outside does nothing (the page did not see it)', (await hits()) === '{"other":0,"fruit":0,"away":0,"notice":0}', await hits());
+  await p.focus('#t-menu');
+  await p.keyboard.press('Tab');
+  ok('lit parts: Tab goes from the Menu button into the opened list', (await p.evaluate(() => document.activeElement && document.activeElement.id)) === 't-l1', await p.evaluate(() => document.activeElement && document.activeElement.id));
+  await clickOn('#t-l1');
+  await okSoon('lit parts: a real click on a link in the opened list works (the page goes to the place the link names)', () => p.evaluate(() => location.hash), (v) => v === '#visit');
+  const awayUrl = await p.evaluate(() => location.href);
+  await clickOn('#t-l2');
+  await okSoon('lit parts: a link in the list that leaves the page does nothing but say so', () => p.evaluate(() => ({ u: location.href, note: (document.querySelector('.wa-tour-flash') || {}).textContent || '' })), (v) => v.u === awayUrl && /switched off/.test(v.note));
+  await clickOn('#t-menu');
+  await okSoon('lit parts: the Menu button shuts the list: only the bar is lit again', litNow, (v) => !v.extra && v.rings.length === 0 && v.stopLayers === 1 && v.dimLayers === 1);
+
+  await press(p, 'Next');
+  await atStep(p, 2, 'lit parts: step 2 (a game: the picker, and a picture named with also) shows');
+  ls = await litNow();
+  const play = await rectOf(p, '#t-play');
+  ok('lit parts: the picture named with "also" is lit with the picker from the start (a yellow edge round it)', ls.extra && ls.rings.length === 1 && lit(ls.rings[0], play), JSON.stringify(ls));
+  await clickOn('#t-fruit');
+  await clickOn('#t-away');
+  await clickOn('#t-other');
+  ok('lit parts: a click in the picture counts (the page sees it); a click on the button next to it and one on the other button do not', (await hits()) === '{"other":0,"fruit":1,"away":0,"notice":0}', await hits());
+
+  await press(p, 'Next');
+  await atStep(p, 3, 'lit parts: step 3 (a bell whose list is not inside it) shows');
+  ls = await litNow();
+  ok('lit parts: before the bell is pressed only the bell is lit', !ls.extra && ls.rings.length === 0, JSON.stringify(ls));
+  await clickOn('#t-bell');
+  await okSoon('lit parts: the bell opens its list, which is not inside the bell, and the list is lit', async () => ({ ls: await litNow(), panel: await rectOf(p, '#t-panel') }), (v) => v.ls.extra && v.ls.rings.length === 1 && lit(v.ls.rings[0], v.panel));
+  await rest(p);
+  await clickOn('#t-p1');
+  await clickOn('#t-other');
+  ok('lit parts: a click in the bell\'s list counts; a click on the button outside does not', (await hits()) === '{"other":0,"fruit":1,"away":0,"notice":1}', await hits());
+
+  await press(p, 'Next');
+  await atStep(p, 4, 'lit parts: step 4 (allowClicks: false, a bar) shows');
+  await p.evaluate(() => { const b = document.getElementById('t-menu'); b.setAttribute('aria-expanded', 'true'); document.getElementById('t-list').hidden = false; });
+  await p.waitForTimeout(400);
+  ls = await litNow();
+  const stuck = await topAt(...mid(await rectOf(p, '#t-menu')));
+  ok('lit parts: a step that says allowClicks: false lights nothing more, and nothing in it can be pressed (not even the lit button)', !ls.extra && ls.rings.length === 0 && stuck.stopped, JSON.stringify({ ls, stuck }));
+  await p.context().close();
 });

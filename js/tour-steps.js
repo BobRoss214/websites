@@ -12,9 +12,12 @@
  *                  The engine takes the first VISIBLE match, so a selector may also match hidden things.
  *   title, text    plain English: "you", short sentences (25 words at most), the whole text 45 words at most.
  *                  In text, a line break is \n and a line that starts with "- " is a bullet.
- *   allowClicks    leave it out: the lit part can be used (a question opens, a tab changes) and nothing else can, and a link that leaves the page is switched off.
- *                  true: the whole page may be used during the step ("Try it"). Use it when the lit part opens something OUTSIDE its own box (a menu bar with
- *                  drop-down lists): the list would be dimmed and blocked otherwise (tests/tour-targets.test.mjs looks for this). false: nothing can be clicked.
+ *   allowClicks    leave it out: the lit part can be used (a question opens, a tab changes, a menu opens) and nothing else can, and a link that leaves the page is switched off.
+ *                  What a lit button opens is lit too and can be used: a list under a menu bar, the bell's panel (the button says so in aria-controls and aria-expanded),
+ *                  and a dialog of the pretend account (it sits above the dimmer). So no step needs more than this. false: nothing can be clicked.
+ *                  (true is the whole page; no step uses it.)
+ *   also           optional: a CSS selector (or a list of them) for a part that is lit and can be used together with the target. Only the basket game uses it:
+ *                  its picture is the playground (#hero-scene), and the menu and the links around it stay locked.
  *   choices        optional: a row of small buttons on the card (the season walk: seasonWalk() below); choicesLabel is the few words above the row
  *   skipIfMissing  true when the target can be missing or hidden on some days or screens (a box that hides itself by date)
  *   before, after  small functions that open or put back something on the page (a menu, a tab). They use plain page code and never read
@@ -259,7 +262,7 @@
       text: 'Reserve opens your booking tool (Bookeo) in a new tab. Nothing is booked on this site. The white button leads to what is in season. In winter the big red button says “Visit The GreenHouse”, and the top bar keeps its Reserve.'
     },
     {
-      id: 'ch2-game', order: 206, chapter: 2, page: 'index', target: '#picker', allowClicks: true,
+      id: 'ch2-game', order: 206, chapter: 2, page: 'index', target: '#picker', also: '#hero-scene',
       title: 'The basket game',
       text: 'Try it: press the yellow button to pick. Kids can also tap fruit, flowers or trees in the picture. Picking 100 of one kind earns a badge, like Pumpkin Champion. It is only for fun, and nothing is saved. Press a season.',
       choicesLabel: 'See this part in:',
@@ -303,7 +306,7 @@
       after: seasonsEnd
     },
     {
-      id: 'ch3-menu', order: 303, chapter: 3, page: 'index', target: '#nav, #menu-toggle', allowClicks: true, skipIfMissing: true,   // the lists open below the bar, outside its box: so the whole page may be used here
+      id: 'ch3-menu', order: 303, chapter: 3, page: 'index', target: '#nav, #menu-toggle', skipIfMissing: true,   // the lists open below the bar, outside its box: they are lit with it, and can be used
       title: 'The menu at the top',
       text: 'Seven buttons group the whole site: Visit, Things to Do, GreenHouse, Store, Groups & Parties, About Us and Contact. Press one to open its short list. A red dot marks something new or coming soon, like Christmas trees. Try it.',
       after: function () {   // a list the visitor opened is shut again

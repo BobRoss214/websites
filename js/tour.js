@@ -189,6 +189,12 @@
     if (d) { const cs = getComputedStyle(d), top = parseFloat(cs.top); if (cs.position === 'sticky') n = (isNaN(top) ? n : top) + d.getBoundingClientRect().height; }
     return n;
   };
+  const headerBottom = () => {   // where the sticky top bar (and, on the pretend-account pages, the thin demo bar under it) ends now
+    const h = $('.site-header'), d = $('.demo-bar');
+    let n = h ? h.getBoundingClientRect().bottom : 0;
+    if (d && getComputedStyle(d).position === 'sticky') n = Math.max(n, d.getBoundingClientRect().bottom);
+    return Math.max(0, n);
+  };
   const jump = (y) => {   // an instant scroll, whatever smooth scrolling the page asks for
     const before = root.style.scrollBehavior;
     root.style.scrollBehavior = 'auto';
@@ -268,8 +274,34 @@
     flush();
   };
 
+  // The dimmer and the click stopper are layers that cover the page with a window cut out of them (a polygon with one hole). A lit part and a list it has opened are two windows, which
+  // may overlap: they are two layers inside each other, and what shows through both of them (or catches a click) is what lies outside every window. Only the innermost layer is painted
+  // (the dimmer) or catches the click (the stopper); the ones outside it only cut.
+  const chain = (host) => ({ list: [host], clips: [''] });
+  const setLayers = (c, polys, stop) => {
+    const n = Math.max(1, polys.length);
+    while (c.list.length < n) { const l = make('div', 'wa-tour-layer'); c.list[c.list.length - 1].appendChild(l); c.list.push(l); c.clips.push(''); }
+    while (c.list.length > n) { const l = c.list.pop(); c.clips.pop(); if (l.parentNode) l.parentNode.removeChild(l); }
+    c.list.forEach((l, i) => {
+      const p = polys[i] || '';
+      if (c.clips[i] !== p) { c.clips[i] = p; l.style.clipPath = p; }
+      l.classList.toggle('is-last', i === n - 1);
+      if (stop) l.style.pointerEvents = i < n - 1 ? 'none' : '';
+    });
+  };
+  const px = (v) => (Math.round(v * 10) / 10) + 'px';
+  const rectLoop = (x1, y1, x2, y2) => [px(x1) + ' ' + px(y1), px(x1) + ' ' + px(y2), px(x2) + ' ' + px(y2), px(x2) + ' ' + px(y1)];
+  const roundLoop = (x1, y1, x2, y2, rad) => {   // a box with round corners as a list of points (each corner in five steps)
+    const r = Math.max(0, Math.min(rad, (x2 - x1) / 2, (y2 - y1) / 2)), pts = [];
+    const corner = (cx, cy, from) => { for (let i = 0; i <= 5; i++) { const a = (from + i * 18) * Math.PI / 180; pts.push(px(cx + r * Math.cos(a)) + ' ' + px(cy + r * Math.sin(a))); } };
+    corner(x1 + r, y1 + r, 180); corner(x2 - r, y1 + r, 270); corner(x2 - r, y2 - r, 0); corner(x1 + r, y2 - r, 90);
+    return pts;
+  };
+  const holePoly = (pts) => 'polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ' + pts.join(', ') + ', ' + pts[0] + ', 0 0)';   // the whole window with one hole (it comes back along the same line, so the join has no width)
+  const radiusOf = (el) => clamp((parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0) + 8, 14, 32);
+
   const buildUi = () => {
-    const box = make('div', 'wa-tour'), shield = make('div', 'wa-tour-shield'), hole = make('div', 'wa-tour-hole');
+    const box = make('div', 'wa-tour'), shield = make('div', 'wa-tour-shield'), dim = make('div', 'wa-tour-dim'), hole = make('div', 'wa-tour-hole');
     const card = make('section', 'wa-tour-card');
     box.id = 'wa-tour'; box.lang = 'en';
     card.id = 'wa-tour-card'; card.tabIndex = -1;
@@ -284,11 +316,11 @@
     card.append(progress, bar, title, body, choices, actions, x);
     const live = make('div', 'sr-only');
     live.setAttribute('role', 'status'); live.setAttribute('aria-live', 'polite'); live.setAttribute('aria-atomic', 'true');
-    box.append(shield, hole, card, live);
+    box.append(shield, dim, hole, card, live);
     // a press inside the tour never reaches the page: its own "click anywhere else closes me" rules (the menus) must not fire for the tour's buttons
     ['click', 'pointerdown', 'pointerup', 'mousedown', 'mouseup', 'touchstart'].forEach((ev) => box.addEventListener(ev, (e) => e.stopPropagation()));
     doc.body.appendChild(box);
-    return { box, shield, hole, card, progress, bar: fillBar, title, body, choices, actions, x, live, primary: null };
+    return { box, shield, dim, hole, rings: [], cutter: chain(shield), dimmer: chain(dim), card, progress, bar: fillBar, title, body, choices, actions, x, live, primary: null };
   };
 
   const say = (text) => { const live = ui && ui.live; if (!live) return; live.textContent = ''; setTimeout(() => { if (ui && ui.live === live) live.textContent = text; }, 60); };
@@ -376,17 +408,44 @@
     ui.body.scrollTop = 0;
   };
 
+  // What is lit besides the part itself (the first): the other parts the step names (its "also"), and what the lit buttons have opened: a list under a menu bar, the bell's panel.
+  // A button says what it opens in aria-controls while its aria-expanded is "true". What lies inside a part that is lit already is not counted again. Each is { el, r }.
+  const litMore = (r) => {
+    const out = [], held = [curEl];
+    if (!curEl || !curEl.isConnected || !r) return out;
+    const take = (n, also) => {
+      if (!n || !n.isConnected || held.indexOf(n) >= 0 || !shown(n)) return;
+      let b = n.getBoundingClientRect();
+      if (also) {   // a part of the page that reaches up under the sticky top bar is lit and usable only below the bar: the menu stays locked
+        const hb = headerBottom();
+        if (b.top < hb) b = { left: b.left, right: b.right, top: hb, bottom: b.bottom, width: b.width, height: b.bottom - hb };
+      }
+      if (!(b.width > 0 && b.height > 0)) return;
+      if ([{ r }].concat(out).some((o) => b.left >= o.r.left - 1 && b.top >= o.r.top - 1 && b.right <= o.r.right + 1 && b.bottom <= o.r.bottom + 1)) return;
+      held.push(n); out.push({ el: n, r: b, also: !!also });
+    };
+    [].concat(curStep && curStep.also ? curStep.also : []).forEach((sel) => take(find(sel), true));
+    for (let i = 0; i < held.length && i < 6; i++) {   // the buttons of every lit part that have a list or a panel open (a list inside a list too)
+      const buttons = $$('[aria-controls][aria-expanded="true"]', held[i]);
+      if (held[i].matches('[aria-controls][aria-expanded="true"]')) buttons.unshift(held[i]);
+      buttons.forEach((c) => String(c.getAttribute('aria-controls')).split(/\s+/).forEach((id) => take(doc.getElementById(id))));
+    }
+    return out;
+  };
+
   // What the card should not sit on when it has to sit on the lit box: its buttons, links, fields and switches (what the text names: weight 10), its headings and labels
   // (weight 5), and what an open button of it shows (a list, a panel: weight 10). Each is a rectangle and a weight.
   const KEEP_CONTROLS = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="switch"], [role="tab"], [role="checkbox"], [role="radio"]';
   const KEEP_WORDS = 'h1, h2, h3, h4, h5, h6, label';
-  const keepClear = () => {
+  const keepClear = (more) => {
     const out = [];
     if (!curEl || !curEl.isConnected) return out;
     const add = (n, k) => { if (out.length < 400 && shown(n)) { const b = n.getBoundingClientRect(); if (b.width >= 8 && b.height >= 8) out.push({ b, k }); } };
-    $$(KEEP_CONTROLS, curEl).forEach((n) => add(n, 10));
-    $$(KEEP_WORDS, curEl).forEach((n) => add(n, 5));
-    if (curEl.matches(KEEP_CONTROLS)) add(curEl, 10); else if (curEl.matches(KEEP_WORDS)) add(curEl, 5);
+    [curEl].concat((more || []).map((m) => m.el)).forEach((host) => {
+      $$(KEEP_CONTROLS, host).forEach((n) => add(n, 10));
+      $$(KEEP_WORDS, host).forEach((n) => add(n, 5));
+      if (host.matches(KEEP_CONTROLS)) add(host, 10); else if (host.matches(KEEP_WORDS)) add(host, 5);
+    });
     $$('[aria-controls][aria-expanded="true"]', curEl).forEach((c) => { const p = doc.getElementById(c.getAttribute('aria-controls')); if (p) add(p, 10); });
     return out;
   };
@@ -394,52 +453,66 @@
   /* The lit box and the card follow the target while a step shows: one measure per frame, a style change only when something moved. */
   const place = (force) => {
     if (!ui) return;
-    const { box, hole, card, shield } = ui;
+    const { box, hole, card } = ui;
     if (view === 'step' && curStep && curStep.target && (!curEl || !curEl.isConnected)) { const again = find(curStep.target); if (again) { curEl = again; curRad = 14; } }   // a re-drawn page part: found again
     let r = null;
     if (curEl && curEl.isConnected) { const b = curEl.getBoundingClientRect(); if (b.width > 0 || b.height > 0) r = b; }
     box.classList.toggle('no-hole', !r);
-    // A step with a lit box lets the visitor use what is lit (open a question, choose a tab) and nothing else: the shield that stops clicks has a window cut out of it
-    // where the lit part of the page is (the part's own box, not the glow around it). It is cut again whenever the part moves or grows (an opened answer).
-    let cut = '';
-    if (r && box.classList.contains('is-try')) {
-      const x1 = Math.round(r.left), y1 = Math.round(r.top), x2 = Math.round(r.right), y2 = Math.round(r.bottom);
-      cut = 'polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ' + x1 + 'px ' + y1 + 'px, ' + x1 + 'px ' + y2 + 'px, ' + x2 + 'px ' + y2 + 'px, ' + x2 + 'px ' + y1 + 'px, ' + x1 + 'px ' + y1 + 'px)';
-    }
-    if (cut !== clip) { clip = cut; shield.style.clipPath = cut; }
+    const more = r && view === 'step' && curStep && curStep.allowClicks !== false ? litMore(r) : [];   // a list the lit button has opened, the parts a step names with "also": they are lit with it, and can be used
+    // A step with a lit box lets the visitor use what is lit (open a question, choose a tab, open a menu) and nothing else: the layers that stop clicks have windows cut out of them
+    // where the lit parts of the page are (each part's own box, not the glow around it). They are cut again whenever a part moves or grows (an opened answer, an opened list).
+    const cuts = r && box.classList.contains('is-try') ? [r].concat(more.map((m) => m.r)).map((b) => holePoly(rectLoop(b.left, b.top, b.right, b.bottom))) : [];
+    const cutKey = cuts.join('|');
+    if (cutKey !== clip) { clip = cutKey; setLayers(ui.cutter, cuts, true); }
     const vw = root.clientWidth || win.innerWidth, vh = win.innerHeight, phone = vw <= 640;
-    const hl = r ? r.left - 8 : 0, ht = r ? r.top - 8 : 0, hw = r ? r.width + 16 : 0, hh = r ? r.height + 16 : 0;
+    const pad = (b) => ({ l: b.left - 8, t: b.top - 8, w: b.width + 16, h: b.height + 16 });
+    const holes = r ? [pad(r)].concat(more.map((m) => pad(m.r))) : [];   // the lit boxes: the part with 8 px round it, then the others
+    const hl = r ? holes[0].l : 0, ht = r ? holes[0].t : 0, hw = r ? holes[0].w : 0, hh = r ? holes[0].h : 0;
     const dbox = $('.demo-modal-box'), dr = dbox && shown(dbox) ? dbox.getBoundingClientRect() : null;   // a dialog of the page is open (the pretend account's): the card keeps off its box
     const dk = dr ? [dr.left, dr.top, dr.width, dr.height].map(Math.round).join() : '';
-    const key = [hl, ht, hw, hh, vw, vh, card.offsetWidth, card.offsetHeight].map(Math.round).join() + '|' + dk;
+    const mk = more.map((m) => [m.r.left, m.r.top, m.r.width, m.r.height].map(Math.round).join()).join(';');
+    const key = [hl, ht, hw, hh, vw, vh, card.offsetWidth, card.offsetHeight].map(Math.round).join() + '|' + dk + '|' + mk;
     if (!force && key === placed) return;
     placed = key;
     if (r) {
       hole.style.left = hl + 'px'; hole.style.top = ht + 'px'; hole.style.width = hw + 'px'; hole.style.height = hh + 'px'; hole.style.borderRadius = curRad + 'px';
     }
+    // With more than one lit part the dimmer is made of layers (setLayers), the first part's own shadow is only its yellow edge, and each other part has an edge of its own.
+    const rads = more.map((m) => radiusOf(m.el));
+    box.classList.toggle('has-extra', more.length > 0);
+    setLayers(ui.dimmer, more.length ? holes.map((a, i) => holePoly(roundLoop(a.l, a.t, a.l + a.w, a.t + a.h, i ? rads[i - 1] : curRad))) : [], false);
+    while (ui.rings.length < more.length) { const g = make('div', 'wa-tour-hole wa-tour-ring'); box.insertBefore(g, card); ui.rings.push(g); }
+    while (ui.rings.length > more.length) { const g = ui.rings.pop(); if (g.parentNode) g.parentNode.removeChild(g); }
+    more.forEach((m, i) => { const g = ui.rings[i], a = holes[i + 1]; g.style.left = a.l + 'px'; g.style.top = a.t + 'px'; g.style.width = a.w + 'px'; g.style.height = a.h + 'px'; g.style.borderRadius = rads[i] + 'px'; });
     card.classList.toggle('is-sheet', phone);
     if (phone) { card.style.left = card.style.top = card.style.width = ''; cardAt = null; return; }
     // the card on a computer: beside the box (the side with more room first), then below, then above, then a corner; never over the box when it can be helped
     const w = card.offsetWidth, h = card.offsetHeight, M = 14, G = 18;
     const at = cardAt;
-    if (!force && r && at && Math.abs(at[0] - hl) < 30 && Math.abs(at[1] - ht) < 30 && Math.abs(at[2] - hw) < 30 && Math.abs(at[3] - hh) < 30 && at[4] === w && at[5] === h && at[6] === vw && at[7] === vh && at[8] === dk) return;   // it drifted a little: the card stays where it is
-    cardAt = [hl, ht, hw, hh, w, h, vw, vh, dk];
+    if (!force && r && at && Math.abs(at[0] - hl) < 30 && Math.abs(at[1] - ht) < 30 && Math.abs(at[2] - hw) < 30 && Math.abs(at[3] - hh) < 30 && at[4] === w && at[5] === h && at[6] === vw && at[7] === vh && at[8] === dk && at[9] === mk) return;   // it drifted a little: the card stays where it is
+    cardAt = [hl, ht, hw, hh, w, h, vw, vh, dk, mk];
     let x, y;
     if (!r) { x = (vw - w) / 2; y = Math.max(M, (vh - h) / 2); }
     else {
-      const midY = clamp(ht + hh / 2 - h / 2, M, Math.max(M, vh - h - M)), midX = clamp(hl + hw / 2 - w / 2, M, Math.max(M, vw - w - M));
-      const right = [hl + hw + G, midY], left = [hl - G - w, midY], below = [midX, ht + hh + G], above = [midX, ht - G - h];
-      const opts = (hl + hw / 2 < vw / 2 ? [right, left, below, above] : [left, right, below, above]).concat([[vw - w - M, vh - h - M], [M, vh - h - M], [vw - w - M, M], [M, M]]);
+      const opts = [];
+      holes.forEach((a, k) => {   // beside, below, above each lit box (the lit part first; the side with more room first); not round a part named with "also" (a picture: the card cannot avoid it)
+        if (k && more[k - 1].also) return;
+        const midY = clamp(a.t + a.h / 2 - h / 2, M, Math.max(M, vh - h - M)), midX = clamp(a.l + a.w / 2 - w / 2, M, Math.max(M, vw - w - M));
+        const right = [a.l + a.w + G, midY], left = [a.l - G - w, midY], below = [midX, a.t + a.h + G], above = [midX, a.t - G - h];
+        opts.push(...(a.l + a.w / 2 < vw / 2 ? [right, left, below, above] : [left, right, below, above]));
+      });
+      opts.push([vw - w - M, vh - h - M], [M, vh - h - M], [vw - w - M, M], [M, M]);
       let best = null, bestScore = Infinity;
-      const keep = keepClear();
+      const keep = keepClear(more);
       opts.forEach((o) => {
         const out = Math.max(0, M - o[0]) + Math.max(0, o[0] + w - (vw - M)) + Math.max(0, M - o[1]) + Math.max(0, o[1] + h - (vh - M));   // how far it comes within the margin of the window's edge
         const cut = Math.max(0, -o[0]) + Math.max(0, o[0] + w - vw) + Math.max(0, -o[1]) + Math.max(0, o[1] + h - vh);   // how much of it the window cuts off
-        const ox = Math.max(0, Math.min(o[0] + w, hl + hw) - Math.max(o[0], hl)), oy = Math.max(0, Math.min(o[1] + h, ht + hh) - Math.max(o[1], ht));
+        let ov = 0;   // how much of the lit boxes this place would cover
+        holes.forEach((a, k) => { ov += (k && more[k - 1].also ? 0.1 : 1) * Math.max(0, Math.min(o[0] + w, a.l + a.w) - Math.max(o[0], a.l)) * Math.max(0, Math.min(o[1] + h, a.t + a.h) - Math.max(o[1], a.t)); });
         let hit = 0;   // how much of the buttons, fields, switches and headings of the lit box this place would cover, each by its weight
         keep.forEach((x) => { hit += x.k * Math.max(0, Math.min(o[0] + w, x.b.right) - Math.max(o[0], x.b.left)) * Math.max(0, Math.min(o[1] + h, x.b.bottom) - Math.max(o[1], x.b.top)); });
         const under = dr ? Math.max(0, Math.min(o[0] + w, dr.right) - Math.max(o[0], dr.left)) * Math.max(0, Math.min(o[1] + h, dr.bottom) - Math.max(o[1], dr.top)) : 0;   // how much of the dialog's box
-        const score = (cut > 0 ? 1e9 : 0) + out * 1000 + ox * oy + hit + under * 8;   // a place where the window cuts the card off loses to every place where it does not, however much of the lit box the card would then cover
+        const score = (cut > 0 ? 1e9 : 0) + out * 1000 + ov + hit + under * 8;   // a place where the window cuts the card off loses to every place where it does not, however much of the lit box the card would then cover
         if (score < bestScore) { best = o; bestScore = score; }
       });
       x = best[0]; y = best[1];
@@ -607,10 +680,10 @@
     const mine = $$('button:not([disabled])', ui.card).filter((b) => !b.hidden);
     if (!(view === 'step' && curStep && curStep.allowClicks !== false && curEl)) return mine;
     const sel = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
-    let more = $$(sel, curEl);
-    if (curEl.matches(sel)) more.unshift(curEl);
+    let more = [];
+    [curEl].concat(litMore(curEl.getBoundingClientRect()).map((m) => m.el)).forEach((host) => { more = more.concat($$(sel, host)); if (host.matches(sel)) more.unshift(host); });
     $$('[aria-controls][aria-expanded="true"]', curEl).forEach((c) => { const t = doc.getElementById(c.getAttribute('aria-controls')); if (t) more = more.concat($$(sel, t)); });
-    return mine.concat(more.filter(shown));
+    return mine.concat(more.filter((n, i) => more.indexOf(n) === i && shown(n)));
   };
   const onKey = (e) => {   // heard at the window, before the page's own handlers (a menu that takes Esc for itself)
     if (!ui) return;

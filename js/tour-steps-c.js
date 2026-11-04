@@ -11,8 +11,8 @@
  *   - Every change to the demo is made in before() of the step that SHOWS the result, so Back never answers a request. The after() of a card only clears away what was left on
  *     the screen, and never touches the store. Every card, when it is left, takes away the toasts (the small messages that fade by themselves) with the demo's own
  *     DemoUI.clearToasts(), so an old message does not sit on top of the next card. Seven cards also close a dialog the owner left open (the lit part of those cards has a
- *     button that opens one: Request a different day, Pick a new day, Start over, I also plan an event) with DemoUI.closeModals(). The five cards whose lit button is
- *     the point of the card also say allowClicks: true.
+ *     button that opens one: Request a different day, Pick a new day, Start over, I also plan an event) with DemoUI.closeModals(). No card says allowClicks: the lit part can be used,
+ *     a list that a lit button opens (the bell's) is lit too, and a dialog sits above the dimmer (js/tour.js, docs/TOUR.md), so the rest of the page stays locked while the card is up.
  *   - Every before() can run twice, or out of order (the owner goes Back): it looks at what the store holds now and only does what is missing.
  *     When a request is already past the stage a step needs, the sample family is made again (seedSample) or the pizza part is put back.
  *     A notice the store posts a second time (a day closed again, a request sent again) replaces the first one, so the bell does not grow while the owner goes back and forth.
@@ -321,7 +321,7 @@
    * ------------------------------------------------------------------ */
   var steps = [
     {
-      id: 'ch10-intro', order: CHAPTER * 100 + 1, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true, allowClicks: true,   // the lit Start over opens a dialog outside the strip
+      id: 'ch10-intro', order: CHAPTER * 100 + 1, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
       title: 'A pretend account',
       text: 'This part is a demo of accounts. Nothing in it is real: no server, no real families, and nothing is sent to anyone. This strip says so on every demo screen. The Start over button clears the demo.',
       after: closeDialogs
@@ -346,7 +346,7 @@
       before: scene(function () { visitIs('none'); }, hook('acct-paid'), 'visits')
     },
     {
-      id: 'ch10-request', order: CHAPTER * 100 + 5, chapter: CHAPTER, page: 'account', target: hook('acct-request-day'), skipIfMissing: true, allowClicks: true,   // the lit button opens a dialog
+      id: 'ch10-request', order: CHAPTER * 100 + 5, chapter: CHAPTER, page: 'account', target: hook('acct-request-day'), skipIfMissing: true,   // the lit button opens a dialog (it sits above the dimmer, so it can be used)
       title: 'Request a different day',
       text: 'A family can ask to move its visit. It picks one of the next open days and a sample time. Nothing changes until Mrs. Cathy says yes. Press Next and the tour sends a sample request.',
       before: scene(function () { visitIs('none'); }, hook('acct-request-day'), 'visits'),
@@ -359,7 +359,7 @@
       before: scene(function () { visitIs('waiting'); }, hook('acct-request-status'), 'visits')
     },
     {
-      id: 'ch10-desk-request', order: CHAPTER * 100 + 7, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-card') + '[data-req-kind="visit-change"]', skipIfMissing: true, allowClicks: true,
+      id: 'ch10-desk-request', order: CHAPTER * 100 + 7, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-card') + '[data-req-kind="visit-change"]', skipIfMissing: true,
       title: 'Your desk, with the request waiting',
       text: "This is your side. The request waits here with the family's name and note. Yes moves the visit, No keeps it, and Suggest offers another day. Try one, or press Next and the tour says Yes.",
       before: scene(function () { visitIs('waiting'); }, hook('desk-card') + '[data-req-kind="visit-change"]')
@@ -383,13 +383,13 @@
       before: scene(function () { pizzaIs('none'); }, hook('acct-pizza-edit'), 'pizza')
     },
     {
-      id: 'ch10-kitchen', order: CHAPTER * 100 + 11, chapter: CHAPTER, page: 'kitchen', target: hook('kit-card'), skipIfMissing: true, allowClicks: true,
+      id: 'ch10-kitchen', order: CHAPTER * 100 + 11, chapter: CHAPTER, page: 'kitchen', target: hook('kit-card'), skipIfMissing: true,
       title: 'The kitchen screen',
       text: "The kitchen sees the time before and after, and the family's allergy note. Yes accepts, No keeps the old time, Change it offers another. Try one, or press Next and the tour offers a later time.",
       before: scene(function () { pizzaIs('waiting'); }, hook('kit-card'), null, hook('kit-yes'))
     },
     {
-      id: 'ch10-family-ok', order: CHAPTER * 100 + 12, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true, allowClicks: true,
+      id: 'ch10-family-ok', order: CHAPTER * 100 + 12, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true,
       title: 'The family says OK',
       text: "The kitchen offered a time a little later than asked. The family sees the old and new time and can say OK, or 'No thanks, keep my order as it is'. Press Next and the tour says OK for you.",
       before: scene(function () { pizzaIs('suggested'); }, hook('acct-reply'), 'pizza')
@@ -402,7 +402,7 @@
       after: closeDialogs   // a family without an event sees "I also plan an event" here, which opens a dialog
     },
     {
-      id: 'ch10-alerts', order: CHAPTER * 100 + 14, chapter: CHAPTER, page: 'account', target: hook('acct-alerts'), skipIfMissing: true, allowClicks: true,
+      id: 'ch10-alerts', order: CHAPTER * 100 + 14, chapter: CHAPTER, page: 'account', target: hook('acct-alerts'), skipIfMissing: true,
       title: 'Tell me when',
       text: 'At the top, two switches say where messages go: text, email or both. The choices come below, in this order: a spot opens on a full day, then reservations open. After those come strawberries, blueberries and sunflowers, pumpkins and tomatoes, and Christmas trees.',
       before: scene(alertOn, hook('acct-alerts'), 'alerts')
@@ -414,7 +414,7 @@
       before: scene(alertOn, hook('desk-people'))
     },
     {
-      id: 'ch10-bell', order: CHAPTER * 100 + 16, chapter: CHAPTER, page: 'account', target: hook('acct-bell'), skipIfMissing: true, allowClicks: true,   // the bell opens its list outside its own box
+      id: 'ch10-bell', order: CHAPTER * 100 + 16, chapter: CHAPTER, page: 'account', target: hook('acct-bell'), skipIfMissing: true,   // the bell opens its list outside its own box: the list is lit with it (the bell says so in aria-controls and aria-expanded)
       title: 'The alert arrives',
       text: 'The tour sent the alert. The family sees it in the bell at the top. Replies, alerts and weather notices all land there, and each one links to the right screen.',
       before: scene(alertSent, hook('acct-bell'))
@@ -450,20 +450,20 @@
       before: scene(function () { if (account()) daysOpened(); }, hook('desk-weather'))
     },
     {
-      id: 'ch10-closed', order: CHAPTER * 100 + 23, chapter: CHAPTER, page: 'account', target: hook('acct-closed-banner'), skipIfMissing: true, allowClicks: true,   // the lit button opens a dialog
+      id: 'ch10-closed', order: CHAPTER * 100 + 23, chapter: CHAPTER, page: 'account', target: hook('acct-closed-banner'), skipIfMissing: true,   // the lit button opens a dialog (it sits above the dimmer, so it can be used)
       title: 'Every booked family sees it',
       text: 'The day is closed. The booked family now sees a banner with the reason, and a button to pick a new day. One tap starts a request to you.',
       before: scene(dayClosed, hook('acct-closed-banner'), 'visits'),
       after: closeDialogs
     },
     {
-      id: 'ch10-real-needs', order: CHAPTER * 100 + 24, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true, allowClicks: true,   // the lit Start over opens a dialog
+      id: 'ch10-real-needs', order: CHAPTER * 100 + 24, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
       title: 'What a real version needs',
       text: 'A real version would need:\n- a safe place for logins\n- a link to your booking tool\n- alerts to Mrs. Cathy and the kitchen\n- extra care with kids\' information\n- an updated privacy page',
       after: closeDialogs
     },
     {
-      id: 'ch10-worth-asking', order: CHAPTER * 100 + 25, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true, allowClicks: true,   // the lit Start over opens a dialog
+      id: 'ch10-worth-asking', order: CHAPTER * 100 + 25, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
       title: 'Worth asking your booking tool',
       text: 'Your booking tool (Bookeo) may already do part of this. Your FAQ says guests can click View Booking in their email to change a reservation. Ask what else it offers before building anything.',
       after: closeDialogs
