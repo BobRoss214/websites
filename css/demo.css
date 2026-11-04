@@ -40,6 +40,7 @@ html.wa-demo{scroll-padding-top:calc(var(--header-h) + 16px + var(--demo-bar-h,0
 .demo-auth-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:22px;margin-top:22px;align-items:start}
 .demo-form{display:grid;gap:14px}
 .demo-field{display:grid;gap:4px}
+.demo-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:14px;align-items:start}   /* the sign-up's name and email side by side when two columns of 14rem fit, one under the other when they do not */
 .demo-field label{font-weight:800}
 .demo-input{width:100%;min-height:44px;padding:.5em .8em;font:600 1.05rem/1.3 var(--body);color:var(--ink);background:#fff;border:2.5px solid var(--ink);border-radius:14px}
 textarea.demo-input{min-height:5.5em}

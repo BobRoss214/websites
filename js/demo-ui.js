@@ -6,6 +6,7 @@
  *   DemoUI.modal({ title, body, actions, wide, onClose })  a dialog: returns { el, body, actions, close }      DemoUI.confirm({ title, text, yes, no })  a Promise of true or false
  *   DemoUI.closeModals()                  closes every dialog that is open (the tour uses it when the owner goes on with a dialog still open); returns how many were open
  *   DemoUI.toast(text, { kind })          a short message that fades by itself (one place for the whole demo)
+ *   DemoUI.clearToasts()                  takes away every toast that is on the screen now (the tour uses it when it leaves a card); returns how many there were
  *   DemoUI.chip(text, kind)               a small status label (kind: wait, good, no, info, weather)         DemoUI.requestStatus(request)  { text, kind }
  *   DemoUI.choices({ name, legend, hint, options, value, onChange })  a question with big buttons, one chosen: { el, value(), set(v) }  (the sign-up question)
  *   DemoUI.download(name, text, type)     saves a file (the preview page saves files its own way)            DemoUI.addToCalendar(visit, order)
@@ -173,6 +174,13 @@
     setTimeout(function () { t.remove(); }, o.ms || 6000);
     return t;
   }
+  // clearToasts(): takes away every toast that is on the screen now, so an old message does not sit on top of the next tour card. It changes nothing else
+  // (not the store, not a dialog, not the page). A toast that is gone already is not counted. Returns how many toasts were there.
+  function clearToasts() {
+    var list = doc.querySelectorAll('[data-demo-toasts] .demo-toast'), i;
+    for (i = 0; i < list.length; i++) list[i].remove();
+    return list.length;
+  }
 
   /* ---------------------------------------------------------------- files */
   function download(name, text, type) {
@@ -187,6 +195,6 @@
   window.DemoUI = {
     h: h, icon: icon, clear: clear, focusables: focusables,
     dateLong: Data.dateLong, dateShort: Data.dateShort, weekdayName: Data.weekdayName, time12: Data.time12, money: Data.money, when: when, side: side,
-    chip: chip, choices: choices, requestStatus: requestStatus, modal: modal, closeModals: closeModals, confirm: confirmBox, toast: toast, download: download, addToCalendar: addToCalendar
+    chip: chip, choices: choices, requestStatus: requestStatus, modal: modal, closeModals: closeModals, confirm: confirmBox, toast: toast, clearToasts: clearToasts, download: download, addToCalendar: addToCalendar
   };
 })();

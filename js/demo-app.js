@@ -81,11 +81,14 @@
       options: Data.EVENT_KINDS.map(function (k) { return { value: k.key, label: k.label }; }),
       hint: ['Only a yes adds the My event tab. You can add an event later in My family. School trips: ', h('a', { href: vanessa.href }, vanessa.text)]
     });
+    // The name and the email sit side by side when the card is wide enough, and the question comes right after them (before the pretend password), so a computer screen
+    // shows the whole question without scrolling.
     var form = h('form', { novalidate: true, class: 'demo-form' },
-      field('demo-su-name', 'Your name', { type: 'text', name: 'name', autocomplete: 'name' }),
-      field('demo-su-email', 'Email', { type: 'email', name: 'email', autocomplete: 'email', inputmode: 'email' }),
-      field('demo-su-pass', 'Password (pretend)', { type: 'password', name: 'pass', autocomplete: 'off' }, 'Demo: any password works. It is not saved.'),
+      h('div', { class: 'demo-pair' },
+        field('demo-su-name', 'Your name', { type: 'text', name: 'name', autocomplete: 'name' }),
+        field('demo-su-email', 'Email', { type: 'email', name: 'email', autocomplete: 'email', inputmode: 'email' })),
       pick.el,
+      field('demo-su-pass', 'Password (pretend)', { type: 'password', name: 'pass', autocomplete: 'off' }, 'Demo: any password works. It is not saved.'),
       h('div', { class: 'demo-actions' },
         h('button', { type: 'submit', class: 'btn btn-red' }, 'Create account'),
         h('button', { type: 'button', class: 'demo-linkbtn', 'data-demo-fill': '' }, 'Fill in sample details')));
