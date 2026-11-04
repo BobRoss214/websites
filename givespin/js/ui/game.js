@@ -124,6 +124,7 @@
     amount = ui.amount.mount(root.querySelector('[data-role="amount"]'), function () { refreshBet(); });
     opts = ui.opts.mount(root.querySelector('[data-role="opts"]'));
     variantsPicker = ui.variants.mount(el.variantsBox, { onPick: setVariant });
+    if (ui.spotlight) { ui.spotlight.mountStrip($('#field-pick'), function (id) { if (current && !state().busy) { setPick(id); } }); }   // "Charity of the week: ..." (js/ui/spotlight.js)
     ui.filters.quickChips($('#quick-causes'), { max: 8 });
 
     el.filtersBtn.addEventListener('click', function () { ui.filters.open(); });
@@ -246,6 +247,7 @@
         title: 'Back a charity',
         sub: 'Pick the one you think will win. It goes on the board if it was not there already, which is what gives it a chance (with 8 spots, 1 in 8 instead of 1 in over a thousand); once it is there, every charity on the board has equal odds. If it wins you earn a bonus; either way your gift goes to whichever charity wins.',
         charities: inPlay,
+        note: function (c) { return ui.spotlight && ui.spotlight.isPick(c.id) ? 'Charity of the week, +' + ui.spotlight.XP + ' XP' : ''; },
         random: true,
         onPick: function (id) { setPick(id); }
       });
@@ -626,6 +628,7 @@
     el.pickHint.textContent = ch
       ? ch.short + ' is on the board. If it wins you earn bonus XP and the Called It badge. Your gift always goes to the winner.'
       : 'Optional: back one charity. If it wins you earn bonus XP; your gift always goes to the winner.';
+    if (ui.spotlight) { ui.spotlight.syncStrip(pid, activePool(current)); }
   }
 
   function refreshBet() {
@@ -741,13 +744,13 @@
       h = list.length ? '<ol class="histlist">' + list.map(function (x) {
         var nm = x.allocations.length === 1 ? (GS.charity(x.allocations[0].charityId) || { name: 'Unknown' }).name : x.allocations.length + ' charities';
         return '<li class="hist"><span class="hist__game">' + ui.icon(g.icon) + '</span><div><div class="hist__main">' + esc(nm) + '</div><div class="hist__sub">' + esc(ui.fmtWhen(x.ts)) + (x.rounds > 1 ? ' · ' + x.rounds + ' rounds' : '') + '</div></div><span class="hist__amt">' + money(x.totalCents, true) + '</span></li>';
-      }).join('') + '</ol>' : '<p class="empty">No rounds of ' + esc(g.name) + ' yet. Your results will show up here.</p>';
+      }).join('') + '</ol>' : '<p class="empty">No rounds of ' + esc(g.name) + ' yet. Deal yourself in and your results will show up here.</p>';
     } else if (tabState === 'about') {
       var vl = g.variants ? (g.variants.label || 'Track') : '';
       // how to use the picker, then what the game says about it (variants.about), or by default that it never changes the odds
       var vInfo = g.variants ? '<p><b>' + esc(vl) + ':</b> ' + esc('Pick a ' + vl.toLowerCase() + ' in the panel on the left, or choose Surprise me for a different one every round. ' + (g.variants.about || 'It changes how the race looks and plays out, never who can win: every charity on the board still has exactly the same chance, whichever ' + vl.toLowerCase() + ' you pick.')) + '</p>' : '';
       h = '<div class="about">' + g.info.map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('') + vInfo +
-        '<p><b>Odds:</b> ' + (g.setBoard ? 'every charity on the board has exactly the same chance (set how many are on it, from a few to ' + ui.num(g.maxSize || 100) + '). ' : 'every charity in play has exactly the same chance. ') + 'The result is drawn first, from a seed committed before you play, and the game then shows it.</p></div>';
+        '<p><b>Odds:</b> ' + (g.setBoard ? 'every charity on the board has exactly the same chance (set how many are on it, from a few to ' + ui.num(g.maxSize || 100) + '). ' : 'every charity in play has exactly the same chance. ') + 'The result is drawn first, from a seed committed before you play, and the game then shows it. House edge: 0%. The house is a charity.</p></div>';
     } else {
       var pool = activePool(current).slice().sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
       h = '<p class="tabnote">' + ui.num(pool.length) + (customOn(current) ? (pool.length === 1 ? ' charity in your custom list.' : ' charities in your custom list.') : (pool.length === 1 ? ' charity in play.' : ' charities in play.')) + ' Tap one to read about it.</p><div class="chips chips--pool">' + pool.map(function (c) {
@@ -1122,7 +1125,7 @@
   /** Sets up the last non-direct round again (same game, amount, split and frequency). */
   function repeatLast() {
     var h = store.get().history.filter(function (x) { return !x.direct && ORDER.indexOf(x.game) >= 0; })[0];
-    if (!h) { ui.toast('Play a round first, then you can repeat it.', 'info'); return false; }
+    if (!h) { ui.toast('Nothing to repeat yet. Play a round first and the dealer will remember it.', 'info'); return false; }
     var dollars = h.totalCents / 100;
     if (dollars >= cfg.minAmount && dollars <= cfg.maxAmount) { store.setPref('amount', dollars); }
     if (cfg.roundOptions.indexOf(h.rounds) >= 0) { store.setPref('rounds', h.rounds); }

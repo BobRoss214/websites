@@ -272,8 +272,8 @@
       '<div class="acctcard">' + ui.avatar(a, 52) + '<div><b>' + esc(a.name) + '</b><small>' + esc(accounts.maskContact(a.type, a.contact)) + ' · ' + (st.rank ? ui.standingLine(st) : 'Level ' + lv.level + ' ' + esc(lv.name)) + '</small></div></div>' +
       previewNotice() +
       '<section class="fgroup"><h3 class="fgroup__t">Saved card</h3>' + cardHTML + '</section>' +
-      '<section class="fgroup"><h3 class="fgroup__t">Monthly giving limit</h3>' +
-        '<p class="fgroup__h">Giving should feel good. Set a cap and games and direct gifts will stop when you reach it. You have given <b>' + money(spent, true) + '</b> this month' + (a.limitCents ? ' of ' + money(a.limitCents, true) : '') + '.</p>' +
+      '<section class="fgroup"><h3 class="fgroup__t">Responsible giving: monthly limit</h3>' +
+        '<p class="fgroup__h">Giving should feel good, and a limit keeps it that way. Set a cap and games and direct gifts will stop when you reach it. You have given <b>' + money(spent, true) + '</b> this month' + (a.limitCents ? ' of ' + money(a.limitCents, true) : '') + '.</p>' +
         '<div class="presets" role="group" aria-label="Monthly limit" data-role="limits">' +
           limitPresets().map(function (v) {
             var on = v === 0 ? !a.limitCents : a.limitCents === v * 100;
@@ -295,7 +295,7 @@
       store.setLimit(Number(b.getAttribute('data-limit')) * 100);
       GS.bus.emit('account');
       renderSettings();
-      ui.toast(b.getAttribute('data-limit') === '0' ? 'Limit removed.' : 'Monthly limit set to $' + b.getAttribute('data-limit') + '.', 'shield-check');
+      ui.toast(b.getAttribute('data-limit') === '0' ? 'Limit removed.' : 'Responsible giving: monthly limit set to $' + b.getAttribute('data-limit') + '.', 'shield-check');
     });
     m.$('[data-role="setlimit"]').addEventListener('click', function () {
       var inp = m.$('#lim-custom');
@@ -304,12 +304,13 @@
       store.setLimit(v * 100);
       GS.bus.emit('account');
       renderSettings();
-      ui.toast('Monthly limit set to $' + v + '.', 'shield-check');
+      ui.toast('Responsible giving: monthly limit set to $' + v + '.', 'shield-check');
     });
-    m.$('[data-role="signout"]').addEventListener('click', function () { accounts.signOut(); GS.bus.emit('account'); GS.bus.emit('prefs'); m.close(); ui.toast('Signed out.', 'log-out'); });
+    m.$('[data-role="signout"]').addEventListener('click', function () { accounts.signOut(); GS.bus.emit('account'); GS.bus.emit('prefs'); m.close(); ui.toast('Signed out. See you at the tables.', 'log-out'); });
     ui.armButton(m.$('[data-role="erase"]'), 'Tap again to erase everything', function () {
       ui.takeBackOpenStakes();
       store.eraseAll();
+      GS.local.clearAll();
       GS.bus.emit('account'); GS.bus.emit('prefs'); GS.bus.emit('balance'); GS.bus.emit('progress');
       GS.app.refreshPool();
       m.close();
@@ -331,7 +332,7 @@
     var short = need && !store.canAfford(need);
     m.set(
       '<h2 class="modal__title" id="dlg-credit-title">Add demo credit</h2>' +
-      '<p class="modal__sub">' + (short ? 'This gift is ' + money(need, false) + ' and you have ' + money(store.balance(), false) + '. Top up with free play-money to keep going.' : 'Free play-money for demo rounds. It is not real money and cannot be cashed out.') + '</p>' +
+      '<p class="modal__sub">' + (short ? 'This gift is ' + money(need, false) + ' and you have ' + money(store.balance(), false) + '. Top up with free play-money to keep going.' : 'Free play-money for demo rounds. It is not real money and never turns into any: it only goes one way, out, when you give it out.') + '</p>' +
       '<div class="creditnow"><span>' + ui.icon('coins') + 'Your balance</span><b>' + money(store.balance(), false) + '</b></div>' +
       '<div class="creditopts" data-role="opts">' + GS.config.creditTopUps.map(function (v) {
         return '<button type="button" class="creditbtn" data-add="' + v + '"><b>+$' + v.toLocaleString() + '</b><small>Free</small></button>';
@@ -365,14 +366,17 @@
   function menuHTML(a) {
     var lv = core.levelFor(store.get().xp);
     var st = ui.myStanding();
+    var who = ui.displayName() || a.name;   // the name chosen on the profile page, else the account's
+    var av = { hue: a.hue, name: who };
     // a ranked player's emblem sits on the corner of the avatar button, and the button's name says the rank
     var pin = st.rank ? '<span class="acct__rank" aria-hidden="true">' + ui.rankEmblem(st.rank, 22, { animated: false }) + '</span>' : '';
-    return '<button type="button" class="acct__btn' + (st.rank ? ' has-rank' : '') + '" data-role="toggle" aria-expanded="' + menuOpen + '" aria-controls="acct-menu" aria-label="Account menu for ' + esc(a.name) + (st.rank ? ', ' + esc(st.words) : '') + '">' + ui.avatar(a, 34) + pin + '</button>' +
+    return '<button type="button" class="acct__btn' + (st.rank ? ' has-rank' : '') + '" data-role="toggle" aria-expanded="' + menuOpen + '" aria-controls="acct-menu" aria-label="Account menu for ' + esc(who) + (st.rank ? ', ' + esc(st.words) : '') + '">' + ui.avatar(av, 34) + pin + '</button>' +
       '<div class="acct__menu" id="acct-menu"' + (menuOpen ? '' : ' hidden') + '>' +
-        '<div class="acct__who">' + ui.avatar(a, 40) + '<div><b>' + esc(a.name) + '</b><small>' + (st.rank ? ui.standingLine(st) : 'Level ' + lv.level + ' · ' + esc(lv.name)) + '</small></div></div>' +
+        '<div class="acct__who">' + ui.avatar(av, 40) + '<div><b>' + esc(who) + '</b><small>' + (st.rank ? ui.standingLine(st) : 'Level ' + lv.level + ' · ' + esc(lv.name)) + '</small></div></div>' +
+        '<a class="acct__item" href="#me">' + ui.icon('user-round') + 'My profile</a>' +
         '<a class="acct__item" href="#giving">' + ui.icon('hand-heart') + 'My Giving</a>' +
         '<a class="acct__item" href="#club">' + ui.icon('crown') + 'Giving Club</a>' +
-        '<button type="button" class="acct__item" data-role="settings">' + ui.icon('credit-card') + 'Card &amp; giving limit</button>' +
+        '<button type="button" class="acct__item" data-role="settings">' + ui.icon('credit-card') + 'Card &amp; responsible giving</button>' +
         '<button type="button" class="acct__item" data-role="out">' + ui.icon('log-out') + 'Sign out</button>' +
       '</div>';
   }
@@ -406,7 +410,7 @@
       if (e.target.closest('[data-role="signup"]')) { openAuth('signup'); return; }
       if (e.target.closest('[data-role="toggle"]')) { setMenu(!menuOpen); return; }
       if (e.target.closest('[data-role="settings"]')) { setMenu(false); openSettings(); return; }
-      if (e.target.closest('[data-role="out"]')) { setMenu(false); accounts.signOut(); GS.bus.emit('account'); GS.bus.emit('prefs'); ui.toast('Signed out.', 'log-out'); return; }
+      if (e.target.closest('[data-role="out"]')) { setMenu(false); accounts.signOut(); GS.bus.emit('account'); GS.bus.emit('prefs'); ui.toast('Signed out. See you at the tables.', 'log-out'); return; }
       if (e.target.closest('.acct__item')) { setMenu(false); }
     });
     document.addEventListener('click', function (e) { if (menuOpen && !e.target.closest('#acct')) { setMenu(false); } });

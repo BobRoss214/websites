@@ -31,7 +31,7 @@
     box.innerHTML =
       '<dl class="kv kv--fair">' +
         '<dt>The sealed envelope’s fingerprint <small>(called a hash: the game locked in a secret number before you play, and this is its fingerprint)</small></dt>' +
-        '<dd class="hashrow"><code class="mono" data-role="hash">' + (f.serverHash ? esc(f.serverHash) : 'Preparing…') + '</code><button type="button" class="iconbtn iconbtn--sm" data-role="copy" aria-label="Copy the fingerprint (hash)">' + ui.icon('copy') + '</button></dd>' +
+        '<dd class="hashrow"><code class="mono" data-role="hash">' + (f.serverHash ? esc(f.serverHash) : 'Sealing the envelope…') + '</code><button type="button" class="iconbtn iconbtn--sm" data-role="copy" aria-label="Copy the fingerprint (hash)">' + ui.icon('copy') + '</button></dd>' +
         '<dt><label for="seed-' + (box._n || 0) + '">Your own lucky number</label> <small>(called your seed: it is mixed into every pick so the game cannot steer the result. Change it any time)</small></dt>' +
         '<dd class="seedrow"><input class="input input--sm mono" id="seed-' + (box._n || 0) + '" data-role="seed" maxlength="40" autocomplete="off" spellcheck="false" value="' + esc(f.clientSeed) + '"><button type="button" class="btn btn--sm" data-role="newseed">' + ui.icon('refresh-cw') + 'New lucky number</button></dd>' +
         '<dt>Round number <small>(counts up by one each round, so every round is different)</small></dt><dd class="mono">' + f.nonce + '</dd>' +
@@ -92,7 +92,7 @@
     o = o || {};
     var list = store.get().history.filter(function (h) { return !o.fairOnly || (h.fair && h.fair.roundSeed); }).slice(0, o.limit || 10);
     if (!list.length) {
-      box.innerHTML = '<p class="empty">' + (o.fairOnly ? 'No verified-fair rounds yet. Play a game and it will appear here.' : 'Nothing here yet. <a href="#lobby">Play your first round</a> and it will show up.') + '</p>';
+      box.innerHTML = '<p class="empty">' + (o.fairOnly ? 'No verified-fair rounds yet. Play a game and it will appear here.' : 'No rounds yet. <a href="#lobby">Play your first round</a> and it will show up.') + '</p>';
       return;
     }
     box.innerHTML = '<ol class="histlist">' + list.map(function (h, i) {
@@ -167,7 +167,7 @@
         (ui.siteUrl(ch) ? '<a class="btn btn--sm btn--ghost" href="' + esc(ui.siteUrl(ch)) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(ch.name) + ' website (opens in a new tab)">Website ' + ui.icon('external-link') + '</a>' : '') +
         '<button type="button" class="btn btn--sm btn--ghost" data-give="' + ch.id + '">' + ui.icon('hand-heart') + 'Give again</button></div></li>';
     }).join('') + '</ul>'
-      : '<div class="emptycard">' + ui.icon('hand-heart') + '<h3>No gifts yet</h3><p>Every charity your games land on will be listed here, with its profile and a link to its website.</p><a class="btn btn--green" href="#game-wheel">' + ui.icon('play') + 'Play your first round</a></div>';
+      : '<div class="emptycard">' + ui.icon('hand-heart') + '<h3>No gifts yet</h3><p>The house is waiting, and the house is a charity. Every charity your games land on will be listed here, with its profile and a link to its website.</p><a class="btn btn--green" href="#game-wheel">' + ui.icon('play') + 'Play your first round</a></div>';
 
     var plans = s.plans.length ? '<ul class="plans">' + s.plans.map(function (p) {
       return '<li class="plan"><span class="plan__ico">' + ui.icon('calendar-days') + '</span><div><b>' + esc(p.label) + '</b><small>' + esc(ui.opts.freqLabel(p.freq)) + ' · ' + money(p.cents, true) + ' · next ' + esc(ui.fmtDate(p.next)) + '</small></div>' +
@@ -230,7 +230,7 @@
           '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + lv.pct + '" aria-label="Progress to next level"><i style="width:' + lv.pct + '%"></i></div>' +
           '<div class="lvl__meta">' + (lv.maxed ? 'Max level reached. ' + s.xp.toLocaleString() + ' XP in total.' : lv.into.toLocaleString() + ' / ' + lv.need.toLocaleString() + ' XP to ' + esc(lv.nextName)) + '</div>' +
           ui.rankui.goalHTML(st) +
-          '<p class="lvl__tip">10 XP for every $1 you give, whatever the game. Backing a winner, a jackpot, a finished card set and a hot hand add a little on top. <a href="#help-xp">What is XP?</a> At ' + core.fmtMoney(core.RANKS[0].at * 100, true) + ' given you earn a rank. <a href="#help-ranks">What are ranks?</a></p></div></div>';
+          '<p class="lvl__tip">10 XP for every $1 you give, whatever the game. Backing a winner, a Triple Threat, a finished card set and a hot hand add a little on top. <a href="#help-xp">What is XP?</a> At ' + core.fmtMoney(core.RANKS[0].at * 100, true) + ' given you earn a rank. <a href="#help-ranks">What are ranks?</a></p></div></div>';
 
     var badges = core.BADGES.map(function (b) {
       var on = !!s.badges[b.id];
@@ -238,7 +238,7 @@
         (on ? '<span class="badge__when">Unlocked ' + esc(ui.fmtDate(s.badges[b.id])) + '</span>' : '') + '</li>';
     }).join('');
 
-    root.innerHTML = pageHead('Giving Club', 'Every $1 you give earns 10 XP. Level up as you give, then earn a rank at ' + core.fmtMoney(core.RANKS[0].at * 100, true) + ' given. Keep your streak going, back winners for a hot hand and collect badges. Your level, rank and badges live on this device.') +
+    root.innerHTML = pageHead('Giving Club', 'Welcome to the VIP lounge. The only way in is giving. Every $1 you give earns 10 XP. Level up as you give, then earn a rank at ' + core.fmtMoney(core.RANKS[0].at * 100, true) + ' given. Keep your streak going, back winners for a hot hand and collect badges. Your level, rank and badges live on this device.', '<a class="btn btn--sm" href="#me">' + ui.icon('user-round') + 'My profile</a>') +
       '<div class="clubtop">' +
         card +
         '<div class="stats stats--2">' +
@@ -263,7 +263,7 @@
 
   function renderFair() {
     var root = $('#view-fair');
-    root.innerHTML = pageHead('Fair Play?', 'The honest question: <b>is the game rigged?</b> The result is fixed before the animation, and you can check it yourself. One honest limit: in this preview the secret is made on your own device, so this shows how a result is worked out, not an outside audit. Here is how it works in plain words.') +
+    root.innerHTML = pageHead('Fair Play?', 'The honest question: <b>is the game rigged?</b> The result is fixed before the animation, and you can check it yourself. One honest limit: in this preview the secret is made on your own device, so this shows how a result is worked out, not an outside audit. Here is how it works in plain words.') + ui.voice.houseStrip() +
 
       '<section class="sect panel panel--short" aria-labelledby="fp-short"><h2 class="sect__t" id="fp-short">The short version</h2>' +
         '<ul class="fplist">' +
@@ -320,7 +320,7 @@
 
   var FAQ = [
     ['help-tour', 'What is GiveSpin?', function (demo) {
-      return '<p>GiveSpin is a <strong>charity site with games on top</strong>. You pick an amount, play a game (a wheel, Plinko, roulette, a duck race and more), and the game picks which charity gets your gift. It is not a betting site: there is nothing for you to win and nothing to cash out, because the charity is always the winner.</p>' +
+      return '<p>GiveSpin is a <strong>charity site with games on top</strong>. You pick an amount, play a game (a wheel, Plinko, roulette, a duck race and more), and the game picks which charity gets your gift. It is not a betting site: nothing here pays you, so there is nothing for you to win. The house is a charity, so the charity always wins, and the only thing you can do is give out.</p>' +
         (demo ? '<p><strong>Right now it is all pretend.</strong> The credit is play money, nothing is charged, no donation is made, and the other players at live tables are simulated.</p>' : '') +
         '<p><button type="button" class="btn btn--sm" data-open-tour>Take the tour again</button></p>';
     }],
@@ -329,13 +329,19 @@
         ? '<p>Not yet. This site is in <strong>demo mode</strong>: you play with free demo credit, rounds are simulated from start to finish, nothing is charged and no donation is made. Every receipt is stamped DEMO so nobody is misled. The site owner can connect real checkout in <code>js/config.js</code> (see the README).</p>'
         : '<p>Yes. When a game picks a charity you finish your gift on a checkout page run by the donation platform. GiveSpin never sees or stores your card details.</p>';
     }],
+    ['help-money', 'How we make money: we do not.', function (demo) {
+      return demo
+        ? '<p><strong>We do not.</strong> GiveSpin is a play-money preview: demo credit is free, no real money moves and nobody is paid, so there is nothing to make money from. House edge: 0%. The house is a charity.</p>' +
+          '<p>If real giving is ever switched on (the README calls it “Going live”), each gift goes to the charity through the payment provider’s checkout page. GiveSpin never sees your card, never holds the money and adds no fee of its own. Any processing fee is set by the provider and shown before you pay.</p>'
+        : '<p><strong>We do not.</strong> When a game picks a charity you finish your gift on the checkout page run by the payment provider. GiveSpin never sees your card, never holds the money and adds no fee of its own. Any processing fee is set by the provider and shown before you pay. House edge: 0%. The house is a charity.</p>';
+    }],
     ['help-fair', 'How is the winner picked?', function () {
       return '<p>Think of a sealed envelope. Before you play, the game seals a secret number in an envelope and shows you its fingerprint (a long code called a hash). The winner is then worked out by scrambling that secret together with your own lucky number and the round number (a standard method called HMAC-SHA256), with careful maths so no charity is favoured. The animation just reveals a result that is already decided. Afterwards the secret is shown, so you can check it matches the fingerprint. <a href="#fair">Fair Play? explains it step by step, and lets you verify any round.</a></p>';
     }],
     ['help-live', 'How do live tables work? Are the other players real?', function (demo) {
       return '<p>A live table is a shared pot. Everyone at the table backs a charity with a stake (default $20). Every dollar is a ticket, so a charity with 30% of the pot wins 30% of the time. When bets close, one charity is drawn, the game plays out, and <strong>the whole pot goes to the winner, whether you backed it or not</strong>. Your own stake is allocated to the winner too, so it is as if your charity won.</p>' +
         '<p><strong>The other players are bots for now.</strong> They stand in for a real multiplayer table and their stakes are simulated, so every screen labels them. A real launch would run tables on a server. Live tables are demo-only: a pooled pot needs that server, and this site never touches real money.</p>' +
-        '<p>Some tables carry a <strong>sponsor match</strong> (a simulated sponsor adds to the winner’s pot), a rolling <strong>progressive jackpot</strong>, or a time-limited <strong>event</strong>. These are simulated too and are labelled on the table. A <em>last call</em> warns you before betting closes, a big stake asks you to confirm, and close finishes get a slow-motion photo finish. Turn the <strong>croupier voice</strong> on or off from the table.</p>' +
+        '<p>Some tables carry a <strong>sponsor match</strong> (a simulated sponsor adds to the winner’s pot), a rolling <strong>Triple Threat pot</strong>, or a time-limited <strong>event</strong>. These are simulated too and are labelled on the table. A <em>last call</em> warns you before betting closes, a big stake asks you to confirm, and close finishes get a slow-motion photo finish. Turn the <strong>croupier voice</strong> on or off from the table.</p>' +
         '<p><strong>Every live game has seven table sizes</strong> (5, 10, 25, 50, 100, 200 and 500 spots), like a lobby: on the <a href="#live">Live tables</a> page you tap a game (the same picture tiles as in the lobby), which opens that game’s own page of tables, and there you tap the size you want. Each table has its own pot. A spot is a slice on the wheel, a pocket in roulette, a runner or balloon in a race, a bin in Plinko, and so on. The charities players back go on the board; the remaining spots are filled in at random from our catalog so the board is always full. Only backed charities can win.</p>' +
         '<p>Your stake is refunded if you cancel before the table locks. The draw uses a seed committed before bets open and the frozen pot, so you can <a href="#fair">verify any live round</a> afterwards.</p>';
     }],
@@ -374,7 +380,7 @@
     ['help-xp', 'What is XP, and what does it do?', function (demo) {
       return '<p><strong>Every $1 you give earns 10 XP</strong>, in any game: a $5 gift is 50 XP, a $50 gift is 500 XP. XP is a receipt for giving, so it grows as you give.</p>' +
         '<p>It is not money. You cannot buy it on its own, you cannot lose it in a game, and it never turns back into money or anything worth money. It unlocks <a href="#club">levels</a> (the first step up is at 100 XP, about $10 given), the weekly <a href="#leagues">league</a> and its tiers, which open bigger live-table stakes, and collectible <a href="#cards">cards</a>. After level 10, at ' + core.fmtMoney(core.RANKS[0].at * 100, true) + ' given, you earn a <a href="#help-ranks">rank</a>.</p>' +
-        '<p>A few things add a little on top of the 10 per $1, always shown separately on your receipt: backing the charity that wins, a jackpot, a finished card set, a hot-hand streak and right side predictions.</p>' +
+        '<p>A few things add a little on top of the 10 per $1, always shown separately on your receipt: backing the charity that wins, a Triple Threat, a finished card set, a hot-hand streak and right side predictions.</p>' +
         (demo ? '<p>In demo mode the dollars are pretend, so the XP they earn is pretend too: it only lives in this browser.</p>' : '');
     }],
     ['help-ranks', 'What are ranks?', function (demo) {
@@ -396,16 +402,23 @@
     }],
     ['help-credit', 'What is demo credit?', function (demo) {
       if (!demo) { return '<p>Demo credit is free play-money that only exists in demo mode. In this version there is no play-money balance: you finish each gift on the charity’s checkout page.</p>'; }
-      return '<p>Free play-money so you can try every game. It goes down when you give and you can top it up any time with <strong>Add credit</strong>. It is not real money and cannot be cashed out.</p>';
+      return '<p>Free play-money so you can try every game. It goes down when you give and you can top it up any time with <strong>Add credit</strong>. It is not real money and never turns into any: it only goes one way, out, when you give it out.</p>';
     }],
     ['help-fees', 'Are there fees or tax receipts?', function () {
       return '<p>GiveSpin adds no fee of its own. Any processing fees are set by the checkout provider and shown before you pay. Tax receipts come from the charity or provider that processes the gift, not from GiveSpin, and demo receipts are not tax documents.</p>';
     }],
-    ['help-limit', 'Can I limit how much I give?', function () {
-      return '<p>Yes. When you are signed in, open <strong>Card &amp; giving limit</strong> from your account menu and set a monthly limit. Games and direct gifts stop when you reach it.</p>';
+    ['help-limit', 'Responsible giving: can I limit how much I give?', function () {
+      return '<p>Yes. Giving should feel good, so there is a monthly limit for you to set. When you are signed in, open <strong>Card &amp; responsible giving</strong> from your account menu and pick a limit. Games and direct gifts stop when you reach it, and you can change or remove it any time.</p>';
     }],
     ['help-stream', 'Can I use this on stream?', function (demo) {
       return '<p>That is what it is built for. Hit the TV button at the top for <strong>Stream Mode</strong> (or add <code>?stream=1</code> to the URL). It enlarges the game and hides everything else' + (demo ? ', except a one-line demo notice so viewers know it is play-money' : '') + '. Add <code>&amp;transparent=1</code> for a see-through background in an OBS browser source. The space bar plays.</p>';
+    }],
+    ['help-ticker', 'Who is in the ticker under the top bar?', function (demo) {
+      if (!demo) { return '<p>The ticker of simulated players is part of demo mode, so it is switched off in this version.</p>'; }
+      return '<p>Nobody real. The bar on the lobby and the Live tables pages shows <strong>Given today</strong> and a feed of recent gifts, and both come from <strong>simulated players</strong>: made-up bots, each marked <strong>BOT</strong>, giving made-up play-money. The total grows through the day, starts again at midnight and is the same on every page. Your own gifts are never counted in it. The Pause button stops it, and it stays still if your device asks for reduced motion.</p>';
+    }],
+    ['help-spotlight', 'What is the charity of the week?', function () {
+      return '<p>One charity in the spotlight each week, a new one every Monday. It is picked automatically by walking through the whole list in a fixed shuffled order, so every charity gets a turn before any comes round again: it is not a ranking and not an endorsement. Back it in the <strong>Back a charity</strong> step of a game and you earn ' + GS.weekly.SPOTLIGHT_XP + ' extra XP once a round, whether it wins or not. XP only, never money. See <a href="#spotlights">this week and the past spotlights</a>.</p>';
     }],
     ['help-data', 'About the charity information', function () {
       var unv = GS.charities.filter(function (c) { return c.unverified; }).length;
@@ -422,7 +435,7 @@
   function renderHelp() {
     var root = $('#view-help');
     var demo = GS.payments.mode() === 'demo';
-    root.innerHTML = pageHead('Help', 'How GiveSpin works, and answers to the questions people ask most.') +
+    root.innerHTML = pageHead('Help', 'How GiveSpin works, and answers to the questions people ask most.') + ui.voice.houseStrip() +
       '<ol class="steps3 steps3--4">' +
         '<li class="step3"><span class="step3__n">1</span><h2>Pick an amount</h2><p>Tap a preset or type your own. You can split one gift across several rounds.</p></li>' +
         '<li class="step3"><span class="step3__n">2</span><h2>Choose who can win</h2><p>Use Filters to pick causes, who they help, where they work and more. Or leave it open for a surprise.</p></li>' +

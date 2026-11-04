@@ -45,7 +45,7 @@
     if (d) {
       list.push({
         sel: '#balance', icon: 'coins', title: 'This is your demo credit',
-        body: 'You start with $1,000 of <b>pretend</b> credit. It goes down as you give, and you can add more any time with <b>Add credit</b>. It is play money: it is not real and it can never be cashed out.'
+        body: 'You start with $1,000 of <b>pretend</b> credit. It goes down as you give, and you can add more any time with <b>Add credit</b>. It is play money: free, not real, and it only goes one way, out, when you give it out.'
       });
     }
     list.push({
@@ -68,11 +68,11 @@
     });
     list.push({
       sel: '#acct', icon: 'user', title: 'Accounts are optional',
-      body: 'You do not need an account to play. If you want one, you can sign up, save a card for easy giving and set a monthly giving limit.' + (d ? ' For now this is a <b>preview</b>: nothing is sent anywhere and nothing real is stored.' : '')
+      body: 'You do not need an account to play. If you want one, you can sign up, save a card for easy giving and set a monthly limit under Responsible giving.' + (d ? ' For now this is a <b>preview</b>: nothing is sent anywhere and nothing real is stored.' : '')
     });
     list.push({
       sel: '.side__link[data-route="club"]', icon: 'crown', title: 'Levels, ranks, leagues and more',
-      body: 'Every $1 you give earns 10 XP, which levels you up and unlocks badges in the Giving Club. After level 10, at $1,000 given, you earn a <b>rank</b> with its own emblem next to your name (a receipt for giving, not money). There are weekly leagues, crews, collectible cards' + (d ? ' and a daily bonus wheel' : '') + '. It is all just for fun.'
+      body: 'Every $1 you give earns 10 XP, which levels you up and unlocks badges in the Giving Club, the VIP lounge. After level 10, at $1,000 given, you earn a <b>rank</b> with its own emblem next to your name (a receipt for giving, not money). There are weekly leagues, crews, collectible cards' + (d ? ' and a daily bonus wheel' : '') + '. It is all just for fun.'
     });
     list.push({ last: true });
     return list;
@@ -131,7 +131,7 @@
       (d ? '<p class="tour__fake" role="note">' + ui.icon('info') + '<span><b>First, the important bit: right now everything here is fake.</b> The credit is pretend, nothing is charged, no donation is made, and the other players are simulated.</span></p>' : '') +
       '<ul class="tour__points">' +
         '<li>' + ui.icon('hand-heart') + '<span><b>What it is.</b> You pick an amount and play a game (a wheel, Plinko, a duck race, slots and more). The game picks a real charity to receive your gift. Every round is a win for someone.</span></li>' +
-        '<li>' + ui.icon('shield-check') + '<span><b>What it is not.</b> It is not a betting site: there is nothing for you to win and nothing to cash out. The charity is the winner, never you.</span></li>' +
+        '<li>' + ui.icon('shield-check') + '<span><b>What it is not.</b> It is not a betting site: nothing here pays you, so there is nothing for you to win. House edge: 0%. The house is a charity, so the charity always wins.</span></li>' +
         '<li>' + ui.icon('sparkles') + '<span><b>Why games?</b> Because giving can be a bit more fun. Pick how many charities are on the board, back one to win, or choose exactly the causes you care about.</span></li>' +
         (d ? '' : '<li>' + ui.icon('lock') + '<span><b>Your money.</b> When a game picks a charity you finish your gift on that charity’s own checkout page. GiveSpin never sees your card.</span></li>') +
       '</ul>' +
@@ -141,7 +141,7 @@
 
   function lastHTML() {
     return '<div class="tour__hero"><span class="tour__logo">' + ui.icon('party-popper') + '</span><div><p class="tour__eyebrow">That is the tour</p><h2 class="tour__title" id="tour-title">Ready to give something?</h2></div></div>' +
-      '<p class="tour__body">Try a game with the credit you already have. Open <b>Help</b> any time for the full story, or <b>Fair Play?</b> to see how every result is drawn and how you can check it yourself.' + (demo() ? ' And remember: it is all pretend for now.' : '') + '</p>' +
+      '<p class="tour__body">Try a game with the credit you already have. Open <b>Help</b> any time for the full story (including how we make money: we do not), or <b>Fair Play?</b> to see how every result is drawn and how you can check it yourself.' + (demo() ? ' And remember: it is all pretend for now.' : '') + '</p>' +
       '<div class="tour__foot"><button type="button" class="btn btn--ghost" data-tour="back">Back</button><button type="button" class="btn btn--green" data-tour="finish" id="tour-primary">' + ui.icon('play') + 'Start playing</button></div>';
   }
 

@@ -1,4 +1,95 @@
 /* ==========================================================================
    Share cards and the fair-play showcase.
    Loaded before fit.css and walk.css, so the one-screen layout rules still win.
+   js/ui/sharecard.js (the share dialog) and js/ui/fairshow.js (the lobby block and the checker dialog).
    ========================================================================== */
+
+/* ------------------------------------------------------------------ the share dialog */
+dialog.modal--share { max-width: min(880px, calc(100vw - 20px)); }
+.sc { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.sc__preview { display: grid; place-items: center; min-height: 150px; padding: 8px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); }
+/* the picture keeps its shape: width and height are auto, the two maximums do the fitting (a phone leaves room for the buttons under it) */
+.sc__img { display: block; width: auto; height: auto; max-width: 100%; max-height: min(40dvh, 520px); border-radius: 10px; box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.9); }
+.sc__img[hidden], .sc__wait[hidden], .sc__hint[hidden] { display: none; }
+.sc__wait { padding: 36px 12px; text-align: center; color: var(--muted); font-size: 0.9rem; }
+.sc__preview[data-failed] .sc__wait { color: #ffb3bd; }
+.sc__ctl { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.sc__lbl { display: block; margin-bottom: 6px; font: 700 0.74rem var(--f-body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.sc .switchrow.sc__name { margin-top: 0; }
+.sc .switchrow input:disabled + .switch__ui { opacity: 0.55; }
+.sc .switchrow small a { white-space: nowrap; }
+.sc__shows { font-size: 0.8rem; color: var(--dim); }
+.sc__act { display: grid; gap: 8px; }
+.sc__act .btn { justify-content: center; }
+.sc__hint { padding: 10px 12px; border-radius: 10px; background: rgba(255, 197, 66, 0.09); border: 1px solid rgba(255, 197, 66, 0.3); color: #f8e1a6; font-size: 0.82rem; }
+@media (min-width: 720px) {
+  .sc { grid-template-columns: minmax(0, 1fr) 290px; }
+  /* beside the controls the picture can use the dialog's height; a short window keeps a usable size and the dialog scrolls */
+  .sc__img { max-height: max(300px, calc(100dvh - 200px)); }
+}
+/* a small phone held sideways: the picture and the buttons side by side, so the picture is not a thumbnail */
+@media (min-width: 480px) and (max-width: 719px) and (max-height: 520px) {
+  .sc { grid-template-columns: minmax(0, 1fr) minmax(220px, 250px); }
+  .sc__img { max-height: max(200px, calc(100dvh - 150px)); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sc__img { animation: sc-in 0.25s ease-out; }
+}
+@keyframes sc-in { from { opacity: 0; } }
+
+/* the result dialog's Verify shortcut and the live result's (js/ui/fairshow.js addShortcut) */
+.fs-jump { display: flex; justify-content: center; }
+.fs-jump .btn { gap: 6px; }
+
+/* ------------------------------------------------------------------ the lobby block */
+.fs { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px 18px; padding: 18px 20px; border-radius: var(--r-lg); border: 1px solid var(--line-2); background: linear-gradient(135deg, rgba(34, 240, 122, 0.1), rgba(53, 212, 255, 0.06) 60%, transparent), var(--panel); }
+.fs__ico { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: rgba(34, 240, 122, 0.14); color: var(--green); }
+.fs__ico .ico { width: 1.8rem; height: 1.8rem; }
+.fs__copy { display: grid; gap: 4px; min-width: 0; }
+.fs__eyebrow { font: 700 0.72rem var(--f-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); }
+.fs__t { font-size: clamp(1.1rem, 2.4vw, 1.4rem); }
+.fs__p { color: var(--muted); font-size: 0.88rem; max-width: 70ch; }
+.fs__note { color: #f8e1a6; font-size: 0.82rem; }
+.fs__act { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 8px; }
+@media (min-width: 900px) {
+  .fs { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .fs__act { grid-column: auto; margin-top: 0; flex-direction: column; align-items: stretch; gap: 8px; }
+  .fs__act .linkbtn { text-align: center; }
+}
+@media (max-width: 560px) {
+  .fs { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 14px 16px; }
+  .fs__ico { display: none; }
+  .fs__p { font-size: 0.82rem; }
+  .fs__act { margin-top: 6px; }
+}
+
+/* ------------------------------------------------------------------ the checker dialog */
+dialog.modal--fairdemo { max-width: min(720px, calc(100vw - 20px)); }
+.fsd__sample { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 14px; border-radius: 12px; border: 1px dashed rgba(255, 197, 66, 0.6); background: rgba(255, 197, 66, 0.08); color: #f8e1a6; font-size: 0.88rem; }
+.fsd__sample b { color: #fff; }
+.fsd__steps { display: grid; gap: 12px; }
+.fsd__step { display: grid; gap: 8px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg-2); }
+.fsd__h { display: flex; align-items: center; gap: 10px; font-size: 1.02rem; }
+.fsd__n { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; background: rgba(34, 240, 122, 0.16); color: var(--green); font: 800 0.85rem var(--f-display); }
+.fsd__step p { color: var(--muted); font-size: 0.88rem; }
+.fsd__hash, .fsd__secret { display: block; padding: 8px 10px; border-radius: 8px; background: #0b161f; border: 1px solid var(--line); font-size: 0.78rem; overflow-wrap: anywhere; }
+.fsd__lbl { font: 700 0.72rem var(--f-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.fsd__board { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.fsd__c { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); font-size: 0.84rem; }
+.fsd__c .fsd__idx { flex: none; width: 1.6em; color: var(--dim); font: 700 0.78rem var(--f-mono); }
+.fsd__c .fsd__nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fsd__c .fsd__tag { margin-left: auto; flex: none; padding: 1px 8px; border-radius: 999px; background: var(--green); color: var(--green-ink); font: 800 0.7rem var(--f-body); }
+.fsd__c.is-win { border-color: var(--green); background: rgba(34, 240, 122, 0.12); }
+.fsd__c.is-win .fsd__nm { color: #fff; font-weight: 700; }
+.fsd__act { display: flex; flex-wrap: wrap; gap: 8px; }
+.fsd__out { display: grid; gap: 8px; }
+.fsd__out:empty { display: none; }
+.fsd__checked { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+.fsd__checked mark { background: rgba(255, 90, 110, 0.35); color: #fff; padding: 0 2px; border-radius: 3px; }
+.fsd__point { font-size: 0.88rem; color: var(--text); }
+.fsd__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.fsd__off { display: grid; gap: 10px; }
+@media (max-width: 480px) {
+  .fsd__step { padding: 12px; }
+  .fsd__board { grid-template-columns: minmax(0, 1fr); }
+}

@@ -32,7 +32,7 @@
         var extra = opts.note ? opts.note(c) : '';
         return '<li><button type="button" class="pickitem" data-id="' + c.id + '" style="--c:' + c.accent + '">' + ui.mono(c, 32) +
           '<span class="pickitem__t"><b>' + esc(c.name) + '</b><small>' + esc(c.causes.map(function (x) { return GS.cause(x).name; }).slice(0, 2).join(' · ')) + (extra ? ' · ' + esc(extra) : '') + '</small></span></button></li>';
-      }).join('') : '<li class="empty">No charity matches “' + esc(q.value) + '”.</li>';
+      }).join('') : '<li class="empty">No charity at this table matches “' + esc(q.value) + '”.</li>';
     }
 
     function choose(id) {

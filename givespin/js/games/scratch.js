@@ -1,5 +1,5 @@
 /*
- * Scratch Card. Buy a card, scratch the silver foil with your finger or mouse, and find three matching charities.
+ * Scratch Card. Deal a card, scratch the silver foil with your finger or mouse, and find three matching charities.
  *
  * Fairness: the app draws the winner from the whole pool (see js/fair.js) before the card is printed. Three panels
  * hold the winner; the rest hold decoys (never three of the same, so a match is never ambiguous). Scratching
@@ -239,10 +239,10 @@
     minSize: 4,
     sizes: [{ n: 6, name: 'Classic' }, { n: 12, name: 'Big' }, { n: 24, name: 'Mega' }, { n: 48, name: 'Jumbo' }],
     defaultSize: 6,
-    tagline: 'Scratch the foil. Match three charities to win.',
-    cta: 'Buy a card',
+    tagline: 'Scratch the foil. Match three and that charity wins.',
+    cta: 'Deal a card',
     info: [
-      'Buy a card and scratch the silver foil with your finger or mouse. Find three panels showing the same charity and that charity gets your gift. Set the card to any number of panels, up to 48. Each panel opens once you have scratched about half of it.',
+      'Deal a card and scratch the silver foil with your finger or mouse. Find three panels showing the same charity and that charity gets your gift. Set the card to any number of panels, up to 48. Each panel opens once you have scratched about half of it.',
       'In a hurry, or using a keyboard? Press Tab to move between panels and Enter to reveal them, or tap Reveal all.'
     ],
 
@@ -253,7 +253,7 @@
           '<div class="scard" data-role="card"><div class="scard__head"><b>GIVING CARD</b><small>Match 3 charities to win</small></div>' +
             '<div class="scard__grid" data-role="grid"></div></div>' +
           '<p class="scratch__prompt" data-role="prompt" aria-live="polite"></p>' +
-          '<div class="scratch__act"><button type="button" class="gbtn" data-role="buy">' + GS.icon('ticket') + '<span>Buy card</span></button>' +
+          '<div class="scratch__act"><button type="button" class="gbtn" data-role="buy">' + GS.icon('ticket') + '<span>Deal card</span></button>' +
           '<button type="button" class="gbtn gbtn--ghost" data-role="reveal" hidden>' + GS.icon('eraser') + '<span>Reveal all</span></button></div>' +
         '</div>' +
         '<p class="game-note" data-role="note"></p>';
@@ -265,7 +265,7 @@
       el.note = container.querySelector('[data-role="note"]');
       el.buy.addEventListener('click', function () { if (!locked) { api.requestPlay(); } });
       buildPanels(size);
-      el.prompt.textContent = 'Buy a card to start scratching.';
+      el.prompt.textContent = 'Deal a card to start scratching.';
       U.observeSize(el.card, function () { if (state !== 'playing') { layout(); } });
     },
 
@@ -279,15 +279,15 @@
       updateNote();
       // the receipt has just closed: the finished card stays up (its panels can be pressed to read about their charities) until the next card is bought
       if (o && o.afterRound && state === 'done') {
-        el.prompt.textContent = 'Three of a kind: ' + (result ? result.name : '') + '! Press a panel to read about its charity, or buy another card.';
+        el.prompt.textContent = 'Three of a kind: ' + (result ? result.name : '') + '! Press a panel to read about its charity, or deal another card.';
         return;
       }
-      if (state !== 'playing') { state = 'idle'; buildPanels(size); layout(); el.card.classList.remove('is-live'); el.prompt.textContent = pool.length ? 'Buy a card to start scratching.' : ''; }
+      if (state !== 'playing') { state = 'idle'; buildPanels(size); layout(); el.card.classList.remove('is-live'); el.prompt.textContent = pool.length ? 'Deal a card to start scratching.' : ''; }
     },
     setPool: function (list) {
       pool = list.slice();
       updateNote();
-      if (state !== 'playing') { state = 'idle'; buildPanels(size); layout(); el.card.classList.remove('is-live'); el.prompt.textContent = pool.length ? 'Buy a card to start scratching.' : ''; }
+      if (state !== 'playing') { state = 'idle'; buildPanels(size); layout(); el.card.classList.remove('is-live'); el.prompt.textContent = pool.length ? 'Deal a card to start scratching.' : ''; }
     },
 
     activate: function () { active = true; if (state !== 'playing') { layout(); } },

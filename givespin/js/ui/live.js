@@ -226,10 +226,10 @@
       return '<li class="hist hist--ch">' + ui.siteMark(ch, 34) + '<div><div class="hist__main">' + ui.siteName(ch, 'hist__name') + ' took the pot</div>' +
         '<div class="hist__sub">' + esc(GS.live.room(x.id).title()) + ' · round ' + x.h.round + ' · ' + ui.num(x.h.players) + ' players' + botNote(x.h) + '</div></div>' +
         ui.aboutBtn(ch) + '<span class="hist__amt">' + dollars(x.h.pot) + '</span></li>';
-    }).join('') + '</ol>' : '<p class="empty">Finished pots will show up here as tables settle. Each one went to a single charity.</p>';
+    }).join('') + '</ol>' : '<p class="empty">No finished pots yet. They show up here as tables settle, and each one goes to a single charity.</p>';
   }
 
-  /** The featured event and the progressive jackpot meter (both simulated). */
+  /** The featured event and the Triple Threat pot meter (the rolling jackpot; both simulated). */
   function renderEventBar() {
     var box = $('[data-role="evbar"]', $('#view-live'));
     if (!box) { return; }
@@ -237,8 +237,8 @@
     var jp = GS.live.jackpot();
     var pct = Math.min(100, Math.round(jp / GS.live.JACKPOT_AT * 100));
     var html = (ev ? '<div class="evcard">' + ui.icon('sparkles') + '<div><b>' + esc(ev.name) + '</b><span>' + esc(ev.desc) + '</span></div></div>' : '') +
-      '<div class="jpmeter"><div class="jpmeter__t">' + ui.icon('gem') + '<b>Progressive jackpot</b> <span class="jpmeter__v">' + dollars(jp) + '</span> <small>simulated</small></div>' +
-      '<div class="jpmeter__bar" role="img" aria-label="Jackpot is ' + pct + '% of the way to dropping"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="jpmeter"><div class="jpmeter__t">' + ui.icon('gem') + '<b>Triple Threat pot</b> <span class="jpmeter__v">' + dollars(jp) + '</span> <small>simulated</small></div>' +
+      '<div class="jpmeter__bar" role="img" aria-label="The Triple Threat pot is ' + pct + '% of the way to dropping"><i style="width:' + pct + '%"></i></div>' +
       '<small>It grows with every pot and drops at the next table to open once it passes ' + dollars(GS.live.JACKPOT_AT) + '.</small></div>';
     if (box.getAttribute('data-sig') !== html) { box.setAttribute('data-sig', html); box.innerHTML = html; }
   }
@@ -463,7 +463,7 @@
     var chips = [];
     if (room.event) { chips.push('<span class="chip-ev chip-ev--event">' + ui.icon('sparkles') + esc(room.event.name) + '</span>'); }
     if (room.match) { chips.push('<span class="chip-ev chip-ev--match" title="The sponsor is simulated">' + ui.icon('hand-coins') + 'Match +' + Math.round(room.match.ratio * 100) + '% up to ' + dollars(room.match.cap) + ' <small>simulated sponsor</small></span>'); }
-    if (room.jackpot) { chips.push('<span class="chip-ev chip-ev--jackpot">' + ui.icon('gem') + 'Jackpot drops here: +' + dollars(room.jackpot) + ' <small>simulated</small></span>'); }
+    if (room.jackpot) { chips.push('<span class="chip-ev chip-ev--jackpot">' + ui.icon('gem') + 'Triple Threat pot drops here: +' + dollars(room.jackpot) + ' <small>simulated</small></span>'); }
     var tier = core.tierFor(core.levelFor(store.get().xp).level).tier;
     if (tier.vip.length) { chips.push('<span class="chip-ev chip-ev--vip">' + ui.icon('crown') + tier.name + ' VIP stakes</span>'); }
     var hot = store.hot();
@@ -716,7 +716,7 @@
     }
     var bonusBits = [];
     if (r.bonus.match) { bonusBits.push(esc(r.bonus.matchWhy) + ' matched ' + dollars(r.bonus.match) + ' (simulated)'); }
-    if (r.bonus.jackpot) { bonusBits.push('the progressive jackpot added ' + dollars(r.bonus.jackpot) + ' (simulated)'); }
+    if (r.bonus.jackpot) { bonusBits.push('the Triple Threat pot added ' + dollars(r.bonus.jackpot) + ' (simulated)'); }
     var f = r.fair;
     var fairBits = f
       ? '<details class="rs-fair"><summary>' + ui.icon('shield-check') + 'Fair play details</summary><dl class="kv">' +
@@ -737,6 +737,7 @@
         '<p class="lt-res__sim">' + (you ? 'Your ' + dollars(you.dollars) + ' is demo credit. The other ' + dollars(Math.max(0, r.pot - you.dollars)) + ' came from simulated bots' : 'The whole ' + dollars(r.pot) + ' came from simulated bots') + (bonusBits.length ? ', and ' + bonusBits.join(' and ') : '') + '.</p>' +
         '<div class="lt-res__site">' + ui.siteMark(winner, 40) + '<div class="lt-res__site-in">' + ui.siteName(winner, 'lt-res__name') + ui.aboutBtn(winner) + '</div></div>' + fairBits + '</div>';
     ui.hydrate(el.result);
+    if (ui.fairshow) { ui.fairshow.addShortcut(el.result, '.lt-res__t'); }   // a "Verify" shortcut that opens the fair play details
     var vb = $('[data-role="verify"]', el.result);
     if (vb) {
       vb.addEventListener('click', function () {
@@ -1006,7 +1007,7 @@
     if (room.phase === 'open') {
       verifyOut = '';
       if (!animating[cur.id]) { setFieldNow(); }
-      if (room.jackpot && sirenRound[room.id] !== room.round) { sirenRound[room.id] = room.round; GS.audio.siren(); GS.audio.say('Jackpot table'); ui.toast('Jackpot drops at this table: +' + dollars(room.jackpot) + ' (simulated)', 'gem'); }
+      if (room.jackpot && sirenRound[room.id] !== room.round) { sirenRound[room.id] = room.round; GS.audio.siren(); GS.audio.say('Triple Threat table'); ui.toast('Triple Threat pot drops at this table: +' + dollars(room.jackpot) + ' (simulated)', 'gem'); }
       else { GS.audio.say('Place your bets'); }
     }
     else if (room.phase === 'locked') { setFieldNow(); GS.audio.say('No more bets'); ui.announce('Bets are closed. Drawing the winner from a pot of ' + dollars(room.pot()) + '.'); }
@@ -1092,8 +1093,8 @@
 
   function renderFeed() {
     var room = cur.room;
-    if (!room.feed.length) { return '<p class="empty">Nothing yet. Bets will show up here as they come in.</p>'; }
-    var sig = room.id + ':' + room.round + ':' + ui.myStanding().label + ':' + JSON.stringify(room.feed.slice(0, 24));
+    if (!room.feed.length) { return '<p class="empty">A quiet table. Bets will show up here as they come in.</p>'; }
+    var sig = room.id + ':' + room.round + ':' + ui.myStanding().label + ':' + ui.chosenName() + ':' + JSON.stringify(room.feed.slice(0, 24));
     if (feedMemo.sig === sig) { return feedMemo.html; }
     var html = feedHTML(room);
     feedMemo = { sig: sig, html: html };
@@ -1104,10 +1105,10 @@
     return '<p class="tabnote">Newest first. Every player marked ' + botTag() + ' is a simulated bot.</p><ol class="feed" tabindex="0" aria-label="Live feed, newest first">' + room.feed.slice(0, 24).map(function (n) {
       var ch = GS.charity(n.charityId || n.winnerId);
       if (n.kind === 'join' || n.kind === 'cancel') {
-        var who = n.who === 'you' ? '<b>You</b> ' + ui.youChip() : '<b>' + esc(n.name) + '</b> ' + ui.botChip(n.name) + botTag();
+        var who = n.who === 'you' ? '<b>' + esc(ui.chosenName() || 'You') + '</b> ' + ui.youChip() : '<b>' + ui.botName(n.name) + '</b> ' + ui.botChip(n.name) + botTag();
         return '<li class="feed__row' + (n.who === 'you' ? ' is-you' : '') + '">' + who + (n.kind === 'cancel' ? ' took back ' : ' put ') + '<b>' + dollars(n.dollars) + '</b>' + (n.kind === 'cancel' ? ' from ' : ' on ') + '<span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span></li>';
       }
-      if (n.kind === 'crew') { return '<li class="feed__row feed__row--crew">' + ui.icon('users') + '<b>' + esc(n.name) + '</b> ' + botTag() + ' crewmates ' + n.members.map(function (m) { return esc(m) + ' ' + ui.botChip(m); }).join(', ') + ' put <b>' + dollars(n.dollars) + '</b> on <span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span> with you</li>'; }
+      if (n.kind === 'crew') { return '<li class="feed__row feed__row--crew">' + ui.icon('users') + '<b>' + esc(n.name) + '</b> ' + botTag() + ' crewmates ' + n.members.map(function (m) { return ui.botName(m) + ' ' + ui.botChip(m); }).join(', ') + ' put <b>' + dollars(n.dollars) + '</b> on <span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span> with you</li>'; }
       if (n.kind === 'chat') { return '<li class="feed__row feed__row--crew">' + ui.icon('radio') + '<b>Chat</b> ' + botTag() + ' voted for <span class="feed__ch" style="--c:' + ch.accent + '">' + esc(ch.short) + '</span> (' + n.votes + ' votes) and put <b>' + dollars(n.dollars) + '</b> on it</li>'; }
       if (n.kind === 'lock') { return '<li class="feed__row feed__row--sys">Bets closed. The pot is <b>' + dollars(n.pot) + '</b>. Drawing the winner…</li>'; }
       return '<li class="feed__row feed__row--sys">' + esc(ch.name) + ' wins the <b>' + dollars(n.pot) + '</b> pot.</li>';
@@ -1116,7 +1117,7 @@
 
   function renderLast() {
     var room = cur.room;
-    if (!room.history.length) { return '<p class="empty">No finished rounds at this table yet.</p>'; }
+    if (!room.history.length) { return '<p class="empty">No finished rounds at this table yet. The dealer is warming up.</p>'; }
     return '<ol class="histlist">' + room.history.map(function (h) {
       var ch = GS.charity(h.winnerId);
       return '<li class="hist hist--ch">' + ui.siteMark(ch, 34) + '<div><div class="hist__main">' + ui.siteName(ch, 'hist__name') + '</div><div class="hist__sub">Round ' + h.round + (h.map ? ' · ' + esc(h.map.name) : '') + ' · ' + ui.num(h.players) + ' players' +

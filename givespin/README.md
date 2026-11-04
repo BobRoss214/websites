@@ -169,7 +169,7 @@ browser (`localStorage`) and resettable.
 **XP is a receipt for giving: every $1 given earns 10 XP**, in any game, with no cap and nothing extra for splitting a gift
 (`xpForGift` in `js/core.js`). It cannot be bought on its own, cannot be lost in a game and never turns back into money or
 anything with a cash value; it unlocks levels, the weekly league and its tiers, and cards. Bonuses are added on top and the
-receipt shows them separately from the gift's XP: backing the winning charity, a jackpot, a finished card set, a hot hand
+receipt shows them separately from the gift's XP: backing the winning charity, a Triple Threat, a finished card set, a hot hand
 and right side predictions. The levels sit on round giving milestones (level 2 at 100 XP, about $10 given; level 10 at
 9,000 XP, about $900). In demo mode the dollars are pretend, so the XP is too.
 
@@ -191,6 +191,23 @@ made-up rank that never changes (about 55% have none, then fewer and fewer at ea
 given Luminary and Immortal by name so the top emblems are seen now and then), next to its BOT tag. The emblems
 are drawn by `js/ranks.js` and `css/ranks.css`, the screens are `js/ui/rankui.js` and `css/rankui.css`.
 
+**My profile (`#me`).** The visitor's own page, reached from the level card in the side nav, from "My profile" in the account menu and from a button on the
+Giving Club page (the Giving Club itself stays in the nav, and the profile links to it). A big rank emblem (the ring of ten levels round it, or a level medal before the first
+rank) sits inside the **emblem frame** they chose, with their name, their **title**, "Rank 2 · Level 6" and the bar to the next level. Under it: total given, streak and
+best streak, rounds and charities, the **favourite causes and favourite charities** (the three each with the most rounds, worked out from the saved rounds, which is the latest 60), the
+cards held and monthly sets finished, all 24 badges (the locked ones dimmed, each with how to earn it), the last eight gifts, and a **Share my profile** button that
+only appears when the share cards are built (`ui.sharecard.openProfile`). "Make it yours" holds the **display name** (1 to 20 characters: letters, numbers, spaces and
+simple punctuation, no links, no `<` or `>`, and nothing from a small block-list of rude words) and the pickers for frame and title. There are eight frames (plain, laurel, flame, halo,
+stars, hexagon, diamond, sunburst; CSS and SVG only, still when the visitor prefers reduced motion) and eight titles; every one is listed with a plain "how to unlock" line
+and is open only when the saved game says so (the total given, a streak, a rank, badges, cards or a finished card set), so a locked one is never hidden. The name, frame and
+title live under `GS.local` 'profile' (never in the main save), are only shown on this device and on the cards the visitor shares, and are erased with "Erase my data". Where the
+visitor's own name is shown (the account button and menu, the league's "(you)" row) it is `ui.displayName()`: the name chosen here, else the signed-in account's, else nothing;
+the "You" of a live table's feed and of a crew's chat only changes once a name has been chosen. A later feature adds frames and titles with `GS.profileFrames.add({ id, name,
+description, how, unlocked(facts, save) })` and `GS.profileTitles.add(...)`. **Simulated players have profiles too:** a bot's name at a live table, in the league and in a crew is a
+button (`ui.botName(name)`), and it opens a read-only dialog (`ui.profile.openBot(name)`) with the bot's emblem and "Rank X · Level Y" and the line **BOT: a simulated player.
+Everything here is made up.**, plus a made-up title, favourite cause, favourite game, habit and "pretend streak" worked out from the name alone. The rules are in `js/profile.js`, the
+page in `js/ui/profile.js` and `css/profile.css`.
+
 **Leagues, crews and cards.** All play, no cash value, and everything with other people is simulated and labelled.
 - **Leagues.** A weekly XP table against 14 simulated rivals (the same table for everyone that week), with promotion
   and relegation zones, and **tiers** from Bronze to Diamond by level. Gold, Platinum and Diamond unlock VIP stakes
@@ -204,9 +221,29 @@ are drawn by `js/ranks.js` and `css/ranks.css`, the screens are `js/ui/rankui.js
 - **Streaks.** Back winners on the trot to build a **hot hand**: a carried streak multiplies your XP gains (up to
   x1.5). A **daily wheel** gives one free spin a day for $5 to $100 of demo credit (demo mode only).
 
+**The voice.** The whole site speaks one voice: a casino, but it is for charity. "House edge: 0%. The house is a charity." is on the lobby, Fair Play and Help;
+the jackpot is a **Triple Threat**; the Giving Club is the **VIP lounge**; the monthly giving limit lives in **Responsible giving**; money only ever goes
+**out** ("give out", never "cash out"); loading lines and empty states have a little personality; and Help has the honest answer to **"How we make money: we do not."**
+The style guide, with the vocabulary and example lines, is `docs/voice.md`; it is parody only, never mean, and never implies real money.
+
+**The ticker and the charity of the week.** A slim bar under the top bar, on the lobby and the Live tables pages only, shows **Given today** and a
+feed of recent gifts ("LuckyLark gave $25 to WaterAid", each bot with its rank chip and a BOT tag). All of it comes from **simulated players**, says so
+on the bar, in its tooltip and in Help, and never includes your own gifts. The numbers are a pure function of the clock (`js/ticker.js`): the total starts at $0
+at local midnight, only grows through the day and is the same on every page and reload, and no line repeats within a few minutes. The bar has one fixed height,
+is not a live region (screen readers are never told about each new line), has a Pause button, starts paused and still with reduced motion, and is hidden in
+Stream Mode, on every game screen and live table (they keep the one-screen rule) and in short windows (up to 520 px tall, or up to 600 px tall and wider than tall).
+**Charity of the week** puts one charity in the spotlight each Monday (the lobby, the `#spotlights` page with the last twelve weeks, and a one-line strip in the
+"Back a charity" field of a solo game). The charity comes from walking the whole roster in one seeded order, so none comes round again before every other
+has had a turn, and the past weeks are recomputed, never stored (`js/weekly.js`). Its two sentences are built only from the roster's own entry for it. Backing it in a
+game earns a flat 25 XP once a round, win or lose (XP only, never money), shown in the receipt's XP card. Live tables do not have this bonus.
+
 **Fair Play?** is the page that answers "is it rigged?" in plain language: a short version, a sealed-envelope explanation
 of commit, draw and reveal, a glossary, a button that re-checks any past round, and (for the technically curious) a snippet
 you can run yourself. See [How the games stay fair](#how-the-games-stay-fair) for the details.
+
+**Share your gift.** After a round the receipt's **Share your gift** button opens a dialog with a picture drawn on a canvas (`js/ui/sharecard.js`; the words and the rules are in `js/share.js`): the rank emblem in its level ring and "Rank 2 · Level 6" (the XP level, drawn the same way, before the first rank), the amount, the game, the charity's logo or illustrated emblem and name, and the receipt id with a small **Verify this round** line (the first 8 characters of the round's fingerprint, the hash that was shown before the draw, plus the receipt id, and "Check it at Fair Play"; in the demo it also says the secret is made on your own device). A direct gift, or a browser without the hashing API, has no verify line: a card never claims a check it cannot back up. The dialog previews the picture as an image with a real alt text, with a clear **Portrait (1080 x 1350) / Square (1080 x 1080)** toggle (remembered). A big win gets a fancier frame (a gold border with a glow, marquee bulbs and confetti dots, all drawn in code): a Triple Threat, a rank-up, a backed charity that won, or a gift of $100 or more (`bigWin` in `js/share.js`); everything else gets the plain frame. The actions are **Download PNG**, **Share** (the Web Share sheet with the picture as a file where the browser allows it, otherwise the text and the address; the button only shows where Web Share exists) and **Copy link and text**. Pages shown inside another page (a preview) may block downloads without telling anyone, so after Download a small hint says how to save the picture by hand (press and hold it, or right-click). Privacy: the card holds only the rank and level, the gift, the game, the charity, the receipt id and 8 characters of the public fingerprint, plus the display name if, and only if, the visitor switches **Show my name on the card** on (it starts off, it cannot be turned on without a chosen name, it is remembered on this device under `GS.local` "share", an email address is never used as a name). Never the balance, an email, a phone number, a card, or the secret number. The same dialog is the **profile card** (`ui.sharecard.openProfile()`, called from the profile page's Share my profile button): the big emblem, the name if allowed, the standing, the total given, the charity given to most and the streak, worked out from the saved history so old saves work.
+
+**Fair play as a selling point.** A lobby block below the welcome promos (`js/ui/fairshow.js`, `ui.lobby.addBlock` id `fair`, order 30) says every round can be checked and has a **Try the checker** button. It opens a checker that runs a **sample round, clearly labelled as not one of yours**, with the real `GS.fair` code in three plain steps: **Sealed first** (the fingerprint of a fresh secret), **Drawn** (the secret is revealed and the draw maths picks a winner from 8 real roster charities) and **Check it yourself** (hash the secret again and redo the pick: three ticks; **Tamper with it** changes one character of the secret and the check fails, so the point is seen). Where the browser cannot run the hashing (it needs a secure page) the block and the checker say honestly that it is not available here. Every receipt (and every live table result) with fair-play details also has a **Verify** button that opens them and scrolls them into view. The wording stays honest: in this build the secret is made on the visitor's own device, so it shows how a draw is worked out and is not an outside audit; the Fair Play page explains.
 
 **Optional account (preview).** Sign up with an email or a phone number and a password (strength meter, a
 verify-code step, a display name), log in, save a card for easy giving, set a monthly giving limit. All of it is a
@@ -314,9 +351,9 @@ table locks, and refunded if you close the page before the round settles.
 **Extras at the table.** All simulated, all labelled:
 - **Sponsor match.** About one table in seven has a simulated sponsor who adds 50% of the pot (up to $100) to what the
   winner receives. The result shows the stakes, the match and who the sponsor was as separate lines.
-- **Progressive jackpot.** Every settled pot adds 5% to a simulated jackpot. Once it passes $1,500 it drops at the next
+- **Triple Threat pot** (the progressive jackpot, called `jackpot` in the code). Every settled pot adds 5% to a simulated pot. Once it passes $1,500 it drops at the next
   table, goes to that table's winner on top of the pot, and starts again. A siren sounds when it lands.
-- **Events.** Featured events run off the clock (they come from `eventAt()` in `js/live.js`): Giving Tuesday Jackpot
+- **Events.** Featured events run off the clock (they come from `eventAt()` in `js/live.js`): Giving Tuesday Match
   (all day Tuesday; a simulated sponsor matches the pot dollar for dollar up to $250), Disaster Relief Night (from 6 pm;
   disaster-relief and health charities only, 50% matched up to $150) and a Double Pot Hour in the first quarter of every
   hour (dollar for dollar up to $200).
@@ -404,12 +441,14 @@ browser's random generator and the site makes no verifiability claim.
 | Level names, XP, badges, tiers, card rarity | `LEVELS`, `xpForGift`, `BADGES`, `TIERS` and `RARITIES` in `js/core.js` |
 | Rank names and the dollar amounts they begin at | `RANKS` in `js/core.js` |
 | How the simulated players are spread over the ranks (and which two handles wear the top ranks) | `BOT_RANK_MIX`, `BOT_RANK_PINS` in `js/core.js` |
-| Live-table timings, bots, sponsor and jackpot | the constants at the top of `js/live.js` |
+| Live-table timings, bots, sponsor and the Triple Threat pot | the constants at the top of `js/live.js` |
 | Live-table events (Giving Tuesday, Disaster Relief Night, Double Pot Hour) | `eventAt()` in `js/live.js` |
+| How often the ticker has a new gift, the gift sizes and busy hours, the XP bonus for the charity of the week | `SLOT_MS`, `AMOUNTS` and `HOURLY` in `js/ticker.js`, `SPOTLIGHT_XP` in `js/weekly.js` |
 | Crews and their chat | `js/crews.js` |
 | Daily wheel segments | `js/ui/collection.js` |
 | Sign-up, log-in and saved-card behaviour | `js/accounts.js` |
 | Brand name and copy | `index.html` and `js/ui/` |
+| The voice of that copy (casino words, "House edge: 0%", Triple Threat, VIP lounge, Responsible giving, "Give out") | `docs/voice.md` |
 
 Each cause needs at least a few charities so a single-cause filter still plays well (the test suite checks this).
 
@@ -419,7 +458,7 @@ Each cause needs at least a few charities so a single-cause filter still plays w
 node --test givespin/tests/*.test.js
 ```
 
-205 unit tests: money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+291 unit tests: the brand voice in the source (no "cash out", no "Give responsibly", no visitor-facing "jackpot", the shared loading lines and house-edge strip, the style guide's shape), money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
 within a group, AND between), XP, levels, ranks (every boundary from $999.99 to $1,000,000.00 and beyond, a cent either
 side, the ten levels inside each rank, the top rank, the standing never going down, labels, the simulated players' spread
 and what a round reports about a rank-up), streaks, badges, boards of any size (fill spots evenly, always include the
@@ -427,16 +466,17 @@ backed charity), the bonus for backing a long shot, apportioning pockets and sli
 (ticket ownership, hashes, uniformity, tampering), tiers and VIP stakes, card rarity and the monthly set, the weekly
 league and the Charity Cup field, email/phone/password/card/expiry validation, the fair-play draw (cross-checked
 against Node's own HMAC, uniformity over 30,000 rounds, tampering is caught, the standalone snippet matches), and the
+display-name rules and the block-list (unicode, spaces, html, links, look-alike letters, words that only contain a rude one), the favourites worked out from the saved rounds (ties, empty and odd histories, 200,000 rounds), which frames and titles each save unlocks, a later feature adding its own, and the simulated players' made-up profiles, and the
 charity data (unique ids, valid vocabulary, short names and blurbs, bare hostnames, no superlatives, minimum counts per
 cause and filter), and saved rounds (a board of 300, 301 or 500 charities and a live round with 25 backed charities come back whole
 after a reload and still verify, a Dice round still verifies after the roster grows, older saves still load, a full
-storage is reported, and the saved text stays small), Marble Run's click spots (a marble tossed up in the shake is clicked where it is seen) and which marbles wear their charity's mark, the track of a live Marble Run table (one per round, the next one in turn, never the same twice in a row, and never part of the draw),, starting pack, race and fairness of every Marble Run map, and this README (the roster size, the board sizes per game, the unit-test count and command, the file list and the wording rules are all checked against the code).
+storage is reported, and the saved text stays small), Marble Run's click spots (a marble tossed up in the shake is clicked where it is seen) and which marbles wear their charity's mark, the track of a live Marble Run table (one per round, the next one in turn, never the same twice in a row, and never part of the draw),, starting pack, race and fairness of every Marble Run map, the charity of the week (the same week gives the same charity, a full walk through the roster before any repeat, the past list, the Sunday/Monday boundary, the two sentences about it and the XP bonus), the ticker's numbers (they only grow through a day, start again at midnight, hold for a minute, and no line repeats within minutes), and this README (the roster size, the board sizes per game, the unit-test count and command, the file list and the wording rules are all checked against the code).
 
 ```
 NODE_PATH=$(npm root -g) node givespin/tests/e2e.mjs
 ```
 
-About 2,620 end-to-end checks (a few dozen fewer without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
+About 3,300 end-to-end checks (a few dozen fewer without the accessibility scan) in headless Chromium (needs Playwright installed globally). They start their own static
 server and drive the real UI: every game (and that **what is on screen matches the winner that gets recorded**),
 the first-visit tour, the choose-your-own-charities dialog, all five slot machines (up to twelve reels, Triple Threat), every game at its biggest board (500 charities), clicking a logo or slice in every game to open that charity, the website links in the results, the big Roulette wheel and the Plinko camera, backing a charity, live tables (the game tiles, each game's page of seven table sizes, stakes, refunds, the whole pot, the extras, every live game), leagues, the Charity Cup, cards, crews and the daily wheel, real-speed card picking and scratching, split gifts and the minimum per round, amount validation, game filters checked
 against an independent computation, the filters on the Charities page (which only narrow the list, never the games), the charity directory and profiles, direct gifts, repeat plans and dedications,
@@ -476,6 +516,7 @@ css/quests.css      quests, the season track and the side-menu badge
 css/boards.css      leaderboards and crew goals
 css/stream.css      the Stream Mode overlay
 css/app.css         the Make it real page, the waitlist and the install button
+css/voice.css       the house-edge strip (lobby, Fair Play, Help) and the house line on a receipt
 css/walk.css        small fixes found by walking every page on phones, tablets and big screens (loaded last, each rule says which window it is for)
 css/ranks.css       the rank emblems: their classes and animation
 css/rankui.css      rank chips next to names, the rank card and ladder, the rank-up moment
@@ -489,10 +530,15 @@ js/payments.js      the money step (demo credit or redirect)
 js/accounts.js      the account and saved-card PREVIEW
 js/util.js          small shared helpers for the games and the UI (maths, timing, escaping, the ?fast=1 speed-up)
 js/local.js         small storage helper for the newer features: one key each, nothing required, memory when storage is blocked (unit-tested in Node)
-js/weekly.js        week keys, the charity of the week and past spotlights (pure logic, unit-tested in Node)
+js/weekly.js        week keys, the charity of the week, its two sentences, the past spotlights and the XP bonus for backing it (pure logic, unit-tested in Node)
+js/ticker.js        the ticker's numbers: "Given today" and the feed of recent gifts from simulated players, a pure function of the clock (unit-tested in Node)
+js/share.js         share cards, the pure parts: what text goes on which card, the verify code, file names, the big-win rule and the line breaking (unit-tested in Node)
+js/ui/sharecard.js  the share card: the picture drawn on a canvas (rank emblem, amount, charity, verify line), its dialog, Download PNG, Web Share and copy; also the profile card
+js/ui/fairshow.js   the fair-play showcase: the lobby block, the sample-round checker and the Verify shortcut on receipts
 js/quests.js        quests and the season track, worked out from the saved history (pure logic, unit-tested in Node)
 js/boards.js        leaderboards for crews, charities and players, with your own row always shown (pure logic, unit-tested in Node)
 js/transport.js     the interface the live rooms talk through, so a server could be plugged in later (pure logic, unit-tested in Node)
+js/profile.js       the profile's rules: display-name checks, favourites from the saved rounds, the frames and titles with how each unlocks, a bot's made-up details (pure logic, unit-tested in Node)
 js/kit.js           shared game toolkit: board samples that include the winner, the race choreography
 js/live.js          live tables: rooms, rounds, bots, stakes, events, sponsor match, jackpot and the weighted draw (no DOM)
 js/crews.js         simulated crews: members, chat lines, emotes, weekly goal
@@ -505,7 +551,8 @@ js/games/*.js       the games; crowd.js is the engine behind Duck Derby, Marble 
 js/ui/*.js          shared helpers, amount and gift options, filters, charities, account, receipt,
                     charity picker and the choose-your-own-charities dialog (picker.js, chooser.js), the Track picker (variants.js), live tables, game
                     screen, lobby, pages, cards and daily wheel (collection.js), leagues and crews (leagues.js),
-                    the first-visit tour (tour.js), rank card, ladder, side-nav card and rank-up moment (rankui.js)
+                    the first-visit tour (tour.js), rank card, ladder, side-nav card and rank-up moment (rankui.js),
+                    the shared voice lines: the house-edge strip and the loading lines (voice.js)
 js/logos.js         which charities have a logo file (134 so far)
 js/marks.js         charity marks for the canvas games: the real logo or the illustrated emblem, as an image to draw
 tools/              fetch-logos.mjs: collects more charity logos from their own websites
@@ -513,7 +560,7 @@ assets/logos/       the logo files (see docs/logo-sources.md)
 assets/favicon.svg  the browser-tab icon
 assets/fonts/       the Sora and Inter font files (loaded from here, never from another site)
 assets/licenses/    the licence texts for the fonts and the icons
-docs/               roster-sources.json (evidence for the added charities), roster-candidates.md (what was left out), logo-sources.md, marble-maps.md (how to write a Marble Run track)
+docs/               roster-sources.json (evidence for the added charities), roster-candidates.md (what was left out), logo-sources.md, marble-maps.md (how to write a Marble Run track), voice.md (the brand voice: the 10 rules and the vocabulary)
 js/app.js           boots everything, routing, top bar, search
 tests/              unit and end-to-end tests
 tools/              check-links.mjs: asks every charity website whether it still answers or has moved (run it from a normal connection)

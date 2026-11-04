@@ -6,3 +6,123 @@
 /* the lobby's block area (js/ui/lobby.js addBlock): blocks stack with the same gap as the other lobby sections */
 .lobbyblocks:empty { display: none; }
 .lobbyblocks { display: grid; gap: 18px; margin-bottom: 18px; }
+
+/* ------------------------------------------------------------------ the ticker bar */
+/* One fixed height (36 px) whatever the bar says: the lines are cut with an ellipsis, never wrapped, so nothing under it ever moves. It sits in the page,
+   under the demo notice, and scrolls away with it. js/ui/ticker.js only shows it on the lobby and the Live tables pages. */
+.ticker {
+  display: flex; align-items: center; gap: 14px; height: 36px; padding: 0 clamp(12px, 2vw, 22px); overflow: hidden;
+  background: #0d1822; border-bottom: 1px solid var(--line); font-size: 0.8rem; line-height: 1.2; color: var(--muted);
+}
+.tick__total { display: flex; flex: none; align-items: center; gap: 7px; white-space: nowrap; }
+.tick__lbl { font-weight: 600; }
+.tick__amt { display: inline-block; min-width: 6.4ch; font: 800 0.95rem var(--f-display); font-variant-numeric: tabular-nums; color: var(--gold); }
+.tick__sim { margin-left: 0; }
+.tick__sim-s { display: none; }
+.tick__feed {
+  display: flex; flex: 1 1 0; min-width: 0; align-items: center; gap: 0; margin: 0; padding: 0; overflow: hidden; white-space: nowrap;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent);
+}
+.tick__feed:focus-visible { outline-offset: -2px; border-radius: 6px; }
+.tick__item { display: block; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; padding-inline: 16px; border-left: 1px solid var(--line); }
+.tick__item:first-child { padding-left: 14px; flex-shrink: 0.2; }
+.tick__item:nth-child(n+2) { flex-shrink: 4; }
+.tick__item b { color: var(--text); font-weight: 700; }
+.tick__who .rchip { vertical-align: middle; margin-left: 0; margin-right: 6px; font-size: 0.72rem; }
+.tick__who .botpill { margin-left: 1px; }
+.tick__ch { color: var(--text); }
+.tick__btn { display: inline-grid; flex: none; place-items: center; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid var(--line-2); background: var(--panel); color: var(--muted); }
+.tick__btn:hover { color: var(--text); border-color: #4a7392; }
+.tick__btn[aria-pressed="true"] { color: var(--gold); border-color: rgba(255, 197, 66, 0.5); }
+.tick__btn .ico { width: 14px; height: 14px; }
+
+/* a new line slides in a few pixels inside the list's clipped box (the bar's height and what is under it never change) */
+@media (prefers-reduced-motion: no-preference) {
+  .tick__feed.is-fresh { animation: tickin 0.5s ease-out; }
+  @keyframes tickin { from { transform: translateX(-14px); } to { transform: none; } }   /* no change of opacity: a scan for colour contrast must never catch the text half faded */
+}
+@media (prefers-reduced-motion: reduce) { .tick__feed.is-fresh { animation: none; } }
+
+/* fewer lines on narrower screens: three, then two, then one (and the total always) */
+@media (max-width: 1100px) { .tick__item:nth-child(n+3) { display: none; } }
+@media (max-width: 700px) {
+  .tick__item:nth-child(n+2) { display: none; }
+  .ticker { gap: 10px; }
+  .tick__item { padding-inline: 0; border-left: 0; }
+  .tick__item:first-child { padding-left: 0; flex-shrink: 1; }
+  .tick__sim-l { display: none; }
+  .tick__sim-s { display: inline; }
+  .tick__bot { display: none; }
+}
+@media (max-width: 480px) {
+  /* a phone: two rows of the same fixed height (the total and Pause above, the newest line below), so the line can be read in full; a ranked bot keeps
+     its emblem, its words ("R2 · L5") and the plain level chip of an unranked bot give way */
+  .ticker { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "total btn" "feed feed"; align-content: center; gap: 0 8px; height: 52px; padding: 0 12px; }
+  .tick__total { grid-area: total; gap: 5px; min-width: 0; }
+  .tick__btn { grid-area: btn; width: 26px; height: 26px; }
+  .tick__feed { grid-area: feed; height: 22px; }
+  .tick__who .rchip__t, .tick__who .rchip--lvl { display: none; }
+  .tick__who .rchip { margin-right: 4px; padding-right: 2px; }
+  .tick__bot { display: inline-block; }
+  .tick__lbl { font-size: 0.78rem; }
+  .tick__amt { font-size: 0.92rem; min-width: 0; }
+}
+
+/* hidden where it would cost room: Stream Mode, every game screen (solo games and live tables keep the one-screen rule), and a short window.
+   A window up to 520 px tall (a phone held sideways, a phone with its keyboard open) or up to 600 px tall and wider than tall (a small laptop window) has
+   no height to spare: the lobby and the Live tables pages scroll, but the bar would still cover a tenth of the first screen there. */
+body.is-stream .ticker, body:has(#view-game:not([hidden])) .ticker { display: none; }
+@media (max-height: 520px), (orientation: landscape) and (max-height: 600px) { .ticker { display: none; } }
+
+/* ------------------------------------------------------------------ charity of the week */
+/* the card on the #spotlights page (big) and in the lobby (smaller): the charity's mark, its name as a link to its website, its two sentences and the buttons */
+.spot { --c: var(--green); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px 20px; align-items: start; padding: 18px; border-color: color-mix(in srgb, var(--c) 45%, var(--line));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 14%, var(--panel)), var(--panel) 62%); }
+.spot__mark { display: grid; justify-items: center; gap: 8px; width: 128px; }
+.spot--lobby .spot__mark { width: 64px; }
+.spot__markline { margin: 0; text-align: center; font-size: 0.7rem; line-height: 1.3; color: var(--muted); }
+.spot__body { display: grid; gap: 10px; min-width: 0; }
+.spot__eyebrow { font: 700 0.72rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.spot__name { font-size: 1.15rem; }
+.spot--big .spot__name { font-size: clamp(1.4rem, 3vw, 2rem); }
+.spot__link { color: var(--text); }
+.spot__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.spot__text { color: var(--text); font-size: 0.92rem; line-height: 1.5; max-width: 70ch; }
+.spot__text--big { font-size: 1.02rem; }
+.spot__meta { color: var(--muted); font-size: 0.8rem; }
+.spot__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.spot__bonus { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: rgba(255, 197, 66, 0.09); border: 1px solid rgba(255, 197, 66, 0.3); color: #f8e1a6; font-size: 0.84rem; }
+.spot__bonus .ico { margin-top: 2px; color: var(--gold); }
+.spot__fine { color: var(--dim); font-size: 0.78rem; max-width: 70ch; }
+.spot--lobby { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; padding: 14px 16px; }
+.spot--lobby .spot__text { font-size: 0.86rem; }
+.spast__t, .spasts { min-width: 0; }
+.spasts { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.spast { --c: var(--green); display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+.spast__t { display: grid; flex: 1; gap: 2px; }
+.spast__t b { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spast__t small { color: var(--dim); }
+.spot__pastnote { margin: -6px 0 12px; font-size: 0.84rem; }
+@media (max-width: 700px) {
+  .spot { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .spot__mark { width: auto; justify-items: start; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }
+  .spot--lobby { grid-template-columns: auto minmax(0, 1fr); }
+  .spot--lobby .spot__actions { grid-column: 1 / -1; }
+  .spot--lobby .spot__s2, .spot--lobby .spot__meta { display: none; }   /* the phone's lobby keeps the block short: the second sentence is on the page */
+}
+
+/* in the receipt's XP card: the flat bonus for backing the charity of the week */
+.xpcard__spot { display: flex; align-items: center; gap: 6px; color: var(--gold); font-weight: 700; font-size: 0.84rem; }
+.xpcard__spot small { color: var(--muted); font-weight: 500; }
+
+/* the one-line strip in a solo game's "Back a charity" field (js/ui/spotlight.js): "Charity of the week: <name>, +25 XP if you back it".
+   It costs the first screen nothing: in the phone's Options sheet (a docked panel, which is not on the first screen) and on a tall laptop window (900 px or more,
+   where the gift panel has room to spare); it is not drawn in a short window, or in Stream Mode. */
+.spotstrip { display: none; margin: 0; align-items: center; gap: 6px; font-size: 0.72rem; line-height: 1.3; color: #f8e1a6; }
+.spotstrip .ico { flex: none; width: 1em; height: 1em; color: var(--gold); }
+.spotstrip .linkbtn { flex: none; min-height: 24px; padding: 0 2px; font-size: 0.72rem; }
+.spotstrip.is-on { color: var(--green); }
+.spotstrip.is-on .ico { color: var(--green); }
+@media (max-width: 900px) and (min-height: 521px) { #view-game:not(.is-live) .spotstrip:not([hidden]) { display: flex; } }
+@media (min-width: 901px) and (min-height: 900px) { #view-game:not(.is-live) .spotstrip:not([hidden]) { display: flex; } }
+body.is-stream .spotstrip { display: none !important; }

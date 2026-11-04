@@ -874,7 +874,7 @@
     cta: 'Spin roulette',
     info: [
       'A roulette wheel where every pocket is a charity. Set the board to any number of pockets, from a few to a thousand: the ball races around the rim in the opposite direction, bounces across the pockets and drops into one.',
-      'Casino roulette has 37 or 38 pockets and a house edge. Here there is no house: every charity on the wheel has exactly the same chance and your whole gift goes to whoever the ball picks. Back a charity and, if the ball picks it, you earn a bonus.'
+      'Casino roulette has 37 or 38 pockets and a house edge. Here the house edge is 0%, because the house is a charity: every charity on the wheel has exactly the same chance and your whole gift goes to whoever the ball picks. Back a charity and, if the ball picks it, you earn a bonus.'
     ],
 
     mount: function (container, gameApi) {

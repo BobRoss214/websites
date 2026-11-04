@@ -169,7 +169,7 @@
       return '<li role="option" id="sr-' + i + '" class="search__item" data-i="' + i + '" aria-selected="' + (i === 0) + '">' +
         (it.kind === 'game' ? '<span class="search__thumb">' + ui.icon(it.g.icon) + '</span>' : ui.mono(it.c, 28)) +
         '<span class="search__txt"><b>' + ui.esc(it.label) + '</b><small>' + it.sub + '</small></span></li>';
-    }).join('') : '<li class="search__none" role="option" aria-disabled="true">Nothing matches “' + ui.esc(q) + '”</li>';
+    }).join('') : '<li class="search__none" role="option" aria-disabled="true">Nothing matches “' + ui.esc(q) + '”. Not even the house has that.</li>';
     list.hidden = false;
     input.setAttribute('aria-expanded', 'true');
     if (search.active >= 0) { input.setAttribute('aria-activedescendant', 'sr-0'); } else { input.removeAttribute('aria-activedescendant'); }

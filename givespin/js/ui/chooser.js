@@ -165,7 +165,7 @@
     var shown = list.slice(0, S.limit);
     ul.innerHTML = shown.length
       ? shown.map(rowHTML).join('') + (list.length > shown.length ? '<li class="chrow__more-li"><button type="button" class="btn" data-role="showmore">Show ' + Math.min(PAGE, list.length - shown.length) + ' more <small>(' + (list.length - shown.length) + ' not shown yet)</small></button></li>' : '')
-      : '<li class="empty chz__empty">No charity matches. Try a different word, or clear a filter.</li>';
+      : '<li class="empty chz__empty">No charity matches at this table. Try a different word, or clear a filter.</li>';
     if (keepScroll) { ul.scrollTop = top; } else { ul.scrollTop = 0; }
     var bits = [];
     var nf = filterCount();

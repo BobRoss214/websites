@@ -708,7 +708,7 @@
     cta: 'Draw a ball',
     info: [
       'Charity balls tumble in the drum with a puff of air. Fill the drum with as many balls as you like, from a few to 500. One is picked out through the chute and drops into the tray.',
-      'It is the classic lottery draw, except every ball is a winner for someone and your whole gift goes to the one that rolls out. Every charity in the drum has equal odds. Back one and, if its ball rolls out, you earn a bonus.'
+      'It is the classic lottery draw, except the house is a charity, every ball is a winner for someone and your whole gift goes to the one that rolls out. Every charity in the drum has equal odds. Back one and, if its ball rolls out, you earn a bonus.'
     ],
 
     mount: function (container, gameApi) {

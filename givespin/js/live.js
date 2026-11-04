@@ -89,7 +89,7 @@
    */
   function eventAt(d) {
     if (d.getDay() === 2) {
-      return { id: 'tuesday', name: 'Giving Tuesday Jackpot', desc: 'A simulated sponsor matches every pot dollar for dollar, up to $250.', match: { ratio: 1, cap: 250 }, causes: null };
+      return { id: 'tuesday', name: 'Giving Tuesday Match', desc: 'A simulated sponsor matches every pot dollar for dollar, up to $250.', match: { ratio: 1, cap: 250 }, causes: null };
     }
     if (d.getHours() >= 18) {
       return { id: 'relief', name: 'Disaster Relief Night', desc: 'Every table runs on disaster-relief and health charities, and a simulated sponsor adds 50% up to $150.', match: { ratio: 0.5, cap: 150 }, causes: ['disaster', 'global-health', 'health'] };
@@ -665,6 +665,7 @@
 
   GS.live = {
     PRESETS: PRESETS,
+    HANDLES: HANDLES,                   // the bots' made-up names (the ticker's feed uses them too)
     MAX_GATES: MAX_GATES,
     TABLES: TABLES,
     UNITS: UNITS,

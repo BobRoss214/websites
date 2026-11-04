@@ -271,7 +271,7 @@
   function renderList() {
     var list = visibleList();
     var ul = dir.root.querySelector('[data-role="list"]');
-    ul.innerHTML = list.length ? list.map(cardHTML).join('') : '<li class="empty" style="grid-column:1/-1">No charities match. Try a different search, another tab or fewer filters.</li>';
+    ul.innerHTML = list.length ? list.map(cardHTML).join('') : '<li class="empty" style="grid-column:1/-1">No charities match at this table. Try a different search, another tab or fewer filters.</li>';
     updateCount(list.length);
   }
 
@@ -342,7 +342,7 @@
       root.querySelector('[data-role="allon"]').addEventListener('click', function () {
         store.setPref('excluded', []);
         GS.app.refreshPool();
-        ui.toast('Every charity is back in play.');
+        ui.toast('Every charity is back at the table.');
       });
       root.querySelector('[data-role="list"]').addEventListener('change', function (e) {
         var input = e.target.closest('input[data-ch]');

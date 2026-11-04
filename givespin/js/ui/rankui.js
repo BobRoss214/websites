@@ -69,7 +69,7 @@
         '<span class="rk__s">' + text + '</span></li>';
     }).join('');
     return '<section class="sect panel rk" aria-labelledby="cl-rank"><div class="sect__head"><h2 class="sect__t" id="cl-rank">Ranks</h2><span class="tag tag--plain">' + core.RANKS.length + ' ranks</span></div>' +
-      '<p class="rk__intro">After level 10, at ' + dollars(core.RANKS[0].at * 100) + ' given, you earn a rank, and every rank has its own levels 1 to 10 (' + esc(core.RANKS[1].name) + ' covers ' + dollars(core.RANKS[1].at * 100) + ' to ' + dollars(core.RANKS[2].at * 100) + ', so its level 6 starts at ' + dollars(core.rankLevelAt(2, 6)) + '). ' +
+      '<p class="rk__intro">Ranks are your lounge membership. After level 10, at ' + dollars(core.RANKS[0].at * 100) + ' given, you earn a rank, and every rank has its own levels 1 to 10 (' + esc(core.RANKS[1].name) + ' covers ' + dollars(core.RANKS[1].at * 100) + ' to ' + dollars(core.RANKS[2].at * 100) + ', so its level 6 starts at ' + dollars(core.rankLevelAt(2, 6)) + '). ' +
       'Your rank shows next to your name. Ranks, like XP, are a receipt for giving: they are not money and they unlock nothing with a cash value' + (demo() ? ', and in demo mode the dollars are pretend' : '') + '. ' +
       'On live tables, in leagues and in crews the other players’ ranks are simulated, like the players. <a href="#help-ranks">What are ranks?</a></p>' +
       '<ol class="rk__list" aria-label="The eight ranks">' + rows + '</ol></section>';
@@ -85,10 +85,10 @@
     var st = ui.myStanding();
     var lv = core.levelFor(store.get().xp);
     if (!st.rank) {
-      return '<a class="lvlcard" href="#club" aria-label="Level ' + lv.level + ', ' + esc(lv.name) + '. Open the Giving Club">' +
+      return '<a class="lvlcard" href="#me" aria-label="Level ' + lv.level + ', ' + esc(lv.name) + '. Open your profile">' +
         '<span class="lvlcard__n">' + lv.level + '</span><span class="lvlcard__t"><b>' + esc(lv.name) + '</b><span class="bar"><i style="width:' + lv.pct + '%"></i></span></span></a>';
     }
-    return '<a class="lvlcard lvlcard--rank"' + ui.rankTheme(st.rank) + ' href="#club" aria-label="' + esc(st.words) + '. Open the Giving Club">' +
+    return '<a class="lvlcard lvlcard--rank"' + ui.rankTheme(st.rank) + ' href="#me" aria-label="' + esc(st.words) + '. Open your profile">' +
       '<span class="lvlcard__e" aria-hidden="true">' + ui.rankEmblem(st.rank, 40, { animated: false }) + '</span>' +
       '<span class="lvlcard__t"><b>' + esc(st.name) + '</b><small>' + esc(st.label) + '</small><span class="bar"><i style="width:' + st.pct + '%"></i></span></span></a>';
   }

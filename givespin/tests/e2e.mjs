@@ -3596,8 +3596,13 @@ if (section('13t. Honesty wording: fair play you can check, demo or checkout wor
   const rtitle = await rp.locator('#dlg-result .rs-title').innerText();
   check(!/goes to/.test(rtitle) && /is for/.test(rtitle), 'the redirect receipt title does not say the money "goes to" the charity yet', rtitle);
   await rp.evaluate(() => { window.__shared = null; navigator.share = (d) => { window.__shared = d; return Promise.resolve(); }; });
+  // (the receipt's Share button now opens the share-card dialog, which has the Share action: the text is still checked)
   await rp.click('#dlg-result [data-role="share"]');
+  await rp.waitForSelector('#dlg-sharecard[open] .sc__preview[data-ready="1"]');
+  await rp.click('#dlg-sharecard [data-role="share"]');
   const shared = await rp.evaluate(() => window.__shared);
+  await rp.click('#dlg-sharecard .modal__close');
+  await rp.waitForFunction(() => !document.querySelector('#dlg-sharecard').open);
   check(shared && !/just gave/i.test(shared.text) && /picked/.test(shared.text), 'the share text does not claim "I just gave" before checkout is done', shared);
   await closeReceipt(rp);
   // a direct gift

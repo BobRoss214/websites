@@ -29,7 +29,7 @@
     },
     {
       id: 'goldrush', cls: 'gold', name: 'Gold Rush', label: 'Gold Rush', icon: 'gem', title: 'GOLD RUSH', badge: '5 reels · mining', defaultReels: 5,
-      tagline: 'Strike it rich for charity. A five-reel mining machine with drifting gold dust.',
+      tagline: 'Strike gold for charity. A five-reel mining machine with drifting gold dust.',
       info: [
         'A prospector’s machine: five reels by default, each one a charity your gift is split across. Pick fewer reels for a bigger share on each, or up to twelve to spread the gold around.',
         'Three or more matching charities on the payline is a Triple Threat: bonus XP and confetti. The dust, the glow and the slow last reel are just for show; every reel is an equal-odds draw.'

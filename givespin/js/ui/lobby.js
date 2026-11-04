@@ -71,9 +71,9 @@
           ? 'Pick an amount, play any game, and see which charity your gift lands on. Right now it is all play-money: nothing is charged.'
           : 'Pick an amount, play any game, and the game picks the charity for your gift. You finish each gift on the charity’s checkout page.') + '</p>' +
         '<a class="btn btn--light" href="#game-wheel">' + ui.icon('play') + 'Spin the wheel</a></div><div class="promo__art" aria-hidden="true">' + GS.art.wheel() + '</div></article>' +
-      '<article class="promo promo--b"><div class="promo__copy"><p class="promo__eyebrow">Giving Club</p><h2 class="promo__t">Level up as you give.</h2>' +
-        '<p class="promo__p">Every $1 you give earns 10 XP. Level up, earn a rank with its own emblem at $1,000 given, keep a streak alive and unlock ' + core.BADGES.length + ' badges.</p>' +
-        '<a class="btn btn--light" href="#club">' + ui.icon('crown') + 'Open the Club</a></div><div class="promo__art" aria-hidden="true">' + GS.art.coin('p') + '</div></article>' +
+      '<article class="promo promo--b"><div class="promo__copy"><p class="promo__eyebrow">Giving Club</p><h2 class="promo__t">The VIP lounge is open.</h2>' +
+        '<p class="promo__p">The only way in is giving. Every $1 you give earns 10 XP. Level up, earn a rank with its own emblem at $1,000 given, keep a streak alive and unlock ' + core.BADGES.length + ' badges.</p>' +
+        '<a class="btn btn--light" href="#club">' + ui.icon('crown') + 'Enter the lounge</a></div><div class="promo__art" aria-hidden="true">' + GS.art.coin('p') + '</div></article>' +
       '<article class="promo promo--c"><div class="promo__copy"><p class="promo__eyebrow">Fair play you can check</p><h2 class="promo__t">Check every result yourself.</h2>' +
         '<p class="promo__p">Each winner is drawn from a sealed secret before the animation starts, and you can recompute it. In this preview the secret is made on your own device.</p>' +
         '<a class="btn btn--light" href="#fair">' + ui.icon('shield-check') + 'See how</a></div><div class="promo__art" aria-hidden="true">' + GS.art.dice() + '</div></article>' +
@@ -86,7 +86,7 @@
     var box = $('[data-role="recent"]', root);
     if (!box) { return; }
     if (!h.length) {
-      box.innerHTML = '<p class="empty">Nothing here yet. Play any game and your rounds will show up here, with a link to each charity.</p>';
+      box.innerHTML = '<p class="empty">No rounds yet. The tables are warm: play any game and your rounds will show up here, with a link to each charity.</p>';
       return;
     }
     box.innerHTML = h.map(function (x) {
@@ -130,7 +130,7 @@
 
   function build() {
     root.innerHTML = '<h1 class="sr-only">GiveSpin lobby: casino-style games that give to charity</h1>' +
-      '<div class="lobbysearch" data-role="lobbysearch"></div>' + promos() + '<div class="lobbyblocks" data-role="blocks"></div>' +
+      '<div class="lobbysearch" data-role="lobbysearch"></div>' + promos() + ui.voice.houseStrip() + '<div class="lobbyblocks" data-role="blocks"></div>' +
       '<section class="sect livestrip" data-role="livestrip" aria-labelledby="lb-live" hidden></section>' +
       '<div class="lobbybar"><nav class="cats" aria-label="Game categories">' + CATS.map(function (c) {
         return '<a class="cat" href="#' + c[2] + '" data-cat="' + c[0] + '">' + esc(c[1]) + '</a>';

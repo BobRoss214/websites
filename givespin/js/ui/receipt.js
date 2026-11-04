@@ -109,7 +109,7 @@
     var m = dlg();
     var names = round.allocs.length === 1 ? GS.charity(round.allocs[0].charityId).name : round.allocs.length + ' charities';
     m.set('<div class="rs-sending" role="status"><div class="rs-spinner">' + ui.icon('coins') + '</div>' +
-      '<h2 id="dlg-result-title">Sending your demo gift…</h2><p>' + money(round.cents, false) + ' to ' + esc(names) + ' · demo, nothing is charged</p></div>');
+      '<h2 id="dlg-result-title">Sending your demo gift…</h2><p>' + money(round.cents, false) + ' to ' + esc(names) + ' · demo, nothing is charged</p><p class="rs-fine">' + ui.voice.loading() + '</p></div>');
     m.setLocked(true);
     m.open();
   }
@@ -194,8 +194,9 @@
     var startPct = climbed ? 0 : (summary.rankBefore ? summary.rankBefore.pct : summary.before.pct);
     var endPct = ra ? ra.pct : after.pct;
     var giftCents = allocs.reduce(function (s, a) { return s + a.cents; }, 0);
+    var spotXp = summary.spotlightXp || 0;   // the flat bonus for backing the charity of the week (js/weekly.js); it is inside bonusXp, and shown on its own
     var why = summary.giftXp + ' XP for your ' + money(giftCents, false) + ' gift (10 XP for every $1)' +
-      (summary.bonusXp ? ' + ' + summary.bonusXp + ' bonus' : '') + (summary.hotXp ? ' + ' + summary.hotXp + ' hot hand' : '') + (summary.setXp ? ' + ' + summary.setXp + ' for the card set' : '') + '.';
+      (summary.bonusXp - spotXp > 0 ? ' + ' + (summary.bonusXp - spotXp) + ' bonus' : '') + (spotXp ? ' + ' + spotXp + ' for the charity of the week' : '') + (summary.hotXp ? ' + ' + summary.hotXp + ' hot hand' : '') + (summary.setXp ? ' + ' + summary.setXp + ' for the card set' : '') + '.';
     var who = ranked
       ? '<span class="xpcard__who"><span class="xpcard__e" aria-hidden="true">' + ui.rankEmblem(ra.rank, 26, { animated: false }) + '</span><span>' + esc(ra.label) + ' · ' + esc(ra.name) + '</span></span>'
       : '<span>Level ' + after.level + ' · ' + esc(after.name) + '</span>';
@@ -206,7 +207,9 @@
     var goal = ranked || (ra && after.maxed) ? '<p class="rs-fine xpcard__next">' + esc(ui.rankui.nextLine(ra)) + '</p>' : '';
     var xp = '<div class="xpcard' + (ranked ? ' has-rank' : '') + '"' + (ranked ? ui.rankTheme(ra.rank) : '') + '><div class="xpcard__row">' + who + '<span class="xpcard__gain">+' + summary.xpGain + ' XP</span></div>' +
       '<div class="bar"><i style="width:' + startPct + '%"></i></div>' +
-      '<p class="rs-fine xpcard__why">' + esc(why) + '</p>' + goal + up + '</div>';
+      '<p class="rs-fine xpcard__why">' + esc(why) + '</p>' +
+      (spotXp && round.pick && GS.charity(round.pick.id) ? '<p class="xpcard__spot">' + ui.icon('sparkles') + 'Charity of the week bonus +' + spotXp + ' XP <small>(you backed ' + esc(GS.charity(round.pick.id).short) + ')</small></p>' : '') +
+      goal + up + '</div>';
 
     var extras = '';
     if (summary.hot && summary.hot.mult > 1) {
@@ -233,12 +236,13 @@
         '<p class="rs-eyebrow">' + (demo ? 'Demo receipt' : 'Ready to donate') + ' · ' + esc(pay.receipt) + '</p>' +
         '<h2 class="rs-title" id="dlg-result-title">' + titleFor(round, demo) + '</h2>' +
         '<p class="rs-sub">' + sub + '</p>' +
+        '<p class="rs-house">The house wins: the house is a charity.</p>' +
       '</div>' +
       '<ul class="alloc">' + items + '</ul>' +
       detailRows(round, pay, plan) + checkout + xp + extras + badges + fairDetailsHTML(round.fair) +
       '<div class="rs-actions">' +
         '<button type="button" class="btn btn--green btn--wide" data-role="again">' + ui.icon(round.direct ? 'hand-heart' : 'rotate-cw') + againLabel + '</button>' +
-        '<button type="button" class="btn" data-role="share">' + ui.icon('share-2') + 'Share</button>' +
+        '<button type="button" class="btn" data-role="share">' + ui.icon('share-2') + 'Share your gift</button>' +
         '<a class="btn" href="#giving" data-role="mygiving">' + ui.icon('hand-heart') + 'My Giving</a>' +
         '<button type="button" class="btn btn--ghost" data-role="done">Done</button>' +
       '</div>' +
@@ -259,7 +263,12 @@
     m.$('[data-role="done"]').addEventListener('click', function () { m.close(); });
     m.$('[data-role="mygiving"]').addEventListener('click', function () { m.close(); });
     Array.prototype.forEach.call(m.$$('[data-role="mycards"]'), function (a) { a.addEventListener('click', function () { m.close(); }); });
-    m.$('[data-role="share"]').addEventListener('click', function () { share(round, demo); });
+    // the picture to save or send (js/ui/sharecard.js); the plain text share below stays as the fallback if that file is missing
+    m.$('[data-role="share"]').addEventListener('click', function () {
+      if (ui.sharecard && ui.sharecard.openRound) { ui.sharecard.openRound({ round: round, pay: pay, summary: summary, demo: demo }); } else { share(round, demo); }
+    });
+    // a "Verify" shortcut under the subtitle that opens the fair play details (js/ui/fairshow.js)
+    if (ui.fairshow) { ui.fairshow.addShortcut(m.body, '.rs-sub'); }
     var vbtn = m.$('[data-role="verify"]');
     if (vbtn) {
       vbtn.addEventListener('click', function () {
@@ -329,14 +338,17 @@
         plan = planFor(round);
         planBadges = store.addPlan(plan);
       }
+      // backing a winner pays a bonus that grows with the length of the shot; backing the charity of the week pays a flat extra, win or lose (js/weekly.js)
+      var bonus = GS.weekly.roundBonus(round.pick, GS.weekly.current(GS.charities, new Date()).id);
       var summary = store.recordPlay({
         game: round.game, totalCents: round.cents, rounds: round.rounds, jackpot: round.jackpot,
         status: pay.status, receipt: pay.receipt, pay: pay.pay, stream: GS.app.state.stream, direct: !!round.direct,
         freq: o.freq, dedication: o.dedication, fair: round.fair, allocations: round.allocs, map: round.map || null,
         pick: round.pick ? { charityId: round.pick.id, won: round.pick.won, board: round.pick.board } : null,
         collect: round.collect || null,
-        bonusXp: round.pick && round.pick.won ? core.pickBonusXp(round.pick.board, round.pick.wins) : 0
+        bonusXp: bonus.total
       });
+      summary.spotlightXp = bonus.spotlight;
       summary.newBadges = planBadges.concat(summary.newBadges);
       last = { round: round, pay: pay, summary: summary, plan: plan };
       GS.app._last = last;

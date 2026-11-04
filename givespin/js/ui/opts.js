@@ -147,7 +147,7 @@
     if (a.signedIn && a.limitCents) {
       var spent = store.monthSpent();
       if (spent + cents > a.limitCents) {
-        return { ok: false, limit: true, message: 'That would go past your monthly giving limit of ' + core.fmtMoney(a.limitCents, true) + '. You have ' + core.fmtMoney(Math.max(0, a.limitCents - spent), true) + ' left this month.' };
+        return { ok: false, limit: true, message: 'Responsible giving: that would go past your monthly giving limit of ' + core.fmtMoney(a.limitCents, true) + '. You have ' + core.fmtMoney(Math.max(0, a.limitCents - spent), true) + ' left this month.' };
       }
     }
     if (GS.payments.mode() === 'demo' && effectivePay() === 'credit' && !store.canAfford(cents)) {
