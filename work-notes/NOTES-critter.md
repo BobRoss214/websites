@@ -107,8 +107,8 @@ the targets), so no fallback is needed. (`startTime` is guarded: if the browser 
 
 - The leaves and snow are BEHIND all the hero's words: `.hero-scene` (which holds `#critters` and `.particles`) has z-index 1, `.hero-copy` (the headline, the chips, the buttons) 5, the bee or butterfly 6, the picker 7;
   `.particles` and `.hero-scene` have `pointer-events:none`. Nothing to change there.
-- Run on its own, the failing item (index.html, fall, en, 1280: "the words at the top of the page ... animations at 15% of their cycle") fails now and then (2 times in about 14 runs while the computer was busy,
-  none in about 90 runs on a quiet one): `ul.chips > li "Family farm since 2013" 1.19:1` and `"USDA Certified Organic" 2.98:1`, worst pixel in the first row of the line box. The picture the test saves of the failing text
+- Run on its own, the failing item (index.html, fall, en, 1280: "the words at the top of the page ... animations at 15% of their cycle") fails now and then (2 times in 12 runs of the whole item, while the computer was busy,
+  none in the 40 runs of the same item that followed and none in more than 100 shorter runs of just the hero measurement): `ul.chips > li "Family farm since 2013" 1.19:1` and `"USDA Certified Organic" 2.98:1`, worst pixel in the first row of the line box. The picture the test saves of the failing text
   shows the BUTTERFLY (`#bee-fly`, z-index 6, in front of the chips) lying across the lower part of the chip's words, its antennae and the top of its wings inside the line box. The test hides what is in front of the words
   (`data-cx-occ`), but it finds it by looking at the middle of each line every 16 px; a creature that only touches the top or the bottom rows of the line box (and moves a little before the photograph) is not found, and its dark
   outline counts as "what is behind the words". The flake needs the creature to be resting or flying right over a chip, which is why it is rare. The leaves play no part: at the 15% moment 15 of the 16 leaves stand in a row
