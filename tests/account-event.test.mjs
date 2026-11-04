@@ -11,11 +11,15 @@
  *   - there is no My year: no tab, no script, no file, and none of the words about how many times a family came (visits so far, badges, stamps, streaks, season pass) on any tab;
  *   - the contact links: "Questions? Email Vanessa" on a school trip, "Pizza questions? Email Ava" on My pizza (and in the pizza editor), "Pizza kitchen contact:" with Ava's address on
  *     the kitchen screen; mailto links to the addresses the site already shows, no telephone link;
+ *   - My visits: the box with Mrs. Cathy's answer carries the tour hook (acct-reply) in every state, not only while she suggests something (yes, no, a suggestion, OK, kept);
+ *     a day closed by the desk says why in one sentence ("The farm is closed that day because of rain."), the new-day box says the same reason, and so does the desk's own promise;
+ *   - DemoUI.closeModals() closes every open dialog by the demo's own close, and the cards of tour chapter 10 that light a button which opens a dialog (js/tour-steps-c.js, run
+ *     here on the real screen) close it when they are left, find their boxes (the answer card is no longer skipped), and keep a family made by hand;
  *   - accessibility (axe, when axe-core is installed): the sign-up card, the three kinds of My event, My family with its box, My pizza and its editor have no violations.
  * Run: node tests/account-event.test.mjs  (or: node tests/run-all.mjs account-event) */
 import fs from 'node:fs';
 import path from 'node:path';
-import { run, open, ok, info, axeSource, ROOT } from './lib.mjs';
+import { run, open, ok, info, axeSource, ROOT, TODAY } from './lib.mjs';
 
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const axe = axeSource();
@@ -225,6 +229,153 @@ await run('account-event', async ({ browser, base, errs }) => {
     // the school trip is the only event: no "I also plan an event" link on My family
     await goTab(p, 'family');
     ok('a family that has an event does not see "I also plan an event"', await p.locator('.dvf-event').count() === 0);
+    await p.context().close();
+  }
+
+  /* ---- My visits: the answer box, the closed day, the dialogs, and the tour's cards for them on the real screen ---- */
+  {
+    const p = await open(browser, base, 'account.html', errs, { query: 'demo' });
+    await signUp(p, 'No');   // Pat, made by hand
+    await p.evaluate(() => { window.WA_TOUR_STEPS = []; });
+    await p.addScriptTag({ content: read('js/tour-steps-c.js') });   // the real cards of chapter 10, run against the real screen
+    const card = (id, which) => p.evaluate(async ([i, w]) => { const st = window.WA_TOUR_STEPS.find((x) => x.id === i); if (!st || typeof st[w] !== 'function') return 'none'; await st[w]({}); return 'done'; }, [id, which]);
+    const lit = async (id) => p.locator(await p.evaluate((i) => window.WA_TOUR_STEPS.find((x) => x.id === i).target, id)).first();
+    const modals = () => p.locator('.demo-modal').count();
+    const calm = () => p.evaluate(() => !document.documentElement.classList.contains('demo-modal-open'));
+    const store = (fn, arg) => p.evaluate(fn, arg);
+    const textOf = async (loc) => ((await loc.count()) ? (await loc.first().innerText()).replace(/\s+/g, ' ').trim() : '(not on the screen)');   // a missing box is a failed check, not a 20 second wait
+    ok('the real chapter 10 is in the page: 24 cards', await p.evaluate(() => window.WA_TOUR_STEPS.length) === 24);
+
+    // a family made by hand is kept by the sign-up card and the card after it
+    await card('ch10-signup', 'before');
+    ok('the tour\'s sign-up card only signs the family out: the sign-up form shows, and Pat (made by hand) is still in the browser', await (await lit('ch10-signup')).isVisible()
+      && await store(() => !window.DemoStore.current() && window.DemoStore.snapshot().accounts.length === 1 && window.DemoStore.snapshot().accounts[0].name === 'Pat'));
+    await card('ch10-sample', 'before');
+    ok('the next card signs Pat in again (no new sample family) and shows the visit', await (await lit('ch10-sample')).isVisible() && await store(() => !!window.DemoStore.current() && window.DemoStore.current().name === 'Pat' && window.DemoStore.current().eventKind === 'none'));
+
+    // the sample card lights the whole visit card, which holds the same button: a dialog opened there is closed when the card is left too
+    await p.locator('[data-tour="acct-visit-card"] [data-dv-request]').click();
+    await p.waitForSelector('.demo-modal');
+    await card('ch10-sample', 'after');
+    ok('a dialog opened from the lit visit card (sample card) is closed when the card is left', await modals() === 0 && await calm());
+
+    // the request dialog: opened by the lit button, closed when the card is left
+    await card('ch10-request', 'before');
+    const ask = await lit('ch10-request');
+    ok('the request card lights the "Request a different day" button', await ask.isVisible() && (await ask.innerText()).trim() === 'Request a different day');
+    await ask.click();
+    await p.waitForSelector('.demo-modal');
+    ok('the lit button opens a dialog', await modals() === 1);
+    await card('ch10-request', 'after');
+    ok('leaving the card closes it with the demo\'s own close: no dialog is left, the page is not marked as having one, the focus is back on the button, and no request was sent',
+      await modals() === 0 && await calm() && await p.evaluate(() => !!document.activeElement && document.activeElement.getAttribute('data-tour') === 'acct-request-day') && await store(() => window.DemoStore.list('requests').length === 0));
+
+    // two dialogs on top of each other (the request, and the Start over question), then the cards of the strip
+    await ask.click();
+    await p.waitForSelector('.demo-modal');
+    await p.evaluate(() => document.querySelector('[data-tour="demo-reset"]').click());   // (the strip is behind the first dialog: pressed from the page)
+    await p.waitForFunction(() => document.querySelectorAll('.demo-modal').length === 2);
+    ok('DemoUI.closeModals() closes dialogs that sit on top of each other: two were open, none is left, and Start over was not done (Pat is still there)',
+      await store(() => window.DemoUI.closeModals()) === 2 && await modals() === 0 && await calm() && await store(() => !!window.DemoStore.current() && window.DemoStore.current().name === 'Pat'));
+    ok('with no dialog open it does nothing and says 0', await store(() => window.DemoUI.closeModals()) === 0);
+    const strip = [];
+    for (const id of ['ch10-intro', 'ch10-real-needs', 'ch10-worth-asking']) {
+      await p.evaluate(() => document.querySelector('[data-tour="demo-reset"]').click());
+      await p.waitForSelector('.demo-modal');
+      const was = await modals();
+      await card(id, 'after');
+      if (!(was === 1 && await modals() === 0 && await calm() && await store(() => !!window.DemoStore.current()))) strip.push(id);
+    }
+    ok('the three cards that light the strip close the "Are you sure?" question of Start over when they are left, and nothing is cleared', strip.length === 0, strip.join(', '));
+
+    // waiting, then the answer: the answer card finds its box (it used to be skipped), whatever the answer was
+    await card('ch10-waiting', 'before');
+    ok('the waiting card lights the waiting box, and while the request waits there is no answer box yet', await (await lit('ch10-waiting')).isVisible() && /Waiting for a reply from Mrs\. Cathy/.test(await textOf(await lit('ch10-waiting'))) && await p.locator('[data-tour="acct-reply"]').count() === 0);
+    await card('ch10-answer', 'before');
+    const answer = await lit('ch10-answer');
+    ok('after the tour\'s yes the answer card finds its box and it says what happened', await p.locator('[data-tour="acct-reply"]').count() === 1 && await answer.isVisible() && /Mrs\. Cathy said yes\. Your visit is moved\./.test(await textOf(answer)), await textOf(answer));
+    const drive = (how) => p.evaluate((h) => {
+      const S = window.DemoStore, D = window.DemoData, v = S.list('visits').filter((x) => x.date >= S.today())[0];
+      const day = S.openDays(D.addDays(S.today(), 1), v.package, 8).filter((d) => d !== v.date)[0], left = S.openRequestFor('visits', v.id);
+      if (left) S.cancel(left.id);   // a suggestion left unanswered by the last state: the family cancels it first (a visit has one open request)
+      const q = S.ask({ kind: 'visit-change', to: 'cathy', from: 'family', target: { coll: 'visits', id: v.id }, patch: { date: day, time: '13:00' }, summary: 'Move the visit', note: 'Another day works better.' });
+      if (h === 'yes' || h === 'no') S.reply(q.id, { answer: h, note: 'Fine.' });
+      if (h === 'suggested' || h === 'accepted' || h === 'declined') S.reply(q.id, { answer: 'suggest', note: 'How about this?', suggestion: { patch: { date: day, time: '12:00' }, summary: 'The same day at 12:00 pm' } });
+      if (h === 'accepted') S.respond(q.id, 'ok');
+      if (h === 'declined') S.respond(q.id, 'decline');
+      return q.id;
+    }, how);
+    const states = [['yes', /Mrs\. Cathy said yes\. Your visit is moved\./], ['no', /Mrs\. Cathy said no\. Your visit stays as it was\./], ['suggested', /Mrs\. Cathy suggests something else/],
+      ['accepted', /You said OK to Mrs\. Cathy’s plan\. Your visit is moved\./], ['declined', /You kept your visit as it was\./]];
+    for (const [how, words] of states) {
+      await drive(how);
+      await p.waitForTimeout(300);
+      const box = p.locator('[data-tour="acct-reply"]');
+      ok(`the answer box has its tour hook when the state is "${how}": one box, on the screen, with the words for that state`, await box.count() === 1 && await box.first().isVisible() && words.test(await textOf(box)), (await textOf(box)).slice(0, 120));
+    }
+
+    // Pat said no to the event question, so the lit My family box has "I also plan an event", which opens a dialog: closed when the card is left
+    await card('ch10-family', 'before');
+    await p.locator('[data-tour="acct-family"] .dvf-event button').click();
+    await p.waitForSelector('.demo-modal');
+    await card('ch10-family', 'after');
+    ok('a dialog opened from the lit My family box ("I also plan an event") is closed when the card is left, and no event was added', await modals() === 0 && await calm() && await store(() => window.DemoStore.list('events').length === 0));
+
+    // a closed day: the card, the banner, the new-day box, and the other reasons
+    await card('ch10-closed', 'before');
+    const banner = await lit('ch10-closed');
+    const said = () => textOf(p.locator('[data-tour="acct-closed-banner"] p'));
+    const long = (d) => p.evaluate((x) => window.DemoUI.dateLong(x), d);
+    const visitDay = () => store(() => { const S = window.DemoStore; return S.list('visits').filter((x) => x.date >= S.today())[0].date; });
+    ok('the closed-day card lights the banner, and the tour closed the day for rain: "The farm is closed that day because of rain." (the reason is said once, in the sentence)', await banner.isVisible() && await said() === 'The farm is closed that day because of rain.', await said());
+    await banner.locator('button').click();
+    await p.waitForSelector('.demo-modal');
+    const newDay = () => textOf(p.locator('.demo-modal .dv-form p'));
+    ok('the new-day box says the same reason, with the day', await newDay() === 'The farm is closed on ' + await long(await visitDay()) + ' because of rain. Pick a new day and Mrs. Cathy will confirm it.', await newDay());
+    await card('ch10-closed', 'after');
+    ok('leaving the closed-day card closes that dialog too, and the day stays closed (nothing was sent)', await modals() === 0 && await calm() && await store(() => window.DemoStore.list('closedDays').length === 1 && window.DemoStore.list('requests').filter((r) => r.status === 'waiting').length === 0));
+    const reasons = [['strong wind', 'strong wind'], ['a power cut', 'a power cut'], ['a holiday.', 'a holiday'], [undefined, 'weather'], ['  rain  ', 'rain']];
+    const bad = [];
+    for (const [given, shown] of reasons) {
+      const day = await visitDay();
+      await store((d) => window.DemoStore.openDay(d), day);
+      await store(([d, r]) => window.DemoStore.closeDay(d, r), [day, given]);
+      await p.waitForSelector('[data-tour="acct-closed-banner"]');
+      await p.waitForTimeout(150);
+      const b = await said();
+      await p.locator('[data-tour="acct-closed-banner"] button').click();
+      await p.waitForSelector('.demo-modal');
+      const n = await newDay();
+      await store(() => window.DemoUI.closeModals());
+      if (b !== `The farm is closed that day because of ${shown}.` || n !== `The farm is closed on ${await long(day)} because of ${shown}. Pick a new day and Mrs. Cathy will confirm it.`) bad.push(`${given}: "${b}" / "${n}"`);
+    }
+    ok('closed for "strong wind", "a power cut", "a holiday." (the owner\'s full stop is not doubled), nothing given ("weather") or with spaces around it: the banner and the new-day box use that reason, once', bad.length === 0, bad.join(' | '));
+    // an old record that is closed but has no reason written says weather
+    await store(() => { const S = window.DemoStore, v = S.list('visits').filter((x) => x.date >= S.today())[0]; S.update('visits', v.id, { closed: true, closedReason: '' }); });
+    await p.waitForTimeout(250);
+    ok('a visit marked closed with no reason says "weather"', await said() === 'The farm is closed that day because of weather.', await said());
+
+    // the real desk: close the day with its own form (Rain is its first choice), and read the three sentences
+    await store((d) => { window.DemoStore.openDay(d); }, await visitDay());
+    const desk = await p.context().newPage();
+    desk.on('pageerror', (e) => errs.push('farm-desk.html pageerror: ' + e.message));
+    await desk.clock.install({ time: new Date(TODAY) });
+    await desk.goto(base + 'farm-desk.html?demo', { waitUntil: 'load' });
+    await desk.waitForSelector('#ds-close-day', { timeout: 40000 });
+    const day = await visitDay();
+    await desk.selectOption('#ds-close-day', day);
+    ok('the desk offers Rain first', await desk.inputValue('#ds-close-why') === 'rain');
+    await desk.click('button:has-text("Close this day")');
+    await desk.waitForSelector('.ds-confirm');
+    const promise = (await desk.locator('.ds-confirm p').nth(1).innerText()).replace(/\s+/g, ' ');
+    const quoted = (/“([^”]+)”/.exec(promise) || [])[1];
+    await desk.click('button:has-text("Yes, close this day")');
+    await p.waitForSelector('[data-tour="acct-closed-banner"]');
+    await p.waitForTimeout(250);
+    const notice = await store(() => window.DemoStore.noticesFor('family')[0].text);
+    ok('what the desk promises the family is what the family\'s bell gets: "The farm is closed on <day> because of rain. Pick a new day for your visit."', quoted === 'The farm is closed on ' + await long(day) + ' because of rain. Pick a new day for your visit.' && notice === quoted, quoted + ' | ' + notice);
+    ok('...and the banner and the new-day box say the same reason (rain)', await said() === 'The farm is closed that day because of rain.');
+    await desk.close();
     await p.context().close();
   }
 
