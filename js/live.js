@@ -161,7 +161,7 @@
   }
 
   function renderBadge(el) {
-    const s = W.clockOk() ? statusFor(el.dataset.live) : null;   // no readable clock: no "open now"
+    const s = W.clockOk() ? statusFor(el.dataset.live, W.pretendNow ? W.pretendNow() : undefined) : null;   // no readable clock: no "open now". (W.pretendNow: only the owners' tour sets it, while it shows another season)
     if (!s) { el.hidden = true; return; }
     el.hidden = false;
     el.className = 'live is-' + s.state + (el.dataset.liveClass ? ' ' + el.dataset.liveClass : '');

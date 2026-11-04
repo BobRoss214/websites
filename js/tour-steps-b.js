@@ -67,7 +67,8 @@
     return box ? box.querySelector('.lang-btn') : null;
   }
   function openLanguages() {
-    var btn = languageButton(), box = one('[data-lang-menu]'), now;
+    var btn = languageButton(), box = one('[data-lang-menu]'), now, site = window.WISE_ACRES;
+    if (mem.lang == null && site && site.lang) mem.lang = site.lang;   // the language the page has now: a press on another one in the list really changes the whole site, and the site keeps the choice
     if (!btn || btn.getAttribute('aria-expanded') === 'true') return;
     mem.languages = true;
     btn.click();   // the page opens its own list and moves the focus to a language
@@ -76,7 +77,9 @@
     if (now && now !== document.body && box && box.contains(now) && now.blur) now.blur();
   }
   function closeLanguages() {
-    var btn = languageButton();
+    var btn = languageButton(), site = window.WISE_ACRES, back = mem.lang;
+    mem.lang = null;
+    if (back && site && typeof site.setLang === 'function' && site.lang !== back) site.setLang(back);   // the page goes back to the language it had
     if (!mem.languages) return;
     mem.languages = false;
     if (btn && btn.getAttribute('aria-expanded') === 'true') btn.click();

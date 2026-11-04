@@ -451,6 +451,9 @@ function wordChecks() {
     const empty = chapters.filter((c) => !perChapter[c.n]).map((c) => c.n);
     ok('every chapter has at least one step (all three files are here)', empty.length === 0, 'chapters without a step: ' + empty.join(', '));
   }
+  // what the owners are told about clicking is said once, in the same words: on the welcome card (js/tour.js) and on the first step
+  const clicking = 'Whatever is lit up on the page, you can click and try.', hello = steps.find((s) => s.id === 'ch1-hello');
+  ok('the welcome card and the first step say the same about clicking: "' + clicking + '"', read('js/tour.js').includes(clicking) && !!hello && hello.text.includes(clicking), hello ? hello.text.slice(0, 120) : 'no step ch1-hello');
 }
 
 if (process.env.WA_WORDS_ONLY) { wordChecks(); await finish({}); }
