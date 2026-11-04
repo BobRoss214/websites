@@ -11,6 +11,9 @@
  *     Back does the same; a part in Contents does the same, also when the owner had opened another tab first; Esc does the same, also in the middle of a press
  *   - the page that was put back still works (the hero's own season buttons)
  *   - the buttons are reached with Tab and pressed with Enter; the card stays inside the window; a phone
+ *   - three things an independent walk of the real tour found, tried on the real steps (the engine's own checks are in tests/tour.test.mjs): the open-now badges keep saying what the pretended
+ *     season says after a minute and when the tab is shown again (js/live.js draws them again with the real date every 60 seconds); the sign-up preview cannot be sent (it has no address, so
+ *     the browser would load the page again and the tour would be gone); the language list puts the site's language back when the step is left
  *   - the tour is walked from the card about the buttons on, with every season button pressed on every step that has them (WA_SEASONS_FULL=1: to the last card and Finish), and the
  *     page is exactly as it was afterwards, with nothing of the walk left in browser storage */
 import { run, open, ok, okSoon, info, settled } from './lib.mjs';
@@ -246,4 +249,56 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
   const keys = await p.evaluate(() => Object.keys(localStorage).concat(Object.keys(sessionStorage)));
   ok(FULL ? 'after Finish nothing of the tour is left in browser storage (the season walk keeps nothing of its own)' : 'the tour keeps only its own place in browser storage (wa-tour); the season walk keeps nothing of its own', FULL ? !keys.some((k) => /tour/.test(k)) : keys.every((k) => k === 'wa-tour' || /^wa\./.test(k)), JSON.stringify(keys));
   await p.context().close();
+
+  /* ================================================================ the real steps: what an independent walk of the tour found (the day of the story) */
+  {
+    const time = DAYS[0][0], tag = 'real steps: ';
+    p = await openPage(browser, base, errs, { time });
+    await p.click('.wa-tour-pill');
+    await welcome(p, tag + 'the welcome card opens');
+
+    // the open-now badges draw themselves again every 60 seconds and when the tab is shown again, with the real date: they must keep saying what the pretended season says
+    const badges = () => p.evaluate(() => [...document.querySelectorAll('.hero-live .live')].filter((e) => !e.hidden).map((e) => e.textContent.replace(/\s+/g, ' ').trim()).join(' | '));
+    await goto(p, 'ch2-badges');
+    await atTitle(p, 'Open now, or closed today', tag + 'the badges step shows');
+    const real = await badges();
+    await btn(p, 'Summer').click();
+    await okSoon(tag + 'Summer pressed: only The GreenHouse badge shows, and it says it is open', async () => ({ l: await look(p), b: await badges() }), (v) => v.l && v.l.rowBusy === 'false' && v.l.choices.includes('Summer*') && /Open now/.test(v.b) && !/farm|visits|reserved/i.test(v.b));
+    const summer = await badges();
+    ok(tag + 'the badges of today are not the badges of a summer Saturday (the day of the story is a Tuesday in fall)', summer !== real, JSON.stringify({ real, summer }));
+    await p.clock.runFor(65000);
+    await settled(p, 300);
+    ok(tag + 'a minute later (js/live.js drew the badges again with the real date) they still say the summer words: "' + summer + '"', (await badges()) === summer, JSON.stringify({ now: await badges(), summer }));
+    await p.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await settled(p, 300);
+    ok(tag + 'and when the tab is shown again', (await badges()) === summer, await badges());
+    await press(p, 'Next');
+    await atTitle(p, 'The big buttons', tag + 'Next goes on');
+    ok(tag + 'Next put the real badges back, and the draw-again every minute asks for the real date again', (await badges()) === real && (await p.evaluate(() => !window.WISE_ACRES.pretendNow)), JSON.stringify({ now: await badges(), real }));
+    await p.clock.runFor(65000);
+    await settled(p, 300);
+    ok(tag + '...also after the next minute', (await badges()) === real, await badges());
+
+    // the sign-up preview: a form without an address that nobody handles; the browser would send it to this same page, with the email in the address, and the tour would close
+    await goto(p, 'ch8-signup');
+    await atTitle(p, 'The email sign-up', tag + 'the sign-up step shows');
+    await p.fill('#su-email', 'owner@example.com');
+    const urlWas = p.url();
+    await p.click('#signup button[type="submit"]');
+    await p.waitForTimeout(500);
+    let sent;
+    try { sent = await p.evaluate(() => ({ url: location.href, card: !!document.querySelector('.wa-tour-card'), note: (document.querySelector('.wa-tour-flash') || {}).textContent || '', email: document.getElementById('su-email').value })); } catch (e) { sent = { error: String(e.message).slice(0, 90) }; }
+    ok(tag + 'typing an email in the sign-up preview and pressing "Join the email list" sends nothing: the address does not change, the tour stays, and the card says forms are switched off', !sent.error && sent.url === urlWas && sent.card && /Forms are switched off/.test(sent.note) && sent.email === 'owner@example.com', JSON.stringify(sent));
+
+    // the language list: a press on another language really changes the site, and the site keeps it; leaving the step puts it back
+    await goto(p, 'ch9-languages');
+    await atTitle(p, 'The language list', tag + 'the language step shows');
+    await p.click('.lang-list [data-lang="es"]');
+    await okSoon(tag + 'Español pressed: the whole site is Spanish', () => p.evaluate(() => ({ w: window.WISE_ACRES.lang, h: document.documentElement.lang })), (v) => v.w === 'es' && v.h === 'es', 20000);
+    await press(p, 'Next');
+    await okSoon(tag + 'Next: the site is English again, and the choice kept on this device is not Spanish', () => p.evaluate(() => ({ w: window.WISE_ACRES.lang, h: document.documentElement.lang, kept: (function () { try { return localStorage.getItem('wa.lang'); } catch (e) { return 'blocked'; } })() })), (v) => v.w === 'en' && v.h === 'en' && v.kept !== 'es', 20000);
+    await p.keyboard.press('Escape');
+    await okSoon(tag + 'the tour closes', () => p.evaluate(() => !document.querySelector('.wa-tour')), (v) => v === true);
+    await p.context().close();
+  }
 });

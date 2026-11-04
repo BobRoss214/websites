@@ -19,7 +19,10 @@
  *   - calm mode and reduced motion (nothing slides), a phone (the card is a sheet at the bottom; the target is above it), a long text scrolls inside the card
  *   - a step's own row of small buttons (step.choices, used by the season walk of the real steps): not there on other steps, one button each with the pressed one marked,
  *     run() waited for and a run() that throws not stopping the card, the card's title and text changing, the lit box measured again, a press ignored while the tour moves on,
- *     Next / Back / Contents / Esc while a press is still being carried out, a list given by a function, a phone, axe */
+ *     Next / Back / Contents / Esc while a press is still being carried out, a list given by a function, a phone, axe
+ *   - what an independent walk of the real tour found (section 8): a form nobody handles is stopped (the sign-up preview), a dialog the page opens over the tour is above the
+ *     dimmer and keeps its Esc, the first Esc on a part of the page brings the focus back to the card, a link to a place on the page brings the lit part back, the card keeps off the
+ *     buttons of a wide lit box, the lit part is brought under the sticky demo bar too */
 import { run, open, ok, okSoon, until, info, settled, ms, axeSource, ROOT } from './lib.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -344,6 +347,7 @@ await run('tour', async ({ browser, base, errs }) => {
   await okSoon('Contents shows each part with its number of steps, and the part you are in is marked', () => p.evaluate(() => [...document.querySelectorAll('.wa-tour-chap')].map((b) => b.textContent.trim().replace(/\s+/g, ' ') + (b.getAttribute('aria-current') ? ' *' : ''))), (l) => l.join('|') === '1. Welcome 1 step|2. The first screen 4 steps|3. Planning 4 steps|4. Other page 1 step|5. The end 1 step *');
   const c1 = await look(p);
   ok('Contents says where you are and has no lit box (the page is dimmed all over)', /You are at step 11 of 11/.test(c1.text) && c1.hole === null, c1.text.slice(0, 80));
+  ok('Contents is a list of buttons with no bullet dots and no padding at the left (the rule for the lists in the card\'s words does not reach it)', await p.evaluate(() => { const c = getComputedStyle(document.querySelector('.wa-tour-chapters')); return c.listStyleType === 'none' && parseFloat(c.paddingLeft) === 0; }), '');
   await p.keyboard.press('Escape');
   await atStep(p, 11, 'Esc in Contents goes back to the step (it does not close the tour)');
   await press(p, 'Contents');
@@ -423,7 +427,7 @@ await run('tour', async ({ browser, base, errs }) => {
   const before = p.url();
   await p.evaluate(() => { const a = document.createElement('a'); a.href = 'index.html#tour'; a.setAttribute('data-tour-open', ''); a.id = 'open-link'; a.textContent = 'Take a tour (link)'; a.style.cssText = 'position:fixed;left:10px;top:120px;z-index:60;background:#fff'; document.body.appendChild(a); });
   await p.click('#open-link');
-  await okSoon('a link with data-tour-open opens the welcome card on this page, and the address does not change', () => look(p), (x) => x && x.name === 'Your website tour');
+  await okSoon('a link with data-tour-open opens the welcome card on this page, and the address does not change', () => look(p), (x) => x && x.name === 'Your website tour' && /It takes about \d+ minutes/.test(x.text));   // ("Getting the tour ready..." has the same title: wait for the words of the welcome card)
   ok('the address did not change', p.url() === before, p.url());
   ok('with one step the welcome card says "about 5 minutes" (never less)', /about 5 minutes/.test((await look(p)).text));
   await p.context().close();
@@ -702,5 +706,163 @@ await run('tour', async ({ browser, base, errs }) => {
   s = await look(p);
   target = await rectOf(p, '.announce');
   ok('choices (phone): the sheet with the row is inside the window and the page does not scroll sideways', s.sheet && inside(s.card, s.vw, s.vh) && (await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 1, JSON.stringify({ card: s.card }));
+  await p.context().close();
+
+  /* ================================================================ 8. what an independent walk of the real tour found */
+  const STEPS_WALK = `
+(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push(
+  { id: 'w1', order: 101, chapter: 1, page: 'index', target: '#faq', title: 'A lit section', text: 'Forms, links, a question and a dialog.' },
+  { id: 'w2', order: 102, chapter: 1, page: 'index', target: '#t-wide', title: 'A wide box', text: 'The card keeps off the buttons.' },
+  { id: 'w3', order: 103, chapter: 1, page: 'index', target: null, title: 'The end', text: 'End.' }
+);
+window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
+`;
+  p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: serve({ a: STEPS_WALK }) });
+  await p.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'auto';
+    // in the lit section (#faq): a form that nobody handles, a form the page handles, a form that only closes a dialog, a question, a link to a place far away, a menu with its own Esc
+    const host = document.querySelector('#faq .faq-list') || document.querySelector('#faq');
+    const box = document.createElement('div'); box.id = 't-walk'; box.style.cssText = 'padding:12px;background:#fff';
+    box.innerHTML = '<form id="t-bare" novalidate><input id="t-email" name="EMAIL" type="email" value="a@b.example"> <button type="submit" id="t-bare-go">Join the list</button></form>'
+      + '<form id="t-own" novalidate><button type="submit" id="t-own-go">Handled by the page</button></form>'
+      + '<form id="t-dlg" method="dialog"><button type="submit" id="t-dlg-go">Closes a dialog</button></form>'
+      + '<details id="t-q"><summary id="t-sum">A question</summary><p>An answer.</p></details>'
+      + '<a id="t-down" href="#visit" style="display:inline-block;padding:8px">Go to the visit part</a> '
+      + '<button type="button" id="t-menu-btn" aria-expanded="false" aria-controls="t-menu-list">Menu</button><ul id="t-menu-list" hidden><li>One</li></ul>';
+    host.appendChild(box);
+    window.__own = 0; window.__menuEsc = 0; window.__kept = 'kept';
+    document.getElementById('t-own').addEventListener('submit', (e) => { e.preventDefault(); window.__own++; });
+    const mb = document.getElementById('t-menu-btn');
+    mb.addEventListener('click', () => { const o = mb.getAttribute('aria-expanded') !== 'true'; mb.setAttribute('aria-expanded', String(o)); document.getElementById('t-menu-list').hidden = !o; });
+    mb.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mb.getAttribute('aria-expanded') === 'true') { window.__menuEsc++; mb.click(); } });   // the page closes its own menu
+    // a wide lit box with a button at the top right and one at the bottom right: there is no room beside it, so the card has to sit on it
+    const wide = document.createElement('div'); wide.id = 't-wide'; wide.style.cssText = 'position:fixed;left:100px;top:100px;width:1240px;height:640px;z-index:55;background:#fffdf6;border:2px solid #3a2416';
+    wide.innerHTML = '<h2 style="margin:12px">A wide box</h2><button type="button" id="t-no" style="position:absolute;right:20px;top:20px;width:200px;height:60px">No</button><button type="button" id="t-yes" style="position:absolute;right:20px;bottom:20px;width:200px;height:60px">Yes</button><p style="margin:12px">Plain words.</p>';
+    document.body.appendChild(wide);
+    // a dialog of the page, built like the pretend account's (css/demo.css: fixed, z-index 200; js/demo-ui.js: Esc is heard on the document, in the capture phase)
+    const st = document.createElement('style');
+    st.textContent = '.demo-modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:80px 14px;background:rgba(0,0,0,.45)}.demo-modal-box{background:#fff;border:3px solid #000;padding:20px}';
+    document.head.appendChild(st);
+    window.__modalClicks = 0; window.__modalEsc = 0;
+    window.__openModal = () => {
+      const back = document.createElement('div'); back.className = 'demo-modal'; back.setAttribute('data-demo-modal', '');
+      back.innerHTML = '<div class="demo-modal-box" role="dialog" aria-modal="true" tabindex="-1"><h2>A dialog</h2><button type="button" id="t-m-ok">OK</button></div>';
+      document.body.appendChild(back);
+      back.querySelector('#t-m-ok').addEventListener('click', () => { window.__modalClicks++; });
+      const onKey = (e) => { if (e.key === 'Escape') { window.__modalEsc++; back.remove(); document.removeEventListener('keydown', onKey, true); } };
+      document.addEventListener('keydown', onKey, true);
+      back.querySelector('#t-m-ok').focus();
+    };
+  });
+  await p.click('.wa-tour-pill');
+  await okSoon('walk: the welcome card opens', () => look(p), (x) => x && x.name === 'Your website tour' && !x.busy);
+  await press(p, 'Start the tour');
+  await atStep(p, 1, 'walk: step 1 lights the FAQ section');
+  ok('walk: while the tour is open <html> has the class wa-tour-open', await p.evaluate(() => document.documentElement.classList.contains('wa-tour-open')), '');
+  const showMid = (sel) => p.evaluate((x) => document.querySelector(x).scrollIntoView({ block: 'center' }), sel).then(() => p.waitForTimeout(400));
+  const noteNow = () => p.evaluate(() => (document.querySelector('.wa-tour-flash') || {}).textContent || '');
+  const clearNote = () => p.evaluate(() => { const n = document.querySelector('.wa-tour-flash'); if (n) n.remove(); });
+
+  // a form nobody handles (no action, no script: the sign-up preview): its send would load this page again with the fields in the address, and the tour would be gone
+  await showMid('#t-bare-go');
+  const urlWas = p.url();
+  await p.click('#t-bare-go');
+  await p.waitForTimeout(500);
+  let bare;
+  try { bare = await p.evaluate(() => ({ url: location.href, kept: window.__kept, card: !!document.querySelector('.wa-tour-card'), note: (document.querySelector('.wa-tour-flash') || {}).textContent || '' })); } catch (e) { bare = { error: String(e.message).slice(0, 90) }; }
+  ok('walk: a form that nobody handles is stopped: the address does not change, the page is not loaded again, the tour stays, and the card says forms are switched off', !bare.error && bare.url === urlWas && bare.kept === 'kept' && bare.card && /Forms are switched off/.test(bare.note), JSON.stringify(bare));
+  await clearNote();
+  await showMid('#t-own-go');
+  await p.click('#t-own-go');
+  await p.waitForTimeout(300);
+  ok('walk: a form the page handles itself (its own code stops the send) is left alone: the code ran once and the card has no note', (await p.evaluate(() => window.__own)) === 1 && (await noteNow()) === '', String(await noteNow()));
+  await showMid('#t-dlg-go');
+  await p.click('#t-dlg-go');
+  await p.waitForTimeout(300);
+  ok('walk: a form that only closes a dialog (method="dialog") is left alone too', (await noteNow()) === '' && (await p.evaluate(() => window.__kept)) === 'kept', String(await noteNow()));
+  // the photo viewer: opened by a photo link of the page, closed by the form in its corner
+  await p.evaluate(() => { const a = document.createElement('a'); a.id = 't-photo'; a.href = 'assets/photos/wise-pie-fall-menu-2026.webp'; a.setAttribute('data-zoom', ''); a.textContent = 'A photo'; a.style.cssText = 'display:inline-block;padding:8px'; document.getElementById('t-walk').appendChild(a); if (window.WISE_ACRES && window.WISE_ACRES.bindZoom) window.WISE_ACRES.bindZoom(a); });
+  await showMid('#t-photo');
+  await p.click('#t-photo');
+  await okSoon('walk: a photo link of the page opens the photo viewer while the tour is open', () => p.evaluate(() => !!document.querySelector('dialog[open]')), (v) => v === true);
+  await p.click('dialog[open] .lightbox-close');
+  await okSoon('walk: ...and the viewer\'s own close button closes it (its form is not stopped), with no note in the card', async () => ({ open: await p.evaluate(() => !!document.querySelector('dialog[open]')), note: await noteNow() }), (v) => v.open === false && v.note === '');
+
+  // a dialog of the page opened over the tour (the pretend account's .demo-modal): above the dimmer and the card, usable, and it keeps its Esc
+  await p.evaluate(() => window.__openModal());
+  const mz = await p.evaluate(() => { const back = document.querySelector('.demo-modal'), okb = document.getElementById('t-m-ok'), r = okb.getBoundingClientRect(), hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { z: getComputedStyle(back).zIndex, onTop: hit === okb }; });
+  ok('walk: a dialog the page opens while the tour is open is above the dimmer (z-index 9100), and its button is the thing at that place', mz.z === '9100' && mz.onTop, JSON.stringify(mz));
+  const reach = await p.evaluate(() => {
+    const back = document.querySelector('.demo-modal'), box = back.querySelector('.demo-modal-box'), cs = getComputedStyle(back);
+    const nx = [...document.querySelectorAll('.wa-tour-card button')].find((b) => b.textContent.trim() === 'Next'), r = nx.getBoundingClientRect();
+    return { bg: cs.backgroundColor, pe: cs.pointerEvents, boxPe: getComputedStyle(box).pointerEvents, nextOnTop: document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === nx };
+  });
+  ok('walk: the dialog\'s own dim overlay does not dim or block (transparent, no pointer events), only its box takes clicks, and the Next button of the card is still the thing at its place', reach.bg === 'rgba(0, 0, 0, 0)' && reach.pe === 'none' && reach.boxPe === 'auto' && reach.nextOnTop, JSON.stringify(reach));
+  await p.click('#t-m-ok');
+  ok('walk: ...a real click on the dialog\'s button reaches it', (await p.evaluate(() => window.__modalClicks)) === 1, '');
+  await press(p, 'Next');
+  await atStep(p, 2, 'walk: Next works while the dialog is open (the card is not under its overlay)');
+  await press(p, 'Back');
+  await atStep(p, 1, 'walk: ...and Back');
+  ok('walk: (the dialog is still open: the tour does not close the dialogs of the page; a step that opens one closes it in its after())', await p.evaluate(() => !!document.querySelector('.demo-modal')), '');
+  await p.focus('#t-m-ok');
+  await p.keyboard.press('Escape');
+  await okSoon('walk: Esc with the dialog open (the focus is in it) closes the dialog and not the tour', () => p.evaluate(() => ({ esc: window.__modalEsc, modal: !!document.querySelector('.demo-modal'), card: !!document.querySelector('.wa-tour-card') })), (v) => v.esc === 1 && !v.modal && v.card);
+  await p.evaluate(() => { window.__openModal(); document.activeElement.blur(); });
+  await p.keyboard.press('Escape');
+  await okSoon('walk: ...and with the focus on the page itself (nothing focused) it is the same', () => p.evaluate(() => ({ esc: window.__modalEsc, modal: !!document.querySelector('.demo-modal'), card: !!document.querySelector('.wa-tour-card') })), (v) => v.esc === 2 && !v.modal && v.card);
+
+  // a link to a place on this page scrolls the page away from the lit section: a moment later the lit section is brought back, with the card
+  await showMid('#t-down');
+  await p.evaluate(() => { window.__y0 = window.scrollY; window.__dev = 0; window.addEventListener('scroll', () => { window.__dev = Math.max(window.__dev, Math.abs(window.scrollY - window.__y0)); }); });
+  await p.click('#t-down');
+  await okSoon('walk: after a link to #visit in the lit section the lit section is on the screen again (the page had gone away, then came back), and the lit box is on it', async () => ({ dev: await p.evaluate(() => window.__dev), r: await rectOf(p, '#faq'), l: await look(p) }), (v) => v.dev > 400 && v.r && v.r.y < v.l.vh - 100 && v.r.b > 100 && v.l.hole && v.l.hole.y < v.l.vh && v.l.hole.b > 0 && inside(v.l.card, v.l.vw, v.l.vh), 20000);
+
+  // a wide lit box: the card has to sit on it and keeps off its two buttons
+  await press(p, 'Next');
+  await atStep(p, 2, 'walk: step 2 lights the wide box');
+  s = await look(p);
+  const yes = await rectOf(p, '#t-yes'), no = await rectOf(p, '#t-no');
+  ok('walk: the card is on the wide box (there is no room beside it) and covers neither of its buttons', overlap(s.card, await rectOf(p, '#t-wide')) > 0 && overlap(s.card, yes) === 0 && overlap(s.card, no) === 0, JSON.stringify({ card: s.card, yes, no }));
+  await press(p, 'Back');
+  await atStep(p, 1, 'walk: Back to step 1');
+
+  // Esc: a menu of the page keeps its own Esc; a question of the lit section: one Esc brings the focus back to the card, the next one closes the tour
+  await showMid('#t-menu-btn');
+  await p.click('#t-menu-btn');
+  ok('walk: the menu in the lit section opens (the page may use it)', (await p.evaluate(() => document.getElementById('t-menu-btn').getAttribute('aria-expanded'))) === 'true', '');
+  await p.keyboard.press('Escape');
+  await okSoon('walk: Esc with that menu open is the menu\'s own: it closes, and the tour stays open with the focus where it was', () => p.evaluate(() => ({ esc: window.__menuEsc, open: document.getElementById('t-menu-btn').getAttribute('aria-expanded'), card: !!document.querySelector('.wa-tour-card'), onMenu: document.activeElement && document.activeElement.id === 't-menu-btn' })), (v) => v.esc === 1 && v.open === 'false' && v.card && v.onMenu);
+  await showMid('#t-sum');
+  await p.focus('#t-sum');
+  await p.keyboard.press('Escape');
+  await okSoon('walk: Esc with the focus on a question of the lit section brings the focus back to the card (the tour stays open)', () => look(p), (x) => x && x.inCard && x.focus === 'Next');
+  await p.focus('#t-sum');
+  await p.keyboard.press('ArrowRight');
+  await p.waitForTimeout(300);
+  ok('walk: (the arrow keys belong to the page while the focus is on a question: the step did not change)', (await look(p)).n === 1, '');
+  await p.keyboard.press('Escape');
+  await okSoon('walk: (one Esc again: the focus is back on the card)', () => look(p), (x) => x && x.inCard);
+  await p.keyboard.press('Escape');
+  await okSoon('walk: ...and the next Esc, from the card, closes the tour', () => p.evaluate(() => !document.querySelector('.wa-tour')), (v) => v === true);
+  ok('walk: when the tour is closed <html> has no wa-tour-open and a dialog of the page is at its own level again (z-index 200)', await (async () => { await p.evaluate(() => window.__openModal()); const r = await p.evaluate(() => ({ cls: document.documentElement.classList.contains('wa-tour-open'), z: getComputedStyle(document.querySelector('.demo-modal')).zIndex })); await p.evaluate(() => { const m = document.querySelector('.demo-modal'); if (m) m.remove(); }); return !r.cls && r.z === '200'; })(), '');
+  await p.context().close();
+
+  // the lit part is brought under the sticky bar of the pretend-account pages too, not only under the top bar
+  const STEPS_BAR = `(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push({ id: 'b1', order: 101, chapter: 1, page: 'index', target: '#faq', title: 'Under both bars', text: 'The section is brought under the top bar and the demo bar.' });`;
+  p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: serve({ a: STEPS_BAR }) });
+  await p.evaluate(() => {
+    const h = document.querySelector('.site-header'), top = Math.round(h.getBoundingClientRect().height) + 3;
+    const bar = document.createElement('div'); bar.className = 'demo-bar'; bar.id = 't-bar';
+    bar.style.cssText = 'position:sticky;top:' + top + 'px;z-index:40;height:70px;background:#ffc928;border-bottom:3px solid #3a2416';
+    bar.textContent = 'A demo bar';
+    h.insertAdjacentElement('afterend', bar);
+  });
+  await p.click('.wa-tour-pill');
+  await okSoon('walk (demo bar): the welcome card opens', () => look(p), (x) => x && x.name === 'Your website tour' && !x.busy);
+  await press(p, 'Start the tour');
+  await atStep(p, 1, 'walk (demo bar): step 1 lights the FAQ section');
+  const secT = await rectOf(p, '#faq'), barT = await rectOf(p, '#t-bar'), headT = await p.evaluate(() => document.querySelector('.site-header').getBoundingClientRect().bottom);
+  ok('walk (demo bar): the lit section starts below the top bar AND the sticky demo bar under it, so nothing of it is hidden behind them', barT.y >= headT - 1 && secT.y >= barT.b - 1, JSON.stringify({ section: secT.y, bar: [barT.y, barT.b], head: headT }));
   await p.context().close();
 });

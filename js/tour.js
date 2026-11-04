@@ -183,7 +183,12 @@
   pill.setAttribute('aria-haspopup', 'dialog');
 
   const sheet = () => (root.clientWidth || win.innerWidth) <= 640;   // a phone: the card is a sheet at the bottom
-  const headerH = () => { const h = $('.site-header'); return h ? h.getBoundingClientRect().height : 0; };
+  const headerH = () => {   // the sticky top bar; on the pretend-account pages (a computer) the thin demo bar sticks under it, and the lit box must not hide behind that either
+    const h = $('.site-header'), d = $('.demo-bar');
+    let n = h ? h.getBoundingClientRect().height : 0;
+    if (d) { const cs = getComputedStyle(d), top = parseFloat(cs.top); if (cs.position === 'sticky') n = (isNaN(top) ? n : top) + d.getBoundingClientRect().height; }
+    return n;
+  };
   const jump = (y) => {   // an instant scroll, whatever smooth scrolling the page asks for
     const before = root.style.scrollBehavior;
     root.style.scrollBehavior = 'auto';
@@ -358,6 +363,18 @@
     ui.body.scrollTop = 0;
   };
 
+  // What the card should not sit on when it has to sit on the lit box: its buttons, links, fields, switches and headings, and what an open button of it shows (a list, a panel)
+  const KEEP_CLEAR = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, label, [role="button"], [role="switch"], [role="tab"], [role="checkbox"], [role="radio"], h1, h2, h3, h4, h5, h6';
+  const keepClear = () => {
+    const out = [];
+    if (!curEl || !curEl.isConnected) return out;
+    const add = (n) => { if (out.length < 400 && shown(n)) { const b = n.getBoundingClientRect(); if (b.width >= 8 && b.height >= 8) out.push(b); } };
+    $$(KEEP_CLEAR, curEl).forEach(add);
+    if (curEl.matches(KEEP_CLEAR)) add(curEl);
+    $$('[aria-controls][aria-expanded="true"]', curEl).forEach((c) => { const p = doc.getElementById(c.getAttribute('aria-controls')); if (p) add(p); });
+    return out;
+  };
+
   /* The lit box and the card follow the target while a step shows: one measure per frame, a style change only when something moved. */
   const place = (force) => {
     if (!ui) return;
@@ -396,10 +413,13 @@
       const right = [hl + hw + G, midY], left = [hl - G - w, midY], below = [midX, ht + hh + G], above = [midX, ht - G - h];
       const opts = (hl + hw / 2 < vw / 2 ? [right, left, below, above] : [left, right, below, above]).concat([[vw - w - M, vh - h - M], [M, vh - h - M], [vw - w - M, M], [M, M]]);
       let best = null, bestScore = Infinity;
+      const keep = keepClear();
       opts.forEach((o) => {
         const out = Math.max(0, M - o[0]) + Math.max(0, o[0] + w - (vw - M)) + Math.max(0, M - o[1]) + Math.max(0, o[1] + h - (vh - M));
         const ox = Math.max(0, Math.min(o[0] + w, hl + hw) - Math.max(o[0], hl)), oy = Math.max(0, Math.min(o[1] + h, ht + hh) - Math.max(o[1], ht));
-        const score = out * 1000 + ox * oy;
+        let hit = 0;   // how much of the buttons, fields, switches and headings of the lit box this place would cover
+        keep.forEach((b) => { hit += Math.max(0, Math.min(o[0] + w, b.right) - Math.max(o[0], b.left)) * Math.max(0, Math.min(o[1] + h, b.bottom) - Math.max(o[1], b.top)); });
+        const score = out * 1000 + ox * oy + hit * 5;
         if (score < bestScore) { best = o; bestScore = score; }
       });
       x = best[0]; y = best[1];
@@ -561,6 +581,8 @@
    * 8. Open, close, and the keys.
    * ------------------------------------------------------------------ */
   const inTour = (n) => !!(ui && n && ui.box.contains(n));
+  const pageDialog = () => $$('.demo-modal, dialog[open]').some((d) => !inTour(d) && shown(d));   // a dialog of the page (the pretend account's .demo-modal, the photo viewer) is open
+  const openNow = () => $$('[aria-expanded="true"]').some((b) => !inTour(b));   // a menu or list of the page is open: it keeps its own Esc
   const reachable = () => {   // what Tab can reach: the card's buttons, and (when the page may be used) what is inside the lit box
     const mine = $$('button:not([disabled])', ui.card).filter((b) => !b.hidden);
     if (!(view === 'step' && curStep && curStep.allowClicks !== false && curEl)) return mine;
@@ -581,6 +603,13 @@
       e.preventDefault(); e.stopPropagation();
       list[at < 0 ? (e.shiftKey ? list.length - 1 : 0) : (at + (e.shiftKey ? -1 : 1) + list.length) % list.length].focus();
       return;
+    }
+    if (e.key === 'Escape' && !e.altKey && !e.ctrlKey && !e.metaKey) {
+      if (pageDialog()) return;   // an open dialog of the page takes Esc for itself (it closes; the tour stays)
+      if (!free) {   // the focus is on a part of the page (a question of the lit part): one Esc brings it back to the card, the next one closes the tour. An open menu keeps its own Esc
+        if (view === 'step' && !openNow()) { e.preventDefault(); e.stopPropagation(); focusCard(); }
+        return;
+      }
     }
     if (e.altKey || e.ctrlKey || e.metaKey || !free) return;   // a key meant for a part of the page that has the focus
     if (e.key === 'Escape') {
@@ -615,6 +644,16 @@
       return u.origin !== here.origin || one(u.pathname) !== one(here.pathname) || u.search !== here.search || href.indexOf('#') < 0;
     } catch (e) { return false; }
   };
+  let backTimer = 0;
+  const comeBack = () => {   // a link to a place on this page scrolls the page away from the lit part: a moment later the lit part is brought back, and the card with it
+    if (view !== 'step' || !curEl) return;
+    const mine = seq, el = curEl;
+    clearTimeout(backTimer);
+    backTimer = setTimeout(() => {
+      if (!ui || view !== 'step' || mine !== seq || curEl !== el) return;
+      bring(el, true).then(() => { if (ui && mine === seq) { placed = ''; place(true); } });
+    }, 700);
+  };
   const onLink = (e) => {
     if (!ui || !e.target || !e.target.closest || inTour(e.target)) return;
     const a = e.target.closest('a[href]');
@@ -624,11 +663,12 @@
       flash('This link is switched off during the tour, because it would take you away from it.');
       return;
     }
-    // "/" and "/index.html" are one page, but the browser loads the page again for a link that spells it the other way, and the tour would be gone: only the place is moved to
     if (e.type !== 'click' || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    // "/" and "/index.html" are one page, but the browser loads the page again for a link that spells it the other way, and the tour would be gone: only the place is moved to
     let u = null;
     try { u = new URL(a.getAttribute('href') || '', win.location.href); } catch (err) { u = null; }
     if (u && u.origin === win.location.origin && u.pathname !== win.location.pathname) { e.preventDefault(); e.stopPropagation(); win.location.hash = u.hash; }
+    comeBack();
   };
   const onForm = (e) => {
     const f = e.target;
@@ -636,6 +676,12 @@
     let out = false;
     try { out = new URL(f.action, win.location.href).origin !== win.location.origin; } catch (err) { out = false; }
     if (out) { e.preventDefault(); e.stopPropagation(); flash('Forms are switched off during the tour.'); }
+  };
+  const onFormLate = (e) => {   // heard after the page's own handlers: a form that nobody handled (no action, no script) would send its fields to this same address and load the page again
+    const f = e.target;
+    if (!ui || e.defaultPrevented || !f || inTour(f) || f.method === 'dialog') return;
+    e.preventDefault();
+    flash('Forms are switched off during the tour.');
   };
 
   const openTour = (how, at) => beginTour(how, at).catch((e) => warn('opening', e));
@@ -652,6 +698,8 @@
     doc.addEventListener('click', onLink, true);
     doc.addEventListener('auxclick', onLink, true);
     doc.addEventListener('submit', onForm, true);
+    doc.addEventListener('submit', onFormLate, false);
+    root.classList.add('wa-tour-open');   // css/tour.css: what the page opens over the tour (a dialog) is lifted above the dimmer
     setCard({ title: 'Your website tour', text: 'Getting the tour ready...', buttons: [['Not now', () => endTour(false), 'ghost', true]] });
     setBusy(true); place(true);
     styled = await loadCss();
@@ -691,6 +739,9 @@
       doc.removeEventListener('click', onLink, true);
       doc.removeEventListener('auxclick', onLink, true);
       doc.removeEventListener('submit', onForm, true);
+      doc.removeEventListener('submit', onFormLate, false);
+      root.classList.remove('wa-tour-open');
+      clearTimeout(backTimer);
       clearTimeout(flashTimer);
       clearTimeout(glide);
       ui.box.remove();

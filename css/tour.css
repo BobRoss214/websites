@@ -9,6 +9,12 @@
 .wa-tour-pill{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:70;margin:0}
 @media (max-width:47.5em){.wa-tour-pill{bottom:calc(158px + env(safe-area-inset-bottom,0px))}}
 
+/* a dialog the page opens while the tour is on (the pretend account's .demo-modal, z-index 200, with a dim overlay of its own) is lifted above the tour's dimmer so that it can
+   be read and used, but its overlay no longer dims or blocks anything: the tour's own dimmer keeps dimming the page, and the tour's card (below it, in its own layer) stays reachable.
+   Only the box of the dialog takes clicks. js/tour.js puts the class on <html> while the tour is open */
+html.wa-tour-open .demo-modal{z-index:9100;background:transparent;pointer-events:none}
+html.wa-tour-open .demo-modal-box{pointer-events:auto}
+
 /* the tour: a dimmer with a hole round the lit box, and the card */
 .wa-tour{position:fixed;top:0;left:0;width:0;height:0;z-index:9000;font-family:var(--body,sans-serif);color:var(--ink,#3a2416)}
 .wa-tour-shield{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;background:transparent}   /* it stops clicks reaching the page behind */
@@ -44,7 +50,7 @@
 @media (hover:hover){.wa-tour-x:hover{background:#fff3cf}}
 
 /* "Contents": one button for each part of the tour */
-.wa-tour-chapters{margin:0 0 .5em;padding:0;list-style:none}
+.wa-tour-chapters,.wa-tour-body .wa-tour-chapters{margin:0 0 .5em;padding:0;list-style:none}   /* (the second one wins over the bullets of every list in the card's words) */
 .wa-tour-chap{display:flex;align-items:baseline;justify-content:space-between;width:100%;min-height:44px;margin:0 0 6px;padding:.5em .9em;text-align:left;font:600 1.0625rem/1.25 var(--display,sans-serif);color:var(--ink,#3a2416);background:#fff;border:3px solid var(--ink,#3a2416);border-radius:14px;cursor:pointer}
 .wa-tour-chap-count{flex:none;margin-left:12px;font:600 .85rem/1.25 var(--body,sans-serif);white-space:nowrap;color:var(--ink-soft,#6a5140)}
 .wa-tour-chap.is-here{background:var(--sun,#ffc928)}

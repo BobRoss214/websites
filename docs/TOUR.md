@@ -26,7 +26,7 @@ To go to other pages the tour keeps the switch on for itself. With `?tour` it ta
 5. They can stop at any time. The next time they press the button, the welcome card has a **Continue where I stopped** button and says at which step they stopped. This works after the page was closed, and on another day, on the same computer and browser.
 6. Some steps are about parts of the site that change with the season (ten today: the strip, the first screen, the badges, the game, the countdown, This week, the two places, What's in season, What's on the farm, the trees at The GreenHouse). Their card has a row of four small buttons, **Spring, Summer, Fall and Winter** (the season walk, below). Pressing one switches the whole page to that season, the lit part stays lit, and the card says what the part shows now and what is different from the season before. **Next, Back, Contents and Close put the page back** as it was.
 
-Keys: the Right arrow is Next, the Left arrow is Back, Enter is Next, Esc closes. Tab and Shift+Tab go round the card's buttons and, in a step that lights a part of the page, the things inside that lit part too (a question, a link); they never reach the rest of the page. A screen reader hears each step once, politely.
+Keys: the Right arrow is Next, the Left arrow is Back, Enter is Next, Esc closes. If the focus is on a part of the page (a question in the lit part), the first Esc brings the focus back to the card and the next one closes the tour; a menu or dialog of the page that is open keeps its own Esc. Tab and Shift+Tab go round the card's buttons and, in a step that lights a part of the page, the things inside that lit part too (a question, a link); they never reach the rest of the page. A screen reader hears each step once, politely.
 On a phone the card is a sheet at the bottom of the screen and the lit box is moved above it.
 
 ## What it does to the page
@@ -34,6 +34,12 @@ On a phone the card is a sheet at the bottom of the screen and the lit box is mo
 - It changes nothing for real. Nothing is sent anywhere. It only keeps its own place in the browser, under the name `wa-tour`: one note for this tab and one for the next day. Finishing the tour deletes both.
 - When the tour closes it puts back what it touched: a menu a step opened is closed, and the page goes back to where it was when the tour was opened.
 - With "Pause animations" on, or when the visitor's system asks for reduced motion, nothing slides or fades: the lit box just appears.
+- While it is open `<html>` has the class `wa-tour-open`. A dialog the page opens meanwhile (the pretend account's `.demo-modal`) is lifted above the dimmer and the card (`css/tour.css`, z-index 9100) so that it can be used, and it keeps its Esc. A step that opens a dialog should say `allowClicks: true` and close the dialog in `after()`.
+- A form that nobody handles (no address, no script of the page: the sign-up preview) is stopped too, with the note "Forms are switched off during the tour." Its send would load this same page again with the fields in the address, and the tour would be gone. A form the page handles itself, and a form that only closes a dialog, work as usual.
+- A link to a place on this page (`#visit`) works. The page may scroll away from the lit part; a moment later the lit part is brought back, and the card with it.
+- On a computer the card sits beside the lit box. When there is no room beside it (a wide box), the card sits on the box, in the corner that covers the least: it keeps off the buttons, links, fields, switches and headings of the lit part and off the list an open button of it shows.
+- The lit part is brought below the sticky top bar and, on the pretend-account pages (a computer), below the thin demo bar under it.
+- A step that changes something the site keeps puts it back in `after()`: the language list (a press on Español really changes the site and the choice is kept on that device) puts the language back.
 - If something is missing the tour does not stop. A step whose target is not on the page shows its card in the middle (or is skipped, when the step says so). A step that fails is shown anyway. A missing steps file is ignored.
 
 ## Turning it off, and taking it out
@@ -126,6 +132,7 @@ What a press does (the helpers are in `js/tour-steps.js`; `js/tour-steps-b.js` u
 3. The parts that follow the clock (the strip at the top, the countdown, "This week at the farm", the open-now badges, the "In season" fact, the "Happening now" and "Now" marks) draw themselves again, the way the page does it when the farm's day changes
    (`WISE_ACRES.live.refresh()`, then the `wa:day` event), for a **pretend day**: the Saturday on or before the middle of that season's dates (`js/season.js`), in the latest year when that day is not after today, at noon in New York.
    The clock is pretended only while they draw (an instant), then it is the real one again. A pretend day is never after today, so no line with a last day (`data-until`) is hidden by it.
+   The open-now badges draw themselves again every minute, and when the tab is shown again, with the real date (`js/live.js`). While a season is pretended they ask for the pretend moment instead: the one hook the tour put in `js/live.js` is `WISE_ACRES.pretendNow`, a function that `js/tour-steps.js` sets while a season is pretended and takes away when the page is put back. On a visitor's page nothing sets it.
 
 `seasonsEnd` (in `after`) puts everything back: the season switch, every `data-only` line as it was, the open tabs, and the clock parts drawn again with the real date. It also runs when the owner presses Next, Back, a part in Contents or Close.
 Changes and the putting back are made one after the other, so a quick Next never leaves the page half-changed.
@@ -150,9 +157,9 @@ On a phone the site's own style leaves out a few words (the “In season:” par
 | --- | --- |
 | `js/tour.js` | the engine (one script, after the site's own scripts on every page; the three pretend-account pages add their own scripts after it) |
 | `css/tour.css` | its look |
-| `tests/tour.test.mjs` | the engine, with made-up steps: the button, the welcome card, a walk through the steps, the lit box and the card, keys, links that leave the page, other pages, stopping and continuing, the small buttons of a step (`choices`), calm mode, a phone |
+| `tests/tour.test.mjs` | the engine, with made-up steps: the button, the welcome card, a walk through the steps, the lit box and the card (also a wide box and the sticky demo bar), keys (Esc, Tab), links and forms that would leave the page, a dialog of the page opened over the tour, other pages, stopping and continuing, the small buttons of a step (`choices`), calm mode, a phone |
 | `tests/tour-off.test.mjs` | with the switch off nothing changes on any page (`js/tour.js` comes after the site's own scripts; a page's own scripts come after it) |
 | `tests/tour-targets.test.mjs` | the real steps: their words, their targets on the real pages (1440 and 390 px, six days), and every small button of every step pressed in turn, the quoted words checked against the lit box, and no lit part that opens something outside its own box unless the step says `allowClicks: true` |
-| `tests/tour-seasons.test.mjs` | the season walk with the real engine and the real steps, on a fall day and a spring day: the whole page changes, Next / Back / Contents / Esc / Finish put it back, a phone, the keyboard, the whole tour walked |
+| `tests/tour-seasons.test.mjs` | the season walk with the real engine and the real steps, on a fall day and a spring day: the whole page changes, Next / Back / Contents / Esc / Finish put it back, a phone, the keyboard, the whole tour walked; and on the real steps: the badges after a minute, the sign-up preview, the language list |
 
 Run them with `node tests/run-all.mjs tour tour-off tour-targets tour-seasons`, as described in `tests/README.md`.

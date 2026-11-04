@@ -123,6 +123,11 @@
     return null;
   }
 
+  // The open-now badges draw themselves again every minute and when the tab is shown again (js/live.js), with the real moment. While a season is pretended they
+  // ask for the pretend moment instead: the one hook in js/live.js, WISE_ACRES.pretendNow.
+  function hold(at) { var S = site(), Real = W.Date; if (S === W.WISE_ACRES) S.pretendNow = function () { return new Real(at); }; }
+  function release() { var S = W.WISE_ACRES; if (S && S.pretendNow) S.pretendNow = null; }
+
   function redrawClock() {   // the parts that follow the clock draw themselves again: what js/live.js does when the farm's day changes (it draws, then announces wa:day)
     var S = site();
     try { if (S.live && S.live.refresh) S.live.refresh(); } catch (e) { /* the page's own problem */ }
@@ -149,7 +154,7 @@
           if (el.getAttribute('data-only').split(/\s+/).indexOf(id) >= 0) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
         });
         var at = pretendAt(id);
-        if (at !== null) withNow(at, redrawClock);
+        if (at !== null) { hold(at); withNow(at, redrawClock); }
         walk.pretend = id;
       });
     });
@@ -160,6 +165,7 @@
       var was = walk, hero = site().hero, away;
       if (!was) return null;
       walk = null;
+      release();
       away = !!hero && pageSeason() !== was.season;
       if (away) hero.setSeason(was.season);
       return (away ? pause(SWAP) : Promise.resolve()).then(function () {
@@ -194,7 +200,7 @@
     {
       id: 'ch1-hello', order: 101, chapter: 1, page: 'index', target: null,
       title: 'Welcome, Mrs. Cathy and Rob',
-      text: 'This tour shows your new website one part at a time. You will see what each part is and how it may help you. Where a step says try it, you can click. Nothing you click changes the site for anyone else.'
+      text: 'This tour shows your new website one part at a time. You will see what each part is and how it may help you. Whatever is lit up on the page, you can click and try. Nothing you click changes the site for anyone else.'
     },
     {
       id: 'ch1-real', order: 102, chapter: 1, page: 'index', target: null,
@@ -250,7 +256,7 @@
     {
       id: 'ch2-reserve', order: 205, chapter: 2, page: 'index', target: '.hero-cta',
       title: 'The big buttons',
-      text: 'Reserve opens your booking tool (Bookeo) in a new tab. Nothing is booked on this site. The other buttons lead to The GreenHouse and to what is in season. In winter, when the farm takes a break, the Reserve button hides.'
+      text: 'Reserve opens your booking tool (Bookeo) in a new tab. Nothing is booked on this site. The white button leads to what is in season. In winter the big red button says “Visit The GreenHouse”, and the top bar keeps its Reserve.'
     },
     {
       id: 'ch2-game', order: 206, chapter: 2, page: 'index', target: '#picker', allowClicks: true,
@@ -360,7 +366,7 @@
     {
       id: 'ch5-tabs', order: 501, chapter: 5, page: 'index', target: '#seasons .season-stage',
       title: 'What\'s in season',
-      text: 'Four tabs show what visitors can pick, cut and do in each season. The tab for today\'s season says Happening now, by the calendar. This panel is what the open tab shows. Press a season to see it.',
+      text: 'Four tabs above this panel show what visitors can pick, cut and do in each season. Today\'s season is marked Happening now, by the calendar. Press a season on this card to see each panel.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring. “Strawberry season”, “Usually mid-April to early June”. This is the busiest time, and reservations fill quickly. The button says “Reserve a strawberry visit”.',
@@ -373,7 +379,7 @@
     {
       id: 'ch5-cards', order: 502, chapter: 5, page: 'index', target: '#farm-cards',
       title: 'What\'s on the farm',
-      text: 'These cards show what is on the farm right now, such as u-pick, animals, playgrounds and rides. Pick another season above the cards and they change. In winter, the fun moves next door to The GreenHouse. Press a season to see them.',
+      text: 'These cards show what is on the farm right now, such as u-pick, animals, playgrounds and rides. In winter, the fun moves next door to The GreenHouse. Press a season on this card to see the cards change.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring, six cards. “U-Pick Strawberries” leads, then “Meet the Animals”, “Playgrounds”, “Shaded Picnic Patch”, “Concessions & Local Goods” and “Wagon Ride & Barrel Train”.',
