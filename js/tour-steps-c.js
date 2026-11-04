@@ -8,9 +8,11 @@
  * How the demo is driven: the tour never clicks for the owner. It uses the demo's own store (js/demo-store.js, js/demo-data.js, the names are in
  * docs/ACCOUNT_DEMO.md): createAccount, seedSample, ask, reply, respond, setAlert, fireAlert, post, submitReview, decideReview, closeDay, openDay.
  * Rules this file keeps:
- *   - Every change to the demo is made in before() of the step that SHOWS the result, so Back never answers a request. The only after() here closes a dialog the owner left
- *     open (the lit part of those seven cards has a button that opens one: Request a different day, Pick a new day, Start over, I also plan an event); it uses the demo's own
- *     DemoUI.closeModals() and never touches the store. The five cards whose lit button is the point of the card also say allowClicks: true.
+ *   - Every change to the demo is made in before() of the step that SHOWS the result, so Back never answers a request. The after() of a card only clears away what was left on
+ *     the screen, and never touches the store. Every card, when it is left, takes away the toasts (the small messages that fade by themselves) with the demo's own
+ *     DemoUI.clearToasts(), so an old message does not sit on top of the next card. Seven cards also close a dialog the owner left open (the lit part of those cards has a
+ *     button that opens one: Request a different day, Pick a new day, Start over, I also plan an event) with DemoUI.closeModals(). The five cards whose lit button is
+ *     the point of the card also say allowClicks: true.
  *   - Every before() can run twice, or out of order (the owner goes Back): it looks at what the store holds now and only does what is missing.
  *     When a request is already past the stage a step needs, the sample family is made again (seedSample) or the pizza part is put back.
  *     A notice the store posts a second time (a day closed again, a request sent again) replaces the first one, so the bell does not grow while the owner goes back and forth.
@@ -51,6 +53,19 @@
   function closeDialogs() {
     var ui = window.DemoUI;
     try { if (ui && typeof ui.closeModals === 'function') ui.closeModals(); } catch (e) { /* nothing is open, or the demo is not on this page */ }
+  }
+  // A toast (a small message that fades by itself after a few seconds) is taken away when its card is left, so an old message does not sit on top of the next card (the lit
+  // choices of "Tell me when"). It is the demo's own DemoUI.clearToasts(): it sends and answers nothing, and this never touches the store.
+  function clearToasts() {
+    var ui = window.DemoUI;
+    try { if (ui && typeof ui.clearToasts === 'function') ui.clearToasts(); } catch (e) { /* no toast, or the demo is not on this page */ }
+  }
+  // leaving(then): the after() of every card. What the card needs first (then: it closes a dialog, in seven cards), and the toasts always, even if that first part fails.
+  function leaving(then) {
+    return function () {
+      try { return typeof then === 'function' ? then.apply(this, arguments) : undefined; }
+      finally { clearToasts(); }
+    };
   }
 
   // Waits (without blocking the page) until test() gives something, up to ms milliseconds; settles with that thing, or null.
@@ -456,5 +471,5 @@
   ];
 
   var all = (window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []);
-  steps.forEach(function (s) { all.push(s); });
+  steps.forEach(function (s) { s.after = leaving(s.after); all.push(s); });
 })();
