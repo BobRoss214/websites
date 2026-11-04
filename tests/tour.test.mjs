@@ -752,7 +752,7 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
     mb.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mb.getAttribute('aria-expanded') === 'true') { window.__menuEsc++; mb.click(); } });   // the page closes its own menu
     // a wide lit box with a button at the top right and one at the bottom right: there is no room beside it, so the card has to sit on it
     const wide = document.createElement('div'); wide.id = 't-wide'; wide.style.cssText = 'position:fixed;left:100px;top:100px;width:1240px;height:640px;z-index:55;background:#fffdf6;border:2px solid #3a2416';
-    wide.innerHTML = '<h2 style="margin:12px">A wide box</h2><button type="button" id="t-no" style="position:absolute;right:20px;top:20px;width:200px;height:60px">No</button><button type="button" id="t-yes" style="position:absolute;right:20px;bottom:20px;width:200px;height:60px">Yes</button><p style="margin:12px">Plain words.</p>';
+    wide.innerHTML = '<h2 style="margin:12px">A wide box</h2><button type="button" id="t-no" style="position:absolute;right:20px;top:20px;width:200px;height:60px">No</button><button type="button" id="t-yes" style="position:absolute;right:20px;bottom:20px;width:200px;height:60px">Yes</button><span id="t-tag" class="t-tag" style="position:absolute;left:20px;bottom:20px;padding:6px 12px;background:#d33;color:#fff">Next door</span><p style="margin:12px">Plain words.</p>';
     document.body.appendChild(wide);
     // a dialog of the page, built like the pretend account's (css/demo.css: fixed, z-index 200; js/demo-ui.js: Esc is heard on the document, in the capture phase)
     const st = document.createElement('style');
@@ -839,8 +839,8 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
   await press(p, 'Next');
   await atStep(p, 2, 'walk: step 2 lights the wide box');
   s = await look(p);
-  const yes = await rectOf(p, '#t-yes'), no = await rectOf(p, '#t-no');
-  ok('walk: the card is on the wide box (there is no room beside it) and covers neither of its buttons', overlap(s.card, await rectOf(p, '#t-wide')) > 0 && overlap(s.card, yes) === 0 && overlap(s.card, no) === 0, JSON.stringify({ card: s.card, yes, no }));
+  const yes = await rectOf(p, '#t-yes'), no = await rectOf(p, '#t-no'), tagBox = await rectOf(p, '#t-tag'), headBox = await rectOf(p, '#t-wide h2');
+  ok('walk: the card is on the wide box (there is no room beside it) and covers neither of its buttons, nor its heading, nor the small label at its corner (the four corners are all taken: the card sits between them, on plain words)', overlap(s.card, await rectOf(p, '#t-wide')) > 0 && overlap(s.card, yes) === 0 && overlap(s.card, no) === 0 && overlap(s.card, tagBox) === 0 && overlap(s.card, headBox) === 0 && inside(s.card, s.vw, s.vh), JSON.stringify({ card: s.card, yes, no, tag: tagBox, head: headBox }));
   await press(p, 'Back');
   await atStep(p, 1, 'walk: Back to step 1');
 
@@ -913,6 +913,18 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
     ok(tag + 'the card is whole in the window and not on the strip', inside(s.card, s.vw, s.vh) && overlap(s.card, strip) === 0, JSON.stringify({ card: s.card, strip }));
     await p.context().close();
   }
+
+  /* ================================================================ 9b. a tall lit part starts below the top bar and the vine that hangs under it (the strawberry vine of the real pages) */
+  const STEPS_VINE = `(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push({ id: 'v1', order: 101, chapter: 1, page: 'index', target: '#faq', title: 'A tall section', text: 'Its top is below the top bar and below the vine.' });`;
+  p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: serve({ a: STEPS_VINE }) });
+  await p.click('.wa-tour-pill');
+  await okSoon('vine: the welcome card opens', () => look(p), (x) => x && x.name === 'Your website tour' && !x.busy);
+  await press(p, 'Start the tour');
+  await atStep(p, 1, 'vine: step 1 lights the FAQ section');
+  s = await look(p);
+  const vineEnd = await p.evaluate(() => { const v = document.querySelector('.site-header .vine'); return v ? v.getBoundingClientRect().bottom : null; });
+  ok('vine: the lit box (the section with 8 px round it) starts below the vine that hangs under the top bar, so none of it is hidden behind the leaves', vineEnd !== null && !!s.hole && s.hole.y >= vineEnd - 1, JSON.stringify({ vineEnd, hole: s.hole }));
+  await p.context().close();
 
   /* ================================================================ 10. what is lit besides the target: a list a lit button opens, a part a step names with "also" */
   // The lit part can be used and nothing else can. A button of it that opens a list (aria-controls, aria-expanded) lights the list too, and the list can be used; so can the parts a step names

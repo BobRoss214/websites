@@ -187,6 +187,7 @@
     const h = $('.site-header'), d = $('.demo-bar');
     let n = h ? h.getBoundingClientRect().height : 0;
     if (d) { const cs = getComputedStyle(d), top = parseFloat(cs.top); if (cs.position === 'sticky') n = (isNaN(top) ? n : top) + d.getBoundingClientRect().height; }
+    else { const v = $('.site-header .vine'); if (h && v) n = Math.max(n, v.getBoundingClientRect().bottom - h.getBoundingClientRect().top); }   // the vine that grows along the bar hangs below it: the lit box must not hide behind that
     return n;
   };
   const headerBottom = () => {   // where the sticky top bar (and, on the pretend-account pages, the thin demo bar under it) ends now
@@ -436,7 +437,7 @@
   // What the card should not sit on when it has to sit on the lit box: its buttons, links, fields and switches (what the text names: weight 10), its headings and labels
   // (weight 5), and what an open button of it shows (a list, a panel: weight 10). Each is a rectangle and a weight.
   const KEEP_CONTROLS = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="switch"], [role="tab"], [role="checkbox"], [role="radio"]';
-  const KEEP_WORDS = 'h1, h2, h3, h4, h5, h6, label';
+  const KEEP_WORDS = 'h1, h2, h3, h4, h5, h6, label, [class~="tag"], [class*="-tag"], [class*="badge"], [class*="pill"], [class*="-flag"], [class*="-chip"]';   // (the small coloured labels of a card: "Reservation required", "Next door")
   const keepClear = (more) => {
     const out = [];
     if (!curEl || !curEl.isConnected) return out;
@@ -444,6 +445,13 @@
     [curEl].concat((more || []).map((m) => m.el)).forEach((host) => {
       $$(KEEP_CONTROLS, host).forEach((n) => add(n, 10));
       $$(KEEP_WORDS, host).forEach((n) => add(n, 5));
+      const words = doc.createTreeWalker(host, NodeFilter.SHOW_TEXT, null);   // every line of words, lightly (weight 1): when the card has to cover something, it covers blank room before text
+      for (let n = words.nextNode(), k = 0; n && k < 300; n = words.nextNode()) {
+        if (!/\S/.test(n.nodeValue) || !n.parentElement || !shown(n.parentElement)) continue;
+        const g = doc.createRange(); g.selectNodeContents(n);
+        const b = g.getBoundingClientRect();
+        if (b.width >= 8 && b.height >= 8 && out.length < 400) { out.push({ b, k: 1 }); k++; }
+      }
       if (host.matches(KEEP_CONTROLS)) add(host, 10); else if (host.matches(KEEP_WORDS)) add(host, 5);
     });
     $$('[aria-controls][aria-expanded="true"]', curEl).forEach((c) => { const p = doc.getElementById(c.getAttribute('aria-controls')); if (p) add(p, 10); });
@@ -504,7 +512,7 @@
       opts.push([vw - w - M, vh - h - M], [M, vh - h - M], [vw - w - M, M], [M, M]);
       let best = null, bestScore = Infinity;
       const keep = keepClear(more);
-      opts.forEach((o) => {
+      const scoreOf = (o) => {
         const out = Math.max(0, M - o[0]) + Math.max(0, o[0] + w - (vw - M)) + Math.max(0, M - o[1]) + Math.max(0, o[1] + h - (vh - M));   // how far it comes within the margin of the window's edge
         const cut = Math.max(0, -o[0]) + Math.max(0, o[0] + w - vw) + Math.max(0, -o[1]) + Math.max(0, o[1] + h - vh);   // how much of it the window cuts off
         let ov = 0;   // how much of the lit boxes this place would cover
@@ -512,9 +520,13 @@
         let hit = 0;   // how much of the buttons, fields, switches and headings of the lit box this place would cover, each by its weight
         keep.forEach((x) => { hit += x.k * Math.max(0, Math.min(o[0] + w, x.b.right) - Math.max(o[0], x.b.left)) * Math.max(0, Math.min(o[1] + h, x.b.bottom) - Math.max(o[1], x.b.top)); });
         const under = dr ? Math.max(0, Math.min(o[0] + w, dr.right) - Math.max(o[0], dr.left)) * Math.max(0, Math.min(o[1] + h, dr.bottom) - Math.max(o[1], dr.top)) : 0;   // how much of the dialog's box
-        const score = (cut > 0 ? 1e9 : 0) + out * 1000 + ov + hit + under * 8;   // a place where the window cuts the card off loses to every place where it does not, however much of the lit box the card would then cover
-        if (score < bestScore) { best = o; bestScore = score; }
-      });
+        return (cut > 0 ? 1e9 : 0) + out * 1000 + ov + hit + under * 8;   // a place where the window cuts the card off loses to every place where it does not, however much of the lit box the card would then cover
+      };
+      opts.forEach((o) => { const s = scoreOf(o); if (s < bestScore) { best = o; bestScore = s; } });
+      if (bestScore > 0) {   // every place by the lit boxes is on something: try the whole window (a grid of places), and take the one that covers the least of what matters
+        for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) opts.push([M + (Math.max(M, vw - w - M) - M) * i / 6, M + (Math.max(M, vh - h - M) - M) * j / 6]);
+        opts.slice(opts.length - 49).forEach((o) => { const s = scoreOf(o); if (s < bestScore) { best = o; bestScore = s; } });
+      }
       x = best[0]; y = best[1];
     }
     card.style.width = ''; card.style.left = Math.round(x) + 'px'; card.style.top = Math.round(y) + 'px';
