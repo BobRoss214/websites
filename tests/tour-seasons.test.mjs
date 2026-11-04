@@ -15,6 +15,8 @@
  *     season says after a minute and when the tab is shown again (js/live.js draws them again with the real date every 60 seconds); the sign-up preview cannot be sent (it has no address, so
  *     the browser would load the page again and the tour would be gone); the language list puts the site's language back when the step is left; a dialog of the pretend account
  *     that the owner opens from a lit button is above the tour's dimmer, its buttons work, the card sits off it, and Next works with it still open (it is closed by the step)
+ *   - the spring picture that the cards of the basket game and of the first screen talk about: kids pick in the strawberry rows, the sunflowers at the sides can be snipped and grow
+ *     back, and the basket card says so (the words of the cards are in js/tour-steps.js; the picture is js/hero.js)
  *   - the tour is walked from the card about the buttons on, with every season button pressed on every step that has them (WA_SEASONS_FULL=1: to the last card and Finish), and the
  *     page is exactly as it was afterwards, with nothing of the walk left in browser storage */
 import { run, open, ok, okSoon, info, settled } from './lib.mjs';
@@ -332,5 +334,25 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
     await d.keyboard.press('Escape');   // ...and this one closes the tour
     await okSoon(tag + 'the tour closes (the dialog is gone, so Esc is the tour\'s)', () => d.evaluate(() => !document.querySelector('.wa-tour')), (v) => v === true);
     await d.context().close();
+  }
+
+  /* ================================================================ the spring picture, as the cards of the basket game and of the first screen describe it (20 Apr) */
+  {
+    const tag = 'spring picture: ';
+    const p = await openPage(browser, base, errs, { time: DAYS[1][0] });
+    await settled(p, 1500);
+    const pic = await p.evaluate(() => ({ season: document.documentElement.getAttribute('data-season'), kids: document.querySelectorAll('#hero-scene [data-npc="kid"]').length, flowers: document.querySelectorAll('#hero-scene .flower-cut').length, hint: ((document.getElementById('pick-msg') || {}).textContent || '') }));
+    ok(tag + 'the page is dressed for spring, kids with baskets stand in the strawberry rows, five sunflowers at the sides can be snipped', pic.season === 'spring' && pic.kids >= 2 && pic.flowers === 5, JSON.stringify(pic));
+    const hintOf = () => p.evaluate(() => ((document.getElementById('pick-msg') || {}).textContent || '').replace(/\s+/g, ' ').trim());
+    ok(tag + 'the basket card says "Try it! Tap the strawberries to pick them, or snip a sunflower." (the words the tour quotes)', (await hintOf()).includes('Try it! Tap the strawberries to pick them, or snip a sunflower.'), await hintOf());
+    const at = await p.evaluate(() => { const r = document.querySelector('#hero-scene .flower-cut rect').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+    await p.mouse.click(at.x, at.y);
+    await settled(p, 300);
+    const cut = await p.evaluate(() => document.querySelectorAll('#hero-scene .flower-cut .berry.is-picked').length);
+    ok(tag + 'a tap on a sunflower at the side snips it', cut === 1, String(cut));
+    await p.clock.runFor(12000);   // it grows back after 7 to 11 seconds (js/hero.js picks the time by chance)
+    await settled(p, 300);
+    ok(tag + '...and it grows back (nothing is snipped 12 seconds later)', (await p.evaluate(() => document.querySelectorAll('#hero-scene .flower-cut .berry.is-picked').length)) === 0, '');
+    await p.context().close();
   }
 });
