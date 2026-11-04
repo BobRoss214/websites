@@ -118,6 +118,53 @@ the targets), so no fallback is needed. (`startTime` is guarded: if the browser 
   The creature moves, so it is never "what is behind" a word. (I tried the other way, keeping the creature off the chips and the "open now" pills with `keep`: pointers resting among those stacked boxes then sent it far
   from the pointer, so I took that back.)
 
+## The confirmation run on a busy computer (walker, integ 86e426f, load 7 to 17 on 4 cores): which failure was which
+
+js/main.js is not changed. Every failure was in the tests; none came back as a fault of the page. Evidence, by item:
+
+**The cause behind most of them.** Playwright's pretend clock runs the page's timers one after the other, and waits a real `setTimeout` of the browser after each one. On this computer (load 2) it serves at most
+about 110 timers a second, and a chain of 100 ms timers ticks 8.5 times a second, not 10 (scratchpad/critter/clockthru.mjs). A page that the test asked for 60 more timers a second (a look every 16 ms, a pointer made
+inside the page every 16 ms) serves its own timers late: the creature's next look, and the 12-second guard of the change of kind. With a busy computer the pretend clock serves far fewer.
+The page's own timers were never the problem (a real phone has real timers); the test's own were.
+
+critter:
+- (a) "about ten a second when the computer keeps up (3.9 / 4.7 ; 2.5 / 4.7)": TEST, load. A fixed bound of 6 legs a second cannot be right when the pretend clock serves the timers late. The check now compares the legs a second
+  with the page's own 100 ms timer chain (a probe in the page, the same kind of timer, over the same seconds): at least 70 % of it.
+- (b) "Pause animations while it is out of sight changing kind: ... parked inside the hero": the expectation is what the code does (this check passed 2 of the 4 times it ran, at x 1376 = 1440 - 52 - 12 in the other
+  kind; the box is inside the hero, `gone.x < gone.w` is the right measure). The two failures: the creature had not left the hero 25 s after the change began (`out: false`, same kind): once standing exactly at the pointer
+  (x 1074 = 1100 - 26: it had not moved at all), once mid-flight 66 px short of the edge. Cause: the check looked every 16 ms from a timer of the page, 62 timers a second,
+  and the pretend clock served the creature's looks and the 12-s guard (set 12 s of pretend time ahead, behind all the 16 ms ticks before it) too late for the 25 s real-time limit.
+  Reproduced without any other load on the computer, by asking the pretend clock for more (scratchpad/critter/reprob.mjs): the old check with no extra timer in the page: the creature is out of the hero after 1.1 s; with
+  four extra 16 ms intervals in the page (312 timers a second asked for): 25.0 s, the creature at the pointer for the first seconds, then at x 1374, then stopped at x 1425 for 15 s (its next looks not served), out when the guard came;
+  the new look from the browser's own frames, with the same four extra intervals (250 timers a second): out after 6.4 s. Now: the creature is looked at in every frame the browser
+  really draws (the browser's own requestAnimationFrame, taken before the pretend clock replaces it) and Pause is pressed in the frame in which less than 8 px of it are left inside the hero; the pointer made by the circle and the
+  rest-finding look use the browser's own timer too; and when the computer was busy and the creature did not leave in 25 s x the load factor, it is said (info: too busy to judge) and not failed. On a quiet computer it is still a failure.
+- (c) "every leg has its start time at once (start time null)", butterfly, once: TEST. A leg that was taken back in the same turn it was made (`swap()` and the Pause click in one turn, a leg made at once when the creature
+  had just arrived) has no start time because it was cancelled. The leg log now notes the state of every leg and ignores legs that were "idle" in the same turn.
+- (c) "never goes back (at worst 30 px, at most 25)", bee busy page, once: TEST. The old way sampled the box and counted the stroll before the pointer arrived and the time the pointer took to arrive on a busy computer. Now it is
+  measured along the legs the page started after the first pointer event of the trip (each leg begins where the one before ended).
+- (c) "a pointer that comes in over the big Reserve button ... settles next to it, not on it", "with the pointer resting on each of 6 buttons ... Reserve: did not come to rest near the pointer; See what's in season:
+  it sits on a button at 848,593", "where it rests (69 pictures) it is never on a button or a card": TEST, timing. The logic first (your question): at rest the creature is never on a button: `clearOf` puts its box at the nearest
+  spot that overlaps no button by more than 2 px (the test says "on" for more than 8 px both ways), also when the pointer rests on a button; the path that skips a pending leg (a browser that takes no start time) only waits, it never moves it.
+  What the test saw was a creature standing between two late legs, in the middle of its way past a button (a page that is late stands still for a moment at the end of each leg, and the legs were seconds apart). Now "at rest" means: it
+  has stood still for 250 ms, within 170 px of the pointer, AND no new leg has begun for 2.2 times the gap the legs lately had (250 ms to 1 s); and for the strolls: no new leg for 1.15 s after a SHORT last leg (it has got where it is
+  going; the last legs are the slowest). If it does not rest that long anywhere in the 20 s (a butterfly strolls on soon after it has got somewhere) the check says so instead of failing.
+- Not on the walker's list, found in my own run on a busy computer (load 10): "...a turn goes through the numbers between 1 and -1 over several legs (1 legs begin part-way through a turn)". A turn lasts one 240 ms leg:
+  legs that begin 100 ms apart begin twice part-way through it, 150 ms apart once, 220 ms apart not at all. The number needed now follows the gap the legs really had (median over the trip: 2, 1 or 0).
+
+calm:
+- "a computer that was only slow for the first 6 s (pretend frames): light, then full motion, and it stays at full motion ()  []" (both runs, empty log): TEST, a race, reproduced (scratchpad/critter/simdry2.mjs). The pretend frames were put
+  into the page one real second after it had loaded, and the page's first look comes 4 s after the load. A computer that needed more than 4 s to load had started the look already: the "slow for 6 s" stretch (counted from the first
+  pretend frame) then no longer lined up with the page's spells, it never found three bad spells in a row, and nothing was written down. With the same start 6 s later the old arrangement gives an empty log (and the quiet start gives
+  "light, full motion" at 6.2 s and 14.2 s as it should); the new one gives 6.2 s and 14.2 s with a start 8 s late too. Fix: the pretend clock stands still from before the page's first script (pauseAt right after the install), the
+  page's observer is told that the hero is in sight (our own observer is told after it), the pretend frames go in, and the clock is moved by hand from there (4 s, then 2 s at a time). The A check (slow while nothing rests) never
+  depended on this, which is why it passed both times.
+- "a page that calmed itself (light) goes back to full motion by itself when the computer is fast again" (run 1 only): LOAD. The way back needs the four looks that follow at once to be all good; one bad 2-s spell among them and the next look
+  comes only after 15 s (then three more of those would be a minute: the check's 60 s). The check skipped itself only when one of the LAST THREE frame-rate windows of the computer was slow. Now it looks at every window since the computer was
+  fast again (the page's own frame counter, 2 s at a time): one slow window, or fewer than four, and it is said, not failed. A page that did not come back while every window was fast is still a failure.
+- The two pages that look at the real frame rate (the real slow page and the way back) used to run together with the two pretend-clock pages, which work the computer hard for a while. The pretend-clock pages now run first, together;
+  then the two real ones.
+
 ## What I could not do / am unsure about
 
 - I did not change the 240 ms leg or the 100 ms look. On a computer that is so busy that its timers come 300 ms late or more, a leg ends before the next one begins and the creature

@@ -22,6 +22,10 @@
  * it strolls. A light look at the real box a few times a second proves that the browser draws what the legs say. (A look at the box every frame would cost the busy page so much that its
  * timers run late, and the busy page is what must be judged: those checks that depend on the timing say so and are left out when the legs came 300 ms apart or more.) The page's own calm mode
  * is only simulated here (the attribute and the event); the real switch (a slow processor), with the wings of the follower running in "light" and in "most" and the flight going on, is in tests/calm.test.mjs.
+ * WHAT THE TEST ASKS OF THE PRETEND CLOCK. Playwright's clock runs the page's timers one after another and waits a real timer of the browser after each (about 110 timers a second at most on a quiet
+ * computer, far fewer on a busy one). The page's own timers (the creature's looks, the 12-s guard of the change of kind) must not be kept waiting by what the test does inside the page: its pointer
+ * (circle), its look for a creature that has come to rest and its look for a creature that has left the hero use the browser's own timers and frames (taken before the pretend clock replaces them,
+ * LEG_LOG), and "about ten legs a second" is compared with the page's own 100 ms timer chain (probe), which is late in the same way.
  *
  * A BUSY PAGE (busy): every frame the page draws costs 90 ms of its own turn (the browser's own requestAnimationFrame, taken before the pretend clock replaces it), so the page draws about ten
  * frames a second at best, much fewer on a busy computer. The creature must still reach the pointer three times, never go back on the way, every leg must have its start time at once, and a change
@@ -76,7 +80,12 @@ const hidden = (p, v) => p.evaluate((h) => { Object.defineProperty(document, 'hi
 // Written into the page before its own scripts: every leg of the flight (Element.animate on #bee-fly) is noted down the moment it starts: the browser's animation clock, the keyframes,
 // how long it lasts, where the creature was drawn just before it, and, one microtask later (still in the same turn of the page, so before any frame is drawn), whether the leg already
 // has its start time. Read back as window.__legs.
+// It also keeps the browser's own timers and frames (window.__setInterval, __clearInterval, __raf), taken before the pretend clock replaces them: what the test itself does inside the page (the
+// pointer made by the circle, the look for the creature leaving the hero) must not ask the pretend clock for anything. That clock runs one timer after the other, each after a real timer of the
+// browser (Playwright's clock waits a real setTimeout between two timers), so on a busy computer it serves perhaps 30 timers a second; a page that the test asks for 60 more a second serves its
+// own timers (the creature's next look, the 12-s guard of the change of kind) late, and nothing the creature does can be judged any more.
 const LEG_LOG = () => {
+  window.__setInterval = window.setInterval.bind(window); window.__clearInterval = window.clearInterval.bind(window); window.__raf = window.requestAnimationFrame.bind(window);
   const animate = Element.prototype.animate;
   const log = window.__legs = [];
   Element.prototype.animate = function (keyframes, options) {
@@ -84,9 +93,9 @@ const LEG_LOG = () => {
     if (this.id === 'bee-fly') { const m = new DOMMatrixReadOnly(getComputedStyle(this).transform); before = [m.m41, m.m42]; }
     const a = animate.apply(this, arguments);
     if (before) {
-      const rec = { kind: this.dataset.kind, clock: document.timeline.currentTime, kf: Array.from(keyframes, (k) => k.transform), props: Array.from(keyframes, (k) => Object.keys(k).join()), ms: options.duration, easing: options.easing, fill: options.fill, before, pending: null, startTime: null };
+      const rec = { kind: this.dataset.kind, clock: document.timeline.currentTime, real: performance.now(), kf: Array.from(keyframes, (k) => k.transform), props: Array.from(keyframes, (k) => Object.keys(k).join()), ms: options.duration, easing: options.easing, fill: options.fill, before, pending: null, startTime: null, state: null };
       log.push(rec);
-      Promise.resolve().then(() => { rec.pending = a.pending; rec.startTime = a.startTime; });
+      Promise.resolve().then(() => { rec.pending = a.pending; rec.startTime = a.startTime; rec.state = a.playState; });   // (state "idle": taken back in the same turn, a Pause just as it set off: it never ran)
     }
     return a;
   };
@@ -105,23 +114,29 @@ const busyStart = (p, jank) => p.evaluate((jank) => new Promise((resolve) => {
   let n = 0; const t0 = performance.now();
   (function loop() { window.__raf(() => { const t = performance.now(); while (performance.now() - t < jank); if (++n === 5) resolve(Math.round(n * 1000 / (performance.now() - t0))); loop(); }); })();
 }), jank);
-// how far the creature gets from a spot (hero coordinates) after it has been nearer, every 50 ms from inside the page: a creature that goes straight for the spot never gets farther
-const tripStart = (p, target) => p.evaluate((t) => {
-  const el = document.querySelector('#bee-fly'), w = el.offsetWidth / 2, h = el.offsetHeight / 2, rows = [];
-  window.__trip = { rows, iv: setInterval(() => { const m = new DOMMatrixReadOnly(getComputedStyle(el).transform); rows.push(Math.hypot(m.m41 + w - t[0], m.m42 + h - t[1])); }, 50) };
-}, target);
-const tripStop = (p) => p.evaluate(() => { clearInterval(window.__trip.iv); return window.__trip.rows; });
-const regress = (rows) => { let best = Infinity, worst = 0; for (const d of rows) { best = Math.min(best, d); worst = Math.max(worst, d - best); } return worst; };
+// How far the creature gets from a spot (hero coordinates) after it has been nearer, along the legs the page started after the first pointer event of the trip (arm, then the pointer moves): a creature
+// that goes straight for the spot never gets farther. (Looked at from outside, by sampling the box, a creature that was still strolling when the pointer arrived, and the time the pointer takes to
+// arrive on a busy computer, would count as "going back"; the legs are the creature's own path, each begins where the one before ended.)
+const arm = (p) => p.evaluate(() => { window.__mv = null; document.querySelector('#top').addEventListener('pointermove', () => { if (window.__mv === null) window.__mv = performance.now(); }, { once: true }); });
+const regressOf = (legs, target) => {
+  const pts = legs.length ? [[legs[0].x0, legs[0].y0], ...legs.map((l) => [l.x1, l.y1])] : [];
+  let best = Infinity, worst = 0;
+  for (const q of pts) { const d = dist(q, target); best = Math.min(best, d); worst = Math.max(worst, d - best); }
+  return worst;
+};
 
 const TF = /translate\(([-\d.]+)px, ([-\d.]+)px\) (?:scaleX\(([-\d.]+)\)|rotate\(([-\d.]+)deg\))/;
 const legOf = (l) => {
   const a = TF.exec(l.kf[0]), b = TF.exec(l.kf[1]);
   if (l.kf.length !== 2 || !a || !b) return null;
   const n = (m, i) => (m[i] === undefined ? null : +m[i]);
-  return { kind: l.kind, x0: +a[1], y0: +a[2], x1: +b[1], y1: +b[2], f0: n(a, 3), f1: n(b, 3), r0: n(a, 4), r1: n(b, 4), ms: l.ms, st: l.startTime, clock: l.clock, before: l.before, pending: l.pending, easing: l.easing, fill: l.fill, props: l.props, len: Math.hypot(+b[1] - +a[1], +b[2] - +a[2]) };
+  return { kind: l.kind, x0: +a[1], y0: +a[2], x1: +b[1], y1: +b[2], f0: n(a, 3), f1: n(b, 3), r0: n(a, 4), r1: n(b, 4), ms: l.ms, st: l.startTime, clock: l.clock, real: l.real, state: l.state, before: l.before, pending: l.pending, easing: l.easing, fill: l.fill, props: l.props, len: Math.hypot(+b[1] - +a[1], +b[2] - +a[2]) };
 };
 // What is wrong with the legs: their shape, their start, their speed and (joins: true) whether each one begins where the one before it had got to.
-function legChecks(raw, kind, { joins = false } = {}) {
+const ran = (raw) => raw.filter((l) => l.state !== 'idle');   // (a leg taken back in the turn of the page that made it never ran)
+const legsOf2 = (raw) => ran(raw).map(legOf).filter(Boolean);
+function legChecks(rawAll, kind, { joins = false } = {}) {
+  const raw = ran(rawAll);
   const L = raw.map(legOf), bad = { shape: [], start: [], speed: [], join: [] };
   L.forEach((l, i) => {
     if (!l) { bad.shape.push(`#${i} is not one straight leg: ${JSON.stringify(raw[i].kf)}`); return; }
@@ -163,16 +178,26 @@ const told = (f) => (f.ok ? `it got to the pointer in ${f.secs.toFixed(1)} s` : 
 async function stays(p, wait = 1500) { const a = await centre(p); await realWait(wait); const b = await centre(p); return { still: dist(a, b) < 0.6, moved: r1(dist(a, b)), legs: await legsOf(p) }; }
 // waits until the creature has come to rest (its middle has not moved 1 px for 250 ms) within `near` px of `want` (hero coordinates); returns { ok, c }: c is its middle at rest (or the last
 // place it was seen). It looks from inside the page, every 100 ms: a slow round trip between this program and a busy page cannot make it miss the short moment the creature stays at rest.
+// A page that is late stands still for a moment between two legs, and that is not rest: where the legs are written down (LEG_LOG) the creature must also have started no new leg for a while,
+// twice as long as the legs have lately been coming apart (250 ms or more, at most 1 s), because a creature that has got where it is going starts none.
 const settlesNear = (p, want, { near = 170, limit = 15000 } = {}) => p.evaluate(({ want, near, limit }) => new Promise((resolve) => {
   const el = document.querySelector('#bee-fly'), w = el.offsetWidth / 2, h = el.offsetHeight / 2, t0 = performance.now();
   let last = null, since = t0;
-  const iv = setInterval(() => {
+  const noNewLeg = (now) => {
+    const L = window.__legs;
+    if (!L || L.length < 4) return true;
+    const gaps = []; for (let i = Math.max(1, L.length - 8); i < L.length; i++) gaps.push(L[i].real - L[i - 1].real);
+    gaps.sort((a, b) => a - b);
+    return now - L[L.length - 1].real >= Math.min(1000, Math.max(250, 2.2 * gaps[Math.floor(gaps.length / 2)]));
+  };
+  const every = window.__setInterval || window.setInterval.bind(window), stop = window.__clearInterval || window.clearInterval.bind(window);   // (the browser's own timer: see LEG_LOG)
+  const iv = every(() => {
     const m = new DOMMatrixReadOnly(getComputedStyle(el).transform), c = [m.m41 + w, m.m42 + h], now = performance.now();
     if (last && Math.hypot(c[0] - last[0], c[1] - last[1]) < 1) {
-      if (now - since >= 250 && Math.hypot(c[0] - want[0], c[1] - want[1]) <= near) { clearInterval(iv); resolve({ ok: true, c, t: document.timeline.currentTime }); return; }
+      if (now - since >= 250 && Math.hypot(c[0] - want[0], c[1] - want[1]) <= near && noNewLeg(now)) { stop(iv); resolve({ ok: true, c, t: document.timeline.currentTime }); return; }
     } else since = now;
     last = c;
-    if (now - t0 > limit) { clearInterval(iv); resolve({ ok: false, c, want, t: document.timeline.currentTime }); }
+    if (now - t0 > limit) { stop(iv); resolve({ ok: false, c, want, t: document.timeline.currentTime }); }
   }, 100);
 }), { want, near, limit: ms(limit) });
 // the hero's own buttons and cards (hero coordinates) and the size of the creature's box
@@ -216,10 +241,11 @@ const release = (p) => p.evaluate(() => clearInterval(window.__hold));
 const circle = (p, geo, secs) => p.evaluate(({ cx, cy, R, secs }) => new Promise((resolve) => {
   const hero = document.querySelector('#top'), t0 = performance.now(), c0 = document.timeline.currentTime;
   let moves = 0;
-  const iv = setInterval(() => {
+  const every = window.__setInterval || window.setInterval.bind(window), stop = window.__clearInterval || window.clearInterval.bind(window);   // (the browser's own timer: see LEG_LOG)
+  const iv = every(() => {
     const f = Math.min(1, (performance.now() - t0) / (secs * 1000)), a = f * Math.PI * 2;
     hero.dispatchEvent(new PointerEvent('pointermove', { clientX: cx + R * Math.cos(a), clientY: cy + R * Math.sin(a), bubbles: true, pointerType: 'mouse' })); moves++;
-    if (f >= 1) { clearInterval(iv); resolve({ moves, from: c0, to: document.timeline.currentTime }); }
+    if (f >= 1) { stop(iv); resolve({ moves, from: c0, to: document.timeline.currentTime, p0: t0, p1: performance.now() }); }
   }, 16);
 }), { ...geo, secs });
 // the free band between the season buttons and the first big button, as a circle for the pointer (hero coordinates). The creature keeps its box clear of every button (the box's corner is
@@ -388,7 +414,7 @@ async function behaviour(browser, base, errs, kind, ck) {
   const out = await soon(ck, `${kind}: the change starts by flying out over the ${side} edge of the hero (the nearer one)`, () => centre(p), (c) => (side === 'left' ? c[0] < -10 : c[0] > hook.w + 10), 20000);
   const flipped = await soon(ck, `${kind}: ...and when it is out of sight the other kind comes back`, () => kindOf(p), (k) => k === (kind === 'bee' ? 'butterfly' : 'bee'), 20000);
   if (out && flipped) {
-    const after = (await legsLog(p)).slice(nLegs).map(legOf).filter(Boolean);
+    const after = legsOf2((await legsLog(p)).slice(nLegs));
     const inFlight = after.find((l) => l.kind !== kind);   // the first leg of the other kind
     ck(`${kind}: ...flying in from the same edge (its first leg begins beyond the ${side} edge, at x ${inFlight ? Math.round(inFlight.x0) : '?'})`, !!inFlight && (side === 'left' ? inFlight.x0 < -40 : inFlight.x0 > hook.w + 20), JSON.stringify(inFlight));
     await soon(ck, `${kind}: ...and comes inside the hero`, () => centre(p), (c) => c[0] > 20 && c[0] < hook.w - 20, 20000);
@@ -413,20 +439,31 @@ async function behaviour(browser, base, errs, kind, ck) {
     f = await farFollows(p);
     ck(`${kind}: ...Play: it follows the pointer, still a ${k1}`, f.ok && (await kindOf(p)) === k1, told(f));
     // ... when it is already out of sight, changing kind, Pause brings it back at once as the other kind, parked inside the hero (a creature outside the hero would never be seen again)
-    const gone = await p.evaluate((sel) => new Promise((resolve) => {
-      const el = document.querySelector('#bee-fly'), hero = document.querySelector('#top'), was = el.dataset.kind, t0 = performance.now();
+    // It is looked at in every frame the browser really draws (its own requestAnimationFrame, see LEG_LOG), and Pause is pressed in the very frame in which less than 8 px of its box are left
+    // inside the hero (the page's own rule for "out of sight"). Not from a timer of the page's own, 60 times a second: the pretend clock would have been asked for more than a busy computer lets
+    // it serve, and the creature's own looks and the 12-s guard of the change of kind would have come too late (it was found standing at the pointer 25 s later, never gone).
+    const gone = await p.evaluate(([sel, limit]) => new Promise((resolve) => {
+      const el = document.querySelector('#bee-fly'), hero = document.querySelector('#top'), was = el.dataset.kind, t0 = performance.now(), trail = [];
+      let nextTrail = 0;
       window.WISE_ACRES.critter.swap();
-      const iv = setInterval(() => {
-        const r = el.getBoundingClientRect(), h = hero.getBoundingClientRect(), out = r.right <= h.left + 6 || r.left >= h.right - 6;   // (fewer than 8 px of its box inside the hero: out of sight, by the page's own rule)
-        if (el.dataset.kind !== was) { clearInterval(iv); resolve({ missed: true, was, now: el.dataset.kind }); return; }   // it was back before this looked: nothing to judge
-        if (out || performance.now() - t0 > 25000) {
-          clearInterval(iv); document.querySelector(sel).click();
-          const r2 = el.getBoundingClientRect(), h2 = hero.getBoundingClientRect();
-          resolve({ out, was, now: el.dataset.kind, x: Math.round(r2.x - h2.x), legs: el.getAnimations().length, w: Math.round(h2.width), calm: document.documentElement.getAttribute('data-calm') });
-        }
-      }, 16);
-    }), PAUSE);
+      (function look() {
+        window.__raf(() => {
+          const r = el.getBoundingClientRect(), h = hero.getBoundingClientRect(), now = performance.now() - t0, out = r.right <= h.left + 6 || r.left >= h.right - 6;   // (fewer than 8 px of its box inside the hero)
+          if (now >= nextTrail) { trail.push([Math.round(now), Math.round(r.x - h.x), el.dataset.kind]); nextTrail = now + 1000; }
+          if (el.dataset.kind !== was) { resolve({ missed: true, was, now: el.dataset.kind, trail }); return; }   // it was back before this looked: nothing to judge
+          if (out || now > limit) {
+            document.querySelector(sel).click();
+            const r2 = el.getBoundingClientRect(), h2 = hero.getBoundingClientRect();
+            resolve({ out, was, now: el.dataset.kind, x: Math.round(r2.x - h2.x), legs: el.getAnimations().length, w: Math.round(h2.width), calm: document.documentElement.getAttribute('data-calm'), waited: Math.round(now), seen: [Math.round(r.x - h.x), Math.round(r.right - h.x)], trail });
+            return;
+          }
+          look();
+        });
+      })();
+    }), [PAUSE, ms(25000)]);
+    const busyRun = machine().peak / machine().cores >= 2.5;   // (the computer was busy at some time during this run: the way lib.mjs says it at the end of a failed run)
     if (gone.missed) info(`${kind}: the change of kind was over before it could be looked at while out of sight (too busy to judge Pause while it is away)`);
+    else if (!gone.out && busyRun) info(`${kind}: it did not leave the hero within ${Math.round(gone.waited / 1000)} s while this computer was busy (load ${machine().peak.toFixed(0)} on ${machine().cores} cores; the page's own timers were served late): too busy to judge "Pause animations" while it is away  ${JSON.stringify(gone.trail)}`);
     else ck(`${kind}: "Pause animations" while it is out of sight changing kind: it is back at once, in the other kind, parked inside the hero (x ${gone.x} of ${gone.w})`, gone.out && gone.calm === 'all' && gone.now !== gone.was && gone.legs === 0 && gone.x > -10 && gone.x < gone.w, JSON.stringify(gone));
     s = await stays(p, 800);
     ck(`${kind}: ...and it stays there, parked (moved ${s.moved} px)`, s.still && s.legs === 0, JSON.stringify(s));
@@ -473,7 +510,7 @@ async function smoothness(browser, base, errs, kind, ck) {
   await recStart(p);
   const first = await goTo(1100), toLeft = await goTo(300), toRight = await goTo(1100);
   await release(p);
-  const checks = await recStop(p), legs = (await legsLog(p)).map(legOf).filter(Boolean);
+  const checks = await recStop(p), legs = legsOf2(await legsLog(p));
   ck(`${kind}: the pointer goes far to the right, to the left and to the right again: the ${kind} follows each time and comes to rest at the pointer`, first.ok && toLeft.ok && toRight.ok, JSON.stringify([first, toLeft, toRight]));
   const wayLegs = legs.filter((l) => l.st >= toRight.from && l.st <= toRight.to), turnLegs = legs.filter((l) => l.st >= toLeft.from && l.st <= toRight.to), tripJudge = judging(turnLegs, 'the way across');
   const wayRows = modelRows(legs, toRight.from, toRight.to, half);
@@ -498,7 +535,9 @@ async function smoothness(browser, base, errs, kind, ck) {
   if (kind === 'bee') {
     const flips = turnLegs.filter((l) => l.f0 !== null), fast = flips.filter((l) => Math.abs(l.f1 - l.f0) / l.ms > 2 / 100), mid = flips.filter((l) => Math.abs(l.f0) < 0.9);
     ck(`bee: it turns round smoothly: no leg flips it in under 100 ms (${fast.length} do), and it turns both ways`, flips.some((l) => l.f0 > 0.9 && l.f1 < -0.9) && flips.some((l) => l.f0 < -0.9 && l.f1 > 0.9) && fast.length === 0, JSON.stringify(flips.slice(0, 8).map((l) => [l.f0, l.f1, l.ms])));
-    tripJudge(`bee: ...a turn goes through the numbers between 1 and -1 over several legs (${mid.length} legs begin part-way through a turn)`, mid.length >= 2, JSON.stringify(flips.slice(0, 8).map((l) => [l.f0, l.f1, l.ms])));
+    // a turn lasts one leg, 240 ms: legs that begin 100 ms apart begin twice part-way through it, legs 150 ms apart once, legs 220 ms apart not at all (a busy computer: the page's timers come late)
+    const turnGap = pct(gapsOf(turnLegs), 0.5), needMid = turnGap <= 108 ? 2 : turnGap <= 216 ? 1 : 0;
+    tripJudge(`bee: ...a turn goes through the numbers between 1 and -1 over several legs (${mid.length} legs begin part-way through a turn; the legs began ${Math.round(turnGap)} ms apart, so ${needMid} are needed)`, mid.length >= needMid, JSON.stringify(flips.slice(0, 8).map((l) => [l.f0, l.f1, l.ms])));
     const turn = modelRows(legs, toLeft.from, toLeft.from + 2000, half), i0 = turn.findIndex((r) => r[3] < 0.95), i1 = i0 < 0 ? -1 : turn.findIndex((r, i) => i >= i0 && r[3] < -0.95);
     if (i0 > 0 && i1 > i0) {
       const part = turn.slice(i0 - 1, i1 + 1), mids = part.filter((r) => Math.abs(r[3]) < 0.9).length, took = part[part.length - 1][0] - part[0][0];
@@ -518,12 +557,16 @@ async function smoothness(browser, base, errs, kind, ck) {
   await settlesNear(p, middle(geo.cx + geo.R, geo.cy), { near: 14, limit: 25000 });
   await release(p);
   const c0 = (await legsLog(p)).length;
+  // a timer of the page's own, asked for every 100 ms exactly as the creature asks for its next look: how often it really comes says how late the page is (a busy computer), and the creature must keep pace with it
+  await p.evaluate(() => { window.__probe = []; (function t() { window.__probe.push(performance.now()); window.__probeT = setTimeout(t, 100); })(); });
   const run = await circle(p, { cx: geo.cx + ox, cy: geo.cy + oy, R: geo.R }, 6);
+  const probe = await p.evaluate(([a, b]) => { clearTimeout(window.__probeT); return window.__probe.filter((t) => t >= a && t <= b); }, [run.p0, run.p1]);
+  const probeRate = probe.length > 3 ? (probe.length - 1) / ((probe[probe.length - 1] - probe[0]) / 1000) : 10;
   const c1 = (await legsLog(p)).length;
   // ---- ...and then the pointer rests where it stopped, for 20 s: the creature settles, wanders, stays in the hero, never stands still for long
   await realWait(20000);
-  const proof = await recStop(p), allRaw = await legsLog(p), all = allRaw.map(legOf).filter(Boolean);
-  const circleRaw = allRaw.slice(c0, c1), circleLegs = circleRaw.map(legOf).filter(Boolean), restLegs = allRaw.slice(c1).map(legOf).filter(Boolean);
+  const proof = await recStop(p), allRaw = await legsLog(p), all = legsOf2(allRaw);
+  const circleRaw = ran(allRaw.slice(c0, c1)), circleLegs = legsOf2(circleRaw), restLegs = legsOf2(allRaw.slice(c1));
   const ring = modelRows(all, run.from, run.to, half), rest = modelRows(all, run.to + 1, all[all.length - 1].st + all[all.length - 1].ms, half);
   const pointerAt = (t) => { const a = Math.min(1, Math.max(0, (t - run.from) / 6000)) * Math.PI * 2; return middle(geo.cx + geo.R * Math.cos(a), geo.cy + geo.R * Math.sin(a)); };
   const circleGap = pct(gapsOf(circleLegs), 0.5), roundJudge = judging(circleLegs, 'the circle');
@@ -548,7 +591,7 @@ async function smoothness(browser, base, errs, kind, ck) {
   const cl = legChecks(circleRaw, kind, { joins: true });
   const secs = circleRaw.length > 1 ? (circleRaw[circleRaw.length - 1].startTime - circleRaw[0].startTime) / 1000 : 0, rate = secs > 0 ? (circleRaw.length - 1) / secs : 0;
   ck(`${kind}: the legs of the circle (${cl.n}) are short and straight, at the speed of the kind, each with its start time at once, no more than ten a second (${r1(rate)})`, cl.n > 3 && rate <= 13 && cl.bad.shape.length + cl.bad.speed.length + cl.bad.start.length === 0, said([...cl.bad.shape, ...cl.bad.speed, ...cl.bad.start]) || `${r1(rate)} a second`);
-  roundJudge(`${kind}: ...about ten a second when the computer keeps up (${r1(rate)}; a timer that is late by a few ms makes it 8)`, rate >= 6, `${r1(rate)} a second`);
+  ck(`${kind}: ...and it looks about as often as the page's own 100 ms timer comes (${r1(rate)} legs a second against ${r1(probeRate)} of the timer: ten when the computer keeps up, fewer when it is busy, and never much fewer than the timer)`, rate >= 0.7 * probeRate, `${r1(rate)} legs, the timer ${r1(probeRate)} a second`);
   ck(`${kind}: ...and every leg begins exactly where the one before it had got to (no joins in the path)`, cl.bad.join.length === 0, said(cl.bad.join));
 
   // after the circle the pointer rests where it stopped
@@ -568,10 +611,16 @@ async function smoothness(browser, base, errs, kind, ck) {
   ck(`${kind}: ...it strolls slowly (at most ${Math.round(fastest)} px per second; a ${kind}: up to ${STROLL[kind]})`, win.length > 20 && fastest <= STROLL[kind] * 1.25 + 15, `${win.length} windows`);
   let path = 0; for (let i = 1; i < rest.length; i++) path += dist([rest[i][1], rest[i][2]], [rest[i - 1][1], rest[i - 1][2]]);
   restJudge(`${kind}: ...it really goes places (${Math.round(path)} px in all)`, path >= 150);
-  const resting = []; a = 0;   // where it rests (it has not moved 1 px for 1.2 s) it is beside the hero's buttons, not on them
-  for (let b = 1; b < rest.length; b++) { while (rest[b][0] - rest[a][0] > 1200) a++; if (rest[b][0] - rest[a][0] >= 1150 && dist([rest[a][1], rest[a][2]], [rest[b][1], rest[b][2]]) < 1) resting.push([rest[b][1], rest[b][2]]); }
+  // Where it rests it is beside the hero's buttons, not on them. It rests when no new leg begins for 1.15 s after a SHORT last leg (it has got where it is going: the last legs are the slowest, at most
+  // about 11 px). The same wait after a long leg is a page that was late in the middle of its way, and the creature may be over a button on its way to the spot beside it.
+  const resting = [];
+  for (let i = 0; i + 1 < restLegs.length; i++) {
+    const l = restLegs[i], wait = restLegs[i + 1].st - (l.st + l.ms);
+    if (wait >= 1150 && l.len <= 14) resting.push([l.x1 + half[0], l.y1 + half[1]]);
+  }
   const onBtn = resting.filter((c) => onAny(c, keep));
-  restJudge(`${kind}: ...and where it rests (${resting.length} pictures) it is never on a button or a card`, onBtn.length === 0 && resting.length > 0, JSON.stringify(onBtn.slice(0, 2)));
+  if (resting.length === 0) info(`${kind}: it did not rest for 1.15 s anywhere in these ${r1((rest[rest.length - 1][0] - run.to) / 1000)} s (a butterfly strolls on soon after it has got somewhere): nothing to look at for "never on a button or a card"`);
+  else restJudge(`${kind}: ...and where it rests (${resting.length} time${resting.length === 1 ? '' : 's'}) it is never on a button or a card`, onBtn.length === 0, JSON.stringify(onBtn.slice(0, 2)));
   const sl = legChecks(allRaw.slice(c1), kind, { joins: true }), bads = [...sl.bad.shape, ...sl.bad.speed, ...sl.bad.start, ...sl.bad.join];
   ck(`${kind}: ...its legs are as short and straight as the rest, each starts at once and where the one before it had got to (${sl.n} legs)`, sl.n > 2 && bads.length === 0, said(bads));
   await p.context().close();
@@ -621,15 +670,18 @@ async function busy(browser, base, errs, kind, ck, { nostart = false } = {}) {
   info(`${tag}: the page manages ${fps} frames a second`);
   const trips = [];
   for (const [x, y] of nostart ? [[1200, 520], [250, 420]] : [[1200, 520], [250, 420], [900, 300]]) {
-    await tripStart(p, await inHero(p, x, y));
+    const at = await inHero(p, x, y);
+    await arm(p);
     const f = await follows(p, x, y, { limit: 25000, steps: 1 });   // (one pointer event: the spot is the same from the first look to the last, so any step away from it is the creature's own)
-    trips.push({ f, back: regress(await tripStop(p)) });
+    const mv = await p.evaluate(() => window.__mv);
+    const legs = legsOf2((await legsLog(p)).filter((l) => mv !== null && l.real >= mv));
+    trips.push({ f, back: regressOf(legs, [at[0] - 26, at[1] - 24]), n: legs.length });   // (the box's corner is 26 px left of and 24 px above the pointer)
   }
   ck(`${tag}: it flies to the pointer, ${trips.length} far spots one after the other (${trips.map((t) => t.f.ok ? t.f.secs.toFixed(1) + ' s' : 'NOT').join(', ')})`, trips.every((t) => t.f.ok), trips.map((t) => told(t.f)).join(' | '));
   const back = Math.max(...trips.map((t) => t.back));
   // (without a start time of its own a leg is read at the last drawn frame, which on a busy page is up to a tenth of a second behind: a small step back is all that is left of the old jumping)
   const most = nostart ? 70 : 25;
-  ck(`${tag}: ...and on the way it never goes back (at worst ${Math.round(back)} px farther from the spot than it had been; at most ${most})`, back <= most, trips.map((t) => Math.round(t.back)).join(', '));
+  ck(`${tag}: ...and on the way it never goes back (at worst ${Math.round(back)} px farther from the spot than it had been, along the legs of its way; at most ${most})`, back <= most && trips.every((t) => t.n > 2), trips.map((t) => `${Math.round(t.back)} px in ${t.n} legs`).join(', '));
   const raw = await legsLog(p);
   if (nostart) ck(`${tag}: (the browser really took no start time: no leg had one at once)`, raw.length > 5 && raw.every((l) => l.pending === true), JSON.stringify(raw.slice(0, 2)));
   else {

@@ -11,7 +11,7 @@
  * After Pause and Play the falling leaves still tip the way they drift. The automatic check is also run on a pretend clock with pretend frames (section 5: nothing in it depends on how busy this computer
  * is): a computer that is only fine once "light" is set goes light, full, and light again after ONE bad look (not after three); one that was only slow while the page loaded stays at full motion; and the
  * falling leaves keep going for the 0.6 s they fade out in, and rest only after. */
-import { run, open, ok, okSoon, info, until, ms } from './lib.mjs';
+import { run, open, ok, okSoon, info, until, ms, TODAY } from './lib.mjs';
 
 const LABELS = {   // "Pause animations" / "Play animations", as in lang/src/<code>.json
   es: ['Pausar animaciones', 'Reproducir animaciones'], hi: ['एनिमेशन रोकें', 'एनिमेशन चलाएँ'], zh: ['暂停动画', '播放动画'], vi: ['Tạm dừng hoạt ảnh', 'Phát hoạt ảnh'],
@@ -249,11 +249,15 @@ await run('calm', async ({ browser, base, errs }) => {
     const cdp = await q.context().newCDPSession(q);
     const first = await until(q, () => document.documentElement.getAttribute('data-calm'), null, 45000);
     await q.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important}' });   // (the drawing of the page costs next to nothing now, whatever else this computer is busy with: the looks of the page count only what the page itself needs)
+    const lifted = await q.evaluate(() => window.__fps.length);   // (the 2-s windows of this computer's own frame rate: the one being counted now began before the computer got fast, those after it began after)
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });   // the computer is fast again
     const gone = await until(q, () => document.documentElement.getAttribute('data-calm') === null, null, 60000);
     const fps = await q.evaluate(() => window.__fps), end = await now(q);
-    if (!gone && fps.slice(-3).some((x) => x < 40)) info(`this computer is too busy to judge the way back from "light" (frames per second, 2 s at a time: ${fps.join(' ')}); that check is skipped`);
-    else ok('a page that calmed itself ("light") goes back to full motion by itself when the computer is fast again, and the buttons show not pressed', first === 'light' && gone && end.pressed === 'false,false', `${first} then ${end.calm}, ${JSON.stringify(end)}`);
+    // The way back needs four good looks of the page in a row (the four that follow at once; one bad one among them and the next look comes only after 15 s, three more of those would be a minute), so one
+    // window in which this computer itself drew fewer than 40 frames a second since it got fast again, may be the one that stopped it: that is a computer too busy to judge, not a page that did not come back.
+    const after = fps.slice(lifted + 1);
+    if (!gone && (after.length < 4 || after.some((x) => x < 40))) info(`this computer is too busy to judge the way back from "light" (frames per second, 2 s at a time, since it was fast again: ${after.join(' ')}); that check is skipped`);
+    else ok('a page that calmed itself ("light") goes back to full motion by itself when the computer is fast again, and the buttons show not pressed', first === 'light' && gone && end.pressed === 'false,false', `${first} then ${end.calm}, ${JSON.stringify(end)}, frames per second since it was fast again: ${after.join(' ')}`);
     await q.context().close();
   };
   // ---------------------------------------------------------------- 5. the same automatic check on a pretend clock with pretend frames
@@ -263,17 +267,23 @@ await run('calm', async ({ browser, base, errs }) => {
   // follower's loops (how many run).
   //   A: slow while nothing rests, fine once "light" is set (a phone that needs the calm mode): "light", then full motion after four good spells, then "light" AGAIN after one bad spell (it used to take three).
   //   C: slow only for the first 6 s (a page that was only slow while it loaded): "light", then full motion, and it stays there.
+  // The pretend clock stands still from before the page's first script until everything is in place: the page's own observer has been told that the hero is in sight, and the pretend frames are in.
+  // (On a running clock the page's first look comes 4 s after it loaded, and a busy computer that needed those 4 s for loading had started it before the pretend frames were put in: the slow
+  // stretch was then not aligned with the spells, the page never found three bad ones in a row, and nothing was written down at all.) From there the clock is moved by hand only.
   const simulate = async (name, { slowUntil, onlyUncalm, sim }) => {
     const q = await open(browser, base, 'index.html', errs, {
-      viewport: { width: 1440, height: 900 }, query: 'critter=bee',
+      viewport: { width: 1440, height: 900 }, query: 'critter=bee', time: null,
       routes: async (pg) => {
+        await pg.clock.install({ time: new Date(TODAY) });
+        await pg.clock.pauseAt(new Date(new Date(TODAY).getTime() + 1));
         await pg.addInitScript(() => {
           Object.defineProperty(Navigator.prototype, 'webdriver', { configurable: true, get: () => false });   // (a browser run by a program never switches by itself)
           window.PerformanceObserver = function () { this.observe = function () { throw new Error('no long tasks here'); }; this.takeRecords = function () { return []; }; };
         });
       },
     });
-    await realWait(1000);   // (the page's observers need a real drawn frame to say that the hero is in sight)
+    // the page's own observers are told by a drawn frame (late on a busy computer): ask the same question and wait for ours, which is told after the page's own
+    await q.evaluate(() => new Promise((resolve) => { const io = new IntersectionObserver(() => { io.disconnect(); resolve(); }); io.observe(document.querySelector('#top')); }));
     await q.evaluate(({ slowUntil, onlyUncalm }) => {
       const log = window.__calmLog = [];
       let t0 = null;
@@ -292,7 +302,7 @@ await run('calm', async ({ browser, base, errs }) => {
         setTimeout(() => { rec.leaves750 = leaves(); rec.wings750 = wings(); }, 750);
       });
     }, { slowUntil, onlyUncalm });
-    await q.clock.pauseAt(new Date((await q.evaluate(() => Date.now())) + 4000));   // (the page started its first look 4 s after it loaded)
+    await q.clock.runFor(4000);   // (the page's first look comes 4 s after it loaded)
     const t0 = await q.evaluate(() => Math.round(performance.now()));
     for (let t = 0; t < sim; t += 2000) await q.clock.runFor(2000);
     const log = (await q.evaluate(() => window.__calmLog)).map((r) => ({ ...r, at: r.at - t0 }));
@@ -318,7 +328,10 @@ await run('calm', async ({ browser, base, errs }) => {
     const log = await simulate('C', { slowUntil: 6000, onlyUncalm: false, sim: 20000 });
     ok(`a computer that was only slow for the first 6 s (pretend frames): light, then full motion, and it stays at full motion (${shown(log)})`, log.map((r) => r.level).join(',') === 'light,' && log.every((r) => r.by === 'auto'), JSON.stringify(log));
   };
-  await Promise.all([mainFlow(), recoverFlow(), simA(), simC()]);
+  // The two on the pretend clock first, together (they do not depend on how fast this computer is, but they work it hard for a while: the timers of the pretend clock); then the two that look at the
+  // frame rate this computer really manages, together, and nothing else running.
+  await Promise.all([simA(), simC()]);
+  await Promise.all([mainFlow(), recoverFlow()]);
 
   const fast = await open(browser, base, 'index.html', errs, real(1));
   await realWait(ms(17000));   // the page looks 6 times, 2 s each, from 4 s after loading
