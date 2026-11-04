@@ -1845,7 +1845,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. Draw 2 or 3 sunflowers in the middle**
 
-- Ask Claude: js/hero.js at `snippable(24, 205, 128, '')` is the first of the five (two on the left edge, three on the right); add two or three in the middle of the picture, away from the berry rows. A drawing change; they must also be tappable on a phone.
+- Ask Claude: js/hero.js at `const springFore` (and at `const summerFore`) list the five sunflowers (two on the left edge, three on the right); add two or three in the middle of the picture, away from the berry rows. A drawing change; they must also be tappable on a phone.
 - Strings: 0
 - Tests: hero, touch, visual-check; games
 
