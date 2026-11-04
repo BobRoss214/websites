@@ -26,13 +26,13 @@
   function seasonWalk(words, then) { return function () { var w = window.WA_TOUR_SEASONS; return w ? w.walk(words, then)() : []; }; }
   function seasonsBegin() { var w = window.WA_TOUR_SEASONS; return w ? w.begin() : undefined; }
   function seasonsEnd() { var w = window.WA_TOUR_SEASONS; return w ? w.end() : undefined; }
-  // The list that names the trees is brought just under the top bar: the yellow note and the green line (tree season) lie below it, so everything the card names is in the window.
-  // On a phone the columns are stacked, the card is a sheet over the lower part, and the yellow note goes there instead (the green line shows above the sheet).
-  function placeTreeList() {
-    var narrow = (document.documentElement.clientWidth || window.innerWidth) <= 640;
-    var anchor = one(narrow ? '#greenhouse .gh-callout' : '#greenhouse .gh-features'), bar = one('.site-header');
-    if (!anchor) return;
-    var dy = anchor.getBoundingClientRect().top - ((bar ? bar.getBoundingClientRect().height : 80) + (narrow ? 24 : 40));
+  // On a phone the columns of The GreenHouse are stacked and the card is a sheet over the lower part: the yellow note is brought just under the top bar, so the green line (tree
+  // season) shows above the sheet. On a computer the list, the note and the line are brought into the window together by the engine (also), and nothing is scrolled by hand.
+  function placeTreeNote() {
+    if ((document.documentElement.clientWidth || window.innerWidth) > 640) return;
+    var note = one('#greenhouse .gh-callout'), bar = one('.site-header');
+    if (!note) return;
+    var dy = note.getBoundingClientRect().top - ((bar ? bar.getBoundingClientRect().height : 80) + 24);
     try { window.scrollTo({ top: window.pageYOffset + dy, behavior: 'instant' }); } catch (e) { window.scrollTo(0, window.pageYOffset + dy); }
   }
 
@@ -144,9 +144,8 @@
         summer: 'Summer. The same: no green line, only “Christmas trees in season” in the list.',
         fall: 'Fall. Still no green line. It waits for tree season.',
         winter: 'Winter. A green line appears: “Christmas trees are here.” It says tree season runs from the Friday after Thanksgiving to early December, right at The GreenHouse.'
-      }, placeTreeList),
-      before: function () { var b = seasonsBegin(); if (b && b.then) return b.then(placeTreeList); placeTreeList(); return b; },
-      after: seasonsEnd
+      }, placeTreeNote),
+      before: seasonsBegin, after: seasonsEnd
     },
 
     /* ============ 7  The Store ============ */

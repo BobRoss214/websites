@@ -926,6 +926,27 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
   ok('vine: the lit box (the section with 8 px round it) starts below the vine that hangs under the top bar, so none of it is hidden behind the leaves', vineEnd !== null && !!s.hole && s.hole.y >= vineEnd - 1, JSON.stringify({ vineEnd, hole: s.hole }));
   await p.context().close();
 
+  /* ================================================================ 9c. the parts a step names with "also" are brought into the window together with the target, when they fit there together */
+  // A target and a part 600 px below it, in the flow of the page far from the top: with the target alone in the middle of the window the other one would be below the window.
+  const STEPS_FLOW = `(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push({ id: 'f1', order: 101, chapter: 1, page: 'index', target: '#t-fa', also: '#t-fb', title: 'Two parts', text: 'Both are in the window.' });`;
+  p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: serve({ a: STEPS_FLOW }) });
+  await p.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'auto';
+    const wrap = document.createElement('div');
+    wrap.id = 't-flow'; wrap.style.cssText = 'margin:900px 0 900px;padding:0 24px';
+    wrap.innerHTML = '<div id="t-fa" style="height:100px;background:#fffdf6;border:2px solid #3a2416">The target</div><div style="height:500px"></div><div id="t-fb" style="height:100px;background:#e8f4ff;border:2px solid #3a2416">Named with also</div>';
+    const sec = document.querySelector('#faq');
+    sec.parentNode.insertBefore(wrap, sec);
+  });
+  await p.click('.wa-tour-pill');
+  await okSoon('also in the flow: the welcome card opens', () => look(p), (x) => x && x.name === 'Your website tour' && !x.busy);
+  await press(p, 'Start the tour');
+  await atStep(p, 1, 'also in the flow: step 1 lights the target and the other part');
+  const fa = await rectOf(p, '#t-fa'), fb = await rectOf(p, '#t-fb'), fHead = await p.evaluate(() => document.querySelector('.site-header').getBoundingClientRect().bottom);
+  s = await look(p);
+  ok('also in the flow: the target and the part named with also are both whole in the window, under the top bar (the window is ' + s.vh + ' px high, the two are 700 px from top to bottom)', fa.y >= fHead - 1 && fb.b <= s.vh && fa.b <= s.vh && fb.y >= fHead - 1, JSON.stringify({ fa, fb, head: fHead, vh: s.vh }));
+  await p.context().close();
+
   /* ================================================================ 10. what is lit besides the target: a list a lit button opens, a part a step names with "also" */
   // The lit part can be used and nothing else can. A button of it that opens a list (aria-controls, aria-expanded) lights the list too, and the list can be used; so can the parts a step names
   // with "also" (the basket game's picture). Everything else stays locked, in every step. (Found by an independent walk of the real tour: ten steps left the whole page free.)

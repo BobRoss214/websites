@@ -375,9 +375,10 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
           if (op.unseen.length) { menusBad++; rec(name + ': what the lit buttons open is found by the tour (aria-controls, and aria-expanded "true" while it is open)', false, op.unseen.join('; ')); }
           else if (op.opened) info('the lit part has ' + op.opened + ' button' + (op.opened === 1 ? '' : 's') + ' that open something' + (op.outside ? ' (' + op.outside + ' of them reach outside the lit box: the tour lights that too)' : '') + ': ' + s.id);
         }
-        for (const sel of [].concat(s.also || [])) {   // the other parts the step lights with its target
+        for (const sel of [].concat(s.also || [])) {   // the other parts the step lights with its target: each must be on the page (one that shows only on some days, the green line of tree season, may be hidden today: the tour lights it when it shows)
           const pa = await p.evaluate(([x]) => window.__tour.probe(x), [sel]);
-          rec(name + ': the part named with also (' + sel + ') is on the page and visible', !pa.bad && pa.shown, pa.bad ? 'not a valid selector' : pa.shown ? '' : pa.why);
+          const n = await p.evaluate(([x]) => { try { return document.querySelectorAll(x).length; } catch (e) { return -1; } }, [sel]);
+          rec(name + ': the part named with also (' + sel + ') is a valid selector and is on the page' + (!pa.bad && pa.shown ? ' and visible' : ' (hidden today: the tour lights it when it shows)'), n > 0, n < 0 ? 'not a valid selector' : 'no element matches');
         }
         if (s.allowClicks) {
           const clicked = await p.evaluate(([t]) => window.__tour.tryClick(t), [s.target]);

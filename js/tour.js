@@ -239,10 +239,19 @@
   };
   const bring = async (el, keep) => {   // bring the box to a comfortable place under the sticky bar (and above the sheet on a phone), then wait until it stops moving; keep: after a press on a small button, a box taller than the room stays where it is while part of it shows (the step's run() may have scrolled to what matters)
     snapReveal(el);
+    const named = el === curEl && curStep && curStep.also ? [].concat(curStep.also).map((sel) => find(sel)).filter(Boolean) : [];   // the parts the step lights with its target (also)
+    named.forEach(snapReveal);
     if (pinned(el)) return;
     if (inScroller(el)) { try { el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' }); } catch (e) { /* an old browser */ } }
-    const r = el.getBoundingClientRect(), vh = win.innerHeight;
+    let r = el.getBoundingClientRect();
+    const vh = win.innerHeight;
     const top = headerH() + 14, bottom = vh - 14 - (sheet() && ui ? ui.card.offsetHeight + 8 : 0);
+    if (named.length) {   // all of them are brought into the window together, when they fit there together (a picture as big as the window is not: then the target alone is looked after)
+      const all = [r].concat(named.map((n) => n.getBoundingClientRect()));
+      const u = { left: Math.min(...all.map((q) => q.left)), right: Math.max(...all.map((q) => q.right)), top: Math.min(...all.map((q) => q.top)), bottom: Math.max(...all.map((q) => q.bottom)) };
+      u.height = u.bottom - u.top;
+      if (u.height <= bottom - top) r = u;
+    }
     let dy = 0;
     if (r.height <= bottom - top) {
       let want = r.top;   // where the part's top should be
