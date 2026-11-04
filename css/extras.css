@@ -248,7 +248,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
    the name and the price in the hand-lettered font beside it, and at most one line of note under both. 4 cards across on a wide screen, 3 on a laptop or tablet,
    2 on a phone. The group's colours are three tokens: --g the band (and the jump pill), --gt the text on it, --gp the pale bubble.
    Nothing here moves by itself, so there is nothing for "Pause animations" to stop. */
-.shop{--shop-cols:5;--shop-gap:14px}   /* the Store is long: five cards across where there is room, and tighter spacing all through (the look is the same) */
+.shop{--shop-cols:5;--shop-gap:14px}   /* the Store is long: five cards across where there is room, and tighter spacing all through (the look is the same). From 62em the groups run in two columns with fewer cards across: see "Store on a computer" below */
 @media (max-width:73.75em){.shop{--shop-cols:4}}
 @media (max-width:62em){.shop{--shop-cols:3}}
 @media (max-width:47.5em){.shop{--shop-cols:2;--shop-gap:10px}}
@@ -265,19 +265,14 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 .sg-flowers{--g:#c43c7a;--gt:#fff;--gp:#fbdbe9}
 .sg-farm{--g:#8bc34a;--gt:var(--ink);--gp:#e4f2cf}
 .shop-group{margin-top:clamp(16px,2.4vw,26px)}
-.shop-note+.shop-group{margin-top:0}
-@media (min-width:62em){
-  #shop > .wrap{display:flex;flex-wrap:wrap;column-gap:20px}
-  #shop > .wrap > *{flex:0 0 100%;max-width:100%;min-width:0}
-  #shop > .wrap > .sg-icecream,#shop > .wrap > .sg-pizza{flex:0 0 calc(50% - 10px);max-width:calc(50% - 10px)}   /* the two groups that hold one wide card each */
-}
+.shop-groups > .shop-group:first-child{margin-top:0}
 .shop-band{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;margin:0 0 10px;padding:4px 14px 4px 6px;background:var(--g);color:var(--gt);border:3px solid var(--ink);border-radius:40px;box-shadow:0 4px 0 var(--ink)}
 .shop-band-ico{flex:none;width:42px;height:42px;padding:4px;background:#fff;border:2.5px solid var(--ink);border-radius:50%}
 .shop-band-h{flex:1 1 6em;min-width:0;margin:0;color:inherit;font-size:clamp(1.3rem,2.4vw,1.7rem);line-height:1.1}
 .shop-where{margin:0 0 0 auto;padding:.28em .85em;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:999px;font:700 .85rem/1.2 var(--display)}
 .shop-intro{max-width:44em;margin:0 auto 14px;text-align:center;font-weight:600;color:var(--ink-soft)}
 .shop-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--shop-gap);margin:0;padding:0;list-style:none}
-.shop-grid + .shop-grid{margin-top:var(--shop-gap)}   /* the farm group has two lists in a row (the two Farm fun cards, then the rides): the same space between them as between the cards */
+.shop-grid + .shop-grid{margin-top:calc(var(--shop-gap) + 4px)}   /* the farm group has two lists in a row (the two Farm fun cards, then the rides): the clear space between them, under the cards' 4 px shadow, is the gap between the cards (tests/shop.test.mjs checks it) */
 .shop-card{--w:calc((100% - (var(--shop-cols) - 1) * var(--shop-gap)) / var(--shop-cols));flex:0 0 var(--w);max-width:var(--w);min-width:0;display:flex;flex-wrap:wrap;align-items:center;align-content:flex-start;gap:3px 10px;padding:9px 10px;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--ink);overflow-wrap:break-word;overflow-wrap:anywhere}
 .shop-bubble{flex:none;display:grid;place-items:center;width:56px;height:56px;background:var(--gp);border:2.5px solid var(--ink);border-radius:50%;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
 .shop-ico{width:78%;height:78%}
@@ -319,6 +314,48 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 /* Hindi letters have a small body: a little bigger, as elsewhere on the site */
 html:lang(hi) .shop-name{font-size:1.1rem}
 html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .shop-facts li,html:lang(hi) .shop-where,html:lang(hi) .shop-soon,html:lang(hi) .shop-chips li{font-size:.92rem}
+/* ---------- Store on a computer (62em and up): two columns, and everything a little tighter ----------
+   A tablet and a phone keep the one column above. The 12 groups sit in .shop-groups: CSS columns keep the order of the page (down the left column, then
+   the right one), so the keyboard and the jump buttons still go in the order you read, and a short group no longer leaves half a row empty. A group is
+   never cut between the two columns (break-inside). The last group, the farm visit, is wide and runs across both columns. Every word, price and picture
+   stays; only the space around them is smaller. Sizes that must not shrink: names .95rem, prices 1.5rem, notes .78rem. */
+@media screen and (min-width:62em){
+  .shop{--shop-gap:10px;padding-top:72px;padding-bottom:72px;padding-block:72px}
+  .shop .section-head{max-width:56em;margin-bottom:22px}
+  .shop-jump{margin:0 0 14px}
+  .shop-jump a{gap:.4em;padding:.3em .85em .3em .4em;font-size:.94rem}
+  .shop-note{margin:0 0 18px;padding:.5em 1em}
+  .shop-groups{columns:2;column-gap:24px;--shop-cols:2}
+  .shop-groups > .shop-group{break-inside:avoid;margin:0 0 12px;padding-bottom:4px}
+  .shop-groups > .sg-farm{column-span:all;--shop-cols:4;margin-bottom:0}
+  .shop-band{gap:2px 10px;margin:0 0 8px;padding:2px 12px 2px 3px}
+  .shop-band-ico{width:34px;height:34px;padding:3px}
+  .shop-band-h{font-size:1.35rem}
+  .shop-where{padding:.2em .75em}
+  .shop-card{gap:2px 8px;padding:5px 9px 6px;border-radius:16px}
+  .shop-bubble{width:44px;height:44px}
+  .shop-body{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 .45em}
+  .shop-body > *{max-width:100%}
+  .shop-name{font-size:1rem;line-height:1.12}
+  .shop-price.hand,.shop-price .hand{font-size:1.55rem;line-height:1}
+  .shop-sub{font-size:.78rem;line-height:1.22}
+  .shop-soon{margin:1px 0}
+  .shop-half{padding:7px 10px;column-gap:10px}
+  .shop-half .shop-bubble,.shop-full .shop-bubble{width:56px;height:56px}
+  .shop-full{padding:7px 10px;gap:6px 14px}
+  .shop-flavors-h{font-size:1.25rem;margin-bottom:3px}
+  .shop-facts{gap:2px 16px;margin:6px 0 0}
+  .shop-facts li{font-size:.88rem}
+  .shop-ride .shop-bubble{width:72px;height:48px;border-radius:24px}
+  .shop-opts-u li{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 8px}   /* the label and its price on one line (they were one above the other) */
+  .shop-opts-u .so-p{display:inline;margin-left:auto;text-align:right}
+  .shop-intro{margin-bottom:8px}
+}
+@media screen and (min-width:77.5em){   /* from 1240 px: three cards across in a column, five rides across (a card is then 185 px or more: narrower, the Spanish "Prices coming soon" breaks a word) */
+  .shop-groups{--shop-cols:3}
+  .shop-groups > .sg-farm{--shop-cols:5}
+}
+@media screen and (min-width:80em){.shop > .wrap{width:min(1380px,100% - 2 * var(--gutter))}}   /* a big screen: the Store may be a little wider than the other sections, so more fits on one screen */
 @media (max-width:47.5em){
   .shop-jump{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .shop-jump a{height:100%;padding-right:.7em;font-size:.9rem}
