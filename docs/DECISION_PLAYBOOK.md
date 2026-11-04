@@ -1829,7 +1829,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: d69 and d70 (the same game code, js/hero.js); d34 (the sunflower photos are a separate question).
-- Note: Checked in a browser on 3 October 2026 (summer picture). The game fixes and the game test (tests/games.test.mjs) are already in the tree; the optional patch games-B-pick-snips-sunflowers.patch goes on top of them.
+- Note: Checked in a browser on 3 October 2026 (summer picture; the spring picture has the same five sunflowers, and they can be snipped there too). The game fixes and the game test (tests/games.test.mjs) are already in the tree; the optional patch games-B-pick-snips-sunflowers.patch goes on top of them.
 
 **A. Let the Pick button snip sunflowers too**
 
@@ -1845,7 +1845,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. Draw 2 or 3 sunflowers in the middle**
 
-- Ask Claude: js/hero.js at `sunflower(24, 205, 128, '')` is the first of the five (two on the left edge, three on the right); add two or three in the middle of the picture, away from the berry rows. A drawing change; they must also be tappable on a phone.
+- Ask Claude: js/hero.js at `const springFore` (and at `const summerFore`) list the five sunflowers (two on the left edge, three on the right); add two or three in the middle of the picture, away from the berry rows. A drawing change; they must also be tappable on a phone.
 - Strings: 0
 - Tests: hero, touch, visual-check; games
 

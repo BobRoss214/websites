@@ -1,8 +1,8 @@
 /* Wise Acres — seasonal hero.
  *
  * The first screen is an illustrated farm that follows the calendar:
- *   spring  strawberry field (tap to pick)
- *   summer  blueberry bushes (tap to pick)
+ *   spring  strawberry field with kids picking, and sunflowers at the sides (tap to pick or snip)
+ *   summer  blueberry bushes, and the same sunflowers at the sides (tap to pick or snip)
  *   fall    pumpkin patch + a tractor pulling a wagon ride (tap to pick / toot)
  *   winter  Christmas-tree farm with campfires and a snowman (tap to light / stoke)
  *

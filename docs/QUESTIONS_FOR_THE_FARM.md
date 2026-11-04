@@ -725,11 +725,11 @@ Answer:
 
 ### Question 63
 
-**Is it all right that the "Sunflower Whisperer" badge (100 snipped sunflowers in the summer picture) can only be earned on a wide computer screen?**
+**Is it all right that the "Sunflower Whisperer" badge (100 snipped sunflowers in the spring and summer pictures) can only be earned on a wide computer screen?**
 
 Dashboard id: d68
 
-Why it matters: Only 5 sunflowers are drawn, at the far edges of the picture. On a screen 1440 pixels wide 4 of the 5 are in view; on a phone 390 pixels wide none is, so a visitor on a phone can never earn this badge.
+Why it matters: Only 5 sunflowers are drawn in each of those pictures, at the far edges. On a screen 1440 pixels wide 4 of the 5 are in view; on a phone 390 pixels wide none is, so a visitor on a phone can never earn this badge.
 
 Answer:
 
@@ -1165,7 +1165,7 @@ Everything in this section was checked against the code on 3 October 2026; the g
 
 - **If the Pick button snips sunflowers too:** the optional patch `games-B-pick-snips-sunflowers.patch` (DECISION_PLAYBOOK, "Patches on disk").
 - **If a lower number:** `js/hero.js` at `sunflower: { icon: 'sunflower', at: 100` and the badge text `js/hero.js` at `100 sunflowers snipped!` (a JavaScript string with four translations: ask Claude).
-- **If sunflowers in the middle:** `js/hero.js` at `sunflower(24, 205, 128, '')`: add two or three sunflowers near the middle of the picture (ask Claude).
+- **If sunflowers in the middle:** `js/hero.js` at `const springFore` (and at `const summerFore`): add two or three sunflowers near the middle of the picture (ask Claude).
 - **If she leaves it:** no change.
 
 **Question 64: In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 22 trees. Should it change?**
