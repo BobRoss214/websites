@@ -4,6 +4,7 @@
  *   DemoUI.h(tag, attrs, ...children)     builds an element: attrs { class, text, on: { click: fn }, style: { prop: value }, any attribute }; children are text, elements or lists
  *   DemoUI.dateLong('2026-11-14')         "Saturday, Nov 14"          DemoUI.time12('14:00')  "2:00 pm"          DemoUI.money(4.5)  "$4.50"
  *   DemoUI.modal({ title, body, actions, wide, onClose })  a dialog: returns { el, body, actions, close }      DemoUI.confirm({ title, text, yes, no })  a Promise of true or false
+ *   DemoUI.closeModals()                  closes every dialog that is open (the tour uses it when the owner goes on with a dialog still open); returns how many were open
  *   DemoUI.toast(text, { kind })          a short message that fades by itself (one place for the whole demo)
  *   DemoUI.chip(text, kind)               a small status label (kind: wait, good, no, info, weather)         DemoUI.requestStatus(request)  { text, kind }
  *   DemoUI.choices({ name, legend, hint, options, value, onChange })  a question with big buttons, one chosen: { el, value(), set(v) }  (the sign-up question)
@@ -139,6 +140,13 @@
     (first || focusables(body)[0] || actions.querySelector('button') || box).focus();
     return api;
   }
+  // closeModals(): closes every dialog that is open now, the top one first, each one by its own close (the focus goes back to where it came from, and a confirm answers no).
+  // Nothing is removed by hand. Returns how many dialogs were open.
+  function closeModals() {
+    var list = open.slice(), n = list.length, shut;
+    while (list.length) { shut = list.pop().close; shut(); }
+    return n;
+  }
   // confirm({ title, text, yes, no, danger }) -> a Promise of true (the first button) or false (the second, Escape, or a click outside)
   function confirmBox(o) {
     o = o || {};
@@ -179,6 +187,6 @@
   window.DemoUI = {
     h: h, icon: icon, clear: clear, focusables: focusables,
     dateLong: Data.dateLong, dateShort: Data.dateShort, weekdayName: Data.weekdayName, time12: Data.time12, money: Data.money, when: when, side: side,
-    chip: chip, choices: choices, requestStatus: requestStatus, modal: modal, confirm: confirmBox, toast: toast, download: download, addToCalendar: addToCalendar
+    chip: chip, choices: choices, requestStatus: requestStatus, modal: modal, closeModals: closeModals, confirm: confirmBox, toast: toast, download: download, addToCalendar: addToCalendar
   };
 })();

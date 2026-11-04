@@ -15,6 +15,12 @@
  *     card 20 after 21 makes the review wait again; the same answer comes the second time round;
  *   - any card entered first (a fresh browser) makes what it needs; a stale sample (its visit is over) is made again;
  *   - the owner answers by hand (No, Suggest at the desk, Yes at the kitchen): the next cards go on from that answer and never answer twice;
+ *   - the seven cards whose lit part has a button that opens a dialog (the visit card, the request, the family box, the closed-day banner, the strip with Start over) leave with an
+ *     after() that closes a dialog still open through the demo's own DemoUI.closeModals() and touches nothing else (five of them, the request, the banner and the strip, also let the
+ *     owner click while the card is up); no other card has an after();
+ *   - the bell does not grow when the owner goes Back and forth (the same notice is never in it twice); a family the owner made by hand is kept (the sign-up card only signs it out);
+ *   - the words: the closed day is closed for rain (the desk's own sentence), the cards do not say "the sample family" when the family may be hand-made, the family-OK card
+ *     names the button as it is written in js/demo-view-pizza.js, the alerts card says where messages go before it lists the choices;
  *   - without the demo, or with a store that throws, no before() throws. */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -36,11 +42,12 @@ const BASE = TODAY.slice(0, 10);
 function world(opts = {}) {
   const clock = { date: opts.date || BASE, time: '09:00' };
   const store = Store.create(null, { now: () => ({ date: clock.date, time: clock.time }) });
-  const w = { clock, store, tab: 'visits', waited: [], errors: [] };
+  const w = { clock, store, tab: 'visits', waited: [], errors: [], closedDialogs: 0 };
   const el = { getBoundingClientRect: () => ({ width: 10, height: 10 }), getAttribute: () => null, click() {} };
   const document = { querySelectorAll: (s) => { w.waited.push(s); return [el]; }, querySelector: () => el };
   const win = { DemoStore: opts.noStore ? undefined : (opts.brokenStore ? new Proxy({}, { get: () => () => { throw new Error('broken'); } }) : store), DemoData: opts.noStore ? undefined : Data,
-    DemoApp: { route: () => ({ name: w.tab }), go: (n) => { w.tab = n; } } };
+    DemoApp: { route: () => ({ name: w.tab }), go: (n) => { w.tab = n; } },
+    DemoUI: opts.noUI ? undefined : { closeModals: () => { if (opts.brokenUI) throw new Error('broken'); w.closedDialogs++; return 0; } } };
   win.window = win;
   vm.runInNewContext(SOURCE, { window: win, document, setTimeout, clearTimeout }, { filename: 'js/tour-steps-c.js' });
   w.steps = win.WA_TOUR_STEPS.slice().sort((a, b) => a.order - b.order);
@@ -55,11 +62,19 @@ function world(opts = {}) {
     return s;
   };
   w.walk = async (from, to) => { for (let n = from; n <= to; n++) await w.run(n); };
+  // leave card n: its after(), if it has one (the engine runs it when the card is left)
+  w.leave = async (n) => {
+    const s = w.steps.find((x) => x.order === 1000 + n);
+    try { if (s && s.after) await s.after({}); } catch (e) { w.errors.push('after ' + n + ': ' + e.message); }
+    return s;
+  };
   w.snap = () => JSON.stringify(store.snapshot());
   w.visit = () => store.list('visits').filter((v) => v.id === 'v1')[0];
   w.order = () => store.list('orders')[0];
   w.req = (kind) => { const all = store.list('requests').filter((r) => r.kind === kind); return all[all.length - 1] || null; };
   w.notices = () => store.noticesFor('family');
+  w.allNotices = () => store.list('notices');
+  w.sameTwice = () => { const seen = new Set(); let twice = 0; w.allNotices().forEach((n) => { const k = [n.to, n.text, n.link].join('|'); if (seen.has(k)) twice++; seen.add(k); }); return twice; };
   return w;
 }
 const plus = (t, m) => Data.addMinutes(t, m);
@@ -74,9 +89,22 @@ const dayAfter = (d) => Data.addDays(d, 1);
   ok('the chapter\'s first card does not promise a year screen', !/year|badge/i.test(w.steps[0].text + ' ' + w.steps[0].title));
   const ev = w.steps.find((s) => s.id === 'ch10-event'), su = w.steps.find((s) => s.id === 'ch10-signup');
   ok('the My event card keeps its id, order and target, and says the tab shows only for families who said yes at sign-up', !!ev && ev.order === 1021 && ev.target === '[data-tour="acct-event"]' && /only for families who said yes at sign-up/.test(ev.text), ev && ev.text);
-  ok('the sign-up card says the family is asked about a party, an event or a school trip', !!su && su.order === 1002 && /party, an event or a school trip/.test(su.text));
+  ok('the My event card is true for any family: it does not say "the sample family said yes" (a family made by hand may have said no, and still gets the sample trip)', !/sample family|said yes\. /i.test(ev.text.replace(/only for families who said yes at sign-up/, '')) && /This family has one/.test(ev.text), ev.text);
+  ok('the sign-up card says the family is asked about a party, an event or a school trip, and does not promise to create a family (a hand-made one is kept)', !!su && su.order === 1002 && /party, an event or a school trip/.test(su.text) && !/creates a sample family/.test(su.text), su && su.text);
   ok('every card is skipped when its target is missing, and is on a demo page', w.steps.every((s) => s.skipIfMissing === true && ['account', 'farm-desk', 'kitchen'].includes(s.page)));
-  ok('no card has an after() (Back must never answer a request)', w.steps.every((s) => !('after' in s)));
+  const withAfter = w.steps.filter((s) => 'after' in s).map((s) => s.id);
+  ok('only seven cards have an after(): the ones whose lit part has a button that opens a dialog (the visit card, the request, the family box, the closed-day banner, the strip with Start over three times)', withAfter.join() === 'ch10-intro,ch10-sample,ch10-request,ch10-family,ch10-closed,ch10-real-needs,ch10-worth-asking' && w.steps.filter((s) => 'after' in s).every((s) => typeof s.after === 'function'), withAfter.join());
+  ok('...and five of them let the owner click while the card is up: the request, the closed-day banner and the strip (allowClicks: true)', w.steps.filter((s) => 'after' in s && s.allowClicks === true).map((s) => s.id).join() === 'ch10-intro,ch10-request,ch10-closed,ch10-real-needs,ch10-worth-asking');
+  const pick = (id) => w.steps.find((s) => s.id === id);
+  const PIZZA_VIEW = fs.readFileSync(path.join(ROOT, 'js/demo-view-pizza.js'), 'utf8'), VISITS = fs.readFileSync(path.join(ROOT, 'js/demo-view-visits.js'), 'utf8');
+  ok('the family-OK card names the "no" button as it is written on the My pizza screen: No thanks, keep my order as it is (not "keep mine")', PIZZA_VIEW.includes("'No thanks, keep my order as it is'") && pick('ch10-family-ok').text.includes("'No thanks, keep my order as it is'") && !/keep mine/.test(pick('ch10-family-ok').text), pick('ch10-family-ok').text);
+  const alerts = pick('ch10-alerts').text, at = (x) => alerts.toLowerCase().indexOf(x);
+  ok('the alerts card says first where messages go (the two switches at the top: text, email or both), then the choices in the order of the screen', at('two switches') > 0 && at('two switches') < at('a spot opens on a full day') && /text, email or both/.test(alerts) && at('a spot opens on a full day') < at('reservations open') && at('reservations open') < at('strawberries') && at('strawberries') < at('blueberries') && at('blueberries') < at('pumpkins') && at('pumpkins') < at('christmas trees') && !/first choice is a spot/.test(alerts), alerts);
+  ok('...the same order as the screen: spot, reservations, strawberries, blueberries, pumpkins, trees', Data.alertKinds.map((k) => k.key).join() === 'spot,reservations,strawberries,blueberries,pumpkins,trees');
+  const ans = pick('ch10-answer');
+  ok('the answer card lights the family\'s box with Mrs. Cathy\'s answer (acct-reply) and says so; that box has the hook for a suggestion and for a finished answer (yes, no, OK, kept)', ans.target === '[data-tour="acct-reply"]' && /the lit box is your answer/.test(ans.text) && /function lastBlock[\s\S]*?'data-tour': 'acct-reply'[\s\S]*?\n  }\n/.test(VISITS) && /function suggestedBlock[\s\S]*?'data-tour': 'acct-reply'/.test(VISITS), ans.text);
+  ok('the closed-day card does not name a reason of its own (the banner shows the desk\'s words)', !/weather\./.test(pick('ch10-closed').text) && /banner with the reason/.test(pick('ch10-closed').text), pick('ch10-closed').text);
+  ok('...so the dialog can be used while the card is up (allowClicks: true), and the file never takes a node out of the page by hand', w.steps.filter((s) => s.id === 'ch10-request' || s.id === 'ch10-closed').every((s) => s.allowClicks === true) && !/\.remove\s*\(|removeChild|innerHTML|querySelector\([^)]*modal/.test(SOURCE));
 }
 
 /* ------------------------------------------------------------------ forward, card by card */
@@ -139,7 +167,9 @@ const dayAfter = (d) => Data.addDays(d, 1);
   await w.run(22);
   ok('card 22 (the desk): no day is closed yet', S.list('closedDays').length === 0 && !w.visit().closed);
   await w.run(23);
-  ok('card 23: the day of the visit is closed for weather, the visit shows it, My visits is open', w.visit().closed === true && w.visit().closedReason === 'weather' && S.list('closedDays').join() === w.visit().date && w.tab === 'visits', w.visit().date);
+  ok('card 23: the day of the visit is closed for rain (the desk\'s own first choice), the visit shows it, My visits is open', w.visit().closed === true && w.visit().closedReason === 'rain' && S.list('closedDays').join() === w.visit().date && w.tab === 'visits', w.visit().date);
+  const closedNote = w.notices().filter((n) => /is closed on/.test(n.text));
+  ok('the family\'s notice says it in the desk\'s words: "The farm is closed on <day> because of rain. Pick a new day for your visit." (not "weather")', closedNote.length === 1 && closedNote[0].text === 'The farm is closed on ' + Data.dateLong(w.visit().date) + ' because of rain. Pick a new day for your visit.' && closedNote[0].link === '#visits', closedNote.map((n) => n.text).join(' | '));
   await w.walk(24, 25);
   ok('cards 24 and 25 change nothing', true);
   ok('no before() threw', w.errors.length === 0, w.errors.join(' | '));
@@ -272,6 +302,92 @@ const dayAfter = (d) => Data.addDays(d, 1);
   ok('card 21 still has something to show: it adds the sample school trip for that family (and the account keeps the kind)', w.store.list('events').length === 1 && w.store.list('events')[0].kind === 'school' && w.store.current().eventKind === 'school' && w.tab === 'event' && w.errors.length === 0);
   await w.run(21);
   ok('and running the card again adds nothing more', w.store.list('events').length === 1);
+}
+
+/* ------------------------------------------------------------------ the cards that open a dialog: leaving them closes it, and nothing else */
+{
+  const ids = ['ch10-intro', 'ch10-sample', 'ch10-request', 'ch10-family', 'ch10-closed', 'ch10-real-needs', 'ch10-worth-asking'];
+  const w = world();
+  await w.walk(1, 5);
+  const snap = w.snap();
+  const leave = async (x, id) => { const s = x.steps.find((y) => y.id === id); if (s && typeof s.after === 'function') await s.after({}); };
+  for (const id of ids) await leave(w, id);
+  ok('leaving each of the seven cards closes the open dialogs with the demo\'s own DemoUI.closeModals(), once for each card', w.closedDialogs === 7, String(w.closedDialogs));
+  ok('...and changes nothing in the demo (a dialog left open, then Back or Next, never sends or answers a request)', w.snap() === snap);
+  const noUI = world({ noUI: true }), broken = world({ brokenUI: true });
+  for (const x of [noUI, broken]) { await x.walk(1, 5); for (const id of ids) await leave(x, id); }
+  ok('...without DemoUI on the page, or with a closeModals() that throws, an after() does nothing and throws nothing', noUI.errors.length === 0 && broken.errors.length === 0);
+  const w2 = world(), changed = [];
+  for (let n = 1; n <= 25; n++) { await w2.run(n); const a = w2.snap(); await w2.leave(n); if (w2.snap() !== a) changed.push(n); }
+  ok('leaving any card at any point of the walk changes nothing in the store', changed.length === 0 && w2.errors.length === 0, changed.join(','));
+}
+
+/* ------------------------------------------------------------------ Back and forth: the bell does not grow */
+{
+  const w = world();
+  await w.walk(1, 25);
+  const first = w.allNotices().length, sizes = [], twice = [];
+  for (let round = 0; round < 3; round++) {
+    for (const n of [22, 23, 20, 21, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25]) { await w.run(n); if (w.sameTwice()) twice.push(n); }
+    sizes.push(w.allNotices().length);
+  }
+  info('the bell: ' + first + ' notices after the first walk, ' + sizes.join(', ') + ' after each round of going Back and forth');
+  ok('going Back and forth: the same notice is never in the bell twice', twice.length === 0, twice.join(','));
+  ok('...and the bell stops growing: the same size after every round', sizes[0] === sizes[1] && sizes[1] === sizes[2], sizes.join(','));
+  ok('...close to the size of the first walk (a day opened again adds one notice, a review sent again none)', sizes[0] - first <= 3, sizes[0] + ' against ' + first);
+  ok('...and no before() threw', w.errors.length === 0, w.errors.join(' | '));
+}
+
+/* ------------------------------------------------------------------ a family made by hand is kept */
+{
+  const w = world(), S = w.store;
+  S.createAccount({ name: 'Pat', email: 'pat@example.org', eventKind: 'none' });
+  const made = S.current();
+  w.clock.time = '10:30';   // a family made again would carry another stamp
+  await w.run(1);
+  await w.run(2);
+  ok('the sign-up card only signs the family out: nobody is signed in, the family made by hand is still in the browser', !S.current() && S.snapshot().accounts.length === 1 && S.snapshot().accounts[0].email === 'pat@example.org');
+  await w.run(3);
+  ok('the next card signs it in again: the same family, not a new sample one', !!S.current() && S.current().email === 'pat@example.org' && S.current().id === made.id && S.current().created === made.created && S.snapshot().accounts.length === 1 && !!w.visit() && w.tab === 'visits', JSON.stringify(S.current()));
+  await w.walk(4, 20);
+  ok('...and the family stays through the walk (it said no to the trip at sign-up, so it has none until the My event card)', S.current().email === 'pat@example.org' && S.list('events').length === 0 && w.errors.length === 0);
+  await w.run(21);
+  ok('the My event card gives that family the sample trip, and its text is still true ("This family has one")', S.list('events').length === 1 && S.current().email === 'pat@example.org' && /This family has one/.test(w.steps.find((x) => x.id === 'ch10-event').text));
+}
+{
+  const w = world(), S = w.store;
+  await w.walk(1, 25);
+  const a0 = S.current();
+  w.clock.time = '10:30';
+  await w.run(2);
+  ok('Back to the sign-up card after the whole walk: signed out, the family is not wiped', !S.current() && S.snapshot().accounts.length === 1 && S.snapshot().accounts[0].created === a0.created);
+  await w.run(3);
+  ok('...and forward again: the same family, the sample cleaned back to its start (no request, no closed day)', S.current().created === a0.created && S.list('requests').length === 0 && S.list('closedDays').length === 0 && w.visit().closed === false);
+  w.clock.date = Data.addDays(BASE, 40);   // its visit is over: now a new sample is made
+  await w.run(2);
+  await w.run(3);
+  ok('a family whose visit is over is still replaced by a new sample (as before)', !!S.current() && S.current().email === Data.SAMPLE_ACCOUNT.email && w.visit() && w.visit().date >= w.clock.date);
+}
+
+/* ------------------------------------------------------------------ a request left open by hand does not hide the closed-day banner */
+{
+  const w = world(), S = w.store;
+  await w.walk(1, 7);
+  const r = w.req('visit-change');
+  S.reply(r.id, { answer: 'suggest', note: 'How about this?', suggestion: { patch: { date: r.patch.date, time: '12:00' }, summary: 'Sunday at 12:00 pm' } });
+  await w.walk(8, 23);
+  ok('Mrs. Cathy suggested another time and the family never answered: at the closed-day card that request is cancelled and the day is closed (the banner shows only while no request is open)', S.openRequestFor('visits', w.visit().id) === null && w.visit().closed === true && w.req('visit-change').status === 'cancelled' && w.errors.length === 0);
+}
+{
+  const w = world(), S = w.store;
+  await w.walk(1, 23);
+  const v = w.visit();
+  S.ask({ kind: 'visit-change', to: 'cathy', from: 'family', target: { coll: 'visits', id: v.id }, patch: { date: Data.addDays(v.date, 7), time: v.time }, summary: 'Move the visit (closed for weather)', note: '', weather: true });   // the owner pressed Pick a new day in the lit banner and sent it
+  ok('the owner sent a weather move from the lit banner: a request is open now', S.openRequestFor('visits', v.id) !== null);
+  await w.leave(23);
+  await w.run(22);
+  await w.run(23);
+  ok('Back to the desk card and forward again: the sent request is cancelled, the day is closed again, so the banner is back', S.openRequestFor('visits', v.id) === null && w.visit().closed === true && w.visit().closedReason === 'rain' && w.errors.length === 0);
 }
 
 /* ------------------------------------------------------------------ never an error */

@@ -8,9 +8,13 @@
  * How the demo is driven: the tour never clicks for the owner. It uses the demo's own store (js/demo-store.js, js/demo-data.js, the names are in
  * docs/ACCOUNT_DEMO.md): createAccount, seedSample, ask, reply, respond, setAlert, fireAlert, post, submitReview, decideReview, closeDay, openDay.
  * Rules this file keeps:
- *   - Every change to the demo is made in before() of the step that SHOWS the result, never in an after(), so Back never answers a request.
+ *   - Every change to the demo is made in before() of the step that SHOWS the result, so Back never answers a request. The only after() here closes a dialog the owner left
+ *     open (the lit part of those seven cards has a button that opens one: Request a different day, Pick a new day, Start over, I also plan an event); it uses the demo's own
+ *     DemoUI.closeModals() and never touches the store. The five cards whose lit button is the point of the card also say allowClicks: true.
  *   - Every before() can run twice, or out of order (the owner goes Back): it looks at what the store holds now and only does what is missing.
  *     When a request is already past the stage a step needs, the sample family is made again (seedSample) or the pizza part is put back.
+ *     A notice the store posts a second time (a day closed again, a request sent again) replaces the first one, so the bell does not grow while the owner goes back and forth.
+ *   - A family the owner made by hand is kept: the sign-up card only signs it out, and the next card signs it in again. A sample family is made only when there is none.
  *   - Everything is guarded. Without window.DemoStore (demo mode off) a before() does nothing; if a call fails, the target is not found and the
  *     engine skips the step (skipIfMissing). Nothing here ever throws into the page.
  *   - before() does not read its argument (a test calls it with an empty one) and returns a Promise that settles when the step's target is on
@@ -41,6 +45,13 @@
     return v === undefined ? null : v;
   }
   function rows(coll) { return call('list', coll) || []; }
+
+  // A dialog the owner left open (the lit button of some cards opens one) is closed by the demo's own close when the card is left, so it does not hang over the next card.
+  // Closing a dialog sends and answers nothing, and this never touches the store.
+  function closeDialogs() {
+    var ui = window.DemoUI;
+    try { if (ui && typeof ui.closeModals === 'function') ui.closeModals(); } catch (e) { /* nothing is open, or the demo is not on this page */ }
+  }
 
   // Waits (without blocking the page) until test() gives something, up to ms milliseconds; settles with that thing, or null.
   function until(test, ms) {
@@ -99,12 +110,29 @@
     for (i = all.length - 1; i >= 0; i--) if (all[i].kind === kind) return all[i];
     return null;
   }
-  // A signed-in sample family with a visit to come. A new one is made when there is none, or when its visit is already over.
+  // A signed-in family with a visit to come. If nobody is signed in but a family exists (the sign-up card signed it out, or the owner made one by hand), it signs in again.
+  // A new sample family is made only when there is none, or when its visit is already over.
   function account() {
+    var kept;
     if (call('current') && upcoming()) return true;
+    if (!call('current')) {
+      kept = ((call('snapshot') || {}).accounts || [])[0];
+      if (kept && kept.email) call('signIn', kept.email);
+      if (call('current') && upcoming()) return true;
+    }
     call('reset');
     call('createAccount', D().SAMPLE_ACCOUNT);
     return !!(call('current') && upcoming());
+  }
+  // The store posts a notice every time (a day closed, a day opened, a request cancelled and sent again). When a card is played a second time, only the newest copy of each
+  // notice stays, so the bell keeps its size while the owner goes Back and forth.
+  function tidyNotices() {
+    var all = rows('notices'), had = {}, i, n, key;
+    for (i = all.length - 1; i >= 0; i--) {   // the list is oldest first, so this starts at the newest
+      n = all[i];
+      key = [n.to, n.text, n.link].join('|');
+      if (had[key]) call('remove', 'notices', n.id); else had[key] = true;
+    }
   }
 
   /* ------------------------------------------------------------------ *
@@ -247,11 +275,14 @@
   function daysOpened() {   // every closed day opens again
     rows('closedDays').forEach(function (d) { call('openDay', typeof d === 'string' ? d : d.date); });
   }
-  function dayClosed() {   // the day of the family's visit is closed for weather
-    var v;
+  function dayClosed() {   // the day of the family's visit is closed for rain (the desk's first choice, and the words its confirm box shows)
+    var v, open;
     if (!account()) return;
     v = upcoming();
-    if (v && !v.closed) call('closeDay', v.date, 'weather');
+    if (!v) return;
+    open = call('openRequestFor', 'visits', v.id);
+    if (open) call('cancel', open.id);   // a request the owner sent by hand: the banner shows only while no request is open
+    if (!v.closed) call('closeDay', v.date, 'rain');
   }
 
   /* ------------------------------------------------------------------ *
@@ -262,7 +293,7 @@
     return function () {
       var opened;
       if (!ready()) return;
-      try { if (prepare) prepare(); } catch (e) { /* the target will not be found and the engine skips the card */ }
+      try { if (prepare) prepare(); tidyNotices(); } catch (e) { /* the target will not be found and the engine skips the card */ }
       opened = tab ? openTab(tab) : Promise.resolve(true);
       return opened.then(function () { return target ? seen(target) : true; }).then(function (found) {
         return also && found ? seen(also).then(function () { return found; }) : found;
@@ -275,21 +306,23 @@
    * ------------------------------------------------------------------ */
   var steps = [
     {
-      id: 'ch10-intro', order: CHAPTER * 100 + 1, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,
+      id: 'ch10-intro', order: CHAPTER * 100 + 1, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true, allowClicks: true,   // the lit Start over opens a dialog outside the strip
       title: 'A pretend account',
-      text: 'This part is a demo of accounts. Nothing in it is real: no server, no real families, and nothing is sent to anyone. This strip says so on every demo screen. The Start over button clears the demo.'
+      text: 'This part is a demo of accounts. Nothing in it is real: no server, no real families, and nothing is sent to anyone. This strip says so on every demo screen. The Start over button clears the demo.',
+      after: closeDialogs
     },
     {
       id: 'ch10-signup', order: CHAPTER * 100 + 2, chapter: CHAPTER, page: 'account', target: hook('acct-signup'), skipIfMissing: true,
       title: 'Create an account',
-      text: 'A visitor types a name and an email, and says if they plan a party, an event or a school trip. Any password works here, and nothing is saved on a server. Press Next and the tour creates a sample family for you.',
-      before: scene(function () { if (ready() && call('current')) call('reset'); }, hook('acct-signup'))
+      text: 'A visitor types a name and an email, and says if they plan a party, an event or a school trip. Any password works here, and nothing is saved on a server. Press Next and the tour gets a sample family ready for you.',
+      before: scene(function () { if (call('current')) call('signOut'); }, hook('acct-signup'))   // signed out only: a family the owner made by hand is still there for the next card
     },
     {
       id: 'ch10-sample', order: CHAPTER * 100 + 3, chapter: CHAPTER, page: 'account', target: hook('acct-visit-card'), skipIfMissing: true,
       title: 'My visits, with a sample family',
-      text: 'The tour added a made-up family with a visit and a pizza order, so you can try every button. The card shows the day, the time, who is coming and what was booked.',
-      before: scene(function () { visitIs('none'); }, hook('acct-visit-card'), 'visits')
+      text: 'This family has a made-up visit and a pizza order, so you can try every button. The card shows the day, the time, who is coming and what was booked.',
+      before: scene(function () { visitIs('none'); }, hook('acct-visit-card'), 'visits'),
+      after: closeDialogs   // the lit card holds "Request a different day", which opens a dialog
     },
     {
       id: 'ch10-paid', order: CHAPTER * 100 + 4, chapter: CHAPTER, page: 'account', target: hook('acct-paid'), skipIfMissing: true,
@@ -298,15 +331,16 @@
       before: scene(function () { visitIs('none'); }, hook('acct-paid'), 'visits')
     },
     {
-      id: 'ch10-request', order: CHAPTER * 100 + 5, chapter: CHAPTER, page: 'account', target: hook('acct-request-day'), skipIfMissing: true,
+      id: 'ch10-request', order: CHAPTER * 100 + 5, chapter: CHAPTER, page: 'account', target: hook('acct-request-day'), skipIfMissing: true, allowClicks: true,   // the lit button opens a dialog
       title: 'Request a different day',
       text: 'A family can ask to move its visit. It picks one of the next open days and a sample time. Nothing changes until Mrs. Cathy says yes. Press Next and the tour sends a sample request.',
-      before: scene(function () { visitIs('none'); }, hook('acct-request-day'), 'visits')
+      before: scene(function () { visitIs('none'); }, hook('acct-request-day'), 'visits'),
+      after: closeDialogs
     },
     {
       id: 'ch10-waiting', order: CHAPTER * 100 + 6, chapter: CHAPTER, page: 'account', target: hook('acct-request-status'), skipIfMissing: true,
       title: 'Waiting for a reply',
-      text: "The tour sent the request. The family now sees 'Waiting for a reply from Mrs. Cathy' and can cancel it. The visit does not change until she answers.",
+      text: "The request is sent. The family now sees 'Waiting for a reply from Mrs. Cathy' and can cancel it. The visit does not change until she answers.",
       before: scene(function () { visitIs('waiting'); }, hook('acct-request-status'), 'visits')
     },
     {
@@ -318,7 +352,7 @@
     {
       id: 'ch10-answer', order: CHAPTER * 100 + 8, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true,
       title: 'The answer arrives',
-      text: 'Back on the family side, your answer is already here. A yes moves the visit. A no keeps it and shows your note. A suggestion asks the family to say OK. The bell at the top counts it too.',
+      text: 'Back on the family side, the lit box is your answer. A yes moves the visit. A no keeps it and shows your note. A suggestion asks the family to say OK. The bell at the top counts it too.',
       before: scene(function () { visitIs('answered'); }, hook('acct-reply'), 'visits')
     },
     {
@@ -342,19 +376,20 @@
     {
       id: 'ch10-family-ok', order: CHAPTER * 100 + 12, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true, allowClicks: true,
       title: 'The family says OK',
-      text: "The kitchen offered a time a little later than asked. The family sees the old and new time and can say OK, or 'No thanks, keep mine'. Press Next and the tour says OK for you.",
+      text: "The kitchen offered a time a little later than asked. The family sees the old and new time and can say OK, or 'No thanks, keep my order as it is'. Press Next and the tour says OK for you.",
       before: scene(function () { pizzaIs('suggested'); }, hook('acct-reply'), 'pizza')
     },
     {
       id: 'ch10-family', order: CHAPTER * 100 + 13, chapter: CHAPTER, page: 'account', target: hook('acct-family'), skipIfMissing: true,
       title: 'My family',
       text: "The family saves its adults, kids' names and ages, and allergies once. The kitchen sees the allergies on pizza orders. Your site keeps almost nothing about visitors today, so a real version needs extra care with kids' details.",
-      before: scene(function () { pizzaIs('accepted'); }, hook('acct-family'), 'family')
+      before: scene(function () { pizzaIs('accepted'); }, hook('acct-family'), 'family'),
+      after: closeDialogs   // a family without an event sees "I also plan an event" here, which opens a dialog
     },
     {
       id: 'ch10-alerts', order: CHAPTER * 100 + 14, chapter: CHAPTER, page: 'account', target: hook('acct-alerts'), skipIfMissing: true, allowClicks: true,
       title: 'Tell me when',
-      text: 'Families choose where messages go: text, email or both. The first choice is a spot on a full day. For visits there are two kinds of "when": a spot opens, or reservations open. Strawberries, blueberries and sunflowers, pumpkins and tomatoes, and Christmas trees follow.',
+      text: 'At the top, two switches say where messages go: text, email or both. The choices come below, in this order: a spot opens on a full day, then reservations open. After those come strawberries, blueberries and sunflowers, pumpkins and tomatoes, and Christmas trees.',
       before: scene(alertOn, hook('acct-alerts'), 'alerts')
     },
     {
@@ -390,7 +425,7 @@
     {
       id: 'ch10-event', order: CHAPTER * 100 + 21, chapter: CHAPTER, page: 'account', target: hook('acct-event'), skipIfMissing: true,
       title: 'My event, for groups and schools',
-      text: 'This tab shows only for families who said yes at sign-up to a party, an event or a school trip. The sample family said yes. Its school trip has a head count, a checklist and messages. Changes are requests to you.',
+      text: 'This tab shows only for families who said yes at sign-up to a party, an event or a school trip. This family has one, so the tab is here. It has a head count, a checklist and messages. Changes are requests to you.',
       before: scene(eventShown, hook('acct-event'), 'event')
     },
     {
@@ -400,20 +435,23 @@
       before: scene(function () { if (account()) daysOpened(); }, hook('desk-weather'))
     },
     {
-      id: 'ch10-closed', order: CHAPTER * 100 + 23, chapter: CHAPTER, page: 'account', target: hook('acct-closed-banner'), skipIfMissing: true,
+      id: 'ch10-closed', order: CHAPTER * 100 + 23, chapter: CHAPTER, page: 'account', target: hook('acct-closed-banner'), skipIfMissing: true, allowClicks: true,   // the lit button opens a dialog
       title: 'Every booked family sees it',
-      text: 'The tour closed the day for weather. The booked family now sees that the farm is closed that day, with a button to pick a new day. One tap starts a request to you.',
-      before: scene(dayClosed, hook('acct-closed-banner'), 'visits')
+      text: 'The day is closed. The booked family now sees a banner with the reason, and a button to pick a new day. One tap starts a request to you.',
+      before: scene(dayClosed, hook('acct-closed-banner'), 'visits'),
+      after: closeDialogs
     },
     {
-      id: 'ch10-real-needs', order: CHAPTER * 100 + 24, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,
+      id: 'ch10-real-needs', order: CHAPTER * 100 + 24, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true, allowClicks: true,   // the lit Start over opens a dialog
       title: 'What a real version needs',
-      text: 'A real version would need:\n- a safe place for logins\n- a link to your booking tool\n- alerts to Mrs. Cathy and the kitchen\n- extra care with kids\' information\n- an updated privacy page'
+      text: 'A real version would need:\n- a safe place for logins\n- a link to your booking tool\n- alerts to Mrs. Cathy and the kitchen\n- extra care with kids\' information\n- an updated privacy page',
+      after: closeDialogs
     },
     {
-      id: 'ch10-worth-asking', order: CHAPTER * 100 + 25, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,
+      id: 'ch10-worth-asking', order: CHAPTER * 100 + 25, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true, allowClicks: true,   // the lit Start over opens a dialog
       title: 'Worth asking your booking tool',
-      text: 'Your booking tool (Bookeo) may already do part of this. Your FAQ says guests can click View Booking in their email to change a reservation. Ask what else it offers before building anything.'
+      text: 'Your booking tool (Bookeo) may already do part of this. Your FAQ says guests can click View Booking in their email to change a reservation. Ask what else it offers before building anything.',
+      after: closeDialogs
     }
   ];
 
