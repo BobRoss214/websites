@@ -103,6 +103,21 @@ the targets), so no fallback is needed. (`startTime` is guarded: if the browser 
 
 - The comment at js/main.js about line 337, in initNav, is stale (R2 4d). I did not touch initNav.
 
+## tests/contrast-pixels (asked by main): where the leaves are, and what the test measured
+
+- The leaves and snow are BEHIND all the hero's words: `.hero-scene` (which holds `#critters` and `.particles`) has z-index 1, `.hero-copy` (the headline, the chips, the buttons) 5, the bee or butterfly 6, the picker 7;
+  `.particles` and `.hero-scene` have `pointer-events:none`. Nothing to change there.
+- Run on its own, the failing item (index.html, fall, en, 1280: "the words at the top of the page ... animations at 15% of their cycle") fails now and then (2 times in about 14 runs while the computer was busy,
+  none in about 90 runs on a quiet one): `ul.chips > li "Family farm since 2013" 1.19:1` and `"USDA Certified Organic" 2.98:1`, worst pixel in the first row of the line box. The picture the test saves of the failing text
+  shows the BUTTERFLY (`#bee-fly`, z-index 6, in front of the chips) lying across the lower part of the chip's words, its antennae and the top of its wings inside the line box. The test hides what is in front of the words
+  (`data-cx-occ`), but it finds it by looking at the middle of each line every 16 px; a creature that only touches the top or the bottom rows of the line box (and moves a little before the photograph) is not found, and its dark
+  outline counts as "what is behind the words". The flake needs the creature to be resting or flying right over a chip, which is why it is rare. The leaves play no part: at the 15% moment 15 of the 16 leaves stand in a row
+  along the top edge of the hero (the test sets a negative time on animations with a negative delay, which Chrome shows as "not started"), 700 px above the chips; the sixteenth is near the sun.
+- Not reproduced without the creature (16 runs, `#bee-fly{display:none}`), nor with it on a quiet computer (20 runs), so the creature is the only suspect that was seen in a failing picture.
+- Suggested fix, in the test (main's file, one line, I did not touch it): `const OCC = '[data-cx-occ],#bee-fly{visibility:hidden!important}';` (line 66 of tests/contrast-pixels.test.mjs; both photo modes use it).
+  The creature moves, so it is never "what is behind" a word. (I tried the other way, keeping the creature off the chips and the "open now" pills with `keep`: pointers resting among those stacked boxes then sent it far
+  from the pointer, so I took that back.)
+
 ## What I could not do / am unsure about
 
 - I did not change the 240 ms leg or the 100 ms look. On a computer that is so busy that its timers come 300 ms late or more, a leg ends before the next one begins and the creature
