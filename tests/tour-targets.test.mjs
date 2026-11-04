@@ -260,8 +260,9 @@ const IN_PAGE = `(() => {
       b.click();
       return (b.id || b.getAttribute('data-season') || b.textContent.trim().slice(0, 20));
     },
-    boxText(sel) { const f = find(sel); return f.el ? f.el.innerText.replace(/\\s+/g, ' ').trim() : null; },   // what is written in the lit box now (as shown: capitals of a heading included)
-    boxAll(sel) { const f = find(sel); return f.el ? f.el.textContent.replace(/\\s+/g, ' ').trim() : null; },   // everything written in it, also what the site's own style leaves out on a phone
+    parts(sel, also) { const f = find(sel); return f.el ? [f.el].concat([].concat(also || []).map((x) => find(x).el).filter(Boolean)) : []; },   // the lit box and the parts a step lights with it (also)
+    boxText(sel, also) { const l = this.parts(sel, also); return l.length ? l.map((e) => e.innerText.replace(/\\s+/g, ' ').trim()).join(' ') : null; },   // what is written in the lit box now (as shown: capitals of a heading included)
+    boxAll(sel, also) { const l = this.parts(sel, also); return l.length ? l.map((e) => e.textContent.replace(/\\s+/g, ' ').trim()).join(' ') : null; },   // everything written in it, also what the site's own style leaves out on a phone
     dataSeason() { return document.documentElement.getAttribute('data-season'); },
     choiceList(id) { const s = this.stepById(id); const l = typeof s.choices === 'function' ? s.choices({}) : s.choices; return l ? l.map((c) => ({ label: c.label, title: c.title, text: c.text, pressed: !!c.pressed })) : []; },
     startChoice(id, i) {   // like start(), for the run() of the small button i (a fresh list is asked for, as the engine does when the card shows)
@@ -387,7 +388,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
     // the small buttons of the step (the season walk): press each one in turn, the way an owner would, and look at the lit box after each press
     const buttons = full && pr.shown ? await p.evaluate(([id]) => window.__tour.choiceList(id), [s.id]) : [];
     if (buttons.length) {
-      const boxBefore = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
+      const boxBefore = await p.evaluate(([t, a]) => window.__tour.boxText(t, a), [s.target, s.also || []]);
       const seen = [], seenAll = [], phone = size.width < 600;   // on a phone the site's own style leaves some words out (the "In season:" part of the top strip): the tour is made for the computer first
       for (let i = 0; i < buttons.length; i++) {
         const c = buttons[i], nm = name + ' - button "' + c.label + '"';
@@ -402,8 +403,8 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
           const now = await p.evaluate(() => window.__tour.dataSeason());
           if (now !== c.label.toLowerCase()) bad.push('the page is in "' + now + '", not in ' + c.label.toLowerCase());
         }
-        const box = (await p.evaluate(([t]) => window.__tour.boxText(t), [s.target])) || '';
-        const all = phone ? (await p.evaluate(([t]) => window.__tour.boxAll(t), [s.target])) || '' : '';
+        const box = (await p.evaluate(([t, a]) => window.__tour.boxText(t, a), [s.target, s.also || []])) || '';
+        const all = phone ? (await p.evaluate(([t, a]) => window.__tour.boxAll(t, a), [s.target, s.also || []])) || '' : '';
         seen.push(box); seenAll.push(all || box);
         const phrases = [...String((c.title || '') + ' ' + (c.text || '')).matchAll(/\u201c([^\u201d]+)\u201d/g)].map((m) => m[1]);
         const lost = phrases.filter((ph) => !squash(box).includes(squash(ph)));
@@ -422,7 +423,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
       const a2 = await hook(p, s.id, 'after');
       if (a2.error) { rec(name + ': after() ran without an error', false, a2.error); continue; }
       if (a2.ran) await settled(p, 300);
-      const boxAfter = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
+      const boxAfter = await p.evaluate(([t, a]) => window.__tour.boxText(t, a), [s.target, s.also || []]);
       rec(name + ': after() put the words of the lit box back as they were (numbers aside: a countdown moves on by itself)', numbersAside(boxAfter) === numbersAside(boxBefore), boxAfter === boxBefore ? '' : 'before: ' + String(boxBefore).slice(0, 160) + ' | after: ' + String(boxAfter).slice(0, 160));
       if (site) {
         const afterSnap = await p.evaluate(() => window.__tour.snapshot());

@@ -415,6 +415,35 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
     await d.context().close();
   }
 
+  /* ================================================================ the Christmas trees step: in every season the lit box is the list that names the trees, and in winter the green line is lit too */
+  {
+    const tag = 'trees: ';
+    const p = await openPage(browser, base, errs, { time: DAYS[0][0] });
+    await p.click('.wa-tour-pill');
+    await welcome(p, tag + 'the welcome card opens');
+    await goto(p, 'ch6-trees');
+    await atTitle(p, 'Christmas trees at The GreenHouse', tag + 'the step shows');
+    await settled(p, 600);
+    const boxes = () => p.evaluate(() => {
+      const rect = (e) => { const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; };
+      const hole = rect(document.querySelector('.wa-tour-hole')), li = [...document.querySelectorAll('#greenhouse .gh-features li')].find((x) => /Christmas trees in season/.test(x.textContent));
+      const line = document.querySelector('#greenhouse .gh-trees'), shown = !!(line && !line.hidden && line.getClientRects().length);
+      return { hole, li: li ? rect(li) : null, line: shown ? rect(line) : null, rings: [...document.querySelectorAll('.wa-tour-ring')].map(rect), hb: document.querySelector('.site-header').getBoundingClientRect().bottom, vh: innerHeight };
+    });
+    const within = (a, h) => !!a && a.x >= h.x - 1 && a.y >= h.y - 1 && a.x + a.w <= h.x + h.w + 1 && a.y + a.h <= h.y + h.h + 1;
+    const around = (g, b) => !!g && !!b && Math.abs(g.x - (b.x - 8)) <= 4 && Math.abs(g.y - (b.y - 8)) <= 4 && Math.abs(g.w - (b.w + 16)) <= 4 && Math.abs(g.h - (b.h + 16)) <= 4;
+    for (const id of SEASONS) {
+      await btn(p, capital(id)).click();
+      await okSoon(tag + capital(id) + ' pressed: the card says ' + capital(id), () => look(p), (v) => v && v.rowBusy === 'false' && new RegExp('^' + capital(id) + '\\b').test(v.text), 20000);
+      await settled(p, 600);
+      const b = await boxes();
+      ok(tag + capital(id) + ': the lit box is the list that names the trees: it holds "Christmas trees in season", and that line is whole in the window under the top bar', within(b.li, b.hole) && b.li.y >= b.hb && b.li.y + b.li.h <= b.vh, JSON.stringify(b));
+      if (id === 'winter') ok(tag + 'Winter: the green line "Christmas trees are here" is lit too (a yellow edge round it, with the yellow note), and it is whole in the window', !!b.line && b.rings.length === 2 && b.rings.some((g) => around(g, b.line)) && b.line.y >= b.hb && b.line.y + b.line.h <= b.vh, JSON.stringify(b));
+      else ok(tag + capital(id) + ': there is no green line, so only the yellow note is lit with the list', !b.line && b.rings.length === 1, JSON.stringify(b));
+    }
+    await p.context().close();
+  }
+
   /* ================================================================ the spring picture, as the cards of the basket game and of the first screen describe it (20 Apr) */
   {
     const tag = 'spring picture: ';

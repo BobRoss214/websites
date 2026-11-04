@@ -26,6 +26,15 @@
   function seasonWalk(words, then) { return function () { var w = window.WA_TOUR_SEASONS; return w ? w.walk(words, then)() : []; }; }
   function seasonsBegin() { var w = window.WA_TOUR_SEASONS; return w ? w.begin() : undefined; }
   function seasonsEnd() { var w = window.WA_TOUR_SEASONS; return w ? w.end() : undefined; }
+  // The list that names the trees is brought just under the top bar: the yellow note and the green line (tree season) lie below it, so everything the card names is in the window.
+  // On a phone the columns are stacked, the card is a sheet over the lower part, and the yellow note goes there instead (the green line shows above the sheet).
+  function placeTreeList() {
+    var narrow = (document.documentElement.clientWidth || window.innerWidth) <= 640;
+    var anchor = one(narrow ? '#greenhouse .gh-callout' : '#greenhouse .gh-features'), bar = one('.site-header');
+    if (!anchor) return;
+    var dy = anchor.getBoundingClientRect().top - ((bar ? bar.getBoundingClientRect().height : 80) + (narrow ? 24 : 40));
+    try { window.scrollTo({ top: window.pageYOffset + dy, behavior: 'instant' }); } catch (e) { window.scrollTo(0, window.pageYOffset + dy); }
+  }
 
   /* ---- the three group tabs: school tours, parties, corporate events (steps 801 to 803) ---- */
   function groupTab() {
@@ -125,7 +134,8 @@
     },
     {
       id: 'ch6-trees', order: 606, chapter: 6, page: 'index',
-      target: '#greenhouse .gh-copy',
+      target: '#greenhouse .gh-features',
+      also: ['#greenhouse .gh-callout', '#greenhouse .gh-trees'],   // the list that names the trees, the yellow note, and the green line when it shows (tree season): all lit
       title: 'Christmas trees at The GreenHouse',
       text: 'The list says “Christmas trees in season” all year. A green line, “Christmas trees are here”, shows only in tree season. It sits under the yellow reservations note. Press a season.',
       choicesLabel: 'See this part in:',
@@ -134,13 +144,9 @@
         summer: 'Summer. The same: no green line, only “Christmas trees in season” in the list.',
         fall: 'Fall. Still no green line. It waits for tree season.',
         winter: 'Winter. A green line appears: “Christmas trees are here.” It says tree season runs from the Friday after Thanksgiving to early December, right at The GreenHouse.'
-      }, function () {   // the line sits low in this tall box: the reservations note above it is brought just under the top bar, so the line shows above the card (on a phone too)
-        var note = one('#greenhouse .gh-callout'), bar = one('.site-header');
-        if (!note) return;
-        var dy = note.getBoundingClientRect().top - ((bar ? bar.getBoundingClientRect().height : 80) + 24);
-        try { window.scrollTo({ top: window.pageYOffset + dy, behavior: 'instant' }); } catch (e) { window.scrollTo(0, window.pageYOffset + dy); }
-      }),
-      before: seasonsBegin, after: seasonsEnd
+      }, placeTreeList),
+      before: function () { var b = seasonsBegin(); if (b && b.then) return b.then(placeTreeList); placeTreeList(); return b; },
+      after: seasonsEnd
     },
 
     /* ============ 7  The Store ============ */
