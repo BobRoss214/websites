@@ -305,7 +305,8 @@
   "Next photo": "下一张照片",
   "{n} of {total}": "第 {n} 张，共 {total} 张",
   "Pause animations": "暂停动画",
-  "Play animations": "播放动画"
+  "Play animations": "播放动画",
+  "Try it! Tap the strawberries to pick them, or snip a sunflower.": "试试看！点草莓来采摘，或者剪一朵向日葵。"
  },
  "ui": {
   "t000eb0a5": "在花田里剪一束属于你的花束",

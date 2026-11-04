@@ -305,7 +305,8 @@
   "Next photo": "Foto siguiente",
   "{n} of {total}": "{n} de {total}",
   "Pause animations": "Pausar animaciones",
-  "Play animations": "Reproducir animaciones"
+  "Play animations": "Reproducir animaciones",
+  "Try it! Tap the strawberries to pick them, or snip a sunflower.": "¡Pruébalo! Toca las fresas para recogerlas, o corta un girasol."
  },
  "ui": {
   "t000eb0a5": "Corta tu propio ramo en el campo de flores",

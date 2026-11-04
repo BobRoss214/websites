@@ -169,7 +169,15 @@
     let out = `<path d="${groundPath()}" fill="#69b84c"/>`;
     out += lanes('spring', '#cfa571', '#b0804f', '#e3c18a', 6);
     out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a', t0: 0.08 });
-    const KIDS = { 6: [[-1.5, '#e5334b', HAT.straw, 0], [1.5, '#4b5bb8', HAT.cap, 1]], 9: [[0.5, '#ffc928', HAT.beanie, 0]], 11: [[-3.2, '#43a047', HAT.pony, 1]] };
+    // [row's k, shirt, hat, faces left]. The first four stand in the middle rows (the hero's words and chips hide most of them); the others stand at the left and right
+    // of the field, in the rows near the front, where nothing covers them.
+    const KIDS = {
+      6: [[-1.5, '#e5334b', HAT.straw, 0], [1.5, '#4b5bb8', HAT.cap, 1]],
+      8: [[-4.7, '#ffc928', HAT.cap, 0]],
+      9: [[0.5, '#ffc928', HAT.beanie, 0], [-4.3, '#e5334b', HAT.hair, 1], [3.45, '#ff8fb1', HAT.pony, 1]],
+      10: [[-3.15, '#43a047', HAT.cap, 0], [4.1, '#4b5bb8', HAT.straw, 1]],
+      11: [[4.6, '#ffc928', HAT.beanie, 0]],
+    };
     FIELD_T.forEach((t, ti) => {
       (KIDS[ti] || []).forEach(([k, shirt, hat, flip]) => { out += kid(rowX(k, t), rowY(t) - 2, 22 + 130 * t, shirt, hat, flip); });
       for (let k = -4; k <= 4; k++) {
@@ -196,10 +204,10 @@
   const springFore = () =>
     blades(520, 10, 30, 26, '#5cb85c', 4) +
     meadow(31, 34, 496, 528, ['#fff', '#ffd54f', '#ff8fb1', '#b79bff']) +
-    sunflower(24, 205, 128, '') + sunflower(170, 300, 88, 's2') + sunflower(1236, 250, 112, 's3') + sunflower(1330, 178, 138, 's2') + sunflower(1160, 340, 78, '') +
+    snippable(24, 205, 128, '') + snippable(170, 300, 88, 's2') + snippable(1236, 250, 112, 's3') + snippable(1330, 178, 138, 's2') + snippable(1160, 340, 78, '') +
     blades(538, 12, 34, 22, '#2e8b3a', 9);
 
-  // Summer: the same sunflowers, but tap one and it is snipped. A kid cuts a flower for the bucket every few seconds.
+  // The sunflowers at the sides of the spring and summer fields: tap one and it is snipped (it grows back). In summer a kid also cuts a flower for the bucket every few seconds.
   const snippable = (x, y, w, cls) => {
     const h = w * 380 / 140;
     return pickable(x, y, sunflower(0, 0, w, cls), { x: -4, y: -4, w: w + 8, h: h * 0.42 }, '50% 100%', 'fruit', 'flower-cut');
@@ -852,7 +860,7 @@
       far: () => `<path d="${FAR_HILL}" fill="#b5e59a"/>` + rows(FAR_LINE, '#8fd078', 5, 9) + round(228, 182, 1, '#6cbf5b', '#5cb85c') + round(300, 198, 0.75, '#7ccf62', '#6cbf5b') + barn(1130, 70, 170),
       mid: () => `<path d="${MID_HILL}" fill="#8ed46b"/>` + rows(MID_LINE, '#6fba55', 3, 8),
       field: springField, fore: springFore,
-      hud: { art: 'basket', hint: 'Try it! Tap the strawberries to pick them.', btn: 'Pick a strawberry',
+      hud: { art: 'basket', hint: 'Try it! Tap the strawberries to pick them, or snip a sunflower.', btn: 'Pick a strawberry',
         msgs: [[1, 'Yum! Keep going.'], [3, 'You’re a natural picker!'], [5, 'Basket’s filling up! Ready for the real thing? {reserve}'], [10, TEN]] },
     },
     summer: {
@@ -994,9 +1002,10 @@
   { const host = $('#picker') || hero; if (host) { stackEl = doc.createElement('div'); stackEl.className = 'ach-stack'; stackEl.setAttribute('aria-live', 'polite'); host.appendChild(stackEl); } }
 
   const kindOf = (el) => (el.dataset.pick === 'tree' ? 'winter'
-    : season === 'spring' ? 'strawberry'
-      : season === 'summer' ? (el.classList.contains('flower-cut') ? 'sunflower' : 'blueberry')
-        : 'pumpkin');
+    : el.classList.contains('flower-cut') ? 'sunflower'
+      : season === 'spring' ? 'strawberry'
+        : season === 'summer' ? 'blueberry'
+          : 'pumpkin');
 
   function credit(kind) {
     tally[kind] = (tally[kind] || 0) + 1;

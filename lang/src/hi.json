@@ -305,7 +305,8 @@
   "Next photo": "अगली फ़ोटो",
   "{n} of {total}": "{total} में से {n}",
   "Pause animations": "एनिमेशन रोकें",
-  "Play animations": "एनिमेशन चलाएँ"
+  "Play animations": "एनिमेशन चलाएँ",
+  "Try it! Tap the strawberries to pick them, or snip a sunflower.": "आज़माइए! स्ट्रॉबेरी तोड़ने के लिए उन पर टैप करें, या एक सूरजमुखी काटें।"
  },
  "ui": {
   "t000eb0a5": "फूलों के खेत में अपना गुलदस्ता खुद काटें",
