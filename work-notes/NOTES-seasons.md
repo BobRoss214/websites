@@ -190,3 +190,23 @@ An independent walk of all 77 steps (1440x900, four seasons, pictures and number
 5. **The first season card** (`ch1-seasons`): "A button pretends it is a Saturday at noon, in the middle of that season. Words in ‘single quotes’ show on another day." (45 words; two sentences of the old text went). The pretend day is the Saturday on or before the middle of the season's dates in the latest year not after today (`pretendAt` in `js/tour-steps.js`), so the card says "in the middle of that season", not a date (the date moves with today; no year in a card).
 
 Also: `tests/tour-store.test.mjs` waits for the real welcome card (the card "Getting the tour ready..." has the same title; the steps are loaded only when the real one shows).
+
+### Where I stopped (stopped on main's order, nothing half done; the tree was clean before this note)
+
+All five items are done and committed on `storetour` (one commit each). Last code commit: `6451454`.
+
+| Item | Commit | Tested |
+|---|---|---|
+| 1 Clickable area = lit part + what it opens | `19e10ae` | `tour` 285, `tour-seasons` 251 ("locked page"), `tour-targets`, `tour-demo-script` 101: green |
+| 2 Step 30, Christmas trees in every season | `c2587eb`, `1b70456` | `tour-seasons` ("trees", two window sizes), `tour-targets`: green |
+| 3 Card keeps off the labels; lit part below the bar | `c6ea31e` | `tour` (sections 9, 9b): green; see the known limits |
+| 4 Step 37, Vanessa's email lit and named | `e75eb45` | `tour-seasons` ("school tours"), `tour-targets` words: green |
+| 5 First season card: pretend day and 'single quotes' | `9acf868` | `tour-targets` words (45 words), `tour-seasons`: green |
+
+Also: `dc6eb1a` merges integ `9a1aa85` (nothing to resolve), `6451454` keeps the row of small buttons busy until a press is fully carried out (the one failure of `tour-seasons` on a busy computer, "whole tour, step 4: Fall shows").
+
+Run after the restart (23:44 UTC), on the last code commit `6451454`:
+- green: `tour-seasons` 251, `tour` 285, and the quick checks (`docs`, `plain-lint`, `consistency`, `code-rules`, `validity`, `browser-support`, `tour-demo-script`: 300 checks).
+- not re-run on `6451454`: `tour-targets` (stopped half way, 361 passed before I stopped it; 363 passed on `72a6c0f`), `tour-store` (60 passed on `72a6c0f`), `tour-off` (95 passed on `72a6c0f`). `6451454` changes only the end of `choose()` in `js/tour.js`.
+
+Known limits: the step 13 card still covers the heading of the farm card; a window 768 px high is too low for the list and the winter green line together (step 30 asserts only the list and the note there); the hero buttons inside the lit picture stay usable in the basket game step; one small placement regression at 1280x720 (`ch8-contact`).
