@@ -15,8 +15,9 @@
  *   (the pretend-demo pages only when their files exist, and with ?demo), before() is run (with an EMPTY object: it must never read what the engine hands
  *   it), the page is let to settle, the first visible match of the target must be there (a box that hides itself by date says skipIfMissing: true and is
  *   listed here, not failed), it is scrolled into view and must be fully drawn (a box that is still fading in does not count), have a size and show
- *   something; for a step that lets the owners click, a click on another tab or season button is tried; then after() is run and the page must be
- *   as it was before (the season, the open tab, the open menus). This is done at 1440 and at 390 px wide.
+ *   something; for a step that lets the owners click, a click on another tab or season button is tried; a button of the lit part that opens a list (aria-controls) must say
+ *   aria-expanded="true" while it is open, because the tour finds and lights what it opens that way, and the parts a step names with `also` must be on the page; then after() is run
+ *   and the page must be as it was before (the season, the open tab, the open menus). This is done at 1440 and at 390 px wide.
  *   The same walk without the scrolling is repeated on five other days (the real day, winter, a day when nothing is in season, spring and summer) on the
  *   home page: a target that disappears on one of those days must say skipIfMissing, because the owners may open the tour in any month.
  *   Steps with small buttons on their card (step.choices: the season walk, docs/TOUR.md): the list is asked for with no page (it must work without one), every button has a
@@ -37,7 +38,7 @@ import { run, open, ok, info, finish, settled, until, ROOT, ms } from './lib.mjs
 const FILES = ['js/tour-steps.js', 'js/tour-steps-b.js', 'js/tour-steps-c.js'];
 const PAGE_FILE = { index: 'index.html', 'first-visit': 'first-visit.html', account: 'account.html', 'farm-desk': 'farm-desk.html', kitchen: 'kitchen.html' };
 const DEMO_PAGES = ['account', 'farm-desk', 'kitchen'];
-const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after', 'choices', 'choicesLabel'];
+const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'also', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after', 'choices', 'choicesLabel'];
 const CHOICE_FIELDS = ['label', 'title', 'text', 'run', 'pressed'];
 const SEASON_NAMES = ['spring', 'summer', 'fall', 'winter'];
 const SIZES = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
@@ -153,6 +154,8 @@ function wordProblems(s) {
   if (!(s.target === null || (typeof s.target === 'string' && s.target.trim() !== ''))) p.push('target must be one CSS selector or null');
   p.push(...copyProblems(s, '', { needTitle: true, needText: true }));
   for (const k of ['allowClicks', 'skipIfMissing']) if (s[k] !== undefined && typeof s[k] !== 'boolean') p.push(k + ' must be true or false');
+  if (s.also !== undefined && !((typeof s.also === 'string' && s.also.trim() !== '') || (Array.isArray(s.also) && s.also.length > 0 && s.also.every((x) => typeof x === 'string' && x.trim() !== '')))) p.push('also must be a CSS selector or a list of them');
+  if (s.also !== undefined && !s.target) p.push('also needs a target (it names more parts to light with it)');
   for (const k of ['before', 'after']) if (s[k] !== undefined && typeof s[k] !== 'function') p.push(k + ' must be a function');
   p.push(...choicesOf(s).problems);
   return p;
@@ -228,24 +231,27 @@ const IN_PAGE = `(() => {
       if (!hit || f.el.contains(hit) || hit.contains(f.el)) return '';
       return hit.tagName.toLowerCase() + (hit.className && typeof hit.className === 'string' ? '.' + hit.className.split(' ')[0] : '');
     },
-    openersOutside(sel) {   // buttons in the lit part that open something (aria-expanded + aria-controls): what they open must stay inside the lit box, or the visitor can open it but not use it
-      const f = find(sel); if (!f.el) return [];
-      const box = f.el.getBoundingClientRect(), found = [];
+    openers(sel) {   // buttons in the lit part that open something (aria-expanded + aria-controls): the tour lights what they open and lets it be used, but only when the button says aria-expanded="true" while it is open
+      const f = find(sel); if (!f.el) return { opened: 0, outside: 0, unseen: [] };
+      const box = f.el.getBoundingClientRect(), res = { opened: 0, outside: 0, unseen: [] };
       const list = Array.from(f.el.querySelectorAll('[aria-expanded][aria-controls]'));
       if (f.el.matches('[aria-expanded][aria-controls]')) list.unshift(f.el);
       list.forEach((b) => {
         if (!visible(b)) return;
-        const c = document.getElementById(b.getAttribute('aria-controls')); if (!c) return;
+        const c = document.getElementById(b.getAttribute('aria-controls'));
         const name = '"' + (b.getAttribute('aria-label') || b.textContent || b.id || '?').trim().replace(/\\s+/g, ' ').slice(0, 30) + '"';
-        if (!f.el.contains(c)) { found.push(name + ' opens #' + (c.id || '?') + ', which is not inside the lit part'); return; }
+        if (!c) { res.unseen.push(name + ' says it opens #' + b.getAttribute('aria-controls') + ', which is not on the page'); return; }
         const was = b.getAttribute('aria-expanded') === 'true';
         if (!was) b.click();
-        const r = c.getBoundingClientRect();
-        const out = r.width > 0 && r.height > 0 && (r.left < box.left - 12 || r.right > box.right + 12 || r.top < box.top - 12 || r.bottom > box.bottom + 12);
+        const r = c.getBoundingClientRect(), drawn = r.width > 0 && r.height > 0;
+        if (drawn) {
+          res.opened++;
+          if (b.getAttribute('aria-expanded') !== 'true') res.unseen.push(name + ' shows #' + (c.id || '?') + ' but its aria-expanded is not "true" while it is open, so the tour would not light it');
+          if (r.left < box.left - 12 || r.right > box.right + 12 || r.top < box.top - 12 || r.bottom > box.bottom + 12) res.outside++;
+        }
         if (!was) b.click();
-        if (out) found.push(name + ' opens #' + (c.id || '?') + ', which reaches outside the lit box');
       });
-      return found;
+      return res;
     },
     tryClick(sel) {   // what an owner may do in a step that says allowClicks: choose another season or tab
       const f = find(sel); if (!f.el) return '';
@@ -254,8 +260,9 @@ const IN_PAGE = `(() => {
       b.click();
       return (b.id || b.getAttribute('data-season') || b.textContent.trim().slice(0, 20));
     },
-    boxText(sel) { const f = find(sel); return f.el ? f.el.innerText.replace(/\\s+/g, ' ').trim() : null; },   // what is written in the lit box now (as shown: capitals of a heading included)
-    boxAll(sel) { const f = find(sel); return f.el ? f.el.textContent.replace(/\\s+/g, ' ').trim() : null; },   // everything written in it, also what the site's own style leaves out on a phone
+    parts(sel, also) { const f = find(sel); return f.el ? [f.el].concat([].concat(also || []).map((x) => find(x).el).filter(Boolean)) : []; },   // the lit box and the parts a step lights with it (also)
+    boxText(sel, also) { const l = this.parts(sel, also); return l.length ? l.map((e) => e.innerText.replace(/\\s+/g, ' ').trim()).join(' ') : null; },   // what is written in the lit box now (as shown: capitals of a heading included)
+    boxAll(sel, also) { const l = this.parts(sel, also); return l.length ? l.map((e) => e.textContent.replace(/\\s+/g, ' ').trim()).join(' ') : null; },   // everything written in it, also what the site's own style leaves out on a phone
     dataSeason() { return document.documentElement.getAttribute('data-season'); },
     choiceList(id) { const s = this.stepById(id); const l = typeof s.choices === 'function' ? s.choices({}) : s.choices; return l ? l.map((c) => ({ label: c.label, title: c.title, text: c.text, pressed: !!c.pressed })) : []; },
     startChoice(id, i) {   // like start(), for the run() of the small button i (a fresh list is asked for, as the engine does when the card shows)
@@ -312,21 +319,24 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
   await putStepsInPage(p);
   const skipped = [];
   let bad = 0, menusChecked = 0, menusBad = 0;
-  if (full) {   // the check for a lit part that opens something outside its box, tried first on made-up samples: it must find the two bad ones and leave the good one alone
+  if (full) {   // the check for what a lit button opens, tried first on made-up samples: it must report the one the tour could not find and leave the others alone
     const sample = await p.evaluate(() => {
       const made = [];
       const mk = (id, inner) => { const d = document.createElement('div'); d.id = id; d.style.cssText = 'position:absolute;left:0;top:0;width:200px;height:40px'; d.innerHTML = inner; document.body.appendChild(d); made.push(d); return d; };
       const wire = (d) => { const b = d.querySelector('button'); b.addEventListener('click', () => { const o = b.getAttribute('aria-expanded') !== 'true'; b.setAttribute('aria-expanded', String(o)); document.getElementById(b.getAttribute('aria-controls')).hidden = !o; }); };
-      mk('t-far', '<button type="button" aria-expanded="false" aria-controls="t-far-list">Menu</button>');
+      mk('t-far', '<button type="button" aria-expanded="false" aria-controls="t-far-list">Menu</button>');   // a list that is not inside the lit part at all (the bell's)
       const far = document.createElement('ul'); far.id = 't-far-list'; far.hidden = true; far.textContent = 'x'; document.body.appendChild(far); made.push(far);
       wire(document.getElementById('t-far'));
       wire(mk('t-hang', '<button type="button" aria-expanded="false" aria-controls="t-hang-list">Menu</button><ul id="t-hang-list" hidden style="position:absolute;left:0;top:44px;width:150px;height:120px">x</ul>'));
       wire(mk('t-fit', '<button type="button" aria-expanded="false" aria-controls="t-fit-list">Menu</button><ul id="t-fit-list" hidden style="position:absolute;left:60px;top:2px;width:100px;height:30px;margin:0">x</ul>'));
-      const r = { far: window.__tour.openersOutside('#t-far').length, hang: window.__tour.openersOutside('#t-hang').length, fit: window.__tour.openersOutside('#t-fit').length, closedAgain: ['t-hang-list', 't-fit-list', 't-far-list'].every((id) => document.getElementById(id).hidden) };
+      const lazy = mk('t-lazy', '<button type="button" aria-expanded="false" aria-controls="t-lazy-list">Menu</button><ul id="t-lazy-list" hidden style="position:absolute;left:0;top:44px;width:150px;height:60px">x</ul>');   // shows its list and never says aria-expanded="true"
+      lazy.querySelector('button').addEventListener('click', () => { const l = document.getElementById('t-lazy-list'); l.hidden = !l.hidden; });
+      const sum = (id) => { const o = window.__tour.openers('#' + id); return o.opened + '/' + o.outside + '/' + o.unseen.length; };   // opened / reaching outside / the tour cannot find it
+      const r = { far: sum('t-far'), hang: sum('t-hang'), fit: sum('t-fit'), lazy: sum('t-lazy'), closedAgain: ['t-hang-list', 't-fit-list', 't-far-list', 't-lazy-list'].every((id) => document.getElementById(id).hidden) };
       made.forEach((n) => n.remove());
       return r;
     });
-    ok('(tried first on made-up samples) the check for a lit part that opens something outside its box finds the list that is not inside it and the list that hangs out of it, leaves a list that fits alone, and closes what it opened', sample.far === 1 && sample.hang === 1 && sample.fit === 0 && sample.closedAgain, JSON.stringify(sample));
+    ok('(tried first on made-up samples) the check for what a lit button opens finds the list that is not inside the lit part and the list that hangs out of it (both are fine: the tour lights them), reports a list that is shown without aria-expanded="true" (the tour could not find it), and closes what it opened', sample.far === '1/1/0' && sample.hang === '1/1/0' && sample.fit === '1/0/0' && sample.lazy === '1/1/1' && sample.closedAgain, JSON.stringify(sample));
   }
   const rec = (name, cond, detail) => { if (!cond) bad++; if (full || !cond) ok(name, cond, detail); };   // the light walks print only what fails, and one line at the end
   for (const s of list) {
@@ -359,10 +369,16 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
         const cover = await p.evaluate(([t]) => window.__tour.covered(t), [s.target]);
         if (cover) info('note: something else (' + cover + ') is on top of the middle of the target ' + s.target);
         if (pr.h > pr.vh) info('note: the target is taller than the window (' + pr.h + ' of ' + pr.vh + ' px): ' + s.id);
-        if (s.allowClicks !== true) {   // the lit part may be used, but only inside its own box: a button that opens something outside it is a trap (the opened part is dimmed and blocked)
-          const outside = await p.evaluate(([t]) => window.__tour.openersOutside(t), [s.target]);
+        {   // what a lit button opens (a list under a menu bar, the bell's panel) is lit too and can be used: the tour finds it by aria-controls, and by aria-expanded="true" while it is open
+          const op = await p.evaluate(([t]) => window.__tour.openers(t), [s.target]);
           menusChecked++;
-          if (outside.length) { menusBad++; rec(name + ': nothing in the lit part opens something outside its box (or the step says allowClicks: true)', false, outside.join('; ') + '  -> give the step allowClicks: true (the whole page may be used), or light the opened part'); }
+          if (op.unseen.length) { menusBad++; rec(name + ': what the lit buttons open is found by the tour (aria-controls, and aria-expanded "true" while it is open)', false, op.unseen.join('; ')); }
+          else if (op.opened) info('the lit part has ' + op.opened + ' button' + (op.opened === 1 ? '' : 's') + ' that open something' + (op.outside ? ' (' + op.outside + ' of them reach outside the lit box: the tour lights that too)' : '') + ': ' + s.id);
+        }
+        for (const sel of [].concat(s.also || [])) {   // the other parts the step lights with its target: each must be on the page (one that shows only on some days, the green line of tree season, may be hidden today: the tour lights it when it shows)
+          const pa = await p.evaluate(([x]) => window.__tour.probe(x), [sel]);
+          const n = await p.evaluate(([x]) => { try { return document.querySelectorAll(x).length; } catch (e) { return -1; } }, [sel]);
+          rec(name + ': the part named with also (' + sel + ') is a valid selector and is on the page' + (!pa.bad && pa.shown ? ' and visible' : ' (hidden today: the tour lights it when it shows)'), n > 0, n < 0 ? 'not a valid selector' : 'no element matches');
         }
         if (s.allowClicks) {
           const clicked = await p.evaluate(([t]) => window.__tour.tryClick(t), [s.target]);
@@ -373,7 +389,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
     // the small buttons of the step (the season walk): press each one in turn, the way an owner would, and look at the lit box after each press
     const buttons = full && pr.shown ? await p.evaluate(([id]) => window.__tour.choiceList(id), [s.id]) : [];
     if (buttons.length) {
-      const boxBefore = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
+      const boxBefore = await p.evaluate(([t, a]) => window.__tour.boxText(t, a), [s.target, s.also || []]);
       const seen = [], seenAll = [], phone = size.width < 600;   // on a phone the site's own style leaves some words out (the "In season:" part of the top strip): the tour is made for the computer first
       for (let i = 0; i < buttons.length; i++) {
         const c = buttons[i], nm = name + ' - button "' + c.label + '"';
@@ -388,8 +404,8 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
           const now = await p.evaluate(() => window.__tour.dataSeason());
           if (now !== c.label.toLowerCase()) bad.push('the page is in "' + now + '", not in ' + c.label.toLowerCase());
         }
-        const box = (await p.evaluate(([t]) => window.__tour.boxText(t), [s.target])) || '';
-        const all = phone ? (await p.evaluate(([t]) => window.__tour.boxAll(t), [s.target])) || '' : '';
+        const box = (await p.evaluate(([t, a]) => window.__tour.boxText(t, a), [s.target, s.also || []])) || '';
+        const all = phone ? (await p.evaluate(([t, a]) => window.__tour.boxAll(t, a), [s.target, s.also || []])) || '' : '';
         seen.push(box); seenAll.push(all || box);
         const phrases = [...String((c.title || '') + ' ' + (c.text || '')).matchAll(/\u201c([^\u201d]+)\u201d/g)].map((m) => m[1]);
         const lost = phrases.filter((ph) => !squash(box).includes(squash(ph)));
@@ -408,7 +424,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
       const a2 = await hook(p, s.id, 'after');
       if (a2.error) { rec(name + ': after() ran without an error', false, a2.error); continue; }
       if (a2.ran) await settled(p, 300);
-      const boxAfter = await p.evaluate(([t]) => window.__tour.boxText(t), [s.target]);
+      const boxAfter = await p.evaluate(([t, a]) => window.__tour.boxText(t, a), [s.target, s.also || []]);
       rec(name + ': after() put the words of the lit box back as they were (numbers aside: a countdown moves on by itself)', numbersAside(boxAfter) === numbersAside(boxBefore), boxAfter === boxBefore ? '' : 'before: ' + String(boxBefore).slice(0, 160) + ' | after: ' + String(boxAfter).slice(0, 160));
       if (site) {
         const afterSnap = await p.evaluate(() => window.__tour.snapshot());
@@ -425,7 +441,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
     }
   }
   await p.context().close();
-  if (full && menusChecked) ok(tag + ': no lit part opens something outside its own box, except in steps that say allowClicks: true (' + menusChecked + ' steps looked at)', menusBad === 0);
+  if (full && menusChecked) ok(tag + ': what the lit buttons open is found by the tour in every step (' + menusChecked + ' steps looked at)', menusBad === 0);
   if (!full && !bad) ok(tag + ': all ' + list.length + ' steps have a visible target or say skipIfMissing', true);
   return { skipped, seen: list.length };
 }
@@ -453,6 +469,10 @@ function wordChecks() {
   }
   // what the owners are told about clicking is said once, in the same words: on the welcome card (js/tour.js) and on the first step
   const clicking = 'Whatever is lit up on the page, you can click and try.', hello = steps.find((s) => s.id === 'ch1-hello');
+  {   // the card about the season buttons: which day a button pretends, and what 'single quotes' in the other cards mean
+    const c = steps.find((s) => s.id === 'ch1-seasons');
+    ok('the card about the season buttons says that a button pretends a Saturday at noon in the middle of the season, and that words in ‘single quotes’ show on another day', !!c && /pretends it is a Saturday at noon, in the middle of that season/.test(c.text) && /Words in ‘single quotes’ show on another day/.test(c.text), c && c.text);
+  }
   ok('the welcome card and the first step say the same about clicking: "' + clicking + '"', read('js/tour.js').includes(clicking) && !!hello && hello.text.includes(clicking), hello ? hello.text.slice(0, 120) : 'no step ch1-hello');
 }
 

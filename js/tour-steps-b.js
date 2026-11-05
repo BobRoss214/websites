@@ -26,6 +26,15 @@
   function seasonWalk(words, then) { return function () { var w = window.WA_TOUR_SEASONS; return w ? w.walk(words, then)() : []; }; }
   function seasonsBegin() { var w = window.WA_TOUR_SEASONS; return w ? w.begin() : undefined; }
   function seasonsEnd() { var w = window.WA_TOUR_SEASONS; return w ? w.end() : undefined; }
+  // On a phone the columns of The GreenHouse are stacked and the card is a sheet over the lower part: the yellow note is brought just under the top bar, so the green line (tree
+  // season) shows above the sheet. On a computer the list, the note and the line are brought into the window together by the engine (also), and nothing is scrolled by hand.
+  function placeTreeNote() {
+    if ((document.documentElement.clientWidth || window.innerWidth) > 640) return;
+    var note = one('#greenhouse .gh-callout'), bar = one('.site-header');
+    if (!note) return;
+    var dy = note.getBoundingClientRect().top - ((bar ? bar.getBoundingClientRect().height : 80) + 24);
+    try { window.scrollTo({ top: window.pageYOffset + dy, behavior: 'instant' }); } catch (e) { window.scrollTo(0, window.pageYOffset + dy); }
+  }
 
   /* ---- the three group tabs: school tours, parties, corporate events (steps 801 to 803) ---- */
   function groupTab() {
@@ -125,7 +134,8 @@
     },
     {
       id: 'ch6-trees', order: 606, chapter: 6, page: 'index',
-      target: '#greenhouse .gh-copy',
+      target: '#greenhouse .gh-features',
+      also: ['#greenhouse .gh-callout', '#greenhouse .gh-trees'],   // the list that names the trees, the yellow note, and the green line when it shows (tree season): all lit
       title: 'Christmas trees at The GreenHouse',
       text: 'The list says “Christmas trees in season” all year. A green line, “Christmas trees are here”, shows only in tree season. It sits under the yellow reservations note. Press a season.',
       choicesLabel: 'See this part in:',
@@ -134,12 +144,7 @@
         summer: 'Summer. The same: no green line, only “Christmas trees in season” in the list.',
         fall: 'Fall. Still no green line. It waits for tree season.',
         winter: 'Winter. A green line appears: “Christmas trees are here.” It says tree season runs from the Friday after Thanksgiving to early December, right at The GreenHouse.'
-      }, function () {   // the line sits low in this tall box: the reservations note above it is brought just under the top bar, so the line shows above the card (on a phone too)
-        var note = one('#greenhouse .gh-callout'), bar = one('.site-header');
-        if (!note) return;
-        var dy = note.getBoundingClientRect().top - ((bar ? bar.getBoundingClientRect().height : 80) + 24);
-        try { window.scrollTo({ top: window.pageYOffset + dy, behavior: 'instant' }); } catch (e) { window.scrollTo(0, window.pageYOffset + dy); }
-      }),
+      }, placeTreeNote),
       before: seasonsBegin, after: seasonsEnd
     },
 
@@ -192,9 +197,10 @@
     {
       id: 'ch8-school', order: 801, chapter: 8, page: 'index',
       target: '#school-tours .price-card',
+      also: '#school-tours .card-actions',   // the buttons under the words: the sign-up form and Vanessa's email
       title: 'School tours and group events',
       text: 'Schools, parties and companies each get a tab, and menu links open the right one. ' +
-            'School tours cost $11 per student, with 100 students at least. Teachers use the sign-up form, and you contact them.',
+            'School tours cost $11 per student, with 100 students at least. Teachers use the sign-up form, and you contact them. Questions? Vanessa’s email is here.',
       before: function () { showGroupTab('gtab-school'); },
       after: function () { restoreGroupTab('gtab-school'); }
     },
