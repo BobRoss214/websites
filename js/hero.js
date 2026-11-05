@@ -169,16 +169,19 @@
     let out = `<path d="${groundPath()}" fill="#69b84c"/>`;
     out += lanes('spring', '#cfa571', '#b0804f', '#e3c18a', 6);
     out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a', t0: 0.08 });
-    // [row's k, shirt, hat, faces left]. Rows 6 and 9 hold the three in the middle (the hero's words and chips hide most of them); the rest stand at the left and right of the field, in rows 8 to 12, where the
-    // picker card, the chips, the pills and the sunflower heads are not in front of their faces (measured at 1920, 1600, 1440, 1280, 1100 and 992 px; tests/hero.test.mjs counts the ones that can be seen at 1440).
-    // k: the place in the row, in steps of 230 * t (the plants stand at the whole steps from -4 to 4): 2 to 4.7 is beside and just past the last plants, where the plants of the row in front hide the feet.
+    // [row's k, shirt, hat, faces left]. Six people, three at each side of the field, where nothing of the page is in front of them: the pills, the chips and the words cover the middle, the picker card the bottom
+    // left and the sunflowers the far sides (the middle of a person is never in a sunflower's tap area, and no person stands in front of another). The first two at each side stand at the very edge of the rows, far
+    // back (rows 6 and 7, k past the last plants): that is the only ground beside the pills that a laptop window shows (1440 x 780: the strawberry rows begin about 690 px down, the window ends at 780), and their
+    // baskets point inward, which is where no other person is. The third stands in row 10, in the free ground between the chips and the picker card, which a window about 900 px high shows. Counted as a visitor sees
+    // them, in real windows (not screens: a laptop's window is 100 to 130 px lower than its screen), with 80 % of the head and hat and 60 % of everything drawn (the basket too) in sight (tests/hero.test.mjs):
+    // 3 at each side at 1920 x 950, 2 at 1440 x 780. What no places can change: the picture sits at the bottom of the hero, which is about 800 px high however low the window is, so in a window lower than 700 px
+    // (1366 x 650, 1280 x 680) the first row is under the bottom edge and nothing can be seen; at 1536 x 730 the edge cuts every person far enough back to stand beside the pills (the best shows 55 % of its
+    // drawing); and the pills' words change with the day, the hour and the visitor's time zone (up to 750 px wide), so beside them there are 0 to 120 px of free ground. People stand in the rows, not on the hills.
+    // k: the place in the row, in steps of 230 * t (the plants stand at the whole steps from -4 to 4); 5.4 and 5.6 are just past the last row.
     const KIDS = {
-      6: [[-1.5, '#e5334b', HAT.straw, 0], [1.5, '#4b5bb8', HAT.cap, 1]],
-      8: [[-4.6, '#ffc928', HAT.cap, 0], [4.15, '#e5334b', HAT.hair, 1]],
-      9: [[0.5, '#ffc928', HAT.beanie, 0], [-2.85, '#ff8fb1', HAT.pony, 1]],
-      10: [[-2.1, '#43a047', HAT.straw, 0], [3.65, '#4b5bb8', HAT.cap, 0]],
-      11: [[2.15, '#e5334b', HAT.cap, 1]],
-      12: [[4.5, '#ffc928', HAT.beanie, 0]],
+      6: [[-5.4, '#e5334b', HAT.straw, 0], [5.4, '#4b5bb8', HAT.beanie, 1]],
+      7: [[-5.6, '#ffc928', HAT.hair, 0], [5.6, '#43a047', HAT.cap, 1]],
+      10: [[-2.15, '#ff8fb1', HAT.pony, 1], [2.15, '#e5334b', HAT.cap, 0]],
     };
     FIELD_T.forEach((t, ti) => {
       (KIDS[ti] || []).forEach(([k, shirt, hat, flip]) => { out += kid(rowX(k, t), rowY(t) - 2, 22 + 130 * t, shirt, hat, flip); });

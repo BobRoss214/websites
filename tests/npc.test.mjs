@@ -42,7 +42,7 @@ await run('npc', async ({ browser, base, errs }) => {
   }
   // the spring field has people at its left and right too (tests/hero.test.mjs looks at how much of each can be seen): each one has a place where a tap lands on that person, not on a plant, a sunflower or a neighbour
   await p.evaluate(() => window.WISE_ACRES.hero.setSeason('spring'));
-  await until(p, () => document.documentElement.dataset.season === 'spring' && document.querySelectorAll('#field [data-npc=kid] .npc-hit').length > 6, null, 20000);
+  await until(p, () => document.documentElement.dataset.season === 'spring' && document.querySelectorAll('#field [data-npc=kid] .npc-hit').length > 4, null, 20000);
   const reach = await p.evaluate(() => [...document.querySelectorAll('#field [data-npc=kid]')].map((k) => {
     const r = k.querySelector('.npc-hit').getBoundingClientRect();
     return [[.5, .3], [.5, .5], [.3, .3], [.7, .3], [.5, .15], [.5, .7]].some(([a, c]) => {
@@ -52,6 +52,6 @@ await run('npc', async ({ browser, base, errs }) => {
       return !!t && t.closest('[data-npc]') === k;
     });
   }));
-  ok(`spring: every one of the ${reach.length} people in the strawberry rows can be tapped (${reach.filter(Boolean).length} can)`, reach.length >= 8 && reach.every(Boolean), JSON.stringify(reach));
+  ok(`spring: every one of the ${reach.length} people in the strawberry rows can be tapped (${reach.filter(Boolean).length} can)`, reach.length >= 6 && reach.every(Boolean), JSON.stringify(reach));
   await p.context().close();
 });
