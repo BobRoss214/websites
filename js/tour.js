@@ -377,7 +377,6 @@
     const same = () => mine === seq && !!ui && curStep === s && view === 'step';   // false once the owner has gone to another step, opened Contents or closed the tour meanwhile
     choosing = run(d.run, s, 8000).then(async () => {
       try {
-        if (ui) ui.choices.setAttribute('aria-busy', 'false');
         if (!same()) return;
         const title = d.title || s.title || '', text = d.text != null ? d.text : s.text;
         ui.title.textContent = title; fill(ui.body, text); ui.body.scrollTop = 0;
@@ -387,7 +386,10 @@
         if (!same()) return;
         placed = ''; place(true);
         say(title + '. ' + String(text || '').replace(/\n+/g, ' '));
-      } finally { choosing = null; }
+      } finally {
+        choosing = null;   // the row is "busy" until here, not only while run() works: a button pressed in between would be ignored (see the first line of choose)
+        if (ui && !ui.choices.hidden) ui.choices.setAttribute('aria-busy', 'false');
+      }
     });
   };
 
