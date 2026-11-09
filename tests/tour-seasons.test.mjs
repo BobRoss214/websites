@@ -238,7 +238,7 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
       walked++;
     }
     if (/Finish/.test(l.actions)) break;
-    if (!FULL && walked >= 10 && ++after > 3) break;
+    if (!FULL && walked >= 11 && ++after > 3) break;
     await press(p, 'Next');
     await okSoon('whole tour: Next from step ' + l.n, () => look(p), (x) => x && !x.busy && x.n === l.n + 1);
     if (!(await p.evaluate(() => window.Date === window.__Date0))) { ok('whole tour: Date is the page\'s own after step ' + l.n, false); break; }
