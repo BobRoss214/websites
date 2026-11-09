@@ -206,8 +206,8 @@ await run('hero', async ({ browser, base, errs }) => {
     const v = view[w + 'x' + h], left = v.filter((k) => k.x < w / 2 && clearKid(k)).length, right = v.filter((k) => k.x >= w / 2 && clearKid(k)).length;
     ok(`spring, window ${w} x ${h}: ${left} clear people at the left and ${right} at the right of the field (at least ${want} at each side; clear: 80 % of the head and 60 % of the body in sight, nobody in front)`, left >= want && right >= want, JSON.stringify(v.map((k) => [k.x, k.head, k.body, k.cov, k.front])));
   }
-  // Where fewer can be clear (said, not asked): at 1536 x 730 the window's bottom edge cuts every person that is far enough back to stand beside the pills (the best of them shows 55 % of what is drawn), and in
-  // the windows of 1100 and 992 px the chips and the picker card take the left side
+  // Where fewer can be clear (said, not asked): at 1536 x 730 the window's bottom edge cuts the people (1 at the left and 2 at the right are clear), and in the windows of 1100 and 992 px the chips and the
+  // picker card take some of the ground (2 and 3, 2 and 2)
   for (const [w, h] of NEAR) {
     const v = view[w + 'x' + h];
     info(`spring, window ${w} x ${h}: ${v.filter((k) => k.x < w / 2 && clearKid(k)).length} clear people at the left, ${v.filter((k) => k.x >= w / 2 && clearKid(k)).length} at the right; the best shows ${Math.max(...v.map((k) => k.head >= 80 ? k.body : 0))} % of what is drawn of it`);
