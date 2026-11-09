@@ -15,6 +15,8 @@
  *     season says after a minute and when the tab is shown again (js/live.js draws them again with the real date every 60 seconds); the sign-up preview cannot be sent (it has no address, so
  *     the browser would load the page again and the tour would be gone); the language list puts the site's language back when the step is left; a dialog of the pretend account
  *     that the owner opens from a lit button is above the tour's dimmer, its buttons work, the card sits off it, and Next works with it still open (it is closed by the step)
+ *   - the steps that used to leave the whole page free (the basket game, the menu at the top, the pretend account's request and bell): the lit part and what it opens (the menu's list, the
+ *     bell's panel, the dialog, and for the game its picture) can be used and are lit, and everything else is locked: the menu, the tabs, the language list; a real click there does nothing
  *   - the spring picture that the cards of the basket game and of the first screen talk about: kids pick in the strawberry rows, the sunflowers at the sides can be snipped and grow
  *     back, and the basket card says so (the words of the cards are in js/tour-steps.js; the picture is js/hero.js)
  *   - the tour is walked from the card about the buttons on, with every season button pressed on every step that has them (WA_SEASONS_FULL=1: to the last card and Finish), and the
@@ -334,6 +336,135 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
     await d.keyboard.press('Escape');   // ...and this one closes the tour
     await okSoon(tag + 'the tour closes (the dialog is gone, so Esc is the tour\'s)', () => d.evaluate(() => !document.querySelector('.wa-tour')), (v) => v === true);
     await d.context().close();
+  }
+
+  /* ================================================================ the steps that used to leave the whole page free: the lit part and what it opens can be used, nothing else can */
+  {
+    const tag = 'locked page: ';
+    const time = DAYS[0][0];
+    // what a press at the middle of an element would meet: the element itself (or something in it), or the tour's click stopper
+    const meet = (pg, sel) => pg.evaluate((s) => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(), h = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { self: !!h && (h === e || e.contains(h)), stopped: !!(h && h.closest('.wa-tour-shield')), at: h ? (h.id || String(h.className).slice(0, 30) || h.tagName) : null, y: Math.round(r.top + r.height / 2) }; }, sel);
+    const edges = (pg) => pg.evaluate(() => ({ extra: document.querySelector('.wa-tour').classList.contains('has-extra'), rings: [...document.querySelectorAll('.wa-tour-ring')].map((g) => { const b = g.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }) }));
+    const boxOf = (pg, sel) => pg.evaluate((s) => { const b = document.querySelector(s).getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }, sel);
+    const near = (a, b, d = 4) => Math.abs(a - b) <= d;
+    const around = (g, b) => !!g && near(g.x, b.x - 8) && near(g.y, b.y - 8) && near(g.w, b.w + 16) && near(g.h, b.h + 16);
+    const click = async (pg, sel) => { const b = await boxOf(pg, sel); await pg.mouse.click(b.x + b.w / 2, b.y + b.h / 2); };
+    const attr = (pg, sel, a) => pg.evaluate(([s, n]) => document.querySelector(s).getAttribute(n), [sel, a]);
+    const VISIT = '.nav-group-btn[aria-controls="nav-list-visit"]';
+
+    const p = await openPage(browser, base, errs, { time });
+    await p.click('.wa-tour-pill');
+    await welcome(p, tag + 'the welcome card opens');
+    // the basket game: its picture is the playground (lit with the picker); the menu above it is locked
+    await goto(p, 'ch2-game');
+    await atTitle(p, 'The basket game', tag + 'the basket game step shows');
+    await settled(p, 600);
+    let e = await edges(p);
+    const menuBtn = await meet(p, VISIT), pickBtn = await meet(p, '#pick-btn');
+    ok(tag + 'the basket game: the picture is lit with the picker (a second yellow edge), the picker button can be pressed, and the menu above is locked (a press meets the click stopper)', e.extra && e.rings.length === 1 && pickBtn && pickBtn.self && !pickBtn.stopped && menuBtn && menuBtn.stopped, JSON.stringify({ e, menuBtn, pickBtn }));
+    await click(p, VISIT);
+    await settled(p, 300);
+    ok(tag + 'a real click on the menu\'s Visit button does nothing in the game step (its list stays shut)', (await attr(p, VISIT, 'aria-expanded')) === 'false');
+    await click(p, '#pick-btn');
+    await okSoon(tag + 'a real click on the picker button works (the basket count goes up)', () => p.evaluate(() => document.getElementById('pick-count').textContent), (v) => v === '1');
+
+    // the menu at the top: Visit opens its list, which is lit with the bar and can be used; the rest of the page is locked
+    await goto(p, 'ch3-menu');
+    await atTitle(p, 'The menu at the top', tag + 'the menu step shows');
+    await settled(p, 600);
+    await p.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await settled(p, 600);
+    e = await edges(p);
+    ok(tag + 'the menu step: before a button is pressed only the menu bar is lit', !e.extra && e.rings.length === 0, JSON.stringify(e));
+    await click(p, VISIT);
+    await okSoon(tag + 'the menu step: Visit opens its list, the list is lit with the bar (a yellow edge 8 px round it) and a link in it can be pressed', async () => ({ e: await edges(p), list: await boxOf(p, '#nav-list-visit'), link: await meet(p, '#nav-list-visit a') }), (v) => v.e.extra && v.e.rings.length === 1 && around(v.e.rings[0], v.list) && v.link && v.link.self && !v.link.stopped, 20000);
+    const big = await meet(p, '.hero-cta .btn-white');
+    ok(tag + 'the menu step: the big white button of the first screen is locked (a press meets the click stopper)', big && big.stopped, JSON.stringify(big));
+    const h0 = await p.evaluate(() => location.hash);
+    if (big && big.stopped) await click(p, '.hero-cta .btn-white');
+    await settled(p, 300);
+    ok(tag + 'the menu step: a real click on it does nothing (the address does not change)', (await p.evaluate(() => location.hash)) === h0, await p.evaluate(() => location.hash));
+    await press(p, 'Next');
+    await okSoon(tag + 'the menu step: Next shuts the list again (after()) and only one part is lit', async () => ({ e: await edges(p), open: await attr(p, VISIT, 'aria-expanded') }), (v) => !v.e.extra && v.e.rings.length === 0 && v.open === 'false', 20000);
+    await p.context().close();
+
+    // the pretend account: the request (the lit button opens a dialog) and the bell (its list is not inside it); the tabs are locked
+    const d = await open(browser, base, 'account.html', errs, { query: 'demo&tour', time });
+    await d.addStyleTag({ content: '#wa-problems{display:none!important}' });
+    await d.click('.wa-tour-pill');
+    await welcome(d, tag + 'account page: the welcome card opens');
+    await goto(d, 'ch10-request');
+    await atTitle(d, 'Request a different day', tag + 'account page: the request step shows');
+    await settled(d, 600);
+    await d.evaluate(() => document.querySelector('#demo-tab-pizza').scrollIntoView({ block: 'center', behavior: 'instant' }));   // the step has scrolled the page to its lit button: the tab is brought on the screen, so that a press on it can be tried
+    await settled(d, 300);
+    const tabIn = await meet(d, '#demo-tab-pizza'), hashAt = await d.evaluate(() => location.hash);
+    ok(tag + 'the request step: the My pizza tab is locked (a press meets the click stopper)', tabIn && tabIn.stopped, JSON.stringify(tabIn));
+    await click(d, '#demo-tab-pizza');
+    await settled(d, 400);
+    ok(tag + 'the request step: a real click on the My pizza tab does not switch the screen (the address is the same, and the card still talks about the lit part)', (await d.evaluate(() => location.hash)) === hashAt && (await look(d)).title === 'Request a different day', await d.evaluate(() => location.hash));
+    await goto(d, 'ch10-bell');
+    await atTitle(d, 'The alert arrives', tag + 'account page: the bell step shows');
+    await settled(d, 600);
+    e = await edges(d);
+    ok(tag + 'the bell step: before the bell is pressed only the bell is lit', !e.extra && e.rings.length === 0, JSON.stringify(e));
+    await click(d, '[data-tour="acct-bell"]');
+    await okSoon(tag + 'the bell step: the bell opens its list, which is not inside the bell, the list is lit (a yellow edge 8 px round it) and a notice in it can be pressed', async () => ({ e: await edges(d), panel: await boxOf(d, '#demo-bell-panel'), notice: await meet(d, '#demo-bell-panel .demo-notice') }), (v) => v.e.extra && v.e.rings.length === 1 && around(v.e.rings[0], v.panel) && v.notice && v.notice.self && !v.notice.stopped, 20000);
+    const tab2 = await meet(d, '#demo-tab-pizza');
+    ok(tag + 'the bell step: the My pizza tab is locked while the list is open', tab2 && tab2.stopped, JSON.stringify(tab2));
+    await d.context().close();
+  }
+
+  /* ================================================================ the Christmas trees step: in every season the lit box is the list that names the trees, and in winter the green line is lit too */
+  {
+   for (const vp of [{ width: 1440, height: 900 }, { width: 1366, height: 768 }]) {
+    const tag = 'trees ' + vp.width + 'x' + vp.height + ': ';
+    const p = await openPage(browser, base, errs, { time: DAYS[0][0], viewport: vp });
+    await p.click('.wa-tour-pill');
+    await welcome(p, tag + 'the welcome card opens');
+    await goto(p, 'ch6-trees');
+    await atTitle(p, 'Christmas trees at The GreenHouse', tag + 'the step shows');
+    await settled(p, 600);
+    const boxes = () => p.evaluate(() => {
+      const rect = (e) => { const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; };
+      const hole = rect(document.querySelector('.wa-tour-hole')), li = [...document.querySelectorAll('#greenhouse .gh-features li')].find((x) => /Christmas trees in season/.test(x.textContent));
+      const line = document.querySelector('#greenhouse .gh-trees'), shown = !!(line && !line.hidden && line.getClientRects().length);
+      return { hole, li: li ? rect(li) : null, line: shown ? rect(line) : null, rings: [...document.querySelectorAll('.wa-tour-ring')].map(rect), hb: document.querySelector('.site-header').getBoundingClientRect().bottom, vh: innerHeight };
+    });
+    const within = (a, h) => !!a && a.x >= h.x - 1 && a.y >= h.y - 1 && a.x + a.w <= h.x + h.w + 1 && a.y + a.h <= h.y + h.h + 1;
+    const around = (g, b) => !!g && !!b && Math.abs(g.x - (b.x - 8)) <= 4 && Math.abs(g.y - (b.y - 8)) <= 4 && Math.abs(g.w - (b.w + 16)) <= 4 && Math.abs(g.h - (b.h + 16)) <= 4;
+    for (const id of SEASONS) {
+      await btn(p, capital(id)).click();
+      await okSoon(tag + capital(id) + ' pressed: the card says ' + capital(id), () => look(p), (v) => v && v.rowBusy === 'false' && new RegExp('^' + capital(id) + '\\b').test(v.text), 20000);
+      await settled(p, 600);
+      const b = await boxes();
+      ok(tag + capital(id) + ': the lit box is the list that names the trees: it holds "Christmas trees in season", and that line is whole in the window under the top bar', within(b.li, b.hole) && b.li.y >= b.hb && b.li.y + b.li.h <= b.vh, JSON.stringify(b));
+      if (id === 'winter') ok(tag + 'Winter: the green line "Christmas trees are here" is lit too (a yellow edge round it, with the yellow note)' + (vp.height >= 900 ? ', and it is whole in the window' : ' (a window 768 px high is too low for the list and the line together: the line may be cut at the bottom)'), !!b.line && b.rings.length === 2 && b.rings.some((g) => around(g, b.line)) && (vp.height < 900 || (b.line.y >= b.hb && b.line.y + b.line.h <= b.vh)), JSON.stringify(b));
+      else ok(tag + capital(id) + ': there is no green line, so only the yellow note is lit with the list, and the note is whole in the window too', !b.line && b.rings.length === 1 && b.rings[0].y >= b.hb && b.rings[0].y + b.rings[0].h <= b.vh + 8, JSON.stringify(b));
+    }
+    await p.context().close();
+   }
+  }
+
+  /* ================================================================ the school tours step: the price card, and the buttons under the words (the sign-up form and Vanessa's email), all lit and usable */
+  {
+    const tag = 'school tours: ';
+    const p = await openPage(browser, base, errs, { time: DAYS[0][0] });
+    await p.click('.wa-tour-pill');
+    await welcome(p, tag + 'the welcome card opens');
+    await goto(p, 'ch8-school');
+    await atTitle(p, 'School tours and group events', tag + 'the step shows');
+    await settled(p, 600);
+    const boxOf = (sel) => p.evaluate((s) => { const b = document.querySelector(s).getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }, sel);
+    const meet = (sel) => p.evaluate((s) => { const e = document.querySelector(s); const r = e.getBoundingClientRect(), h = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { self: !!h && (h === e || e.contains(h)), stopped: !!(h && h.closest('.wa-tour-shield')) }; }, sel);
+    const rings = await p.evaluate(() => [...document.querySelectorAll('.wa-tour-ring')].map((g) => { const b = g.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }));
+    const row = await boxOf('#school-tours .card-actions'), s2 = await look(p);
+    const near = (a, b, d = 4) => Math.abs(a - b) <= d;
+    ok(tag + 'the buttons under the words (the sign-up form, Email Vanessa, About school field trips) are lit with the price card (a yellow edge 8 px round them)', rings.length === 1 && near(rings[0].x, row.x - 8) && near(rings[0].y, row.y - 8) && near(rings[0].w, row.w + 16) && near(rings[0].h, row.h + 16), JSON.stringify({ rings, row }));
+    const mail = await meet('#school-tours a[href^="mailto:vanessa"]'), form = await meet('#school-tours a[href*="docs.google.com/forms"]');
+    ok(tag + 'Vanessa\'s email button and the sign-up form button can be pressed (not behind the click stopper)', mail.self && !mail.stopped && form.self && !form.stopped, JSON.stringify({ mail, form }));
+    ok(tag + 'the card names her: "Questions? Vanessa\'s email is here."', /Questions\? Vanessa’s email is here\./.test(s2.text), s2.text);
+    await p.context().close();
   }
 
   /* ================================================================ the spring picture, as the cards of the basket game and of the first screen describe it (20 Apr) */

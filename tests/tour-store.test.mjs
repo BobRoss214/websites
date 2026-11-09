@@ -80,7 +80,7 @@ await run('tour-store', async ({ browser, base, errs }) => {
     const p = await open(browser, base, 'index.html', errs, { query: 'tour', viewport: { width: w, height: h } });
     await p.addStyleTag({ content: '#wa-problems{display:none!important}' });   // the "Site check" box of a computer's own address sits over the bottom of the window, above the tour
     await p.click('.wa-tour-pill');
-    await okSoon(tag + 'the welcome card opens', () => p.evaluate(() => { const c = document.querySelector('.wa-tour-card'); return c ? c.querySelector('.wa-tour-title').textContent : ''; }), (t) => t === 'Your website tour');
+    await okSoon(tag + 'the welcome card opens (the steps are loaded)', () => p.evaluate(() => { const c = document.querySelector('.wa-tour-card'); return c ? c.querySelector('.wa-tour-title').textContent + '|' + (c.querySelector('.wa-tour-body') || {}).innerText : ''; }), (t) => /^Your website tour\|This is a tour of your new website/.test(t));   // (the card "Getting the tour ready..." has the same title: the steps are not there until the real one shows)
     // every step of the tour that lights something in the Store (found by where its target is, so a step added later is looked at too)
     ids = await p.evaluate(() => window.WISE_ACRES.tour.steps().filter((s) => s.page === 'index' && s.target && (() => { try { const e = document.querySelector(s.target); return !!(e && e.closest('#shop')); } catch (x) { return false; } })()).map((s) => s.id));
     if (w === SIZES[0][0]) {

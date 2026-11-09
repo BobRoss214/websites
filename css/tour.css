@@ -25,6 +25,15 @@ html.wa-tour-open .demo-modal-box{pointer-events:auto}
 .wa-tour-flash{flex:none;margin:0 0 .6em;padding:.45em .75em;border:2px solid var(--sun,#ffc928);border-radius:12px;background:#fff3cf;font-weight:700;font-size:.95rem;line-height:1.35}   /* a short note under the text: a link that is switched off during the tour */
 .wa-tour-hole{position:fixed;z-index:9001;box-sizing:border-box;pointer-events:none;border:3px solid transparent;border-radius:16px;box-shadow:0 0 0 4px var(--sun,#ffc928),0 0 0 9999px rgba(58,36,22,.74)}   /* the transparent border is what High Contrast colors show */
 .wa-tour.no-hole .wa-tour-hole{display:none}
+/* More than one part is lit (a list that a lit button has opened, the parts a step names with "also"): the dimmer is made of layers inside each other, each with one window cut out of it
+   (js/tour.js, setLayers), and each lit part has its own yellow edge. Only the innermost layer is painted, or catches a click. */
+.wa-tour-layer{position:absolute;top:0;right:0;bottom:0;left:0}
+.wa-tour-shield .wa-tour-layer{pointer-events:auto}
+.wa-tour-dim{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9001;display:none;pointer-events:none;background:transparent}
+.wa-tour.has-extra .wa-tour-dim{display:block}
+.wa-tour-dim.is-last,.wa-tour-dim .is-last{background:rgba(58,36,22,.74)}
+.wa-tour-ring{box-shadow:0 0 0 4px var(--sun,#ffc928)}
+.wa-tour.has-extra .wa-tour-hole{box-shadow:0 0 0 4px var(--sun,#ffc928);transition:none!important}
 
 .wa-tour-card{position:fixed;z-index:9200;box-sizing:border-box;display:flex;flex-direction:column;width:380px;max-width:calc(100vw - 28px);max-height:calc(100vh - 28px);margin:0;padding:18px 20px;background:var(--paper,#fffdf6);color:var(--ink,#3a2416);border:3px solid var(--ink,#3a2416);border-radius:22px;box-shadow:0 6px 0 var(--ink,#3a2416),0 18px 44px rgba(0,0,0,.35);animation:wa-tour-in .22s ease-out both}
 .wa-tour-card:focus{outline:none}
