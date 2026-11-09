@@ -37,6 +37,16 @@ await run('live', async ({ browser, base, errs }) => {
   ok('the hero shows the same "open now" badges for the farm and The GreenHouse', (await p.locator('.hero-live [data-live=farm]:not([hidden])').count()) === 1 && (await p.locator('.hero-live [data-live=greenhouse]:not([hidden])').count()) === 1);
   ok('the menu has a "First-visit guide" link to the short guide on this page (#first-visit), which exists', (await p.locator('#nav a[href="#first-visit"]').count()) >= 1 && (await p.locator('main > section#first-visit').count()) === 1);
 
+  // The little "Next" tag on the season buttons is on the season that the countdown (and, between seasons, the top bar) call "Next up"; "Now" is on the season that is on.
+  // A page left open past midnight moves them: js/live.js announces the new day, js/hero.js draws the tags again.
+  const tagged = () => p.evaluate(() => { const b = document.querySelector('#season-switch .ss-next'), s = b && WISE_ACRES.seasons.list.find((x) => x.id === b.parentElement.dataset.season); return { crop: s ? s.crop : '', now: !!document.querySelector('#season-switch .ss-now'), cd: document.querySelector('[data-cd-next]').textContent, bar: document.querySelector('[data-ann-season]').textContent }; });
+  const inFall = await tagged();
+  ok('fall (Oct 2): "now" is on Fall and the "next" tag is on the season that the countdown calls "Next up"', inFall.now && inFall.crop === 'Christmas trees at The GreenHouse' && inFall.cd.includes(inFall.crop), JSON.stringify(inFall));
+  await p.clock.setSystemTime(new Date('2026-11-09T00:30:00-05:00'));   // the page was left open past the last day of fall
+  await p.clock.runFor(61000);
+  const between = await tagged();
+  ok('the day after fall: the "now" tag is gone, "next" stays on Winter, and the countdown and the top bar say the same (Next up)', !between.now && between.crop === 'Christmas trees at The GreenHouse' && between.cd.includes(between.crop) && between.bar.includes(between.crop), JSON.stringify(between));
+
   // notice bar: shows, expires by date, and can be written per language
   await p.evaluate(() => { WISE_ACRES.notice = 'Closed Sunday for rain.'; WISE_ACRES.live.refresh(); });
   ok('notice bar appears', await p.isVisible('#site-notice'));

@@ -245,7 +245,6 @@
     },
     {
       id: 'ch2-tags', order: 203, chapter: 2, page: 'index', target: '#season-switch', skipIfMissing: true,   // the buttons can be switched off (seasonPicker: false)
-      also: ['#season-switch .ss-now', '#season-switch .ss-next'],   // the two little tags stand partly outside the row of buttons: they are lit too (a tag that is not there today is left out)
       title: 'The Now and Next tags',
       text: 'Two little tags tell visitors at a glance where the farm is in the year. “Now” marks the season happening today. “Next” marks the one after it, so they know what to look forward to. Between seasons only “Next” shows. Press a season.',
       choicesLabel: 'See this part in:',
