@@ -43,7 +43,10 @@ function inventory() {
   const copyrights = pages.map((f) => [f, (read(f).match(/class="wrap copyright"[^>]*>/g) || [])]).filter(([, a]) => a.length);
   ok('the footer year rolls over by itself on every page that has one (data-year)', copyrights.length >= 2 && copyrights.every(([, a]) => a.every((x) => /\bdata-year\b/.test(x))), copyrights.filter(([, a]) => !a.every((x) => /\bdata-year\b/.test(x))).map(([f]) => f).join(', '));
   const fresh = [...read('index.html').matchAll(/<(?:li|p)[^>]*class="(?:chip-new|new-ribbon)"[^>]*>/g)].map((m) => m[0]);
-  ok('the "New: ..." chip and the "New this year" ribbon hide themselves by a date (data-until)', fresh.length >= 2 && fresh.every((x) => /\bdata-until="20\d\d-\d\d-\d\d"/.test(x)), fresh.join(' ').slice(0, 200));
+  // the ribbon has a last day (data-until). The chip has none since Nov 9 2026: the site builder made the tomatoes run the fall dates, so the chip ends with the fall season (data-only="fall" data-in-season)
+  // and shows again each fall until question d66 is answered (docs/DECISION_PLAYBOOK.md)
+  const ribbon = fresh.filter((x) => /new-ribbon/.test(x)), chip = fresh.filter((x) => /chip-new/.test(x));
+  ok('the "New this year" ribbon hides itself by a date (data-until), and the "New: ..." chip ends with the fall season (data-only="fall" data-in-season)', ribbon.length >= 1 && ribbon.every((x) => /\bdata-until="20\d\d-\d\d-\d\d"/.test(x)) && chip.length >= 1 && chip.every((x) => /\bdata-only="fall"/.test(x) && /\bdata-in-season\b/.test(x)), fresh.join(' ').slice(0, 300));
   // structured data and the sitemap: nothing that says "valid until" or "last changed on" a day that will pass
   const ld = (read('index.html').match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g) || []).map((s) => s.replace(/<[^>]+>/g, ''));
   const keys = new Set();
@@ -290,7 +293,7 @@ const snap = (p) => p.evaluate(() => {
     ann: tx('[data-ann-season]'),
     days: vis(cd) ? tx('[data-cd-days]') : null,
     cal: cal ? +getComputedStyle(cal).getPropertyValue('--today') : null,
-    ribbon: !!vis(document.querySelector('.new-ribbon[data-until]')), chip: !!vis(document.querySelector('.chip-new[data-until]')),
+    ribbon: !!vis(document.querySelector('.new-ribbon[data-until]')), chip: !!vis(document.querySelector('.chip-new')),
     notice: !!vis(document.querySelector('.notice[data-until="2026-10-04"]')),
     badges: [...document.querySelectorAll('.now-badge')].map(vis), fsNow: [...document.querySelectorAll('.fs-now')].map(vis),
     season: document.documentElement.dataset.season,

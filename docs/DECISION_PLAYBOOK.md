@@ -2472,7 +2472,7 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 ### d48. Haunted trail and u-pick tomatoes this fall
 
-- In plain words: The home page says visitors can walk a haunted trail and u-pick tomatoes and basil every weekend until the end of October ($4.50 a pound, $1 a stem). Your farm map shows both, but we could not find them on the farm's public pages.
+- In plain words: The home page says visitors can walk a haunted trail and u-pick tomatoes and basil every weekend from mid-September through early November ($4.50 a pound, $1 a stem). Your farm map shows both, but we could not find them on the farm's public pages.
 - Doc question: Q5, Q6, Q7
 - Urgency: 2 (wrong or risky information). Checklist says: before launch.
 - Owner fact (no sensible default): no
