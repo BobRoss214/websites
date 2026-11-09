@@ -67,7 +67,8 @@ html[data-season="winter"] .bee-fly{display:none}
 .season-switch button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 .season-switch button[aria-checked="true"]{background:var(--sun);box-shadow:0 3px 0 var(--ink),inset 0 0 0 2px var(--ink)}   /* thicker dark edge, not only yellow (docs/COLOUR_BLIND_CHECK.md) */
 .ss-ico{width:26px;height:26px;flex:none}
-.ss-now{position:absolute;top:-12px;right:-8px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .5em;font:700 .7rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;transform:rotate(6deg);pointer-events:none}
+.ss-now,.ss-next{position:absolute;top:-12px;right:-8px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .5em;font:700 .7rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;transform:rotate(6deg);pointer-events:none}
+.ss-next{background:var(--berry)}   /* "Now" is red, "Next" is blue (white words on it: 6 to 1): two colours that cannot be mixed up, and the words say it too */
 
 /* ---------------------------------------------------------------- fall: tractor + wagon ride */
 .rig{--rig-from:-420px;--rig-to:1660px;--rig-rest:420px;
@@ -258,7 +259,7 @@ html[data-calm="light"] .particles,html[data-calm="most"] .particles{opacity:0} 
   .ss-label{display:none}
   .season-switch button{flex:1 1 auto;justify-content:center;min-width:0;padding:.22em .3em .22em .3em;font-size:.82rem;box-shadow:0 2px 0 var(--ink)}
   .ss-ico{width:20px;height:20px}
-  .ss-now{top:-20px;right:-4px;font-size:.6875rem}
+  .ss-now,.ss-next{top:-20px;right:-4px;font-size:.6875rem}
 }
 @media (max-width:22.5em){
   .season-switch button{font-size:.76rem;gap:.25em}
