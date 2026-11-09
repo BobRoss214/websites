@@ -171,15 +171,15 @@
     out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a', t0: 0.08 });
     // [row's k, shirt, hat, faces left]. Six people, three at each side of the field, on the ground that nothing of the page covers: the pills, the chips and the words take the middle, the picker card the bottom
     // left and the sunflowers the far sides. At each side the three stand on a slant from the back of the field to the front, close to the edge of the rows (k past the plants of their own row, so none of them
-    // is behind a plant of it): rows 3, 4 and 6 at the right, rows 4, 6 and 8 at the left (the last of them beside the chips). They are small, because their tap areas (about 46 x 58 of their own units each) must
-    // not take each other's taps: a tap on a person lands on that person (70 % or more of the area is its own), and three tap areas, three faces and three bodies fit between the chips and the sunflowers of a
-    // 1440 px wide window only if the people are no bigger than these (bigger ones in rows 9 to 11 are half behind the plants and the berries in front). Measured on the page as a visitor sees it, in real windows (not
-    // screens: a laptop's window is 100 to 130 px lower than its screen), one person at a time and then together, with 80 % of the head and the hat and 60 % of everything drawn (the basket too) in sight and nobody in
-    // front (tests/hero.test.mjs): 3 at each side from 1440 x 900 up (1536 x 864, 1600 x 900, 1920 x 950, 1920 x 1080, 2560 x 1440 ...), 2 at the left and 3 at the right at 1440 x 780, 1366 x 768 and 1280 x 800, 1 and 2 at
-    // 1536 x 730. What no places can change: the picture sits at the bottom of the hero, which is about 800 px high however low the window is, so in a window lower than about 700 px (1366 x 650, 1280 x 680) the
-    // first row is under the bottom edge and nothing can be seen. The pills' words change with the day, the hour and the visitor's time zone: with the farm's own pill too (only in fall, when the spring picture is
-    // chosen by hand) the row is up to 750 px wide and at 1440 x 900 one person at the left and two at the right are under it (2 and 1 are left); in spring there is one pill and all six show. People stand in the rows,
-    // not on the hills. k: the place in the row, in steps of 230 * t (the plants stand at the whole steps from -4 to 4); 4.7 to 5.6 are just past the last plant.
+    // is behind a plant of it): rows 3, 4 and 6 at the right, rows 4, 6 and 8 at the left (the last of them beside the chips). They are small on purpose: a tap area is about 46 x 58 of a person's own units and
+    // 70 % or more of it must be the person's own (tests/hero.test.mjs), so three of them fit between the chips and the sunflowers of a 1440 px wide window only when they are small; a bigger person (rows 9 to
+    // 11) has about 55 to 75 % of its tap area left when the berries in front take theirs. Measured on the page as a visitor sees it, in real windows (not screens: a laptop's window is 100 to 130 px lower than
+    // its screen), every place alone and then the whole table, with 80 % of the head and the hat and 60 % of everything drawn (the basket too) in sight and nobody in front: 3 at each side from 1440 x 900 up
+    // (1536 x 864, 1600 x 900, 1920 x 950, 1920 x 1080, 2560 x 1440 ...), 2 at the left and 3 at the right at 1440 x 780, 1366 x 768 and 1280 x 800, 1 and 2 at 1536 x 730. What no places can change: the
+    // picture sits at the bottom of the hero, which is about 800 px high however low the window is, so in a window lower than about 700 px (1366 x 650, 1280 x 680) the first row is under the bottom edge
+    // and nothing can be seen. The pills' words change with the day, the hour and the visitor's time zone: with the farm's own pill too (only in fall, when the spring picture is chosen by hand) the row is up
+    // to 750 px wide and at 1440 x 900 one person at the left and two at the right are under it (2 and 1 are left); in spring there is one pill, and 3 and 3 show at 1440 x 900. People stand in the rows, not
+    // on the hills. k: the place in the row, in steps of 230 * t (the plants stand at the whole steps from -4 to 4); 4.7 to 5.6 are just past the last plant.
     const KIDS = {
       3: [[4.7, '#4b5bb8', HAT.beanie, 0]],
       4: [[-5.6, '#ffc928', HAT.straw, 1], [5.6, '#e5334b', HAT.hair, 0]],
