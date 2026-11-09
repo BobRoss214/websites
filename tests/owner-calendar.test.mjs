@@ -96,7 +96,7 @@ for (const r of rows) {
 const missing = [...inFiles].filter((x) => !inDoc.has(x)), extra = [...inDoc].filter((x) => !inFiles.has(x));
 ok('every data-until and data-release date in index.html and pages/*.html is in the page\'s second table (' + inFiles.size + ' dates)', inFiles.size > 12 && missing.length === 0, 'not on the page: ' + missing.join(', '));
 ok('every date in the second table is still written in a page file', extra.length === 0, 'not in the files any more: ' + extra.join(', '));
-ok('each "Hides on" day is the day after its data-until', rows.length >= 9 && wrongHide.length === 0, wrongHide.join('; '));
+ok('each "Hides on" day is the day after its data-until', rows.length >= 10 && wrongHide.length === 0, wrongHide.join('; '));
 ok('the pizza rows in the page are the pizza rows in index.html (' + pairs.size + ' rows), and each opens on a Tuesday', pairs.size >= 4 && JSON.stringify([...pairs].sort()) === JSON.stringify([...docPairs].sort()) && notTuesday.length === 0, 'files: ' + [...pairs].join(', ') + ' | page: ' + [...docPairs].join(', ') + (notTuesday.length ? ' | not a Tuesday: ' + notTuesday.join(', ') : ''));
 
 // ---- the facts the page leans on

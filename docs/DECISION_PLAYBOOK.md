@@ -162,7 +162,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | dated, live | closed badges on a closure date | d60 |
 | drive at `those services may keep a record of the request` | the Drive time note sentence | d62 |
 | print-qr (whole file) | QR codes: error correction level M or better, every code scans back, the signs and the six pages on paper | d64, d65 |
-| hero at `fall: the "New tomatoes" chip shows` | the "New" tomato chip (it shows in fall only, September 13 to November 8, and has no last day of its own) | d66 |
+| hero at `fall: the "New tomatoes" chip shows` | the "New" tomato chip (it hides itself after 2026-11-08) | d66 |
 | validity (whole file) | page style lines that browsers ignore (the two backgrounds of d67 must stay valid) | d67 |
 | hero, touch, games (whole files) | the badges and the reach of the game, a badge on a 320 pixel screen, the winter messages | d68, d69, d70 |
 | auto-dark (whole file) | every yellow part keeps dark text when Chromium's auto dark mode is on | d73 |
@@ -1593,9 +1593,9 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts the Friday after Thanksgiving (Nov 27, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 4 days. Decide what shows then (ask Claude).
 - Words "early November" become "late November" (say early, mid or late: the year-bar check and the season-words check of consistency read those words, and "end of November" is not one of them): index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
 - Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
-- The year bar next to that sentence ends too early for "late November": in index.html at `bar-orange" style="--s:8.45;--e:10.25"` (the pumpkin bar; the tomato bar below it has the same numbers: change it too if the tomatoes go on as long as the pumpkins, and then the tomato sentences and the tomato dates in js/features.js as well) change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
+- The year bar next to that sentence ends too early for "late November": in index.html at `bar-orange" style="--s:8.45;--e:10.25"` (the pumpkin bar; the tomato bar below it has the same numbers: change it too if the tomatoes go on as long as the pumpkins, and then the tomato sentences, the tomato dates in js/features.js and the last day of the chip and the card link as well) change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
 - Strings: about 7 to 9 ids x 4 translations
-- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs pins the pizza rows and the "No pizza" box (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`); the pizza and "No pizza" checks pass without a change when only the end date and the words change (tried), so redo those dates only if you also change the rows or the box; but the tomato tags end with fall (tests/dated.test.mjs at `Nov 9: the chip` expects them gone on Nov 9), so with a later end date that check fails until you decide: the tomatoes go on too (then the tomato dates in js/features.js at `id: 'tomatoes'`, the tomato bar and the tomato sentences change with the fall words, and that check moves to the new day) or they stop on Nov 8 (then give the chip and the card link `data-until="2026-11-08"`); farm-seasons and hero may react to the new end date, run them
+- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs pins the pizza rows and the "No pizza" box (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`); it passes without a change when only the end date and the words change (tried), so redo those dates only if you also change the rows or the box; farm-seasons and hero may react to the new end date, run them
 
 **B. Fall ends Nov 8: fix the pizza box**
 
@@ -1793,25 +1793,25 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d66. Stop saying "new this year" from January?
 
-- In plain words: The "New this year" ribbon hides itself after December 31, 2026. The "New" chip and badge show only in fall (September 13 to November 8) and have no last day of their own, so they come back in fall 2027. Eight other places still call the tomatoes and basil new, and the red dot on the Tomatoes link comes back every fall.
+- In plain words: The "New this year" ribbon hides itself after December 31, 2026 (the "New" chip and badge hide themselves after November 8). Eight other places still call the tomatoes and basil new, and the red dot on the Tomatoes link comes back every fall.
 - Doc question: Q61
 - Urgency: 3 (nice to have). Checklist says: not listed.
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: d48 (u-pick tomatoes this fall: if they are removed this question is gone), d24 (fall 2027 content).
-- Note: Due before 1 January 2027. The eight places: the fall hero line, the "New:" line in the Fall panel list, the add-on note, the pumpkin text, the calendar row, the season list, the FAQ answer and the pumpkin page. The ribbon carries a last day, so it needs no edit. The chip and the "New" badge have no last day of their own (they end with the fall season, like the tomato dates in js/features.js), so they need one in A. The red dot is a fall-only rule in css/sections.css.
+- Note: Due before 1 January 2027. The eight places: the fall hero line, the "New:" line in the Fall panel list, the add-on note, the pumpkin text, the calendar row, the season list, the FAQ answer and the pumpkin page. The ribbon, the chip and the "New" badge carry a last day, so they need no edit. The red dot is a fall-only rule in css/sections.css.
 
 **A. Stop calling them new from January 1 (words and red dot)**
 
 - Change the words in index.html at `data-t="td6ecd1d8"` (fall hero line, "plus new u-pick ..."), `data-t="t850262cb"` (the "New:" line in the Fall panel list), `data-t="t3e399cd9"` (add-on note), `data-t="tbc119a85"` (pumpkin text), `data-t="t6af84b8c"` (calendar row), `data-t="tf6fccf62"` (season list) and `data-t="t96e7263a"` (FAQ answer "Yes, and it's new this year!"), and in pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes` (the rebuild copies it to the generated pumpkin-patch page).
 - The red dot: delete the two rules css/sections.css at `html[data-season="fall"] .nav-tomato .nav-group-btn::after` and `html[data-season="fall"] .nav-tomato .nav-group-title::after` (and the class on index.html at `class="nav-group nav-tomato"` can stay).
-- The ribbon (index.html at `data-t="tbaeea389"`) hides itself after its last day, index.html at `data-until="2026-12-31"`. The chip (index.html at `data-t="t30661b0e"`) and the "New" badge (index.html at `data-t="tddae9ce2"`) have no last day: they come back every fall. Give both the ribbon's last day: add `data-until="2026-12-31"` after `data-in-season` in each (2 places).
+- The ribbon (index.html at `data-t="tbaeea389"`) hides itself after its last day, index.html at `data-until="2026-12-31"`; the chip (index.html at `data-t="t30661b0e"`) and the "New" badge (index.html at `data-t="tddae9ce2"`) hide themselves after index.html at `data-in-season data-until="2026-11-08"` (2 places).
 - Strings: 8 ids x 4 translations (7 in index.html, 1 for the pumpkin page)
 - Tests: farm-seasons, consistency, languages, i18n; hero looks for the "New" tomatoes chip (hero at `fall: the "New tomatoes" chip shows`), which hides itself after the last day
 
 **B. Keep saying new (I will say until when)**
 
-- Change the last day in index.html at `data-until="2026-12-31"` (the ribbon) to her date. The chip and the "New" badge have no last day (they show in every fall); they stay as they are, with the eight sentences and the red dot.
+- Change the last day in index.html at `data-until="2026-12-31"` (the ribbon) and `data-in-season data-until="2026-11-08"` (2 places: the chip and the "New" badge) to her date. The eight sentences and the red dot stay as they are.
 - Strings: 0
 - Tests: none
 

@@ -60,9 +60,9 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `index.html` at `<strong>Open now:</strong> pizza reservations for` (the sentence and its `data-until`); `index.html` at `data-release-time="17:00"` (the opening time). README row "Open a new pizza weekend".
 - **If you forget:** the countdown still says "just opened" by itself, but the sentence under the table is old or missing, so visitors do not see which weekend is open.
 
-### Wed Oct 7, 2026 to Wed Nov 4, 2026: lines hide one by one
+### Wed Oct 7, 2026 to Mon Nov 9, 2026: lines hide one by one
 
-- **By itself:** Wed Oct 7, 2026: the "Exceptional Children Day" line. Mon Oct 12, 2026, Mon Oct 19, 2026 and Mon Oct 26, 2026: the pizza rows. Wed Nov 4, 2026: the "Home School Day" line. When every line in the "Fall 2026 special days" box has gone, the box hides itself.
+- **By itself:** Wed Oct 7, 2026: the "Exceptional Children Day" line. Mon Oct 12, 2026, Mon Oct 19, 2026 and Mon Oct 26, 2026: the pizza rows. Wed Nov 4, 2026: the "Home School Day" line. When every line in the "Fall 2026 special days" box has gone, the box hides itself. Mon Nov 9, 2026: the "New: u-pick tomatoes & basil" chip and the "New" badge.
 - **You:** nothing.
 - **Where:** `index.html` at `data-t="tcda0fa57"` and `data-t="te8f8cb7a"` (the two special days). The full list is in section 9.
 - **If you forget:** nothing visible. `?check` lists them in its green box ("remove them when you like").
@@ -76,7 +76,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ### Mon Nov 9, 2026: the fall season is over
 
-- **By itself:** no season is in progress. The farm badge goes, the top bar says "Next up: Christmas trees at The GreenHouse", the hero line becomes the all-year one, the pizza rows are gone, and the "Fall schedule" button on the pumpkin page hides. The "New: u-pick tomatoes & basil" chip and the "New" badge go too: they end with the season. The page keeps its fall look until Wed Nov 18, 2026, and the "Reserve" buttons keep showing.
+- **By itself:** no season is in progress. The farm badge goes, the top bar says "Next up: Christmas trees at The GreenHouse", the hero line becomes the all-year one, the pizza rows are gone, and the "Fall schedule" button on the pumpkin page hides. The page keeps its fall look until Wed Nov 18, 2026, and the "Reserve" buttons keep showing.
 - **You, by Sun Nov 1, 2026:** answer **d23** (is the farm open after November 8?) and **d25** (Reserve buttons when nothing can be booked). If you stay open, Claude moves the end of fall; you add pizza rows and open the times in Bookeo.
 - **Where:** `js/season.js` at `id: 'fall'` (the end date is on that line; ask Claude).
 - **If you forget:** from Nov 9 to Nov 17 visitors see "Reserve a fall visit" with no farm badge, and may book times that do not exist.
@@ -195,7 +195,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ### Mon Sep 13, 2027: the fall season starts
 
-- **By itself:** "In season: Pumpkins & tomatoes", the farm badge "Reserved visits today" Thursday to Sunday, the fall hero line. The "New: u-pick tomatoes & basil" chip and the "New" badge show again: they have no last day of their own (question **d66**).
+- **By itself:** "In season: Pumpkins & tomatoes", the farm badge "Reserved visits today" Thursday to Sunday, the fall hero line. The "New: u-pick tomatoes" chip and the "New" badge stay gone for good.
 - **You, by Mon Sep 6, 2027:** the pizza table must hold rows for the first weekends, with the first opening still ahead (the countdown needs it). Write the sentence under the table on each opening day (it translates itself, see "How to read it").
 - **Where:** `index.html` at `data-release-time="17:00"`; README row "Open a new pizza weekend".
 - **If you forget:** with no rows left from 2026 there is no countdown and no chip all fall. The schedule box shows only its "No pizza" lines, or stays hidden if you did not renew their last day in August.
@@ -329,6 +329,7 @@ A line with `data-until="D"` hides itself on the day after D. A pizza row has bo
 | `data-release="2026-10-13"` `data-until="2026-10-18"` | pizza row: opens Oct 13, visits Oct 16 to 18 | Mon Oct 19, 2026 |
 | `data-release="2026-10-20"` `data-until="2026-10-25"` | pizza row: opens Oct 20, visits Oct 23 to 25 | Mon Oct 26, 2026 |
 | `data-release="2026-10-27"` `data-until="2026-11-08"` | pizza row: opens Oct 27, visits Oct 30 to Nov 8 | Mon Nov 9, 2026 |
+| `data-until="2026-11-08"` | the "New: u-pick tomatoes & basil" chip and the "New" badge (2 places) | Mon Nov 9, 2026 |
 | `data-until="2026-11-03"` | the "Home School Day" line | Wed Nov 4, 2026 |
 | `data-until="2026-11-30"` | the "No pizza" block (the "Fall schedule" button on the pumpkin page carries the same date, but it already hides on Nov 9 with the fall season) | Tue Dec 1, 2026 |
 | `data-until="2026-12-31"` | the "New this year" ribbon | Fri Jan 1, 2027 |

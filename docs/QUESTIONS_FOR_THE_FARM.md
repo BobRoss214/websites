@@ -707,7 +707,7 @@ Answer:
 
 Dashboard id: d66
 
-Why it matters: The "New this year" ribbon hides itself after 31 December 2026. (The "New: u-pick tomatoes & basil" chip and badge show only in fall, from 13 September to 8 November, and have no last day of their own, so they come back next fall.) But eight other places still call the tomatoes and basil new, for example the FAQ answer "Yes, and it's new this year!". The small red dot on the Tomatoes link in the menu also comes back every fall, not only this one.
+Why it matters: The "New this year" ribbon hides itself after 31 December 2026. (The "New: u-pick tomatoes & basil" chip and badge hide themselves after 8 November.) But eight other places still call the tomatoes and basil new, for example the FAQ answer "Yes, and it's new this year!". The small red dot on the Tomatoes link in the menu also comes back every fall, not only this one.
 
 Answer:
 
@@ -1151,8 +1151,8 @@ Everything in this section was checked against the code on 3 October 2026; the g
 
 **Question 61: After 31 December 2026, should the site stop calling the u-pick tomatoes and basil "new"?**
 
-- **If she stops calling them new:** change the words in `index.html` at `data-t="td6ecd1d8"`, `data-t="t850262cb"`, `data-t="t3e399cd9"`, `data-t="tbc119a85"`, `data-t="t6af84b8c"`, `data-t="tf6fccf62"` and `data-t="t96e7263a"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`; delete the two red-dot rules `css/sections.css` at `html[data-season="fall"] .nav-tomato .nav-group-btn::after` and `html[data-season="fall"] .nav-tomato .nav-group-title::after`. The ribbon (`index.html` at `data-until="2026-12-31"`) hides itself. The chip and the "New" badge have no last day and come back every fall: give both the ribbon's last day (`data-until="2026-12-31"` after `data-in-season`, in `index.html` at `data-t="t30661b0e"` and at `data-t="tddae9ce2"`).
-- **If she keeps saying new:** change that last day (`index.html` at `data-until="2026-12-31"`) to her date. The chip and the "New" badge stay as they are.
+- **If she stops calling them new:** change the words in `index.html` at `data-t="td6ecd1d8"`, `data-t="t850262cb"`, `data-t="t3e399cd9"`, `data-t="tbc119a85"`, `data-t="t6af84b8c"`, `data-t="tf6fccf62"` and `data-t="t96e7263a"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`; delete the two red-dot rules `css/sections.css` at `html[data-season="fall"] .nav-tomato .nav-group-btn::after` and `html[data-season="fall"] .nav-tomato .nav-group-title::after`. The ribbon (`index.html` at `data-until="2026-12-31"`), the chip and the "New" badge (`index.html` at `data-in-season data-until="2026-11-08"` (2 places)) hide themselves.
+- **If she keeps saying new:** change those last days (`index.html` at `data-until="2026-12-31"` and at `data-in-season data-until="2026-11-08"` (2 places)) to her date.
 - **If she decides in December:** no change now; it all has to be done before 1 January 2027.
 
 **Question 62: Keep two backgrounds that never showed?**

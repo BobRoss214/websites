@@ -1,7 +1,7 @@
 // order: 90
 // browser: yes
 // covers: js/live.js, js/content.js, js/season.js, *.html, pages/*
-/* Lines that hide themselves after their date (data-until="2026-10-04" in index.html), the "New: tomatoes" tags that end with the fall season (the tomatoes run the same days), the
+/* Lines that hide themselves after their date (data-until="2026-10-04" in index.html), the "New: tomatoes" tags that follow the tomato dates, the
  * "Fall schedule" button that must not point at a schedule box that is gone, and the hero line between seasons.
  * The page clock is set to chosen moments (Eastern Time is what counts: a line hides from the day after its date). */
 import { run, open, ok, okSoon, until, fetchRetry } from './lib.mjs';
@@ -122,26 +122,22 @@ await run('dated', async ({ browser, base, errs }) => {
   await okSoon('...and picking a season with the switcher shows that season\'s own line', () => hero(p), (v) => v === 'fall');
   await p.context().close();
 
-  // ---- the "New: u-pick tomatoes & basil" tags end with the tomatoes, and the tomatoes end with fall: Nov 8 is the last day for all of them (the same as "This week at the farm" and the page's own words, "mid-September through early November"); the tags have no last day of their own
+  // ---- the "New: u-pick tomatoes & basil" tags end with the tomatoes: the same last day as "This week at the farm" (Nov 8, the last day of fall) and the page's own words ("mid-September through early November")
   const tomatoes = async (pg) => ({
     chip: await pg.locator('.chip-new').first().isVisible(), card: await pg.locator('a.choose-new[href="#tomatoes"]').first().isVisible(),
     week: (await pg.locator('#this-week .wk-name').allTextContents()).some((t) => /Tomatoes/.test(t)),
   });
-  p = await at('2026-10-31T12:00:00-04:00');
-  let tm = await tomatoes(p);
-  ok('Oct 31 (no longer the last day): the "New: u-pick tomatoes & basil" chip and the card link are shown, and "This week" lists the tomatoes', tm.chip && tm.card && tm.week, JSON.stringify(tm));
-  await p.context().close();
   p = await at('2026-11-01T12:00:00-05:00');
-  tm = await tomatoes(p);
-  ok('Nov 1: the chip, the card link and the tomatoes in "This week" are still all there (fall goes on until Nov 8)', tm.chip && tm.card && tm.week && await p.locator('.hero-sub[data-only="fall"]').first().isVisible(), JSON.stringify(tm));
+  let tm = await tomatoes(p);
+  ok('Nov 1 (it used to be the last day of the tomatoes): the "New: u-pick tomatoes & basil" chip and the card link are still shown, and "This week" lists the tomatoes (fall goes on until Nov 8)', tm.chip && tm.card && tm.week && await p.locator('.hero-sub[data-only="fall"]').first().isVisible(), JSON.stringify(tm));
   await p.context().close();
   p = await at('2026-11-08T12:00:00-05:00');
   tm = await tomatoes(p);
-  ok('Nov 8 (the last day of the tomatoes, the same as fall): the chip, the card link and the tomatoes in "This week" are shown', tm.chip && tm.card && tm.week && await p.locator('.hero-sub[data-only="fall"]').first().isVisible(), JSON.stringify(tm));
+  ok('Nov 8 (the last day of the tomatoes): the "New: u-pick tomatoes & basil" chip and the card link are shown, and "This week" lists the tomatoes', tm.chip && tm.card && tm.week, JSON.stringify(tm));
   await p.context().close();
   p = await at('2026-11-09T12:00:00-05:00');
   tm = await tomatoes(p);
-  ok('Nov 9: the chip, the card link and the tomatoes in "This week" are all gone together with fall', !tm.chip && !tm.card && !tm.week && !(await p.locator('.hero-sub[data-only="fall"]').first().isVisible()), JSON.stringify(tm));
+  ok('Nov 9: the chip, the card link and the tomatoes in "This week" are all gone together', !tm.chip && !tm.card && !tm.week, JSON.stringify(tm));
   await p.context().close();
 
   // ---- "Fall schedule" (pumpkin page) opens the schedule box on the home page: it is shown only while that box is

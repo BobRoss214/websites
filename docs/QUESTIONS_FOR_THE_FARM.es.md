@@ -711,7 +711,7 @@ Respuesta:
 
 Id en el panel: d66
 
-Por qué importa: La cinta "Novedad de este año" se oculta sola después del 31 de diciembre de 2026 (la etiqueta "Novedad: tomates y albahaca para recoger" aparece solo en otoño, del 13 de septiembre al 8 de noviembre, y no tiene un último día propio, así que vuelve el otoño que viene), pero otros ocho lugares siguen llamando novedad a los tomates y la albahaca, por ejemplo la respuesta de las preguntas frecuentes ("¡Sí, y es novedad este año!"). El puntito rojo del enlace "Tomates" del menú también vuelve cada otoño, no solo este.
+Por qué importa: La cinta "Novedad de este año" se oculta sola después del 31 de diciembre de 2026 (la etiqueta "Novedad: tomates y albahaca para recoger" se oculta sola después del 8 de noviembre), pero otros ocho lugares siguen llamando novedad a los tomates y la albahaca, por ejemplo la respuesta de las preguntas frecuentes ("¡Sí, y es novedad este año!"). El puntito rojo del enlace "Tomates" del menú también vuelve cada otoño, no solo este.
 
 Respuesta:
 
