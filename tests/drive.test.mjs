@@ -428,6 +428,8 @@ if (want(12)) { console.log('12. links to the box (Visit area, first-visit page)
   ok((await radios(page))[1].on, 'the link in The GreenHouse card chooses The GreenHouse');
   ok(await inView(), 'and the page scrolls so the box starts just under the header');
   ok(new URL(page.url()).hash === '#drive-form', 'the address bar says #drive-form (Back goes back to where the reader was)');
+  // (the page glides to the box: a Back pressed while it still glides is overtaken by the glide, which is how the browser works and not the page's doing, so wait until the page is still)
+  for (let k = 0, last = -1, same = 0; k < 60 && same < 3; k++) { await page.waitForTimeout(150); const y = await page.evaluate(() => Math.round(scrollY)); same = y === last ? same + 1 : 0; last = y; }
   await page.goBack();
   await page.waitForFunction(() => scrollY < 8000, null, { timeout: T }).catch(() => {});
   ok(await page.evaluate(() => scrollY < 8000), 'Back returns to the visit area');
