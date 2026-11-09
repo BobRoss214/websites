@@ -162,7 +162,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | dated, live | closed badges on a closure date | d60 |
 | drive at `those services may keep a record of the request` | the Drive time note sentence | d62 |
 | print-qr (whole file) | QR codes: error correction level M or better, every code scans back, the signs and the six pages on paper | d64, d65 |
-| hero at `fall: the "New tomatoes" chip shows` | the "New" tomato chip (it hides itself after 2026-10-31) | d66 |
+| hero at `fall: the "New tomatoes" chip shows` | the "New" tomato chip (it hides itself after 2026-11-08) | d66 |
 | validity (whole file) | page style lines that browsers ignore (the two backgrounds of d67 must stay valid) | d67 |
 | hero, touch, games (whole files) | the badges and the reach of the game, a badge on a 320 pixel screen, the winter messages | d68, d69, d70 |
 | auto-dark (whole file) | every yellow part keeps dark text when Chromium's auto dark mode is on | d73 |
@@ -1593,7 +1593,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts the Friday after Thanksgiving (Nov 27, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 4 days. Decide what shows then (ask Claude).
 - Words "early November" become "late November" (say early, mid or late: the year-bar check and the season-words check of consistency read those words, and "end of November" is not one of them): index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
 - Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
-- The year bar next to that sentence ends too early for "late November": in index.html at `--s:8.45;--e:10.25` change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
+- The year bar next to that sentence ends too early for "late November": in index.html at `bar-orange" style="--s:8.45;--e:10.25"` (the pumpkin bar; the tomato bar below it has the same numbers: change it too if the tomatoes go on as long as the pumpkins, and then the tomato sentences, the tomato dates in js/features.js and the last day of the chip and the card link as well) change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
 - Strings: about 7 to 9 ids x 4 translations
 - Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs pins the pizza rows and the "No pizza" box (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`); it passes without a change when only the end date and the words change (tried), so redo those dates only if you also change the rows or the box; farm-seasons and hero may react to the new end date, run them
 
@@ -1793,7 +1793,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d66. Stop saying "new this year" from January?
 
-- In plain words: The "New this year" ribbon hides itself after December 31, 2026 (the "New" chip and badge hide themselves after October 31). Eight other places still call the tomatoes and basil new, and the red dot on the Tomatoes link comes back every fall.
+- In plain words: The "New this year" ribbon hides itself after December 31, 2026 (the "New" chip and badge hide themselves after November 8). Eight other places still call the tomatoes and basil new, and the red dot on the Tomatoes link comes back every fall.
 - Doc question: Q61
 - Urgency: 3 (nice to have). Checklist says: not listed.
 - Owner fact (no sensible default): no
@@ -1803,15 +1803,15 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **A. Stop calling them new from January 1 (words and red dot)**
 
-- Change the words in index.html at `data-t="td6ecd1d8"` (fall hero line, "plus new u-pick ..."), `data-t="t1c989256"` (the "New:" line in the Fall panel list), `data-t="tedce5b9f"` (add-on note), `data-t="tbc119a85"` (pumpkin text), `data-t="t4eb3e326"` (calendar row), `data-t="t247dcbc5"` (season list) and `data-t="t398007b0"` (FAQ answer "Yes, and it's new this year!"), and in pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes` (the rebuild copies it to the generated pumpkin-patch page).
+- Change the words in index.html at `data-t="td6ecd1d8"` (fall hero line, "plus new u-pick ..."), `data-t="t850262cb"` (the "New:" line in the Fall panel list), `data-t="t3e399cd9"` (add-on note), `data-t="tbc119a85"` (pumpkin text), `data-t="t6af84b8c"` (calendar row), `data-t="tf6fccf62"` (season list) and `data-t="t96e7263a"` (FAQ answer "Yes, and it's new this year!"), and in pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes` (the rebuild copies it to the generated pumpkin-patch page).
 - The red dot: delete the two rules css/sections.css at `html[data-season="fall"] .nav-tomato .nav-group-btn::after` and `html[data-season="fall"] .nav-tomato .nav-group-title::after` (and the class on index.html at `class="nav-group nav-tomato"` can stay).
-- The ribbon (index.html at `data-t="tbaeea389"`) hides itself after its last day, index.html at `data-until="2026-12-31"`; the chip (index.html at `data-t="t30661b0e"`) and the "New" badge (index.html at `data-t="tddae9ce2"`) hide themselves after index.html at `data-until="2026-10-31"` (2 places).
+- The ribbon (index.html at `data-t="tbaeea389"`) hides itself after its last day, index.html at `data-until="2026-12-31"`; the chip (index.html at `data-t="t30661b0e"`) and the "New" badge (index.html at `data-t="tddae9ce2"`) hide themselves after index.html at `data-in-season data-until="2026-11-08"` (2 places).
 - Strings: 8 ids x 4 translations (7 in index.html, 1 for the pumpkin page)
 - Tests: farm-seasons, consistency, languages, i18n; hero looks for the "New" tomatoes chip (hero at `fall: the "New tomatoes" chip shows`), which hides itself after the last day
 
 **B. Keep saying new (I will say until when)**
 
-- Change the last day in index.html at `data-until="2026-12-31"` (the ribbon) and `data-until="2026-10-31"` (2 places: the chip and the "New" badge) to her date. The eight sentences and the red dot stay as they are.
+- Change the last day in index.html at `data-until="2026-12-31"` (the ribbon) and `data-in-season data-until="2026-11-08"` (2 places: the chip and the "New" badge) to her date. The eight sentences and the red dot stay as they are.
 - Strings: 0
 - Tests: none
 
@@ -2472,7 +2472,7 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 ### d48. Haunted trail and u-pick tomatoes this fall
 
-- In plain words: The home page says visitors can walk a haunted trail and u-pick tomatoes and basil every weekend until the end of October ($4.50 a pound, $1 a stem). Your farm map shows both, but we could not find them on the farm's public pages.
+- In plain words: The home page says visitors can walk a haunted trail and u-pick tomatoes and basil every weekend from mid-September through early November ($4.50 a pound, $1 a stem). Your farm map shows both, but we could not find them on the farm's public pages.
 - Doc question: Q5, Q6, Q7
 - Urgency: 2 (wrong or risky information). Checklist says: before launch.
 - Owner fact (no sensible default): no
@@ -2495,14 +2495,14 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 **C. No u-pick tomatoes and basil this fall**
 
-- Remove the whole "Tomatoes & basil" section index.html from `id="tomatoes"` to `================= WISE PIE` and every link to it: hero line (index.html at `data-t="td6ecd1d8"`) and chip (index.html at `data-t="t30661b0e"`), the chooser card (index.html at `data-t="tddae9ce2"`), the add-on (index.html at `data-t="t48324abe"`), the calendar bar (index.html at `class="cal-bar bar-tomato"`), the Shop card (index.html at `id="shop-upick"`), the FAQ answer (index.html at `data-t="t398007b0"`), pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`, the "tomatoes" crop in js/features.js (This week box) and the farm map mark. Ask Claude: the largest removal on this list.
+- Remove the whole "Tomatoes & basil" section index.html from `id="tomatoes"` to `================= WISE PIE` and every link to it: hero line (index.html at `data-t="td6ecd1d8"`) and chip (index.html at `data-t="t30661b0e"`), the chooser card (index.html at `data-t="tddae9ce2"`), the add-on (index.html at `data-t="t48324abe"`), the calendar bar (index.html at `class="cal-bar bar-tomato"`), the Shop card (index.html at `id="shop-upick"`), the FAQ answer (index.html at `data-t="t96e7263a"`), pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`, the "tomatoes" crop in js/features.js (This week box) and the farm map mark. Ask Claude: the largest removal on this list.
 - 46 UI ids and 5 JS strings mention tomatoes or basil. The photo with the price signs goes too (d13, d32).
 - Strings: about 46 UI ids + 5 JS strings (unused after removal)
 - Tests: consistency: tests/consistency.test.mjs at `price: tomatoes, per pound` and `price: basil, per stem` (prices) and from `const tom =` to `season words match js/season.js and the tomato dates in js/features.js` (tomato dates); features at `auto: pumpkins, tomatoes, flowers in season`, `const WEEK =` and `override: tomatoes peak first`; hero at `fall: the "New tomatoes" chip shows` and `winter: the tomato chip and the bee are hidden`; farm-seasons
 
 **D. The tomato or basil prices are different**
 
-- Change the price in 5 sentences and in the Shop card: index.html at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"` and `data-t="t398007b0"`, the two prices of the u-pick card index.html at `id="shop-upick"` (no translation id), and pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`. 5 UI ids x 4 translations (t398007b0, t48324abe, t6b47c02f, tcc1be24a, te71161d2).
+- Change the price in 5 sentences and in the Shop card: index.html at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"` and `data-t="t96e7263a"`, the two prices of the u-pick card index.html at `id="shop-upick"` (no translation id), and pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`. 5 UI ids x 4 translations (t96e7263a, t48324abe, t6b47c02f, ta15f2284, te71161d2).
 - Strings: 7 UI ids x 4 translations
 - Tests: consistency: facts "price: tomatoes, per pound" and "price: basil, per stem" (tests/consistency.test.mjs at `price: tomatoes, per pound` and `price: basil, per stem`, at least 5 places each): all places must agree, no edit if they do
 

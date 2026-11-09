@@ -61,7 +61,7 @@ Answer:
 
 ### Question 6
 
-**Are you offering u-pick tomatoes and basil this fall (every weekend, late September through October)?**
+**Are you offering u-pick tomatoes and basil this fall (every weekend, mid-September through early November)?**
 
 Dashboard id: d48
 
@@ -707,7 +707,7 @@ Answer:
 
 Dashboard id: d66
 
-Why it matters: The "New this year" ribbon hides itself after 31 December 2026. (The "New: u-pick tomatoes & basil" chip and badge hide themselves after 31 October.) But eight other places still call the tomatoes and basil new, for example the FAQ answer "Yes, and it's new this year!". The small red dot on the Tomatoes link in the menu also comes back every fall, not only this one.
+Why it matters: The "New this year" ribbon hides itself after 31 December 2026. (The "New: u-pick tomatoes & basil" chip and badge hide themselves after 8 November.) But eight other places still call the tomatoes and basil new, for example the FAQ answer "Yes, and it's new this year!". The small red dot on the Tomatoes link in the menu also comes back every fall, not only this one.
 
 Answer:
 
@@ -831,14 +831,14 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 - **If Yes:** no change.
 - **If No:** remove it from `index.html` at `data-t="td6ecd1d8"`, `data-t="tb2ff1037"`, `data-t="t4b6d3990"`, `data-t="tb89adc3c"`, `data-t="t49c35609"` and `data-t="tf7a7ad06"` (the "Haunted Trail" card is `index.html` at `class="card c-lilac reveal"`; `data-t="t49c35609"` is a row of the season table, `data-t="tf7a7ad06"` a bullet list). Remove "A haunted trail on fall visits" from `pages/first-visit.html` at `<li>A haunted trail on fall visits</li>` and `pages/pumpkin-patch.html` at `<li>A haunted trail on fall visits</li>` (generated pages follow on rebuild). Remove the map point by re-marking the map and running `python3 tools/farm_map.py tools/saved-map.json` (the point is written to `js/farm-map-data.js` at `"label": "Haunted trail"`; do not edit that file by hand).
 
-**Question 6: Are you offering u-pick tomatoes and basil this fall (every weekend, late September through October)?**
+**Question 6: Are you offering u-pick tomatoes and basil this fall (every weekend, mid-September through early November)?**
 
 - **If Yes:** no change (then questions 7 to 9).
-- **If No:** delete the section and its comment (`index.html` from `TOMATOES & BASIL (new this year)` to the end of that section) and every other mention: `index.html` at `class="nav-group nav-tomato"` (and the two red-dot rules in `css/sections.css` at `.nav-tomato .nav-group-btn::after` and `.nav-tomato .nav-group-title::after`), `data-t="tffd483ee" href="#tomatoes"` (the "Tomatoes & basil" line of the Things to Do list), `data-t="ta1584517"`, `data-t="td6ecd1d8"`, `data-t="t30661b0e"`, `data-t="tddae9ce2"`, `data-t="t48324abe"`, `data-t="t93b3741c"`, `data-t="tce23d9e3"`, `data-t="t30cf7da9"`, `data-t="t1805b2dc"`, `data-t="t1c989256"`, `data-t="t4eb3e326"`, `id="shop-upick"`, `data-t="t247dcbc5"`, `class="ra-tomato"` and `value="tomatoes"` (menu line, hero text and chip, add-on card, tables, calendar bar, shop prices, season list, signup choice, reserve-band art), the FAQ answer `index.html` at `data-t="t398007b0"` ("Do you have u-pick tomatoes and basil?"), `pages/pumpkin-patch.html` from `<h3>U-pick tomatoes &amp; basil</h3>` to `href="index.html#tomatoes"`, `js/features.js` at `{ id: 'tomatoes'` and `tomatoes: { g: 1`, and `js/season.js` at `{ id: 'fall'`. The tomato sauce and basil in the pizza menu (`index.html` from `data-t="td48b3939"` to `data-t="t71087d7e"`, and `data-t="tb2e89922"`) stay. Delete the README row "Tomatoes & basil". Questions 7 to 9 then do not matter.
+- **If No:** delete the section and its comment (`index.html` from `TOMATOES & BASIL (new this year)` to the end of that section) and every other mention: `index.html` at `class="nav-group nav-tomato"` (and the two red-dot rules in `css/sections.css` at `.nav-tomato .nav-group-btn::after` and `.nav-tomato .nav-group-title::after`), `data-t="tffd483ee" href="#tomatoes"` (the "Tomatoes & basil" line of the Things to Do list), `data-t="ta1584517"`, `data-t="td6ecd1d8"`, `data-t="t30661b0e"`, `data-t="tddae9ce2"`, `data-t="t48324abe"`, `data-t="t93b3741c"`, `data-t="tce23d9e3"`, `data-t="t30cf7da9"`, `data-t="t1805b2dc"`, `data-t="t850262cb"`, `data-t="t6af84b8c"`, `id="shop-upick"`, `data-t="tf6fccf62"`, `class="ra-tomato"` and `value="tomatoes"` (menu line, hero text and chip, add-on card, tables, calendar bar, shop prices, season list, signup choice, reserve-band art), the FAQ answer `index.html` at `data-t="t96e7263a"` ("Do you have u-pick tomatoes and basil?"), `pages/pumpkin-patch.html` from `<h3>U-pick tomatoes &amp; basil</h3>` to `href="index.html#tomatoes"`, `js/features.js` at `{ id: 'tomatoes'` and `tomatoes: { g: 1`, and `js/season.js` at `{ id: 'fall'`. The tomato sauce and basil in the pizza menu (`index.html` from `data-t="td48b3939"` to `data-t="t71087d7e"`, and `data-t="tb2e89922"`) stay. Delete the README row "Tomatoes & basil". Questions 7 to 9 then do not matter.
 
 **Question 7: Are the tomato and basil prices right: $4.50 per pound for tomatoes and $1 per stem for basil?**
 
-- **If the prices are different:** change `index.html` at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"`, `id="shop-upick"` (the two prices of the u-pick card) and `data-t="t398007b0"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes` (the generated pumpkin-patch page follows on rebuild).
+- **If the prices are different:** change `index.html` at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"`, `id="shop-upick"` (the two prices of the u-pick card) and `data-t="t96e7263a"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes` (the generated pumpkin-patch page follows on rebuild).
 - **If they are right:** no change.
 
 **Question 8: Are all 15 tomato varieties and all 4 basil varieties listed on the site growing this year?**
@@ -1151,8 +1151,8 @@ Everything in this section was checked against the code on 3 October 2026; the g
 
 **Question 61: After 31 December 2026, should the site stop calling the u-pick tomatoes and basil "new"?**
 
-- **If she stops calling them new:** change the words in `index.html` at `data-t="td6ecd1d8"`, `data-t="t1c989256"`, `data-t="tedce5b9f"`, `data-t="tbc119a85"`, `data-t="t4eb3e326"`, `data-t="t247dcbc5"` and `data-t="t398007b0"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`; delete the two red-dot rules `css/sections.css` at `html[data-season="fall"] .nav-tomato .nav-group-btn::after` and `html[data-season="fall"] .nav-tomato .nav-group-title::after`. The ribbon (`index.html` at `data-until="2026-12-31"`), the chip and the "New" badge (`index.html` at `data-until="2026-10-31"` (2 places)) hide themselves.
-- **If she keeps saying new:** change those last days (`index.html` at `data-until="2026-12-31"` and at `data-until="2026-10-31"` (2 places)) to her date.
+- **If she stops calling them new:** change the words in `index.html` at `data-t="td6ecd1d8"`, `data-t="t850262cb"`, `data-t="t3e399cd9"`, `data-t="tbc119a85"`, `data-t="t6af84b8c"`, `data-t="tf6fccf62"` and `data-t="t96e7263a"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`; delete the two red-dot rules `css/sections.css` at `html[data-season="fall"] .nav-tomato .nav-group-btn::after` and `html[data-season="fall"] .nav-tomato .nav-group-title::after`. The ribbon (`index.html` at `data-until="2026-12-31"`), the chip and the "New" badge (`index.html` at `data-in-season data-until="2026-11-08"` (2 places)) hide themselves.
+- **If she keeps saying new:** change those last days (`index.html` at `data-until="2026-12-31"` and at `data-in-season data-until="2026-11-08"` (2 places)) to her date.
 - **If she decides in December:** no change now; it all has to be done before 1 January 2027.
 
 **Question 62: Keep two backgrounds that never showed?**

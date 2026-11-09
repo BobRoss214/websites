@@ -65,7 +65,7 @@ Respuesta:
 
 ### Pregunta 6
 
-**¿Ofrecen tomates y albahaca de cosecha propia este otoño (todos los fines de semana, de finales de septiembre a octubre)?**
+**¿Ofrecen tomates y albahaca de cosecha propia este otoño (todos los fines de semana, de mediados de septiembre a principios de noviembre)?**
 
 Id en el panel: d48
 
@@ -711,7 +711,7 @@ Respuesta:
 
 Id en el panel: d66
 
-Por qué importa: La cinta "Novedad de este año" se oculta sola después del 31 de diciembre de 2026 (la etiqueta "Novedad: tomates y albahaca para recoger" se oculta sola después del 31 de octubre), pero otros ocho lugares siguen llamando novedad a los tomates y la albahaca, por ejemplo la respuesta de las preguntas frecuentes ("¡Sí, y es novedad este año!"). El puntito rojo del enlace "Tomates" del menú también vuelve cada otoño, no solo este.
+Por qué importa: La cinta "Novedad de este año" se oculta sola después del 31 de diciembre de 2026 (la etiqueta "Novedad: tomates y albahaca para recoger" se oculta sola después del 8 de noviembre), pero otros ocho lugares siguen llamando novedad a los tomates y la albahaca, por ejemplo la respuesta de las preguntas frecuentes ("¡Sí, y es novedad este año!"). El puntito rojo del enlace "Tomates" del menú también vuelve cada otoño, no solo este.
 
 Respuesta:
 

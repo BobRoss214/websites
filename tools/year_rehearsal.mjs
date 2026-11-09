@@ -326,16 +326,16 @@ step('R02', 'Tue Oct 6, 2026: the first pizza weekend opens (and every Tuesday t
   S.check('the sentence hides itself the day after its data-until (Mon Oct 12)', !shown(g, 'pizza reservations for Oct 9'), '');
 });
 
-step('R03', 'Wed Oct 7, 2026 to Wed Nov 4, 2026: lines hide one by one', { group: 'itself' }, async (S) => {
+step('R03', 'Wed Oct 7, 2026 to Mon Nov 9, 2026: lines hide one by one', { group: 'itself' }, async (S) => {
   // each line: what it is, how to see it, its last day (data-until). Visible at 23:59 on that day, gone at 00:00 the next.
   const LINES = [
     ['Exceptional Children Day', (v) => shown(v, 'Exceptional Children Day'), '2026-10-06'],
     ['pizza row Oct 6', (v) => rowDates(v).includes('Oct 6'), '2026-10-11'],
     ['pizza row Oct 13', (v) => rowDates(v).includes('Oct 13'), '2026-10-18'],
     ['pizza row Oct 20', (v) => rowDates(v).includes('Oct 20'), '2026-10-25'],
-    ['the "New: u-pick tomatoes & basil" chip', (v) => shown(v, 'New: u-pick tomatoes'), '2026-10-31'],
-    ['the "New" badge on the tomatoes line', (v) => v.tags.includes('NEW'), '2026-10-31'],
     ['Home School Day', (v) => shown(v, 'Home School Day'), '2026-11-03'],
+    ['the "New: u-pick tomatoes & basil" chip', (v) => shown(v, 'New: u-pick tomatoes'), '2026-11-08'],
+    ['the "New" badge on the tomatoes line', (v) => v.tags.includes('NEW'), '2026-11-08'],
   ];
   const probes = [];
   for (const [what, seen, last] of LINES) probes.push([what, seen, last, dayAt(S, last, '23:59', { device: 'phone' }), dayAt(S, addDay(last, 1), '00:00', { device: 'phone' })]);
@@ -539,14 +539,15 @@ step('R19', 'Thu Aug 12, 2027: the fall look starts, a month before the season',
   S.check('the publish check is happy with the two matching last days (the calendar: they must match)', cf.code === 0, cf.out.split('\n').slice(-2).join(' | ').slice(0, 160));
 });
 
-step('R20', 'Mon Aug 23, 2027 to Sat Sep 25, 2027: the "This week" box counts down by itself', { group: 'itself' }, async (S) => {
+step('R20', 'Mon Aug 23, 2027 to Sun Sep 12, 2027: the "This week" box counts down by itself', { group: 'itself' }, async (S) => {
   S.owner.setting('week', '{}');
-  const [a, b, c, d] = await Promise.all([dayAt(S, '2027-08-22', '12:00'), dayAt(S, '2027-08-23', '12:00'), dayAt(S, '2027-09-04', '12:00'), dayAt(S, '2027-09-25', '12:00')]);
+  const [a, b, c, d] = await Promise.all([dayAt(S, '2027-08-22', '12:00'), dayAt(S, '2027-08-23', '12:00'), dayAt(S, '2027-09-12', '12:00'), dayAt(S, '2027-09-13', '12:00')]);
   const crops = (v) => (v.week ? v.week.crops.join(' | ') : '');
   S.check('Aug 23: pumpkins "usually start Sep 13" (not on Aug 22)', !/Pumpkins.*Usually starts Sep 13/.test(crops(a)) && /Pumpkins.*Usually starts Sep 13/.test(crops(b)), crops(a) + ' -> ' + crops(b));
+  S.check('Aug 23: tomatoes and basil "usually start Sep 13", the same day as the pumpkins (not on Aug 22)', !/Tomatoes & basil.*Usually starts/.test(crops(a)) && /Tomatoes & basil.*Usually starts Sep 13/.test(crops(b)), crops(a) + ' -> ' + crops(b));
   S.check('Aug 23: cut flowers "usually start Sep 1"', /U-cut flowers.*Usually starts Sep 1/.test(crops(b)), crops(b));
-  S.check('Sep 4: tomatoes and basil "usually start Sep 25"', /Tomatoes & basil.*Usually starts Sep 25/.test(crops(c)), crops(c));
-  S.check('Sep 25: tomatoes and basil are in season; cut flowers from Sep 1 (in season by Aug 12 as "usually starts Sep 1")', /Tomatoes & basil In season/.test(crops(d)), crops(d));
+  S.check('Sep 12 (the last day of the countdown): pumpkins and tomatoes and basil still "usually start Sep 13"', /Pumpkins.*Usually starts Sep 13/.test(crops(c)) && /Tomatoes & basil.*Usually starts Sep 13/.test(crops(c)), crops(c));
+  S.check('Sep 13: pumpkins and tomatoes and basil are in season together; cut flowers from Sep 1 (in season by Aug 12 as "usually starts Sep 1")', /Pumpkins In season/.test(crops(d)) && /Tomatoes & basil In season/.test(crops(d)), crops(d));
 });
 
 step('R21', 'Mon Sep 13, 2027: the fall season starts', { }, async (S) => {

@@ -60,9 +60,9 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `index.html` at `<strong>Open now:</strong> pizza reservations for` (the sentence and its `data-until`); `index.html` at `data-release-time="17:00"` (the opening time). README row "Open a new pizza weekend".
 - **If you forget:** the countdown still says "just opened" by itself, but the sentence under the table is old or missing, so visitors do not see which weekend is open.
 
-### Wed Oct 7, 2026 to Wed Nov 4, 2026: lines hide one by one
+### Wed Oct 7, 2026 to Mon Nov 9, 2026: lines hide one by one
 
-- **By itself:** Wed Oct 7, 2026: the "Exceptional Children Day" line. Mon Oct 12, 2026, Mon Oct 19, 2026 and Mon Oct 26, 2026: the pizza rows. Sun Nov 1, 2026: the "New: u-pick tomatoes & basil" chip and the "New" badge. Wed Nov 4, 2026: the "Home School Day" line. When every line in the "Fall 2026 special days" box has gone, the box hides itself.
+- **By itself:** Wed Oct 7, 2026: the "Exceptional Children Day" line. Mon Oct 12, 2026, Mon Oct 19, 2026 and Mon Oct 26, 2026: the pizza rows. Wed Nov 4, 2026: the "Home School Day" line. When every line in the "Fall 2026 special days" box has gone, the box hides itself. Mon Nov 9, 2026: the "New: u-pick tomatoes & basil" chip and the "New" badge.
 - **You:** nothing.
 - **Where:** `index.html` at `data-t="tcda0fa57"` and `data-t="te8f8cb7a"` (the two special days). The full list is in section 9.
 - **If you forget:** nothing visible. `?check` lists them in its green box ("remove them when you like").
@@ -120,7 +120,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 - **By itself:** the footer year turns from 2026 to 2027 (`data-year`), and the "New this year" ribbon hides (`data-until="2026-12-31"`). Nothing in the search-engine data or the sitemap has a date that runs out.
 - **You, by Fri Dec 18, 2026:** answer **d66** (stop saying "new this year" from January?) and **d24** (Fall 2027 prices, schedule and menu). Eight places still say the tomatoes are new, and seven places write "2026" in a label (two more labels hide themselves in the fall). If you are closed on Jan 1, add it to `closures`.
-- **Where:** "new": `index.html` at `data-t="td6ecd1d8"`, `data-t="t1c989256"`, `data-t="tedce5b9f"`, `data-t="tbc119a85"`, `data-t="t4eb3e326"`, `data-t="t247dcbc5"` and `data-t="t398007b0"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`. The year: `python3 tools/check_facts.py year` lists every place (README, section "A new year, a new season").
+- **Where:** "new": `index.html` at `data-t="td6ecd1d8"`, `data-t="t850262cb"`, `data-t="t3e399cd9"`, `data-t="tbc119a85"`, `data-t="t6af84b8c"`, `data-t="tf6fccf62"` and `data-t="t96e7263a"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`. The year: `python3 tools/check_facts.py year` lists every place (README, section "A new year, a new season").
 - **If you forget:** in 2027 the FAQ still says "Yes, and it's new this year!", and the pages say "Fall 2026 prices" all winter, spring and summer. That is true but looks old.
 
 ## 4. The calendar, 2027
@@ -186,9 +186,9 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `python3 tools/check_facts.py year` lists the 2026 places. `index.html` at `data-t="t7f10df40"` (special days heading), `data-t="t65d35823"` (schedule heading), `data-t="tb848cce7"` (the "No pizza" words) and `data-t="t4f7c68ac"` (Fall Menu heading); `pages/pumpkin-patch.html` at `data-until="2026-11-30"` (2 places). README, section "A new year, a new season"; README row "Open a new pizza weekend". Every changed English sentence needs its four translations (README, section "Change one sentence and its translations, step by step").
 - **If you forget:** from Aug 12 visitors see a fall page with 2026 prices and no schedule box.
 
-### Mon Aug 23, 2027 to Sat Sep 25, 2027: the "This week" box counts down by itself
+### Mon Aug 23, 2027 to Sun Sep 12, 2027: the "This week" box counts down by itself
 
-- **By itself:** pumpkins "usually start Sep 13", tomatoes and basil "usually start Sep 25", cut flowers from Sep 1.
+- **By itself:** pumpkins and tomatoes and basil "usually start Sep 13", cut flowers from Sep 1.
 - **You:** optional: `week` when you know better.
 - **Where:** `js/content.js` at `week: {},` (2 places).
 - **If you forget:** the box keeps the typical dates.
@@ -329,7 +329,7 @@ A line with `data-until="D"` hides itself on the day after D. A pizza row has bo
 | `data-release="2026-10-13"` `data-until="2026-10-18"` | pizza row: opens Oct 13, visits Oct 16 to 18 | Mon Oct 19, 2026 |
 | `data-release="2026-10-20"` `data-until="2026-10-25"` | pizza row: opens Oct 20, visits Oct 23 to 25 | Mon Oct 26, 2026 |
 | `data-release="2026-10-27"` `data-until="2026-11-08"` | pizza row: opens Oct 27, visits Oct 30 to Nov 8 | Mon Nov 9, 2026 |
-| `data-until="2026-10-31"` | the "New: u-pick tomatoes & basil" chip and the "New" badge (2 places) | Sun Nov 1, 2026 |
+| `data-until="2026-11-08"` | the "New: u-pick tomatoes & basil" chip and the "New" badge (2 places) | Mon Nov 9, 2026 |
 | `data-until="2026-11-03"` | the "Home School Day" line | Wed Nov 4, 2026 |
 | `data-until="2026-11-30"` | the "No pizza" block (the "Fall schedule" button on the pumpkin page carries the same date, but it already hides on Nov 9 with the fall season) | Tue Dec 1, 2026 |
 | `data-until="2026-12-31"` | the "New this year" ribbon | Fri Jan 1, 2027 |

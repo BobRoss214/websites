@@ -297,7 +297,7 @@
       choices: seasonWalk({
         spring: 'Spring. “Strawberries” and “U-cut flowers”, both “In season”. A crop that starts within 21 days shows ‘Usually starts’ and its date. When nothing is near, the box hides.',
         summer: 'Summer. “Blueberries”, “Sunflowers” and “U-cut flowers” are all “In season”.',
-        fall: 'Fall. “Pumpkins”, “Tomatoes & basil” and “U-cut flowers” are “In season”. The tomatoes stop at the end of October, so this list gets shorter.',
+        fall: 'Fall. “Pumpkins”, “Tomatoes & basil” and “U-cut flowers” are “In season”. The tomatoes stop on November 8 with the rest of fall, so this list gets shorter after that.',
         winter: 'Winter. Only “Christmas trees” shows, marked “At The GreenHouse” and “In season”. The farm crops are gone.'
       }),
       before: function () {   // the box hides itself when nothing is near: then the season the page is dressed in is shown first, so the step still has a box to light
@@ -395,7 +395,7 @@
     {
       id: 'ch5-tomatoes', order: 503, chapter: 5, page: 'index', target: '.tomato-copy',
       title: 'Tomatoes and basil',
-      text: 'New this year: u-pick organic tomatoes and basil, every weekend from late September through October. Tomatoes are $4.50 per pound and basil is $1 per stem. The New labels hide themselves after their end date. This box stays all year.'
+      text: 'New this year: u-pick organic tomatoes and basil, every weekend from mid-September through early November. Tomatoes are $4.50 per pound and basil is $1 per stem. The New labels hide themselves after their end date. This box stays all year.'
     },
     {
       id: 'ch5-flowers', order: 504, chapter: 5, page: 'index', target: '#flowers .flowers-copy',

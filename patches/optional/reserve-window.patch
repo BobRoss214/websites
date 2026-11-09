@@ -35,7 +35,7 @@ index dcb86e1..bae7158 100644
            <a data-t="t38a1d40a" class="btn btn-white btn-lg" href="#seasons">See what&rsquo;s in season</a>
          </div>
 @@ -357,7 +357,7 @@
-             <a data-t="tddae9ce2" class="choose-new" data-only="fall" data-in-season data-until="2026-10-31" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+             <a data-t="tddae9ce2" class="choose-new" data-only="fall" data-in-season data-until="2026-11-08" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
              <a data-t="t01cba258" class="choose-new" data-only="winter" data-in-season hidden href="#greenhouse"><span class="choose-new-badge">Trees</span> Christmas trees are at The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
              <div class="card-actions">
 -              <a data-t="tfa23ca11" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve the farm <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
