@@ -229,30 +229,16 @@ keeps the picture) are untouched. The test measures it on the animations themsel
 most 21 px/s (8 or more on average, a reach of 10 px or more so that no leaf goes straight down), a whole swing 4.5 s or more, the turning at most 44 degrees/s. At a hero taller than 916 px (a screen wider than about 2200 px) the shortest falls
 come to a little over 60 px/s; the first leaves fell at 70 to 95 there.
 
-## Where I stopped (the spring job, R2 review, safe shutdown asked by main)
+## Where I stopped (spring-final: the kids table measured on the real page, nine tests run)
 
-Branch `spring`, integ 9a1aa85 merged (963a823). Scripts and data of the work are in the scratchpad: .../scratchpad/spring (explore3.mjs, eval5.mjs, exact9.py, opt7.py, ex10-*.json, evalE.log, final-pics.mjs, pix/) and .../scratchpad/critter (leafpath2.mjs).
-
-Done and measured
-- Leaves (css/hero.css, `particles()` in js/hero.js): measured on the page, 16 leaves for 24 s at 1440 x 900: sideways 44.8 -> 16.6 px/s on average (the fastest leaf 79 -> 19.4), fall 60 -> 41 px/s (47 to 87 -> 36 to 53),
-  a whole swing 3.2 to 6.4 s -> 5.6 to 9.2 s, tipping at most 36 degrees/s, still a smooth sine, random places and times kept (the section above has the table). The test check is in tests/hero.test.mjs (fall block).
-- Friend button (#npc-btn, js/hero.js): says hi only to friends with 60 % or more of their tap area inside the window and the hero; if none, any that shows; if nothing shows, all. The test (friendTour, hero test) is written.
-- Kid places: KIDS in js/hero.js now has 6 people (rows 6 and 7 at the very edges of the rows, k -5.4/5.4 and -5.6/5.6 with the baskets inward, row 10 at k -2.15/2.15); the comment that said "where nothing covers them" now says what is true.
-- What the measuring showed (a person is "clear" = head and hat 80 % and everything drawn, the basket too, 60 % in sight, nobody in front; the account helper's pixel numbers agree with mine within about 5 points on the same kids):
-  integ's 9 kids: 0 clear at the left and 1 at the right at 1920 x 950, 1920 x 1080 and 1440 x 900, 0 at 1536 x 730 and 1440 x 780. The plants of the rows in front hide about 40 % of any kid by design, so 60 % is near the most a kid can show.
-  The strawberry rows begin about 690 px down (the picture sits at the bottom of the hero, about 800 px high): at 1366 x 650, 1280 x 680, 1280 x 600 and 1024 x 650 the first row ends 692 to 694 px down, under the window's bottom edge (nothing can be placed);
-  at 1536 x 730 the bottom edge cuts every kid far enough back to stand beside the pills (the best shows 55 %); at 1440 x 780 only 83 to 123 px of free ground lie beside the pills (between the sunflower's tap area and the pills), room for 2 kids per side at most.
-  Predicted for the committed table from the exploration (cap hats, short pill state): 3 + 3 at 1920 x 950, 1920 x 1080, 2560 x 1440 and 1440 x 900, 2 + 2 at 1440 x 780, 0 at 1536 x 730 and below.
-  The pills' words change with the day, the hour and the visitor's time zone (the row is up to 750 px wide, about x 345 to 1095 at 1440): in the wide state the inner edge kid at each side is under a pill at 1440 and 1536 (1 + 1 instead of 2 + 2).
-  Tables T1 and T2 (scratchpad/spring/evalE.log) had the edge pair overlapping (24 to 40 % of a kid under the other); the committed table (called U1 there) has the baskets inward, where the model says 2 %: NOT yet checked on the real page.
-
-Tests green: quick checks (code-rules, validity, browser-support, privacy-static, seo: 146 of 146) and tests/games.test.mjs (97 of 97, merged tree, 00:27 UTC). Earlier, on the first-pass table: hero, npc, touch, pause, contrast-pixels, calm, critter (see the sections above).
-Not run on the final tree: hero, npc, touch, pause, farm-seasons, calm, critter, contrast-pixels.
-
-Left to do
-- Run those tests through `flock /tmp/wa-heavy.lock`; the per-size numbers in tests/hero.test.mjs (SEEN: 3 at 1920 x 950, 1920 x 1080, 2560 x 1440, 1440 x 900, 2 at 1440 x 780; LOW: first row at least h - 20 px down) are predictions and may need changing; the npc test now asks for 6 people.
-- Check the committed table on the real page (eval5.mjs with FAKE_TIME for one fixed pill state; tablesG.json is ready) and with the pixel pipeline (pix/look.mjs, analyze.py); pictures with final-pics.mjs.
-- Then the report to main with the before/after table (above), and clean up (nothing is left running: the server and the queued jobs were killed).
+Branch `spring` in /tmp/spring-final (a clone of critter-clone2, integ 1a61a49 merged). Scripts and data: scratchpad/sf (explore4.mjs: every place alone on the real page; own.mjs: tap areas; opt2.py, pick.py: sets of three; eval6.mjs + check.py: a whole table with the hero test's own measure; talk.mjs: real clicks and the friend button; pix/: look.mjs + analyze.py, now with the kids held still; compare.mjs: pictures).
+- The first table (rows 6, 7, 10) was a prediction. On the real page it gave 2 + 2 clear people at 1920 x 950, 1920 x 1080, 2560 x 1440 and 1440 x 900 (row 10 showed 58 and 59 % of the body), and the tap areas of the edge pair lay on each other (24 % their own, 70 % asked): 7 failures of the hero test.
+- New table (js/hero.js KIDS): rows 3, 4, 6 at the right, rows 4, 6, 8 at the left, small people close to the edge of the rows (a bigger one has 55 to 75 % of its tap area left; 3 tap areas per side do not fit otherwise). The target of the test did not change.
+- Clear per side (left + right), the hero test's measure, integ's 9 people -> now: 1920 x 950 1+1 -> 3+3, 1920 x 1080 1+1 -> 3+3, 2560 x 1440 1+2 -> 3+3, 1440 x 900 0+1 -> 3+3, 1440 x 780 0+0 -> 2+3, 1536 x 730 0+0 -> 1+2 (the pixel pipeline says 1+1 there: one at 55 %). Also 3+3 at 1536 x 864, 1600 x 900, 1680 x 1050, 1920 x 1200, 2048 x 1152, 2+3 at 1366 x 768, 1280 x 800, 1100 x 800; nothing in windows lower than about 700 px.
+- Pixel pipeline (owner's pixels): head 91 to 100 % and whole person 72 to 97 % for all six at the four big sizes; at 1440 x 780 the front one at the left is 56 % (cut by the bottom edge). Real clicks: all six speak at 1440 x 900, 1920 x 950, 1920 x 1080, 2560 x 1440, 1440 x 780, 1536 x 730; the friend button never picked an off-screen friend at those and at 1366 x 650.
+- Tests on the final tree: quick checks 243/0; hero 166/0, npc 20/0, touch 97/0, pause 12/0, farm-seasons 24/0, calm 55/0, critter 189/0, contrast-pixels 19/0, games 97/0. One test change besides comments: "it goes round" of the friend button (when no friend shows, 1366 x 650, it goes round all 17, as js/hero.js says).
+- Summer, fall and winter pictures: the same pixels as integ (animations off, leaves hidden): at most 71 pixels differ at rounded edges, as much as two loads of one build differ (50).
+- Left: other pill states and languages. With the farm's pill (fall, spring picture chosen by hand) at 1440 x 900 it is 2 + 1; in Spanish and Vietnamese the chips are 42 px wider at each side: 2 + 2 at 1440 x 900 (3 + 3 at 1920 x 950 in es, 3 + 2 in vi). English at the pinned moment is what the test checks.
 
 ## What I could not do / am unsure about
 
