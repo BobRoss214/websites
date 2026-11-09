@@ -113,12 +113,12 @@
  {
   "id": "a06",
   "cat": "content",
-  "desc": "A data-until date typo (month 13) on the New tomatoes chip",
+  "desc": "A data-until date typo (month 13) on the Home School Day line",
   "ops": [
    {
     "file": "index.html",
-    "find": "data-until=\"2026-10-31\"",
-    "repl": "data-until=\"2026-13-31\"",
+    "find": "data-until=\"2026-11-03\"",
+    "repl": "data-until=\"2026-13-03\"",
     "regex": false,
     "flags": "",
     "count": 1
@@ -136,12 +136,12 @@
  {
   "id": "a07",
   "cat": "content",
-  "desc": "A data-until date written 2026-10-3 (one digit)",
+  "desc": "A data-until date written 2026-11-3 (one digit)",
   "ops": [
    {
     "file": "index.html",
-    "find": "data-until=\"2026-10-31\"",
-    "repl": "data-until=\"2026-10-3\"",
+    "find": "data-until=\"2026-11-03\"",
+    "repl": "data-until=\"2026-11-3\"",
     "regex": false,
     "flags": "",
     "count": 1

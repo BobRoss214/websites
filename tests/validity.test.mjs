@@ -345,7 +345,7 @@ for (const f of htmlFiles) {
 }
 const fragments = list('pages', '.html');
 for (const f of fragments) { const r = checkHtml(read(f), { name: f, fragment: true }); ok(`${f}: no repeated id, no bad nesting, no bad link`, r.problems.length === 0, r.problems.slice(0, 4).join(' | ')); }
-{   // the dates the owner types into the pages (kills mutants a06: data-until month 13, a07: data-until written 2026-10-3; before this only the browser test `dated`, minutes later, saw them)
+{   // the dates the owner types into the pages (kills mutants a06: data-until month 13, a07: data-until written 2026-11-3; before this only the browser test `dated`, minutes later, saw them)
   const found = []; let n = 0;
   for (const f of [...htmlFiles, ...fragments]) { n += (noComments(read(f)).match(/\bdata-(until|release)="/g) || []).length; for (const b of badDates(read(f))) found.push(`${f}: ${b}`); }
   ok(`every data-until and data-release in the pages is a real day written YYYY-MM-DD (${n} dates read; it notices the breaks a06 and a07 of tools/mutants.json)`, found.length === 0 && n > 0, found.slice(0, 4).join(' | ') || (n ? '' : 'no date found: is the check reading the pages?'));
