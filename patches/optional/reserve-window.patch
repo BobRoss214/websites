@@ -117,10 +117,10 @@ index 1c1857f..57629e2 100644
          </div>
        </div>
 diff --git a/tests/hero.test.mjs b/tests/hero.test.mjs
-index ca7d16b..237087d 100644
+index e52d47c..ee8416b 100644
 --- a/tests/hero.test.mjs
 +++ b/tests/hero.test.mjs
-@@ -58,8 +58,9 @@ await run('hero', async ({ browser, base, errs }) => {
+@@ -182,8 +182,9 @@ await run('hero', async ({ browser, base, errs }) => {
      ok(`${s}: hint text`, ((await p.textContent('#pick-msg')) || '').length > 10 && (await p.textContent('#pick-count')) === '0');
      // the chooser card's buttons follow the season: reserve in spring/summer/fall, "Tell me when" in winter, "See prices" in fall only
      const acts = await p.evaluate(() => Array.from(document.querySelectorAll('.choose-farm .card-actions a')).filter((e) => e.getBoundingClientRect().width > 0).map((e) => e.textContent.trim().replace(/\s+/g, ' ')));
@@ -130,4 +130,4 @@ index ca7d16b..237087d 100644
 +    ok(`${s}: the card buttons are "${wantRed}"${s === 'fall' ? ', Directions and See prices' : ' and Directions'}`, (windowed ? !acts.includes(wantRed) : acts.includes(wantRed)) && acts.includes('Directions') && acts.includes('See prices') === (s === 'fall') && acts.includes(s === 'winter' ? 'Reserve the farm' : 'Tell me when') === false, JSON.stringify(acts));
    }
  
-   // ---- fall: picking, the wagon, the tractor
+   // ---- spring: the people in the strawberry rows stand where they can be seen (not behind the words, the chips, the card or the sunflowers), and the sunflowers at the sides can be snipped
