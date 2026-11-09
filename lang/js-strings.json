@@ -294,6 +294,7 @@
  "mid-April": "season.js",
  "mid-June": "season.js",
  "mid-September": "season.js",
+ "next": "hero.js",
  "now": "hero.js",
  "the Friday after Thanksgiving": "season.js",
  "tomorrow": "live.js",

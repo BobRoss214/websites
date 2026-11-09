@@ -60,14 +60,15 @@ html[data-season="winter"] .bee-fly{display:none}
 
 /* ---------------------------------------------------------------- season switcher */
 .hero{padding-top:clamp(14px,1.6vw,22px)}
-.season-switch{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;margin:0 auto 16px;pointer-events:auto}
+.season-switch{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:18px 8px;margin:0 auto 16px;pointer-events:auto}   /* the buttons wrap in a long language (Vietnamese at 768 px) or at big text: the row gap leaves room for the Now / Next tags of the lower row, which stand 12 px above their buttons */
 .ss-label{font:700 1.5rem/1 var(--hand);color:#a8182f;margin-right:4px;transform:rotate(-2deg)}
 .season-switch button{position:relative;display:inline-flex;align-items:center;gap:.4em;padding:.26em .85em .26em .45em;font:700 .95rem/1.2 var(--display);color:var(--ink);background:rgba(255,255,255,.9);border:2.5px solid var(--ink);border-radius:999px;cursor:pointer;box-shadow:0 3px 0 var(--ink);transition:transform .18s cubic-bezier(.3,1.6,.5,1),background-color .2s,box-shadow .2s}
 @media (hover:hover){.season-switch button:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--ink)}}
 .season-switch button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 .season-switch button[aria-checked="true"]{background:var(--sun);box-shadow:0 3px 0 var(--ink),inset 0 0 0 2px var(--ink)}   /* thicker dark edge, not only yellow (docs/COLOUR_BLIND_CHECK.md) */
 .ss-ico{width:26px;height:26px;flex:none}
-.ss-now{position:absolute;top:-12px;right:-8px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .5em;font:700 .7rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;transform:rotate(6deg);pointer-events:none}
+.ss-now,.ss-next{position:absolute;top:-12px;right:-8px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .5em;font:700 .7rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;transform:rotate(6deg);pointer-events:none}
+.ss-next{background:var(--berry)}   /* "Now" is red, "Next" is blue (white words on it: 6 to 1): two colours that cannot be mixed up, and the words say it too */
 
 /* ---------------------------------------------------------------- fall: tractor + wagon ride */
 .rig{--rig-from:-420px;--rig-to:1660px;--rig-rest:420px;
@@ -258,12 +259,16 @@ html[data-calm="light"] .particles,html[data-calm="most"] .particles{opacity:0} 
   .ss-label{display:none}
   .season-switch button{flex:1 1 auto;justify-content:center;min-width:0;padding:.22em .3em .22em .3em;font-size:.82rem;box-shadow:0 2px 0 var(--ink)}
   .ss-ico{width:20px;height:20px}
-  .ss-now{top:-20px;right:-4px;font-size:.6875rem}
+  .ss-now,.ss-next{top:-20px;right:-4px;font-size:.6875rem;padding:.1em .3em;letter-spacing:.02em}   /* compact: on a narrow button (Verano, Otoño) the long words "siguiente" and "tiếp theo" reached the tag of the button before */
 }
 @media (max-width:22.5em){
+  .ss-now,.ss-next{font-size:.625rem}   /* 360 px and under: a little smaller still */
   .season-switch button{font-size:.76rem;gap:.25em}
   .ss-ico{width:17px;height:17px}
   .hero h1{font-size:clamp(1.7rem,9vw,2.3rem)}   /* "Árboles de Navidad" (es, winter) was cut off at 320px */
+}
+@media (max-width:21.5em){
+  .ss-now,.ss-next{right:-2px;padding:.1em .2em;letter-spacing:0}   /* 320 px: the narrowest button (Mùa hè) is shorter than the words "tiếp theo" and the tag of the button before must not be touched */
 }
 
 /* Nothing should freeze off-screen or half-drawn when motion is turned off. */

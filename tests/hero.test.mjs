@@ -1,7 +1,7 @@
 // order: 350
 // browser: yes
 // covers: js/hero.js, js/season.js, js/content.js, css/hero.css, index.html
-/* The seasonal hero: which season it is on a date, the "See the farm in..." switcher, picking things, the tractor, keyboard use,
+/* The seasonal hero: which season it is on a date, the "See the farm in..." switcher and its little Now and Next tags (on every kind of day, moved by a page left open past midnight, not changed by pressing a season, not cut off or on a letter in five languages at eight sizes), picking things, the tractor, keyboard use,
  * no sideways scrolling from phone to wide screen, reduced motion, and seasonPicker: false. The falling leaves of fall: each one has its three animations (it falls
  * through the hero's own height, it drifts to one side and the other, its drawing tips the way it drifts), they fall from above the top edge to below the bottom edge
  * of the hero whatever its height (the snow too: 1440 x 600), --fh follows the hero's picture when the window does not change (a resize observer), and on a slow computer (the page's own calm mode,
@@ -30,6 +30,129 @@ async function clickPick(p) {
   return true;
 }
 const frames = (p) => p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+
+/* ---- the little tags at the top right of the season buttons: "now" on the season that is on today, "next" on the one that starts next (between seasons only "next") ----
+ * They follow today's date (the page clock), not the picture. They are drawn again when the farm's day changes (js/live.js announces wa:day when a page is left open past midnight; the tour's
+ * pretend days use it too) and when the language changes (tests/i18n-a11y.test.mjs checks the words in all five languages). */
+// what the buttons show now, in the order of the buttons: "fall:now=now winter:next=next"
+const tagsOf = (q) => q.evaluate(() => [...document.querySelectorAll('#season-switch button')].map((b) => [b.dataset.season].concat([...b.querySelectorAll('.ss-now,.ss-next')].map((n) => n.className.slice(3) + '=' + n.textContent)).join(':')).filter((x) => x.includes('=')).join(' '));
+// the page's clock goes to another day and the farm's day changes
+const onDay = async (q, iso) => { await q.clock.setSystemTime(new Date(iso)); await q.evaluate(() => document.dispatchEvent(new CustomEvent('wa:day', { detail: '' }))); };
+const TAG_DAYS = [   // [the farm's day at noon, what the buttons show, which day it is]
+  ['2026-10-02T12:00:00-04:00', 'fall:now=now winter:next=next', 'a day in fall: Now on Fall, Next on Winter (the Christmas trees)'],
+  ['2026-11-08T12:00:00-05:00', 'fall:now=now winter:next=next', 'the last day of fall'],
+  ['2026-11-09T12:00:00-05:00', 'winter:next=next', 'the day after fall, between seasons: no Now, Next on Winter'],
+  ['2026-11-26T12:00:00-05:00', 'winter:next=next', 'Thanksgiving: the trees start tomorrow'],
+  ['2026-11-27T12:00:00-05:00', 'spring:next=next winter:now=now', 'the Friday after Thanksgiving: Now on Winter, Next on Spring'],
+  ['2026-12-08T12:00:00-05:00', 'spring:next=next winter:now=now', 'the last day of winter'],
+  ['2026-12-09T12:00:00-05:00', 'spring:next=next', 'the day after winter: only Next, on Spring'],
+  ['2027-01-20T12:00:00-05:00', 'spring:next=next', 'January: only Next, on Spring'],
+  ['2027-04-14T12:00:00-04:00', 'spring:next=next', 'the day before spring'],
+  ['2027-04-15T12:00:00-04:00', 'spring:now=now summer:next=next', 'the first day of spring'],
+  ['2027-05-10T12:00:00-04:00', 'spring:now=now summer:next=next', 'a day in spring: Now on Spring, Next on Summer'],
+  ['2027-06-08T12:00:00-04:00', 'summer:next=next', 'between spring and summer'],
+  ['2027-06-20T12:00:00-04:00', 'summer:now=now fall:next=next', 'a day in summer: Now on Summer, Next on Fall'],
+  ['2027-07-11T12:00:00-04:00', 'fall:next=next', 'between summer and fall'],
+];
+// What a customer would call wrong with a tag: cut off (by the window, or by a box with overflow hidden), on top of another button, another tag or "See the farm in", or on two lines
+const TAG_PROBLEMS = () => {
+  const R = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
+  const meet = (a, b) => a.l < b.r - 0.5 && a.r > b.l + 0.5 && a.t < b.b - 0.5 && a.b > b.t + 0.5;
+  const sw = document.querySelector('#season-switch'), btns = [...sw.querySelectorAll('button')], tags = [...sw.querySelectorAll('.ss-now,.ss-next')];
+  const label = sw.querySelector('.ss-label'), lr = label && label.getClientRects().length ? R(label) : null, bad = [];
+  for (const t of tags) {
+    const tr = R(t), own = t.parentElement, who = t.className.slice(3) + ' on ' + own.dataset.season;
+    if (tr.l < 0 || tr.r > innerWidth || tr.t < 0) bad.push(who + ' is outside the window');
+    for (let a = own; a && a !== document.documentElement; a = a.parentElement) {   // a box that cuts off what sticks out of it
+      const cs = getComputedStyle(a), x = /hidden|clip|auto|scroll/.test(cs.overflowX), y = /hidden|clip|auto|scroll/.test(cs.overflowY), ar = R(a);
+      if ((x && (tr.l < ar.l - 0.5 || tr.r > ar.r + 0.5)) || (y && (tr.t < ar.t - 0.5 || tr.b > ar.b + 0.5))) bad.push(who + ' is cut off by ' + a.tagName.toLowerCase() + '.' + String(a.className).split(' ')[0]);
+    }
+    btns.forEach((b) => { if (b !== own && meet(tr, R(b))) bad.push(who + ' covers the ' + b.dataset.season + ' button'); });
+    if (lr && meet(tr, lr)) bad.push(who + ' covers "See the farm in"');
+    tags.forEach((o) => { if (o !== t && meet(tr, R(o))) bad.push(who + ' touches the other tag'); });
+    if (t.offsetHeight > 2.2 * parseFloat(getComputedStyle(t).fontSize)) bad.push(who + ' is on two lines');
+  }
+  return bad;
+};
+// Pixels: the letters of the buttons must look the same with the tags as without them. Three pictures of the row of buttons (and the room above it, where the tags stand): as it is, with the tags
+// hidden, and with the tags hidden and the letters see-through (the letters are where the last two differ). A letter pixel that differs between the first two is under a tag.
+// `blank` is an empty page that only decodes the pictures.
+async function coveredInk(q, blank) {
+  const clip = await q.evaluate(() => { const r = document.querySelector('#season-switch').getBoundingClientRect(), x = Math.max(0, Math.floor(r.left) - 20); return { x, y: Math.max(0, Math.floor(r.top) - 30), width: Math.min(innerWidth, Math.ceil(r.right) + 20) - x, height: Math.ceil(r.height) + 40 }; });
+  const shoot = async (css) => {
+    const st = css ? await q.addStyleTag({ content: css }) : null;
+    const picture = (await q.screenshot({ clip })).toString('base64');
+    if (st) await st.evaluate((e) => e.remove());
+    return picture;
+  };
+  const a = await shoot(''), b = await shoot('.ss-now,.ss-next{visibility:hidden!important}'), c = await shoot('.ss-now,.ss-next{visibility:hidden!important}.ss-name{color:transparent!important}');
+  return blank.evaluate(async ([A, B, C]) => {
+    const px = async (s) => { const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + s)).blob()); const g = new OffscreenCanvas(bmp.width, bmp.height).getContext('2d'); g.drawImage(bmp, 0, 0); return g.getImageData(0, 0, bmp.width, bmp.height).data; };
+    const far = (x, y, i) => Math.max(Math.abs(x[i] - y[i]), Math.abs(x[i + 1] - y[i + 1]), Math.abs(x[i + 2] - y[i + 2]));
+    const [pa, pb, pc] = [await px(A), await px(B), await px(C)];
+    let ink = 0, covered = 0;
+    for (let i = 0; i < pa.length; i += 4) if (far(pb, pc, i) > 60) { ink++; if (far(pa, pb, i) > 30) covered++; }
+    return { ink, covered };
+  }, [a, b, c]);
+}
+async function tagChecks({ browser, base, errs }) {
+  // which season has which tag, on every kind of day (the page's clock is moved and the farm's day announced, as js/live.js does it after midnight)
+  const q = await open(browser, base, 'index.html', errs, { time: TAG_DAYS[0][0] });
+  for (const [iso, want, what] of TAG_DAYS) {
+    await onDay(q, iso);
+    const got = await tagsOf(q);
+    ok(`${what} (${iso.slice(0, 10)}): the buttons show "${want}"`, got === want, got);
+  }
+  // the real way a page changes day: left open past midnight, js/live.js notices at its next minute and the tags move on their own
+  await onDay(q, '2026-11-08T12:00:00-05:00');
+  await q.clock.setSystemTime(new Date('2026-11-09T00:30:00-05:00'));
+  await q.clock.runFor(61000);
+  const over = await tagsOf(q);
+  ok('a page left open from the last day of fall into the next day: "now" is gone and "next" stays on Winter, by itself', over === 'winter:next=next', over);
+  const clockless = await q.evaluate(() => { const S = WISE_ACRES.seasons; return { between: S.upcoming(new Date(2026, 10, 9)).id, inFall: S.upcoming(new Date(2026, 9, 2)).id, inWinter: S.upcoming(new Date(2026, 11, 1)).id }; });
+  ok('W.seasons.upcoming(date): the season that starts next and is not on (Nov 9: winter, Oct 2: winter, Dec 1: spring)', clockless.between === 'winter' && clockless.inFall === 'winter' && clockless.inWinter === 'spring', JSON.stringify(clockless));
+  await q.context().close();
+
+  // the checks can fail: a tag moved onto the letters of its button is found in the pictures, and a tag moved onto the next button is found by the measuring of the boxes
+  const m = await open(browser, base, 'index.html', errs, { viewport: { width: 1440, height: 900 }, time: TAG_DAYS[0][0] });
+  await m.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}body *{animation:none!important;transition:none!important}#bee-fly,#critters,.bee-fly,.particles{visibility:hidden!important}' });   // (nothing may move between the pictures: the bee and the leaves are hidden)
+  const blank0 = await m.context().newPage();
+  const fine = await coveredInk(m, blank0), fineBoxes = await m.evaluate(TAG_PROBLEMS);
+  await m.addStyleTag({ content: '.ss-next{top:9px!important;right:12px!important}' });   // on the word "Winter"
+  const hit1 = await coveredInk(m, blank0);
+  await m.addStyleTag({ content: '.ss-now{right:-80px!important}' });   // on the Winter button
+  const hit2 = await m.evaluate(TAG_PROBLEMS);
+  ok('the checks can fail: a tag moved onto the letters of its button is found in the pictures (' + hit1.covered + ' of ' + hit1.ink + ' letter pixels), a tag moved onto the next button by the measuring of the boxes, and the page as it is has neither',
+    fine.covered === 0 && fineBoxes.length === 0 && hit1.covered > 20 && hit2.some((x) => /covers the winter button|touches the other tag/.test(x)), JSON.stringify({ fine, fineBoxes, hit1, hit2 }));
+  await m.context().close();
+
+  // the tags in every language, at the sizes of the site: not cut off, not on another button, tag or words (computer, tablet, phone, phone on its side)
+  const SIZES = [[1920, 900], [1440, 900], [1100, 800], [768, 1024], [390, 844], [360, 740], [320, 640], [667, 375], [740, 360]];
+  const STATES = [TAG_DAYS[0][0], TAG_DAYS[2][0], TAG_DAYS[4][0], TAG_DAYS[7][0], TAG_DAYS[10][0], TAG_DAYS[12][0]];   // both tags side by side (fall); only Next, on the last button; Now on the last and Next on the first (winter); only Next, on the first; Now on the first (spring) and Next on the second; Now on the second (summer) and Next on the third
+  for (const lang of ['en', 'es', 'hi', 'vi', 'zh']) {
+    const l = await open(browser, base, 'index.html', errs, { lang: lang === 'en' ? undefined : lang, viewport: { width: 1920, height: 900 }, time: STATES[0] });
+    await l.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}body *{animation:none!important;transition:none!important}#bee-fly,#critters,.bee-fly,.particles{visibility:hidden!important}' });   // (nothing may move between the pictures: the bee and the leaves are hidden)
+    const blank = await l.context().newPage();
+    const probs = []; let looks = 0, ink = 0, covered = 0, pictures = 0;
+    for (const [w, h] of SIZES) {
+      await l.setViewportSize({ width: w, height: h });
+      for (const iso of STATES) {
+        await onDay(l, iso);
+        await l.clock.runFor(200);
+        const bad = await l.evaluate(TAG_PROBLEMS);
+        looks++;
+        if (bad.length) probs.push(w + 'x' + h + ' ' + iso.slice(0, 10) + ': ' + bad.join(', '));
+        if ((w === 1440 || w === 768 || (w === 390 && iso === STATES[0])) && iso !== STATES[1] && iso !== STATES[3]) {   // pictures: every season has had a Now and a Next (the days that repeat a button are left out)
+          const c = await coveredInk(l, blank);
+          ink += c.ink; covered += c.covered; pictures++;
+        }
+      }
+    }
+    ok(`${lang}: the Now and Next tags are not cut off and are not on another button, tag or words, at 1920, 1440, 1100, 768, 390, 360 and 320 px and on two phones on their side (${looks} looks)`, probs.length === 0, probs.slice(0, 3).join(' | '));
+    ok(`${lang}: no tag covers a letter of the buttons (${pictures} pictures at 1440, 768 and 390 px, ${ink} letter pixels, every season with a Now and a Next)`, ink > 500 && covered === 0, ink + ' letter pixels, ' + covered + ' under a tag');
+    await l.context().close();
+  }
+}
 
 // The people in the spring field, as the window shows them now (the first screen: what is below the fold or past the sides is not seen). For each one, in the order of the picture:
 //   x     the middle of its drawing across the hero
@@ -168,11 +291,15 @@ await run('hero', async ({ browser, base, errs }) => {
   ok('page opens on the current season', (await season(p)) === cur, cur);
   ok('switcher is visible with 4 radio buttons', (await p.locator('#season-switch button[role=radio]').count()) === 4 && (await p.locator('#season-switch').isVisible()));
   ok('"now" tag on the current season', (await p.locator(`#season-switch button[data-season="${cur}"] .ss-now`).count()) === 1);
+  const tags0 = await tagsOf(p);
+  ok('on the test day (a day in fall) "now" is on Fall and "next" on Winter, and nowhere else', tags0 === 'fall:now=now winter:next=next', tags0);
+  await tagChecks({ browser, base, errs });
 
   // ---- each season: the scene, the radio state, the season tab, the chooser card
   const want = { spring: 'rgb(255, 221, 228)', summer: 'rgb(225, 230, 255)', fall: 'rgb(255, 227, 194)', winter: 'rgb(220, 236, 250)' };
   for (const s of ['spring', 'summer', 'fall', 'winter']) {
     await choose(p, s);
+    ok(`${s}: the Now and Next tags stay where they are (they follow today's date, not the picture)`, (await tagsOf(p)) === tags0, await tagsOf(p));
     ok(`${s}: data-season and radio state`, (await season(p)) === s && (await p.getAttribute(`#season-switch button[data-season="${s}"]`, 'aria-checked')) === 'true' && (await p.locator('#season-switch [aria-checked=true]').count()) === 1);
     ok(`${s}: pickable things drawn`, (await p.locator('#field [data-pick]').count()) > 10);
     await okSoon(`${s}: season tab synced`, () => p.getAttribute(`#tab-${s}`, 'aria-selected'), (v) => v === 'true');

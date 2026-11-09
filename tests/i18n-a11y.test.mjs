@@ -12,6 +12,7 @@ const HTML_LANG = { en: 'en', es: 'es', hi: 'hi', zh: 'zh-Hans', vi: 'vi' };
 // the language button's name: the word, the language, and (except in Chinese, where the button's own words are the name) the short code on the button, so the words you see are in the name (WCAG 2.5.3)
 const BUTTON = { en: 'Language: English, EN', es: 'Idioma: Español, ES', hi: 'भाषा: हिन्दी, हिं', zh: '语言：中文', vi: 'Ngôn ngữ: Tiếng Việt, VI' };
 const NOW = { es: 'ahora', hi: 'अभी', zh: '现在', vi: 'bây giờ' };
+const NEXT = { es: 'siguiente', hi: 'अगला', zh: '接下来', vi: 'tiếp theo' };   // the other little tag on the season buttons (on the page's test day, a fall day: "now" is on Fall, "next" on Winter)
 const MENU = { es: ['Abrir menú', 'Cerrar menú'], hi: ['मेनू खोलें', 'मेनू बंद करें'], zh: ['打开菜单', '关闭菜单'], vi: ['Mở menu', 'Đóng menu'] };
 
 // the names the page must say in an English voice: any of them left outside a lang="en" element is a miss
@@ -60,6 +61,7 @@ await run('i18n-a11y', async ({ browser, base, errs }) => {
         ok(`${lang}: every language in the menu is written in itself and carries its own lang`, await p.evaluate(() => [...document.querySelectorAll('.lang-list [data-lang]')].every((b) => b.getAttribute('lang') === ({ en: 'en', es: 'es', hi: 'hi', zh: 'zh-Hans', vi: 'vi' })[b.dataset.lang])));
         ok(`${lang}: the menu marks the current language`, await p.evaluate((c) => document.querySelector('.lang-list [aria-checked="true"]').dataset.lang === c, lang));
         ok(`${lang}: the "now" tag on the season buttons is translated`, (await txt(p, '.ss-now')) === NOW[lang], await txt(p, '.ss-now'));
+        ok(`${lang}: the "next" tag on the season buttons is translated`, (await txt(p, '.ss-next')) === NEXT[lang], await txt(p, '.ss-next'));
 
         // text written later by JavaScript is marked too, and an English quotation is left alone
         await p.evaluate(() => {
@@ -70,9 +72,9 @@ await run('i18n-a11y', async ({ browser, base, errs }) => {
 
         // live switches
         await p.evaluate(() => WISE_ACRES.setLang('en'));
-        await okSoon(`${lang}: back to English: no wrapper left in the page text, html lang = en`, () => p.evaluate(() => ({ w: document.querySelectorAll('[data-t] wa-en').length, l: document.documentElement.lang, b: document.querySelector('.lang-btn').getAttribute('aria-label'), n: document.querySelector('.ss-now').textContent })), (v) => v.w === 0 && v.l === 'en' && v.b === BUTTON.en && v.n === 'now');
+        await okSoon(`${lang}: back to English: no wrapper left in the page text, html lang = en`, () => p.evaluate(() => ({ w: document.querySelectorAll('[data-t] wa-en').length, l: document.documentElement.lang, b: document.querySelector('.lang-btn').getAttribute('aria-label'), n: document.querySelector('.ss-now').textContent, x: document.querySelector('.ss-next').textContent })), (v) => v.w === 0 && v.l === 'en' && v.b === BUTTON.en && v.n === 'now' && v.x === 'next');
         await p.evaluate((c) => WISE_ACRES.setLang(c), lang);
-        await okSoon(`${lang}: and forward again`, () => p.evaluate(() => ({ w: document.querySelectorAll('[data-t] wa-en').length, l: document.documentElement.lang })), (v) => v.w > 10 && v.l === HTML_LANG[lang]);
+        await okSoon(`${lang}: and forward again`, () => p.evaluate(() => ({ w: document.querySelectorAll('[data-t] wa-en').length, l: document.documentElement.lang, n: document.querySelector('.ss-now').textContent, x: document.querySelector('.ss-next').textContent })), (v) => v.w > 10 && v.l === HTML_LANG[lang] && v.n === NOW[lang] && v.x === NEXT[lang]);
       }
       await p.context().close();
     }

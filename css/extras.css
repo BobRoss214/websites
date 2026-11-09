@@ -98,9 +98,10 @@ html:is(:lang(hi),:lang(zh)) :is(.map-svg,.toot) text{font-family:var(--display)
 html:lang(hi),html:lang(zh){font-synthesis:weight}
 html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;letter-spacing:0}
 /* Devanagari: letter-spacing pulls the joined top line of each word apart, and labels under 12px are hard to read. Chinese: no slanted (synthetic italic) text, and no lone character on the last line. */
-html:lang(hi) :is(.rc i,.badge-now,.fs-this,.new-ribbon,.nu-now,.rel-eyebrow,.cal-months span,.cal-today span,.way-time,.menu-addons span,.bloom-when,.choose-new-badge,.choose-tag,.fact-label,.fs-now,.gh-banner-a,.gh-banner-b,.loc-tag,.menu-name,.now-badge,.package-flag,.pill,.ss-now,.tag,.v-cat,.who-what,.sched-table th,.map-legend h3,.press h3,.nav-group-title){letter-spacing:0}
+html:lang(hi) :is(.rc i,.badge-now,.fs-this,.new-ribbon,.nu-now,.rel-eyebrow,.cal-months span,.cal-today span,.way-time,.menu-addons span,.bloom-when,.choose-new-badge,.choose-tag,.fact-label,.fs-now,.gh-banner-a,.gh-banner-b,.loc-tag,.menu-name,.now-badge,.package-flag,.pill,.ss-now,.ss-next,.tag,.v-cat,.who-what,.sched-table th,.map-legend h3,.press h3,.nav-group-title){letter-spacing:0}
 html:lang(zh) .nav-group-title{letter-spacing:0}
-html:lang(hi) :is(.rc i,.fs-now,.fs-this,.now-badge,.package-flag,.pill,.ss-now,.tag,.v-cat,.cal-months span,.cal-today span){font-size:12px}
+html:lang(hi) :is(.rc i,.fs-now,.fs-this,.now-badge,.package-flag,.pill,.ss-now,.ss-next,.tag,.v-cat,.cal-months span,.cal-today span){font-size:12px}
+html:lang(hi) .season-switch .ss-name{position:relative;top:.12em}   /* the Hindi words for summer and winter have a tall top (र्, ी): the Now / Next tag, which dips into the top of its button, touched them */
 html:lang(hi) .menu-desc,html:lang(zh) .menu-desc{font-style:normal}
 html:lang(zh) body{text-wrap:pretty}
 .cal-months{grid-template-columns:repeat(12,minmax(0,1fr))}
@@ -686,9 +687,10 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
   .chips{margin-top:.7em}
   .hero-cta{gap:10px}
   .hero-cta .btn-lg{font-size:min(1.2rem,26px);padding:.6em 1.2em}
-  .ss-now{font-size:min(.6875rem,12px)}
+  .ss-now,.ss-next{font-size:min(.6875rem,12px)}
 }
 @media (max-height:34em) and (max-width:47.5em){
+  .season-switch{margin-top:14px}   /* the Now / Next tags stand 20 px above the buttons here: room for them under the top of the hero (they were cut off) */
   body{padding-bottom:68px}
   .action-bar{left:6px;right:6px;bottom:6px;padding:5px;gap:6px;border-radius:18px;box-shadow:0 3px 0 var(--ink)}
   .action-bar .btn{font-size:min(.95rem,17px);padding:.5em .3em;min-height:44px}
@@ -760,9 +762,9 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
   .btn{font-size:min(1.0625rem,18px);padding:.6em .9em}
   .btn-lg,.hero-cta .btn-lg{font-size:min(1.1rem,19px);padding:.4em 1em}
   .hero-cta{gap:8px}
-  .season-switch{flex-wrap:wrap;gap:11px 5px}
+  .season-switch{flex-wrap:wrap;gap:17px 5px}
   .season-switch button{flex:1 1 40%;font-size:min(.82rem,15px);padding-top:.15em;padding-bottom:.15em;padding-block:.15em}
-  .ss-now{top:-11px;right:-2px;font-size:10px;padding:.05em .4em}
+  .ss-now,.ss-next{top:-11px;right:-2px;font-size:10px;padding:.05em .4em}
   .steps-wrap{padding-left:64px}
   .track{width:58px}
   .track-road{left:18px}

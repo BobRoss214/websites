@@ -1305,9 +1305,19 @@
   }
 
   if (switchEl && W.seasonPicker !== false) {
-    const now = W.seasons.current();
+    // The little tags at the top right of the buttons follow today's date, not the picture: "Now" on the season that is on, "Next" on the one that starts next
+    // (between seasons only "Next"). Drawn again when the language changes and when the farm's day changes (wa:day: a page left open overnight, and the tour's pretend days).
+    const markTags = () => {
+      $$('.ss-now, .ss-next', switchEl).forEach((n) => n.remove());
+      if (!W.clockOk()) return;   // no readable clock: no tags
+      const on = W.seasons.live()[0], up = W.seasons.upcoming();
+      buttons.forEach((b) => {
+        if (on && b.dataset.season === on.id) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
+        else if (up && b.dataset.season === up.id) b.insertAdjacentHTML('beforeend', '<span class="ss-next">' + t('next') + '</span>');
+      });
+    };
+    markTags();
     buttons.forEach((b, i) => {
-      if (b.dataset.season === now && W.seasons.live().some((s) => s.id === now)) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
       b.addEventListener('click', () => setSeason(b.dataset.season, true));
       b.addEventListener('keydown', (e) => {
         const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
@@ -1318,7 +1328,8 @@
         next.focus(); setSeason(next.dataset.season, true);
       });
     });
-    doc.addEventListener('wa:lang', () => $$('.ss-now').forEach((n) => { n.textContent = t('now'); }));   // written once above, so it is re-worded when the language changes
+    doc.addEventListener('wa:lang', markTags);
+    doc.addEventListener('wa:day', markTags);
     switchEl.hidden = false;
   }
 
