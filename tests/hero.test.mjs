@@ -115,7 +115,7 @@ async function tagChecks({ browser, base, errs }) {
 
   // the checks can fail: a tag moved onto the letters of its button is found in the pictures, and a tag moved onto the next button is found by the measuring of the boxes
   const m = await open(browser, base, 'index.html', errs, { viewport: { width: 1440, height: 900 }, time: TAG_DAYS[0][0] });
-  await m.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}body *{animation:none!important;transition:none!important}' });
+  await m.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}body *{animation:none!important;transition:none!important}#bee-fly,#critters,.bee-fly,.particles{visibility:hidden!important}' });   // (nothing may move between the pictures: the bee and the leaves are hidden)
   const blank0 = await m.context().newPage();
   const fine = await coveredInk(m, blank0), fineBoxes = await m.evaluate(TAG_PROBLEMS);
   await m.addStyleTag({ content: '.ss-next{top:9px!important;right:12px!important}' });   // on the word "Winter"
@@ -127,11 +127,11 @@ async function tagChecks({ browser, base, errs }) {
   await m.context().close();
 
   // the tags in every language, at the sizes of the site: not cut off, not on another button, tag or words (computer, tablet, phone, phone on its side)
-  const SIZES = [[1920, 900], [1440, 900], [1100, 800], [768, 1024], [390, 844], [360, 740], [667, 375], [740, 360]];
+  const SIZES = [[1920, 900], [1440, 900], [1100, 800], [768, 1024], [390, 844], [360, 740], [320, 640], [667, 375], [740, 360]];
   const STATES = [TAG_DAYS[0][0], TAG_DAYS[2][0], TAG_DAYS[4][0], TAG_DAYS[7][0], TAG_DAYS[10][0], TAG_DAYS[12][0]];   // both tags side by side (fall); only Next, on the last button; Now on the last and Next on the first (winter); only Next, on the first; Now on the first (spring) and Next on the second; Now on the second (summer) and Next on the third
   for (const lang of ['en', 'es', 'hi', 'vi', 'zh']) {
     const l = await open(browser, base, 'index.html', errs, { lang: lang === 'en' ? undefined : lang, viewport: { width: 1920, height: 900 }, time: STATES[0] });
-    await l.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}body *{animation:none!important;transition:none!important}' });
+    await l.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}body *{animation:none!important;transition:none!important}#bee-fly,#critters,.bee-fly,.particles{visibility:hidden!important}' });   // (nothing may move between the pictures: the bee and the leaves are hidden)
     const blank = await l.context().newPage();
     const probs = []; let looks = 0, ink = 0, covered = 0, pictures = 0;
     for (const [w, h] of SIZES) {
@@ -148,7 +148,7 @@ async function tagChecks({ browser, base, errs }) {
         }
       }
     }
-    ok(`${lang}: the Now and Next tags are not cut off and are not on another button, tag or words, at 1920, 1440, 1100, 768, 390, 360 px and on two phones on their side (${looks} looks)`, probs.length === 0, probs.slice(0, 3).join(' | '));
+    ok(`${lang}: the Now and Next tags are not cut off and are not on another button, tag or words, at 1920, 1440, 1100, 768, 390, 360 and 320 px and on two phones on their side (${looks} looks)`, probs.length === 0, probs.slice(0, 3).join(' | '));
     ok(`${lang}: no tag covers a letter of the buttons (${pictures} pictures at 1440, 768 and 390 px, ${ink} letter pixels, every season with a Now and a Next)`, ink > 500 && covered === 0, ink + ' letter pixels, ' + covered + ' under a tag');
     await l.context().close();
   }

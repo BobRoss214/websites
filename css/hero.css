@@ -259,15 +259,16 @@ html[data-calm="light"] .particles,html[data-calm="most"] .particles{opacity:0} 
   .ss-label{display:none}
   .season-switch button{flex:1 1 auto;justify-content:center;min-width:0;padding:.22em .3em .22em .3em;font-size:.82rem;box-shadow:0 2px 0 var(--ink)}
   .ss-ico{width:20px;height:20px}
-  .ss-now,.ss-next{top:-20px;right:-4px;font-size:.6875rem}
-}
-@media (max-width:21.5em){
-  .ss-now,.ss-next{padding:.1em .3em;letter-spacing:0}   /* 320 px: "ahora" and "siguiente" (neighbours in fall) used to touch */
+  .ss-now,.ss-next{top:-20px;right:-4px;font-size:.6875rem;padding:.1em .3em;letter-spacing:.02em}   /* compact: on a narrow button (Verano, Otoño) the long words "siguiente" and "tiếp theo" reached the tag of the button before */
 }
 @media (max-width:22.5em){
+  .ss-now,.ss-next{font-size:.625rem}   /* 360 px and under: a little smaller still */
   .season-switch button{font-size:.76rem;gap:.25em}
   .ss-ico{width:17px;height:17px}
   .hero h1{font-size:clamp(1.7rem,9vw,2.3rem)}   /* "Árboles de Navidad" (es, winter) was cut off at 320px */
+}
+@media (max-width:21.5em){
+  .ss-now,.ss-next{right:-2px;padding:.1em .2em;letter-spacing:0}   /* 320 px: the narrowest button (Mùa hè) is shorter than the words "tiếp theo" and the tag of the button before must not be touched */
 }
 
 /* Nothing should freeze off-screen or half-drawn when motion is turned off. */

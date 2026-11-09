@@ -289,8 +289,8 @@
     },
     {
       id: 'ch2-chips', order: 207, chapter: 2, page: 'index', target: '.hero .chips',
-      title: 'The little chips',
-      text: 'These chips give quick facts. Two stay all year: organic and family farm. In fall a yellow chip says New: u-pick tomatoes and basil, and a pizza chip says when reservations open. They follow the calendar.'
+      title: 'The small labels under the badges',
+      text: 'These small labels give quick facts. Two stay all year: organic and family farm. In fall a yellow label says New: u-pick tomatoes and basil, and a pizza label says when reservations open. They follow the calendar.'
     },
 
     /* ---------------------------------------------------------------- 3. This week and the menu */
