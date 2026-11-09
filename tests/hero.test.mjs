@@ -240,7 +240,9 @@ await run('hero', async ({ browser, base, errs }) => {
     const t = await friendTour(p), spoke = new Set(t.out.map((o) => o.who));
     const bad = t.out.filter((o) => o.who < 0 || (o.good ? o.share < 60 : o.any ? o.share <= 0 : false));
     ok(`friend button, window ${w} x ${h}: pressed ${t.n} times, every friend that speaks is on the screen (60 % or more of its tap area; ${t.out[0].good} of the ${t.n} friends are, ${t.out[0].any} show at all); ${bad.length} do not`, t.n >= 15 && bad.length === 0, JSON.stringify(t.out));
-    ok(`...and it goes round: ${spoke.size} different friends spoke`, spoke.size >= Math.min(3, t.out[0].good || t.out[0].any) && spoke.size <= Math.max(t.out[0].good, t.out[0].any), JSON.stringify([...spoke]));
+    // (when no friend shows at all, the picture being under the bottom edge as at 1366 x 650, the button goes round all of them: it is also the way for someone who cannot see the picture)
+    const shows = t.out[0].any > 0;
+    ok(`...and it goes round: ${spoke.size} different friends spoke${shows ? '' : ' (none shows: all of them, in turn)'}`, shows ? spoke.size >= Math.min(3, t.out[0].good || t.out[0].any) && spoke.size <= Math.max(t.out[0].good, t.out[0].any) : spoke.size === t.n, JSON.stringify([...spoke]));
   }
   await p.setViewportSize({ width: 1440, height: 900 });
   await p.clock.runFor(300);
