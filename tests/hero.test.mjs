@@ -1,7 +1,7 @@
 // order: 350
 // browser: yes
 // covers: js/hero.js, js/season.js, js/content.js, css/hero.css, index.html
-/* The seasonal hero: which season it is on a date, the "See the farm in..." switcher, picking things, the tractor, keyboard use,
+/* The seasonal hero: which season it is on a date, the "See the farm in..." switcher and its little Now and Next tags (on every kind of day, moved by a page left open past midnight, not changed by pressing a season, not cut off or on a letter in five languages at eight sizes), picking things, the tractor, keyboard use,
  * no sideways scrolling from phone to wide screen, reduced motion, and seasonPicker: false. The falling leaves of fall: each one has its three animations (it falls
  * through the hero's own height, it drifts to one side and the other, its drawing tips the way it drifts), they fall from above the top edge to below the bottom edge
  * of the hero whatever its height (the snow too: 1440 x 600), --fh follows the hero's picture when the window does not change (a resize observer), and on a slow computer (the page's own calm mode,
@@ -74,26 +74,24 @@ const TAG_PROBLEMS = () => {
   }
   return bad;
 };
-// Pixels: the letters of a tagged button must look the same with the tag as without it. Three pictures of the name on each tagged button: as it is, with the tags hidden, and with the tags hidden and the
-// letters see-through (the letters are where the last two differ). A letter pixel that differs between the first two is under a tag. `blank` is an empty page that only decodes the pictures.
+// Pixels: the letters of the buttons must look the same with the tags as without them. Three pictures of the row of buttons (and the room above it, where the tags stand): as it is, with the tags
+// hidden, and with the tags hidden and the letters see-through (the letters are where the last two differ). A letter pixel that differs between the first two is under a tag.
+// `blank` is an empty page that only decodes the pictures.
 async function coveredInk(q, blank) {
-  const boxes = await q.evaluate(() => [...document.querySelectorAll('#season-switch button')].filter((b) => b.querySelector('.ss-now,.ss-next')).map((b) => { const r = b.querySelector('.ss-name').getBoundingClientRect(); return { x: Math.max(0, Math.floor(r.left) - 1), y: Math.max(0, Math.floor(r.top) - 1), width: Math.ceil(r.width) + 3, height: Math.ceil(r.height) + 3 }; }));
+  const clip = await q.evaluate(() => { const r = document.querySelector('#season-switch').getBoundingClientRect(), x = Math.max(0, Math.floor(r.left) - 20); return { x, y: Math.max(0, Math.floor(r.top) - 30), width: Math.min(innerWidth, Math.ceil(r.right) + 20) - x, height: Math.ceil(r.height) + 40 }; });
   const shoot = async (css) => {
     const st = css ? await q.addStyleTag({ content: css }) : null;
-    const out = [];
-    for (const clip of boxes) out.push((await q.screenshot({ clip })).toString('base64'));
+    const picture = (await q.screenshot({ clip })).toString('base64');
     if (st) await st.evaluate((e) => e.remove());
-    return out;
+    return picture;
   };
   const a = await shoot(''), b = await shoot('.ss-now,.ss-next{visibility:hidden!important}'), c = await shoot('.ss-now,.ss-next{visibility:hidden!important}.ss-name{color:transparent!important}');
   return blank.evaluate(async ([A, B, C]) => {
     const px = async (s) => { const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + s)).blob()); const g = new OffscreenCanvas(bmp.width, bmp.height).getContext('2d'); g.drawImage(bmp, 0, 0); return g.getImageData(0, 0, bmp.width, bmp.height).data; };
     const far = (x, y, i) => Math.max(Math.abs(x[i] - y[i]), Math.abs(x[i + 1] - y[i + 1]), Math.abs(x[i + 2] - y[i + 2]));
+    const [pa, pb, pc] = [await px(A), await px(B), await px(C)];
     let ink = 0, covered = 0;
-    for (let k = 0; k < A.length; k++) {
-      const [pa, pb, pc] = [await px(A[k]), await px(B[k]), await px(C[k])];
-      for (let i = 0; i < pa.length; i += 4) if (far(pb, pc, i) > 60) { ink++; if (far(pa, pb, i) > 30) covered++; }
-    }
+    for (let i = 0; i < pa.length; i += 4) if (far(pb, pc, i) > 60) { ink++; if (far(pa, pb, i) > 30) covered++; }
     return { ink, covered };
   }, [a, b, c]);
 }
@@ -115,14 +113,27 @@ async function tagChecks({ browser, base, errs }) {
   ok('W.seasons.upcoming(date): the season that starts next and is not on (Nov 9: winter, Oct 2: winter, Dec 1: spring)', clockless.between === 'winter' && clockless.inFall === 'winter' && clockless.inWinter === 'spring', JSON.stringify(clockless));
   await q.context().close();
 
+  // the checks can fail: a tag moved onto the letters of its button is found in the pictures, and a tag moved onto the next button is found by the measuring of the boxes
+  const m = await open(browser, base, 'index.html', errs, { viewport: { width: 1440, height: 900 }, time: TAG_DAYS[0][0] });
+  await m.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}body *{animation:none!important;transition:none!important}' });
+  const blank0 = await m.context().newPage();
+  const fine = await coveredInk(m, blank0), fineBoxes = await m.evaluate(TAG_PROBLEMS);
+  await m.addStyleTag({ content: '.ss-next{top:9px!important;right:12px!important}' });   // on the word "Winter"
+  const hit1 = await coveredInk(m, blank0);
+  await m.addStyleTag({ content: '.ss-now{right:-80px!important}' });   // on the Winter button
+  const hit2 = await m.evaluate(TAG_PROBLEMS);
+  ok('the checks can fail: a tag moved onto the letters of its button is found in the pictures (' + hit1.covered + ' of ' + hit1.ink + ' letter pixels), a tag moved onto the next button by the measuring of the boxes, and the page as it is has neither',
+    fine.covered === 0 && fineBoxes.length === 0 && hit1.covered > 20 && hit2.some((x) => /covers the winter button|touches the other tag/.test(x)), JSON.stringify({ fine, fineBoxes, hit1, hit2 }));
+  await m.context().close();
+
   // the tags in every language, at the sizes of the site: not cut off, not on another button, tag or words (computer, tablet, phone, phone on its side)
   const SIZES = [[1920, 900], [1440, 900], [1100, 800], [768, 1024], [390, 844], [360, 740], [667, 375], [740, 360]];
-  const STATES = [TAG_DAYS[0][0], TAG_DAYS[2][0], TAG_DAYS[4][0], TAG_DAYS[7][0]];   // both tags next to each other, only Next on the last button, Now on the last and Next on the first, only Next on the first
+  const STATES = [TAG_DAYS[0][0], TAG_DAYS[2][0], TAG_DAYS[4][0], TAG_DAYS[7][0], TAG_DAYS[10][0], TAG_DAYS[12][0]];   // both tags side by side (fall); only Next, on the last button; Now on the last and Next on the first (winter); only Next, on the first; Now on the first (spring) and Next on the second; Now on the second (summer) and Next on the third
   for (const lang of ['en', 'es', 'hi', 'vi', 'zh']) {
     const l = await open(browser, base, 'index.html', errs, { lang: lang === 'en' ? undefined : lang, viewport: { width: 1920, height: 900 }, time: STATES[0] });
     await l.addStyleTag({ content: 'html{scroll-behavior:auto!important}.action-bar{display:none!important}body *{animation:none!important;transition:none!important}' });
     const blank = await l.context().newPage();
-    const probs = []; let looks = 0, ink = 0, covered = 0;
+    const probs = []; let looks = 0, ink = 0, covered = 0, pictures = 0;
     for (const [w, h] of SIZES) {
       await l.setViewportSize({ width: w, height: h });
       for (const iso of STATES) {
@@ -131,16 +142,14 @@ async function tagChecks({ browser, base, errs }) {
         const bad = await l.evaluate(TAG_PROBLEMS);
         looks++;
         if (bad.length) probs.push(w + 'x' + h + ' ' + iso.slice(0, 10) + ': ' + bad.join(', '));
-      }
-      if ([1440, 768, 390].includes(w)) {   // the pictures: both tags on, as on a fall day
-        await onDay(l, STATES[0]);
-        await l.clock.runFor(200);
-        const c = await coveredInk(l, blank);
-        ink += c.ink; covered += c.covered;
+        if ((w === 1440 || w === 768 || (w === 390 && iso === STATES[0])) && iso !== STATES[1] && iso !== STATES[3]) {   // pictures: every season has had a Now and a Next (the days that repeat a button are left out)
+          const c = await coveredInk(l, blank);
+          ink += c.ink; covered += c.covered; pictures++;
+        }
       }
     }
     ok(`${lang}: the Now and Next tags are not cut off and are not on another button, tag or words, at 1920, 1440, 1100, 768, 390, 360 px and on two phones on their side (${looks} looks)`, probs.length === 0, probs.slice(0, 3).join(' | '));
-    ok(`${lang}: no tag covers a letter of its own button's name (${ink} letter pixels looked at in pictures at 1440, 768 and 390 px)`, ink > 100 && covered === 0, ink + ' letter pixels, ' + covered + ' under a tag');
+    ok(`${lang}: no tag covers a letter of the buttons (${pictures} pictures at 1440, 768 and 390 px, ${ink} letter pixels, every season with a Now and a Next)`, ink > 500 && covered === 0, ink + ' letter pixels, ' + covered + ' under a tag');
     await l.context().close();
   }
 }

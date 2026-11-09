@@ -101,6 +101,7 @@ html:lang(zh) .hand,html:lang(hi) .hand,html:lang(vi) .hand{font-weight:600;lett
 html:lang(hi) :is(.rc i,.badge-now,.fs-this,.new-ribbon,.nu-now,.rel-eyebrow,.cal-months span,.cal-today span,.way-time,.menu-addons span,.bloom-when,.choose-new-badge,.choose-tag,.fact-label,.fs-now,.gh-banner-a,.gh-banner-b,.loc-tag,.menu-name,.now-badge,.package-flag,.pill,.ss-now,.ss-next,.tag,.v-cat,.who-what,.sched-table th,.map-legend h3,.press h3,.nav-group-title){letter-spacing:0}
 html:lang(zh) .nav-group-title{letter-spacing:0}
 html:lang(hi) :is(.rc i,.fs-now,.fs-this,.now-badge,.package-flag,.pill,.ss-now,.ss-next,.tag,.v-cat,.cal-months span,.cal-today span){font-size:12px}
+html:lang(hi) .season-switch .ss-name{position:relative;top:.12em}   /* the Hindi words for summer and winter have a tall top (र्, ी): the Now / Next tag, which dips into the top of its button, touched them */
 html:lang(hi) .menu-desc,html:lang(zh) .menu-desc{font-style:normal}
 html:lang(zh) body{text-wrap:pretty}
 .cal-months{grid-template-columns:repeat(12,minmax(0,1fr))}
