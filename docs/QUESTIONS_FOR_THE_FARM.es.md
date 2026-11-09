@@ -65,7 +65,7 @@ Respuesta:
 
 ### Pregunta 6
 
-**¿Ofrecen tomates y albahaca de cosecha propia este otoño (todos los fines de semana, de finales de septiembre a octubre)?**
+**¿Ofrecen tomates y albahaca de cosecha propia este otoño (todos los fines de semana, de mediados de septiembre a principios de noviembre)?**
 
 Id en el panel: d48
 

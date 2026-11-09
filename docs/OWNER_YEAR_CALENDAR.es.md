@@ -124,7 +124,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 - **Por sí solo:** el año del pie de página cambia de 2026 a 2027 (`data-year`), y la cinta "New this year" se oculta (`data-until="2026-12-31"`). Nada en los datos para buscadores ni en el mapa del sitio tiene una fecha que se venza.
 - **Ustedes, a más tardar el vie 18 dic 2026:** respondan **d66** (¿dejar de decir "new this year" desde enero?) y **d24** (precios, calendario y menú de otoño 2027). Ocho lugares todavía dicen que los tomates son nuevos, y siete lugares escriben "2026" en una etiqueta (otras dos etiquetas se ocultan solas en otoño). Si van a estar cerrados el 1 de enero, agréguenlo a `closures`.
-- **Dónde:** "new": `index.html`, en `data-t="td6ecd1d8"`, `data-t="t1c989256"`, `data-t="tedce5b9f"`, `data-t="tbc119a85"`, `data-t="t4eb3e326"`, `data-t="t247dcbc5"` y `data-t="t398007b0"`, y `pages/pumpkin-patch.html`, en `New this year. Certified organic cherry tomatoes`. El año: `python3 tools/check_facts.py year` enumera todos los lugares (README, sección "A new year, a new season").
+- **Dónde:** "new": `index.html`, en `data-t="td6ecd1d8"`, `data-t="t850262cb"`, `data-t="t3e399cd9"`, `data-t="tbc119a85"`, `data-t="t6af84b8c"`, `data-t="tf6fccf62"` y `data-t="t96e7263a"`, y `pages/pumpkin-patch.html`, en `New this year. Certified organic cherry tomatoes`. El año: `python3 tools/check_facts.py year` enumera todos los lugares (README, sección "A new year, a new season").
 - **Si se olvidan:** en 2027 las preguntas frecuentes todavía dicen "Yes, and it's new this year!", y las páginas dicen "Fall 2026 prices" todo el invierno, la primavera y el verano. Es cierto, pero se ve viejo.
 
 ## 4. El calendario de 2027

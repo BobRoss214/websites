@@ -120,7 +120,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 - **By itself:** the footer year turns from 2026 to 2027 (`data-year`), and the "New this year" ribbon hides (`data-until="2026-12-31"`). Nothing in the search-engine data or the sitemap has a date that runs out.
 - **You, by Fri Dec 18, 2026:** answer **d66** (stop saying "new this year" from January?) and **d24** (Fall 2027 prices, schedule and menu). Eight places still say the tomatoes are new, and seven places write "2026" in a label (two more labels hide themselves in the fall). If you are closed on Jan 1, add it to `closures`.
-- **Where:** "new": `index.html` at `data-t="td6ecd1d8"`, `data-t="t1c989256"`, `data-t="tedce5b9f"`, `data-t="tbc119a85"`, `data-t="t4eb3e326"`, `data-t="t247dcbc5"` and `data-t="t398007b0"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`. The year: `python3 tools/check_facts.py year` lists every place (README, section "A new year, a new season").
+- **Where:** "new": `index.html` at `data-t="td6ecd1d8"`, `data-t="t850262cb"`, `data-t="t3e399cd9"`, `data-t="tbc119a85"`, `data-t="t6af84b8c"`, `data-t="tf6fccf62"` and `data-t="t96e7263a"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`. The year: `python3 tools/check_facts.py year` lists every place (README, section "A new year, a new season").
 - **If you forget:** in 2027 the FAQ still says "Yes, and it's new this year!", and the pages say "Fall 2026 prices" all winter, spring and summer. That is true but looks old.
 
 ## 4. The calendar, 2027

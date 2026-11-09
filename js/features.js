@@ -693,7 +693,7 @@
     { id: 'blueberries', name: T('Blueberries'), icon: 'blueberry', vb: '0 0 90 92', wins: seasonRange('summer') },
     { id: 'sunflowers', name: T('Sunflowers'), icon: 'sunflower', vb: '0 0 120 120', wins: seasonRange('summer') },
     { id: 'pumpkins', name: T('Pumpkins'), icon: 'pumpkin', vb: '0 0 110 92', wins: seasonRange('fall') },
-    { id: 'tomatoes', name: T('Tomatoes & basil'), icon: 'tomato', vb: '0 0 64 64', color: '#e5334b', wins: (y) => [[new Date(y, 8, 25), new Date(y, 9, 31)]] },
+    { id: 'tomatoes', name: T('Tomatoes & basil'), icon: 'tomato', vb: '0 0 64 64', color: '#e5334b', wins: (y) => [[new Date(y, 8, 13), new Date(y, 10, 8)]] },   // the same days as the fall season in js/season.js
     { id: 'flowers', name: T('U-cut flowers'), icon: 'bloom', vb: '0 0 60 60', color: '#e0509c', wins: (y) => [...seasonRange('spring')(y), ...seasonRange('summer')(y), [new Date(y, 8, 1), new Date(y, 10, 8)]] },   // spring and summer picking, then September until the first frost
     { id: 'trees', name: T('Christmas trees'), icon: 'fir', vb: '0 0 80 110', wins: seasonRange('winter'), where: T('At The GreenHouse') },
   ];
