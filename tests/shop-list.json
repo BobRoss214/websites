@@ -79,7 +79,7 @@
   {"slug":"barrel-train","group":12,"name":"Barrel train","price":"$3","unknown":false,"free":false,"amounts":[3],"options":[],"unit":"","note":"Ages 12 and under only. These words come from the farm's older page and stay","noteAmounts":[],"symbols":["barrel-train"],"oldPage":"index.html at commit e3a195f"},
   {"slug":"corn-pit","group":12,"name":"Corn pit","price":"$4","unknown":false,"free":false,"amounts":[4],"options":[],"unit":"","note":"Buy one, get one free on Thursdays with reservations. These words come from the farm's older page and stay","noteAmounts":[],"symbols":["p-corn-cob"],"oldPage":"index.html at commit e3a195f"},
   {"slug":"scavenger-hunt","group":12,"name":"Scavenger hunt","price":"Free","unknown":false,"free":true,"amounts":[],"options":[],"unit":"","note":"","noteAmounts":[],"symbols":["p-scavenger-hunt"]},
-  {"slug":"sunn-hemp-maze","group":12,"name":"Small sunn hemp maze","price":"Free","unknown":false,"free":true,"amounts":[],"options":[],"unit":"","note":"","noteAmounts":[],"symbols":["p-sunn-hemp-mini"]},
+  {"slug":"sunn-hemp-maze","group":12,"name":"Sunn hemp maze","price":"Free","unknown":false,"free":true,"amounts":[],"options":[],"unit":"","note":"","noteAmounts":[],"symbols":["p-sunn-hemp-mini"]},
   {"slug":"upick","group":12,"name":"U-pick tomatoes & basil","price":"tomatoes $4.50 a pound, basil $1 a stem","unknown":false,"free":false,"amounts":[4.5,1],"options":[{"amount":4.5,"label":"tomatoes","unit":"a pound"},{"amount":1,"label":"basil","unit":"a stem"}],"unit":"","note":"Every weekend, late September through October. These words come from the farm's older page and stay","noteAmounts":[],"symbols":["p-upick"],"oldPage":"index.html at commit e3a195f"}
  ],
  "extras": [

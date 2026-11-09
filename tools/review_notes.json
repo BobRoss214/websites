@@ -121,7 +121,7 @@
   },
   {
    "lang": "zh",
-   "ids": ["t4b6d3990", "tb89adc3c", "t49c35609", "tb2ff1037", "t46f6aa3b", "td6ecd1d8", "t0b5eaa9e"],
+   "ids": ["t4b6d3990", "tb89adc3c", "t49c35609", "tb2ff1037", "t46f6aa3b", "td6ecd1d8", "tf7a7ad06"],
    "when": "鬼屋小径",
    "ask": "“Haunted trail” is a spooky walk in the dark on the farm. “鬼屋小径” is “haunted house path”, and a trail is not a house.",
    "suggest": "“闹鬼小径” or “鬼影小径”"
@@ -161,7 +161,7 @@
   },
   {
    "lang": "vi",
-   "ids": ["tfd41a510", "t0b5eaa9e", "t910a3c0c", "t277ccb16"],
+   "ids": ["tfd41a510", "tf7a7ad06", "t910a3c0c", "t277ccb16"],
    "when": "xe kéo",
    "ask": "“Wagon ride” is the ride on a wagon pulled by a tractor. “xe kéo” means “pulled cart”. Natural, or is there a better word?"
   },

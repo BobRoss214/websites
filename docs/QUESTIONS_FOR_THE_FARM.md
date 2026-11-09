@@ -118,11 +118,11 @@ Answer:
 
 ### Question 11
 
-**Is the maze this year a small sunn hemp maze?**
+**Is the maze this year a sunn hemp maze?**
 
 Dashboard id: d07
 
-Why it matters: The site calls it a "small sunn hemp maze" but the farm map calls it a "corn maze", so they disagree.
+Why it matters: The site calls it a "sunn hemp maze" but the farm map calls it a "corn maze", so they disagree.
 
 Answer:
 
@@ -829,7 +829,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 **Question 5: Is there a haunted trail at the farm this fall?**
 
 - **If Yes:** no change.
-- **If No:** remove it from `index.html` at `data-t="td6ecd1d8"`, `data-t="tb2ff1037"`, `data-t="t4b6d3990"`, `data-t="tb89adc3c"`, `data-t="t49c35609"` and `data-t="t0b5eaa9e"` (the "Haunted Trail" card is `index.html` at `class="card c-lilac reveal"`; `data-t="t49c35609"` is a row of the season table, `data-t="t0b5eaa9e"` a bullet list). Remove "A haunted trail on fall visits" from `pages/first-visit.html` at `<li>A haunted trail on fall visits</li>` and `pages/pumpkin-patch.html` at `<li>A haunted trail on fall visits</li>` (generated pages follow on rebuild). Remove the map point by re-marking the map and running `python3 tools/farm_map.py tools/saved-map.json` (the point is written to `js/farm-map-data.js` at `"label": "Haunted trail"`; do not edit that file by hand).
+- **If No:** remove it from `index.html` at `data-t="td6ecd1d8"`, `data-t="tb2ff1037"`, `data-t="t4b6d3990"`, `data-t="tb89adc3c"`, `data-t="t49c35609"` and `data-t="tf7a7ad06"` (the "Haunted Trail" card is `index.html` at `class="card c-lilac reveal"`; `data-t="t49c35609"` is a row of the season table, `data-t="tf7a7ad06"` a bullet list). Remove "A haunted trail on fall visits" from `pages/first-visit.html` at `<li>A haunted trail on fall visits</li>` and `pages/pumpkin-patch.html` at `<li>A haunted trail on fall visits</li>` (generated pages follow on rebuild). Remove the map point by re-marking the map and running `python3 tools/farm_map.py tools/saved-map.json` (the point is written to `js/farm-map-data.js` at `"label": "Haunted trail"`; do not edit that file by hand).
 
 **Question 6: Are you offering u-pick tomatoes and basil this fall (every weekend, late September through October)?**
 
@@ -855,13 +855,13 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 
 **Question 10: Does the scavenger hunt still happen at the farm?**
 
-- **If Yes:** put it back where commit 2b09373 removed it (`git show 2b09373 -U0` shows each line): `index.html` at `data-t="tb6c0c855"` (2 places) and `data-t="tb2ff1037"` (the three "Playgrounds, animals ..." lines on the farm cards), `index.html` at `data-t="t6933d769"` (the "Every reservation includes" list), `index.html` at `data-t="tb604c4f8"` (school-tour list, add "Educational scavenger hunt"), `index.html` at `data-t="tf7ddcce0"` (party text), `index.html` at `data-t="t7eaa8aa3"` and `data-t="t7f553727"` (only if corporate events stay), `pages/first-visit.html` at `A farm reservation includes` and `<li>Meet the animals</li>`, `pages/pumpkin-patch.html` at `<li>A small sunn hemp maze</li>` and `pages/school-field-trips.html` at `<li>Meet and feed the farm animals</li>` and `<li>Unlimited access to playground areas</li>`.
+- **If Yes:** put it back where commit 2b09373 removed it (`git show 2b09373 -U0` shows each line): `index.html` at `data-t="tb6c0c855"` (2 places) and `data-t="tb2ff1037"` (the three "Playgrounds, animals ..." lines on the farm cards), `index.html` at `data-t="t6933d769"` (the "Every reservation includes" list), `index.html` at `data-t="tb604c4f8"` (school-tour list, add "Educational scavenger hunt"), `index.html` at `data-t="tf7ddcce0"` (party text), `index.html` at `data-t="t7eaa8aa3"` and `data-t="t7f553727"` (only if corporate events stay), `pages/first-visit.html` at `A farm reservation includes` and `<li>Meet the animals</li>`, `pages/pumpkin-patch.html` at `<li>A sunn hemp maze</li>` and `pages/school-field-trips.html` at `<li>Meet and feed the farm animals</li>` and `<li>Unlimited access to playground areas</li>`.
 - **If No:** no change.
 
-**Question 11: Is the maze this year a small sunn hemp maze?**
+**Question 11: Is the maze this year a sunn hemp maze?**
 
-- **If it is a small sunn hemp maze:** change the label "Corn maze" by re-marking it in the Farm Map Marker and running `python3 tools/farm_map.py tools/saved-map.json` (it is written to `js/farm-map-data.js` at `"label": "Corn maze"`; do not edit that file by hand; text labels are translated like other names, see the README). Delete the maze sentence of the README row "Farm map".
-- **If it is a corn maze:** change "small sunn hemp maze" in `index.html` at `data-t="t447b4ee9"`, `<li data-t="t39573dd5">`, `data-t="t8c64d6c3"`, `<th data-t="t39573dd5"`, `<h4 data-t="t39573dd5"` (the Shop card) and `data-t="t0b5eaa9e"`, and `pages/pumpkin-patch.html` at `<li>A small sunn hemp maze</li>`.
+- **If it is a sunn hemp maze:** change the label "Corn maze" by re-marking it in the Farm Map Marker and running `python3 tools/farm_map.py tools/saved-map.json` (it is written to `js/farm-map-data.js` at `"label": "Corn maze"`; do not edit that file by hand; text labels are translated like other names, see the README). Delete the maze sentence of the README row "Farm map".
+- **If it is a corn maze:** change "sunn hemp maze" in `index.html` at `data-t="te1a07fa0"`, `<li data-t="t38498f20">`, `data-t="ta04da337"`, `<th data-t="t38498f20"`, `<h4 data-t="t38498f20"` (the Shop card) and `data-t="tf7a7ad06"`, and `pages/pumpkin-patch.html` at `<li>A sunn hemp maze</li>`.
 
 **Question 12: Will Christmas trees be sold at The GreenHouse (5503 Poplin Rd), starting the Friday after Thanksgiving?**
 

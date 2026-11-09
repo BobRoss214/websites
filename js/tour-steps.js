@@ -329,7 +329,7 @@
       choices: seasonWalk({
         spring: 'Spring. The farm card shows a strawberry: “U-pick organic strawberries, plus u-cut flowers”. The button is “Reserve the farm”. The GreenHouse card never changes.',
         summer: 'Summer. A blueberry: “U-pick organic blueberries, plus u-cut sunflowers and flowers”. The button stays “Reserve the farm”.',
-        fall: 'Fall. A pumpkin. The card adds wagon rides, the corn pit, a small sunn hemp maze and a haunted trail. A “See prices” button joins “Reserve the farm”.',
+        fall: 'Fall. A pumpkin. The card adds wagon rides, the corn pit, a sunn hemp maze and a haunted trail. A “See prices” button joins “Reserve the farm”.',
         winter: 'Winter. A Christmas tree. “Picking is seasonal”, with strawberries next. The button ‘Reserve the farm’ becomes “Tell me when”, and a new line says “Christmas trees are at The GreenHouse”.'
       }),
       before: seasonsBegin, after: seasonsEnd
@@ -387,7 +387,7 @@
       choices: seasonWalk({
         spring: 'Spring, six cards. “U-Pick Strawberries” leads, then “Meet the Animals”, “Playgrounds”, “Shaded Picnic Patch”, “Concessions & Local Goods” and “Wagon Ride & Barrel Train”.',
         summer: 'Summer, six cards. “U-Pick Blueberries” takes the place of the strawberries. The other five stay.',
-        fall: 'Fall, eight cards. “U-Pick Pumpkins” takes over. New: “Haunted Trail” and “Small Sunn Hemp Maze”. The wagon card becomes “Wagon, Corn Pit & Barrel Train”.',
+        fall: 'Fall, eight cards. “U-Pick Pumpkins” takes over. New: “Haunted Trail” and “Sunn Hemp Maze”. The wagon card becomes “Wagon, Corn Pit & Barrel Train”.',
         winter: 'Winter, only three cards, each marked “At The GreenHouse”: “Christmas Trees”, “Playground & Goats” and “Pizza, Ice Cream & Drinks”. The farm cards are gone.'
       }),
       before: seasonsBegin, after: seasonsEnd

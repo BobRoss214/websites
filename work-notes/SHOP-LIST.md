@@ -106,7 +106,7 @@ A price is `$5`, `$3 small, $4 large`, `$.84 a pound`, `$15 to $17` (a range), `
 - barrel-train | Barrel train | $3 | Ages 12 and under only. These words come from the farm's older page and stay | reuse the existing `#barrel-train`
 - corn-pit | Corn pit | $4 | Buy one, get one free on Thursdays with reservations. These words come from the farm's older page and stay | a small corn cob drawing (`p-corn-cob`, made for the Shop) Better: skip an icon for this one and use `p-corn-cob`.
 - scavenger-hunt | Scavenger hunt | Free | | a magnifying glass over a paw print
-- sunn-hemp-maze | Small sunn hemp maze | Free | | a small green plant with yellow flowers (`p-sunn-hemp-mini`, made for the Shop)
+- sunn-hemp-maze | Sunn hemp maze | Free | | a small green plant with yellow flowers (`p-sunn-hemp-mini`, made for the Shop)
 - upick | U-pick tomatoes & basil | tomatoes $4.50 a pound, basil $1 a stem | Every weekend, late September through October. These words come from the farm's older page and stay | a basil leaf + a tomato
 
 ## Cards the page also shows that are NOT in this list
@@ -115,7 +115,7 @@ Five cards were already on the farm's older page, before the Shop was built, and
 
 ## Decisions (24 Oct 2026) that the list now follows
 
-1. Card names: where the page and the list only differed in wording the page's name wins: "Waxhaw Creamery ice cream", "Local mums", "NC pumpkins", "Small sunn hemp maze", "U-pick tomatoes & basil", and the heading of group 12, "Farm visit, rides & picking". The soap card is just "Soap" (no photo says handmade).
+1. Card names: where the page and the list only differed in wording the page's name wins: "Waxhaw Creamery ice cream", "Local mums", "NC pumpkins", "Sunn hemp maze", "U-pick tomatoes & basil", and the heading of group 12, "Farm visit, rides & picking". The soap card is just "Soap" (no photo says handmade).
 2. Pizza: the prices ($15 to $17, +$9, +$3) and the opening hours shown in the pizza group come from the farm's own older page and stay. The old rule "pizza shows no price" is dropped.
 3. Taken out on purpose: the cards "Organic strawberry lemonade" and "Apple cider" (their words are a note on the Slushie card), the "16 oz $32.99" elderberry syrup line, the kettle corn note "big bag", "sparkling juice" after Izze, and the candle weight. The test makes sure "big bag", "handmade" (soap) and "sparkling juice" do not come back.
 4. Pumpkins: the card's price is $0.84 a pound; the note names the barn display's $1.50 (mini) and $4.00 (medium). No other amount.

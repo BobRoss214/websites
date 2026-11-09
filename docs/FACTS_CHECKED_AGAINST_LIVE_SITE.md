@@ -86,7 +86,7 @@ These are not changes. The owner decides.
 - A main phone number: 704-628-6232 (C5).
 - Exact opening dates: pumpkin season from 13 September (C9), and the dates when no-pizza reservations open (C7).
 - Exceptional Children Day: Tuesday 6 October, 10 am – 1 pm (C6).
-- A zip line, climbing and swings: S15 said "a corn maze, climbing activities, swings, and a zip line in their recycled tire playground and wooded park". That wording seems to come from review sites, not the farm. Our site says "a small sunn hemp maze" and the playgrounds, and no zip line.
+- A zip line, climbing and swings: S15 said "a corn maze, climbing activities, swings, and a zip line in their recycled tire playground and wooded park". That wording seems to come from review sites, not the farm. Our site says "a sunn hemp maze" and the playgrounds, and no zip line.
 - Busy-hour note for pizza reservations: S10 gave this text, which reads like the farm's own FAQ: "When reservations first open there is often excessive traffic that results in temporary "error" messages. This does not mean reservations are full." Our site has no such note.
 - A scavenger hunt on the farm visit: S1 says a farm reservation includes "access to the pumpkin and flower fields, animals, playgrounds, a small maze, scavenger hunt and shaded picnic areas". Our site mentions a scavenger hunt nowhere (for school tours see C8).
 

@@ -2181,7 +2181,7 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 - Owner fact (no sensible default): yes (only she knows what each word means on her farm)
 - Default: none. If she does not answer, B: nothing breaks.
 - Depends on: d07 (the maze line must use the name she picks), d44 (the corn pit line must agree with the Thursday offer), d02 (the Party Patch is the private party area in the group prices), d16 (farm fun is what both package prices include), d45 (ages).
-- Note: All seven words are on the site today. A few sit next to a short line (the maze card says "Wander through our little maze on fall visits."; Halfzies says "pepperoni on half"), but none has a plain line of its own that says what it is. This question asks for one in her words. Where each word first appears: corn pit, index.html at `data-t="t447b4ee9"` (price $4 per person); barrel train, index.html at `data-t="tea6897bf"` (ages 12 and under, $3 per child); small sunn hemp maze, index.html at `data-t="t447b4ee9"`; Halfzies, index.html at `data-t="te2b6ab0c"` (next to it: "homemade dough, tomato sauce, cheese, pepperoni on half"); Party Patch, index.html at `data-t="t756d2aeb"` (the tab calls it "Private party patch", index.html at `data-t="t91aeca4c"`); u-cut, index.html at `data-t="t0e96fa27"`; farm fun, index.html at `data-t="t9c63bc47"`.
+- Note: All seven words are on the site today. A few sit next to a short line (the maze card says "Wander through our little maze on fall visits."; Halfzies says "pepperoni on half"), but none has a plain line of its own that says what it is. This question asks for one in her words. Where each word first appears: corn pit, index.html at `data-t="te1a07fa0"` (price $4 per person); barrel train, index.html at `data-t="tea6897bf"` (ages 12 and under, $3 per child); sunn hemp maze, index.html at `data-t="te1a07fa0"`; Halfzies, index.html at `data-t="te2b6ab0c"` (next to it: "homemade dough, tomato sauce, cheese, pepperoni on half"); Party Patch, index.html at `data-t="t756d2aeb"` (the tab calls it "Private party patch", index.html at `data-t="t91aeca4c"`); u-cut, index.html at `data-t="t0e96fa27"`; farm fun, index.html at `data-t="t9c63bc47"`.
 
 **A. I will send one line for each**
 
@@ -2280,7 +2280,7 @@ One spelling and one name everywhere, matching Google and Facebook.
 
 ### d07. Name of the maze
 
-- In plain words: The site says "Corn maze" in some places and "Small Sunn Hemp Maze" in others.
+- In plain words: The site says "Corn maze" in some places and "Sunn Hemp Maze" in others.
 - Doc question: Q11
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): yes
@@ -2289,16 +2289,16 @@ One spelling and one name everywhere, matching Google and Facebook.
 
 **A. Corn maze**
 
-- Everywhere "Corn maze". The farm map already says "Corn maze" (js/farm-map-data.js at `"label": "Corn maze"`, written from tools/saved-map.json at `"label": "Corn maze"`). Change the text that says sunn hemp: index.html at `data-t="t447b4ee9"`, `<li data-t="t39573dd5">`, `data-t="t8c64d6c3"` (heading), `<th data-t="t39573dd5"` (table row), `<h4 data-t="t39573dd5"` (Shop card) and `data-t="t0b5eaa9e"`, and pages/pumpkin-patch.html at `<li>A small sunn hemp maze</li>`. The line index.html at `data-t="tcc37b939"` ("Wander through our little maze") can stay.
+- Everywhere "Corn maze". The farm map already says "Corn maze" (js/farm-map-data.js at `"label": "Corn maze"`, written from tools/saved-map.json at `"label": "Corn maze"`). Change the text that says sunn hemp: index.html at `data-t="te1a07fa0"`, `<li data-t="t38498f20">`, `data-t="ta04da337"` (heading), `<th data-t="t38498f20"` (table row), `<h4 data-t="t38498f20"` (Shop card) and `data-t="tf7a7ad06"`, and pages/pumpkin-patch.html at `<li>A sunn hemp maze</li>`. The line index.html at `data-t="tcc37b939"` ("Wander through our little maze") can stay.
 - README rows "Farm map" and the maze mention (README.md, section "What's interactive", the item "What's on the farm").
-- Strings: 5 ids change (t0b5eaa9e, t39573dd5, t447b4ee9, t8c64d6c3, tc2132019) but two of them end up as the same words, "Corn maze", so 4 new sentences x 4 translations; the JS strings "Corn maze" and "Corn maze sign" stay
+- Strings: 5 ids change (tf7a7ad06, t38498f20, te1a07fa0, ta04da337, t1ba5d868) but two of them end up as the same words, "Corn maze", so 4 new sentences x 4 translations; the JS strings "Corn maze" and "Corn maze sign" stay
 - Tests: farm-seasons: tests/farm-seasons.test.mjs at `haunted trail and the maze only in fall` looks for /Maze/ (capital M) in the fall text: change it to /maze/i if the heading becomes "Corn maze"
 
-**B. Small Sunn Hemp Maze**
+**B. Sunn Hemp Maze**
 
-- Everywhere "Small sunn hemp maze". The text already says it (5 ids). Change the map: in the Farm Map Marker (or by hand in tools/saved-map.json at `"label": "Corn maze"`) change the label "Corn maze" to "Small sunn hemp maze", then python3 tools/farm_map.py tools/saved-map.json (rewrites js/farm-map-data.js at `"label": "Corn maze"`). Check that the legend and the map sign (js/features.js at `T('Corn maze sign')`) say it too.
+- Everywhere "Sunn hemp maze". The text already says it (5 ids). Change the map: in the Farm Map Marker (or by hand in tools/saved-map.json at `"label": "Corn maze"`) change the label "Corn maze" to "Sunn hemp maze", then python3 tools/farm_map.py tools/saved-map.json (rewrites js/farm-map-data.js at `"label": "Corn maze"`). Check that the legend and the map sign (js/features.js at `T('Corn maze sign')`) say it too.
 - The picture of the maze on the map (js/map-art.js cornMaze) is a drawing: no change.
-- Strings: 1 to 2 JS strings x 4 translations (new "Small sunn hemp maze"; "Corn maze sign" if you rename it); the 5 UI ids stay
+- Strings: 1 to 2 JS strings x 4 translations (new "Sunn hemp maze"; "Corn maze sign" if you rename it); the 5 UI ids stay
 - Tests: map (legend text), i18n; farm-seasons unchanged
 
 **C. A different name**
@@ -2488,7 +2488,7 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 **B. No haunted trail this fall**
 
-- Take the haunted trail out: index.html at `data-t="td6ecd1d8"` (hero line), `data-t="tb2ff1037"` (farm card), `data-t="t4b6d3990"` (the "Haunted Trail" card in the fall panel), `data-t="t49c35609"` (row in the "Season by season" table) and `data-t="t0b5eaa9e"` (fall tab line); pages/first-visit.html at `<li>A haunted trail on fall visits</li>`; pages/pumpkin-patch.html at `<li>A haunted trail on fall visits</li>`. 7 UI ids x 4 translations (t0b5eaa9e, t46f6aa3b, t49c35609, t4b6d3990, tb2ff1037, tb89adc3c, td6ecd1d8).
+- Take the haunted trail out: index.html at `data-t="td6ecd1d8"` (hero line), `data-t="tb2ff1037"` (farm card), `data-t="t4b6d3990"` (the "Haunted Trail" card in the fall panel), `data-t="t49c35609"` (row in the "Season by season" table) and `data-t="tf7a7ad06"` (fall tab line); pages/first-visit.html at `<li>A haunted trail on fall visits</li>`; pages/pumpkin-patch.html at `<li>A haunted trail on fall visits</li>`. 7 UI ids x 4 translations (tf7a7ad06, t46f6aa3b, t49c35609, t4b6d3990, tb2ff1037, tb89adc3c, td6ecd1d8).
 - Map: delete the "Haunted trail" mark in the Farm Map Marker (tools/saved-map.json at `"label": "Haunted trail"`) and run python3 tools/farm_map.py tools/saved-map.json (rewrites js/farm-map-data.js at `"label": "Haunted trail"`). The legend label (js/features.js at `T('Haunted trail')`) can stay.
 - Strings: 7 UI ids x 4 translations
 - Tests: farm-seasons MUST change: tests/farm-seasons.test.mjs at `haunted trail and the maze only in fall` requires "Haunted" in the fall text (keep only /Maze/); map (legend and marks)
