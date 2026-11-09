@@ -333,8 +333,6 @@ step('R03', 'Wed Oct 7, 2026 to Wed Nov 4, 2026: lines hide one by one', { group
     ['pizza row Oct 6', (v) => rowDates(v).includes('Oct 6'), '2026-10-11'],
     ['pizza row Oct 13', (v) => rowDates(v).includes('Oct 13'), '2026-10-18'],
     ['pizza row Oct 20', (v) => rowDates(v).includes('Oct 20'), '2026-10-25'],
-    ['the "New: u-pick tomatoes & basil" chip', (v) => shown(v, 'New: u-pick tomatoes'), '2026-10-31'],
-    ['the "New" badge on the tomatoes line', (v) => v.tags.includes('NEW'), '2026-10-31'],
     ['Home School Day', (v) => shown(v, 'Home School Day'), '2026-11-03'],
   ];
   const probes = [];
@@ -377,6 +375,7 @@ step('R05', 'Mon Nov 9, 2026: the fall season is over', { quick: true }, async (
   S.check('on a phone the top bar is not shown (the calendar does not say so)', m2es.topbarShown2 === false, String(m2es.topbarShown2));
   S.check('Mon Nov 9: the hero line is the all-year one and the fall look stays', /^Pick strawberries in spring/.test(m2.sub) && m2.season === 'fall', m2.sub.slice(0, 60) + ' / ' + m2.season);
   S.check('Mon Nov 9: the "Reserve" buttons keep showing', reserveTexts(m2).some((t) => /^Reserve/i.test(t)), reserveTexts(m2).join());
+  S.check('the "New: u-pick tomatoes & basil" chip and the "New" badge end with the fall season (they have no last day of their own): shown on Sun Nov 8, gone on Mon Nov 9', shown(sun, 'New: u-pick tomatoes') && sun.tags.includes('NEW') && !shown(m2, 'New: u-pick tomatoes') && !m2.tags.includes('NEW'), 'Nov 8: ' + shown(sun, 'New: u-pick tomatoes') + ' ' + sun.tags.includes('NEW') + ', Nov 9: ' + shown(m2, 'New: u-pick tomatoes') + ' ' + m2.tags.includes('NEW'));
   S.check('Mon Nov 9: the old pizza rows are gone (only a row the owner added for later can show)', !rowDates(m2).some((d) => ['Oct 6', 'Oct 13', 'Oct 20', 'Oct 27'].includes(d)), rowDates(m2).join());
   const pump = await dayAt(S, '2026-11-09', '12:00', { page: 'pumpkin-patch.html' });
   const pump8 = S.quick ? sun : await dayAt(S, '2026-11-08', '12:00', { page: 'pumpkin-patch.html' });
@@ -539,20 +538,21 @@ step('R19', 'Thu Aug 12, 2027: the fall look starts, a month before the season',
   S.check('the publish check is happy with the two matching last days (the calendar: they must match)', cf.code === 0, cf.out.split('\n').slice(-2).join(' | ').slice(0, 160));
 });
 
-step('R20', 'Mon Aug 23, 2027 to Sat Sep 25, 2027: the "This week" box counts down by itself', { group: 'itself' }, async (S) => {
+step('R20', 'Mon Aug 23, 2027 to Sun Sep 12, 2027: the "This week" box counts down by itself', { group: 'itself' }, async (S) => {
   S.owner.setting('week', '{}');
-  const [a, b, c, d] = await Promise.all([dayAt(S, '2027-08-22', '12:00'), dayAt(S, '2027-08-23', '12:00'), dayAt(S, '2027-09-04', '12:00'), dayAt(S, '2027-09-25', '12:00')]);
+  const [a, b, c, d] = await Promise.all([dayAt(S, '2027-08-22', '12:00'), dayAt(S, '2027-08-23', '12:00'), dayAt(S, '2027-09-12', '12:00'), dayAt(S, '2027-09-13', '12:00')]);
   const crops = (v) => (v.week ? v.week.crops.join(' | ') : '');
   S.check('Aug 23: pumpkins "usually start Sep 13" (not on Aug 22)', !/Pumpkins.*Usually starts Sep 13/.test(crops(a)) && /Pumpkins.*Usually starts Sep 13/.test(crops(b)), crops(a) + ' -> ' + crops(b));
+  S.check('Aug 23: tomatoes and basil "usually start Sep 13", the same day as the pumpkins (not on Aug 22)', !/Tomatoes & basil.*Usually starts/.test(crops(a)) && /Tomatoes & basil.*Usually starts Sep 13/.test(crops(b)), crops(a) + ' -> ' + crops(b));
   S.check('Aug 23: cut flowers "usually start Sep 1"', /U-cut flowers.*Usually starts Sep 1/.test(crops(b)), crops(b));
-  S.check('Sep 4: tomatoes and basil "usually start Sep 25"', /Tomatoes & basil.*Usually starts Sep 25/.test(crops(c)), crops(c));
-  S.check('Sep 25: tomatoes and basil are in season; cut flowers from Sep 1 (in season by Aug 12 as "usually starts Sep 1")', /Tomatoes & basil In season/.test(crops(d)), crops(d));
+  S.check('Sep 12 (the last day of the countdown): pumpkins and tomatoes and basil still "usually start Sep 13"', /Pumpkins.*Usually starts Sep 13/.test(crops(c)) && /Tomatoes & basil.*Usually starts Sep 13/.test(crops(c)), crops(c));
+  S.check('Sep 13: pumpkins and tomatoes and basil are in season together; cut flowers from Sep 1 (in season by Aug 12 as "usually starts Sep 1")', /Pumpkins In season/.test(crops(d)) && /Tomatoes & basil In season/.test(crops(d)), crops(d));
 });
 
 step('R21', 'Mon Sep 13, 2027: the fall season starts', { }, async (S) => {
   const [a, b] = await Promise.all([dayAt(S, '2027-09-12', '23:59'), dayAt(S, '2027-09-13', '00:00')]);
   S.check('Sep 13: "In season: Pumpkins & tomatoes", the fall hero line, the farm badge Thursday to Sunday', /^In season: Pumpkins & tomatoes/.test(b.topbar) && /It.s pumpkin season!/.test(b.sub) && !/In season/.test(a.topbar), b.topbar);
-  S.check('the "New: u-pick tomatoes" chip and the "New" badge stay gone for good', !shown(b, 'New: u-pick tomatoes'), '');
+  S.check('the "New: u-pick tomatoes & basil" chip and the "New" badge show again with the fall season (they have no last day of their own; question d66)', shown(b, 'New: u-pick tomatoes') && b.tags.includes('NEW'), shown(b, 'New: u-pick tomatoes') + ' ' + b.tags.includes('NEW'));
   S.check('with no rows left from 2026 there is no pizza countdown and no chip (the box shows only its "No pizza" lines if you renewed their last day on Aug 12, and stays hidden if not)', b.chip === '' && b.relBox === '', JSON.stringify(b.ids) + ' chip=' + b.chip);
   // the owner adds rows for the first weekends (the first opening still ahead)
   S.owner.edit('index.html', '<tr data-release="2026-10-06" data-until="2026-10-11">', '<tr data-release="2027-09-14" data-until="2027-09-19"><td>Sep 14</td><td>Sep 17&ndash;19</td></tr>\n                  <tr data-release="2026-10-06" data-until="2026-10-11">');

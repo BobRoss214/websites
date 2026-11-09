@@ -322,7 +322,7 @@ verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so
     const words = decode(li[1]).toLowerCase(); const bars = [...li[2].matchAll(/--s:([\d.]+);--e:([\d.]+)/g)].map((b) => [+b[1], +b[2]]);
     const mon = (w) => MON.findIndex((x) => w.startsWith(x));
     let start = null, end = null;
-    const MONTHS = '(january|february|march|april|may|june|july|august|september|october|november|december)';   // "mid-April to early June", "mid- to late June through early July", "late September through October"
+    const MONTHS = '(january|february|march|april|may|june|july|august|september|october|november|december)';   // "mid-April to early June", "mid- to late June through early July", "mid-September through early November"
     const parts = new RegExp('(early|mid|late)?[- ]*(?:to (?:early|mid|late) )?' + MONTHS + '\\s*(?:to|through)\\s+(early |mid-|late )?' + MONTHS).exec(words.replace('mid- to late ', 'mid-').replace('new this year: every weekend, ', ''));
     if (/thanksgiving/.test(words)) { start = [10.7, 11.0]; const e = /early (december)/.exec(words); end = e ? [11.0, 11.34] : null; }
     else if (parts) {
@@ -358,7 +358,8 @@ verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so
   ];
   for (const [name, expect, rx] of want) { const m = rx.exec(t); if (!m) { bad.push(name + ': the words were not found'); continue; } if (m[1].toLowerCase().replace(/[ -]+/g, '') !== expect.toLowerCase().replace(/[ -]+/g, '')) bad.push(`${name}: the page says "${m[1]}", js/season.js says ${expect}`); }
   if (!(winterEnd && winterEnd.month === 'December' && /Friday after Thanksgiving to early December/.test(t) && half(winterEnd) === 'early')) bad.push('winter: "Friday after Thanksgiving to early December" does not match the end date in js/season.js');
-  if (!(tom && +tom[1] === 8 && +tom[2] >= 20 && +tom[3] === 9 && +tom[4] >= 28) || !/late September through October/.test(t)) bad.push('tomatoes and basil: "late September through October" does not match the dates in js/features.js');
+  // tomatoes and basil run the same days as the fall season (the site builder, Nov 9 2026): September 13 to November 8 in js/features.js, said as "mid-September through early November"
+  if (!(tom && +tom[1] === 8 && +tom[2] === 13 && +tom[3] === 10 && +tom[4] === 8) || !/every weekend,? (?:from )?mid-September through early November/i.test(t) || /late September through October/i.test(t)) bad.push('tomatoes and basil: "every weekend, mid-September through early November" does not match the dates in js/features.js (September 13 to November 8, the fall season)');
   verify('season words match js/season.js and the tomato dates in js/features.js', bad.length === 0, 'the seasons in the text and in js/season.js (or the tomato dates in js/features.js) differ: ' + bad.join('; '),
     'change the words in index.html (search for the words quoted above) or the dates in js/season.js so they say the same months, ' + REBUILD);
 }

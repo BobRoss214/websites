@@ -66,7 +66,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 ### mié 7 oct 2026 al mié 4 nov 2026: las líneas se ocultan una por una
 
-- **Por sí solo:** el mié 7 oct 2026: la línea "Exceptional Children Day". El lun 12 oct 2026, el lun 19 oct 2026 y el lun 26 oct 2026: las filas de pizza. El dom 1 nov 2026: la etiqueta "New: u-pick tomatoes & basil" y la insignia "New". El mié 4 nov 2026: la línea "Home School Day". Cuando todas las líneas del cuadro "Fall 2026 special days" han desaparecido, el cuadro se oculta solo.
+- **Por sí solo:** el mié 7 oct 2026: la línea "Exceptional Children Day". El lun 12 oct 2026, el lun 19 oct 2026 y el lun 26 oct 2026: las filas de pizza. El mié 4 nov 2026: la línea "Home School Day". Cuando todas las líneas del cuadro "Fall 2026 special days" han desaparecido, el cuadro se oculta solo.
 - **Ustedes:** nada.
 - **Dónde:** `index.html`, en `data-t="tcda0fa57"` y `data-t="te8f8cb7a"` (los dos días especiales). La lista completa está en la sección 9.
 - **Si se olvidan:** no se ve nada. `?check` las enumera en su cuadro verde ("remove them when you like").
@@ -80,7 +80,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 ### lun 9 nov 2026: termina la temporada de otoño
 
-- **Por sí solo:** no hay ninguna temporada en curso. La insignia de la granja desaparece, la barra superior dice "Next up: Christmas trees at The GreenHouse", la línea principal pasa a la de todo el año, las filas de pizza ya no están y el botón "Fall schedule" de la página de calabazas se oculta. La página conserva su aspecto de otoño hasta el mié 18 nov 2026, y los botones "Reserve" siguen apareciendo.
+- **Por sí solo:** no hay ninguna temporada en curso. La insignia de la granja desaparece, la barra superior dice "Next up: Christmas trees at The GreenHouse", la línea principal pasa a la de todo el año, las filas de pizza ya no están y el botón "Fall schedule" de la página de calabazas se oculta. La etiqueta "New: u-pick tomatoes & basil" y la insignia "New" también desaparecen: terminan con la temporada. La página conserva su aspecto de otoño hasta el mié 18 nov 2026, y los botones "Reserve" siguen apareciendo.
 - **Ustedes, a más tardar el dom 1 nov 2026:** respondan **d23** (¿está abierta la granja después del 8 de noviembre?) y **d25** (botones Reserve cuando no se puede reservar nada). Si siguen abiertos, Claude mueve el fin del otoño; ustedes agregan filas de pizza y abren los horarios en Bookeo.
 - **Dónde:** `js/season.js`, en `id: 'fall'` (la fecha de fin está en esa línea; pídanselo a Claude).
 - **Si se olvidan:** del 9 al 17 de noviembre los visitantes ven "Reserve a fall visit" sin la insignia de la granja, y pueden reservar horarios que no existen.
@@ -190,16 +190,16 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 - **Dónde:** `python3 tools/check_facts.py year` enumera los lugares con 2026. `index.html`, en `data-t="t7f10df40"` (título de los días especiales), `data-t="t65d35823"` (título del calendario), `data-t="tb848cce7"` (las palabras de "No pizza") y `data-t="t4f7c68ac"` (título Fall Menu); `pages/pumpkin-patch.html`, en `data-until="2026-11-30"` (2 lugares). README, sección "A new year, a new season"; README, fila "Open a new pizza weekend". Cada oración en inglés que cambien necesita sus cuatro traducciones (README, sección "Change one sentence and its translations, step by step").
 - **Si se olvidan:** desde el 12 de agosto los visitantes ven una página de otoño con precios de 2026 y sin cuadro del calendario.
 
-### lun 23 ago 2027 al sáb 25 sep 2027: el cuadro "This week" cuenta hacia atrás solo
+### lun 23 ago 2027 al dom 12 sep 2027: el cuadro "This week" cuenta hacia atrás solo
 
-- **Por sí solo:** las calabazas "usually start Sep 13", los tomates y la albahaca "usually start Sep 25", las flores para cortar desde el 1 de septiembre.
+- **Por sí solo:** las calabazas, los tomates y la albahaca "usually start Sep 13", las flores para cortar desde el 1 de septiembre.
 - **Ustedes:** opcional: `week` cuando sepan algo mejor.
 - **Dónde:** `js/content.js`, en `week: {},` (2 lugares).
 - **Si se olvidan:** el cuadro mantiene las fechas típicas.
 
 ### lun 13 sep 2027: empieza la temporada de otoño
 
-- **Por sí solo:** "In season: Pumpkins & tomatoes", la insignia de la granja "Reserved visits today" de jueves a domingo, la línea principal de otoño. La etiqueta "New: u-pick tomatoes" y la insignia "New" ya no vuelven.
+- **Por sí solo:** "In season: Pumpkins & tomatoes", la insignia de la granja "Reserved visits today" de jueves a domingo, la línea principal de otoño. La etiqueta "New: u-pick tomatoes & basil" y la insignia "New" vuelven a aparecer: no tienen un último día propio (pregunta **d66**).
 - **Ustedes, a más tardar el lun 6 sep 2027:** la tabla de pizza debe tener filas para los primeros fines de semana, con la primera apertura todavía por delante (la cuenta regresiva lo necesita). Escriban la oración que está debajo de la tabla cada día de apertura (se traduce sola, vean "Cómo leerla").
 - **Dónde:** `index.html`, en `data-release-time="17:00"`; README, fila "Open a new pizza weekend".
 - **Si se olvidan:** sin filas que queden de 2026, no hay cuenta regresiva ni etiqueta todo el otoño. El cuadro del calendario muestra solo sus líneas "No pizza", o permanece oculto si no renovaron su último día en agosto.
@@ -333,7 +333,6 @@ Una línea con `data-until="D"` se oculta el día después de D. Una fila de piz
 | `data-release="2026-10-13"` `data-until="2026-10-18"` | fila de pizza: abre el 13 de oct, visitas del 16 al 18 de oct | lun 19 oct 2026 |
 | `data-release="2026-10-20"` `data-until="2026-10-25"` | fila de pizza: abre el 20 de oct, visitas del 23 al 25 de oct | lun 26 oct 2026 |
 | `data-release="2026-10-27"` `data-until="2026-11-08"` | fila de pizza: abre el 27 de oct, visitas del 30 de oct al 8 de nov | lun 9 nov 2026 |
-| `data-until="2026-10-31"` | la etiqueta "New: u-pick tomatoes & basil" y la insignia "New" (2 lugares) | dom 1 nov 2026 |
 | `data-until="2026-11-03"` | la línea "Home School Day" | mié 4 nov 2026 |
 | `data-until="2026-11-30"` | el bloque "No pizza" (el botón "Fall schedule" de la página de calabazas lleva la misma fecha, pero ya se oculta el 9 de nov con la temporada de otoño) | mar 1 dic 2026 |
 | `data-until="2026-12-31"` | la cinta "New this year" | vie 1 ene 2027 |
