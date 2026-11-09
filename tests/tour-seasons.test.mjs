@@ -244,7 +244,7 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
     if (!(await p.evaluate(() => window.Date === window.__Date0))) { ok('whole tour: Date is the page\'s own after step ' + l.n, false); break; }
   }
   info(walked + ' steps had the four season buttons; the last card was step ' + (last && last.n) + ' of ' + (last && last.of));
-  ok('whole tour: ' + walked + ' steps had the four season buttons (10 are expected)', walked === 10, String(walked));
+  ok('whole tour: ' + walked + ' steps had the four season buttons (11 are expected)', walked === 11, String(walked));
   if (FULL) {
     ok('whole tour: the last card was reached', !!last && /Finish/.test(last.actions));
     await press(p, 'Finish');

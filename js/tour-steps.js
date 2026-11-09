@@ -72,7 +72,7 @@
    *   1. the page's own season switch (WISE_ACRES.hero.setSeason, as the "See the farm in" buttons do): the picture, the headline and buttons,
    *      the "What's in season" tabs, the farm cards, the menu link to Playgrounds;
    *   2. the lines that say data-in-season (shown only while that season is really on) are shown, as on those days;
-   *   3. the parts that follow the clock (the strip at the top, the countdown, "This week at the farm", the open-now badges) draw themselves again
+   *   3. the parts that follow the clock (the strip at the top, the countdown, "This week at the farm", the open-now badges, the Now and Next tags on the season buttons) draw themselves again
    *      for a PRETEND day: the Saturday on or before the middle of that season's dates (js/season.js), in the latest year when that day is not after today.
    *      The clock is pretended only while they draw (an instant), then it is the real one. A pretend day is never after today, so a line with a
    *      last day (data-until) is never hidden by it.
@@ -244,6 +244,20 @@
       before: seasonsBegin, after: seasonsEnd
     },
     {
+      id: 'ch2-tags', order: 203, chapter: 2, page: 'index', target: '#season-switch', skipIfMissing: true,   // the buttons can be switched off (seasonPicker: false)
+      also: ['#season-switch .ss-now', '#season-switch .ss-next'],   // the two little tags stand partly outside the row of buttons: they are lit too (a tag that is not there today is left out)
+      title: 'The Now and Next tags',
+      text: 'Two little tags tell visitors at a glance where the farm is in the year. “Now” marks the season happening today. “Next” marks the one after it, so they know what to look forward to. Between seasons only “Next” shows. Press a season.',
+      choicesLabel: 'See this part in:',
+      choices: seasonWalk({
+        spring: 'Spring. “Now” is on Spring, for strawberries. “Next” is on Summer, for blueberries and sunflowers.',
+        summer: 'Summer. “Now” moves to Summer. “Next” moves to Fall, for pumpkins and tomatoes.',
+        fall: 'Fall. “Now” is on Fall. “Next” is on Winter, so visitors see that the Christmas trees are coming. After November 8 only “Next” shows.',
+        winter: 'Winter. “Now” is on Winter, for the Christmas trees. “Next” is on Spring, for strawberries. After December 8 only “Next” shows.'
+      }),
+      before: seasonsBegin, after: seasonsEnd
+    },
+    {
       id: 'ch2-badges', order: 204, chapter: 2, page: 'index', target: '.hero-live', skipIfMissing: true,
       title: 'Open now, or closed today',
       text: 'These badges say if the farm and The GreenHouse are open, from your hours and the clock. For a rain day, your site builder adds the date and they show closed. Your booking tool needs its own change. Press a season.',
@@ -273,6 +287,11 @@
         winter: 'Winter. The game is about trees: “Tap the trees to light them up. Tap a fire to stoke it.” The button says “Light a tree”.'
       }),
       before: seasonsBegin, after: seasonsEnd
+    },
+    {
+      id: 'ch2-chips', order: 207, chapter: 2, page: 'index', target: '.hero .chips',
+      title: 'The little chips',
+      text: 'These chips give quick facts. Two stay all year: organic and family farm. In fall a yellow chip says New: u-pick tomatoes and basil, and a pizza chip says when reservations open. They follow the calendar.'
     },
 
     /* ---------------------------------------------------------------- 3. This week and the menu */

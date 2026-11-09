@@ -689,6 +689,7 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
   .ss-now,.ss-next{font-size:min(.6875rem,12px)}
 }
 @media (max-height:34em) and (max-width:47.5em){
+  .season-switch{margin-top:14px}   /* the Now / Next tags stand 20 px above the buttons here: room for them under the top of the hero (they were cut off) */
   body{padding-bottom:68px}
   .action-bar{left:6px;right:6px;bottom:6px;padding:5px;gap:6px;border-radius:18px;box-shadow:0 3px 0 var(--ink)}
   .action-bar .btn{font-size:min(.95rem,17px);padding:.5em .3em;min-height:44px}
@@ -760,7 +761,7 @@ html[data-calm="all"] .hero-scene .layer[data-depth]{transform:none!important}  
   .btn{font-size:min(1.0625rem,18px);padding:.6em .9em}
   .btn-lg,.hero-cta .btn-lg{font-size:min(1.1rem,19px);padding:.4em 1em}
   .hero-cta{gap:8px}
-  .season-switch{flex-wrap:wrap;gap:11px 5px}
+  .season-switch{flex-wrap:wrap;gap:17px 5px}
   .season-switch button{flex:1 1 40%;font-size:min(.82rem,15px);padding-top:.15em;padding-bottom:.15em;padding-block:.15em}
   .ss-now,.ss-next{top:-11px;right:-2px;font-size:10px;padding:.05em .4em}
   .steps-wrap{padding-left:64px}
