@@ -169,14 +169,22 @@
     let out = `<path d="${groundPath()}" fill="#69b84c"/>`;
     out += lanes('spring', '#cfa571', '#b0804f', '#e3c18a', 6);
     out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a', t0: 0.08 });
-    // [row's k, shirt, hat, faces left]. The first four stand in the middle rows (the hero's words and chips hide most of them); the others stand at the left and right
-    // of the field, in the rows near the front, where nothing covers them.
+    // [row's k, shirt, hat, faces left]. Six people, three at each side of the field, on the ground that nothing of the page covers: the pills, the chips and the words take the middle, the picker card the bottom
+    // left and the sunflowers the far sides. At each side the three stand on a slant from the back of the field to the front, close to the edge of the rows (k past the plants of their own row, so none of them
+    // is behind a plant of it): rows 3, 4 and 6 at the right, rows 4, 6 and 8 at the left (the last of them beside the chips). They are small on purpose: a tap area is about 46 x 58 of a person's own units and
+    // 70 % or more of it must be the person's own (tests/hero.test.mjs), so three of them fit between the chips and the sunflowers of a 1440 px wide window only when they are small; a bigger person (rows 9 to
+    // 11) has about 55 to 75 % of its tap area left when the berries in front take theirs. Measured on the page as a visitor sees it, in real windows (not screens: a laptop's window is 100 to 130 px lower than
+    // its screen), every place alone and then the whole table, with 80 % of the head and the hat and 60 % of everything drawn (the basket too) in sight and nobody in front: 3 at each side from 1440 x 900 up
+    // (1536 x 864, 1600 x 900, 1920 x 950, 1920 x 1080, 2560 x 1440 ...), 2 at the left and 3 at the right at 1440 x 780, 1366 x 768 and 1280 x 800, 1 and 2 at 1536 x 730. What no places can change: the
+    // picture sits at the bottom of the hero, which is about 800 px high however low the window is, so in a window lower than about 700 px (1366 x 650, 1280 x 680) the first row is under the bottom edge
+    // and nothing can be seen. The pills' words change with the day, the hour and the visitor's time zone: with the farm's own pill too (only in fall, when the spring picture is chosen by hand) the row is up
+    // to 750 px wide and at 1440 x 900 one person at the left and two at the right are under it (2 and 1 are left); in spring there is one pill, and 3 and 3 show at 1440 x 900. People stand in the rows, not
+    // on the hills. k: the place in the row, in steps of 230 * t (the plants stand at the whole steps from -4 to 4); 4.7 to 5.6 are just past the last plant.
     const KIDS = {
-      6: [[-1.5, '#e5334b', HAT.straw, 0], [1.5, '#4b5bb8', HAT.cap, 1]],
-      8: [[-4.7, '#ffc928', HAT.cap, 0]],
-      9: [[0.5, '#ffc928', HAT.beanie, 0], [-4.3, '#e5334b', HAT.hair, 1], [3.45, '#ff8fb1', HAT.pony, 1]],
-      10: [[-3.15, '#43a047', HAT.cap, 0], [4.1, '#4b5bb8', HAT.straw, 1]],
-      11: [[4.6, '#ffc928', HAT.beanie, 0]],
+      3: [[4.7, '#4b5bb8', HAT.beanie, 0]],
+      4: [[-5.6, '#ffc928', HAT.straw, 1], [5.6, '#e5334b', HAT.hair, 0]],
+      6: [[-5.6, '#43a047', HAT.cap, 1], [5.45, '#ffc928', HAT.cap, 0]],
+      8: [[-2.6, '#ff8fb1', HAT.pony, 0]],
     };
     FIELD_T.forEach((t, ti) => {
       (KIDS[ti] || []).forEach(([k, shirt, hat, flip]) => { out += kid(rowX(k, t), rowY(t) - 2, 22 + 130 * t, shirt, hat, flip); });
@@ -900,8 +908,11 @@
     let html = '';
     for (let i = 0; i < n; i++) {
       const size = kind === 'snow' ? 3 + r() * 6 : 14 + r() * 12;
-      const flutter = kind === 'snow' ? '' : `;--sd:${(1.6 + r() * 1.8).toFixed(1)}s;--rk:${Math.round(32 + r() * 30)}deg`;   // a leaf: how long one drift to the side takes, and how far it tips
-      html += `<i class="${kind === 'snow' ? 'flake' : 'leaf'}" style="left:${(r() * 100).toFixed(1)}%;--s:${size.toFixed(1)}px;--d:${(kind === 'snow' ? 8 + r() * 9 : 10 + r() * 9).toFixed(1)}s;--dl:${(-r() * 16).toFixed(1)}s;--sw:${(20 + r() * 50).toFixed(0)}px;--c:${colors[Math.floor(r() * colors.length)]};--rot:${Math.floor(r() * 360)}deg${flutter}"></i>`;
+      // A leaf is calm: it falls in 16.5 to 25 s (at most 60 px a second in a hero up to 900 px high), drifts to one side and back in 5.6 to 9.2 s (--sd is one drift, there or back), its reach --sw
+      // is in step with it so that it never goes sideways faster than 20 px a second (a sine, 2 * sw / sd), and it tips the way it drifts by 26 to 50 degrees (at most 36 degrees a second).
+      const fl = kind === 'snow' ? null : { sd: +(2.8 + r() * 1.8).toFixed(1), rk: Math.round(26 + r() * 24) };
+      const flutter = fl ? `;--sd:${fl.sd}s;--rk:${fl.rk}deg` : '';
+      html += `<i class="${kind === 'snow' ? 'flake' : 'leaf'}" style="left:${(r() * 100).toFixed(1)}%;--s:${size.toFixed(1)}px;--d:${(kind === 'snow' ? 8 + r() * 9 : 16.5 + r() * 8.5).toFixed(1)}s;--dl:${(-r() * 16).toFixed(1)}s;--sw:${fl ? Math.round(fl.sd * (5.5 + r() * 4.5)) : (20 + r() * 50).toFixed(0)}px;--c:${colors[Math.floor(r() * colors.length)]};--rot:${Math.floor(r() * 360)}deg${flutter}"></i>`;
     }
     box.innerHTML = html;
     crittersEl.appendChild(box);
@@ -1161,17 +1172,31 @@
     if (body) restart(body, 'is-hi', kind === 'scarecrow' ? 2800 : 1700);
   }
 
-  // The friends are drawn in the picture and cannot be reached with Tab, so this one button says hi to the next friend in turn.
+  // The friends are drawn in the picture and cannot be reached with Tab, so this one button says hi to the next friend in turn, one that can be seen: the picture is cut off at both sides of a narrow
+  // window and at the bottom of a low one, and a friend out there would speak from a bubble that hangs in the air at the edge. Friends with at least 60 % of their tap area inside the window and
+  // the hero come first; when there are none, any that shows; when nothing shows (the hero is scrolled away) all of them, since the button is also the way for someone who cannot see the picture.
   const npcBtn = $('#npc-btn');
-  let npcNext = -1;
+  let lastNpc = null;
+  const shownShare = (el) => {
+    const r = ($('.npc-hit', el) || el).getBoundingClientRect(), h = hero.getBoundingClientRect();
+    const w = Math.min(r.right, h.right, window.innerWidth) - Math.max(r.left, h.left, 0), v = Math.min(r.bottom, h.bottom, window.innerHeight) - Math.max(r.top, h.top, 0);
+    return r.width > 0 && r.height > 0 ? Math.max(0, w) * Math.max(0, v) / (r.width * r.height) : 0;
+  };
   if (npcBtn) npcBtn.addEventListener('click', () => {
     const all = $$('[data-npc]', sceneEl);
-    if (all.length) { npcNext = (npcNext + 1) % all.length; npcTalk(all[npcNext]); }
+    if (!all.length) return;
+    const share = new Map(all.map((el) => [el, shownShare(el)]));
+    let list = all.filter((el) => share.get(el) >= 0.6);
+    if (!list.length) list = all.filter((el) => share.get(el) > 0);
+    if (!list.length) list = all;
+    const after = list.findIndex((el) => all.indexOf(el) > all.indexOf(lastNpc));   // the next one in the picture's order after the one that spoke last (the first when that was the last)
+    lastNpc = list[after < 0 ? 0 : after];
+    npcTalk(lastNpc);
   });
 
   function bindScene() {
     pickables = $$('[data-pick]', sceneEl);
-    npcNext = -1;
+    lastNpc = null;
     if (npcBtn) npcBtn.hidden = !$$('[data-npc]', sceneEl).length;
     pickables.forEach((el) => el.addEventListener('click', () => pick(el)));
 
