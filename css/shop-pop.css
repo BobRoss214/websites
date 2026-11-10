@@ -1,0 +1,46 @@
+/* The pop-up of a "What to buy" card (js/shop-pop.js). Asked for when a visitor first points at a card that has an ingredient list, so a visitor who never does costs nothing.
+   Look: the site's sticker style (thick ink outline, hard shadow). The top band takes the colours of the card's group (--g, --gt, --gp: the script gives the box the group's
+   sg-* class), the picture sits in a round bubble like the card's, the list is a set of rounded chips. Only the box scrolls (max 85% of the window high); the page behind is locked
+   by html.shop-pop-lock, with the width of the scroll bar kept (--shop-bar) so the page does not slide sideways. Fades and scales in over 160 ms; not with reduced motion or
+   "Pause animations". */
+.shop-pop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(58,36,22,.62);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,visibility 0s linear .16s;-webkit-tap-highlight-color:transparent}
+.shop-pop.is-open{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
+html.shop-pop-lock{overflow:hidden;padding-right:var(--shop-bar,0px)}
+.shop-pop-box{position:relative;box-sizing:border-box;width:min(92vw,34rem);max-height:85vh;overflow-x:hidden;overflow-y:auto;background:var(--paper,#fffdf6);color:var(--ink);border:3px solid var(--ink);border-radius:26px;box-shadow:0 8px 0 var(--ink);transform:translateY(10px) scale(.94);transition:transform .16s ease}
+.shop-pop.is-open .shop-pop-box{transform:none}
+.shop-pop-box:focus{outline:none}
+.shop-pop-bar{position:sticky;top:0;z-index:3;height:0}   /* no height: the X sits on the band, and stays in view when the box scrolls */
+.shop-pop-x{position:absolute;top:10px;right:10px;width:44px;height:44px;margin:0;padding:0;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:50%;box-shadow:0 3px 0 var(--ink);cursor:pointer}
+.shop-pop-x::before,.shop-pop-x::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:3px;margin:-1.5px 0 0 -9px;background:currentColor;border-radius:2px;transform:rotate(45deg)}
+.shop-pop-x::after{transform:rotate(-45deg)}
+@media (hover:hover){.shop-pop-x:hover{background:var(--sun,#ffc928)}}
+.shop-pop-head{display:flex;align-items:center;gap:14px;padding:18px 66px 16px 18px;background:var(--g,var(--sun,#ffc928));color:var(--gt,var(--ink));border-bottom:3px solid var(--ink)}
+.shop-pop-pic{flex:none;display:grid;place-items:center;width:88px;height:88px;background:var(--gp,#fff0b3);border:3px solid var(--ink);border-radius:50%;box-shadow:0 3px 0 var(--ink)}
+.shop-pop-ico{width:80%;height:80%}
+.shop-pop-name{flex:1 1 0;min-width:0;margin:0;color:inherit;font:700 1.6rem/1.1 var(--display);overflow-wrap:break-word;overflow-wrap:anywhere}
+.shop-pop-main{padding:14px 18px 20px}
+.shop-pop-price{margin:0 0 10px}
+.shop-pop-price .shop-price{margin:0}
+.shop-pop-price .shop-price.hand,.shop-pop-price .shop-price .hand,.shop-pop-price .so-p.hand{font-size:2rem;line-height:1.05}
+.shop-pop-price .shop-opts{width:min(100%,19rem)}
+.shop-pop-price .so-l{font-size:1rem}
+.shop-pop-note{margin:0 0 14px;font:600 1rem/1.4 var(--body);color:var(--ink-soft)}
+.shop-pop-pretend{margin:0 0 18px;padding:.55em .8em;background:#fff1b8;color:var(--ink);border:3px solid var(--ink);border-radius:16px;box-shadow:0 3px 0 var(--ink);font:700 1.4rem/1.25 var(--display);text-align:center;overflow-wrap:break-word;overflow-wrap:anywhere}   /* the notice: big, bold, on yellow, with a box of its own */
+.shop-pop-h{margin:0 0 8px;font:700 1.75rem/1 var(--hand);color:var(--ink-soft)}
+.shop-pop-list{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+.shop-pop-list li{padding:.3em .9em;background:var(--gp,#fff0b3);color:var(--ink);border:2px solid var(--ink);border-radius:999px;font:700 1rem/1.25 var(--display);overflow-wrap:break-word;overflow-wrap:anywhere}
+.shop-pop-contains{margin:14px 0 0;font:600 1rem/1.4 var(--body)}
+.shop-pop-contains strong{font-weight:800}
+.shop-pop-done{display:flex;width:max-content;max-width:100%;margin:20px auto 0}
+@media (max-width:30em){
+  .shop-pop{padding:10px}
+  .shop-pop-head{gap:10px;padding:14px 62px 12px 14px}
+  .shop-pop-pic{width:68px;height:68px}
+  .shop-pop-name{font-size:1.35rem}
+  .shop-pop-main{padding:12px 14px 16px}
+  .shop-pop-pretend{font-size:1.25rem}
+}
+@media (prefers-reduced-motion:reduce){.shop-pop,.shop-pop-box{transition:none}.shop-pop-box{transform:none}}
+html[data-calm="all"] .shop-pop,html[data-calm="all"] .shop-pop-box{transition:none}
+html[data-calm="all"] .shop-pop-box{transform:none}
+@media print{.shop-pop{display:none!important}}
