@@ -1,24 +1,17 @@
-/* Wise Acres: "What to buy", a card that opens a pop-up with the ingredient list of the product (README: "Store pop-up"; nothing is stored or sent).
- *
- * The lists are in js/shop-sample.js (window.WISE_ACRES.shopSample, one entry for each picture name: the p-<slug> in the card's <use>). That file is PREVIEW DATA, made up
- * until the farm gives its real lists. Without it this script does nothing: no button, no class, no listener on a card, no file asked for.
- * With it, each card that has an entry gets
- *   - the class shop-card-pop (css/extras.css: the card grows and lifts when it is pointed at, or reached with the keyboard), and
- *   - one transparent button.shop-open over the whole card, named "<name>, <price>, show ingredients" in the page's language: a real control for the keyboard and a screen
- *     reader. The <li> stays a plain list item, and the button sits outside every text that js/i18n.js writes again when the language changes.
- * A click, Enter or Space opens ONE pop-up (div.shop-pop > div.shop-pop-box, role="dialog"), built the first time and filled again each time: the picture, name, price and note
- * of the card (copied, so already in the page's language), the notice that the list is only a preview, then the list. Its style sheet, css/shop-pop.css, is asked for when a
- * visitor first points at a card (or at the first click), never before. While it is open the page behind is out of reach of a screen reader and of the Tab key (aria-hidden and
- * inert), does not scroll and does not slide sideways when the scroll bar goes; Tab stays inside; Escape, the X, the Close button and a click outside close it, and focus goes
- * back to the card. The words of the pop-up go through WISE_ACRES.t() (lang/src/<code>.json, "js"); the names in the lists stay English.
- */
+/* Wise Acres: "What to buy": a card opens a pop-up with the ingredient list of the product. Nothing is stored or sent.
+ * The lists are PREVIEW DATA in js/shop-sample.js (window.WISE_ACRES.shopSample, by picture name: the p-<slug> in the card's <use>). Without that file this script does nothing:
+ * no button, no class, no listener on a card, no file asked for. With it, each card that has an entry gets the class shop-card-pop (css/extras.css: it grows when pointed at)
+ * and a transparent button.shop-open over the whole card, named "<name>, <price>, show ingredients" in the page's language. A click, Enter or Space opens ONE pop-up
+ * (div.shop-pop, role="dialog"), built the first time and filled again each time; css/shop-pop.css is asked for when a card is first pointed at. While it is open the page behind
+ * is hidden (aria-hidden, inert) and does not scroll, Tab stays inside, Escape, the X, Close and a click outside shut it, and focus goes back to the card. Its words go through
+ * WISE_ACRES.t() (lang/src/<code>.json, "js"); the names in the lists stay English. */
 (function () {
   'use strict';
 
   const W = (window.WISE_ACRES = window.WISE_ACRES || {}), doc = document, root = doc.documentElement;
   const me = doc.currentScript;
   const where = me && me.src ? /^(.*)js\/shop-pop\.js(?:[?#].*)?$/.exec(me.src) : null;
-  const BASE = where ? where[1] : '';   // the folder of the site, from this script's own address ('' = the page's own folder, also when the preview put the script in the page)
+  const BASE = where ? where[1] : '';   // the site's folder, from this script's own address ('' when the preview put the script in the page)
   const t = (s, v) => (W.t ? W.t(s, v) : s);
   const clean = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
   const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
@@ -46,13 +39,13 @@
   }
   const relabel = () => items.forEach((item) => item.btn.setAttribute('aria-label', labelOf(item)));
 
-  /* ---------------------------------------------------------------- the style sheet (the tour loads css/tour.css the same way) */
+  /* ---------------------------------------------------------------- the style sheet (as js/tour.js loads css/tour.css) */
   function loadCss() {
     return cssReady || (cssReady = new Promise((resolve) => {
-      if (doc.querySelector('link[href*="shop-pop.css"], style[data-shop-pop-css]')) { resolve(true); return; }   // already in the page (the preview puts it there)
+      if (doc.querySelector('link[href*="shop-pop.css"], style[data-shop-pop-css]')) { resolve(true); return; }   // already in the page (the preview)
       const link = doc.createElement('link');
       let finished = false;
-      const end = (ok) => { if (!finished) { finished = true; resolve(ok); } };
+      const end = (ok) => { if (!finished) { finished = true; if (!ok) { cssReady = null; link.remove(); } resolve(ok); } };   // a failed try is forgotten: the next click asks again
       link.rel = 'stylesheet'; link.href = BASE + 'css/shop-pop.css';
       link.onload = () => end(true); link.onerror = () => end(false);
       setTimeout(() => end(!!link.sheet), 8000);
@@ -74,12 +67,12 @@
     note = el('p', 'shop-pop-note', main);
     pretend = el('p', 'shop-pop-pretend', main); pretend.id = 'shop-pop-pretend';
     heading = el('h3', 'shop-pop-h', main);
-    list = el('ul', 'shop-pop-list', main); list.setAttribute('lang', 'en');   // the names of the sample lists are English in every language
+    list = el('ul', 'shop-pop-list', main); list.setAttribute('lang', 'en');   // the names in the lists are English in every language
     contains = el('p', 'shop-pop-contains', main);
     done = el('button', 'btn btn-sm shop-pop-done', main); done.type = 'button';
     closeX.addEventListener('click', close); done.addEventListener('click', close);
     pop.addEventListener('pointerdown', (e) => { down = e.target; });
-    pop.addEventListener('click', (e) => { if (e.target === pop && (down === pop || down === null)) close(); down = null; });   // a click on the dim part, not the end of a drag that began in the box
+    pop.addEventListener('click', (e) => { if (e.target === pop && (down === pop || down === null)) close(); down = null; });   // the dim part, not the end of a drag that began in the box
     doc.body.appendChild(pop);
   }
 
@@ -93,7 +86,7 @@
     price.textContent = '';
     if (p) {
       const c = p.cloneNode(true);
-      [c].concat(Array.prototype.slice.call(c.querySelectorAll('[data-t]'))).forEach((x) => x.removeAttribute('data-t'));   // the language switch must not rewrite a copy
+      [c].concat(Array.prototype.slice.call(c.querySelectorAll('[data-t]'))).forEach((x) => x.removeAttribute('data-t'));   // the language switch must not rewrite the copy
       price.appendChild(c);
     }
     note.textContent = clean(s && s.textContent); note.hidden = !note.textContent;
@@ -111,7 +104,7 @@
     closeX.setAttribute('aria-label', t('Close')); done.textContent = t('Close');
   }
 
-  function lock() {   // the page behind: out of reach of a screen reader and the Tab key, and it does not scroll or slide when the scroll bar goes
+  function lock() {   // the page behind: out of reach of screen readers and Tab, and it does not scroll or slide when the scroll bar goes
     saved = [];
     Array.prototype.forEach.call(doc.body.children, (el) => {
       if (el === pop || /^(?:SCRIPT|STYLE|LINK|TEMPLATE|NOSCRIPT)$/.test(el.tagName)) return;
@@ -138,7 +131,7 @@
     if (!f.length) { e.preventDefault(); return; }
     if (e.shiftKey ? (a === first || a === box || !box.contains(a)) : (a === last || !box.contains(a))) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
   }
-  function strayed(e) { if (!box.contains(e.target)) closeX.focus({ preventScroll: true }); }   // focus came back from the browser's own bar: into the box, not the page
+  function strayed(e) { if (!box.contains(e.target)) closeX.focus({ preventScroll: true }); }   // focus came back from the browser's own bar: into the box
 
   function open(item, btn) {
     if (pop && pop.classList.contains('is-open')) return;

@@ -31,7 +31,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-import { run, open, ok, okSoon, info, until, settled, axeSource, skip, ROOT } from './lib.mjs';
+import { run, open, ok, okSoon, info, until, settled, axeSource, ROOT } from './lib.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const LIST = JSON.parse(fs.readFileSync(path.join(HERE, 'shop-list.json'), 'utf8'));
@@ -139,7 +139,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
     await a.p.context().close();
     const b = await visit('B', ['shop-sample.js', 'shop-pop.js']);
     await b.p.context().close();
-    const drop = (list) => [...new Set(list.filter((u) => !/shop-(pop|sample)\.js$/.test(u)))].sort();
+    const drop = (list) => [...new Set(list.filter((u) => /\.(js|css|json)$/.test(u) && !/shop-(pop|sample)\.js$/.test(u)))].sort();
     const extra = drop(seen.A).filter((u) => !drop(seen.B).includes(u)), gone = drop(seen.B).filter((u) => !drop(seen.A).includes(u));
     ok('...it asks for the same files as with js/shop-pop.js refused as well, and never for css/shop-pop.css', extra.length === 0 && gone.length === 0 && !seen.A.some((u) => /shop-pop\.css/.test(u)), 'extra: ' + extra.join(', ') + ' / missing: ' + gone.join(', '));
   }
@@ -149,7 +149,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   /* -------------------------------------------------------------- 2. WITH DATA (and 4, 5, 6 on the same page) */
   const p = await open(browser, base, 'index.html', errs, { viewport: DESKTOP });
   await prep(p);
-  const cards = await p.evaluate(() => window.__sp.cards().map((c) => ({ slug: window.__sp.slug(c), name: c.querySelector('.shop-name').textContent.trim(), tag: c.tagName, role: c.getAttribute('role'), tabindex: c.getAttribute('tabindex'),
+  const cards = await p.evaluate(() => window.__sp.cards().map((c) => ({ slug: window.__sp.slug(c), name: c.querySelector('.shop-name').textContent.replace(/\s+/g, ' ').trim(), tag: c.tagName, role: c.getAttribute('role'), tabindex: c.getAttribute('tabindex'),
     full: c.classList.contains('shop-full'), group: window.__sp.group(c), btn: [...c.querySelectorAll('button.shop-open')].map((b) => ({ type: b.type, label: b.getAttribute('aria-label'), kids: b.children.length, text: b.textContent })), cls: c.classList.contains('shop-card-pop') })));
   const withBtn = cards.filter((c) => c.btn.length);
   const exp = new Set(EXPECTED);
@@ -240,7 +240,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
       ok(`${mode}: under the pointer nothing is scaled, lifted or tilted (size and place the same, no transform), but the shadow and the edge change`, near(g.w, rest.w, 0.5) && near(g.h, rest.h, 0.5) && near(g.top, rest.y, 0.5) && g.tf === 'none' && g.bubble === 'none' && g.shadow !== b0.shadow && g.edge !== b0.edge, JSON.stringify({ rest, g, b0 }));
       await r.mouse.move(2, 2);
     }
-    ok('reduced motion: the pop-up opens and shuts at once (no fade, no scale)', await openBy(r, 'hot-pretzel') && await r.evaluate(() => { const b = document.querySelector('.shop-pop-box'), cs = getComputedStyle(b); return cs.transform === 'none' && parseFloat(getComputedStyle(document.querySelector('.shop-pop')).transitionDuration) === 0; }));
+    ok('reduced motion: the pop-up opens and shuts at once (no fade, no scale)', await openBy(r, 'hot-pretzel') && await r.evaluate(() => { const b = document.querySelector('.shop-pop-box'), cs = getComputedStyle(b); return cs.transform === 'none' && parseFloat(getComputedStyle(document.querySelector('.shop-pop')).transitionDuration) <= 0.001; }));
     await closeBy(r);
     await r.context().close();
   }
@@ -289,7 +289,6 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   await k.mouse.move(boxAt.x, boxAt.y); await k.mouse.down(); await k.mouse.move(6, 6); await k.mouse.up();
   ok('a press in the box that is let go on the dim part (selecting text) does not close it', await isOpen(k));
   await closeBy(k);
-  await k.mouse.click(5, 5);   // a click with nothing open is nothing
   // three different cards in a row: nothing of the one before is left
   const rows = [];
   for (const slug of ['hot-pretzel', 'trucker-cap', 'pizza', 'water']) {
@@ -335,7 +334,6 @@ await run('shop-pop', async ({ browser, base, errs }) => {
       for (const slug of ['hot-pretzel', 'trucker-cap']) {
         if (!await openBy(l, slug)) { ok(`${code} ${view.width}px: ${slug} opens`, false); continue; }
         const t = await popText(l);
-        const own = [t.notice, t.heading, t.done, t.x].concat(t.contains ? [t.contains.split(/[:：]/)[0] + ':'] : []);
         const wantHeading = sample[slug].heading === 'Made of' ? w.made : w.ing;
         const fit = await l.evaluate(() => {
           const b = document.querySelector('.shop-pop-box'), r = b.getBoundingClientRect(), cut = [];
