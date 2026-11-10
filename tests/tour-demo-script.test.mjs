@@ -38,6 +38,13 @@ const Data = require(path.join(ROOT, 'js/demo-data.js'));
 const Store = require(path.join(ROOT, 'js/demo-store.js'));
 const SOURCE = fs.readFileSync(path.join(ROOT, 'js/tour-steps-c.js'), 'utf8');
 const BASE = TODAY.slice(0, 10);
+// The original 24 cards of the chapter, by the number the tests have always used for them (card 1 to 25; number 17, My year, was taken out). Their orders go up in fours
+// (1000 + 4 x the place in the story), so a card can be added between two of them (tests/demo-desk-live.test.mjs has the desk's, the kitchen's have their own test):
+// a card is found by its id, never by its order, and the other cards of the chapter do not change these numbers.
+const OLD_IDS = ['ch10-intro', 'ch10-signup', 'ch10-sample', 'ch10-paid', 'ch10-request', 'ch10-waiting', 'ch10-desk-request', 'ch10-answer', 'ch10-pizza', 'ch10-pizza-edit', 'ch10-kitchen',
+  'ch10-family-ok', 'ch10-family', 'ch10-alerts', 'ch10-desk-people', 'ch10-bell', null, 'ch10-messages', 'ch10-photos', 'ch10-desk-approve', 'ch10-event', 'ch10-desk-weather', 'ch10-closed',
+  'ch10-real-needs', 'ch10-worth-asking'];
+const OLD_CARDS = OLD_IDS.filter(Boolean);
 
 /* A fresh world: the store on a fake storage (a clock the test can move), a fake page where every target is on the screen, a fake DemoApp that remembers the open tab. */
 function world(opts = {}) {
@@ -54,9 +61,9 @@ function world(opts = {}) {
   vm.runInNewContext(SOURCE, { window: win, document, setTimeout, clearTimeout }, { filename: 'js/tour-steps-c.js' });
   w.steps = win.WA_TOUR_STEPS.slice().sort((a, b) => a.order - b.order);
   w.win = win;
-  // run the before() of card n (its order is 1000 + n) and wait for it
+  // run the before() of card n (n is the old card number, see OLD_IDS) and wait for it
   w.run = async (n) => {
-    const s = w.steps.find((x) => x.order === 1000 + n);
+    const s = w.steps.find((x) => x.id === OLD_IDS[n - 1]);
     if (!s) return null;   // there is no card with that number (17 was My year)
     w.waited.length = 0;
     let r;
@@ -66,7 +73,7 @@ function world(opts = {}) {
   w.walk = async (from, to) => { for (let n = from; n <= to; n++) await w.run(n); };
   // leave card n: its after(), if it has one (the engine runs it when the card is left)
   w.leave = async (n) => {
-    const s = w.steps.find((x) => x.order === 1000 + n);
+    const s = w.steps.find((x) => x.id === OLD_IDS[n - 1]);
     try { if (s && s.after) await s.after({}); } catch (e) { w.errors.push('after ' + n + ': ' + e.message); }
     return s;
   };
@@ -85,14 +92,15 @@ const dayAfter = (d) => Data.addDays(d, 1);
 /* ------------------------------------------------------------------ the cards */
 {
   const w = world();
-  const orders = [...Array(16).keys()].map((i) => 1001 + i).concat([...Array(8).keys()].map((i) => 1018 + i));   // 1001 to 1016 and 1018 to 1025: 1017 was My year
-  ok('the chapter has 24 cards, orders 1001 to 1016 and 1018 to 1025, increasing, each with its own id', w.steps.length === 24 && w.steps.every((s, i) => s.order === orders[i] && s.chapter === 10) && new Set(w.steps.map((s) => s.id)).size === 24, w.steps.map((s) => s.order).join(','));
+  const own = w.steps.filter((x) => OLD_CARDS.includes(x.id));
+  ok('the chapter keeps its original 24 cards, in the same order of the story, each with its own id (cards added between them are checked by the tests of the helpers who added them)', own.map((x) => x.id).join() === OLD_CARDS.join() && w.steps.length >= 24 && new Set(w.steps.map((x) => x.id)).size === w.steps.length && w.steps.every((x) => x.chapter === 10), w.steps.map((x) => x.id).join());
+  ok('every order is a whole number of the chapter (1000 to 1099), they increase from card to card, and the original cards are on the numbers 1000 + 4 x their place (1004, 1008 ... 1096), so there is room for new cards between them', w.steps.every((x, i) => Number.isInteger(x.order) && x.order > 1000 && x.order < 1100 && (i === 0 || x.order > w.steps[i - 1].order)) && own.every((x, i) => x.order === 1004 + 4 * i), w.steps.map((x) => x.order).join(','));
   ok('My year is gone from the tour: no card with its id, its hook (acct-year) or its tab (year)', !w.steps.some((s) => /year/i.test(s.id + ' ' + s.target + ' ' + s.title)) && !/acct-year|'year'/.test(SOURCE));
   ok('the chapter\'s first card does not promise a year screen', !/year|badge/i.test(w.steps[0].text + ' ' + w.steps[0].title));
   const ev = w.steps.find((s) => s.id === 'ch10-event'), su = w.steps.find((s) => s.id === 'ch10-signup');
-  ok('the My event card keeps its id, order and target, and says the tab shows only for families who said yes at sign-up', !!ev && ev.order === 1021 && ev.target === '[data-tour="acct-event"]' && /only for families who said yes at sign-up/.test(ev.text), ev && ev.text);
+  ok('the My event card keeps its id, order and target, and says the tab shows only for families who said yes at sign-up', !!ev && ev.order === 1080 && ev.target === '[data-tour="acct-event"]' && /only for families who said yes at sign-up/.test(ev.text), ev && ev.text);
   ok('the My event card is true for any family: it does not say "the sample family said yes" (a family made by hand may have said no, and still gets the sample trip)', !/sample family|said yes\. /i.test(ev.text.replace(/only for families who said yes at sign-up/, '')) && /This family has one/.test(ev.text), ev.text);
-  ok('the sign-up card says the family is asked about a party, an event or a school trip, and does not promise to create a family (a hand-made one is kept)', !!su && su.order === 1002 && /party, an event or a school trip/.test(su.text) && !/creates a sample family/.test(su.text), su && su.text);
+  ok('the sign-up card says the family is asked about a party, an event or a school trip, and does not promise to create a family (a hand-made one is kept)', !!su && su.order === 1008 && /party, an event or a school trip/.test(su.text) && !/creates a sample family/.test(su.text), su && su.text);
   ok('every card is skipped when its target is missing, and is on a demo page', w.steps.every((s) => s.skipIfMissing === true && ['account', 'farm-desk', 'kitchen'].includes(s.page)));
   // What each card does when it is left: leave every card on its own in a fresh world and count the demo's own calls (the fake DemoUI counts closeModals() and clearToasts()).
   const probe = world(), left = [];
@@ -102,7 +110,7 @@ const dayAfter = (d) => Data.addDays(d, 1);
     left.push({ id: s.id, hasAfter: typeof s.after === 'function', dialogs: probe.closedDialogs - was[0], toasts: probe.clearedToasts - was[1], clicks: s.allowClicks === true });
   }
   const withDialog = left.filter((c) => c.dialogs > 0);
-  ok('every card has an after(), and leaving it takes the toasts away once, with the demo\'s own DemoUI.clearToasts() (an old message must not sit on top of the next card, as on "Tell me when")', left.length === 24 && left.every((c) => c.hasAfter && c.toasts === 1), left.filter((c) => !c.hasAfter || c.toasts !== 1).map((c) => c.id).join());
+  ok('every card has an after(), and leaving it takes the toasts away once, with the demo\'s own DemoUI.clearToasts() (an old message must not sit on top of the next card, as on "Tell me when")', left.length === w.steps.length && left.every((c) => c.hasAfter && c.toasts === 1), left.filter((c) => !c.hasAfter || c.toasts !== 1).map((c) => c.id).join());
   ok('only seven cards close a dialog when they are left: the ones whose lit part has a button that opens one (the visit card, the request, the family box, the closed-day banner, the strip with Start over three times), each one once', withDialog.map((c) => c.id).join() === 'ch10-intro,ch10-sample,ch10-request,ch10-family,ch10-closed,ch10-real-needs,ch10-worth-asking' && withDialog.every((c) => c.dialogs === 1), withDialog.map((c) => c.id).join());
   ok('...and none of them asks for the whole page (no allowClicks): the lit part can be used, a list that a lit button opens (the bell\'s) is lit and can be used too, and a dialog sits above the dimmer, so the rest of the page stays locked while the card is up', withDialog.every((c) => !c.clicks), withDialog.filter((c) => c.clicks).map((c) => c.id).join());
   ok('the cards take the toasts away only through the demo\'s own DemoUI.clearToasts(): this file names no toast box or toast class of its own', /clearToasts/.test(SOURCE) && !/demo-toast|data-demo-toasts/.test(SOURCE));
@@ -129,7 +137,7 @@ const dayAfter = (d) => Data.addDays(d, 1);
   ok('card 3: the sample family is signed in with the next visit, no request yet, My visits is open', !!S.current() && S.current().email === Data.SAMPLE_ACCOUNT.email && !!w.visit() && S.list('requests').length === 0 && w.tab === 'visits');
   const v0 = w.visit();
   ok('the next visit is the sample one (pizza package, a Saturday, 2:00 pm)', v0.package === 'pizza' && v0.time === '14:00' && Data.weekday(v0.date) === 6 && v0.date >= BASE, v0.date + ' ' + v0.time);
-  ok('card 3 waits for its own target', w.waited.includes(w.steps[2].target), String(w.waited));
+  ok('card 3 waits for its own target', w.waited.includes(w.steps.find((x) => x.id === OLD_IDS[2]).target), String(w.waited));
   await w.walk(4, 5);
   ok('cards 4 and 5: still no request, My visits open', S.list('requests').length === 0 && w.tab === 'visits');
   await w.run(6);
@@ -333,7 +341,7 @@ const dayAfter = (d) => Data.addDays(d, 1);
   const w2 = world(), changed = [];
   for (let n = 1; n <= 25; n++) { await w2.run(n); const a = w2.snap(); await w2.leave(n); if (w2.snap() !== a) changed.push(n); }
   ok('leaving any card at any point of the walk changes nothing in the store', changed.length === 0 && w2.errors.length === 0, changed.join(','));
-  ok('...and every one of the 24 cards took the toasts away once (Next or Back leaves a card; so does Close), only seven of them closed a dialog', w2.clearedToasts === 24 && w2.closedDialogs === 7, w2.clearedToasts + ' / ' + w2.closedDialogs);
+  ok('...and every one of the 24 original cards took the toasts away once (Next or Back leaves a card; so does Close), only seven of them closed a dialog', w2.clearedToasts === OLD_CARDS.length && w2.closedDialogs === 7, w2.clearedToasts + ' / ' + w2.closedDialogs);
   // the engine runs a card's after() also when the card is skipped (its target is missing) and when the tour is closed on it: one call, the same effect
   const w3 = world();
   await w3.walk(1, 11);
