@@ -438,7 +438,10 @@
   /** A pick-up time moved by some minutes, kept inside the day ('12:45' + 10 -> '12:55'). */
   function moveTime(hhmm, delta) { return fromMinutes(Math.max(0, Math.min(23 * 60 + 55, minutes(hhmm) + delta))); }
 
-  function took(store, rid) { var now = store.get('requests', rid); return !!now && now.status !== 'waiting'; }
+  // Did the store take the answer? A request the family cancelled a moment ago (or another tab answered) is not 'waiting' any more, so the reply does nothing:
+  // the request must now say what this answer makes it say.
+  var MADE = { yes: 'yes', no: 'no', later: 'suggested' };
+  function took(store, rid, how) { var now = store.get('requests', rid); return !!now && now.status === MADE[how]; }
 
   /**
    * One answer, through the store. t = a ticket of the rail, how = 'yes' | 'no' | 'later', extra = { pickup: 'HH:MM', note }.
@@ -456,7 +459,7 @@
         if (t.req.patch && typeof t.req.patch.notes === 'string') sug.notes = t.req.patch.notes;
         store.reply(rid, { answer: 'suggest', note: note, suggestion: { patch: sug, summary: summarize(assign({}, t.order, (t.req.patch || {}), sug), byId) } });
       } else return none;
-      if (!took(store, rid)) return { ok: false, closed: true, text: 'That change is already closed. The family may have cancelled it.' };
+      if (!took(store, rid, how)) return { ok: false, closed: true, text: 'That change is already closed. The family may have cancelled it.' };
       return { ok: true, closed: false, text: 'Order ' + num + ': ' + (how === 'yes' ? 'Yes.' : how === 'no' ? 'No.' : 'another time, ' + time12(extra.pickup) + ', sent to the family.') };
     }
     if (t.kind === 'order') {
