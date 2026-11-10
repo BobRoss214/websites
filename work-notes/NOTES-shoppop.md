@@ -14,7 +14,7 @@ The builder (not the farm owner; the bosses are Mrs. Cathy and Rob) asked for tw
 - `js/shop-pop.js`: the small loader. When `shopSample` is on the page it asks for `js/shop-pop-box.js`; otherwise it does nothing (no button, no class, no request).
 - `js/shop-pop-box.js`: the cards' buttons and classes, and the pop-up. It asks for `css/shop-pop.css` when a card is first pointed at, as `js/tour.js` asks for `css/tour.css` (the preview puts both in the page: see below).
 - `css/shop-pop.css`: the pop-up's look. `css/extras.css`: a short hover block after the Store rules (inert without the script).
-- `tests/shop-pop.test.mjs`, `lang/src/{es,hi,vi,zh}.json` (six new words each, under "js", placed after "Close"), `tools/pages.py` (the two script tags stay on the home page: the other pages have no Store), `tests/code-rules.test.mjs` and `tests/no-js.test.mjs` (one pattern each: the two lazily loaded files), `work-notes/preview/build-artifact.py` (one line).
+- `tests/shop-pop.test.mjs`, `lang/src/{es,hi,vi,zh}.json` (six new words each, under "js", placed after "Close"), `tools/pages.py` (the two script tags stay on the home page: the other pages have no Store), `tests/code-rules.test.mjs` and `tests/no-js.test.mjs` (one pattern each: the two lazily loaded files), `tests/keyboard.test.mjs` (the Tab-order rule lets the focus go to the next column inside the Store: the cards stand in two CSS columns and have 55 new Tab stops; the rule is unchanged everywhere else), `work-notes/preview/build-artifact.py` (one line).
 
 ## For main
 README.md, in the Shop row ("Shop section"), add after the last sentence:
@@ -30,17 +30,31 @@ A card that has a list carries the class `shop-card-pop` and, inside it, `button
 `flock /tmp/wa-heavy.lock node tests/shop-pop.test.mjs` (about 6 minutes on a quiet computer: it opens about 25 pages). To work on one part: `SHOPPOP_ONLY=hover` (or `dormant`, `data`, `keys`, `languages`, `bigfont`, `preview`, several with commas). The part "preview" builds the preview into a temporary folder and needs python3.
 
 ## The real site
-The farm has not given real lists, so the real site should not carry the made-up ones. For a push, take BOTH script lines out of `index.html`, `js/shop-pop.js` and `js/shop-sample.js`, the way `js/tour.js` goes (the files may stay in the repo; without the lists the feature is not there, and the loader is a file the real first visit does not need: it counts as one more request). The hover block in `css/extras.css` matches nothing without the script and may stay (about 0.7 KB with brotli) or go with the two lines. When the real lists arrive: put both lines back, replace `js/shop-sample.js` (same shape), and everything works.
+The farm has not given real lists, so the real site should not carry the made-up ones. For a push, take BOTH script lines out of `index.html`, `js/shop-pop.js` and `js/shop-sample.js`, the way `js/tour.js` goes (the files may stay in the repo; without the lists the feature is not there, and the loader is a file the real first visit does not need: it counts as one more request). The hover block in `css/extras.css` matches nothing without the script and may stay (441 bytes with brotli, 533 with gzip) or go with the two lines. When the real lists arrive: put both lines back, replace `js/shop-sample.js` (same shape), and everything works.
 
 ## Browser-support table
 `node tests/browser-support.test.mjs` is red on this branch for ONE name, and only because the table has not seen it yet (the table is main's, rebuilt with network access): the message is `no new use of the features whose fallback was weighed one by one (...): css-pseudo:focus-visible: css/shop-pop.css uses it 1 times, 0 were reviewed`. It is the white focus ring of the pop-up's X (`.shop-pop-x:focus-visible`). Fallback: a browser that does not know the selector drops that one rule and shows its own focus ring, as it already does for the site's own `:focus-visible` rule in `css/styles.css`. Please run `tools/browser_support_table.mjs` once after the merges so the use is recorded. Everything else passes: `inert` is set as an attribute next to `aria-hidden` (`setAttribute('inert', '')`), so it is not a name the table lists (a browser that does not know it still has `aria-hidden` and the Tab loop); in the script `:focus-visible` is asked inside a `try` with a fallback; the other CSS uses only what the site already uses (`touch-action`, `overscroll-behavior`, `place-items`, `position: sticky`, `min()`, custom properties).
+
+If the pop-up ever goes on the real site, `docs/BROWSER_SUPPORT.md` could get one line: before Safari 15.5, Chrome 102 and Firefox 112 the `inert` attribute does nothing; the pop-up still hides the page behind it with `aria-hidden` and keeps Tab inside, so it works the same for a keyboard and a screen reader.
+
+## Weight (first visit on a slow phone)
+The real file set (no tour, no demo), measured with the same code as `tests/slow-phone.test.mjs` (phone, Slow 4G, English, text compressed like the real host), on the last commit of this branch:
+
+| the real first visit | files | bytes |
+|---|---|---|
+| before (a21f60f) | 21 | 424,759 (414.8 KB) |
+| both script lines out of `index.html`, only the hover block in `css/extras.css` left | 21 | 425,278 (415.3 KB), +519 |
+| `js/shop-pop.js` kept, no sample lists (the feature dormant) | 22 | 425,850 (415.9 KB), +1,091 |
+| loader + sample lists + the pop-up code the loader then asks for (the preview) | 24 | 432,636 (422.5 KB), +7,877 |
+
+The limits are 24 files and 420 KB, so a real site with only the loader line has 4 KB to spare, and the preview set is 2.5 KB over: one more reason the sample lists stay off the real site. Not counted above: `css/shop-pop.css` (asked for only when a card is first pointed at) and the six new words in `lang/*.js` (+113 to +142 bytes with brotli, only for visitors in es, hi, vi, zh). With the pop-up code in the loader's own file the dormant real first visit was 419.4 KB, 0.6 KB under the limit: that is why the code is in a second file. Sizes of the files (raw / gzip -9 / brotli): `js/shop-pop.js` 955 / 562 / 453, `js/shop-pop-box.js` 13,275 / 4,684 / 4,044, `css/shop-pop.css` 5,213 / 1,971 / 1,643, `js/shop-sample.js` 8,531 / 2,273 / 2,030, the hover block in `css/extras.css` +1,957 / +533 / +441.
 
 ## What the preview build must do
 One line in `work-notes/preview/build-artifact.py` (added here, in `script_block`, just before `return block`): for `js/shop-pop.js` it puts `css/shop-pop.css` in the page as `<style data-shop-pop-css>` and `js/shop-pop-box.js` in a `<script>` in front of it, so that nothing is asked for later (the viewer lets a page load only its own published files). `js/shop-pop.js` and `js/shop-sample.js` are plain `<script>` tags of `index.html`, so the build inlines them in place already.
 
 ## Things I was not sure about (the default I took)
 - Decision 1 of the spec says the `.shop-full` bars have no entry, but the data helper's spec and test 2 of the spec cover groups 2 and 3, so the pizza and ice cream bars HAVE lists and a button. They grow less (4.5 percent) and their own links stay on top of the button.
-- The spec says `js/shop-pop.js` is the loader plus the pop-up code. To keep the real site's first visit light (the real file set is at 415 KB of the 420 KB limit), the pop-up code is in a second file, `js/shop-pop-box.js`, that the small `js/shop-pop.js` asks for only when the sample lists are there. Folding the two files together is a copy and paste; the preview build line and the two test patterns would go back to one file.
+- The spec says `js/shop-pop.js` is the loader plus the pop-up code. To keep the real site's first visit light (it is 21 files and 414.8 KB now, limits 24 and 420: see Weight), the pop-up code is in a second file, `js/shop-pop-box.js`, that the small `js/shop-pop.js` asks for only when the sample lists are there. Folding the two files together is a copy and paste; the preview build line and the two test patterns would go back to one file.
 - The button covers the whole card, so the card's words cannot be selected with the mouse. Links in a card (the pizza bar's two) stay above it.
 - Chinese: the notice keeps its parentheses as the full-width ones used in Chinese text.
 - The beer group is not in this branch: the test accepts the page with or without it, and wants the 16 drinks to have lists once their cards are there.
