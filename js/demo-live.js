@@ -527,7 +527,11 @@
       return tstr(clockMin(l, timeAt(l, now())));
     }
     function today() { var l = L(); return l.baseDate || Data.farmParts(new Date(now())).date; }
-    function clockAt(t) { return tstr(clockMin(L(), t)); }
+    function clockAt(t) {   // before the first start the pretend clock is the real farm clock, so a time later than now is counted from it
+      var l = L();
+      if (l.baseMin === undefined) return tstr(((tmin(Data.farmParts(new Date(now())).time) + Math.floor((t - timeAt(l, now())) / 60000)) % 1440 + 1440) % 1440);
+      return tstr(clockMin(l, t));
+    }
     function tally(name) {
       return store.transact(function (st) { var l = live(st); l.tally = l.tally || {}; l.tally[name] = (l.tally[name] || 0) + 1; return l.tally[name]; });
     }

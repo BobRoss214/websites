@@ -58,6 +58,7 @@ const signature = (x) => JSON.stringify(['visits', 'orders', 'requests', 'messag
 {
   const x = make();
   ok('it is OFF until somebody starts it (a plain tick makes nothing), at speed Busy, with the real farm clock', x.live.isOn() === false && x.live.speed() === 'busy' && (x.advance(30), lv(x.st, 'orders').length === 0 && x.live.stats().made === 0) && x.live.clock() === '11:30', x.live.clock());
+  ok('before the first start clockAt() counts from the real farm clock (11:30 now, so 2 minutes on is 11:32)', x.live.clockAt(x.live.time() + 120000) === '11:32' && x.live.clockAt(x.live.time()) === '11:30', x.live.clockAt(x.live.time() + 120000));
   x.live.start();
   ok('start() turns it on', x.live.isOn() === true);
   x.live.setSpeed('rush');

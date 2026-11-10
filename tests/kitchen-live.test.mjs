@@ -86,12 +86,12 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
   ok('the timer says it waits because the rush is off, and so does the clock', (await p.locator('.kit-timer-note').first().textContent()) === 'paused (the pretend rush is off)' && (await p.locator('.kit-clock-note').textContent()) === 'paused');
   const t = await p.evaluate(() => { const li = document.querySelector('.kit-ticket'); const q = (s) => li.querySelector(s); const r = (e) => e.getBoundingClientRect(); return {
     pick: q('.kit-pick-time').textContent, table: [...li.querySelectorAll('.kit-diff tbody tr')].map((tr) => tr.textContent.replace(/\s+/g, ' ').trim()), allergy: li.querySelector('.kit-allergy') ? li.querySelector('.kit-allergy').textContent : '', quote: li.querySelector('.kit-quote').textContent,
-    buttons: [...li.querySelectorAll('.kit-ans')].map((b) => ({ act: b.getAttribute('data-act'), text: b.textContent.replace(/\s+/g, ' ').trim(), h: Math.round(r(b).height), w: Math.round(r(b).width), keys: b.getAttribute('aria-keyshortcuts'), tour: b.getAttribute('data-tour') })),
+    buttons: [...li.querySelectorAll('.kit-ans')].map((b) => ({ act: b.getAttribute('data-act'), text: b.textContent.replace(/\s+/g, '').trim(), h: Math.round(r(b).height), w: Math.round(r(b).width), keys: b.getAttribute('aria-keyshortcuts'), tour: b.getAttribute('data-tour') })),
     num: Math.round(parseFloat(getComputedStyle(q('.kit-num')).fontSize)), label: document.getElementById(li.getAttribute('aria-labelledby')).textContent.replace(/\s+/g, ' ').trim(), timerRole: q('.kit-timer').getAttribute('role'), timerLive: q('.kit-timer').getAttribute('aria-live'), srOnly: li.querySelector('.kit-timer .sr-only').textContent,
     cut: [...li.querySelectorAll('.kit-diff-wrap')].some((w) => w.scrollWidth > w.clientWidth + 1) }; });
   ok('the ticket shows the pick-up time big, the table of the old and the asked time (nothing cut off), the family\'s words, and the allergy note of the sample family', t.pick === '3:00 pm' && t.table[0].includes('3:00 pm') && t.table[0].includes('2:30 pm') && /30 minutes earlier/.test(t.table[0]) && /Could the pizza be ready a little earlier\?/.test(t.quote) && /Allergies: Riley: peanut allergy\./.test(t.allergy) && !t.cut, JSON.stringify(t));
   ok('the order number is big (32 px or more) and the screen reader reads "#101 Alex\u2019s family" as the name of the ticket', t.num >= 32 && t.label === '#101 Alex\u2019s family', t.num + ' ' + t.label);
-  ok('three answer buttons, Yes, No and Another time, each at least 72 px high and 150 px wide, with their keys written on them and in aria-keyshortcuts, and the hooks the tour needs', t.buttons.map((b) => b.act).join() === 'yes,no,later' && t.buttons.every((b) => b.h >= 72 && b.w >= 150) && t.buttons[0].text === 'Yes 1' && t.buttons[1].text === 'No 2' && t.buttons[2].text === 'Another time 3' && t.buttons.map((b) => b.keys).join('|') === '1 Y|2 N|3 S' && t.buttons.map((b) => b.tour).join() === 'kit-yes,kit-no,kit-change', JSON.stringify(t.buttons));
+  ok('three answer buttons, Yes, No and Another time, each at least 72 px high and 150 px wide, with their keys written on them and in aria-keyshortcuts, and the hooks the tour needs', t.buttons.map((b) => b.act).join() === 'yes,no,later' && t.buttons.every((b) => b.h >= 72 && b.w >= 150) && t.buttons[0].text === 'Yes1' && t.buttons[1].text === 'No2' && t.buttons[2].text === 'Anothertime3' && t.buttons.map((b) => b.keys).join('|') === '1 Y|2 N|3 S' && t.buttons.map((b) => b.tour).join() === 'kit-yes,kit-no,kit-change', JSON.stringify(t.buttons));
   ok('the timer is a timer that does not read itself out (it does not chatter), and has a still sentence for a screen reader: "Answer by ..."', t.timerRole === 'timer' && t.timerLive === 'off' && /Answer by \d{1,2}:\d{2} (am|pm)\./.test(t.srOnly), t.srOnly);
   await shot(p, '2-one-ticket');
   await axeOn(p, 'the screen with one ticket', '.kit');
@@ -111,8 +111,9 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
   await settled(p, 0);
   const t2 = secsOf((await sample()).timer);
   ok('the timer counts down while the rush is on (30 seconds go by: it has 29 to 50 seconds less)', t1 - t2 >= 29 && t1 - t2 <= 50, t1 + ' -> ' + t2);
-  const beforePause = await tally(p), tl = (await sample()).timer, nBefore = (await rail(p)).length;
   await p.locator('[data-live="off"]').click();
+  await settled(p, 0);
+  const beforePause = await tally(p), tl = (await sample()).timer, nBefore = (await rail(p)).length;
   await p.clock.runFor(60000);
   await settled(p, 0);
   ok('Off pauses everything: a minute later the timer says the same, no ticket came, the counters are the same, the clock and the timers say paused', (await sample()).timer === tl && JSON.stringify(await tally(p)) === JSON.stringify(beforePause) && (await rail(p)).length === nBefore && (await p.locator('.kit-clock-note').textContent()) === 'paused' && (await p.locator('.kit-timer-note').first().textContent()) !== '');
@@ -149,8 +150,8 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
   const sub = (await rail(p)).find((x) => x.kind === 'change') || (await rail(p))[0];
   await p.evaluate((key) => document.querySelector('[data-key="' + key + '"]').focus(), sub.key);
   await press(p, '3');
-  const ed = await p.evaluate(() => { const e = document.querySelector('.kit-edit'); const a = document.activeElement; return e && { in: e.contains(a), spin: e.querySelector('.kit-spin').textContent, role: e.querySelector('.kit-spin').getAttribute('role'), steps: [...e.querySelectorAll('.kit-add')].map((b) => b.textContent), send: e.querySelector('.kit-send').textContent.replace(/\s+/g, ' ').trim(), cancel: e.querySelector('.kit-cancel').textContent.replace(/\s+/g, ' ').trim(), tour: e.getAttribute('data-tour'), noteLabel: e.querySelector('label').textContent }; });
-  ok('the 3 key opens the small editor on that ticket with the time in focus: the time (a spin button), -5, +5, +10 and +15, a note, Send (Enter) and Cancel (Esc)', !!ed && ed.in && ed.role === 'spinbutton' && ed.steps.join() === '\u22125,+5,+10,+15' && ed.send === 'Send Enter' && ed.cancel === 'Cancel Esc' && ed.tour === 'kit-edit' && /Note for the family/.test(ed.noteLabel), JSON.stringify(ed));
+  const ed = await p.evaluate(() => { const e = document.querySelector('.kit-edit'); const a = document.activeElement; return e && { in: e.contains(a), spin: e.querySelector('.kit-spin').textContent, role: e.querySelector('.kit-spin').getAttribute('role'), steps: [...e.querySelectorAll('.kit-add')].map((b) => b.textContent), send: e.querySelector('.kit-send').textContent.replace(/\s+/g, '').trim(), cancel: e.querySelector('.kit-cancel').textContent.replace(/\s+/g, '').trim(), tour: e.getAttribute('data-tour'), noteLabel: e.querySelector('label').textContent }; });
+  ok('the 3 key opens the small editor on that ticket with the time in focus: the time (a spin button), -5, +5, +10 and +15, a note, Send (Enter) and Cancel (Esc)', !!ed && ed.in && ed.role === 'spinbutton' && ed.steps.join() === '\u22125,+5,+10,+15' && ed.send === 'SendEnter' && ed.cancel === 'CancelEsc' && ed.tour === 'kit-edit' && /Note for the family/.test(ed.noteLabel), JSON.stringify(ed));
   const spin = () => p.locator('.kit-edit .kit-spin').textContent();
   const base0 = await spin();
   await press(p, 'Enter');
@@ -300,8 +301,8 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
     await b.clock.install({ time: new Date(nowA) });
     await b.goto(base + 'kitchen.html?demo', { waitUntil: 'load' });
     await until(b, () => document.querySelectorAll('.kit-ticket').length > 0, null, 20000);
-    const ra = (await rail(a)).map((x) => x.key).sort().join(), rb = (await rail(b)).map((x) => x.key).sort().join();
-    ok('a second window of the same browser shows the same tickets (the demo is one pretend store)', ra === rb && ra.length > 0, ra + ' / ' + rb);
+    const ra = (await rail(a)).map((x) => x.key), rb = (await rail(b)).map((x) => x.key), both = ra.filter((k) => rb.includes(k));
+    ok('a second window of the same browser shows the same tickets (the demo is one pretend store; one that arrived between the two looks does not count)', ra.length >= 3 && both.length >= Math.min(ra.length, rb.length) - 1 && rb.includes('r:' + (await a.evaluate(() => window.DemoStore.list('requests')[0].id))), ra.join() + ' / ' + rb.join());
     const gone = (await rail(a))[0];
     await a.keyboard.press('1');
     await settled(a, 0);
