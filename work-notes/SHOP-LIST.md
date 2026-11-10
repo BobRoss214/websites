@@ -9,8 +9,9 @@ This is the list the Shop section of `index.html` (`#shop`, "What to buy at Wise
 Format: `slug | English name | price | small note | what to draw`
 The slug is the icon id: the picture is the SVG symbol `p-<slug>` (so `p-hot-pretzel`).
 A price is `$5`, `$3 small, $4 large`, `$.84 a pound`, `$15 to $17` (a range), `$19.99 (8 oz)` (one size), `basil $1 a stem` or `Free`. The card's English name is exactly the name in this list.
+A group may also have a line `Note under the band: words` (the short sentence the page shows under the group's heading, word for word) and small headings written `#### Beer` (the products under one belong to it, up to the next; the page shows the heading above its own cards, in this order).
 
-## A. Groups 1-6 (food and drink). Group names are the section headings.
+## A. Groups 1-7 (food and drink). Group names are the section headings.
 
 ### 1. Snacks & treats (at the barn)
 - hot-pretzel | Hot pretzel | $5 | Add Pumpkin Spice Ricotta or Caramel Apple for +$2. Caramel Apple contains nuts. | a big salted soft pretzel
@@ -41,10 +42,34 @@ A price is `$5`, `$3 small, $4 large`, `$.84 a pound`, `$15 to $17` (a range), `
 - kombucha | Kombucha | $5 | | an amber bottle with a swirl
 - iced-coffee | Organic iced coffee | $5 | | a clear cup, iced coffee, straw
 - refill | Water bottle refill | $0.50 | bring your own bottle | a water bottle with a tap/drip
-- beer-wine | Beer, hard cider & wine | $6 | Every beer, hard cider and wine is the same price. What's pouring changes. | a beer glass + a wine glass + a cider can (no brand names, no logos)
-(Do not put an age statement; check what the page already says about alcohol and reuse it, or say nothing. The older "Please do not bring your own alcohol" line stays in this group.)
+(The old card "Beer, hard cider & wine" is not here any more: it became the group 5 below, and its words are that group's note. The older line "Please do not bring your own alcohol" moved to group 5 with it.)
 
-### 5. From our pantry & friends (jars, bags and bottles at the barn)
+### 5. Beer, cider & wine
+(The farm's chalkboard, sent by the site builder as a photo on 10 Nov 2026: "Beer $6", "Cider (Red clay) $6", "Wine $6". Every drink is $6. The order is the board's: beer, then cider, then wine. The board writes "AVB" where it means ABV: the page says ABV. A maker or a drink's name stays as written in every language. No "sold out" label, no tasting words, no food-pairing words, no health words.)
+Note under the band: Every beer, hard cider and wine is the same price. What's pouring changes.
+(Do not put an age statement; the page says nothing about an age, so this group says nothing. No place line: the page does not say where the beer, cider and wine are sold, so the band has none, and nobody may invent one. The older line "Please do not bring your own alcohol" is in the foot of this group, with the drink icon.)
+#### Beer
+- dales-light-lager | Dales light lager | $6 | Oskars Blues. American light lager, 4.2% ABV, 12 oz. | a pale straw can (no logo, no lettering)
+- blood-orange-wheat | Blood orange wheat | $6 | Southern Range. Light wheat ale, 5.3% ABV. | a hazy orange pint glass with an orange slice
+- hop-drop | Hop drop | $6 | NODA. West coast style IPA, 7.2% ABV. | a golden IPA pint glass and a green hop cone
+- kei-truck | Kei Truck | $6 | Triple C. Japanese style rice lager, 4.2% ABV. | a pale rice lager in a tall pilsner glass
+- oktoberfest | Oktoberfest | $6 | Amber lager with German malts and hops, 5.5% ABV. | an amber lager in a dimpled mug
+- three-c-ipa | 3C | $6 | West coast style IPA, 6.2% ABV. | an amber IPA in a tulip glass
+- planet-pulp-ipa | Planet Pulp IPA | $6 | Tropical IPA, 6.5% ABV. | a hazy gold pint glass and a pineapple wedge
+- hoppy-amber | Hoppy Amber | $6 | NA Brooklyn. Non-alcoholic. | an amber bottle
+- loyal-to-the-dream | Loyal to the dream | $6 | Wise Man. Light lager, 5.5% ABV. | a light lager in a tall glass
+- shape-shifter-pumpkin-spice | Shape shifter pumpkin spice | $6 | Blonde, 5.5% ABV. | a blonde pint glass and a tiny pumpkin
+#### Cider (Red clay)
+- peach-crumble-cider | Peach crumble | $6 | 6.5% ABV. | a pale gold cider glass and a peach slice
+- brambling-blackberry-cider | Brambling blackberry | $6 | 6.9% ABV. | a rosy-purple glass and blackberries
+#### Wine
+- bev-pinot-grigio | Pinot Grigio | $6 | Bev (Gris). 13% ABV. | a white wine glass, pale gold
+- glitz-bubbly-white | Dry bubbly white | $6 | Glitz. 13% ABV. | a flute with bubbles
+- noblio-sauvignon-blanc | Sauvignon blanc | $6 | Noblio. 13% ABV. | a white wine glass, pale green
+- franciscan-cabernet | Cabernet Sauvignon | $6 | Franciscan. 14.2% ABV. | a red wine glass, deep red
+(The group's own picture, in its band and on its jump button, is the old drink symbol `p-beer-wine` (a glass, a glass and a can). No picture of the 16 may carry a logo or lettering. "Red clay" is the cider maker's name on the board; the heading of the small group of ciders is "Cider (Red clay)".)
+
+### 6. From our pantry & friends (jars, bags and bottles at the barn)
 - honey | Local honey | $14 | 16 oz jar, from a local beekeeper | a skep-shaped honey jar with a bee
 - honeycomb | Honey with honeycomb | $20 | a jar with a piece of honeycomb inside | a quilted jar with a comb
 - jam | Jam | ? | Best Jam Ever: Fizzy Bizzy Berry, Blapple, raspberry | two jam jars with kraft labels
@@ -58,14 +83,14 @@ A price is `$5`, `$3 small, $4 large`, `$.84 a pound`, `$15 to $17` (a range), `
 (Do NOT repeat any health claim from the brand's sign. Describe the product, name the maker. Only the 8 oz syrup bottle is shown: no 16 oz line.)
 (The honey with honeycomb card is REAL: the owner's last two photos, "Batch 14" in `PRODUCTS.md`.)
 
-### 6. Fresh bread & cookies (Crowe's Dough)
+### 7. Fresh bread & cookies (Crowe's Dough)
 - sourdough | Sourdough bread | $14 | Long-fermented, in a paper bag | a round crusty loaf with a score mark in a paper bag
 - pancake-mix | Sourdough pancake mix | $11 | | a pouch with a pancake stack picture
 - sourdough-cookie | Sourdough chocolate chip cookie | $9 | | a chunky cookie with chips
 
-## B. Groups 7-12 (things to take home and things to do)
+## B. Groups 8-13 (things to take home and things to do)
 
-### 7. Gifts & home (the gift corner at the barn)
+### 8. Gifts & home (the gift corner at the barn)
 - candle | Soy candle | $20 | Wood wick. Scents like Kokomo and Apple Harvest | an amber jar with a gold lid and a little flame
 - room-spray | Room & linen spray | $17 | 8 oz. Scents like Tobacco Barn and Christmas Hearth | an amber spray bottle with a white label
 - soap | Soap | $5 | In a little organza bag | a flower-shaped soap in a sheer bag with a ribbon
@@ -75,7 +100,7 @@ A price is `$5`, `$3 small, $4 large`, `$.84 a pound`, `$15 to $17` (a range), `
 - painted-rock | Painted rocks | $4 small, $5 large | | two smooth rocks painted like a ladybug and a sunflower
 (No candle weight: the photos give 16 oz in one place and 14 oz in another.)
 
-### 8. Wear Wise Acres
+### 9. Wear Wise Acres
 (ALL prices are `?`. Do not state any price.)
 - trucker-cap | Trucker cap | ? | Green, with the Wise Acres heart logo. In the youth sunhats basket | a green mesh-back cap with a red apple-heart logo
 - bucket-hat | Bucket hat | ? | Cream or black. In the youth sunhats basket | a cream bucket hat with a little logo
@@ -83,13 +108,13 @@ A price is `$5`, `$3 small, $4 large`, `$.84 a pound`, `$15 to $17` (a range), `
 - sweatshirt | Sweatshirt | ? | Adult sweatshirts | a green hoodie
 - tote-bag | Canvas & linen bags | ? | | a cream canvas tote with the logo
 
-### 9. Plants to take home
+### 10. Plants to take home
 - lavender-plant | Lavender plant | $5 | Provence, Exceptional, Phenomenal | a small pot with a purple lavender bush
 - strawberry-plant | Strawberry plant | $5 | Fronteras | a small pot with a strawberry plant and a red berry
 - blackberry-plant | Blackberry plant | $17.50 | Ouachita, Natchez, Prime Ark Traveler | a pot with a cane and black berries
 - mum | Local mums | 8" $8, 10" $13, 12" $20 | Potted mums in yellow, orange, gold and pink | a pot of round fall mums
 
-### 10. Fall & holidays
+### 11. Fall & holidays
 - pumpkin | NC pumpkins | $0.84 a pound | Big pumpkins are sold by the pound. Weigh them at the weight station by the barn. On the barn display, each mini pumpkin is $1.50 and each medium pumpkin is $4.00. | three pumpkins (orange, white, blue-gray)
 - mini-pumpkin | Mini pumpkin | $1.50 | | one tiny orange pumpkin and a striped gourd
 - straw-bale | Mini straw bale | $6 | | a small tied straw bale
@@ -97,11 +122,11 @@ A price is `$5`, `$3 small, $4 large`, `$.84 a pound`, `$15 to $17` (a range), `
 - christmas-tree | Christmas trees | ? | from the NC mountains. Dates: keep the page's existing wording only (the farm has two different dates on file); details and pre-orders are on this website | a green fir tree with a red bow
 (The $0.84 is the card's price. The $1.50 and the $4.00 are only named in the note, as the barn display's prices; the page shows no other amount on this card.)
 
-### 11. Flowers
+### 12. Flowers
 - flower-jar | U-cut flower jar | $18.50 | Buy a jar at the register, pick up clippers, head to the field | a jar of zinnias, marigolds, celosia and a sunflower
 - farmhouse-jar | Farmhouse jar | $3 | An empty jar for your flowers | a clear mason jar with a pink tag
 
-### 12. Farm visit, rides & picking (ride tokens at the barn). These are already on the site; show them as a small compact group that links to the add-ons and u-pick sections, do not duplicate their long text.
+### 13. Farm visit, rides & picking (ride tokens at the barn). These are already on the site; show them as a small compact group that links to the add-ons and u-pick sections, do not duplicate their long text.
 - wagon-ride | Wagon ride | $4.50 | Ages 3 and younger ride free. The farm's older page said 2 and younger; the site builder changed it to 3 on Nov 3 2026 | the tractor + wagon (reuse the existing symbols `#tractor`/`#wagon` if they fit)
 - barrel-train | Barrel train | $3 | Ages 12 and under only. These words come from the farm's older page and stay | reuse the existing `#barrel-train`
 - corn-pit | Corn pit | $4 | Buy one, get one free on Thursdays with reservations. These words come from the farm's older page and stay | a small corn cob drawing (`p-corn-cob`, made for the Shop) Better: skip an icon for this one and use `p-corn-cob`.
@@ -115,11 +140,19 @@ Five cards were already on the farm's older page, before the Shop was built, and
 
 ## Decisions (24 Oct 2026) that the list now follows
 
-1. Card names: where the page and the list only differed in wording the page's name wins: "Waxhaw Creamery ice cream", "Local mums", "NC pumpkins", "Sunn hemp maze", "U-pick tomatoes & basil", and the heading of group 12, "Farm visit, rides & picking". The soap card is just "Soap" (no photo says handmade).
+1. Card names: where the page and the list only differed in wording the page's name wins: "Waxhaw Creamery ice cream", "Local mums", "NC pumpkins", "Sunn hemp maze", "U-pick tomatoes & basil", and the heading of group 13, "Farm visit, rides & picking". The soap card is just "Soap" (no photo says handmade).
 2. Pizza: the prices ($15 to $17, +$9, +$3) and the opening hours shown in the pizza group come from the farm's own older page and stay. The old rule "pizza shows no price" is dropped.
 3. Taken out on purpose: the cards "Organic strawberry lemonade" and "Apple cider" (their words are a note on the Slushie card), the "16 oz $32.99" elderberry syrup line, the kettle corn note "big bag", "sparkling juice" after Izze, and the candle weight. The test makes sure "big bag", "handmade" (soap) and "sparkling juice" do not come back.
 4. Pumpkins: the card's price is $0.84 a pound; the note names the barn display's $1.50 (mini) and $4.00 (medium). No other amount.
-5. The pretzel note adds "Caramel Apple contains nuts."; the beer, hard cider and wine card says "$6" and "the same price" (no "each").
+5. The pretzel note adds "Caramel Apple contains nuts."; the group Beer, cider & wine says "the same price" in its note (no "each") and each of its 16 drinks says "$6".
 6. The ages on the wagon ride (3 and younger ride free, changed from 2 by the site builder on Nov 3 2026) and the barrel train (12 and under, from the older page) are allowed. The dates on the u-pick tomatoes & basil card are the fall season's (mid-September through early November; the older page said late September through October, changed by the site builder on Nov 9 2026).
 7. The honey with honeycomb card ($20) is real and stays. A price the farm has not confirmed stays "Prices coming soon", and the test checks that those cards show no dollar sign (jam, elderberry shrub, the five wear cards, Christmas trees, and the three older "Prices coming soon" cards).
 8. The two jump buttons "Wise Pie pizza" and "U-cut flower jar" do not carry their group's name ("Pizza", "Flowers"): the top menu already has links with those names that go somewhere else, and the link-names check wants two links with the same words to lead to the same place. The test knows these two names.
+
+## Decisions (10 Nov 2026): the group Beer, cider & wine
+
+9. The site builder asked for "its own beer and wine section" in the Store ("a big part of the Wiseacres profits") and sent a photo of the farm's chalkboard. It is group 5, right after Drinks. The one old card "Beer, hard cider & wine" is replaced by it: its words are the group's note ("Every beer, hard cider and wine is the same price. What's pouring changes."), and the line "Please do not bring your own alcohol" moved from the foot of Drinks to the foot of this group. The band picture and the jump button use the old symbol `p-beer-wine`.
+10. The 16 drinks are the board's own, in the board's order, each $6 ("Beer $6", "Cider (Red clay) $6", "Wine $6"). Left out on purpose: the two ciders whose names are hidden under the taped note "S/O SOLD OUT" (nobody can read them, and they are sold out). No "sold out" label anywhere. The board's "AVB" is written ABV. "NA Brooklyn : Hoppy Amber" has the maker NA Brooklyn and no % and no style on the board; the builder answered on 10 Nov that NA means non-alcoholic, so its note is exactly "NA Brooklyn. Non-alcoholic." (and its pretend ingredient list stays a plain beer list). "Peach crumble" is half hidden on the board: the page says "Peach crumble" until the builder says otherwise. The three small headings are the board's: "Beer", "Cider (Red clay)", "Wine".
+11. A maker's name and a drink's name stay as written in every language (the list file's `names`); the style words in the notes ("American light lager", "West coast style IPA" ...) and the name "Dry bubbly white" are translated, and the numbers and "ABV" stay as written.
+12. The group has no place line, no age statement, no tasting or food-pairing words and no health words, and Drinks no longer carries the alcohol line. `tests/shop.test.mjs` checks each of these through `tests/shop-list.json`.
+13. The builder's answers (10 Nov): the two cider names under the "sold out" note stay out of the page for now (main asks again later); "NA" in "NA Brooklyn : Hoppy Amber" means non-alcoholic, so the card says so (decision 10); the spellings stay as on the chalkboard (Oskars Blues, Dales, Kei Truck, Bev (Gris), Peach crumble; main checks them later); the group name stays "Beer, cider & wine".

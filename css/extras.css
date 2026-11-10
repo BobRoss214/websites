@@ -258,6 +258,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 .sg-icecream{--g:#ff8fb1;--gt:var(--ink);--gp:#ffdde4}
 .sg-pizza{--g:#d72a43;--gt:#fff;--gp:#ffd9de}
 .sg-drinks{--g:#8fd3f4;--gt:var(--ink);--gp:#d6effb}
+.sg-beerwine{--g:#7d1f3f;--gt:#fff;--gp:#f6dde4}   /* Beer, cider & wine: a deep wine red under white text (9.8 to 1) */
 .sg-pantry{--g:#d9a066;--gt:var(--ink);--gp:#f6e2c8}
 .sg-bread{--g:#7a4b2a;--gt:#fff;--gp:#ecd9c6}
 .sg-gifts{--g:#7b3fa0;--gt:#fff;--gp:#eadcf4}
@@ -266,6 +267,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 .sg-fall{--g:#f58a1f;--gt:var(--ink);--gp:#ffe0bd}
 .sg-flowers{--g:#c43c7a;--gt:#fff;--gp:#fbdbe9}
 .sg-farm{--g:#8bc34a;--gt:var(--ink);--gp:#e4f2cf}
+.shop-subh{margin:12px 0 6px 8px;font:700 1.35rem/1 var(--hand);color:var(--ink-soft)}   /* the small headings inside the group Beer, cider & wine (Beer, Cider (Red clay), Wine), in the look of "On the board now" of the ice cream */
 .shop-group{margin-top:clamp(16px,2.4vw,26px)}
 .shop-groups > .shop-group:first-child{margin-top:0}
 .shop-band{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;margin:0 0 10px;padding:4px 14px 4px 6px;background:var(--g);color:var(--gt);border:3px solid var(--ink);border-radius:40px;box-shadow:0 4px 0 var(--ink)}

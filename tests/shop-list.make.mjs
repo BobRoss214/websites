@@ -7,8 +7,9 @@
  *
  * The list has one line per product:   - slug | English name | price | small note | what to draw
  * and one heading per group:           ### 1. Snacks & treats (at the barn)
+ * A group may have small headings inside it (#### Beer: the products under one belong to it) and a line  Note under the band: words
  * A price of `?` means the farm has not confirmed it: the page then shows "Prices coming soon" and no dollar sign.
- * Nothing here is written by hand except the tables below (SYMBOLS, RULES, SAYS, AVOID, BUTTONS, NAMES, LOANWORDS, OLD_FACTS and EXTRAS). Each one says
+ * Nothing here is written by hand except the tables below (SYMBOLS, RULES, GROUP_RULES, SAYS, GROUP_SAYS, AVOID, GROUP_AVOID, BUTTONS, NAMES, LOANWORDS, OLD_FACTS and EXTRAS). Each one says
  * where its words come from, and this script stops when the list or the farm's older page no longer has them. The rest is read from the list, so a
  * changed price in the list is a changed price here.
  * tests/shop.test.mjs checks the page against the file this makes. It never reads the page to decide what is right. */
@@ -26,7 +27,7 @@ const src = args.find((a) => !a.startsWith('--')) || path.join(path.dirname(HERE
 if (args.includes('--help') || !fs.existsSync(src)) { console.log('Usage: node tests/shop-list.make.mjs [PATH/TO/SHOP-LIST.md] [--check]   (without a path: work-notes/SHOP-LIST.md)'); process.exit(args.includes('--help') ? 0 : 2); }
 const md = fs.readFileSync(src, 'utf8').replace(/\r\n/g, '\n');   // (a Windows copy of the list with CR LF line ends is the same list)
 
-/* ---- the pictures: by default the symbol p-<slug>; these four reuse a picture that is drawn elsewhere (the list says so in group 12) */
+/* ---- the pictures: by default the symbol p-<slug>; these four reuse a picture that is drawn elsewhere (the list says so in group 13) */
 const SYMBOLS = {
   'wagon-ride': ['tractor', 'wagon'],            // "reuse the existing symbols #tractor / #wagon"
   'barrel-train': ['barrel-train'],              // "reuse the existing #barrel-train"
@@ -37,8 +38,14 @@ const SYMBOLS = {
 /* ---- orders to the page maker that are in the list's own words; the phrases must still be in the list, or this stops */
 const RULES = {
   pizza: { needs: [/LINK to the existing page wise-pie\.html/, /Opening hours may show in this group/], set: { linkTo: 'wise-pie.html', hoursOk: ['10 am', '8 pm'] } },   // the hours of the farm's older page (see OLD_FACTS): no other clock time in the pizza group
-  'beer-wine': { needs: [/Do not put an age statement/], set: { noAgeStatement: true } },
   'christmas-tree': { needs: [/keep the page's existing wording only/], set: { noNewDates: true } },
+};
+
+/* ---- orders in the list's own words for a whole group (by the group's name): `needs` must still be in that group's lines of the list, `set` goes to the group (the test looks at the page's group box), `product` goes to every product of the group.
+ *      Beer, cider & wine: the page says nothing about an age, so no card says one; the page does not say where the drinks are sold, so the band has no place line; no picture of a drink carries lettering or a logo
+ *      (the test looks for drawn text and embedded pictures in the symbols; a logo it cannot see, the list says so) (the builder's group, 10 Nov 2026). */
+const GROUP_RULES = {
+  'Beer, cider & wine': { needs: [/Do not put an age statement/, /No place line/, /may carry a logo or lettering/], set: { noPlaceLine: true }, product: { noAgeStatement: true, noLettering: true } },
 };
 
 /* ---- sentences a card must carry, word for word (the decisions of 24 Oct 2026). Each one must be in the product's note in the list, or this stops. */
@@ -46,9 +53,14 @@ const SAYS = {
   'hot-pretzel': ['Caramel Apple contains nuts.'],
   slushie: ['Also on the board with the slushies: organic strawberry lemonade, apple cider'],
   pumpkin: ['Big pumpkins are sold by the pound.', 'Weigh them at the weight station by the barn.', 'On the barn display, each mini pumpkin is $1.50 and each medium pumpkin is $4.00.'],
-  'beer-wine': ['Every beer, hard cider and wine is the same price.', "What's pouring changes."],
+  'hoppy-amber': ['Non-alcoholic.'],   // the builder's answer of 10 Nov 2026: NA in "NA Brooklyn" means non-alcoholic, and the card must say so
   'wagon-ride': ['Ages 3 and younger ride free.'],   // the site builder's age since Nov 3 2026 (the farm's older page said 2): the card must carry this sentence, so the old age cannot come back unseen
   upick: ['Every weekend, mid-September through early November.'],   // the site builder's dates since Nov 9 2026 (the farm's older page said late September through October): the same dates as the fall season in js/season.js
+};
+
+/* ---- sentences a whole group box must carry, word for word (its note under the band, and the older line in its foot). Each must be in that group's lines of the list, or this stops. */
+const GROUP_SAYS = {
+  'Beer, cider & wine': ['Every beer, hard cider and wine is the same price.', "What's pouring changes.", 'Please do not bring your own alcohol'],   // the old card's words became the group's note; the older alcohol line moved here from Drinks
 };
 
 /* ---- words that were taken out of a card on purpose because no sign or photo says them: they must not come back. The card's own name is kept by the test anyway. */
@@ -58,12 +70,21 @@ const AVOID = {
   izze: [{ words: 'sparkling juice', why: 'no sign says "sparkling juice"; the sign says "Izze"' }],
 };
 
+/* ---- words that were taken out of a whole group on purpose (the group's own name keys the table): they must not come back */
+const GROUP_AVOID = {
+  Drinks: [{ words: 'Please do not bring your own alcohol', why: 'the line moved to the Beer, cider & wine group together with the old beer, hard cider and wine card' }],
+};
+
 /* ---- the jump button of a group that is named for a card of the group, not for the group: the top menu already has a link called "Pizza" and one called
  *      "Flowers" that go elsewhere, and the link-names test wants two links with the same words to lead to the same place (commit "Shop buttons: give Pizza and Flowers their own names") */
-const BUTTONS = { 3: 'pizza', 11: 'flower-jar' };   // group number -> the slug of the product whose name is the button's name
+const BUTTONS = { 3: 'pizza', 12: 'flower-jar' };   // group number -> the slug of the product whose name is the button's name
 
-/* ---- names that stay as written in every language (scents, makers): not left-over English. Each one must be in the list. */
-const NAMES = ['Tobacco Barn', 'Christmas Hearth', 'Apple Harvest', 'Kokomo'];
+/* ---- names that stay as written in every language (scents, makers, a drink's own name): not left-over English. Each one must be in the list.
+ *      The makers and the drinks of the farm's chalkboard (Beer, cider & wine, 10 Nov 2026) are written as the board has them; only the style words of a note ("American light lager" ...) and the name "Dry bubbly white" are translated. */
+const NAMES = ['Tobacco Barn', 'Christmas Hearth', 'Apple Harvest', 'Kokomo',
+  'Oskars Blues', 'Southern Range', 'NODA', 'Triple C', 'Wise Man', 'Red clay', 'Bev (Gris)', 'Glitz', 'Noblio', 'Franciscan', 'NA Brooklyn',
+  'Dales light lager', 'Blood orange wheat', 'Hop drop', 'Kei Truck', 'Oktoberfest', '3C', 'Planet Pulp IPA', 'Hoppy Amber', 'Loyal to the dream', 'Shape shifter pumpkin spice',
+  'Peach crumble', 'Brambling blackberry', 'Pinot Grigio', 'Sauvignon blanc', 'Cabernet Sauvignon'];
 
 /* ---- an English word that a language of the site uses as its own on the pages outside the Shop too (the test looks for it there, and only then lets the Shop use it) */
 const LOANWORDS = [{ lang: 'vi', word: 'pound', why: 'the Vietnamese texts of the tomato prices use "mỗi pound"; the Shop uses the same words (the same text block)' }];
@@ -103,10 +124,15 @@ for (const line of md.split('\n')) {
     const text = m[2];
     const name = text.replace(/\s*[(.].*$/, '').trim();               // "Farm visit, rides & picking (ride tokens ...). These are ..." -> "Farm visit, rides & picking"
     const where = (/\(([^)]*)\)/.exec(text) || [, ''])[1].trim();
-    cur = { n: Number(m[1]), name, where, slugs: [] };
+    cur = { n: Number(m[1]), name, where, slugs: [], lines: [] };
     groups.push(cur);
     continue;
   }
+  if (cur) cur.lines.push(line);                                          // the group's own lines of the list (for the words a group rule asks for)
+  m = /^#### (.+)$/.exec(line);                                           // a small heading inside the group: "Beer", "Cider (Red clay)", "Wine"
+  if (m) { if (!cur) throw new Error('a small heading before any group: ' + line); (cur.subs = cur.subs || []).push({ name: m[1].trim(), slugs: [] }); continue; }
+  m = /^Note under the band:\s*(.+)$/.exec(line);                         // the short sentence under the group's heading
+  if (m) { if (!cur) throw new Error('a note before any group: ' + line); cur.note = m[1].trim(); continue; }
   m = /^- ([a-z0-9]+(?:-[a-z0-9]+)*) \|(.*)$/.exec(line);
   if (!m) continue;
   if (!cur) throw new Error('a product line before any group: ' + line);
@@ -142,6 +168,7 @@ for (const line of md.split('\n')) {
     }
   }
   for (const [slug, r] of Object.entries(RULES)) if (slug === p.slug) { for (const re of r.needs) if (!re.test(md)) throw new Error(`rule for ${slug}: the list no longer says ${re}`); Object.assign(p, r.set); }
+  if (GROUP_RULES[cur.name] && GROUP_RULES[cur.name].product) Object.assign(p, GROUP_RULES[cur.name].product);
   if (SAYS[p.slug]) {
     for (const s of SAYS[p.slug]) if (!note.includes(s)) throw new Error(`${p.slug}: the card must say "${s}" but the list's note does not have these words`);
     p.says = SAYS[p.slug];
@@ -150,15 +177,27 @@ for (const line of md.split('\n')) {
   if (OLD_FACTS[p.slug]) p.oldPage = `${OLD_PAGE.file} at commit ${OLD_PAGE.commit}`;
   products.push(p);
   cur.slugs.push(p.slug);
+  if (cur.subs) cur.subs[cur.subs.length - 1].slugs.push(p.slug);
 }
 
 /* ---- the list must look like the list we were given: stop on anything odd instead of writing a wrong file ---- */
 const seen = new Set();
 for (const p of products) { if (seen.has(p.slug)) throw new Error('slug twice in the list: ' + p.slug); seen.add(p.slug); }
-if (groups.length !== 12) throw new Error('expected 12 groups, found ' + groups.length);
+if (groups.length !== 13) throw new Error('expected 13 groups, found ' + groups.length);
 if (groups.some((g) => !g.slugs.length)) throw new Error('a group with no product: ' + groups.find((g) => !g.slugs.length).name);
-if (groups.find((g) => g.n === 8).slugs.some((s) => !products.find((p) => p.slug === s).unknown)) throw new Error('group 8 (Wear Wise Acres): the list says ALL prices are "?"');
+if (groups.find((g) => g.n === 9).slugs.some((s) => !products.find((p) => p.slug === s).unknown)) throw new Error('group 9 (Wear Wise Acres): the list says ALL prices are "?"');
+groups.forEach((g, i) => { if (g.n !== i + 1) throw new Error(`the groups must be numbered 1, 2, 3 ... in the order of the page: "${g.name}" is number ${g.n} but comes ${i + 1}th`); });
+for (const g of groups) if (g.subs && (g.subs.some((x) => !x.slugs.length) || g.subs.reduce((n, x) => n + x.slugs.length, 0) !== g.slugs.length)) throw new Error(`group "${g.name}": every product must sit under one of its small headings (#### ...), and no small heading may be empty`);
 for (const table of [RULES, SAYS, AVOID, OLD_FACTS]) for (const slug of Object.keys(table)) if (!seen.has(slug)) throw new Error(`a rule names the product "${slug}", which the list does not have`);
+for (const table of [GROUP_RULES, GROUP_SAYS, GROUP_AVOID]) for (const name of Object.keys(table)) if (!groups.some((g) => g.name === name)) throw new Error(`a group rule names the group "${name}", which the list does not have`);
+for (const g of groups) {   // the rules of a whole group: the words must be in the group's own lines of the list
+  const text = g.lines.join('\n');
+  const gr = GROUP_RULES[g.name];
+  if (gr) { for (const re of gr.needs) if (!re.test(text)) throw new Error(`rule for the group "${g.name}": the list no longer says ${re}`); Object.assign(g, gr.set); }
+  if (GROUP_SAYS[g.name]) { for (const x of GROUP_SAYS[g.name]) if (!text.includes(x)) throw new Error(`the group "${g.name}" must say "${x}" but the list's lines for it do not have these words`); g.says = GROUP_SAYS[g.name]; }
+  if (GROUP_AVOID[g.name]) g.avoid = GROUP_AVOID[g.name];
+  if (g.note && !GROUP_SAYS[g.name]) throw new Error(`the group "${g.name}" has a note under the band: list its words in GROUP_SAYS, so the page is checked for them`);
+}
 for (const [n, slug] of Object.entries(BUTTONS)) {
   const g = groups.find((x) => x.n === Number(n));
   if (!g || !g.slugs.includes(slug)) throw new Error(`group ${n} has no product "${slug}" to give its jump button the name of`);
@@ -184,7 +223,7 @@ const lines = [
   ` "unknownWords": ${J('Prices coming soon')},`,
   ` "names": ${J(NAMES)},`,
   ` "loanwords": ${J(LOANWORDS)},`,
-  ' "groups": [', groups.map((g) => '  ' + J(g.button ? { n: g.n, name: g.name, where: g.where, slugs: g.slugs, button: g.button } : { n: g.n, name: g.name, where: g.where, slugs: g.slugs })).join(',\n'), ' ],',
+  ' "groups": [', groups.map((g) => '  ' + J(Object.assign({ n: g.n, name: g.name, where: g.where, slugs: g.slugs }, ...['button', 'note', 'subs', 'noPlaceLine', 'says', 'avoid'].filter((k) => g[k] !== undefined).map((k) => ({ [k]: g[k] }))))).join(',\n'), ' ],',
   ' "products": [', products.map((p) => '  ' + J(p)).join(',\n'), ' ],',
   ' "extras": [', EXTRAS.map((e) => '  ' + J(e)).join(',\n'), ' ]',
   '}',
