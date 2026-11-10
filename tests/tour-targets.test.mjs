@@ -387,7 +387,7 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
           const lit = (await p.evaluate(([t, a]) => window.__tour.boxText(t, a), [s.target, s.also || []])) || '';
           const quoted = [...String(s.text).matchAll(/\u201c([^\u201d]+)\u201d/g)].map((m) => m[1]);
           const lost = quoted.filter((ph) => !squash(lit).includes(squash(ph)));
-          rec(name + ': the words the card quotes (' + quoted.length + ') are written in the lit part', quoted.length > 0 && lost.length === 0, lost.length ? 'not in the lit part: ' + lost.map((m) => '\u201c' + m + '\u201d').join(', ') : 'the card quotes nothing: take it off QUOTES_IN_LIT');
+          rec(name + ': the words the card quotes (' + quoted.length + ') are written in the lit part', quoted.length > 0 && lost.length === 0, lost.length ? 'not in the lit part: ' + lost.map((m) => '\u201c' + m + '\u201d').join(', ') : quoted.length ? '' : 'the card quotes nothing: take it off QUOTES_IN_LIT');
         }
         if (s.allowClicks) {
           const clicked = await p.evaluate(([t]) => window.__tour.tryClick(t), [s.target]);
