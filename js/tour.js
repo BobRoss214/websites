@@ -453,7 +453,8 @@
     const out = [];
     if (!curEl || !curEl.isConnected) return out;
     const add = (n, k) => { if (out.length < 400 && shown(n)) { const b = n.getBoundingClientRect(); if (b.width >= 8 && b.height >= 8) out.push({ b, k }); } };
-    [curEl].concat((more || []).map((m) => m.el)).forEach((host) => {
+    const dialog = dialogBox();   // a dialog of the page is open (the Store's pop-up): its buttons are kept clear too, so that its Close buttons stay in sight when the window is too narrow to put the card beside its box
+    [curEl].concat((more || []).map((m) => m.el), dialog ? [dialog] : []).forEach((host) => {
       $$(KEEP_CONTROLS, host).forEach((n) => add(n, 10));
       $$(KEEP_WORDS, host).forEach((n) => add(n, 5));
       const words = doc.createTreeWalker(host, NodeFilter.SHOW_TEXT, null);   // every line of words, lightly (weight 1): when the card has to cover something, it covers blank room before text

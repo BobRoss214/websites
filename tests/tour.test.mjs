@@ -881,7 +881,7 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
 );
 window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Pop-up' }];
 `;
-  for (const [vw, vh, what] of [[1440, 900, 'a computer'], [390, 844, 'a phone']]) {
+  for (const [vw, vh, what] of [[1440, 900, 'a computer'], [1100, 800, 'a small computer'], [390, 844, 'a phone']]) {
     const tag = 'pop-up (' + what + '): ';
     p = await open(browser, base, 'index.html', errs, { query: 'tour', viewport: { width: vw, height: vh }, routes: serve({ a: STEPS_POP }) });
     await p.evaluate(() => {
@@ -926,11 +926,11 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Pop-up' }];
     await press(p, 'Start the tour');
     await atStep(p, 1, tag + 'step 1 lights the box that opens the pop-up');
     const where = () => p.evaluate(() => {   // what the owner has on the screen while the pop-up is open
-      const pop = document.querySelector('.shop-pop'), box = pop.querySelector('.shop-pop-box'), okb = document.getElementById('t-pop-ok'), r = okb.getBoundingClientRect(), tour = document.getElementById('wa-tour');
+      const pop = document.querySelector('.shop-pop'), box = pop.querySelector('.shop-pop-box'), okb = document.getElementById('t-pop-ok'), r = okb.getBoundingClientRect(), xb = document.getElementById('t-pop-x'), xr = xb.getBoundingClientRect(), tour = document.getElementById('wa-tour');
       const cs = getComputedStyle(pop), card = document.querySelector('.wa-tour-card'), nx = [...card.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Next'), nr = nx.getBoundingClientRect();
       const hit = (x, y) => document.elementFromPoint(x, y), c = card.getBoundingClientRect(), d = box.getBoundingClientRect();
       const area = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
-      return { z: cs.zIndex, bg: cs.backgroundColor, pe: cs.pointerEvents, boxPe: getComputedStyle(box).pointerEvents, okOnTop: hit(r.left + r.width / 2, r.top + r.height / 2) === okb, nextOnTop: hit(nr.left + nr.width / 2, nr.top + nr.height / 2) === nx,
+      return { z: cs.zIndex, bg: cs.backgroundColor, pe: cs.pointerEvents, boxPe: getComputedStyle(box).pointerEvents, okOnTop: hit(r.left + r.width / 2, r.top + r.height / 2) === okb, xOnTop: hit(xr.left + xr.width / 2, xr.top + xr.height / 2) === xb, nextOnTop: hit(nr.left + nr.width / 2, nr.top + nr.height / 2) === nx,
         inert: tour.hasAttribute('inert'), ariaHidden: tour.getAttribute('aria-hidden'), cardOverBox: Math.round(100 * area(c, d) / (d.width * d.height)), cardOverOk: area(c, r), box: [d.left, d.top, d.width, d.height].map(Math.round) };
     });
     const hole = await rectOf(p, '#t-card');
@@ -938,9 +938,10 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Pop-up' }];
     await okSoon(tag + 'a click on the lit box opens the pop-up (the page opened it: the tour let the click through)', () => p.evaluate(() => window.__pop.isOpen()), (v) => v === true);
     await p.waitForTimeout(500);   // the pop-up fades in and the card moves off it
     let w = await where();
-    ok(tag + 'the pop-up is above the dimmer (z-index 9100), its own dim does not dim or block (transparent, no pointer events), its box takes clicks, and its button is the thing at its place', w.z === '9100' && w.bg === 'rgba(0, 0, 0, 0)' && w.pe === 'none' && w.boxPe === 'auto' && w.okOnTop, JSON.stringify(w));
+    ok(tag + 'the pop-up is above the dimmer (z-index 9100), its own dim does not dim or block (transparent, no pointer events), its box takes clicks, and its button is the thing at its place', w.z === '9100' && w.bg === 'rgba(0, 0, 0, 0)' && w.pe === 'none' && w.boxPe === 'auto' && w.okOnTop && w.xOnTop, JSON.stringify(w));
     ok(tag + 'the page shut the tour\'s own box with the rest (inert, aria-hidden) and the tour gives it back: the card is usable, and Next is the thing at its place', !w.inert && w.ariaHidden === null && w.nextOnTop, JSON.stringify({ inert: w.inert, ariaHidden: w.ariaHidden, next: w.nextOnTop }));
-    if (vw >= 1000) ok(tag + 'the card sits off the pop-up\'s box (it covers its button not at all and the box by ' + w.cardOverBox + ' percent)', w.cardOverOk === 0 && w.cardOverBox <= 10, JSON.stringify({ cardOverBox: w.cardOverBox, ok: w.cardOverOk, box: w.box }));
+    if (vw >= 1300) ok(tag + 'the card sits off the pop-up\'s box (it covers its button not at all and the box by ' + w.cardOverBox + ' percent)', w.cardOverOk === 0 && w.cardOverBox <= 10, JSON.stringify({ cardOverBox: w.cardOverBox, ok: w.cardOverOk, box: w.box }));
+    else if (vw >= 700) ok(tag + 'the window is too narrow to put the card beside the pop-up\'s box (it covers ' + w.cardOverBox + ' percent of it), but the card keeps off its buttons', w.cardOverOk === 0 && w.okOnTop && w.xOnTop, JSON.stringify({ cardOverBox: w.cardOverBox, ok: w.cardOverOk, box: w.box }));
     await p.click('#t-pop-ok');
     ok(tag + 'a real click on the pop-up\'s button reaches it', (await p.evaluate(() => window.__pop.state.clicks)) === 1, '');
     await press(p, 'Next');
@@ -990,7 +991,7 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Pop-up' }];
     await okSoon(tag + 'any dialog: its overlay is lifted above the dimmer (z-index 9100) within a moment, and its button is the thing at its place', genNow, (v) => v.z === '9100' && v.okOnTop && v.lifted === 1);
     await p.waitForTimeout(400);
     w = await genNow();
-    if (vw >= 1000) ok(tag + 'any dialog: the card sits off its box (' + w.cardOverBox + ' percent of the box)', w.cardOverBox <= 10, JSON.stringify(w));
+    if (vw >= 1300) ok(tag + 'any dialog: the card sits off its box (' + w.cardOverBox + ' percent of the box)', w.cardOverBox <= 10, JSON.stringify(w));
     await p.click('#t-gen-ok');
     ok(tag + 'any dialog: a real click on its button reaches it', (await p.evaluate(() => window.__gen.clicks)) === 1, '');
     await p.focus('#t-gen-ok');

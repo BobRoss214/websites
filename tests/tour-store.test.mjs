@@ -127,7 +127,7 @@ await run('tour-store', async ({ browser, base, errs }) => {
 
   /* ---- the Store's pop-up (js/shop-pop.js), when this repo has it: a click on the lit product box opens it above the tour, the tour goes on */
   const POP_TITLE = 'Point at a product, click for details';
-  for (const [w, h, what] of [[1440, 900, 'a computer'], [390, 844, 'a phone']]) {
+  for (const [w, h, what] of [[1440, 900, 'a computer'], [1100, 800, 'a small computer'], [390, 844, 'a phone']]) {
     const tag = 'the Store pop-up (' + what + '): ';
     const p = await open(browser, base, 'index.html', errs, { query: 'tour', viewport: { width: w, height: h } });
     await p.addStyleTag({ content: '#wa-problems{display:none!important}' });
@@ -145,13 +145,13 @@ await run('tour-store', async ({ browser, base, errs }) => {
       const pop = document.querySelector('.shop-pop'), box = pop && pop.querySelector('.shop-pop-box');
       const card = document.querySelector('.wa-tour-card'), tour = document.getElementById('wa-tour');
       if (!pop || !box || !card) return { open: !!(pop && pop.classList.contains('is-open')), card: !!card, title: card ? card.querySelector('.wa-tour-title').textContent : '' };
-      const d = box.getBoundingClientRect(), c = card.getBoundingClientRect(), x = pop.querySelector('.shop-pop-x'), xr = x ? x.getBoundingClientRect() : null;
+      const d = box.getBoundingClientRect(), c = card.getBoundingClientRect(), x = pop.querySelector('.shop-pop-x'), xr = x ? x.getBoundingClientRect() : null, dn = pop.querySelector('.shop-pop-done'), dr = dn ? dn.getBoundingClientRect() : null;
       const hit = xr ? document.elementFromPoint(xr.left + xr.width / 2, xr.top + xr.height / 2) : null;
       const area = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
       const nx = [...card.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Next'), nr = nx ? nx.getBoundingClientRect() : null;
       return {
         open: pop.classList.contains('is-open'), card: true, title: card.querySelector('.wa-tour-title').textContent, z: getComputedStyle(pop).zIndex, bg: getComputedStyle(pop).backgroundColor,
-        xOnTop: !!(hit && box.contains(hit)), centre: [Math.round(d.left + d.width / 2 - document.documentElement.clientWidth / 2), Math.round(d.top + d.height / 2 - window.innerHeight / 2)], cardOverBox: Math.round(100 * area(c, d) / (d.width * d.height)),
+        xOnTop: !!(hit && box.contains(hit)), doneOnTop: !!(dr && dr.width > 0 && document.elementFromPoint(dr.left + dr.width / 2, Math.min(window.innerHeight - 2, dr.top + dr.height / 2)) === dn), centre: [Math.round(d.left + d.width / 2 - document.documentElement.clientWidth / 2), Math.round(d.top + d.height / 2 - window.innerHeight / 2)], cardOverBox: Math.round(100 * area(c, d) / (d.width * d.height)),
         inert: tour.hasAttribute('inert') || tour.getAttribute('aria-hidden') === 'true', nextOnTop: !!(nr && document.elementFromPoint(nr.left + nr.width / 2, nr.top + nr.height / 2) === nx), box: [d.width, d.height].map(Math.round),
       };
     });
@@ -165,7 +165,8 @@ await run('tour-store', async ({ browser, base, errs }) => {
     const v = await popNow();
     ok(tag + 'the pop-up is above the tour\'s dimmer (z-index ' + v.z + '), its Close button is the thing at its place, and it is in the middle of the window', v.z === '9100' && v.xOnTop && Math.abs(v.centre[0]) <= 6 && Math.abs(v.centre[1]) <= 6, JSON.stringify(v));
     ok(tag + 'the tour\'s card is usable while it is open (the page shuts the rest of the page, not the card; Next is the thing at its place)', !v.inert && v.nextOnTop && v.card, JSON.stringify({ inert: v.inert, next: v.nextOnTop }));
-    if (w >= 1000) ok(tag + 'the card sits off the pop-up\'s box (it covers ' + v.cardOverBox + ' percent of it)', v.cardOverBox <= 10, JSON.stringify(v));
+    if (w >= 1300) ok(tag + 'the card sits off the pop-up\'s box (it covers ' + v.cardOverBox + ' percent of it)', v.cardOverBox <= 10, JSON.stringify(v));
+    else if (w >= 700) ok(tag + 'the window is too narrow to put the card beside the box (it covers ' + v.cardOverBox + ' percent of it), but the card keeps off both Close buttons of the pop-up', v.xOnTop && v.doneOnTop, JSON.stringify(v));
     await p.keyboard.press('Escape');
     await okSoon(tag + 'Esc shuts the pop-up, and the tour stays on its step', popNow, (x) => !x.open && x.card && x.title === POP_TITLE);
     if (w >= 1000) {   // (on a phone the sheet of the tour covers the lower part of the pop-up, so its Close button at the bottom is not pressed there: the round one at the top and Esc are)
