@@ -18,6 +18,9 @@
  *     When a request is already past the stage a step needs, the sample family is made again (seedSample) or the pizza part is put back.
  *     A notice the store posts a second time (a day closed again, a request sent again) replaces the first one, so the bell does not grow while the owner goes back and forth.
  *   - A family the owner made by hand is kept: the sign-up card only signs it out, and the next card signs it in again. A sample family is made only when there is none.
+ *   - The kitchen's six cards (1041 to 1046) say what the kitchen screen does: the pretend rush control, a ticket, the timer, the one-press answers, the small editor, the sound.
+ *     The first three keep the rush running (liveScene); the last three show the one ticket of the sample family, so they switch it off. The editor card opens the screen's own
+ *     editor (DemoKitchen.screen.openEditor) and closes it again when it is left: nothing is sent.
  *   - The pretend rush (js/demo-live.js, window.DemoLive) makes pretend families on the desk and the kitchen. The story cards run without it, so they read the same every time:
  *     a card made with scene() first switches the rush off and takes the pretend families away (the family's own screens never show them anyway). A card that SHOWS the rush is made
  *     with liveScene() and rushOn(): the rush starts from nothing (four things already waiting, more coming), so the card shows the same thing each time. On the family's page
@@ -102,6 +105,25 @@
       }
       if (typeof L.isOn !== 'function' || !L.isOn()) L.start();
     } catch (e) { /* no rush on this page */ }
+  }
+
+  // The pretend rush started again from nothing at a speed ('calm', 'busy' or 'rush'): the same four things already waiting every time, then more coming. The kitchen cards
+  // show it at Busy, a pace that can be read. Does nothing on a page without window.DemoLive, and never throws.
+  function rushRestart(speed) {
+    var L = window.DemoLive;
+    try {
+      if (!L || typeof L.start !== 'function') return;
+      if (typeof L.isOn === 'function' && L.isOn() && typeof L.stop === 'function') L.stop();
+      if (typeof L.clear === 'function') L.clear();
+      if (typeof L.setSpeed === 'function') L.setSpeed(speed);
+      L.start();
+    } catch (e) { /* no rush on this page */ }
+  }
+  // The kitchen screen's small editor ("Another time") on its first ticket, and closing it again. The editor only exists on the screen: nothing is sent and the store is not touched.
+  function kitchenScreen() { var K = window.DemoKitchen; return K && K.screen ? K.screen : null; }
+  function closeKitchenEditor() {
+    var k = kitchenScreen();
+    try { if (k && typeof k.closeEditors === 'function') k.closeEditors(); } catch (e) { /* the screen is not on this page */ }
   }
 
   // Waits (without blocking the page) until test() gives something, up to ms milliseconds; settles with that thing, or null.
@@ -435,10 +457,50 @@
       before: scene(function () { pizzaIs('none'); }, hook('acct-pizza-edit'), 'pizza')
     },
     {
+      id: 'ch10-kit-rush', order: CHAPTER * 100 + 41, chapter: CHAPTER, page: 'kitchen', target: hook('live-control'), skipIfMissing: true,
+      title: 'The pretend rush',
+      text: 'The pretend rush sends pretend orders and changes to the kitchen, so you can watch a busy day. Press \u201cOn\u201d to start and \u201cOff\u201d to pause. \u201cCalm\u201d, \u201cBusy\u201d and \u201cRush\u201d set the speed. Off also stops every timer.',
+      before: liveScene(function () { rushRestart('busy'); }, hook('live-control'), null, hook('kit-card'))
+    },
+    {
+      id: 'ch10-kit-tickets', order: CHAPTER * 100 + 42, chapter: CHAPTER, page: 'kitchen', target: hook('kit-card'), also: hook('kit-counters'), skipIfMissing: true,
+      title: 'A ticket for every order',
+      text: 'Each ticket shows a big order number, the family, the pizzas, the pick-up time and any note. Tickets that need an answer wait in one list. The counters at the top show how many are waiting, answered and late.',
+      before: liveScene(function () { rushOn(false); }, hook('kit-card'), null, hook('kit-counters'))
+    },
+    {
+      id: 'ch10-kit-timer', order: CHAPTER * 100 + 43, chapter: CHAPTER, page: 'kitchen', target: hook('kit-timer'), skipIfMissing: true,
+      title: 'The answer-by timer',
+      text: 'Every ticket has a timer that counts down: green, then amber, then red. When time runs out the ticket is late, turns red and stays at the top until it is answered. An order gets 3 minutes and a change gets 2.',
+      before: liveScene(function () { rushOn(false); }, hook('kit-timer'))
+    },
+    {
       id: 'ch10-kitchen', order: CHAPTER * 100 + 44, chapter: CHAPTER, page: 'kitchen', target: hook('kit-card'), skipIfMissing: true,
-      title: 'The kitchen screen',
-      text: "The kitchen sees the time before and after, and the family's allergy note. Yes accepts, No keeps the old time, Change it offers another. Try one, or press Next and the tour offers a later time.",
+      title: 'One press answers',
+      text: "This ticket is a change: the family asks for an earlier pick-up. The table shows the old time and the time asked, and the allergy note sits under it. Press Yes, No or Another time, or the key 1, 2 or 3. Try one.",
       before: scene(function () { pizzaIs('waiting'); }, hook('kit-card'), null, hook('kit-yes'))
+    },
+    {
+      id: 'ch10-kit-edit', order: CHAPTER * 100 + 45, chapter: CHAPTER, page: 'kitchen', target: hook('kit-edit'), skipIfMissing: true,
+      title: 'Another time, from the keyboard',
+      text: 'Another time opens a small editor on the ticket. Add 5, 10 or 15 minutes with the buttons, the plus and minus keys or the arrows, and write a note if you like. Enter sends it. Esc closes it.',
+      before: function () {
+        if (!ready()) return;   // no demo on this page: nothing is done
+        var shown = scene(function () { pizzaIs('waiting'); }, hook('kit-card'), null, hook('kit-yes'))();
+        return Promise.resolve(shown).then(function () {
+          return until(function () { var k = kitchenScreen(); return k && typeof k.openEditor === 'function' ? k : null; }, 3000);
+        }).then(function (k) {
+          try { if (k) k.openEditor(); } catch (e) { /* the target will not be found and the engine skips the card */ }
+          return seen(hook('kit-edit'));
+        });
+      },
+      after: closeKitchenEditor
+    },
+    {
+      id: 'ch10-kit-sound', order: CHAPTER * 100 + 46, chapter: CHAPTER, page: 'kitchen', target: hook('kit-sound'), skipIfMissing: true,
+      title: 'Sound and the late beep',
+      text: 'Sound stays off until you press \u201cSound\u201d. Then a ticket that arrives makes one soft chime, and a late ticket beeps gently every few seconds until it is answered. Press \u201cSound\u201d again, or the M key, to mute.',
+      before: scene(function () { pizzaIs('waiting'); }, hook('kit-sound'))
     },
     {
       id: 'ch10-family-ok', order: CHAPTER * 100 + 48, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true,
