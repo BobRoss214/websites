@@ -151,7 +151,7 @@ await run('tour-store', async ({ browser, base, errs }) => {
       const nx = [...card.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Next'), nr = nx ? nx.getBoundingClientRect() : null;
       return {
         open: pop.classList.contains('is-open'), card: true, title: card.querySelector('.wa-tour-title').textContent, z: getComputedStyle(pop).zIndex, bg: getComputedStyle(pop).backgroundColor,
-        xOnTop: !!(hit && box.contains(hit)), doneOnTop: !!(dr && dr.width > 0 && document.elementFromPoint(dr.left + dr.width / 2, Math.min(window.innerHeight - 2, dr.top + dr.height / 2)) === dn), centre: [Math.round(d.left + d.width / 2 - document.documentElement.clientWidth / 2), Math.round(d.top + d.height / 2 - window.innerHeight / 2)], cardOverBox: Math.round(100 * area(c, d) / (d.width * d.height)),
+        xOnTop: !!(hit && box.contains(hit)), doneOnTop: !(dr && dr.width > 0 && dr.top >= Math.max(0, d.top) && dr.bottom <= Math.min(window.innerHeight, d.bottom)) || document.elementFromPoint(dr.left + dr.width / 2, dr.top + dr.height / 2) === dn,   // (a Close button that the box's own scroll hides is not looked at) centre: [Math.round(d.left + d.width / 2 - document.documentElement.clientWidth / 2), Math.round(d.top + d.height / 2 - window.innerHeight / 2)], cardOverBox: Math.round(100 * area(c, d) / (d.width * d.height)),
         inert: tour.hasAttribute('inert') || tour.getAttribute('aria-hidden') === 'true', nextOnTop: !!(nr && document.elementFromPoint(nr.left + nr.width / 2, nr.top + nr.height / 2) === nx), box: [d.width, d.height].map(Math.round),
       };
     });
