@@ -22,17 +22,19 @@ index 62e372c..e82f2b5 100644
    .hero{min-height:700px;padding-top:20px}
    .hero-sub{font-size:1rem;margin:.7em auto 1.1em}
 diff --git a/index.html b/index.html
-index dcb86e1..bae7158 100644
+index df1863d..34dc2fc 100644
 --- a/index.html
 +++ b/index.html
-@@ -218,5 +218,5 @@
+@@ -292,7 +292,7 @@
+         <p data-t="td6ecd1d8" class="hero-sub" data-only="fall" hidden>It&rsquo;s pumpkin season! Pick pumpkins, plus new u-pick organic tomatoes and basil, with wagon rides and a haunted trail. Our family-owned, USDA&nbsp;Certified&nbsp;Organic farm is in Indian&nbsp;Trail, NC.</p>
+         <p data-t="tddf53699" class="hero-sub" data-only="winter" hidden>Pick out a North Carolina Christmas tree at The GreenHouse next door on the last weekend in November and the first weekend in December, Saturday and Sunday only (<span data-tree-dates>Nov 28&ndash;29 and Dec 5&ndash;6</span>). The farm is open then too, with no reservation needed. Wise Acres is a family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
          <div class="hero-cta">
 -          <a data-t="tdcd8d557" class="btn btn-red btn-lg" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your visit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
 +          <a data-t="tdcd8d557" class="btn btn-red btn-lg" data-only="spring summer fall" data-book href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your visit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
            <a data-t="t927e6cbe" class="btn btn-red btn-lg" data-only="winter" hidden href="#greenhouse">Visit The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
            <a data-t="t38a1d40a" class="btn btn-white btn-lg" href="#seasons">See what&rsquo;s in season</a>
          </div>
-@@ -357,7 +357,7 @@
+@@ -437,7 +437,7 @@
              <a data-t="tddae9ce2" class="choose-new" data-only="fall" data-in-season data-until="2026-11-08" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
              <a data-t="t01cba258" class="choose-new" data-only="winter" data-in-season hidden href="#greenhouse"><span class="choose-new-badge">Trees</span> Christmas trees are at The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
              <div class="card-actions">
@@ -41,7 +43,7 @@ index dcb86e1..bae7158 100644
                <a data-t="tf09e1fa4" class="btn btn-red" data-only="winter" hidden href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Tell me when <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
                <a data-t="t4b3f3cb5" class="btn btn-ghost" id="pl-farm-dir" aria-labelledby="pl-farm-dir pl-farm-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
                <a data-t="tb349c1e7" class="btn btn-ghost btn-sm" data-only="fall" href="#options">See prices</a>
-@@ -783,7 +783,7 @@
+@@ -944,7 +944,7 @@
                  <li data-t="te92bb327">U-cut flowers too. The better cutting flowers start in May</li>
                </ul>
                <ul data-ta-aria-label="td18c4de1" class="photo-strip season-pics" aria-label="Photos from the farm"><li><figure><img data-ta-alt="t3af6b5a1" data-zoom src="assets/photos/strawberries-in-pink-bucket.webp" alt="A pink bucket piled high with fresh-picked strawberries" width="500" height="667" loading="lazy" decoding="async"><figcaption data-t="t6a26d745">Fresh-picked strawberries</figcaption></figure></li><li><figure><img data-ta-alt="t06bb9aff" data-zoom src="assets/photos/poppies-and-larkspur-field.webp" alt="Red poppies and purple larkspur blooming in a wildflower field" width="300" height="375" loading="lazy" decoding="async"><figcaption data-t="t61dce77d">Poppies &amp; larkspur</figcaption></figure></li></ul>
@@ -50,15 +52,15 @@ index dcb86e1..bae7158 100644
              </div>
            </div>
  
-@@ -2180,7 +2180,7 @@
+@@ -2977,7 +2977,7 @@
  
    <!-- ================= MOBILE ACTION BAR ================= -->
    <nav data-ta-aria-label="t82b6bfe1" class="action-bar" id="action-bar" aria-label="Quick actions">
 -    <a data-t="t8e6ed827" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg> Reserve</a>
 +    <a data-t="t8e6ed827" class="btn btn-red" data-only="spring summer fall" data-book href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg> Reserve</a>
-     <a data-t="te149bcbe" class="btn btn-red" data-only="winter" hidden href="#greenhouse"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> GreenHouse</a>
+     <a data-t="te149bcbe" class="btn btn-red" id="ab-gh" data-only="winter" hidden href="#greenhouse"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> GreenHouse</a>
      <a data-t="t4b3f3cb5" class="btn btn-white" data-only="spring summer fall" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
-     <a data-t="t4b3f3cb5" class="btn btn-white" data-only="winter" hidden href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+     <a data-t="t4b3f3cb5" class="btn btn-white" id="ab-gh-dir" aria-labelledby="ab-gh-dir ab-gh" data-only="winter" hidden href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
 diff --git a/js/hero.js b/js/hero.js
 index 67c2271..457034e 100644
 --- a/js/hero.js

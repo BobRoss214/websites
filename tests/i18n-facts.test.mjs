@@ -129,5 +129,26 @@ ok('every entry of tools/i18n_facts_allow.json still matches a difference (nothi
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 }
 
+/* ------------------------------------------------------------------ the Christmas tree weekends (the builder, 10 Nov 2026): the dates as js/season.js writes them in each language, and the rule as the pages say it */
+{
+  const DATES_EN = 'Nov 28–29 and Dec 5–6', RULE_EN = 'the last weekend in November and the first weekend in December, Saturday and Sunday only';
+  const DATES = { es: '28–29 nov y 5–6 dic', hi: '28–29 नवंबर और 5–6 दिसंबर', zh: '11月28–29日和12月5–6日', vi: '28–29 thg 11 và 5–6 thg 12' };
+  const RULE = {
+    es: 'el último fin de semana de noviembre y el primer fin de semana de diciembre, solo sábado y domingo',
+    hi: 'नवंबर महीने का आख़िरी वीकेंड और दिसंबर महीने का पहला वीकेंड, केवल शनिवार और रविवार',
+    zh: '11 月最后一个周末和 12 月第一个周末，仅限周六和周日',
+    vi: 'cuối tuần cuối cùng của tháng 11 và cuối tuần đầu tiên của tháng 12, chỉ thứ Bảy và Chủ Nhật' };
+  const WRONG_DATES = { es: '28–29 nov y 5–6 nov', hi: '28–29 नवंबर और 5–6 नवंबर', zh: '11月28–29日和11月5–6日', vi: '28–29 thg 11 và 5–6 thg 11' };   // the second weekend in the wrong month
+  const WRONG_RULE = { es: RULE.es.replace('sábado y domingo', 'viernes y sábado'), hi: RULE.hi.replace('शनिवार और रविवार', 'शुक्रवार और शनिवार'), zh: RULE.zh.replace('周六和周日', '周五和周六'), vi: RULE.vi.replace('thứ Bảy và Chủ Nhật', 'thứ Sáu và thứ Bảy') };   // Friday and Saturday
+  const noisy = [], blind = [];
+  for (const l of LANGS) {
+    for (const [en, tr] of [[DATES_EN, DATES[l]], [RULE_EN, RULE[l]]]) { const d = compare(en, tr, l); if (d.length) noisy.push(`${l} "${tr}" = ${d.map((x) => x.msg).join(', ')}`); }
+    if (!compare(DATES_EN, WRONG_DATES[l], l).some((d) => d.kind === 'date')) blind.push(`${l} [date] "${WRONG_DATES[l]}"`);
+    if (!compare(RULE_EN, WRONG_RULE[l], l).some((d) => d.kind === 'days')) blind.push(`${l} [days] "${WRONG_RULE[l]}"`);
+  }
+  ok('the tree weekends ("Nov 28–29 and Dec 5–6" and the tree rule) are read right in es hi zh vi, as the dates are written by js/season.js', noisy.length === 0, 'false alarm: ' + noisy.slice(0, 3).join('; ') + '. This is a problem in tools/i18n_facts.mjs, not in the site: tell the developer');
+  ok('... a second weekend in the wrong month, and Friday and Saturday for Saturday and Sunday, are found', blind.length === 0, 'missed: ' + blind.slice(0, 4).join('; ') + '. This is a problem in tools/i18n_facts.mjs, not in the site: tell the developer');
+}
+
 console.log(`     ${allowed.length} difference(s) are on the allow list (tools/i18n_facts_allow.json); ${open.length} are open; ${Math.round((Date.now() - T0) / 100) / 10} s`);
 await finish({});

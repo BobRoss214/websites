@@ -62,7 +62,7 @@
           "name": "Where can I get Wise Pie pizza?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "At the farm, you can get pizza until 4:00 PM with a farm reservation package that includes pizza. At The GreenHouse (5503 Poplin Rd), you can get pizza Friday through Sunday from 4:00 to 8:00 PM. No reservation is required there."
+            "text": "At the farm, you can get pizza until 4:00 PM with a farm reservation package that includes pizza. At The GreenHouse (5503 Poplin Rd), you can get pizza Friday through Sunday from 4:00 to 8:00 PM. No reservation is required there. In winter, Wise Pie pizza Not official yet is at The GreenHouse (5503 Poplin Rd) on the Christmas tree weekends, 11 am–8 pm Not official yet . No reservation is required."
           }
         },
         {
@@ -70,7 +70,7 @@
           "name": "Do I need a reservation for pizza?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "At The GreenHouse, no. Pizza there is first come, first served from 4 to 8 pm. At the farm, yes: pizza is available only with a farm reservation package that you buy before your visit."
+            "text": "At The GreenHouse, no. Pizza there is first come, first served from 4 to 8 pm. At the farm, yes: pizza is available only with a farm reservation package that you buy before your visit. No. In winter, pizza Not official yet is at The GreenHouse on the Christmas tree weekends, and no reservation is required."
           }
         },
         {
@@ -108,9 +108,10 @@
 
   <!-- ================= ANNOUNCEMENT ================= -->
   <div data-ta-aria-label="t9598093b" class="announce" role="region" aria-label="Announcement">
-    <p data-t="tf45d455e"><span class="ann-season" data-ann-season data-no-i18n></span><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>
-      <strong>The farm is reservation-only.</strong> The GreenHouse next door needs no reservation.
-      <a href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your time <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    <p><span class="ann-season" data-ann-season data-no-i18n></span><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>
+      <span data-t="ta8eeccae" data-only="spring summer fall"><strong>The farm is reservation-only.</strong> The GreenHouse next door needs no reservation.</span>
+      <a data-t="t108d546d" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your time <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <span data-t="t1dbd95b4" data-only="winter" hidden><strong>Christmas trees:</strong> the last weekend in November and the first weekend in December, Saturday and Sunday only (<span data-tree-dates>Nov 28&ndash;29 and Dec 5&ndash;6</span>). The farm and The GreenHouse are open then. No reservation needed.</span>
     </p>
   </div>
 
@@ -241,17 +242,18 @@
         <header class="section-head">
           <p data-t="td81615aa" class="hand eyebrow">Two ways to get it</p>
           <h2 data-t="ta1d5cd79" id="ways-h">At the farm or at The GreenHouse</h2>
-          <p data-t="t69bed5b9" class="lead">Fall hours are Friday through Sunday. Pizza times depend on where you are.</p>
+          <p data-t="t69bed5b9" class="lead" data-only="spring summer fall">Fall hours are Friday through Sunday. Pizza times depend on where you are.</p>
+          <p data-t="td873ef48" class="lead" data-only="winter" hidden>In winter, pizza <span class="not-official">Not official yet</span> is at The GreenHouse on the Christmas tree weekends.</p>
         </header>
         <div class="way-grid">
-          <article class="way-card">
+          <article class="way-card" data-only="spring summer fall">
             <span data-t="t1c41eab2" class="way-time">10 am &ndash; 4 pm</span>
             <h3 data-t="t7b7034d4">At the farm</h3>
             <p data-t="ta9075b2d">During farm hours, pizza is available <strong>only with a farm reservation package that you buy before your visit</strong>. Choose a reservation with pizza.</p>
             <p data-t="tb150c178">Reservations with pizza open every <strong>Tuesday at 5:00 PM</strong> for the upcoming weekend. Pizzas are ready for pick-up 1 hour after your reservation time, at the wood-fired oven at The GreenHouse.</p>
             <div class="card-actions"><a data-t="td5732118" class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve with pizza <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
           </article>
-          <article class="way-card way-card-alt">
+          <article class="way-card way-card-alt" data-only="spring summer fall">
             <span data-t="t4ffa359f" class="way-time">4 pm &ndash; 8 pm</span>
             <h3 data-t="t11999abc">At The GreenHouse</h3>
             <p data-t="t60509a07">First come, first served: eat there or take your pizza with you. Or <strong>pre-order</strong> with the link we post 5 days ahead.</p>
@@ -261,6 +263,15 @@
               <a data-t="t3d7eea72" class="btn btn-ghost" href="index.html#greenhouse">About The GreenHouse</a>
             </div>
           </article>
+          <div class="way-card way-card-alt way-card-winter" data-only="winter" hidden>
+            <span data-t="ta97a5777" class="way-time">Christmas tree weekends</span>
+            <h3 data-t="t11999abc">At The GreenHouse</h3>
+            <p data-t="t7e5c41db">The last weekend in November and the first weekend in December, Saturday and Sunday only (<span data-tree-dates>Nov 28&ndash;29 and Dec 5&ndash;6</span>).</p>
+            <p data-t="tafa09ac2">The GreenHouse is open 11 am&ndash;8 pm <span class="not-official">Not official yet</span> and serves Wise Pie pizza <span class="not-official">Not official yet</span>.</p>
+            <div class="card-actions">
+              <a data-t="t3d7eea72" class="btn btn-ghost" href="index.html#greenhouse">About The GreenHouse</a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -300,11 +311,13 @@
         <div class="faq-list" data-faq>
           <details name="faq" open>
             <summary data-t="t7980feda">Where can I get Wise Pie pizza?</summary>
-            <div class="answer"><p data-t="t5ad7056c">At the farm, you can get pizza until 4:00 PM with a farm reservation package that includes pizza. At The GreenHouse (5503 Poplin Rd), you can get pizza Friday through Sunday from 4:00 to 8:00 PM. No reservation is required there.</p></div>
+            <div class="answer"><p data-t="t5ad7056c" data-only="spring summer fall">At the farm, you can get pizza until 4:00 PM with a farm reservation package that includes pizza. At The GreenHouse (5503 Poplin Rd), you can get pizza Friday through Sunday from 4:00 to 8:00 PM. No reservation is required there.</p>
+            <p data-t="t54c459ca" data-only="winter" hidden>In winter, Wise Pie pizza <span class="not-official">Not official yet</span> is at The GreenHouse (5503 Poplin Rd) on the Christmas tree weekends, 11 am&ndash;8 pm <span class="not-official">Not official yet</span>. No reservation is required.</p></div>
           </details>
           <details name="faq">
             <summary data-t="t4a12debd">Do I need a reservation for pizza?</summary>
-            <div class="answer"><p data-t="td8ee7853">At The GreenHouse, no. Pizza there is first come, first served from 4 to 8 pm. At the farm, yes: pizza is available only with a farm reservation package that you buy before your visit.</p></div>
+            <div class="answer"><p data-t="td8ee7853" data-only="spring summer fall">At The GreenHouse, no. Pizza there is first come, first served from 4 to 8 pm. At the farm, yes: pizza is available only with a farm reservation package that you buy before your visit.</p>
+            <p data-t="td43d9058" data-only="winter" hidden>No. In winter, pizza <span class="not-official">Not official yet</span> is at The GreenHouse on the Christmas tree weekends, and no reservation is required.</p></div>
           </details>
           <details name="faq">
             <summary data-t="t9c92799b">Is there a vegan or gluten-free option?</summary>
@@ -384,9 +397,9 @@
 
   <nav data-ta-aria-label="t82b6bfe1" class="action-bar" id="action-bar" aria-label="Quick actions">
     <a data-t="t8e6ed827" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg> Reserve</a>
-    <a data-t="te149bcbe" class="btn btn-red" data-only="winter" hidden href="index.html#greenhouse"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> GreenHouse</a>
+    <a data-t="te149bcbe" class="btn btn-red" id="ab-gh" data-only="winter" hidden href="index.html#greenhouse"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> GreenHouse</a>
     <a data-t="t4b3f3cb5" class="btn btn-white" data-only="spring summer fall" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
-    <a data-t="t4b3f3cb5" class="btn btn-white" data-only="winter" hidden href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+    <a data-t="t4b3f3cb5" class="btn btn-white" id="ab-gh-dir" aria-labelledby="ab-gh-dir ab-gh" data-only="winter" hidden href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
     <a data-t="t64c30157" class="btn btn-white" href="mailto:cathy@wiseacresorganic.com"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Email</a>
   </nav>
 

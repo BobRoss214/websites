@@ -183,8 +183,8 @@ function readShop(SEL) {
 function readOutside() {   // the words of the page without #shop (for "the page's existing wording")
   const copy = document.body.cloneNode(true);
   const s = copy.querySelector('#shop'); if (s) s.remove();
-  copy.querySelectorAll('script,style,svg,template').forEach((e) => e.remove());
-  return copy.textContent.replace(/\s+/g, ' ');
+  copy.querySelectorAll('script,style,svg,template,[data-tree-dates]').forEach((e) => e.remove());   // the dates the script writes after the tree rule ("... Sunday only (Nov 28-29 and Dec 5-6)") are numbers it works out, not the page's words: the rule is
+  return copy.textContent.replace(/\s*\(\s*\)/g, '').replace(/\s+/g, ' ');   // the empty brackets they leave behind go with them
 }
 function readSymbols(expected) {
   const sym = (id) => { const e = document.getElementById(id); return e && e.tagName.toLowerCase() === 'symbol' ? e : null; };
@@ -617,7 +617,7 @@ await run('shop', async ({ browser, base, errs }) => {
   ok(`2: every product with no confirmed price says "${LIST.unknownWords}" (the page's own words) and shows no dollar sign (${PRODUCTS.filter((q) => q.unknown).length} of them)`, soonBad.length === 0, few(soonBad));
   ok('2: a free thing says Free and shows no dollar sign', freeBad.length === 0, few(freeBad));
   ok('2: no number on a card that the list does not give for that product (sizes, counts, ages, dates)', numBad.length === 0, few(numBad));
-  ok('2: the list\'s own orders: pizza links to its page and its group shows no clock time but the older page\'s 10 am and 8 pm, beer and wine have no age statement, Christmas trees have only the page\'s own dates', ruleBad.length === 0, few(ruleBad));
+  ok('2: the list\'s own orders: pizza links to its page and its group shows no clock time but the older page\'s 10 am and 8 pm and the winter 11 am, beer and wine have no age statement, Christmas trees have only the page\'s own dates', ruleBad.length === 0, few(ruleBad));
   const saysTotal = PRODUCTS.reduce((n, q) => n + (q.says || []).length, 0);
   ok(`2: the sentences the list makes a card say are on the card (${saysTotal}: the pretzel's nuts, the slushie board note, the pumpkin note, "Non-alcoholic." on NA Brooklyn's Hoppy Amber, the wagon ride's age, the u-pick dates)`, saysTotal >= 4 && saysBad.length === 0, few(saysBad));
   // the sentences the list makes a whole group say (the group's note under its band, a line in its foot), and the words a group must not carry any more

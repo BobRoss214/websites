@@ -24,7 +24,7 @@ index 875a118..99bfdb9 100644
  /* ---------- seasons: four tabs, photo scenes, calendar ---------- */
  .season-tabs{grid-template-columns:repeat(4,1fr)}
 diff --git a/docs/QUESTIONS_FOR_THE_FARM.md b/docs/QUESTIONS_FOR_THE_FARM.md
-index 58f055f..59cc1c9 100644
+index 6ea0219..83a72af 100644
 --- a/docs/QUESTIONS_FOR_THE_FARM.md
 +++ b/docs/QUESTIONS_FOR_THE_FARM.md
 @@ -940,7 +940,7 @@
@@ -42,14 +42,14 @@ index 58f055f..59cc1c9 100644
  
 -- **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html` at `id="options"`), the packages (`index.html` at `class="packages"`) and the schedule (`index.html` at `id="schedule"`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js` at `function applyOnly(` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html` at `class="btn btn-sm btn-red"`), "Fall hours:" (`index.html` at `data-t="t17246313"`), the Shop note (`index.html` at `data-t="taa947919"`) and "Fall 2026 special days" (`index.html` at `data-t="t7f10df40"`).
 +- **The u-pick farm is closed until spring:** hide the fall blocks outside fall by adding `data-only="fall"` to the "Choose your package" header (`index.html` at `id="options"`), the packages (`index.html` at `class="packages"`) and the schedule (`index.html` at `id="schedule"`). We tested this: the three blocks are hidden on 20 January and shown on 10 October (`js/hero.js` at `function applyOnly(` hides anything marked this way outside the listed seasons). The other fall wording needs her words (and four translations, so ask Claude): the "Reserve now" button in step 1 (`index.html` at `data-t="t90bac313" class="btn btn-sm btn-red"`), "Fall hours:" (`index.html` at `data-t="t17246313"`), the Shop note (`index.html` at `data-t="taa947919"`) and "Fall 2026 special days" (`index.html` at `data-t="t7f10df40"`).
- - **The GreenHouse has different winter hours, or is closed:** change `hours` in `js/content.js` (the `greenhouse` and `pizza` hours are one Friday-Sunday window all year, and the `winter` line inside each of them holds the hours of the Christmas tree weekends: Saturday and Sunday, 11 am to 8 pm, with "Not official yet" next to them on the page) and the text (README, "Change a fact everywhere", rows "The GreenHouse hours" and "Wise Pie hours"). The "Closed today. Opens Friday at 10 am" line comes from the `greenhouse` hours in `js/content.js`. For single closed days use `closures` (README, "Day-to-day changes"). Question 17 lists the other hours lines.
- - **Trees on other weekends:** the two weekends are worked out in `js/season.js` at `function lastSaturdayOfNovember(` and `function firstSaturdayOfDecember(` (each weekend is the Saturday and the Sunday after it; this year Nov 28-29 and Dec 5-6), and the words that say it are on the home page and the other pages: ask Claude to change the rule and the words together. After the last Sunday the site opens on spring, the season that starts next (`js/season.js` at `// The season the site shows: the one in progress.`), and the tree wording goes. If trees are sold on other days, ask Claude to change the rule.
+ - **The GreenHouse has different winter hours, or is closed:** change `hours` in `js/content.js` (the `greenhouse` and `pizza` hours; they are one Friday-Sunday window all year, so separate winter hours need a small code change: ask Claude, or change them by hand when winter starts and again when it ends) and the text (README, "Change a fact everywhere", rows "The GreenHouse hours" and "Wise Pie hours"). The "Closed today. Opens Friday at 10 am" line comes from the `greenhouse` hours in `js/content.js`. For single closed days use `closures` (README, "Day-to-day changes"). Question 17 lists the other hours lines.
+ - **The trees are on other days than the last weekend in November and the first weekend in December, Saturday and Sunday only:** the rule is in `js/season.js` at `{ id: 'winter'` and the words are in `index.html` at `data-t="tc34fb730"`, `data-t="t24860cae"`, `data-t="t75711ac3"`, `data-t="t66a0e31b"`, `data-t="td4909250"`, `data-t="t59d83261"`, `data-t="t219211a7"` and `data-t="t9757af8f"`. The site shows "Christmas tree season is on." (`index.html` at `data-t="td4909250"`, marked `data-only="winter"`) from the first tree day to the last. If the days are different, ask Claude to change the rule and the wording.
  - **If the answer is "leave it":** no change; the README row "Winter and early-spring wording" stays.
 diff --git a/index.html b/index.html
-index cc2e77d..a6a55e4 100644
+index a0eacce..a104a8a 100644
 --- a/index.html
 +++ b/index.html
-@@ -402,7 +402,7 @@
+@@ -486,7 +486,7 @@
                <span class="step-num" aria-hidden="true"><span class="n">1</span><svg class="ico"><use href="#i-check"/></svg></span>
                <h3 data-t="t93856060">Reserve your time</h3>
                <p data-t="t117bfbcb">The farm is always reservation-only. Book online and pick a time. When new reservations open, many people use the site at once, so it can show a temporary error. That does not mean we are full. Please try again after the first busy period.</p>
@@ -58,7 +58,7 @@ index cc2e77d..a6a55e4 100644
              </li>
              <li class="step reveal">
                <span class="step-num" aria-hidden="true"><span class="n">2</span><svg class="ico"><use href="#i-check"/></svg></span>
-@@ -421,14 +421,20 @@
+@@ -505,14 +505,20 @@
            </ol>
          </div>
  
@@ -81,7 +81,7 @@ index cc2e77d..a6a55e4 100644
            <article class="package reveal">
              <span data-t="ta820ac6b" class="package-flag">Includes pizza</span>
              <svg class="package-art" aria-hidden="true" viewBox="0 0 84 92"><use href="#pizza-slice"/></svg>
-@@ -454,7 +460,7 @@
+@@ -538,7 +544,7 @@
            </article>
          </div>
  
@@ -90,7 +90,7 @@ index cc2e77d..a6a55e4 100644
            <h4 data-t="t6933d769">Every reservation includes</h4>
            <ul class="ticks ticks-cols">
              <li data-t="t9812b413">Shaded picnic patch</li>
-@@ -465,7 +471,7 @@
+@@ -549,7 +555,7 @@
            </ul>
          </div>
  
@@ -99,7 +99,7 @@ index cc2e77d..a6a55e4 100644
            <h4 data-t="t6d120d7c">Optional add-ons</h4>
            <ul class="addon-list">
              <li>
-@@ -823,7 +829,7 @@
+@@ -983,7 +989,7 @@
                <ul data-ta-aria-label="td18c4de1" class="photo-strip season-pics" aria-label="Photos from the farm"><li><figure><img data-ta-alt="t33b7866d" data-zoom src="assets/photos/mums-and-red-shed.webp" alt="Rows of pink, orange and yellow mums in pots beside a little red shed" width="750" height="563" loading="lazy" decoding="async"><figcaption data-t="tb24561f2">Fall mums</figcaption></figure></li><li><figure><img data-ta-alt="tafe393d2" data-zoom src="assets/photos/mums-field-with-red-shed-and-palm.webp" alt="A field of potted mums in red, pink and white, with a small red shed and a large-leaved tropical plant behind" width="206" height="206" loading="lazy" decoding="async"><figcaption data-t="te3b0d15f">Field of mums</figcaption></figure></li><li><figure><img data-ta-alt="t1de31035" data-zoom src="assets/photos/goat-with-pumpkins.webp" alt="A baby goat standing in the grass behind four small pumpkins" width="500" height="553" loading="lazy" decoding="async"><figcaption data-t="t4fda8924">Goat meets pumpkins</figcaption></figure></li></ul>
                <div class="card-actions">
                  <a data-t="t0c2b8b1c" class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve a fall visit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
@@ -108,7 +108,7 @@ index cc2e77d..a6a55e4 100644
                </div>
              </div>
            </div>
-@@ -1138,7 +1144,7 @@
+@@ -1298,7 +1304,7 @@
              <p data-t="t16a7a4ce">Reservations with pizza open every <strong>Tuesday at 5:00 PM</strong> for the upcoming weekend.</p>
              <div class="card-actions">
                <a data-t="td5732118" class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve with pizza <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
@@ -116,8 +116,8 @@ index cc2e77d..a6a55e4 100644
 +              <a data-t="t4237a680" class="btn btn-ghost" data-only="fall" href="#options">See packages</a>
              </div>
            </article>
-           <article class="way-card way-card-alt reveal">
-@@ -1432,7 +1438,7 @@
+           <article class="way-card way-card-alt reveal" data-only="spring summer fall">
+@@ -1533,7 +1539,7 @@
            <li class="sg-plants"><a href="#shop-plants"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-lavender-plant"/></svg><span data-t="t39cf4606">Plants to take home</span></a></li>
            <li class="sg-fall"><a href="#shop-pumpkins"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-pumpkin"/></svg><span data-t="t45421e94">Fall &amp; holidays</span></a></li>
            <li class="sg-flowers"><a href="#shop-flowers"><svg class="shop-pill-ico" aria-hidden="true" focusable="false"><use href="#p-flower-jar"/></svg><span data-t="t63849ec2">U-cut flower jar</span></a></li>
@@ -126,7 +126,7 @@ index cc2e77d..a6a55e4 100644
          </ul>
          <p class="notice notice-soft shop-note reveal"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><span data-t="taa947919">Prices are for fall 2026 and can change. We read them from the farm&rsquo;s own signs. Anything marked &ldquo;Prices coming soon&rdquo; is still being confirmed. Questions? Email <a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a>.</span></p>
  
-@@ -1950,7 +1956,7 @@
+@@ -2114,7 +2120,7 @@
            </div>
          </div>
  
@@ -135,7 +135,7 @@ index cc2e77d..a6a55e4 100644
            <header class="shop-band">
              <svg class="shop-band-ico" aria-hidden="true" focusable="false"><use href="#tractor"/></svg>
              <h3 data-t="t8063a5d8" class="shop-band-h">Farm visit, rides &amp; picking</h3>
-@@ -1923,7 +1929,7 @@
+@@ -2682,7 +2688,7 @@
            <details name="faq">
              <summary data-t="t69109cd4">When do reservations open?</summary>
              <div class="answer">

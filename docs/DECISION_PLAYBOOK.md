@@ -849,6 +849,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 - Owner fact (no sensible default): yes
 - Default: none. The prices are owner facts. If they cannot come before launch, B removes the empty tags.
 - Depends on: d19 (drinks and ice cream: the ice cream card index.html at `data-t="t3699e70a"` and the Shop group Beer, cider & wine index.html at `data-t="ta693499c"` (2 places) are in both), d16 (the $31 package), d50 (tree dates share the card index.html at `data-t="t53cf41e8"`), d02 (draft prices).
+- Depends on: d19 (drinks and ice cream: the cards index.html at `data-t="t3699e70a"` and `data-t="t5cc2b160"` are in both), d16 (the $31 package), d50 (tree dates share the card index.html at `data-t="t59d83261"`), d02 (draft prices).
 - Note: Old Q19 asked the same list in one question; d19 already covers the two drinks rows.
 
 **A. I will send the price list**
@@ -1261,6 +1262,8 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 
 - The prices are on the site now, read from the farm's own signs (ice cream $4 for one scoop and $6 for two; every beer, cider and wine $6, 16 drinks): index.html at `data-t="t3699e70a"` (Waxhaw Creamery ice cream) and `data-t="ta693499c"` (2 places), the group Beer, cider & wine, where each of its 16 cards has its own `$6` in a `<p class="shop-price hand">` under its name. If she corrects one, change the number in the `<span class="so-p hand">` or `<p class="shop-price hand">` of that card (for the drinks, in all 16 cards). Prices carry no translation id.
 - Names that change (if she corrects them): index.html at `data-t="t3517c259"`, `data-t="t8aa1a25f"`, `data-t="t1d93180c"`, `data-t="t7b10f100"` and `data-t="ta38e4092"`, pages/pumpkin-patch.html at `<h3>No reservation?</h3>` and pages/wise-pie.html at `src="assets/photos/wise-pie-pizza-and-drinks.webp"`. The GreenHouse side says "cider", and so does the Shop group Beer, cider & wine (index.html at `data-t="ta693499c"` (2 places) and `data-t="tc5c16b91"`); the farm side says "hard cider" (index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="tf3d80896"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`): make the wording agree.
+- The prices are on the site now, read from the farm's own signs (ice cream $4 for one scoop and $6 for two, beer, hard cider and wine $6): index.html at `data-t="t3699e70a"` (Waxhaw Creamery ice cream) and `data-t="t5cc2b160"` (Beer, hard cider & wine). If she corrects one, change the number in the `<span class="so-p hand">` or `<p class="shop-price hand">` of that card. Prices carry no translation id.
+- Names that change (if she corrects them): index.html at `data-t="t8dcdef56"`, `data-t="t8aa1a25f"`, `data-t="t1d93180c"`, `data-t="t7b10f100"` and `data-t="ta38e4092"`, pages/pumpkin-patch.html at `<h3>No reservation?</h3>` and pages/wise-pie.html at `src="assets/photos/wise-pie-pizza-and-drinks.webp"`. The GreenHouse side says "cider", the farm side says "hard cider" (index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="t5cc2b160"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`): make the wording agree.
 - README: delete the part about drinks in the row "Pre-order page, drinks and ice cream".
 - Strings: 0 for prices only; up to 23 ids x 4 if names change (ids containing ice cream, drinks or cider)
 - Tests: none (prices of drinks are not in the facts test); consistency "price:" facts only if you add a pinned price
@@ -1269,6 +1272,8 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 
 - Delete the drinks mentions on The GreenHouse side: index.html at `data-t="t7b10f100"` (list item "Beer, wine & cider"), the sentences index.html at `data-t="t3517c259"` and `data-t="t8aa1a25f"`, and index.html at `data-t="ta38e4092"` if it names drinks.
 - The farm side (hard cider, beer and wine at the farm: index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="tf3d80896"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`) is a separate claim, and so is the Shop group "Beer, cider & wine" (the farm's chalkboard, 16 drinks; its band names no place): not asked on the dashboard (doc Q15 covers spring and summer snacks); leave or ask.
+- Delete the drinks mentions on The GreenHouse side: index.html at `data-t="t7b10f100"` (list item "Beer, wine & cider"), the sentences index.html at `data-t="t8dcdef56"` and `data-t="t8aa1a25f"`, and index.html at `data-t="ta38e4092"` if it names drinks.
+- The farm side (hard cider, beer and wine at the farm: index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="t5cc2b160"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`) is a separate claim, and so is the Shop card "Beer, hard cider & wine" (it is shared by the farm and The GreenHouse): not asked on the dashboard (doc Q15 covers spring and summer snacks); leave or ask.
 - Strings: 2 to 6 changed sentences x 4 translations
 - Tests: none
 
@@ -1545,7 +1550,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. Leave it as it is now**
 
-- Nothing to apply: this answer means "change nothing more". The Christmas tree wording is already fixed: it is in-season-only since b54427b (commit e081393): the headline "Wise Acres Christmas trees", the "Trees" chip and "Christmas trees are here." show only from the first tree Saturday (the last Saturday of November) to the Sunday after the first Saturday of December (data-in-season; js/hero.js at `function applyOnly(` and `$$('#hero-h > [data-only]')`). Checked with a page clock on the unpatched tree: tree headline on 2026-12-01 only; 2026-11-20, 2026-12-20, 2027-01-20 and 2027-03-01 show "Organic u-pick fun for the whole family".
+- Nothing to apply: this answer means "change nothing more". The Christmas tree wording is already fixed: it is in-season-only since b54427b (commit e081393): the headline "Wise Acres Christmas trees", the "Trees" chip and "Christmas trees are here." show only in the tree season, from the last Saturday in November to the Sunday after the first Saturday in December (data-in-season; js/hero.js at `function applyOnly(` and `$$('#hero-h > [data-only]')`). Checked with a page clock on the unpatched tree: tree headline on 2026-12-01 only; 2026-11-20, 2026-12-20, 2027-01-20 and 2027-03-01 show "Organic u-pick fun for the whole family".
 - Do NOT apply the patch winter-C.patch (it is stale and does not apply any more). A naive rebase (tree headline first in the h1) is wrong: js/hero.js at `$$('#hero-h > [data-only]')` shows the FIRST title between seasons, so the tree headline would show all winter. Tested and rejected.
 - What stays wrong with C alone: from Nov 9 on, all winter, spring and summer, the Visit and Shop areas still show "Fall 2026" prices and "Reserve now" (see A and B).
 - Strings: 0
@@ -1590,7 +1595,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **A. Open until Nov 30: I will change the end date**
 
-- js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts on the last Saturday of November (Nov 28, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 3 days. Decide what shows then (ask Claude).
+- js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts on the last Saturday in November (Nov 28, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 3 days (Nov 28 to 30). Decide what shows then (ask Claude).
 - Words "early November" become "late November" (say early, mid or late: the year-bar check and the season-words check of consistency read those words, and "end of November" is not one of them): index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
 - Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
 - The year bar next to that sentence ends too early for "late November": in index.html at `bar-orange" style="--s:8.45;--e:10.25"` (the pumpkin bar; the tomato bar below it has the same numbers: change it too if the tomatoes go on as long as the pumpkins, and then the tomato sentences, the tomato dates in js/features.js and the last day of the chip and the card link as well) change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
@@ -1606,11 +1611,11 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d50. Christmas tree dates at The GreenHouse
 
-- In plain words: The site says trees are sold at The GreenHouse on the last weekend in November and the first weekend in December, Saturday and Sunday only (the site builder gave this rule on 10 November 2026; this year it is Nov 28-29 and Dec 5-6). The code works the dates out each year from the rule: the tree wording shows from the first Saturday to the last Sunday.
+- In plain words: The site says trees are sold at The GreenHouse on the last weekend in November and the first weekend in December, Saturday and Sunday only (the builder's words, 10 Nov 2026; this year Nov 28-29 and Dec 5-6). The dates are worked out from that rule every year, so nobody types a date. If the rule is not right, tell us.
 - Doc question: Q12
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): no
-- Default: A. The rule is the one the site builder gave on 10 November 2026; the farm has not confirmed it in writing.
+- Default: A. The rule is the builder's words of 10 Nov 2026 (trees only on those two weekends, Saturday and Sunday only, never Friday). The tree wording is in-season-only (commit e081393). Nobody has confirmed the rule in writing.
 - Depends on: d01 (what winter shows), d09 (GreenHouse hours in winter), d54 (tree price), d51 (hours).
 - Note: Old Q37 asked this as its third part ("when do you stop selling Christmas trees?"); the dashboard had no question for it. Before 10 November 2026 the trees started on a Friday and the code ended them on December 8. That rule and those words are gone.
 
@@ -1629,7 +1634,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. No trees this year**
 
-- Remove the tree wording: 19 UI ids mention Christmas trees (x 4), the winter hero headline "Wise Acres Christmas trees" (index.html at `id="hero-h"`), the "Trees" chip (index.html at `data-t="t01cba258"`), the winter season panel, the calendar bar (index.html at `data-t="t0e76cb0a"`), the Shop row (index.html at `data-t="t53cf41e8"`), the crop "trees" in js/features.js, and the tree FAQ (index.html at `data-t="t5ecd6fe5"`). Ask Claude. Check d01 (what winter shows then).
+- Remove the tree wording: 19 UI ids mention Christmas trees (x 4), the winter hero headline "Wise Acres Christmas trees" (index.html at `id="hero-h"`), the "Trees" chip (index.html at `data-t="t01cba258"`), the winter season panel, the calendar bar (index.html at `data-t="t66a0e31b"`), the Shop row (index.html at `data-t="t59d83261"`), the crop "trees" in js/features.js, and the tree FAQ (index.html at `data-t="t9757af8f"`). Ask Claude. Check d01 (what winter shows then).
 - Strings: about 19 UI ids (unused after removal)
 - Tests: farm-seasons MUST change: tests/farm-seasons.test.mjs at `Christmas trees only in winter`; consistency from `const MONTHS = '(january` to `winterSeason.next !== 'the last weekend in November'`; hero (winter checks); dated
 

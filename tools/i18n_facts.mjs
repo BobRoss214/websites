@@ -195,7 +195,7 @@ function readDates(text, f, lang) {
     text = blank(text, /(\d{1,2})\s*月\s*(\d{1,2})(?:\s*[日号]|(?=\s*(?:–|-|至|到|和|与|及|、|&)\s*\d{1,2}\s*[日号]))(?:\s*(?:–|-|至|到|和|与|及|、|&)\s*(?:(\d{1,2})\s*月\s*)?(\d{1,2})\s*[日号]?)?/g, (m, mo, d, mo2, d2) => { push(+mo, +d); if (d2) push(mo2 ? +mo2 : +mo, +d2); });
     text = blank(text, /(?<![\d/])(\d{1,2})\/(\d{1,2})(?![\d/])/g, (m, a, b) => push(+a, +b));
   } else if (lang === 'vi') {
-    text = blank(text, /(?:ngày\s*)?(?<![\d–-])(?<!(?:tháng|thg)\s*)(\d{1,2})\s*(?:–|-|đến|tới|và)?\s*(\d{1,2})?\s*(?:tháng|thg)\s*(\d{1,2})(?!\d)(?:\s*(?:–|-|đến|tới|và)\s*(?:ngày\s*)?(\d{1,2})\s*(?:(?:tháng|thg)\s*(\d{1,2}))?)?/gi, (m, d, d2, mo, d3, mo2) => { push(+mo, +d); if (d2) push(+mo, +d2); if (d3) push(mo2 ? +mo2 : +mo, +d3); });
+    text = blank(text, /(?:ngày\s*)?(?<![\d–-])(?<!(?:tháng|thg)\s*)(\d{1,2})\s*(?:–|-|đến|tới|và)?\s*(\d{1,2})?\s*(?:tháng|thg)\s*(\d{1,2})(?!\d)(?:\s*(?:–|-|đến|tới|và)\s*(?:ngày\s*)?(\d{1,2})(?:\s*[–-]\s*(\d{1,2}))?\s*(?:(?:tháng|thg)\s*(\d{1,2}))?)?/gi, (m, d, d2, mo, d3, d4, mo2) => { push(+mo, +d); if (d2) push(+mo, +d2); if (d3) push(mo2 ? +mo2 : +mo, +d3); if (d4) push(mo2 ? +mo2 : +mo, +d4); });   // \"28–29 thg 11 và 5–6 thg 12\": a second range after the first
     text = blank(text, /(?<![\d/])(\d{1,2})\/(\d{1,2})(?![\d/])/g, (m, a, b) => { +a > 12 || +b <= 12 ? push(+b, +a) : push(+a, +b); });   // 29/9 and 6/10 are day / month; 9/29 is month / day
   } else {   // es, hi: "3 de nov", "23–25 de oct", "30 de oct al 8 de nov" (es); "3 नवंबर", "23–25 अक्टूबर" (hi)
     const mr = monthRx(lang);

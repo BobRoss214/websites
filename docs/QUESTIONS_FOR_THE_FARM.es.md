@@ -133,7 +133,7 @@ Respuesta:
 
 ### Pregunta 12
 
-**¿Se venderán árboles de Navidad en The GreenHouse (5503 Poplin Rd), a partir del viernes después de Acción de Gracias?**
+**¿Se venderán árboles de Navidad en The GreenHouse (5503 Poplin Rd) el último fin de semana de noviembre y el primer fin de semana de diciembre, solo sábado y domingo?**
 
 Id en el panel: d50, d01
 
