@@ -95,7 +95,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | d38 web address | share cards, QR signs, sitemap, structured data, d10 option C, d30 | One setting (tools/pages.py SITE) plus the home page tags and tools/qr_links.json "site". A new address after launch means new link previews: a changed picture needs a new file name (checklist 3.11). Old-address redirects only make sense if the new site takes over the old address. |
 | d30 redirects | d05 (which patch), d38 | redirects-A needs _redirects (Cloudflare, Netlify). redirects-B (13 small redirect pages) is for hosts without it. |
 | d15 header | d10, d05, analytics, Mailchimp | The line names the two map services (connect-src). Switch it on last, after d10 is final. |
-| d01 winter, d24, d25, d27, d23, d09 | each other | d24 option B is the same patch as d01 option A. d25 (Reserve window) and d27 (school banner) use the same data-only switch. d23 (fall end date) decides the November gap and overlaps winter if fall ends Nov 30. d09 (GreenHouse hours) is the same code change as d08 (Thursday). Christmas trees are sold at The GreenHouse. |
+| d01 winter, d24, d25, d27, d23, d09 | each other | d24 option B is the same patch as d01 option A. d25 (Reserve window) and d27 (school banner) use the same data-only switch. d23 (fall end date) decides when the page turns to the winter look and overlaps winter if fall ends Nov 30. d09 (GreenHouse hours) is the same code change as d08 (Thursday). Christmas trees are sold at The GreenHouse. |
 | d16 $31 package | tests/consistency.test.mjs, d17, d20, d21, d19 | The price and the sentence "Includes 2 Wise Pie pizzas, plus $3 per person" are pinned in 3 places and 5 languages. Extras (+$9, +$3) and the pizza card (index.html from `data-t="t661d94cd"` to `data-t="td4abc72c"`) are shared with d17, d20 and d21. |
 | d18 oven | share picture og-wise-pie.png, tests, d37 | The heading is drawn into assets/og-wise-pie.png. consistency pins "N-degree oven" (consistency at `pizza: oven temperature`) and the Celsius figure in Chinese (consistency at `const ALLOWED_EXTRA`). |
 | d17 allergen, d41, d42, d19 | d37 | Sentences about allergies, refunds and drinks should be read by a native speaker in each language. |
@@ -200,7 +200,7 @@ Choices with no patch file (docs/OPTION_PATCHES.md, "Choices that have no patch,
 |---|---|---|---|
 | d37 clock words (the old es-OPTIONAL-clock-12h.patch and vi-OPTIONAL-clock-words.patch) | d37 A or B | Nothing to apply: the code already writes Spanish times as "5:00 p. m." and Vietnamese times as "5 giờ chiều" (js/features.js at `const fmtClock = (date, tz) => {`, js/live.js at `function timeLabel(mins)`, js/i18n.js at `W.clock = (h, m, code) => {`). | yes: checked in a browser on 3 October 2026 (es, vi, hi, zh) |
 | Stop saying "new this year" from January 1 | d66 A | By hand when she answers: the places are listed in d66 A below. A patch would change about 40 notes that name those ids. | no (no patch) |
-| The 2026 fall prices in 2027 | d24 | winter-A-hide-fall-booking.patch covers the months when the page is not in its fall look; from August 12, 2027 only the 2027 details (d24 A) help. | no (no patch) |
+| The 2026 fall prices in 2027 | d24 | winter-A-hide-fall-booking.patch covers the months when the page is not in its fall look; from July 11, 2027 (the page opens on fall again) only the 2027 details (d24 A) help. | no (no patch) |
 
 Not in the repository and not to be applied (replaced): the old winter patches for b54427b, winter-A.patch and winter-C.patch (the tree wording is already in-season-only in the code, commit e081393), and 2-OPTIONAL-cloudflare-no-html-addresses.patch (clean-addresses-C does the same and more). The patches zh-C, es-C, vi-C and hi-C (translation decisions) and the photo, share-image and checklist patches are already merged.
 
@@ -1586,7 +1586,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): yes
 - Default: none. Owner fact. If she cannot say by Nov 1, B (it promises less).
-- Depends on: d01/d25 (the gap after fall: November 9 onward), d24 (2027 dates), d27 (school tours banner). The Reserve window and "Tell me when it opens" follow js/season.js.
+- Depends on: d01/d25 (what the page shows after fall: the winter look from November 9, the spring look from December 7), d24 (2027 dates), d27 (school tours banner). The Reserve window and "Tell me when it opens" follow js/season.js.
 
 **A. Open until Nov 30: I will change the end date**
 
@@ -1658,11 +1658,11 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d24. Fall 2027 prices, schedule and menu
 
-- In plain words: The Fall 2026 prices, schedule and menu stay on the site all year. From August 2027 they would look like this year's.
+- In plain words: The Fall 2026 prices, schedule and menu stay on the site all year. From July 2027 they would look like this year's.
 - Doc question: none
 - Urgency: 3 (nice to have). Checklist says: not listed.
 - Owner fact (no sensible default): yes
-- Default: B now (it is d01 A), but A before about August 12, 2027: that is when the site switches back to fall and the 2026 prices show again.
+- Default: B now (it is d01 A), but A before July 11, 2027: that is when the page opens on fall again and the 2026 prices show again.
 - Depends on: d01 (B = winter A), d23 (end date), d02 (corporate prices have no year), d16 (package price).
 
 **A. I will send the 2027 details**
@@ -1674,7 +1674,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **B. Hide fall content between seasons**
 
-- Same as d01 option A: apply patches/optional/winter-A-hide-fall-booking.patch. Fall blocks are hidden while another season is on screen: the 2026 prices stop showing from Nov 18 (when the page begins to look like winter) until the site switches back to fall, about August 12 (checked with a page clock: hidden on 2027-08-11, shown on 2027-08-13). Then the 2026 prices show again, so send the 2027 details (option A) before that date.
+- Same as d01 option A: apply patches/optional/winter-A-hide-fall-booking.patch. Fall blocks are hidden while another season is on screen: the 2026 prices stop showing from Nov 9 (when the page opens on the winter look) until the page opens on fall again on July 11, 2027, the day after summer ends (the season rule gives summer on 2027-07-10 and fall on 2027-07-11: tests/logic.test.mjs). Then the 2026 prices show again, so send the 2027 details (option A) before that date.
 - Not covered: the pumpkin page (pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`).
 - Strings: 1 new sentence x 4 (see d01)
 - Tests: as d01 A
@@ -1682,23 +1682,23 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. Keep as is**
 
-- No change. The site keeps showing Fall 2026 until August 2027.
+- No change. The site keeps showing Fall 2026 until July 2027.
 - Strings: 0
 - Tests: none
 
 ### d25. Reserve buttons when nothing can be booked
 
-- In plain words: Reserve buttons show in the gaps between seasons (for example November 9 to 17 and February 10 to April 14).
+- In plain words: Reserve buttons show in the gaps between seasons (for example December 7 to April 14, when the page opens on spring).
 - Doc question: none
 - Urgency: 3 (nice to have). Checklist says: not listed.
 - Owner fact (no sensible default): no
 - Default: A, but it only fixes the spring gap. With d01 A the winter buttons are hidden anyway.
-- Depends on: d01 (A hides the Visit-area button in winter), d23 (the fall end date decides the November gap).
+- Depends on: d01 (A hides the Visit-area button in winter), d23 (the fall end date decides when the page turns to the winter look).
 
 **A. Hide them out of season**
 
 - Apply patches/optional/reserve-window.patch (optional patch). Files: css/styles.css, index.html, js/hero.js, pages/strawberry-picking.html (then python3 tools/pages.py).
-- What it does: the buttons marked data-book show only inside the booking window the site's own words give: strawberry (spring) buttons from 3 weeks before the season starts (about March 25) to its end. Summer and fall state no window, so their buttons are never hidden by it (the November 9 to 17 gap stays).
+- What it does: the buttons marked data-book show only inside the booking window the site's own words give: strawberry (spring) buttons from 3 weeks before the season starts (about March 25) to its end. Summer and fall state no window, so their buttons are never hidden by it, also in the weeks before those seasons start.
 - Phone bar keeps its buttons evenly spaced (data-count).
 - Strings: 0
 - Tests: hero, farm-seasons (run them)
