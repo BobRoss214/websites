@@ -1007,7 +1007,7 @@
       if (!st) return;
       Array.prototype.forEach.call(parts.feed.children, (li) => {
         const t = li.firstChild, w = agoWords(Number(li.getAttribute('data-ms')));
-        if (t && t.textContent !== w) t.textContent = w;
+        if (t && t.textContent !== w) { t.textContent = w; li.setAttribute('data-sig', li.getAttribute('data-key') + '|' + w); }   // (the line keeps its place: it is not drawn again)
       });
       paintClock();
       expireNew();
@@ -1074,13 +1074,16 @@
         const apprOpen = apprAll.filter((a) => a.status === 'waiting');
 
         // The family answered a suggestion, or took a request back: say it once (what Mrs. Cathy herself just did is said when she does it)
+        const present = {};
         reqs.forEach((r) => {
           const was = ui.status[r.id];
           if (was !== undefined && was !== r.status && (r.status === 'accepted' || r.status === 'declined' || r.status === 'cancelled')) {
             say(whoOf(r) + (r.status === 'accepted' ? ' said OK to your suggestion.' : r.status === 'declined' ? ' said no thanks to your suggestion.' : ' took a request back.'));
           }
           ui.status[r.id] = r.status;
+          present[r.id] = true;
         });
+        Object.keys(ui.status).forEach((id) => { if (!present[id]) delete ui.status[id]; });   // a request the rush has tidied away is forgotten here too
 
         // "New" marks: things that arrived while this screen was open. They are said (in batches), marked on their card for half a minute, and counted by the "new" button.
         const nowKeys = {}, words = {};

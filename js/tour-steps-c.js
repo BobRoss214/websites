@@ -95,7 +95,11 @@
     var L = window.DemoLive;
     try {
       if (!L || typeof L.start !== 'function') return;
-      if (fresh) { if (typeof L.clear === 'function') L.clear(); if (typeof L.setSpeed === 'function') L.setSpeed('rush'); }
+      if (fresh) {   // from nothing: off, the pretend families taken away, the speed of the tour; the start then makes the four things that are already waiting
+        if (typeof L.stop === 'function') L.stop();
+        if (typeof L.clear === 'function') L.clear();
+        if (typeof L.setSpeed === 'function') L.setSpeed('rush');
+      }
       if (typeof L.isOn !== 'function' || !L.isOn()) L.start();
     } catch (e) { /* no rush on this page */ }
   }
@@ -403,7 +407,7 @@
     {
       id: 'ch10-desk-live', order: CHAPTER * 100 + 29, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-live'), skipIfMissing: true,
       title: 'A busy day at the desk',
-      text: 'The rush is on while this card shows. Pretend families keep asking to move a visit, asking questions and sending photos and reviews. The counters and the feed follow. Calm, Busy and Rush set the speed. Off pauses everything.',
+      text: 'The tour starts the rush for this card. Pretend families keep asking to move a visit, asking questions and sending photos and reviews. The counters and the feed follow. Calm, Busy and Rush set the speed. Off pauses everything, On starts it again.',
       before: liveScene(function () { rushOn(true); }, hook('desk-live'))
     },
     {
