@@ -14,9 +14,9 @@ For main, who applies README.md, tests/README.md and tests/browser-support.table
 
 ## Shared test lines I touched (tour-A knows)
 
-- `tests/tour.test.mjs`: header comment (one more bullet), line 198 (welcome regex: "your website"), `STORE_WORDS` and the title next to it (about line 1040: the made-up strip card now has the words and the title of the real `ch7-jump`), and the new section 8b (after the section "8. what an independent walk of the real tour found").
-- `tests/tour-store.test.mjs`: header comment, line 83 (welcome regex), the `POSITION_WORDS` comment, the ids rule (4 or more Store steps, among them the four named), and a new block at the end.
-- `tests/tour-targets.test.mjs`: `soonCardsIn()` next to `soonCards()` in `IN_PAGE`, the chapter 7 / 11 block ("Prices coming soon"), one more entry in `CLAIMS`. Not `wordChecks()`.
+- `tests/tour.test.mjs`: header comment (lines 30 to 34, one more bullet), line 202 (welcome regex: "your website"), the new section 8b (lines 872 to 1007: the Store pop-up as a stand-in, and any aria-modal dialog; a computer, a small computer and a phone), and `STORE_WORDS` with the card title next to it (lines 1032 and 1034: the made-up strip card has the words and the title of the real `ch7-jump`).
+- `tests/tour-store.test.mjs`: header comment (lines 5 to 17), the `POSITION_WORDS` comment (24), the welcome regex (87), the ids rule and the words check (91, 94), and a new block at the end (127 to 185: the real pop-up).
+- `tests/tour-targets.test.mjs`: header (29 to 30), `soonCardsIn()` next to `soonCards()` in `IN_PAGE` (283 to 286), the chapter 7 / 11 block "Prices coming soon" (492, 500 to 509) and one more entry in `CLAIMS` (517). Not `wordChecks()`.
 - `tests/tour-seasons.test.mjs`: line 52 only (welcome regex).
 
 ## Merge notes (conflicts to expect)
