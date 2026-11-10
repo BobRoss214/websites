@@ -1129,7 +1129,17 @@
     }
 
     /* ---------- one pass: read the store, draw what changed ---------- */
+    // A change of the store while a pass is drawing (the screen notes when it first saw a ticket, which writes to the store) asks for one more pass after this one,
+    // so a pass is never started inside another.
     function sync() {
+      if (ui.syncing) { ui.again = true; return null; }
+      var model = null;
+      ui.syncing = true;
+      try { model = syncOnce(); } finally { ui.syncing = false; }
+      if (ui.again) { ui.again = false; model = sync(); }
+      return model;
+    }
+    function syncOnce() {
       var saved = capture();
       var model = buildModel(readState(), menu);
       var s = live ? live.settings() : { orderSecs: SECS.order, changeSecs: SECS.change };
@@ -1147,6 +1157,8 @@
       rail.forEach(function (t) { byKey[t.key] = t; });
       ui.rail = order.map(function (key) { return byKey[key]; });
       Object.keys(ui.edit).forEach(function (key) { if (!byKey[key]) delete ui.edit[key]; });     // an editor belongs to a ticket that still waits
+      // what the screen remembers about a ticket goes when the ticket leaves the list (after Start over the sample family's ticket has the same key again, and is a new ticket)
+      ['starts', 'late', 'tm'].forEach(function (name) { Object.keys(ui[name]).forEach(function (key) { if (!byKey[key]) delete ui[name][key]; }); });
       done.sort(function (a, b) { return (b.order.arrived || 0) - (a.order.arrived || 0) || b.num - a.num; });
       ui.family = family;
       ui.done = done.slice(0, 6);
