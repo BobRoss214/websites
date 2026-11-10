@@ -76,8 +76,8 @@
     };
   }
 
-  // The pretend rush. rushLeft(): did it make anything, or is it on? rushOff(): switch it off and take its pretend families away. rushOn(fresh): switch it on at the speed the
-  // desk cards show; fresh: begin again from nothing first. Both do nothing on a page without window.DemoLive, and never throw.
+  // The pretend rush. rushLeft(): did it make anything, or is it on? rushOff(): switch it off and take its pretend families away. rushOn(fresh): switch it on (at Busy, the
+  // speed the strip starts with); fresh: begin again from nothing first. Both do nothing on a page without window.DemoLive, and never throw.
   function rushLeft() {
     var found = false, L = window.DemoLive;
     ['visits', 'orders', 'requests', 'messages', 'reviews', 'photos'].forEach(function (coll) {
@@ -101,7 +101,7 @@
       if (fresh) {   // from nothing: off, the pretend families taken away, the speed of the tour; the start then makes the four things that are already waiting
         if (typeof L.stop === 'function') L.stop();
         if (typeof L.clear === 'function') L.clear();
-        if (typeof L.setSpeed === 'function') L.setSpeed('rush');
+        if (typeof L.setSpeed === 'function') L.setSpeed('busy');
       }
       if (typeof L.isOn !== 'function' || !L.isOn()) L.start();
     } catch (e) { /* no rush on this page */ }

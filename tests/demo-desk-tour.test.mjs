@@ -87,14 +87,14 @@ const ALL_BEFORE_DESK = ORIGINAL.slice(0, ORIGINAL.indexOf('ch10-desk-request') 
   const before = w.family();
   ok('before the card the rush is off and no pretend family is in the store', !L.isOn() && w.count() === 0);
   await w.run('ch10-desk-live');
-  ok('the first card switches the rush on at the speed of the tour (Rush) and makes the four things that are already waiting', L.isOn() && L.speed() === 'rush' && w.count() > 0 && L.feed(20).length === 4, 'on ' + L.isOn() + ', speed ' + L.speed() + ', records ' + w.count() + ', events ' + L.feed(20).length);
+  ok('the first card switches the rush on at Busy (the speed the strip starts with) and makes the four things that are already waiting', L.isOn() && L.speed() === 'busy' && w.count() > 0 && L.feed(20).length === 4, 'on ' + L.isOn() + ', speed ' + L.speed() + ', records ' + w.count() + ', events ' + L.feed(20).length);
   const first = w.pretend();
   const desk = L.feed(20).filter((e) => e.side === 'desk').map((e) => e.kind).sort().join();
   ok('two of them are for the desk (a visit change and a question), two for the kitchen (an order and a change of an order)', desk === 'question,visit-change' && L.feed(20).filter((e) => e.side === 'kitchen').length === 2, desk);
   ok('the family\'s own screens do not see the pretend families (the store hides them), and the family\'s own records are as the story left them', w.family() === before && w.store.list('requests').every((r) => !r.live) && w.store.openRequests('cathy').every((r) => !r.live));
   ok('the desk sees them with the extra argument: pretend requests, a question and their visits, each with a family name of its own', w.store.list('requests', { live: true }).some((r) => r.live && r.to === 'cathy' && /’s family$/.test(r.fam)) && w.store.threadsWaiting({ live: true }).some((t) => /^q-L/.test(t.thread)));
   await w.run('ch10-desk-keep');
-  ok('the second card leaves the rush as it is: still on, the same pretend families, nothing made again', L.isOn() && w.pretend() === first && L.speed() === 'rush');
+  ok('the second card leaves the rush as it is: still on, the same pretend families, nothing made again', L.isOn() && w.pretend() === first && L.speed() === 'busy');
   await w.run('ch10-desk-live');
   ok('going Back to the first card begins again from nothing: the same four things, the same words, the same family names (the engine makes event k from its seed and k alone)', L.isOn() && w.pretend() === first && w.count() === JSON.parse(first).reduce((n, l) => n + l.length, 0), String(w.count()));
   ok('no before() threw', w.errors.length === 0, w.errors.join(' | '));

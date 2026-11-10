@@ -1094,6 +1094,7 @@
           });
         }
         ui.seen = nowKeys;
+        ui.pending = ui.pending.filter((k) => nowKeys[k]);   // a card that was answered (or tidied away) before it was seen is not "new below" any more
 
         // Waiting for you: the cards stay in the order they came in (the first time this screen saw them, oldest first), new ones go last, and a card that is answered leaves
         const nWaiting = waitingReqs.length + needReply.length;

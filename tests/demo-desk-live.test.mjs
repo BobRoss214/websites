@@ -311,6 +311,46 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
     ok('...and the notices of the sides did not pile up (the rush makes none: only the family\'s own request made some)', big.notices < 20, String(big.notices));
 
   });
+  /* ------------------------------------------------------------------ a question answered on the screen stays answered */
+  await sec('a question answered on the screen stays answered', async () => {
+    // From nothing at Rush, with the kitchen left alone (it fills up, so every new thing is for the desk). Somebody answers the desk's changes of day, photos and reviews with the
+    // store's calls and replies to six questions THROUGH THE SCREEN. Then the rush makes sixty things more, past the point where the engine tidies old records away (it keeps the
+    // newest forty events). An answered question must stay answered: it must not come back under "Waiting for you" and the counter must not grow.
+    await store(p, () => { const L = window.DemoLive; L.stop(); L.clear(); L.setSpeed('rush'); L.start(); });
+    await settled(p, 100);
+    const replied = [];
+    const deskAnswers = (questionsToo) => p.evaluate((q) => {
+      const S = window.DemoStore;
+      S.list('requests', { live: true }).filter((r) => r.live && r.to === 'cathy' && r.status === 'waiting').forEach((r) => S.reply(r.id, { answer: 'yes' }));
+      S.list('photos', { live: true }).filter((x) => x.live && x.status === 'waiting').forEach((x) => S.decidePhoto(x.id, true));
+      S.list('reviews', { live: true }).filter((x) => x.live && x.status === 'waiting').forEach((x) => S.decideReview(x.id, true));
+      if (q) S.threadsWaiting({ live: true }).filter((t) => /^q-L/.test(t.thread)).forEach((t) => S.post(t.thread, 'cathy', 'Thank you!'));
+    }, !!questionsToo);
+    for (let round = 0; round < 60 && replied.length < 6; round++) {
+      await run1(p, 15000);
+      const qs = await p.evaluate((sel) => [...document.querySelectorAll(sel)].filter((c) => c.querySelector('.ds-chip').textContent.trim() === 'Question').map((c) => c.getAttribute('data-key')), WAIT);
+      for (const k of qs) {
+        if (replied.length >= 6) break;
+        await p.locator('[data-key="' + k + '"] textarea').fill('Thank you, see you soon!');
+        await p.locator('[data-key="' + k + '"] button:has-text("Send reply")').click();
+        replied.push(k.slice(2));
+      }
+      await deskAnswers(false);
+    }
+    const at = await made(p);
+    for (let round = 0; round < 90 && (await made(p)) < at + 60; round++) { await run1(p, 15000); await deskAnswers(true); }
+    const later = await made(p);
+    await settled(p, 100);
+    const back = await p.evaluate((ids) => ({
+      waiting: window.DemoStore.threadsWaiting({ live: true }).map((t) => t.thread).filter((t) => ids.includes(t)),
+      cards: ids.filter((id) => !!document.querySelector('#desk-waiting .ds-stack[aria-live="off"] > [data-key="t:' + id + '"]')),
+      shown: document.querySelectorAll('#desk-waiting .ds-stack[aria-live="off"] > [data-key]').length,
+      broken: ids.filter((id) => { const m = window.DemoStore.list('messages', { live: true }).filter((x) => x.thread === id); return m.length === 1; })
+    }), replied);
+    ok('six questions were answered through the screen, and the rush then made sixty things more (past the forty it keeps)', replied.length === 6 && later >= at + 60, 'replied ' + replied.length + ', things made ' + at + ' -> ' + later);
+    ok('none of those six comes back under "Waiting for you" (not in the store\'s waiting threads, not a card), and no thread is left with the family\'s first message alone', back.waiting.length === 0 && back.cards.length === 0 && back.broken.length === 0, JSON.stringify(back));
+    ok('...and the counter says what the screen shows: Waiting for you counts the cards that wait', (await tile(p, 'Waiting for you')) === back.shown, (await tile(p, 'Waiting for you')) + ' against ' + back.shown);
+  });
   /* ------------------------------------------------------------------ the screen drawn again from the store says the same */
   await sec('the screen drawn again from the store says the same', async () => {
     const kept2 = await p.evaluate(() => window.DemoDesk.app.ui.feed.map((f) => f.text));
