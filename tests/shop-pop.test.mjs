@@ -48,7 +48,7 @@ const DICT = Object.fromEntries(['es', 'hi', 'zh', 'vi'].map((c) => [c, JSON.par
 const REVEAL = '.reveal{opacity:1!important;transform:none!important;transition:none!important}html{scroll-behavior:auto!important}';
 const DESKTOP = { width: 1366, height: 768 }, PHONE = { width: 390, height: 844 };
 const near = (a, b, d) => Math.abs(a - b) <= d;
-const ONLY = process.env.SHOPPOP_ONLY || '';   // for working on one part: SHOPPOP_ONLY=dormant,data,hover,keys,languages,preview (nothing set: all of it)
+const ONLY = process.env.SHOPPOP_ONLY || '';   // for working on one part: SHOPPOP_ONLY=dormant,data,hover,keys,languages,bigfont,preview (nothing set: all of it)
 const go = (part) => !ONLY || ONLY.split(',').includes(part);
 
 /* ------------------------------------------------------------------ the page's own parts, and small helpers that run inside the page */
@@ -386,6 +386,26 @@ await run('shop-pop', async ({ browser, base, errs }) => {
       await l.context().close();
     }
   }
+  }
+
+  /* -------------------------------------------------------------- 5b. big letters (the browser's text size at 200 percent) on a phone and on a computer */
+  if (go('bigfont')) {
+    for (const view of [PHONE, DESKTOP]) {
+      const f = await open(browser, base, 'index.html', errs, { viewport: view, touch: view === PHONE });
+      await f.addStyleTag({ content: 'html{font-size:200%!important}' });
+      await prep(f);
+      const opened = await openBy(f, 'hot-pretzel');
+      const g = await f.evaluate(() => {
+        const b = document.querySelector('.shop-pop-box'), r = b.getBoundingClientRect(), x = document.querySelector('.shop-pop-x').getBoundingClientRect(), d = document.querySelector('.shop-pop-done');
+        const before = d.getBoundingClientRect().bottom <= b.getBoundingClientRect().bottom;
+        d.scrollIntoView({ block: 'end' });
+        const q = d.getBoundingClientRect(), r2 = b.getBoundingClientRect();
+        return { w: r.width, h: r.height, vw: innerWidth, vh: innerHeight, inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, scrolls: b.scrollHeight > b.clientHeight, xIn: x.right <= r.right + 1 && x.top >= r.top - 1 && x.width >= 44, doneReach: q.bottom <= r2.bottom + 1 && q.top >= r2.top - 1, before, side: document.documentElement.scrollWidth - document.documentElement.clientWidth, boxSide: b.scrollWidth - b.clientWidth, root: parseFloat(getComputedStyle(document.documentElement).fontSize) };
+      });
+      ok(`text at 200% (${g.root}px) at ${view.width}px: the pop-up opens, stays inside the window (at most 85% high; it scrolls inside itself when it is taller), the X stays 44 px and in the box, the Close button can be scrolled to, and nothing slides sideways`, opened && g.root >= 31 && g.inside && g.h <= view.height * 0.85 + 1 && g.xIn && g.doneReach && g.side <= 0 && g.boxSide <= 0, JSON.stringify(g));
+      await closeBy(f);
+      await f.context().close();
+    }
   }
 
   /* -------------------------------------------------------------- 10. the preview build (the page the builder looks at: scripts and style sheets inline, nothing asked for later) */
