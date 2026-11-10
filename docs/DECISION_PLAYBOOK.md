@@ -106,7 +106,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | d10, d11, d15 | each other | farmPoint (d11) halves the requests to the free service. A Mapbox switch (d10 C) changes the header line (d15) and 5 docs. |
 | d46 booking page, d47 pre-order page | tests/consistency.test.mjs, QR signs, calendar files | One booking page and one pre-order page are pinned on every page (consistency at `one booking page, one pre-order page and one e-mail signup address`) and in the QR signs (consistency at `['reserve', /bookeo\.com/]`). A new address changes 29 and 6 places. |
 | d48 haunted trail and tomatoes | d13, d32, d14, tests | A removal also removes the map mark, the tomato price-sign photo and the tests that look for "Haunted" in fall (farm-seasons at `haunted trail and the maze only in fall`) and the tomato prices (consistency at `price: tomatoes, per pound` and `price: basil, per stem`). |
-| d50 tree dates, d51 hours | d01, d09, tests | Tree season words and hours are read from js/season.js and js/content.js by the facts test (consistency from `const MONTHS = '(january` to `winterEnd.month === 'December'`, and from `time: The GreenHouse open hours` to `CONTENT.hours.greenhouse.days`). |
+| d50 tree dates, d51 hours | d01, d09, tests | Tree season words and hours are read from js/season.js and js/content.js by the facts test (consistency from `const MONTHS = '(january` to `winterSeason.next !== 'the last weekend in November'`, and from `time: The GreenHouse open hours` to `CONTENT.hours.greenhouse.days`). |
 | d52 Cathy's email | d55, d03, messages tests | The accessibility card and the waitlist/messages feature name this address. |
 | d53 pre-order timing, d57 eat there | each other | They share the sentence index.html at `data-t="t60509a07"`. |
 | d02, d36, d03 | each other | Groups prices, school tour rules and the sign-up form are all on the School tours and Groups tabs. |
@@ -152,7 +152,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | gallery | photo count (at least 5) and tags | d13, d31, d32 |
 | consistency at `price: tomatoes, per pound` and `price: basil, per stem` | tomato price per pound and basil per stem (5 places each) | d48 |
 | consistency at `pizza menu: the price range says the cheapest` | the pizza price range is the cheapest and dearest of the nine menu prices | d47 |
-| consistency from `const MONTHS = '(january` to `if (/thanksgiving/.test(words))`, and `winterEnd.month === 'December'` | tree season words ("Friday after Thanksgiving to early December") against js/season.js | d50 |
+| consistency from `const MONTHS = '(january` to `if (/data-tree-bar/.test(li[2]))`, and `winterSeason.next !== 'the last weekend in November'` | the tree season rule ("the last weekend in November and the first weekend in December, Saturday and Sunday only") and the two tree bars against js/season.js | d50 |
 | consistency at `one booking page, one pre-order page and one e-mail signup address` and `['reserve', /bookeo\.com/]` | one booking page, one pre-order page, one signup address; the three QR signs use them | d46, d47 |
 | farm-seasons at `haunted trail and the maze only in fall` and `Christmas trees only in winter` | "Haunted" and /Maze/ only in fall; "Christmas" only in winter | d07, d48, d50 |
 | features at `press: two Axios Charlotte links` | exactly two Axios links in the press list | d56 |
@@ -1528,7 +1528,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - What it does: the "Reserve now" button in the Visit area, the "Choose your package" header, packages, included, add-ons, the "See prices" and "See packages" buttons, the "Farm visit, rides & picking" group of the Shop with its jump link and the "Fall:" paragraph get data-only="fall" (or "spring summer fall"). A new off-season line ("Fall at the farm usually starts again in mid-September...") with the existing "Tell me when it opens" button shows in winter, spring and summer. First-visit page: "See packages & add-ons" button hidden out of fall. css/sections.css +2 lines.
 - Then rebuild (python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build) and python3 tools/i18n.py missing es hi zh vi (0 each).
 - The pumpkin page (pages/pumpkin-patch.html from `<h3>Fall 2026 prices</h3>` to `Prices are for fall 2026 and can change.`, and `For fall 2026, farm fun without pizza`) keeps "fall 2026" prices all year: not covered.
-- The fall blocks are hidden from Nov 18, when the page begins to look like winter (from Nov 9 to Nov 17 it still looks like fall), and come back about August 12 (the site then treats fall as the nearest season): answer d24 before that.
+- The fall blocks are hidden from Nov 9, when the page opens on the winter look (between seasons it opens on the season that starts next), and come back on Jul 11, the day after summer ends (the page then opens on fall): answer d24 before that.
 - Strings: 1 new UI sentence (id t48ba72e7) x 4 translations, already written in the patch
 - Tests: Run on the patched e02b95e tree: consistency 66, live 20, dated 24, farm-seasons 24, hero 74, messages 173: all pass. Page-clock check: packages, shop block and Reserve now show on 2026-10-10 only; the off-season line shows from 2026-11-20 to 2027-03-01; the tree headline shows on 2026-12-01 only (same as unpatched). No test needs a change
 - Patch: patches/optional/winter-A-hide-fall-booking.patch
@@ -1545,7 +1545,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. Leave it as it is now**
 
-- Nothing to apply: this answer means "change nothing more". The Christmas tree wording is already fixed: it is in-season-only since b54427b (commit e081393): the headline "Wise Acres Christmas trees", the "Trees" chip and "Christmas trees are here." show only from the Friday after Thanksgiving to December 8 (data-in-season; js/hero.js at `function applyOnly(` and `$$('#hero-h > [data-only]')`). Checked with a page clock on the unpatched tree: tree headline on 2026-12-01 only; 2026-11-20, 2026-12-20, 2027-01-20 and 2027-03-01 show "Organic u-pick fun for the whole family".
+- Nothing to apply: this answer means "change nothing more". The Christmas tree wording is already fixed: it is in-season-only since b54427b (commit e081393): the headline "Wise Acres Christmas trees", the "Trees" chip and "Christmas trees are here." show only from the first tree Saturday (the last Saturday of November) to the Sunday after the first Saturday of December (data-in-season; js/hero.js at `function applyOnly(` and `$$('#hero-h > [data-only]')`). Checked with a page clock on the unpatched tree: tree headline on 2026-12-01 only; 2026-11-20, 2026-12-20, 2027-01-20 and 2027-03-01 show "Organic u-pick fun for the whole family".
 - Do NOT apply the patch winter-C.patch (it is stale and does not apply any more). A naive rebase (tree headline first in the h1) is wrong: js/hero.js at `$$('#hero-h > [data-only]')` shows the FIRST title between seasons, so the tree headline would show all winter. Tested and rejected.
 - What stays wrong with C alone: from Nov 9 on, all winter, spring and summer, the Visit and Shop areas still show "Fall 2026" prices and "Reserve now" (see A and B).
 - Strings: 0
@@ -1575,7 +1575,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. Closed some months: I will say which**
 
-- Same code and text changes as B, with a "closed from ... to ..." window and wording. Christmas trees are sold at The GreenHouse from the Friday after Thanksgiving to December 8 (js/season.js at `{ id: 'winter'`): say what shows when it is closed.
+- Same code and text changes as B, with a "closed from ... to ..." window and wording. Christmas trees are sold at The GreenHouse on the last weekend in November and the first weekend in December, Saturday and Sunday only (js/season.js at `{ id: 'winter'`): say what shows when it is closed.
 - Strings: 4 to 8 ids x 4 translations
 - Tests: consistency (as B), live, dated
 
@@ -1590,7 +1590,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **A. Open until Nov 30: I will change the end date**
 
-- js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts the Friday after Thanksgiving (Nov 27, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 4 days. Decide what shows then (ask Claude).
+- js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts on the last Saturday of November (Nov 28, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 3 days. Decide what shows then (ask Claude).
 - Words "early November" become "late November" (say early, mid or late: the year-bar check and the season-words check of consistency read those words, and "end of November" is not one of them): index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
 - Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
 - The year bar next to that sentence ends too early for "late November": in index.html at `bar-orange" style="--s:8.45;--e:10.25"` (the pumpkin bar; the tomato bar below it has the same numbers: change it too if the tomatoes go on as long as the pumpkins, and then the tomato sentences, the tomato dates in js/features.js and the last day of the chip and the card link as well) change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
@@ -1606,13 +1606,13 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d50. Christmas tree dates at The GreenHouse
 
-- In plain words: The site says trees are sold at The GreenHouse from the Friday after Thanksgiving (November 27) to early December, and the page switches the tree wording off on December 8. We have not heard the end date from you.
+- In plain words: The site says trees are sold at The GreenHouse on the last weekend in November and the first weekend in December, Saturday and Sunday only (the site builder gave this rule on 10 November 2026; this year it is Nov 28-29 and Dec 5-6). The code works the dates out each year from the rule: the tree wording shows from the first Saturday to the last Sunday.
 - Doc question: Q12
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): no
-- Default: A. The tree wording is already in-season-only (commit e081393). The end date ("early December", December 8 in the code) is the one part nobody confirmed in writing.
+- Default: A. The rule is the one the site builder gave on 10 November 2026; the farm has not confirmed it in writing.
 - Depends on: d01 (what winter shows), d09 (GreenHouse hours in winter), d54 (tree price), d51 (hours).
-- Note: Old Q37 asked this as its third part ("when do you stop selling Christmas trees?"); the dashboard had no question for it.
+- Note: Old Q37 asked this as its third part ("when do you stop selling Christmas trees?"); the dashboard had no question for it. Before 10 November 2026 the site said "the Friday after Thanksgiving" and "early December" (December 8 in the code). Those words and that end date are gone.
 
 **A. Those dates are right**
 
@@ -1620,18 +1620,18 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Strings: 0
 - Tests: none
 
-**B. Different dates (I will send them)**
+**B. Different weekends (I will send them)**
 
-- js/season.js at `{ id: 'winter'`: the start (thanksgivingFriday) and the end (new Date(y, 11, 8)).
-- The words "Friday after Thanksgiving to early December" in 8 sentences: index.html at `data-t="t0e76cb0a"`, `data-t="t28844e2e"`, `data-t="t4503c39b"`, `data-t="t493369ae"`, `data-t="t53cf41e8"`, `data-t="t5ecd6fe5"`, `data-t="t8f55ff30"` and `data-t="tf0d0193a"` x 4 translations. README.md row "Christmas trees". Use the word that fits the end day: early is day 1 to 10, mid 11 to 20, late 21 and later (Dec 8 is early, Dec 22 is late). The year bar beside the first sentence ends where the words say: in index.html at `--s:10.85;--e:11.3` the end `--e:11.3` is early December; for mid-December use `--e:11.5`, for late December `--e:11.9` (months count from 0 = January 1).
-- Strings: 8 UI ids x 4 translations
-- Tests: consistency MUST follow, in two places that read "early December" against js/season.js. The words check: tests/consistency.test.mjs at `winterEnd.month === ` holds "Friday after Thanksgiving to early December" and `half(winterEnd) === 'early'`: write your word and its half there (they must fit the end day in js/season.js, as above). The year bar check: tests/consistency.test.mjs at `(december)/.exec(words)` reads `/early (december)/` and lets the bar end between 11.0 and 11.34: write `/late (december)/` and `[11.6, 12.1]` for late December (`/mid (december)/` and `[11.3, 11.7]` for mid-December); hero at `Dec 1 and Dec 20 are winter` (the switch to winter); dated
+- js/season.js at `function lastSaturdayOfNovember(` and `function firstSaturdayOfDecember(`: the two Saturdays (each weekend is the Saturday and the Sunday after it). The winter season runs from the first Saturday to the last Sunday (`function treeSeasonStart(` and `function treeSeasonEnd(`). A different rule is a code change that only the helper can make: ask Claude.
+- The words "the last weekend in November and the first weekend in December, Saturday and Sunday only" are on the home page and the other pages (README.md row "Christmas trees") x 4 translations. The dates in brackets and the two little bars of the year picture are written by the code (`data-tree-dates` and `data-tree-bar` in index.html): there is no date to type.
+- Strings: the sentences that say the rule x 4 translations
+- Tests: logic, upcoming-dates, time-bombs, features, hero, dated and consistency know the rule: consistency at `winterSeason.next !== 'the last weekend in November'` and `const RULE = /the last weekend in November and the first weekend in December, Saturday and Sunday only/ig`; hero at `Dec 1 is winter (the trees are on)` (the switch to winter); dated
 
 **C. No trees this year**
 
 - Remove the tree wording: 19 UI ids mention Christmas trees (x 4), the winter hero headline "Wise Acres Christmas trees" (index.html at `id="hero-h"`), the "Trees" chip (index.html at `data-t="t01cba258"`), the winter season panel, the calendar bar (index.html at `data-t="t0e76cb0a"`), the Shop row (index.html at `data-t="t53cf41e8"`), the crop "trees" in js/features.js, and the tree FAQ (index.html at `data-t="t5ecd6fe5"`). Ask Claude. Check d01 (what winter shows then).
 - Strings: about 19 UI ids (unused after removal)
-- Tests: farm-seasons MUST change: tests/farm-seasons.test.mjs at `Christmas trees only in winter`; consistency from `const MONTHS = '(january` to `winterEnd.month === 'December'`; hero (winter checks); dated
+- Tests: farm-seasons MUST change: tests/farm-seasons.test.mjs at `Christmas trees only in winter`; consistency from `const MONTHS = '(january` to `winterSeason.next !== 'the last weekend in November'`; hero (winter checks); dated
 
 ### d51. Are the fall opening hours right?
 
@@ -1945,13 +1945,13 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Owner fact (no sensible default): yes
 - Default: none. Only she knows.
 - Depends on: none. d25 is about the Reserve buttons; this question is only about the farm badge.
-- Note: The setting is js/content.js at `farm:       { fall: [4, 5, 6, 0] }`: the days are numbers (0 = Sunday, 4 = Thursday, 6 = Saturday), and "a season you leave out shows no farm badge" (the comment in js/content.js). When she must tell us (docs/OWNER_YEAR_CALENDAR.md): by Thu Apr 8, 2027 for spring (the strawberry season starts Apr 15) and by Mon Jun 7, 2027 for summer (the blueberry season starts Jun 15).
+- Note: The setting is js/content.js at `farm:       { fall: [4, 5, 6, 0], winter: [6, 0] }`: the days are numbers (0 = Sunday, 4 = Thursday, 6 = Saturday), and "a season you leave out shows no farm badge" (the comment in js/content.js). When she must tell us (docs/OWNER_YEAR_CALENDAR.md): by Thu Apr 8, 2027 for spring (the strawberry season starts Apr 15) and by Mon Jun 7, 2027 for summer (the blueberry season starts Jun 15).
 
 **A. Same days as fall: Thursday to Sunday**
 
-- js/content.js at `farm:       { fall: [4, 5, 6, 0] }`: add the same days for spring and summer: `{ fall: [4, 5, 6, 0], spring: [4, 5, 6, 0], summer: [4, 5, 6, 0] }`, and the words "in fall" at the end of the line become "in fall, spring and summer". The badge then says "Reserved visits today" on those days inside the spring and summer seasons, and "No visits today. Next reserved day: ..." on the others (js/live.js at `function farmStatus(`).
-- Two tests pin "fall only" and must follow. tests/live.test.mjs at `Farm badge hidden outside fall` expects no badge on 2026-05-05, a Tuesday in spring: change that date to a winter one (2027-01-20T16:00:00Z), its words to "Farm badge hidden in winter (no farm days)", and add a check that on that Tuesday in spring the badge says "No visits today. Next reserved day: Thursday". tests/owner-calendar.test.mjs at `farm badge in the fall only (Thu-Sun)`: that line and the pattern on the next line must name spring and summer too.
-- The notes that quote this line follow: docs/OWNER_YEAR_CALENDAR.md and its Spanish copy say "today only fall has farm days" (the docs test lists them).
+- js/content.js at `farm:       { fall: [4, 5, 6, 0], winter: [6, 0] }`: add the same days for spring and summer: `{ fall: [4, 5, 6, 0], spring: [4, 5, 6, 0], summer: [4, 5, 6, 0], winter: [6, 0] }`, and the words "in fall" at the end of the line become "in fall, spring and summer". The badge then says "Reserved visits today" on those days inside the spring and summer seasons, and "No visits today. Next reserved day: ..." on the others (js/live.js at `function farmStatus(`).
+- Two tests pin "fall only" and must follow. tests/live.test.mjs at `Farm badge hidden outside fall` expects no badge on 2026-05-05, a Tuesday in spring: change that date to a winter one (2027-01-20T16:00:00Z), its words to "Farm badge hidden in winter (no farm days)", and add a check that on that Tuesday in spring the badge says "No visits today. Next reserved day: Thursday". tests/owner-calendar.test.mjs at `farm badge in fall (Thu-Sun) and on the tree weekends (Sat-Sun)`: that line and the pattern on the next line must name spring and summer too.
+- The notes that quote this line follow: docs/OWNER_YEAR_CALENDAR.md and its Spanish copy say "today only fall and the Christmas tree weekends have farm days" (the docs test lists them).
 - Strings: 0
 - Tests: live and owner-calendar MUST follow (the two changes above); tried with the change: dated, farm-seasons, hero, features, year-rehearsal, time-bombs and consistency pass as they are; docs lists the notes
 

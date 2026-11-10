@@ -5,7 +5,8 @@
  *   - every weekday written with a date is that date's weekday, and every such date has its year;
  *   - the entries are in date order, inside the range (3 Oct 2026 to 1 Jan 2028), and a "You, by <date>" is never later than the last date of its heading;
  *   - the season days in the first table are exactly the days listed in docs/WHAT_VISITORS_SEE_WHEN.md (which tests/calendar-doc.test.mjs keeps equal to the real
- *     season code, in a browser), each row's weekday matches its date, and the Friday after Thanksgiving, Easter, Father's Day agree with the calendar;
+ *     season code, in a browser), each row's weekday matches its date, and the Christmas tree weekends (the last Saturday of November, the first Saturday of December, with their Sundays),
+ *     Easter and Father's Day agree with the calendar;
  *   - every data-until / data-release written in index.html and pages/*.html is in the second table, and every one in the table is in the files; each "Hides on"
  *     day is the day after its data-until; the pizza rows are the same pairs as in the table in index.html and open on a Tuesday;
  *   - the facts the page leans on (the opening time, the hours, the week box's 14 days, the footer year) are in the files;
@@ -56,7 +57,7 @@ const entries = body.split(/\n### /).slice(1).map((t) => {
   const by = [...(t.match(/\*\*You, by (?:[^*]*?)\*\*/) || [''])[0].matchAll(WD)].map(iso);
   return { head, first: dates[0], last: dates.slice().sort().pop(), by };
 });
-ok('there are at least 25 dated entries, each with a date in its heading', entries.length >= 25 && entries.every((e) => e.first), entries.filter((e) => !e.first).map((e) => e.head).join('; '));
+ok('there are at least 23 dated entries, each with a date in its heading (the page opens on the next season from the day after a season ends, so the entries for the "look" days were folded into the entries for the season days)', entries.length >= 23 && entries.every((e) => e.first), entries.filter((e) => !e.first).map((e) => e.head).join('; '));
 ok('the entries are in date order', entries.every((e, i) => i === 0 || e.first >= entries[i - 1].first), entries.filter((e, i) => i && e.first < entries[i - 1].first).map((e) => e.head).join('; '));
 ok('the first entry is 3 Oct 2026 and the last is no later than 1 Jan 2028', entries[0].first === '2026-10-03' && entries[entries.length - 1].last <= '2028-01-01', entries[0].head + ' ... ' + entries[entries.length - 1].head);
 const late = entries.filter((e) => e.by.some((b) => b > e.last));
@@ -69,12 +70,19 @@ const table1 = [...doc.matchAll(/^\| `(\d{4}-\d{2}-\d{2})` \| ([^|]+) \| ([^|]+)
 ok('the season table lists the same days as docs/WHAT_VISITORS_SEE_WHEN.md (' + seasonDays.length + ')', seasonDays.length > 10 && JSON.stringify(table1.map((r) => r[0])) === JSON.stringify(seasonDays), 'page: ' + table1.map((r) => r[0]).join(' ') + ' | day-by-day: ' + seasonDays.join(' '));
 ok('each row of the season table writes the same day twice (as 2026-11-09 and as Mon Nov 9, 2026)', table1.length > 10 && table1.every(([d, text]) => text === pretty(d)), table1.filter(([d, text]) => text !== pretty(d)).map((r) => r.slice(0, 2).join(' / ')).join('; '));
 const nth = (y, month, dow, n) => { let c = 0; for (let d = 1; d < 32; d++) { const x = new Date(Date.UTC(y, month, d, 12)); if (x.getUTCMonth() !== month) break; if (x.getUTCDay() === dow && ++c === n) return ymd(y, month, d); } };
-const thanksFriday = (y) => plus(nth(y, 10, 4, 4), 1);                       // the 4th Thursday of November, plus one day
+// The Christmas tree weekends, by a walk over the calendar: the LAST Saturday of November and the Sunday after it, the FIRST Saturday of December and the Sunday after it.
+// The winter season runs from the first Saturday to the last Sunday, so the season days of the table are: the first Saturday (it starts) and the Monday after the last Sunday (it is over).
+const lastSaturday = (y, m) => { let d = null; for (let k = 1; k < 32; k++) { const x = new Date(Date.UTC(y, m, k, 12)); if (x.getUTCMonth() !== m) break; if (x.getUTCDay() === 6) d = ymd(y, m, k); } return d; };
+const treeFirstDay = (y) => lastSaturday(y, 10), treeLastDay = (y) => plus(nth(y, 11, 6, 1), 1);
 const easter = (y) => { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451); return ymd(y, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1); };
-ok('the Friday after Thanksgiving is the day the page says the tree season starts (' + thanksFriday(2026) + ', ' + thanksFriday(2027) + ')', [2026, 2027].every((y) => table1.some(([d, , what]) => d === thanksFriday(y) && /tree season starts/.test(what))));
-const father = nth(2027, 5, 0, 3), thanks = (y) => pretty(plus(thanksFriday(y), -1));
-ok('Easter Sunday, Father\'s Day and Thanksgiving Day are on the days the page says (' + pretty(easter(2027)) + ', ' + pretty(father) + ', ' + thanks(2026) + ', ' + thanks(2027) + ')',
-  doc.includes('### ' + pretty(easter(2027)) + ': Easter Sunday') && doc.includes('Easter Sunday 2027 is ' + pretty(easter(2027))) && doc.includes('### ' + pretty(father) + ' and ') && /### [^\n]*: Father's Day/.test(doc) && doc.includes('Thanksgiving is ' + thanks(2026) + ' and ' + thanks(2027)));
+ok('the last Saturday of November is the day the page says the tree weekends start, and the day after the Sunday that follows the first Saturday of December is the day it says they are over (' + treeFirstDay(2026) + ' and ' + plus(treeLastDay(2026), 1) + '; ' + treeFirstDay(2027) + ' and ' + plus(treeLastDay(2027), 1) + ')',
+  [2026, 2027].every((y) => table1.some(([d, , what]) => d === treeFirstDay(y) && /tree weekends start/.test(what)) && table1.some(([d, , what]) => d === plus(treeLastDay(y), 1) && /tree weekends are over/.test(what))));
+const father = nth(2027, 5, 0, 3);
+const weekend = (y, m, sat) => pretty(sat) + ' and ' + pretty(plus(sat, 1));   // "Sat Nov 28, 2026 and Sun Nov 29, 2026"
+const nov1 = (y) => lastSaturday(y, 10), dec1 = (y) => nth(y, 11, 6, 1);
+ok('Easter Sunday, Father\'s Day and the Christmas tree weekends are on the days the page says (' + pretty(easter(2027)) + ', ' + pretty(father) + ', ' + weekend(2026, 10, nov1(2026)) + ', ' + weekend(2026, 11, dec1(2026)) + ')',
+  doc.includes('### ' + pretty(easter(2027)) + ': Easter Sunday') && doc.includes('Easter Sunday 2027 is ' + pretty(easter(2027))) && doc.includes('### ' + pretty(father) + ' and ') && /### [^\n]*: Father's Day/.test(doc)
+  && [2026, 2027].every((y) => doc.includes('In ' + y + ' they are ' + weekend(y, 10, nov1(y)) + ', then ' + weekend(y, 11, dec1(y)) + '.')));
 
 // ---- the dated lines
 const files = ['index.html', ...fs.readdirSync(path.join(ROOT, 'pages')).filter((f) => f.endsWith('.html')).map((f) => 'pages/' + f)];
@@ -102,8 +110,8 @@ ok('the pizza rows in the page are the pizza rows in index.html (' + pairs.size 
 // ---- the facts the page leans on
 const html = read('index.html'), content = read('js/content.js');
 ok('pizza reservations open at 5:00 PM (data-release-time="17:00" in index.html)', html.includes('data-release-time="17:00"') && doc.includes('data-release-time="17:00"') && /5:00 PM/.test(doc));
-ok('the hours are the ones the page says: The GreenHouse Fri-Sun 10-8, Wise Pie 4-8, farm badge in the fall only (Thu-Sun)',
-  /greenhouse:\s*\{\s*days:\s*\[5,\s*6,\s*0\],\s*open:\s*'10:00',\s*close:\s*'20:00'/.test(content) && /pizza:\s*\{\s*days:\s*\[5,\s*6,\s*0\],\s*open:\s*'16:00',\s*close:\s*'20:00'/.test(content) && /farm:\s*\{\s*fall:\s*\[4,\s*5,\s*6,\s*0\]\s*\}/.test(content), 'hours in js/content.js changed: update the entries that talk about hours');
+ok('the hours are the ones the page says: The GreenHouse Fri-Sun 10-8 (tree weekends Sat-Sun 11-8), Wise Pie 4-8 (tree weekends: the same hours as The GreenHouse), farm badge in fall (Thu-Sun) and on the tree weekends (Sat-Sun)',
+  /greenhouse:\s*\{\s*days:\s*\[5,\s*6,\s*0\],\s*open:\s*'10:00',\s*close:\s*'20:00',\s*winter:\s*\{\s*days:\s*\[6,\s*0\],\s*open:\s*'11:00',\s*close:\s*'20:00'\s*\}/.test(content) && /pizza:\s*\{\s*days:\s*\[5,\s*6,\s*0\],\s*open:\s*'16:00',\s*close:\s*'20:00',\s*winter:\s*'greenhouse'/.test(content) && /farm:\s*\{\s*fall:\s*\[4,\s*5,\s*6,\s*0\],\s*winter:\s*\[6,\s*0\]\s*\}/.test(content), 'hours in js/content.js changed: update the entries that talk about hours');
 ok('"This week at the farm" disappears 14 days after updated (expireDays: 14 in js/features.js)', read('js/features.js').includes('expireDays: 14') && doc.includes('expireDays: 14') && /14 days after `updated`/.test(doc));
 ok('the footer year follows the calendar by itself (data-year in index.html)', /<p[^>]*\bdata-year\b/.test(html));
 ok('the owner settings the page names are in js/content.js (closures, notice, noticeUntil, week, analytics)', ['closures', 'notice', 'noticeUntil', 'week', 'analytics'].every((k) => new RegExp('\\n  ' + k + ':').test(content)));
