@@ -10,7 +10,9 @@
  *   chapter * 100 + the place in the chapter), a chapter that has a title, a page the site has, a title of 9 words at most, a text of 45 words at most
  *   with no sentence over 25 words (a line that starts with "- " is a bullet line and counts as its own sentence), no web address, e-mail address, year,
  *   markup, "Kathy" or jargon word from tools/plain_words.txt, and every dollar amount in a text is an amount that the site's own pages show (a price is
- *   never invented).
+ *   never invented). In chapters 1 to 5 and 11 no card says what was changed ("now says", "new this year", "still", "already", "used to", "instead of",
+ *   "older page", "we need you to": the owner's rule of 10 Nov, NO_CHANGE_NOTES below): a card says what a thing is and why it helps. A card in QUOTES_IN_LIT quotes the page's
+ *   own words in “ ”, and those words must be written in its lit part.
  *   Targets (a browser): the steps are walked in order, the way the engine walks them, in ONE browser context per window size: on the page the step names
  *   (the pretend-demo pages only when their files exist, and with ?demo), before() is run (with an EMPTY object: it must never read what the engine hands
  *   it), the page is let to settle, the first visible match of the target must be there (a box that hides itself by date says skipIfMissing: true and is
@@ -41,6 +43,7 @@ const DEMO_PAGES = ['account', 'farm-desk', 'kitchen'];
 const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'also', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after', 'choices', 'choicesLabel'];
 const CHOICE_FIELDS = ['label', 'title', 'text', 'run', 'pressed'];
 const SEASON_NAMES = ['spring', 'summer', 'fall', 'winter'];
+const QUOTES_IN_LIT = ['ch2-pill', 'ch5-varieties'];   // cards with no season buttons that quote the page's own words in “ ”: those words must be written in the lit part (add a card here when it quotes the page)
 const SIZES = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
 const OTHER_DAYS = [
   ['2026-11-03T12:00:00-05:00', 'the real day (3 Nov 2026)'],
@@ -379,6 +382,12 @@ async function walk({ browser, base, errs, size, full, time, pages, tag }) {
           const pa = await p.evaluate(([x]) => window.__tour.probe(x), [sel]);
           const n = await p.evaluate(([x]) => { try { return document.querySelectorAll(x).length; } catch (e) { return -1; } }, [sel]);
           rec(name + ': the part named with also (' + sel + ') is a valid selector and is on the page' + (!pa.bad && pa.shown ? ' and visible' : ' (hidden today: the tour lights it when it shows)'), n > 0, n < 0 ? 'not a valid selector' : 'no element matches');
+        }
+        if (QUOTES_IN_LIT.includes(s.id)) {   // the words the card puts in double curly quotes are in the lit part (the target and the parts named with also)
+          const lit = (await p.evaluate(([t, a]) => window.__tour.boxText(t, a), [s.target, s.also || []])) || '';
+          const quoted = [...String(s.text).matchAll(/\u201c([^\u201d]+)\u201d/g)].map((m) => m[1]);
+          const lost = quoted.filter((ph) => !squash(lit).includes(squash(ph)));
+          rec(name + ': the words the card quotes (' + quoted.length + ') are written in the lit part', quoted.length > 0 && lost.length === 0, lost.length ? 'not in the lit part: ' + lost.map((m) => '\u201c' + m + '\u201d').join(', ') : 'the card quotes nothing: take it off QUOTES_IN_LIT');
         }
         if (s.allowClicks) {
           const clicked = await p.evaluate(([t]) => window.__tour.tryClick(t), [s.target]);
