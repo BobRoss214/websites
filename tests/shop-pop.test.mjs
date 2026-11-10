@@ -130,7 +130,7 @@ else {
   const num = copy(); num[EXPECTED[2]].list = ['Sugar 12 g'];
   ok('(tried on bad lists first) a product with no list, a list with no card, an empty list, a wrong heading, "vegan", a vitamin and a number are each found', problems(gone).missing.length === 1 && problems(extra).orphans.length === 1 && problems(empty).shape.length === 1 && problems(bad).shape.length === 1 && problems(claim).words.length === 1 && problems(dose).words.length === 1 && problems(num).words.length === 1 && Object.values(problems(sample)).every((v) => v.length === 0));
   const found = problems(sample);
-  ok(`every product of groups 1-11 has a list (${PRODUCTS.length} products${beerOnPage ? ' and the 16 beer, cider and wine drinks' : ''})`, found.missing.length === 0, found.missing.join(', '));
+  ok(`every product of groups 1-11 has a list (${EXPECTED.length} products${beerOnPage ? ', the 16 beer, cider and wine drinks among them' : ''})`, found.missing.length === 0, found.missing.join(', '));
   ok('no list belongs to a picture that no card shows' + (beerOnPage ? '' : ' (the 16 drinks of the beer group wait for their cards: that group is not in this copy of the page yet)'), found.orphans.length === 0, found.orphans.join(', '));
   ok('the farm visit group, the old "Beer, hard cider & wine" card and every other card with no list has none', !Object.keys(sample).some((s) => ['beer-wine', 'wagon-ride', 'barrel-train', 'corn-pit', 'scavenger-hunt', 'sunn-hemp-maze', 'upick'].includes(s)));
   ok('every list has a heading ("Ingredients" or "Made of"), 1 to 14 plain items, none twice, and a "contains" line only for things you put in or on your body', found.shape.length === 0, found.shape.join(', '));
