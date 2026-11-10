@@ -26,23 +26,33 @@ image_alt: Illustration of three slices of pizza and two paper cups on a red and
         <header class="section-head">
           <p class="hand eyebrow">Two ways to get it</p>
           <h2 id="ways-h">At the farm or at The GreenHouse</h2>
-          <p class="lead">Fall hours are Friday through Sunday. Pizza times depend on where you are.</p>
+          <p class="lead" data-only="spring summer fall">Fall hours are Friday through Sunday. Pizza times depend on where you are.</p>
+          <p class="lead" data-only="winter" hidden>In winter, pizza <span class="not-official">Not official yet</span> is at The GreenHouse on the Christmas tree weekends.</p>
         </header>
         <div class="way-grid">
-          <article class="way-card">
+          <article class="way-card" data-only="spring summer fall">
             <span class="way-time">10 am &ndash; 4 pm</span>
             <h3>At the farm</h3>
             <p>During farm hours, pizza is available <strong>only with a farm reservation package that you buy before your visit</strong>. Choose a reservation with pizza.</p>
             <p>Reservations with pizza open every <strong>Tuesday at 5:00 PM</strong> for the upcoming weekend. Pizzas are ready for pick-up 1 hour after your reservation time, at the wood-fired oven at The GreenHouse.</p>
             <div class="card-actions"><a class="btn btn-red" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve with pizza <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
           </article>
-          <article class="way-card way-card-alt">
+          <article class="way-card way-card-alt" data-only="spring summer fall">
             <span class="way-time">4 pm &ndash; 8 pm</span>
             <h3>At The GreenHouse</h3>
             <p>First come, first served: eat there or take your pizza with you. Or <strong>pre-order</strong> with the link we post 5 days ahead.</p>
             <p>No reservation and no farm access. Great for neighbors, or if you only want a pizza or two. 5503 Poplin Rd, Indian Trail.</p>
             <div class="card-actions">
               <a class="btn btn-sun" href="https://wise-pie-wood-fired-at-wise-acres.square.site/?location=CVJNFDQTZCA3B" target="_blank" rel="noopener">Pre-order pizza <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+              <a class="btn btn-ghost" href="index.html#greenhouse">About The GreenHouse</a>
+            </div>
+          </article>
+          <article class="way-card way-card-alt way-card-winter" data-only="winter" hidden>
+            <span class="way-time">Christmas tree weekends</span>
+            <h3>At The GreenHouse</h3>
+            <p>The last weekend in November and the first weekend in December, Saturday and Sunday only (<span data-tree-dates>Nov 28&ndash;29 and Dec 5&ndash;6</span>).</p>
+            <p>The GreenHouse is open 11 am&ndash;8 pm <span class="not-official">Not official yet</span> and serves Wise Pie pizza <span class="not-official">Not official yet</span>.</p>
+            <div class="card-actions">
               <a class="btn btn-ghost" href="index.html#greenhouse">About The GreenHouse</a>
             </div>
           </article>
@@ -85,11 +95,13 @@ image_alt: Illustration of three slices of pizza and two paper cups on a red and
         <div class="faq-list" data-faq>
           <details name="faq" open>
             <summary>Where can I get Wise Pie pizza?</summary>
-            <div class="answer"><p>At the farm, you can get pizza until 4:00 PM with a farm reservation package that includes pizza. At The GreenHouse (5503 Poplin Rd), you can get pizza Friday through Sunday from 4:00 to 8:00 PM. No reservation is required there.</p></div>
+            <div class="answer"><p data-only="spring summer fall">At the farm, you can get pizza until 4:00 PM with a farm reservation package that includes pizza. At The GreenHouse (5503 Poplin Rd), you can get pizza Friday through Sunday from 4:00 to 8:00 PM. No reservation is required there.</p>
+            <p data-only="winter" hidden>In winter, Wise Pie pizza <span class="not-official">Not official yet</span> is at The GreenHouse (5503 Poplin Rd) on the Christmas tree weekends, 11 am&ndash;8 pm <span class="not-official">Not official yet</span>. No reservation is required.</p></div>
           </details>
           <details name="faq">
             <summary>Do I need a reservation for pizza?</summary>
-            <div class="answer"><p>At The GreenHouse, no. Pizza there is first come, first served from 4 to 8 pm. At the farm, yes: pizza is available only with a farm reservation package that you buy before your visit.</p></div>
+            <div class="answer"><p data-only="spring summer fall">At The GreenHouse, no. Pizza there is first come, first served from 4 to 8 pm. At the farm, yes: pizza is available only with a farm reservation package that you buy before your visit.</p>
+            <p data-only="winter" hidden>No. In winter, pizza <span class="not-official">Not official yet</span> is at The GreenHouse on the Christmas tree weekends, and no reservation is required.</p></div>
           </details>
           <details name="faq">
             <summary>Is there a vegan or gluten-free option?</summary>
