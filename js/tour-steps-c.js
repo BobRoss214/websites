@@ -18,6 +18,10 @@
  *     When a request is already past the stage a step needs, the sample family is made again (seedSample) or the pizza part is put back.
  *     A notice the store posts a second time (a day closed again, a request sent again) replaces the first one, so the bell does not grow while the owner goes back and forth.
  *   - A family the owner made by hand is kept: the sign-up card only signs it out, and the next card signs it in again. A sample family is made only when there is none.
+ *   - The pretend rush (js/demo-live.js, window.DemoLive) makes pretend families on the desk and the kitchen. The story cards run without it, so they read the same every time:
+ *     a card made with scene() first switches the rush off and takes the pretend families away (the family's own screens never show them anyway). A card that SHOWS the rush is made
+ *     with liveScene() and rushOn(): the rush starts from nothing (four things already waiting, more coming), so the card shows the same thing each time. On the family's page
+ *     there is no DemoLive: nothing is switched there, and the next card on the desk or the kitchen does it.
  *   - Everything is guarded. Without window.DemoStore (demo mode off) a before() does nothing; if a call fails, the target is not found and the
  *     engine skips the step (skipIfMissing). Nothing here ever throws into the page.
  *   - before() does not read its argument (a test calls it with an empty one) and returns a Promise that settles when the step's target is on
@@ -67,6 +71,33 @@
       try { return typeof then === 'function' ? then.apply(this, arguments) : undefined; }
       finally { clearToasts(); }
     };
+  }
+
+  // The pretend rush. rushLeft(): did it make anything, or is it on? rushOff(): switch it off and take its pretend families away. rushOn(fresh): switch it on at the speed the
+  // desk cards show; fresh: begin again from nothing first. Both do nothing on a page without window.DemoLive, and never throw.
+  function rushLeft() {
+    var found = false, L = window.DemoLive;
+    ['visits', 'orders', 'requests', 'messages', 'reviews', 'photos'].forEach(function (coll) {
+      (call('list', coll, { live: true }) || []).forEach(function (r) { if (r && r.live) found = true; });
+    });
+    try { if (L && typeof L.isOn === 'function' && L.isOn()) found = true; } catch (e) { /* no rush on this page */ }
+    return found;
+  }
+  function rushOff() {
+    var L = window.DemoLive;
+    try {
+      if (!L || !rushLeft()) return;
+      if (typeof L.isOn === 'function' && L.isOn() && typeof L.stop === 'function') L.stop();
+      if (typeof L.clear === 'function') L.clear();
+    } catch (e) { /* no rush on this page */ }
+  }
+  function rushOn(fresh) {
+    var L = window.DemoLive;
+    try {
+      if (!L || typeof L.start !== 'function') return;
+      if (fresh) { if (typeof L.clear === 'function') L.clear(); if (typeof L.setSpeed === 'function') L.setSpeed('rush'); }
+      if (typeof L.isOn !== 'function' || !L.isOn()) L.start();
+    } catch (e) { /* no rush on this page */ }
   }
 
   // Waits (without blocking the page) until test() gives something, up to ms milliseconds; settles with that thing, or null.
@@ -304,18 +335,22 @@
   /* ------------------------------------------------------------------ *
    * A card's before(): make the demo ready (prepare), open the tab, wait for the target
    * ------------------------------------------------------------------ */
-  // The last argument is a second thing to wait for (the kitchen card shows its Yes / No / Change it buttons a moment after the card).
-  function scene(prepare, target, tab, also) {
+  // The fourth argument is a second thing to wait for (the kitchen card shows its Yes / No / Change it buttons a moment after the card). A card that shows the pretend rush passes
+  // keepRush (see liveScene): every other card switches the rush off first.
+  function scene(prepare, target, tab, also, keepRush) {
     return function () {
       var opened;
       if (!ready()) return;
-      try { if (prepare) prepare(); tidyNotices(); } catch (e) { /* the target will not be found and the engine skips the card */ }
+      try { if (!keepRush) rushOff(); if (prepare) prepare(); tidyNotices(); } catch (e) { /* the target will not be found and the engine skips the card */ }
       opened = tab ? openTab(tab) : Promise.resolve(true);
       return opened.then(function () { return target ? seen(target) : true; }).then(function (found) {
         return also && found ? seen(also).then(function () { return found; }) : found;
       });
     };
   }
+
+  // A card that shows the pretend rush (the desk's): it leaves the rush running.
+  function liveScene(prepare, target, tab, also) { return scene(prepare, target, tab, also, true); }
 
   /* ------------------------------------------------------------------ *
    * The steps
@@ -364,6 +399,18 @@
       title: 'Your desk, with the request waiting',
       text: "This is your side. The request waits here with the family's name and note. Yes moves the visit, No keeps it, and Suggest offers another day. Try one, or press Next and the tour says Yes.",
       before: scene(function () { visitIs('waiting'); }, hook('desk-card') + '[data-req-kind="visit-change"]')
+    },
+    {
+      id: 'ch10-desk-live', order: CHAPTER * 100 + 29, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-live'), skipIfMissing: true,
+      title: 'A busy day at the desk',
+      text: 'The rush is on while this card shows. Pretend families keep asking to move a visit, asking questions and sending photos and reviews. The counters and the feed follow. Calm, Busy and Rush set the speed. Off pauses everything.',
+      before: liveScene(function () { rushOn(true); }, hook('desk-live'))
+    },
+    {
+      id: 'ch10-desk-keep', order: CHAPTER * 100 + 30, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-card'), skipIfMissing: true,
+      title: 'Answer while more arrive',
+      text: 'Answer with Yes, No or a suggestion. The card moves to Answered and the next one is ready. Cards that arrive while you read go to the bottom, so nothing moves under your finger. A note you are typing stays where it is.',
+      before: liveScene(function () { rushOn(false); }, hook('desk-card'))
     },
     {
       id: 'ch10-answer', order: CHAPTER * 100 + 32, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true,

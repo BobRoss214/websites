@@ -18,6 +18,8 @@
 .ds-who .ds-ico{margin-top:.2em;width:1.5em;height:1.5em}
 .ds-who p{margin:0}
 .ds-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:0;padding:0;list-style:none}
+.ds-tiles > li{display:flex}
+.ds-tiles .ds-tile{flex:1 1 auto;min-width:0}
 .ds-tile{display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:center;min-height:92px;padding:14px 18px;background:#fff;border:3px solid var(--ink);border-radius:22px;box-shadow:0 5px 0 var(--ink);color:var(--ink);text-decoration:none}
 .ds-tile .ds-ico{grid-row:1 / span 2;width:36px;height:36px}
 .ds-tile-n{font:700 2.2rem/1 var(--display)}
@@ -47,7 +49,7 @@
 .ds-more{margin:14px 0 0;color:var(--ink-soft);font-weight:800}
 .ds-more-line{color:var(--ink-soft);font-weight:700}
 /* a small button that says new cards came in out of sight; it sits at the bottom of the window */
-.ds-pill{position:fixed;left:16px;bottom:16px;z-index:50;max-width:calc(100vw - 32px);min-height:48px;padding:.5em 1.1em;background:var(--red);color:#fff;border:3px solid var(--ink);border-radius:999px;box-shadow:0 4px 0 var(--ink);font:700 1.05rem/1.2 var(--display);cursor:pointer}
+.ds-pill{position:fixed;left:0;right:0;bottom:16px;z-index:50;width:max-content;max-width:calc(100vw - 32px);margin:0 auto;min-height:48px;padding:.5em 1.1em;background:var(--red);color:#fff;border:3px solid var(--ink);border-radius:999px;box-shadow:0 4px 0 var(--ink);font:700 1.05rem/1.2 var(--display);cursor:pointer}
 
 /* ---------- sections ---------- */
 .ds-section{margin-top:48px}
@@ -211,7 +213,6 @@
   .ds-tile-l{font-size:.98rem}
   .ds-feed-line{grid-template-columns:1fr;padding:8px 12px 8px 20px}
   .ds-feed-line:nth-child(n+5){display:none}
-  .ds-pill{right:72px}
   .ds-card{padding:18px 16px 20px;border-radius:22px}
   .ds-card.ds-s-waiting,.ds-card.ds-s-yes,.ds-card.ds-s-accepted,.ds-card.ds-s-no,.ds-card.ds-s-declined,.ds-card.ds-s-suggested{padding-left:26px}
   .ds-ask{font-size:1.3rem}

@@ -920,18 +920,17 @@
     }
     // the lines this screen has not taken yet go to the feed, in the order they happened (the biggest seq is the newest); returns how many were taken
     function takeFeed(first) {
-      const lines = feedLines(), now = Date.now();
-      let taken = 0;
+      const lines = feedLines(), now = Date.now(), present = {};
+      lines.forEach((e) => { present[e.key] = true; });
+      // a line of a record that is gone (the tour takes the rush away, the engine tidies old things) goes with it, and its name can be used again
+      ui.feed = ui.feed.filter((e) => present[e.key]);
+      Object.keys(ui.feedSeen).forEach((k) => { if (!present[k]) delete ui.feedSeen[k]; });
       lines.forEach((e) => {
         if (ui.feedSeen[e.key]) return;
         ui.feedSeen[e.key] = true;
         ui.feed.push({ key: e.key, seq: ++ui.feedSeq, ms: first ? now - e.ago : now, text: e.text, tone: e.tone });   // a line that was already there is as old as the store says; one that comes while the screen is open is "just now"
-        taken++;
       });
       if (ui.feed.length > 40) ui.feed = ui.feed.slice(-40);
-      const keys = Object.keys(ui.feedSeen);
-      if (keys.length > 600) { ui.feedSeen = {}; ui.feed.forEach((e) => { ui.feedSeen[e.key] = true; }); lines.forEach((e) => { ui.feedSeen[e.key] = true; }); }
-      return taken;
     }
     // "just now" for the first 45 seconds, then whole minutes: the words change once a minute, so the feed stays calm to read
     function agoWords(ms) {
