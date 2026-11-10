@@ -170,13 +170,13 @@
       target: '#greenhouse .gh-features',
       also: ['#greenhouse .gh-callout', '#greenhouse .gh-trees'],   // the list that names the trees, the yellow note, and the green line when it shows (tree season): all lit
       title: 'Christmas trees at The GreenHouse',
-      text: 'The list says “Christmas trees in season” all year. A green line, “Christmas trees are here”, shows only in tree season. It sits under the yellow reservations note. Press a season.',
+      text: 'The list says “Christmas trees in season” all year. A green line, “Christmas tree season is on”, shows only in tree season. It sits under the yellow reservations note. Press a season.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring. No green line. Only the list item “Christmas trees in season” is there, with the pizza, ice cream, drinks and goats.',
         summer: 'Summer. The same: no green line, only “Christmas trees in season” in the list.',
         fall: 'Fall. No green line. It waits for tree season.',
-        winter: 'Winter. A green line appears: “Christmas tree season is on.” It says the trees are right at The GreenHouse on the last weekend in November and the first weekend in December, Saturday and Sunday only.'
+        winter: 'Winter. A green line appears, saying “Christmas tree season is on”. The trees are right at The GreenHouse. They are there on the last weekend in November and the first weekend in December, Saturday and Sunday only.'
       }, placeTreeNote),
       before: seasonsBegin, after: seasonsEnd
     },

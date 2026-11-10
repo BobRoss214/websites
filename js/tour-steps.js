@@ -234,7 +234,7 @@
         spring: 'Spring, April 15 to June 7. The strip begins “In season: Strawberries”. After June 7 it says ‘Next up: Blueberries & sunflowers, usually mid-June’.',
         summer: 'Summer, June 15 to July 10. It says “In season: Blueberries & sunflowers”. After July 10 it says ‘Next up: Pumpkins & tomatoes, usually mid-September’.',
         fall: 'Fall, September 13 to November 8. It says “In season: Pumpkins & tomatoes”. After November 8 it says ‘Next up: Christmas trees at The GreenHouse, usually the last weekend in November’.',
-        winter: 'Winter, from the last Saturday in November to the Sunday after the first Saturday in December (the trees are on those two weekends, Saturday and Sunday only). It says “In season: Christmas trees at The GreenHouse”. After that Sunday it says ‘Next up: Strawberries, usually mid-April’.'
+        winter: 'Winter, from the last Saturday in November to the Sunday after the first Saturday in December. Trees are there on Saturdays and Sundays only. It says “In season: Christmas trees at The GreenHouse”. After that Sunday it says ‘Next up: Strawberries, usually mid-April’.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
