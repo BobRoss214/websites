@@ -1,6 +1,6 @@
 # Notes of the winter-text helper (10 Nov 2026): the words of the Christmas tree weekends
 
-For main, who applies README.md, tests/README.md and tests/browser-support.table.json once, after the merges.
+For main, who applies README.md and tests/README.md once, after the merges.
 
 ## What the pages say now (the builder's words, nothing more)
 
@@ -20,11 +20,9 @@ For main, who applies README.md, tests/README.md and tests/browser-support.table
 - Row "Winter and early-spring wording" (line 523): the GreenHouse shows Friday to Sunday, 10 am to 8 pm, in spring, summer and fall only; in winter it shows the tree weekends, 11 am to 8 pm, with "Not official yet". The green line now says "Christmas tree season is on." and shows while the winter season is on (js/season.js), not "until about 10 February".
 - New row "Not official yet label": what it is (`.not-official` in css/extras.css, in index.html and pages/wise-pie.html next to the winter pizza and the 11 am-8 pm hours, and in the badges of js/live.js). When the farm confirms the pizza and the hours, delete every `<span class="not-official">...</span>` (search `not-official`), run the full pipeline, and ask Claude to remove it from js/live.js.
 
-## tests/browser-support.table.json (main rebuilds it with network)
+## tests/browser-support.table.json: nothing to do
 
-Two names are new and not in the table. Both are the plain `hidden` attribute (every browser has it), on elements that had none before:
-`html-attr:article.hidden` (index.html and wise-pie.html: the winter card of the Wise Pie ways) and `html-attr:h3.hidden` (index.html: the winter hours heading of The GreenHouse).
-tests/browser-support is red only for these two until the table is rebuilt.
+The winter Wise Pie card is a `div` and the winter hours heading of The GreenHouse sits in a `div` that carries `data-only="winter" hidden`, so the files use no new `hidden` name (the table has div, p, span, li and the others, not article or h3). tests/browser-support is green without a rebuild of the table. The label css uses no `:is()`.
 
 ## After the merge with winter-logic (names that move)
 
@@ -39,6 +37,7 @@ tests/browser-support is red only for these two until the table is rebuilt.
 
 - tests/consistency.test.mjs: the tree check reads the rule (`TREE_RULE`) and the two bars of the calendar row; tests/i18n-facts.test.mjs: a block at the end for the two date ranges in every language; tests/tour-seasons.test.mjs: the new name of the green line.
 - tests/shop.test.mjs (`readOutside`): the Store tree card keeps only "the page's existing wording" for dates. The page's wording is now the tree rule; the dates after it are written by the script (`data-tree-dates`), so `readOutside` leaves those dates (and the empty brackets) out when it reads the page without #shop. Nothing else about the check changed.
+- tests/shop-list.make.mjs and tests/shop-list.json (made by it: `node tests/shop-list.make.mjs`): the pizza group may show 11 am (the winter hours, the builder's words) as well as the older page's 10 am and 8 pm.
 - tools/apply_answers_rules.json: `d50=B` is not in "manual" any more (it has no recipe: a different tree rule is a code change, so it is skipped in tools/rehearse_answers.json like d50=C).
 
 ## Not decided (asked in the report)
