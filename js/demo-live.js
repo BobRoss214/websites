@@ -99,7 +99,6 @@
    * Small helpers
    * ------------------------------------------------------------------ */
   function clone(x) { return x === undefined ? undefined : JSON.parse(JSON.stringify(x)); }
-  function pad2(n) { return (n < 10 ? '0' : '') + n; }
   function find(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
   // A small stream of numbers from 0 up to (not including) 1 that depends only on (seed, k, salt): the same event number always makes the same things.
   // (Every product stays below 2^53, so the arithmetic is exact: no Math.imul and no real randomness.)
@@ -221,7 +220,6 @@
     }
     return PD.mergeRows(rows);
   }
-  function orderSummary(o) { return PD.orderSentence(o); }
   function addOrder(st, L, r, ev, fam, t, o) {   // writes a pretend visit and its order; o: { status, pickup (minutes), pizzas, notes }
     var date = L.baseDate, pick0 = tstr(o.pickup);
     var visit = newVisit(st, L, r, ev, fam, { date: date, time: Data.addMinutes(pick0, -60), package: 'pizza' });
@@ -461,7 +459,7 @@
    * ------------------------------------------------------------------ */
   function create(store, opts) {
     opts = opts || {};
-    var subs = [], listeners = [], notified = -1, ticker = null, offStore = null, strips = [];
+    var subs = [], listeners = [], notified = -1, ticker = null, offStore = null;
     function now() { return typeof opts.now === 'function' ? opts.now() : new Date().getTime(); }
     function L() { return store.get('live') || {}; }
 
@@ -503,7 +501,7 @@
     }
     function setSpeed(s) {
       if (!GAP[s]) return false;
-      store.transact(function (st) { var l = live(st); if (l.speed === s) return undefined; l.speed = s; return true; });
+      store.transact(function (st) { var l = live(st); if (l.speed === s) return undefined; l.speed = s; if (l.on && l.seed !== undefined) l.nextAt = Math.min(l.nextAt, timeAt(l, now()) + gapFor(l, l.made)); return true; });   // the next thing comes at the new pace
       return true;
     }
     function tick(at) {
@@ -527,7 +525,11 @@
       return tstr(clockMin(l, timeAt(l, now())));
     }
     function today() { var l = L(); return l.baseDate || Data.farmParts(new Date(now())).date; }
-    function clockAt(t) { return tstr(clockMin(L(), t)); }
+    function clockAt(t) {   // before the first start the pretend clock is the real farm clock, so a time later than now is counted from it
+      var l = L();
+      if (l.baseMin === undefined) return tstr(((tmin(Data.farmParts(new Date(now())).time) + Math.floor((t - timeAt(l, now())) / 60000)) % 1440 + 1440) % 1440);
+      return tstr(clockMin(l, t));
+    }
     function tally(name) {
       return store.transact(function (st) { var l = live(st); l.tally = l.tally || {}; l.tally[name] = (l.tally[name] || 0) + 1; return l.tally[name]; });
     }
@@ -608,6 +610,7 @@
     '.dl-group .dl-btn:last-child{margin-right:0;border-radius:0 14px 14px 0}',
     '.dl-btn[aria-pressed="true"]{background:var(--ink,#3a2416);color:#fff}',
     '.dl-btn.dl-on[aria-pressed="true"]{background:var(--green-deep,#1f6b34);border-color:var(--ink,#3a2416);color:#fff}',
+    '.dl-btn:focus{border-radius:0}.dl-group .dl-btn:first-child:focus{border-radius:14px 0 0 14px}.dl-group .dl-btn:last-child:focus{border-radius:0 14px 14px 0}',
     '.dl-btn:focus-visible{position:relative;z-index:1;outline:4px solid var(--focus,#1a56db);outline-offset:3px}',
     '.dl-strip.dl-invite{background:#fff7d6;border-width:4px}',
     '.dl-invite .dl-btn.dl-on{min-width:12rem;min-height:60px;font-size:1.25rem;background:var(--green-deep,#1f6b34);color:#fff}',
@@ -637,7 +640,7 @@
     speeds.setAttribute('role', 'group'); speeds.setAttribute('aria-label', 'How busy');
     var bOn = el('button', 'dl-btn dl-on', 'On'), bOff = el('button', 'dl-btn dl-off', 'Off');
     bOn.type = 'button'; bOff.type = 'button';
-    bOn.setAttribute('data-live', 'on'); bOff.setAttribute('data-live', 'off');
+    bOn.setAttribute('data-dl', 'on'); bOff.setAttribute('data-dl', 'off');   // (not data-live: the site's js/live.js hides every data-live element that is not an open-now badge)
     onoff.appendChild(bOn); onoff.appendChild(bOff);
     var sb = {};
     engine.speeds.forEach(function (s) {

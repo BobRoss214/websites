@@ -153,14 +153,6 @@
     lines.forEach(function (l) { n += l.count; });
     return n;
   }
-  /** 'Margherita on gluten-free crust with vegan cheese' */
-  function lineLabel(l) {
-    var s = l.name;
-    if (l.glutenFree) s += ' on gluten-free crust';
-    if (l.vegan) s += ' with vegan cheese';
-    return s;
-  }
-
   /** One plain sentence for a whole order: '3 pizzas: 2 Pepperoni, 1 Margherita (gluten-free). Ready at 2:45 pm.' */
   function summarize(order, byId) {
     var lines = orderLines(order, byId), n = countPizzas(lines);
@@ -496,7 +488,6 @@
     sound: 'M11 5L6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
     mute: 'M11 5L6 9H2v6h4l5 4V5zM22 9l-6 6M16 9l6 6'
   };
-  var STATUS_ICON = { 'new': 'plus', change: 'bell', family: 'clock', confirmed: 'done' };
 
   function icon(name) {
     var svg = document.createElementNS(NS, 'svg');
@@ -538,27 +529,10 @@
     return el;
   }
 
-  /** A real button with an icon and a word. kf = a key that lets the page give focus back after it redraws. */
-  function btn(label, opts) {
-    opts = opts || {};
-    return h('button', {
-      type: 'button',
-      'class': 'btn ' + (opts.cls || 'btn-white') + ' ' + (opts.big ? 'kit-big' : 'kit-small'),
-      'data-tour': opts.tour,
-      'data-kf': opts.kf,
-      'aria-label': opts.label,
-      disabled: opts.disabled ? '' : null,
-      onclick: opts.onclick
-    }, opts.icon ? icon(opts.icon) : null, h('span', { text: label }));
-  }
   function chip(text, cls) { return h('span', { 'class': 'kit-flag' + (cls ? ' ' + cls : ''), text: text }); }
   function safe(key) { return String(key).replace(/[^\w-]/g, '-'); }
 
   /* ---------- pieces of a ticket ---------- */
-
-  function statusChip(status) {
-    return h('p', { 'class': 'kit-status kit-st-' + status }, icon(STATUS_ICON[status]), h('span', { text: STATUS_LABEL[status] }));
-  }
 
   function flagChips(l) {
     var flags = [];
@@ -685,7 +659,7 @@
       rail: [], family: [], done: [],
       lastBeep: 0, says: [], sayTimer: null, answered: 0, seen: false
     };
-    var els = {}, minis = {}, parts = {}, unsub = null, timer = null, stopRun = null;
+    var els = {}, minis = {}, minisDone = {}, parts = {}, unsub = null, timer = null, stopRun = null;
 
     function nowT() { return live ? live.time() : 0; }
     function nowMs() { return new Date().getTime(); }
@@ -1124,18 +1098,30 @@
       if (moved && ui.rail.length && !ui.current) setCurrent(ui.rail[0].key);
       // the gentle beep: when a ticket has just turned late, and again every few seconds while any is late; never while the pretend clocks are stopped
       var t0 = nowMs();
-      if (sound.isOn() && running && lateNow && (newLate.length || t0 - ui.lastBeep >= BEEP_EVERY)) { sound.beep(); ui.lastBeep = t0; }
+      if (sound.isOn() && running && !document.hidden && lateNow && (newLate.length || t0 - ui.lastBeep >= BEEP_EVERY)) { sound.beep(); ui.lastBeep = t0; }
       paintHead();
     }
 
     /* ---------- one pass: read the store, draw what changed ---------- */
+    // A change of the store while a pass is drawing (the screen notes when it first saw a ticket, which writes to the store) asks for one more pass after this one,
+    // so a pass is never started inside another.
     function sync() {
+      if (ui.syncing) { ui.again = true; return null; }
+      var model = null;
+      ui.syncing = true;
+      try { model = syncOnce(); } finally { ui.syncing = false; }
+      if (ui.again) { ui.again = false; model = sync(); }
+      return model;
+    }
+    function syncOnce() {
       var saved = capture();
       var model = buildModel(readState(), menu);
       var s = live ? live.settings() : { orderSecs: SECS.order, changeSecs: SECS.change };
       var tickets = ticketsOf(model, s);
       var rail = [], family = [], done = [];
       tickets.forEach(function (t) {
+        // a ticket of the signed-in family: when the kitchen first saw it, asked of the store on every pass (clear() starts the pretend clock again from 0, and the old time would be wrong)
+        if (t.zone === 'rail' && live && (t.arrived === null || t.arrived === undefined)) ui.starts[t.key] = live.watch(t.key);
         if (t.zone === 'rail') { startOf(t); rail.push(t); }
         else if (t.zone === 'family') family.push(t);
         else if (t.zone === 'done') done.push(t);
@@ -1147,12 +1133,14 @@
       rail.forEach(function (t) { byKey[t.key] = t; });
       ui.rail = order.map(function (key) { return byKey[key]; });
       Object.keys(ui.edit).forEach(function (key) { if (!byKey[key]) delete ui.edit[key]; });     // an editor belongs to a ticket that still waits
+      // what the screen remembers about a ticket goes when the ticket leaves the list (after Start over the sample family's ticket has the same key again, and is a new ticket)
+      ['starts', 'late', 'tm'].forEach(function (name) { Object.keys(ui[name]).forEach(function (key) { if (!byKey[key]) delete ui[name][key]; }); });
       done.sort(function (a, b) { return (b.order.arrived || 0) - (a.order.arrived || 0) || b.num - a.num; });
       ui.family = family;
       ui.done = done.slice(0, 6);
       drawRail(ui.rail);
       drawLane(parts.famList, ui.family, minis);
-      drawLane(parts.doneList, ui.done, minis);
+      drawLane(parts.doneList, ui.done, minisDone);   // (each lane has its own cache, or each pass would make both lanes again)
       var more = done.length - ui.done.length;
       parts.doneMore.hidden = more <= 0;
       parts.doneMore.textContent = more > 0 ? 'and ' + more + ' more' : '';
@@ -1164,7 +1152,7 @@
         var fresh = ui.rail.filter(function (t) { return ui.known.indexOf(t.key) < 0; });
         if (fresh.length) {
           say(fresh.length === 1 ? (fresh[0].kind === 'change' ? 'Change to order ' + fresh[0].num : 'New order ' + fresh[0].num) + ' from ' + fresh[0].who + ': ' + plural(fresh[0].count, 'pizza', 'pizzas') + ' for ' + time12(fresh[0].pickup) + '.' : fresh.length + ' new tickets.');
-          sound.chime();
+          if (!document.hidden) sound.chime();
         }
       }
       ui.known = keys;
@@ -1177,7 +1165,7 @@
 
     /* ---------- the keys of the board ---------- */
     function onKey(e) {
-      if (e.defaultPrevented || e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;   // a key held down answers one ticket, not the whole list
       var tg = e.target, tag = tg && tg.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tg && tg.isContentEditable)) return;
       if (tg && tg.closest && (tg.closest('.kit-edit') || tg.closest('[role="dialog"]'))) return;
