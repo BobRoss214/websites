@@ -9,7 +9,7 @@ For main, who applies README.md and tests/README.md once, after the merges.
   `data-tree-bar="1"` and `"2"`.
 - The farm: open only those two weekends, no reservation, no rides.
 - The GreenHouse: open those weekends, 11 am-8 pm, serving Wise Pie pizza. The small label "Not official yet" (class `not-official`, css/extras.css, translated es "Aún no es oficial", hi "अभी आधिकारिक नहीं है",
-  vi "Chưa chính thức", zh "尚未正式确认") stands right after every winter mention of the pizza and of the 11 am-8 pm hours (index.html: 17 places, pages/wise-pie.html: 6).
+  vi "Chưa chính thức", zh "尚未正式确认") stands right after every winter mention of the pizza and of the 11 am-8 pm hours (index.html: 19 labels, pages/wise-pie.html: 6).
   js/live.js puts the same label into the open-now badges (its own helper).
 - Pattern: a winter line is `data-only="winter" hidden`, the line it replaces is `data-only="spring summer fall"`, so in spring, summer and fall nothing changes and a page without JavaScript shows the old words.
 
@@ -28,11 +28,8 @@ The winter Wise Pie card is a `div` and the winter hours heading of The GreenHou
 
 - docs/OWNER_YEAR_CALENDAR.md and .es.md name the Shop tree card as `data-t="t59d83261"` (I changed only that id; the rest of those two files is winter-logic's).
 - docs/DECISION_PLAYBOOK.md (d50, d23) and docs/QUESTIONS_FOR_THE_FARM.md (Q12, Q37) name js/season.js at `{ id: 'winter'` (still there after the merge). I removed the old anchor `function thanksgivingFriday(`.
-- lang/src/*.json still has the js text "the Friday after Thanksgiving" (the old `next:` of js/season.js): winter-logic's commit removes it.
-
 - tests/README.md line 151 (row `upcoming-dates`, a winter-logic test) still says "the Friday after Thanksgiving in several years": main rewrites it with winter-logic's test change.
 - lang/src/*.json (js section, line 256) still has "the Friday after Thanksgiving" with its four translations: it is the old `next:` of js/season.js. When winter-logic's commit is merged, run the pipeline; if `i18n.py build` names that line as not on any page, delete the four lines.
-
 - docs/WHAT_VISITORS_SEE_WHEN.md is made from the pages and js/season.js by `node tools/season_calendar.mjs` (it opens the pages in a browser). It still has the old winter words (14 lines) because the dates come from winter-logic's js: after the merge main runs the tool once (`--check` says if it is out of date; tests/calendar-doc reads it).
 
 ## Tests I changed (so the merge does not undo them)
