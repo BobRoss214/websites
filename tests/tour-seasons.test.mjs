@@ -49,7 +49,7 @@ const btn = (p, name) => p.locator('.wa-tour-card').getByRole('button', { name, 
 const press = (p, name) => btn(p, name).click();
 const atTitle = (p, title, name) => okSoon(name || 'the card is "' + title + '"', () => look(p), (s) => s && !s.busy && s.title === title);
 // the welcome card (the card that says "Getting the tour ready..." has the same title: the steps are not loaded until the real one shows)
-const welcome = (p, name) => okSoon(name || 'the welcome card opens', () => look(p), (s) => s && s.title === 'Your website tour' && /^This is a tour of your new website/.test(s.text));
+const welcome = (p, name) => okSoon(name || 'the welcome card opens', () => look(p), (s) => s && s.title === 'Your website tour' && /^This is a tour of your website/.test(s.text));
 
 /* what the page looks like to a visitor, for comparing before and after: the season, the lines of a season, the parts that follow the clock, the lines with a last day, the open tabs, Date itself */
 const SNAP = `(() => {

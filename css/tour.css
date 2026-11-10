@@ -10,12 +10,15 @@
 @media (max-width:47.5em){.wa-tour-pill{bottom:calc(158px + env(safe-area-inset-bottom,0px))}}
 
 /* The layers, from the bottom: the page; the click stopper (9000); the dimmer with the lit hole (9001); a dialog the page opens while the tour is on (9100); the card (9200).
-   The dialog is the pretend account's .demo-modal (z-index 200 with a dim overlay of its own): it is lifted above the dimmer so that it can be read and used, its overlay no longer
-   dims or blocks anything (the tour's own dimmer keeps dimming the page), only its box takes clicks, and the card stays above it so that Next and Back can always be pressed.
-   The layers have to be layers of the page itself (.wa-tour is no box of its own), or the dialog could not go between them. js/tour.js puts the class on <html> while the tour
-   is open, and keeps the card off the dialog's box. */
-html.wa-tour-open .demo-modal{z-index:9100;background:transparent;pointer-events:none}
-html.wa-tour-open .demo-modal-box{pointer-events:auto}
+   The dialog is the pretend account's .demo-modal (z-index 200) or the Store's pop-up .shop-pop (z-index 300), each a fixed overlay with a dim of its own: it is lifted above the dimmer
+   so that it can be read and used, its overlay no longer dims or blocks anything (the tour's own dimmer keeps dimming the page), only its box takes clicks, and the card stays above
+   it so that Next and Back can always be pressed. Any other overlay that holds a box with role="dialog" aria-modal="true" gets the class wa-tour-lift from js/tour.js (its z-index only:
+   what it dims and takes is its own business). The layers have to be layers of the page itself (.wa-tour is no box of its own), or the dialog could not go between them.
+   js/tour.js puts the class on <html> while the tour is open, and keeps the card off the dialog's box. */
+html.wa-tour-open .demo-modal,html.wa-tour-open .shop-pop{z-index:9100}
+html.wa-tour-open .wa-tour-lift{z-index:9100!important}   /* (important: a dialog may set its z-index in its style attribute) */
+html.wa-tour-open .demo-modal,html.wa-tour-open .shop-pop{background:transparent;pointer-events:none}   /* (a shut .shop-pop is invisible and takes no click already) */
+html.wa-tour-open .demo-modal-box,html.wa-tour-open .shop-pop-box{pointer-events:auto}
 
 /* the tour: a dimmer with a hole round the lit box, and the card */
 .wa-tour{font-family:var(--body,sans-serif);color:var(--ink,#3a2416)}   /* no box of its own (not fixed, no z-index): its children are fixed to the window, each with its own layer */

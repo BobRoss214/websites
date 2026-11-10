@@ -27,7 +27,11 @@
  *     brought to the top of the free room and the card goes under it, whole in the window and not on the part
  *   - what is lit besides the target (section 10): a list that a lit button opens (aria-controls, aria-expanded: a menu bar's list, a bell's panel) is lit too, with a yellow edge of its own and the
  *     dimmer in layers, and can be used; the parts a step names with "also" (the basket game's picture) likewise; everything else stays locked, a real click on it does nothing; Tab reaches
- *     the list; a step with allowClicks: false lights nothing more */
+ *     the list; a step with allowClicks: false lights nothing more
+ *   - a dialog of the page that is not the pretend account's (section 8b): the Store's pop-up (a stand-in built like js/shop-pop.js: a fixed overlay with a dim of its own, a box that says role="dialog"
+ *     aria-modal="true", and aria-hidden and inert on every other child of <body>, the tour's own box included) opens above the dimmer and the click stopper, its box takes clicks and its overlay does not,
+ *     the tour's card stays usable (not inert: Next and Back work) and keeps off the box, Esc closes the pop-up and not the tour, and the pop-up is at its own level again when the tour is closed; the
+ *     same for any other overlay that holds a role="dialog" aria-modal="true" box (a computer and a phone) */
 import { run, open, ok, okSoon, until, info, settled, ms, axeSource, ROOT } from './lib.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -195,7 +199,7 @@ await run('tour', async ({ browser, base, errs }) => {
   const scrollBefore = 1700;
 
   await p.getByRole('button', { name: 'Take a tour', exact: true }).click();   // the round button is on the page, not in the card
-  await okSoon('the button opens a welcome card: a dialog with a name, the words of the plan, and its three buttons', () => look(p), (s) => s && s.dialog === 'dialog' && s.name === 'Your website tour' && /^This is a tour of your new website\. It takes about \d+ minutes\. You can stop any time/.test(s.text) && /Continue where I stopped/.test(s.text) && /Contents lets you jump to any part/.test(s.text) && !s.busy);
+  await okSoon('the button opens a welcome card: a dialog with a name, the words of the plan, and its three buttons', () => look(p), (s) => s && s.dialog === 'dialog' && s.name === 'Your website tour' && /^This is a tour of your website\. It takes about \d+ minutes\. You can stop any time/.test(s.text) && /Continue where I stopped/.test(s.text) && /Contents lets you jump to any part/.test(s.text) && !s.busy);
   await rest(p);
   const s0 = await look(p);
   ok('the welcome card has Start the tour, Choose a part and Not now (and no "Continue" button the first time), and the first button has the focus', s0.buttons.join('|') === 'Start the tour|Choose a part|Not now|Close' && s0.focus === 'Start the tour', s0.buttons.join('|') + ' / ' + s0.focus);
@@ -865,6 +869,141 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
   ok('walk: when the tour is closed <html> has no wa-tour-open and a dialog of the page is at its own level again (z-index 200)', await (async () => { await p.evaluate(() => window.__openModal()); const r = await p.evaluate(() => ({ cls: document.documentElement.classList.contains('wa-tour-open'), z: getComputedStyle(document.querySelector('.demo-modal')).zIndex })); await p.evaluate(() => { const m = document.querySelector('.demo-modal'); if (m) m.remove(); }); return !r.cls && r.z === '200'; })(), '');
   await p.context().close();
 
+  /* ================================================================ 8b. the Store's pop-up (a stand-in built like js/shop-pop.js) and any other dialog that says role="dialog" aria-modal="true" */
+  // The Store's pop-up is a fixed overlay (div.shop-pop: z-index 300, a dim of its own, shut = invisible) with a box (div.shop-pop-box, role="dialog" aria-modal="true"). While it is open the real one
+  // shuts every other part of the page: aria-hidden and inert on each child of <body>, the tour's own box too. The stand-in does the same, so this is the engine against that behaviour.
+  // (tests/tour-store.test.mjs does it with the real pop-up and the real Store steps, when js/shop-pop.js is in this repo.)
+  const STEPS_POP = `
+(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push(
+  { id: 'q1', order: 101, chapter: 1, page: 'index', target: '#t-card', title: 'A box that opens a pop-up', text: 'Press the box.' },
+  { id: 'q2', order: 102, chapter: 1, page: 'index', target: '#faq', title: 'Another step', text: 'The next one.' },
+  { id: 'q3', order: 103, chapter: 1, page: 'index', target: null, title: 'The end', text: 'End.' }
+);
+window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Pop-up' }];
+`;
+  for (const [vw, vh, what] of [[1440, 900, 'a computer'], [390, 844, 'a phone']]) {
+    const tag = 'pop-up (' + what + '): ';
+    p = await open(browser, base, 'index.html', errs, { query: 'tour', viewport: { width: vw, height: vh }, routes: serve({ a: STEPS_POP }) });
+    await p.evaluate(() => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      const lit = document.createElement('div');
+      lit.id = 't-card'; lit.style.cssText = 'position:fixed;left:40px;top:120px;width:220px;z-index:60;background:#fff;padding:10px;border:2px solid #000';
+      lit.innerHTML = '<button type="button" id="t-open">Open the pop-up</button>';
+      document.body.appendChild(lit);
+      const st = document.createElement('style');   // the look of the Store's pop-up that matters here (css/shop-pop.css)
+      st.textContent = '.shop-pop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(58,36,22,.62);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,visibility 0s linear .16s}'
+        + '.shop-pop.is-open{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}'
+        + '.shop-pop-box{position:relative;box-sizing:border-box;width:min(92vw,34rem);height:380px;max-height:85vh;overflow-y:auto;background:#fffdf6;color:#3a2416;border:3px solid #3a2416;border-radius:26px;padding:20px}'
+        + 'html.shop-pop-lock{overflow:hidden}';
+      document.head.appendChild(st);
+      const pop = document.createElement('div'), box = document.createElement('div');
+      pop.className = 'shop-pop'; box.className = 'shop-pop-box';
+      box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', 'A pop-up'); box.tabIndex = -1;
+      box.innerHTML = '<h2>A pop-up</h2><button type="button" id="t-pop-x">Close</button> <button type="button" id="t-pop-ok">OK</button>';
+      pop.appendChild(box); document.body.appendChild(pop);
+      let saved = [];
+      const state = { clicks: 0, esc: 0 };
+      const keys = (e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); state.esc++; shut(); } };
+      const strayed = (e) => { if (!box.contains(e.target)) document.getElementById('t-pop-x').focus({ preventScroll: true }); };   // the real one pulls the focus back into the box
+      const lock = () => {   // what js/shop-pop.js does to the page behind it
+        saved = [];
+        Array.from(document.body.children).forEach((el) => { if (el === pop || /^(?:SCRIPT|STYLE|LINK|TEMPLATE|NOSCRIPT)$/.test(el.tagName)) return; saved.push([el, el.getAttribute('aria-hidden'), el.hasAttribute('inert')]); el.setAttribute('aria-hidden', 'true'); el.setAttribute('inert', ''); });
+        document.documentElement.classList.add('shop-pop-lock');
+      };
+      const unlock = () => {
+        saved.forEach((x) => { if (x[1] === null) x[0].removeAttribute('aria-hidden'); else x[0].setAttribute('aria-hidden', x[1]); if (!x[2]) x[0].removeAttribute('inert'); });
+        saved = []; document.documentElement.classList.remove('shop-pop-lock');
+      };
+      const open = () => { if (pop.classList.contains('is-open')) return; lock(); void pop.offsetWidth; pop.classList.add('is-open'); document.addEventListener('keydown', keys, true); document.addEventListener('focusin', strayed); document.getElementById('t-pop-x').focus({ preventScroll: true }); };
+      const shut = () => { pop.classList.remove('is-open'); document.removeEventListener('keydown', keys, true); document.removeEventListener('focusin', strayed); unlock(); };
+      document.getElementById('t-open').addEventListener('click', open);
+      document.getElementById('t-pop-x').addEventListener('click', shut);
+      document.getElementById('t-pop-ok').addEventListener('click', () => { state.clicks++; });
+      window.__pop = { open, shut, state, isOpen: () => pop.classList.contains('is-open') };
+    });
+    await p.click('.wa-tour-pill');
+    await okSoon(tag + 'the welcome card opens', () => look(p), (x) => x && x.name === 'Your website tour' && !x.busy);
+    await press(p, 'Start the tour');
+    await atStep(p, 1, tag + 'step 1 lights the box that opens the pop-up');
+    const where = () => p.evaluate(() => {   // what the owner has on the screen while the pop-up is open
+      const pop = document.querySelector('.shop-pop'), box = pop.querySelector('.shop-pop-box'), okb = document.getElementById('t-pop-ok'), r = okb.getBoundingClientRect(), tour = document.getElementById('wa-tour');
+      const cs = getComputedStyle(pop), card = document.querySelector('.wa-tour-card'), nx = [...card.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Next'), nr = nx.getBoundingClientRect();
+      const hit = (x, y) => document.elementFromPoint(x, y), c = card.getBoundingClientRect(), d = box.getBoundingClientRect();
+      const area = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      return { z: cs.zIndex, bg: cs.backgroundColor, pe: cs.pointerEvents, boxPe: getComputedStyle(box).pointerEvents, okOnTop: hit(r.left + r.width / 2, r.top + r.height / 2) === okb, nextOnTop: hit(nr.left + nr.width / 2, nr.top + nr.height / 2) === nx,
+        inert: tour.hasAttribute('inert'), ariaHidden: tour.getAttribute('aria-hidden'), cardOverBox: Math.round(100 * area(c, d) / (d.width * d.height)), cardOverOk: area(c, r), box: [d.left, d.top, d.width, d.height].map(Math.round) };
+    });
+    const hole = await rectOf(p, '#t-card');
+    await p.mouse.click(hole.x + 20, hole.y + 20);   // the lit box: the click reaches the page's own button
+    await okSoon(tag + 'a click on the lit box opens the pop-up (the page opened it: the tour let the click through)', () => p.evaluate(() => window.__pop.isOpen()), (v) => v === true);
+    await p.waitForTimeout(500);   // the pop-up fades in and the card moves off it
+    let w = await where();
+    ok(tag + 'the pop-up is above the dimmer (z-index 9100), its own dim does not dim or block (transparent, no pointer events), its box takes clicks, and its button is the thing at its place', w.z === '9100' && w.bg === 'rgba(0, 0, 0, 0)' && w.pe === 'none' && w.boxPe === 'auto' && w.okOnTop, JSON.stringify(w));
+    ok(tag + 'the page shut the tour\'s own box with the rest (inert, aria-hidden) and the tour gives it back: the card is usable, and Next is the thing at its place', !w.inert && w.ariaHidden === null && w.nextOnTop, JSON.stringify({ inert: w.inert, ariaHidden: w.ariaHidden, next: w.nextOnTop }));
+    if (vw >= 1000) ok(tag + 'the card sits off the pop-up\'s box (it covers its button not at all and the box by ' + w.cardOverBox + ' percent)', w.cardOverOk === 0 && w.cardOverBox <= 10, JSON.stringify({ cardOverBox: w.cardOverBox, ok: w.cardOverOk, box: w.box }));
+    await p.click('#t-pop-ok');
+    ok(tag + 'a real click on the pop-up\'s button reaches it', (await p.evaluate(() => window.__pop.state.clicks)) === 1, '');
+    await press(p, 'Next');
+    await atStep(p, 2, tag + 'Next works while the pop-up is open (the card is not under it and not inert)');
+    await press(p, 'Back');
+    await atStep(p, 1, tag + '...and Back');
+    ok(tag + '(the pop-up is still open: the tour does not shut the dialogs of the page; the step that opened one shuts it in its after())', await p.evaluate(() => window.__pop.isOpen()), '');
+    await p.focus('#t-pop-x');
+    await p.keyboard.press('Escape');
+    await okSoon(tag + 'Esc with the focus in the pop-up closes the pop-up and not the tour', () => p.evaluate(() => ({ open: window.__pop.isOpen(), esc: window.__pop.state.esc, card: !!document.querySelector('.wa-tour-card') })), (v) => !v.open && v.esc === 1 && v.card);
+    s = await look(p);
+    ok(tag + '...the tour is still on step 1', s.n === 1, String(s.n));
+    await p.evaluate(() => { window.__pop.open(); document.activeElement.blur(); });
+    await p.waitForTimeout(300);
+    await p.keyboard.press('Escape');
+    await okSoon(tag + '...and with nothing focused it is the same', () => p.evaluate(() => ({ open: window.__pop.isOpen(), esc: window.__pop.state.esc, card: !!document.querySelector('.wa-tour-card') })), (v) => !v.open && v.esc === 2 && v.card);
+    await p.evaluate(() => window.__pop.open());
+    await p.waitForTimeout(400);
+    await p.mouse.click(vw - 20, 20);   // the dim part of the overlay, away from the box and the card
+    await p.waitForTimeout(200);
+    ok(tag + 'a click on the dim part of the pop-up does nothing during the tour (only its box takes clicks; the tour\'s click stopper has the rest)', await p.evaluate(() => window.__pop.isOpen()), '');
+    await press(p, 'Close');   // the round Close button of the tour's card, with the pop-up still open
+    await okSoon(tag + 'the tour closes with the pop-up open', () => p.evaluate(() => !document.querySelector('.wa-tour')), (v) => v === true);
+    const after = await p.evaluate(() => ({ z: getComputedStyle(document.querySelector('.shop-pop')).zIndex, cls: document.documentElement.classList.contains('wa-tour-open') }));
+    ok(tag + 'after the tour the pop-up is at its own level again (z-index 300) and <html> has no wa-tour-open', after.z === '300' && !after.cls, JSON.stringify(after));
+    await p.evaluate(() => window.__pop.shut());
+
+    /* any other overlay that holds a box with role="dialog" aria-modal="true": lifted above the dimmer by the tour, let go when it is gone, its Esc left alone */
+    await p.click('.wa-tour-pill');
+    await okSoon(tag + 'any dialog: the welcome card opens again', () => look(p), (x) => x && x.name === 'Your website tour' && !x.busy);
+    await press(p, 'Start the tour');
+    await atStep(p, 1, tag + 'any dialog: step 1 shows');
+    await p.evaluate(() => {
+      const g = document.createElement('div');
+      g.id = 't-gen'; g.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:250;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4)';
+      g.innerHTML = '<div id="t-gen-box" role="dialog" aria-modal="true" tabindex="-1" style="box-sizing:border-box;width:420px;max-width:92vw;height:300px;background:#fff;border:3px solid #000;padding:16px"><button type="button" id="t-gen-ok">OK</button></div>';
+      document.body.appendChild(g);
+      window.__gen = { clicks: 0, esc: 0 };
+      g.querySelector('#t-gen-ok').addEventListener('click', () => { window.__gen.clicks++; });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && g.style.display !== 'none') { window.__gen.esc++; g.style.display = 'none'; } }, true);   // the page's own Esc
+    });
+    const genNow = () => p.evaluate(() => {
+      const g = document.getElementById('t-gen'), okb = document.getElementById('t-gen-ok'), r = okb.getBoundingClientRect(), card = document.querySelector('.wa-tour-card'), c = card.getBoundingClientRect(), d = document.getElementById('t-gen-box').getBoundingClientRect();
+      const area = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      return { z: getComputedStyle(g).zIndex, okOnTop: document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === okb, cardOverBox: Math.round(100 * area(c, d) / (d.width * d.height)), lifted: document.querySelectorAll('.wa-tour-lift').length };
+    });
+    await okSoon(tag + 'any dialog: its overlay is lifted above the dimmer (z-index 9100) within a moment, and its button is the thing at its place', genNow, (v) => v.z === '9100' && v.okOnTop && v.lifted === 1);
+    await p.waitForTimeout(400);
+    w = await genNow();
+    if (vw >= 1000) ok(tag + 'any dialog: the card sits off its box (' + w.cardOverBox + ' percent of the box)', w.cardOverBox <= 10, JSON.stringify(w));
+    await p.click('#t-gen-ok');
+    ok(tag + 'any dialog: a real click on its button reaches it', (await p.evaluate(() => window.__gen.clicks)) === 1, '');
+    await p.focus('#t-gen-ok');
+    await p.keyboard.press('Escape');
+    await okSoon(tag + 'any dialog: Esc is the dialog\'s own (it closes) and the tour stays open', () => p.evaluate(() => ({ esc: window.__gen.esc, card: !!document.querySelector('.wa-tour-card') })), (v) => v.esc === 1 && v.card);
+    await okSoon(tag + 'any dialog: when the dialog is gone its overlay is let go (no wa-tour-lift left on the page)', () => p.evaluate(() => document.querySelectorAll('.wa-tour-lift').length), (n) => n === 0);
+    await p.evaluate(() => { document.getElementById('t-gen').style.display = 'flex'; window.__gen.esc = 0; });
+    await okSoon(tag + 'any dialog: shown again, it is lifted again', genNow, (v) => v.z === '9100' && v.lifted === 1);
+    await press(p, 'Close');
+    await okSoon(tag + 'any dialog: the tour closes with the dialog open, and the lift is taken away', () => p.evaluate(() => ({ gone: !document.querySelector('.wa-tour'), lifted: document.querySelectorAll('.wa-tour-lift').length, z: getComputedStyle(document.getElementById('t-gen')).zIndex })), (v) => v.gone && v.lifted === 0 && v.z === '250');
+    await p.context().close();
+  }
+
   // the lit part is brought under the sticky bar of the pretend-account pages too, not only under the top bar
   const STEPS_BAR = `(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push({ id: 'b1', order: 101, chapter: 1, page: 'index', target: '#faq', title: 'Under both bars', text: 'The section is brought under the top bar and the demo bar.' });`;
   p = await open(browser, base, 'index.html', errs, { query: 'tour', routes: serve({ a: STEPS_BAR }) });
@@ -889,9 +1028,9 @@ window.WA_TOUR_CHAPTERS = [{ n: 1, title: 'Walk' }];
   // the window, not cut off at the top and not on the part. (Found by looking at the real Store at 1366x768, 1280x800, 1100x800 and 992x800.)
   const WORDS55 = Array.from({ length: 55 }, (_, i) => 'word' + i).join(' ');
   const STRIP_STEP = (title, text) => `(window.WA_TOUR_STEPS = window.WA_TOUR_STEPS || []).push({ id: 's1', order: 101, chapter: 1, page: 'index', target: '#t-strip', title: '${title}', text: '${text}' });`;
-  const STORE_WORDS = 'Everything for sale at the farm and The GreenHouse is listed here, in twelve groups. Each product has a name, a price and a small drawing. These buttons jump straight to a group. Visitors can check a price before they ask.';   // the words of the Store's own first step: a card of about 390 px
+  const STORE_WORDS = 'Everything for sale at the farm and The GreenHouse is listed here, in groups. Each product has a name, a price and a small drawing. These buttons jump straight to a group. Visitors can check a price before they ask.';   // the words of the Store's own first step: a card of about 390 px
   // two cards: the one above, and one with a long text (about 570 px: at 1366x768 it does not fit under the strip even when the strip is at the top of the free room, so the strip goes to the bottom and the card above it)
-  const CARDS = [['a short text', STRIP_STEP('The Store: twelve groups, all in one place', STORE_WORDS)], ['a long text', STRIP_STEP('A wide strip of buttons, all in one place', WORDS55)]];
+  const CARDS = [['a short text', STRIP_STEP('The Store, all in one place', STORE_WORDS)], ['a long text', STRIP_STEP('A wide strip of buttons, all in one place', WORDS55)]];
   for (const [w, h, what, STEPS_STRIP] of [[1366, 768], [1280, 800], [992, 800]].flatMap(([a, b]) => CARDS.map(([n, st]) => [a, b, n, st]))) {
     const tag = `wide strip, ${w}x${h}, ${what}: `;
     p = await open(browser, base, 'index.html', errs, { query: 'tour', viewport: { width: w, height: h }, routes: serve({ a: STEPS_STRIP }) });
