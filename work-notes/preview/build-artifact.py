@@ -222,7 +222,7 @@ class Builder:
                 self.used_js.add(step)
                 extra.append('<script>\n' + esc_js(self.read(step)) + '\n//# sourceURL=' + step + '\n</script>')
             block = '\n'.join(extra + [block])
-        if name == 'shop-pop' and self.exists('css/shop-pop.css'): block = self.style_block('css/shop-pop.css').replace('<style>', '<style data-shop-pop-css>', 1) + '\n' + block   # the Store pop-up asks for css/shop-pop.css when a card is first pointed at: the preview carries it in the page, and js/shop-pop.js finds style[data-shop-pop-css]
+        if name == 'shop-pop' and self.exists('css/shop-pop.css'): self.used_js.add('js/shop-pop-box.js'); block = self.style_block('css/shop-pop.css').replace('<style>', '<style data-shop-pop-css>', 1) + '\n<script>\n' + esc_js(self.read('js/shop-pop-box.js')) + '\n//# sourceURL=js/shop-pop-box.js\n</script>\n' + block   # the Store pop-up's code and style sheet are asked for later (when sample lists are on the page, and when a card is first pointed at): the preview carries both in the page
         return block
 
     def convert(self, text, page, collect=None):

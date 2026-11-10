@@ -1,7 +1,7 @@
 // order: 326
 // browser: yes
 // quick: no
-// covers: js/shop-pop.js, js/shop-sample.js, css/shop-pop.css, css/extras.css, index.html, tools/pages.py, lang/*, tests/shop-list.json
+// covers: js/shop-pop.js, js/shop-pop-box.js, js/shop-sample.js, css/shop-pop.css, css/extras.css, index.html, tools/pages.py, lang/*, tests/shop-list.json
 /* "What to buy": a card that opens a pop-up with the (pretend) ingredient list of the product, checked on the home page. The lists are PREVIEW DATA in js/shop-sample.js
  * ("SAMPLE DATA, NOT REAL"); without that file the whole feature is dormant. The page is the one the builder asked for: "when users hover over the little snacks or anything in the
  * what to buy section, it makes it a little larger and a bigger animation ... and also make it clickable. And when the users click it, there's a little pop-up box in the middle of
@@ -24,7 +24,7 @@
  *      scroll and no cut text at 390 and 1366 px; a language change with the pop-up closed re-names the buttons
  *   8  DATA (no browser): js/shop-sample.js has an entry for every product of groups 1-11 (the old beer card is replaced by the beer group), none without a card, none empty, and
  *      none of the words the farm has not said (health claims, "vegan", "natural", "local", digits ...) unless the card's own words say it
- *   9  weight: the bytes of the new files (information)
+ *   9  weight: the bytes of the new files (information); the pop-up's code (js/shop-pop-box.js) is asked for by the small js/shop-pop.js only when the sample lists are there
  * Names of the page's own parts are in the helper text below (SP): if the markup is renamed, change them there. */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -45,6 +45,8 @@ const DICT = Object.fromEntries(['es', 'hi', 'zh', 'vi'].map((c) => [c, JSON.par
 const REVEAL = '.reveal{opacity:1!important;transform:none!important;transition:none!important}html{scroll-behavior:auto!important}';
 const DESKTOP = { width: 1366, height: 768 }, PHONE = { width: 390, height: 844 };
 const near = (a, b, d) => Math.abs(a - b) <= d;
+const ONLY = process.env.SHOPPOP_ONLY || '';   // for working on one part: SHOPPOP_ONLY=dormant,data,hover,keys,languages (nothing set: all of it)
+const go = (part) => !ONLY || ONLY.split(',').includes(part);
 
 /* ------------------------------------------------------------------ the page's own parts, and small helpers that run inside the page */
 const SP = `window.__sp = {
@@ -57,7 +59,7 @@ const SP = `window.__sp = {
   ratio: (a, b) => { const x = window.__sp.lum(a), y = window.__sp.lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); },
   txt: (s) => { const e = document.querySelector(s); return e ? e.textContent.replace(/\\s+/g, ' ').trim() : null; },
 };`;
-const prep = async (p) => { await p.addStyleTag({ content: REVEAL }); await p.evaluate(SP); };
+const prep = async (p, buttons = true) => { await p.addStyleTag({ content: REVEAL }); await p.evaluate(SP); if (buttons) await until(p, () => document.querySelectorAll('#shop .shop-open').length > 0, null, 30000); };   // the cards get their buttons once js/shop-pop.js has asked for the pop-up's code (the page's load waits for it)
 const center = (b) => ({ x: b.x + b.w / 2, y: b.y + b.h / 2 });
 /** brings a card (by its picture name) to the middle of the window; returns its box at rest */
 async function show(p, slug) {
@@ -117,12 +119,12 @@ else {
 
 await run('shop-pop', async ({ browser, base, errs }) => {
   /* -------------------------------------------------------------- 1. DORMANT */
-  {
+  if (go('dormant')) {
     const seen = { A: [], B: [] };
     const visit = async (key, refuse) => {
       const before = errs.length;
       const p = await open(browser, base, 'index.html', errs, { viewport: DESKTOP, routes: async (pg) => { pg.on('request', (r) => seen[key].push(new URL(r.url()).pathname)); for (const f of refuse) await pg.route('**/js/' + f, (r) => r.abort()); } });
-      await prep(p);
+      await prep(p, false);
       const slug = 'hot-pretzel', rest = await show(p, slug), at = center(rest);
       await p.mouse.move(at.x, at.y);
       await settled(p, 0);
@@ -139,14 +141,15 @@ await run('shop-pop', async ({ browser, base, errs }) => {
     await a.p.context().close();
     const b = await visit('B', ['shop-sample.js', 'shop-pop.js']);
     await b.p.context().close();
-    const drop = (list) => [...new Set(list.filter((u) => /\.(js|css|json)$/.test(u) && !/shop-(pop|sample)\.js$/.test(u)))].sort();
+    const drop = (list) => [...new Set(list.filter((u) => /\.(js|css|json)$/.test(u) && !/shop-(pop|sample)\.js$/.test(u)))].sort();   // (js/shop-pop.js is refused in the second visit and the first one, with the sample refused, must ask for nothing more)
     const extra = drop(seen.A).filter((u) => !drop(seen.B).includes(u)), gone = drop(seen.B).filter((u) => !drop(seen.A).includes(u));
-    ok('...it asks for the same files as with js/shop-pop.js refused as well, and never for css/shop-pop.css', extra.length === 0 && gone.length === 0 && !seen.A.some((u) => /shop-pop\.css/.test(u)), 'extra: ' + extra.join(', ') + ' / missing: ' + gone.join(', '));
+    ok('...it asks for the same files as with js/shop-pop.js refused as well: not for js/shop-pop-box.js (the pop-up\'s code), not for css/shop-pop.css', extra.length === 0 && gone.length === 0 && !seen.A.some((u) => /shop-pop-box\.js|shop-pop\.css/.test(u)), 'extra: ' + extra.join(', ') + ' / missing: ' + gone.join(', '));
   }
   if (!HAS_SAMPLE) return;
   if (!axeSource()) info('axe-core is not installed: the axe check is skipped');
 
   /* -------------------------------------------------------------- 2. WITH DATA (and 4, 5, 6 on the same page) */
+  if (go('data')) {
   const p = await open(browser, base, 'index.html', errs, { viewport: DESKTOP });
   await prep(p);
   const cards = await p.evaluate(() => window.__sp.cards().map((c) => ({ slug: window.__sp.slug(c), name: c.querySelector('.shop-name').textContent.replace(/\s+/g, ' ').trim(), tag: c.tagName, role: c.getAttribute('role'), tabindex: c.getAttribute('tabindex'),
@@ -200,8 +203,10 @@ await run('shop-pop', async ({ browser, base, errs }) => {
     ok('...after it shuts, the card is not left big (a touch screen has no hover to leave it in)', near(after.w, rest.w, 0.6) && near(after.h, rest.h, 0.6), JSON.stringify([rest, after]));
     await q.context().close();
   }
+  }
 
   /* -------------------------------------------------------------- 3. HOVER */
+  if (go('hover')) {
   const PICKS = async (pg) => pg.evaluate(() => {   // the first card (left edge, left column), the one furthest right (right column), a wide bar
     const pops = [...document.querySelectorAll('#shop .shop-card-pop:not(.shop-full)')], right = pops.reduce((m, c) => (c.getBoundingClientRect().right > m.getBoundingClientRect().right ? c : m), pops[0]);
     return [['the first snack', window.__sp.slug(document.querySelector('#shop-snacks .shop-card-pop'))], ['the card furthest right', window.__sp.slug(right)], ['the pizza bar', 'pizza']];
@@ -244,8 +249,10 @@ await run('shop-pop', async ({ browser, base, errs }) => {
     await closeBy(r);
     await r.context().close();
   }
+  }
 
   /* -------------------------------------------------------------- 5. KEYBOARD, 6. ACCESSIBILITY (a fresh page) */
+  if (go('keys')) {
   const k = await open(browser, base, 'index.html', errs, { viewport: DESKTOP });
   await prep(k);
   await k.addStyleTag({ content: 'html::-webkit-scrollbar{width:17px}html::-webkit-scrollbar-thumb{background:#999}' });   // a classic scroll bar that takes room, as most computers have (the test browser hides its own)
@@ -319,8 +326,10 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   }
   ok(`contrast of the words in the pop-up is 4.5 to 1 or better in each of the ${groups.length} groups (name on the band, notice, heading, note, price, chips, Close)`, weak.length === 0 && groups.length >= 11, weak.join(', ') + ` (${groups.length} groups)`);
   await k.context().close();
+  }
 
   /* -------------------------------------------------------------- 7. LANGUAGES */
+  if (go('languages')) {
   const want = (code) => (code === 'en' ? { notice: NOTICE, ing: 'Ingredients', made: 'Made of', contains: 'Contains:', close: 'Close', label: (n, pr) => `${n}, ${pr}, show ingredients`, labelMade: (n, pr) => `${n}, ${pr}, show what it is made of` }
     : { notice: DICT[code]['(This is not the real ingredients. This is just a preview.)'], ing: DICT[code].Ingredients, made: DICT[code]['Made of'], contains: DICT[code]['Contains:'], close: DICT[code].Close,
       label: (n, pr) => DICT[code]['{name}, {price}, show ingredients'].replace('{name}', n).replace('{price}', pr), labelMade: (n, pr) => DICT[code]['{name}, {price}, show what it is made of'].replace('{name}', n).replace('{price}', pr) });
@@ -358,11 +367,12 @@ await run('shop-pop', async ({ browser, base, errs }) => {
       await l.context().close();
     }
   }
+  }
 
   /* -------------------------------------------------------------- 9. weight */
   const kb = (n) => (n / 1024).toFixed(1) + ' KB';
   const hover = read('css/extras.css').match(/\/\* A card with a pretend ingredient list[\s\S]*?@media print\{\.shop-open\{display:none\}\}/);
-  for (const [name, text] of [['js/shop-pop.js', read('js/shop-pop.js')], ['css/shop-pop.css', read('css/shop-pop.css')], ['js/shop-sample.js', read('js/shop-sample.js')], ['the hover block in css/extras.css', hover ? hover[0] : '']]) {
+  for (const [name, text] of [['js/shop-pop.js (resident)', read('js/shop-pop.js')], ['js/shop-pop-box.js (asked for when there is sample data)', read('js/shop-pop-box.js')], ['css/shop-pop.css', read('css/shop-pop.css')], ['js/shop-sample.js', read('js/shop-sample.js')], ['the hover block in css/extras.css', hover ? hover[0] : '']]) {
     const raw = Buffer.from(text);
     info(`${name}: ${raw.length} bytes (${kb(raw.length)}), gzip -9 ${zlib.gzipSync(raw, { level: 9 }).length} bytes, brotli ${zlib.brotliCompressSync(raw).length} bytes`);
   }
