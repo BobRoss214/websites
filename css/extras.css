@@ -401,10 +401,9 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .shop-group{break-inside:auto}
   .shop-band,.shop-intro{break-after:avoid}
 }
-/* A card with a pretend ingredient list (js/shop-pop.js; its pop-up is css/shop-pop.css, loaded when the first one opens). The script adds .shop-card-pop and a
-   transparent button.shop-open over the card to the cards that have a list: with no js/shop-sample.js nothing below matches. Under the pointer or the keyboard
-   (.shop-pop-focus) the card grows a little, lifts, gets a deeper shadow and a red edge, and its picture tilts; only transform changes, so nothing around it moves.
-   The grow waits for a mouse (hover:hover), so a tap does not leave a card big; no scale and no tilt with reduced motion or "Pause animations". */
+/* A card with a pretend ingredient list (js/shop-pop.js; the pop-up is css/shop-pop.css): the script adds .shop-card-pop and a transparent button.shop-open over the card, so
+   without js/shop-sample.js none of this matches. Pointed at or reached with Tab (.shop-pop-focus) the card grows, lifts, gets a deeper shadow and a red edge, and its picture
+   tilts (transform only: nothing around it moves). The grow waits for a mouse (hover:hover); not scaled or tilted with reduced motion or "Pause animations". */
 .shop-card-pop{--s:1.07;--grow:translateY(-4px) scale(var(--s));--pop:rotate(-9deg) scale(1.14);--press:translateY(-1px) scale(1.03);position:relative;cursor:pointer;transition:transform .2s cubic-bezier(.3,1.5,.5,1),box-shadow .2s,border-color .2s}
 .shop-full.shop-card-pop{--s:1.045}   /* the wide pizza and ice cream bars grow less: 7% of a whole row is a lot */
 .shop-open{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;width:100%;height:100%;margin:0;padding:0;background:none;border:0;border-radius:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
