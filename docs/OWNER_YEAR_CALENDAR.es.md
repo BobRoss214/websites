@@ -96,7 +96,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 
 - **Por sí solo:** la temporada de invierno está en curso hasta el 8 de diciembre: la barra superior dice "In season: Christmas trees at The GreenHouse", el titular pasa a ser "Wise Acres Christmas trees", y el cuadro "This week" muestra los árboles "In season". El jue 26 nov 2026 (Día de Acción de Gracias) no es día de apertura, así que no necesita cierre. En el menú de arriba, la línea "Christmas trees" conserva la negrita y el puntito rojo hasta el 8 de diciembre, y un lector de pantalla deja de decir "Coming soon" después de ella.
 - **Ustedes, a más tardar el mié 25 nov 2026:** confirmen las fechas y los precios de los árboles (**d50**, **d54**). Agreguen una nota breve a `week` ("Trees arrive Friday"; `updated` es hoy).
-- **Dónde:** `js/content.js`, en `week: {},` (2 lugares: el ajuste y la nota que habla de él); `index.html`, en `data-t="t53cf41e8"` (las fechas de los árboles en la Shop). README, fila "Say what is ripe / spots left this week".
+- **Dónde:** `js/content.js`, en `week: {},` (2 lugares: el ajuste y la nota que habla de él); `index.html`, en `data-t="t59d83261"` (las fechas de los árboles en la Shop). README, fila "Say what is ripe / spots left this week".
 - **Si se olvidan:** el sitio dice que los árboles están en temporada desde el 27 de noviembre sin importar sus existencias, y la línea de la Shop dice "Prices coming soon".
 
 ### mar 1 dic 2026: se oculta el cuadro del calendario

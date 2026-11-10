@@ -94,7 +94,7 @@
   "d43=A": "one line for each farm word (corn pit, barrel train, halfzies and the others on the site)",
   "d44=C": "her own rule for the corn pit offer, in her words",
   "d45=B": "the age from which a child pays for the wagon ride (the model assumes 1 year), and the other age sentences that change",
-  "d50=B": "the real last day for Christmas trees (the model uses December 22)",
+  "d50=B": "a different rule for the Christmas tree weekends (a code change in js/season.js and the words: ask Claude)",
   "d51=B": "the right closing time of Wise Pie (the model uses 9 pm) and any other hours that are wrong",
   "d54=A": "the price of each of the eleven Shop cards that say Prices coming soon (the prices differ card by card)",
   "d55=B": "what visitors with strollers or wheelchairs should do instead, in her words",
@@ -211,7 +211,7 @@
  "notes": {
   "_about": "A line for the report, printed next to the answer when it is applied.",
   "d03=A": "The link she sent replaces the old address (it ended in /edit) in the four places the form is used. Open it in a private window first: it must open with no sign-in.",
-  "d23=A": "Fall now ends November 30, but winter starts on the Friday after Thanksgiving (November 27, 2026): for four days both seasons are on. Ask her what the site should show on those days.",
+  "d23=A": "Fall ends November 8 and winter starts on the last Saturday in November (November 28, 2026): in between no season is in progress. Ask her what the site should show on those days.",
   "d47=A": "Nothing a visitor sees changes. The only edit is the Square part of a README row, in the notes for whoever keeps the site (the notes are not uploaded).",
   "d51=A": "Nothing a visitor sees changes. The only edit is a README row, in the notes for whoever keeps the site (the notes are not uploaded).",
   "d56=A": "Nothing a visitor sees changes. The only edit is a README row, in the notes for whoever keeps the site (the notes are not uploaded).",

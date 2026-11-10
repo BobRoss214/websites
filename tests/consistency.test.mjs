@@ -324,8 +324,17 @@ verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so
     let start = null, end = null;
     const MONTHS = '(january|february|march|april|may|june|july|august|september|october|november|december)';   // "mid-April to early June", "mid- to late June through early July", "mid-September through early November"
     const parts = new RegExp('(early|mid|late)?[- ]*(?:to (?:early|mid|late) )?' + MONTHS + '\\s*(?:to|through)\\s+(early |mid-|late )?' + MONTHS).exec(words.replace('mid- to late ', 'mid-').replace('new this year: every weekend, ', ''));
-    if (/thanksgiving/.test(words)) { start = [10.7, 11.0]; const e = /early (december)/.exec(words); end = e ? [11.0, 11.34] : null; }
-    else if (parts) {
+    if (/^the last weekend in november and the first weekend in december, saturday and sunday only/.test(words)) {   // the Christmas trees: two bars, the two weekends of the rule (Saturday and Sunday only), worked out here from the calendar
+      n++;
+      const y = +(/Fall (20\d\d)/.exec(src) || [])[1], dim = (m) => new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      const day = (m, d) => new Date(Date.UTC(y, m, d)), pos = (d) => d.getUTCMonth() + (d.getUTCDate() - 1) / dim(d.getUTCMonth());   // 10.9 = Nov 28: the month, and how far into it
+      const sat1 = day(10, 30 - ((day(10, 30).getUTCDay() + 1) % 7)), sat2 = day(11, 1 + ((6 - day(11, 1).getUTCDay() + 7) % 7));   // the last Saturday of November, the first Saturday of December
+      const want = [sat1, sat2].map((sat) => [pos(sat), pos(new Date(sat.getTime() + 2 * 864e5))]);   // from the start of the Saturday to the end of the Sunday
+      if (bars.length !== 2) bad.push(`"${words}": ${bars.length} bar(s), the two tree weekends need two`);
+      else want.forEach((w, i) => { if (Math.abs(bars[i][0] - w[0]) > 0.012 || Math.abs(bars[i][1] - w[1]) > 0.012) bad.push(`"${words}": bar ${i + 1} is ${bars[i][0]} to ${bars[i][1]}, the weekend of ${i ? 'the first Saturday of December' : 'the last Saturday of November'} ${y} is ${w[0].toFixed(3)} to ${w[1].toFixed(3)} (months count from 0 = January 1)`); });
+      continue;
+    }
+    if (parts) {
       const a = fraction[parts[1]] || [0, 0.34], mo1 = mon(parts[2]); start = [mo1 + a[0] - 0.05, mo1 + a[1] + 0.05];
       const mod = (parts[3] || '').replace(/[- ]/g, ''), mo2 = mon(parts[4]); end = mod ? [mo2 + fraction[mod][0] - 0.05, mo2 + fraction[mod][1] + 0.05] : [mo2 + 1 - 0.1, mo2 + 1 + 0.1];   // "through October" = to the end of October
     } else if (/^april.*july and september/.test(words)) { start = [3 - 0.1, 3 + 0.1]; end = [7 - 0.1, 7 + 0.1]; }
@@ -357,7 +366,8 @@ verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so
     ['fall', `${half(fall[0])}-${fall[0].month} through ${half(fall[1])} ${fall[1].month}`, /(Mid-September through early November)/i],
   ];
   for (const [name, expect, rx] of want) { const m = rx.exec(t); if (!m) { bad.push(name + ': the words were not found'); continue; } if (m[1].toLowerCase().replace(/[ -]+/g, '') !== expect.toLowerCase().replace(/[ -]+/g, '')) bad.push(`${name}: the page says "${m[1]}", js/season.js says ${expect}`); }
-  if (!(winterEnd && winterEnd.month === 'December' && /Friday after Thanksgiving to early December/.test(t) && half(winterEnd) === 'early')) bad.push('winter: "Friday after Thanksgiving to early December" does not match the end date in js/season.js');
+  const TREE_RULE = 'the last weekend in November and the first weekend in December, Saturday and Sunday only';   // the builder, Nov 10 2026: the trees are on those two weekends, Saturday and Sunday only; the dates are worked out from the rule (js/season.js)
+  if (!t.toLowerCase().includes(TREE_RULE.toLowerCase()) || /Friday after Thanksgiving|after Thanksgiving|early December/i.test(t)) bad.push('winter: the page must say "' + TREE_RULE + '" for the Christmas trees, and no longer "Friday after Thanksgiving" or "early December"');
   // tomatoes and basil run the same days as the fall season (the site builder, Nov 9 2026): September 13 to November 8 in js/features.js, said as "mid-September through early November"
   if (!(tom && +tom[1] === 8 && +tom[2] === 13 && +tom[3] === 10 && +tom[4] === 8) || !/every weekend,? (?:from )?mid-September through early November/i.test(t) || /late September through October/i.test(t)) bad.push('tomatoes and basil: "every weekend, mid-September through early November" does not match the dates in js/features.js (September 13 to November 8, the fall season)');
   verify('season words match js/season.js and the tomato dates in js/features.js', bad.length === 0, 'the seasons in the text and in js/season.js (or the tomato dates in js/features.js) differ: ' + bad.join('; '),

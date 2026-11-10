@@ -92,7 +92,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 - **By itself:** the winter season is in progress until Dec 8: the top bar says "In season: Christmas trees at The GreenHouse", the headline becomes "Wise Acres Christmas trees", and the "This week" box lists trees "In season". Thu Nov 26, 2026 (Thanksgiving Day) is not an open day, so it needs no closure. In the top menu the "Christmas trees" line keeps its bold and its red dot until Dec 8, and a screen reader stops saying "Coming soon" after it.
 - **You, by Wed Nov 25, 2026:** confirm the tree dates and prices (**d50**, **d54**). Add a short note to `week` ("Trees arrive Friday"; `updated` is today).
-- **Where:** `js/content.js` at `week: {},` (2 places: the setting and the note about it); `index.html` at `data-t="t53cf41e8"` (the tree dates in the Shop). README row "Say what is ripe / spots left this week".
+- **Where:** `js/content.js` at `week: {},` (2 places: the setting and the note about it); `index.html` at `data-t="t59d83261"` (the tree dates in the Shop). README row "Say what is ripe / spots left this week".
 - **If you forget:** the site says trees are in season from Nov 27 whatever your stock, and the Shop line says "Prices coming soon".
 
 ### Tue Dec 1, 2026: the schedule box hides
