@@ -392,7 +392,7 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .shop-wide3 .shop-opts-u li{display:flex}
   .shop-wide3 .shop-opts-u .so-p{display:inline;margin-left:auto;text-align:right}
 }
-@media (max-width:47.5em){
+@media screen and (max-width:47.5em){
   .shop-wide2{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
   .shop-wide2 .shop-body{flex:0 1 auto;max-width:calc(100% - 4.4em);display:grid;justify-items:start}   /* (on a phone the name and price stay beside the picture and the sizes wrap, instead of the whole block dropping under the picture) */
   .shop-wide2 > .shop-sub{flex:1 1 11em}

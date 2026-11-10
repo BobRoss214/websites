@@ -17,9 +17,10 @@ At 1440 px, English, before: 19 cards under 55%, the worst Mini pumpkin 29.7%, B
   row before it (the order of the cards is fixed):
   - `shop-wide3` three across (from 1264 px, and 761-991 px): Hot pretzel, Spicy pecan brittle, Slushie, Water bottle refill, Beer/cider/wine, Organic olive oil, Popcorn kernels,
     Lavender oil, Painted rocks, NC pumpkins, Christmas trees; in the farm group (761-991 px only): Wagon ride, Corn pit, U-pick tomatoes & basil
-  - `shop-wide2` two across (992-1263 px): Hot pretzel, Spicy pecan brittle, Slushie, Blackberry plant, Local mums, NC pumpkins, Christmas trees
+  - `shop-wide2` two across (992-1263 px, and a phone up to 760 px, where a wide card is a whole row): Hot pretzel, Spicy pecan brittle, Slushie, Blackberry plant, Local mums,
+    NC pumpkins, Christmas trees; in the farm group (phone only): Corn pit, U-pick tomatoes & basil
   - `shop-wide5` / `shop-wide4` five / four rides across in the farm group (from 992 px): Corn pit, U-pick tomatoes & basil (both), Wagon ride, Barrel train (four only)
-  A phone (two across, up to 760 px) has no wide cards. The print layout is untouched (the rules are `@media screen`).
+  The print layout is untouched (the rules are `@media screen` / `max-width`, the print block still sets `display:block` on every card).
   If cards are added to or taken out of a group, the rows can get a hole: tests/shop.test.mjs ("every row of cards is full except the last") names the row; change the classes.
 - tests/shop.test.mjs: the cards across are counted with a wide card as two; every row but the last of a grid is full; the cards of a row end at the same height (no ragged
   bottoms); and a new fill check in English at 1440, 1280 and 1100 px (no card under 55%, at most 6 under 60%, the builder's Organic iced coffee at least 60%).
