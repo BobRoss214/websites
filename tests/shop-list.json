@@ -1,8 +1,8 @@
 {
  "_about": "Made by tests/shop-list.make.mjs from the farm's products list (work-notes/SHOP-LIST.md). Do not edit by hand: change the list, then run  node tests/shop-list.make.mjs work-notes/SHOP-LIST.md",
- "_source": {"file":"SHOP-LIST.md","sha256":"8f1ba69b9d29927cf380911763d35fe8a3eca4a724294b05070863a225fe1c9f"},
+ "_source": {"file":"SHOP-LIST.md","sha256":"7cc664f0ef5c454e1dc9ed87609e58f2714d8fef01c3e5710fd4766a25f4f6f2"},
  "unknownWords": "Prices coming soon",
- "names": ["Tobacco Barn","Christmas Hearth","Apple Harvest","Kokomo","Oskars Blues","Southern Range","NODA","Triple C","Wise Man","Red clay","Bev (Gris)","Glitz","Noblio","Franciscan","NA Brooklyn","Dales light lager","Blood orange wheat","Hop drop","Kei Truck","Oktoberfest","3C","Planet Pulp IPA","Hoppy Amber","Loyal to the dream","Shape shifter pumpkin spice","Peach crumble","Brambling blackberry","Pinot Grigio","Sauvignon blanc","Cabernet Sauvignon"],
+ "names": ["Tobacco Barn","Christmas Hearth","Apple Harvest","Kokomo","Oskars Blues","Southern Range","NODA","Triple C","Wise Man","Red clay","Bev (Gris)","Glitz","Noblio","Franciscan","NA Brooklyn","Dales light lagers","Blood orange wheat","Hop drop","Kei Truck","Oktoberfest","3C","Planet Pulp IPA","Hoppy Amber","Loyal to the dream","Shape shifter pumpkin spice","Peach crumble","Brambling blackberry","Pinot Grigio","Sauvignon blanc","Cabernet Sauvignon"],
  "loanwords": [{"lang":"vi","word":"pound","why":"the Vietnamese texts of the tomato prices use \"mỗi pound\"; the Shop uses the same words (the same text block)"}],
  "groups": [
   {"n":1,"name":"Snacks & treats","where":"at the barn","slugs":["hot-pretzel","cider-donut","popcorn","kettle-corn","snack-bag","brittle","bag-candy","jar-candy","slushie"]},
@@ -39,7 +39,7 @@
   {"slug":"kombucha","group":4,"name":"Kombucha","price":"$5","unknown":false,"free":false,"amounts":[5],"options":[],"unit":"","note":"","noteAmounts":[],"symbols":["p-kombucha"]},
   {"slug":"iced-coffee","group":4,"name":"Organic iced coffee","price":"$5","unknown":false,"free":false,"amounts":[5],"options":[],"unit":"","note":"","noteAmounts":[],"symbols":["p-iced-coffee"]},
   {"slug":"refill","group":4,"name":"Water bottle refill","price":"$0.50","unknown":false,"free":false,"amounts":[0.5],"options":[],"unit":"","note":"bring your own bottle","noteAmounts":[],"symbols":["p-refill"]},
-  {"slug":"dales-light-lager","group":5,"name":"Dales light lager","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"Oskars Blues. American light lager, 4.2% ABV, 12 oz.","noteAmounts":[],"symbols":["p-dales-light-lager"],"noAgeStatement":true,"noLettering":true},
+  {"slug":"dales-light-lager","group":5,"name":"Dales light lagers","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"Oskars Blues. American light lager, 4.2% ABV, 12 oz.","noteAmounts":[],"symbols":["p-dales-light-lager"],"noAgeStatement":true,"noLettering":true},
   {"slug":"blood-orange-wheat","group":5,"name":"Blood orange wheat","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"Southern Range. Light wheat ale, 5.3% ABV.","noteAmounts":[],"symbols":["p-blood-orange-wheat"],"noAgeStatement":true,"noLettering":true},
   {"slug":"hop-drop","group":5,"name":"Hop drop","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"NODA. West coast style IPA, 7.2% ABV.","noteAmounts":[],"symbols":["p-hop-drop"],"noAgeStatement":true,"noLettering":true},
   {"slug":"kei-truck","group":5,"name":"Kei Truck","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"Triple C. Japanese style rice lager, 4.2% ABV.","noteAmounts":[],"symbols":["p-kei-truck"],"noAgeStatement":true,"noLettering":true},

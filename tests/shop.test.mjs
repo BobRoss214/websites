@@ -644,9 +644,10 @@ await run('shop', async ({ browser, base, errs }) => {
   const wrongPic = [...where].map(([s, l]) => ({ q: PRODUCTS.find((q) => q.slug === s), c: l[0] })).filter(({ q, c }) => { const ids = c.uses.map((u) => u.replace(/^#/, '')); return !q.symbols.some((x) => ids.includes(x)) || ids.some((i) => !q.symbols.includes(i)); });
   ok('3: each card shows the picture of its own product (p-<slug>; the wagon ride, barrel train, corn pit and sunn hemp maze use the pictures the list names)', wrongPic.length === 0, few(wrongPic.map(({ q, c }) => `${q.slug}: shows ${c.uses.join(' ') || 'no picture'}, list says ${q.symbols.map((x) => '#' + x).join(' or ')}`)));
   // a drink's picture is drawn with plain shapes: no letters (<text>), no embedded picture (<image>), no copy of another drawing (<use>), no style or gradient list (the list: no logo, no lettering)
-  const lettered = PRODUCTS.filter((q) => q.noLettering).flatMap((q) => q.symbols.map((id) => ({ q, s: hasSym.get(id) }))).filter(({ s }) => s && s.found && /<(?:text|tspan|image|use|style|defs|foreignObject)\b/i.test(s.markup));
-  const drawn = PRODUCTS.filter((q) => q.noLettering).length;
-  ok(`3: the ${drawn} drinks' pictures have no lettering and no logo-making parts (only plain shapes: no <text>, <image>, <use>, <style>, <defs>)`, drawn >= 16 && lettered.length === 0, few(lettered.map(({ q }) => q.slug)));
+  const drinkPics = PRODUCTS.filter((q) => q.noLettering).flatMap((q) => q.symbols.map((id) => ({ q, id, s: hasSym.get(id) })));
+  const lettered = drinkPics.filter(({ s }) => s && s.found && /<(?:text|tspan|image|use|style|defs|foreignObject)\b/i.test(s.markup));
+  const noPic = drinkPics.filter(({ s }) => !s || !s.found);   // (a picture that is not there cannot be looked at: the check must not pass quietly)
+  ok(`3: the ${drinkPics.length} drinks' pictures are all there and have no lettering and no logo-making parts (only plain shapes: no <text>, <image>, <use>, <style>, <defs>)`, drinkPics.length >= 16 && noPic.length === 0 && lettered.length === 0, few(noPic.map(({ id }) => '#' + id + ' is missing').concat(lettered.map(({ q }) => q.slug + ' has lettering or a copy'))));
   const byPic = {};
   for (const c of en.cards) for (const u of c.uses.map((x) => x.replace(/^#/, ''))) (byPic[u] = byPic[u] || []).push(c.name);
   const twice = Object.entries(byPic).filter(([, names]) => new Set(names).size > 1);
