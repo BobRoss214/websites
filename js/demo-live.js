@@ -612,6 +612,7 @@
     '.dl-group .dl-btn:last-child{margin-right:0;border-radius:0 14px 14px 0}',
     '.dl-btn[aria-pressed="true"]{background:var(--ink,#3a2416);color:#fff}',
     '.dl-btn.dl-on[aria-pressed="true"]{background:var(--green-deep,#1f6b34);border-color:var(--ink,#3a2416);color:#fff}',
+    '.dl-btn:focus{border-radius:0}.dl-group .dl-btn:first-child:focus{border-radius:14px 0 0 14px}.dl-group .dl-btn:last-child:focus{border-radius:0 14px 14px 0}',
     '.dl-btn:focus-visible{position:relative;z-index:1;outline:4px solid var(--focus,#1a56db);outline-offset:3px}',
     '.dl-strip.dl-invite{background:#fff7d6;border-width:4px}',
     '.dl-invite .dl-btn.dl-on{min-width:12rem;min-height:60px;font-size:1.25rem;background:var(--green-deep,#1f6b34);color:#fff}',
