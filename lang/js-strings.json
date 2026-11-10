@@ -199,7 +199,9 @@
  "Rows of pink, orange and yellow mums in pots beside a little red shed": "content.js",
  "Rubs make us happy": "content.js",
  "School Field Trips | Wise Acres Organic Farm, Indian Trail": "school-field-trips.html",
+ "Show ingredients": "shop-pop-box.js",
  "Show names": "features.js",
+ "Show what it is made of": "shop-pop-box.js",
  "Site check: nothing is broken": "features.js",
  "Site check: {n} thing to fix": "features.js",
  "Site check: {n} things to fix": "features.js",
@@ -307,8 +309,6 @@
  "{date} at {time} Eastern Time": "features.js",
  "{distance}, about {time} by car": "features.js",
  "{first}. {second}": "features.js",
- "{name}, {price}, show ingredients": "shop-pop-box.js",
- "{name}, {price}, show what it is made of": "shop-pop-box.js",
  "{n} of {total}": "main.js",
  "{text} (Eastern Time)": "live.js"
 }

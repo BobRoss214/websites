@@ -55,6 +55,7 @@ const go = (part) => !ONLY || ONLY.split(',').includes(part);
 const SP = `window.__sp = {
   slug: (c) => { const u = c.querySelector('.shop-bubble use'), m = u && /#p-([a-z0-9-]+)$/.exec(u.getAttribute('href') || ''); return m ? m[1] : ''; },
   cards: () => [...document.querySelectorAll('#shop .shop-card')],
+  nameOf: (b) => (b.getAttribute('aria-labelledby') || '').split(/\\s+/).filter(Boolean).map((i) => { const e = document.getElementById(i); return e ? e.innerText.replace(/\\s+/g, ' ').trim() : '?'; }).join(' '),
   bySlug: (s) => window.__sp.cards().find((c) => window.__sp.slug(c) === s) || null,
   box: (e) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height, r: r.right, b: r.bottom }; },
   group: (c) => { const g = c.closest('.shop-group'); return g ? ((/\\bsg-[a-z0-9]+/.exec(g.className) || [''])[0]) : ''; },
@@ -174,16 +175,18 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   const p = await open(browser, base, 'index.html', errs, { viewport: DESKTOP });
   await prep(p);
   const cards = await p.evaluate(() => window.__sp.cards().map((c) => ({ slug: window.__sp.slug(c), name: c.querySelector('.shop-name').textContent.replace(/\s+/g, ' ').trim(), tag: c.tagName, role: c.getAttribute('role'), tabindex: c.getAttribute('tabindex'),
-    full: c.classList.contains('shop-full'), group: window.__sp.group(c), btn: [...c.querySelectorAll('button.shop-open')].map((b) => ({ type: b.type, label: b.getAttribute('aria-label'), kids: b.children.length, text: b.textContent, haspopup: b.getAttribute('aria-haspopup') })), cls: c.classList.contains('shop-card-pop') })));
+    full: c.classList.contains('shop-full'), group: window.__sp.group(c), btn: [...c.querySelectorAll('button.shop-open')].map((b) => ({ type: b.type, label: window.__sp.nameOf(b), ariaLabel: b.getAttribute('aria-label'), refs: (b.getAttribute('aria-labelledby') || '').split(/\s+/).filter((i) => document.getElementById(i)).length, kids: b.children.length, text: b.textContent, haspopup: b.getAttribute('aria-haspopup') })), cls: c.classList.contains('shop-card-pop') })));
   const withBtn = cards.filter((c) => c.btn.length);
   const exp = new Set(EXPECTED);
   ok(`every product card of groups 1-11 has one button (${EXPECTED.length} cards)`, EXPECTED.every((s) => cards.filter((c) => c.slug === s && c.btn.length === 1).length === 1), EXPECTED.filter((s) => !cards.some((c) => c.slug === s && c.btn.length === 1)).join(', '));
   ok('no other card has one: not the farm visit group, not the five older cards (Farm fun x2, U-pick pumpkins, strawberries, blueberries), not the old beer card', withBtn.every((c) => exp.has(c.slug)) && withBtn.length === EXPECTED.length, withBtn.filter((c) => !exp.has(c.slug)).map((c) => c.name).join(', ') + ` (${withBtn.length} buttons)`);
-  ok('each is a real button (type=button, aria-haspopup="dialog", no text of its own, named "<name>, <price>, show ingredients" or "... show what it is made of"), and its card is still a plain <li>', withBtn.every((c) => c.btn[0].type === 'button' && c.btn[0].haspopup === 'dialog' && c.btn[0].kids === 0 && c.btn[0].text === '' && c.tag === 'LI' && c.role === null && c.tabindex === null && c.cls && c.btn[0].label.startsWith(c.name + ', ') && /, show (ingredients|what it is made of)$/.test(c.btn[0].label)), withBtn.filter((c) => !(c.btn[0].label || '').startsWith(c.name + ', ')).map((c) => c.name + ' = ' + c.btn[0].label).slice(0, 3).join(' | '));
-  const made = withBtn.filter((c) => sample[c.slug].heading === 'Made of').every((c) => /show what it is made of$/.test(c.btn[0].label)) && withBtn.filter((c) => sample[c.slug].heading !== 'Made of').every((c) => /show ingredients$/.test(c.btn[0].label));
-  ok('a thing that is not eaten ("Made of": caps, shirts, plants, jars) says "show what it is made of", the rest "show ingredients"', made);
+  ok('each is a real button (type=button, aria-haspopup="dialog", no text of its own, no aria-label: tests/shop.test.mjs allows only labels the translator knows; named by aria-labelledby from the card\'s name and price and "Show ingredients" or "Show what it is made of"), and its card is still a plain <li>', withBtn.every((c) => c.btn[0].type === 'button' && c.btn[0].haspopup === 'dialog' && c.btn[0].kids === 0 && c.btn[0].text === '' && c.btn[0].ariaLabel === null && c.btn[0].refs >= 2 && c.tag === 'LI' && c.role === null && c.tabindex === null && c.cls && c.btn[0].label.startsWith(c.name + ' ') && /\sShow (ingredients|what it is made of)$/.test(c.btn[0].label)), withBtn.filter((c) => !(c.btn[0].label || '').startsWith(c.name + ' ') || c.btn[0].ariaLabel !== null).map((c) => c.name + ' = ' + c.btn[0].label).slice(0, 3).join(' | '));
+  const made = withBtn.filter((c) => sample[c.slug].heading === 'Made of').every((c) => /Show what it is made of$/.test(c.btn[0].label)) && withBtn.filter((c) => sample[c.slug].heading !== 'Made of').every((c) => /Show ingredients$/.test(c.btn[0].label));
+  ok('a thing that is not eaten ("Made of": caps, shirts, plants, jars) says "Show what it is made of", the rest "Show ingredients"', made);
   const price = withBtn.find((c) => c.slug === 'slushie');
-  ok('a card with two sizes puts both in the name ("Slushie, Small $3, Large $4, show ingredients")', !!price && /^Slushie, Small \$3, Large \$4, show ingredients$/.test(price.btn[0].label), price && price.btn[0].label);
+  ok('a card with two sizes puts both in the name ("Slushie Small $3 Large $4 Show ingredients")', !!price && /^Slushie\s*Small\s*\$3\s*Large\s*\$4\s*Show ingredients$/.test(price.btn[0].label), price && price.btn[0].label);
+  const real = await p.getByRole('button', { name: /^Hot pretzel\s*\$5\s*Show ingredients$/ }).count();
+  ok('the browser itself names the pretzel button "Hot pretzel $5 Show ingredients" (its own accessible name, worked out from aria-labelledby)', real === 1, String(real));
   const bars = await p.evaluate(() => ['pizza', 'ice-cream'].map((s) => { const c = window.__sp.bySlug(s); const a = c && c.querySelector('.shop-full-actions a'); if (!a) return { s, ok: !!c && c.classList.contains('shop-full') }; a.scrollIntoView({ block: 'center' }); const r = a.getBoundingClientRect(), top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return { s, ok: top === a || a.contains(top), full: c.classList.contains('shop-full') }; }));
   ok('the wide pizza and ice cream bars have their button, and the pizza bar\'s own two links are still the top thing under the pointer', bars.every((b) => b.ok) && cards.filter((c) => ['pizza', 'ice-cream'].includes(c.slug)).every((c) => c.btn.length === 1), JSON.stringify(bars));
 
@@ -382,15 +385,15 @@ await run('shop-pop', async ({ browser, base, errs }) => {
 
   /* -------------------------------------------------------------- 7. LANGUAGES */
   if (go('languages')) {
-  const want = (code) => (code === 'en' ? { notice: NOTICE, ing: 'Ingredients', made: 'Made of', contains: 'Contains:', close: 'Close', label: (n, pr) => `${n}, ${pr}, show ingredients`, labelMade: (n, pr) => `${n}, ${pr}, show what it is made of` }
+  const want = (code) => (code === 'en' ? { notice: NOTICE, ing: 'Ingredients', made: 'Made of', contains: 'Contains:', close: 'Close', label: (n, pr) => `${n} ${pr} Show ingredients`, labelMade: (n, pr) => `${n} ${pr} Show what it is made of` }
     : { notice: DICT[code]['(This is not the real ingredients. This is just a preview.)'], ing: DICT[code].Ingredients, made: DICT[code]['Made of'], contains: DICT[code]['Contains:'], close: DICT[code].Close,
-      label: (n, pr) => DICT[code]['{name}, {price}, show ingredients'].replace('{name}', n).replace('{price}', pr), labelMade: (n, pr) => DICT[code]['{name}, {price}, show what it is made of'].replace('{name}', n).replace('{price}', pr) });
+      label: (n, pr) => `${n} ${pr} ${DICT[code]['Show ingredients']}`, labelMade: (n, pr) => `${n} ${pr} ${DICT[code]['Show what it is made of']}` });
   for (const code of LANGS) {
     const w = want(code);
     for (const view of (code === 'en' ? [DESKTOP] : [DESKTOP, PHONE])) {   // English is not long: the phone is tried in the four other languages
       const l = await open(browser, base, 'index.html', errs, { viewport: view, lang: code, touch: view === PHONE });
       await prep(l);
-      const labels = await l.evaluate(() => { const lab = (s) => { const c = window.__sp.bySlug(s); return { name: c.querySelector('.shop-name').textContent.replace(/\s+/g, ' ').trim(), price: c.querySelector('.shop-price').textContent.replace(/\s+/g, ' ').trim(), label: c.querySelector('.shop-open').getAttribute('aria-label') }; }; return { pretzel: lab('hot-pretzel'), cap: lab('trucker-cap') }; });
+      const labels = await l.evaluate(() => { const lab = (s) => { const c = window.__sp.bySlug(s); return { name: c.querySelector('.shop-name').textContent.replace(/\s+/g, ' ').trim(), price: c.querySelector('.shop-price').textContent.replace(/\s+/g, ' ').trim(), label: window.__sp.nameOf(c.querySelector('.shop-open')) }; }; return { pretzel: lab('hot-pretzel'), cap: lab('trucker-cap') }; });
       if (view === DESKTOP) ok(`${code}: the buttons are named in the page's language ("${labels.pretzel.label}")`, labels.pretzel.label === w.label(labels.pretzel.name, labels.pretzel.price) && labels.cap.label === w.labelMade(labels.cap.name, labels.cap.price) && (code === 'en' || !/show |ingredients|made of/i.test(labels.pretzel.label + labels.cap.label)), JSON.stringify(labels));
       for (const slug of ['hot-pretzel', 'trucker-cap']) {
         if (!await openBy(l, slug)) { ok(`${code} ${view.width}px: ${slug} opens`, false); continue; }
@@ -410,10 +413,10 @@ await run('shop-pop', async ({ browser, base, errs }) => {
       if (view === DESKTOP && code === 'en') {   // a language change with the pop-up closed re-names the buttons; and with it open, re-writes it
         const was = labels.pretzel.label;
         await l.evaluate(() => window.WISE_ACRES.setLang('es'));
-        await okSoon('en -> es with the pop-up closed: the card\'s button is named in Spanish', () => l.evaluate(() => window.__sp.bySlug('hot-pretzel').querySelector('.shop-open').getAttribute('aria-label')), (x) => x !== was && /ver ingredientes$/.test(x));
+        await okSoon('en -> es with the pop-up closed: the card\'s button is named in Spanish', () => l.evaluate(() => window.__sp.nameOf(window.__sp.bySlug('hot-pretzel').querySelector('.shop-open'))), (x) => x !== was && /Ver ingredientes$/.test(x));
         await openBy(l, 'hot-pretzel');
         await l.evaluate(() => window.WISE_ACRES.setLang('en'));
-        await okSoon('es -> en with the pop-up open: it is written again in English (the notice, the Close button) and the closed buttons are English again', async () => ({ n: await l.evaluate(() => window.__sp.txt('.shop-pop-pretend')), d: await l.evaluate(() => window.__sp.txt('.shop-pop-done')), a: await l.evaluate(() => window.__sp.bySlug('water').querySelector('.shop-open').getAttribute('aria-label')) }), (x) => x.n === NOTICE && x.d === 'Close' && /, show ingredients$/.test(x.a));
+        await okSoon('es -> en with the pop-up open: it is written again in English (the notice, the Close button) and the closed buttons are English again', async () => ({ n: await l.evaluate(() => window.__sp.txt('.shop-pop-pretend')), d: await l.evaluate(() => window.__sp.txt('.shop-pop-done')), a: await l.evaluate(() => window.__sp.nameOf(window.__sp.bySlug('water').querySelector('.shop-open'))) }), (x) => x.n === NOTICE && x.d === 'Close' && / Show ingredients$/.test(x.a));
         await closeBy(l);
       }
       await l.context().close();

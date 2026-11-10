@@ -26,19 +26,11 @@
     const m = use ? /#p-([a-z0-9-]+)$/.exec(use.getAttribute('href') || '') : null;
     return m ? m[1] : '';
   }
-  function priceOf(card) {
-    const p = card.querySelector('.shop-price, .shop-opts');
-    if (!p) return '';
-    if (!p.classList.contains('shop-opts')) return clean(p.textContent);
-    return Array.prototype.map.call(p.children, (li) => Array.prototype.map.call(li.children, (c) => clean(c.textContent)).join(' ')).join(', ');
-  }
-  function labelOf(item) {
-    const n = item.card.querySelector('.shop-name');
-    const vars = { name: clean(n && n.textContent), price: priceOf(item.card) };
-    const s = item.entry.heading === 'Made of' ? t('{name}, {price}, show what it is made of', vars) : t('{name}, {price}, show ingredients', vars);
-    return s.replace(/,\s*,/g, ',');
-  }
-  const relabel = () => items.forEach((item) => item.btn.setAttribute('aria-label', labelOf(item)));
+  /* A button is named by aria-labelledby: the card's own name and price (already in the page's language) and one of two hidden words ("Show ingredients", "Show what it is made of").
+     No aria-label is written in #shop, because tests/shop.test.mjs wants every label there to be one that the site's translator knows. The two words sit outside #shop and are
+     written again when the language changes; the card's name and price follow the language by themselves. */
+  let verbs = null;
+  function words() { if (verbs) { verbs.i.textContent = t('Show ingredients'); verbs.m.textContent = t('Show what it is made of'); } }
 
   /* ---------------------------------------------------------------- the style sheet (as js/tour.js loads css/tour.css) */
   function loadCss() {
@@ -88,6 +80,7 @@
     if (p) {
       const c = p.cloneNode(true);
       [c].concat(Array.prototype.slice.call(c.querySelectorAll('[data-t]'))).forEach((x) => x.removeAttribute('data-t'));   // the language switch must not rewrite the copy
+      c.removeAttribute('id');   // (and the page must not hold the same id twice)
       price.appendChild(c);
     }
     note.textContent = clean(s && s.textContent); note.hidden = !note.textContent;
@@ -108,7 +101,7 @@
   function lock() {   // the page behind: out of reach of screen readers and Tab, and it does not scroll or slide when the scroll bar goes
     saved = [];
     Array.prototype.forEach.call(doc.body.children, (el) => {
-      if (el === pop || /^(?:SCRIPT|STYLE|LINK|TEMPLATE|NOSCRIPT)$/.test(el.tagName)) return;
+      if (el === pop || (verbs && el === verbs.box) || /^(?:SCRIPT|STYLE|LINK|TEMPLATE|NOSCRIPT)$/.test(el.tagName)) return;
       saved.push([el, el.getAttribute('aria-hidden'), el.hasAttribute('inert')]);
       el.setAttribute('aria-hidden', 'true'); el.setAttribute('inert', '');
     });
@@ -172,12 +165,19 @@
       const slug = slugOf(card), entry = slug && own(data, slug) ? data[slug] : null;
       if (!entry || !Array.isArray(entry.list) || !entry.list.length) return;
       const btn = doc.createElement('button');
+      const nm = card.querySelector('.shop-name'), pr = card.querySelector('.shop-price, .shop-opts');
+      if (nm && !nm.id) nm.id = 'shop-pop-n-' + slug;
+      if (pr && !pr.id) pr.id = 'shop-pop-p-' + slug;
       btn.type = 'button'; btn.className = 'shop-open'; btn.setAttribute('aria-haspopup', 'dialog'); btn._item = { card: card, btn: btn, entry: entry };
+      btn.setAttribute('aria-labelledby', [nm && nm.id, pr && pr.id, entry.heading === 'Made of' ? 'shop-pop-show-m' : 'shop-pop-show-i'].filter(Boolean).join(' '));
       card.classList.add('shop-card-pop'); card.appendChild(btn);
       items.push(btn._item);
     });
     if (!items.length) return;
-    relabel();
+    verbs = { box: doc.createElement('div'), i: doc.createElement('span'), m: doc.createElement('span') };
+    verbs.box.hidden = true; verbs.i.id = 'shop-pop-show-i'; verbs.m.id = 'shop-pop-show-m';
+    verbs.box.appendChild(verbs.i); verbs.box.appendChild(verbs.m); doc.body.appendChild(verbs.box);
+    words();
     const hit = (e) => (e.target.closest ? e.target.closest('.shop-open') : null);
     let keyboard = false;   // only for a browser that does not know :focus-visible: was the last thing a key?
     doc.addEventListener('keydown', () => { keyboard = true; }, true); doc.addEventListener('pointerdown', () => { keyboard = false; }, true);
@@ -192,7 +192,7 @@
       if (seen) b._item.card.classList.add('shop-pop-focus');
     });
     shop.addEventListener('focusout', (e) => { const b = hit(e); if (b) b._item.card.classList.remove('shop-pop-focus'); });
-    doc.addEventListener('wa:lang', () => { relabel(); if (current && pop && pop.classList.contains('is-open')) fill(current); });
+    doc.addEventListener('wa:lang', () => { words(); if (current && pop && pop.classList.contains('is-open')) fill(current); });
   }
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', start); else start();
 })();
