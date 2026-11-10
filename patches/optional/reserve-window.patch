@@ -65,7 +65,7 @@ index 67c2271..457034e 100644
 +++ b/js/hero.js
 @@ -1182,10 +1182,28 @@
    // data-only="fall winter": shown only while one of those seasons is on screen. Add data-in-season to show it only
-   // while that season is really happening (not in the weeks before or after, when the nearest season is shown).
+   // while that season is really happening (not in the weeks between seasons, when the season that starts next is shown).
    // data-out-of-season="spring" is the opposite: hidden while that season is really happening ("Tell me when it opens").
 +  // data-book (optional, the owner's choice): a Reserve button shows only inside the booking window the site's own words give.
 +  // data-book="spring" is about that season; data-book with no value follows the season on screen. The FAQ ("When do
