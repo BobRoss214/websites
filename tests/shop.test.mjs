@@ -199,11 +199,22 @@ function readSymbols(expected) {
 }
 function readLayout(SEL) {
   const shop = document.getElementById('shop'), de = document.documentElement, vw = de.clientWidth;
+  // (a wide card, css/extras.css "Wide cards", is two cards and a gap wide: it counts as two. `rows` = how many cards each row holds, `wide` = the wide cards)
   const grids = [...shop.querySelectorAll(SEL.grid)].map((g) => {
     const cards = [...g.children].filter((c) => c.matches(SEL.card) && !c.matches(SEL.full));
     if (cards.length < 4) return null;
-    const t0 = cards[0].getBoundingClientRect().top;
-    return { id: (g.closest(SEL.group) || {}).id || '', cards: cards.length, cols: cards.filter((c) => Math.abs(c.getBoundingClientRect().top - t0) < 4).length };
+    const gap = parseFloat(getComputedStyle(g).columnGap) || 0, unit = Math.min(...cards.map((c) => c.getBoundingClientRect().width));
+    const rows = [];
+    let wide = 0;
+    for (const c of cards) {
+      const r = c.getBoundingClientRect(), n = Math.round((r.width + gap) / (unit + gap));
+      if (n > 1) wide++;
+      let row = rows.find((q) => Math.abs(q.top - r.top) < 4);
+      if (!row) { row = { top: r.top, units: 0 }; rows.push(row); }
+      row.units += n;
+    }
+    rows.sort((a, b) => a.top - b.top);
+    return { id: (g.closest(SEL.group) || {}).id || '', cards: cards.length, units: rows.reduce((t, q) => t + q.units, 0), cols: rows[0].units, rows: rows.map((q) => q.units), wide };
   }).filter(Boolean);
   // text parts that cut their own words: wider or taller inside than their box (clipped, shortened with "...", or a fixed height that is too small)
   const cut = [];
@@ -236,6 +247,19 @@ function readLayout(SEL) {
       if (dn.r.t < up.r.b + 4 - 0.5) touching.push(`"${said(up)}" and "${said(dn)}" are ${Math.round((dn.r.t - up.r.b) * 10) / 10}px apart (the shadow is 4)`);
     }
   });
+  // the cards of a row are one height (the row's tallest card sets it): no ragged bottoms
+  const ragged = [];
+  shop.querySelectorAll(SEL.grid).forEach((g) => {
+    const rows = [];
+    for (const c of g.children) {
+      if (!c.matches(SEL.card)) continue;
+      const r = c.getBoundingClientRect();
+      let row = rows.find((q) => Math.abs(q.top - r.top) < 4);
+      if (!row) { row = { top: r.top, bottoms: [] }; rows.push(row); }
+      row.bottoms.push(r.bottom);
+    }
+    rows.forEach((row) => { if (row.bottoms.length > 1 && Math.max(...row.bottoms) - Math.min(...row.bottoms) > 1) ragged.push(`${(g.closest(SEL.group) || {}).id || '?'}: a row ends ${Math.round((Math.max(...row.bottoms) - Math.min(...row.bottoms)) * 10) / 10}px apart`); });
+  });
   // the farm group has two lists: the Farm fun cards, then the rides (they touched once)
   const lists = [...shop.querySelectorAll(SEL.farm + ' ' + SEL.grid)];
   const farm = { lists: lists.length };
@@ -259,7 +283,15 @@ function readLayout(SEL) {
   // the smallest type of the names, the prices and the notes (px; 1 rem = 16 px)
   const minPx = (sel) => { const v = [...shop.querySelectorAll(sel)].filter((e) => e.getClientRects().length).map((e) => parseFloat(getComputedStyle(e).fontSize)); return v.length ? Math.min(...v) : null; };
   const type = { name: minPx(SEL.name), price: minPx(SEL.hand), note: minPx(SEL.note) };
-  return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, flow, touching, outside, farm, broken, type };
+  return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, flow, touching, outside, ragged, farm, broken, type };
+}
+function readFill(SEL) {   // how much of each card's white box its own content covers: from the top of its first part (picture, name and price, note) to the bottom of its last, over the height of the card inside its border
+  return [...document.querySelectorAll('#shop ' + SEL.card)].filter((c) => c.getClientRects().length).map((c) => {
+    let top = Infinity, bottom = -Infinity;
+    for (const k of c.children) { const r = k.getBoundingClientRect(); if (r.height < 1) continue; top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); }
+    const nm = c.querySelector(SEL.name);
+    return { name: nm ? nm.textContent.replace(/\s+/g, ' ').trim() : '?', fill: Math.round((bottom - top) / c.clientHeight * 1000) / 10 };
+  });
 }
 function readFarmGap(SEL) {   // the clear space above the farm visit bar: from the lowest bottom edge of everything above it (a shadow counts: at least 4 px, as a card has) to the top of the bar
   const shop = document.getElementById('shop'), farm = shop.querySelector(SEL.farm), band = farm && farm.querySelector(SEL.band);
@@ -285,6 +317,16 @@ function readFarmGap(SEL) {   // the clear space above the farm visit bar: from 
     if (bottom > lowest) { lowest = bottom; what = e.tagName.toLowerCase() + '.' + String(typeof e.className === 'string' ? e.className : '').split(' ')[0] + ' "' + (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 24) + '"'; }
   }
   return { clear: Math.round((top - lowest) * 100) / 100, what };
+}
+const FILL_WIDTHS = [1440, 1280, 1100];   // a wide screen, a laptop and a small window (3 cards across, 3 across, 2 across)
+async function fillAt(page) {   // the same page at each width (the window is made wider or narrower, nothing is loaded again)
+  const out = [];
+  for (const w of FILL_WIDTHS) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await page.waitForTimeout(ms(350));
+    out.push({ w, cards: await page.evaluate(readFill, SEL) });
+  }
+  return out;
 }
 const CLASSIC_WIDTHS = [1240, 1250, 1264, 1270];   // windows with a classic scroll bar, around the switch to three cards across (1264): the old switch, 1240, broke a Spanish word
 const GAP_WIDTHS = [992, 1100, 1180, 1240, 1264, 1280, 1366, 1440, 1920];
@@ -637,7 +679,10 @@ await run('shop', async ({ browser, base, errs }) => {
     const single = w > 760 ? [3] : w >= 340 ? [2] : [1, 2];
     const want = (id) => (id === 'shop-farm' ? (wide ? [5] : two ? [4] : single) : (wide ? [3] : two ? [2] : single));
     const kind = w <= 760 ? 'a phone' : w < 992 ? 'a tablet' : w < 1264 ? 'a laptop' : 'a wide computer';
-    ok(`7: ${tag}: the product grids show ${two ? (wide ? '3 cards across in a column and 5 rides' : '2 cards across in a column and 4 rides') : single.join(' or ')} across (${kind}; a group with fewer cards fills one row)`, rec.grids.length > 0 && rec.grids.every((g) => want(g.id).some((n) => g.cols === Math.min(n, g.cards))), rec.grids.map((g) => `${g.id}: ${g.cols} of ${g.cards}`).join(', '));
+    ok(`7: ${tag}: the product grids show ${two ? (wide ? '3 cards across in a column and 5 rides' : '2 cards across in a column and 4 rides') : single.join(' or ')} across (${kind}; a wide card counts as two; a group with fewer cards fills one row)`, rec.grids.length > 0 && rec.grids.every((g) => want(g.id).some((n) => g.cols === Math.min(n, g.units))), rec.grids.map((g) => `${g.id}: ${g.cols} of ${g.units}`).join(', '));
+    // no hole: every row but the last of a grid is full (a wide card that does not fit at the end of a row moves to the next one and leaves a hole: the classes shop-wide2 ... shop-wide5 in index.html say for how many cards across a card is wide)
+    const holes = rec.grids.flatMap((g) => g.rows.slice(0, -1).map((u, i) => (want(g.id).some((n) => u === n) ? '' : `${g.id.replace('shop-', '')} row ${i + 1} holds ${u} (${want(g.id).join(' or ')} wanted)`))).filter(Boolean);
+    ok(`7: ${tag}: every row of cards is full except the last of a grid (no hole where a wide card did not fit; ${rec.grids.reduce((t, g) => t + g.wide, 0)} wide cards)`, rec.grids.length > 0 && holes.length === 0, few(holes, 4));
     const F = rec.flow, W = F.wrap, mid = (W.l + W.r) / 2, farm = F.groups.find((g) => g.id === 'shop-farm'), others = F.groups.filter((g) => g.id !== 'shop-farm');
     const brief = (g) => `${g.id.replace('shop-', '')} ${Math.round(g.l)}..${Math.round(g.r)} x ${Math.round(g.t)}..${Math.round(g.b)}`;
     if (two) {
@@ -655,6 +700,7 @@ await run('shop', async ({ browser, base, errs }) => {
       ok(`7: ${tag}: the groups are stacked, one above the other, each the whole width, in the page's order`, F.groups.length === GROUPS.length && F.groups.every((g, i) => g.w >= W.w - 2 && (i === 0 || g.t >= F.groups[i - 1].b - 1)), few(F.groups.map(brief), 12));
     }
     ok(`7: ${tag}: no card or band touches or overlaps another (a card's 4 px shadow counts) or sticks out of its group`, rec.touching.length === 0 && rec.outside.length === 0, few(rec.touching.concat(rec.outside), 4));
+    ok(`7: ${tag}: the cards of a row are one height (no ragged bottoms)`, rec.ragged.length === 0, few(rec.ragged, 4));
     const fg = rec.farm;
     ok(`7: ${tag}: in the farm group the two Farm fun cards, with their 4 px shadow, end at least one card gap (${fg.gap || '?'} px) above the first ride card`, fg.lists === 2 && fg.funCards === 2 && fg.rideCards > 2 && fg.gap > 0 && fg.funBottom + 4 + fg.gap <= fg.rideTop + 0.5, JSON.stringify(fg));
     // (a word cut in the middle: a phone narrower than 390 px did that before the Store was made dense, with the long Spanish and Vietnamese words, so only 390 and up is looked at)
@@ -673,6 +719,17 @@ await run('shop', async ({ browser, base, errs }) => {
   const heights = {};
   heights[1366] = (await layout(p, '1366px', 1366)).shopH;
   await farmBar(p, 'English');
+  {
+    /* 7: no card is mostly empty. A card with a long note used to make its whole row as tall as itself and its short neighbours (Organic iced coffee, Mini pumpkin ...) were a third full
+       (19 cards under 55% at 1440 px, the worst 29.7%). Wide cards (css/extras.css) fixed that; this keeps it fixed. The share is measured in readFill(). */
+    const f = await fillAt(p);
+    const all = f.flatMap((x) => x.cards.map((c) => ({ ...c, w: x.w }))), worst = all.slice().sort((a, b) => a.fill - b.fill);
+    const under = (t) => all.filter((c) => c.fill < t);
+    ok(`7: English: no card is mostly empty: at ${FILL_WIDTHS.join(', ')} px every card's own content covers at least 55% of its white box (the worst: ${worst[0].name} ${worst[0].fill}% at ${worst[0].w} px)`, under(55).length === 0, few(under(55).map((c) => `${c.name} ${c.fill}% at ${c.w}`), 5));
+    ok(`7: English: at most 6 cards of ${f[0].cards.length} cover less than 60% of their box at any one of ${FILL_WIDTHS.join(', ')} px (${f.map((x) => x.w + ': ' + x.cards.filter((c) => c.fill < 60).length).join(', ')})`, f.every((x) => x.cards.filter((c) => c.fill < 60).length <= 6), few(under(60).map((c) => `${c.name} ${c.fill}% at ${c.w}`), 6));
+    const coffee = all.filter((c) => /iced coffee/i.test(c.name));
+    ok(`7: English: "Organic iced coffee" (the builder's example) covers at least 60% of its box at ${FILL_WIDTHS.join(', ')} px (${coffee.map((c) => c.fill + '% at ' + c.w).join(', ')})`, coffee.length === FILL_WIDTHS.length && coffee.every((c) => c.fill >= 60), JSON.stringify(coffee));
+  }
   const phone = {};
   await p.context().close();
   for (const w of WIDTHS.slice(1)) {
@@ -756,7 +813,7 @@ await run('shop', async ({ browser, base, errs }) => {
         rows.push(`${w}: bar ${bar}px, cards from ${card}px, ${grids.length ? grids[0].cols : '?'} across`);
         if (rec.broken.length) bad.push(`${w}: ${few(rec.broken, 3)}`);
         if (rec.cut.length) bad.push(`${w}: ${few(rec.cut, 2)}`);
-        if (!grids.length || !grids.every((g) => g.cols === Math.min(across, g.cards))) bad.push(`${w}: ${grids.map((g) => g.id + ' ' + g.cols).join(', ') || 'no grid'} across, ${across} wanted`);
+        if (!grids.length || !grids.every((g) => g.cols === Math.min(across, g.units) && g.rows.slice(0, -1).every((u) => u === across))) bad.push(`${w}: ${grids.map((g) => g.id + ' ' + g.rows.join('+')).join(', ') || 'no grid'} across, ${across} wanted`);
         await q.context().close();
       }
       if (bars < 10) info(`7: es with a classic scroll bar: NOT CHECKED, this Chromium showed no scroll bar (${rows.join('; ')})`);
