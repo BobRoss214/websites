@@ -89,17 +89,35 @@ class CheckFacts(unittest.TestCase):
         self.assertRegex(out, r'vanessa@wiseacresorganic\.com and vanesa@wiseacresorganic\.com look like two spellings of one address|vanesa@wiseacresorganic\.com and vanessa@wiseacresorganic\.com look like')
 
     def test_other_hours_in_the_settings(self):
-        self.edit('js/content.js', "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00' }", "greenhouse: { days: [5, 6, 0], open: '10:00', close: '21:00' }")
+        # (the line also holds the hours of the Christmas tree weekends, `winter: { ... }`: the usual hours are the ones before it)
+        self.edit('js/content.js', "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00',", "greenhouse: { days: [5, 6, 0], open: '10:00', close: '21:00',")
         code, out = run(self.root, 'greenhouse')
         self.assertEqual(code, 1, out)
         self.assertRegex(out, r'DIFFERENT: 2 answers[^\n]*\n[^\n]*\n(?:[^\n]*\n)*? +10:00-21:00 +\(1 place\(s\)\)\n +js/content\.js:\d+ ')
 
     def test_hours_in_double_quotes_or_without_a_leading_zero_are_still_read(self):
         # js/content.js may say "9:00" as well as '09:00': the hours there must still be compared with the pages (10:00-20:00)
-        self.edit('js/content.js', "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00' }", 'greenhouse: { days: [5, 6, 0], open: "9:00", close: "20:00" }')
+        self.edit('js/content.js', "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00',", 'greenhouse: { days: [5, 6, 0], open: "9:00", close: "20:00",')
         code, out = run(self.root, 'greenhouse')
         self.assertEqual(code, 1, out)
         self.assertRegex(out, r'09:00-20:00 +\(1 place\(s\)\)\n +js/content\.js:\d+ ')
+
+    def test_the_hours_of_the_christmas_tree_weekends_are_a_fact_of_their_own(self):
+        # js/content.js has two hours in one line: the usual ones and, inside `winter: { ... }`, those of the Christmas tree weekends. Each is read for itself,
+        # so the usual 10:00-20:00 is not mixed up with the 11:00-20:00 of the tree weekends (and Wise Pie's `winter: 'greenhouse'` has no hours to read).
+        sys.dont_write_bytecode = True
+        sys.path.insert(0, HERE)
+        import check_facts as cf
+        line = "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00', winter: { days: [6, 0], open: '11:00', close: '20:00' } }, pizza: { days: [5, 6, 0], open: '16:00', close: '20:00', winter: 'greenhouse' }"
+        self.assertEqual(cf.setting_hours(re.search(cf.SETTING_HOURS % 'greenhouse', line)), '10:00-20:00')
+        self.assertEqual(cf.setting_hours(re.search(cf.SETTING_WINTER_HOURS, line)), '11:00-20:00')
+        self.assertEqual(cf.setting_hours(re.search(cf.SETTING_HOURS % 'pizza', line)), '16:00-20:00')
+        self.assertIsNone(re.search(cf.SETTING_WINTER_HOURS, line.replace("open: '11:00', close: '20:00'", "open: 'x', close: 'y'")))
+        # a different closing time of the tree weekends in the settings is listed as a place of that fact (alone, or against the pages that say 8 pm)
+        self.edit('js/content.js', "close: '20:00', winter: { days: [6, 0], open: '11:00', close: '20:00' }", "close: '20:00', winter: { days: [6, 0], open: '11:00', close: '21:00' }")   # (the comment above the settings quotes the winter line too)
+        code, out = run(self.root, 'christmas tree weekends')
+        self.assertIn('11:00-21:00', out)
+        self.assertRegex(out, r'11:00-21:00 +\(1 place\(s\)\)\n +js/content\.js:\d+ |all 1 places say 11:00-21:00')
 
     def test_a_wrong_translation_is_found(self):
         p = os.path.join(self.root, 'lang', 'src', 'es.json')

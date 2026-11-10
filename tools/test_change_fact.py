@@ -3,7 +3,7 @@
 
   python3 tools/test_change_fact.py
 
-On a scratch copy it makes a price change, an e-mail change (the waitlist address in js/features.js too), a phone change written in another layout, an hours change, a change of
+On a scratch copy it makes a price change, an e-mail change (the waitlist address in js/features.js too), a phone change written in another layout, an hours change (the usual hours, and the hours of the Christmas tree weekends on their own), a change of
 a street number that lives in the pages, in a script and in the translations, and a change of words it cannot translate. After each change tools/check_facts.py must agree
 everywhere and i18n.py must say 0 missing in all four languages (except for the change of words: that one must say exactly what is left). "undo" must put back every file
 byte for byte. A change that was not asked for with --yes must change nothing. Hostile words (HTML, quote marks, a line break, an invisible character, a very long text) must be
@@ -117,6 +117,14 @@ def sc_hours(s):
     return r
 
 
+def sc_hours_winter(s):
+    r = {}
+    r['yes'] = s.change('hours', 'Sat-Sun, 11 am-8 pm', 'Sat-Sun, 11 am-9 pm', '--yes')   # the Christmas tree weekends: the winter line of The GreenHouse changes and the usual hours do not
+    r['content'], r['index'], r['langs'], r['clean'] = s.read('js/content.js'), s.read('index.html'), s.langs(), s.clean('hi')
+    r['undo'] = s.undo()
+    return r
+
+
 def sc_hours_cross(s):
     r = {}
     r['cross'] = s.change('hours', 'Fri-Sun, 10 am-8 pm', 'Fri-Sun, 10 am-11 pm', '--yes')   # 11 pm: the words for the time of day may change in hi, zh and vi
@@ -175,8 +183,8 @@ def setUpModule():
             return fn.__name__[3:], fn(s)
         except Exception as e:   # shown by the test that needs it
             return fn.__name__[3:], e
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:   # seven copies of the site, four at a time
-        for name, res in pool.map(go, [sc_words_and_refusals, sc_hours, sc_text_number, sc_price, sc_email_crlf, sc_phone, sc_hours_cross]):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:   # eight copies of the site, four at a time
+        for name, res in pool.map(go, [sc_words_and_refusals, sc_hours, sc_hours_winter, sc_text_number, sc_price, sc_email_crlf, sc_phone, sc_hours_cross]):
             SCENARIOS[name] = res
     for s in sites:
         shutil.rmtree(s.tmp, ignore_errors=True)
@@ -245,12 +253,21 @@ class ChangeFact(unittest.TestCase):
         r = got('hours')
         ready(self, 'hours', r)
         self.assertIn('native speaker', r['yes'][1])
-        self.assertIn("open: '10:00', close: '21:00' },   // Fri-Sun, 10 am-9 pm", r['content'])
+        # the usual hours change in the settings and in the note at the end of the line; the line's `winter: { ... }` (the Christmas tree weekends) stays as it was
+        self.assertIn("open: '10:00', close: '21:00', winter: { days: [6, 0], open: '11:00', close: '20:00' } },   // Fri-Sun, 10 am-9 pm; Christmas tree weekends: Sat-Sun, 11 am-8 pm", r['content'])
         self.assertEqual(r['index'].count('10 am&ndash;9 pm'), 4)
         self.assertIn('10 a. m.–9 p. m.', r['langs']['es'])
         self.assertIn('晚上 9 点', r['langs']['zh'])
         self.assertIn('9 giờ tối', r['langs']['vi'])
         put_back(self, 'hours', r['undo'])
+
+    def test_the_hours_of_the_christmas_tree_weekends_change_alone(self):
+        r = got('hours_winter')
+        ready(self, 'winter hours', r)
+        self.assertIn("close: '20:00', winter: { days: [6, 0], open: '11:00', close: '21:00' } },   // Fri-Sun, 10 am-8 pm; Christmas tree weekends: Sat-Sun, 11 am-9 pm", r['content'])
+        self.assertNotIn('11 am&ndash;8 pm', r['index'], 'every place of the tree weekend hours changed')
+        self.assertIn('10 am&ndash;8 pm', r['index'], 'the usual hours stay')
+        put_back(self, 'winter hours', r['undo'])
 
     def test_hours_that_cross_into_another_part_of_the_day_are_left_for_a_person(self):
         code, out = got('hours_cross')['cross']
