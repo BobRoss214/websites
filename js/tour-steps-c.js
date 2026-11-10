@@ -435,7 +435,7 @@
     {
       id: 'ch10-desk-keep', order: CHAPTER * 100 + 30, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-card'), skipIfMissing: true,
       title: 'Answer while more arrive',
-      text: 'Answer with Yes, No or a suggestion. The card moves to Answered and the next one is ready. Cards that arrive while you read go to the bottom, so nothing moves under your finger. A note you are typing stays where it is.',
+      text: 'Answer with Yes, No, a suggestion or a reply. The card moves to Answered and the next one is ready. Cards that arrive while you read go to the bottom, so nothing moves under your finger. A note you are typing stays where it is.',
       before: liveScene(function () { rushOn(false); }, hook('desk-card'))
     },
     {
