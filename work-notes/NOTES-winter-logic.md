@@ -39,9 +39,9 @@ Checked with `node /tmp/helpers/winter-oracle/check.mjs <clone>`: 0 hard mismatc
 - Translations (`lang/src/{es,hi,vi,zh}.json`, "js"): new "Not official yet", "Open today. No reservation needed", "Closed today. Next open day: {day}"; the key "the Friday after Thanksgiving" became "the last weekend in November"
   (es el último fin de semana de noviembre, hi नवंबर महीने के आख़िरी वीकेंड में, vi vào cuối tuần cuối cùng của tháng 11, zh 11 月最后一个周末). `lang/js-strings.json` and `lang/*.js` rebuilt with the pipeline; 0 missing in es, hi, vi, zh.
 - Tools: `tools/upcoming_dates.py` (tree weekends, season start and end read from the new names), `tools/season_calendar.mjs` (wording and reasons: the page opens on the season that starts next; the "no season" rule is gone),
-  `tools/check_facts.py` (reads the GreenHouse winter hours as their own fact), `tools/year_rehearsal.mjs` (R05 R06 R07 R09 R12 R15 R16 R19 R23 R24 and the seam days), `tools/rehearse_answers.json`, `tools/apply_answers_rules.json`, `tools/review_notes.json`.
+  `tools/check_facts.py` (reads the GreenHouse winter hours as their own fact; its test `tools/test_check_facts.py` and `tools/test_change_fact.py` know the line with both hours, and `change_fact.py hours` changes the usual hours and the tree weekend hours each on its own), `tools/year_rehearsal.mjs` (R05 R06 R07 R09 R12 R15 R16 R19 R23 R24 and the seam days), `tools/rehearse_answers.json`, `tools/apply_answers_rules.json`, `tools/review_notes.json`.
 - Docs: `docs/OWNER_YEAR_CALENDAR.md` and `.es.md` (11 season days: 2026-11-09, 11-28, 12-07, 2027-04-15, 06-08, 06-15, 07-11, 09-13, 11-09, 11-27, 12-06; the old Nov 18, Feb 10 and Aug 12 entries are merged into Nov 9, Dec 7 and Jul 11),
-  `docs/DECISION_PLAYBOOK.md`, `docs/OPTION_PATCHES.md`, `docs/QUESTIONS_FOR_THE_FARM.md`. Patches: `winter-A-hide-fall-booking.patch` (questions hunk re-made), `reserve-window.patch` (header; the hero hunk keeps one line of context).
+  `docs/DECISION_PLAYBOOK.md`, `docs/OPTION_PATCHES.md`, `docs/QUESTIONS_FOR_THE_FARM.md`. In the owner calendar question d25 (Reserve buttons) is asked for Dec 7 only (Fri Dec 4): on Nov 9 the page opens on winter and those buttons do not change. Patches: `winter-A-hide-fall-booking.patch` (questions hunk re-made), `reserve-window.patch` (header; the hero hunk keeps one line of context).
 - Tests that now state the new truth (never loosened): `logic` (the rule 2026-2032 by an independent calendar walk, window ends, the season shown between seasons, the hours on tree days against other days, the label, the dates in five languages, the bars,
   host time zones UTC / Tokyo / Los Angeles), `upcoming-dates` (2026-2033), `consistency`, `owner-calendar`, `live`, `hero`, `features`, `dated`, `time-bombs`, `code-read`, `calendar-doc`.
 
@@ -69,18 +69,19 @@ tests/README.md
 tests/browser-support.table.json: nothing from this helper (the code uses only features already in the table).
 tools/mutants.json: main's. The mutants that named `thanksgivingFriday` or the old end date must be re-made (nothing here was changed in that file).
 
-## After the merge with winter-text (a trial merge was made in a scratch clone: 16 files conflict)
+## After the merge with winter-text (a resolved trial merge exists)
 
-Resolve like this, then run the pipeline once (`python3 tools/pages.py`, `python3 tools/i18n.py extract`, `jsstrings`, `build`, then `missing es hi zh vi`):
+`python3 /tmp/wl-scratch/make_trial.py /tmp/some-new-folder` clones this branch, merges the `wintertext` branch of /tmp/wintertext-clone, resolves the 16 conflicting files as below, runs the pipeline (0 missing in es hi vi zh), checks both patches apply
+and commits it on a branch `trial-merge` (scratch only; nothing is pushed). On the part-14 words of winter-text it passed the no-browser tests (766 of 767: only `owner-calendar` waits for the regenerated document).
+By hand, resolve like this, then run the pipeline once (`python3 tools/pages.py`, `python3 tools/i18n.py extract`, `jsstrings`, `build`, then `missing es hi zh vi`):
 - generated, never merge by hand: `first-visit.html`, `lang/es.js`, `lang/hi.js`, `lang/vi.js`, `lang/zh.js` (take either side, then run the pipeline).
 - `pages/first-visit.html`: keep BOTH: the winter lead line (winter-text) and `data-live-not="winter"` on `<p class="live" data-no-i18n data-live="farm" ...>` (mine).
-- `tests/consistency.test.mjs` (2 blocks): take MINE for the rule/season-words block (it also checks `js/season.js`, the rule count and the removed words). The first block (the tree row bars) is a second copy of what the file does for the bars:
-  keep the winter-text block only if the file does not already check `data-tree-bar` (mine checks it in the bars test).
+- `tests/consistency.test.mjs` (2 blocks): take MINE for both. The first block of winter-text (the tree row bars) can never run: the file already checks the row by `data-tree-bar` and `continue`s before it.
 - `tools/apply_answers_rules.json` d23=A: take MINE ("Fall now ends November 30 ... for three days both seasons are on": that is what option A does). `tools/rehearse_answers.json`: identical apart from the reason of `_skipped.d50=B`: either. `tools/review_notes.json`: winter-text's.
 - `docs/OWNER_YEAR_CALENDAR.md` and `.es.md`: take MINE and change the Shop tree id to `data-t="t59d83261"` (winter-text's id).
-- `docs/QUESTIONS_FOR_THE_FARM.md`: block 1 (the Q12 ids) winter-text's; block 2: my hours bullet (the `winter` lines in `js/content.js`) and one trees bullet that names both the rule (`js/season.js` at `function lastSaturdayOfNovember(`) and winter-text's ids.
-- `docs/DECISION_PLAYBOOK.md` (7 blocks): the d50, d23, d01 and d24 sections were rewritten by both: mine has the dates of the new logic (winter look from Nov 9, spring look from Dec 7, fall look from Jul 11); winter-text's has the new ids. Keep mine and replace the ids.
-- patches: `winter-A-hide-fall-booking.patch` and `reserve-window.patch` were re-made by both. After the merge take winter-text's index.html hunks and my questions hunk (winter-A), my header line and my one-line context at the hero buttons (reserve-window), then `git apply --check` each.
+- `docs/QUESTIONS_FOR_THE_FARM.md`: block 1 (the Q12 ids) winter-text's plus my anchors of the rule (`js/season.js` at `function lastSaturdayOfNovember(`); block 2: my hours bullet (the `winter` lines in `js/content.js`) and one trees bullet that names both the rule and winter-text's ids.
+- `docs/DECISION_PLAYBOOK.md` (7 blocks): blocks 1, 2 and 7 (anchors into `tests/consistency.test.mjs`) mine; blocks 3, 4, 5 (words) winter-text's; block 6 (d50 B) winter-text's words with my rule anchors and my test anchors.
+- patches: `winter-A-hide-fall-booking.patch` and `reserve-window.patch` were re-made by both. After the merge take winter-text's index.html hunks and make my questions hunk again against the merged document (winter-A), my header line and my one-line context at the hero buttons (reserve-window), then `git apply --check` each.
 
 Regenerate after the merge, with the tool (never by hand): `node tools/season_calendar.mjs --jobs 2` (docs/WHAT_VISITORS_SEE_WHEN.md, 10 to 40 minutes; its data block must list the 11 season days above). It depends on the final words, so it is not done here.
 `docs/YEAR_REHEARSAL_LOG.md` is a dated record of what the first full replay found (the tool prints, it writes nothing): left as it is. Run `node tools/year_rehearsal.mjs` once after the merge (all steps, PASS or FAIL for each).
