@@ -16,8 +16,11 @@
  *                  What a lit button opens is lit too and can be used: a list under a menu bar, the bell's panel (the button says so in aria-controls and aria-expanded),
  *                  and a dialog of the pretend account (it sits above the dimmer). So no step needs more than this. false: nothing can be clicked.
  *                  (true is the whole page; no step uses it.)
- *   also           optional: a CSS selector (or a list of them) for a part that is lit and can be used together with the target. Only the basket game uses it:
- *                  its picture is the playground (#hero-scene), and the menu and the links around it stay locked.
+ *   also           optional: a CSS selector (or a list of them) for a part that is lit and can be used together with the target. It is for a card that talks about a
+ *                  second part: the picture of the first screen (#hero-scene) for the basket game, the season buttons and the farm friends, the button of the
+ *                  first-visit guide, the heading above the tomato and basil varieties. The menu and the links around it stay locked.
+ *   WHAT A CARD SAYS (the owner's rule): what a thing IS and why it helps visitors or the farm. Never what was changed ("new", "now says", "still", "already",
+ *                  "used to", "instead of", "from your older page", "we need you to"). tests/tour-targets.test.mjs refuses those words in chapters 1 to 5 and 11.
  *   choices        optional: a row of small buttons on the card (the season walk: seasonWalk() below); choicesLabel is the few words above the row
  *   skipIfMissing  true when the target can be missing or hidden on some days or screens (a box that hides itself by date)
  *   before, after  small functions that open or put back something on the page (a menu, a tab). They use plain page code and never read
@@ -62,6 +65,11 @@
   function chosenFarm() {   // the season picked above the "What's on the farm" cards
     var on = q('#farm-seasons .fs-btn[aria-pressed="true"]');
     return on ? on.getAttribute('data-fs') : '';
+  }
+  var varietyWas = '';       // the filter of the tomato and basil varieties that was pressed when its card showed
+  function chosenVariety() {   // the filter pressed above the list of varieties (All, Cherry tomatoes, Slicers & salad, Basil)
+    var on = q('#variety-filters .filter-btn[aria-pressed="true"]');
+    return on ? on.getAttribute('data-filter') : '';
   }
 
   /* ------------------------------------------------------------------ *
@@ -203,12 +211,12 @@
     {
       id: 'ch1-hello', order: 101, chapter: 1, page: 'index', target: null,
       title: 'Welcome, Mrs. Cathy and Rob',
-      text: 'This tour shows your new website one part at a time. You will see what each part is and how it may help you. Whatever is lit up on the page, you can click and try. Nothing you click changes the site for anyone else.'
+      text: 'This tour shows your website one part at a time. You will see what each part is and how it may help you. Whatever is lit up on the page, you can click and try. Nothing you click changes the site for anyone else.'
     },
     {
       id: 'ch1-real', order: 102, chapter: 1, page: 'index', target: null,
       title: 'What is real, and what is pretend',
-      text: 'The words, hours and prices come from your own signs, photos and older web page. A few prices are still waiting for you. The account area near the end is a pretend demo. It sends nothing to anyone.'
+      text: 'The words, hours and prices come from the farm’s own signs and photos. The account area near the end is a pretend demo. It sends nothing to anyone.'
     },
     {
       id: 'ch1-seasons', order: 103, chapter: 1, page: 'index', target: null,
@@ -224,14 +232,19 @@
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring, April 15 to June 7. The strip begins “In season: Strawberries”. After June 7 it says ‘Next up: Blueberries & sunflowers, usually mid-June’.',
-        summer: 'Summer, June 15 to July 10. It now says “In season: Blueberries & sunflowers”. After July 10 it says ‘Next up: Pumpkins & tomatoes, usually mid-September’.',
+        summer: 'Summer, June 15 to July 10. It says “In season: Blueberries & sunflowers”. After July 10 it says ‘Next up: Pumpkins & tomatoes, usually mid-September’.',
         fall: 'Fall, September 13 to November 8. It says “In season: Pumpkins & tomatoes”. After November 8 it says ‘Next up: Christmas trees at The GreenHouse, usually the Friday after Thanksgiving’.',
         winter: 'Winter, the Friday after Thanksgiving to December 8. It says “In season: Christmas trees at The GreenHouse”. After December 8 it says ‘Next up: Strawberries, usually mid-April’.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
     {
-      id: 'ch2-seasons', order: 202, chapter: 2, page: 'index', target: '.hero-copy',
+      id: 'ch2-notice', order: 202, chapter: 2, page: 'index', target: '.announce',   // the yellow bar is drawn right under this strip (js/live.js, renderNotice); it is off while the notice is empty
+      title: 'The yellow bar for closures',
+      text: 'For a rain day or a holiday, a yellow bar can show under this strip on every page, with a short message for visitors. It can switch itself off after a date you choose. Today it is off, so you do not see it.'
+    },
+    {
+      id: 'ch2-seasons', order: 203, chapter: 2, page: 'index', target: '.hero-copy', also: '#hero-scene',   // the picture is lit too: the cards of the buttons describe it
       title: 'The first screen follows the season',
       text: 'The page dresses itself for the real season, using the calendar. Headline, line, buttons and picture all follow it. Visitors can peek at other seasons with the buttons at the top. Your site builder can switch them off. Press a season to see it.',
       choicesLabel: 'See this part in:',
@@ -244,7 +257,7 @@
       before: seasonsBegin, after: seasonsEnd
     },
     {
-      id: 'ch2-tags', order: 203, chapter: 2, page: 'index', target: '#season-switch', skipIfMissing: true,   // the buttons can be switched off (seasonPicker: false)
+      id: 'ch2-tags', order: 204, chapter: 2, page: 'index', target: '#season-switch', skipIfMissing: true,   // the buttons can be switched off (seasonPicker: false)
       title: 'The Now and Next tags',
       text: 'Two little tags tell visitors at a glance where the farm is in the year. “Now” marks the season happening today. “Next” marks the one after it, so they know what to look forward to. Between seasons only “Next” shows. Press a season.',
       choicesLabel: 'See this part in:',
@@ -257,7 +270,7 @@
       before: seasonsBegin, after: seasonsEnd
     },
     {
-      id: 'ch2-badges', order: 204, chapter: 2, page: 'index', target: '.hero-live', skipIfMissing: true,
+      id: 'ch2-badges', order: 205, chapter: 2, page: 'index', target: '.hero-live', skipIfMissing: true,
       title: 'Open now, or closed today',
       text: 'These badges say if the farm and The GreenHouse are open, from your hours and the clock. For a rain day, your site builder adds the date and they show closed. Your booking tool needs its own change. Press a season.',
       choicesLabel: 'See this part in:',
@@ -270,12 +283,17 @@
       before: seasonsBegin, after: seasonsEnd
     },
     {
-      id: 'ch2-reserve', order: 205, chapter: 2, page: 'index', target: '.hero-cta',
+      id: 'ch2-reserve', order: 206, chapter: 2, page: 'index', target: '.hero-cta',
       title: 'The big buttons',
       text: 'Reserve opens your booking tool (Bookeo) in a new tab. Nothing is booked on this site. The white button leads to what is in season. In winter the big red button says “Visit The GreenHouse”, and the top bar keeps its Reserve.'
     },
     {
-      id: 'ch2-game', order: 206, chapter: 2, page: 'index', target: '#picker', also: '#hero-scene',
+      id: 'ch2-pill', order: 207, chapter: 2, page: 'index', target: '.hero-note', skipIfMissing: true,   // the note is shown from spring to fall: it is hidden in winter
+      title: 'The note for visitors without a reservation',
+      text: 'Under the big buttons, a small note reads “No reservation? Visit The GreenHouse next door”. It sends visitors who did not book to the place that welcomes drop-ins. Pressed, it takes them down to The GreenHouse.'
+    },
+    {
+      id: 'ch2-game', order: 208, chapter: 2, page: 'index', target: '#picker', also: '#hero-scene',
       title: 'The basket game',
       text: 'Try it: press the yellow button to pick. Kids can also tap fruit, flowers or trees in the picture. Picking 100 of one kind earns a badge, like Pumpkin Champion. It is only for fun, and nothing is saved. Press a season.',
       choicesLabel: 'See this part in:',
@@ -288,9 +306,19 @@
       before: seasonsBegin, after: seasonsEnd
     },
     {
-      id: 'ch2-chips', order: 207, chapter: 2, page: 'index', target: '.hero .chips',
+      id: 'ch2-friends', order: 209, chapter: 2, page: 'index', target: '#npc-btn', also: '#hero-scene', skipIfMissing: true,   // the round button shows once the picture has a friend in it
+      title: 'Farm friends in the picture',
+      text: 'Kids, a wagon rider, the scarecrow and the snowman are drawn into the picture, depending on the season. Tap one and it says something. The round smiley button does the same, for people who use a keyboard or a screen reader.'
+    },
+    {
+      id: 'ch2-chips', order: 210, chapter: 2, page: 'index', target: '.hero .chips',
       title: 'The small labels under the badges',
       text: 'These small labels give quick facts. Two stay all year: organic and family farm. In fall a yellow label says New: u-pick tomatoes and basil, and a pizza label says when reservations open. They follow the calendar.'
+    },
+    {
+      id: 'ch2-facts', order: 211, chapter: 2, page: 'index', target: '.facts',
+      title: 'The quick facts under the first screen',
+      text: 'Four quick facts sit under the first screen: where the farm is, that reservations are required, what is in season today and who to email. Each one is a link, so a visitor can get directions, book or write in one tap.'
     },
 
     /* ---------------------------------------------------------------- 3. This week and the menu */
@@ -326,7 +354,7 @@
     {
       id: 'ch3-menu', order: 303, chapter: 3, page: 'index', target: '#nav, #menu-toggle', skipIfMissing: true,   // the lists open below the bar, outside its box: they are lit with it, and can be used
       title: 'The menu at the top',
-      text: 'Seven buttons group the whole site: Visit, Things to Do, GreenHouse, Store, Groups & Parties, About Us and Contact. Press one to open its short list. A red dot marks something new or coming soon, like Christmas trees. Try it.',
+      text: 'Seven buttons group the whole site: Visit, Things to Do, GreenHouse, Store, Groups & Parties, About Us and Contact. Press one to open its short list. A red dot marks a season that is coming up, like Christmas trees. Try it.',
       after: function () {   // a list the visitor opened is shut again
         var open = document.querySelector('.nav-group.is-open .nav-group-btn');
         if (open) open.click();
@@ -378,9 +406,9 @@
       text: 'This is a drawn map of the farm. Visitors tap a picture to see what it is. Parking, check-in and restrooms come first. There are buttons for Google Maps, Apple Maps and Waze.'
     },
     {
-      id: 'ch4-guide', order: 407, chapter: 4, page: 'index', target: '#first-visit .section-head',
+      id: 'ch4-guide', order: 407, chapter: 4, page: 'index', target: '#first-visit .section-head', also: '#first-visit .fv-more',   // the button that opens the full guide page is lit with the heading
       title: 'The first-visit guide',
-      text: 'New visitors can read what they may need before they arrive: parking, bathrooms, dogs, strollers, what to bring and the rain rules. A button opens the full guide page.'
+      text: 'First-time visitors can read what they may need before they arrive: parking, bathrooms, dogs, strollers, what to bring and the rain rules. A button opens the full guide page.'
     },
 
     /* ---------------------------------------------------------------- 5. What is in season */
@@ -398,7 +426,12 @@
       before: seasonsBegin, after: seasonsEnd
     },
     {
-      id: 'ch5-cards', order: 502, chapter: 5, page: 'index', target: '#farm-cards',
+      id: 'ch5-year', order: 502, chapter: 5, page: 'index', target: '#farm-cal',
+      title: 'The farm year at a glance',
+      text: 'Each crop has a bar that shows its months, from strawberries in April to Christmas trees at the end of the year. A Today marker shows where today falls in the year. Families can use it to choose a month to visit.'
+    },
+    {
+      id: 'ch5-cards', order: 503, chapter: 5, page: 'index', target: '#farm-cards',
       title: 'What\'s on the farm',
       text: 'These cards show what is on the farm right now, such as u-pick, animals, playgrounds and rides. In winter, the fun moves next door to The GreenHouse. Press a season on this card to see the cards change.',
       choicesLabel: 'See this part in:',
@@ -411,17 +444,42 @@
       before: seasonsBegin, after: seasonsEnd
     },
     {
-      id: 'ch5-tomatoes', order: 503, chapter: 5, page: 'index', target: '.tomato-copy',
-      title: 'Tomatoes and basil',
-      text: 'New this year: u-pick organic tomatoes and basil, every weekend from mid-September through early November. Tomatoes are $4.50 per pound and basil is $1 per stem. The New labels hide themselves after their end date. This box stays all year.'
+      id: 'ch5-glance', order: 504, chapter: 5, page: 'index', target: '.fs-glance',
+      title: 'Season by season, in one table',
+      text: 'A table ticks what is on the farm each season: animals, playgrounds, the picnic patch, rides, the corn pit, the haunted trail and the maze. Press a season name at the top to see that season’s cards. A key marks what is next door.',
+      before: seasonsBegin, after: seasonsEnd   // a season name pressed here shows that season's farm cards: put back when the card is left
     },
     {
-      id: 'ch5-flowers', order: 504, chapter: 5, page: 'index', target: '#flowers .flowers-copy',
+      id: 'ch5-tree-weekends', order: 505, chapter: 5, page: 'index', target: '#seasons .season-stage',   // lit in winter: the panel of the Christmas trees
+      title: 'Christmas tree weekends',
+      text: 'Christmas trees are at The GreenHouse on two weekends: the last weekend in November and the first weekend in December, Saturday and Sunday only. The farm is open only on those weekends, with no reservation and no rides.',
+      before: function () { return seasonsBegin().then(function () { return showSeason('winter'); }); },
+      after: seasonsEnd
+    },
+    {
+      id: 'ch5-tomatoes', order: 506, chapter: 5, page: 'index', target: '.tomato-copy',
+      title: 'Tomatoes and basil',
+      text: 'Visitors pick organic tomatoes and basil themselves, every weekend from mid-September through early November. Tomatoes are $4.50 per pound and basil is $1 per stem. The New labels hide themselves after their end date. This box stays all year.'
+    },
+    {
+      id: 'ch5-varieties', order: 507, chapter: 5, page: 'index', target: '#variety-filters', also: '#varieties',   // the heading above the buttons: it says how many varieties there are
+      title: 'Tomato and basil varieties',
+      text: 'More than a dozen tomato varieties and four kinds of basil are listed, each with a short taste note. Press “Cherry tomatoes”, “Slicers & salad” or “Basil” to narrow the list. Families can pick their favorites before they come.',
+      before: function () { varietyWas = chosenVariety(); },
+      after: function () { if (varietyWas && chosenVariety() !== varietyWas) click('#variety-filters [data-filter="' + varietyWas + '"]'); }   // a filter pressed here is put back
+    },
+    {
+      id: 'ch5-flowers', order: 508, chapter: 5, page: 'index', target: '#flowers .flowers-copy',
       title: 'U-cut flowers',
       text: 'Visitors can cut their own flowers from April to July and from September to the first frost. The page links to a flower Instagram account for bloom updates. This box stays all year.'
     },
     {
-      id: 'ch5-photos', order: 505, chapter: 5, page: 'index', target: '.passes',
+      id: 'ch5-bouquet', order: 509, chapter: 5, page: 'index', target: '.flowers-mid',
+      title: 'Flower schedule and bouquet game',
+      text: 'The estimated flower schedule shows what blooms from April to frost, and says that blooms change with the weather. A bouquet game lets kids tap flowers to fill a paper cup. It is just for fun.'
+    },
+    {
+      id: 'ch5-photos', order: 510, chapter: 5, page: 'index', target: '.passes',
       title: 'Photography passes',
       text: 'Professional photographers need an appointment and a photographer pass. A single session pass is $35 plus $3 per person. A day pass is $70 plus $3 per person. Buying a pass starts with an email to the farm.'
     },
@@ -430,7 +488,7 @@
     {
       id: 'ch11-prices', order: 1101, chapter: 11, page: 'index', target: null,
       title: 'Prices to confirm',
-      text: 'These still say Prices coming soon:\n- Jam and elderberry shrub\n- Trucker cap, bucket hat, T-shirt, sweatshirt, canvas and linen bags\n- Christmas trees\n- U-pick strawberries, blueberries and pumpkins\nPlease also check the pizza prices and the draft corporate event prices.'
+      text: 'These Store cards say “Prices coming soon”:\n- Jam and elderberry shrub\n- Trucker cap, bucket hat, T-shirt, sweatshirt, canvas and linen bags\n- Christmas trees\n- U-pick strawberries, blueberries and pumpkins\nPlease also check the pizza prices and the draft corporate event prices.'
     },
     {
       id: 'ch11-photos', order: 1102, chapter: 11, page: 'index', target: null,
@@ -440,7 +498,7 @@
     {
       id: 'ch11-people', order: 1103, chapter: 11, page: 'index', target: null,
       title: 'Who does what, and when',
-      text: 'Please tell us:\n- Who updates This week at the farm, the pizza weekends and closures\n- What your booking tool already offers, like customer logins and changing a booking\n- When the new site should open to visitors\nThank you, Mrs. Cathy and Rob!'
+      text: 'Please tell us:\n- Who updates This week at the farm, the pizza weekends and closures\n- What your booking tool offers, like customer logins and changing a booking\n- When the site should open to visitors\nThank you, Mrs. Cathy and Rob!'
     }
   ];
 
