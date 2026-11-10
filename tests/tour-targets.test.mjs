@@ -26,7 +26,8 @@
  *   button must leave the whole page in that season, every phrase the card puts in double curly quotes (“...”) must be written in the lit box, the buttons must show
  *   different things, and after() must put the words of the lit box and the whole page (season, open tabs, the lines of a season, the parts that follow the clock)
  *   back as they were. A "Month day" in the card of a season must be the first or the last day of that season in js/season.js.
- *   The Store's "Prices coming soon" cards must be exactly the ones that chapters 7 and 11 name, and a number that a text quotes from the page ("Fifteen
+ *   The Store's "Prices coming soon" cards: chapter 11 must name every one (it is the full list), chapter 7 must name the cards of the pantry group that show the label (and the
+ *   number it says, "Two pantry cards", must be the page's own), and neither may name a card that has a price; a number that a text quotes from the page ("Fifteen
  *   common questions") must be the page's own.
  *   WA_WORDS_ONLY=1 node tests/tour-targets.test.mjs runs only the first part (no browser, about a second); WA_TOUR_ONLY=3,ch2-game limits the walks to
  *   chapter 3 and the step ch2-game. */
