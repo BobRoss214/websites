@@ -69,7 +69,7 @@
 
   var NAMES = ['Dana', 'Mateo', 'Priya', 'Owen', 'Lucia', 'Noah', 'Amara', 'Ethan', 'Sofia', 'Caleb', 'Mei', 'Jonah', 'Isla', 'Rafael', 'Hana', 'Theo', 'Zoe', 'Malik',
     'Nora', 'Felix', 'Ivy', 'Omar', 'Tessa', 'Gabe', 'Ruby', 'Andre', 'Lena', 'Miles', 'Joy', 'Diego'];
-  var KIDS = ['Ava', 'Leo', 'Mia', 'Max', 'Lily', 'Eli', 'Nina', 'Jack'];
+  var KIDS = ['Ada', 'Leo', 'Mia', 'Max', 'Lily', 'Eli', 'Nina', 'Jack'];
   var ORDER_NOTES = ['', '', '', '', '', 'Please cut it in squares.', 'One of us is vegetarian.', 'We have a nut allergy in our family.', 'We may be a few minutes early.',
     'Two boxes, please.', 'Please go light on the cheese.', 'Our youngest is a very slow eater.'];
   var LATE_NOTES = ['We are running a little late. Sorry!', 'The line at the gate is long.', 'The kids are not done picking yet.', 'We are still in the field.'];

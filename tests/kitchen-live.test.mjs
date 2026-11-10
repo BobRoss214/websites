@@ -17,6 +17,10 @@
  *   - the sound: nothing plays (not even an audio context) until Sound is pressed; then a chime for tickets that arrive, a gentle beep that repeats while any is late, none while the
  *     rush is paused, none after muting (the Sound button, or the M key);
  *   - a screen reader: a polite status line says a ticket arrived, was answered, is late; the timer is a timer that does not chatter; the buttons say their keys;
+ *   - a tablet (1024 x 768): the title, the counters, the clock and the Sound button share one row, and a screen that opens with tickets puts the board in place, so the
+ *     first ticket and its three answer buttons are on the first screen, below the site's own sticky bars;
+ *   - the keys: a key held down answers one ticket only; the Keys button under the board turns the number and letter keys off (and the key marks and the key hints go with
+ *     them) and on again; the small tickets of the side lanes are not made again on every pass; a tab nobody can see makes no chime and no beep;
  *   - reduced motion: the late ticket does not pulse; a phone with touch: the buttons stay big, nothing scrolls sideways, a tap answers; a second window sees an answer;
  *   - axe-core finds nothing on the screen with tickets, with the editor open and with a late ticket.
  * Set KL_SHOTS=/some/folder to save screenshots of the states while it runs. Run: node tests/kitchen-live.test.mjs */
@@ -140,6 +144,7 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
   await p.clock.runFor(60000);
   await settled(p, 0);
   ok('Off pauses everything: a minute later the timer says the same, no ticket came, the counters are the same, the clock and the timers say paused', (await sample()).timer === tl && JSON.stringify(await tally(p)) === JSON.stringify(beforePause) && (await rail(p)).length === nBefore && (await p.locator('.kit-clock-note').textContent()) === 'paused' && (await p.locator('.kit-timer-note').first().textContent()) !== '');
+  ok('the On and Off buttons of the strip are still there after a minute and more (the site\'s own "open now" script must leave them alone)', await p.evaluate(() => { const b = [...document.querySelectorAll('[data-dl]')]; return b.length === 2 && b.every((x) => !x.hidden && x.offsetParent !== null) && !!document.querySelector('.dl-on') && !!document.querySelector('.dl-off'); }));
   await clickLive(p, 'on');
   await settled(p, 0);
 
@@ -160,6 +165,8 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
   const line = await said(p);
   ok('a polite status line tells a screen reader what happened ("Order 2xx: Yes." or "Order 2xx confirmed for ...")', /Order \d+(: Yes\.| confirmed for)/.test(line), line);
   await shot(p, '4-after-yes');
+  const kept = await p.evaluate(() => { const a = [...document.querySelectorAll('.kit-mini')]; a.forEach((li) => { li.__mark = 1; }); window.DemoKitchen.screen.sync(); window.DemoKitchen.screen.sync(); const b = [...document.querySelectorAll('.kit-mini')]; return { before: a.length, kept: b.filter((li) => li.__mark === 1).length, now: b.length }; });
+  ok('the small tickets of the side lanes are not made again on every pass (a screen reader keeps its place): after two more passes the very same elements are there', kept.before >= 1 && kept.kept === kept.before && kept.now === kept.before, JSON.stringify(kept));
   const cur = (await rail(p)).find((x) => x.focused), before = (await rail(p)).map((x) => x.key);
   await press(p, 'ArrowDown');
   const down = (await rail(p)).find((x) => x.focused);
@@ -280,6 +287,17 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
   ok('with Sound on again, tickets that arrive make a soft chime (two notes) once for the ones that came together', (await rail(p)).length >= 2 && a9.osc - a8.osc >= 2 && a9.contexts === 1, JSON.stringify([a8, a9]));
   const alex = (await rail(p)).find((x) => x.key === 'r:r1');
   ok('after the rush was cleared (the pretend clock starts again) the sample family\'s ticket shows a sane time: never more than its full 2:00', !!alex && secsOf(alex.timer) <= 120 && !alex.late, JSON.stringify(alex));
+  await p.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); });   // the tab is now one nobody can see
+  const h0 = await audio(p);
+  await p.clock.runFor(150000);
+  await settled(p, 0);
+  const h1 = await audio(p), lateHidden = (await rail(p)).filter((x) => x.late).length;
+  await p.evaluate(() => { delete document.hidden; });
+  ok('in a tab nobody can see it stays silent: no chime for tickets that come, no beep for a late one, although the rush goes on and a ticket ran out of time', lateHidden >= 1 && h1.osc === h0.osc, 'late ' + lateHidden + ', ' + JSON.stringify([h0, h1]));
+  await p.clock.runFor(9000);
+  await settled(p, 0);
+  const h2 = await audio(p);
+  ok('and when the tab is seen again the late ticket beeps again', h2.osc > h1.osc, JSON.stringify([h1, h2]));
   await p.locator('[data-tour="kit-sound"]').click();
 
   });
@@ -295,6 +313,44 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
   ok('the whole list of tickets is a labelled list and the counters are a labelled list', await p.evaluate(() => document.querySelector('.kit-rail').getAttribute('aria-labelledby') === 'kit-rail-h' && document.querySelector('.kit-tally').getAttribute('aria-label') === 'Tickets' && document.getElementById('kit-rail-h').tagName === 'H2'));
   await p.context().close();
 
+  });
+
+  /* ------------------------------------------------------------------ the keys */
+  await section('the keys', async () => {
+    const k = await openKitchen(browser, base, errs);
+    await sampleChange(k);
+    await k.evaluate(() => { window.DemoLive.setSettings({ changeSecs: 600, orderSecs: 600 }); window.DemoLive.start({ speed: 'rush' }); });
+    for (let i = 0; i < 12 && (await rail(k)).length < 4; i++) await k.clock.runFor(10000);
+    await settled(k, 0);
+    await k.evaluate(() => document.activeElement && document.activeElement.blur());
+    const n0 = (await rail(k)).length;
+    for (let i = 0; i < 4; i++) await k.keyboard.down('1');   // one press and three auto-repeats, as when a key is held down
+    await k.keyboard.up('1');
+    await settled(k, 60);
+    ok('a key held down answers one ticket, not the whole list: one press and three auto-repeats of 1 take one ticket off the list', n0 >= 4 && (await rail(k)).length === n0 - 1, n0 + ' -> ' + (await rail(k)).length);
+    const toggle = k.locator('.kit-keytoggle');
+    const keyHints = () => k.evaluate(() => [...document.querySelectorAll('.kit-ans')].map((b) => b.getAttribute('aria-keyshortcuts') || '').filter(Boolean).length);
+    const nButtons = await k.evaluate(() => document.querySelectorAll('.kit-ans').length);
+    ok('under the board a Keys button says that the keys are on (pressed), says in words what they do, and the buttons tell a screen reader their keys', (await toggle.getAttribute('aria-pressed')) === 'true' && /On$/.test((await toggle.textContent()).trim()) && /answer tickets from anywhere on this page/.test(await k.locator('.kit-keysnote').textContent()) && (await keyHints()) === nButtons && (await k.evaluate(() => { const r = document.querySelector('.kit-keytoggle').getBoundingClientRect(); return r.height >= 48; })));
+    await axeOn(k, 'the screen with the Keys button', '.kit');
+    await toggle.click();
+    await settled(k, 60);
+    ok('Keys off: the button is not pressed and says Off, the note says that the keys do nothing, the line of keys above the tickets and the key marks on the buttons are gone, and no button claims a key any more', (await toggle.getAttribute('aria-pressed')) === 'false' && /Off$/.test((await toggle.textContent()).trim()) && /The keys do nothing now/.test(await k.locator('.kit-keysnote').textContent()) && (await k.evaluate(() => document.querySelector('.kit-keys').hidden && [...document.querySelectorAll('.kit-ans .kit-key')].every((x) => getComputedStyle(x).display === 'none'))) && (await keyHints()) === 0, String(await keyHints()));
+    const n1 = (await rail(k)).length, cur1 = (await rail(k)).find((x) => x.current).key, sound1 = await k.locator('[data-tour="kit-sound"]').getAttribute('aria-pressed');
+    for (const key of ['1', '2', '3', 'y', 'n', 's', 't', 'e', 'm', 'ArrowDown']) await k.keyboard.press(key);
+    await settled(k, 60);
+    ok('with the keys off, pressing 1, 2, 3, Y, N, S, T, E, M and the arrow key does nothing: nothing is answered, no editor opens, the sound is not switched, the marked ticket stays', (await rail(k)).length === n1 && (await k.locator('.kit-edit').count()) === 0 && (await k.locator('[data-tour="kit-sound"]').getAttribute('aria-pressed')) === sound1 && (await rail(k)).find((x) => x.current).key === cur1, n1 + ' tickets');
+    await k.locator('.kit-ticket').first().locator('.kit-ans-yes').click();
+    await settled(k, 60);
+    ok('the buttons still work with the keys off (a click on Yes answers)', (await rail(k)).length === n1 - 1);
+    await toggle.click();
+    await settled(k, 60);
+    const n2 = (await rail(k)).length;
+    await k.keyboard.press('1');
+    await settled(k, 60);
+    ok('Keys on again: the button is pressed, the key marks and the hints are back, and the 1 key answers a ticket', (await toggle.getAttribute('aria-pressed')) === 'true' && (await rail(k)).length === n2 - 1 && (await keyHints()) === (await k.evaluate(() => document.querySelectorAll('.kit-ans').length)) && (await k.evaluate(() => !document.querySelector('.kit-keys').hidden)));
+    await shot(k, '9-keys');
+    await k.context().close();
   });
 
   /* ------------------------------------------------------------------ less motion */
@@ -332,6 +388,31 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
     await settled(q, 0);
     ok('a tap on Yes answers: the ticket leaves the list, and the next one has the focus', (await rail(q)).length <= n0 && !(await rail(q)).some((x) => x.key === first.key) && (await rail(q))[0].focused);
     await q.context().close();
+  });
+
+  /* ------------------------------------------------------------------ a tablet: the first screen */
+  await section('a tablet', async () => {
+    const a = await openKitchen(browser, base, errs, { viewport: { width: 1024, height: 768 } });
+    await sampleChange(a);
+    await a.evaluate(() => window.DemoLive.start({ speed: 'busy' }));
+    await a.clock.runFor(8000);
+    await settled(a, 0);
+    const nowA = await a.evaluate(() => Date.now());
+    const b = await a.context().newPage();   // a second look at the page, now with tickets waiting: the first drawing has tickets
+    await b.clock.install({ time: new Date(nowA) });
+    await b.goto(base + 'kitchen.html?demo', { waitUntil: 'load' });
+    await until(b, () => document.querySelectorAll('.kit-ticket').length > 0, null, 20000);
+    await settled(b, 200);
+    const m = await b.evaluate(() => {
+      const r = (e) => e.getBoundingClientRect(), li = document.querySelector('.kit-ticket'), bar = document.querySelector('.demo-bar'), note = document.querySelector('.kit-soundnote');
+      return { y: Math.round(window.scrollY), vh: window.innerHeight, under: Math.round(bar ? r(bar).bottom : 150), tickets: document.querySelectorAll('.kit-ticket').length,
+        buttons: [...li.querySelectorAll('.kit-ans')].map((x) => [Math.round(r(x).top), Math.round(r(x).bottom)]),
+        sameRow: Math.abs(r(document.querySelector('.kit-sound')).top - r(document.querySelector('.kit-tally')).top) < 40, noteW: Math.round(r(note).width), noteText: note.textContent.length };
+    });
+    ok('at 1024 x 768 a screen that opens with tickets puts the board in place: the page is scrolled, and the first ticket\'s three answer buttons are all on the screen, under the site\'s sticky bars', m.tickets >= 2 && m.y > 100 && m.buttons.length >= 2 && m.buttons.every(([top, bottom]) => top >= m.under - 2 && bottom <= m.vh), JSON.stringify(m));
+    ok('the title, the counters, the clock and the Sound button are on one row at that size, and the long note under the Sound button is for a screen reader only (it has its words, but takes no room)', m.sameRow && m.noteW <= 2 && m.noteText > 20, JSON.stringify(m));
+    await shot(b, '10-tablet');
+    await a.context().close();
   });
 
   /* ------------------------------------------------------------------ a second window */

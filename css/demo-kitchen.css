@@ -15,7 +15,7 @@
 /* The site's focus ring (css/styles.css, :focus-visible) also sets a 6px corner. While a control has the focus here it keeps its own corners (the next ticket gets the focus after every answer). */
 .kit-ticket:focus{border-radius:24px}
 .kit-ans:focus{border-radius:20px}
-.kit-big:focus,.kit-step:focus,.kit-sound:focus{border-radius:999px}
+.kit-big:focus,.kit-step:focus,.kit-sound:focus,.kit-keytoggle:focus{border-radius:999px}
 .kit-spin:focus,.kit-input:focus{border-radius:14px}
 .kit-rail-title:focus{border-radius:0}
 
@@ -38,10 +38,28 @@
 .kit-sound-state{padding:.05em .6em;background:var(--ink);color:#fff;border-radius:999px;font-size:1rem}
 .kit-sound[aria-pressed="true"] .kit-sound-state{background:#fff;color:var(--ink)}
 .kit-soundnote{margin:0 0 10px;font-size:1rem;font-weight:600;color:var(--ink-soft)}
+.kit-soundnote.sr-only{margin:-1px}
+/* a tablet (about 1024 wide): the title, the counters, the clock and the Sound button share one row, so the first ticket starts higher */
+@media (min-width:761px) and (max-width:1100px){
+  .kit .kit-title{font-size:1.6rem;margin-right:0}
+  .kit-tally{gap:8px}
+  .kit-tally-item{padding:.05em .6em .15em}
+  .kit-tally-num{font-size:1.9rem}
+  .kit-tally-label{font-size:1rem}
+  .kit-clock-label{display:none}
+  .kit-clock-time{font-size:1.6rem}
+  .kit-sound{min-height:56px;font-size:1.1rem}
+}
 
 /* ---------- the answer-by times (a small strip under the board: set once, not while cooking) ---------- */
 .kit-settings{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;margin:12px 0 0;padding:10px 16px;background:#fff;border:3px solid var(--ink);border-radius:18px;font:700 1.05rem/1.2 var(--display)}
 .kit-settings-title{color:var(--ink-soft)}
+.kit-set-group{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px}
+.kit-keytoggle{min-height:56px;gap:.6em;font-size:1.1rem}
+.kit-keytoggle[aria-pressed="true"]{--bg:var(--ink);--fg:#fff}
+.kit-keys-state{padding:.05em .6em;background:var(--ink);color:#fff;border-radius:999px;font-size:1rem}
+.kit-keytoggle[aria-pressed="true"] .kit-keys-state{background:#fff;color:var(--ink)}
+.kit-keysnote{flex:1 1 16rem;font:600 1rem/1.35 var(--body);color:var(--ink-soft)}
 .kit-step-group{display:inline-flex;align-items:center;gap:8px}
 .kit-step-label{font-weight:700}
 .kit-stepval{display:inline-block;min-width:3.2rem;text-align:center;font:800 1.4rem/1.1 var(--display)}
@@ -101,7 +119,7 @@ html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 .kit-pick{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:0 0 10px}
 .kit-pick-label{font:700 1rem/1.2 var(--display);letter-spacing:.04em;color:var(--ink-soft)}
 .kit-pick-time{font:800 clamp(2.1rem,4.4vw,2.8rem)/1.1 var(--display);white-space:nowrap}
-.kit-pick-day,.kit-pick-count,.kit-waited{font:700 1.1rem/1.3 var(--display);color:var(--ink-soft)}
+.kit-pick-day,.kit-pick-count,.kit-waited{font:700 clamp(1.1rem,1.6vw,1.4rem)/1.3 var(--display);color:var(--ink-soft)}
 .kit-closed{display:flex;align-items:center;gap:.6em;margin:0 0 12px;padding:.5em 1em;background:#ffe1c2;border:3px solid var(--ink);border-radius:16px;font-weight:800}
 .kit-closed .kit-ico{color:var(--red-deep);width:1.4em;height:1.4em}
 
@@ -111,6 +129,7 @@ html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 .kit-ans .kit-ico{width:1.35em;height:1.35em}
 .kit-ans-label{flex:1 1 auto}
 .kit-ans .kit-key{flex:none;margin-left:auto;min-width:2.2rem;height:2.2rem;font-size:1.2rem}
+.kit-nokeys .kit-ans .kit-key{display:none}
 .kit-ans-yes{--bg:var(--green-deep);--fg:#fff}
 .kit-ans-no{--bg:#fff;--fg:var(--red-deep)}
 .kit-ans-later{--bg:var(--sun);--fg:var(--ink)}
@@ -122,8 +141,8 @@ html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 .kit-line:first-child{border-top:0}
 .kit-count{flex:none;display:grid;place-items:center;min-width:2.6rem;height:2.6rem;padding:0 .3em;background:var(--sun);border:3px solid var(--ink);border-radius:12px;font:800 1.5rem/1 var(--display)}
 .kit-line-text{min-width:0}
-.kit-pizza{display:inline;font:800 1.55rem/1.2 var(--display)}
-.kit-tops{display:block;margin:.1em 0 .1em;font-size:1.05rem;font-weight:600;color:var(--ink-soft)}
+.kit-pizza{display:inline;font:800 clamp(1.55rem,2.6vw,2.3rem)/1.2 var(--display)}
+.kit-tops{display:block;margin:.1em 0 .1em;font-size:clamp(1.05rem,1.8vw,1.5rem);font-weight:600;color:var(--ink-soft)}
 .kit-flags{display:flex;flex-wrap:wrap;gap:6px 8px;margin:.3em 0 0}
 .kit-flag{display:inline-block;white-space:nowrap;padding:.12em .75em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 1rem/1.3 var(--display)}
 .kit-flag-gf{background:#fff0a6}
