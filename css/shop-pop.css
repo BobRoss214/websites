@@ -3,10 +3,10 @@
    sg-* class), the picture sits in a round bubble like the card's, the list is a set of rounded chips. Only the box scrolls (max 85% of the window high); the page behind is locked
    by html.shop-pop-lock, with the width of the scroll bar kept (--shop-bar) so the page does not slide sideways. Fades and scales in over 160 ms; not with reduced motion or
    "Pause animations". */
-.shop-pop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(58,36,22,.62);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,visibility 0s linear .16s;touch-action:none;-webkit-tap-highlight-color:transparent}
+.shop-pop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(58,36,22,.62);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,visibility 0s linear .16s;touch-action:pinch-zoom;-webkit-tap-highlight-color:transparent}
 .shop-pop.is-open{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
 html.shop-pop-lock{overflow:hidden;padding-right:var(--shop-bar,0px)}
-.shop-pop-box{position:relative;box-sizing:border-box;width:min(92vw,34rem);max-height:85vh;overflow-x:hidden;overflow-y:auto;background:var(--paper,#fffdf6);color:var(--ink);border:3px solid var(--ink);border-radius:26px;box-shadow:0 8px 0 var(--ink);touch-action:pan-y;overscroll-behavior:contain;transform:translateY(10px) scale(.94);transition:transform .16s ease}
+.shop-pop-box{position:relative;box-sizing:border-box;width:min(92vw,34rem);max-height:85vh;overflow-x:hidden;overflow-y:auto;background:var(--paper,#fffdf6);color:var(--ink);border:3px solid var(--ink);border-radius:26px;box-shadow:0 8px 0 var(--ink);touch-action:pan-y pinch-zoom;overscroll-behavior:contain;transform:translateY(10px) scale(.94);transition:transform .16s ease}
 .shop-pop.is-open .shop-pop-box{transform:none}
 .shop-pop-box:focus{outline:none}
 .shop-pop-bar{position:sticky;top:0;z-index:3;height:0}   /* no height: the X sits on the band, and stays in view when the box scrolls */
