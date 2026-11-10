@@ -30,7 +30,7 @@ if (data) {
   const names = (b) => b.day + ' ' + b.page.replace('.html', '') + ' (' + b.changed.join(', ') + ')';
   ok('on all 12 dates the six pages show what the document says', r.bad.length === 0, r.bad.slice(0, 4).map(names).join('; ') + (r.bad.length > 4 ? ' ...' : '') + (r.bad.length ? '  → run  node tools/season_calendar.mjs  and read the new file' : ''));
   const fmt = (d) => 'now ' + (d.added.join(', ') || 'nothing new') + '; no longer ' + (d.removed.join(', ') || 'nothing');
-  ok('the days on which the season code changes its mind (' + data.seasons.length + ' in the range: the season dates, “nearest season” between seasons, what comes next) are the days in the document', r.seasonDiff.added.length === 0 && r.seasonDiff.removed.length === 0, fmt(r.seasonDiff) + '  → run  node tools/season_calendar.mjs');
+  ok('the days on which the season code changes its mind (' + data.seasons.length + ' in the range: the season dates, “the season that starts next” between seasons, what comes next) are the days in the document', r.seasonDiff.added.length === 0 && r.seasonDiff.removed.length === 0, fmt(r.seasonDiff) + '  → run  node tools/season_calendar.mjs');
   ok('the dates written in the page files (data-until, data-release, js/content.js) are the dates the document was made from', r.dateDiff.added.length === 0 && r.dateDiff.removed.length === 0, fmt(r.dateDiff) + '  → run  node tools/season_calendar.mjs');
   const bySeam = {};
   r.bad.forEach((b) => { bySeam[b.day] = (bySeam[b.day] || 0) + 1; });

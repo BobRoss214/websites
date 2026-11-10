@@ -143,7 +143,7 @@
         spring: 'Spring. No green line. Only the list item “Christmas trees in season” is there, with the pizza, ice cream, drinks and goats.',
         summer: 'Summer. The same: no green line, only “Christmas trees in season” in the list.',
         fall: 'Fall. Still no green line. It waits for tree season.',
-        winter: 'Winter. A green line appears: “Christmas trees are here.” It says tree season runs from the Friday after Thanksgiving to early December, right at The GreenHouse.'
+        winter: 'Winter. A green line appears: “Christmas tree season is on.” It says the trees are right at The GreenHouse on the last weekend in November and the first weekend in December, Saturday and Sunday only.'
       }, placeTreeNote),
       before: seasonsBegin, after: seasonsEnd
     },

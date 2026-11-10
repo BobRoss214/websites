@@ -225,8 +225,8 @@
       choices: seasonWalk({
         spring: 'Spring, April 15 to June 7. The strip begins “In season: Strawberries”. After June 7 it says ‘Next up: Blueberries & sunflowers, usually mid-June’.',
         summer: 'Summer, June 15 to July 10. It now says “In season: Blueberries & sunflowers”. After July 10 it says ‘Next up: Pumpkins & tomatoes, usually mid-September’.',
-        fall: 'Fall, September 13 to November 8. It says “In season: Pumpkins & tomatoes”. After November 8 it says ‘Next up: Christmas trees at The GreenHouse, usually the Friday after Thanksgiving’.',
-        winter: 'Winter, the Friday after Thanksgiving to December 8. It says “In season: Christmas trees at The GreenHouse”. After December 8 it says ‘Next up: Strawberries, usually mid-April’.'
+        fall: 'Fall, September 13 to November 8. It says “In season: Pumpkins & tomatoes”. After November 8 it says ‘Next up: Christmas trees at The GreenHouse, usually the last weekend in November’.',
+        winter: 'Winter, from the last Saturday in November to the Sunday after the first Saturday in December (the trees are on those two weekends, Saturday and Sunday only). It says “In season: Christmas trees at The GreenHouse”. After that Sunday it says ‘Next up: Strawberries, usually mid-April’.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
@@ -252,7 +252,7 @@
         spring: 'Spring. “Now” is on Spring, for strawberries. “Next” is on Summer, for blueberries and sunflowers.',
         summer: 'Summer. “Now” moves to Summer. “Next” moves to Fall, for pumpkins and tomatoes.',
         fall: 'Fall. “Now” is on Fall. “Next” is on Winter, so visitors see that the Christmas trees are coming. After November 8 only “Next” shows.',
-        winter: 'Winter. “Now” is on Winter, for the Christmas trees. “Next” is on Spring, for strawberries. After December 8 only “Next” shows.'
+        winter: 'Winter. “Now” is on Winter, for the Christmas trees. “Next” is on Spring, for strawberries. After the last tree Sunday only “Next” shows.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
@@ -265,7 +265,7 @@
         spring: 'Spring, on a Saturday at noon. Only The GreenHouse has a badge: “Open now, until 8 pm”. The farm has none, because no farm days are set for spring.',
         summer: 'Summer, on a Saturday at noon. The same: only The GreenHouse badge, “Open now, until 8 pm”. No farm days are set for summer.',
         fall: 'Fall, on a Saturday at noon. The farm gets a badge too: “Reserved visits today”. The farm days set are Thursday to Sunday. On other days it names the next reserved day.',
-        winter: 'Winter, on a Saturday at noon. Only The GreenHouse badge, “Open now, until 8 pm”. The farm badge is gone.'
+        winter: 'Winter, on a tree Saturday at noon. The farm badge says “Open today. No reservation needed”. The GreenHouse badge says “Open now, until 8 pm”, with the small label “Not official yet” next to the hours.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
@@ -302,7 +302,7 @@
       choices: seasonWalk({
         spring: 'Spring. It says “Happening now: Strawberries” and “Next up: Blueberries & sunflowers”, usually mid-June, with the days to go.',
         summer: 'Summer. It changes to “Happening now: Blueberries & sunflowers” and “Next up: Pumpkins & tomatoes”, usually mid-September.',
-        fall: 'Fall. It says “Happening now: Pumpkins & tomatoes” and “Next up: Christmas trees at The GreenHouse”, usually the Friday after Thanksgiving.',
+        fall: 'Fall. It says “Happening now: Pumpkins & tomatoes” and “Next up: Christmas trees at The GreenHouse”, usually the last weekend in November.',
         winter: 'Winter. It says “Happening now: Christmas trees at The GreenHouse” and “Next up: Strawberries”, usually mid-April. The count of days is the longest of the year.'
       }),
       before: seasonsBegin, after: seasonsEnd
@@ -393,7 +393,7 @@
         spring: 'Spring. “Strawberry season”, “Usually mid-April to early June”. This is the busiest time, and reservations fill quickly. The button says “Reserve a strawberry visit”.',
         summer: 'Summer. “Blueberries & sunflower season”, “Usually mid- to late June through early July”. The button says “Reserve a summer visit”.',
         fall: 'Fall. “Pumpkin & tomato season”, “Mid-September through early November”. Reservations are Thursday to Sunday. Buttons: “Reserve a fall visit” and “See prices”.',
-        winter: 'Winter. “NC Christmas tree season”, “Friday after Thanksgiving to early December”, at The GreenHouse, with no reservation. The button is “Get farm updates”.'
+        winter: 'Winter. “NC Christmas tree season”, “The last weekend in November and the first weekend in December, Saturday and Sunday only”, at The GreenHouse, with no reservation. The button is “Get farm updates”.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },

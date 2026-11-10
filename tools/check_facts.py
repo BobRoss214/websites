@@ -224,8 +224,10 @@ def one(g=1):
     return lambda m: m.group(g)
 
 
-# js/content.js: greenhouse: { days: [...], open: '10:00', close: '20:00' }. Single or double quote marks, and 9:00 as well as 09:00, are both fine in that file.
-SETTING_HOURS = r"%s:\s*\{[^}]*open:\s*['\"](\d{1,2}):(\d\d)['\"],\s*close:\s*['\"](\d{1,2}):(\d\d)['\"]"
+# js/content.js: greenhouse: { days: [...], open: '10:00', close: '20:00', winter: { days: [6, 0], open: '11:00', close: '20:00' } }. Single or double quote marks, and 9:00 as well as 09:00, are both fine in that file.
+# The usual hours are the first open / close of the line (the lazy [^}]*?); the hours of the Christmas tree weekends are the ones inside winter: { ... } (their own fact below).
+SETTING_HOURS = r"%s:\s*\{[^}]*?open:\s*['\"](\d{1,2}):(\d\d)['\"],\s*close:\s*['\"](\d{1,2}):(\d\d)['\"]"
+SETTING_WINTER_HOURS = r"greenhouse:\s*\{[^\n]*?winter:\s*\{[^}]*?open:\s*['\"](\d{1,2}):(\d\d)['\"],\s*close:\s*['\"](\d{1,2}):(\d\d)['\"]"
 
 
 def setting_hours(m):
@@ -246,6 +248,8 @@ FACTS = [
     dict(name='hours: The GreenHouse', what='the GreenHouse opening hours (js/content.js hours.greenhouse and the words on the pages)', see='README: "Change a fact everywhere", row "The GreenHouse hours"', check='digits',
          pats=[(r'(?<!At The GreenHouse )(?:Fri–Sun|Friday–Sunday|Fri through Sun|Friday through Sunday),? ' + RANGE, hours),
                (SETTING_HOURS % 'greenhouse', setting_hours)]),
+    dict(name='hours: The GreenHouse on the Christmas tree weekends', what='the GreenHouse hours on the Christmas tree weekends (js/content.js hours.greenhouse.winter and the words on the pages; Wise Pie has no hours of its own then)', see='README: "Change a fact everywhere", row "The GreenHouse hours"', check='digits',
+         pats=[(r'(?:[Oo]pen|weekends,?) ' + RANGE, hours), (SETTING_WINTER_HOURS, setting_hours)]),
     dict(name='hours: Wise Pie', what='the Wise Pie (pizza) hours at The GreenHouse', see='README: "Change a fact everywhere", row "The Wise Pie hours"', check='digits',
          pats=[(r'\| ' + RANGE + r' \| At The GreenHouse', hours), (r'first come, first served from ' + T + ' to ' + T.replace('([ap]\\.?m\\.?)?', '([ap]\\.?m\\.?)'), hours),
                (SETTING_HOURS % 'pizza', setting_hours)]),
