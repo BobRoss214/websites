@@ -13,9 +13,9 @@
   const where = me && me.src ? /^(.*)js\/shop-pop-box\.js(?:[?#].*)?$/.exec(me.src) : null;
   const BASE = where ? where[1] : '';   // the site's folder, from this script's own address ('' when the preview put the script in the page)
   W.shopPop = 1;   // js/shop-pop.js: already here
-  const t = (s, v) => (W.t ? W.t(s, v) : s);
-  const clean = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
   const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+  const t = (s, v) => (W.t ? W.t(s, v) : v ? s.replace(/\{(\w+)\}/g, (m, k) => (own(v, k) ? v[k] : m)) : s);   // (without js/i18n.js: the English words)
+  const clean = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
 
   let items = [], cssReady = null, current = null, opener = null, down = null, saved = [], ticket = 0;
   let pop, box, closeX, picture, title, price, note, pretend, heading, list, contains, done;
