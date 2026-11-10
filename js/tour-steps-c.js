@@ -1,7 +1,8 @@
 /* The tour, chapter 10: the account demo (PRETEND). Written for Mrs. Cathy and Rob; English only.
  *
- * What this file is: 24 steps (order 1001 to 1025, without 1017: the "My year" screen was taken out of the demo) that walk through the pretend account pages
- * (account.html, farm-desk.html, kitchen.html).
+ * What this file is: the steps that walk through the pretend account pages (account.html, farm-desk.html, kitchen.html). Their orders go up in fours (1004, 1008,
+ * ... 1096: 1000 + 4 x the place in the story), so a card can be added between two others without moving any of them (the free numbers between 1004 and 1008 are
+ * 1005, 1006 and 1007, and so on). The original 24 cards keep their ids and their order in the story; tests/tour-demo-script.test.mjs finds each one by its id.
  * The engine (js/tour.js) merges them with the steps of js/tour-steps.js and js/tour-steps-b.js and sorts them by order.
  * The words of the cards are the only thing the owners read; the rest of the file makes the demo ready for each card.
  *
@@ -321,149 +322,149 @@
    * ------------------------------------------------------------------ */
   var steps = [
     {
-      id: 'ch10-intro', order: CHAPTER * 100 + 1, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
+      id: 'ch10-intro', order: CHAPTER * 100 + 4, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
       title: 'A pretend account',
       text: 'This part is a demo of accounts. Nothing in it is real: no server, no real families, and nothing is sent to anyone. This strip says so on every demo screen. The Start over button clears the demo.',
       after: closeDialogs
     },
     {
-      id: 'ch10-signup', order: CHAPTER * 100 + 2, chapter: CHAPTER, page: 'account', target: hook('acct-signup'), skipIfMissing: true,
+      id: 'ch10-signup', order: CHAPTER * 100 + 8, chapter: CHAPTER, page: 'account', target: hook('acct-signup'), skipIfMissing: true,
       title: 'Create an account',
       text: 'A visitor types a name and an email, and says if they plan a party, an event or a school trip. Any password works here, and nothing is saved on a server. Press Next and the tour gets a sample family ready for you.',
       before: scene(function () { if (call('current')) call('signOut'); }, hook('acct-signup'))   // signed out only: a family the owner made by hand is still there for the next card
     },
     {
-      id: 'ch10-sample', order: CHAPTER * 100 + 3, chapter: CHAPTER, page: 'account', target: hook('acct-visit-card'), skipIfMissing: true,
+      id: 'ch10-sample', order: CHAPTER * 100 + 12, chapter: CHAPTER, page: 'account', target: hook('acct-visit-card'), skipIfMissing: true,
       title: 'My visits, with a sample family',
       text: 'This family has a made-up visit and a pizza order, so you can try every button. The card shows the day, the time, who is coming and what was booked.',
       before: scene(function () { visitIs('none'); }, hook('acct-visit-card'), 'visits'),
       after: closeDialogs   // the lit card holds "Request a different day", which opens a dialog
     },
     {
-      id: 'ch10-paid', order: CHAPTER * 100 + 4, chapter: CHAPTER, page: 'account', target: hook('acct-paid'), skipIfMissing: true,
+      id: 'ch10-paid', order: CHAPTER * 100 + 16, chapter: CHAPTER, page: 'account', target: hook('acct-paid'), skipIfMissing: true,
       title: 'What was paid',
       text: "Every paid line is listed, with the total. The sample uses your site's prices: the $31 base price with 2 pizzas and $3 per person ages 3 and up. The wagon ride is $4.50 (ages 3 and younger free), the barrel train $3 per child.",
       before: scene(function () { visitIs('none'); }, hook('acct-paid'), 'visits')
     },
     {
-      id: 'ch10-request', order: CHAPTER * 100 + 5, chapter: CHAPTER, page: 'account', target: hook('acct-request-day'), skipIfMissing: true,   // the lit button opens a dialog (it sits above the dimmer, so it can be used)
+      id: 'ch10-request', order: CHAPTER * 100 + 20, chapter: CHAPTER, page: 'account', target: hook('acct-request-day'), skipIfMissing: true,   // the lit button opens a dialog (it sits above the dimmer, so it can be used)
       title: 'Request a different day',
       text: 'A family can ask to move its visit. It picks one of the next open days and a sample time. Nothing changes until Mrs. Cathy says yes. Press Next and the tour sends a sample request.',
       before: scene(function () { visitIs('none'); }, hook('acct-request-day'), 'visits'),
       after: closeDialogs
     },
     {
-      id: 'ch10-waiting', order: CHAPTER * 100 + 6, chapter: CHAPTER, page: 'account', target: hook('acct-request-status'), skipIfMissing: true,
+      id: 'ch10-waiting', order: CHAPTER * 100 + 24, chapter: CHAPTER, page: 'account', target: hook('acct-request-status'), skipIfMissing: true,
       title: 'Waiting for a reply',
       text: "The request is sent. The family now sees 'Waiting for a reply from Mrs. Cathy' and can cancel it. The visit does not change until she answers.",
       before: scene(function () { visitIs('waiting'); }, hook('acct-request-status'), 'visits')
     },
     {
-      id: 'ch10-desk-request', order: CHAPTER * 100 + 7, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-card') + '[data-req-kind="visit-change"]', skipIfMissing: true,
+      id: 'ch10-desk-request', order: CHAPTER * 100 + 28, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-card') + '[data-req-kind="visit-change"]', skipIfMissing: true,
       title: 'Your desk, with the request waiting',
       text: "This is your side. The request waits here with the family's name and note. Yes moves the visit, No keeps it, and Suggest offers another day. Try one, or press Next and the tour says Yes.",
       before: scene(function () { visitIs('waiting'); }, hook('desk-card') + '[data-req-kind="visit-change"]')
     },
     {
-      id: 'ch10-answer', order: CHAPTER * 100 + 8, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true,
+      id: 'ch10-answer', order: CHAPTER * 100 + 32, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true,
       title: 'The answer arrives',
       text: 'Back on the family side, the lit box is your answer. A yes moves the visit. A no keeps it and shows your note. A suggestion asks the family to say OK. The bell at the top counts it too.',
       before: scene(function () { visitIs('answered'); }, hook('acct-reply'), 'visits')
     },
     {
-      id: 'ch10-pizza', order: CHAPTER * 100 + 9, chapter: CHAPTER, page: 'account', target: hook('acct-pizza-card'), skipIfMissing: true,
+      id: 'ch10-pizza', order: CHAPTER * 100 + 36, chapter: CHAPTER, page: 'account', target: hook('acct-pizza-card'), skipIfMissing: true,
       title: 'My pizza',
       text: "The family sees its pizza order: each pizza, the pick-up time and the price lines. The pizza is ready 1 hour after the visit time, as on your packages. The family's allergies show next to it.",
       before: scene(function () { pizzaIs('none'); }, hook('acct-pizza-card'), 'pizza')
     },
     {
-      id: 'ch10-pizza-edit', order: CHAPTER * 100 + 10, chapter: CHAPTER, page: 'account', target: hook('acct-pizza-edit'), skipIfMissing: true,
+      id: 'ch10-pizza-edit', order: CHAPTER * 100 + 40, chapter: CHAPTER, page: 'account', target: hook('acct-pizza-edit'), skipIfMissing: true,
       title: 'Change everything',
       text: 'A family can change how many pizzas, the toppings, the type, gluten-free crust, vegan cheese and the pick-up time. Your menu prices apply: gluten-free crust is +$9 and vegan cheese is +$3. Next, the tour asks the kitchen for an earlier time.',
       before: scene(function () { pizzaIs('none'); }, hook('acct-pizza-edit'), 'pizza')
     },
     {
-      id: 'ch10-kitchen', order: CHAPTER * 100 + 11, chapter: CHAPTER, page: 'kitchen', target: hook('kit-card'), skipIfMissing: true,
+      id: 'ch10-kitchen', order: CHAPTER * 100 + 44, chapter: CHAPTER, page: 'kitchen', target: hook('kit-card'), skipIfMissing: true,
       title: 'The kitchen screen',
       text: "The kitchen sees the time before and after, and the family's allergy note. Yes accepts, No keeps the old time, Change it offers another. Try one, or press Next and the tour offers a later time.",
       before: scene(function () { pizzaIs('waiting'); }, hook('kit-card'), null, hook('kit-yes'))
     },
     {
-      id: 'ch10-family-ok', order: CHAPTER * 100 + 12, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true,
+      id: 'ch10-family-ok', order: CHAPTER * 100 + 48, chapter: CHAPTER, page: 'account', target: hook('acct-reply'), skipIfMissing: true,
       title: 'The family says OK',
       text: "The kitchen offered a time a little later than asked. The family sees the old and new time and can say OK, or 'No thanks, keep my order as it is'. Press Next and the tour says OK for you.",
       before: scene(function () { pizzaIs('suggested'); }, hook('acct-reply'), 'pizza')
     },
     {
-      id: 'ch10-family', order: CHAPTER * 100 + 13, chapter: CHAPTER, page: 'account', target: hook('acct-family'), skipIfMissing: true,
+      id: 'ch10-family', order: CHAPTER * 100 + 52, chapter: CHAPTER, page: 'account', target: hook('acct-family'), skipIfMissing: true,
       title: 'My family',
       text: "The family saves its adults, kids' names and ages, and allergies once. The kitchen sees the allergies on pizza orders. Your site keeps almost nothing about visitors today, so a real version needs extra care with kids' details.",
       before: scene(function () { pizzaIs('accepted'); }, hook('acct-family'), 'family'),
       after: closeDialogs   // a family without an event sees "I also plan an event" here, which opens a dialog
     },
     {
-      id: 'ch10-alerts', order: CHAPTER * 100 + 14, chapter: CHAPTER, page: 'account', target: hook('acct-alerts'), skipIfMissing: true,
+      id: 'ch10-alerts', order: CHAPTER * 100 + 56, chapter: CHAPTER, page: 'account', target: hook('acct-alerts'), skipIfMissing: true,
       title: 'Tell me when',
       text: 'At the top, two switches say where messages go: text, email or both. The choices come below, in this order: a spot opens on a full day, then reservations open. After those come strawberries, blueberries and sunflowers, pumpkins and tomatoes, and Christmas trees.',
       before: scene(alertOn, hook('acct-alerts'), 'alerts')
     },
     {
-      id: 'ch10-desk-people', order: CHAPTER * 100 + 15, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-people'), skipIfMissing: true,
+      id: 'ch10-desk-people', order: CHAPTER * 100 + 60, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-people'), skipIfMissing: true,
       title: 'Who is waiting for news',
       text: 'Your desk counts the families waiting for each kind of news, and for each full day. The switch the tour turned on shows as 1. One button sends the alert. In this demo nothing leaves the browser.',
       before: scene(alertOn, hook('desk-people'))
     },
     {
-      id: 'ch10-bell', order: CHAPTER * 100 + 16, chapter: CHAPTER, page: 'account', target: hook('acct-bell'), skipIfMissing: true,   // the bell opens its list outside its own box: the list is lit with it (the bell says so in aria-controls and aria-expanded)
+      id: 'ch10-bell', order: CHAPTER * 100 + 64, chapter: CHAPTER, page: 'account', target: hook('acct-bell'), skipIfMissing: true,   // the bell opens its list outside its own box: the list is lit with it (the bell says so in aria-controls and aria-expanded)
       title: 'The alert arrives',
       text: 'The tour sent the alert. The family sees it in the bell at the top. Replies, alerts and weather notices all land there, and each one links to the right screen.',
       before: scene(alertSent, hook('acct-bell'))
     },
     {
-      id: 'ch10-messages', order: CHAPTER * 100 + 18, chapter: CHAPTER, page: 'account', target: hook('acct-messages'), skipIfMissing: true,
+      id: 'ch10-messages', order: CHAPTER * 100 + 68, chapter: CHAPTER, page: 'account', target: hook('acct-messages'), skipIfMissing: true,
       title: 'Receipts and questions',
       text: 'Receipts are kept here, line by line. A family can also ask the farm a question, and your reply shows in the same place. The tour sent a sample question and reply.',
       before: scene(questionSent, hook('acct-messages'), 'messages')
     },
     {
-      id: 'ch10-photos', order: CHAPTER * 100 + 19, chapter: CHAPTER, page: 'account', target: hook('acct-photos'), skipIfMissing: true,
+      id: 'ch10-photos', order: CHAPTER * 100 + 72, chapter: CHAPTER, page: 'account', target: hook('acct-photos'), skipIfMissing: true,
       title: 'Photos and reviews',
       text: 'After a visit a family can send stars, words and a picture (one of three samples here). The tour sent a sample review. It stays private until Mrs. Cathy approves it, and never reaches your real reviews or gallery.',
       before: scene(reviewWaiting, hook('acct-photos'), 'photos')
     },
     {
-      id: 'ch10-desk-approve', order: CHAPTER * 100 + 20, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-approvals'), skipIfMissing: true,
+      id: 'ch10-desk-approve', order: CHAPTER * 100 + 76, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-approvals'), skipIfMissing: true,
       title: 'Approve before it shows',
       text: 'Reviews and photos wait here for you. Approve shows it as shared. Not now keeps it private. The tour approves the sample when you go on.',
       before: scene(reviewWaiting, hook('desk-approvals'))
     },
     {
-      id: 'ch10-event', order: CHAPTER * 100 + 21, chapter: CHAPTER, page: 'account', target: hook('acct-event'), skipIfMissing: true,
+      id: 'ch10-event', order: CHAPTER * 100 + 80, chapter: CHAPTER, page: 'account', target: hook('acct-event'), skipIfMissing: true,
       title: 'My event, for groups and schools',
       text: 'This tab shows only for families who said yes at sign-up to a party, an event or a school trip. This family has one, so the tab is here. It has a head count, a checklist and messages. Changes are requests to you.',
       before: scene(eventShown, hook('acct-event'), 'event')
     },
     {
-      id: 'ch10-desk-weather', order: CHAPTER * 100 + 22, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-weather'), skipIfMissing: true,
+      id: 'ch10-desk-weather', order: CHAPTER * 100 + 84, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-weather'), skipIfMissing: true,
       title: 'Close a day for weather',
       text: 'Pick a day and close it. Every family booked that day gets a notice at once. Today your site says you email each family if severe weather closes the farm. The tour closes a day for you next.',
       before: scene(function () { if (account()) daysOpened(); }, hook('desk-weather'))
     },
     {
-      id: 'ch10-closed', order: CHAPTER * 100 + 23, chapter: CHAPTER, page: 'account', target: hook('acct-closed-banner'), skipIfMissing: true,   // the lit button opens a dialog (it sits above the dimmer, so it can be used)
+      id: 'ch10-closed', order: CHAPTER * 100 + 88, chapter: CHAPTER, page: 'account', target: hook('acct-closed-banner'), skipIfMissing: true,   // the lit button opens a dialog (it sits above the dimmer, so it can be used)
       title: 'Every booked family sees it',
       text: 'The day is closed. The booked family now sees a banner with the reason, and a button to pick a new day. One tap starts a request to you.',
       before: scene(dayClosed, hook('acct-closed-banner'), 'visits'),
       after: closeDialogs
     },
     {
-      id: 'ch10-real-needs', order: CHAPTER * 100 + 24, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
+      id: 'ch10-real-needs', order: CHAPTER * 100 + 92, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
       title: 'What a real version needs',
       text: 'A real version would need:\n- a safe place for logins\n- a link to your booking tool\n- alerts to Mrs. Cathy and the kitchen\n- extra care with kids\' information\n- an updated privacy page',
       after: closeDialogs
     },
     {
-      id: 'ch10-worth-asking', order: CHAPTER * 100 + 25, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
+      id: 'ch10-worth-asking', order: CHAPTER * 100 + 96, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
       title: 'Worth asking your booking tool',
       text: 'Your booking tool (Bookeo) may already do part of this. Your FAQ says guests can click View Booking in their email to change a reservation. Ask what else it offers before building anything.',
       after: closeDialogs
