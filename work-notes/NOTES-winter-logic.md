@@ -14,7 +14,7 @@ The builder's rule (not yet written down by the farm): the Christmas trees are o
 | `treeDatesText(year, lang)` | "Nov 28–29 and Dec 5–6" (en dash U+2013; "Nov 30–Dec 1 and Dec 7–8" across a month end); es "28–29 nov y 5–6 dic", hi "28–29 नवंबर और 5–6 दिसंबर", zh "11月28–29日和12月5–6日", vi "28–29 thg 11 và 5–6 thg 12" (the shapes of `tools/date_phrases.py`) |
 | `treeYear(now)` | the year whose weekends are shown: this year until the second Sunday has passed, next year after it |
 | `live(now)`, `upcoming(now)`, `current(now)`, `inWindow(...)`, `daysUntilStart(...)` | as before. `live` = seasons in progress; `upcoming` = the season that starts next and is not on; `current` = the live season, else `upcoming` (the page opens on the season that starts next) |
-| `tags(now)` | `{ now: id or null, next: id }`: what `js/hero.js` `markTags` puts on the season buttons |
+| `tags(now)` | `{ now: id or '', next: id }` (`now` is '' between seasons): what `js/hero.js` `markTags` puts on the season buttons |
 | `paintTree(root)` | fills `[data-tree-dates]` and sets `--s` / `--e` on `[data-tree-bar="1"]` and `"2"` |
 
 Inside the file (not on the object): `lastSaturdayOfNovember(year)`, `firstSaturdayOfDecember(year)`, `treeSeasonStart(year)` (= weekend 1's Saturday), `treeSeasonEnd(year)` (= weekend 2's Sunday), `treeRange`, `monthPos`.
@@ -82,8 +82,9 @@ Resolve like this, then run the pipeline once (`python3 tools/pages.py`, `python
 - `docs/DECISION_PLAYBOOK.md` (7 blocks): the d50, d23, d01 and d24 sections were rewritten by both: mine has the dates of the new logic (winter look from Nov 9, spring look from Dec 7, fall look from Jul 11); winter-text's has the new ids. Keep mine and replace the ids.
 - patches: `winter-A-hide-fall-booking.patch` and `reserve-window.patch` were re-made by both. After the merge take winter-text's index.html hunks and my questions hunk (winter-A), my header line and my one-line context at the hero buttons (reserve-window), then `git apply --check` each.
 
-Regenerate after the merge, with the tools (never by hand): `node tools/season_calendar.mjs --jobs 2` (docs/WHAT_VISITORS_SEE_WHEN.md; the data block must list the 11 season days above), `node tools/year_rehearsal.mjs` (docs/YEAR_REHEARSAL_LOG.md).
-`owner-calendar` is red until the first one is regenerated; `consistency` (2 checks: the tree row of the farm-year picture and the season words) is red here only because the words are the winter-text helper's; both pass on the merged files.
+Regenerate after the merge, with the tool (never by hand): `node tools/season_calendar.mjs --jobs 2` (docs/WHAT_VISITORS_SEE_WHEN.md, 10 to 40 minutes; its data block must list the 11 season days above). It depends on the final words, so it is not done here.
+`docs/YEAR_REHEARSAL_LOG.md` is a dated record of what the first full replay found (the tool prints, it writes nothing): left as it is. Run `node tools/year_rehearsal.mjs` once after the merge (all steps, PASS or FAIL for each).
+`owner-calendar` and `calendar-doc` are red until the document is regenerated; `consistency` (2 checks: the tree row of the farm-year picture and the season words) is red here only because the words are the winter-text helper's; both pass on the merged files.
 
 ## Decisions taken (the builder can overrule)
 
