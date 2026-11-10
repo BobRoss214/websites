@@ -43,4 +43,5 @@ html.shop-pop-lock{overflow:hidden;padding-right:var(--shop-bar,0px)}
 @media (prefers-reduced-motion:reduce){.shop-pop,.shop-pop-box{transition:none}.shop-pop-box{transform:none}}
 html[data-calm="all"] .shop-pop,html[data-calm="all"] .shop-pop-box{transition:none}
 html[data-calm="all"] .shop-pop-box{transform:none}
+@media (forced-colors:active){.shop-pop-x::before,.shop-pop-x::after{forced-color-adjust:none;background:ButtonText}}   /* the X is drawn with backgrounds, which that mode would paint over */
 @media print{.shop-pop{display:none!important}}
