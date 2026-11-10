@@ -51,6 +51,11 @@
  * `days` are numbers: 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday.
  * When you change a time, change the note at the end of its line too, and the hours written on the pages. One command does all three: python3 tools/change_fact.py hours (README, row "Change a price, an hour, ...").
  * For `farm` you list the days with reserved visits for each season (spring, summer, fall, winter). A season you leave out shows no farm badge.
+ * WINTER (the Christmas tree weekends): `winter` is the days and hours of the season in js/season.js, which is only the last weekend in November and the
+ * first weekend in December, Saturday and Sunday only (the site works the dates out each year; you never type them). In the tree weekends the farm is open
+ * on those days with no reservation (its `winter: [6, 0]`), and The GreenHouse has its own hours, `winter: { days: [6, 0], open: '11:00', close: '20:00' }`.
+ * Wise Pie has no hours of its own then (`winter: 'greenhouse'` = the same hours as The GreenHouse). The badges for those hours say "Not official yet"
+ * next to them, because the farm is not sure of them yet. On every other day of the year the usual hours above are used, as before.
  * The Site check box reads these values: a time that is not on the 24-hour clock ('4 pm' instead of '16:00'), a close that is not later than the open,
  * and a day that is not a number from 0 to 6 are each named, with what to type.
  *
@@ -206,9 +211,9 @@ window.WISE_ACRES = {
   noticeUntil: '',
   closures: [],
   hours: {
-    greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00' },   // Fri-Sun, 10 am-8 pm
-    pizza:      { days: [5, 6, 0], open: '16:00', close: '20:00' },   // Wise Pie at The GreenHouse, 4-8 pm
-    farm:       { fall: [4, 5, 6, 0] },                               // reserved visits Thu-Sun in fall
+    greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00', winter: { days: [6, 0], open: '11:00', close: '20:00' } },   // Fri-Sun, 10 am-8 pm; Christmas tree weekends: Sat-Sun, 11 am-8 pm
+    pizza:      { days: [5, 6, 0], open: '16:00', close: '20:00', winter: 'greenhouse' },   // Wise Pie at The GreenHouse, 4-8 pm; Christmas tree weekends: during The GreenHouse's hours
+    farm:       { fall: [4, 5, 6, 0], winter: [6, 0] },                               // reserved visits Thu-Sun in fall; Christmas tree weekends: open Sat-Sun, no reservation
   },
   week: {},
   signup: { action: '', interests: {}, tags: '', languageField: '' },

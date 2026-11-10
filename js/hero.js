@@ -1247,7 +1247,7 @@
    * Build a season
    * ------------------------------------------------------------------ */
   // data-only="fall winter": shown only while one of those seasons is on screen. Add data-in-season to show it only
-  // while that season is really happening (not in the weeks before or after, when the nearest season is shown).
+  // while that season is really happening (not in the weeks between seasons, when the season that starts next is shown).
   // data-out-of-season="spring" is the opposite: hidden while that season is really happening ("Tell me when it opens").
   function applyOnly(id) {
     const now = W.seasons.live().map((s) => s.id), live = now.includes(id);
@@ -1300,8 +1300,8 @@
       W.seasons.apply(id);
       try { build(id); } catch (e) { setTimeout(() => { throw e; }); }   // a drawing problem must not leave the wrong season's words and buttons
       applyOnly(id);
-      // Between seasons the scene shows the nearest one, but its line ("It's strawberry season!") would not be true yet
-      // (or any more), so the all-year line is shown instead. A season picked with the switcher still shows its own line.
+      // Between seasons the scene shows the season that starts next, but its line ("It's strawberry season!") would not be true yet,
+      // so the all-year line is shown instead. A season picked with the switcher still shows its own line.
       if (!userAction && !W.seasons.live().some((s) => s.id === id)) {
         $$('.hero-sub').forEach((p) => { p.hidden = p.dataset.only !== 'no-js'; });
         $$('#hero-h > [data-only]').forEach((s, i) => { s.hidden = i > 0; });   // the first title is the all-year one
@@ -1319,10 +1319,10 @@
     const markTags = () => {
       $$('.ss-now, .ss-next', switchEl).forEach((n) => n.remove());
       if (!W.clockOk()) return;   // no readable clock: no tags
-      const on = W.seasons.live()[0], up = W.seasons.upcoming();
+      const tag = W.seasons.tags();   // js/season.js: { now: the season in progress, next: the one that starts next }
       buttons.forEach((b) => {
-        if (on && b.dataset.season === on.id) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
-        else if (up && b.dataset.season === up.id) b.insertAdjacentHTML('beforeend', '<span class="ss-next">' + t('next') + '</span>');
+        if (b.dataset.season === tag.now) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
+        else if (b.dataset.season === tag.next) b.insertAdjacentHTML('beforeend', '<span class="ss-next">' + t('next') + '</span>');
       });
     };
     markTags();

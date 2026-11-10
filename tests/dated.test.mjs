@@ -122,6 +122,26 @@ await run('dated', async ({ browser, base, errs }) => {
   await okSoon('...and picking a season with the switcher shows that season\'s own line', () => hero(p), (v) => v === 'fall');
   await p.context().close();
 
+  // ---- between seasons the page opens on the season that starts next (Nov 10: Winter; Dec 7, after the last tree day: Spring), but its own "It's ... season!" line waits for the day it starts
+  const look = (pg) => pg.evaluate(() => ({ season: document.documentElement.dataset.season, h1: Array.from(document.querySelectorAll('#hero-h > [data-only]')).filter((e) => !e.hidden).map((e) => e.textContent.trim().replace(/\s+/g, ' ')).join('|'), pressed: [...document.querySelectorAll('#farm-seasons [data-fs][aria-pressed=true]')].map((b) => b.dataset.fs).join() }));
+  p = await at('2026-11-10T12:00:00-05:00');
+  await until(p, () => !!document.querySelector('#field [data-pick]'), null, 20000);
+  let lk = await look(p);
+  ok('Nov 10 (fall is over, the trees are not on yet): the page opens on the Winter picture and the Winter tab of "What\'s on the farm", but the hero line and title are the all-year ones (the trees are not here yet)', lk.season === 'winter' && lk.pressed === 'winter' && (await hero(p)) === 'no-js' && lk.h1 === 'Organic u-pick fun for the whole family', JSON.stringify(lk) + ' ' + await hero(p));
+  await p.click('#season-switch button[data-season="winter"]');
+  await okSoon('...and picking Winter with the switcher shows its own line', () => hero(p), (v) => v === 'winter');
+  await p.context().close();
+  p = await at('2026-12-07T12:00:00-05:00');
+  await until(p, () => !!document.querySelector('#field [data-pick]'), null, 20000);
+  lk = await look(p);
+  ok('Dec 7 (the day after the last tree day): the page opens on Spring, with the all-year hero line', lk.season === 'spring' && lk.pressed === 'spring' && (await hero(p)) === 'no-js', JSON.stringify(lk) + ' ' + await hero(p));
+  await p.context().close();
+  p = await at('2026-11-28T12:00:00-05:00');
+  await until(p, () => !!document.querySelector('#field [data-pick]'), null, 20000);
+  lk = await look(p);
+  ok('Sat Nov 28 (the first tree day): Winter is really on, so its own hero line shows', lk.season === 'winter' && (await hero(p)) === 'winter', JSON.stringify(lk) + ' ' + await hero(p));
+  await p.context().close();
+
   // ---- the "New: u-pick tomatoes & basil" tags end with the tomatoes: the same last day as "This week at the farm" (Nov 8, the last day of fall) and the page's own words ("mid-September through early November")
   const tomatoes = async (pg) => ({
     chip: await pg.locator('.chip-new').first().isVisible(), card: await pg.locator('a.choose-new[href="#tomatoes"]').first().isVisible(),

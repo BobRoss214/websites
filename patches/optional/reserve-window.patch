@@ -1,6 +1,6 @@
 Option: reserve-window
 Name: Spring Reserve buttons only inside the booking window
-Does: Buttons marked data-book show only from 3 weeks before the strawberry season starts (about March 25) until it ends. Summer and fall state no window, so their buttons are never hidden by this (the November 9 to 17 gap stays). The phone bar keeps its buttons evenly spaced.
+Does: Buttons marked data-book show only from 3 weeks before the strawberry season starts (about March 25) until it ends. Summer and fall state no window, so their buttons are never hidden by this. The phone bar keeps its buttons evenly spaced.
 Answers: d25 A (Reserve buttons when nothing can be booked)
 Conflicts: none
 Requires: none
@@ -25,9 +25,7 @@ diff --git a/index.html b/index.html
 index dcb86e1..bae7158 100644
 --- a/index.html
 +++ b/index.html
-@@ -216,7 +216,7 @@
-         <p data-t="td6ecd1d8" class="hero-sub" data-only="fall" hidden>It&rsquo;s pumpkin season! Pick pumpkins, plus new u-pick organic tomatoes and basil, with wagon rides and a haunted trail. Our family-owned, USDA&nbsp;Certified&nbsp;Organic farm is in Indian&nbsp;Trail, NC.</p>
-         <p data-t="tb7f044e8" class="hero-sub" data-only="winter" hidden>Pick out a North Carolina Christmas tree at The GreenHouse next door, starting the Friday after Thanksgiving. Wise Acres is a family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
+@@ -218,5 +218,5 @@
          <div class="hero-cta">
 -          <a data-t="tdcd8d557" class="btn btn-red btn-lg" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your visit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
 +          <a data-t="tdcd8d557" class="btn btn-red btn-lg" data-only="spring summer fall" data-book href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your visit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
@@ -67,7 +65,7 @@ index 67c2271..457034e 100644
 +++ b/js/hero.js
 @@ -1182,10 +1182,28 @@
    // data-only="fall winter": shown only while one of those seasons is on screen. Add data-in-season to show it only
-   // while that season is really happening (not in the weeks before or after, when the nearest season is shown).
+   // while that season is really happening (not in the weeks between seasons, when the season that starts next is shown).
    // data-out-of-season="spring" is the opposite: hidden while that season is really happening ("Tell me when it opens").
 +  // data-book (optional, the owner's choice): a Reserve button shows only inside the booking window the site's own words give.
 +  // data-book="spring" is about that season; data-book with no value follows the season on screen. The FAQ ("When do

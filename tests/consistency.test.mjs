@@ -318,14 +318,29 @@ verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so
   const src = read('index.html'); const bad = []; let n = 0;
   const fraction = { early: [0, 0.34], mid: [0.34, 0.67], late: [0.67, 1.0] };
   const MON = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-  for (const li of src.matchAll(/<span class="cal-range">([^<]*)<\/span>[\s\S]*?<span class="cal-track"[^>]*>([\s\S]*?)<\/span><\/span>\s*<\/li>/g)) {
-    const words = decode(li[1]).toLowerCase(); const bars = [...li[2].matchAll(/--s:([\d.]+);--e:([\d.]+)/g)].map((b) => [+b[1], +b[2]]);
+  // The Christmas trees row has two little bars, one for each tree weekend (the last Saturday of November with its Sunday, the first Saturday of December with its Sunday: js/season.js
+  // places them again from the rule each year, the numbers in index.html are what a page without scripts shows, so they are the ones of 2026). Worked out here by a walk over the calendar.
+  const treeBars2026 = (() => {
+    const sats = (m) => { const out = []; for (let d = 1; d <= 31; d++) { const x = new Date(Date.UTC(2026, m, d)); if (x.getUTCMonth() !== m) break; if (x.getUTCDay() === 6) out.push(d); } return out; };
+    const at = (m, d) => m + (d - 1) / new Date(Date.UTC(2026, m + 1, 0)).getUTCDate();   // months counted from 0 = January 1, and how far into the month
+    const nov = sats(10), dec = sats(11), a = nov[nov.length - 1], b = dec[0];
+    return [[at(10, a), at(10, a + 2)], [at(11, b), at(11, b + 2)]];   // from the start of the Saturday to the end of the Sunday (the start of the Monday)
+  })();
+  for (const li of src.matchAll(/<span class="cal-range">([\s\S]*?)<\/span>(?=\s*<\/span>)[\s\S]*?<span class="cal-track"[^>]*>([\s\S]*?)<\/span><\/span>\s*<\/li>/g)) {
+    const words = decode(li[1].replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim().toLowerCase(); const bars = [...li[2].matchAll(/--s:([\d.]+);--e:([\d.]+)/g)].map((b) => [+b[1], +b[2]]);
+    if (/data-tree-bar/.test(li[2])) {   // the Christmas trees row
+      n++;
+      const tagged = [...li[2].matchAll(/<span class="cal-bar[^"]*"([^>]*)>/g)].map((m) => ({ which: (/data-tree-bar="(\d)"/.exec(m[1]) || [])[1], s: +((/--s:([\d.]+)/.exec(m[1]) || [])[1]), e: +((/--e:([\d.]+)/.exec(m[1]) || [])[1]) }));
+      if (tagged.length !== 2 || tagged[0].which !== '1' || tagged[1].which !== '2') bad.push('the Christmas trees row has ' + tagged.length + ' bars, expected two with data-tree-bar="1" and data-tree-bar="2"');
+      else tagged.forEach((b, i) => { if (!(Math.abs(b.s - treeBars2026[i][0]) <= 0.03 && Math.abs(b.e - treeBars2026[i][1]) <= 0.03)) bad.push(`tree bar ${i + 1} is --s:${b.s};--e:${b.e}, the weekend (2026) is --s:${treeBars2026[i][0].toFixed(3)};--e:${treeBars2026[i][1].toFixed(3)}`); });
+      if (!(/the last weekend in november and the first weekend in december/.test(words) && /saturday and sunday only/.test(words)) || /thanksgiving|early december/.test(words)) bad.push('the Christmas trees row says "' + words + '", expected the last weekend in November and the first weekend in December, Saturday and Sunday only');   // winter-scan: allow
+      continue;
+    }
     const mon = (w) => MON.findIndex((x) => w.startsWith(x));
     let start = null, end = null;
     const MONTHS = '(january|february|march|april|may|june|july|august|september|october|november|december)';   // "mid-April to early June", "mid- to late June through early July", "mid-September through early November"
     const parts = new RegExp('(early|mid|late)?[- ]*(?:to (?:early|mid|late) )?' + MONTHS + '\\s*(?:to|through)\\s+(early |mid-|late )?' + MONTHS).exec(words.replace('mid- to late ', 'mid-').replace('new this year: every weekend, ', ''));
-    if (/thanksgiving/.test(words)) { start = [10.7, 11.0]; const e = /early (december)/.exec(words); end = e ? [11.0, 11.34] : null; }
-    else if (parts) {
+    if (parts) {
       const a = fraction[parts[1]] || [0, 0.34], mo1 = mon(parts[2]); start = [mo1 + a[0] - 0.05, mo1 + a[1] + 0.05];
       const mod = (parts[3] || '').replace(/[- ]/g, ''), mo2 = mon(parts[4]); end = mod ? [mo2 + fraction[mod][0] - 0.05, mo2 + fraction[mod][1] + 0.05] : [mo2 + 1 - 0.1, mo2 + 1 + 0.1];   // "through October" = to the end of October
     } else if (/^april.*july and september/.test(words)) { start = [3 - 0.1, 3 + 0.1]; end = [7 - 0.1, 7 + 0.1]; }
@@ -347,7 +362,9 @@ verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so
   const spring = [d(/id: 'spring'.*?start: function \(y\) \{ return new Date\(y, (\d+), (\d+)\)/), d(/id: 'spring'.*?end: function \(y\) \{ return new Date\(y, (\d+), (\d+)\)/)];
   const summer = [d(/id: 'summer'.*?start: function \(y\) \{ return new Date\(y, (\d+), (\d+)\)/), d(/id: 'summer'.*?end: function \(y\) \{ return new Date\(y, (\d+), (\d+)\)/)];
   const fall = [d(/id: 'fall'.*?start: function \(y\) \{ return new Date\(y, (\d+), (\d+)\)/), d(/id: 'fall'.*?end: function \(y\) \{ return new Date\(y, (\d+), (\d+)\)/)];
-  const winterEnd = d(/id: 'winter'.*?end: function \(y\) \{ return new Date\(y, (\d+), (\d+)\)/);
+  // js/season.js is run in a bare context to ask its winter dates (the rule is code, not a typed date)
+  const seasonApi = (() => { const w = { document: { documentElement: { classList: { add() {} }, setAttribute() {} }, readyState: 'complete', addEventListener() {} }, matchMedia: () => ({ matches: false }) }; w.window = w; vm.runInNewContext(seasonSrc, w); return w.WISE_ACRES.seasons; })();
+  const winterSeason = seasonApi.list.find((x) => x.id === 'winter'), w26 = [winterSeason.start(2026), winterSeason.end(2026)];
   const tom = /id: 'tomatoes'.*?wins: \(y\) => \[\[new Date\(y, (\d+), (\d+)\), new Date\(y, (\d+), (\d+)\)\]\]/.exec(featuresSrc);
   const bad = [], t = index.text;
   const half = (x) => (x.day <= 10 ? 'early' : x.day <= 20 ? 'mid' : 'late');
@@ -357,7 +374,14 @@ verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so
     ['fall', `${half(fall[0])}-${fall[0].month} through ${half(fall[1])} ${fall[1].month}`, /(Mid-September through early November)/i],
   ];
   for (const [name, expect, rx] of want) { const m = rx.exec(t); if (!m) { bad.push(name + ': the words were not found'); continue; } if (m[1].toLowerCase().replace(/[ -]+/g, '') !== expect.toLowerCase().replace(/[ -]+/g, '')) bad.push(`${name}: the page says "${m[1]}", js/season.js says ${expect}`); }
-  if (!(winterEnd && winterEnd.month === 'December' && /Friday after Thanksgiving to early December/.test(t) && half(winterEnd) === 'early')) bad.push('winter: "Friday after Thanksgiving to early December" does not match the end date in js/season.js');
+  // winter: the Christmas trees are on the last weekend in November and the first weekend in December, Saturday and Sunday only (the builder, Nov 10 2026). The season runs from the
+  // last Saturday of November (its first day) to the Sunday after the first Saturday of December (its last day); the words say so, and "Friday after Thanksgiving" and "early December" are gone.   winter-scan: allow
+  const RULE = /the last weekend in November and the first weekend in December, Saturday and Sunday only/ig, ruleHits = (t.match(RULE) || []).length;
+  if (!(w26[0].getMonth() === 10 && w26[0].getDay() === 6 && w26[0].getDate() >= 24 && w26[1].getMonth() === 11 && w26[1].getDay() === 0 && w26[1].getDate() <= 8 && (w26[1] - w26[0]) / 864e5 === 8)) bad.push('winter: js/season.js starts on ' + w26[0].toDateString() + ' and ends on ' + w26[1].toDateString() + ', not the last Saturday of November and the Sunday after the first Saturday of December');
+  if (ruleHits < 5) bad.push('winter: the rule "the last weekend in November and the first weekend in December, Saturday and Sunday only" is on the home page ' + ruleHits + ' times, expected the trees to say it in at least 5 places');
+  if (winterSeason.next !== 'the last weekend in November' || !/the last weekend in November/.test(t)) bad.push('winter: js/season.js says the trees usually start "' + winterSeason.next + '" (the top bar and the countdown)');
+  const oldWords = PAGES.filter((pg) => /after Thanksgiving|to early December|early December/i.test(pg.text)).map((pg) => SRC(pg.file));   // winter-scan: allow
+  if (oldWords.length) bad.push('winter: "Friday after Thanksgiving" or "early December" is still written in ' + oldWords.join(', ') + ' (the trees are only on the last weekend in November and the first weekend in December, Saturday and Sunday only)');   // winter-scan: allow
   // tomatoes and basil run the same days as the fall season (the site builder, Nov 9 2026): September 13 to November 8 in js/features.js, said as "mid-September through early November"
   if (!(tom && +tom[1] === 8 && +tom[2] === 13 && +tom[3] === 10 && +tom[4] === 8) || !/every weekend,? (?:from )?mid-September through early November/i.test(t) || /late September through October/i.test(t)) bad.push('tomatoes and basil: "every weekend, mid-September through early November" does not match the dates in js/features.js (September 13 to November 8, the fall season)');
   verify('season words match js/season.js and the tomato dates in js/features.js', bad.length === 0, 'the seasons in the text and in js/season.js (or the tomato dates in js/features.js) differ: ' + bad.join('; '),

@@ -112,11 +112,24 @@ def eastern_today(now=None):
     return (now - dt.timedelta(hours=4 if start <= now < end else 5)).date()
 
 
-def thanksgiving_friday(year):
-    """The Friday after the 4th Thursday of November (js/season.js, thanksgivingFriday)."""
-    d = dt.date(year, 11, 1)
-    first_thursday = d + dt.timedelta(days=(3 - d.weekday()) % 7)
-    return first_thursday + dt.timedelta(days=22)
+def tree_weekends(year):
+    """The Christmas tree weekends, as (Saturday, Sunday) pairs (js/season.js, treeWeekends): the LAST Saturday of November and the Sunday after it, then the FIRST
+    Saturday of December and the Sunday after it. 2026: Nov 28-29 and Dec 5-6."""
+    last = dt.date(year, 11, 30)
+    first = dt.date(year, 12, 1)
+    a = last - dt.timedelta(days=(last.weekday() - 5) % 7)       # weekday(): Monday is 0, Saturday is 5
+    b = first + dt.timedelta(days=(5 - first.weekday()) % 7)
+    return (a, a + dt.timedelta(days=1)), (b, b + dt.timedelta(days=1))
+
+
+def tree_season_start(year):
+    """The first tree day: the winter season starts there (js/season.js, treeSeasonStart)."""
+    return tree_weekends(year)[0][0]
+
+
+def tree_season_end(year):
+    """The last tree day: the winter season ends there (js/season.js, treeSeasonEnd)."""
+    return tree_weekends(year)[1][1]
 
 
 # ------------------------------------------------------------------------------------------------ reading the files
@@ -286,8 +299,10 @@ def read_seasons(root):
             if mm:
                 month, day = int(mm.group(1)) + 1, int(mm.group(2))
                 return lambda y: dt.date(y, month, day)
-            if 'thanksgivingFriday' in expr:
-                return thanksgiving_friday
+            if 'treeSeasonStart' in expr:
+                return tree_season_start
+            if 'treeSeasonEnd' in expr:
+                return tree_season_end
             return None
         s, e = make(start), make(end)
         if s and e:
@@ -417,7 +432,7 @@ def collect(root, today, horizon):
         for y in (today.year - 1, today.year, today.year + 1):
             s, e = start(y), end(y)
             items.append(Item(s, 'changes', 'The %s season starts: the home page changes to its %s look (%s).' % (sid, sid, crop), 'js/season.js'))
-            items.append(Item(e, 'changes', 'Last day of the %s season. The day after, the home page shows whichever season is closest.' % sid, 'js/season.js'))
+            items.append(Item(e, 'changes', 'Last day of the %s season. The day after, the home page shows the season that starts next.' % sid, 'js/season.js'))
 
     # --- the owner's calendar document
     doc = read_calendar_doc(root)

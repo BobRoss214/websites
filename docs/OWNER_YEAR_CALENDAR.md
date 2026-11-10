@@ -74,26 +74,19 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `index.html` at `data-release="2026-10-27"`: copy that whole row and change its four dates (README row "Open a new pizza weekend").
 - **If you forget:** pizza is on sale, but there is no countdown, no "Remind me" and no chip: visitors only see "New weekends open every Tuesday at 5:00 PM".
 
-### Mon Nov 9, 2026: the fall season is over
+### Mon Nov 9, 2026: the fall season is over, and the page turns to winter
 
-- **By itself:** no season is in progress. The farm badge goes, the top bar says "Next up: Christmas trees at The GreenHouse", the hero line becomes the all-year one, the pizza rows are gone, and the "Fall schedule" button on the pumpkin page hides. The page keeps its fall look until Wed Nov 18, 2026, and the "Reserve" buttons keep showing.
-- **You, by Sun Nov 1, 2026:** answer **d23** (is the farm open after November 8?) and **d25** (Reserve buttons when nothing can be booked). If you stay open, Claude moves the end of fall; you add pizza rows and open the times in Bookeo.
-- **Where:** `js/season.js` at `id: 'fall'` (the end date is on that line; ask Claude).
-- **If you forget:** from Nov 9 to Nov 17 visitors see "Reserve a fall visit" with no farm badge, and may book times that do not exist.
+- **By itself:** no season is in progress. The farm badge goes, the top bar says "Next up: Christmas trees at The GreenHouse, usually the last weekend in November", the pizza rows are gone, and the "Fall schedule" button on the pumpkin page hides. The page opens on the winter look, the season that starts next: the first-screen button "Visit The GreenHouse" replaces "Reserve your visit", and the farm's "Reserve" buttons mostly go. The headline and the line under it stay the all-year ones until the trees start.
+- **You, by Sun Nov 1, 2026:** answer **d23** (is the farm open after November 8?). Also answer **d01** (what visitors see in winter), **d09** (The GreenHouse winter hours) and **d69** ("Every tree is lit!" appears too early). If you stay open, Claude moves the end of fall; you add pizza rows and open the times in Bookeo. If the winter hours change, change them in both places: the settings and the words.
+- **Where:** `js/season.js` at `id: 'fall'` (the end date is on that line; ask Claude); `js/content.js` at `greenhouse: { days: [5, 6, 0]` (the green badges), then the words (README row "Change opening hours"; README, section "Change a fact everywhere"), then `python3 tools/check_facts.py hours`.
+- **If you forget:** from Nov 9 the farm's "Reserve" buttons are mostly gone, although you still take reservations. The badges keep the usual hours until the trees start, then the winter hours.
 
-### Wed Nov 18, 2026: the winter look
+### Sat Nov 28, 2026: the Christmas tree weekends start
 
-- **By itself:** the page turns wintry. The first-screen button "Visit The GreenHouse" replaces "Reserve your visit", and the farm's "Reserve" buttons mostly go.
-- **You, by Tue Nov 17, 2026:** answer **d01** (what visitors see in winter), **d09** (The GreenHouse winter hours) and **d69** ("Every tree is lit!" appears too early). If the winter hours differ from Friday to Sunday, 10 am to 8 pm, change them in both places: the settings and the words.
-- **Where:** `js/content.js` at `greenhouse: { days: [5, 6, 0]` (the green badges), then the words (README row "Change opening hours"; README, section "Change a fact everywhere"), then `python3 tools/check_facts.py hours`.
-- **If you forget:** badges and text keep saying Friday to Sunday, 10 to 8, all winter. That is wrong only if your hours really change.
-
-### Fri Nov 27, 2026: Christmas tree season starts (the Friday after Thanksgiving)
-
-- **By itself:** the winter season is in progress until Dec 8: the top bar says "In season: Christmas trees at The GreenHouse", the headline becomes "Wise Acres Christmas trees", and the "This week" box lists trees "In season". Thu Nov 26, 2026 (Thanksgiving Day) is not an open day, so it needs no closure. In the top menu the "Christmas trees" line keeps its bold and its red dot until Dec 8, and a screen reader stops saying "Coming soon" after it.
-- **You, by Wed Nov 25, 2026:** confirm the tree dates and prices (**d50**, **d54**). Add a short note to `week` ("Trees arrive Friday"; `updated` is today).
+- **By itself:** the winter season is in progress from Sat Nov 28, 2026 to Sun Dec 6, 2026: the two tree weekends (Nov 28 and 29, Dec 5 and 6) and the five days between them. The top bar says "In season: Christmas trees at The GreenHouse" and the headline becomes "Wise Acres Christmas trees". The "This week" box lists the trees "In season" on the four tree days only (on the other days it says "Usually starts Dec 5"). The GreenHouse and Wise Pie say they are open 11 am to 8 pm on those four days, with the small label "Not official yet" next to the hours, and the farm badge says "Open today. No reservation needed". Fri Nov 27, 2026 is not a tree day. In the top menu the "Christmas trees" line keeps its bold and its red dot until Dec 6, and a screen reader stops saying "Coming soon" after it.
+- **You, by Wed Nov 25, 2026:** confirm the tree dates and prices (**d50**, **d54**) and the hours that say "Not official yet" (**d09**, **d51**). Add a short note to `week` ("Trees this weekend"; `updated` is today).
 - **Where:** `js/content.js` at `week: {},` (2 places: the setting and the note about it); `index.html` at `data-t="t53cf41e8"` (the tree dates in the Shop). README row "Say what is ripe / spots left this week".
-- **If you forget:** the site says trees are in season from Nov 27 whatever your stock, and the Shop line says "Prices coming soon".
+- **If you forget:** the site says trees are in season from Nov 28 whatever your stock, and the Shop line says "Prices coming soon".
 
 ### Tue Dec 1, 2026: the schedule box hides
 
@@ -102,12 +95,12 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `index.html` at `data-t="t6fab8a7b"` (the sentence with the link); `pages/pumpkin-patch.html` at `data-until="2026-11-30"` (2 places).
 - **If you forget:** nothing. The sentence comes back by itself when a schedule box is back.
 
-### Wed Dec 9, 2026: the tree season is over in the site's calendar
+### Mon Dec 7, 2026: the tree weekends are over, and the page turns to spring
 
-- **By itself:** the code's last tree day is Dec 8. From Wed Dec 9, 2026 no season is in progress: the top bar says "Next up: Strawberries, usually mid-April", the headline is the all-year one, and trees leave the "This week" box. In the top menu the "Christmas trees" line is a plain line again, and the GreenHouse button loses its red dot.
-- **You, by Fri Dec 4, 2026:** if you sell trees after Dec 8, or sell out earlier, say so (question **d50**). Until Claude moves the end date, use the notice bar and `week` (`crops: { trees: 'peak' }`, or `'off'` when they are gone).
-- **Where:** `js/season.js` at `id: 'winter'`; `js/content.js` at `notice: '',`.
-- **If you forget:** the site stops saying trees are in season on Dec 9 while you still sell them, or keeps saying it after they are gone.
+- **By itself:** the code's last tree day is Sun Dec 6, 2026. From Mon Dec 7, 2026 no season is in progress, and the page opens on spring, the season that starts next. The top bar says "Next up: Strawberries, usually mid-April", the headline is the all-year one, and trees leave the "This week" box. "Reserve your visit" and "Reserve a strawberry visit" come back, and the note "No reservation? Visit The GreenHouse next door" shows again. The GreenHouse and Wise Pie say their usual Friday to Sunday hours again, and the farm badge is gone. In the top menu the "Christmas trees" line is a plain line again, and the GreenHouse button loses its red dot.
+- **You, by Fri Dec 4, 2026:** if you sell trees on other days, or sell out earlier, say so (question **d50**). Until Claude changes the rule, use the notice bar and `week` (`crops: { trees: 'peak' }`, or `'off'` when they are gone). Answer **d25** (Reserve buttons when nothing can be booked) and open the spring times in Bookeo, or the buttons lead to an empty calendar for four months.
+- **Where:** `js/season.js` at `id: 'winter'`; `js/content.js` at `notice: '',`; Bookeo; the Reserve buttons are in `index.html` (README row "Change the booking link" if the address changes).
+- **If you forget:** the site stops saying trees are in season on Dec 7 while you still sell them, or keeps saying it after they are gone. From Dec 7 to Apr 14 "Reserve" buttons show while nothing can be booked.
 
 ### Fri Dec 25, 2026: Christmas Day is an open day (also Sat Dec 26, 2026 and Sun Dec 27, 2026)
 
@@ -124,13 +117,6 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **If you forget:** in 2027 the FAQ still says "Yes, and it's new this year!", and the pages say "Fall 2026 prices" all winter, spring and summer. That is true but looks old.
 
 ## 4. The calendar, 2027
-
-### Wed Feb 10, 2027: the spring look
-
-- **By itself:** the page turns to spring. "Reserve your visit" and "Reserve a strawberry visit" come back, and the note "No reservation? Visit The GreenHouse next door" shows again. The top bar says "Next up: Strawberries, usually mid-April".
-- **You, by Tue Feb 9, 2027:** answer **d25** (Reserve buttons when nothing can be booked). Open the spring times in Bookeo, or the buttons lead to an empty calendar for nine weeks.
-- **Where:** Bookeo; the Reserve buttons are in `index.html` (README row "Change the booking link" if the address changes).
-- **If you forget:** from Feb 10 to Apr 14 "Reserve" buttons show while nothing can be booked.
 
 ### Thu Mar 25, 2027: strawberries show up in the "This week" box
 
@@ -149,13 +135,13 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 ### Thu Apr 15, 2027: the strawberry season starts (by the calendar, not by the weather)
 
 - **By itself:** the top bar says "In season: Strawberries", the first screen says "It's strawberry season!" and the "This week" box says "In season". Nothing on the site follows the weather.
-- **You, by Thu Apr 8, 2027:** answer **d41** (cancel fee on the strawberry page), **d54** (prices) and **d26** (when are cut flowers available?). If the field is late or early, say so with the notice bar and `week` (`crops: { strawberries: 'soon' }`). Open the Bookeo times. If you take reserved visits in spring, add the days to `hours` (`farm`) so the farm badge shows: `farm:       { fall: [4, 5, 6, 0], spring: [4, 5, 6, 0] }`.
-- **Where:** `js/content.js` at `farm:       { fall: [4, 5, 6, 0] }` (today only fall has farm days), `notice: '',` and `week: {},` (2 places).
+- **You, by Thu Apr 8, 2027:** answer **d41** (cancel fee on the strawberry page), **d54** (prices) and **d26** (when are cut flowers available?). If the field is late or early, say so with the notice bar and `week` (`crops: { strawberries: 'soon' }`). Open the Bookeo times. If you take reserved visits in spring, add the days to `hours` (`farm`) so the farm badge shows: `farm:       { fall: [4, 5, 6, 0], spring: [4, 5, 6, 0], winter: [6, 0] }`.
+- **Where:** `js/content.js` at `farm:       { fall: [4, 5, 6, 0], winter: [6, 0] }` (today only fall and the Christmas tree weekends have farm days), `notice: '',` and `week: {},` (2 places).
 - **If you forget:** the first screen says it is strawberry season on a day the field is not ready; with no spring farm days there is no farm badge (that is a gap, not an error).
 
 ### Tue Jun 8, 2027 to Tue Jun 15, 2027: spring ends, summer begins
 
-- **By itself:** the strawberry season's last day is Jun 7. On Tue Jun 8, 2027 no season is in progress; the look turns to summer on Sat Jun 12, 2027; on Tue Jun 15, 2027 the blueberries and sunflowers season starts ("It's blueberry season!").
+- **By itself:** the strawberry season's last day is Jun 7. On Tue Jun 8, 2027 no season is in progress and the page opens on summer, the season that starts next; on Tue Jun 15, 2027 the blueberries and sunflowers season starts ("It's blueberry season!").
 - **You, by Mon Jun 7, 2027:** answer **d59** (summer programs), **d58** (snacks and drinks in spring and summer?) and **d68** (the sunflower badge works only on big screens). Open the summer times in Bookeo; add summer farm days to `hours` if you want the badge (`summer: [4, 5, 6, 0]`, in the same place); update `week`.
 - **Where:** `js/season.js` at `id: 'summer'` (the dates are on that line; ask Claude); `js/content.js` at `week: {},` (2 places).
 - **If you forget:** the same as the strawberries: calendar words on a day the blueberries may not be ready.
@@ -167,24 +153,17 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `js/content.js` at `closures: [],`.
 - **If you forget:** "Open now" on a closed day.
 
-### Sun Jul 11, 2027: the summer season is over
+### Sun Jul 11, 2027: the summer season is over, and the fall look starts, two months before the season
 
-- **By itself:** the top bar says "Next up: Pumpkins & tomatoes, usually mid-September" and the "This week" box empties.
-- **You:** nothing yet. Start collecting the fall 2027 facts (see the entry for Thu Aug 12, 2027).
-- **Where:** nothing yet.
-- **If you forget:** nothing yet.
-
-### Thu Aug 12, 2027: the fall look starts, a month before the season
-
-- **By itself:** the page turns to fall: "Reserve a fall visit" and the fall lines show, though the season starts on Mon Sep 13, 2027.
-- **You, by Wed Aug 11, 2027:** have the fall 2027 facts in.
+- **By itself:** no season is in progress. The top bar says "Next up: Pumpkins & tomatoes, usually mid-September", and the "This week" box empties. The page turns to fall, the season that starts next: "Reserve a fall visit" and the fall lines show, though the season starts on Mon Sep 13, 2027.
+- **You, by Sat Jul 10, 2027:** have the fall 2027 facts in.
   1. The prices and the labels that say 2026 (question **d24**, with **d54** and **d16**).
   2. The special days (Home School Day and the others), with a `data-until` on each line, and the box heading.
   3. The schedule: the "No pizza" block's words and last day, the pumpkin page button's last day (they must match), and the first pizza rows.
   4. The new menu picture, under a new file name.
   5. The Bookeo times; the tomatoes and the haunted trail (**d48**); the fall hours (**d51**); Thai night (**d08**).
 - **Where:** `python3 tools/check_facts.py year` lists the 2026 places. `index.html` at `data-t="t7f10df40"` (special days heading), `data-t="t65d35823"` (schedule heading), `data-t="tb848cce7"` (the "No pizza" words) and `data-t="t4f7c68ac"` (Fall Menu heading); `pages/pumpkin-patch.html` at `data-until="2026-11-30"` (2 places). README, section "A new year, a new season"; README row "Open a new pizza weekend". Every changed English sentence needs its four translations (README, section "Change one sentence and its translations, step by step").
-- **If you forget:** from Aug 12 visitors see a fall page with 2026 prices and no schedule box.
+- **If you forget:** from Jul 11 visitors see a fall page with 2026 prices and no schedule box.
 
 ### Mon Aug 23, 2027 to Sun Sep 12, 2027: the "This week" box counts down by itself
 
@@ -200,9 +179,9 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `index.html` at `data-release-time="17:00"`; README row "Open a new pizza weekend".
 - **If you forget:** with no rows left from 2026 there is no countdown and no chip all fall. The schedule box shows only its "No pizza" lines, or stays hidden if you did not renew their last day in August.
 
-### Mon Sep 27, 2027: the top menu shows that tree season is near
+### Tue Sep 28, 2027: the top menu shows that tree season is near
 
-- **By itself:** in the top menu the "Christmas trees" line (GreenHouse list) turns bold with a small red dot, and so does the GreenHouse button. Tree season starts in 60 days (Fri Nov 26, 2027). A screen reader says "Coming soon" after the line until then.
+- **By itself:** in the top menu the "Christmas trees" line (GreenHouse list) turns bold with a small red dot, and so does the GreenHouse button. Tree season starts in 60 days (Sat Nov 27, 2027). A screen reader says "Coming soon" after the line until then.
 - **You:** nothing.
 - **Where:** `index.html` at `data-coming="winter"`; `js/main.js` at `const COMING_DAYS = 60;`.
 - **If you forget:** nothing.
@@ -210,20 +189,20 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 ### Mon Nov 8, 2027 to Tue Nov 9, 2027: the fall season is over (as on Mon Nov 9, 2026)
 
 - **By itself:** the farm badge goes on Mon Nov 8, 2027; no season in progress on Tue Nov 9, 2027; the rows are gone.
-- **You, by Mon Nov 1, 2027:** questions **d23** and **d25** again, if the answer was for 2026 only.
+- **You, by Mon Nov 1, 2027:** question **d23** again, if the answer was for 2026 only.
 - **Where:** `js/season.js` at `id: 'fall'`.
 - **If you forget:** the same as on Nov 9, 2026.
 
-### Thu Nov 18, 2027 to Fri Nov 26, 2027: winter look, Thanksgiving (Thu Nov 25, 2027), trees from the Friday after
+### Sat Nov 27, 2027: the Christmas tree weekends start (Nov 27 and 28, Dec 4 and 5)
 
-- **By itself:** winter look on Thu Nov 18, 2027; tree season starts Fri Nov 26, 2027.
+- **By itself:** the page has had its winter look since Tue Nov 9, 2027; the winter season is in progress from Sat Nov 27, 2027 to Sun Dec 5, 2027.
 - **You, by Wed Nov 24, 2027:** the tree dates and prices, the winter hours, the `week` note, as on Nov 25, 2026.
 - **Where:** `js/content.js` at `greenhouse: { days: [5, 6, 0]` and `week: {},` (2 places).
 - **If you forget:** the same as in 2026.
 
-### Thu Dec 9, 2027 and Fri Dec 24, 2027 to Fri Dec 31, 2027: trees end, Christmas, the end of the year
+### Mon Dec 6, 2027 and Fri Dec 24, 2027 to Fri Dec 31, 2027: trees end, Christmas, the end of the year
 
-- **By itself:** tree season is over on Thu Dec 9, 2027. Fri Dec 24, 2027, Sat Dec 25, 2027 and Sun Dec 26, 2027 are open days (The GreenHouse and Wise Pie are open Friday to Sunday). In the top menu the "Christmas trees" line is a plain line again, and the GreenHouse button loses its red dot.
+- **By itself:** tree season is over on Mon Dec 6, 2027. Fri Dec 24, 2027, Sat Dec 25, 2027 and Sun Dec 26, 2027 are open days (The GreenHouse and Wise Pie are open Friday to Sunday). In the top menu the "Christmas trees" line is a plain line again, and the GreenHouse button loses its red dot.
 - **You, by Wed Dec 22, 2027:** closures and a notice for the days you are closed; the "new" and "Fall 2027" labels for next January (see Fri Jan 1, 2027).
 - **Where:** `js/content.js` at `closures: [],` and `noticeUntil: '',`.
 - **If you forget:** "Open now" on a closed day.
@@ -252,7 +231,7 @@ These stay on the page every day until you edit them. Nothing ties them to a dat
 - **"Prices coming soon"** on the Shop and the price lists. Fill each when you have the price (**d54**). Search those words in `index.html`.
 - **School tours "Now booking"** (`index.html` at `data-t="td727517c"` and `data-t="t61e401ae"`): they show all year (**d27**). Change them when the tours are not booking.
 - **The "2026" labels** ("Fall 2026 reservations", "Fall Menu 2026", "Prices are for fall 2026", the pumpkin page). `python3 tools/check_facts.py year` lists them. The menu picture name has 2026 in it: add the new one under a new name (README, section "A new year, a new season").
-- **"Usually mid-April to early June" and the other usual dates in the words.** They repeat every year (search `mid-April`, `mid- to late June`, `Mid-September` and `Friday after Thanksgiving`: the Season by season table, the season cards, the FAQ, the Strawberry and Pumpkin pages). Change them only when the usual dates change, in the words and in `js/season.js` together (ask Claude: a test compares them).
+- **"Usually mid-April to early June" and the other usual dates in the words.** They repeat every year (search `mid-April`, `mid- to late June`, `Mid-September` and `the last weekend in November`: the Season by season table, the season cards, the FAQ, the Strawberry and Pumpkin pages). Change them only when the usual dates change, in the words and in `js/season.js` together (ask Claude: a test compares them).
 - **Pictures with dated words** (Easter, Father's Day, "waiting all summer", "berries & sunflowers"): they are in the gallery all year (**d13**, **d32**).
 - **Reviews** you added, with their free-text `date`.
 - **Prices and tax.** The site shows only the prices you typed, and no sales tax. When a price changes, follow README, section "Change a fact everywhere", then `python3 tools/check_facts.py price`. Bookeo and Square show what is charged at checkout.
@@ -268,7 +247,7 @@ Put each date in your phone calendar twice: 60 days before and 14 days before.
 - **Search Console.** The site stays verified while its tag stays in `index.html` (search the words "GOOGLE SEARCH CONSOLE"); the Sitemaps report should say "Success" (`docs/LAUNCH_CHECKLIST.md`, section "3.10").
 - **Business Profile.** Hours, holiday hours, the website address and the booking link match the site (section "3.12").
 - **Paid accounts.** Your host plan, Mailchimp, Bookeo, Square and any analytics service: the renewal date, and that a changed booking or pre-order address is changed on the site too (README row "Change the booking link").
-- **The translations.** Once a year, in August before the fall look starts, have a native speaker read what changed (questions **d37** and **d71**).
+- **The translations.** Once a year, in June before the fall look starts, have a native speaker read what changed (questions **d37** and **d71**).
 - **Old closure dates.** In January delete the passed dates from `closures`, if you like (passed dates may stay).
 
 ## 8. Questions that wait for a date
@@ -279,16 +258,16 @@ None of these is decided here. Each is a card on your dashboard; this list says 
 |---|---|---|
 | d60 Closed Sunday, October 4 for rain? | Sat Oct 3, 2026 | the Sunday badges |
 | d23 Is the farm open after November 8? | Sun Nov 1, 2026 | the fall season ends Nov 8 |
-| d25 Reserve buttons when nothing can be booked | Sun Nov 1, 2026 (again Tue Feb 9, 2027) | the buttons show between seasons |
-| d01 What visitors see in winter, d09 The GreenHouse winter hours, d69 "Every tree is lit!" appears too early | Tue Nov 17, 2026 | the winter look starts Nov 18 |
-| d50 Christmas tree dates, d54 Prices for pumpkins, berries, flowers and trees | Wed Nov 25, 2026 | the tree season starts Nov 27 |
+| d01 What visitors see in winter, d09 The GreenHouse winter hours, d69 "Every tree is lit!" appears too early | Sun Nov 1, 2026 | the winter look starts Nov 9 |
+| d50 Christmas tree dates, d54 Prices for pumpkins, berries, flowers and trees | Wed Nov 25, 2026 | the tree season starts Nov 28 |
+| d25 Reserve buttons when nothing can be booked | Fri Dec 4, 2026 | the page opens on spring Dec 7, and the buttons show while nothing can be booked |
 | d66 Stop saying "new this year" from January? | Fri Dec 18, 2026 | the new year |
 | d26 When are cut flowers available?, d41 Cancel fee on the strawberry page | Thu Apr 8, 2027 | the strawberry season starts Apr 15 |
 | d58 Snacks and drinks in spring and summer?, d59 Do you still run summer programs?, d68 Sunflower badge only works on big screens | Mon Jun 7, 2027 | the summer season starts Jun 15 |
-| d24 Fall 2027 prices, schedule and menu | Wed Aug 11, 2027 | the fall look starts Aug 12 |
+| d24 Fall 2027 prices, schedule and menu | Sat Jul 10, 2027 | the fall look starts Jul 11 |
 | d48 Haunted trail and u-pick tomatoes this fall, d51 Are the fall opening hours right?, d08 Thai night | Mon Sep 6, 2027 | the fall season starts Sep 13 |
 | d27 School tours banner, d13 Photos with words or people, d32 Photos that have dated words on them | any time | they show all year |
-| d37 Native speakers for the translations, d71 Friendly or formal in the translations? | any time | before the next August check |
+| d37 Native speakers for the translations, d71 Friendly or formal in the translations? | any time | before the next June check |
 
 Cards with no date: d61, d62, d63, d64, d65, d67, d70, d72, d73.
 
@@ -300,22 +279,17 @@ The test `node tests/owner-calendar.test.mjs` compares every row below with the 
 
 | Date | Day | What changes |
 |---|---|---|
-| `2026-11-09` | Mon Nov 9, 2026 | fall season over (last day Nov 8); no season in progress |
-| `2026-11-18` | Wed Nov 18, 2026 | winter look |
-| `2026-11-27` | Fri Nov 27, 2026 | tree season starts (the Friday after Thanksgiving) |
-| `2026-12-09` | Wed Dec 9, 2026 | tree season over (last day Dec 8) |
-| `2027-02-10` | Wed Feb 10, 2027 | spring look |
+| `2026-11-09` | Mon Nov 9, 2026 | fall season over (last day Nov 8); no season in progress; the page opens on winter |
+| `2026-11-28` | Sat Nov 28, 2026 | the Christmas tree weekends start (the first tree day) |
+| `2026-12-07` | Mon Dec 7, 2026 | the tree weekends are over (the last tree day is Dec 6); the page opens on spring |
 | `2027-04-15` | Thu Apr 15, 2027 | strawberry season starts |
-| `2027-06-08` | Tue Jun 8, 2027 | strawberry season over (last day Jun 7) |
-| `2027-06-12` | Sat Jun 12, 2027 | summer look |
+| `2027-06-08` | Tue Jun 8, 2027 | strawberry season over (last day Jun 7); the page opens on summer |
 | `2027-06-15` | Tue Jun 15, 2027 | blueberries and sunflowers season starts |
-| `2027-07-11` | Sun Jul 11, 2027 | summer season over (last day Jul 10) |
-| `2027-08-12` | Thu Aug 12, 2027 | fall look |
+| `2027-07-11` | Sun Jul 11, 2027 | summer season over (last day Jul 10); the page opens on fall |
 | `2027-09-13` | Mon Sep 13, 2027 | fall season starts |
-| `2027-11-09` | Tue Nov 9, 2027 | fall season over (last day Nov 8) |
-| `2027-11-18` | Thu Nov 18, 2027 | winter look |
-| `2027-11-26` | Fri Nov 26, 2027 | tree season starts (the Friday after Thanksgiving) |
-| `2027-12-09` | Thu Dec 9, 2027 | tree season over (last day Dec 8) |
+| `2027-11-09` | Tue Nov 9, 2027 | fall season over (last day Nov 8); the page opens on winter |
+| `2027-11-27` | Sat Nov 27, 2027 | the Christmas tree weekends start (the first tree day) |
+| `2027-12-06` | Mon Dec 6, 2027 | the tree weekends are over (the last tree day is Dec 5); the page opens on spring |
 
 ### The lines that have a last day (a `data-until`) or an opening day (a `data-release`)
 
@@ -337,9 +311,9 @@ A line with `data-until="D"` hides itself on the day after D. A pizza row has bo
 ### Facts this page relies on
 
 - Pizza rows open on Tuesdays at 5:00 PM (`data-release-time="17:00"` in `index.html`).
-- The GreenHouse is open Friday to Sunday, 10 am to 8 pm, and Wise Pie 4 pm to 8 pm; the farm has a badge only in the fall, Thursday to Sunday (`hours` in `js/content.js`).
+- The GreenHouse is open Friday to Sunday, 10 am to 8 pm, and Wise Pie 4 pm to 8 pm; the farm has a badge in the fall, Thursday to Sunday. On the Christmas tree weekends The GreenHouse and Wise Pie are open Saturday and Sunday, 11 am to 8 pm, and the farm is open Saturday and Sunday with no reservation (`hours` in `js/content.js`).
 - "This week at the farm" stays for 14 days after `updated` and is gone from the 15th day (`expireDays: 14` in `js/features.js`).
-- Easter Sunday 2027 is Sun Mar 28, 2027; Thanksgiving is Thu Nov 26, 2026 and Thu Nov 25, 2027.
+- Easter Sunday 2027 is Sun Mar 28, 2027. The Christmas tree weekends are the last Saturday of November with its Sunday and the first Saturday of December with its Sunday. In 2026 they are Sat Nov 28, 2026 and Sun Nov 29, 2026, then Sat Dec 5, 2026 and Sun Dec 6, 2026. In 2027 they are Sat Nov 27, 2027 and Sun Nov 28, 2027, then Sat Dec 4, 2027 and Sun Dec 5, 2027.
 - Footer year: `data-year` in `index.html`; it turns over at midnight on Jan 1 (Eastern Time).
 
 *How this page is kept true.* `node tests/owner-calendar.test.mjs` checks these things:

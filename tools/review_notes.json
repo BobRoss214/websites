@@ -151,7 +151,7 @@
    "lang": "zh",
    "ids": ["j8a39af68", "j7cc0082e"],
    "when": "通常{when}",
-   "ask": "{when} is filled with “4 月中旬”, “6 月中旬” or “9 月中旬”, or, for the winter season, with “感恩节后的周五”. Today the line reads “通常4 月中旬开始”. If the answer for the three month words is to keep their spaces, a space is wanted after 通常 before a number but not before “感恩节后的周五”. Tell us the spacing you want for both."
+   "ask": "{when} is filled with “4 月中旬”, “6 月中旬”, “9 月中旬” or, for the winter season, “11 月最后一个周末”. Today the line reads “通常4 月中旬开始”. If the answer for the month words is to keep their spaces, a space is wanted after 通常 before the number. Tell us the spacing you want."
   },
   {
    "lang": "vi",

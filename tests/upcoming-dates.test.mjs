@@ -3,7 +3,7 @@
 // covers: tools/upcoming_dates.py, index.html, pages/*, js/content.js, js/season.js, docs/OWNER_YEAR_CALENDAR.md
 /* tools/upcoming_dates.py: the plain-English list of what changes or runs out in the next days (no browser; needs Python 3.8 or newer, no packages).
  * It is run with pretend "today" dates (--today) on a small made-up site, so the answers do not depend on the day the test runs on, and then on the
- * real files: the first and last day of every season, the Friday after Thanksgiving in several years, the exit code (1 only when something runs out
+ * real files: the first and last day of every season, the Christmas tree weekends (last Saturday of November, first Saturday of December) in several years, the exit code (1 only when something runs out
  * within 7 days), what is NOT counted (dates inside comments, a day that does not exist), --markdown for GitHub's job summary, and a wrong command.
  * Nothing is written in the site folder: the made-up site lives in a temporary folder. */
 import fs from 'node:fs';
@@ -93,17 +93,40 @@ try {
   r = run(['--today', '2026-09-01'], tmp);
   ok('1 Sep: the fall season starts on 13 Sep (in 12 days), a change, not red', r.code === 0 && /Sunday, Sep 13 \(in 12 days\)[^\n]*The fall season starts/.test(r.out), r.out.slice(0, 300));
   r = run(['--today', '2026-11-02'], tmp);
-  ok('2 Nov: the last day of fall is 8 Nov, "the day after the home page shows whichever season is closest"', /Sunday, Nov 8 \(in 6 days\)[^\n]*Last day of the fall season/.test(r.out), r.out.slice(0, 300));
-  // the Friday after the 4th Thursday of November, written out independently here
-  const fridayAfterThanksgiving = (y) => { let d = new Date(Date.UTC(y, 10, 1)); let thu = 0; while (thu < 4) { if (d.getUTCDay() === 4) thu++; if (thu < 4) d = new Date(d.getTime() + 864e5); } return new Date(d.getTime() + 864e5); };
-  const bad = [];
-  for (const y of [2026, 2027, 2028, 2029, 2030, 2031]) {
-    const f = fridayAfterThanksgiving(y), before = new Date(f.getTime() - 3 * 864e5).toISOString().slice(0, 10);
-    const out = run(['--today', before], tmp).out;
-    const want = `Friday, Nov ${f.getUTCDate()} (in 3 days): The winter season starts`;
-    if (!out.includes(want)) bad.push(y + ': ' + want);
+  ok('2 Nov: the last day of fall is 8 Nov, "the day after the home page shows the season that starts next" (the builder, 10 Nov 2026), not the one that is closest', /Sunday, Nov 8 \(in 6 days\)[^\n]*Last day of the fall season\. The day after, the home page shows the season that starts next\./.test(r.out) && !/closest/.test(r.out), r.out.slice(0, 300));
+  // The Christmas tree weekends, written out independently here (a walk over the calendar, not the formula of js/season.js or of the tool): the LAST Saturday of
+  // November and the Sunday after it, the FIRST Saturday of December and the Sunday after it (the builder, 10 Nov 2026). Winter runs from the first Saturday to the last Sunday.
+  const treeDays = (y) => {
+    const sats = (m) => { const out = []; for (let d = new Date(Date.UTC(y, m, 1)); d.getUTCMonth() === m; d = new Date(d.getTime() + 864e5)) if (d.getUTCDay() === 6) out.push(d); return out; };
+    const nov = sats(10), dec = sats(11), plus1 = (d) => new Date(d.getTime() + 864e5);
+    return { a: nov[nov.length - 1], aSun: plus1(nov[nov.length - 1]), b: dec[0], bSun: plus1(dec[0]) };
+  };
+  const MON3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], DOWNAME = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const said = (d) => `${DOWNAME[d.getUTCDay()]}, ${MON3[d.getUTCMonth()]} ${d.getUTCDate()}`;
+  const iso10 = (d) => d.toISOString().slice(0, 10), minus = (d, n) => new Date(d.getTime() - n * 864e5);
+  const bad = [], badEnd = [], shape = [];
+  for (const y of [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033]) {
+    const t = treeDays(y);
+    const out = run(['--today', iso10(minus(t.a, 3))], tmp).out;
+    if (!out.includes(`${said(t.a)} (in 3 days): The winter season starts`)) bad.push(y + ': ' + said(t.a));
+    const endOut = run(['--today', iso10(minus(t.bSun, 2))], tmp).out;
+    if (!endOut.includes(`${said(t.bSun)} (in 2 days): Last day of the winter season`)) badEnd.push(y + ': ' + said(t.bSun));
+    const gap = (t.b - t.a) / 864e5;
+    if (t.a.getUTCDay() !== 6 || t.b.getUTCDay() !== 6 || t.aSun.getUTCDay() !== 0 || t.bSun.getUTCDay() !== 0 || gap !== 7 || t.a.getUTCMonth() !== 10 || t.a.getUTCDate() < 24) shape.push(y);
   }
-  ok('the winter season starts on the Friday after Thanksgiving in 2026 to 2031 (the first Thursday of November is any of 7 days)', bad.length === 0, bad.join('; '));
+  ok('the winter season starts on the first tree day, the LAST Saturday of November, in 2026 to 2033 (2026: Sat Nov 28; 2027: Sat Nov 27; 2028: Sat Nov 25; 2029: Sat Nov 24; 2030: Sat Nov 30)', bad.length === 0, bad.join('; '));
+  ok('the winter season ends on the last tree day, the Sunday after the FIRST Saturday of December, in 2026 to 2033 (2026: Sun Dec 6; 2027: Sun Dec 5; 2028: Sun Dec 3; 2029: Sun Dec 2; 2030: Sun Dec 8)', badEnd.length === 0, badEnd.join('; '));
+  ok('the two weekends are one week apart every year (the next Saturday after the last one in November is the first one in December), Saturday and Sunday, never a Friday', shape.length === 0, shape.join(', '));
+  {
+    const explicit = { 2026: ['Saturday, Nov 28', 'Sunday, Dec 6'], 2027: ['Saturday, Nov 27', 'Sunday, Dec 5'], 2028: ['Saturday, Nov 25', 'Sunday, Dec 3'], 2029: ['Saturday, Nov 24', 'Sunday, Dec 2'], 2030: ['Saturday, Nov 30', 'Sunday, Dec 8'] };
+    const wrongYears = Object.entries(explicit).filter(([y, [a, b]]) => { const t = treeDays(+y); return said(t.a) !== a || said(t.bSun) !== b; }).map(([y]) => y);
+    ok('the dates the builder named (Nov 28-29 and Dec 5-6 in 2026, Nov 27-28 and Dec 4-5 in 2027, Nov 24-25 and Dec 1-2 in 2029, Nov 30-Dec 1 and Dec 7-8 in 2030) are what the calendar gives', wrongYears.length === 0, wrongYears.join(', '));
+  }
+  {   // the day before the window and the day after it: nothing about winter that day, and a Friday is no tree day
+    const fri = run(['--today', '2026-11-27', '--days', '2'], tmp).out, sat = run(['--today', '2026-11-28', '--days', '1'], tmp).out;
+    ok('Fri Nov 27, 2026 (the day before the first tree day) is not a day the winter season starts; Sat Nov 28 is', !/Friday, Nov 27[^\n]*winter season starts/.test(fri) && /Saturday, Nov 28 \(tomorrow\)[^\n]*The winter season starts/.test(fri) && /Saturday, Nov 28 \(today\)[^\n]*The winter season starts/.test(sat), fri.slice(0, 300));
+    ok('the tool names no Thanksgiving rule any more (the tree weekends are worked out from the calendar)', !/thanksgiving/i.test(fs.readFileSync(path.join(ROOT, 'tools/upcoming_dates.py'), 'utf8')), '');   // winter-scan: allow
+  }
   const ex = spawnSync(PY, ['-c', `import sys, datetime as dt; sys.path.insert(0, ${JSON.stringify(path.join(ROOT, 'tools'))}); import upcoming_dates as u
 f = lambda y, m, d, h, mi: str(u.eastern_today(dt.datetime(y, m, d, h, mi)))
 print(f(2026, 7, 1, 3, 30), f(2026, 12, 1, 4, 30), f(2026, 3, 8, 4, 30), f(2026, 3, 9, 4, 30), f(2026, 11, 1, 4, 30), f(2026, 11, 2, 4, 30))`], { encoding: 'utf8' });
@@ -141,7 +164,7 @@ print(f(2026, 7, 1, 3, 30), f(2026, 12, 1, 4, 30), f(2026, 3, 8, 4, 30), f(2026,
   r = run(['--today', '2026-10-02']);
   ok('the real site, 2 Oct 2026: runs, exit code 0 or 1, starts with the heading, no Python error', (r.code === 0 || r.code === 1) && /^Things that change or expire/.test(r.out) && !/Traceback/.test(r.out), r.out.slice(0, 200));
   r = run(['--today', '2026-11-20']);
-  ok('the real site, 20 Nov 2026: the winter season starts on Friday, Nov 27', /Friday, Nov 27 \(in 7 days\)[^\n]*The winter season starts/.test(r.out), r.out.slice(0, 300));
+  ok('the real site, 20 Nov 2026: the winter season starts on Saturday, Nov 28 (the first tree day), in 8 days', /Saturday, Nov 28 \(in 8 days\)[^\n]*The winter season starts/.test(r.out), r.out.slice(0, 300));
   for (const args of [['--today', '2026-10-02', '--days', '450'], ['--today', '2026-11-20', '--days', '450', '--markdown'], ['--days', '450']]) {
     r = run(args);
     ok(`the real site (${args.join(' ')}): no example from the owner's notes is left empty (data-until="", data-release="", closures: [''], '' for one day)`, !/data-\w+=""|\[''\]|'' for one day|\( '' |'\.\.'/.test(r.out) && !/Traceback/.test(r.out), (r.out.match(/[^\n]*(data-\w+=""|\[''\]|'' for one day)[^\n]*/) || [''])[0].slice(0, 300));
