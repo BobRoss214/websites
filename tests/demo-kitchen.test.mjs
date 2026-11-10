@@ -222,8 +222,20 @@ function world() {
   const broken = K.makeSound({ AudioContext: class { constructor() { throw new Error('blocked'); } } });
   ok('audio that refuses to open is not an error either', (broken.on(), broken.chime(), true));
   ok('the beep repeats every 7 seconds while a ticket is late (the page\'s own timer)', K.BEEP_EVERY === 7000);
+  let held = null, resumes = 0;
+  class Phone { constructor() { held = this; this.currentTime = 0; this.destination = {}; this.state = 'running'; }
+    createOscillator() { return { type: '', frequency: { value: 0 }, connect() {}, start() {}, stop() {} }; }
+    createGain() { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {} }, connect() {} }; }
+    resume() { resumes++; return Promise.reject(new Error('not allowed now')); } }
+  const phone = K.makeSound({ AudioContext: Phone });
+  phone.on(); phone.chime();
+  const awake = resumes;
+  held.state = 'suspended';
+  phone.chime();
+  ok('a phone that put the audio to sleep again (a call, another app): the next chime wakes it first, and a wake-up the phone refuses is no error', awake === 0 && resumes >= 1, awake + ' then ' + resumes);
 }
 const keySrc = fs.readFileSync(path.join(ROOT, 'js/demo-kitchen.js'), 'utf8');
+ok('the key handler ignores a key that is held down and does nothing while the person has turned the keys off; the beep and the chime are silent in a tab nobody sees (the browser test watches what happens)', /e\.defaultPrevented \|\| e\.repeat/.test(keySrc) && /if \(!ui\.keysOn\) return;/.test(keySrc) && /sound\.isOn\(\) && running && !document\.hidden/.test(keySrc) && /if \(!document\.hidden\) sound\.chime\(\)/.test(keySrc));
 ok('no inline handlers, no innerHTML, no storage in the kitchen script; the family\'s words only ever go in as text', !/\bon[a-z]+\s*=\s*["']/.test(keySrc.replace(/'on'/g, '')) && !/innerHTML|outerHTML|insertAdjacentHTML/.test(keySrc) && !/localStorage|sessionStorage|indexedDB|cookie/i.test(keySrc));
 
 await finish({});

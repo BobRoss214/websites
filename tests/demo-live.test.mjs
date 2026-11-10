@@ -10,7 +10,8 @@
  * farm's day, a visit change names days the farm is open; Off is a pause (the pretend clock stands still, nothing arrives) and a page that was closed does not age the
  * pretend world; the speed changes the rate; nothing waits for more than a few at a time and nothing grows without bound (two hours of Rush with nobody answering);
  * answering a pretend family through the store's own calls (reply, respond, decide, post) makes no notice for the family, a suggestion is answered by the family itself
- * a few seconds later, and decide stamps when; the counters (made, waiting, answered, late), the answer-by times, the watch marks and the tally; clear and Start over.
+ * a few seconds later, and decide stamps when; an answered question stays answered however long the rush runs; changing the speed shows within seconds; the counters (made,
+ * waiting, answered, late), the answer-by times, the watch marks and the tally; clear and Start over.
  * Run: node tests/demo-live.test.mjs */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -46,6 +47,7 @@ const signature = (x) => JSON.stringify(['visits', 'orders', 'requests', 'messag
 {
   const src = fs.readFileSync(path.join(ROOT, 'js/demo-live.js'), 'utf8');
   ok('the engine is one IIFE with the API note at the top, and it names no browser storage', /^\/\*[\s\S]*API NOTE[\s\S]*?\*\/\s*\(function \(\) \{\s*'use strict';/.test(src) && !/localStorage|sessionStorage|indexedDB|cookie/i.test(src));
+  ok('the strip\'s On and Off buttons carry data-dl: the site\'s own js/live.js hides every element with data-live that is not an open-now badge', /setAttribute\('data-dl', 'on'\)/.test(src) && /setAttribute\('data-dl', 'off'\)/.test(src) && !/setAttribute\('data-live'/.test(src));
   const names = ['start', 'stop', 'isOn', 'setSpeed', 'speed', 'tick', 'time', 'clock', 'clockAt', 'today', 'run', 'tally', 'tallies', 'onEvent', 'subscribe', 'feed', 'stats', 'settings', 'setSettings', 'watch', 'unwatch', 'clear', 'strip'];
   ok('the API of the note is there (start, stop, isOn, setSpeed, speed, tick, time, clock, onEvent, feed, stats, subscribe, settings, watch, tally, clear, strip, run ...)', names.every((n) => typeof Live[n] === 'function') && Live.speeds.map((s) => s.key + ':' + s.label).join() === 'calm:Calm,busy:Busy,rush:Rush', names.filter((n) => typeof Live[n] !== 'function').join());
   let touched = 0;
@@ -283,6 +285,41 @@ const signature = (x) => JSON.stringify(['visits', 'orders', 'requests', 'messag
   const fs2 = new Fake(); fs2.setItem('wa-demo-v1', raw);
   const st3 = Store.create(fs2, {});
   ok('a state saved before the rush existed (no live object) still works: the rush is off and can start', st3.get('live') && Object.keys(st3.get('live')).length === 0 && Live.create(st3, { now: () => START }).isOn() === false && (Live.create(st3, { now: () => START }).start(), st3.list('orders', { live: true }).length >= 1) && typeof old === 'object' && st2 !== null);
+}
+
+/* ---------------- 11. an answered question stays answered; a change of speed shows soon ---------------- */
+{
+  const x = make({ seed: 7 });
+  x.live.start({ speed: 'rush' });
+  const answered = new Set();
+  let ghosts = 0;
+  const answerAll = () => {   // what Mrs. Cathy and the kitchen do when they keep up: answer everything that waits
+    x.st.threadsWaiting({ live: true }).forEach((t) => { if (answered.has(t.thread)) ghosts++; else { x.st.post(t.thread, 'cathy', 'Yes, you can.'); answered.add(t.thread); } });
+    x.st.openRequests('cathy', { live: true }).concat(x.st.openRequests('kitchen', { live: true })).forEach((q) => x.st.reply(q.id, { answer: 'yes' }));
+    x.st.list('orders', { live: true }).filter((o) => o.status === 'new').forEach((o) => x.st.update('orders', o.id, { status: 'confirmed' }));
+    x.st.list('photos', { live: true }).filter((p) => p.status === 'waiting').forEach((p) => x.st.decidePhoto(p.id, true));
+    x.st.list('reviews', { live: true }).filter((p) => p.status === 'waiting').forEach((p) => x.st.decideReview(p.id, true));
+  };
+  for (let i = 0; i < 12 * 60; i++) { x.clock.ms += 1000; x.live.tick(); if (i % 5 === 0) answerAll(); }
+  ok('a question the desk answered stays answered: 12 minutes of Rush (far more than 40 events), everything answered as it comes, and no answered question ever comes back as waiting', answered.size >= 8 && x.live.stats().made > 60 && ghosts === 0 && x.st.threadsWaiting({ live: true }).every((t) => !answered.has(t.thread)), answered.size + ' answered, ' + x.live.stats().made + ' events, ' + ghosts + ' came back');
+  const msgs = lv(x.st, 'messages'), first = (th) => msgs.find((m) => m.thread === th && m.from === 'family'), replies = msgs.filter((m) => m.from === 'cathy');
+  ok('the reply has the event number of its question, so the two are tidied away together (no reply is left without its question)', replies.length >= 1 && replies.every((m) => m.ev >= 1 && !!first(m.thread) && first(m.thread).ev === m.ev), replies.length + ' replies left');
+  const y = make({ seed: 7 });
+  y.live.start({ speed: 'calm' });
+  y.advance(3);
+  const n0 = y.live.stats().made;
+  y.live.setSpeed('rush');
+  let secs = 0;
+  while (y.live.stats().made === n0 && secs < 90) { y.advance(1); secs++; }
+  ok('the speed shows soon: from Calm to Rush the next thing comes within 15 seconds (a Calm gap is 24 to 56 seconds)', secs >= 1 && secs <= 15, secs + ' seconds');
+  const z = make({ seed: 7 });
+  z.live.start({ speed: 'rush' });
+  z.advance(3);
+  const m0 = z.live.stats().made;
+  z.live.setSpeed('calm');
+  let secs2 = 0;
+  while (z.live.stats().made === m0 && secs2 < 90) { z.advance(1); secs2++; }
+  ok('and from Rush to Calm nothing is hurried: the next thing still comes at its own time, and Calm is slower than Rush', secs2 >= 1 && secs2 <= 60, secs2 + ' seconds');
 }
 
 await finish({});
