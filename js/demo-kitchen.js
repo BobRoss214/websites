@@ -759,7 +759,6 @@
       parts.strip = live ? live.strip() : null;
       parts.settings = live ? h('div', { 'class': 'kit-settings', role: 'group', 'aria-label': 'Answer-by times' },
         h('span', { 'class': 'kit-settings-title', text: 'Answer by' }), stepper('order', 'New order'), stepper('change', 'Change')) : null;
-      parts.paused = h('p', { 'class': 'kit-paused', hidden: '', text: 'The pretend rush is off, so the answer-by times wait. Press On to start them.' });
       parts.railHead = h('h2', { 'class': 'kit-rail-title', tabindex: '-1', id: 'kit-rail-h' }, 'Needs an answer ', parts.railCount = h('span', { 'class': 'kit-pill', text: '0' }));
       parts.keys = h('p', { 'class': 'kit-keys' },
         h('span', { 'class': 'kit-keys-label', text: 'Keys' }),
@@ -791,9 +790,8 @@
       rootEl.appendChild(parts.soundNote);
       rootEl.appendChild(parts.live);
       if (parts.strip) rootEl.appendChild(parts.strip);
-      if (parts.settings) rootEl.appendChild(parts.settings);
-      rootEl.appendChild(parts.paused);
       rootEl.appendChild(parts.board);
+      if (parts.settings) rootEl.appendChild(parts.settings);
       rootEl.appendChild(parts.contact);
     }
 
@@ -829,6 +827,7 @@
       return h('div', { 'class': 'kit-timer kit-tm-green', role: 'timer', 'aria-live': 'off', 'data-tour': 'kit-timer' },
         h('span', { 'class': 'kit-timer-text', text: fmtClock(t.secs * 1000) + ' left' }),
         h('span', { 'class': 'kit-bar', 'aria-hidden': 'true' }, h('span', { 'class': 'kit-bar-fill' })),
+        h('span', { 'class': 'kit-timer-note', text: '' }),
         h('span', { 'class': 'sr-only', text: answerBy }));
     }
 
@@ -947,7 +946,7 @@
     }
     function buildTicket(t) {
       var k = safe(t.key), titleId = 'kit-h-' + k, ed = ui.edit[t.key], today = live ? live.today() : (store.today ? store.today() : '');
-      var li = h('li', { 'class': 'kit-ticket kit-k-' + t.kind + (t.live ? ' kit-pretend' : '') + (ed ? ' kit-editing' : ''), id: 'kit-t-' + k, tabindex: '-1', role: 'group', 'aria-labelledby': titleId, 'data-key': t.key, 'data-tour': 'kit-card', 'data-order': t.id });
+      var li = h('li', { 'class': 'kit-ticket kit-k-' + t.kind + (t.live ? ' kit-pretend' : '') + (ed ? ' kit-editing' : ''), id: 'kit-t-' + k, tabindex: '-1', 'aria-labelledby': titleId, 'data-key': t.key, 'data-tour': 'kit-card', 'data-order': t.id });
       li.appendChild(h('header', { 'class': 'kit-t-head' },
         h('h3', { id: titleId, 'class': 'kit-t-title' }, h('span', { 'class': 'kit-num', text: '#' + t.num }), ' ', h('span', { 'class': 'kit-name', text: t.who })),
         h('p', { 'class': 'kit-kind kit-kind-' + t.kind }, icon(t.kind === 'change' ? 'swap' : 'plus'), h('span', { text: t.kind === 'change' ? 'Change to the order' : 'New order' })),
@@ -1079,7 +1078,6 @@
       parts.clockText.textContent = live ? time12(live.clock()) : '';
       var paused = !!live && !live.isOn();
       parts.clockNote.textContent = paused ? 'paused' : '';
-      parts.paused.hidden = !(paused && ui.rail.length);
       var none = !ui.rail.length && !ui.family.length && !ui.done.length;
       parts.empty.hidden = !none;
       parts.calm.hidden = none || !!ui.rail.length;
@@ -1102,7 +1100,8 @@
         if (!el || !live) return;
         var total = t.secs * 1000, waited = now - startOf(t), tm = timerOf(total - waited, total);
         ui.tm[t.key] = { left: total - waited, late: tm.late, waited: waited };
-        var box = el.querySelector('.kit-timer'), txt = el.querySelector('.kit-timer-text'), fill = el.querySelector('.kit-bar-fill'), wt = el.querySelector('.kit-waited-time');
+        var box = el.querySelector('.kit-timer'), txt = el.querySelector('.kit-timer-text'), fill = el.querySelector('.kit-bar-fill'), wt = el.querySelector('.kit-waited-time'), note = el.querySelector('.kit-timer-note');
+        if (note && note.textContent !== (running ? '' : 'paused (the pretend rush is off)')) note.textContent = running ? '' : 'paused (the pretend rush is off)';
         if (box) box.className = 'kit-timer kit-tm-' + tm.stage + (tm.late ? ' kit-tm-late' : '');
         if (txt && txt.textContent !== tm.text) txt.textContent = tm.text;
         if (fill) fill.style.width = Math.round(tm.pct * 100) + '%';

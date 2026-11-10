@@ -450,7 +450,7 @@
     }
     if (L.nextAt <= t) { L.nextAt = t + 1500; dirty = true; }   // far behind (a long gap): do not flood, go on from here
     if (familyReplies(st, L, t)) dirty = true;
-    if (!dirty && !(now - (L.last === undefined ? now : L.last) >= HEARTBEAT || now < L.last)) return undefined;
+    if (!dirty && !(now - (L.last === undefined ? now : L.last) >= HEARTBEAT || now + 1000 < L.last)) return undefined;   // (a clock more than a second behind the last write is written down too)
     L.t = t; L.last = now;
     trim(st, L);
     return { made: L.made };
@@ -511,7 +511,7 @@
       var nw = at === undefined ? now() : at, l = L();
       if (!l.on) return 0;
       var t = timeAt(l, nw);
-      if (l.seed !== undefined && l.nextAt > t && nw - l.last < HEARTBEAT && nw >= l.last && !answerDue(l, t)) return 0;   // nothing is due: write nothing
+      if (l.seed !== undefined && l.nextAt > t && nw - l.last < HEARTBEAT && nw + 1000 >= l.last && !answerDue(l, t)) return 0;   // nothing is due: write nothing
       var res = store.transact(function (st) { return tickState(st, nw); });
       return res ? 1 : 0;
     }
