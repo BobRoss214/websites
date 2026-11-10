@@ -125,6 +125,7 @@
   }
 
   function keys(e) {
+    if (e.repeat && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); return; }   // a key still held down from opening it must not press the button that now has focus
     if (e.key === 'Escape' || e.key === 'Esc') { e.preventDefault(); e.stopPropagation(); close(); return; }
     if (e.key !== 'Tab') return;
     const f = Array.prototype.filter.call(box.querySelectorAll('button, a[href], [tabindex]:not([tabindex="-1"])'), (x) => !x.disabled && x.getClientRects().length);
