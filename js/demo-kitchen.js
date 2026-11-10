@@ -1217,6 +1217,7 @@
       model: function () { return buildModel(readState(), menu); },
       tickets: function () { return ticketsOf(buildModel(readState(), menu), live ? live.settings() : {}); },
       openEditor: function (key) { var t = ticketOf(key || ui.current) || ui.rail[0]; if (t) openEditor(t); },
+      closeEditors: function () { if (Object.keys(ui.edit).length) { ui.edit = {}; sync(); } },
       current: function () { return ui.current; },
       destroy: function () {
         if (unsub) unsub();
