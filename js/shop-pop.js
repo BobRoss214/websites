@@ -136,7 +136,7 @@
     const f = Array.prototype.filter.call(box.querySelectorAll('button, a[href], [tabindex]:not([tabindex="-1"])'), (x) => !x.disabled && x.getClientRects().length);
     const a = doc.activeElement, first = f[0], last = f[f.length - 1];
     if (!f.length) { e.preventDefault(); return; }
-    if (e.shiftKey ? (a === first || !box.contains(a)) : (a === last || !box.contains(a))) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+    if (e.shiftKey ? (a === first || a === box || !box.contains(a)) : (a === last || !box.contains(a))) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
   }
   function strayed(e) { if (!box.contains(e.target)) closeX.focus({ preventScroll: true }); }   // focus came back from the browser's own bar: into the box, not the page
 
