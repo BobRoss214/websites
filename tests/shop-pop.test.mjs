@@ -104,7 +104,7 @@ const FARM = (LIST.groups.find((g) => /^Farm visit/.test(g.name)) || { n: 12 }).
 const PRODUCTS = LIST.products.filter((x) => x.group !== FARM && x.slug !== 'beer-wine');   // beer-wine: the old card, replaced by the beer group (it has no list)
 const EXPECTED = [...new Set([...PRODUCTS.map((x) => x.slug), ...(beerOnPage ? BEER : [])])];
 const SAYS = Object.fromEntries(LIST.products.map((x) => [x.slug, (x.name + ' ' + x.note).toLowerCase()]));
-const FORBIDDEN = /gluten[- ]?free|vegan|dairy[- ]?free|nut[- ]?free|non-?gmo|\bnatural|\blocal|\bfresh|home-?made|hand-?made|organic|\bcure|\bheal|\bboost|immun|\bdetox|\bvitamin|\bprobiotic|antioxidant|\bcalori|\d|\bages? |\byears?\b/i;
+const FORBIDDEN = /gluten[- ]?free|vegan|dairy[- ]?free|nut[- ]?free|non-?gmo|\bnatural|\blocal|\bfresh|home-?made|hand-?made|organic|\bcure|\bheal|\bboost|immun|\bdetox|\bvitamin|\bprobiotic|antioxidant|\bcalori|\d|\bages? |\byears?\b|\bnc\b|mountain|carolina|for taste|\bfrom the\b/i;
 
 /** What is wrong with a set of lists: which products have none, which lists have no card, which are malformed, which carry words the farm has not said. */
 function problems(lists) {
@@ -174,18 +174,21 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   const p = await open(browser, base, 'index.html', errs, { viewport: DESKTOP });
   await prep(p);
   const cards = await p.evaluate(() => window.__sp.cards().map((c) => ({ slug: window.__sp.slug(c), name: c.querySelector('.shop-name').textContent.replace(/\s+/g, ' ').trim(), tag: c.tagName, role: c.getAttribute('role'), tabindex: c.getAttribute('tabindex'),
-    full: c.classList.contains('shop-full'), group: window.__sp.group(c), btn: [...c.querySelectorAll('button.shop-open')].map((b) => ({ type: b.type, label: b.getAttribute('aria-label'), kids: b.children.length, text: b.textContent })), cls: c.classList.contains('shop-card-pop') })));
+    full: c.classList.contains('shop-full'), group: window.__sp.group(c), btn: [...c.querySelectorAll('button.shop-open')].map((b) => ({ type: b.type, label: b.getAttribute('aria-label'), kids: b.children.length, text: b.textContent, haspopup: b.getAttribute('aria-haspopup') })), cls: c.classList.contains('shop-card-pop') })));
   const withBtn = cards.filter((c) => c.btn.length);
   const exp = new Set(EXPECTED);
   ok(`every product card of groups 1-11 has one button (${EXPECTED.length} cards)`, EXPECTED.every((s) => cards.filter((c) => c.slug === s && c.btn.length === 1).length === 1), EXPECTED.filter((s) => !cards.some((c) => c.slug === s && c.btn.length === 1)).join(', '));
   ok('no other card has one: not the farm visit group, not the five older cards (Farm fun x2, U-pick pumpkins, strawberries, blueberries), not the old beer card', withBtn.every((c) => exp.has(c.slug)) && withBtn.length === EXPECTED.length, withBtn.filter((c) => !exp.has(c.slug)).map((c) => c.name).join(', ') + ` (${withBtn.length} buttons)`);
-  ok('each is a real button (type=button, no text of its own, named "<name>, <price>, show ingredients" or "... show what it is made of"), and its card is still a plain <li>', withBtn.every((c) => c.btn[0].type === 'button' && c.btn[0].kids === 0 && c.btn[0].text === '' && c.tag === 'LI' && c.role === null && c.tabindex === null && c.cls && c.btn[0].label.startsWith(c.name + ', ') && /, show (ingredients|what it is made of)$/.test(c.btn[0].label)), withBtn.filter((c) => !(c.btn[0].label || '').startsWith(c.name + ', ')).map((c) => c.name + ' = ' + c.btn[0].label).slice(0, 3).join(' | '));
+  ok('each is a real button (type=button, aria-haspopup="dialog", no text of its own, named "<name>, <price>, show ingredients" or "... show what it is made of"), and its card is still a plain <li>', withBtn.every((c) => c.btn[0].type === 'button' && c.btn[0].haspopup === 'dialog' && c.btn[0].kids === 0 && c.btn[0].text === '' && c.tag === 'LI' && c.role === null && c.tabindex === null && c.cls && c.btn[0].label.startsWith(c.name + ', ') && /, show (ingredients|what it is made of)$/.test(c.btn[0].label)), withBtn.filter((c) => !(c.btn[0].label || '').startsWith(c.name + ', ')).map((c) => c.name + ' = ' + c.btn[0].label).slice(0, 3).join(' | '));
   const made = withBtn.filter((c) => sample[c.slug].heading === 'Made of').every((c) => /show what it is made of$/.test(c.btn[0].label)) && withBtn.filter((c) => sample[c.slug].heading !== 'Made of').every((c) => /show ingredients$/.test(c.btn[0].label));
   ok('a thing that is not eaten ("Made of": caps, shirts, plants, jars) says "show what it is made of", the rest "show ingredients"', made);
   const price = withBtn.find((c) => c.slug === 'slushie');
   ok('a card with two sizes puts both in the name ("Slushie, Small $3, Large $4, show ingredients")', !!price && /^Slushie, Small \$3, Large \$4, show ingredients$/.test(price.btn[0].label), price && price.btn[0].label);
   const bars = await p.evaluate(() => ['pizza', 'ice-cream'].map((s) => { const c = window.__sp.bySlug(s); const a = c && c.querySelector('.shop-full-actions a'); if (!a) return { s, ok: !!c && c.classList.contains('shop-full') }; a.scrollIntoView({ block: 'center' }); const r = a.getBoundingClientRect(), top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return { s, ok: top === a || a.contains(top), full: c.classList.contains('shop-full') }; }));
   ok('the wide pizza and ice cream bars have their button, and the pizza bar\'s own two links are still the top thing under the pointer', bars.every((b) => b.ok) && cards.filter((c) => ['pizza', 'ice-cream'].includes(c.slug)).every((c) => c.btn.length === 1), JSON.stringify(bars));
+
+  const edge = await p.evaluate(() => { const c = window.__sp.bySlug('hot-pretzel'); c.scrollIntoView({ block: 'center' }); const r = c.getBoundingClientRect(), pts = [[r.x + r.width / 2, r.y + 1], [r.x + r.width / 2, r.bottom - 2], [r.x + 1, r.y + r.height / 2], [r.right - 2, r.y + r.height / 2]]; return pts.map(([x, y]) => { const e = document.elementFromPoint(x, y); return !!e && e.classList.contains('shop-open'); }); });
+  ok('the button reaches the card\'s own 3 px edge: the top, bottom, left and right border of a card are the button too', edge.every(Boolean), JSON.stringify(edge));
 
   /* -------------------------------------------------------------- 4. CLICK */
   ok('a click on a card opens the pop-up (role=dialog)', await openBy(p, 'hot-pretzel'));
@@ -206,6 +209,17 @@ await run('shop-pop', async ({ browser, base, errs }) => {
     if (slug === 'blood-orange-wheat' && !beerOnPage) continue;
     ok(`a "${heading}" card (${slug}) opens too: its heading, its items${contains ? ', "Contains:"' : ' and no "Contains:" line'}`, await openBy(p, slug) && await (async () => { const t = await popText(p); return t.heading === heading && JSON.stringify(t.items) === JSON.stringify(sample[slug].list) && (contains ? /^Contains: /.test(t.contains) : t.contains === '') && t.notice === NOTICE; })());
     await closeBy(p);
+  }
+  // a quick double click on a card that lies outside the box: the second click lands on the dim layer and must not shut the pop-up
+  {
+    await show(p, 'hot-pretzel');
+    const at = await spot(p, 'hot-pretzel');
+    await p.mouse.dblclick(at.x, at.y);
+    await settled(p, 0);
+    ok('a fast double click on a card (its second click lands on the dim layer) leaves the pop-up open', await isOpen(p));
+    await new Promise((r) => setTimeout(r, 500));
+    await p.mouse.click(6, 6);
+    ok('...and a click on the dim layer a moment later shuts it', await until(p, () => !document.querySelector('.shop-pop.is-open'), null, 10000));
   }
   await p.context().close();
 
@@ -313,6 +327,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   ok('after it shuts the page is as before: the scroll bar is back, nothing slid, the blocks are no longer hidden or inert, the place on the page is the same', lay1.bar === lay0.bar && near(lay1.left, lay0.left, 0.5) && lay1.hidden === lay0.hidden && lay1.y === lay0.y && !lay1.cls, JSON.stringify({ lay0, lay1 }));
   await k.keyboard.press('Space');
   ok('Space on the focused card opens it too', await until(k, () => !!document.querySelector('.shop-pop.is-open'), null, 20000));
+  await new Promise((r) => setTimeout(r, 500));   // (a click on the dim layer in the first 400 ms is the second click of a double click, and is left alone)
   await k.mouse.click(6, 6);   // the dim part, outside the box
   ok('a click on the dim part outside the box closes it, and focus is back on the card', await until(k, () => !document.querySelector('.shop-pop.is-open'), null, 10000) && await k.evaluate(() => document.activeElement.classList.contains('shop-open')));
   // a drag that begins in the box and ends on the dim part must not close it
@@ -350,6 +365,17 @@ await run('shop-pop', async ({ browser, base, errs }) => {
     await closeBy(k);
   }
   ok(`contrast of the words in the pop-up is 4.5 to 1 or better in each of the ${groups.length} groups (name on the band, notice, heading, note, price, chips, Close)`, weak.length === 0 && groups.length >= 11, weak.join(', ') + ` (${groups.length} groups)`);
+  const rings = [];
+  for (const slug of groups) {
+    await focusIn(slug);
+    await k.keyboard.press('Enter');
+    await until(k, () => !!document.querySelector('.shop-pop.is-open'), null, 20000);
+    await settled(k, 0);
+    const r = await k.evaluate(() => { const x = document.querySelector('.shop-pop-x'), cs = getComputedStyle(x), m = /(rgba?\([^)]*\))\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+(-?[\d.]+)px/.exec(cs.boxShadow); return { on: document.activeElement === x && x.matches(':focus-visible'), style: cs.outlineStyle, w: parseFloat(cs.outlineWidth), off: parseFloat(cs.outlineOffset), col: cs.outlineColor, spread: m ? parseFloat(m[5]) : 0, ratio: m ? window.__sp.ratio(cs.outlineColor, m[1]) : 0 }; });
+    if (!(r.on && r.style === 'solid' && r.w >= 3 && r.spread >= r.off + r.w && r.ratio >= 3)) rings.push(slug + ' ' + JSON.stringify(r));
+    await closeBy(k);
+  }
+  ok(`opened with the keyboard, the X shows a focus ring on each of the ${groups.length} band colours (a white ring between two rings of the dark brown: 3 to 1 or more each side, so the colour under it does not matter)`, rings.length === 0 && groups.length >= 11, rings.join(' | '));
   await k.context().close();
   await classic.close();
   }
@@ -409,6 +435,10 @@ await run('shop-pop', async ({ browser, base, errs }) => {
         const q = d.getBoundingClientRect(), r2 = b.getBoundingClientRect();
         return { w: r.width, h: r.height, vw: innerWidth, vh: innerHeight, inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, scrolls: b.scrollHeight > b.clientHeight, xIn: x.right <= r.right + 1 && x.top >= r.top - 1 && x.width >= 44, doneReach: q.bottom <= r2.bottom + 1 && q.top >= r2.top - 1, before, side: document.documentElement.scrollWidth - document.documentElement.clientWidth, boxSide: b.scrollWidth - b.clientWidth, root: parseFloat(getComputedStyle(document.documentElement).fontSize) };
       });
+      const was = await f.evaluate(() => { const b = document.querySelector('.shop-pop-box'); b.scrollTop = b.scrollHeight; return Math.round(b.scrollTop); });
+      await closeBy(f);
+      const next = await openBy(f, 'ice-cream') && await f.evaluate(() => document.querySelector('.shop-pop-box').scrollTop);
+      ok(`the next pop-up opens from the top, also when the one before was scrolled to its end (${was} px)`, was > 0 && next === 0, JSON.stringify({ was, next }));
       ok(`text at 200% (${g.root}px) on a phone (${view.width}px): the pop-up opens, stays inside the window (at most 85% high; it scrolls inside itself when it is taller), the X stays 44 px and in the box, the Close button can be scrolled to, and nothing slides sideways`, opened && g.root >= 31 && g.inside && g.h <= view.height * 0.85 + 1 && g.xIn && g.doneReach && g.side <= 0 && g.boxSide <= 0, JSON.stringify(g));
       await closeBy(f);
       await f.context().close();

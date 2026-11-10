@@ -30,17 +30,4 @@ A card that has a list carries the class `shop-card-pop` and, inside it, `button
 `flock /tmp/wa-heavy.lock node tests/shop-pop.test.mjs` (about 6 minutes on a quiet computer: it opens about 25 pages). To work on one part: `SHOPPOP_ONLY=hover` (or `dormant`, `data`, `keys`, `languages`, `bigfont`, `preview`, several with commas). The part "preview" builds the preview into a temporary folder and needs python3.
 
 ## The real site
-The farm has not given real lists, so the real site should not carry the made-up ones. To leave the feature out of a push, drop `js/shop-sample.js` and its `<script>` line from `index.html`. The small `js/shop-pop.js` line may stay (it does nothing without the sample, and asks for nothing), or go too, with `js/shop-pop-box.js` and `css/shop-pop.css`. The hover block in `css/extras.css` matches nothing without the script and may stay. When the real lists arrive, replace `js/shop-sample.js` (same shape) and everything works.
-
-## Browser-support table
-Nothing new is needed: `node tests/browser-support.test.mjs` passes with these files. `inert` is set as an attribute next to `aria-hidden` (`setAttribute('inert', '')`), so it is not a name the table lists: a browser that does not know it still has `aria-hidden` and the Tab loop. `:focus-visible` is asked in a `try`, and the CSS uses only properties the site already uses (`touch-action`, `place-items`, `position: sticky`, `min()`, custom properties).
-
-## What the preview build must do
-One line in `work-notes/preview/build-artifact.py` (added here, in `script_block`, just before `return block`): for `js/shop-pop.js` it puts `css/shop-pop.css` in the page as `<style data-shop-pop-css>` and `js/shop-pop-box.js` in a `<script>` in front of it, so that nothing is asked for later (the viewer lets a page load only its own published files). `js/shop-pop.js` and `js/shop-sample.js` are plain `<script>` tags of `index.html`, so the build inlines them in place already.
-
-## Things I was not sure about (the default I took)
-- Decision 1 of the spec says the `.shop-full` bars have no entry, but the data helper's spec and test 2 of the spec cover groups 2 and 3, so the pizza and ice cream bars HAVE lists and a button. They grow less (4.5 percent) and their own links stay on top of the button.
-- The spec says `js/shop-pop.js` is the loader plus the pop-up code. To keep the real site's first visit light (the real file set is at 415 KB of the 420 KB limit), the pop-up code is in a second file, `js/shop-pop-box.js`, that the small `js/shop-pop.js` asks for only when the sample lists are there. Folding the two files together is a copy and paste; the preview build line and the two test patterns would go back to one file.
-- The button covers the whole card, so the card's words cannot be selected with the mouse. Links in a card (the pizza bar's two) stay above it.
-- Chinese: the notice keeps its parentheses as the full-width ones used in Chinese text.
-- The beer group is not in this branch: the test accepts the page with or without it, and wants the 16 drinks to have lists once their cards are there.
+The farm has not given real lists, so the real site should not carry the made-up ones. For a push, take BOTH script lines out of `index.html`, `js/shop-pop.js` and `js/shop-sample.js`, the way `js/tour.js` goes (the files may stay in the repo; without the lists the feature is not there, and the loader is a file the real first visit does not need: it counts as one more request). The hover block in `css/extras.css` matches nothing without the script and may stay (about 0.7 KB with brotli) or go with the two lines. When the real lists arrive: put both lines back, replace `js/shop-sample.js` (same shape), and everything works.

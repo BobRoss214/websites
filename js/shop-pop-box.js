@@ -17,7 +17,7 @@
   const t = (s, v) => (W.t ? W.t(s, v) : v ? s.replace(/\{(\w+)\}/g, (m, k) => (own(v, k) ? v[k] : m)) : s);   // (without js/i18n.js: the English words)
   const clean = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
 
-  let items = [], cssReady = null, current = null, opener = null, down = null, saved = [], ticket = 0;
+  let items = [], cssReady = null, current = null, opener = null, down = null, saved = [], ticket = 0, openedAt = 0;
   let pop, box, closeX, picture, title, price, note, pretend, heading, list, contains, done;
 
   /* ---------------------------------------------------------------- the cards */
@@ -73,7 +73,7 @@
     done = el('button', 'btn btn-sm shop-pop-done', main); done.type = 'button';
     closeX.addEventListener('click', close); done.addEventListener('click', close);
     pop.addEventListener('pointerdown', (e) => { down = e.target; });
-    pop.addEventListener('click', (e) => { if (e.target === pop && (down === pop || down === null)) close(); down = null; });   // the dim part, not the end of a drag that began in the box
+    pop.addEventListener('click', (e) => { if (e.target === pop && Date.now() - openedAt > 400 && (down === pop || down === null)) close(); down = null; });   // the dim part (not the end of a drag that began in the box, and not the second click of a double click on a card)
     doc.body.appendChild(pop);
   }
 
@@ -146,8 +146,10 @@
       if (!ok) { current = null; opener = null; try { console.warn('Wise Acres: css/shop-pop.css did not load, so the pop-up stays shut'); } catch (x) { /* no console */ } return; }
       lock();
       pop.hidden = false;
+      box.scrollTop = 0;   // always from the top: the picture, the name and the notice first
       void pop.offsetWidth;   // the first frame is the shut one, so the fade runs
       pop.classList.add('is-open');
+      openedAt = Date.now();
       doc.addEventListener('keydown', keys, true); doc.addEventListener('focusin', strayed);
       closeX.focus({ preventScroll: true });
     });
@@ -170,13 +172,15 @@
       const slug = slugOf(card), entry = slug && own(data, slug) ? data[slug] : null;
       if (!entry || !Array.isArray(entry.list) || !entry.list.length) return;
       const btn = doc.createElement('button');
-      btn.type = 'button'; btn.className = 'shop-open'; btn._item = { card: card, btn: btn, entry: entry };
+      btn.type = 'button'; btn.className = 'shop-open'; btn.setAttribute('aria-haspopup', 'dialog'); btn._item = { card: card, btn: btn, entry: entry };
       card.classList.add('shop-card-pop'); card.appendChild(btn);
       items.push(btn._item);
     });
     if (!items.length) return;
     relabel();
     const hit = (e) => (e.target.closest ? e.target.closest('.shop-open') : null);
+    let keyboard = false;   // only for a browser that does not know :focus-visible: was the last thing a key?
+    doc.addEventListener('keydown', () => { keyboard = true; }, true); doc.addEventListener('pointerdown', () => { keyboard = false; }, true);
     const warm = (e) => { if (hit(e)) { loadCss(); shop.removeEventListener('pointerover', warm); shop.removeEventListener('focusin', warm); } };
     shop.addEventListener('pointerover', warm); shop.addEventListener('focusin', warm);
     shop.addEventListener('click', (e) => { const b = hit(e); if (b) open(b._item, b); });
@@ -184,7 +188,7 @@
       const b = hit(e);
       if (!b) return;
       let seen = true;
-      try { seen = b.matches(':focus-visible'); } catch (x) { /* a browser that does not know the selector: show it */ }
+      try { seen = b.matches(':focus-visible'); } catch (x) { seen = keyboard; }   // a browser that does not know the selector: the last key or click tells
       if (seen) b._item.card.classList.add('shop-pop-focus');
     });
     shop.addEventListener('focusout', (e) => { const b = hit(e); if (b) b._item.card.classList.remove('shop-pop-focus'); });

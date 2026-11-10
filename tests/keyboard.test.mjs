@@ -44,7 +44,7 @@ function helpers() {
       const seen = (n) => n.checkVisibility({ opacityProperty: true, visibilityProperty: true }) && parseFloat(getComputedStyle(n).opacity) > 0.5 && n.getBoundingClientRect().width > 1;
       const ringed = (n) => { const s = getComputedStyle(n); return s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) >= 1; };
       const ind = [el, el.nextElementSibling, el.parentElement].find((n) => n && ringed(n) && seen(n)) || (ringed(el) ? el : null);
-      const out = { d: tag(el), name: label(el), x: Math.round(el.getBoundingClientRect().left), y: Math.round(el.getBoundingClientRect().top + scrollY), fixed: !!fixedOf(el), again: !!el.dataset.kbSeen, probs: [] };
+      const out = { d: tag(el), name: label(el), x: Math.round(el.getBoundingClientRect().left), y: Math.round(el.getBoundingClientRect().top + scrollY), fixed: !!fixedOf(el), again: !!el.dataset.kbSeen, inShop: !!el.closest('#shop .shop-groups'), probs: [] };
       el.dataset.kbSeen = '1';
       const bad = (t) => out.probs.push(t);
       if (!el.matches(':focus-visible')) bad('not :focus-visible');
@@ -189,7 +189,7 @@ async function tour(p, label, vp, lang, { back = false } = {}) {
   ok(`${label}: no stop comes twice`, again.length === 0, again.slice(0, 3).map((s) => s.d + ' "' + s.name + '"').join(', '));
   // the order follows the page: it never jumps back up by more than a screen (side-by-side columns are read top to bottom, then the next column)
   const jumps = [];
-  for (let i = 1; i < stops.length; i++) { const a = stops[i - 1], b = stops[i]; if (!a.fixed && !b.fixed && b.y < a.y - vp.height) jumps.push(a.d + ' -> ' + b.d + ' (' + (b.y - a.y) + 'px)'); }
+  for (let i = 1; i < stops.length; i++) { const a = stops[i - 1], b = stops[i]; if (!a.fixed && !b.fixed && b.y < a.y - vp.height && !(a.inShop && b.inShop && b.x > a.x + 100)) jumps.push(a.d + ' -> ' + b.d + ' (' + (b.y - a.y) + 'px)'); }   // (the Store runs its groups in two CSS columns, read down the left one and then down the right one: with a Tab stop on every card, the step from the end of the left column to the top of the right one goes back up by the height of a column, and that is the reading order of the page, not a jump)
   ok(`${label}: the Tab order follows the page from top to bottom`, jumps.length === 0, jumps.slice(0, 3).join(' | '));
   const missed = await p.evaluate(() => window.__kb.missed());
   ok(`${label}: everything you can click can also be reached with Tab`, missed.length === 0, missed.slice(0, 6).join(', '));

@@ -406,7 +406,7 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
    tilts (transform only: nothing around it moves). The grow waits for a mouse (hover:hover); not scaled or tilted with reduced motion or "Pause animations". */
 .shop-card-pop{--s:1.07;--grow:translateY(-4px) scale(var(--s));--pop:rotate(-9deg) scale(1.14);--press:translateY(-1px) scale(1.03);position:relative;cursor:pointer;transition:transform .2s cubic-bezier(.3,1.5,.5,1),box-shadow .2s,border-color .2s}
 .shop-full.shop-card-pop{--s:1.045}   /* the wide pizza and ice cream bars grow less: 7% of a whole row is a lot */
-.shop-open{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;width:100%;height:100%;margin:0;padding:0;background:none;border:0;border-radius:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.shop-open{position:absolute;top:-3px;right:-3px;bottom:-3px;left:-3px;z-index:1;width:calc(100% + 6px);height:calc(100% + 6px);margin:0;padding:0;background:none;border:0;border-radius:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .shop-card-pop a{position:relative;z-index:2}   /* the pizza bar's own two links stay above the button */
 .shop-pop-focus{z-index:5;border-color:var(--red);box-shadow:0 9px 0 var(--ink),0 16px 22px -4px rgba(58,36,22,.3);transform:var(--grow)}
 .shop-pop-focus .shop-bubble{transform:var(--pop)}

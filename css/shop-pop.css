@@ -3,10 +3,10 @@
    sg-* class), the picture sits in a round bubble like the card's, the list is a set of rounded chips. Only the box scrolls (max 85% of the window high); the page behind is locked
    by html.shop-pop-lock, with the width of the scroll bar kept (--shop-bar) so the page does not slide sideways. Fades and scales in over 160 ms; not with reduced motion or
    "Pause animations". */
-.shop-pop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(58,36,22,.62);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,visibility 0s linear .16s;-webkit-tap-highlight-color:transparent}
+.shop-pop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(58,36,22,.62);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,visibility 0s linear .16s;touch-action:none;-webkit-tap-highlight-color:transparent}
 .shop-pop.is-open{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
 html.shop-pop-lock{overflow:hidden;padding-right:var(--shop-bar,0px)}
-.shop-pop-box{position:relative;box-sizing:border-box;width:min(92vw,34rem);max-height:85vh;overflow-x:hidden;overflow-y:auto;background:var(--paper,#fffdf6);color:var(--ink);border:3px solid var(--ink);border-radius:26px;box-shadow:0 8px 0 var(--ink);transform:translateY(10px) scale(.94);transition:transform .16s ease}
+.shop-pop-box{position:relative;box-sizing:border-box;width:min(92vw,34rem);max-height:85vh;overflow-x:hidden;overflow-y:auto;background:var(--paper,#fffdf6);color:var(--ink);border:3px solid var(--ink);border-radius:26px;box-shadow:0 8px 0 var(--ink);touch-action:pan-y;overscroll-behavior:contain;transform:translateY(10px) scale(.94);transition:transform .16s ease}
 .shop-pop.is-open .shop-pop-box{transform:none}
 .shop-pop-box:focus{outline:none}
 .shop-pop-bar{position:sticky;top:0;z-index:3;height:0}   /* no height: the X sits on the band, and stays in view when the box scrolls */
@@ -14,6 +14,7 @@ html.shop-pop-lock{overflow:hidden;padding-right:var(--shop-bar,0px)}
 .shop-pop-x::before,.shop-pop-x::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:3px;margin:-1.5px 0 0 -9px;background:currentColor;border-radius:2px;transform:rotate(45deg)}
 .shop-pop-x::after{transform:rotate(-45deg)}
 @media (hover:hover){.shop-pop-x:hover{background:var(--sun,#ffc928)}}
+.shop-pop-x:focus-visible{outline:3px solid #fff;outline-offset:2px;box-shadow:0 0 0 8px var(--ink)}   /* the X sits on the group's colour, where the site's blue ring is lost on half of them: a white ring between two dark ones shows on all */
 .shop-pop-head{display:flex;align-items:center;gap:14px;padding:18px 66px 16px 18px;background:var(--g,var(--sun,#ffc928));color:var(--gt,var(--ink));border-bottom:3px solid var(--ink)}
 .shop-pop-pic{flex:none;display:grid;place-items:center;width:88px;height:88px;background:var(--gp,#fff0b3);border:3px solid var(--ink);border-radius:50%;box-shadow:0 3px 0 var(--ink)}
 .shop-pop-ico{width:80%;height:80%}
