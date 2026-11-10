@@ -77,7 +77,7 @@ await run('live', async ({ browser, base, errs }) => {
     by('greenhouse').every((x) => x.text === 'Closed today. Opens Saturday at 11 am Not official yet') && by('pizza').every((x) => x.text === 'Closed today. Opens Saturday at 11 am Not official yet') && by('farm').every((x) => x.text === 'Closed today. Next open day: Saturday'), JSON.stringify(b));
   await at('2026-12-06T21:00:00-05:00');
   b = await badges();
-  ok('Sun Dec 6 at 9 pm (the last tree day is over): the usual hours speak again ("Opens Friday at 10 am"), no label anywhere, no farm badge', by('greenhouse').every((x) => x.text === 'Closed now. Opens Friday at 10 am' && x.labels === 0) && by('pizza').every((x) => x.text === 'Closed now. Opens Friday at 4 pm' && x.labels === 0) && by('farm').length === 0 && b.every((x) => x.labels === 0), JSON.stringify(b));
+  ok('Sun Dec 6 at 9 pm (the last tree day, after closing): the next opening named is the usual one ("Opens Friday at 10 am"), no label anywhere; the farm badge has no hours, so it still says it is open today until midnight', by('greenhouse').every((x) => x.text === 'Closed now. Opens Friday at 10 am' && x.labels === 0) && by('pizza').every((x) => x.text === 'Closed now. Opens Friday at 4 pm' && x.labels === 0) && by('farm').length > 0 && by('farm').every((x) => x.text === 'Open today. No reservation needed') && b.every((x) => x.labels === 0), JSON.stringify(b));
   await at('2026-11-10T12:00:00-05:00');
   b = await badges();
   ok('Tue Nov 10 (fall is over, the trees are not on yet): the usual hours, no label, no farm badge', by('greenhouse').every((x) => x.text === 'Closed today. Opens Friday at 10 am' && x.labels === 0) && by('farm').length === 0, JSON.stringify(b));
