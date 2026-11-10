@@ -42,9 +42,10 @@ const RULES = {
 };
 
 /* ---- orders in the list's own words for a whole group (by the group's name): `needs` must still be in that group's lines of the list, `set` goes to the group (the test looks at the page's group box), `product` goes to every product of the group.
- *      Beer, cider & wine: the page says nothing about an age, so no card says one; the page does not say where the drinks are sold, so the band has no place line (the builder's group, 10 Nov 2026). */
+ *      Beer, cider & wine: the page says nothing about an age, so no card says one; the page does not say where the drinks are sold, so the band has no place line; no picture of a drink carries lettering or a logo
+ *      (the test looks for drawn text and embedded pictures in the symbols; a logo it cannot see, the list says so) (the builder's group, 10 Nov 2026). */
 const GROUP_RULES = {
-  'Beer, cider & wine': { needs: [/Do not put an age statement/, /No place line/], set: { noPlaceLine: true }, product: { noAgeStatement: true } },
+  'Beer, cider & wine': { needs: [/Do not put an age statement/, /No place line/, /may carry a logo or lettering/], set: { noPlaceLine: true }, product: { noAgeStatement: true, noLettering: true } },
 };
 
 /* ---- sentences a card must carry, word for word (the decisions of 24 Oct 2026). Each one must be in the product's note in the list, or this stops. */

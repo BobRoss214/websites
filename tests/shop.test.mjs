@@ -6,13 +6,15 @@
  *   0  the list file is the list: tests/shop-list.json carries the fingerprint of work-notes/SHOP-LIST.md (when that file is there), so a changed list
  *      cannot go unnoticed and the file cannot be edited by hand
  *   1  every product of the list is on the page exactly once, in its group, with its name; no card the list does not have (the few extra cards that the
- *      published page had before are named in the list file); the groups are the list's groups
+ *      published page had before are named in the list file); the groups are the list's groups; a group that has small headings in the list (Beer, cider & wine:
+ *      Beer, Cider (Red clay), Wine) shows each one above its own cards, in the list's order, and names its list for a screen reader
  *   2  the prices: the dollar amounts of each card are the list's (with their small words: small / large, 1 scoop, 8 oz, a pound; a range like $15 to $17
  *      shows both ends), a price the farm has not confirmed shows the page's own "Prices coming soon" and no dollar sign, free things say free, and no
  *      number appears that the list does not give (the pizza prices and hours and the barrel train's age are the farm's older words and are in the list; the
  *      wagon ride's age, 3 and younger ride free, is the site builder's of Nov 3 2026 and the card must say it word for word);
- *      the sentences the list makes a card say are there (the pretzel's nuts, "the same price" for beer and wine, the pumpkin note), and the words that
- *      were taken out on purpose do not come back
+ *      the sentences the list makes a card say are there (the pretzel's nuts, the pumpkin note), the sentences it makes a whole group say are there (Beer, cider & wine:
+ *      its note "the same price" and the line about not bringing your own alcohol, which is no longer in Drinks), a group the list gives no place line has none,
+ *      and the words that were taken out on purpose do not come back
  *   3  the pictures: every <use href="#p-..."> has its <symbol>, none is empty, each card shows the picture of its own product, no picture serves two
  *   4  words that must never be there, in any language: phone numbers, the elderberry brand's health claims and dose figures, the maker's own name
  *   5  the five languages: the same dollar amounts on every card, every text block has its translation, no English left over (a scent's or maker's name stays
@@ -22,7 +24,7 @@
  *   7  layout at 320, 360, 390, 768, 992, 1024, 1240, 1264, 1280, 1366 and 1920 px wide (and the long languages on a phone, and at 1264 px, where a card is narrowest): nothing
  *      sideways, no cut text, no word broken in the middle (from 390 px up), no card or band touching or overlapping another (the 4 px shadow counts) or sticking
  *      out of its group, and the Store is dense on purpose (css/extras.css, "Store on a computer"):
- *        from 992 px the 12 groups run in two columns (down the left one, then down the right one: the page's order), each about half the width, none cut between
+ *        from 992 px the 13 groups run in two columns (down the left one, then down the right one: the page's order), each about half the width, none cut between
  *        the columns, the columns about as tall as each other, the farm visit group last and across both; 2 cards across in a column (3 from 1264 px) and 4 rides
  *        across (5 from 1264 px);
  *        below 992 px one column, the groups stacked in the page's order, 3 cards across over 760 px and 2 below;
@@ -49,12 +51,12 @@ const PRODUCTS = LIST.products, GROUPS = LIST.groups, EXTRAS = LIST.extras || []
 const NAMES = LIST.names || [], LOANWORDS = LIST.loanwords || [];   // names that stay as written in every language; English words a language of the site uses as its own
 const LANGS = ['en', 'es', 'hi', 'zh', 'vi'];
 const WIDTHS = [1366, 1920, 1280, 1264, 1240, 1024, 992, 768, 390, 360, 320];   // the first one gets every check; the others get the layout checks (992 and 1264 are where the layout changes: two columns, three cards across; 1280 is where the section gets wider)
-const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', price: '.shop-price, .shop-opts', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full', band: '.shop-band', note: '.shop-sub', hand: '.shop-price.hand, .shop-price .hand', farm: '#shop-farm', groups: '.shop-groups' };
+const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', price: '.shop-price, .shop-opts', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full', band: '.shop-band', note: '.shop-sub', hand: '.shop-price.hand, .shop-price .hand', farm: '#shop-farm', groups: '.shop-groups', sub: '.shop-subh', where: '.shop-where' };
 const STILL = '.reveal{opacity:1!important;transform:none!important}*{animation:none!important;transition:none!important}html{scroll-behavior:auto!important}html.cv .cv-sec{content-visibility:visible!important}';
 
 /* ------------------------------------------------------------------ small helpers (Node side) */
 const clean = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
-const norm = (s) => clean(s).toLowerCase().replace(/&amp;|&/g, ' and ').replace(/[\u2018\u2019`]/g, "'").replace(/[^a-z0-9' -]+/g, ' ').replace(/\s+/g, ' ').trim();   // "Beer, hard cider & wine" == "beer hard cider and wine"
+const norm = (s) => clean(s).toLowerCase().replace(/&amp;|&/g, ' and ').replace(/[\u2018\u2019`]/g, "'").replace(/[^a-z0-9' -]+/g, ' ').replace(/\s+/g, ' ').trim();   // "Beer, cider & wine" == "beer cider and wine"
 const digits = (s) => String(s).replace(/[\u0966-\u096f]/g, (c) => String(c.charCodeAt(0) - 0x966)).replace(/[\u0660-\u0669]/g, (c) => String(c.charCodeAt(0) - 0x660)).replace(/[\uff10-\uff19]/g, (c) => String(c.charCodeAt(0) - 0xff10));
 const numOf = (s) => Number(String(s).replace(/^[.,]/, '0.').replace(',', '.'));
 // every dollar amount in a text: "$5", "$1.25", "$.84", "$ 4", "5$", "US$5", "5 USD", "5 dólares", "5 đô la", "5美元", "5 डॉलर"
@@ -160,7 +162,11 @@ function readShop(SEL) {
   const attrKeys = [...new Set([...shop.querySelectorAll('*')].flatMap((e) => [...e.attributes].filter((a) => a.name.indexOf('data-ta-') === 0).map((a) => a.value)))];
   return {
     lang: window.WISE_ACRES ? WISE_ACRES.lang : '', htmlLang: document.documentElement.lang, cards, stray, strayAttrs,
-    groups: [...shop.querySelectorAll(SEL.group)].map((g) => { const h = g.querySelector(SEL.groupHead); return { id: g.id, head: h ? clean(h.textContent) : '', tag: h ? h.tagName.toLowerCase() : '', cards: g.querySelectorAll(SEL.card).length, text: textOf(g) }; }),
+    groups: [...shop.querySelectorAll(SEL.group)].map((g) => {
+      const h = g.querySelector(SEL.groupHead);
+      const subs = [...g.querySelectorAll(SEL.sub)].map((t) => { const u = t.nextElementSibling, grid = !!u && u.matches(SEL.grid); return { head: clean(t.textContent), cards: grid ? [...u.querySelectorAll(SEL.name)].map((n) => clean(n.textContent)) : [], named: grid && !!t.id && u.getAttribute('aria-labelledby') === t.id }; });
+      return { id: g.id, head: h ? clean(h.textContent) : '', tag: h ? h.tagName.toLowerCase() : '', cards: g.querySelectorAll(SEL.card).length, where: g.querySelectorAll(SEL.where).length, subs, text: textOf(g) };
+    }),
     pills: [...shop.querySelectorAll(SEL.jump)].map((a) => ({ href: a.getAttribute('href') || '', text: clean(a.textContent) })),
     headings: [...shop.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((h) => ({ tag: h.tagName.toLowerCase(), text: clean(h.textContent) })),
     allText: textOf(shop) + ' ' + attrText.join(' '), shopText: textOf(shop),
@@ -352,7 +358,7 @@ async function openShop(browser, base, errs, o = {}) {
 /* ================================================================== the checks that need no browser */
 {
   const slugs = PRODUCTS.map((p) => p.slug);
-  ok('the list file is sane: 12 groups, every product in one group, no slug twice, a price rule and a picture for each', GROUPS.length === 12 && new Set(slugs).size === slugs.length && PRODUCTS.every((p) => GROUPS.some((g) => g.n === p.group && g.slugs.includes(p.slug)) && p.symbols.length && (p.unknown || p.free || p.amounts.length)) && GROUPS.every((g) => g.slugs.every((s) => slugs.includes(s))), `${PRODUCTS.length} products`);
+  ok('the list file is sane: 13 groups, every product in one group, no slug twice, a price rule and a picture for each', GROUPS.length === 13 && new Set(slugs).size === slugs.length && PRODUCTS.every((p) => GROUPS.some((g) => g.n === p.group && g.slugs.includes(p.slug)) && p.symbols.length && (p.unknown || p.free || p.amounts.length)) && GROUPS.every((g) => g.slugs.every((s) => slugs.includes(s))), `${PRODUCTS.length} products`);
   info(`the list: ${PRODUCTS.length} products in ${GROUPS.length} groups; ${PRODUCTS.filter((p) => p.unknown).length} have no confirmed price ("${LIST.unknownWords}"), ${PRODUCTS.filter((p) => p.free).length} are free; ${EXTRAS.length} extra cards are allowed because the published page already had them (${EXTRAS.map((e) => e.name).join(', ')})`);
   // 0: the list file is made from the farm's list. work-notes/SHOP-LIST.md is not part of the website; when it is here, its fingerprint must be the one in the file.
   const MD = path.join(ROOT, 'work-notes', (LIST._source || {}).file || 'SHOP-LIST.md');
@@ -456,10 +462,25 @@ await run('shop', async ({ browser, base, errs }) => {
   if (extrasShown.length) info(`${extrasShown.length} card(s) are not in SHOP-LIST.md but were already on the published page, so they are allowed: ${extrasShown.map((c) => c.name).join(', ')}`);
   const headings = en.groups.map((g) => norm(g.head));
   const gMissing = GROUPS.filter((g) => !headings.includes(norm(g.name))), gExtra = en.groups.filter((g) => !GROUPS.some((x) => norm(x.name) === norm(g.head)));
-  ok(`1: the 12 groups are on the page with the names of the list (headings)`, gMissing.length === 0 && gExtra.length === 0 && en.groups.length === GROUPS.length, few(gMissing.map((g) => `missing "${g.name}"`).concat(gExtra.map((g) => `page has "${g.head}" (#${g.id})`))));
+  ok(`1: the ${GROUPS.length} groups are on the page with the names of the list (headings)`, gMissing.length === 0 && gExtra.length === 0 && en.groups.length === GROUPS.length, few(gMissing.map((g) => `missing "${g.name}"`).concat(gExtra.map((g) => `page has "${g.head}" (#${g.id})`))));
   const order = GROUPS.map((g) => headings.indexOf(norm(g.name)));
   info(`group order on the page: ${order.every((v, i) => i === 0 || v > order[i - 1]) ? 'the same as the list' : 'not the order of the list (' + en.groups.map((g) => g.head).join(' > ') + ')'}`);
   ok('1: each card is shown once in its own group box (no group is empty, no card sits outside a group)', en.groups.every((g) => g.cards > 0) && en.cards.every((c) => c.groupId), few(en.cards.filter((c) => !c.groupId).map((c) => c.name)));
+  // a group with small headings in the list: each heading is on the page, above its own cards, in the list's order; no other group has one
+  const subBad = [];
+  for (const g of GROUPS) {
+    const pg = en.groups.find((x) => norm(x.head) === norm(g.name)); if (!pg) continue;
+    const want = g.subs || [];
+    if (pg.subs.length !== want.length) subBad.push(`"${g.name}": ${pg.subs.length} small headings on the page, ${want.length} in the list`);
+    want.forEach((sub, i) => {
+      const t = pg.subs[i]; if (!t) return;
+      const names = sub.slugs.map((sl) => norm(PRODUCTS.find((q) => q.slug === sl).name));
+      if (norm(t.head) !== norm(sub.name)) subBad.push(`"${g.name}": small heading ${i + 1} is "${t.head}", the list has "${sub.name}"`);
+      else if (t.cards.map(norm).join('|') !== names.join('|')) subBad.push(`"${g.name}" / "${sub.name}": the cards under it are ${few(t.cards, 4)}, the list has ${few(sub.slugs, 4)}`);
+      if (!t.named) subBad.push(`"${g.name}" / "${sub.name}": the list of its cards is not named by the heading (aria-labelledby), so a screen reader does not say which drinks they are`);
+    });
+  }
+  ok(`1: the small headings of a group (${GROUPS.filter((g) => g.subs).map((g) => g.subs.map((x) => '"' + x.name + '"').join(', ')).join('; ') || 'none'}) are above their own cards in the list's order, and no other group has any`, subBad.length === 0 && GROUPS.some((g) => g.subs), few(subBad));
 
   /* ---- 2: the prices */
   const priceBad = [], pairBad = [], unitBad = [], soonBad = [], freeBad = [], numBad = [], ruleBad = [], saysBad = [], avoidBad = [];
@@ -542,7 +563,18 @@ await run('shop', async ({ browser, base, errs }) => {
   ok('2: no number on a card that the list does not give for that product (sizes, counts, ages, dates)', numBad.length === 0, few(numBad));
   ok('2: the list\'s own orders: pizza links to its page and its group shows no clock time but the older page\'s 10 am and 8 pm, beer and wine have no age statement, Christmas trees have only the page\'s own dates', ruleBad.length === 0, few(ruleBad));
   const saysTotal = PRODUCTS.reduce((n, q) => n + (q.says || []).length, 0);
-  ok(`2: the sentences the list makes a card say are on the card (${saysTotal}: the pretzel's nuts, the slushie board note, "the same price" for beer and wine, the pumpkin note)`, saysTotal >= 4 && saysBad.length === 0, few(saysBad));
+  ok(`2: the sentences the list makes a card say are on the card (${saysTotal}: the pretzel's nuts, the slushie board note, the pumpkin note, the wagon ride's age, the u-pick dates)`, saysTotal >= 4 && saysBad.length === 0, few(saysBad));
+  // the sentences the list makes a whole group say (the group's note under its band, a line in its foot), and the words a group must not carry any more
+  const gSaysBad = [], gAvoidBad = [];
+  for (const g of GROUPS) {
+    const pg = en.groups.find((x) => norm(x.head) === norm(g.name)); if (!pg) continue;
+    for (const t of g.says || []) if (!norm(pg.text).includes(norm(t))) gSaysBad.push(`"${g.name}": should say "${t.slice(0, 60)}"`);
+    for (const a of g.avoid || []) if (norm(pg.text).includes(norm(a.words))) gAvoidBad.push(`"${g.name}": says "${a.words}" (${a.why})`);
+    if (g.noPlaceLine && pg.where) gAvoidBad.push(`"${g.name}": has a place line ("At the barn" ...), the list says the page does not say where it is sold`);
+  }
+  const gSays = GROUPS.reduce((n, g) => n + (g.says || []).length, 0), gAvoid = GROUPS.reduce((n, g) => n + (g.avoid || []).length + (g.noPlaceLine ? 1 : 0), 0);
+  ok(`2: the sentences the list makes a whole group say are in that group's box (${gSays}: the note under the band of Beer, cider & wine, "the same price", and the line about not bringing your own alcohol)`, gSays >= 3 && gSaysBad.length === 0, few(gSaysBad));
+  ok(`2: what a group must not carry is not there (${gAvoid}: the alcohol line is not in Drinks any more, and Beer, cider & wine has no place line)`, gAvoid >= 2 && gAvoidBad.length === 0, few(gAvoidBad));
   ok(`2: the words taken out of a card on purpose have not come back (${PRODUCTS.reduce((n, q) => n + (q.avoid || []).length, 0)}: "big bag", "handmade" soap, "sparkling juice" after Izze)`, avoidBad.length === 0, few(avoidBad));
 
   /* ---- 3: the pictures */
@@ -555,6 +587,10 @@ await run('shop', async ({ browser, base, errs }) => {
   ok('3: no picture is empty (it has a viewBox, at least 3 shapes, and draws over at least a tenth of its box)', emptySy.length === 0, few(emptySy.map((s) => `#${s.id} (${s.shapes} shapes, viewBox ${s.hasViewBox ? 'ok' : 'missing'}, fills ${Math.round(s.area * 100)}%)`)));
   const wrongPic = [...where].map(([s, l]) => ({ q: PRODUCTS.find((q) => q.slug === s), c: l[0] })).filter(({ q, c }) => { const ids = c.uses.map((u) => u.replace(/^#/, '')); return !q.symbols.some((x) => ids.includes(x)) || ids.some((i) => !q.symbols.includes(i)); });
   ok('3: each card shows the picture of its own product (p-<slug>; the wagon ride, barrel train, corn pit and sunn hemp maze use the pictures the list names)', wrongPic.length === 0, few(wrongPic.map(({ q, c }) => `${q.slug}: shows ${c.uses.join(' ') || 'no picture'}, list says ${q.symbols.map((x) => '#' + x).join(' or ')}`)));
+  // a drink's picture is drawn with plain shapes: no letters (<text>), no embedded picture (<image>), no copy of another drawing (<use>), no style or gradient list (the list: no logo, no lettering)
+  const lettered = PRODUCTS.filter((q) => q.noLettering).flatMap((q) => q.symbols.map((id) => ({ q, s: hasSym.get(id) }))).filter(({ s }) => s && s.found && /<(?:text|tspan|image|use|style|defs|foreignObject)\b/i.test(s.markup));
+  const drawn = PRODUCTS.filter((q) => q.noLettering).length;
+  ok(`3: the ${drawn} drinks' pictures have no lettering and no logo-making parts (only plain shapes: no <text>, <image>, <use>, <style>, <defs>)`, drawn >= 16 && lettered.length === 0, few(lettered.map(({ q }) => q.slug)));
   const byPic = {};
   for (const c of en.cards) for (const u of c.uses.map((x) => x.replace(/^#/, ''))) (byPic[u] = byPic[u] || []).push(c.name);
   const twice = Object.entries(byPic).filter(([, names]) => new Set(names).size > 1);
@@ -695,6 +731,7 @@ await run('shop', async ({ browser, base, errs }) => {
   // A scent's or maker's name (the list's `names`) stays as written. An English word that the list calls a loan word of a language stays too, but only when
   // that language's page uses it outside #shop as well ("mỗi pound" in the Vietnamese tomato prices): then it is the site's own word, not a left-over.
   const stripNames = (t) => NAMES.reduce((s, n) => s.split(n).join(' '), t);
+  const onlyNames = (t) => !/[A-Za-z]/.test(stripNames(t));   // a text that is nothing but names the list says stay as written ("Hop drop", "Loyal to the dream"): the same in every language is right
   const stoplist = (t, loan = []) => { for (const m of stripNames(t).matchAll(new RegExp(STOP.source, 'gi'))) if (!loan.includes(m[0].toLowerCase())) return m[0]; return ''; };
   for (const lang of LANGS.slice(1)) {
     const q = await openShop(browser, base, errs, { w: 360, h: 800, lang });
@@ -719,9 +756,18 @@ await run('shop', async ({ browser, base, errs }) => {
       const en0 = enKeys.get(k.key) || '';
       const stop = stoplist(k.plain, loan);
       if (stop) leaks.push(`"${k.plain.slice(0, 34)}" has the English word "${stop}"`);
-      else if (clean(k.text) === clean(en0) && /(?<![A-Za-z])[a-z]{4,}/.test(en0) && !/^\$|^\d/.test(en0)) leaks.push(`"${en0.slice(0, 34)}" is still English`);
+      else if (clean(k.text) === clean(en0) && /(?<![A-Za-z])[a-z]{4,}/.test(en0) && !/^\$|^\d/.test(en0) && !onlyNames(en0)) leaks.push(`"${en0.slice(0, 34)}" is still English`);
     }
     ok(`5: ${tag}: no English left in the cards (names, small words, notes) except the farm's and makers' names`, leaks.length === 0, few(leaks));
+    // the group's own words (its name and its small headings) are in the language too; "Red clay", the maker, stays as written
+    const gLeft = [];
+    for (const g of GROUPS.filter((x) => x.subs)) {
+      const e = en.groups.find((x) => norm(x.head) === norm(g.name)), l = L.groups.find((x) => e && x.id === e.id);
+      if (!e || !l) continue;
+      if (clean(l.head) === clean(e.head)) gLeft.push(`"${e.head}"`);
+      e.subs.forEach((t, i) => { if (!l.subs[i] || clean(l.subs[i].head) === clean(t.head)) gLeft.push(`"${t.head}"`); });
+    }
+    ok(`5: ${tag}: the name of the group with small headings and each small heading are translated`, gLeft.length === 0, few(gLeft));
     const badL = forbiddenIn(L.allText);
     ok(`4: ${tag}: no phone number, health claim, dose figure or the maker's name in #shop`, badL.length === 0, badL.join(', '));
     await q.addStyleTag({ content: STILL });
