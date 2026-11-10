@@ -18,11 +18,11 @@ Lavender oil). The final version keeps wide boxes only where they clearly pay: a
 - index.html: only classes on 10 card `<li>`s. The class says for how many cards across the card is wide, because a wide card must not leave a hole at the end of the row before it
   (the order of the cards is fixed):
   - `shop-wide3` three across (from 1264 px, and 761-991 px): Hot pretzel, Spicy pecan brittle, Slushie, Organic olive oil, Popcorn kernels, NC pumpkins; farm group, 761-991 px only:
-    Wagon ride and the u-pick tomatoes
-  - `shop-wide2` two across (992-1263 px, and a phone up to 760 px, where a wide card is a whole row): Hot pretzel, Spicy pecan brittle, Slushie, Blackberry plant, NC pumpkins;
+    Wagon ride, Corn pit and the u-pick tomatoes
+  - `shop-wide2` two across (992-1263 px, and a phone up to 760 px, where a wide card is a whole row): Hot pretzel, Spicy pecan brittle, Slushie, NC pumpkins, Christmas trees;
     farm group, phone only: Corn pit and the u-pick tomatoes
-  - `shop-wide5` / `shop-wide4` five / four rides across in the farm group (from 1264 / 992 px): the u-pick tomatoes & basil only
-  At 1366 px 7 of the 67 boxes are wide (13 before), 6 at 1100 px. No wide box ends alone in a row (the pumpkin and drink boxes that did are normal again).
+  - `shop-wide5` / `shop-wide4` five / four rides across in the farm group (from 1264 / 992 px): the u-pick tomatoes & basil carries both, Corn pit only wide4 (four across)
+  At 1366 px 7 of the 67 boxes are wide (13 before), 7 at 1100 px.
   The print layout is untouched (every wide rule is `@media screen`, and the print block still sets `display:block` on every card).
   If cards are added to or taken out of a group, the rows can get a hole: tests/shop.test.mjs ("every row of cards is full except the last") names the row; change the classes.
 - Drinks: no wide boxes. The Beer, hard cider & wine card (3 lines of note) made the Organic iced coffee row 125 px tall; it is to leave Drinks for a group of its own, and
@@ -31,6 +31,18 @@ Lavender oil). The final version keeps wide boxes only where they clearly pay: a
 - tests/shop.test.mjs: the cards across are counted with a wide card as two; every row but the last of a grid is full; the cards of a row end at the same height (no ragged
   bottoms); and a fill check in English at 1440, 1280 and 1100 px (no card under 40%, at most 4 under 55%, at most 7 under 60%, Organic iced coffee at least 60%, wide boxes filled
   across at least 75%).
+
+## After the independent review of the merge (branch storegaps2)
+- S1 (class edits only): Blackberry plant is no longer wide, Christmas trees gets `shop-wide2`, Corn pit gets `shop-wide3 shop-wide4`. At 992-1263 px, on a tablet and on a phone the
+  old classes left a box alone in the last row (Local mums, Christmas trees, U-pick blueberries) and made Plants / Fall / Farm taller. Now (English, group height minus the old page):
+  Plants 0 at every width; Fall -2 to -49 px up to 1263 px (+32 at 1264-1280: the NC pumpkins note is 6 lines there); Farm -37 to -116 px at 390-768 and 1264+, +9 to +16 at 992-1263;
+  the whole Store is shorter than the old page at every width (-192 at 390 and 768, -41 at 992, -4 at 1100 and 1263, -147 at 1264, -117 at 1920). The price: at 992-1263 px Blackberry
+  plant is the old page's own box again, 41% full, 1 point above the test's 40% floor (the lone Local mums it replaced made Plants 71 px taller). Left alone on purpose: Christmas trees
+  alone in its last row at 3 across (768 and 1264+), like Painted rocks and Local mums in the old page.
+- S2: the `shop-spread` rules now sit inside the four wide blocks, next to the matching width class, so they only apply while the card is wide. Taking the shop-wide2..5 classes off is
+  therefore enough to go back to the old boxes (measured: with only shop-wide2..5 removed no group height differs from the old page at 11 widths from 390 to 1920 px); before this, a
+  leftover shop-spread made the u-pick card 8-46 px taller. The comment above the wide-card rules in css/extras.css says the same. A revert also takes the wide-box and fill hunks of
+  tests/shop.test.mjs with it (they need wide boxes).
 
 ## Numbers (English, page without the Beer card, 1440 / 1280 / 1100 px; cards under 55% / under 60%; worst card)
 before 17 / 18 (29.7%), 14 / 20 (26.8%), 9 / 9 (31.2%); after 3 / 4 (50.6%), 3 / 6 (42.7%), 1 / 3 (50.6%).
