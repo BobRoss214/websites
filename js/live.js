@@ -6,7 +6,8 @@
  *   - The pizza-reservation rules  (js/features.js draws that countdown; the hero chip is first set here)
  *
  * Hours and closures come from js/content.js. Times are Eastern Time, whatever
- * the visitor's own time zone is.
+ * the visitor's own time zone is. In winter (the Christmas tree weekends, js/season.js)
+ * the hours are the winter ones, and the badges say "Not official yet" next to them.
  *
  * Loaded in <head> (after js/i18n.js): each badge, the top bar line, the notice and
  * the countdown are filled in as the browser reads them (W.onParse, js/season.js),
@@ -117,38 +118,56 @@
   /* ------------------------------------------------------------------ *
    * Open-now status for a place that keeps a weekly schedule
    * ------------------------------------------------------------------ */
-  function scheduleStatus(sch, now, at) {   // now: the farm's clock (easternParts), at: the moment itself
-    const open = toMins(sch.open), close = toMins(sch.close), closures = closedDays();
-    const closedOn = (ymd) => closures.includes(ymd);
+  // The hours that count on one day (ymd): the winter ones inside the winter season (the Christmas tree weekends: js/season.js), the usual ones on every other day.
+  // Inside the season the only Saturdays and Sundays are the four tree days, so winter days [6, 0] mean exactly those. hours.pizza.winter can be 'greenhouse':
+  // Wise Pie serves in The GreenHouse's winter hours (no pizza hours of its own were given). `winter` says the day uses the winter hours, which are not official yet.
+  const readable = (sch) => !!sch && typeof sch === 'object' && Array.isArray(sch.days) && /^\d{1,2}:\d{2}$/.test(String(sch.open)) && /^\d{1,2}:\d{2}$/.test(String(sch.close));
+  function scheduleOn(name, ymd) {
+    const base = W.hours && W.hours[name];
+    if (!base) return null;
+    let win = base.winter;
+    if (win === 'greenhouse' && name !== 'greenhouse') win = W.hours.greenhouse && W.hours.greenhouse.winter;   // follows The GreenHouse
+    const season = W.seasons.list.filter((x) => x.id === 'winter')[0];
+    if (season && readable(win) && W.seasons.inWindow(season, ymd)) return { sch: win, winter: true };
+    return { sch: base, winter: false };
+  }
+
+  function scheduleStatus(name, now, at) {   // now: the farm's clock (easternParts), at: the moment itself
+    const closures = closedDays(), closedOn = (ymd) => closures.includes(ymd);
+    const today = scheduleOn(name, now.ymd), sch = today.sch, open = toMins(sch.open), close = toMins(sch.close);
     const todayOpen = sch.days.includes(now.dow) && !closedOn(now.ymd);
     const sameDay = sameDate(at);   // false: the visitor is on another date, so "today" and "tomorrow" would be the farm's
-    // the text, with "(Eastern Time)" when the visitor's clock is not the farm's now or at the time it names
-    const say = (state, text, named) => ({ state, text: sameClock(at) && sameClock(named) ? text : farmZone(text) });
-    if (todayOpen && now.mins >= open && now.mins < close) return say('open', t('Open now, until {time}', { time: timeLabel(close) }), farmMoment(now.ymd, sch.close));
-    if (todayOpen && now.mins < open) return say('soon', sameDay ? t('Opens today at {time}', { time: timeLabel(open) }) : t('Opens {day} at {time}', { day: dayName(now.dow), time: timeLabel(open) }), farmMoment(now.ymd, sch.open));
+    // the text, with "(Eastern Time)" when the visitor's clock is not the farm's now or at the time it names; notOfficial: the hours shown are the winter ones
+    const say = (state, text, named, winter) => ({ state, text: sameClock(at) && sameClock(named) ? text : farmZone(text), notOfficial: !!winter });
+    if (todayOpen && now.mins >= open && now.mins < close) return say('open', t('Open now, until {time}', { time: timeLabel(close) }), farmMoment(now.ymd, sch.close), today.winter);
+    if (todayOpen && now.mins < open) return say('soon', sameDay ? t('Opens today at {time}', { time: timeLabel(open) }) : t('Opens {day} at {time}', { day: dayName(now.dow), time: timeLabel(open) }), farmMoment(now.ymd, sch.open), today.winter);
     for (let i = 1; i <= 14; i++) {
-      const dow = (now.dow + i) % 7;
-      if (!sch.days.includes(dow) || closedOn(addDays(now.ymd, i))) continue;
-      const when = whenLabel(i, dow, addDays(now.ymd, i), sameDay);
+      const dow = (now.dow + i) % 7, ymd = addDays(now.ymd, i), day = scheduleOn(name, ymd);   // the day's own hours: the day after a season's last day may have the usual ones
+      if (!day.sch.days.includes(dow) || closedOn(ymd)) continue;
+      const when = whenLabel(i, dow, ymd, sameDay);
       const lead = !sameDay ? t('Closed now.') : sch.days.includes(now.dow) && closedOn(now.ymd) ? t('Closed today.') : (todayOpen ? t('Closed now.') : t('Closed today.'));
-      return say('closed', lead + (lang() === 'zh' ? '' : ' ') + t('Opens {day} at {time}', { day: when, time: timeLabel(open) }), farmMoment(addDays(now.ymd, i), sch.open));
+      return say('closed', lead + (lang() === 'zh' ? '' : ' ') + t('Opens {day} at {time}', { day: when, time: timeLabel(toMins(day.sch.open)) }), farmMoment(ymd, day.sch.open), day.winter);
     }
-    return { state: 'closed', text: t('Closed for now') };
+    return { state: 'closed', text: t('Closed for now'), notOfficial: false };
   }
 
   // The farm has no walk-up hours: it is open for reserved visits on certain days each season.
   // `season` is the season that is really happening today (none between seasons, so no badge then).
+  // In winter (the Christmas tree weekends) the farm is open on its days with no reservation and no hours are given, so it says so and nothing else.
   function farmStatus(now, season, at) {
     const days = (season && W.hours && W.hours.farm && W.hours.farm[season.id]) || null;
-    if (!days) return null;
-    const shut = closedDays(), closed = (ymd) => shut.includes(ymd);
+    if (!Array.isArray(days)) return null;
+    const shut = closedDays(), closed = (ymd) => shut.includes(ymd), walkIn = season.id === 'winter';
     const inSeason = (ymd) => W.seasons.inWindow(season, ymd);   // a calendar day, as written: no time zone shifting
     const sameDay = sameDate(at), say = (state, text) => ({ state, text: sameDay ? text : farmZone(text) });   // no clock time here: only "today" can be the farm's, not the visitor's
-    if (days.includes(now.dow) && !closed(now.ymd)) return say('open', t('Reserved visits today'));
+    if (days.includes(now.dow) && !closed(now.ymd)) return say('open', walkIn ? t('Open today. No reservation needed') : t('Reserved visits today'));
     for (let i = 1; i <= 14; i++) {   // two weeks ahead: a week of closures must not leave the badge blank
       const dow = (now.dow + i) % 7, ymd = addDays(now.ymd, i);
-      if (!inSeason(ymd)) break;   // the season ends before another reserved day
-      if (days.includes(dow) && !closed(ymd)) return say('closed', t('No visits today. Next reserved day: {day}', { day: whenLabel(i, dow, ymd, sameDay) }));
+      if (!inSeason(ymd)) break;   // the season ends before another open day
+      if (days.includes(dow) && !closed(ymd)) {
+        const day = whenLabel(i, dow, ymd, sameDay);
+        return say('closed', walkIn ? t('Closed today. Next open day: {day}', { day }) : t('No visits today. Next reserved day: {day}', { day }));
+      }
     }
     return null;
   }
@@ -157,7 +176,7 @@
     const at = date || new Date(), now = easternParts(at);
     if (name === 'farm') return farmStatus(now, W.seasons.live(at)[0], at);
     const sch = W.hours && W.hours[name];
-    return sch ? scheduleStatus(sch, now, at) : null;
+    return sch ? scheduleStatus(name, now, at) : null;
   }
 
   function renderBadge(el) {
@@ -172,6 +191,10 @@
       txt.textContent = s.text.slice(0, -zone.length);
       const z = doc.createElement('span'); z.className = 'farm-zone'; z.textContent = zone; txt.appendChild(z);
     } else txt.textContent = s.text;
+    if (s.notOfficial) {   // the winter hours: the label stands right after the hours it is about (css/extras.css, .not-official)
+      txt.appendChild(doc.createTextNode(' '));
+      const label = doc.createElement('span'); label.className = 'not-official'; label.textContent = t('Not official yet'); txt.appendChild(label);
+    }
   }
   function renderBadges() { $$('[data-live]').forEach(renderBadge); renderZoneMarks(); }
   // The heading of the pizza schedule ("Opens Tuesday, 5 PM") is written in the page: for a visitor on another clock it gets the same "(Eastern Time)"
