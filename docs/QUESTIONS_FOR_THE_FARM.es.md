@@ -740,11 +740,11 @@ Respuesta:
 
 ### Pregunta 64
 
-**En invierno el mensaje "¡Todos los árboles están encendidos!" aparece en la luz número 12, pero la imagen tiene 22 árboles. ¿Debe cambiar?**
+**En invierno el mensaje "¡Todos los árboles están encendidos!" aparece en la luz número 12, pero la imagen tiene 16 árboles. ¿Debe cambiar?**
 
 Id en el panel: d69
 
-Por qué importa: Al tocar se enciende un árbol (o una fogata) y el mensaje cambia según el conteo. En el 12 dice que todos los árboles están encendidos cuando todavía hay al menos 10 apagados, y un niño puede pensar que el juego ya terminó.
+Por qué importa: Al tocar se enciende un árbol (o una fogata) y el mensaje cambia según el conteo. En el 12 dice que todos los árboles están encendidos cuando todavía hay al menos 4 apagados, y un niño puede pensar que el juego ya terminó.
 
 Respuesta:
 

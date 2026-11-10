@@ -736,11 +736,11 @@ Answer:
 
 ### Question 64
 
-**In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 22 trees. Should it change?**
+**In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 16 trees. Should it change?**
 
 Dashboard id: d69
 
-Why it matters: Tapping lights a tree (or sparks a fire), and the message changes as the count grows. At 12 it says that every tree is lit while at least 10 are still dark, so a child may think the game is finished.
+Why it matters: Tapping lights a tree (or sparks a fire), and the message changes as the count grows. At 12 it says that every tree is lit while at least 4 are still dark, so a child may think the game is finished.
 
 Answer:
 
@@ -1168,9 +1168,9 @@ Everything in this section was checked against the code on 3 October 2026; the g
 - **If sunflowers in the middle:** `js/hero.js` at `const springFore` (and at `const summerFore`): add two or three sunflowers near the middle of the picture (ask Claude).
 - **If she leaves it:** no change.
 
-**Question 64: In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 22 trees. Should it change?**
+**Question 64: In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 16 trees. Should it change?**
 
-- **If only when all 22 are lit:** `js/hero.js` at `Every tree is lit!`: the messages follow the count of taps (a fire spark counts too); the last one should follow the number of lit trees (ask Claude).
+- **If only when all 16 are lit:** `js/hero.js` at `Every tree is lit!`: the messages follow the count of taps (a fire spark counts too); the last one should follow the number of lit trees (ask Claude).
 - **If new words:** change that sentence in `js/hero.js` at `Every tree is lit!` (keep {gh}, it becomes The GreenHouse); its four translations (ask Claude).
 - **If she leaves it:** no change.
 
