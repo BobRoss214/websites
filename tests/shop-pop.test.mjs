@@ -34,7 +34,7 @@ import zlib from 'node:zlib';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { run, open, ok, okSoon, info, until, settled, axeSource, startServer, ROOT } from './lib.mjs';
+import { run, open, ok, okSoon, info, until, settled, axeSource, startServer, loadPlaywright, ms, ROOT } from './lib.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const LIST = JSON.parse(fs.readFileSync(path.join(HERE, 'shop-list.json'), 'utf8'));
@@ -78,7 +78,9 @@ async function openBy(p, slug) {   // a real click on the card's picture
   await show(p, slug);
   const at = await spot(p, slug);
   await p.mouse.click(at.x, at.y);
-  return until(p, () => !!document.querySelector('.shop-pop.is-open'), null, 20000);
+  const opened = await until(p, () => !!document.querySelector('.shop-pop.is-open'), null, 20000);
+  await settled(p, 0);   // the fade and the scale (160 ms) are over: the box is where it stays
+  return opened;
 }
 async function closeBy(p) { await p.keyboard.press('Escape'); return until(p, () => !document.querySelector('.shop-pop.is-open'), null, 10000); }
 const popText = (p) => p.evaluate(() => ({
@@ -214,9 +216,12 @@ await run('shop-pop', async ({ browser, base, errs }) => {
     const rest = await show(q, 'hot-pretzel'), at = await spot(q, 'hot-pretzel');
     await q.touchscreen.tap(at.x, at.y);
     ok('390x844 (touch): a tap opens the pop-up', await until(q, () => !!document.querySelector('.shop-pop.is-open'), null, 20000));
+    await settled(q, 0);
     const g = await q.evaluate(() => { const b = document.querySelector('.shop-pop-box'), r = b.getBoundingClientRect(), n = document.querySelector('.shop-pop-pretend').getBoundingClientRect(); return { cx: r.x + r.width / 2 - innerWidth / 2, cy: r.y + r.height / 2 - innerHeight / 2, w: r.width, left: r.left, right: r.right, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth, noticeIn: n.left >= r.left && n.right <= r.right, root: parseFloat(getComputedStyle(document.documentElement).fontSize), fs: parseFloat(getComputedStyle(document.querySelector('.shop-pop-pretend')).fontSize) }; });
     ok('...in the middle (within 3 px), 92% of the width, the notice big and inside it, no sideways scroll', Math.abs(g.cx) <= 3 && Math.abs(g.cy) <= 3 && near(g.w, 390 * 0.92, 2) && g.noticeIn && g.sideways <= 0 && g.fs >= 1.25 * g.root, JSON.stringify(g));
-    await closeBy(q);
+    const dn = await q.evaluate(() => { const d = document.querySelector('.shop-pop-done'); d.scrollIntoView({ block: 'end' }); const r = d.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+    await q.touchscreen.tap(dn.x, dn.y);   // shut with a finger (the Escape key would be a keyboard, and a keyboard focus grows the card on purpose)
+    await until(q, () => !document.querySelector('.shop-pop.is-open'), null, 10000);
     await settled(q, 0);
     const after = await q.evaluate((s) => window.__sp.box(window.__sp.bySlug(s)), 'hot-pretzel');
     ok('...after it shuts, the card is not left big (a touch screen has no hover to leave it in)', near(after.w, rest.w, 0.6) && near(after.h, rest.h, 0.6), JSON.stringify([rest, after]));
@@ -272,9 +277,10 @@ await run('shop-pop', async ({ browser, base, errs }) => {
 
   /* -------------------------------------------------------------- 5. KEYBOARD, 6. ACCESSIBILITY (a fresh page) */
   if (go('keys')) {
-  const k = await open(browser, base, 'index.html', errs, { viewport: DESKTOP });
+  const { chromium } = await loadPlaywright();
+  const classic = await chromium.launch({ executablePath: process.env.WA_CHROME || undefined, ignoreDefaultArgs: ['--hide-scrollbars'], timeout: ms(30000) });   // a Chromium that shows classic scroll bars, which take room, as most computers' do (the test browser hides them: tests/shop.test.mjs does the same)
+  const k = await open(classic, base, 'index.html', errs, { viewport: DESKTOP });
   await prep(k);
-  await k.addStyleTag({ content: 'html::-webkit-scrollbar{width:17px}html::-webkit-scrollbar-thumb{background:#999}' });   // a classic scroll bar that takes room, as most computers have (the test browser hides its own)
   const focusIn = async (slug) => { await show(k, slug); await k.keyboard.press('Tab'); await k.evaluate((s) => window.__sp.bySlug(s).querySelector('.shop-open').focus(), slug); };   // one Tab first: the page has then been used with the keyboard, so a focus made by a script shows its ring
   await focusIn('hot-pretzel');
   const lit = await k.evaluate(() => { const c = window.__sp.bySlug('hot-pretzel'); return { cls: c.classList.contains('shop-pop-focus'), tf: getComputedStyle(c).transform, ring: getComputedStyle(c.querySelector('.shop-open')).outlineStyle }; });
@@ -290,7 +296,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   await k.mouse.wheel(0, 900); await k.keyboard.press('PageDown'); await k.keyboard.press('End');
   await settled(k, 0);
   const lock = await k.evaluate(() => ({ left: document.querySelector('#shop .wrap').getBoundingClientRect().left, y: scrollY }));
-  ok('the page behind does not scroll (wheel, Page Down, End) and does not slide sideways when the scroll bar goes (it was ' + lay0.bar + ' px wide)', lay0.bar === 17 && mid.bar === 0 && near(mid.left, lay0.left, 0.5) && near(lock.left, lay0.left, 0.5) && lock.y === lay0.y && mid.gap === '17px', JSON.stringify({ lay0, mid, lock }));
+  ok('the page behind does not scroll (wheel, Page Down, End) and does not slide sideways when the scroll bar goes (it was ' + lay0.bar + ' px wide)', lay0.bar >= 8 && mid.bar === 0 && near(mid.left, lay0.left, 0.5) && near(lock.left, lay0.left, 0.5) && lock.y === lay0.y && mid.gap === lay0.bar + 'px', JSON.stringify({ lay0, mid, lock }));
   const hidden = await k.evaluate(() => [...document.body.children].filter((e) => !e.matches('script, style, link, .shop-pop')).map((e) => [e.tagName, e.getAttribute('aria-hidden'), e.hasAttribute('inert')]));
   ok('while it is open every other block of the page is hidden from screen readers and cannot be reached (aria-hidden, inert)', hidden.length > 3 && hidden.every((h) => h[1] === 'true' && h[2] === true), JSON.stringify(hidden.filter((h) => h[1] !== 'true' || !h[2])));
   const attrs = await k.evaluate(() => { const b = document.querySelector('.shop-pop-box'), by = (a) => { const e = document.getElementById(b.getAttribute(a)); return e ? e.textContent.replace(/\s+/g, ' ').trim() : null; }; return { role: b.getAttribute('role'), modal: b.getAttribute('aria-modal'), name: by('aria-labelledby'), desc: by('aria-describedby'), title: document.querySelector('.shop-pop-name').textContent, x: document.querySelector('.shop-pop-x').getBoundingClientRect(), xl: document.querySelector('.shop-pop-x').getAttribute('aria-label'), h2: document.querySelectorAll('.shop-pop-box h2').length, tag: document.querySelector('.shop-pop-name').tagName }; });
@@ -304,7 +310,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   ok('Escape shuts it and focus goes back to the card\'s button (which shows the keyboard grow again)', await until(k, () => !document.querySelector('.shop-pop.is-open'), null, 10000) && await k.evaluate(() => { const a = document.activeElement; return a.classList.contains('shop-open') && a.closest('.shop-card').querySelector('.shop-name').textContent.trim() === 'Hot pretzel' && a.closest('.shop-card').classList.contains('shop-pop-focus'); }));
   await settled(k, 0);
   const lay1 = await k.evaluate(() => ({ left: document.querySelector('#shop .wrap').getBoundingClientRect().left, bar: innerWidth - document.documentElement.clientWidth, y: scrollY, hidden: [...document.body.children].map((e) => [e.tagName, e.getAttribute('aria-hidden'), e.hasAttribute('inert')].join(':')).join(','), pad: document.documentElement.style.paddingRight, cls: document.documentElement.className.includes('shop-pop') }));
-  ok('after it shuts the page is as before: the scroll bar is back, nothing slid, the blocks are no longer hidden or inert, the place on the page is the same', lay1.bar === 17 && near(lay1.left, lay0.left, 0.5) && lay1.hidden === lay0.hidden && lay1.y === lay0.y && !lay1.cls, JSON.stringify({ lay0, lay1 }));
+  ok('after it shuts the page is as before: the scroll bar is back, nothing slid, the blocks are no longer hidden or inert, the place on the page is the same', lay1.bar === lay0.bar && near(lay1.left, lay0.left, 0.5) && lay1.hidden === lay0.hidden && lay1.y === lay0.y && !lay1.cls, JSON.stringify({ lay0, lay1 }));
   await k.keyboard.press('Space');
   ok('Space on the focused card opens it too', await until(k, () => !!document.querySelector('.shop-pop.is-open'), null, 20000));
   await k.mouse.click(6, 6);   // the dim part, outside the box
@@ -345,6 +351,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   }
   ok(`contrast of the words in the pop-up is 4.5 to 1 or better in each of the ${groups.length} groups (name on the band, notice, heading, note, price, chips, Close)`, weak.length === 0 && groups.length >= 11, weak.join(', ') + ` (${groups.length} groups)`);
   await k.context().close();
+  await classic.close();
   }
 
   /* -------------------------------------------------------------- 7. LANGUAGES */
@@ -365,7 +372,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
         const wantHeading = sample[slug].heading === 'Made of' ? w.made : w.ing;
         const fit = await l.evaluate(() => {
           const b = document.querySelector('.shop-pop-box'), r = b.getBoundingClientRect(), cut = [];
-          b.querySelectorAll('.shop-pop-name, .shop-pop-price, .shop-pop-note, .shop-pop-pretend, .shop-pop-h, .shop-pop-list li, .shop-pop-contains, .shop-pop-done').forEach((e) => { const q = e.getBoundingClientRect(); if (q.left < r.left - 0.5 || q.right > r.right + 0.5 || e.scrollWidth > e.clientWidth + 1) cut.push(e.className + ' ' + Math.round(q.left) + '-' + Math.round(q.right) + ' scroll ' + e.scrollWidth + '/' + e.clientWidth); });
+          b.querySelectorAll('.shop-pop-name, .shop-pop-price, .shop-pop-note, .shop-pop-pretend, .shop-pop-h, .shop-pop-list li, .shop-pop-contains, .shop-pop-done').forEach((e) => { const q = e.getBoundingClientRect(); if (!q.width && !q.height) return; if (q.left < r.left - 0.5 || q.right > r.right + 0.5 || e.scrollWidth > e.clientWidth + 1) cut.push(e.className + ' ' + Math.round(q.left) + '-' + Math.round(q.right) + ' scroll ' + e.scrollWidth + '/' + e.clientWidth); });
           return { cut, boxSide: b.scrollWidth - b.clientWidth, page: document.documentElement.scrollWidth - document.documentElement.clientWidth, h: r.height, vh: innerHeight };
         });
         const english = /[A-Za-z]/.test([t.notice, t.heading, t.done, t.x].join('') + (t.contains ? t.contains.split(/[:：]/)[0] : ''));
