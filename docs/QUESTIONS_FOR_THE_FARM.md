@@ -129,7 +129,7 @@ Answer:
 
 ### Question 12
 
-**Will Christmas trees be sold at The GreenHouse (5503 Poplin Rd), starting the Friday after Thanksgiving?**
+**Will Christmas trees be sold at The GreenHouse (5503 Poplin Rd) on the last weekend in November and the first weekend in December, Saturday and Sunday only?**
 
 Dashboard id: d50, d01
 
@@ -866,7 +866,7 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 **Question 12: Will Christmas trees be sold at The GreenHouse (5503 Poplin Rd) on the last weekend in November and the first weekend in December, Saturday and Sunday only?**
 
 - **If Yes:** no change; delete the README row "Christmas trees".
-- **If No:** change the mentions (21 lines): `index.html` at `id="hero-h"`, `data-t="tddf53699"`, `data-t="t52787b9b"`, `data-t="t01cba258"`, `data-t="tb3a3b6b8"`, `data-t="t0c1c1374"`, `data-t="ta92faa3f"`, `data-t="tce23d9e3"`, `data-ta-aria-label="t8470b8f1"`, `data-t="t5050558d"`, `data-t="t75711ac3"`, `data-t="t3a128bf5"`, `data-t="t66a0e31b"`, `data-t="t198b7b41"`, `data-t="td4909250"`, `data-t="t59d83261"`, `data-t="t219211a7"`, `data-t="t8cb0d6bc"`, `data-t="t9757af8f"` and `value="trees"`, and the tree weekends in `js/season.js` at `function thanksgivingFriday(` and `{ id: 'winter'` and `js/features.js` at `{ id: 'trees'`.
+- **If No:** change the mentions (21 lines): `index.html` at `id="hero-h"`, `data-t="tddf53699"`, `data-t="t52787b9b"`, `data-t="t01cba258"`, `data-t="tb3a3b6b8"`, `data-t="t0c1c1374"`, `data-t="ta92faa3f"`, `data-t="tce23d9e3"`, `data-ta-aria-label="t8470b8f1"`, `data-t="t5050558d"`, `data-t="t75711ac3"`, `data-t="t3a128bf5"`, `data-t="t66a0e31b"`, `data-t="t198b7b41"`, `data-t="td4909250"`, `data-t="t59d83261"`, `data-t="t219211a7"`, `data-t="t8cb0d6bc"`, `data-t="t9757af8f"` and `value="trees"`, and the tree weekends in `js/season.js` at `{ id: 'winter'` and `js/features.js` at `{ id: 'trees'`.
 
 **Question 13: Is blueberry and sunflower season usually "mid- to late June through early July"?**
 

@@ -1545,7 +1545,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. Leave it as it is now**
 
-- Nothing to apply: this answer means "change nothing more". The Christmas tree wording is already fixed: it is in-season-only since b54427b (commit e081393): the headline "Wise Acres Christmas trees", the "Trees" chip and "Christmas trees are here." show only from the Friday after Thanksgiving to December 8 (data-in-season; js/hero.js at `function applyOnly(` and `$$('#hero-h > [data-only]')`). Checked with a page clock on the unpatched tree: tree headline on 2026-12-01 only; 2026-11-20, 2026-12-20, 2027-01-20 and 2027-03-01 show "Organic u-pick fun for the whole family".
+- Nothing to apply: this answer means "change nothing more". The Christmas tree wording is already fixed: it is in-season-only since b54427b (commit e081393): the headline "Wise Acres Christmas trees", the "Trees" chip and "Christmas trees are here." show only in the tree season, from the last Saturday in November to the Sunday after the first Saturday in December (data-in-season; js/hero.js at `function applyOnly(` and `$$('#hero-h > [data-only]')`). Checked with a page clock on the unpatched tree: tree headline on 2026-12-01 only; 2026-11-20, 2026-12-20, 2027-01-20 and 2027-03-01 show "Organic u-pick fun for the whole family".
 - Do NOT apply the patch winter-C.patch (it is stale and does not apply any more). A naive rebase (tree headline first in the h1) is wrong: js/hero.js at `$$('#hero-h > [data-only]')` shows the FIRST title between seasons, so the tree headline would show all winter. Tested and rejected.
 - What stays wrong with C alone: from Nov 9 on, all winter, spring and summer, the Visit and Shop areas still show "Fall 2026" prices and "Reserve now" (see A and B).
 - Strings: 0
@@ -1575,7 +1575,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. Closed some months: I will say which**
 
-- Same code and text changes as B, with a "closed from ... to ..." window and wording. Christmas trees are sold at The GreenHouse from the Friday after Thanksgiving to December 8 (js/season.js at `{ id: 'winter'`): say what shows when it is closed.
+- Same code and text changes as B, with a "closed from ... to ..." window and wording. Christmas trees are sold at The GreenHouse on the last weekend in November and the first weekend in December, Saturday and Sunday only (js/season.js at `{ id: 'winter'`): say what shows when it is closed.
 - Strings: 4 to 8 ids x 4 translations
 - Tests: consistency (as B), live, dated
 
@@ -1590,7 +1590,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **A. Open until Nov 30: I will change the end date**
 
-- js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts the Friday after Thanksgiving (Nov 27, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 4 days. Decide what shows then (ask Claude).
+- js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts on the last Saturday in November (Nov 28, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 3 days (Nov 28 to 30). Decide what shows then (ask Claude).
 - Words "early November" become "late November" (say early, mid or late: the year-bar check and the season-words check of consistency read those words, and "end of November" is not one of them): index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
 - Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
 - The year bar next to that sentence ends too early for "late November": in index.html at `bar-orange" style="--s:8.45;--e:10.25"` (the pumpkin bar; the tomato bar below it has the same numbers: change it too if the tomatoes go on as long as the pumpkins, and then the tomato sentences, the tomato dates in js/features.js and the last day of the chip and the card link as well) change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
