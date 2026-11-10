@@ -24,14 +24,17 @@
  *      scroll and no cut text at 390 and 1366 px; a language change with the pop-up closed re-names the buttons
  *   8  DATA (no browser): js/shop-sample.js has an entry for every product of groups 1-11 (the old beer card is replaced by the beer group), none without a card, none empty, and
  *      none of the words the farm has not said (health claims, "vegan", "natural", "local", digits ...) unless the card's own words say it
+ *  10  the preview build (the page the builder looks at): the same, with every script and style sheet inline and nothing asked for later
  *   9  weight: the bytes of the new files (information); the pop-up's code (js/shop-pop-box.js) is asked for by the small js/shop-pop.js only when the sample lists are there
  * Names of the page's own parts are in the helper text below (SP): if the markup is renamed, change them there. */
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import zlib from 'node:zlib';
+import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { run, open, ok, okSoon, info, until, settled, axeSource, ROOT } from './lib.mjs';
+import { run, open, ok, okSoon, info, until, settled, axeSource, startServer, ROOT } from './lib.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const LIST = JSON.parse(fs.readFileSync(path.join(HERE, 'shop-list.json'), 'utf8'));
@@ -45,7 +48,7 @@ const DICT = Object.fromEntries(['es', 'hi', 'zh', 'vi'].map((c) => [c, JSON.par
 const REVEAL = '.reveal{opacity:1!important;transform:none!important;transition:none!important}html{scroll-behavior:auto!important}';
 const DESKTOP = { width: 1366, height: 768 }, PHONE = { width: 390, height: 844 };
 const near = (a, b, d) => Math.abs(a - b) <= d;
-const ONLY = process.env.SHOPPOP_ONLY || '';   // for working on one part: SHOPPOP_ONLY=dormant,data,hover,keys,languages (nothing set: all of it)
+const ONLY = process.env.SHOPPOP_ONLY || '';   // for working on one part: SHOPPOP_ONLY=dormant,data,hover,keys,languages,preview (nothing set: all of it)
 const go = (part) => !ONLY || ONLY.split(',').includes(part);
 
 /* ------------------------------------------------------------------ the page's own parts, and small helpers that run inside the page */
@@ -383,6 +386,26 @@ await run('shop-pop', async ({ browser, base, errs }) => {
       await l.context().close();
     }
   }
+  }
+
+  /* -------------------------------------------------------------- 10. the preview build (the page the builder looks at: scripts and style sheets inline, nothing asked for later) */
+  if (go('preview')) {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'shoppop-preview-'));
+    try {
+      const made = spawnSync('python3', ['work-notes/preview/build-artifact.py', '--no-flags', '--out', dir], { cwd: ROOT, encoding: 'utf8', timeout: 240000 });
+      ok('the preview build (work-notes/preview/build-artifact.py) runs', made.status === 0 && fs.existsSync(path.join(dir, 'index.html')), String(made.stderr || made.stdout || made.error || '').slice(-300));
+      if (made.status === 0) {
+        const site2 = await startServer({ root: dir });
+        const asked = [];
+        const v = await open(browser, site2.url, 'index.html', errs, { viewport: DESKTOP, routes: async (pg) => { pg.on('request', (r) => asked.push(new URL(r.url()).pathname)); } });
+        await prep(v);
+        const inl = await v.evaluate(() => ({ buttons: document.querySelectorAll('#shop .shop-open').length, sheet: !!document.querySelector('style[data-shop-pop-css]'), link: !!document.querySelector('link[href*="shop-pop"]') }));
+        ok('preview: the cards have their buttons, the pop-up\'s style sheet is in the page (style[data-shop-pop-css]), and the page asks for none of js/shop-pop.js, js/shop-pop-box.js, js/shop-sample.js, css/shop-pop.css', inl.buttons >= 50 && inl.sheet && !inl.link && !asked.some((u) => /shop-pop|shop-sample/.test(u)), JSON.stringify({ inl, asked: asked.filter((u) => /shop-pop|shop-sample/.test(u)) }));
+        ok('preview: a click opens the pop-up, with the notice and the list, and Escape shuts it', await openBy(v, 'hot-pretzel') && JSON.stringify((await popText(v)).items) === JSON.stringify(sample['hot-pretzel'].list) && (await popText(v)).notice === NOTICE && await closeBy(v));
+        await v.context().close();
+        await site2.close();
+      }
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
   }
 
   /* -------------------------------------------------------------- 9. weight */
