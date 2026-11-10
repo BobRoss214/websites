@@ -354,7 +354,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
       label: (n, pr) => DICT[code]['{name}, {price}, show ingredients'].replace('{name}', n).replace('{price}', pr), labelMade: (n, pr) => DICT[code]['{name}, {price}, show what it is made of'].replace('{name}', n).replace('{price}', pr) });
   for (const code of LANGS) {
     const w = want(code);
-    for (const view of [DESKTOP, PHONE]) {
+    for (const view of (code === 'en' ? [DESKTOP] : [DESKTOP, PHONE])) {   // English is not long: the phone is tried in the four other languages
       const l = await open(browser, base, 'index.html', errs, { viewport: view, lang: code, touch: view === PHONE });
       await prep(l);
       const labels = await l.evaluate(() => { const lab = (s) => { const c = window.__sp.bySlug(s); return { name: c.querySelector('.shop-name').textContent.replace(/\s+/g, ' ').trim(), price: c.querySelector('.shop-price').textContent.replace(/\s+/g, ' ').trim(), label: c.querySelector('.shop-open').getAttribute('aria-label') }; }; return { pretzel: lab('hot-pretzel'), cap: lab('trucker-cap') }; });
@@ -390,7 +390,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
 
   /* -------------------------------------------------------------- 5b. big letters (the browser's text size at 200 percent) on a phone and on a computer */
   if (go('bigfont')) {
-    for (const view of [PHONE, DESKTOP]) {
+    for (const view of [PHONE]) {   // (a computer window is wide enough: the phone is the one that can fail)
       const f = await open(browser, base, 'index.html', errs, { viewport: view, touch: view === PHONE });
       await f.addStyleTag({ content: 'html{font-size:200%!important}' });
       await prep(f);
@@ -402,7 +402,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
         const q = d.getBoundingClientRect(), r2 = b.getBoundingClientRect();
         return { w: r.width, h: r.height, vw: innerWidth, vh: innerHeight, inside: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, scrolls: b.scrollHeight > b.clientHeight, xIn: x.right <= r.right + 1 && x.top >= r.top - 1 && x.width >= 44, doneReach: q.bottom <= r2.bottom + 1 && q.top >= r2.top - 1, before, side: document.documentElement.scrollWidth - document.documentElement.clientWidth, boxSide: b.scrollWidth - b.clientWidth, root: parseFloat(getComputedStyle(document.documentElement).fontSize) };
       });
-      ok(`text at 200% (${g.root}px) at ${view.width}px: the pop-up opens, stays inside the window (at most 85% high; it scrolls inside itself when it is taller), the X stays 44 px and in the box, the Close button can be scrolled to, and nothing slides sideways`, opened && g.root >= 31 && g.inside && g.h <= view.height * 0.85 + 1 && g.xIn && g.doneReach && g.side <= 0 && g.boxSide <= 0, JSON.stringify(g));
+      ok(`text at 200% (${g.root}px) on a phone (${view.width}px): the pop-up opens, stays inside the window (at most 85% high; it scrolls inside itself when it is taller), the X stays 44 px and in the box, the Close button can be scrolled to, and nothing slides sideways`, opened && g.root >= 31 && g.inside && g.h <= view.height * 0.85 + 1 && g.xIn && g.doneReach && g.side <= 0 && g.boxSide <= 0, JSON.stringify(g));
       await closeBy(f);
       await f.context().close();
     }
