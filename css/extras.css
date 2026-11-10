@@ -275,7 +275,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 .shop-intro{max-width:44em;margin:0 auto 14px;text-align:center;font-weight:600;color:var(--ink-soft)}
 .shop-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--shop-gap);margin:0;padding:0;list-style:none}
 .shop-grid + .shop-grid{margin-top:calc(var(--shop-gap) + 4px)}   /* the farm group has two lists in a row (the two Farm fun cards, then the rides): the clear space between them, under the cards' 4 px shadow, is the gap between the cards (tests/shop.test.mjs checks it) */
-.shop-card{--w:calc((100% - (var(--shop-cols) - 1) * var(--shop-gap)) / var(--shop-cols));flex:0 0 var(--w);max-width:var(--w);min-width:0;display:flex;flex-wrap:wrap;align-items:center;align-content:flex-start;gap:3px 10px;padding:9px 10px;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--ink);overflow-wrap:break-word;overflow-wrap:anywhere}
+.shop-card{--u:calc((100% - (var(--shop-cols) - 1) * var(--shop-gap)) / var(--shop-cols));--w:var(--u);flex:0 0 var(--w);max-width:var(--w);min-width:0;display:flex;flex-wrap:wrap;align-items:center;align-content:flex-start;gap:3px 10px;padding:9px 10px;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 4px 0 var(--ink);overflow-wrap:break-word;overflow-wrap:anywhere}
 .shop-bubble{flex:none;display:grid;place-items:center;width:56px;height:56px;background:var(--gp);border:2.5px solid var(--ink);border-radius:50%;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
 .shop-ico{width:78%;height:78%}
 @media (hover:hover){.shop-card:hover .shop-bubble{transform:rotate(-7deg) scale(1.07)}}
@@ -359,6 +359,29 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .shop-groups > .sg-farm{--shop-cols:5}
 }
 @media screen and (min-width:80em){.shop > .wrap{width:min(1380px,100% - 2 * var(--gutter))}}   /* a big screen (from 1280 px): the Store may be up to 1380 px wide while the other sections stay 1180 px, so more fits on one screen */
+/* ---------- Wide cards on a computer (from 992 px) ----------
+   The cards of a row are as tall as the tallest one, so a card with a long note (the pretzel, the slushie, the beer, the NC pumpkins ...) made its short neighbours
+   (Organic iced coffee, Mini pumpkin ...) mostly empty. These cards take the width of two cards (and the gap between) and carry their note BESIDE the name and the
+   price instead of under them (and a list of sizes runs across), so they are about as tall as a card without a note: the row stays full and every card in it the same
+   height. Type and pictures keep their sizes; every word stays, in the same order. Where a note cannot get 13em beside the name, it stays under it (the card is then
+   wide only).
+   Which cards are wide depends on how many stand across, because a wide card must not leave a hole at the end of the row before it. The class says when:
+   shop-wide3 / shop-wide2: three across in a column (from 1264 px) / two across (992-1263 px); shop-wide5 / shop-wide4: five / four rides across in the farm group.
+   (A card that is wide in both layouts has both classes.) After a change to the cards of a group, tests/shop.test.mjs shows a row that is not full. */
+@media screen and (min-width:79em){
+  .shop-wide3,.shop-wide5{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
+  .shop-wide3 .shop-body,.shop-wide5 .shop-body{flex:0 1 auto;display:grid;justify-items:start}
+  .shop-wide3 > .shop-sub,.shop-wide5 > .shop-sub{flex:1 1 13em}
+  .shop-wide3 .shop-opts,.shop-wide5 .shop-opts{display:flex;flex-wrap:wrap;width:auto;gap:0 14px}
+  .shop-wide3 .shop-opts li:last-child,.shop-wide5 .shop-opts li:last-child{border-bottom:2px dashed var(--line,#e6d6b8)}
+}
+@media screen and (min-width:62em) and (max-width:78.99em){
+  .shop-wide2,.shop-wide4{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
+  .shop-wide2 .shop-body,.shop-wide4 .shop-body{flex:0 1 auto;display:grid;justify-items:start}
+  .shop-wide2 > .shop-sub,.shop-wide4 > .shop-sub{flex:1 1 13em}
+  .shop-wide2 .shop-opts,.shop-wide4 .shop-opts{display:flex;flex-wrap:wrap;width:auto;gap:0 14px}
+  .shop-wide2 .shop-opts li:last-child,.shop-wide4 .shop-opts li:last-child{border-bottom:2px dashed var(--line,#e6d6b8)}
+}
 @media (max-width:47.5em){
   .shop-jump{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .shop-jump a{height:100%;padding-right:.7em;font-size:.9rem}
