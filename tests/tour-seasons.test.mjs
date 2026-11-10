@@ -125,17 +125,22 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
     }
     ok(tag + 'the four buttons showed four different strips', new Set(Object.values(seen)).size === 4, JSON.stringify(seen));
 
-    /* ---- Next puts everything back, and the next step is the first screen with the same four buttons, none pressed */
+    /* ---- Next puts everything back; the card after the strip is the yellow bar for closures (no season buttons), and the one after that is the first screen with the same four buttons, none pressed */
     await press(p, 'Next');
-    await atTitle(p, 'The first screen follows the season', tag + 'Next goes to the first-screen step');
+    await atTitle(p, 'The yellow bar for closures', tag + 'Next goes to the card about the yellow bar, which has no season buttons');
     ok(tag + 'Next put the page back exactly as it was (season, every line of a season, the strip, the countdown, This week, the badges, the tabs, Date)', (await snap(p)) === start, differ(start, await snap(p)));
+    ok(tag + 'the yellow bar card has no season buttons', (await look(p)).choices === '');
+    await press(p, 'Next');
+    await atTitle(p, 'The first screen follows the season', tag + 'Next goes on to the first-screen step');
     ok(tag + 'the next step starts with no button pressed (the old one is not carried over)', (await look(p)).choices === 'Spring|Summer|Fall|Winter');
 
     /* ---- the first screen: Winter changes the headline, the red button and the note; Back puts it back */
     await btn(p, 'Winter').click();
     await okSoon(tag + 'Winter on the first screen: the tree headline, the red button is Visit The GreenHouse, the note about The GreenHouse is gone', () => p.evaluate(() => ({ h: document.getElementById('hero-h').innerText, c: [...document.querySelectorAll('.hero-cta a')].filter((a) => a.getClientRects().length).map((a) => a.textContent.trim().replace(/\s+/g, ' ')), n: document.querySelector('.hero-note').getClientRects().length > 0 })), (v) => /Christmas trees/.test(v.h) && /^Visit The GreenHouse/.test(v.c[0]) && v.n === false);
     await press(p, 'Back');
-    await atTitle(p, 'The strip at the very top', tag + 'Back goes to the strip step');
+    await atTitle(p, 'The yellow bar for closures', tag + 'Back goes to the yellow bar card');
+    await press(p, 'Back');
+    await atTitle(p, 'The strip at the very top', tag + 'Back goes on to the strip step');
     ok(tag + 'Back put the page back exactly as it was', (await snap(p)) === start, differ(start, await snap(p)));
 
     /* ---- the farm cards: Winter and Spring change them; the Summer tab the owner had open stays the open one afterwards */
@@ -212,7 +217,7 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
   await okSoon('phone: Winter pressed: the strip says Christmas trees and the sheet is inside the window', async () => ({ l: await look(p), t: await strip(p) }), (v) => v.l && /Christmas trees/.test(v.t) && v.l.box.x >= 0 && v.l.box.r <= v.l.vw + 0.5 && v.l.box.b <= v.l.vh + 0.5);
   ok('phone: the page does not scroll sideways', (await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 1);
   await btn(p, 'Next').tap();
-  await atTitle(p, 'The first screen follows the season', 'phone: Next goes on');
+  await atTitle(p, 'The yellow bar for closures', 'phone: Next goes on (the card after the strip is the yellow bar for closures)');
   ok('phone: Next put the page back', (await snap(p)) === phone0);
   await p.context().close();
 

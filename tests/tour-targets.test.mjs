@@ -460,6 +460,18 @@ function wordChecks() {
   let wordFails = 0;
   for (const s of steps) { const p = wordProblems(s); if (p.length) { wordFails++; ok('the words of step ' + s.order + ' ' + s.id, false, p.join(' | ')); } }
   ok('the words of all ' + steps.length + ' steps follow the rules (fields, 9-word title, 45-word text, 25-word sentences, no address, year, jargon or invented price)', wordFails === 0);
+  {   // the owner's rule (10 Nov): a card says what a thing IS and why it helps visitors or the farm, never what was changed. Read for the chapters written to that rule (1 to 5 and 11); widen NO_CHANGE_NOTES to every chapter once chapters 6 to 10 are written the same way
+    const NO_CHANGE_NOTES = [1, 2, 3, 4, 5, 11];
+    const NOTES = [/\bnow (?:says|shows|reads|has|have|uses|lists|opens)\b/i, /\bnew (?:this year|website|site|page|look|design|version)\b/i, /\bsomething new\b/i, /\bstill\b/i, /\balready\b/i, /\bused to\b/i, /\binstead of\b/i,
+      /\b(?:older|earlier|old) (?:web )?(?:page|site)\b/i, /\byour older\b/i, /\bwe need you to\b/i, /\b(?:was|were|has been|have been) (?:changed|added|moved|removed|fixed|updated)\b/i];
+    const found = [];
+    for (const s of steps.filter((x) => NO_CHANGE_NOTES.includes(x.chapter))) {
+      const parts = [['title', s.title], ['text', s.text]];
+      for (const c of choicesOf(s).list || []) parts.push([c.label + ' button', (c.title || '') + ' ' + (c.text || '')]);
+      for (const [where, v] of parts) for (const re of NOTES) { const m = String(v || '').match(re); if (m) found.push(s.id + ' ' + where + ': "' + m[0] + '"'); }
+    }
+    ok('the cards of chapters 1 to 5 and 11 say what a thing is and why it helps, never what was changed (no "now says", "new this year", "something new", "still", "already", "used to", "instead of", "older page", "we need you to")', found.length === 0, found.join(' | '));
+  }
   const perChapter = {};
   for (const s of steps) perChapter[s.chapter] = (perChapter[s.chapter] || 0) + 1;
   info('steps per chapter: ' + chapters.map((c) => c.n + ': ' + (perChapter[c.n] || 0)).join(', ') + '  (total ' + steps.length + ')');
