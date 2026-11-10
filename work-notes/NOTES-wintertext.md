@@ -33,6 +33,8 @@ The winter Wise Pie card is a `div` and the winter hours heading of The GreenHou
 - tests/README.md line 151 (row `upcoming-dates`, a winter-logic test) still says "the Friday after Thanksgiving in several years": main rewrites it with winter-logic's test change.
 - lang/src/*.json (js section, line 256) still has "the Friday after Thanksgiving" with its four translations: it is the old `next:` of js/season.js. When winter-logic's commit is merged, run the pipeline; if `i18n.py build` names that line as not on any page, delete the four lines.
 
+- docs/WHAT_VISITORS_SEE_WHEN.md is made from the pages and js/season.js by `node tools/season_calendar.mjs` (it opens the pages in a browser). It still has the old winter words (14 lines) because the dates come from winter-logic's js: after the merge main runs the tool once (`--check` says if it is out of date; tests/calendar-doc reads it).
+
 ## Tests I changed (so the merge does not undo them)
 
 - tests/consistency.test.mjs: the tree check reads the rule (`TREE_RULE`) and the two bars of the calendar row; tests/i18n-facts.test.mjs: a block at the end for the two date ranges in every language; tests/tour-seasons.test.mjs: the new name of the green line.
