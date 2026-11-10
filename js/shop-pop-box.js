@@ -144,7 +144,6 @@
     loadCss().then((ok) => {
       if (mine !== ticket) return;   // closed, or another card was asked for, while the style sheet was on its way
       if (!ok) { current = null; opener = null; try { console.warn('Wise Acres: css/shop-pop.css did not load, so the pop-up stays shut'); } catch (x) { /* no console */ } return; }
-      lock();
       pop.hidden = false;
       box.scrollTop = 0;   // always from the top: the picture, the name and the notice first
       void pop.offsetWidth;   // the first frame is the shut one, so the fade runs
@@ -152,6 +151,7 @@
       openedAt = Date.now();
       doc.addEventListener('keydown', keys, true); doc.addEventListener('focusin', strayed);
       closeX.focus({ preventScroll: true });
+      lock();   // after the focus has moved in: the page is never hidden from screen readers while the focus is still on it
     });
   }
   function close() {
