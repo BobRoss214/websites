@@ -501,7 +501,7 @@
     }
     function setSpeed(s) {
       if (!GAP[s]) return false;
-      store.transact(function (st) { var l = live(st); if (l.speed === s) return undefined; l.speed = s; return true; });
+      store.transact(function (st) { var l = live(st); if (l.speed === s) return undefined; l.speed = s; if (l.on && l.seed !== undefined) l.nextAt = Math.min(l.nextAt, timeAt(l, now()) + gapFor(l, l.made)); return true; });   // the next thing comes at the new pace
       return true;
     }
     function tick(at) {
@@ -640,7 +640,7 @@
     speeds.setAttribute('role', 'group'); speeds.setAttribute('aria-label', 'How busy');
     var bOn = el('button', 'dl-btn dl-on', 'On'), bOff = el('button', 'dl-btn dl-off', 'Off');
     bOn.type = 'button'; bOff.type = 'button';
-    bOn.setAttribute('data-live', 'on'); bOff.setAttribute('data-live', 'off');
+    bOn.setAttribute('data-dl', 'on'); bOff.setAttribute('data-dl', 'off');   // (not data-live: the site's js/live.js hides every data-live element that is not an open-now badge)
     onoff.appendChild(bOn); onoff.appendChild(bOff);
     var sb = {};
     engine.speeds.forEach(function (s) {

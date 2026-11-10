@@ -659,7 +659,7 @@
       rail: [], family: [], done: [],
       lastBeep: 0, says: [], sayTimer: null, answered: 0, seen: false
     };
-    var els = {}, minis = {}, parts = {}, unsub = null, timer = null, stopRun = null;
+    var els = {}, minis = {}, minisDone = {}, parts = {}, unsub = null, timer = null, stopRun = null;
 
     function nowT() { return live ? live.time() : 0; }
     function nowMs() { return new Date().getTime(); }
@@ -1098,7 +1098,7 @@
       if (moved && ui.rail.length && !ui.current) setCurrent(ui.rail[0].key);
       // the gentle beep: when a ticket has just turned late, and again every few seconds while any is late; never while the pretend clocks are stopped
       var t0 = nowMs();
-      if (sound.isOn() && running && lateNow && (newLate.length || t0 - ui.lastBeep >= BEEP_EVERY)) { sound.beep(); ui.lastBeep = t0; }
+      if (sound.isOn() && running && !document.hidden && lateNow && (newLate.length || t0 - ui.lastBeep >= BEEP_EVERY)) { sound.beep(); ui.lastBeep = t0; }
       paintHead();
     }
 
@@ -1140,7 +1140,7 @@
       ui.done = done.slice(0, 6);
       drawRail(ui.rail);
       drawLane(parts.famList, ui.family, minis);
-      drawLane(parts.doneList, ui.done, minis);
+      drawLane(parts.doneList, ui.done, minisDone);   // (each lane has its own cache, or each pass would make both lanes again)
       var more = done.length - ui.done.length;
       parts.doneMore.hidden = more <= 0;
       parts.doneMore.textContent = more > 0 ? 'and ' + more + ' more' : '';
@@ -1152,7 +1152,7 @@
         var fresh = ui.rail.filter(function (t) { return ui.known.indexOf(t.key) < 0; });
         if (fresh.length) {
           say(fresh.length === 1 ? (fresh[0].kind === 'change' ? 'Change to order ' + fresh[0].num : 'New order ' + fresh[0].num) + ' from ' + fresh[0].who + ': ' + plural(fresh[0].count, 'pizza', 'pizzas') + ' for ' + time12(fresh[0].pickup) + '.' : fresh.length + ' new tickets.');
-          sound.chime();
+          if (!document.hidden) sound.chime();
         }
       }
       ui.known = keys;
@@ -1165,7 +1165,7 @@
 
     /* ---------- the keys of the board ---------- */
     function onKey(e) {
-      if (e.defaultPrevented || e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;   // a key held down answers one ticket, not the whole list
       var tg = e.target, tag = tg && tg.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tg && tg.isContentEditable)) return;
       if (tg && tg.closest && (tg.closest('.kit-edit') || tg.closest('[role="dialog"]'))) return;

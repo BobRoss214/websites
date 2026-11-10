@@ -354,7 +354,7 @@
         var first = null;   // the first message of the thread: when it is a pretend family's (the rush), the answer is too and makes no notice
         for (var i = 0; i < st.messages.length && !first; i++) if (st.messages[i].thread === threadId) first = st.messages[i];
         var pretend = !!(first && first.live), rec = { thread: threadId, from: from, text: text, at: stampNow() };
-        if (pretend) { rec.live = true; rec.fam = first.fam; }
+        if (pretend) { rec.live = true; rec.fam = first.fam; rec.ev = first.ev; }   // the reply ages out of the rush's window together with its question
         var m = addRec(st, 'messages', rec);
         if (pretend) return m;
         if (from === 'cathy') noteTo(st, 'family', 'Mrs. Cathy wrote: ' + short(text), /^event-/.test(threadId) ? '#event' : '#messages');
