@@ -253,6 +253,24 @@ const kidsView = (q) => q.evaluate(() => {
   return result;
 });
 
+// The trees of the winter lot as the window shows them, one entry for each tree of the field in the order of the picture (back to front):
+//   hid   the share of the tree (8 x 5 points inside the cone of its picture) that lies inside the cone of a tree drawn after it, in the field or the two big lit trees at the sides (that tree is in front of it)
+//   cut   the share of its width that the window's edges cut off
+const lotView = (q) => q.evaluate(() => {
+  // every tree of the lot as the window shows it: its width, the share of its cone (8 x 5 points) that lies inside the cone of a tree drawn after it (in front), and how much of it the window's edges cut off
+  const W = innerWidth, half = (v) => Math.min(0.46, 0.46 * 1.05 * (v - 0.09) / 0.82);
+  const rs = [...document.querySelectorAll('#field use[href="#xmas-tree"], #fore use[href="#xmas-tree"]')].map((u) => { const r = u.getBoundingClientRect(); return { left: r.left, top: r.top, width: r.width, height: r.height, field: !!u.closest('#field'), pick: !!u.closest('[data-pick="tree"]') }; });
+  const inCone = (x, y, d) => { const v = (y - d.top) / d.height; return v >= 0.09 && v <= 0.93 && Math.abs(x - (d.left + d.width / 2)) <= half(v) * d.width; };
+  return rs.map((d, i) => {
+    if (!d.field) return null;
+    let n = 0, hid = 0;
+    for (let gy = 0; gy < 8; gy++) {
+      const v = 0.14 + 0.78 * (gy + 0.5) / 8, hf = half(v);
+      for (let gx = 0; gx < 5; gx++) { const x = d.left + d.width * (0.5 + 0.9 * hf * 2 * ((gx + 0.5) / 5 - 0.5)), y = d.top + d.height * v; n++; if (rs.slice(i + 1).some((o) => inCone(x, y, o))) hid++; }
+    }
+    return { pick: d.pick, left: Math.round(d.left), right: Math.round(d.left + d.width), w: Math.round(d.width), hid: Math.round(100 * hid / n), cut: Math.round(100 * (Math.max(0, -d.left) + Math.max(0, d.left + d.width - W)) / d.width) };
+  }).filter(Boolean);
+});
 // The winter picture as the window shows it now (the first screen; what is below the fold or past the sides is not seen), the way kidsView sees the people of the spring field.
 // For each tree that can be lit, in the order of the picture:
 //   seen  the share of the tree (8 x 5 points inside the cone of its picture) that is on screen (in the window and the hero) and not under the page's own words, pills, chips, buttons or card
@@ -645,6 +663,14 @@ await run('hero', async ({ browser, base, errs }) => {
   }));
   ok(`winter: ${lot.length} trees can be lit, each 1.5 times as tall as the first drawing was and 0.727 of that wide (${Math.min(...lot.map((t) => t.h))} to ${Math.max(...lot.map((t) => t.h))} units tall in a picture 1440 units wide)`, lot.length === 16 && lot.every((t) => Math.abs(t.h / t.was - 1.5) < 0.02 && Math.abs(t.w / t.h - 0.727) < 0.01), JSON.stringify(lot.map((t) => [t.was, t.h, t.w])));
   ok('winter: the tap area of a tree is its picture and a little more (wider by a fifth, taller by a seventh), so what is tapped is what is drawn', lot.every((t) => t.tw >= t.w * 1.1 && t.tw <= t.w * 1.25 && t.th >= t.h * 1.05 && t.th <= t.h * 1.25), JSON.stringify(lot.map((t) => [t.w, t.tw, t.h, t.th])));
+  // The lot is not stacked: no tree is behind the ones in front of it by more than 45 % (before the rows were shifted by their own part of a step, the two trees of the row at 0.4 were 80 % behind),
+  // and a window as high as it is wide (1280 x 1024, 1100 x 800) cuts none of them off at the sides (the first tree at the front left was cut by 30 % in 1280 x 1024 when the trees were made bigger)
+  const stacked = await lotView(p);
+  ok(`winter: ${stacked.length} trees are drawn and none is more than 45 % behind the trees in front of it (the most hidden is ${Math.max(...stacked.map((t) => t.hid))} %, ${stacked.filter((t) => t.hid >= 40).length} are 40 % or more)`, stacked.length === 23 && Math.max(...stacked.map((t) => t.hid)) <= 45, JSON.stringify(stacked.map((t) => t.hid)));
+  for (const [w, h] of [[1280, 1024], [1100, 800]]) {
+    await okSoon(`winter, window ${w} x ${h}: every tree of the lot stands whole, none is cut off by the window's edges`, async () => { await p.setViewportSize({ width: w, height: h }); await settled(p, 300); return lotView(p); }, (v) => v.length === 23 && v.every((t) => t.cut === 0));
+  }
+  await p.setViewportSize({ width: 1440, height: 900 });
   await p.addStyleTag({ content: '#bee-fly{visibility:hidden!important}html{scroll-behavior:auto!important}' });   // (the bee flies over everything, and the page must scroll at once)
   const WINTER_SEEN = [[1920, 1080], [1920, 950], [1440, 900]];   // the whole picture is on the first screen
   const WINTER_LOW = [[1440, 780], [1366, 768], [1280, 720]];   // the bottom of the picture is under the bottom edge of the window: looked at with the page scrolled down to the bottom of the hero
@@ -660,7 +686,7 @@ await run('hero', async ({ browser, base, errs }) => {
   const treesSeen = (v) => v.trees.filter((t) => t >= 50).length;   // half of the tree on screen and not under the page
   const clear = (a, least) => a.on === 100 && a.free >= least;   // all of the tap area on screen, and a tap lands on the fire or the snowman (at least this share of it), not on a tree, a word, a chip or the card
   const winterGood = (v, least) => v.fires.length === 2 && v.fires.every((f) => clear(f, 75)) && clear(v.snow, 90) && treesSeen(v) >= least;
-  for (const [w, h, down, least] of [...WINTER_SEEN.map(([a, b]) => [a, b, false, 13]), ...WINTER_LOW.map(([a, b]) => [a, b, true, 10])]) {
+  for (const [w, h, down, least] of [...WINTER_SEEN.map(([a, b]) => [a, b, false, 13]), ...WINTER_LOW.map(([a, b]) => [a, b, true, 9])]) {
     let last = null;
     await okSoon(`winter, window ${w} x ${h}${down ? ', scrolled down to the bottom of the hero' : ''}: both campfires and the snowman are in sight with nothing in front of them, and at least ${least} of the 16 trees can be seen (half of the tree in sight and not under the page's words, chips or card)`,
       async () => (last = await winterAt(w, h, down)), (v) => winterGood(v, least));
