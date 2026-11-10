@@ -439,7 +439,7 @@ await run('tour-seasons', async ({ browser, base, errs }) => {
       await settled(p, 600);
       const b = await boxes();
       ok(tag + capital(id) + ': the lit box is the list that names the trees: it holds "Christmas trees in season", and that line is whole in the window under the top bar', within(b.li, b.hole) && b.li.y >= b.hb && b.li.y + b.li.h <= b.vh, JSON.stringify(b));
-      if (id === 'winter') ok(tag + 'Winter: the green line "Christmas trees are here" is lit too (a yellow edge round it, with the yellow note)' + (vp.height >= 900 ? ', and it is whole in the window' : ' (a window 768 px high is too low for the list and the line together: the line may be cut at the bottom)'), !!b.line && b.rings.length === 2 && b.rings.some((g) => around(g, b.line)) && (vp.height < 900 || (b.line.y >= b.hb && b.line.y + b.line.h <= b.vh)), JSON.stringify(b));
+      if (id === 'winter') ok(tag + 'Winter: the green line "Christmas tree season is on" is lit too (a yellow edge round it, with the yellow note)' + (vp.height >= 900 ? ', and it is whole in the window' : ' (a window 768 px high is too low for the list and the line together: the line may be cut at the bottom)'), !!b.line && b.rings.length === 2 && b.rings.some((g) => around(g, b.line)) && (vp.height < 900 || (b.line.y >= b.hb && b.line.y + b.line.h <= b.vh)), JSON.stringify(b));
       else ok(tag + capital(id) + ': there is no green line, so only the yellow note is lit with the list, and the note is whole in the window too', !b.line && b.rings.length === 1 && b.rings[0].y >= b.hb && b.rings[0].y + b.rings[0].h <= b.vh + 8, JSON.stringify(b));
     }
     await p.context().close();
