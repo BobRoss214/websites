@@ -1238,7 +1238,7 @@
    * Build a season
    * ------------------------------------------------------------------ */
   // data-only="fall winter": shown only while one of those seasons is on screen. Add data-in-season to show it only
-  // while that season is really happening (not in the weeks before or after, when the nearest season is shown).
+  // while that season is really happening (not in the weeks between seasons, when the season that starts next is shown).
   // data-out-of-season="spring" is the opposite: hidden while that season is really happening ("Tell me when it opens").
   function applyOnly(id) {
     const now = W.seasons.live().map((s) => s.id), live = now.includes(id);
@@ -1291,8 +1291,8 @@
       W.seasons.apply(id);
       try { build(id); } catch (e) { setTimeout(() => { throw e; }); }   // a drawing problem must not leave the wrong season's words and buttons
       applyOnly(id);
-      // Between seasons the scene shows the nearest one, but its line ("It's strawberry season!") would not be true yet
-      // (or any more), so the all-year line is shown instead. A season picked with the switcher still shows its own line.
+      // Between seasons the scene shows the season that starts next, but its line ("It's strawberry season!") would not be true yet,
+      // so the all-year line is shown instead. A season picked with the switcher still shows its own line.
       if (!userAction && !W.seasons.live().some((s) => s.id === id)) {
         $$('.hero-sub').forEach((p) => { p.hidden = p.dataset.only !== 'no-js'; });
         $$('#hero-h > [data-only]').forEach((s, i) => { s.hidden = i > 0; });   // the first title is the all-year one
