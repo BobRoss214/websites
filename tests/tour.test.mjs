@@ -30,8 +30,8 @@
  *     the list; a step with allowClicks: false lights nothing more
  *   - a dialog of the page that is not the pretend account's (section 8b): the Store's pop-up (a stand-in built like js/shop-pop.js: a fixed overlay with a dim of its own, a box that says role="dialog"
  *     aria-modal="true", and aria-hidden and inert on every other child of <body>, the tour's own box included) opens above the dimmer and the click stopper, its box takes clicks and its overlay does not,
- *     the tour's card stays usable (not inert: Next and Back work) and keeps off the box, Esc closes the pop-up and not the tour, and the pop-up is at its own level again when the tour is closed; the
- *     same for any other overlay that holds a role="dialog" aria-modal="true" box (a computer and a phone) */
+ *     the tour's card stays usable (not inert: Next and Back work) and keeps off the box (off its buttons when the window is too narrow for that), Esc closes the pop-up and not the tour, and the pop-up
+ *     is at its own level again when the tour is closed; the same for any other overlay that holds a role="dialog" aria-modal="true" box (a computer, a small computer and a phone) */
 import { run, open, ok, okSoon, until, info, settled, ms, axeSource, ROOT } from './lib.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
