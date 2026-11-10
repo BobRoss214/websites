@@ -15,11 +15,19 @@
  * another tab changes it), so a request sent from the family's page arrives here by itself. Cards that did not change are kept as they are, so
  * a note being typed, and the keyboard focus, are not lost. Everything the screen needs to know about the SHAPE of the store's objects is in
  * section 3 ("Reading the store"); the rest does not look inside them.
+ *
+ * The pretend rush (js/demo-live.js, window.DemoLive): the box at the top, "Right now", holds the rush's own control strip (DemoLive.strip(), the same on the kitchen), the
+ * counters (waiting for you, photos and reviews, answered today, people waiting) and a feed of the last things that happened ("just now: ..."). The families that the rush makes
+ * are in the store's normal lists, marked live: true, with their name in `fam`; this screen reads them with the extra argument S.list(coll, { live: true }) and prints
+ * `fam` where it used to print the signed-in family. Nothing here counts, remembers or invents what the rush did: the counters and the feed are read from the store (so every
+ * tab and every reload agrees, and a fake clock in a test gives the same words), the order of the cards is the order they arrived in, and a card that is answered leaves the
+ * waiting list at once (its result shows under "Answered", the focus goes to the next card). The list changes only when you answer, and new cards come at the bottom, so
+ * what you are reading never moves under your finger. Without window.DemoLive the box has no strip and everything else works.
  */
 (function () {
   'use strict';
 
-  const doc = document;
+  const doc = document, win = window;
 
   /* ------------------------------------------------------------------ *
    * 1. Small helpers
@@ -67,7 +75,8 @@
     pizza: ['M12 21L4 7a14 14 0 0 1 16 0z', 'c11,11,1', 'c14,8,1'],
     arrow: ['M5 12h14M13 6l6 6-6 6'],
     warn: ['M12 4l9 16H3z', 'M12 10v4M12 17v.5'],
-    plus: ['M12 5v14M5 12h14']
+    plus: ['M12 5v14M5 12h14'],
+    pulse: ['M3 12h4l3-7 4 14 3-7h4']
   };
   function icon(name) {
     const NS = 'http://www.w3.org/2000/svg';
@@ -143,12 +152,27 @@
   }
   // a number to sort moments by (minutes are enough)
   const stamp = (v) => { const w = wall(v); return w ? Date.UTC(+w.ymd.slice(0, 4), +w.ymd.slice(5, 7) - 1, +w.ymd.slice(8, 10), +w.time.slice(0, 2), +w.time.slice(3, 5)) : 0; };
+  const dayOf = (v) => { const w = wall(v); return w ? w.ymd : ''; };
+  // the number at the end of an id ("r12", "rL12", "q-L3" are 12, 12 and 3): ids of one list grow, so it breaks a tie between two moments in the same minute
+  const idNum = (id) => { const m = /(\d+)$/.exec(str(id)); return m ? +m[1] : 0; };
+  // a few words of a longer text, never cut in the middle of a word
+  const shorten = (t, n) => { t = str(t).replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1).replace(/\s+\S*$/, '') + '\u2026' : t; };
+  // "just now", "3 min ago", "1 hr ago", then "today at 2:15 pm" or "Mon, Nov 2 at 2:15 pm": how long ago a stamp was, by the store's own clock (it has whole minutes)
+  function agoText(at, nowStamp, today) {
+    const d = Math.round((nowStamp - stamp(at)) / 60000);
+    if (!wall(at)) return '';
+    if (d <= 0) return 'just now';
+    if (d < 60) return d + ' min ago';
+    if (d < 120) return '1 hr ago';
+    return sentText(at, today);
+  }
 
   /* ------------------------------------------------------------------ *
    * 3. Reading the store   (the ONLY part that knows what the objects look like)
    * ------------------------------------------------------------------ */
   function readState(S, D) {
-    const list = (c) => { try { return arr(S.list(c)); } catch (e) { return []; } };
+    // { live: true }: the families of the pretend rush are in the same lists but the store hides them unless they are asked for (the family's own screens never see them)
+    const list = (c) => { try { return arr(S.list(c, { live: true })); } catch (e) { return []; } };
     let account = null, family = null, counts = {}, alerts = {};
     try { account = S.current(); } catch (e) {}
     try { family = typeof S.get === 'function' ? S.get('family') : null; } catch (e) {}
@@ -163,8 +187,12 @@
       return { date, reason: str((c && c.reason) || (hit && hit.closedReason)) };
     });
     const today = (typeof S.today === 'function' && S.today()) || (D && typeof D.today === 'function' && D.today()) || farmToday();
+    // the store's own clock (a test moves it): 'YYYY-MM-DD HH:MM'
+    let nowAt = '';
+    try { const n = typeof S.now === 'function' ? S.now() : null; if (n && n.date && n.time) nowAt = n.date + ' ' + n.time; } catch (e) {}
+    if (!nowAt) { const p = etParts(new Date()); if (p) nowAt = p.ymd + ' ' + p.time; }
     return {
-      today, account, family, counts, alerts, closed, visits,
+      today, nowAt, account, family, counts, alerts, closed, visits,
       orders: list('orders'), requests: list('requests'), messages: list('messages'),
       reviews: list('reviews'), photos: list('photos'), events: list('events'), waitlist: list('waitlist')
     };
@@ -178,6 +206,8 @@
     if (!n) return 'The sample family';
     return /\s/.test(n) ? n : possessive(n) + ' family';
   }
+  // The name to print for a record: the pretend rush's families carry their own (`fam`, "The Ortiz family"); everything else belongs to the signed-in family
+  const famOf = (st, rec) => str(rec && rec.fam).trim() || familyLabel(st);
   const byId = (list, id) => list.filter((x) => x && x.id === id)[0] || null;
   const eventTitle = (e) => str(e && (e.title || e.name)) || 'The group trip';
   const visitOf = (st, r) => (r && r.target && r.target.coll === 'visits' ? byId(st.visits, r.target.id) : null);
@@ -218,7 +248,7 @@
     st.messages.slice().sort((a, b) => stamp(a.at) - stamp(b.at)).forEach((m) => {
       const id = str(m.thread || m.threadId || 'farm');
       if (!map[id]) { map[id] = []; order.push(id); }
-      map[id].push({ id: m.id, from: m.from === 'family' ? 'family' : 'cathy', text: str(m.text), at: m.at });
+      map[id].push({ id: m.id, from: m.from === 'family' ? 'family' : 'cathy', text: str(m.text), at: m.at, fam: str(m.fam).trim() });
     });
     // since: when the family's latest run of messages began (where the card stands in the list, before and after the answer)
     return order.map((id) => {
@@ -226,7 +256,7 @@
       let i = m.length - 1;
       while (i >= 0 && m[i].from !== 'family') i--;
       while (i > 0 && m[i - 1].from === 'family') i--;
-      return { id, msgs: m, last: m[m.length - 1], since: stamp((m[Math.max(i, 0)] || m[0]).at) };
+      return { id, msgs: m, last: m[m.length - 1], since: stamp((m[Math.max(i, 0)] || m[0]).at), fam: (m.filter((x) => x.fam)[0] || {}).fam || '' };
     });
   }
   const eventThreadId = (e) => 'event-' + e.id;
@@ -237,7 +267,7 @@
     const out = [];
     st.reviews.forEach((x) => out.push({ coll: 'reviews', x }));
     st.photos.forEach((x) => out.push({ coll: 'photos', x }));
-    return out.map((it) => ({ coll: it.coll, id: it.x.id, status: str(it.x.status) || 'waiting', stars: num(it.x.stars), text: str(it.x.text).trim(), photoName: str(it.x.photoName || it.x.name || it.x.fileName), thumb: str(it.x.thumb || it.x.thumbnail || it.x.photo || it.x.dataUrl), visitId: it.x.visitId, at: it.x.at }));
+    return out.map((it) => ({ coll: it.coll, id: it.x.id, status: str(it.x.status) || 'waiting', stars: num(it.x.stars), text: str(it.x.text).trim(), photoName: str(it.x.photoName || it.x.name || it.x.fileName), thumb: str(it.x.thumb || it.x.thumbnail || it.x.photo || it.x.dataUrl), visitId: it.x.visitId, at: it.x.at, decided: it.x.decided, fam: str(it.x.fam).trim() }));
   }
 
   // The "tell me when" switches, with the labels the family sees. Keys (agreed in /tmp/helpers/KEYS.md): strawberries, blueberries, pumpkins, trees, spot.
@@ -302,20 +332,56 @@
    * ------------------------------------------------------------------ */
   function mount(root, S, D) {
     if (!root || !S) return null;
-    // What the person is doing right now (not saved anywhere): open panels, typed words, cards answered in this visit to the screen
-    const ui = { mode: {}, val: {}, sent: {}, fresh: {}, seen: null, focus: '', alertSent: {}, status: {}, why: {} };
-    let st = null;
+    // What the person is doing right now (not saved anywhere): open panels, typed words, the order the cards came in, the lines of the feed.
+    // order: the number each waiting card got when this screen first saw it (the cards stay in that order, new ones go last); waitKeys / apprKeys: the cards on the screen now, in order;
+    // feed: the lines of "Just now" (newest has the biggest seq); feedSeen: the lines already taken; pending: the new cards the person may not have seen yet (the "new" button);
+    // fresh: the moment (ms) a card arrived while this screen was open, for its New mark.
+    const ui = { mode: {}, val: {}, fresh: {}, seen: null, focus: '', alertSent: {}, status: {}, why: {}, order: {}, seq: 0, waitKeys: [], apprKeys: [], feed: [], feedSeen: {}, feedSeq: 0, pending: [], waitTotal: 0, drawn: false };
+    let st = null, nowStamp = 0, timer = 0;
+    // The numbers that keep the screen calm and short: no more cards than this are drawn (the rest are counted and said), the feed shows a few lines, a day of "This week"
+    // lists a few visits, and a New mark (on a card, on a line of the feed) fades after this many milliseconds.
+    const MAX_WAITING = 24, MAX_ANSWERED = 6, MAX_FEED = 6, MAX_DAY_LINES = 5, FRESH_CARD_MS = 30000, FRESH_LINE_MS = 6000;
+    const liveApi = () => { const L = window.DemoLive; return L && typeof L === 'object' ? L : null; };   // the pretend rush's engine, when the page has it
+    const liveOn = () => { const L = liveApi(); try { return !!(L && typeof L.isOn === 'function' && L.isOn()); } catch (e) { return false; } };
+    const baseTitle = doc.title;
 
     root.textContent = '';
     root.classList.add('ds');
 
     const live = el('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
     const say = (t) => { live.textContent = ''; live.textContent = t; };
+    // Arrivals are said in a place of their own and in batches (at most one message every 4 seconds: "New: ..." or "3 new: ... and 2 more"), so a busy rush never floods a screen reader
+    // and never talks over what the person's own answer just said.
+    const liveNew = el('p', { class: 'sr-only', role: 'status', 'aria-live': 'polite' });
+    let said = [], saidAt = 0, saidTimer = 0;
+    function flushSaid() {
+      saidTimer = 0;
+      if (!said.length) return;
+      const q = said; said = []; saidAt = Date.now();
+      liveNew.textContent = '';
+      liveNew.textContent = q.length === 1 ? 'New: ' + q[0] : q.length + ' new: ' + q[0] + ' and ' + (q.length - 1) + ' more.';
+    }
+    function sayNew(t) {
+      said.push(t);
+      if (!saidTimer) saidTimer = setTimeout(flushSaid, Math.max(0, 4000 - (Date.now() - saidAt)));
+    }
 
     // ----- the frame (built once; the parts inside are redrawn as needed)
     const parts = {};
     const intro = el('p', { class: 'ds-who' }, [icon('bell'), el('span', null, [el('strong', { text: 'Demo: you are Mrs. Cathy (or Rob).' }), ' No sign-in is needed on this screen. Whatever a family sends shows up below by itself.'])]);
+    // "Right now": the rush's control strip, the counters (the tiles: they are links to the sections below, and "Answered today"), and the feed. The strip is the engine's own
+    // (DemoLive.strip(), the same on the kitchen screen); a page without the engine has no strip. Every part is drawn again from the store whenever it changes.
+    parts.live = el('section', { class: 'ds-live', 'data-tour': 'desk-live', 'aria-labelledby': 'ds-live-h' });
+    parts.clock = el('span', { class: 'ds-clock', 'aria-hidden': 'true' });
+    parts.strip = el('div', { class: 'ds-live-strip' });
     parts.tiles = el('ul', { class: 'ds-tiles', 'aria-label': 'Where to look first' });
+    parts.feedHead = el('h3', { class: 'ds-sub ds-feed-h' }, [icon('pulse'), 'Just now']);
+    parts.feed = el('ol', { class: 'ds-feed', 'aria-label': 'Just now' });
+    parts.feedEmpty = el('p', { class: 'ds-empty ds-feed-empty', text: 'Nothing has happened yet. Start the pretend rush to see a busy day, or send a request from the family page.' });
+    parts.live.appendChild(el('div', { class: 'ds-live-head' }, [el('h2', { id: 'ds-live-h', tabindex: '-1', text: 'Right now' }), parts.clock]));
+    [parts.strip, parts.tiles, parts.feedHead, parts.feedEmpty, parts.feed].forEach((n) => parts.live.appendChild(n));
+    // a small button that says new cards came in below the part of the page that is on the screen
+    parts.pill = el('button', { type: 'button', class: 'ds-pill', hidden: '', onclick: () => showNewest() });
     const section = (id, tour, title, help, extra) => {
       const hid = id + '-h';
       const head = el('h2', { id: hid, tabindex: '-1' }, [title, extra || null]);
@@ -332,8 +398,10 @@
     parts.answeredHead = el('h3', { class: 'ds-sub', text: 'Answered' });
     parts.answeredList = el('div', { class: 'ds-stack ds-stack-tight' });
     parts.kitchenNote = el('p', { class: 'ds-kitchen-note', hidden: '' });
-    parts.waiting.body.appendChild(el('p', { class: 'ds-empty', 'data-for': 'waiting', hidden: '' }));
+    parts.waiting.body.appendChild(el('p', { class: 'ds-empty', 'data-for': 'waiting', 'data-focus': 'empty:waiting', tabindex: '-1', hidden: '' }));
     parts.waiting.body.appendChild(parts.waitingList);
+    parts.moreWaiting = el('p', { class: 'ds-more', hidden: '' });
+    parts.waiting.body.appendChild(parts.moreWaiting);
     parts.waiting.body.appendChild(parts.kitchenNote);
     parts.waiting.body.appendChild(parts.answeredHead);
     parts.waiting.body.appendChild(parts.answeredList);
@@ -375,9 +443,12 @@
     // the page's one h1 (the shell keeps its own h1 inside the box that is hidden in demo mode)
     root.appendChild(el('div', { class: 'ds-head' }, [el('h1', { class: 'demo-h1', id: 'desk-h1', tabindex: '-1', text: 'Mrs. Cathy and Rob\u2019s desk' }), intro]));
     root.appendChild(live);
+    root.appendChild(liveNew);
+    root.appendChild(parts.live);
     root.appendChild(parts.empty);
-    const main = el('div', { class: 'ds-main' }, [parts.tiles, parts.waiting.sec, parts.approvals.sec, parts.week.sec, parts.weather.sec, parts.people.sec, parts.groups.sec]);
+    const main = el('div', { class: 'ds-main' }, [parts.waiting.sec, parts.approvals.sec, parts.week.sec, parts.weather.sec, parts.people.sec, parts.groups.sec]);
     root.appendChild(main);
+    root.appendChild(parts.pill);
 
     // ----- little builders used by several cards
     const field = (id, label, control, hint) => el('div', { class: 'ds-field' }, [el('label', { for: id, text: label }), control, hint ? el('p', { class: 'ds-hint', text: hint }) : null]);
@@ -423,20 +494,22 @@
     }
     const sampleSlots = () => { const sl = D && (D.SLOTS || D.slots); return arr(sl).length ? sl : ['10:00', '11:00', '12:00', '13:00', '14:00']; };
 
-    // Who a request is from: the school for a group trip, the family otherwise
-    const whoOf = (r) => { if (kindOf(r) === 'group') { const e = eventOf(st, r); if (e) return eventTitle(e); } return familyLabel(st); };
+    // Who a request is from: the school for a group trip, the family otherwise (a family of the pretend rush has its own name)
+    const whoOf = (r) => { if (kindOf(r) === 'group') { const e = eventOf(st, r); if (e) return eventTitle(e); } return famOf(st, r); };
+
+    // Where the keyboard focus goes when a card leaves its list because it was answered: the next card, or the one before when it was the last, else the "nothing is waiting" line.
+    // (The card is not kept where it was: its result is under "Answered" and in the feed, so the list holds only what still needs an answer.)
+    const focusAfter = (key, keys, empty) => { const i = keys.indexOf(key), next = keys[i + 1] || keys[i - 1] || ''; return next ? 'card:' + next : 'empty:' + empty; };
 
     // ----- the answer to a request
     function answer(r, how, suggestion) {
       const note = (ui.val['note:' + r.id] || '').trim();
-      ui.sent[r.id] = true;
       ui.mode[r.id] = '';
-      ui.focus = 'res:' + r.id;
+      ui.focus = focusAfter('r:' + r.id, ui.waitKeys, 'waiting');
       const body = { answer: how, note };
       if (how === 'suggest') body.suggestion = suggestion;
       const res = S.reply(r.id, body);
       if (res === null || res === false) {   // the store would not take it: somebody (another tab) answered or took it back first
-        delete ui.sent[r.id];
         ui.focus = '';
         say('This one was already answered or taken back. The screen shows how it stands now.');
         render();
@@ -499,13 +572,13 @@
       const tone = KIND_TEXT[kind] || KIND_TEXT.visit;
       const sentAt = sentText(reqSent(r), st.today);
       const note = reqNote(r);
-      const card = el('article', { class: 'ds-card ds-req ds-s-' + (r.status || 'waiting') + (ui.fresh[r.id] && open ? ' is-new' : ''), 'aria-labelledby': hid, 'data-tour': 'desk-card', 'data-req-kind': str(r.kind) });
+      const card = el('article', { class: 'ds-card ds-req ds-s-' + (r.status || 'waiting') + (ui.fresh['r:' + r.id] && open ? ' is-new' : ''), 'aria-labelledby': hid, 'data-tour': 'desk-card', 'data-req-kind': str(r.kind) });
       card.appendChild(el('div', { class: 'ds-card-top' }, [
         chip(tone[0], tone[1], tone[2]),
-        ui.fresh[r.id] && open ? chip('new', 'New') : null,
+        ui.fresh['r:' + r.id] && open ? chip('new', 'New') : null,
         sentAt ? el('span', { class: 'ds-sent', text: 'Sent ' + sentAt }) : null
       ]));
-      card.appendChild(el('h3', { id: hid, text: whoOf(r) }));
+      card.appendChild(el('h3', { id: hid, tabindex: '-1', 'data-focus': 'card:r:' + r.id, text: whoOf(r) }));
       card.appendChild(el('p', { class: 'ds-ask', text: reqAsk(r) }));
       add(card, quote('Their note', note));
       if (target && kind !== 'group') {
@@ -563,13 +636,13 @@
     // ----- a question from a family (or a school)
     function messageCard(t) {
       const ev = threadEvent(st, t.id);
-      const who = ev ? str(ev.title || ev.name) : familyLabel(st);
+      const who = ev ? str(ev.title || ev.name) : (t.fam || familyLabel(st));
       const hid = 'ds-h-t-' + t.id;
       const open = t.last.from === 'family';
       const card = el('article', { class: 'ds-card ds-msg ds-s-' + (open ? 'waiting' : 'yes') + (ui.fresh['t:' + t.id] && open ? ' is-new' : ''), 'aria-labelledby': hid, 'data-tour': 'desk-card' });
       const sentAt = sentText(t.last.at, st.today);
       card.appendChild(el('div', { class: 'ds-card-top' }, [chip('pink', 'Question', 'chat'), ui.fresh['t:' + t.id] && open ? chip('new', 'New') : null, sentAt ? el('span', { class: 'ds-sent', text: (open ? 'Sent ' : 'You wrote ') + sentAt }) : null]));
-      card.appendChild(el('h3', { id: hid, text: ev ? who + ' wrote to you' : who + ' asks the farm' }));
+      card.appendChild(el('h3', { id: hid, tabindex: '-1', 'data-focus': 'card:t:' + t.id, text: ev ? who + ' wrote to you' : who + ' asks the farm' }));
       const chat = el('ol', { class: 'ds-chat', 'aria-label': 'Messages' });
       t.msgs.slice(-4).forEach((m) => chat.appendChild(el('li', { class: 'ds-bubble ds-from-' + m.from }, [el('span', { class: 'ds-bubble-who', text: m.from === 'family' ? (ev ? 'They wrote' : 'They wrote') : 'You wrote' }), el('p', { text: m.text })])));
       card.appendChild(chat);
@@ -579,7 +652,7 @@
           bigBtn('btn-green', 'Send reply', 'check', () => {
             const text = (ui.val['reply:' + t.id] || '').trim();
             if (!text) { say('Write a few words first.'); const box = doc.getElementById('reply-' + t.id); if (box) box.focus(); return; }
-            ui.sent['t:' + t.id] = true; ui.focus = 'res:t:' + t.id; delete ui.val['reply:' + t.id];
+            ui.focus = focusAfter('t:' + t.id, ui.waitKeys, 'waiting'); delete ui.val['reply:' + t.id];
             S.post(t.id, 'cathy', text);
             say('Sent: your reply to ' + who + '.');
           }, { 'aria-describedby': hid, 'data-focus': 'send-t:' + t.id })
@@ -596,9 +669,10 @@
       const v = it.visitId ? byId(st.visits, it.visitId) : null;
       const open = it.status === 'waiting';
       const isReview = it.coll === 'reviews' && (it.stars || it.text);
-      const card = el('article', { class: 'ds-card ds-appr ds-s-' + (open ? 'waiting' : it.status === 'approved' ? 'yes' : 'no'), 'aria-labelledby': hid });
-      card.appendChild(el('div', { class: 'ds-card-top' }, [chip('pink', isReview ? 'Review' : 'Photo', isReview ? 'star' : 'camera'), it.at ? el('span', { class: 'ds-sent', text: 'Sent ' + sentText(it.at, st.today) }) : null]));
-      card.appendChild(el('h3', { id: hid, text: (isReview ? 'Review from ' : 'Photo from ') + familyLabel(st) }));
+      const isNew = open && !!ui.fresh[it.coll + it.id];
+      const card = el('article', { class: 'ds-card ds-appr ds-s-' + (open ? 'waiting' : it.status === 'approved' ? 'yes' : 'no') + (isNew ? ' is-new' : ''), 'aria-labelledby': hid });
+      card.appendChild(el('div', { class: 'ds-card-top' }, [chip('pink', isReview ? 'Review' : 'Photo', isReview ? 'star' : 'camera'), isNew ? chip('new', 'New') : null, it.at ? el('span', { class: 'ds-sent', text: 'Sent ' + sentText(it.at, st.today) }) : null]));
+      card.appendChild(el('h3', { id: hid, tabindex: '-1', 'data-focus': 'card:' + it.coll + it.id, text: (isReview ? 'Review from ' : 'Photo from ') + (it.fam || familyLabel(st)) }));
       const body = el('div', { class: 'ds-appr-body' });
       if (it.thumb) body.appendChild(el('img', { class: 'ds-thumb', src: it.thumb, alt: 'The photo they sent' + (it.photoName ? ' (' + it.photoName + ')' : ''), width: '160', height: '160' }));
       const txt = el('div', { class: 'ds-appr-text' });
@@ -610,7 +684,7 @@
       card.appendChild(body);
       if (open) {
         const decide = (ok) => {
-          ui.sent['a:' + it.coll + it.id] = true; ui.focus = 'res:a:' + it.coll + it.id;
+          ui.focus = focusAfter(it.coll + it.id, ui.apprKeys, 'approvals');
           if (it.coll === 'reviews') S.decideReview(it.id, ok);
           else S.decidePhoto(it.id, ok);   // both tell the family (the store makes the notice)
           say(ok ? 'Approved.' : 'Not now.');
@@ -636,7 +710,8 @@
       const openDay = isFarmDay(ymd);
       const total = visits.reduce((n, v) => n + people(v), 0) + events.reduce((n, e) => n + num(e.students) + guestsOf(e), 0);
       const lines = [];
-      visits.forEach((v) => lines.push(el('li', null, [el('strong', { text: timeText(v.time) }), ' ' + familyLabel(st) + ' · ' + plural(people(v), 'person', 'people') + (packageOf(v) === 'pizza' ? ' · with pizza' : ' · farm only') + (v.closed ? ' · told about the closing' : '')])));
+      visits.slice(0, MAX_DAY_LINES).forEach((v) => lines.push(el('li', null, [el('strong', { text: timeText(v.time) }), ' ' + famOf(st, v) + ' · ' + plural(people(v), 'person', 'people') + (packageOf(v) === 'pizza' ? ' · with pizza' : ' · farm only') + (v.closed ? ' · told about the closing' : '')])));
+      if (visits.length > MAX_DAY_LINES) lines.push(el('li', { class: 'ds-more-line', text: 'and ' + plural(visits.length - MAX_DAY_LINES, 'more visit', 'more visits') }));
       events.forEach((e) => lines.push(el('li', null, [el('strong', { text: e.time ? timeText(e.time) : 'Group' }), ' ' + eventTitle(e) + ' \u00B7 ' + plural(num(e.students) + guestsOf(e), 'person', 'people') + ' (' + headText(e.students, guestsOf(e)) + ')'])));
       // pizzas by pick-up time
       const slots = {};
@@ -796,158 +871,352 @@
     }
 
     /* ---------------------------------------------------------------- *
+     * The live parts: the feed ("just now: ..."), the counters, the clock, the "new" button, the title
+     * ---------------------------------------------------------------- */
+    // How many things Mrs. Cathy answered today: requests (the store stamps reply.at), replies to a question (her message right after a family message), and photos and reviews
+    // (the store stamps decided). Counted from the store, so every tab and every reload says the same.
+    function answeredToday() {
+      let n = 0;
+      st.requests.forEach((r) => { if ((r.to === 'cathy' || r.to === 'farm') && r.reply && dayOf(r.reply.at) === st.today) n++; });
+      threadsOf(st).forEach((t) => t.msgs.forEach((m, i) => { if (i > 0 && m.from === 'cathy' && t.msgs[i - 1].from === 'family' && dayOf(m.at) === st.today) n++; }));
+      approvalItems(st).forEach((a) => { if (a.status !== 'waiting' && dayOf(a.decided) === st.today) n++; });
+      return n;
+    }
+
+    // Every line the feed could show, oldest first: what arrived and what was answered, each with the words of one plain line. A line is named by what it is about
+    // (`ask:r12`, `ans:r12`), so it is taken once. `ago` says how long before now it happened, as far as the store knows (a family of the rush has its own clock: arrived).
+    function feedLines() {
+      const out = [];
+      const pretendNow = (() => { const L = liveApi(); try { return L && typeof L.time === 'function' ? L.time() : 0; } catch (e) { return 0; } })();
+      const put = (key, at, rank, id, text, tone, arrived) => {
+        const t = stamp(at);
+        out.push({ key: key + '@' + str(at), t, rank, n: idNum(id), text, tone, ago: arrived != null && pretendNow ? Math.max(0, pretendNow - arrived) : Math.max(0, nowStamp - t) });
+      };
+      st.requests.forEach((r) => {
+        if (r.to !== 'cathy' && r.to !== 'farm') return;   // pizza changes are the kitchen's
+        const who = whoOf(r);
+        put('ask:' + r.id, reqSent(r), 0, r.id, who + ' asks: ' + reqAsk(r), 'ask', r.arrived);
+        if (r.reply && r.reply.at) {
+          const how = r.reply.answer;
+          put('ans:' + r.id, r.reply.at, 1, r.id, how === 'yes' ? 'You said Yes to ' + who + '.' : how === 'no' ? 'You said No to ' + who + '.' : 'You suggested something else to ' + who + '.', how === 'no' ? 'no' : 'good');
+        }
+        if (r.status === 'accepted' || r.status === 'declined' || r.status === 'cancelled') {
+          put('fam:' + r.id + ':' + r.status, r.updated || reqSent(r), 2, r.id, r.status === 'accepted' ? who + ' said OK to your suggestion.' : r.status === 'declined' ? who + ' said no thanks to your suggestion.' : who + ' took a request back.', 'plain');
+        }
+      });
+      threadsOf(st).forEach((t) => {
+        const ev = threadEvent(st, t.id), who = ev ? eventTitle(ev) : (t.fam || familyLabel(st));
+        t.msgs.forEach((m, i) => {
+          if (m.from === 'family') put('msg:' + m.id, m.at, 0, m.id, who + (ev ? ' wrote to you: ' : ' asks the farm: ') + '“' + shorten(m.text, 70) + '”', 'ask', m.arrived);
+          else if (i > 0 && t.msgs[i - 1].from === 'family') put('rep:' + m.id, m.at, 1, m.id, 'You replied to ' + who + '.', 'good');
+        });
+      });
+      approvalItems(st).forEach((a) => {
+        const who = a.fam || familyLabel(st), what = a.coll === 'reviews' && (a.stars || a.text) ? 'review' : 'photo';
+        put('new:' + a.coll + a.id, a.at, 0, a.id, who + ' sent a ' + what + (what === 'review' && a.stars ? ': ' + plural(a.stars, 'star', 'stars') : '') + '.', 'ask', a.arrived);
+        if (a.status !== 'waiting' && a.decided) put('dec:' + a.coll + a.id, a.decided, 1, a.id, a.status === 'approved' ? 'You approved the ' + what + ' from ' + who + '.' : 'You said Not now to the ' + what + ' from ' + who + '.', a.status === 'approved' ? 'good' : 'plain');
+      });
+      return out.sort((a, b) => a.t - b.t || a.rank - b.rank || a.n - b.n);
+    }
+    // the lines this screen has not taken yet go to the feed, in the order they happened (the biggest seq is the newest); returns how many were taken
+    function takeFeed(first) {
+      const lines = feedLines(), now = Date.now();
+      let taken = 0;
+      lines.forEach((e) => {
+        if (ui.feedSeen[e.key]) return;
+        ui.feedSeen[e.key] = true;
+        ui.feed.push({ key: e.key, seq: ++ui.feedSeq, ms: first ? now - e.ago : now, text: e.text, tone: e.tone });   // a line that was already there is as old as the store says; one that comes while the screen is open is "just now"
+        taken++;
+      });
+      if (ui.feed.length > 40) ui.feed = ui.feed.slice(-40);
+      const keys = Object.keys(ui.feedSeen);
+      if (keys.length > 600) { ui.feedSeen = {}; ui.feed.forEach((e) => { ui.feedSeen[e.key] = true; }); lines.forEach((e) => { ui.feedSeen[e.key] = true; }); }
+      return taken;
+    }
+    // "just now" for the first 45 seconds, then whole minutes: the words change once a minute, so the feed stays calm to read
+    function agoWords(ms) {
+      const sec = Math.max(0, Math.round((Date.now() - ms) / 1000));
+      if (sec < 45) return 'just now';
+      const min = Math.max(1, Math.round(sec / 60));
+      return min < 60 ? min + ' min ago' : min < 120 ? '1 hr ago' : Math.floor(min / 60) + ' hr ago';
+    }
+    function feedLine(e) {
+      return el('li', { class: 'ds-feed-line ds-f-' + e.tone + (Date.now() - e.ms < FRESH_LINE_MS ? ' is-fresh' : ''), 'data-ms': String(e.ms) }, [el('span', { class: 'ds-feed-at', text: agoWords(e.ms) }), el('span', { class: 'ds-feed-text', text: e.text })]);
+    }
+    function paintFeed() {
+      const lines = ui.feed.slice().sort((a, b) => b.seq - a.seq).slice(0, MAX_FEED);
+      sync(parts.feed, lines.map((e) => ({ key: e.key, sig: e.key + '|' + agoWords(e.ms), make: () => feedLine(e) })));
+      parts.feed.hidden = lines.length === 0;
+      parts.feedHead.hidden = lines.length === 0;
+      parts.feedEmpty.hidden = lines.length > 0;
+    }
+    function paintClock() {
+      const L = liveApi(), made = (() => { try { return (S.get('live') || {}).count || 0; } catch (e) { return 0; } })();
+      let text = '';
+      if (L && made) { try { text = timeText(L.clock()); } catch (e) { text = ''; } }   // the rush has made things: its clock is the one on the cards it made
+      if (!text && st) { const w = wall(st.nowAt); text = w ? timeText(w.time) : ''; }
+      const next = text ? 'Time: ' + text : '';
+      if (parts.clock.textContent !== next) parts.clock.textContent = next;
+    }
+    function paintPill() {
+      const n = ui.pending.length;
+      parts.pill.hidden = n === 0;
+      if (n) {
+        parts.pill.textContent = plural(n, 'new card', 'new cards') + ' · Show';
+        parts.pill.setAttribute('aria-label', 'Show the ' + plural(n, 'new card', 'new cards'));
+      }
+    }
+    function paintTitle() {   // the tab says how many things wait while the rush is on, so it can be read from another tab or window
+      const t = (liveOn() && ui.waitTotal > 0 ? '(' + ui.waitTotal + ') ' : '') + baseTitle;
+      if (doc.title !== t) doc.title = t;
+    }
+    // a new card that is on the screen is not "new below" any more
+    function checkPending() {
+      if (!ui.pending.length) return;
+      const vh = win.innerHeight || doc.documentElement.clientHeight;
+      ui.pending = ui.pending.filter((k) => {
+        const n = root.querySelector('[data-key="' + k + '"]');
+        if (!n) return false;
+        const r = n.getBoundingClientRect();
+        return !(r.top < vh && r.bottom > 0);
+      });
+      paintPill();
+    }
+    function showNewest() {
+      const k = ui.pending[0];
+      ui.pending = [];
+      paintPill();
+      const target = k ? root.querySelector('[data-focus="card:' + k + '"]') : null;
+      if (target) { try { target.focus(); } catch (e) { /* the card went away */ } }
+    }
+    // a card's New mark fades after a while; it is taken off in place (the card is not drawn again, so a note being typed keeps its place)
+    function expireNew() {
+      const now = Date.now();
+      Object.keys(ui.fresh).forEach((k) => {
+        if (now - ui.fresh[k] < FRESH_CARD_MS) return;
+        delete ui.fresh[k];
+        const card = root.querySelector('[data-key="' + k + '"]');
+        if (!card) return;
+        card.classList.remove('is-new');
+        const chipEl = card.querySelector('.ds-chip-new');
+        if (chipEl && chipEl.parentNode) chipEl.parentNode.removeChild(chipEl);
+      });
+      Array.prototype.forEach.call(parts.feed.querySelectorAll('.is-fresh'), (li) => { if (now - Number(li.getAttribute('data-ms')) >= FRESH_LINE_MS) li.classList.remove('is-fresh'); });
+    }
+    // once a second: the words of the feed and the clock, the New marks, the "new" button, the title
+    function tick() {
+      if (!st) return;
+      Array.prototype.forEach.call(parts.feed.children, (li) => {
+        const t = li.firstChild, w = agoWords(Number(li.getAttribute('data-ms')));
+        if (t && t.textContent !== w) t.textContent = w;
+      });
+      paintClock();
+      expireNew();
+      checkPending();
+      paintTitle();
+    }
+
+    // Keeps what the person is looking at where it is: when the cards above it grow, shrink, come or go, the page is scrolled by the same amount. (A browser that does this itself
+    // has already done it when we look, so nothing is added twice.) The anchor is the first card or box whose top edge is on the screen.
+    function holdPlace(fn) {
+      let anchor = null, top = 0;
+      try {
+        const vh = win.innerHeight || doc.documentElement.clientHeight, all = root.querySelectorAll('[data-key], .ds-section, .ds-live');
+        for (let i = 0; i < all.length && !anchor; i++) { const r = all[i].getBoundingClientRect(); if (r.top >= 0 && r.top < vh && r.height > 0) { anchor = all[i]; top = r.top; } }
+      } catch (e) { anchor = null; }
+      fn();
+      if (!anchor || !anchor.isConnected) return;
+      const dy = anchor.getBoundingClientRect().top - top;
+      if (Math.abs(dy) >= 1) { try { win.scrollTo({ top: win.pageYOffset + dy, left: 0, behavior: 'instant' }); } catch (e) { win.scrollTo(0, win.pageYOffset + dy); } }   // a browser that rejects 'instant' still scrolls
+    }
+
+    /* ---------------------------------------------------------------- *
      * render: draw everything from the store's state
      * ---------------------------------------------------------------- */
     function render() {
       st = readState(S, D);
+      nowStamp = stamp(st.nowAt);
       const active = doc.activeElement;
       const hadFocus = active && root.contains(active) ? active.getAttribute('data-focus') : '';
+      const first = !ui.drawn;
 
       const any = hasData(st);
       parts.empty.hidden = any;
       main.hidden = !any;
-      if (!any) { if (!ui.seen) ui.seen = {}; return; }   // an empty desk that is open: whatever arrives next is new
-
-      // requests for Mrs. Cathy
-      const reqs = st.requests.filter((r) => r.to === 'cathy' || r.to === 'farm');
-      const waitingReqs = reqs.filter((r) => r.status === 'waiting');
-      const later = reqs.filter((r) => r.status !== 'waiting' && !ui.sent[r.id]);
-      const threads = threadsOf(st);
-      const needReply = threads.filter((t) => t.last.from === 'family');
-      const laterThreads = threads.filter((t) => t.last.from !== 'family' && !ui.sent['t:' + t.id] && threadEvent(st, t.id) === null);
-      const apprAll = approvalItems(st);
-      const apprOpen = apprAll.filter((a) => a.status === 'waiting');
-      const apprDone = apprAll.filter((a) => a.status !== 'waiting' && !ui.sent['a:' + a.coll + a.id]);
-
-      // The family answered a suggestion, or took a request back: say it once (what Mrs. Cathy herself just did is said when she does it)
-      reqs.forEach((r) => {
-        const was = ui.status[r.id];
-        if (was !== undefined && was !== r.status && (r.status === 'accepted' || r.status === 'declined' || r.status === 'cancelled')) {
-          say(whoOf(r) + (r.status === 'accepted' ? ' said OK to your suggestion.' : r.status === 'declined' ? ' said no thanks to your suggestion.' : ' took a request back.'));
-        }
-        ui.status[r.id] = r.status;
-      });
-
-      // "New" marks: things that arrived while this screen was open
-      const nowKeys = {};
-      waitingReqs.forEach((r) => { nowKeys[r.id] = 1; });
-      needReply.forEach((t) => { nowKeys['t:' + t.id] = 1; });
-      if (ui.seen) {
-        const fresh = [];
-        Object.keys(nowKeys).forEach((k) => { if (!ui.seen[k]) { ui.fresh[k] = true; fresh.push(k); } });
-        if (fresh.length) {
-          const first = fresh[0];
-          const r = byId(waitingReqs, first);
-          say('New: ' + (r ? whoOf(r) + ' asks: ' + reqAsk(r) : 'a question') + '.');
-        }
+      parts.tiles.hidden = !any;
+      if (!any) {   // an empty desk that is open: whatever arrives next is new; the box with the strip stays
+        if (!ui.seen) ui.seen = {};
+        ui.waitTotal = 0;
+        takeFeed(first); paintFeed(); paintClock(); paintTitle(); paintPill();
+        ui.drawn = true;
+        return;
       }
-      ui.seen = nowKeys;
-
-      // Waiting for you
-      const nWaiting = waitingReqs.length + needReply.length;
-      parts.waitingBadge.textContent = String(nWaiting);
-      parts.waitingBadge.setAttribute('data-n', String(nWaiting));
-      setHeadSr(parts.waitingBadge, nWaiting, 'waiting');
-      const items = [];
-      // oldest first, and an answered card stays exactly where it was (the sort is stable and ignores the status: same moment, same place)
-      const ordered = [];
-      reqs.forEach((r) => { if (r.status === 'waiting' || ui.sent[r.id]) ordered.push({ at: stamp(reqSent(r)), r }); });
-      threads.forEach((t) => { if (t.last.from === 'family' || ui.sent['t:' + t.id]) ordered.push({ at: t.since, t }); });
-      ordered.sort((a, b) => a.at - b.at);
-      ordered.forEach((o) => {
-        if (o.r) {
-          const r = o.r, tgt = kindOf(r) === 'group' ? eventOf(st, r) : visitOf(st, r);
-          items.push({ key: 'r:' + r.id, sig: JSON.stringify([r, tgt, !!ui.fresh[r.id], ui.mode[r.id] || '', st.account && st.account.name, st.today]), make: () => requestCard(r) });
-        } else {
-          const t = o.t;
-          items.push({ key: 't:' + t.id, sig: JSON.stringify([t.msgs.slice(-4), !!ui.fresh['t:' + t.id], !!ui.sent['t:' + t.id], st.events.length]), make: () => messageCard(t) });
-        }
-      });
-      sync(parts.waitingList, items);
-      const emptyW = parts.waiting.body.querySelector('[data-for="waiting"]');
-      emptyW.hidden = nWaiting > 0;
-      emptyW.textContent = items.length ? 'Everything is answered. A new request or question shows up here by itself.' : 'Nothing is waiting for you. When a family asks for a change or sends a question, it shows up here by itself.';
-
-      // pizza changes are the kitchen's to answer: only a pointer here, never a button to answer them
-      const kitchenWaiting = st.requests.filter((r) => r.to === 'kitchen' && r.status === 'waiting').length;
-      parts.kitchenNote.hidden = kitchenWaiting === 0;
-      if (kitchenWaiting) {
-        parts.kitchenNote.textContent = '';
-        parts.kitchenNote.appendChild(icon('pizza'));
-        parts.kitchenNote.appendChild(el('span', { text: 'The kitchen answers pizza changes: ' + kitchenWaiting + ' waiting there. ' }));
-        parts.kitchenNote.appendChild(el('a', { href: 'kitchen.html', text: 'Open the kitchen screen' }));
-      }
-
-      // Answered earlier
-      const answered = later.slice().sort((a, b) => stamp(reqSent(b)) - stamp(reqSent(a))).slice(0, 6);
-      const aItems = answered.map((r) => {
-        const tgt = kindOf(r) === 'group' ? eventOf(st, r) : visitOf(st, r);
-        return { key: 'r:' + r.id, sig: JSON.stringify([r, tgt, 'old']), make: () => requestCard(r) };
-      });
-      laterThreads.slice(-3).forEach((t) => aItems.push({ key: 't:' + t.id, sig: JSON.stringify([t.msgs.slice(-4), 'old']), make: () => messageCard(t) }));
-      sync(parts.answeredList, aItems);
-      parts.answeredHead.hidden = aItems.length === 0;
-      parts.answeredList.hidden = aItems.length === 0;
-
-      // Photos and reviews
-      parts.approvalsBadge.textContent = String(apprOpen.length);
-      parts.approvalsBadge.setAttribute('data-n', String(apprOpen.length));
-      setHeadSr(parts.approvalsBadge, apprOpen.length, 'to look at');
-      const ap = apprAll.filter((a) => a.status === 'waiting' || ui.sent['a:' + a.coll + a.id]).sort((a, b) => stamp(a.at) - stamp(b.at)).map((a) => ({ key: a.coll + a.id, sig: JSON.stringify([a, a.visitId ? byId(st.visits, a.visitId) : null]), make: () => approvalCard(a) }));
-      sync(parts.approvalsList, ap);
-      sync(parts.approvalsDone, apprDone.slice(-4).map((a) => ({ key: a.coll + a.id, sig: JSON.stringify([a, 'old']), make: () => approvalCard(a) })));
-      const emptyA = parts.approvals.body.querySelector('[data-for="approvals"]');
-      emptyA.hidden = ap.length > 0 || apprDone.length > 0;
-      emptyA.textContent = 'No photos or reviews to look at.';
-
-      // This week
-      const week = [];
-      for (let i = 0; i < 7; i++) week.push(addDays(st.today, i));
-      sync(parts.weekList, week.map((d, i) => ({
-        key: d,
-        sig: JSON.stringify([d, i, st.closed, st.visits.filter((v) => v.date === d), st.events.filter((e) => e.date === d), st.orders.filter((o) => orderDate(st, o) === d), st.family && st.family.name, st.account && st.account.name]),
-        make: () => dayRow(d, i)
-      })));
-
-      renderWeather();
-
-      // People waiting
-      const pr = peopleRows();
-      sync(parts.peopleList, pr.map((r) => ({
-        key: r.key,
-        sig: JSON.stringify([r, ui.alertSent[r.key] === undefined ? -1 : ui.alertSent[r.key]]),
-        make: () => peopleRow(r)
-      })));
-
-      // Groups
-      const gItems = st.events.map((e) => ({ key: e.id, sig: JSON.stringify([e, threadsOf(st).filter((t) => t.id === eventThreadId(e)).map((t) => t.msgs.slice(-5))]), make: () => eventCard(e) }));
-      sync(parts.groupsList, gItems);
-      let emptyG = parts.groups.body.querySelector('[data-for="groups"]');
-      if (!emptyG) { emptyG = el('p', { class: 'ds-empty', 'data-for': 'groups' }); parts.groups.body.appendChild(emptyG); }
-      emptyG.hidden = gItems.length > 0;
-      emptyG.textContent = 'No group trips yet.';
-
-      // the three tiles at the top
-      const totalPeople = pr.reduce((n, r) => n + r.n, 0);
-      const tiles = [
-        ['desk-waiting', nWaiting, 'Waiting for you', 'bell', 'ask'],
-        ['desk-approvals', apprOpen.length, 'Photos and reviews to look at', 'camera', 'ask'],
-        ['desk-people', totalPeople, 'People waiting for news', 'users', 'info']
-      ];
-      sync(parts.tiles, tiles.map((t) => ({
-        key: t[0], sig: JSON.stringify(t),
-        make: () => el('li', null, [el('a', { class: 'ds-tile ds-tile-' + t[4] + (t[1] ? ' has' : ''), href: '#' + t[0] }, [icon(t[3]), el('span', { class: 'ds-tile-n', text: String(t[1]) }), el('span', { class: 'ds-tile-l', text: t[2] })])])
-      })));
+      ui.drawn = true;
+      holdPlace(paint);
 
       // put the keyboard focus back where it was, or where the last action asked for
       const want = ui.focus || hadFocus;
       ui.focus = '';
       if (want) {
         const now = doc.activeElement;
-        if (ui.focusAsked || !now || now === doc.body || !root.contains(now) || now.getAttribute('data-focus') !== want) {
+        if (!now || now === doc.body || !root.contains(now) || now.getAttribute('data-focus') !== want) {
           const target = root.querySelector('[data-focus="' + want.replace(/"/g, '\\"') + '"]');
           if (target && target !== now) { try { target.focus({ preventScroll: false }); } catch (e) { target.focus(); } }
         }
+      }
+
+      function paint() {
+        // requests for Mrs. Cathy
+        const reqs = st.requests.filter((r) => r.to === 'cathy' || r.to === 'farm');
+        const waitingReqs = reqs.filter((r) => r.status === 'waiting');
+        const threads = threadsOf(st);
+        const needReply = threads.filter((t) => t.last.from === 'family');
+        const apprAll = approvalItems(st);
+        const apprOpen = apprAll.filter((a) => a.status === 'waiting');
+
+        // The family answered a suggestion, or took a request back: say it once (what Mrs. Cathy herself just did is said when she does it)
+        reqs.forEach((r) => {
+          const was = ui.status[r.id];
+          if (was !== undefined && was !== r.status && (r.status === 'accepted' || r.status === 'declined' || r.status === 'cancelled')) {
+            say(whoOf(r) + (r.status === 'accepted' ? ' said OK to your suggestion.' : r.status === 'declined' ? ' said no thanks to your suggestion.' : ' took a request back.'));
+          }
+          ui.status[r.id] = r.status;
+        });
+
+        // "New" marks: things that arrived while this screen was open. They are said (in batches), marked on their card for half a minute, and counted by the "new" button.
+        const nowKeys = {}, words = {};
+        waitingReqs.forEach((r) => { nowKeys['r:' + r.id] = 1; words['r:' + r.id] = whoOf(r) + ' asks: ' + reqAsk(r); });
+        needReply.forEach((t) => { nowKeys['t:' + t.id] = 1; words['t:' + t.id] = (t.fam || familyLabel(st)) + ' asks the farm a question'; });
+        apprOpen.forEach((a) => { nowKeys[a.coll + a.id] = 1; words[a.coll + a.id] = (a.fam || familyLabel(st)) + ' sent a ' + (a.coll === 'reviews' && (a.stars || a.text) ? 'review' : 'photo'); });
+        if (ui.seen) {
+          Object.keys(nowKeys).forEach((k) => {
+            if (ui.seen[k]) return;
+            ui.fresh[k] = Date.now();
+            if (ui.pending.indexOf(k) < 0) ui.pending.push(k);
+            sayNew(words[k] + '.');
+          });
+        }
+        ui.seen = nowKeys;
+
+        // Waiting for you: the cards stay in the order they came in (the first time this screen saw them, oldest first), new ones go last, and a card that is answered leaves
+        const nWaiting = waitingReqs.length + needReply.length;
+        ui.waitTotal = nWaiting + apprOpen.length;
+        parts.waitingBadge.textContent = String(nWaiting);
+        parts.waitingBadge.setAttribute('data-n', String(nWaiting));
+        setHeadSr(parts.waitingBadge, nWaiting, 'waiting');
+        const ordered = [];
+        waitingReqs.forEach((r) => ordered.push({ key: 'r:' + r.id, at: stamp(reqSent(r)), r }));
+        needReply.forEach((t) => ordered.push({ key: 't:' + t.id, at: t.since, t }));
+        apprOpen.forEach((a) => ordered.push({ key: a.coll + a.id, at: stamp(a.at), a }));
+        ordered.sort((a, b) => a.at - b.at);
+        ordered.forEach((o) => { if (ui.order[o.key] === undefined) ui.order[o.key] = ++ui.seq; });
+        Object.keys(ui.order).forEach((k) => { if (!nowKeys[k]) delete ui.order[k]; });
+        const byOrder = (a, b) => ui.order[a.key] - ui.order[b.key];
+        const waitingAll = ordered.filter((o) => !o.a).sort(byOrder), waitingShown = waitingAll.slice(0, MAX_WAITING);
+        ui.waitKeys = waitingShown.map((o) => o.key);
+        const items = waitingShown.map((o) => {
+          if (o.r) {
+            const r = o.r, tgt = kindOf(r) === 'group' ? eventOf(st, r) : visitOf(st, r);
+            return { key: o.key, sig: JSON.stringify([r, tgt, ui.mode[r.id] || '', st.account && st.account.name, st.today]), make: () => requestCard(r) };
+          }
+          const t = o.t;
+          return { key: o.key, sig: JSON.stringify([t.msgs.slice(-4), st.events.length]), make: () => messageCard(t) };
+        });
+        sync(parts.waitingList, items);
+        const emptyW = parts.waiting.body.querySelector('[data-for="waiting"]');
+        emptyW.hidden = nWaiting > 0;
+        emptyW.textContent = 'Nothing is waiting for you. When a family asks for a change or sends a question, it shows up here by itself.';
+        const hiddenWaiting = waitingAll.length - waitingShown.length;
+        parts.moreWaiting.hidden = hiddenWaiting === 0;
+        parts.moreWaiting.textContent = hiddenWaiting ? plural(hiddenWaiting, 'more is', 'more are') + ' waiting. Answer some and they show up here.' : '';
+
+        // pizza changes are the kitchen's to answer: only a pointer here, never a button to answer them
+        const kitchenWaiting = st.requests.filter((r) => r.to === 'kitchen' && r.status === 'waiting').length;
+        parts.kitchenNote.hidden = kitchenWaiting === 0;
+        if (kitchenWaiting) {
+          parts.kitchenNote.textContent = '';
+          parts.kitchenNote.appendChild(icon('pizza'));
+          parts.kitchenNote.appendChild(el('span', { text: 'The kitchen answers pizza changes: ' + kitchenWaiting + ' waiting there. ' }));
+          parts.kitchenNote.appendChild(el('a', { href: 'kitchen.html', text: 'Open the kitchen screen' }));
+        }
+
+        // Answered: the latest few, newest answer first (a request that waits for the family's OK is answered for the desk too)
+        const done = [];
+        reqs.filter((r) => r.status !== 'waiting').forEach((r) => done.push({ at: stamp((r.reply && r.reply.at) || r.updated || reqSent(r)), n: idNum(r.id), r }));
+        threads.filter((t) => t.last.from !== 'family' && threadEvent(st, t.id) === null).forEach((t) => done.push({ at: stamp(t.last.at), n: idNum(t.last.id), t }));
+        done.sort((a, b) => b.at - a.at || b.n - a.n);
+        const aItems = done.slice(0, MAX_ANSWERED).map((o) => {
+          if (o.r) {
+            const r = o.r, tgt = kindOf(r) === 'group' ? eventOf(st, r) : visitOf(st, r);
+            return { key: 'r:' + r.id, sig: JSON.stringify([r, tgt, 'old']), make: () => requestCard(r) };
+          }
+          return { key: 't:' + o.t.id, sig: JSON.stringify([o.t.msgs.slice(-4), 'old']), make: () => messageCard(o.t) };
+        });
+        sync(parts.answeredList, aItems);
+        parts.answeredHead.hidden = aItems.length === 0;
+        parts.answeredList.hidden = aItems.length === 0;
+
+        // Photos and reviews
+        parts.approvalsBadge.textContent = String(apprOpen.length);
+        parts.approvalsBadge.setAttribute('data-n', String(apprOpen.length));
+        setHeadSr(parts.approvalsBadge, apprOpen.length, 'to look at');
+        const apprWaiting = ordered.filter((o) => o.a).sort(byOrder).map((o) => o.a);
+        ui.apprKeys = apprWaiting.map((a) => a.coll + a.id);
+        const apprDone = apprAll.filter((a) => a.status !== 'waiting').sort((a, b) => stamp(b.decided || b.at) - stamp(a.decided || a.at) || idNum(b.id) - idNum(a.id)).slice(0, 4);
+        sync(parts.approvalsList, apprWaiting.map((a) => ({ key: a.coll + a.id, sig: JSON.stringify([a, a.visitId ? byId(st.visits, a.visitId) : null]), make: () => approvalCard(a) })));
+        sync(parts.approvalsDone, apprDone.map((a) => ({ key: a.coll + a.id, sig: JSON.stringify([a, 'old']), make: () => approvalCard(a) })));
+        const emptyA = parts.approvals.body.querySelector('[data-for="approvals"]');
+        emptyA.hidden = apprWaiting.length > 0 || apprDone.length > 0;
+        emptyA.textContent = 'No photos or reviews to look at.';
+        emptyA.setAttribute('data-focus', 'empty:approvals');
+        emptyA.setAttribute('tabindex', '-1');
+
+        // This week
+        const week = [];
+        for (let i = 0; i < 7; i++) week.push(addDays(st.today, i));
+        sync(parts.weekList, week.map((d, i) => ({
+          key: d,
+          sig: JSON.stringify([d, i, st.closed, st.visits.filter((v) => v.date === d), st.events.filter((e) => e.date === d), st.orders.filter((o) => orderDate(st, o) === d), st.family && st.family.name, st.account && st.account.name]),
+          make: () => dayRow(d, i)
+        })));
+
+        renderWeather();
+
+        // People waiting
+        const pr = peopleRows();
+        sync(parts.peopleList, pr.map((r) => ({
+          key: r.key,
+          sig: JSON.stringify([r, ui.alertSent[r.key] === undefined ? -1 : ui.alertSent[r.key]]),
+          make: () => peopleRow(r)
+        })));
+
+        // Groups
+        const gItems = st.events.map((e) => ({ key: e.id, sig: JSON.stringify([e, threadsOf(st).filter((t) => t.id === eventThreadId(e)).map((t) => t.msgs.slice(-5))]), make: () => eventCard(e) }));
+        sync(parts.groupsList, gItems);
+        let emptyG = parts.groups.body.querySelector('[data-for="groups"]');
+        if (!emptyG) { emptyG = el('p', { class: 'ds-empty', 'data-for': 'groups' }); parts.groups.body.appendChild(emptyG); }
+        emptyG.hidden = gItems.length > 0;
+        emptyG.textContent = 'No group trips yet.';
+
+        // the counters at the top: where to look first (links to the sections) and what was answered today
+        const totalPeople = pr.reduce((n, r) => n + r.n, 0), doneToday = answeredToday();
+        const tiles = [
+          ['desk-waiting', nWaiting, 'Waiting for you', 'bell', 'ask'],
+          ['desk-approvals', apprOpen.length, 'Photos and reviews to look at', 'camera', 'ask'],
+          ['', doneToday, 'Answered today', 'check', 'done'],
+          ['desk-people', totalPeople, 'People waiting for news', 'users', 'info']
+        ];
+        sync(parts.tiles, tiles.map((t) => ({
+          key: t[0] || 'answered', sig: JSON.stringify(t),
+          make: () => {
+            const inside = [icon(t[3]), el('span', { class: 'ds-tile-n', text: String(t[1]) }), el('span', { class: 'ds-tile-l', text: t[2] })];
+            return el('li', null, [t[0] ? el('a', { class: 'ds-tile ds-tile-' + t[4] + (t[1] ? ' has' : ''), href: '#' + t[0] }, inside) : el('div', { class: 'ds-tile ds-tile-' + t[4] + (t[1] ? ' has' : '') }, inside)]);
+          }
+        })));
+
+        // the feed, the clock, the "new" button and the title
+        takeFeed(first);
+        paintFeed(); paintClock(); paintPill(); paintTitle();
       }
     }
 
@@ -978,9 +1247,28 @@
     }
 
     // ----- go
+    // The rush's own control goes into its place (the page without js/demo-live.js has no strip), and its one-second timer starts (it does nothing while the rush is off).
+    const engine = liveApi();
+    let stopRun = null;
+    if (engine) {
+      try { if (typeof engine.strip === 'function') parts.strip.appendChild(engine.strip()); } catch (e) { /* no strip: the rest of the screen works as it is */ }
+      try { if (typeof engine.run === 'function') stopRun = engine.run(); } catch (e) { stopRun = null; }
+    }
+    parts.strip.hidden = !parts.strip.firstChild;
     const unsub = S.subscribe(() => { render(); });
+    timer = win.setInterval(tick, 1000);
+    let scrollWait = 0;
+    const onScroll = () => { if (!scrollWait) scrollWait = win.setTimeout(() => { scrollWait = 0; checkPending(); }, 120); };   // the "new" button goes when the new cards are on the screen
+    win.addEventListener('scroll', onScroll);
     render();
-    return { render, destroy() { unsub(); }, ui };
+    return {
+      render, ui,
+      destroy() {
+        unsub(); win.clearInterval(timer); win.removeEventListener('scroll', onScroll);
+        if (saidTimer) win.clearTimeout(saidTimer);
+        if (stopRun) stopRun();
+      }
+    };
   }
 
   /* ------------------------------------------------------------------ *
