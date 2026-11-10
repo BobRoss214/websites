@@ -1146,6 +1146,8 @@
       var tickets = ticketsOf(model, s);
       var rail = [], family = [], done = [];
       tickets.forEach(function (t) {
+        // a ticket of the signed-in family: when the kitchen first saw it, asked of the store on every pass (clear() starts the pretend clock again from 0, and the old time would be wrong)
+        if (t.zone === 'rail' && live && (t.arrived === null || t.arrived === undefined)) ui.starts[t.key] = live.watch(t.key);
         if (t.zone === 'rail') { startOf(t); rail.push(t); }
         else if (t.zone === 'family') family.push(t);
         else if (t.zone === 'done') done.push(t);

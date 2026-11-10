@@ -278,6 +278,8 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
   await settled(p, 0);
   const a9 = await audio(p);
   ok('with Sound on again, tickets that arrive make a soft chime (two notes) once for the ones that came together', (await rail(p)).length >= 2 && a9.osc - a8.osc >= 2 && a9.contexts === 1, JSON.stringify([a8, a9]));
+  const alex = (await rail(p)).find((x) => x.key === 'r:r1');
+  ok('after the rush was cleared (the pretend clock starts again) the sample family\'s ticket shows a sane time: never more than its full 2:00', !!alex && secsOf(alex.timer) <= 120 && !alex.late, JSON.stringify(alex));
   await p.locator('[data-tour="kit-sound"]').click();
 
   });
