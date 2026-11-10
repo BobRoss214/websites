@@ -153,14 +153,6 @@
     lines.forEach(function (l) { n += l.count; });
     return n;
   }
-  /** 'Margherita on gluten-free crust with vegan cheese' */
-  function lineLabel(l) {
-    var s = l.name;
-    if (l.glutenFree) s += ' on gluten-free crust';
-    if (l.vegan) s += ' with vegan cheese';
-    return s;
-  }
-
   /** One plain sentence for a whole order: '3 pizzas: 2 Pepperoni, 1 Margherita (gluten-free). Ready at 2:45 pm.' */
   function summarize(order, byId) {
     var lines = orderLines(order, byId), n = countPizzas(lines);
@@ -496,7 +488,6 @@
     sound: 'M11 5L6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
     mute: 'M11 5L6 9H2v6h4l5 4V5zM22 9l-6 6M16 9l6 6'
   };
-  var STATUS_ICON = { 'new': 'plus', change: 'bell', family: 'clock', confirmed: 'done' };
 
   function icon(name) {
     var svg = document.createElementNS(NS, 'svg');
@@ -538,27 +529,10 @@
     return el;
   }
 
-  /** A real button with an icon and a word. kf = a key that lets the page give focus back after it redraws. */
-  function btn(label, opts) {
-    opts = opts || {};
-    return h('button', {
-      type: 'button',
-      'class': 'btn ' + (opts.cls || 'btn-white') + ' ' + (opts.big ? 'kit-big' : 'kit-small'),
-      'data-tour': opts.tour,
-      'data-kf': opts.kf,
-      'aria-label': opts.label,
-      disabled: opts.disabled ? '' : null,
-      onclick: opts.onclick
-    }, opts.icon ? icon(opts.icon) : null, h('span', { text: label }));
-  }
   function chip(text, cls) { return h('span', { 'class': 'kit-flag' + (cls ? ' ' + cls : ''), text: text }); }
   function safe(key) { return String(key).replace(/[^\w-]/g, '-'); }
 
   /* ---------- pieces of a ticket ---------- */
-
-  function statusChip(status) {
-    return h('p', { 'class': 'kit-status kit-st-' + status }, icon(STATUS_ICON[status]), h('span', { text: STATUS_LABEL[status] }));
-  }
 
   function flagChips(l) {
     var flags = [];

@@ -99,7 +99,6 @@
    * Small helpers
    * ------------------------------------------------------------------ */
   function clone(x) { return x === undefined ? undefined : JSON.parse(JSON.stringify(x)); }
-  function pad2(n) { return (n < 10 ? '0' : '') + n; }
   function find(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
   // A small stream of numbers from 0 up to (not including) 1 that depends only on (seed, k, salt): the same event number always makes the same things.
   // (Every product stays below 2^53, so the arithmetic is exact: no Math.imul and no real randomness.)
@@ -221,7 +220,6 @@
     }
     return PD.mergeRows(rows);
   }
-  function orderSummary(o) { return PD.orderSentence(o); }
   function addOrder(st, L, r, ev, fam, t, o) {   // writes a pretend visit and its order; o: { status, pickup (minutes), pizzas, notes }
     var date = L.baseDate, pick0 = tstr(o.pickup);
     var visit = newVisit(st, L, r, ev, fam, { date: date, time: Data.addMinutes(pick0, -60), package: 'pizza' });
@@ -461,7 +459,7 @@
    * ------------------------------------------------------------------ */
   function create(store, opts) {
     opts = opts || {};
-    var subs = [], listeners = [], notified = -1, ticker = null, offStore = null, strips = [];
+    var subs = [], listeners = [], notified = -1, ticker = null, offStore = null;
     function now() { return typeof opts.now === 'function' ? opts.now() : new Date().getTime(); }
     function L() { return store.get('live') || {}; }
 
