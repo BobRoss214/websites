@@ -94,7 +94,6 @@
   "d43=A": "one line for each farm word (corn pit, barrel train, halfzies and the others on the site)",
   "d44=C": "her own rule for the corn pit offer, in her words",
   "d45=B": "the age from which a child pays for the wagon ride (the model assumes 1 year), and the other age sentences that change",
-  "d50=B": "a different rule for the Christmas tree weekends (a code change in js/season.js and the words: ask Claude)",
   "d51=B": "the right closing time of Wise Pie (the model uses 9 pm) and any other hours that are wrong",
   "d54=A": "the price of each of the eleven Shop cards that say Prices coming soon (the prices differ card by card)",
   "d55=B": "what visitors with strollers or wheelchairs should do instead, in her words",

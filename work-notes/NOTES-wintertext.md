@@ -32,6 +32,15 @@ tests/browser-support is red only for these two until the table is rebuilt.
 - docs/DECISION_PLAYBOOK.md (d50, d23) and docs/QUESTIONS_FOR_THE_FARM.md (Q12, Q37) name js/season.js at `{ id: 'winter'` (still there after the merge). I removed the old anchor `function thanksgivingFriday(`.
 - lang/src/*.json still has the js text "the Friday after Thanksgiving" (the old `next:` of js/season.js): winter-logic's commit removes it.
 
+- tests/README.md line 151 (row `upcoming-dates`, a winter-logic test) still says "the Friday after Thanksgiving in several years": main rewrites it with winter-logic's test change.
+- lang/src/*.json (js section, line 256) still has "the Friday after Thanksgiving" with its four translations: it is the old `next:` of js/season.js. When winter-logic's commit is merged, run the pipeline; if `i18n.py build` names that line as not on any page, delete the four lines.
+
+## Tests I changed (so the merge does not undo them)
+
+- tests/consistency.test.mjs: the tree check reads the rule (`TREE_RULE`) and the two bars of the calendar row; tests/i18n-facts.test.mjs: a block at the end for the two date ranges in every language; tests/tour-seasons.test.mjs: the new name of the green line.
+- tests/shop.test.mjs (`readOutside`): the Store tree card keeps only "the page's existing wording" for dates. The page's wording is now the tree rule; the dates after it are written by the script (`data-tree-dates`), so `readOutside` leaves those dates (and the empty brackets) out when it reads the page without #shop. Nothing else about the check changed.
+- tools/apply_answers_rules.json: `d50=B` is not in "manual" any more (it has no recipe: a different tree rule is a code change, so it is skipped in tools/rehearse_answers.json like d50=C).
+
 ## Not decided (asked in the report)
 
 See the report: the tomato lines left on purpose, the winter lines that say more than the spec (playground and goats, ice cream and drinks, "Picking is seasonal"), the generic how-to-reserve text left as it is, the SEO descriptions.
