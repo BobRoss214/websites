@@ -5,7 +5,7 @@
  * no sideways scrolling from phone to wide screen, reduced motion, and seasonPicker: false. The falling leaves of fall: each one has its three animations (it falls
  * through the hero's own height, it drifts to one side and the other, its drawing tips the way it drifts), they fall from above the top edge to below the bottom edge
  * of the hero whatever its height (the snow too: 1440 x 600), --fh follows the hero's picture when the window does not change (a resize observer), and on a slow computer (the page's own calm mode,
- * data-calm light or most) the layer fades out instead of freezing in mid-air (a transition of its own, out and in), and is hidden where `translate` is not understood (@supports). */
+ * data-calm light or most) the layer fades out instead of freezing in mid-air (a transition of its own, out and in), and is hidden where `translate` is not understood (@supports). The winter picture: the Christmas trees are 1.5 times as tall and wide as they first were (16 can be lit), the tap area of a tree is its picture and a little more, and at 1920 x 1080, 1920 x 950 and 1440 x 900 (scrolled down to the hero's bottom at 1440 x 780, 1366 x 768 and 1280 x 720) both campfires and the snowman are in sight with nothing in front of them and most of the trees can be seen. */
 import { run, open, ok, okSoon, until, settled, info } from './lib.mjs';
 
 const season = (p) => p.evaluate(() => document.documentElement.dataset.season);
@@ -253,6 +253,52 @@ const kidsView = (q) => q.evaluate(() => {
   return result;
 });
 
+// The winter picture as the window shows it now (the first screen; what is below the fold or past the sides is not seen), the way kidsView sees the people of the spring field.
+// For each tree that can be lit, in the order of the picture:
+//   seen  the share of the tree (8 x 5 points inside the cone of its picture) that is on screen (in the window and the hero) and not under the page's own words, pills, chips, buttons or card
+// For each campfire and for the snowman (their tap areas, 6 x 6 points; of a fire the top row is left out: it is air above the flames, and the page's list of chips, which takes taps over its whole width, can lie over it):
+//   on    the share of the area that is on screen
+//   free  of those points, the share where a tap really lands on the fire or the snowman: nothing of the page and no tree in front of it
+const winterView = (q) => q.evaluate(() => {
+  const hero = document.querySelector('#top'), h0 = hero.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+  const win = { l: 0, t: Math.max(0, h0.top), r: W, b: Math.min(H, h0.bottom) };
+  const cover = [], add = (r) => { if (r.width > 1 && r.height > 1) cover.push(r); };
+  const copy = document.querySelector('.hero-copy'), tw = document.createTreeWalker(copy, NodeFilter.SHOW_TEXT);
+  for (let n = tw.nextNode(); n; n = tw.nextNode()) {   // (the page's text has pointer-events: none, so it is measured as rectangles, the lines of the words one by one)
+    const e = n.parentElement;
+    if (!n.data.trim() || !e.getClientRects().length || getComputedStyle(e).visibility === 'hidden' || e.closest('[hidden], .sr-only')) continue;
+    const rg = document.createRange(); rg.selectNodeContents(n);
+    for (const r of rg.getClientRects()) add(r);
+  }
+  for (const e of hero.querySelectorAll('.hero-cta a, .chips li, .season-switch button, .hero-note a, .hero-live .live, #picker')) if (e.getClientRects().length) add(e.getBoundingClientRect());
+  const under = (x, y) => cover.some((r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+  const onScreen = (x, y) => x >= win.l && x <= win.r && y >= win.t && y <= win.b;
+  const trees = [...document.querySelectorAll('#field [data-pick="tree"]')].map((g) => {
+    const d = g.querySelector('use[href="#xmas-tree"]').getBoundingClientRect();
+    let n = 0, good = 0;
+    for (let gy = 0; gy < 8; gy++) {
+      const v = 0.2 + 0.7 * (gy + 0.5) / 8, half = 0.46 * (v - 0.09) / 0.82;   // the cone: it is as wide as the picture (0.92 of it) at the bottom tier and a point at the top
+      for (let gx = 0; gx < 5; gx++) {
+        const x = d.left + d.width * (0.5 + 1.6 * half * ((gx + 0.5) / 5 - 0.5)), y = d.top + d.height * v;
+        n++; if (onScreen(x, y) && !under(x, y)) good++;
+      }
+    }
+    return Math.round(100 * good / n);
+  });
+  const area = (el, owner, rows) => {
+    const r = el.getBoundingClientRect(), gy0 = 6 - rows;
+    let on = 0, mine = 0;
+    for (let gx = 0; gx < 6; gx++) for (let gy = gy0; gy < 6; gy++) {
+      const x = r.left + (gx + 0.5) * r.width / 6, y = r.top + (gy + 0.5) * r.height / 6;
+      if (!onScreen(x, y)) continue;
+      on++; const e = document.elementFromPoint(x, y); if (e && owner.contains(e)) mine++;
+    }
+    return { on: Math.round(100 * on / (6 * rows)), free: on ? Math.round(100 * mine / on) : 0 };
+  };
+  const fires = [...document.querySelectorAll('#field [data-fire]')].map((f) => area(f.querySelector('.scene-hit'), f, 5));
+  const sn = document.querySelector('#fore [data-npc="snowman"]');
+  return { trees, fires, snow: area(sn.querySelector('.npc-hit'), sn, 6) };
+});
 // The friend button (#npc-btn) pressed once for every friend of the picture, as the window shows it now: for each press who spoke (the bubble is put on its element: `_say`) and how much of that friend's tap area is
 // inside the window and the hero, and how many of the friends have at least 60 % of theirs there (good) or any of it (any), worked out just before the press.
 const friendTour = (q) => q.evaluate(() => {
@@ -587,6 +633,46 @@ await run('hero', async ({ browser, base, errs }) => {
   ok(`...and every flake falls from above the top edge to below the bottom edge of the hero (${snow.out.length} flakes, hero ${Math.round(snow.h)}px high; ${badSnow.length} do not)`, snow.out.length > 20 && badSnow.length === 0, JSON.stringify(badSnow.slice(0, 2)));
   await p.setViewportSize({ width: 1440, height: 900 });
   ok('winter: flames animate', (await p.evaluate(() => getComputedStyle(document.querySelector('.campfire .f1')).animationName)) === 'flick1');
+
+  // ---- winter: the Christmas trees of the tree lot are big (1.5 times as tall and wide as they first were), and the picture is sensible in every window: the fires and the snowman are not buried (not in trees, not under the
+  // page's own words, pills, chips, buttons or card) and most of the trees can be seen. (22 trees could be lit before they were made bigger and stand 1.5 times as far apart; docs/QUESTIONS_FOR_THE_FARM.md, question 64, says how many there are now.)
+  await choose(p, 'summer');
+  await choose(p, 'winter');   // a scene of its own again, nothing lit (a lit tree takes no tap)
+  const lot = await p.evaluate(() => [...document.querySelectorAll('#field [data-pick="tree"]')].map((g) => {
+    const m = /translate\(([-\d.]+) ([-\d.]+)\)/.exec(g.getAttribute('transform')), t = (+m[2] - 262) / 338;   // the row of the field the tree stands in (y = 262 + 338 t)
+    const u = g.querySelector('use[href="#xmas-tree"]'), r = [...g.children].find((c) => c.localName === 'rect');
+    return { was: Math.round((18 + 188 * t) * 10) / 10, h: +u.getAttribute('height'), w: +u.getAttribute('width'), tw: +r.getAttribute('width'), th: +r.getAttribute('height') };
+  }));
+  ok(`winter: ${lot.length} trees can be lit, each 1.5 times as tall as the first drawing was and 0.727 of that wide (${Math.min(...lot.map((t) => t.h))} to ${Math.max(...lot.map((t) => t.h))} units tall in a picture 1440 units wide)`, lot.length === 16 && lot.every((t) => Math.abs(t.h / t.was - 1.5) < 0.02 && Math.abs(t.w / t.h - 0.727) < 0.01), JSON.stringify(lot.map((t) => [t.was, t.h, t.w])));
+  ok('winter: the tap area of a tree is its picture and a little more (wider by a fifth, taller by a seventh), so what is tapped is what is drawn', lot.every((t) => t.tw >= t.w * 1.1 && t.tw <= t.w * 1.25 && t.th >= t.h * 1.05 && t.th <= t.h * 1.25), JSON.stringify(lot.map((t) => [t.w, t.tw, t.h, t.th])));
+  await p.addStyleTag({ content: '#bee-fly{visibility:hidden!important}html{scroll-behavior:auto!important}' });   // (the bee flies over everything, and the page must scroll at once)
+  const WINTER_SEEN = [[1920, 1080], [1920, 950], [1440, 900]];   // the whole picture is on the first screen
+  const WINTER_LOW = [[1440, 780], [1366, 768], [1280, 720]];   // the bottom of the picture is under the bottom edge of the window: looked at with the page scrolled down to the bottom of the hero
+  const WINTER_NEAR = [[1100, 800], [768, 1024], [390, 844], [360, 640]];   // looked at too (nothing is asked of them: see below)
+  // The picture in a window of this size, at the top of the page or scrolled down to the bottom of the hero (the page has come to rest first: a view taken while it was still moving, as on a busy computer, showed the fires covered).
+  const winterAt = async (w, h, down) => {
+    await p.setViewportSize({ width: w, height: h });
+    await settled(p, 300);
+    await p.evaluate((d) => { const r = document.querySelector('#top').getBoundingClientRect(); scrollTo(0, d ? Math.max(0, r.bottom + scrollY - innerHeight) : 0); }, down);
+    await settled(p, 300);
+    return winterView(p);
+  };
+  const treesSeen = (v) => v.trees.filter((t) => t >= 50).length;   // half of the tree on screen and not under the page
+  const clear = (a, least) => a.on === 100 && a.free >= least;   // all of the tap area on screen, and a tap lands on the fire or the snowman (at least this share of it), not on a tree, a word, a chip or the card
+  const winterGood = (v, least) => v.fires.length === 2 && v.fires.every((f) => clear(f, 75)) && clear(v.snow, 90) && treesSeen(v) >= least;
+  for (const [w, h, down, least] of [...WINTER_SEEN.map(([a, b]) => [a, b, false, 13]), ...WINTER_LOW.map(([a, b]) => [a, b, true, 10])]) {
+    let last = null;
+    await okSoon(`winter, window ${w} x ${h}${down ? ', scrolled down to the bottom of the hero' : ''}: both campfires and the snowman are in sight with nothing in front of them, and at least ${least} of the 16 trees can be seen (half of the tree in sight and not under the page's words, chips or card)`,
+      async () => (last = await winterAt(w, h, down)), (v) => winterGood(v, least));
+    if (last) info(`winter, window ${w} x ${h}${down ? ', scrolled down' : ''}: ${treesSeen(last)} of ${last.trees.length} trees can be seen; campfires ${last.fires.map((f) => f.on + ' % in sight, ' + f.free + ' % free').join(' and ')}; snowman ${last.snow.on} % in sight, ${last.snow.free} % free`);
+  }
+  // In the narrow windows the picture is cut at the sides (a phone shows the middle 400 of its 1440 units: the fires are at its edges, the snowman is out) and the picker card, which is as wide as it is anywhere, covers more of it:
+  // said, not asked
+  for (const [w, h] of WINTER_NEAR) {
+    const v = await winterAt(w, h, true);
+    info(`winter, window ${w} x ${h}, scrolled down: ${treesSeen(v)} of ${v.trees.length} trees can be seen; campfires ${v.fires.map((f) => f.on + ' % in sight, ' + f.free + ' % free').join(' and ')}; snowman ${v.snow.on} % in sight, ${v.snow.free} % free`);
+  }
+  await p.setViewportSize({ width: 1440, height: 900 });
 
   // ---- keyboard on the switcher
   await p.focus('#season-switch button[aria-checked=true]');

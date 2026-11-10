@@ -1857,17 +1857,17 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d69. "Every tree is lit!" appears too early
 
-- In plain words: In winter each tap lights one of 22 trees (or sparks a fire). At the 12th light the message says "Every tree is lit!" while at least 10 trees are still dark.
+- In plain words: In winter each tap lights one of 16 trees (or sparks a fire). At the 12th light the message says "Every tree is lit!" while at least 4 trees are still dark.
 - Doc question: Q64
 - Urgency: 3 (nice to have). Checklist says: not listed.
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: d68 and d70 (the same game code, js/hero.js), d01 (what visitors see in winter).
-- Note: Checked in a browser on 3 October 2026 (winter picture, 22 trees and 2 fires). The messages are by count: at 1 "Ooh, twinkly!", at 3 "You're a natural decorator.", at 6 "The whole farm is glowing! Real trees are at The GreenHouse.", at 12 "Every tree is lit! Bring the family to The GreenHouse.". A fire spark counts like a lit tree, so a count of 22 does not always mean 22 lit trees.
+- Note: Checked in a browser on 3 October 2026 (winter picture, 22 trees and 2 fires) and again on 10 November 2026, after the trees were made bigger (16 trees and 2 fires). The messages are by count: at 1 "Ooh, twinkly!", at 3 "You're a natural decorator.", at 6 "The whole farm is glowing! Real trees are at The GreenHouse.", at 12 "Every tree is lit! Bring the family to The GreenHouse.". A fire spark counts like a lit tree, so a count of 16 does not always mean 16 lit trees.
 
-**A. Say it only when all 22 trees are lit**
+**A. Say it only when all 16 trees are lit**
 
-- Ask Claude: in js/hero.js at `Every tree is lit!` the message list is chosen by the count of taps; make this last message depend on the number of lit trees instead (the 22 trees are the winter picture's trees).
+- Ask Claude: in js/hero.js at `Every tree is lit!` the message list is chosen by the count of taps; make this last message depend on the number of lit trees instead (the 16 trees are the winter picture's trees).
 - Strings: 0
 - Tests: hero (winter part); games
 
