@@ -23,7 +23,8 @@ For main, who applies README.md, tests/README.md and tests/browser-support.table
 
 - `js/tour-steps-b.js` with winterlogic: two lines of the card `ch6-trees` (the fall and the winter button). Take MY fall line (`Fall. No green line. It waits for tree season.`, no "still") and winterlogic's winter line.
 - `js/tour-steps-b.js` with wintertext: it will edit `ch6-hours` (not touched here) and `ch7-pizza` (rewritten here: keep my text, it has no hours and no dates, so there is nothing to fix in it).
-- tour-A's `NO_CHANGE_NOTES = [1, 2, 3, 4, 5, 11]` block in `tests/tour-targets.test.mjs`: after both branches are in, add `6, 7, 8, 9` to the array. Checked here with a copy of its phrase list: chapters 6 to 9 have none of "now says", "new this year", "something new", "still", "already", "used to", "instead of", "older page", "we need you to".
+- tour-A's `NO_CHANGE_NOTES = [1, 2, 3, 4, 5, 11]` and `QUOTES_IN_LIT` in `tests/tour-targets.test.mjs`: after both branches are in, make the first `[1, 2, 3, 4, 5, 6, 7, 8, 9, 11]` and add `'ch7-note', 'ch7-soon-pantry', 'ch8-last'` to the second (and `'ch6-tree-pizza'` once wintertext is in: its quote is only in the lit part with the winter text). Tried in a copy of my branch with tour-A's branch merged (the merge has no conflict): tour-targets for those three cards, 66 checks, all passed; the whole file merges without a conflict.
+- `docs/TOUR.md` merges with tour-A's without a conflict (I left its "Clicks" line alone; the pop-up is described in the layers paragraph).
 
 ## After the winter, shop-pop and beer-wine branches merge: what to re-check
 
