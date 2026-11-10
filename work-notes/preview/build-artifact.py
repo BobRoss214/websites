@@ -15,13 +15,21 @@ What it makes in the output folder (default /tmp/preview-out; never inside the s
 
 Every page is self-contained: each <link rel="stylesheet" href="css/..."> becomes an inline <style> and each <script src="js/..."> an inline
 <script>, in the SAME place, so the order the real page runs in is kept. Fonts become data: addresses. The viewer lets pages load only their own
-published files, so nothing is fetched later: the lazy tour files (css/tour.css, js/tour-steps*.js) are put in the page too (see TOUR below).
+published files, so nothing is fetched later: the files that a script asks for by code (css/tour.css, js/tour-steps*.js, js/shop-pop-box.js, css/shop-pop.css)
+are put in the page too, in front of the script that asks (the list LAZY below).
 
 FLAGS (default on; --no-flags leaves them out): the FIRST script of every page is
     window.WA_DEMO = true; window.WA_TOUR = true; window.WA_TOUR_INLINE = true;
 They are what makes the "Sign in" button and the "Take a tour" pill show. The real site never has them.
-TOUR (flags on only): css/tour.css is put at the end of the page's styles and every js/tour-steps*.js just before js/tour.js (WA_TOUR_INLINE tells
-the engine not to ask for those files). Without flags the pages carry exactly what the real site carries, and the demo and the tour do nothing.
+TOUR (flags on only): css/tour.css and every js/tour-steps*.js are put right in front of js/tour.js (WA_TOUR_INLINE tells the engine not to ask for
+those files). Without flags the pages carry exactly what the real site carries, and the demo and the tour do nothing.
+SHOP POP-UP ("What to buy": a card grows under the pointer, a click opens a box with the ingredients): js/shop-pop.js (a small loader) and js/shop-sample.js
+(PRETEND ingredients) are plain <script src> tags of the home page, so they are inlined like every other script. The loader asks for js/shop-pop-box.js (the cards'
+buttons and the box) only when the sample is on the page and the box has not already said it is there (window.WISE_ACRES.shopPop), and the box asks for
+css/shop-pop.css when a card is first touched, unless a <style data-shop-pop-css> is already in the page. So the build puts both in front of the loader, in BOTH builds
+(they belong to the site, not to the flags): the box script, which sets shopPop, and the style, with exactly that marker. A site folder without js/shop-sample.js (what the
+real site gets until the farm gives its real lists) builds the same way and the pop-up just stays asleep: no control on any card (the test checks that state too).
+build-info.json says what was put in (`lazy`) and which files only the build with the flags carries (`flags_only`: the tour's), so the test needs no list of its own.
 
 Preview-only code (not in the real site): a storage fallback (window.name) for a frame that refuses localStorage, right after the flags; and, in front
 of js/i18n.js, the IntersectionObserver fix for the viewer's frame, the sign-up form in demo mode, example weekly spots, and the viewer's own save
@@ -49,6 +57,28 @@ INFO_NAME = 'build-info.json'
 PLAN_NAME = 'publish-files.json'      # the exact `files` list for the Artifact tool (with root = the output folder); like build-info.json it is NOT published
 
 FLAGS = '<script>window.WA_DEMO = true; window.WA_TOUR = true; window.WA_TOUR_INLINE = true;</script>'
+
+# ---- the lazy files (a new feature is one more line here, nothing else in this file) ----------------------------------------------------------
+# The viewer serves only the files that were published, so a script that asks for a style or a script file by code (the tour opening, a Store card being touched)
+# would find nothing. The build puts every such file in the page itself, right in front of the <script> tag of the script that asks for it, with the very marker that
+# script looks for before it asks: a loader that finds its marker asks for no file at all (the test fails on any request for a js/ or css/ file). One entry for each
+# file, or for a group of files:
+#   script    the file that asks for it: its own <script src> tag in the page carries the blocks, or, for a file that is itself lazy, its own block. A list of files:
+#             the first one that is in the site and mentions the marker or flag is the one that asks (a loader and the file it loads may be folded into one)
+#   kind      'css' (a <style> block) or 'js' (a <script> block)
+#   file      the site file; or  pattern  = a regular expression for the whole path of several files (sorted). A file the site does not have is skipped.
+#   marker    the attribute put on the <style> or <script>, written as the loader looks for it, for example  data-shop-pop-css  ('' = none)
+#   flag      instead of an attribute: the name of a global (window.WISE_ACRES.<flag>) that the lazy script sets when it runs and the loader looks at before it asks.
+#             ('' = none: a flag of the page tells the loader, as WA_TOUR_INLINE does for the tour). The build says so (NOTE) when the loader never mentions the
+#             marker or the flag, or the lazy script never mentions the flag: the copy in the page would not be seen and the file would be asked for.
+#   optional  True: a missing file is no NOTE (a site that keeps the code in one file has no such file)
+#   flags     True: only in the build WITH the flags (it is preview-only: the tour); False: in both builds (it belongs to the site)
+LAZY = [
+    dict(script='js/tour.js', kind='css', file='css/tour.css', marker='', flag='', optional=False, flags=True),
+    dict(script='js/tour.js', kind='js', pattern=r'js/tour-steps[A-Za-z0-9-]*\.js', marker='', flag='', optional=False, flags=True),
+    dict(script='js/shop-pop.js', kind='js', file='js/shop-pop-box.js', marker='', flag='shopPop', optional=True, flags=False),
+    dict(script=['js/shop-pop-box.js', 'js/shop-pop.js'], kind='css', file='css/shop-pop.css', marker='data-shop-pop-css', flag='', optional=False, flags=False),
+]
 
 # ---- preview-only code ------------------------------------------------------------------------------------------------------------------
 # 1. runs first (right after the flags): a frame that refuses storage gets a stand-in kept in window.name.
@@ -148,6 +178,7 @@ class Builder:
         self.repo, self.out, self.flags = repo, out, flags
         self.font_cache = {}
         self.used_css, self.used_js = set(), set()
+        self.lazy = {}        # file -> what LAZY put in front of the script that asks for it (the script, the kind, the marker, the flag, the pages)
         self.warnings = []
         self.patched = {'sticky header': 0, 'bottom bar': 0}
         self._dicts = None
@@ -189,23 +220,69 @@ class Builder:
                 css = css.replace(old, new)
         return css
 
-    # -- the lazy tour files and the language dictionaries
-    def tour_step_files(self):
-        d = self.path('js')
-        return sorted('js/' + f for f in os.listdir(d) if re.fullmatch(r'tour-steps[A-Za-z0-9-]*\.js', f)) if os.path.isdir(d) else []
-
+    # -- the language dictionaries
     def dicts(self):
         if self._dicts is None:
             self._dicts = '\n'.join(self.read('lang/%s.js' % c) for c in ('es', 'hi', 'zh', 'vi'))
         return self._dicts
 
     # -- one <script src="js/..."> or <link> becomes inline text
-    def style_block(self, rel, media=''):
+    def style_block(self, rel, media='', marker=''):
+        """A <style> with the text of css/... ; `marker` (for example  data-shop-pop-css) goes on the tag, as a loader that looks for it expects."""
         self.used_css.add(rel)
-        tag = '<style media="%s">' % media.replace('"', '&quot;') if media and media.lower() != 'all' else '<style>'
-        return tag + '\n' + self.css_text(rel) + '\n/*# sourceURL=' + rel + ' */\n</style>'
+        attrs = (' ' + marker if marker else '') + (' media="%s"' % media.replace('"', '&quot;') if media and media.lower() != 'all' else '')
+        return '<style' + attrs + '>\n' + self.css_text(rel) + '\n/*# sourceURL=' + rel + ' */\n</style>'
 
-    def script_block(self, rel):
+    def inline_script(self, rel, marker='', js=None):
+        """A <script> with the text of js/... (or of `js`, a changed copy of it); the name of the file stays in the debugger as its sourceURL."""
+        self.used_js.add(rel)
+        return '<script%s>\n' % (' ' + marker if marker else '') + esc_js(self.read(rel) if js is None else js) + '\n//# sourceURL=' + rel + '\n</script>'
+
+    def lazy_files(self, entry):
+        """The site files that one entry of LAZY names and that are really there (sorted)."""
+        if 'file' in entry:
+            return [entry['file']] if self.exists(entry['file']) else []
+        folder = entry['pattern'].split('/')[0]
+        d = self.path(folder)
+        return sorted(folder + '/' + f for f in os.listdir(d) if re.fullmatch(entry['pattern'], folder + '/' + f)) if os.path.isdir(d) else []
+
+    def asker_of(self, e):
+        """The script that asks for the file of entry `e` of LAZY (`script` is one file, or a list: the first that is in the site and mentions the marker or flag)."""
+        cands = e['script'] if isinstance(e['script'], (list, tuple)) else [e['script']]
+        needle = e['marker'].split('=')[0] or e['flag']
+        for c in cands:
+            if self.exists(c) and (not needle or needle in self.read(c)):
+                return c
+        return next((c for c in cands if self.exists(c)), cands[0])
+
+    def lazy_blocks(self, script, page, depth=0):
+        """The blocks that go right in front of `script`: the files it asks for by code (LAZY), already in the page, with the marker it looks for first.
+        A lazy script brings the files it asks for itself, in front of its own block."""
+        out = []
+        for e in LAZY:
+            if (e['flags'] and not self.flags) or self.asker_of(e) != script:
+                continue
+            files = self.lazy_files(e)
+            if not files and 'file' in e and not e['optional']:
+                self.warn('%s is in the page but %s, which it asks for, is not in the site folder' % (script, e['file']))
+            for rel in files:
+                needle = e['marker'].split('=')[0] or e['flag']
+                if needle:
+                    if needle not in self.read(script):
+                        self.warn('%s never mentions "%s", which the preview puts on %s so that the loader sees the copy in the page: it would ask for the file, which is not '
+                                  'published. Change the marker or the flag in LAZY (top of work-notes/preview/build-artifact.py) to the one the loader looks for.' % (script, needle, rel))
+                    if e['flag'] and e['flag'] not in self.read(rel):
+                        self.warn('%s never mentions "%s", which %s looks at before it asks for the file: the loader would ask for it all the same' % (rel, e['flag'], script))
+                if e['kind'] == 'css':
+                    out.append(self.style_block(rel, marker=e['marker']))
+                else:
+                    out.extend(self.lazy_blocks(rel, page, depth + 1) if depth < 3 else [])      # what this script asks for in its turn goes in front of it
+                    out.append(self.inline_script(rel, e['marker']))
+                got = self.lazy.setdefault(rel, {'script': script, 'kind': e['kind'], 'marker': e['marker'], 'flag': e['flag'], 'pages': set()})
+                got['pages'].add(page)
+        return out
+
+    def script_block(self, rel, page=''):
         name = rel[3:-3]
         self.used_js.add(rel)
         if name == 'guard':
@@ -213,16 +290,15 @@ class Builder:
         js = self.read(rel)
         if name == 'i18n':
             js = PREVIEW + '\n' + self.dicts() + '\n' + js
-        block = '<script>\n' + esc_js(js) + '\n//# sourceURL=' + rel + '\n</script>'
-        if name == 'tour' and self.flags:
-            extra = []
-            if self.exists('css/tour.css'):
-                extra.append(self.style_block('css/tour.css'))
-            for step in self.tour_step_files():
-                self.used_js.add(step)
-                extra.append('<script>\n' + esc_js(self.read(step)) + '\n//# sourceURL=' + step + '\n</script>')
-            block = '\n'.join(extra + [block])
-        return block
+        return '\n'.join(self.lazy_blocks(rel, page) + [self.inline_script(rel, js=js)])
+
+    def flags_only_files(self):
+        """Every file of the site that only the build WITH the flags carries (the lazy ones with flags=True), if the site has it."""
+        found = set()
+        for e in LAZY:
+            if e['flags']:
+                found.update(self.lazy_files(e))
+        return sorted(found)
 
     def convert(self, text, page, collect=None):
         """Turns the stylesheet links and the script tags of `text` into inline ones, in place (comments are left alone).
@@ -273,7 +349,7 @@ class Builder:
                      'Use a plain <script src="..."></script>, or teach work-notes/preview/build-artifact.py about it.' % (page, src, ', '.join(extra)))
             if not self.exists(src):
                 fail('%s points at %s, which is not in the site folder.' % (page, src))
-            return put(self.script_block(src))
+            return put(self.script_block(src, page))
 
         def one(m):                                     # one pass, so the blocks keep the order of the tags in the page
             return script(m) if m.group('sa') is not None else link(m)
@@ -370,7 +446,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description='Build the claude.ai preview of the site (see the top of this file).')
     ap.add_argument('--repo', default=os.path.dirname(os.path.dirname(HERE)), help='the site folder (default: the folder this file sits in)')
     ap.add_argument('--out', default='/tmp/preview-out', help='where to write the preview (default /tmp/preview-out; must be outside the site folder)')
-    ap.add_argument('--no-flags', action='store_true', help='leave out WA_DEMO / WA_TOUR (and the tour files): what the real site shows')
+    ap.add_argument('--no-flags', action='store_true', help='leave out WA_DEMO / WA_TOUR (and the tour files and the pretend ingredients): what the real site shows')
     ap.add_argument('--force', action='store_true', help='empty the output folder even if an earlier build did not make it')
     args = ap.parse_args(argv)
 
@@ -441,6 +517,10 @@ def main(argv=None):
         'assets': assets,
         'css_inlined': sorted(b.used_css),
         'js_inlined': sorted(b.used_js),
+        # the files a script asks for by code, put in the page in front of it (the test checks the marker or flag is there and the loader mentions it)
+        'lazy': [{'file': f, 'script': v['script'], 'kind': v['kind'], 'marker': v['marker'], 'flag': v['flag'], 'pages': sorted(v['pages'])} for f, v in sorted(b.lazy.items())],
+        # every file that only the build with the flags carries (the tour's styles and steps), as far as the site folder has it
+        'flags_only': b.flags_only_files(),
         'publish': {'page': 'index.html', 'root': out, 'files': publish_files},
         'totals': {'files': len(sizes), 'bytes': total, 'largest': max(sizes.items(), key=lambda kv: kv[1])},
         'limits': LIMITS,
@@ -472,6 +552,13 @@ def main(argv=None):
     print('  css inlined: %s' % ', '.join(sorted(os.path.basename(c) for c in b.used_css)))
     new = sorted(os.path.basename(j) for j in b.used_js if re.match(r'js/(demo|tour)', j))
     print('  demo / tour scripts inlined: %s' % (', '.join(new) if new else 'none (they are not in the site yet)'))
+    shop = sorted(f for f in b.used_js | b.used_css if re.match(r'(?:js|css)/shop-', f))
+    how = lambda f: f + (' (%s, in front of %s)' % (('as <%s %s>' % ('style' if b.lazy[f]['kind'] == 'css' else 'script', b.lazy[f]['marker'])) if b.lazy[f]['marker'] else 'the loader sees WISE_ACRES.%s' % b.lazy[f]['flag'], b.lazy[f]['script'])
+                         if f in b.lazy and (b.lazy[f]['marker'] or b.lazy[f]['flag']) else '')
+    print('  shop pop-up files inlined: %s' % (', '.join(how(f) for f in shop) if shop else 'none (they are not in the site yet)'))
+    skipped = [f for f in b.flags_only_files() if f not in b.used_js and f not in b.used_css]
+    if skipped:
+        print('  left out of this build on purpose (only the build with the flags has them): %s' % ', '.join(skipped))
     if clash_text:
         for line in clash_text.splitlines():
             print('  ' + ('CLASH: ' + line[len('CLASH in '):] if line.startswith('CLASH in ') else line))

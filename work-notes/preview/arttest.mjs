@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Checks a preview folder made by build-artifact.py, the way the claude.ai viewer shows it.
  *
- *   node work-notes/preview/arttest.mjs [--dir /tmp/preview-out] [--shots DIR] [--quick] [--only static,home,flags,flow,tour,blocked]
+ *   node work-notes/preview/arttest.mjs [--dir /tmp/preview-out] [--shots DIR] [--quick] [--only static,home,flags,flow,tour,blocked,shop]
  *
  * It reads <dir>/build-info.json to know whether the build has the demo and tour flags (a build made with --no-flags is tested the other way round:
  * nothing demo-related may show). It serves the folder from a pretend address (https://art.local/) and shows every page inside an <iframe> of a
@@ -20,6 +20,13 @@
  *   tour     (needs the tour) the pill opens the welcome card, the tour walks through every page with Next (also across pages) and asks for no file
  *   blocked  a frame that refuses all storage (the strictest viewer): the pages load without errors and the pretend account still follows the tab from page
  *            to page (the window.name fallback of the build)
+ *   shop     (needs the shop pop-up files: js/shop-pop.js, js/shop-pop-box.js, css/shop-pop.css, js/shop-sample.js) a click on a Store card that has a button
+ *            opens the pop-up in the middle of the window with the big words "This is not the real ingredients", and Esc closes it; no file is asked for (the
+ *            loader's code, the pop-up styles and the pretend ingredients are all in the page). Without the files it says "skipped: no shop-pop files in this
+ *            repo". Without the pretend ingredients (js/shop-sample.js, the real site's state) it only checks that the Store stays quiet.
+ * The static section also checks the files that scripts ask for by code (build-artifact.py, LAZY): no local <script src> or <link> is left in any page, each
+ * such file is in front of the script that asks for it and carries the marker (or sets the flag) that script looks for, and the build without the flags has
+ * none of the files that only the flags build carries (the tour's styles and steps).
  * This opens several tabs: run it as  flock /tmp/wa-heavy.lock node work-notes/preview/arttest.mjs ...  and, in this project, from a background script with a log. */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -46,6 +53,13 @@ const HAVE_DEMO = DEMO_PAGES.every((p) => PAGES.includes(p));
 const HAVE_TOUR = INFO.js_inlined.includes('js/tour.js');
 const HAVE_HEADER = INFO.js_inlined.includes('js/demo-header.js');
 const PUBLISHED = new Set(['index.html', ...INFO.publish.files]);
+// The "What to buy" pop-up: js/shop-pop.js (a small loader, a tag of the home page), js/shop-sample.js (the PRETEND ingredients, a tag of the home page), and the two files
+// that the loader and the box ask for later: js/shop-pop-box.js (the cards' buttons and the box) and css/shop-pop.css. They belong to the site: both builds carry them.
+const FLAGS_ONLY = INFO.flags_only || [];                                   // every file that only the flags build carries (the tour's), as far as the site folder has it
+const inBuild = (f) => INFO.js_inlined.includes(f) || INFO.css_inlined.includes(f);
+const SHOP = { loader: inBuild('js/shop-pop.js'), box: inBuild('js/shop-pop-box.js'), css: inBuild('css/shop-pop.css'), sample: inBuild('js/shop-sample.js') };
+const SHOP_ANY = SHOP.loader || SHOP.box || SHOP.css || SHOP.sample;
+const NO_SHOP_FILES = 'skipped: no shop-pop files in this repo (js/shop-pop.js, js/shop-pop-box.js, css/shop-pop.css and js/shop-sample.js are not in the site folder)';
 
 // What the Artifact tool puts around the index page when it publishes it (the other pages are served as they are). Measured on 3 Nov 2026.
 const SKELETON_HEAD = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>\n';
@@ -127,6 +141,13 @@ const tourPill = (f) => f.getByRole('button', { name: /take a tour/i });        
 const tourAny = (f) => f.getByRole('button', { name: /take a tour/i }).or(f.getByRole('link', { name: /take a tour/i }));   // the pill, or the demo bar's link
 const shown = (f, sel) => f.evaluate((q) => [...document.querySelectorAll(q)].filter((e) => e.getClientRects().length > 0).length, sel);   // matches that are on the screen (a screen may keep hidden leftovers)
 const store = (f, body, arg) => f.evaluate(new Function('arg', 'const S = window.DemoStore; ' + body), arg);   // runs `body` in the page with S = the page's own DemoStore
+// What the Store has of the pop-up when the pretend ingredients are NOT in the page (the feature is asleep): nothing. Runs in the page.
+const quietStore = () => ({
+  buttons: document.querySelectorAll('#shop .shop-card button').length,
+  tabstops: document.querySelectorAll('#shop .shop-card[tabindex], #shop .shop-card [tabindex]').length,
+  pop: document.querySelectorAll('.shop-pop, .shop-pop-box, link[href*="shop-pop"]').length,   // what the box builds, or a style sheet it asks for
+  data: !!((window.WISE_ACRES && window.WISE_ACRES.shopSample) || (window.WA && window.WA.shopSample)),
+});
 
 /* ------------------------------------------------------------------ static checks (no browser) ----------------------------------------------------- */
 function walk(dir, base = dir) {
@@ -188,6 +209,47 @@ function staticChecks() {
   ok('no two scripts of a page fight over a top-level name (each file is its own script, as on the real site)', clashes.length === 0, clashes.slice(0, 4).join(' | '));
   if (FLAGS && HAVE_TOUR) ok('the tour\'s css is inline (WA_TOUR_INLINE): css/tour.css is among the inlined files', INFO.css_inlined.includes('css/tour.css'), INFO.css_inlined.join(', '));
   if (FLAGS && HAVE_TOUR) info('tour steps inlined: ' + (INFO.js_inlined.filter((j) => /tour-steps/.test(j)).join(', ') || 'none'));
+
+  // ---- the files that scripts ask for by code (LAZY in build-artifact.py) and the preview-only files ----
+  const isLocal = (u) => !/^(?:[a-z][a-z0-9+.-]*:|\/\/|#|data:)/i.test(u);
+  const left = [];                                                           // a local script or style file that a page would still have to ask the viewer for
+  for (const n of PAGES) {
+    const text = html[n].replace(/<!--[\s\S]*?-->/g, '');
+    for (const m of text.matchAll(SCRIPT)) { const s = /\bsrc\s*=\s*["']?([^"'\s>]+)/i.exec(m[1]); if (s && isLocal(s[1])) left.push(n + ': <script src="' + s[1] + '">'); }
+    for (const m of strip(html[n]).matchAll(/<link\b[^>]*>/gi)) {
+      const rel = /\brel\s*=\s*["']?([^"'\s>]+)/i.exec(m[0]), href = /\bhref\s*=\s*["']?([^"'\s>]+)/i.exec(m[0]);
+      if (rel && href && /^(?:stylesheet|preload|modulepreload)$/i.test(rel[1]) && isLocal(href[1])) left.push(n + ': <link rel="' + rel[1] + '" href="' + href[1] + '">');
+    }
+  }
+  ok('no local <script src> or <link> for a style or script file is left in any page (the build put every one inline, so no page has to ask for a file)', left.length === 0, left.slice(0, 5).join(' | '));
+  const has = (n, file) => html[n].includes('sourceURL=' + file);
+  const lazyBad = [];
+  const scriptOf = (n, file) => [...html[n].matchAll(SCRIPT)].find((m) => m[2].includes('//# sourceURL=' + file));
+  for (const L of INFO.lazy || []) {
+    const mark = L.marker.split('=')[0], needle = mark || L.flag || '';
+    for (const n of PAGES) {
+      if (has(n, L.script) !== has(n, L.file)) { lazyBad.push(n + ': ' + L.file + (has(n, L.file) ? ' is in the page but ' + L.script + ' (which asks for it) is not' : ' is missing, and ' + L.script + ' asks for it')); continue; }
+      if (!has(n, L.script)) continue;
+      if (html[n].indexOf('sourceURL=' + L.file) > html[n].indexOf('sourceURL=' + L.script)) lazyBad.push(n + ': ' + L.file + ' comes after ' + L.script + ', which asks for it');
+      if (mark && !new RegExp('<' + (L.kind === 'css' ? 'style' : 'script') + '\\b[^>]*\\b' + mark.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=[\\s=>])[^>]*>').test(html[n])) lazyBad.push(n + ': ' + L.file + ' does not carry the marker ' + mark);
+      const loader = scriptOf(n, L.script);
+      if (needle && loader && !loader[2].includes(needle)) lazyBad.push(n + ': ' + L.script + ' never mentions ' + needle + ' (the build relies on it for ' + L.file + '), so it would ask for the file');
+      const lazy = L.flag ? scriptOf(n, L.file) : null;
+      if (lazy && !lazy[2].includes(L.flag)) lazyBad.push(n + ': ' + L.file + ' never sets ' + L.flag + ', which ' + L.script + ' looks at before it asks for it');
+    }
+  }
+  if ((INFO.lazy || []).length) ok('every file that a script asks for by code is in the page, in front of that script, with the marker the script looks for (' + INFO.lazy.map((L) => L.file).join(', ') + ')', lazyBad.length === 0, lazyBad.slice(0, 5).join(' | '));
+  if (!FLAGS) {
+    const seen = PAGES.flatMap((n) => FLAGS_ONLY.filter((f) => has(n, f)).map((f) => n + ': ' + f));
+    ok('the build without the flags has none of the preview-only files (' + (FLAGS_ONLY.join(', ') || 'none in this site') + ')', seen.length === 0 && FLAGS_ONLY.every((f) => !INFO.js_inlined.includes(f) && !INFO.css_inlined.includes(f)), seen.slice(0, 5).join(' | '));
+  }
+  if (!SHOP_ANY) info('shop pop-up: ' + NO_SHOP_FILES);
+  else if (!SHOP.loader) ok('shop pop-up: js/shop-pop.js is in the home page (the site has other shop-pop files, which do nothing without it)', false, JSON.stringify(SHOP));
+  else if (!SHOP.sample) info('shop pop-up: no js/shop-sample.js (the pretend ingredients) here, so the pop-up stays asleep, as on the real site');
+  else {
+    const want = ['js/shop-pop.js', 'js/shop-sample.js', 'css/shop-pop.css'].concat(SHOP.box ? ['js/shop-pop-box.js'] : []);
+    ok('shop pop-up: the files are in the home page (' + want.join(', ') + '; the style as <style data-shop-pop-css>)', SHOP.css && want.every((f) => has('index.html', f)), JSON.stringify(SHOP));
+  }
 }
 
 /* ------------------------------------------------------------------ the sections ---------------------------------------------------------------- */
@@ -263,6 +325,10 @@ sections.flags = async ({ browser }) => {
         const g = await t.f.evaluate(() => { const gd = document.getElementById('demo-guard'), app = document.querySelector('[data-demo-app]'); const vis = (e) => !!e && e.getClientRects().length > 0; return { guard: vis(gd), text: gd ? gd.textContent.replace(/\s+/g, ' ').trim() : '', app: vis(app) }; });
         ok(name + ': only the polite box shows ("This is a demo page. It is not open to visitors.")', g.guard && !g.app && /not open to visitors/i.test(g.text), JSON.stringify(g));
       }
+    }
+    if (name === 'index.html' && SHOP.loader && !SHOP.sample) {      // the pop-up is in the site but its pretend ingredients are not (the real site's state): it stays asleep
+      const q = await t.f.evaluate(quietStore);
+      ok(name + ': the Store is quiet (no pretend ingredients here: no button or tab stop on any card, no pop-up built, no data)', q.buttons === 0 && q.tabstops === 0 && q.pop === 0 && !q.data, JSON.stringify(q));
     }
     await t.page.close();
   }
@@ -440,6 +506,71 @@ sections.blocked = async ({ browser }) => {
     await fam.page.close();
   }
   ok('blocked: every file the pages asked for was published', w.log.missing.length === 0, w.log.missing.join(', '));
+  await w.close();
+};
+
+/* "What to buy": hover grow and a click that opens a pop-up with the (PRETEND) ingredients. The cards' code (js/shop-pop-box.js) and the pop-up styles (css/shop-pop.css) are
+ * asked for by code, and the pretend ingredients are a file of their own (js/shop-sample.js): in the viewer all of them are in the page, so a touched card must not ask
+ * for any file. At 1366 x 768, the size of the builder's computer. */
+sections.shop = async ({ browser }) => {
+  if (!SHOP_ANY) { info('shop: ' + NO_SHOP_FILES); return; }
+  if (!SHOP.loader) { ok('shop: js/shop-pop.js is in the home page', false, 'the site has css/shop-pop.css or js/shop-sample.js, but index.html has no <script src="js/shop-pop.js">'); return; }
+  const w = await world(browser, { label: 'shop', viewport: { width: 1366, height: 768 } });
+  const t = await w.open('index.html');
+  const f = t.f;
+  await f.addStyleTag({ content: '.reveal{opacity:1!important;transform:none!important;transition:none!important}' });   // the Store fades in as it comes on screen: not what is measured here
+  if (!SHOP.sample) {
+    const q = await f.evaluate(quietStore);
+    ok('shop: no js/shop-sample.js in this build, so the Store stays quiet (no button or tab stop on any card, no pop-up built, no data)', q.buttons === 0 && q.tabstops === 0 && q.pop === 0 && !q.data, JSON.stringify(q));
+    info('shop: the click test needs the pretend ingredients (js/shop-sample.js): skipped');
+  } else {
+    const armed = await until(f, () => document.querySelectorAll('#shop .shop-card button').length, null, 20000);
+    const total = await f.evaluate(() => document.querySelectorAll('#shop .shop-card').length);
+    ok('shop: the loader found the pretend ingredients: ' + (armed || 0) + ' of the ' + total + ' Store cards have a button', armed > 0, armed > 0 ? '' : 'no card has a button: the loader did not see js/shop-sample.js');
+    if (armed > 0) {
+      const cards = f.locator('#shop .shop-card').filter({ has: f.locator('button') });
+      const dialog = f.locator('[role=dialog]').filter({ hasText: /not the real ingredients/i }).first();
+      const open = async (i) => {                       // hover, then click, the way a person does; the card is first brought to the middle of the window
+        const card = cards.nth(i);
+        const name = (((await card.locator('.shop-name').first().textContent().catch(() => '')) || '').replace(/\s+/g, ' ')).trim();
+        await card.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+        await card.hover();
+        await card.click();
+        await dialog.waitFor({ state: 'visible', timeout: ms(8000) }).catch(() => {});
+        await t.page.waitForTimeout(ms(450));            // the fade and the small grow of the box are over
+        return name;
+      };
+      const read = () => dialog.evaluate((box) => {
+        const vw = window.innerWidth, vh = window.innerHeight, r = box.getBoundingClientRect(), squash = (s) => String(s || '').replace(/\s+/g, ' ').trim();
+        const words = [...box.querySelectorAll('*')].filter((e) => /not the real ingredients/i.test(squash(e.textContent)) && ![...e.children].some((c) => /not the real ingredients/i.test(squash(c.textContent)))).pop() || box;   // the smallest element that holds the words
+        const wr = words.getBoundingClientRect(), cs = getComputedStyle(words), id = box.getAttribute('aria-labelledby'), h = id ? document.getElementById(id) : null;
+        return { dx: Math.round(r.left + r.width / 2 - vw / 2), dy: Math.round(r.top + r.height / 2 - vh / 2), box: Math.round(r.width) + 'x' + Math.round(r.height), vw, vh, text: squash(box.textContent), title: h ? squash(h.textContent) : '',
+          size: parseFloat(cs.fontSize), rem: parseFloat(getComputedStyle(document.documentElement).fontSize), weight: parseInt(cs.fontWeight, 10), seen: wr.width > 0 && wr.height > 0 && wr.top >= 0 && wr.bottom <= vh && wr.left >= 0 && wr.right <= vw };
+      });
+      const first = await open(0);
+      ok('shop: a click on the Store card "' + first + '" opens the pop-up (a dialog with the words "This is not the real ingredients")', await dialog.isVisible().catch(() => false), '');
+      if (await dialog.isVisible().catch(() => false)) {
+        const g = await read();
+        await shot(t.page, 'shop-popup');
+        ok('shop: the big words "This is not the real ingredients" are shown whole, in bold, 1.25 rem or bigger, without scrolling (at 1366 x 768)', /this is not the real ingredients/i.test(g.text) && g.size >= 1.25 * g.rem - 0.1 && g.weight >= 700 && g.seen, 'size ' + g.size + ' px (1 rem = ' + g.rem + ' px), weight ' + g.weight + ', in the window ' + g.seen);
+        ok('shop: the pop-up shows the name of the card (' + first + ')', first !== '' && g.text.includes(first), g.text.slice(0, 120));
+        ok('shop: the pop-up is in the middle of the window (its styles are on: ' + g.box + ' px, ' + g.dx + ' / ' + g.dy + ' px off the middle)', Math.abs(g.dx) <= 24 && Math.abs(g.dy) <= 24, 'window ' + g.vw + 'x' + g.vh);
+        await t.page.keyboard.press('Escape');
+        await okSoon('shop: Esc closes the pop-up', () => dialog.isVisible(), (v) => v === false, 6000);
+        await okSoon('shop: the focus goes back to the card that opened it', () => f.evaluate(() => { const c = document.activeElement && document.activeElement.closest('.shop-card'); const n = c && c.querySelector('.shop-name'); return n ? n.textContent.replace(/\s+/g, ' ').trim() : ''; }), (v) => v === first, 6000);
+        const count = await cards.count();
+        if (count > 1) {                                 // another card: its own content, nothing left over from the first
+          const second = await open(count - 1);
+          const g2 = await dialog.isVisible().catch(() => false) ? await read() : null;
+          ok('shop: another card (' + second + ') opens the pop-up with its own name and title', !!g2 && g2.text.includes(second) && (g2.title === '' || g.title === '' || g2.title !== g.title), g2 ? g2.title + ' / ' + g.title : 'no pop-up');
+          await t.page.keyboard.press('Escape');
+          await okSoon('shop: Esc closes it again', () => dialog.isVisible(), (v) => v === false, 6000);
+        }
+      }
+    }
+  }
+  ok('shop: no page asked for a css/ or js/ file (the pop-up styles and the pretend ingredients are inline)', !w.log.requests.some((p) => /^(?:js|css)\//.test(p)), w.log.requests.filter((p) => /^(?:js|css)\//.test(p)).join(', '));
+  ok('shop: every file the pages asked for was published', w.log.missing.length === 0, w.log.missing.join(', '));
   await w.close();
 };
 
