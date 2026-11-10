@@ -45,26 +45,27 @@ Checked with `node /tmp/helpers/winter-oracle/check.mjs <clone>`: 0 hard mismatc
 - Tests that now state the new truth (never loosened): `logic` (the rule 2026-2032 by an independent calendar walk, window ends, the season shown between seasons, the hours on tree days against other days, the label, the dates in five languages, the bars,
   host time zones UTC / Tokyo / Los Angeles), `upcoming-dates` (2026-2033), `consistency`, `owner-calendar`, `live`, `hero`, `features`, `dated`, `time-bombs`, `code-read`, `calendar-doc`.
 
-## Text for README.md and tests/README.md (main applies; these files are main's)
+## Text for README.md and tests/README.md (main applies; these files are main's). The list, 3 README places and 9 tests/README rows
 
-README.md
-- Line 142, row "Change opening hours": replace "**The GreenHouse and Wise Pie each have one set of days and hours for the whole year**; only `farm` can be set per season. For different winter hours, change them when winter starts and again when it ends."
+README.md (the other README places, lines 509 and 523 and the new "Not official yet label" row, are in NOTES-wintertext.md)
+- R1. Line 142, row "Change opening hours": replace "**The GreenHouse and Wise Pie each have one set of days and hours for the whole year**; only `farm` can be set per season. For different winter hours, change them when winter starts and again when it ends."
   with "**The GreenHouse and Wise Pie each have one set of days and hours for the usual year, and a `winter` line for the Christmas tree weekends** (the last weekend in November and the first weekend in December, Saturday and Sunday only;
   the site works the dates out each year). `farm` has a line for each season (`fall`, `winter`). On the tree weekends the `winter` line is used, on every other day the usual hours. The green badges that use the `winter` hours say "Not official yet"."
-- Line 205: replace "winter from the Friday after Thanksgiving." with "winter from the last Saturday of November to the Sunday after the first Saturday of December (the Christmas tree weekends: the last weekend in November and the first weekend in December,
+- R2. Line 205: replace "winter from the Friday after Thanksgiving." with "winter from the last Saturday of November to the Sunday after the first Saturday of December (the Christmas tree weekends: the last weekend in November and the first weekend in December,
   Saturday and Sunday only; the site works the dates out every year in `js/season.js`, so nobody types them). When no season is in progress the page opens on the season that starts next (on November 9 it opens on winter, on December 7 on spring)."
-- Line 504, row "Season dates & switcher": replace "Between seasons the site shows whichever is closest." with "Between seasons the site shows the season that starts next (its picture and tabs; the top bar, the Now tag and the "In season" lines still say what is really on)."
-- Lines 509 and 523: the winter-text helper's wording (its notes). One more fact for the row "Winter and early-spring wording": the green line shows while the winter season is in progress.
+- R3. Line 504, row "Season dates & switcher": replace "Between seasons the site shows whichever is closest." with "Between seasons the site shows the season that starts next (its picture and tabs; the top bar, the Now tag and the "In season" lines still say what is really on)."
 
-tests/README.md
-- `logic` (line 155): add "the tree weekends of 2026-2032 (worked out in the test by walking the calendar), the first and last day of the winter season, which season the page opens on between seasons, the GreenHouse, pizza and farm hours on a tree day and on other days, the label "Not official yet", the tree dates in five languages and the two bars of the farm-year picture, on host clocks in UTC, Tokyo and Los Angeles".
-- `upcoming-dates` (line 151): replace "the Friday after Thanksgiving in six years" with "the Christmas tree weekends in eight years (2026-2033, worked out by walking the calendar)".
-- `consistency`: add "the two tree bars are the two weekends of the rule and the rule sentence is on the home page at least five times".
-- `live`: add "the winter hours on the tree weekends with "Not official yet" (English and Spanish), the farm's "Open today. No reservation needed", and `data-live-not` on the pumpkin patch and first-visit pages".
-- `hero`: "the Now and Next tags on the days of the winter weekends" (the tag table has the days Nov 8, 9, 27, 28, Dec 6, 7 and the days between seasons); `farm-seasons`: "This season" only for a season in progress.
-- `features`: "winter" in the "This week" part becomes "winter: the trees on the four tree days, no tomatoes". `dated`: "the hero line between seasons" becomes "the hero lines between seasons (the page opens on the season that starts next)".
-- `owner-calendar`: add "the tree weekends are the ones the rule gives". `year-rehearsal`: nothing to add in the row; the replays R05 R06 R07 R09 R12 R15 R16 R19 R23 R24 changed.
-- `code-read`: "the "Now" and "This season" marks" gets "("This season" only for a season in progress)".
+tests/README.md (add the words to the end of what the row says; each row is named by its test)
+- T1. `logic` (line 155): "the tree weekends of 2026-2032 (worked out in the test by walking the calendar), the first and last day of the winter season, which season the page opens on between seasons, the GreenHouse, pizza and farm hours on a tree day and on other days, the label "Not official yet", the tree dates in five languages and the two bars of the farm-year picture, on host clocks in UTC, Tokyo and Los Angeles".
+- T2. `upcoming-dates` (line 151, the one the scanner lists): replace "the Friday after Thanksgiving in six years" with "the Christmas tree weekends in eight years (2026-2033, worked out by walking the calendar)".
+- T3. `consistency`: "the two tree bars are the two weekends of the rule and the rule sentence is on the home page at least five times".
+- T4. `live`: "the winter hours on the tree weekends with "Not official yet" (English and Spanish), the farm's "Open today. No reservation needed", and `data-live-not` on the pumpkin patch and first-visit pages".
+- T5. `hero`: "the Now and Next tags on the days of the winter weekends" (the tag table has the days Nov 8, 9, 26, 27, 28, Dec 2, 6, 7 and the days between seasons); `farm-seasons`: ""This season" only for a season in progress".
+- T6. `features`: in the "This week" part "winter" becomes "winter: the trees on the four tree days, no tomatoes".
+- T7. `dated`: "the hero line between seasons" becomes "the hero lines between seasons (the page opens on the season that starts next)".
+- T8. `owner-calendar`: "the tree weekends are the ones the rule gives".
+- T9. `code-read`: "the "Now" and "This season" marks" gets "("This season" only for a season in progress)".
+- (`year-rehearsal`: nothing to add in the row; the replays R03 R05 R06 R07 R09 R12 R15 R16 R19 R22 R23 R24 and the seam days of N1 changed. `tools-safety` and `pipeline` run the two Python tool tests that now know the line with both hours.)
 
 tests/browser-support.table.json: nothing from this helper (the code uses only features already in the table).
 tools/mutants.json: main's. The mutants that named `thanksgivingFriday` or the old end date must be re-made (nothing here was changed in that file).
