@@ -258,7 +258,7 @@ await run('account-event', async ({ browser, base, errs }) => {
     const calm = () => p.evaluate(() => !document.documentElement.classList.contains('demo-modal-open'));
     const store = (fn, arg) => p.evaluate(fn, arg);
     const textOf = async (loc) => ((await loc.count()) ? (await loc.first().innerText()).replace(/\s+/g, ' ').trim() : '(not on the screen)');   // a missing box is a failed check, not a 20 second wait
-    ok('the real chapter 10 is in the page: 24 cards', await p.evaluate(() => window.WA_TOUR_STEPS.length) === 24);
+    ok('the real chapter 10 is in the page: its cards (the original 24, and the cards added to show the pretend rush)', await p.evaluate(() => window.WA_TOUR_STEPS.length) >= 24);
 
     // a family made by hand is kept by the sign-up card and the card after it
     await card('ch10-signup', 'before');
@@ -403,7 +403,7 @@ await run('account-event', async ({ browser, base, errs }) => {
     const toasts = () => p.locator('[data-demo-toasts] .demo-toast').count();
     const store = (fn, arg) => p.evaluate(fn, arg);
     const whole = () => store(() => JSON.stringify(window.DemoStore.snapshot()));
-    ok('every one of the 24 cards of the real chapter 10 has an after()', await store(() => window.WA_TOUR_STEPS.length === 24 && window.WA_TOUR_STEPS.every((s) => typeof s.after === 'function')));
+    ok('every one of the cards of the real chapter 10 (the original 24 and the ones added since) has an after()', await store(() => window.WA_TOUR_STEPS.length >= 24 && window.WA_TOUR_STEPS.every((s) => typeof s.after === 'function')));
     await store(() => { window.DemoUI.clearToasts(); });   // the sign-up's own toast goes, so the next check sees only the toast of the notice
 
     // the real thing: a notice arrives while the page is open (the alert the tour sends on "The alert arrives") and the page makes a toast for it
@@ -434,7 +434,7 @@ await run('account-event', async ({ browser, base, errs }) => {
       await card(id, 'after');
       if (await toasts() !== 0) stuck.push(id);
     }
-    ok('leaving any of the 24 cards takes an old toast away', ids.length === 24 && stuck.length === 0, stuck.join(', '));
+    ok('leaving any of the cards takes an old toast away', ids.length >= 24 && stuck.length === 0, ids.length + ' cards' + (stuck.length ? ', stuck: ' : '') + stuck.join(', '));
     await p.context().close();
   }
 
