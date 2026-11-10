@@ -64,6 +64,13 @@ await run('live', async ({ browser, base, errs }) => {
   await p.evaluate(() => WISE_ACRES.setLang('es'));
   await okSoon('in Spanish the label is "Aún no es oficial", still right after the hours', () => badges().then((l) => l.filter((x) => x.k === 'greenhouse' || x.k === 'pizza')), (l) => l.length >= 5 && l.every((x) => /Abierto ahora, hasta las 8 p\. ?m\.? Aún no es oficial$/.test(x.text) && x.label));
   await p.evaluate(() => WISE_ACRES.setLang('en'));
+  // the pumpkin patch page and the first-visit page are written for reservations: they leave the farm badge out while the winter season is in progress, and show it in fall
+  for (const pg of ['pumpkin-patch.html', 'first-visit.html']) {
+    const q = await open(browser, base, pg, errs, { time: '2026-11-28T12:00:00-05:00' }), q2 = await open(browser, base, pg, errs, { time: '2026-10-02T12:00:00-04:00' });
+    const shown = (x) => x.evaluate(() => [...document.querySelectorAll('[data-live=farm]')].filter((e) => !e.hidden).map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+    ok(pg + ': on a tree day the farm badge is left out (data-live-not="winter"), on a fall day it says "Reserved visits today"', (await shown(q)).length === 0 && (await shown(q2)).join() === 'Reserved visits today', JSON.stringify([await shown(q), await shown(q2)]));
+    await q.context().close(); await q2.context().close();
+  }
   await at('2026-12-02T12:00:00-05:00');
   b = await badges();
   ok('Wed Dec 2 (inside the season, between the weekends): The GreenHouse and Wise Pie say when they open next (Saturday, 11 am), the farm says its next open day, the label stays with the 11 am',

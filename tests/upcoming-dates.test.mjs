@@ -124,8 +124,8 @@ try {
   }
   {   // the day before the window and the day after it: nothing about winter that day, and a Friday is no tree day
     const fri = run(['--today', '2026-11-27', '--days', '2'], tmp).out, sat = run(['--today', '2026-11-28', '--days', '1'], tmp).out;
-    ok('Fri Nov 27, 2026 (the old first tree day, the Friday after Thanksgiving) is not a day the winter season starts; Sat Nov 28 is', !/Friday, Nov 27[^\n]*winter season starts/.test(fri) && /Saturday, Nov 28 \(tomorrow\)[^\n]*The winter season starts/.test(fri) && /Saturday, Nov 28 \(today\)[^\n]*The winter season starts/.test(sat), fri.slice(0, 300));
-    ok('the tool names no Thanksgiving rule any more (the tree weekends are worked out from the calendar)', !/thanksgiving/i.test(fs.readFileSync(path.join(ROOT, 'tools/upcoming_dates.py'), 'utf8')), '');
+    ok('Fri Nov 27, 2026 (the day before the first tree day) is not a day the winter season starts; Sat Nov 28 is', !/Friday, Nov 27[^\n]*winter season starts/.test(fri) && /Saturday, Nov 28 \(tomorrow\)[^\n]*The winter season starts/.test(fri) && /Saturday, Nov 28 \(today\)[^\n]*The winter season starts/.test(sat), fri.slice(0, 300));
+    ok('the tool names no Thanksgiving rule any more (the tree weekends are worked out from the calendar)', !/thanksgiving/i.test(fs.readFileSync(path.join(ROOT, 'tools/upcoming_dates.py'), 'utf8')), '');   // winter-scan: allow
   }
   const ex = spawnSync(PY, ['-c', `import sys, datetime as dt; sys.path.insert(0, ${JSON.stringify(path.join(ROOT, 'tools'))}); import upcoming_dates as u
 f = lambda y, m, d, h, mi: str(u.eastern_today(dt.datetime(y, m, d, h, mi)))

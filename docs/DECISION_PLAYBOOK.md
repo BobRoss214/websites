@@ -1612,7 +1612,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Owner fact (no sensible default): no
 - Default: A. The rule is the one the site builder gave on 10 November 2026; the farm has not confirmed it in writing.
 - Depends on: d01 (what winter shows), d09 (GreenHouse hours in winter), d54 (tree price), d51 (hours).
-- Note: Old Q37 asked this as its third part ("when do you stop selling Christmas trees?"); the dashboard had no question for it. Before 10 November 2026 the site said "the Friday after Thanksgiving" and "early December" (December 8 in the code). Those words and that end date are gone.
+- Note: Old Q37 asked this as its third part ("when do you stop selling Christmas trees?"); the dashboard had no question for it. Before 10 November 2026 the trees started on a Friday and the code ended them on December 8. That rule and those words are gone.
 
 **A. Those dates are right**
 

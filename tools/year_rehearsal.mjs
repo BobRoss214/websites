@@ -368,45 +368,43 @@ step('R04', 'Tue Oct 27, 2026: the last pizza row opens; the countdown and the c
   S.check('the new row reads in Spanish and in Chinese too', (dEs.schedule || { rows: [] }).rows.includes('10 nov → 13–15 nov') && (dZh.schedule || { rows: [] }).rows.includes('11月10日 → 11月13–15日'), JSON.stringify((dEs.schedule || {}).rows) + ' ' + JSON.stringify((dZh.schedule || {}).rows));
 });
 
-step('R05', 'Mon Nov 9, 2026: the fall season is over', { quick: true }, async (S) => {
+step('R05', 'Mon Nov 9, 2026: the fall season is over, and the page opens on winter', { quick: true }, async (S) => {
   const [sun, mon] = await Promise.all([dayAt(S, '2026-11-08', '12:00'), S.quick ? Promise.resolve(null) : dayAt(S, '2026-11-09', '00:00')]);
   S.check('Sun Nov 8 (the last fall day): the farm badge says "Reserved visits today"', badgeTexts(sun, 'farm').includes('Reserved visits today'), JSON.stringify(sun.live.farm));
   const [m2, m2es] = await Promise.all([dayAt(S, '2026-11-09', '12:00'), dayAt(S, '2026-11-09', '12:00', { lang: 'es', device: 'phone' })]);
   S.check('Mon Nov 9: no farm badge', !m2.live.farm && (!mon || !mon.live.farm), JSON.stringify(m2.live.farm));
   S.check('Mon Nov 9: the top bar says "Next up: Christmas trees at The GreenHouse" (computer)', /^Next up: Christmas trees at The GreenHouse/.test(m2.topbar) && m2.topbarShown, m2.topbar);
   S.check('on a phone the top bar is not shown (the calendar does not say so)', m2es.topbarShown2 === false, String(m2es.topbarShown2));
-  S.check('Mon Nov 9: the hero line is the all-year one and the fall look stays', /^Pick strawberries in spring/.test(m2.sub) && m2.season === 'fall', m2.sub.slice(0, 60) + ' / ' + m2.season);
-  S.check('Mon Nov 9: the "Reserve" buttons keep showing', reserveTexts(m2).some((t) => /^Reserve/i.test(t)), reserveTexts(m2).join());
+  S.check('Mon Nov 9: the page opens on the winter look, the season that starts next, but the hero line is still the all-year one (the trees are not on yet)', /^Pick strawberries in spring/.test(m2.sub) && m2.season === 'winter', m2.sub.slice(0, 60) + ' / ' + m2.season);
+  S.check('Mon Nov 9: the first-screen button is "Visit The GreenHouse", and the farm\'s "Reserve your visit" is gone', m2.heroButtons[0] === 'Visit The GreenHouse' && !reserveTexts(m2).some((t) => /^Reserve your visit$/i.test(t)), m2.heroButtons[0] + ' | ' + reserveTexts(m2).join());
   S.check('Mon Nov 9: the old pizza rows are gone (only a row the owner added for later can show)', !rowDates(m2).some((d) => ['Oct 6', 'Oct 13', 'Oct 20', 'Oct 27'].includes(d)), rowDates(m2).join());
   const pump = await dayAt(S, '2026-11-09', '12:00', { page: 'pumpkin-patch.html' });
   const pump8 = S.quick ? sun : await dayAt(S, '2026-11-08', '12:00', { page: 'pumpkin-patch.html' });
   if (S.quick) { S.check('the "Fall schedule" button on the pumpkin page is hidden on Nov 9', !shown(pump, 'Fall schedule'), String(shown(pump, 'Fall schedule'))); return; }
   S.check('the "Fall schedule" button on the pumpkin page: there on Nov 8, hidden on Nov 9', shown(pump8, 'Fall schedule') && !shown(pump, 'Fall schedule'), 'Nov 8: ' + shown(pump8, 'Fall schedule') + ', Nov 9: ' + shown(pump, 'Fall schedule'));
-  const n17 = await dayAt(S, '2026-11-17', '23:59');
-  S.check('the page keeps its fall look until Nov 18 (Nov 17 23:59 is still fall)', n17.season === 'fall', n17.season);
+  const n8 = await dayAt(S, '2026-11-08', '23:59');
+  S.check('the page keeps its fall look to the last minute of Nov 8 and turns to winter at midnight (Nov 8 23:59 is still fall)', n8.season === 'fall' && mon.season === 'winter', n8.season + ' -> ' + mon.season);
 });
 
-step('R06', 'Wed Nov 18, 2026: the winter look', { }, async (S) => {
-  const [a, b] = await Promise.all([dayAt(S, '2026-11-17', '23:59'), dayAt(S, '2026-11-18', '00:00')]);
-  S.check('Nov 18 00:00: winter look; the first-screen button "Visit The GreenHouse" replaces "Reserve your visit"', b.season === 'winter' && b.heroButtons[0] === 'Visit The GreenHouse' && a.heroButtons[0] === 'Reserve your visit', a.heroButtons[0] + ' -> ' + b.heroButtons[0]);
-  S.check('the farm\'s "Reserve" buttons mostly go', reserveTexts(b).length < reserveTexts(a).length, reserveTexts(a).length + ' -> ' + reserveTexts(b).length);
-  // the owner changes the winter hours: the settings first, then the facts check
-  S.owner.edit('js/content.js', "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00' }", "greenhouse: { days: [5, 6, 0], open: '10:00', close: '18:00' }");
+step('R06', 'Fri Nov 20, 2026: the owner changes the GreenHouse hours (the usual Friday to Sunday ones)', { }, async (S) => {
+  // the settings first, then the facts check
+  S.owner.edit('js/content.js', "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00', winter:", "greenhouse: { days: [5, 6, 0], open: '10:00', close: '18:00', winter:");
   const cf = S.owner.py('tools/check_facts.py', 'hours');
   S.check('python3 tools/check_facts.py hours says the words still disagree with the new closing time (the calendar: change them in both places)', cf.code === 1 && /HOURS: THE GREENHOUSE[\s\S]*DIFFERENT: 2 answers/.test(cf.out), cf.out.split('\n').filter((l) => /DIFFERENT|OK:/.test(l)).slice(0, 3).join(' | '));
   const fri = await dayAt(S, '2026-11-20', '18:30');
   S.check('Friday 6:30 PM with the new hours: the GreenHouse badge says closed', badgeStates(fri, 'greenhouse').every((c) => c !== 'open') && badgeStates(fri, 'greenhouse').length > 0, JSON.stringify(fri.live.greenhouse));
-  S.owner.edit('js/content.js', "close: '18:00' }", "close: '20:00' }");
+  S.owner.edit('js/content.js', "close: '18:00', winter:", "close: '20:00', winter:");
 });
 
-step('R07', 'Fri Nov 27, 2026: Christmas tree season starts (the Friday after Thanksgiving)', { }, async (S) => {
-  S.owner.setting('week', "{ updated: '2026-11-25', note: 'Trees arrive Friday.', crops: { trees: 'peak' } }", 'week: {},');
-  const [thu, fri, friEs] = await Promise.all([dayAt(S, '2026-11-26', '12:00'), dayAt(S, '2026-11-27', '12:00'), dayAt(S, '2026-11-27', '12:00', { lang: 'es', device: 'phone' })]);
-  S.check('Thu Nov 26 (Thanksgiving): not an open day (the GreenHouse badge says closed, no closure needed)', badgeStates(thu, 'greenhouse').length > 0 && badgeStates(thu, 'greenhouse').every((c) => c !== 'open'), JSON.stringify(thu.live.greenhouse));
-  S.check('the tree season starts Nov 27: the top bar says "In season: Christmas trees at The GreenHouse" (computer)', /^In season: Christmas trees at The GreenHouse/.test(fri.topbar), fri.topbar);
-  S.check('the headline says "Wise Acres Christmas trees"', fri.h1 === 'Wise Acres Christmas trees', fri.h1);
-  S.check('the "This week" box lists trees and shows the owner\'s note "Trees arrive Friday."', fri.week && fri.week.crops.some((c) => /Christmas trees/.test(c)) && /Trees arrive Friday\./.test(fri.weekNote), JSON.stringify(fri.week) + ' | ' + fri.weekNote);
-  S.check('the same box on a Spanish phone (box shown, note in English with the owner\'s words)', friEs.week && friEs.week.crops.length > 0 && /Trees arrive Friday\./.test(friEs.weekNote), JSON.stringify(friEs.week) + ' | ' + friEs.weekNote);
+step('R07', 'Sat Nov 28, 2026: the Christmas tree weekends start (Saturday and Sunday only, never a Friday)', { }, async (S) => {
+  S.owner.setting('week', "{ updated: '2026-11-25', note: 'Trees arrive Saturday.', crops: { trees: 'peak' } }", 'week: {},');
+  const [fri, sat, satEs] = await Promise.all([dayAt(S, '2026-11-27', '12:00'), dayAt(S, '2026-11-28', '12:00'), dayAt(S, '2026-11-28', '12:00', { lang: 'es', device: 'phone' })]);
+  S.check('Fri Nov 27 is not a tree day: the top bar still says "Next up: Christmas trees at The GreenHouse", and there is no farm badge', /^Next up: Christmas trees at The GreenHouse/.test(fri.topbar) && !fri.live.farm, fri.topbar + ' | ' + JSON.stringify(fri.live.farm));
+  S.check('the tree weekends start Sat Nov 28: the top bar says "In season: Christmas trees at The GreenHouse" (computer)', /^In season: Christmas trees at The GreenHouse/.test(sat.topbar), sat.topbar);
+  S.check('the headline says "Wise Acres Christmas trees"', sat.h1 === 'Wise Acres Christmas trees', sat.h1);
+  S.check('the farm badge says "Open today. No reservation needed", and The GreenHouse badge says "Open now, until 8 pm" with "Not official yet" right after it', badgeTexts(sat, 'farm').includes('Open today. No reservation needed') && badgeTexts(sat, 'greenhouse').some((t) => /^Open now, until 8 pm.*Not official yet$/.test(t)), JSON.stringify(sat.live));
+  S.check('the "This week" box lists trees and shows the owner\'s note "Trees arrive Saturday."', sat.week && sat.week.crops.some((c) => /Christmas trees/.test(c)) && /Trees arrive Saturday\./.test(sat.weekNote), JSON.stringify(sat.week) + ' | ' + sat.weekNote);
+  S.check('the same box on a Spanish phone (box shown, note in English with the owner\'s words)', satEs.week && satEs.week.crops.length > 0 && /Trees arrive Saturday\./.test(satEs.weekNote), JSON.stringify(satEs.week) + ' | ' + satEs.weekNote);
 });
 
 step('R08', 'Tue Dec 1, 2026: the schedule box hides', { quick: true }, async (S) => {
@@ -416,16 +414,16 @@ step('R08', 'Tue Dec 1, 2026: the schedule box hides', { quick: true }, async (S
   S.check('the sentence "See the current fall schedule" hides with the box, so no link points to a hidden box (the calendar says so)', !b.links.some((l) => l.to === '#schedule' && l.state === 'HIDDEN'), JSON.stringify(b.links.filter((l) => l.to === '#schedule')));
 });
 
-step('R09', 'Wed Dec 9, 2026: the tree season is over in the site\'s calendar', { }, async (S) => {
-  const [a, b] = await Promise.all([dayAt(S, '2026-12-08', '23:59'), dayAt(S, '2026-12-09', '00:00')]);
-  S.check('Dec 8 23:59 is still tree season, Dec 9 00:00 is not', /^In season: Christmas trees/.test(a.topbar) && /^Next up: Strawberries, usually mid-April/.test(b.topbar), a.topbar + ' -> ' + b.topbar);
-  S.check('the headline becomes the all-year one on Dec 9', a.h1 === 'Wise Acres Christmas trees' && b.h1 === 'Organic u-pick fun for the whole family', a.h1 + ' -> ' + b.h1);
+step('R09', 'Mon Dec 7, 2026: the tree weekends are over in the site\'s calendar, and the page opens on spring', { }, async (S) => {
+  const [a, b] = await Promise.all([dayAt(S, '2026-12-06', '23:59'), dayAt(S, '2026-12-07', '00:00')]);
+  S.check('Dec 6 23:59 (the last tree day) is still tree season, Dec 7 00:00 is not', /^In season: Christmas trees/.test(a.topbar) && /^Next up: Strawberries, usually mid-April/.test(b.topbar), a.topbar + ' -> ' + b.topbar);
+  S.check('the headline becomes the all-year one on Dec 7, and the page turns to the spring look (the season that starts next)', a.season === 'winter' && b.season === 'spring' && b.heroButtons[0] === 'Reserve your visit' &&  a.h1 === 'Wise Acres Christmas trees' && b.h1 === 'Organic u-pick fun for the whole family', a.h1 + ' -> ' + b.h1);
   // the owner keeps saying trees: week crops trees peak, updated Dec 9, and a notice
-  S.owner.setting('week', "{ updated: '2026-12-09', note: 'Trees until Dec 24.', crops: { trees: 'peak' } }");
+  S.owner.setting('week', "{ updated: '2026-12-07', note: 'Trees until Dec 24.', crops: { trees: 'peak' } }");
   S.owner.setting('notice', "'Christmas trees until Dec 24.'", undefined);
   S.owner.setting('noticeUntil', "'2026-12-24'", undefined);
   const [c, ces] = await Promise.all([dayAt(S, '2026-12-10', '12:00'), dayAt(S, '2026-12-10', '12:00', { lang: 'es', device: 'phone' })]);
-  S.check('with week crops trees: peak, the trees stay in the "This week" box after Dec 8 ("Peak picking")', c.week && c.week.crops.some((x) => /Christmas trees.*Peak picking/.test(x)) && /Trees until Dec 24/.test(c.weekNote), JSON.stringify(c.week) + ' | ' + c.weekNote);
+  S.check('with week crops trees: peak, the trees stay in the "This week" box after Dec 6 ("Peak picking")', c.week && c.week.crops.some((x) => /Christmas trees.*Peak picking/.test(x)) && /Trees until Dec 24/.test(c.weekNote), JSON.stringify(c.week) + ' | ' + c.weekNote);
   S.check('the notice bar shows on Dec 10 (English and Spanish phone)', /Christmas trees until Dec 24\./.test(c.notice) && /Christmas trees until Dec 24\./.test(ces.notice) && ces.week !== null, c.notice + ' / ' + ces.notice);
   S.owner.setting('week', "{ updated: '2026-12-24', crops: { trees: 'off' } }");
   const gone = await dayAt(S, '2026-12-26', '12:00');
@@ -467,12 +465,12 @@ step('R11', 'Fri Jan 1, 2027: the new year', { quick: true }, async (S) => {
 
 /* ---- 4. 2027 ------------------------------------------------------------------------------- */
 
-step('R12', 'Wed Feb 10, 2027: the spring look', { }, async (S) => {
+step('R12', 'Wed Feb 10, 2027: nothing changes (the page has looked like spring since Dec 7)', { }, async (S) => {
   const [a, b] = await Promise.all([dayAt(S, '2027-02-09', '23:59'), dayAt(S, '2027-02-10', '00:00')]);
-  S.check('Feb 10: the spring look', a.season === 'winter' && b.season === 'spring', a.season + ' -> ' + b.season);
-  S.check('"Reserve your visit" is back as the first button', b.heroButtons[0] === 'Reserve your visit' && a.heroButtons[0] === 'Visit The GreenHouse', a.heroButtons[0] + ' -> ' + b.heroButtons[0]);
-  S.check('"Reserve a strawberry visit" comes back', reserveTexts(b).some((t) => /Reserve a strawberry visit/i.test(t)) && !reserveTexts(a).some((t) => /Reserve a strawberry visit/i.test(t)), reserveTexts(a).join() + ' -> ' + reserveTexts(b).join());
-  S.check('the note "No reservation? Visit The GreenHouse next door" shows again', shown(b, 'No reservation? Visit The GreenHouse next door') && !shown(a, 'No reservation? Visit The GreenHouse next door'), '');
+  S.check('Feb 10: still the spring look, no change at midnight', a.season === 'spring' && b.season === 'spring', a.season + ' -> ' + b.season);
+  S.check('"Reserve your visit" is the first button on both days', b.heroButtons[0] === 'Reserve your visit' && a.heroButtons[0] === 'Reserve your visit', a.heroButtons[0] + ' -> ' + b.heroButtons[0]);
+  S.check('"Reserve a strawberry visit" shows on both days', reserveTexts(b).some((t) => /Reserve a strawberry visit/i.test(t)) && reserveTexts(a).some((t) => /Reserve a strawberry visit/i.test(t)), reserveTexts(a).join() + ' -> ' + reserveTexts(b).join());
+  S.check('the note "No reservation? Visit The GreenHouse next door" shows on both days', shown(b, 'No reservation? Visit The GreenHouse next door') && shown(a, 'No reservation? Visit The GreenHouse next door'), '');
   S.check('the top bar says "Next up: Strawberries, usually mid-April"', /^Next up: Strawberries, usually mid-April/.test(b.topbar), b.topbar);
 });
 
@@ -495,7 +493,7 @@ step('R15', 'Thu Apr 15, 2027: the strawberry season starts', { }, async (S) => 
   const [a, b] = await Promise.all([dayAt(S, '2027-04-14', '23:59'), dayAt(S, '2027-04-15', '00:00')]);
   S.check('Apr 15: the top bar says "In season: Strawberries"; the first screen says "It\'s strawberry season!"; the "This week" box says "In season"', /^In season: Strawberries/.test(b.topbar) && /It.s strawberry season!/.test(b.sub) && b.week && b.week.crops.some((c) => /^Strawberries In season/.test(c)) && !/In season/.test(a.topbar), a.topbar + ' -> ' + b.topbar);
   S.check('with no spring farm days there is no farm badge (the calendar: a gap, not an error)', !b.live.farm, JSON.stringify(b.live.farm));
-  S.owner.edit('js/content.js', 'farm:       { fall: [4, 5, 6, 0] }', 'farm:       { fall: [4, 5, 6, 0], spring: [4, 5, 6, 0] }');
+  S.owner.edit('js/content.js', 'farm:       { fall: [4, 5, 6, 0], winter: [6, 0] }', 'farm:       { fall: [4, 5, 6, 0], spring: [4, 5, 6, 0], winter: [6, 0] }');
   const c = await dayAt(S, '2027-04-15', '12:00', { device: 'phone' });
   S.check('after adding spring farm days to hours.farm, the farm badge shows ("Reserved visits today" on Thu Apr 15)', badgeTexts(c, 'farm').includes('Reserved visits today'), JSON.stringify(c.live.farm));
 });
@@ -503,10 +501,10 @@ step('R15', 'Thu Apr 15, 2027: the strawberry season starts', { }, async (S) => 
 step('R16', 'Tue Jun 8, 2027 to Tue Jun 15, 2027: spring ends, summer begins', { group: 'itself' }, async (S) => {
   const [a, b, c, d, e] = await Promise.all([dayAt(S, '2027-06-07', '23:59'), dayAt(S, '2027-06-08', '00:00'), dayAt(S, '2027-06-12', '00:00'), dayAt(S, '2027-06-14', '23:59'), dayAt(S, '2027-06-15', '00:00')]);
   S.check('Jun 7 is the last strawberry day; Jun 8 has no season in progress', /^In season: Strawberries/.test(a.topbar) && !/^In season/.test(b.topbar), a.topbar + ' -> ' + b.topbar);
-  S.check('the look turns to summer on Sat Jun 12', b.season === 'spring' && c.season === 'summer', b.season + ' -> ' + c.season);
+  S.check('the page turns to the summer look on Tue Jun 8 (the season that starts next), and keeps it', a.season === 'spring' && b.season === 'summer' && c.season === 'summer', a.season + ' -> ' + b.season + ' -> ' + c.season);
   S.check('Tue Jun 15: the blueberry season starts ("It\'s blueberry season!")', !/blueberry season/.test(d.sub) && /It.s blueberry season!/.test(e.sub) && /^In season: Blueberries & sunflowers/.test(e.topbar), e.sub.slice(0, 40));
   S.check('with no summer farm days there is no farm badge in the summer (a gap, as in spring)', !e.live.farm, JSON.stringify(e.live.farm));
-  S.owner.edit('js/content.js', 'spring: [4, 5, 6, 0] }', 'spring: [4, 5, 6, 0], summer: [4, 5, 6, 0] }');
+  S.owner.edit('js/content.js', 'spring: [4, 5, 6, 0], winter:', 'spring: [4, 5, 6, 0], summer: [4, 5, 6, 0], winter:');
   const thu = await dayAt(S, '2027-06-17', '12:00', { device: 'phone' });
   S.check('after adding summer farm days (summer: [4, 5, 6, 0]) the farm badge shows on Thu Jun 17', badgeTexts(thu, 'farm').includes('Reserved visits today'), JSON.stringify(thu.live.farm));
 });
@@ -524,11 +522,11 @@ step('R18', 'Sun Jul 11, 2027: the summer season is over', { }, async (S) => {
   S.check('Jul 11: the top bar says "Next up: Pumpkins & tomatoes, usually mid-September" and the "This week" box empties', /^In season: Blueberries/.test(a.topbar) && /^Next up: Pumpkins & tomatoes, usually mid-September/.test(b.topbar) && b.week === null, a.topbar + ' -> ' + b.topbar + ' week=' + JSON.stringify(b.week));
 });
 
-step('R19', 'Thu Aug 12, 2027: the fall look starts, a month before the season', { }, async (S) => {
-  const [a, b] = await Promise.all([dayAt(S, '2027-08-11', '23:59'), dayAt(S, '2027-08-12', '00:00')]);
-  S.check('Aug 12: the page turns to fall, though the season starts Sep 13', a.season === 'summer' && b.season === 'fall' && /^Next up: Pumpkins/.test(b.topbar), a.season + ' -> ' + b.season);
+step('R19', 'Sun Jul 11, 2027: the fall look starts, two months before the season', { }, async (S) => {
+  const [a, b] = await Promise.all([dayAt(S, '2027-07-10', '23:59'), dayAt(S, '2027-07-11', '00:00')]);
+  S.check('Jul 11: the page turns to fall, though the season starts Sep 13', a.season === 'summer' && b.season === 'fall' && /^Next up: Pumpkins/.test(b.topbar), a.season + ' -> ' + b.season);
   S.check('"Reserve a fall visit" and the fall lines show', reserveTexts(b).some((t) => /Reserve a fall visit/i.test(t)), reserveTexts(b).join());
-  // the owner's list for Aug 12: the year labels, the pumpkin page button, translations
+  // the owner's list for Jul 10: the year labels, the pumpkin page button, translations
   const fy = S.owner.py('tools/check_facts.py', 'year');
   S.check('python3 tools/check_facts.py year lists the 2026 places to change', /places say 2026/.test(fy.out), '');
   S.owner.edit('pages/pumpkin-patch.html', 'data-until="2026-11-30"', 'data-until="2027-11-30"', 2);
@@ -570,15 +568,15 @@ step('R22', 'Mon Nov 8, 2027 to Tue Nov 9, 2027: the fall season is over (as in 
   S.check('Mon Nov 8 is the last fall day, Tue Nov 9 has no season in progress', /^In season: Pumpkins/.test(b.topbar) && /^Next up: Christmas trees/.test(c.topbar), b.topbar + ' -> ' + c.topbar);
 });
 
-step('R23', 'Thu Nov 18, 2027 to Fri Nov 26, 2027: winter look, Thanksgiving, trees from the Friday after', { group: 'itself' }, async (S) => {
-  const [a, b, c, d] = await Promise.all([dayAt(S, '2027-11-17', '23:59'), dayAt(S, '2027-11-18', '00:00'), dayAt(S, '2027-11-25', '23:59'), dayAt(S, '2027-11-26', '00:00')]);
-  S.check('winter look on Thu Nov 18, 2027', a.season === 'fall' && b.season === 'winter', a.season + ' -> ' + b.season);
-  S.check('tree season starts Fri Nov 26, 2027 (Thanksgiving is Thu Nov 25)', !/^In season/.test(c.topbar) && /^In season: Christmas trees/.test(d.topbar), c.topbar + ' -> ' + d.topbar);
+step('R23', 'Tue Nov 9, 2027 to Sat Nov 27, 2027: the winter look, trees from the last Saturday of November', { group: 'itself' }, async (S) => {
+  const [a, b, c, d] = await Promise.all([dayAt(S, '2027-11-08', '23:59'), dayAt(S, '2027-11-09', '00:00'), dayAt(S, '2027-11-26', '23:59'), dayAt(S, '2027-11-27', '00:00')]);
+  S.check('the page turns to the winter look on Tue Nov 9, 2027', a.season === 'fall' && b.season === 'winter', a.season + ' -> ' + b.season);
+  S.check('tree weekends start Sat Nov 27, 2027 (the last Saturday of November; Fri Nov 26 is no tree day)', !/^In season/.test(c.topbar) && /^In season: Christmas trees/.test(d.topbar), c.topbar + ' -> ' + d.topbar);
 });
 
-step('R24', 'Thu Dec 9, 2027 and Fri Dec 24, 2027 to Fri Dec 31, 2027: trees end, Christmas, the end of the year', { group: 'itself' }, async (S) => {
-  const [a, b, f24, f25, f26] = await Promise.all([dayAt(S, '2027-12-08', '23:59'), dayAt(S, '2027-12-09', '00:00'), dayAt(S, '2027-12-24', '12:00'), dayAt(S, '2027-12-25', '12:00'), dayAt(S, '2027-12-26', '12:00')]);
-  S.check('tree season is over on Thu Dec 9, 2027', /^In season: Christmas trees/.test(a.topbar) && !/^In season/.test(b.topbar), a.topbar + ' -> ' + b.topbar);
+step('R24', 'Mon Dec 6, 2027 and Fri Dec 24, 2027 to Fri Dec 31, 2027: trees end, Christmas, the end of the year', { group: 'itself' }, async (S) => {
+  const [a, b, f24, f25, f26] = await Promise.all([dayAt(S, '2027-12-05', '23:59'), dayAt(S, '2027-12-06', '00:00'), dayAt(S, '2027-12-24', '12:00'), dayAt(S, '2027-12-25', '12:00'), dayAt(S, '2027-12-26', '12:00')]);
+  S.check('the tree weekends are over on Mon Dec 6, 2027 (the last tree day is Sun Dec 5)', /^In season: Christmas trees/.test(a.topbar) && !/^In season/.test(b.topbar), a.topbar + ' -> ' + b.topbar);
   S.check('Fri Dec 24 and Sun Dec 26, 2027 are open days', badgeStates(f24, 'greenhouse').includes('open') && badgeStates(f26, 'greenhouse').includes('open'), '');
   S.check('Sat Dec 25, 2027 too (the calendar says "if you open Saturdays": the GreenHouse is open Friday to Sunday, so it is)', badgeStates(f25, 'greenhouse').includes('open'), JSON.stringify(f25.live.greenhouse));
 });
@@ -623,7 +621,7 @@ step('W1', 'Section 1: every Monday (the "This week" box lasts 14 days; ?check b
 
 step('N1', 'Nothing to do: the site changes itself at midnight, farm time (and for a visitor in another time zone)', { quick: true, group: 'itself' }, async (S) => {
   // season days, by the farm's midnight: 23:59 the day before is the old look, 00:00 is the new one, in the browser's own clock
-  const SEAMS = [['2026-11-09', 'fall over'], ['2026-11-18', 'winter look'], ['2027-02-10', 'spring look'], ['2027-04-15', 'strawberry season'], ['2027-06-08', 'spring over'], ['2027-06-12', 'summer look'], ['2027-06-15', 'summer season'], ['2027-07-11', 'summer over'], ['2027-08-12', 'fall look'], ['2027-09-13', 'fall season'], ['2027-11-09', 'fall over'], ['2027-11-18', 'winter look'], ['2026-11-27', 'tree season'], ['2026-12-09', 'tree season over'], ['2027-11-26', 'tree season'], ['2027-12-09', 'tree season over']];
+  const SEAMS = [['2026-11-09', 'fall over, winter look'], ['2026-11-28', 'tree weekends start'], ['2026-12-07', 'tree weekends over, spring look'], ['2027-04-15', 'strawberry season'], ['2027-06-08', 'spring over, summer look'], ['2027-06-15', 'summer season'], ['2027-07-11', 'summer over, fall look'], ['2027-09-13', 'fall season'], ['2027-11-09', 'fall over, winter look'], ['2027-11-27', 'tree weekends start'], ['2027-12-06', 'tree weekends over, spring look']];
   const rows = S.quick ? [['2026-11-09', 'fall over']] : SEAMS;
   const jobs = rows.map(([day, what]) => Promise.all([dayAt(S, addDay(day, -1), '23:59'), dayAt(S, day, '00:00')]).then(([a, b]) => [day, what, a, b]));
   for (const [day, what, a, b] of await Promise.all(jobs)) S.check(day + ' (' + what + '): different at 00:00 than at 23:59 the night before, with nothing for the owner to do', a.season + '|' + a.topbar + '|' + a.h1 !== b.season + '|' + b.topbar + '|' + b.h1, a.season + ' / ' + a.topbar + '  ->  ' + b.season + ' / ' + b.topbar);

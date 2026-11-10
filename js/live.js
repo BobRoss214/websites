@@ -4,6 +4,8 @@
  *   - The notice bar               WISE_ACRES.notice
  *   - The "next up" countdown      <section data-countdown>
  *   - The pizza-reservation rules  (js/features.js draws that countdown; the hero chip is first set here)
+ *   A badge with data-live-not="winter" is left out while that season is in progress (the farm's winter badge says "no reservation needed",
+ *   which the pumpkin patch page and the first-visit page, written for reservations, do not).
  *
  * Hours and closures come from js/content.js. Times are Eastern Time, whatever
  * the visitor's own time zone is. In winter (the Christmas tree weekends, js/season.js)
@@ -180,8 +182,11 @@
   }
 
   function renderBadge(el) {
-    const s = W.clockOk() ? statusFor(el.dataset.live, W.pretendNow ? W.pretendNow() : undefined) : null;   // no readable clock: no "open now". (W.pretendNow: only the owners' tour sets it, while it shows another season)
-    if (!s) { el.hidden = true; return; }
+    const when = W.pretendNow ? W.pretendNow() : undefined;
+    const s = W.clockOk() ? statusFor(el.dataset.live, when) : null;   // no readable clock: no "open now". (W.pretendNow: only the owners' tour sets it, while it shows another season)
+    // data-live-not="winter": a page that is about something else in that season (the pumpkin patch page, the first-visit page: both say "reservation") leaves the badge out while the season is in progress
+    const left = s && el.dataset.liveNot ? el.dataset.liveNot.split(/\s+/) : [];
+    if (!s || W.seasons.live(when).some((x) => left.indexOf(x.id) >= 0)) { el.hidden = true; return; }
     el.hidden = false;
     el.className = 'live is-' + s.state + (el.dataset.liveClass ? ' ' + el.dataset.liveClass : '');
     el.innerHTML = '<span class="live-dot" aria-hidden="true"></span><span class="live-text"></span>';

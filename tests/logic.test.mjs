@@ -111,8 +111,8 @@ ok('which season is in progress (the Now tag, "In season"): fall to Nov 8, none 
 const ids = W.seasons.list.map((s) => [s.id, s.start(2026).getMonth() + 1 + '/' + s.start(2026).getDate(), s.end(2026).getMonth() + 1 + '/' + s.end(2026).getDate()].join(' '));
 ok('the season table for 2026 (start and end): spring 4/15 to 6/7, summer 6/15 to 7/10, fall 9/13 to 11/8, winter 11/28 to 12/6 (the first Saturday to the last Sunday of the tree weekends)', ids.join(', ') === 'spring 4/15 6/7, summer 6/15 7/10, fall 9/13 11/8, winter 11/28 12/6', ids.join(', '));
 const winter = W.seasons.list.find((x) => x.id === 'winter');
-ok('the words for the winter entry follow the rule: "Next up: Christmas trees at The GreenHouse, usually the last weekend in November"; no Thanksgiving, no "early December" in js/season.js',
-  winter.next === 'the last weekend in November' && winter.crop === 'Christmas trees at The GreenHouse' && !/thanksgiving|early december/i.test(fs.readFileSync(path.join(ROOT, 'js/season.js'), 'utf8')), JSON.stringify([winter.crop, winter.next]));
+ok('the words for the winter entry follow the rule: "Next up: Christmas trees at The GreenHouse, usually the last weekend in November"; the old rule and its end date are gone from js/season.js',
+  winter.next === 'the last weekend in November' && winter.crop === 'Christmas trees at The GreenHouse' && !/thanksgiving|early december/i.test(fs.readFileSync(path.join(ROOT, 'js/season.js'), 'utf8')), JSON.stringify([winter.crop, winter.next]));   // winter-scan: allow
 
 /* ---------------------------------------------------------------- the Christmas tree weekends: the rule, worked out each year */
 // Written out independently here, by walking the calendar (not with the formula of js/season.js): the LAST Saturday of November and the Sunday after it, the FIRST
