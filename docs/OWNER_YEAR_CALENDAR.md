@@ -77,7 +77,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 ### Mon Nov 9, 2026: the fall season is over, and the page turns to winter
 
 - **By itself:** no season is in progress. The farm badge goes, the top bar says "Next up: Christmas trees at The GreenHouse, usually the last weekend in November", the pizza rows are gone, and the "Fall schedule" button on the pumpkin page hides. The page opens on the winter look, the season that starts next: the first-screen button "Visit The GreenHouse" replaces "Reserve your visit", and the farm's "Reserve" buttons mostly go. The headline and the line under it stay the all-year ones until the trees start.
-- **You, by Sun Nov 1, 2026:** answer **d23** (is the farm open after November 8?) and **d25** (Reserve buttons when nothing can be booked). Also answer **d01** (what visitors see in winter), **d09** (The GreenHouse winter hours) and **d69** ("Every tree is lit!" appears too early). If you stay open, Claude moves the end of fall; you add pizza rows and open the times in Bookeo. If the winter hours change, change them in both places: the settings and the words.
+- **You, by Sun Nov 1, 2026:** answer **d23** (is the farm open after November 8?). Also answer **d01** (what visitors see in winter), **d09** (The GreenHouse winter hours) and **d69** ("Every tree is lit!" appears too early). If you stay open, Claude moves the end of fall; you add pizza rows and open the times in Bookeo. If the winter hours change, change them in both places: the settings and the words.
 - **Where:** `js/season.js` at `id: 'fall'` (the end date is on that line; ask Claude); `js/content.js` at `greenhouse: { days: [5, 6, 0]` (the green badges), then the words (README row "Change opening hours"; README, section "Change a fact everywhere"), then `python3 tools/check_facts.py hours`.
 - **If you forget:** from Nov 9 the farm's "Reserve" buttons are mostly gone, although you still take reservations. The badges keep the usual hours until the trees start, then the winter hours.
 
@@ -189,7 +189,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 ### Mon Nov 8, 2027 to Tue Nov 9, 2027: the fall season is over (as on Mon Nov 9, 2026)
 
 - **By itself:** the farm badge goes on Mon Nov 8, 2027; no season in progress on Tue Nov 9, 2027; the rows are gone.
-- **You, by Mon Nov 1, 2027:** questions **d23** and **d25** again, if the answer was for 2026 only.
+- **You, by Mon Nov 1, 2027:** question **d23** again, if the answer was for 2026 only.
 - **Where:** `js/season.js` at `id: 'fall'`.
 - **If you forget:** the same as on Nov 9, 2026.
 
@@ -258,9 +258,9 @@ None of these is decided here. Each is a card on your dashboard; this list says 
 |---|---|---|
 | d60 Closed Sunday, October 4 for rain? | Sat Oct 3, 2026 | the Sunday badges |
 | d23 Is the farm open after November 8? | Sun Nov 1, 2026 | the fall season ends Nov 8 |
-| d25 Reserve buttons when nothing can be booked | Sun Nov 1, 2026 (again Sun Dec 6, 2026) | the buttons show between seasons |
 | d01 What visitors see in winter, d09 The GreenHouse winter hours, d69 "Every tree is lit!" appears too early | Sun Nov 1, 2026 | the winter look starts Nov 9 |
 | d50 Christmas tree dates, d54 Prices for pumpkins, berries, flowers and trees | Wed Nov 25, 2026 | the tree season starts Nov 28 |
+| d25 Reserve buttons when nothing can be booked | Fri Dec 4, 2026 | the page opens on spring Dec 7, and the buttons show while nothing can be booked |
 | d66 Stop saying "new this year" from January? | Fri Dec 18, 2026 | the new year |
 | d26 When are cut flowers available?, d41 Cancel fee on the strawberry page | Thu Apr 8, 2027 | the strawberry season starts Apr 15 |
 | d58 Snacks and drinks in spring and summer?, d59 Do you still run summer programs?, d68 Sunflower badge only works on big screens | Mon Jun 7, 2027 | the summer season starts Jun 15 |

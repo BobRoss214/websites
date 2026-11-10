@@ -81,7 +81,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 ### lun 9 nov 2026: termina la temporada de otoño, y la página pasa al invierno
 
 - **Por sí solo:** no hay ninguna temporada en curso. La insignia de la granja desaparece, la barra superior dice "Next up: Christmas trees at The GreenHouse, usually the last weekend in November", las filas de pizza ya no están y el botón "Fall schedule" de la página de calabazas se oculta. La página se abre con el aspecto de invierno, la temporada que empieza después: el botón "Visit The GreenHouse" de la primera pantalla reemplaza a "Reserve your visit", y los botones "Reserve" de la granja casi todos desaparecen. El titular y la línea de abajo siguen siendo los de todo el año hasta que empiecen los árboles.
-- **Ustedes, a más tardar el dom 1 nov 2026:** respondan **d23** (¿está abierta la granja después del 8 de noviembre?) y **d25** (botones Reserve cuando no se puede reservar nada). Respondan también **d01** (qué ven los visitantes en invierno), **d09** (el horario de invierno de The GreenHouse) y **d69** ("Every tree is lit!" aparece demasiado pronto). Si siguen abiertos, Claude mueve el fin del otoño; ustedes agregan filas de pizza y abren los horarios en Bookeo. Si cambia el horario de invierno, cámbienlo en los dos lugares: los ajustes y las palabras.
+- **Ustedes, a más tardar el dom 1 nov 2026:** respondan **d23** (¿está abierta la granja después del 8 de noviembre?). Respondan también **d01** (qué ven los visitantes en invierno), **d09** (el horario de invierno de The GreenHouse) y **d69** ("Every tree is lit!" aparece demasiado pronto). Si siguen abiertos, Claude mueve el fin del otoño; ustedes agregan filas de pizza y abren los horarios en Bookeo. Si cambia el horario de invierno, cámbienlo en los dos lugares: los ajustes y las palabras.
 - **Dónde:** `js/season.js`, en `id: 'fall'` (la fecha de fin está en esa línea; pídanselo a Claude); `js/content.js`, en `greenhouse: { days: [5, 6, 0]` (las insignias verdes), luego las palabras (README, fila "Change opening hours"; README, sección "Change a fact everywhere"), y después `python3 tools/check_facts.py hours`.
 - **Si se olvidan:** desde el 9 de noviembre los botones "Reserve" de la granja casi todos desaparecen, aunque ustedes siguen aceptando reservas. Las insignias mantienen el horario de siempre hasta que empiecen los árboles, y luego el horario de invierno.
 
@@ -193,7 +193,7 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 ### lun 8 nov 2027 al mar 9 nov 2027: termina la temporada de otoño (como el lun 9 nov 2026)
 
 - **Por sí solo:** la insignia de la granja desaparece el lun 8 nov 2027; ninguna temporada en curso el mar 9 nov 2027; las filas ya no están.
-- **Ustedes, a más tardar el lun 1 nov 2027:** otra vez las preguntas **d23** y **d25**, si la respuesta fue solo para 2026.
+- **Ustedes, a más tardar el lun 1 nov 2027:** otra vez la pregunta **d23**, si la respuesta fue solo para 2026.
 - **Dónde:** `js/season.js`, en `id: 'fall'`.
 - **Si se olvidan:** lo mismo que el 9 de noviembre de 2026.
 
@@ -262,9 +262,9 @@ Ninguna de estas se decide aquí. Cada una es una tarjeta de su panel; esta list
 |---|---|---|
 | d60 ¿Cierre por lluvia el 4 de octubre? | sáb 3 oct 2026 | las insignias del domingo |
 | d23 ¿Está abierta la granja después del 8 de noviembre? | dom 1 nov 2026 | la temporada de otoño termina el 8 de noviembre |
-| d25 Botones Reserve cuando no se puede reservar nada | dom 1 nov 2026 (otra vez dom 6 dic 2026) | los botones aparecen entre temporadas |
 | d01 Qué ven los visitantes en invierno, d09 El horario de invierno de The GreenHouse, d69 "Every tree is lit!" aparece demasiado pronto | dom 1 nov 2026 | el aspecto de invierno empieza el 9 de noviembre |
 | d50 Fechas de los árboles de Navidad, d54 Precios de calabazas, bayas, flores y árboles | mié 25 nov 2026 | la temporada de árboles empieza el 28 de noviembre |
+| d25 Botones Reserve cuando no se puede reservar nada | vie 4 dic 2026 | la página abre en primavera el 7 de diciembre y los botones aparecen mientras no se puede reservar nada |
 | d66 ¿Dejar de decir "new this year" desde enero? | vie 18 dic 2026 | el año nuevo |
 | d26 ¿Cuándo hay flores para cortar?, d41 Cargo por cancelación en la página de fresas | jue 8 abr 2027 | la temporada de fresas empieza el 15 de abril |
 | d58 ¿Botanas y bebidas en primavera y verano?, d59 ¿Todavía tienen programas de verano?, d68 La insignia de girasoles solo funciona en pantallas grandes | lun 7 jun 2027 | la temporada de verano empieza el 15 de junio |
