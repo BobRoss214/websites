@@ -418,7 +418,7 @@ step('R09', 'Mon Dec 7, 2026: the tree weekends are over in the site\'s calendar
   const [a, b] = await Promise.all([dayAt(S, '2026-12-06', '23:59'), dayAt(S, '2026-12-07', '00:00')]);
   S.check('Dec 6 23:59 (the last tree day) is still tree season, Dec 7 00:00 is not', /^In season: Christmas trees/.test(a.topbar) && /^Next up: Strawberries, usually mid-April/.test(b.topbar), a.topbar + ' -> ' + b.topbar);
   S.check('the headline becomes the all-year one on Dec 7, and the page turns to the spring look (the season that starts next)', a.season === 'winter' && b.season === 'spring' && b.heroButtons[0] === 'Reserve your visit' &&  a.h1 === 'Wise Acres Christmas trees' && b.h1 === 'Organic u-pick fun for the whole family', a.h1 + ' -> ' + b.h1);
-  // the owner keeps saying trees: week crops trees peak, updated Dec 9, and a notice
+  // the owner keeps saying trees: week crops trees peak, updated Dec 7, and a notice
   S.owner.setting('week', "{ updated: '2026-12-07', note: 'Trees until Dec 24.', crops: { trees: 'peak' } }");
   S.owner.setting('notice', "'Christmas trees until Dec 24.'", undefined);
   S.owner.setting('noticeUntil', "'2026-12-24'", undefined);
