@@ -31,6 +31,11 @@ const keys = (p, sel) => p.evaluate((s) => [...document.querySelectorAll(s)].map
 const heads = (p, sel) => p.evaluate((s) => [...document.querySelectorAll(s)].map((c) => c.querySelector('h3').textContent.trim()), sel);
 const tile = (p, label) => p.evaluate((l) => { const t = [...document.querySelectorAll('.ds-live .ds-tile')].find((x) => x.querySelector('.ds-tile-l').textContent.trim() === l); return t ? Number(t.querySelector('.ds-tile-n').textContent) : null; }, label);
 const feed = (p) => p.evaluate(() => [...document.querySelectorAll('.ds-feed li')].map((l) => ({ at: l.querySelector('.ds-feed-at').textContent, text: l.querySelector('.ds-feed-text').textContent })));
+const both = (p) => p.evaluate(() => {   // the counters and the cards, read in one turn of the page
+  const n = (l) => { const t = [...document.querySelectorAll('.ds-live .ds-tile')].find((x) => x.querySelector('.ds-tile-l').textContent.trim() === l); return t ? Number(t.querySelector('.ds-tile-n').textContent) : null; };
+  return { waiting: n('Waiting for you'), cards: document.querySelectorAll('#desk-waiting .ds-stack[aria-live="off"] > [data-key]').length, appr: n('Photos and reviews to look at'), apprCards: document.querySelectorAll('#desk-approvals .ds-stack:not(.ds-stack-tight) > [data-key]').length, done: n('Answered today') };
+});
+const topFeed = async (p, f) => { const lines = (await feed(p)).slice(0, 3); return lines.find(f) || null; };   // (a thing may arrive between the answer and the look: the line is among the newest three)
 const pill = (p) => p.evaluate(() => { const b = document.querySelector('.ds-pill'); return b && !b.hidden ? b.textContent.trim() : null; });
 const focusKey = (p) => p.evaluate(() => (document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('data-focus')) || '');
 const store = (p, fn, arg) => p.evaluate(fn, arg);
@@ -100,7 +105,8 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
     const kinds = await p.evaluate((s) => [...document.querySelectorAll(s)].map((c) => c.querySelector('.ds-chip').textContent.trim()), WAIT);
     const firstText = (await p.locator(WAIT).first().innerText()).replace(/\s+/g, ' ');
     ok('their chips say what each one is (Change of day, Question), and the change of day shows the booked visit under its name', kinds.includes('Change of day') && kinds.includes('Question') && /Booked now: .* · \d+ (person|people)/.test(firstText), kinds.join() + ' ' + firstText.slice(0, 200));
-    ok('the counters follow: Waiting for you counts the cards, Photos and reviews counts its cards, Answered today is 0', (await tile(p, 'Waiting for you')) === w0.length && (await tile(p, 'Answered today')) === 0 && (await tile(p, 'Photos and reviews to look at')) === (await keys(p, APPR)).length);
+    const b0 = await both(p);
+    ok('the counters follow: Waiting for you counts the cards, Photos and reviews counts its cards, Answered today is 0', b0.waiting === b0.cards && b0.appr === b0.apprCards && b0.done === 0 && b0.cards >= w0.length, JSON.stringify(b0));
     ok('the feed has one line for each arrival, newest first, each with its words about how long ago and the family\'s name; at most six lines', f0.length >= 2 && f0.length <= 6 && f0.every((l) => AGO.test(l.at) && /’s family/.test(l.text)) && f0.some((l) => /asks: Move/.test(l.text)) && f0.some((l) => /asks the farm: “/.test(l.text)), JSON.stringify(f0));
     ok('the tab says how many things wait while the rush is on, and the clock of the box is the rush\'s own', (await p.title()) === '(' + ((await keys(p, WAIT)).length + (await keys(p, APPR)).length) + ') Demo: Mrs. Cathy\'s desk | Wise Acres Organic Farm' && /^Time: \d{1,2}:\d{2} (am|pm)$/.test(await p.locator('.ds-clock').innerText()));
     const week = (await p.locator('#desk-week').innerText()).replace(/\s+/g, ' ');
@@ -162,7 +168,7 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
     const firstPending = await p.evaluate(() => window.DemoDesk.app.ui.pending[0]);
     await p.locator('.ds-pill').focus();
     await p.keyboard.press('Enter');
-    await settled(p, 300);
+    await until(p, () => { const r = document.activeElement.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }, null, 10000);   // (the page scrolls smoothly: that takes a moment)
     const fk = await focusKey(p), where = await p.evaluate(() => { const r = document.activeElement.getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom), vh: innerHeight, pending: window.DemoDesk.app.ui.pending.length, pill: (document.querySelector('.ds-pill') || {}).hidden }; });
     ok('pressing it (also from the keyboard) takes the focus to the heading of the first new card, which is on the screen, and the button goes', fk === 'card:' + firstPending && (await pill(p)) === null && where.top >= 0 && where.bottom <= where.vh, fk + ' wanted card:' + firstPending + ' ' + JSON.stringify(where));
     await press(p, '[data-tour="live-control"] .dl-on');
@@ -189,8 +195,10 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
     const idx = order0.indexOf(visitKey), nextKey = order0[idx + 1] || order0[idx - 1];
     ok('the keyboard focus went to the heading of the next card (not to the answer under Answered), so she can go on', (await focusKey(p)) === 'card:' + nextKey, (await focusKey(p)) + ' wanted card:' + nextKey);
     ok('the pretend family made no notice in the real family\'s bell, and the family\'s own visits and requests are as they were', (await store(p, () => window.DemoStore.noticesFor('family').length)) === notices0 && (await store(p, () => window.DemoStore.list('requests').length)) === 0);
-    ok('"Answered today" counts it, and the feed has "You said Yes to ..." at the top', (await tile(p, 'Answered today')) === doneBefore + 1 && (await feed(p))[0].text === 'You said Yes to ' + who + '.' && AGO.test((await feed(p))[0].at), JSON.stringify((await feed(p))[0]));
-    ok('Waiting for you went down by one too', (await tile(p, 'Waiting for you')) === order1.length);
+    const lineYes = await topFeed(p, (l) => l.text === 'You said Yes to ' + who + '.');
+    ok('"Answered today" counts it, and the feed has "You said Yes to ..." among the newest lines', (await tile(p, 'Answered today')) === doneBefore + 1 && !!lineYes && AGO.test(lineYes.at), JSON.stringify((await feed(p)).slice(0, 3)));
+    const bY = await both(p);
+    ok('Waiting for you went down with the card: the counter and the cards say the same', bY.waiting === bY.cards, JSON.stringify(bY));
 
   });
   /* ------------------------------------------------------------------ a question: a reply */
@@ -219,7 +227,7 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
       await p.locator('[data-key="' + noKey + '"] [data-tour="desk-no"]').click();
       await settled(p, 100);
       const rn = await store(p, (id) => window.DemoStore.get('requests', id), noId);
-      ok('No: the request is answered no, the card moves to Answered with "You said No.", the feed says so', rn.status === 'no' && /You said No\./.test(await p.locator('[data-key="' + noKey + '"]').innerText()) && (await feed(p))[0].text.startsWith('You said No to '));
+      ok('No: the request is answered no, the card moves to Answered with "You said No.", the feed says so', rn.status === 'no' && /You said No\./.test(await p.locator('[data-key="' + noKey + '"]').innerText()) && !!(await topFeed(p, (l) => l.text.startsWith('You said No to '))));
       await p.locator('[data-key="' + sgKey + '"] [data-tour="desk-suggest"]').click();
       await p.locator('#sg-' + sgId + '-day').selectOption({ index: 1 });
       await p.locator('[data-key="' + sgKey + '"] button:has-text("Send my suggestion")').click();
@@ -250,19 +258,19 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
       S.add('reviews', { visitId: 'v2', stars: 4, text: 'A lovely morning.', status: 'waiting', at, live: true, fam: 'Test’s family' });
     });
     await settled(p, 100);
-    const aw = await heads(p, APPR), nA = await tile(p, 'Photos and reviews to look at');
-    ok('a photo and a review of a pretend family wait under Photos and reviews with its name; the counter and the title count them', aw.includes('Photo from Test’s family') && aw.includes('Review from Test’s family') && nA === aw.length && /^\(\d+\) /.test(await p.title()), aw.join(' | '));
+    const aw = await heads(p, APPR), bA = await both(p);
+    ok('a photo and a review of a pretend family wait under Photos and reviews with its name; the counter and the title count them', aw.includes('Photo from Test’s family') && aw.includes('Review from Test’s family') && bA.appr === bA.apprCards && /^\(\d+\) /.test(await p.title()), aw.join(' | ') + ' ' + JSON.stringify(bA));
     const photoKey = await p.evaluate((s) => [...document.querySelectorAll(s)].find((c) => /Photo from Test/.test(c.querySelector('h3').textContent)).getAttribute('data-key'), APPR);
     const doneA = await tile(p, 'Answered today'), nPhoto = await store(p, () => window.DemoStore.noticesFor('family').length);
     await p.locator('[data-key="' + photoKey + '"] button:has-text("Approve")').click();
     await settled(p, 100);
     const ph = await store(p, () => window.DemoStore.list('photos', { live: true }).filter((x) => x.fam === 'Test’s family')[0]);
-    ok('Approve: the photo is approved with the time it was decided, it moves to the done part, "Answered today" counts it, the feed says so, the real family got no notice', ph.status === 'approved' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(ph.decided) && (await keys(p, ADONE)).includes(photoKey) && (await tile(p, 'Answered today')) === doneA + 1 && (await feed(p))[0].text === 'You approved the photo from Test’s family.' && (await store(p, () => window.DemoStore.noticesFor('family').length)) === nPhoto, JSON.stringify(ph) + ' ' + JSON.stringify((await feed(p))[0]));
+    ok('Approve: the photo is approved with the time it was decided, it moves to the done part, "Answered today" counts it, the feed says so, the real family got no notice', ph.status === 'approved' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(ph.decided) && (await keys(p, ADONE)).includes(photoKey) && (await tile(p, 'Answered today')) === doneA + 1 && !!(await topFeed(p, (l) => l.text === 'You approved the photo from Test’s family.')) && (await store(p, () => window.DemoStore.noticesFor('family').length)) === nPhoto, JSON.stringify(ph) + ' ' + JSON.stringify((await feed(p)).slice(0, 3)));
     const revKey = await p.evaluate((s) => [...document.querySelectorAll(s)].find((c) => /Review from Test/.test(c.querySelector('h3').textContent)).getAttribute('data-key'), APPR);
     await p.locator('[data-key="' + revKey + '"] button:has-text("Not now")').click();
     await settled(p, 100);
     const empty = await p.evaluate(() => { const e = document.querySelector('#desk-approvals [data-for="approvals"]'); return { hidden: e.hidden, text: e.textContent }; });
-    ok('Not now on the review (the last one): declined and decided, the feed says so, and the focus went to something that is shown (the "No photos or reviews to look at." line, or the next card)', (await store(p, () => window.DemoStore.list('reviews', { live: true }).filter((x) => x.fam === 'Test’s family')[0].status)) === 'declined' && (await feed(p))[0].text === 'You said Not now to the review from Test’s family.' && (await p.evaluate(() => !!document.activeElement && document.activeElement !== document.body)), JSON.stringify(empty) + ' ' + (await focusKey(p)));
+    ok('Not now on the review (the last one): declined and decided, the feed says so, and the focus went to something that is shown (the "No photos or reviews to look at." line, or the next card)', (await store(p, () => window.DemoStore.list('reviews', { live: true }).filter((x) => x.fam === 'Test’s family')[0].status)) === 'declined' && !!(await topFeed(p, (l) => l.text === 'You said Not now to the review from Test’s family.')) && (await p.evaluate(() => !!document.activeElement && document.activeElement !== document.body)), JSON.stringify(empty) + ' ' + (await focusKey(p)));
 
   });
   /* ------------------------------------------------------------------ Off pauses, On and the speed go on */
