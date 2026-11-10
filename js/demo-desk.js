@@ -1007,7 +1007,7 @@
       if (!st) return;
       Array.prototype.forEach.call(parts.feed.children, (li) => {
         const t = li.firstChild, w = agoWords(Number(li.getAttribute('data-ms')));
-        if (t && t.textContent !== w) t.textContent = w;
+        if (t && t.textContent !== w) { t.textContent = w; li.setAttribute('data-sig', li.getAttribute('data-key') + '|' + w); }   // (the line keeps its place: it is not drawn again)
       });
       paintClock();
       expireNew();
@@ -1074,13 +1074,16 @@
         const apprOpen = apprAll.filter((a) => a.status === 'waiting');
 
         // The family answered a suggestion, or took a request back: say it once (what Mrs. Cathy herself just did is said when she does it)
+        const present = {};
         reqs.forEach((r) => {
           const was = ui.status[r.id];
           if (was !== undefined && was !== r.status && (r.status === 'accepted' || r.status === 'declined' || r.status === 'cancelled')) {
             say(whoOf(r) + (r.status === 'accepted' ? ' said OK to your suggestion.' : r.status === 'declined' ? ' said no thanks to your suggestion.' : ' took a request back.'));
           }
           ui.status[r.id] = r.status;
+          present[r.id] = true;
         });
+        Object.keys(ui.status).forEach((id) => { if (!present[id]) delete ui.status[id]; });   // a request the rush has tidied away is forgotten here too
 
         // "New" marks: things that arrived while this screen was open. They are said (in batches), marked on their card for half a minute, and counted by the "new" button.
         const nowKeys = {}, words = {};
@@ -1165,7 +1168,7 @@
         sync(parts.approvalsList, apprWaiting.map((a) => ({ key: a.coll + a.id, sig: JSON.stringify([a, a.visitId ? byId(st.visits, a.visitId) : null]), make: () => approvalCard(a) })));
         sync(parts.approvalsDone, apprDone.map((a) => ({ key: a.coll + a.id, sig: JSON.stringify([a, 'old']), make: () => approvalCard(a) })));
         const emptyA = parts.approvals.body.querySelector('[data-for="approvals"]');
-        emptyA.hidden = apprWaiting.length > 0 || apprDone.length > 0;
+        emptyA.hidden = apprWaiting.length > 0;   // (shown whenever nothing waits, also under the answered ones: the focus goes there after the last answer)
         emptyA.textContent = 'No photos or reviews to look at.';
         emptyA.setAttribute('data-focus', 'empty:approvals');
         emptyA.setAttribute('tabindex', '-1');

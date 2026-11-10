@@ -17,6 +17,23 @@ It is hidden from real visitors. Only the person who shows it sees it.
 
 The three pages remember that the demo is on while you move between them in the same browser tab. A new tab needs `?demo` again.
 
+## The desk in a pretend rush
+
+Mrs. Cathy and Rob's desk (`farm-desk.html`) can show a busy day. The box **Right now** at the top holds three things.
+
+- **The strip "Pretend rush"**, the same control as on the kitchen screen. **On** starts the rush. **Off** pauses it: nothing comes and the pretend clock stands still. **Calm**, **Busy** and **Rush** set how fast things come (about one every 40, 18 or 8 seconds, some of them for the kitchen). It is off until somebody presses On. The first start also makes four things that are already waiting, so the screen is not empty. The choice is kept in the demo, so every screen agrees. **Start over** clears it.
+- **Four counters**: **Waiting for you** (requests and questions), **Photos and reviews to look at**, **Answered today** and **People waiting for news**. The first, second and fourth link to their part of the screen. They are read from the demo's own records, so a reload or a second window says the same.
+- **Just now**: the last six things that happened, newest first, in plain words ("Dana's family asks: Move to Sunday, Nov 29 at 12:00 pm", "You said Yes to Dana's family."), each with how long ago ("just now", "3 min ago").
+
+The rush sends the desk a family that asks to move a visit, a question, a photo or a review. Every pretend family has a name of its own ("Dana's family") on its card, in the feed and in "This week". The family's own screens never see them, and answering one never puts a notice in the family's bell.
+
+On a busy desk:
+
+- New cards go to the bottom of **Waiting for you**, oldest first, with a **New** mark for half a minute. The cards you are reading do not move, and a note you are typing keeps its words and its cursor.
+- When new cards arrive out of sight, a small button says how many (**3 new cards · Show**) and takes you to the first one. A screen reader hears the arrivals politely, in batches (one message every four seconds at most). While the rush is on, the title of the browser tab counts what waits, for example `(4) Demo: Mrs. Cathy's desk`. The desk makes no sound.
+- **Yes**, **No**, **Suggest another day or time**, **Send reply**, **Approve** and **Not now** work on a pretend family as on a real one. The card leaves the waiting list at once and shows under **Answered** (the latest six). The keyboard focus goes to the next card. A pretend family answers a suggestion by itself a few seconds later, and the card says OK or no thanks.
+- To keep the screen short: at most 24 waiting cards are drawn (a line says how many more wait), "This week" shows five visits a day and says how many more, and the rush keeps only its newest forty things.
+
 ## How to start over
 
 Press **Start over** in the yellow strip, then **Yes, start over**. It clears the pretend account, visits, orders and requests in this browser. Nothing else on the site is touched. Closing the browser does not clear the demo: the next time you open it with `?demo`, the same family is still there.
@@ -73,7 +90,7 @@ The demo does not answer these questions. They are for a later talk:
 | `js/demo-app.js` | The family's account page: sign-up, sign-in, the tabs, the bell and the view list. |
 | `js/demo-view-*.js` | One file per family screen. `visits` is `js/demo-view-visits.js`. The kit `js/demo-view-kit.js` has helpers the other views share. |
 | `js/demo-pizza-editor.js` | The pizza editor that My pizza and the kitchen share. |
-| `js/demo-desk.js`, `js/demo-kitchen.js` | The screens of Mrs. Cathy and Rob's desk and of the pizza kitchen. |
+| `js/demo-desk.js`, `js/demo-kitchen.js` | The screens of Mrs. Cathy and Rob's desk (with its "Right now" box, see "The desk in a pretend rush") and of the pizza kitchen. |
 | `css/demo.css` (and `css/demo-staff.css`, `css/demo-kitchen.css`, `css/demo-pizza.css`) | The look: the same style as the rest of the site. |
 | `pages/account.html`, `pages/farm-desk.html`, `pages/kitchen.html` | The page sources. Their settings block says `robots: noindex`, and names the style sheets and scripts of that page in order (`styles:` and `scripts:`, see the top of `tools/pages.py`). The text inside is left out of the translations (`data-no-i18n`): the demo is English only. |
 
@@ -145,7 +162,7 @@ How it is kept:
 
 ### Hooks for the tour
 
-These invisible `data-tour` names are put on the key controls so the tour can point at them. The shell and the header have: `demo-bar`, `demo-switch`, `demo-reset`, `acct-signup`, `acct-sample-note`, `acct-bell`. The family screens have `acct-visit-card`, `acct-paid`, `acct-request-day`, `acct-request-status`, `acct-reply` (the box with Mrs. Cathy's answer, in every state: her suggestion with its two buttons, or what is left once the family has answered, so it is also there after yes, no, OK or "No thanks"), `acct-pizza-card`, `acct-pizza-edit`, `acct-pizza-time`, `acct-family`, `acct-alerts`, `acct-messages`, `acct-photos`, `acct-event` and `acct-closed-banner`. The desk has `desk-waiting`, `desk-card`, `desk-yes`, `desk-no`, `desk-suggest`, `desk-week`, `desk-weather`, `desk-people`, `desk-approvals` and `desk-groups`. The kitchen has `kit-queue`, `kit-card`, `kit-yes`, `kit-no`, `kit-change` and `kit-notes`. The tour drives the demo with the store functions above, so their names must stay as they are.
+These invisible `data-tour` names are put on the key controls so the tour can point at them. The shell and the header have: `demo-bar`, `demo-switch`, `demo-reset`, `acct-signup`, `acct-sample-note`, `acct-bell`. The family screens have `acct-visit-card`, `acct-paid`, `acct-request-day`, `acct-request-status`, `acct-reply` (the box with Mrs. Cathy's answer, in every state: her suggestion with its two buttons, or what is left once the family has answered, so it is also there after yes, no, OK or "No thanks"), `acct-pizza-card`, `acct-pizza-edit`, `acct-pizza-time`, `acct-family`, `acct-alerts`, `acct-messages`, `acct-photos`, `acct-event` and `acct-closed-banner`. The desk has `desk-live` (the "Right now" box: the strip, the counters and the feed; the strip itself is `live-control`), `desk-waiting`, `desk-card`, `desk-yes`, `desk-no`, `desk-suggest`, `desk-week`, `desk-weather`, `desk-people`, `desk-approvals` and `desk-groups`. The kitchen has `kit-queue`, `kit-card`, `kit-yes`, `kit-no`, `kit-change` and `kit-notes`. The tour drives the demo with the store functions above, so their names must stay as they are.
 
 ### The checks
 
@@ -154,5 +171,7 @@ These invisible `data-tour` names are put on the key controls so the tour can po
 - `tests/demo-alerts.test.mjs`: the Tell me when screen in a real browser, on a computer window and on a phone: the order, the two switches for text message and email, the rule that one stays on, the full-day choice and reservations with the desk, and axe-core.
 - `tests/account-event.test.mjs`: the family's screens in a real browser: the sign-up question and each answer (the whole question on the first screen of a 1440 x 900 window, the name and the email side by side), My event shown only to a family that has an event, "I also plan an event", no My year, the contact links (Vanessa, Ava, the kitchen line), Mrs. Cathy's answer box on My visits in every state, a closed day with its reason (banner, new-day box and the desk's own promise), `DemoUI.closeModals()` and `DemoUI.clearToasts()`, the tour's cards for those dialogs and every card's toast clearing run on the real screen, and an accessibility check (axe) of the new boxes.
 - `tests/tour-demo-script.test.mjs`: the tour's chapter on the demo, card by card, against the real store (no browser): going Back and forth never answers a request twice or piles up notices, a family made by hand is kept, every card takes the toasts away when it is left, and the seven cards with a dialog also close it.
+- `tests/demo-desk-live.test.mjs`: the desk in the pretend rush, in a real browser on a fake clock: the box and its strip, the four counters, the feed, the pretend families by name, new cards that arrive while a note is being typed (same elements, same order, the cursor kept, a New mark that fades, the "new" button, the arrivals said in batches), each answer (Yes, No, a suggestion that the family answers, a reply, Approve, Not now: the card leaves the waiting list, the focus goes on, the counters and the feed follow, the real family gets a notice and a pretend one does not), Off and On and the speeds, a ten-minute rush that does not grow the screen, the same seed giving the same screen, reduced motion, a phone, axe-core.
+- `tests/demo-desk-tour.test.mjs`: the two desk cards of the tour that show the rush, against the real store and the real engine (no browser): the first starts the rush from nothing, the second leaves it, every story card switches it off and takes the pretend families away, and the walk of the original cards gives the family the same story with a rush in the middle.
 - `tests/seo.test.mjs`: the three pages are `noindex`, have no canonical address, no share picture and no line in the sitemap.
 - `tests/privacy.test.mjs`: the demo files may use browser storage only in `js/demo-store.js` (one key) and `js/demo-header.js` (one hint for the tab), and may build their own form, text box and list. Everything else stays refused.
