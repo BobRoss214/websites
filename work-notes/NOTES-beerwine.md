@@ -1,0 +1,43 @@
+# Notes from helper beer-wine (10 Nov 2026): the Store group "Beer, cider & wine"
+
+The site builder (not the farm owner) asked for "its own beer and wine section in the what to buy" and sent a photo of the farm's chalkboard. The source of every name, number and price is the transcription in /tmp/helpers/BEER_WINE_LIST.md (outside the repo). Nothing was invented.
+
+## What is on the page now
+- A new group `#shop-beerwine` (class `sg-beerwine`, a deep wine red under white text, 9.8 to 1) right after Drinks, and a new jump button after the Drinks button. Both are named "Beer, cider & wine" and use the old drink picture `p-beer-wine` (glass, glass, can).
+- Under the band: the old card's words as the group's note ("Every beer, hard cider and wine is the same price. What's pouring changes."), then three small headings from the board with their own cards: "Beer" (10), "Cider (Red clay)" (2), "Wine" (4). 16 cards, every one $6, in the board's order. Each card has its own picture `p-<slug>` (drawn by helper beer-icons, no lettering, no logo).
+- The line "Please do not bring your own alcohol" moved from the foot of Drinks to the foot of this group. The old card "Beer, hard cider & wine" is gone from Drinks (Drinks now has 8 cards and no foot).
+- No place line in the band ("At the barn" ...): the page does not say where beer, cider and wine are sold, so none was invented. No age statement, no "sold out" label, no tasting, food or health words.
+- Left out on purpose: the two ciders whose names are under the taped note "S/O SOLD OUT" (lines 11 and 12 of the board).
+- The three small headings are `<p class="shop-subh">` (the look of "On the board now" of the ice cream, hand letters) and each list of cards is named by its heading (`aria-labelledby`), so a screen reader says "Beer, list, 10 items". They are paragraphs, not headings, so the heading order h2, h3, h4 of the Store is unchanged.
+- 13 groups now, 82 cards (77 products of the list plus the 5 older cards). The groups after Drinks are renumbered in work-notes/SHOP-LIST.md (5 is the new group; pantry is 6 ... the farm visit is 13).
+
+## Files changed
+index.html (group, jump button, old card out, 16 symbols), css/extras.css (two rules: `.sg-beerwine` and `.shop-subh`, next to the other group colours), work-notes/SHOP-LIST.md, tests/shop-list.make.mjs, tests/shop-list.json (made by it), tests/shop.test.mjs, lang/en.json, lang/src/{es,hi,vi,zh}.json, lang/{es,hi,vi,zh}.js (36 new texts each), docs/DECISION_PLAYBOOK.md and docs/QUESTIONS_FOR_THE_FARM.md (they named the old card by its `data-t`), tools/rehearse_answers.json (answer d19=A: the drinks price is now 16 steps, one per card, instead of 1).
+
+## Texts main must change (README files and notes main owns)
+1. README.md, row "Shop section": "about 70 products in 12 colored groups (snacks, ice cream, pizza, drinks, pantry, ..." becomes "about 80 products in 13 colored groups (snacks, ice cream, pizza, drinks, beer, cider & wine, pantry, ...". Add: "The group Beer, cider & wine has the 16 drinks of the farm's chalkboard, each $6, under the board's three small headings. To change a drink, change its card (name, note, `$6`) and its line in work-notes/SHOP-LIST.md, then make tests/shop-list.json again. The board changes ('What's pouring changes'): when it does, send the new board and Claude updates the 16 cards and their drawings (`p-<slug>`)."
+2. tests/README.md, row `shop`: "the sentences the list makes a card say (the pretzel's nuts, "the same price" for beer and wine, the pumpkin note)" becomes "the sentences the list makes a card say (the pretzel's nuts, the pumpkin note ...), the sentences it makes a whole group say (the note and the alcohol line of Beer, cider & wine; Drinks no longer has the alcohol line; Beer, cider & wine has no place line), the small headings of Beer, cider & wine above their own cards in the list's order and named for a screen reader"; and "its 12 groups run in two columns" becomes "its 13 groups".
+3. work-notes/HANDOFF.md, item 8: "in 12 groups ... (61 pictures" becomes "in 13 groups ... (77 pictures".
+4. docs/SLOW_PHONE_TEST.md (the "In memory" line): the node count and the number of drawings changed, see the numbers below.
+5. css/extras.css, the comment above "Store on a computer": "The 12 groups sit in .shop-groups" should say 13 (a comment only; I left it so that it does not clash with the store-gaps hunk).
+
+## The tour says "twelve groups" (not mine: the tour helper)
+js/tour-steps-b.js (step `ch7-jump`, title and text), tests/tour.test.mjs (the copy `STORE_WORDS` and the card title), tests/tour-store.test.mjs (a comment) and tests/tour-targets.test.mjs (the claim `/\bin (\w+) groups\b/` counts `#shop .shop-jump > li`, which is 13 now) all say twelve. The tour step must say thirteen, or say no number. I did not touch the tour. The jump row is one button longer; the tour card of `ch7-jump` points at it (work-notes/NOTES-seasons.md says that card once got cut off): tests/tour-store.test.mjs was run, see below.
+
+## Things I took as defaults (the builder has not answered)
+- Names and notes are exactly the table of BEER_WINE_LIST.md. The board's "AVB" is written ABV.
+- In es, hi, vi and zh a maker's name and a drink's name stay as written (Oskars Blues, Hop drop, Loyal to the dream, Pinot Grigio ...: the list file's `names`). Translated: the group name, the three small headings ("Red clay", the maker, stays), the style words in the notes ("American light lager" ...), and the name "Dry bubbly white" (it is a description, not a name). The numbers and "ABV" stay as written, with the way each language already writes a percent (es "4.2 %", the others "4.2%"; oz stays oz, zh says 盎司). All four translations are machine-made like the rest of the site and should be read by a speaker.
+- The Spanish for cider is plain "sidra" in the group name and the small heading (like the GreenHouse side) and "sidra alcohólica" in the note (the old words of the card, kept so their translation carries over).
+
+## What the builder must still tell us (BEER_WINE_LIST.md, bottom; the list has four lines, not five)
+1. The two cider names hidden under the "sold out" note (and which of the ciders are sold out): left out for now.
+2. "NA Brooklyn : Hoppy Amber": does NA mean non-alcoholic? Shown exactly as on the board, no word added.
+3. Spelling: "Oskars Blues", "Dales", "Kei Truck", "Bev (Gris)", "Peach crumble" (half hidden).
+4. The group name "Beer, cider & wine" (she said "beer and wine").
+Found while working (not in that list): (a) work-notes/PRODUCTS.md (lines about photo 9, an older board, and "NEWER drinks chalkboard") spells some names differently: "Oskar Blues", "Dale's", "NoDa", "Planet Pulp Hazy IPA", "Nobilo" (not "Noblio"), "Bramblin' Blackberry", and it reads the two hidden ciders as "Red Clay South End" semi-sweet 6.2% and "Chai Jacked" semi-sweet 6.25%. I did not use any of it (the list is the only source), but it is worth showing her when asking 1 and 3. (b) Where are beer, cider and wine sold? The old Drinks band said "At the barn and The GreenHouse" and the FAQ says "for sale at the farm"; the new band has no place line until she says.
+
+## Pictures
+The 16 drawings `p-<slug>` are helper beer-icons' (/tmp/helpers/beer-icons/symbols.html, 13.5 KB raw, 6.8 KB gzip, one symbol per line, plain shapes only). They are at the end of the sprite in index.html. The test checks that none has drawn text, an embedded picture or a `<use>` (no lettering, no logo-making parts), that none is empty and that no two are the same drawing. `p-beer-wine` stays for the band and the jump button of the group only (no card uses it). The home page keeps the whole sprite; tools/pages.py gives the other pages only the drawings they use, so none of the 16 is on another page.
+
+## Budget (index.html)
+index.html before / after: raw 468,390 / 490,042 bytes (+21,652), gzip -9 94,381 / 98,456 (+4,075), brotli 73,646 / 76,701 (+3,055; quality 11). The new group is 8.7 KB of markup (146 elements), the 16 pictures 13.5 KB; the old card and the alcohol line of Drinks are gone. css/extras.css +354 bytes raw (+152 gzip). The language files grow by 1.3 to 1.7 KB raw each (only loaded when a visitor picks a language). No new request, no new file.
