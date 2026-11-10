@@ -256,7 +256,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   const k = await open(browser, base, 'index.html', errs, { viewport: DESKTOP });
   await prep(k);
   await k.addStyleTag({ content: 'html::-webkit-scrollbar{width:17px}html::-webkit-scrollbar-thumb{background:#999}' });   // a classic scroll bar that takes room, as most computers have (the test browser hides its own)
-  const focusIn = async (slug) => { await show(k, slug); await k.keyboard.press('Shift'); await k.evaluate((s) => window.__sp.bySlug(s).querySelector('.shop-open').focus(), slug); };
+  const focusIn = async (slug) => { await show(k, slug); await k.keyboard.press('Tab'); await k.evaluate((s) => window.__sp.bySlug(s).querySelector('.shop-open').focus(), slug); };   // one Tab first: the page has then been used with the keyboard, so a focus made by a script shows its ring
   await focusIn('hot-pretzel');
   const lit = await k.evaluate(() => { const c = window.__sp.bySlug('hot-pretzel'); return { cls: c.classList.contains('shop-pop-focus'), tf: getComputedStyle(c).transform, ring: getComputedStyle(c.querySelector('.shop-open')).outlineStyle }; });
   ok('keyboard focus on a card gives it the same grow as the pointer, and a focus ring on the button over the card', lit.cls && lit.tf !== 'none' && lit.ring !== 'none', JSON.stringify(lit));
