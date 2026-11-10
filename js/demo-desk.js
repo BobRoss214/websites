@@ -1168,7 +1168,7 @@
         sync(parts.approvalsList, apprWaiting.map((a) => ({ key: a.coll + a.id, sig: JSON.stringify([a, a.visitId ? byId(st.visits, a.visitId) : null]), make: () => approvalCard(a) })));
         sync(parts.approvalsDone, apprDone.map((a) => ({ key: a.coll + a.id, sig: JSON.stringify([a, 'old']), make: () => approvalCard(a) })));
         const emptyA = parts.approvals.body.querySelector('[data-for="approvals"]');
-        emptyA.hidden = apprWaiting.length > 0 || apprDone.length > 0;
+        emptyA.hidden = apprWaiting.length > 0;   // (shown whenever nothing waits, also under the answered ones: the focus goes there after the last answer)
         emptyA.textContent = 'No photos or reviews to look at.';
         emptyA.setAttribute('data-focus', 'empty:approvals');
         emptyA.setAttribute('tabindex', '-1');
