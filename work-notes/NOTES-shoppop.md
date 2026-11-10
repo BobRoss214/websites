@@ -38,7 +38,7 @@ The farm has not given real lists, so the real site should not carry the made-up
 If the pop-up ever goes on the real site, `docs/BROWSER_SUPPORT.md` could get one line: before Safari 15.5, Chrome 102 and Firefox 112 the `inert` attribute does nothing; the pop-up still hides the page behind it with `aria-hidden` and keeps Tab inside, so it works the same for a keyboard and a screen reader.
 
 ## Weight (first visit on a slow phone)
-The real file set (no tour, no demo), measured with the same code as `tests/slow-phone.test.mjs` (phone, Slow 4G, English, text compressed like the real host), on the last commit of this branch:
+The real file set (no tour, no demo), measured with the same code as `tests/slow-phone.test.mjs` (phone, Slow 4G, English, text compressed like the real host), on commit 3b53fa6 (the pop-up code has grown by about 200 bytes with brotli since, which only the preview row loads):
 
 | the real first visit | files | bytes |
 |---|---|---|
@@ -47,7 +47,7 @@ The real file set (no tour, no demo), measured with the same code as `tests/slow
 | `js/shop-pop.js` kept, no sample lists (the feature dormant) | 22 | 425,850 (415.9 KB), +1,091 |
 | loader + sample lists + the pop-up code the loader then asks for (the preview) | 24 | 432,636 (422.5 KB), +7,877 |
 
-The limits are 24 files and 420 KB, so a real site with only the loader line has 4 KB to spare, and the preview set is 2.5 KB over: one more reason the sample lists stay off the real site. Not counted above: `css/shop-pop.css` (asked for only when a card is first pointed at) and the six new words in `lang/*.js` (+113 to +142 bytes with brotli, only for visitors in es, hi, vi, zh). With the pop-up code in the loader's own file the dormant real first visit was 419.4 KB, 0.6 KB under the limit: that is why the code is in a second file. Sizes of the files (raw / gzip -9 / brotli): `js/shop-pop.js` 955 / 562 / 453, `js/shop-pop-box.js` 13,275 / 4,684 / 4,044, `css/shop-pop.css` 5,213 / 1,971 / 1,643, `js/shop-sample.js` 8,531 / 2,273 / 2,030, the hover block in `css/extras.css` +1,957 / +533 / +441.
+The limits are 24 files and 420 KB, so a real site with only the loader line has 4 KB to spare, and the preview set is 2.5 KB over: one more reason the sample lists stay off the real site. Not counted above: `css/shop-pop.css` (asked for only when a card is first pointed at) and the six new words in `lang/*.js` (+93 to +139 bytes with brotli, only for visitors in es, hi, vi, zh). With the pop-up code in the loader's own file the dormant real first visit was 419.4 KB, 0.6 KB under the limit: that is why the code is in a second file. Sizes of the files (raw / gzip -9 / brotli): `js/shop-pop.js` 955 / 562 / 453, `js/shop-pop-box.js` 13,901 / 4,928 / 4,253, `css/shop-pop.css` 5,213 / 1,971 / 1,643, `js/shop-sample.js` 8,531 / 2,273 / 2,030, the hover block in `css/extras.css` +1,957 / +533 / +441.
 
 ## What the preview build must do
 One line in `work-notes/preview/build-artifact.py` (added here, in `script_block`, just before `return block`): for `js/shop-pop.js` it puts `css/shop-pop.css` in the page as `<style data-shop-pop-css>` and `js/shop-pop-box.js` in a `<script>` in front of it, so that nothing is asked for later (the viewer lets a page load only its own published files). `js/shop-pop.js` and `js/shop-sample.js` are plain `<script>` tags of `index.html`, so the build inlines them in place already.
