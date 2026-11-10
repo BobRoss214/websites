@@ -26,6 +26,9 @@
  *   DemoLive.settings() -> { orderSecs: 180, changeSecs: 120 }   the kitchen's answer-by times (seconds); .setSettings(patch) changes them (30 to 600).
  *   DemoLive.watch(key) -> ms      the pretend time when a ticket of the signed-in family was first seen (kept in the store, so a reload does not restart its timer);
  *                                  .unwatch(key). The kitchen uses it for Alex's real orders.
+ *   DemoLive.clockAt(t) -> 'HH:MM'  the pretend farm clock at the pretend time t (for "answer by 11:45 am").
+ *   DemoLive.tally(name) -> n      counts one answer for a side ('kitchen', 'desk') in the store and returns the new total; .tallies() -> { kitchen: n, desk: n }. The counters
+ *                                  "answered" use it, so they do not shrink when old records are tidied away.
  *   DemoLive.clear()               removes every pretend record and forgets the run (the choices on/off, speed and times stay). The tour and the tests use it.
  *
  * THE RECORDS (the pretend families are in the normal lists; every record has live: true, fam: "Dana's family", ev: <event number>; ids have an L: vL3, oL3, rL3, mL3, pL3, rvL3):
@@ -518,8 +521,17 @@
       return false;
     }
     function time() { var l = L(); return timeAt(l, now()); }
-    function clock() { var l = L(); return tstr(clockMin(l, timeAt(l, now()))); }
+    function clock() {   // before the first start: the real farm clock; after it: the pretend one
+      var l = L();
+      if (l.baseMin === undefined) return Data.farmParts(new Date(now())).time;
+      return tstr(clockMin(l, timeAt(l, now())));
+    }
     function today() { var l = L(); return l.baseDate || Data.farmParts(new Date(now())).date; }
+    function clockAt(t) { return tstr(clockMin(L(), t)); }
+    function tally(name) {
+      return store.transact(function (st) { var l = live(st); l.tally = l.tally || {}; l.tally[name] = (l.tally[name] || 0) + 1; return l.tally[name]; });
+    }
+    function tallies() { return clone(L().tally || {}); }
     function onEvent(fn) { hook(); listeners.push(fn); return function () { listeners = listeners.filter(function (f) { return f !== fn; }); }; }
     function subscribe(fn) { hook(); subs.push(fn); return function () { subs = subs.filter(function (f) { return f !== fn; }); }; }
     function feed(n) { return clone((L().feed || []).slice(0, n || 8)); }
@@ -575,7 +587,7 @@
     }
 
     var inst = {
-      start: start, stop: stop, isOn: isOn, setSpeed: setSpeed, speed: speed, speeds: SPEEDS, tick: tick, time: time, clock: clock, today: today, run: run,
+      start: start, stop: stop, isOn: isOn, setSpeed: setSpeed, speed: speed, speeds: SPEEDS, tick: tick, time: time, clock: clock, clockAt: clockAt, today: today, run: run, tally: tally, tallies: tallies,
       onEvent: onEvent, subscribe: subscribe, feed: feed, stats: stats, settings: settings, setSettings: setSettings, watch: watch, unwatch: unwatch, clear: clear,
       strip: function (o) { return buildStrip(inst, o); }
     };
@@ -659,7 +671,7 @@
   /* ------------------------------------------------------------------ *
    * The page's engine: made on first use, on the page's own store
    * ------------------------------------------------------------------ */
-  var NAMES_OUT = ['start', 'stop', 'isOn', 'setSpeed', 'speed', 'tick', 'time', 'clock', 'today', 'run', 'onEvent', 'subscribe', 'feed', 'stats', 'settings', 'setSettings', 'watch', 'unwatch', 'clear', 'strip'];
+  var NAMES_OUT = ['start', 'stop', 'isOn', 'setSpeed', 'speed', 'tick', 'time', 'clock', 'clockAt', 'today', 'run', 'tally', 'tallies', 'onEvent', 'subscribe', 'feed', 'stats', 'settings', 'setSettings', 'watch', 'unwatch', 'clear', 'strip'];
   var api = { create: create, SPEEDS: SPEEDS, speeds: SPEEDS, DEFAULTS: DEFAULTS, GAP: GAP, stream: stream };
   var theOne = null;
   function the() {
