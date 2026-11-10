@@ -24,6 +24,7 @@ except these three, which the pages of the pretend account demo use (docs/ACCOUN
   scripts: js/demo-data.js ...  scripts for this page only, loaded after the site's own footer scripts, in this order (spaces between them; each must be a file in js/)
 The share picture's size is read from the file itself. The home page's picture and its description live in index.html (og:image, og:image:alt).
 The farm map's scripts (js/map-art.js, js/farm-map-data.js) are added only to a page whose source contains data-farm-map.
+The Store's pop-up scripts (js/shop-pop.js, js/shop-sample.js) stay on the home page, the only page with a Store.
 
 To keep the pages light for slow phones this also writes, from the same sources:
   - js/footer-art.js   the few lines of js/hero.js that draw the footer's row of crops (generated: edit js/hero.js, not this file). The extra pages load it instead
@@ -407,6 +408,7 @@ def compose(c, slug, meta, body):
         extra, ld = '\n  <meta name="robots" content="noindex">', ''
     # The farm map's drawing code and points are only loaded by a page that has a map (data-farm-map).
     scripts = [s for s in c['scripts'] if 'data-farm-map' in body or not re.search(r'js/(map-art|farm-map-data)\.js', s)]
+    scripts = [s for s in scripts if not re.search(r'js/shop-(pop|sample)\.js', s)]   # the Store (and so its pop-up) is on the home page only
     # A page without the hero picture does not need the hero engine, only its footer art (js/footer-art.js, written below by main()).
     if 'id="hero-scene"' not in body and os.path.exists(os.path.join(JS_DIR, 'hero.js')):
         scripts = [s.replace('js/hero.js', FOOTER_ART) for s in scripts]
