@@ -654,6 +654,7 @@
       known: null,         // the keys of the rail at the last drawing (null before the first)
       starts: {},          // key -> the pretend time a ticket of the signed-in family was first seen
       current: null,       // the key of the ticket the keys act on
+      chosen: false,       // true once a person has put the focus in a ticket: then the marked ticket stays where they put it; until then it is always the first ticket of the list
       pending: undefined,  // the key to give the focus after the next drawing ("keep rolling"); null = the rail is empty
       late: {},            // key -> true once a ticket has run out of time
       tm: {},              // key -> { left, late } at the last second
@@ -905,6 +906,7 @@
         var base = startPickup(t);
         ui.edit[t.key] = { base: base, pickup: base, note: '' };
         ui.current = t.key;
+        ui.chosen = true;
         sync();
       }
       var el = els[t.key], spin = el && el.querySelector('.kit-spin');
@@ -984,7 +986,7 @@
       answers.appendChild(ansBtn(t, 'later', '3 S', 'Another time', 'clock', 'kit-change', titleId));
       li.appendChild(h('div', { 'class': 'kit-t-body' }, info, answers));
       if (ed) li.appendChild(buildEditor(t, ed));
-      li.addEventListener('focusin', function () { setCurrent(t.key); });
+      li.addEventListener('focusin', function () { ui.chosen = true; setCurrent(t.key); });
       return li;
     }
 
@@ -1134,7 +1136,7 @@
         }
       }
       if (newLate.length) say(newLate.length === 1 ? 'Order ' + newLate[0].num + ' is late.' : newLate.length + ' orders are late.');
-      if (moved && ui.rail.length && !ui.current) setCurrent(ui.rail[0].key);
+      if (moved && ui.rail.length && (!ui.current || !ui.chosen)) { setCurrent(ui.rail[0].key); if (els[ui.current]) els[ui.current].classList.add('kit-current'); }   // nobody chose a ticket: the marked one is the first, and a ticket that turned late is now the first
       // the gentle beep: when a ticket has just turned late, and again every few seconds while any is late; never while the pretend clocks are stopped
       var t0 = nowMs();
       if (sound.isOn() && running && !document.hidden && lateNow && (newLate.length || t0 - ui.lastBeep >= BEEP_EVERY)) { sound.beep(); ui.lastBeep = t0; }
@@ -1183,8 +1185,10 @@
       var more = done.length - ui.done.length;
       parts.doneMore.hidden = more <= 0;
       parts.doneMore.textContent = more > 0 ? 'and ' + more + ' more' : '';
-      if (!ui.current || !byKey[ui.current]) setCurrent(ui.rail.length ? ui.rail[0].key : null);
-      else if (els[ui.current]) els[ui.current].classList.add('kit-current');
+      var marked = (!ui.current || !byKey[ui.current] || !ui.chosen) ? (ui.rail.length ? ui.rail[0].key : null) : ui.current;   // the ticket the keys act on: the one a person chose, else the first
+      if (!marked) ui.chosen = false;
+      setCurrent(marked);
+      if (marked && els[marked]) els[marked].classList.add('kit-current');
       // new tickets: one soft chime and a word for a screen reader (not for the first drawing)
       var keys = ui.rail.map(function (t) { return t.key; });
       if (ui.known) {
