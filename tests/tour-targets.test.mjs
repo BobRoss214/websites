@@ -28,7 +28,8 @@
  *   button must leave the whole page in that season, every phrase the card puts in double curly quotes (“...”) must be written in the lit box, the buttons must show
  *   different things, and after() must put the words of the lit box and the whole page (season, open tabs, the lines of a season, the parts that follow the clock)
  *   back as they were. A "Month day" in the card of a season must be the first or the last day of that season in js/season.js.
- *   The Store's "Prices coming soon" cards must be exactly the ones that chapters 7 and 11 name, and a number that a text quotes from the page ("Fifteen
+ *   The Store's "Prices coming soon" cards: chapter 11 must name every one (it is the full list), chapter 7 must name the cards of the pantry group that show the label (and the
+ *   number it says, "Two pantry cards", must be the page's own), and neither may name a card that has a price; a number that a text quotes from the page ("Fifteen
  *   common questions") must be the page's own.
  *   WA_WORDS_ONLY=1 node tests/tour-targets.test.mjs runs only the first part (no browser, about a second); WA_TOUR_ONLY=3,ch2-game limits the walks to
  *   chapter 3 and the step ch2-game. */
@@ -282,6 +283,10 @@ const IN_PAGE = `(() => {
     soonCards() {
       return Array.from(document.querySelectorAll('.shop-card')).filter((c) => c.querySelector('.shop-soon')).map((c) => (c.querySelector('.shop-name') || {}).textContent.trim());
     },
+    soonCardsIn(sel) {   // the same, inside one group of the Store (chapter 7 lights the pantry group and says how many of its cards wait for a price)
+      const g = document.querySelector(sel);
+      return g ? Array.from(g.querySelectorAll('.shop-card')).filter((c) => c.querySelector('.shop-soon')).map((c) => (c.querySelector('.shop-name') || {}).textContent.trim()) : [];
+    },
   };
 })();`;
 
@@ -505,6 +510,7 @@ else await run('tour-targets', async ({ browser, base, errs }) => {
   const p0 = await open(browser, base, 'index.html', errs, {});
   await putStepsInPage(p0);
   const soon = await p0.evaluate(() => window.__tour.soonCards());
+  const soonPantry = await p0.evaluate(() => window.__tour.soonCardsIn('#shop-pantry'));
   const norm = (t) => String(t).toLowerCase().replace(/&/g, 'and').replace(/[‘’]/g, "'").replace(/\s+/g, ' ');
   const priced = await p0.evaluate(() => Array.from(document.querySelectorAll('.shop-card')).filter((c) => !c.querySelector('.shop-soon')).map((c) => (c.querySelector('.shop-name') || {}).textContent.trim()));
   ok('the Store has cards that say Prices coming soon (' + soon.length + ': ' + soon.join(', ') + ')', soon.length > 0);
@@ -512,11 +518,16 @@ else await run('tour-targets', async ({ browser, base, errs }) => {
     const mine = steps.filter((s) => s.chapter === ch);
     if (!mine.length) { info('chapter ' + ch + ' has no steps here yet: its list of Prices coming soon cards is not checked'); continue; }
     const text = norm(mine.map((s) => s.text).join(' '));
-    const unnamed = soon.filter((n) => {
-      const m = norm(n).match(/^u-pick (.+)$/);
-      return m ? !(text.includes('u-pick') && text.includes(m[1])) : !text.includes(norm(n));
-    });
-    ok('chapter ' + ch + ' names every card that says Prices coming soon', unnamed.length === 0, 'not named: ' + unnamed.join(', '));
+    if (ch === 11) {   // chapter 11 ("Prices to confirm") is the full list of the cards that wait for a price
+      const unnamed = soon.filter((n) => {
+        const m = norm(n).match(/^u-pick (.+)$/);
+        return m ? !(text.includes('u-pick') && text.includes(m[1])) : !text.includes(norm(n));
+      });
+      ok('chapter 11 names every card that says Prices coming soon (it is the full list)', unnamed.length === 0, 'not named: ' + unnamed.join(', '));
+    } else {   // chapter 7 explains the label on the pantry group it lights and names the pantry cards that show it (all of them: its card says how many)
+      const unnamed = soonPantry.filter((n) => !text.includes(norm(n)));
+      ok('chapter 7 names every pantry card that says Prices coming soon (' + soonPantry.join(', ') + ')', soonPantry.length > 0 && unnamed.length === 0, 'not named: ' + unnamed.join(', '));
+    }
     const wrong = priced.filter((n) => text.includes(norm(n)) && !soon.some((c) => norm(c).includes(norm(n)) || norm(n).includes(norm(c))));
     ok('chapter ' + ch + ' does not name a Store card that already has a price', wrong.length === 0, 'named but priced: ' + wrong.join(', '));
   }
@@ -524,6 +535,7 @@ else await run('tour-targets', async ({ browser, base, errs }) => {
   const WORD_NUMBERS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20 };
   const CLAIMS = [
     [/\b(\w+) cards in the Store still say/i, () => soon.length, 'cards in the Store that say Prices coming soon'],
+    [/\b(\w+) pantry cards show it/i, () => soonPantry.length, 'pantry cards that say Prices coming soon'],
     [/\b(\w+) (?:common )?questions are answered/i, '#faq .faq-list > details', 'questions in the FAQ'],
     [/\b(\w+) towns? show/i, '.drive-list > li', 'towns in the drive-time list'],
     [/\b(\w+) pizzas at \$/i, '#menu .menu-list > li', 'pizzas on the menu'],

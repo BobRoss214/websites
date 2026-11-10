@@ -453,7 +453,8 @@
     const out = [];
     if (!curEl || !curEl.isConnected) return out;
     const add = (n, k) => { if (out.length < 400 && shown(n)) { const b = n.getBoundingClientRect(); if (b.width >= 8 && b.height >= 8) out.push({ b, k }); } };
-    [curEl].concat((more || []).map((m) => m.el)).forEach((host) => {
+    const dialog = dialogBox();   // a dialog of the page is open (the Store's pop-up): its buttons are kept clear too, so that its Close buttons stay in sight when the window is too narrow to put the card beside its box
+    [curEl].concat((more || []).map((m) => m.el), dialog ? [dialog] : []).forEach((host) => {
       $$(KEEP_CONTROLS, host).forEach((n) => add(n, 10));
       $$(KEEP_WORDS, host).forEach((n) => add(n, 5));
       const words = doc.createTreeWalker(host, NodeFilter.SHOW_TEXT, null);   // every line of words, lightly (weight 1): when the card has to cover something, it covers blank room before text
@@ -472,6 +473,9 @@
   /* The lit box and the card follow the target while a step shows: one measure per frame, a style change only when something moved. */
   const place = (force) => {
     if (!ui) return;
+    if (ui.box.hasAttribute('inert')) ui.box.removeAttribute('inert');   // a dialog of the page that shuts every other part of the page (the Store's pop-up does) must not shut the tour's own card: Next, Back and Close keep working
+    if (ui.box.getAttribute('aria-hidden') === 'true') ui.box.removeAttribute('aria-hidden');
+    liftDialogs();
     const { box, hole, card } = ui;
     if (view === 'step' && curStep && curStep.target && (!curEl || !curEl.isConnected)) { const again = find(curStep.target); if (again) { curEl = again; curRad = 14; } }   // a re-drawn page part: found again
     let r = null;
@@ -487,7 +491,7 @@
     const pad = (b) => ({ l: b.left - 8, t: b.top - 8, w: b.width + 16, h: b.height + 16 });
     const holes = r ? [pad(r)].concat(more.map((m) => pad(m.r))) : [];   // the lit boxes: the part with 8 px round it, then the others
     const hl = r ? holes[0].l : 0, ht = r ? holes[0].t : 0, hw = r ? holes[0].w : 0, hh = r ? holes[0].h : 0;
-    const dbox = $('.demo-modal-box'), dr = dbox && shown(dbox) ? dbox.getBoundingClientRect() : null;   // a dialog of the page is open (the pretend account's): the card keeps off its box
+    const dbox = dialogBox(), dr = dbox ? dbox.getBoundingClientRect() : null;   // a dialog of the page is open (the pretend account's, the Store's pop-up): the card keeps off its box
     const dk = dr ? [dr.left, dr.top, dr.width, dr.height].map(Math.round).join() : '';
     const mk = more.map((m) => [m.r.left, m.r.top, m.r.width, m.r.height].map(Math.round).join()).join(';');
     const key = [hl, ht, hw, hh, vw, vh, card.offsetWidth, card.offsetHeight].map(Math.round).join() + '|' + dk + '|' + mk;
@@ -648,7 +652,7 @@
     stopTracking(); curStep = null; curEl = null;
     setCard({
       title: 'Your website tour',
-      text: 'This is a tour of your new website. It takes about ' + minutes() + ' minutes. You can stop any time and do the rest later: come back and press "Continue where I stopped". Use Next and Back. Contents lets you jump to any part. Whatever is lit up on the page, you can click and try.' +
+      text: 'This is a tour of your website. It takes about ' + minutes() + ' minutes. You can stop any time and do the rest later: come back and press "Continue where I stopped". Use Next and Back. Contents lets you jump to any part. Whatever is lit up on the page, you can click and try.' +
         (at > 0 ? '\n\nYou stopped at step ' + (at + 1) + ' of ' + steps.length + '.' : ''),
       buttons: [
         at > 0 ? ['Continue where I stopped', () => goTo(at, 1), 'red', true] : null,
@@ -659,7 +663,7 @@
     });
     placed = ''; place(true); setBusy(!ready);
     focusCard();
-    say('Your website tour. This is a tour of your new website. It takes about ' + minutes() + ' minutes.' + (at > 0 ? ' You stopped at step ' + (at + 1) + '.' : ''));
+    say('Your website tour. This is a tour of your website. It takes about ' + minutes() + ' minutes.' + (at > 0 ? ' You stopped at step ' + (at + 1) + '.' : ''));
   };
   const showNote = (title, text) => {
     view = 'note'; stopTracking(); curStep = null; curEl = null;
@@ -697,7 +701,26 @@
    * 8. Open, close, and the keys.
    * ------------------------------------------------------------------ */
   const inTour = (n) => !!(ui && n && ui.box.contains(n));
-  const pageDialog = () => $$('.demo-modal, dialog[open]').some((d) => !inTour(d) && shown(d));   // a dialog of the page (the pretend account's .demo-modal, the photo viewer) is open
+  // A dialog of the page that is open over the tour: the pretend account's .demo-modal, the Store's pop-up (.shop-pop), the photo viewer (dialog[open]) and any other box that says
+  // role="dialog" aria-modal="true" (the tour's own card says it too, and is left out). css/tour.css lifts the first two above the dimmer; liftDialogs() does it for the overlay of any other.
+  const DIALOGS = '.demo-modal, .shop-pop, dialog[open], [role="dialog"][aria-modal="true"]';
+  const DIALOG_BOXES = '.demo-modal-box, .shop-pop-box, [role="dialog"][aria-modal="true"]';   // the box that holds the words: the card keeps off it
+  const pageDialog = () => $$(DIALOGS).some((d) => !inTour(d) && shown(d));
+  const dialogBox = () => $$(DIALOG_BOXES).find((d) => !inTour(d) && shown(d)) || null;
+  let lifted = [];   // the page's overlays that carry the class wa-tour-lift now (css/tour.css puts them above the dimmer)
+  const liftDialogs = () => {   // the overlay of a dialog the tour does not know by name (a box straight under <body>, fixed over the page) is lifted above the dimmer too, and let go when the dialog is gone
+    const now = [];
+    $$('[role="dialog"][aria-modal="true"]').forEach((d) => {
+      if (inTour(d) || !shown(d)) return;
+      let top = d;
+      while (top.parentElement && top.parentElement !== doc.body) top = top.parentElement;
+      if (top !== doc.body && now.indexOf(top) < 0) now.push(top);
+    });
+    lifted.forEach((n) => { if (now.indexOf(n) < 0) n.classList.remove('wa-tour-lift'); });
+    now.forEach((n) => n.classList.add('wa-tour-lift'));
+    lifted = now;
+  };
+  const dropLifts = () => { lifted.forEach((n) => n.classList.remove('wa-tour-lift')); lifted = []; };
   const openNow = () => $$('[aria-expanded="true"]').some((b) => !inTour(b));   // a menu or list of the page is open: it keeps its own Esc
   const reachable = () => {   // what Tab can reach: the card's buttons, and (when the page may be used) what is inside the lit box
     const mine = $$('button:not([disabled])', ui.card).filter((b) => !b.hidden);
@@ -857,6 +880,7 @@
       doc.removeEventListener('submit', onForm, true);
       doc.removeEventListener('submit', onFormLate, false);
       root.classList.remove('wa-tour-open');
+      dropLifts();
       clearTimeout(backTimer);
       clearTimeout(flashTimer);
       clearTimeout(glide);
