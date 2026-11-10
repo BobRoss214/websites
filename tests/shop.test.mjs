@@ -295,10 +295,10 @@ function readLayout(SEL) {
   const type = { name: minPx(SEL.name), price: minPx(SEL.hand), note: minPx(SEL.note) };
   return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, flow, touching, outside, ragged, farm, broken, type };
 }
-function readFill(SEL) {   // how much of each card's white box its own content covers: from the top of its first part (picture, name and price, note) to the bottom of its last, over the height of the card inside its border; and, for a wide card, how far across its width the picture and the words run (a note's box always runs to the card's edge, so the words themselves are measured)
+function readFill(SEL) {   // (the transparent button.shop-open of the pop-up covers the whole card: it is not content and is skipped, or every card would read 100%)  how much of each card's white box its own content covers: from the top of its first part (picture, name and price, note) to the bottom of its last, over the height of the card inside its border; and, for a wide card, how far across its width the picture and the words run (a note's box always runs to the card's edge, so the words themselves are measured)
   return [...document.querySelectorAll('#shop ' + SEL.card)].filter((c) => c.getClientRects().length).map((c) => {
     let top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity;
-    for (const k of c.children) { const r = k.getBoundingClientRect(); if (r.height < 1) continue; top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); }
+    for (const k of c.children) { if (k.classList.contains('shop-open')) continue; const r = k.getBoundingClientRect(); if (r.height < 1) continue; top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); }
     const tw = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
     for (let n = tw.nextNode(); n; n = tw.nextNode()) {
       if (!n.data.trim()) continue;
