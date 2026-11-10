@@ -335,6 +335,9 @@
     const liveApi = () => { const L = window.DemoLive; return L && typeof L === 'object' ? L : null; };   // the pretend rush's engine, when the page has it
     const liveOn = () => { const L = liveApi(); try { return !!(L && typeof L.isOn === 'function' && L.isOn()); } catch (e) { return false; } };
     const baseTitle = doc.title;
+    // The engine keeps a count of the answers given on this desk (DemoLive.tally) that does not shrink when it tidies old pretend records away; "Answered today" is never less than it.
+    const tallied = () => { const L = liveApi(); try { return L && typeof L.tallies === 'function' ? num((L.tallies() || {}).desk) : 0; } catch (e) { return 0; } };
+    const countAnswer = () => { const L = liveApi(); try { if (L && typeof L.tally === 'function') L.tally('desk'); } catch (e) { /* the count is only a help */ } };
 
     root.textContent = '';
     root.classList.add('ds');
@@ -507,6 +510,7 @@
         return;
       }
       delete ui.val['note:' + r.id];
+      countAnswer();
       say(how === 'yes' ? 'Sent: you said Yes to ' + whoOf(r) + '.' : how === 'no' ? 'Sent: you said No to ' + whoOf(r) + '.' : 'Sent: you suggested ' + (suggestion && suggestion.summary) + '.');
     }
 
@@ -645,6 +649,7 @@
             if (!text) { say('Write a few words first.'); const box = doc.getElementById('reply-' + t.id); if (box) box.focus(); return; }
             ui.focus = focusAfter('t:' + t.id, ui.waitKeys, 'waiting'); delete ui.val['reply:' + t.id];
             S.post(t.id, 'cathy', text);
+            countAnswer();
             say('Sent: your reply to ' + who + '.');
           }, { 'aria-describedby': hid, 'data-focus': 'send-t:' + t.id })
         ]));
@@ -678,6 +683,7 @@
           ui.focus = focusAfter(it.coll + it.id, ui.apprKeys, 'approvals');
           if (it.coll === 'reviews') S.decideReview(it.id, ok);
           else S.decidePhoto(it.id, ok);   // both tell the family (the store makes the notice)
+          countAnswer();
           say(ok ? 'Approved.' : 'Not now.');
         };
         card.appendChild(el('div', { class: 'ds-actions' }, [
@@ -865,13 +871,14 @@
      * The live parts: the feed ("just now: ..."), the counters, the clock, the "new" button, the title
      * ---------------------------------------------------------------- */
     // How many things Mrs. Cathy answered today: requests (the store stamps reply.at), replies to a question (her message right after a family message), and photos and reviews
-    // (the store stamps decided). Counted from the store, so every tab and every reload says the same.
+    // (the store stamps decided). Counted from the store, so every tab and every reload says the same; the engine's tally of the answers given on this desk keeps it from shrinking
+    // when the engine tidies old pretend records away.
     function answeredToday() {
       let n = 0;
       st.requests.forEach((r) => { if ((r.to === 'cathy' || r.to === 'farm') && r.reply && dayOf(r.reply.at) === st.today) n++; });
       threadsOf(st).forEach((t) => t.msgs.forEach((m, i) => { if (i > 0 && m.from === 'cathy' && t.msgs[i - 1].from === 'family' && dayOf(m.at) === st.today) n++; }));
       approvalItems(st).forEach((a) => { if (a.status !== 'waiting' && dayOf(a.decided) === st.today) n++; });
-      return n;
+      return Math.max(n, tallied());
     }
 
     // Every line the feed could show, oldest first: what arrived and what was answered, each with the words of one plain line. A line is named by what it is about
