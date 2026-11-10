@@ -37,10 +37,10 @@
 .ds-live-strip{margin:0 0 18px}
 .ds-live-strip .dl-strip{margin:0}
 .ds-live .ds-tiles{margin:0}
-.ds-feed-h{display:flex;align-items:center;gap:8px;margin:22px 0 10px;font-size:1.3rem}
+.ds-feed-h{display:flex;align-items:center;gap:8px;margin:18px 0 8px;font-size:1.3rem}
 .ds-feed-empty{margin:18px 0 0}
-.ds-feed{display:grid;gap:8px;margin:0;padding:0;list-style:none}
-.ds-feed-line{display:grid;grid-template-columns:6.4em minmax(0,1fr);align-items:baseline;gap:2px 14px;padding:9px 16px 9px 24px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:inset 9px 0 0 var(--sun);font-weight:700}
+.ds-feed{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.ds-feed-line{display:grid;grid-template-columns:6.4em minmax(0,1fr);align-items:baseline;gap:2px 14px;padding:7px 16px 7px 24px;background:#fff;border:2.5px solid var(--ink);border-radius:16px;box-shadow:inset 9px 0 0 var(--sun);font-weight:700}
 .ds-feed-line.ds-f-good{box-shadow:inset 9px 0 0 var(--leaf)}
 .ds-feed-line.ds-f-no{box-shadow:inset 9px 0 0 var(--red)}
 .ds-feed-line.ds-f-plain{box-shadow:inset 9px 0 0 var(--sky)}
