@@ -1,6 +1,6 @@
 {
  "_about": "Made by tests/shop-list.make.mjs from the farm's products list (work-notes/SHOP-LIST.md). Do not edit by hand: change the list, then run  node tests/shop-list.make.mjs work-notes/SHOP-LIST.md",
- "_source": {"file":"SHOP-LIST.md","sha256":"8bbea728362a8bb5f2de6c8e968be74ea003b337f685233882b5bc4689ddea9d"},
+ "_source": {"file":"SHOP-LIST.md","sha256":"8f1ba69b9d29927cf380911763d35fe8a3eca4a724294b05070863a225fe1c9f"},
  "unknownWords": "Prices coming soon",
  "names": ["Tobacco Barn","Christmas Hearth","Apple Harvest","Kokomo","Oskars Blues","Southern Range","NODA","Triple C","Wise Man","Red clay","Bev (Gris)","Glitz","Noblio","Franciscan","NA Brooklyn","Dales light lager","Blood orange wheat","Hop drop","Kei Truck","Oktoberfest","3C","Planet Pulp IPA","Hoppy Amber","Loyal to the dream","Shape shifter pumpkin spice","Peach crumble","Brambling blackberry","Pinot Grigio","Sauvignon blanc","Cabernet Sauvignon"],
  "loanwords": [{"lang":"vi","word":"pound","why":"the Vietnamese texts of the tomato prices use \"mỗi pound\"; the Shop uses the same words (the same text block)"}],
@@ -46,7 +46,7 @@
   {"slug":"oktoberfest","group":5,"name":"Oktoberfest","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"Amber lager with German malts and hops, 5.5% ABV.","noteAmounts":[],"symbols":["p-oktoberfest"],"noAgeStatement":true,"noLettering":true},
   {"slug":"three-c-ipa","group":5,"name":"3C","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"West coast style IPA, 6.2% ABV.","noteAmounts":[],"symbols":["p-three-c-ipa"],"noAgeStatement":true,"noLettering":true},
   {"slug":"planet-pulp-ipa","group":5,"name":"Planet Pulp IPA","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"Tropical IPA, 6.5% ABV.","noteAmounts":[],"symbols":["p-planet-pulp-ipa"],"noAgeStatement":true,"noLettering":true},
-  {"slug":"hoppy-amber","group":5,"name":"Hoppy Amber","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"NA Brooklyn.","noteAmounts":[],"symbols":["p-hoppy-amber"],"noAgeStatement":true,"noLettering":true},
+  {"slug":"hoppy-amber","group":5,"name":"Hoppy Amber","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"NA Brooklyn. Non-alcoholic.","noteAmounts":[],"symbols":["p-hoppy-amber"],"noAgeStatement":true,"noLettering":true,"says":["Non-alcoholic."]},
   {"slug":"loyal-to-the-dream","group":5,"name":"Loyal to the dream","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"Wise Man. Light lager, 5.5% ABV.","noteAmounts":[],"symbols":["p-loyal-to-the-dream"],"noAgeStatement":true,"noLettering":true},
   {"slug":"shape-shifter-pumpkin-spice","group":5,"name":"Shape shifter pumpkin spice","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"Blonde, 5.5% ABV.","noteAmounts":[],"symbols":["p-shape-shifter-pumpkin-spice"],"noAgeStatement":true,"noLettering":true},
   {"slug":"peach-crumble-cider","group":5,"name":"Peach crumble","price":"$6","unknown":false,"free":false,"amounts":[6],"options":[],"unit":"","note":"6.5% ABV.","noteAmounts":[],"symbols":["p-peach-crumble-cider"],"noAgeStatement":true,"noLettering":true},

@@ -12,7 +12,7 @@
  *      shows both ends), a price the farm has not confirmed shows the page's own "Prices coming soon" and no dollar sign, free things say free, and no
  *      number appears that the list does not give (the pizza prices and hours and the barrel train's age are the farm's older words and are in the list; the
  *      wagon ride's age, 3 and younger ride free, is the site builder's of Nov 3 2026 and the card must say it word for word);
- *      the sentences the list makes a card say are there (the pretzel's nuts, the pumpkin note), the sentences it makes a whole group say are there (Beer, cider & wine:
+ *      the sentences the list makes a card say are there (the pretzel's nuts, the pumpkin note, "Non-alcoholic." for Hoppy Amber), the sentences it makes a whole group say are there (Beer, cider & wine:
  *      its note "the same price" and the line about not bringing your own alcohol, which is no longer in Drinks), a group the list gives no place line has none,
  *      and the words that were taken out on purpose do not come back
  *   3  the pictures: every <use href="#p-..."> has its <symbol>, none is empty, each card shows the picture of its own product, no picture serves two
@@ -563,7 +563,7 @@ await run('shop', async ({ browser, base, errs }) => {
   ok('2: no number on a card that the list does not give for that product (sizes, counts, ages, dates)', numBad.length === 0, few(numBad));
   ok('2: the list\'s own orders: pizza links to its page and its group shows no clock time but the older page\'s 10 am and 8 pm, beer and wine have no age statement, Christmas trees have only the page\'s own dates', ruleBad.length === 0, few(ruleBad));
   const saysTotal = PRODUCTS.reduce((n, q) => n + (q.says || []).length, 0);
-  ok(`2: the sentences the list makes a card say are on the card (${saysTotal}: the pretzel's nuts, the slushie board note, the pumpkin note, the wagon ride's age, the u-pick dates)`, saysTotal >= 4 && saysBad.length === 0, few(saysBad));
+  ok(`2: the sentences the list makes a card say are on the card (${saysTotal}: the pretzel's nuts, the slushie board note, the pumpkin note, "Non-alcoholic." on NA Brooklyn's Hoppy Amber, the wagon ride's age, the u-pick dates)`, saysTotal >= 4 && saysBad.length === 0, few(saysBad));
   // the sentences the list makes a whole group say (the group's note under its band, a line in its foot), and the words a group must not carry any more
   const gSaysBad = [], gAvoidBad = [];
   for (const g of GROUPS) {

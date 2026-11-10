@@ -53,6 +53,7 @@ const SAYS = {
   'hot-pretzel': ['Caramel Apple contains nuts.'],
   slushie: ['Also on the board with the slushies: organic strawberry lemonade, apple cider'],
   pumpkin: ['Big pumpkins are sold by the pound.', 'Weigh them at the weight station by the barn.', 'On the barn display, each mini pumpkin is $1.50 and each medium pumpkin is $4.00.'],
+  'hoppy-amber': ['Non-alcoholic.'],   // the builder's answer of 10 Nov 2026: NA in "NA Brooklyn" means non-alcoholic, and the card must say so
   'wagon-ride': ['Ages 3 and younger ride free.'],   // the site builder's age since Nov 3 2026 (the farm's older page said 2): the card must carry this sentence, so the old age cannot come back unseen
   upick: ['Every weekend, mid-September through early November.'],   // the site builder's dates since Nov 9 2026 (the farm's older page said late September through October): the same dates as the fall season in js/season.js
 };
