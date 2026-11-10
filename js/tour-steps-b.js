@@ -217,7 +217,7 @@
       id: 'ch7-beer-wine', order: 705, chapter: 7, page: 'index',
       target: '#shop-beerwine .shop-band', skipIfMissing: true,   // the group Beer, cider & wine
       title: 'Beer, cider and wine',
-      text: 'Beer, hard cider and wine have their own group in the Store. Every drink is $6, so visitors know the price before they come. ' +
+      text: 'Beer, cider and wine have their own group in the Store. Every drink is $6, so visitors know the price before they come. ' +
             'The list shows what is pouring, and it can change.'
     },
     {
