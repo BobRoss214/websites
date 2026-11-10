@@ -157,15 +157,6 @@
   const idNum = (id) => { const m = /(\d+)$/.exec(str(id)); return m ? +m[1] : 0; };
   // a few words of a longer text, never cut in the middle of a word
   const shorten = (t, n) => { t = str(t).replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1).replace(/\s+\S*$/, '') + '\u2026' : t; };
-  // "just now", "3 min ago", "1 hr ago", then "today at 2:15 pm" or "Mon, Nov 2 at 2:15 pm": how long ago a stamp was, by the store's own clock (it has whole minutes)
-  function agoText(at, nowStamp, today) {
-    const d = Math.round((nowStamp - stamp(at)) / 60000);
-    if (!wall(at)) return '';
-    if (d <= 0) return 'just now';
-    if (d < 60) return d + ' min ago';
-    if (d < 120) return '1 hr ago';
-    return sentText(at, today);
-  }
 
   /* ------------------------------------------------------------------ *
    * 3. Reading the store   (the ONLY part that knows what the objects look like)
@@ -960,10 +951,7 @@
     function paintPill() {
       const n = ui.pending.length;
       parts.pill.hidden = n === 0;
-      if (n) {
-        parts.pill.textContent = plural(n, 'new card', 'new cards') + ' · Show';
-        parts.pill.setAttribute('aria-label', 'Show the ' + plural(n, 'new card', 'new cards'));
-      }
+      if (n) parts.pill.textContent = 'Show ' + plural(n, 'new card', 'new cards');   // (the words on it are its name for a screen reader too)
     }
     function paintTitle() {   // the tab says how many things wait while the rush is on, so it can be read from another tab or window
       const t = (liveOn() && ui.waitTotal > 0 ? '(' + ui.waitTotal + ') ' : '') + baseTitle;

@@ -136,7 +136,7 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
   const said = await p.evaluate(() => [...document.querySelectorAll('.sr-only[role="status"]')].map((x) => x.textContent));
   ok('the arrivals were said politely in a place of their own, in batches ("New: ..." or "3 new: ... and 2 more.")', said.some((t) => /^(New: |\d+ new: .* and \d+ more\.$)/.test(t)), JSON.stringify(said));
   const pl = await pill(p);
-  ok('the "new" button counts the new cards that are out of sight', /^\d+ new cards? · Show$/.test(pl || '') && (await p.locator('.ds-pill').getAttribute('aria-label')).startsWith('Show the '), String(pl));
+  ok('the "new" button counts the new cards that are out of sight ("Show 3 new cards"; its words are its name)', /^Show \d+ new cards?$/.test(pl || '') && (await p.locator('.ds-pill').getAttribute('aria-label')) === null, String(pl));
   await p.locator('.ds-pill').focus();
   await p.keyboard.press('Enter');
   await settled(p, 300);

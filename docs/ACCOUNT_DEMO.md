@@ -30,7 +30,7 @@ The rush sends the desk a family that asks to move a visit, a question, a photo 
 On a busy desk:
 
 - New cards go to the bottom of **Waiting for you**, oldest first, with a **New** mark for half a minute. The cards you are reading do not move, and a note you are typing keeps its words and its cursor.
-- When new cards arrive out of sight, a small button says how many (**3 new cards · Show**) and takes you to the first one. A screen reader hears the arrivals politely, in batches (one message every four seconds at most). While the rush is on, the title of the browser tab counts what waits, for example `(4) Demo: Mrs. Cathy's desk`. The desk makes no sound.
+- When new cards arrive out of sight, a small button says how many (**Show 3 new cards**) and takes you to the first one. A screen reader hears the arrivals politely, in batches (one message every four seconds at most). While the rush is on, the title of the browser tab counts what waits, for example `(4) Demo: Mrs. Cathy's desk`. The desk makes no sound.
 - **Yes**, **No**, **Suggest another day or time**, **Send reply**, **Approve** and **Not now** work on a pretend family as on a real one. The card leaves the waiting list at once and shows under **Answered** (the latest six). The keyboard focus goes to the next card. A pretend family answers a suggestion by itself a few seconds later, and the card says OK or no thanks.
 - To keep the screen short: at most 24 waiting cards are drawn (a line says how many more wait), "This week" shows five visits a day and says how many more, and the rush keeps only its newest forty things.
 
