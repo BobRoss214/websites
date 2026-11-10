@@ -649,31 +649,27 @@ await run('hero', async ({ browser, base, errs }) => {
   const WINTER_SEEN = [[1920, 1080], [1920, 950], [1440, 900]];   // the whole picture is on the first screen
   const WINTER_LOW = [[1440, 780], [1366, 768], [1280, 720]];   // the bottom of the picture is under the bottom edge of the window: looked at with the page scrolled down to the bottom of the hero
   const WINTER_NEAR = [[1100, 800], [768, 1024], [390, 844], [360, 640]];   // looked at too (nothing is asked of them: see below)
-  const wview = {};
-  for (const [w, h] of [...WINTER_SEEN, ...WINTER_LOW, ...WINTER_NEAR]) {
+  // The picture in a window of this size, at the top of the page or scrolled down to the bottom of the hero (the page has come to rest first: a view taken while it was still moving, as on a busy computer, showed the fires covered).
+  const winterAt = async (w, h, down) => {
     await p.setViewportSize({ width: w, height: h });
-    await p.clock.runFor(300);
-    await p.evaluate(() => scrollTo(0, 0));
-    wview[w + 'x' + h] = await winterView(p);
-    await p.evaluate(() => { const r = document.querySelector('#top').getBoundingClientRect(); scrollTo(0, Math.max(0, r.bottom + scrollY - innerHeight)); });
-    await p.clock.runFor(300);
-    wview[w + 'x' + h + ' down'] = await winterView(p);
-    await p.evaluate(() => scrollTo(0, 0));
-  }
+    await settled(p, 300);
+    await p.evaluate((d) => { const r = document.querySelector('#top').getBoundingClientRect(); scrollTo(0, d ? Math.max(0, r.bottom + scrollY - innerHeight) : 0); }, down);
+    await settled(p, 300);
+    return winterView(p);
+  };
   const treesSeen = (v) => v.trees.filter((t) => t >= 50).length;   // half of the tree on screen and not under the page
   const clear = (a, least) => a.on === 100 && a.free >= least;   // all of the tap area on screen, and a tap lands on the fire or the snowman (at least this share of it), not on a tree, a word, a chip or the card
-  for (const [w, h] of WINTER_SEEN) {
-    const v = wview[w + 'x' + h];
-    ok(`winter, window ${w} x ${h}: both campfires and the snowman are in sight with nothing in front of them, and ${treesSeen(v)} of ${v.trees.length} trees can be seen (at least 13)`, v.fires.length === 2 && v.fires.every((f) => clear(f, 75)) && clear(v.snow, 90) && treesSeen(v) >= 13, JSON.stringify(v));
-  }
-  for (const [w, h] of WINTER_LOW) {
-    const v = wview[w + 'x' + h + ' down'];
-    ok(`winter, window ${w} x ${h}, scrolled down to the bottom of the hero: both campfires and the snowman are in sight with nothing in front of them, and ${treesSeen(v)} of ${v.trees.length} trees can be seen (at least 10)`, v.fires.length === 2 && v.fires.every((f) => clear(f, 75)) && clear(v.snow, 90) && treesSeen(v) >= 10, JSON.stringify(v));
+  const winterGood = (v, least) => v.fires.length === 2 && v.fires.every((f) => clear(f, 75)) && clear(v.snow, 90) && treesSeen(v) >= least;
+  for (const [w, h, down, least] of [...WINTER_SEEN.map(([a, b]) => [a, b, false, 13]), ...WINTER_LOW.map(([a, b]) => [a, b, true, 10])]) {
+    let last = null;
+    await okSoon(`winter, window ${w} x ${h}${down ? ', scrolled down to the bottom of the hero' : ''}: both campfires and the snowman are in sight with nothing in front of them, and at least ${least} of the 16 trees can be seen (half of the tree in sight and not under the page's words, chips or card)`,
+      async () => (last = await winterAt(w, h, down)), (v) => winterGood(v, least));
+    if (last) info(`winter, window ${w} x ${h}${down ? ', scrolled down' : ''}: ${treesSeen(last)} of ${last.trees.length} trees can be seen; campfires ${last.fires.map((f) => f.on + ' % in sight, ' + f.free + ' % free').join(' and ')}; snowman ${last.snow.on} % in sight, ${last.snow.free} % free`);
   }
   // In the narrow windows the picture is cut at the sides (a phone shows the middle 400 of its 1440 units: the fires are at its edges, the snowman is out) and the picker card, which is as wide as it is anywhere, covers more of it:
   // said, not asked
   for (const [w, h] of WINTER_NEAR) {
-    const v = wview[w + 'x' + h + ' down'];
+    const v = await winterAt(w, h, true);
     info(`winter, window ${w} x ${h}, scrolled down: ${treesSeen(v)} of ${v.trees.length} trees can be seen; campfires ${v.fires.map((f) => f.on + ' % in sight, ' + f.free + ' % free').join(' and ')}; snowman ${v.snow.on} % in sight, ${v.snow.free} % free`);
   }
   await p.setViewportSize({ width: 1440, height: 900 });
