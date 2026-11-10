@@ -95,8 +95,9 @@ const homeHtml = read('index.html');
 const shopHtml = homeHtml.slice(homeHtml.indexOf('id="shop"'), homeHtml.indexOf('id="flowers"'));
 const pageSlugs = [...shopHtml.matchAll(/<span class="shop-bubble"><svg[^>]*><use href="#p-([a-z0-9-]+)"\/>/g)].map((m) => m[1]);
 const beerOnPage = BEER.some((s) => pageSlugs.includes(s));
-const PRODUCTS = LIST.products.filter((x) => x.group >= 1 && x.group <= 11 && x.slug !== 'beer-wine');   // beer-wine: the old card, replaced by the beer group (it has no list)
-const EXPECTED = [...PRODUCTS.map((x) => x.slug), ...(beerOnPage ? BEER : [])];
+const FARM = (LIST.groups.find((g) => /^Farm visit/.test(g.name)) || { n: 12 }).n;   // the last group, the farm visit, rides and picking, has no lists (found by its name: the beer group makes the numbers move up by one)
+const PRODUCTS = LIST.products.filter((x) => x.group !== FARM && x.slug !== 'beer-wine');   // beer-wine: the old card, replaced by the beer group (it has no list)
+const EXPECTED = [...new Set([...PRODUCTS.map((x) => x.slug), ...(beerOnPage ? BEER : [])])];
 const SAYS = Object.fromEntries(LIST.products.map((x) => [x.slug, (x.name + ' ' + x.note).toLowerCase()]));
 const FORBIDDEN = /gluten[- ]?free|vegan|dairy[- ]?free|nut[- ]?free|non-?gmo|\bnatural|\blocal|\bfresh|home-?made|hand-?made|organic|\bcure|\bheal|\bboost|immun|\bdetox|\bvitamin|\bprobiotic|antioxidant|\bcalori|\d|\bages? |\byears?\b/i;
 
