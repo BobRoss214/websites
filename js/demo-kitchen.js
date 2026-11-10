@@ -1,24 +1,26 @@
 /* ==========================================================================
    Wise Acres: the pizza KITCHEN screen of the account demo (everything here is PRETEND).
-   Page: kitchen.html (built from pages/kitchen.html). Plan: work-notes/ACCOUNT-DEMO-PLAN.md, "Kitchen".
+   Page: kitchen.html (built from pages/kitchen.html). The look is in css/demo-kitchen.css.
 
-   What it shows: the queue of pizza orders by pick-up time. Each card has the family's name, the pick-up time, the pizzas
-   (type, toppings, gluten-free, vegan), the family's allergy note and flags, and one of four statuses:
-     New / Change waiting for you / Waiting for the family's OK / Confirmed.
-   When the family asks for a change to their pizza order it shows the difference (now -> asked) with three big buttons:
-     Yes (the change goes in), No (the order stays), Change it (the kitchen edits the order and a time and sends it back
-     to the family, who must say OK).
+   What it is: a kitchen display for a busy pizza kitchen. Look, press one key or button, and the next ticket is ready ("keep rolling").
+   Tickets that need an answer sit in ONE rail, late ones on top, then the soonest deadline. A ticket is a new pizza order (answers: Yes confirms it, Another time
+   moves the pick-up) or a change the family asks for (Yes, No, Another time). Each ticket shows a big order number, the family, the pizzas, the pick-up time, the
+   notes, how long it waited and an answer-by countdown (green, amber, red; when it runs out the ticket is LATE, turns red and stays on top).
+   Keys: 1 or Y = Yes, 2 or N = No, 3 or S = Another time, E also opens the editor, Up and Down move between tickets, M mutes. In the small editor: + and - (or Up and
+   Down, Page Up and Page Down) change the time by 5 (15) minutes, Enter sends, Esc cancels. After an answer the next ticket that needs one gets the focus.
+   Sound: off until a person presses Sound; a new ticket makes one soft chime, a late one a gentle beep every few seconds until it is answered (only while the pretend rush
+   is on, because its clocks stand still when it is off). A polite status line (aria-live) tells a screen reader about new tickets, late ones and answers.
+   Counters at the top: waiting, answered (kept by DemoLive.tally) and late; a small pretend clock.
 
-   What it touches: ONLY the store, js/demo-store.js (DemoStore), never browser storage itself. It reads: orders, visits, requests
-   (kind 'pizza-change', to 'kitchen'), family. It writes: DemoStore.reply(id, {answer: 'yes'|'no'|'suggest', note, suggestion}),
-   DemoStore.update('orders', id, {status: 'confirmed'}) and DemoStore.postNotice(text, '#pizza'). The names are in
-   work-notes/ACCOUNT-DEMO-PLAN.md and docs/ACCOUNT_DEMO.md. It listens with DemoStore.subscribe, so a change made in another tab
-   shows at once (the answer buttons, the editor and a note being typed all survive a redraw).
+   Where the tickets come from: the store's orders and 'pizza-change' requests for the kitchen, the signed-in family's AND the pretend families' of the pretend rush
+   (js/demo-live.js: store.list(coll, { live: true })). Answers go through the store only: reply(id, {answer: 'yes' | 'no' | 'suggest', note, suggestion}),
+   update('orders', id, {status: 'confirmed', pickup}) and, for the signed-in family only, postNotice(text, '#pizza'). It listens with DemoStore.subscribe, so a change made
+   in another tab shows at once; the answer-by time of a ticket of the signed-in family starts when the kitchen first sees it (DemoLive.watch).
 
-   Layout of this file:  1 small helpers  2 the model (pure functions of the store's lists; nothing here touches the page, so
-   they can be tried in Node: require('./js/demo-kitchen.js'))  3 the page (DOM builders)  4 the pizza editor for "Change it"
-   (the shared one, DemoPizza.editor from js/demo-pizza-editor.js, the same editor "My pizza" uses)  5 start-up.
-   Tour hooks (invisible): data-tour="kit-queue", "kit-card", "kit-yes", "kit-no", "kit-change", "kit-notes".
+   Layout of this file:  1 small helpers  2 the model (pure functions of the store's lists, the tickets, the timers and the answers; nothing here touches the page, so
+   they can be tried in Node: require('./js/demo-kitchen.js'))  3 the page (DOM builders)  4 the sound  5 the screen  6 start-up.
+   Tour hooks (invisible): data-tour="kit-queue", "kit-card", "kit-yes", "kit-confirm", "kit-no", "kit-change", "kit-answers", "kit-edit", "kit-timer", "kit-counters",
+   "kit-sound", "kit-notes", and "live-control" (the pretend rush strip of js/demo-live.js).
    ========================================================================== */
 (function () {
   'use strict';
@@ -151,14 +153,6 @@
     lines.forEach(function (l) { n += l.count; });
     return n;
   }
-  /** 'Margherita on gluten-free crust with vegan cheese' */
-  function lineLabel(l) {
-    var s = l.name;
-    if (l.glutenFree) s += ' on gluten-free crust';
-    if (l.vegan) s += ' with vegan cheese';
-    return s;
-  }
-
   /** One plain sentence for a whole order: '3 pizzas: 2 Pepperoni, 1 Margherita (gluten-free). Ready at 2:45 pm.' */
   function summarize(order, byId) {
     var lines = orderLines(order, byId), n = countPizzas(lines);
@@ -279,6 +273,7 @@
       plan: plan,
       planSummary: (req.suggestion && req.suggestion.summary) || '',
       replyNote: (req.reply && req.reply.note) || '',
+      arrived: req.arrived,
       last: isOpen(req) ? null : lastWord(req),
       trail: trailOf(req),
       patch: req.patch || {}
@@ -311,7 +306,7 @@
     var cards = (state.orders || []).map(function (order) {
       var visit = visits[order.visitId] || null;
       var req = pickRequest(order.id, state.requests);
-      var lines = orderLines(order, byId);
+      var lines = orderLines(order, byId), pretend = !!order.live;   // a pretend family of the rush: the signed-in family's allergy note is not theirs
       return {
         id: order.id,
         who: String(order.familyName || who),
@@ -321,9 +316,9 @@
         status: statusOf(order, req),
         lines: lines,
         count: countPizzas(lines),
-        allergies: notes.allergies,
-        familyGlutenFree: notes.glutenFree,
-        familyVegan: notes.vegan,
+        allergies: pretend ? '' : notes.allergies,
+        familyGlutenFree: pretend ? false : notes.glutenFree,
+        familyVegan: pretend ? false : notes.vegan,
         orderNote: String(order.notes || '').replace(/^\s+|\s+$/g, ''),
         closed: !!(visit && visit.closed),
         req: req ? reqView(req, order, byId) : null,
@@ -347,8 +342,137 @@
     return { cards: cards, days: days, counts: counts, pizzas: pizzas };
   }
 
+  
+  /* ----------------------------------------------------------------------
+     2b. Tickets, timers, keys and answers (still no page)
+     ---------------------------------------------------------------------- */
+  var SECS = { order: 180, change: 120 };    // the answer-by times when the engine gives none: 3:00 for a new order, 2:00 for a change
+
+  /** 125000 -> '2:05' (rounded up: the last second shows 0:01, never 0:00 before the time is really up) */
+  function fmtClock(ms) { var s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + pad2(s % 60); }
+  /** how long something has waited: 125000 -> '2:05' (rounded down) */
+  function fmtElapsed(ms) { var s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + pad2(s % 60); }
+
+  /** The big order number: the pretend rush gives its orders a number; an order of the signed-in family is 100 plus its own number (o1 is 101). */
+  function orderNum(card) {
+    var n = card.order && card.order.num;
+    if (n) return n;
+    var m = /(\d+)/.exec(String(card.id));
+    return 100 + (m ? +m[1] : 0);
+  }
+  /** "Alex" -> "Alex's family"; a name that already says family stays as it is */
+  function familyLabel(name) {
+    name = String(name || '').replace(/^\s+|\s+$/g, '') || 'A family';
+    return /famil/i.test(name) ? name : name + '’s family';
+  }
+
+  /**
+   * How much time is left. left and total in milliseconds. -> { late, stage: 'green' | 'amber' | 'red', pct (0 to 1), text }
+   * Green while more than half is left, amber from half down to 15 percent, red below that and when the time is up (then it is also late).
+   */
+  function timerOf(left, total) {
+    var late = left <= 0, pct = total > 0 ? Math.max(0, Math.min(1, left / total)) : 0;
+    var stage = late || pct <= 0.15 ? 'red' : pct <= 0.5 ? 'amber' : 'green';
+    return { late: late, stage: stage, pct: pct, text: late ? 'Late ' + fmtClock(-left) : fmtClock(left) + ' left' };
+  }
+
+  /**
+   * The tickets of the screen from the model. Every order of the model is one ticket in a zone:
+   *   'rail'    needs an answer: a new order (key 'o:<order id>') or a change that waits (key 'r:<request id>')
+   *   'family'  the kitchen suggested something and the family has not said OK ('f:<request id>')
+   *   'done'    confirmed (or a change that was answered) ('d:<order id>')
+   *   'hidden'  an order the pretend rush made already confirmed only so that a change could be asked for
+   * opts: { orderSecs, changeSecs } the answer-by times in seconds.
+   */
+  function ticketsOf(model, opts) {
+    opts = opts || {};
+    var secs = { order: opts.orderSecs || SECS.order, change: opts.changeSecs || SECS.change };
+    return model.cards.map(function (c) {
+      var order = c.order || {}, t = {
+        id: c.id, key: '', num: orderNum(c), who: familyLabel(c.who), live: !!order.live, status: c.status, kind: c.status === 'change' ? 'change' : 'order',
+        zone: '', pickup: c.pickup, date: c.date, visitTime: c.visitTime, lines: c.lines, count: c.count, allergies: c.allergies, familyGlutenFree: c.familyGlutenFree,
+        familyVegan: c.familyVegan, orderNote: c.orderNote, closed: c.closed, req: c.req, order: order, visit: c.visit, base: !!order.base, arrived: null, secs: 0
+      };
+      if (c.status === 'change') { t.key = 'r:' + c.req.id; t.zone = 'rail'; t.arrived = c.req.arrived === undefined ? null : c.req.arrived; t.secs = secs.change; }
+      else if (c.status === 'new') { t.key = 'o:' + c.id; t.zone = 'rail'; t.arrived = order.arrived === undefined ? null : order.arrived; t.secs = secs.order; }
+      else if (c.status === 'family') { t.key = 'f:' + c.req.id; t.zone = 'family'; }
+      else { t.key = 'd:' + c.id; t.zone = t.base && !c.req ? 'hidden' : 'done'; }
+      return t;
+    });
+  }
+
+  /** The order of the rail: late tickets first (the one that is most late on top), then the soonest deadline. items: [{ key, late, left, seq }] -> the keys. */
+  function railOrder(items) {
+    return items.slice().sort(function (a, b) {
+      if (a.late !== b.late) return a.late ? -1 : 1;
+      if (a.left !== b.left) return a.left - b.left;
+      return a.seq - b.seq;
+    }).map(function (x) { return x.key; });
+  }
+
+  /** Which ticket gets the focus after `answered` was answered: the next one below it, else the first of the rest (null when nothing is left). */
+  function nextKey(keys, answered) {
+    var i = keys.indexOf(answered);
+    if (i < 0) return keys.length ? keys[0] : null;
+    var rest = keys.slice(i + 1).concat(keys.slice(0, i));
+    return rest.length ? rest[0] : null;
+  }
+
+  /** What a key means on the board: 'yes' | 'no' | 'later' | 'up' | 'down' | 'mute' | null */
+  var KEY_ACTIONS = { '1': 'yes', y: 'yes', '2': 'no', n: 'no', '3': 'later', s: 'later', t: 'later', e: 'later', m: 'mute', arrowdown: 'down', arrowup: 'up' };
+  function actionForKey(key) {
+    var k = String(key === null || key === undefined ? '' : key).toLowerCase();
+    return Object.prototype.hasOwnProperty.call(KEY_ACTIONS, k) ? KEY_ACTIONS[k] : null;
+  }
+
+  /** The time an editor starts from: the time the family asked for, else the order's own pick-up time. */
+  function startPickup(t) { return (t.req && t.req.patch && t.req.patch.pickup) || t.pickup || '12:00'; }
+  /** A pick-up time moved by some minutes, kept inside the day ('12:45' + 10 -> '12:55'). */
+  function moveTime(hhmm, delta) { return fromMinutes(Math.max(0, Math.min(23 * 60 + 55, minutes(hhmm) + delta))); }
+
+  // Did the store take the answer? A request the family cancelled a moment ago (or another tab answered) is not 'waiting' any more, so the reply does nothing:
+  // the request must now say what this answer makes it say.
+  var MADE = { yes: 'yes', no: 'no', later: 'suggested' };
+  function took(store, rid, how) { var now = store.get('requests', rid); return !!now && now.status === MADE[how]; }
+
+  /**
+   * One answer, through the store. t = a ticket of the rail, how = 'yes' | 'no' | 'later', extra = { pickup: 'HH:MM', note }.
+   * -> { ok, closed, text }: text is one plain sentence to say out loud ("Order 204: Yes."). A ticket of a pretend family makes no notice for the family.
+   */
+  function answerTicket(store, t, how, extra, byId) {
+    extra = extra || {};
+    var note = String(extra.note || '').replace(/^\s+|\s+$/g, ''), num = t.num, none = { ok: false, closed: false, text: '' };
+    if (t.kind === 'change' && t.req) {
+      var rid = t.req.id;
+      if (how === 'yes') store.reply(rid, { answer: 'yes', note: note });
+      else if (how === 'no') store.reply(rid, { answer: 'no', note: note });
+      else if (how === 'later' && extra.pickup) {
+        var sug = { pizzas: clone((t.req.patch && t.req.patch.pizzas) || (t.order && t.order.pizzas) || []), pickup: extra.pickup };
+        if (t.req.patch && typeof t.req.patch.notes === 'string') sug.notes = t.req.patch.notes;
+        store.reply(rid, { answer: 'suggest', note: note, suggestion: { patch: sug, summary: summarize(assign({}, t.order, (t.req.patch || {}), sug), byId) } });
+      } else return none;
+      if (!took(store, rid, how)) return { ok: false, closed: true, text: 'That change is already closed. The family may have cancelled it.' };
+      return { ok: true, closed: false, text: 'Order ' + num + ': ' + (how === 'yes' ? 'Yes.' : how === 'no' ? 'No.' : 'another time, ' + time12(extra.pickup) + ', sent to the family.') };
+    }
+    if (t.kind === 'order') {
+      var cur = store.get('orders', t.id);
+      if (!cur || cur.status === 'confirmed') return { ok: false, closed: true, text: 'That order is already confirmed.' };
+      if (how === 'yes') {
+        store.update('orders', t.id, { status: 'confirmed' });
+        if (!t.live) store.postNotice('The kitchen confirmed your pizza order for ' + dayLabel(t.date) + ' at ' + time12(t.pickup) + '.', '#pizza');
+        return { ok: true, closed: false, text: 'Order ' + num + ' confirmed for ' + time12(t.pickup) + '.' };
+      }
+      if (how === 'later' && extra.pickup) {
+        store.update('orders', t.id, { pickup: extra.pickup, status: 'confirmed' });
+        if (!t.live) store.postNotice('The kitchen confirmed your pizza order for ' + dayLabel(t.date) + ' at ' + time12(extra.pickup) + ' instead of ' + time12(t.pickup) + '.' + (note ? ' ' + note : ''), '#pizza');
+        return { ok: true, closed: false, text: 'Order ' + num + ' confirmed for ' + time12(extra.pickup) + ' instead of ' + time12(t.pickup) + '.' };
+      }
+    }
+    return none;
+  }
+
   /* ======================================================================
-     3. The page
+     3. The page: small builders
      ====================================================================== */
   var NS = 'http://www.w3.org/2000/svg';
   var ICONS = {
@@ -359,9 +483,11 @@
     plus: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8v8M8 12h8',
     bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.7 21a2 2 0 0 1-3.4 0',
     clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3.5 2',
-    done: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM7.8 12.4l3 3 5.4-6'
+    done: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM7.8 12.4l3 3 5.4-6',
+    swap: 'M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4',
+    sound: 'M11 5L6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13',
+    mute: 'M11 5L6 9H2v6h4l5 4V5zM22 9l-6 6M16 9l6 6'
   };
-  var STATUS_ICON = { 'new': 'plus', change: 'bell', family: 'clock', confirmed: 'done' };
 
   function icon(name) {
     var svg = document.createElementNS(NS, 'svg');
@@ -403,27 +529,10 @@
     return el;
   }
 
-  /** A real button with an icon and a word. kf = a key that lets the page give focus back after it redraws. */
-  function btn(label, opts) {
-    opts = opts || {};
-    return h('button', {
-      type: 'button',
-      'class': 'btn ' + (opts.cls || 'btn-white') + ' ' + (opts.big ? 'kit-big' : 'kit-small'),
-      'data-tour': opts.tour,
-      'data-kf': opts.kf,
-      'aria-describedby': opts.describedby,
-      disabled: opts.disabled ? '' : null,
-      onclick: opts.onclick
-    }, opts.icon ? icon(opts.icon) : null, h('span', { text: label }));
-  }
-
   function chip(text, cls) { return h('span', { 'class': 'kit-flag' + (cls ? ' ' + cls : ''), text: text }); }
+  function safe(key) { return String(key).replace(/[^\w-]/g, '-'); }
 
-  /* ---------- pieces of a card ---------- */
-
-  function statusChip(status) {
-    return h('p', { 'class': 'kit-status kit-st-' + status }, icon(STATUS_ICON[status]), h('span', { text: STATUS_LABEL[status] }));
-  }
+  /* ---------- pieces of a ticket ---------- */
 
   function flagChips(l) {
     var flags = [];
@@ -450,20 +559,17 @@
     return h('ul', { 'class': 'kit-lines' }, lines.map(lineEl));
   }
 
-  /** The notes box: the family's allergy note and flags, and the order's own note. Always there, so the hook always exists. */
-  function notesEl(card) {
-    var box = h('div', { 'class': 'kit-notes', 'data-tour': 'kit-notes' });
-    box.appendChild(h('h4', { 'class': 'kit-h', text: 'Kitchen notes' }));
-    if (card.allergies) {
-      box.appendChild(h('p', { 'class': 'kit-allergy' }, icon('warn'), h('span', null, h('strong', { text: 'Allergies: ' }), card.allergies)));
-    } else {
-      box.appendChild(h('p', { 'class': 'kit-allergy kit-allergy-none', text: 'No allergies saved.' }));
-    }
+  /** The notes box: the family's allergy note and flags, and the order's own note. Nothing at all for a pretend family that wrote no note. */
+  function notesEl(t) {
     var flags = [];
-    if (card.familyGlutenFree) flags.push(chip('Gluten-free in this family', 'kit-flag-gf'));
-    if (card.familyVegan) flags.push(chip('Vegan in this family', 'kit-flag-vegan'));
+    if (t.familyGlutenFree) flags.push(chip('Gluten-free in this family', 'kit-flag-gf'));
+    if (t.familyVegan) flags.push(chip('Vegan in this family', 'kit-flag-vegan'));
+    if (!t.allergies && !flags.length && !t.orderNote && t.live) return null;
+    var box = h('div', { 'class': 'kit-notes', 'data-tour': 'kit-notes' });
+    if (t.allergies) box.appendChild(h('p', { 'class': 'kit-allergy' }, icon('warn'), h('span', null, h('strong', { text: 'Allergies: ' }), t.allergies)));
+    else if (!t.live) box.appendChild(h('p', { 'class': 'kit-allergy kit-allergy-none', text: 'No allergies saved.' }));
     if (flags.length) box.appendChild(h('p', { 'class': 'kit-flags kit-family-flags' }, flags));
-    if (card.orderNote) box.appendChild(h('p', { 'class': 'kit-order-note' }, h('strong', { text: 'Order note: ' }), card.orderNote));
+    if (t.orderNote) box.appendChild(h('p', { 'class': 'kit-order-note' }, h('strong', { text: 'Note: ' }), t.orderNote));
     return box;
   }
 
@@ -491,304 +597,417 @@
       body));
   }
 
-  function trailEl(req) {
-    if (!req || !req.trail.length) return null;
-    return h('details', { 'class': 'kit-history' },
-      h('summary', { text: 'What happened' }),
-      h('ol', null, req.trail.map(function (t) {
-        return h('li', null, t.at ? h('span', { 'class': 'kit-when', text: t.at }) : null, ' ', t.text);
-      })));
+  /* ======================================================================
+     4. The sound: a soft chime for a new ticket, a gentle beep for a late one. Off until a person presses Sound (browsers do not allow sound before a press).
+     ====================================================================== */
+  function makeSound(w) {
+    var ctx = null, on = false;
+    function context() {
+      if (ctx) return ctx;
+      var AC = w.AudioContext || w.webkitAudioContext;
+      if (!AC) return null;
+      try { ctx = new AC(); } catch (e) { ctx = null; }
+      return ctx;
+    }
+    function note(freq, delay, dur, vol) {   // one soft tone: a sine wave that fades in and out, so nothing clicks or shrieks
+      var c = context();
+      if (!c) return;
+      try {
+        var osc = c.createOscillator(), gain = c.createGain(), t0 = c.currentTime + delay;
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.linearRampToValueAtTime(vol, t0 + 0.04);
+        gain.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+        osc.connect(gain);
+        gain.connect(c.destination);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.05);
+      } catch (e) { /* no sound: the screen works without it */ }
+    }
+    return {
+      supported: function () { return !!(w.AudioContext || w.webkitAudioContext); },
+      isOn: function () { return on; },
+      on: function () {
+        on = true;
+        var c = context();
+        if (c && c.state === 'suspended' && typeof c.resume === 'function') { try { c.resume(); } catch (e) { /* stays quiet */ } }
+        note(784, 0, 0.2, 0.05);
+      },
+      off: function () { on = false; },
+      chime: function () { if (!on) return; note(659, 0, 0.22, 0.06); note(880, 0.18, 0.34, 0.05); },
+      beep: function () { if (!on) return; note(523, 0, 0.3, 0.05); }
+    };
   }
 
   /* ======================================================================
-     4. The pizza editor for "Change it": the shared one (js/demo-pizza-editor.js), the same that "My pizza" uses
+     5. The screen: draws the tickets, answers the family, stays live
      ====================================================================== */
-  function sharedEditor(opts) {
-    if (!(win.DemoPizza && typeof win.DemoPizza.editor === 'function')) return null;
-    return win.DemoPizza.editor(opts);
-  }
+  var BEEP_EVERY = 7000;   // a late ticket beeps again after this many milliseconds, while the sound is on
 
-  /* ======================================================================
-     5. The screen: draws the model, answers the family, stays live
-     ====================================================================== */
   function mount(rootEl, env) {
     var store = env.store, data = env.data || {}, menu = data.PIZZAS || [], byId = menuMap(menu);   // data = DemoPizzaData or DemoData
-    var ui = { drafts: {}, editors: {}, seen: false, prevChange: -1 };
-    var els = {};                // order id -> the card element now on the page
-    var parts = {};              // the fixed parts of the page
-    var unsub = null;
+    var live = env.live || null, sound = env.sound || makeSound(win);
+    var ui = {
+      edit: {},            // ticket key -> { base, pickup, note }: the small editor of a ticket that is open
+      known: null,         // the keys of the rail at the last drawing (null before the first)
+      starts: {},          // key -> the pretend time a ticket of the signed-in family was first seen
+      current: null,       // the key of the ticket the keys act on
+      pending: undefined,  // the key to give the focus after the next drawing ("keep rolling"); null = the rail is empty
+      late: {},            // key -> true once a ticket has run out of time
+      tm: {},              // key -> { left, late } at the last second
+      rail: [], family: [], done: [],
+      lastBeep: 0, says: [], sayTimer: null, answered: 0, seen: false
+    };
+    var els = {}, minis = {}, minisDone = {}, parts = {}, unsub = null, timer = null, stopRun = null;
 
+    function nowT() { return live ? live.time() : 0; }
+    function nowMs() { return new Date().getTime(); }
     function readState() {
+      var all = { live: true };   // the signed-in family's tickets and the pretend families' ones
       return {
-        orders: store.list('orders') || [],
-        visits: store.list('visits') || [],
-        requests: store.list('requests') || [],
+        orders: store.list('orders', all) || [],
+        visits: store.list('visits', all) || [],
+        requests: store.list('requests', all) || [],
         family: store.get('family') || null,
         account: typeof store.current === 'function' ? store.current() : null
       };
     }
 
+    /* ---------- say it out loud: a polite status line, a few words at a time ---------- */
+    function say(text) {
+      if (!text) return;
+      ui.says.push(text);
+      if (!ui.sayTimer) ui.sayTimer = setTimeout(flushSay, 250);
+    }
+    function flushSay() {
+      var q = ui.says;
+      ui.sayTimer = null;
+      ui.says = [];
+      if (!q.length) return;
+      parts.live.textContent = q.length > 3 ? q.length + ' updates. ' + q[q.length - 1] : q.join(' ');
+    }
+
     /* ---------- the fixed frame ---------- */
+    function tally(cls, label) {
+      var num = h('span', { 'class': 'kit-tally-num', text: '0' });
+      return { num: num, el: h('li', { 'class': 'kit-tally-item ' + cls }, num, h('span', { 'class': 'kit-tally-label', text: label })) };
+    }
+    function stepper(which, label) {
+      var key = which === 'order' ? 'orderSecs' : 'changeSecs', val = h('strong', { 'class': 'kit-stepval', text: '' });
+      function shift(d) {
+        if (!live) return;
+        var cur = live.settings()[key], patch = {};
+        patch[key] = cur + d;
+        live.setSettings(patch);
+        sync();
+      }
+      parts['step_' + which] = val;
+      return h('span', { 'class': 'kit-step-group' },
+        h('span', { 'class': 'kit-step-label', text: label }),
+        h('button', { type: 'button', 'class': 'btn btn-white kit-step', 'aria-label': 'Shorter answer-by time for ' + label.toLowerCase() + 's', 'data-kf': 'step-' + which + '-less', onclick: function () { shift(-30); } }, '−'),
+        val,
+        h('button', { type: 'button', 'class': 'btn btn-white kit-step', 'aria-label': 'Longer answer-by time for ' + label.toLowerCase() + 's', 'data-kf': 'step-' + which + '-more', onclick: function () { shift(30); } }, '+'));
+    }
     function frame() {
       rootEl.textContent = '';
       rootEl.classList.add('kit');
       var one = document.querySelector('h1');
       var hasH1 = !!(one && one.getClientRects().length);    // the page's own title (the guard box has one too, but it is hidden in demo mode)
-      parts.head = h('header', { 'class': 'kit-head' },
+      parts.tWait = tally('kit-tally-wait', 'Waiting');
+      parts.tDone = tally('kit-tally-done', 'Answered');
+      parts.tLate = tally('kit-tally-late', 'Late');
+      parts.clockText = h('strong', { 'class': 'kit-clock-time', text: '' });
+      parts.clockNote = h('span', { 'class': 'kit-clock-note', text: '' });
+      parts.soundState = h('span', { 'class': 'kit-sound-state', text: 'Off' });
+      parts.soundIcon = h('span', { 'class': 'kit-sound-icon', 'aria-hidden': 'true' }, icon('mute'));
+      parts.sound = h('button', { type: 'button', 'class': 'btn btn-white kit-sound', 'data-tour': 'kit-sound', 'data-kf': 'sound', 'aria-pressed': 'false', 'aria-describedby': 'kit-sound-note', onclick: toggleSound },
+        parts.soundIcon, h('span', { 'class': 'kit-sound-word', text: 'Sound' }), parts.soundState);
+      parts.top = h('header', { 'class': 'kit-top' },
         hasH1 ? null : h('h1', { 'class': 'demo-h1 kit-title', text: 'Pizza kitchen' }),
-        parts.lead = h('p', { 'class': 'kit-lead' }),
-        parts.banner = h('span', { 'class': 'kit-banner-slot' }),
-        parts.demo = h('p', { 'class': 'kit-demo', text: 'Demo: you are the Wise Pie kitchen.' }));
+        h('ul', { 'class': 'kit-tally', 'data-tour': 'kit-counters', 'aria-label': 'Tickets' }, parts.tWait.el, parts.tDone.el, parts.tLate.el),
+        h('p', { 'class': 'kit-clock' }, h('span', { 'class': 'kit-clock-label', text: 'Clock' }), parts.clockText, parts.clockNote),
+        parts.sound);
+      parts.soundNote = h('p', { 'class': 'kit-soundnote', id: 'kit-sound-note' });
       parts.live = h('p', { 'class': 'sr-only', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });
+      parts.strip = live ? live.strip() : null;
+      parts.settings = live ? h('div', { 'class': 'kit-settings', role: 'group', 'aria-label': 'Answer-by times' },
+        h('span', { 'class': 'kit-settings-title', text: 'Answer by' }), stepper('order', 'New order'), stepper('change', 'Change')) : null;
+      parts.railHead = h('h2', { 'class': 'kit-rail-title', tabindex: '-1', id: 'kit-rail-h' }, 'Needs an answer ', parts.railCount = h('span', { 'class': 'kit-pill', text: '0' }));
+      parts.keys = h('p', { 'class': 'kit-keys' },
+        h('span', { 'class': 'kit-keys-label', text: 'Keys' }),
+        h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: '1' }), ' Yes'),
+        h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: '2' }), ' No'),
+        h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: '3' }), ' Another time'),
+        h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: '↑' }), h('kbd', { 'class': 'kit-key', text: '↓' }), ' Move'));
+      parts.rail = h('ol', { 'class': 'kit-rail kit-queue', 'data-tour': 'kit-queue', 'aria-labelledby': 'kit-rail-h' });
+      parts.calm = h('p', { 'class': 'kit-calm', hidden: '' }, icon('done'), h('span', { text: 'Nothing needs an answer right now.' }));
       parts.empty = h('section', { 'class': 'kit-empty', hidden: '' },
-        h('h2', { text: 'No pizza orders yet' }),
-        h('p', { text: 'When a family orders pizza with their visit, the order shows up here, by pick-up time.' }),
-        h('p', { text: 'To see one now, open the family page and create the sample account. It comes with a pizza order.' }),
-        h('p', null, h('a', { 'class': 'btn btn-red kit-big', href: 'account.html' }, h('span', { text: 'Open the family page' }))));
-      parts.queue = h('div', { 'class': 'kit-queue', 'data-tour': 'kit-queue' });
+        h('h2', { text: 'No tickets right now' }),
+        h('p', { text: 'When a family orders pizza with their visit, or asks for a change, a ticket shows up here.' }),
+        live ? h('p', null, h('button', { type: 'button', 'class': 'btn btn-green kit-big kit-startrush', 'data-kf': 'startrush', onclick: function () { live.start(); } }, icon('plus'), h('span', { text: 'Start the pretend rush' }))) : null,
+        h('p', null, h('a', { 'class': 'btn btn-white kit-big', href: 'account.html' }, h('span', { text: 'Open the family page' }))));
+      parts.famList = h('ol', { 'class': 'kit-minis' });
+      parts.doneList = h('ol', { 'class': 'kit-minis' });
+      parts.famHead = h('h2', { 'class': 'kit-lane-title' }, 'With the family ', parts.famCount = h('span', { 'class': 'kit-pill', text: '0' }));
+      parts.doneHead = h('h2', { 'class': 'kit-lane-title' }, 'Done ', parts.doneCount = h('span', { 'class': 'kit-pill', text: '0' }));
+      parts.famNone = h('p', { 'class': 'kit-lane-none', text: 'Nothing is waiting for a family.' });
+      parts.doneNone = h('p', { 'class': 'kit-lane-none', text: 'Nothing is done yet.' });
+      parts.doneMore = h('p', { 'class': 'kit-lane-more', hidden: '' });
       parts.contact = h('p', { 'class': 'kit-contact' }, CONTACT.label, h('a', { href: CONTACT.href }, CONTACT.email));
-      rootEl.appendChild(parts.head);
+      parts.board = h('div', { 'class': 'kit-board' },
+        h('section', { 'class': 'kit-main-lane', 'aria-labelledby': 'kit-rail-h' }, parts.railHead, parts.keys, parts.calm, parts.rail, parts.empty),
+        h('aside', { 'class': 'kit-side-lanes', 'aria-label': 'Tickets that are not waiting for you' },
+          h('section', { 'class': 'kit-lane kit-lane-family' }, parts.famHead, parts.famNone, parts.famList),
+          h('section', { 'class': 'kit-lane kit-lane-done' }, parts.doneHead, parts.doneNone, parts.doneList, parts.doneMore)));
+      rootEl.appendChild(parts.top);
+      rootEl.appendChild(parts.soundNote);
       rootEl.appendChild(parts.live);
-      rootEl.appendChild(parts.empty);
-      rootEl.appendChild(parts.queue);
+      if (parts.strip) rootEl.appendChild(parts.strip);
+      rootEl.appendChild(parts.board);
+      if (parts.settings) rootEl.appendChild(parts.settings);
       rootEl.appendChild(parts.contact);
     }
 
+    /* ---------- the sound button ---------- */
+    function paintSound() {
+      var on = sound.isOn(), can = sound.supported();
+      parts.sound.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (!can) parts.sound.setAttribute('disabled', ''); else parts.sound.removeAttribute('disabled');
+      parts.soundState.textContent = !can ? 'Not here' : on ? 'On' : 'Off';
+      parts.soundIcon.textContent = '';
+      parts.soundIcon.appendChild(icon(on ? 'sound' : 'mute'));
+      parts.soundNote.textContent = !can ? 'This browser cannot play sounds, so the screen stays quiet.'
+        : on ? 'Sound is on: one soft chime for a new ticket, a gentle beep every few seconds while a ticket is late. Press Sound or the M key to mute.'
+          : 'Sound is off. Press Sound to hear a soft chime for a new ticket and a gentle beep for a late one.';
+    }
+    function toggleSound() {
+      if (sound.isOn()) { sound.off(); say('Sound is off.'); }
+      else { sound.on(); say('Sound is on.'); }
+      paintSound();
+    }
+
+    /* ---------- when a ticket started: its own arrival time (pretend families), else when the kitchen first saw it ---------- */
+    function startOf(t) {
+      if (t.arrived !== null && t.arrived !== undefined) return t.arrived;
+      if (ui.starts[t.key] === undefined) ui.starts[t.key] = live ? live.watch(t.key) : 0;
+      return ui.starts[t.key];
+    }
+
+    /* ---------- the timer of a ticket ---------- */
+    function timerEl(t) {
+      var answerBy = '';
+      if (live && typeof live.clockAt === 'function') answerBy = ' Answer by ' + time12(live.clockAt(startOf(t) + t.secs * 1000)) + '.';
+      return h('div', { 'class': 'kit-timer kit-tm-green', role: 'timer', 'aria-live': 'off', 'data-tour': 'kit-timer' },
+        h('span', { 'class': 'kit-timer-text', text: fmtClock(t.secs * 1000) + ' left' }),
+        h('span', { 'class': 'kit-bar', 'aria-hidden': 'true' }, h('span', { 'class': 'kit-bar-fill' })),
+        h('span', { 'class': 'kit-timer-note', text: '' }),
+        h('span', { 'class': 'sr-only', text: answerBy }));
+    }
+
     /* ---------- answering ---------- */
-    function noteOf(reqId) { return (ui.drafts[reqId] || '').replace(/^\s+|\s+$/g, ''); }
+    function ticketOf(key) {
+      for (var i = 0; i < ui.rail.length; i++) if (ui.rail[i].key === key) return ui.rail[i];
+      return null;
+    }
+    function currentTicket() { return ticketOf(ui.current) || ui.rail[0] || null; }
 
-    function backToCard(orderId) {
+    function run(t, how, extra) {
+      var keys = ui.rail.map(function (x) { return x.key; });
+      ui.pending = nextKey(keys, t.key);
+      var res = answerTicket(store, t, how, extra, byId);
+      if (!res.ok) {
+        ui.pending = undefined;
+        if (res.text) say(res.text);
+        sync();
+        return;
+      }
+      if (live && typeof live.tally === 'function') live.tally('kitchen'); else ui.answered++;
+      delete ui.edit[t.key];
+      say(res.text);
       sync();
-      var el = els[orderId];
-      var t = el && el.querySelector('.kit-card-title');
-      if (t) { try { t.focus({ preventScroll: false }); } catch (e) { t.focus(); } }
     }
 
-    function closedMessage() {
-      if (win.DemoUI && win.DemoUI.toast) win.DemoUI.toast('That request is already closed. The family may have cancelled it.');
+    function trigger(t, act) {
+      if (act === 'later') { openEditor(t); return; }
+      if (act === 'no' && t.kind === 'order') { say('A new order can be confirmed with Yes, or moved to another time.'); return; }
+      run(t, act, {});
     }
 
-    /** Did the store take the answer? (A request the family cancelled a moment ago no longer waits.) */
-    function took(rid) {
-      var now = store.get('requests', rid);
-      return !!now && now.status !== 'waiting';
+    /* ---------- the small editor: another pick-up time and a note; Enter sends, Esc cancels ---------- */
+    function paintEdit(box, t, ed) {
+      var spin = box.querySelector('.kit-spin'), diff = minutes(ed.pickup) - minutes(ed.base), words = '';
+      if (diff) words = span(diff) + (diff < 0 ? ' earlier' : ' later') + ' than ' + time12(ed.base);
+      spin.textContent = time12(ed.pickup);
+      spin.setAttribute('aria-valuenow', String(minutes(ed.pickup)));
+      spin.setAttribute('aria-valuetext', time12(ed.pickup) + (words ? ', ' + words : ''));
+      box.querySelector('.kit-edit-diff').textContent = words || 'Same time as before';
+    }
+    function adjust(t, d) {
+      var ed = ui.edit[t.key], box = els[t.key] && els[t.key].querySelector('.kit-edit');
+      if (!ed || !box) return;
+      ed.pickup = moveTime(ed.pickup, d);
+      paintEdit(box, t, ed);
+    }
+    function closeEditor(t) {
+      delete ui.edit[t.key];
+      sync();
+      var el = els[t.key];
+      if (el) { try { el.focus(); } catch (e) { /* gone */ } }
+    }
+    function sendEditor(t) {
+      var ed = ui.edit[t.key];
+      if (!ed) return;
+      if (ed.pickup === ed.base && !String(ed.note).replace(/\s+/g, '')) { say('Choose another time, or write a note, first.'); return; }
+      run(t, 'later', { pickup: ed.pickup, note: ed.note });
+    }
+    function openEditor(t) {
+      if (!ui.edit[t.key]) {
+        var base = startPickup(t);
+        ui.edit[t.key] = { base: base, pickup: base, note: '' };
+        ui.current = t.key;
+        sync();
+      }
+      var el = els[t.key], spin = el && el.querySelector('.kit-spin');
+      if (spin) { spin.focus(); scrollNear(el); }
+    }
+    function buildEditor(t, ed) {
+      var k = safe(t.key), noteId = 'kit-note-' + k;
+      var spin = h('div', { 'class': 'kit-spin', role: 'spinbutton', tabindex: '0', 'aria-label': 'Pick-up time', 'aria-valuemin': '0', 'aria-valuemax': '1435', 'data-kf': 'spin:' + t.key });
+      var diff = h('span', { 'class': 'kit-edit-diff' });
+      function stepBtn(label, d, aria) {
+        return h('button', { type: 'button', 'class': 'btn btn-white kit-step kit-add', 'aria-label': aria, 'data-kf': 'add' + d + ':' + t.key, onclick: function () { adjust(t, d); spin.focus(); } }, label);
+      }
+      var note = h('input', { type: 'text', id: noteId, 'class': 'kit-input kit-edit-note', maxlength: '140', autocomplete: 'off', 'data-kf': 'note:' + t.key });
+      note.value = ed.note;
+      note.addEventListener('input', function () { ed.note = note.value; });
+      var box = h('div', { 'class': 'kit-edit', 'data-tour': 'kit-edit', role: 'group', 'aria-label': 'Another time for order ' + t.num },
+        h('p', { 'class': 'kit-edit-title', text: 'Another pick-up time' }),
+        h('div', { 'class': 'kit-edit-time' },
+          h('span', { 'class': 'kit-edit-was', text: (t.kind === 'change' ? 'Asked for ' : 'Now ') + time12(ed.base) }),
+          spin, diff),
+        h('div', { 'class': 'kit-edit-steps', role: 'group', 'aria-label': 'Change the time' },
+          stepBtn('−5', -5, 'Take 5 minutes off'), stepBtn('+5', 5, 'Add 5 minutes'), stepBtn('+10', 10, 'Add 10 minutes'), stepBtn('+15', 15, 'Add 15 minutes'),
+          h('button', { type: 'button', 'class': 'btn btn-white kit-step kit-reset', 'data-kf': 'reset:' + t.key, onclick: function () { ed.pickup = ed.base; paintEdit(box, t, ed); spin.focus(); } }, 'Reset')),
+        h('div', { 'class': 'kit-notebox' }, h('label', { 'for': noteId, text: 'Note for the family (you do not have to write anything)' }), note),
+        h('div', { 'class': 'kit-edit-actions' },
+          h('button', { type: 'button', 'class': 'btn btn-green kit-big kit-send', 'data-kf': 'send:' + t.key, onclick: function () { sendEditor(t); } }, icon('check'), h('span', { text: 'Send' }), h('kbd', { 'class': 'kit-key', 'aria-hidden': 'true', text: 'Enter' })),
+          h('button', { type: 'button', 'class': 'btn btn-white kit-big kit-cancel', 'data-kf': 'cancel:' + t.key, onclick: function () { closeEditor(t); } }, icon('x'), h('span', { text: 'Cancel' }), h('kbd', { 'class': 'kit-key', 'aria-hidden': 'true', text: 'Esc' }))),
+        h('p', { 'class': 'kit-hint', text: 'Keys: + or Up adds 5 minutes, - or Down takes 5 away, Enter sends, Esc cancels.' }));
+      box.addEventListener('keydown', function (e) {
+        var tg = e.target, inNote = tg === note, onButton = !!(tg && tg.tagName === 'BUTTON');
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeEditor(t); return; }
+        if (e.key === 'Enter' && !onButton) { e.preventDefault(); e.stopPropagation(); sendEditor(t); return; }
+        if (inNote) return;
+        var d = 0;
+        if (e.key === '+' || e.key === '=' || e.key === 'ArrowUp') d = 5;
+        else if (e.key === '-' || e.key === '_' || e.key === 'ArrowDown') d = -5;
+        else if (e.key === 'PageUp') d = 15;
+        else if (e.key === 'PageDown') d = -15;
+        if (d && !onButton) { e.preventDefault(); e.stopPropagation(); adjust(t, d); }
+      });
+      paintEdit(box, t, ed);
+      return box;
     }
 
-    function answer(card, which) {
-      var rid = card.req.id, note = noteOf(rid);
-      store.reply(rid, { answer: which, note: note });
-      if (!took(rid)) { delete ui.editors[rid]; closedMessage(); backToCard(card.id); return; }
-      var o = store.get('orders', card.id);
-      if (which === 'yes' && o && o.status !== 'confirmed') store.update('orders', card.id, { status: 'confirmed' });
-      delete ui.drafts[rid];
-      delete ui.editors[rid];
-      backToCard(card.id);
+    /* ---------- one ticket of the rail ---------- */
+    function ansBtn(t, act, key, label, ico, tour, titleId) {
+      return h('button', {
+        type: 'button', 'class': 'btn kit-ans kit-ans-' + act, 'data-act': act, 'data-tour': tour, 'data-kf': act + ':' + t.key, 'aria-keyshortcuts': key,
+        'aria-describedby': titleId, onclick: function () { trigger(t, act); }
+      }, icon(ico), h('span', { 'class': 'kit-ans-label', text: label }), h('kbd', { 'class': 'kit-key', 'aria-hidden': 'true', text: key.charAt(0) }));
     }
-
-    function openEditor(card) {
-      var rid = card.req.id;
-      var start = assign({}, card.order, card.req.patch || {});     // the editor starts from what the family asked for
-      start.pizzas = clone(start.pizzas || []);
-      var close = function () { delete ui.editors[rid]; backToCard(card.id); };
-      var form = null;
-      try {
-        form = sharedEditor({
-          order: start, visit: card.visit, mode: 'kitchen',
-          submitLabel: 'Send to the family', cancelLabel: 'Close without sending',
-          onCancel: close,
-          onSubmit: function (patch, summary) {
-            var sug = { pizzas: patch.pizzas, pickup: patch.pickup };
-            if (typeof patch.notes === 'string') sug.notes = patch.notes;
-            store.reply(rid, { answer: 'suggest', note: noteOf(rid), suggestion: { patch: sug, summary: summary || summarize(assign({}, start, sug), byId) } });
-            if (!took(rid)) closedMessage();
-            delete ui.drafts[rid];
-            delete ui.editors[rid];
-            backToCard(card.id);
-          }
-        });
-      } catch (e) { form = null; }
-      if (!form) {
-        form = h('div', { 'class': 'kit-editor-missing' },
-          h('p', { text: 'The pizza editor did not load. Reload this page and try again.' }),
-          btn('Close without sending', { cls: 'btn-white', icon: 'x', kf: 'edclose:' + rid, onclick: close }));
+    function buildTicket(t) {
+      var k = safe(t.key), titleId = 'kit-h-' + k, ed = ui.edit[t.key], today = live ? live.today() : (store.today ? store.today() : '');
+      var li = h('li', { 'class': 'kit-ticket kit-k-' + t.kind + (t.live ? ' kit-pretend' : '') + (ed ? ' kit-editing' : ''), id: 'kit-t-' + k, tabindex: '-1', 'aria-labelledby': titleId, 'data-key': t.key, 'data-tour': 'kit-card', 'data-order': t.id });
+      li.appendChild(h('header', { 'class': 'kit-t-head' },
+        h('h3', { id: titleId, 'class': 'kit-t-title' }, h('span', { 'class': 'kit-num', text: '#' + t.num }), ' ', h('span', { 'class': 'kit-name', text: t.who })),
+        h('p', { 'class': 'kit-kind kit-kind-' + t.kind }, icon(t.kind === 'change' ? 'swap' : 'plus'), h('span', { text: t.kind === 'change' ? 'Change to the order' : 'New order' })),
+        live ? timerEl(t) : null));
+      var info = h('div', { 'class': 'kit-t-info' });
+      var day = t.date && today && t.date !== today ? ' on ' + dayLabel(t.date) : '';
+      info.appendChild(h('p', { 'class': 'kit-pick' }, h('span', { 'class': 'kit-pick-label', text: 'Pick-up' }), h('strong', { 'class': 'kit-pick-time', text: time12(t.pickup) || 'not set' }), day ? h('span', { 'class': 'kit-pick-day', text: day }) : null,
+        h('span', { 'class': 'kit-pick-count', text: plural(t.count, 'pizza', 'pizzas') }),
+        live ? h('span', { 'class': 'kit-waited' }, 'Waited ', h('span', { 'class': 'kit-waited-time', text: '0:00' })) : null));
+      if (t.closed) info.appendChild(h('p', { 'class': 'kit-closed' }, icon('warn'), h('span', { text: 'The farm is closed on this day. This order may move to a new day.' })));
+      if (t.kind === 'change' && t.req) {
+        if (t.req.note) info.appendChild(h('blockquote', { 'class': 'kit-quote' }, h('span', { 'class': 'kit-quote-label', text: 'Their words: ' }), t.req.note));
+        info.appendChild(diffTable(t.req.asked, 'The family asks for'));
+      } else {
+        info.appendChild(linesEl(t.lines));
       }
-      ui.editors[rid] = form;
-      backToCard(card.id);
-      var first = form.querySelector('select, input, textarea, button');
-      if (first) first.focus();
-    }
-
-    function confirmOrder(card) {
-      store.update('orders', card.id, { status: 'confirmed' });
-      store.postNotice('The kitchen confirmed your pizza order for ' + dayLabel(card.date) + ' at ' + time12(card.pickup) + '.', '#pizza');
-      backToCard(card.id);
-    }
-
-    /* ---------- one card ---------- */
-    function buildCard(card) {
-      var titleId = 'kit-t-' + card.id;
-      var li = h('li', { 'class': 'kit-card kit-s-' + card.status, id: 'kit-order-' + card.id, 'data-tour': 'kit-card', 'data-order': card.id });
-      var req = card.req, open = card.status === 'change', waitFam = card.status === 'family';
-      var hasEditor = !!(open && ui.editors[req.id]);
-      var host = li, side = null;
-
-      // a change that waits has two parts side by side on a wide screen: the details on the left, the answer on the right
-      if (open) {
-        li.className += ' kit-rail' + (hasEditor ? ' kit-rail-editing' : '');
-        host = h('div', { 'class': 'kit-main' });
-        side = h('div', { 'class': 'kit-side' });
-        li.appendChild(host);
-        li.appendChild(side);
-      }
-
-      // head: pick-up time, name, status
-      var sub = [plural(card.count, 'pizza', 'pizzas')];
-      if (card.visitTime) sub.push('visit at ' + time12(card.visitTime));
-      if (open && req && req.sent) sub.push('asked at ' + req.sent);
-      host.appendChild(h('header', { 'class': 'kit-card-head' },
-        h('div', { 'class': 'kit-time' }, h('span', { 'class': 'kit-time-label', text: 'Pick-up' }), h('strong', { 'class': 'kit-time-value', text: time12(card.pickup) || 'not set' })),
-        h('div', { 'class': 'kit-who' }, h('h3', { id: titleId, 'class': 'kit-card-title', tabindex: '-1', text: card.who }), h('p', { 'class': 'kit-sub', text: sub.join(' · ') })),
-        open ? null : statusChip(card.status)));
-
-      if (card.closed) {
-        host.appendChild(h('p', { 'class': 'kit-closed' }, icon('warn'), h('span', { text: 'The farm is closed on this day. This order may move to a new day.' })));
-      }
-
-      if (open) {
-        // a change waits: the notes, the family's words and what changes (left); the status and the answer (right)
-        host.appendChild(notesEl(card));
-        var asked = req.asked;
-        var panel = h('div', { 'class': 'kit-request' });
-        if (req.note) panel.appendChild(h('blockquote', { 'class': 'kit-quote' }, h('span', { 'class': 'kit-quote-label', text: 'Their words: ' }), req.note));
-        panel.appendChild(diffTable(asked, 'The family asks for'));
-        panel.appendChild(h('p', { 'class': 'kit-price-note', text: 'The kitchen confirms any price change.' }));
-        host.appendChild(panel);
-
-        var rid = req.id;
-        side.appendChild(statusChip(card.status));
-        var answerBox = h('div', { 'class': 'kit-answer', role: 'group', 'aria-label': 'Answer the family' });
-        var noteId = 'kit-note-' + rid;
-        var noteBox = h('textarea', { id: noteId, 'class': 'kit-input kit-note-input', rows: '2', 'data-kf': 'note:' + rid, placeholder: 'For example: the oven is full then.' });
-        noteBox.value = ui.drafts[rid] || '';
-        noteBox.addEventListener('input', function () { ui.drafts[rid] = noteBox.value; });
-        var noteBlock = h('div', { 'class': 'kit-notebox' }, h('label', { 'for': noteId, text: 'Note for the family (optional)' }), noteBox);
-        if (hasEditor) {
-          answerBox.appendChild(noteBlock);
-          answerBox.appendChild(h('div', { 'class': 'kit-editor-wrap', 'data-req': rid }, h('h4', { 'class': 'kit-h', text: 'Your change' }), ui.editors[rid]));
-        } else {
-          // the three buttons come first (one tap answers); the note, if there is one, is written below and goes with the answer
-          answerBox.appendChild(h('div', { 'class': 'kit-buttons' },
-            btn('Yes', { cls: 'btn-green', big: true, icon: 'check', tour: 'kit-yes', kf: 'yes:' + rid, describedby: titleId, onclick: function () { answer(card, 'yes'); } }),
-            btn('No', { cls: 'btn-white kit-no', big: true, icon: 'x', tour: 'kit-no', kf: 'no:' + rid, describedby: titleId, onclick: function () { answer(card, 'no'); } }),
-            btn('Change it', { cls: 'btn-sun', big: true, icon: 'pencil', tour: 'kit-change', kf: 'change:' + rid, describedby: titleId, onclick: function () { openEditor(card); } })));
-          answerBox.appendChild(h('p', { 'class': 'kit-hint', text: 'Accept it, refuse it, or suggest something else.' }));
-          answerBox.appendChild(noteBlock);
-        }
-        side.appendChild(answerBox);
-        return li;
-      }
-
-      if (waitFam) {
-        li.appendChild(notesEl(card));
-        var plan = req.plan;
-        var box = h('div', { 'class': 'kit-request kit-request-sent' });
-        box.appendChild(h('h4', { 'class': 'kit-h kit-h-request', text: 'Your plan is with the family' }));
-        if (req.replyNote) box.appendChild(h('blockquote', { 'class': 'kit-quote' }, h('span', { 'class': 'kit-quote-label', text: 'You wrote: ' }), req.replyNote));
-        if (plan) box.appendChild(diffTable(plan, 'Your plan'));
-        else if (req.planSummary) box.appendChild(h('p', { text: req.planSummary }));
-        box.appendChild(h('p', { 'class': 'kit-wait', text: 'The family has not answered yet. Nothing changes until they do.' }));
-        box.appendChild(h('p', { 'class': 'kit-wait-link' }, h('a', { 'class': 'kit-link', href: 'account.html#pizza' }, 'See the family\u2019s side')));
-        li.appendChild(box);
-        var tl = trailEl(req); if (tl) li.appendChild(tl);
-        return li;
-      }
-
-      // New or Confirmed: the pizzas and the notes side by side
-      var body = h('div', { 'class': 'kit-body' });
-      var pz = h('div', { 'class': 'kit-pizzas' });
-      pz.appendChild(h('h4', { 'class': 'kit-h', text: 'Pizzas' }));
-      pz.appendChild(linesEl(card.lines));
-      body.appendChild(pz);
-      body.appendChild(notesEl(card));
-      li.appendChild(body);
-
-      if (req && req.last) {
-        var lw = h('div', { 'class': 'kit-last kit-last-' + req.last.kind, role: 'group', 'aria-label': 'Last answer' },
-          h('p', { 'class': 'kit-last-text' }, icon(req.last.kind === 'ok' ? 'check' : 'x'), h('span', { text: req.last.text })),
-          req.last.note ? h('p', { 'class': 'kit-quote kit-quote-inline' }, h('span', { 'class': 'kit-quote-label', text: 'You wrote: ' }), req.last.note) : null);
-        li.appendChild(lw);
-        var tl2 = trailEl(req); if (tl2) li.appendChild(tl2);
-      }
-
-      if (card.status === 'new') {
-        li.appendChild(h('div', { 'class': 'kit-actions' },
-          btn('Confirm order', { cls: 'btn-green', big: true, icon: 'done', tour: 'kit-confirm', kf: 'confirm:' + card.id, describedby: titleId, onclick: function () { confirmOrder(card); } }),
-          h('p', { 'class': 'kit-hint', text: 'Look the order over, then confirm it. The family gets a message.' })));
-      }
+      var notes = notesEl(t);
+      if (notes) info.appendChild(notes);
+      var answers = h('div', { 'class': 'kit-t-answers', role: 'group', 'aria-label': 'Answer order ' + t.num, 'data-tour': 'kit-answers' });
+      answers.appendChild(ansBtn(t, 'yes', '1 Y', 'Yes', 'check', t.kind === 'change' ? 'kit-yes' : 'kit-confirm', titleId));
+      if (t.kind === 'change') answers.appendChild(ansBtn(t, 'no', '2 N', 'No', 'x', 'kit-no', titleId));
+      answers.appendChild(ansBtn(t, 'later', '3 S', 'Another time', 'clock', 'kit-change', titleId));
+      li.appendChild(h('div', { 'class': 'kit-t-body' }, info, answers));
+      if (ed) li.appendChild(buildEditor(t, ed));
+      li.addEventListener('focusin', function () { setCurrent(t.key); });
       return li;
     }
 
-    /* ---------- the parts that change with every update ---------- */
-    function renderHead(model) {
-      var n = model.cards.length;
-      parts.lead.hidden = n > 0;      // with orders on the page the day headings say what the lead would say
-      parts.lead.textContent = n ? '' : 'Wise Pie orders by pick-up time. Answer the family\u2019s pizza change requests here.';
-      parts.banner.textContent = '';
-      if (n) {
-        var c = model.counts.change;
-        if (c) {
-          var first = null;
-          model.cards.forEach(function (x) { if (!first && x.status === 'change') first = x; });
-          parts.banner.appendChild(h('span', { 'class': 'kit-banner kit-banner-alert' }, icon('bell'),
-            h('span', { text: (c === 1 ? '1 change needs' : c + ' changes need') + ' an answer' }),
-            first && model.cards.length > 1 ? h('button', { type: 'button', 'class': 'kit-linkbtn', 'data-kf': 'goto', onclick: function () { var el = els[first.id]; if (el) { el.scrollIntoView(); var t = el.querySelector('.kit-card-title'); if (t) t.focus(); } } }, h('span', { text: 'Go to it' })) : null));
-        } else {
-          parts.banner.appendChild(h('span', { 'class': 'kit-banner kit-banner-calm' }, icon('done'), h('span', { text: 'No answers needed right now' })));
-        }
-      }
+    /* ---------- a small ticket of the side lanes ---------- */
+    function buildMini(t) {
+      var li = h('li', { 'class': 'kit-mini kit-mini-' + t.zone, 'data-key': t.key });
+      var line = t.zone === 'family' ? 'Waiting for the family’s OK' : (t.req && t.req.last ? t.req.last.text.replace(/^You said /, 'Said ').replace(/^The family said /, 'Family said ') : 'Confirmed');
+      li.appendChild(h('p', { 'class': 'kit-mini-head' }, h('strong', { 'class': 'kit-num', text: '#' + t.num }), ' ', h('span', { 'class': 'kit-mini-who', text: t.who })));
+      li.appendChild(h('p', { 'class': 'kit-mini-text', text: time12(t.pickup) + ' · ' + plural(t.count, 'pizza', 'pizzas') }));
+      li.appendChild(h('p', { 'class': 'kit-mini-status' }, icon(t.zone === 'family' ? 'clock' : 'done'), h('span', { text: line })));
+      return li;
     }
 
-    /** Make `parent`'s children be exactly `want`, in order, moving as little as possible (a card that has focus is not touched). */
+    /* ---------- drawing ---------- */
+    /** Make `parent`'s children be exactly `want`, in order, moving as little as possible. */
     function place(parent, want) {
       want.forEach(function (node, i) {
         if (parent.children[i] !== node) parent.insertBefore(node, parent.children[i] || null);
       });
       while (parent.children.length > want.length) parent.removeChild(parent.lastElementChild);
     }
+    function setCurrent(key) {
+      if (ui.current === key) return;
+      if (ui.current && els[ui.current]) els[ui.current].classList.remove('kit-current');
+      ui.current = key;
+      if (key && els[key]) els[key].classList.add('kit-current');
+    }
+    function scrollNear(el) { if (el && typeof el.scrollIntoView === 'function') { try { el.scrollIntoView({ block: 'nearest' }); } catch (e) { el.scrollIntoView(); } } }
 
-    function renderQueue(model) {
-      var empty = !model.cards.length;
-      parts.empty.hidden = !empty;
-      parts.queue.hidden = empty;
-      var alive = {}, sections = [];
-      model.days.forEach(function (day) {
-        var key = day.date || 'none';
-        var sec = parts.queue.querySelector('[data-day="' + key + '"]');
-        if (!sec) {
-          sec = h('section', { 'class': 'kit-day', 'data-day': key },
-            h('h2', { 'class': 'kit-day-title' }), h('ol', { 'class': 'kit-list' }));
+    function ticketSig(t) { return JSON.stringify(t) + (ui.edit[t.key] ? '|ed' : ''); }
+    function drawRail(rail) {
+      var alive = {};
+      var want = rail.map(function (t) {
+        alive[t.key] = true;
+        var sig = ticketSig(t), el = els[t.key];
+        if (!el || el.__sig !== sig) {
+          var fresh = buildTicket(t);
+          fresh.__sig = sig;
+          if (ui.seen && !el) fresh.classList.add('kit-arrive');      // a ticket that arrives after the first drawing lights up for a moment
+          if (el && el.parentNode) el.parentNode.replaceChild(fresh, el);
+          el = els[t.key] = fresh;
         }
-        var title = sec.querySelector('.kit-day-title');
-        var tt = day.label + ' · ' + plural(day.pizzas, 'pizza', 'pizzas');
-        if (title.textContent !== tt) title.textContent = tt;
-        var cards = day.cards.map(function (card) {
-          alive[card.id] = true;
-          var sig = JSON.stringify(card) + '|' + (card.req && ui.editors[card.req.id] ? 'ed' : '');
-          var el = els[card.id];
-          if (!el || el.__sig !== sig) {
-            var fresh = buildCard(card);
-            fresh.__sig = sig;
-            if (ui.seen) fresh.classList.add('kit-flash');      // a card that arrives or changes after the first drawing lights up for a moment
-            if (el && el.parentNode) el.parentNode.replaceChild(fresh, el);
-            el = els[card.id] = fresh;
-          }
-          return el;
-        });
-        place(sec.querySelector('.kit-list'), cards);
-        sections.push(sec);
+        return el;
       });
-      Object.keys(els).forEach(function (id) { if (!alive[id]) delete els[id]; });
-      place(parts.queue, sections);
+      Object.keys(els).forEach(function (key) { if (!alive[key]) delete els[key]; });
+      place(parts.rail, want);
+    }
+    function drawLane(list, items, cache) {
+      var alive = {};
+      var want = items.map(function (t) {
+        alive[t.key] = true;
+        var sig = JSON.stringify([t.key, t.num, t.who, t.pickup, t.count, t.req && t.req.last]), el = cache[t.key];
+        if (!el || el.__sig !== sig) {
+          var fresh = buildMini(t);
+          fresh.__sig = sig;
+          if (el && el.parentNode) el.parentNode.replaceChild(fresh, el);
+          el = cache[t.key] = fresh;
+        }
+        return el;
+      });
+      Object.keys(cache).forEach(function (key) { if (!alive[key]) delete cache[key]; });
+      place(list, want);
     }
 
     /* ---------- focus: keep it where the person was across a redraw ---------- */
@@ -796,62 +1015,205 @@
       var a = document.activeElement;
       if (!a || a === document.body || !rootEl.contains(a)) return null;
       var key = a.getAttribute && a.getAttribute('data-kf');
-      var info = { el: a, key: key };
+      var info = { el: a, key: key, ticket: null };
       try { info.start = a.selectionStart; info.end = a.selectionEnd; } catch (e) { /* not a text box */ }
-      // a control inside a pizza editor that is kept: remember which one by its place in that editor
-      var wrap = a.closest ? a.closest('.kit-editor-wrap') : null;
-      if (wrap) {
-        var all = wrap.querySelectorAll('input, select, textarea, button');
-        for (var i = 0; i < all.length; i++) if (all[i] === a) { info.edIndex = i; info.edReq = wrap.getAttribute('data-req'); }
-      }
+      var tk = a.closest ? a.closest('.kit-ticket') : null;
+      if (tk) info.ticket = tk.getAttribute('data-key');
       return info;
     }
     function restore(info) {
       if (!info || document.activeElement === info.el) return;
       var target = null;
       if (info.key) target = rootEl.querySelector('[data-kf="' + info.key.replace(/"/g, '\\"') + '"]');
-      if (!target && info.edIndex !== undefined && info.edReq) {
-        var wrap = rootEl.querySelector('.kit-editor-wrap[data-req="' + info.edReq + '"]');
-        if (wrap) target = wrap.querySelectorAll('input, select, textarea, button')[info.edIndex] || null;
-      }
+      if (!target && info.ticket && els[info.ticket]) target = els[info.ticket];
       if (!target) return;
       try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); }
       if (info.start !== undefined && info.start !== null) { try { target.setSelectionRange(info.start, info.end); } catch (e2) { /* not a text box */ } }
     }
-
-    /* ---------- one pass: read the store, draw what changed ---------- */
-    function announce(model) {
-      var c = model.counts.change;
-      if (ui.prevChange >= 0 && c > ui.prevChange) parts.live.textContent = c === 1 ? 'A change is waiting for you.' : c + ' changes are waiting for you.';
-      ui.prevChange = c;
+    function focusKey(key) {
+      var el = key ? els[key] : null;
+      if (!el && ui.rail.length) el = els[ui.rail[0].key];
+      if (el) { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } scrollNear(el); setCurrent(el.getAttribute('data-key')); }
+      else { try { parts.railHead.focus({ preventScroll: true }); } catch (e2) { parts.railHead.focus(); } }
     }
 
+    /* ---------- the head: counters, clock, which message to show ---------- */
+    function paintHead() {
+      var late = 0;
+      ui.rail.forEach(function (t) { if (ui.tm[t.key] && ui.tm[t.key].late) late++; });
+      var answered = live && typeof live.tallies === 'function' ? (live.tallies().kitchen || 0) : ui.answered;
+      parts.tWait.num.textContent = String(ui.rail.length);
+      parts.tDone.num.textContent = String(answered);
+      parts.tLate.num.textContent = String(late);
+      if (late) parts.tLate.el.classList.add('kit-has-late'); else parts.tLate.el.classList.remove('kit-has-late');
+      parts.railCount.textContent = String(ui.rail.length);
+      parts.famCount.textContent = String(ui.family.length);
+      parts.doneCount.textContent = String(ui.done.length);
+      parts.clockText.textContent = live ? time12(live.clock()) : '';
+      var paused = !!live && !live.isOn();
+      parts.clockNote.textContent = paused ? 'paused' : '';
+      var none = !ui.rail.length && !ui.family.length && !ui.done.length;
+      parts.empty.hidden = !none;
+      parts.calm.hidden = none || !!ui.rail.length;
+      parts.keys.hidden = !ui.rail.length;
+      parts.rail.hidden = !ui.rail.length;
+      parts.famNone.hidden = !!ui.family.length;
+      parts.doneNone.hidden = !!ui.done.length;
+      if (live) {
+        var s = live.settings();
+        parts.step_order.textContent = fmtClock(s.orderSecs * 1000);
+        parts.step_change.textContent = fmtClock(s.changeSecs * 1000);
+      }
+    }
+
+    /* ---------- once a second: the countdowns, the late tickets, the beep ---------- */
+    function paintTimers() {
+      var now = nowT(), running = !!live && live.isOn(), newLate = [], lateNow = 0, moved = false;
+      ui.rail.forEach(function (t) {
+        var el = els[t.key];
+        if (!el || !live) return;
+        var total = t.secs * 1000, waited = now - startOf(t), tm = timerOf(total - waited, total);
+        ui.tm[t.key] = { left: total - waited, late: tm.late, waited: waited };
+        var box = el.querySelector('.kit-timer'), txt = el.querySelector('.kit-timer-text'), fill = el.querySelector('.kit-bar-fill'), wt = el.querySelector('.kit-waited-time'), note = el.querySelector('.kit-timer-note');
+        if (note && note.textContent !== (running ? '' : 'paused (the pretend rush is off)')) note.textContent = running ? '' : 'paused (the pretend rush is off)';
+        if (box) box.className = 'kit-timer kit-tm-' + tm.stage + (tm.late ? ' kit-tm-late' : '');
+        if (txt && txt.textContent !== tm.text) txt.textContent = tm.text;
+        if (fill) fill.style.width = Math.round(tm.pct * 100) + '%';
+        if (wt) wt.textContent = fmtElapsed(waited);
+        if (tm.late) { lateNow++; el.classList.add('kit-late'); if (!ui.late[t.key]) { ui.late[t.key] = true; newLate.push(t); } }
+        else { el.classList.remove('kit-late'); ui.late[t.key] = false; }
+      });
+      if (live) {
+        var order = railOrder(ui.rail.map(function (t, i) { var m = ui.tm[t.key] || { left: t.secs * 1000, late: false }; return { key: t.key, late: m.late, left: m.left, seq: i }; }));
+        var cur = ui.rail.map(function (t) { return t.key; });
+        if (order.join('|') !== cur.join('|')) {
+          var saved = capture();
+          ui.rail = order.map(function (key) { return ticketOf(key); });
+          place(parts.rail, ui.rail.map(function (t) { return els[t.key]; }));
+          restore(saved);
+          moved = true;
+        }
+      }
+      if (newLate.length) say(newLate.length === 1 ? 'Order ' + newLate[0].num + ' is late.' : newLate.length + ' orders are late.');
+      if (moved && ui.rail.length && !ui.current) setCurrent(ui.rail[0].key);
+      // the gentle beep: when a ticket has just turned late, and again every few seconds while any is late; never while the pretend clocks are stopped
+      var t0 = nowMs();
+      if (sound.isOn() && running && !document.hidden && lateNow && (newLate.length || t0 - ui.lastBeep >= BEEP_EVERY)) { sound.beep(); ui.lastBeep = t0; }
+      paintHead();
+    }
+
+    /* ---------- one pass: read the store, draw what changed ---------- */
+    // A change of the store while a pass is drawing (the screen notes when it first saw a ticket, which writes to the store) asks for one more pass after this one,
+    // so a pass is never started inside another.
     function sync() {
+      if (ui.syncing) { ui.again = true; return null; }
+      var model = null;
+      ui.syncing = true;
+      try { model = syncOnce(); } finally { ui.syncing = false; }
+      if (ui.again) { ui.again = false; model = sync(); }
+      return model;
+    }
+    function syncOnce() {
       var saved = capture();
       var model = buildModel(readState(), menu);
-      // an editor belongs to a request that still waits; if the family cancelled it, drop it
-      Object.keys(ui.editors).forEach(function (rid) {
-        var still = model.cards.some(function (c) { return c.req && c.req.id === rid && c.status === 'change'; });
-        if (!still) { delete ui.editors[rid]; delete ui.drafts[rid]; }
+      var s = live ? live.settings() : { orderSecs: SECS.order, changeSecs: SECS.change };
+      var tickets = ticketsOf(model, s);
+      var rail = [], family = [], done = [];
+      tickets.forEach(function (t) {
+        // a ticket of the signed-in family: when the kitchen first saw it, asked of the store on every pass (clear() starts the pretend clock again from 0, and the old time would be wrong)
+        if (t.zone === 'rail' && live && (t.arrived === null || t.arrived === undefined)) ui.starts[t.key] = live.watch(t.key);
+        if (t.zone === 'rail') { startOf(t); rail.push(t); }
+        else if (t.zone === 'family') family.push(t);
+        else if (t.zone === 'done') done.push(t);
       });
-      renderHead(model);
-      renderQueue(model);
-      restore(saved);
-      announce(model);
+      // the rail: late first, then the soonest deadline
+      var now = nowT();
+      var order = railOrder(rail.map(function (t, i) { var total = t.secs * 1000, left = total - (now - startOf(t)); return { key: t.key, late: !!live && left <= 0, left: left, seq: i }; }));
+      var byKey = {};
+      rail.forEach(function (t) { byKey[t.key] = t; });
+      ui.rail = order.map(function (key) { return byKey[key]; });
+      Object.keys(ui.edit).forEach(function (key) { if (!byKey[key]) delete ui.edit[key]; });     // an editor belongs to a ticket that still waits
+      // what the screen remembers about a ticket goes when the ticket leaves the list (after Start over the sample family's ticket has the same key again, and is a new ticket)
+      ['starts', 'late', 'tm'].forEach(function (name) { Object.keys(ui[name]).forEach(function (key) { if (!byKey[key]) delete ui[name][key]; }); });
+      done.sort(function (a, b) { return (b.order.arrived || 0) - (a.order.arrived || 0) || b.num - a.num; });
+      ui.family = family;
+      ui.done = done.slice(0, 6);
+      drawRail(ui.rail);
+      drawLane(parts.famList, ui.family, minis);
+      drawLane(parts.doneList, ui.done, minisDone);   // (each lane has its own cache, or each pass would make both lanes again)
+      var more = done.length - ui.done.length;
+      parts.doneMore.hidden = more <= 0;
+      parts.doneMore.textContent = more > 0 ? 'and ' + more + ' more' : '';
+      if (!ui.current || !byKey[ui.current]) setCurrent(ui.rail.length ? ui.rail[0].key : null);
+      else if (els[ui.current]) els[ui.current].classList.add('kit-current');
+      // new tickets: one soft chime and a word for a screen reader (not for the first drawing)
+      var keys = ui.rail.map(function (t) { return t.key; });
+      if (ui.known) {
+        var fresh = ui.rail.filter(function (t) { return ui.known.indexOf(t.key) < 0; });
+        if (fresh.length) {
+          say(fresh.length === 1 ? (fresh[0].kind === 'change' ? 'Change to order ' + fresh[0].num : 'New order ' + fresh[0].num) + ' from ' + fresh[0].who + ': ' + plural(fresh[0].count, 'pizza', 'pizzas') + ' for ' + time12(fresh[0].pickup) + '.' : fresh.length + ' new tickets.');
+          if (!document.hidden) sound.chime();
+        }
+      }
+      ui.known = keys;
+      if (ui.pending !== undefined) { var want = ui.pending; ui.pending = undefined; focusKey(want); }
+      else restore(saved);
       ui.seen = true;
+      paintTimers();
       return model;
     }
 
+    /* ---------- the keys of the board ---------- */
+    function onKey(e) {
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;   // a key held down answers one ticket, not the whole list
+      var tg = e.target, tag = tg && tg.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tg && tg.isContentEditable)) return;
+      if (tg && tg.closest && (tg.closest('.kit-edit') || tg.closest('[role="dialog"]'))) return;
+      if (document.querySelector('[data-demo-modal]')) return;
+      var act = actionForKey(e.key);
+      if (!act) return;
+      if (act === 'mute') { e.preventDefault(); toggleSound(); return; }
+      if (act === 'up' || act === 'down') {
+        if (!ui.rail.length) return;
+        var i = -1;
+        ui.rail.forEach(function (t, n) { if (t.key === ui.current) i = n; });
+        var next = act === 'down' ? Math.min(ui.rail.length - 1, i + 1) : Math.max(0, i - 1);
+        if (i < 0) next = 0;
+        e.preventDefault();
+        focusKey(ui.rail[next].key);
+        return;
+      }
+      var t = currentTicket();
+      if (!t) return;
+      e.preventDefault();
+      trigger(t, act);
+    }
+
     frame();
+    paintSound();
     sync();
     unsub = store.subscribe(sync);
+    document.addEventListener('keydown', onKey);
     var onVisible = function () { if (!document.hidden) sync(); };
     document.addEventListener('visibilitychange', onVisible);
+    if (live && typeof live.run === 'function') stopRun = live.run();
+    timer = setInterval(paintTimers, 1000);
 
     return {
       sync: sync,
       model: function () { return buildModel(readState(), menu); },
-      destroy: function () { if (unsub) unsub(); document.removeEventListener('visibilitychange', onVisible); rootEl.textContent = ''; }
+      tickets: function () { return ticketsOf(buildModel(readState(), menu), live ? live.settings() : {}); },
+      openEditor: function (key) { var t = ticketOf(key || ui.current) || ui.rail[0]; if (t) openEditor(t); },
+      closeEditors: function () { if (Object.keys(ui.edit).length) { ui.edit = {}; sync(); } },
+      current: function () { return ui.current; },
+      destroy: function () {
+        if (unsub) unsub();
+        if (stopRun) stopRun();
+        if (timer) clearInterval(timer);
+        document.removeEventListener('keydown', onKey);
+        document.removeEventListener('visibilitychange', onVisible);
+        rootEl.textContent = '';
+      }
     };
   }
 
@@ -865,7 +1227,8 @@
   function boot() {
     var rootEl = document.getElementById('kitchen-root');
     if (!rootEl || mounted || !win.DemoStore || !demoOn()) return;
-    mounted = mount(rootEl, { store: win.DemoStore, data: win.DemoPizzaData || win.DemoData });
+    mounted = mount(rootEl, { store: win.DemoStore, data: win.DemoPizzaData || win.DemoData, live: win.DemoLive || null });
+    win.DemoKitchen.screen = mounted;
   }
   if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
@@ -877,7 +1240,9 @@
     boot: boot,
     // the pure part, for tests
     buildModel: buildModel, diff: diff, summarize: summarize, statusOf: statusOf, pickRequest: pickRequest, orderLines: orderLines,
-    time12: time12, dayLabel: dayLabel, minutes: minutes, fromMinutes: fromMinutes, STATUS_LABEL: STATUS_LABEL, CONTACT: CONTACT
+    time12: time12, dayLabel: dayLabel, minutes: minutes, fromMinutes: fromMinutes, STATUS_LABEL: STATUS_LABEL, CONTACT: CONTACT,
+    ticketsOf: ticketsOf, timerOf: timerOf, fmtClock: fmtClock, fmtElapsed: fmtElapsed, railOrder: railOrder, nextKey: nextKey, actionForKey: actionForKey,
+    startPickup: startPickup, moveTime: moveTime, answerTicket: answerTicket, orderNum: orderNum, familyLabel: familyLabel, makeSound: makeSound, BEEP_EVERY: BEEP_EVERY
   };
   win.DemoKitchen = api;
   if (typeof module === 'object' && module && module.exports) module.exports = api;

@@ -1,8 +1,10 @@
 /* ==========================================================================
    Wise Acres: the pizza KITCHEN screen of the account demo (kitchen.html, js/demo-kitchen.js). Pretend, demo mode only.
-   Made for a tablet on a kitchen counter (1024 x 768 first): big type, big buttons (76 px tall), high contrast, plain words.
+   Made for a tablet on a kitchen counter, to be read from 2 metres (1024 x 768 first): big type, big buttons (72 px tall), high contrast, plain words.
    Same look as the rest of the site (ink borders, rounded cards, hard shadows, the site's colours and fonts from css/styles.css).
-   Every class starts with kit- so nothing else on the site is touched. The status never rests on colour alone: each one has its words and its own icon.
+   Every class starts with kit- (the pretend rush strip, dl-, has its own style, added by js/demo-live.js). Nothing here rests on colour alone: the timer says its
+   words ("1:30 left", "Late 0:45"), every status has its words and its icon. Nothing flashes: the one slow pulse of a late ticket is under 1 beat a second and
+   stops for people who asked for less motion.
    ========================================================================== */
 
 .kit{--kit-line:rgba(58,36,22,.28);font-size:1.25rem;line-height:1.45;color:var(--ink)}
@@ -10,64 +12,120 @@
 .kit h1,.kit h2,.kit h3,.kit h4,.kit h5{text-wrap:balance}
 .kit-ico{width:1.25em;height:1.25em;flex:none}
 
-/* ---------- the top of the page ---------- */
-.kit-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-bottom:14px}
-.kit-title{flex:0 0 auto;margin:0 8px 0 0}
-.kit-lead{flex:1 0 100%;font-size:1.3rem;font-weight:700;margin:0}
-.kit-banner-slot{flex:1 1 auto;display:flex;flex-wrap:wrap}
-.kit-demo{margin:0 0 0 auto;padding:.3em .9em;font:700 1rem/1.3 var(--display);background:#fff;border:2.5px solid var(--ink);border-radius:999px;box-shadow:0 3px 0 var(--ink)}
-.kit-contact{margin:22px 0 0;font:600 1rem/1.4 var(--display);color:var(--ink-soft)}
-.kit-contact a{color:var(--ink);font-weight:700;text-decoration:underline}
-.kit-banner{display:inline-flex;align-items:center;flex-wrap:wrap;gap:.2em .7em;margin:0;padding:.3em 1em;border:3px solid var(--ink);border-radius:999px;font:700 1.12rem/1.25 var(--display);box-shadow:0 3px 0 var(--ink)}
-.kit-banner .kit-ico{width:1.3em;height:1.3em}
-.kit-banner-alert{background:var(--red-deep);color:#fff;--focus:#fff3b0}
-.kit-banner-calm{background:#e3f4dc;color:var(--ink)}
+/* The site's focus ring (css/styles.css, :focus-visible) also sets a 6px corner. While a control has the focus here it keeps its own corners (the next ticket gets the focus after every answer). */
+.kit-ticket:focus{border-radius:24px}
+.kit-ans:focus{border-radius:20px}
+.kit-big:focus,.kit-step:focus,.kit-sound:focus{border-radius:999px}
+.kit-spin:focus,.kit-input:focus{border-radius:14px}
+.kit-rail-title:focus{border-radius:0}
+
+/* ---------- the top: counters, clock, sound ---------- */
+.kit-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-bottom:12px}
+.kit .kit-title{flex:0 0 auto;margin:0 8px 0 0;font-size:clamp(1.7rem,3.2vw,2.3rem)}
+.kit-tally{display:flex;flex-wrap:wrap;gap:10px;list-style:none;margin:0;padding:0}
+.kit-tally-item{display:flex;align-items:baseline;gap:.4em;margin:0;padding:.1em .8em .2em;background:#fff;border:3px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--ink)}
+.kit-tally-num{font:800 2.2rem/1.1 var(--display);min-width:1.1em;text-align:center}
+.kit-tally-label{font:700 1.1rem/1.2 var(--display)}
+.kit-tally-done{background:#e3f4dc}
+.kit-has-late{background:var(--red-deep);color:#fff}
+.kit-clock{display:flex;align-items:baseline;gap:.5em;margin:0 0 0 auto;font:700 1.1rem/1.2 var(--display)}
+.kit-clock-label{color:var(--ink-soft)}
+.kit-clock-time{font:800 1.9rem/1.1 var(--display)}
+.kit-clock-note{font-weight:700;color:var(--red-deep)}
+.kit-sound{min-height:60px;gap:.6em;font-size:1.2rem}
+.kit-sound[aria-pressed="true"]{--bg:var(--ink);--fg:#fff}
+.kit-sound-icon{display:inline-flex}
+.kit-sound-state{padding:.05em .6em;background:var(--ink);color:#fff;border-radius:999px;font-size:1rem}
+.kit-sound[aria-pressed="true"] .kit-sound-state{background:#fff;color:var(--ink)}
+.kit-soundnote{margin:0 0 10px;font-size:1rem;font-weight:600;color:var(--ink-soft)}
+
+/* ---------- the answer-by times (a small strip under the board: set once, not while cooking) ---------- */
+.kit-settings{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;margin:12px 0 0;padding:10px 16px;background:#fff;border:3px solid var(--ink);border-radius:18px;font:700 1.05rem/1.2 var(--display)}
+.kit-settings-title{color:var(--ink-soft)}
+.kit-step-group{display:inline-flex;align-items:center;gap:8px}
+.kit-step-label{font-weight:700}
+.kit-stepval{display:inline-block;min-width:3.2rem;text-align:center;font:800 1.4rem/1.1 var(--display)}
+.kit-step{min-width:56px;min-height:56px;padding:.3em .7em;font-size:1.25rem}
+
+/* ---------- the board: the rail of tickets that need an answer, and the side lanes ---------- */
+.kit-board{display:grid;grid-template-columns:minmax(0,1fr);gap:20px 26px;align-items:start}
+@media (min-width:1100px){.kit-board{grid-template-columns:minmax(0,1fr) 21rem}}
+.kit-rail-title,.kit-lane-title{display:flex;align-items:center;gap:.5em;margin:0 0 .4em;font-size:clamp(1.35rem,2.6vw,1.7rem);padding-bottom:.2em;border-bottom:4px solid var(--ink)}
+.kit-pill{display:inline-block;min-width:2rem;padding:0 .55em;background:var(--ink);color:#fff;border-radius:999px;font:800 1.05rem/1.7 var(--display);text-align:center}
+.kit-keys{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;margin:0 0 14px;font:700 1.05rem/1.3 var(--display)}
+.kit-keys[hidden],.kit-rail[hidden],.kit-calm[hidden],.kit-empty[hidden],.kit-lane-none[hidden],.kit-lane-more[hidden]{display:none}
+.kit-keys-label{color:var(--ink-soft)}
+.kit-keys-item{display:inline-flex;align-items:center;gap:.35em}
+.kit-key{display:inline-grid;place-items:center;min-width:1.9rem;height:1.9rem;padding:0 .4em;background:#fff;color:var(--ink);border:2.5px solid var(--ink);border-radius:8px;font:800 1rem/1 var(--display)}
+.kit-calm{display:flex;align-items:center;gap:.6em;margin:0 0 16px;padding:.7em 1em;background:#e3f4dc;border:3px solid var(--ink);border-radius:18px;font:700 1.25rem/1.3 var(--display)}
 .kit-empty{text-align:center;margin:10px 0;padding:clamp(28px,5vw,56px) clamp(16px,4vw,40px);background:#fff;border:3px dashed var(--ink);border-radius:28px}
 .kit-empty h2{font-size:clamp(1.8rem,3.6vw,2.4rem);margin:0 0 .4em}
 .kit-empty p{max-width:34em;margin-left:auto;margin-right:auto}
 
-/* ---------- the queue ---------- */
-.kit-day{margin:0 0 30px}
-.kit-day-title{font-size:clamp(1.35rem,2.6vw,1.6rem);margin:0 0 12px;padding-bottom:.2em;border-bottom:4px solid var(--ink)}
-.kit-list{list-style:none;margin:0;padding:0}
-.kit-card{list-style:none;position:relative;margin:0 0 28px;padding:clamp(16px,2.4vw,26px);background:#fff;border:3px solid var(--ink);border-radius:28px;box-shadow:0 6px 0 var(--ink)}
-.kit-s-change{border-color:var(--red-deep);border-width:5px;box-shadow:0 6px 0 var(--red-deep)}
-.kit-s-family{background:#fffbe6}
-.kit-s-confirmed{background:#f6fbf3}
-.kit-flash{animation:kitFlash 1.6s ease-out 1}
+/* ---------- a ticket ---------- */
+.kit-rail{list-style:none;margin:0;padding:0}
+.kit-ticket{position:relative;list-style:none;margin:0 0 24px;padding:clamp(14px,2.2vw,22px);background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:0 6px 0 var(--ink)}
+.kit-current{box-shadow:0 6px 0 var(--ink),0 0 0 7px var(--sun)}
+.kit-arrive{animation:kitFlash 1.6s ease-out 1}
 @keyframes kitFlash{from{outline:8px solid rgba(255,201,40,.95);outline-offset:3px}to{outline:8px solid rgba(255,201,40,0);outline-offset:12px}}
-@media (prefers-reduced-motion:reduce){.kit-flash{animation:none}}
-html[data-calm] .kit-flash{animation:none}
+.kit-late{border-color:var(--red-deep);border-width:6px;background:#fff1f0;box-shadow:0 6px 0 var(--red-deep);animation:kitLate 1.7s ease-in-out infinite}
+.kit-late.kit-current{box-shadow:0 6px 0 var(--red-deep),0 0 0 7px var(--sun)}
+@keyframes kitLate{0%,100%{outline:0 solid rgba(200,32,58,0)}50%{outline:8px solid rgba(200,32,58,.28);outline-offset:2px}}
+@media (prefers-reduced-motion:reduce){.kit-arrive,.kit-late{animation:none}}
+html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 
-.kit-card-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px 22px;align-items:center}
-.kit-time{display:flex;align-items:baseline;gap:.7em;padding:.3em 1em .35em;background:var(--cream);border:3px solid var(--ink);border-radius:18px}
-.kit-time-label{font:700 .95rem/1.2 var(--display);letter-spacing:.04em;color:var(--ink-soft)}
-.kit-time-value{font:700 clamp(2rem,4.4vw,2.6rem)/1.1 var(--display);white-space:nowrap}
-.kit-who{min-width:0}
-.kit-card-title{font-size:clamp(1.6rem,3.2vw,2.1rem);margin:0;overflow-wrap:break-word;overflow-wrap:anywhere}
-.kit-sub{margin:.2em 0 0;font-size:1.1rem;font-weight:700;color:var(--ink-soft)}
+.kit-t-head{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title timer" "kind timer";gap:6px 20px;align-items:center}
+.kit-t-title{grid-area:title;display:flex;flex-wrap:wrap;align-items:center;gap:.2em .5em;margin:0;font-size:1rem}
+.kit-num{display:inline-block;padding:.02em .4em;background:var(--ink);color:#fff;border-radius:14px;font:800 clamp(2.1rem,4.2vw,2.9rem)/1.15 var(--display)}
+.kit-name{font:800 clamp(1.6rem,3.2vw,2.2rem)/1.15 var(--display);overflow-wrap:break-word;overflow-wrap:anywhere}
+.kit-kind{grid-area:kind;display:inline-flex;align-items:center;gap:.5em;justify-self:start;margin:0;padding:.2em .9em;border:3px solid var(--ink);border-radius:999px;font:700 1.1rem/1.2 var(--display)}
+.kit-kind-order{background:var(--berry);color:#fff}
+.kit-kind-change{background:var(--sun);color:var(--ink)}
 
-.kit-status{display:inline-flex;align-items:center;gap:.5em;margin:0;padding:.5em 1.1em;border:3px solid var(--ink);border-radius:999px;font:700 1.12rem/1.15 var(--display);justify-self:end;text-align:left}
-.kit-st-new{background:var(--berry);color:#fff}
-.kit-st-change{background:var(--red-deep);color:#fff}
-.kit-st-family{background:var(--sun);color:var(--ink)}
-.kit-st-confirmed{background:var(--green-deep);color:#fff}
+/* the answer-by timer: a bar that empties, green then amber then red, with its words */
+.kit-timer{grid-area:timer;min-width:12.5rem;padding:.4em .9em .55em;background:#fff;border:3px solid var(--ink);border-radius:18px;text-align:center}
+.kit-timer-text{display:block;font:800 1.75rem/1.15 var(--display);white-space:nowrap}
+.kit-timer-note{display:block;font:700 .9rem/1.25 var(--display)}
+.kit-bar{display:block;height:14px;margin-top:6px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.kit-bar-fill{display:block;width:100%;height:100%;background:var(--ink)}
+.kit-tm-green{background:#d9f3e6}
+.kit-tm-green .kit-bar-fill{background:var(--green-deep)}
+.kit-tm-amber{background:#ffe9a8}
+.kit-tm-amber .kit-bar-fill{background:#9a5b00}
+.kit-tm-red{background:var(--red-deep);color:#fff}
+.kit-tm-red .kit-bar{background:rgba(255,255,255,.3);border-color:#fff}
+.kit-tm-red .kit-bar-fill{background:#fff}
 
-.kit-closed{display:flex;align-items:center;gap:.6em;margin:16px 0 0;padding:.6em 1em;background:#ffe1c2;border:3px solid var(--ink);border-radius:16px;font-weight:800}
+.kit-t-body{display:grid;grid-template-columns:minmax(0,1fr);gap:16px 22px;margin-top:14px;align-items:start}
+@media (min-width:760px){.kit-t-body{grid-template-columns:minmax(0,1fr) 15.5rem}}
+.kit-pick{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:0 0 10px}
+.kit-pick-label{font:700 1rem/1.2 var(--display);letter-spacing:.04em;color:var(--ink-soft)}
+.kit-pick-time{font:800 clamp(2.1rem,4.4vw,2.8rem)/1.1 var(--display);white-space:nowrap}
+.kit-pick-day,.kit-pick-count,.kit-waited{font:700 1.1rem/1.3 var(--display);color:var(--ink-soft)}
+.kit-closed{display:flex;align-items:center;gap:.6em;margin:0 0 12px;padding:.5em 1em;background:#ffe1c2;border:3px solid var(--ink);border-radius:16px;font-weight:800}
 .kit-closed .kit-ico{color:var(--red-deep);width:1.4em;height:1.4em}
 
+/* the answers: three big buttons, each with its key */
+.kit-t-answers{display:grid;gap:12px}
+.kit-ans{justify-content:flex-start;gap:.6em;width:100%;min-height:72px;padding:.35em .9em;font:800 1.55rem/1.1 var(--display);border-radius:20px;text-align:left}
+.kit-ans .kit-ico{width:1.35em;height:1.35em}
+.kit-ans-label{flex:1 1 auto}
+.kit-ans .kit-key{flex:none;margin-left:auto;min-width:2.2rem;height:2.2rem;font-size:1.2rem}
+.kit-ans-yes{--bg:var(--green-deep);--fg:#fff}
+.kit-ans-no{--bg:#fff;--fg:var(--red-deep)}
+.kit-ans-later{--bg:var(--sun);--fg:var(--ink)}
+
 /* ---------- pizzas ---------- */
-.kit-body{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px 26px;margin-top:20px;align-items:start}
 .kit-h{font:700 1.1rem/1.2 var(--display);letter-spacing:.02em;margin:0 0 .5em;color:var(--ink-soft)}
 .kit-lines{list-style:none;margin:0;padding:0}
 .kit-line{display:flex;align-items:flex-start;gap:14px;padding:10px 8px;margin:0;border-top:2px dashed var(--kit-line)}
 .kit-line:first-child{border-top:0}
-.kit-count{flex:none;display:grid;place-items:center;min-width:2.5rem;height:2.5rem;padding:0 .3em;background:var(--sun);border:3px solid var(--ink);border-radius:12px;font:700 1.4rem/1 var(--display)}
+.kit-count{flex:none;display:grid;place-items:center;min-width:2.6rem;height:2.6rem;padding:0 .3em;background:var(--sun);border:3px solid var(--ink);border-radius:12px;font:800 1.5rem/1 var(--display)}
 .kit-line-text{min-width:0}
-.kit-pizza{display:inline;font:700 1.4rem/1.2 var(--display)}
+.kit-pizza{display:inline;font:800 1.55rem/1.2 var(--display)}
 .kit-tops{display:block;margin:.1em 0 .1em;font-size:1.05rem;font-weight:600;color:var(--ink-soft)}
 .kit-flags{display:flex;flex-wrap:wrap;gap:6px 8px;margin:.3em 0 0}
-.kit-flag{display:inline-block;white-space:nowrap;padding:.12em .75em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 .98rem/1.3 var(--display)}
+.kit-flag{display:inline-block;white-space:nowrap;padding:.12em .75em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 1rem/1.3 var(--display)}
 .kit-flag-gf{background:#fff0a6}
 .kit-flag-vegan{background:#d4eecb}
 .kit-flag-off{border-style:dashed}
@@ -75,136 +133,116 @@ html[data-calm] .kit-flash{animation:none}
 .kit-none{margin:0;padding:8px;font-weight:700;color:var(--ink-soft)}
 
 /* ---------- notes: allergies and flags ---------- */
-.kit-notes{margin:0;padding:14px 18px;background:#fff6c2;border:3px solid var(--ink);border-radius:18px}
-.kit-notes .kit-h{color:var(--ink)}
-/* while a change is being decided the notes are one thin strip, so the buttons stay near the top of the card */
-.kit-s-change .kit-notes,.kit-s-family .kit-notes{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;margin-top:14px;padding:8px 16px}
-.kit-s-change .kit-notes .kit-h,.kit-s-family .kit-notes .kit-h{margin:0}
-.kit-s-change .kit-allergy,.kit-s-family .kit-allergy,.kit-s-change .kit-family-flags,.kit-s-family .kit-family-flags,.kit-s-change .kit-order-note,.kit-s-family .kit-order-note{margin:0}
-.kit-allergy{display:flex;align-items:flex-start;gap:.6em;margin:0 0 .5em;font:700 1.3rem/1.3 var(--display)}
+.kit-notes{margin:12px 0 0;padding:10px 16px;background:#fff6c2;border:3px solid var(--ink);border-radius:18px}
+.kit-allergy{display:flex;align-items:flex-start;gap:.6em;margin:0 0 .4em;font:700 1.3rem/1.3 var(--display)}
 .kit-allergy .kit-ico{width:1.5em;height:1.5em;margin-top:.05em;color:var(--red-deep)}
-.kit-allergy-none{font-weight:600;font-family:var(--body);font-size:1.15rem;color:var(--ink-soft)}
+.kit-allergy-none{font-weight:600;font-family:var(--body);font-size:1.1rem;color:var(--ink-soft)}
 .kit-family-flags{margin:.2em 0 .4em}
-.kit-order-note{margin:.4em 0 0;font-size:1.15rem;font-weight:700}
+.kit-order-note{margin:.2em 0 0;font-size:1.2rem;font-weight:700}
+.kit-notes > :last-child{margin-bottom:0}
 
 /* ---------- a change from the family ---------- */
-.kit-request{margin-top:14px;padding:14px 18px 16px;background:#fff1f0;border:3px solid var(--ink);border-radius:22px}
-.kit-main > .kit-request:last-child{margin-bottom:0}
-.kit-request-sent{background:#fffbe0}
-.kit-quote{margin:0 0 12px;padding:.5em 1em;background:#fff;border-left:8px solid var(--ink);border-radius:8px;font-size:1.2rem;font-weight:700}
-.kit-quote-inline{margin:12px 0 0}
+.kit-quote{margin:0 0 12px;padding:.45em 1em;background:#fff;border-left:8px solid var(--ink);border-radius:8px;font-size:1.25rem;font-weight:700}
 .kit-quote-label{font:700 1rem/1.2 var(--display);letter-spacing:.02em;color:var(--ink-soft)}
-.kit-h-request{font-size:1.15rem;color:var(--ink);letter-spacing:.06em}
-
-/* the table: what the order says now, and what the family asks for (or what the kitchen suggests) */
 .kit-diff-wrap{overflow:hidden;background:#fff;border:3px solid var(--ink);border-radius:16px}
 .kit-diff{width:100%;border-collapse:separate;border-spacing:0}
-.kit-diff th,.kit-diff td{padding:9px 14px;text-align:left;vertical-align:middle;border-top:2px solid var(--kit-line)}
+.kit-diff th,.kit-diff td{padding:8px 10px;text-align:left;vertical-align:middle;border-top:2px solid var(--kit-line)}
 .kit-diff thead th{border-top:0;background:var(--cream);font:700 1rem/1.2 var(--display);letter-spacing:.02em;color:var(--ink-soft)}
 .kit-diff tbody th{font:700 1.25rem/1.25 var(--display)}
 .kit-diff tbody th .kit-pizza{display:block;font-size:1.25rem}
 .kit-diff tbody th .kit-flags{margin-top:4px}
-.kit-diff td{font:700 1.5rem/1.2 var(--display)}
-.kit-diff .kit-diff-now{width:8rem;white-space:nowrap;color:var(--ink-soft)}
-.kit-diff .kit-diff-val{margin-right:.5em}
+.kit-diff td{font:800 1.5rem/1.2 var(--display)}
+.kit-diff .kit-diff-now{width:6.5rem;white-space:nowrap;color:var(--ink-soft)}
+.kit-diff .kit-diff-val{display:block}
 .kit-diff-changed th,.kit-diff-changed td{background:#fff0a6}
 .kit-diff-changed .kit-diff-now{color:var(--ink)}
 .kit-diff-note td{font-size:1.1rem}
-.kit-chg{display:inline-block;padding:.05em .7em;background:var(--ink);color:#fff;border-radius:999px;font:700 .9rem/1.5 var(--display);letter-spacing:.03em;white-space:nowrap}
-.kit-price-note{margin:12px 0 0;font-size:1.05rem;font-weight:700;color:var(--ink-soft)}
-.kit-wait{margin:14px 0 6px;font-size:1.2rem;font-weight:700}
-.kit-wait-link{margin:0}
-.kit-link{display:inline-flex;align-items:center;min-height:44px;font-weight:800;color:var(--ink)}
+.kit-chg{display:block;width:max-content;max-width:100%;margin-top:3px;padding:.05em .7em;background:var(--ink);color:#fff;border-radius:999px;font:700 .95rem/1.5 var(--display);letter-spacing:.03em}
 
-/* ---------- answering ---------- */
-/* A change that waits: on a tablet or a laptop the status and the three big buttons sit in a column on the right, at the top of the
-   card, so they are on the first screen. On a narrow screen everything stacks: the status first, then the details, then the answer. */
-.kit-rail{display:flex;flex-direction:column}
-.kit-rail > .kit-side{display:contents}
-.kit-rail > .kit-side > .kit-status{order:0;align-self:flex-start;margin-bottom:12px}
-.kit-rail > .kit-main{order:1}
-.kit-rail > .kit-side > .kit-answer{order:2}
-.kit-answer{margin-top:16px}
-@media (min-width:960px){
-  .kit-rail:not(.kit-rail-editing){display:grid;grid-template-columns:minmax(0,1.75fr) minmax(16rem,1fr);gap:0 20px;align-items:start}
-  .kit-rail:not(.kit-rail-editing) > .kit-main{order:0}
-  .kit-rail:not(.kit-rail-editing) > .kit-side{display:block;order:0}
-  .kit-rail:not(.kit-rail-editing) > .kit-side > .kit-status{display:flex;width:max-content;max-width:100%;margin:0 0 12px auto}
-  .kit-rail:not(.kit-rail-editing) .kit-answer{margin-top:0;padding:14px 16px 16px;background:#fff;border:3px solid var(--ink);border-radius:22px}
-  .kit-rail:not(.kit-rail-editing) .kit-buttons{grid-template-columns:minmax(0,1fr)}
-}
+/* ---------- the small editor: another time, a note; Enter sends, Esc cancels ---------- */
+.kit-edit{margin-top:16px;padding:14px 16px 18px;background:#fffdf0;border:3px dashed var(--ink);border-radius:22px}
+.kit-edit-title{margin:0 0 8px;font:800 1.3rem/1.2 var(--display)}
+.kit-edit-time{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.kit-edit-was{font:700 1.1rem/1.2 var(--display);color:var(--ink-soft)}
+.kit-spin{min-width:10rem;padding:.1em .7em;background:#fff;border:3px solid var(--ink);border-radius:14px;font:800 2.3rem/1.25 var(--display);text-align:center}
+.kit-edit-diff{font:700 1.1rem/1.2 var(--display)}
+.kit-edit-steps{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.kit-notebox{margin-top:6px}
 .kit-notebox label{display:block;margin:0 0 6px;font:700 1.1rem/1.3 var(--display)}
 .kit-input{display:block;width:100%;min-height:56px;padding:.55em .8em;font:600 1.15rem/1.35 var(--body);color:var(--ink);background:#fff;border:3px solid var(--ink);border-radius:14px}
 .kit-input::placeholder{color:#6a5140;opacity:1}
-.kit-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.kit-notebox{margin-top:12px}
-.kit-big{min-height:72px;width:100%;padding:.5em 1em;font-size:1.65rem;gap:.5em}
+.kit-edit-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.kit-big{min-height:72px;padding:.5em 1.1em;font-size:1.5rem;gap:.5em}
 .kit-big .kit-ico{width:1.35em;height:1.35em}
+.kit-send{--bg:var(--green-deep);--fg:#fff}
+.kit-send .kit-key,.kit-cancel .kit-key{min-width:3.4rem;height:2rem;font-size:1rem}
 .kit-small{min-height:56px;font-size:1.1rem}
-.kit-no{--fg:var(--red-deep)}
-.kit-hint{margin:10px 0 0;font-size:1.05rem;font-weight:600;color:var(--ink-soft)}
-.kit-actions{margin-top:20px}
-.kit-actions .kit-big{width:auto;min-width:min(100%,19rem)}
-.kit-linkbtn{display:inline-flex;align-items:center;gap:.4em;min-height:44px;padding:.3em .3em;font:700 1.1rem/1.2 var(--body);color:inherit;background:none;border:0;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;cursor:pointer}
+.kit-hint{margin:12px 0 0;font-size:1.05rem;font-weight:600;color:var(--ink-soft)}
 
-/* ---------- what the kitchen wrote, and what happened ---------- */
-.kit-last{margin-top:18px;padding:12px 16px;border:3px solid var(--ink);border-radius:18px;background:#fff}
-.kit-last-ok{background:#e3f4dc}
-.kit-last-no{background:#f3ebe3}
-.kit-last-text{display:flex;align-items:center;gap:.6em;margin:0;font:700 1.25rem/1.3 var(--display)}
-.kit-last-text .kit-ico{width:1.4em;height:1.4em}
-.kit-history{margin-top:14px;font-size:1.1rem}
-.kit-history summary{display:list-item;min-height:44px;padding:.4em 0;font:700 1.1rem/1.4 var(--display);cursor:pointer}
-.kit-history ol{margin:.3em 0 0 1.3em;padding:0}
-.kit-history li{margin:.2em 0}
-.kit-when{display:inline-block;min-width:4.6em;font-weight:800}
+/* ---------- the side lanes: with the family, done ---------- */
+.kit-lane{margin:0 0 22px}
+.kit-lane-title{font-size:1.3rem}
+.kit-lane-none,.kit-lane-more{margin:0 0 8px;font-weight:700;color:var(--ink-soft)}
+.kit-minis{list-style:none;margin:0;padding:0}
+.kit-mini{margin:0 0 10px;padding:9px 14px;background:#fff;border:3px solid var(--ink);border-radius:18px}
+.kit-mini-family{background:#fffbe6}
+.kit-mini-done{background:#f6fbf3}
+.kit-mini p{margin:0}
+.kit-mini-head{display:flex;flex-wrap:wrap;align-items:center;gap:.2em .5em}
+.kit-mini .kit-num{font-size:1.4rem;border-radius:10px}
+.kit-mini-who{font:800 1.2rem/1.2 var(--display)}
+.kit-mini-text{font-size:1.05rem;font-weight:700;color:var(--ink-soft)}
+.kit-mini-status{display:flex;align-items:center;gap:.5em;font:700 1.05rem/1.3 var(--display)}
+.kit-mini-status .kit-ico{width:1.2em;height:1.2em}
 
-/* ---------- the pizza editor ("Change it") ----------
-   The editor is the shared one (js/demo-pizza-editor.js, its look is in css/demo-pizza.css). Here it only gets bigger touch targets,
-   and on a wide screen two pizzas side by side so the whole change fits on fewer screens. */
-.kit-editor-wrap{margin-top:14px;padding:14px 16px 18px;background:#fffdf0;border:3px dashed var(--ink);border-radius:22px}
-.kit-editor-wrap .kit-h{margin-bottom:.6em}
-.kit-editor-wrap .dp-select{min-height:56px;font-size:1.15rem}
-.kit-editor-wrap .dp-check{min-height:52px}
-.kit-editor-wrap .dp-remove{min-height:52px}
-.kit-editor-wrap .dp-step,.kit-editor-wrap .dp-add{min-height:56px}
-.kit-editor-wrap .dp-send,.kit-editor-wrap .dp-cancel{min-height:64px;font-size:1.25rem}
-@media (min-width:960px){
-  .kit-editor-wrap .dp-rows{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-.kit-editor-missing p{margin:0 0 12px;font-weight:700}
+.kit-contact{margin:22px 0 0;font:600 1rem/1.4 var(--display);color:var(--ink-soft)}
+.kit-contact a{color:var(--ink);font-weight:700;text-decoration:underline}
 
 /* ---------- phones and narrow windows ---------- */
 @media (max-width:760px){
   .kit{font-size:1.15rem}
-  .kit-card-head{grid-template-columns:minmax(0,1fr)}
-  .kit-status{justify-self:start}
-  .kit-demo{margin-left:0}
-  .kit-body{grid-template-columns:minmax(0,1fr)}
-  .kit-request{padding:12px 12px 14px}
-  .kit-diff th,.kit-diff td{padding:8px 8px}
+  .kit-tally{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;gap:8px}
+  .kit-tally-item{flex-direction:column;align-items:center;gap:0;padding:.1em .3em .25em}
+  .kit-tally-num{font-size:1.9rem}
+  .kit-tally-label{font-size:.95rem}
+  .kit-top{gap:8px 12px}
+  .kit-clock{margin-left:0;font-size:1rem}
+  .kit-clock-time{font-size:1.5rem}
+  .kit-sound{margin-left:auto;min-height:56px}
+  .kit-t-head{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "kind" "timer"}
+  .kit-timer{justify-self:stretch}
+  .kit-t-answers{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .kit-ans{flex-wrap:wrap;justify-content:center;min-height:64px;padding:.3em .4em;font-size:1.2rem;text-align:center}
+  .kit-ans-label{flex:0 1 auto}
+  .kit-ans .kit-ico,.kit-ans .kit-key{display:none}
+  .kit-diff th,.kit-diff td{padding:7px 8px}
   .kit-diff tbody th,.kit-diff tbody th .kit-pizza{font-size:1.1rem}
   .kit-diff td{font-size:1.2rem}
   .kit-diff .kit-diff-now{width:auto;white-space:normal}
-  .kit-chg{display:table;margin-top:4px;padding:.1em .6em;border-radius:12px;white-space:normal}
-  .kit-buttons{grid-template-columns:minmax(0,1fr)}
-  .kit-time{flex-direction:row;align-items:baseline;gap:.8em}
-  .kit-actions .kit-big{width:100%}
+  .kit-chg{padding:.1em .6em;border-radius:12px}
+  .kit-keys{display:none}
+  .kit-edit-actions .kit-big{flex:1 1 100%}
 }
 @media (max-width:480px){
-  /* the table never grows past its box: three columns that share the width and let words wrap */
   .kit-diff{overflow-wrap:break-word}
-  .kit-diff th,.kit-diff td{padding:7px 6px}
+  .kit-diff th,.kit-diff td{padding:6px 5px}
   .kit-diff thead th{font-size:.85rem;letter-spacing:0}
   .kit-diff tbody th,.kit-diff tbody th .kit-pizza{font-size:1rem}
   .kit-diff .kit-flag{font-size:.8rem;padding:.05em .5em;border-radius:10px;white-space:normal}
   .kit-diff td{font-size:1.1rem}
   .kit-flag{white-space:normal}
+  .kit-tally-num{font-size:2rem}
 }
 @media (max-width:380px){
-  .kit-big{font-size:1.4rem}
-  .kit-card{padding:12px}
-  .kit-request{padding:10px}
-  .kit-diff th,.kit-diff td{padding:6px 4px}
+  .kit-ticket{padding:12px}
+  .kit-ans{font-size:1.05rem}
   .kit-chg{font-size:.8rem}
+  .kit-timer-text{font-size:1.5rem}
+  .kit-clock-label{display:none}
+}
+@media (forced-colors:active){
+  .kit-bar-fill{background:Highlight}
+  .kit-tm-red .kit-bar-fill{background:Highlight}
+  .kit-ticket,.kit-timer,.kit-mini{border-color:CanvasText}
+  .kit-current{outline:4px solid Highlight}
 }
