@@ -67,7 +67,7 @@ ok('every entry of tools/i18n_facts_allow.json still matches a difference (nothi
 {
   // [English, translation] pairs. WRONG ones must be flagged with the kind named; RIGHT ones must pass.
   const WRONG = {
-    es: [['price', '$3 per person', '$4 por persona'], ['date', 'Nov 28–29 and Dec 5–6', '28–29 nov y 5–6 nov'], ['price', '$3 per person', '$3 por niño'], ['days', 'Friday through Sunday, 4 to 8 pm', 'De jueves a domingo, de 4 a 8 p. m.'], ['days', 'Thursday–Sunday', 'viernes a domingo'], ['time', '10 am – 4 pm', '10 a. m. – 4 a. m.'],
+    es: [['price', '$3 per person', '$4 por persona'], ['price', '$3 per person', '$3 por niño'], ['days', 'Friday through Sunday, 4 to 8 pm', 'De jueves a domingo, de 4 a 8 p. m.'], ['days', 'Thursday–Sunday', 'viernes a domingo'], ['time', '10 am – 4 pm', '10 a. m. – 4 a. m.'],
       ['time', '4 to 8 pm', 'de 5 a 8 p. m.'], ['time', 'Open every Tuesday at 5:00 PM', 'Abre los martes a las 6:00 p. m.'], ['date', 'Oct 6', '6 de nov'], ['numbers', 'One family, up to 6 people', 'Una familia, hasta 7 personas'], ['units', 'Takes 45 minutes', 'Dura 45 horas'],
       ['bound', 'Ages 3 and up', 'Hasta 3 años'], ['early/mid/late', 'late April through early May', 'de principios de abril a principios de mayo'], ['words', 'Children age 2 and younger are free', 'Los niños de 2 años o menos pagan'],
       ['name', 'Wise Pie pizza at The GreenHouse', 'Pizza Wise Pi en The GreenHouse'], ['contact', 'Email vanessa@wiseacresorganic.com', 'Escribe a vanesa@wiseacresorganic.com'], ['contact', 'Call 704-207-6347', 'Llama al 704-207-6348'],
@@ -76,16 +76,16 @@ ok('every entry of tools/i18n_facts_allow.json still matches a difference (nothi
       ['bound', 'Ages 3 and up', '3 साल और उससे छोटे'], ['early/mid/late', 'mid-April', 'अप्रैल के अंत'], ['words', 'No reservation needed', 'रिज़र्वेशन की ज़रूरत है'], ['units', 'Takes 45 minutes', '45 घंटे लगते हैं']],
     zh: [['price', '$3 per person', '每人 $4'], ['days', 'Friday through Sunday', '周四至周日'], ['time', '10 am – 4 pm', '上午 10 点至上午 4 点'], ['date', 'Oct 6', '10 月 7 日'], ['bound', 'Ages 3 and up', '3 岁及以下'], ['early/mid/late', 'late April', '4 月上旬'],
       ['numbers', 'up to 6 people', '最多 7 人'], ['words', 'No reservation needed', '需要预约'], ['units', 'Takes 45 minutes', '需要 45 小时']],
-    vi: [['price', '$3 per person', '$4 mỗi người'], ['date', 'Nov 28–29 and Dec 5–6', '28–29 thg 11 và 5–6 thg 11'], ['days', 'Friday through Sunday', 'Thứ Năm đến Chủ Nhật'], ['time', '10 am – 4 pm', '10 giờ sáng – 4 giờ sáng'], ['date', 'Oct 6', '6 thg 11'], ['bound', 'Ages 3 and up', '3 tuổi trở xuống'],
+    vi: [['price', '$3 per person', '$4 mỗi người'], ['days', 'Friday through Sunday', 'Thứ Năm đến Chủ Nhật'], ['time', '10 am – 4 pm', '10 giờ sáng – 4 giờ sáng'], ['date', 'Oct 6', '6 thg 11'], ['bound', 'Ages 3 and up', '3 tuổi trở xuống'],
       ['early/mid/late', 'late April', 'đầu tháng 4'], ['numbers', 'up to 6 people', 'tối đa 7 người'], ['words', 'No reservation needed', 'Cần đặt chỗ'], ['units', 'Takes 45 minutes', 'Mất 45 giờ']],
   };
   const RIGHT = {
-    es: [['$3 per person, ages 3 and up', '$3 por persona, a partir de los 3 años'], ['Nov 28–29 and Dec 5–6', '28–29 nov y 5–6 dic'], ['the last weekend in November and the first weekend in December, Saturday and Sunday only', 'el último fin de semana de noviembre y el primer fin de semana de diciembre, solo sábado y domingo'], ['Open every Tuesday at 5:00 PM', 'Abre los martes a las 17:00'], ['Open every Tuesday at 5:00 PM', 'Abre todos los martes a las 5:00 p. m.'], ['Friday through Sunday, 4 to 8 pm', 'De viernes a domingo, de 4 a 8 p. m.'],
+    es: [['$3 per person, ages 3 and up', '$3 por persona, a partir de los 3 años'], ['Open every Tuesday at 5:00 PM', 'Abre los martes a las 17:00'], ['Open every Tuesday at 5:00 PM', 'Abre todos los martes a las 5:00 p. m.'], ['Friday through Sunday, 4 to 8 pm', 'De viernes a domingo, de 4 a 8 p. m.'],
       ['Fri, Sat & Sun', 'Viernes, sábado y domingo'], ['Thursday–Sunday', 'jueves a domingo'], ['Oct 23–25', '23–25 oct'], ['Tuesday, Nov 3, 9 am–1 pm', 'martes 3 de nov, 9 a. m.–1 p. m.'], ['Usually mid-April through early June', 'Normalmente de mediados de abril a principios de junio'],
       ['Ages 12 and under only.', 'Solo para niños de 12 años o menos.'], ['Pizza from 10 to 4', 'Pizza de 10 a 4'], ['Real pizza, 1,500 miles', 'Pizza de verdad, 1.500 millas']],
-    hi: [['$3 per person, ages 3 and up', 'प्रति व्यक्ति $3, 3 साल और उससे बड़े'], ['Nov 28–29 and Dec 5–6', '28–29 नवंबर और 5–6 दिसंबर'], ['the last weekend in November and the first weekend in December, Saturday and Sunday only', 'नवंबर महीने का आख़िरी वीकेंड और दिसंबर महीने का पहला वीकेंड, केवल शनिवार और रविवार'], ['Open every Tuesday at 5:00 PM', 'हर मंगलवार शाम 5:00 बजे खुलता है'], ['Friday through Sunday, 4 to 8 pm', 'शुक्रवार से रविवार, शाम 4 से रात 8 बजे'], ['Oct 6', '6 अक्टूबर'], ['10 am – 4 pm', 'सुबह 10 बजे – शाम 4 बजे'], ['Open 10 am', 'सुबह १० बजे खुलता है']],
-    zh: [['$3 per person, ages 3 and up', '每人 $3，3 岁及以上'], ['Nov 28–29 and Dec 5–6', '11月28–29日和12月5–6日'], ['the last weekend in November and the first weekend in December, Saturday and Sunday only', '11 月最后一个周末和 12 月第一个周末，仅限周六和周日'], ['Open every Tuesday at 5:00 PM', '每周二下午 5:00 开放'], ['Friday through Sunday, 4 to 8 pm', '周五至周日，下午 4 点至 8 点'], ['Oct 6', '10 月 6 日'], ['10 am – 4 pm', '上午 10 点至下午 4 点'], ['Tuesday, Nov 3, 9 am–1 pm', '11 月 3 日周二，上午 9 点至下午 1 点'], ['Six years of farming', '六年的种植经验']],
-    vi: [['$3 per person, ages 3 and up', '$3 mỗi người (từ 3 tuổi trở lên)'], ['Nov 28–29 and Dec 5–6', '28–29 thg 11 và 5–6 thg 12'], ['the last weekend in November and the first weekend in December, Saturday and Sunday only', 'cuối tuần cuối cùng của tháng 11 và cuối tuần đầu tiên của tháng 12, chỉ thứ Bảy và Chủ Nhật'], ['Open every Tuesday at 5:00 PM', 'Mở vào Thứ Ba lúc 5 giờ chiều hằng tuần'], ['Friday through Sunday, 4 to 8 pm', 'Thứ Sáu đến Chủ Nhật, 4 đến 8 giờ tối'], ['Oct 6', '6 thg 10'], ['10 am – 4 pm', '10 giờ sáng – 4 giờ chiều'], ['Tuesday, Nov 3', 'Thứ Ba, 3 thg 11']],
+    hi: [['$3 per person, ages 3 and up', 'प्रति व्यक्ति $3, 3 साल और उससे बड़े'], ['Open every Tuesday at 5:00 PM', 'हर मंगलवार शाम 5:00 बजे खुलता है'], ['Friday through Sunday, 4 to 8 pm', 'शुक्रवार से रविवार, शाम 4 से रात 8 बजे'], ['Oct 6', '6 अक्टूबर'], ['10 am – 4 pm', 'सुबह 10 बजे – शाम 4 बजे'], ['Open 10 am', 'सुबह १० बजे खुलता है']],
+    zh: [['$3 per person, ages 3 and up', '每人 $3，3 岁及以上'], ['Open every Tuesday at 5:00 PM', '每周二下午 5:00 开放'], ['Friday through Sunday, 4 to 8 pm', '周五至周日，下午 4 点至 8 点'], ['Oct 6', '10 月 6 日'], ['10 am – 4 pm', '上午 10 点至下午 4 点'], ['Tuesday, Nov 3, 9 am–1 pm', '11 月 3 日周二，上午 9 点至下午 1 点'], ['Six years of farming', '六年的种植经验']],
+    vi: [['$3 per person, ages 3 and up', '$3 mỗi người (từ 3 tuổi trở lên)'], ['Open every Tuesday at 5:00 PM', 'Mở vào Thứ Ba lúc 5 giờ chiều hằng tuần'], ['Friday through Sunday, 4 to 8 pm', 'Thứ Sáu đến Chủ Nhật, 4 đến 8 giờ tối'], ['Oct 6', '6 thg 10'], ['10 am – 4 pm', '10 giờ sáng – 4 giờ chiều'], ['Tuesday, Nov 3', 'Thứ Ba, 3 thg 11']],
   };
   const blind = [], noisy = []; let nWrong = 0, nRight = 0;
   for (const l of LANGS) {
@@ -127,6 +127,27 @@ ok('every entry of tools/i18n_facts_allow.json still matches a difference (nothi
     ok('on a temporary copy of the real lang files, one changed number, two changed weekdays, one changed price and two changed times (am / pm) are all found (6 changes made, the originals untouched)',
       edits.length === 6 && found.every(Boolean), edits.length < 6 ? 'only ' + edits.length + ' of 6 changes could be made (' + report + '): a text the changes were made on is no longer there; adjust the test' : 'not all seen: ' + report);
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+}
+
+/* ------------------------------------------------------------------ the Christmas tree weekends (the builder, 10 Nov 2026): the dates as js/season.js writes them in each language, and the rule as the pages say it */
+{
+  const DATES_EN = 'Nov 28–29 and Dec 5–6', RULE_EN = 'the last weekend in November and the first weekend in December, Saturday and Sunday only';
+  const DATES = { es: '28–29 nov y 5–6 dic', hi: '28–29 नवंबर और 5–6 दिसंबर', zh: '11月28–29日和12月5–6日', vi: '28–29 thg 11 và 5–6 thg 12' };
+  const RULE = {
+    es: 'el último fin de semana de noviembre y el primer fin de semana de diciembre, solo sábado y domingo',
+    hi: 'नवंबर महीने का आख़िरी वीकेंड और दिसंबर महीने का पहला वीकेंड, केवल शनिवार और रविवार',
+    zh: '11 月最后一个周末和 12 月第一个周末，仅限周六和周日',
+    vi: 'cuối tuần cuối cùng của tháng 11 và cuối tuần đầu tiên của tháng 12, chỉ thứ Bảy và Chủ Nhật' };
+  const WRONG_DATES = { es: '28–29 nov y 5–6 nov', hi: '28–29 नवंबर और 5–6 नवंबर', zh: '11月28–29日和11月5–6日', vi: '28–29 thg 11 và 5–6 thg 11' };   // the second weekend in the wrong month
+  const WRONG_RULE = { es: RULE.es.replace('sábado y domingo', 'viernes y sábado'), hi: RULE.hi.replace('शनिवार और रविवार', 'शुक्रवार और शनिवार'), zh: RULE.zh.replace('周六和周日', '周五和周六'), vi: RULE.vi.replace('thứ Bảy và Chủ Nhật', 'thứ Sáu và thứ Bảy') };   // Friday and Saturday
+  const noisy = [], blind = [];
+  for (const l of LANGS) {
+    for (const [en, tr] of [[DATES_EN, DATES[l]], [RULE_EN, RULE[l]]]) { const d = compare(en, tr, l); if (d.length) noisy.push(`${l} "${tr}" = ${d.map((x) => x.msg).join(', ')}`); }
+    if (!compare(DATES_EN, WRONG_DATES[l], l).some((d) => d.kind === 'date')) blind.push(`${l} [date] "${WRONG_DATES[l]}"`);
+    if (!compare(RULE_EN, WRONG_RULE[l], l).some((d) => d.kind === 'days')) blind.push(`${l} [days] "${WRONG_RULE[l]}"`);
+  }
+  ok('the tree weekends ("Nov 28–29 and Dec 5–6" and the tree rule) are read right in es hi zh vi, as the dates are written by js/season.js', noisy.length === 0, 'false alarm: ' + noisy.slice(0, 3).join('; ') + '. This is a problem in tools/i18n_facts.mjs, not in the site: tell the developer');
+  ok('... a second weekend in the wrong month, and Friday and Saturday for Saturday and Sunday, are found', blind.length === 0, 'missed: ' + blind.slice(0, 4).join('; ') + '. This is a problem in tools/i18n_facts.mjs, not in the site: tell the developer');
 }
 
 console.log(`     ${allowed.length} difference(s) are on the allow list (tools/i18n_facts_allow.json); ${open.length} are open; ${Math.round((Date.now() - T0) / 100) / 10} s`);
