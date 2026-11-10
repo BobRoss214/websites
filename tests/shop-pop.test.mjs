@@ -101,20 +101,35 @@ const EXPECTED = [...new Set([...PRODUCTS.map((x) => x.slug), ...(beerOnPage ? B
 const SAYS = Object.fromEntries(LIST.products.map((x) => [x.slug, (x.name + ' ' + x.note).toLowerCase()]));
 const FORBIDDEN = /gluten[- ]?free|vegan|dairy[- ]?free|nut[- ]?free|non-?gmo|\bnatural|\blocal|\bfresh|home-?made|hand-?made|organic|\bcure|\bheal|\bboost|immun|\bdetox|\bvitamin|\bprobiotic|antioxidant|\bcalori|\d|\bages? |\byears?\b/i;
 
+/** What is wrong with a set of lists: which products have none, which lists have no card, which are malformed, which carry words the farm has not said. */
+function problems(lists) {
+  const keys = Object.keys(lists);
+  const shape = keys.filter((s) => { const e = lists[s]; return !(e && ['Ingredients', 'Made of'].includes(e.heading) && Array.isArray(e.list) && e.list.length >= 1 && e.list.length <= 14 && e.list.every((x) => typeof x === 'string' && x.trim() && x === x.trim()) && new Set(e.list.map((x) => x.toLowerCase())).size === e.list.length && (e.contains === undefined || (typeof e.contains === 'string' && e.contains.trim() && e.heading === 'Ingredients'))); });
+  const words = [];
+  for (const s of keys.filter((k) => !shape.includes(k))) for (const x of [...lists[s].list, lists[s].contains || '']) { const m = FORBIDDEN.exec(x); if (m && !(SAYS[s] && SAYS[s].includes(m[0].toLowerCase().trim()))) words.push(`${s}: "${x}" (${m[0].trim()})`); }
+  return { missing: EXPECTED.filter((s) => !keys.includes(s)), orphans: keys.filter((s) => !pageSlugs.includes(s) && !(!beerOnPage && BEER.includes(s))), shape, words };
+}
+
 if (!HAS_SAMPLE) info('js/shop-sample.js is not in this copy of the site (the real site): only the DORMANT check runs');
 else {
   const head = read('js/shop-sample.js').slice(0, 400);
   ok('js/shop-sample.js says in its first lines that it is SAMPLE DATA, NOT REAL, English only, and not for the real website', /SAMPLE DATA, NOT REAL\. English only\. Must not go on the real website until the farm gives the real lists\./.test(head));
-  const keys = Object.keys(sample);
-  const missing = EXPECTED.filter((s) => !keys.includes(s)), orphans = keys.filter((s) => !pageSlugs.includes(s) && !(!beerOnPage && BEER.includes(s)));
-  ok(`every product of groups 1-11 has a list (${PRODUCTS.length} products${beerOnPage ? ' and the 16 beer, cider and wine drinks' : ''})`, missing.length === 0, missing.join(', '));
-  ok('no list belongs to a picture that no card shows' + (beerOnPage ? '' : ' (the 16 drinks of the beer group wait for their cards: that group is not in this copy of the page yet)'), orphans.length === 0, orphans.join(', '));
-  ok('the farm visit group, the old "Beer, hard cider & wine" card and every other card with no list has none', !keys.some((s) => ['beer-wine', 'wagon-ride', 'barrel-train', 'corn-pit', 'scavenger-hunt', 'sunn-hemp-maze', 'upick'].includes(s)));
-  const shape = keys.filter((s) => { const e = sample[s]; return !(e && ['Ingredients', 'Made of'].includes(e.heading) && Array.isArray(e.list) && e.list.length >= 1 && e.list.length <= 14 && e.list.every((x) => typeof x === 'string' && x.trim() && x === x.trim()) && new Set(e.list.map((x) => x.toLowerCase())).size === e.list.length && (e.contains === undefined || (typeof e.contains === 'string' && e.contains.trim() && e.heading === 'Ingredients'))); });
-  ok('every list has a heading ("Ingredients" or "Made of"), 1 to 14 plain items, none twice, and a "contains" line only for things you put in or on your body', shape.length === 0, shape.join(', '));
-  const words = [];
-  for (const s of keys) for (const x of [...sample[s].list, sample[s].contains || '']) { const m = FORBIDDEN.exec(x); if (m && !(SAYS[s] && SAYS[s].includes(m[0].toLowerCase().trim()))) words.push(`${s}: "${x}" (${m[0].trim()})`); }
-  ok('no list has a health claim, a dose, a number, an age, or "vegan", "natural", "local", "fresh", "homemade", "organic" unless the card itself says it', words.length === 0, words.slice(0, 5).join(' | '));
+  // the check is tried on bad lists first, so that it cannot go blind
+  const copy = () => JSON.parse(JSON.stringify(sample)), first = EXPECTED[0];
+  const gone = copy(); delete gone[first];
+  const extra = copy(); extra['no-such-picture'] = { heading: 'Ingredients', list: ['Water'] };
+  const empty = copy(); empty[first].list = [];
+  const claim = copy(); claim[EXPECTED.find((s) => !/organic|vegan/.test(SAYS[s] || ''))].list = ['Water', 'Vegan butter'];
+  const bad = copy(); bad[first].heading = 'Foods';
+  const dose = copy(); dose[EXPECTED[1]].list = ['Vitamin C'];
+  const num = copy(); num[EXPECTED[2]].list = ['Sugar 12 g'];
+  ok('(tried on bad lists first) a product with no list, a list with no card, an empty list, a wrong heading, "vegan", a vitamin and a number are each found', problems(gone).missing.length === 1 && problems(extra).orphans.length === 1 && problems(empty).shape.length === 1 && problems(bad).shape.length === 1 && problems(claim).words.length === 1 && problems(dose).words.length === 1 && problems(num).words.length === 1 && Object.values(problems(sample)).every((v) => v.length === 0));
+  const found = problems(sample);
+  ok(`every product of groups 1-11 has a list (${PRODUCTS.length} products${beerOnPage ? ' and the 16 beer, cider and wine drinks' : ''})`, found.missing.length === 0, found.missing.join(', '));
+  ok('no list belongs to a picture that no card shows' + (beerOnPage ? '' : ' (the 16 drinks of the beer group wait for their cards: that group is not in this copy of the page yet)'), found.orphans.length === 0, found.orphans.join(', '));
+  ok('the farm visit group, the old "Beer, hard cider & wine" card and every other card with no list has none', !Object.keys(sample).some((s) => ['beer-wine', 'wagon-ride', 'barrel-train', 'corn-pit', 'scavenger-hunt', 'sunn-hemp-maze', 'upick'].includes(s)));
+  ok('every list has a heading ("Ingredients" or "Made of"), 1 to 14 plain items, none twice, and a "contains" line only for things you put in or on your body', found.shape.length === 0, found.shape.join(', '));
+  ok('no list has a health claim, a dose, a number, an age, or "vegan", "natural", "local", "fresh", "homemade", "organic" unless the card itself says it', found.words.length === 0, found.words.slice(0, 5).join(' | '));
   ok('the pizza and the ice cream bars (the wide cards) have lists: they are products of groups 2 and 3', !!sample.pizza && !!sample['ice-cream']);
 }
 
