@@ -715,10 +715,10 @@
 
   // Rows of trees planted on the snow lanes, evenly stepped toward the viewer; every other row is shifted
   // half a step over, so each tree peeks between two in front. Clearings are left around the campfires and the snowman.
-  // The trees are 1.5 times as tall and wide as they first were (TREE_SIZE: a tree of row t is 1.5 * (18 + 188 t) units tall and 0.727 of that wide,
-  // 64 x 46 in the row at the back and 210 x 153 in the one at the front), and they stand 1.5 times as far apart (TREE_STEP: every 1.5th lane, in the two rows at the back every 3rd),
-  // so the lot looks as it did, with fewer and bigger trees: the same gap between neighbours, each tree still seen between two in front, and no tap area (the tree's picture and a tenth more
-  // all round) lies over the whole of another.
+  // The trees are 1.5 times as tall and wide as they first were (TREE_SIZE: a tree of row t is 1.5 * (18 + 188 t) units tall and 0.727 of that wide, 64 x 46 at the back and 210 x 153 at the front)
+  // and stand 1.5 times as far apart (TREE_STEP: every 1.5th lane, every 3rd in the two rows at the back), so the lot looks as it did, with fewer and bigger trees: the same gap between neighbours
+  // and each tree still seen between two in front. The tap area of a tree is its picture and a tenth more, so it grew with it. 16 trees can be lit (it was 22: the count is in
+  // docs/QUESTIONS_FOR_THE_FARM.md, question 64, and in tests/hero.test.mjs) and 7 far ones are only drawn.
   const TREE_ROWS = [0.13, 0.2, 0.29, 0.4, 0.52, 0.65];
   const TREE_SIZE = 1.5, TREE_STEP = 1.5;
   // A tree is left out where a fire burns (the flames reach 84 units up, the stones 62 to each side of the fire, and a tree is as wide as its picture) and in front of the snowman's body.
