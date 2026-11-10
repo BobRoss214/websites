@@ -128,15 +128,25 @@ await run('features', async ({ browser, base, errs }) => {
   ok('feed: JSON file overrides the page settings', fd.note === 'From the feed' && fd.first === 'Pumpkins', JSON.stringify(fd));
   await p.context().close();
 
-  // winter: trees at The GreenHouse, 21-day lookahead
-  p = await open('index.html', { time: '2026-11-04T10:00:00-05:00' });
-  const wt = await p.evaluate(() => [...document.querySelectorAll('.wk')].map((e) => e.textContent.trim().replace(/\s+/g, ' ')));
-  ok('Nov 4: trees start Nov 27 (23 days) so no tree card yet', !wt.some((x) => /Christmas/.test(x)), JSON.stringify(wt));
-  await p.context().close();
-  p = await open('index.html', { time: '2026-11-12T10:00:00-05:00' });
-  const wt2 = await p.evaluate(() => [...document.querySelectorAll('.wk')].map((e) => e.textContent.trim().replace(/\s+/g, ' ')));
-  ok('Nov 12: tree card says starts Nov 27, at The GreenHouse', wt2.some((x) => /Christmas trees/.test(x) && /At The GreenHouse/.test(x) && /Usually starts Nov 27/.test(x)), JSON.stringify(wt2));
-  await p.context().close();
+  // winter: the Christmas trees are on two weekends only, Saturday and Sunday (the last weekend in November and the first weekend in December: this year Nov 28-29
+  // and Dec 5-6), at The GreenHouse, with the 21-day lookahead. Nothing for a Friday, nothing for the days between the weekends, and no tomatoes (they ended Nov 8).
+  const weekOn = async (iso) => {
+    const q = await open('index.html', { time: iso });
+    const items = await q.evaluate(() => [...document.querySelectorAll('.wk')].map((e) => e.textContent.trim().replace(/\s+/g, ' ')));
+    const all = await q.evaluate(() => (document.querySelector('[data-week]') || { textContent: '' }).textContent.replace(/\s+/g, ' '));
+    await q.context().close();
+    return { items, all, trees: items.filter((x) => /Christmas trees/.test(x)) };
+  };
+  const wk = {};
+  for (const d of ['2026-11-04T10:00:00-05:00', '2026-11-06T10:00:00-05:00', '2026-11-07T10:00:00-05:00', '2026-11-12T10:00:00-05:00', '2026-11-27T10:00:00-05:00', '2026-11-28T10:00:00-05:00', '2026-11-29T20:00:00-05:00', '2026-11-30T10:00:00-05:00', '2026-12-02T10:00:00-05:00', '2026-12-05T10:00:00-05:00', '2026-12-06T10:00:00-05:00', '2026-12-07T10:00:00-05:00']) wk[d.slice(5, 10)] = await weekOn(d);
+  ok('Nov 4 and Nov 6: the trees start Nov 28 (24 and 22 days away) so no tree card yet', wk['11-04'].trees.length === 0 && wk['11-06'].trees.length === 0, JSON.stringify([wk['11-04'].items, wk['11-06'].items]));
+  ok('Nov 7 (21 days before the first tree day) and Nov 12: the tree card says "Usually starts Nov 28", at The GreenHouse', [wk['11-07'], wk['11-12']].every((x) => x.trees.length === 1 && /At The GreenHouse/.test(x.trees[0]) && /Usually starts Nov 28/.test(x.trees[0])), JSON.stringify([wk['11-07'].trees, wk['11-12'].trees]));
+  ok('Fri Nov 27 (the old first tree day, the Friday after Thanksgiving): still "Usually starts Nov 28", never "In season": nothing is on for a Friday', wk['11-27'].trees.length === 1 && /Usually starts Nov 28/.test(wk['11-27'].trees[0]) && !/In season/.test(wk['11-27'].trees[0]), JSON.stringify(wk['11-27'].trees));
+  ok('Sat Nov 28 and Sun Nov 29 (the first weekend): the trees are "In season", at The GreenHouse', [wk['11-28'], wk['11-29']].every((x) => x.trees.length === 1 && /At The GreenHouse/.test(x.trees[0]) && /In season/.test(x.trees[0])), JSON.stringify([wk['11-28'].trees, wk['11-29'].trees]));
+  ok('Mon Nov 30 and Wed Dec 2 (the winter season is on, but these are no tree days): "Usually starts Dec 5", not "In season"', [wk['11-30'], wk['12-02']].every((x) => x.trees.length === 1 && /Usually starts Dec 5/.test(x.trees[0]) && !/In season/.test(x.trees[0])), JSON.stringify([wk['11-30'].trees, wk['12-02'].trees]));
+  ok('Sat Dec 5 and Sun Dec 6 (the second weekend): "In season"', [wk['12-05'], wk['12-06']].every((x) => x.trees.length === 1 && /In season/.test(x.trees[0])), JSON.stringify([wk['12-05'].trees, wk['12-06'].trees]));
+  ok('Mon Dec 7 (after the last tree day): no tree card (next year\'s trees are months away)', wk['12-07'].trees.length === 0, JSON.stringify(wk['12-07'].items));
+  ok('no tomatoes (and no basil) in the box on any winter date: they ended Nov 8 (Nov 12 to Dec 7)', ['11-12', '11-27', '11-28', '11-29', '11-30', '12-02', '12-05', '12-06', '12-07'].every((k) => !/omato|basil/i.test(wk[k].all)), ['11-12', '11-28', '12-06'].map((k) => wk[k].all).join(' | '));
 }
 
 /* ---------------------------------------------------------- 4. signup */

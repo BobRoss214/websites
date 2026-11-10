@@ -87,6 +87,14 @@
     return SEASONS.filter(function (s) { return !inWindow(s, now); }).sort(function (a, b) { return daysUntilStart(a, now) - daysUntilStart(b, now); })[0];
   }
 
+  // The little tags on the season buttons (js/hero.js): Now on the season in progress, Next on the one that starts next (between seasons only Next).
+  // { now: 'winter', next: 'spring' }; '' when there is none.
+  function tags(now) {
+    now = now || new Date();
+    var on = live(now)[0], up = upcoming(now);
+    return { now: on ? on.id : '', next: up ? up.id : '' };
+  }
+
   // The season the site shows: the one in progress. Between seasons it is the one that starts NEXT, so the site always turns to the section that is coming up
   // (the builder, Nov 10 2026: "now that fall is over it should open into the winter section ... it should turn to the next section that's coming up").
   // The Now tag, the all-year hero line and the other "only while it is really on" lines still follow live(), not this: between seasons the next season's
@@ -158,7 +166,7 @@
 
   W.rand = rand;
   W.seasons = { list: SEASONS, live: live, upcoming: upcoming, current: current, inWindow: inWindow, daysUntilStart: daysUntilStart, farmDay: farmDay, apply: apply, active: null,
-    treeWeekends: treeWeekends, treeDatesText: treeDatesText, treeYear: treeYear, paintTree: paintTree };
+    tags: tags, treeWeekends: treeWeekends, treeDatesText: treeDatesText, treeYear: treeYear, paintTree: paintTree };
   if (W.seasonPicker === undefined) W.seasonPicker = true;
 
   document.documentElement.classList.add('js-scene');

@@ -952,13 +952,15 @@
     const btns = $$('[data-fs]', (farm && farm.parentElement) || doc);
     const notes = $$('[data-fs-note]', root);
     const cols = $$('#farm-glance [data-col]');
-    let nowId = '';
-    // the "Now" marks and "This season", read again when the farm's day changes (wa:day, js/live.js): a page left open overnight
+    let nowId = '', liveId = '';
+    // the "Now" marks and "This season", read again when the farm's day changes (wa:day, js/live.js): a page left open overnight.
+    // nowId is the season the site opens on (the one in progress, between seasons the one that starts next); "Now" and "This season" are only for a season
+    // that is really in progress (liveId), so on the days before the trees nothing says the winter has started.
     const markNow = () => {
       const day = new Date(), liveIds = S.live(day).map((s) => s.id);
-      nowId = S.current(day);
+      nowId = S.current(day); liveId = liveIds[0] || '';
       $$('[data-fs]', root).forEach((b) => { const m = $('.fs-now', b.parentElement); if (m) m.hidden = !liveIds.includes(b.dataset.fs); });
-      notes.forEach((n) => { if (!n.hidden) $('.fs-this', n).hidden = n.dataset.fsNote !== nowId; });
+      notes.forEach((n) => { if (!n.hidden) $('.fs-this', n).hidden = n.dataset.fsNote !== liveId; });
     };
     markNow();
     doc.addEventListener('wa:day', markNow);
@@ -971,7 +973,7 @@
       notes.forEach((n) => {
         const on = n.dataset.fsNote === id;
         n.hidden = !on;
-        if (on) $('.fs-this', n).hidden = id !== nowId;
+        if (on) $('.fs-this', n).hidden = id !== liveId;
       });
       cols.forEach((c) => c.classList.toggle('is-sel', c.dataset.col === id));
       let k = 0;

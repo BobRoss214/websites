@@ -42,10 +42,10 @@ const TAG_DAYS = [   // [the farm's day at noon, what the buttons show, which da
   ['2026-10-02T12:00:00-04:00', 'fall:now=now winter:next=next', 'a day in fall: Now on Fall, Next on Winter (the Christmas trees)'],
   ['2026-11-08T12:00:00-05:00', 'fall:now=now winter:next=next', 'the last day of fall'],
   ['2026-11-09T12:00:00-05:00', 'winter:next=next', 'the day after fall, between seasons: no Now, Next on Winter'],
-  ['2026-11-26T12:00:00-05:00', 'winter:next=next', 'Thanksgiving: the trees start tomorrow'],
-  ['2026-11-27T12:00:00-05:00', 'spring:next=next winter:now=now', 'the Friday after Thanksgiving: Now on Winter, Next on Spring'],
-  ['2026-12-08T12:00:00-05:00', 'spring:next=next winter:now=now', 'the last day of winter'],
-  ['2026-12-09T12:00:00-05:00', 'spring:next=next', 'the day after winter: only Next, on Spring'],
+  ['2026-11-26T12:00:00-05:00', 'winter:next=next', 'Thanksgiving, two days before the first tree day: only Next, on Winter'],
+  ['2026-11-28T12:00:00-05:00', 'spring:next=next winter:now=now', 'the first tree day (Saturday, the last weekend in November): Now on Winter, Next on Spring'],
+  ['2026-12-06T12:00:00-05:00', 'spring:next=next winter:now=now', 'the last tree day (the Sunday after the first Saturday of December): the last day of winter'],
+  ['2026-12-07T12:00:00-05:00', 'spring:next=next', 'the day after the last tree day: only Next, on Spring'],
   ['2027-01-20T12:00:00-05:00', 'spring:next=next', 'January: only Next, on Spring'],
   ['2027-04-14T12:00:00-04:00', 'spring:next=next', 'the day before spring'],
   ['2027-04-15T12:00:00-04:00', 'spring:now=now summer:next=next', 'the first day of spring'],
@@ -53,6 +53,10 @@ const TAG_DAYS = [   // [the farm's day at noon, what the buttons show, which da
   ['2027-06-08T12:00:00-04:00', 'summer:next=next', 'between spring and summer'],
   ['2027-06-20T12:00:00-04:00', 'summer:now=now fall:next=next', 'a day in summer: Now on Summer, Next on Fall'],
   ['2027-07-11T12:00:00-04:00', 'fall:next=next', 'between summer and fall'],
+  ['2026-11-27T12:00:00-05:00', 'winter:next=next', 'the Friday after Thanksgiving (no tree day): still only Next, on Winter'],
+  ['2026-12-02T12:00:00-05:00', 'spring:next=next winter:now=now', 'a weekday between the two tree weekends: the winter season is on (Now on Winter)'],
+  ['2027-11-27T12:00:00-05:00', 'spring:next=next winter:now=now', 'the first tree day of the next year (2027: the last Saturday of November is Nov 27)'],
+  ['2027-11-26T12:00:00-05:00', 'winter:next=next', 'the day before it (2027): only Next, on Winter'],
 ];
 // What a customer would call wrong with a tag: cut off (by the window, or by a box with overflow hidden), on top of another button, another tag or "See the farm in", or on two lines
 const TAG_PROBLEMS = () => {
@@ -284,7 +288,9 @@ await run('hero', async ({ browser, base, errs }) => {
   // ---- date logic
   const d = await p.evaluate(() => { const S = WISE_ACRES.seasons, c = (y, m, dd) => S.current(new Date(y, m - 1, dd)); return { a: c(2026, 9, 30), b: c(2026, 4, 25), c: c(2026, 6, 20), d: c(2026, 12, 1), e: c(2026, 12, 20), f: c(2027, 3, 1), g: c(2026, 11, 20) }; });
   ok('Sep 30 is fall, Apr 25 spring, Jun 20 summer', d.a === 'fall' && d.b === 'spring' && d.c === 'summer', JSON.stringify(d));
-  ok('Dec 1 and Dec 20 are winter (holidays), Mar 1 is spring (ahead of picking), Nov 20 is winter (tree season next)', d.d === 'winter' && d.e === 'winter' && d.f === 'spring' && d.g === 'winter');
+  ok('Dec 1 is winter (the trees are on), Dec 20 and Mar 1 are spring (between seasons the site opens on the season that starts next: it no longer stays wintry through the holidays), Nov 20 is winter (the trees are next)', d.d === 'winter' && d.e === 'spring' && d.f === 'spring' && d.g === 'winter', JSON.stringify(d));
+  const between = await p.evaluate(() => { const S = WISE_ACRES.seasons, c = (y, m, dd) => S.current(new Date(y, m - 1, dd, 12)); return [c(2026, 11, 9), c(2026, 11, 10), c(2026, 12, 6), c(2026, 12, 7), c(2027, 6, 9), c(2027, 7, 20), c(2027, 11, 8)].join(); });
+  ok('the day after fall (Nov 9, Nov 10) the site opens on Winter, the day after the last tree day (Dec 7) on Spring, Jun 9 on Summer, Jul 20 on Fall, and Nov 8 (the last day of fall) on Fall', between === 'winter,winter,winter,spring,summer,fall,fall', between);
 
   // ---- the page opens on today's season, with the switcher
   const cur = await p.evaluate(() => WISE_ACRES.seasons.current());

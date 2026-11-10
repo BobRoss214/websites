@@ -1310,10 +1310,10 @@
     const markTags = () => {
       $$('.ss-now, .ss-next', switchEl).forEach((n) => n.remove());
       if (!W.clockOk()) return;   // no readable clock: no tags
-      const on = W.seasons.live()[0], up = W.seasons.upcoming();
+      const tag = W.seasons.tags();   // js/season.js: { now: the season in progress, next: the one that starts next }
       buttons.forEach((b) => {
-        if (on && b.dataset.season === on.id) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
-        else if (up && b.dataset.season === up.id) b.insertAdjacentHTML('beforeend', '<span class="ss-next">' + t('next') + '</span>');
+        if (b.dataset.season === tag.now) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
+        else if (b.dataset.season === tag.next) b.insertAdjacentHTML('beforeend', '<span class="ss-next">' + t('next') + '</span>');
       });
     };
     markTags();
