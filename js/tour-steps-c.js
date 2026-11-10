@@ -579,7 +579,7 @@
     {
       id: 'ch10-worth-asking', order: CHAPTER * 100 + 96, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
       title: 'Worth asking your booking tool',
-      text: 'Your booking tool (Bookeo) may already do part of this. Your FAQ says guests can click View Booking in their email to change a reservation. Ask what else it offers before building anything.',
+      text: 'Your booking tool (Bookeo) may do part of this. Your FAQ says guests can click View Booking in their email to change a reservation. Ask what else it offers before building anything.',
       after: closeDialogs
     }
   ];

@@ -10,7 +10,7 @@
  *   chapter * 100 + the place in the chapter), a chapter that has a title, a page the site has, a title of 9 words at most, a text of 45 words at most
  *   with no sentence over 25 words (a line that starts with "- " is a bullet line and counts as its own sentence), no web address, e-mail address, year,
  *   markup, "Kathy" or jargon word from tools/plain_words.txt, and every dollar amount in a text is an amount that the site's own pages show (a price is
- *   never invented). In chapters 1 to 5 and 11 no card says what was changed ("now says", "new this year", "still", "already", "used to", "instead of",
+ *   never invented). In every chapter no card says what was changed ("now says", "new this year", "still", "already", "used to", "instead of",
  *   "older page", "we need you to": the owner's rule of 10 Nov, NO_CHANGE_NOTES below): a card says what a thing is and why it helps. A card in QUOTES_IN_LIT quotes the page's
  *   own words in “ ”, and those words must be written in its lit part.
  *   Targets (a browser): the steps are walked in order, the way the engine walks them, in ONE browser context per window size: on the page the step names
@@ -44,7 +44,7 @@ const DEMO_PAGES = ['account', 'farm-desk', 'kitchen'];
 const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'also', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after', 'choices', 'choicesLabel'];
 const CHOICE_FIELDS = ['label', 'title', 'text', 'run', 'pressed'];
 const SEASON_NAMES = ['spring', 'summer', 'fall', 'winter'];
-const QUOTES_IN_LIT = ['ch2-pill', 'ch5-varieties'];   // cards with no season buttons that quote the page's own words in “ ”: those words must be written in the lit part (add a card here when it quotes the page)
+const QUOTES_IN_LIT = ['ch2-pill', 'ch5-varieties', 'ch7-note', 'ch7-soon-pantry', 'ch8-last', 'ch6-tree-pizza'];   // cards with no season buttons that quote the page's own words in “ ”: those words must be written in the lit part (add a card here when it quotes the page)
 const SIZES = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
 const OTHER_DAYS = [
   ['2026-11-03T12:00:00-05:00', 'the real day (3 Nov 2026)'],
@@ -474,8 +474,8 @@ function wordChecks() {
   let wordFails = 0;
   for (const s of steps) { const p = wordProblems(s); if (p.length) { wordFails++; ok('the words of step ' + s.order + ' ' + s.id, false, p.join(' | ')); } }
   ok('the words of all ' + steps.length + ' steps follow the rules (fields, 9-word title, 45-word text, 25-word sentences, no address, year, jargon or invented price)', wordFails === 0);
-  {   // the owner's rule (10 Nov): a card says what a thing IS and why it helps visitors or the farm, never what was changed. Read for the chapters written to that rule (1 to 5 and 11); widen NO_CHANGE_NOTES to every chapter once chapters 6 to 10 are written the same way
-    const NO_CHANGE_NOTES = [1, 2, 3, 4, 5, 11];
+  {   // the owner's rule (10 Nov): a card says what a thing IS and why it helps visitors or the farm, never what was changed. Read for every chapter
+    const NO_CHANGE_NOTES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     const NOTES = [/\bnow (?:says|shows|reads|has|have|uses|lists|opens)\b/i, /\bnew (?:this year|website|site|page|look|design|version)\b/i, /\bsomething new\b/i, /\bstill\b/i, /\balready\b/i, /\bused to\b/i, /\binstead of\b/i,
       /\b(?:older|earlier|old) (?:web )?(?:page|site)\b/i, /\byour older\b/i, /\bwe need you to\b/i, /\b(?:was|were|has been|have been) (?:changed|added|moved|removed|fixed|updated)\b/i];
     const found = [];
@@ -484,7 +484,7 @@ function wordChecks() {
       for (const c of choicesOf(s).list || []) parts.push([c.label + ' button', (c.title || '') + ' ' + (c.text || '')]);
       for (const [where, v] of parts) for (const re of NOTES) { const m = String(v || '').match(re); if (m) found.push(s.id + ' ' + where + ': "' + m[0] + '"'); }
     }
-    ok('the cards of chapters 1 to 5 and 11 say what a thing is and why it helps, never what was changed (no "now says", "new this year", "something new", "still", "already", "used to", "instead of", "older page", "we need you to")', found.length === 0, found.join(' | '));
+    ok('the cards of every chapter say what a thing is and why it helps, never what was changed (no "now says", "new this year", "something new", "still", "already", "used to", "instead of", "older page", "we need you to")', found.length === 0, found.join(' | '));
   }
   const perChapter = {};
   for (const s of steps) perChapter[s.chapter] = (perChapter[s.chapter] || 0) + 1;
