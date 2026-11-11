@@ -633,11 +633,11 @@
       isOn: function () { return on; },
       on: function () {     // (called inside the press, so the browser lets the audio start; the first note wakes it)
         on = true;
-        note(784, 0, 0.2, 0.05);
+        note(784, 0, 0.2, 0.08);
       },
       off: function () { on = false; },
-      chime: function () { if (!on) return; note(659, 0, 0.22, 0.06); note(880, 0.18, 0.34, 0.05); },
-      beep: function () { if (!on) return; note(523, 0, 0.3, 0.05); }
+      chime: function () { if (!on) return; note(659, 0, 0.22, 0.1); note(880, 0.18, 0.34, 0.09); },
+      beep: function () { if (!on) return; note(523, 0, 0.3, 0.09); }
     };
   }
 
@@ -733,7 +733,7 @@
       parts.top = h('header', { 'class': 'kit-top' },
         h('ul', { 'class': 'kit-tally', 'data-tour': 'kit-counters', 'aria-label': 'Tickets' }, parts.tWait.el, parts.tDone.el, parts.tLate.el),
         h('p', { 'class': 'kit-clock' }, h('span', { 'class': 'kit-clock-label', text: 'Clock' }), parts.clockText, parts.clockNote),
-        parts.sound);
+        parts.sound, parts.keysBtn);
       parts.soundNote = h('p', { 'class': 'kit-soundnote', id: 'kit-sound-note' });
       parts.live = h('p', { 'class': 'sr-only', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });
       parts.strip = live ? live.strip() : null;
@@ -744,7 +744,7 @@
       parts.settings = h('div', { 'class': 'kit-settings' },
         live ? h('div', { 'class': 'kit-set-group', role: 'group', 'aria-label': 'Answer-by times' },
           h('span', { 'class': 'kit-settings-title', text: 'Answer by' }), stepper('order', 'New order'), stepper('change', 'Change')) : null,
-        h('div', { 'class': 'kit-set-group', role: 'group', 'aria-label': 'Keyboard shortcuts' }, parts.keysBtn, parts.keysNote));
+        h('div', { 'class': 'kit-set-group' }, parts.keysNote));
       parts.railHead = h('h2', { 'class': 'kit-rail-title', tabindex: '-1', id: 'kit-rail-h' }, 'Needs an answer ', parts.railCount = h('span', { 'class': 'kit-pill', text: '0' }));
       parts.keys = h('p', { 'class': 'kit-keys' },
         h('span', { 'class': 'kit-keys-label', text: 'Keys' }),
@@ -824,6 +824,16 @@
       ui.placedY = win.pageYOffset || 0;
     }
 
+    /* ---------- a short message that is seen as well as said (the status line says it to a screen reader): in the box it is about, for a few seconds ---------- */
+    function flashIn(box, text) {
+      if (!box) return;
+      var old = box.querySelector('.kit-flash');
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+      var note = h('p', { 'class': 'kit-flash', 'aria-hidden': 'true', text: text });
+      box.appendChild(note);
+      setTimeout(function () { if (note.parentNode) note.parentNode.removeChild(note); }, 4500);
+    }
+
     /* ---------- the keys button: the number and letter keys answer from anywhere on the page, so a person can turn them off ---------- */
     function keyHint(b) {     // what a screen reader is told about an answer button: its keys, only while the keys work
       var k = b.getAttribute('data-keys');
@@ -888,7 +898,7 @@
 
     function trigger(t, act) {
       if (act === 'later') { openEditor(t); return; }
-      if (act === 'no' && t.kind === 'order') { say('A new order can be confirmed with Yes, or moved to another time.'); return; }
+      if (act === 'no' && t.kind === 'order') { say('A new order can be confirmed with Yes, or moved to another time.'); flashIn(els[t.key] && els[t.key].querySelector('.kit-t-side'), 'A new order can be confirmed with Yes, or moved to another time.'); return; }
       run(t, act, {});
     }
 
@@ -916,7 +926,7 @@
     function sendEditor(t) {
       var ed = ui.edit[t.key];
       if (!ed) return;
-      if (ed.pickup === ed.base && !String(ed.note).replace(/\s+/g, '')) { say('Choose another time, or write a note, first.'); return; }
+      if (ed.pickup === ed.base && !String(ed.note).replace(/\s+/g, '')) { say('Choose another time, or write a note, first.'); flashIn(els[t.key] && els[t.key].querySelector('.kit-edit'), 'Choose another time, or write a note, first.'); return; }
       run(t, 'later', { pickup: ed.pickup, note: ed.note });
     }
     function openEditor(t) {

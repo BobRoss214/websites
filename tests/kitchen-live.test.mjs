@@ -17,8 +17,9 @@
  *   - the sound: nothing plays (not even an audio context) until Sound is pressed; then a chime for tickets that arrive, a gentle beep that repeats while any is late, none while the
  *     rush is paused, none after muting (the Sound button, or the M key);
  *   - a screen reader: a polite status line says a ticket arrived, was answered, is late; the timer is a timer that does not chatter; the buttons say their keys;
- *   - a tablet (1024 x 768): the title, the counters, the clock and the Sound button share one row, and a screen that opens with tickets puts the board in place, so the
- *     first ticket and its three answer buttons are on the first screen, below the site's own sticky bars;
+ *   - the first screen at 1366 x 768, 1024 x 768 and 1920 x 1080: when the page opens with tickets, after a reload and after pressing On, the first ticket's pizzas and its three
+ *     answer buttons are fully on the screen, under what sticks to the top; at 1366 the type is big (pizza names 34 px, the table of a change too), the strip with Waiting, Late and
+ *     Sound sticks under the site's header, a ticket that gets the focus goes to the top of the board, the editor names its order and the tab title shows the count;
  *   - the keys: a key held down answers one ticket only; the Keys button under the board turns the number and letter keys off (and the key marks and the key hints go with
  *     them) and on again; the small tickets of the side lanes are not made again on every pass; a tab nobody can see makes no chime and no beep;
  *   - reduced motion: the late ticket does not pulse; a phone with touch: the buttons stay big, nothing scrolls sideways, a tap answers; a second window sees an answer;
@@ -85,6 +86,16 @@ async function clickLive(p, which) {
     await p.evaluate((w) => { const b = document.querySelector('[data-dl="' + w + '"]'); if (b) b.click(); }, which);
   }
 }
+
+// The first screen: where the first ticket is, whether its pizzas (the left part) and its three answers (the right part) are fully inside the window, and below what sticks to the top (the kitchen's strip, else the site's header).
+const firstScreen = (p) => p.evaluate(() => {
+  const r = (e) => e.getBoundingClientRect(), li = document.querySelector('.kit-ticket');
+  if (!li) return { none: true };
+  const hd = document.querySelector('.site-header'), top = document.querySelector('.kit-top'), info = li.querySelector('.kit-t-info');
+  const sticky = getComputedStyle(top).position === 'sticky', stuck = Math.round(sticky ? r(top).bottom : r(hd).bottom);
+  const btns = [...li.querySelectorAll('.kit-ans')].map((b) => [Math.round(r(b).top), Math.round(r(b).bottom)]), vh = window.innerHeight;
+  return { y: Math.round(window.scrollY), vh, stuck, ticket: [Math.round(r(li).top), Math.round(r(li).bottom)], info: Math.round(r(info).bottom), btns, fits: r(li).top >= stuck - 2 && Math.max(r(info).bottom, ...btns.map((b) => b[1])) <= vh };
+});
 
 await run('kitchen-live', async ({ browser, base, errs }) => {
   const p = await openKitchen(browser, base, errs);
@@ -390,29 +401,62 @@ await run('kitchen-live', async ({ browser, base, errs }) => {
     await q.context().close();
   });
 
-  /* ------------------------------------------------------------------ a tablet: the first screen */
-  await section('a tablet', async () => {
-    const a = await openKitchen(browser, base, errs, { viewport: { width: 1024, height: 768 } });
-    await sampleChange(a);
-    await a.evaluate(() => window.DemoLive.start({ speed: 'busy' }));
-    await a.clock.runFor(8000);
-    await settled(a, 0);
-    const nowA = await a.evaluate(() => Date.now());
-    const b = await a.context().newPage();   // a second look at the page, now with tickets waiting: the first drawing has tickets
-    await b.clock.install({ time: new Date(nowA) });
-    await b.goto(base + 'kitchen.html?demo', { waitUntil: 'load' });
-    await until(b, () => document.querySelectorAll('.kit-ticket').length > 0, null, 20000);
-    await settled(b, 200);
-    const m = await b.evaluate(() => {
-      const r = (e) => e.getBoundingClientRect(), li = document.querySelector('.kit-ticket'), bar = document.querySelector('.demo-bar'), note = document.querySelector('.kit-soundnote');
-      return { y: Math.round(window.scrollY), vh: window.innerHeight, under: Math.round(bar ? r(bar).bottom : 150), tickets: document.querySelectorAll('.kit-ticket').length,
-        buttons: [...li.querySelectorAll('.kit-ans')].map((x) => [Math.round(r(x).top), Math.round(r(x).bottom)]),
-        sameRow: Math.abs(r(document.querySelector('.kit-sound')).top - r(document.querySelector('.kit-tally')).top) < 40, noteW: Math.round(r(note).width), noteText: note.textContent.length };
-    });
-    ok('at 1024 x 768 a screen that opens with tickets puts the board in place: the page is scrolled, and the first ticket\'s three answer buttons are all on the screen, under the site\'s sticky bars', m.tickets >= 2 && m.y > 100 && m.buttons.length >= 2 && m.buttons.every(([top, bottom]) => top >= m.under - 2 && bottom <= m.vh), JSON.stringify(m));
-    ok('the title, the counters, the clock and the Sound button are on one row at that size, and the long note under the Sound button is for a screen reader only (it has its words, but takes no room)', m.sameRow && m.noteW <= 2 && m.noteText > 20, JSON.stringify(m));
-    await shot(b, '10-tablet');
-    await a.context().close();
+  /* ------------------------------------------------------------------ the first screen at three window sizes */
+  await section('the first screen', async () => {
+    for (const [w, h] of [[1366, 768], [1024, 768], [1920, 1080]]) {
+      const size = { viewport: { width: w, height: h } };
+      const a = await openKitchen(browser, base, errs, size);
+      await sampleChange(a);
+      await a.evaluate(() => window.DemoLive.start({ speed: 'busy' }));
+      await a.clock.runFor(8000);
+      await settled(a, 0);
+      const nowA = await a.evaluate(() => Date.now());
+      const b = await a.context().newPage();   // a second look at the page, now with tickets waiting: the first drawing has tickets
+      await b.clock.install({ time: new Date(nowA) });
+      await b.goto(base + 'kitchen.html?demo', { waitUntil: 'load' });
+      await until(b, () => document.querySelectorAll('.kit-ticket').length > 0, null, 20000);
+      await b.waitForTimeout(2600);   // the page puts the board in place again after the load, at 0.25, 0.9 and 2 seconds
+      const opened = await firstScreen(b);
+      await b.reload({ waitUntil: 'load' });
+      await until(b, () => document.querySelectorAll('.kit-ticket').length > 0, null, 20000);
+      await b.waitForTimeout(2600);
+      const reloaded = await firstScreen(b);
+      if (w === 1366) await shot(b, '10-first-1366');
+      await a.context().close();
+      const e = await openKitchen(browser, base, errs, size);   // an empty screen, then On
+      await sampleChange(e);
+      await e.waitForTimeout(500);
+      await e.evaluate(() => window.scrollTo(0, 0));
+      await e.locator('[data-dl="on"]').click();
+      await e.waitForTimeout(1500);
+      const pressed = await firstScreen(e);
+      ok('at ' + w + ' x ' + h + ' the first ticket\'s pizzas and its three answer buttons are fully on the screen, under what sticks to the top: when the page opens, after a reload and after pressing On', [opened, reloaded, pressed].every((m) => !m.none && m.y > 0 && m.fits), JSON.stringify([opened, reloaded, pressed]));
+      if (w === 1366) {
+        const px = await e.evaluate(() => { const f = (sel) => { const x = document.querySelector(sel); return x ? parseFloat(getComputedStyle(x).fontSize) : 0; }; return { num: f('.kit-num'), name: f('.kit-name'), pizza: f('.kit-ticket .kit-line .kit-pizza'), tops: f('.kit-tops'), tablePizza: f('.kit-diff tbody th .kit-pizza'), tableValue: f('.kit-diff td'), waited: f('.kit-waited'), timer: f('.kit-timer-text') }; });
+        ok('at 1366 x 768 what a cook reads at a glance is big: the number 44 px or more, the family 34, pizza names 34 (in an order and in the table of a change), toppings and the "Waited" line 23, values in the table 29, the timer 36', px.num >= 44 && px.name >= 34 && px.pizza >= 34 && px.tablePizza >= 30 && px.tops >= 23.5 && px.waited >= 23 && px.tableValue >= 29 && px.timer >= 36, JSON.stringify(px));
+        const st = await e.evaluate(() => {
+          const r = (x) => x.getBoundingClientRect(), hd = document.querySelector('.site-header'), top = document.querySelector('.kit-top'), at = (y) => { window.scrollTo({ top: y, behavior: 'instant' }); };
+          const read = () => ({ head: Math.round(r(hd).bottom), top: Math.round(r(top).top), bottom: Math.round(r(top).bottom), late: Math.round(r(document.querySelector('.kit-tally-late')).top), wait: Math.round(r(document.querySelector('.kit-tally-wait')).top), sound: Math.round(r(document.querySelector('.kit-sound')).top), sticky: getComputedStyle(top).position });
+          const a0 = read(); at(window.scrollY + 700); const a1 = read(); at(0); return { a0, a1 };
+        });
+        const sees = (m) => m.sticky === 'sticky' && Math.abs(m.top - m.head) <= 3 && m.late >= m.head && m.wait >= m.head && m.sound >= m.head && m.sound < m.bottom;
+        ok('the strip with Waiting, Late and Sound sticks under the site\'s header: it is on the screen where the board was put in place, and still after the page is scrolled 700 px further', sees(st.a0) && sees(st.a1), JSON.stringify(st));
+        await e.evaluate(() => { document.activeElement && document.activeElement.blur(); window.DemoLive.setSettings({ changeSecs: 600, orderSecs: 600 }); });
+        await e.keyboard.press('ArrowDown');
+        await settled(e, 100);
+        const al = await e.evaluate(() => { const li = document.activeElement.closest ? document.activeElement.closest('.kit-ticket') : null, top = document.querySelector('.kit-top'); if (!li) return null; const r = li.getBoundingClientRect(); return { top: Math.round(r.top), stuck: Math.round(top.getBoundingClientRect().bottom), tall: Math.round(r.height), num: li.querySelector('.kit-num').getBoundingClientRect().top >= top.getBoundingClientRect().bottom - 1 }; });
+        ok('a ticket that gets the focus from the keyboard goes to the top of the board area, just under the sticky bars: its number, family and timer are not hidden', !!al && al.top >= al.stuck - 2 && al.top <= al.stuck + 40 && al.num, JSON.stringify(al));
+        await e.keyboard.press('3');
+        await settled(e, 100);
+        const et = await e.evaluate(() => { const t = document.querySelector('.kit-edit-title'), li = t && t.closest('.kit-ticket'); return t ? { title: t.textContent, num: li.querySelector('.kit-num').textContent } : null; });
+        ok('the small editor says which order it is for: "Another pick-up time for order #" and the order\'s own number', !!et && et.title === 'Another pick-up time for order ' + et.num, JSON.stringify(et));
+        await e.keyboard.press('Escape');
+        const tt = await e.evaluate(() => document.title);
+        ok('the tab title shows what waits, for a cook in another tab: "(3) ..." for tickets that wait, "(2 late) ..." while some are late', /^\(\d+( late)?\) /.test(tt), tt);
+        await shot(e, '11-1366-on');
+      }
+      await e.context().close();
+    }
   });
 
   /* ------------------------------------------------------------------ a second window */
