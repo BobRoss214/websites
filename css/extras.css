@@ -386,13 +386,19 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
    (it would leave a blank at its side). Which cards are wide depends on how many stand across, because a wide card must never leave a hole at the end of the row before it.
    The class in index.html says when: shop-wide3 / shop-wide2 = three across (from 1264 px, and 761-991 px) / two across (992-1263 px, and a phone up to 760 px); in the farm
    group the rides stand 5 / 4 across from 1264 / 992 px (shop-wide5 / shop-wide4) and 3 / 2 across below that (shop-wide3 / shop-wide2). A card that is wide in several
-   layouts has several classes. After a change to the cards of a group, tests/shop.test.mjs names the row that is not full. */
+   layouts has several classes. After a change to the cards of a group, tests/shop.test.mjs names the row that is not full.
+   TO GO BACK to the old boxes: take the shop-wide2 ... shop-wide5 classes off the cards in index.html (10 cards; shop-spread, the one on the u-pick card, then does nothing: its rules
+   only apply together with a width class; you may take it off too), and take the wide-box and fill hunks of tests/shop.test.mjs with them (they need wide boxes: "the wide boxes
+   are filled across", the fill counts). */
 @media screen and (min-width:79em){
   .shop-group:not(.sg-farm) .shop-wide3,.sg-farm .shop-wide5{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
   .shop-group:not(.sg-farm) .shop-wide3 .shop-body,.sg-farm .shop-wide5 .shop-body{flex:0 1 auto;display:grid;justify-items:start}
   .shop-group:not(.sg-farm) .shop-wide3 > .shop-sub,.sg-farm .shop-wide5 > .shop-sub{flex:1 1 11em}
   .shop-group:not(.sg-farm) .shop-wide3 .shop-opts,.sg-farm .shop-wide5 .shop-opts{display:flex;flex-wrap:wrap;width:auto;gap:0 14px}
   .shop-group:not(.sg-farm) .shop-wide3 .shop-opts li:last-child,.sg-farm .shop-wide5 .shop-opts li:last-child{border-bottom:2px dashed var(--line,#e6d6b8)}
+  .sg-farm .shop-wide5.shop-spread .shop-body{flex:1 1 auto}   /* shop-spread (the u-pick card, whose sizes have no note beside them): the two prices share the width of the box instead of leaving a blank at its side; only while the card is wide */
+  .sg-farm .shop-wide5.shop-spread .shop-opts{width:100%}
+  .sg-farm .shop-wide5.shop-spread .shop-opts li{flex:1 1 auto}
 }
 @media screen and (min-width:62em) and (max-width:78.99em){
   .shop-group:not(.sg-farm) .shop-wide2,.sg-farm .shop-wide4{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
@@ -400,6 +406,9 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .shop-group:not(.sg-farm) .shop-wide2 > .shop-sub,.sg-farm .shop-wide4 > .shop-sub{flex:1 1 11em}
   .shop-group:not(.sg-farm) .shop-wide2 .shop-opts,.sg-farm .shop-wide4 .shop-opts{display:flex;flex-wrap:wrap;width:auto;gap:0 14px}
   .shop-group:not(.sg-farm) .shop-wide2 .shop-opts li:last-child,.sg-farm .shop-wide4 .shop-opts li:last-child{border-bottom:2px dashed var(--line,#e6d6b8)}
+  .sg-farm .shop-wide4.shop-spread .shop-body{flex:1 1 auto}
+  .sg-farm .shop-wide4.shop-spread .shop-opts{width:100%}
+  .sg-farm .shop-wide4.shop-spread .shop-opts li{flex:1 1 auto}
 }
 @media screen and (min-width:47.51em) and (max-width:61.99em){
   .shop-wide3{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
@@ -409,6 +418,9 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .shop-wide3 .shop-opts li:last-child{border-bottom:2px dashed var(--line,#e6d6b8)}
   .shop-wide3 .shop-opts-u li{display:flex}
   .shop-wide3 .shop-opts-u .so-p{display:inline;margin-left:auto;text-align:right}
+  .shop-wide3.shop-spread .shop-body{flex:1 1 auto}
+  .shop-wide3.shop-spread .shop-opts{width:100%}
+  .shop-wide3.shop-spread .shop-opts li{flex:1 1 auto}
 }
 @media screen and (max-width:47.5em){
   .shop-wide2{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
@@ -418,11 +430,9 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .shop-wide2 .shop-opts li:last-child{border-bottom:2px dashed var(--line,#e6d6b8)}
   .shop-wide2 .shop-opts-u li{display:flex}
   .shop-wide2 .shop-opts-u .so-p{display:inline;margin-left:auto;text-align:right}
-}
-@media screen{   /* the u-pick card (its sizes have no note beside them): the two prices share the width of the box instead of leaving a blank at its side */
-  .shop-card.shop-spread .shop-body{flex:1 1 auto}
-  .shop-card.shop-spread .shop-opts{width:100%}
-  .shop-card.shop-spread .shop-opts li{flex:1 1 auto}
+  .shop-wide2.shop-spread .shop-body{flex:1 1 auto}
+  .shop-wide2.shop-spread .shop-opts{width:100%}
+  .shop-wide2.shop-spread .shop-opts li{flex:1 1 auto}
 }
 @media (max-width:47.5em){
   .shop-jump{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
