@@ -912,10 +912,12 @@
 
     // Mark what's happening now, and open that season by default.
     const now = new Date();
-    let live = [], next = null;
+    let live = [], next = null, onNow = [], gapDay = '';
     const markNow = () => {   // also when the farm's day changes while the page is open (a season ends or starts)
       const at = new Date();
       live = S.live(at);
+      onNow = S.happening(at);   // the trees are only on the tree days: not on the five days between the two weekends (the "Now" badges still follow live)
+      gapDay = live.length && !onNow.length ? S.nextTreeDay(at) : '';
       S.list.forEach((s) => { const b = $('.now-badge', $('#tab-' + s.id)); if (b) b.hidden = !live.some((x) => x.id === s.id); });
       next = S.list.filter((s) => !S.inWindow(s, at)).sort((a, b) => S.daysUntilStart(a, at) - S.daysUntilStart(b, at))[0] || target;
     };
@@ -929,9 +931,10 @@
     const fact = $('#fact-season');
     const renderFact = () => {
       if (!fact) return;
-      fact.textContent = live.length
-        ? t('{crop} \u2014 happening now', { crop: live.map((s) => t(s.crop)).join(' & ') })
-        : t('Next up: {crop} ({when})', { crop: t(next.crop), when: t(next.next) });
+      fact.textContent = onNow.length
+        ? t('{crop} \u2014 happening now', { crop: onNow.map((s) => t(s.crop)).join(' & ') })
+        : gapDay ? t('Next up: {crop} ({when})', { crop: t(live[0].crop), when: W.live.dateLabel(gapDay) })
+          : t('Next up: {crop} ({when})', { crop: t(next.crop), when: t(next.next) });
     };
     renderFact();
     doc.addEventListener('wa:lang', renderFact);

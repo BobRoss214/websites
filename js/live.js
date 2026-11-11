@@ -243,10 +243,14 @@
     const S = W.seasons, now = new Date();
     const upcoming = S.list.filter((s) => !S.inWindow(s, now)).sort((a, b) => S.daysUntilStart(a, now) - S.daysUntilStart(b, now))[0];
     if (!upcoming) { box.hidden = true; return; }
-    const days = Math.round(S.daysUntilStart(upcoming, now));
-    const live = S.live(now)[0];
-    $('[data-cd-now]', box).textContent = live ? t('Happening now: {crop}', { crop: t(live.crop) }) : '';
-    $('[data-cd-next]', box).textContent = t('Next up: {crop}. Usually starts {when}.', { crop: t(upcoming.crop), when: t(upcoming.next) });
+    const inSeason = S.live(now)[0], on = S.happening(now)[0];
+    // the winter season also covers the five days between the two tree weekends: the trees are not there then, so the next tree day is what comes next
+    const gap = inSeason && !on ? S.nextTreeDay(now) : '';
+    const dayNo = (ymd) => Date.UTC(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8)) / 864e5;
+    const next = gap ? { crop: inSeason.crop, when: dateLabel(gap) } : { crop: upcoming.crop, when: t(upcoming.next) };
+    const days = gap ? Math.round(dayNo(gap) - dayNo(easternParts(now).ymd)) : Math.round(S.daysUntilStart(upcoming, now));
+    $('[data-cd-now]', box).textContent = on ? t('Happening now: {crop}', { crop: t(on.crop) }) : '';
+    $('[data-cd-next]', box).textContent = t('Next up: {crop}. Usually starts {when}.', { crop: t(next.crop), when: next.when });
     $('[data-cd-days]', box).textContent = String(days);
     $('[data-cd-unit]', box).textContent = days === 1 ? t('day to go') : t('days to go');
     box.hidden = false;
@@ -261,8 +265,9 @@
     const el = $('[data-ann-season]');
     if (!el) return;
     if (!W.clockOk()) { el.textContent = ''; return; }
-    const now = new Date(), live = W.seasons.live(now)[0], nxt = upcomingSeason(now);
-    el.textContent = live ? t('In season: {crop}', { crop: t(live.crop) }) : nxt ? t('Next up: {crop}, usually {when}', { crop: t(nxt.crop), when: t(nxt.next) }) : '';
+    const S = W.seasons, now = new Date(), live = S.live(now)[0], on = S.happening(now)[0], nxt = upcomingSeason(now);
+    const gap = live && !on ? S.nextTreeDay(now) : '';   // between the two tree weekends: the trees are not there, the next tree day is what comes next
+    el.textContent = on ? t('In season: {crop}', { crop: t(on.crop) }) : gap ? t('Next up: {crop}, usually {when}', { crop: t(live.crop), when: dateLabel(gap) }) : nxt ? t('Next up: {crop}, usually {when}', { crop: t(nxt.crop), when: t(nxt.next) }) : '';
   }
 
   /* ------------------------------------------------------------------ *
