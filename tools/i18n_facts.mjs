@@ -55,7 +55,7 @@ const enDayNo = (w) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf
 const L = '\\p{L}\\p{M}';   // a letter (with its marks): Devanagari and Vietnamese words are not cut in the middle
 const MONTHS = {   // month names (full names first, then the short forms that are used), one entry per month; [^L] before and after is added below
   es: ['enero|ene', 'febrero|feb', 'marzo|mar', 'abril|abr', 'mayo|may', 'junio|jun', 'julio|jul', 'agosto|ago', 'septiembre|setiembre|sept|sep', 'octubre|oct', 'noviembre|nov', 'diciembre|dic'],
-  hi: ['जनवरी|Jan', 'फ़रवरी|फरवरी|Feb', 'मार्च|Mar', 'अप्रैल|Apr', 'मई|May', 'जून|Jun', 'जुलाई|Jul', 'अगस्त|Aug', 'सितंबर|सितम्बर|Sep', 'अक्टूबर|अक्तूबर|Oct', 'नवंबर|नवम्बर|Nov', 'दिसंबर|दिसम्बर|Dec'],
+  hi: ['जनवरी|जन॰|Jan', 'फ़रवरी|फरवरी|फ़र॰|Feb', 'मार्च|Mar', 'अप्रैल|Apr', 'मई|May', 'जून|Jun', 'जुलाई|जुल॰|Jul', 'अगस्त|अग॰|Aug', 'सितंबर|सितम्बर|सित॰|Sep', 'अक्टूबर|अक्तूबर|अक्टू॰|Oct', 'नवंबर|नवम्बर|नव॰|Nov', 'दिसंबर|दिसम्बर|दिस॰|Dec'],   // the short forms (॰) are the ones the browser uses for Hindi; the farm-year bar of the home page has twelve narrow columns
 };
 const DAYS = {   // names of the days of the week, Sunday first; short forms after the bar
   es: ['domingo|dom', 'lunes|lun', 'martes', 'mi[eé]rcoles|mi[eé]', 'jueves|jue', 'viernes|vie', 's[aá]bado|s[aá]b'],
