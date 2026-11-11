@@ -385,13 +385,13 @@
     {
       id: 'ch10-intro', order: CHAPTER * 100 + 4, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
       title: 'A pretend account',
-      text: 'This part is a demo of accounts. Nothing in it is real: no server, no real families, and nothing is sent to anyone. This strip says so on every demo screen. The Start over button clears the demo.',
+      text: 'This part is a demo of family accounts. Nothing in it is real, and nothing is sent to anyone or saved anywhere but in this browser. The strip above says so on every demo screen. Start over clears the demo.',
       after: closeDialogs
     },
     {
       id: 'ch10-signup', order: CHAPTER * 100 + 8, chapter: CHAPTER, page: 'account', target: hook('acct-signup'), skipIfMissing: true,
       title: 'Create an account',
-      text: 'A visitor types a name and an email, and says if they plan a party, an event or a school trip. Any password works here, and nothing is saved on a server. Press Next and the tour gets a sample family ready for you.',
+      text: 'A visitor types a name and an email, and says if they plan a party, an event or a school trip. Any password works, and nothing is saved except in this browser. Press Next and the tour gets a sample family ready.',
       before: scene(function () { if (call('current')) call('signOut'); }, hook('acct-signup'))   // signed out only: a family the owner made by hand is still there for the next card
     },
     {
@@ -429,7 +429,7 @@
     {
       id: 'ch10-desk-live', order: CHAPTER * 100 + 29, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-live'), skipIfMissing: true,
       title: 'A busy day at the desk',
-      text: 'The tour starts the rush for this card. Pretend families keep asking to move a visit, asking questions and sending photos and reviews. The counters and the feed follow. Calm, Busy and Rush set the speed. Off pauses everything, On starts it again.',
+      text: 'A pretend busy day starts when this card shows. Families keep asking to move a visit and sending questions, photos and reviews. The counters and the feed (a list of what just happened) follow. Calm, Busy and Rush set the speed. Off pauses, On restarts.',
       before: liveScene(function () { rushOn(true); }, hook('desk-live'))
     },
     {
@@ -528,6 +528,12 @@
       before: scene(alertOn, hook('desk-people'))
     },
     {
+      id: 'ch10-desk-week', order: CHAPTER * 100 + 62, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-week'), skipIfMissing: true,
+      title: 'This week, day by day',
+      text: 'The desk shows who is coming each day, counted as people, not as room left. Pizzas are counted by pick-up time. The numbers come from the pretend visits in this demo.',
+      before: scene(account, hook('desk-week'))
+    },
+    {
       id: 'ch10-bell', order: CHAPTER * 100 + 64, chapter: CHAPTER, page: 'account', target: hook('acct-bell'), skipIfMissing: true,   // the bell opens its list outside its own box: the list is lit with it (the bell says so in aria-controls and aria-expanded)
       title: 'The alert arrives',
       text: 'The tour sent the alert. The family sees it in the bell at the top. Replies, alerts and weather notices all land there, and each one links to the right screen.',
@@ -554,8 +560,14 @@
     {
       id: 'ch10-event', order: CHAPTER * 100 + 80, chapter: CHAPTER, page: 'account', target: hook('acct-event'), skipIfMissing: true,
       title: 'My event, for groups and schools',
-      text: 'This tab shows only for families who said yes at sign-up to a party, an event or a school trip. This family has one, so the tab is here. It has a head count, a checklist and messages. Changes are requests to you.',
+      text: 'This screen shows only for families who said yes at sign-up to a party, an event or a school trip. This family has one, so it is here. It has a head count, a checklist and messages. Changes are requests to you.',
       before: scene(eventShown, hook('acct-event'), 'event')
+    },
+    {
+      id: 'ch10-desk-groups', order: CHAPTER * 100 + 82, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-groups'), skipIfMissing: true,
+      title: 'Groups and schools on your desk',
+      text: 'A school trip or party that a family set up shows here, with its messages. A change in the head count lands under “Waiting for you”, so nothing slips by. The sample family has a school trip.',
+      before: scene(eventShown, hook('desk-groups'))
     },
     {
       id: 'ch10-desk-weather', order: CHAPTER * 100 + 84, chapter: CHAPTER, page: 'farm-desk', target: hook('desk-weather'), skipIfMissing: true,
@@ -573,7 +585,7 @@
     {
       id: 'ch10-real-needs', order: CHAPTER * 100 + 92, chapter: CHAPTER, page: 'account', target: BAR, skipIfMissing: true,   // the lit Start over opens a dialog (it sits above the dimmer, so it can be used)
       title: 'What a real version needs',
-      text: 'A real version would need:\n- a safe place for logins\n- a link to your booking tool\n- alerts to Mrs. Cathy and the kitchen\n- extra care with kids\' information\n- an updated privacy page',
+      text: 'A real version would need:\n- a safe place for sign-ins\n- a link to your booking tool\n- alerts to Mrs. Cathy and the kitchen\n- extra care with kids’ information\n- an updated privacy page',
       after: closeDialogs
     },
     {

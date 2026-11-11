@@ -42,9 +42,9 @@
     { n: 5, title: 'What is in season' },
     { n: 6, title: 'The GreenHouse and pizza' },
     { n: 7, title: 'The Store' },
-    { n: 8, title: 'Groups, story and contact' },
+    { n: 8, title: 'Groups, story, questions and contact' },
     { n: 9, title: 'Works for everyone' },
-    { n: 10, title: 'A pretend account' },
+    { n: 10, title: 'A pretend account, desk and kitchen' },
     { n: 11, title: 'What we need from you' }
   ];
 
@@ -216,37 +216,37 @@
     {
       id: 'ch1-real', order: 102, chapter: 1, page: 'index', target: null,
       title: 'What is real, and what is pretend',
-      text: 'The words, hours and prices come from the farm’s own signs and photos. The account area near the end is a pretend demo. It sends nothing to anyone.'
+      text: 'Hours and prices come from the farm’s own signs and photos. Pretend or not final: the account, desk and kitchen screens, the Store’s ingredient lists, the draft corporate prices and the hours marked “Not official yet”. Nothing pretend is sent to anyone.'
     },
     {
       id: 'ch1-seasons', order: 103, chapter: 1, page: 'index', target: null,
       title: 'The page changes with the seasons',
-      text: 'Parts of the site change with the seasons. Their steps have season buttons. A button pretends it is a Saturday at noon, in the middle of that season. Words in ‘single quotes’ show on another day. Is it right? Tell us. Next puts it back.'
+      text: 'Parts of the site change with the seasons. Their steps have season buttons. A button pretends it is a Saturday at noon, in the middle of that season. Words in ‘single quotes’ show on another day. Next puts it back.'
     },
 
     /* ---------------------------------------------------------------- 2. The first screen */
     {
       id: 'ch2-strip', order: 201, chapter: 2, page: 'index', target: '.announce',
       title: 'The strip at the very top',
-      text: 'This strip is on every page. It says the farm takes reservations only, and The GreenHouse needs none. It also says what is in season, or what comes next, from the calendar. On a phone, that part is left out. Press a season.',
+      text: 'This strip is on every page. From spring to fall it says the farm takes reservations only and The GreenHouse needs none. In winter it names the tree weekends. It also says what is in season or next (not on a phone). Press a season.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring, April 15 to June 7. The strip begins “In season: Strawberries”. After June 7 it says ‘Next up: Blueberries & sunflowers, usually mid-June’.',
         summer: 'Summer, June 15 to July 10. It says “In season: Blueberries & sunflowers”. After July 10 it says ‘Next up: Pumpkins & tomatoes, usually mid-September’.',
         fall: 'Fall, September 13 to November 8. It says “In season: Pumpkins & tomatoes”. After November 8 it says ‘Next up: Christmas trees at The GreenHouse, usually the last weekend in November’.',
-        winter: 'Winter, from the last Saturday in November to the Sunday after the first Saturday in December. Trees are there on Saturdays and Sundays only. It says “In season: Christmas trees at The GreenHouse”. After that Sunday it says ‘Next up: Strawberries, usually mid-April’.'
+        winter: 'Winter. The strip names the tree weekends, Saturday and Sunday only. It says the farm and The GreenHouse are open then, with no reservation, and “In season: Christmas trees at The GreenHouse”. After the last tree Sunday it says ‘Next up: Strawberries, usually mid-April’.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
     {
       id: 'ch2-notice', order: 202, chapter: 2, page: 'index', target: '.announce',   // the yellow bar is drawn right under this strip (js/live.js, renderNotice); it is off while the notice is empty
       title: 'The yellow bar for closures',
-      text: 'For a rain day or a holiday, a yellow bar can show under this strip on every page, with a short message for visitors. It can switch itself off after a date you choose. Today it is off, so you do not see it.'
+      text: 'For a rain day or a holiday, a yellow bar can show under this strip on every page, with a short message for visitors. It can switch itself off after a date you choose. With no message set, nothing shows.'
     },
     {
       id: 'ch2-seasons', order: 203, chapter: 2, page: 'index', target: '.hero-copy', also: '#hero-scene',   // the picture is lit too: the cards of the buttons describe it
       title: 'The first screen follows the season',
-      text: 'The page dresses itself for the real season, using the calendar. Headline, line, buttons and picture all follow it. Visitors can peek at other seasons with the buttons at the top. Your site builder can switch them off. Press a season to see it.',
+      text: 'The page dresses itself for the season that is on. Between seasons the picture and buttons turn to the one coming next. Visitors can peek at other seasons with the buttons at the top. Press a season to see it.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring. The line says “It’s strawberry season!” and talks about strawberries, flowers and the animals. The buttons are “Reserve your visit” and “See what’s in season”, with a note about The GreenHouse. In the picture, kids pick strawberries in the rows.',
@@ -272,7 +272,7 @@
     {
       id: 'ch2-badges', order: 205, chapter: 2, page: 'index', target: '.hero-live', skipIfMissing: true,
       title: 'Open now, or closed today',
-      text: 'These badges say if the farm and The GreenHouse are open, from your hours and the clock. For a rain day, your site builder adds the date and they show closed. Your booking tool needs its own change. Press a season.',
+      text: 'These badges say if the farm and The GreenHouse are open, using your hours and the clock. For a rain day, tell your site builder the date and they show closed. Close the day in your booking tool too. Press a season.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring, on a Saturday at noon. Only The GreenHouse has a badge: “Open now, until 8 pm”. The farm has none, because no farm days are set for spring.',
@@ -285,7 +285,7 @@
     {
       id: 'ch2-reserve', order: 206, chapter: 2, page: 'index', target: '.hero-cta',
       title: 'The big buttons',
-      text: 'Reserve opens your booking tool (Bookeo) in a new tab. Nothing is booked on this site. The white button leads to what is in season. In winter the big red button says “Visit The GreenHouse”, and the top bar keeps its Reserve.'
+      text: 'From spring to fall the big red button is Reserve. It opens your booking tool (Bookeo) in a new window, and nothing is booked on this site. In winter it says “Visit The GreenHouse”. The white button leads to what is in season.'
     },
     {
       id: 'ch2-pill', order: 207, chapter: 2, page: 'index', target: '.hero-note', skipIfMissing: true,   // the note is shown from spring to fall: it is hidden in winter
@@ -318,7 +318,7 @@
     {
       id: 'ch2-facts', order: 211, chapter: 2, page: 'index', target: '.facts',
       title: 'The quick facts under the first screen',
-      text: 'Four quick facts sit under the first screen: where the farm is, that reservations are required, what is in season today and who to email. Each one is a link, so a visitor can get directions, book or write in one tap.'
+      text: 'Four quick facts sit under the first screen: where the farm is, whether a reservation is needed, what is in season and who to email. Each is a link: directions, booking details or an email in one tap.'
     },
 
     /* ---------------------------------------------------------------- 3. This week and the menu */
@@ -370,13 +370,13 @@
     {
       id: 'ch4-places', order: 401, chapter: 4, page: 'index', target: '#visit .choose',
       title: 'Two places, one family',
-      text: 'Visitors choose the farm or The GreenHouse next door. The farm is always by reservation, never walk-in. The GreenHouse needs no reservation and is open Friday to Sunday, 10 am to 8 pm. Press a season to see the farm card change.',
+      text: 'Visitors choose the farm or The GreenHouse next door. The GreenHouse needs no reservation. From spring to fall the farm is by reservation only; on the tree weekends it is open with none. Press a season to see the farm card change.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
-        spring: 'Spring. The farm card shows a strawberry: “U-pick organic strawberries, plus u-cut flowers”. The button is “Reserve the farm”. The GreenHouse card never changes.',
+        spring: 'Spring. The farm card shows a strawberry: “U-pick organic strawberries, plus u-cut flowers”. The button is “Reserve the farm”. The GreenHouse card stays the same until winter.',
         summer: 'Summer. A blueberry: “U-pick organic blueberries, plus u-cut sunflowers and flowers”. The button stays “Reserve the farm”.',
         fall: 'Fall. A pumpkin. The card adds wagon rides, the corn pit, a sunn hemp maze and a haunted trail. A “See prices” button joins “Reserve the farm”.',
-        winter: 'Winter. A Christmas tree. “Picking is seasonal”, with strawberries next. The button ‘Reserve the farm’ becomes “Tell me when”, and a new line says “Christmas trees are at The GreenHouse”.'
+        winter: 'Winter. A Christmas tree. The farm is open on the tree weekends, with no reservation and no rides, and the button becomes “Tell me when”. The GreenHouse card shows 11 am to 8 pm with “Not official yet”.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
@@ -388,12 +388,12 @@
     {
       id: 'ch4-packages', order: 403, chapter: 4, page: 'index', target: '.packages',
       title: 'Choose your package',
-      text: 'The pizza package is $31 and includes 2 Wise Pie pizzas, plus $3 per person ages 3 and up. Farm fun only is $3 per person. Children 2 and younger are free. Pizzas are ready 1 hour after your reservation time.'
+      text: 'The pizza package is $31 and includes 2 Wise Pie pizzas, plus $3 per person ages 3 and up. Farm fun only is $3 per person. Children 2 and younger are free. Pizzas are ready 1 hour after the reservation time.'
     },
     {
       id: 'ch4-addons', order: 404, chapter: 4, page: 'index', target: '.addons',
       title: 'Optional add-ons',
-      text: 'Visitors can add u-pick tomatoes and basil, the corn pit, a wagon ride or the barrel train. The page shows each price. On Thursdays the corn pit is buy one, get one free, with a reservation.'
+      text: 'Add-ons: a wagon ride and the barrel train, and in fall the corn pit and u-pick tomatoes and basil. There are no rides on the tree weekends. On Thursdays the corn pit is buy one, get one free, with a reservation.'
     },
     {
       id: 'ch4-schedule', order: 405, chapter: 4, page: 'index', target: '#schedule', skipIfMissing: true,
@@ -415,7 +415,7 @@
     {
       id: 'ch5-tabs', order: 501, chapter: 5, page: 'index', target: '#seasons .season-stage',
       title: 'What\'s in season',
-      text: 'Four tabs above this panel show what visitors can pick, cut and do in each season. Today\'s season is marked Happening now, by the calendar. Press a season on this card to see each panel.',
+      text: 'Four season buttons above this panel show what visitors can pick, cut and do in each season. The season on today is marked Happening now. Press a season on this card to see each panel.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring. “Strawberry season”, “Usually mid-April to early June”. This is the busiest time, and reservations fill quickly. The button says “Reserve a strawberry visit”.',
@@ -438,7 +438,7 @@
       choices: seasonWalk({
         spring: 'Spring, six cards. “U-Pick Strawberries” leads, then “Meet the Animals”, “Playgrounds”, “Shaded Picnic Patch”, “Concessions & Local Goods” and “Wagon Ride & Barrel Train”.',
         summer: 'Summer, six cards. “U-Pick Blueberries” takes the place of the strawberries. The other five stay.',
-        fall: 'Fall, eight cards. “U-Pick Pumpkins” takes over. New: “Haunted Trail” and “Sunn Hemp Maze”. The wagon card becomes “Wagon, Corn Pit & Barrel Train”.',
+        fall: 'Fall, eight cards. “U-Pick Pumpkins” takes over. Fall adds “Haunted Trail” and “Sunn Hemp Maze”. The wagon card becomes “Wagon, Corn Pit & Barrel Train”.',
         winter: 'Winter, only three cards, each marked “At The GreenHouse”: “Christmas Trees”, “Playground & Goats” and “Pizza, Ice Cream & Drinks”. The farm cards are gone.'
       }),
       before: seasonsBegin, after: seasonsEnd
@@ -459,7 +459,7 @@
     {
       id: 'ch5-tomatoes', order: 506, chapter: 5, page: 'index', target: '.tomato-copy',
       title: 'Tomatoes and basil',
-      text: 'Visitors pick organic tomatoes and basil themselves, every weekend from mid-September through early November. Tomatoes are $4.50 per pound and basil is $1 per stem. The New labels hide themselves after their end date. This box stays all year.'
+      text: 'Visitors pick organic tomatoes and basil themselves, every weekend from mid-September through early November. Tomatoes are $4.50 per pound and basil is $1 per stem. Some New labels hide themselves on their end date.'
     },
     {
       id: 'ch5-varieties', order: 507, chapter: 5, page: 'index', target: '#variety-filters', also: '#varieties',   // the heading above the buttons: it says how many varieties there are
@@ -492,13 +492,18 @@
     },
     {
       id: 'ch11-photos', order: 1102, chapter: 11, page: 'index', target: null,
-      title: 'Photos and dates',
-      text: 'Please send:\n- Full-size photos straight from your phone. Many photos we have are tiny, about 200 pixels wide.\n- The right Christmas tree dates. The site and your sign give different dates.'
+      title: 'Photos, lists and a link',
+      text: 'Please send:\n- Full-size photos from your phone (ours are very small)\n- The real ingredient lists for the Store (the ones shown are pretend)\n- The link for one-tap Google reviews\n- The email sign-up form from Mailchimp'
     },
     {
-      id: 'ch11-people', order: 1103, chapter: 11, page: 'index', target: null,
+      id: 'ch11-hours', order: 1103, chapter: 11, page: 'index', target: null,
+      title: 'Hours and days to check',
+      text: 'Please check:\n- The tree-weekend hours (11 am to 8 pm) and the pizza. Then the “Not official yet” label can go.\n- The six drive times in the Drive time box.\n- The farm’s reservation days in spring and summer, for its badge.'
+    },
+    {
+      id: 'ch11-people', order: 1104, chapter: 11, page: 'index', target: null,
       title: 'Who does what, and when',
-      text: 'Please tell us:\n- Who updates This week at the farm, the pizza weekends and closures\n- What your booking tool offers, like customer logins and changing a booking\n- When the site should open to visitors\nThank you, Mrs. Cathy and Rob!'
+      text: 'Please tell us:\n- Who updates the weekly box, pizza weekends, beer list and closures\n- What your booking tool offers\n- Who can read the Spanish, Hindi, Chinese and Vietnamese pages\n- When the site opens to visitors\nThank you, Mrs. Cathy and Rob!'
     }
   ];
 

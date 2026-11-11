@@ -44,7 +44,7 @@ const DEMO_PAGES = ['account', 'farm-desk', 'kitchen'];
 const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'also', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after', 'choices', 'choicesLabel'];
 const CHOICE_FIELDS = ['label', 'title', 'text', 'run', 'pressed'];
 const SEASON_NAMES = ['spring', 'summer', 'fall', 'winter'];
-const QUOTES_IN_LIT = ['ch2-pill', 'ch5-varieties', 'ch7-note', 'ch7-soon-pantry', 'ch8-last', 'ch6-tree-pizza'];   // cards with no season buttons that quote the page's own words in “ ”: those words must be written in the lit part (add a card here when it quotes the page)
+const QUOTES_IN_LIT = ['ch2-pill', 'ch5-varieties', 'ch7-note', 'ch7-soon-pantry', 'ch8-last', 'ch6-tree-pizza', 'ch8-reviews', 'ch10-desk-groups'];   // cards with no season buttons that quote the page's own words in “ ”: those words must be written in the lit part (add a card here when it quotes the page)
 const SIZES = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
 const OTHER_DAYS = [
   ['2026-11-03T12:00:00-05:00', 'the real day (3 Nov 2026)'],
@@ -500,6 +500,12 @@ function wordChecks() {
     ok('the card about the season buttons says that a button pretends a Saturday at noon in the middle of the season, and that words in ‘single quotes’ show on another day', !!c && /pretends it is a Saturday at noon, in the middle of that season/.test(c.text) && /Words in ‘single quotes’ show on another day/.test(c.text), c && c.text);
   }
   ok('the welcome card and the first step say the same about clicking: "' + clicking + '"', read('js/tour.js').includes(clicking) && !!hello && hello.text.includes(clicking), hello ? hello.text.slice(0, 120) : 'no step ch1-hello');
+  {   // the farm's list (chapter 11) and the names Contents shows
+    const list = steps.filter((s) => s.chapter === 11).map((s) => s.text).join(' ');
+    ok('chapter 11 asks the farm to confirm the tree-weekend hours and the pizza (the words the page marks "Not official yet"), and no card asks for "the right Christmas tree dates" (the tree rule gives them)', /Not official yet/.test(list) && /11 am to 8 pm/.test(list) && !steps.some((s) => /\b(?:right|correct) (?:christmas )?tree dates\b/i.test(s.text)), list.slice(0, 160));
+    const ten = String((chapters.find((c) => c.n === 10) || {}).title);
+    ok('Contents names the pretend desk and the pizza kitchen in the name of chapter 10, not only the account (' + ten + ')', /desk/i.test(ten) && /kitchen/i.test(ten));
+  }
 }
 
 if (process.env.WA_WORDS_ONLY) { wordChecks(); await finish({}); }

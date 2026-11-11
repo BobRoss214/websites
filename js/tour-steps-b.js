@@ -147,14 +147,17 @@
       target: '#greenhouse .gh-features',
       title: 'The GreenHouse: next door, no reservation',
       text: 'The GreenHouse is next door and needs no reservation, so visitors without a booking have a place to go. ' +
-            'It does not include farm access. Here is what they will find: pizza, ice cream, beer, wine and cider, a playground and goats.'
+            'From spring to fall it has no farm access. ' +
+            'It offers pizza, ice cream, beer, wine and cider, a playground, goats and Christmas trees in season.'
     },
     {
       id: 'ch6-hours', order: 605, chapter: 6, page: 'index',
       target: '#greenhouse .gh-hours',
       title: 'GreenHouse hours and the Open now line',
-      text: 'Friday to Sunday, 10 am to 8 pm. The line under it says Open now or Closed today. ' +
-            'If weather closes you, your site builder can switch on a closure. The page also sends visitors to Instagram for sudden changes, so post there too.'
+      text: 'From spring to fall: Friday to Sunday, 10 am to 8 pm. ' +
+            'In winter this box shows the tree weekends instead. ' +
+            'A line under the hours says Open now or Closed today. ' +
+            'Visitors are sent to Instagram for sudden changes, so post there too.'
     },
     {
       id: 'ch6-tree-pizza', order: 606, chapter: 6, page: 'index',
@@ -193,7 +196,7 @@
       id: 'ch7-note', order: 702, chapter: 7, page: 'index',
       target: '#shop .shop-note',
       title: 'The price note',
-      text: 'This note says prices are for this fall and can change. ' +
+      text: 'This note says prices are for fall and can change. ' +
             'It also says anything marked “Prices coming soon” is being confirmed. ' +
             'Questions go to the farm’s email, so you may hear about a price that looks wrong.'
     },
@@ -201,8 +204,10 @@
       id: 'ch7-hover-popup', order: 703, chapter: 7, page: 'index',
       target: '#shop-snacks .shop-card-pop', skipIfMissing: true,   // the class js/shop-pop.js puts on a product box that has a pop-up: the card is there only where the Store has the pop-up
       title: 'Point at a product, click for details',
-      text: 'Point at any product box in the Store and it grows a little. Click it and a pop-up opens with the ingredients. ' +
-            'The lists are pretend, and each pop-up says it is only a preview. Try it on this box.',
+      text: 'Point at a product and its box grows a little. ' +
+            'Click it and a small window opens in the middle of the screen with the ingredients. ' +
+            'The lists are pretend, and each window says it is only a preview. ' +
+            'Try it on this box.',
       after: closeShopPop
     },
     {
@@ -217,7 +222,9 @@
       id: 'ch7-beer-wine', order: 705, chapter: 7, page: 'index',
       target: '#shop-beerwine .shop-band', skipIfMissing: true,   // the group Beer, cider & wine
       title: 'Beer, cider and wine',
-      text: 'Beer, cider and wine have their own group in the Store. Every drink is $6, so visitors know the price before they come. ' +
+      text: 'Beer, cider and wine have their own group in the Store. ' +
+            'Every drink is $6, so visitors know the price before they come. ' +
+            'A non-alcoholic beer says so on its card. ' +
             'The list shows what is pouring, and it can change.'
     },
     {
@@ -235,8 +242,11 @@
       target: '#school-tours .price-card',
       also: '#school-tours .card-actions',   // the buttons under the words: the sign-up form and Vanessa's email
       title: 'School tours and group events',
-      text: 'Schools, parties and companies each get a tab, and menu links open the right one. ' +
-            'School tours cost $11 per student, with 100 students at least. Teachers use the sign-up form, and you contact them. Questions? Vanessa’s email is here.',
+      text: 'Schools, parties and companies each have a button, and menu links open the right one. ' +
+            'School tours cost $11 per student, with 100 students at least. ' +
+            'Teachers use the sign-up form, and you contact them. ' +
+            'Questions? ' +
+            'Vanessa’s email is here.',
       before: function () { showGroupTab('gtab-school'); },
       after: function () { restoreGroupTab('gtab-school'); }
     },
@@ -271,8 +281,8 @@
       target: '#reviews .wrap',
       title: 'Reviews and news',
       text: 'Three buttons send visitors to your reviews on Google, Tripadvisor and Yelp. ' +
-            'Quotes from families can appear here once you have real ones and their permission. ' +
-            'For a one-tap review button, we need the review link from your Google profile.'
+            'A “Leave a Google review” button asks happy families to write one. ' +
+            'Quotes from families can appear here once you have real ones and their permission.'
     },
     {
       id: 'ch8-photos', order: 806, chapter: 8, page: 'index',
@@ -307,15 +317,18 @@
       id: 'ch8-drive', order: 810, chapter: 8, page: 'index',
       target: '#contact .drive',
       title: 'The drive-time box',
-      text: 'Six towns show a drive time. A visitor can type an address to get miles and minutes to the farm or The GreenHouse. ' +
-            'The site does not keep the address. The six times are our estimates, so please check them.'
+      text: 'Six towns show a drive time. ' +
+            'A visitor can type an address to get miles and minutes to the farm or The GreenHouse. ' +
+            'The address goes to a free map service that may keep it; this site keeps nothing. ' +
+            'The page says so.'
     },
     {
       id: 'ch8-signup', order: 811, chapter: 8, page: 'index',
       target: '#follow-signup',
       title: 'The email sign-up',
-      text: 'Preview of the sign-up form. It asks for an email and what people want to hear about, like strawberries, pumpkins or pizza. ' +
-            'Until Mailchimp is connected, visitors see one button instead. Your site builder needs the form code from your Mailchimp.',
+      text: 'Preview of the sign-up form. ' +
+            'It asks for an email and what people want to hear about, like strawberries, pumpkins or pizza. ' +
+            'Until the form is connected, visitors see one button that opens the farm’s own sign-up page.',
       before: showSignupPreview,
       after: hideSignupPreview
     },
@@ -332,9 +345,9 @@
       id: 'ch9-languages', order: 901, chapter: 9, page: 'index',
       target: '.lang-list', skipIfMissing: true,
       title: 'The language list',
-      text: 'This list is on every page, and the site remembers the choice on that device. ' +
-            'Families can read the whole site in English, Spanish, Hindi, Chinese or Vietnamese. ' +
-            'The translations were written by an AI, so please ask a native speaker to read them.',
+      text: 'This list is on every page. ' +
+            'A visitor whose phone is set to Spanish, Hindi, Chinese or Vietnamese is also asked, in that language, whether to show the page in it. ' +
+            'The site remembers the choice on that device.',
       before: openLanguages,
       after: closeLanguages
     },
@@ -342,27 +355,31 @@
       id: 'ch9-calm', order: 902, chapter: 9, page: 'index',
       target: '.motion-row', skipIfMissing: true,
       title: 'Comfort: pause the moving pictures',
-      text: 'Find “Pause animations” here in the footer. It stops the moving pictures for visitors who find motion tiring. ' +
-            'A round button on the game card does the same. The page also calms itself on slow phones and follows a device’s reduce-motion setting.'
+      text: 'Find “Pause animations” here in the footer. ' +
+            'It stops the moving pictures for visitors who find motion tiring. ' +
+            'A round button on the game card does the same. ' +
+            'The page also calms itself on slow phones and when a device asks for less motion.'
     },
     {
       id: 'ch9-phone', order: 903, chapter: 9, page: 'index',
       target: null,
       title: 'Easy on phones, and for everyone',
-      text: 'On a phone, the menu is one button and a bottom bar offers Reserve, Directions and Email. Try it on your phone. ' +
+      text: 'On a phone, the menu is one button and a bottom bar offers Reserve (in winter, GreenHouse), Directions and Email. ' +
+            'Try it on your phone. ' +
             'The page also works with a keyboard, a screen reader and bigger text.'
     },
     {
       id: 'ch9-calendar', order: 904, chapter: 9, page: 'index',
       target: null,
       title: 'The page keeps up with the calendar',
-      text: 'The season, Open now badges and New tags follow the real date by themselves, so the page does not go stale. ' +
-            'Special-day lines hide after their day. A few jobs need a person: closures, the weekly box, new pizza weekends, price changes.'
+      text: 'The season, tree weekend dates, Open now badges and New tags follow the real date by themselves, so the page does not go stale. ' +
+            'Special-day lines hide after their day. ' +
+            'A few jobs need a person: closures, the weekly box, pizza weekends, prices.'
     },
     {
       id: 'ch9-pages', order: 905, chapter: 9, page: 'index',
       target: '.footer-guides',
-      title: 'Five extra pages for search',
+      title: 'Five extra pages for Google searches',
       text: 'Besides the home page, five pages are built for what families search for. ' +
             'They are the first visit, the pumpkin patch, strawberry picking, school field trips and Wise Pie pizza. Each has its own questions and answers. The footer lists all five.'
     },
