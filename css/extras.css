@@ -387,7 +387,9 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
    The class in index.html says when: shop-wide3 / shop-wide2 = three across (from 1264 px, and 761-991 px) / two across (992-1263 px, and a phone up to 760 px); in the farm
    group the rides stand 5 / 4 across from 1264 / 992 px (shop-wide5 / shop-wide4) and 3 / 2 across below that (shop-wide3 / shop-wide2). A card that is wide in several
    layouts has several classes. After a change to the cards of a group, tests/shop.test.mjs names the row that is not full.
-   TO GO BACK to the old boxes: take the shop-wide2 ... shop-wide5 classes off the cards in index.html (10 cards; shop-spread, the one on the u-pick card, then does nothing: its rules
+   shop-row3 (always with shop-wide3) makes the card take the whole row when three across: it is for the box that stands alone at the end of its group (Local mums, Christmas trees,
+   Painted rocks), which becomes a strip with its sizes or note across instead of a tall box with a blank beside it, so the two columns of groups end closer together.
+   TO GO BACK to the old boxes: take the shop-wide2 ... shop-wide5 and shop-row3 classes off the cards in index.html (12 cards; shop-spread, on the u-pick card, Local mums and Painted rocks, then does nothing: its rules
    only apply together with a width class; you may take it off too), and take the wide-box and fill hunks of tests/shop.test.mjs with them (they need wide boxes: "the wide boxes
    are filled across", the fill counts). */
 @media screen and (min-width:79em){
@@ -399,6 +401,10 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .sg-farm .shop-wide5.shop-spread .shop-body{flex:1 1 auto}   /* shop-spread (the u-pick card, whose sizes have no note beside them): the two prices share the width of the box instead of leaving a blank at its side; only while the card is wide */
   .sg-farm .shop-wide5.shop-spread .shop-opts{width:100%}
   .sg-farm .shop-wide5.shop-spread .shop-opts li{flex:1 1 auto}
+  .shop-group:not(.sg-farm) .shop-row3{--w:100%}   /* shop-row3 (with shop-wide3): the box that stands alone at the end of its group takes the whole row */
+  .shop-group:not(.sg-farm) .shop-wide3.shop-spread .shop-body{flex:1 1 auto}
+  .shop-group:not(.sg-farm) .shop-wide3.shop-spread .shop-opts{width:100%}
+  .shop-group:not(.sg-farm) .shop-wide3.shop-spread .shop-opts li{flex:1 1 auto}
 }
 @media screen and (min-width:62em) and (max-width:78.99em){
   .shop-group:not(.sg-farm) .shop-wide2,.sg-farm .shop-wide4{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
@@ -409,6 +415,9 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .sg-farm .shop-wide4.shop-spread .shop-body{flex:1 1 auto}
   .sg-farm .shop-wide4.shop-spread .shop-opts{width:100%}
   .sg-farm .shop-wide4.shop-spread .shop-opts li{flex:1 1 auto}
+  .shop-group:not(.sg-farm) .shop-wide2.shop-spread .shop-body{flex:1 1 auto}
+  .shop-group:not(.sg-farm) .shop-wide2.shop-spread .shop-opts{width:100%}
+  .shop-group:not(.sg-farm) .shop-wide2.shop-spread .shop-opts li{flex:1 1 auto}
 }
 @media screen and (min-width:47.51em) and (max-width:61.99em){
   .shop-wide3{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
@@ -421,6 +430,7 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .shop-wide3.shop-spread .shop-body{flex:1 1 auto}
   .shop-wide3.shop-spread .shop-opts{width:100%}
   .shop-wide3.shop-spread .shop-opts li{flex:1 1 auto}
+  .shop-row3{--w:100%}
 }
 @media screen and (max-width:47.5em){
   .shop-wide2{--w:calc(2 * var(--u) + var(--shop-gap));column-gap:10px}
@@ -433,6 +443,10 @@ html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .s
   .shop-wide2.shop-spread .shop-body{flex:1 1 auto}
   .shop-wide2.shop-spread .shop-opts{width:100%}
   .shop-wide2.shop-spread .shop-opts li{flex:1 1 auto}
+}
+@media screen and (min-width:62em){   /* the two Farm fun boxes (half the farm group each): the note beside the name and price when it gets 11em, so no third of the box is blank at its right */
+  .shop-half .shop-body{flex:0 1 auto}
+  .shop-half > .shop-sub{flex:1 1 11em}
 }
 @media (max-width:47.5em){
   .shop-jump{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
