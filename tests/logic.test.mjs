@@ -196,19 +196,23 @@ const say = (name, iso) => { const r = st(name, E(iso)); return r ? r.text + (r.
     ['2026-11-28T12:00:00', 'Open now, until 8 pm [not official yet]', 'Open now, until 8 pm [not official yet]', 'Open today. No reservation needed'],
     ['2026-11-28T21:00:00', 'Closed now. Opens tomorrow at 11 am [not official yet]', 'Closed now. Opens tomorrow at 11 am [not official yet]', 'Open today. No reservation needed'],
     ['2026-11-29T12:00:00', 'Open now, until 8 pm [not official yet]', 'Open now, until 8 pm [not official yet]', 'Open today. No reservation needed'],
-    ['2026-11-29T21:00:00', 'Closed now. Opens Saturday at 11 am [not official yet]', 'Closed now. Opens Saturday at 11 am [not official yet]', 'Open today. No reservation needed'],
-    ['2026-11-30T12:00:00', 'Closed today. Opens Saturday at 11 am [not official yet]', 'Closed today. Opens Saturday at 11 am [not official yet]', 'Closed today. Next open day: Saturday'],
-    ['2026-12-04T12:00:00', 'Closed today. Opens tomorrow at 11 am [not official yet]', 'Closed today. Opens tomorrow at 11 am [not official yet]', 'Closed today. Next open day: tomorrow'],
+    ['2026-11-29T21:00:00', 'Closed now. Opens Sat, Dec 5 at 11 am [not official yet]', 'Closed now. Opens Sat, Dec 5 at 11 am [not official yet]', 'Open today. No reservation needed'],
+    ['2026-11-30T12:00:00', 'Opens Sat, Dec 5 at 11 am [not official yet]', 'Opens Sat, Dec 5 at 11 am [not official yet]', 'Closed today. Next open day: Saturday'],
+    ['2026-12-04T12:00:00', 'Opens tomorrow at 11 am [not official yet]', 'Opens tomorrow at 11 am [not official yet]', 'Closed today. Next open day: tomorrow'],
     ['2026-12-05T15:00:00', 'Open now, until 8 pm [not official yet]', 'Open now, until 8 pm [not official yet]', 'Open today. No reservation needed'],
     ['2026-12-06T19:59:00', 'Open now, until 8 pm [not official yet]', 'Open now, until 8 pm [not official yet]', 'Open today. No reservation needed'],
     ['2026-12-06T20:00:00', 'Closed now. Opens Friday at 10 am', 'Closed now. Opens Friday at 4 pm', 'Open today. No reservation needed'],
     ['2026-12-07T12:00:00', 'Closed today. Opens Friday at 10 am', 'Closed today. Opens Friday at 4 pm', null],
   ];
   const bad = rows.filter(([iso, gh, pz, fm]) => say('greenhouse', iso) !== gh || say('pizza', iso) !== pz || say('farm', iso) !== fm).map(([iso, gh, pz, fm]) => iso + ' -> ' + [say('greenhouse', iso), say('pizza', iso), say('farm', iso)].join(' | '));
-  ok('on the tree days The GreenHouse and Wise Pie are open 11 am to 8 pm and the farm is open with no reservation; on the five days between the weekends they say when they open next; on Sunday night and after the window the usual hours speak again (no "Not official yet" there)', bad.length === 0, bad.join('; '));
-  const before = [['2026-11-27T12:00:00', 'Open now, until 8 pm', 'Opens today at 4 pm', null], ['2026-11-27T21:00:00', 'Closed now. Opens tomorrow at 11 am [not official yet]', 'Closed now. Opens tomorrow at 11 am [not official yet]', null], ['2026-11-20T12:00:00', 'Open now, until 8 pm', 'Opens today at 4 pm', null]];
+  ok('on the tree days The GreenHouse and Wise Pie are open 11 am to 8 pm and the farm is open with no reservation; on the five days between the weekends they only say when they open next, with the date and never "Closed"; on Sunday night and after the last tree day the usual hours speak again (no "Not official yet" there)', bad.length === 0, bad.join('; '));
+  const SAT28 = 'Opens Sat, Nov 28 at 11 am [not official yet]';
+  const before = [['2026-11-08T21:00:00', 'Closed now. Opens Sat, Nov 28 at 11 am [not official yet]', 'Closed now. Opens Sat, Nov 28 at 11 am [not official yet]', 'Reserved visits today'],   // the last fall day, after closing: the next opening is the first tree Saturday
+    ['2026-11-09T12:00:00', SAT28, SAT28, null], ['2026-11-11T12:00:00', SAT28, SAT28, null], ['2026-11-14T17:00:00', SAT28, SAT28, null], ['2026-11-20T12:00:00', SAT28, SAT28, null],   // winter is the page's season from Nov 9: no usual Friday hours, no "Closed", a Saturday that is no tree day is not "Open now"
+    ['2026-11-27T12:00:00', 'Opens tomorrow at 11 am [not official yet]', 'Opens tomorrow at 11 am [not official yet]', null], ['2026-11-27T21:00:00', 'Opens tomorrow at 11 am [not official yet]', 'Opens tomorrow at 11 am [not official yet]', null],
+    ['2026-10-09T12:00:00', 'Open now, until 8 pm', 'Opens today at 4 pm', 'Reserved visits today']];   // a fall day: nothing changed
   const badBefore = before.filter(([iso, gh, pz, fm]) => say('greenhouse', iso) !== gh || say('pizza', iso) !== pz || say('farm', iso) !== fm).map(([iso]) => iso + ' -> ' + [say('greenhouse', iso), say('pizza', iso), say('farm', iso)].join(' | '));
-  ok('before the window the usual hours and no farm badge (Fri Nov 27 is no tree day, the usual Friday hours speak; from its evening the next opening named is the tree Saturday at 11 am, with the label)', badBefore.length === 0, badBefore.join('; '));
+  ok('while the page shows winter (Nov 9 to the last tree day) the GreenHouse and Wise Pie follow the winter hours on every day: before the first weekend they never say Friday, the usual hours or "Closed", only when they open next (Sat, Nov 28, 11 am: with the date, "tomorrow" on Fri Nov 27) and the label; no farm badge; a fall day keeps the usual hours', badBefore.length === 0, badBefore.join('; '));
   const eT = (iso, tz) => { const Real = Date; return new Real(iso); };
   void eT;
   const farZone = st('greenhouse', '2026-11-28T17:00:00Z');   // 12 pm in New York, 9 am on the US west coast, evening in Europe: the label stays, "(Eastern Time)" is for another clock
