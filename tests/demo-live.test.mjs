@@ -164,18 +164,97 @@ const signature = (x) => JSON.stringify(['visits', 'orders', 'requests', 'messag
 {
   const x = make({ seed: 5 });
   x.live.start({ speed: 'rush' });
-  let maxK = 0, maxD = 0, maxRecords = 0;
+  let maxK = 0, maxD = 0, maxRecords = 0, maxLate = 0;
   for (let i = 0; i < 2 * 3600; i++) {
     x.clock.ms += 1000; x.live.tick();
     if (i % 20 === 0) {
       const s = x.live.stats('kitchen'), d = x.live.stats('desk');
-      maxK = Math.max(maxK, s.waiting); maxD = Math.max(maxD, d.waiting);
+      maxK = Math.max(maxK, s.waiting); maxD = Math.max(maxD, d.waiting); maxLate = Math.max(maxLate, s.late);
       maxRecords = Math.max(maxRecords, ['visits', 'orders', 'requests', 'messages', 'reviews', 'photos'].reduce((n, c) => n + lv(x.st, c).length, 0));
     }
   }
   ok('two hours of Rush with nobody answering: no more than 8 wait for the kitchen and 10 for the desk', maxK <= 8 && maxD <= 10 && maxK >= 6 && maxD >= 8, maxK + ' / ' + maxD);
   ok('and the records stay bounded (a few hundred at most, not thousands), the saved state stays small, the signed-in family\'s lists are untouched', maxRecords < 260 && String(x.storage.getItem('wa-demo-v1')).length < 400000 && x.st.list('orders').length === 1 && x.st.list('visits').length === 3 && x.st.noticesFor('cathy').length === 0 && x.st.noticesFor('kitchen').length === 0, 'at most ' + maxRecords + ' records, ' + String(x.storage.getItem('wa-demo-v1')).length + ' characters');
-  ok('events that nobody answered do not make the kitchen late for ever: they are late (they waited) and counted', x.live.stats('kitchen').late >= 1);
+  // (what this check pinned before: the rush stood still at the caps, so everything that waited stayed late for ever and the last look found some. Now the family of the oldest thing gives up,
+  // so at one moment nothing may be late: it is looked at all through the two hours instead)
+  ok('events that nobody answered make the kitchen late (they waited past 3:00 or 2:00) and they are counted, and the families of the oldest ones give up (missed) so the rush goes on', maxLate >= 1 && x.live.stats().missed > 100, 'most late at once ' + maxLate + ', missed ' + x.live.stats().missed);
+}
+
+/* ---------------- 7b. nobody answers: the rush does not stand still ---------------- */
+// the old rush made things only until 8 waited for the kitchen and 10 for the desk and then stopped for good (Rush after 2 minutes, Busy after 4, Calm after 9)
+{
+  const floor = { calm: 8, busy: 20, rush: 40 };   // new things in ANY ten minutes of the 40, also once both piles have filled up
+  for (const sp of ['calm', 'busy', 'rush']) {
+    const x = make({ seed: 11 });
+    x.live.start({ speed: sp });
+    const at = [];
+    for (let m = 1; m <= 40; m++) { x.advance(60); at.push(x.live.stats().made); }
+    let worst = Infinity;
+    for (let m = 0; m + 10 < at.length; m++) worst = Math.min(worst, at[m + 10] - at[m]);
+    ok('nobody answers at ' + sp + ': things keep arriving in every ten minutes of forty, also when both piles are full (at least ' + floor[sp] + ')', worst >= floor[sp], 'the least in ten minutes: ' + worst);
+    const k = x.live.stats('kitchen'), d = x.live.stats('desk');
+    ok('and at ' + sp + ' the piles stay at their caps (8 for the kitchen, 10 for the desk), the strip\'s numbers say how many gave up, and it is not "held"', k.waiting <= 8 && d.waiting <= 10 && x.live.stats().missed > 0 && x.live.stats().held === false, JSON.stringify(x.live.stats()));
+  }
+}
+
+/* ---------------- 7c. who gives up: the oldest thing of a full side, and only after its time ---------------- */
+{
+  const patienceOf = (x, kind) => (kind === 'order' ? x.live.settings().orderSecs * 1000 + 30000 : kind === 'order-change' ? x.live.settings().changeSecs * 1000 + 30000 : 120000);
+  const waitingNow = (x) => {   // every pretend thing that waits for somebody, as { id, side, kind, arrived }
+    const out = [];
+    lv(x.st, 'orders').filter((o) => o.status === 'new').forEach((o) => out.push({ id: o.id, side: 'kitchen', kind: 'order', arrived: o.arrived }));
+    lv(x.st, 'requests').filter((q) => q.status === 'waiting').forEach((q) => out.push({ id: q.id, side: q.kind === 'pizza-change' ? 'kitchen' : 'desk', kind: q.kind === 'pizza-change' ? 'order-change' : 'visit-change', arrived: q.arrived }));
+    lv(x.st, 'photos').filter((p) => p.status === 'waiting').forEach((p) => out.push({ id: p.id, side: 'desk', kind: 'photo', arrived: p.arrived }));
+    lv(x.st, 'reviews').filter((p) => p.status === 'waiting').forEach((p) => out.push({ id: p.id, side: 'desk', kind: 'review', arrived: p.arrived }));
+    const msgs = lv(x.st, 'messages');
+    msgs.filter((m) => m.from === 'family' && !msgs.some((n) => n.thread === m.thread && n.from !== 'family')).forEach((m) => out.push({ id: m.thread, side: 'desk', kind: 'question', arrived: m.arrived }));
+    return out;
+  };
+  const run = () => {
+    const x = make({ seed: 11 });
+    x.live.start({ speed: 'rush' });
+    const bell0 = x.st.noticesFor('family').length, desk0 = x.st.noticesFor('cathy').length;
+    let gave = 0, tooSoon = 0, skippedOlder = 0;
+    const kinds = {}, seen = {}, snaps = [];
+    for (let i = 0; i < 20 * 60; i++) {
+      const before = waitingNow(x);
+      x.advance(1);
+      lv(x.st, 'requests').filter((q) => q.missed && !seen[q.id]).forEach((q) => { seen[q.id] = 1; snaps.push({ coll: 'requests', status: q.status, at: q.missedAt, line: q.history[q.history.length - 1].text }); });
+      lv(x.st, 'orders').filter((o) => o.missed && !seen[o.id]).forEach((o) => { seen[o.id] = 1; snaps.push({ coll: 'orders', status: o.status, at: o.missedAt }); });
+      const now = x.live.time(), still = {};
+      waitingNow(x).forEach((w) => { still[w.id] = true; });
+      before.filter((w) => !still[w.id]).forEach((g) => {
+        gave++; kinds[g.kind] = (kinds[g.kind] || 0) + 1;
+        const rec = g.kind === 'order' ? x.st.get('orders', g.id) : /change$/.test(g.kind) ? x.st.get('requests', g.id) : null;
+        const when = rec && rec.missedAt !== undefined ? rec.missedAt : now;   // (a question, a photo or a review is removed: the pretend time at the end of that second is a little later, never earlier)
+        if (when - g.arrived < patienceOf(x, g.kind)) tooSoon++;
+        if (before.some((w) => w.side === g.side && w.arrived < g.arrived && still[w.id] && when - w.arrived >= patienceOf(x, w.kind))) skippedOlder++;
+      });
+    }
+    return { gave, tooSoon, skippedOlder, kinds, snaps, quiet: x.st.noticesFor('family').length === bell0 && x.st.noticesFor('cathy').length === desk0, sig: signature(x) + '|' + x.live.stats().missed, st: x };
+  };
+  const a = run(), b = run();
+  ok('twenty minutes of Rush with nobody answering: families give up (' + JSON.stringify(a.kinds) + ') of every kind the rush makes', a.gave > 40 && ['order', 'order-change', 'visit-change', 'question', 'photo', 'review'].every((k) => a.kinds[k] > 0), JSON.stringify(a.kinds));
+  ok('nobody gives up too soon: the kitchen\'s things after the answer-by time + 30 seconds (they were late first), the desk\'s after 2 minutes', a.tooSoon === 0, a.tooSoon + ' too soon');
+  ok('the oldest goes first: no older thing of the same side that had waited long enough was left waiting when another one gave up', a.skippedOlder === 0, a.skippedOlder + ' older things skipped');
+  ok('the same seed and the same clock give the same run, the ones that gave up included', a.sig === b.sig && a.gave === b.gave);
+  ok('nobody answered, so nothing counts as answered: not a request that was taken back, not an order that was missed', a.st.live.stats().answered === 0 && a.st.live.stats('kitchen').answered === 0 && a.st.live.stats('desk').answered === 0, JSON.stringify(a.st.live.stats()));
+  const x = a.st;
+  const reqs = a.snaps.filter((n) => n.coll === 'requests'), orders = a.snaps.filter((n) => n.coll === 'orders');
+  ok('a request that was given up is taken back (cancelled, missed, with a line in its history); a new order is marked missed; the family\'s bell and the desk\'s notices stay empty', reqs.length > 10 && reqs.every((q) => q.status === 'cancelled' && q.at > 0 && /did not wait/.test(q.line)) && orders.length > 3 && orders.every((o) => o.status === 'missed' && o.at > 0) && a.quiet, reqs.length + ' requests, ' + orders.length + ' orders');
+  {   // somebody is writing an answer to a card: its family does not give up on it
+    const y = make({ seed: 11 });
+    y.live.start({ speed: 'rush' });
+    y.advance(240);
+    const mine = waitingNow(y).filter((w) => w.side === 'desk').sort((p, q) => p.arrived - q.arrived)[0];
+    const off = y.live.keep((kind, id) => id === mine.id);
+    y.advance(300);
+    const stays = waitingNow(y).some((w) => w.id === mine.id), gave = y.live.stats().missed;
+    off();
+    y.advance(120);
+    ok('a thing that somebody is working on (DemoLive.keep) is not given up on, however long it waits, while the others go; when they let go it goes too', !!mine && stays && gave > 10 && !waitingNow(y).some((w) => w.id === mine.id), (mine && mine.id) + ' stayed ' + stays + ', ' + gave + ' others gave up');
+  }
+  ok('a question that was given up leaves no half thread behind: every pretend thread still has the family\'s message, and a review that went takes its visit', lv(x.st, 'messages').every((m) => lv(x.st, 'messages').some((n) => n.thread === m.thread && n.from === 'family')) && lv(x.st, 'reviews').every((r) => !r.visitId || lv(x.st, 'visits').some((v) => v.id === r.visitId)));
 }
 
 /* ---------------- 8. answering a pretend family ---------------- */

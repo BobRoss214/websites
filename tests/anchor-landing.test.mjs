@@ -127,7 +127,7 @@ await run('anchor-landing', async ({ browser, base, errs }) => {
   // 5. a place inside a fading box: the Drive time box (a button on the first screen, the box is at the end of the page) and the signup block ("Tell me when" in winter, with the signup preview on)
   for (const [name, width, height] of [SIZES[0], SIZES[3]]) {
     await attempt(name, { width, height }, '#drive-form', async (f) => check(f, name, 'a "Drive time" button', 'drive-form', await click(f, '#visit a[data-drive-link]:visible')));
-    await attempt(name + ' in winter', { width, height, time: '2026-12-15T12:00:00-05:00', extra: 'WISE_ACRES.signup.demo = true;' }, '#follow-signup',
+    await attempt(name + ' in winter', { width, height, time: '2026-12-01T12:00:00-05:00', extra: 'WISE_ACRES.signup.demo = true;' }, '#follow-signup',   // (winter is Nov 28 to Dec 6 in 2026: Tue Dec 1 is inside it, Dec 15 is spring)
       async (f) => check(f, name + ' in winter', 'a "Tell me when" button', 'follow-signup', await click(f, 'a[data-signup-link]:visible')));
   }
 

@@ -228,7 +228,7 @@
     {
       id: 'ch2-strip', order: 201, chapter: 2, page: 'index', target: '.announce',
       title: 'The strip at the very top',
-      text: 'This strip is on every page. From spring to fall it says the farm takes reservations only and The GreenHouse needs none. In winter it names the tree weekends. It also says what is in season or next (not on a phone). Press a season.',
+      text: 'This strip is on every page. From spring to fall it says the farm needs a reservation and The GreenHouse does not. In winter it names the tree weekends. It also says what is in season or next (not on a phone). Press a season.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring, April 15 to June 7. The strip begins “In season: Strawberries”. After June 7 it says ‘Next up: Blueberries & sunflowers, usually mid-June’.',
@@ -318,7 +318,7 @@
     {
       id: 'ch2-facts', order: 211, chapter: 2, page: 'index', target: '.facts',
       title: 'The quick facts under the first screen',
-      text: 'Four quick facts sit under the first screen: where the farm is, whether a reservation is needed, what is in season and who to email. Each is a link: directions, booking details or an email in one tap.'
+      text: 'Four quick facts sit under the first screen: where the farm is, whether to reserve, what is in season and who to email. Each is a link. The reservation fact says “Required” from spring to fall and “Not needed” on the tree weekends.'
     },
 
     /* ---------------------------------------------------------------- 3. This week and the menu */
@@ -370,7 +370,7 @@
     {
       id: 'ch4-places', order: 401, chapter: 4, page: 'index', target: '#visit .choose',
       title: 'Two places, one family',
-      text: 'Visitors choose the farm or The GreenHouse next door. The GreenHouse needs no reservation. From spring to fall the farm is by reservation only; on the tree weekends it is open with none. Press a season to see the farm card change.',
+      text: 'Visitors choose the farm or The GreenHouse next door. The GreenHouse needs no reservation. The farm needs a reservation from spring to fall. On the tree weekends it is open with no reservation and no rides. Press a season to see the farm card change.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring. The farm card shows a strawberry: “U-pick organic strawberries, plus u-cut flowers”. The button is “Reserve the farm”. The GreenHouse card stays the same until winter.',
@@ -383,7 +383,7 @@
     {
       id: 'ch4-steps', order: 402, chapter: 4, page: 'index', target: '#steps',
       title: 'Three steps to a farm day',
-      text: 'The page walks a visitor through the day: reserve a time, head to the farm, then pick, play and explore. Each step has a button. The directions button opens Google Maps.'
+      text: 'These three steps are for farm days from spring to fall. They walk a visitor through the day: reserve a time, head to the farm, then pick, play and explore. Each step has a button. The directions button opens Google Maps.'
     },
     {
       id: 'ch4-packages', order: 403, chapter: 4, page: 'index', target: '.packages',

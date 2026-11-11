@@ -220,6 +220,7 @@ html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 .kit-mini{margin:0 0 10px;padding:9px 14px;background:#fff;border:3px solid var(--ink);border-radius:18px}
 .kit-mini-family{background:#fffbe6}
 .kit-mini-done{background:#f6fbf3}
+.kit-mini-done.kit-mini-missed{background:#fdf1ee}
 .kit-mini p{margin:0}
 .kit-mini-head{display:flex;flex-wrap:wrap;align-items:center;gap:.2em .5em}
 .kit-mini .kit-num{font-size:1.4rem;border-radius:10px}

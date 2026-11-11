@@ -179,7 +179,7 @@ await run('menu-groups', async ({ browser, base, errs }) => {
   }
 
   // ---------------------------------------------------------------- 6. things only some seasons show, and the red dot
-  for (const [name, time, season] of [['fall', '2026-10-02T12:00:00-04:00', 'fall'], ['summer', '2026-07-01T12:00:00-04:00', 'summer'], ['winter', '2026-12-15T12:00:00-05:00', 'winter'], ['spring', '2026-05-01T12:00:00-04:00', 'spring']]) {
+  for (const [name, time, season] of [['fall', '2026-10-02T12:00:00-04:00', 'fall'], ['summer', '2026-07-01T12:00:00-04:00', 'summer'], ['winter', '2026-12-01T12:00:00-05:00', 'winter'], ['spring', '2026-05-01T12:00:00-04:00', 'spring']]) {   // (winter is Nov 28 to Dec 6 in 2026: Tue Dec 1 is inside it, Dec 15 is spring)
     const q = await open(browser, base, 'index.html', errs, { viewport: { width: 1440, height: 900 }, time });
     await q.addStyleTag({ content: '#wa-problems{display:none!important}' });
     const hrefs = await q.evaluate(() => Object.fromEntries([...document.querySelectorAll('.nav-group-list a[data-seasons]')].map((a) => [a.textContent.trim(), a.getAttribute('href')])));
@@ -201,7 +201,7 @@ await run('menu-groups', async ({ browser, base, errs }) => {
     await q.context().close();
   }
   {   // the other pages: the Playgrounds line in winter (index.html#farm) and fall (index.html#farm-playgrounds); "Meet the animals" always goes to index.html#animals
-    for (const [time, wantA] of [['2026-12-15T12:00:00-05:00', 'index.html#farm'], ['2026-10-02T12:00:00-04:00', 'index.html#farm-playgrounds']]) {
+    for (const [time, wantA] of [['2026-12-01T12:00:00-05:00', 'index.html#farm'], ['2026-10-02T12:00:00-04:00', 'index.html#farm-playgrounds']]) {
       const q = await open(browser, base, 'wise-pie.html', errs, { viewport: { width: 1440, height: 900 }, time });
       const got = await q.evaluate(() => [...document.querySelectorAll('.nav-group-list a[data-seasons]')].map((a) => a.getAttribute('href')));
       ok(`wise-pie.html on ${time.slice(0, 10)}: "Playgrounds" goes to ${wantA}`, got[0] === wantA, got.join());

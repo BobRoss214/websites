@@ -13,7 +13,11 @@
  *   - the answers: Yes, No, a suggestion, a reply, Approve, Not now each work on a pretend family as on the family's own (the store makes no notice for a pretend family and
  *     one for the real one); an answered card leaves the waiting list at once, shows under Answered, the focus goes to the next card, "Answered today" and the feed follow; the
  *     family answers a suggestion by itself and the desk says so;
- *   - Off pauses everything (nothing arrives, the pretend clock stands still, the words of the feed go on counting), On and the speed buttons go on again, Rush brings more than Calm;
+ *   - Off pauses everything (nothing arrives, the pretend clock stands still, the words of the feed stand still too and go on counting after On), the speed buttons go on again, Rush brings more than Calm;
+ *   - nobody answers: the rush does not stand still (it used to stop for good when 8 waited for the kitchen and 10 for the desk): the oldest families give up, the strip says so, and things
+ *     keep coming; the pretend clock of the box says that it is the pretend time;
+ *   - the first screen of a laptop (1366 x 768) and of a tablet (1024 x 768) shows the strip, the counters AND the newest lines of the feed (the counters and the feed side by side),
+ *     and the "new" button stays off them (it waits while the box is on the screen);
  *   - a long rush with somebody answering does not grow the screen without end (cards, lines, nodes, records, remembered things), the same seed gives the same first cards twice,
  *     a screen drawn again from the store gives the same lines, reduced motion (no animation), no animation that repeats, a phone (no sideways scroll, two counters in a row, big
  *     buttons), and axe-core finds nothing.
@@ -108,7 +112,7 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
     const b0 = await both(p);
     ok('the counters follow: Waiting for you counts the cards, Photos and reviews counts its cards, Answered today is 0', b0.waiting === b0.cards && b0.appr === b0.apprCards && b0.done === 0 && b0.cards >= w0.length, JSON.stringify(b0));
     ok('the feed has one line for each arrival, newest first, each with its words about how long ago and the family\'s name; at most six lines', f0.length >= 2 && f0.length <= 6 && f0.every((l) => AGO.test(l.at) && /’s family/.test(l.text)) && f0.some((l) => /asks: Move/.test(l.text)) && f0.some((l) => /asks the farm: “/.test(l.text)), JSON.stringify(f0));
-    ok('the tab says how many things wait while the rush is on, and the clock of the box is the rush\'s own', (await p.title()) === '(' + ((await keys(p, WAIT)).length + (await keys(p, APPR)).length) + ') Demo: Mrs. Cathy\'s desk | Wise Acres Organic Farm' && /^Time: \d{1,2}:\d{2} (am|pm)$/.test(await p.locator('.ds-clock').innerText()));
+    ok('the tab says how many things wait while the rush is on, and the clock of the box is the rush\'s own and says it is the pretend time', (await p.title()) === '(' + ((await keys(p, WAIT)).length + (await keys(p, APPR)).length) + ') Demo: Mrs. Cathy\'s desk | Wise Acres Organic Farm' && /^Pretend time: \d{1,2}:\d{2} (am|pm)$/.test(await p.locator('.ds-clock').innerText()));
     const week = (await p.locator('#desk-week').innerText()).replace(/\s+/g, ' ');
     ok('"This week" lists the pretend visits under their own family names too', /’s family · \d+ (person|people) · with pizza/.test(week), week.slice(0, 300));
     const strip = await p.evaluate(() => [...document.querySelectorAll('[data-tour="live-control"] button')].map((b) => b.textContent.trim() + ':' + b.getAttribute('aria-pressed')).join(' '));
@@ -140,7 +144,7 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
   });
   /* ------------------------------------------------------------------ new things arrive while Mrs. Cathy works */
   await sec('new things arrive while Mrs. Cathy works', async () => {
-    await answerAll(p);   // (the rush makes no more things for the desk while ten wait: start from a desk that was cleared)
+    await answerAll(p);   // (start from a desk that was cleared: ten cards would make the old ones give up while she works)
     await until2(p, (sel) => document.querySelectorAll(sel).length >= 3, WAIT);
     const before = await keys(p, WAIT);
     ok('(the desk was cleared and the rush at Rush has written again: three cards or more wait)', before.length >= 3 && (await live(p)).speed === 'rush', String(before.length));
@@ -163,6 +167,10 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
     const said = await p.evaluate(() => [...document.querySelectorAll('.sr-only[role="status"]')].map((x) => x.textContent));
     ok('the arrivals were said politely in a place of their own, in batches ("New: ..." or "3 new: ... and 2 more.")', said.some((t) => /^(New: |\d+ new: .* and \d+ more\.$)/.test(t)), JSON.stringify(said));
     await press(p, '[data-tour="live-control"] .dl-off');   // (paused while the button is looked at: an arrival would add to its count)
+    // (pressing Off scrolled the page up to the strip, and the button waits while the "Right now" box is on the screen so that it never lies over the counters: she goes back to her cards)
+    ok('while the "Right now" box is on the screen the "new" button waits (it would lie over the counters), although new cards are out of sight', (await pill(p)) === null && (await p.evaluate(() => window.DemoDesk.app.ui.pending.length)) > 0);
+    await p.evaluate(() => { const c = document.querySelector('#desk-waiting .ds-stack[aria-live="off"] > [data-key]'); window.scrollTo({ top: c.getBoundingClientRect().top + window.scrollY - 20, behavior: 'instant' }); });
+    await run1(p, 2000, 1000);
     const pl = await pill(p);
     ok('the "new" button counts the new cards that are out of sight ("Show 3 new cards"; its words are its name)', /^Show \d+ new cards?$/.test(pl || '') && (await p.locator('.ds-pill').getAttribute('aria-label')) === null, String(pl));
     const firstPending = await p.evaluate(() => window.DemoDesk.app.ui.pending[0]);
@@ -277,11 +285,15 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
   await sec('Off pauses, On and the speed go on', async () => {
     await press(p, '[data-tour="live-control"] .dl-off');
     await settled(p, 100);
-    const paused = await live(p), cardsOff = (await keys(p, WAIT)).length;
+    const paused = await live(p), cardsOff = (await keys(p, WAIT)).length, wordsOff = (await feed(p)).map((l) => l.at);
     await run1(p, 90000);
     const pausedLater = await live(p);
     ok('Off: nothing more is made in 90 seconds, no card comes, the pretend clock stands still, the title is the page\'s own, the strip says Paused', !paused.on && pausedLater.count === paused.count && (await keys(p, WAIT)).length === cardsOff && pausedLater.t === paused.t && !(await p.title()).startsWith('(') && /Paused/.test(await p.locator('.dl-state').innerText()), JSON.stringify([paused, pausedLater]));
-    ok('...the words of the feed go on counting (the feed is not frozen): the old lines say minutes ago', (await feed(p)).some((l) => /^\d+ min ago$/.test(l.at)), JSON.stringify((await feed(p)).map((l) => l.at)));
+    // (this used to say the opposite, that the words go on counting while paused: the strip says "the clocks stand still", so now the words do too, and they go on after On)
+    ok('...the words of the feed stand still with the clocks: 90 seconds of pause do not make any line older ("just now" stays "just now")', JSON.stringify((await feed(p)).map((l) => l.at)) === JSON.stringify(wordsOff) && wordsOff.length > 0, JSON.stringify(wordsOff) + ' then ' + JSON.stringify((await feed(p)).map((l) => l.at)));
+    await press(p, '[data-tour="live-control"] .dl-on');
+    await run1(p, 90000);
+    ok('...and after On they go on counting: the old lines say minutes ago', (await feed(p)).some((l) => /^\d+ min ago$/.test(l.at)), JSON.stringify((await feed(p)).map((l) => l.at)));
     // Calm and Rush: each from the start (nothing waiting), the same time
     const fromStart = async (speed) => {
       await store(p, () => { window.DemoLive.stop(); window.DemoLive.clear(); });
@@ -383,6 +395,60 @@ await run('demo-desk-live', async ({ browser, base, errs }) => {
       await q.context().close();
     }
 
+  });
+  /* ------------------------------------------------------------------ nobody answers */
+  await sec('nobody answers: the rush goes on', async () => {
+    const q = await openDesk(browser, base, errs);
+    await store(q, () => { window.DemoStore.createAccount(); });
+    await settled(q);
+    await startRush(q, 'rush');
+    await run1(q, 20000, 5000);
+    const first = await q.evaluate(() => { const c = document.querySelector('#desk-waiting .ds-stack[aria-live="off"] > [data-key]'), t = c && c.querySelector('textarea'); return c && t ? { key: c.getAttribute('data-key'), id: t.id } : null; });
+    if (first) { await q.locator('#' + first.id).click(); await q.keyboard.type('Hello'); }   // she starts to write to the first card and then leaves it
+    await run1(q, 340000, 10000);   // six minutes at Rush: the old rush had stopped after two
+    const c6 = await made(q);
+    if (first) ok('the card she wrote a note in is still there with its words after six minutes of nobody answering (a family does not give up on a card that is being answered), while others went', await q.evaluate((f) => { const c = document.querySelector('[data-key="' + f.key + '"]'), t = c && c.querySelector('textarea'); return !!t && t.value === 'Hello'; }, first) && (await q.evaluate(() => window.DemoLive.stats().missed)) > 5);
+    await run1(q, 120000, 10000);
+    const c8 = await made(q), text = await q.locator('.dl-state').innerText(), top = (await feed(q))[0];
+    const tiles = await both(q), gave = await q.evaluate(() => window.DemoLive.stats());
+    ok('nobody answers at Rush for eight minutes and things still come in: at least ten more in the last two minutes (the old rush made none after the second minute)', c8 - c6 >= 10 && c6 >= 30, c6 + ' -> ' + c8);
+    ok('the strip tells the truth (the counts go up and some families gave up waiting, or it says it is full), the newest line of the feed is recent, and the counters stay inside the caps', /^On: pretend families are sending things \(\d+ so far, \d+ gave up waiting\)\./.test(text) || /^On, but full: /.test(text), text);
+    ok('...the newest line of "Just now" is recent (not minutes old) and the pile of cards the desk has stays at ten or fewer', !!top && /^(just now|1 min ago)$/.test(top.at) && tiles.cards <= 10 && gave.missed > 5, JSON.stringify([top, tiles, gave]));
+    // a card that goes while somebody answers it: the screen says so and counts nothing (no stray answer, no half thread)
+    const gone = await q.evaluate(() => { const S = window.DemoStore; const t = S.threadsWaiting({ live: true }).filter((x) => /^q-L/.test(x.thread))[0]; return t ? t.thread : ''; });
+    if (gone) {
+      const before = (await store(q, () => window.DemoLive.tallies())).desk || 0;
+      await store(q, () => { window.DemoLive.stop(); });
+      await q.evaluate((id) => { const S = window.DemoStore; S.transact((st) => { st.messages = st.messages.filter((m) => m.thread !== id); return true; }); }, gone);
+      await settled(q, 100);
+      ok('a question that is gone (the family gave up) is not on the screen any more and "Answered today" did not move', !(await q.evaluate((id) => !!document.querySelector('[data-key="t:' + id + '"]'), gone)) && ((await store(q, () => window.DemoLive.tallies())).desk || 0) === before);
+    }
+    await q.context().close();
+  });
+  /* ------------------------------------------------------------------ the first screen of a laptop and of a tablet */
+  await sec('the first screen of a laptop and a tablet', async () => {
+    for (const [w, h] of [[1366, 768], [1024, 768]]) {
+      const q = await openDesk(browser, base, errs, { viewport: { width: w, height: h } });
+      await store(q, () => { window.DemoStore.createAccount(); });
+      await settled(q);
+      await startRush(q);
+      await run1(q, 70000, 5000);
+      const m = await q.evaluate(() => {
+        const r = (e) => { const b = e.getBoundingClientRect(); return { top: Math.round(b.top), bottom: Math.round(b.bottom), left: Math.round(b.left), right: Math.round(b.right) }; };
+        const tiles = [...document.querySelectorAll('.ds-live .ds-tile')].map(r), lines = [...document.querySelectorAll('.ds-feed-line')].map(r), pill = document.querySelector('.ds-pill'), strip = r(document.querySelector('[data-tour="live-control"]'));
+        const hit = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+        const pr = pill && !pill.hidden ? r(pill) : null;
+        return { vh: innerHeight, strip, tiles, lines, pending: window.DemoDesk.app.ui.pending.length, pill: pr, pillOver: pr ? tiles.concat(lines, [strip]).some((b) => hit(pr, b)) : false, sideBySide: tiles[0].right <= lines[0].left + 1, wide: document.documentElement.scrollWidth - innerWidth };
+      });
+      ok(w + ' x ' + h + ': the first screen holds the strip, the four counters (their numbers) and the top of the feed (the first three lines start above the bottom edge, with a row of text each)', m.strip.bottom <= m.vh && m.tiles.length === 4 && m.tiles.every((t) => t.top + 50 <= m.vh) && m.lines.length >= 3 && m.lines[2].top + 34 <= m.vh && m.sideBySide && m.wide <= 1, JSON.stringify(m));
+      ok(w + ' x ' + h + ': the "new" button does not lie over the counters, the feed or the strip (while the box is on the screen it waits, and it has ' + m.pending + ' new cards to show)', !m.pill && !m.pillOver, JSON.stringify(m.pill));
+      // when the box has been scrolled away the button comes, and off the box
+      const first = await q.evaluate(() => { const c = document.querySelector('#desk-waiting .ds-stack[aria-live="off"] > [data-key]'); if (c) window.scrollTo({ top: c.getBoundingClientRect().top + window.scrollY - 20, behavior: 'instant' }); return !!c; });
+      await run1(q, 40000, 5000);
+      const later = await q.evaluate(() => { const b = document.querySelector('.ds-pill'), box = document.querySelector('.ds-live').getBoundingClientRect(); return { shown: !!b && !b.hidden, boxBottom: Math.round(box.bottom), vh: innerHeight, pending: window.DemoDesk.app.ui.pending.length }; });
+      ok(w + ' x ' + h + ': scrolled to the cards, new cards that come in below are counted by the button ("Show N new cards") and it is shown, now that the box is out of its way', !first || (later.pending > 0 ? later.shown : true) && later.boxBottom < later.vh - 72, JSON.stringify(later));
+      await q.context().close();
+    }
   });
   /* ------------------------------------------------------------------ a phone */
   await sec('a phone', async () => {

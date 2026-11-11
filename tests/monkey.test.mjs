@@ -36,7 +36,7 @@ function rng(seed) {
   return () => { a = (a + 0x6D2B79F5) >>> 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
-const DATES = { spring: '2026-04-25T12:00:00-04:00', summer: '2026-06-25T12:00:00-04:00', fall: '2026-10-02T12:00:00-04:00', winter: '2026-12-10T12:00:00-05:00' };
+const DATES = { spring: '2026-04-25T12:00:00-04:00', summer: '2026-06-25T12:00:00-04:00', fall: '2026-10-02T12:00:00-04:00', winter: '2026-12-01T12:00:00-05:00' };   // winter is Nov 28 to Dec 6 in 2026: Tue Dec 1 is inside it (Dec 10 is spring)
 const COMBOS = [
   { name: '390 phone, English, fall, home page', page: 'index.html', w: 390, h: 844, lang: 'en', season: 'fall', touch: true },
   { name: '390 phone, Spanish, winter, First visit', page: 'first-visit.html', w: 390, h: 844, lang: 'es', season: 'winter', touch: true },

@@ -192,6 +192,28 @@
 .ds-facts li{display:flex;align-items:flex-start;gap:10px;font-weight:700}
 .ds-facts .ds-ico{margin-top:.2em}
 
+/* ---------- wide windows: the counters and the feed side by side, so the first screen shows the latest things, and the "new" button is off the counters ---------- */
+@media (min-width:900px){
+  .ds-head{margin:0 0 16px}
+  .ds-head .demo-h1{margin:0 0 10px}
+  .ds-who{padding:10px 18px}
+  .ds-live{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-areas:"head head" "strip strip" "tiles fh" "tiles feed";column-gap:24px;align-items:start;padding:16px 22px 22px}
+  .ds-live.ds-live-bare{display:block}
+  .ds-live-head{grid-area:head;margin:0 0 8px}
+  .ds-live-head h2{font-size:clamp(1.4rem,2.2vw,1.8rem)}
+  .ds-live-strip{grid-area:strip;margin:0 0 10px}
+  .ds-live-strip .dl-strip{padding:8px 14px}
+  .ds-live .ds-tiles{grid-area:tiles;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .ds-live .ds-tile{min-height:76px;padding:10px 14px;column-gap:10px}
+  .ds-live .ds-tile .ds-ico{width:28px;height:28px}
+  .ds-live .ds-tile-n{font-size:1.9rem}
+  .ds-live .ds-tile-l{font-size:1rem}
+  .ds-feed-h{grid-area:fh;margin:0 0 6px;font-size:1.15rem}
+  .ds-feed,.ds-feed-empty{grid-area:feed;margin-top:0}
+  .ds-feed{gap:5px}
+  .ds-feed-line{padding:5px 14px 5px 22px;font-size:1rem;line-height:1.4}
+}
+
 /* ---------- small windows ---------- */
 @media (max-width:1060px){
   .ds-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}

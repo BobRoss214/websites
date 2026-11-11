@@ -80,9 +80,10 @@
     const part = hasOwn(DAY_PART, code) && DAY_PART[code];
     if (!part || !(h >= 0 && h < 24 && m >= 0 && m < 60)) return '';
     const h12 = h % 12 || 12, mm = m ? ':' + String(m).padStart(2, '0') : '';   // a whole hour has no minutes, as in "10 am"
-    if (code === 'hi') return part(h) + ' ' + h12 + mm + ' बजे';
-    if (code === 'zh') return part(h) + ' ' + h12 + (m ? mm : ' 点');
-    return m ? h12 + mm + ' ' + part(h) : h12 + ' giờ ' + part(h);
+    // A no-break space (U+00A0) holds the number and its word together: a line never ends with "5" and starts with "बजे" / "点" / "giờ chiều".
+    if (code === 'hi') return part(h) + ' ' + h12 + mm + '\u00a0बजे';
+    if (code === 'zh') return part(h) + ' ' + h12 + (m ? mm : '\u00a0点');
+    return m ? h12 + mm + '\u00a0' + part(h) : h12 + '\u00a0giờ\u00a0' + part(h);
   };
 
   /* ------------------------------------------------------------------ *

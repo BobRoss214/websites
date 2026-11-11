@@ -328,7 +328,12 @@
     // feed: the lines of "Just now" (newest has the biggest seq); feedSeen: the lines already taken; pending: the new cards the person may not have seen yet (the "new" button);
     // fresh: the moment (ms) a card arrived while this screen was open, for its New mark.
     const ui = { mode: {}, val: {}, fresh: {}, seen: null, focus: '', alertSent: {}, status: {}, why: {}, order: {}, seq: 0, waitKeys: [], apprKeys: [], feed: [], feedSeen: {}, feedSeq: 0, pending: [], waitTotal: 0, drawn: false };
-    let st = null, nowStamp = 0, timer = 0;
+    let st = null, nowStamp = 0, timer = 0, lastTickAt = 0;
+    // The words of the feed ("3 min ago") follow the pretend clock: while the rush has been started and is Off, the clocks stand still, so the time spent paused does not count.
+    // (kept in memory only: a reload starts from the store's own ages, which stand still too)
+    ui.paused = 0;
+    const paused = () => { const L = liveApi(); try { return !!(L && !liveOn() && num((S.get('live') || {}).count) > 0); } catch (e) { return false; } };
+    const clockNow = () => Date.now() - ui.paused;
     // The numbers that keep the screen calm and short: no more cards than this are drawn (the rest are counted and said), the feed shows a few lines, a day of "This week"
     // lists a few visits, and a New mark (on a card, on a line of the feed) fades after this many milliseconds.
     const MAX_WAITING = 24, MAX_ANSWERED = 6, MAX_FEED = 6, MAX_DAY_LINES = 5, FRESH_CARD_MS = 30000, FRESH_LINE_MS = 6000;
@@ -338,6 +343,15 @@
     // The engine keeps a count of the answers given on this desk (DemoLive.tally) that does not shrink when it tidies old pretend records away; "Answered today" is never less than it.
     const tallied = () => { const L = liveApi(); try { return L && typeof L.tallies === 'function' ? num((L.tallies() || {}).desk) : 0; } catch (e) { return 0; } };
     const countAnswer = () => { const L = liveApi(); try { if (L && typeof L.tally === 'function') L.tally('desk'); } catch (e) { /* the count is only a help */ } };
+    // A card Mrs. Cathy is working on is not given up by its family when nobody answers for a long time: a note is typed in it, its suggestion panel is open, or the focus is in it.
+    const inUse = (kind, id) => {
+      const key = kind === 'visit-change' ? 'r:' + id : kind === 'question' ? 't:' + id : kind === 'photo' ? 'photos' + id : kind === 'review' ? 'reviews' + id : '';
+      if (!key) return false;
+      if (ui.mode[id] || ui.val['note:' + id] || ui.val['reply:' + id]) return true;
+      const card = root.querySelector('[data-key="' + key + '"]');
+      return !!(card && doc.activeElement && card.contains(doc.activeElement));
+    };
+    { const L = liveApi(); try { if (L && typeof L.keep === 'function') L.keep(inUse); } catch (e) { /* the engine is only a help */ } }
 
     root.textContent = '';
     root.classList.add('ds');
@@ -362,7 +376,7 @@
 
     // ----- the frame (built once; the parts inside are redrawn as needed)
     const parts = {};
-    const intro = el('p', { class: 'ds-who' }, [icon('bell'), el('span', null, [el('strong', { text: 'Demo: you are Mrs. Cathy (or Rob).' }), ' No sign-in is needed on this screen. Whatever a family sends shows up below by itself.'])]);
+    const intro = el('p', { class: 'ds-who' }, [icon('bell'), el('span', null, [el('strong', { text: 'Demo: you are Mrs. Cathy (or Rob).' }), ' No sign-in is needed here. What a family sends shows up below.'])]);
     // "Right now": the rush's control strip, the counters (the tiles: they are links to the sections below, and "Answered today"), and the feed. The strip is the engine's own
     // (DemoLive.strip(), the same on the kitchen screen); a page without the engine has no strip. Every part is drawn again from the store whenever it changes.
     parts.live = el('section', { class: 'ds-live', 'data-tour': 'desk-live', 'aria-labelledby': 'ds-live-h' });
@@ -619,7 +633,7 @@
         case 'suggested': tone = 'wait'; ic = 'clock'; title = 'You suggested ' + (sg ? str(sg.summary) : 'something else') + '.'; lines = [n ? 'Your note: “' + n + '”' : '', 'Waiting for the family’s OK.']; break;
         case 'accepted': tone = 'good'; title = 'The family said OK to your suggestion.'; lines = [now]; break;
         case 'declined': tone = 'plain'; ic = 'x'; title = 'The family said no thanks, and keeps what they had.'; lines = [now]; break;
-        case 'cancelled': tone = 'plain'; ic = 'x'; title = 'The family took this request back.'; break;
+        case 'cancelled': tone = 'plain'; ic = 'x'; title = r.missed ? 'The family did not wait and took this request back.' : 'The family took this request back.'; break;
         default: title = str(r.status);
       }
       return el('div', { class: 'ds-result ds-result-' + tone, tabindex: '-1', 'data-focus': 'res:' + r.id }, [
@@ -647,6 +661,7 @@
           bigBtn('btn-green', 'Send reply', 'check', () => {
             const text = (ui.val['reply:' + t.id] || '').trim();
             if (!text) { say('Write a few words first.'); const box = doc.getElementById('reply-' + t.id); if (box) box.focus(); return; }
+            if (!arr(S.list('messages', { live: true })).some((m) => m.thread === t.id && m.from === 'family')) { delete ui.val['reply:' + t.id]; ui.focus = ''; say('This question is gone: the family did not wait. The screen shows how it stands now.'); render(); return; }   // (the family gave up while you wrote)
             ui.focus = focusAfter('t:' + t.id, ui.waitKeys, 'waiting'); delete ui.val['reply:' + t.id];
             S.post(t.id, 'cathy', text);
             countAnswer();
@@ -680,6 +695,7 @@
       card.appendChild(body);
       if (open) {
         const decide = (ok) => {
+          if (!S.get(it.coll, it.id)) { ui.focus = ''; say('This one is gone: the family did not wait. The screen shows how it stands now.'); render(); return; }   // (the family gave up before you answered)
           ui.focus = focusAfter(it.coll + it.id, ui.apprKeys, 'approvals');
           if (it.coll === 'reviews') S.decideReview(it.id, ok);
           else S.decidePhoto(it.id, ok);   // both tell the family (the store makes the notice)
@@ -713,7 +729,7 @@
       // pizzas by pick-up time
       const slots = {};
       st.orders.forEach((o) => {
-        if (orderDate(st, o) !== ymd || !o.pickup) return;
+        if (orderDate(st, o) !== ymd || !o.pickup || o.status === 'missed') return;   // (a family that gave up waiting for the kitchen is not coming for pizza)
         const s = slots[o.pickup] || (slots[o.pickup] = { n: 0, gf: 0, vegan: 0 });
         s.n += pizzaCount(o);
         arr(o.pizzas).forEach((p) => { const c = num(p.count != null ? p.count : p.qty) || 1; if (p.gf || p.glutenFree) s.gf += c; if (p.vegan || p.veganCheese) s.vegan += c; });
@@ -899,7 +915,7 @@
           put('ans:' + r.id, r.reply.at, 1, r.id, how === 'yes' ? 'You said Yes to ' + who + '.' : how === 'no' ? 'You said No to ' + who + '.' : 'You suggested something else to ' + who + '.', how === 'no' ? 'no' : 'good');
         }
         if (r.status === 'accepted' || r.status === 'declined' || r.status === 'cancelled') {
-          put('fam:' + r.id + ':' + r.status, r.updated || reqSent(r), 2, r.id, r.status === 'accepted' ? who + ' said OK to your suggestion.' : r.status === 'declined' ? who + ' said no thanks to your suggestion.' : who + ' took a request back.', 'plain');
+          put('fam:' + r.id + ':' + r.status, r.updated || reqSent(r), 2, r.id, r.status === 'accepted' ? who + ' said OK to your suggestion.' : r.status === 'declined' ? who + ' said no thanks to your suggestion.' : r.missed ? who + ' did not wait for an answer and took a request back.' : who + ' took a request back.', 'plain');
         }
       });
       threadsOf(st).forEach((t) => {
@@ -918,7 +934,7 @@
     }
     // the lines this screen has not taken yet go to the feed, in the order they happened (the biggest seq is the newest); returns how many were taken
     function takeFeed(first) {
-      const lines = feedLines(), now = Date.now(), present = {};
+      const lines = feedLines(), now = clockNow(), present = {};
       lines.forEach((e) => { present[e.key] = true; });
       // a line of a record that is gone (the tour takes the rush away, the engine tidies old things) goes with it, and its name can be used again
       ui.feed = ui.feed.filter((e) => present[e.key]);
@@ -932,13 +948,13 @@
     }
     // "just now" for the first 45 seconds, then whole minutes: the words change once a minute, so the feed stays calm to read
     function agoWords(ms) {
-      const sec = Math.max(0, Math.round((Date.now() - ms) / 1000));
+      const sec = Math.max(0, Math.round((clockNow() - ms) / 1000));
       if (sec < 45) return 'just now';
       const min = Math.max(1, Math.round(sec / 60));
       return min < 60 ? min + ' min ago' : min < 120 ? '1 hr ago' : Math.floor(min / 60) + ' hr ago';
     }
     function feedLine(e) {
-      return el('li', { class: 'ds-feed-line ds-f-' + e.tone + (Date.now() - e.ms < FRESH_LINE_MS ? ' is-fresh' : ''), 'data-ms': String(e.ms) }, [el('span', { class: 'ds-feed-at', text: agoWords(e.ms) }), el('span', { class: 'ds-feed-text', text: e.text })]);
+      return el('li', { class: 'ds-feed-line ds-f-' + e.tone + (clockNow() - e.ms < FRESH_LINE_MS ? ' is-fresh' : ''), 'data-ms': String(e.ms) }, [el('span', { class: 'ds-feed-at', text: agoWords(e.ms) }), el('span', { class: 'ds-feed-text', text: e.text })]);
     }
     function paintFeed() {
       const lines = ui.feed.slice().sort((a, b) => b.seq - a.seq).slice(0, MAX_FEED);
@@ -949,15 +965,23 @@
     }
     function paintClock() {
       const L = liveApi(), made = (() => { try { return (S.get('live') || {}).count || 0; } catch (e) { return 0; } })();
-      let text = '';
-      if (L && made) { try { text = timeText(L.clock()); } catch (e) { text = ''; } }   // the rush has made things: its clock is the one on the cards it made
+      let text = '', pretend = false;
+      if (L && made) { try { text = timeText(L.clock()); pretend = !!text; } catch (e) { text = ''; } }   // the rush has made things: its clock is the one on the cards it made, and it says so
       if (!text && st) { const w = wall(st.nowAt); text = w ? timeText(w.time) : ''; }
-      const next = text ? 'Time: ' + text : '';
+      const next = text ? (pretend ? 'Pretend time: ' : 'Time: ') + text : '';
       if (parts.clock.textContent !== next) parts.clock.textContent = next;
     }
+    // The button floats at the bottom of the screen. While the "Right now" box (the strip, the counters, the feed) is there it stays hidden: they already show what came in, and the
+    // button would lie over them. It comes as soon as the box has been scrolled up out of its place.
+    function overBox() {
+      try {
+        const r = parts.live.getBoundingClientRect(), vh = win.innerHeight || doc.documentElement.clientHeight;
+        return r.height > 0 && r.top < vh && r.bottom > vh - 72;
+      } catch (e) { return false; }
+    }
     function paintPill() {
-      const n = ui.pending.length;
-      parts.pill.hidden = n === 0;
+      const n = ui.pending.length, show = n > 0 && !overBox();
+      parts.pill.hidden = !show;
       if (n) parts.pill.textContent = 'Show ' + plural(n, 'new card', 'new cards');   // (the words on it are its name for a screen reader too)
     }
     function paintTitle() {   // the tab says how many things wait while the rush is on, so it can be read from another tab or window
@@ -995,11 +1019,14 @@
         const chipEl = card.querySelector('.ds-chip-new');
         if (chipEl && chipEl.parentNode) chipEl.parentNode.removeChild(chipEl);
       });
-      Array.prototype.forEach.call(parts.feed.querySelectorAll('.is-fresh'), (li) => { if (now - Number(li.getAttribute('data-ms')) >= FRESH_LINE_MS) li.classList.remove('is-fresh'); });
+      Array.prototype.forEach.call(parts.feed.querySelectorAll('.is-fresh'), (li) => { if (clockNow() - Number(li.getAttribute('data-ms')) >= FRESH_LINE_MS) li.classList.remove('is-fresh'); });
     }
     // once a second: the words of the feed and the clock, the New marks, the "new" button, the title
     function tick() {
       if (!st) return;
+      const real = Date.now();
+      if (lastTickAt && real > lastTickAt && paused()) ui.paused += real - lastTickAt;   // paused: the lines of the feed stand still with the clocks
+      lastTickAt = real;
       Array.prototype.forEach.call(parts.feed.children, (li) => {
         const t = li.firstChild, w = agoWords(Number(li.getAttribute('data-ms')));
         if (t && t.textContent !== w) { t.textContent = w; li.setAttribute('data-sig', li.getAttribute('data-key') + '|' + w); }   // (the line keeps its place: it is not drawn again)
@@ -1038,6 +1065,7 @@
       parts.empty.hidden = any;
       main.hidden = !any;
       parts.tiles.hidden = !any;
+      if (any) parts.live.classList.remove('ds-live-bare'); else parts.live.classList.add('ds-live-bare');   // no family yet: the box is one column (the feed says how to start)
       if (!any) {   // an empty desk that is open: whatever arrives next is new; the box with the strip stays
         if (!ui.seen) ui.seen = {};
         ui.waitTotal = 0;
@@ -1073,7 +1101,7 @@
         reqs.forEach((r) => {
           const was = ui.status[r.id];
           if (was !== undefined && was !== r.status && (r.status === 'accepted' || r.status === 'declined' || r.status === 'cancelled')) {
-            say(whoOf(r) + (r.status === 'accepted' ? ' said OK to your suggestion.' : r.status === 'declined' ? ' said no thanks to your suggestion.' : ' took a request back.'));
+            say(whoOf(r) + (r.status === 'accepted' ? ' said OK to your suggestion.' : r.status === 'declined' ? ' said no thanks to your suggestion.' : r.missed ? ' did not wait for an answer and took a request back.' : ' took a request back.'));
           }
           ui.status[r.id] = r.status;
           present[r.id] = true;

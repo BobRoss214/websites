@@ -9,7 +9,7 @@
 import { run, open, ok, okSoon, until } from './lib.mjs';
 
 const PAGES = ['first-visit', 'pumpkin-patch', 'school-field-trips', 'strawberry-picking', 'wise-pie'];
-const SEASON = { spring: '2026-04-25T12:00:00-04:00', summer: '2026-06-25T12:00:00-04:00', fall: '2026-10-02T12:00:00-04:00', winter: '2026-12-10T12:00:00-05:00' };
+const SEASON = { spring: '2026-04-25T12:00:00-04:00', summer: '2026-06-25T12:00:00-04:00', fall: '2026-10-02T12:00:00-04:00', winter: '2026-12-01T12:00:00-05:00' };   // winter is Nov 28 to Dec 6 in 2026: Tue Dec 1 is inside it (Dec 10 is spring)
 
 // every drawing the page points at, now (the ones that are on the page, and the ones that are not)
 const drawings = (p) => p.evaluate(() => {

@@ -41,6 +41,9 @@
  *      every group fades in when it is scrolled to (none stays invisible)
  *   8  reading aids: pictures hidden from screen readers, every card in a list item, heading order, readable price text (and axe, when it is installed)
  *   9  (information) how tall #shop is on a computer and on a phone
+ *  10  winter (the page clock on 1 Dec): the farm says it is open only the two tree weekends, no reservation, no rides, tomatoes done, so the farm visit group (rides,
+ *      ride tokens, reservation, tomatoes, Thursday to Sunday) and its jump button are hidden together; no jump button is left without its group or the other way round;
+ *      nothing the Store shows says ride, wagon, barrel train, tomato, reservation-only, walk-in, Reserve your visit or Thursday; in summer the group and its button are there
  * The names of the page's own parts (the class names) are in SEL below: if the markup is renamed, change them there and nowhere else. */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -884,5 +887,32 @@ await run('shop', async ({ browser, base, errs }) => {
       if (bars < 10) info(`7: es with a classic scroll bar: NOT CHECKED, this Chromium showed no scroll bar (${rows.join('; ')})`);
       else ok(`7: es with a classic scroll bar (15 to 17 px) at ${CLASSIC_WIDTHS.join(', ')} px: no word broken in the middle, no text cut off, 2 cards across below 1264 px and 3 from there`, bad.length === 0, rows.join('; ') + (bad.length ? ' | ' + bad.join(' | ') : ''));
     } finally { await classic.close().catch(() => {}); }
+  }
+
+  /* ---- 10: winter. The farm visit group says rides, tokens, reservations, tomatoes and Thursday to Sunday: none of that is true on the tree weekends (the farm's own rule: open only those
+     two weekends, no reservation, no rides, tomatoes ended Nov 8), so the group is for the other seasons (data-only="spring summer fall", with its jump button). */
+  {
+    const look = async (time) => {
+      const q = await open(browser, base, 'index.html', errs, { time });
+      await q.addStyleTag({ content: STILL });
+      await q.waitForTimeout(ms(500));
+      const r = await q.evaluate(() => {
+        const shown = (e) => !!e && e.getClientRects().length > 0;   // an element inside a display:none box has none
+        const groups = [...document.querySelectorAll('#shop .shop-group')], pills = [...document.querySelectorAll('#shop .shop-jump a')];
+        const orphan = pills.filter((a) => shown(a) && !shown(document.getElementById(a.getAttribute('href').slice(1)))).map((a) => a.textContent.trim());
+        const lonely = groups.filter((g) => shown(g) && !pills.some((a) => shown(a) && a.getAttribute('href') === '#' + g.id)).map((g) => g.id);
+        const re = /\b(?:rides?|wagon|barrel train|tomato(?:es)?|reservation-only|walk-ins?|reserve your visit|thursday)\b/i, words = [];
+        const walk = document.createTreeWalker(document.getElementById('shop'), NodeFilter.SHOW_TEXT);
+        for (let n; (n = walk.nextNode());) { const e = n.parentElement; if (e && e.getClientRects().length && !e.closest('script,style') && re.test(n.nodeValue)) words.push(n.nodeValue.trim().slice(0, 60)); }
+        return { farm: shown(document.getElementById('shop-farm')), pill: pills.some((a) => a.getAttribute('href') === '#shop-farm' && shown(a)), groups: groups.filter(shown).length, pills: pills.filter(shown).length, orphan, lonely, words };
+      });
+      await q.context().close();
+      return r;
+    };
+    const w = await look('2026-12-01T12:00:00-05:00'), su = await look('2027-06-20T12:00:00-04:00');
+    ok('10: winter (1 Dec): the farm visit group and its jump button are both hidden', !w.farm && !w.pill, JSON.stringify(w));
+    ok('10: winter: 12 groups and 12 jump buttons are shown, no button without its group and no group without its button', w.groups === 12 && w.pills === 12 && w.orphan.length === 0 && w.lonely.length === 0, JSON.stringify(w));
+    ok('10: winter: nothing in the Store says ride, wagon, barrel train, tomato, reservation-only, walk-in, Reserve your visit or Thursday', w.words.length === 0, w.words.join(' | '));
+    ok('10: summer (20 Jun): the farm visit group and its jump button are there, 13 groups and 13 buttons', su.farm && su.pill && su.groups === 13 && su.pills === 13 && su.orphan.length === 0 && su.lonely.length === 0, JSON.stringify(su));
   }
 });

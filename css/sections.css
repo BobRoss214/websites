@@ -239,6 +239,7 @@ html[data-season="fall"] .nav-tomato .nav-group-title::after{content:"";display:
 .cal-track{position:relative;height:26px;border-radius:10px;background:repeating-linear-gradient(90deg,rgba(58,36,22,.07) 0 1.5px,transparent 1.5px calc(100% / 12))}
 .cal-bar{position:absolute;top:1px;bottom:1px;left:calc(var(--s) / 12 * 100%);width:calc((var(--e) - var(--s)) / 12 * 100%);border:2.5px solid var(--ink);border-radius:999px}
 .bar-red{background:#ff5d73}.bar-blue{background:#7c8be0}.bar-orange{background:#ffa03a}.bar-green{background:#5cb85c}.bar-pink{background:#ff9cc0}
+.cal-bar[data-tree-bar]{min-width:8px;border-width:2px}   /* The two Christmas tree bars are two days each (js/season.js sets --s and --e from the rule): 2 to 5 px on this year-wide track, less than the two outlines, so the bar was all outline and the two weekends merged into one dark tick beside the Today line. The bar still starts on its true start; min-width keeps at least 4 px of the green fill (the outline is 2 px here), and on a phone the two bars may touch. */
 .cal-today{display:none;position:absolute;top:22px;bottom:30px;left:calc(var(--label-w) + 16px + (100% - var(--label-w) - 16px) * var(--today,0));width:0;border-left:3px solid var(--red);pointer-events:none}
 .cal.has-today .cal-today{display:block}
 .cal-today span{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.15em .6em;font:700 .7rem/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase}

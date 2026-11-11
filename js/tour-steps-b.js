@@ -154,7 +154,7 @@
       id: 'ch6-hours', order: 605, chapter: 6, page: 'index',
       target: '#greenhouse .gh-hours',
       title: 'GreenHouse hours and the Open now line',
-      text: 'From spring to fall: Friday to Sunday, 10 am to 8 pm. ' +
+      text: 'Usual hours: Friday to Sunday, 10 am to 8 pm. ' +
             'In winter this box shows the tree weekends instead. ' +
             'A line under the hours says Open now or Closed today. ' +
             'Visitors are sent to Instagram for sudden changes, so post there too.'

@@ -201,20 +201,20 @@ await run('sitecheck', async ({ browser, base, errs }) => {
 
   const labels = async (extra, date, lang) => {
     const q = await at(extra, { lang, time: date });
-    const out = await q.evaluate((d) => ({ gh: WISE_ACRES.live.status('greenhouse', new Date(d)).text, farm: (WISE_ACRES.live.status('farm', new Date(d)) || {}).text, date: WISE_ACRES.features.fmtYmd('2026-11-15', { weekday: 'short', month: 'short', day: 'numeric' }), label: WISE_ACRES.live.dateLabel('2026-11-15'), box: (document.getElementById('wa-problems') || {}).textContent || '' }), date);
+    const out = await q.evaluate((d) => ({ gh: WISE_ACRES.live.status('greenhouse', new Date(d)).text, farm: (WISE_ACRES.live.status('farm', new Date(d)) || {}).text, date: WISE_ACRES.features.fmtYmd('2026-10-18', { weekday: 'short', month: 'short', day: 'numeric' }), label: WISE_ACRES.live.dateLabel('2026-10-18'), box: (document.getElementById('wa-problems') || {}).textContent || '' }), date);
     await done(q); return out;
   };
-  // Sunday Nov 8, 9 pm (the GreenHouse is open Fri-Sun, 10 am-8 pm): after closing time on a Sunday
-  let l = await labels('', '2026-11-08T21:00:00-05:00');
+  // Sunday Oct 11, 9 pm (the GreenHouse is open Fri-Sun, 10 am-8 pm in fall; from Nov 9 the page shows winter and the winter hours): after closing time on a Sunday
+  let l = await labels('', '2026-10-11T21:00:00-04:00');
   ok('no closures: Friday is 5 days away, written as a weekday', /^Closed now\. Opens Friday at 10 am$/.test(l.gh), l.gh);
-  l = await labels("WISE_ACRES.closures = ['2026-11-13'];", '2026-11-08T21:00:00-05:00');
+  l = await labels("WISE_ACRES.closures = ['2026-10-16'];", '2026-10-11T21:00:00-04:00');
   ok('6 days away is still a weekday name ("Opens Saturday")', /^Closed now\. Opens Saturday at 10 am$/.test(l.gh), l.gh);
-  l = await labels("WISE_ACRES.closures = ['2026-11-13..2026-11-14'];", '2026-11-08T21:00:00-05:00');
-  ok('7 days away: the date is added, so "Sunday" is not mistaken for today ("Opens Sun, Nov 15")', /^Closed now\. Opens Sun, Nov 15 at 10 am$/.test(l.gh), l.gh);
-  l = await labels("WISE_ACRES.closures = ['2026-11-20..2026-11-22'];", '2026-11-20T12:00:00-05:00');
-  ok('a closed week-end, written as a range: "Closed today. Opens Fri, Nov 27 at 10 am"', /^Closed today\. Opens Fri, Nov 27 at 10 am$/.test(l.gh), l.gh);
-  l = await labels("WISE_ACRES.closures = ['2026-11-13..2026-11-15'];", '2026-11-10T12:00:00-05:00');
-  ok('a week with every open day closed: the next opening is on the date ("Opens Fri, Nov 20")', /^Closed today\. Opens Fri, Nov 20 at 10 am$/.test(l.gh), l.gh);
+  l = await labels("WISE_ACRES.closures = ['2026-10-16..2026-10-17'];", '2026-10-11T21:00:00-04:00');
+  ok('7 days away: the date is added, so "Sunday" is not mistaken for today ("Opens Sun, Oct 18")', /^Closed now\. Opens Sun, Oct 18 at 10 am$/.test(l.gh), l.gh);
+  l = await labels("WISE_ACRES.closures = ['2026-10-23..2026-10-25'];", '2026-10-23T12:00:00-04:00');
+  ok('a closed week-end, written as a range: "Closed today. Opens Fri, Oct 30 at 10 am"', /^Closed today\. Opens Fri, Oct 30 at 10 am$/.test(l.gh), l.gh);
+  l = await labels("WISE_ACRES.closures = ['2026-10-16..2026-10-18'];", '2026-10-13T12:00:00-04:00');
+  ok('a week with every open day closed: the next opening is on the date ("Opens Fri, Oct 23")', /^Closed today\. Opens Fri, Oct 23 at 10 am$/.test(l.gh), l.gh);
   // the farm (fall: Thu-Sun by reservation); Monday Oct 12
   l = await labels('', '2026-10-12T12:00:00-04:00');
   ok('the farm, no closures: "Next reserved day: Thursday"', /Next reserved day: Thursday$/.test(l.farm || ''), l.farm);
@@ -226,11 +226,11 @@ await run('sitecheck', async ({ browser, base, errs }) => {
   // the same label in the five languages: the date is written like every other date on the page (fmtYmd in js/features.js)
   const seen = {};
   for (const lang of ['en', 'es', 'hi', 'zh', 'vi']) {
-    l = await labels("WISE_ACRES.closures = ['2026-11-13..2026-11-14'];", '2026-11-08T21:00:00-05:00', lang === 'en' ? undefined : lang);
+    l = await labels("WISE_ACRES.closures = ['2026-10-16..2026-10-17'];", '2026-10-11T21:00:00-04:00', lang === 'en' ? undefined : lang);
     seen[lang] = l.gh;
     ok(lang + ': the opening label carries the date written as the page writes dates (' + l.label + ')', l.label === l.date && l.gh.includes(l.label) && /\d/.test(l.label), l.gh + ' | ' + l.date + ' | ' + l.label);
   }
-  ok('Spanish, Chinese, Vietnamese and Hindi write the date in their own words (no English month or weekday left)', !/Sun|Nov/.test(seen.es + seen.hi + seen.zh + seen.vi), JSON.stringify(seen));
+  ok('Spanish, Chinese, Vietnamese and Hindi write the date in their own words (no English month or weekday left)', !/Sun|Oct/.test(seen.es + seen.hi + seen.zh + seen.vi), JSON.stringify(seen));
   info(JSON.stringify(seen));
 
   // ---- mistakes in a range are named, and a wrong range closes nothing
@@ -243,8 +243,8 @@ await run('sitecheck', async ({ browser, base, errs }) => {
   ok('"to" instead of two dots: the box shows the two-dot way', /looks like a range of days\. Write a range with two dots/.test(has(/looks like a range/)), has(/looks like a range/));
   ok('a short day inside a range (2026-11-9): read, and the box says how to write it', /was read as 2026-11-09/.test(has(/2026-11-9/)), has(/2026-11-9/));
   ok('a good range gives no warning', !b.broken.some((x) => /2026-11-20/.test(x)), JSON.stringify(b.broken));
-  const st = await p.evaluate(() => WISE_ACRES.live.status('greenhouse', new Date('2026-11-13T12:00:00-05:00')).text);
-  ok('the wrong ranges closed nothing: Friday Nov 13 at noon is still open', /^Open now, until 8 pm$/.test(st), st);
+  const st = await p.evaluate(() => WISE_ACRES.live.status('greenhouse', new Date('2026-10-16T12:00:00-04:00')).text);
+  ok('the wrong ranges closed nothing: Friday Oct 16 at noon is still open', /^Open now, until 8 pm$/.test(st), st);
   await done(p);
   p = await at("WISE_ACRES.closures = '2026-11-09..2026-11-15';");
   b = await parts(p);

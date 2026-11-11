@@ -1,19 +1,19 @@
 # Decision playbook
 
-What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 and 14 more, d60 to d73, d74 to d87, d88 to d92 (see "Dashboard ids and doc question numbers").
+What to change when the farm owner answers one of the open questions on the dashboard: d01 to d59 and 14 more, d60 to d73, d74 to d87, d88 to d93 (see "Dashboard ids and doc question numbers").
 Written on 3 October 2026 for commit b54427b, extended for e02b95e and (d60 to d73) f176745. Nothing here decides anything for the owner, and no optional patch has been applied.
-Entries d74 to d87 (added to the dashboard on 3 October 2026, with no number in the doc) were written for commit 9416cba. Entries d88 to d92 (added on 4 October 2026, with no number in the doc) were written for commit f7bebdb. Each answer that is a file edit was tried on a copy of the site (docs/ANSWER_REHEARSAL.md); the answers that need files from later sets of changes say so.
+Entries d74 to d87 (added to the dashboard on 3 October 2026, with no number in the doc) were written for commit 9416cba. Entries d88 to d92 (added on 4 October 2026, with no number in the doc) were written for commit f7bebdb. Entry d93 (added on 11 November 2026, with no number in the doc) was written for commit 343e1d3. Each answer that is a file edit was tried on a copy of the site (docs/ANSWER_REHEARSAL.md); the answers that need files from later sets of changes say so.
 Entries d43 to d45 (added later on the dashboard, with no number in the doc) were written on 3 October 2026 for commit af1e572. On the same day the dashboard texts of d01, d10, d15, d22, d41 and d44 were reworded; this page says the same as the dashboard now.
 
 ## How to use it
 
-1. Find the question by its number (d01 to d92) or in the topic list below.
+1. Find the question by its number (d01 to d93) or in the topic list below.
 2. Read the option she chose. It lists the files and the exact setting or text, how many strings must be written in the four translations, and which tests may need an update.
 3. Make the change. If it changes a sentence of pages/first-visit.html, check whether index.html at `id="first-visit"` (the short first-visit guide on the home page) has the same sentence and change it there too: `node tests/first-visit-guide.test.mjs` names every sentence that is no longer the same. Rebuild and test as in "The standard steps". Then run `node tests/docs.test.mjs`: it lists every note (this page, the README rows, the other docs) that still names the old words or a place that moved; give those notes the new words. The steps and "Tests:" lines of the entries below were tried one by one on a copy of the site (docs/ANSWER_REHEARSAL.md says which ones, and how to try them again with `python3 tools/rehearse_answers.py --list`).
 4. If the entry names a patch, apply it only after her answer. Patches are listed in "Patches on disk".
 5. Delete the matching row in the README table "Content status" when a question is closed.
 
-Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572, entries d60 to d73 for f176745, entries d74 to d87 for 9416cba, entries d88 to d92 for f7bebdb. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
+Entries d01 to d42 were written for commit b54427b, entries d46 to d59 for e02b95e, entries d43 to d45 for af1e572, entries d60 to d73 for f176745, entries d74 to d87 for 9416cba, entries d88 to d92 for f7bebdb, entry d93 for 343e1d3. Places in files are named by words you can search for, not by line numbers (see "How the docs point into files").
 
 Commit e02b95e also holds the messages feature (f45d6d9) and the plain-English rewrite (7d917e6), which changed the wording and the ids of 77 sentences.
 
@@ -76,7 +76,7 @@ git apply patches/optional/<file>.patch
 | 2 | Wrong links and placeholder content | blocks launch | d02, d03, d46, d47, d04, d54, d06 |
 | 3 | People and photos (permission) | blocks launch | d13, d31, d32, d33, d12, d34, d61, d86, d87 |
 | 4 | Pizza and food facts | wrong or risky information | d17, d16, d18, d19, d20, d21, d22, d49, d53, d08, d57, d79, d80 |
-| 5 | Dates, seasons and winter | wrong or risky information | d01, d09, d23, d50, d51, d24, d25, d26, d27, d60, d66, d68, d69, d70, d91, d92 |
+| 5 | Dates, seasons and winter | wrong or risky information | d01, d09, d23, d50, d51, d24, d25, d26, d27, d60, d66, d68, d69, d70, d91, d92, d93 |
 | 6 | Rules and promises to visitors | wrong or risky information | d41, d42, d52, d55, d44, d45, d35, d36, d43, d81, d85, d89 |
 | 7 | Names, address and listings | wrong or risky information | d07, d28, d29, d39, d40, d65, d78 |
 | 10 | What the site says the farm offers | wrong or risky information | d48, d56, d58, d59, d67, d73, d74, d84 |
@@ -123,6 +123,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | d79 Thursday pizza, d80 GreenHouse pizza times | d16, d51, d08, d20, d44 | The Fall line (d79) and the package cards (d16) must agree on the days of pizza. The GreenHouse pizza times (d80) are the hours of d51 and of the "Open now" badge. |
 | d74, d81, d82, d83, d85 new words | d37, d71 | New sentences in four languages: a native reader should read them (d37), in the tone chosen in d71. |
 | d89 privacy page, d90 item 2 | each other | privacy-page.patch edits js/analytics.js. d90 item 2 renames that file, so the rename comes after the patch (or the patch is made again). |
+| d93 tomatoes in winter | d48, d01, d66 | d48 C deletes the Tomatoes & basil section for good: then d93 is not needed. d01 A hides the fall booking and prices out of fall with the same `data-only` word and the same rule for what winter means. d66 changes the words "new this year", which d93 hides together with the section. |
 | d91 closed days, d92 farm days | d60, d51, d09 | `closures` in js/content.js closes the farm, The GreenHouse and Wise Pie together (d60). `hours.farm` is the badge "Reserved visits today" (d92); the hours of The GreenHouse and Wise Pie are d09 and d51. |
 
 ## Tests that can need an update
@@ -141,7 +142,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | consistency at `Mid-September through early November` | season words from js/season.js ("Mid-September through early November") | d23 |
 | consistency at `const ALLOWED_EXTRA` | ALLOWED_EXTRA: Celsius 370 beside "700-degree" | d18, d37 |
 | consistency at `farm year bars match the dates written beside them` | the year bars start and end where the words beside them say (early, mid or late + month; the April to July bar is read at `/^april.*`) | d23, d26, d50 |
-| dated (whole file) | the 2026 pizza rows, special days, "No pizza" block until Nov 30, Nov 8/9, Dec 1 | d23, d24 |
+| dated (whole file) | the 2026 pizza rows, special days, "No pizza" block and the schedule box until Nov 8 (gone on Nov 9), Nov 8/9, Dec 1 | d23, d24 |
 | farm-seasons at `haunted trail and the maze only in fall` | /Maze/ in fall text only | d07 |
 | print-qr at `there are signs, each with a QR code` | at least 9 signs | d06, d28, d29 |
 | consistency at `printedCount >= 9 && bad.length === 0` | the QR signs check: at least 9 signs are printed in print/qr-signs.html | d06, d28, d29 |
@@ -179,6 +180,7 @@ Every row names the file, the question, what it changes and whether it was teste
 | season-picker-off.patch | launch decision D6 | seasonPicker false. It also changes tests/lib.mjs so that every page a test opens has the season switcher on (the tests that look at or click it keep passing). | yes: with it applied (in the set of 11 patches, settings filled in) hero, games, dated, keyboard and calm pass; hero and games failed without the tests/lib.mjs change |
 | winter-A-hide-fall-booking.patch | d01 A, d24 B | Hides the fall booking and prices out of season; one new sentence in 4 languages. | yes: the matrix, hero, features, the page clock on 11 dates |
 | winter-B-fall-prices-note.patch | d01 B | Keeps the fall prices all year with the note "These are the fall 2026 prices and times"; one new sentence in 4 languages. | yes: the matrix, the page clock on 11 dates |
+| winter-hide-tomatoes.patch | d93 A | Hides the u-pick tomatoes and basil while the page is in its winter look (menu line, section, add-on, calendar row, FAQ, sign-up interest, map field); three lines get a twin without the tomatoes; the tour skips two cards. Two new sentences in 4 languages. | option-patches: yes, with every set of the other patches |
 | reserve-window.patch | d25 A | Hides the spring Reserve buttons outside the booking window. | yes: the matrix, hero (80 checks), the page clock on 11 dates; with the rebuild, dated, deploy and messages see no page error on the extra pages |
 | redirects-A-redirects-file.patch | d30 A (Cloudflare Pages, Netlify) | Adds _redirects (22 lines, all 301). | yes: the matrix, also with Cloudflare's own test server |
 | redirects-B-redirect-pages.patch | d30 A (any host, the only one for GitHub Pages) | 13 small redirect pages, their two lines in the visitor's language (10 new texts in 4 languages); the deploy tool uploads them; the launch check follows them. | yes: the matrix, the 13 pages in 5 languages with and without JavaScript |
@@ -380,6 +382,7 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d90 | Six small improvements for odd browsers and slow lines: do you want any? | none |
 | d91 | Which days are you closed this year? | none |
 | d92 | Which days is the farm open for strawberries and blueberries? | none |
+| d93 | Should the site stop mentioning tomatoes and basil in winter? | none |
 
 ### Dashboard questions with no number in the doc
 
@@ -425,6 +428,7 @@ Doc questions that are on the dashboard in more than one card: Q37 (d01, d09, d5
 | d90 | Six small improvements for odd browsers and slow lines: do you want any? |
 | d91 | Which days are you closed this year? |
 | d92 | Which days is the farm open for strawberries and blueberries? |
+| d93 | Should the site stop mentioning tomatoes and basil in winter? |
 
 Only a note exists for d37 (the doc has a "Translation notes" section, but no question). d29 is the printed sign for the hashtag asked in Q25. d43 to d45 (farm words, the corn pit offer, free entry for ages 2 and under) were added to the dashboard after the doc was written: they have no doc number and no "Dashboard id" line there, and their entries are in Topic 6.
 
@@ -1592,17 +1596,17 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 - js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts on the last Saturday in November (Nov 28, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 3 days (Nov 28 to 30). Decide what shows then (ask Claude).
 - Words "early November" become "late November" (say early, mid or late: the year-bar check and the season-words check of consistency read those words, and "end of November" is not one of them): index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
-- Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
+- Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-08">`) already says November, but since 11 Nov 2026 (the builder's winter rules: the farm is closed from Nov 9 to Nov 27) it ends on Nov 8: move its last day to 2026-11-30, and the last day of the "Fall schedule" button on the pumpkin page with it (pages/pumpkin-patch.html at `data-until="2026-11-08"` (2 places)).
 - The year bar next to that sentence ends too early for "late November": in index.html at `bar-orange" style="--s:8.45;--e:10.25"` (the pumpkin bar; the tomato bar below it has the same numbers: change it too if the tomatoes go on as long as the pumpkins, and then the tomato sentences, the tomato dates in js/features.js and the last day of the chip and the card link as well) change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
 - Strings: about 7 to 9 ids x 4 translations
-- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs pins the pizza rows and the "No pizza" box (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`); it passes without a change when only the end date and the words change (tried), so redo those dates only if you also change the rows or the box; farm-seasons and hero may react to the new end date, run them
+- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs pins the pizza rows and the "No pizza" box (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`); since 11 Nov 2026 it pins the last day of the "No pizza" box as Nov 8 (the farm is closed from Nov 9), so with A redo the box's dates in it (`const NOPIZZA =` and the Nov 9 lines); farm-seasons and hero may react to the new end date, run them
 
 **B. Fall ends Nov 8: fix the pizza box**
 
-- Fix the "No pizza" box: index.html at `<div data-until="2026-11-30">`: data-until="2026-11-30" -> "2026-11-08", and the sentence index.html at `data-t="tb848cce7"` ("Open for all of October and November.") -> for example "Open through November 8".
+- The "No pizza" box already ends on Nov 8 (done on 11 Nov 2026, from the builder's winter rules: index.html at `<div data-until="2026-11-08">`, and the "Fall schedule" button on the pumpkin page with it). What is left is the sentence index.html at `data-t="tb848cce7"` ("Open for all of October and November.") -> for example "Open through November 8".
 - js/season.js stays as is.
 - Strings: 1 id x 4 translations
-- Tests: dated: tests/dated.test.mjs at `const NOPIZZA =` (selector data-until="2026-11-30"), `Nov 9: "No pizza` (Nov 9 line) and `Dec 1: "No pizza` (Dec 1 line) must follow the new date
+- Tests: dated already follows the date: tests/dated.test.mjs at `const NOPIZZA =` (selector data-until="2026-11-08"), `Nov 8, 11:30 PM` (still shown) and `Nov 9 (the day after` (gone); nothing to redo
 
 ### d50. Christmas tree dates at The GreenHouse
 
@@ -1968,6 +1972,33 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Strings: 0 in the notice, 1 sentence x 4 translations on the page
 - Tests: none for the notice; dated, live if the page changes
 - Not replayed: her own words.
+
+### d93. Should the site stop mentioning tomatoes and basil in winter?
+
+- In plain words: The u-pick tomatoes and basil ended on November 8, but the home page still offers them all year: a menu line, a whole section with 14 varieties, the add-on, the calendar row, two FAQ lines and the all-year line on the first screen (the Store card and the Pumpkin patch page card are already hidden in winter). Yes (A) hides them while the page is in its winter look. No (B) changes nothing.
+- Doc question: none (added on the dashboard after the doc was written)
+- Urgency: 2 (wrong or risky information). Checklist says: not listed.
+- Owner fact (no sensible default): no. The site builder decides (10 November 2026: "make sure nothing in winter mentions tomatoes").
+- Default: B, no change, until the builder says yes. The patch is ready.
+- Depends on: d48 (are there tomatoes this fall at all: with C there the section is deleted for good and this patch is not needed), d01 (winter: the same `data-only` rule), d66 (the words "new this year").
+- Note: "Winter" here is the page's winter look: from November 9 (the page opens on the season that starts next) to the Sunday after the first tree weekend in December, and whenever a visitor presses Winter at the top. From December 7 the page opens in its spring look and the tomato parts come back, as every other all-year part does (the same as d01 A for the fall booking: it comes back on July 11). If the builder wants them hidden all the way to the strawberry opening, say so: it needs a date rule, not only the winter look.
+
+**A. Yes, hide them in winter**
+
+- Apply patches/optional/winter-hide-tomatoes.patch (source files only; then rebuild).
+- What it does: `data-only="spring summer fall"` (the same word the winter lines use) goes on the Things to Do menu line, the add-on, the calendar row, the FAQ list line and the FAQ entry "Do you have u-pick tomatoes and basil?" and the sign-up interest "Tomatoes & basil". One new CSS line in css/sections.css, `html[data-season="winter"] #tomatoes{display:none}`, leaves out the whole Tomatoes & basil section (index.html at `id="tomatoes"`; the section line itself is not changed, because faster-below-the-fold.patch changes it too). The Store card (index.html at `id="shop-upick"`) and its "See the tomato varieties" button are in the Store farm group, and the Pumpkin patch page card is in its own `data-only` line: both are already hidden in winter, so the patch does not touch them. Three lines that list the tomatoes get a winter twin without them: the all-year first-screen line, the Fall cell of the "Season by season" table and the name of the Fall tab ("Pumpkins" instead of "Pumpkins & Tomatoes"). A new short list in js/features.js, `OFF_IN_SEASON`, leaves the tomato field and its legend line off the farm map in winter (the map is drawn again when a season is pressed). A new word, `data-all-year`, read by js/season.js and js/hero.js, chooses which all-year first-screen line shows. js/tour-steps.js at `ch5-tomatoes` and `ch5-varieties` say `skipIfMissing: true`, so the tour passes those two cards when their parts are not on the page.
+- Left alone on purpose: the pizza words (tomato sauce, tomatoes on a pizza, the sauce list), the Fall tab, card and panel of "What's in season" and "What's on the farm" (a visitor who presses Fall chooses to see fall), the fall hero line and the "New" chip and card (they already end on November 8), the drawings of a tomato or basil plant (no words), the tomato photo in the gallery (a photo; its words are only its alt text and its enlarged caption), the pretend demo pages and the tour's own words about fall.
+- Then rebuild (python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build) and python3 tools/i18n.py missing es hi zh vi (0 each).
+- In spring, summer and fall the page shows exactly what it shows today: the changes are attributes and three twin lines that stay hidden outside winter.
+- Strings: 2 new UI sentences (ids t1706223d and t6a964418) x 4 translations, already written in the patch
+- Tests: option-patches (the patch applies alone and in every set with the other patches, in the documented order) and docs pass; the browser tests run on a copy with the patch applied are listed in the commit message
+- Patch: patches/optional/winter-hide-tomatoes.patch
+
+**B. No, leave it as it is now**
+
+- Nothing to apply: this answer means "change nothing". The tomato and basil parts stay on the page all year. The ones that said "new" end themselves (the chip and the card link on November 8, the ribbon on December 31).
+- Strings: 0
+- Tests: none to run: no file changes
 
 ## Topic 6. Rules and promises to visitors
 
