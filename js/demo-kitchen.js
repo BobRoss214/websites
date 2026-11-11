@@ -228,6 +228,7 @@
 
   /** New / Change waiting for you / Waiting for the family's OK / Confirmed */
   function statusOf(order, req) {
+    if (order && order.status === 'missed') return 'missed';   // a pretend family gave up waiting for the answer to a new order
     if (req && req.status === 'waiting') return 'change';
     if (req && req.status === 'suggested') return 'family';
     if ((order && order.status === 'confirmed') || (req && (req.status === 'yes' || req.status === 'accepted'))) return 'confirmed';
@@ -244,7 +245,7 @@
     }
     if (req.status === 'accepted') out.push({ at: stamp(req.updated), text: 'The family said OK to your plan. The order was changed.' });
     if (req.status === 'declined') out.push({ at: stamp(req.updated), text: 'The family said no thanks. The order stayed as it was.' });
-    if (req.status === 'cancelled') out.push({ at: stamp(req.updated), text: 'The family cancelled the request.' });
+    if (req.status === 'cancelled') out.push({ at: stamp(req.updated), text: req.missed ? 'Nobody answered in time, so the family took the request back.' : 'The family cancelled the request.' });
     return out;
   }
 
@@ -256,7 +257,7 @@
     if (s === 'no') return { kind: 'no', text: 'You said No. The order stays as it was.', note: note };
     if (s === 'accepted') return { kind: 'ok', text: 'The family said OK to your plan. The order is changed.', note: note };
     if (s === 'declined') return { kind: 'no', text: 'The family said no thanks to your plan. The order stays as it was.', note: note };
-    if (s === 'cancelled') return { kind: 'no', text: 'The family cancelled their request. The order stays as it was.', note: '' };
+    if (s === 'cancelled') return { kind: 'no', text: req.missed ? 'Missed: nobody answered in time. The order stays as it was.' : 'The family cancelled their request. The order stays as it was.', note: '' };
     return null;
   }
 
@@ -330,7 +331,7 @@
       return (a.date + ' ' + a.pickup + ' ' + a.id) < (b.date + ' ' + b.pickup + ' ' + b.id) ? -1 : 1;
     });
 
-    var days = [], byDate = {}, counts = { 'new': 0, change: 0, family: 0, confirmed: 0 }, pizzas = 0;
+    var days = [], byDate = {}, counts = { 'new': 0, change: 0, family: 0, confirmed: 0, missed: 0 }, pizzas = 0;
     cards.forEach(function (c) {
       counts[c.status]++;
       pizzas += c.count;
@@ -456,6 +457,7 @@
     }
     if (t.kind === 'order') {
       var cur = store.get('orders', t.id);
+      if (cur && cur.status === 'missed') return { ok: false, closed: true, text: 'That order was missed: the family did not wait.' };
       if (!cur || cur.status === 'confirmed') return { ok: false, closed: true, text: 'That order is already confirmed.' };
       if (how === 'yes') {
         store.update('orders', t.id, { status: 'confirmed' });
@@ -992,11 +994,11 @@
 
     /* ---------- a small ticket of the side lanes ---------- */
     function buildMini(t) {
-      var li = h('li', { 'class': 'kit-mini kit-mini-' + t.zone, 'data-key': t.key });
-      var line = t.zone === 'family' ? 'Waiting for the family’s OK' : (t.req && t.req.last ? t.req.last.text.replace(/^You said /, 'Said ').replace(/^The family said /, 'Family said ') : 'Confirmed');
+      var li = h('li', { 'class': 'kit-mini kit-mini-' + t.zone + (t.status === 'missed' ? ' kit-mini-missed' : ''), 'data-key': t.key });
+      var line = t.zone === 'family' ? 'Waiting for the family’s OK' : t.status === 'missed' ? 'Missed: nobody answered in time' : (t.req && t.req.last ? t.req.last.text.replace(/^You said /, 'Said ').replace(/^The family said /, 'Family said ') : 'Confirmed');
       li.appendChild(h('p', { 'class': 'kit-mini-head' }, h('strong', { 'class': 'kit-num', text: '#' + t.num }), ' ', h('span', { 'class': 'kit-mini-who', text: t.who })));
       li.appendChild(h('p', { 'class': 'kit-mini-text', text: time12(t.pickup) + ' · ' + plural(t.count, 'pizza', 'pizzas') }));
-      li.appendChild(h('p', { 'class': 'kit-mini-status' }, icon(t.zone === 'family' ? 'clock' : 'done'), h('span', { text: line })));
+      li.appendChild(h('p', { 'class': 'kit-mini-status' }, icon(t.zone === 'family' ? 'clock' : t.status === 'missed' ? 'x' : 'done'), h('span', { text: line })));
       return li;
     }
 

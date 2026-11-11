@@ -137,6 +137,7 @@
   "d01=B": ["winter-B-fall-prices-note"],
   "d24=B": ["winter-A-hide-fall-booking"],
   "d25=A": ["reserve-window"],
+  "d93=A": ["winter-hide-tomatoes"],
   "d05=A": ["clean-addresses-C-cloudflare"],
   "d65=C": ["qr-one-address-line"],
   "d65=D": ["qr-stronger-codes", "qr-one-address-line"],

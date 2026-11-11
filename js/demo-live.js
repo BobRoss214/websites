@@ -21,8 +21,11 @@
  *                                  record to answer (order, request, thread, photo or review: see below); at = pretend clock when it arrived; who = "Dana's family";
  *                                  text = one plain line ("asks to move their visit to Sunday, Nov 15"); answerBy = at + the answer-by time (kitchen only, else null).
  *   DemoLive.feed([n]) -> events   the last n (default 8) events, newest first, same shape as above (for "just now: ..." lines).
- *   DemoLive.stats([side]) -> { made, waiting, answered, late }   side 'desk' | 'kitchen' | none. `made` counts all events since the first start.
+ *   DemoLive.stats([side]) -> { made, waiting, answered, late, missed, held }   side 'desk' | 'kitchen' | none. `made` counts all events since the first start; `missed` counts the things
+ *                                  whose family gave up waiting (see NOBODY ANSWERS below); `held` is true while the rush waits because both sides are full and no thing has waited long enough yet.
  *   DemoLive.subscribe(fn) -> off  fn() on every change of the rush or of the store (this tab or another).
+ *   DemoLive.keep(fn) -> off       fn(kind, id) says true while somebody on this page is answering that thing (kind and id as in onEvent): its family does not give up on it
+ *                                  (see NOBODY ANSWERS below). The desk keeps a card with a note typed in it, an open suggestion panel or the focus.
  *   DemoLive.settings() -> { orderSecs: 180, changeSecs: 120 }   the kitchen's answer-by times (seconds); .setSettings(patch) changes them (30 to 600).
  *   DemoLive.watch(key) -> ms      the pretend time when a ticket of the signed-in family was first seen (kept in the store, so a reload does not restart its timer);
  *                                  .unwatch(key). The kitchen uses it for Alex's real orders.
@@ -43,6 +46,10 @@
  * them), store.threadsWaiting({ live: true }), store.openRequests(side, { live: true }); store.get(coll, id) finds any id. Answer them with the store's own calls
  * (reply, respond, update('orders', id, ...), decideReview, decidePhoto, post(thread, 'cathy', text)): a pretend family never makes a notice in the family's bell, and
  * the engine answers a suggestion for the family by itself a few seconds later (OK in about 6 of 7 cases). The engine keeps at most about 40 events of records.
+ * NOBODY ANSWERS: the rush keeps flowing. When no more than 8 things wait for the kitchen and 10 for the desk, nothing happens. When one side is full and a new thing is due, the family of
+ * the OLDEST thing of that side gives up, if it has waited long enough: the kitchen's things after their answer-by time + 30 seconds (so they were late, and beeped if Sound is on, before they
+ * are missed), the desk's after 2 minutes. A request is taken back (status 'cancelled', missed: true, missedAt, a line in its history); a new order gets status 'missed' (missed: true, missedAt);
+ * a question, a photo or a review leaves the Waiting list (the records are removed). Each one is counted in stats().missed. Pretend minutes only: the clock stands still when the rush is Off.
  * The generator is deterministic: event k depends only on (seed, k). Tests: DemoLive.create(store, { now: () => ms, seed: 7 }) makes a private engine on any store.
  * ===========================================================================================
  */
@@ -63,7 +70,9 @@
   var HEARTBEAT = 4000;     // while a page is open the clock is written at least this often
   var MAX_BURST = 3;        // after a long wait at most this many events come at once
   var KEEP_EVENTS = 40;     // the records of this many of the newest events are kept (answered ones older than that are forgotten)
-  var MAX_WAIT = { kitchen: 8, desk: 10 };   // no more than this many things wait for one side: then the other side gets the next one
+  var MAX_WAIT = { kitchen: 8, desk: 10 };   // no more than this many things wait for one side: then the other side gets the next one, and the oldest thing of the full side is given up
+  var MISS_GRACE = 30000;   // kitchen: a thing nobody answered is given up this long after its answer-by time ran out (so it is late, and beeps if Sound is on, before it is missed)
+  var DESK_PATIENCE = 120000;   // desk: a thing is not given up before it has waited this long (pretend milliseconds)
   var FEED = 12;            // events kept for the "just now" lines
   var KITCHEN_KINDS = { order: 1, 'order-change': 1 };
 
@@ -157,7 +166,7 @@
       if (q.status === 'waiting') {
         out[side].waiting++;
         if (side === 'kitchen' && t - (q.arrived || 0) > secsFor(L, 'order-change') * 1000) out.kitchen.late++;
-      } else out[side].answered++;   // a suggestion that waits for the family counts as answered for the side
+      } else if (!q.missed) out[side].answered++;   // a suggestion that waits for the family counts as answered for the side (a request its family took back, missed, does not)
     });
     st.orders.forEach(function (o) {
       if (!o.live) return;
@@ -176,7 +185,53 @@
     });
     return out;
   }
-  function waitingOn(st, L, side) { return counts(st, L, L.t || 0)[side].waiting; }
+  // The pretend things that wait for one side (the same things counts() counts): [{ coll, rec, kind, side, arrived }]
+  function waitingThings(st, side) {
+    var out = [], last, th;
+    if (side === 'kitchen') {
+      st.orders.forEach(function (o) { if (o.live && o.status === 'new') out.push({ coll: 'orders', rec: o, kind: 'order', side: side, arrived: o.arrived || 0 }); });
+      st.requests.forEach(function (q) { if (q.live && q.kind === 'pizza-change' && q.status === 'waiting') out.push({ coll: 'requests', rec: q, kind: 'order-change', side: side, arrived: q.arrived || 0 }); });
+      return out;
+    }
+    st.requests.forEach(function (q) { if (q.live && q.kind !== 'pizza-change' && q.status === 'waiting') out.push({ coll: 'requests', rec: q, kind: 'visit-change', side: side, arrived: q.arrived || 0 }); });
+    ['photos', 'reviews'].forEach(function (coll) {
+      st[coll].forEach(function (p) { if (p.live && p.status === 'waiting') out.push({ coll: coll, rec: p, kind: coll === 'photos' ? 'photo' : 'review', side: side, arrived: p.arrived || 0 }); });
+    });
+    last = lastFromFamily(st);
+    for (th in last) if (last[th].live && /^q-/.test(th) && last[th].from === 'family') out.push({ coll: 'messages', rec: last[th], kind: 'question', side: side, arrived: last[th].arrived || 0 });
+    return out;
+  }
+  function waitingOn(st, L, side) { return waitingThings(st, side).length; }
+  var heldBy = null;   // while a tick runs: the page's answer to "is somebody working on this thing?" (see keep() below)
+  function patience(L, w) { return w.side === 'kitchen' ? secsFor(L, w.kind) * 1000 + MISS_GRACE : DESK_PATIENCE; }
+
+  // Nobody answers, the pile of one side is full, and a new thing is due: the family of the OLDEST thing that has waited long enough gives up (the rush goes on instead of standing still).
+  // A request is taken back (status 'cancelled', missed: true, with a line in its history); a new order is marked status 'missed' (the kitchen shows it as missed, in its Done lane);
+  // a question, a photo or a review leaves the desk's Waiting list. Counted in live.missed. Returns true when one was given up.
+  function giveUpOldest(st, L, side, t) {
+    var best = null;
+    waitingThings(st, side).forEach(function (w) {
+      if (t - w.arrived < patience(L, w)) return;
+      if (heldBy && heldBy(w.kind, w.coll === 'messages' ? w.rec.thread : w.rec.id)) return;   // somebody is writing an answer to it: it stays
+      if (!best || w.arrived < best.arrived || (w.arrived === best.arrived && (w.rec.ev || 0) < (best.rec.ev || 0))) best = w;
+    });
+    if (!best) return false;
+    var rec = best.rec;
+    if (best.coll === 'requests') {
+      rec.status = 'cancelled'; rec.missed = true; rec.missedAt = t;
+      rec.history.push(histLine(L, t, 'family', 'The family did not wait and took the request back.'));
+      rec.updated = stampAt(L, t);
+    } else if (best.coll === 'orders') {
+      rec.status = 'missed'; rec.missed = true; rec.missedAt = t;
+    } else if (best.coll === 'messages') {
+      st.messages = st.messages.filter(function (m) { return m.thread !== rec.thread; });
+    } else {
+      st[best.coll] = st[best.coll].filter(function (x) { return x !== rec; });
+      if (rec.visitId) st.visits = st.visits.filter(function (v) { return !(v.live && v.id === rec.visitId); });   // the visit that only a review was about goes with it
+    }
+    L.missed = (L.missed || 0) + 1;
+    return true;
+  }
 
   /* ------------------------------------------------------------------ *
    * Making one event: choose what comes, then write the records
@@ -266,9 +321,10 @@
     return q;
   }
 
-  function chooseKind(st, L, r) {
+  function chooseKind(st, L, r, t) {
+    ['kitchen', 'desk'].forEach(function (side) { if (waitingOn(st, L, side) >= MAX_WAIT[side]) giveUpOldest(st, L, side, t); });   // a full side makes room first
     var kitchenFull = waitingOn(st, L, 'kitchen') >= MAX_WAIT.kitchen, deskFull = waitingOn(st, L, 'desk') >= MAX_WAIT.desk;
-    if (kitchenFull && deskFull) return null;
+    if (kitchenFull && deskFull) return null;   // (every thing still has to wait a little before its family gives up: the rush holds for a moment, and the strip says so)
     var table = [['order', 38], ['order-change', 17], ['visit-change', 18], ['question', 14], ['photo', 7], ['review', 6]];
     if (kitchenFull) table = [['visit-change', 40], ['question', 30], ['photo', 15], ['review', 15]];
     if (deskFull) table = [['order', 65], ['order-change', 35]];
@@ -277,7 +333,7 @@
 
   // Makes the records of event k and returns the event, or null. `t` is the pretend time the event arrives.
   function makeEvent(st, L, k, t, forced) {
-    var r = stream(L.seed, k, 1), kind = forced || chooseKind(st, L, r);
+    var r = stream(L.seed, k, 1), kind = forced || chooseKind(st, L, r, t);
     if (!kind) return null;
     var fam = familyName(r, st), ev = k + 1, at = stampAt(L, t), id = '', text = '', side = KITCHEN_KINDS[kind] ? 'kitchen' : 'desk', rec, base, plan;
     if (kind === 'order') {
@@ -441,8 +497,7 @@
     if (L.seed === undefined) { initRun(st, L, now); dirty = true; }
     var t = timeAt(L, now), guard = 0;
     while (L.nextAt <= t && guard < MAX_BURST) {
-      makeEvent(st, L, L.made, L.nextAt);
-      L.made++;
+      if (makeEvent(st, L, L.made, L.nextAt)) { L.made++; L.held = false; } else L.held = true;   // held: both sides are full and nothing may be given up yet: try again at the next time
       L.nextAt += gapFor(L, L.made);
       guard++; dirty = true;
     }
@@ -459,7 +514,7 @@
    * ------------------------------------------------------------------ */
   function create(store, opts) {
     opts = opts || {};
-    var subs = [], listeners = [], notified = -1, ticker = null, offStore = null;
+    var subs = [], listeners = [], keepers = [], notified = -1, ticker = null, offStore = null;
     function now() { return typeof opts.now === 'function' ? opts.now() : new Date().getTime(); }
     function L() { return store.get('live') || {}; }
 
@@ -510,8 +565,14 @@
       if (!l.on) return 0;
       var t = timeAt(l, nw);
       if (l.seed !== undefined && l.nextAt > t && nw - l.last < HEARTBEAT && nw + 1000 >= l.last && !answerDue(l, t)) return 0;   // nothing is due: write nothing
-      var res = store.transact(function (st) { return tickState(st, nw); });
+      var res = store.transact(function (st) { heldBy = keepers.length ? kept : null; try { return tickState(st, nw); } finally { heldBy = null; } });
       return res ? 1 : 0;
+    }
+    function kept(kind, id) { for (var i = 0; i < keepers.length; i++) { try { if (keepers[i](kind, id)) return true; } catch (x) { /* a page that cannot say does not keep it */ } } return false; }
+    function keep(fn) {   // fn(kind, id) -> true while somebody on this page is answering that thing: its family does not give up on it (kind as in onEvent, id = event.id)
+      if (typeof fn !== 'function') return function () {};
+      keepers.push(fn);
+      return function () { keepers = keepers.filter(function (f) { return f !== fn; }); };
     }
     function answerDue(l, t) {   // the family has an answer to a suggestion ready
       var ids = l.respondAt ? Object.keys(l.respondAt) : [], i;
@@ -538,7 +599,7 @@
     function subscribe(fn) { hook(); subs.push(fn); return function () { subs = subs.filter(function (f) { return f !== fn; }); }; }
     function feed(n) { return clone((L().feed || []).slice(0, n || 8)); }
     function stats(side) {
-      var l = L(), st = store.snapshot(), c = counts(st, l, timeAt(l, now())), out = { made: l.count || 0, waiting: 0, answered: 0, late: 0 };
+      var l = L(), st = store.snapshot(), c = counts(st, l, timeAt(l, now())), out = { made: l.count || 0, waiting: 0, answered: 0, late: 0, missed: l.missed || 0, held: !!l.held };
       ['kitchen', 'desk'].forEach(function (s) {
         if (side && side !== s) return;
         out.waiting += c[s].waiting; out.answered += c[s].answered; out.late += c[s].late;
@@ -590,7 +651,7 @@
 
     var inst = {
       start: start, stop: stop, isOn: isOn, setSpeed: setSpeed, speed: speed, speeds: SPEEDS, tick: tick, time: time, clock: clock, clockAt: clockAt, today: today, run: run, tally: tally, tallies: tallies,
-      onEvent: onEvent, subscribe: subscribe, feed: feed, stats: stats, settings: settings, setSettings: setSettings, watch: watch, unwatch: unwatch, clear: clear,
+      onEvent: onEvent, subscribe: subscribe, keep: keep, feed: feed, stats: stats, settings: settings, setSettings: setSettings, watch: watch, unwatch: unwatch, clear: clear,
       strip: function (o) { return buildStrip(inst, o); }
     };
     return inst;
@@ -660,7 +721,8 @@
       bOff.setAttribute('aria-pressed', on ? 'false' : 'true');
       engine.speeds.forEach(function (x) { sb[x.key].setAttribute('aria-pressed', x.key === sp ? 'true' : 'false'); });
       box.className = 'dl-strip' + (on ? ' dl-on-now' : ' dl-off') + (!on && !s.made ? ' dl-invite' : '');
-      state.textContent = on ? 'On: pretend families are sending things (' + s.made + ' so far). Press Off to pause everything, even the clocks.'
+      state.textContent = on ? (s.held ? 'On, but full: new things come when some are answered or time out (' + s.made + ' so far). Press Off to pause everything, even the clocks.'
+        : 'On: pretend families are sending things (' + s.made + ' so far' + (s.missed ? ', ' + s.missed + ' gave up waiting' : '') + '). Press Off to pause everything, even the clocks.')
         : (s.made ? 'Paused: nothing new comes and the clocks stand still. Press On to go on.' : 'Off. Press On to start the pretend rush and watch pretend orders and requests arrive. Nothing is real.');
     }
     paint();
@@ -674,7 +736,7 @@
   /* ------------------------------------------------------------------ *
    * The page's engine: made on first use, on the page's own store
    * ------------------------------------------------------------------ */
-  var NAMES_OUT = ['start', 'stop', 'isOn', 'setSpeed', 'speed', 'tick', 'time', 'clock', 'clockAt', 'today', 'run', 'tally', 'tallies', 'onEvent', 'subscribe', 'feed', 'stats', 'settings', 'setSettings', 'watch', 'unwatch', 'clear', 'strip'];
+  var NAMES_OUT = ['start', 'stop', 'isOn', 'setSpeed', 'speed', 'tick', 'time', 'clock', 'clockAt', 'today', 'run', 'tally', 'tallies', 'onEvent', 'subscribe', 'keep', 'feed', 'stats', 'settings', 'setSettings', 'watch', 'unwatch', 'clear', 'strip'];
   var api = { create: create, SPEEDS: SPEEDS, speeds: SPEEDS, DEFAULTS: DEFAULTS, GAP: GAP, stream: stream };
   var theOne = null;
   function the() {

@@ -95,6 +95,27 @@
     return { now: on ? on.id : '', next: up ? up.id : '' };
   }
 
+  // The winter season is the two tree weekends and the five days between them, but the trees are only on the four weekend days. The Now tag and the season look
+  // follow live() (winter starts on the first tree day), but what says "in season" or "happening now" must not say it on the days in between:
+  //   treeDay(now)      is the farm's day one of the four tree days?
+  //   happening(now)    live(), without winter on a day that is no tree day
+  //   nextTreeDay(now)  the next tree day after today as 'YYYY-MM-DD' ('' when there is none this year)
+  function ymdOfDate(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function treeDay(now) {
+    var t = dayStart(now || new Date()), w = treeWeekends(t.getFullYear());
+    return (t >= w[0].start && t <= w[0].end) || (t >= w[1].start && t <= w[1].end);
+  }
+  function happening(now) {
+    now = now || new Date();
+    var day = treeDay(now);
+    return live(now).filter(function (s) { return s.id !== 'winter' || day; });
+  }
+  function nextTreeDay(now) {
+    var t = dayStart(now || new Date()), w = treeWeekends(t.getFullYear()), days = [w[0].start, w[0].end, w[1].start, w[1].end], i;
+    for (i = 0; i < days.length; i++) if (days[i] > t) return ymdOfDate(days[i]);
+    return '';
+  }
+
   // The season the site shows: the one in progress. Between seasons it is the one that starts NEXT, so the site always turns to the section that is coming up
   // (the builder, Nov 10 2026: "now that fall is over it should open into the winter section ... it should turn to the next section that's coming up").
   // The Now tag, the all-year hero line and the other "only while it is really on" lines still follow live(), not this: between seasons the next season's
@@ -137,9 +158,24 @@
     if (L === 'zh') return same ? ma + a.getDate() + '–' + b.getDate() + '日' : ma + a.getDate() + '日–' + mb + b.getDate() + '日';
     return same ? a.getDate() + '–' + b.getDate() + ' ' + ma : a.getDate() + ' ' + ma + '–' + b.getDate() + ' ' + mb;
   }
-  function treeDatesText(year, lang) {
+  function treeDatesParts(year, lang) {   // the dates in three pieces: the first weekend, the word between, the second weekend
     var L = TREE_MONTH[lang] ? lang : 'en', w = treeWeekends(year);
-    return treeRange(w[0], L) + TREE_AND[L] + treeRange(w[1], L);
+    return [treeRange(w[0], L), TREE_AND[L], treeRange(w[1], L)];
+  }
+  function treeDatesText(year, lang) { return treeDatesParts(year, lang).join(''); }
+  // The words stay what they were (plain spaces: copy and paste, screen readers and the tests read the same text), but each weekend sits in a <span class="nb">
+  // (css/extras.css: white-space: nowrap), so a line breaks between the two weekends and never inside one: not between "28–29" and "nov", "5–6" and "thg 12",
+  // "12" and "月". An element that cannot hold children (the stand-in of tests/logic) just gets the text.
+  function writeTreeDates(el, parts, text) {
+    var doc = el.ownerDocument, i, nb;
+    if (!doc || !doc.createElement || !el.appendChild) { if (el.textContent !== text) el.textContent = text; return; }
+    if (el.textContent === text && el.children && el.children.length === 2) return;   // already written
+    el.textContent = '';
+    for (i = 0; i < parts.length; i++) {
+      if (i % 2) { el.appendChild(doc.createTextNode(parts[i])); continue; }
+      nb = doc.createElement('span'); nb.className = 'nb'; nb.textContent = parts[i];
+      el.appendChild(nb);
+    }
   }
   function treeYear(now) {
     var t = dayStart(now || new Date()), y = t.getFullYear();
@@ -152,10 +188,10 @@
     if (root.nodeType === 1 && (root.hasAttribute('data-tree-dates') || root.hasAttribute('data-tree-bar'))) found.push(root);
     if (root.querySelectorAll && (root.nodeType === 9 || root.firstElementChild)) { list = root.querySelectorAll('[data-tree-dates], [data-tree-bar]'); for (i = 0; i < list.length; i++) found.push(list[i]); }
     if (!found.length || !W.clockOk()) return;   // an unreadable clock does not know the year: the words stay empty, the bars keep the numbers typed in the page
-    var y = treeYear(new Date()), weekends = treeWeekends(y), text = treeDatesText(y, W.lang);
+    var y = treeYear(new Date()), weekends = treeWeekends(y), parts = treeDatesParts(y, W.lang), text = parts.join('');
     for (i = 0; i < found.length; i++) {
       var el = found[i], bar = el.getAttribute('data-tree-bar');
-      if (el.hasAttribute('data-tree-dates') && el.textContent !== text) el.textContent = text;
+      if (el.hasAttribute('data-tree-dates')) writeTreeDates(el, parts, text);
       if (bar === '1' || bar === '2') {
         var wk = weekends[+bar - 1];   // the bar covers both whole days: from the start of the Saturday to the end of the Sunday
         el.style.setProperty('--s', monthPos(wk.start).toFixed(3));
@@ -166,7 +202,7 @@
 
   W.rand = rand;
   W.seasons = { list: SEASONS, live: live, upcoming: upcoming, current: current, inWindow: inWindow, daysUntilStart: daysUntilStart, farmDay: farmDay, apply: apply, active: null,
-    tags: tags, treeWeekends: treeWeekends, treeDatesText: treeDatesText, treeYear: treeYear, paintTree: paintTree };
+    tags: tags, treeWeekends: treeWeekends, treeDatesText: treeDatesText, treeYear: treeYear, paintTree: paintTree, treeDay: treeDay, happening: happening, nextTreeDay: nextTreeDay };
   if (W.seasonPicker === undefined) W.seasonPicker = true;
 
   document.documentElement.classList.add('js-scene');

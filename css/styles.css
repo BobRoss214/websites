@@ -102,6 +102,7 @@ a[href^="tel:"]{white-space:nowrap}
 .announce p{margin:0;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.3em .6em}
 .announce a{color:var(--sun);font-weight:800;display:inline-flex;align-items:center;gap:.3em}
 .announce .ico{width:1.1em;height:1.1em}
+.announce p > span[data-only]:not([data-only="winter"]):not([hidden]){display:contents}   /* The one-line sentence of spring, summer and fall sits in a span (so it can hide in winter). A span is ONE flex item: too wide to share a line with the icon, so the icon stood alone on the first line (a line taller on a phone) and the words lost the .6em gap between the bold sentence and the next one. With display:contents its bold words and the words after them are items of the flex line again, as they were before the span, so the icon and "The farm is reservation-only." share a line. [hidden] is left out so the site can still hide the span; the long winter sentence stays one block (its dates are a span of their own). */
 
 .site-header{position:sticky;top:0;z-index:50;background:rgba(255,248,230,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:3px solid var(--ink)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;height:var(--header-h)}
@@ -216,7 +217,7 @@ svg.layer{bottom:0;height:64%;overflow:visible}
    Quick facts
    ========================================================================== */
 .facts{background:var(--sun);border-bottom:3px solid var(--ink)}
-.facts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 24px;padding-top:22px;padding-bottom:22px;padding-block:22px}
+.facts-grid{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:8px 24px;padding-top:22px;padding-bottom:22px;padding-block:22px}   /* four boxes in a row: the last one holds the e-mail address, which takes the room it needs (auto) so it never breaks in two; the other three share the rest. The rule that lets an address wrap (css/extras.css, overflow-wrap) is still there for a narrow phone. */
 .facts-grid li{display:flex;align-items:center;gap:12px;min-width:0}
 .fact-ico{flex:none;width:46px;height:46px;display:grid;place-items:center;background:#fff;border:3px solid var(--ink);border-radius:50%}
 .fact-ico .ico{width:22px;height:22px}
@@ -349,6 +350,7 @@ svg.layer{bottom:0;height:64%;overflow:visible}
 .season-copy h3{font-size:clamp(1.7rem,3vw,2.3rem);margin:.15em 0 .4em}
 .season-copy p{font-weight:600;color:var(--ink-soft)}
 .season-when{display:inline-flex;align-items:center;gap:.45em;background:var(--cream);border:2.5px solid var(--ink);border-radius:999px;padding:.35em .9em;font:600 .92rem/1.2 var(--display)!important;color:var(--ink)!important;margin:0!important}
+.season-when [data-tree-dates]{display:contents;white-space:nowrap}   /* Winter: the pill is a flex box, and a box inside it (the dates) would be an item of its own, wrapping alone in a narrow column with its brackets left behind. display:contents takes that box away, so the words before it, the dates and the closing bracket are ONE run of text; nowrap keeps the dates (and the brackets that touch them) in one piece: they move to the next line together. */
 .season-copy .ticks{margin:1em 0 1.4em}
 
 /* ---------- Eat & drink ---------- */

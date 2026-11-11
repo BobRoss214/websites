@@ -1,0 +1,176 @@
+Option: winter-hide-tomatoes
+Name: Hide the tomatoes and basil while the page is in its winter look
+Does: When the season on screen is winter (the page opens on winter from Nov 9, and the Christmas tree weekends), the home page leaves out the rest of what offers u-pick tomatoes and basil: the Things to Do menu line, the whole Tomatoes & basil section with its varieties (one CSS line), the add-on, the calendar row, the FAQ entry and the FAQ list line, the email sign-up interest, and the farm map's tomato field and its legend line. The all-year first-screen line, the "Season by season" Fall cell and the Fall tab name say the same thing without the tomatoes. (The Store tomato card and its button and the Pumpkin patch page card are already hidden in winter with the Store farm group and that page.) In spring, summer and fall nothing changes (the changes are attributes, one CSS line that only matches winter, and three winter-only lines that stay hidden). The tour skips its two tomato cards when their parts are not on the page. The pizza words (tomato sauce, tomatoes on a pizza) and the Fall tab and card of "What's on the farm" stay as they are.
+Answers: d93 A (tomatoes and basil in winter)
+Conflicts: none
+Requires: none
+Host: any
+Order: 15
+After: python3 tools/pages.py, then python3 tools/i18n.py extract, then python3 tools/i18n.py jsstrings, then python3 tools/i18n.py build, then python3 tools/i18n.py missing es hi zh vi (0 missing each)
+Strings: 2 new sentences (ids t1706223d and t6a964418), already translated into es, hi, zh, vi inside this patch
+
+diff --git a/css/sections.css b/css/sections.css
+index 5b4a139..e70f016 100644
+--- a/css/sections.css
++++ b/css/sections.css
+@@ -515,2 +515,3 @@ html[data-season="fall"] .nav-tomato .nav-group-title::after{content:"";display:
+ .tomatoes{background:#fff1e4 radial-gradient(rgba(215,42,67,.1) 1.8px,transparent 1.8px) 0 0/26px 26px;border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);border-block:3px solid var(--ink);overflow-x:clip}
++html[data-season="winter"] #tomatoes{display:none}   /* winter: the tomatoes and basil ended with fall, so the whole section is left out (the other tomato parts say data-only="spring summer fall" in index.html) */
+ .tomato-hero{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,5vw,60px);align-items:center;background:#fff;border:3px solid var(--ink);border-radius:36px;padding:clamp(22px,4vw,48px);box-shadow:0 10px 0 var(--ink)}
+diff --git a/index.html b/index.html
+index e872387..6f2b932 100644
+--- a/index.html
++++ b/index.html
+@@ -112,3 +112,3 @@
+               <li><a data-t="td150e085" href="#farm">U-pick</a></li>
+-              <li><a data-t="tffd483ee" href="#tomatoes">Tomatoes &amp; basil</a></li>
++              <li data-only="spring summer fall"><a data-t="tffd483ee" href="#tomatoes">Tomatoes &amp; basil</a></li>
+               <li><a data-t="tec7e08fa" href="#flowers">U-cut flowers</a></li>
+@@ -288,3 +288,4 @@
+         <!-- One line per season (hero.js shows the current one). The first is what visitors without JavaScript see. -->
+-        <p data-t="ta1584517" class="hero-sub" data-only="no-js">Pick strawberries in spring, blueberries and sunflowers in summer, and pumpkins, tomatoes and basil in fall. Our family-owned, USDA&nbsp;Certified&nbsp;Organic farm is in Indian&nbsp;Trail, NC.</p>
++        <p data-t="ta1584517" class="hero-sub" data-only="no-js" data-all-year="spring summer fall">Pick strawberries in spring, blueberries and sunflowers in summer, and pumpkins, tomatoes and basil in fall. Our family-owned, USDA&nbsp;Certified&nbsp;Organic farm is in Indian&nbsp;Trail, NC.</p>
++        <p data-t="t1706223d" class="hero-sub" data-only="no-js" data-all-year="winter" hidden>Pick strawberries in spring, blueberries and sunflowers in summer, and pumpkins in fall. Our family-owned, USDA&nbsp;Certified&nbsp;Organic farm is in Indian&nbsp;Trail, NC.</p>
+         <p data-t="ta83368b3" class="hero-sub" data-only="spring" hidden>It&rsquo;s strawberry season! Pick juicy organic strawberries, cut flowers to take home and meet the animals, on our family-owned, USDA&nbsp;Certified&nbsp;Organic farm in Indian&nbsp;Trail, NC.</p>
+@@ -554,3 +555,3 @@
+           <ul class="addon-list">
+-            <li>
++            <li data-only="spring summer fall">
+               <span class="addon-art-group" aria-hidden="true"><svg class="addon-art" viewBox="0 0 64 64" style="color:#e5334b"><use href="#tomato"/></svg><svg class="addon-art" viewBox="0 0 64 64" style="color:#43a047"><use href="#basil"/></svg><svg class="addon-art" viewBox="0 0 64 64" style="color:#7b3fa0"><use href="#basil"/></svg></span>
+@@ -772,3 +773,3 @@
+               <tbody>
+-                <tr><th data-t="tce23d9e3" scope="row">What you pick</th><td data-t="td25dd2fd" data-col="spring" class="fs-text">Strawberries, flowers</td><td data-t="t89e6a6db" data-col="summer" class="fs-text">Blueberries, sunflowers, flowers</td><td data-t="t36c85461" data-col="fall" class="fs-text">Pumpkins, flowers, tomatoes &amp; basil</td><td data-t="t05db350a" data-col="winter" class="fs-gh">Christmas trees</td></tr>
++                <tr><th data-t="tce23d9e3" scope="row">What you pick</th><td data-t="td25dd2fd" data-col="spring" class="fs-text">Strawberries, flowers</td><td data-t="t89e6a6db" data-col="summer" class="fs-text">Blueberries, sunflowers, flowers</td><td data-col="fall" class="fs-text"><span data-t="t36c85461" data-only="spring summer fall">Pumpkins, flowers, tomatoes &amp; basil</span><span data-t="t6a964418" data-only="winter" hidden>Pumpkins, flowers</span></td><td data-t="t05db350a" data-col="winter" class="fs-gh">Christmas trees</td></tr>
+                 <tr><th data-t="t1780ecaa" scope="row">Animals</th><td data-col="spring" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="summer" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-t="t1c23b792" data-col="winter" class="fs-gh">Goats</td></tr>
+@@ -921,3 +922,3 @@
+             <svg class="tab-art" aria-hidden="true" viewBox="0 0 110 92"><use href="#pumpkin"/></svg>
+-            <span class="tab-text"><span data-t="t5c1ae82c" class="tab-name">Fall</span><span data-t="t30cf7da9" class="tab-crop">Pumpkins &amp; Tomatoes</span></span>
++            <span class="tab-text"><span data-t="t5c1ae82c" class="tab-name">Fall</span><span data-t="t30cf7da9" class="tab-crop" data-only="spring summer fall">Pumpkins &amp; Tomatoes</span><span data-t="td8913263" class="tab-crop" data-only="winter" hidden>Pumpkins</span></span>
+             <span data-t="tabc0ea98" class="now-badge" hidden>Happening now</span>
+@@ -1024,3 +1025,3 @@
+               </li>
+-              <li>
++              <li data-only="spring summer fall">
+                 <span data-t="t6af84b8c" class="cal-label">Tomatoes &amp; basil <span class="cal-range">new this year: every weekend, mid-September through early November</span></span>
+@@ -2804,3 +2805,3 @@
+                 <li data-t="t6fa474da"><strong>Fall, pumpkins:</strong> mid-September through early November</li>
+-                <li data-t="tf6fccf62"><strong>Fall, tomatoes &amp; basil (new this year):</strong> every weekend, mid-September through early November</li>
++                <li data-t="tf6fccf62" data-only="spring summer fall"><strong>Fall, tomatoes &amp; basil (new this year):</strong> every weekend, mid-September through early November</li>
+                 <li data-t="t219211a7"><strong>Winter, NC Christmas trees:</strong> the last weekend in November and the first weekend in December, Saturday and Sunday only (<span data-tree-dates>Nov 28&ndash;29 and Dec 5&ndash;6</span>), at The GreenHouse</li>
+@@ -2841,3 +2842,3 @@
+           </details>
+-          <details name="faq">
++          <details name="faq" data-only="spring summer fall">
+             <summary data-t="t7db13699">Do you have u-pick tomatoes and basil?</summary>
+@@ -3043,3 +3044,3 @@
+                   <label class="su-chip"><input type="checkbox" name="interest" value="pumpkins"><span data-t="td8913263">Pumpkins</span></label>
+-                  <label class="su-chip"><input type="checkbox" name="interest" value="tomatoes"><span data-t="tffd483ee">Tomatoes &amp; basil</span></label>
++                  <label class="su-chip" data-only="spring summer fall"><input type="checkbox" name="interest" value="tomatoes"><span data-t="tffd483ee">Tomatoes &amp; basil</span></label>
+                   <label class="su-chip"><input type="checkbox" name="interest" value="trees"><span data-t="t05db350a">Christmas trees</span></label>
+diff --git a/js/features.js b/js/features.js
+index 2d5037d..062e5c7 100644
+--- a/js/features.js
++++ b/js/features.js
+@@ -1257,2 +1257,7 @@
+ 
++  // Things on the map that are left out while one season is on screen (the tomatoes and basil ended with fall, so the winter map does not show them).
++  // The map is drawn again when the season on screen changes (wa:season, below).
++  const OFF_IN_SEASON = { tomatoes: 'winter' };
++  const offNow = (kind) => has(OFF_IN_SEASON, kind) && !!W.seasons && W.seasons.active === OFF_IN_SEASON[kind];
++
+   function drawMap(container, data) {
+@@ -1264,3 +1269,3 @@
+     // Unknown kinds become "Something else" here, once, so js/map-art.js only ever sees kinds it knows.
+-    const items = data.items.filter((it) => it && it.pts && it.pts.length).map((it) => (has(MK, it.kind) ? it : Object.assign({}, it, { kind: 'other' })));
++    const items = data.items.filter((it) => it && it.pts && it.pts.length && !offNow(it.kind)).map((it) => (has(MK, it.kind) ? it : Object.assign({}, it, { kind: 'other' })));
+     const vb = A.viewBox(data, items);
+@@ -1478,2 +1483,3 @@
+   doc.addEventListener('wa:day', catchUp);
++  doc.addEventListener('wa:season', () => safe(initFarmMapRerender));   // a season picked with the buttons at the top: the map follows (OFF_IN_SEASON)
+   safe(() => { initFarmMap(); mapReady = !!(window.WISE_ACRES_MAP && window.WISE_ACRES_MAP.items && window.WISE_ACRES_MAP.items.length); });
+diff --git a/js/hero.js b/js/hero.js
+index 6bc1612..e928b3b 100644
+--- a/js/hero.js
++++ b/js/hero.js
+@@ -1307,3 +1307,3 @@
+       if (!userAction && !W.seasons.live().some((s) => s.id === id)) {
+-        $$('.hero-sub').forEach((p) => { p.hidden = p.dataset.only !== 'no-js'; });
++        $$('.hero-sub').forEach((p) => { p.hidden = p.dataset.only !== 'no-js' || (p.hasAttribute('data-all-year') && !p.dataset.allYear.split(/\s+/).includes(id)); });   // data-all-year: the all-year line made for this season (js/season.js)
+         $$('#hero-h > [data-only]').forEach((s, i) => { s.hidden = i > 0; });   // the first title is the all-year one
+diff --git a/js/season.js b/js/season.js
+index 64f3af8..0bfcc48 100644
+--- a/js/season.js
++++ b/js/season.js
+@@ -190,2 +190,5 @@
+   };
++  // data-all-year="spring summer fall" on an all-year hero line (data-only="no-js"): that line is for those seasons on screen only, and a second all-year
++  // line says winter (without the tomatoes). A line with no data-all-year is for every season. js/hero.js does the same when it draws a season.
++  function allYearFor(el, id) { var a = el.getAttribute('data-all-year'); return !a || a.split(/\s+/).indexOf(id) >= 0; }
+   var calmSystem = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+@@ -197,3 +200,3 @@
+         var show = only.split(/\s+/).indexOf(id) >= 0 && !(el.hasAttribute('data-in-season') && !isLive);
+-        if (!isLive && el.classList.contains('hero-sub')) show = only === 'no-js';   // between seasons: the all-year line
++        if (!isLive && el.classList.contains('hero-sub')) show = only === 'no-js' && allYearFor(el, id);   // between seasons: the all-year line (the one made for this season, if there are two)
+         if (!isLive && el.parentNode && el.parentNode.id === 'hero-h') {               // ...and the first (all-year) title
+diff --git a/js/tour-steps.js b/js/tour-steps.js
+index 596ab61..8e38fda 100644
+--- a/js/tour-steps.js
++++ b/js/tour-steps.js
+@@ -459,3 +459,3 @@
+     {
+-      id: 'ch5-tomatoes', order: 506, chapter: 5, page: 'index', target: '.tomato-copy',
++      id: 'ch5-tomatoes', order: 506, chapter: 5, page: 'index', target: '.tomato-copy', skipIfMissing: true,   // the section is left out of the page in winter (data-only="spring summer fall")
+       title: 'Tomatoes and basil',
+@@ -464,3 +464,3 @@
+     {
+-      id: 'ch5-varieties', order: 507, chapter: 5, page: 'index', target: '#variety-filters', also: '#varieties',   // the heading above the buttons: it says how many varieties there are
++      id: 'ch5-varieties', order: 507, chapter: 5, page: 'index', target: '#variety-filters', also: '#varieties', skipIfMissing: true,   // the heading above the buttons: it says how many varieties there are; the section is left out of the page in winter
+       title: 'Tomato and basil varieties',
+diff --git a/lang/src/es.json b/lang/src/es.json
+index aaaa7fe..f4bdbe9 100644
+--- a/lang/src/es.json
++++ b/lang/src/es.json
+@@ -559,2 +559,3 @@
+   "t36c85461": "Calabazas, flores, tomates y albahaca",
++  "t6a964418": "Calabazas, flores",
+   "t37319519": "Somos agricultores, así que un poco de lluvia no cierra la granja.",
+@@ -964,2 +965,3 @@
+   "ta1584517": "Recoge fresas en primavera, arándanos y girasoles en verano, y calabazas, tomates y albahaca en otoño. Nuestra granja familiar con certificación orgánica del USDA está en Indian Trail, NC.",
++  "t1706223d": "Recoge fresas en primavera, arándanos y girasoles en verano, y calabazas en otoño. Nuestra granja familiar con certificación orgánica del USDA está en Indian Trail, NC.",
+   "t7b10f100": "<svg/> Cerveza, vino y sidra",
+diff --git a/lang/src/hi.json b/lang/src/hi.json
+index 61281ba..ba954f2 100644
+--- a/lang/src/hi.json
++++ b/lang/src/hi.json
+@@ -559,2 +559,3 @@
+   "t36c85461": "कद्दू, फूल, टमाटर और बेसिल",
++  "t6a964418": "कद्दू, फूल",
+   "t37319519": "हम किसान हैं, इसलिए थोड़ी-सी बारिश से फ़ार्म बंद नहीं होता।",
+@@ -964,2 +965,3 @@
+   "ta1584517": "वसंत में स्ट्रॉबेरी, गर्मियों में ब्लूबेरी और सूरजमुखी, और पतझड़ में कद्दू, टमाटर और बेसिल तोड़ें। हमारा पारिवारिक, USDA-प्रमाणित ऑर्गेनिक फ़ार्म इंडियन ट्रेल (Indian Trail), NC में है।",
++  "t1706223d": "वसंत में स्ट्रॉबेरी, गर्मियों में ब्लूबेरी और सूरजमुखी, और पतझड़ में कद्दू तोड़ें। हमारा पारिवारिक, USDA-प्रमाणित ऑर्गेनिक फ़ार्म इंडियन ट्रेल (Indian Trail), NC में है।",
+   "t7b10f100": "<svg/> बीयर, वाइन और साइडर",
+diff --git a/lang/src/vi.json b/lang/src/vi.json
+index 3a56f1f..2b06495 100644
+--- a/lang/src/vi.json
++++ b/lang/src/vi.json
+@@ -559,2 +559,3 @@
+   "t36c85461": "Bí ngô, hoa, cà chua và húng quế",
++  "t6a964418": "Bí ngô, hoa",
+   "t37319519": "Chúng tôi là nông dân, nên một chút mưa không làm nông trại đóng cửa.",
+@@ -964,2 +965,3 @@
+   "ta1584517": "Hái dâu tây vào mùa xuân, việt quất và hoa hướng dương vào mùa hè, bí ngô, cà chua và húng quế vào mùa thu. Nông trại gia đình có chứng nhận hữu cơ USDA của chúng tôi ở Indian Trail, NC.",
++  "t1706223d": "Hái dâu tây vào mùa xuân, việt quất và hoa hướng dương vào mùa hè, bí ngô vào mùa thu. Nông trại gia đình có chứng nhận hữu cơ USDA của chúng tôi ở Indian Trail, NC.",
+   "t7b10f100": "<svg/> Bia, rượu vang và rượu táo",
+diff --git a/lang/src/zh.json b/lang/src/zh.json
+index db6605a..3b15f55 100644
+--- a/lang/src/zh.json
++++ b/lang/src/zh.json
+@@ -559,2 +559,3 @@
+   "t36c85461": "南瓜、鲜花、番茄和罗勒",
++  "t6a964418": "南瓜、鲜花",
+   "t37319519": "我们是农民，所以一点小雨不会关闭农场。",
+@@ -964,2 +965,3 @@
+   "ta1584517": "春天采草莓，夏天采蓝莓、剪向日葵，秋天采南瓜、番茄和罗勒。我们是位于北卡罗来纳州 Indian Trail、拥有美国农业部（USDA）有机认证的家庭农场。",
++  "t1706223d": "春天采草莓，夏天采蓝莓、剪向日葵，秋天采南瓜。我们是位于北卡罗来纳州 Indian Trail、拥有美国农业部（USDA）有机认证的家庭农场。",
+   "t7b10f100": "<svg/> 啤酒、葡萄酒和苹果酒",

@@ -186,13 +186,26 @@ def parse_source(path):
     return meta, raw[m.end():].strip() + '\n'
 
 
+NOT_OFFICIAL = '(not official yet)'   # what an answer in the structured data says for the small label <span class="not-official">Not official yet</span> (see faq_items)
+
+
 def sentence(text):
-    """A list item has no full stop on the page, but run together in one answer it needs one: "...your visit If you cancel..." becomes "...your visit. If you cancel..."."""
+    """A list item has no full stop on the page, but run together in one answer it needs one: "...your visit If you cancel..." becomes "...your visit. If you cancel...".
+    An item that ends with the "(not official yet)" words needs one too; any other closing bracket is left as it is ("Call us (anytime)")."""
+    if text.endswith(NOT_OFFICIAL):
+        return text + '.'
     return text if re.search(r'[.!?\u2026:;)"\u201d\u2019]$', text) else text + '.'
 
 
 def faq_items(body):
     soup = BeautifulSoup(body, 'html.parser')
+    # The small label "Not official yet" (class not-official) tells a visitor that the owner is not sure of that winter pizza or those hours. Search engines must read the same
+    # caveat, as words in the sentence: "11 am-8 pm (not official yet). No reservation..." Without this the pieces of text are joined with a space and it reads "11 am-8 pm Not official yet . No reservation..."
+    labels = soup.select('[data-faq] .answer .not-official')
+    if labels:
+        for label in labels:
+            label.replace_with(NOT_OFFICIAL)
+        soup = BeautifulSoup(str(soup), 'html.parser')   # read again, so the new words and the text around them are one piece of text and no space is put between them
     out = []
     for d in soup.select('[data-faq] details'):
         q = d.find('summary').get_text(' ', strip=True)
