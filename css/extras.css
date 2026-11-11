@@ -334,7 +334,7 @@ a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow
 html:lang(hi) .shop-name{font-size:1.1rem}
 html:lang(hi) .shop-sub,html:lang(hi) .so-l,html:lang(hi) .sp-u,html:lang(hi) .shop-facts li,html:lang(hi) .shop-where,html:lang(hi) .shop-soon,html:lang(hi) .shop-chips li{font-size:.92rem}
 /* ---------- Store on a computer (62em and up): two columns, and everything a little tighter ----------
-   A tablet and a phone keep the one column above. The 12 groups sit in .shop-groups: CSS columns keep the order of the page (down the left column, then
+   A tablet and a phone keep the one column above. The 13 groups sit in .shop-groups: CSS columns keep the order of the page (down the left column, then
    the right one), so the keyboard and the jump buttons still go in the order you read, and a short group no longer leaves half a row empty. A group is
    never cut between the two columns (break-inside). The last group, the farm visit, is wide and runs across both columns; the space under each group is the
    group's own padding (a margin at the end of a column is cut), so that bar always has 12 px of clear space above it (tests/shop.test.mjs). Every word, price

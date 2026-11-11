@@ -20,7 +20,7 @@ To go to other pages the tour keeps the switch on for itself. With `?tour` it ta
 ## What the owners see
 
 1. The button opens a **welcome card**. It says how long the tour takes (about 15 seconds for each step, a step with small buttons counting as three, to the nearest 5 minutes). It has three buttons: **Start the tour**, **Choose a part** and **Not now**.
-2. Each **step** dims the page and lights one box. The card says "Step 23 of 78" and the name of the part, and under it "Chapter 4 of 11". It has **Back**, **Next**, **Contents** and a round **Close** button.
+2. Each **step** dims the page and lights one box. The card says "Step 23 of 101" and the name of the part, and under it "Chapter 4 of 11". It has **Back**, **Next**, **Contents** and a round **Close** button.
 3. **Contents** lists every part with the number of steps in it. The part they are in is marked. A press on a part goes to its first step.
 4. The last card has **Finish** and **Start again**.
 5. They can stop at any time. The next time they press the button, the welcome card has a **Continue where I stopped** button and says at which step they stopped. This works after the page was closed, and on another day, on the same computer and browser.
