@@ -23,7 +23,8 @@
  *   7  LANGUAGES (en, es, hi, zh, vi): the pop-up's own words and the notice in the page's language (no English left in them), the names in the list stay English; no sideways
  *      scroll and no cut text at 390 and 1366 px; a language change with the pop-up closed re-names the buttons
  *   8  DATA (no browser): js/shop-sample.js has an entry for every product of groups 1-11 (the old beer card is replaced by the beer group), none without a card, none empty, and
- *      none of the words the farm has not said (health claims, "vegan", "natural", "local", digits ...) unless the card's own words say it
+ *      none of the words the farm has not said (health claims, "vegan", "natural", "local", digits ...) unless the card's own words say it; no allergen line at all (an entry is
+ *      a heading and a list, never a "contains" line: the pop-up shows an ingredient list only) and no tomato, sulfite or label-law word ("enriched", "purified", "from concentrate")
  *  10  the preview build (the page the builder looks at): the same, with every script and style sheet inline and nothing asked for later
  *   9  weight: the bytes of the new files (information); the pop-up's code (js/shop-pop-box.js) is asked for by the small js/shop-pop.js only when the sample lists are there
  * Names of the page's own parts are in the helper text below (SP): if the markup is renamed, change them there. */
@@ -105,12 +106,12 @@ const FARM = (LIST.groups.find((g) => /^Farm visit/.test(g.name)) || { n: 12 }).
 const PRODUCTS = LIST.products.filter((x) => x.group !== FARM && x.slug !== 'beer-wine');   // beer-wine: the old card, replaced by the beer group (it has no list)
 const EXPECTED = [...new Set([...PRODUCTS.map((x) => x.slug), ...(beerOnPage ? BEER : [])])];
 const SAYS = Object.fromEntries(LIST.products.map((x) => [x.slug, (x.name + ' ' + x.note).toLowerCase()]));
-const FORBIDDEN = /gluten[- ]?free|vegan|dairy[- ]?free|nut[- ]?free|non-?gmo|\bnatural|\blocal|\bfresh|home-?made|hand-?made|organic|\bcure|\bheal|\bboost|immun|\bdetox|\bvitamin|\bprobiotic|antioxidant|\bcalori|\d|\bages? |\byears?\b|\bnc\b|mountain|carolina|for taste|\bfrom the\b/i;
+const FORBIDDEN = /gluten[- ]?free|vegan|dairy[- ]?free|nut[- ]?free|non-?gmo|\bnatural|\blocal|\bfresh|home-?made|hand-?made|organic|\bcure|\bheal|\bboost|immun|\bdetox|\bvitamin|\bprobiotic|antioxidant|\bcalori|\d|\bages? |\byears?\b|\bnc\b|mountain|carolina|for taste|\bfrom the\b|\btomato|\bsulfite|\ballerg|\benriched|\bpurified|from concentrate/i;
 
 /** What is wrong with a set of lists: which products have none, which lists have no card, which are malformed, which carry words the farm has not said. */
 function problems(lists) {
   const keys = Object.keys(lists);
-  const shape = keys.filter((s) => { const e = lists[s]; return !(e && ['Ingredients', 'Made of'].includes(e.heading) && Array.isArray(e.list) && e.list.length >= 1 && e.list.length <= 14 && e.list.every((x) => typeof x === 'string' && x.trim() && x === x.trim()) && new Set(e.list.map((x) => x.toLowerCase())).size === e.list.length && (e.contains === undefined || (typeof e.contains === 'string' && e.contains.trim() && e.heading === 'Ingredients'))); });
+  const shape = keys.filter((s) => { const e = lists[s]; return !(e && ['Ingredients', 'Made of'].includes(e.heading) && Array.isArray(e.list) && e.list.length >= 1 && e.list.length <= 14 && e.list.every((x) => typeof x === 'string' && x.trim() && x === x.trim()) && new Set(e.list.map((x) => x.toLowerCase())).size === e.list.length && Object.keys(e).every((k) => k === 'heading' || k === 'list')); });
   const words = [];
   for (const s of keys.filter((k) => !shape.includes(k))) for (const x of [...lists[s].list, lists[s].contains || '']) { const m = FORBIDDEN.exec(x); if (m && !(SAYS[s] && SAYS[s].includes(m[0].toLowerCase().trim()))) words.push(`${s}: "${x}" (${m[0].trim()})`); }
   return { missing: EXPECTED.filter((s) => !keys.includes(s)), orphans: keys.filter((s) => !pageSlugs.includes(s) && !(!beerOnPage && BEER.includes(s))), shape, words };
@@ -134,7 +135,7 @@ else {
   ok(`every product of groups 1-11 has a list (${EXPECTED.length} products${beerOnPage ? ', the 16 beer, cider and wine drinks among them' : ''})`, found.missing.length === 0, found.missing.join(', '));
   ok('no list belongs to a picture that no card shows' + (beerOnPage ? '' : ' (the 16 drinks of the beer group wait for their cards: that group is not in this copy of the page yet)'), found.orphans.length === 0, found.orphans.join(', '));
   ok('the farm visit group, the old "Beer, hard cider & wine" card and every other card with no list has none', !Object.keys(sample).some((s) => ['beer-wine', 'wagon-ride', 'barrel-train', 'corn-pit', 'scavenger-hunt', 'sunn-hemp-maze', 'upick'].includes(s)));
-  ok('every list has a heading ("Ingredients" or "Made of"), 1 to 14 plain items, none twice, and a "contains" line only for things you put in or on your body', found.shape.length === 0, found.shape.join(', '));
+  ok('every list has a heading ("Ingredients" or "Made of"), 1 to 14 plain items, none twice, and nothing else: no allergen "contains" line (the pop-up shows an ingredient list only)', found.shape.length === 0, found.shape.join(', '));
   ok('no list has a health claim, a dose, a number, an age, or "vegan", "natural", "local", "fresh", "homemade", "organic" unless the card itself says it', found.words.length === 0, found.words.slice(0, 5).join(' | '));
   ok('the pizza and the ice cream bars (the wide cards) have lists: they are products of groups 2 and 3', !!sample.pizza && !!sample['ice-cream']);
 }
@@ -212,10 +213,10 @@ await run('shop-pop', async ({ browser, base, errs }) => {
   const hp = await popText(p);
   const pretzel = await p.evaluate(() => { const c = window.__sp.bySlug('hot-pretzel'); return { name: c.querySelector('.shop-name').textContent.trim(), price: c.querySelector('.shop-price').textContent.trim(), note: c.querySelector('.shop-sub').textContent.replace(/\s+/g, ' ').trim() }; });
   ok('...it shows the card\'s name, price and its own note (the pretzel\'s "Caramel Apple contains nuts"), the notice exactly as the builder asked, and the heading "Ingredients"', hp.name === pretzel.name && hp.price === pretzel.price && hp.note === pretzel.note && /Caramel Apple contains nuts/.test(hp.note) && hp.notice === NOTICE && hp.heading === 'Ingredients', JSON.stringify([hp, pretzel]));
-  ok('...the list is the pretzel\'s (every item is in the page\'s text), then "Contains: wheat"', JSON.stringify(hp.items) === JSON.stringify(sample['hot-pretzel'].list) && await p.evaluate((l) => l.every((x) => document.body.innerText.includes(x)), sample['hot-pretzel'].list) && hp.contains === 'Contains: wheat', JSON.stringify([hp.items, hp.contains]));
+  ok('...the list is the pretzel\'s (every item is in the page\'s text), and no "Contains:" line (the pop-up never gives allergen advice)', JSON.stringify(hp.items) === JSON.stringify(sample['hot-pretzel'].list) && await p.evaluate((l) => l.every((x) => document.body.innerText.includes(x)), sample['hot-pretzel'].list) && hp.contains === '', JSON.stringify([hp.items, hp.contains]));
   ok('...the picture is the card\'s own (<use href="#p-hot-pretzel">)', await p.evaluate(() => { const u = document.querySelector('.shop-pop-pic use'); return !!u && u.getAttribute('href') === '#p-hot-pretzel'; }));
   await closeBy(p);
-  for (const [slug, heading, contains] of [['trucker-cap', 'Made of', false], ['blood-orange-wheat', 'Ingredients', true]]) {
+  for (const [slug, heading, contains] of [['trucker-cap', 'Made of', false], ['blood-orange-wheat', 'Ingredients', false]]) {
     if (slug === 'blood-orange-wheat' && !beerOnPage) continue;
     ok(`a "${heading}" card (${slug}) opens too: its heading, its items${contains ? ', "Contains:"' : ' and no "Contains:" line'}`, await openBy(p, slug) && await (async () => { const t = await popText(p); return t.heading === heading && JSON.stringify(t.items) === JSON.stringify(sample[slug].list) && (contains ? /^Contains: /.test(t.contains) : t.contains === '') && t.notice === NOTICE; })());
     await closeBy(p);
@@ -355,7 +356,7 @@ await run('shop-pop', async ({ browser, base, errs }) => {
     rows.push(t.name === card.name && t.note === card.sub && JSON.stringify(t.items) === JSON.stringify(sample[slug].list) && t.heading === sample[slug].heading && (sample[slug].contains ? t.contains === 'Contains: ' + sample[slug].contains : t.contains === '') && shown.pic === card.pic && shown.cls.includes(card.group) && shown.n === 2 ? '' : slug + ' ' + JSON.stringify({ t, card, shown }));
     await closeBy(k);
   }
-  ok('four cards in a row (pretzel with note and "Contains", cap "Made of", the wide pizza bar, water): each time its own name, picture, group colours, note, heading, list and "Contains" line, nothing left from the one before', rows.every((x) => !x), rows.filter(Boolean).join(' || '));
+  ok('four cards in a row (pretzel with note, cap "Made of", the wide pizza bar, water): each time its own name, picture, group colours, note, heading and list, and no "Contains" line, nothing left from the one before', rows.every((x) => !x), rows.filter(Boolean).join(' || '));
 
   /* -------------------------------------------------------------- 6. contrast, in every group */
   const groups = await k.evaluate(() => [...new Set(window.__sp.cards().filter((c) => c.querySelector('.shop-open')).map((c) => window.__sp.group(c)))].map((g) => window.__sp.slug(window.__sp.cards().find((c) => c.querySelector('.shop-open') && window.__sp.group(c) === g))));
