@@ -42,9 +42,9 @@
     { n: 5, title: 'What is in season' },
     { n: 6, title: 'The GreenHouse and pizza' },
     { n: 7, title: 'The Store' },
-    { n: 8, title: 'Groups, story and contact' },
+    { n: 8, title: 'Groups, story, questions and contact' },
     { n: 9, title: 'Works for everyone' },
-    { n: 10, title: 'A pretend account' },
+    { n: 10, title: 'A pretend account, desk and kitchen' },
     { n: 11, title: 'What we need from you' }
   ];
 
@@ -216,12 +216,12 @@
     {
       id: 'ch1-real', order: 102, chapter: 1, page: 'index', target: null,
       title: 'What is real, and what is pretend',
-      text: 'The words, hours and prices come from the farm’s own signs and photos. The account area near the end is a pretend demo. It sends nothing to anyone.'
+      text: 'Hours and prices come from the farm’s own signs and photos. Pretend or not final: the account, desk and kitchen screens, the Store’s ingredient lists, the draft corporate prices and the hours marked “Not official yet”. Nothing pretend is sent to anyone.'
     },
     {
       id: 'ch1-seasons', order: 103, chapter: 1, page: 'index', target: null,
       title: 'The page changes with the seasons',
-      text: 'Parts of the site change with the seasons. Their steps have season buttons. A button pretends it is a Saturday at noon, in the middle of that season. Words in ‘single quotes’ show on another day. Is it right? Tell us. Next puts it back.'
+      text: 'Parts of the site change with the seasons. Their steps have season buttons. A button pretends it is a Saturday at noon, in the middle of that season. Words in ‘single quotes’ show on another day. Next puts it back.'
     },
 
     /* ---------------------------------------------------------------- 2. The first screen */
@@ -241,7 +241,7 @@
     {
       id: 'ch2-notice', order: 202, chapter: 2, page: 'index', target: '.announce',   // the yellow bar is drawn right under this strip (js/live.js, renderNotice); it is off while the notice is empty
       title: 'The yellow bar for closures',
-      text: 'For a rain day or a holiday, a yellow bar can show under this strip on every page, with a short message for visitors. It can switch itself off after a date you choose. Today it is off, so you do not see it.'
+      text: 'For a rain day or a holiday, a yellow bar can show under this strip on every page, with a short message for visitors. It can switch itself off after a date you choose. With no message set, nothing shows.'
     },
     {
       id: 'ch2-seasons', order: 203, chapter: 2, page: 'index', target: '.hero-copy', also: '#hero-scene',   // the picture is lit too: the cards of the buttons describe it
@@ -272,7 +272,7 @@
     {
       id: 'ch2-badges', order: 205, chapter: 2, page: 'index', target: '.hero-live', skipIfMissing: true,
       title: 'Open now, or closed today',
-      text: 'These badges say if the farm and The GreenHouse are open, from your hours and the clock. For a rain day, your site builder adds the date and they show closed. Your booking tool needs its own change. Press a season.',
+      text: 'These badges say if the farm and The GreenHouse are open, using your hours and the clock. For a rain day, tell your site builder the date and they show closed. Close the day in your booking tool too. Press a season.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring, on a Saturday at noon. Only The GreenHouse has a badge: “Open now, until 8 pm”. The farm has none, because no farm days are set for spring.',
@@ -415,7 +415,7 @@
     {
       id: 'ch5-tabs', order: 501, chapter: 5, page: 'index', target: '#seasons .season-stage',
       title: 'What\'s in season',
-      text: 'Four tabs above this panel show what visitors can pick, cut and do in each season. Today\'s season is marked Happening now, by the calendar. Press a season on this card to see each panel.',
+      text: 'Four season buttons above this panel show what visitors can pick, cut and do in each season. The season on today is marked Happening now. Press a season on this card to see each panel.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring. “Strawberry season”, “Usually mid-April to early June”. This is the busiest time, and reservations fill quickly. The button says “Reserve a strawberry visit”.',
@@ -438,7 +438,7 @@
       choices: seasonWalk({
         spring: 'Spring, six cards. “U-Pick Strawberries” leads, then “Meet the Animals”, “Playgrounds”, “Shaded Picnic Patch”, “Concessions & Local Goods” and “Wagon Ride & Barrel Train”.',
         summer: 'Summer, six cards. “U-Pick Blueberries” takes the place of the strawberries. The other five stay.',
-        fall: 'Fall, eight cards. “U-Pick Pumpkins” takes over. New: “Haunted Trail” and “Sunn Hemp Maze”. The wagon card becomes “Wagon, Corn Pit & Barrel Train”.',
+        fall: 'Fall, eight cards. “U-Pick Pumpkins” takes over. Fall adds “Haunted Trail” and “Sunn Hemp Maze”. The wagon card becomes “Wagon, Corn Pit & Barrel Train”.',
         winter: 'Winter, only three cards, each marked “At The GreenHouse”: “Christmas Trees”, “Playground & Goats” and “Pizza, Ice Cream & Drinks”. The farm cards are gone.'
       }),
       before: seasonsBegin, after: seasonsEnd
@@ -492,13 +492,18 @@
     },
     {
       id: 'ch11-photos', order: 1102, chapter: 11, page: 'index', target: null,
-      title: 'Photos and dates',
-      text: 'Please send:\n- Full-size photos straight from your phone. Many photos we have are tiny, about 200 pixels wide.\n- The right Christmas tree dates. The site and your sign give different dates.'
+      title: 'Photos, lists and a link',
+      text: 'Please send:\n- Full-size photos from your phone (ours are very small)\n- The real ingredient lists for the Store (the ones shown are pretend)\n- The link for one-tap Google reviews\n- The email sign-up form from Mailchimp'
     },
     {
-      id: 'ch11-people', order: 1103, chapter: 11, page: 'index', target: null,
+      id: 'ch11-hours', order: 1103, chapter: 11, page: 'index', target: null,
+      title: 'Hours and days to check',
+      text: 'Please check:\n- The tree-weekend hours (11 am to 8 pm) and the pizza. Then the “Not official yet” label can go.\n- The six drive times in the Drive time box.\n- The farm’s reservation days in spring and summer, for its badge.'
+    },
+    {
+      id: 'ch11-people', order: 1104, chapter: 11, page: 'index', target: null,
       title: 'Who does what, and when',
-      text: 'Please tell us:\n- Who updates This week at the farm, the pizza weekends and closures\n- What your booking tool offers, like customer logins and changing a booking\n- When the site should open to visitors\nThank you, Mrs. Cathy and Rob!'
+      text: 'Please tell us:\n- Who updates the weekly box, pizza weekends, beer list and closures\n- What your booking tool offers\n- Who can read the Spanish, Hindi, Chinese and Vietnamese pages\n- When the site opens to visitors\nThank you, Mrs. Cathy and Rob!'
     }
   ];
 
