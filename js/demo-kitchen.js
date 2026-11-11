@@ -659,6 +659,7 @@
       late: {},            // key -> true once a ticket has run out of time
       tm: {},              // key -> { left, late } at the last second
       rail: [], family: [], done: [],
+      baseTitle: document.title,   // the page's own title, which the tab shows after the counts
       placedY: -1,         // where the page was scrolled to when the board was put in place (a person's own place is left alone)
       wasOn: null,         // was the rush on at the last pass (null before the first)
       keysOn: true,        // the number and letter keys of the board (a person can turn them off: Keys, under the board)
@@ -728,8 +729,8 @@
       parts.soundIcon = h('span', { 'class': 'kit-sound-icon', 'aria-hidden': 'true' }, icon('mute'));
       parts.sound = h('button', { type: 'button', 'class': 'btn btn-white kit-sound', 'data-tour': 'kit-sound', 'data-kf': 'sound', 'aria-pressed': 'false', 'aria-describedby': 'kit-sound-note', onclick: toggleSound },
         parts.soundIcon, h('span', { 'class': 'kit-sound-word', text: 'Sound' }), parts.soundState);
+      parts.title = hasH1 ? null : h('h1', { 'class': 'demo-h1 kit-title', text: 'Pizza kitchen' });
       parts.top = h('header', { 'class': 'kit-top' },
-        hasH1 ? null : h('h1', { 'class': 'demo-h1 kit-title', text: 'Pizza kitchen' }),
         h('ul', { 'class': 'kit-tally', 'data-tour': 'kit-counters', 'aria-label': 'Tickets' }, parts.tWait.el, parts.tDone.el, parts.tLate.el),
         h('p', { 'class': 'kit-clock' }, h('span', { 'class': 'kit-clock-label', text: 'Clock' }), parts.clockText, parts.clockNote),
         parts.sound);
@@ -772,6 +773,7 @@
         h('aside', { 'class': 'kit-side-lanes', 'aria-label': 'Tickets that are not waiting for you' },
           h('section', { 'class': 'kit-lane kit-lane-family' }, parts.famHead, parts.famNone, parts.famList),
           h('section', { 'class': 'kit-lane kit-lane-done' }, parts.doneHead, parts.doneNone, parts.doneList, parts.doneMore)));
+      if (parts.title) rootEl.appendChild(parts.title);
       rootEl.appendChild(parts.top);
       rootEl.appendChild(parts.soundNote);
       rootEl.appendChild(parts.live);
@@ -939,7 +941,7 @@
       note.value = ed.note;
       note.addEventListener('input', function () { ed.note = note.value; });
       var box = h('div', { 'class': 'kit-edit', 'data-tour': 'kit-edit', role: 'group', 'aria-label': 'Another time for order ' + t.num },
-        h('p', { 'class': 'kit-edit-title', text: 'Another pick-up time' }),
+        h('p', { 'class': 'kit-edit-title', text: 'Another pick-up time for order #' + t.num }),
         h('div', { 'class': 'kit-edit-time' },
           h('span', { 'class': 'kit-edit-was', text: (t.kind === 'change' ? 'Asked for ' : 'Now ') + time12(ed.base) }),
           spin, diff),
@@ -1030,7 +1032,11 @@
       ui.current = key;
       if (key && els[key]) els[key].classList.add('kit-current');
     }
-    function scrollNear(el) { if (el && typeof el.scrollIntoView === 'function') { try { el.scrollIntoView({ block: 'nearest' }); } catch (e) { el.scrollIntoView(); } } }
+    function scrollNear(el) {     // a ticket that gets the focus goes to the top of the board area, just under the sticky bars (never half under them, also when it is tall)
+      if (!el || typeof el.scrollIntoView !== 'function') return;
+      measureStack();
+      try { el.scrollIntoView({ block: 'start', behavior: 'instant' }); } catch (e) { el.scrollIntoView(true); }
+    }
 
     function ticketSig(t) { return JSON.stringify(t) + (ui.edit[t.key] ? '|ed' : ''); }
     function drawRail(rail) {
@@ -1104,6 +1110,8 @@
       parts.tLate.num.textContent = String(late);
       if (late) parts.tLate.el.classList.add('kit-has-late'); else parts.tLate.el.classList.remove('kit-has-late');
       parts.railCount.textContent = String(ui.rail.length);
+      var want = (late ? '(' + late + ' late) ' : ui.rail.length ? '(' + ui.rail.length + ') ' : '') + ui.baseTitle;     // the tab title: seen from another tab
+      if (document.title !== want) document.title = want;
       parts.famCount.textContent = String(ui.family.length);
       parts.doneCount.textContent = String(ui.done.length);
       parts.clockText.textContent = live ? time12(live.clock()) : '';
@@ -1282,6 +1290,7 @@
         if (timer) clearInterval(timer);
         document.removeEventListener('keydown', onKey);
         document.removeEventListener('visibilitychange', onVisible);
+        document.title = ui.baseTitle;
         win.removeEventListener('load', placeBoard);
         win.removeEventListener('pageshow', placeBoard);
         win.removeEventListener('resize', measureStack);
