@@ -45,6 +45,10 @@ const OLD_IDS = ['ch10-intro', 'ch10-signup', 'ch10-sample', 'ch10-paid', 'ch10-
   'ch10-family-ok', 'ch10-family', 'ch10-alerts', 'ch10-desk-people', 'ch10-bell', null, 'ch10-messages', 'ch10-photos', 'ch10-desk-approve', 'ch10-event', 'ch10-desk-weather', 'ch10-closed',
   'ch10-real-needs', 'ch10-worth-asking'];
 const OLD_CARDS = OLD_IDS.filter(Boolean);
+// The 9 cards added since, between the original ones: four on the desk (the pretend rush, tests/demo-desk-tour.test.mjs; the week and the groups, tests/tour-targets.test.mjs) and five in the
+// kitchen (tests/kitchen-tour.test.mjs). With the 24 original cards the chapter has exactly 33. The list is fixed (it does not depend on the date): a card added or taken out changes it on purpose.
+const ADDED_IDS = ['ch10-desk-live', 'ch10-desk-keep', 'ch10-kit-rush', 'ch10-kit-tickets', 'ch10-kit-timer', 'ch10-kit-edit', 'ch10-kit-sound', 'ch10-desk-week', 'ch10-desk-groups'];
+const CHAPTER_CARDS = 33;
 
 /* A fresh world: the store on a fake storage (a clock the test can move), a fake page where every target is on the screen, a fake DemoApp that remembers the open tab. */
 function world(opts = {}) {
@@ -93,7 +97,9 @@ const dayAfter = (d) => Data.addDays(d, 1);
 {
   const w = world();
   const own = w.steps.filter((x) => OLD_CARDS.includes(x.id));
-  ok('the chapter keeps its original 24 cards, in the same order of the story, each with its own id (cards added between them are checked by the tests of the helpers who added them)', own.map((x) => x.id).join() === OLD_CARDS.join() && w.steps.length >= 24 && new Set(w.steps.map((x) => x.id)).size === w.steps.length && w.steps.every((x) => x.chapter === 10), w.steps.map((x) => x.id).join());
+  ok('the chapter has exactly 33 cards: its original 24, in the same order of the story, each with its own id, and the 9 added since between them (' + ADDED_IDS.join(', ') + ')',
+    OLD_CARDS.length === 24 && ADDED_IDS.length === 9 && CHAPTER_CARDS === 33 && w.steps.length === CHAPTER_CARDS && own.map((x) => x.id).join() === OLD_CARDS.join()
+    && w.steps.filter((x) => !OLD_CARDS.includes(x.id)).map((x) => x.id).sort().join() === ADDED_IDS.slice().sort().join() && new Set(w.steps.map((x) => x.id)).size === CHAPTER_CARDS && w.steps.every((x) => x.chapter === 10), w.steps.length + ' cards: ' + w.steps.map((x) => x.id).join());
   ok('every order is a whole number of the chapter (1000 to 1099), they increase from card to card, and the original cards are on the numbers 1000 + 4 x their place (1004, 1008 ... 1096), so there is room for new cards between them', w.steps.every((x, i) => Number.isInteger(x.order) && x.order > 1000 && x.order < 1100 && (i === 0 || x.order > w.steps[i - 1].order)) && own.every((x, i) => x.order === 1004 + 4 * i), w.steps.map((x) => x.order).join(','));
   ok('My year is gone from the tour: no card with its id, its hook (acct-year) or its tab (year)', !w.steps.some((s) => /year/i.test(s.id + ' ' + s.target + ' ' + s.title)) && !/acct-year|'year'/.test(SOURCE));
   ok('the chapter\'s first card does not promise a year screen', !/year|badge/i.test(w.steps[0].text + ' ' + w.steps[0].title));
@@ -110,7 +116,7 @@ const dayAfter = (d) => Data.addDays(d, 1);
     left.push({ id: s.id, hasAfter: typeof s.after === 'function', dialogs: probe.closedDialogs - was[0], toasts: probe.clearedToasts - was[1], clicks: s.allowClicks === true });
   }
   const withDialog = left.filter((c) => c.dialogs > 0);
-  ok('every card has an after(), and leaving it takes the toasts away once, with the demo\'s own DemoUI.clearToasts() (an old message must not sit on top of the next card, as on "Tell me when")', left.length === w.steps.length && left.every((c) => c.hasAfter && c.toasts === 1), left.filter((c) => !c.hasAfter || c.toasts !== 1).map((c) => c.id).join());
+  ok('every card has an after(), and leaving it takes the toasts away once, with the demo\'s own DemoUI.clearToasts() (an old message must not sit on top of the next card, as on "Tell me when")', left.length === CHAPTER_CARDS && left.every((c) => c.hasAfter && c.toasts === 1), left.length + ' cards' + (left.some((c) => !c.hasAfter || c.toasts !== 1) ? ', not clearing once: ' : '') + left.filter((c) => !c.hasAfter || c.toasts !== 1).map((c) => c.id).join());
   ok('only seven cards close a dialog when they are left: the ones whose lit part has a button that opens one (the visit card, the request, the family box, the closed-day banner, the strip with Start over three times), each one once', withDialog.map((c) => c.id).join() === 'ch10-intro,ch10-sample,ch10-request,ch10-family,ch10-closed,ch10-real-needs,ch10-worth-asking' && withDialog.every((c) => c.dialogs === 1), withDialog.map((c) => c.id).join());
   ok('...and none of them asks for the whole page (no allowClicks): the lit part can be used, a list that a lit button opens (the bell\'s) is lit and can be used too, and a dialog sits above the dimmer, so the rest of the page stays locked while the card is up', withDialog.every((c) => !c.clicks), withDialog.filter((c) => c.clicks).map((c) => c.id).join());
   ok('the cards take the toasts away only through the demo\'s own DemoUI.clearToasts(): this file names no toast box or toast class of its own', /clearToasts/.test(SOURCE) && !/demo-toast|data-demo-toasts/.test(SOURCE));
@@ -341,7 +347,7 @@ const dayAfter = (d) => Data.addDays(d, 1);
   const w2 = world(), changed = [];
   for (let n = 1; n <= 25; n++) { await w2.run(n); const a = w2.snap(); await w2.leave(n); if (w2.snap() !== a) changed.push(n); }
   ok('leaving any card at any point of the walk changes nothing in the store', changed.length === 0 && w2.errors.length === 0, changed.join(','));
-  ok('...and every one of the 24 original cards took the toasts away once (Next or Back leaves a card; so does Close), only seven of them closed a dialog', w2.clearedToasts === OLD_CARDS.length && w2.closedDialogs === 7, w2.clearedToasts + ' / ' + w2.closedDialogs);
+  ok('...and every one of the 24 original cards took the toasts away once (Next or Back leaves a card; so does Close), only seven of them closed a dialog', w2.clearedToasts === 24 && w2.closedDialogs === 7, w2.clearedToasts + ' / ' + w2.closedDialogs);
   // the engine runs a card's after() also when the card is skipped (its target is missing) and when the tour is closed on it: one call, the same effect
   const w3 = world();
   await w3.walk(1, 11);

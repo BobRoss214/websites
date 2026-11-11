@@ -31,6 +31,7 @@ const RULES = { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'
 const STILL = '*{animation:none!important;transition:none!important}';
 const VANESSA = 'mailto:vanessa@wiseacresorganic.com?subject=School%20tour%20question', AVA = 'mailto:ava@wiseacresorganic.com?subject=Wise%20Pie%20question';
 const WORDS_OF_COUNTING = /visits? so far|visits? this year|times you|how many times|visit number|badges?|stamps?|streak|season pass|loyal/i;
+const CHAPTER_10_CARDS = 33;   // the cards of tour chapter 10 in js/tour-steps-c.js: the 24 original ones and the 9 added since (4 on the desk, 5 in the kitchen). The list is fixed, not read from the date: a card added or taken out changes this number on purpose (here, in tests/tour-demo-script.test.mjs and in tests/README.md)
 
 await run('account-event', async ({ browser, base, errs }) => {
   /* ---- the files: no field in a page file, no My year anywhere ---- */
@@ -258,7 +259,8 @@ await run('account-event', async ({ browser, base, errs }) => {
     const calm = () => p.evaluate(() => !document.documentElement.classList.contains('demo-modal-open'));
     const store = (fn, arg) => p.evaluate(fn, arg);
     const textOf = async (loc) => ((await loc.count()) ? (await loc.first().innerText()).replace(/\s+/g, ' ').trim() : '(not on the screen)');   // a missing box is a failed check, not a 20 second wait
-    ok('the real chapter 10 is in the page: its cards (the original 24, and the cards added to show the pretend rush)', await p.evaluate(() => window.WA_TOUR_STEPS.length) >= 24);
+    const cardCount = await p.evaluate(() => window.WA_TOUR_STEPS.length);
+    ok('the real chapter 10 is in the page: ' + CHAPTER_10_CARDS + ' cards (the 24 original ones and the 9 added since)', cardCount === CHAPTER_10_CARDS, cardCount + ' cards');
 
     // a family made by hand is kept by the sign-up card and the card after it
     await card('ch10-signup', 'before');
@@ -403,7 +405,7 @@ await run('account-event', async ({ browser, base, errs }) => {
     const toasts = () => p.locator('[data-demo-toasts] .demo-toast').count();
     const store = (fn, arg) => p.evaluate(fn, arg);
     const whole = () => store(() => JSON.stringify(window.DemoStore.snapshot()));
-    ok('every one of the cards of the real chapter 10 (the original 24 and the ones added since) has an after()', await store(() => window.WA_TOUR_STEPS.length >= 24 && window.WA_TOUR_STEPS.every((s) => typeof s.after === 'function')));
+    ok('every one of the ' + CHAPTER_10_CARDS + ' cards of the real chapter 10 has an after()', await store((n) => window.WA_TOUR_STEPS.length === n && window.WA_TOUR_STEPS.every((s) => typeof s.after === 'function'), CHAPTER_10_CARDS));
     await store(() => { window.DemoUI.clearToasts(); });   // the sign-up's own toast goes, so the next check sees only the toast of the notice
 
     // the real thing: a notice arrives while the page is open (the alert the tour sends on "The alert arrives") and the page makes a toast for it
@@ -434,7 +436,7 @@ await run('account-event', async ({ browser, base, errs }) => {
       await card(id, 'after');
       if (await toasts() !== 0) stuck.push(id);
     }
-    ok('leaving any of the cards takes an old toast away', ids.length >= 24 && stuck.length === 0, ids.length + ' cards' + (stuck.length ? ', stuck: ' : '') + stuck.join(', '));
+    ok('leaving any of the ' + CHAPTER_10_CARDS + ' cards takes an old toast away', ids.length === CHAPTER_10_CARDS && stuck.length === 0, ids.length + ' cards' + (stuck.length ? ', stuck: ' : '') + stuck.join(', '));
     await p.context().close();
   }
 
