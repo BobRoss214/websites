@@ -44,7 +44,7 @@ const DEMO_PAGES = ['account', 'farm-desk', 'kitchen'];
 const FIELDS = ['id', 'order', 'chapter', 'page', 'target', 'also', 'title', 'text', 'allowClicks', 'skipIfMissing', 'before', 'after', 'choices', 'choicesLabel'];
 const CHOICE_FIELDS = ['label', 'title', 'text', 'run', 'pressed'];
 const SEASON_NAMES = ['spring', 'summer', 'fall', 'winter'];
-const QUOTES_IN_LIT = ['ch2-pill', 'ch5-varieties', 'ch7-note', 'ch7-soon-pantry', 'ch8-last', 'ch6-tree-pizza', 'ch8-reviews'];   // cards with no season buttons that quote the page's own words in “ ”: those words must be written in the lit part (add a card here when it quotes the page)
+const QUOTES_IN_LIT = ['ch2-pill', 'ch5-varieties', 'ch7-note', 'ch7-soon-pantry', 'ch8-last', 'ch6-tree-pizza', 'ch8-reviews', 'ch10-desk-groups'];   // cards with no season buttons that quote the page's own words in “ ”: those words must be written in the lit part (add a card here when it quotes the page)
 const SIZES = [{ width: 1440, height: 900 }, { width: 390, height: 844 }];
 const OTHER_DAYS = [
   ['2026-11-03T12:00:00-05:00', 'the real day (3 Nov 2026)'],
