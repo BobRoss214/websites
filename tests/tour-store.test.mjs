@@ -2,8 +2,8 @@
 // browser: yes
 // quick: no
 // covers: js/tour.js, js/tour-steps-b.js, css/tour.css, css/extras.css, index.html
-/* The STORE steps of the tour (chapter 7: the row of group buttons, the price note, the pizza group, the pantry group with its Prices coming soon label and, when the Store has them, the
- * product pop-up and the Beer, cider & wine group) on a COMPUTER, with the real engine
+/* The STORE steps of the tour (chapter 7, six steps: the row of group buttons, the price note, the product pop-up, the pizza group, the Beer, cider & wine group and the pantry group with
+ * its Prices coming soon label) on a COMPUTER, with the real engine
  * (js/tour.js) and the real steps. From 992 px wide the Store (#shop) runs its groups in two columns, and from 1280 px it may be wider than the other sections (css/extras.css,
  * "Store on a computer"), so a lit group is half the width of the page, the card has its other half, and the row of group buttons is 900 to 1400 px wide and has no room beside it.
  * This test follows what the owner sees at six window sizes (1920, 1440, 1366, 1280, 1100 and 992 px wide, with the heights of real screens), on every step that points into the Store:
@@ -21,6 +21,8 @@
 import { run, open, ok, okSoon, info, settled, ms } from './lib.mjs';
 
 const SIZES = [[1920, 1080], [1440, 900], [1366, 768], [1280, 800], [1100, 800], [992, 800]];
+// the steps of chapter 7 (js/tour-steps-b.js, orders 701 to 706): the only steps whose target is in the Store. The list is fixed: it does not depend on the date, the season or the language
+const STORE_STEPS = ['ch7-jump', 'ch7-note', 'ch7-hover-popup', 'ch7-pizza', 'ch7-beer-wine', 'ch7-soon-pantry'];
 const POSITION_WORDS = /\b(scroll\w*|above|beneath|underneath|next to|beside|left|right|column\w*|rows?|sideways|long page|down the page|up the page)\b/i;   // ("below" is allowed: the farm group is the last group, under both columns, and the test below looks that up)
 
 /* the step, the lit part, the lit box and the card, as the owner sees them (measured in the page) */
@@ -88,7 +90,7 @@ await run('tour-store', async ({ browser, base, errs }) => {
     // every step of the tour that lights something in the Store (found by where its target is, so a step added later is looked at too)
     ids = await p.evaluate(() => window.WISE_ACRES.tour.steps().filter((s) => s.page === 'index' && s.target && (() => { try { const e = document.querySelector(s.target); return !!(e && e.closest('#shop')); } catch (x) { return false; } })()).map((s) => s.id));
     if (w === SIZES[0][0]) {
-      ok('the tour has steps that light the Store, among them the row of group buttons, the price note, the pizza group and the pantry group (' + ids.join(', ') + ')', ids.length >= 4 && ['ch7-jump', 'ch7-note', 'ch7-pizza', 'ch7-soon-pantry'].every((x) => ids.includes(x)), JSON.stringify(ids));
+      ok('the tour has exactly six steps that light the Store, in the order of the tour: the row of group buttons, the price note, the product pop-up, the pizza group, the Beer, cider & wine group and the pantry group (' + ids.join(', ') + ')', ids.length === STORE_STEPS.length && STORE_STEPS.length === 6 && ids.join() === STORE_STEPS.join(), ids.length + ' steps: ' + JSON.stringify(ids));
       const texts = await p.evaluate((list) => window.WISE_ACRES.tour.steps().filter((s) => list.includes(s.id)).map((s) => [s.id, s.title + ' ' + s.text]), ids);
       const said = texts.filter(([, t]) => POSITION_WORDS.test(t)).map(([i, t]) => i + ' says "' + POSITION_WORDS.exec(t)[0] + '"');
       ok('the words of the Store cards do not say where anything is (no "next to", "left", "scroll", "column"...: the Store is one column on a phone and two on a computer); a "below" would be true', said.length === 0, said.join('; '));

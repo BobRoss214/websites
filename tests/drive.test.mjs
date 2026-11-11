@@ -14,7 +14,7 @@ import { startSite, launch, ok as libOk, finish, ms } from './lib.mjs';
 const site = await startSite();
 const ORIGIN = site.url.replace(/\/$/, '');
 const BASE = `${ORIGIN}/index.html`;
-const DATES = { fall: '2026-10-02T11:00:00-04:00', winter: '2027-01-15T11:00:00-05:00' };
+const DATES = { fall: '2026-10-02T11:00:00-04:00', winter: '2026-12-01T11:00:00-05:00' };   // winter is the window from the last Saturday of November to the Sunday after the first Saturday of December (2026: Nov 28 to Dec 6): Tue Dec 1 is inside it (Jan 15 is spring now)
 const errs = [];
 const T = ms(30000);   // the longest any single wait may take (scaled by WA_SLOW)
 const want = (n) => !process.env.SECTIONS || process.env.SECTIONS.split(',').includes(String(n));
