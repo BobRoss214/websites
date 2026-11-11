@@ -118,8 +118,9 @@ await run('dated', async ({ browser, base, errs }) => {
   p = await at('2026-08-01T12:00:00-04:00');
   await until(p, () => !!document.querySelector('#field [data-pick]'), null, 20000);
   ok('Aug 1 (between summer and fall): the hero line is the all-year one, not "It\'s blueberry season!"', (await hero(p)) === 'no-js', await hero(p));
-  await p.click('#season-switch button[data-season="fall"]');
-  await okSoon('...and picking a season with the switcher shows that season\'s own line', () => hero(p), (v) => v === 'fall');
+  // (the page opens on Fall here, the season that starts next: picking Fall would change nothing, so the check picks the other one)
+  await p.click('#season-switch button[data-season="summer"]');
+  await okSoon('...and picking a season with the switcher shows that season\'s own line (Summer, which is over: the switcher is for looking)', () => hero(p), (v) => v === 'summer');
   await p.context().close();
 
   // ---- between seasons the page opens on the season that starts next (Nov 10: Winter; Dec 7, after the last tree day: Spring), but its own "It's ... season!" line waits for the day it starts
@@ -128,8 +129,8 @@ await run('dated', async ({ browser, base, errs }) => {
   await until(p, () => !!document.querySelector('#field [data-pick]'), null, 20000);
   let lk = await look(p);
   ok('Nov 10 (fall is over, the trees are not on yet): the page opens on the Winter picture and the Winter tab of "What\'s on the farm", but the hero line and title are the all-year ones (the trees are not here yet)', lk.season === 'winter' && lk.pressed === 'winter' && (await hero(p)) === 'no-js' && lk.h1 === 'Organic u-pick fun for the whole family', JSON.stringify(lk) + ' ' + await hero(p));
-  await p.click('#season-switch button[data-season="winter"]');
-  await okSoon('...and picking Winter with the switcher shows its own line', () => hero(p), (v) => v === 'winter');
+  await p.click('#season-switch button[data-season="fall"]');   // (the page opens on Winter here: picking Winter would change nothing, so the check picks the other one)
+  await okSoon('...and picking Fall with the switcher shows its own line (Fall, which is over: the switcher is for looking)', () => hero(p), (v) => v === 'fall');
   await p.context().close();
   p = await at('2026-12-07T12:00:00-05:00');
   await until(p, () => !!document.querySelector('#field [data-pick]'), null, 20000);

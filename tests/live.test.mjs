@@ -69,7 +69,7 @@ await run('live', async ({ browser, base, errs }) => {
   ok('...and the hours box of The GreenHouse shows ONE pill, not two identical ones (the Wise Pie pill there is left out while it says the very same: data-live-same)', (await box()).join(' | ') === 'greenhouse: Open now, until 8 pm Not official yet', (await box()).join(' | '));
   ok('...and the farm badges say "Open today. No reservation needed" with no label and no hours', by('farm').length >= 2 && by('farm').every((x) => x.text === 'Open today. No reservation needed' && !x.label && x.labels === 0), JSON.stringify(by('farm')));
   await p.evaluate(() => WISE_ACRES.setLang('es'));
-  await okSoon('in Spanish the label is "Aún no es oficial", still right after the hours', () => badges().then((l) => l.filter((x) => x.k === 'greenhouse' || x.k === 'pizza')), (l) => l.length >= 5 && l.every((x) => /Abierto ahora, hasta las 8 p\. ?m\.? Aún no es oficial$/.test(x.text) && x.label));
+  await okSoon('in Spanish the label is "Aún no es oficial", still right after the hours', () => badges().then((l) => l.filter((x) => x.k === 'greenhouse' || x.k === 'pizza')), (l) => l.length >= 4 && l.every((x) => /Abierto ahora, hasta las 8 p\. ?m\.? Aún no es oficial$/.test(x.text) && x.label));   // three GreenHouse pills and one Wise Pie pill (the one in the hours box says the same as The GreenHouse's, so it is left out)
   await p.evaluate(() => WISE_ACRES.setLang('en'));
   // the pumpkin patch page and the first-visit page are written for reservations: they leave the farm badge out while the winter season is in progress, and show it in fall
   for (const pg of ['pumpkin-patch.html', 'first-visit.html']) {
@@ -78,9 +78,9 @@ await run('live', async ({ browser, base, errs }) => {
     ok(pg + ': on a tree day the farm badge is left out (data-live-not="winter"), on a fall day it says "Reserved visits today"', (await shown(q)).length === 0 && (await shown(q2)).join() === 'Reserved visits today', JSON.stringify([await shown(q), await shown(q2)]));
     await q.context().close(); await q2.context().close();
   }
-  await at('2026-10-02T12:00:00-04:00');
+  await at('2026-10-09T12:00:00-04:00');
   const fallBox = await box();
-  ok('on a usual fall day (Fri Oct 2) the hours box keeps both pills, they say different things (The GreenHouse is open, Wise Pie opens at 4 pm)', fallBox.length === 2 && fallBox[0].startsWith('greenhouse: Open now') && fallBox[1].startsWith('pizza: Opens today at 4 pm'), fallBox.join(' | '));
+  ok('on a usual fall day (Fri Oct 9) the hours box keeps both pills, they say different things (The GreenHouse is open, Wise Pie opens at 4 pm)', fallBox.length === 2 && fallBox[0].startsWith('greenhouse: Open now') && fallBox[1].startsWith('pizza: Opens today at 4 pm'), fallBox.join(' | '));
   await at('2026-12-02T12:00:00-05:00');
   b = await badges();
   ok('Wed Dec 2: still one pill in the hours box (the two say the same, with the label)', (await box()).join(' | ') === 'greenhouse: Closed today. Opens Saturday at 11 am Not official yet', (await box()).join(' | '));
