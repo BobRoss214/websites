@@ -8,6 +8,7 @@ The builder's rule: while winter is on the farm is open only the two tree weeken
 - index.html, "Optional add-ons": the Wagon ride and the Barrel train lines.
 - index.html, step 1 of the three steps and the "Reserve a time" card of the first-visit guide: the sentence "The farm is always reservation-only ..." (heading and button stay; the lead line above says the steps are for the other seasons).
 - pages/first-visit.html: the same sentence. pages/pumpkin-patch.html: the card "Reservations only" and the FAQ "Do I need a reservation for the pumpkin patch?". pages/strawberry-picking.html: "By reservation only, no walk-ins" and the FAQ "Do I need a reservation to pick strawberries?".
+- pages/pumpkin-patch.html, more: the Wagon ride and Barrel train prices, the card "U-pick tomatoes & basil", the card "No reservation?" ("It does not include farm access" is not true on the tree weekends), and in the Wise Pie card the sentence "drop in at The GreenHouse from 4 to 8 pm, Friday through Sunday", which in winter is replaced by the sentence the other pages already have ("The GreenHouse is open 11 am-8 pm Not official yet and serves Wise Pie pizza Not official yet", same key, same translations).
 
 ## Left alone on purpose (asked not to touch, or a question for the builder)
 
