@@ -6,6 +6,7 @@
  *   - The pizza-reservation rules  (js/features.js draws that countdown; the hero chip is first set here)
  *   A badge with data-live-not="winter" is left out while that season is in progress (the farm's winter badge says "no reservation needed",
  *   which the pumpkin patch page and the first-visit page, written for reservations, do not).
+ *   A badge with data-live-same="greenhouse" is left out when it says the very same as that badge (the hours box of The GreenHouse: in the tree weekends Wise Pie follows its hours).
  *
  * Hours and closures come from js/content.js. Times are Eastern Time, whatever
  * the visitor's own time zone is. In winter (the Christmas tree weekends, js/season.js)
@@ -187,6 +188,9 @@
     // data-live-not="winter": a page that is about something else in that season (the pumpkin patch page, the first-visit page: both say "reservation") leaves the badge out while the season is in progress
     const left = s && el.dataset.liveNot ? el.dataset.liveNot.split(/\s+/) : [];
     if (!s || W.seasons.live(when).some((x) => left.indexOf(x.id) >= 0)) { el.hidden = true; return; }
+    // data-live-same="greenhouse": left out when it says the very same as that badge (in the tree weekends Wise Pie has no hours of its own and follows The GreenHouse: one pill in the hours box, not two)
+    const twin = el.dataset.liveSame ? statusFor(el.dataset.liveSame, when) : null;
+    if (twin && twin.text === s.text && !!twin.notOfficial === !!s.notOfficial) { el.hidden = true; return; }
     el.hidden = false;
     el.className = 'live is-' + s.state + (el.dataset.liveClass ? ' ' + el.dataset.liveClass : '');
     el.innerHTML = '<span class="live-dot" aria-hidden="true"></span><span class="live-text"></span>';

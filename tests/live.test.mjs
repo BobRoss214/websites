@@ -64,7 +64,9 @@ await run('live', async ({ browser, base, errs }) => {
     sat.bar === 'In season: Christmas trees at The GreenHouse' && sat.now === 'Happening now: Christmas trees at The GreenHouse' && sat.fact === 'Christmas trees at The GreenHouse \u2014 happening now', JSON.stringify(sat));
   ok('Sat Nov 28 noon (the first tree day): The GreenHouse badges (hero, "Two places", The GreenHouse section) say "Open now, until 8 pm Not official yet", the label is the last thing after the hours',
     by('greenhouse').length >= 3 && by('greenhouse').every((x) => x.text === 'Open now, until 8 pm Not official yet' && x.label && x.labels === 1), JSON.stringify(by('greenhouse')));
-  ok('...and Wise Pie says the same, with the label (no pizza hours of its own: it follows The GreenHouse)', by('pizza').length >= 2 && by('pizza').every((x) => x.text === 'Open now, until 8 pm Not official yet' && x.label), JSON.stringify(by('pizza')));
+  ok('...and Wise Pie says the same, with the label (no pizza hours of its own: it follows The GreenHouse)', by('pizza').length >= 1 && by('pizza').every((x) => x.text === 'Open now, until 8 pm Not official yet' && x.label), JSON.stringify(by('pizza')));
+  const box = () => p.evaluate(() => [...document.querySelectorAll('.gh-hours .live')].filter((e) => !e.hidden).map((e) => e.dataset.live + ': ' + e.textContent.replace(/\s+/g, ' ').trim()));
+  ok('...and the hours box of The GreenHouse shows ONE pill, not two identical ones (the Wise Pie pill there is left out while it says the very same: data-live-same)', (await box()).join(' | ') === 'greenhouse: Open now, until 8 pm Not official yet', (await box()).join(' | '));
   ok('...and the farm badges say "Open today. No reservation needed" with no label and no hours', by('farm').length >= 2 && by('farm').every((x) => x.text === 'Open today. No reservation needed' && !x.label && x.labels === 0), JSON.stringify(by('farm')));
   await p.evaluate(() => WISE_ACRES.setLang('es'));
   await okSoon('in Spanish the label is "Aún no es oficial", still right after the hours', () => badges().then((l) => l.filter((x) => x.k === 'greenhouse' || x.k === 'pizza')), (l) => l.length >= 5 && l.every((x) => /Abierto ahora, hasta las 8 p\. ?m\.? Aún no es oficial$/.test(x.text) && x.label));
@@ -76,8 +78,12 @@ await run('live', async ({ browser, base, errs }) => {
     ok(pg + ': on a tree day the farm badge is left out (data-live-not="winter"), on a fall day it says "Reserved visits today"', (await shown(q)).length === 0 && (await shown(q2)).join() === 'Reserved visits today', JSON.stringify([await shown(q), await shown(q2)]));
     await q.context().close(); await q2.context().close();
   }
+  await at('2026-10-02T12:00:00-04:00');
+  const fallBox = await box();
+  ok('on a usual fall day (Fri Oct 2) the hours box keeps both pills, they say different things (The GreenHouse is open, Wise Pie opens at 4 pm)', fallBox.length === 2 && fallBox[0].startsWith('greenhouse: Open now') && fallBox[1].startsWith('pizza: Opens today at 4 pm'), fallBox.join(' | '));
   await at('2026-12-02T12:00:00-05:00');
   b = await badges();
+  ok('Wed Dec 2: still one pill in the hours box (the two say the same, with the label)', (await box()).join(' | ') === 'greenhouse: Closed today. Opens Saturday at 11 am Not official yet', (await box()).join(' | '));
   ok('Wed Dec 2 (inside the season, between the weekends): The GreenHouse and Wise Pie say when they open next (Saturday, 11 am), the farm says its next open day, the label stays with the 11 am',
     by('greenhouse').every((x) => x.text === 'Closed today. Opens Saturday at 11 am Not official yet') && by('pizza').every((x) => x.text === 'Closed today. Opens Saturday at 11 am Not official yet') && by('farm').every((x) => x.text === 'Closed today. Next open day: Saturday'), JSON.stringify(b));
   const gap = await words();
