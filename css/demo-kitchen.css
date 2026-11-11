@@ -12,6 +12,12 @@
 .kit h1,.kit h2,.kit h3,.kit h4,.kit h5{text-wrap:balance}
 .kit-ico{width:1.25em;height:1.25em;flex:none}
 
+/* The page's own bars. The sticky demo bar (css/demo.css) takes 70 to 100 px of every screen, and the kitchen needs them for the board: here the demo bar stays at the top of the page (it is still
+   there, with Family, Mrs. Cathy's desk, Kitchen and Start over) and does not follow the window. Only the site's header sticks (and, below it, the kitchen's own bar, see "the top").
+   A scroll to a place lands under what sticks: js/demo-kitchen.js measures it into --kit-stack. */
+.demo-bar{position:static}
+html.wa-demo{scroll-padding-top:calc(var(--kit-stack,var(--header-h)) + 14px)}
+
 /* The site's focus ring (css/styles.css, :focus-visible) also sets a 6px corner. While a control has the focus here it keeps its own corners (the next ticket gets the focus after every answer). */
 .kit-ticket:focus{border-radius:24px}
 .kit-ans:focus{border-radius:20px}
@@ -82,7 +88,18 @@
 
 /* ---------- a ticket ---------- */
 .kit-rail{list-style:none;margin:0;padding:0}
-.kit-ticket{position:relative;list-style:none;margin:0 0 24px;padding:clamp(14px,2.2vw,22px);background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:0 6px 0 var(--ink)}
+.kit-ticket{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"head" "timer" "info" "answers" "edit";gap:10px 22px;list-style:none;margin:0 0 18px;padding:clamp(12px,1.8vw,18px);background:#fff;border:3px solid var(--ink);border-radius:24px;box-shadow:0 6px 0 var(--ink)}
+.kit-t-head{grid-area:head}
+.kit-t-info{grid-area:info;min-width:0}
+.kit-t-side{display:contents}
+.kit-t-side .kit-timer{grid-area:timer}
+.kit-t-side .kit-t-answers{grid-area:answers}
+.kit-ticket > .kit-edit{grid-area:edit;margin-top:6px}
+/* a tablet and wider: the timer and the three answers are a column beside the title and the pizzas, so the ticket is no taller than its pizzas */
+@media (min-width:760px){
+  .kit-ticket{grid-template-columns:minmax(0,1fr) 15.5rem;grid-template-areas:"head side" "info side" "edit edit"}
+  .kit-t-side{display:flex;flex-direction:column;gap:12px;grid-area:side;align-self:start}
+}
 .kit-current{box-shadow:0 6px 0 var(--ink),0 0 0 7px var(--sun)}
 .kit-arrive{animation:kitFlash 1.6s ease-out 1}
 @keyframes kitFlash{from{outline:8px solid rgba(255,201,40,.95);outline-offset:3px}to{outline:8px solid rgba(255,201,40,0);outline-offset:12px}}
@@ -92,16 +109,16 @@
 @media (prefers-reduced-motion:reduce){.kit-arrive,.kit-late{animation:none}}
 html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 
-.kit-t-head{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title timer" "kind timer";gap:6px 20px;align-items:center}
-.kit-t-title{grid-area:title;display:flex;flex-wrap:wrap;align-items:center;gap:.2em .5em;margin:0;font-size:1rem}
+.kit-t-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}
+.kit-t-title{display:flex;flex-wrap:wrap;align-items:center;gap:.2em .5em;margin:0;font-size:1rem}
 .kit-num{display:inline-block;padding:.02em .4em;background:var(--ink);color:#fff;border-radius:14px;font:800 clamp(2.1rem,4.2vw,2.9rem)/1.15 var(--display)}
 .kit-name{font:800 clamp(1.6rem,3.2vw,2.2rem)/1.15 var(--display);overflow-wrap:break-word;overflow-wrap:anywhere}
-.kit-kind{grid-area:kind;display:inline-flex;align-items:center;gap:.5em;justify-self:start;margin:0;padding:.2em .9em;border:3px solid var(--ink);border-radius:999px;font:700 1.1rem/1.2 var(--display)}
+.kit-kind{display:inline-flex;align-items:center;gap:.5em;margin:0;padding:.15em .9em;border:3px solid var(--ink);border-radius:999px;font:700 1.1rem/1.2 var(--display)}
 .kit-kind-order{background:var(--berry);color:#fff}
 .kit-kind-change{background:var(--sun);color:var(--ink)}
 
 /* the answer-by timer: a bar that empties, green then amber then red, with its words */
-.kit-timer{grid-area:timer;min-width:12.5rem;padding:.4em .9em .55em;background:#fff;border:3px solid var(--ink);border-radius:18px;text-align:center}
+.kit-timer{min-width:12.5rem;padding:.4em .9em .55em;background:#fff;border:3px solid var(--ink);border-radius:18px;text-align:center}
 .kit-timer-text{display:block;font:800 1.75rem/1.15 var(--display);white-space:nowrap}
 .kit-timer-note{display:block;font:700 .9rem/1.25 var(--display)}
 .kit-bar{display:block;height:14px;margin-top:6px;background:#fff;border:2.5px solid var(--ink);border-radius:999px;overflow:hidden}
@@ -114,9 +131,7 @@ html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 .kit-tm-red .kit-bar{background:rgba(255,255,255,.3);border-color:#fff}
 .kit-tm-red .kit-bar-fill{background:#fff}
 
-.kit-t-body{display:grid;grid-template-columns:minmax(0,1fr);gap:16px 22px;margin-top:14px;align-items:start}
-@media (min-width:760px){.kit-t-body{grid-template-columns:minmax(0,1fr) 15.5rem}}
-.kit-pick{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:0 0 10px}
+.kit-pick{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;margin:0 0 6px}
 .kit-pick-label{font:700 1rem/1.2 var(--display);letter-spacing:.04em;color:var(--ink-soft)}
 .kit-pick-time{font:800 clamp(2.1rem,4.4vw,2.8rem)/1.1 var(--display);white-space:nowrap}
 .kit-pick-day,.kit-pick-count,.kit-waited{font:700 clamp(1.1rem,1.6vw,1.4rem)/1.3 var(--display);color:var(--ink-soft)}
@@ -137,7 +152,7 @@ html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 /* ---------- pizzas ---------- */
 .kit-h{font:700 1.1rem/1.2 var(--display);letter-spacing:.02em;margin:0 0 .5em;color:var(--ink-soft)}
 .kit-lines{list-style:none;margin:0;padding:0}
-.kit-line{display:flex;align-items:flex-start;gap:14px;padding:10px 8px;margin:0;border-top:2px dashed var(--kit-line)}
+.kit-line{display:flex;align-items:flex-start;gap:14px;padding:7px 8px;margin:0;border-top:2px dashed var(--kit-line)}
 .kit-line:first-child{border-top:0}
 .kit-count{flex:none;display:grid;place-items:center;min-width:2.6rem;height:2.6rem;padding:0 .3em;background:var(--sun);border:3px solid var(--ink);border-radius:12px;font:800 1.5rem/1 var(--display)}
 .kit-line-text{min-width:0}
@@ -152,7 +167,7 @@ html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 .kit-none{margin:0;padding:8px;font-weight:700;color:var(--ink-soft)}
 
 /* ---------- notes: allergies and flags ---------- */
-.kit-notes{margin:12px 0 0;padding:10px 16px;background:#fff6c2;border:3px solid var(--ink);border-radius:18px}
+.kit-notes{margin:8px 0 0;padding:8px 16px;background:#fff6c2;border:3px solid var(--ink);border-radius:18px}
 .kit-allergy{display:flex;align-items:flex-start;gap:.6em;margin:0 0 .4em;font:700 1.3rem/1.3 var(--display)}
 .kit-allergy .kit-ico{width:1.5em;height:1.5em;margin-top:.05em;color:var(--red-deep)}
 .kit-allergy-none{font-weight:600;font-family:var(--body);font-size:1.1rem;color:var(--ink-soft)}
@@ -161,11 +176,11 @@ html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
 .kit-notes > :last-child{margin-bottom:0}
 
 /* ---------- a change from the family ---------- */
-.kit-quote{margin:0 0 12px;padding:.45em 1em;background:#fff;border-left:8px solid var(--ink);border-radius:8px;font-size:1.25rem;font-weight:700}
+.kit-quote{margin:0 0 8px;padding:.3em 1em;background:#fff;border-left:8px solid var(--ink);border-radius:8px;font-size:1.25rem;font-weight:700}
 .kit-quote-label{font:700 1rem/1.2 var(--display);letter-spacing:.02em;color:var(--ink-soft)}
 .kit-diff-wrap{overflow:hidden;background:#fff;border:3px solid var(--ink);border-radius:16px}
 .kit-diff{width:100%;border-collapse:separate;border-spacing:0}
-.kit-diff th,.kit-diff td{padding:8px 10px;text-align:left;vertical-align:middle;border-top:2px solid var(--kit-line)}
+.kit-diff th,.kit-diff td{padding:6px 10px;text-align:left;vertical-align:middle;border-top:2px solid var(--kit-line)}
 .kit-diff thead th{border-top:0;background:var(--cream);font:700 1rem/1.2 var(--display);letter-spacing:.02em;color:var(--ink-soft)}
 .kit-diff tbody th{font:700 1.25rem/1.25 var(--display)}
 .kit-diff tbody th .kit-pizza{display:block;font-size:1.25rem}
@@ -228,8 +243,6 @@ html[data-calm] .kit-arrive,html[data-calm] .kit-late{animation:none}
   .kit-clock{margin-left:0;font-size:1rem}
   .kit-clock-time{font-size:1.5rem}
   .kit-sound{margin-left:auto;min-height:56px}
-  .kit-t-head{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "kind" "timer"}
-  .kit-timer{justify-self:stretch}
   .kit-t-answers{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
   .kit-ans{flex-wrap:wrap;justify-content:center;min-height:64px;padding:.3em .4em;font-size:1.2rem;text-align:center}
   .kit-ans-label{flex:0 1 auto}

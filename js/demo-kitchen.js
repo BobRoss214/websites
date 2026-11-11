@@ -659,6 +659,8 @@
       late: {},            // key -> true once a ticket has run out of time
       tm: {},              // key -> { left, late } at the last second
       rail: [], family: [], done: [],
+      placedY: -1,         // where the page was scrolled to when the board was put in place (a person's own place is left alone)
+      wasOn: null,         // was the rush on at the last pass (null before the first)
       keysOn: true,        // the number and letter keys of the board (a person can turn them off: Keys, under the board)
       lastBeep: 0, says: [], sayTimer: null, answered: 0, seen: false
     };
@@ -798,12 +800,26 @@
       paintSound();
     }
 
-    /* ---------- the board in place: the site's own bars and the controls above the board fill the first screen of a tablet, so when the screen opens with tickets (and the page is
-       still at its top and has no place in its address) the board is scrolled up once: the first ticket and its three buttons are then on the screen ---------- */
-    function putBoardInView() {
-      var hd = parts.railHead;
-      if (!ui.rail.length || !hd || typeof hd.scrollIntoView !== 'function' || (win.pageYOffset || 0) > 50 || (win.location && win.location.hash)) return;
-      try { hd.scrollIntoView({ block: 'start', behavior: 'instant' }); } catch (e) { hd.scrollIntoView(true); }
+    /* ---------- the board in place: the site's own banner, header and demo bar and the controls above the board fill the first screen, so the page is scrolled until the FIRST ticket
+       (its pizzas and its three buttons) sits just under the sticky bar. It is done when the screen opens with tickets, again after the page has loaded (a reload puts the page back at its top), when
+       the first tickets arrive and when the rush is switched on. Only while the page is at its top or where this put it (a person who scrolled somewhere else is left alone), and never while the
+       tour is open (the tour scrolls to its own lit part). ---------- */
+    function measureStack() {     // the height of what sticks to the top of the window: the site's header, and the kitchen's own bar when it sticks
+      var hd = document.querySelector('.site-header'), head = hd ? hd.offsetHeight : 0, bar = 0;
+      try { if (parts.top && win.getComputedStyle(parts.top).position === 'sticky') bar = parts.top.offsetHeight; } catch (e) { /* no bar */ }
+      document.documentElement.style.setProperty('--kit-head', head + 'px');
+      document.documentElement.style.setProperty('--kit-stack', (head + bar) + 'px');
+      return head + bar;
+    }
+    function placeBoard() {
+      var first = ui.rail.length ? els[ui.rail[0].key] : null, y0 = win.pageYOffset || 0;
+      if (!first || document.querySelector('.wa-tour') || (win.location && win.location.hash)) return;
+      if (y0 > 60 && Math.abs(y0 - ui.placedY) > 3) return;        // somewhere else: a person's own place
+      var y = Math.max(0, Math.round(first.getBoundingClientRect().top + y0 - measureStack() - 12));
+      if (Math.abs(y - y0) >= 2) {
+        try { win.scrollTo({ left: 0, top: y, behavior: 'instant' }); } catch (e) { win.scrollTo(0, y); }
+      }
+      ui.placedY = win.pageYOffset || 0;
     }
 
     /* ---------- the keys button: the number and letter keys answer from anywhere on the page, so a person can turn them off ---------- */
@@ -964,8 +980,7 @@
       var li = h('li', { 'class': 'kit-ticket kit-k-' + t.kind + (t.live ? ' kit-pretend' : '') + (ed ? ' kit-editing' : ''), id: 'kit-t-' + k, tabindex: '-1', 'aria-labelledby': titleId, 'data-key': t.key, 'data-tour': 'kit-card', 'data-order': t.id });
       li.appendChild(h('header', { 'class': 'kit-t-head' },
         h('h3', { id: titleId, 'class': 'kit-t-title' }, h('span', { 'class': 'kit-num', text: '#' + t.num }), ' ', h('span', { 'class': 'kit-name', text: t.who })),
-        h('p', { 'class': 'kit-kind kit-kind-' + t.kind }, icon(t.kind === 'change' ? 'swap' : 'plus'), h('span', { text: t.kind === 'change' ? 'Change to the order' : 'New order' })),
-        live ? timerEl(t) : null));
+        h('p', { 'class': 'kit-kind kit-kind-' + t.kind }, icon(t.kind === 'change' ? 'swap' : 'plus'), h('span', { text: t.kind === 'change' ? 'Change to the order' : 'New order' }))));
       var info = h('div', { 'class': 'kit-t-info' });
       var day = t.date && today && t.date !== today ? ' on ' + dayLabel(t.date) : '';
       info.appendChild(h('p', { 'class': 'kit-pick' }, h('span', { 'class': 'kit-pick-label', text: 'Pick-up' }), h('strong', { 'class': 'kit-pick-time', text: time12(t.pickup) || 'not set' }), day ? h('span', { 'class': 'kit-pick-day', text: day }) : null,
@@ -984,7 +999,8 @@
       answers.appendChild(ansBtn(t, 'yes', '1 Y', 'Yes', 'check', t.kind === 'change' ? 'kit-yes' : 'kit-confirm', titleId));
       if (t.kind === 'change') answers.appendChild(ansBtn(t, 'no', '2 N', 'No', 'x', 'kit-no', titleId));
       answers.appendChild(ansBtn(t, 'later', '3 S', 'Another time', 'clock', 'kit-change', titleId));
-      li.appendChild(h('div', { 'class': 'kit-t-body' }, info, answers));
+      li.appendChild(info);
+      li.appendChild(h('div', { 'class': 'kit-t-side' }, live ? timerEl(t) : null, answers));   // the timer and the three answers: a column beside the pizzas on a wide screen
       if (ed) li.appendChild(buildEditor(t, ed));
       li.addEventListener('focusin', function () { ui.chosen = true; setCurrent(t.key); });
       return li;
@@ -1198,7 +1214,10 @@
           if (!document.hidden) sound.chime();
         }
       }
+      var wasEmpty = ui.known && !ui.known.length, on = live ? live.isOn() : false;
       ui.known = keys;
+      if (ui.rail.length && ((wasEmpty && ui.rail.length) || (on && ui.wasOn === false))) placeBoard();   // the first tickets came, or the rush was switched on
+      ui.wasOn = on;
       if (ui.pending !== undefined) { var want = ui.pending; ui.pending = undefined; focusKey(want); }
       else restore(saved);
       ui.seen = true;
@@ -1237,7 +1256,12 @@
     paintSound();
     paintKeys();
     sync();
-    putBoardInView();
+    measureStack();
+    placeBoard();
+    [250, 900, 2000].forEach(function (ms) { setTimeout(placeBoard, ms); });                // the fonts and the pictures come in after the first drawing: place it again
+    win.addEventListener('load', placeBoard);
+    win.addEventListener('pageshow', placeBoard);
+    win.addEventListener('resize', measureStack);
     unsub = store.subscribe(sync);
     document.addEventListener('keydown', onKey);
     var onVisible = function () { if (!document.hidden) sync(); };
@@ -1258,6 +1282,9 @@
         if (timer) clearInterval(timer);
         document.removeEventListener('keydown', onKey);
         document.removeEventListener('visibilitychange', onVisible);
+        win.removeEventListener('load', placeBoard);
+        win.removeEventListener('pageshow', placeBoard);
+        win.removeEventListener('resize', measureStack);
         rootEl.textContent = '';
       }
     };
@@ -1270,6 +1297,7 @@
     return typeof win.WA_DEMO_MODE === 'function' ? !!win.WA_DEMO_MODE() : false;
   }
   var mounted = null;
+  try { if (win.history && 'scrollRestoration' in win.history) win.history.scrollRestoration = 'manual'; } catch (e) { /* the browser keeps its own habit */ }   // the screen puts the board in place itself
   function boot() {
     var rootEl = document.getElementById('kitchen-root');
     if (!rootEl || mounted || !win.DemoStore || !demoOn()) return;
