@@ -45,8 +45,8 @@ image_alt: Illustration of a fall pumpkin patch: rows of orange and white pumpki
             <div><dt>Farm fun, no pizza</dt><dd>$3 per person<small>Ages 3 and up. Thursday&ndash;Sunday. Children age 2 and younger are free.</small></dd></div>
             <div><dt>Farm fun with pizza</dt><dd>$31 base<small>Includes 2 Wise Pie pizzas, plus $3 per person (ages 3+). Friday&ndash;Sunday.</small></dd></div>
             <div><dt>Corn pit</dt><dd>$4 per person<small>Buy one, get one free on Thursdays with reservations.</small></dd></div>
-            <div><dt>Wagon ride</dt><dd>$4.50 per person<small>Ages 3 and younger ride free.</small></dd></div>
-            <div><dt>Barrel train</dt><dd>$3 per child<small>Ages 12 and under only.</small></dd></div>
+            <div data-only="spring summer fall"><dt>Wagon ride</dt><dd>$4.50 per person<small>Ages 3 and younger ride free.</small></dd></div>
+            <div data-only="spring summer fall"><dt>Barrel train</dt><dd>$3 per child<small>Ages 12 and under only.</small></dd></div>
           </dl>
           <p class="fine">Prices are for fall 2026 and can change.</p>
         </div>
@@ -60,7 +60,7 @@ image_alt: Illustration of a fall pumpkin patch: rows of orange and white pumpki
           <h2 id="also-h">Also on the farm this fall</h2>
         </header>
         <ul class="fact-grid">
-          <li class="fact-card c-pink">
+          <li class="fact-card c-pink" data-only="spring summer fall">
             <h3>U-pick tomatoes &amp; basil</h3>
             <p>New this year. Certified organic cherry tomatoes, slicers and basil, every weekend from mid-September through early November. Tomatoes are $4.50 per pound and basil is $1 per stem.</p>
             <a class="btn btn-ghost btn-sm" href="index.html#tomatoes">See the varieties</a>
@@ -72,7 +72,8 @@ image_alt: Illustration of a fall pumpkin patch: rows of orange and white pumpki
           </li>
           <li class="fact-card c-mint">
             <h3>Wise Pie pizza</h3>
-            <p>Wood-fired pizza with homemade dough and locally sourced mozzarella. Add it to your reservation, or drop in at The GreenHouse from 4 to 8 pm, Friday through Sunday.</p>
+            <p data-only="spring summer fall">Wood-fired pizza with homemade dough and locally sourced mozzarella. Add it to your reservation, or drop in at The GreenHouse from 4 to 8 pm, Friday through Sunday.</p>
+            <p data-only="winter" hidden>The GreenHouse is open 11 am&ndash;8 pm <span class="not-official">Not official yet</span> and serves Wise Pie pizza <span class="not-official">Not official yet</span>.</p>
             <a class="btn btn-ghost btn-sm" href="wise-pie.html">About Wise Pie</a>
             <a class="btn btn-ghost btn-sm" href="mailto:ava@wiseacresorganic.com?subject=Wise%20Pie%20question"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Pizza questions: ava@wiseacresorganic.com</a>
           </li>
@@ -87,8 +88,8 @@ image_alt: Illustration of a fall pumpkin patch: rows of orange and white pumpki
           <h2 id="plan-h">Good to know before you go</h2>
         </header>
         <ul class="fact-grid fact-grid-3">
-          <li class="fact-card"><h3>Reservations only</h3><p>The farm is always reservation-only, and we don&rsquo;t take walk-ins. We&rsquo;re in a neighborhood with limited parking, so booking a time keeps things safe and calm.</p></li>
-          <li class="fact-card"><h3>No reservation?</h3><p>Stop by The GreenHouse next door at 5503 Poplin Rd. No reservation is needed, and there&rsquo;s a playground, goats, pizza and ice cream. It does not include farm access.</p></li>
+          <li class="fact-card" data-only="spring summer fall"><h3>Reservations only</h3><p>The farm is always reservation-only, and we don&rsquo;t take walk-ins. We&rsquo;re in a neighborhood with limited parking, so booking a time keeps things safe and calm.</p></li>
+          <li class="fact-card" data-only="spring summer fall"><h3>No reservation?</h3><p>Stop by The GreenHouse next door at 5503 Poplin Rd. No reservation is needed, and there&rsquo;s a playground, goats, pizza and ice cream. It does not include farm access.</p></li>
           <li class="fact-card"><h3>Your first time?</h3><p>Read our first-visit guide for parking, check-in, what to bring, bathrooms and the rain policy.</p><a class="btn btn-ghost btn-sm" href="first-visit.html">First-visit guide</a></li>
         </ul>
       </div>
@@ -111,7 +112,7 @@ image_alt: Illustration of a fall pumpkin patch: rows of orange and white pumpki
             <summary>When is pumpkin season at Wise Acres?</summary>
             <div class="answer"><p>Pumpkin picking usually runs from mid-September through early November. Exact dates depend on the weather, so check the fall schedule or join our email list for updates.</p></div>
           </details>
-          <details name="faq">
+          <details name="faq" data-only="spring summer fall">
             <summary>Do I need a reservation for the pumpkin patch?</summary>
             <div class="answer"><p>Yes. The farm is always reservation-only. You can book online and pick a time. Reservations with pizza open every Tuesday at 5:00 PM for the upcoming weekend.</p></div>
           </details>
