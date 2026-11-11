@@ -120,6 +120,7 @@ html:lang(hi) .season-switch .ss-name{position:relative;top:.12em}   /* the Hind
 html:lang(hi) .menu-desc,html:lang(zh) .menu-desc{font-style:normal}
 html:lang(zh) body{text-wrap:pretty}
 .cal-months{grid-template-columns:repeat(12,minmax(0,1fr))}
+.cal-today span{white-space:nowrap}   /* the "Today" pill hangs on a line without width, so it shrank to its longest word: "HÔM / NAY", "今 / 天" */
 @media (max-width:360px){.cal-months{letter-spacing:0;text-transform:none}.cal-months span{margin-left:-3px;margin-right:-3px;margin-inline:-3px;text-align:center}}
 /* A long word that cannot break (an e-mail address) wraps instead of pushing a 320px screen sideways, whatever font the phone falls back to while Nunito loads or if it fails. */
 a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow-wrap:anywhere}
