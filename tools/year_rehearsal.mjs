@@ -407,10 +407,10 @@ step('R07', 'Sat Nov 28, 2026: the Christmas tree weekends start (Saturday and S
   S.check('the same box on a Spanish phone (box shown, note in English with the owner\'s words)', satEs.week && satEs.week.crops.length > 0 && /Trees arrive Saturday\./.test(satEs.weekNote), JSON.stringify(satEs.week) + ' | ' + satEs.weekNote);
 });
 
-step('R08', 'Tue Dec 1, 2026: the schedule box hides', { quick: true }, async (S) => {
-  const [a, b] = await Promise.all([dayAt(S, '2026-11-30', '23:59'), dayAt(S, '2026-12-01', '00:00')]);
-  S.check('Nov 30 23:59: the "Fall 2026 reservation schedule" box is still shown', a.ids && a.ids.schedule === 'shown', JSON.stringify(a.ids));
-  S.check('Dec 1 00:00: the box is hidden', b.ids && b.ids.schedule === 'HIDDEN', JSON.stringify(b.ids));
+step('R08', 'Mon Nov 9, 2026: the schedule box hides', { quick: true }, async (S) => {
+  const [a, b] = await Promise.all([dayAt(S, '2026-11-08', '23:59'), dayAt(S, '2026-11-09', '00:00')]);
+  S.check('Nov 8 23:59 (the last day of fall): the "Fall 2026 reservation schedule" box is still shown', a.ids && a.ids.schedule === 'shown', JSON.stringify(a.ids));
+  S.check('Nov 9 00:00: the box is hidden (the "No pizza" block ends on Nov 8, with the last pizza row)', b.ids && b.ids.schedule === 'HIDDEN', JSON.stringify(b.ids));
   S.check('the sentence "See the current fall schedule" hides with the box, so no link points to a hidden box (the calendar says so)', !b.links.some((l) => l.to === '#schedule' && l.state === 'HIDDEN'), JSON.stringify(b.links.filter((l) => l.to === '#schedule')));
 });
 
@@ -529,10 +529,10 @@ step('R19', 'Sun Jul 11, 2027: the fall look starts, two months before the seaso
   // the owner's list for Jul 10: the year labels, the pumpkin page button, translations
   const fy = S.owner.py('tools/check_facts.py', 'year');
   S.check('python3 tools/check_facts.py year lists the 2026 places to change', /places say 2026/.test(fy.out), '');
-  S.owner.edit('pages/pumpkin-patch.html', 'data-until="2026-11-30"', 'data-until="2027-11-30"', 2);
-  S.owner.edit('index.html', '<div data-until="2026-11-30">', '<div data-until="2027-11-30">');
+  S.owner.edit('pages/pumpkin-patch.html', 'data-until="2026-11-08"', 'data-until="2027-11-08"', 2);
+  S.owner.edit('index.html', '<div data-until="2026-11-08">', '<div data-until="2027-11-08">');
   const pg = S.owner.py('tools/pages.py'), ex = S.owner.py('tools/i18n.py', 'extract'), bu = S.owner.py('tools/i18n.py', 'build');
-  S.check('after editing pages/pumpkin-patch.html (2 places): python3 tools/pages.py, then i18n.py extract and build, rebuild the page the visitors see', pg.code === 0 && ex.code === 0 && bu.code === 0 && S.owner.read('pumpkin-patch.html').includes('data-until="2027-11-30"'), (pg.out + ex.out + bu.out).slice(-100));
+  S.check('after editing pages/pumpkin-patch.html (2 places): python3 tools/pages.py, then i18n.py extract and build, rebuild the page the visitors see', pg.code === 0 && ex.code === 0 && bu.code === 0 && S.owner.read('pumpkin-patch.html').includes('data-until="2027-11-08"'), (pg.out + ex.out + bu.out).slice(-100));
   const cf = S.owner.publish(true);
   S.check('the publish check is happy with the two matching last days (the calendar: they must match)', cf.code === 0, cf.out.split('\n').slice(-2).join(' | ').slice(0, 160));
 });

@@ -141,7 +141,7 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | consistency at `Mid-September through early November` | season words from js/season.js ("Mid-September through early November") | d23 |
 | consistency at `const ALLOWED_EXTRA` | ALLOWED_EXTRA: Celsius 370 beside "700-degree" | d18, d37 |
 | consistency at `farm year bars match the dates written beside them` | the year bars start and end where the words beside them say (early, mid or late + month; the April to July bar is read at `/^april.*`) | d23, d26, d50 |
-| dated (whole file) | the 2026 pizza rows, special days, "No pizza" block until Nov 30, Nov 8/9, Dec 1 | d23, d24 |
+| dated (whole file) | the 2026 pizza rows, special days, "No pizza" block and the schedule box until Nov 8 (gone on Nov 9), Nov 8/9, Dec 1 | d23, d24 |
 | farm-seasons at `haunted trail and the maze only in fall` | /Maze/ in fall text only | d07 |
 | print-qr at `there are signs, each with a QR code` | at least 9 signs | d06, d28, d29 |
 | consistency at `printedCount >= 9 && bad.length === 0` | the QR signs check: at least 9 signs are printed in print/qr-signs.html | d06, d28, d29 |
@@ -1592,17 +1592,17 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 - js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts on the last Saturday in November (Nov 28, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 3 days (Nov 28 to 30). Decide what shows then (ask Claude).
 - Words "early November" become "late November" (say early, mid or late: the year-bar check and the season-words check of consistency read those words, and "end of November" is not one of them): index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
-- Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
+- Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-08">`) already says November, but since 11 Nov 2026 (the builder's winter rules: the farm is closed from Nov 9 to Nov 27) it ends on Nov 8: move its last day to 2026-11-30, and the last day of the "Fall schedule" button on the pumpkin page with it (pages/pumpkin-patch.html at `data-until="2026-11-08"` (2 places)).
 - The year bar next to that sentence ends too early for "late November": in index.html at `bar-orange" style="--s:8.45;--e:10.25"` (the pumpkin bar; the tomato bar below it has the same numbers: change it too if the tomatoes go on as long as the pumpkins, and then the tomato sentences, the tomato dates in js/features.js and the last day of the chip and the card link as well) change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
 - Strings: about 7 to 9 ids x 4 translations
-- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs pins the pizza rows and the "No pizza" box (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`); it passes without a change when only the end date and the words change (tried), so redo those dates only if you also change the rows or the box; farm-seasons and hero may react to the new end date, run them
+- Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs pins the pizza rows and the "No pizza" box (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`); since 11 Nov 2026 it pins the last day of the "No pizza" box as Nov 8 (the farm is closed from Nov 9), so with A redo the box's dates in it (`const NOPIZZA =` and the Nov 9 lines); farm-seasons and hero may react to the new end date, run them
 
 **B. Fall ends Nov 8: fix the pizza box**
 
-- Fix the "No pizza" box: index.html at `<div data-until="2026-11-30">`: data-until="2026-11-30" -> "2026-11-08", and the sentence index.html at `data-t="tb848cce7"` ("Open for all of October and November.") -> for example "Open through November 8".
+- The "No pizza" box already ends on Nov 8 (done on 11 Nov 2026, from the builder's winter rules: index.html at `<div data-until="2026-11-08">`, and the "Fall schedule" button on the pumpkin page with it). What is left is the sentence index.html at `data-t="tb848cce7"` ("Open for all of October and November.") -> for example "Open through November 8".
 - js/season.js stays as is.
 - Strings: 1 id x 4 translations
-- Tests: dated: tests/dated.test.mjs at `const NOPIZZA =` (selector data-until="2026-11-30"), `Nov 9: "No pizza` (Nov 9 line) and `Dec 1: "No pizza` (Dec 1 line) must follow the new date
+- Tests: dated already follows the date: tests/dated.test.mjs at `const NOPIZZA =` (selector data-until="2026-11-08"), `Nov 8, 11:30 PM` (still shown) and `Nov 9 (the day after` (gone); nothing to redo
 
 ### d50. Christmas tree dates at The GreenHouse
 
