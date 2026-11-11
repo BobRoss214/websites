@@ -6,6 +6,7 @@
  *   - The pizza-reservation rules  (js/features.js draws that countdown; the hero chip is first set here)
  *   A badge with data-live-not="winter" is left out while that season is in progress (the farm's winter badge says "no reservation needed",
  *   which the pumpkin patch page and the first-visit page, written for reservations, do not).
+ *   A badge with data-live-same="greenhouse" is left out when it says the very same as that badge (the hours box of The GreenHouse: in the tree weekends Wise Pie follows its hours).
  *
  * Hours and closures come from js/content.js. Times are Eastern Time, whatever
  * the visitor's own time zone is. In winter (the Christmas tree weekends, js/season.js)
@@ -120,35 +121,38 @@
   /* ------------------------------------------------------------------ *
    * Open-now status for a place that keeps a weekly schedule
    * ------------------------------------------------------------------ */
-  // The hours that count on one day (ymd): the winter ones inside the winter season (the Christmas tree weekends: js/season.js), the usual ones on every other day.
-  // Inside the season the only Saturdays and Sundays are the four tree days, so winter days [6, 0] mean exactly those. hours.pizza.winter can be 'greenhouse':
-  // Wise Pie serves in The GreenHouse's winter hours (no pizza hours of its own were given). `winter` says the day uses the winter hours, which are not official yet.
+  // The hours that count on one day (ymd): the winter ones while winter is the season the page shows (the Christmas tree weekends: js/season.js; the page opens on winter from the day
+  // fall is over, Nov 9, to the last tree day), the usual ones on every other day. In winter a day is an open day only if it is a tree day: the Saturdays and Sundays before the first
+  // tree weekend are not (isOpenDay). hours.pizza.winter can be 'greenhouse': Wise Pie serves in The GreenHouse's winter hours (no pizza hours of its own were given).
+  // `winter` says the day uses the winter hours, which are not official yet.
   const readable = (sch) => !!sch && typeof sch === 'object' && Array.isArray(sch.days) && /^\d{1,2}:\d{2}$/.test(String(sch.open)) && /^\d{1,2}:\d{2}$/.test(String(sch.close));
   function scheduleOn(name, ymd) {
     const base = W.hours && W.hours[name];
     if (!base) return null;
     let win = base.winter;
     if (win === 'greenhouse' && name !== 'greenhouse') win = W.hours.greenhouse && W.hours.greenhouse.winter;   // follows The GreenHouse
-    const season = W.seasons.list.filter((x) => x.id === 'winter')[0];
-    if (season && readable(win) && W.seasons.inWindow(season, ymd)) return { sch: win, winter: true };
+    if (readable(win) && W.seasons.current(ymd) === 'winter') return { sch: win, winter: true };
     return { sch: base, winter: false };
   }
+  const isOpenDay = (day, ymd, dow) => day.sch.days.includes(dow) && (!day.winter || W.seasons.treeDay(ymd));
 
   function scheduleStatus(name, now, at) {   // now: the farm's clock (easternParts), at: the moment itself
     const closures = closedDays(), closedOn = (ymd) => closures.includes(ymd);
     const today = scheduleOn(name, now.ymd), sch = today.sch, open = toMins(sch.open), close = toMins(sch.close);
-    const todayOpen = sch.days.includes(now.dow) && !closedOn(now.ymd);
+    const todayDay = isOpenDay(today, now.ymd, now.dow), todayOpen = todayDay && !closedOn(now.ymd);
     const sameDay = sameDate(at);   // false: the visitor is on another date, so "today" and "tomorrow" would be the farm's
     // the text, with "(Eastern Time)" when the visitor's clock is not the farm's now or at the time it names; notOfficial: the hours shown are the winter ones
     const say = (state, text, named, winter) => ({ state, text: sameClock(at) && sameClock(named) ? text : farmZone(text), notOfficial: !!winter });
     if (todayOpen && now.mins >= open && now.mins < close) return say('open', t('Open now, until {time}', { time: timeLabel(close) }), farmMoment(now.ymd, sch.close), today.winter);
     if (todayOpen && now.mins < open) return say('soon', sameDay ? t('Opens today at {time}', { time: timeLabel(open) }) : t('Opens {day} at {time}', { day: dayName(now.dow), time: timeLabel(open) }), farmMoment(now.ymd, sch.open), today.winter);
-    for (let i = 1; i <= 14; i++) {
+    for (let i = 1; i <= 21; i++) {   // three weeks: from the last day of fall the first tree Saturday is 20 days away
       const dow = (now.dow + i) % 7, ymd = addDays(now.ymd, i), day = scheduleOn(name, ymd);   // the day's own hours: the day after a season's last day may have the usual ones
-      if (!day.sch.days.includes(dow) || closedOn(ymd)) continue;
-      const when = whenLabel(i, dow, ymd, sameDay);
-      const lead = !sameDay ? t('Closed now.') : sch.days.includes(now.dow) && closedOn(now.ymd) ? t('Closed today.') : (todayOpen ? t('Closed now.') : t('Closed today.'));
-      return say('closed', lead + (lang() === 'zh' ? '' : ' ') + t('Opens {day} at {time}', { day: when, time: timeLabel(toMins(day.sch.open)) }), farmMoment(ymd, day.sch.open), day.winter);
+      if (!isOpenDay(day, ymd, dow) || closedOn(ymd)) continue;
+      // In winter a day that is no tree day is not called closed (nobody said The GreenHouse is shut on it): the line only says when it opens next, with the date.
+      const quiet = today.winter && !todayDay;
+      const when = day.winter && (i > 1 || !sameDay) ? dateLabel(ymd) : whenLabel(i, dow, ymd, sameDay);
+      const lead = quiet ? '' : !sameDay ? t('Closed now.') : todayDay && closedOn(now.ymd) ? t('Closed today.') : (todayOpen ? t('Closed now.') : t('Closed today.'));
+      return say(quiet ? 'soon' : 'closed', (lead ? lead + (lang() === 'zh' ? '' : ' ') : '') + t('Opens {day} at {time}', { day: when, time: timeLabel(toMins(day.sch.open)) }), farmMoment(ymd, day.sch.open), day.winter);
     }
     return { state: 'closed', text: t('Closed for now'), notOfficial: false };
   }
@@ -187,6 +191,9 @@
     // data-live-not="winter": a page that is about something else in that season (the pumpkin patch page, the first-visit page: both say "reservation") leaves the badge out while the season is in progress
     const left = s && el.dataset.liveNot ? el.dataset.liveNot.split(/\s+/) : [];
     if (!s || W.seasons.live(when).some((x) => left.indexOf(x.id) >= 0)) { el.hidden = true; return; }
+    // data-live-same="greenhouse": left out when it says the very same as that badge (in the tree weekends Wise Pie has no hours of its own and follows The GreenHouse: one pill in the hours box, not two)
+    const twin = el.dataset.liveSame ? statusFor(el.dataset.liveSame, when) : null;
+    if (twin && twin.text === s.text && !!twin.notOfficial === !!s.notOfficial) { el.hidden = true; return; }
     el.hidden = false;
     el.className = 'live is-' + s.state + (el.dataset.liveClass ? ' ' + el.dataset.liveClass : '');
     el.innerHTML = '<span class="live-dot" aria-hidden="true"></span><span class="live-text"></span>';
@@ -243,10 +250,14 @@
     const S = W.seasons, now = new Date();
     const upcoming = S.list.filter((s) => !S.inWindow(s, now)).sort((a, b) => S.daysUntilStart(a, now) - S.daysUntilStart(b, now))[0];
     if (!upcoming) { box.hidden = true; return; }
-    const days = Math.round(S.daysUntilStart(upcoming, now));
-    const live = S.live(now)[0];
-    $('[data-cd-now]', box).textContent = live ? t('Happening now: {crop}', { crop: t(live.crop) }) : '';
-    $('[data-cd-next]', box).textContent = t('Next up: {crop}. Usually starts {when}.', { crop: t(upcoming.crop), when: t(upcoming.next) });
+    const inSeason = S.live(now)[0], on = S.happening(now)[0];
+    // the winter season also covers the five days between the two tree weekends: the trees are not there then, so the next tree day is what comes next
+    const gap = inSeason && !on ? S.nextTreeDay(now) : '';
+    const dayNo = (ymd) => Date.UTC(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8)) / 864e5;
+    const next = gap ? { crop: inSeason.crop, when: dateLabel(gap) } : { crop: upcoming.crop, when: t(upcoming.next) };
+    const days = gap ? Math.round(dayNo(gap) - dayNo(easternParts(now).ymd)) : Math.round(S.daysUntilStart(upcoming, now));
+    $('[data-cd-now]', box).textContent = on ? t('Happening now: {crop}', { crop: t(on.crop) }) : '';
+    $('[data-cd-next]', box).textContent = t('Next up: {crop}. Usually starts {when}.', { crop: t(next.crop), when: next.when });
     $('[data-cd-days]', box).textContent = String(days);
     $('[data-cd-unit]', box).textContent = days === 1 ? t('day to go') : t('days to go');
     box.hidden = false;
@@ -261,8 +272,9 @@
     const el = $('[data-ann-season]');
     if (!el) return;
     if (!W.clockOk()) { el.textContent = ''; return; }
-    const now = new Date(), live = W.seasons.live(now)[0], nxt = upcomingSeason(now);
-    el.textContent = live ? t('In season: {crop}', { crop: t(live.crop) }) : nxt ? t('Next up: {crop}, usually {when}', { crop: t(nxt.crop), when: t(nxt.next) }) : '';
+    const S = W.seasons, now = new Date(), live = S.live(now)[0], on = S.happening(now)[0], nxt = upcomingSeason(now);
+    const gap = live && !on ? S.nextTreeDay(now) : '';   // between the two tree weekends: the trees are not there, the next tree day is what comes next
+    el.textContent = on ? t('In season: {crop}', { crop: t(on.crop) }) : gap ? t('Next up: {crop}, usually {when}', { crop: t(live.crop), when: dateLabel(gap) }) : nxt ? t('Next up: {crop}, usually {when}', { crop: t(nxt.crop), when: t(nxt.next) }) : '';
   }
 
   /* ------------------------------------------------------------------ *

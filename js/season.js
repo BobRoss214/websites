@@ -95,6 +95,27 @@
     return { now: on ? on.id : '', next: up ? up.id : '' };
   }
 
+  // The winter season is the two tree weekends and the five days between them, but the trees are only on the four weekend days. The Now tag and the season look
+  // follow live() (winter starts on the first tree day), but what says "in season" or "happening now" must not say it on the days in between:
+  //   treeDay(now)      is the farm's day one of the four tree days?
+  //   happening(now)    live(), without winter on a day that is no tree day
+  //   nextTreeDay(now)  the next tree day after today as 'YYYY-MM-DD' ('' when there is none this year)
+  function ymdOfDate(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function treeDay(now) {
+    var t = dayStart(now || new Date()), w = treeWeekends(t.getFullYear());
+    return (t >= w[0].start && t <= w[0].end) || (t >= w[1].start && t <= w[1].end);
+  }
+  function happening(now) {
+    now = now || new Date();
+    var day = treeDay(now);
+    return live(now).filter(function (s) { return s.id !== 'winter' || day; });
+  }
+  function nextTreeDay(now) {
+    var t = dayStart(now || new Date()), w = treeWeekends(t.getFullYear()), days = [w[0].start, w[0].end, w[1].start, w[1].end], i;
+    for (i = 0; i < days.length; i++) if (days[i] > t) return ymdOfDate(days[i]);
+    return '';
+  }
+
   // The season the site shows: the one in progress. Between seasons it is the one that starts NEXT, so the site always turns to the section that is coming up
   // (the builder, Nov 10 2026: "now that fall is over it should open into the winter section ... it should turn to the next section that's coming up").
   // The Now tag, the all-year hero line and the other "only while it is really on" lines still follow live(), not this: between seasons the next season's
@@ -181,7 +202,7 @@
 
   W.rand = rand;
   W.seasons = { list: SEASONS, live: live, upcoming: upcoming, current: current, inWindow: inWindow, daysUntilStart: daysUntilStart, farmDay: farmDay, apply: apply, active: null,
-    tags: tags, treeWeekends: treeWeekends, treeDatesText: treeDatesText, treeYear: treeYear, paintTree: paintTree };
+    tags: tags, treeWeekends: treeWeekends, treeDatesText: treeDatesText, treeYear: treeYear, paintTree: paintTree, treeDay: treeDay, happening: happening, nextTreeDay: nextTreeDay };
   if (W.seasonPicker === undefined) W.seasonPicker = true;
 
   document.documentElement.classList.add('js-scene');
