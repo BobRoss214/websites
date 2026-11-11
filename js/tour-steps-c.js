@@ -471,7 +471,7 @@
     {
       id: 'ch10-kit-timer', order: CHAPTER * 100 + 43, chapter: CHAPTER, page: 'kitchen', target: hook('kit-timer'), skipIfMissing: true,
       title: 'The answer-by timer',
-      text: 'Every ticket has a timer that counts down: green, then amber, then red. When time runs out the ticket is late, turns red and stays at the top until it is answered. An order gets 3 minutes and a change gets 2.',
+      text: 'Each ticket has a timer: green, then amber, then red. At zero the ticket is late, turns red and stays at the top. A late ticket nobody answers can be missed. An order gets 3 minutes and a change gets 2.',
       before: liveScene(function () { rushOn(false); }, hook('kit-timer'))
     },
     {
@@ -499,7 +499,7 @@
     {
       id: 'ch10-kit-sound', order: CHAPTER * 100 + 46, chapter: CHAPTER, page: 'kitchen', target: hook('kit-sound'), skipIfMissing: true,
       title: 'Sound and the late beep',
-      text: 'Sound stays off until you press \u201cSound\u201d. Then a ticket that arrives makes one soft chime, and a late ticket beeps gently every few seconds until it is answered. Press \u201cSound\u201d again, or the M key, to mute.',
+      text: 'Sound stays off until you press \u201cSound\u201d. Then a ticket that arrives makes one soft chime, and a late ticket beeps gently every few seconds until it is answered or missed. Press \u201cSound\u201d again, or the M key, to mute.',
       before: scene(function () { pizzaIs('waiting'); }, hook('kit-sound'))
     },
     {
