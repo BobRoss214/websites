@@ -177,7 +177,8 @@
       const p = tzParts(date, tz || hereTz), c = W.clock(p.h, p.min, L);
       if (c) return c;
     }
-    return formatter(Intl.DateTimeFormat, L === 'es' ? { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz } : { hour: 'numeric', minute: '2-digit', timeZone: tz }).format(date);
+    const s = formatter(Intl.DateTimeFormat, L === 'es' ? { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz } : { hour: 'numeric', minute: '2-digit', timeZone: tz }).format(date);
+    return L === 'es' ? s.replace(/(\d)\s([ap])\.\s?m\./, '$1\u00a0$2. m.') : s;   // the number stays with "p. m.": a line never ends with "5:00"
   };
   // The weekday and the time of day in the visitor's own zone: English "Wed 2:30 AM"; the other languages word the weekday like the fixed texts (miércoles, बुधवार, 周三, Thứ Tư).
   const fmtDayClock = (date) => lang() === 'en'

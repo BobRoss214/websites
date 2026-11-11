@@ -137,9 +137,24 @@
     if (L === 'zh') return same ? ma + a.getDate() + '–' + b.getDate() + '日' : ma + a.getDate() + '日–' + mb + b.getDate() + '日';
     return same ? a.getDate() + '–' + b.getDate() + ' ' + ma : a.getDate() + ' ' + ma + '–' + b.getDate() + ' ' + mb;
   }
-  function treeDatesText(year, lang) {
+  function treeDatesParts(year, lang) {   // the dates in three pieces: the first weekend, the word between, the second weekend
     var L = TREE_MONTH[lang] ? lang : 'en', w = treeWeekends(year);
-    return treeRange(w[0], L) + TREE_AND[L] + treeRange(w[1], L);
+    return [treeRange(w[0], L), TREE_AND[L], treeRange(w[1], L)];
+  }
+  function treeDatesText(year, lang) { return treeDatesParts(year, lang).join(''); }
+  // The words stay what they were (plain spaces: copy and paste, screen readers and the tests read the same text), but each weekend sits in a <span class="nb">
+  // (css/extras.css: white-space: nowrap), so a line breaks between the two weekends and never inside one: not between "28–29" and "nov", "5–6" and "thg 12",
+  // "12" and "月". An element that cannot hold children (the stand-in of tests/logic) just gets the text.
+  function writeTreeDates(el, parts, text) {
+    var doc = el.ownerDocument, i, nb;
+    if (!doc || !doc.createElement || !el.appendChild) { if (el.textContent !== text) el.textContent = text; return; }
+    if (el.textContent === text && el.children && el.children.length === 2) return;   // already written
+    el.textContent = '';
+    for (i = 0; i < parts.length; i++) {
+      if (i % 2) { el.appendChild(doc.createTextNode(parts[i])); continue; }
+      nb = doc.createElement('span'); nb.className = 'nb'; nb.textContent = parts[i];
+      el.appendChild(nb);
+    }
   }
   function treeYear(now) {
     var t = dayStart(now || new Date()), y = t.getFullYear();
@@ -152,10 +167,10 @@
     if (root.nodeType === 1 && (root.hasAttribute('data-tree-dates') || root.hasAttribute('data-tree-bar'))) found.push(root);
     if (root.querySelectorAll && (root.nodeType === 9 || root.firstElementChild)) { list = root.querySelectorAll('[data-tree-dates], [data-tree-bar]'); for (i = 0; i < list.length; i++) found.push(list[i]); }
     if (!found.length || !W.clockOk()) return;   // an unreadable clock does not know the year: the words stay empty, the bars keep the numbers typed in the page
-    var y = treeYear(new Date()), weekends = treeWeekends(y), text = treeDatesText(y, W.lang);
+    var y = treeYear(new Date()), weekends = treeWeekends(y), parts = treeDatesParts(y, W.lang), text = parts.join('');
     for (i = 0; i < found.length; i++) {
       var el = found[i], bar = el.getAttribute('data-tree-bar');
-      if (el.hasAttribute('data-tree-dates') && el.textContent !== text) el.textContent = text;
+      if (el.hasAttribute('data-tree-dates')) writeTreeDates(el, parts, text);
       if (bar === '1' || bar === '2') {
         var wk = weekends[+bar - 1];   // the bar covers both whole days: from the start of the Saturday to the end of the Sunday
         el.style.setProperty('--s', monthPos(wk.start).toFixed(3));

@@ -123,6 +123,8 @@ html:lang(zh) body{text-wrap:pretty}
 @media (max-width:360px){.cal-months{letter-spacing:0;text-transform:none}.cal-months span{margin-left:-3px;margin-right:-3px;margin-inline:-3px;text-align:center}}
 /* A long word that cannot break (an e-mail address) wraps instead of pushing a 320px screen sideways, whatever font the phone falls back to while Nunito loads or if it fails. */
 a[href^="mailto:"],.faq-list .answer,.facts li{overflow-wrap:break-word;overflow-wrap:anywhere}
+/* The Christmas tree dates (js/season.js) come in two pieces, one for each weekend ("28–29 nov", "12月5–6日"): a line may break between them, never inside one. The selector is longer than ".gh-banner span", which sets white-space back to normal on a phone. */
+[data-tree-dates] .nb{white-space:nowrap}
 @media (max-width:640px){.gh-banner{max-width:100%}.gh-banner span{white-space:normal}}
 
 /* ---------------------------------------------------------------- reviews */

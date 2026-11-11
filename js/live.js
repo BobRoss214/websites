@@ -91,7 +91,7 @@
     const own = W.clock && lang() !== 'en' ? W.clock(h, m, lang()) : '';   // Hindi, Chinese, Vietnamese: शाम 5 बजे, 下午 5 点, 5 giờ chiều (i18n.js)
     if (own) return own;
     const s = new Intl.DateTimeFormat(lang(), { hour: 'numeric', minute: m ? '2-digit' : undefined, hour12: true, timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1, h, m)));
-    return lang() === 'en' ? s.replace(/\s?(AM|PM)/, (_, x) => ' ' + x.toLowerCase()) : s;
+    return lang() === 'en' ? s.replace(/\s?(AM|PM)/, (_, x) => ' ' + x.toLowerCase()) : lang() === 'es' ? s.replace(/(\d)\s([ap])\.\s?m\./, '$1\u00a0$2. m.') : s;   // Spanish: the number stays with "p. m." (a no-break space), as in the fixed texts
   }
 
   /* ------------------------------------------------------------------ *
