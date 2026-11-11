@@ -83,7 +83,7 @@ const BUTTONS = { 3: 'pizza', 12: 'flower-jar' };   // group number -> the slug 
  *      The makers and the drinks of the farm's chalkboard (Beer, cider & wine, 10 Nov 2026) are written as the board has them; only the style words of a note ("American light lager" ...) and the name "Dry bubbly white" are translated. */
 const NAMES = ['Tobacco Barn', 'Christmas Hearth', 'Apple Harvest', 'Kokomo',
   'Oskars Blues', 'Southern Range', 'NODA', 'Triple C', 'Wise Man', 'Red clay', 'Bev (Gris)', 'Glitz', 'Noblio', 'Franciscan', 'NA Brooklyn',
-  'Dales light lager', 'Blood orange wheat', 'Hop drop', 'Kei Truck', 'Oktoberfest', '3C', 'Planet Pulp IPA', 'Hoppy Amber', 'Loyal to the dream', 'Shape shifter pumpkin spice',
+  'Dales light lagers', 'Blood orange wheat', 'Hop drop', 'Kei Truck', 'Oktoberfest', '3C', 'Planet Pulp IPA', 'Hoppy Amber', 'Loyal to the dream', 'Shape shifter pumpkin spice',
   'Peach crumble', 'Brambling blackberry', 'Pinot Grigio', 'Sauvignon blanc', 'Cabernet Sauvignon'];
 
 /* ---- an English word that a language of the site uses as its own on the pages outside the Shop too (the test looks for it there, and only then lets the Shop use it) */
