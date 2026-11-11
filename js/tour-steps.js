@@ -228,13 +228,13 @@
     {
       id: 'ch2-strip', order: 201, chapter: 2, page: 'index', target: '.announce',
       title: 'The strip at the very top',
-      text: 'This strip is on every page. It says the farm takes reservations only, and The GreenHouse needs none. It also says what is in season, or what comes next, from the calendar. On a phone, that part is left out. Press a season.',
+      text: 'This strip is on every page. From spring to fall it says the farm takes reservations only and The GreenHouse needs none. In winter it names the tree weekends. It also says what is in season or next (not on a phone). Press a season.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring, April 15 to June 7. The strip begins “In season: Strawberries”. After June 7 it says ‘Next up: Blueberries & sunflowers, usually mid-June’.',
         summer: 'Summer, June 15 to July 10. It says “In season: Blueberries & sunflowers”. After July 10 it says ‘Next up: Pumpkins & tomatoes, usually mid-September’.',
         fall: 'Fall, September 13 to November 8. It says “In season: Pumpkins & tomatoes”. After November 8 it says ‘Next up: Christmas trees at The GreenHouse, usually the last weekend in November’.',
-        winter: 'Winter, from the last Saturday in November to the Sunday after the first Saturday in December. Trees are there on Saturdays and Sundays only. It says “In season: Christmas trees at The GreenHouse”. After that Sunday it says ‘Next up: Strawberries, usually mid-April’.'
+        winter: 'Winter. The strip names the tree weekends, Saturday and Sunday only. It says the farm and The GreenHouse are open then, with no reservation, and “In season: Christmas trees at The GreenHouse”. After the last tree Sunday it says ‘Next up: Strawberries, usually mid-April’.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
@@ -246,7 +246,7 @@
     {
       id: 'ch2-seasons', order: 203, chapter: 2, page: 'index', target: '.hero-copy', also: '#hero-scene',   // the picture is lit too: the cards of the buttons describe it
       title: 'The first screen follows the season',
-      text: 'The page dresses itself for the real season, using the calendar. Headline, line, buttons and picture all follow it. Visitors can peek at other seasons with the buttons at the top. Your site builder can switch them off. Press a season to see it.',
+      text: 'The page dresses itself for the season that is on. Between seasons the picture and buttons turn to the one coming next. Visitors can peek at other seasons with the buttons at the top. Press a season to see it.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
         spring: 'Spring. The line says “It’s strawberry season!” and talks about strawberries, flowers and the animals. The buttons are “Reserve your visit” and “See what’s in season”, with a note about The GreenHouse. In the picture, kids pick strawberries in the rows.',
@@ -285,7 +285,7 @@
     {
       id: 'ch2-reserve', order: 206, chapter: 2, page: 'index', target: '.hero-cta',
       title: 'The big buttons',
-      text: 'Reserve opens your booking tool (Bookeo) in a new tab. Nothing is booked on this site. The white button leads to what is in season. In winter the big red button says “Visit The GreenHouse”, and the top bar keeps its Reserve.'
+      text: 'From spring to fall the big red button is Reserve. It opens your booking tool (Bookeo) in a new window, and nothing is booked on this site. In winter it says “Visit The GreenHouse”. The white button leads to what is in season.'
     },
     {
       id: 'ch2-pill', order: 207, chapter: 2, page: 'index', target: '.hero-note', skipIfMissing: true,   // the note is shown from spring to fall: it is hidden in winter
@@ -318,7 +318,7 @@
     {
       id: 'ch2-facts', order: 211, chapter: 2, page: 'index', target: '.facts',
       title: 'The quick facts under the first screen',
-      text: 'Four quick facts sit under the first screen: where the farm is, that reservations are required, what is in season today and who to email. Each one is a link, so a visitor can get directions, book or write in one tap.'
+      text: 'Four quick facts sit under the first screen: where the farm is, whether a reservation is needed, what is in season and who to email. Each is a link: directions, booking details or an email in one tap.'
     },
 
     /* ---------------------------------------------------------------- 3. This week and the menu */
@@ -370,13 +370,13 @@
     {
       id: 'ch4-places', order: 401, chapter: 4, page: 'index', target: '#visit .choose',
       title: 'Two places, one family',
-      text: 'Visitors choose the farm or The GreenHouse next door. The farm is always by reservation, never walk-in. The GreenHouse needs no reservation and is open Friday to Sunday, 10 am to 8 pm. Press a season to see the farm card change.',
+      text: 'Visitors choose the farm or The GreenHouse next door. The GreenHouse needs no reservation. From spring to fall the farm is by reservation only; on the tree weekends it is open with none. Press a season to see the farm card change.',
       choicesLabel: 'See this part in:',
       choices: seasonWalk({
-        spring: 'Spring. The farm card shows a strawberry: “U-pick organic strawberries, plus u-cut flowers”. The button is “Reserve the farm”. The GreenHouse card never changes.',
+        spring: 'Spring. The farm card shows a strawberry: “U-pick organic strawberries, plus u-cut flowers”. The button is “Reserve the farm”. The GreenHouse card stays the same until winter.',
         summer: 'Summer. A blueberry: “U-pick organic blueberries, plus u-cut sunflowers and flowers”. The button stays “Reserve the farm”.',
         fall: 'Fall. A pumpkin. The card adds wagon rides, the corn pit, a sunn hemp maze and a haunted trail. A “See prices” button joins “Reserve the farm”.',
-        winter: 'Winter. A Christmas tree. “Picking is seasonal”, with strawberries next. The button ‘Reserve the farm’ becomes “Tell me when”, and a new line says “Christmas trees are at The GreenHouse”.'
+        winter: 'Winter. A Christmas tree. The farm is open on the tree weekends, with no reservation and no rides, and the button becomes “Tell me when”. The GreenHouse card shows 11 am to 8 pm with “Not official yet”.'
       }),
       before: seasonsBegin, after: seasonsEnd
     },
@@ -388,12 +388,12 @@
     {
       id: 'ch4-packages', order: 403, chapter: 4, page: 'index', target: '.packages',
       title: 'Choose your package',
-      text: 'The pizza package is $31 and includes 2 Wise Pie pizzas, plus $3 per person ages 3 and up. Farm fun only is $3 per person. Children 2 and younger are free. Pizzas are ready 1 hour after your reservation time.'
+      text: 'The pizza package is $31 and includes 2 Wise Pie pizzas, plus $3 per person ages 3 and up. Farm fun only is $3 per person. Children 2 and younger are free. Pizzas are ready 1 hour after the reservation time.'
     },
     {
       id: 'ch4-addons', order: 404, chapter: 4, page: 'index', target: '.addons',
       title: 'Optional add-ons',
-      text: 'Visitors can add u-pick tomatoes and basil, the corn pit, a wagon ride or the barrel train. The page shows each price. On Thursdays the corn pit is buy one, get one free, with a reservation.'
+      text: 'Add-ons: a wagon ride and the barrel train, and in fall the corn pit and u-pick tomatoes and basil. There are no rides on the tree weekends. On Thursdays the corn pit is buy one, get one free, with a reservation.'
     },
     {
       id: 'ch4-schedule', order: 405, chapter: 4, page: 'index', target: '#schedule', skipIfMissing: true,
@@ -459,7 +459,7 @@
     {
       id: 'ch5-tomatoes', order: 506, chapter: 5, page: 'index', target: '.tomato-copy',
       title: 'Tomatoes and basil',
-      text: 'Visitors pick organic tomatoes and basil themselves, every weekend from mid-September through early November. Tomatoes are $4.50 per pound and basil is $1 per stem. The New labels hide themselves after their end date. This box stays all year.'
+      text: 'Visitors pick organic tomatoes and basil themselves, every weekend from mid-September through early November. Tomatoes are $4.50 per pound and basil is $1 per stem. Some New labels hide themselves on their end date.'
     },
     {
       id: 'ch5-varieties', order: 507, chapter: 5, page: 'index', target: '#variety-filters', also: '#varieties',   // the heading above the buttons: it says how many varieties there are

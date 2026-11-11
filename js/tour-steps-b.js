@@ -147,14 +147,17 @@
       target: '#greenhouse .gh-features',
       title: 'The GreenHouse: next door, no reservation',
       text: 'The GreenHouse is next door and needs no reservation, so visitors without a booking have a place to go. ' +
-            'It does not include farm access. Here is what they will find: pizza, ice cream, beer, wine and cider, a playground and goats.'
+            'From spring to fall it has no farm access. ' +
+            'It offers pizza, ice cream, beer, wine and cider, a playground, goats and Christmas trees in season.'
     },
     {
       id: 'ch6-hours', order: 605, chapter: 6, page: 'index',
       target: '#greenhouse .gh-hours',
       title: 'GreenHouse hours and the Open now line',
-      text: 'Friday to Sunday, 10 am to 8 pm. The line under it says Open now or Closed today. ' +
-            'If weather closes you, your site builder can switch on a closure. The page also sends visitors to Instagram for sudden changes, so post there too.'
+      text: 'From spring to fall: Friday to Sunday, 10 am to 8 pm. ' +
+            'In winter this box shows the tree weekends instead. ' +
+            'A line under the hours says Open now or Closed today. ' +
+            'Visitors are sent to Instagram for sudden changes, so post there too.'
     },
     {
       id: 'ch6-tree-pizza', order: 606, chapter: 6, page: 'index',
@@ -193,7 +196,7 @@
       id: 'ch7-note', order: 702, chapter: 7, page: 'index',
       target: '#shop .shop-note',
       title: 'The price note',
-      text: 'This note says prices are for this fall and can change. ' +
+      text: 'This note says prices are for fall and can change. ' +
             'It also says anything marked “Prices coming soon” is being confirmed. ' +
             'Questions go to the farm’s email, so you may hear about a price that looks wrong.'
     },
@@ -349,7 +352,8 @@
       id: 'ch9-phone', order: 903, chapter: 9, page: 'index',
       target: null,
       title: 'Easy on phones, and for everyone',
-      text: 'On a phone, the menu is one button and a bottom bar offers Reserve, Directions and Email. Try it on your phone. ' +
+      text: 'On a phone, the menu is one button and a bottom bar offers Reserve (in winter, GreenHouse), Directions and Email. ' +
+            'Try it on your phone. ' +
             'The page also works with a keyboard, a screen reader and bigger text.'
     },
     {
