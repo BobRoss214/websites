@@ -9,7 +9,8 @@ import { run, open, ok, okSoon, until, fetchRetry } from './lib.mjs';
 const NOTICE = '.notice[data-until="2026-10-04"]';                 // "Open now: pizza reservations for Oct 2 & 3 ..."
 const ROW = (d) => `.sched-table tr[data-release="${d}"]`;          // the four weekends of the pizza table
 const TABLE = '.sched-table';
-const NOPIZZA = '.schedule-grid > div[data-until="2026-11-30"]';    // "No pizza: open for all of October and November"
+const NOPIZZA = '.schedule-grid > div[data-until="2026-11-08"]';    // "No pizza: open for all of October and November": it ends with fall, on Nov 8 (the farm is closed from Nov 9 until the Christmas tree weekends)
+const SCHEDULE = '#schedule';                                        // the whole "Fall 2026 reservation schedule" box: it hides itself when its last dated line has gone (data-until-empty)
 const DAYS = '.side-note[data-until-empty]';                         // the "Fall 2026 special days" box
 const ECD = 'li[data-until="2026-10-06"]', HSD = 'li[data-until="2026-11-03"]';
 
@@ -64,11 +65,17 @@ await run('dated', async ({ browser, base, errs }) => {
   ok('Nov 2: only the last weekend (Oct 30-Nov 8) is left, and the Home School Day', !s.r1 && !s.r2 && !s.r3 && s.r4 && s.table && s.hsd && !s.ecd && s.days && s.nopizza, 'shown: ' + show(s));
   await p.context().close();
 
+  p = await at('2026-11-08T23:30:00-05:00');   // the last day of fall and of the last pizza weekend (Oct 30-Nov 8): the last day of "No pizza" too
+  s = await seen(p);
+  ok('Nov 8, 11:30 PM Eastern (the last day of fall): the last weekend row, "No pizza" and the schedule box are all still shown', s.r4 === true && s.table === true && s.nopizza === true && (await p.locator(SCHEDULE).first().isVisible()) === true, 'shown: ' + show(s));
+  await p.context().close();
+
   p = await at('2026-11-09T12:00:00-05:00');
   s = await seen(p);
   ok('Nov 9: every weekend is gone, so the table is gone too (no empty table)', !s.r4 && !s.table, 'shown: ' + show(s));
   ok('Nov 9: both special days are gone, so is their box', !s.ecd && !s.hsd && !s.days, 'shown: ' + show(s));
-  ok('Nov 9: "No pizza: all of October and November" is still shown (until Nov 30)', s.nopizza === true, 'shown: ' + show(s));
+  ok('Nov 9 (the day after the last day of fall): "No pizza: all of October and November" is gone (it no longer stays until Nov 30: the farm is closed until the Christmas tree weekends)', s.nopizza === false, 'shown: ' + show(s));
+  ok('Nov 9: nothing dated is left in the schedule box, so the whole box is gone', (await p.locator(SCHEDULE).first().isVisible()) === false, 'shown: ' + show(s));
   await okSoon('Nov 9: the "Site check" box lists the lines that went away', () => box(p), (v) => /Site check: nothing is broken/.test(v) && /Hidden since/.test(v) && !/to fix/.test(v));
   await p.context().close();
 
@@ -76,7 +83,7 @@ await run('dated', async ({ browser, base, errs }) => {
   await p.click('#season-switch button[data-season="fall"]');
   await okSoon('Dec 1 (fall panel picked): the fall panel is in view', () => p.locator('.season-panel[data-season="fall"]').isVisible(), (v) => v === true);
   s = await seen(p);
-  ok('Dec 1: "No pizza: all of October and November" is gone as well', s.nopizza === false, 'shown: ' + show(s));
+  ok('Dec 1: "No pizza: all of October and November" is gone as well, and so is the schedule box (both went on Nov 9)', s.nopizza === false && (await p.locator(SCHEDULE).first().isVisible()) === false, 'shown: ' + show(s));
   await p.context().close();
 
   // ---- a page left open overnight catches up by itself (the page checks once a minute)
@@ -172,6 +179,8 @@ await run('dated', async ({ browser, base, errs }) => {
   };
   let ft = await target('2026-11-08T12:00:00-05:00');
   ok('Nov 8 2026 (last day of fall): the "Fall schedule" button is shown and the schedule box it opens is there', ft.btn && ft.there, JSON.stringify(ft));
+  ft = await target('2026-11-09T12:00:00-05:00');
+  ok('Nov 9 2026 (the day after): the "Fall schedule" button is gone and so is the schedule box it opened (no link to nothing)', !ft.btn && !ft.there, JSON.stringify(ft));
   ft = await target('2027-09-20T12:00:00-04:00');
   ok('Sep 20 2027 (fall again, no 2027 weekends in the box): no "Fall schedule" button that would open nothing', !ft.btn && !ft.there, JSON.stringify(ft));
 });

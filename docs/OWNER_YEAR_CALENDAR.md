@@ -62,7 +62,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 
 ### Wed Oct 7, 2026 to Mon Nov 9, 2026: lines hide one by one
 
-- **By itself:** Wed Oct 7, 2026: the "Exceptional Children Day" line. Mon Oct 12, 2026, Mon Oct 19, 2026 and Mon Oct 26, 2026: the pizza rows. Wed Nov 4, 2026: the "Home School Day" line. When every line in the "Fall 2026 special days" box has gone, the box hides itself. Mon Nov 9, 2026: the "New: u-pick tomatoes & basil" chip and the "New" badge.
+- **By itself:** Wed Oct 7, 2026: the "Exceptional Children Day" line. Mon Oct 12, 2026, Mon Oct 19, 2026 and Mon Oct 26, 2026: the pizza rows. Wed Nov 4, 2026: the "Home School Day" line. When every line in the "Fall 2026 special days" box has gone, the box hides itself. Mon Nov 9, 2026: the "New: u-pick tomatoes & basil" chip, the "New" badge and the "No pizza" block (and with it the whole schedule box, see the next entries).
 - **You:** nothing.
 - **Where:** `index.html` at `data-t="tcda0fa57"` and `data-t="te8f8cb7a"` (the two special days). The full list is in section 9.
 - **If you forget:** nothing visible. `?check` lists them in its green box ("remove them when you like").
@@ -81,19 +81,19 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
 - **Where:** `js/season.js` at `id: 'fall'` (the end date is on that line; ask Claude); `js/content.js` at `greenhouse: { days: [5, 6, 0]` (the green badges), then the words (README row "Change opening hours"; README, section "Change a fact everywhere"), then `python3 tools/check_facts.py hours`.
 - **If you forget:** from Nov 9 the farm's "Reserve" buttons are mostly gone, although you still take reservations. The badges keep the usual hours until the trees start, then the winter hours.
 
+### Mon Nov 9, 2026: the schedule box hides
+
+- **By itself:** the "No pizza" block (`data-until="2026-11-08"`) ends on the same day as the last pizza row, Nov 8, the last day of fall (the farm is closed from Nov 9 until the Christmas tree weekends). Nothing dated is left, so the whole "Fall 2026 reservation schedule" box hides. The sentence "See the current fall schedule" in the home page FAQ hides with it (`data-needs="schedule"`), so no link leads nowhere.
+- **You:** nothing. If you plan winter pizza dates, add rows and the box comes back.
+- **Where:** `index.html` at `data-t="t6fab8a7b"` (the sentence with the link); `pages/pumpkin-patch.html` at `data-until="2026-11-08"` (2 places).
+- **If you forget:** nothing. The sentence comes back by itself when a schedule box is back.
+
 ### Sat Nov 28, 2026: the Christmas tree weekends start
 
 - **By itself:** the winter season is in progress from Sat Nov 28, 2026 to Sun Dec 6, 2026: the two tree weekends (Nov 28 and 29, Dec 5 and 6) and the five days between them. The top bar says "In season: Christmas trees at The GreenHouse" and the headline becomes "Wise Acres Christmas trees". The "This week" box lists the trees "In season" on the four tree days only (on the other days it says "Usually starts Dec 5"). The GreenHouse and Wise Pie say they are open 11 am to 8 pm on those four days, with the small label "Not official yet" next to the hours, and the farm badge says "Open today. No reservation needed". Fri Nov 27, 2026 is not a tree day. In the top menu the "Christmas trees" line keeps its bold and its red dot until Dec 6, and a screen reader stops saying "Coming soon" after it.
 - **You, by Wed Nov 25, 2026:** confirm the tree dates and prices (**d50**, **d54**) and the hours that say "Not official yet" (**d09**, **d51**). Add a short note to `week` ("Trees this weekend"; `updated` is today).
 - **Where:** `js/content.js` at `week: {},` (2 places: the setting and the note about it); `index.html` at `data-t="t59d83261"` (the tree dates in the Shop). README row "Say what is ripe / spots left this week".
 - **If you forget:** the site says trees are in season from Nov 28 whatever your stock, and the Shop line says "Prices coming soon".
-
-### Tue Dec 1, 2026: the schedule box hides
-
-- **By itself:** the "No pizza" block (`data-until="2026-11-30"`) was the last dated line, so the whole "Fall 2026 reservation schedule" box hides. The sentence "See the current fall schedule" in the home page FAQ hides with it (`data-needs="schedule"`), so no link leads nowhere.
-- **You:** nothing. If you plan winter pizza dates, add rows and the box comes back.
-- **Where:** `index.html` at `data-t="t6fab8a7b"` (the sentence with the link); `pages/pumpkin-patch.html` at `data-until="2026-11-30"` (2 places).
-- **If you forget:** nothing. The sentence comes back by itself when a schedule box is back.
 
 ### Mon Dec 7, 2026: the tree weekends are over, and the page turns to spring
 
@@ -162,7 +162,7 @@ Before the launch day (the date is not set): the decisions in `docs/LAUNCH_CHECK
   3. The schedule: the "No pizza" block's words and last day, the pumpkin page button's last day (they must match), and the first pizza rows.
   4. The new menu picture, under a new file name.
   5. The Bookeo times; the tomatoes and the haunted trail (**d48**); the fall hours (**d51**); Thai night (**d08**).
-- **Where:** `python3 tools/check_facts.py year` lists the 2026 places. `index.html` at `data-t="t7f10df40"` (special days heading), `data-t="t65d35823"` (schedule heading), `data-t="tb848cce7"` (the "No pizza" words) and `data-t="t4f7c68ac"` (Fall Menu heading); `pages/pumpkin-patch.html` at `data-until="2026-11-30"` (2 places). README, section "A new year, a new season"; README row "Open a new pizza weekend". Every changed English sentence needs its four translations (README, section "Change one sentence and its translations, step by step").
+- **Where:** `python3 tools/check_facts.py year` lists the 2026 places. `index.html` at `data-t="t7f10df40"` (special days heading), `data-t="t65d35823"` (schedule heading), `data-t="tb848cce7"` (the "No pizza" words) and `data-t="t4f7c68ac"` (Fall Menu heading); `pages/pumpkin-patch.html` at `data-until="2026-11-08"` (2 places). README, section "A new year, a new season"; README row "Open a new pizza weekend". Every changed English sentence needs its four translations (README, section "Change one sentence and its translations, step by step").
 - **If you forget:** from Jul 11 visitors see a fall page with 2026 prices and no schedule box.
 
 ### Mon Aug 23, 2027 to Sun Sep 12, 2027: the "This week" box counts down by itself
@@ -303,9 +303,8 @@ A line with `data-until="D"` hides itself on the day after D. A pizza row has bo
 | `data-release="2026-10-13"` `data-until="2026-10-18"` | pizza row: opens Oct 13, visits Oct 16 to 18 | Mon Oct 19, 2026 |
 | `data-release="2026-10-20"` `data-until="2026-10-25"` | pizza row: opens Oct 20, visits Oct 23 to 25 | Mon Oct 26, 2026 |
 | `data-release="2026-10-27"` `data-until="2026-11-08"` | pizza row: opens Oct 27, visits Oct 30 to Nov 8 | Mon Nov 9, 2026 |
-| `data-until="2026-11-08"` | the "New: u-pick tomatoes & basil" chip and the "New" badge (2 places) | Mon Nov 9, 2026 |
+| `data-until="2026-11-08"` | the "New: u-pick tomatoes & basil" chip and the "New" badge (2 places), the "No pizza" block, and the "Fall schedule" button on the pumpkin page (it also hides on Nov 9 with the fall season) | Mon Nov 9, 2026 |
 | `data-until="2026-11-03"` | the "Home School Day" line | Wed Nov 4, 2026 |
-| `data-until="2026-11-30"` | the "No pizza" block (the "Fall schedule" button on the pumpkin page carries the same date, but it already hides on Nov 9 with the fall season) | Tue Dec 1, 2026 |
 | `data-until="2026-12-31"` | the "New this year" ribbon | Fri Jan 1, 2027 |
 
 ### Facts this page relies on
