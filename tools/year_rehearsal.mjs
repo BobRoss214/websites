@@ -391,8 +391,10 @@ step('R06', 'Fri Nov 20, 2026: the owner changes the GreenHouse hours (the usual
   S.owner.edit('js/content.js', "greenhouse: { days: [5, 6, 0], open: '10:00', close: '20:00', winter:", "greenhouse: { days: [5, 6, 0], open: '10:00', close: '18:00', winter:");
   const cf = S.owner.py('tools/check_facts.py', 'hours');
   S.check('python3 tools/check_facts.py hours says the words still disagree with the new closing time (the calendar: change them in both places)', cf.code === 1 && /HOURS: THE GREENHOUSE[\s\S]*DIFFERENT: 2 answers/.test(cf.out), cf.out.split('\n').filter((l) => /DIFFERENT|OK:/.test(l)).slice(0, 3).join(' | '));
-  const fri = await dayAt(S, '2026-11-20', '18:30');
-  S.check('Friday 6:30 PM with the new hours: the GreenHouse badge says closed', badgeStates(fri, 'greenhouse').every((c) => c !== 'open') && badgeStates(fri, 'greenhouse').length > 0, JSON.stringify(fri.live.greenhouse));
+  // the usual hours matter on the days when the page does not show winter: Fri Dec 11 (the page shows spring again); on Fri Nov 20 the winter badge only says when the tree weekends begin
+  const fri = await dayAt(S, '2026-12-11', '18:30'), nov20 = await dayAt(S, '2026-11-20', '18:30');
+  S.check('Friday 6:30 PM with the new hours (Dec 11, usual hours): the GreenHouse badge says closed', badgeStates(fri, 'greenhouse').every((c) => c !== 'open') && badgeStates(fri, 'greenhouse').length > 0, JSON.stringify(fri.live.greenhouse));
+  S.check('the change of the usual hours does not touch the winter badge: on Fri Nov 20 the GreenHouse only says when the tree weekends begin ("Opens Sat, Nov 28 at 11 am", never Friday, never "Closed")', nov20.live.greenhouse && nov20.live.greenhouse.texts.length > 0 && nov20.live.greenhouse.texts.every((x) => /^Opens Sat, Nov 28 at 11 am/.test(x)), JSON.stringify(nov20.live.greenhouse));
   S.owner.edit('js/content.js', "close: '18:00', winter:", "close: '20:00', winter:");
 });
 
@@ -589,12 +591,12 @@ step('R25', 'Sat Jan 1, 2028: the year turns again', { group: 'itself' }, async 
 /* ---- 5. and 6. any day, and what never switches off ------------------------------------------- */
 
 step('A1', 'Section 5: closing for rain and other surprises', { group: 'section' }, async (S) => {
-  S.owner.setting('closures', "['2026-10-11', '2026-11-09..2026-11-15']");
+  S.owner.setting('closures', "['2026-10-11', '2026-10-16..2026-10-18']");
   S.owner.setting('notice', "'Closed Oct 11 for rain.'");
   S.owner.setting('noticeUntil', "''");
-  const [oct, nov, late] = await Promise.all([dayAt(S, '2026-10-11', '12:00'), dayAt(S, '2026-11-12', '12:00'), dayAt(S, '2027-03-01', '12:00', { query: 'check' })]);
+  const [oct, nov, late] = await Promise.all([dayAt(S, '2026-10-11', '12:00'), dayAt(S, '2026-10-16', '12:00'), dayAt(S, '2027-03-01', '12:00', { query: 'check' })]);
   S.check('a closed day shows all three places closed (Oct 11 is a Sunday)', ['greenhouse', 'pizza', 'farm'].every((n) => badgeStates(oct, n).length && badgeStates(oct, n).every((c) => c === 'closed')), JSON.stringify(oct.live));
-  S.check('a run of days (Nov 9..15): Thursday Nov 12 shows the farm closed', ['greenhouse', 'pizza'].every((n) => badgeStates(nov, n).every((c) => c === 'closed')), JSON.stringify(nov.live));
+  S.check('a run of days (Oct 16..18): Friday Oct 16 shows all three places closed', ['greenhouse', 'pizza', 'farm'].every((n) => badgeStates(nov, n).length && badgeStates(nov, n).every((c) => c === 'closed')), JSON.stringify(nov.live));
   S.check('a bar with no noticeUntil stays on a later day (Mar 1, 2027)', /Closed Oct 11 for rain\./.test(late.notice), late.notice);
   S.check('?check does not complain about a bar with no last day', !/noticeUntil/.test(late.siteCheck), late.siteCheck);
   S.owner.setting('noticeUntil', "'2026-10-11'");
