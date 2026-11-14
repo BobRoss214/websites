@@ -74,6 +74,7 @@ export function collect(cfg) {
 
   out.season = document.documentElement.getAttribute('data-season') || '';
   out.live = W.seasons ? W.seasons.live(new Date()).map((s) => s.id) : [];
+  out.happening = W.seasons && W.seasons.happening ? W.seasons.happening(new Date()).map((s) => s.id) : out.live;   // winter is not "happening" on the five days between the two tree weekends
   const hero = document.querySelector('#top, .page-hero');
   const h1 = all('h1')[0];
   out.h1 = text(h1);
@@ -187,7 +188,7 @@ const uniqSorted = (a) => Array.from(new Set(a)).sort();
 /** The part of one page's state that decides whether two days "look the same" (numbers that tick up every day, and wording that follows the weekday, are not part of it). */
 export function fieldsOf(fp) {
   return {
-    season: fp.season, live: fp.live, h1: fp.h1, sub: fp.sub, heroNote: fp.heroNote, heroButtons: fp.heroButtons, topbar: fp.topbar, notice: fp.notice, year: fp.year, nowTag: fp.nowTag,
+    season: fp.season, live: fp.live, happening: fp.happening, h1: fp.h1, sub: fp.sub, heroNote: fp.heroNote, heroButtons: fp.heroButtons, topbar: fp.topbar, notice: fp.notice, year: fp.year, nowTag: fp.nowTag,
     badges: uniqSorted(fp.badges.map((b) => b.split(':')[0])), chip: counts(fp.chip), relBox: counts(fp.relBox), countdown: digits(fp.countdown).replace(/\bN days? to go/i, 'N days to go'),
     week: fp.week ? { crops: fp.week.crops.map(digits), note: fp.week.note, days: fp.week.days } : null,
     schedule: fp.schedule, signup: fp.signup, signupForm: fp.signupForm, reserve: fp.reserve.map((r) => r.text + ' → ' + r.to + (r.target ? ' ' + r.target : '')).sort(),
@@ -325,7 +326,7 @@ async function seasonSeams(session, from, to) {
   const states = await p.evaluate((list) => list.map((t) => {
     const S = window.WISE_ACRES.seasons, d = new Date(t);
     const live = S.live(d).map((x) => x.id), next = S.list.filter((x) => !S.inWindow(x, d)).sort((a, b) => S.daysUntilStart(a, d) - S.daysUntilStart(b, d))[0];
-    return S.current(d) + '|' + live.join(',') + '|' + (next ? next.id : '');
+    return S.current(d) + '|' + live.join(',') + '|' + (S.happening ? S.happening(d).map((x) => x.id).join(',') : live.join(',')) + '|' + (next ? next.id : '');
   }), iso);
   await p.context().close();
   const seams = [];
@@ -447,7 +448,7 @@ function phases(res) {
 
 function liveLine(home) {
   const crop = { spring: 'strawberries', summer: 'blueberries and sunflowers', fall: 'pumpkins and tomatoes', winter: 'Christmas trees' };
-  if (home.live.length) return SEASON_WORD[home.season] + ' look, ' + home.live.map((x) => SEASON_WORD[x].toLowerCase() + ' (' + crop[x] + ')').join(' and ') + ' in season';
+  if (home.live.length) return SEASON_WORD[home.season] + ' look, ' + home.live.map((x) => SEASON_WORD[x].toLowerCase() + ' (' + crop[x] + ')').join(' and ') + (home.happening && !home.happening.length ? ' in progress, but no trees today (a day between the two tree weekends)' : ' in season');
   return SEASON_WORD[home.season] + ' look, but no season in progress (the page opens on the season that starts next)';
 }
 
@@ -588,8 +589,9 @@ export function problemsOf(run, day) {
     if (f.nowTag && !f.live.includes(f.nowTag)) add('seasonWord', pg, 'the “now” tag sits on ' + SEASON_WORD[f.nowTag] + ' but ' + (f.live.length ? list(f.live) + ' is' : 'no season is') + ' in progress');
   }
   const inSeasonBar = /^In season/.test(home.topbar), nextBar = /^Next up/.test(home.topbar);
-  if (home.topbar && inSeasonBar !== home.live.length > 0) add('contradict', 'index.html', 'top bar says ' + quote(home.topbar) + ' but the season code says ' + (home.live.length ? list(home.live) + ' is in progress' : 'nothing is in progress'));
-  if (home.countdown && /HAPPENING NOW/i.test(home.countdown) !== home.live.length > 0) add('contradict', 'index.html', 'the countdown box says ' + (/HAPPENING NOW/i.test(home.countdown) ? '“happening now”' : 'nothing is happening') + ' but the season code disagrees');
+  const happening = home.happening || home.live;   // the trees are only on the tree days: on the five days between the weekends the winter season is in progress but nothing is "happening"
+  if (home.topbar && inSeasonBar !== happening.length > 0) add('contradict', 'index.html', 'top bar says ' + quote(home.topbar) + ' but the season code says ' + (happening.length ? list(happening) + ' is in season' : 'nothing is in season'));
+  if (home.countdown && /HAPPENING NOW/i.test(home.countdown) !== happening.length > 0) add('contradict', 'index.html', 'the countdown box says ' + (/HAPPENING NOW/i.test(home.countdown) ? '“happening now”' : 'nothing is happening') + ' but the season code disagrees');
   const farmReserve = home.reserve.filter((r) => /^Reserve (your visit|the farm|a (fall|spring|summer|strawberry) visit)$/i.test(r.text));
   if (!home.live.some((x) => x !== 'winter') && farmReserve.length) add('reserveClosed', 'index.html', 'shown: ' + list(Array.from(new Set(farmReserve.map((r) => quote(r.text)))).sort()) + (home.live.length ? ' (only winter, the Christmas trees, is in progress)' : ' (no season in progress)'));
   const tomatoTag = home.tags.some((t) => /tomatoes/i.test(t)) && home.dated.some((d) => /tomatoes/i.test(d));

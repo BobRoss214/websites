@@ -28,13 +28,13 @@ The answer used in each replay is an example (for example a price of $35, a clos
 
 ## What was tried, and what was not
 
-The playbook has 250 answers (the 92 questions d01 to d92). 110 were replayed. 140 were not:
+The playbook has 252 answers (the 93 questions d01 to d93). 110 were replayed. 142 were not:
 
 | Not replayed | Answers | Why |
 |---|---|---|
-| No change (the answer leaves the files as they are) | 86 | Nothing to do, so nothing to try. |
+| No change (the answer leaves the files as they are) | 87 | Nothing to do, so nothing to try. |
 | A code change only Claude can make | 24 | The entry gives the owner no file steps to follow (d08 A, d09 B and C, d10 C, d32 A, d46 C, d48 C, d50 B and C, d59 A, d64 B and C, d67 B, d68 C, d69 A, d70 B, d72 A and B, d78 B, d81 A, d82 A, d86 C, d88 C, d90 B). |
-| An optional patch | 9 | `node tests/run-all.mjs option-patches` tries them (d01 A and B, d05 A and C, d24 B, d25 A, d30 A, d88 B, d89 A). Four more, d65 C and D, d68 A and d86 B, are replayed (see "Optional patches"). |
+| An optional patch | 10 | `node tests/run-all.mjs option-patches` tries them (d01 A and B, d05 A and C, d24 B, d25 A, d30 A, d88 B, d89 A, d93 A). Four more, d65 C and D, d68 A and d86 B, are replayed (see "Optional patches"). |
 | Her own words or numbers, the same steps as another answer | 16 | d07 C, d26 C, d37 B, d45 C, d53 C, d58 C, d74 C, d75 C, d76 C, d78 C, d90 C, d91 B and C, d92 B and C, and d31 A (the optional credit: as d61 B). |
 | The same kind of edit as another answer, in many sentences | 2 | d79 B and d80 B: about eight and about twenty sentences, found by the consistency test, like d51 B. |
 | Needs her own photos or her whole 2027 content | 3 | d12 A, d34 A and d24 A. |

@@ -49,7 +49,7 @@ A group may also have a line `Note under the band: words` (the short sentence th
 Note under the band: Every beer, hard cider and wine is the same price. What's pouring changes.
 (Do not put an age statement; the page says nothing about an age, so this group says nothing. No place line: the page does not say where the beer, cider and wine are sold, so the band has none, and nobody may invent one. The older line "Please do not bring your own alcohol" is in the foot of this group, with the drink icon.)
 #### Beer
-- dales-light-lager | Dales light lager | $6 | Oskars Blues. American light lager, 4.2% ABV, 12 oz. | a pale straw can (no logo, no lettering)
+- dales-light-lager | Dales light lagers | $6 | Oskars Blues. American light lager, 4.2% ABV, 12 oz. | a pale straw can (no logo, no lettering)
 - blood-orange-wheat | Blood orange wheat | $6 | Southern Range. Light wheat ale, 5.3% ABV. | a hazy orange pint glass with an orange slice
 - hop-drop | Hop drop | $6 | NODA. West coast style IPA, 7.2% ABV. | a golden IPA pint glass and a green hop cone
 - kei-truck | Kei Truck | $6 | Triple C. Japanese style rice lager, 4.2% ABV. | a pale rice lager in a tall pilsner glass

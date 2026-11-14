@@ -70,6 +70,18 @@ tests/README.md (add the words to the end of what the row says; each row is name
 tests/browser-support.table.json: nothing from this helper (the code uses only features already in the table).
 tools/mutants.json: main's. The mutants that named `thanksgivingFriday` or the old end date must be re-made (nothing here was changed in that file).
 
+## After the merge (the winterfix pass, 10 Nov 2026: a fresh clone of integ, branch `winterfix`)
+
+main merged this branch and winter-text; the pass made these things again on the merged tree:
+- `patches/optional/winter-A-hide-fall-booking.patch`: the Question 37 hunk of `docs/QUESTIONS_FOR_THE_FARM.md` made again against the merged document; it and `reserve-window.patch` apply (`git apply --check`).
+- The README.md and tests/README.md texts below (R1-R3, T1-T9) and winter-text's README lines (Christmas trees row, the new "Not official yet" label row, the winter wording row) are applied. Two README sentences were split for plain-lint (40 words).
+- A new README row for the hours of the tree weekends (`hours.greenhouse.winter`, `change_fact.py hours "Sat-Sun, 11 am-8 pm" ...`).
+- The merge had left two copies of some bullets (beerwine's words with winter-text's old ids, and the older words with the new ids): `docs/DECISION_PLAYBOOK.md` (d54 "Depends on", d19 A and B) and `docs/QUESTIONS_FOR_THE_FARM.md` (question 53). They are one bullet again: beerwine's words, winter-text's ids (`t8dcdef56`, `t59d83261`).
+- `pages/first-visit.html` had two farm badges (the merge kept both): one is left, with `data-live-not="winter"`.
+- `tests/live.test.mjs`: at 9 pm on the last tree day the farm badge still says "Open today. No reservation needed" (it has no hours), as `tests/logic.test.mjs` says.
+- `docs/WHAT_VISITORS_SEE_WHEN.md` made again with `node tools/season_calendar.mjs --jobs 2` (the data block lists the 11 season days); `owner-calendar` and `calendar-doc` read it.
+- No stale "the Friday after Thanksgiving" line is left in `lang/src` (the key was renamed here). `winter-scan.sh` says 0 for every place of this branch; its Part B shows one empty row (tomato 0, Friday 0): a scanner artefact.
+
 ## After the merge with winter-text (a resolved trial merge exists)
 
 `python3 /tmp/wl-scratch/make_trial.py /tmp/some-new-folder` clones this branch, merges the `wintertext` branch of /tmp/wintertext-clone, resolves the 16 conflicting files as below, runs the pipeline (0 missing in es hi vi zh), checks both patches apply

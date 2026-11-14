@@ -41,6 +41,9 @@
  *      every group fades in when it is scrolled to (none stays invisible)
  *   8  reading aids: pictures hidden from screen readers, every card in a list item, heading order, readable price text (and axe, when it is installed)
  *   9  (information) how tall #shop is on a computer and on a phone
+ *  10  winter (the page clock on 1 Dec): the farm says it is open only the two tree weekends, no reservation, no rides, tomatoes done, so the farm visit group (rides,
+ *      ride tokens, reservation, tomatoes, Thursday to Sunday) and its jump button are hidden together; no jump button is left without its group or the other way round;
+ *      nothing the Store shows says ride, wagon, barrel train, tomato, reservation-only, walk-in, Reserve your visit or Thursday; in summer the group and its button are there
  * The names of the page's own parts (the class names) are in SEL below: if the markup is renamed, change them there and nowhere else. */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -295,10 +298,10 @@ function readLayout(SEL) {
   const type = { name: minPx(SEL.name), price: minPx(SEL.hand), note: minPx(SEL.note) };
   return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, flow, touching, outside, ragged, farm, broken, type };
 }
-function readFill(SEL) {   // how much of each card's white box its own content covers: from the top of its first part (picture, name and price, note) to the bottom of its last, over the height of the card inside its border; and, for a wide card, how far across its width the picture and the words run (a note's box always runs to the card's edge, so the words themselves are measured)
+function readFill(SEL) {   // (the transparent button.shop-open of the pop-up covers the whole card: it is not content and is skipped, or every card would read 100%)  how much of each card's white box its own content covers: from the top of its first part (picture, name and price, note) to the bottom of its last, over the height of the card inside its border; and, for a wide card, how far across its width the picture and the words run (a note's box always runs to the card's edge, so the words themselves are measured)
   return [...document.querySelectorAll('#shop ' + SEL.card)].filter((c) => c.getClientRects().length).map((c) => {
     let top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity;
-    for (const k of c.children) { const r = k.getBoundingClientRect(); if (r.height < 1) continue; top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); }
+    for (const k of c.children) { if (k.classList.contains('shop-open')) continue; const r = k.getBoundingClientRect(); if (r.height < 1) continue; top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); }
     const tw = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
     for (let n = tw.nextNode(); n; n = tw.nextNode()) {
       if (!n.data.trim()) continue;
@@ -644,9 +647,10 @@ await run('shop', async ({ browser, base, errs }) => {
   const wrongPic = [...where].map(([s, l]) => ({ q: PRODUCTS.find((q) => q.slug === s), c: l[0] })).filter(({ q, c }) => { const ids = c.uses.map((u) => u.replace(/^#/, '')); return !q.symbols.some((x) => ids.includes(x)) || ids.some((i) => !q.symbols.includes(i)); });
   ok('3: each card shows the picture of its own product (p-<slug>; the wagon ride, barrel train, corn pit and sunn hemp maze use the pictures the list names)', wrongPic.length === 0, few(wrongPic.map(({ q, c }) => `${q.slug}: shows ${c.uses.join(' ') || 'no picture'}, list says ${q.symbols.map((x) => '#' + x).join(' or ')}`)));
   // a drink's picture is drawn with plain shapes: no letters (<text>), no embedded picture (<image>), no copy of another drawing (<use>), no style or gradient list (the list: no logo, no lettering)
-  const lettered = PRODUCTS.filter((q) => q.noLettering).flatMap((q) => q.symbols.map((id) => ({ q, s: hasSym.get(id) }))).filter(({ s }) => s && s.found && /<(?:text|tspan|image|use|style|defs|foreignObject)\b/i.test(s.markup));
-  const drawn = PRODUCTS.filter((q) => q.noLettering).length;
-  ok(`3: the ${drawn} drinks' pictures have no lettering and no logo-making parts (only plain shapes: no <text>, <image>, <use>, <style>, <defs>)`, drawn >= 16 && lettered.length === 0, few(lettered.map(({ q }) => q.slug)));
+  const drinkPics = PRODUCTS.filter((q) => q.noLettering).flatMap((q) => q.symbols.map((id) => ({ q, id, s: hasSym.get(id) })));
+  const lettered = drinkPics.filter(({ s }) => s && s.found && /<(?:text|tspan|image|use|style|defs|foreignObject)\b/i.test(s.markup));
+  const noPic = drinkPics.filter(({ s }) => !s || !s.found);   // (a picture that is not there cannot be looked at: the check must not pass quietly)
+  ok(`3: the ${drinkPics.length} drinks' pictures are all there and have no lettering and no logo-making parts (only plain shapes: no <text>, <image>, <use>, <style>, <defs>)`, drinkPics.length >= 16 && noPic.length === 0 && lettered.length === 0, few(noPic.map(({ id }) => '#' + id + ' is missing').concat(lettered.map(({ q }) => q.slug + ' has lettering or a copy'))));
   const byPic = {};
   for (const c of en.cards) for (const u of c.uses.map((x) => x.replace(/^#/, ''))) (byPic[u] = byPic[u] || []).push(c.name);
   const twice = Object.entries(byPic).filter(([, names]) => new Set(names).size > 1);
@@ -777,7 +781,7 @@ await run('shop', async ({ browser, base, errs }) => {
     const under = (t) => all.filter((c) => c.fill < t);
     const per = (t) => f.map((x) => x.w + ': ' + x.cards.filter((c) => c.fill < t).length).join(', ');
     ok(`7: English: no box is mostly empty: at ${FILL_WIDTHS.join(', ')} px no card's own content covers less than 40% of its white box (the worst: ${worst[0].name} ${worst[0].fill}% at ${worst[0].w} px; before: 26.8%)`, under(40).length === 0, few(under(40).map((c) => `${c.name} ${c.fill}% at ${c.w}`), 5));
-    ok(`7: English: at most 4 cards of ${f[0].cards.length} cover less than 55% of their box at any one of ${FILL_WIDTHS.join(', ')} px (${per(55)}; before: 17, 14, 9) and at most 7 less than 60% (${per(60)}; before: 18, 20, 9)`, f.every((x) => x.cards.filter((c) => c.fill < 55).length <= 4 && x.cards.filter((c) => c.fill < 60).length <= 7), few(under(55).map((c) => `${c.name} ${c.fill}% at ${c.w}`), 6));
+    ok(`7: English: at most 4 cards of ${f[0].cards.length} cover less than 55% of their box at any one of ${FILL_WIDTHS.join(', ')} px (${per(55)}; before: 17, 14, 9) and at most ${Math.round(0.104 * f[0].cards.length)} (the same 10.4% of the cards as the 7 of 67 it was) less than 60% (${per(60)}; before: 18, 20, 9)`, f.every((x) => x.cards.filter((c) => c.fill < 55).length <= 4 && x.cards.filter((c) => c.fill < 60).length <= Math.round(0.104 * x.cards.length)), few(under(55).map((c) => `${c.name} ${c.fill}% at ${c.w}`), 6));
     const coffee = all.filter((c) => /iced coffee/i.test(c.name));
     ok(`7: English: "Organic iced coffee" (the builder's example) covers at least 60% of its box at ${FILL_WIDTHS.join(', ')} px (${coffee.map((c) => c.fill + '% at ' + c.w).join(', ')})`, coffee.length === FILL_WIDTHS.length && coffee.every((c) => c.fill >= 60), JSON.stringify(coffee));
     // a wide box must not trade empty space at the bottom for empty space at its side: its picture and words run across at least 70% of its width
@@ -883,5 +887,32 @@ await run('shop', async ({ browser, base, errs }) => {
       if (bars < 10) info(`7: es with a classic scroll bar: NOT CHECKED, this Chromium showed no scroll bar (${rows.join('; ')})`);
       else ok(`7: es with a classic scroll bar (15 to 17 px) at ${CLASSIC_WIDTHS.join(', ')} px: no word broken in the middle, no text cut off, 2 cards across below 1264 px and 3 from there`, bad.length === 0, rows.join('; ') + (bad.length ? ' | ' + bad.join(' | ') : ''));
     } finally { await classic.close().catch(() => {}); }
+  }
+
+  /* ---- 10: winter. The farm visit group says rides, tokens, reservations, tomatoes and Thursday to Sunday: none of that is true on the tree weekends (the farm's own rule: open only those
+     two weekends, no reservation, no rides, tomatoes ended Nov 8), so the group is for the other seasons (data-only="spring summer fall", with its jump button). */
+  {
+    const look = async (time) => {
+      const q = await open(browser, base, 'index.html', errs, { time });
+      await q.addStyleTag({ content: STILL });
+      await q.waitForTimeout(ms(500));
+      const r = await q.evaluate(() => {
+        const shown = (e) => !!e && e.getClientRects().length > 0;   // an element inside a display:none box has none
+        const groups = [...document.querySelectorAll('#shop .shop-group')], pills = [...document.querySelectorAll('#shop .shop-jump a')];
+        const orphan = pills.filter((a) => shown(a) && !shown(document.getElementById(a.getAttribute('href').slice(1)))).map((a) => a.textContent.trim());
+        const lonely = groups.filter((g) => shown(g) && !pills.some((a) => shown(a) && a.getAttribute('href') === '#' + g.id)).map((g) => g.id);
+        const re = /\b(?:rides?|wagon|barrel train|tomato(?:es)?|reservation-only|walk-ins?|reserve your visit|thursday)\b/i, words = [];
+        const walk = document.createTreeWalker(document.getElementById('shop'), NodeFilter.SHOW_TEXT);
+        for (let n; (n = walk.nextNode());) { const e = n.parentElement; if (e && e.getClientRects().length && !e.closest('script,style') && re.test(n.nodeValue)) words.push(n.nodeValue.trim().slice(0, 60)); }
+        return { farm: shown(document.getElementById('shop-farm')), pill: pills.some((a) => a.getAttribute('href') === '#shop-farm' && shown(a)), groups: groups.filter(shown).length, pills: pills.filter(shown).length, orphan, lonely, words };
+      });
+      await q.context().close();
+      return r;
+    };
+    const w = await look('2026-12-01T12:00:00-05:00'), su = await look('2027-06-20T12:00:00-04:00');
+    ok('10: winter (1 Dec): the farm visit group and its jump button are both hidden', !w.farm && !w.pill, JSON.stringify(w));
+    ok('10: winter: 12 groups and 12 jump buttons are shown, no button without its group and no group without its button', w.groups === 12 && w.pills === 12 && w.orphan.length === 0 && w.lonely.length === 0, JSON.stringify(w));
+    ok('10: winter: nothing in the Store says ride, wagon, barrel train, tomato, reservation-only, walk-in, Reserve your visit or Thursday', w.words.length === 0, w.words.join(' | '));
+    ok('10: summer (20 Jun): the farm visit group and its jump button are there, 13 groups and 13 buttons', su.farm && su.pill && su.groups === 13 && su.pills === 13 && su.orphan.length === 0 && su.lonely.length === 0, JSON.stringify(su));
   }
 });

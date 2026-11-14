@@ -228,6 +228,7 @@
 
   /** New / Change waiting for you / Waiting for the family's OK / Confirmed */
   function statusOf(order, req) {
+    if (order && order.status === 'missed') return 'missed';   // a pretend family gave up waiting for the answer to a new order
     if (req && req.status === 'waiting') return 'change';
     if (req && req.status === 'suggested') return 'family';
     if ((order && order.status === 'confirmed') || (req && (req.status === 'yes' || req.status === 'accepted'))) return 'confirmed';
@@ -244,7 +245,7 @@
     }
     if (req.status === 'accepted') out.push({ at: stamp(req.updated), text: 'The family said OK to your plan. The order was changed.' });
     if (req.status === 'declined') out.push({ at: stamp(req.updated), text: 'The family said no thanks. The order stayed as it was.' });
-    if (req.status === 'cancelled') out.push({ at: stamp(req.updated), text: 'The family cancelled the request.' });
+    if (req.status === 'cancelled') out.push({ at: stamp(req.updated), text: req.missed ? 'Nobody answered in time, so the family took the request back.' : 'The family cancelled the request.' });
     return out;
   }
 
@@ -256,7 +257,7 @@
     if (s === 'no') return { kind: 'no', text: 'You said No. The order stays as it was.', note: note };
     if (s === 'accepted') return { kind: 'ok', text: 'The family said OK to your plan. The order is changed.', note: note };
     if (s === 'declined') return { kind: 'no', text: 'The family said no thanks to your plan. The order stays as it was.', note: note };
-    if (s === 'cancelled') return { kind: 'no', text: 'The family cancelled their request. The order stays as it was.', note: '' };
+    if (s === 'cancelled') return { kind: 'no', text: req.missed ? 'Missed: nobody answered in time. The order stays as it was.' : 'The family cancelled their request. The order stays as it was.', note: '' };
     return null;
   }
 
@@ -330,7 +331,7 @@
       return (a.date + ' ' + a.pickup + ' ' + a.id) < (b.date + ' ' + b.pickup + ' ' + b.id) ? -1 : 1;
     });
 
-    var days = [], byDate = {}, counts = { 'new': 0, change: 0, family: 0, confirmed: 0 }, pizzas = 0;
+    var days = [], byDate = {}, counts = { 'new': 0, change: 0, family: 0, confirmed: 0, missed: 0 }, pizzas = 0;
     cards.forEach(function (c) {
       counts[c.status]++;
       pizzas += c.count;
@@ -456,6 +457,7 @@
     }
     if (t.kind === 'order') {
       var cur = store.get('orders', t.id);
+      if (cur && cur.status === 'missed') return { ok: false, closed: true, text: 'That order was missed: the family did not wait.' };
       if (!cur || cur.status === 'confirmed') return { ok: false, closed: true, text: 'That order is already confirmed.' };
       if (how === 'yes') {
         store.update('orders', t.id, { status: 'confirmed' });
@@ -612,6 +614,9 @@
     function note(freq, delay, dur, vol) {   // one soft tone: a sine wave that fades in and out, so nothing clicks or shrieks
       var c = context();
       if (!c) return;
+      if (c.state === 'suspended' && typeof c.resume === 'function') {   // a phone may put the audio to sleep again (a call, another app): wake it before the tone
+        try { var woke = c.resume(); if (woke && typeof woke.catch === 'function') woke.catch(function () { /* stays quiet */ }); } catch (e) { /* stays quiet */ }
+      }
       try {
         var osc = c.createOscillator(), gain = c.createGain(), t0 = c.currentTime + delay;
         osc.type = 'sine';
@@ -628,10 +633,8 @@
     return {
       supported: function () { return !!(w.AudioContext || w.webkitAudioContext); },
       isOn: function () { return on; },
-      on: function () {
+      on: function () {     // (called inside the press, so the browser lets the audio start; the first note wakes it)
         on = true;
-        var c = context();
-        if (c && c.state === 'suspended' && typeof c.resume === 'function') { try { c.resume(); } catch (e) { /* stays quiet */ } }
         note(784, 0, 0.2, 0.05);
       },
       off: function () { on = false; },
@@ -653,10 +656,12 @@
       known: null,         // the keys of the rail at the last drawing (null before the first)
       starts: {},          // key -> the pretend time a ticket of the signed-in family was first seen
       current: null,       // the key of the ticket the keys act on
+      chosen: false,       // true once a person has put the focus in a ticket: then the marked ticket stays where they put it; until then it is always the first ticket of the list
       pending: undefined,  // the key to give the focus after the next drawing ("keep rolling"); null = the rail is empty
       late: {},            // key -> true once a ticket has run out of time
       tm: {},              // key -> { left, late } at the last second
       rail: [], family: [], done: [],
+      keysOn: true,        // the number and letter keys of the board (a person can turn them off: Keys, under the board)
       lastBeep: 0, says: [], sayTimer: null, answered: 0, seen: false
     };
     var els = {}, minis = {}, minisDone = {}, parts = {}, unsub = null, timer = null, stopRun = null;
@@ -731,15 +736,22 @@
       parts.soundNote = h('p', { 'class': 'kit-soundnote', id: 'kit-sound-note' });
       parts.live = h('p', { 'class': 'sr-only', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });
       parts.strip = live ? live.strip() : null;
-      parts.settings = live ? h('div', { 'class': 'kit-settings', role: 'group', 'aria-label': 'Answer-by times' },
-        h('span', { 'class': 'kit-settings-title', text: 'Answer by' }), stepper('order', 'New order'), stepper('change', 'Change')) : null;
+      parts.keysState = h('span', { 'class': 'kit-keys-state', 'aria-hidden': 'true', text: 'On' });   // (a screen reader hears the button's pressed state, not this word)
+      parts.keysBtn = h('button', { type: 'button', 'class': 'btn btn-white kit-keytoggle', 'data-kf': 'keys', 'aria-pressed': 'true', 'aria-describedby': 'kit-keys-note', onclick: toggleKeys },
+        h('span', { 'class': 'kit-keytoggle-word', text: 'Keys' }), parts.keysState);
+      parts.keysNote = h('span', { 'class': 'kit-keysnote', id: 'kit-keys-note' });
+      parts.settings = h('div', { 'class': 'kit-settings' },
+        live ? h('div', { 'class': 'kit-set-group', role: 'group', 'aria-label': 'Answer-by times' },
+          h('span', { 'class': 'kit-settings-title', text: 'Answer by' }), stepper('order', 'New order'), stepper('change', 'Change')) : null,
+        h('div', { 'class': 'kit-set-group', role: 'group', 'aria-label': 'Keyboard shortcuts' }, parts.keysBtn, parts.keysNote));
       parts.railHead = h('h2', { 'class': 'kit-rail-title', tabindex: '-1', id: 'kit-rail-h' }, 'Needs an answer ', parts.railCount = h('span', { 'class': 'kit-pill', text: '0' }));
       parts.keys = h('p', { 'class': 'kit-keys' },
         h('span', { 'class': 'kit-keys-label', text: 'Keys' }),
         h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: '1' }), ' Yes'),
         h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: '2' }), ' No'),
         h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: '3' }), ' Another time'),
-        h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: '↑' }), h('kbd', { 'class': 'kit-key', text: '↓' }), ' Move'));
+        h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: '↑' }), h('kbd', { 'class': 'kit-key', text: '↓' }), ' Move'),
+        h('span', { 'class': 'kit-keys-item' }, h('kbd', { 'class': 'kit-key', text: 'M' }), ' Sound'));
       parts.rail = h('ol', { 'class': 'kit-rail kit-queue', 'data-tour': 'kit-queue', 'aria-labelledby': 'kit-rail-h' });
       parts.calm = h('p', { 'class': 'kit-calm', hidden: '' }, icon('done'), h('span', { text: 'Nothing needs an answer right now.' }));
       parts.empty = h('section', { 'class': 'kit-empty', hidden: '' },
@@ -777,6 +789,7 @@
       parts.soundState.textContent = !can ? 'Not here' : on ? 'On' : 'Off';
       parts.soundIcon.textContent = '';
       parts.soundIcon.appendChild(icon(on ? 'sound' : 'mute'));
+      parts.soundNote.className = 'kit-soundnote' + (can ? ' sr-only' : '');   // the button says its state in words; the longer note is for a screen reader, and shows when sound cannot be played
       parts.soundNote.textContent = !can ? 'This browser cannot play sounds, so the screen stays quiet.'
         : on ? 'Sound is on: one soft chime for a new ticket, a gentle beep every few seconds while a ticket is late. Press Sound or the M key to mute.'
           : 'Sound is off. Press Sound to hear a soft chime for a new ticket and a gentle beep for a late one.';
@@ -785,6 +798,35 @@
       if (sound.isOn()) { sound.off(); say('Sound is off.'); }
       else { sound.on(); say('Sound is on.'); }
       paintSound();
+    }
+
+    /* ---------- the board in place: the site's own bars and the controls above the board fill the first screen of a tablet, so when the screen opens with tickets (and the page is
+       still at its top and has no place in its address) the board is scrolled up once: the first ticket and its three buttons are then on the screen ---------- */
+    function putBoardInView() {
+      var hd = parts.railHead;
+      if (!ui.rail.length || !hd || typeof hd.scrollIntoView !== 'function' || (win.pageYOffset || 0) > 50 || (win.location && win.location.hash)) return;
+      try { hd.scrollIntoView({ block: 'start', behavior: 'instant' }); } catch (e) { hd.scrollIntoView(true); }
+    }
+
+    /* ---------- the keys button: the number and letter keys answer from anywhere on the page, so a person can turn them off ---------- */
+    function keyHint(b) {     // what a screen reader is told about an answer button: its keys, only while the keys work
+      var k = b.getAttribute('data-keys');
+      if (ui.keysOn && k) b.setAttribute('aria-keyshortcuts', k); else b.removeAttribute('aria-keyshortcuts');
+    }
+    function paintKeys() {
+      var on = ui.keysOn;
+      if (on) rootEl.classList.remove('kit-nokeys'); else rootEl.classList.add('kit-nokeys');
+      parts.keysBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      parts.keysState.textContent = on ? 'On' : 'Off';
+      parts.keysNote.textContent = on ? 'The number and letter keys answer tickets from anywhere on this page. Press Keys to turn them off.'
+        : 'The keys do nothing now. Use the buttons, or press Keys to turn them on.';
+      Array.prototype.forEach.call(rootEl.querySelectorAll('.kit-ans'), keyHint);
+      parts.keys.hidden = !ui.rail.length || !on;
+    }
+    function toggleKeys() {
+      ui.keysOn = !ui.keysOn;
+      paintKeys();
+      say(ui.keysOn ? 'Keys are on.' : 'Keys are off.');
     }
 
     /* ---------- when a ticket started: its own arrival time (pretend families), else when the kitchen first saw it ---------- */
@@ -866,6 +908,7 @@
         var base = startPickup(t);
         ui.edit[t.key] = { base: base, pickup: base, note: '' };
         ui.current = t.key;
+        ui.chosen = true;
         sync();
       }
       var el = els[t.key], spin = el && el.querySelector('.kit-spin');
@@ -914,7 +957,7 @@
     /* ---------- one ticket of the rail ---------- */
     function ansBtn(t, act, key, label, ico, tour, titleId) {
       return h('button', {
-        type: 'button', 'class': 'btn kit-ans kit-ans-' + act, 'data-act': act, 'data-tour': tour, 'data-kf': act + ':' + t.key, 'aria-keyshortcuts': key,
+        type: 'button', 'class': 'btn kit-ans kit-ans-' + act, 'data-act': act, 'data-tour': tour, 'data-kf': act + ':' + t.key, 'data-keys': key, 'aria-keyshortcuts': ui.keysOn ? key : null,
         'aria-describedby': titleId, onclick: function () { trigger(t, act); }
       }, icon(ico), h('span', { 'class': 'kit-ans-label', text: label }), h('kbd', { 'class': 'kit-key', 'aria-hidden': 'true', text: key.charAt(0) }));
     }
@@ -945,17 +988,17 @@
       answers.appendChild(ansBtn(t, 'later', '3 S', 'Another time', 'clock', 'kit-change', titleId));
       li.appendChild(h('div', { 'class': 'kit-t-body' }, info, answers));
       if (ed) li.appendChild(buildEditor(t, ed));
-      li.addEventListener('focusin', function () { setCurrent(t.key); });
+      li.addEventListener('focusin', function () { ui.chosen = true; setCurrent(t.key); });
       return li;
     }
 
     /* ---------- a small ticket of the side lanes ---------- */
     function buildMini(t) {
-      var li = h('li', { 'class': 'kit-mini kit-mini-' + t.zone, 'data-key': t.key });
-      var line = t.zone === 'family' ? 'Waiting for the family’s OK' : (t.req && t.req.last ? t.req.last.text.replace(/^You said /, 'Said ').replace(/^The family said /, 'Family said ') : 'Confirmed');
+      var li = h('li', { 'class': 'kit-mini kit-mini-' + t.zone + (t.status === 'missed' ? ' kit-mini-missed' : ''), 'data-key': t.key });
+      var line = t.zone === 'family' ? 'Waiting for the family’s OK' : t.status === 'missed' ? 'Missed: nobody answered in time' : (t.req && t.req.last ? t.req.last.text.replace(/^You said /, 'Said ').replace(/^The family said /, 'Family said ') : 'Confirmed');
       li.appendChild(h('p', { 'class': 'kit-mini-head' }, h('strong', { 'class': 'kit-num', text: '#' + t.num }), ' ', h('span', { 'class': 'kit-mini-who', text: t.who })));
       li.appendChild(h('p', { 'class': 'kit-mini-text', text: time12(t.pickup) + ' · ' + plural(t.count, 'pizza', 'pizzas') }));
-      li.appendChild(h('p', { 'class': 'kit-mini-status' }, icon(t.zone === 'family' ? 'clock' : 'done'), h('span', { text: line })));
+      li.appendChild(h('p', { 'class': 'kit-mini-status' }, icon(t.zone === 'family' ? 'clock' : t.status === 'missed' ? 'x' : 'done'), h('span', { text: line })));
       return li;
     }
 
@@ -1055,7 +1098,7 @@
       var none = !ui.rail.length && !ui.family.length && !ui.done.length;
       parts.empty.hidden = !none;
       parts.calm.hidden = none || !!ui.rail.length;
-      parts.keys.hidden = !ui.rail.length;
+      parts.keys.hidden = !ui.rail.length || !ui.keysOn;
       parts.rail.hidden = !ui.rail.length;
       parts.famNone.hidden = !!ui.family.length;
       parts.doneNone.hidden = !!ui.done.length;
@@ -1095,7 +1138,7 @@
         }
       }
       if (newLate.length) say(newLate.length === 1 ? 'Order ' + newLate[0].num + ' is late.' : newLate.length + ' orders are late.');
-      if (moved && ui.rail.length && !ui.current) setCurrent(ui.rail[0].key);
+      if (moved && ui.rail.length && (!ui.current || !ui.chosen)) { setCurrent(ui.rail[0].key); if (els[ui.current]) els[ui.current].classList.add('kit-current'); }   // nobody chose a ticket: the marked one is the first, and a ticket that turned late is now the first
       // the gentle beep: when a ticket has just turned late, and again every few seconds while any is late; never while the pretend clocks are stopped
       var t0 = nowMs();
       if (sound.isOn() && running && !document.hidden && lateNow && (newLate.length || t0 - ui.lastBeep >= BEEP_EVERY)) { sound.beep(); ui.lastBeep = t0; }
@@ -1144,8 +1187,10 @@
       var more = done.length - ui.done.length;
       parts.doneMore.hidden = more <= 0;
       parts.doneMore.textContent = more > 0 ? 'and ' + more + ' more' : '';
-      if (!ui.current || !byKey[ui.current]) setCurrent(ui.rail.length ? ui.rail[0].key : null);
-      else if (els[ui.current]) els[ui.current].classList.add('kit-current');
+      var marked = (!ui.current || !byKey[ui.current] || !ui.chosen) ? (ui.rail.length ? ui.rail[0].key : null) : ui.current;   // the ticket the keys act on: the one a person chose, else the first
+      if (!marked) ui.chosen = false;
+      setCurrent(marked);
+      if (marked && els[marked]) els[marked].classList.add('kit-current');
       // new tickets: one soft chime and a word for a screen reader (not for the first drawing)
       var keys = ui.rail.map(function (t) { return t.key; });
       if (ui.known) {
@@ -1166,6 +1211,7 @@
     /* ---------- the keys of the board ---------- */
     function onKey(e) {
       if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;   // a key held down answers one ticket, not the whole list
+      if (!ui.keysOn) return;                                                             // the person turned the keys off (the buttons still work)
       var tg = e.target, tag = tg && tg.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tg && tg.isContentEditable)) return;
       if (tg && tg.closest && (tg.closest('.kit-edit') || tg.closest('[role="dialog"]'))) return;
@@ -1191,7 +1237,9 @@
 
     frame();
     paintSound();
+    paintKeys();
     sync();
+    putBoardInView();
     unsub = store.subscribe(sync);
     document.addEventListener('keydown', onKey);
     var onVisible = function () { if (!document.hidden) sync(); };

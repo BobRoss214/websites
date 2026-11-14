@@ -5,7 +5,7 @@
 
 Also checks the real site: every extra page names its own share picture, the file is there, 1200 x 630 and under 250 KB, and it has a description;
 every page has its own title and description of a length search results can show; and every question and answer in a page's structured data
-(FAQPage) is word for word what the page shows, with no markup left in it.
+(FAQPage) is word for word what the page shows, with no markup left in it (one difference: the small label "Not official yet" is written "(not official yet)").
 Prints "OK" when everything passes. Needs: pip install beautifulsoup4  (and pillow for the picture-size tests).
 """
 import json, os, re, shutil, struct, subprocess, sys, tempfile, unittest
@@ -261,6 +261,23 @@ class Pages(unittest.TestCase):
         faq = [g for g in ld['@graph'] if g['@type'] == 'FAQPage'][0]['mainEntity']
         self.assertEqual(faq[0]['acceptedAnswer']['text'], 'It is simple. Change it before noon. We refund the rest. Call us (anytime)')
 
+    def test_the_not_official_label_reads_as_words_in_brackets_in_an_answer(self):
+        body = ('<section data-faq><details><summary>Is pizza served?</summary><div class="answer">'
+                '<p>Pizza <span class="not-official">Not official yet</span> is at The GreenHouse, 11 am&ndash;8 pm <span class="not-official">Not official yet</span>. No reservation is required.</p>'
+                '<ul><li>Ice cream <span class="not-official">Not official yet</span>, drinks and goats</li><li>Open on Saturday <span class="not-official">Not official yet</span></li><li>Call us (anytime)</li></ul>'
+                '</div></details></section>')
+        with open(os.path.join(self.root, 'pages', 'label.html'), 'w', encoding='utf-8', newline='\n') as f:
+            f.write('---\ntitle: Label\ndescription: A label.\n---\n' + body + '\n')
+        code, text = self.build()
+        self.assertEqual(code, 0, text)
+        page = self.out('label')
+        ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', page, re.S).group(1))
+        faq = [g for g in ld['@graph'] if g['@type'] == 'FAQPage'][0]['mainEntity']
+        # in brackets and lower case, no space before the full stop or the comma, a full stop after a list item that ends with the label
+        self.assertEqual(faq[0]['acceptedAnswer']['text'], 'Pizza (not official yet) is at The GreenHouse, 11 am\u20138 pm (not official yet). No reservation is required. '
+                         'Ice cream (not official yet), drinks and goats. Open on Saturday (not official yet). Call us (anytime)')
+        self.assertEqual(page.count('<span class="not-official">Not official yet</span>'), 4, 'the page itself still shows the label four times')
+
     # -------------------------------------------------------------
     def real_pages(self):
         pages = ['index'] + sorted(f[:-5] for f in os.listdir(os.path.join(REAL, 'pages')) if f.endswith('.html') and not is_noindex(f[:-5]))
@@ -294,7 +311,11 @@ class Pages(unittest.TestCase):
                     self.assertEqual(len(node['mainEntity']), len(shown), f'{slug}: the page shows {len(shown)} questions, its structured data has {len(node["mainEntity"])}')
                     for q, d in zip(node['mainEntity'], shown):
                         want_q = re.sub(r'\s+', ' ', d.find('summary').get_text(' ', strip=True))
-                        want_a = re.sub(r'\s+', ' ', d.select_one('.answer').get_text(' ', strip=True))
+                        # the one difference allowed besides the full stops: the page shows the small label "Not official yet" (class not-official), the structured data says the words "(not official yet)"
+                        shown_answer = BeautifulSoup(str(d.select_one('.answer')), 'html.parser')
+                        for label in shown_answer.select('.not-official'):
+                            label.replace_with('(not official yet)')
+                        want_a = re.sub(r'\s+', ' ', BeautifulSoup(str(shown_answer), 'html.parser').get_text(' ', strip=True))   # read again: the new words and their neighbours are one piece of text
                         got_a = q['acceptedAnswer']['text']
                         self.assertEqual(q['name'], want_q, f'{slug}: question differs')
                         self.assertFalse(re.search(r'<[^>]+>|&[a-z#0-9]+;', got_a + q['name']), f'{slug}: markup left in {q["name"]}')

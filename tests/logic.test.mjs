@@ -163,6 +163,29 @@ const treeRule = (y) => { const nov = saturdays(y, 10), dec = saturdays(y, 11), 
   ok('on the last tree day (Sun Dec 6) the dates are still this year\'s; from the next day they are next year\'s ("Nov 27–28 and Dec 4–5"), the next ones to come', during[0].textContent === 'Nov 28–29 and Dec 5–6' && after[0].textContent === 'Nov 27–28 and Dec 4–5', during[0].textContent + ' / ' + after[0].textContent);
 }
 
+/* ---------------------------------------------------------------- "in season" and "happening now" are for the tree days only */
+// The winter season is the two tree weekends and the five days between them (Now tag, season look). The trees are only on the four weekend days, so the words "In season"
+// and "Happening now" (the top bar, the countdown, the line under the farm picker) must not be said on the days in between: W.seasons.happening() is live() without them.
+{
+  const bad = [];
+  for (let y = 2026; y <= 2033; y++) {
+    const [w1, w2] = treeRule(y), treeDays = [...w1, ...w2];
+    for (let d = new Date(w1[0] + 'T12:00:00Z'); ymdOf(d) <= w2[1]; d = new Date(d.getTime() + 864e5)) {
+      const ymd = ymdOf(d), when = at(ymd + 'T12:00:00-05:00'), on = treeDays.includes(ymd);
+      const live = W.seasons.live(when).map((x) => x.id).join(), happening = W.seasons.happening(when).map((x) => x.id).join(), tags = W.seasons.tags(when);
+      if (live !== 'winter' || tags.now !== 'winter' || tags.next !== 'spring' || W.seasons.current(when) !== 'winter') bad.push(ymd + ': winter must stay the season in progress, got ' + live + ' / ' + JSON.stringify(tags));
+      if (happening !== (on ? 'winter' : '') || W.seasons.treeDay(when) !== on) bad.push(ymd + ': happening "' + happening + '", tree day ' + W.seasons.treeDay(when) + ' (it is ' + (on ? 'one' : 'not one') + ')');
+      const next = treeDays.find((x) => x > ymd) || '';
+      if (W.seasons.nextTreeDay(when) !== next) bad.push(ymd + ': the next tree day is "' + W.seasons.nextTreeDay(when) + '", not "' + next + '"');
+    }
+  }
+  ok('2026 to 2033: every day of the winter season keeps winter as the season in progress (Now tag, look), but only the four tree days are "happening", and the next tree day is named (Mon Nov 30 to Fri Dec 4, 2026: next Sat Dec 5)', bad.length === 0, bad.slice(0, 4).join('; '));
+  const out = ['2026-11-27', '2026-12-07', '2026-12-31', '2027-04-20', '2027-11-26'].map((d) => W.seasons.happening(at(d + 'T12:00:00-05:00')).map((x) => x.id).join() + '|' + W.seasons.treeDay(at(d + 'T12:00:00-05:00')));
+  ok('outside the winter season winter is not happening and no day is a tree day (Nov 27, Dec 7, Dec 31, Apr 20 and Nov 26 of the next year; the other seasons are happening while they are in progress)', out.every((x) => !/winter/.test(x) && /\|false$/.test(x)) && /^spring\|/.test(out[3]), out.join(' '));
+  const sun = at('2026-12-06T23:30:00-05:00'), mon = at('2026-12-07T00:30:00-05:00'), tokyo = at('2026-12-07T13:30:00+09:00');   // the farm's day counts, whoever looks (13:30 in Tokyo is 23:30 at the farm)
+  ok('the farm\'s day decides, not the visitor\'s: Sunday night at the farm is still a tree day; after midnight it is not (and the next tree day is the next year\'s, none this year)', W.seasons.treeDay(sun) && W.seasons.treeDay(tokyo) && !W.seasons.treeDay(mon) && W.seasons.nextTreeDay(mon) === '', [W.seasons.treeDay(sun), W.seasons.treeDay(tokyo), W.seasons.treeDay(mon), W.seasons.nextTreeDay(mon)].join(' '));
+}
+
 /* ---------------------------------------------------------------- the hours on tree days and on other days, "Not official yet" */
 const E = (iso) => iso + '-05:00';   // November and December: Eastern Time is UTC-5
 const say = (name, iso) => { const r = st(name, E(iso)); return r ? r.text + (r.notOfficial ? ' [not official yet]' : '') : null; };
@@ -173,19 +196,23 @@ const say = (name, iso) => { const r = st(name, E(iso)); return r ? r.text + (r.
     ['2026-11-28T12:00:00', 'Open now, until 8 pm [not official yet]', 'Open now, until 8 pm [not official yet]', 'Open today. No reservation needed'],
     ['2026-11-28T21:00:00', 'Closed now. Opens tomorrow at 11 am [not official yet]', 'Closed now. Opens tomorrow at 11 am [not official yet]', 'Open today. No reservation needed'],
     ['2026-11-29T12:00:00', 'Open now, until 8 pm [not official yet]', 'Open now, until 8 pm [not official yet]', 'Open today. No reservation needed'],
-    ['2026-11-29T21:00:00', 'Closed now. Opens Saturday at 11 am [not official yet]', 'Closed now. Opens Saturday at 11 am [not official yet]', 'Open today. No reservation needed'],
-    ['2026-11-30T12:00:00', 'Closed today. Opens Saturday at 11 am [not official yet]', 'Closed today. Opens Saturday at 11 am [not official yet]', 'Closed today. Next open day: Saturday'],
-    ['2026-12-04T12:00:00', 'Closed today. Opens tomorrow at 11 am [not official yet]', 'Closed today. Opens tomorrow at 11 am [not official yet]', 'Closed today. Next open day: tomorrow'],
+    ['2026-11-29T21:00:00', 'Closed now. Opens Sat, Dec 5 at 11 am [not official yet]', 'Closed now. Opens Sat, Dec 5 at 11 am [not official yet]', 'Open today. No reservation needed'],
+    ['2026-11-30T12:00:00', 'Opens Sat, Dec 5 at 11 am [not official yet]', 'Opens Sat, Dec 5 at 11 am [not official yet]', 'Closed today. Next open day: Saturday'],
+    ['2026-12-04T12:00:00', 'Opens tomorrow at 11 am [not official yet]', 'Opens tomorrow at 11 am [not official yet]', 'Closed today. Next open day: tomorrow'],
     ['2026-12-05T15:00:00', 'Open now, until 8 pm [not official yet]', 'Open now, until 8 pm [not official yet]', 'Open today. No reservation needed'],
     ['2026-12-06T19:59:00', 'Open now, until 8 pm [not official yet]', 'Open now, until 8 pm [not official yet]', 'Open today. No reservation needed'],
     ['2026-12-06T20:00:00', 'Closed now. Opens Friday at 10 am', 'Closed now. Opens Friday at 4 pm', 'Open today. No reservation needed'],
     ['2026-12-07T12:00:00', 'Closed today. Opens Friday at 10 am', 'Closed today. Opens Friday at 4 pm', null],
   ];
   const bad = rows.filter(([iso, gh, pz, fm]) => say('greenhouse', iso) !== gh || say('pizza', iso) !== pz || say('farm', iso) !== fm).map(([iso, gh, pz, fm]) => iso + ' -> ' + [say('greenhouse', iso), say('pizza', iso), say('farm', iso)].join(' | '));
-  ok('on the tree days The GreenHouse and Wise Pie are open 11 am to 8 pm and the farm is open with no reservation; on the five days between the weekends they say when they open next; on Sunday night and after the window the usual hours speak again (no "Not official yet" there)', bad.length === 0, bad.join('; '));
-  const before = [['2026-11-27T12:00:00', 'Open now, until 8 pm', 'Opens today at 4 pm', null], ['2026-11-27T21:00:00', 'Closed now. Opens tomorrow at 11 am [not official yet]', 'Closed now. Opens tomorrow at 11 am [not official yet]', null], ['2026-11-20T12:00:00', 'Open now, until 8 pm', 'Opens today at 4 pm', null]];
+  ok('on the tree days The GreenHouse and Wise Pie are open 11 am to 8 pm and the farm is open with no reservation; on the five days between the weekends they only say when they open next, with the date and never "Closed"; on Sunday night and after the last tree day the usual hours speak again (no "Not official yet" there)', bad.length === 0, bad.join('; '));
+  const SAT28 = 'Opens Sat, Nov 28 at 11 am [not official yet]';
+  const before = [['2026-11-08T21:00:00', 'Closed now. Opens Sat, Nov 28 at 11 am [not official yet]', 'Closed now. Opens Sat, Nov 28 at 11 am [not official yet]', 'Reserved visits today'],   // the last fall day, after closing: the next opening is the first tree Saturday
+    ['2026-11-09T12:00:00', SAT28, SAT28, null], ['2026-11-11T12:00:00', SAT28, SAT28, null], ['2026-11-14T17:00:00', SAT28, SAT28, null], ['2026-11-20T12:00:00', SAT28, SAT28, null],   // winter is the page's season from Nov 9: no usual Friday hours, no "Closed", a Saturday that is no tree day is not "Open now"
+    ['2026-11-27T12:00:00', 'Opens tomorrow at 11 am [not official yet]', 'Opens tomorrow at 11 am [not official yet]', null], ['2026-11-27T21:00:00', 'Opens tomorrow at 11 am [not official yet]', 'Opens tomorrow at 11 am [not official yet]', null],
+    ['2026-10-09T12:00:00', 'Open now, until 8 pm', 'Opens today at 4 pm', 'Reserved visits today']];   // a fall day: nothing changed
   const badBefore = before.filter(([iso, gh, pz, fm]) => say('greenhouse', iso) !== gh || say('pizza', iso) !== pz || say('farm', iso) !== fm).map(([iso]) => iso + ' -> ' + [say('greenhouse', iso), say('pizza', iso), say('farm', iso)].join(' | '));
-  ok('before the window the usual hours and no farm badge (Fri Nov 27 is no tree day, the usual Friday hours speak; from its evening the next opening named is the tree Saturday at 11 am, with the label)', badBefore.length === 0, badBefore.join('; '));
+  ok('while the page shows winter (Nov 9 to the last tree day) the GreenHouse and Wise Pie follow the winter hours on every day: before the first weekend they never say Friday, the usual hours or "Closed", only when they open next (Sat, Nov 28, 11 am: with the date, "tomorrow" on Fri Nov 27) and the label; no farm badge; a fall day keeps the usual hours', badBefore.length === 0, badBefore.join('; '));
   const eT = (iso, tz) => { const Real = Date; return new Real(iso); };
   void eT;
   const farZone = st('greenhouse', '2026-11-28T17:00:00Z');   // 12 pm in New York, 9 am on the US west coast, evening in Europe: the label stays, "(Eastern Time)" is for another clock
