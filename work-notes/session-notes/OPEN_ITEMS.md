@@ -32,11 +32,18 @@ Everything below is what was true when it stopped. Her own words for every reque
   language polish (e-mail in one piece, no-break dates/units, vi tag, Hindi month names); tests: old winter dates moved, exact counts back; the owner-calendar sanity floors follow the real counts (12 dates, 9 rows).
 - `patches/optional/winter-hide-tomatoes.patch` (decision d93) is READY BUT NOT APPLIED: it hides the all-year tomato parts (section, menu link, FAQ, calendar row, Store card, hero line) in winter. It is her call.
 
-## 3a. Known red checks on 14 Nov (pushed on purpose, the builder asked for the latest version; each is explained)
-- `tests/slow-phone.test.mjs`: index.html is 432 KB (limit 420) and pumpkin-patch 313 KB (limit 300). Cause: the growth of the site since 3 Nov. Safe fix: font subset (-27.6 KB, `SPEED_BUDGET_OPTIONS.md`), needs her OK.
-- `tests/hero.test.mjs`, check "winter, window 1440 x 900: ... at least 13 of the 16 trees can be seen": the winter top bar is now 3 lines at 1440 (the live "Next up / In season" line + the 2-line winter sentence), so the hero (788 px high)
-  ends 59 px below a 900 px window and the bottom row of trees is cut (5 trees at 38 %). Visitors just scroll (the 1440 x 780 case passes). Fixes to consider: shorter winter bar words (needs her OK: it is her wording), or make the hero height follow the real bar height.
-  Do NOT loosen the check; decide with her.
+## 3a. The 3 known issues on 14 Nov (pushed on purpose: the builder asked for the latest version and said to leave these three as they are: do NOT change the tests or their limits without her)
+1. SPEED, index.html (`tests/slow-phone.test.mjs`): 432 KB in 22 files on a slow phone; the limit is 420 KB.
+   CAUSE: the site grew since 3 Nov (the Store, the winter code, the language files: about +12 KB on this page).
+   OPTIONS (numbers in `SPEED_BUDGET_OPTIONS.md`): A) cut the three fonts down to the letters the site uses: about -27.6 KB on EVERY page, nothing looks different, about half a day of work (recommended; needs her OK);
+   B) raise the limit by about 12 KB; C) leave the test red.
+2. SPEED, pumpkin-patch.html (same test): 313 KB in 20 files; the limit is 300 KB.
+   CAUSE: the same growth (it was already 304 KB before 10 Nov).
+   OPTIONS: the same A fixes both pages (index about 401 KB, pumpkin about 282 KB); B) raise this limit by about 12 KB; C) leave it red.
+3. HERO, `tests/hero.test.mjs`, check "winter, window 1440 x 900: both campfires and the snowman are in sight ... at least 13 of the 16 trees can be seen": 11 of 16 are seen.
+   CAUSE: the winter top bar is 3 lines at 1440 wide (the live "Next up / In season" line plus the 2-line winter sentence), so the hero (788 px high) ends 59 px below a 900 px window and the bottom row of trees is cut (5 trees at 38 %).
+   Visitors just scroll (the 1440 x 780 window, which is already "scrolled down", passes). OPTIONS: A) shorter winter words in the top bar (it is HER wording; the bar would have to be one line to fit, which the dates sentence cannot be, so this alone is probably not enough);
+   B) make the hero height follow the real height of the top bar (a CSS/JS change in the hero; then the picture fits again); C) move this window from the "whole picture on the first screen" group to the "scrolled down" group in the test: that LOOSENS the check, so only with her OK.
 
 ## 3. Not done / open, in the order I would do it
 1. `tests/shop-pop.test.mjs`: 3 checks failed under load: "every other block of the page is hidden while open" (one body DIV without aria-hidden/inert; the pop-up code skips the "verbs" box on purpose, js/shop-pop-box.js ~line 103,
