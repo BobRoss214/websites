@@ -31,8 +31,9 @@ The command does four things and ends with `READY TO PUBLISH` or `NOT READY` (an
 1. Builds the preview into `OUT_DIR` with the demo and tour switched on (`build-artifact.py`).
 2. Builds it again into `OUT_DIR-bare` WITHOUT the switches. That copy is what the real site shows.
 3. Checks the first one (`arttest.mjs`): sizes, links, the Sign in button and the Take a tour button on every page, a family request that travels from
-   `account.html` to `farm-desk.html` and back, the kitchen, "Start over", the whole tour from the first card to the last (across pages), and a frame
-   that refuses all storage. `PREVIEW_TEST_ARGS="--quick"` leaves out the tour walk.
+   `account.html` to `farm-desk.html` and back, the kitchen, "Start over", the whole tour from the first card to the last (across pages), a frame
+   that refuses all storage, and the Store: a click on a card opens the pop-up with the big words "This is not the real ingredients" and Esc closes it.
+   `PREVIEW_TEST_ARGS="--quick"` leaves out the tour walk.
 4. Checks the second one: nothing of the demo or the tour may show anywhere.
 
 It takes about 5 minutes when the computer is quiet and 15 to 30 minutes when many helpers are testing at once (it waits for the shared lock first).
@@ -42,7 +43,7 @@ The pieces can be run on their own:
 
 ```
 python3 work-notes/preview/build-artifact.py --out DIR                # build (add --no-flags for the copy without the switches; --repo DIR for another site folder)
-node work-notes/preview/arttest.mjs --dir DIR [--only static,home,flags,flow,tour,blocked] [--quick] [--shots PICTURE_DIR]
+node work-notes/preview/arttest.mjs --dir DIR [--only static,home,flags,flow,tour,blocked,shop] [--quick] [--shots PICTURE_DIR]
 node work-notes/preview/globals-check.mjs DIR                         # two scripts that fight over one top-level name (the build runs it)
 ```
 
@@ -83,7 +84,27 @@ window.WA_DEMO = true; window.WA_TOUR = true; window.WA_TOUR_INLINE = true;
   demo pages show only a polite box ("This is a demo page. It is not open to visitors.").
 - `WA_TOUR` turns on the "Take a tour" button. The page address cannot carry `?demo` or `?tour` inside the viewer (it drops query strings), so these two lines are the only switch there.
 - `WA_TOUR_INLINE` tells the tour that its styles (`css/tour.css`) and steps (`js/tour-steps*.js`) are already in the page, so it asks for no file. The build puts them in (flags build only).
-- `--no-flags` leaves all three out, and leaves out the tour's styles and steps. That copy must show nothing of the demo or the tour; the test proves it.
+- `--no-flags` leaves all three out, and leaves out the tour's styles and steps. That copy must show nothing of the demo or the tour; the test proves it. (The Store's pop-up is not a matter of the flags: see the next section.)
+
+## Files that a script asks for later, and the Store's pop-up
+
+The viewer serves only published files, so a script that asks for a style or script file by code would find nothing. The list `LAZY` at the top of `build-artifact.py` names each
+such file, the script that asks for it, and the marker (an attribute) or flag (a name in `window.WISE_ACRES`) that script looks at before it asks. The build puts the file in the page
+itself, right in front of that script (a lazy script brings the files it asks for in front of its own block), so the script finds it and asks for nothing. One more line in `LAZY` is all a
+new case needs; `script` may be a list of files when a loader and the file it loads may be folded into one (the first that is in the site and mentions the marker is the asker). The build
+says NOTE when a loader never mentions its marker or flag. The tour is the first case (`css/tour.css` and `js/tour-steps*.js` in front of `js/tour.js`; the flag `WA_TOUR_INLINE` is its
+marker; flags build only). The second is the Store's pop-up ("What to buy": a card grows under the pointer and a click opens a box with the ingredients):
+
+- `js/shop-pop.js` (a small loader) and `js/shop-sample.js` (the PRETEND ingredients) are plain `<script src>` tags of the home page, so they are inlined like every other script.
+- The loader asks for `js/shop-pop-box.js` (the cards' buttons and the box) when the sample is on the page, unless `WISE_ACRES.shopPop` is already set; the box sets it. The build puts the box in
+  front of the loader, so the loader asks for nothing.
+- The box asks for `css/shop-pop.css` when a card is first pointed at, unless `style[data-shop-pop-css]` is already in the page. The build puts the style in front of the box, as `<style data-shop-pop-css>`.
+- These belong to the site, not to the flags: both builds carry them. The real site will get no `js/shop-sample.js` until the farm gives its real lists. A site folder without it (and
+  without its tag in `index.html`) builds the same way, and the pop-up stays asleep: no control on any card, no request for a file. The test checks that state too.
+- The list of published files does not change: nothing here is published on its own.
+
+`build-info.json` records what was put in (`lazy`) and every file that only the flags build carries (`flags_only`), and the test reads those, so it needs no list of its own. Without any of the
+shop files in the site folder the test prints `skipped: no shop-pop files in this repo`; with the loader but without `js/shop-sample.js` it only checks that the Store stays quiet.
 
 The test also keeps a copy of the page the Artifact tool puts around `index.html` (`SKELETON_HEAD` in `arttest.mjs`, measured on the published preview on 3 Nov 2026:
 a small style block and `</body></html>`, 546 bytes in all). If the tool changes it, publish once, read the first lines of the published `index.html`, and update that line.
@@ -111,7 +132,7 @@ Each file stays its own script, exactly as on the real site (the old build joine
 | The viewer refuses `alert`, `confirm`, `prompt`, `window.open`, `window.print` and downloads by `<a download>` | The demo and the tour use boxes of their own. Calendar files go through the viewer's own save box (`window.claude.use('downloads')`), set up in the preview-only code at the front of `js/i18n.js`. The test stands in for that box. |
 | The viewer drops query strings and only passes a plain `#name` | `?demo` and `?tour` cannot be used; the flags above replace them. The tour keeps its place in storage, not in the address. |
 | Observers ignore `rootMargin` in the viewer's frame | Already handled by the preview-only code (menu highlight, fade-ins). |
-| Anything fetched later (a script or style file loaded by code) | Not possible to rely on: only published files exist. The build puts everything in the page, and the test fails on any request for a `js/` or `css/` file or any file that was not published. |
+| Anything fetched later (a script or style file loaded by code) | Not possible to rely on: only published files exist. The build puts everything in the page (the list `LAZY`, see above), and the test fails on any request for a `js/` or `css/` file or any file that was not published, and on a local `<script src>` or `<link>` left in a page. |
 
 ## What the test cannot know (check these by eye in the real viewer after a publish)
 
@@ -127,6 +148,9 @@ The tests run in Chromium with a pretend viewer. They cannot open claude.ai. Aft
 8. "Take a tour": Start the tour, press Next all the way. The chapters about the account demo go to the three demo pages and come back. Close it half way and open it again: "Continue where I stopped".
 9. A phone-width window: the Sign in button and the tour pill do not cover each other or the basket box.
 10. "Start over" empties the demo.
+11. "What to buy": point at a card with the mouse (it grows and lifts), click it: a box opens in the middle of the window with the picture, the name and price, the big yellow words
+    "(This is not the real ingredients. This is just a preview.)" and the list. Esc, the X, the Close button and a click outside close it; Tab stays inside the box. The cards of the
+    farm visit and rides have no box. Change the language: the box's own words change, the ingredient names stay English.
 
 ## If the check says FAIL
 
@@ -137,7 +161,12 @@ The tests run in Chromium with a pretend viewer. They cannot open claude.ai. Aft
 | `CLASH: ...` | Two files declare the same top-level name. Make each file one `(function () { ... })();`. |
 | `... points at a published file` | A link or picture names a file that is not in the preview (a page not built, a photo not in `assets/photos`). Run the three pipeline commands and build again. |
 | `the FIRST script sets WA_DEMO ...` | Something else was put in front of the flags. It is a bug in `build-artifact.py`. |
-| `no page asked for a css/ or js/ file` | A script loads a file by code. Tell its owner: in the preview everything must already be in the page (`WA_TOUR_INLINE` covers the tour). |
+| `no page asked for a css/ or js/ file` | A script loads a file by code. Tell its owner: in the preview everything must already be in the page (`WA_TOUR_INLINE` covers the tour; the Store's pop-up has the marker `data-shop-pop-css` and the flag `shopPop`). Add the file to `LAZY` in `build-artifact.py`. |
+| `no local <script src> or <link> ... is left in any page` | A tag the build did not turn into inline text (the build says why with a NOTE). |
+| `every file that a script asks for by code is in the page, in front of that script, with the marker ...` | The script was changed: it looks for another marker, or its file is no longer named in `LAZY`. Read the loader (`js/shop-pop.js`, `js/tour.js`) and change `LAZY`. |
+| `the build without the flags has none of the preview-only files` | A file that only the flags build may carry (`flags_only` in `build-info.json`: the tour's) is in the build without the flags. Check `flags=` in `LAZY`. |
+| `shop: ...` | The Store's pop-up does not open in the pretend viewer. Read which line failed: no button on the cards (the loader did not see `js/shop-sample.js`, or the box code did not run), no dialog after a click, the box not in the middle (the styles are not on), the big words missing or too small, Esc not closing it, or a file asked for (`js/shop-pop-box.js` or `css/shop-pop.css`: the marker or flag in `LAZY` is not the one the code looks at). |
+| `the Store is quiet ...` | The Store shows something of the pop-up although there are no pretend ingredients in the site folder: a control on a card, a pop-up built, or the data itself. |
 | `the "Sign in" button ...` or `the "Take a tour" button ...` | `js/demo-header.js` or `js/tour.js` is not on that page, or the flags script did not run first. |
 | `farm-desk.html ... storage event` | The desk does not listen for changes made in another tab, or the two tabs are not sharing storage. |
 | `LIMIT: ...` (in the build) | A file or the whole preview is over the Artifact's limits. |

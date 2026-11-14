@@ -736,11 +736,11 @@ Answer:
 
 ### Question 64
 
-**In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 22 trees. Should it change?**
+**In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 16 trees. Should it change?**
 
 Dashboard id: d69
 
-Why it matters: Tapping lights a tree (or sparks a fire), and the message changes as the count grows. At 12 it says that every tree is lit while at least 10 are still dark, so a child may think the game is finished.
+Why it matters: Tapping lights a tree (or sparks a fire), and the message changes as the count grows. At 12 it says that every tree is lit while at least 4 are still dark, so a child may think the game is finished.
 
 Answer:
 
@@ -1097,7 +1097,7 @@ Everything in this section was checked against the code on 3 October 2026. Chang
 
 **Question 53: Ice cream and drinks at The GreenHouse**
 
-- **If she sends the list:** change the names in `index.html` at `data-t="t93fcfff0"`, `data-t="t3517c259"`, `data-t="t8aa1a25f"`, `data-t="t1d93180c"`, `data-t="t7b10f100"` and `data-t="ta38e4092"` and `pages/pumpkin-patch.html` at `<h3>No reservation?</h3>`, and correct the prices in the Shop cards if she gives different ones (`index.html` at `data-t="t3699e70a"` and `data-t="t5cc2b160"`; question 19 has the same cards). Make the wording agree: The GreenHouse side says "cider" (`index.html` at `data-t="t3517c259"`, `data-t="t8aa1a25f"` and `data-t="t7b10f100"`) and the farm side says "hard cider" (`index.html` at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="t5cc2b160"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`).
+- **If she sends the list:** change the names in `index.html` at `data-t="t93fcfff0"`, `data-t="t3517c259"`, `data-t="t8aa1a25f"`, `data-t="t1d93180c"`, `data-t="t7b10f100"` and `data-t="ta38e4092"` and `pages/pumpkin-patch.html` at `<h3>No reservation?</h3>`, and correct the prices in the Shop cards if she gives different ones (`index.html` at `data-t="t3699e70a"` and `data-t="ta693499c"` (2 places), the group Beer, cider & wine, whose 16 cards each have their own price; question 19 has the same cards). Make the wording agree: The GreenHouse side says "cider" (`index.html` at `data-t="t3517c259"`, `data-t="t8aa1a25f"` and `data-t="t7b10f100"`), and so does the Shop group Beer, cider & wine (`index.html` at `data-t="ta693499c"` (2 places) and `data-t="tc5c16b91"`), and the farm side says "hard cider" (`index.html` at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="tf3d80896"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`).
 - **If it is not Waxhaw Creamery:** change `index.html` at `data-t="t3517c259"`, `data-t="t8aa1a25f"`, `data-t="t1d93180c"` and `data-t="t3699e70a"`.
 - **If it is right as it is:** no change.
 
@@ -1168,9 +1168,9 @@ Everything in this section was checked against the code on 3 October 2026; the g
 - **If sunflowers in the middle:** `js/hero.js` at `const springFore` (and at `const summerFore`): add two or three sunflowers near the middle of the picture (ask Claude).
 - **If she leaves it:** no change.
 
-**Question 64: In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 22 trees. Should it change?**
+**Question 64: In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 16 trees. Should it change?**
 
-- **If only when all 22 are lit:** `js/hero.js` at `Every tree is lit!`: the messages follow the count of taps (a fire spark counts too); the last one should follow the number of lit trees (ask Claude).
+- **If only when all 16 are lit:** `js/hero.js` at `Every tree is lit!`: the messages follow the count of taps (a fire spark counts too); the last one should follow the number of lit trees (ask Claude).
 - **If new words:** change that sentence in `js/hero.js` at `Every tree is lit!` (keep {gh}, it becomes The GreenHouse); its four translations (ask Claude).
 - **If she leaves it:** no change.
 
@@ -1202,4 +1202,4 @@ Everything in this section was checked against the code on 3 October 2026; the g
 These are not questions for the farm. Nothing here has been changed.
 
 - **Hindi, "zucchini" on The Farmer Cathy:** the Hindi line says "ऑर्गेनिक तोरी" (`lang/src/hi.json`, entry `t9b66d867`; the English is in `index.html` at `data-t="t9b66d867"`). "तोरी" can mean ridge gourd (turai), a different vegetable; "ज़ुकीनी" is the clearer word for zucchini. A Hindi reader should confirm, and then Claude changes that one word.
-- **Spanish, "hard cider":** the Spanish text says "sidra fuerte" in the Shop (`index.html` at `data-t="t5cc2b160"`) and plain "sidra" everywhere else. In Spanish "sidra" alone usually means the alcoholic kind, so a Spanish reader may prefer one word everywhere (see question 53).
+- **Spanish, "hard cider":** the Spanish text says "sidra alcohólica" on the farm side and in the note of the Shop group Beer, cider & wine (`index.html` at `data-t="tf3d80896"`), and plain "sidra" on the GreenHouse side and in the group's name (`index.html` at `data-t="ta693499c"` (2 places)). In Spanish "sidra" alone usually means the alcoholic kind, so a Spanish reader may prefer one word everywhere (see question 53).

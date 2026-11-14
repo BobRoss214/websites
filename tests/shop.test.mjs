@@ -6,13 +6,15 @@
  *   0  the list file is the list: tests/shop-list.json carries the fingerprint of work-notes/SHOP-LIST.md (when that file is there), so a changed list
  *      cannot go unnoticed and the file cannot be edited by hand
  *   1  every product of the list is on the page exactly once, in its group, with its name; no card the list does not have (the few extra cards that the
- *      published page had before are named in the list file); the groups are the list's groups
+ *      published page had before are named in the list file); the groups are the list's groups; a group that has small headings in the list (Beer, cider & wine:
+ *      Beer, Cider (Red clay), Wine) shows each one above its own cards, in the list's order, and names its list for a screen reader
  *   2  the prices: the dollar amounts of each card are the list's (with their small words: small / large, 1 scoop, 8 oz, a pound; a range like $15 to $17
  *      shows both ends), a price the farm has not confirmed shows the page's own "Prices coming soon" and no dollar sign, free things say free, and no
  *      number appears that the list does not give (the pizza prices and hours and the barrel train's age are the farm's older words and are in the list; the
  *      wagon ride's age, 3 and younger ride free, is the site builder's of Nov 3 2026 and the card must say it word for word);
- *      the sentences the list makes a card say are there (the pretzel's nuts, "the same price" for beer and wine, the pumpkin note), and the words that
- *      were taken out on purpose do not come back
+ *      the sentences the list makes a card say are there (the pretzel's nuts, the pumpkin note, "Non-alcoholic." for Hoppy Amber), the sentences it makes a whole group say are there (Beer, cider & wine:
+ *      its note "the same price" and the line about not bringing your own alcohol, which is no longer in Drinks), a group the list gives no place line has none,
+ *      and the words that were taken out on purpose do not come back
  *   3  the pictures: every <use href="#p-..."> has its <symbol>, none is empty, each card shows the picture of its own product, no picture serves two
  *   4  words that must never be there, in any language: phone numbers, the elderberry brand's health claims and dose figures, the maker's own name
  *   5  the five languages: the same dollar amounts on every card, every text block has its translation, no English left over (a scent's or maker's name stays
@@ -22,10 +24,14 @@
  *   7  layout at 320, 360, 390, 768, 992, 1024, 1240, 1264, 1280, 1366 and 1920 px wide (and the long languages on a phone, and at 1264 px, where a card is narrowest): nothing
  *      sideways, no cut text, no word broken in the middle (from 390 px up), no card or band touching or overlapping another (the 4 px shadow counts) or sticking
  *      out of its group, and the Store is dense on purpose (css/extras.css, "Store on a computer"):
- *        from 992 px the 12 groups run in two columns (down the left one, then down the right one: the page's order), each about half the width, none cut between
+ *        from 992 px the 13 groups run in two columns (down the left one, then down the right one: the page's order), each about half the width, none cut between
  *        the columns, the columns about as tall as each other, the farm visit group last and across both; 2 cards across in a column (3 from 1264 px) and 4 rides
  *        across (5 from 1264 px);
  *        below 992 px one column, the groups stacked in the page's order, 3 cards across over 760 px and 2 below;
+ *        a wide card (css/extras.css, "Wide cards": a card with a long note takes the width of two cards and carries its note beside the name) counts as two cards across; every row of
+ *        cards but the last of a grid is full (no hole where a wide card did not fit) and the cards of a row end at the same height (no ragged bottoms);
+ *        in English at 1440, 1280 and 1100 px (the page without the Beer card, which is to leave Drinks): no card's own content covers less than 40% of its white box, at most 4 cards
+ *        less than 55% and at most 7 less than 60% (the old page: 17, 14, 9 and 18, 20, 9), Organic iced coffee at least 60%, and the picture and words of every wide box run across at least 75% of it;
  *      in the farm group the two Farm fun cards end, with their shadow, at least a card gap above the first ride card (they touched once);
  *      the green farm visit bar, which runs across both columns, has at least 12 px of clear space above it at 992, 1100, 1180, 1240, 1264, 1280, 1366, 1440 and 1920 px in all five
  *      languages, measured from the lowest bottom edge of everything above it (a shadow counts, at least 4 px) to the top of the bar (it once sat right on the column end);
@@ -49,12 +55,12 @@ const PRODUCTS = LIST.products, GROUPS = LIST.groups, EXTRAS = LIST.extras || []
 const NAMES = LIST.names || [], LOANWORDS = LIST.loanwords || [];   // names that stay as written in every language; English words a language of the site uses as its own
 const LANGS = ['en', 'es', 'hi', 'zh', 'vi'];
 const WIDTHS = [1366, 1920, 1280, 1264, 1240, 1024, 992, 768, 390, 360, 320];   // the first one gets every check; the others get the layout checks (992 and 1264 are where the layout changes: two columns, three cards across; 1280 is where the section gets wider)
-const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', price: '.shop-price, .shop-opts', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full', band: '.shop-band', note: '.shop-sub', hand: '.shop-price.hand, .shop-price .hand', farm: '#shop-farm', groups: '.shop-groups' };
+const SEL = { card: '.shop-card', group: '.shop-group', groupHead: '.shop-band-h', name: '.shop-name', price: '.shop-price, .shop-opts', jump: '.shop-jump a', grid: '.shop-grid', full: '.shop-full', band: '.shop-band', note: '.shop-sub', hand: '.shop-price.hand, .shop-price .hand', farm: '#shop-farm', groups: '.shop-groups', sub: '.shop-subh', where: '.shop-where' };
 const STILL = '.reveal{opacity:1!important;transform:none!important}*{animation:none!important;transition:none!important}html{scroll-behavior:auto!important}html.cv .cv-sec{content-visibility:visible!important}';
 
 /* ------------------------------------------------------------------ small helpers (Node side) */
 const clean = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
-const norm = (s) => clean(s).toLowerCase().replace(/&amp;|&/g, ' and ').replace(/[\u2018\u2019`]/g, "'").replace(/[^a-z0-9' -]+/g, ' ').replace(/\s+/g, ' ').trim();   // "Beer, hard cider & wine" == "beer hard cider and wine"
+const norm = (s) => clean(s).toLowerCase().replace(/&amp;|&/g, ' and ').replace(/[\u2018\u2019`]/g, "'").replace(/[^a-z0-9' -]+/g, ' ').replace(/\s+/g, ' ').trim();   // "Beer, cider & wine" == "beer cider and wine"
 const digits = (s) => String(s).replace(/[\u0966-\u096f]/g, (c) => String(c.charCodeAt(0) - 0x966)).replace(/[\u0660-\u0669]/g, (c) => String(c.charCodeAt(0) - 0x660)).replace(/[\uff10-\uff19]/g, (c) => String(c.charCodeAt(0) - 0xff10));
 const numOf = (s) => Number(String(s).replace(/^[.,]/, '0.').replace(',', '.'));
 // every dollar amount in a text: "$5", "$1.25", "$.84", "$ 4", "5$", "US$5", "5 USD", "5 dólares", "5 đô la", "5美元", "5 डॉलर"
@@ -160,7 +166,11 @@ function readShop(SEL) {
   const attrKeys = [...new Set([...shop.querySelectorAll('*')].flatMap((e) => [...e.attributes].filter((a) => a.name.indexOf('data-ta-') === 0).map((a) => a.value)))];
   return {
     lang: window.WISE_ACRES ? WISE_ACRES.lang : '', htmlLang: document.documentElement.lang, cards, stray, strayAttrs,
-    groups: [...shop.querySelectorAll(SEL.group)].map((g) => { const h = g.querySelector(SEL.groupHead); return { id: g.id, head: h ? clean(h.textContent) : '', tag: h ? h.tagName.toLowerCase() : '', cards: g.querySelectorAll(SEL.card).length, text: textOf(g) }; }),
+    groups: [...shop.querySelectorAll(SEL.group)].map((g) => {
+      const h = g.querySelector(SEL.groupHead);
+      const subs = [...g.querySelectorAll(SEL.sub)].map((t) => { const u = t.nextElementSibling, grid = !!u && u.matches(SEL.grid); return { head: clean(t.textContent), cards: grid ? [...u.querySelectorAll(SEL.name)].map((n) => clean(n.textContent)) : [], named: grid && !!t.id && u.getAttribute('aria-labelledby') === t.id }; });
+      return { id: g.id, head: h ? clean(h.textContent) : '', tag: h ? h.tagName.toLowerCase() : '', cards: g.querySelectorAll(SEL.card).length, where: g.querySelectorAll(SEL.where).length, subs, text: textOf(g) };
+    }),
     pills: [...shop.querySelectorAll(SEL.jump)].map((a) => ({ href: a.getAttribute('href') || '', text: clean(a.textContent) })),
     headings: [...shop.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((h) => ({ tag: h.tagName.toLowerCase(), text: clean(h.textContent) })),
     allText: textOf(shop) + ' ' + attrText.join(' '), shopText: textOf(shop),
@@ -199,11 +209,22 @@ function readSymbols(expected) {
 }
 function readLayout(SEL) {
   const shop = document.getElementById('shop'), de = document.documentElement, vw = de.clientWidth;
+  // (a wide card, css/extras.css "Wide cards", is two cards and a gap wide: it counts as two. `rows` = how many cards each row holds, `wide` = the wide cards)
   const grids = [...shop.querySelectorAll(SEL.grid)].map((g) => {
     const cards = [...g.children].filter((c) => c.matches(SEL.card) && !c.matches(SEL.full));
     if (cards.length < 4) return null;
-    const t0 = cards[0].getBoundingClientRect().top;
-    return { id: (g.closest(SEL.group) || {}).id || '', cards: cards.length, cols: cards.filter((c) => Math.abs(c.getBoundingClientRect().top - t0) < 4).length };
+    const gap = parseFloat(getComputedStyle(g).columnGap) || 0, unit = Math.min(...cards.map((c) => c.getBoundingClientRect().width));
+    const rows = [];
+    let wide = 0;
+    for (const c of cards) {
+      const r = c.getBoundingClientRect(), n = Math.round((r.width + gap) / (unit + gap));
+      if (n > 1) wide++;
+      let row = rows.find((q) => Math.abs(q.top - r.top) < 4);
+      if (!row) { row = { top: r.top, units: 0 }; rows.push(row); }
+      row.units += n;
+    }
+    rows.sort((a, b) => a.top - b.top);
+    return { id: (g.closest(SEL.group) || {}).id || '', cards: cards.length, units: rows.reduce((t, q) => t + q.units, 0), cols: rows[0].units, rows: rows.map((q) => q.units), wide };
   }).filter(Boolean);
   // text parts that cut their own words: wider or taller inside than their box (clipped, shortened with "...", or a fixed height that is too small)
   const cut = [];
@@ -236,6 +257,19 @@ function readLayout(SEL) {
       if (dn.r.t < up.r.b + 4 - 0.5) touching.push(`"${said(up)}" and "${said(dn)}" are ${Math.round((dn.r.t - up.r.b) * 10) / 10}px apart (the shadow is 4)`);
     }
   });
+  // the cards of a row are one height (the row's tallest card sets it): no ragged bottoms
+  const ragged = [];
+  shop.querySelectorAll(SEL.grid).forEach((g) => {
+    const rows = [];
+    for (const c of g.children) {
+      if (!c.matches(SEL.card)) continue;
+      const r = c.getBoundingClientRect();
+      let row = rows.find((q) => Math.abs(q.top - r.top) < 4);
+      if (!row) { row = { top: r.top, bottoms: [] }; rows.push(row); }
+      row.bottoms.push(r.bottom);
+    }
+    rows.forEach((row) => { if (row.bottoms.length > 1 && Math.max(...row.bottoms) - Math.min(...row.bottoms) > 1) ragged.push(`${(g.closest(SEL.group) || {}).id || '?'}: a row ends ${Math.round((Math.max(...row.bottoms) - Math.min(...row.bottoms)) * 10) / 10}px apart`); });
+  });
   // the farm group has two lists: the Farm fun cards, then the rides (they touched once)
   const lists = [...shop.querySelectorAll(SEL.farm + ' ' + SEL.grid)];
   const farm = { lists: lists.length };
@@ -259,7 +293,22 @@ function readLayout(SEL) {
   // the smallest type of the names, the prices and the notes (px; 1 rem = 16 px)
   const minPx = (sel) => { const v = [...shop.querySelectorAll(sel)].filter((e) => e.getClientRects().length).map((e) => parseFloat(getComputedStyle(e).fontSize)); return v.length ? Math.min(...v) : null; };
   const type = { name: minPx(SEL.name), price: minPx(SEL.hand), note: minPx(SEL.note) };
-  return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, flow, touching, outside, farm, broken, type };
+  return { vw, innerWidth: window.innerWidth, pageW: de.scrollWidth, shopW: shop.scrollWidth, shopClientW: shop.clientWidth, shopH: Math.round(sh.height), shopLeft: Math.round(sh.left), shopRight: Math.round(sh.right), grids, cut, flow, touching, outside, ragged, farm, broken, type };
+}
+function readFill(SEL) {   // how much of each card's white box its own content covers: from the top of its first part (picture, name and price, note) to the bottom of its last, over the height of the card inside its border; and, for a wide card, how far across its width the picture and the words run (a note's box always runs to the card's edge, so the words themselves are measured)
+  return [...document.querySelectorAll('#shop ' + SEL.card)].filter((c) => c.getClientRects().length).map((c) => {
+    let top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity;
+    for (const k of c.children) { const r = k.getBoundingClientRect(); if (r.height < 1) continue; top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); left = Math.min(left, r.left); }
+    const tw = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+      if (!n.data.trim()) continue;
+      const rg = document.createRange(); rg.selectNodeContents(n);
+      for (const q of rg.getClientRects()) if (q.width > 0 && q.height > 0) right = Math.max(right, q.right);
+    }
+    const grid = c.parentElement, cw = c.getBoundingClientRect().width, unit = Math.min(...[...grid.children].filter((x) => x.matches(SEL.card) && !x.matches(SEL.full) && x.getClientRects().length).map((x) => x.getBoundingClientRect().width));
+    const nm = c.querySelector(SEL.name);
+    return { name: nm ? nm.textContent.replace(/\s+/g, ' ').trim() : '?', fill: Math.round((bottom - top) / c.clientHeight * 1000) / 10, wide: cw > 1.5 * unit && !c.matches(SEL.full) && !c.classList.contains('shop-half'), across: Math.round((right - left) / (cw - 6) * 1000) / 10 };
+  });
 }
 function readFarmGap(SEL) {   // the clear space above the farm visit bar: from the lowest bottom edge of everything above it (a shadow counts: at least 4 px, as a card has) to the top of the bar
   const shop = document.getElementById('shop'), farm = shop.querySelector(SEL.farm), band = farm && farm.querySelector(SEL.band);
@@ -285,6 +334,19 @@ function readFarmGap(SEL) {   // the clear space above the farm visit bar: from 
     if (bottom > lowest) { lowest = bottom; what = e.tagName.toLowerCase() + '.' + String(typeof e.className === 'string' ? e.className : '').split(' ')[0] + ' "' + (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 24) + '"'; }
   }
   return { clear: Math.round((top - lowest) * 100) / 100, what };
+}
+const FILL_WIDTHS = [1440, 1280, 1100];   // a wide screen, a laptop and a small window (3 cards across, 3 across, 2 across)
+async function fillAt(page) {   // the same page at each width (the window is made wider or narrower, nothing is loaded again)
+  // The card "Beer, hard cider & wine" (a two-line name and three lines of note) is to leave Drinks for a group of its own and makes its row 125 px tall (Organic iced coffee is 37% full beside it),
+  // so the page is looked at without it. (Once it is gone from Drinks this does nothing.)
+  await page.evaluate((sel) => { document.querySelectorAll('#shop ' + sel.card).forEach((c) => { const n = c.querySelector(sel.name); if (n && /^Beer, hard cider/i.test(n.textContent.trim())) c.remove(); }); }, SEL);
+  const out = [];
+  for (const w of FILL_WIDTHS) {
+    await page.setViewportSize({ width: w, height: 900 });
+    await page.waitForTimeout(ms(350));
+    out.push({ w, cards: await page.evaluate(readFill, SEL) });
+  }
+  return out;
 }
 const CLASSIC_WIDTHS = [1240, 1250, 1264, 1270];   // windows with a classic scroll bar, around the switch to three cards across (1264): the old switch, 1240, broke a Spanish word
 const GAP_WIDTHS = [992, 1100, 1180, 1240, 1264, 1280, 1366, 1440, 1920];
@@ -352,7 +414,7 @@ async function openShop(browser, base, errs, o = {}) {
 /* ================================================================== the checks that need no browser */
 {
   const slugs = PRODUCTS.map((p) => p.slug);
-  ok('the list file is sane: 12 groups, every product in one group, no slug twice, a price rule and a picture for each', GROUPS.length === 12 && new Set(slugs).size === slugs.length && PRODUCTS.every((p) => GROUPS.some((g) => g.n === p.group && g.slugs.includes(p.slug)) && p.symbols.length && (p.unknown || p.free || p.amounts.length)) && GROUPS.every((g) => g.slugs.every((s) => slugs.includes(s))), `${PRODUCTS.length} products`);
+  ok('the list file is sane: 13 groups, every product in one group, no slug twice, a price rule and a picture for each', GROUPS.length === 13 && new Set(slugs).size === slugs.length && PRODUCTS.every((p) => GROUPS.some((g) => g.n === p.group && g.slugs.includes(p.slug)) && p.symbols.length && (p.unknown || p.free || p.amounts.length)) && GROUPS.every((g) => g.slugs.every((s) => slugs.includes(s))), `${PRODUCTS.length} products`);
   info(`the list: ${PRODUCTS.length} products in ${GROUPS.length} groups; ${PRODUCTS.filter((p) => p.unknown).length} have no confirmed price ("${LIST.unknownWords}"), ${PRODUCTS.filter((p) => p.free).length} are free; ${EXTRAS.length} extra cards are allowed because the published page already had them (${EXTRAS.map((e) => e.name).join(', ')})`);
   // 0: the list file is made from the farm's list. work-notes/SHOP-LIST.md is not part of the website; when it is here, its fingerprint must be the one in the file.
   const MD = path.join(ROOT, 'work-notes', (LIST._source || {}).file || 'SHOP-LIST.md');
@@ -456,10 +518,25 @@ await run('shop', async ({ browser, base, errs }) => {
   if (extrasShown.length) info(`${extrasShown.length} card(s) are not in SHOP-LIST.md but were already on the published page, so they are allowed: ${extrasShown.map((c) => c.name).join(', ')}`);
   const headings = en.groups.map((g) => norm(g.head));
   const gMissing = GROUPS.filter((g) => !headings.includes(norm(g.name))), gExtra = en.groups.filter((g) => !GROUPS.some((x) => norm(x.name) === norm(g.head)));
-  ok(`1: the 12 groups are on the page with the names of the list (headings)`, gMissing.length === 0 && gExtra.length === 0 && en.groups.length === GROUPS.length, few(gMissing.map((g) => `missing "${g.name}"`).concat(gExtra.map((g) => `page has "${g.head}" (#${g.id})`))));
+  ok(`1: the ${GROUPS.length} groups are on the page with the names of the list (headings)`, gMissing.length === 0 && gExtra.length === 0 && en.groups.length === GROUPS.length, few(gMissing.map((g) => `missing "${g.name}"`).concat(gExtra.map((g) => `page has "${g.head}" (#${g.id})`))));
   const order = GROUPS.map((g) => headings.indexOf(norm(g.name)));
   info(`group order on the page: ${order.every((v, i) => i === 0 || v > order[i - 1]) ? 'the same as the list' : 'not the order of the list (' + en.groups.map((g) => g.head).join(' > ') + ')'}`);
   ok('1: each card is shown once in its own group box (no group is empty, no card sits outside a group)', en.groups.every((g) => g.cards > 0) && en.cards.every((c) => c.groupId), few(en.cards.filter((c) => !c.groupId).map((c) => c.name)));
+  // a group with small headings in the list: each heading is on the page, above its own cards, in the list's order; no other group has one
+  const subBad = [];
+  for (const g of GROUPS) {
+    const pg = en.groups.find((x) => norm(x.head) === norm(g.name)); if (!pg) continue;
+    const want = g.subs || [];
+    if (pg.subs.length !== want.length) subBad.push(`"${g.name}": ${pg.subs.length} small headings on the page, ${want.length} in the list`);
+    want.forEach((sub, i) => {
+      const t = pg.subs[i]; if (!t) return;
+      const names = sub.slugs.map((sl) => norm(PRODUCTS.find((q) => q.slug === sl).name));
+      if (norm(t.head) !== norm(sub.name)) subBad.push(`"${g.name}": small heading ${i + 1} is "${t.head}", the list has "${sub.name}"`);
+      else if (t.cards.map(norm).join('|') !== names.join('|')) subBad.push(`"${g.name}" / "${sub.name}": the cards under it are ${few(t.cards, 4)}, the list has ${few(sub.slugs, 4)}`);
+      if (!t.named) subBad.push(`"${g.name}" / "${sub.name}": the list of its cards is not named by the heading (aria-labelledby), so a screen reader does not say which drinks they are`);
+    });
+  }
+  ok(`1: the small headings of a group (${GROUPS.filter((g) => g.subs).map((g) => g.subs.map((x) => '"' + x.name + '"').join(', ')).join('; ') || 'none'}) are above their own cards in the list's order, and no other group has any`, subBad.length === 0 && GROUPS.some((g) => g.subs), few(subBad));
 
   /* ---- 2: the prices */
   const priceBad = [], pairBad = [], unitBad = [], soonBad = [], freeBad = [], numBad = [], ruleBad = [], saysBad = [], avoidBad = [];
@@ -542,7 +619,18 @@ await run('shop', async ({ browser, base, errs }) => {
   ok('2: no number on a card that the list does not give for that product (sizes, counts, ages, dates)', numBad.length === 0, few(numBad));
   ok('2: the list\'s own orders: pizza links to its page and its group shows no clock time but the older page\'s 10 am and 8 pm, beer and wine have no age statement, Christmas trees have only the page\'s own dates', ruleBad.length === 0, few(ruleBad));
   const saysTotal = PRODUCTS.reduce((n, q) => n + (q.says || []).length, 0);
-  ok(`2: the sentences the list makes a card say are on the card (${saysTotal}: the pretzel's nuts, the slushie board note, "the same price" for beer and wine, the pumpkin note)`, saysTotal >= 4 && saysBad.length === 0, few(saysBad));
+  ok(`2: the sentences the list makes a card say are on the card (${saysTotal}: the pretzel's nuts, the slushie board note, the pumpkin note, "Non-alcoholic." on NA Brooklyn's Hoppy Amber, the wagon ride's age, the u-pick dates)`, saysTotal >= 4 && saysBad.length === 0, few(saysBad));
+  // the sentences the list makes a whole group say (the group's note under its band, a line in its foot), and the words a group must not carry any more
+  const gSaysBad = [], gAvoidBad = [];
+  for (const g of GROUPS) {
+    const pg = en.groups.find((x) => norm(x.head) === norm(g.name)); if (!pg) continue;
+    for (const t of g.says || []) if (!norm(pg.text).includes(norm(t))) gSaysBad.push(`"${g.name}": should say "${t.slice(0, 60)}"`);
+    for (const a of g.avoid || []) if (norm(pg.text).includes(norm(a.words))) gAvoidBad.push(`"${g.name}": says "${a.words}" (${a.why})`);
+    if (g.noPlaceLine && pg.where) gAvoidBad.push(`"${g.name}": has a place line ("At the barn" ...), the list says the page does not say where it is sold`);
+  }
+  const gSays = GROUPS.reduce((n, g) => n + (g.says || []).length, 0), gAvoid = GROUPS.reduce((n, g) => n + (g.avoid || []).length + (g.noPlaceLine ? 1 : 0), 0);
+  ok(`2: the sentences the list makes a whole group say are in that group's box (${gSays}: the note under the band of Beer, cider & wine, "the same price", and the line about not bringing your own alcohol)`, gSays >= 3 && gSaysBad.length === 0, few(gSaysBad));
+  ok(`2: what a group must not carry is not there (${gAvoid}: the alcohol line is not in Drinks any more, and Beer, cider & wine has no place line)`, gAvoid >= 2 && gAvoidBad.length === 0, few(gAvoidBad));
   ok(`2: the words taken out of a card on purpose have not come back (${PRODUCTS.reduce((n, q) => n + (q.avoid || []).length, 0)}: "big bag", "handmade" soap, "sparkling juice" after Izze)`, avoidBad.length === 0, few(avoidBad));
 
   /* ---- 3: the pictures */
@@ -555,6 +643,10 @@ await run('shop', async ({ browser, base, errs }) => {
   ok('3: no picture is empty (it has a viewBox, at least 3 shapes, and draws over at least a tenth of its box)', emptySy.length === 0, few(emptySy.map((s) => `#${s.id} (${s.shapes} shapes, viewBox ${s.hasViewBox ? 'ok' : 'missing'}, fills ${Math.round(s.area * 100)}%)`)));
   const wrongPic = [...where].map(([s, l]) => ({ q: PRODUCTS.find((q) => q.slug === s), c: l[0] })).filter(({ q, c }) => { const ids = c.uses.map((u) => u.replace(/^#/, '')); return !q.symbols.some((x) => ids.includes(x)) || ids.some((i) => !q.symbols.includes(i)); });
   ok('3: each card shows the picture of its own product (p-<slug>; the wagon ride, barrel train, corn pit and sunn hemp maze use the pictures the list names)', wrongPic.length === 0, few(wrongPic.map(({ q, c }) => `${q.slug}: shows ${c.uses.join(' ') || 'no picture'}, list says ${q.symbols.map((x) => '#' + x).join(' or ')}`)));
+  // a drink's picture is drawn with plain shapes: no letters (<text>), no embedded picture (<image>), no copy of another drawing (<use>), no style or gradient list (the list: no logo, no lettering)
+  const lettered = PRODUCTS.filter((q) => q.noLettering).flatMap((q) => q.symbols.map((id) => ({ q, s: hasSym.get(id) }))).filter(({ s }) => s && s.found && /<(?:text|tspan|image|use|style|defs|foreignObject)\b/i.test(s.markup));
+  const drawn = PRODUCTS.filter((q) => q.noLettering).length;
+  ok(`3: the ${drawn} drinks' pictures have no lettering and no logo-making parts (only plain shapes: no <text>, <image>, <use>, <style>, <defs>)`, drawn >= 16 && lettered.length === 0, few(lettered.map(({ q }) => q.slug)));
   const byPic = {};
   for (const c of en.cards) for (const u of c.uses.map((x) => x.replace(/^#/, ''))) (byPic[u] = byPic[u] || []).push(c.name);
   const twice = Object.entries(byPic).filter(([, names]) => new Set(names).size > 1);
@@ -637,7 +729,10 @@ await run('shop', async ({ browser, base, errs }) => {
     const single = w > 760 ? [3] : w >= 340 ? [2] : [1, 2];
     const want = (id) => (id === 'shop-farm' ? (wide ? [5] : two ? [4] : single) : (wide ? [3] : two ? [2] : single));
     const kind = w <= 760 ? 'a phone' : w < 992 ? 'a tablet' : w < 1264 ? 'a laptop' : 'a wide computer';
-    ok(`7: ${tag}: the product grids show ${two ? (wide ? '3 cards across in a column and 5 rides' : '2 cards across in a column and 4 rides') : single.join(' or ')} across (${kind}; a group with fewer cards fills one row)`, rec.grids.length > 0 && rec.grids.every((g) => want(g.id).some((n) => g.cols === Math.min(n, g.cards))), rec.grids.map((g) => `${g.id}: ${g.cols} of ${g.cards}`).join(', '));
+    ok(`7: ${tag}: the product grids show ${two ? (wide ? '3 cards across in a column and 5 rides' : '2 cards across in a column and 4 rides') : single.join(' or ')} across (${kind}; a wide card counts as two; a group with fewer cards fills one row)`, rec.grids.length > 0 && rec.grids.every((g) => want(g.id).some((n) => g.cols === Math.min(n, g.units))), rec.grids.map((g) => `${g.id}: ${g.cols} of ${g.units}`).join(', '));
+    // no hole: every row but the last of a grid is full (a wide card that does not fit at the end of a row moves to the next one and leaves a hole: the classes shop-wide2 ... shop-wide5 in index.html say for how many cards across a card is wide)
+    const holes = rec.grids.flatMap((g) => g.rows.slice(0, -1).map((u, i) => (want(g.id).some((n) => u === n) ? '' : `${g.id.replace('shop-', '')} row ${i + 1} holds ${u} (${want(g.id).join(' or ')} wanted)`))).filter(Boolean);
+    ok(`7: ${tag}: every row of cards is full except the last of a grid (no hole where a wide card did not fit; ${rec.grids.reduce((t, g) => t + g.wide, 0)} wide cards)`, rec.grids.length > 0 && holes.length === 0, few(holes, 4));
     const F = rec.flow, W = F.wrap, mid = (W.l + W.r) / 2, farm = F.groups.find((g) => g.id === 'shop-farm'), others = F.groups.filter((g) => g.id !== 'shop-farm');
     const brief = (g) => `${g.id.replace('shop-', '')} ${Math.round(g.l)}..${Math.round(g.r)} x ${Math.round(g.t)}..${Math.round(g.b)}`;
     if (two) {
@@ -655,6 +750,7 @@ await run('shop', async ({ browser, base, errs }) => {
       ok(`7: ${tag}: the groups are stacked, one above the other, each the whole width, in the page's order`, F.groups.length === GROUPS.length && F.groups.every((g, i) => g.w >= W.w - 2 && (i === 0 || g.t >= F.groups[i - 1].b - 1)), few(F.groups.map(brief), 12));
     }
     ok(`7: ${tag}: no card or band touches or overlaps another (a card's 4 px shadow counts) or sticks out of its group`, rec.touching.length === 0 && rec.outside.length === 0, few(rec.touching.concat(rec.outside), 4));
+    ok(`7: ${tag}: the cards of a row are one height (no ragged bottoms)`, rec.ragged.length === 0, few(rec.ragged, 4));
     const fg = rec.farm;
     ok(`7: ${tag}: in the farm group the two Farm fun cards, with their 4 px shadow, end at least one card gap (${fg.gap || '?'} px) above the first ride card`, fg.lists === 2 && fg.funCards === 2 && fg.rideCards > 2 && fg.gap > 0 && fg.funBottom + 4 + fg.gap <= fg.rideTop + 0.5, JSON.stringify(fg));
     // (a word cut in the middle: a phone narrower than 390 px did that before the Store was made dense, with the long Spanish and Vietnamese words, so only 390 and up is looked at)
@@ -673,6 +769,21 @@ await run('shop', async ({ browser, base, errs }) => {
   const heights = {};
   heights[1366] = (await layout(p, '1366px', 1366)).shopH;
   await farmBar(p, 'English');
+  {
+    /* 7: no card is mostly empty. A card with a long note used to make its whole row as tall as itself and its short neighbours (Organic iced coffee, Mini pumpkin ...) were a third full
+       (19 cards under 55% at 1440 px, the worst 29.7%). Wide cards (css/extras.css) fixed that; this keeps it fixed. The share is measured in readFill(). */
+    const f = await fillAt(p);
+    const all = f.flatMap((x) => x.cards.map((c) => ({ ...c, w: x.w }))), worst = all.slice().sort((a, b) => a.fill - b.fill);
+    const under = (t) => all.filter((c) => c.fill < t);
+    const per = (t) => f.map((x) => x.w + ': ' + x.cards.filter((c) => c.fill < t).length).join(', ');
+    ok(`7: English: no box is mostly empty: at ${FILL_WIDTHS.join(', ')} px no card's own content covers less than 40% of its white box (the worst: ${worst[0].name} ${worst[0].fill}% at ${worst[0].w} px; before: 26.8%)`, under(40).length === 0, few(under(40).map((c) => `${c.name} ${c.fill}% at ${c.w}`), 5));
+    ok(`7: English: at most 4 cards of ${f[0].cards.length} cover less than 55% of their box at any one of ${FILL_WIDTHS.join(', ')} px (${per(55)}; before: 17, 14, 9) and at most 7 less than 60% (${per(60)}; before: 18, 20, 9)`, f.every((x) => x.cards.filter((c) => c.fill < 55).length <= 4 && x.cards.filter((c) => c.fill < 60).length <= 7), few(under(55).map((c) => `${c.name} ${c.fill}% at ${c.w}`), 6));
+    const coffee = all.filter((c) => /iced coffee/i.test(c.name));
+    ok(`7: English: "Organic iced coffee" (the builder's example) covers at least 60% of its box at ${FILL_WIDTHS.join(', ')} px (${coffee.map((c) => c.fill + '% at ' + c.w).join(', ')})`, coffee.length === FILL_WIDTHS.length && coffee.every((c) => c.fill >= 60), JSON.stringify(coffee));
+    // a wide box must not trade empty space at the bottom for empty space at its side: its picture and words run across at least 70% of its width
+    const wides = all.filter((c) => c.wide), thin = wides.filter((c) => c.across < 75);
+    ok(`7: English: the wide boxes are filled across: the picture and words of each of the ${wides.length} (${[...new Set(wides.map((c) => c.name))].join(', ').slice(0, 120)}) run across at least 75% of the box, at ${FILL_WIDTHS.join(', ')} px`, wides.length > 0 && thin.length === 0, few(thin.map((c) => `${c.name} ${c.across}% at ${c.w}`), 5) || `narrowest: ${Math.min(...wides.map((c) => c.across))}%`);
+  }
   const phone = {};
   await p.context().close();
   for (const w of WIDTHS.slice(1)) {
@@ -695,6 +806,7 @@ await run('shop', async ({ browser, base, errs }) => {
   // A scent's or maker's name (the list's `names`) stays as written. An English word that the list calls a loan word of a language stays too, but only when
   // that language's page uses it outside #shop as well ("mỗi pound" in the Vietnamese tomato prices): then it is the site's own word, not a left-over.
   const stripNames = (t) => NAMES.reduce((s, n) => s.split(n).join(' '), t);
+  const onlyNames = (t) => !/[A-Za-z]/.test(stripNames(t));   // a text that is nothing but names the list says stay as written ("Hop drop", "Loyal to the dream"): the same in every language is right
   const stoplist = (t, loan = []) => { for (const m of stripNames(t).matchAll(new RegExp(STOP.source, 'gi'))) if (!loan.includes(m[0].toLowerCase())) return m[0]; return ''; };
   for (const lang of LANGS.slice(1)) {
     const q = await openShop(browser, base, errs, { w: 360, h: 800, lang });
@@ -719,9 +831,18 @@ await run('shop', async ({ browser, base, errs }) => {
       const en0 = enKeys.get(k.key) || '';
       const stop = stoplist(k.plain, loan);
       if (stop) leaks.push(`"${k.plain.slice(0, 34)}" has the English word "${stop}"`);
-      else if (clean(k.text) === clean(en0) && /(?<![A-Za-z])[a-z]{4,}/.test(en0) && !/^\$|^\d/.test(en0)) leaks.push(`"${en0.slice(0, 34)}" is still English`);
+      else if (clean(k.text) === clean(en0) && /(?<![A-Za-z])[a-z]{4,}/.test(en0) && !/^\$|^\d/.test(en0) && !onlyNames(en0)) leaks.push(`"${en0.slice(0, 34)}" is still English`);
     }
     ok(`5: ${tag}: no English left in the cards (names, small words, notes) except the farm's and makers' names`, leaks.length === 0, few(leaks));
+    // the group's own words (its name and its small headings) are in the language too; "Red clay", the maker, stays as written
+    const gLeft = [];
+    for (const g of GROUPS.filter((x) => x.subs)) {
+      const e = en.groups.find((x) => norm(x.head) === norm(g.name)), l = L.groups.find((x) => e && x.id === e.id);
+      if (!e || !l) continue;
+      if (clean(l.head) === clean(e.head)) gLeft.push(`"${e.head}"`);
+      e.subs.forEach((t, i) => { if (!l.subs[i] || clean(l.subs[i].head) === clean(t.head)) gLeft.push(`"${t.head}"`); });
+    }
+    ok(`5: ${tag}: the name of the group with small headings and each small heading are translated`, gLeft.length === 0, few(gLeft));
     const badL = forbiddenIn(L.allText);
     ok(`4: ${tag}: no phone number, health claim, dose figure or the maker's name in #shop`, badL.length === 0, badL.join(', '));
     await q.addStyleTag({ content: STILL });
@@ -756,7 +877,7 @@ await run('shop', async ({ browser, base, errs }) => {
         rows.push(`${w}: bar ${bar}px, cards from ${card}px, ${grids.length ? grids[0].cols : '?'} across`);
         if (rec.broken.length) bad.push(`${w}: ${few(rec.broken, 3)}`);
         if (rec.cut.length) bad.push(`${w}: ${few(rec.cut, 2)}`);
-        if (!grids.length || !grids.every((g) => g.cols === Math.min(across, g.cards))) bad.push(`${w}: ${grids.map((g) => g.id + ' ' + g.cols).join(', ') || 'no grid'} across, ${across} wanted`);
+        if (!grids.length || !grids.every((g) => g.cols === Math.min(across, g.units) && g.rows.slice(0, -1).every((u) => u === across))) bad.push(`${w}: ${grids.map((g) => g.id + ' ' + g.rows.join('+')).join(', ') || 'no grid'} across, ${across} wanted`);
         await q.context().close();
       }
       if (bars < 10) info(`7: es with a classic scroll bar: NOT CHECKED, this Chromium showed no scroll bar (${rows.join('; ')})`);

@@ -848,7 +848,7 @@ A visitor can hit these on day one: a form that asks for a sign-in, made-up pric
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): yes
 - Default: none. The prices are owner facts. If they cannot come before launch, B removes the empty tags.
-- Depends on: d19 (drinks and ice cream: the cards index.html at `data-t="t3699e70a"` and `data-t="t5cc2b160"` are in both), d16 (the $31 package), d50 (tree dates share the card index.html at `data-t="t53cf41e8"`), d02 (draft prices).
+- Depends on: d19 (drinks and ice cream: the ice cream card index.html at `data-t="t3699e70a"` and the Shop group Beer, cider & wine index.html at `data-t="ta693499c"` (2 places) are in both), d16 (the $31 package), d50 (tree dates share the card index.html at `data-t="t53cf41e8"`), d02 (draft prices).
 - Note: Old Q19 asked the same list in one question; d19 already covers the two drinks rows.
 
 **A. I will send the price list**
@@ -1259,8 +1259,8 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 
 **A. I will send names and prices**
 
-- The prices are on the site now, read from the farm's own signs (ice cream $4 for one scoop and $6 for two, beer, hard cider and wine $6): index.html at `data-t="t3699e70a"` (Waxhaw Creamery ice cream) and `data-t="t5cc2b160"` (Beer, hard cider & wine). If she corrects one, change the number in the `<span class="so-p hand">` or `<p class="shop-price hand">` of that card. Prices carry no translation id.
-- Names that change (if she corrects them): index.html at `data-t="t3517c259"`, `data-t="t8aa1a25f"`, `data-t="t1d93180c"`, `data-t="t7b10f100"` and `data-t="ta38e4092"`, pages/pumpkin-patch.html at `<h3>No reservation?</h3>` and pages/wise-pie.html at `src="assets/photos/wise-pie-pizza-and-drinks.webp"`. The GreenHouse side says "cider", the farm side says "hard cider" (index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="t5cc2b160"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`): make the wording agree.
+- The prices are on the site now, read from the farm's own signs (ice cream $4 for one scoop and $6 for two; every beer, cider and wine $6, 16 drinks): index.html at `data-t="t3699e70a"` (Waxhaw Creamery ice cream) and `data-t="ta693499c"` (2 places), the group Beer, cider & wine, where each of its 16 cards has its own `$6` in a `<p class="shop-price hand">` under its name. If she corrects one, change the number in the `<span class="so-p hand">` or `<p class="shop-price hand">` of that card (for the drinks, in all 16 cards). Prices carry no translation id.
+- Names that change (if she corrects them): index.html at `data-t="t3517c259"`, `data-t="t8aa1a25f"`, `data-t="t1d93180c"`, `data-t="t7b10f100"` and `data-t="ta38e4092"`, pages/pumpkin-patch.html at `<h3>No reservation?</h3>` and pages/wise-pie.html at `src="assets/photos/wise-pie-pizza-and-drinks.webp"`. The GreenHouse side says "cider", and so does the Shop group Beer, cider & wine (index.html at `data-t="ta693499c"` (2 places) and `data-t="tc5c16b91"`); the farm side says "hard cider" (index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="tf3d80896"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`): make the wording agree.
 - README: delete the part about drinks in the row "Pre-order page, drinks and ice cream".
 - Strings: 0 for prices only; up to 23 ids x 4 if names change (ids containing ice cream, drinks or cider)
 - Tests: none (prices of drinks are not in the facts test); consistency "price:" facts only if you add a pinned price
@@ -1268,7 +1268,7 @@ Claims about food, allergies and prices that nothing from the farm backs up yet.
 **B. Remove the drinks line**
 
 - Delete the drinks mentions on The GreenHouse side: index.html at `data-t="t7b10f100"` (list item "Beer, wine & cider"), the sentences index.html at `data-t="t3517c259"` and `data-t="t8aa1a25f"`, and index.html at `data-t="ta38e4092"` if it names drinks.
-- The farm side (hard cider, beer and wine at the farm: index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="t5cc2b160"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`) is a separate claim, and so is the Shop card "Beer, hard cider & wine" (it is shared by the farm and The GreenHouse): not asked on the dashboard (doc Q15 covers spring and summer snacks); leave or ask.
+- The farm side (hard cider, beer and wine at the farm: index.html at `data-t="te7f1d0c8"`, `data-t="tbf415391"`, `data-t="t7528af5c"`, `data-t="tf3d80896"`, `data-t="t60cc5e24"` and `data-t="t6536e198"`) is a separate claim, and so is the Shop group "Beer, cider & wine" (the farm's chalkboard, 16 drinks; its band names no place): not asked on the dashboard (doc Q15 covers spring and summer snacks); leave or ask.
 - Strings: 2 to 6 changed sentences x 4 translations
 - Tests: none
 
@@ -1857,17 +1857,17 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d69. "Every tree is lit!" appears too early
 
-- In plain words: In winter each tap lights one of 22 trees (or sparks a fire). At the 12th light the message says "Every tree is lit!" while at least 10 trees are still dark.
+- In plain words: In winter each tap lights one of 16 trees (or sparks a fire). At the 12th light the message says "Every tree is lit!" while at least 4 trees are still dark.
 - Doc question: Q64
 - Urgency: 3 (nice to have). Checklist says: not listed.
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: d68 and d70 (the same game code, js/hero.js), d01 (what visitors see in winter).
-- Note: Checked in a browser on 3 October 2026 (winter picture, 22 trees and 2 fires). The messages are by count: at 1 "Ooh, twinkly!", at 3 "You're a natural decorator.", at 6 "The whole farm is glowing! Real trees are at The GreenHouse.", at 12 "Every tree is lit! Bring the family to The GreenHouse.". A fire spark counts like a lit tree, so a count of 22 does not always mean 22 lit trees.
+- Note: Checked in a browser on 3 October 2026 (winter picture, 22 trees and 2 fires) and again on 10 November 2026, after the trees were made bigger (16 trees and 2 fires). The messages are by count: at 1 "Ooh, twinkly!", at 3 "You're a natural decorator.", at 6 "The whole farm is glowing! Real trees are at The GreenHouse.", at 12 "Every tree is lit! Bring the family to The GreenHouse.". A fire spark counts like a lit tree, so a count of 16 does not always mean 16 lit trees.
 
-**A. Say it only when all 22 trees are lit**
+**A. Say it only when all 16 trees are lit**
 
-- Ask Claude: in js/hero.js at `Every tree is lit!` the message list is chosen by the count of taps; make this last message depend on the number of lit trees instead (the 22 trees are the winter picture's trees).
+- Ask Claude: in js/hero.js at `Every tree is lit!` the message list is chosen by the count of taps; make this last message depend on the number of lit trees instead (the 16 trees are the winter picture's trees).
 - Strings: 0
 - Tests: hero (winter part); games
 

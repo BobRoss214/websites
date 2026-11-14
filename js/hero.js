@@ -711,19 +711,28 @@
   }
 
   const FIRES = [{ x: 560, y: 458, s: 1 }, { x: 890, y: 452, s: 0.94 }];   // kept clear of the picking card (bottom left) and the snowman (right)
+  const SNOWMAN = { x: 1236, y: 512 };   // where winterFore stands him; he fills about 118 units of width (his arms 175)
 
   // Rows of trees planted on the snow lanes, evenly stepped toward the viewer; every other row is shifted
-  // a lane so it reads like a real planted lot. Clearings are left around the campfires.
+  // half a step over, so each tree peeks between two in front. Clearings are left around the campfires and the snowman.
+  // The trees are 1.5 times as tall and wide as they first were (TREE_SIZE: a tree of row t is 1.5 * (18 + 188 t) units tall and 0.727 of that wide, 64 x 46 at the back and 210 x 153 at the front)
+  // and stand 1.5 times as far apart (TREE_STEP: every 1.5th lane, every 3rd in the two rows at the back), so the lot looks as it did, with fewer and bigger trees: the same gap between neighbours
+  // and each tree still seen between two in front. The tap area of a tree is its picture and a tenth more, so it grew with it. 16 trees can be lit (it was 22: the count is in
+  // docs/QUESTIONS_FOR_THE_FARM.md, question 64, and in tests/hero.test.mjs) and 7 far ones are only drawn.
   const TREE_ROWS = [0.13, 0.2, 0.29, 0.4, 0.52, 0.65];
+  const TREE_SIZE = 1.5, TREE_STEP = 1.5;
+  // A tree is left out where a fire burns (the flames reach 84 units up, the stones 62 to each side of the fire, and a tree is as wide as its picture) and in front of the snowman's body.
+  const inTheWay = (x, y, w) => FIRES.some((f) => y > f.y - 84 * f.s && Math.abs(x - f.x) < 62 * f.s + w / 2) || Math.abs(x - SNOWMAN.x) < 59 + w * 0.3;
   function winterField() {
     let out = `<path d="${groundPath()}" fill="#f5f9fd" stroke="#c9dcef" stroke-width="3"/>`;
     out += rowPolys(range(-5, 5), { fill: '#e6f0f9', inner: '#ffffff', hw: 60, innerHw: 28, innerOpacity: 0.7 });
     TREE_ROWS.forEach((t, r) => {
-      const h = 18 + 188 * t, w = h * 0.727, y = rowY(t), step = t < 0.25 ? 2 : 1;
-      for (let k = (r % 2 ? -3.5 : -4); k <= 4; k += step) {   // odd rows sit half a lane over, so each tree peeks between two in front
+      const h = TREE_SIZE * (18 + 188 * t), w = h * 0.727, y = rowY(t), far = t < 0.25, step = (far ? 2 : 1) * TREE_STEP;
+      for (let n = -9; n <= 9; n++) {
+        const k = (n + (r % 2 ? 0.5 : 0)) * step;   // the middle lane and every step from it; odd rows sit half a step over
+        if (Math.abs(k) > 5) continue;   // the snow lanes of the field run from -5 to 5
         const x = rowX(k, t);
-        if (FIRES.some((f) => Math.abs(x - f.x) < 108 && Math.abs(y - f.y) < 62)) continue;
-        out += tree(x, y, w, h, t >= 0.25 ? 'pick' : 'plain');
+        if (!inTheWay(x, y, w)) out += tree(x, y, w, h, far ? 'plain' : 'pick');
       }
     });
     FIRES.forEach((f) => { out += campfire(f.x, f.y, f.s); });
@@ -756,7 +765,7 @@
   const winterFore = () =>
     `<path d="M-40 700V532C60 508 180 512 300 524S540 506 700 520 980 506 1120 520 1360 506 1480 516V700Z" fill="#dce9f5" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` +
     tree(51, 460, 170, 234, 'lit') + tree(1393, 464, 150, 206, 'lit') +
-    snowman(1236, 512) +
+    snowman(SNOWMAN.x, SNOWMAN.y) +
     `<path d="M-40 700V548C80 522 220 530 340 542S580 524 720 538 1000 524 1140 538 1380 526 1480 536V700Z" fill="#ffffff" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>` +
     `<path d="M0 588c80-12 160-12 240 0M700 592c90-12 180-10 270 2M1180 590c60-10 130-10 200 0" fill="none" stroke="#cfe0f0" stroke-width="4" stroke-linecap="round"/>`;
 
