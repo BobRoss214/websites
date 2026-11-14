@@ -256,9 +256,10 @@ class ChangeFact(unittest.TestCase):
         # the usual hours change in the settings and in the note at the end of the line; the line's `winter: { ... }` (the Christmas tree weekends) stays as it was
         self.assertIn("open: '10:00', close: '21:00', winter: { days: [6, 0], open: '11:00', close: '20:00' } },   // Fri-Sun, 10 am-9 pm; Christmas tree weekends: Sat-Sun, 11 am-8 pm", r['content'])
         self.assertEqual(r['index'].count('10 am&ndash;9 pm'), 4)
-        self.assertIn('10 a. m.–9 p. m.', r['langs']['es'])
-        self.assertIn('晚上 9 点', r['langs']['zh'])
-        self.assertIn('9 giờ tối', r['langs']['vi'])
+        # the translations keep a number with its unit in one piece (a no-break space after the number), so the new hours are written with it
+        self.assertIn('10\u00a0a. m.–9\u00a0p. m.', r['langs']['es'])
+        self.assertIn('晚上 9\u00a0点', r['langs']['zh'])
+        self.assertIn('9\u00a0giờ\u00a0tối', r['langs']['vi'])
         put_back(self, 'hours', r['undo'])
 
     def test_the_hours_of_the_christmas_tree_weekends_change_alone(self):
