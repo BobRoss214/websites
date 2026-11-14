@@ -13,7 +13,8 @@ You work for the site BUILDER. She is not the farm owner (the bosses are Mrs. Ca
 
 ## Where we are
 Read `work-notes/HANDOFF.md` (top block) and `work-notes/session-notes/OPEN_ITEMS.md` first. Her own words for each request: `work-notes/session-notes/REQUESTS_10NOV.md`.
-Branch `integ` has everything finished. Unfinished work: branches `kitchenfix` and `storegaps3`.
+This branch (the default branch) is the REAL website. The PREVIEW-ONLY things (the tour, the pretend ingredient lists and the Store pop-up, see above) are NOT in it: they live on the branch `claude/wise-acres-everything` (`git fetch origin` then `git checkout claude/wise-acres-everything`), which also has the tests of those things.
+Unfinished work: branches `claude/wise-acres-kitchenfix` (the pizza kitchen screen) and `claude/wise-acres-storegaps3` (the Store: blank under the beer group).
 
 ## How the site is built
 - `pages/*.html` are the sources; the root `*.html` files are GENERATED. Visitor text is marked `data-t="t<8 hex>"` (sha1 of the English text); translations live in `lang/src/<code>.json`.

@@ -3,13 +3,13 @@
 The site builder (she is NOT the farm owner; the bosses are Mrs. Cathy and Rob) stopped the online session on purpose because 15 helpers were waiting on one small computer and on each other.
 Everything below is what was true when it stopped. Her own words for every request of 10 Nov are in `REQUESTS_10NOV.md` (same folder).
 
-## 1. Where everything is (nothing is pushed to GitHub; the real website is the default branch `claude/wise-acres-redesign-w9m4bi` at 02ffa32)
-- Branch `integ` = everything that is finished and merged. Start from here.
-- Branch `kitchenfix` (4 real commits, then a merge of integ, then one WIP commit that is NOT tested): the pizza kitchen screen (`kitchen.html?demo`): the board is put in place on open, after a reload and after
+## 1. Where everything is (on 14 Nov the real website, the default branch `claude/wise-acres-redesign-w9m4bi`, got the latest finished work; it was at 02ffa32 before)
+- GitHub branch `claude/wise-acres-everything` (called `integ` in the online session) = everything that is finished and merged, INCLUDING the preview-only things (tour, pretend lists, pop-up). The default branch = the real website without them.
+- GitHub branch `claude/wise-acres-kitchenfix` (4 real commits, then a merge of integ, then one WIP commit that is NOT tested): the pizza kitchen screen (`kitchen.html?demo`): the board is put in place on open, after a reload and after
   pressing On; a small strip that stays in sight (Waiting, Late, Sound); the focused ticket is aligned under the sticky bars; the editor and the tab title say which order; the type and the column grow on wide
   screens; change tickets read like order tickets; the Keys switch sits beside Sound; the sound is a little louder. STILL TO DO: run `demo-kitchen demo-live kitchen-tour demo-store demo-data consistency code-rules`
   and the browser tests `kitchen-live tour-targets i18n-early`; look at 1366x768, 1024x768 and 1920x1080 (first ticket's pizzas and its 3 buttons visible without scrolling); then merge into integ.
-- Branch `storegaps3` (1 real commit + a merge of integ): Store: a lone last box becomes a strip (class `shop-row3`) and the two Farm fun boxes carry their note beside the name. STILL TO DO: the new
+- GitHub branch `claude/wise-acres-storegaps3` (1 real commit + a merge of integ): Store: a lone last box becomes a strip (class `shop-row3`) and the two Farm fun boxes carry their note beside the name. STILL TO DO: the new
   Beer, cider & wine group leaves a blank of about 270 px under the left column at 1366 (180 px at 1920) above the Farm bar: fix it (idea: end the left column with a short group, or make the Beer group
   denser; keep the page order of the groups and the jump buttons); judge it with AND without the farm group (it is hidden in winter now, so winter has 12 groups, the other seasons 13); run `tests/shop.test.mjs`;
   look at 1920, 1440, 1366, 1280, 1100.

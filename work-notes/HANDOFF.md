@@ -3,11 +3,11 @@
 Branch: `claude/wise-acres-redesign-w9m4bi` (the repo's default branch). Nothing here is a pull request.
 This folder (`work-notes/`) is NOT part of the website. It only keeps notes and tools from the session so nothing is lost.
 
-## STATE ON 11 Nov 2026, evening (READ THIS FIRST; it replaces the 9 Nov state below)
-The site builder stopped the online session on purpose (15 helpers were waiting on one small computer and on each other) and is moving the work to Claude Code in her own terminal. NOTHING is pushed to GitHub.
-Branch `integ` has everything that is finished (winter rule, Store pop-up and Beer, cider & wine group, pretend-live desk and kitchen, tour, language polish, the 11 reviewers' fixes). Preview Version 51 is published (in-between version).
-Unfinished: branches `kitchenfix` (kitchen screen, last commit is a WIP that is not tested) and `storegaps3` (Store: the blank under the beer group). The whole test set was not run on the final head.
-Everything else (open items, her questions, how to publish, how to push) is in `work-notes/session-notes/OPEN_ITEMS.md`; her own words for the requests are in `work-notes/session-notes/REQUESTS_10NOV.md`. The standing rules are in `CLAUDE.md` at the top of the repo.
+## STATE ON 14 Nov 2026 (READ THIS FIRST; it replaces the 9 Nov state below)
+The site builder moved the work to Claude Code in her own terminal and asked to publish the latest version. The REAL website (this default branch) now has everything that is finished up to 11 Nov: the winter rule, the Store boxes, the new Beer, cider & wine group,
+the pretend-live desk and kitchen (hidden demo, only with ?demo), the language polish and the reviewers' fixes. It does NOT have the preview-only things she decided to keep out: the tour, the Store's pretend ingredient lists and the pop-up (they are on the branch
+`claude/wise-acres-everything`, which has everything). Unfinished: branches `claude/wise-acres-kitchenfix` and `claude/wise-acres-storegaps3`. The whole test set was never run on the final head; two speed checks (tests/slow-phone) are red by about 10 KB (see session-notes/SPEED_BUDGET_OPTIONS.md).
+Everything else (open items, her questions, how to publish the preview, how to push) is in `work-notes/session-notes/OPEN_ITEMS.md`; her own words for the requests are in `work-notes/session-notes/REQUESTS_10NOV.md`. The standing rules are in `CLAUDE.md` at the top of the repo.
 
 ## STATE ON 9 Nov 2026 (read this first; it replaces the 5 Nov state below)
 Version 50 of the private preview https://claude.ai/artifact/BxpyJpFX8bKixnoHnta2wW is published (built from `integ` at a6c1555). NOTHING is pushed to GitHub (the repo's default branch is the real website: push only when the builder says so). Backups: `git bundle` files in the scratchpad `backup/` folder.
