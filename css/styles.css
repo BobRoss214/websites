@@ -136,7 +136,7 @@ a[href^="tel:"]{white-space:nowrap}
 /* ==========================================================================
    Hero
    ========================================================================== */
-.hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(var(--sky-1,#5fc1ee) 0%,var(--sky-2,#93d8f6) 34%,var(--sky-3,#cdeffb) 58%,var(--sky-4,#fff1c9) 100%);min-height:max(clamp(660px,calc(100vh - 112px),880px),calc(31.2vw + 230px));min-height:max(clamp(660px,calc(100svh - 112px),880px),calc(31.2vw + 230px));padding-top:clamp(24px,4vw,48px);border-bottom:3px solid var(--ink)}
+.hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(var(--sky-1,#5fc1ee) 0%,var(--sky-2,#93d8f6) 34%,var(--sky-3,#cdeffb) 58%,var(--sky-4,#fff1c9) 100%);min-height:max(clamp(660px,calc(100vh - var(--hero-above,112px)),880px),calc(31.2vw + 230px));min-height:max(clamp(660px,calc(100svh - var(--hero-above,112px)),880px),calc(31.2vw + 230px));padding-top:clamp(24px,4vw,48px);border-bottom:3px solid var(--ink)}
 /* 31.2vw + 230px: the farm picture grows with the width of the window, so a wide and short window needs a taller hero, or the barn on the far hill
    climbs over the sun and then out of the top (tests/barn.test.mjs). It only counts on a window wider than about 1380 px that is also short, and on screens
    wider than about 2080 px; everywhere else the 660 to 880 px rule is the larger one. */

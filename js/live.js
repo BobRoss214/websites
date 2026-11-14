@@ -145,7 +145,7 @@
     const say = (state, text, named, winter) => ({ state, text: sameClock(at) && sameClock(named) ? text : farmZone(text), notOfficial: !!winter });
     if (todayOpen && now.mins >= open && now.mins < close) return say('open', t('Open now, until {time}', { time: timeLabel(close) }), farmMoment(now.ymd, sch.close), today.winter);
     if (todayOpen && now.mins < open) return say('soon', sameDay ? t('Opens today at {time}', { time: timeLabel(open) }) : t('Opens {day} at {time}', { day: dayName(now.dow), time: timeLabel(open) }), farmMoment(now.ymd, sch.open), today.winter);
-    for (let i = 1; i <= 21; i++) {   // three weeks: from the last day of fall the first tree Saturday is 20 days away
+    for (let i = 1; i <= MAX_RANGE + 21; i++) {   // past the longest closure the settings allow (and from the last day of fall the first tree Saturday is 20 days away)
       const dow = (now.dow + i) % 7, ymd = addDays(now.ymd, i), day = scheduleOn(name, ymd);   // the day's own hours: the day after a season's last day may have the usual ones
       if (!isOpenDay(day, ymd, dow) || closedOn(ymd)) continue;
       // In winter a day that is no tree day is not called closed (nobody said The GreenHouse is shut on it): the line only says when it opens next, with the date.
@@ -167,7 +167,7 @@
     const inSeason = (ymd) => W.seasons.inWindow(season, ymd);   // a calendar day, as written: no time zone shifting
     const sameDay = sameDate(at), say = (state, text) => ({ state, text: sameDay ? text : farmZone(text) });   // no clock time here: only "today" can be the farm's, not the visitor's
     if (days.includes(now.dow) && !closed(now.ymd)) return say('open', walkIn ? t('Open today. No reservation needed') : t('Reserved visits today'));
-    for (let i = 1; i <= 14; i++) {   // two weeks ahead: a week of closures must not leave the badge blank
+    for (let i = 1; i <= MAX_RANGE + 14; i++) {   // past the longest closure the settings allow: a long closure must not leave the badge blank
       const dow = (now.dow + i) % 7, ymd = addDays(now.ymd, i);
       if (!inSeason(ymd)) break;   // the season ends before another open day
       if (days.includes(dow) && !closed(ymd)) {

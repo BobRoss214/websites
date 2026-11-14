@@ -89,7 +89,6 @@
   /* ------------------------------------------------------------------ *
    * Loading dictionaries (before first paint when we can)
    * ------------------------------------------------------------------ */
-  const loading = {};
   function load(code, done) {
     if (code === 'en' || W.dict[code]) { done(); return; }
     const s = doc.createElement('script');
@@ -129,7 +128,8 @@
       const attr = a.name.slice(ATTR_PREFIX.length);
       if (el['_en_' + attr] === undefined) el['_en_' + attr] = el.getAttribute(attr);
       const tr = code !== 'en' && d[a.value];
-      el.setAttribute(attr, tr || el['_en_' + attr]);
+      const v = tr || el['_en_' + attr];
+      if (v == null) el.removeAttribute(attr); else el.setAttribute(attr, v);
     }
   }
   function swapBlocks(code) {

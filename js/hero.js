@@ -940,6 +940,24 @@
     if ('ResizeObserver' in window) new ResizeObserver(fallHeight).observe(crittersEl);
     addEventListener('resize', fallHeight, { passive: true });
   }
+  // The hero fills the first screen under what is above it (the announcement bar and the menu). The CSS counts 112px for those two. When they are
+  // taller (the winter announcement is three lines in a window 1440px wide), the real height is used (--hero-above), so the bottom of the picture
+  // is not pushed under the window's edge. Never less than the 112px: a short bar changes nothing.
+  const topEl = doc.getElementById('top');
+  function heroAbove() {
+    const above = Math.round(topEl.getBoundingClientRect().top + (window.pageYOffset || 0));
+    if (above > 112) topEl.style.setProperty('--hero-above', above + 'px'); else topEl.style.removeProperty('--hero-above');
+  }
+  if (topEl) {
+    heroAbove();
+    if ('ResizeObserver' in window) {
+      const watch = new ResizeObserver(heroAbove);
+      for (let el = topEl.parentNode; el && el !== doc.body; el = el.parentNode) { /* up to the body's own child */ if (el.parentNode === doc.body) { for (let s = el.previousElementSibling; s; s = s.previousElementSibling) watch.observe(s); } }
+    }
+    addEventListener('resize', heroAbove, { passive: true });
+    addEventListener('load', heroAbove);
+    ['wa:season', 'wa:lang', 'wa:day'].forEach((name) => doc.addEventListener(name, () => requestAnimationFrame(heroAbove)));
+  }
 
   /* ------------------------------------------------------------------ *
    * Picking / lighting

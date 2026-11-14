@@ -336,12 +336,21 @@ class Spec:
         if self.kind == 'text':
             if not self.skeleton_same:
                 return None, 'the words changed, not only a number or an address'
-            out = tr
+            # Whole numbers only ("3" is not the 3 of "$3", of "13" or of a year), all pairs in one pass ("10 to 12" -> "12 to 14"),
+            # and only when the translation holds each number as often as the changed English words do: never a guess.
+            swaps = {}
             for a, b in self.pairs:
-                if a not in out:
+                if swaps.setdefault(a, b) != b:
+                    return None, 'the number %s changes in two different ways' % a
+            whole = lambda a: r'(?<![\w$.,:@])' + re.escape(a) + r'(?![\w:@]|[.,]\d)'
+            for a in swaps:
+                want = len(re.findall(whole(a), self.old)) * old_en.count(self.old)
+                if not re.search(whole(a), tr):
                     return None, 'it does not hold %s' % a
-                out = out.replace(a, b)
-            return out, ''
+                if len(re.findall(whole(a), old_en)) != want or len(re.findall(whole(a), tr)) != want:
+                    return None, 'the number %s is also written elsewhere in this text' % a
+            rx = re.compile('|'.join(whole(a) for a in sorted(swaps, key=len, reverse=True)))
+            return rx.sub(lambda m: swaps[m.group(0)], tr), ''
         return self.swap_hours(tr, old_en)
 
     def swap_hours(self, tr, old_en):
@@ -454,9 +463,9 @@ def other_files(spec):
 
 def translation_texts(spec):
     """English texts that hold the old words: {id: English} for the pages, and the English texts of the scripts."""
-    en = json.load(open(os.path.join(ROOT, 'lang', 'en.json'), encoding='utf-8'))
+    en = json.load(open(os.path.join(ROOT, 'lang', 'en.json'), encoding='utf-8-sig'))
     try:
-        js = json.load(open(os.path.join(ROOT, 'lang', 'js-strings.json'), encoding='utf-8'))
+        js = json.load(open(os.path.join(ROOT, 'lang', 'js-strings.json'), encoding='utf-8-sig'))
     except (OSError, ValueError):
         js = {}
     return {i: t for i, t in en.items() if spec.apply(t)[1]}, {t: f for t, f in js.items() if spec.apply(t)[1]}
@@ -510,7 +519,7 @@ def undo():
 
 # ---------------------------------------------------------------- translations
 def read_lang(code):
-    with open(os.path.join(ROOT, LANGS_DIR, code + '.json'), encoding='utf-8') as f:
+    with open(os.path.join(ROOT, LANGS_DIR, code + '.json'), encoding='utf-8-sig') as f:
         return json.load(f)
 
 
@@ -659,8 +668,8 @@ def change(kind, old, new, only, yes):
         print('\n'.join(problems))
         print('\nThe English is changed but the rebuild stopped. Fix what is said above, or put everything back:  python3 tools/change_fact.py undo')
         return 1
-    new_en = json.load(open(os.path.join(ROOT, 'lang', 'en.json'), encoding='utf-8'))
-    new_js = json.load(open(os.path.join(ROOT, 'lang', 'js-strings.json'), encoding='utf-8'))
+    new_en = json.load(open(os.path.join(ROOT, 'lang', 'en.json'), encoding='utf-8-sig'))
+    new_js = json.load(open(os.path.join(ROOT, 'lang', 'js-strings.json'), encoding='utf-8-sig'))
     written, left, reviewed = carry_translations(spec, old_ui, old_js, new_en, new_js)
     print('Translations written: ' + ', '.join('%s %d' % (c, n) for c, n in sorted(written.items())) + '.')
     code, text = run('i18n.py', 'build')

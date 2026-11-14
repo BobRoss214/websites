@@ -115,7 +115,7 @@ def weekday_index(d):
 # ------------------------------------------------------------------------------------------------ the words
 def load_phrases():
     try:
-        with open(PHRASES, encoding='utf-8') as f:
+        with open(PHRASES, encoding='utf-8-sig') as f:
             return json.load(f)
     except (OSError, ValueError) as e:
         raise Refuse('tools/notice_phrases.json cannot be read (%s). Put it back from your backup, or ask Claude. Nothing was changed.' % (e,))
@@ -363,6 +363,19 @@ def new_closures_span(text, props, item, q, nl):
     lit = js_string(item, q)
     if not inner.strip():
         return '[' + lit + ']'
+    # A comment in the list (// Thanksgiving) is not part of it: the new day goes after the last real item, and after that item's own comment.
+    mask = code_mask(old)[1:-1]
+    code_end = max([i + 1 for i, ch in enumerate(inner) if mask[i] != 'm' and not ch.isspace()] or [0])
+    if 'm' in mask[code_end:]:
+        if not code_end:   # only a comment so far
+            return '[' + inner + lit + ']'
+        head, rest = inner[:code_end], inner[code_end:]
+        had_comma = head.endswith(',')
+        if '\n' not in inner:
+            return '[' + head + ('' if had_comma else ',') + ' ' + lit + (',' if had_comma else '') + rest + ']'
+        cut = rest.find('\n') if '\n' in rest else len(rest)
+        item_indent = re.match(r'[ \t]*', head.split('\n')[-1]).group(0) if '\n' in head else line_indent(text, vs) + '  '
+        return '[' + head + ('' if had_comma else ',') + rest[:cut] + nl + item_indent + lit + (',' if had_comma else '') + rest[cut:] + ']'
     m = re.match(r'(?s)^(.*?)(,?)(\s*)$', inner)
     body, comma, tail = m.group(1), m.group(2), m.group(3)
     if '\n' in inner:
@@ -703,13 +716,13 @@ def do_publish():
 def site_line(code):
     """The farm's own sentence about refunds when severe weather closes it, in English or Spanish, if the site has it (never invented)."""
     try:
-        en = json.load(open(os.path.join(ROOT, 'lang', 'en.json'), encoding='utf-8'))
+        en = json.load(open(os.path.join(ROOT, 'lang', 'en.json'), encoding='utf-8-sig'))
         hit = [k for k, v in en.items() if 'severe weather forces us to close' in v and 'full refund' in v and len(v) < 140]
         if not hit:
             return ''
         if code == 'en':
             return re.sub(r'<[^>]+>', '', en[hit[0]]).strip().rstrip('.') + '.'
-        es = json.load(open(os.path.join(ROOT, 'lang', 'src', 'es.json'), encoding='utf-8'))['ui'].get(hit[0], '')
+        es = json.load(open(os.path.join(ROOT, 'lang', 'src', 'es.json'), encoding='utf-8-sig'))['ui'].get(hit[0], '')
         return re.sub(r'<[^>]+>', '', es).strip().rstrip('.') + '.' if es else ''
     except (OSError, ValueError):
         return ''

@@ -298,3 +298,14 @@ html{overscroll-behavior-y:contain}
 .lightbox{touch-action:pinch-zoom;overscroll-behavior:contain}
 html:has(.lightbox[open]){overflow:hidden;scrollbar-gutter:stable}   /* stable: the page behind does not shift when the scrollbar goes */
 @supports (height:1dvh){.lightbox{max-height:92dvh}.lightbox img{max-height:74dvh}}   /* vh counts the area under a phone's address bar */
+
+/* ---------------------------------------------------------------- winter on a wide, short window (a laptop: 1440 x 900)
+   The winter announcement is two sentences and the winter words under the headline are five lines, so the first screen was taller than the
+   window: the campfires, the snowman and the front row of trees were cut off at the bottom. Here the announcement is a little smaller (two lines
+   instead of three), the words under the headline are wider and a little smaller (four lines) and the hand-lettered line is smaller. Only in
+   winter, only from 1100px wide and up to 960px high: every other season and window is as it was. (tests/hero.test.mjs, "winter, window 1440 x 900") */
+@media (min-width:1100px) and (max-height:960px){
+  html[data-season="winter"] .announce{font-size:.86rem;padding:6px var(--gutter) 7px}
+  html[data-season="winter"] .hero-kicker{font-size:1.65rem}
+  html[data-season="winter"] .hero-sub{max-width:880px;margin:.5em auto .9em;font-size:1.1rem}
+}

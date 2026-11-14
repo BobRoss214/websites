@@ -1,0 +1,120 @@
+Changed files: 30 (not yet committed)
+  README.md                          -> -   [no browser: docs, doc-commands, owner-cheat-sheet, windows-reality, plain-lint]
+  assets/fonts/caveat-latin-700-normal.woff2 -> slow-phone   [no browser: docs, files-audit, licences, font-letters]
+  assets/fonts/fredoka-latin-wght-normal.woff2 -> slow-phone   [no browser: docs, files-audit, licences, font-letters]
+  assets/fonts/nunito-latin-wght-normal.woff2 -> slow-phone   [no browser: docs, files-audit, licences, font-letters]
+  css/hero.css                       -> smoke, time-bombs, pause, calm, critter, games, print-qr, npc, axe, axe-wide, keyboard, contrast-pixels, shop, hero, barn, touch, layout-sweep, big-font, auto-dark, slow-phone, forced-colors, colour-blind, monkey   [no browser: docs, validity, browser-support, files-audit, font-letters, privacy-static]
+  css/sections.css                   -> smoke, interference, time-bombs, calm, critter, gallery, print-qr, axe, axe-wide, keyboard, contrast-pixels, shop, touch, layout-sweep, big-font, auto-dark, slow-phone, forced-colors, menu-groups, nav-highlight, colour-blind, monkey   [no browser: docs, validity, browser-support, files-audit, font-letters, privacy-static]
+  css/styles.css                     -> smoke, time-bombs, calm, critter, print-qr, axe, axe-wide, keyboard, contrast-pixels, shop, barn, touch, layout-sweep, big-font, auto-dark, slow-phone, forced-colors, nav-highlight, anchor-landing, hash-open, colour-blind, monkey   [no browser: docs, validity, browser-support, files-audit, font-letters, privacy-static]
+  docs/CREDITS_AND_LICENCES.md       -> -   [no browser: docs, doc-commands, licences, plain-lint]
+  js/demo-app.js                     -> interference, time-bombs, no-js, privacy, axe-wide, slow-phone, monkey   [no browser: docs, validity, browser-support, code-rules, files-audit, font-letters, privacy-static]
+  js/demo-store.js                   -> demo-alerts, demo-desk-live, kitchen-live, interference, time-bombs, no-js, privacy, axe-wide, slow-phone, monkey   [no browser: docs, validity, browser-support, code-rules, demo-store, demo-live, files-audit, font-letters, privacy-static]
+  js/hero.js                         -> smoke, interference, time-bombs, pause, calm, games, no-js, privacy, farm-seasons, npc, i18n-early, axe-wide, keyboard, contrast-pixels, link-names, sprite, hero, barn, touch, slow-phone, monkey   [no browser: docs, validity, browser-support, code-rules, files-audit, font-letters, privacy-static]
+  js/i18n.js                         -> moved-pages, interference, time-bombs, no-js, privacy, i18n, i18n-early, i18n-a11y, languages, axe-wide, keyboard, link-names, shop, code-read, slow-phone, colour-blind, monkey   [no browser: docs, validity, browser-support, code-rules, files-audit, font-letters, logic, privacy-static]
+  js/live.js                         -> live, dated, interference, time-bombs, calendar-doc, year-rehearsal, sitecheck, sitecheck-values, no-js, privacy, languages, axe-wide, features, code-read, slow-phone, monkey   [no browser: docs, validity, browser-support, code-rules, files-audit, font-letters, logic, privacy-static]
+  js/main.js                         -> smoke, interference, time-bombs, owner-input, pause, calm, critter, gallery, no-js, analytics, privacy, axe, axe-wide, keyboard, contrast-pixels, link-names, first-visit-guide, sprite, shop, code-read, barn, touch, slow-phone, menu-groups, nav-highlight, anchor-landing, hash-open, colour-blind, monkey   [no browser: docs, validity, browser-support, code-rules, files-audit, font-letters, privacy-static]
+  tests/README.md                    -> -   [no browser: docs, validity]
+  tests/pipeline.test.mjs            -> -   [no browser: runner, docs, validity, pipeline]
+  tools/change_fact.py               -> time-bombs, code-read   [no browser: docs, owner-cheat-sheet, tools-safety, pipeline, windows-reality, doctor]
+  tools/close_today.py               -> time-bombs, code-read   [no browser: docs, owner-cheat-sheet, tools-safety, close-today, pipeline, windows-reality, doctor]
+  tools/i18n.py                      -> moved-pages, time-bombs, messages, deploy, i18n, i18n-a11y, languages, code-read   [no browser: docs, owner-cheat-sheet, date-phrases, tools-safety, pipeline, windows-reality, doctor, reader-roundtrip]
+  tests/font-letters.test.mjs        -> -   [no browser: runner, docs, validity, font-letters]
+  tools/font_subset.py               -> time-bombs, code-read   [no browser: docs, owner-cheat-sheet, tools-safety, pipeline, windows-reality, doctor, font-letters]
+  tools/fonts-full/LICENSE-OFL-Caveat.txt -> time-bombs, code-read   [no browser: docs, owner-cheat-sheet, pipeline, windows-reality, doctor, font-letters]
+  tools/fonts-full/LICENSE-OFL-Fredoka.txt -> time-bombs, code-read   [no browser: docs, owner-cheat-sheet, pipeline, windows-reality, doctor, font-letters]
+  tools/fonts-full/LICENSE-OFL-Nunito.txt -> time-bombs, code-read   [no browser: docs, owner-cheat-sheet, pipeline, windows-reality, doctor, font-letters]
+  tools/fonts-full/caveat-latin-700-normal.woff2 -> time-bombs, code-read   [no browser: docs, owner-cheat-sheet, pipeline, windows-reality, doctor, font-letters]
+  tools/fonts-full/fredoka-latin-wght-normal.woff2 -> time-bombs, code-read   [no browser: docs, owner-cheat-sheet, pipeline, windows-reality, doctor, font-letters]
+  tools/fonts-full/nunito-latin-wght-normal.woff2 -> time-bombs, code-read   [no browser: docs, owner-cheat-sheet, pipeline, windows-reality, doctor, font-letters]
+  work-notes/session-notes/FEATURE_PLAN.md -> -   [no browser: docs]
+  work-notes/session-notes/LANGUAGE_NOTES.md -> -   [no browser: docs]
+  work-notes/session-notes/LATER_PROJECTS.md -> -   [no browser: docs]
+
+The look of the pages may have changed too: node tests/visual-check.mjs shows which parts look different (it is not one of the tests; it needs a baseline, see "The visual check" below).
+
+77 tests, about 51 min at the times in tests/timings.json:
+  node tests/run-all.mjs runner moved-pages docs doc-commands =owner-cheat-sheet date-phrases tools-safety close-today validity browser-support code-rules demo-store demo-live pipeline windows-reality doctor reader-roundtrip files-audit licences font-letters plain-lint live smoke logic demo-alerts demo-desk-live kitchen-live dated interference time-bombs calendar-doc year-rehearsal sitecheck sitecheck-values owner-input messages pause calm critter games gallery no-js analytics privacy-static privacy print-qr deploy farm-seasons npc =i18n i18n-early i18n-a11y languages axe axe-wide keyboard contrast-pixels link-names first-visit-guide sprite shop features code-read hero barn touch layout-sweep big-font auto-dark slow-phone forced-colors menu-groups nav-highlight anchor-landing hash-open colour-blind monkey
+  (add --run to this command line to run them now)
+77 tests, about 51 min at the times in tests/timings.json.
+
+...   runner             runningPASS  runner             30 passed  (7s)
+...   moved-pages        runningFAIL  moved-pages        did not finish (exit code 1)  (15s)
+      FAIL the patch applies to the site as it is now (git apply)  error: patch failed: lang/src/zh.json:1011
+      FAIL all 13 folders have a page  about, contact-us, contact, faq, flowers-photographers, flowers, food, parties, parties-school-tours, school-tours, schooltours, the-greenhouse, wiseacres
+      FAIL the jump is unchanged: each page still has <meta http-equiv="refresh" content="0; url=..."> to the same address as before, and a link to it  about, contact-us, contact, faq, flowers-photographers, flowers, food, par
+      FAIL the English is still in the HTML (the fallback): "This page has moved." and the link line, and the title
+      FAIL each page loads js/moved.js, and its two lines carry data-t ids  about, contact-us, contact, faq, flowers-photographers, flowers, food, parties, parties-school-tours, school-tours, schooltours, the-greenhouse, wisea
+      FAIL there are 10 different texts (one shared line and 9 link lines), each translated in es, hi, zh and vi with a text that is not the English  0 ids
+      FAIL with the language saved by the language button (wa.lang), all 13 pages show their two lines, the title and <html lang> in that language: English, Spanish, Hindi, Chinese, Vietnamese (65 pages looked at), and the lin
+      FAIL ?lang=xx, and the browser's language list when nothing was chosen, give the same words in es, hi, zh and vi (on the first and the last kind of page)  ?lang=es about || browser es about: ["",[]] || ?lang=es food
+      running moved-pages once more (--retry) ...
+FAIL  moved-pages        did not finish (exit code 1)  (30s)
+      FAIL the patch applies to the site as it is now (git apply)  error: patch failed: lang/src/zh.json:1011
+      FAIL all 13 folders have a page  about, contact-us, contact, faq, flowers-photographers, flowers, food, parties, parties-school-tours, school-tours, schooltours, the-greenhouse, wiseacres
+      FAIL the jump is unchanged: each page still has <meta http-equiv="refresh" content="0; url=..."> to the same address as before, and a link to it  about, contact-us, contact, faq, flowers-photographers, flowers, food, par
+      FAIL the English is still in the HTML (the fallback): "This page has moved." and the link line, and the title
+      FAIL each page loads js/moved.js, and its two lines carry data-t ids  about, contact-us, contact, faq, flowers-photographers, flowers, food, parties, parties-school-tours, school-tours, schooltours, the-greenhouse, wisea
+      FAIL there are 10 different texts (one shared line and 9 link lines), each translated in es, hi, zh and vi with a text that is not the English  0 ids
+      FAIL with the language saved by the language button (wa.lang), all 13 pages show their two lines, the title and <html lang> in that language: English, Spanish, Hindi, Chinese, Vietnamese (65 pages looked at), and the lin
+      FAIL ?lang=xx, and the browser's language list when nothing was chosen, give the same words in es, hi, zh and vi (on the first and the last kind of page)  ?lang=es about || browser es about: ["",[]] || ?lang=es food
+...   docs               runningPASS  docs               10 passed  (2s)
+...   doc-commands       runningFAIL  doc-commands       19 passed, 1 FAILED  (5s)
+      FAIL every command in the notes names a tool, test, option and file that exists, and works in Windows cmd and PowerShell too  BROKEN   tools/font_subset.py
+      running doc-commands once more (--retry) ...
+FAIL  doc-commands       19 passed, 1 FAILED  (9s)
+      FAIL every command in the notes names a tool, test, option and file that exists, and works in Windows cmd and PowerShell too  BROKEN   tools/font_subset.py
+...   owner-cheat-sheet  runningPASS  owner-cheat-sheet  27 passed  (4s)
+...   date-phrases       runningPASS  date-phrases       36 passed  (17s)
+...   tools-safety       runningFAIL  tools-safety       2 passed, 1 FAILED  (16s)
+      FAIL tools/test_safety.py ran to the end and listed its checks  0 checks found; exit code 0; Ran 41 tests in 15.285s |  | OK
+      running tools-safety once more (--retry) ...
+FAIL  tools-safety       2 passed, 1 FAILED  (37s)
+      FAIL tools/test_safety.py ran to the end and listed its checks  0 checks found; exit code 0; Ran 41 tests in 20.556s |  | OK
+...   close-today        runningFAIL  close-today        2 passed, 1 FAILED  (13s)
+      FAIL tools/test_close_today.py ran to the end and listed its checks  0 checks found; exit code 0; Ran 17 tests in 12.362s |  | OK
+      running close-today once more (--retry) ...
+FAIL  close-today        2 passed, 1 FAILED  (21s)
+      FAIL tools/test_close_today.py ran to the end and listed its checks  0 checks found; exit code 0; Ran 17 tests in 8.053s |  | OK
+...   validity           runningPASS  validity           59 passed  (4s)
+...   browser-support    runningPASS  browser-support    16 passed  (0s)
+...   code-rules         runningPASS  code-rules         29 passed  (0s)
+...   demo-store         runningPASS  demo-store         144 passed  (0s)
+...   demo-live          runningPASS  demo-live          83 passed  (6s)
+...   pipeline           runningPASS  pipeline           50 passed  (189s)
+...   windows-reality    runningFAIL  windows-reality    13 passed, 1 FAILED  (46s)
+      FAIL the windows-reality test ran to the end  Error: EISDIR: illegal operation on a directory, read /     at Object.readSync (node:fs:797:18) /     at tryReadSync (node:fs:426:20) /     at Object.readFileSync (node:fs:52
+      running windows-reality once more (--retry) ...
+FAIL  windows-reality    13 passed, 1 FAILED  (81s)
+      FAIL the windows-reality test ran to the end  Error: EISDIR: illegal operation on a directory, read /     at Object.readSync (node:fs:797:18) /     at tryReadSync (node:fs:426:20) /     at Object.readFileSync (node:fs:52
+...   doctor             runningFAIL  doctor             2 passed, 1 FAILED  (13s)
+      FAIL doctor: the test ran to the end  Error: EISDIR: illegal operation on a directory, read /     at Object.readSync (node:fs:797:18) /     at tryReadSync (node:fs:426:20)
+      running doctor once more (--retry) ...
+FAIL  doctor             2 passed, 1 FAILED  (27s)
+      FAIL doctor: the test ran to the end  Error: EISDIR: illegal operation on a directory, read /     at Object.readSync (node:fs:797:18) /     at tryReadSync (node:fs:426:20)
+...   reader-roundtrip   runningPASS  reader-roundtrip   67 passed  (25s)
+...   files-audit        runningPASS  files-audit        13 passed  (0s)
+...   licences           runningPASS  licences           46 passed  (0s)
+...   font-letters       runningPASS  font-letters       11 passed  (0s)
+...   plain-lint         runningPASS  plain-lint         19 passed  (4s)
+...   live               runningPASS  live               39 passed  (36s)
+...   smoke              runningPASS  smoke              13 passed  (24s)
+...   logic              runningPASS  logic              49 passed  (1s)
+...   demo-alerts        runningPASS  demo-alerts        43 passed  (15s)
+...   demo-desk-live     runningPASS  demo-desk-live     67 passed  (94s)
+...   kitchen-live       runningPASS  kitchen-live       70 passed  (37s)
+...   dated              runningPASS  dated              36 passed  (154s)
+...   interference       runningPASS  interference       19 passed  (53s)
+...   time-bombs         runningPASS  time-bombs         294 passed  (156s)
+...   calendar-doc       runningFAIL  calendar-doc       8 passed, 2 FAILED  (44s)
+      FAIL on all 12 dates the six pages show what the document says  2026-10-04 first-visit (happening, h1, sub, heroNote, heroButtons, topbar, notice, year, nowTag, badges, countdown, schedule, signup, signupForm, reserve, l
+      FAIL the days on which the season code changes its mind (11 in the range: the season dates, “the season that starts next” between seasons, what comes next) are the days in the document  now 2026-11-30, 2026-12-05, 2027-1
+      running calendar-doc once more (--retry) ...
+FAIL  calendar-doc       8 passed, 2 FAILED  (76s)
+      FAIL on all 12 dates the six pages show what the document says  2026-10-04 first-visit (happening, h1, sub, heroNote, heroButtons, topbar, notice, year, nowTag, badges, countdown, schedule, signup, signupForm, reserve, l
+      FAIL the days on which the season code changes its mind (11 in the range: the season dates, “the season that starts next” between seasons, what comes next) are the days in the document  now 2026-11-30, 2026-12-05, 2027-1
+...   year-rehearsal     runningFAIL  year-rehearsal     65 passed, 1 FAILED  (86s)
+      FAIL R05: Mon Nov 9: the first-screen button is "Visit The GreenHouse", and the farm's "Reserve your visit" is gone  Visit The GreenHouse | Reserve,Reserve now,Reserve with pizza,Reserve without pizza,Reserve your visit
+      running year-rehearsal once more (--retry) ...
+FAIL  year-rehearsal     65 passed, 1 FAILED  (153s)
+      FAIL R05: Mon Nov 9: the first-screen button is "Visit The GreenHouse", and the farm's "Reserve your visit" is gone  Visit The GreenHouse | Reserve,Reserve now,Reserve with pizza,Reserve without pizza,Reserve your visit
+...   sitecheck          running

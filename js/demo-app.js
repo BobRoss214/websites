@@ -16,7 +16,7 @@
 
   var UI = window.DemoUI, Data = window.DemoData, Store = window.DemoStore, h = UI.h;
   var ORDER = ['visits', 'pizza', 'family', 'alerts', 'messages', 'photos', 'event'];
-  var views = {}, names = [];
+  var views = Object.create(null), names = [];
   var app = null, parts = null, tabNames = '', booted = false, mode = null, pending = false, focusPanelNext = false, kept = null, seenNotices = null, typingWait = false, drawn = false;
 
   function view(name, def) {
@@ -139,7 +139,7 @@
   function bellItem(n, today) {
     var body = [h('span', { class: 'demo-notice-text' }, n.text), h('span', { class: 'demo-notice-when' }, UI.when(n.at, today))];
     var cls = 'demo-notice' + (n.read ? '' : ' is-new');
-    if (!n.link) return h('li', { class: cls }, body);
+    if (!n.link || String(n.link).charAt(0) !== '#') return h('li', { class: cls }, body);   // only a link to a place on this page
     var a = h('a', { href: n.link, class: cls + ' is-link', 'data-notice': n.id }, body);
     a.addEventListener('click', function () {
       if (!n.read) Store.markRead(n.id);

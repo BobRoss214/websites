@@ -80,6 +80,13 @@
       var st = null;
       if (raw) { try { st = JSON.parse(raw); } catch (e) { st = null; } }
       if (!st || typeof st !== 'object' || st.v !== 1) st = empty();
+      else {   // a saved state with a part missing or of the wrong kind (an older build, a cut-off save): that part starts empty
+        var base = empty();
+        Object.keys(base).forEach(function (k) {
+          if (k === 'v' || k === 'session') return;
+          if (!st[k] || typeof st[k] !== 'object' || Array.isArray(st[k]) !== Array.isArray(base[k])) st[k] = base[k];
+        });
+      }
       if (!st.live || typeof st.live !== 'object') st.live = {};   // a state saved before the pretend rush existed
       cache = { raw: raw, state: st };
       return st;

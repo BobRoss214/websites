@@ -22,7 +22,7 @@ if (py(ROOT, '-c', 'import bs4').status !== 0) skip(`${PY} with beautifulsoup4 i
 const hasSegno = py(ROOT, '-c', 'import segno').status === 0;
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-pipeline-'));
-fs.cpSync(ROOT, tmp, { recursive: true, filter: (src) => !/(^|[\\/])(\.git|node_modules|tests|__pycache__)([\\/]|$)/.test(path.relative(ROOT, src)) });
+fs.cpSync(ROOT, tmp, { recursive: true, filter: (src) => !/(^|[\\/])(\.git|\.venv|node_modules|tests|__pycache__)([\\/]|$)/.test(path.relative(ROOT, src)) });
 // A Windows checkout (git config core.autocrlf true) has Windows line endings in every text file, and the tools write Unix ones: the files are compared by their words.
 const TEXT_FILE = /\.(html|css|js|mjs|json|svg|txt|xml|webmanifest|md|py)$|^_headers$/;
 const lf = (buf) => Buffer.from(buf.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');

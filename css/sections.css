@@ -580,7 +580,7 @@ html[data-season="fall"] .nav-tomato .nav-group-title::after{content:"";display:
 .gh-tile figcaption{margin-top:6px;font:700 1.2rem/1.2 var(--display)}
 .awning{transform-box:fill-box;transform-origin:50% 0;animation:awning 3.6s ease-in-out infinite alternate}
 .cone-sign{transform-box:fill-box;transform-origin:50% 100%;animation:coneBob 2.4s ease-in-out infinite}
-.twinkle{transform-box:fill-box;transform-origin:center;animation:twinkle 2.2s ease-in-out infinite}
+.twinkle{transform-box:fill-box;transform-origin:center;animation:starTwinkle 2.2s ease-in-out infinite}
 .twinkle.t2{animation-delay:-1.1s}
 .flame{transform-box:fill-box;transform-origin:50% 100%;animation:flame .7s ease-in-out infinite alternate}
 .flame.f2{animation-duration:.55s}
@@ -594,7 +594,7 @@ html[data-season="fall"] .nav-tomato .nav-group-title::after{content:"";display:
 @media (hover:hover){.gh-tile:hover .awning{animation-duration:1.4s}}
 @keyframes awning{from{transform:rotate(-1.4deg)}to{transform:rotate(1.4deg)}}
 @keyframes coneBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
-@keyframes twinkle{0%,100%{transform:scale(.5);opacity:.35}50%{transform:scale(1.15);opacity:1}}
+@keyframes starTwinkle{0%,100%{transform:scale(.5);opacity:.35}50%{transform:scale(1.15);opacity:1}}
 @keyframes flame{0%{transform:scaleY(.85) scaleX(1.04)}100%{transform:scaleY(1.14) scaleX(.9)}}
 @keyframes smoke{0%{transform:translate(0,0) scale(.5);opacity:0}20%{opacity:.9}100%{transform:translate(12px,-52px) scale(1.7);opacity:0}}
 

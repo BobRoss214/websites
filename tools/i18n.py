@@ -492,6 +492,7 @@ def languages():
 
 def need_language(args, extra=0):
     """The language code (and `extra` more words) typed after the command; a plain message when it is missing or unknown."""
+    args = [a for a in args if not a.startswith('--')]   # "missing --list es" is as good as "missing es --list"
     if len(args) < 3 + extra:
         sys.exit('This command needs a language code, for example:  python3 tools/i18n.py ' + args[1] + ' es' + (' 0 50' if extra else '') + '\n(languages: ' + ', '.join(languages()) + ')')
     if args[2] not in languages():

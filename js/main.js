@@ -892,7 +892,7 @@
       const key = card.dataset.scene;
       const photo = card.classList.contains('has-photo');
       card.insertAdjacentHTML('beforeend',
-        `<svg${photo ? ' class="stickers"' : ''} viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${(photo ? stickers[key] : builders[key])()}</svg>`);
+        `<svg${photo ? ' class="stickers"' : ''} viewBox="0 0 480 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${((photo ? stickers[key] : builders[key]) || (() => ''))()}</svg>`);
     });
 
     const select = (id, focus) => {
@@ -1030,6 +1030,7 @@
     };
     // Links like #parties or #corporate elsewhere on the page open the right tab.
     doc.addEventListener('click', (e) => {
+      if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // "open in a new tab" stays the browser's
       const a = e.target.closest('a[href^="#"]');
       if (a && go(a.getAttribute('href'), true)) e.preventDefault();
     });
@@ -1204,10 +1205,11 @@
         row.appendChild(el);
       }
     };
-    let timer = 0;
+    let timer = 0, lastW = window.innerWidth;
     const all = () => $$('.crop-row[data-crops]').forEach(fill);
     all();
-    addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(all, 200); }, { passive: true });
+    // Only a change of width: a phone fires resize each time its address bar hides or shows, and a redraw replays the grow-in.
+    addEventListener('resize', () => { if (window.innerWidth === lastW) return; lastW = window.innerWidth; clearTimeout(timer); timer = setTimeout(all, 200); }, { passive: true });
   }
 
   /* ------------------------------------------------------------------ *
